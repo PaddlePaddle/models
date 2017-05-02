@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sys
-import sqlite3
 import paddle.v2 as paddle
 import gzip
 
