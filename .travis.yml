@@ -1,0 +1,24 @@
+language: cpp
+cache: ccache
+sudo: required
+dist: trusty
+os:
+  - linux
+env:
+  - JOB=PRE_COMMIT
+
+addons:
+  apt:
+    packages:
+      - git
+      - python
+      - python-pip
+      - python2.7-dev
+before_install:
+  -  pip install -U virtualenv pre-commit pip
+script:
+  -  .travis/precommit.sh
+notifications:
+  email:
+    on_success: change
+    on_failure: always
