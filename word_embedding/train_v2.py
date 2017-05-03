@@ -10,7 +10,7 @@ def main():
     paddle.init(use_gpu=False, trainer_count=1)
     word_dict = paddle.dataset.imikolov.build_dict()
     dict_size = len(word_dict)
-    input_data_lst, trainer, _, parameters = network_conf(
+    input_data_lst, cost, prediction = network_conf(
         hidden_size=256, embed_size=32, dict_size=dict_size)
 
     def event_handler(event):
@@ -29,6 +29,11 @@ def main():
                     event.pass_id, event.batch_id, event.cost)
 
     feeding = dict(zip(input_data_lst, xrange(len(input_data_lst))))
+    parameters = paddle.parameters.create([cost, prediction])
+    adam_optimizer = paddle.optimizer.Adam(
+        learning_rate=3e-3,
+        regularization=paddle.optimizer.L2Regularization(8e-4))
+    trainer = paddle.trainer.SGD(cost, parameters, adam_optimizer)
 
     trainer.train(
         paddle.batch(

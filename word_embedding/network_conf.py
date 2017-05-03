@@ -44,13 +44,6 @@ def network_conf(hidden_size, embed_size, dict_size):
         param_attr=paddle.attr.Param(
             initial_std=1. / math.sqrt(embed_size * 8), learning_rate=1))
 
-    with paddle.layer.mixed(
-            size=dict_size - 1,
-            act=paddle.activation.Sigmoid(),
-            bias_attr=paddle.attr.Param(name='sigmoid_b')) as prediction:
-        prediction += paddle.layer.trans_full_matrix_projection(
-            input=hidden_layer, param_attr=paddle.attr.Param(name='sigmoid_w'))
-
     cost = paddle.layer.hsigmoid(
         input=hidden_layer,
         label=target_word,
@@ -58,14 +51,13 @@ def network_conf(hidden_size, embed_size, dict_size):
         param_attr=paddle.attr.Param(name='sigmoid_w'),
         bias_attr=paddle.attr.Param(name='sigmoid_b'))
 
-    parameters = paddle.parameters.create([cost, prediction])
-
-    adam_optimizer = paddle.optimizer.Adam(
-        learning_rate=3e-3,
-        regularization=paddle.optimizer.L2Regularization(8e-4))
+    with paddle.layer.mixed(
+            size=dict_size - 1,
+            act=paddle.activation.Sigmoid(),
+            bias_attr=paddle.attr.Param(name='sigmoid_b')) as prediction:
+        prediction += paddle.layer.trans_full_matrix_projection(
+            input=hidden_layer, param_attr=paddle.attr.Param(name='sigmoid_w'))
 
     input_data_lst = ['firstw', 'secondw', 'thirdw', 'fourthw', 'fifthw']
 
-    trainer = paddle.trainer.SGD(cost, parameters, adam_optimizer)
-
-    return input_data_lst, trainer, prediction, parameters
+    return input_data_lst, cost, prediction
