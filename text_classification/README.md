@@ -7,6 +7,6 @@
 ## DNN模型结构
 DNN的模型结构入下图所示：
 <p align="center">
-<img src="images/dnn_net.png" width = "100%" align="center"/><br/>
+<img src="images/dnn_net.png" width = "90%" align="center"/><br/>
 图1. DNN文本分类模型
 </p>
