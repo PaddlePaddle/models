@@ -168,14 +168,11 @@ def train(source_dict_dim, target_dict_dim):
 
 
 def generate(source_dict_dim, target_dict_dim):
-    # use the first 3 samples for generation
+    # load data  samples for generation
     gen_creator = paddle.dataset.wmt14.gen(source_dict_dim)
     gen_data = []
-    gen_num = 3
     for item in gen_creator():
         gen_data.append((item[0], ))
-        if len(gen_data) == gen_num:
-            break
 
     beam_gen = seq2seq_net(source_dict_dim, target_dict_dim, True)
 
