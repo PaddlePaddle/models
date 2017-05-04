@@ -18,14 +18,18 @@ import gzip
 
 
 def fc_net(input_dim, class_dim=2, emb_dim=256):
+    # input layers
     data = paddle.layer.data("word",
                              paddle.data_type.integer_value_sequence(input_dim))
     lbl = paddle.layer.data("label", paddle.data_type.integer_value(class_dim))
 
+    # emdedding layer
     emb = paddle.layer.embedding(input=data, size=emb_dim)
+    # max pooling
     seq_pool = paddle.layer.pooling(
         input=emb, pooling_type=paddle.pooling.Max())
 
+    # two hidden layers
     hd1 = paddle.layer.fc(
         input=seq_pool,
         size=128,
@@ -37,6 +41,7 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
         act=paddle.activation.Tanh(),
         param_attr=paddle.attr.Param(initial_std=0.01))
 
+    # output layer
     output = paddle.layer.fc(
         input=hd2,
         size=class_dim,
