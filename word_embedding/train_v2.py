@@ -8,10 +8,10 @@ import gzip
 
 def main():
     paddle.init(use_gpu=False, trainer_count=1)
-    word_dict = paddle.dataset.imikolov.build_dict()
+    word_dict = paddle.dataset.imikolov.build_dict(typo_freq=2)
     dict_size = len(word_dict)
-    input_data_lst, cost, prediction = network_conf(
-        hidden_size=256, embed_size=32, dict_size=dict_size)
+    cost = network_conf(
+        is_train=True, hidden_size=256, embed_size=32, dict_size=dict_size)
 
     def event_handler(event):
         if isinstance(event, paddle.event.EndPass):
@@ -28,8 +28,15 @@ def main():
                 print "Pass %d, Batch %d, Cost %f" % (
                     event.pass_id, event.batch_id, event.cost)
 
-    feeding = dict(zip(input_data_lst, xrange(len(input_data_lst))))
-    parameters = paddle.parameters.create([cost, prediction])
+    feeding = {
+        'firstw': 0,
+        'secondw': 1,
+        'thirdw': 2,
+        'fourthw': 3,
+        'fifthw': 4
+    }
+
+    parameters = paddle.parameters.create(cost)
     adam_optimizer = paddle.optimizer.Adam(
         learning_rate=3e-3,
         regularization=paddle.optimizer.L2Regularization(8e-4))
