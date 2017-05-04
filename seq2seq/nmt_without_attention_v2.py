@@ -22,9 +22,7 @@ def seq2seq_net(source_dict_dim, target_dict_dim, generating=False):
         type=paddle.data_type.integer_value_sequence(source_dict_dim))
 
     src_embedding = paddle.layer.embedding(
-        input=src_word_id,
-        size=word_vector_dim,
-        param_attr=paddle.attr.ParamAttr(name='_source_language_embedding'))
+        input=src_word_id, size=word_vector_dim)
 
     encoder_forward = paddle.networks.simple_gru(
         input=src_embedding,
@@ -91,11 +89,6 @@ def seq2seq_net(source_dict_dim, target_dict_dim, generating=False):
             param_attr=paddle.attr.ParamAttr(name='_target_language_embedding'))
         group_inputs.append(trg_embedding)
 
-        # For decoder equipped without attention mechanism, in training,
-        # target embeding (the groudtruth) is the data input,
-        # while encoded source sequence is accessed to as an unbounded memory.
-        # Here, the StaticInput defines a read-only memory
-        # for the recurrent_group.
         decoder = paddle.layer.recurrent_group(
             name=decoder_group_name,
             step=gru_decoder_without_attention,
@@ -108,14 +101,6 @@ def seq2seq_net(source_dict_dim, target_dict_dim, generating=False):
 
         return cost
     else:
-        # In generation, the decoder predicts a next target word based on
-        # the encoded source sequence and the last generated target word.
-
-        # The encoded source sequence (encoder's output) must be specified by
-        # StaticInput, which is a read-only memory.
-        # Embedding of the last generated word is automatically gotten by
-        # GeneratedInputs, which is initialized by a start mark, such as <s>,
-        # and must be included in generation.
 
         trg_embedding = paddle.layer.GeneratedInputV2(
             size=target_dict_dim,
@@ -193,8 +178,7 @@ def generate(source_dict_dim, target_dict_dim):
             break
 
     beam_gen = seq2seq_net(source_dict_dim, target_dict_dim, True)
-    # get the pretrained model, whose bleu = 26.92
-    # parameters = paddle.dataset.wmt14.model()
+
     with gzip.open('models/nmt_without_att_params_batch_400.tar.gz') as f:
         parameters = paddle.parameters.Parameters.from_tar(f)
     # prob is the prediction probabilities, and id is the prediction word. 
