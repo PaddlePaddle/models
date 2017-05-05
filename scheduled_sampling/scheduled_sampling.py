@@ -75,7 +75,7 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
         generated_word_memory = paddle.layer.memory(
             name='generated_word', size=1, boot_with_const_id=0)
 
-        current_word = paddle.layer.multiplex([true_token_flag, true_word, generated_word_memory])
+        current_word = paddle.layer.multiplex(input=[true_token_flag, true_word, generated_word_memory])
 
         with paddle.layer.mixed(size=decoder_size * 3) as decoder_inputs:
             decoder_inputs += paddle.layer.full_matrix_projection(input=context)
