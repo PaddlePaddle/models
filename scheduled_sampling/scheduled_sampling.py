@@ -140,12 +140,6 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
             param_attr=paddle.attr.ParamAttr(name='_target_language_embedding'))
         group_inputs.append(trg_embedding)
 
-        generated_embedding = paddle.layer.GeneratedInputV2(
-            size=target_dict_dim,
-            embedding_name='_target_language_embedding',
-            embedding_size=word_vector_dim)
-        group_inputs.append(generated_embedding)
-
         true_token_flags = paddle.layer.data(
             name='true_token_flag',
             type=paddle.data_type.integer_value_sequence(2))
