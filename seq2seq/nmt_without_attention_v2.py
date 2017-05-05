@@ -2,6 +2,7 @@
 
 import sys
 import gzip
+import sqlite3
 import paddle.v2 as paddle
 
 ### Parameters
@@ -181,7 +182,7 @@ def generate(source_dict_dim, target_dict_dim, init_models_path):
 
     prob = beam_result[0]
     beam_size = 3
-    for i in xrange(gen_num):
+    for i in xrange(len(gen_data)):
         print "\n*******************************************************\n"
         print "src:", ' '.join([src_dict.get(w) for w in gen_data[i][0]]), "\n"
         for j in xrange(beam_size):
@@ -210,7 +211,7 @@ def main():
 
     if generating:
         # shoud pass the right generated model's path here
-        init_models_path = 'models/nmt_without_att_params_batch_400.tar.gz'
+        init_models_path = 'models/nmt_without_att_params_batch_1800.tar.gz'
         if not os.path.exists(init_models_path):
             print "Cannot find models for generation"
             exit(1)
