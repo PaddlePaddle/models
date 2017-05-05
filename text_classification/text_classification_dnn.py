@@ -23,7 +23,7 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
                              paddle.data_type.integer_value_sequence(input_dim))
     lbl = paddle.layer.data("label", paddle.data_type.integer_value(class_dim))
 
-    # emdedding layer
+    # embedding layer
     emb = paddle.layer.embedding(input=data, size=emb_dim)
     # max pooling
     seq_pool = paddle.layer.pooling(

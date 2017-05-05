@@ -34,7 +34,7 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
                              paddle.data_type.integer_value_sequence(input_dim))
     lbl = paddle.layer.data("label", paddle.data_type.integer_value(class_dim))
 
-    # emdedding layer
+    # embedding layer
     emb = paddle.layer.embedding(input=data, size=emb_dim)
     # max pooling
     seq_pool = paddle.layer.pooling(
@@ -93,15 +93,21 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
 import paddle.v2 as paddle
 
 def convolution_net(input_dim, class_dim=2, emb_dim=128, hid_dim=128):
+    # input layers
     data = paddle.layer.data("word",
                              paddle.data_type.integer_value_sequence(input_dim))
     lbl = paddle.layer.data("label", paddle.data_type.integer_value(2))
 
+    #embedding layer
     emb = paddle.layer.embedding(input=data, size=emb_dim)
+
+    # convolution layers with max pooling
     conv_3 = paddle.networks.sequence_conv_pool(
         input=emb, context_len=3, hidden_size=hid_dim)
     conv_4 = paddle.networks.sequence_conv_pool(
         input=emb, context_len=4, hidden_size=hid_dim)
+
+    # fc and output layer
     output = paddle.layer.fc(
         input=[conv_3, conv_4], size=class_dim, act=paddle.activation.Softmax())
 
