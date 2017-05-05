@@ -2,7 +2,6 @@
 
 import sys
 import gzip
-import sqlite3
 import paddle.v2 as paddle
 
 ### Parameters
