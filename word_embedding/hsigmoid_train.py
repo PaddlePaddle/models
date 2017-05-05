@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import paddle.v2 as paddle
-from network_conf import network_conf
+from hsigmoid_conf import network_conf
 import gzip
 
 
 def main():
     paddle.init(use_gpu=False, trainer_count=1)
-    word_dict = paddle.dataset.imikolov.build_dict(typo_freq=2)
+    word_dict = paddle.dataset.imikolov.build_dict(min_word_freq=2)
     dict_size = len(word_dict)
     cost = network_conf(
         is_train=True, hidden_size=256, embed_size=32, dict_size=dict_size)
@@ -25,8 +25,8 @@ def main():
                 result = trainer.test(
                     paddle.batch(
                         paddle.dataset.imikolov.test(word_dict, 5), 32))
-                print "Pass %d, Batch %d, Cost %f" % (
-                    event.pass_id, event.batch_id, event.cost)
+                print("Pass %d, Batch %d, Cost %f, Test Cost %f" %
+                      (event.pass_id, event.batch_id, event.cost, result.cost))
 
     feeding = {
         'firstw': 0,

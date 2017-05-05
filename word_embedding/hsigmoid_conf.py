@@ -5,16 +5,7 @@ import math
 import paddle.v2 as paddle
 
 
-def network_conf(is_train, hidden_size, embed_size, dict_size):
-    def word_embed(in_layer):
-        ''' word embedding layer '''
-        word_embed = paddle.layer.table_projection(
-            input=in_layer,
-            size=embed_size,
-            param_attr=paddle.attr.Param(
-                name="_proj", initial_std=0.001, learning_rate=1, l2_rate=0))
-        return word_embed
-
+def network_conf(hidden_size, embed_size, dict_size, is_train=True):
     first_word = paddle.layer.data(
         name='firstw', type=paddle.data_type.integer_value(dict_size))
     second_word = paddle.layer.data(
@@ -26,17 +17,23 @@ def network_conf(is_train, hidden_size, embed_size, dict_size):
     target_word = paddle.layer.data(
         name='fifthw', type=paddle.data_type.integer_value(dict_size))
 
-    first_word_embed = word_embed(first_word)
-    second_word_embed = word_embed(second_word)
-    third_word_embed = word_embed(third_word)
-    fourth_word_embed = word_embed(fourth_word)
+    embed_param_attr = paddle.attr.Param(
+        name="_proj", initial_std=0.001, learning_rate=1, l2_rate=0)
+    embed_first_word = paddle.layer.embedding(
+        input=first_word, size=embed_size, param_attr=embed_param_attr)
+    embed_second_word = paddle.layer.embedding(
+        input=second_word, size=embed_size, param_attr=embed_param_attr)
+    embed_third_word = paddle.layer.embedding(
+        input=third_word, size=embed_size, param_attr=embed_param_attr)
+    embed_fourth_word = paddle.layer.embedding(
+        input=fourth_word, size=embed_size, param_attr=embed_param_attr)
 
-    context_embed = paddle.layer.concat(input=[
-        first_word_embed, second_word_embed, third_word_embed, fourth_word_embed
+    embed_context = paddle.layer.concat(input=[
+        embed_first_word, embed_second_word, embed_third_word, embed_fourth_word
     ])
 
     hidden_layer = paddle.layer.fc(
-        input=context_embed,
+        input=embed_context,
         size=hidden_size,
         act=paddle.activation.Sigmoid(),
         layer_attr=paddle.attr.Extra(drop_rate=0.5),

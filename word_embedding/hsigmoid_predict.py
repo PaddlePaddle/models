@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import paddle.v2 as paddle
-from network_conf import network_conf
+from hsigmoid_conf import network_conf
 import gzip
 
 
@@ -36,41 +36,47 @@ def decode_res(infer_res, dict_size):
     return predict_lbls
 
 
-def main():
-    paddle.init(use_gpu=False, trainer_count=1)
-    word_dict = paddle.dataset.imikolov.build_dict(typo_freq=2)
-    dict_size = len(word_dict)
-    prediction = network_conf(
-        is_train=False, hidden_size=256, embed_size=32, dict_size=dict_size)
-
-    print('Load model ....')
-    with gzip.open('./models/model_pass_00000.tar.gz') as f:
-        parameters = paddle.parameters.Parameters.from_tar(f)
-
-    ins_num = 10  # total 10 instance for prediction
-    ins_lst = []  # input data
-
-    ins_iter = paddle.dataset.imikolov.test(word_dict, 5)
-
-    for ins in ins_iter():
-        ins_lst.append(ins[:-1])
-        if len(ins_lst) >= ins_num: break
-
+def predict(batch_ins, idx_word_dict, dict_size, prediction_layer, parameters):
     infer_res = paddle.infer(
-        output_layer=prediction, parameters=parameters, input=ins_lst)
-
-    idx_word_dict = dict((v, k) for k, v in word_dict.items())
+        output_layer=prediction_layer, parameters=parameters, input=batch_ins)
 
     predict_lbls = decode_res(infer_res, dict_size)
     predict_words = [idx_word_dict[lbl] for lbl in predict_lbls]  # map to word
 
     # Ouput format: word1 word2 word3 word4 -> predict label
-    for i, ins in enumerate(ins_lst):
-        print idx_word_dict[ins[0]] + ' ' + \
+    for i, ins in enumerate(batch_ins):
+        print(idx_word_dict[ins[0]] + ' ' + \
             idx_word_dict[ins[1]] + ' ' + \
             idx_word_dict[ins[2]] + ' ' + \
             idx_word_dict[ins[3]] + ' ' + \
-         ' -> ' + predict_words[i]
+         ' -> ' + predict_words[i])
+
+
+def main():
+    paddle.init(use_gpu=False, trainer_count=1)
+    word_dict = paddle.dataset.imikolov.build_dict(min_word_freq=2)
+    dict_size = len(word_dict)
+    prediction_layer = network_conf(
+        is_train=False, hidden_size=256, embed_size=32, dict_size=dict_size)
+
+    with gzip.open('./models/model_pass_00000.tar.gz') as f:
+        parameters = paddle.parameters.Parameters.from_tar(f)
+
+    idx_word_dict = dict((v, k) for k, v in word_dict.items())
+    batch_size = 64
+    batch_ins = []
+    ins_iter = paddle.dataset.imikolov.test(word_dict, 5)
+
+    for ins in ins_iter():
+        batch_ins.append(ins[:-1])
+        if len(batch_ins) == batch_size:
+            predict(batch_ins, idx_word_dict, dict_size, prediction_layer,
+                    parameters)
+            batch_ins = []
+
+    if len(batch_ins) > 0:
+        predict(batch_ins, idx_word_dict, dict_size, prediction_layer,
+                parameters)
 
 
 if __name__ == '__main__':
