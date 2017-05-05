@@ -116,4 +116,4 @@ def convolution_net(input_dim, class_dim=2, emb_dim=128, hid_dim=128):
     return cost, output
 ```
 
-该CNN网络的输入数据类型和前面介绍过的DNN一致。`paddle.networks.sequence_conv_pool`为Paddle中已经封装好的带有pooling的文本序列卷积模块，`context_len`参数用于指定卷积核在同一时间覆盖的文本长度，也即图2中的卷积核的高度；`hidden_size`用于指定该类型的卷积核的数量。可以看到，上述代码定义的结构中使用了128个大小为3的卷积核和128个大小为4的卷积核，这些卷积的结果经过max pooling和结果并置后产生一个256维的向量，向量经过一个全连接层输出最终预测结果。
+该CNN网络的输入数据类型和前面介绍过的DNN一致。`paddle.networks.sequence_conv_pool`为Paddle中已经封装好的带有pooling的文本序列卷积模块，该模块的`context_len`参数用于指定卷积核在同一时间覆盖的文本长度，也即图2中的卷积核的高度；`hidden_size`用于指定该类型的卷积核的数量。可以看到，上述代码定义的结构中使用了128个大小为3的卷积核和128个大小为4的卷积核，这些卷积的结果经过max pooling和结果并置后产生一个256维的向量，向量经过一个全连接层输出最终预测结果。
