@@ -59,3 +59,5 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
     return cost, output
 
 ```
+该DNN模型默认对输入的语料进行二分类（`class_dim=2`），embedding的词向量维度默认为256(`emd_dim=256`)，两个隐层均使用Tanh激活函数（`act=paddle.activation.Tanh()`）。  
+需要注意的是，该模型的输入数据为整数序列，而不是原始的英文单词序列。事实上，为了处理方便我们一般会事先将单词根据词频顺序进行id化，即将单词用整数替代。这一步一般在DNN模型之外完成。
