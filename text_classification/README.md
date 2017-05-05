@@ -6,11 +6,14 @@
 
 ## DNN模型结构
 #### DNN的模型结构入下图所示：
+
 <p align="center">
 <img src="images/dnn_net.png" width = "90%" align="center"/><br/>
 图1. DNN文本分类模型
 </p>
-#### 可以看到，模型主要分为如下几个部分：  
+
+#### 可以看到，模型主要分为如下几个部分：
+
 - **embedding层**：IMDB的样本由原始的英文单词组成，为了方便模型的训练，必须通过embedding将英文单词转化为固定维度的向量。  
 - **max pooling**：max pooling在时间序列上进行，pooling过程消除了不同语料样本在单词数量多少上的差异，并提炼出词向量中每一下标位置上的最大值。经过pooling后，样本被转化为一条固定维度的向量。  
 - **全连接隐层**：经过max pooling后的向量被送入一个具有两个隐层的DNN模型，隐层之间为全连接结构。  
