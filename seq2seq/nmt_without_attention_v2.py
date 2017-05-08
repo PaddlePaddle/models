@@ -8,7 +8,7 @@ import paddle.v2 as paddle
 word_vector_dim = 620
 latent_chain_dim = 1000
 
-beam_size = 3
+beam_size = 5
 max_length = 50
 
 
@@ -37,7 +37,7 @@ def seq2seq_net(source_dict_dim, target_dict_dim, generating=False):
             act=paddle.activation.Tanh()) as encoder_last_projected:
         encoder_last_projected += paddle.layer.full_matrix_projection(
             input=encoder_last)
-
+    # gru step
     def gru_decoder_without_attention(enc_vec, current_word):
 
         decoder_mem = paddle.layer.memory(
@@ -180,7 +180,6 @@ def generate(source_dict_dim, target_dict_dim, init_models_path):
             seq = []
 
     prob = beam_result[0]
-    beam_size = 3
     for i in xrange(len(gen_data)):
         print "\n*******************************************************\n"
         print "src:", ' '.join([src_dict.get(w) for w in gen_data[i][0]]), "\n"
