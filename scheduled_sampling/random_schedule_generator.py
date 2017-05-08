@@ -1,7 +1,6 @@
 import numpy as np
 import math
 import pdb
-
 '''
 The random sampling rate for scheduled sampling algoithm, which uses devcayed
 sampling rate.
@@ -55,4 +54,3 @@ if __name__ == "__main__":
     schedule_generator = RandomScheduleGenerator("linear", 0.1, 500000)
     true_token_flag = schedule_generator.processBatch(5)
     pdb.set_trace()
-    pass
