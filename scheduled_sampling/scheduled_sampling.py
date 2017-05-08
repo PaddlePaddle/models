@@ -22,7 +22,7 @@ def gen_schedule_data(reader):
     def data_reader():
         for src_ids, trg_ids, trg_ids_next in reader():
             yield src_ids, trg_ids, trg_ids_next, \
-                  schedule_generator.processBatch(len(trg_ids))
+                  [0] + schedule_generator.processBatch(len(trg_ids) - 1)
 
     return data_reader
 
@@ -72,11 +72,13 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
             encoded_proj=enc_proj,
             decoder_state=decoder_mem)
 
-        generated_word_memory = paddle.layer.memory(
-            name='generated_word', size=1, boot_with_const_id=0)
+        gru_out_memory = paddle.layer.memory(
+            name='gru_out', size=target_dict_dim)  # , boot_with_const_id=0)
 
-        generated_word_emb = embedding(
-            input=generated_word_memory,
+        generated_word = paddle.layer.max_id(input=gru_out_memory)
+
+        generated_word_emb = paddle.layer.embedding(
+            input=generated_word,
             size=word_vector_dim,
             param_attr=paddle.attr.ParamAttr(name='_target_language_embedding'))
 
@@ -94,12 +96,11 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
             size=decoder_size)
 
         with paddle.layer.mixed(
+                name='gru_out',
                 size=target_dict_dim,
                 bias_attr=True,
                 act=paddle.activation.Softmax()) as out:
             out += paddle.layer.full_matrix_projection(input=gru_step)
-
-        max_id(input=out, name='generated_word')
 
         return out
 
@@ -150,11 +151,6 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
             type=paddle.data_type.integer_value_sequence(2))
         group_inputs.append(true_token_flags)
 
-        # For decoder equipped with attention mechanism, in training,
-        # target embeding (the groudtruth) is the data input,
-        # while encoded source sequence is accessed to as an unbounded memory.
-        # Here, the StaticInput defines a read-only memory
-        # for the recurrent_group.
         decoder = paddle.layer.recurrent_group(
             name=decoder_group_name,
             step=gru_decoder_with_attention_train,
@@ -167,15 +163,6 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
 
         return cost
     else:
-        # In generation, the decoder predicts a next target word based on
-        # the encoded source sequence and the last generated target word.
-
-        # The encoded source sequence (encoder's output) must be specified by
-        # StaticInput, which is a read-only memory.
-        # Embedding of the last generated word is automatically gotten by
-        # GeneratedInputs, which is initialized by a start mark, such as <s>,
-        # and must be included in generation.
-
         trg_embedding = paddle.layer.GeneratedInputV2(
             size=target_dict_dim,
             embedding_name='_target_language_embedding',
@@ -197,6 +184,7 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
 def main():
     paddle.init(use_gpu=False, trainer_count=1)
     is_generating = False
+    model_path_for_generating = 'params_pass_1.tar.gz'
 
     # source and target dict dim.
     dict_size = 30000
@@ -215,9 +203,13 @@ def main():
             cost=cost, parameters=parameters, update_equation=optimizer)
         # define data reader
         wmt14_reader = paddle.batch(
-            paddle.reader.shuffle(
-                paddle.dataset.wmt14.train(dict_size), buf_size=8192),
+            gen_schedule_data(
+                paddle.reader.shuffle(
+                    paddle.dataset.wmt14.train(dict_size), buf_size=8192)),
             batch_size=5)
+
+        feeding = {'source_language_word': 0, 'target_language_word': 1,
+                   'target_language_next_word': 2, 'true_token_flag': 3}
 
         # define event_handler callback
         def event_handler(event):
@@ -229,10 +221,14 @@ def main():
                 else:
                     sys.stdout.write('.')
                     sys.stdout.flush()
+            if isinstance(event, paddle.event.EndPass):
+                # save parameters
+                with gzip.open('params_pass_%d.tar.gz' % event.pass_id, 'w') as f:
+                    parameters.to_tar(f)
 
         # start to train
         trainer.train(
-            reader=wmt14_reader, event_handler=event_handler, num_passes=2)
+            reader=wmt14_reader, event_handler=event_handler, feeding=feeding, num_passes=2)
 
     # generate a english sequence to french
     else:
@@ -246,8 +242,9 @@ def main():
                 break
 
         beam_gen = seqToseq_net(source_dict_dim, target_dict_dim, is_generating)
-        # get the pretrained model, whose bleu = 26.92
-        parameters = paddle.dataset.wmt14.model()
+        # get the trained model
+        with gzip.open(model_path_for_generating, 'r') as f:
+            parameters = Parameters.from_tar(f)
         # prob is the prediction probabilities, and id is the prediction word.
         beam_result = paddle.infer(
             output_layer=beam_gen,
