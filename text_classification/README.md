@@ -10,14 +10,14 @@ DNN与CNN模型之间最大的区别在于，CNN模型中存在卷积结构，�
 
 ## DNN模型
 
-***DNN的模型结构入下图所示：***
+**DNN的模型结构入下图所示：**
 
 <p align="center">
 <img src="images/dnn_net.png" width = "90%" align="center"/><br/>
 图1. DNN文本分类模型
 </p>
 
-***可以看到，模型主要分为如下几个部分：***
+**可以看到，模型主要分为如下几个部分：**
 
 - **词向量层**：IMDB的样本由原始的英文单词组成，为了方便模型的训练，必须将英文单词转化为固定维度的向量。  
 
@@ -28,7 +28,7 @@ DNN与CNN模型之间最大的区别在于，CNN模型中存在卷积结构，�
 
 - **输出层**：输出层的神经元数量和样本的类别数一致，例如在二分类问题中，输出层会有2个神经元。通过Softmax激活函数，我们保证输出层各神经元的输出之和为1，因此第i个神经元的输出就可以认为是样本属于第i类的预测概率。
 
-***通过PaddlePaddle实现该DNN结构的代码如下：***
+**通过PaddlePaddle实现该DNN结构的代码如下：**
 
 ```python
 import paddle.v2 as paddle
@@ -77,14 +77,14 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
 
 ## CNN模型
 
-***CNN的模型结构如下图所示：***
+**CNN的模型结构如下图所示：**
 
 <p align="center">
 <img src="images/cnn_net.png" width = "90%" align="center"/><br/>
 图2. CNN文本分类模型
 </p>
 
-***可以看到，模型主要分为如下几个部分:***
+**可以看到，模型主要分为如下几个部分:**
 
 - **词向量层**：与DNN中词向量层的作用一样，将英文单词转化为固定维度的向量。如图2中所示，将得到的词向量定义为行向量，再将语料中所有的单词产生的行向量拼接在一起组成矩阵。假设词向量维度为5，语料“The cat sat on the read mat”包含7个单词，那么得到的矩阵维度为7*5。
 
@@ -94,7 +94,7 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
 
 - **全连接与输出层**：将最大池化的结果通过全连接层输出，与DNN模型一样，最后输出层的神经元个数与样本的类别数量一致，且输出之和为1。
 
-***通过PaddlePaddle实现该CNN结构的代码如下：***
+**通过PaddlePaddle实现该CNN结构的代码如下：**
 
 ```python
 import paddle.v2 as paddle
