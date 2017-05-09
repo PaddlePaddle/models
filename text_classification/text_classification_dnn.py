@@ -139,5 +139,5 @@ def dnn_infer():
 
 if __name__ == "__main__":
     paddle.init(use_gpu=False, trainer_count=4)
-    train_dnn_model(2)
+    train_dnn_model(num_pass=5)
     dnn_infer()

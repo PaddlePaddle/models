@@ -126,6 +126,6 @@ def cnn_infer():
 
 
 if __name__ == "__main__":
-    paddle.init(use_gpu=False, trainer_count=10)
-    train_cnn_model(num_pass=10)
+    paddle.init(use_gpu=False, trainer_count=4)
+    train_cnn_model(num_pass=5)
     cnn_infer()
