@@ -82,7 +82,8 @@ def train_cnn_model(num_pass):
         if isinstance(event, paddle.event.EndPass):
             result = trainer.test(reader=test_reader, feeding=feeding)
             print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
-            with gzip.open("cnn_params.tar.gz", 'w') as f:
+            with gzip.open("cnn_params_pass" + str(event.pass_id) + ".tar.gz",
+                           'w') as f:
                 parameters.to_tar(f)
 
     # begin training network
@@ -96,7 +97,7 @@ def train_cnn_model(num_pass):
     print("Training finished.")
 
 
-def cnn_infer():
+def cnn_infer(file_name):
     print("Begin to predict...")
 
     word_dict = paddle.dataset.imdb.word_dict()
@@ -104,17 +105,13 @@ def cnn_infer():
     class_dim = 2
 
     [_, output] = convolution_net(dict_dim, class_dim=class_dim)
-    parameters = paddle.parameters.Parameters.from_tar(
-        gzip.open("cnn_params.tar.gz"))
+    parameters = paddle.parameters.Parameters.from_tar(gzip.open(file_name))
 
     infer_data = []
-    infer_label_data = []
-    infer_data_num = 100
+    infer_data_label = []
     for item in paddle.dataset.imdb.test(word_dict):
         infer_data.append([item[0]])
-        infer_label_data.append(item[1])
-        if len(infer_data) == infer_data_num:
-            break
+        infer_data_label.append(item[1])
 
     predictions = paddle.infer(
         output_layer=output,
@@ -122,10 +119,12 @@ def cnn_infer():
         input=infer_data,
         field=['value'])
     for i, prob in enumerate(predictions):
-        print prob, infer_label_data[i]
+        print prob, infer_data_label[i]
 
 
 if __name__ == "__main__":
     paddle.init(use_gpu=False, trainer_count=4)
-    train_cnn_model(num_pass=5)
-    cnn_infer()
+    num_pass = 5
+    train_cnn_model(num_pass=num_pass)
+    param_file_name = "cnn_params_pass" + str(num_pass - 1) + ".tar.gz"
+    cnn_infer(file_name=param_file_name)

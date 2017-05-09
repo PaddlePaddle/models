@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sys
+import math
 import paddle.v2 as paddle
 import gzip
 
@@ -30,23 +31,26 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
         input=emb, pooling_type=paddle.pooling.Max())
 
     # two hidden layers
+    hd_layer_size = [128, 32]
+    hd_layer_init_std = [1.0 / math.sqrt(s) / 3.0 for s in hd_layer_size]
     hd1 = paddle.layer.fc(
         input=seq_pool,
-        size=128,
+        size=hd_layer_size[0],
         act=paddle.activation.Tanh(),
-        param_attr=paddle.attr.Param(initial_std=0.01))
+        param_attr=paddle.attr.Param(initial_std=hd_layer_init_std[0]))
     hd2 = paddle.layer.fc(
         input=hd1,
-        size=32,
+        size=hd_layer_size[1],
         act=paddle.activation.Tanh(),
-        param_attr=paddle.attr.Param(initial_std=0.01))
+        param_attr=paddle.attr.Param(initial_std=hd_layer_init_std[1]))
 
     # output layer
     output = paddle.layer.fc(
         input=hd2,
         size=class_dim,
         act=paddle.activation.Softmax(),
-        param_attr=paddle.attr.Param(initial_std=0.1))
+        param_attr=paddle.attr.Param(initial_std=1.0 / math.sqrt(class_dim) /
+                                     3.0))
 
     cost = paddle.layer.classification_cost(input=output, label=lbl)
 
@@ -94,7 +98,8 @@ def train_dnn_model(num_pass):
         if isinstance(event, paddle.event.EndPass):
             result = trainer.test(reader=test_reader, feeding=feeding)
             print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
-            with gzip.open("dnn_params.tar.gz", 'w') as f:
+            with gzip.open("dnn_params_pass" + str(event.pass_id) + ".tar.gz",
+                           'w') as f:
                 parameters.to_tar(f)
 
     # begin training network
@@ -108,7 +113,7 @@ def train_dnn_model(num_pass):
     print("Training finished.")
 
 
-def dnn_infer():
+def dnn_infer(file_name):
     print("Begin to predict...")
 
     word_dict = paddle.dataset.imdb.word_dict()
@@ -116,17 +121,13 @@ def dnn_infer():
     class_dim = 2
 
     [_, output] = fc_net(dict_dim, class_dim=class_dim)
-    parameters = paddle.parameters.Parameters.from_tar(
-        gzip.open("dnn_params.tar.gz"))
+    parameters = paddle.parameters.Parameters.from_tar(gzip.open(file_name))
 
     infer_data = []
-    infer_label_data = []
-    infer_data_num = 100
+    infer_data_label = []
     for item in paddle.dataset.imdb.test(word_dict):
         infer_data.append([item[0]])
-        infer_label_data.append(item[1])
-        if len(infer_data) == infer_data_num:
-            break
+        infer_data_label.append(item[1])
 
     predictions = paddle.infer(
         output_layer=output,
@@ -134,10 +135,12 @@ def dnn_infer():
         input=infer_data,
         field=['value'])
     for i, prob in enumerate(predictions):
-        print prob, infer_label_data[i]
+        print prob, infer_data_label[i]
 
 
 if __name__ == "__main__":
     paddle.init(use_gpu=False, trainer_count=4)
-    train_dnn_model(num_pass=5)
-    dnn_infer()
+    num_pass = 5
+    train_dnn_model(num_pass=num_pass)
+    param_file_name = "dnn_params_pass" + str(num_pass - 1) + ".tar.gz"
+    dnn_infer(file_name=param_file_name)
