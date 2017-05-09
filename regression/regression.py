@@ -98,10 +98,9 @@ def main():
                     print "\nPass %d, Batch %d, Cost %f, %s" % (
                         event.pass_id, event.batch_id, event.cost)
             if isinstance(event, paddle.event.EndPass):
-                #result = trainer.test(
-                #    reader=paddle.batch(paddle.dataset.wmt14.test(dict_size), batch_size=2))
-                #print "Test %d, Cost %f" % (event.pass_id, result.cost)
-                print "successfully end"
+                result = trainer.test(reader=paddle.batch(
+                    paddle.dataset.wmt14.test(dict_size), batch_size=2))
+                print "Test %d, Cost %f" % (event.pass_id, result.cost)
 
         # start to train
         trainer.train(
