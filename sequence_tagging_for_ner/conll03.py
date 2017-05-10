@@ -81,23 +81,24 @@ def corpus_reader(filename='data/train'):
                 else:
                     segs = line.strip().split()
                     sentence.append(segs[0])
-                    labels.append(segs[-1])
+                    # transform from I-TYPE to BIO schema
+                    if segs[-1] != 'O' and (len(labels) == 0 or
+                                            labels[-1][1:] != segs[-1][1:]):
+                        labels.append('B' + segs[-1][1:])
+                    else:
+                        labels.append(segs[-1])
 
         f.close()
 
     return reader
 
 
-def reader_creator(corpus_reader=corpus_reader('data/train'),
-                   word_dict=load_dict('data/vocab.txt'),
-                   label_dict=load_dict('data/target.txt')):
+def reader_creator(corpus_reader, word_dict, label_dict):
     """
     Conll03 train set creator.
 
-    Because the training dataset is not free, the test dataset is used for
-    training. It returns a reader creator, each sample in the reader is nine
-    features, including sentence sequence, predicate, predicate context,
-    predicate context flag and tagged sequence.
+    The dataset can be obtained according to http://www.clips.uantwerpen.be/conll2003/ner/.
+    It returns a reader creator, each sample in the reader includes sentence sequence and tagged sequence.
 
     :return: Training reader creator
     :rtype: callable
@@ -105,7 +106,6 @@ def reader_creator(corpus_reader=corpus_reader('data/train'),
 
     def reader():
         for sentence, labels in corpus_reader():
-            #word_idx = [word_dict.get(w, UNK_IDX) for w in sentence]
             word_idx = [
                 word_dict.get(canonicalize_word(w, word_dict), UNK_IDX)
                 for w in sentence
@@ -116,15 +116,19 @@ def reader_creator(corpus_reader=corpus_reader('data/train'),
     return reader
 
 
-def train():
+def train(data_file='data/train',
+          vocab_file='data/vocab.txt',
+          target_file='data/target.txt'):
     return reader_creator(
-        corpus_reader('data/train'),
-        word_dict=load_dict('data/vocab.txt'),
-        label_dict=load_dict('data/target.txt'))
+        corpus_reader(data_file),
+        word_dict=load_dict(vocab_file),
+        label_dict=load_dict(target_file))
 
 
-def test():
+def test(data_file='data/test',
+         vocab_file='data/vocab.txt',
+         target_file='data/target.txt'):
     return reader_creator(
-        corpus_reader('data/test'),
-        word_dict=load_dict('data/vocab.txt'),
-        label_dict=load_dict('data/target.txt'))
+        corpus_reader(data_file),
+        word_dict=load_dict(vocab_file),
+        label_dict=load_dict(target_file))
