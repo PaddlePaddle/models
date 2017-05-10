@@ -74,7 +74,7 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
             decoder_state=decoder_mem)
 
         gru_out_memory = paddle.layer.memory(
-            name='gru_out', size=target_dict_dim)  # , boot_with_const_id=0)
+            name='gru_out', size=target_dict_dim)
 
         generated_word = paddle.layer.max_id(input=gru_out_memory)
 
