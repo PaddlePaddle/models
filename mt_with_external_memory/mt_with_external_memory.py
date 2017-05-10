@@ -11,6 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+    This python script is a example model configuration for neural machine
+    translation with external memory, based on PaddlePaddle V2 APIs.
+
+    The "external memory" refers to two types of memories.
+    - Unbounded memory: i.e. vanilla attention mechanism in Seq2Seq.
+    - Bounded memory: i.e. external memory in NTM.
+    Both types of external memories are exploited to enhance the vanilla
+    Seq2Seq neural machine translation.
+
+    The implementation largely followers the paper
+    `Memory-enhanced Decoder for Neural Machine Translation
+    <https://arxiv.org/abs/1606.02003>`_,
+    with some minor differences (will be listed in README.md).
+
+    For details about "external memory", please also refer to
+    `Neural Turing Machines <https://arxiv.org/abs/1410.5401>`_.
+"""
 
 import paddle.v2 as paddle
 import sys
@@ -27,17 +45,23 @@ infer_data_num = 3
 
 class ExternalMemory(object):
     """
-    External neural memory class, with differentiable write/read heads.
+    External neural memory class.
 
-    A simplified Neural Turing Machine (NTM) with only content-based
+    A simplified Neural Turing Machines (NTM) with only content-based
     addressing (including content addressing and interpolation, but excluding
-    convolutional shift and sharpening). It can serve as an external memory
-    bank, with differential write/read head controllers responsible for storing
-    and reading information flow dynamically as the model needs. Here, simple
-    feedforward neural networks are used as the write/read head controllers.
+    convolutional shift and sharpening). It serves as an external differential
+    memory bank, with differential write/read head controllers to store
+    and read information dynamically as needed. Simple feedforward networks are
+    used as the write/read head controllers.
+
+    The ExternalMemory class could be utilized by many neural network structures
+    to easily expand their memory bandwidth and accomplish a long-term memory
+    handling. Besides, some existing mechanism can be realized directly with
+    the ExternalMemory class, e.g. the attention mechanism in Seq2Seq (i.e. an
+    unbounded external memory).
     
-    For more techinical details, please refer to the 
-    `NTM paper <https://arxiv.org/abs/1410.5401>`_.
+    For more details, please refer to
+    `Neural Turing Machines <https://arxiv.org/abs/1410.5401>`_.
 
     :param name: Memory name.
     :type name: basestring
@@ -72,7 +96,7 @@ class ExternalMemory(object):
 
     def __content_addressing__(self, key_vector):
         """
-        Get head's addressing weight via content-based addressing.
+        Get write/read head's addressing weights via content-based addressing.
         """
         # content-based addressing: a=tanh(W*M + U*key)
         key_projection = paddle.layer.fc(
@@ -126,7 +150,7 @@ class ExternalMemory(object):
 
     def __get_addressing_weight__(self, key_vector):
         """
-        Get final addressing weight for read/write heads, including content
+        Get final addressing weights for read/write heads, including content
         addressing and interpolation.
         """
         # current content-based addressing
@@ -138,8 +162,9 @@ class ExternalMemory(object):
     def write(self, write_key):
         """
         Write head for external memory.
+        It cannot be called if "readonly" set True.
 
-        :param write_key: Key vector for write head to generate writing
+        :param write_key: Key vector for write heads to generate writing
                           content and addressing signals.
         :type write_key: LayerOutput
         """
@@ -185,7 +210,7 @@ class ExternalMemory(object):
         :param write_key: Key vector for read head to generate addressing
                           signals.
         :type write_key: LayerOutput
-        :return: Content read from external memory.
+        :return: Content (vector) read from external memory.
         :rtype: LayerOutput
         """
         # get addressing weight for write head
@@ -220,41 +245,44 @@ def bidirectional_gru_encoder(input, size, word_vec_dim):
 def memory_enhanced_decoder(input, target, initial_state, source_context, size,
                             word_vec_dim, dict_size, is_generating, beam_size):
     """
-    Memory enhanced GRU decoder.
+    GRU sequence decoder enhanced with external memory.
 
     The "external memory" refers to two types of memories.
-    - Unbounded memory: i.e. vanilla attention mechanism.
+    - Unbounded memory: i.e. attention mechanism in Seq2Seq.
     - Bounded memory: i.e. external memory in NTM.
     Both types of external memories can be implemented with
-    ExternalMemory class, and are both included in this enhanced seq2seq model.
+    ExternalMemory class, and are both exploited in this enhanced RNN decoder.
 
-    Here, the bounded memory takes the place of the "state" vector in RNNs. The
-    state vector in RNNs is a very successfull design enriching the model with
-    capability to "remember" things in the long run (across multiple sequence
-    steps). However, such a vector state is somewhat limited to very small
-    memory bandwith. A bounded memory introduced here could easily increase the
-    memory capacity under linear complexity cost (rather than quadratic 
-    with vector state). Besides, attention mechasim (with unbounded memory) also
-    serves as a exteranl memory bank encoding source input information.
+    The vanilla RNN/LSTM/GRU also has a narrow memory mechanism, namely the
+    hidden state vector (or cell state in LSTM) carrying information through
+    a span of sequence time, which is a successful design enriching the model
+    with capability to "remember" things in the long run. However, such a vector
+    state is somewhat limited to a very narrow memory bandwidth. External memory
+    introduced here could easily increase the memory capacity with linear
+    complexity cost (rather than quadratic for vector state).
+
+    This enhanced decoder expands its "memory passage" through two
+    ExternalMemory objects:
+    - Bounded memory for handling long-term information exchange within decoder
+      itself. A direct expansion of traditional "vector" state.
+    - Unbounded memory for handling source language's token-wise information.
+      Exactly the attention mechanism over Seq2Seq.
     
     Notice that we take the attention mechanism as a special form of external
-    memory, with readonly memory bank initialized with encoder states, and a
-    content-based addressing read head responsable for generating attentional
-    context. From this view point, we could have a better understanding of
-    attention mechanism and other types of external memory, and it also enable a
-    concise and unified implementation for them.
+    memory, with read-only memory bank initialized with encoder states, and a
+    read head with content-based addressing (attention). From this view point,
+    we arrive at a better understanding of attention mechanism itself and other
+    external memory, and a concise and unified implementation for them.
 
-    For more techinical details about external memory, please refer to
+    For more details about external memory, please refer to
     `Neural Turing Machines <https://arxiv.org/abs/1410.5401>`_.
 
-    For more techinical details about this memory-enhanced decoder, please
+    For more details about this memory-enhanced decoder, please
     refer to `Memory-enhanced Decoder for Neural Machine Translation 
     <https://arxiv.org/abs/1606.02003>`_. This implementation is highly
-    correlated to this paper with minor differences.
-
-    Also, we reversed the read-write order, for skipping the potential problems
-    in PaddlePaddle V2 APIs.
-    See `issue <https://github.com/PaddlePaddle/Paddle/issues/2061>`_.
+    correlated to this paper, but with minor differences (e.g. put "write"
+    before "read" to bypass a potential bug in V2 APIs. See
+    (`issue <https://github.com/PaddlePaddle/Paddle/issues/2061>`_).
     """
     # prepare initial bounded and unbounded memory
     bounded_memory_slot_init = paddle.layer.fc(
@@ -346,38 +374,19 @@ def memory_enhanced_seq2seq(encoder_input, decoder_input, decoder_target,
     Seq2Seq Model enhanced with external memory.
 
     The "external memory" refers to two types of memories.
-    - Unbounded memory: i.e. vanilla attention mechanism.
+    - Unbounded memory: i.e. attention mechanism in Seq2Seq.
     - Bounded memory: i.e. external memory in NTM.
     Both types of external memories can be implemented with
-    ExternalMemory class, and are both included in this enhanced seq2seq model.
+    ExternalMemory class, and are both exploited in this Seq2Seq model.
 
-    Here, the bounded memory takes the place of the "state" vector in RNNs. The
-    state vector in RNNs is a very successfull design enriching the model with
-    capability to "remember" things in the long run (across multiple sequence
-    steps). However, such a vector state is somewhat limited to very small
-    memory bandwith. A bounded memory introduced here could easily increase the
-    memory capacity under linear complexity cost (rather than quadratic 
-    with vector state). Besides, attention mechasim (with unbounded memory) also
-    serves as a exteranl memory bank encoding source input information.
-    
-    Notice that we take the attention mechanism as a special form of external
-    memory, with readonly memory bank initialized with encoder states, and a
-    content-based addressing read head responsable for generating attentional
-    context. From this view point, we could have a better understanding of
-    attention mechanism and other types of external memory, and it also enable a
-    concise and unified implementation for them.
+    Please refer to the function comments of memory_enhanced_decoder(...).
 
-    For more techinical details about external memory, please refer to
+    For more details about external memory, please refer to
     `Neural Turing Machines <https://arxiv.org/abs/1410.5401>`_.
 
-    For more techinical details about this memory-enhanced decoder, please
+    For more details about this memory-enhanced Seq2Seq, please
     refer to `Memory-enhanced Decoder for Neural Machine Translation 
-    <https://arxiv.org/abs/1606.02003>`_. This implementation is highly
-    correlated to this paper with minor differences.
-
-    Also, we reversed the read-write order, for skipping the potential problems
-    in PaddlePaddle V2 APIs.
-    See `issue <https://github.com/PaddlePaddle/Paddle/issues/2061>`_.
+    <https://arxiv.org/abs/1606.02003>`_.
     """
     # encoder
     context_encodings, sequence_encoding = bidirectional_gru_encoder(
@@ -395,9 +404,9 @@ def memory_enhanced_seq2seq(encoder_input, decoder_input, decoder_target,
         beam_size=beam_size)
 
 
-def parse_beam_result(beam_result, dictionary):
+def parse_beam_search_result(beam_result, dictionary):
     """
-    Beam result parser.
+    Beam search result parser.
     """
     sentence_list = []
     sentence = []
@@ -488,8 +497,6 @@ def train(num_passes):
             if event.batch_id % 10 == 0:
                 print "Pass: %d, Batch: %d, TrainCost: %f, %s" % (
                     event.pass_id, event.batch_id, event.cost, event.metrics)
-                with gzip.open("params.tar.gz", 'w') as f:
-                    parameters.to_tar(f)
             else:
                 sys.stdout.write('.')
                 sys.stdout.flush()
@@ -548,9 +555,10 @@ def infer():
 
     # parse beam result and print 
     source_dict, target_dict = paddle.dataset.wmt14.get_dict(dict_size)
-    beam_probs, beam_sentences = parse_beam_result(beam_result, target_dict)
+    beam_probs, beam_sentences = parse_beam_search_result(beam_result,
+                                                          target_dict)
     for i in xrange(infer_data_num):
-        print "\n*******************************************************\n"
+        print "\n***************************************************\n"
         print "src:", ' '.join(
             [source_dict.get(word) for word in infer_data[i][0]]), "\n"
         for j in xrange(beam_size):
@@ -558,7 +566,7 @@ def infer():
 
 
 def main():
-    paddle.init(use_gpu=False, trainer_count=1)
+    paddle.init(use_gpu=False, trainer_count=8)
     train(num_passes=1)
     infer()
 
