@@ -54,7 +54,7 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
 
     cost = paddle.layer.classification_cost(input=output, label=lbl)
 
-    return cost, output
+    return cost, output, lbl
 
 
 def train_dnn_model(num_pass):
@@ -73,7 +73,8 @@ def train_dnn_model(num_pass):
         lambda: paddle.dataset.imdb.test(word_dict), batch_size=100)
 
     # network config
-    [cost, _] = fc_net(dict_dim, class_dim=class_dim)
+    [cost, output, label] = fc_net(dict_dim, class_dim=class_dim)
+
     # create parameters
     parameters = paddle.parameters.create(cost)
     # create optimizer
@@ -81,6 +82,9 @@ def train_dnn_model(num_pass):
         learning_rate=2e-3,
         regularization=paddle.optimizer.L2Regularization(rate=8e-4),
         model_average=paddle.optimizer.ModelAverage(average_window=0.5))
+
+    # add auc evaluator
+    paddle.evaluator.auc(input=output, label=label)
 
     # create trainer
     trainer = paddle.trainer.SGD(
@@ -120,7 +124,7 @@ def dnn_infer(file_name):
     dict_dim = len(word_dict)
     class_dim = 2
 
-    [_, output] = fc_net(dict_dim, class_dim=class_dim)
+    [_, output, _] = fc_net(dict_dim, class_dim=class_dim)
     parameters = paddle.parameters.Parameters.from_tar(gzip.open(file_name))
 
     infer_data = []

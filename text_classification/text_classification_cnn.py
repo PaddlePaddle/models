@@ -38,7 +38,7 @@ def convolution_net(input_dim, class_dim=2, emb_dim=128, hid_dim=128):
 
     cost = paddle.layer.classification_cost(input=output, label=lbl)
 
-    return cost, output
+    return cost, output, lbl
 
 
 def train_cnn_model(num_pass):
@@ -57,7 +57,7 @@ def train_cnn_model(num_pass):
         lambda: paddle.dataset.imdb.test(word_dict), batch_size=100)
 
     # network config
-    [cost, _] = convolution_net(dict_dim, class_dim=class_dim)
+    [cost, output, label] = convolution_net(dict_dim, class_dim=class_dim)
     # create parameters
     parameters = paddle.parameters.create(cost)
     # create optimizer
@@ -65,6 +65,9 @@ def train_cnn_model(num_pass):
         learning_rate=2e-3,
         regularization=paddle.optimizer.L2Regularization(rate=8e-4),
         model_average=paddle.optimizer.ModelAverage(average_window=0.5))
+
+    # add auc evaluator
+    paddle.evaluator.auc(input=output, label=label)
 
     # create trainer
     trainer = paddle.trainer.SGD(
@@ -104,7 +107,7 @@ def cnn_infer(file_name):
     dict_dim = len(word_dict)
     class_dim = 2
 
-    [_, output] = convolution_net(dict_dim, class_dim=class_dim)
+    [_, output, _] = convolution_net(dict_dim, class_dim=class_dim)
     parameters = paddle.parameters.Parameters.from_tar(gzip.open(file_name))
 
     infer_data = []
