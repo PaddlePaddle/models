@@ -1,13 +1,85 @@
 
 # 回归问题
 
-回归问题是机器学习中的一个经典问题，主要目的是构建一个函数将输入数据与输出数据关联起来。本示例中利用机器翻译中的[WMT-14](https://github.com/PaddlePaddle/book/tree/develop/08.machine_translation#数据介绍)，构建了一个相同结构的网络，对源数据与目标数据进行编码。迭代更新源数据网络的参数，来拟合目标数据的编码，完成了一个简单的回归问题。经典的线性回归，请参考[fit_a_line](https://github.com/PaddlePaddle/book/tree/develop/01.fit_a_line).
+回归问题是机器学习中的一个经典问题，主要目的是构建一个函数将输入数据与输出数据关联起来。本示例中拟合两条语意相近的语句，通过构建了一个相同结构的网络，对源数据与目标数据进行编码。迭代更新源数据网络的参数，来拟合目标数据的编码，完成了一个简单的回归问题。用户可以利用机器翻译中的[WMT-14](https://github.com/PaddlePaddle/book/tree/develop/08.machine_translation#数据介绍)数据集来测试该配置文件，经典的线性回归，请参考[fit_a_line](https://github.com/PaddlePaddle/book/tree/develop/01.fit_a_line).
 
 ## 数据准备
 
-本示例使用[WMT-14](http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/)数据集，因为完整的数据集数据量较大，使用PaddlePaddle接口paddle.dataset.wmt14中默认提供了一个经过预处理的[较小规模的数据集](http://paddlepaddle.bj.bcebos.com/demo/wmt_shrinked_data/wmt14.tgz)。
+本示例模拟的是两条语句相近的两条语句的编码相似，具体示例如下图所示，左右两端语句的语意相近，中间以 `\t` 分割。
+用户需要自行编写数据读取接口,使用其它数据来进行测试
 
-该数据集有193319条训练数据，6003条测试数据，词典长度为30000。因为数据规模限制，使用该数据集训练出来的模型效果无法保证
+<p align="center">
+<img src="image/data.png" width=500><br/>
+图1. 数据示例
+</p>
+
+本示例使用的是文本数据，需要先用词典进行编码，生成一个整数序列。编写的数据读取接口实际上就是一个Python生成器，该生成器负责解析数据文件中的每一行内容，然后传送给输入层 `paddle.layer.data` ，该输入层的输入数据类型为 `paddle.data_type.integer_value_sequence` 。该Python生成器的需要包含一个生成词典的函数和生成适合输入的Python list的函数。
+```python
+def __read_to_dict__(tar_file, dict_size):
+    def __to_dict__(fd, size):
+        out_dict = dict()
+        for line_count, line in enumerate(fd):
+            if line_count < size:
+                out_dict[line.strip()] = line_count
+            else:
+                break
+        return out_dict
+    with tarfile.open(tar_file, mode='r') as f:
+        names = [
+            each_item.name for each_item in f
+            if each_item.name.endswith("dict")
+        ]
+        assert len(names) == 1
+        src_dict = __to_dict__(f.extractfile(names[0]), dict_size)
+    return src_dict
+  ```
+  ```python
+def reader_creator(tar_file, file_name, dict_size):
+    def reader():
+        src_dict = __read_to_dict__(tar_file, dict_size)
+        with tarfile.open(tar_file, mode='r') as f:
+            names = [
+                each_item.name for each_item in f
+                if each_item.name.endswith(file_name)
+            ]
+            for name in names:
+                for line in f.extractfile(name):
+                    line_split = line.strip().split('\t')
+                    if len(line_split) != 2:
+                        continue
+                    src_seq = line_split[0]  # one source sequence
+                    src_words = src_seq.split()
+                    src_ids = [
+                        src_dict.get(w, UNK_IDX)
+                        for w in [START] + src_words + [END]
+                    ]
+                    trg_seq = line_split[1]  # one target sequence
+                    trg_words = trg_seq.split()
+                    trg_ids = [src_dict.get(w, UNK_IDX) for w in trg_words]
+
+                    # remove sequence whose length > 80 in training mode
+                    if len(src_ids) > 80 or len(trg_ids) > 80:
+                        continue
+                    trg_ids_next = trg_ids + [src_dict[END]]
+                    trg_ids = [src_dict[START]] + trg_ids
+
+                    yield src_ids, trg_ids, trg_ids_next
+    return reader
+
+def train(dict_size):
+    return reader_creator('train_data.tar.gz', 'train', dict_size)
+  ```
+
+本示例在第一次使用时可以采用[WMT-14](http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/)数据集，因为完整的数据集数据量较大，使用PaddlePaddle接口paddle.dataset.wmt14中默认提供了一个经过预处理的[较小规模的数据集](http://paddlepaddle.bj.bcebos.com/demo/wmt_shrinked_data/wmt14.tgz)。
+
+使用方式如下：
+
+  ```python
+   data_reader = paddle.batch(
+        paddle.reader.shuffle(
+            paddle.dataset.wmt14.train(dict_size), buf_size=8192),
+        batch_size=5)
+  ```
 
 ## 模型概览
 
@@ -27,7 +99,7 @@
 
 <p align="center">
 <img src="image/encode.png" width=500><br/>
-图5. 源序列编码编码器
+图2. 源序列编码编码器
 </p>
 
 目标序列的编码器结果与源序列编码器保持一致
@@ -115,9 +187,9 @@
 
     ```python
     if not is_generating:
-        wmt14_reader = paddle.batch(
+        data_reader = paddle.batch(
             paddle.reader.shuffle(
-                paddle.dataset.wmt14.train(dict_size=dict_size), buf_size=8192),
+                data_process.train(dict_size), buf_size=8192),
             batch_size=5)
     ```
 
@@ -144,7 +216,7 @@
     ```python
     # start to train
     trainer.train(
-        reader=wmt14_reader, event_handler=event_handler, num_passes=2)
+        reader=data_reader, event_handler=event_handler, num_passes=2)
     ```
 
 ## 运行与输出
@@ -163,13 +235,10 @@
 
 模型训练过程输出形式为：
 ```
-Pass 0, Batch 0, Cost 199.840833
-Pass 0, Batch 100, Cost 146.913696
-Pass 0, Batch 200, Cost 33.758130
-Pass 0, Batch 300, Cost 30.043756
-Pass 0, Batch 400, Cost 57.393976
-Pass 0, Batch 500, Cost 54.718372
-Pass 0, Batch 600, Cost 10.710149
-Pass 0, Batch 700, Cost 6.287951
+Pass 0, Batch 0, Cost 283.923291
+Pass 0, Batch 100, Cost 6.700358
+Pass 0, Batch 200, Cost 0.154797
+Pass 0, Batch 300, Cost 0.185172
+Pass 0, Batch 400, Cost 0.095839
 ```
 可以观察到模型训练结果一直在下降
