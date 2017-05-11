@@ -1,84 +1,62 @@
-#!/usr/bin/env python
 # -*- encoding:utf-8 -*-
-# Copyright (c) 2016 PaddlePaddle Authors. All Rights Reserved
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 import math
 import paddle.v2 as paddle
 
 
-def network_conf(hidden_size, embed_size, dict_size, is_train):
-    def wordemb(inlayer):
-        wordemb = paddle.layer.table_projection(
-            input=inlayer,
-            size=embed_size,
-            param_attr=paddle.attr.Param(
-                name="_proj",
-                initial_std=0.001,
-                learning_rate=1,
-                l2_rate=0,
-                sparse_update=True))
-        return wordemb
+def network_conf(hidden_size, embedding_size, dict_size, is_train):
 
-    firstword = paddle.layer.data(
+    first_word = paddle.layer.data(
         name="firstw", type=paddle.data_type.integer_value(dict_size))
-    secondword = paddle.layer.data(
+    second_word = paddle.layer.data(
         name="secondw", type=paddle.data_type.integer_value(dict_size))
-    thirdword = paddle.layer.data(
+    third_word = paddle.layer.data(
         name="thirdw", type=paddle.data_type.integer_value(dict_size))
-    fourthword = paddle.layer.data(
+    fourth_word = paddle.layer.data(
         name="fourthw", type=paddle.data_type.integer_value(dict_size))
-    nextword = paddle.layer.data(
+    next_word = paddle.layer.data(
         name="fifthw", type=paddle.data_type.integer_value(dict_size))
 
-    Efirst = wordemb(firstword)
-    Esecond = wordemb(secondword)
-    Ethird = wordemb(thirdword)
-    Efourth = wordemb(fourthword)
+    embed_param_attr = paddle.attr.Param(
+        name="_proj", initial_std=0.001, learning_rate=1, l2_rate=0)
+    first_embedding = paddle.layer.embedding(
+        input=first_word, size=embedding_size, param_attr=embed_param_attr)
+    second_embedding = paddle.layer.embedding(
+        input=second_word, size=embedding_size, param_attr=embed_param_attr)
+    third_embedding = paddle.layer.embedding(
+        input=third_word, size=embedding_size, param_attr=embed_param_attr)
+    fourth_embedding = paddle.layer.embedding(
+        input=fourth_word, size=embedding_size, param_attr=embed_param_attr)
 
-    contextemb = paddle.layer.concat(input=[Efirst, Esecond, Ethird, Efourth])
+    context_embedding = paddle.layer.concat(input=[
+        first_embedding, second_embedding, third_embedding, fourth_embedding
+    ])
 
     hidden_layer = paddle.layer.fc(
-        input=contextemb,
+        input=context_embedding,
         size=hidden_size,
-        act=paddle.activation.Sigmoid(),
+        act=paddle.activation.Tanh(),
         layer_attr=paddle.attr.Extra(drop_rate=0.5),
         bias_attr=paddle.attr.Param(learning_rate=1),
         param_attr=paddle.attr.Param(
-            initial_std=1. / math.sqrt(embed_size * 8), learning_rate=1))
-
-    predictword = paddle.layer.fc(
-        input=hidden_layer,
-        size=dict_size,
-        bias_attr=paddle.attr.Param(learning_rate=1),
-        act=paddle.activation.Softmax())
+            initial_std=1. / math.sqrt(embedding_size * 8), learning_rate=1))
 
     if is_train == True:
         cost = paddle.layer.nce(
-            name='softmax',
-            input=predictword,
-            label=nextword,
+            name='nce',
+            input=hidden_layer,
+            label=next_word,
             num_classes=dict_size,
-            num_neg_samples=10, )
+            act=paddle.activation.Sigmoid(),
+            num_neg_samples=25,
+            neg_distribution=None)
         return cost
     else:
         with paddle.layer.mixed(
                 size=dict_size,
                 act=paddle.activation.Softmax(),
-                bias_attr=paddle.attr.Param(
-                    name='_softmax.wbias')) as prediction:
+                bias_attr=paddle.attr.Param(name='_nce.wbias')) as prediction:
             prediction += paddle.layer.trans_full_matrix_projection(
-                input=predictword,
-                param_attr=paddle.attr.Param(name='_softmax.w0'))
+                input=hidden_layer,
+                param_attr=paddle.attr.Param(name='_nce.w0'))
 
         return prediction
