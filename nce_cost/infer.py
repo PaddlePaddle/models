@@ -60,7 +60,6 @@ def main():
         print 'Ground Truth Output: ' + idx_word_dict[label]
         print 'Predict Output: ' + idx_word_dict[prob.argsort(
             kind='heapsort', axis=0)[-1]]
-        print prob.argsort(kind='heapsort', axis=0)[-1]
         print
 
 
