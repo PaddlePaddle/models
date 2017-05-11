@@ -1,21 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-########################################################################
-# 
-# Copyright (c) 2017 Baidu.com, Inc. All Rights Reserved
-# 
-########################################################################
-"""
-File: ngram_language_model.py
-Author: chengxiaohua(chengxiaohua@baidu.com)
-Date: 2017/05/02 15:13:21
-"""
-import sqlite3
 import paddle.v2 as paddle
 import math
 import os
 import sys
-import ptb
 import gzip
 import numpy as np
 
@@ -26,38 +14,33 @@ lr = 0.1
 max_word_num = 40
 
 
-def gen_embedding_layer(layer_name, voc_dim):
-    return paddle.layer.data(
-        name=layer_name, type=paddle.data_type.integer_value(voc_dim))
-
-
-def word_embed(in_layer):
-    word_embed = paddle.layer.table_projection(
-        input=in_layer,
-        size=word_dim,
+def gen_word_embedding(layer_name, voc_dim):
+    word_id = paddle.layer.data(
+        layer_name, type=paddle.data_type.integer_value(voc_dim))
+    word_embedding = paddle.layer.embedding(
+        input=word_id,
+        size=voc_dim,
         param_attr=paddle.attr.Param(
             name="emb", initial_std=0.001, learning_rate=lr, l2_rate=0))
-    return word_embed
+
+    return word_embedding
 
 
-def ngrm_network(voc_dim):
-    firWord = gen_embedding_layer("firWord", voc_dim)
-    secWord = gen_embedding_layer("secWord", voc_dim)
-    thirdWord = gen_embedding_layer("thirdWord", voc_dim)
-    forthWord = gen_embedding_layer("forthWord", voc_dim)
-    fifthWord = gen_embedding_layer("fifthWord", voc_dim)
+def ngram_network(voc_dim):
+    first_embedding = gen_word_embedding("first_word", voc_dim)
+    second_embedding = gen_word_embedding("second_word", voc_dim)
+    third_embedding = gen_word_embedding("third_word", voc_dim)
+    forth_embedding = gen_word_embedding("forth_word", voc_dim)
+    fifth_embedding = gen_word_embedding("fifth_word", voc_dim)
 
-    fir = word_embed(firWord)
-    sec = word_embed(secWord)
-    third = word_embed(thirdWord)
-    forth = word_embed(forthWord)
-    fifth = word_embed(firWord)
-
-    embedding = paddle.layer.concat(input=[fir, sec, third, forth, fifth])
+    embedding = paddle.layer.concat(input=[
+        first_embedding, second_embedding, third_embedding, forth_embedding,
+        fifth_embedding
+    ])
 
     hidden1 = paddle.layer.fc(
         input=embedding,
-        act=paddle.activation.Sigmoid(),
+        act=paddle.activation.Tanh(),
         size=hidden_dim,
         bias_attr=paddle.attr.Param(learning_rate=2 * lr),
         layer_attr=paddle.attr.Extra(drop_rate=0.5),
@@ -75,14 +58,19 @@ def ngrm_network(voc_dim):
 
 
 def train_model(word_dict, voc_dim):
-    nxtWord = gen_embedding_layer("nxtWord", voc_dim)
-    output = ngrm_network(voc_dim)
+    #treate the next_word as label
+    nxtWord = paddle.layer.data(
+        name="next_word", type=paddle.data_type.integer_value(voc_dim))
+    #construct ngram network
+    output = ngram_network(voc_dim)
 
+    #callback function when meet some conditions
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
             if event.batch_id % 100 == 0:
                 result = trainer.test(
-                    paddle.batch(ptb.ngram_test(word_dict, 6), batch_size))
+                    paddle.batch(
+                        paddle.dataset.imikolov.test(word_dict, 6), batch_size))
                 print("Pass %d, Batch %d, Cost %f, %s, Testing metrics %s" %
                       (event.pass_id, event.batch_id, event.cost, event.metrics,
                        result.metrics))
@@ -92,6 +80,7 @@ def train_model(word_dict, voc_dim):
             with gzip.open(model_name, 'w') as f:
                 parameters.to_tar(f)
 
+    #calc train loss
     cost = paddle.layer.classification_cost(input=output, label=nxtWord)
     parameters = paddle.parameters.create(cost)
 
@@ -107,13 +96,24 @@ def train_model(word_dict, voc_dim):
 
     trainer = paddle.trainer.SGD(cost, parameters, adadelta_optimizer)
     trainer.train(
-        paddle.batch(ptb.ngram_train(word_dict, 6), batch_size),
+        paddle.batch(paddle.dataset.imikolov.train(word_dict, 6), batch_size),
         num_passes=30,
         event_handler=event_handler)
 
 
-def predict(word_dict, voc_dim):
-    prediction_layer = ngrm_network(voc_dim)
+def generate_sequence(word_dict, voc_dim):
+    """
+    the generating process as follows:
+      1 construct the ngram netword
+      2 read the model which is trained before
+      3 read the test data by ins_iter which is a five-element couple
+      4 generate the next word according to the last four words 
+          until the word count is equal to max_word_num or 
+          the next word is <e>
+      5 so far, we have completed one five-element couple predicting,
+        and then continue to iterate the next couple
+    """
+    prediction_layer = ngram_network(voc_dim)
 
     with gzip.open('./models/model_pass_00000.tar.gz') as f:
         parameters = paddle.parameters.Parameters.from_tar(f)
@@ -124,7 +124,7 @@ def predict(word_dict, voc_dim):
     for ins in ins_iter():
         gen_seq = []
         cur_predict_word = None
-        pre_n_words = [ins[-i] for i in xrange(4, 0, -1)]
+        pre_n_words = [ins[-i] for i in xrange(5, 0, -1)]
         while len(gen_seq) < max_word_num:
             infer_res = paddle.infer(
                 output_layer=prediction_layer,
@@ -135,19 +135,19 @@ def predict(word_dict, voc_dim):
             if cur_predict_word == word_dict['<e>']:
                 break
             gen_seq.append(cur_predict_word)
-            pre_n_words = pre_n_words[-3:] + [cur_predict_word]
+            pre_n_words = pre_n_words[-4:] + [cur_predict_word]
         print [idx_word_dict[idx] for idx in gen_seq]
 
 
 def process(is_generating):
-    paddle.init(use_gpu=False, trainer_count=4)
+    paddle.init(use_gpu=False, trainer_count=1)
     word_dict = paddle.dataset.imikolov.build_dict()
     voc_dim = len(word_dict)
 
     if not is_generating:
         train_model(word_dict, voc_dim)
     elif is_generating:
-        predict(word_dict, voc_dim)
+        generate_sequence(word_dict, voc_dim)
 
 
 def usage_helper():
