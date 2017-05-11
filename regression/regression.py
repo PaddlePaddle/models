@@ -20,50 +20,36 @@ def encode_net(input_dict_dim, word_emb_dim, hidden_dim, is_static=False):
                 False: The parameters will be updated during the training process
     """
 
+    if is_static:
+        hidden_input_w = "_hidden_input.w2"
+        hidden_input_bias = "_hidden_input.bias2"
+    else:
+        hidden_input_w = "_hidden_input.w1"
+        hidden_input_bias = "_hidden_input.bias1"
+
     input_data = paddle.layer.data(
         name='input_word',
         type=paddle.data_type.integer_value_sequence(input_dict_dim))
 
-    if is_static:
-        input_emb = paddle.layer.embedding(
-            input=input_data,
-            size=word_emb_dim,
-            param_attr=paddle.attr.Param(name='_emb_basic2', is_static=True))
+    input_emb = paddle.layer.embedding(
+        input=input_data,
+        size=word_emb_dim,
+        param_attr=paddle.attr.Param(name='_emb_basic', is_static=is_static))
 
-        input_vec = paddle.layer.pooling(
-            input=input_emb,
-            pooling_type=paddle.pooling.Sum(),
-            bias_attr=paddle.attr.ParameterAttribute(
-                name='_avg.bias_basic2', is_static=True))
+    input_vec = paddle.layer.pooling(
+        input=input_emb,
+        pooling_type=paddle.pooling.Sum(),
+        bias_attr=paddle.attr.ParameterAttribute(
+            name='_avg.bias_basic', is_static=is_static))
 
-        hidden_input = paddle.layer.fc(
-            input=input_vec,
-            size=hidden_dim,
-            act=paddle.activation.Tanh(),
-            param_attr=paddle.attr.Param(
-                name='_hidden_input.w2', is_static=True),
-            bias_attr=paddle.attr.ParameterAttribute(
-                name='_hidden_input.bias2', is_static=True))
-    else:
-        input_emb = paddle.layer.embedding(
-            input=input_data,
-            size=word_emb_dim,
-            param_attr=paddle.attr.Param(name='_emb_basic1', initial_std=0.02))
+    hidden_input = paddle.layer.fc(
+        input=input_vec,
+        size=hidden_dim,
+        act=paddle.activation.Tanh(),
+        param_attr=paddle.attr.Param(name=hidden_input_w, is_static=is_static),
+        bias_attr=paddle.attr.ParameterAttribute(
+            name=hidden_input_bias, is_static=is_static))
 
-        input_vec = paddle.layer.pooling(
-            input=input_emb,
-            pooling_type=paddle.pooling.Sum(),
-            bias_attr=paddle.attr.ParameterAttribute(
-                name='_avg.bias_basic1', initial_std=0.01))
-
-        hidden_input = paddle.layer.fc(
-            input=input_vec,
-            size=hidden_dim,
-            act=paddle.activation.Tanh(),
-            param_attr=paddle.attr.Param(
-                name='_hidden_input.w1', initial_std=0.03),
-            bias_attr=paddle.attr.ParameterAttribute(
-                name='_hidden_input.bias1'))
     return hidden_input
 
 
