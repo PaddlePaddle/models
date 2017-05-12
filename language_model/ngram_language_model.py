@@ -59,7 +59,7 @@ def ngram_network(voc_dim):
 
 def train_model(word_dict, voc_dim):
     #treate the next_word as label
-    nxtWord = paddle.layer.data(
+    next_word = paddle.layer.data(
         name="next_word", type=paddle.data_type.integer_value(voc_dim))
     #construct ngram network
     output = ngram_network(voc_dim)
@@ -81,7 +81,7 @@ def train_model(word_dict, voc_dim):
                 parameters.to_tar(f)
 
     #calc train loss
-    cost = paddle.layer.classification_cost(input=output, label=nxtWord)
+    cost = paddle.layer.classification_cost(input=output, label=next_word)
     parameters = paddle.parameters.create(cost)
 
     adadelta_optimizer = paddle.optimizer.AdaDelta(
@@ -103,14 +103,20 @@ def train_model(word_dict, voc_dim):
 
 def generate_sequence(word_dict, voc_dim):
     """
-    the generating process as follows:
-      1 construct the ngram netword
-      2 read the model which is trained before
-      3 read the test data by ins_iter which is a five-element couple
-      4 generate the next word according to the last four words 
-          until the word count is equal to max_word_num or 
-          the next word is <e>
-      5 so far, we have completed one five-element couple predicting,
+    the language model is given N words, the N+1 word should be predicted.if 
+    complement language model by ngram, firstly the N words should be embedding seperately;
+    secondly concating the N words's embedding as an input is fully connected ,and the 
+    output is an embedding; thirdly apply a multiple classifier to predict the probability
+    indicating the possibility of the N+1 word for all of the words in word dict;
+    In this example, one-way search is used to select the highest probability of the N+1 word
+    , I suggest authors could use beam-search to do it.
+    At last, the generating process goes as follows:
+      1 load the trained model
+      2 read the testing data by ins_iter which is a five-element couple.
+        according to language model, we can use the five words as N words, and predict
+        the following words until the word count is moren than max_word_num or the word of '<e>'
+        is selected
+      3 so far, we have completed one five-element couple predicting,
         and then continue to iterate the next couple
     """
     prediction_layer = ngram_network(voc_dim)
