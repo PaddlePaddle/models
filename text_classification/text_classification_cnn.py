@@ -3,10 +3,23 @@ import paddle.v2 as paddle
 import gzip
 
 
-def convolution_net(input_dim, class_dim=2, emb_dim=128, hid_dim=128):
+def convolution_net(dict_dim, class_dim=2, emb_dim=28, hid_dim=128):
+    """
+    cnn network definition
+
+    :param dict_dim: size of word dictionary
+    :type input_dim: int
+    :params class_dim: number of instance class
+    :type class_dim: int
+    :params emb_dim: embedding vector dimension
+    :type emb_dim: int
+    :params hid_dim: number of same size convolution kernels
+    :type hid_dim: int
+    """
+
     # input layers
     data = paddle.layer.data("word",
-                             paddle.data_type.integer_value_sequence(input_dim))
+                             paddle.data_type.integer_value_sequence(dict_dim))
     lbl = paddle.layer.data("label", paddle.data_type.integer_value(2))
 
     #embedding layer
@@ -28,6 +41,13 @@ def convolution_net(input_dim, class_dim=2, emb_dim=128, hid_dim=128):
 
 
 def train_cnn_model(num_pass):
+    """
+    train cnn model
+
+    :params num_pass: train pass number
+    :type num_pass: int
+    """
+
     # load word dictionary
     print 'load dictionary...'
     word_dict = paddle.dataset.imdb.word_dict()
@@ -48,8 +68,8 @@ def train_cnn_model(num_pass):
     parameters = paddle.parameters.create(cost)
     # create optimizer
     adam_optimizer = paddle.optimizer.Adam(
-        learning_rate=2e-3,
-        regularization=paddle.optimizer.L2Regularization(rate=8e-4),
+        learning_rate=1e-3,
+        regularization=paddle.optimizer.L2Regularization(rate=1e-3),
         model_average=paddle.optimizer.ModelAverage(average_window=0.5))
 
     # add auc evaluator
@@ -87,6 +107,13 @@ def train_cnn_model(num_pass):
 
 
 def cnn_infer(file_name):
+    """
+    predict instance labels by cnn network
+
+    :params file_name: network parameter file
+    :type file_name: str
+    """
+
     print("Begin to predict...")
 
     word_dict = paddle.dataset.imdb.word_dict()

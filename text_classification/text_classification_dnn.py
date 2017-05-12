@@ -4,10 +4,21 @@ import paddle.v2 as paddle
 import gzip
 
 
-def fc_net(input_dim, class_dim=2, emb_dim=256):
+def fc_net(dict_dim, class_dim=2, emb_dim=28):
+    """
+    dnn network definition
+
+    :param dict_dim: size of word dictionary
+    :type input_dim: int
+    :params class_dim: number of instance class
+    :type class_dim: int
+    :params emb_dim: embedding vector dimension
+    :type emb_dim: int
+    """
+
     # input layers
     data = paddle.layer.data("word",
-                             paddle.data_type.integer_value_sequence(input_dim))
+                             paddle.data_type.integer_value_sequence(dict_dim))
     lbl = paddle.layer.data("label", paddle.data_type.integer_value(class_dim))
 
     # embedding layer
@@ -17,8 +28,8 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
         input=emb, pooling_type=paddle.pooling.Max())
 
     # two hidden layers
-    hd_layer_size = [128, 32]
-    hd_layer_init_std = [1.0 / math.sqrt(s) / 3.0 for s in hd_layer_size]
+    hd_layer_size = [28, 8]
+    hd_layer_init_std = [1.0 / math.sqrt(s) for s in hd_layer_size]
     hd1 = paddle.layer.fc(
         input=seq_pool,
         size=hd_layer_size[0],
@@ -35,8 +46,7 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
         input=hd2,
         size=class_dim,
         act=paddle.activation.Softmax(),
-        param_attr=paddle.attr.Param(initial_std=1.0 / math.sqrt(class_dim) /
-                                     3.0))
+        param_attr=paddle.attr.Param(initial_std=1.0 / math.sqrt(class_dim)))
 
     cost = paddle.layer.classification_cost(input=output, label=lbl)
 
@@ -44,6 +54,13 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
 
 
 def train_dnn_model(num_pass):
+    """
+    train dnn model
+
+    :params num_pass: train pass number
+    :type num_pass: int
+    """
+
     # load word dictionary
     print 'load dictionary...'
     word_dict = paddle.dataset.imdb.word_dict()
@@ -65,8 +82,8 @@ def train_dnn_model(num_pass):
     parameters = paddle.parameters.create(cost)
     # create optimizer
     adam_optimizer = paddle.optimizer.Adam(
-        learning_rate=2e-3,
-        regularization=paddle.optimizer.L2Regularization(rate=8e-4),
+        learning_rate=1e-3,
+        regularization=paddle.optimizer.L2Regularization(rate=1e-3),
         model_average=paddle.optimizer.ModelAverage(average_window=0.5))
 
     # add auc evaluator
@@ -104,6 +121,13 @@ def train_dnn_model(num_pass):
 
 
 def dnn_infer(file_name):
+    """
+    predict instance labels by dnn network
+
+    :params file_name: network parameter file
+    :type file_name: str
+    """
+
     print("Begin to predict...")
 
     word_dict = paddle.dataset.imdb.word_dict()

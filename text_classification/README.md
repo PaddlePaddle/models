@@ -1,10 +1,10 @@
 # 文本分类
-文本分类是机器学习中的一项常见任务，主要目的是根据一条文本的内容，判断该文本所属的类别。在本例子中，我们利用有标注的IMDB语料库训练二分类DNN和CNN模型，完成对语料的简单文本分类。
+文本分类是机器学习中的一项常见任务，主要目的是根据一条文本的内容，判断该文本所属的类别。在本例子中，我们利用有标注的语料库训练二分类DNN和CNN模型，完成对语料的简单文本分类。
 
-DNN与CNN模型之间最大的区别在于，CNN模型中存在卷积结构，而DNN大多使用基本的全连接结构。这使得CNN模型可以对语料信息中相邻单词组成的短语进行分析。例如，"The apple is not bad"，其中的"not bad"是决定这个句子情感的关键。对于DNN模型来说，只能感知到句子中有一个"not"和一个"bad"，而CNN模型则可能直接感知到"not bad"这个关键词组。因此，在大多数文本分类任务上，CNN模型的表现要好于DNN。
+DNN与CNN模型之间最大的区别在于：CNN是一种序列模型，能够提取一个局部区域之内的特征，能够处理变长的序列输入。而DNN大多使用基本的全连接结构，不是一种序列模型，只能接受固定维度的特征向量作为输入。例如，"The apple is not bad"，其中的"not bad"是决定这个句子情感的关键。对于DNN模型来说，只能感知到句子中有一个"not"和一个"bad"，并且在输入时“not”和“bad”之间的顺序关系已经丢失，网络已经不再有机会学习到序列之间蕴含的特征；而CNN模型则可能直接感知到"not bad"这个关键词组。因此，在大多数文本分类任务上，CNN模型的表现要好于DNN。
 
 ## 实验数据
-本例子的实验在IMDB数据集上进行（[数据集下载](http://ai.stanford.edu/%7Eamaas/data/sentiment/aclImdb_v1.tar.gz)）。IMDB数据集包含了来自IMDb（互联网电影数据库）网站的5万条电影影评，并被标注为正面/负面两种评价。数据集被划分为train和test两部分，各2.5万条数据，正负样本的比例基本为1:1。样本直接以英文原文的形式表示。
+本例子的实验在IMDB数据集上进行（[数据集下载](http://ai.stanford.edu/%7Eamaas/data/sentiment/aclImdb_v1.tar.gz)）。IMDB数据集包含了来自IMDB（互联网电影数据库）网站的5万条电影影评，并被标注为正面/负面两种评价。数据集被划分为train和test两部分，各2.5万条数据，正负样本的比例基本为1:1。样本直接以英文原文的形式表示。
 
 本样例在第一次运行的时候会自动下载IMDB数据集并缓存，用户无需手动下载。
 
@@ -19,24 +19,35 @@ DNN与CNN模型之间最大的区别在于，CNN模型中存在卷积结构，�
 
 **可以看到，模型主要分为如下几个部分：**
 
-- **词向量层**：IMDB的样本由原始的英文单词组成，为了方便模型的训练，必须将英文单词转化为固定维度的向量。  
+- **词向量层**：IMDB的样本由原始的英文单词组成，为了更好地表示不同的词之间语义上的关系，首先将英文单词转化为固定维度的向量。训练完成后，词与词语义上的相似程度将可以用它们的词向量之间的距离来表示，语义上越相似，距离越近。  
 
-- **最大池化层**：最大池化在时间序列上进行，池化过程消除了不同语料样本在单词数量多少上的差异，并提炼出词向量中每一下标位置上的最大值。经过池化后，样本被转化为一条固定维度的向量。例如，假设最大池化前的矩阵为`[[2,3,5],[7,3,6],[1,4,0]]`，该矩阵每一列代表一个词向量，则最大池化的结果为：`[[5],[7],[4]]`。
+- **最大池化层**：最大池化在时间序列上进行，池化过程消除了不同语料样本在单词数量多少上的差异，并提炼出词向量中每一下标位置上的最大值。经过池化后，词向量层输出的向量的序列被转化为一条固定维度的向量。例如，假设最大池化前向量的序列为`[[2,3,5],[7,3,6],[1,4,0]]`，则最大池化的结果为：`[7,4,6]`。
 
 - **全连接隐层**：经过最大池化后的向量被送入两个连续的隐层，隐层之间为全连接结构。
 
 
-- **输出层**：输出层的神经元数量和样本的类别数一致，例如在二分类问题中，输出层会有2个神经元。通过Softmax激活函数，我们保证输出层各神经元的输出之和为1，因此第i个神经元的输出就可以认为是样本属于第i类的预测概率。
+- **输出层**：输出层的神经元数量和样本的类别数一致，例如在二分类问题中，输出层会有2个神经元。通过Softmax激活函数，输出层神经元的输出结果归一化为一个概率分布，和为1，因此第i个神经元的输出就可以认为是样本属于第i类的预测概率。
 
 **通过PaddlePaddle实现该DNN结构的代码如下：**
 
 ```python
 import paddle.v2 as paddle
 
-def fc_net(input_dim, class_dim=2, emb_dim=256):
+def fc_net(dict_dim, class_dim=2, emb_dim=28):
+    """
+    dnn network definition
+
+    :param dict_dim: size of word dictionary
+    :type input_dim: int
+    :params class_dim: number of instance class
+    :type class_dim: int
+    :params emb_dim: embedding vector dimension
+    :type emb_dim: int
+    """
+
     # input layers
     data = paddle.layer.data("word",
-                             paddle.data_type.integer_value_sequence(input_dim))
+                             paddle.data_type.integer_value_sequence(dict_dim))
     lbl = paddle.layer.data("label", paddle.data_type.integer_value(class_dim))
 
     # embedding layer
@@ -46,8 +57,8 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
         input=emb, pooling_type=paddle.pooling.Max())
 
     # two hidden layers
-    hd_layer_size = [128, 32]
-    hd_layer_init_std = [1.0/math.sqrt(s)/3.0 for s in hd_layer_size]
+    hd_layer_size = [28, 8]
+    hd_layer_init_std = [1.0 / math.sqrt(s) for s in hd_layer_size]
     hd1 = paddle.layer.fc(
         input=seq_pool,
         size=hd_layer_size[0],
@@ -64,16 +75,16 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
         input=hd2,
         size=class_dim,
         act=paddle.activation.Softmax(),
-        param_attr=paddle.attr.Param(initial_std=1.0/math.sqrt(class_dim)/3.0))
+        param_attr=paddle.attr.Param(initial_std=1.0 / math.sqrt(class_dim)))
 
     cost = paddle.layer.classification_cost(input=output, label=lbl)
 
-    return cost, output
+    return cost, output, lbl
 
 ```
-该DNN模型默认对输入的语料进行二分类（`class_dim=2`），embedding的词向量维度默认为256（`emd_dim=256`），两个隐层均使用Tanh激活函数（`act=paddle.activation.Tanh()`）。
+该DNN模型默认对输入的语料进行二分类（`class_dim=2`），embedding的词向量维度默认为28（`emd_dim=28`），两个隐层均使用Tanh激活函数（`act=paddle.activation.Tanh()`）。
 
-需要注意的是，该模型的输入数据为整数序列，而不是原始的英文单词序列。事实上，为了处理方便我们一般会事先将单词根据词频顺序进行id化，即将单词用整数替代。这一步一般在DNN模型之外完成。
+需要注意的是，该模型的输入数据为整数序列，而不是原始的英文单词序列。事实上，为了处理方便我们一般会事先将单词根据词频顺序进行id化，即将单词用整数替代， 也就是单词在字典中的序号。这一步一般在DNN模型之外完成。
 
 ## CNN模型
 
@@ -86,7 +97,7 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
 
 **可以看到，模型主要分为如下几个部分:**
 
-- **词向量层**：与DNN中词向量层的作用一样，将英文单词转化为固定维度的向量。如图2中所示，将得到的词向量定义为行向量，再将语料中所有的单词产生的行向量拼接在一起组成矩阵。假设词向量维度为5，语料“The cat sat on the read mat”包含7个单词，那么得到的矩阵维度为7*5。
+- **词向量层**：与DNN中词向量层的作用一样，将英文单词转化为固定维度的向量，利用向量之间的距离来表示词之间的语义相关程度。如图2中所示，将得到的词向量定义为行向量，再将语料中所有的单词产生的行向量拼接在一起组成矩阵。假设词向量维度为5，语料“The cat sat on the read mat”包含7个单词，那么得到的矩阵维度为7*5。
 
 - **卷积层**： 文本分类中的卷积在时间序列上进行，即卷积核的宽度和词向量层产出的矩阵一致，卷积验证矩阵的高度方向进行。卷积后得到的结果被称为“特征图”（feature map）。假设卷积核的高度为h，矩阵的高度为N，卷积的步长为1，则得到的特征图为一个高度为N+1-h的向量。可以同时使用多个不同高度的卷积核，得到多个特征图。
 
@@ -99,10 +110,23 @@ def fc_net(input_dim, class_dim=2, emb_dim=256):
 ```python
 import paddle.v2 as paddle
 
-def convolution_net(input_dim, class_dim=2, emb_dim=128, hid_dim=128):
+def convolution_net(dict_dim, class_dim=2, emb_dim=28, hid_dim=128):
+    """
+    cnn network definition
+
+    :param dict_dim: size of word dictionary
+    :type input_dim: int
+    :params class_dim: number of instance class
+    :type class_dim: int
+    :params emb_dim: embedding vector dimension
+    :type emb_dim: int
+    :params hid_dim: number of same size convolution kernels
+    :type hid_dim: int
+    """
+
     # input layers
     data = paddle.layer.data("word",
-                             paddle.data_type.integer_value_sequence(input_dim))
+                             paddle.data_type.integer_value_sequence(dict_dim))
     lbl = paddle.layer.data("label", paddle.data_type.integer_value(2))
 
     #embedding layer
@@ -120,33 +144,50 @@ def convolution_net(input_dim, class_dim=2, emb_dim=128, hid_dim=128):
 
     cost = paddle.layer.classification_cost(input=output, label=lbl)
 
-    return cost, output
-
+    return cost, output, lbl
 ```
 
 该CNN网络的输入数据类型和前面介绍过的DNN一致。`paddle.networks.sequence_conv_pool`为Paddle中已经封装好的带有池化的文本序列卷积模块，该模块的`context_len`参数用于指定卷积核在同一时间覆盖的文本长度，也即图2中的卷积核的高度；`hidden_size`用于指定该类型的卷积核的数量。可以看到，上述代码定义的结构中使用了128个大小为3的卷积核和128个大小为4的卷积核，这些卷积的结果经过最大池化和结果并置后产生一个256维的向量，向量经过一个全连接层输出最终预测结果。
 
 ## 自定义数据
-上面的代码样例中使用的都是PaddlePaddle自带的样例数据，如果用户希望使用其他数据进行测试，需要自行编写数据读取接口。
+上面的代码使用了PaddlePaddle自带的样例数据，如果希望使用自己的数据进行训练，需要自行编写数据读取接口。
 
-编写数据读取接口的关键在于实现一个Python生成器，生成器负责解析数据文件中的每一行内容，并组合成适当的数据形式传送给网络中的data layer。例如在本样例中，data layer需要的数据类型为`paddle.data_type.integer_value_sequence`，这本质上是一个Python list。因此我们的生成器需要完成的主要就是“从文件中读取数据”和“转换成适当形式的Python list”这两件事。
+编写数据读取接口的关键在于实现一个Python生成器，生成器负责从原始输入文集中解析出一条训练样本，并组合成适当的数据形式传送给网络中的data layer。例如在本样例中，data layer需要的数据类型为`paddle.data_type.integer_value_sequence`，这本质上是一个Python list。因此我们的生成器需要完成的主要就是“从文件中读取数据”和“转换成适当形式的Python list”这两件事。
 
-假设我们的数据的内容形式为：
+假设原始数据的格式为：
 
 ```
 PaddlePaddle is good    1  
 What a terrible weather    0
 ```
-每一行为一条样本，样本包括了原始语料和标签，语料内部的单词空格分隔，语料和标签之间用`\t`分隔。对于这样的数据我们可以如下编写数据读取接口：
+每一行为一条样本，样本包括了原始语料和标签，语料内部单词以空格分隔，语料和标签之间用`\t`分隔。对于这样的数据，可以如下自定义的数据读取接口来为PaddlePaddle返回训练数据：
 
 ```python
 def encode_word(word, word_dict):
+    """
+    map word to id
+
+    :param word: the word to be mapped
+    :type word: str
+    :param word_dict: word dictionary
+    :type word_dict: Python dict
+    """
+
     if word_dict.has_key(word):
         return word_dict[word]
     else:
         return word_dict['<unk>']
 
 def data_reader(file_name, word_dict):
+    """
+    Reader interface for training data
+
+    :param file_name: data file name
+    :type file_name: str
+    :param word_dict: word dictionary
+    :type word_dict: Python dict
+    """
+
     def reader():
         with open(file_name, "r") as f:
             for line in f:
@@ -156,7 +197,7 @@ def data_reader(file_name, word_dict):
     return reader
 ```
 
-其中`word_dict`为事先准备好的将单词映射为id的词表。该`data_reader`可以替换代码中原先的`Paddle.dataset.imdb.train`用以数据提供。
+`word_dict`是字典，用来讲原始的单词字符串转化为在字典中的序号。可以用`data_reader`替换原先代码中的`Paddle.dataset.imdb.train`接口用以提供自定义的训练数据。
 
 ## 运行与输出
 
@@ -166,9 +207,9 @@ def data_reader(file_name, word_dict):
 
 - **fc_net函数**：定义dnn网络结构，上文已经有说明。
 
-- **train\_dnn\_model函数**：模型训练函数。定义优化方式、训练输出等内容，并组织训练流程。该函数运行完成前会将训练得到的模型数保存至硬盘上的`dnn_params.tar.gz`文件中。本函数接受一个整数类型的参数，表示训练pass的轮数。
+- **train\_dnn\_model函数**：模型训练函数。定义优化方式、训练输出等内容，并组织训练流程。每完成一个pass的训练，程序都会将当前的模型参数保存在硬盘上，文件名为：`dnn_params_pass***.tar.gz`，其中`***`表示pass的id，从0开始计数。本函数接受一个整数类型的参数，表示训练pass的总轮数。
 
-- **dnn_infer函数**：载入已有模型并对新样本进行预测。函数开始运行后会从当前路径下寻找并读取`dnn_params.tar.gz`文件，加载其中的模型参数，并对test数据集中的前100条样本进行预测。
+- **dnn_infer函数**：载入已有模型并对新样本进行预测。函数开始运行后会从当前路径下寻找并读取指定名称的参数文件，加载其中的模型参数，并对test数据集中的样本进行预测。
 
 - **main函数**：主函数
 
@@ -185,3 +226,5 @@ def data_reader(file_name, word_dict):
 ```
 
 每一行表示一条样本的预测结果。前两列表示该样本属于0、1这两个类别的预测概率，最后一列表示样本的实际label。
+
+在运行CNN的模型的`text_classification_cnn.py`脚本中，网络模型定义在`convolution_net`函数中，模型训练函数名为`train_cnn_model`，预测函数名为`cnn_infer`。其他的用法和`text_classification_dnn.py`是一致的。
