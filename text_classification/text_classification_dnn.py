@@ -129,7 +129,7 @@ def dnn_infer(file_name):
 
 
 if __name__ == "__main__":
-    paddle.init(use_gpu=False, trainer_count=4)
+    paddle.init(use_gpu=False, trainer_count=1)
     num_pass = 5
     train_dnn_model(num_pass=num_pass)
     param_file_name = "dnn_params_pass" + str(num_pass - 1) + ".tar.gz"
