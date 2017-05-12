@@ -239,10 +239,7 @@ def ner_net_infer(data_reader=test_data_reader, model_file='ner_model.tar.gz'):
         parameters=paddle.parameters.Parameters.from_tar(gzip.open(model_file)),
         input=test_data,
         field='id')
-    '''words_reverse = {}
-    for (k, v) in word_dict.items():
-        words_reverse[v] = k
-    flat_data = [words_reverse[word_id] for word_id in itertools.chain.from_iterable(itertools.chain.from_iterable(test_data))]'''
+
     flat_data = [word for word in itertools.chain.from_iterable(test_sentences)]
 
     labels_reverse = {}
