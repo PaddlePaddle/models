@@ -49,6 +49,7 @@ def ner_net(is_train):
     hidden_1 = paddle.layer.mixed(
         name='hidden1',
         size=hidden_dim,
+        act=paddle.activation.Tanh(),
         bias_attr=std_default,
         input=[
             paddle.layer.full_matrix_projection(
@@ -74,8 +75,10 @@ def ner_net(is_train):
         param_attr=rnn_para_attr)
 
     hidden_2_1 = paddle.layer.mixed(
+        name='hidden2-1',
         size=hidden_dim,
         bias_attr=std_default,
+        act=paddle.activation.STanh(),
         input=[
             paddle.layer.full_matrix_projection(
                 input=hidden_1, param_attr=hidden_para_attr),
@@ -83,8 +86,10 @@ def ner_net(is_train):
                 input=rnn_1_1, param_attr=rnn_para_attr)
         ])
     hidden_2_2 = paddle.layer.mixed(
+        name='hidden2-2',
         size=hidden_dim,
         bias_attr=std_default,
+        act=paddle.activation.STanh(),
         input=[
             paddle.layer.full_matrix_projection(
                 input=hidden_1, param_attr=hidden_para_attr),
@@ -110,6 +115,7 @@ def ner_net(is_train):
         name='hidden3',
         size=hidden_dim,
         bias_attr=std_default,
+        act=paddle.activation.STanh(),
         input=[
             paddle.layer.full_matrix_projection(
                 input=hidden_2_1, param_attr=hidden_para_attr),
@@ -158,7 +164,7 @@ def ner_net(is_train):
         return predict
 
 
-def ner_net_train(data_reader, num_passes=1):
+def ner_net_train(data_reader=train_data_reader, num_passes=1):
     # define network topology
     crf_cost, crf_dec, target = ner_net(is_train=True)
     evaluator.sum(name='error', input=crf_dec)
@@ -201,7 +207,9 @@ def ner_net_train(data_reader, num_passes=1):
             # save parameters
             with gzip.open('params_pass_%d.tar.gz' % event.pass_id, 'w') as f:
                 parameters.to_tar(f)
-
+            if event.pass_id == num_passes - 1:
+                with gzip.open('ner_model.tar.gz', 'w') as f:
+                    parameters.to_tar(f)
             result = trainer.test(reader=reader, feeding=feeding)
             print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
 
@@ -214,11 +222,13 @@ def ner_net_train(data_reader, num_passes=1):
     return parameters
 
 
-def ner_net_infer(data_reader, parameters):
+def ner_net_infer(data_reader=test_data_reader, model_file='ner_model.tar.gz'):
     test_creator = data_reader
     test_data = []
+    test_sentences = []
     for item in test_creator():
         test_data.append([item[0]])
+        test_sentences.append(item[-1])
         if len(test_data) == 10:
             break
 
@@ -226,18 +236,25 @@ def ner_net_infer(data_reader, parameters):
 
     lab_ids = paddle.infer(
         output_layer=predict,
-        parameters=parameters,
+        parameters=paddle.parameters.Parameters.from_tar(gzip.open(model_file)),
         input=test_data,
         field='id')
+    '''words_reverse = {}
+    for (k, v) in word_dict.items():
+        words_reverse[v] = k
+    flat_data = [words_reverse[word_id] for word_id in itertools.chain.from_iterable(itertools.chain.from_iterable(test_data))]'''
+    flat_data = [word for word in itertools.chain.from_iterable(test_sentences)]
 
     labels_reverse = {}
     for (k, v) in label_dict.items():
         labels_reverse[v] = k
     pre_lab = [labels_reverse[lab_id] for lab_id in lab_ids]
-    print pre_lab
+
+    for word, label in zip(flat_data, pre_lab):
+        print word, label
 
 
 if __name__ == '__main__':
     paddle.init(use_gpu=False, trainer_count=1)
-    parameters = ner_net_train(train_data_reader, 1)
-    ner_net_infer(test_data_reader, parameters)
+    ner_net_train(num_passes=1)
+    ner_net_infer()

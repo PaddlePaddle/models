@@ -1,16 +1,3 @@
-# Copyright (c) 2016 PaddlePaddle Authors. All Rights Reserved
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """
 Conll03 dataset.
 """
@@ -18,6 +5,7 @@ Conll03 dataset.
 import tarfile
 import gzip
 import itertools
+import collections
 import re
 import numpy as np
 
@@ -41,6 +29,32 @@ def canonicalize_word(word, wordset=None, digits=True):
         word = canonicalize_digits(word)  # try to canonicalize numbers
     if (wordset == None) or (word in wordset): return word
     else: return "UUUNKKK"  # unknown token
+
+
+def corpus_reader(filename='data/train'):
+    def reader():
+        sentence = []
+        labels = []
+        with open(filename) as f:
+            for line in f:
+                if re.match(r"-DOCSTART-.+", line) or (len(line.strip()) == 0):
+                    if len(sentence) > 0:
+                        yield sentence, labels
+                    sentence = []
+                    labels = []
+                else:
+                    segs = line.strip().split()
+                    sentence.append(segs[0])
+                    # transform from I-TYPE to BIO schema
+                    if segs[-1] != 'O' and (len(labels) == 0 or
+                                            labels[-1][1:] != segs[-1][1:]):
+                        labels.append('B' + segs[-1][1:])
+                    else:
+                        labels.append(segs[-1])
+
+        f.close()
+
+    return reader
 
 
 def load_dict(filename):
@@ -98,7 +112,7 @@ def reader_creator(corpus_reader, word_dict, label_dict):
     Conll03 train set creator.
 
     The dataset can be obtained according to http://www.clips.uantwerpen.be/conll2003/ner/.
-    It returns a reader creator, each sample in the reader includes sentence sequence and tagged sequence.
+    It returns a reader creator, each sample in the reader includes word id sequence, label id sequence and raw sentence for purpose of print.
 
     :return: Training reader creator
     :rtype: callable
@@ -111,7 +125,7 @@ def reader_creator(corpus_reader, word_dict, label_dict):
                 for w in sentence
             ]
             label_idx = [label_dict.get(w) for w in labels]
-            yield word_idx, label_idx
+            yield word_idx, label_idx, sentence
 
     return reader
 
