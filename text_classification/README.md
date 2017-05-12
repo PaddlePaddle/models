@@ -147,13 +147,13 @@ def encode_word(word, word_dict):
         return word_dict['<unk>']
 
 def data_reader(file_name, word_dict):
-    def data_reader():
+    def reader():
         with open(file_name, "r") as f:
             for line in f:
                 ins, label = line.strip('\n').split('\t')
                 ins_data = [int(encode_word(w, word_dict)) for w in ins.split(' ')]
                 yield ins_data, int(label)
-    return data_reader
+    return reader
 ```
 
 其中`word_dict`为事先准备好的将单词映射为id的词表。该`data_reader`可以替换代码中原先的`Paddle.dataset.imdb.train`用以数据提供。
