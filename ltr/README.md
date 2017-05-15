@@ -32,7 +32,7 @@
   ​
 
 <p align="center">
-<img src="image/learningtorank.jpg" width="40%" ><br/>
+<img src="image/learningToRank.jpg" width="50%" ><br/>
 图2. 排序模型构造的三类方法
 </p>
 
@@ -93,7 +93,7 @@ $$C=\frac{1}{2}(1-S_{i,j})\sigma (s_{i}-s{j})+log(1+e^{-\sigma (s_{i}-s_{j})})$$
 根据以上推论构造RankNet网络结构，由若干层隐藏层和全连接层构成，如图所示，将文档特征使用隐藏层，全连接层逐层变换，完成了底层特征空间到高层特征空间的变换。其中docA和docB结构对称，分别输入到最终的RankCost层中。
 
 <p align="center">
-<img src="image/ranknet.jpg" width="30%" ><br/>
+<img src="image/ranknet.jpg" width="50%" ><br/>
 图3. RankNet网络结构示意图
 </p>
 
