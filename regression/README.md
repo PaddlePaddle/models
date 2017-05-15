@@ -12,7 +12,24 @@
 <img src="image/data.png" width=500><br/>
 图1. 数据示例
 </p>
+### 数据文件格式
 
+压缩数据集包 `train_data.tar.gz` ,其中包含3个数据文件 train、test/dict，其中train与test的数据格式一致，如下所示，以 `\t`分割，单次之间以空格分割
+```
+克里斯 保罗 经历    人物 故事 克里斯
+广电 经常 禁 能 换 人 吗    广电 总局 该 不 该 换 人
+```
+dict的格式如下所示：
+```
+<s>
+<e>
+<unk>
+炫飞
+闹钟
+灵岩
+```
+
+### 数据生成器
 本示例使用的是文本数据，需要先用词典进行编码，生成一个整数序列。编写的数据读取接口实际上就是一个Python生成器，该生成器负责解析数据文件中的每一行内容，然后传送给输入层 `paddle.layer.data` ，该输入层的输入数据类型为 `paddle.data_type.integer_value_sequence` 。该Python生成器的需要包含一个生成词典的函数和生成适合输入的Python list的函数。
 ```python
 def __read_to_dict__(tar_file, dict_size):
