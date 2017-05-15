@@ -20,6 +20,7 @@
 import paddle.v2 as paddle
 import sys
 import gzip
+import random
 
 dict_size = 30000
 word_vec_dim = 512
@@ -28,6 +29,7 @@ batch_size = 5
 memory_slot_num = 8
 beam_size = 3
 infer_data_num = 3
+memory_perturb_stddev = 0.1
 
 
 class ExternalMemory(object):
@@ -46,6 +48,10 @@ class ExternalMemory(object):
     handling. Besides, some existing mechanism can be realized directly with
     the ExternalMemory class, e.g. the attention mechanism in Seq2Seq (i.e. an
     unbounded external memory).
+
+    Besides, the ExternalMemory class must be used together with
+    paddle.layer.recurrent_group (within its step function). It can never be
+    used in a standalone manner.
     
     For more details, please refer to
     `Neural Turing Machines <https://arxiv.org/abs/1410.5401>`_.
@@ -289,11 +295,17 @@ def memory_enhanced_decoder(input, target, initial_state, source_context, size,
             input=source_context, pooling_type=paddle.pooling.Avg()),
         size=size,
         act=paddle.activation.Sigmoid())
-    bounded_memory_init = paddle.layer.expand(
-        input=bounded_memory_slot_init,
-        expand_as=paddle.layer.data(
-            name='bounded_memory_template',
-            type=paddle.data_type.integer_value_sequence(0)))
+    bounded_memory_perturbation = paddle.layer.data(
+        name='bounded_memory_perturbation',
+        type=paddle.data_type.dense_vector_sequence(size))
+    bounded_memory_init = paddle.layer.addto(
+        input=[
+            paddle.layer.expand(
+                input=bounded_memory_slot_init,
+                expand_as=bounded_memory_perturbation),
+            bounded_memory_perturbation
+        ],
+        act=paddle.activation.Linear())
     unbounded_memory_init = source_context
 
     # prepare step function for reccurent group
@@ -477,17 +489,22 @@ def train(num_passes):
         "source_words": 0,
         "target_words": 1,
         "target_next_words": 2,
-        "bounded_memory_template": 3
+        "bounded_memory_perturbation": 3
     }
+    random.seed(0)  # for keeping consitancy for multiple runs
+    bounded_memory_perturbation = [
+        [random.gauss(0, memory_perturb_stddev) for i in xrange(hidden_size)]
+        for j in xrange(memory_slot_num)
+    ]
     train_append_reader = reader_append_wrapper(
         reader=paddle.dataset.wmt14.train(dict_size),
-        append_tuple=([0] * memory_slot_num, ))
+        append_tuple=(bounded_memory_perturbation, ))
     train_batch_reader = paddle.batch(
         reader=paddle.reader.shuffle(reader=train_append_reader, buf_size=8192),
         batch_size=batch_size)
     test_append_reader = reader_append_wrapper(
         reader=paddle.dataset.wmt14.test(dict_size),
-        append_tuple=([0] * memory_slot_num, ))
+        append_tuple=(bounded_memory_perturbation, ))
     test_batch_reader = paddle.batch(
         reader=paddle.reader.shuffle(reader=test_append_reader, buf_size=8192),
         batch_size=batch_size)
@@ -524,7 +541,7 @@ def infer():
     source_words = paddle.layer.data(
         name="source_words",
         type=paddle.data_type.integer_value_sequence(dict_size))
-    beam_gen = seq2seq(
+    beam_gen = memory_enhanced_seq2seq(
         encoder_input=source_words,
         decoder_input=None,
         decoder_target=None,
@@ -540,9 +557,14 @@ def infer():
 
     # prepare infer data
     infer_data = []
+    random.seed(0)  # for keeping consitancy for multiple runs
+    bounded_memory_perturbation = [
+        [random.gauss(0, memory_perturb_stddev) for i in xrange(hidden_size)]
+        for j in xrange(memory_slot_num)
+    ]
     test_append_reader = reader_append_wrapper(
         reader=paddle.dataset.wmt14.test(dict_size),
-        append_tuple=([0] * memory_slot_num, ))
+        append_tuple=(bounded_memory_perturbation, ))
     for i, item in enumerate(test_append_reader()):
         if i < infer_data_num:
             infer_data.append((item[0], item[3], ))
