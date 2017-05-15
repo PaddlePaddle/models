@@ -12,6 +12,7 @@
 <img src="image/data.png" width=500><br/>
 图1. 数据示例
 </p>
+
 ### 数据文件格式
 
 压缩数据集包 `train_data.tar.gz` ,其中包含3个数据文件 train、test/dict，其中train与test的数据格式一致，如下所示，以 `\t`分割，单次之间以空格分割
