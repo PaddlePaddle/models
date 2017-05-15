@@ -30,7 +30,7 @@ def main():
     for item in paddle.dataset.imikolov.test(word_dict, 5)():
         infer_data.append((item[:4]))
         infer_data_label.append(item[4])
-        # Pick up 100 elements of test set. Convenient for show up.
+        # Choose 100 samples from the test set to show how to infer.
         if len(infer_data_label) == 100:
             break
 
