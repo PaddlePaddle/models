@@ -11,11 +11,11 @@
 排序学习技术随着互联网的快速增长而受到越来越多关注，是机器学习中的常见任务。一方面人工排序规则不能处理海量规模的候选数据，另一方面无法为不同渠道的候选数据给于合适的权重，因此排序学习在日常生活中应用非常广泛。排序学习起源于信息检索领域，目前仍然是许多信息检索场景中的核心模块，例如搜索引擎搜索结果排序，推荐系统候选集排序，在线广告排序等等。在本例子中，采用文档检索阐述排序学习模型。
 
 <p align="center">
-<img src="image/search-engine-example.png" width="50%" ><br/>
+<img src="image/search-engine-example.png" width="30%" ><br/>
 图1. 排序模型在文档检索的典型应用搜索引擎中的作用
 </p>
 
-假定有一组文档S，文档检索任务是依据和请求的相关性，给出文档排列顺序。查询引擎根据查询请求，排序模型会给每个文档打出分数，依据打分情况倒序排列文档，得到查询结果。在训练模型时，给定一条查询，并给出对应的文档最佳排序和得分。在预测时候，给出查询请求，排序模型生成文档排序。传统的排序学习方法划分为以下三类：
+假定有一组文档S，文档检索任务是依据和请求的相关性，给出文档排列顺序。查询引擎根据查询请求，排序模型会给每个文档打出分数，依据打分情况倒序排列文档，得到查询结果。在训练模型时，给定一条查询，并给出对应的文档最佳排序和得分。在预测时候，给出查询请求，排序模型生成文档排序。传统的排序学习方法划分为以下三类：
 
 - Pointwise 方法
 
@@ -32,17 +32,13 @@
   ​
 
 <p align="center">
-<img src="image/learningtorank.jpg" width="70%" ><br/>
+<img src="image/learningtorank.jpg" width="40%" ><br/>
 图2. 排序模型构造的三类方法
 </p>
 
 ## 实验数据
 
 本例子中的实验数据采用了排序学习中的基准数据[LETOR]([http://research.microsoft.com/en-us/um/beijing/projects/letor/LETOR4.0/Data/MQ2007.rar](http://research.microsoft.com/en-us/um/beijing/projects/letor/LETOR4.0/Data/MQ2007.rar))中语料库，部分来自于Gov2网站的查询请求结果，包含了约1700条查询请求结果文档列表，并对文档相关性做出了人工标注。其中，一条查询含有唯一的查询id，对应于多个具有相关性的文档，构成了一次查询请求结果文档列表。每个文档由一个一维数组的特征向量表示，并对应一个人工标注与查询的相关性分数。
-
-[文档与查询相关性分数] ：[查询id] : [文档的特征向量]
-
-score : query id : feature1, feature2, …., featureN.  
 
 本样例在第一次运行的时候会自动下载LETOR MQ2007数据集并缓存，用户无需手动下载。
 
@@ -97,7 +93,7 @@ $$C=\frac{1}{2}(1-S_{i,j})\sigma (s_{i}-s{j})+log(1+e^{-\sigma (s_{i}-s_{j})})$$
 根据以上推论构造RankNet网络结构，由若干层隐藏层和全连接层构成，如图所示，将文档特征使用隐藏层，全连接层逐层变换，完成了底层特征空间到高层特征空间的变换。其中docA和docB结构对称，分别输入到最终的RankCost层中。
 
 <p align="center">
-<img src="image/ranknet.jpg" width="70%" ><br/>
+<img src="image/ranknet.jpg" width="30%" ><br/>
 图3. RankNet网络结构示意图
 </p>
 
@@ -146,7 +142,7 @@ def ranknet(input_dim):
   return cost
 ```
 
-上述结构中使用了和前述图表相同的模型结构，使用了两层隐藏层，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征dense_vector的维度，label取值为1，-1。每条输入样本为label，\<docA, docB\>的结构，以docA为例，输入input_dim的文档特征，依次变换成10维，1维特征，最终输入到RankCost层中，比较docA和docB在RankCost输出得到预测值。
+上述结构中使用了和前述图表相同的模型结构，使用了两层隐藏层，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征dense_vector的维度，label取值为1，-1。每条输入样本为`<label>，<docA, docB>`的结构，以docA为例，输入`input_dim`的文档特征，依次变换成10维，1维特征，最终输入到RankCost层中，比较docA和docB在RankCost输出得到预测值。
 
 用户运行`python ranknet.py`将会将每个轮次的模型存下来，并在测试数据上测试效果。
 
@@ -220,7 +216,7 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}}=-\frac{\sigma }{1+e^{\sigma (
 由以上推导可知，LambdaRank网络结构和RankNet结构非常相似。如图所示
 
 <p align="center">
-<img src="image/lambdarank.jpg" width="70%" ><br/>
+<img src="image/lambdarank.jpg" width="50%" ><br/>
 图4. LambdaRank的网络结构示意图
 </p>
 
