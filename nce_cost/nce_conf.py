@@ -42,21 +42,23 @@ def network_conf(hidden_size, embedding_size, dict_size, is_train):
 
     if is_train == True:
         cost = paddle.layer.nce(
-            name='nce',
             input=hidden_layer,
             label=next_word,
             num_classes=dict_size,
             act=paddle.activation.Sigmoid(),
             num_neg_samples=25,
-            neg_distribution=None)
+            neg_distribution=None,
+            param_attr=paddle.attr.Param(name='nce_w'),
+            bias_attr=paddle.attr.Param(name='nce_b'))
         return cost
     else:
         with paddle.layer.mixed(
                 size=dict_size,
                 act=paddle.activation.Softmax(),
-                bias_attr=paddle.attr.Param(name='_nce.wbias')) as prediction:
+                bias_attr=paddle.attr.Param(
+                    name='nce_b')) as prediction:
             prediction += paddle.layer.trans_full_matrix_projection(
                 input=hidden_layer,
-                param_attr=paddle.attr.Param(name='_nce.w0'))
+                param_attr=paddle.attr.Param(name='nce_w'))
 
         return prediction
