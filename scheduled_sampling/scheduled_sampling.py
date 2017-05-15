@@ -28,6 +28,17 @@ def gen_schedule_data(reader):
 
 
 def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
+    """
+    The definition of the sequence to sequence model
+    :param source_dict_dim: the dictionary size of the source language
+    :type source_dict_dim: int
+    :param target_dict_dim: the dictionary size of the target language
+    :type target_dict_dim: int
+    :param is_generating: whether in generating mode
+    :type is_generating: Bool
+    :return: the last layer of the network
+    :rtype: Layer
+    """
     ### Network Architecture
     word_vector_dim = 512  # dimension of word vector
     decoder_size = 512  # dimension of hidden unit in GRU Decoder network
@@ -41,9 +52,7 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
         name='source_language_word',
         type=paddle.data_type.integer_value_sequence(source_dict_dim))
     src_embedding = paddle.layer.embedding(
-        input=src_word_id,
-        size=word_vector_dim,
-        param_attr=paddle.attr.ParamAttr(name='_source_language_embedding'))
+        input=src_word_id, size=word_vector_dim)
     src_forward = paddle.networks.simple_gru(
         input=src_embedding, size=encoder_size)
     src_backward = paddle.networks.simple_gru(
@@ -64,6 +73,19 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
 
     def gru_decoder_with_attention_train(enc_vec, enc_proj, true_word,
                                          true_token_flag):
+        """
+        The decoder step for training.
+        :param enc_vec: the encoder vector for attention
+        :type enc_vec: Layer
+        :param enc_proj: the encoder projection for attention
+        :type enc_proj: Layer
+        :param true_word: the ground-truth target word
+        :type true_word: Layer
+        :param true_token_flag: the flag of using the ground-truth target word
+        :type true_token_flag: Layer
+        :return: the softmax output layer
+        :rtype: Layer
+        """
 
         decoder_mem = paddle.layer.memory(
             name='gru_decoder', size=decoder_size, boot_layer=decoder_boot)
@@ -107,6 +129,17 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
         return out
 
     def gru_decoder_with_attention_test(enc_vec, enc_proj, current_word):
+        """
+        The decoder step for generating.
+        :param enc_vec: the encoder vector for attention
+        :type enc_vec: Layer
+        :param enc_proj: the encoder projection for attention
+        :type enc_proj: Layer
+        :param current_word: the previously generated word
+        :type current_word: Layer
+        :return: the softmax output layer
+        :rtype: Layer
+        """
 
         decoder_mem = paddle.layer.memory(
             name='gru_decoder', size=decoder_size, boot_layer=decoder_boot)
