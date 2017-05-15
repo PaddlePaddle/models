@@ -11,10 +11,9 @@
 排序学习技术随着互联网的快速增长而受到越来越多关注，是机器学习中的常见任务。一方面人工排序规则不能处理海量规模的候选数据，另一方面无法为不同渠道的候选数据给于合适的权重，因此排序学习在日常生活中应用非常广泛。排序学习起源于信息检索领域，目前仍然是许多信息检索场景中的核心模块，例如搜索引擎搜索结果排序，推荐系统候选集排序，在线广告排序等等。在本例子中，采用文档检索阐述排序学习模型。
 
 <p align="center">
-
-<img src="search-engine-example.png", style="width: 400px;">
-
-<br/>图1 排序模型在文档检索的典型应用搜索引擎中的作用</p>
+<img src="image/search-engine-example.png" width="50%" ><br/>
+图1. 排序模型在文档检索的典型应用搜索引擎中的作用
+</p>
 
 假定有一组文档S，文档检索任务是依据和请求的相关性，给出文档排列顺序。查询引擎根据查询请求，排序模型会给每个文档打出分数，依据打分情况倒序排列文档，得到查询结果。在训练模型时，给定一条查询，并给出对应的文档最佳排序和得分。在预测时候，给出查询请求，排序模型生成文档排序。传统的排序学习方法划分为以下三类：
 
@@ -30,13 +29,12 @@
 
   Listwise方法是直接优化排序列表，输入为单条样本为一个文档排列。通过构造合适的度量函数衡量当前文档排序和最优排序差值，优化度量函数得到排序模型。由于度量函数很多具有非连续性，优化困难。
 
-  <p align="center">
-
-  <img src="learningToRank.jpg", style="width :500px;">
-
-  <br />图2 排序模型三类构造方法</p>
-
   ​
+
+<p align="center">
+<img src="image/learningtorank.jpg" width="70%" ><br/>
+图2. 排序模型构造的三类方法
+</p>
 
 ## 实验数据
 
@@ -50,15 +48,13 @@ score : query id : feature1, feature2, …., featureN.
 
 `mq2007`数据集分别提供了三种类型排序模型的生成格式，需要指定生成格式`format`
 
-例如
+例如调用接口
 
 ```python
 pairwise_train_dataset = functools.partial(paddle.dataset.mq2007.train, format="pairwise")
 for label, left_doc, right_doc in pairwise_train_dataset():
     ...
 ```
-
-
 
 
 
@@ -101,12 +97,9 @@ $$C=\frac{1}{2}(1-S_{i,j})\sigma (s_{i}-s{j})+log(1+e^{-\sigma (s_{i}-s_{j})})$$
 根据以上推论构造RankNet网络结构，由若干层隐藏层和全连接层构成，如图所示，将文档特征使用隐藏层，全连接层逐层变换，完成了底层特征空间到高层特征空间的变换。其中docA和docB结构对称，分别输入到最终的RankCost层中。
 
 <p align="center">
-
-<img src="ranknet.jpg", style="width:400px">
-
-<br />图3 RankNet网络结构示意图</p>
-
-
+<img src="image/ranknet.jpg" width="70%" ><br/>
+图3. RankNet网络结构示意图
+</p>
 
 - 全连接层(fully connected layer) : 指上一层中的每个节点都连接到下层网络。本例子中同样使用paddle.layer.fc实现，注意输入到RankCost层的全连接层输出为1x1的层结构
 - RankCost层： RankCost层是排序网络RankNet的核心，度量docA相关性是否比docB好，给出预测值并和label比较。使用了交叉熵(cross enctropy)作为度量损失函数，使用梯度下降方法进行优化。细节可见[RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf)[4]
@@ -227,10 +220,9 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}}=-\frac{\sigma }{1+e^{\sigma (
 由以上推导可知，LambdaRank网络结构和RankNet结构非常相似。如图所示
 
 <p align="center">
-
-<img src="lambdarank.jpg", style="width : 500px">
-
-<br/> 图4. LambdaRank的网络结构示意图</p>
+<img src="image/lambdarank.jpg" width="70%" ><br/>
+图4. LambdaRank的网络结构示意图
+</p>
 
 一个查询得到的结果文档列表作为一条样本输入到网络中，替换RankCost为LambdaCost层，其他结构与RankNet相同。
 
