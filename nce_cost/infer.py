@@ -49,8 +49,8 @@ def main():
         feeding=feeding,
         field=['value'])
 
-    for i, (prob, data,
-            label) in enumerate(zip(predictions, infer_data, infer_data_label)):
+    for i, (prob, data, label) in enumerate(
+            zip(predictions, infer_data, infer_data_label)):
         print '--------------------------'
         print "No.%d Input: " % (i+1) + \
                 idx_word_dict[data[0]] + ' ' + \
