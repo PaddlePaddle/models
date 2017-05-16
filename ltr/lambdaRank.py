@@ -1,6 +1,5 @@
 import os, sys
 import gzip
-import sqlite3
 import paddle.v2 as paddle
 import numpy as np
 import functools
@@ -39,7 +38,7 @@ def train_lambdaRank(num_passes):
     train_reader = paddle.batch(
         paddle.reader.shuffle(fill_default_train, buf_size=100), batch_size=32)
     test_reader = paddle.batch(
-        paddle.reader.shuffle(fill_default_test, buf_size=100), batch_size=32)
+        paddle.reader.buffered(fill_default_test, size=100), batch_size=32)
 
     # mq2007 input_dim = 46, dense format 
     input_dim = 46

@@ -2,7 +2,15 @@
 
 排序学习技术[1] 是构建排序模型的机器学习方法，在信息检索，自然语言处理，数据挖掘等机器学场景中具有重要作用。排序学习的主要目的是对给定一组文档，对任意查询请求给出反映相关性的文档排序。在本例子中，利用标注过的语料库训练两种经典排序模型RankNet[4]和LamdaRank[6]，分别可以生成对应的排序模型，能够对任意查询请求，给出相关性文档排序。
 
-用户可以使用 `python ranknet.py` 或者 `python lambdaRank.py`命令就完成排序模型的训练和预测，程序会自动下载内置数据集，无需手动下载。
+RankNet模型在命令行输入：
+
+ `python ranknet.py`
+
+LambdaRank模型在命令行输入：
+
+ `python lambdaRank.py`
+
+用户只需要使用以上命令就完成排序模型的训练和预测，程序会自动下载内置数据集，无需手动下载。
 
 
 
@@ -62,7 +70,7 @@ for label, left_doc, right_doc in pairwise_train_dataset():
 
 ## RankNet排序模型
 
-[RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf)是一种经典的Pairwise的排序学习方法，是典型的前向神经网络排序模型。在文档集合S中的第i个文档记做`Ui`，它的文档特征向量记做`xi`，对于给定的一个文档对`<Ui, Uj>`，RankNet将输入的单个文档特征向量x映射到`f(x)`，得到`si=f(xi), sj=f(xj)`。将`Ui`相关性比Uj好的概率记做Pij，则
+[RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf)是一种经典的Pairwise的排序学习方法，是典型的前向神经网络排序模型。在文档集合S中的第i个文档记做$U_i$，它的文档特征向量记做$x_i$，对于给定的一个文档对$U_i, U_j$，RankNet将输入的单个文档特征向量x映射到$f(x)$，得到$s_i=f(x_i), s_j=f(x_j)$。将$U_i$相关性比Uj好的概率记做$P_{i,j}$，则
 
 $$P_{i,j}=P(U_{i}>U_{j})=\frac{1}{1+e^{-\sigma (s_{i}-s_{j}))}}$$
 
@@ -70,7 +78,7 @@ $$P_{i,j}=P(U_{i}>U_{j})=\frac{1}{1+e^{-\sigma (s_{i}-s_{j}))}}$$
 
 $$C_{i,j}=-\bar{P_{i,j}}logP_{i,j}-(1-\bar{P_{i,j}})log(1-P_{i,j})$$
 
-其中代表真实概率的
+其中$\bar{P_{i,j}}$代表真实概率，记做
 
 $$\bar{P_{i,j}}=\frac{1}{2}(1+S_{i,j})$$
 
@@ -84,7 +92,7 @@ $$C=\frac{1}{2}(1-S_{i,j})\sigma (s_{i}-s{j})+log(1+e^{-\sigma (s_{i}-s_{j})})$$
 
 同时，得到文档Ui在排序优化过程的梯度信息为
 
-\lambda _{i,j}=\frac{\partial C}{\partial s_{i}} = \frac{1}{2}(1-S_{i,j})-\frac{1}{1+e^{\sigma (s_{i}-s_{j})}}
+$$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}} = \frac{1}{2}(1-S_{i,j})-\frac{1}{1+e^{\sigma (s_{i}-s_{j})}}$$
 
 表示的含义是本轮排序优化过程中上升或者下降量。
 
@@ -97,8 +105,8 @@ $$C=\frac{1}{2}(1-S_{i,j})\sigma (s_{i}-s{j})+log(1+e^{-\sigma (s_{i}-s_{j})})$$
 图3. RankNet网络结构示意图
 </p>
 
-- 全连接层(fully connected layer) : 指上一层中的每个节点都连接到下层网络。本例子中同样使用paddle.layer.fc实现，注意输入到RankCost层的全连接层输出为1x1的层结构
-- RankCost层： RankCost层是排序网络RankNet的核心，度量docA相关性是否比docB好，给出预测值并和label比较。使用了交叉熵(cross enctropy)作为度量损失函数，使用梯度下降方法进行优化。细节可见[RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf)[4]
+- 全连接层(fully connected layer) : 指上一层中的每个节点都连接到下层网络。本例子中同样使用paddle.layer.fc实现，注意输入到RankCost层的全连接层维度为1。
+- RankCost层： RankCost层是排序网络RankNet的核心，度量docA相关性是否比docB好，给出预测值并和label比较。使用了交叉熵(cross enctropy)作为度量损失函数，使用梯度下降方法进行优化。细节可见[RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf)[4]。
 
 由于Pairwise中的网络结构是左右对称，可定义一半网络结构，另一半共享网络参数。使用PaddlePaddle实现RankNet排序模型，定义网络结构的示例代码如下：
 
@@ -142,17 +150,21 @@ def ranknet(input_dim):
   return cost
 ```
 
-上述结构中使用了和前述图表相同的模型结构，使用了两层隐藏层，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征dense_vector的维度，label取值为1，-1。每条输入样本为`<label>，<docA, docB>`的结构，以docA为例，输入`input_dim`的文档特征，依次变换成10维，1维特征，最终输入到RankCost层中，比较docA和docB在RankCost输出得到预测值。
+上述结构中使用了和前述图表相同的模型结构，使用了两层隐藏层，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征的维度，label取值为1，-1。每条输入样本为`<label>，<docA, docB>`的结构，以docA为例，输入`input_dim`的文档特征，依次变换成10维，1维特征，最终输入到RankCost层中，比较docA和docB在RankCost输出得到预测值。
 
-用户运行`python ranknet.py`将会将每个轮次的模型存下来，并在测试数据上测试效果。
+用户运行只需要运行命令：
+
+`python ranknet.py`
+
+将会自动下载数据，训练RankNet模型，并将每个轮次的模型存下来，并在测试数据上测试效果。
 
 
 
 ##  用户自定义RankNet数据
 
-上面的代码使用了paddle内置的排序数据，如果希望使用自定义格式数据。可以参考Paddle内置的`mq2007`数据集，编写一个生成器函数。例如输入数据为如下格式，只包含doc0-doc2三个文档。
+上面的代码使用了paddle内置的排序数据，如果希望使用自定义格式数据，可以参考Paddle内置的`mq2007`数据集，编写一个生成器函数。例如输入数据为如下格式，只包含doc0-doc2三个文档。
 
-\<query_id\> \<relevance_score\> \<feature_vector\>的格式
+\<query_id\> \<relevance_score\> \<feature_vector\>的格式(feature_vector采用libsvm数据格式)
 
 ```
 query_id : 1, relevance_score:1, feature_vector 0:0.1, 1:0.2, 2:0.4  #doc0
@@ -195,8 +207,8 @@ def gen_pairwise_data(text_line_of_data):
 ```python
 # Define the input data order
 feeding = {"label":0,
-              "left/data" :1,
-              "right/data":2}
+            "left/data" :1,
+            "right/data":2}
 ```
 
 
@@ -249,15 +261,17 @@ def lambdaRank(input_dim):
   return cost, output
 ```
 
-上述结构中使用了和前述图表相同的模型结构，和RankNet相似，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征dense_vector的维度，label取值为1，-1。每条输入样本为label，\<docA, docB\>的结构，以docA为例，输入input_dim的文档特征，依次变换成10维，1维特征，最终输入到LambdaCost层中。需要注意这里的label和data格式为**dense_vector_sequence**，表示一列文档得分或者文档特征组成的**序列**。
+上述结构中使用了和前述图表相同的模型结构，和RankNet相似，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征的维度，label取值为1，-1。每条输入样本为label，\<docA, docB\>的结构，以docA为例，输入input_dim的文档特征，依次变换成10维，1维特征，最终输入到LambdaCost层中。需要注意这里的label和data格式为**dense_vector_sequence**，表示一列文档得分或者文档特征组成的**序列**。
 
-用户运行`python lambdaRank.py`将会把每个轮次的模型存下来，并在测试数据上测试效果。
+用户运行只需要运行命令：
 
+`python lambdaRank.py`
 
+将会自动下载数据，训练LambdaRank模型，并将每个轮次的模型存下来，并在测试数据上测试效果。
 
 ## 自定义 LambdaRank数据
 
-上面的代码使用了paddle内置的mq2007数据，如果希望使用自定义格式数据。可以参考Paddle内置的`mq2007`数据集，编写一个生成器函数。例如输入数据为如下格式，只包含doc0-doc2三个文档。
+上面的代码使用了paddle内置的mq2007数据，如果希望使用自定义格式数据，可以参考Paddle内置的`mq2007`数据集，编写一个生成器函数。例如输入数据为如下格式，只包含doc0-doc2三个文档。
 
 \<query_id\> \<relevance_score\> \<feature_vector\>的格式
 

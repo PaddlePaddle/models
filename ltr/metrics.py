@@ -3,6 +3,13 @@ import unittest
 
 
 def ndcg(score_list):
+    """
+    measure the ndcg score of order list
+    https://en.wikipedia.org/wiki/Discounted_cumulative_gain
+    parameter:
+        score_list: np.array, shape=(sample_num,1)
+    """
+
     def dcg(score_list):
         n = len(score_list)
         cost = .0
