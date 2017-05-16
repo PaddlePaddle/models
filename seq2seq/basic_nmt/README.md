@@ -16,9 +16,7 @@
 
 - **解码器**：接受编码器的输入，逐个词地解码出目标语言序列 $u = {u_1, u_2, ..., u_{T'}}$。每个时间步， RNN 单元输出一个隐藏向量，之后经 `Softmax` 归一化计算出下一个目标词的条件概率，即 $P(u_i | w, u_1, u_2, ..., u_{t-1})$。因此，给定输入 $w$，其对应的翻译结果为 $u$ 的概率则为
 
-<center>
-$$ P(u_1,u_2,...,u_{T'} | w) = \prod_{t=1}^{t={T'}}p(u_t|w, u_1, u_2, u_{t-1})$$
-</center>
+<center>$$ P(u_1,u_2,...,u_{T'} | w) = \prod_{t=1}^{t={T'}}p(u_t|w, u_1, u_2, u_{t-1})$$</center>
 
 以中文到英文的翻译为例，对于如下分词后的句子
 
@@ -90,7 +88,7 @@ encoded_vector = paddle.networks.bidirectional_gru(
 ### 无注意力机制的解码器
 PaddleBook中[机器翻译](https://github.com/PaddlePaddle/book/tree/develop/08.machine_translation)的相关章节中，已介绍了带注意力机制（Attention Mechanism）的 Encoder-Decoder 结构，本教程则介绍的是不带注意力机制的 Encoder-Decoder 结构。关于注意力机制，读者可进一步参考 PaddleBook 和参考文献\[[3](#参考文献)]。
 
-对于各种可以标准化的 RNN 结构，在 PaddlePaddle 中已有很好的实现，可以像前面的双向编码器那样直接调用。而如果希望在 RNN 的每一个时间步实现某些自定义操作，则可以自定义单步逻辑函数，再利用函数 `recurrent_group()` 循环调用单步逻辑函数处理完整个序列。 此处无注意力机制的的解码器，就用了单步逻辑函数＋`recurrent_group()`的方式予以实现，其中单步逻辑函数`gru_decoder_without_attention()`的相关代码如下：
+对于各种可以标准化的 RNN 结构，在 PaddlePaddle 中已有很好的实现，可以像前面的双向编码器那样直接调用。而如果希望在 RNN 的每一个时间步实现某些自定义操作，则可以自定义单步逻辑函数，再利用函数 `recurrent_group()` 循环调用单步逻辑函数处理完整个序列。 此处无注意力机制的的解码器，就用了单步逻辑函数加`recurrent_group()`的方式予以实现，其中单步逻辑函数`gru_decoder_without_attention()`的相关代码如下：
 
 ```python
 #### Decoder
@@ -352,6 +350,6 @@ prob = -5.026885: They know their business better than anybody . <e>
 ## 参考文献
 [1] Sutskever I, Vinyals O, Le Q V. [Sequence to Sequence Learning with Neural Networks](https://arxiv.org/abs/1409.3215)[J]. 2014, 4:3104-3112.
 
-［2］Cho K, Van Merriënboer B, Gulcehre C, et al. [Learning phrase representations using RNN encoder-decoder for statistical machine translation](http://www.aclweb.org/anthology/D/D14/D14-1179.pdf)[C]. Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP), 2014: 1724-1734.
+[2]Cho K, Van Merriënboer B, Gulcehre C, et al. [Learning phrase representations using RNN encoder-decoder for statistical machine translation](http://www.aclweb.org/anthology/D/D14/D14-1179.pdf)[C]. Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP), 2014: 1724-1734.
 
-［3］Bahdanau D, Cho K, Bengio Y. [Neural machine translation by jointly learning to align and translate](https://arxiv.org/abs/1409.0473)[C]. Proceedings of ICLR 2015, 2015
+[3] Bahdanau D, Cho K, Bengio Y. [Neural machine translation by jointly learning to align and translate](https://arxiv.org/abs/1409.0473)[C]. Proceedings of ICLR 2015, 2015
