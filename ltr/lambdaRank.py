@@ -37,8 +37,7 @@ def train_lambdaRank(num_passes):
         paddle.dataset.mq2007.test, format="listwise")
     train_reader = paddle.batch(
         paddle.reader.shuffle(fill_default_train, buf_size=100), batch_size=32)
-    test_reader = paddle.batch(
-        paddle.reader.buffered(fill_default_test, size=100), batch_size=32)
+    test_reader = paddle.batch(fill_default_test, batch_size=32)
 
     # mq2007 input_dim = 46, dense format 
     input_dim = 46

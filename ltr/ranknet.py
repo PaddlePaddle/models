@@ -54,9 +54,7 @@ def train_ranknet(num_passes):
     train_reader = paddle.batch(
         paddle.reader.shuffle(paddle.dataset.mq2007.train, buf_size=100),
         batch_size=100)
-    test_reader = paddle.batch(
-        paddle.reader.buffered(paddle.dataset.mq2007.test, size=100),
-        batch_size=100)
+    test_reader = paddle.batch(paddle.dataset.mq2007.test, batch_size=100)
 
     # mq2007 feature_dim = 46, dense format 
     # fc hidden_dim = 128
