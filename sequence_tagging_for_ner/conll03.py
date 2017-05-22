@@ -31,32 +31,6 @@ def canonicalize_word(word, wordset=None, digits=True):
     else: return "UUUNKKK"  # unknown token
 
 
-def corpus_reader(filename='data/train'):
-    def reader():
-        sentence = []
-        labels = []
-        with open(filename) as f:
-            for line in f:
-                if re.match(r"-DOCSTART-.+", line) or (len(line.strip()) == 0):
-                    if len(sentence) > 0:
-                        yield sentence, labels
-                    sentence = []
-                    labels = []
-                else:
-                    segs = line.strip().split()
-                    sentence.append(segs[0])
-                    # transform from I-TYPE to BIO schema
-                    if segs[-1] != 'O' and (len(labels) == 0 or
-                                            labels[-1][1:] != segs[-1][1:]):
-                        labels.append('B' + segs[-1][1:])
-                    else:
-                        labels.append(segs[-1])
-
-        f.close()
-
-    return reader
-
-
 def load_dict(filename):
     d = dict()
     with open(filename, 'r') as f:
@@ -124,8 +98,9 @@ def reader_creator(corpus_reader, word_dict, label_dict):
                 word_dict.get(canonicalize_word(w, word_dict), UNK_IDX)
                 for w in sentence
             ]
+            mark = [1 if w[0].isupper() else 0 for w in sentence]
             label_idx = [label_dict.get(w) for w in labels]
-            yield word_idx, label_idx, sentence
+            yield word_idx, mark, label_idx, sentence
 
     return reader
 

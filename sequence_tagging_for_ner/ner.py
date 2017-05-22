@@ -12,15 +12,17 @@ vocab_file = 'data/vocab.txt'
 target_file = 'data/target.txt'
 emb_file = 'data/wordVectors.txt'
 
-word_dict, label_dict = conll03.get_dict(vocab_file, target_file)
-word_vector_values = conll03.get_embedding(emb_file)
 train_data_reader = conll03.train(train_data_file, vocab_file, target_file)
 test_data_reader = conll03.test(test_data_file, vocab_file, target_file)
+word_dict, label_dict = conll03.get_dict(vocab_file, target_file)
+word_vector_values = conll03.get_embedding(emb_file)
 
 # init hyper-params
 word_dict_len = len(word_dict)
 label_dict_len = len(label_dict)
+mark_dict_len = 2
 word_dim = 50
+mark_dim = 5
 hidden_dim = 300
 
 mix_hidden_lr = 1e-3
@@ -37,12 +39,17 @@ def d_type(size):
 
 def ner_net(is_train):
     word = paddle.layer.data(name='word', type=d_type(word_dict_len))
+    mark = paddle.layer.data(name='mark', type=d_type(mark_dict_len))
 
     word_embedding = paddle.layer.mixed(
         name='word_embedding',
         size=word_dim,
         input=paddle.layer.table_projection(input=word, param_attr=emb_para))
-    emb_layers = [word_embedding]
+    mark_embedding = paddle.layer.mixed(
+        name='mark_embedding',
+        size=mark_dim,
+        input=paddle.layer.table_projection(input=mark, param_attr=std_0))
+    emb_layers = [word_embedding, mark_embedding]
 
     word_caps_vector = paddle.layer.concat(
         name='word_caps_vector', input=emb_layers)
@@ -191,7 +198,7 @@ def ner_net_train(data_reader=train_data_reader, num_passes=1):
     reader = paddle.batch(
         paddle.reader.shuffle(data_reader, buf_size=8192), batch_size=64)
 
-    feeding = {'word': 0, 'target': 1}
+    feeding = {'word': 0, 'mark': 1, 'target': 2}
 
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
@@ -223,11 +230,10 @@ def ner_net_train(data_reader=train_data_reader, num_passes=1):
 
 
 def ner_net_infer(data_reader=test_data_reader, model_file='ner_model.tar.gz'):
-    test_creator = data_reader
     test_data = []
     test_sentences = []
-    for item in test_creator():
-        test_data.append([item[0]])
+    for item in data_reader():
+        test_data.append([item[0], item[1]])
         test_sentences.append(item[-1])
         if len(test_data) == 10:
             break
@@ -253,5 +259,5 @@ def ner_net_infer(data_reader=test_data_reader, model_file='ner_model.tar.gz'):
 
 if __name__ == '__main__':
     paddle.init(use_gpu=False, trainer_count=1)
-    ner_net_train(num_passes=1)
-    ner_net_infer()
+    ner_net_train(data_reader=train_data_reader, num_passes=1)
+    ner_net_infer(data_reader=test_data_reader, model_file='ner_model.tar.gz')
