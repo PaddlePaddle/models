@@ -4,11 +4,15 @@
 
 RankNet模型在命令行输入：
 
- `python ranknet.py`
+```python
+python ranknet.py
+```
 
 LambdaRank模型在命令行输入：
 
- `python lambdaRank.py`
+```python
+python lambdaRank.py
+```
 
 用户只需要使用以上命令就完成排序模型的训练和预测，程序会自动下载内置数据集，无需手动下载。
 
@@ -16,26 +20,26 @@ LambdaRank模型在命令行输入：
 
 ## 背景介绍
 
-排序学习技术随着互联网的快速增长而受到越来越多关注，是机器学习中的常见任务。一方面人工排序规则不能处理海量规模的候选数据，另一方面无法为不同渠道的候选数据给于合适的权重，因此排序学习在日常生活中应用非常广泛。排序学习起源于信息检索领域，目前仍然是许多信息检索场景中的核心模块，例如搜索引擎搜索结果排序，推荐系统候选集排序，在线广告排序等等。在本例子中，采用文档检索阐述排序学习模型。
+排序学习技术随着互联网的快速增长而受到越来越多关注，是机器学习中的常见任务之一。一方面人工排序规则不能处理海量规模的候选数据，另一方面无法为不同渠道的候选数据给于合适的权重，因此排序学习在日常生活中应用非常广泛。排序学习起源于信息检索领域，目前仍然是许多信息检索场景中的核心模块，例如搜索引擎搜索结果排序，推荐系统候选集排序，在线广告排序等等。在本例子中，采用文档检索阐述排序学习模型。
 
 <p align="center">
 <img src="image/search-engine-example.png" width="30%" ><br/>
 图1. 排序模型在文档检索的典型应用搜索引擎中的作用
 </p>
 
-假定有一组文档S，文档检索任务是依据和请求的相关性，给出文档排列顺序。查询引擎根据查询请求，排序模型会给每个文档打出分数，依据打分情况倒序排列文档，得到查询结果。在训练模型时，给定一条查询，并给出对应的文档最佳排序和得分。在预测时候，给出查询请求，排序模型生成文档排序。传统的排序学习方法划分为以下三类：
+假定有一组文档S，文档检索任务是依据和请求的相关性，给出文档排列顺序。查询引擎根据查询请求，排序模型会给每个文档打出分数，依据打分情况倒序排列文档，得到查询结果。在训练模型时，给定一条查询，并给出对应的文档最佳排序和得分。在预测时候，给出查询请求，排序模型生成文档排序。常见的排序学习方法划分为以下三类：
 
 - Pointwise 方法
 
-  Pointwise方法是通过近似为回归问题解决排序问题，输入的单条样本为得分-文档，将每个查询-文档对的相关性得分作为实数分数或者序数分数，使得单个查询-文档对作为样本点(Pointwise的由来)，训练排序模型。预测时候对于指定输入，给出查询-文档对的相关性得分
+  Pointwise方法是通过近似为回归问题解决排序问题，输入的单条样本为**得分-文档**，将每个查询-文档对的相关性得分作为实数分数或者序数分数，使得单个查询-文档对作为样本点(Pointwise的由来)，训练排序模型。预测时候对于指定输入，给出查询-文档对的相关性得分。
 
 - Pairwise方法
 
-  Pairwise方法是通过近似为分类问题解决排序问题，输入的单条样本为标签-文档对。对于一次查询的多个结果文档，组合任意两个文档形成文档对作为输入样本。即学习一个二分类器，对输入的一对文档对AB（Pairwise的由来），根据A相关性是否比B好，二分类器给出分类标签+1或-1。对所有文档对进行分类，就可以得到一组偏序关系，从而构造文档全集的排序关系。该类方法的原理是对给定的文档全集S，降低排序中的逆序文档对的个数来降低排序错误，从而达到优化排序结果的目的。
+  Pairwise方法是通过近似为分类问题解决排序问题，输入的单条样本为**标签-文档对**。对于一次查询的多个结果文档，组合任意两个文档形成文档对作为输入样本。即学习一个二分类器，对输入的一对文档对AB（Pairwise的由来），根据A相关性是否比B好，二分类器给出分类标签+1或-1。对所有文档对进行分类，就可以得到一组偏序关系，从而构造文档全集的排序关系。该类方法的原理是对给定的文档全集S，降低排序中的逆序文档对的个数来降低排序错误，从而达到优化排序结果的目的。
 
 - Listwise方法
 
-  Listwise方法是直接优化排序列表，输入为单条样本为一个文档排列。通过构造合适的度量函数衡量当前文档排序和最优排序差值，优化度量函数得到排序模型。由于度量函数很多具有非连续性，优化困难。
+  Listwise方法是直接优化排序列表，输入为单条样本为一个**文档排列**。通过构造合适的度量函数衡量当前文档排序和最优排序差值，优化度量函数得到排序模型。由于度量函数很多具有非连续性的性质，优化困难。
 
   ​
 
@@ -94,7 +98,7 @@ $$C=\frac{1}{2}(1-S_{i,j})\sigma (s_{i}-s{j})+log(1+e^{-\sigma (s_{i}-s_{j})})$$
 
 $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}} = \frac{1}{2}(1-S_{i,j})-\frac{1}{1+e^{\sigma (s_{i}-s_{j})}}$$
 
-表示的含义是本轮排序优化过程中上升或者下降量。
+表示的含义是本轮排序优化过程中文档Ui的上升或者下降量。
 
 
 
@@ -108,7 +112,7 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}} = \frac{1}{2}(1-S_{i,j})-\fra
 - 全连接层(fully connected layer) : 指上一层中的每个节点都连接到下层网络。本例子中同样使用paddle.layer.fc实现，注意输入到RankCost层的全连接层维度为1。
 - RankCost层： RankCost层是排序网络RankNet的核心，度量docA相关性是否比docB好，给出预测值并和label比较。使用了交叉熵(cross enctropy)作为度量损失函数，使用梯度下降方法进行优化。细节可见[RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf)[4]。
 
-由于Pairwise中的网络结构是左右对称，可定义一半网络结构，另一半共享网络参数。使用PaddlePaddle实现RankNet排序模型，定义网络结构的示例代码如下：
+由于Pairwise中的网络结构是左右对称，可定义一半网络结构，另一半共享网络参数。在PaddlePaddle中允许网络结构中共享连接，具有相同名字的参数将会共享参数状态。使用PaddlePaddle实现RankNet排序模型，定义网络结构的示例代码如下：
 
 ```python
 import paddle.v2 as paddle
@@ -116,8 +120,7 @@ import paddle.v2 as paddle
 def half_ranknet(name_prefix, input_dim):
   """
   parameter in same name will be shared in paddle framework,
-  these parameters in ranknet can be used in shared state, e.g. left network and right network
-  shared parameters in detail
+  these parameters in ranknet can be used in shared state, e.g. left network and right network in detail
   https://github.com/PaddlePaddle/Paddle/blob/develop/doc/design/api.md
   """
   # data layer
@@ -154,8 +157,9 @@ def ranknet(input_dim):
 
 用户运行只需要运行命令：
 
-`python ranknet.py`
-
+```python
+python ranknet.py
+```
 将会自动下载数据，训练RankNet模型，并将每个轮次的模型存下来，并在测试数据上测试效果。
 
 
@@ -241,33 +245,50 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}}=-\frac{\sigma }{1+e^{\sigma (
 ```python
 import paddle.v2 as paddle
 def lambdaRank(input_dim):
-  label = paddle.layer.data("label", paddle.data_type.dense_vector_sequence(1))
-  data = paddle.layer.data("data", paddle.data_type.dense_vector_sequence(input_dim))
+    """
+    lambdaRank is a ListWise Rank Model, input data and label must be sequence
+    https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf
+    parameters :
+      input_dim, one document's dense feature vector dimension
 
-  # hidden layer
-  hd1 = paddle.layer.fc(
-    input=data,
-    size=10,
-    act=paddle.activation.Tanh(),
-    param_attr=paddle.attr.Param(initial_std=0.01))
-  output = paddle.layer.fc(                                                                                                                                       input=hd1,
-    size=1,
-    act=paddle.activation.Linear(),
-    param_attr=paddle.attr.Param(initial_std=0.01))
-  cost = paddle.layer.lambda_cost(input=output,
-                                  score=label,
-                                  NDCG_num=6,
-                                  max_sort_size = -1)
-  return cost, output
+    dense_vector_sequence format
+    [[f, ...], [f, ...], ...], f is represent for an float or int number
+    """
+    label = paddle.layer.data("label",
+                              paddle.data_type.dense_vector_sequence(1))
+    data = paddle.layer.data("data",
+                             paddle.data_type.dense_vector_sequence(input_dim))
+
+    # hidden layer
+    hd1 = paddle.layer.fc(
+        input=data,
+        size=10,
+        act=paddle.activation.Tanh(),
+        param_attr=paddle.attr.Param(initial_std=0.01))
+    output = paddle.layer.fc(
+        input=hd1,
+        size=1,
+        act=paddle.activation.Linear(),
+        param_attr=paddle.attr.Param(initial_std=0.01))
+    # cost layer
+    cost = paddle.layer.lambda_cost(
+        input=output, score=label, NDCG_num=6, max_sort_size=-1)
+    return cost, output
 ```
 
 上述结构中使用了和前述图表相同的模型结构，和RankNet相似，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征的维度，label取值为1，-1。每条输入样本为label，\<docA, docB\>的结构，以docA为例，输入input_dim的文档特征，依次变换成10维，1维特征，最终输入到LambdaCost层中。需要注意这里的label和data格式为**dense_vector_sequence**，表示一列文档得分或者文档特征组成的**序列**。
 
 用户运行只需要运行命令：
 
-`python lambdaRank.py`
+```python
+python lambdaRank.py
+```
 
-将会自动下载数据，训练LambdaRank模型，并将每个轮次的模型存下来，并在测试数据上测试效果。
+将会自动下载数据，训练LambdaRank模型，并将每个轮次的模型存下来，将最终模型存储在文件中
+
+###  rankNet模型预测
+
+
 
 ## 自定义 LambdaRank数据
 

@@ -8,6 +8,11 @@ def ndcg(score_list):
     https://en.wikipedia.org/wiki/Discounted_cumulative_gain
     parameter:
         score_list: np.array, shape=(sample_num,1)
+
+    e.g. predict rank score list :
+    >>> scores =  [3, 2, 3, 0, 1, 2] 
+    >>> ndcg_score = ndcg(scores)
+    
     """
 
     def dcg(score_list):
