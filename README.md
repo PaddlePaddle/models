@@ -5,68 +5,83 @@
 [![Documentation Status](https://img.shields.io/badge/中文文档-最新-brightgreen.svg)](http://www.paddlepaddle.org/doc_cn/)
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 
+PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式构建起千变万化的深度学习模型来解决不同的应用问题。这里，我们针对常见的机器学习任务，提供了不同的神经网络模型供大家学习和使用。
 
 ## 词向量
 
-- **介绍：**
+- **介绍**
 
-    狭义上讲，词向量是指把所有文本样本中的每个单词映射到一个向量。比如，对于文本“A B A E B F G”，我们最终得到单词A对应的向量为[0.1 0.6 -0.5]，单词B对应的向量为[-0.2 0.9 0.7] 。相对于one-hot表示方式，词向量方式更容易计算单词之间的相似性，表示方式更加紧凑。
-    广义上讲，词向量也可以应用于普通离散特征，可以充分利用无监督数据，充分捕获特征间的关系，可以有效解决特征稀疏、标签数据缺失、数据噪声等问题。
+	[词向量](https://github.com/PaddlePaddle/book/blob/develop/04.word2vec/README.cn.md) 是深度学习应用于自然语言处理领域最成功的概念和成果之一，是一种分散式表示（distributed representation）法。分散式表示法用一个更低维度的实向量表示词语，向量的每个维度在实数域取值，都表示文本的某种潜在的语法或语义特征。广义地讲，词向量也可以应用于普通离散特征。词向量的学习通常都是一个无监督的学习过程，因此，可以充分利用海量的无标记数据以捕获特征之间的关系，也可以有效地解决特征稀疏、标签数据缺失、数据噪声等问题。
 
-- **应用领域：**
+	然而，常见词向量学习模型的最后一层往往都会遇到超大规模分类问题，成为学习的性能瓶颈，在词向量的例子中，我们向大家展示如何使用Hierarchical-sigmoid 和噪声对比估计（Noise Contrastive Estimation，NCE）来加速词向量的学习。
 
-    词向量是自然语言处理中常见的一个操作，是搜索引擎、广告系统、推荐系统等互联网服务背后常见的基础技术。
+- **应用领域**
 
-- **模型配置说明：**
+	词向量是深度学习算法引入自然语言处理领域的核心技术之一，在大规模无标记语料上训练的词向量模型也是自然语言处理任务上的通用数据资源，对特定自然语言处理任务的性能提升都有一定的帮助。同时，词嵌入的思想也是深度学习模型处理离散特征的重要方法，有着广泛地借鉴和参考意义。
 
-    [word_embedding](https://github.com/PaddlePaddle/models/tree/develop/word_embedding) |
+	词向量在搜索引擎、广告系统、推荐系统等互联网服务背后常见的基础技术之一。
+
+- **模型配置说明**
+
+	[word_embedding](https://github.com/PaddlePaddle/models/tree/develop/word_embedding)
 ## 文本生成
 
-- **介绍：**
+- **介绍**
 
-    文本生成(Sequence to Sequence)，是一种时序对映射的过程，实现了深度学习模型在序列问题中的应用，其中比较突出的是机器翻译和机器人问答。
+	我们期待有一天机器可以使用自然语言与人们进行交流，像人一样能够撰写高质量的自然语言文本，自动文本生成是实现这一目标的关键技术，可以应用于机器翻译系统、对话系统、问答系统等，为人们带来更加有趣地交互体验，也可以自动撰写新闻摘要，撰写歌词，简单的故事等等。或许未来的某一天，机器能够代替编辑，作家，歌词作者，颠覆这些内容创作领域的工作方式。
 
-- **应用领域：**
+	基于神经网络生成文本常使用两类方法：1. 语言模型；2. 序列到序列（sequence to sequence）映射模型。在文本生成的例子中，我们为大家展示如何使用以上两种模型来自动生成文本。
 
-    文本生成模型可扩展应用于：机器翻译、智能对话与问答、广告创意语料生成、自动编码（如金融画像编码）等业务领域
+	特别的，对序列到序列映射模型，我们以机器翻译任务为例提供了多种改进模型，供大家学习和使用，包括：
+	1. 不带注意力机制的序列到序列映射模型，这一模型是所有序列到序列学习模型的基础。
+	2. 带注意力机制使用 scheduled sampling 改善生成质量，用来改善RNN模型在文本生成过程中的错误累积问题。
+	3. 带外部记忆机制的神经机器翻译，通过增强神经网络的记忆能力，来完成复杂的序列到序列学习任务。
 
-- **模型配置说明：**
 
-    [sequence_tagging_for_ner](https://github.com/PaddlePaddle/models/tree/develop/sequence_tagging_for_ner) | [seq2seq](https://github.com/PaddlePaddle/models/tree/develop/seq2seq)
+- **应用领域**
 
-## LTR
+	文本生成模型实现了两个甚至是多个不定长模型之间的映射，有着广泛地应用，包括机器翻译、智能对话与问答、广告创意语料生成、自动编码（如金融画像编码）、判断多个文本串之间的语义相关性等。
 
-- **介绍：**
+- **模型配置说明**
 
-    LTR(learning to rank)是用于解决排序问题的监督学习算法。LTR可分为以下三种：
+	[seq2seq](https://github.com/PaddlePaddle/models/tree/develop/seq2seq) | [scheduled_sampling](https://github.com/PaddlePaddle/models/tree/develop/scheduled_sampling) | [external_memory](https://github.com/PaddlePaddle/models/tree/develop/mt_with_external_memory)
 
-    - Pointwis：将排序问题转化为多类分类问题或者回归问题。对于检索问题，只考虑给定查询下，单个文档的绝对相关度。
-    - PairWise：排序问题被转化成结果对的 回归 、 分类 或 有序分类 的问题。考虑给定查询下，两个文档之间的相对相关度。
-    - ListWise：不再将Ranking问题直接形式化为一个分类或者回归问题，考虑给定查询下的文档集合的整体序列。
+## 排序学习（Learning to Rank, LTR）
 
-    PaddlePaddle提供的模型是ListWise的一种实现LambdaRank。
+- **介绍**
 
-- **应用领域：**
+	排序学习（Learning to Rank，下简称LTR）是信息检索和搜索引擎研究的核心问题之一，通过机器学习方法学习一个分值函数（Scoring Function）对待排序的候选进行打分，再根据分值的高低确定序关系。深度神经网络可以用来建模分值函数，构成各类基于深度学习的LTR模型。
 
-    LTR最标准的应用场景是搜索排序，包括：图片搜索排序、外卖美食搜索排序、App搜索排序、酒店搜索排序。同时，还可以扩展应用于：关键词推荐排序、各类业务榜单排序、个性化推荐排序等。
+	以信息检索任务为例，给定查询以及检索到的候选文档列表，LTR系统需要按照查询与候选文档的相关性，对候选文档进行打分并排序。LTR学习方法可以分为三种：
 
-- **模型配置说明：**
+	- Pointwise：在Pointwise 学习策略中，LTR被转化为一个回归或是分类问题。Pointwise 学习策略可参考PaddleBook的[推荐系统](https://github.com/PaddlePaddle/book/blob/develop/05.recommender_system/README.cn.md)一节。
+	- PairWise：排序问题被转化成结果对的回归 、分类或有序分类问题。考虑给定查询下，两个文档之间的相对相关度。
+	- Listwise：与Pointwise与Pairwise学习方法相比，Listwise方法将给定查询对应的整个候选文档集合列表（list）作为输入，直接对排序结果列表进行优化。Listwise方法在损失函数中考虑了文档排序的位置因素，是前两种方法所不具备的。
 
-    [LTR](https://github.com/PaddlePaddle/models/tree/develop/ltr) |
+	我们提供了基于RankLoss 损失函数的Pairwise 排序模型，以及基于LambdaRank 损失函数的ListWise排序模型。Pointwise 可参考[文本分类](https://github.com/llxxxll/models/tree/b762b41e0330dbbbb73b83ddba0417ac48c73593/text_classification)中的分类模型，以及[Regression](https://github.com/llxxxll/models/tree/b762b41e0330dbbbb73b83ddba0417ac48c73593/text_classification)中的回归模型来实现。
+
+- **应用领域**
+
+	LTR模型在搜索排序，包括：图片搜索排序、外卖美食搜索排序、App搜索排序、酒店搜索排序等场景中有着广泛的应用。还可以扩展应用于：关键词推荐、各类业务榜单、个性化推荐等任务。
+
+- **模型配置说明**
+
+	[Pointwise 排序模型](https://github.com/PaddlePaddle/book/blob/develop/05.recommender_system/README.cn.md)
+ | [Pairwise 排序模型]() | [Listwise 排序模型]()
 
 ## 文本分类
 
-- **介绍：**
+- **介绍**
 
-    通过深度神经网络模型对文本样本进行分类，支持二分类和多分类。模型包含word embedding步骤，用户可直接将原始文本数据作为输入。
+	文本分类是自然语言处理领域最基础的任务之一，深度学习方法能够免除复杂的特征工程，直接使用原始文本作为输入，数据驱动地最优化分类准确率。我们以情感分类任务为例，提供了基于DNN的非序列文本分类模型，基CNN和LSTM的序列模型供大家学习和使用。
 
-- **应用领域：**
+- **应用领域**
 
-    文本分类可扩展用于以下业务领域：文章质量评估，色情暴力文章识别，评论情绪识别，广告物料风险控制等。
+	分类是机器学习基础任务之一。文本分类模型在SPAM检测，文本打标签，文本意图识别，文章质量评估，色情暴力文章识别，评论情绪识别，广告物料风险控制等领域都有着广泛地应用。
 
-- **模型配置说明：**
+- **模型配置说明**
 
-    [text_classification](https://github.com/PaddlePaddle/models/tree/develop/text_classification) |
+	[text_classification](https://github.com/PaddlePaddle/models/tree/develop/text_classification)
 
 ## Copyright and License
 PaddlePaddle is provided under the [Apache-2.0 license](LICENSE).
