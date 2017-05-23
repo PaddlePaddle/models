@@ -21,7 +21,7 @@
     文本生成模型可扩展应用于：机器翻译、智能对话与问答、广告创意语料生成、自动编码（如金融画像编码）等业务领域
 
 - **模型配置说明：**
-    [sequence_tagging_for_ner](https://github.com/PaddlePaddle/models/tree/develop/sequence_tagging_for_ner) |[seq2seq](https://github.com/PaddlePaddle/models/tree/develop/seq2seq) 
+    [sequence_tagging_for_ner](https://github.com/PaddlePaddle/models/tree/develop/sequence_tagging_for_ner) | [seq2seq](https://github.com/PaddlePaddle/models/tree/develop/seq2seq)
 
 ## LTR
 
