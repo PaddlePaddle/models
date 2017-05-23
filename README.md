@@ -10,15 +10,16 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 - **介绍**
 
-	[词向量](https://github.com/PaddlePaddle/book/blob/develop/04.word2vec/README.cn.md) 是深度学习应用于自然语言处理领域最成功的概念和成果之一，是一种分散式表示（distributed representation）法。分散式表示法用一个更低维度的实向量表示词语，向量的每个维度在实数域取值，都表示文本的某种潜在的语法或语义特征。广义地讲，词向量也可以应用于普通离散特征。词向量的学习通常都是一个无监督的学习过程，因此，可以充分利用海量的无标记数据以捕获特征之间的关系，也可以有效地解决特征稀疏、标签数据缺失、数据噪声等问题。
+	[词向量](https://github.com/PaddlePaddle/book/blob/develop/04.word2vec/README.cn.md) 是深度学习应用于自然语言处理领域最成功的概念和成果之一，是一种分散式表示（distributed representation）法。分散式表示法用一个更低维度的实向量表示词语，向量的每个维度在实数域取值，都表示文本的某种潜在语法或语义特征。广义地讲，词向量也可以应用于普通离散特征。词向量的学习通常都是一个无监督的学习过程，因此，可以充分利用海量的无标记数据以捕获特征之间的关系，也可以有效地解决特征稀疏、标签数据缺失、数据噪声等问题。
 
-	然而，常见词向量学习模型的最后一层往往都会遇到超大规模分类问题，成为学习的性能瓶颈，在词向量的例子中，我们向大家展示如何使用Hierarchical-sigmoid 和噪声对比估计（Noise Contrastive Estimation，NCE）来加速词向量的学习。
+	然而，在常见词向量学习方法中，模型最后一层往往会遇到一个超大规模的分类问题，是计算性能的瓶颈。在词向量的例子中，我们向大家展示如何使用Hierarchical-Sigmoid 和噪声对比估计（Noise Contrastive Estimation，NCE）来加速词向量的学习。
 
 - **应用领域**
 
-	词向量是深度学习算法引入自然语言处理领域的核心技术之一，在大规模无标记语料上训练的词向量模型也是自然语言处理任务上的通用数据资源，对特定自然语言处理任务的性能提升都有一定的帮助。同时，词嵌入的思想也是深度学习模型处理离散特征的重要方法，有着广泛地借鉴和参考意义。
+	1. 词向量是深度学习算法引入自然语言处理领域的核心技术之一 -->  词向量是深度学习方法引入自然语言处理领域的核心技术之一 [深度学习算法--> 深度学习方法]
+	2. 在大规模无标记语料上训练的词向量模型也是自然语言处理任务上的通用数据资源，对特定自然语言处理任务的性能提升都有一定的帮助。 --> 在大规模无标记语料上训练的词向量常作为各种自然语言处理任务的预训练参数，是一种较为通用的资源，对任务性能的进一步提升有一定的帮助。
 
-	词向量在搜索引擎、广告系统、推荐系统等互联网服务背后常见的基础技术之一。
+	词向量是搜索引擎、广告系统、推荐系统等互联网服务背后的常见基础技术之一。
 
 - **模型配置说明**
 
@@ -53,11 +54,11 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 	以信息检索任务为例，给定查询以及检索到的候选文档列表，LTR系统需要按照查询与候选文档的相关性，对候选文档进行打分并排序。LTR学习方法可以分为三种：
 
-	- Pointwise：在Pointwise 学习策略中，LTR被转化为一个回归或是分类问题。Pointwise 学习策略可参考PaddleBook的[推荐系统](https://github.com/PaddlePaddle/book/blob/develop/05.recommender_system/README.cn.md)一节。
-	- PairWise：排序问题被转化成结果对的回归 、分类或有序分类问题。考虑给定查询下，两个文档之间的相对相关度。
+	- Pointwise：Pointwise 学习方法将LTR被转化为回归或是分类问题。给定查询以及一个候选文档，模型基于序数进行二分类、多分类或者回归拟合，是一种基础的LTR学习策略。
+	- Pairwise：Pairwise学习方法将排序问题归约为对有序对（ordered pair）的分类，比Pointwise方法更近了一步。模型判断一对候选文档中，哪一个与给定查询更相关，学习的目标为是最小化误分类文档对的数量。理想情况下，如果所有文档对都能被正确的分类，那么原始的候选文档也会被正确的排序。
 	- Listwise：与Pointwise与Pairwise学习方法相比，Listwise方法将给定查询对应的整个候选文档集合列表（list）作为输入，直接对排序结果列表进行优化。Listwise方法在损失函数中考虑了文档排序的位置因素，是前两种方法所不具备的。
 
-	我们提供了基于RankLoss 损失函数的Pairwise 排序模型，以及基于LambdaRank 损失函数的ListWise排序模型。Pointwise 可参考[文本分类](https://github.com/llxxxll/models/tree/b762b41e0330dbbbb73b83ddba0417ac48c73593/text_classification)中的分类模型，以及[Regression](https://github.com/llxxxll/models/tree/b762b41e0330dbbbb73b83ddba0417ac48c73593/text_classification)中的回归模型来实现。
+	Pointwise 学习策略可参考PaddleBook的[推荐系统](https://github.com/PaddlePaddle/book/blob/develop/05.recommender_system/README.cn.md)一节。在这里，我们提供了基于RankLoss 损失函数的Pairwise 排序模型，以及基于LambdaRank 损失函数的ListWise排序模型。
 
 - **应用领域**
 
@@ -66,7 +67,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 - **模型配置说明**
 
 	[Pointwise 排序模型](https://github.com/PaddlePaddle/book/blob/develop/05.recommender_system/README.cn.md)
- | [Pairwise 排序模型]() | [Listwise 排序模型]()
+ | [Pairwise 排序模型](https://github.com/PaddlePaddle/models/tree/develop/ltr) | [Listwise 排序模型](https://github.com/PaddlePaddle/models/tree/develop/ltr)
 
 ## 文本分类
 
