@@ -15,7 +15,6 @@
 - **模型配置说明：**
 
     [word_embedding](https://github.com/PaddlePaddle/models/tree/develop/word_embedding) |
-    
 ## 文本生成
 
 - **介绍：**
@@ -35,11 +34,11 @@
 - **介绍：**
 
     LTR(learning to rank)是用于解决排序问题的监督学习算法。LTR可分为以下三种：
-    
+
     - Pointwis：将排序问题转化为多类分类问题或者回归问题。对于检索问题，只考虑给定查询下，单个文档的绝对相关度。
     - PairWise：排序问题被转化成结果对的 回归 、 分类 或 有序分类 的问题。考虑给定查询下，两个文档之间的相对相关度。
     - ListWise：不再将Ranking问题直接形式化为一个分类或者回归问题，考虑给定查询下的文档集合的整体序列。
-    
+
     PaddlePaddle提供的模型是ListWise的一种实现LambdaRank。
 
 - **应用领域：**
