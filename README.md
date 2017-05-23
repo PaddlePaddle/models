@@ -1,6 +1,11 @@
 
 # models简介
 
+[![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](http://www.paddlepaddle.org/develop/doc/)
+[![Documentation Status](https://img.shields.io/badge/中文文档-最新-brightgreen.svg)](http://www.paddlepaddle.org/doc_cn/)
+[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
+
+
 ## 词向量
 
 - **介绍：**
@@ -62,3 +67,6 @@
 - **模型配置说明：**
 
     [text_classification](https://github.com/PaddlePaddle/models/tree/develop/text_classification) |
+
+## Copyright and License
+PaddlePaddle is provided under the [Apache-2.0 license](LICENSE).
