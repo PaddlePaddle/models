@@ -6,7 +6,7 @@
 ## 模型概览
 基于 RNN 的神经网络机器翻译模型遵循编码器－解码器结构，其中的编码器和解码器均是一个循环神经网络。将构成编码器和解码器的两个 RNN 沿时间步展开，得到如下的模型结构图：
 
-<p align="center"><img src="images/Encoder-Decoder.png" width = "90%" align="center"/><br/>图 1. 编码器－解码器框架 </p>
+<p align="center"><img src="images/encoder-decoder.png" width = "90%" align="center"/><br/>图 1. 编码器－解码器框架 </p>
 
 神经机器翻译模型的输入输出可以是字符，也可以是词或者短语。不失一般性，本例以基于词的模型为例说明编码器／解码器的工作机制：
 
