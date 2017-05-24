@@ -1,16 +1,16 @@
 # 噪声对比估计加速词向量训练
 ## 背景介绍
-在自然语言处理领域中，通常使用特征向量来表示一个单词，但是如何使用准确的词向量来表示语义却是一个难点，详细内容可以在[词向量章节](https://github.com/PaddlePaddle/book/blob/develop/04.word2vec/README.cn.md)中查阅到，原作者使用神经概率语言模型（Neural Probabilistic Language Model, NPLM）来训练词向量，尽管 NPLM 有优异的精度表现，但是相对于传统的 N-gram 统计模型，训练时间还是太漫长了\[[4](#参考文献)\]。常用的优化这个问题算法主要有两个：一个是 hierarchical-sigmoid \[[3](#参考文献)\] 另一个 噪声对比估计（Noise-contrastive estimation, NCE）\[[2](#参考文献)\]。为了克服这个问题本文引入了 NCE 方法。本文将以训练 NPLM 作为例子来讲述如何使用 NCE。
+在自然语言处理领域中，通常使用特征向量来表示一个单词，但是如何使用准确的词向量来表示语义却是一个难点，详细内容可以在[词向量章节](https://github.com/PaddlePaddle/book/blob/develop/04.word2vec/README.cn.md)中查阅到，原作者使用神经概率语言模型（Neural Probabilistic Language Model, NPLM）来训练词向量，尽管 NPLM 有优异的精度表现，但是相对于传统的 N-gram 统计模型，训练时间还是太漫长了\[[3](#参考文献)\]。常用的优化这个问题算法主要有两个：一个是 hierarchical-sigmoid \[[2](#参考文献)\] 另一个 噪声对比估计（Noise-contrastive estimation, NCE）\[[1](#参考文献)\]。为了克服这个问题本文引入了 NCE 方法。本文将以训练 NPLM 作为例子来讲述如何使用 NCE。
 
 ## NCE 概览
-NCE 是一种快速对离散分布进行估计的方法，应用到本文中的问题：训练 NPLM 计算开销很大，原因是 softmax 函数计算时需要考虑每个类别的指数项，必须计算字典中的所有单词，而在一般语料集上面字典往往非常大\[[4](#参考文献)\]，从而导致整个训练过程十分耗时。与常用的 hierarchical-sigmoid \[[3](#参考文献)\] 方法相比，NCE 不再使用复杂的二叉树来构造目标函数，而是采用相对简单的随机负采样，以大幅提升计算效率。
+NCE 是一种快速对离散分布进行估计的方法，应用到本文中的问题：训练 NPLM 计算开销很大，原因是 softmax 函数计算时需要考虑每个类别的指数项，必须计算字典中的所有单词，而在一般语料集上面字典往往非常大\[[3](#参考文献)\]，从而导致整个训练过程十分耗时。与常用的 hierarchical-sigmoid \[[2](#参考文献)\] 方法相比，NCE 不再使用复杂的二叉树来构造目标函数，而是采用相对简单的随机负采样，以大幅提升计算效率。
 
 
-假设已知具体的上下文 $h$，并且知道这个分布为 $P^h(w)$ ，并将从中抽样出来的数据作为正样例，而从一个噪音分布 $P_n(w)$ 抽样的数据作为负样例。我们可以任意选择合适的噪音分布，默认为无偏的均匀分布。这里我们同时假设噪音样例 k 倍于数据样例，则训练数据被抽中的概率为\[[2](#参考文献)\]：
+假设已知具体的上下文 $h$，并且知道这个分布为 $P^h(w)$ ，并将从中抽样出来的数据作为正样例，而从一个噪音分布 $P_n(w)$ 抽样的数据作为负样例。我们可以任意选择合适的噪音分布，默认为无偏的均匀分布。这里我们同时假设噪音样例 k 倍于数据样例，则训练数据被抽中的概率为\[[1](#参考文献)\]：
 
 $$P^h(D=1|w,\theta)=\frac { P_\theta^h(w) }{ P^h_\theta(w)+kP_n(w) } =\sigma (\Delta s_\theta(w,h))$$
 
-其中 $\Delta s_\theta(w,h)=s_\theta(w,h)-\log (kP_n(w))$ ，$s_\theta(w,h)$ 表示选择在生成 $w$ 字并处于上下文 $h$ 时的特征向量，整体目标函数的目的就是增大正样本的概率同时降低负样本的概率。目标函数如下[[2](#参考文献)]：
+其中 $\Delta s_\theta(w,h)=s_\theta(w,h)-\log (kP_n(w))$ ，$s_\theta(w,h)$ 表示选择在生成 $w$ 字并处于上下文 $h$ 时的特征向量，整体目标函数的目的就是增大正样本的概率同时降低负样本的概率。目标函数如下[[1](#参考文献)]：
 
 $$
 J^h(\theta )=E_{ P_d^h }\left[ \log { P^h(D=1|w,\theta ) }  \right] +kE_{ P_n }\left[ \log P^h (D=0|w,\theta ) \right]$$
@@ -70,9 +70,9 @@ cost = paddle.layer.nce(
 
 
 ## 预测阶段
-预测直接运行``` python infer.py ```，程序首先会加载最新模型，然后按照 batch 大小依次进行预测，并打印预测结果。因为训练和预测计算逻辑不一样，预测阶段需要共享 NCE Layer 中的逻辑回归训练时得到的参数，所以要写一个推断层，推断层的参数为预先训练好的参数。
+预测直接运行` python infer.py `，程序首先会加载最新模型，然后按照 batch 大小依次进行预测，并打印预测结果。因为训练和预测计算逻辑不一样，预测阶段需要共享 NCE Layer 中的逻辑回归训练时得到的参数，所以要写一个推断层，推断层的参数为预先训练好的参数。
 
-具体实现推断层的方法：先是通过 ```paddle.attr.Param``` 方法获取参数值，然后使用 ```paddle.layer.trans_full_matrix_projection``` 对隐层输出向量 ```hidden_layer``` 做一个矩阵右乘，PaddlePaddle 会自行在模型中寻找相同参数名的参数并获取。右乘求和后得到类别向量，将类别向量输入 softmax 做一个归一操作，和为1，从而得到最后的类别概率分布。
+具体实现推断层的方法：先是通过 `paddle.attr.Param` 方法获取参数值，然后使用 `paddle.layer.trans_full_matrix_projection` 对隐层输出向量 `hidden_layer` 做一个矩阵右乘，PaddlePaddle 会自行在模型中寻找相同参数名的参数并获取。右乘求和后得到类别向量，将类别向量输入 softmax 做一个归一操作，和为1，从而得到最后的类别概率分布。
 
 代码实现如下：
 
@@ -85,13 +85,31 @@ with paddle.layer.mixed(
         input=hidden_layer, param_attr=paddle.attr.Param(name='nce_w'))
 ```
 
+预测的输出形式为：
 
+```
+--------------------------
+No.68 Input: ' <unk> for possible
+Ground Truth Output: <unk>
+Predict Output: <unk>
+
+--------------------------
+No.69 Input: <unk> for possible <unk>
+Ground Truth Output: on
+Predict Output: <e>
+
+--------------------------
+No.70 Input: for possible <unk> on
+Ground Truth Output: the
+Predict Output: the
+
+```
+
+每一个短线表示一次的预测，第二行显示第几条测试样例，并给出输入的4个单词，第三行为真实的标签，第四行为预测的标签。
 
 ## 参考文献
-1. Mathematiques C D R. [Quick Training of Probabilistic Neural Nets by Importance Sampling](http://www.iro.umontreal.ca/~lisa/pointeurs/submit_aistats2003.pdf)[C]// 2002.
+1. Mnih A, Kavukcuoglu K. [Learning word embeddings efficiently with noise-contrastive estimation](https://papers.nips.cc/paper/5165-learning-word-embeddings-efficiently-with-noise-contrastive-estimation.pdf)[C]//Advances in neural information processing systems. 2013: 2265-2273.
 
-2. Mnih A, Kavukcuoglu K. [Learning word embeddings efficiently with noise-contrastive estimation](https://papers.nips.cc/paper/5165-learning-word-embeddings-efficiently-with-noise-contrastive-estimation.pdf)[C]//Advances in neural information processing systems. 2013: 2265-2273.
+2. Morin, F., & Bengio, Y. (2005, January). [Hierarchical Probabilistic Neural Network Language Model](http://www.iro.umontreal.ca/~lisa/pointeurs/hierarchical-nnlm-aistats05.pdf). In Aistats (Vol. 5, pp. 246-252).
 
-3. Morin, F., & Bengio, Y. (2005, January). [Hierarchical Probabilistic Neural Network Language Model](http://www.iro.umontreal.ca/~lisa/pointeurs/hierarchical-nnlm-aistats05.pdf). In Aistats (Vol. 5, pp. 246-252).
-
-4. Mnih A, Teh Y W. [A Fast and Simple Algorithm for Training Neural Probabilistic Language Models](http://xueshu.baidu.com/s?wd=paperuri%3A%280735b97df93976efb333ac8c266a1eb2%29&filter=sc_long_sign&tn=SE_xueshusource_2kduw22v&sc_vurl=http%3A%2F%2Farxiv.org%2Fabs%2F1206.6426&ie=utf-8&sc_us=5770715420073315630)[J]. Computer Science, 2012:1751-1758.
+3. Mnih A, Teh Y W. [A Fast and Simple Algorithm for Training Neural Probabilistic Language Models](http://xueshu.baidu.com/s?wd=paperuri%3A%280735b97df93976efb333ac8c266a1eb2%29&filter=sc_long_sign&tn=SE_xueshusource_2kduw22v&sc_vurl=http%3A%2F%2Farxiv.org%2Fabs%2F1206.6426&ie=utf-8&sc_us=5770715420073315630)[J]. Computer Science, 2012:1751-1758.
