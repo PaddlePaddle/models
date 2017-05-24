@@ -4,18 +4,16 @@ import paddle.v2 as paddle
 import numpy as np
 import functools
 
-#lambdaRank is listwise learning to rank model
 
-
-def lambdaRank(input_dim):
+def lambda_rank(input_dim):
     """
-    lambdaRank is a ListWise Rank Model, input data and label must be sequence
+    lambda_rank is a Listwise rank model, the input data and label must be sequences.
     https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf
     parameters :
       input_dim, one document's dense feature vector dimension
 
-    dense_vector_sequence format
-    [[f, ...], [f, ...], ...], f is represent for an float or int number
+    format of the dense_vector_sequence:
+    [[f, ...], [f, ...], ...], f is a float or an int number
     """
     label = paddle.layer.data("label",
                               paddle.data_type.dense_vector_sequence(1))
@@ -48,7 +46,7 @@ def lambdaRank(input_dim):
     return cost, output
 
 
-def train_lambdaRank(num_passes):
+def train_lambda_rank(num_passes):
     # listwise input sequence
     fill_default_train = functools.partial(
         paddle.dataset.mq2007.train, format="listwise")
@@ -60,7 +58,7 @@ def train_lambdaRank(num_passes):
 
     # mq2007 input_dim = 46, dense format
     input_dim = 46
-    cost, output = lambdaRank(input_dim)
+    cost, output = lambda_rank(input_dim)
     parameters = paddle.parameters.create(cost)
 
     trainer = paddle.trainer.SGD(
@@ -76,7 +74,7 @@ def train_lambdaRank(num_passes):
         if isinstance(event, paddle.event.EndPass):
             result = trainer.test(reader=test_reader, feeding=feeding)
             print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
-            with gzip.open("lambdaRank_params_%d.tar.gz" % (event.pass_id),
+            with gzip.open("lambda_rank_params_%d.tar.gz" % (event.pass_id),
                            "w") as f:
                 parameters.to_tar(f)
 
@@ -88,17 +86,17 @@ def train_lambdaRank(num_passes):
         num_passes=num_passes)
 
 
-def lambdaRank_infer(pass_id):
+def lambda_rank_infer(pass_id):
     """
-  lambdaRank model inference interface
+  lambda_rank model inference interface
   parameters:
     pass_id : inference model in pass_id
   """
     print "Begin to Infer..."
     input_dim = 46
-    output = lambdaRank(input_dim)
+    output = lambda_rank(input_dim)
     parameters = paddle.parameters.Parameters.from_tar(
-        gzip.open("lambdaRank_params_%d.tar.gz" % (pass_id - 1)))
+        gzip.open("lambda_rank_params_%d.tar.gz" % (pass_id - 1)))
 
     infer_query_id = None
     infer_data = []
@@ -119,6 +117,6 @@ def lambdaRank_infer(pass_id):
 
 
 if __name__ == '__main__':
-    paddle.init(use_gpu=False, trainer_count=4)
-    train_lambdaRank(2)
-    lambdaRank_infer(pass_id=1)
+    paddle.init(use_gpu=False, trainer_count=1)
+    train_lambda_rank(2)
+    lambda_rank_infer(pass_id=1)

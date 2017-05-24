@@ -1,4 +1,4 @@
-## 排序学习(LearningToRank)
+# 排序学习(Learning To Rank)
 
 排序学习技术\[[1](#参考文献1)\]是构建排序模型的机器学习方法，在信息检索、自然语言处理，数据挖掘等机器学场景中具有重要作用。排序学习的主要目的是对给定一组文档，对任意查询请求给出反映相关性的文档排序。在本例子中，利用标注过的语料库训练两种经典排序模型RankNet[[4](#参考文献4)\]和LamdaRank[[6](#参考文献6)\]，分别可以生成对应的排序模型，能够对任意查询请求，给出相关性文档排序。
 
@@ -238,9 +238,9 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}}=-\frac{\sigma }{1+e^{\sigma (
 
 ```python
 import paddle.v2 as paddle
-def lambdaRank(input_dim):
+def lambda_rank(input_dim):
     """
-    lambdaRank is a ListWise Rank Model, input data and label must be sequence
+    lambda_rank is a ListWise Rank Model, input data and label must be sequence
     https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf
     parameters :
       input_dim, one document's dense feature vector dimension

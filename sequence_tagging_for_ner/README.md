@@ -1,24 +1,23 @@
 # 命名实体识别
 
-## 背景说明
-
 命名实体识别（Named Entity Recognition，NER）又称作“专名识别”，是指识别文本中具有特定意义的实体，主要包括人名、地名、机构名、专有名词等，是自然语言处理研究的一个基础问题。NER任务通常包括实体边界识别、确定实体类别两部分，可以将其作为序列标注问题解决。
 
-序列标注可以分为Sequence Classification、Segment Classification和Temporal Classification三类[[1](#参考文献)]，我们这里限定序列标注为Segment Classification，即对输入序列中的每个元素在输出序列中给出对应的标签。对于NER任务，由于需要标识边界，一般采用[BIO方式](http://book.paddlepaddle.org/07.label_semantic_roles/)定义的标签集，如下是一个NER的标注结果示例：
+序列标注可以分为Sequence Classification、Segment Classification和Temporal Classification三类[[1](#参考文献)]，本例只考虑Segment Classification，即对输入序列中的每个元素在输出序列中给出对应的标签。对于NER任务，由于需要标识边界，一般采用[BIO方式](http://book.paddlepaddle.org/07.label_semantic_roles/)定义的标签集，如下是一个NER的标注结果示例：
 
-<div  align="center">  
-<img src="image/ner_label_ins.png" width = "80%"  align=center /><br>
+<div  align="center">
+<img src="images/ner_label_ins.png" width = "80%"  align=center /><br>
 图1. BIO标注方法示例
 </div>
 
+根据序列标注结果可以直接得到实体边界和实体类别。类似的，分词、词性标注、语块识别、[语义角色标注](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)等任务同样可通过序列标注来解决。
 
-根据序列标注结果可以直接得到实体边界和实体类别。类似的，分词、词性标注、语块识别、[语义角色标注](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)等任务同样可作为序列标注问题。
+由于序列标注问题的广泛性，产生了[CRF](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)等经典的序列模型，这些模型大多只能使用局部信息或需要人工设计特征。随着深度学习研究的发展，循环神经网络（Recurrent Neural Network，RNN等序列模型能够处理序列元素之间前后关联问题，能够从原始输入文本中学习特征表示，而更加适合序列标注任务，更多相关知识可参考PaddleBook中[语义角色标注](https://github.com/PaddlePaddle/book/blob/develop/07.label_semantic_roles/README.cn.md)一课。
 
-由于序列标注问题的广泛性，产生了[CRF](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)等经典的序列模型，这些模型多只能使用局部信息或需要人工设计特征。发展到深度学习阶段，各种网络结构能够实现复杂的特征抽取功能，循环神经网络（Recurrent Neural Network，RNN，更多相关知识见PaddleBook中[语义角色标注](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)一课）能够处理输入序列元素之间前后关联的问题而更适合序列数据。使用神经网络模型解决问题的思路通常是：前层网络学习输入的特征表示，网络的最后一层在特征基础上完成最终的任务；对于序列标注问题的通常做法是：使用基于RNN的网络结构学习特征，将学习到的特征接入CRF进行序列标注。这实际上是将传统CRF中的线性模型换成了非线性神经网络，沿用CRF的出发点是：CRF使用句子级别的似然概率，能够更好的解决标记偏置问题[[2](#参考文献)]。本示例中也将基于此思路建立模型，另外，虽然这里使用的是NER任务，但是所给出的模型也可以应用到其他序列标注任务中。
+使用神经网络模型解决问题的思路通常是：前层网络学习输入的特征表示，网络的最后一层在特征基础上完成最终的任务；对于序列标注问题，通常：使用基于RNN的网络结构学习特征，将学习到的特征接入CRF完成序列标注。实际上是将传统CRF中的线性模型换成了非线性神经网络。沿用CRF的出发点是：CRF使用句子级别的似然概率，能够更好的解决标记偏置问题[[2](#参考文献)]。本例也将基于此思路建立模型。虽然，这里以NER任务作为示例，但所给出的模型可以应用到其他各种序列标注任务中。
 
 ## 模型说明
 
-在NER任务中，输入是"一句话"，目标是识别句子中的实体边界及类别，我们参照论文\[[2](#参考文献)\]仅对原始句子进行了一些预处理工作：将每个词转换为小写，并将原词是否大写另作为一个特征，共同作为模型的输入。按照上文所述处理序列标注问题的思路，可以构造如下结构的模型（图2是模型结构示意图）：
+NER任务的输入是"一句话"，目标是识别句子中的实体边界及类别，我们参照论文\[[2](#参考文献)\]仅对原始句子进行了一些预处理工作：将每个词转换为小写，并将原词是否大写另作为一个特征，共同作为模型的输入。按照上述处理序列标注问题的思路，可构造如下结构的模型（图2是模型结构示意图）：
 
 1. 构造输入
  - 输入1是句子序列，采用one-hot方式表示
@@ -28,14 +27,14 @@
 4. CRF以步骤3中模型学习到的特征为输入，以标记序列为监督信号，实现序列标注。
 
 <div  align="center">  
-<img src="image/ner_network.png" width = "40%"  align=center /><br>
-图2. NER模型网络结构
+<img src="images/ner_network.png" width = "40%"  align=center /><br>
+图2. NER模型的网络结构图
 </div>
 
 
 ## 数据说明
 
-在本示例中，我们将使用CoNLL 2003 NER任务中开放出的数据集。该任务（见[此页面](http://www.clips.uantwerpen.be/conll2003/ner/)）只提供了标注工具的下载，原始Reuters数据由于版权原因需另外申请免费下载。在获取原始数据后可参照标注工具中README生成所需数据文件，完成后将包括如下三个数据文件：
+在本例中，我们使用CoNLL 2003 NER任务中开放出的数据集。该任务（见[此页面](http://www.clips.uantwerpen.be/conll2003/ner/)）只提供了标注工具的下载，原始Reuters数据由于版权原因需另外申请免费下载。在获取原始数据后可参照标注工具中README生成所需数据文件，完成后将包括如下三个数据文件：
 
 | 文件名 | 描述 |
 |---|---|
@@ -73,7 +72,7 @@
 # conll03.train和conll03.test函数可以获取处理之后的每条样本来供PaddlePaddle训练和测试.
 ```
 
-预处理完成之后一条训练样本包含3个部分，分别是：句子序列、首字母大写标记序列、标注序列。下表是一条训练样本的示例。
+预处理完成后，一条训练样本包含3个部分：句子序列、首字母大写标记序列、标注序列。下表是一条训练样本的示例。
 
 | 句子序列 | 大写标记序列 | 标注序列 |
 |---|---|---|
@@ -85,7 +84,7 @@
 | baghdad | 1 | B-LOC |
 | . | 0 | O |
 
-另外，使用本示例时数据相关的还有word词典、label词典和预训练的词向量三个文件：label词典已附在`data`目录中，对应于`data/target.txt`；word词典和预训练的词向量来源于[Stanford CS224d](http://cs224d.stanford.edu/)课程作业，请先在该示例所在目录下运行`data/download.sh`脚本进行下载，完成后会将这两个文件一并放入`data`目录下，分别对应`data/vocab.txt`和`data/wordVectors.txt`。
+另外，本例依赖的数据还包括：word词典、label词典和预训练的词向量三个文件。label词典已附在`data`目录中，对应于`data/target.txt`；word词典和预训练的词向量来源于[Stanford CS224d](http://cs224d.stanford.edu/)课程作业，请先在该示例所在目录下运行`data/download.sh`脚本进行下载，完成后会将这两个文件一并放入`data`目录下，分别对应`data/vocab.txt`和`data/wordVectors.txt`。
 
 ## 使用说明
 
@@ -148,7 +147,7 @@ target_file = 'data/target.txt'   # 标签对应的字典文件的路径
 emb_file = 'data/wordVectors.txt' # 预训练的词向量参数的路径
 ```
 
-而各接口的调用已在`ner.py`中预先提供
+各接口的调用已在`ner.py`中提供：
 
 ```python
 # 训练数据的生成器
@@ -162,11 +161,11 @@ ner_net_train(data_reader=train_data_reader, num_passes=1)
 ner_net_infer(data_reader=test_data_reader, model_file='params_pass_0.tar.gz')
 ```
 
-除适当调整`num_passes`和`model_file`两参数值外无需再做修改（也可根据需要自行调用各接口，如只使用预测功能）。完成修改后，运行本示例只需在`ner.py`所在路径下执行`python ner.py`即可。该示例程序会执行数据读取、模型训练和保存、模型读取及新样本预测等步骤。
+为运行序列标注模型除适当调整`num_passes`和`model_file`两参数值外，无需再做其它修改（也可根据需要自行调用各接口，如只使用预测功能）。完成修改后，运行本示例只需在`ner.py`所在路径下执行`python ner.py`即可。该示例程序会执行数据读取、模型训练和保存、模型读取及新样本预测等步骤。
 
 ### 自定义数据和任务
 
-前文提到本示例中的模型可以应用到其他序列标注任务中，这里以词性标注任务为例，给出使用其他数据并应用到其他任务的方法。
+前文提到本例中的模型可以应用到其他序列标注任务中，这里以词性标注任务为例，给出使用其他数据，并应用到其他任务的操作方法。
 
 假定有如下格式的原始数据：
 
@@ -180,7 +179,7 @@ Baghdad      NNP
 .            .  
 ```
 
-其中第一列为原始句子序列，第二列为词性标签序列，两列之间以空格分隔，句子之间以空行分隔。
+第一列为原始句子序列，第二列为词性标签序列，两列之间以“\t”分隔，句子之间以空行分隔。
 
 为使用PaddlePaddle和本示例提供的模型，可参照`conll03.py`并根据需要自定义数据接口，如下：
 
