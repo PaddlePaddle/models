@@ -18,7 +18,7 @@
 
 ## 模型说明
 
-在NER任务中，输入是"一句话"，目标是识别句子中的实体边界及类别，我们这里仅对原始句子作为特征（参照论文\[[2](#参考文献)\]进行了一些预处理工作：将每个词转换为小写并将原词是否大写另作为一个特征）。按照上文所述处理序列标注问题的思路，可以构造如下结构的模型（图2是模型结构示意图）：
+在NER任务中，输入是"一句话"，目标是识别句子中的实体边界及类别，我们参照论文\[[2](#参考文献)\]仅对原始句子进行了一些预处理工作：将每个词转换为小写，并将原词是否大写另作为一个特征，共同作为模型的输入。按照上文所述处理序列标注问题的思路，可以构造如下结构的模型（图2是模型结构示意图）：
 
 1. 构造输入
  - 输入1是句子序列，采用one-hot方式表示
@@ -43,7 +43,7 @@
 | eng.testa | 验证数据，可用来进行参数调优 |
 | eng.testb | 评估数据，用来进行最终效果评估 |
 
-（为保证本例的完整性，我们从中抽取少量样本放在`data/train`和`data/test`文件中作为训练和测试示例使用；由于版权原因完整数据还请自行获取）这三个文件数据格式如下：
+为保证本例的完整性，我们从中抽取少量样本放在`data/train`和`data/test`文件中，作为示例使用；由于版权原因，完整数据还请大家自行获取。这三个文件数据格式如下：
 
 ```
    U.N.         NNP  I-NP  I-ORG
@@ -85,7 +85,7 @@
 | baghdad | 1 | B-LOC |
 | . | 0 | O |
 
-另外，我们附上word词典、label词典和预训练的词向量三个文件（word词典和词向量来源于[Stanford CS224d](http://cs224d.stanford.edu/)课程作业）以供使用。
+另外，使用本示例时数据相关的还有word词典、label词典和预训练的词向量三个文件：label词典已附在`data`目录中，对应于`data/target.txt`；word词典和预训练的词向量来源于[Stanford CS224d](http://cs224d.stanford.edu/)课程作业，请先在该示例所在目录下运行`data/download.sh`脚本进行下载，完成后会将这两个文件一并放入`data`目录下，分别对应`data/vocab.txt`和`data/wordVectors.txt`。
 
 ## 使用说明
 
@@ -120,7 +120,7 @@ test_data_reader = conll03.test(test_data_file, vocab_file, target_file)
 
 `ner.py`提供了以下两个接口分别进行模型训练和预测：
 
-1. `ner_net_train(data_reader, num_passes)`函数实现了模型训练功能，参数`data_reader`表示训练数据的迭代器、`num_passes`表示训练pass的轮数。训练过程中每100个iteration会打印模型训练信息（由于加入了chunk evaluator，会按语块计算当前模型识别的Precision、Recall和F1值，这里也会打印出来，其详细使用说明请参照[文档](http://www.paddlepaddle.org/develop/doc/api/v2/config/evaluators.html#chunk)），每个pass后会将模型保存为`params_pass_***.tar.gz`的文件（`***`表示pass的id），并将最终模型另存为。
+1. `ner_net_train(data_reader, num_passes)`函数实现了模型训练功能，参数`data_reader`表示训练数据的迭代器、`num_passes`表示训练pass的轮数。训练过程中每100个iteration会打印模型训练信息。我们同时在模型配置中加入了chunk evaluator，会输出当前模型对语块识别的Precision、Recall和F1值。chunk evaluator 的详细使用说明请参照[文档](http://www.paddlepaddle.org/develop/doc/api/v2/config/evaluators.html#chunk)。每个pass后会将模型保存为`params_pass_***.tar.gz`的文件（`***`表示pass的id）。
 
 2. `ner_net_infer(data_reader, model_file)`函数实现了预测功能，参数`data_reader`表示测试数据的迭代器、`model_file`表示保存在本地的模型文件，预测过程会按如下格式打印预测结果：
 

@@ -220,9 +220,6 @@ def ner_net_train(data_reader=train_data_reader, num_passes=1):
             # save parameters
             with gzip.open('params_pass_%d.tar.gz' % event.pass_id, 'w') as f:
                 parameters.to_tar(f)
-            if event.pass_id == num_passes - 1:
-                with gzip.open('ner_model.tar.gz', 'w') as f:
-                    parameters.to_tar(f)
             result = trainer.test(reader=reader, feeding=feeding)
             print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
 
