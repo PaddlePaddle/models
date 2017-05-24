@@ -175,6 +175,12 @@ def ner_net_train(data_reader=train_data_reader, num_passes=1):
     # define network topology
     crf_cost, crf_dec, target = ner_net(is_train=True)
     evaluator.sum(name='error', input=crf_dec)
+    evaluator.chunk(
+        name='ner_chunk',
+        input=crf_dec,
+        label=target,
+        chunk_scheme='IOB',
+        num_chunk_types=(label_dict_len - 1) / 2)
 
     # create parameters
     parameters = paddle.parameters.create(crf_cost)
@@ -260,4 +266,5 @@ def ner_net_infer(data_reader=test_data_reader, model_file='ner_model.tar.gz'):
 if __name__ == '__main__':
     paddle.init(use_gpu=False, trainer_count=1)
     ner_net_train(data_reader=train_data_reader, num_passes=1)
-    ner_net_infer(data_reader=test_data_reader, model_file='ner_model.tar.gz')
+    ner_net_infer(
+        data_reader=test_data_reader, model_file='params_pass_0.tar.gz')

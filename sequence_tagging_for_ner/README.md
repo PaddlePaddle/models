@@ -8,17 +8,17 @@
 
 <div  align="center">  
 <img src="image/ner_label_ins.png" width = "80%"  align=center /><br>
-图1. NER标注示例
+图1. BIO标注方法示例
 </div>
 
 
-根据序列标注结果可以直接得到实体边界和实体类别。类似的，分词、词性标注、语块识别、[语义角色标注](http://book.paddlepaddle.org/07.label_semantic_roles/)等任务同样可作为序列标注问题。
+根据序列标注结果可以直接得到实体边界和实体类别。类似的，分词、词性标注、语块识别、[语义角色标注](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)等任务同样可作为序列标注问题。
 
-由于序列标注问题的广泛性，产生了[CRF](http://book.paddlepaddle.org/07.label_semantic_roles/)等经典的序列模型，这些模型多只能使用局部信息或需要人工设计特征。发展到深度学习阶段，各种网络结构能够实现复杂的特征抽取功能，循环神经网络（Recurrent Neural Network，RNN，更多相关知识见[此页面](http://book.paddlepaddle.org/07.label_semantic_roles/)）能够处理输入序列元素之间前后关联的问题而更适合序列数据。使用神经网络模型解决问题的思路通常是：前层网络学习输入的特征表示，网络的最后一层在特征基础上完成最终的任务；对于序列标注问题的通常做法是：使用基于RNN的网络结构学习特征，将学习到的特征接入CRF进行序列标注。这实际上是将传统CRF中的线性模型换成了非线性神经网络，沿用CRF的出发点是：CRF使用句子级别的似然概率，能够更好的解决标记偏置问题[[2](#参考文献)]。本示例中也将基于此思路建立模型，另外，虽然这里使用的是NER任务，但是所给出的模型也可以应用到其他序列标注任务中。
+由于序列标注问题的广泛性，产生了[CRF](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)等经典的序列模型，这些模型多只能使用局部信息或需要人工设计特征。发展到深度学习阶段，各种网络结构能够实现复杂的特征抽取功能，循环神经网络（Recurrent Neural Network，RNN，更多相关知识见PaddleBook中[语义角色标注](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)一课）能够处理输入序列元素之间前后关联的问题而更适合序列数据。使用神经网络模型解决问题的思路通常是：前层网络学习输入的特征表示，网络的最后一层在特征基础上完成最终的任务；对于序列标注问题的通常做法是：使用基于RNN的网络结构学习特征，将学习到的特征接入CRF进行序列标注。这实际上是将传统CRF中的线性模型换成了非线性神经网络，沿用CRF的出发点是：CRF使用句子级别的似然概率，能够更好的解决标记偏置问题[[2](#参考文献)]。本示例中也将基于此思路建立模型，另外，虽然这里使用的是NER任务，但是所给出的模型也可以应用到其他序列标注任务中。
 
 ## 模型说明
 
-在NER任务中，输入是"一句话"，目标是识别句子中的实体边界及类别，我们这里仅使用原始句子作为特征（参照论文\[[2](#参考文献)\]进行了一些预处理工作：将每个词转换为小写并将原词是否大写另作为一个特征）。按照上文所述处理序列标注问题的思路，可以构造如下结构的模型（图2是模型结构示意图）：
+在NER任务中，输入是"一句话"，目标是识别句子中的实体边界及类别，我们这里仅对原始句子作为特征（参照论文\[[2](#参考文献)\]进行了一些预处理工作：将每个词转换为小写并将原词是否大写另作为一个特征）。按照上文所述处理序列标注问题的思路，可以构造如下结构的模型（图2是模型结构示意图）：
 
 1. 构造输入
  - 输入1是句子序列，采用one-hot方式表示
@@ -43,7 +43,7 @@
 | eng.testa | 验证数据，可用来进行参数调优 |
 | eng.testb | 评估数据，用来进行最终效果评估 |
 
-这三个文件数据格式如下：
+（为保证本例的完整性，我们从中抽取少量样本放在`data/train`和`data/test`文件中作为训练和测试示例使用；由于版权原因完整数据还请自行获取）这三个文件数据格式如下：
 
 ```
    U.N.         NNP  I-NP  I-ORG
@@ -85,7 +85,7 @@
 | baghdad | 1 | B-LOC |
 | . | 0 | O |
 
-另外，我们附上word词典、label词典和预训练的词向量三个文件（word词典和词向量来源于[Stanford cs224d](http://cs224d.stanford.edu/)课程作业）以供使用。
+另外，我们附上word词典、label词典和预训练的词向量三个文件（word词典和词向量来源于[Stanford CS224d](http://cs224d.stanford.edu/)课程作业）以供使用。
 
 ## 使用说明
 
@@ -104,11 +104,11 @@
 import conll03
 
 # 修改以下变量为对应文件路径
-train_data_file = 'data/train'    # 训练数据文件
-test_data_file = 'data/test'      # 测试数据文件
-vocab_file = 'data/vocab.txt'     # word_dict文件
-target_file = 'data/target.txt'   # label_dict文件
-emb_file = 'data/wordVectors.txt' # 词向量文件
+train_data_file = 'data/train'    # 训练数据文件的路径
+test_data_file = 'data/test'      # 测试数据文件的路径
+vocab_file = 'data/vocab.txt'     # 输入句子对应的字典文件的路径
+target_file = 'data/target.txt'   # 标签对应的字典文件的路径
+emb_file = 'data/wordVectors.txt' # 预训练的词向量参数的路径
 
 # 返回训练数据的生成器
 train_data_reader = conll03.train(train_data_file, vocab_file, target_file)
@@ -120,7 +120,7 @@ test_data_reader = conll03.test(test_data_file, vocab_file, target_file)
 
 `ner.py`提供了以下两个接口分别进行模型训练和预测：
 
-1. `ner_net_train(data_reader, num_passes)`函数实现了模型训练功能，参数`data_reader`表示训练数据的迭代器、`num_passes`表示训练pass的轮数。训练过程中每100个iteration会打印模型训练信息，每个pass后会将模型保存为`params_pass_***.tar.gz`的文件（`***`表示pass的id），并将最终模型另存为`ner_model.tar.gz`。
+1. `ner_net_train(data_reader, num_passes)`函数实现了模型训练功能，参数`data_reader`表示训练数据的迭代器、`num_passes`表示训练pass的轮数。训练过程中每100个iteration会打印模型训练信息（由于加入了chunk evaluator，会按语块计算当前模型识别的Precision、Recall和F1值，这里也会打印出来，其详细使用说明请参照[文档](http://www.paddlepaddle.org/develop/doc/api/v2/config/evaluators.html#chunk)），每个pass后会将模型保存为`params_pass_***.tar.gz`的文件（`***`表示pass的id），并将最终模型另存为。
 
 2. `ner_net_infer(data_reader, model_file)`函数实现了预测功能，参数`data_reader`表示测试数据的迭代器、`model_file`表示保存在本地的模型文件，预测过程会按如下格式打印预测结果：
 
@@ -137,15 +137,15 @@ test_data_reader = conll03.test(test_data_file, vocab_file, target_file)
 
 ### 运行程序
 
-本示例另在`ner.py`中提供了完整的运行流程，包括数据接口的使用和模型训练、预测。根据上文所述的接口使用方法，使用时需要将`ner.py`中如下的数据设置部分中的各变量修改为正确的文件路径：
+本例另在`ner.py`中提供了完整的运行流程，包括数据接口的使用和模型训练、预测。根据上文所述的接口使用方法，使用时需要将`ner.py`中如下的数据设置部分中的各变量修改为对应文件路径：
 
 ```python
 # 修改以下变量为对应文件路径
-train_data_file = 'data/train'    # 训练数据文件
-test_data_file = 'data/test'      # 测试数据文件
-vocab_file = 'data/vocab.txt'     # word_dict文件
-target_file = 'data/target.txt'   # label_dict文件
-emb_file = 'data/wordVectors.txt' # 词向量文件
+train_data_file = 'data/train'    # 训练数据文件的路径
+test_data_file = 'data/test'      # 测试数据文件的路径
+vocab_file = 'data/vocab.txt'     # 输入句子对应的字典文件的路径
+target_file = 'data/target.txt'   # 标签对应的字典文件的路径
+emb_file = 'data/wordVectors.txt' # 预训练的词向量参数的路径
 ```
 
 而各接口的调用已在`ner.py`中预先提供
@@ -159,10 +159,10 @@ test_data_reader = conll03.test(test_data_file, vocab_file, target_file)
 # 模型训练
 ner_net_train(data_reader=train_data_reader, num_passes=1)
 # 预测
-ner_net_infer(data_reader=test_data_reader, model_file='ner_model.tar.gz')
+ner_net_infer(data_reader=test_data_reader, model_file='params_pass_0.tar.gz')
 ```
 
-无需再做修改，使用时只需修改文件路径内容即可（也可根据需要自行调用各接口，如只使用预测功能）。完成修改后，运行本示例只需在`ner.py`所在路径下执行`python ner.py`即可。该示例程序会执行数据读取、模型训练和保存、模型读取及新样本预测等步骤。
+除适当调整`num_passes`和`model_file`两参数值外无需再做修改（也可根据需要自行调用各接口，如只使用预测功能）。完成修改后，运行本示例只需在`ner.py`所在路径下执行`python ner.py`即可。该示例程序会执行数据读取、模型训练和保存、模型读取及新样本预测等步骤。
 
 ### 自定义数据和任务
 
