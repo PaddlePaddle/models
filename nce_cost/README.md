@@ -2,25 +2,24 @@
 ## 背景介绍
 语言模型是自然语言处理领域的基础问题，其在词性标注、句法分析、机器翻译、信息检索等任务中起到了重要作用。
 
-神经概率语言模型（Neural Probabilistic Language Model, NPLM）尽管有优异的精度表现，但是相对基于统计的 n-gram 传统模型，训练时间还是太漫长了[[4](#参考文献)]。原因请见[下一章节](#NCE Layer)。
+神经概率语言模型（Neural Probabilistic Language Model, NPLM）尽管有优异的精度表现，但是相对基于统计的 n-gram 传统模型，训练时间还是太漫长了\[[4](#参考文献)\]。原因请见下一章节。
 
-NCE（Noise-contrastive estimation）[[2](#参考文献)]，是一种快速简便的离散分布估计方法，这里以训练 NPLM 为例。这里我们使用了 ptb 数据来训练神经语言模型。
+NCE（Noise-contrastive estimation）\[[2](#参考文献)\]，是一种快速简便的离散分布估计方法，这里以训练 NPLM 为例。这里我们使用了 ptb 数据来训练神经语言模型。
 
 ## NCE Layer
 在这里将 NCE 用于训练神经语言模型，主要目的是用来提高训练速度。训练 NPLM 计算开销很大，是因为 softmax 函数计算时需要计算每个类别的指数项，必须考虑字典中的所有单词，这是相当耗时的，因为对于语言模型字典往往非常大[[4](#参考文献)]。与 hierarchical-sigmoid \[[3](#参考文献)\] 相比，NCE 不再使用复杂的 Huffman 树来构造目标函数，而是采用相对简单的随机负采样，以大幅提升计算效率。
 
 
-假设已知具体的上下文 h，并且知道这个分布为 ${ P }^{ h }(w)$ ，我们将训练样例作为正样例，从一个噪音分布 ${ P }_{ n }(w)$ 抽样产生负样例。我们可以任意选择合适的噪音分布，默认为无偏的均匀分布。这里我们同时假设噪音样例 k 倍于数据样例，则训练数据被抽中的概率为[[2](#参考文献)]：
+假设已知具体的上下文 $h$，并且知道这个分布为 ${ P }^{ h }(w)$ ，我们将训练样例作为正样例，从一个噪音分布 ${ P }_n(w)$ 抽样产生负样例。我们可以任意选择合适的噪音分布，默认为无偏的均匀分布。这里我们同时假设噪音样例 k 倍于数据样例，则训练数据被抽中的概率为[[2](#参考文献)]：
+
+$$P^h(D=1|w,\theta)=\frac { P_\theta^h(w) }{ P^h_\theta(w)+kP_n(w) } =\sigma (\Delta s_\theta(w,h))$$
+
+其中 $\Delta s_\theta(w,h)=s_\theta(w,h)-\log (kP_n(w))$ ，$s_\theta(w,h)$ 表示选择在生成 $w$ 字并处于上下文 $h$ 时的特征向量，整体目标函数的目的就是增大正样本的概率同时降低负样本的概率。目标函数如下[[2](#参考文献)]：
 
 $$
-{ P }^{ h }(D=1|w,\theta )=\frac { { P }_{ \theta  }^{ h }(w) }{ { P }^{ h }_{ \theta  }(w)+k{ P }_{ n }(w) } =\sigma (\Delta { s }_{ \theta  }^{  }(w,h))
+J^h(\theta )=E_{ P_d^h }\left[ \log { P^h(D=1|w,\theta ) }  \right] +kE_{ P_n }\left[ \log P^h (D=0|w,\theta ) \right]$$
 $$
-
-其中 $\Delta { s }_{ \theta  }^{  }(w,h)={ s }_{ \theta  }^{  }(w,h)-\log { (k{ P }_{ n }^{  }(w)) }$ ，${ s }_{ \theta  }(w,h)$ 表示选择在生成 $w$ 字并处于上下文 $h$ 时的特征向量，整体目标函数的目的就是增大正样本的概率同时降低负样本的概率。目标函数如下[[2](#参考文献)]：
-
-$$
-{ J }_{  }^{ h }(\theta )={ E  }_{ { P }_{ d }^{ h } }^{  }\left[ \log { { P }_{  }^{ h }(D=1|w,\theta ) }  \right] +k{ E }_{ { P }_{ n }^{  } }^{  }\left[ \log { { P }_{  }^{ h } } (D=0|w,\theta ) \right] \\ \qquad ={ E }_{ { P }_{ d }^{ h } }^{  }\left[ \log { \sigma (\Delta { s }_{ \theta  }^{  }(w,h)) }  \right] +k{ E  }_{ { P }_{ n }^{  } }^{  }\left[ \log { (1-\sigma (\Delta { s }_{ \theta  }^{  }(w,h))) }  \right]
-$$
+ \\\\\qquad =E_{ P_d^h }\left[ \log { \sigma (\Delta s_\theta(w,h)) }  \right] +kE_{ P_n }\left[ \log (1-\sigma (\Delta s_\theta(w,h)))  \right]$$
 
 NCE 原理是通过构造一个逻辑回归（logistic regression），对正样例和负样例做二分类，对于每一个样本，将自身的预测词 label 作为正样例，同时采样出 k 个其他词 label 作为负样例，从而只需要计算样本在这 k+1 个 label 上的概率。相比原始的 softmax 分类需要计算每个类别的分数，然后归一化得到概率，softmax 这个计算过程是十分耗时的。
 
@@ -47,10 +46,7 @@ NCE 原理是通过构造一个逻辑回归（logistic regression），对正样
 5. **NCE层**：推断时，输出层的神经元数量和样本的类别数一致，在这里就是整个字典的大小，最后使用 softmax 对每个类别的概率做归一化操作，因此第$i$个神经元的输出就可以认为是样本属于第$i$类的预测概率。训练时，我们需要构造二分类分类器。
 
 ## 训练阶段
-训练直接运行``` python train.py ```。程序第一次运行会检测用户缓存文件夹中是否包含 ptb 数据集，如果未包含，则自动下载。运行过程中，每1000个 iteration 会打印模型训练信息，主要包含训练损失，每个 pass 计算一次测试损失，并同时会保存一次最新的模型。
-
-在 PaddlePaddle 中也有已经实现好的 NCE layer，有一些参数需要自行根据实际场景进行设计：
-代码实现如下：
+训练直接运行``` python train.py ```。程序第一次运行会检测用户缓存文件夹中是否包含 ptb 数据集，如果未包含，则自动下载。运行过程中，每1000个 iteration 会打印模型训练信息，主要包含训练损失，每个 pass 计算一次测试损失，并同时会保存一次最新的模型。在 PaddlePaddle 中也有已经实现好的 NCE layer，有一些参数需要自行根据实际场景进行设计，代码实现如下：
 
 ```python
 cost = paddle.layer.nce(
