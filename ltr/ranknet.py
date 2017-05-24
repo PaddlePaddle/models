@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 import gzip
 import functools
 import paddle.v2 as paddle
@@ -37,7 +38,7 @@ def half_ranknet(name_prefix, input_dim):
 
 def ranknet(input_dim):
     # label layer
-    label = paddle.layer.data("label", paddle.data_type.integer_value(1))
+    label = paddle.layer.data("label", paddle.data_type.dense_vector(1))
 
     # reuse the parameter in half_ranknet
     output_left = half_ranknet("left", input_dim)
@@ -56,7 +57,7 @@ def train_ranknet(num_passes):
         batch_size=100)
     test_reader = paddle.batch(paddle.dataset.mq2007.test, batch_size=100)
 
-    # mq2007 feature_dim = 46, dense format 
+    # mq2007 feature_dim = 46, dense format
     # fc hidden_dim = 128
     feature_dim = 46
     cost = ranknet(feature_dim)
@@ -106,10 +107,9 @@ def ranknet_infer(pass_id):
         gzip.open("ranknet_params_%d.tar.gz" % (pass_id - 1)))
 
     # load data of same query and relevance documents, need ranknet to rank these candidates
-    infer_query_id = None
+    infer_query_id = []
     infer_data = []
-    infer_score_list = []
-    infer_data_num = 1000
+    infer_doc_index = []
 
     # convert to mq2007 built-in data format
     # <query_id> <relevance_score> <feature_vector>
@@ -117,17 +117,19 @@ def ranknet_infer(pass_id):
         paddle.dataset.mq2007.test, format="plain_txt")
 
     for query_id, relevance_score, feature_vector in plain_txt_test():
-        if infer_query_id == None:
-            infer_query_id = query_id
-        elif infer_query_id != query_id:
-            break
+        infer_query_id.append(query_id)
         infer_data.append(feature_vector)
-    predicitons = paddle.infer(
+
+    # predict score of infer_data document. Re-sort the document base on predict score
+    # in descending order. then we build the ranking documents
+    scores = paddle.infer(
         output_layer=output, parameters=parameters, input=infer_data)
+    for query_id, score in zip(infer_query_id, scores):
+        print "query_id : ", query_id, " ranknet rank document order : ", score
 
 
 if __name__ == '__main__':
     paddle.init(use_gpu=False, trainer_count=4)
-    pass_num = 10
+    pass_num = 2
     train_ranknet(pass_num)
     ranknet_infer(pass_id=pass_num - 1)
