@@ -35,7 +35,7 @@ python lambdaRank.py
 
 - Pairwise方法
 
-  Pairwise方法是通过近似为分类问题解决排序问题，输入的单条样本为**标签-文档对**。对于一次查询的多个结果文档，组合任意两个文档形成文档对作为输入样本。即学习一个二分类器，对输入的一对文档对AB（Pairwise的由来），根据A相关性是否比B好，二分类器给出分类标签+1或-1。对所有文档对进行分类，就可以得到一组偏序关系，从而构造文档全集的排序关系。该类方法的原理是对给定的文档全集S，降低排序中的逆序文档对的个数来降低排序错误，从而达到优化排序结果的目的。
+  Pairwise方法是通过近似为分类问题解决排序问题，输入的单条样本为**标签-文档对**。对于一次查询的多个结果文档，组合任意两个文档形成文档对作为输入样本。即学习一个二分类器，对输入的一对文档对AB（Pairwise的由来），根据A相关性是否比B好，二分类器给出分类标签1或0。对所有文档对进行分类，就可以得到一组偏序关系，从而构造文档全集的排序关系。该类方法的原理是对给定的文档全集S，降低排序中的逆序文档对的个数来降低排序错误，从而达到优化排序结果的目的。
 
 - Listwise方法
 
@@ -86,7 +86,7 @@ $$C_{i,j}=-\bar{P_{i,j}}logP_{i,j}-(1-\bar{P_{i,j}})log(1-P_{i,j})$$
 
 $$\bar{P_{i,j}}=\frac{1}{2}(1+S_{i,j})$$
 
-而Sij = {+1,-1}，表示Ui和Uj组成的Pair的标签，即Ui相关性是否好于Uj。
+而Sij = {+1,0}，表示Ui和Uj组成的Pair的标签，即Ui相关性是否好于Uj。
 
 最终得到了可求导的度量损失函数
 
@@ -153,18 +153,20 @@ def ranknet(input_dim):
   return cost
 ```
 
-上述结构中使用了和前述图表相同的模型结构，使用了两层隐藏层，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征的维度，label取值为1，-1。每条输入样本为`<label>，<docA, docB>`的结构，以docA为例，输入`input_dim`的文档特征，依次变换成10维，1维特征，最终输入到RankCost层中，比较docA和docB在RankCost输出得到预测值。
+上述结构中使用了和前述图表相同的模型结构，使用了两层隐藏层，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征的维度，label取值为1，0。每条输入样本为`<label>，<docA, docB>`的结构，以docA为例，输入`input_dim`的文档特征，依次变换成10维，1维特征，最终输入到RankCost层中，比较docA和docB在RankCost输出得到预测值。
+
+### rankNet模型训练
 
 用户运行只需要运行命令：
 
 ```python
 python ranknet.py
 ```
-将会自动下载数据，训练RankNet模型，并将每个轮次的模型存储下来。
+将会自动下载数据，训练RankNet模型，并将每个轮次的模型参数存储下来。
 
 ### rankNet模型预测
 
-本例子提供了rankNet模型的部署和预测。训练好的模型分为拓扑结构(需要注意rankcost不是模型拓扑结构的一部分)和参数文件两部分，复用了ranknet的模型结构文件，从外存中加载训练好的模型。模型预测的输入为单个文档的特征向量，模型会给出相关性得分。将预测得分排序即可得到最终的文档相关性排序结果。
+本例子提供了rankNet模型的训练和预测两个部分。完成训练后的模型分为拓扑结构(需要注意rank_cost不是模型拓扑结构的一部分)和模型参数文件两部分。在本例子中复用了ranknet训练时的模型拓扑结构half_ranknet，模型参数从外存中加载。模型预测的输入为单个文档的特征向量，模型会给出相关性得分。将预测得分排序即可得到最终的文档相关性排序结果。
 
 
 
@@ -172,7 +174,7 @@ python ranknet.py
 
 上面的代码使用了paddle内置的排序数据，如果希望使用自定义格式数据，可以参考Paddle内置的`mq2007`数据集，编写一个生成器函数。例如输入数据为如下格式，只包含doc0-doc2三个文档。
 
-\<query_id\> \<relevance_score\> \<feature_vector\>的格式(feature_vector采用libsvm数据格式)
+\<query_id\> \<relevance_score\> \<feature_vector\>的格式(featureid: feature_value)
 
 ```
 query_id : 1, relevance_score:1, feature_vector 0:0.1, 1:0.2, 2:0.4  #doc0
@@ -193,7 +195,7 @@ query_id : 2, relevance_score:0, feature_vector 0:0.1, 1:0.4, 2:0.1  #doc0
 ....
 ```
 
-注意，一般在PairWise格式的数据中，label=1表示docA和查询的相关性好于docB，事实上label信息隐含在docA和docB组合pair中。如果存在`-1 docA docB`，交换顺序构造`1 docB docA`即可。
+注意，一般在PairWise格式的数据中，label=1表示docA和查询的相关性好于docB，事实上label信息隐含在docA和docB组合pair中。如果存在`0 docA docB`，交换顺序构造`1 docB docA`即可。
 
 另外组合所有的pair会有训练数据冗余，因为可以从部分偏序关系恢复文档集上的全序关系。相关研究见[PairWise approach](http://www.machinelearning.org/proceedings/icml2007/papers/139.pdf)[5]，本例子不予赘述。
 
@@ -207,7 +209,7 @@ def gen_pairwise_data(text_line_of_data):
   docA_feature_vector : np.array, shape=(1, feature_dimension)
   docA_feature_vector : np.array, shape=(1, feature_dimension)
     """
-    yield label, docA_feature_vector, docB_feature_vector
+    return label, docA_feature_vector, docB_feature_vector
 ```
 
 对应于paddle的输入中，`integer_value`为单个整数，`dense_vector`为实数一维向量，与生成器对应，需要在训练模型之前指明输入数据对应关系。
@@ -280,7 +282,9 @@ def lambdaRank(input_dim):
     return cost, output
 ```
 
-上述结构中使用了和前述图表相同的模型结构，和RankNet相似，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征的维度，label取值为1，-1。每条输入样本为label，\<docA, docB\>的结构，以docA为例，输入input_dim的文档特征，依次变换成10维，1维特征，最终输入到LambdaCost层中。需要注意这里的label和data格式为**dense_vector_sequence**，表示一列文档得分或者文档特征组成的**序列**。
+上述结构中使用了和前述图表相同的模型结构，和RankNet相似，分别使用了`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例子中的input_dim指输入**单个文档**的特征的维度，label取值为1，0。每条输入样本为label，\<docA, docB\>的结构，以docA为例，输入input_dim的文档特征，依次变换成10维，1维特征，最终输入到LambdaCost层中。需要注意这里的label和data格式为**dense_vector_sequence**，表示一列文档得分或者文档特征组成的**序列**。
+
+### lambdaRank模型训练
 
 用户运行只需要运行命令：
 
@@ -290,7 +294,9 @@ python lambdaRank.py
 
 将会自动下载数据，训练LambdaRank模型，并将每个轮次的模型存储下来，将最终模型存储在文件中。
 
+### lambdaRank模型预测
 
+lambdaRank模型预测过程和ranknet相同。预测时的模型拓扑结构复用代码中的模型定义，从外存加载对应的参数文件。预测时的输入是文档列表，输出是该文档列表的各个文档相关性打分，根据打分对文档进行重新排序，即可得到最终的文档排序结果。
 
 ## 自定义 LambdaRank数据
 
@@ -337,7 +343,7 @@ def gen_listwise_data(text_all_lines_of_data):
   label : np.array, shape=(samples_num, )
   querylist : np.array, shape=(samples_num, feature_dimension)
     """
-    yield label_list, query_docs_feature_vector_matrix
+    return label_list, query_docs_feature_vector_matrix
 ```
 
 对应于paddle的输入中，label的`dense_vector_sequence`为得分序列，data的`dense_vector_sequence`为特征向量的序列输入，input_dim为单个文档的一维特征向量维度，与生成器对应，需要在训练模型之前指明输入数据对应关系。
@@ -352,7 +358,7 @@ feeding = {"label":0,
 
 ## 总结
 
-LearningToRank是和业务场景结合非常紧密的常用机器学习方法，排序模型构造方法一般可划分为PointWise方法，PairWise方法，ListWise方法，本例子中以LETOR的mq2007数据为例，阐述了PairWise的经典方法RankNet和ListWise方法中的LambdaRank，展示如何使用Paddle框架构造对应的排序模型结构，并提供了自定义数据类型样例。Paddle提供了灵活的编程接口，并能在单机单GPU和多机分布式多GPU无缝运行，可以实现LearningToRank类型任务。
+LearningToRank是和业务场景结合非常紧密的常用机器学习方法，排序模型构造方法一般可划分为PointWise方法，PairWise方法，ListWise方法，本例子中以LETOR的mq2007数据为例，阐述了PairWise的经典方法RankNet和ListWise方法中的LambdaRank，展示如何使用Paddle框架构造对应的排序模型结构，并提供了自定义数据类型样例。Paddle提供了灵活的编程接口，并可以使用一套代码运行在单机单GPU和多机分布式多GPU情况下，可以实现LearningToRank类型任务。
 
 
 
@@ -364,8 +370,8 @@ LearningToRank是和业务场景结合非常紧密的常用机器学习方法，
 
 [3] H. Li, “Learning to rank for information retrieval and natural language processing,” Synthesis Lectures on Human Language Technologies, 2011, Morgan & Claypool Publishers.
 
-[4] Burges C, Shaked T, Renshaw E, et al. Learning to rank using gradient descent[C]// International Conference. DBLP, 2005:89-96.
+[4] Burges, Chris, et al. "Learning to rank using gradient descent." *Proceedings of the 22nd international conference on Machine learning*. ACM, 2005.
 
-[5]Cao Z, Qin T, Liu T Y, et al. Learning to rank: from pairwise approach to listwise approach[C]// International Conference on Machine Learning. ACM, 2007:129-136.
+[5]Cao, Zhe, et al. "Learning to rank: from pairwise approach to listwise approach." *Proceedings of the 24th international conference on Machine learning*. ACM, 2007.
 
-[6]Schölkopf B, Platt J, Hofmann T. Learning to Rank with Nonsmooth Cost Functions[C]// Conference on Advances in Neural Information Processing Systems. MIT Press, 2006:193-200.
+[6]Burges, Christopher JC, Robert Ragno, and Quoc Viet Le. "Learning to rank with nonsmooth cost functions." *NIPS*. Vol. 6. 2006.
