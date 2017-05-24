@@ -1,6 +1,6 @@
 ## 排序学习(LearningToRank)
 
-排序学习技术[1] 是构建排序模型的机器学习方法，在信息检索，自然语言处理，数据挖掘等机器学场景中具有重要作用。排序学习的主要目的是对给定一组文档，对任意查询请求给出反映相关性的文档排序。在本例子中，利用标注过的语料库训练两种经典排序模型RankNet[4]和LamdaRank[6]，分别可以生成对应的排序模型，能够对任意查询请求，给出相关性文档排序。
+排序学习技术\[[1](#参考文献1)\]是构建排序模型的机器学习方法，在信息检索，自然语言处理，数据挖掘等机器学场景中具有重要作用。排序学习的主要目的是对给定一组文档，对任意查询请求给出反映相关性的文档排序。在本例子中，利用标注过的语料库训练两种经典排序模型RankNet[[4](#参考文献4)\]和LamdaRank[[6](#参考文献6)\]，分别可以生成对应的排序模型，能够对任意查询请求，给出相关性文档排序。
 
 RankNet模型在命令行输入：
 
@@ -64,21 +64,17 @@ for label, left_doc, right_doc in pairwise_train_dataset():
     ...
 ```
 
-
-
 ## 模型概览
 
-对于排序模型，本样例中提供了PairWise方法的模型RankNet和ListWise方法的模型LambdaRank，分别代表了两类学习方法。PointWise方法的排序模型退化为回归问题，不予赘述。
-
-
+对于排序模型，本样例中提供了Pairwise方法的模型RankNet和ListWise方法的模型LambdaRank，分别代表了两类学习方法。PointWise方法的排序模型退化为回归问题，不予赘述。
 
 ## RankNet排序模型
 
-[RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf)是一种经典的Pairwise的排序学习方法，是典型的前向神经网络排序模型。在文档集合S中的第i个文档记做$U_i$，它的文档特征向量记做$x_i$，对于给定的一个文档对$U_i, U_j$，RankNet将输入的单个文档特征向量x映射到$f(x)$，得到$s_i=f(x_i), s_j=f(x_j)$。将$U_i$相关性比Uj好的概率记做$P_{i,j}$，则
+[RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf)是一种经典的Pairwise的排序学习方法，是典型的前向神经网络排序模型。在文档集合$S$中的第i个文档记做$U_i$，它的文档特征向量记做$x_i$，对于给定的一个文档对$U_i$, $U_j$，RankNet将输入的单个文档特征向量$x$映射到$f(x)$，得到$s_i=f(x_i)$, $s_j=f(x_j)$。将$U_i$相关性比$U_j$好的概率记做$P_{i,j}$，则
 
 $$P_{i,j}=P(U_{i}>U_{j})=\frac{1}{1+e^{-\sigma (s_{i}-s_{j}))}}$$
 
-由于排序度量函数大多数非连续，非光滑，因此RankNet需要一个可以优化的度量函数C。首先使用交叉熵作为度量函数衡量预测代价，将损失函数C记做
+由于排序度量函数大多数非连续，非光滑，因此RankNet需要一个可以优化的度量函数$C$。首先使用交叉熵作为度量函数衡量预测代价，将损失函数$C$记做
 
 $$C_{i,j}=-\bar{P_{i,j}}logP_{i,j}-(1-\bar{P_{i,j}})log(1-P_{i,j})$$
 
@@ -86,7 +82,7 @@ $$C_{i,j}=-\bar{P_{i,j}}logP_{i,j}-(1-\bar{P_{i,j}})log(1-P_{i,j})$$
 
 $$\bar{P_{i,j}}=\frac{1}{2}(1+S_{i,j})$$
 
-而Sij = {+1,0}，表示Ui和Uj组成的Pair的标签，即Ui相关性是否好于Uj。
+而$S_{i,j}$ = {+1,0}，表示$U_i$和$U_j$组成的Pair的标签，即Ui相关性是否好于Uj。
 
 最终得到了可求导的度量损失函数
 
@@ -94,11 +90,11 @@ $$C=\frac{1}{2}(1-S_{i,j})\sigma (s_{i}-s{j})+log(1+e^{-\sigma (s_{i}-s_{j})})$$
 
 可以使用常规的梯度下降方法进行优化。细节见[RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf)
 
-同时，得到文档Ui在排序优化过程的梯度信息为
+同时，得到文档$U_i$在排序优化过程的梯度信息为
 
 $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}} = \frac{1}{2}(1-S_{i,j})-\frac{1}{1+e^{\sigma (s_{i}-s_{j})}}$$
 
-表示的含义是本轮排序优化过程中文档Ui的上升或者下降量。
+表示的含义是本轮排序优化过程中文档$U_i$的上升或者下降量。
 
 
 
@@ -197,7 +193,7 @@ query_id : 2, relevance_score:0, feature_vector 0:0.1, 1:0.4, 2:0.1  #doc0
 
 注意，一般在PairWise格式的数据中，label=1表示docA和查询的相关性好于docB，事实上label信息隐含在docA和docB组合pair中。如果存在`0 docA docB`，交换顺序构造`1 docB docA`即可。
 
-另外组合所有的pair会有训练数据冗余，因为可以从部分偏序关系恢复文档集上的全序关系。相关研究见[PairWise approach](http://www.machinelearning.org/proceedings/icml2007/papers/139.pdf)[5]，本例子不予赘述。
+另外组合所有的pair会有训练数据冗余，因为可以从部分偏序关系恢复文档集上的全序关系。相关研究见[PairWise approach](http://www.machinelearning.org/proceedings/icml2007/papers/139.pdf)[[5](#参考文献5)\]，本例子不予赘述。
 
 ```python
 # self define data generator
@@ -364,14 +360,9 @@ LearningToRank是和业务场景结合非常紧密的常用机器学习方法，
 
 ## 参考文献
 
-[1] https://en.wikipedia.org/wiki/Learning_to_rank
-
-[2] T.Y. Liu, “Learning to rank for information retrieval,” Foundations and Trends in Information Retrieval, vol.3, no.3, pp.225–331, 2009.
-
-[3] H. Li, “Learning to rank for information retrieval and natural language processing,” Synthesis Lectures on Human Language Technologies, 2011, Morgan & Claypool Publishers.
-
-[4] Burges, Chris, et al. "Learning to rank using gradient descent." *Proceedings of the 22nd international conference on Machine learning*. ACM, 2005.
-
-[5]Cao, Zhe, et al. "Learning to rank: from pairwise approach to listwise approach." *Proceedings of the 24th international conference on Machine learning*. ACM, 2007.
-
-[6]Burges, Christopher JC, Robert Ragno, and Quoc Viet Le. "Learning to rank with nonsmooth cost functions." *NIPS*. Vol. 6. 2006.
+1. https://en.wikipedia.org/wiki/Learning_to_rank
+2. T.Y. Liu, “Learning to rank for information retrieval,” Foundations and Trends in Information Retrieval, vol.3, no.3, pp.225–331, 2009.
+3. H. Li, “Learning to rank for information retrieval and natural language processing,” Synthesis Lectures on Human Language Technologies, 2011, Morgan & Claypool Publishers.
+4. Burges, Chris, et al. "Learning to rank using gradient descent." *Proceedings of the 22nd international conference on Machine learning*. ACM, 2005.
+5. Cao, Zhe, et al. "Learning to rank: from pairwise approach to listwise approach." *Proceedings of the 24th international conference on Machine learning*. ACM, 2007.
+6. Burges, Christopher JC, Robert Ragno, and Quoc Viet Le. "Learning to rank with nonsmooth cost functions." *NIPS*. Vol. 6. 2006.
