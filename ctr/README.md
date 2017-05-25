@@ -2,29 +2,29 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org80045af">1. 背景介绍</a>
+<li><a href="#org4966554">1. 背景介绍</a>
 <ul>
-<li><a href="#org2edb17b">1.1. LR vs DNN</a></li>
+<li><a href="#orgea3bf99">1.1. LR vs DNN</a></li>
 </ul>
 </li>
-<li><a href="#org94ecde7">2. 数据和任务抽象</a></li>
-<li><a href="#org4f46e91">3. Wide &amp; Deep Learning Model</a>
+<li><a href="#orgc22a0fb">2. 数据和任务抽象</a></li>
+<li><a href="#orgd330828">3. Wide &amp; Deep Learning Model</a>
 <ul>
-<li><a href="#org837c2cb">3.1. 模型简介</a></li>
-<li><a href="#orga01450a">3.2. 编写模型输入</a></li>
-<li><a href="#orgaa0f255">3.3. 编写 Wide 部分</a></li>
-<li><a href="#org977dfc7">3.4. 编写 Deep 部分</a></li>
-<li><a href="#orgca6f48d">3.5. 两者融合</a></li>
-<li><a href="#orgd2d3549">3.6. 训练任务的定义</a></li>
+<li><a href="#org00e7785">3.1. 模型简介</a></li>
+<li><a href="#orgba88a75">3.2. 编写模型输入</a></li>
+<li><a href="#orga84cacc">3.3. 编写 Wide 部分</a></li>
+<li><a href="#orga2e5de6">3.4. 编写 Deep 部分</a></li>
+<li><a href="#orgd16118a">3.5. 两者融合</a></li>
+<li><a href="#org3d58a70">3.6. 训练任务的定义</a></li>
 </ul>
 </li>
-<li><a href="#orgc20b351">4. 写在最后</a></li>
+<li><a href="#org54ed5a6">4. 写在最后</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="org80045af"></a>
+<a id="org4966554"></a>
 
 # 背景介绍
 
@@ -51,13 +51,13 @@ CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率�
 逐渐地接过 CTR 预估任务的大旗。
 
 
-<a id="org2edb17b"></a>
+<a id="orgea3bf99"></a>
 
 ## LR vs DNN
 
 下图展示了 LR 和一个 \(3x2\) 的 NN 模型的结构：
 
-![img](./img/lr-vs-dnn.png)
+![img](./img/lr-vs-dnn.jpg)
 
 LR 部分和蓝色箭头部分可以直接类比到 NN 中的结构，可以看到 LR 和 NN 有一些共通之处（比如权重累加），
 但前者的模型复杂度在相同输入维度下比后者可能第很多（从某方面讲，模型越复杂，越有潜力学习到更复杂的信息）。
@@ -73,7 +73,7 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 本文后面的章节会演示如何使用 Paddle 编写一个结合两者优点的模型。
 
 
-<a id="org94ecde7"></a>
+<a id="orgc22a0fb"></a>
 
 # 数据和任务抽象
 
@@ -89,14 +89,14 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 具体的特征处理方法参看 [data process](./dataset.md)
 
 
-<a id="org4f46e91"></a>
+<a id="orgd330828"></a>
 
 # Wide & Deep Learning Model
 
 谷歌在 16 年提出了 Wide & Deep Learning 的模型框架，用于融合 适合学习抽象特征的 DNN 和 适用于大规模系数特征的 LR 两种模型的优点。
 
 
-<a id="org837c2cb"></a>
+<a id="org00e7785"></a>
 
 ## 模型简介
 
@@ -111,7 +111,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
 而模型右边的 Deep 部分，能够学习特征间的隐含关系，在相同数量的特征下有更好的学习和推导能力。
 
 
-<a id="orga01450a"></a>
+<a id="orgba88a75"></a>
 
 ## 编写模型输入
 
@@ -132,7 +132,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
     click = paddle.layer.data(name='click', type=dtype.dense_vector(1))
 
 
-<a id="orgaa0f255"></a>
+<a id="orga84cacc"></a>
 
 ## 编写 Wide 部分
 
@@ -142,7 +142,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
         return fc
 
 
-<a id="org977dfc7"></a>
+<a id="orga2e5de6"></a>
 
 ## 编写 Deep 部分
 
@@ -159,7 +159,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
         return _input_layer
 
 
-<a id="orgca6f48d"></a>
+<a id="orgd16118a"></a>
 
 ## 两者融合
 
@@ -175,7 +175,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
         return fc
 
 
-<a id="orgd2d3549"></a>
+<a id="org3d58a70"></a>
 
 ## 训练任务的定义
 
@@ -221,7 +221,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
         num_passes=100)
 
 
-<a id="orgc20b351"></a>
+<a id="org54ed5a6"></a>
 
 # 写在最后
 
