@@ -10,18 +10,19 @@ from data_provider import categorial_features, id_features, field_index, detect_
 id_features_space = 10000
 dnn_layer_dims = [128, 64, 32, 1]
 train_data_path = './train.txt'
-data_meta_info = detect_dataset(train_data_path, 10000)
+data_meta_info = detect_dataset(train_data_path, 500000)
+batch_size = 1000 * 11
+test_set_size = 10000
 
 logging.warning('detect categorical fields in dataset %s' % train_data_path)
 for key, item in data_meta_info.items():
     logging.warning('    - {}\t{}'.format(key, item))
 
-paddle.init(use_gpu=False, trainer_count=1)
+paddle.init(use_gpu=False, trainer_count=11)
 
 # ==============================================================================
 #                    input layers
 # ==============================================================================
-
 
 dnn_merged_input = layer.data(
     name='dnn_input',
@@ -40,13 +41,6 @@ click = paddle.layer.data(name='click', type=dtype.dense_vector(1))
 
 def build_dnn_submodel(dnn_layer_dims):
     dnn_embedding = layer.fc(input=dnn_merged_input, size=dnn_layer_dims[0])
-    # dnn_embedding = layer.embedding(
-    #     input=dnn_merged_input,
-    #     size=128)
-    # average_layer = layer.pooling(input=dnn_embedding,
-    #                               pooling_type=paddle.pooling.Avg())
-
-    # _input_layer = average_layer
     _input_layer = dnn_embedding
     for no, dim in enumerate(dnn_layer_dims[1:]):
         fc = layer.fc(
@@ -94,17 +88,26 @@ optimizer = paddle.optimizer.Momentum(momentum=0)
 trainer = paddle.trainer.SGD(
     cost=classification_cost, parameters=params, update_equation=optimizer)
 
-dataset = AvazuDataset(train_data_path)
+dataset = AvazuDataset(train_data_path, n_records_as_test=test_set_size)
 
-step = 0
+def event_handler(event):
+    if isinstance(event, paddle.event.EndIteration):
+        if event.batch_id % 100 == 0:
+            logging.warning("Pass %d, Samples %d, Cost %f" % (
+                event.pass_id, event.batch_id * batch_size, event.cost))
 
-
-def event_hander(event):
-    global step
+        if event.batch_id % 1000 == 0:
+            result = trainer.test(
+                reader=paddle.batch(dataset.test, batch_size=1000),
+                feeding=field_index)
+            logging.warning("Test %d-%d, Cost %f" % (event.pass_id, event.batch_id,
+                                           result.cost))
 
 
 trainer.train(
     reader=paddle.batch(
-        paddle.reader.shuffle(dataset.train, buf_size=500), batch_size=5),
+        paddle.reader.shuffle(dataset.train, buf_size=500),
+        batch_size=batch_size),
     feeding=field_index,
-    num_passes=1)
+    event_handler=event_handler,
+    num_passes=100)

@@ -63,6 +63,9 @@ def get_all_field_names(mode=0):
 class CategoryFeatureGenerator(object):
     '''
     Generator category features.
+
+    Register all records by calling `register` first, then call `gen` to generate
+    one-hot representation for a record.
     '''
 
     def __init__(self):
@@ -70,6 +73,9 @@ class CategoryFeatureGenerator(object):
         self.counter = 1
 
     def register(self, key):
+        '''
+        Register record.
+        '''
         if key not in self.dic:
             self.dic[key] = self.counter
             self.counter += 1
@@ -78,6 +84,9 @@ class CategoryFeatureGenerator(object):
         return len(self.dic)
 
     def gen(self, key):
+        '''
+        Generate one-hot representation for a record.
+        '''
         if key not in self.dic:
             res = self.dic['unk']
         else:
@@ -90,10 +99,21 @@ class CategoryFeatureGenerator(object):
 
 class IDfeatureGenerator(object):
     def __init__(self, max_dim):
+        '''
+        @max_dim: int
+            Size of the id elements' space
+        '''
         self.max_dim = max_dim
 
     def gen(self, key):
+        '''
+        Generate one-hot representation for records
+        '''
         return [hash(key) % self.max_dim]
+
+    def gen_cross_fea(self, fea1, fea2):
+        key = str(fea1) + str(fea2)
+        return self.gen(key)
 
     def size(self):
         return self.max_dim
@@ -152,7 +172,8 @@ def detect_dataset(path, topn, id_fea_space=10000):
 
     feature_dims['dnn_input'] = np.sum(
         feature_dims[key] for key in categorial_features + ['hour']) + 10
-    feature_dims['lr_input'] = np.sum(feature_dims[key] for key in id_features) + 10
+    feature_dims['lr_input'] = np.sum(feature_dims[key]
+                                      for key in id_features) + 10
 
     return feature_dims
 
@@ -180,21 +201,22 @@ class AvazuDataset(object):
     TRAIN_MODE = 0
     TEST_MODE = 1
 
-    def __init__(self, train_path, test_path=None):
+    def __init__(self, train_path, n_records_as_test=-1):
         self.train_path = train_path
-        self.test_path = test_path
+        self.n_records_as_test = n_records_as_test
         # task model: 0 train, 1 test
         self.mode = 0
 
     def train(self):
         self.mode = self.TRAIN_MODE
-        return self._parse(self.train_path)
+        return self._parse(
+            self.train_path, skip_n_lines=self.n_records_as_test)
 
     def test(self):
         self.mode = self.TEST_MODE
-        return self._parse(self.test_path)
+        return self._parse(self.train_path, top_n_lines=self.n_records_as_test)
 
-    def _parse(self, path):
+    def _parse(self, path, skip_n_lines=-1, top_n_lines=-1):
         with open(path, 'rb') as csvfile:
             reader = csv.DictReader(csvfile)
 
@@ -204,6 +226,11 @@ class AvazuDataset(object):
             id_dims = [feature_dims[key] for key in id_features]
 
             for row_id, row in enumerate(reader):
+                if skip_n_lines > 0 and row_id < skip_n_lines:
+                    continue
+                if top_n_lines > 0 and row_id > top_n_lines:
+                    break
+
                 record = []
                 for key in categorial_features:
                     record.append(fields[key].gen(row[key]))
@@ -218,10 +245,7 @@ class AvazuDataset(object):
 
                 record = [dense_input, sparse_input]
 
-                if self.mode == self.TRAIN_MODE:
-                    record.append(list((int(row['click']), )))
-
-                # print record
+                record.append(list((int(row['click']), )))
                 yield record
 
 

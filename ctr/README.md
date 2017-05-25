@@ -2,29 +2,29 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org5589824">1. 背景介绍</a>
+<li><a href="#org7f839ad">1. 背景介绍</a>
 <ul>
-<li><a href="#org39b4382">1.1. LR vs DNN</a></li>
+<li><a href="#org731851a">1.1. LR vs DNN</a></li>
 </ul>
 </li>
-<li><a href="#org5b2aafc">2. 数据和任务抽象</a></li>
-<li><a href="#org17c7e05">3. 特征提取</a>
+<li><a href="#orgc2a75e1">2. 数据和任务抽象</a></li>
+<li><a href="#org7f7e5a5">3. Wide &amp; Deep Learning Model</a>
 <ul>
-<li><a href="#orga3db7a6">3.1. ID 类特征</a></li>
+<li><a href="#org218a889">3.1. 模型简介</a></li>
+<li><a href="#org222c8b8">3.2. 编写模型输入</a></li>
+<li><a href="#org12bc870">3.3. 编写 Wide 部分</a></li>
+<li><a href="#org4c61b9b">3.4. 编写 Deep 部分</a></li>
+<li><a href="#orged7c312">3.5. 两者融合</a></li>
+<li><a href="#orgb6ad56e">3.6. 训练任务的定义</a></li>
 </ul>
 </li>
-<li><a href="#org5ce3921">4. 模型实现</a>
-<ul>
-<li><a href="#orgbb98635">4.1. DNN 简单模型</a></li>
-<li><a href="#org41335f7">4.2. long wide 复杂模型</a></li>
-</ul>
-</li>
-<li><a href="#orgb8efca9">5. 写在最后</a></li>
+<li><a href="#orga0bd27d">4. 写在最后</a></li>
 </ul>
 </div>
 </div>
 
-<a id="org5589824"></a>
+
+<a id="org7f839ad"></a>
 
 # 背景介绍
 
@@ -47,17 +47,17 @@ CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率�
 -   LR + DNN 特征
 -   DNN + 特征工程
 
-在发展早期是 LR 一统天下，但最近 DNN 模型由于其强大的学习能力和逐渐成熟的性能优化，
+在发展早期时 LR 一统天下，但最近 DNN 模型由于其强大的学习能力和逐渐成熟的性能优化，
 逐渐地接过 CTR 预估任务的大旗。
 
 
-<a id="org39b4382"></a>
+<a id="org731851a"></a>
 
 ## LR vs DNN
 
 下图展示了 LR 和一个 \(3x2\) 的 NN 模型的结构：
 
-![img](背景介绍/LR vs DNN_2017-05-22_10-09-02.jpg)
+![img](背景介绍/lr-vs-dnn_2017-05-25_10-36-48.jpg)
 
 LR 部分和蓝色箭头部分可以直接类比到 NN 中的结构，可以看到 LR 和 NN 有一些共通之处（比如权重累加），
 但前者的模型复杂度在相同输入维度下比后者可能第很多（从某方面讲，模型越复杂，越有潜力学习到更复杂的信息）。
@@ -68,10 +68,12 @@ LR 部分和蓝色箭头部分可以直接类比到 NN 中的结构，可以看�
 而 NN 模型具有自己学习新特征的能力，一定程度上能够提升特征使用的效率，
 这使得 NN 模型在同样规模特征的情况下，更有可能达到更好的学习效果。
 
-本文会演示，如何使用 NN 模型来完成 CTR 预估的任务。
+LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括内存和计算量等，工业界都有非常成熟的优化方法。
+
+本文后面的章节会演示如何使用 Paddle 编写一个结合两者优点的模型。
 
 
-<a id="org5b2aafc"></a>
+<a id="orgc2a75e1"></a>
 
 # 数据和任务抽象
 
@@ -82,80 +84,150 @@ LR 部分和蓝色箭头部分可以直接类比到 NN 中的结构，可以看�
 
 这里，我们直接使用第一种方法做分类任务。
 
-我们使用 Kaggle 上 \`Click-through rate prediction\` 任务的数据集来演示模型。
+我们使用 Kaggle 上 \`Click-through rate prediction\` 任务的数据集[1] 来演示模型。
 
-各个字段内容如下：
-
--   id: ad identifier
--   click: 0/1 for non-click/click
--   hour: format is YYMMDDHH, so 14091123 means 23:00 on Sept. 11, 2014 UTC.
--   C1 &#x2013; anonymized categorical variable
--   banner<sub>pos</sub>
--   site<sub>id</sub>
--   site<sub>domain</sub>
--   site<sub>category</sub>
--   app<sub>id</sub>
--   app<sub>domain</sub>
--   app<sub>category</sub>
--   device<sub>id</sub>
--   device<sub>ip</sub>
--   device<sub>model</sub>
--   device<sub>type</sub>
--   device<sub>conn</sub><sub>type</sub>
--   C14-C21 &#x2013; anonymized categorical variables
+具体的特征处理方法参看 [data process](./dataset.md)
 
 
-<a id="org17c7e05"></a>
+<a id="org7f7e5a5"></a>
 
-# 特征提取
+# Wide & Deep Learning Model
 
-下面我们会简单演示几种特征的提取方式。 
-
-原始数据中的特征可以分为以下几类：
-
-1.  ID 类特征（稀疏，数量多）
-    -   id
-    -   site<sub>id</sub>
-    -   app<sub>id</sub>
-    -   device<sub>id</sub>
-
-2.  类别类特征（稀疏，但数量有限）
-    -   C1
-    -   site<sub>category</sub>
-    -   device<sub>type</sub>
-    -   C14-C21
-
-3.  数值型特征
-    -   hour (可以转化成数值，也可以按小时为单位转化为类别）
+谷歌在 16 年提出了 Wide & Deep Learning 的模型框架，用于融合 适合学习抽象特征的 DNN 和 适用于大规模系数特征的 LR 两种模型的优点。
 
 
-<a id="orga3db7a6"></a>
+<a id="org218a889"></a>
 
-## ID 类特征
+## 模型简介
 
-ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot 表示时维度过大。
+Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用，
+在 CTR 预估的任务中工业界也有一定的应用，因此本文将演示使用此模型来完成 CTR 预估的任务。
 
-一般会作如下处理：
+模型结构如下：
 
+![img](Wide & Deep Learning Model/wide-deep_2017-05-25_10-24-26.png)
 
-<a id="org5ce3921"></a>
-
-# 模型实现
-
-
-<a id="orgbb98635"></a>
-
-## DNN 简单模型
+模型左边的 Wide 部分，可以容纳大规模系数特征，并且对一些特定的信息（比如 ID）有一定的记忆能力；
+而模型右边的 Deep 部分，能够学习特征间的隐含关系，在相同数量的特征下有更好的学习和推导能力。
 
 
-<a id="org41335f7"></a>
+<a id="org222c8b8"></a>
 
-## long wide 复杂模型
+## 编写模型输入
+
+模型只接受 3 个输入，分别是
+
+-   \`dnn<sub>input</sub>\` ，也就是 Deep 部分的输入
+-   \`lr<sub>input</sub>\` ，也就是 Wide 部分的输入
+-   \`click\` ， 点击与否，作为二分类模型学习的标签
+
+    dnn_merged_input = layer.data(
+        name='dnn_input',
+        type=paddle.data_type.sparse_binary_vector(data_meta_info['dnn_input']))
+    
+    lr_merged_input = layer.data(
+        name='lr_input',
+        type=paddle.data_type.sparse_binary_vector(data_meta_info['lr_input']))
+    
+    click = paddle.layer.data(name='click', type=dtype.dense_vector(1))
 
 
-<a id="orgb8efca9"></a>
+<a id="org12bc870"></a>
+
+## 编写 Wide 部分
+
+    def build_lr_submodel():
+        fc = layer.fc(
+            input=lr_merged_input, size=1, name='lr', act=paddle.activation.Relu())
+        return fc
+
+
+<a id="org4c61b9b"></a>
+
+## 编写 Deep 部分
+
+    def build_dnn_submodel(dnn_layer_dims):
+        dnn_embedding = layer.fc(input=dnn_merged_input, size=dnn_layer_dims[0])
+        _input_layer = dnn_embedding
+        for no, dim in enumerate(dnn_layer_dims[1:]):
+            fc = layer.fc(
+                input=_input_layer,
+                size=dim,
+                act=paddle.activation.Relu(),
+                name='dnn-fc-%d' % no)
+            _input_layer = fc
+        return _input_layer
+
+
+<a id="orged7c312"></a>
+
+## 两者融合
+
+    # conbine DNN and LR submodels
+    def combine_submodels(dnn, lr):
+        merge_layer = layer.concat(input=[dnn, lr])
+        fc = layer.fc(
+            input=merge_layer,
+            size=1,
+            name='output',
+            # use sigmoid function to approximate ctr rate, a float value between 0 and 1.
+            act=paddle.activation.Sigmoid())
+        return fc
+
+
+<a id="orgb6ad56e"></a>
+
+## 训练任务的定义
+
+    dnn = build_dnn_submodel(dnn_layer_dims)
+    lr = build_lr_submodel()
+    output = combine_submodels(dnn, lr)
+    
+    # ==============================================================================
+    #                   cost and train period
+    # ==============================================================================
+    classification_cost = paddle.layer.multi_binary_label_cross_entropy_cost(
+        input=output, label=click)
+    
+    params = paddle.parameters.create(classification_cost)
+    
+    optimizer = paddle.optimizer.Momentum(momentum=0)
+    
+    trainer = paddle.trainer.SGD(
+        cost=classification_cost, parameters=params, update_equation=optimizer)
+    
+    dataset = AvazuDataset(train_data_path, n_records_as_test=test_set_size)
+    
+    def event_handler(event):
+        if isinstance(event, paddle.event.EndIteration):
+            if event.batch_id % 100 == 0:
+                logging.warning("Pass %d, Samples %d, Cost %f" % (
+                    event.pass_id, event.batch_id * batch_size, event.cost))
+    
+            if event.batch_id % 1000 == 0:
+                result = trainer.test(
+                    reader=paddle.batch(dataset.test, batch_size=1000),
+                    feeding=field_index)
+                logging.warning("Test %d-%d, Cost %f" % (event.pass_id, event.batch_id,
+                                               result.cost))
+    
+    
+    trainer.train(
+        reader=paddle.batch(
+            paddle.reader.shuffle(dataset.train, buf_size=500),
+            batch_size=batch_size),
+        feeding=field_index,
+        event_handler=event_handler,
+        num_passes=100)
+
+
+<a id="orga0bd27d"></a>
 
 # 写在最后
 
-<https://en.wikipedia.org/wiki/Click-through_rate>
+-   [1] <https://en.wikipedia.org/wiki/Click-through_rate>
+-   [2] Strategies for Training Large Scale Neural Network Language Models
+-   <https://www.kaggle.com/c/avazu-ctr-prediction/data>
+
+[1] <https://www.kaggle.com/c/avazu-ctr-prediction/data>
 
