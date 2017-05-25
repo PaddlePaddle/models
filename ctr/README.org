@@ -25,8 +25,7 @@ CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率�
 ** LR vs DNN
 下图展示了 LR 和一个 \(3x2\) 的 NN 模型的结构：
 
-#+DOWNLOADED: file:/Users/superjom/project/paddle_models/ctr/img/lr-vs-dnn.jpg @ 2017-05-25 10:36:48
-[[file:背景介绍/lr-vs-dnn_2017-05-25_10-36-48.jpg]]
+[[./img/lr-vs-dnn.png]]
 
 LR 部分和蓝色箭头部分可以直接类比到 NN 中的结构，可以看到 LR 和 NN 有一些共通之处（比如权重累加），
 但前者的模型复杂度在相同输入维度下比后者可能第很多（从某方面讲，模型越复杂，越有潜力学习到更复杂的信息）。
@@ -61,8 +60,7 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 
  模型结构如下：
 
-#+DOWNLOADED: file:/Users/superjom/project/paddle_models/ctr/img/wide-deep.png @ 2017-05-25 10:24:26
-[[file:Wide & Deep Learning Model/wide-deep_2017-05-25_10-24-26.png]]
+[[./img/wide-deep.png]]
 
 模型左边的 Wide 部分，可以容纳大规模系数特征，并且对一些特定的信息（比如 ID）有一定的记忆能力；
 而模型右边的 Deep 部分，能够学习特征间的隐含关系，在相同数量的特征下有更好的学习和推导能力。
