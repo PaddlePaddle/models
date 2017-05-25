@@ -2,29 +2,29 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org4966554">1. 背景介绍</a>
+<li><a href="#orgd3b5e47">1. 背景介绍</a>
 <ul>
-<li><a href="#orgea3bf99">1.1. LR vs DNN</a></li>
+<li><a href="#org281ac04">1.1. LR vs DNN</a></li>
 </ul>
 </li>
-<li><a href="#orgc22a0fb">2. 数据和任务抽象</a></li>
-<li><a href="#orgd330828">3. Wide &amp; Deep Learning Model</a>
+<li><a href="#org7b0794d">2. 数据和任务抽象</a></li>
+<li><a href="#orgb7d416a">3. Wide &amp; Deep Learning Model</a>
 <ul>
-<li><a href="#org00e7785">3.1. 模型简介</a></li>
-<li><a href="#orgba88a75">3.2. 编写模型输入</a></li>
-<li><a href="#orga84cacc">3.3. 编写 Wide 部分</a></li>
-<li><a href="#orga2e5de6">3.4. 编写 Deep 部分</a></li>
-<li><a href="#orgd16118a">3.5. 两者融合</a></li>
-<li><a href="#org3d58a70">3.6. 训练任务的定义</a></li>
+<li><a href="#org34e65a5">3.1. 模型简介</a></li>
+<li><a href="#org9aab6a2">3.2. 编写模型输入</a></li>
+<li><a href="#org28eef19">3.3. 编写 Wide 部分</a></li>
+<li><a href="#orga6a8e51">3.4. 编写 Deep 部分</a></li>
+<li><a href="#org447552d">3.5. 两者融合</a></li>
+<li><a href="#orgbf70727">3.6. 训练任务的定义</a></li>
 </ul>
 </li>
-<li><a href="#org54ed5a6">4. 写在最后</a></li>
+<li><a href="#orgefd4d16">4. 写在最后</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="org4966554"></a>
+<a id="orgd3b5e47"></a>
 
 # 背景介绍
 
@@ -32,7 +32,7 @@ CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率�
 通常被用来衡量一个在线广告系统的有效性。
 
 当有多个广告位时，CTR 预估一般会作为排序的基准。
-比如在百度的搜索广告系统，当用户输入一个带商业价值的搜索词（query）时，系统大体上会执行下列步骤：
+比如在搜索引擎的广告系统里，当用户输入一个带商业价值的搜索词（query）时，系统大体上会执行下列步骤：
 
 1.  召回满足 query 的广告集合
 2.  业务规则和相关性过滤
@@ -51,7 +51,7 @@ CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率�
 逐渐地接过 CTR 预估任务的大旗。
 
 
-<a id="orgea3bf99"></a>
+<a id="org281ac04"></a>
 
 ## LR vs DNN
 
@@ -70,10 +70,10 @@ LR 部分和蓝色箭头部分可以直接类比到 NN 中的结构，可以看�
 
 LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括内存和计算量等，工业界都有非常成熟的优化方法。
 
-本文后面的章节会演示如何使用 Paddle 编写一个结合两者优点的模型。
+本文后面的章节会演示如何使用 PaddlePaddle 编写一个结合两者优点的模型。
 
 
-<a id="orgc22a0fb"></a>
+<a id="org7b0794d"></a>
 
 # 数据和任务抽象
 
@@ -89,14 +89,14 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 具体的特征处理方法参看 [data process](./dataset.md)
 
 
-<a id="orgd330828"></a>
+<a id="orgb7d416a"></a>
 
 # Wide & Deep Learning Model
 
 谷歌在 16 年提出了 Wide & Deep Learning 的模型框架，用于融合 适合学习抽象特征的 DNN 和 适用于大规模系数特征的 LR 两种模型的优点。
 
 
-<a id="org00e7785"></a>
+<a id="org34e65a5"></a>
 
 ## 模型简介
 
@@ -111,7 +111,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
 而模型右边的 Deep 部分，能够学习特征间的隐含关系，在相同数量的特征下有更好的学习和推导能力。
 
 
-<a id="orgba88a75"></a>
+<a id="org9aab6a2"></a>
 
 ## 编写模型输入
 
@@ -132,7 +132,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
     click = paddle.layer.data(name='click', type=dtype.dense_vector(1))
 
 
-<a id="orga84cacc"></a>
+<a id="org28eef19"></a>
 
 ## 编写 Wide 部分
 
@@ -142,7 +142,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
         return fc
 
 
-<a id="orga2e5de6"></a>
+<a id="orga6a8e51"></a>
 
 ## 编写 Deep 部分
 
@@ -159,7 +159,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
         return _input_layer
 
 
-<a id="orgd16118a"></a>
+<a id="org447552d"></a>
 
 ## 两者融合
 
@@ -175,7 +175,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
         return fc
 
 
-<a id="org3d58a70"></a>
+<a id="orgbf70727"></a>
 
 ## 训练任务的定义
 
@@ -221,7 +221,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
         num_passes=100)
 
 
-<a id="org54ed5a6"></a>
+<a id="orgefd4d16"></a>
 
 # 写在最后
 

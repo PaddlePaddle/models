@@ -2,35 +2,34 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org2665a87">1. 数据集介绍</a></li>
-<li><a href="#org6179fca">2. 特征提取</a>
+<li><a href="#orgb697e2a">1. 数据集介绍</a></li>
+<li><a href="#org912d23e">2. 特征提取</a>
 <ul>
-<li><a href="#org42da1c1">2.1. 类别类特征</a></li>
-<li><a href="#org53b2fea">2.2. ID 类特征</a></li>
-<li><a href="#orgc5d512d">2.3. 数值型特征</a></li>
-<li><a href="#org38ba127">2.4. 特征处理方法</a></li>
+<li><a href="#org59e1a78">2.1. 类别类特征</a></li>
+<li><a href="#orgad86672">2.2. ID 类特征</a></li>
+<li><a href="#orgeed4bfc">2.3. 数值型特征</a></li>
 </ul>
 </li>
-<li><a href="#orgbef0a6e">3. 特征处理</a>
+<li><a href="#orgbb21fbb">3. 特征处理</a>
 <ul>
-<li><a href="#org72e16f2">3.1. 类别型特征</a></li>
-<li><a href="#org3473ce8">3.2. ID 类特征</a></li>
-<li><a href="#org53745e6">3.3. 交叉类特征</a></li>
-<li><a href="#org60b0048">3.4. 特征维度</a>
+<li><a href="#org9105d62">3.1. 类别型特征</a></li>
+<li><a href="#org6131dd5">3.2. ID 类特征</a></li>
+<li><a href="#org64a5228">3.3. 交叉类特征</a></li>
+<li><a href="#orgdfa3224">3.4. 特征维度</a>
 <ul>
-<li><a href="#orgac20756">3.4.1. Deep submodel(DNN)特征</a></li>
-<li><a href="#orgbccc155">3.4.2. Wide submodel(LR)特征</a></li>
+<li><a href="#org4c15bfb">3.4.1. Deep submodel(DNN)特征</a></li>
+<li><a href="#orga3f2dd5">3.4.2. Wide submodel(LR)特征</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org758adb3">4. 输入到 Paddle 中</a></li>
+<li><a href="#org55405cd">4. 输入到 PaddlePaddle 中</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="org2665a87"></a>
+<a id="orgb697e2a"></a>
 
 # 数据集介绍
 
@@ -55,7 +54,7 @@
 -   C14-C21 &#x2013; anonymized categorical variables
 
 
-<a id="org6179fca"></a>
+<a id="org912d23e"></a>
 
 # 特征提取
 
@@ -79,7 +78,7 @@
     -   hour (可以转化成数值，也可以按小时为单位转化为类别）
 
 
-<a id="org42da1c1"></a>
+<a id="org59e1a78"></a>
 
 ## 类别类特征
 
@@ -89,7 +88,7 @@
 2.  类似词向量，用一个 Embedding Table 将每个类别映射到对应的向量
 
 
-<a id="org53b2fea"></a>
+<a id="orgad86672"></a>
 
 ## ID 类特征
 
@@ -104,7 +103,7 @@ ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot �
 上面的方法尽管存在一定的碰撞概率，但能够处理任意数量的 ID 特征，并保留一定的效果[2]。
 
 
-<a id="orgc5d512d"></a>
+<a id="orgeed4bfc"></a>
 
 ## 数值型特征
 
@@ -114,19 +113,12 @@ ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot �
 -   用区间分割处理成类别类特征，稀疏化表示，模糊细微上的差别
 
 
-<a id="org38ba127"></a>
-
-## 特征处理方法
-
-具体特征处理方法参看 [data process](./dataset.md)
-
-
-<a id="orgbef0a6e"></a>
+<a id="orgbb21fbb"></a>
 
 # 特征处理
 
 
-<a id="org72e16f2"></a>
+<a id="org9105d62"></a>
 
 ## 类别型特征
 
@@ -173,7 +165,7 @@ ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot �
 本任务中，类别类特征会输入到 DNN 中使用。
 
 
-<a id="org3473ce8"></a>
+<a id="org6131dd5"></a>
 
 ## ID 类特征
 
@@ -198,7 +190,7 @@ ID 类特征代稀疏值，且值的空间很大的情况，一般用模操作�
             return self.max_dim
 
 
-<a id="org53745e6"></a>
+<a id="org64a5228"></a>
 
 ## 交叉类特征
 
@@ -215,12 +207,12 @@ LR 模型作为 Wide & Deep model 的 \`wide\` 部分，可以输入很 wide 的
 我们通过组合出两者组合来捕捉这类信息。
 
 
-<a id="org60b0048"></a>
+<a id="orgdfa3224"></a>
 
 ## 特征维度
 
 
-<a id="orgac20756"></a>
+<a id="org4c15bfb"></a>
 
 ### Deep submodel(DNN)特征
 
@@ -279,7 +271,7 @@ LR 模型作为 Wide & Deep model 的 \`wide\` 部分，可以输入很 wide 的
 </table>
 
 
-<a id="orgbccc155"></a>
+<a id="orga3f2dd5"></a>
 
 ### Wide submodel(LR)特征
 
@@ -338,9 +330,9 @@ LR 模型作为 Wide & Deep model 的 \`wide\` 部分，可以输入很 wide 的
 </table>
 
 
-<a id="org758adb3"></a>
+<a id="org55405cd"></a>
 
-# 输入到 Paddle 中
+# 输入到 PaddlePaddle 中
 
 Deep 和 Wide 两部分均以 \`sparse<sub>binary</sub><sub>vector</sub>\` 的格式[1]输入，输入前需要将相关特征拼合，模型最终只接受 3 个 input，
 分别是
