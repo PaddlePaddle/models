@@ -117,12 +117,12 @@ Deep 部分使用了标准的多层前向传导的 NN 模型
 def build_dnn_submodel(dnn_layer_dims):
     dnn_embedding = layer.fc(input=dnn_merged_input, size=dnn_layer_dims[0])
     _input_layer = dnn_embedding
-    for no, dim in enumerate(dnn_layer_dims[1:]):
+    for i, dim in enumerate(dnn_layer_dims[1:]):
         fc = layer.fc(
             input=_input_layer,
             size=dim,
             act=paddle.activation.Relu(),
-            name='dnn-fc-%d' % no)
+            name='dnn-fc-%d' % i)
         _input_layer = fc
     return _input_layer
 ```
