@@ -150,8 +150,8 @@ for key in id_features:
         fields[key] = IDfeatureGenerator(10000)
 
 # used as feed_dict in PaddlePaddle
-field_index = dict(
-    (key, id) for id, key in enumerate(['dnn_input', 'lr_input', 'click']))
+field_index = dict((key, id)
+                   for id, key in enumerate(['dnn_input', 'lr_input', 'click']))
 
 
 def detect_dataset(path, topn, id_fea_space=10000):
@@ -175,7 +175,7 @@ def detect_dataset(path, topn, id_fea_space=10000):
         feature_dims[key] = item.size()
 
     #for key in id_features:
-        #feature_dims[key] = id_fea_space
+    #feature_dims[key] = id_fea_space
 
     feature_dims['hour'] = 24
     feature_dims['click'] = 1
@@ -222,8 +222,7 @@ class AvazuDataset(object):
 
     def train(self):
         self.mode = self.TRAIN_MODE
-        return self._parse(
-            self.train_path, skip_n_lines=self.n_records_as_test)
+        return self._parse(self.train_path, skip_n_lines=self.n_records_as_test)
 
     def test(self):
         self.mode = self.TEST_MODE
@@ -257,7 +256,8 @@ class AvazuDataset(object):
                     else:
                         fea0 = fields[key].cross_fea0
                         fea1 = fields[key].cross_fea1
-                        record.append(fields[key].gen_cross_fea(row[fea0], row[fea1]))
+                        record.append(
+                            fields[key].gen_cross_fea(row[fea0], row[fea1]))
 
                 sparse_input = concat_sparse_vectors(record, id_dims)
 

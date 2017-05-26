@@ -1,44 +1,12 @@
-<div id="table-of-contents">
-<h2>Table of Contents</h2>
-<div id="text-table-of-contents">
-<ul>
-<li><a href="#orgb9b1ee8">1. 数据集介绍</a></li>
-<li><a href="#orgeaf74d5">2. 特征提取</a>
-<ul>
-<li><a href="#org876ed90">2.1. 类别类特征</a></li>
-<li><a href="#org33838ae">2.2. ID 类特征</a></li>
-<li><a href="#org96be68a">2.3. 数值型特征</a></li>
-</ul>
-</li>
-<li><a href="#org6ef4cab">3. 特征处理</a>
-<ul>
-<li><a href="#org967be87">3.1. 类别型特征</a></li>
-<li><a href="#org516125b">3.2. ID 类特征</a></li>
-<li><a href="#org8a0cce6">3.3. 交叉类特征</a></li>
-<li><a href="#org6655b66">3.4. 特征维度</a>
-<ul>
-<li><a href="#org223ebf2">3.4.1. Deep submodel(DNN)特征</a></li>
-<li><a href="#orgb062f1d">3.4.2. Wide submodel(LR)特征</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#org6b9de13">4. 输入到 PaddlePaddle 中</a></li>
-</ul>
-</div>
-</div>
-
-
-<a id="orgb9b1ee8"></a>
-
-# 数据集介绍
+# 数据及处理
+## 数据集介绍
 
 数据集使用 `csv` 格式存储，其中各个字段内容如下：
 
 -   `id` : ad identifier
 -   `click` : 0/1 for non-click/click
 -   `hour` : format is YYMMDDHH, so 14091123 means 23:00 on Sept. 11, 2014 UTC.
--   `C1` &#x2013; anonymized categorical variable
+-   `C1` : anonymized categorical variable
 -   `banner_pos`
 -   `site_id`
 -   `site_domain`
@@ -51,45 +19,33 @@
 -   `device_model`
 -   `device_type`
 -   `device_conn_type`
--   `C14-C21` &#x2013; anonymized categorical variables
+-   `C14-C21` : anonymized categorical variables
 
 
-<a id="orgeaf74d5"></a>
-
-# 特征提取
+## 特征提取
 
 下面我们会简单演示几种特征的提取方式。
 
 原始数据中的特征可以分为以下几类：
 
 1.  ID 类特征（稀疏，数量多）
-```python
 -   `id`
 -   `site_id`
 -   `app_id`
 -   `device_id`
 
-```
-
 2.  类别类特征（稀疏，但数量有限）
-```python
+
 -   `C1`
 -   `site_category`
 -   `device_type`
 -   `C14-C21`
 
-```
-
 3.  数值型特征转化为类别型特征
-```python
+
 -   hour (可以转化成数值，也可以按小时为单位转化为类别）
 
-
-```
-
-<a id="org876ed90"></a>
-
-## 类别类特征
+### 类别类特征
 
 类别类特征的提取方法有以下两种：
 
@@ -97,9 +53,7 @@
 2.  类似词向量，用一个 Embedding Table 将每个类别映射到对应的向量
 
 
-<a id="org33838ae"></a>
-
-## ID 类特征
+### ID 类特征
 
 ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot 表示时维度过大。
 
@@ -111,25 +65,17 @@ ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot �
 
 上面的方法尽管存在一定的碰撞概率，但能够处理任意数量的 ID 特征，并保留一定的效果[2]。
 
-
-<a id="org96be68a"></a>
-
-## 数值型特征
+### 数值型特征
 
 一般会做如下处理：
 
 -   归一化，直接作为特征输入模型
 -   用区间分割处理成类别类特征，稀疏化表示，模糊细微上的差别
 
-
-<a id="org6ef4cab"></a>
-
-# 特征处理
+## 特征处理
 
 
-<a id="org967be87"></a>
-
-## 类别型特征
+### 类别型特征
 
 类别型特征有有限多种值，在模型中，我们一般使用 embedding table 将每种值映射为连续值的向量。
 
@@ -171,15 +117,11 @@ class CategoryFeatureGenerator(object):
 
     def __repr__(self):
         return '<CategoryFeatureGenerator %d>' % len(self.dic)
-
 ```
 
 本任务中，类别类特征会输入到 DNN 中使用。
 
-
-<a id="org516125b"></a>
-
-## ID 类特征
+### ID 类特征
 
 ID 类特征代稀疏值，且值的空间很大的情况，一般用模操作规约到一个有限空间，
 之后可以当成类别类特征使用，这里我们会将 ID 类特征输入到 LR 模型中使用。
@@ -201,13 +143,9 @@ class IDfeatureGenerator(object):
 
     def size(self):
         return self.max_dim
-
-
 ```
 
-<a id="org8a0cce6"></a>
-
-## 交叉类特征
+### 交叉类特征
 
 LR 模型作为 Wide & Deep model 的 `wide` 部分，可以输入很 wide 的数据（特征空间的维度很大），
 为了充分利用这个优势，我们将演示交叉组合特征构建成更大维度特征的情况，之后塞入到模型中训练。
@@ -218,139 +156,33 @@ LR 模型作为 Wide & Deep model 的 `wide` 部分，可以输入很 wide 的�
 def gen_cross_fea(self, fea1, fea2):
     key = str(fea1) + str(fea2)
     return self.gen(key)
-
 ```
 
 比如，我们觉得原始数据中， `device_id` 和 `site_id` 有一些关联（比如某个 device 倾向于浏览特定 site)，
 我们通过组合出两者组合来捕捉这类信息。
 
+### 特征维度
+#### Deep submodel(DNN)特征
+| feature          | dimention |
+|------------------+-----------|
+| app_category     |        21 |
+| site_category    |        22 |
+| device_conn_type |         5 |
+| hour             |        24 |
+| banner_pos       |         7 |
+| **Total**        | 79        |
 
-<a id="org6655b66"></a>
+#### Wide submodel(LR)特征
+| Feature             | Dimention |
+|---------------------+-----------|
+| id                  |     10000 |
+| site_id             |     10000 |
+| app_id              |     10000 |
+| device_id           |     10000 |
+| device_id X site_id |   1000000 |
+| **Total**           | 1,040,000 |
 
-## 特征维度
-
-
-<a id="org223ebf2"></a>
-
-### Deep submodel(DNN)特征
-
-<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-
-
-<colgroup>
-<col  class="org-left" />
-
-<col  class="org-right" />
-</colgroup>
-<thead>
-<tr>
-<th scope="col" class="org-left">feature</th>
-<th scope="col" class="org-right">dimention</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<td class="org-left">`app_category`</td>
-<td class="org-right">21</td>
-</tr>
-
-
-<tr>
-<td class="org-left">`site_category`</td>
-<td class="org-right">22</td>
-</tr>
-
-
-<tr>
-<td class="org-left">`device_conn_type`</td>
-<td class="org-right">5</td>
-</tr>
-
-
-<tr>
-<td class="org-left">`hour`</td>
-<td class="org-right">24</td>
-</tr>
-
-
-<tr>
-<td class="org-left">`banner_pos`</td>
-<td class="org-right">7</td>
-</tr>
-</tbody>
-
-<tbody>
-<tr>
-<td class="org-left">Total</td>
-<td class="org-right">79</td>
-</tr>
-</tbody>
-</table>
-
-
-<a id="orgb062f1d"></a>
-
-### Wide submodel(LR)特征
-
-<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-
-
-<colgroup>
-<col  class="org-left" />
-
-<col  class="org-right" />
-</colgroup>
-<thead>
-<tr>
-<th scope="col" class="org-left">Feature</th>
-<th scope="col" class="org-right">Dimention</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<td class="org-left">`id`</td>
-<td class="org-right">100000</td>
-</tr>
-
-
-<tr>
-<td class="org-left">`site_id`</td>
-<td class="org-right">100000</td>
-</tr>
-
-
-<tr>
-<td class="org-left">`app_id`</td>
-<td class="org-right">100000</td>
-</tr>
-
-
-<tr>
-<td class="org-left">`device_id`</td>
-<td class="org-right">100000</td>
-</tr>
-
-
-<tr>
-<td class="org-left">`device_id` X `site_id`</td>
-<td class="org-right">10000000</td>
-</tr>
-</tbody>
-
-<tbody>
-<tr>
-<td class="org-left">Total</td>
-<td class="org-right">10,400,000</td>
-</tr>
-</tbody>
-</table>
-
-
-<a id="org6b9de13"></a>
-
-# 输入到 PaddlePaddle 中
+## 输入到 PaddlePaddle 中
 
 Deep 和 Wide 两部分均以 `sparse_binary_vector` 的格式[1]输入，输入前需要将相关特征拼合，模型最终只接受 3 个 input，
 分别是
@@ -379,8 +211,6 @@ def concat_sparse_vectors(inputs, dims):
             res.append(v + start)
         start += dims[no]
     return res
-
 ```
 
-[1] <https://github.com/PaddlePaddle/Paddle/blob/develop/doc/api/v1/data_provider/pydataprovider2_en.rst>
-
+1. <https://github.com/PaddlePaddle/Paddle/blob/develop/doc/api/v1/data_provider/pydataprovider2_en.rst>

@@ -1,32 +1,6 @@
-<div id="table-of-contents">
-<h2>Table of Contents</h2>
-<div id="text-table-of-contents">
-<ul>
-<li><a href="#orgc299c2a">1. 背景介绍</a>
-<ul>
-<li><a href="#org5cc253b">1.1. LR vs DNN</a></li>
-</ul>
-</li>
-<li><a href="#orgab346e7">2. 数据和任务抽象</a></li>
-<li><a href="#org07ef211">3. Wide &amp; Deep Learning Model</a>
-<ul>
-<li><a href="#orgeae9b2d">3.1. 模型简介</a></li>
-<li><a href="#org19637b5">3.2. 编写模型输入</a></li>
-<li><a href="#orgd2cbfbd">3.3. 编写 Wide 部分</a></li>
-<li><a href="#orgd78c9ff">3.4. 编写 Deep 部分</a></li>
-<li><a href="#org92e3541">3.5. 两者融合</a></li>
-<li><a href="#orgb4020a9">3.6. 训练任务的定义</a></li>
-</ul>
-</li>
-<li><a href="#org8f6a6fa">4. 引用</a></li>
-</ul>
-</div>
-</div>
+# CTR预估
 
-
-<a id="orgc299c2a"></a>
-
-# 背景介绍
+## 背景介绍
 
 CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率，
 通常被用来衡量一个在线广告系统的有效性。
@@ -40,7 +14,7 @@ CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率�
 4.  展出广告
 
 可以看到，CTR 在最终排序中起到了很重要的作用。
-
+### 发展阶段
 在业内，CTR 模型经历了如下的发展阶段：
 
 -   Logistic Regression(LR) / GBDT + 特征工程
@@ -51,9 +25,7 @@ CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率�
 逐渐地接过 CTR 预估任务的大旗。
 
 
-<a id="org5cc253b"></a>
-
-## LR vs DNN
+### LR vs DNN
 
 下图展示了 LR 和一个 \(3x2\) 的 NN 模型的结构：
 
@@ -73,9 +45,7 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 本文后面的章节会演示如何使用 PaddlePaddle 编写一个结合两者优点的模型。
 
 
-<a id="orgab346e7"></a>
-
-# 数据和任务抽象
+## 数据和任务抽象
 
 我们可以将 `click` 作为学习目标，具体任务可以有以下几种方案：
 
@@ -90,16 +60,12 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 具体的特征处理方法参看 [data process](./dataset.md)
 
 
-<a id="org07ef211"></a>
-
-# Wide & Deep Learning Model
+## Wide & Deep Learning Model
 
 谷歌在 16 年提出了 Wide & Deep Learning 的模型框架，用于融合适合学习抽象特征的 DNN 和 适用于大规模稀疏特征的 LR 两种模型的优点。
 
 
-<a id="orgeae9b2d"></a>
-
-## 模型简介
+### 模型简介
 
 Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用，
 在 CTR 预估的任务中工业界也有一定的应用，因此本文将演示使用此模型来完成 CTR 预估的任务。
@@ -112,9 +78,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
 而模型右边的 Deep 部分，能够学习特征间的隐含关系，在相同数量的特征下有更好的学习和推导能力。
 
 
-<a id="org19637b5"></a>
-
-## 编写模型输入
+### 编写模型输入
 
 模型只接受 3 个输入，分别是
 
@@ -132,13 +96,9 @@ lr_merged_input = layer.data(
     type=paddle.data_type.sparse_binary_vector(data_meta_info['lr_input']))
 
 click = paddle.layer.data(name='click', type=dtype.dense_vector(1))
-
-
 ```
 
-<a id="orgd2cbfbd"></a>
-
-## 编写 Wide 部分
+### 编写 Wide 部分
 
 Wide 部分直接使用了 LR 模型，但激活函数改成了 `RELU` 来加速
 
@@ -147,13 +107,9 @@ def build_lr_submodel():
     fc = layer.fc(
         input=lr_merged_input, size=1, name='lr', act=paddle.activation.Relu())
     return fc
-
-
 ```
 
-<a id="orgd78c9ff"></a>
-
-## 编写 Deep 部分
+### 编写 Deep 部分
 
 Deep 部分使用了标准的多层前向传导的 NN 模型
 
@@ -169,13 +125,9 @@ def build_dnn_submodel(dnn_layer_dims):
             name='dnn-fc-%d' % no)
         _input_layer = fc
     return _input_layer
-
-
 ```
 
-<a id="org92e3541"></a>
-
-## 两者融合
+### 两者融合
 
 两个 submodel 的最上层输出加权求和得到整个模型的输出，输出部分使用 `sigmoid` 作为激活函数，得到区间\((0,1)\) 的预测值，
 来逼近训练数据中二元类别的分布，最终作为 CTR 预估的值使用。
@@ -191,13 +143,9 @@ def combine_submodels(dnn, lr):
         # use sigmoid function to approximate ctr rate, a float value between 0 and 1.
         act=paddle.activation.Sigmoid())
     return fc
-
-
 ```
 
-<a id="orgb4020a9"></a>
-
-## 训练任务的定义
+### 训练任务的定义
 
 ```python
 dnn = build_dnn_submodel(dnn_layer_dims)
@@ -240,16 +188,10 @@ trainer.train(
     feeding=field_index,
     event_handler=event_handler,
     num_passes=100)
-
-
 ```
 
-<a id="org8f6a6fa"></a>
-
-# 引用
-
--   [1] <https://en.wikipedia.org/wiki/Click-through_rate>
--   [2] Mikolov, Tomáš, et al. "Strategies for training large scale neural network language models." Automatic Speech Recognition and Understanding (ASRU), 2011 IEEE Workshop on. IEEE, 2011.
--   [3] <https://www.kaggle.com/c/avazu-ctr-prediction/data>
--   [4] Cheng, Heng-Tze, et al. "Wide & deep learning for recommender systems." Proceedings of the 1st Workshop on Deep Learning for Recommender Systems. ACM, 2016.
-
+## 引用
+1. <https://en.wikipedia.org/wiki/Click-through_rate>
+2. Mikolov T, Deoras A, Povey D, et al. Strategies for training large scale neural network language models[C]//Automatic Speech Recognition and Understanding (ASRU), 2011 IEEE Workshop on. IEEE, 2011: 196-201.
+3. <https://www.kaggle.com/c/avazu-ctr-prediction/data>
+4. Cheng H T, Koc L, Harmsen J, et al. Wide & deep learning for recommender systems[C]//Proceedings of the 1st Workshop on Deep Learning for Recommender Systems. ACM, 2016: 7-10.
