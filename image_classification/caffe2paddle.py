@@ -98,13 +98,6 @@ class ModelConverter(object):
             layer = layer_dict[layer_name]
             layer_params = layer.blobs
             layer_type = layer.type
-            print layer_name, layer_type, len(layer_params)
-            if layer_type == "BatchNorm":
-                print layer_params[0].data.shape, layer_params[
-                    1].data.shape, layer_params[2].data, type(
-                        layer_params[0].data)
-            #print dir(layer)
-            #continue
             if len(layer_params) > 0:
                 self.pre_layer_name = getattr(
                     self, "convert_" + layer_type + "_layer")(layer_params)
