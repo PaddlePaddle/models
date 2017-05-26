@@ -158,6 +158,9 @@ output = combine_submodels(dnn, lr)
 classification_cost = paddle.layer.multi_binary_label_cross_entropy_cost(
     input=output, label=click)
 
+
+paddle.init(use_gpu=False, trainer_count=11)
+
 params = paddle.parameters.create(classification_cost)
 
 optimizer = paddle.optimizer.Momentum(momentum=0)
