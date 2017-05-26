@@ -129,8 +129,8 @@ def build_dnn_submodel(dnn_layer_dims):
 
 ### 两者融合
 
-两个 submodel 的最上层输出加权求和得到整个模型的输出，输出部分使用 `sigmoid` 作为激活函数，得到区间\((0,1)\) 的预测值，
-来逼近训练数据中二元类别的分布，最终作为 CTR 预估的值使用。
+两个 submodel 的最上层输出加权求和得到整个模型的输出，输出部分使用 `sigmoid` 作为激活函数，得到区间 (0,1) 的预测值，
+来逼近训练数据中二元类别的分布，并最终作为 CTR 预估的值使用。
 
 ```python
 # conbine DNN and LR submodels
