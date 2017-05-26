@@ -2,34 +2,34 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgc14f235">1. 数据集介绍</a></li>
-<li><a href="#orgbbd35aa">2. 特征提取</a>
+<li><a href="#orgca3e53d">1. 数据集介绍</a></li>
+<li><a href="#org47b1669">2. 特征提取</a>
 <ul>
-<li><a href="#org6cd6490">2.1. 类别类特征</a></li>
-<li><a href="#orga7b8fc0">2.2. ID 类特征</a></li>
-<li><a href="#orgd9e9727">2.3. 数值型特征</a></li>
+<li><a href="#org7f26ecf">2.1. 类别类特征</a></li>
+<li><a href="#org07917d3">2.2. ID 类特征</a></li>
+<li><a href="#org5d114f5">2.3. 数值型特征</a></li>
 </ul>
 </li>
-<li><a href="#orgd77edab">3. 特征处理</a>
+<li><a href="#org446467b">3. 特征处理</a>
 <ul>
-<li><a href="#orgd148362">3.1. 类别型特征</a></li>
-<li><a href="#orge427332">3.2. ID 类特征</a></li>
-<li><a href="#org417457a">3.3. 交叉类特征</a></li>
-<li><a href="#org7ed28fc">3.4. 特征维度</a>
+<li><a href="#orgf027e9c">3.1. 类别型特征</a></li>
+<li><a href="#orgc79bb05">3.2. ID 类特征</a></li>
+<li><a href="#org14552b6">3.3. 交叉类特征</a></li>
+<li><a href="#org274bbec">3.4. 特征维度</a>
 <ul>
-<li><a href="#orgecae989">3.4.1. Deep submodel(DNN)特征</a></li>
-<li><a href="#orgc7a00e0">3.4.2. Wide submodel(LR)特征</a></li>
+<li><a href="#org210c8b4">3.4.1. Deep submodel(DNN)特征</a></li>
+<li><a href="#org21d041c">3.4.2. Wide submodel(LR)特征</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org8a65ed5">4. 输入到 PaddlePaddle 中</a></li>
+<li><a href="#orgd8c5ade">4. 输入到 PaddlePaddle 中</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="orgc14f235"></a>
+<a id="orgca3e53d"></a>
 
 # 数据集介绍
 
@@ -54,7 +54,7 @@
 -   `C14-C21` &#x2013; anonymized categorical variables
 
 
-<a id="orgbbd35aa"></a>
+<a id="org47b1669"></a>
 
 # 特征提取
 
@@ -64,7 +64,7 @@
 
 1.  ID 类特征（稀疏，数量多）
 ```python
--   id
+-   `id`
 -   `site_id`
 -   `app_id`
 -   `device_id`
@@ -73,7 +73,7 @@
 
 2.  类别类特征（稀疏，但数量有限）
 ```python
--   C1
+-   `C1`
 -   `site_category`
 -   `device_type`
 -   `C14-C21`
@@ -87,7 +87,7 @@
 
 ```
 
-<a id="org6cd6490"></a>
+<a id="org7f26ecf"></a>
 
 ## 类别类特征
 
@@ -97,7 +97,7 @@
 2.  类似词向量，用一个 Embedding Table 将每个类别映射到对应的向量
 
 
-<a id="orga7b8fc0"></a>
+<a id="org07917d3"></a>
 
 ## ID 类特征
 
@@ -112,7 +112,7 @@ ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot �
 上面的方法尽管存在一定的碰撞概率，但能够处理任意数量的 ID 特征，并保留一定的效果[2]。
 
 
-<a id="orgd9e9727"></a>
+<a id="org5d114f5"></a>
 
 ## 数值型特征
 
@@ -122,12 +122,12 @@ ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot �
 -   用区间分割处理成类别类特征，稀疏化表示，模糊细微上的差别
 
 
-<a id="orgd77edab"></a>
+<a id="org446467b"></a>
 
 # 特征处理
 
 
-<a id="orgd148362"></a>
+<a id="orgf027e9c"></a>
 
 ## 类别型特征
 
@@ -177,7 +177,7 @@ class CategoryFeatureGenerator(object):
 本任务中，类别类特征会输入到 DNN 中使用。
 
 
-<a id="orge427332"></a>
+<a id="orgc79bb05"></a>
 
 ## ID 类特征
 
@@ -205,7 +205,7 @@ class IDfeatureGenerator(object):
 
 ```
 
-<a id="org417457a"></a>
+<a id="org14552b6"></a>
 
 ## 交叉类特征
 
@@ -225,12 +225,12 @@ def gen_cross_fea(self, fea1, fea2):
 我们通过组合出两者组合来捕捉这类信息。
 
 
-<a id="org7ed28fc"></a>
+<a id="org274bbec"></a>
 
 ## 特征维度
 
 
-<a id="orgecae989"></a>
+<a id="org210c8b4"></a>
 
 ### Deep submodel(DNN)特征
 
@@ -269,7 +269,7 @@ def gen_cross_fea(self, fea1, fea2):
 
 
 <tr>
-<td class="org-left">hour</td>
+<td class="org-left">`hour`</td>
 <td class="org-right">24</td>
 </tr>
 
@@ -289,7 +289,7 @@ def gen_cross_fea(self, fea1, fea2):
 </table>
 
 
-<a id="orgc7a00e0"></a>
+<a id="org21d041c"></a>
 
 ### Wide submodel(LR)特征
 
@@ -310,7 +310,7 @@ def gen_cross_fea(self, fea1, fea2):
 
 <tbody>
 <tr>
-<td class="org-left">id</td>
+<td class="org-left">`id`</td>
 <td class="org-right">100000</td>
 </tr>
 
@@ -348,16 +348,16 @@ def gen_cross_fea(self, fea1, fea2):
 </table>
 
 
-<a id="org8a65ed5"></a>
+<a id="orgd8c5ade"></a>
 
 # 输入到 PaddlePaddle 中
 
 Deep 和 Wide 两部分均以 `sparse_binary_vector` 的格式[1]输入，输入前需要将相关特征拼合，模型最终只接受 3 个 input，
 分别是
 
-1.  ~dnn input~，DNN 的输入
-2.  `lr input`, LR 的输入
-3.  ~click~， 标签
+1.  `dnn input` ，DNN 的输入
+2.  `lr input` , LR 的输入
+3.  `click`  ， 标签
 
 拼合特征的方法：
 
