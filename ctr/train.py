@@ -5,9 +5,9 @@ import logging
 import paddle.v2 as paddle
 from paddle.v2 import layer
 from paddle.v2 import data_type as dtype
-from data_provider import categorial_features, id_features, field_index, detect_dataset, AvazuDataset, get_all_field_names
+from data_provider import field_index, detect_dataset, AvazuDataset
 
-id_features_space = 10000
+id_features_space = 100000
 dnn_layer_dims = [128, 64, 32, 1]
 train_data_path = './train.txt'
 data_meta_info = detect_dataset(train_data_path, 500000)
@@ -90,18 +90,20 @@ trainer = paddle.trainer.SGD(
 
 dataset = AvazuDataset(train_data_path, n_records_as_test=test_set_size)
 
+
 def event_handler(event):
     if isinstance(event, paddle.event.EndIteration):
         if event.batch_id % 100 == 0:
-            logging.warning("Pass %d, Samples %d, Cost %f" % (
-                event.pass_id, event.batch_id * batch_size, event.cost))
+            logging.warning("Pass %d, Samples %d, Cost %f" %
+                            (event.pass_id, event.batch_id * batch_size,
+                             event.cost))
 
         if event.batch_id % 1000 == 0:
             result = trainer.test(
                 reader=paddle.batch(dataset.test, batch_size=1000),
                 feeding=field_index)
-            logging.warning("Test %d-%d, Cost %f" % (event.pass_id, event.batch_id,
-                                           result.cost))
+            logging.warning("Test %d-%d, Cost %f" %
+                            (event.pass_id, event.batch_id, result.cost))
 
 
 trainer.train(

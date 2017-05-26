@@ -2,59 +2,59 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgc5babdf">1. 数据集介绍</a></li>
-<li><a href="#orgbbc9886">2. 特征提取</a>
+<li><a href="#orgc14f235">1. 数据集介绍</a></li>
+<li><a href="#orgbbd35aa">2. 特征提取</a>
 <ul>
-<li><a href="#orgce8b3e2">2.1. 类别类特征</a></li>
-<li><a href="#org36ef5ff">2.2. ID 类特征</a></li>
-<li><a href="#org86e6ead">2.3. 数值型特征</a></li>
+<li><a href="#org6cd6490">2.1. 类别类特征</a></li>
+<li><a href="#orga7b8fc0">2.2. ID 类特征</a></li>
+<li><a href="#orgd9e9727">2.3. 数值型特征</a></li>
 </ul>
 </li>
-<li><a href="#orgb22787c">3. 特征处理</a>
+<li><a href="#orgd77edab">3. 特征处理</a>
 <ul>
-<li><a href="#orge3814aa">3.1. 类别型特征</a></li>
-<li><a href="#org0d48201">3.2. ID 类特征</a></li>
-<li><a href="#org399e146">3.3. 交叉类特征</a></li>
-<li><a href="#org2ce9054">3.4. 特征维度</a>
+<li><a href="#orgd148362">3.1. 类别型特征</a></li>
+<li><a href="#orge427332">3.2. ID 类特征</a></li>
+<li><a href="#org417457a">3.3. 交叉类特征</a></li>
+<li><a href="#org7ed28fc">3.4. 特征维度</a>
 <ul>
-<li><a href="#org02df08b">3.4.1. Deep submodel(DNN)特征</a></li>
-<li><a href="#org76983ab">3.4.2. Wide submodel(LR)特征</a></li>
+<li><a href="#orgecae989">3.4.1. Deep submodel(DNN)特征</a></li>
+<li><a href="#orgc7a00e0">3.4.2. Wide submodel(LR)特征</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org38b7a5c">4. 输入到 PaddlePaddle 中</a></li>
+<li><a href="#org8a65ed5">4. 输入到 PaddlePaddle 中</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="orgc5babdf"></a>
+<a id="orgc14f235"></a>
 
 # 数据集介绍
 
 数据集使用 `csv` 格式存储，其中各个字段内容如下：
 
--   id: ad identifier
--   click: 0/1 for non-click/click
--   hour: format is YYMMDDHH, so 14091123 means 23:00 on Sept. 11, 2014 UTC.
--   C1 &#x2013; anonymized categorical variable
--   banner<sub>pos</sub>
--   site<sub>id</sub>
--   site<sub>domain</sub>
--   site<sub>category</sub>
--   app<sub>id</sub>
--   app<sub>domain</sub>
--   app<sub>category</sub>
--   device<sub>id</sub>
--   device<sub>ip</sub>
--   device<sub>model</sub>
--   device<sub>type</sub>
--   device<sub>conn</sub><sub>type</sub>
--   C14-C21 &#x2013; anonymized categorical variables
+-   `id` : ad identifier
+-   `click` : 0/1 for non-click/click
+-   `hour` : format is YYMMDDHH, so 14091123 means 23:00 on Sept. 11, 2014 UTC.
+-   `C1` &#x2013; anonymized categorical variable
+-   `banner_pos`
+-   `site_id`
+-   `site_domain`
+-   `site_category`
+-   `app_id`
+-   `app_domain`
+-   `app_category`
+-   `device_id`
+-   `device_ip`
+-   `device_model`
+-   `device_type`
+-   `device_conn_type`
+-   `C14-C21` &#x2013; anonymized categorical variables
 
 
-<a id="orgbbc9886"></a>
+<a id="orgbbd35aa"></a>
 
 # 特征提取
 
@@ -65,18 +65,18 @@
 1.  ID 类特征（稀疏，数量多）
 ```python
 -   id
--   site<sub>id</sub>
--   app<sub>id</sub>
--   device<sub>id</sub>
+-   `site_id`
+-   `app_id`
+-   `device_id`
 
 ```
 
 2.  类别类特征（稀疏，但数量有限）
 ```python
 -   C1
--   site<sub>category</sub>
--   device<sub>type</sub>
--   C14-C21
+-   `site_category`
+-   `device_type`
+-   `C14-C21`
 
 ```
 
@@ -87,7 +87,7 @@
 
 ```
 
-<a id="orgce8b3e2"></a>
+<a id="org6cd6490"></a>
 
 ## 类别类特征
 
@@ -97,7 +97,7 @@
 2.  类似词向量，用一个 Embedding Table 将每个类别映射到对应的向量
 
 
-<a id="org36ef5ff"></a>
+<a id="orga7b8fc0"></a>
 
 ## ID 类特征
 
@@ -112,7 +112,7 @@ ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot �
 上面的方法尽管存在一定的碰撞概率，但能够处理任意数量的 ID 特征，并保留一定的效果[2]。
 
 
-<a id="org86e6ead"></a>
+<a id="orgd9e9727"></a>
 
 ## 数值型特征
 
@@ -122,12 +122,12 @@ ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot �
 -   用区间分割处理成类别类特征，稀疏化表示，模糊细微上的差别
 
 
-<a id="orgb22787c"></a>
+<a id="orgd77edab"></a>
 
 # 特征处理
 
 
-<a id="orge3814aa"></a>
+<a id="orgd148362"></a>
 
 ## 类别型特征
 
@@ -177,7 +177,7 @@ class CategoryFeatureGenerator(object):
 本任务中，类别类特征会输入到 DNN 中使用。
 
 
-<a id="org0d48201"></a>
+<a id="orge427332"></a>
 
 ## ID 类特征
 
@@ -205,7 +205,7 @@ class IDfeatureGenerator(object):
 
 ```
 
-<a id="org399e146"></a>
+<a id="org417457a"></a>
 
 ## 交叉类特征
 
@@ -225,12 +225,12 @@ def gen_cross_fea(self, fea1, fea2):
 我们通过组合出两者组合来捕捉这类信息。
 
 
-<a id="org2ce9054"></a>
+<a id="org7ed28fc"></a>
 
 ## 特征维度
 
 
-<a id="org02df08b"></a>
+<a id="orgecae989"></a>
 
 ### Deep submodel(DNN)特征
 
@@ -251,19 +251,19 @@ def gen_cross_fea(self, fea1, fea2):
 
 <tbody>
 <tr>
-<td class="org-left">app<sub>category</sub></td>
+<td class="org-left">`app_category`</td>
 <td class="org-right">21</td>
 </tr>
 
 
 <tr>
-<td class="org-left">site<sub>category</sub></td>
+<td class="org-left">`site_category`</td>
 <td class="org-right">22</td>
 </tr>
 
 
 <tr>
-<td class="org-left">device<sub>conn</sub><sub>type</sub></td>
+<td class="org-left">`device_conn_type`</td>
 <td class="org-right">5</td>
 </tr>
 
@@ -275,7 +275,7 @@ def gen_cross_fea(self, fea1, fea2):
 
 
 <tr>
-<td class="org-left">banner<sub>pos</sub></td>
+<td class="org-left">`banner_pos`</td>
 <td class="org-right">7</td>
 </tr>
 </tbody>
@@ -289,7 +289,7 @@ def gen_cross_fea(self, fea1, fea2):
 </table>
 
 
-<a id="org76983ab"></a>
+<a id="orgc7a00e0"></a>
 
 ### Wide submodel(LR)特征
 
@@ -311,44 +311,44 @@ def gen_cross_fea(self, fea1, fea2):
 <tbody>
 <tr>
 <td class="org-left">id</td>
-<td class="org-right">10000</td>
+<td class="org-right">100000</td>
 </tr>
 
 
 <tr>
-<td class="org-left">site<sub>id</sub></td>
-<td class="org-right">10000</td>
+<td class="org-left">`site_id`</td>
+<td class="org-right">100000</td>
 </tr>
 
 
 <tr>
-<td class="org-left">app<sub>id</sub></td>
-<td class="org-right">10000</td>
+<td class="org-left">`app_id`</td>
+<td class="org-right">100000</td>
 </tr>
 
 
 <tr>
-<td class="org-left">device<sub>id</sub></td>
-<td class="org-right">10000</td>
+<td class="org-left">`device_id`</td>
+<td class="org-right">100000</td>
 </tr>
 
 
 <tr>
-<td class="org-left">device<sub>id</sub> X site<sub>id</sub></td>
-<td class="org-right">1000000</td>
+<td class="org-left">`device_id` X `site_id`</td>
+<td class="org-right">10000000</td>
 </tr>
 </tbody>
 
 <tbody>
 <tr>
 <td class="org-left">Total</td>
-<td class="org-right">1,040,000</td>
+<td class="org-right">10,400,000</td>
 </tr>
 </tbody>
 </table>
 
 
-<a id="org38b7a5c"></a>
+<a id="org8a65ed5"></a>
 
 # 输入到 PaddlePaddle 中
 

@@ -2,23 +2,23 @@
 * 数据集介绍
 数据集使用 ~csv~ 格式存储，其中各个字段内容如下：
 
-- id: ad identifier
-- click: 0/1 for non-click/click
-- hour: format is YYMMDDHH, so 14091123 means 23:00 on Sept. 11, 2014 UTC.
-- C1 -- anonymized categorical variable
-- banner_pos
-- site_id
-- site_domain
-- site_category
-- app_id
-- app_domain
-- app_category
-- device_id
-- device_ip
-- device_model
-- device_type
-- device_conn_type
-- C14-C21 -- anonymized categorical variables
+- ~id~ : ad identifier
+- ~click~ : 0/1 for non-click/click
+- ~hour~ : format is YYMMDDHH, so 14091123 means 23:00 on Sept. 11, 2014 UTC.
+- ~C1~ -- anonymized categorical variable
+- ~banner_pos~
+- ~site_id~
+- ~site_domain~
+- ~site_category~
+- ~app_id~
+- ~app_domain~
+- ~app_category~
+- ~device_id~
+- ~device_ip~
+- ~device_model~
+- ~device_type~
+- ~device_conn_type~
+- ~C14-C21~ -- anonymized categorical variables
 
 * 特征提取
 下面我们会简单演示几种特征的提取方式。 
@@ -27,15 +27,15 @@
 
 1. ID 类特征（稀疏，数量多）
    - id
-   - site_id
-   - app_id
-   - device_id
+   - ~site_id~
+   - ~app_id~
+   - ~device_id~
   
 2. 类别类特征（稀疏，但数量有限）
    - C1
-   - site_category
-   - device_type
-   - C14-C21
+   - ~site_category~
+   - ~device_type~
+   - ~C14-C21~
   
 3. 数值型特征转化为类别型特征
    - hour (可以转化成数值，也可以按小时为单位转化为类别）
@@ -146,30 +146,30 @@ ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot �
  我们通过组合出两者组合来捕捉这类信息。
 ** 特征维度
 *** Deep submodel(DNN)特征
-|------------------+-----------|
-| feature          | dimention |
-|------------------+-----------|
-| app_category     |        21 |
-| site_category    |        22 |
-| device_conn_type |         5 |
-| hour             |        24 |
-| banner_pos       |         7 |
-|------------------+-----------|
-| Total            | 79        |
-|------------------+-----------|
+|--------------------+-----------|
+| feature            | dimention |
+|--------------------+-----------|
+| ~app_category~     |        21 |
+| ~site_category~    |        22 |
+| ~device_conn_type~ |         5 |
+| hour               |        24 |
+| ~banner_pos~       |         7 |
+|--------------------+-----------|
+| Total              |        79 |
+|--------------------+-----------|
 
 *** Wide submodel(LR)特征
-|---------------------+-----------|
-| Feature             | Dimention |
-|---------------------+-----------|
-| id                  |     10000 |
-| site_id             |     10000 |
-| app_id              |     10000 |
-| device_id           |     10000 |
-| device_id X site_id |   1000000 |
-|---------------------+-----------|
-| Total               | 1,040,000 |
-|---------------------+-----------|
+|-------------------------+-----------|
+| Feature                 | Dimention |
+|-------------------------+-----------|
+| id                      |     100000 |
+| ~site_id~               |     100000 |
+| ~app_id~                |     100000 |
+| ~device_id~             |     100000 |
+| ~device_id~ X ~site_id~ |   10000000 |
+|-------------------------+-----------|
+| Total                   | 10,400,000 |
+|-------------------------+-----------|
 * 输入到 PaddlePaddle 中
 Deep 和 Wide 两部分均以 ~sparse_binary_vector~ 的格式[1]输入，输入前需要将相关特征拼合，模型最终只接受 3 个 input，
 分别是
