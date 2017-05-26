@@ -2,29 +2,29 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orga5d96a2">1. 背景介绍</a>
+<li><a href="#orgc299c2a">1. 背景介绍</a>
 <ul>
-<li><a href="#orgad9f213">1.1. LR vs DNN</a></li>
+<li><a href="#org5cc253b">1.1. LR vs DNN</a></li>
 </ul>
 </li>
-<li><a href="#org8985d02">2. 数据和任务抽象</a></li>
-<li><a href="#orgc2a928c">3. Wide &amp; Deep Learning Model</a>
+<li><a href="#orgab346e7">2. 数据和任务抽象</a></li>
+<li><a href="#org07ef211">3. Wide &amp; Deep Learning Model</a>
 <ul>
-<li><a href="#org9d012fc">3.1. 模型简介</a></li>
-<li><a href="#org316d2a7">3.2. 编写模型输入</a></li>
-<li><a href="#orgd1b91e3">3.3. 编写 Wide 部分</a></li>
-<li><a href="#orge808ed0">3.4. 编写 Deep 部分</a></li>
-<li><a href="#orgfdc2b81">3.5. 两者融合</a></li>
-<li><a href="#org7c41052">3.6. 训练任务的定义</a></li>
+<li><a href="#orgeae9b2d">3.1. 模型简介</a></li>
+<li><a href="#org19637b5">3.2. 编写模型输入</a></li>
+<li><a href="#orgd2cbfbd">3.3. 编写 Wide 部分</a></li>
+<li><a href="#orgd78c9ff">3.4. 编写 Deep 部分</a></li>
+<li><a href="#org92e3541">3.5. 两者融合</a></li>
+<li><a href="#orgb4020a9">3.6. 训练任务的定义</a></li>
 </ul>
 </li>
-<li><a href="#orgb7f7b96">4. 引用</a></li>
+<li><a href="#org8f6a6fa">4. 引用</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="orga5d96a2"></a>
+<a id="orgc299c2a"></a>
 
 # 背景介绍
 
@@ -51,7 +51,7 @@ CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率�
 逐渐地接过 CTR 预估任务的大旗。
 
 
-<a id="orgad9f213"></a>
+<a id="org5cc253b"></a>
 
 ## LR vs DNN
 
@@ -73,7 +73,7 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 本文后面的章节会演示如何使用 PaddlePaddle 编写一个结合两者优点的模型。
 
 
-<a id="org8985d02"></a>
+<a id="orgab346e7"></a>
 
 # 数据和任务抽象
 
@@ -90,14 +90,14 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 具体的特征处理方法参看 [data process](./dataset.md)
 
 
-<a id="orgc2a928c"></a>
+<a id="org07ef211"></a>
 
 # Wide & Deep Learning Model
 
 谷歌在 16 年提出了 Wide & Deep Learning 的模型框架，用于融合适合学习抽象特征的 DNN 和 适用于大规模稀疏特征的 LR 两种模型的优点。
 
 
-<a id="org9d012fc"></a>
+<a id="orgeae9b2d"></a>
 
 ## 模型简介
 
@@ -112,7 +112,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
 而模型右边的 Deep 部分，能够学习特征间的隐含关系，在相同数量的特征下有更好的学习和推导能力。
 
 
-<a id="org316d2a7"></a>
+<a id="org19637b5"></a>
 
 ## 编写模型输入
 
@@ -136,7 +136,7 @@ click = paddle.layer.data(name='click', type=dtype.dense_vector(1))
 
 ```
 
-<a id="orgd1b91e3"></a>
+<a id="orgd2cbfbd"></a>
 
 ## 编写 Wide 部分
 
@@ -151,7 +151,7 @@ def build_lr_submodel():
 
 ```
 
-<a id="orge808ed0"></a>
+<a id="orgd78c9ff"></a>
 
 ## 编写 Deep 部分
 
@@ -173,7 +173,7 @@ def build_dnn_submodel(dnn_layer_dims):
 
 ```
 
-<a id="orgfdc2b81"></a>
+<a id="org92e3541"></a>
 
 ## 两者融合
 
@@ -195,7 +195,7 @@ def combine_submodels(dnn, lr):
 
 ```
 
-<a id="org7c41052"></a>
+<a id="orgb4020a9"></a>
 
 ## 训练任务的定义
 
@@ -244,7 +244,7 @@ trainer.train(
 
 ```
 
-<a id="orgb7f7b96"></a>
+<a id="org8f6a6fa"></a>
 
 # 引用
 

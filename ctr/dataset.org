@@ -138,7 +138,7 @@ ID 类特征的特点是稀疏数据，但量比较大，直接使用 One-hot �
  LR 模型作为 Wide & Deep model 的 ~wide~ 部分，可以输入很 wide 的数据（特征空间的维度很大），
  为了充分利用这个优势，我们将演示交叉组合特征构建成更大维度特征的情况，之后塞入到模型中训练。
 
- 这里我们依旧使用模操作来约束最终组合出的特征空间的大小，具体实现是直接在 ~IDfeatureGenerator~ 中添加一个~gen_cross_feature~ 的方法：
+ 这里我们依旧使用模操作来约束最终组合出的特征空间的大小，具体实现是直接在 ~IDfeatureGenerator~ 中添加一个 ~gen_cross_feature~ 的方法：
 
  #+BEGIN_SRC python
        def gen_cross_fea(self, fea1, fea2):
