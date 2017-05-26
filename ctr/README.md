@@ -2,29 +2,29 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org50629cf">1. 背景介绍</a>
+<li><a href="#org466cf34">1. 背景介绍</a>
 <ul>
-<li><a href="#org82d29f2">1.1. LR vs DNN</a></li>
+<li><a href="#orgf06d0ce">1.1. LR vs DNN</a></li>
 </ul>
 </li>
-<li><a href="#org71b628e">2. 数据和任务抽象</a></li>
-<li><a href="#orga33b812">3. Wide &amp; Deep Learning Model</a>
+<li><a href="#orgb599ca8">2. 数据和任务抽象</a></li>
+<li><a href="#org9ca5c95">3. Wide &amp; Deep Learning Model</a>
 <ul>
-<li><a href="#org83aff73">3.1. 模型简介</a></li>
-<li><a href="#org5ea2bba">3.2. 编写模型输入</a></li>
-<li><a href="#org17c16e7">3.3. 编写 Wide 部分</a></li>
-<li><a href="#orged3e908">3.4. 编写 Deep 部分</a></li>
-<li><a href="#org80056a6">3.5. 两者融合</a></li>
-<li><a href="#org6afcbfa">3.6. 训练任务的定义</a></li>
+<li><a href="#org8ce8325">3.1. 模型简介</a></li>
+<li><a href="#org7c4e5de">3.2. 编写模型输入</a></li>
+<li><a href="#org18b2115">3.3. 编写 Wide 部分</a></li>
+<li><a href="#org80d7554">3.4. 编写 Deep 部分</a></li>
+<li><a href="#orge8947b8">3.5. 两者融合</a></li>
+<li><a href="#orgaf3e9f2">3.6. 训练任务的定义</a></li>
 </ul>
 </li>
-<li><a href="#orgbfe2993">4. 引用</a></li>
+<li><a href="#orgad3893f">4. 引用</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="org50629cf"></a>
+<a id="org466cf34"></a>
 
 # 背景介绍
 
@@ -51,7 +51,7 @@ CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率�
 逐渐地接过 CTR 预估任务的大旗。
 
 
-<a id="org82d29f2"></a>
+<a id="orgf06d0ce"></a>
 
 ## LR vs DNN
 
@@ -73,7 +73,7 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 本文后面的章节会演示如何使用 PaddlePaddle 编写一个结合两者优点的模型。
 
 
-<a id="org71b628e"></a>
+<a id="orgb599ca8"></a>
 
 # 数据和任务抽象
 
@@ -90,14 +90,14 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 具体的特征处理方法参看 [data process](./dataset.md)
 
 
-<a id="orga33b812"></a>
+<a id="org9ca5c95"></a>
 
 # Wide & Deep Learning Model
 
 谷歌在 16 年提出了 Wide & Deep Learning 的模型框架，用于融合适合学习抽象特征的 DNN 和 适用于大规模稀疏特征的 LR 两种模型的优点。
 
 
-<a id="org83aff73"></a>
+<a id="org8ce8325"></a>
 
 ## 模型简介
 
@@ -112,7 +112,7 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
 而模型右边的 Deep 部分，能够学习特征间的隐含关系，在相同数量的特征下有更好的学习和推导能力。
 
 
-<a id="org5ea2bba"></a>
+<a id="org7c4e5de"></a>
 
 ## 编写模型输入
 
@@ -123,51 +123,57 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
 -   `click` ， 点击与否，作为二分类模型学习的标签
 
 ```python
-    dnn_merged_input = layer.data(
-        name='dnn_input',
-        type=paddle.data_type.sparse_binary_vector(data_meta_info['dnn_input']))
+dnn_merged_input = layer.data(
+    name='dnn_input',
+    type=paddle.data_type.sparse_binary_vector(data_meta_info['dnn_input']))
 
-    lr_merged_input = layer.data(
-        name='lr_input',
-        type=paddle.data_type.sparse_binary_vector(data_meta_info['lr_input']))
+lr_merged_input = layer.data(
+    name='lr_input',
+    type=paddle.data_type.sparse_binary_vector(data_meta_info['lr_input']))
 
-    click = paddle.layer.data(name='click', type=dtype.dense_vector(1))
+click = paddle.layer.data(name='click', type=dtype.dense_vector(1))
 
 
-<a id="org17c16e7"></a>
+```
+
+<a id="org18b2115"></a>
 
 ## 编写 Wide 部分
 
 Wide 部分直接使用了 LR 模型，但激活函数改成了 `RELU` 来加速
 
 ```python
-    def build_lr_submodel():
-        fc = layer.fc(
-            input=lr_merged_input, size=1, name='lr', act=paddle.activation.Relu())
-        return fc
+def build_lr_submodel():
+    fc = layer.fc(
+        input=lr_merged_input, size=1, name='lr', act=paddle.activation.Relu())
+    return fc
 
 
-<a id="orged3e908"></a>
+```
+
+<a id="org80d7554"></a>
 
 ## 编写 Deep 部分
 
 Deep 部分使用了标准的多层前向传导的 NN 模型
 
 ```python
-    def build_dnn_submodel(dnn_layer_dims):
-        dnn_embedding = layer.fc(input=dnn_merged_input, size=dnn_layer_dims[0])
-        _input_layer = dnn_embedding
-        for no, dim in enumerate(dnn_layer_dims[1:]):
-            fc = layer.fc(
-                input=_input_layer,
-                size=dim,
-                act=paddle.activation.Relu(),
-                name='dnn-fc-%d' % no)
-            _input_layer = fc
-        return _input_layer
+def build_dnn_submodel(dnn_layer_dims):
+    dnn_embedding = layer.fc(input=dnn_merged_input, size=dnn_layer_dims[0])
+    _input_layer = dnn_embedding
+    for no, dim in enumerate(dnn_layer_dims[1:]):
+        fc = layer.fc(
+            input=_input_layer,
+            size=dim,
+            act=paddle.activation.Relu(),
+            name='dnn-fc-%d' % no)
+        _input_layer = fc
+    return _input_layer
 
 
-<a id="org80056a6"></a>
+```
+
+<a id="orge8947b8"></a>
 
 ## 两者融合
 
@@ -175,66 +181,70 @@ Deep 部分使用了标准的多层前向传导的 NN 模型
 来逼近训练数据中二元类别的分布，最终作为 CTR 预估的值使用。
 
 ```python
-    # conbine DNN and LR submodels
-    def combine_submodels(dnn, lr):
-        merge_layer = layer.concat(input=[dnn, lr])
-        fc = layer.fc(
-            input=merge_layer,
-            size=1,
-            name='output',
-            # use sigmoid function to approximate ctr rate, a float value between 0 and 1.
-            act=paddle.activation.Sigmoid())
-        return fc
+# conbine DNN and LR submodels
+def combine_submodels(dnn, lr):
+    merge_layer = layer.concat(input=[dnn, lr])
+    fc = layer.fc(
+        input=merge_layer,
+        size=1,
+        name='output',
+        # use sigmoid function to approximate ctr rate, a float value between 0 and 1.
+        act=paddle.activation.Sigmoid())
+    return fc
 
 
-<a id="org6afcbfa"></a>
+```
+
+<a id="orgaf3e9f2"></a>
 
 ## 训练任务的定义
 
 ```python
-    dnn = build_dnn_submodel(dnn_layer_dims)
-    lr = build_lr_submodel()
-    output = combine_submodels(dnn, lr)
+dnn = build_dnn_submodel(dnn_layer_dims)
+lr = build_lr_submodel()
+output = combine_submodels(dnn, lr)
 
-    # ==============================================================================
-    #                   cost and train period
-    # ==============================================================================
-    classification_cost = paddle.layer.multi_binary_label_cross_entropy_cost(
-        input=output, label=click)
+# ==============================================================================
+#                   cost and train period
+# ==============================================================================
+classification_cost = paddle.layer.multi_binary_label_cross_entropy_cost(
+    input=output, label=click)
 
-    params = paddle.parameters.create(classification_cost)
+params = paddle.parameters.create(classification_cost)
 
-    optimizer = paddle.optimizer.Momentum(momentum=0)
+optimizer = paddle.optimizer.Momentum(momentum=0)
 
-    trainer = paddle.trainer.SGD(
-        cost=classification_cost, parameters=params, update_equation=optimizer)
+trainer = paddle.trainer.SGD(
+    cost=classification_cost, parameters=params, update_equation=optimizer)
 
-    dataset = AvazuDataset(train_data_path, n_records_as_test=test_set_size)
+dataset = AvazuDataset(train_data_path, n_records_as_test=test_set_size)
 
-    def event_handler(event):
-        if isinstance(event, paddle.event.EndIteration):
-            if event.batch_id % 100 == 0:
-                logging.warning("Pass %d, Samples %d, Cost %f" % (
-                    event.pass_id, event.batch_id * batch_size, event.cost))
+def event_handler(event):
+    if isinstance(event, paddle.event.EndIteration):
+        if event.batch_id % 100 == 0:
+            logging.warning("Pass %d, Samples %d, Cost %f" % (
+                event.pass_id, event.batch_id * batch_size, event.cost))
 
-            if event.batch_id % 1000 == 0:
-                result = trainer.test(
-                    reader=paddle.batch(dataset.test, batch_size=1000),
-                    feeding=field_index)
-                logging.warning("Test %d-%d, Cost %f" % (event.pass_id, event.batch_id,
-                                               result.cost))
-
-
-    trainer.train(
-        reader=paddle.batch(
-            paddle.reader.shuffle(dataset.train, buf_size=500),
-            batch_size=batch_size),
-        feeding=field_index,
-        event_handler=event_handler,
-        num_passes=100)
+        if event.batch_id % 1000 == 0:
+            result = trainer.test(
+                reader=paddle.batch(dataset.test, batch_size=1000),
+                feeding=field_index)
+            logging.warning("Test %d-%d, Cost %f" % (event.pass_id, event.batch_id,
+                                           result.cost))
 
 
-<a id="orgbfe2993"></a>
+trainer.train(
+    reader=paddle.batch(
+        paddle.reader.shuffle(dataset.train, buf_size=500),
+        batch_size=batch_size),
+    feeding=field_index,
+    event_handler=event_handler,
+    num_passes=100)
+
+
+```
+
+<a id="orgad3893f"></a>
 
 # 引用
 
