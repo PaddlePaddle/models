@@ -2,7 +2,7 @@
 
 ## 背景介绍
 
-CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率，
+CTR(Click-Through Rate) 是用来表示用户点击一个特定链接的概率，
 通常被用来衡量一个在线广告系统的有效性。
 
 当有多个广告位时，CTR 预估一般会作为排序的基准。
@@ -27,20 +27,23 @@ CTR(Click-through rate) 是用来表示用户点击一个特定链接的概率�
 
 ### LR vs DNN
 
-下图展示了 LR 和一个 \(3x2\) 的 NN 模型的结构：
+下图展示了 LR 和一个 \(3x2\) 的 DNN 模型的结构：
 
-![img](./images/lr-vs-dnn.jpg)
+<p align="center">
+<img src="images/lr_vs_dnn.jpg" width="620" hspace='10'/> <br/>
+Figure 1. LR 和DNN模型结构对比
+</p>
 
-LR 的蓝色箭头部分可以直接类比到 NN 中对应的结构，可以看到 LR 和 NN 有一些共通之处（比如权重累加），
+LR 的蓝色箭头部分可以直接类比到 DNN 中对应的结构，可以看到 LR 和 DNN 有一些共通之处（比如权重累加），
 但前者的模型复杂度在相同输入维度下比后者可能低很多（从某方面讲，模型越复杂，越有潜力学习到更复杂的信息）。
 
-如果 LR 要达到匹敌 NN 的学习能力，必须增加输入的维度，也就是增加特征的数量，
+如果 LR 要达到匹敌 DNN 的学习能力，必须增加输入的维度，也就是增加特征的数量，
 这也就是为何 LR 和大规模的特征工程必须绑定在一起的原因。
 
-LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括内存和计算量等方面，工业界都有非常成熟的优化方法。
+LR 对于 DNN 模型的优势是对大规模稀疏特征的容纳能力，包括内存和计算量等方面，工业界都有非常成熟的优化方法。
 
-而 NN 模型具有自己学习新特征的能力，一定程度上能够提升特征使用的效率，
-这使得 NN 模型在同样规模特征的情况下，更有可能达到更好的学习效果。
+而 DNN 模型具有自己学习新特征的能力，一定程度上能够提升特征使用的效率，
+这使得 DNN 模型在同样规模特征的情况下，更有可能达到更好的学习效果。
 
 本文后面的章节会演示如何使用 PaddlePaddle 编写一个结合两者优点的模型。
 
@@ -50,12 +53,12 @@ LR 对于 NN 模型的优势是对大规模稀疏特征的容纳能力，包括�
 我们可以将 `click` 作为学习目标，具体任务可以有以下几种方案：
 
 1.  直接学习 click，0,1 作二元分类
-2.  Learning to rank, 具体用 pairwise rank（标签 1>0）或者 list rank
+2.  Learning to rank, 具体用 pairwise rank（标签 1>0）或者 listwise rank
 3.  统计每个广告的点击率，将同一个 query 下的广告两两组合，点击率高的>点击率低的，做 rank 或者分类
 
 我们直接使用第一种方法做分类任务。
 
-我们使用 Kaggle 上 `Click-through rate prediction` 任务的数据集[3] 来演示模型。
+我们使用 Kaggle 上 `Click-through rate prediction` 任务的数据集\[[3](https://www.kaggle.com/c/avazu-ctr-prediction/data)\] 来演示模型。
 
 具体的特征处理方法参看 [data process](./dataset.md)
 
@@ -72,7 +75,10 @@ Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用�
 
 模型结构如下：
 
-![img](./images/wide-deep.png)
+<p align="center">
+<img src="images/wide_deep.png" width="820" hspace='10'/> <br/>
+Figure 2. Wide & Deep Model
+</p>
 
 模型左边的 Wide 部分，可以容纳大规模系数特征，并且对一些特定的信息（比如 ID）有一定的记忆能力；
 而模型右边的 Deep 部分，能够学习特征间的隐含关系，在相同数量的特征下有更好的学习和推导能力。
@@ -111,7 +117,7 @@ def build_lr_submodel():
 
 ### 编写 Deep 部分
 
-Deep 部分使用了标准的多层前向传导的 NN 模型
+Deep 部分使用了标准的多层前向传导的 DNN 模型
 
 ```python
 def build_dnn_submodel(dnn_layer_dims):
