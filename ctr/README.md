@@ -2,7 +2,7 @@
 
 ## 背景介绍
 
-CTR(Click-Through Rate) 是用来表示用户点击一个特定链接的概率，
+CTR(Click-Through Rate)[\[1\]](https://en.wikipedia.org/wiki/Click-through_rate) 是用来表示用户点击一个特定链接的概率，
 通常被用来衡量一个在线广告系统的有效性。
 
 当有多个广告位时，CTR 预估一般会作为排序的基准。
@@ -58,7 +58,7 @@ LR 对于 DNN 模型的优势是对大规模稀疏特征的容纳能力，包括
 
 我们直接使用第一种方法做分类任务。
 
-我们使用 Kaggle 上 `Click-through rate prediction` 任务的数据集\[[3](https://www.kaggle.com/c/avazu-ctr-prediction/data)\] 来演示模型。
+我们使用 Kaggle 上 `Click-through rate prediction` 任务的数据集[\[2\]](https://www.kaggle.com/c/avazu-ctr-prediction/data) 来演示模型。
 
 具体的特征处理方法参看 [data process](./dataset.md)
 
@@ -70,7 +70,7 @@ LR 对于 DNN 模型的优势是对大规模稀疏特征的容纳能力，包括
 
 ### 模型简介
 
-Wide & Deep Learning Model 可以作为一种相对成熟的模型框架使用，
+Wide & Deep Learning Model[3] 可以作为一种相对成熟的模型框架使用，
 在 CTR 预估的任务中工业界也有一定的应用，因此本文将演示使用此模型来完成 CTR 预估的任务。
 
 模型结构如下：
@@ -146,7 +146,7 @@ def combine_submodels(dnn, lr):
         input=merge_layer,
         size=1,
         name='output',
-        # use sigmoid function to approximate ctr rate, a float value between 0 and 1.
+        # use sigmoid function to approximate ctr, wihch is a float value between 0 and 1.
         act=paddle.activation.Sigmoid())
     return fc
 ```
@@ -199,8 +199,7 @@ trainer.train(
     num_passes=100)
 ```
 
-## 引用
+## 参考文献
 1. <https://en.wikipedia.org/wiki/Click-through_rate>
-2. Mikolov T, Deoras A, Povey D, et al. Strategies for training large scale neural network language models[C]//Automatic Speech Recognition and Understanding (ASRU), 2011 IEEE Workshop on. IEEE, 2011: 196-201.
-3. <https://www.kaggle.com/c/avazu-ctr-prediction/data>
-4. Cheng H T, Koc L, Harmsen J, et al. Wide & deep learning for recommender systems[C]//Proceedings of the 1st Workshop on Deep Learning for Recommender Systems. ACM, 2016: 7-10.
+2. <https://www.kaggle.com/c/avazu-ctr-prediction/data>
+3. Cheng H T, Koc L, Harmsen J, et al. [Wide & deep learning for recommender systems](https://arxiv.org/pdf/1606.07792.pdf)[C]//Proceedings of the 1st Workshop on Deep Learning for Recommender Systems. ACM, 2016: 7-10.
