@@ -11,14 +11,14 @@ id_features_space = 100000
 dnn_layer_dims = [128, 64, 32, 1]
 train_data_path = './train.txt'
 data_meta_info = detect_dataset(train_data_path, 500000)
-batch_size = 1000 * 11
+batch_size = 10000
 test_set_size = 10000
 
 logging.warning('detect categorical fields in dataset %s' % train_data_path)
 for key, item in data_meta_info.items():
     logging.warning('    - {}\t{}'.format(key, item))
 
-paddle.init(use_gpu=False, trainer_count=11)
+paddle.init(use_gpu=False, trainer_count=1)
 
 # ==============================================================================
 #                    input layers
@@ -81,7 +81,7 @@ classification_cost = paddle.layer.multi_binary_label_cross_entropy_cost(
 
 params = paddle.parameters.create(classification_cost)
 
-optimizer = paddle.optimizer.Momentum(momentum=0)
+optimizer = paddle.optimizer.Momentum(momentum=0.01)
 
 trainer = paddle.trainer.SGD(
     cost=classification_cost, parameters=params, update_equation=optimizer)
