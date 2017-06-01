@@ -201,7 +201,9 @@ trainer.train(
 训练模型需要如下步骤：
 
 1. 下载训练数据，可以使用 Kaggle 上 CTR 比赛的数据\[[2](#参考文献)\]
-2. 将训练数据的路径传给 `train.py` ，开始训练
+    1. 从 [Kaggle CTR](https://www.kaggle.com/c/avazu-ctr-prediction/data) 下载 train.gz
+    2. 解压 train.gz 得到 train.txt
+2. 执行 `python train.py --train_data_path train.txt` ，开始训练
 
 上面第2个步骤可以为 `train.py` 填充命令行参数来定制模型的训练过程，具体的命令行参数及用法如下
 
@@ -226,7 +228,6 @@ optional arguments:
   --num_lines_to_detact NUM_LINES_TO_DETACT
                         number of records to detect dataset's meta info
 ```
-比如执行 `python train.py --train_data_path ./train.txt` 来对目录下的 `train.txt` 建立训练任务。
 
 ## 参考文献
 1. <https://en.wikipedia.org/wiki/Click-through_rate>
