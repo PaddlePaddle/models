@@ -152,7 +152,6 @@ def combine_submodels(dnn, lr):
 ```
 
 ### 训练任务的定义
-
 ```python
 dnn = build_dnn_submodel(dnn_layer_dims)
 lr = build_lr_submodel()
