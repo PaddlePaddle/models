@@ -1,20 +1,44 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import argparse
 import logging
 import paddle.v2 as paddle
 from paddle.v2 import layer
 from paddle.v2 import data_type as dtype
 from data_provider import field_index, detect_dataset, AvazuDataset
 
-id_features_space = 100000
-dnn_layer_dims = [128, 64, 32, 1]
-train_data_path = './train.txt'
-data_meta_info = detect_dataset(train_data_path, 500000)
-batch_size = 10000
-test_set_size = 10000
+parser = argparse.ArgumentParser(description="PaddlePaddle CTR example")
+parser.add_argument(
+    '--train_data_path',
+    type=str,
+    required=True,
+    help="path of training dataset")
+parser.add_argument(
+    '--batch_size',
+    type=int,
+    default=10000,
+    help="size of mini-batch (default:10000)")
+parser.add_argument(
+    '--test_set_size',
+    type=int,
+    default=10000,
+    help="size of the validation dataset(default: 10000)")
+parser.add_argument(
+    '--num_passes', type=int, default=10, help="number of passes to train")
+parser.add_argument(
+    '--num_lines_to_detact',
+    type=int,
+    default=500000,
+    help="number of records to detect dataset's meta info")
 
-logging.warning('detect categorical fields in dataset %s' % train_data_path)
+args = parser.parse_args()
+
+dnn_layer_dims = [128, 64, 32, 1]
+data_meta_info = detect_dataset(args.train_data_path, args.num_lines_to_detact)
+
+logging.warning('detect categorical fields in dataset %s' %
+                args.train_data_path)
 for key, item in data_meta_info.items():
     logging.warning('    - {}\t{}'.format(key, item))
 
@@ -86,19 +110,20 @@ optimizer = paddle.optimizer.Momentum(momentum=0.01)
 trainer = paddle.trainer.SGD(
     cost=classification_cost, parameters=params, update_equation=optimizer)
 
-dataset = AvazuDataset(train_data_path, n_records_as_test=test_set_size)
+dataset = AvazuDataset(
+    args.train_data_path, n_records_as_test=args.test_set_size)
 
 
 def event_handler(event):
     if isinstance(event, paddle.event.EndIteration):
-        num_samples = event.batch_id * batch_size
+        num_samples = event.batch_id * args.batch_size
         if event.batch_id % 100 == 0:
             logging.warning("Pass %d, Samples %d, Cost %f" %
                             (event.pass_id, num_samples, event.cost))
 
         if event.batch_id % 1000 == 0:
             result = trainer.test(
-                reader=paddle.batch(dataset.test, batch_size=1000),
+                reader=paddle.batch(dataset.test, batch_size=args.batch_size),
                 feeding=field_index)
             logging.warning("Test %d-%d, Cost %f" %
                             (event.pass_id, event.batch_id, result.cost))
@@ -107,7 +132,7 @@ def event_handler(event):
 trainer.train(
     reader=paddle.batch(
         paddle.reader.shuffle(dataset.train, buf_size=500),
-        batch_size=batch_size),
+        batch_size=args.batch_size),
     feeding=field_index,
     event_handler=event_handler,
-    num_passes=100)
+    num_passes=args.num_passes)
