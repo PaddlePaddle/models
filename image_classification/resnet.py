@@ -57,7 +57,7 @@ def layer_warp(block_func, input, features, count, stride):
     return conv
 
 
-def resnet_imagenet(input, depth=50):
+def resnet_imagenet(input, depth=50, class_dim=100):
     cfg = {
         18: ([2, 2, 2, 1], basicblock),
         34: ([3, 4, 6, 3], basicblock),
@@ -75,10 +75,12 @@ def resnet_imagenet(input, depth=50):
     res4 = layer_warp(block_func, res3, 512, stages[3], 2)
     pool2 = paddle.layer.img_pool(
         input=res4, pool_size=7, stride=1, pool_type=paddle.pooling.Avg())
-    return pool2
+    out = paddle.layer.fc(
+        input=pool2, size=class_dim, act=paddle.activation.Softmax())
+    return out
 
 
-def resnet_cifar10(input, depth=32):
+def resnet_cifar10(input, depth=32, class_dim=10):
     # depth should be one of 20, 32, 44, 56, 110, 1202
     assert (depth - 2) % 6 == 0
     n = (depth - 2) / 6
@@ -90,4 +92,6 @@ def resnet_cifar10(input, depth=32):
     res3 = layer_warp(basicblock, res2, 64, n, 2)
     pool = paddle.layer.img_pool(
         input=res3, pool_size=8, stride=1, pool_type=paddle.pooling.Avg())
-    return pool
+    out = paddle.layer.fc(
+        input=pool, size=class_dim, act=paddle.activation.Softmax())
+    return out

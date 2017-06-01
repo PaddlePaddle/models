@@ -53,7 +53,69 @@ def inception(name, input, channels, filter1, filter3R, filter3, filter5R,
     return cat
 
 
-def googlenet(input):
+def inception2(name, input, channels, filter1, filter3R, filter3, filter5R,
+               filter5, proj):
+    cov1 = paddle.layer.img_conv(
+        name=name + '_1',
+        input=input,
+        filter_size=1,
+        num_channels=channels,
+        num_filters=filter1,
+        stride=1,
+        padding=0)
+
+    cov3r = paddle.layer.img_conv(
+        name=name + '_3r',
+        input=input,
+        filter_size=1,
+        num_channels=channels,
+        num_filters=filter3R,
+        stride=1,
+        padding=0)
+    cov3 = paddle.layer.img_conv(
+        name=name + '_3',
+        input=cov3r,
+        filter_size=3,
+        num_filters=filter3,
+        stride=1,
+        padding=1)
+
+    cov5r = paddle.layer.img_conv(
+        name=name + '_5r',
+        input=input,
+        filter_size=1,
+        num_channels=channels,
+        num_filters=filter5R,
+        stride=1,
+        padding=0)
+    cov5 = paddle.layer.img_conv(
+        name=name + '_5',
+        input=cov5r,
+        filter_size=5,
+        num_filters=filter5,
+        stride=1,
+        padding=2)
+
+    pool1 = paddle.layer.img_pool(
+        name=name + '_max',
+        input=input,
+        pool_size=3,
+        num_channels=channels,
+        stride=1,
+        padding=1)
+    covprj = paddle.layer.img_conv(
+        name=name + '_proj',
+        input=pool1,
+        filter_size=1,
+        num_filters=proj,
+        stride=1,
+        padding=0)
+
+    cat = paddle.layer.concat(name=name, input=[cov1, cov3, cov5, covprj])
+    return cat
+
+
+def googlenet(input, class_dim=100):
     # stage 1
     conv1 = paddle.layer.img_conv(
         name="conv1",
@@ -85,23 +147,23 @@ def googlenet(input):
         name="pool2", input=conv2_2, pool_size=3, num_channels=192, stride=2)
 
     # stage 3
-    ince3a = inception("ince3a", pool2, 192, 64, 96, 128, 16, 32, 32)
-    ince3b = inception("ince3b", ince3a, 256, 128, 128, 192, 32, 96, 64)
+    ince3a = inception2("ince3a", pool2, 192, 64, 96, 128, 16, 32, 32)
+    ince3b = inception2("ince3b", ince3a, 256, 128, 128, 192, 32, 96, 64)
     pool3 = paddle.layer.img_pool(
         name="pool3", input=ince3b, num_channels=480, pool_size=3, stride=2)
 
     # stage 4
-    ince4a = inception("ince4a", pool3, 480, 192, 96, 208, 16, 48, 64)
-    ince4b = inception("ince4b", ince4a, 512, 160, 112, 224, 24, 64, 64)
-    ince4c = inception("ince4c", ince4b, 512, 128, 128, 256, 24, 64, 64)
-    ince4d = inception("ince4d", ince4c, 512, 112, 144, 288, 32, 64, 64)
-    ince4e = inception("ince4e", ince4d, 528, 256, 160, 320, 32, 128, 128)
+    ince4a = inception2("ince4a", pool3, 480, 192, 96, 208, 16, 48, 64)
+    ince4b = inception2("ince4b", ince4a, 512, 160, 112, 224, 24, 64, 64)
+    ince4c = inception2("ince4c", ince4b, 512, 128, 128, 256, 24, 64, 64)
+    ince4d = inception2("ince4d", ince4c, 512, 112, 144, 288, 32, 64, 64)
+    ince4e = inception2("ince4e", ince4d, 528, 256, 160, 320, 32, 128, 128)
     pool4 = paddle.layer.img_pool(
         name="pool4", input=ince4e, num_channels=832, pool_size=3, stride=2)
 
     # stage 5
-    ince5a = inception("ince5a", pool4, 832, 256, 160, 320, 32, 128, 128)
-    ince5b = inception("ince5b", ince5a, 832, 384, 192, 384, 48, 128, 128)
+    ince5a = inception2("ince5a", pool4, 832, 256, 160, 320, 32, 128, 128)
+    ince5b = inception2("ince5b", ince5a, 832, 384, 192, 384, 48, 128, 128)
     pool5 = paddle.layer.img_pool(
         name="pool5",
         input=ince5b,
@@ -113,6 +175,9 @@ def googlenet(input):
         input=pool5,
         layer_attr=paddle.attr.Extra(drop_rate=0.4),
         act=paddle.activation.Linear())
+
+    out = paddle.layer.fc(
+        input=dropout, size=class_dim, act=paddle.activation.Softmax())
 
     # fc for output 1
     pool_o1 = paddle.layer.img_pool(
@@ -135,6 +200,8 @@ def googlenet(input):
         size=1024,
         layer_attr=paddle.attr.Extra(drop_rate=0.7),
         act=paddle.activation.Relu())
+    out1 = paddle.layer.fc(
+        input=fc_o1, size=class_dim, act=paddle.activation.Softmax())
 
     # fc for output 2
     pool_o2 = paddle.layer.img_pool(
@@ -157,5 +224,7 @@ def googlenet(input):
         size=1024,
         layer_attr=paddle.attr.Extra(drop_rate=0.7),
         act=paddle.activation.Relu())
+    out2 = paddle.layer.fc(
+        input=fc_o2, size=class_dim, act=paddle.activation.Softmax())
 
-    return dropout, fc_o1, fc_o2
+    return out, out1, out2

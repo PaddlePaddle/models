@@ -3,7 +3,7 @@ import paddle.v2 as paddle
 __all__ = ['alexnet']
 
 
-def alexnet(input):
+def alexnet(input, class_dim=100):
     conv1 = paddle.layer.img_conv(
         input=input,
         filter_size=11,
@@ -45,4 +45,6 @@ def alexnet(input):
         act=paddle.activation.Relu(),
         layer_attr=paddle.attr.Extra(drop_rate=0.5))
 
-    return fc2
+    out = paddle.layer.fc(
+        input=fc2, size=class_dim, act=paddle.activation.Softmax())
+    return out

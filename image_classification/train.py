@@ -35,31 +35,25 @@ def main():
 
     extra_layers = None
     if args.model == 'alexnet':
-        net = alexnet.alexnet(image)
+        out = alexnet.alexnet(image, class_dim=CLASS_DIM)
     elif args.model == 'vgg13':
-        net = vgg.vgg13(image)
+        out = vgg.vgg13(image, class_dim=CLASS_DIM)
     elif args.model == 'vgg16':
-        net = vgg.vgg16(image)
+        out = vgg.vgg16(image, class_dim=CLASS_DIM)
     elif args.model == 'vgg19':
-        net = vgg.vgg19(image)
+        out = vgg.vgg19(image, class_dim=CLASS_DIM)
     elif args.model == 'resnet':
-        net = resnet.resnet_imagenet(image)
+        out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
     elif args.model == 'googlenet':
-        net, fc_o1, fc_o2 = googlenet.googlenet(image)
-        out1 = paddle.layer.fc(
-            input=fc_o1, size=CLASS_DIM, act=paddle.activation.Softmax())
+        out, out1, out2 = googlenet.googlenet(image, class_dim=CLASS_DIM)
         loss1 = paddle.layer.cross_entropy_cost(
             input=out1, label=lbl, coeff=0.3)
         paddle.evaluator.classification_error(input=out1, label=lbl)
-        out2 = paddle.layer.fc(
-            input=fc_o2, size=CLASS_DIM, act=paddle.activation.Softmax())
         loss2 = paddle.layer.cross_entropy_cost(
             input=out2, label=lbl, coeff=0.3)
         paddle.evaluator.classification_error(input=out2, label=lbl)
         extra_layers = [loss1, loss2]
 
-    out = paddle.layer.fc(
-        input=net, size=CLASS_DIM, act=paddle.activation.Softmax())
     cost = paddle.layer.classification_cost(input=out, label=lbl)
 
     # Create parameters
