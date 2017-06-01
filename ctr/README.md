@@ -14,6 +14,7 @@ CTR(Click-Through Rate)\[[1](https://en.wikipedia.org/wiki/Click-through_rate)\]
 4.  展出广告
 
 可以看到，CTR 在最终排序中起到了很重要的作用。
+
 ### 发展阶段
 在业内，CTR 模型经历了如下的发展阶段：
 
