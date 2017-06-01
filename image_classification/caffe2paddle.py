@@ -1,9 +1,14 @@
+# -*- coding: utf-8 -*-
 import os
 import functools
 import inspect
 import struct
+import gzip
+import tarfile
+import cStringIO
 import numpy as np
 import caffe
+from paddle.proto.ParameterConfig_pb2 import ParameterConfig
 
 
 def __default_not_set_callback__(kwargs, name):
@@ -85,10 +90,11 @@ def wrap_name_default(name_prefix=None, name_param="name"):
 
 class ModelConverter(object):
     def __init__(self, caffe_model_file, caffe_pretrained_file,
-                 paddle_output_path):
+                 paddle_tar_name):
         self.net = caffe.Net(caffe_model_file, caffe_pretrained_file,
                              caffe.TEST)
-        self.output_path = paddle_output_path
+        self.tar_name = paddle_tar_name
+        self.params = dict()
         self.pre_layer_name = ""
         self.pre_layer_type = ""
 
@@ -102,18 +108,33 @@ class ModelConverter(object):
                 self.pre_layer_name = getattr(
                     self, "convert_" + layer_type + "_layer")(layer_params)
             self.pre_layer_type = layer_type
+        with gzip.open(self.tar_name, 'w') as f:
+            self.to_tar(f)
         return
 
+    def to_tar(self, f):
+        tar = tarfile.TarFile(fileobj=f, mode='w')
+        for param_name in self.params.keys():
+            param_conf, param_data = self.params[param_name]
+
+            confStr = param_conf.SerializeToString()
+            tarinfo = tarfile.TarInfo(name="%s.protobuf" % param_name)
+            tarinfo.size = len(confStr)
+            buf = cStringIO.StringIO(confStr)
+            buf.seek(0)
+            tar.addfile(tarinfo, fileobj=buf)
+
+            buf = cStringIO.StringIO()
+            self.serialize(param_data, buf)
+            tarinfo = tarfile.TarInfo(name=param_name)
+            buf.seek(0)
+            tarinfo.size = len(buf.getvalue())
+            tar.addfile(tarinfo, buf)
+
     @staticmethod
-    def write_parameter(outfile, feats):
-        version = 0
-        value_size = 4
-        fo = open(outfile, "wb")
-        header = ""
-        header += struct.pack("i", version)
-        header += struct.pack("I", value_size)
-        header += struct.pack("Q", feats.size)
-        fo.write(header + feats.tostring())
+    def serialize(data, f):
+        f.write(struct.pack("IIQ", 0, 4, data.size))
+        f.write(data.tobytes())
 
     @wrap_name_default("conv")
     def convert_Convolution_layer(self, params, name=None):
@@ -121,12 +142,13 @@ class ModelConverter(object):
             data = np.array(params[i].data)
             if len(params) == 2:
                 suffix = "0" if i == 0 else "bias"
-                file = os.path.join(self.output_path,
-                                    "_%s.w%s" % (name, suffix))
+                file_name = "_%s.w%s" % (name, suffix)
             else:
-                file = os.path.join(self.output_path,
-                                    "_%s.w%s" % (name, str(i)))
-            ModelConverter.write_parameter(file, data.flatten())
+                file_name = "_%s.w%s" % (name, str(i))
+            param_conf = ParameterConfig()
+            param_conf.name = file_name
+            param_conf.size = reduce(lambda a, b: a * b, data.shape)
+            self.params[file_name] = (param_conf, data.flatten())
         return name
 
     @wrap_name_default("fc_layer")
@@ -135,13 +157,18 @@ class ModelConverter(object):
             data = np.array(params[i].data)
             if len(params) == 2:
                 suffix = "0" if i == 0 else "bias"
-                file = os.path.join(self.output_path,
-                                    "_%s.w%s" % (name, suffix))
+                file_name = "_%s.w%s" % (name, suffix)
             else:
-                file = os.path.join(self.output_path,
-                                    "_%s.w%s" % (name, str(i)))
+                file_name = "_%s.w%s" % (name, str(i))
             data = np.transpose(data)
-            ModelConverter.write_parameter(file, data.flatten())
+            param_conf = ParameterConfig()
+            param_conf.name = file_name
+            dims = list(data.shape)
+            if len(dims) < 2:
+                dims.insert(0, 1)
+            param_conf.size = reduce(lambda a, b: a * b, dims)
+            param_conf.dims.extend(dims)
+            self.params[file_name] = (param_conf, data.flatten())
         return name
 
     @wrap_name_default("batch_norm")
@@ -149,9 +176,15 @@ class ModelConverter(object):
         scale = np.array(params[-1].data)
         for i in range(2):
             data = np.array(params[i].data) * scale
-            file = os.path.join(self.output_path,
-                                "_%s.w%s" % (name, str(i + 1)))
-            ModelConverter.write_parameter(file, data.flatten())
+            file_name = "_%s.w%s" % (name, str(i + 1))
+            param_conf = ParameterConfig()
+            param_conf.name = file_name
+            dims = list(data.shape)
+            assert len(dims) == 1
+            dims.insert(0, 1)
+            param_conf.size = reduce(lambda a, b: a * b, dims)
+            param_conf.dims.extend(dims)
+            self.params[file_name] = (param_conf, data.flatten())
         return name
 
     def convert_Scale_layer(self, params, name=None):
@@ -160,13 +193,22 @@ class ModelConverter(object):
         for i in range(len(params)):
             data = np.array(params[i].data)
             suffix = "0" if i == 0 else "bias"
-            file = os.path.join(self.output_path, "_%s.w%s" % (name, suffix))
-            ModelConverter.write_parameter(file, data.flatten())
+            file_name = "_%s.w%s" % (name, suffix)
+            param_conf = ParameterConfig()
+            param_conf.name = file_name
+            dims = list(data.shape)
+            assert len(dims) == 1
+            dims.insert(0, 1)
+            param_conf.size = reduce(lambda a, b: a * b, dims)
+            if i == 1:
+                param_conf.dims.extend(dims)
+            self.params[file_name] = (param_conf, data.flatten())
         return name
 
 
 if __name__ == "__main__":
-    converter = ModelConverter("./ResNet-101-deploy.prototxt",
-                               "./ResNet-101-model.caffemodel",
-                               "./caffe2paddle_resnet/")
+    converter = ModelConverter("./VGG_ILSVRC_16_layers_deploy.prototxt",
+                               "./VGG_ILSVRC_16_layers.caffemodel",
+                               "/Users/baidu/caffe/caffe/python/paddle_model",
+                               "test_vgg16.tar.gz")
     converter.convert()
