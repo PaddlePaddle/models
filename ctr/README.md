@@ -2,7 +2,7 @@
 
 ## 背景介绍
 
-CTR(Click-Through Rate)[\[1\]](https://en.wikipedia.org/wiki/Click-through_rate) 是用来表示用户点击一个特定链接的概率，
+CTR(Click-Through Rate)\[[1](https://en.wikipedia.org/wiki/Click-through_rate)\] 是用来表示用户点击一个特定链接的概率，
 通常被用来衡量一个在线广告系统的有效性。
 
 当有多个广告位时，CTR 预估一般会作为排序的基准。
@@ -31,7 +31,7 @@ CTR(Click-Through Rate)[\[1\]](https://en.wikipedia.org/wiki/Click-through_rate)
 
 <p align="center">
 <img src="images/lr_vs_dnn.jpg" width="620" hspace='10'/> <br/>
-Figure 1. LR 和DNN模型结构对比
+Figure 1. LR 和 DNN 模型结构对比
 </p>
 
 LR 的蓝色箭头部分可以直接类比到 DNN 中对应的结构，可以看到 LR 和 DNN 有一些共通之处（比如权重累加），
@@ -50,7 +50,7 @@ LR 对于 DNN 模型的优势是对大规模稀疏特征的容纳能力，包括
 
 ## 数据和任务抽象
 
-我们可以将 `click` 作为学习目标，具体任务可以有以下几种方案：
+我们可以将 `click` 作为学习目标，任务可以有以下几种方案：
 
 1.  直接学习 click，0,1 作二元分类
 2.  Learning to rank, 具体用 pairwise rank（标签 1>0）或者 listwise rank
@@ -58,7 +58,7 @@ LR 对于 DNN 模型的优势是对大规模稀疏特征的容纳能力，包括
 
 我们直接使用第一种方法做分类任务。
 
-我们使用 Kaggle 上 `Click-through rate prediction` 任务的数据集[\[2\]](https://www.kaggle.com/c/avazu-ctr-prediction/data) 来演示模型。
+我们使用 Kaggle 上 `Click-through rate prediction` 任务的数据集\[[2](https://www.kaggle.com/c/avazu-ctr-prediction/data)\] 来演示模型。
 
 具体的特征处理方法参看 [data process](./dataset.md)
 
@@ -70,7 +70,7 @@ LR 对于 DNN 模型的优势是对大规模稀疏特征的容纳能力，包括
 
 ### 模型简介
 
-Wide & Deep Learning Model[3] 可以作为一种相对成熟的模型框架使用，
+Wide & Deep Learning Model\[[3](#参考文献)\] 可以作为一种相对成熟的模型框架使用，
 在 CTR 预估的任务中工业界也有一定的应用，因此本文将演示使用此模型来完成 CTR 预估的任务。
 
 模型结构如下：
@@ -198,6 +198,36 @@ trainer.train(
     event_handler=event_handler,
     num_passes=100)
 ```
+## 运行训练和测试
+训练模型需要如下步骤：
+
+1. 下载训练数据，可以使用 Kaggle 上 CTR 比赛的数据\[[2](#参考文献)\]
+2. 将训练数据的路径传给 `train.py` ，开始训练
+
+上面第2个步骤可以为 `train.py` 填充命令行参数来定制模型的训练过程，具体的命令行参数及用法如下
+
+```
+usage: train.py [-h] --train_data_path TRAIN_DATA_PATH
+                [--batch_size BATCH_SIZE] [--test_set_size TEST_SET_SIZE]
+                [--num_passes NUM_PASSES]
+                [--num_lines_to_detact NUM_LINES_TO_DETACT]
+
+PaddlePaddle CTR example
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --train_data_path TRAIN_DATA_PATH
+                        path of training dataset
+  --batch_size BATCH_SIZE
+                        size of mini-batch (default:10000)
+  --test_set_size TEST_SET_SIZE
+                        size of the validation dataset(default: 10000)
+  --num_passes NUM_PASSES
+                        number of passes to train
+  --num_lines_to_detact NUM_LINES_TO_DETACT
+                        number of records to detect dataset's meta info
+```
+比如执行 `python train.py --train_data_path ./train.txt` 来对目录下的 `train.txt` 建立训练任务。
 
 ## 参考文献
 1. <https://en.wikipedia.org/wiki/Click-through_rate>
