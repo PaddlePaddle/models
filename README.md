@@ -1,2 +1,2 @@
 # models
-Model configureations
+Model configuration.
