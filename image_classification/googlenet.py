@@ -3,56 +3,6 @@ import paddle.v2 as paddle
 __all__ = ['googlenet']
 
 
-def inception(name, input, channels, filter1, filter3R, filter3, filter5R,
-              filter5, proj):
-    cov1 = paddle.layer.conv_projection(
-        input=input,
-        filter_size=1,
-        num_channels=channels,
-        num_filters=filter1,
-        stride=1,
-        padding=0)
-
-    cov3r = paddle.layer.img_conv(
-        name=name + '_3r',
-        input=input,
-        filter_size=1,
-        num_channels=channels,
-        num_filters=filter3R,
-        stride=1,
-        padding=0)
-    cov3 = paddle.layer.conv_projection(
-        input=cov3r, filter_size=3, num_filters=filter3, stride=1, padding=1)
-
-    cov5r = paddle.layer.img_conv(
-        name=name + '_5r',
-        input=input,
-        filter_size=1,
-        num_channels=channels,
-        num_filters=filter5R,
-        stride=1,
-        padding=0)
-    cov5 = paddle.layer.conv_projection(
-        input=cov5r, filter_size=5, num_filters=filter5, stride=1, padding=2)
-
-    pool1 = paddle.layer.img_pool(
-        name=name + '_max',
-        input=input,
-        pool_size=3,
-        num_channels=channels,
-        stride=1,
-        padding=1)
-    covprj = paddle.layer.conv_projection(
-        input=pool1, filter_size=1, num_filters=proj, stride=1, padding=0)
-
-    cat = paddle.layer.concat(
-        name=name,
-        input=[cov1, cov3, cov5, covprj],
-        bias_attr=True,
-        act=paddle.activation.Relu())
-    return cat
-
-
 def inception2(name, input, channels, filter1, filter3R, filter3, filter5R,
                filter5, proj):
     cov1 = paddle.layer.img_conv(

@@ -123,6 +123,11 @@ optimizer = paddle.optimizer.Momentum(
     learning_rate_schedule="discexp", )
 ```
 
+通过 `learning_rate_decay_a` (简写$a$） 、`learning_rate_decay_b` (简写$b$) 和 `learning_rate_schedule` 指定学习率调整策略，这里采用离散指数的方式调节学习率，计算公式如下， $n$ 代表已经处理过的累计总样本数，$lr_{0}$ 即为参数里设置的 `learning_rate`。
+
+$$  lr = lr_{0} * a^ {\lfloor \frac{n}{ b}\rfloor} $$
+
+
 ### 定义数据读取方法和事件处理程序
 
 读取数据时需要分别指定训练集和验证集的图像列表文件，这里假设这两个文件分别为`train.list`和`val.list`。

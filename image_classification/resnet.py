@@ -31,7 +31,6 @@ def shortcut(input, n_out, stride, b_projection):
 
 
 def basicblock(input, ch_out, stride, b_projection):
-    # TODO: bug fix for ch_in = input.num_filters
     conv1 = conv_bn_layer(input, ch_out, 3, stride, 1)
     conv2 = conv_bn_layer(conv1, ch_out, 3, 1, 1, paddle.activation.Linear())
     short = shortcut(input, ch_out, stride, b_projection)
@@ -40,7 +39,6 @@ def basicblock(input, ch_out, stride, b_projection):
 
 
 def bottleneck(input, ch_out, stride, b_projection):
-    # TODO: bug fix for ch_in = input.num_filters
     conv1 = conv_bn_layer(input, ch_out, 1, stride, 0)
     conv2 = conv_bn_layer(conv1, ch_out, 3, 1, 1)
     conv3 = conv_bn_layer(conv2, ch_out * 4, 1, 1, 0,
