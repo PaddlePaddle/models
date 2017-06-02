@@ -45,12 +45,12 @@ lm_rnn.py 中的 lm() 函数定义了模型的结构。解析如下：
 * 1，首先，在\_\_main\_\_中定义了模型的参数变量。
 
 	```python
-	    # -- config : model --
-	    rnn_type = 'gru' # or 'lstm'
-	    emb_dim = 200
-	    hidden_size = 200
-	    num_passs = 2
-	    num_layer = 2
+    # -- config : model --
+    rnn_type = 'gru' # or 'lstm'
+    emb_dim = 200
+    hidden_size = 200
+    num_passs = 2
+    num_layer = 2
 	
 	```
 	其中 rnn\_type 用于配置rnn cell类型，可以取‘lstm’或‘gru’；hidden\_size配置unit个数；num\_layer配置RNN的层数；num\_passs配置训练的轮数；emb_dim配置embedding的dimension。
@@ -58,36 +58,35 @@ lm_rnn.py 中的 lm() 函数定义了模型的结构。解析如下：
 * 2，将输入的词（或字）序列映射成向量，即embedding。
 
 	```python
-		data = paddle.layer.data(name="word", type=paddle.data_type.integer_value_sequence(vocab_size))
-		target = paddle.layer.data("label", paddle.data_type.integer_value_sequence(vocab_size))
-		emb = paddle.layer.embedding(input=data, size=emb_dim)
+	data = paddle.layer.data(name="word", type=paddle.data_type.integer_value_sequence(vocab_size))
+	target = paddle.layer.data("label", paddle.data_type.integer_value_sequence(vocab_size))
+	emb = paddle.layer.embedding(input=data, size=emb_dim)
 	
 	```
 * 3，根据配置实现RNN层，将上一步得到的embedding向量序列作为输入。
 
 	```python
-	    if rnn_type == 'lstm':
-	        rnn_cell = paddle.networks.simple_lstm(
-	            input=emb, size=hidden_size)
-	        for _ in range(num_layer - 1):
-	            rnn_cell = paddle.networks.simple_lstm(
-	                input=rnn_cell, size=hidden_size)
-	    elif rnn_type == 'gru':
-	        rnn_cell = paddle.networks.simple_gru(
-	            input=emb, size=hidden_size)
-	        for _ in range(num_layer - 1):
-	            rnn_cell = paddle.networks.simple_gru(
-	                input=rnn_cell, size=hidden_size)
+    if rnn_type == 'lstm':
+        rnn_cell = paddle.networks.simple_lstm(
+            input=emb, size=hidden_size)
+        for _ in range(num_layer - 1):
+            rnn_cell = paddle.networks.simple_lstm(
+                input=rnn_cell, size=hidden_size)
+    elif rnn_type == 'gru':
+        rnn_cell = paddle.networks.simple_gru(
+            input=emb, size=hidden_size)
+        for _ in range(num_layer - 1):
+            rnn_cell = paddle.networks.simple_gru(
+                input=rnn_cell, size=hidden_size)
 	```
 * 4，实现输出层（使用softmax归一化计算单词的概率，将output结果返回）、定义模型的cost（多类交叉熵损失函数）。
 
 	```python
-		# fc and output layer
-		output = paddle.layer.fc(
-	        input=[rnn_cell], size=vocab_size, act=paddle.activation.Softmax())
+	# fc and output layer
+	output = paddle.layer.fc(input=[rnn_cell], size=vocab_size, act=paddle.activation.Softmax())
 	
-	    # loss
-	    cost = paddle.layer.classification_cost(input=output, label=target)
+	# loss
+	cost = paddle.layer.classification_cost(input=output, label=target)
 	```
 
 ### 训练模型
@@ -99,44 +98,44 @@ lm\_rnn.py 中的 train() 方法实现了模型的训练，流程如下：
 * 2，初始化模型：包括模型的结构、参数、优化器（demo中使用的是Adam）以及训练器trainer。如下：
 
 	```python
-	  	# network config
-	    cost, _ = lm(len(word_id_dict), emb_dim, rnn_type, hidden_size, num_layer)
+	# network config
+	cost, _ = lm(len(word_id_dict), emb_dim, rnn_type, hidden_size, num_layer)
 	
-	    # create parameters
-	    parameters = paddle.parameters.create(cost)
+	# create parameters
+	parameters = paddle.parameters.create(cost)
 	
-	    # create optimizer
-	    adam_optimizer = paddle.optimizer.Adam(
-	        learning_rate=1e-3,
-	        regularization=paddle.optimizer.L2Regularization(rate=1e-3),
-	        model_average=paddle.optimizer.ModelAverage(average_window=0.5))
+	# create optimizer
+	adam_optimizer = paddle.optimizer.Adam(
+        learning_rate=1e-3,
+        regularization=paddle.optimizer.L2Regularization(rate=1e-3),
+        model_average=paddle.optimizer.ModelAverage(average_window=0.5))
 	
-	    # create trainer
-	    trainer = paddle.trainer.SGD(
-	        cost=cost, parameters=parameters, update_equation=adam_optimizer)
+    # create trainer
+    trainer = paddle.trainer.SGD(
+        cost=cost, parameters=parameters, update_equation=adam_optimizer)
 	
 	```
 
 * 3，定义回调函数event_handler来跟踪训练过程中loss的变化，并在每轮时结束保存模型的参数：
 
 	```python
-		# define event_handler callback
-	    def event_handler(event):
-	        if isinstance(event, paddle.event.EndIteration):
-	            if event.batch_id % 100 == 0:
-	                print("\nPass %d, Batch %d, Cost %f, %s" % (
-	                    event.pass_id, event.batch_id, event.cost,
-	                    event.metrics))
-	            else:
-	                sys.stdout.write('.')
-	                sys.stdout.flush()
+	# define event_handler callback
+    def event_handler(event):
+        if isinstance(event, paddle.event.EndIteration):
+            if event.batch_id % 100 == 0:
+                print("\nPass %d, Batch %d, Cost %f, %s" % (
+                    event.pass_id, event.batch_id, event.cost,
+                    event.metrics))
+            else:
+                sys.stdout.write('.')
+                sys.stdout.flush()
 	
-	        # save model each pass
-	        if isinstance(event, paddle.event.EndPass):
-	            result = trainer.test(reader=ptb_reader)
-	            print("\nTest with Pass %d, %s" % (event.pass_id, result.metrics))
-	            with gzip.open(model_file_name_prefix + str(event.pass_id) + '.tar.gz', 'w') as f:
-	                parameters.to_tar(f)
+        # save model each pass
+        if isinstance(event, paddle.event.EndPass):
+            result = trainer.test(reader=ptb_reader)
+            print("\nTest with Pass %d, %s" % (event.pass_id, result.metrics))
+            with gzip.open(model_file_name_prefix + str(event.pass_id) + '.tar.gz', 'w') as f:
+                parameters.to_tar(f)
 	```
 
 * 4，开始train模型：
@@ -152,7 +151,7 @@ lm\_rnn.py中的predict()方法实现了做prediction、生成文本。流程如
 * 1，首先加载并缓存词典和模型，其中加载train好的模型参数方法如下：
 	
 	```python
-		parameters = paddle.parameters.Parameters.from_tar(gzip.open(model_file_name))
+	parameters = paddle.parameters.Parameters.from_tar(gzip.open(model_file_name))
 	```
 
 * 2，生成文本，本例中生成文本的方式是启发式图搜索算法beam search，即lm\_rnn.py中的\_generate\_with\_beamSearch()方法。
@@ -168,13 +167,13 @@ lm\_rnn.py中的predict()方法实现了做prediction、生成文本。流程如
 * 按需要配置lm\_rnn.py中\_\_main\_\_函数中对于data的配置：
 	
 	```python
-	    # -- config : data --
-	    train_file = 'data/ptb.train.txt'
-	    test_file = 'data/ptb.test.txt'
-	    vocab_file = 'data/vocab_cn.txt'  # the file to save vocab
-	    vocab_max_size = 3000
-	    min_sentence_length = 3
-	    max_sentence_length = 60
+    # -- config : data --
+    train_file = 'data/ptb.train.txt'
+    test_file = 'data/ptb.test.txt'
+    vocab_file = 'data/vocab_cn.txt'  # the file to save vocab
+    vocab_max_size = 3000
+    min_sentence_length = 3
+    max_sentence_length = 60
 	
 	```
 	其中，vocab\_max\_size定义了词典的最大长度，如果语料中出现的不同词的个数大于这个值，则根据各词的词频倒序排，取top(vocab\_max\_size)个词纳入词典。
