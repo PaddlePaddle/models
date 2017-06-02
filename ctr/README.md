@@ -1,8 +1,8 @@
-# CTR预估
+# 点击率预估
 
 ## 背景介绍
 
-CTR(Click-Through Rate)\[[1](https://en.wikipedia.org/wiki/Click-through_rate)\] 是用来表示用户点击一个特定链接的概率，
+CTR(Click-Through Rate，点击率预估)\[[1](https://en.wikipedia.org/wiki/Click-through_rate)\] 是用来表示用户点击一个特定链接的概率，
 通常被用来衡量一个在线广告系统的有效性。
 
 当有多个广告位时，CTR 预估一般会作为排序的基准。
