@@ -3,7 +3,7 @@ import sys
 import paddle.v2 as paddle
 import data_util as reader
 import gzip
-import generate_text as generator
+import numpy as np
 
 def lm(vocab_size, emb_dim, hidden_size, num_layer):
     """
@@ -13,7 +13,7 @@ def lm(vocab_size, emb_dim, hidden_size, num_layer):
     :param emb_dim: embedding vector's dimension.
     :param hidden_size: size of unit.
     :param num_layer: layer number.
-    :return: cost and output of model.
+    :return: cost and output layer of model.
     """
 
     assert emb_dim > 0 and hidden_size > 0 and vocab_size > 0 and num_layer > 0
@@ -73,19 +73,20 @@ def train():
     :return: none, but this function will save the  training model each epoch.
     """
 
-    # load word dictionary
-    print('load dictionary...')
-    word_id_dict = reader.build_vocab()
+    # prepare word dictionary
+    print('prepare vocab...')
+    word_id_dict = reader.build_vocab(train_file, vocab_max_size)  # build vocab
+    reader.save_vocab(word_id_dict, vocab_file)  # save vocab
 
     # define data reader
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            reader.train_data_for_NGram(N), buf_size=65536),
+            reader.train_data_for_NGram(train_file, N, word_id_dict), buf_size=65536),
         batch_size=32)
 
     test_reader = paddle.batch(
         paddle.reader.shuffle(
-            reader.test_data_for_NGram(N), buf_size=65536),
+            reader.test_data_for_NGram(train_file, N, word_id_dict), buf_size=65536),
         batch_size=8)
 
     # network config
@@ -133,11 +134,9 @@ def train():
     print("Training finished.")
 
 
-
 if __name__ == '__main__':
 
-    # -- config --
-    paddle.init(use_gpu=False, trainer_count=1)
+    # -- config : model --
     emb_dim = 200
     hidden_size = 200
     num_passs = 2
@@ -145,18 +144,36 @@ if __name__ == '__main__':
     N = 5
     model_file_name_prefix = 'lm_ngram_pass_'
 
+    # -- config : data --
+    train_file = 'data/chinese.txt'
+    test_file = 'data/chinese.txt'
+    vocab_file = 'data/vocab_cn.txt'  # the file to save vocab
+    vocab_max_size = 3000
+    min_sentence_length = 3
+    max_sentence_length = 60
+
     # -- train --
+    paddle.init(use_gpu=False, trainer_count=1)
     train()
 
     # -- predict --
 
+    text = 'the end of the'  # use 4 words to predict the 5th word
+
     # prepare model
-    word_id_dict = reader.build_vocab()  # load word dictionary
-    _, output = lm(len(word_id_dict), emb_dim, hidden_size, num_layer)  # network config
+    word_id_dict = reader.load_vocab(vocab_file)  # load word dictionary
+    _, output_layer = lm(len(word_id_dict), emb_dim, hidden_size, num_layer)  # network config
     model_file_name =  model_file_name_prefix + str(num_passs - 1) + '.tar.gz'
     parameters = paddle.parameters.Parameters.from_tar(gzip.open(model_file_name))  # load parameters
     # generate
-    text = 'the end of the'
     input = [[word_id_dict.get(w, word_id_dict['<UNK>']) for w in text.split()]]
-    print(generator.next_word(output, parameters, word_id_dict, input))
+    predictions = paddle.infer(
+        output_layer=output_layer,
+        parameters=parameters,
+        input=input,
+        field=['value'])
+    id_word_dict = dict([(v, k) for k, v in word_id_dict.items()])  # dictionary with type {id : word}
+    predictions[-1][word_id_dict['<UNK>']] = -1  # filter <UNK>
+    next_word = id_word_dict[np.argmax(predictions[-1])]
+    print(next_word.encode('utf-8'))
 
