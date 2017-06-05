@@ -52,7 +52,6 @@ class ImageDataset(object):
         for i, (image, label) in enumerate(self.filelist):
             if i > self.testset_size:
                 record = self.load_image(image), self.ascii_dic.word2ids(label)
-                print record[0].shape, record[1]
                 yield record
 
     def test(self):
@@ -94,5 +93,3 @@ if __name__ == '__main__':
 
     for i, image in enumerate(image_dataset.train()):
         print 'image', image
-        if i > 10:
-            break

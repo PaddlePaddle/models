@@ -10,9 +10,10 @@ num_classes = AsciiDic().size()
 image_shape = (173 / 2, 46 / 2)
 image_vector_size = image_shape[0] * image_shape[1]
 image_file_list = '/home/disk1/yanchunwei/90kDICT32px/train_all.txt'
-batch_size = 1
+trainer_count = 4
+batch_size = 30 * trainer_count
 
-paddle.init(use_gpu=True, trainer_count=1)
+paddle.init(use_gpu=True, trainer_count=trainer_count)
 
 
 def ocr_convs(input_image, num, with_bn):
@@ -46,27 +47,25 @@ def ocr_convs(input_image, num, with_bn):
         pool_size=2,
         pool_stride=2, )
 
-    # tmp = img_conv_group(
-    #       input = tmp,
-    #       conv_padding = 1,
-    #       conv_num_filter = [32] * (num / 4),
-    #       conv_filter_size = 3,
-    #       conv_act = Relu(),
-    #       conv_with_batchnorm = with_bn,
-    #       pool_size = 2,
-    #       pool_stride = 2,
-    #       )
+    tmp = img_conv_group(
+        input=tmp,
+        conv_padding=1,
+        conv_num_filter=[32] * (num / 4),
+        conv_filter_size=3,
+        conv_act=Relu(),
+        conv_with_batchnorm=with_bn,
+        pool_size=2,
+        pool_stride=2, )
 
-    # tmp = img_conv_group(
-    #       input = tmp,
-    #       conv_padding = 1,
-    #       conv_num_filter = [64] * (num / 4),
-    #       conv_filter_size = 3,
-    #       conv_act = Relu(),
-    #       conv_with_batchnorm = with_bn,
-    #       pool_size = 2,
-    #       pool_stride = 2,
-    #       )
+    tmp = img_conv_group(
+        input=tmp,
+        conv_padding=1,
+        conv_num_filter=[64] * (num / 4),
+        conv_filter_size=3,
+        conv_act=Relu(),
+        conv_with_batchnorm=with_bn,
+        pool_size=2,
+        pool_stride=2, )
 
     # tmp = img_conv_group(
     #       input = tmp,
@@ -132,15 +131,15 @@ conv_features = ocr_convs(image, 8, True)
 
 sliced_feature = layer.block_expand(
     input=conv_features,
-    num_channels=16,
+    num_channels=64,
     stride_x=1,
     stride_y=1,
     block_x=1,
-    block_y=3)
+    block_y=11)
 
-gru_forward = simple_gru(input=sliced_feature, size=200, act=Relu())
+gru_forward = simple_gru(input=sliced_feature, size=128, act=Relu())
 gru_backward = simple_gru(
-    input=sliced_feature, size=200, act=Relu(), reverse=True)
+    input=sliced_feature, size=128, act=Relu(), reverse=True)
 
 output = layer.fc(
     input=[gru_forward, gru_backward], size=num_classes + 1, act=Linear())
@@ -168,13 +167,13 @@ dataset = ImageDataset(
 
 def event_handler(event):
     if isinstance(event, paddle.event.EndIteration):
-        if event.batch_id % 1 == 0:
+        if event.batch_id % 20 == 0:
             print "Pass %d, Samples %d, Cost %f" % (
                 event.pass_id, event.batch_id * batch_size, event.cost)
 
-        if event.batch_id % 1000 == 0:
+        if event.batch_id > 0 and event.batch_id % 10 == 0:
             result = trainer.test(
-                reader=paddle.batch(dataset.test, batch_size=1000),
+                reader=paddle.batch(dataset.test, batch_size=50),
                 feeding={'image': 0,
                          'label': 1})
             print "Test %d-%d, Cost %f" % (event.pass_id, event.batch_id,
@@ -183,9 +182,9 @@ def event_handler(event):
 
 trainer.train(
     reader=paddle.batch(
-        paddle.reader.shuffle(dataset.train, buf_size=500),
+        paddle.reader.shuffle(dataset.train, buf_size=100),
         batch_size=batch_size),
     feeding={'image': 0,
              'label': 1},
     event_handler=event_handler,
-    num_passes=1)
+    num_passes=1000)
