@@ -275,9 +275,13 @@ class Model(object):
 这里我们使用了4个 `img_conv_group` ：
 
 ```python
-def ocr_convs(input_image, num, with_bn):
+def ctc_convs(input_image, num, with_bn):
     '''
+    A deep CNN.
+
     @input_image: input image
+    @num: number of CONV filters
+    @with_bn: whether with batch normal
     '''
     assert num % 4 == 0
 
@@ -329,7 +333,8 @@ def ocr_convs(input_image, num, with_bn):
 
 ```python
     def __build_nn__(self):
-        conv_features = ocr_convs(self.image, 8, True)
+        # CNN output image features, 128 float matrixes
+        conv_features = ctc_convs(self.image, 8, True)
         ...
 ```
 
@@ -337,8 +342,11 @@ def ocr_convs(input_image, num, with_bn):
 
 ```python
     def __build_nn__(self):
-        conv_features = ocr_convs(self.image, 8, True)
+        # CNN output image features, 128 float matrixes
+        conv_features = ctc_convs(self.image, 8, True)
 
+        # cutting CNN output into a sequence of feature vectors, which are
+        # 1 pixel wide and 11 pixel high.
         sliced_feature = layer.block_expand(
             input=conv_features,
             num_channels=128,
@@ -353,6 +361,7 @@ def ocr_convs(input_image, num, with_bn):
 此特征向量序列会传入给RNN模块：
 
 ```python
+        # RNNs to capture sequence information forwards and backwards.
         gru_forward = simple_gru(input=sliced_feature, size=128, act=Relu())
         gru_backward = simple_gru(
             input=sliced_feature, size=128, act=Relu(), reverse=True)
@@ -364,6 +373,7 @@ def ocr_convs(input_image, num, with_bn):
 接着，我们整合两个state序列的信息，将其输出为标签分布向量的序列：
 
 ```python
+        # map each step of RNN to character distribution.
         self.output = layer.fc(
             input=[gru_forward, gru_backward],
             size=self.num_classes + 1,
@@ -378,6 +388,7 @@ def ocr_convs(input_image, num, with_bn):
 接下来就是输入给 `CTC layer`，这里我们使用了 对应warp CTC\[[5](#参考文献)\] 的封装 `layer.warp_ctc` ：
 
 ```python
+        # warp CTC to calculate cost for a CTC task.
         self.cost = layer.warp_ctc(
             input=self.output,
             label=self.label,
