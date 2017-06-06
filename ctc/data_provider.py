@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 
 import os
-from paddle.v2.image import load_image, to_chw
+from paddle.v2.image import load_image
 import cv2
 
 
@@ -43,7 +43,7 @@ class ImageDataset(object):
                 for path in image_paths_generator():
                     load_image(path)
         '''
-        self.filelist = image_paths_generator
+        self.filelist = [p for p in image_paths_generator]
         self.fixed_shape = fixed_shape
         self.testset_size = testset_size
         self.ascii_dic = AsciiDic()
@@ -51,8 +51,7 @@ class ImageDataset(object):
     def train(self):
         for i, (image, label) in enumerate(self.filelist):
             if i > self.testset_size:
-                record = self.load_image(image), self.ascii_dic.word2ids(label)
-                yield record
+                yield self.load_image(image), self.ascii_dic.word2ids(label)
 
     def test(self):
         for i, (image, label) in enumerate(self.filelist):
