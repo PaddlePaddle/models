@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import functools
 import inspect
@@ -9,6 +8,7 @@ import cStringIO
 import numpy as np
 import caffe
 from paddle.proto.ParameterConfig_pb2 import ParameterConfig
+from image import load_and_transform
 
 
 def __default_not_set_callback__(kwargs, name):
@@ -90,15 +90,16 @@ def wrap_name_default(name_prefix=None, name_param="name"):
 
 class ModelConverter(object):
     def __init__(self, caffe_model_file, caffe_pretrained_file,
-                 paddle_tar_name):
+                 paddle_output_path, paddle_tar_name):
         self.net = caffe.Net(caffe_model_file, caffe_pretrained_file,
                              caffe.TEST)
+        self.output_path = paddle_output_path
         self.tar_name = paddle_tar_name
         self.params = dict()
         self.pre_layer_name = ""
         self.pre_layer_type = ""
 
-    def convert(self):
+    def convert(self, name_map={}):
         layer_dict = self.net.layer_dict
         for layer_name in layer_dict.keys():
             layer = layer_dict[layer_name]
@@ -106,7 +107,10 @@ class ModelConverter(object):
             layer_type = layer.type
             if len(layer_params) > 0:
                 self.pre_layer_name = getattr(
-                    self, "convert_" + layer_type + "_layer")(layer_params)
+                    self, "convert_" + layer_type + "_layer")(
+                        layer_params,
+                        name=None
+                        if name_map == None else name_map.get(layer_name))
             self.pre_layer_type = layer_type
         with gzip.open(self.tar_name, 'w') as f:
             self.to_tar(f)
@@ -136,7 +140,7 @@ class ModelConverter(object):
         f.write(struct.pack("IIQ", 0, 4, data.size))
         f.write(data.tobytes())
 
-    @wrap_name_default("conv")
+    @wrap_name_default("img_conv_layer")
     def convert_Convolution_layer(self, params, name=None):
         for i in range(len(params)):
             data = np.array(params[i].data)
@@ -149,6 +153,7 @@ class ModelConverter(object):
             param_conf.name = file_name
             param_conf.size = reduce(lambda a, b: a * b, data.shape)
             self.params[file_name] = (param_conf, data.flatten())
+
         return name
 
     @wrap_name_default("fc_layer")
@@ -171,9 +176,10 @@ class ModelConverter(object):
             self.params[file_name] = (param_conf, data.flatten())
         return name
 
-    @wrap_name_default("batch_norm")
+    @wrap_name_default("batch_norm_layer")
     def convert_BatchNorm_layer(self, params, name=None):
-        scale = np.array(params[-1].data)
+        scale = 1 / np.array(params[-1].data)[0] if np.array(
+            params[-1].data)[0] != 0 else 0
         for i in range(2):
             data = np.array(params[i].data) * scale
             file_name = "_%s.w%s" % (name, str(i + 1))
@@ -210,19 +216,7 @@ class ModelConverter(object):
                       mean_file='./caffe/imagenet/ilsvrc_2012_mean.npy'):
         net = self.net
 
-        mu = np.load(mean_file)
-        mu = mu.mean(1).mean(1)
-
-        transformer = caffe.io.Transformer({
-            'data': net.blobs['data'].data.shape
-        })
-        transformer.set_transpose('data', (2, 0, 1))
-        transformer.set_mean('data', mu)
-        transformer.set_raw_scale('data', 255)
-        transformer.set_channel_swap('data', (2, 1, 0))
-        im = caffe.io.load_image(img)
-
-        net.blobs['data'].data[...] = transformer.preprocess('data', im)
+        net.blobs['data'].data[...] = load_img(img, mean_file)
         out = net.forward()
 
         output_prob = net.blobs['prob'].data[0].flatten()
@@ -231,9 +225,19 @@ class ModelConverter(object):
         print 'predicted class is:', output_prob.argmax()
 
 
+def load_image(file, mean_file):
+    im = load_and_transform(file, 256, 224, is_train=False)
+    im = im[(2, 1, 0), :, :]
+    mu = np.load(mean_file)
+    mu = mu.mean(1).mean(1)
+    im = im - mu[:, None, None]
+    im = im / 255.0
+    return im
+
+
 if __name__ == "__main__":
-    converter = ModelConverter("./VGG_ILSVRC_16_layers_deploy.prototxt",
-                               "./VGG_ILSVRC_16_layers.caffemodel",
-                               "test_vgg16.tar.gz")
-    converter.convert()
-    converter.caffe_predict(img='./caffe/examples/images/cat.jpg')
+    converter = ModelConverter("./resnet50/ResNet-50-deploy.prototxt",
+                               "./resnet50/ResNet-50-model.caffemodel",
+                               "paddle_resnet50.tar.gz")
+    converter.convert(name_map=dict())
+    converter.caffe_predict("./images/cat.jpg")
