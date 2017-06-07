@@ -1,4 +1,4 @@
-#Augmentation: Design Doc
+# Augmentation: Design Doc
 ```python
 代码结构：
 | -- generate_data.py            exp：启动脚本，数据生成器
@@ -24,14 +24,14 @@
 |    |    | -- {augmentation}.py
 ```
 
-#执行过程说明：
-##1.执行 python generate_data.py
+# 执行过程说明：
+## 1.执行 python generate_data.py
 
     参数： data_dir:  配置文件及清单所在目录
         max_minibatch: 数据最大分块数
 
     执行顺序：
-        ###1）minibatches, opts, audio_pool = _prepare(data_dir, max_minibatch)
+        1）minibatches, opts, audio_pool = _prepare(data_dir, max_minibatch)
 
             读取data_dir中的配置，生成feature特征化处理所需的对象
             minibatches: List of lists. Each index of the outer list
@@ -47,11 +47,11 @@
                 读取数据文件清单${data_dir}/list， 生成minibatches
                 生成audio_pool对象
 
-        ###2）featurizer = _instantiate_featurizer(opts, audio_pool, data_dir, False)
+        2）featurizer = _instantiate_featurizer(opts, audio_pool, data_dir, False)
             生成AudioFeaturizer对象
             初始化AudioFeaturizer对象，如果aug_pipeline存在，则生成augmenttation对象
 
-        ###3）_featurize(featurizer, minibatches)
+        3）_featurize(featurizer, minibatches)
             对minibatches中的数据进行相关特征化处理
             执行 featurizer.featurize_minibatch(i, minibatch)
                 对每个utterance执行get_audio_files(),提取feature，若存在aug_pipeline，则进行相对应的augmentation
@@ -60,8 +60,8 @@
                 write_minibatch()
 
 
-#接入DataGenerator
-##1.数据准备：
+# 接入DataGenerator
+## 1.数据准备：
 
     audio数据：
         生成list文件清单
@@ -75,7 +75,7 @@
         生成index_file:
             "fname \t duration \t tags_dist"
 
-##2.执行 python generate_data.py
+## 2.执行 python generate_data.py
     对数据进行加噪、音频数据谱特征化及文本转录映射处理
 
-##3.接入 DataGenerator，加载reader()
+## 3.接入 DataGenerator，加载reader()
