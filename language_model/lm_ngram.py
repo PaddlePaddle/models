@@ -5,6 +5,7 @@ import data_util as reader
 import gzip
 import numpy as np
 
+
 def lm(vocab_size, emb_dim, hidden_size, num_layer):
     """
     ngram language model definition.
@@ -135,7 +136,6 @@ def train():
 
 
 if __name__ == '__main__':
-
     # -- config : model --
     emb_dim = 200
     hidden_size = 200
@@ -145,9 +145,9 @@ if __name__ == '__main__':
     model_file_name_prefix = 'lm_ngram_pass_'
 
     # -- config : data --
-    train_file = 'data/chinese.txt'
-    test_file = 'data/chinese.txt'
-    vocab_file = 'data/vocab_cn.txt'  # the file to save vocab
+    train_file = 'data/ptb.train.txt'
+    test_file = 'data/ptb.test.txt'
+    vocab_file = 'data/vocab_ptb.txt'  # the file to save vocab
     vocab_max_size = 3000
     min_sentence_length = 3
     max_sentence_length = 60
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     # prepare model
     word_id_dict = reader.load_vocab(vocab_file)  # load word dictionary
     _, output_layer = lm(len(word_id_dict), emb_dim, hidden_size, num_layer)  # network config
-    model_file_name =  model_file_name_prefix + str(num_passs - 1) + '.tar.gz'
+    model_file_name = model_file_name_prefix + str(num_passs - 1) + '.tar.gz'
     parameters = paddle.parameters.Parameters.from_tar(gzip.open(model_file_name))  # load parameters
     # generate
     input = [[word_id_dict.get(w, word_id_dict['<UNK>']) for w in text.split()]]
@@ -176,4 +176,3 @@ if __name__ == '__main__':
     predictions[-1][word_id_dict['<UNK>']] = -1  # filter <UNK>
     next_word = id_word_dict[np.argmax(predictions[-1])]
     print(next_word.encode('utf-8'))
-

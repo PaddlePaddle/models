@@ -6,6 +6,7 @@ import gzip
 import os
 import numpy as np
 
+
 def lm(vocab_size, emb_dim, rnn_type, hidden_size, num_layer):
     """
     rnn language model definition.
@@ -63,8 +64,8 @@ def train():
 
     # prepare word dictionary
     print('prepare vocab...')
-    word_id_dict = reader.build_vocab(train_file, vocab_max_size) # build vocab
-    reader.save_vocab(word_id_dict, vocab_file) # save vocab
+    word_id_dict = reader.build_vocab(train_file, vocab_max_size)  # build vocab
+    reader.save_vocab(word_id_dict, vocab_file)  # save vocab
 
     # define data reader
     train_reader = paddle.batch(
@@ -188,7 +189,7 @@ def predict():
     if os.path.isfile(vocab_file):
         word_id_dict = reader.load_vocab(vocab_file)  # load word dictionary
     else:
-        word_id_dict = reader.build_vocab(train_file, vocab_max_size) # build vocab
+        word_id_dict = reader.build_vocab(train_file, vocab_max_size)  # build vocab
         reader.save_vocab(word_id_dict, vocab_file)  # save vocab
 
     # prepare and cache model
@@ -209,10 +210,10 @@ def predict():
             print('prob: ', prob)
             print('-------')
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     # -- config : model --
-    rnn_type = 'gru' # or 'lstm'
+    rnn_type = 'gru'  # or 'lstm'
     emb_dim = 200
     hidden_size = 200
     num_passs = 2
