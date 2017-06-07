@@ -1,4 +1,5 @@
 import tarfile
+import gzip
 from paddle.v2.parameters import Parameters
 
 __all__ = ['train', 'test', 'build_dict']
@@ -24,13 +25,13 @@ def __read_to_dict__(tar_file, dict_size):
             each_item.name for each_item in f if each_item.name.endswith("dict")
         ]
         assert len(names) == 1
-        src_dict = __to_dict__(f.extractfile(names[0]), dict_size)
-    return src_dict
+        word_dict = __to_dict__(f.extractfile(names[0]), dict_size)
+    return word_dict
 
 
 def reader_creator(tar_file, file_name, dict_size):
     def reader():
-        src_dict = __read_to_dict__(tar_file, dict_size)
+        word_dict = __read_to_dict__(tar_file, dict_size)
         with tarfile.open(tar_file, mode='r') as f:
             names = [
                 each_item.name for each_item in f
@@ -41,23 +42,26 @@ def reader_creator(tar_file, file_name, dict_size):
                     line_split = line.strip().split('\t')
                     if len(line_split) != 2:
                         continue
-                    src_seq = line_split[0]  # one source sequence
-                    src_words = src_seq.split()
-                    src_ids = [
-                        src_dict.get(w, UNK_IDX)
-                        for w in [START] + src_words + [END]
+                    first_seq = line_split[0]  # first sequence
+                    first_words = first_seq.split()
+                    first_ids = [
+                        word_dict.get(w, UNK_IDX)
+                        for w in [START] + first_words + [END]
                     ]
-                    trg_seq = line_split[1]  # one target sequence
-                    trg_words = trg_seq.split()
-                    trg_ids = [src_dict.get(w, UNK_IDX) for w in trg_words]
+                    second_seq = line_split[
+                        1]  # second sequence relate to first
+                    second_words = second_seq.split()
+                    second_ids = [
+                        word_dict.get(w, UNK_IDX) for w in second_words
+                    ]
 
                     # remove sequence whose length > 80 in training mode
-                    if len(src_ids) > 80 or len(trg_ids) > 80:
+                    if len(first_ids) > 80 or len(second_ids) > 80:
                         continue
-                    trg_ids_next = trg_ids + [src_dict[END]]
-                    trg_ids = [src_dict[START]] + trg_ids
+                    second_ids_next = second_ids + [word_dict[END]]
+                    second_ids = [word_dict[START]] + second_ids
 
-                    yield src_ids, trg_ids, trg_ids_next
+                    yield first_ids, second_ids, second_ids_next
 
     return reader
 
@@ -71,5 +75,5 @@ def test(dict_size):
 
 
 def get_dict(dict_size, reverse=True):
-    src_dict = __read_to_dict__(tar_file, dict_size)
-    return src_dict
+    word_dict = __read_to_dict__(tar_file, dict_size)
+    return word_dict
