@@ -230,7 +230,7 @@ if __name__ == '__main__':
 
     # -- train --
     paddle.init(use_gpu=False, trainer_count=1)
-    train()
+    #train()
 
     # -- predict --
     predict()
