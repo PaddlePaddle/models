@@ -23,7 +23,7 @@ Language Model 常见的实现方式有 N-Gram、RNN、seq2seq。本例中实现
 * lm_rnn.py：实现了基于rnn的语言模型的定义、训练以及做预测。
 * lm_ngram.py：实现了基于n-gram的语言模型的定义、训练以及做预测。
 
-**注：***一般情况下基于N-Gram的语言模型不如基于RNN的语言模型效果好，所以实际使用时建议使用基于RNN的语言模型，本例中也将着重介绍基于RNN的模型，简略介绍基于N-Gram的模型。*
+**注：** *一般情况下基于N-Gram的语言模型不如基于RNN的语言模型效果好，所以实际使用时建议使用基于RNN的语言模型，本例中也将着重介绍基于RNN的模型，简略介绍基于N-Gram的模型。*
 
 ## RNN 语言模型
 ### 简介
@@ -51,7 +51,6 @@ lm_rnn.py 中的 lm() 函数定义了模型的结构。解析如下：
     hidden_size = 200
     num_passs = 2
     num_layer = 2
-	
 	```
 	其中 rnn\_type 用于配置rnn cell类型，可以取‘lstm’或‘gru’；hidden\_size配置unit个数；num\_layer配置RNN的层数；num\_passs配置训练的轮数；emb_dim配置embedding的dimension。
 
@@ -113,7 +112,6 @@ lm\_rnn.py 中的 train() 方法实现了模型的训练，流程如下：
     # create trainer
     trainer = paddle.trainer.SGD(
         cost=cost, parameters=parameters, update_equation=adam_optimizer)
-	
 	```
 
 * 3，定义回调函数event_handler来跟踪训练过程中loss的变化，并在每轮时结束保存模型的参数：
@@ -174,7 +172,6 @@ lm\_rnn.py中的predict()方法实现了做prediction、生成文本。流程如
     vocab_max_size = 3000
     min_sentence_length = 3
     max_sentence_length = 60
-	
 	```
 	其中，vocab\_max\_size定义了词典的最大长度，如果语料中出现的不同词的个数大于这个值，则根据各词的词频倒序排，取top(vocab\_max\_size)个词纳入词典。
 	
@@ -192,7 +189,7 @@ lm\_rnn.py中的predict()方法实现了做prediction、生成文本。流程如
 
 n-gram模型也称为n-1阶马尔科夫模型，它有一个有限历史假设：当前词的出现概率仅仅与前面n-1个词相关。因此 (式1) 可以近似为：
 <div align=center><img src='images/ps2.png'/></div> 
-一般采用最大似然估计（Maximum Likelihood Estimation，MLE）的方法对模型的参数进行估计。当n取1、2、3时，n-gram模型分别称为unigram、bigram和trigram语言模型。一般情况下，n越大、训练语料的规模越大，参数估计的结果越可靠，但由于模型较简单、表达能力不强以及数据稀疏等问题。一般情况下用n-gram实现的语言模型不如rnn、seq2seq效果好。
+一般采用最大似然估计（Maximum Likelihood Estimation，MLE）的方法对模型的参数进行估计。当n取1、2、3时，n-gram模型分别称为unigram、bigram和trigram语言模型。一般情况下，n越大、训练语料的规模越大，参数估计的结果越可靠，但由于模型较简单、表达能力不强以及数据稀疏等问题。一般情况下用n-gram实现的语言模型不如RNN、seq2seq效果好。
 
 ### 模型结构
 
