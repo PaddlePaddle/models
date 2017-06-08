@@ -82,7 +82,8 @@ def train():
     # define data reader
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            reader.train_data_for_NGram(train_file, N, word_id_dict), buf_size=65536),
+            reader.train_data_for_NGram(train_file, N, word_id_dict),
+            buf_size=65536),
         batch_size=32)
 
     test_reader = paddle.batch(

@@ -71,7 +71,8 @@ def train():
     train_reader = paddle.batch(
         paddle.reader.shuffle(
             reader.train_data(
-                train_file, min_sentence_length, max_sentence_length, word_id_dict), buf_size=65536),
+                train_file, min_sentence_length,
+                max_sentence_length, word_id_dict), buf_size=65536),
         batch_size=32)
 
     test_reader = paddle.batch(
