@@ -88,7 +88,8 @@ def train():
 
     test_reader = paddle.batch(
         paddle.reader.shuffle(
-            reader.test_data_for_NGram(train_file, N, word_id_dict), buf_size=65536),
+            reader.test_data_for_NGram(train_file, N, word_id_dict),
+            buf_size=65536),
         batch_size=8)
 
     # network config
@@ -113,8 +114,7 @@ def train():
         if isinstance(event, paddle.event.EndIteration):
             if event.batch_id % 100 == 0:
                 print("\nPass %d, Batch %d, Cost %f, %s" % (
-                    event.pass_id, event.batch_id, event.cost,
-                    event.metrics))
+                    event.pass_id, event.batch_id, event.cost, event.metrics))
             else:
                 sys.stdout.write('.')
                 sys.stdout.flush()
@@ -123,8 +123,9 @@ def train():
         if isinstance(event, paddle.event.EndPass):
             result = trainer.test(reader=test_reader)
             print("\nTest with Pass %d, %s" % (event.pass_id, result.metrics))
-            with gzip.open(model_file_name_prefix + str(event.pass_id) + '.tar.gz',
-                           'w') as f:
+            with gzip.open(
+                    model_file_name_prefix + str(event.pass_id) + '.tar.gz',
+                    'w') as f:
                 parameters.to_tar(f)
 
     # start to train
@@ -163,9 +164,11 @@ if __name__ == '__main__':
 
     # prepare model
     word_id_dict = reader.load_vocab(vocab_file)  # load word dictionary
-    _, output_layer = lm(len(word_id_dict), emb_dim, hidden_size, num_layer)  # network config
+    _, output_layer = lm(len(word_id_dict), emb_dim, hidden_size,
+                         num_layer)  # network config
     model_file_name = model_file_name_prefix + str(num_passs - 1) + '.tar.gz'
-    parameters = paddle.parameters.Parameters.from_tar(gzip.open(model_file_name))  # load parameters
+    parameters = paddle.parameters.Parameters.from_tar(
+        gzip.open(model_file_name))  # load parameters
     # generate
     input = [[word_id_dict.get(w, word_id_dict['<UNK>']) for w in text.split()]]
     predictions = paddle.infer(
@@ -173,7 +176,9 @@ if __name__ == '__main__':
         parameters=parameters,
         input=input,
         field=['value'])
-    id_word_dict = dict([(v, k) for k, v in word_id_dict.items()])  # dictionary with type {id : word}
+    id_word_dict = dict(
+        [(v, k)
+         for k, v in word_id_dict.items()])  # dictionary with type {id : word}
     predictions[-1][word_id_dict['<UNK>']] = -1  # filter <UNK>
     next_word = id_word_dict[np.argmax(predictions[-1])]
     print(next_word.encode('utf-8'))

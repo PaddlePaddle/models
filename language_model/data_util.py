@@ -2,8 +2,8 @@
 import collections
 import os
 
-
 # -- function --
+
 
 def save_vocab(word_id_dict, vocab_file_name):
     """
@@ -79,12 +79,14 @@ def _read_by_fixed_length(file_name, word_id_dict, sentence_len=10):
         while count < sentence_num:
             start = count * sentence_len
             count += 1
-            yield ids[start:start + sentence_len], ids[start + 1:start + sentence_len + 1]
+            yield ids[start:start + sentence_len], ids[start + 1:start +
+                                                       sentence_len + 1]
 
     return reader
 
 
-def _read_by_line(file_name, min_sentence_length, max_sentence_length, word_id_dict):
+def _read_by_line(file_name, min_sentence_length, max_sentence_length,
+                  word_id_dict):
     """
     create reader, each line is a sample.
 
@@ -99,7 +101,8 @@ def _read_by_line(file_name, min_sentence_length, max_sentence_length, word_id_d
         UNK = word_id_dict['<UNK>']
         for line in open(file_name):
             words = line.decode('utf-8', 'ignore').strip().split()
-            if len(words) < min_sentence_length or len(words) > max_sentence_length:
+            if len(words) < min_sentence_length or len(
+                    words) > max_sentence_length:
                 continue
             ids = [word_id_dict.get(w, UNK) for w in words]
             ids.append(word_id_dict['<EOS>'])
@@ -134,12 +137,16 @@ def _reader_creator_for_NGram(file_name, N, word_id_dict):
     return reader
 
 
-def train_data(train_file, min_sentence_length, max_sentence_length, word_id_dict):
-    return _read_by_line(train_file, min_sentence_length, max_sentence_length, word_id_dict)
+def train_data(train_file, min_sentence_length, max_sentence_length,
+               word_id_dict):
+    return _read_by_line(train_file, min_sentence_length, max_sentence_length,
+                         word_id_dict)
 
 
-def test_data(test_file, min_sentence_length, max_sentence_length, word_id_dict):
-    return _read_by_line(test_file, min_sentence_length, max_sentence_length, word_id_dict)
+def test_data(test_file, min_sentence_length, max_sentence_length,
+              word_id_dict):
+    return _read_by_line(test_file, min_sentence_length, max_sentence_length,
+                         word_id_dict)
 
 
 def train_data_for_NGram(train_file, N, word_id_dict):
