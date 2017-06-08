@@ -60,7 +60,6 @@ lm_rnn.py 中的 lm() 函数定义了模型的结构。解析如下：
 	data = paddle.layer.data(name="word", type=paddle.data_type.integer_value_sequence(vocab_size))
 	target = paddle.layer.data("label", paddle.data_type.integer_value_sequence(vocab_size))
 	emb = paddle.layer.embedding(input=data, size=emb_dim)
-	
 	```
 * 3，根据配置实现RNN层，将上一步得到的embedding向量序列作为输入。
 
