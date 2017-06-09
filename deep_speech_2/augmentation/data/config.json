@@ -1,0 +1,54 @@
+{
+    "data_config" : {
+        "server": true,
+        "save_dir": "/tmp/$USER/mini.Swbd.server/",
+        "jitter" : true,
+        "mb_buffer": 20,
+
+        "augmentation_pipeline": [ {
+            "type": "speed_perturb",
+            "rate": 0.4,
+            "speed_min": 0.7,
+            "speed_max": 1.2
+         }
+        ],
+
+        "data_sources": [{
+                "class": "datasets.base.JSONDataset",
+                "location": "test/data/mini.SwbdSet.data.json"
+            }],
+
+        "batch_size": 16,
+
+        "step": 10,
+        "spec_type": "linear",
+        "spec_params": {
+            "window": 20,
+            "max_freq": 8000
+        },
+
+        "use_online_normalization": true,
+        "online_normalization_parameters": {
+            "prior_db": -19.84,
+            "prior_samples": 400,
+            "startup_delay": 0.12
+        },
+
+        "use_ewma_normalization": false,
+        "ewma_normalization_parameters": {
+            "decay_rate": 0.99999,
+            "rms_eps": 1e-6,
+            "startup_delay": 0.12
+        },
+
+        "use_global_normalization": false,
+        "create_identity_transform_stats": true,
+        "allow_downsampling": true,
+        "allow_upsampling": true,
+        "sample_rate": 16000,
+        "post_spec_params": []
+    },
+
+    "char_map": "data-utils/english_chars.txt",
+    "rank": 0
+}
