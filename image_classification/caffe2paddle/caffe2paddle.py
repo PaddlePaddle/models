@@ -61,7 +61,7 @@ class ModelConverter(object):
         f.write(struct.pack("IIQ", 0, 4, data.size))
         f.write(data.tobytes())
 
-    @wrap_name_default("img_conv_layer")
+    @wrap_name_default("conv")
     def convert_Convolution_layer(self, params, name=None):
         for i in range(len(params)):
             data = np.array(params[i].data)
@@ -97,7 +97,7 @@ class ModelConverter(object):
             self.params[file_name] = (param_conf, data.flatten())
         return name
 
-    @wrap_name_default("batch_norm_layer")
+    @wrap_name_default("batch_norm")
     def convert_BatchNorm_layer(self, params, name=None):
         scale = 1 / np.array(params[-1].data)[0] if np.array(
             params[-1].data)[0] != 0 else 0
