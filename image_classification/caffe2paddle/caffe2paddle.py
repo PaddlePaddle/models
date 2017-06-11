@@ -1,105 +1,26 @@
 import os
-import functools
-import inspect
 import struct
 import gzip
 import tarfile
 import cStringIO
 import numpy as np
+import cv2
 import caffe
 from paddle.proto.ParameterConfig_pb2 import ParameterConfig
-from image import load_and_transform
-
-
-def __default_not_set_callback__(kwargs, name):
-    return name not in kwargs or kwargs[name] is None
-
-
-def wrap_param_default(param_names=None,
-                       default_factory=None,
-                       not_set_callback=__default_not_set_callback__):
-    assert param_names is not None
-    assert isinstance(param_names, list) or isinstance(param_names, tuple)
-    for each_param_name in param_names:
-        assert isinstance(each_param_name, basestring)
-
-    def __impl__(func):
-        @functools.wraps(func)
-        def __wrapper__(*args, **kwargs):
-            if len(args) != 0:
-                argspec = inspect.getargspec(func)
-                num_positional = len(argspec.args)
-                if argspec.defaults:
-                    num_positional -= len(argspec.defaults)
-                assert argspec.varargs or len(
-                    args
-                ) <= num_positional, "Must use keyword arguments for non-positional args"
-            for name in param_names:
-                if not_set_callback(kwargs, name):  # Not set
-                    kwargs[name] = default_factory(func)
-            return func(*args, **kwargs)
-
-        if hasattr(func, "argspec"):
-            __wrapper__.argspec = func.argspec
-        else:
-            __wrapper__.argspec = inspect.getargspec(func)
-        return __wrapper__
-
-    return __impl__
-
-
-class DefaultNameFactory(object):
-    def __init__(self, name_prefix):
-        self.__counter__ = 0
-        self.__name_prefix__ = name_prefix
-
-    def __call__(self, func):
-        if self.__name_prefix__ is None:
-            self.__name_prefix__ = func.__name__
-        tmp = "__%s_%d__" % (self.__name_prefix__, self.__counter__)
-        self.__check_name__(tmp)
-        self.__counter__ += 1
-        return tmp
-
-    def __check_name__(self, nm):
-        pass
-
-    def reset(self):
-        self.__counter__ = 0
-
-
-def wrap_name_default(name_prefix=None, name_param="name"):
-    """
-    Decorator to set "name" arguments default to "{name_prefix}_{invoke_count}".
-
-    ..  code:: python
-
-        @wrap_name_default("some_name")
-        def func(name=None):
-            print name      # name will never be None. If name is not set,
-                            # name will be "some_name_%d"
-
-    :param name_prefix: name prefix. wrapped function"s __name__ if None.
-    :type name_prefix: basestring
-    :return: a decorator to set default name
-    :rtype: callable
-    """
-    factory = DefaultNameFactory(name_prefix)
-    return wrap_param_default([name_param], factory)
+from paddle.trainer_config_helpers.default_decorators import wrap_name_default
 
 
 class ModelConverter(object):
     def __init__(self, caffe_model_file, caffe_pretrained_file,
-                 paddle_output_path, paddle_tar_name):
+                 paddle_tar_name):
         self.net = caffe.Net(caffe_model_file, caffe_pretrained_file,
                              caffe.TEST)
-        self.output_path = paddle_output_path
         self.tar_name = paddle_tar_name
         self.params = dict()
         self.pre_layer_name = ""
         self.pre_layer_type = ""
 
-    def convert(self, name_map={}):
+    def convert(self, name_map=None):
         layer_dict = self.net.layer_dict
         for layer_name in layer_dict.keys():
             layer = layer_dict[layer_name]
@@ -216,28 +137,51 @@ class ModelConverter(object):
                       mean_file='./caffe/imagenet/ilsvrc_2012_mean.npy'):
         net = self.net
 
-        net.blobs['data'].data[...] = load_img(img, mean_file)
+        net.blobs['data'].data[...] = load_image(img, mean_file=mean_file)
         out = net.forward()
 
         output_prob = net.blobs['prob'].data[0].flatten()
-        print np.sort(output_prob)[::-1]
-        print np.argsort(output_prob)[::-1]
-        print 'predicted class is:', output_prob.argmax()
+        print zip(np.argsort(output_prob)[::-1], np.sort(output_prob)[::-1])
 
 
-def load_image(file, mean_file):
-    im = load_and_transform(file, 256, 224, is_train=False)
-    im = im[(2, 1, 0), :, :]
-    mu = np.load(mean_file)
-    mu = mu.mean(1).mean(1)
-    im = im - mu[:, None, None]
+def load_image(file, resize_size=256, crop_size=224, mean_file=None):
+    # load image
+    im = cv2.imread(file)
+    # resize
+    h, w = im.shape[:2]
+    h_new, w_new = resize_size, resize_size
+    if h > w:
+        h_new = resize_size * h / w
+    else:
+        w_new = resize_size * w / h
+    im = cv2.resize(im, (h_new, w_new), interpolation=cv2.INTER_CUBIC)
+    # crop
+    h, w = im.shape[:2]
+    h_start = (h - crop_size) / 2
+    w_start = (w - crop_size) / 2
+    h_end, w_end = h_start + crop_size, w_start + crop_size
+    im = im[h_start:h_end, w_start:w_end, :]
+    # transpose to CHW order
+    im = im.transpose((2, 0, 1))
+
+    if mean_file:
+        mu = np.load(mean_file)
+        mu = mu.mean(1).mean(1)
+        im = im - mu[:, None, None]
     im = im / 255.0
     return im
 
 
 if __name__ == "__main__":
-    converter = ModelConverter("./resnet50/ResNet-50-deploy.prototxt",
-                               "./resnet50/ResNet-50-model.caffemodel",
-                               "paddle_resnet50.tar.gz")
-    converter.convert(name_map=dict())
-    converter.caffe_predict("./images/cat.jpg")
+    caffe_model_file = "./ResNet-50-deploy.prototxt"
+    caffe_pretrained_file = "./ResNet-50-model.caffemodel"
+    paddle_tar_name = "Paddle_ResNet50.tar.gz"
+
+    converter = ModelConverter(
+        caffe_model_file=caffe_model_file,
+        caffe_pretrained_file=caffe_pretrained_file,
+        paddle_tar_name=paddle_tar_name)
+    converter.convert()
+
+    converter.caffe_predict("./cat.jpg",
+                            "./caffe/imagenet/ilsvrc_2012_mean.npy")
