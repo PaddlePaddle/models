@@ -16,7 +16,7 @@ def seq2seq_net(source_dict_dim, target_dict_dim, generating=False):
     '''
     Define the network structure of NMT, including encoder and decoder.
 
-    :param source_dict_dim: size of source dictionary 
+    :param source_dict_dim: size of source dictionary
     :type source_dict_dim : int
     :param target_dict_dim: size of target dictionary
     :type target_dict_dim: int
@@ -41,11 +41,11 @@ def seq2seq_net(source_dict_dim, target_dict_dim, generating=False):
         return_seq=True)
     #### Decoder
     encoder_last = paddle.layer.last_seq(input=encoded_vector)
-    with paddle.layer.mixed(
-            size=decoder_size,
-            act=paddle.activation.Tanh()) as encoder_last_projected:
-        encoder_last_projected += paddle.layer.full_matrix_projection(
-            input=encoder_last)
+    encoder_last_projected = paddle.layer.mixed(
+        size=decoder_size,
+        act=paddle.activation.Tanh(),
+        input=paddle.layer.full_matrix_projection(input=encoder_last))
+
     # gru step
     def gru_decoder_without_attention(enc_vec, current_word):
         '''
@@ -63,10 +63,12 @@ def seq2seq_net(source_dict_dim, target_dict_dim, generating=False):
 
         context = paddle.layer.last_seq(input=enc_vec)
 
-        with paddle.layer.mixed(size=decoder_size * 3) as decoder_inputs:
-            decoder_inputs += paddle.layer.full_matrix_projection(input=context)
-            decoder_inputs += paddle.layer.full_matrix_projection(
-                input=current_word)
+        decoder_inputs = paddle.layer.mixed(
+            size=decoder_size * 3,
+            input=[
+                paddle.layer.full_matrix_projection(input=context),
+                paddle.layer.full_matrix_projection(input=current_word)
+            ])
 
         gru_step = paddle.layer.gru_step(
             name='gru_decoder',
@@ -76,15 +78,15 @@ def seq2seq_net(source_dict_dim, target_dict_dim, generating=False):
             output_mem=decoder_mem,
             size=decoder_size)
 
-        with paddle.layer.mixed(
-                size=target_dict_dim,
-                bias_attr=True,
-                act=paddle.activation.Softmax()) as out:
-            out += paddle.layer.full_matrix_projection(input=gru_step)
+        out = paddle.layer.mixed(
+            size=target_dict_dim,
+            bias_attr=True,
+            act=paddle.activation.Softmax(),
+            input=paddle.layer.full_matrix_projection(input=gru_step))
         return out
 
     decoder_group_name = "decoder_group"
-    group_input1 = paddle.layer.StaticInputV2(input=encoded_vector, is_seq=True)
+    group_input1 = paddle.layer.StaticInput(input=encoded_vector, is_seq=True)
     group_inputs = [group_input1]
 
     if not generating:
@@ -109,7 +111,7 @@ def seq2seq_net(source_dict_dim, target_dict_dim, generating=False):
         return cost
     else:
 
-        trg_embedding = paddle.layer.GeneratedInputV2(
+        trg_embedding = paddle.layer.GeneratedInput(
             size=target_dict_dim,
             embedding_name='_target_language_embedding',
             embedding_size=word_vector_dim)
@@ -194,7 +196,7 @@ def generate(source_dict_dim, target_dict_dim, init_models_path):
     beam_gen = seq2seq_net(source_dict_dim, target_dict_dim, True)
     with gzip.open(init_models_path) as f:
         parameters = paddle.parameters.Parameters.from_tar(f)
-    # prob is the prediction probabilities, and id is the prediction word. 
+    # prob is the prediction probabilities, and id is the prediction word.
     beam_result = paddle.infer(
         output_layer=beam_gen,
         parameters=parameters,
@@ -244,10 +246,10 @@ def main():
     target_language_dict_dim = 30000
 
     if generating:
-        # shoud pass the right generated model's path here
+        # modify this path to speicify a trained model.
         init_models_path = 'models/nmt_without_att_params_batch_1800.tar.gz'
         if not os.path.exists(init_models_path):
-            print "Cannot find models for generation"
+            print "trained model cannot be found."
             exit(1)
         generate(source_language_dict_dim, target_language_dict_dim,
                  init_models_path)

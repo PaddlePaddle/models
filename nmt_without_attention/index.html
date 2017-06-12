@@ -133,11 +133,11 @@ PaddleBook中[机器翻译](https://github.com/PaddlePaddle/book/blob/develop/08
 ```python
 #### Decoder
 encoder_last = paddle.layer.last_seq(input=encoded_vector)
-with paddle.layer.mixed(
+encoder_last_projected = paddle.layer.mixed(
         size=decoder_size,
-        act=paddle.activation.Tanh()) as encoder_last_projected:
-        encoder_last_projected += paddle.layer.full_matrix_projection(
-            input=encoder_last)
+        act=paddle.activation.Tanh(),
+        input=paddle.layer.full_matrix_projection(input=encoder_last))
+
 # gru step
 def gru_decoder_without_attention(enc_vec, current_word):
     '''
@@ -154,10 +154,12 @@ def gru_decoder_without_attention(enc_vec, current_word):
 
     context = paddle.layer.last_seq(input=enc_vec)
 
-    with paddle.layer.mixed(size=decoder_size * 3) as decoder_inputs:
-        decoder_inputs +=paddle.layer.full_matrix_projection(input=context)
-        decoder_inputs += paddle.layer.full_matrix_projection(
-                input=current_word)
+    decoder_inputs = paddle.layer.mixed(
+        size=decoder_size * 3,
+        input=[
+            paddle.layer.full_matrix_projection(input=context),
+            paddle.layer.full_matrix_projection(input=current_word)
+        ])
 
     gru_step = paddle.layer.gru_step(
         name='gru_decoder',
@@ -167,24 +169,24 @@ def gru_decoder_without_attention(enc_vec, current_word):
         output_mem=decoder_mem,
         size=decoder_size)
 
-    with paddle.layer.mixed(
-            size=target_dict_dim,
-            bias_attr=True,
-            act=paddle.activation.Softmax()) as out:
-        out += paddle.layer.full_matrix_projection(input=gru_step)
+    out = paddle.layer.mixed(
+        size=target_dict_dim,
+        bias_attr=True,
+        act=paddle.activation.Softmax(),
+        input=paddle.layer.full_matrix_projection(input=gru_step))
     return out
 ```
 
 在模型训练和测试阶段，解码器的行为有很大的不同：
 
 - **训练阶段**：目标翻译结果的词向量`trg_embedding`作为参数传递给单步逻辑`gru_decoder_without_attention()`，函数`recurrent_group()`循环调用单步逻辑执行，最后计算目标翻译与实际解码的差异cost并返回；
-- **测试阶段**：解码器根据最后一个生成的词预测下一个词，`GeneratedInputV2()`自动取出模型预测出的概率最高的$k$个词的词向量传递给单步逻辑，`beam_search()`函数调用单步逻辑函数`gru_decoder_without_attention()`完成柱搜索并作为结果返回。
+- **测试阶段**：解码器根据最后一个生成的词预测下一个词，`GeneratedInput()`自动取出模型预测出的概率最高的$k$个词的词向量传递给单步逻辑，`beam_search()`函数调用单步逻辑函数`gru_decoder_without_attention()`完成柱搜索并作为结果返回。
 
 训练和生成的逻辑分别实现在如下的`if-else`条件分支中：
 
 ```python
 decoder_group_name = "decoder_group"
-group_input1 = paddle.layer.StaticInputV2(input=encoded_vector, is_seq=True)
+group_input1 = paddle.layer.StaticInput(input=encoded_vector, is_seq=True)
 group_inputs = [group_input1]
 if not generating:
     trg_embedding = paddle.layer.embedding(
@@ -208,7 +210,7 @@ if not generating:
     return cost
 else:
 
-    trg_embedding = paddle.layer.GeneratedInputV2(
+    trg_embedding = paddle.layer.GeneratedInput(
         size=target_dict_dim,
         embedding_name='_target_language_embedding',
         embedding_size=word_vector_dim)
