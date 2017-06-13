@@ -51,7 +51,7 @@ def bottleneck(input, ch_in, ch_out, stride):
 def layer_warp(block_func, input, ch_in, ch_out, count, stride):
     conv = block_func(input, ch_in, ch_out, stride)
     for i in range(1, count):
-        conv = block_func(conv, ch_in, ch_out, 1)
+        conv = block_func(conv, ch_out, ch_out, 1)
     return conv
 
 
