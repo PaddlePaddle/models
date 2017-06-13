@@ -3,20 +3,6 @@
 
 这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet和ResNet模型进行图像分类。图像分类问题的描述和这四种模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
 
-## 数据格式
-reader.py定义了数据格式，它读取一个图像列表文件，并从中解析出图像路径和类别标签。
-
-图像列表文件是一个文本文件，其中每一行由一个图像路径和类别标签构成，二者以跳格符（Tab）隔开。类别标签用整数表示，其最小值为0。下面给出一个图像列表文件的片段示例：
-
-```
-dataset_100/train_images/n03982430_23191.jpeg    1
-dataset_100/train_images/n04461696_23653.jpeg    7
-dataset_100/train_images/n02441942_3170.jpeg 8
-dataset_100/train_images/n03733281_31716.jpeg    2
-dataset_100/train_images/n03424325_240.jpeg  0
-dataset_100/train_images/n02643566_75.jpeg   8
-```
-
 ## 训练模型
 
 ### 初始化
@@ -25,14 +11,14 @@ dataset_100/train_images/n02643566_75.jpeg   8
 
 ```python
 import gzip
+import paddle.v2.dataset.flowers as flowers
 import paddle.v2 as paddle
 import reader
 import vgg
 import resnet
 import alexnet
 import googlenet
-import argparse
-import os
+
 
 # PaddlePaddle init
 paddle.init(use_gpu=False, trainer_count=1)
@@ -44,7 +30,7 @@ paddle.init(use_gpu=False, trainer_count=1)
 
 ```python
 DATA_DIM = 3 * 224 * 224
-CLASS_DIM = 100
+CLASS_DIM = 102
 BATCH_SIZE = 128
 
 image = paddle.layer.data(
@@ -128,9 +114,35 @@ optimizer = paddle.optimizer.Momentum(
 $$  lr = lr_{0} * a^ {\lfloor \frac{n}{ b}\rfloor} $$
 
 
-### 定义数据读取方法和事件处理程序
+### 定义数据读取
 
-读取数据时需要分别指定训练集和验证集的图像列表文件，这里假设这两个文件分别为`train.list`和`val.list`。
+首先以[花卉数据](http://www.robots.ox.ac.uk/~vgg/data/flowers/102/index.html)为例说明如何定义输入。下面的代码定义了花卉数据训练集和验证集的输入：
+
+```python
+train_reader = paddle.batch(
+    paddle.reader.shuffle(
+        flowers.train(),
+        buf_size=1000),
+    batch_size=BATCH_SIZE)
+test_reader = paddle.batch(
+    flowers.valid(),
+    batch_size=BATCH_SIZE)
+```
+
+若需要使用其他数据，则需要先建立图像列表文件。`reader.py`定义了这种文件的读取方式，它从图像列表文件中解析出图像路径和类别标签。
+
+图像列表文件是一个文本文件，其中每一行由一个图像路径和类别标签构成，二者以跳格符（Tab）隔开。类别标签用整数表示，其最小值为0。下面给出一个图像列表文件的片段示例：
+
+```
+dataset_100/train_images/n03982430_23191.jpeg    1
+dataset_100/train_images/n04461696_23653.jpeg    7
+dataset_100/train_images/n02441942_3170.jpeg 8
+dataset_100/train_images/n03733281_31716.jpeg    2
+dataset_100/train_images/n03424325_240.jpeg  0
+dataset_100/train_images/n02643566_75.jpeg   8
+```
+
+训练时需要分别指定训练集和验证集的图像列表文件。这里假设这两个文件分别为`train.list`和`val.list`，数据读取方式如下：
 
 ```python
 train_reader = paddle.batch(
@@ -141,7 +153,10 @@ train_reader = paddle.batch(
 test_reader = paddle.batch(
     reader.train_reader('val.list'),
     batch_size=BATCH_SIZE)
+```
 
+### 定义事件处理程序
+```python
 # End batch and end pass event handler
 def event_handler(event):
     if isinstance(event, paddle.event.EndIteration):
@@ -185,3 +200,38 @@ trainer = paddle.trainer.SGD(
 trainer.train(
     reader=train_reader, num_passes=200, event_handler=event_handler)
 ```
+
+## 应用模型
+模型训练好后，可以使用下面的代码预测给定图片的类别。
+
+```python
+# load parameters
+with gzip.open('params_pass_10.tar.gz', 'r') as f:
+    parameters = paddle.parameters.Parameters.from_tar(f)
+
+def load_image(file):
+    im = Image.open(file)
+    im = im.resize((224, 224), Image.ANTIALIAS)
+    im = np.array(im).astype(np.float32)
+    # The storage order of the loaded image is W(widht),
+    # H(height), C(channel). PaddlePaddle requires
+    # the CHW order, so transpose them.
+    im = im.transpose((2, 0, 1))  # CHW
+    # In the training phase, the channel order of CIFAR
+    # image is B(Blue), G(green), R(Red). But PIL open
+    # image in RGB mode. It must swap the channel order.
+    im = im[(2, 1, 0), :, :]  # BGR
+    im = im.flatten()
+    im = im / 255.0
+    return im
+
+file_list = [line.strip() for line in open(image_list_file)]
+test_data = [(load_image(image_file),) for image_file in file_list]
+probs = paddle.infer(
+    output_layer=out, parameters=parameters, input=test_data)
+lab = np.argsort(-probs)
+for file_name, result in zip(file_list, lab):
+    print "Label of %s is: %d" % (file_name, result[0])
+```
+
+首先从文件中加载训练好的模型（代码里以第10轮迭代的结果为例），然后读取`image_list_file`中的图像。`image_list_file`是一个文本文件，每一行为一个图像路径。`load_image`是一个加载图像的函数。代码使用`paddle.infer`判断`image_list_file`中每个图像的类别，并进行输出。

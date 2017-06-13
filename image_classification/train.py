@@ -1,4 +1,5 @@
 import gzip
+import paddle.v2.dataset.flowers as flowers
 import paddle.v2 as paddle
 import reader
 import vgg
@@ -6,19 +7,15 @@ import resnet
 import alexnet
 import googlenet
 import argparse
-import os
 
 DATA_DIM = 3 * 224 * 224
-CLASS_DIM = 100
+CLASS_DIM = 102
 BATCH_SIZE = 128
 
 
 def main():
     # parse the argument
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        'data_dir',
-        help='The data directory which contains train.list and val.list')
     parser.add_argument(
         'model',
         help='The model for image classification',
@@ -71,11 +68,15 @@ def main():
 
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            reader.test_reader(os.path.join(args.data_dir, 'train.list')),
+            flowers.train(),
+            # To use other data, replace the above line with:
+            # reader.test_reader('train.list'),
             buf_size=1000),
         batch_size=BATCH_SIZE)
     test_reader = paddle.batch(
-        reader.train_reader(os.path.join(args.data_dir, 'val.list')),
+        flowers.valid(),
+        # To use other data, replace the above line with:
+        # reader.train_reader('val.list'),
         batch_size=BATCH_SIZE)
 
     # End batch and end pass event handler
