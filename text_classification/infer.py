@@ -13,20 +13,22 @@ from utils import *
 
 def infer(topology, data_dir, model_path, word_dict_path, label_dict_path,
           batch_size):
-    def _infer_a_batch(inferer, test_batch):
+    def _infer_a_batch(inferer, test_batch, ids_2_word, ids_2_label):
         probs = inferer.infer(input=test_batch, field=['value'])
         assert len(probs) == len(test_batch)
-        for prob in probs:
-            lab = prob.argmax()
-            print("%d\t%s\t%s" %
-                  (lab, label_reverse_dict[lab],
-                   "\t".join(["{:0.4f}".format(p) for p in prob])))
+        for word_ids, prob in zip(test_batch, probs):
+            word_text = " ".join([ids_2_word[id] for id in word_ids[0]])
+            print("%s\t%s\t%s" % (ids_2_label[prob.argmax()],
+                                  " ".join(["{:0.4f}".format(p)
+                                            for p in prob]), word_text))
 
     logger.info('begin to predict...')
     use_default_data = (data_dir is None)
 
     if use_default_data:
         word_dict = paddle.dataset.imdb.word_dict()
+        word_reverse_dict = dict((value, key)
+                                 for key, value in word_dict.iteritems())
         label_reverse_dict = {0: "positive", 1: "negative"}
         test_reader = paddle.dataset.imdb.test(word_dict)
     else:
@@ -34,7 +36,9 @@ def infer(topology, data_dir, model_path, word_dict_path, label_dict_path,
             word_dict_path), 'the word dictionary file does not exist'
         assert os.path.exists(
             label_dict_path), 'the label dictionary file does not exist'
+
         word_dict = load_dict(word_dict_path)
+        word_reverse_dict = load_reverse_dict(word_dict_path)
         label_reverse_dict = load_reverse_dict(label_dict_path)
 
         test_reader = reader.test_reader(data_dir, word_dict)()
@@ -56,11 +60,14 @@ def infer(topology, data_dir, model_path, word_dict_path, label_dict_path,
     for idx, item in enumerate(test_reader):
         test_batch.append([item[0]])
         if len(test_batch) == batch_size:
-            _infer_a_batch(inferer, test_batch)
+            _infer_a_batch(inferer, test_batch, word_reverse_dict,
+                           label_reverse_dict)
             test_batch = []
 
-    _infer_a_batch(inferer, test_batch)
-    test_batch = []
+    if len(test_batch):
+        _infer_a_batch(inferer, test_batch, word_reverse_dict,
+                       label_reverse_dict)
+        test_batch = []
 
 
 if __name__ == '__main__':
