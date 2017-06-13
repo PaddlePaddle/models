@@ -31,6 +31,7 @@ def main():
         name="label", type=paddle.data_type.integer_value(CLASS_DIM))
 
     extra_layers = None
+    learning_rate = 0.01
     if args.model == 'alexnet':
         out = alexnet.alexnet(image, class_dim=CLASS_DIM)
     elif args.model == 'vgg13':
@@ -41,6 +42,7 @@ def main():
         out = vgg.vgg19(image, class_dim=CLASS_DIM)
     elif args.model == 'resnet':
         out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
+        learning_rate = 0.1
     elif args.model == 'googlenet':
         out, out1, out2 = googlenet.googlenet(image, class_dim=CLASS_DIM)
         loss1 = paddle.layer.cross_entropy_cost(
@@ -61,7 +63,7 @@ def main():
         momentum=0.9,
         regularization=paddle.optimizer.L2Regularization(rate=0.0005 *
                                                          BATCH_SIZE),
-        learning_rate=0.001 / BATCH_SIZE,
+        learning_rate=learning_rate / BATCH_SIZE,
         learning_rate_decay_a=0.1,
         learning_rate_decay_b=128000 * 35,
         learning_rate_schedule="discexp", )
