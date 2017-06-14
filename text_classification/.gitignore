@@ -1,0 +1,4 @@
+data
+*.tar.gz
+*.log
+*.pyc
