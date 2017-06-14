@@ -55,5 +55,13 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 - 6.1 [无注意力机制的编码器解码器模型](https://github.com/PaddlePaddle/models/tree/develop/nmt_without_attention)
 
+## 7. 语言模型
+
+语言模型是自然语言处理领域里一个重要的基础模型，它是一个概率分布模型，利用它可以确定哪个词序列的可能性更大，或者给定若干个词，可以预测下一个最可能出现的词。语言模型被应用在很多领域，如：自动写作、QA、机器翻译、拼写检查、语音识别、词性标注等。
+
+在语言模型的例子中，我们以文本生成为例，提供了RNN LM（包括LSTM、GRU）和N-Gram LM，供大家学习和使用。用户可以通过文档中的 “使用说明” 快速上手：适配训练语料，以训练 “自动写诗”、“自动写散文” 等有趣的模型。
+
+- 7.1 [语言模型](https://github.com/PaddlePaddle/models/tree/develop/language_model)
+
 ## Copyright and License
 PaddlePaddle is provided under the [Apache-2.0 license](LICENSE).
