@@ -182,7 +182,7 @@ N-Gram模型也称为N-1阶马尔科夫模型，它有一个有限历史假设�
     beam_size = 5  # beam_width, the number of the prediction sentence for each prefix
     ```
 
-    其中，`input_file`中保存的是带生成的文本前缀，utf-8编码，每个前缀占一行，形如：
+    其中，`input_file`中保存的是待生成的文本前缀，utf-8编码，每个前缀占一行，形如：
 
     ```text
     我
