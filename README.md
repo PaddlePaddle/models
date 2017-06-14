@@ -4,8 +4,13 @@
 [![Documentation Status](https://img.shields.io/badge/中文文档-最新-brightgreen.svg)](https://github.com/PaddlePaddle/models)
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 
-PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式构建起千变万化的深度学习模型来解决不同的应用问题。这里，我们针对常见的机器学习任务，提供了不同的神经网络模型供大家学习和使用。
+运行 Models 中的模型需要首先安装 PaddlePaddle，我们推荐三种安装方式：
 
+1. [使用PaddlePaddle发布的Docker镜像](http://www.paddlepaddle.org/doc_cn/getstarted/build_and_install/docker_install_cn.html)
+2. [使用Ubuntu 14.04 deb安装包U部署](http://www.paddlepaddle.org/doc_cn/getstarted/build_and_install/ubuntu_install_cn.html)
+3. [从源码编译安装PaddlePaddle](http://www.paddlepaddle.org/doc_cn/getstarted/build_and_install/cmake/build_from_source_cn.html)
+
+PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式构建起千变万化的深度学习模型来解决不同的应用问题。这里，我们针对常见的机器学习任务，提供了不同的神经网络模型供大家学习和使用。
 
 ## 1. 词向量
 
@@ -14,6 +19,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 在词向量的例子中，我们向大家展示如何使用Hierarchical-Sigmoid 和噪声对比估计（Noise Contrastive Estimation，NCE）来加速词向量的学习。
 
 - 1.1 [Hsigmoid加速词向量训练](https://github.com/PaddlePaddle/models/tree/develop/word_embedding)
+- 1.2 [噪声对比估计加速词向量训练](https://github.com/PaddlePaddle/models/tree/develop/nce_cost)
 
 ## 2. 点击率预估
 
