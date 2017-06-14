@@ -61,7 +61,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在语言模型的例子中，我们以文本生成为例，提供了RNN LM（包括LSTM、GRU）和N-Gram LM，供大家学习和使用。用户可以通过文档中的 “使用说明” 快速上手：适配训练语料，以训练 “自动写诗”、“自动写散文” 等有趣的模型。
 
-- 7.1 [语言模型](https://github.com/PaddlePaddle/models/tree/develop/language_model)
+- 7.1 [基于LSTM、GRU、N-Gram的文本生成模型](https://github.com/PaddlePaddle/models/tree/develop/language_model)
 
 ## Copyright and License
 PaddlePaddle is provided under the [Apache-2.0 license](LICENSE).
