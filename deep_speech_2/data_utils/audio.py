@@ -478,9 +478,8 @@ class AudioSegment(object):
             when the ir has a different sample rate from this signal.
         :type allow_resampling: boolean
         """
-
-    #self.convolve(ir, allow_resampling=allow_resampling)
-    #self.normalize(target_db=self.rms_db)
+        self.convolve(ir, allow_resampling=allow_resampling)
+        self.normalize(target_db=self.rms_db)
 
     def add_noise(self,
                   noise,
