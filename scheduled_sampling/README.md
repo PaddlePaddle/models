@@ -24,14 +24,14 @@ Scheduled Sampling主要应用在序列到序列模型的训练阶段，而生�
 图1给出了这三种方式的衰减曲线，
 
 <p align="center">
-<img src="img/decay.jpg" align="center"><br>
+<img src="img/decay.jpg" width="50%" align="center"><br>
 图1. 线性衰减、指数衰减和反向Sigmoid衰减的衰减曲线
 </p>
 
 如图2所示，在解码器的$t$时刻Scheduled Sampling以概率$\epsilon_i$使用上一时刻的真实元素$y_{t-1}$作为解码器输入，以概率$1-\epsilon_i$使用上一时刻生成的元素$g_{t-1}$作为解码器输入。从图1可知随着$i$的增大$\epsilon_i$会不断减小，解码器将不断倾向于使用生成的元素作为输入，训练阶段和生成阶段的数据分布将变得越来越一致。
 
 <p align="center">
-<img src="img/Scheduled_Sampling.jpg" align="center"><br>
+<img src="img/Scheduled_Sampling.jpg" width="50%" align="center"><br>
 图2. Scheduled Sampling选择不同元素作为解码器输入示意图
 </p>
 
