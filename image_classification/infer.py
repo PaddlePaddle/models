@@ -54,24 +54,9 @@ def main():
     with gzip.open(args.params_path, 'r') as f:
         parameters = paddle.parameters.Parameters.from_tar(f)
 
-    def load_image(file):
-        im = Image.open(file)
-        im = im.resize((WIDTH, HEIGHT), Image.ANTIALIAS)
-        im = np.array(im).astype(np.float32)
-        # The storage order of the loaded image is W(widht),
-        # H(height), C(channel). PaddlePaddle requires
-        # the CHW order, so transpose them.
-        im = im.transpose((2, 0, 1))  # CHW
-        # In the training phase, the channel order of CIFAR
-        # image is B(Blue), G(green), R(Red). But PIL open
-        # image in RGB mode. It must swap the channel order.
-        im = im[(2, 1, 0), :, :]  # BGR
-        im = im.flatten()
-        im = im / 255.0
-        return im
-
     file_list = [line.strip() for line in open(args.data_list)]
-    test_data = [(load_image(image_file), ) for image_file in file_list]
+    test_data = [(paddle.image.load_and_transform(image_file, 256, 224, False)
+                  .flatten().astype('float32'), ) for image_file in file_list]
     probs = paddle.infer(
         output_layer=out, parameters=parameters, input=test_data)
     lab = np.argsort(-probs)

@@ -3,8 +3,8 @@ import paddle.v2 as paddle
 __all__ = ['googlenet']
 
 
-def inception2(name, input, channels, filter1, filter3R, filter3, filter5R,
-               filter5, proj):
+def inception(name, input, channels, filter1, filter3R, filter3, filter5R,
+              filter5, proj):
     cov1 = paddle.layer.img_conv(
         name=name + '_1',
         input=input,
@@ -65,7 +65,7 @@ def inception2(name, input, channels, filter1, filter3R, filter3, filter5R,
     return cat
 
 
-def googlenet(input, class_dim=100):
+def googlenet(input, class_dim):
     # stage 1
     conv1 = paddle.layer.img_conv(
         name="conv1",
@@ -97,23 +97,23 @@ def googlenet(input, class_dim=100):
         name="pool2", input=conv2_2, pool_size=3, num_channels=192, stride=2)
 
     # stage 3
-    ince3a = inception2("ince3a", pool2, 192, 64, 96, 128, 16, 32, 32)
-    ince3b = inception2("ince3b", ince3a, 256, 128, 128, 192, 32, 96, 64)
+    ince3a = inception("ince3a", pool2, 192, 64, 96, 128, 16, 32, 32)
+    ince3b = inception("ince3b", ince3a, 256, 128, 128, 192, 32, 96, 64)
     pool3 = paddle.layer.img_pool(
         name="pool3", input=ince3b, num_channels=480, pool_size=3, stride=2)
 
     # stage 4
-    ince4a = inception2("ince4a", pool3, 480, 192, 96, 208, 16, 48, 64)
-    ince4b = inception2("ince4b", ince4a, 512, 160, 112, 224, 24, 64, 64)
-    ince4c = inception2("ince4c", ince4b, 512, 128, 128, 256, 24, 64, 64)
-    ince4d = inception2("ince4d", ince4c, 512, 112, 144, 288, 32, 64, 64)
-    ince4e = inception2("ince4e", ince4d, 528, 256, 160, 320, 32, 128, 128)
+    ince4a = inception("ince4a", pool3, 480, 192, 96, 208, 16, 48, 64)
+    ince4b = inception("ince4b", ince4a, 512, 160, 112, 224, 24, 64, 64)
+    ince4c = inception("ince4c", ince4b, 512, 128, 128, 256, 24, 64, 64)
+    ince4d = inception("ince4d", ince4c, 512, 112, 144, 288, 32, 64, 64)
+    ince4e = inception("ince4e", ince4d, 528, 256, 160, 320, 32, 128, 128)
     pool4 = paddle.layer.img_pool(
         name="pool4", input=ince4e, num_channels=832, pool_size=3, stride=2)
 
     # stage 5
-    ince5a = inception2("ince5a", pool4, 832, 256, 160, 320, 32, 128, 128)
-    ince5b = inception2("ince5b", ince5a, 832, 384, 192, 384, 48, 128, 128)
+    ince5a = inception("ince5a", pool4, 832, 256, 160, 320, 32, 128, 128)
+    ince5b = inception("ince5b", ince5a, 832, 384, 192, 384, 48, 128, 128)
     pool5 = paddle.layer.img_pool(
         name="pool5",
         input=ince5b,

@@ -17,7 +17,7 @@ import paddle.v2 as paddle
 __all__ = ['vgg13', 'vgg16', 'vgg19']
 
 
-def vgg(input, nums, class_dim=100):
+def vgg(input, nums, class_dim):
     def conv_block(input, num_filter, groups, num_channels=None):
         return paddle.networks.img_conv_group(
             input=input,
@@ -53,16 +53,16 @@ def vgg(input, nums, class_dim=100):
     return out
 
 
-def vgg13(input, class_dim=100):
+def vgg13(input, class_dim):
     nums = [2, 2, 2, 2, 2]
     return vgg(input, nums, class_dim)
 
 
-def vgg16(input, class_dim=100):
+def vgg16(input, class_dim):
     nums = [2, 2, 3, 3, 3]
     return vgg(input, nums, class_dim)
 
 
-def vgg19(input, class_dim=100):
+def vgg19(input, class_dim):
     nums = [2, 2, 4, 4, 4]
     return vgg(input, nums, class_dim)

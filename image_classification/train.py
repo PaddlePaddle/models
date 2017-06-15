@@ -72,13 +72,13 @@ def main():
         paddle.reader.shuffle(
             flowers.train(),
             # To use other data, replace the above line with:
-            # reader.test_reader('train.list'),
+            # reader.train_reader('train.list'),
             buf_size=1000),
         batch_size=BATCH_SIZE)
     test_reader = paddle.batch(
         flowers.valid(),
         # To use other data, replace the above line with:
-        # reader.train_reader('val.list'),
+        # reader.test_reader('val.list'),
         batch_size=BATCH_SIZE)
 
     # End batch and end pass event handler

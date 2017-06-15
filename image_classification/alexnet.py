@@ -3,7 +3,7 @@ import paddle.v2 as paddle
 __all__ = ['alexnet']
 
 
-def alexnet(input, class_dim=100):
+def alexnet(input, class_dim):
     conv1 = paddle.layer.img_conv(
         input=input,
         filter_size=11,

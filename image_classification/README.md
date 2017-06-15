@@ -147,11 +147,11 @@ dataset_100/train_images/n02643566_75.jpeg   8
 ```python
 train_reader = paddle.batch(
     paddle.reader.shuffle(
-        reader.test_reader('train.list'),
+        reader.train_reader('train.list'),
         buf_size=1000),
     batch_size=BATCH_SIZE)
 test_reader = paddle.batch(
-    reader.train_reader('val.list'),
+    reader.test_reader('val.list'),
     batch_size=BATCH_SIZE)
 ```
 
@@ -209,24 +209,10 @@ trainer.train(
 with gzip.open('params_pass_10.tar.gz', 'r') as f:
     parameters = paddle.parameters.Parameters.from_tar(f)
 
-def load_image(file):
-    im = Image.open(file)
-    im = im.resize((224, 224), Image.ANTIALIAS)
-    im = np.array(im).astype(np.float32)
-    # The storage order of the loaded image is W(widht),
-    # H(height), C(channel). PaddlePaddle requires
-    # the CHW order, so transpose them.
-    im = im.transpose((2, 0, 1))  # CHW
-    # In the training phase, the channel order of CIFAR
-    # image is B(Blue), G(green), R(Red). But PIL open
-    # image in RGB mode. It must swap the channel order.
-    im = im[(2, 1, 0), :, :]  # BGR
-    im = im.flatten()
-    im = im / 255.0
-    return im
-
 file_list = [line.strip() for line in open(image_list_file)]
-test_data = [(load_image(image_file),) for image_file in file_list]
+test_data = [(paddle.image.load_and_transform(image_file, 256, 224, False)
+              .flatten().astype('float32'), )
+             for image_file in file_list]
 probs = paddle.infer(
     output_layer=out, parameters=parameters, input=test_data)
 lab = np.argsort(-probs)
@@ -234,4 +220,4 @@ for file_name, result in zip(file_list, lab):
     print "Label of %s is: %d" % (file_name, result[0])
 ```
 
-首先从文件中加载训练好的模型（代码里以第10轮迭代的结果为例），然后读取`image_list_file`中的图像。`image_list_file`是一个文本文件，每一行为一个图像路径。`load_image`是一个加载图像的函数。代码使用`paddle.infer`判断`image_list_file`中每个图像的类别，并进行输出。
+首先从文件中加载训练好的模型（代码里以第10轮迭代的结果为例），然后读取`image_list_file`中的图像。`image_list_file`是一个文本文件，每一行为一个图像路径。代码使用`paddle.infer`判断`image_list_file`中每个图像的类别，并进行输出。

@@ -55,7 +55,7 @@ def layer_warp(block_func, input, ch_in, ch_out, count, stride):
     return conv
 
 
-def resnet_imagenet(input, depth=50, class_dim=100):
+def resnet_imagenet(input, class_dim, depth=50):
     cfg = {
         18: ([2, 2, 2, 1], basicblock),
         34: ([3, 4, 6, 3], basicblock),
@@ -78,7 +78,7 @@ def resnet_imagenet(input, depth=50, class_dim=100):
     return out
 
 
-def resnet_cifar10(input, depth=32, class_dim=10):
+def resnet_cifar10(input, class_dim, depth=32):
     # depth should be one of 20, 32, 44, 56, 110, 1202
     assert (depth - 2) % 6 == 0
     n = (depth - 2) / 6
