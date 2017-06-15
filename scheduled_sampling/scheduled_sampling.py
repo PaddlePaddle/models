@@ -37,7 +37,7 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
     :param is_generating: whether in generating mode
     :type is_generating: Bool
     :return: the last layer of the network
-    :rtype: Layer
+    :rtype: LayerOutput
     """
     ### Network Architecture
     word_vector_dim = 512  # dimension of word vector
@@ -76,15 +76,15 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
         """
         The decoder step for training.
         :param enc_vec: the encoder vector for attention
-        :type enc_vec: Layer
+        :type enc_vec: LayerOutput
         :param enc_proj: the encoder projection for attention
-        :type enc_proj: Layer
+        :type enc_proj: LayerOutput
         :param true_word: the ground-truth target word
-        :type true_word: Layer
+        :type true_word: LayerOutput
         :param true_token_flag: the flag of using the ground-truth target word
-        :type true_token_flag: Layer
+        :type true_token_flag: LayerOutput
         :return: the softmax output layer
-        :rtype: Layer
+        :rtype: LayerOutput
         """
 
         decoder_mem = paddle.layer.memory(
@@ -132,13 +132,13 @@ def seqToseq_net(source_dict_dim, target_dict_dim, is_generating=False):
         """
         The decoder step for generating.
         :param enc_vec: the encoder vector for attention
-        :type enc_vec: Layer
+        :type enc_vec: LayerOutput
         :param enc_proj: the encoder projection for attention
-        :type enc_proj: Layer
+        :type enc_proj: LayerOutput
         :param current_word: the previously generated word
-        :type current_word: Layer
+        :type current_word: LayerOutput
         :return: the softmax output layer
-        :rtype: Layer
+        :rtype: LayerOutput
         """
 
         decoder_mem = paddle.layer.memory(
