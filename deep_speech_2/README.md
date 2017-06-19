@@ -10,8 +10,9 @@ export LD_LIBRARY_PATH=$PADDLE_INSTALL_DIR/Paddle/third_party/install/warpctc/li
 ```
 
 **Notic:** Before install requirements.txt, you have to install SRC for scikits.samplerate
-    - downloaded SRC sources, http://www.mega-nerd.com/SRC/download.html
-    - compiled and installed them
+
+     - downloaded SRC sources, http://www.mega-nerd.com/SRC/download.html
+     - compiled and installed them
 
 For some machines, we also need to install libsndfile1. Details to be added.
 
