@@ -26,8 +26,6 @@ def canonicalize_word(word, wordset=None, digits=True):
 
 def data_reader(data_file, word_dict, label_dict):
     """
-    Conll03 train set creator.
-
     The dataset can be obtained according to http://www.clips.uantwerpen.be/conll2003/ner/.
     It returns a reader creator, each sample in the reader includes:
     word id sequence, label id sequence and raw sentence.

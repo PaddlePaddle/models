@@ -12,11 +12,10 @@ def infer(model_path, batch_size, test_data_file, vocab_file, target_file):
 
         for idx, test_sample in enumerate(test_data):
             start_id = 0
-            pred_str = ""
             for w, tag in zip(test_sample[0],
                               probs[start_id:start_id + len(test_sample[0])]):
-                pred_str += "%s[%s] " % (id_2_word[w], id_2_label[tag])
-            print(pred_str.strip())
+                print("%s\t%s" % (id_2_word[w], id_2_label[tag]))
+            print("\n")
             start_id += len(test_sample[0])
 
     word_dict = load_dict(vocab_file)

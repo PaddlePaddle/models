@@ -21,9 +21,8 @@ before_install:
   -  docker pull paddlepaddle/paddle:latest
 script:
   -  .travis/precommit.sh
-  -  docker run -i --rm -v "$PWD:/py_unittest" paddlepaddle/paddle:latest /bin/bash -c
-     "cd /py_unittest && find . -name 'tests' -type d -print0 | xargs -0 -I{} -n1 bash -c 'cd {};
-     python -m unittest discover -v'"
+  -  docker run -i --rm -v "$PWD:/py_unittest" paddlepaddle/paddle:latest /bin/bash -c 
+    'cd /py_unittest; sh .travis/unittest.sh'
 
 notifications:
   email:
