@@ -5,6 +5,8 @@ import reader
 from utils import *
 from network_conf import *
 
+from paddle.v2.layer import parse_network
+
 
 def main(train_data_file,
          test_data_file,
