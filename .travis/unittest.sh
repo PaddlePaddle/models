@@ -8,8 +8,8 @@ abort(){
 
 unittest(){
     cd $1 > /dev/null
-    if [ -f "requirements.txt" ]; then
-        pip install -r requirements.txt
+    if [ -f "setup.sh" ]; then
+        sh setup.sh
     fi
     if [ $? != 0 ]; then
         exit 1
