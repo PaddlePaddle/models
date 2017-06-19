@@ -51,56 +51,41 @@ def rnn_lm(vocab_size, emb_dim, rnn_type, hidden_size, num_layer):
     return cost, output
 
 
-def ngram_lm(vocab_size, emb_dim, hidden_size, num_layer):
+def ngram_lm(vocab_size, emb_dim, hidden_size, num_layer, gram_num=4):
     """
     N-Gram language model definition.
 
     :param vocab_size: size of vocab.
     :param emb_dim: embedding vector's dimension.
     :param hidden_size: size of unit.
-    :param num_layer: layer number.
+    :param num_layer: number of hidden layers.
+    :param gram_size: gram number in n-gram method
     :return: cost and output layer of model.
     """
 
     assert emb_dim > 0 and hidden_size > 0 and vocab_size > 0 and num_layer > 0
 
-    def wordemb(inlayer):
-        wordemb = paddle.layer.table_projection(
-            input=inlayer,
-            size=emb_dim,
-            param_attr=paddle.attr.Param(
-                name="_proj", initial_std=0.001, learning_rate=1, l2_rate=0))
-        return wordemb
-
     # input layers
-    first_word = paddle.layer.data(
-        name="first_word", type=paddle.data_type.integer_value(vocab_size))
-    second_word = paddle.layer.data(
-        name="second_word", type=paddle.data_type.integer_value(vocab_size))
-    third_word = paddle.layer.data(
-        name="third_word", type=paddle.data_type.integer_value(vocab_size))
-    fourth_word = paddle.layer.data(
-        name="fourth_word", type=paddle.data_type.integer_value(vocab_size))
+    emb_layers = []
+    for i in range(gram_num):
+        word = paddle.layer.data(
+            name="__word%02d__" % (i + 1),
+            type=paddle.data_type.integer_value(vocab_size))
+        emb = paddle.layer.embedding(
+            input=word,
+            size=emb_dim,
+            param_attr=paddle.attr.Param(name="_proj", initial_std=1e-3))
+        emb_layers.append(emb)
     next_word = paddle.layer.data(
-        name="next_word", type=paddle.data_type.integer_value(vocab_size))
-
-    # embedding layer
-    first_emb = wordemb(first_word)
-    second_emb = wordemb(second_word)
-    third_emb = wordemb(third_word)
-    fourth_emb = wordemb(fourth_word)
-
-    context_emb = paddle.layer.concat(
-        input=[first_emb, second_emb, third_emb, fourth_emb])
+        name="__next_word__", type=paddle.data_type.integer_value(vocab_size))
 
     # hidden layer
-    hidden = paddle.layer.fc(
-        input=context_emb, size=hidden_size, act=paddle.activation.Relu())
-    for _ in range(num_layer - 1):
+    for i in range(num_layer):
         hidden = paddle.layer.fc(
-            input=hidden, size=hidden_size, act=paddle.activation.Relu())
+            input=hidden if i else paddle.layer.concat(input=emb_layers),
+            size=hidden_size,
+            act=paddle.activation.Relu())
 
-    # fc(full connected) and output layer
     predict_word = paddle.layer.fc(
         input=[hidden], size=vocab_size, act=paddle.activation.Softmax())
 
