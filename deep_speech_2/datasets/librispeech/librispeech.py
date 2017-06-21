@@ -11,12 +11,10 @@ from __future__ import print_function
 
 import distutils.util
 import os
-import wget
-import tarfile
 import argparse
 import soundfile
 import json
-from paddle.v2.dataset.common import md5file
+from datasets.common import download, unpack
 
 DATA_HOME = os.path.expanduser('~/.cache/paddle/dataset/speech')
 
@@ -45,7 +43,7 @@ parser.add_argument(
     help="Directory to save the dataset. (default: %(default)s)")
 parser.add_argument(
     "--manifest_prefix",
-    default="manifest",
+    default="manifest-libri",
     type=str,
     help="Filepath prefix for output manifests. (default: %(default)s)")
 parser.add_argument(
@@ -56,33 +54,6 @@ parser.add_argument(
     " If False, only download a minimal requirement (test-clean, dev-clean"
     " train-clean-100). (default: %(default)s)")
 args = parser.parse_args()
-
-
-def download(url, md5sum, target_dir):
-    """
-    Download file from url to target_dir, and check md5sum.
-    """
-    if not os.path.exists(target_dir): os.makedirs(target_dir)
-    filepath = os.path.join(target_dir, url.split("/")[-1])
-    if not (os.path.exists(filepath) and md5file(filepath) == md5sum):
-        print("Downloading %s ..." % url)
-        wget.download(url, target_dir)
-        print("\nMD5 Chesksum %s ..." % filepath)
-        if not md5file(filepath) == md5sum:
-            raise RuntimeError("MD5 checksum failed.")
-    else:
-        print("File exists, skip downloading. (%s)" % filepath)
-    return filepath
-
-
-def unpack(filepath, target_dir):
-    """
-    Unpack the file to the target_dir.
-    """
-    print("Unpacking %s ..." % filepath)
-    tar = tarfile.open(filepath)
-    tar.extractall(target_dir)
-    tar.close()
 
 
 def create_manifest(data_dir, manifest_path):

@@ -16,12 +16,10 @@ For some machines, we also need to install libsndfile1. Details to be added.
 ### Preparing Data
 
 ```
-cd datasets
-sh run_all.sh
-cd ..
+sh datasets/run_all.sh
 ```
 
-`sh run_all.sh` prepares all ASR datasets (currently, only LibriSpeech available). After running, we have several summarization manifest files in json-format.
+`sh datasets/run_all.sh` prepares all ASR datasets (currently, only LibriSpeech and THCHS30 available). After running, we have several summarization manifest files in json-format.
 
 A manifest file summarizes a speech data set, with each line containing the meta data (i.e. audio filepath, transcript text, audio duration) of each audio file within the data set, in json format. Manifest file serves as an interface informing our system of  where and what to read the speech samples.
 
