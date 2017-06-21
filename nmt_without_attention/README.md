@@ -1,6 +1,8 @@
 # 神经网络机器翻译模型
 
 ## 背景介绍
+- PaddleBook中[机器翻译](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md)的相关章节中，已介绍了带注意力机制（Attention Mechanism）的 Encoder-Decoder 结构，本例则介绍的是不带注意力机制的 Encoder-Decoder 结构。关于注意力机制，读者可进一步参考 PaddleBook 和参考文献\[[3](#参考文献)]。
+
 机器翻译利用计算机将源语言转换成目标语言的同义表达，是自然语言处理中重要的研究方向，有着广泛的应用需求，其实现方式也经历了不断地演化。传统机器翻译方法主要基于规则或统计模型，需要人为地指定翻译规则或设计语言特征，效果依赖于人对源语言与目标语言的理解程度。近些年来，深度学习的提出与迅速发展使得特征的自动学习成为可能。深度学习首先在图像识别和语音识别中取得成功，进而在机器翻译等自然语言处理领域中掀起了研究热潮。机器翻译中的深度学习模型直接学习源语言到目标语言的映射，大为减少了学习过程中人的介入，同时显著地提高了翻译质量。本例介绍在PaddlePaddle中如何利用循环神经网络（Recurrent Neural Network, RNN）构建一个端到端（End-to-End）的神经网络机器翻译（Neural Machine Translation, NMT）模型。
 
 ## 模型概览
@@ -84,7 +86,6 @@ encoded_vector = paddle.networks.bidirectional_gru(
 
 
 ### 无注意力机制的解码器
-PaddleBook中[机器翻译](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md)的相关章节中，已介绍了带注意力机制（Attention Mechanism）的 Encoder-Decoder 结构，本例则介绍的是不带注意力机制的 Encoder-Decoder 结构。关于注意力机制，读者可进一步参考 PaddleBook 和参考文献\[[3](#参考文献)]。
 
 对于流行的RNN单元，PaddlePaddle 已有很好的实现均可直接调用。如果希望在 RNN 每一个时间步实现某些自定义操作，可使用 PaddlePaddle 中的`recurrent_layer_group`。首先，自定义单步逻辑函数，再利用函数 `recurrent_group()` 循环调用单步逻辑函数处理整个序列。本例中的无注意力机制的解码器便是使用`recurrent_layer_group`来实现，其中，单步逻辑函数`gru_decoder_without_attention()`相关代码如下：
 
@@ -198,7 +199,7 @@ else:
 
 **a) 由网络定义，解析网络结构，初始化模型参数**
 
-```
+```python
 # initialize model
 cost = seq2seq_net(source_dict_dim, target_dict_dim)
 parameters = paddle.parameters.create(cost)
@@ -206,7 +207,7 @@ parameters = paddle.parameters.create(cost)
 
 **b) 设定训练过程中的优化策略、定义训练数据读取 `reader`**
 
-```
+```python
 # define optimize method and trainer
 optimizer = paddle.optimizer.RMSProp(
     learning_rate=1e-3,
@@ -223,7 +224,7 @@ wmt14_reader = paddle.batch(
 
 **c) 定义事件句柄，打印训练中间结果、保存模型快照**
 
-```
+```python
 # define event_handler callback
 def event_handler(event):
     if isinstance(event, paddle.event.EndIteration):
@@ -242,7 +243,7 @@ def event_handler(event):
 
 **d) 开始训练**
 
-```
+```python
 # start to train
 trainer.train(
     reader=wmt14_reader, event_handler=event_handler, num_passes=2)
@@ -250,13 +251,13 @@ trainer.train(
 
 启动模型训练的十分简单，只需在命令行窗口中执行
 
-```
-python nmt_without_attention_v2.py --train
+```bash
+python train.py
 ```
 
 输出样例为
 
-```
+```text
 Pass 0, Batch 0, Cost 267.674663, {'classification_error_evaluator': 1.0}
 .........
 Pass 0, Batch 10, Cost 172.892294, {'classification_error_evaluator': 0.953895092010498}
@@ -274,7 +275,7 @@ Pass 0, Batch 40, Cost 168.170543, {'classification_error_evaluator': 0.83481836
 
 **a) 加载测试样本**
 
-```
+```python
 # load data  samples for generation
 gen_creator = paddle.dataset.wmt14.gen(source_dict_dim)
 gen_data = []
@@ -284,7 +285,7 @@ for item in gen_creator():
 
 **b) 初始化模型，执行`infer()`为每个输入样本生成`beam search`的翻译结果**
 
-```
+```python
 beam_gen = seq2seq_net(source_dict_dim, target_dict_dim, True)
 with gzip.open(init_models_path) as f:
     parameters = paddle.parameters.Parameters.from_tar(f)
@@ -298,7 +299,7 @@ beam_result = paddle.infer(
 
 **c) 加载源语言和目标语言词典，将`id`序列表示的句子转化成原语言并输出结果**
 
-```
+```python
 # get the dictionary
 src_dict, trg_dict = paddle.dataset.wmt14.get_dict(source_dict_dim)
 
@@ -323,19 +324,19 @@ for i in xrange(len(gen_data)):
 
 模型测试的执行与模型训练类似，只需执行
 
-```
-python nmt_without_attention_v2.py --generate
+```bash
+python generate.py
 ```
 则自动为测试数据生成了对应的翻译结果。
 设置beam search的宽度为3，输入某个法文句子
 
-```
+```text
 src: <s> Elles connaissent leur entreprise mieux que personne . <e>
 ```
 
 其对应的英文翻译结果为
 
-```
+```text
 prob = -3.754819: They know their business better than anyone . <e>
 prob = -4.445528: They know their businesses better than anyone . <e>
 prob = -5.026885: They know their business better than anybody . <e>
