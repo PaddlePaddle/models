@@ -1,12 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import argparse
 import logging
+import gzip
 import paddle.v2 as paddle
-from paddle.v2 import layer
-from paddle.v2 import data_type as dtype
 from data_provider import field_index, detect_dataset, AvazuDataset
+from model import CTRmodel
 
 parser = argparse.ArgumentParser(description="PaddlePaddle CTR example")
 parser.add_argument(
@@ -31,6 +28,11 @@ parser.add_argument(
     type=int,
     default=500000,
     help="number of records to detect dataset's meta info")
+parser.add_argument(
+    '--model_output_prefix',
+    type=str,
+    default='./ctr_models',
+    help='prefix of path for model to store (default: ./ctr_models)')
 
 args = parser.parse_args()
 
@@ -44,95 +46,54 @@ for key, item in data_meta_info.items():
 
 paddle.init(use_gpu=False, trainer_count=1)
 
-# ==============================================================================
-#                    input layers
-# ==============================================================================
-dnn_merged_input = layer.data(
-    name='dnn_input',
-    type=paddle.data_type.sparse_binary_vector(data_meta_info['dnn_input']))
-
-lr_merged_input = layer.data(
-    name='lr_input',
-    type=paddle.data_type.sparse_binary_vector(data_meta_info['lr_input']))
-
-click = paddle.layer.data(name='click', type=dtype.dense_vector(1))
-
-
-# ==============================================================================
-#                    network structure
-# ==============================================================================
-def build_dnn_submodel(dnn_layer_dims):
-    dnn_embedding = layer.fc(input=dnn_merged_input, size=dnn_layer_dims[0])
-    _input_layer = dnn_embedding
-    for i, dim in enumerate(dnn_layer_dims[1:]):
-        fc = layer.fc(
-            input=_input_layer,
-            size=dim,
-            act=paddle.activation.Relu(),
-            name='dnn-fc-%d' % i)
-        _input_layer = fc
-    return _input_layer
-
-
-# config LR submodel
-def build_lr_submodel():
-    fc = layer.fc(
-        input=lr_merged_input, size=1, name='lr', act=paddle.activation.Relu())
-    return fc
-
-
-# conbine DNN and LR submodels
-def combine_submodels(dnn, lr):
-    merge_layer = layer.concat(input=[dnn, lr])
-    fc = layer.fc(
-        input=merge_layer,
-        size=1,
-        name='output',
-        # use sigmoid function to approximate ctr rate, a float value between 0 and 1.
-        act=paddle.activation.Sigmoid())
-    return fc
-
-
-dnn = build_dnn_submodel(dnn_layer_dims)
-lr = build_lr_submodel()
-output = combine_submodels(dnn, lr)
+model = CTRmodel(dnn_layer_dims, data_meta_info['dnn_input'],
+                 data_meta_info['lr_input'])
 
 # ==============================================================================
 #                   cost and train period
 # ==============================================================================
-classification_cost = paddle.layer.multi_binary_label_cross_entropy_cost(
-    input=output, label=click)
-
-params = paddle.parameters.create(classification_cost)
-
-optimizer = paddle.optimizer.Momentum(momentum=0.01)
-
-trainer = paddle.trainer.SGD(
-    cost=classification_cost, parameters=params, update_equation=optimizer)
-
-dataset = AvazuDataset(
-    args.train_data_path, n_records_as_test=args.test_set_size)
 
 
-def event_handler(event):
-    if isinstance(event, paddle.event.EndIteration):
-        num_samples = event.batch_id * args.batch_size
-        if event.batch_id % 100 == 0:
-            logging.warning("Pass %d, Samples %d, Cost %f" %
-                            (event.pass_id, num_samples, event.cost))
+def train():
 
-        if event.batch_id % 1000 == 0:
-            result = trainer.test(
-                reader=paddle.batch(dataset.test, batch_size=args.batch_size),
-                feeding=field_index)
-            logging.warning("Test %d-%d, Cost %f" %
-                            (event.pass_id, event.batch_id, result.cost))
+    params = paddle.parameters.create(model.train_cost)
+    optimizer = paddle.optimizer.AdaGrad()
+
+    trainer = paddle.trainer.SGD(
+        cost=model.train_cost, parameters=params, update_equation=optimizer)
+
+    dataset = AvazuDataset(
+        args.train_data_path, n_records_as_test=args.test_set_size)
+
+    def __event_handler__(event):
+        if isinstance(event, paddle.event.EndIteration):
+            num_samples = event.batch_id * args.batch_size
+            if event.batch_id % 100 == 0:
+                logging.warning("Pass %d, Samples %d, Cost %f" %
+                                (event.pass_id, num_samples, event.cost))
+
+            if event.batch_id % 1000 == 0:
+                result = trainer.test(
+                    reader=paddle.batch(
+                        dataset.test, batch_size=args.batch_size),
+                    feeding=field_index)
+                logging.warning("Test %d-%d, Cost %f" %
+                                (event.pass_id, event.batch_id, result.cost))
+
+                path = "{}-pass-{}-batch-{}-test-{}.tar.gz".format(
+                    args.model_output_prefix, event.pass_id, event.batch_id,
+                    result.cost)
+                with gzip.open(path, 'w') as f:
+                    params.to_tar(f)
+
+    trainer.train(
+        reader=paddle.batch(
+            paddle.reader.shuffle(dataset.train, buf_size=500),
+            batch_size=args.batch_size),
+        feeding=field_index,
+        event_handler=__event_handler__,
+        num_passes=args.num_passes)
 
 
-trainer.train(
-    reader=paddle.batch(
-        paddle.reader.shuffle(dataset.train, buf_size=500),
-        batch_size=args.batch_size),
-    feeding=field_index,
-    event_handler=event_handler,
-    num_passes=args.num_passes)
+if __name__ == '__main__':
+    train()
