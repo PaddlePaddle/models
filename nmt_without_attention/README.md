@@ -1,8 +1,6 @@
 # 神经网络机器翻译模型
 
 ## 背景介绍
-- PaddleBook中[机器翻译](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md)的相关章节中，已介绍了带注意力机制（Attention Mechanism）的 Encoder-Decoder 结构，本例则介绍的是不带注意力机制的 Encoder-Decoder 结构。关于注意力机制，读者可进一步参考 PaddleBook 和参考文献\[[3](#参考文献)]。
-
 机器翻译利用计算机将源语言转换成目标语言的同义表达，是自然语言处理中重要的研究方向，有着广泛的应用需求，其实现方式也经历了不断地演化。传统机器翻译方法主要基于规则或统计模型，需要人为地指定翻译规则或设计语言特征，效果依赖于人对源语言与目标语言的理解程度。近些年来，深度学习的提出与迅速发展使得特征的自动学习成为可能。深度学习首先在图像识别和语音识别中取得成功，进而在机器翻译等自然语言处理领域中掀起了研究热潮。机器翻译中的深度学习模型直接学习源语言到目标语言的映射，大为减少了学习过程中人的介入，同时显著地提高了翻译质量。本例介绍在PaddlePaddle中如何利用循环神经网络（Recurrent Neural Network, RNN）构建一个端到端（End-to-End）的神经网络机器翻译（Neural Machine Translation, NMT）模型。
 
 ## 模型概览
@@ -53,14 +51,15 @@ RNN 的原始结构用一个向量来存储隐状态，然而这种结构的 RNN
 在 PaddlePaddle 中，双向编码器可以很方便地调用相关 APIs 实现：
 
 ```python
-#### Encoder
 src_word_id = paddle.layer.data(
     name='source_language_word',
     type=paddle.data_type.integer_value_sequence(source_dict_dim))
+
 # source embedding
 src_embedding = paddle.layer.embedding(
     input=src_word_id, size=word_vector_dim)
-# use bidirectional_gru
+
+# # bidierctional GRU as encoder
 encoded_vector = paddle.networks.bidirectional_gru(
     input=src_embedding,
     size=encoder_size,
@@ -86,18 +85,17 @@ encoded_vector = paddle.networks.bidirectional_gru(
 
 
 ### 无注意力机制的解码器
+-PaddleBook中[机器翻译](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md)的相关章节中，已介绍了带注意力机制（Attention Mechanism）的 Encoder-Decoder 结构，本例则介绍的是不带注意力机制的 Encoder-Decoder 结构。关于注意力机制，读者可进一步参考 PaddleBook 和参考文献\[[3](#参考文献)]。
 
 对于流行的RNN单元，PaddlePaddle 已有很好的实现均可直接调用。如果希望在 RNN 每一个时间步实现某些自定义操作，可使用 PaddlePaddle 中的`recurrent_layer_group`。首先，自定义单步逻辑函数，再利用函数 `recurrent_group()` 循环调用单步逻辑函数处理整个序列。本例中的无注意力机制的解码器便是使用`recurrent_layer_group`来实现，其中，单步逻辑函数`gru_decoder_without_attention()`相关代码如下：
 
 ```python
-#### Decoder
+# the initialization state for decoder GRU
 encoder_last = paddle.layer.last_seq(input=encoded_vector)
-encoder_last_projected = paddle.layer.mixed(
-        size=decoder_size,
-        act=paddle.activation.Tanh(),
-        input=paddle.layer.full_matrix_projection(input=encoder_last))
+encoder_last_projected = paddle.layer.fc(
+    size=decoder_size, act=paddle.activation.Tanh(), input=encoder_last)
 
-# gru step
+# the step function for decoder GRU
 def gru_decoder_without_attention(enc_vec, current_word):
     '''
     Step function for gru decoder
@@ -107,33 +105,29 @@ def gru_decoder_without_attention(enc_vec, current_word):
     :type current_word: layer object
     '''
     decoder_mem = paddle.layer.memory(
-        name='gru_decoder',
-        size=decoder_size,
-        boot_layer=encoder_last_projected)
+            name="gru_decoder",
+            size=decoder_size,
+            boot_layer=encoder_last_projected)
 
     context = paddle.layer.last_seq(input=enc_vec)
 
-    decoder_inputs = paddle.layer.mixed(
-        size=decoder_size * 3,
-        input=[
-            paddle.layer.full_matrix_projection(input=context),
-            paddle.layer.full_matrix_projection(input=current_word)
-        ])
+    decoder_inputs = paddle.layer.fc(
+        size=decoder_size * 3, input=[context, current_word])
 
     gru_step = paddle.layer.gru_step(
-        name='gru_decoder',
+        name="gru_decoder",
         act=paddle.activation.Tanh(),
         gate_act=paddle.activation.Sigmoid(),
         input=decoder_inputs,
         output_mem=decoder_mem,
         size=decoder_size)
 
-    out = paddle.layer.mixed(
+     out = paddle.layer.fc(
         size=target_dict_dim,
         bias_attr=True,
         act=paddle.activation.Softmax(),
-        input=paddle.layer.full_matrix_projection(input=gru_step))
-    return out
+        input=gru_step)
+    return out  
 ```
 
 在模型训练和测试阶段，解码器的行为有很大的不同：
@@ -144,34 +138,14 @@ def gru_decoder_without_attention(enc_vec, current_word):
 训练和生成的逻辑分别实现在如下的`if-else`条件分支中：
 
 ```python
-decoder_group_name = "decoder_group"
-group_input1 = paddle.layer.StaticInput(input=encoded_vector, is_seq=True)
+group_input1 = paddle.layer.StaticInput(input=encoded_vector)
 group_inputs = [group_input1]
-if not generating:
-    trg_embedding = paddle.layer.embedding(
-        input=paddle.layer.data(
-            name='target_language_word',
-            type=paddle.data_type.integer_value_sequence(target_dict_dim)),
-            size=word_vector_dim,
-            param_attr=paddle.attr.ParamAttr(name='_target_language_embedding'))
-    group_inputs.append(trg_embedding)
 
-    decoder = paddle.layer.recurrent_group(
-        name=decoder_group_name,
-        step=gru_decoder_without_attention,
-        input=group_inputs)
-
-    lbl = paddle.layer.data(
-        name='target_language_next_word',
-            type=paddle.data_type.integer_value_sequence(target_dict_dim))
-    cost = paddle.layer.classification_cost(input=decoder, label=lbl)
-
-    return cost
-else:
-
+decoder_group_name = "decoder_group"
+if is_generating:
     trg_embedding = paddle.layer.GeneratedInput(
         size=target_dict_dim,
-        embedding_name='_target_language_embedding',
+        embedding_name="_target_language_embedding",
         embedding_size=word_vector_dim)
     group_inputs.append(trg_embedding)
 
@@ -185,6 +159,26 @@ else:
         max_length=max_length)
 
     return beam_gen
+else:
+    trg_embedding = paddle.layer.embedding(
+        input=paddle.layer.data(
+            name="target_language_word",
+            type=paddle.data_type.integer_value_sequence(target_dict_dim)),
+        size=word_vector_dim,
+        param_attr=paddle.attr.ParamAttr(name="_target_language_embedding"))
+    group_inputs.append(trg_embedding)
+
+    decoder = paddle.layer.recurrent_group(
+        name=decoder_group_name,
+        step=gru_decoder_without_attention,
+        input=group_inputs)
+
+    lbl = paddle.layer.data(
+        name="target_language_next_word",
+        type=paddle.data_type.integer_value_sequence(target_dict_dim))
+    cost = paddle.layer.classification_cost(input=decoder, label=lbl)
+
+    return cost
 ```
 
 ## 数据准备
@@ -208,13 +202,16 @@ parameters = paddle.parameters.create(cost)
 **b) 设定训练过程中的优化策略、定义训练数据读取 `reader`**
 
 ```python
-# define optimize method and trainer
+# define optimization method
 optimizer = paddle.optimizer.RMSProp(
     learning_rate=1e-3,
     gradient_clipping_threshold=10.0,
     regularization=paddle.optimizer.L2Regularization(rate=8e-4))
+
+# define the trainer instance
 trainer = paddle.trainer.SGD(
     cost=cost, parameters=parameters, update_equation=optimizer)
+
 # define data reader
 wmt14_reader = paddle.batch(
     paddle.reader.shuffle(
@@ -225,20 +222,19 @@ wmt14_reader = paddle.batch(
 **c) 定义事件句柄，打印训练中间结果、保存模型快照**
 
 ```python
-# define event_handler callback
+# define the event_handler callback
 def event_handler(event):
     if isinstance(event, paddle.event.EndIteration):
-        if event.batch_id % 100 == 0 and event.batch_id > 0:
-            with gzip.open('models/nmt_without_att_params_batch_%d.tar.gz' %
-                           event.batch_id, 'w') as f:
+        if not event.batch_id % 100 and event.batch_id:
+            with gzip.open(
+                    os.path.join(save_path,
+                                 "nmt_without_att_%05d_batch_%05d.tar.gz" %
+                                 event.pass_id, event.batch_id), "w") as f:
                 parameters.to_tar(f)
 
-        if event.batch_id % 10 == 0:
-            print "\nPass %d, Batch %d, Cost%f, %s" % (
-                event.pass_id, event.batch_id, event.cost, event.metrics)
-        else:
-            sys.stdout.write('.')
-            sys.stdout.flush()
+        if event.batch_id and not event.batch_id % 10:
+            logger.info("Pass %d, Batch %d, Cost %f, %s" % (
+                event.pass_id, event.batch_id, event.cost, event.metrics))
 ```
 
 **d) 开始训练**
@@ -300,26 +296,22 @@ beam_result = paddle.infer(
 **c) 加载源语言和目标语言词典，将`id`序列表示的句子转化成原语言并输出结果**
 
 ```python
-# get the dictionary
-src_dict, trg_dict = paddle.dataset.wmt14.get_dict(source_dict_dim)
+beam_result = inferer.infer(input=test_batch, field=["prob", "id"])
 
-# the delimited element of generated sequences is -1,
-# the first element of each generated sequence is the sequence length
-seq_list = []
-seq = []
-for w in beam_result[1]:
-    if w != -1:
-        seq.append(w)
-    else:
-        seq_list.append(' '.join([trg_dict.get(w) for w in seq[1:]]))
-        seq = []
+gen_sen_idx = np.where(beam_result[1] == -1)[0]
+assert len(gen_sen_idx) == len(test_batch) * beam_size
 
-prob = beam_result[0]
-for i in xrange(len(gen_data)):
-    print "\n*******************************************************\n"
-    print "src:", ' '.join([src_dict.get(w) for w in gen_data[i][0]]), "\n"
+start_pos, end_pos = 1, 0
+for i, sample in enumerate(test_batch):
+    print(" ".join([
+        src_dict[w] for w in sample[0][1:-1]
+    ]))  # skip the start and ending mark when print the source sentence
     for j in xrange(beam_size):
-        print "prob = %f:" % (prob[i][j]), seq_list[i * beam_size + j]
+        end_pos = gen_sen_idx[i * beam_size + j]
+        print("%.4f\t%s" % (beam_result[0][i][j], " ".join(
+            trg_dict[w] for w in beam_result[1][start_pos:end_pos])))
+        start_pos = end_pos + 2
+    print("\n")
 ```
 
 模型测试的执行与模型训练类似，只需执行
@@ -327,23 +319,20 @@ for i in xrange(len(gen_data)):
 ```bash
 python generate.py
 ```
-则自动为测试数据生成了对应的翻译结果。
-设置beam search的宽度为3，输入某个法文句子
+
+设置beam search的宽度为3，输入为一个法文句子，则自动为测试数据生成对应的翻译结果，输出格式如下：
 
 ```text
-src: <s> Elles connaissent leur entreprise mieux que personne . <e>
+Elles connaissent leur entreprise mieux que personne .
+-3.754819        They know their business better than anyone . <e>
+-4.445528        They know their businesses better than anyone . <e>
+-5.026885        They know their business better than anybody . <e>
+
 ```
-
-其对应的英文翻译结果为
-
-```text
-prob = -3.754819: They know their business better than anyone . <e>
-prob = -4.445528: They know their businesses better than anyone . <e>
-prob = -5.026885: They know their business better than anybody . <e>
-```
-
-* `prob`表示生成句子的得分，随之其后则是翻译生成的句子；
-* `<s>` 表示句子的开始，`<e>`表示一个句子的结束，如果出现了在词典中未包含的词，则用`<unk>`替代。
+- 第一行为输入的源语言句子。
+- 第二 ~ `beam_size + 1` 行是柱搜索生成的 `beam_size` 条翻译结果
+    - 一行之内以“\t”分隔为两列，第一列是句子的log 概率，第二列是翻译结果的文本。
+    - `<s>` 表示句子的开始，`<e>`表示一个句子的结束，如果出现了在词典中未包含的词，则用`<unk>`替代。
 
 至此，我们在 PaddlePaddle 上实现了一个初步的机器翻译模型。我们可以看到，PaddlePaddle 提供了灵活丰富的API供大家选择和使用，使得我们能够很方便完成各种复杂网络的配置。机器翻译本身也是个快速发展的领域，各种新方法新思想在不断涌现。在学习完本例后，读者若有兴趣和余力，可基于 PaddlePaddle 平台实现更为复杂、性能更优的机器翻译模型。
 
