@@ -1,54 +1,49 @@
+#!/usr/bin/env python
 # coding=utf-8
+import os
+
+# -- config : building dictionary --
+max_word_num = 5120 - 3
+cutoff_word_fre = 10
 
 # -- config : data --
+train_file = "data/chinese.train.txt"
+test_file = ""
+vocab_file = "data/vocab_dict.txt"
+batch_size = 4
+num_passes = 1
 
-train_file = 'data/chinese.train.txt'
-test_file = 'data/chinese.test.txt'
-vocab_file = 'data/vocab_cn.txt'  # the file to save vocab
-
-build_vocab_method = 'fixed_size'  # 'frequency' or 'fixed_size'
-vocab_max_size = 3000  # when build_vocab_method = 'fixed_size'
-unk_threshold = 1  # # when build_vocab_method = 'frequency'
-
-min_sentence_length = 3
-max_sentence_length = 60
+model_save_dir = "models"
+if not os.path.exists(model_save_dir):
+    os.mkdir(model_save_dir)
 
 # -- config : train --
-
-use_which_model = 'ngram'  # must be: 'rnn' or 'ngram'
+model_type = "rnn"  # must be: "rnn" or "ngram"
 use_gpu = False  # whether to use gpu
 trainer_count = 1  # number of trainer
 
 
-class Config_rnn(object):
+class ConfigRnn(object):
     """
     config for RNN language model
     """
-    rnn_type = 'gru'  # or 'lstm'
-    emb_dim = 200
-    hidden_size = 200
+    rnn_type = "lstm"  # "gru" or "lstm"
+    emb_dim = 256
+    hidden_size = 256
     num_layer = 2
-    num_passs = 2
-    batch_size = 32
-    model_file_name_prefix = 'lm_' + rnn_type + '_params_pass_'
 
 
-class Config_ngram(object):
+class ConfigNgram(object):
     """
     config for N-Gram language model
     """
-    emb_dim = 200
-    hidden_size = 200
+    emb_dim = 256
+    hidden_size = 256
     num_layer = 2
     N = 5
-    num_passs = 2
-    batch_size = 32
-    model_file_name_prefix = 'lm_ngram_pass_'
 
 
 # -- config : infer --
-
-input_file = 'data/input.txt'  # input file contains sentence prefix each line
-output_file = 'data/output.txt'  # the file to save results
-num_words = 10  # the max number of words need to generate
+output_file = "data/output.txt"  # the file to save results
+num_words = 50  # the max number of words need to generate
 beam_size = 5  # beam_width, the number of the prediction sentence for each prefix
