@@ -1,63 +1,80 @@
 # coding=utf-8
+import pdb
 import collections
 import os
 
+MIN_LEN = 3
+MAX_LEN = 100
 
-def rnn_reader(file_name, min_sentence_length, max_sentence_length,
-               word_id_dict):
+
+def rnn_reader(file_name, word_dict, is_infer):
     """
     create reader for RNN, each line is a sample.
 
     :param file_name: file name.
     :param min_sentence_length: sentence's min length.
     :param max_sentence_length: sentence's max length.
-    :param word_id_dict: vocab with content of '{word, id}', 'word' is string type , 'id' is int type.
+    :param word_dict: vocab with content of '{word, id}',
+                      'word' is string type , 'id' is int type.
     :return: data reader.
     """
 
     def reader():
-        UNK = word_id_dict['<UNK>']
+        UNK_ID = word_dict['<unk>']
         with open(file_name) as file:
             for line in file:
-                words = line.decode('utf-8', 'ignore').strip().split()
-                if len(words) < min_sentence_length or len(
-                        words) > max_sentence_length:
+                words = line.strip().split()
+                if len(words) < MIN_LEN or len(words) > MAX_LEN:
                     continue
-                ids = [word_id_dict.get(w, UNK) for w in words]
-                ids.append(word_id_dict['<EOS>'])
-                target = ids[1:]
-                target.append(word_id_dict['<EOS>'])
-                yield ids[:], target[:]
+                ids = [word_dict.get(w, UNK_ID)
+                       for w in words] + [word_dict['<e>']] * 2
+                if is_infer:
+                    yield ids[:-1]
+                else:
+                    yield ids[:-1], ids[1:]
 
     return reader
 
 
-def ngram_reader(file_name, N, word_id_dict):
+def ngram_reader(file_name, word_dict, is_infer, gram_num):
     """
     create reader for N-Gram.
 
     :param file_name: file name.
     :param N: N-Gram's N.
-    :param word_id_dict: vocab with content of '{word, id}', 'word' is string type , 'id' is int type.
+    :param word_dict: vocab with content of '{word, id}',
+        'word' is string type , 'id' is int type.
     :return: data reader.
     """
-    assert N >= 2
+    assert gram_num >= 2
 
     def reader():
         ids = []
-        UNK_ID = word_id_dict['<UNK>']
-        cache_size = 10000000
+        UNK_ID = word_dict['<unk>']
         with open(file_name) as file:
             for line in file:
-                words = line.decode('utf-8', 'ignore').strip().split()
-                ids += [word_id_dict.get(w, UNK_ID) for w in words]
-                ids_len = len(ids)
-                if ids_len > cache_size:  # output
-                    for i in range(ids_len - N - 1):
-                        yield tuple(ids[i:i + N])
-                    ids = []
-        ids_len = len(ids)
-        for i in range(ids_len - N - 1):
-            yield tuple(ids[i:i + N])
+                words = line.strip().split()
+                if len(words) < gram_num + 1: continue
+                ids = [word_dict.get(w, UNK_ID) for w in words]
+                for i in range(len(ids) - gram_num - 1):
+                    if is_infer:
+                        yield tuple(ids[i:i + gram_num])
+                    else:
+                        yield tuple(ids[i:i + gram_num + 1])
 
     return reader
+
+
+if __name__ == "__main__":
+    from utils import load_dict
+    word_dict = load_dict("data/vocab_cn.txt")
+    for idx, data in enumerate(
+            # rnn_reader(
+            #     file_name="/home/caoying/opt/rsync/data/raw_shuffle_1.txt",
+            #     word_dict=word_dict)()):
+            ngram_reader(
+                file_name="/home/caoying/opt/rsync/data/raw_shuffle_1.txt",
+                word_dict=word_dict,
+                is_infer=True,
+                gram_num=4)()):
+        print data
