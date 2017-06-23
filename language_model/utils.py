@@ -1,87 +1,64 @@
+#!/usr/bin/env python
 # coding=utf-8
 import os
-import collections
+import logging
+from collections import defaultdict
+
+__all__ = ["build_dict", "load_dict"]
+
+logger = logging.getLogger("paddle")
+logger.setLevel(logging.DEBUG)
 
 
-def save_vocab(word_id_dict, vocab_file_name):
+def build_dict(data_file,
+               save_path,
+               max_word_num,
+               cutoff_word_fre=5,
+               insert_extra_words=["<unk>", "<e>"]):
     """
-    save vocab.
-
-    :param word_id_dict: dictionary with content of '{word, id}', 'word' is string type , 'id' is int type.
-    :param vocab_file_name: vocab file name.
+    :param data_file: path of data file
+    :param save_path: path to save the word dictionary
+    :param vocab_max_size: if vocab_max_size is set, top vocab_max_size words
+        will be added into word vocabulary
+    :param cutoff_thd: if cutoff_thd is set, words whose frequencies are less
+        than cutoff_thd will not added into word vocabulary.
+        NOTE that: vocab_max_size and cutoff_thd cannot be set at the same time
+    :param extra_keys: extra keys defined by users that added into the word
+        dictionary, ususally these keys includes <unk>, start and ending marks
     """
-    f = open(vocab_file_name, 'w')
-    for (k, v) in word_id_dict.items():
-        f.write(k.encode('utf-8') + '\t' + str(v) + '\n')
-    print('save vocab to ' + vocab_file_name)
-    f.close()
+    word_count = defaultdict(int)
+    with open(data_file, "r") as f:
+        for idx, line in enumerate(f):
+            if not (idx + 1) % 100000:
+                logger.debug("processing %d lines ... " % (idx + 1))
+            words = line.strip().lower().split()
+            for w in words:
+                word_count[w] += 1
+
+    sorted_words = sorted(
+        word_count.iteritems(), key=lambda x: x[1], reverse=True)
+
+    stop_pos = len(sorted_words) if sorted_words[-1][
+        1] > cutoff_word_fre else next(idx for idx, v in enumerate(sorted_words)
+                                       if v[1] < cutoff_word_fre)
+
+    stop_pos = min(max_word_num, stop_pos)
+    with open(save_path, "w") as fdict:
+        for w in insert_extra_words:
+            fdict.write("%s\t-1\n" % (w))
+        for idx, info in enumerate(sorted_words):
+            if idx == stop_pos: break
+            fdict.write("%s\t%d\n" % (info[0], info[-1]))
 
 
-def load_vocab(vocab_file_name):
+def load_dict(dict_path):
     """
-    load vocab from file.
-    :param vocab_file_name: vocab file name.
-    :return: dictionary with content of '{word, id}', 'word' is string type , 'id' is int type.
+    :param dict_path: path of word dictionary
     """
-    assert os.path.isfile(vocab_file_name)
-    dict = {}
-    with open(vocab_file_name) as file:
-        for line in file:
-            if len(line) < 2:
-                continue
-            kv = line.decode('utf-8').strip().split('\t')
-            dict[kv[0]] = int(kv[1])
-    return dict
+    return dict((line.strip().split("\t")[0], idx)
+                for idx, line in enumerate(open(dict_path, "r").readlines()))
 
 
-def build_vocab_using_threshhold(file_name, unk_threshold):
-    """
-    build vacab using_<UNK> threshhold.
-
-    :param file_name:
-    :param unk_threshold: <UNK> threshhold.
-    :type unk_threshold: int.
-    :return: dictionary with content of '{word, id}', 'word' is string type , 'id' is int type.
-    """
-    counter = {}
-    with open(file_name) as file:
-        for line in file:
-            words = line.decode('utf-8', 'ignore').strip().split()
-            for word in words:
-                if word in counter:
-                    counter[word] += 1
-                else:
-                    counter[word] = 1
-    counter_new = {}
-    for (word, frequency) in counter.items():
-        if frequency >= unk_threshold:
-            counter_new[word] = frequency
-    counter.clear()
-    counter_new = sorted(counter_new.items(), key=lambda d: -d[1])
-    words = [word_frequency[0] for word_frequency in counter_new]
-    word_id_dict = dict(zip(words, range(2, len(words) + 2)))
-    word_id_dict['<UNK>'] = 0
-    word_id_dict['<EOS>'] = 1
-    return word_id_dict
-
-
-def build_vocab_with_fixed_size(file_name, vocab_max_size):
-    """
-    build vacab with assigned max size.
-
-    :param vocab_max_size: vocab's max size.
-    :return: dictionary with content of '{word, id}', 'word' is string type , 'id' is int type.
-    """
-    words = []
-    for line in open(file_name):
-        words += line.decode('utf-8', 'ignore').strip().split()
-
-    counter = collections.Counter(words)
-    counter = sorted(counter.items(), key=lambda x: -x[1])
-    if len(counter) > vocab_max_size:
-        counter = counter[:vocab_max_size]
-    words, counts = zip(*counter)
-    word_id_dict = dict(zip(words, range(2, len(words) + 2)))
-    word_id_dict['<UNK>'] = 0
-    word_id_dict['<EOS>'] = 1
-    return word_id_dict
+def load_reverse_dict(dict_path):
+    return dict((idx, line.strip().split("\t")[0])
+                for idx, line in enumerate(open(dict_path, "r").readlines()))

@@ -1,31 +1,38 @@
+#!/usr/bin/env python
 # coding=utf-8
+import os
 import sys
-import paddle.v2 as paddle
-import reader
-from utils import *
-import network_conf
 import gzip
-from config import *
+import pdb
+
+import paddle.v2 as paddle
+import config as conf
+import reader
+from network_conf import rnn_lm
+from utils import logger, build_dict, load_dict
 
 
-def train(model_cost, train_reader, test_reader, model_file_name_prefix,
-          num_passes):
+def train(topology,
+          train_reader,
+          test_reader,
+          model_save_dir="models",
+          num_passes=10):
     """
     train model.
 
     :param model_cost: cost layer of the model to train.
     :param train_reader: train data reader.
     :param test_reader: test data reader.
-    :param model_file_name_prefix: model's prefix name.
+    :param model_file_name_prefix: model"s prefix name.
     :param num_passes: epoch.
     :return:
     """
+    if not os.path.exists(model_save_dir):
+        os.mkdir(model_save_dir)
 
-    # init paddle
-    paddle.init(use_gpu=use_gpu, trainer_count=trainer_count)
-
-    # create parameters
-    parameters = paddle.parameters.create(model_cost)
+    # initialize PaddlePaddle
+    paddle.init(
+        use_gpu=conf.use_gpu, gpu_id=3, trainer_count=conf.trainer_count)
 
     # create optimizer
     adam_optimizer = paddle.optimizer.Adam(
@@ -34,105 +41,82 @@ def train(model_cost, train_reader, test_reader, model_file_name_prefix,
         model_average=paddle.optimizer.ModelAverage(
             average_window=0.5, max_average_window=10000))
 
+    # create parameters
+    parameters = paddle.parameters.create(topology)
     # create trainer
     trainer = paddle.trainer.SGD(
-        cost=model_cost, parameters=parameters, update_equation=adam_optimizer)
+        cost=topology, parameters=parameters, update_equation=adam_optimizer)
 
-    # define event_handler callback
+    # define the event_handler callback
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
-            if event.batch_id % 100 == 0:
-                print("\nPass %d, Batch %d, Cost %f, %s" % (
+            if not event.batch_id % conf.log_period:
+                logger.info("Pass %d, Batch %d, Cost %f, %s" % (
                     event.pass_id, event.batch_id, event.cost, event.metrics))
-            else:
-                sys.stdout.write('.')
-                sys.stdout.flush()
 
-        # save model each pass
+            if (not event.batch_id %
+                    conf.save_period_by_batches) and event.batch_id:
+                save_name = os.path.join(model_save_dir,
+                                         "rnn_lm_pass_%05d_batch_%03d.tar.gz" %
+                                         (event.pass_id, event.batch_id))
+                with gzip.open(save_name, "w") as f:
+                    parameters.to_tar(f)
+
         if isinstance(event, paddle.event.EndPass):
-            result = trainer.test(reader=test_reader)
-            print("\nTest with Pass %d, %s" % (event.pass_id, result.metrics))
-            with gzip.open(
-                    model_file_name_prefix + str(event.pass_id) + '.tar.gz',
-                    'w') as f:
+            if test_reader is not None:
+                result = trainer.test(reader=test_reader)
+                logger.info("Test with Pass %d, %s" %
+                            (event.pass_id, result.metrics))
+            save_name = os.path.join(model_save_dir, "rnn_lm_pass_%05d.tar.gz" %
+                                     (event.pass_id))
+            with gzip.open(save_name, "w") as f:
                 parameters.to_tar(f)
 
-    # start to train
-    print('start training...')
+    logger.info("start training...")
     trainer.train(
         reader=train_reader, event_handler=event_handler, num_passes=num_passes)
 
-    print("Training finished.")
+    logger.info("Training is finished.")
 
 
 def main():
     # prepare vocab
-    print('prepare vocab...')
-    if build_vocab_method == 'fixed_size':
-        word_id_dict = build_vocab_with_fixed_size(
-            train_file, vocab_max_size)  # build vocab
-    else:
-        word_id_dict = build_vocab_using_threshhold(
-            train_file, unk_threshold)  # build vocab
-    save_vocab(word_id_dict, vocab_file)  # save vocab
+    if not (os.path.exists(conf.vocab_file) and
+            os.path.getsize(conf.vocab_file)):
+        logger.info(("word dictionary does not exist, "
+                     "build it from the training data"))
+        build_dict(conf.train_file, conf.vocab_file, conf.max_word_num,
+                   conf.cutoff_word_fre)
+    logger.info("load word dictionary.")
+    word_dict = load_dict(conf.vocab_file)
+    logger.info("dictionay size = %d" % (len(word_dict)))
 
-    # init model and data reader
-    if use_which_model == 'rnn':
-        # init RNN model
-        print('prepare rnn model...')
-        config = Config_rnn()
-        cost, _ = network_conf.rnn_lm(
-            len(word_id_dict), config.emb_dim, config.rnn_type,
-            config.hidden_size, config.num_layer)
+    cost = rnn_lm(
+        len(word_dict), conf.emb_dim, conf.hidden_size, conf.stacked_rnn_num,
+        conf.rnn_type)
 
-        # init RNN data reader
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
-                reader.rnn_reader(train_file, min_sentence_length,
-                                  max_sentence_length, word_id_dict),
-                buf_size=65536),
-            batch_size=config.batch_size)
-
+    # define reader
+    reader_args = {
+        "file_name": conf.train_file,
+        "word_dict": word_dict,
+    }
+    train_reader = paddle.batch(
+        paddle.reader.shuffle(
+            reader.rnn_reader(**reader_args), buf_size=102400),
+        batch_size=conf.batch_size)
+    test_reader = None
+    if os.path.exists(conf.test_file) and os.path.getsize(conf.test_file):
         test_reader = paddle.batch(
             paddle.reader.shuffle(
-                reader.rnn_reader(test_file, min_sentence_length,
-                                  max_sentence_length, word_id_dict),
-                buf_size=65536),
+                reader.rnn_reader(**reader_args), buf_size=65536),
             batch_size=config.batch_size)
 
-    elif use_which_model == 'ngram':
-        # init N-Gram model
-        print('prepare ngram model...')
-        config = Config_ngram()
-        assert config.N == 5
-        cost, _ = network_conf.ngram_lm(
-            vocab_size=len(word_id_dict),
-            emb_dim=config.emb_dim,
-            hidden_size=config.hidden_size,
-            num_layer=config.num_layer)
-
-        # init N-Gram data reader
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
-                reader.ngram_reader(train_file, config.N, word_id_dict),
-                buf_size=65536),
-            batch_size=config.batch_size)
-
-        test_reader = paddle.batch(
-            paddle.reader.shuffle(
-                reader.ngram_reader(test_file, config.N, word_id_dict),
-                buf_size=65536),
-            batch_size=config.batch_size)
-    else:
-        raise Exception('use_which_model must be rnn or ngram!')
-
-    # train model
     train(
-        model_cost=cost,
+        topology=cost,
         train_reader=train_reader,
         test_reader=test_reader,
-        model_file_name_prefix=config.model_file_name_prefix,
-        num_passes=config.num_passs)
+        model_save_dir=conf.model_save_dir,
+        num_passes=conf.num_passes)
 
 
 if __name__ == "__main__":
