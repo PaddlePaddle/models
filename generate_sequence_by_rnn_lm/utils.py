@@ -17,14 +17,19 @@ def build_dict(data_file,
                insert_extra_words=["<unk>", "<e>"]):
     """
     :param data_file: path of data file
+    :type data_file: str
     :param save_path: path to save the word dictionary
+    :type save_path: str
     :param vocab_max_size: if vocab_max_size is set, top vocab_max_size words
         will be added into word vocabulary
+    :type vocab_max_size: int
     :param cutoff_thd: if cutoff_thd is set, words whose frequencies are less
-        than cutoff_thd will not added into word vocabulary.
+        than cutoff_thd will not be added into word vocabulary.
         NOTE that: vocab_max_size and cutoff_thd cannot be set at the same time
+    :type cutoff_word_fre: int
     :param extra_keys: extra keys defined by users that added into the word
-        dictionary, ususally these keys includes <unk>, start and ending marks
+        dictionary, ususally these keys include <unk>, start and ending marks
+    :type extra_keys: list
     """
     word_count = defaultdict(int)
     with open(data_file, "r") as f:
@@ -53,12 +58,29 @@ def build_dict(data_file,
 
 def load_dict(dict_path):
     """
+    load word dictionary from the given file. Each line of the give file is
+    a word in the word dictionary. The first column of the line, seperated by
+    TAB, is the key, while the line index is the value.
+
     :param dict_path: path of word dictionary
+    :type dict_path: str
+    :return: the dictionary
+    :rtype: dict
     """
     return dict((line.strip().split("\t")[0], idx)
                 for idx, line in enumerate(open(dict_path, "r").readlines()))
 
 
 def load_reverse_dict(dict_path):
+    """
+    load word dictionary from the given file. Each line of the give file is
+    a word in the word dictionary. The line index is the key, while the first
+    column of the line, seperated by TAB, is the value.
+
+    :param dict_path: path of word dictionary
+    :type dict_path: str
+    :return: the dictionary
+    :rtype: dict
+    """
     return dict((idx, line.strip().split("\t")[0])
                 for idx, line in enumerate(open(dict_path, "r").readlines()))

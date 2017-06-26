@@ -13,7 +13,7 @@ __all__ = ["BeamSearch"]
 
 class BeamSearch(object):
     """
-    generating sequence by using beam search
+    Generating sequence by beam search
     NOTE: this class only implements generating one sentence at a time.
     """
 
@@ -21,14 +21,14 @@ class BeamSearch(object):
         """
         constructor method.
 
-        :param inferer: object of paddle.Inference that represent the entire
-            network to forward compute the test batch.
+        :param inferer: object of paddle.Inference that represents the entire
+            network to forward compute the test batch
         :type inferer: paddle.Inference
         :param word_dict_file: path of word dictionary file
         :type word_dict_file: str
         :param beam_size: expansion width in each iteration
         :type param beam_size: int
-        :param max_gen_len: the maximum number of iterations.
+        :param max_gen_len: the maximum number of iterations
         :type max_gen_len: int
         """
         self.inferer = inferer
@@ -43,7 +43,7 @@ class BeamSearch(object):
             self.unk_id = next(x[0] for x in self.ids_2_word.iteritems()
                                if x[1] == "<unk>")
         except StopIteration:
-            logger.fatal(("the word dictionay must contains an ending mark "
+            logger.fatal(("the word dictionay must contain an ending mark "
                           "in the text generation task."))
 
         self.candidate_paths = []
@@ -52,7 +52,7 @@ class BeamSearch(object):
     def _top_k(self, softmax_out, k):
         """
         get indices of the words with k highest probablities.
-        NOTE: <unk> will be exclued if it is among the top k words, then word
+        NOTE: <unk> will be excluded if it is among the top k words, then word
         with (k + 1)th highest probability will be returned.
 
         :param softmax_out: probablity over the dictionary
@@ -71,7 +71,7 @@ class BeamSearch(object):
 
         :params batch: the input data batch
         :type batch: list
-        :return: probalities of the predicted word
+        :return: probablities of the predicted word
         :rtype: ndarray
         """
         return self.inferer.infer(input=batch, field=["value"])

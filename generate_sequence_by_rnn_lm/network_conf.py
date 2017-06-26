@@ -12,12 +12,18 @@ def rnn_lm(vocab_dim,
     """
     RNN language model definition.
 
-    :param vocab_dim: size of vocab.
-    :param emb_dim: embedding vector"s dimension.
+    :param vocab_dim: size of vocabulary.
+    :type vocab_dim: int
+    :param emb_dim: dimension of the embedding vector
+    :type emb_dim: int
     :param rnn_type: the type of RNN cell.
-    :param hidden_size: number of unit.
-    :param stacked_rnn_num: layer number.
+    :type rnn_type: int
+    :param hidden_size: number of hidden unit.
+    :type hidden_size: int
+    :param stacked_rnn_num: number of stacked rnn cell.
+    :type stacked_rnn_num: int
     :return: cost and output layer of model.
+    :rtype: LayerOutput
     """
 
     # input layers

@@ -20,12 +20,16 @@ def train(topology,
     """
     train model.
 
-    :param model_cost: cost layer of the model to train.
+    :param topology: cost layer of the model to train.
+    :type topology: LayerOuput
     :param train_reader: train data reader.
+    :type trainer_reader: collections.Iterable
     :param test_reader: test data reader.
-    :param model_file_name_prefix: model"s prefix name.
-    :param num_passes: epoch.
-    :return:
+    :type test_reader: collections.Iterable
+    :param model_save_dir: path to save the trained model
+    :type model_save_dir: str
+    :param num_passes: number of epoch
+    :type num_passes: int
     """
     if not os.path.exists(model_save_dir):
         os.mkdir(model_save_dir)
