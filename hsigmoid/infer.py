@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
+import logging
+import gzip
 
 import paddle.v2 as paddle
-from hsigmoid_conf import network_conf
-import gzip
+from network_conf import ngram_lm
+
+logger = logging.getLogger("paddle")
+logger.setLevel(logging.WARNING)
 
 
 def decode_res(infer_res, dict_size):
@@ -45,21 +50,20 @@ def predict(batch_ins, idx_word_dict, dict_size, prediction_layer, parameters):
 
     # Ouput format: word1 word2 word3 word4 -> predict label
     for i, ins in enumerate(batch_ins):
-        print(idx_word_dict[ins[0]] + ' ' + \
-            idx_word_dict[ins[1]] + ' ' + \
-            idx_word_dict[ins[2]] + ' ' + \
-            idx_word_dict[ins[3]] + ' ' + \
-         ' -> ' + predict_words[i])
+        print(" ".join([idx_word_dict[w]
+                        for w in ins]) + " -> " + predict_words[i])
 
 
-def main():
+def main(model_path):
+    assert os.path.exists(model_path), "trained model does not exist."
+
     paddle.init(use_gpu=False, trainer_count=1)
     word_dict = paddle.dataset.imikolov.build_dict(min_word_freq=2)
     dict_size = len(word_dict)
-    prediction_layer = network_conf(
+    prediction_layer = ngram_lm(
         is_train=False, hidden_size=256, embed_size=32, dict_size=dict_size)
 
-    with gzip.open('./models/model_pass_00000.tar.gz') as f:
+    with gzip.open(model_path, "r") as f:
         parameters = paddle.parameters.Parameters.from_tar(f)
 
     idx_word_dict = dict((v, k) for k, v in word_dict.items())
@@ -79,5 +83,5 @@ def main():
                 parameters)
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    main("models/hsigmoid_batch_00010.tar.gz")

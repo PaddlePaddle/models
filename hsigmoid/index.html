@@ -92,7 +92,7 @@ def train_data(filename, word_dict, n):
 ```
 
 ## 网络结构
-本文通过训练N-gram语言模型来获得词向量，具体地使用前4个词来预测当前词。网络输入为词在字典中的id，然后查询词向量词表获取词向量，接着拼接4个词的词向量，然后接入一个全连接隐层，最后是Hsigmoid层。详细网络结构见图2：
+本文通过训练N-gram语言模型来获得词向量，具体地使用前4个词来预测当前词。网络输入为词在字典中的id，然后查询词向量词表获取词向量，接着拼接4个词的词向量，然后接入一个全连接隐层，最后是`Hsigmoid`层。详细网络结构见图2：
 
 <p align="center">
 <img src="images/network_conf.png" width = "70%" align="center"/><br/>
@@ -102,41 +102,27 @@ def train_data(filename, word_dict, n):
 代码实现如下：
 
 ```python
-import math
-import paddle.v2 as paddle
-
-
-def network_conf(hidden_size, embed_size, dict_size, is_train=True):
-    first_word = paddle.layer.data(
-        name='firstw', type=paddle.data_type.integer_value(dict_size))
-    second_word = paddle.layer.data(
-        name='secondw', type=paddle.data_type.integer_value(dict_size))
-    third_word = paddle.layer.data(
-        name='thirdw', type=paddle.data_type.integer_value(dict_size))
-    fourth_word = paddle.layer.data(
-        name='fourthw', type=paddle.data_type.integer_value(dict_size))
-    target_word = paddle.layer.data(
-        name='fifthw', type=paddle.data_type.integer_value(dict_size))
-
+def ngram_lm(hidden_size, embed_size, dict_size, gram_num=4, is_train=True):
+    emb_layers = []
     embed_param_attr = paddle.attr.Param(
         name="_proj", initial_std=0.001, learning_rate=1, l2_rate=0)
-    embed_first_word = paddle.layer.embedding(
-        input=first_word, size=embed_size, param_attr=embed_param_attr)
-    embed_second_word = paddle.layer.embedding(
-        input=second_word, size=embed_size, param_attr=embed_param_attr)
-    embed_third_word = paddle.layer.embedding(
-        input=third_word, size=embed_size, param_attr=embed_param_attr)
-    embed_fourth_word = paddle.layer.embedding(
-        input=fourth_word, size=embed_size, param_attr=embed_param_attr)
+    for i in range(gram_num):
+        word = paddle.layer.data(
+            name="__word%02d__" % (i),
+            type=paddle.data_type.integer_value(dict_size))
+        emb_layers.append(
+            paddle.layer.embedding(
+                input=word, size=embed_size, param_attr=embed_param_attr))
 
-    embed_context = paddle.layer.concat(input=[
-        embed_first_word, embed_second_word, embed_third_word, embed_fourth_word
-    ])
+    target_word = paddle.layer.data(
+        name="__target_word__", type=paddle.data_type.integer_value(dict_size))
+
+    embed_context = paddle.layer.concat(input=emb_layers)
 
     hidden_layer = paddle.layer.fc(
         input=embed_context,
         size=hidden_size,
-                act=paddle.activation.Sigmoid(),
+        act=paddle.activation.Sigmoid(),
         layer_attr=paddle.attr.Extra(drop_rate=0.5),
         bias_attr=paddle.attr.Param(learning_rate=2),
         param_attr=paddle.attr.Param(
@@ -147,27 +133,26 @@ def network_conf(hidden_size, embed_size, dict_size, is_train=True):
             input=hidden_layer,
             label=target_word,
             num_classes=dict_size,
-            param_attr=paddle.attr.Param(name='sigmoid_w'),
-            bias_attr=paddle.attr.Param(name='sigmoid_b'))
+            param_attr=paddle.attr.Param(name="sigmoid_w"),
+            bias_attr=paddle.attr.Param(name="sigmoid_b"))
         return cost
     else:
-        with paddle.layer.mixed(
-                size=dict_size - 1,
-                act=paddle.activation.Sigmoid(),
-                bias_attr=paddle.attr.Param(name='sigmoid_b')) as prediction:
-            prediction += paddle.layer.trans_full_matrix_projection(
-                input=hidden_layer,
-                param_attr=paddle.attr.Param(name='sigmoid_w'))
+        prediction = paddle.layer.fc(
+            size=dict_size - 1,
+            input=hidden_layer,
+            act=paddle.activation.Sigmoid(),
+            bias_attr=paddle.attr.Param(name="sigmoid_b"),
+            param_attr=paddle.attr.Param(name="sigmoid_w"))
         return prediction
 ```
 
 需要注意，在预测阶段，我们需要对hsigmoid参数做一次转置，这里输出的类别数为词典大小减1，对应非叶节点的数量。
 
 ## 训练阶段
-训练比较简单，直接运行``` python hsigmoid_train.py ```。程序第一次运行会检测用户缓存文件夹中是否包含imikolov数据集，如果未包含，则自动下载。运行过程中，每100个iteration会打印模型训练信息，主要包含训练损失和测试损失，每个pass会保存一次模型。
+训练比较简单，直接运行``` python train.py ```。程序第一次运行会检测用户缓存文件夹中是否包含imikolov数据集，如果未包含，则自动下载。运行过程中，每100个iteration会打印模型训练信息，主要包含训练损失和测试损失，每个pass会保存一次模型。
 
 ## 预测阶段
-预测时，直接运行``` python hsigmoid_predict.py ```，程序会首先load模型，然后按照batch方式进行预测，并打印预测结果。预测阶段最重要的就是根据概率得到编码路径，然后遍历路径获取最终的预测类别，这部分逻辑如下：
+预测时，直接运行``` python infer.py ```，程序会首先load模型，然后按照batch方式进行预测，并打印预测结果。预测阶段最重要的就是根据概率得到编码路径，然后遍历路径获取最终的预测类别，这部分逻辑如下：
 
 ```python
 def decode_res(infer_res, dict_size):
