@@ -138,12 +138,12 @@ Baghdad      NNP  I-NP  I-LOC
         target_file="data/target.txt")
     ```
 
-2. 在终端运行 `python infer.py`，开始测试，会看到如下预测结果：
+2. 在终端运行 `python infer.py`，开始测试，会看到如下预测结果（以下为训练500个pass所得模型的部分预测结果）：
 
     ```text
     cricket             O
     -                   O
-    leicestershire      O
+    leicestershire      B-ORG
     take                O
     over                O
     at                  O
@@ -152,6 +152,15 @@ Baghdad      NNP  I-NP  I-LOC
     innings             O
     victory             O
     .                   O
+    london              B-LOC
+    1996-08-30          O
+    west                B-MISC
+    indian              I-MISC
+    all-rounder         O
+    phil                B-PER
+    simmons             I-PER
+    took                O
+    four                O
 
     ```
     输出分为两列，以“\t” 分隔，第一列是输入的词语，第二列是标记结果。多条输入序列之间以空行分隔。

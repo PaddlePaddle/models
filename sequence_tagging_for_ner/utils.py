@@ -7,7 +7,7 @@ import argparse
 import numpy as np
 from collections import defaultdict
 
-logger = logging.getLogger("logger")
+logger = logging.getLogger("paddle")
 logger.setLevel(logging.INFO)
 
 
