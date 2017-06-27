@@ -17,13 +17,11 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 - 1.2 [噪声对比估计加速词向量训练](https://github.com/PaddlePaddle/models/tree/develop/nce_cost)
 
 
-## 2. 语言模型
+## 2. 使用循环神经网络语言模型生成文本
 
-语言模型是自然语言处理领域里一个重要的基础模型，它是一个概率分布模型，利用它可以确定哪个词序列的可能性更大，或者给定若干个词，可以预测下一个最可能出现的词。语言模型被应用在很多领域，如：自动写作、QA、机器翻译、拼写检查、语音识别、词性标注等。
+语言模型是自然语言处理领域里一个重要的基础模型，除了得到词向量（语言模型训练的副产物），还可以帮助我们生成文本。给定若干个词，语言模型可以帮助我们预测下一个最可能出现的词。在利用语言模型生成文本的例子中，我们重点介绍循环神经网络语言模型，大家可以通过文档中的使用说明快速适配到自己的训练语料，完成自动写诗、自动写散文等有趣的模型。
 
-在语言模型的例子中，我们以文本生成为例，提供了RNN LM（包括LSTM、GRU）和N-Gram LM，供大家学习和使用。用户可以通过文档中的 “使用说明” 快速上手：适配训练语料，以训练 “自动写诗”、“自动写散文” 等有趣的模型。
-
-- 2.1 [基于LSTM、GRU、N-Gram的文本生成模型](https://github.com/PaddlePaddle/models/tree/develop/language_model)
+- 2.1 [使用循环神经网络语言模型生成文本](https://github.com/PaddlePaddle/models/tree/develop/generate_sequence_by_rnn_lm)
 
 ## 3. 点击率预估
 
@@ -64,6 +62,14 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 在序列到序列学习的例子中，我们以机器翻译任务为例，提供了多种改进模型，供大家学习和使用。包括：不带注意力机制的序列到序列映射模型，这一模型是所有序列到序列学习模型的基础；使用 scheduled sampling 改善 RNN 模型在生成任务中的错误累积问题；带外部记忆机制的神经机器翻译，通过增强神经网络的记忆能力，来完成复杂的序列到序列学习任务。
 
 - 7.1 [无注意力机制的编码器解码器模型](https://github.com/PaddlePaddle/models/tree/develop/nmt_without_attention)
+
+## 8. 图像分类
+图像相比文字能够提供更加生动、容易理解及更具艺术感的信息，是人们转递与交换信息的重要来源。在图像分类的例子中，我们向大家介绍如何在PaddlePaddle中训练AlexNet、VGG、GoogLeNet和ResNet模型。同时还提供了一个模型转换工具，能够将Caffe训练好的模型文件，转换为PaddlePaddle的模型文件。
+
+- 8.1 [将Caffe模型文件转换为PaddlePaddle模型文件](https://github.com/PaddlePaddle/models/tree/develop/image_classification/caffe2paddle)
+- 8.2 [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 8.3 [VGG](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 8.4 [Residual Network](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 
 
 ## Copyright and License
