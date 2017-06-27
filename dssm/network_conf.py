@@ -127,8 +127,7 @@ class DSSM(object):
             input=concated_vector,
             size=self.class_num,
             act=paddle.activation.Softmax())
-        cost = paddle.layer.classification_cost(
-            input=prediction, label=label)
+        cost = paddle.layer.classification_cost(input=prediction, label=label)
         return cost, prediction, label
 
     def build_rank_model(self):
