@@ -29,8 +29,7 @@ parser.add_argument(
     '--target_dic_path',
     type=str,
     required=False,
-    help=
-    "path of the target's word dic, if not set, the `source_dic_path` will be used"
+    help="path of the target's word dic, if not set, the `source_dic_path` will be used"
 )
 parser.add_argument(
     '--batch_size',
@@ -61,8 +60,7 @@ parser.add_argument(
     '--dnn_dims',
     type=str,
     default='256,128,64,32',
-    help=
-    "dimentions of dnn layers, default is '256,128,64,32', which means create a 4-layer dnn, dementions of each layer is 256, 128, 64 and 32"
+    help="dimentions of dnn layers, default is '256,128,64,32', which means create a 4-layer dnn, dementions of each layer is 256, 128, 64 and 32"
 )
 args = parser.parse_args()
 
@@ -114,8 +112,7 @@ def train(topology,
     cost, prediction, label = DSSM(
         dnn_dims=layer_dims,
         vocab_sizes=[
-            load_dic(path).size()
-            for path in [train_data_path, test_data_path]
+            load_dic(path).size() for path in [train_data_path, test_data_path]
         ],
         task_type=task_type,
         share_semantic_generator=share_semantic_generator,
@@ -152,17 +149,15 @@ def train(topology,
         '''
         if isinstance(event, paddle.event.EndIteration):
             if event.batch_id % 100 == 0:
-                logger.info("Pass %d, Batch %d, Cost %f, %s\n" %
-                            (event.pass_id, event.batch_id, event.cost,
-                             event.metrics))
+                logger.info("Pass %d, Batch %d, Cost %f, %s\n" % (
+                    event.pass_id, event.batch_id, event.cost, event.metrics))
 
         if isinstance(event, paddle.event.EndPass):
             if test_reader is not None:
                 result = trainer.test(reader=test_reader, feeding=feeding)
                 logger.info("Test at Pass %d, %s \n" % (event.pass_id,
                                                         result.metrics))
-            with gzip.open("dssm_pass_%05d.tar.gz" % event.pass_id,
-                           "w") as f:
+            with gzip.open("dssm_pass_%05d.tar.gz" % event.pass_id, "w") as f:
                 parameters.to_tar(f)
 
     trainer.train(
