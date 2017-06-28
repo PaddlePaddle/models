@@ -11,7 +11,7 @@ logger = logging.getLogger("paddle")
 logger.setLevel(logging.WARNING)
 
 
-def decode_res(infer_res, dict_size):
+def decode_result(infer_res, dict_size):
     """
     Inferring probabilities are orginized as a complete binary tree.
     The actual labels are leaves (indices are counted from class number).
@@ -41,10 +41,10 @@ def decode_res(infer_res, dict_size):
     return predict_lbls
 
 
-def predict(batch_ins, idx_word_dict, dict_size, inferer):
+def infer_a_batch(batch_ins, idx_word_dict, dict_size, inferer):
     infer_res = inferer.infer(input=batch_ins)
 
-    predict_lbls = decode_res(infer_res, dict_size)
+    predict_lbls = decode_result(infer_res, dict_size)
     predict_words = [idx_word_dict[lbl] for lbl in predict_lbls]  # map to word
 
     # Ouput format: word1 word2 word3 word4 -> predict label
@@ -53,7 +53,7 @@ def predict(batch_ins, idx_word_dict, dict_size, inferer):
                         for w in ins]) + " -> " + predict_words[i])
 
 
-def main(model_path):
+def infer(model_path, batch_size):
     assert os.path.exists(model_path), "trained model does not exist."
 
     paddle.init(use_gpu=False, trainer_count=1)
@@ -68,19 +68,17 @@ def main(model_path):
     inferer = paddle.inference.Inference(
         output_layer=prediction_layer, parameters=parameters)
     idx_word_dict = dict((v, k) for k, v in word_dict.items())
-    batch_size = 64
-    batch_ins = []
-    ins_iter = paddle.dataset.imikolov.test(word_dict, 5)
 
-    for ins in ins_iter():
+    batch_ins = []
+    for ins in paddle.dataset.imikolov.test(word_dict, 5)():
         batch_ins.append(ins[:-1])
         if len(batch_ins) == batch_size:
-            predict(batch_ins, idx_word_dict, dict_size, inferer)
+            infer_a_batch(batch_ins, idx_word_dict, dict_size, inferer)
             batch_ins = []
 
     if len(batch_ins) > 0:
-        predict(batch_ins, idx_word_dict, dict_size, inferer)
+        infer_a_batch(batch_ins, idx_word_dict, dict_size, inferer)
 
 
 if __name__ == "__main__":
-    main("models/hsigmoid_batch_00010.tar.gz")
+    infer("models/hsigmoid_batch_00010.tar.gz", 20)
