@@ -32,9 +32,9 @@ parser.add_argument(
     '--model_type',
     type=int,
     required=True,
-    default=ModelType.CLASSFICATION,
+    default=ModelType.CLASSIFICATION,
     help='model type, classification: %d, regression %d (default classification)'
-    % (ModelType.CLASSFICATION, ModelType.REGRESSION))
+    % (ModelType.CLASSIFICATION, ModelType.REGRESSION))
 
 args = parser.parse_args()
 
