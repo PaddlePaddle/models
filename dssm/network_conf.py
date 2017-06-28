@@ -1,6 +1,6 @@
 from paddle import v2 as paddle
 from paddle.v2.attr import ParamAttr
-from utils import TaskType
+from utils import TaskType, logger
 
 
 class DSSM(object):
@@ -36,6 +36,8 @@ class DSSM(object):
         self.task_type = task_type
         self.class_num = class_num
 
+        logger.info("vocabulary sizes: %s" % str(self.vocab_sizes))
+
     def __call__(self):
         if self.task_type == TaskType.CLASSFICATION:
             return self.build_classification_model()
@@ -46,7 +48,7 @@ class DSSM(object):
         Create an embedding table whose name has a `prefix`.
         '''
         emb = paddle.layer.embedding(
-            input=self.inputs[id],
+            input=input,
             size=self.dnn_dims[0],
             param_attr=ParamAttr(name='%s_emb.w' % prefix))
         return emb
@@ -96,6 +98,7 @@ class DSSM(object):
 
         '''
         # prepare inputs.
+        assert self.class_num
 
         source = paddle.layer.data(
             name='source_input',
@@ -122,7 +125,7 @@ class DSSM(object):
             x = self.create_fc(input, prefix=prefixs[id])
             outputs.append(x)
 
-        concated_vector = paddle.layer.concat(*outputs)
+        concated_vector = paddle.layer.concat(outputs)
         prediction = paddle.layer.fc(
             input=concated_vector,
             size=self.class_num,
@@ -139,16 +142,5 @@ class DSSM(object):
           - left_target sentence
           - right_target sentence
           - label, 1 if left_target should be sorted in front of right_target, otherwise 0.
-        '''
-        pass
-
-    def build_regression_model(self):
-        '''
-        Build a regression model, and the cost is returned.
-
-        A regression model has 3 inputs:
-          - source sentence
-          - target sentence
-          - score, a float value
         '''
         pass

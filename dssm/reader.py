@@ -23,13 +23,11 @@ class Dataset(object):
                                 if self.task_type == TaskType.CLASSFICATION \
                                         else self._read_rank_record
 
-    @property
     def train(self):
         with open(self.train_path) as f:
             for line_id, line in enumerate(f):
                 yield self.record_reader(line)
 
-    @property
     def test(self):
         with open(self.test_path) as f:
             for line_id, line in enumerate(f):
@@ -71,9 +69,13 @@ class Dataset(object):
 
 
 if __name__ == '__main__':
-    path = './data/train.txt'
-    test_path = './data/test.txt'
+    path = './data/classification/train.txt'
+    test_path = './data/classification/test.txt'
     source_dic = './data/vocab.txt'
-    dataset = Dataset(path, test_path, source_dic, source_dic, TaskType.CLASSFICATION)
-    for i in range(10):
-        print i, dataset.train.next()
+    dataset = Dataset(path, test_path, source_dic, source_dic,
+                      TaskType.CLASSFICATION)
+
+    for rcd in dataset.train():
+        print rcd
+    # for i in range(10):
+    #     print i, dataset.train().next()

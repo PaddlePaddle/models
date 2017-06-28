@@ -62,18 +62,23 @@ parser.add_argument(
     default='256,128,64,32',
     help="dimentions of dnn layers, default is '256,128,64,32', which means create a 4-layer dnn, dementions of each layer is 256, 128, 64 and 32"
 )
+parser.add_argument(
+    '--num_workers', type=int, default=1, help="num worker threads, default 1")
+
 args = parser.parse_args()
 
-default_train_path = './data/train.txt'
-default_test_path = './data/test.txt'
-default_dic_path = './data/dic.txt'
+default_train_path = './data/rank/train.txt'
+default_test_path = './data/rank/test.txt'
+default_dic_path = './data/vocab.txt'
+if args.task_type == TaskType.CLASSFICATION:
+    default_train_path = './data/classification/train.txt'
+    default_test_path = './data/classification/test.txt'
 
 layer_dims = [int(i) for i in args.dnn_dims.split(',')]
 target_dic_path = args.source_dic_path if not args.target_dic_path else args.target_dic_path
 
 
-def train(topology,
-          train_data_path=None,
+def train(train_data_path=None,
           test_data_path=None,
           source_dic_path=None,
           target_dic_path=None,
@@ -82,7 +87,8 @@ def train(topology,
           num_passes=10,
           share_semantic_generator=False,
           share_embed=False,
-          class_num=None):
+          class_num=None,
+          num_workers=1):
     '''
     Train the DSSM.
     '''
@@ -109,10 +115,12 @@ def train(topology,
         paddle.reader.shuffle(dataset.test, buf_size=1000),
         batch_size=batch_size)
 
+    paddle.init(use_gpu=False, trainer_count=num_workers)
+
     cost, prediction, label = DSSM(
         dnn_dims=layer_dims,
         vocab_sizes=[
-            load_dic(path).size() for path in [train_data_path, test_data_path]
+            len(load_dic(path)) for path in [source_dic_path, target_dic_path]
         ],
         task_type=task_type,
         share_semantic_generator=share_semantic_generator,
@@ -167,3 +175,7 @@ def train(topology,
         num_passes=num_passes)
 
     logger.info("Training has finished.")
+
+
+if __name__ == '__main__':
+    train(class_num=3)
