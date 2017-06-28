@@ -1,8 +1,9 @@
 import gzip
 
 import reader
-from network_conf import *
-from utils import *
+import paddle.v2 as paddle
+from network_conf import ner_net
+from utils import load_dict, load_reverse_dict
 
 
 def infer(model_path, batch_size, test_data_file, vocab_file, target_file):

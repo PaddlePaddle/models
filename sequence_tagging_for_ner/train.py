@@ -2,8 +2,11 @@ import gzip
 import numpy as np
 
 import reader
-from utils import *
-from network_conf import *
+from utils import logger, load_dict, get_embedding
+from network_conf import ner_net
+
+import paddle.v2 as paddle
+import paddle.v2.evaluator as evaluator
 
 
 def main(train_data_file,
@@ -11,8 +14,12 @@ def main(train_data_file,
          vocab_file,
          target_file,
          emb_file,
+         model_save_dir,
          num_passes=10,
          batch_size=32):
+    if not os.path.exists(model_save_dir):
+        os.mkdir(model_save_dir)
+
     word_dict = load_dict(vocab_file)
     label_dict = load_dict(target_file)
 
@@ -77,8 +84,9 @@ def main(train_data_file,
 
         if isinstance(event, paddle.event.EndPass):
             # save parameters
-            with gzip.open("models/params_pass_%d.tar.gz" % event.pass_id,
-                           "w") as f:
+            with gzip.open(
+                    os.path.join(model_save_dir, "params_pass_%d.tar.gz" %
+                                 event.pass_id), "w") as f:
                 parameters.to_tar(f)
 
             result = trainer.test(reader=test_reader, feeding=feeding)
@@ -94,8 +102,8 @@ def main(train_data_file,
 
 if __name__ == "__main__":
     main(
-        train_data_file='data/train',
-        test_data_file='data/test',
-        vocab_file='data/vocab.txt',
-        target_file='data/target.txt',
-        emb_file='data/wordVectors.txt')
+        train_data_file="data/train",
+        test_data_file="data/test",
+        vocab_file="data/vocab.txt",
+        target_file="data/target.txt",
+        emb_file="data/wordVectors.txt")
