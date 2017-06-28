@@ -1,5 +1,20 @@
 # 点击率预估
 
+以下是本例目录包含的文件以及对应说明:
+
+```
+├── README.md          # 本教程markdown 文档
+├── dataset.md         # 数据集处理教程
+├── images             # 本教程图片目录
+│   ├── lr_vs_dnn.jpg
+│   └── wide_deep.png
+├── infer.py           # 预测脚本
+├── network_conf.py    # 模型网络配置
+├── reader.py          # data provider
+├── train.py           # 训练脚本
+└── utils.py           # helper functions
+```
+
 ## 背景介绍
 
 CTR(Click-Through Rate，点击率预估)\[[1](https://en.wikipedia.org/wiki/Click-through_rate)\] 是用来表示用户点击一个特定链接的概率，
@@ -61,8 +76,40 @@ LR 对于 DNN 模型的优势是对大规模稀疏特征的容纳能力，包括
 
 我们使用 Kaggle 上 `Click-through rate prediction` 任务的数据集\[[2](https://www.kaggle.com/c/avazu-ctr-prediction/data)\] 来演示模型。
 
-具体的特征处理方法参看 [data process](./dataset.md)
+具体的特征处理方法参看 [data process](./dataset.md)。
 
+本教程中演示模型的输入格式如下：
+
+```
+# <dnn input ids> \t <lr input sparse values> \t click
+1 23 190 \t 230:0.12 3421:0.9 23451:0.12 \t 0
+23 231 \t 1230:0.12 13421:0.9 \t 1
+```
+
+演示数据集\[[2](#参考文档)\] 可以使用 `avazu_data_processor.py` 脚本处理，具体使用方法参考如下说明：
+
+```
+usage: avazu_data_processer.py [-h] --data_path DATA_PATH --output_dir
+                               OUTPUT_DIR
+                               [--num_lines_to_detect NUM_LINES_TO_DETECT]
+                               [--test_set_size TEST_SET_SIZE]
+                               [--train_size TRAIN_SIZE]
+
+PaddlePaddle CTR example
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --data_path DATA_PATH
+                        path of the Avazu dataset
+  --output_dir OUTPUT_DIR
+                        directory to output
+  --num_lines_to_detect NUM_LINES_TO_DETECT
+                        number of records to detect dataset's meta info
+  --test_set_size TEST_SET_SIZE
+                        size of the validation dataset(default: 10000)
+  --train_size TRAIN_SIZE
+                        size of the trainset (default: 100000)
+```
 
 ## Wide & Deep Learning Model
 
@@ -204,15 +251,17 @@ trainer.train(
 1. 下载训练数据，可以使用 Kaggle 上 CTR 比赛的数据\[[2](#参考文献)\]
     1. 从 [Kaggle CTR](https://www.kaggle.com/c/avazu-ctr-prediction/data) 下载 train.gz
     2. 解压 train.gz 得到 train.txt
-2. 执行 `python train.py --train_data_path train.txt` ，开始训练
+    3. `mkdir -p output; python avazu_data_processer.py --data_path train.txt --output_dir output --num_lines_to_detect 1000 --test_set_size 100` 生成演示数据
+2. 执行 `python train.py --train_data_path ./output/train.txt --test_data_path ./output/test.txt --data_meta_file ./output/data.meta.txt --model_type=0` 开始训练
 
 上面第2个步骤可以为 `train.py` 填充命令行参数来定制模型的训练过程，具体的命令行参数及用法如下
 
 ```
 usage: train.py [-h] --train_data_path TRAIN_DATA_PATH
-                [--batch_size BATCH_SIZE] [--test_set_size TEST_SET_SIZE]
+                [--test_data_path TEST_DATA_PATH] [--batch_size BATCH_SIZE]
                 [--num_passes NUM_PASSES]
-                [--num_lines_to_detact NUM_LINES_TO_DETACT]
+                [--model_output_prefix MODEL_OUTPUT_PREFIX] --data_meta_file
+                DATA_META_FILE --model_type MODEL_TYPE
 
 PaddlePaddle CTR example
 
@@ -220,15 +269,62 @@ optional arguments:
   -h, --help            show this help message and exit
   --train_data_path TRAIN_DATA_PATH
                         path of training dataset
+  --test_data_path TEST_DATA_PATH
+                        path of testing dataset
   --batch_size BATCH_SIZE
                         size of mini-batch (default:10000)
-  --test_set_size TEST_SET_SIZE
-                        size of the validation dataset(default: 10000)
   --num_passes NUM_PASSES
                         number of passes to train
-  --num_lines_to_detact NUM_LINES_TO_DETACT
-                        number of records to detect dataset's meta info
+  --model_output_prefix MODEL_OUTPUT_PREFIX
+                        prefix of path for model to store (default:
+                        ./ctr_models)
+  --data_meta_file DATA_META_FILE
+                        path of data meta info file
+  --model_type MODEL_TYPE
+                        model type, classification: 0, regression 1 (default
+                        classification)
 ```
+
+## 用训好的模型做预测
+训好的模型可以用来预测新的数据， 预测数据的格式为
+
+```
+# <dnn input ids> \t <lr input sparse values>
+1 23 190 \t 230:0.12 3421:0.9 23451:0.12
+23 231 \t 1230:0.12 13421:0.9
+```
+
+`infer.py` 的使用方法如下
+
+```
+usage: infer.py [-h] --model_gz_path MODEL_GZ_PATH --data_path DATA_PATH
+                --prediction_output_path PREDICTION_OUTPUT_PATH
+                [--data_meta_path DATA_META_PATH] --model_type MODEL_TYPE
+
+PaddlePaddle CTR example
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --model_gz_path MODEL_GZ_PATH
+                        path of model parameters gz file
+  --data_path DATA_PATH
+                        path of the dataset to infer
+  --prediction_output_path PREDICTION_OUTPUT_PATH
+                        path to output the prediction
+  --data_meta_path DATA_META_PATH
+                        path of trainset's meta info, default is ./data.meta
+  --model_type MODEL_TYPE
+                        model type, classification: 0, regression 1 (default
+                        classification)
+```
+
+示例数据可以用如下命令预测
+
+```
+python infer.py --model_gz_path <model_path> --data_path output/infer.txt --prediction_output_path predictions.txt --data_meta_path data.meta.txt
+```
+
+最终的预测结果位于 `predictions.txt`。
 
 ## 参考文献
 1. <https://en.wikipedia.org/wiki/Click-through_rate>
