@@ -1,9 +1,10 @@
 import argparse
-import logging
 import gzip
+
+from utils import logger
 import paddle.v2 as paddle
-from reader import field_index, detect_dataset, AvazuDataset
 from network_conf import CTRmodel
+from reader import field_index, detect_dataset, AvazuDataset
 
 parser = argparse.ArgumentParser(description="PaddlePaddle CTR example")
 parser.add_argument(
@@ -39,10 +40,13 @@ args = parser.parse_args()
 dnn_layer_dims = [128, 64, 32, 1]
 data_meta_info = detect_dataset(args.train_data_path, args.num_lines_to_detact)
 
-logging.warning('detect categorical fields in dataset %s' %
-                args.train_data_path)
+logger.info('detect feature fields in dataset %s' % args.train_data_path)
 for key, item in data_meta_info.items():
-    logging.warning('    - {}\t{}'.format(key, item))
+    if key not in ['lr_input', 'dnn_input']:
+        logger.warning('    - {}\t{}'.format(key, item))
+logger.info("get model input dimentions:")
+for key in ['lr_input', 'dnn_input']:
+    logger.info('    - {}\t{}'.format(key, data_meta_info[key]))
 
 paddle.init(use_gpu=False, trainer_count=1)
 
@@ -69,16 +73,16 @@ def train():
         if isinstance(event, paddle.event.EndIteration):
             num_samples = event.batch_id * args.batch_size
             if event.batch_id % 100 == 0:
-                logging.warning("Pass %d, Samples %d, Cost %f" %
-                                (event.pass_id, num_samples, event.cost))
+                logger.warning("Pass %d, Samples %d, Cost %f" %
+                               (event.pass_id, num_samples, event.cost))
 
             if event.batch_id % 1000 == 0:
                 result = trainer.test(
                     reader=paddle.batch(
                         dataset.test, batch_size=args.batch_size),
                     feeding=field_index)
-                logging.warning("Test %d-%d, Cost %f" %
-                                (event.pass_id, event.batch_id, result.cost))
+                logger.warning("Test %d-%d, Cost %f" %
+                               (event.pass_id, event.batch_id, result.cost))
 
                 path = "{}-pass-{}-batch-{}-test-{}.tar.gz".format(
                     args.model_output_prefix, event.pass_id, event.batch_id,
