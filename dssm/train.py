@@ -67,13 +67,6 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-default_train_path = './data/rank/train.txt'
-default_test_path = './data/rank/test.txt'
-default_dic_path = './data/vocab.txt'
-if args.task_type == TaskType.CLASSFICATION:
-    default_train_path = './data/classification/train.txt'
-    default_test_path = './data/classification/test.txt'
-
 layer_dims = [int(i) for i in args.dnn_dims.split(',')]
 target_dic_path = args.source_dic_path if not args.target_dic_path else args.target_dic_path
 
@@ -92,6 +85,13 @@ def train(train_data_path=None,
     '''
     Train the DSSM.
     '''
+    default_train_path = './data/rank/train.txt'
+    default_test_path = './data/rank/test.txt'
+    default_dic_path = './data/vocab.txt'
+    if task_type == TaskType.CLASSFICATION:
+        default_train_path = './data/classification/train.txt'
+        default_test_path = './data/classification/test.txt'
+
     use_default_data = not train_data_path
 
     if use_default_data:
@@ -136,7 +136,8 @@ def train(train_data_path=None,
 
     trainer = paddle.trainer.SGD(
         cost=cost,
-        extra_layers=paddle.evaluator.auc(input=prediction, label=label),
+        extra_layers=paddle.evaluator.auc(input=prediction, label=label)
+        if prediction else None,
         parameters=parameters,
         update_equation=adam_optimizer)
 
@@ -162,9 +163,12 @@ def train(train_data_path=None,
 
         if isinstance(event, paddle.event.EndPass):
             if test_reader is not None:
-                result = trainer.test(reader=test_reader, feeding=feeding)
-                logger.info("Test at Pass %d, %s \n" % (event.pass_id,
-                                                        result.metrics))
+                if task_type == TaskType.CLASSFICATION:
+                    result = trainer.test(reader=test_reader, feeding=feeding)
+                    logger.info("Test at Pass %d, %s \n" % (event.pass_id,
+                                                            result.metrics))
+                else:
+                    result = None
             with gzip.open("dssm_pass_%05d.tar.gz" % event.pass_id, "w") as f:
                 parameters.to_tar(f)
 
@@ -178,4 +182,5 @@ def train(train_data_path=None,
 
 
 if __name__ == '__main__':
-    train(class_num=3)
+    # train(class_num=2)
+    train(task_type=TaskType.RANK)

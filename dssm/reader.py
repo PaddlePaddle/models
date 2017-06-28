@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from utils import UNK, TaskType, load_dic, sent2ids
+from utils import UNK, TaskType, load_dic, sent2ids, logger
 
 
 class Dataset(object):
@@ -24,11 +24,13 @@ class Dataset(object):
                                         else self._read_rank_record
 
     def train(self):
+        logger.info("[reader] load trainset from %s" % self.train_path)
         with open(self.train_path) as f:
             for line_id, line in enumerate(f):
                 yield self.record_reader(line)
 
     def test(self):
+        logger.info("[reader] load testset from %s" % self.test_path)
         with open(self.test_path) as f:
             for line_id, line in enumerate(f):
                 yield self.record_reader(line)
