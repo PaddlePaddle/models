@@ -37,14 +37,10 @@ paddle.init(use_gpu=False, trainer_count=1)
 class CTRInferer(object):
     def __init__(self, param_path):
         logger.info("create CTR model")
-        self.data_meta_info, self.fields = reader.load_data_meta(
-            args.data_meta_path)
-        print 'fields', self.fields
-        print 'data_meta_info', self.data_meta_info
+        dnn_input_dim, lr_input_dim = reader.load_data_meta(args.data_meta_path)
         # create the mdoel
-        self.ctr_model = network_conf.CTRmodel(dnn_layer_dims,
-                                               self.data_meta_info['dnn_input'],
-                                               self.data_meta_info['lr_input'])
+        self.ctr_model = network_conf.CTRmodel(dnn_layer_dims, dnn_input_dim,
+                                               lr_input_dim)
         # load parameter
         logger.info("load model parameters from %s" % param_path)
         self.parameters = paddle.parameters.Parameters.from_tar(
@@ -55,9 +51,9 @@ class CTRInferer(object):
 
     def infer(self, data_path):
         logger.info("infer data...")
-        dataset = reader.AvazuDataset(
-            data_path, fields=self.fields, feature_dims=self.data_meta_info)
-        infer_reader = paddle.batch(dataset.infer, batch_size=1000)
+        dataset = reader.Dataset()
+        infer_reader = paddle.batch(
+            dataset.infer(args.data_path), batch_size=1000)
         logger.warning('write predictions to %s' % args.prediction_output_path)
         output_f = open(args.prediction_output_path, 'w')
         for id, batch in enumerate(infer_reader()):

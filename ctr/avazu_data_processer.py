@@ -399,8 +399,8 @@ with open(output_infer_path, 'w') as f:
         dnn_input, lr_input = record
         dnn_input = ids2dense(dnn_input, feature_dims['dnn_input'])
         lr_input = ids2sparse(lr_input)
-        line = "%s\t%s" % (' '.join(map(str, dnn_input)),
-                           ' '.join(map(str, lr_input)), )
+        line = "%s\t%s\n" % (' '.join(map(str, dnn_input)),
+                             ' '.join(map(str, lr_input)), )
         f.write(line)
         if id > args.test_set_size:
             break
