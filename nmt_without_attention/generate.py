@@ -31,7 +31,7 @@ def infer_a_batch(inferer, test_batch, beam_size, src_dict, trg_dict):
 def generate(source_dict_dim, target_dict_dim, model_path, beam_size,
              batch_size):
     """
-    sequence generation for NMT
+    Sequence generation for NMT.
 
     :param source_dict_dim: size of source dictionary
     :type source_dict_dim: int
@@ -78,8 +78,8 @@ def generate(source_dict_dim, target_dict_dim, model_path, beam_size,
 
 if __name__ == "__main__":
     generate(
-        source_dict_dim=3000,
-        target_dict_dim=3000,
+        source_dict_dim=30000,
+        target_dict_dim=30000,
         batch_size=20,
-        beam_size=5,
-        model_path="models/nmt_without_att_params_batch_00347.tar.gz")
+        beam_size=3,
+        model_path="models/nmt_without_att_params_batch_00100.tar.gz")

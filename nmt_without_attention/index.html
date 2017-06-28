@@ -101,7 +101,7 @@ src_word_id = paddle.layer.data(
 src_embedding = paddle.layer.embedding(
     input=src_word_id, size=word_vector_dim)
 
-# # bidierctional GRU as encoder
+# bidirectional GRU as encoder
 encoded_vector = paddle.networks.bidirectional_gru(
     input=src_embedding,
     size=encoder_size,
@@ -127,7 +127,7 @@ encoded_vector = paddle.networks.bidirectional_gru(
 
 
 ### 无注意力机制的解码器
--PaddleBook中[机器翻译](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md)的相关章节中，已介绍了带注意力机制（Attention Mechanism）的 Encoder-Decoder 结构，本例则介绍的是不带注意力机制的 Encoder-Decoder 结构。关于注意力机制，读者可进一步参考 PaddleBook 和参考文献\[[3](#参考文献)]。
+- PaddleBook中[机器翻译](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md)的相关章节中，已介绍了带注意力机制（Attention Mechanism）的 Encoder-Decoder 结构，本例介绍的则是不带注意力机制的 Encoder-Decoder 结构。关于注意力机制，读者可进一步参考 PaddleBook 和参考文献\[[3](#参考文献)]。
 
 对于流行的RNN单元，PaddlePaddle 已有很好的实现均可直接调用。如果希望在 RNN 每一个时间步实现某些自定义操作，可使用 PaddlePaddle 中的`recurrent_layer_group`。首先，自定义单步逻辑函数，再利用函数 `recurrent_group()` 循环调用单步逻辑函数处理整个序列。本例中的无注意力机制的解码器便是使用`recurrent_layer_group`来实现，其中，单步逻辑函数`gru_decoder_without_attention()`相关代码如下：
 
@@ -228,15 +228,14 @@ else:
 
 ## 模型的训练与测试
 
-在定义好网络结构后，就可以进行模型训练与测试了。根据用户运行时传递的参数是`--train` 还是 `--generate`，Python 脚本的 `main()` 函数分别调用函数`train()`和`generate()`来完成模型的训练与测试。
-
 ### 模型训练
-模型训练阶段，函数 `train()` 依次完成了如下的逻辑：
+
+启动模型训练的十分简单，只需在命令行窗口中执行`python train.py`。模型训练阶段 `train.py` 脚本中的 `train()` 函数依次完成了如下的逻辑：
 
 **a) 由网络定义，解析网络结构，初始化模型参数**
 
 ```python
-# initialize model
+# define the network topolgy.
 cost = seq2seq_net(source_dict_dim, target_dict_dim)
 parameters = paddle.parameters.create(cost)
 ```
@@ -282,15 +281,9 @@ def event_handler(event):
 **d) 开始训练**
 
 ```python
-# start to train
+# start training
 trainer.train(
     reader=wmt14_reader, event_handler=event_handler, num_passes=2)
-```
-
-启动模型训练的十分简单，只需在命令行窗口中执行
-
-```bash
-python train.py
 ```
 
 输出样例为
@@ -307,60 +300,66 @@ Pass 0, Batch 30, Cost 153.633665, {'classification_error_evaluator': 0.86438035
 Pass 0, Batch 40, Cost 168.170543, {'classification_error_evaluator': 0.8348183631896973}
 ```
 
+### 生成翻译结果
+利用训练好的模型生成翻译文本也十分简单。
 
-### 模型测试
-模型测试阶段，函数`generate()`执行了依次如下逻辑：
+1. 首先请修改`generate.py`脚本中`main`中传递给`generate`函数的参数，以选择使用哪一个保存的模型来生成。默认参数如下所示：
 
-**a) 加载测试样本**
+    ```python
+    generate(
+        source_dict_dim=30000,
+        target_dict_dim=30000,
+        batch_size=20,
+        beam_size=3,
+        model_path="models/nmt_without_att_params_batch_00100.tar.gz")
+    ```
 
-```python
-# load data  samples for generation
-gen_creator = paddle.dataset.wmt14.gen(source_dict_dim)
-gen_data = []
-for item in gen_creator():
-    gen_data.append((item[0], ))
-```
+2. 在终端执行命令 `python generate.py`，脚本中的`generate()`执行了依次如下逻辑：
 
-**b) 初始化模型，执行`infer()`为每个输入样本生成`beam search`的翻译结果**
+    **a) 加载测试样本**
 
-```python
-beam_gen = seq2seq_net(source_dict_dim, target_dict_dim, True)
-with gzip.open(init_models_path) as f:
-    parameters = paddle.parameters.Parameters.from_tar(f)
-# prob is the prediction probabilities, and id is the prediction word.
-beam_result = paddle.infer(
-    output_layer=beam_gen,
-    parameters=parameters,
-    input=gen_data,
-    field=['prob', 'id'])
-```
+    ```python
+    # load data  samples for generation
+    gen_creator = paddle.dataset.wmt14.gen(source_dict_dim)
+    gen_data = []
+    for item in gen_creator():
+        gen_data.append((item[0], ))
+    ```
 
-**c) 加载源语言和目标语言词典，将`id`序列表示的句子转化成原语言并输出结果**
+    **b) 初始化模型，执行`infer()`为每个输入样本生成`beam search`的翻译结果**
 
-```python
-beam_result = inferer.infer(input=test_batch, field=["prob", "id"])
+    ```python
+    beam_gen = seq2seq_net(source_dict_dim, target_dict_dim, True)
+    with gzip.open(init_models_path) as f:
+        parameters = paddle.parameters.Parameters.from_tar(f)
+    # prob is the prediction probabilities, and id is the prediction word.
+    beam_result = paddle.infer(
+        output_layer=beam_gen,
+        parameters=parameters,
+        input=gen_data,
+        field=['prob', 'id'])
+    ```
 
-gen_sen_idx = np.where(beam_result[1] == -1)[0]
-assert len(gen_sen_idx) == len(test_batch) * beam_size
+    **c) 加载源语言和目标语言词典，将`id`序列表示的句子转化成原语言并输出结果**
 
-start_pos, end_pos = 1, 0
-for i, sample in enumerate(test_batch):
-    print(" ".join([
-        src_dict[w] for w in sample[0][1:-1]
-    ]))  # skip the start and ending mark when print the source sentence
-    for j in xrange(beam_size):
-        end_pos = gen_sen_idx[i * beam_size + j]
-        print("%.4f\t%s" % (beam_result[0][i][j], " ".join(
-            trg_dict[w] for w in beam_result[1][start_pos:end_pos])))
-        start_pos = end_pos + 2
-    print("\n")
-```
+    ```python
+    beam_result = inferer.infer(input=test_batch, field=["prob", "id"])
 
-模型测试的执行与模型训练类似，只需执行
+    gen_sen_idx = np.where(beam_result[1] == -1)[0]
+    assert len(gen_sen_idx) == len(test_batch) * beam_size
 
-```bash
-python generate.py
-```
+    start_pos, end_pos = 1, 0
+    for i, sample in enumerate(test_batch):
+        print(" ".join([
+            src_dict[w] for w in sample[0][1:-1]
+        ]))  # skip the start and ending mark when print the source sentence
+        for j in xrange(beam_size):
+            end_pos = gen_sen_idx[i * beam_size + j]
+            print("%.4f\t%s" % (beam_result[0][i][j], " ".join(
+                trg_dict[w] for w in beam_result[1][start_pos:end_pos])))
+            start_pos = end_pos + 2
+        print("\n")
+    ```
 
 设置beam search的宽度为3，输入为一个法文句子，则自动为测试数据生成对应的翻译结果，输出格式如下：
 
@@ -372,9 +371,9 @@ Elles connaissent leur entreprise mieux que personne .
 
 ```
 - 第一行为输入的源语言句子。
-- 第二 ~ `beam_size + 1` 行是柱搜索生成的 `beam_size` 条翻译结果
-    - 一行之内以“\t”分隔为两列，第一列是句子的log 概率，第二列是翻译结果的文本。
-    - `<s>` 表示句子的开始，`<e>`表示一个句子的结束，如果出现了在词典中未包含的词，则用`<unk>`替代。
+- 第二 ~ beam_size + 1 行是柱搜索生成的 `beam_size` 条翻译结果
+    - 相同行的输出以“\t”分隔为两列，第一列是句子的log 概率，第二列是翻译结果的文本。
+    - 符号`<s>` 表示句子的开始，符号`<e>`表示一个句子的结束，如果出现了在词典中未包含的词，则用符号`<unk>`替代。
 
 至此，我们在 PaddlePaddle 上实现了一个初步的机器翻译模型。我们可以看到，PaddlePaddle 提供了灵活丰富的API供大家选择和使用，使得我们能够很方便完成各种复杂网络的配置。机器翻译本身也是个快速发展的领域，各种新方法新思想在不断涌现。在学习完本例后，读者若有兴趣和余力，可基于 PaddlePaddle 平台实现更为复杂、性能更优的机器翻译模型。
 
