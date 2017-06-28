@@ -2,8 +2,8 @@ import argparse
 import logging
 import gzip
 import paddle.v2 as paddle
-from data_provider import field_index, detect_dataset, AvazuDataset
-from model import CTRmodel
+from reader import field_index, detect_dataset, AvazuDataset
+from network_conf import CTRmodel
 
 parser = argparse.ArgumentParser(description="PaddlePaddle CTR example")
 parser.add_argument(
