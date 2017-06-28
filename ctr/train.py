@@ -87,16 +87,16 @@ def train():
         if isinstance(event, paddle.event.EndIteration):
             num_samples = event.batch_id * args.batch_size
             if event.batch_id % 100 == 0:
-                logger.warning("Pass %d, Samples %d, Cost %f" %
-                               (event.pass_id, num_samples, event.cost))
+                logger.warning("Pass %d, Samples %d, Cost %f, %s" % (
+                    event.pass_id, num_samples, event.cost, event.metrics))
 
             if event.batch_id % 1000 == 0:
                 result = trainer.test(
                     reader=paddle.batch(
                         dataset.test, batch_size=args.batch_size),
                     feeding=reader.field_index)
-                logger.warning("Test %d-%d, Cost %f" %
-                               (event.pass_id, event.batch_id, result.cost))
+                logger.warning("Test %d-%d, Cost %f, %s" % (
+                    event.pass_id, event.batch_id, result.cost, result.metrics))
 
                 path = "{}-pass-{}-batch-{}-test-{}.tar.gz".format(
                     args.model_output_prefix, event.pass_id, event.batch_id,
