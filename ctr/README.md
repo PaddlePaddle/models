@@ -1,5 +1,21 @@
 # 点击率预估
 
+以下是本例目录包含的文件以及对应说明:
+
+```
+├── README.md
+├── dataset.md
+├── images
+│   ├── lr_vs_dnn.jpg
+│   └── wide_deep.png
+├── infer.py
+├── network_conf.py
+├── reader.py
+├── rsync_fswatch.sh
+├── train.py
+└── utils.py
+```
+
 ## 背景介绍
 
 CTR(Click-Through Rate，点击率预估)\[[1](https://en.wikipedia.org/wiki/Click-through_rate)\] 是用来表示用户点击一个特定链接的概率，
@@ -212,7 +228,9 @@ trainer.train(
 usage: train.py [-h] --train_data_path TRAIN_DATA_PATH
                 [--batch_size BATCH_SIZE] [--test_set_size TEST_SET_SIZE]
                 [--num_passes NUM_PASSES]
-                [--num_lines_to_detact NUM_LINES_TO_DETACT]
+                [--num_lines_to_detect NUM_LINES_TO_DETECT]
+                [--model_output_prefix MODEL_OUTPUT_PREFIX]
+                [--data_meta_info_output_path DATA_META_INFO_OUTPUT_PATH]
 
 PaddlePaddle CTR example
 
@@ -226,9 +244,18 @@ optional arguments:
                         size of the validation dataset(default: 10000)
   --num_passes NUM_PASSES
                         number of passes to train
-  --num_lines_to_detact NUM_LINES_TO_DETACT
+  --num_lines_to_detect NUM_LINES_TO_DETECT
                         number of records to detect dataset's meta info
+  --model_output_prefix MODEL_OUTPUT_PREFIX
+                        prefix of path for model to store (default:
+                        ./ctr_models)
+  --data_meta_info_output_path DATA_META_INFO_OUTPUT_PATH
+                        path to output the dataset's meta info (default:
+                        ./data.meta)
 ```
+
+## 用训好的模型做预测
+
 
 ## 参考文献
 1. <https://en.wikipedia.org/wiki/Click-through_rate>

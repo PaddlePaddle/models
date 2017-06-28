@@ -1,5 +1,6 @@
 import logging
 
+logging.basicConfig()
 logger = logging.getLogger("logger")
 logger.setLevel(logging.INFO)
 
@@ -32,3 +33,14 @@ class TaskMode:
     @staticmethod
     def create_infer():
         return TaskMode(TaskMode.INFER_MODE)
+
+
+def load_dnn_input_record(sent):
+    return map(int, sent.split())
+
+
+def load_lr_input_record(sent):
+    res = []
+    for _ in [x.split(':') for x in sent.split()]:
+        res.append((int(_[0]), float(_[1]), ))
+    return res

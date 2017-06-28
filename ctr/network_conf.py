@@ -7,7 +7,6 @@ import gzip
 import paddle.v2 as paddle
 from paddle.v2 import layer
 from paddle.v2 import data_type as dtype
-from reader import field_index, detect_dataset, AvazuDataset
 
 
 class CTRmodel(object):
@@ -53,7 +52,7 @@ class CTRmodel(object):
 
         self.lr_merged_input = layer.data(
             name='lr_input',
-            type=paddle.data_type.sparse_binary_vector(self.lr_input_dim))
+            type=paddle.data_type.sparse_vector(self.lr_input_dim))
 
         if not self.is_infer:
             self.click = paddle.layer.data(
