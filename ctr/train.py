@@ -2,8 +2,8 @@ import argparse
 import gzip
 
 import reader
-from utils import logger
 import paddle.v2 as paddle
+from utils import logger, ModelType
 from network_conf import CTRmodel
 
 
@@ -33,6 +33,13 @@ def parse_args():
         type=str,
         required=True,
         help='path of data meta info file', )
+    parser.add_argument(
+        '--model_type',
+        type=int,
+        required=True,
+        default=ModelType.CLASSIFICATION,
+        help='model type, classification: %d, regression %d (default classification)'
+        % (ModelType.CLASSIFICATION, ModelType.REGRESSION))
 
     return parser.parse_args()
 
@@ -46,11 +53,17 @@ dnn_layer_dims = [128, 64, 32, 1]
 
 def train():
     args = parse_args()
+    args.model_type = ModelType(args.model_type)
     paddle.init(use_gpu=False, trainer_count=1)
     dnn_input_dim, lr_input_dim = reader.load_data_meta(args.data_meta_file)
 
     # create ctr model.
-    model = CTRmodel(dnn_layer_dims, dnn_input_dim, lr_input_dim)
+    model = CTRmodel(
+        dnn_layer_dims,
+        dnn_input_dim,
+        lr_input_dim,
+        model_type=args.model_type,
+        is_infer=False)
 
     params = paddle.parameters.create(model.train_cost)
     optimizer = paddle.optimizer.AdaGrad()

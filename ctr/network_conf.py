@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import argparse
-import logging
-import gzip
 import paddle.v2 as paddle
 from paddle.v2 import layer
 from paddle.v2 import data_type as dtype
+from utils import logger, ModelType
 
 
 class CTRmodel(object):
@@ -18,6 +16,7 @@ class CTRmodel(object):
                  dnn_layer_dims,
                  dnn_input_dim,
                  lr_input_dim,
+                 model_type=ModelType.create_classification(),
                  is_infer=False):
         '''
         @dnn_layer_dims: list of integer
@@ -32,18 +31,20 @@ class CTRmodel(object):
         self.dnn_layer_dims = dnn_layer_dims
         self.dnn_input_dim = dnn_input_dim
         self.lr_input_dim = lr_input_dim
+        self.model_type = model_type
         self.is_infer = is_infer
 
         self._declare_input_layers()
+
         self.dnn = self._build_dnn_submodel_(self.dnn_layer_dims)
         self.lr = self._build_lr_submodel_()
+
         # model's prediction
         # TODO(superjom) rename it to prediction
-        self.model = self._combine_submodels_(self.dnn, self.lr)
-
-        if not self.is_infer:
-            self.train_cost = paddle.layer.multi_binary_label_cross_entropy_cost(
-                input=self.model, label=self.click)
+        if self.model_type.is_classification():
+            self.model = self._build_classification_model(self.dnn, self.lr)
+        if self.model_type.is_regression():
+            self.model = self._build_regression_model(self.dnn, self.lr)
 
     def _declare_input_layers(self):
         self.dnn_merged_input = layer.data(
@@ -85,15 +86,27 @@ class CTRmodel(object):
             act=paddle.activation.Relu())
         return fc
 
-    def _combine_submodels_(self, dnn, lr):
-        '''
-        conbine DNN and LR submodels
-        '''
+    def _build_classification_model(self, dnn, lr):
         merge_layer = layer.concat(input=[dnn, lr])
-        fc = layer.fc(
+        self.output = layer.fc(
             input=merge_layer,
             size=1,
             name='output',
             # use sigmoid function to approximate ctr rate, a float value between 0 and 1.
             act=paddle.activation.Sigmoid())
-        return fc
+
+        self.train_cost = paddle.layer.multi_binary_label_cross_entropy_cost(
+            input=self.output, label=self.click)
+        return self.output
+
+    def _build_regression_model(self, dnn, lr):
+        merge_layer = layer.concat(input=[dnn, lr])
+        self.output = layer.fc(
+            input=merge_layer,
+            size=1,
+            name='output',
+            act=paddle.activation.Sigmoid())
+        if not self.is_infer:
+            self.train_cost = paddle.layer.mse_cost(
+                input=self.output, label=self.click)
+        return self.output

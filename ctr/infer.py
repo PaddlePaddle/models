@@ -8,7 +8,7 @@ import paddle.v2 as paddle
 import network_conf
 from train import dnn_layer_dims
 import reader
-from utils import logger
+from utils import logger, ModelType
 
 parser = argparse.ArgumentParser(description="PaddlePaddle CTR example")
 parser.add_argument(
@@ -28,6 +28,13 @@ parser.add_argument(
     type=str,
     default="./data.meta",
     help="path of trainset's meta info, default is ./data.meta")
+parser.add_argument(
+    '--model_type',
+    type=int,
+    required=True,
+    default=ModelType.CLASSFICATION,
+    help='model type, classification: %d, regression %d (default classification)'
+    % (ModelType.CLASSFICATION, ModelType.REGRESSION))
 
 args = parser.parse_args()
 
@@ -39,8 +46,12 @@ class CTRInferer(object):
         logger.info("create CTR model")
         dnn_input_dim, lr_input_dim = reader.load_data_meta(args.data_meta_path)
         # create the mdoel
-        self.ctr_model = network_conf.CTRmodel(dnn_layer_dims, dnn_input_dim,
-                                               lr_input_dim)
+        self.ctr_model = network_conf.CTRmodel(
+            dnn_layer_dims,
+            dnn_input_dim,
+            lr_input_dim,
+            model_type=args.model_type,
+            is_infer=True)
         # load parameter
         logger.info("load model parameters from %s" % param_path)
         self.parameters = paddle.parameters.Parameters.from_tar(

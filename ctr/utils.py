@@ -35,6 +35,28 @@ class TaskMode:
         return TaskMode(TaskMode.INFER_MODE)
 
 
+class ModelType:
+    CLASSIFICATION = 0
+    REGRESSION = 1
+
+    def __init__(self, mode):
+        self.mode = mode
+
+    def is_classification(self):
+        return self.mode == self.CLASSIFICATION
+
+    def is_regression(self):
+        return self.mode == self.REGRESSION
+
+    @staticmethod
+    def create_classification():
+        return ModelType(ModelType.CLASSIFICATION)
+
+    @staticmethod
+    def create_regression():
+        return ModelType(ModelType.REGRESSION)
+
+
 def load_dnn_input_record(sent):
     return map(int, sent.split())
 
