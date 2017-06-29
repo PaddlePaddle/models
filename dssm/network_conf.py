@@ -1,13 +1,13 @@
 from paddle import v2 as paddle
 from paddle.v2.attr import ParamAttr
-from utils import TaskType, logger
+from utils import TaskType, logger, ModelType
 
 
 class DSSM(object):
     def __init__(self,
                  dnn_dims=[],
                  vocab_sizes=[],
-                 task_type=TaskType.CLASSFICATION,
+                 model_type=ModelType.CLASSIFICATION,
                  share_semantic_generator=False,
                  class_num=None,
                  share_embed=False):
@@ -16,7 +16,7 @@ class DSSM(object):
             dimentions of each layer in semantic vector generator.
         @vocab_sizes: 2-d tuple
             size of both left and right items.
-        @task_type: str
+        @model_type: str
             type of task, should be 'rank', 'regression' or 'classification'
         @share_semantic_generator: bool
             whether to share the semantic vector generator for both left and right.
@@ -33,13 +33,13 @@ class DSSM(object):
         self.vocab_sizes = vocab_sizes
         self.share_semantic_generator = share_semantic_generator
         self.share_embed = share_embed
-        self.task_type = task_type
+        self.model_type = model_type
         self.class_num = class_num
 
         logger.info("vocabulary sizes: %s" % str(self.vocab_sizes))
 
     def __call__(self):
-        if self.task_type == TaskType.CLASSFICATION:
+        if self.model_type == ModelType.CLASSIFICATION:
             return self._build_classification_model()
         return self._build_rank_model()
 

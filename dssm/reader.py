@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from utils import UNK, TaskType, load_dic, sent2ids, logger
+from utils import UNK, ModelType, TaskType, load_dic, sent2ids, logger, ModelType
 
 
 class Dataset(object):
@@ -9,18 +9,18 @@ class Dataset(object):
                  test_path,
                  source_dic_path,
                  target_dic_path,
-                 task_type=TaskType.RANK):
+                 model_type=ModelType.RANK):
         self.train_path = train_path
         self.test_path = test_path
         self.source_dic_path = source_dic_path
         self.target_dic_path = target_dic_path
-        self.task_type = task_type
+        self.model_type = model_type
 
         self.source_dic = load_dic(self.source_dic_path)
         self.target_dic = load_dic(self.target_dic_path)
 
         self.record_reader = self._read_classification_record \
-                                if self.task_type == TaskType.CLASSFICATION \
+                                if self.model_type == ModelType.CLASSIFICATION \
                                         else self._read_rank_record
 
     def train(self):
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     test_path = './data/classification/test.txt'
     source_dic = './data/vocab.txt'
     dataset = Dataset(path, test_path, source_dic, source_dic,
-                      TaskType.CLASSFICATION)
+                      ModelType.CLASSIFICATION)
 
     for rcd in dataset.train():
         print rcd

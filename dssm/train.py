@@ -6,7 +6,7 @@ import gzip
 import paddle.v2 as paddle
 from network_conf import DSSM
 import reader
-from utils import TaskType, load_dic, logger
+from utils import TaskType, load_dic, logger, ModelType
 
 parser = argparse.ArgumentParser(description="PaddlePaddle DSSM example")
 
@@ -42,10 +42,11 @@ parser.add_argument(
     default=10,
     help="number of passes to run(default:10)")
 parser.add_argument(
-    '--task_type',
+    '--model_type',
     type=int,
-    default=TaskType.CLASSFICATION,
-    help="task type, 0 for classification, 1 for pairwise rank")
+    default=ModelType.CLASSIFICATION,
+    help="model type, %d for classification, %d for pairwise rank (default: classification)"
+    % (ModelType.CLASSIFICATION, ModelType.RANK))
 parser.add_argument(
     '--share_network_between_source_target',
     type=bool,
@@ -66,6 +67,7 @@ parser.add_argument(
     '--num_workers', type=int, default=1, help="num worker threads, default 1")
 
 args = parser.parse_args()
+args.model_type = ModelType(args.model_type)
 
 layer_dims = [int(i) for i in args.dnn_dims.split(',')]
 target_dic_path = args.source_dic_path if not args.target_dic_path else args.target_dic_path
@@ -75,7 +77,7 @@ def train(train_data_path=None,
           test_data_path=None,
           source_dic_path=None,
           target_dic_path=None,
-          task_type=TaskType.CLASSFICATION,
+          model_type=ModelType.CLASSIFICATION,
           batch_size=10,
           num_passes=10,
           share_semantic_generator=False,
@@ -88,7 +90,7 @@ def train(train_data_path=None,
     default_train_path = './data/rank/train.txt'
     default_test_path = './data/rank/test.txt'
     default_dic_path = './data/vocab.txt'
-    if task_type == TaskType.CLASSFICATION:
+    if model_type == ModelType.CLASSIFICATION:
         default_train_path = './data/classification/train.txt'
         default_test_path = './data/classification/test.txt'
 
@@ -105,7 +107,7 @@ def train(train_data_path=None,
         test_path=test_data_path,
         source_dic_path=source_dic_path,
         target_dic_path=target_dic_path,
-        task_type=task_type, )
+        model_type=args.model_type, )
 
     train_reader = paddle.batch(
         paddle.reader.shuffle(dataset.train, buf_size=1000),
@@ -122,7 +124,7 @@ def train(train_data_path=None,
         vocab_sizes=[
             len(load_dic(path)) for path in [source_dic_path, target_dic_path]
         ],
-        task_type=task_type,
+        model_type=model_type,
         share_semantic_generator=share_semantic_generator,
         class_num=class_num,
         share_embed=share_embed)()
@@ -142,7 +144,7 @@ def train(train_data_path=None,
         update_equation=adam_optimizer)
 
     feeding = {}
-    if task_type == TaskType.CLASSFICATION:
+    if model_type == ModelType.CLASSIFICATION:
         feeding = {'source_input': 0, 'target_input': 1, 'label_input': 2}
     else:
         feeding = {
@@ -163,7 +165,7 @@ def train(train_data_path=None,
 
         if isinstance(event, paddle.event.EndPass):
             if test_reader is not None:
-                if task_type == TaskType.CLASSFICATION:
+                if model_type == ModelType.CLASSIFICATION:
                     result = trainer.test(reader=test_reader, feeding=feeding)
                     logger.info("Test at Pass %d, %s \n" % (event.pass_id,
                                                             result.metrics))
@@ -183,4 +185,4 @@ def train(train_data_path=None,
 
 if __name__ == '__main__':
     # train(class_num=2)
-    train(task_type=TaskType.RANK)
+    train(model_type=ModelType.RANK)
