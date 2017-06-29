@@ -1,52 +1,52 @@
+#!/usr/bin/env python
 # -*- encoding:utf-8 -*-
-import paddle.v2 as paddle
+import os
+import logging
 import gzip
 
-from nce_conf import network_conf
+import paddle.v2 as paddle
+from network_conf import ngram_lm
+
+logger = logging.getLogger("paddle")
+logger.setLevel(logging.INFO)
 
 
-def main():
+def train(model_save_dir):
+    if not os.path.exists(model_save_dir):
+        os.mkdir(model_save_dir)
+
     paddle.init(use_gpu=False, trainer_count=1)
     word_dict = paddle.dataset.imikolov.build_dict()
     dict_size = len(word_dict)
 
-    cost = network_conf(
-        is_train=True, hidden_size=128, embedding_size=512, dict_size=dict_size)
+    optimizer = paddle.optimizer.Adam(learning_rate=1e-4)
 
+    cost = ngram_lm(hidden_size=128, emb_size=512, dict_size=dict_size)
     parameters = paddle.parameters.create(cost)
-    adagrad = paddle.optimizer.Adam(learning_rate=1e-4)
-    trainer = paddle.trainer.SGD(cost, parameters, adagrad)
+    trainer = paddle.trainer.SGD(cost, parameters, optimizer)
 
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
-            if event.batch_id % 1000 == 0:
-                print "Pass %d, Batch %d, Cost %f" % (
-                    event.pass_id, event.batch_id, event.cost)
+            if event.batch_id and not event.batch_id % 10:
+                logger.info("Pass %d, Batch %d, Cost %f" %
+                            (event.pass_id, event.batch_id, event.cost))
 
         if isinstance(event, paddle.event.EndPass):
             result = trainer.test(
                 paddle.batch(paddle.dataset.imikolov.test(word_dict, 5), 64))
-            print "Test here.. Pass %d, Cost %f" % (event.pass_id, result.cost)
+            logger.info("Test Pass %d, Cost %f" % (event.pass_id, result.cost))
 
-            model_name = "./models/model_pass_%05d.tar.gz" % event.pass_id
-            print "Save model into %s ..." % model_name
-            with gzip.open(model_name, 'w') as f:
+            save_path = os.path.join(model_save_dir,
+                                     "model_pass_%05d.tar.gz" % event.pass_id)
+            logger.info("Save model into %s ..." % save_path)
+            with gzip.open(save_path, "w") as f:
                 parameters.to_tar(f)
-
-    feeding = {
-        'firstw': 0,
-        'secondw': 1,
-        'thirdw': 2,
-        'fourthw': 3,
-        'fifthw': 4
-    }
 
     trainer.train(
         paddle.batch(paddle.dataset.imikolov.train(word_dict, 5), 64),
         num_passes=1000,
-        event_handler=event_handler,
-        feeding=feeding)
+        event_handler=event_handler)
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    train(model_save_dir="models")

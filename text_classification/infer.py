@@ -6,15 +6,15 @@ import gzip
 
 import paddle.v2 as paddle
 
-import network_conf
 import reader
-from utils import *
+from network_conf import fc_net, convolution_net
+from utils import logger, load_dict
 
 
 def infer(topology, data_dir, model_path, word_dict_path, label_dict_path,
           batch_size):
     def _infer_a_batch(inferer, test_batch, ids_2_word, ids_2_label):
-        probs = inferer.infer(input=test_batch, field=['value'])
+        probs = inferer.infer(input=test_batch, field=["value"])
         assert len(probs) == len(test_batch)
         for word_ids, prob in zip(test_batch, probs):
             word_text = " ".join([ids_2_word[id] for id in word_ids[0]])
@@ -22,7 +22,7 @@ def infer(topology, data_dir, model_path, word_dict_path, label_dict_path,
                                   " ".join(["{:0.4f}".format(p)
                                             for p in prob]), word_text))
 
-    logger.info('begin to predict...')
+    logger.info("begin to predict...")
     use_default_data = (data_dir is None)
 
     if use_default_data:
@@ -33,9 +33,9 @@ def infer(topology, data_dir, model_path, word_dict_path, label_dict_path,
         test_reader = paddle.dataset.imdb.test(word_dict)
     else:
         assert os.path.exists(
-            word_dict_path), 'the word dictionary file does not exist'
+            word_dict_path), "the word dictionary file does not exist"
         assert os.path.exists(
-            label_dict_path), 'the label dictionary file does not exist'
+            label_dict_path), "the label dictionary file does not exist"
 
         word_dict = load_dict(word_dict_path)
         word_reverse_dict = load_reverse_dict(word_dict_path)
@@ -52,7 +52,7 @@ def infer(topology, data_dir, model_path, word_dict_path, label_dict_path,
 
     # load the trained models
     parameters = paddle.parameters.Parameters.from_tar(
-        gzip.open(model_path, 'r'))
+        gzip.open(model_path, "r"))
     inferer = paddle.inference.Inference(
         output_layer=prob_layer, parameters=parameters)
 
@@ -70,19 +70,19 @@ def infer(topology, data_dir, model_path, word_dict_path, label_dict_path,
         test_batch = []
 
 
-if __name__ == '__main__':
-    model_path = 'dnn_params_pass_00000.tar.gz'
+if __name__ == "__main__":
+    model_path = "models/dnn_params_pass_00000.tar.gz"
     assert os.path.exists(model_path), "the trained model does not exist."
 
-    nn_type = 'dnn'
+    nn_type = "dnn"
     test_dir = None
     word_dict = None
     label_dict = None
 
-    if nn_type == 'dnn':
-        topology = network_conf.fc_net
-    elif nn_type == 'cnn':
-        topology = network_conf.convolution_net
+    if nn_type == "dnn":
+        topology = fc_net
+    elif nn_type == "cnn":
+        topology = convolution_net
 
     infer(
         topology=topology,

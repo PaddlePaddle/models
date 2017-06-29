@@ -5,7 +5,7 @@ import os
 import argparse
 from collections import defaultdict
 
-logger = logging.getLogger("logger")
+logger = logging.getLogger("paddle")
 logger.setLevel(logging.INFO)
 
 
@@ -60,6 +60,12 @@ def parse_train_cmd():
         help="the number of training examples in one forward/backward pass")
     parser.add_argument(
         "--num_passes", type=int, default=10, help="number of passes to train")
+    parser.add_argument(
+        "--model_save_dir",
+        type=str,
+        required=False,
+        help=("path to save the trained models."),
+        default="models")
 
     return parser.parse_args()
 

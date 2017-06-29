@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
 import sys
 import gzip
 
 import paddle.v2 as paddle
 
-import network_conf
 import reader
-from utils import *
+from utils import logger, parse_train_cmd, build_dict, load_dict
+from network_conf import fc_net, convolution_net
 
 
 def train(topology,
@@ -15,6 +16,7 @@ def train(topology,
           test_data_dir=None,
           word_dict_path=None,
           label_dict_path=None,
+          model_save_dir="models",
           batch_size=32,
           num_passes=10):
     """
@@ -33,6 +35,8 @@ def train(topology,
     :params num_pass: train pass number
     :type num_pass: int
     """
+    if not os.path.exists(model_save_dir):
+        os.mkdir(model_save_dir)
 
     use_default_data = (train_data_dir is None)
 
@@ -136,8 +140,9 @@ def train(topology,
                 result = trainer.test(reader=test_reader, feeding=feeding)
                 logger.info("Test at Pass %d, %s \n" % (event.pass_id,
                                                         result.metrics))
-            with gzip.open("dnn_params_pass_%05d.tar.gz" % event.pass_id,
-                           "w") as f:
+            with gzip.open(
+                    os.path.join(model_save_dir, "dnn_params_pass_%05d.tar.gz" %
+                                 event.pass_id), "w") as f:
                 parameters.to_tar(f)
 
     trainer.train(
@@ -151,9 +156,9 @@ def train(topology,
 
 def main(args):
     if args.nn_type == "dnn":
-        topology = network_conf.fc_net
+        topology = fc_net
     elif args.nn_type == "cnn":
-        topology = network_conf.convolution_net
+        topology = convolution_net
 
     train(
         topology=topology,
@@ -162,7 +167,8 @@ def main(args):
         word_dict_path=args.word_dict,
         label_dict_path=args.label_dict,
         batch_size=args.batch_size,
-        num_passes=args.num_passes)
+        num_passes=args.num_passes,
+        model_save_dir=args.model_save_dir)
 
 
 if __name__ == "__main__":
