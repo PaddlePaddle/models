@@ -43,7 +43,7 @@ def make_create_method(cls):
         setattr(cls, 'create_' + mode, method(mode))
 
 
-def make_str_method(cls):
+def make_str_method(cls, type_name='unk'):
     def _str_(self):
         for mode in cls.modes:
             if self.mode == getattr(cls, mode_attr_name(mode)):
@@ -55,6 +55,7 @@ def make_str_method(cls):
     setattr(cls, '__str__', _str_)
     setattr(cls, '__repr__', _str_)
     setattr(cls, '__hash__', _hash_)
+    cls.__name__ = type_name
 
 
 def _init_(self, mode, cls):
@@ -63,7 +64,8 @@ def _init_(self, mode, cls):
     elif isinstance(mode, cls):
         self.mode = mode.mode
     else:
-        raise
+        raise Exception("wrong mode type, get type: %s, value: %s" %
+                        (type(mode), mode))
 
 
 def build_mode_class(cls):
@@ -74,9 +76,6 @@ def build_mode_class(cls):
 
 
 class TaskType(object):
-    # TRAIN_MODE = 0
-    # TEST_MODE = 1
-    # INFER_MODE = 2
     modes = 'train test infer'.split()
 
     def __init__(self, mode):

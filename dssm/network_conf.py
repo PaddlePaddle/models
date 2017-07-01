@@ -1,13 +1,14 @@
 from paddle import v2 as paddle
 from paddle.v2.attr import ParamAttr
-from utils import TaskType, logger, ModelType
+from utils import TaskType, logger, ModelType, ModelArch
 
 
 class DSSM(object):
     def __init__(self,
                  dnn_dims=[],
                  vocab_sizes=[],
-                 model_type=ModelType.CLASSIFICATION,
+                 model_type=ModelType.create_classification(),
+                 model_arch=ModelArch.create_cnn(),
                  share_semantic_generator=False,
                  class_num=None,
                  share_embed=False):
@@ -16,8 +17,10 @@ class DSSM(object):
             dimentions of each layer in semantic vector generator.
         @vocab_sizes: 2-d tuple
             size of both left and right items.
-        @model_type: str
-            type of task, should be 'rank', 'regression' or 'classification'
+        @model_type: int
+            type of task, should be 'rank: 0', 'regression: 1' or 'classification: 2'
+        @model_arch: int
+            model architecture
         @share_semantic_generator: bool
             whether to share the semantic vector generator for both left and right.
         @share_embed: bool
@@ -28,18 +31,36 @@ class DSSM(object):
         assert len(
             vocab_sizes
         ) == 2, "vocab_sizes specify the sizes left and right inputs, and dim should be 2."
+        assert len(dnn_dims) > 1, "more than two layers is needed."
 
         self.dnn_dims = dnn_dims
         self.vocab_sizes = vocab_sizes
         self.share_semantic_generator = share_semantic_generator
         self.share_embed = share_embed
-        self.model_type = model_type
+        self.model_type = ModelType(model_type)
+        self.model_arch = ModelArch(model_arch)
         self.class_num = class_num
-
+        logger.warning("build DSSM model with config of %s, %s" %
+                       (self.model_type, self.model_arch))
         logger.info("vocabulary sizes: %s" % str(self.vocab_sizes))
 
+        # bind model architecture
+        _model_arch = {
+            'cnn': self.create_cnn,
+            'fc': self.create_fc,
+        }
+        self.model_arch_creater = _model_arch[str(model_arch)]
+
+        # build model type
+        _model_type = {
+            'classification': self._build_classification_model,
+            'rank': self._build_rank_model,
+            'regression': self._build_regression_model,
+        }
+        self.model_type_creater = _model_type[str(self.model_type)]
+
     def __call__(self):
-        if self.model_type == ModelType.CLASSIFICATION:
+        if self.model_type.is_classification():
             return self._build_classification_model()
         return self._build_rank_model()
 
@@ -47,6 +68,8 @@ class DSSM(object):
         '''
         Create an embedding table whose name has a `prefix`.
         '''
+        logger.info("create embedding table [%s] which dimention is %d" %
+                    (prefix, self.dnn_dims[0]))
         emb = paddle.layer.embedding(
             input=input,
             size=self.dnn_dims[0],
@@ -66,6 +89,8 @@ class DSSM(object):
             input=emb, pooling_type=paddle.pooling.Max())
         for id, dim in enumerate(self.dnn_dims[1:]):
             name = "%s_fc_%d_%d" % (prefix, id, dim)
+            logger.info("create fc layer [%s] which dimention is %d" % (name,
+                                                                        dim))
             fc = paddle.layer.fc(
                 name=name,
                 input=_input_layer,
@@ -85,53 +110,49 @@ class DSSM(object):
         @prefix: str
             prefix of layers' names, used to share parameters between more than one `cnn` parts.
         '''
-        pass
+
+        def create_conv(context_len, hidden_size, prefix):
+            key = "%s_%d_%d" % (prefix, context_len, hidden_size)
+            conv = paddle.networks.sequence_conv_pool(
+                input=emb,
+                context_len=context_len,
+                hidden_size=hidden_size,
+                # set parameter attr for parameter sharing
+                context_proj_param_attr=ParamAttr(name=key + 'contex_proj.w'),
+                fc_param_attr=ParamAttr(name=key + '_fc.w'),
+                fc_bias_attr=ParamAttr(name=key + '_fc.b'),
+                pool_bias_attr=ParamAttr(name=key + '_pool.b'))
+            return conv
+
+        logger.info('create a sequence_conv_pool which context width is 3')
+        conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
+        logger.info('create a sequence_conv_pool which context width is 4')
+        conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
+
+        # if more than three layers, than a fc layer will be added.
+        if len(self.dnn_dims) > 2:
+            _input_layer = [conv_3, conv_4]
+            for id, dim in enumerate(self.dnn_dims[2:]):
+                name = "%s_fc_%d_%d" % (prefix, id, dim)
+                logger.info("create fc layer [%s] which dimention is %d" %
+                            (name, dim))
+                fc = paddle.layer.fc(
+                    name=name,
+                    input=_input_layer,
+                    size=dim,
+                    act=paddle.activation.Tanh(),
+                    param_attr=ParamAttr(name='%s.w' % name),
+                    bias_attr=ParamAttr(name='%s.b' % name))
+                _input_layer = fc
+        return _input_layer
 
     def _build_classification_model(self):
-        '''
-        Build a classification model, and the cost is returned.
+        return self._build_classification_or_regression_model(
+            is_classification=True)
 
-        A Classification has 3 inputs:
-          - source sentence
-          - target sentence
-          - classification label
-
-        '''
-        # prepare inputs.
-        assert self.class_num
-
-        source = paddle.layer.data(
-            name='source_input',
-            type=paddle.data_type.integer_value_sequence(self.vocab_sizes[0]))
-        target = paddle.layer.data(
-            name='target_input',
-            type=paddle.data_type.integer_value_sequence(self.vocab_sizes[1]))
-        label = paddle.layer.data(
-            name='label_input',
-            type=paddle.data_type.integer_value(self.class_num))
-
-        prefixs = '_ _'.split(
-        ) if self.share_semantic_generator else 'left right'.split()
-        embed_prefixs = '_ _'.split(
-        ) if self.share_embed else 'left right'.split()
-
-        word_vecs = []
-        for id, input in enumerate([source, target]):
-            x = self.create_embedding(input, prefix=embed_prefixs[id])
-            word_vecs.append(x)
-
-        semantics = []
-        for id, input in enumerate(word_vecs):
-            x = self.create_fc(input, prefix=prefixs[id])
-            semantics.append(x)
-
-        concated_vector = paddle.layer.concat(semantics)
-        prediction = paddle.layer.fc(
-            input=concated_vector,
-            size=self.class_num,
-            act=paddle.activation.Softmax())
-        cost = paddle.layer.classification_cost(input=prediction, label=label)
-        return cost, prediction, label
+    def _build_regression_model(self):
+        return self._build_classification_or_regression_model(
+            is_classification=False)
 
     def _build_rank_model(self):
         '''
@@ -167,7 +188,7 @@ class DSSM(object):
 
         semantics = []
         for id, input in enumerate(word_vecs):
-            x = self.create_fc(input, prefix=prefixs[id])
+            x = self.model_arch_creater(input, prefix=prefixs[id])
             semantics.append(x)
 
         # cossim score of source and left_target
@@ -181,6 +202,56 @@ class DSSM(object):
         # but this operator is not supported currently.
         # so AUC will not used.
         return cost, None, None
+
+    def _build_classification_or_regression_model(self, is_classification):
+        '''
+        Build a classification model, and the cost is returned.
+
+        A Classification has 3 inputs:
+          - source sentence
+          - target sentence
+          - classification label
+
+        '''
+        # prepare inputs.
+        assert self.class_num
+
+        source = paddle.layer.data(
+            name='source_input',
+            type=paddle.data_type.integer_value_sequence(self.vocab_sizes[0]))
+        target = paddle.layer.data(
+            name='target_input',
+            type=paddle.data_type.integer_value_sequence(self.vocab_sizes[1]))
+        label = paddle.layer.data(
+            name='label_input',
+            type=paddle.data_type.integer_value(self.class_num)
+            if is_classification else paddle.data_type.dense_input)
+
+        prefixs = '_ _'.split(
+        ) if self.share_semantic_generator else 'left right'.split()
+        embed_prefixs = '_ _'.split(
+        ) if self.share_embed else 'left right'.split()
+
+        word_vecs = []
+        for id, input in enumerate([source, target]):
+            x = self.create_embedding(input, prefix=embed_prefixs[id])
+            word_vecs.append(x)
+
+        semantics = []
+        for id, input in enumerate(word_vecs):
+            x = self.model_arch_creater(input, prefix=prefixs[id])
+            semantics.append(x)
+
+        concated_vector = paddle.layer.concat(semantics)
+        prediction = paddle.layer.fc(
+            input=concated_vector,
+            size=self.class_num,
+            act=paddle.activation.Softmax())
+        cost = paddle.layer.classification_cost(
+            input=prediction,
+            label=label) if is_classification else paddle.layer.mse_cost(
+                prediction, label)
+        return cost, prediction, label
 
 
 class RankMetrics(object):
