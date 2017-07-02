@@ -48,8 +48,15 @@ class DSSM(object):
         _model_arch = {
             'cnn': self.create_cnn,
             'fc': self.create_fc,
+            'rnn': self.create_rnn,
         }
-        self.model_arch_creater = _model_arch[str(model_arch)]
+
+        def _model_arch_creater(emb, prefix=''):
+            sent_vec = _model_arch.get(str(model_arch))(emb, prefix)
+            dnn = self.create_dnn(sent_vec, prefix)
+            return dnn
+
+        self.model_arch_creater = _model_arch_creater
 
         # build model type
         _model_type = {
@@ -87,19 +94,17 @@ class DSSM(object):
         '''
         _input_layer = paddle.layer.pooling(
             input=emb, pooling_type=paddle.pooling.Max())
-        for id, dim in enumerate(self.dnn_dims[1:]):
-            name = "%s_fc_%d_%d" % (prefix, id, dim)
-            logger.info("create fc layer [%s] which dimention is %d" % (name,
-                                                                        dim))
-            fc = paddle.layer.fc(
-                name=name,
-                input=_input_layer,
-                size=dim,
-                act=paddle.activation.Relu(),
-                param_attr=ParamAttr(name='%s.w' % name),
-                bias_attr=None, )
-            _input_layer = fc
-        return _input_layer
+        fc = paddle.layer.fc(input=_input_layer, size=self.dnn_dims[1])
+        return fc
+
+    def create_rnn(self, emb, prefix=''):
+        '''
+        A GRU sentence vector learner.
+        '''
+        gru = paddle.layer.gru_memory(
+            input=emb, )
+        sent_vec = paddle.layer.last_seq(gru)
+        return sent_vec
 
     def create_cnn(self, emb, prefix=''):
         '''
@@ -129,10 +134,13 @@ class DSSM(object):
         logger.info('create a sequence_conv_pool which context width is 4')
         conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
 
+        return conv_3, conv_4
+
+    def create_dnn(self, sent_vec, prefix):
         # if more than three layers, than a fc layer will be added.
-        if len(self.dnn_dims) > 2:
-            _input_layer = [conv_3, conv_4]
-            for id, dim in enumerate(self.dnn_dims[2:]):
+        if len(self.dnn_dims) > 1:
+            _input_layer = sent_vec
+            for id, dim in enumerate(self.dnn_dims[1:]):
                 name = "%s_fc_%d_%d" % (prefix, id, dim)
                 logger.info("create fc layer [%s] which dimention is %d" %
                             (name, dim))
@@ -205,7 +213,7 @@ class DSSM(object):
 
     def _build_classification_or_regression_model(self, is_classification):
         '''
-        Build a classification model, and the cost is returned.
+        Build a classification/regression model, and the cost is returned.
 
         A Classification has 3 inputs:
           - source sentence

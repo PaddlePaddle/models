@@ -59,8 +59,8 @@ parser.add_argument(
     type=int,
     required=True,
     default=ModelArch.CNN_MODE,
-    help="model architecture, %d for CNN, %d for FC" % (ModelArch.CNN_MODE,
-                                                        ModelArch.FC_MODE))
+    help="model architecture, %d for CNN, %d for FC, %d for RNN" %
+    (ModelArch.CNN_MODE, ModelArch.FC_MODE, ModelArch.RNN_MODE))
 parser.add_argument(
     '--share_network_between_source_target',
     type=bool,
