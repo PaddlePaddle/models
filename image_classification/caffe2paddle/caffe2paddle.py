@@ -72,6 +72,10 @@ class ModelConverter(object):
                 file_name = "_%s.w%s" % (name, str(i))
             param_conf = ParameterConfig()
             param_conf.name = file_name
+            dims = list(data.shape)
+            if len(dims) == 1:
+                dims.insert(1, 1)
+                param_conf.dims.extend(dims)
             param_conf.size = reduce(lambda a, b: a * b, data.shape)
             self.params[file_name] = (param_conf, data.flatten())
 
