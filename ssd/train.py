@@ -58,8 +58,8 @@ def train(train_file_list, dev_file_list, data_args, init_model_path):
                 sys.stdout.flush()
 
         if isinstance(event, paddle.event.EndPass):
-            with gzip.open('models/params_pass_%05d.tar.gz' % event.pass_id,
-                           'w') as f:
+            with gzip.open('checkpionts/params_pass_%05d.tar.gz' % \
+                    event.pass_id, 'w') as f:
                 parameters.to_tar(f)
             result = trainer.test(reader=dev_reader, feeding=feeding)
             print "\nTest with Pass %d, TestCost: %f, Detection mAP=%g" % \
@@ -86,4 +86,4 @@ if __name__ == "__main__":
         train_file_list='./data/trainval.txt',
         dev_file_list='./data/test.txt',
         data_args=data_args,
-        init_model_path='./atrous_vgg/model.tar.gz')
+        init_model_path='./vgg/vgg_model.tar.gz')

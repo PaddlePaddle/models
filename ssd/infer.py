@@ -68,6 +68,7 @@ def infer(eval_file_list, save_path, data_args, batch_size, model_path,
                 fname_list = []
                 img_w = []
                 img_h = []
+
             idx += 1
 
         if len(test_data) > 0:
