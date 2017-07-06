@@ -3,6 +3,7 @@ import os
 
 data_dir = './data'
 infer_file = './infer.res'
+out_dir = './visual_res'
 
 path_to_im = dict()
 
@@ -26,6 +27,7 @@ for line in open(infer_file):
 
 for img_path in path_to_im:
     im = path_to_im[img_path]
-    cv2.imwrite(img_path, im)
+    out_path = os.path.join(out_dir, os.path.basename(img_path))
+    cv2.imwrite(out_path, im)
 
 print 'Done.'
