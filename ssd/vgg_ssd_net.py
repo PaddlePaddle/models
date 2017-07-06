@@ -1,5 +1,5 @@
 import paddle.v2 as paddle
-from config.vgg_config import cfg
+from config.pascal_voc_conf import cfg
 
 
 def net_conf(mode):

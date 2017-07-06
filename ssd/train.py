@@ -58,7 +58,7 @@ def train(train_file_list, dev_file_list, data_args, init_model_path):
                 sys.stdout.flush()
 
         if isinstance(event, paddle.event.EndPass):
-            with gzip.open('checkpionts/params_pass_%05d.tar.gz' % \
+            with gzip.open('checkpoints/params_pass_%05d.tar.gz' % \
                     event.pass_id, 'w') as f:
                 parameters.to_tar(f)
             result = trainer.test(reader=dev_reader, feeding=feeding)
