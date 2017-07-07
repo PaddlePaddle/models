@@ -1,53 +1,59 @@
-# Deep Structured Semantic Models (DSSM)
-两个单位间语义距离的权衡是一种非常常规的需求，本文将会演示如何使用 DSSM 模型建模两个字符串间的关系，
-具体模型实现支持通用的数据格式，用户只需要替换数据就可以在自己的任务上训练和预测。
+# 深度结构化语义模型 (Deep Structured Semantic Models, DSSM)
+DSSM使用DNN模型在一个连续的语义空间中学习文本低纬的表示向量，并且建模两个句子间的语义相似度。
+本例演示如何使用 PaddlePaddle实现一个通用的DSSM 模型，用于建模两个字符串间的语义相似度，
+模型实现支持通用的数据格式，用户替换数据便可以在真实场景中使用该模型。
 
 ## 背景介绍
-DSSM \[[1](##参考文档)\]是微软研究院13年提出来的比较经典的语义模型，用于学习两个单位之间的语义距离，适用于如下场景：
+DSSM \[[1](##参考文档)\]是微软研究院13年提出来的经典的语义模型，用于学习两个文本之间的语义距离，
+广义上模型也可以推广和适用如下场景：
 
-1. CTR预估模型，衡量用户搜索词（Query）与候选网页集合（Documents）之间的相关联程度
-2. 文本相关性，衡量两个字符串间的语义相关程度
-3. 自动推荐，衡量User与被推荐的Item之间的关联程度
+1. CTR预估模型，衡量用户搜索词（Query）与候选网页集合（Documents）之间的相关联程度。
+2. 文本相关性，衡量两个字符串间的语义相关程度。
+3. 自动推荐，衡量User与被推荐的Item之间的关联程度。
 
-DSSM 如今已经发展成了一个框架，可以很自然地建模两个单位之间的距离关系，比如对于相关性，可以用余弦相似度（COS)来刻画，模型具体训练时，可以用分类或者pairwise rank的方式训练。
+DSSM 已经发展成了一个框架，可以很自然地建模两个记录之间的距离关系，
+例如对于文本相关性问题，可以用余弦相似度 (cosin similarity) 来刻画语义距离；
+而对于搜索引擎的结果排序，可以在DSSM上接上Rank损失训练处一个排序模型。
 
 ## 模型简介
-在原始的DSSM模型的论文\[[1](#参考文档)\]中，DSSM模型用来衡量用户搜索词 Query 和文档集合 Documents 之间隐含的语义关系，模型结构如下
+在原论文\[[1](#参考文档)\]中，DSSM模型用来衡量用户搜索词 Query 和文档集合 Documents 之间隐含的语义关系，模型结构如下
 
 <p align="center">
+<a id="#figure1"></a>
 <img src="./images/dssm.png"/><br/><br/>
-Figure 1. DSSM 原始结构
+图 1. DSSM 原始结构
 <p>
 
-其贯彻的思想是， **用DNN将高维特征空间转化为低纬空间的向量（图中红色框部分）** ，
-**在上层用cossim（余弦相似度）来衡量 Query Semantic Feature 与 Document Semantic Feature 的语义相关性**。
+其贯彻的思想是， **用DNN将高维特征向量转化为低纬空间的连续向量（图中红色框部分）** ，
+**在上层用cosin similarity来衡量用户搜索词与候选文档间的语义相关性**。
 
 在最顶层损失函数的设计上，原始模型使用类似Word2Vec中负例采样的方法，
-一个Query会抽取正例 `D+` 和4个负例 `D-` 整体上算条件概率用对数似然函数作为损失，
-这也就是图中类似 $P(D_1|Q)$ 的结构，具体细节请参考原论文。
+一个Query会抽取正例 $D+$ 和4个负例 $D-$ 整体上算条件概率用对数似然函数作为损失，
+这也就是图 1中类似 $P(D_1|Q)$ 的结构，具体细节请参考原论文。
 
-在后续的优化中，DSSM模型的结构得以简化，最终在分享\[[3](#参考文档)\]中，模型的结构变成
+随着后续优化DSSM模型的结构得以简化\[[3](#参考文档)\]，演变为：
 
 <p align="center">
 <img src="./images/dssm2.png" width="600"/><br/><br/>
-Figure 2. DSSM通用结构
+图 2. DSSM通用结构
 <p>
 
-图中的白色空白框可以用任何模型替代，比如全连接FC，卷积CNN，RNN等都可以，该模型结构专名用于衡量两个元素（比如字符串）间的语义距离。
+图中的空白方框可以用任何模型替代，比如全连接FC，卷积CNN，RNN等都可以，
+该模型结构专门用于衡量两个元素（比如字符串）间的语义距离。
 
-在现实使用中，DSSM模型会当成基础积木，搭配上其他结构来实现具体的功能，比如
+在现实使用中，DSSM模型会作为基础的积木，搭配上不同的损失函数来实现具体的功能，比如
 
-- 在排序学习中，将 Figure 2 中结构添加 pairwise rank损失，变成一个rank模型
-- 在需要对一个pair分类时，比如CTR预估中，对点击与否做0，1二元分类，添加classification error变成一个分类问题
-- 在需要对一个子串打分时，可以使用cossim来计算相似度，变成一个回归问题
+- 在排序学习中，将 图 2 中结构添加 pairwise rank损失，变成一个排序模型
+- 在CTR预估中，对点击与否做0，1二元分类，添加交叉熵损失变成一个分类模型
+- 在需要对一个子串打分时，可以使用余弦相似度来计算相似度，变成一个回归模型
 
-本教程将尝试面向应用提供一个比较通用的解决方案，在模型任务类型上支持
+本例将尝试面向应用提供一个比较通用的解决方案，在模型任务类型上支持
 
 - CLASSIFICATION
 - [-1, 1] 值域内的 REGRESSION
 - Pairwise-Rank
 
-在semantic feature的生成的模型结构上，本模型支持
+在生成低纬语义向量的模型结构上，本模型支持以下三种：
 
 - FC, 多层全连接层
 - CNN，卷积神经网络
@@ -72,21 +78,21 @@ DSSM模型可以拆成三小块实现，分别是左边和右边的DNN，
 
 相关原理在此不再赘述，本文接下来的篇幅主要集中介绍使用PaddlePaddle实现这些结构上。
 
-如下图，REGRESSION 和 CLASSIFICATION 模型的结构很相似
+如图3，REGRESSION 和 CLASSIFICATION 模型的结构很相似
 
 <p align="center">
 <img src="./images/dssm.jpg"/><br/><br/>
-Figure 3. DSSM for REGRESSION or CLASSIFICATION
+图 3. DSSM for REGRESSION or CLASSIFICATION
 </p>
 
 最重要的组成部分包括 embedding，左右两个sentece vector的学习器（可以用RNN/CNN/FC中的任意一种实现），
 最上层对应的损失函数。
 
-而Pairwise Rank的结构会复杂一些，类似两个 Figure 3. 中的结构，增加了对应的 Hinge lost的损失函数。
+而Pairwise Rank的结构会复杂一些，类似两个 图 3. 中的结构，增加了对应的 Hinge lost的损失函数。
 
 <p align="center">
 <img src="./images/dssm2.jpg"/><br/><br/>
-Figure 4. DSSM for Pairwise Rank
+图 4. DSSM for Pairwise Rank
 </p>
 
 下面是各个部分具体的实现方法，所有的代码均包含在 `./network_conf.py` 中。
