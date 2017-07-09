@@ -52,8 +52,9 @@ parser.add_argument(
     type=int,
     required=True,
     default=ModelType.CLASSIFICATION_MODE,
-    help="model type, %d for classification, %d for pairwise rank (default: classification)"
-    % (ModelType.CLASSIFICATION_MODE, ModelType.RANK_MODE))
+    help="model type, %d for classification, %d for pairwise rank, %d for regression (default: classification)"
+    % (ModelType.CLASSIFICATION_MODE, ModelType.RANK_MODE,
+       ModelType.REGRESSION_MODE))
 parser.add_argument(
     '--model_arch',
     type=int,
@@ -124,7 +125,7 @@ def train(train_data_path=None,
     default_train_path = './data/rank/train.txt'
     default_test_path = './data/rank/test.txt'
     default_dic_path = './data/vocab.txt'
-    if model_type.is_classification():
+    if not model_type.is_rank():
         default_train_path = './data/classification/train.txt'
         default_test_path = './data/classification/test.txt'
 
@@ -173,13 +174,18 @@ def train(train_data_path=None,
 
     trainer = paddle.trainer.SGD(
         cost=cost,
-        extra_layers=paddle.evaluator.auc(input=prediction, label=label)
-        if prediction else None,
+        extra_layers=None,
         parameters=parameters,
         update_equation=adam_optimizer)
+    # trainer = paddle.trainer.SGD(
+    #     cost=cost,
+    #     extra_layers=paddle.evaluator.auc(input=prediction, label=label)
+    #     if prediction and model_type.is_classification() else None,
+    #     parameters=parameters,
+    #     update_equation=adam_optimizer)
 
     feeding = {}
-    if model_type.is_classification():
+    if model_type.is_classification() or model_type.is_regression():
         feeding = {'source_input': 0, 'target_input': 1, 'label_input': 2}
     else:
         feeding = {

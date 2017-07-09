@@ -15,9 +15,14 @@ class Dataset(object):
         self.source_dic = load_dic(self.source_dic_path)
         self.target_dic = load_dic(self.target_dic_path)
 
-        self.record_reader = self._read_classification_record \
-                             if self.model_type.is_classification() \
-                                        else self._read_rank_record
+        _record_reader = {
+            ModelType.CLASSIFICATION_MODE: self._read_classification_record,
+            ModelType.REGRESSION_MODE: self._read_regression_record,
+            ModelType.RANK_MODE: self._read_rank_record,
+        }
+
+        assert isinstance(model_type, ModelType)
+        self.record_reader = _record_reader[model_type.mode]
 
     def train(self):
         '''
@@ -53,6 +58,23 @@ class Dataset(object):
         target = sent2ids(fs[1], self.target_dic)
         label = int(fs[2])
         return (source, target, label, )
+
+    def _read_regression_record(self, line):
+        '''
+        data format:
+            <source words> [TAB] <target words> [TAB] <label>
+
+        @line: str
+            a string line which represent a record.
+        '''
+        fs = line.strip().split('\t')
+        assert len(fs) == 3, "wrong format for regression\n" + \
+            "the format shoud be " +\
+            "<source words> [TAB] <target words> [TAB] <label>'"
+        source = sent2ids(fs[0], self.source_dic)
+        target = sent2ids(fs[1], self.target_dic)
+        label = float(fs[2])
+        return (source, target, [label], )
 
     def _read_rank_record(self, line):
         '''
