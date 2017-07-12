@@ -4,7 +4,7 @@ DSSM使用DNN模型在一个连续的语义空间中学习文本低纬的表示�
 模型实现支持通用的数据格式，用户替换数据便可以在真实场景中使用该模型。
 
 ## 背景介绍
-DSSM \[[1](##参考文档)\]是微软研究院13年提出来的经典的语义模型，用于学习两个文本之间的语义距离，
+DSSM \[[1](##参考文献)\]是微软研究院13年提出来的经典的语义模型，用于学习两个文本之间的语义距离，
 广义上模型也可以推广和适用如下场景：
 
 1. CTR预估模型，衡量用户搜索词（Query）与候选网页集合（Documents）之间的相关联程度。
@@ -16,7 +16,7 @@ DSSM 已经发展成了一个框架，可以很自然地建模两个记录之间
 而对于搜索引擎的结果排序，可以在DSSM上接上Rank损失训练处一个排序模型。
 
 ## 模型简介
-在原论文\[[1](#参考文档)\]中，DSSM模型用来衡量用户搜索词 Query 和文档集合 Documents 之间隐含的语义关系，模型结构如下
+在原论文\[[1](#参考文献)\]中，DSSM模型用来衡量用户搜索词 Query 和文档集合 Documents 之间隐含的语义关系，模型结构如下
 
 <p align="center">
 <a id="#figure1"></a>
@@ -31,7 +31,7 @@ DSSM 已经发展成了一个框架，可以很自然地建模两个记录之间
 一个Query会抽取正例 $D+$ 和4个负例 $D-$ 整体上算条件概率用对数似然函数作为损失，
 这也就是图 1中类似 $P(D_1|Q)$ 的结构，具体细节请参考原论文。
 
-随着后续优化DSSM模型的结构得以简化\[[3](#参考文档)\]，演变为：
+随着后续优化DSSM模型的结构得以简化\[[3](#参考文献)\]，演变为：
 
 <p align="center">
 <img src="./images/dssm2.png" width="600"/><br/><br/>
@@ -49,8 +49,8 @@ DSSM 已经发展成了一个框架，可以很自然地建模两个记录之间
 
 本例将尝试面向应用提供一个比较通用的解决方案，在模型任务类型上支持
 
-- CLASSIFICATION
-- [-1, 1] 值域内的 REGRESSION
+- 分类
+- [-1, 1] 值域内的回归
 - Pairwise-Rank
 
 在生成低纬语义向量的模型结构上，本模型支持以下三种：
@@ -66,11 +66,11 @@ DSSM模型可以拆成三小块实现，分别是左边和右边的DNN，以及�
 
 本例中为了简便和通用，将左右两个DNN的结构都设为相同的，因此只有三个选项FC,CNN,RNN等。
 
-在损失函数的设计方面，也支持三种，CLASSIFICATION, REGRESSION, RANK；
-其中，在REGRESSION和RANK两种损失中，左右两边的匹配程度通过余弦相似度（cossim）来计算；
-在CLASSIFICATION任务中，类别预测的分布通过softmax计算。
+在损失函数的设计方面，也支持三种，分类, 回归, 排序；
+其中，在回归和排序两种损失中，左右两边的匹配程度通过余弦相似度（cossim）来计算；
+在分类任务中，类别预测的分布通过softmax计算。
 
-在 [paddle/models](https://github.com/PaddlePaddle/models)之前的系列教程中，对上面提到的很多内容都有了详细的介绍，比如
+在其它教程中，对上述很多内容都有过详细的介绍，例如：
 
 - 如何CNN, FC 做文本信息提取可以参考 [text classification](https://github.com/PaddlePaddle/models/blob/develop/text_classification/README.md#模型详解)
 - RNN/GRU 的内容可以参考 [Machine Translation](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.md#gated-recurrent-unit-gru)
@@ -78,19 +78,19 @@ DSSM模型可以拆成三小块实现，分别是左边和右边的DNN，以及�
 
 相关原理在此不再赘述，本文接下来的篇幅主要集中介绍使用PaddlePaddle实现这些结构上。
 
-如图3，REGRESSION 和 CLASSIFICATION 模型的结构很相似
+如图3，回归和分类模型的结构很相似
 
 <p align="center">
 <img src="./images/dssm3.jpg"/><br/><br/>
 图 3. DSSM for REGRESSION or CLASSIFICATION
 </p>
 
-最重要的组成部分包括 word embedding，图中`(1)`,`(2)`两个低纬向量的学习器（可以用RNN/CNN/FC中的任意一种实现），
+最重要的组成部分包括词向量，图中`(1)`,`(2)`两个低纬向量的学习器（可以用RNN/CNN/FC中的任意一种实现），
 最上层对应的损失函数。
 
-而Pairwise Rank的结构会复杂一些，类似两个 图 4. 中的结构，增加了对应的 Hinge lost的损失函数：
+而Pairwise Rank的结构会复杂一些，类似两个 图 4. 中的结构，增加了对应的损失函数：
 
-- 模型总体思想是，用同一个source为左右两个target分别打分——`(a),(b)`，学习目标是(a),(b)间的大小关系
+- 模型总体思想是，用同一个source(源)为左右两个target(目标)分别打分——`(a),(b)`，学习目标是(a),(b)间的大小关系
 - `(a)`和`(b)`类似图3中结构，用于给source和target的pair打分
 - `(1)`和`(2)`的结构其实是共用的，都表示同一个source，图中为了表达效果展开成两个
 
@@ -116,7 +116,7 @@ def create_embedding(self, input, prefix=''):
     return emb
 ```
 
-由于输入给 `embedding` 的是一个句子对应的 `wordid list`，因此embedding 输出的是 word vector list.
+由于输入给词向量表(embedding table)的是一个句子对应的词的ID的列表 ，因此词向量表输出的是词向量的序列。
 
 ### CNN 结构实现
 ```python
@@ -151,13 +151,13 @@ def create_cnn(self, emb, prefix=''):
     return conv_3, conv_4
 ```
 
-CNN 接受 embedding 输出的 list of word vevtors，通过卷积和池化操作捕捉到原始句子的关键信息，
+CNN 接受 embedding table输出的词向量序列，通过卷积和池化操作捕捉到原始句子的关键信息，
 最终输出一个语义向量（可以认为是句子向量）。
 
-这里实现中，分别使用了窗口长度为3和4的个CNN学到的句子向量按元素求和得到最终的句子向量。
+本例的实现中，分别使用了窗口长度为3和4的CNN学到的句子向量按元素求和得到最终的句子向量。
 ### RNN 结构实现
 
-RNN很适合学习变长序列的信息，使用RNN来学习句子的信息也算是标配之一。
+RNN很适合学习变长序列的信息，使用RNN来学习句子的信息几乎是自然语言处理任务的标配。
 
 ```python
 def create_rnn(self, emb, prefix=''):
@@ -184,15 +184,16 @@ def create_fc(self, emb, prefix=''):
     fc = paddle.layer.fc(input=_input_layer, size=self.dnn_dims[1])
     return fc
 ```
-在构建FC时，首先使用了 `paddle.layer.polling` 按元素取Max的操作将 embedding 出来的word vector list 的信息合并成一个等维度的semantic vector，
-使用取Max的方法能够避免句子长度对semantic vector的影响。
+
+在构建FC时需要首先使用`paddle.layer.pooling` 对词向量序列进行最大池化操作，将边长序列转化为一个固定维度向量，
+作为整个句子的语义表达，使用最大池化能够降低句子长度对句向量表达的影响。
 
 ### 多层DNN实现
-在 CNN/DNN/FC提取出 semantic vector后，在上层接着用多层FC实现一个DNN的结构
+在 CNN/DNN/FC提取出 semantic vector后，在上层可继续接多层FC来实现深层DNN结构。
 
 ```python
 def create_dnn(self, sent_vec, prefix):
-    # if more than three layers, than a fc layer will be added.
+    # if more than three layers exists, a fc layer will be added.
     if len(self.dnn_dims) > 1:
         _input_layer = sent_vec
         for id, dim in enumerate(self.dnn_dims[1:]):
@@ -200,18 +201,19 @@ def create_dnn(self, sent_vec, prefix):
             logger.info("create fc layer [%s] which dimention is %d" %
                         (name, dim))
             fc = paddle.layer.fc(
-                name=name,
                 input=_input_layer,
                 size=dim,
                 act=paddle.activation.Tanh(),
                 param_attr=ParamAttr(name='%s.w' % name),
-                bias_attr=ParamAttr(name='%s.b' % name))
+                bias_attr=ParamAttr(name='%s.b' % name),
+                name=name,
+                )
             _input_layer = fc
     return _input_layer
 ```
 
-### CLASSIFICATION或REGRESSION实现
-CLASSIFICATION和REGRESSION的结构比较相似，因此可以用一个函数创建出来
+### 分类或回归实现
+分类和回归的结构比较相似，因此可以用一个函数创建出来
 
 ```python
 def _build_classification_or_regression_model(self, is_classification):
@@ -266,7 +268,7 @@ def _build_classification_or_regression_model(self, is_classification):
 ```
 ### Pairwise Rank实现
 Pairwise Rank复用上面的DNN结构，同一个source对两个target求相似度打分，使用了hinge lost，
-如果左边的target打分高，则预测为1，否则预测为 0。
+如果左边的target打分高，预测为1，否则预测为 0。
 
 ```python
 def _build_rank_model(self):
@@ -321,35 +323,58 @@ def _build_rank_model(self):
 ## 数据格式
 在 `./data` 中有简单的示例数据
 
-### REGRESSION 的数据格式
+### 回归的数据格式
 ```
 # 3 fields each line:
-#   - source's wordids
-#   - target's wordids
+#   - source's word ids
+#   - target's word ids
 #   - target
 <ids> \t <ids> \t <float>
 ```
-### CLASSIFICATION的数据格式
+
+比如：
+
+```
+3 6 10 \t 6 8 33 \t 0.7
+6 0 \t 6 9 330 \t 0.03
+```
+### 分类的数据格式
 ```
 # 3 fields each line:
-#   - source's wordids
-#   - target's wordids
+#   - source's word ids
+#   - target's word ids
 #   - target
 <ids> \t <ids> \t <label>
 ```
-### RANK的数据格式
+
+比如：
+
+```
+3 6 10 \t 6 8 33 \t 0
+6 10 \t 8 3 1 \t 1
+```
+
+
+### 排序的数据格式
 ```
 # 4 fields each line:
-#   - source's wordids
-#   - target1's wordids
-#   - target2's wordids
+#   - source's word ids
+#   - target1's word ids
+#   - target2's word ids
 #   - label
 <ids> \t <ids> \t <ids> \t <label>
 ```
 
+比如：
+
+```
+7 2 4 \t 2 10 12 \t 9 2 7 10 23 \t 0
+7 2 4 \t 10 12 \t 9 2 21 23 \t 1
+```
+
 ## 执行训练
 
-可以直接执行 `python train.py -y 0 --model_arch 0` 使用简单的demo数据来训练一个分类的FC模型。
+可以直接执行 `python train.py -y 0 --model_arch 0` 使用 `./data/classification` 目录里简单的数据来训练一个分类的FC模型。
 
 其他模型结构也可以通过命令行实现定制，详细命令行参数如下
 
@@ -400,7 +425,7 @@ optional arguments:
                         number of categories for classification task.
 ```
 
-## 参考文档
+## 参考文献
 
 1. Huang P S, He X, Gao J, et al. Learning deep structured semantic models for web search using clickthrough data[C]//Proceedings of the 22nd ACM international conference on Conference on information & knowledge management. ACM, 2013: 2333-2338.
 2. [Microsoft Learning to Rank Datasets](https://www.microsoft.com/en-us/research/project/mslr/)

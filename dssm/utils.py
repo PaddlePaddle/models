@@ -1,8 +1,8 @@
-import logging
+import paddle
 
 UNK = 0
 
-logger = logging.getLogger("logger")
+logger = logging.getLogger("paddle")
 logger.setLevel(logging.INFO)
 
 
