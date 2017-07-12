@@ -101,7 +101,7 @@ DSSM模型可以拆成三小块实现，分别是左边和右边的DNN，以及�
 
 下面是各个部分具体的实现方法，所有的代码均包含在 `./network_conf.py` 中。
 
-### 创建文本的embedding
+### 创建文本的词向量表
 ```python
 def create_embedding(self, input, prefix=''):
     '''
@@ -129,7 +129,6 @@ def create_cnn(self, emb, prefix=''):
     @prefix: str
         prefix of layers' names, used to share parameters between more than one `cnn` parts.
     '''
-
     def create_conv(context_len, hidden_size, prefix):
         key = "%s_%d_%d" % (prefix, context_len, hidden_size)
         conv = paddle.networks.sequence_conv_pool(
@@ -147,7 +146,6 @@ def create_cnn(self, emb, prefix=''):
     conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
     logger.info('create a sequence_conv_pool which context width is 4')
     conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
-
     return conv_3, conv_4
 ```
 
@@ -267,7 +265,7 @@ def _build_classification_or_regression_model(self, is_classification):
     return cost, prediction, label
 ```
 ### Pairwise Rank实现
-Pairwise Rank复用上面的DNN结构，同一个source对两个target求相似度打分，使用了hinge lost，
+Pairwise Rank复用上面的DNN结构，同一个source对两个target求相似度打分，
 如果左边的target打分高，预测为1，否则预测为 0。
 
 ```python
