@@ -60,11 +60,11 @@ DSSM 已经发展成了一个框架，可以很自然地建模两个记录之间
 - RNN，递归神经网络
 
 ## 模型实现
-DSSM模型可以拆成三小块实现，分别是左边和右边的DNN，
-以及顶层的损失函数，在复杂任务中，左右两边DNN的结构可以是不同的，比如在原始论文中左右分别学习Query和Document的semantic vector，
-两者数据的数据不同，最好定制下对应的DNN结构。
+DSSM模型可以拆成三小块实现，分别是左边和右边的DNN，以及顶层的损失函数。
+在复杂任务中，左右两边DNN的结构可以是不同的，比如在原始论文中左右分别学习Query和Document的semantic vector，
+两者数据的数据不同，建议对应定制DNN的结构。
 
-本教程中为了简便和通用，将左右两个DNN的结构都设为相同的，因此只有三个选项FC,CNN,RNN等。
+本例中为了简便和通用，将左右两个DNN的结构都设为相同的，因此只有三个选项FC,CNN,RNN等。
 
 在损失函数的设计方面，也支持三种，CLASSIFICATION, REGRESSION, RANK；
 其中，在REGRESSION和RANK两种损失中，左右两边的匹配程度通过余弦相似度（cossim）来计算；
@@ -81,14 +81,18 @@ DSSM模型可以拆成三小块实现，分别是左边和右边的DNN，
 如图3，REGRESSION 和 CLASSIFICATION 模型的结构很相似
 
 <p align="center">
-<img src="./images/dssm.jpg"/><br/><br/>
+<img src="./images/dssm3.jpg"/><br/><br/>
 图 3. DSSM for REGRESSION or CLASSIFICATION
 </p>
 
-最重要的组成部分包括 embedding，左右两个sentece vector的学习器（可以用RNN/CNN/FC中的任意一种实现），
+最重要的组成部分包括 word embedding，图中`(1)`,`(2)`两个低纬向量的学习器（可以用RNN/CNN/FC中的任意一种实现），
 最上层对应的损失函数。
 
-而Pairwise Rank的结构会复杂一些，类似两个 图 3. 中的结构，增加了对应的 Hinge lost的损失函数。
+而Pairwise Rank的结构会复杂一些，类似两个 图 4. 中的结构，增加了对应的 Hinge lost的损失函数：
+
+- 模型总体思想是，用同一个source为左右两个target分别打分——`(a),(b)`，学习目标是(a),(b)间的大小关系
+- `(a)`和`(b)`类似图3中结构，用于给source和target的pair打分
+- `(1)`和`(2)`的结构其实是共用的，都表示同一个source，图中为了表达效果展开成两个
 
 <p align="center">
 <img src="./images/dssm2.jpg"/><br/><br/>
