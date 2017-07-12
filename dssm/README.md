@@ -201,10 +201,10 @@ def create_dnn(self, sent_vec, prefix):
             fc = paddle.layer.fc(
                 input=_input_layer,
                 size=dim,
+                name=name,
                 act=paddle.activation.Tanh(),
                 param_attr=ParamAttr(name='%s.w' % name),
                 bias_attr=ParamAttr(name='%s.b' % name),
-                name=name,
                 )
             _input_layer = fc
     return _input_layer
