@@ -5,8 +5,7 @@ import paddle.v2 as paddle
 
 
 class ExternalMemory(object):
-    """
-    External neural memory class.
+    """External neural memory class.
 
     A simplified Neural Turing Machines (NTM) with only content-based
     addressing (including content addressing and interpolation, but excluding
@@ -76,8 +75,7 @@ class ExternalMemory(object):
                 size=self.mem_slot_size)
 
     def _content_addressing(self, key_vector):
-        """
-        Get write/read head's addressing weights via content-based addressing.
+        """Get write/read head's addressing weights via content-based addressing.
         """
         # content-based addressing: a=tanh(W*M + U*key)
         key_projection = paddle.layer.fc(
@@ -104,8 +102,7 @@ class ExternalMemory(object):
         return addressing_weight
 
     def _interpolation(self, head_name, key_vector, addressing_weight):
-        """
-        Interpolate between previous and current addressing weights.
+        """Interpolate between previous and current addressing weights.
         """
         # prepare interpolation scalar gate: g=sigmoid(W*key)
         gate = paddle.layer.fc(
@@ -126,8 +123,7 @@ class ExternalMemory(object):
         return interpolated_weight
 
     def _get_addressing_weight(self, head_name, key_vector):
-        """
-        Get final addressing weights for read/write heads, including content
+        """Get final addressing weights for read/write heads, including content
         addressing and interpolation.
         """
         # current content-based addressing
@@ -139,8 +135,7 @@ class ExternalMemory(object):
             return addressing_weight
 
     def write(self, write_key):
-        """
-        Write onto the external memory.
+        """Write onto the external memory.
         It cannot be called if "readonly" set True.
 
         :param write_key: Key vector for write heads to generate writing
@@ -183,8 +178,7 @@ class ExternalMemory(object):
             name=self.name)
 
     def read(self, read_key):
-        """
-        Read from the external memory.
+        """Read from the external memory.
 
         :param write_key: Key vector for read head to generate addressing
                           signals.

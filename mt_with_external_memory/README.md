@@ -222,7 +222,7 @@ class ExternalMemory(object):
     - 输入参数 `read_key`：某层的输出，其包含的信息用于读头的寻址。
     - 返回：读出的信息（可直接作为其他层的输入）。
 
-部分重要的实现逻辑：
+部分关键实现逻辑：
 
 - 神经图灵机的 “外部存储矩阵” 采用 `Paddle.layer.memory`实现，并采用序列形式（`is_seq=True`），该序列的长度表示记忆槽的数量，序列的 `size` 表示记忆槽（向量）的大小。该序列依赖一个外部层作为初始化， 其记忆槽的数量取决于该层输出序列的长度。因此，该类不仅可用来实现有界记忆（Bounded Memory)，同时可用来实现无界记忆 (Unbounded Memory，即记忆槽数量可变)。
 
@@ -244,21 +244,130 @@ class ExternalMemory(object):
 涉及三个主要函数：
 
 ```
-memory_enhanced_seq2seq(...)
-bidirectional_gru_encoder(...)
-memory_enhanced_decoder(...)
+def bidirectional_gru_encoder(input, size, word_vec_dim):
+    """Bidirectional GRU encoder.
+
+    :params size: Hidden cell number in decoder rnn.
+    :type size: int
+    :params word_vec_dim: Word embedding size.
+    :type word_vec_dim: int
+    :return: Tuple of 1. concatenated forward and backward hidden sequence.
+             2. last state of backward rnn.
+    :rtype: tuple of LayerOutput
+    """
+    pass
+
+
+def memory_enhanced_decoder(input, target, initial_state, source_context, size,
+                            word_vec_dim, dict_size, is_generating, beam_size):
+    """GRU sequence decoder enhanced with external memory.
+
+    The "external memory" refers to two types of memories.
+    - Unbounded memory: i.e. attention mechanism in Seq2Seq.
+    - Bounded memory: i.e. external memory in NTM.
+    Both types of external memories can be implemented with
+    ExternalMemory class, and are both exploited in this enhanced RNN decoder.
+
+    The vanilla RNN/LSTM/GRU also has a narrow memory mechanism, namely the
+    hidden state vector (or cell state in LSTM) carrying information through
+    a span of sequence time, which is a successful design enriching the model
+    with the capability to "remember" things in the long run. However, such a
+    vector state is somewhat limited to a very narrow memory bandwidth. External
+    memory introduced here could easily increase the memory capacity with linear
+    complexity cost (rather than quadratic for vector state).
+
+    This enhanced decoder expands its "memory passage" through two
+    ExternalMemory objects:
+    - Bounded memory for handling long-term information exchange within decoder
+      itself. A direct expansion of traditional "vector" state.
+    - Unbounded memory for handling source language's token-wise information.
+      Exactly the attention mechanism over Seq2Seq.
+
+    Notice that we take the attention mechanism as a particular form of external
+    memory, with read-only memory bank initialized with encoder states, and a
+    read head with content-based addressing (attention). From this view point,
+    we arrive at a better understanding of attention mechanism itself and other
+    external memory, and a concise and unified implementation for them.
+
+    For more details about external memory, please refer to
+    `Neural Turing Machines <https://arxiv.org/abs/1410.5401>`_.
+
+    For more details about this memory-enhanced decoder, please
+    refer to `Memory-enhanced Decoder for Neural Machine Translation
+    <https://arxiv.org/abs/1606.02003>`_. This implementation is highly
+    correlated to this paper, but with minor differences (e.g. put "write"
+    before "read" to bypass a potential bug in V2 APIs. See
+    (`issue <https://github.com/PaddlePaddle/Paddle/issues/2061>`_).
+    """
+    pass
+
+
+
+def memory_enhanced_seq2seq(encoder_input, decoder_input, decoder_target,
+                            hidden_size, word_vec_dim, dict_size, is_generating,
+                            beam_size):
+    """Seq2Seq Model enhanced with external memory.
+
+    The "external memory" refers to two types of memories.
+    - Unbounded memory: i.e. attention mechanism in Seq2Seq.
+    - Bounded memory: i.e. external memory in NTM.
+    Both types of external memories can be implemented with
+    ExternalMemory class, and are both exploited in this Seq2Seq model.
+
+    :params encoder_input: Encoder input.
+    :type encoder_input: LayerOutput
+    :params decoder_input: Decoder input.
+    :type decoder_input: LayerOutput
+    :params decoder_target: Decoder target.
+    :type decoder_target: LayerOutput
+    :params hidden_size: Hidden cell number, both in encoder and decoder rnn.
+    :type hidden_size: int
+    :params word_vec_dim: Word embedding size.
+    :type word_vec_dim: int
+    :param dict_size: Vocabulary size.
+    :type dict_size: int
+    :params is_generating: Whether for beam search inferencing (True) or
+                           for training (False).
+    :type is_generating: bool
+    :params beam_size: Beam search width.
+    :type beam_size: int
+    :return: Cost layer if is_generating=False; Beam search layer if
+             is_generating = True.
+    :rtype: LayerOutput
+    """
+    pass
 ```
 
-`memory_enhanced_seq2seq` 函数定义整个带外部记忆机制的序列到序列模型，是模型定义的主调函数。它首先调用`bidirectional_gru_encoder` 对源语言进行编码，然后通过 `memory_enhanced_decoder` 进行解码。
+- `bidirectional_gru_encoder` 函数实现双向单层 GRU（Gated Recurrent Unit） 编码器。返回两组结果：一组为字符级编码向量序列（包含前后向），一组为整个源语句的句级编码向量（仅后向）。前者用于解码器的注意力机制中记忆矩阵的初始化，后者用于解码器的状态向量的初始化。
 
-`bidirectional_gru_encoder` 函数实现双向单层 GRU（Gated Recurrent Unit） 编码器。返回两组结果：一组为字符级编码向量序列（包含前后向），一组为整个源语句的句级编码向量（仅后向）。前者用于解码器的注意力机制中记忆矩阵的初始化，后者用于解码器的状态向量的初始化。
+- `memory_enhanced_decoder` 函数实现通过外部记忆增强的 GRU 解码器。它利用同一个`ExternalMemory` 类实现两种外部记忆模块：
 
-`memory_enhanced_decoder` 函数实现通过外部记忆增强的 GRU 解码器。它利用同一个`ExternalMemory` 类实现两种外部记忆模块：
+    - 无界外部记忆：即传统的注意力机制。利用`ExternalMemory`，打开只读开关，关闭插值寻址。并利用解码器的第一组输出作为 `ExternalMemory` 中存储矩阵的初始化（`boot_layer`）。因此，该存储的记忆槽数目是动态可变的，取决于编码器的字符数。
 
-- 无界外部记忆：即传统的注意力机制。利用`ExternalMemory`，打开只读开关，关闭插值寻址。并利用解码器的第一组输出作为 `ExternalMemory` 中存储矩阵的初始化（`boot_layer`）。因此，该存储的记忆槽数目是动态可变的，取决于编码器的字符数。
-- 有界外部记忆：利用`ExternalMemory`，关闭只读开关，打开插值寻址。并利用解码器的第一组输出，取均值池化（pooling）后并扩展为指定序列长度后，叠加随机噪声（训练和推断时保持一致），作为 `ExternalMemory` 中存储矩阵的初始化（`boot_layer`）。因此，该存储的记忆槽数目是固定的。
+        ```
+            unbounded_memory = ExternalMemory(
+                name="unbounded_memory",
+                mem_slot_size=size * 2,
+                boot_layer=unbounded_memory_init,
+                readonly=True,
+                enable_interpolation=False)
+        ```
+    - 有界外部记忆：利用`ExternalMemory`，关闭只读开关，打开插值寻址。并利用解码器的第一组输出，取均值池化（pooling）后并扩展为指定序列长度后，叠加随机噪声（训练和推断时保持一致），作为 `ExternalMemory` 中存储矩阵的初始化（`boot_layer`）。因此，该存储的记忆槽数目是固定的。即代码中的：
 
-注意到，在我们的实现中，注意力机制（或无界外部存储）和神经图灵机（或有界外部存储）被实现成相同的 `ExternalMemory` 类。前者是**只读**的， 后者**可读可写**。这样处理仅仅是为了便于统一我们对 “注意机制” 和 “记忆机制” 的理解和认识，同时也提供更简洁和统一的实现版本。注意力机制也可以通过 `paddle.networks.simple_attention` 实现。
+        ```
+               bounded_memory = ExternalMemory(
+                name="bounded_memory",
+                mem_slot_size=size,
+                boot_layer=bounded_memory_init,
+                readonly=False,
+                enable_interpolation=True)
+        ```
+
+    注意到，在我们的实现中，注意力机制（或无界外部存储）和神经图灵机（或有界外部存储）被实现成相同的 `ExternalMemory` 类。前者是**只读**的， 后者**可读可写**。这样处理仅仅是为了便于统一我们对 “注意机制” 和 “记忆机制” 的理解和认识，同时也提供更简洁和统一的实现版本。注意力机制也可以通过 `paddle.networks.simple_attention` 实现。
+
+- `memory_enhanced_seq2seq` 函数定义整个带外部记忆机制的序列到序列模型，是模型定义的主调函数。它首先调用`bidirectional_gru_encoder` 对源语言进行编码，然后通过 `memory_enhanced_decoder` 进行解码。
+
+
 
 此外，在该实现中，将 `ExternalMemory` 的 `write` 操作提前至 `read` 之前，以避开潜在的拓扑连接局限，详见 [Issue](https://github.com/PaddlePaddle/Paddle/issues/2061)。我们可以看到，本质上他们是等价的。
 
@@ -278,24 +387,73 @@ def reader():
 
 用户需自行完成字符的切分 (Tokenize) ，并构建字典完成 ID 化。
 
-PaddlePaddle 的接口 [paddle.paddle.wmt14](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/v2/dataset/wmt14.py)， 默认提供了一个经过预处理的、较小规模的 wmt14 英法翻译数据集的子集。并提供了两个reader creator函数如下：
+PaddlePaddle 的接口 [paddle.paddle.wmt14](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/v2/dataset/wmt14.py)， 默认提供了一个经过预处理的、较小规模的 [wmt14 英法翻译数据集的子集](http://paddlepaddle.bj.bcebos.com/demo/wmt_shrinked_data/wmt14.tgz)(该数据集有193319条训练数据，6003条测试数据，词典长度为30000)。并提供了两个reader creator函数如下：
 
 ```
 paddle.dataset.wmt14.train(dict_size)
 paddle.dataset.wmt14.test(dict_size)
 ```
 
-这两个函数被调用时即返回相应的`reader()`函数，供`paddle.traner.SGD.train`使用。
+这两个函数被调用时即返回相应的`reader()`函数，供`paddle.traner.SGD.train`使用。当我们需要使用其他数据时，可参考 [paddle.paddle.wmt14](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/v2/dataset/wmt14.py) 构造相应的 data creator，并替换 `paddle.dataset.wmt14.train` 和 `paddle.dataset.wmt14.train` 成相应函数名。
 
-当我们需要使用其他数据时，可参考 [paddle.paddle.wmt14](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/v2/dataset/wmt14.py) 构造相应的 data creator，并替换 `paddle.dataset.wmt14.train` 和 `paddle.dataset.wmt14.train` 成相应函数名。
-
-### 训练及预测
+### 训练
 
 命令行输入：
 
-```python mt_with_external_memory.py```
+```
+python mt_with_external_memory.py
+```
+或自定义部分参数, 例如:
 
-即可运行训练脚本（默认训练一轮），训练模型将被定期保存于本地 `params.tar.gz`。训练完成后，将为少量样本生成翻译结果，详见 `infer` 函数。
+```
+CUDA_VISIBLE_DEVICES=8,9,10,11 python train.py \
+    --dict_size 30000 \
+       --word_vec_dim 512 \
+       --hidden_size 1024 \
+       --memory_slot_num 8 \
+       --use_gpu True \
+       --trainer_count 4 \
+       --num_passes 100 \
+       --batch_size 128 \
+       --memory_perturb_stddev 0.1
+```
+
+即可运行训练脚本，训练模型将被定期保存于本地 `./checkpoints`。参数含义可运行
+
+```
+python train.py --help
+```
+
+
+### 解码
+
+命令行输入：
+
+```
+python infer.py
+```
+或自定义部分参数, 例如:
+
+```
+CUDA_VISIBLE_DEVICES=8,9,10,11 python train.py \
+    --dict_size 30000 \
+       --word_vec_dim 512 \
+       --hidden_size 1024 \
+       --memory_slot_num 8 \
+       --use_gpu True \
+       --trainer_count 4 \
+       --memory_perturb_stddev 0.1 \
+       --infer_num_data 10 \
+       --model_filepath checkpoints/params.latest.tar.gz
+       --beam_size 3
+```
+
+即可运行解码脚本，产生示例翻译结果。参数含义可运行：
+
+```
+python infer.py --help
+```
+
 
 ## 其他讨论
 

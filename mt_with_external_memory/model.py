@@ -20,8 +20,15 @@ from external_memory import ExternalMemory
 
 
 def bidirectional_gru_encoder(input, size, word_vec_dim):
-    """
-    Bidirectional GRU encoder.
+    """Bidirectional GRU encoder.
+
+    :params size: Hidden cell number in decoder rnn.
+    :type size: int
+    :params word_vec_dim: Word embedding size.
+    :type word_vec_dim: int
+    :return: Tuple of 1. concatenated forward and backward hidden sequence.
+             2. last state of backward rnn.
+    :rtype: tuple of LayerOutput
     """
     # token embedding
     embeddings = paddle.layer.embedding(input=input, size=word_vec_dim)
@@ -38,8 +45,7 @@ def bidirectional_gru_encoder(input, size, word_vec_dim):
 
 def memory_enhanced_decoder(input, target, initial_state, source_context, size,
                             word_vec_dim, dict_size, is_generating, beam_size):
-    """
-    GRU sequence decoder enhanced with external memory.
+    """GRU sequence decoder enhanced with external memory.
 
     The "external memory" refers to two types of memories.
     - Unbounded memory: i.e. attention mechanism in Seq2Seq.
@@ -77,6 +83,30 @@ def memory_enhanced_decoder(input, target, initial_state, source_context, size,
     correlated to this paper, but with minor differences (e.g. put "write"
     before "read" to bypass a potential bug in V2 APIs. See
     (`issue <https://github.com/PaddlePaddle/Paddle/issues/2061>`_).
+
+    :params input: Decoder input.
+    :type input: LayerOutput
+    :params target: Decoder target.
+    :type target: LayerOutput
+    :params initial_state: Initial hidden state.
+    :type initial_state: LayerOutput
+    :params source_context: Group of context hidden states for each token in the
+                            source sentence, for attention mechanisim.
+    :type source_context: LayerOutput
+    :params size: Hidden cell number in decoder rnn.
+    :type size: int
+    :params word_vec_dim: Word embedding size.
+    :type word_vec_dim: int
+    :param dict_size: Vocabulary size.
+    :type dict_size: int
+    :params is_generating: Whether for beam search inferencing (True) or
+                           for training (False).
+    :type is_generating: bool
+    :params beam_size: Beam search width.
+    :type beam_size: int
+    :return: Cost layer if is_generating=False; Beam search layer if
+             is_generating = True.
+    :rtype: LayerOutput
     """
     # prepare initial bounded and unbounded memory
     bounded_memory_slot_init = paddle.layer.fc(
@@ -172,8 +202,7 @@ def memory_enhanced_decoder(input, target, initial_state, source_context, size,
 def memory_enhanced_seq2seq(encoder_input, decoder_input, decoder_target,
                             hidden_size, word_vec_dim, dict_size, is_generating,
                             beam_size):
-    """
-    Seq2Seq Model enhanced with external memory.
+    """Seq2Seq Model enhanced with external memory.
 
     The "external memory" refers to two types of memories.
     - Unbounded memory: i.e. attention mechanism in Seq2Seq.
@@ -189,6 +218,27 @@ def memory_enhanced_seq2seq(encoder_input, decoder_input, decoder_target,
     For more details about this memory-enhanced Seq2Seq, please
     refer to `Memory-enhanced Decoder for Neural Machine Translation 
     <https://arxiv.org/abs/1606.02003>`_.
+
+    :params encoder_input: Encoder input.
+    :type encoder_input: LayerOutput
+    :params decoder_input: Decoder input.
+    :type decoder_input: LayerOutput
+    :params decoder_target: Decoder target.
+    :type decoder_target: LayerOutput
+    :params hidden_size: Hidden cell number, both in encoder and decoder rnn.
+    :type hidden_size: int
+    :params word_vec_dim: Word embedding size.
+    :type word_vec_dim: int
+    :param dict_size: Vocabulary size.
+    :type dict_size: int
+    :params is_generating: Whether for beam search inferencing (True) or
+                           for training (False).
+    :type is_generating: bool
+    :params beam_size: Beam search width.
+    :type beam_size: int
+    :return: Cost layer if is_generating=False; Beam search layer if
+             is_generating = True.
+    :rtype: LayerOutput
     """
     # encoder
     context_encodings, sequence_encoding = bidirectional_gru_encoder(
