@@ -23,8 +23,8 @@
 
 序列标注可以分为Sequence Classification、Segment Classification和Temporal Classification三类[[1](#参考文献)]，本例只考虑Segment Classification，即对输入序列中的每个元素在输出序列中给出对应的标签。对于NER任务，由于需要标识边界，一般采用[BIO标注方法](http://book.paddlepaddle.org/07.label_semantic_roles/)定义的标签集，如下是一个NER的标注结果示例：
 
-<p  align="center">
-<img src="images/ner_label_ins.png" width = "80%"  align=center /><br>
+<p align="center">
+<img src="images/ner_label_ins.png" width="80%" align="center"/><br/>
 图1. BIO标注方法示例
 </p>
 
@@ -43,10 +43,10 @@ NER任务的输入是"一句话"，目标是识别句子中的实体边界及类
 3. 将步骤2中的2个词向量序列作为双向RNN的输入，学习输入序列的特征表示，得到新的特性表示序列；
 4. CRF以步骤3中模型学习到的特征为输入，以标记序列为监督信号，实现序列标注。
 
-<div  align="center">  
-<img src="images/ner_network.png" width = "40%"  align=center /><br>
+<p align="center">
+<img src="images/ner_network.png" width="40%" align="center"/><br/>
 图2. NER 模型网络结构图
-</div>
+</p>
 
 
 ## 数据说明

@@ -35,8 +35,7 @@ def train(topology,
         os.mkdir(model_save_dir)
 
     # initialize PaddlePaddle
-    paddle.init(
-        use_gpu=conf.use_gpu, gpu_id=3, trainer_count=conf.trainer_count)
+    paddle.init(use_gpu=conf.use_gpu, trainer_count=conf.trainer_count)
 
     # create optimizer
     adam_optimizer = paddle.optimizer.Adam(
