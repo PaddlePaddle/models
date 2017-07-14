@@ -48,10 +48,12 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 - 5.1 [基于 Pairwise 和 Listwise 的排序学习](https://github.com/PaddlePaddle/models/tree/develop/ltr)
 
 ## 6. 深度结构化语义模型
-[深度结构化语义模型](https://github.com/PaddlePaddle/models/tree/develop/dssm) (Deep Structured Semantic Models, DSSM) 使用DNN模型在一个连续的语义空间中学习文本低纬的向量表示，最终建模两个句子间的语义相似度。
+ 深度结构化语义模型使用DNN模型在一个连续的语义空间中学习文本低纬的向量表示，最终建模两个句子间的语义相似度。
 
-本例我们演示了如何使用 PaddlePaddle实现一个通用的DSSM 模型，用于建模两个字符串间的语义相似度。
-模型实现支持CNN(卷积网络)、FC(全连接网络)、RNN(递归神经网络)等不同的网络结构，以及分类、回归、排序等不同损失函数，采用了比较通用的数据格式，用户替换数据便可以在真实场景中使用该模型。
+本例中我们演示如何使用 PaddlePaddle实现一个通用的深度结构化语义模型来建模两个字符串间的语义相似度。
+模型支持CNN(卷积网络)、FC(全连接网络)、RNN(递归神经网络)等不同的网络结构，以及分类、回归、排序等不同损失函数，采用了比较通用的数据格式，用户替换数据便可以在真实场景中使用。
+
+- 6.1 [深度结构化语义模型](https://github.com/PaddlePaddle/models/tree/develop/dssm)
 
 ## 7. 序列标注
 
