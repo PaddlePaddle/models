@@ -12,6 +12,7 @@ from model import deep_speech2
 from decoder import *
 from lm.lm_scorer import LmScorer
 from error_rate import wer
+import utils
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument(
@@ -67,12 +68,12 @@ parser.add_argument(
     help="Path for language model. (default: %(default)s)")
 parser.add_argument(
     "--alpha",
-    default=0.26,
+    default=0.34,
     type=float,
     help="Parameter associated with language model. (default: %(default)f)")
 parser.add_argument(
     "--beta",
-    default=0.1,
+    default=0.35,
     type=float,
     help="Parameter associated with word count. (default: %(default)f)")
 parser.add_argument(
@@ -192,11 +193,12 @@ def evaluate():
         else:
             raise ValueError("Decoding method [%s] is not supported." %
                              decode_method)
-
+        print("Cur WER = %f" % (wer_sum / wer_counter))
     print("Final WER = %f" % (wer_sum / wer_counter))
 
 
 def main():
+    utils.print_arguments(args)
     paddle.init(use_gpu=args.use_gpu, trainer_count=1)
     evaluate()
 

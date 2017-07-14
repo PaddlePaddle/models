@@ -16,10 +16,10 @@ import utils
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument(
-    "--num_samples",
+    "--batch_size",
     default=100,
     type=int,
-    help="Number of samples for parameters tuning. (default: %(default)s)")
+    help="Minibatch size for evaluation. (default: %(default)s)")
 parser.add_argument(
     "--num_conv_layers",
     default=2,
@@ -57,7 +57,7 @@ parser.add_argument(
     help="Manifest path for normalizer. (default: %(default)s)")
 parser.add_argument(
     "--decode_manifest_path",
-    default='datasets/manifest.test',
+    default='datasets/manifest.dev',
     type=str,
     help="Manifest path for decoding. (default: %(default)s)")
 parser.add_argument(
@@ -82,17 +82,17 @@ parser.add_argument(
     help="Path for language model. (default: %(default)s)")
 parser.add_argument(
     "--alpha_from",
-    default=0.1,
+    default=0.22,
     type=float,
     help="Where alpha starts from. (default: %(default)f)")
 parser.add_argument(
     "--num_alphas",
-    default=14,
+    default=10,
     type=int,
     help="Number of candidate alphas. (default: %(default)d)")
 parser.add_argument(
     "--alpha_to",
-    default=0.36,
+    default=0.40,
     type=float,
     help="Where alpha ends with. (default: %(default)f)")
 parser.add_argument(
@@ -102,12 +102,12 @@ parser.add_argument(
     help="Where beta starts from. (default: %(default)f)")
 parser.add_argument(
     "--num_betas",
-    default=20,
+    default=7,
     type=float,
     help="Number of candidate betas. (default: %(default)d)")
 parser.add_argument(
     "--beta_to",
-    default=1.0,
+    default=0.35,
     type=float,
     help="Where beta ends with. (default: %(default)f)")
 parser.add_argument(
@@ -160,20 +160,14 @@ def tune():
     # prepare infer data
     batch_reader = data_generator.batch_reader_creator(
         manifest_path=args.decode_manifest_path,
-        batch_size=args.num_samples,
+        batch_size=args.batch_size,
+        min_batch_size=1,
         sortagrad=False,
         shuffle_method=None)
-    # get one batch data for tuning
-    infer_data = batch_reader().next()
 
-    # run inference
-    infer_results = paddle.infer(
-        output_layer=output_probs, parameters=parameters, input=infer_data)
-    num_steps = len(infer_results) // len(infer_data)
-    probs_split = [
-        infer_results[i * num_steps:(i + 1) * num_steps]
-        for i in xrange(0, len(infer_data))
-    ]
+    # define inferer
+    inferer = paddle.inference.Inference(
+        output_layer=output_probs, parameters=parameters)
 
     # create grid for search
     cand_alphas = np.linspace(args.alpha_from, args.alpha_to, args.num_alphas)
@@ -181,34 +175,62 @@ def tune():
     params_grid = [(alpha, beta) for alpha in cand_alphas
                    for beta in cand_betas]
 
+    # external scorer
     ext_scorer = LmScorer(args.alpha_from, args.beta_from,
                           args.language_model_path)
-    ## tune parameters in loop
-    for alpha, beta in params_grid:
-        wer_sum, wer_counter = 0, 0
-        # reset scorer
-        ext_scorer.reset_params(alpha, beta)
-        # beam search using multiple processes
-        beam_search_results = ctc_beam_search_decoder_batch(
-            probs_split=probs_split,
-            vocabulary=data_generator.vocab_list,
-            beam_size=args.beam_size,
-            cutoff_prob=args.cutoff_prob,
-            blank_id=len(data_generator.vocab_list),
-            num_processes=args.num_processes_beam_search,
-            ext_scoring_func=ext_scorer, )
-        for i, beam_search_result in enumerate(beam_search_results):
-            target_transcription = ''.join([
-                data_generator.vocab_list[index] for index in infer_data[i][1]
-            ])
-            wer_sum += wer(target_transcription, beam_search_result[0][1])
-            wer_counter += 1
 
-        print("alpha = %f\tbeta = %f\tWER = %f" %
-              (alpha, beta, wer_sum / wer_counter))
+    wer_sum = [0.0 for i in xrange(len(params_grid))]
+    wer_counter = [0 for i in xrange(len(params_grid))]
+    ave_wer = [0.0 for i in xrange(len(params_grid))]
+    num_batches = 0
+
+    ## incremental tuning batch by batch
+    for infer_data in batch_reader():
+        # run inference
+        infer_results = inferer.infer(input=infer_data)
+        num_steps = len(infer_results) // len(infer_data)
+        probs_split = [
+            infer_results[i * num_steps:(i + 1) * num_steps]
+            for i in xrange(0, len(infer_data))
+        ]
+        # target transcription
+        target_transcription = [
+            ''.join([
+                data_generator.vocab_list[index] for index in infer_data[i][1]
+            ]) for i, probs in enumerate(probs_split)
+        ]
+
+        # grid search on current batch
+        for index, (alpha, beta) in enumerate(params_grid):
+            # reset scorer
+            ext_scorer.reset_params(alpha, beta)
+            beam_search_results = ctc_beam_search_decoder_batch(
+                probs_split=probs_split,
+                vocabulary=data_generator.vocab_list,
+                beam_size=args.beam_size,
+                blank_id=len(data_generator.vocab_list),
+                num_processes=args.num_processes_beam_search,
+                ext_scoring_func=ext_scorer,
+                cutoff_prob=args.cutoff_prob, )
+            for i, beam_search_result in enumerate(beam_search_results):
+                wer_sum[index] += wer(target_transcription[i],
+                                      beam_search_result[0][1])
+                wer_counter[index] += 1
+            ave_wer[index] = wer_sum[index] / wer_counter[index]
+            print("alpha = %f, beta = %f,  WER = %f" %
+                  (alpha, beta, ave_wer[index]))
+
+        # output tuning result til current batch
+        ave_wer_min = min(ave_wer)
+        min_index = ave_wer.index(ave_wer_min)
+        print("Finish batch %d, alpha_opt = %f, beta_opt = %f, WER_opt = %f\n" %
+              (num_batches, params_grid[min_index][0],
+               params_grid[min_index][1], ave_wer_min))
+        num_batches += 1
 
 
 def main():
+    utils.print_arguments(args)
     paddle.init(use_gpu=args.use_gpu, trainer_count=1)
     tune()
 
