@@ -50,7 +50,7 @@ class CTRInferer(object):
             dnn_layer_dims,
             dnn_input_dim,
             lr_input_dim,
-            model_type=args.model_type,
+            model_type=ModelType(args.model_type),
             is_infer=True)
         # load parameter
         logger.info("load model parameters from %s" % param_path)

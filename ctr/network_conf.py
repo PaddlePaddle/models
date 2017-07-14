@@ -95,8 +95,9 @@ class CTRmodel(object):
             # use sigmoid function to approximate ctr rate, a float value between 0 and 1.
             act=paddle.activation.Sigmoid())
 
-        self.train_cost = paddle.layer.multi_binary_label_cross_entropy_cost(
-            input=self.output, label=self.click)
+        if not self.is_infer:
+            self.train_cost = paddle.layer.multi_binary_label_cross_entropy_cost(
+                input=self.output, label=self.click)
         return self.output
 
     def _build_regression_model(self, dnn, lr):
