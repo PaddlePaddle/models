@@ -19,13 +19,12 @@ DSSM 已经发展成了一个框架，可以很自然地建模两个记录之间
 在原论文\[[1](#参考文献)\]中，DSSM模型用来衡量用户搜索词 Query 和文档集合 Documents 之间隐含的语义关系，模型结构如下
 
 <p align="center">
-<a id="#figure1"></a>
 <img src="./images/dssm.png"/><br/><br/>
 图 1. DSSM 原始结构
-<p>
+</p>
 
 其贯彻的思想是， **用DNN将高维特征向量转化为低纬空间的连续向量（图中红色框部分）** ，
-**在上层用cosin similarity来衡量用户搜索词与候选文档间的语义相关性**。
+**在上层用cosin similarity来衡量用户搜索词与候选文档间的语义相关性** 。
 
 在最顶层损失函数的设计上，原始模型使用类似Word2Vec中负例采样的方法，
 一个Query会抽取正例 $D+$ 和4个负例 $D-$ 整体上算条件概率用对数似然函数作为损失，
@@ -36,7 +35,7 @@ DSSM 已经发展成了一个框架，可以很自然地建模两个记录之间
 <p align="center">
 <img src="./images/dssm2.png" width="600"/><br/><br/>
 图 2. DSSM通用结构
-<p>
+</p>
 
 图中的空白方框可以用任何模型替代，比如全连接FC，卷积CNN，RNN等都可以，
 该模型结构专门用于衡量两个元素（比如字符串）间的语义距离。
@@ -101,7 +100,9 @@ DSSM模型可以拆成三小块实现，分别是左边和右边的DNN，以及�
 
 下面是各个部分具体的实现方法，所有的代码均包含在 `./network_conf.py` 中。
 
+
 ### 创建文本的词向量表
+
 ```python
 def create_embedding(self, input, prefix=''):
     '''
@@ -119,6 +120,7 @@ def create_embedding(self, input, prefix=''):
 由于输入给词向量表(embedding table)的是一个句子对应的词的ID的列表 ，因此词向量表输出的是词向量的序列。
 
 ### CNN 结构实现
+
 ```python
 def create_cnn(self, emb, prefix=''):
     '''
@@ -153,6 +155,7 @@ CNN 接受 embedding table输出的词向量序列，通过卷积和池化操作
 最终输出一个语义向量（可以认为是句子向量）。
 
 本例的实现中，分别使用了窗口长度为3和4的CNN学到的句子向量按元素求和得到最终的句子向量。
+
 ### RNN 结构实现
 
 RNN很适合学习变长序列的信息，使用RNN来学习句子的信息几乎是自然语言处理任务的标配。
@@ -166,7 +169,9 @@ def create_rnn(self, emb, prefix=''):
     sent_vec = paddle.layer.last_seq(gru)
     return sent_vec
 ```
+
 ### FC 结构实现
+
 ```python
 def create_fc(self, emb, prefix=''):
     '''
