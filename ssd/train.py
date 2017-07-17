@@ -4,7 +4,7 @@ import vgg_ssd_net
 import os, sys
 import gzip
 import tarfile
-from pascal_voc_conf import cfg
+from config.pascal_voc_conf import cfg
 
 
 def train(train_file_list, dev_file_list, data_args, init_model_path):

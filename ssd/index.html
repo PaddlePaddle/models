@@ -42,19 +42,21 @@
 <div id="markdown" style='display:none'>
 # SSD目标检测
 ## 概述
-SSD全称为Single Shot MultiBox Detector，是目标检测领域较新且效果较好的检测算法之一，具体参见论文\[[1](#引用)\]。SSD算法主要特点是检测速度快且检测精度高。PaddlePaddle已集成SSD算法，本示例旨在介绍如何使用PaddlePaddle的SSD模型进行目标检测。下文展开顺序为：首先简要介绍SSD原理，然后介绍示例包含文件及作用，接着介绍如何在PASCAL VOC数据集上训练、评估及检测，最后简要介绍如何在自有数据集上使用SSD。
+SSD全称为Single Shot MultiBox Detector，是目标检测领域较新且效果较好的检测算法之一，具体参见论文\[[1](#引用)\]。SSD算法主要特点是检测速度快且检测精度高。PaddlePaddle已集成SSD算法，本示例旨在介绍如何使用PaddlePaddle中的SSD模型进行目标检测。下文展开顺序为：首先简要介绍SSD原理，然后介绍示例包含文件及作用，接着介绍如何在PASCAL VOC数据集上训练、评估及检测，最后简要介绍如何在自有数据集上使用SSD。
 ## SSD原理
-SSD使用一个卷积神经网络实现“端到端”的检测，所谓“端到端”指输入为原始图像，输出为检测结果，无需借助外部工具或流程进行特征提取、候选框生成等。论文中SSD的基础模型为VGG-16，其在VGG-16的某些层后面增加了一些额外的层进行候选框的提取，下图为模型的总体结构：
+SSD使用一个卷积神经网络实现“端到端”的检测，所谓“端到端”指输入为原始图像，输出为检测结果，无需借助外部工具或流程进行特征提取、候选框生成等。论文中SSD的基础模型为VGG16\[[2](#引用)\]，不同于原始VGG16网络模型，SSD做了一些改变：1. 将最后的FC6、FC7全连接层变为卷积层，卷积层参数通过对原始FC6、FC7参数采样得到； 2. 将Pool5层的参数由2x2-s2（kernel大小为2x2，stride size为2）更改为3x3-s1-p1（kernel大小为3x3，stride size为1，padding size为1）3. 在conv4\_3、conv7、conv8\_2、conv9\_2、conv10\_2及pool11层后面接了priorbox层，priorbox层的主要目的是根据输入的feature map生成一系列的矩形候选框。关于SSD的更详细的介绍可以参考论文\[[1](#引用)\]。下图为模型（300x300）的总体结构：
 
 <p align="center">
-<img src="images/ssd_network.png" width="600" hspace='10'/> <br/>
+<img src="images/ssd_network.png" width="900" height="250" hspace='10'/> <br/>
 图1. SSD网络结构
 </p>
 
-如图所示，候选框的生成规则是预先设定的，比如Conv7输出的特征图每个像素点会对应6个候选框，这些候选框长宽比或面积有区分。在预测阶段模型会对这些提取出来的候选框做后处理，然后输出作为最终的检测结果。
+图中每个矩形盒子代表一个卷积层，最后的两个矩形框分别表示汇总各卷积层输出结果和后处理阶段。具体地，在预测阶段网络会输出一组候选矩形框，每个矩形包含两类信息：位置和类别得分，图中倒数第二个矩形框即表示网络的检测结果的汇总处理，由于候选矩形框数量较多且很多矩形框重叠严重，这时需要经过后处理来筛选出质量较高的少数矩形框，这里的后处理主要指非极大值抑制（Non-maximum Suppression）。
+
 ## 示例总览
 本示例共包含如下文件：
 <center>
+<center>表1. 示例文件</center>
 
 文件 |  用途
 ---- | -----
@@ -69,13 +71,49 @@ data/label\_list | 类别列表
 data/prepare\_voc\_data.py | 准备训练PASCAL VOC数据列表
 
 </center>
-<center>表1. 示例文件</center>
 
-训练阶段需要对数据做预处理，包括裁剪、采样等，这部分操作在```image_util.py```和```data_provider.py```中完成；值得注意的是，```config/vgg_config.py```为参数配置文件，包括训练参数、神经网络参数等，本配置文件包含参数是针对PASCAL VOC数据配置的，当训练自有数据时，需要仿照该文件配置新的参数；```data/prepare_voc_data.py```脚本用来生成文件列表，包括切分训练集和测试集，使用时需要用户事先下载并解压数据，默认采用VOC2007和VOC2012。
+
+训练阶段需要对数据做预处理，包括裁剪、采样等，这部分操作在```image_util.py```和```data_provider.py```中完成。值得注意的是，```config/vgg_config.py```为参数配置文件，包括训练参数、神经网络参数等，本配置文件包含参数是针对PASCAL VOC数据配置的，当训练自有数据时，需要仿照该文件配置新的参数。```data/prepare_voc_data.py```脚本用来生成文件列表，包括切分训练集和测试集，使用时需要用户事先下载并解压数据，默认采用VOC2007和VOC2012。
 
 ## PASCAL VOC数据集
 ### 数据准备
-首先需要下载数据集，VOC2007\[[2](#引用)\]和VOC2012\[[3](#引用)\]，VOC2007包含训练集和测试集，VOC2012只包含训练集，将下载好的数据解压，目录结构为```VOCdevkit/{VOC2007，VOC2012}```。进入```data```目录，运行```python prepare_voc_data.py```即可生成```trainval.txt```和```test.txt```，默认```prepare_voc_data.py```和```VOCdevkit```在相同目录下，且生成的文件列表也在该目录。需注意```trainval.txt```既包含VOC2007的训练数据，也包含VOC2012的训练数据，```test.txt```只包含VOC2007的测试数据。
+首先需要下载数据集，VOC2007\[[3](#引用)\]和VOC2012\[[4](#引用)\]，VOC2007包含训练集和测试集，VOC2012只包含训练集，将下载好的数据解压，目录结构为```data/VOCdevkit/VOC2007```和```data/VOCdevkit/VOC2012```。进入```data```目录，运行```python prepare_voc_data.py```即可生成```trainval.txt```和```test.txt```。核心函数为：
+
+```python
+def prepare_filelist(devkit_dir, years, output_dir):
+    trainval_list = []
+    test_list = []
+    for year in years:
+        trainval, test = walk_dir(devkit_dir, year)
+        trainval_list.extend(trainval)
+        test_list.extend(test)
+    random.shuffle(trainval_list)
+    with open(osp.join(output_dir, 'trainval.txt'), 'w') as ftrainval:
+        for item in trainval_list:
+            ftrainval.write(item[0] + ' ' + item[1] + '\n')
+
+    with open(osp.join(output_dir, 'test.txt'), 'w') as ftest:
+        for item in test_list:
+            ftest.write(item[0] + ' ' + item[1] + '\n')
+```
+
+该函数首先对每个year的数据进行处理，然后将训练图像的文件路径列表进行随机打乱，最后保存训练文件列表和测试文件列表。默认```prepare_voc_data.py```和```VOCdevkit```在相同目录下，且生成的文件列表也在该目录。需注意```trainval.txt```既包含VOC2007的训练数据，也包含VOC2012的训练数据，```test.txt```只包含VOC2007的测试数据。我们这里提供```trainval.txt```前几行输入作为样例：
+
+```
+VOCdevkit/VOC2007/JPEGImages/000005.jpg VOCdevkit/VOC2007/Annotations/000005.xml
+VOCdevkit/VOC2007/JPEGImages/000007.jpg VOCdevkit/VOC2007/Annotations/000007.xml
+VOCdevkit/VOC2007/JPEGImages/000009.jpg VOCdevkit/VOC2007/Annotations/000009.xml
+VOCdevkit/VOC2007/JPEGImages/000012.jpg VOCdevkit/VOC2007/Annotations/000012.xml
+VOCdevkit/VOC2007/JPEGImages/000016.jpg VOCdevkit/VOC2007/Annotations/000016.xml
+VOCdevkit/VOC2007/JPEGImages/000017.jpg VOCdevkit/VOC2007/Annotations/000017.xml
+VOCdevkit/VOC2007/JPEGImages/000019.jpg VOCdevkit/VOC2007/Annotations/000019.xml
+VOCdevkit/VOC2007/JPEGImages/000020.jpg VOCdevkit/VOC2007/Annotations/000020.xml
+VOCdevkit/VOC2007/JPEGImages/000021.jpg VOCdevkit/VOC2007/Annotations/000021.xml
+VOCdevkit/VOC2007/JPEGImages/000023.jpg VOCdevkit/VOC2007/Annotations/000023.xml
+```
+
+文件共两个字段，第一个字段为图像文件的相对路径，第二个字段为对应标注文件的相对路径。
+
 ### 预训练模型准备
 下载预训练的VGG-16模型，我们提供了一个转换好的模型，具体下载地址为：，下载好模型后，放置路径为```vgg/vgg_model.tar.gz```。
 ### 模型训练
@@ -117,10 +155,10 @@ eval(
     model_path='models/pass-00000.tar.gz')
 ```
 
-调用```paddle.init```指定使用4卡GPU评估；```data_provider.Settings```参见训练阶段的配置；调用```eval```执行训练，其中```eval_file_list```指定训练数据列表，```batch_size```指定评估时batch size的大小，```model_path ```指定模型位置。评估结束会输出模型的```loss```信息和```mAP```信息。
+调用```paddle.init```指定使用4卡GPU评估；```data_provider.Settings```参见训练阶段的配置；调用```eval```执行评估，其中```eval_file_list```指定训练数据列表，```batch_size```指定评估时batch size的大小，```model_path ```指定模型位置。评估结束会输出```loss```信息和```mAP```信息。
 
 ### 图像检测
-执行```python infer.py```即可使用训练好的模型对图片实施检测，```infer.py```最关键的逻辑如下：
+执行```python infer.py```即可使用训练好的模型对图片实施检测，```infer.py```关键逻辑如下：
 
 ```python
 infer(
@@ -193,9 +231,10 @@ with open(label_path) as flabel:
 另一个重要的事情就是根据图像大小及检测物体的大小等更改网络结构的配置，主要是仿照```config/vgg_config.py```创建自己的配置文件，参数设置经验请参照论文\[[1](#引用)\]。
 
 ## 引用
-1. Liu, Wei, et al. "SSD: Single shot multibox detector." European conference on computer vision. Springer, Cham, 2016.
-2. http://host.robots.ox.ac.uk/pascal/VOC/voc2007/index.html
-3. http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html
+1. Wei Liu, Dragomir Anguelov, Dumitru Erhan, Christian Szegedy, Scott Reed, Cheng-Yang Fu, Alexander C. Berg. "SSD: Single shot multibox detector." European conference on computer vision. Springer, Cham, 2016.
+2. Simonyan, Karen, and Andrew Zisserman. "Very deep convolutional networks for large-scale image recognition." arXiv preprint arXiv:1409.1556 (2014).
+3. The PASCAL Visual Object Classes Challenge 2007. http://host.robots.ox.ac.uk/pascal/VOC/voc2007/index.html
+4. Visual Object Classes Challenge 2012 (VOC2012). http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html
 
 </div>
 <!-- You can change the lines below now. -->
