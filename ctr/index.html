@@ -345,6 +345,13 @@ optional arguments:
                         classification)
 ```
 
+- `train_data_path` ： 训练集的路径
+- `test_data_path` : 测试集的路径
+- `num_passes`: 模型训练多少轮
+- `data_meta_file`: 参考[数据和任务抽象](### 数据和任务抽象)的描述。
+- `model_type`: 模型分类或回归
+
+
 ## 用训好的模型做预测
 训好的模型可以用来预测新的数据， 预测数据的格式为
 
@@ -379,6 +386,12 @@ optional arguments:
                         model type, classification: 0, regression 1 (default
                         classification)
 ```
+
+- `model_gz_path_model`：用 `gz` 压缩过的模型路径
+- `data_path` ： 需要预测的数据路径
+- `prediction_output_paht`：预测输出的路径
+- `data_meta_file` ：参考[数据和任务抽象](### 数据和任务抽象)的描述。
+- `model_type` ：分类或回归
 
 示例数据可以用如下命令预测
 
