@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import paddle.v2 as paddle
 from paddle.v2 import layer
 from paddle.v2 import data_type as dtype
@@ -80,10 +79,7 @@ class CTRmodel(object):
         config LR submodel
         '''
         fc = layer.fc(
-            input=self.lr_merged_input,
-            size=1,
-            name='lr',
-            act=paddle.activation.Relu())
+            input=self.lr_merged_input, size=1, act=paddle.activation.Relu())
         return fc
 
     def _build_classification_model(self, dnn, lr):
@@ -91,7 +87,6 @@ class CTRmodel(object):
         self.output = layer.fc(
             input=merge_layer,
             size=1,
-            name='output',
             # use sigmoid function to approximate ctr rate, a float value between 0 and 1.
             act=paddle.activation.Sigmoid())
 
@@ -103,10 +98,7 @@ class CTRmodel(object):
     def _build_regression_model(self, dnn, lr):
         merge_layer = layer.concat(input=[dnn, lr])
         self.output = layer.fc(
-            input=merge_layer,
-            size=1,
-            name='output',
-            act=paddle.activation.Sigmoid())
+            input=merge_layer, size=1, act=paddle.activation.Sigmoid())
         if not self.is_infer:
             self.train_cost = paddle.layer.mse_cost(
                 input=self.output, label=self.click)

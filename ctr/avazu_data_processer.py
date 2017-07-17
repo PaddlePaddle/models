@@ -1,4 +1,5 @@
-import os
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-import os
 import sys
 import csv
 import cPickle
@@ -217,9 +218,6 @@ def detect_dataset(path, topn, id_fea_space=10000):
         feature_dims[key] for key in categorial_features + ['hour']) + 1
     feature_dims['lr_input'] = np.sum(feature_dims[key]
                                       for key in id_features) + 1
-    # logger.warning("dump dataset's meta info to %s" % meta_out_path)
-    # cPickle.dump([feature_dims, fields], open(meta_out_path, 'wb'))
-
     return feature_dims
 
 

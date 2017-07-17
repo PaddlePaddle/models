@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-import os
 import argparse
 import gzip
 
@@ -70,12 +72,6 @@ def train():
 
     trainer = paddle.trainer.SGD(
         cost=model.train_cost, parameters=params, update_equation=optimizer)
-
-    # dataset = reader.AvazuDataset(
-    #     args.train_data_path,
-    #     n_records_as_test=args.test_set_size,
-    #     fields=reader.fields,
-    #     feature_dims=reader.feature_dims)
 
     dataset = reader.Dataset()
 
