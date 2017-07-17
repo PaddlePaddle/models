@@ -50,7 +50,7 @@ The fields of the dataset are:
     15. device_conn_type
     16. C14-C21 -- anonymized categorical variables
 
-We will treat following fields as categorical features:
+We will treat the following fields as categorical features:
 
     - C1
     - banner_pos
