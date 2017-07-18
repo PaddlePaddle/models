@@ -4,9 +4,11 @@ SSD全称为Single Shot MultiBox Detector，是目标检测领域较新且效果
 ## SSD原理
 SSD使用一个卷积神经网络实现“端到端”的检测，所谓“端到端”指输入为原始图像，输出为检测结果，无需借助外部工具或流程进行特征提取、候选框生成等。论文中SSD的基础模型为VGG16\[[2](#引用)\]，不同于原始VGG16网络模型，SSD做了一些改变：
 
-1. 将最后的fc6、fc7全连接层变为卷积层，卷积层参数通过对原始fc6、fc7参数采样得到
-2. 将pool5层的参数由2x2-s2（kernel大小为2x2，stride size为2）更改为3x3-s1-p1（kernel大小为3x3，stride size为1，padding size为1）
-3. 在conv4\_3、conv7、conv8\_2、conv9\_2、conv10\_2及pool11层后面接了priorbox层，priorbox层的主要目的是根据输入的feature map生成一系列的矩形候选框。关于SSD的更详细的介绍可以参考论文\[[1](#引用)\]。下图为模型（300x300）的总体结构：
+1. 将最后的fc6、fc7全连接层变为卷积层，卷积层参数通过对原始fc6、fc7参数采样得到。
+2. 将pool5层的参数由2x2-s2（kernel大小为2x2，stride size为2）更改为3x3-s1-p1（kernel大小为3x3，stride size为1，padding size为1）。
+3. 在conv4\_3、conv7、conv8\_2、conv9\_2、conv10\_2及pool11层后面接了priorbox层，priorbox层的主要目的是根据输入的feature map生成一系列的矩形候选框。关于SSD的更详细的介绍可以参考论文\[[1](#引用)\]。
+
+下图为模型（300x300）的总体结构：
 
 <p align="center">
 <img src="images/ssd_network.png" width="900" height="250" hspace='10'/> <br/>
@@ -14,6 +16,8 @@ SSD使用一个卷积神经网络实现“端到端”的检测，所谓“端�
 </p>
 
 图中每个矩形盒子代表一个卷积层，最后的两个矩形框分别表示汇总各卷积层输出结果和后处理阶段。具体地，在预测阶段网络会输出一组候选矩形框，每个矩形包含两类信息：位置和类别得分，图中倒数第二个矩形框即表示网络的检测结果的汇总处理，由于候选矩形框数量较多且很多矩形框重叠严重，这时需要经过后处理来筛选出质量较高的少数矩形框，这里的后处理主要指非极大值抑制（Non-maximum Suppression）。
+
+从SSD的网络结构可以看出，候选矩形框在多个feature map上生成，不同的feature map具有的感受野不同，这样可以在不同尺度扫描图像，相对于其他检测方法可以生成更丰富的候选框，从而提高检测精度；另一方面SSD对VGG16的扩展部分以较小的代价实现对候选框的位置和类别得分的计算，整个过程只需要一个卷积神经网络完成，所以速度较快。
 
 ## 示例总览
 本示例共包含如下文件：
@@ -88,7 +92,12 @@ train(train_file_list='./data/trainval.txt',
       init_model_path='./vgg/vgg_model.tar.gz')
 ```
 
-调用```paddle.init```指定使用4卡GPU训练；调用```data_provider.Settings```配置数据预处理所需参数，其中```cfg.IMG_HEIGHT```和```cfg.IMG_WIDTH```在配置文件```config/vgg_config.py```中设置，这里均为300，300x300是一个典型配置，兼顾效率和检测精度，也可以通过修改配置文件扩展到500x500；调用```train```执行训练，其中```train_file_list```指定训练数据列表，```dev_file_list```指定评估数据列表，```init_model_path```指定预训练模型位置。训练过程中会打印一些日志信息，每训练10个batch会输出当前的轮数、当前batch的cost及mAP（mean Average Precision），每训练一个pass，会保存一次模型，默认保存在```checkpoints```目录下（注：需事先创建）。
+主要包括：
+
+1. 调用```paddle.init```指定使用4卡GPU训练。
+2. 调用```data_provider.Settings```配置数据预处理所需参数，其中```cfg.IMG_HEIGHT```和```cfg.IMG_WIDTH```在配置文件```config/vgg_config.py```中设置，这里均为300，300x300是一个典型配置，兼顾效率和检测精度，也可以通过修改配置文件扩展到500x500。
+3. 调用```train```执行训练，其中```train_file_list```指定训练数据列表，```dev_file_list```指定评估数据列表，```init_model_path```指定预训练模型位置。
+4. 训练过程中会打印一些日志信息，每训练10个batch会输出当前的轮数、当前batch的cost及mAP（mean Average Precision，平均精度均值），每训练一个pass，会保存一次模型，默认保存在```checkpoints```目录下（注：需事先创建）。
 
 ### 模型评估
 执行```python eval.py```即可对模型进行评估，```eval.py```的关键执行逻辑如下：
@@ -186,7 +195,7 @@ with open(label_path) as flabel:
 另一个重要的事情就是根据图像大小及检测物体的大小等更改网络结构的配置，主要是仿照```config/vgg_config.py```创建自己的配置文件，参数设置经验请参照论文\[[1](#引用)\]。
 
 ## 引用
-1. [Wei Liu, Dragomir Anguelov, Dumitru Erhan, Christian Szegedy, Scott Reed, Cheng-Yang Fu, Alexander C. Berg. "SSD: Single shot multibox detector." European conference on computer vision. Springer, Cham, 2016.](https://arxiv.org/abs/1512.02325)
-2. [Simonyan, Karen, and Andrew Zisserman. "Very deep convolutional networks for large-scale image recognition." arXiv preprint arXiv:1409.1556 (2014).](https://arxiv.org/abs/1409.1556)
+1. Wei Liu, Dragomir Anguelov, Dumitru Erhan, Christian Szegedy, Scott Reed, Cheng-Yang Fu, Alexander C. Berg. [SSD: Single shot multibox detector](https://arxiv.org/abs/1512.02325). European conference on computer vision. Springer, Cham, 2016.
+2. Simonyan, Karen, and Andrew Zisserman. [Very deep convolutional networks for large-scale image recognition](https://arxiv.org/abs/1409.1556). arXiv preprint arXiv:1409.1556 (2014).
 3. [The PASCAL Visual Object Classes Challenge 2007](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/index.html)
 4. [Visual Object Classes Challenge 2012 (VOC2012)](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)
