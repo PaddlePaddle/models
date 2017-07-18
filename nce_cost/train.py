@@ -47,8 +47,8 @@ def train(model_save_dir):
             paddle.reader.shuffle(
                 lambda: paddle.dataset.imikolov.train(word_dict, 5)(),
                 buf_size=1000), 64),
-    num_passes=1000,
-    event_handler=event_handler)
+        num_passes=1000,
+        event_handler=event_handler)
 
 
 if __name__ == "__main__":
