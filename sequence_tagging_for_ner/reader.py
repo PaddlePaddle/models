@@ -21,7 +21,7 @@ def canonicalize_word(word, wordset=None, digits=True):
         if (wordset != None) and (word in wordset): return word
         word = canonicalize_digits(word)  # try to canonicalize numbers
     if (wordset == None) or (word in wordset): return word
-    else: return "<UNK>"  # unknown token
+    else: return "UUUNKKK"  # unknown token
 
 
 def data_reader(data_file, word_dict, label_dict):
@@ -35,7 +35,7 @@ def data_reader(data_file, word_dict, label_dict):
     """
 
     def reader():
-        UNK_IDX = word_dict["<UNK>"]
+        UNK_IDX = word_dict["UUUNKKK"]
 
         sentence = []
         labels = []
