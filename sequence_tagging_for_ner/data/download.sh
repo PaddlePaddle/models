@@ -1,4 +1,8 @@
-wget http://cs224d.stanford.edu/assignment2/assignment2.zip
+if [ -f assignment2.zip ]; then
+    echo "data exist"
+else
+    wget http://cs224d.stanford.edu/assignment2/assignment2.zip
+fi
 
 if [ $? -eq 0  ];then
     unzip assignment2.zip
