@@ -1,3 +1,4 @@
+import logging
 import paddle
 
 UNK = 0
@@ -124,6 +125,12 @@ def load_dic(path):
             w = line.strip()
             dic[w] = id
     return dic
+
+
+def display_args(args):
+    logger.info("arguments passed by command line:")
+    for k, v in sorted(v for v in vars(args).items()):
+        logger.info("{}:\t{}".format(k, v))
 
 
 if __name__ == '__main__':
