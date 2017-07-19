@@ -384,11 +384,13 @@ def _build_rank_model(self):
 ```
 usage: train.py [-h] [-i TRAIN_DATA_PATH] [-t TEST_DATA_PATH]
                 [-s SOURCE_DIC_PATH] [--target_dic_path TARGET_DIC_PATH]
-                [-b BATCH_SIZE] [-p NUM_PASSES] -y MODEL_TYPE --model_arch
-                MODEL_ARCH
+                [-b BATCH_SIZE] [-p NUM_PASSES] -y MODEL_TYPE -a MODEL_ARCH
                 [--share_network_between_source_target SHARE_NETWORK_BETWEEN_SOURCE_TARGET]
                 [--share_embed SHARE_EMBED] [--dnn_dims DNN_DIMS]
                 [--num_workers NUM_WORKERS] [--use_gpu USE_GPU] [-c CLASS_NUM]
+                [--model_output_prefix MODEL_OUTPUT_PREFIX]
+                [-g NUM_BATCHES_TO_LOG] [-e NUM_BATCHES_TO_TEST]
+                [-z NUM_BATCHES_TO_SAVE_MODEL]
 
 PaddlePaddle DSSM example
 
@@ -408,9 +410,9 @@ optional arguments:
   -p NUM_PASSES, --num_passes NUM_PASSES
                         number of passes to run(default:10)
   -y MODEL_TYPE, --model_type MODEL_TYPE
-                        model type, 0 for classification, 1 for pairwise rank
-                        (default: classification)
-  --model_arch MODEL_ARCH
+                        model type, 0 for classification, 1 for pairwise rank,
+                        2 for regression (default: classification)
+  -a MODEL_ARCH, --model_arch MODEL_ARCH
                         model architecture, 1 for CNN, 0 for FC, 2 for RNN
   --share_network_between_source_target SHARE_NETWORK_BETWEEN_SOURCE_TARGET
                         whether to share network parameters between source and
@@ -424,6 +426,56 @@ optional arguments:
   --num_workers NUM_WORKERS
                         num worker threads, default 1
   --use_gpu USE_GPU     whether to use GPU devices (default: False)
+  -c CLASS_NUM, --class_num CLASS_NUM
+                        number of categories for classification task.
+  --model_output_prefix MODEL_OUTPUT_PREFIX
+                        prefix of the path for model to store, (default: ./)
+  -g NUM_BATCHES_TO_LOG, --num_batches_to_log NUM_BATCHES_TO_LOG
+                        number of batches to output train log, (default: 100)
+  -e NUM_BATCHES_TO_TEST, --num_batches_to_test NUM_BATCHES_TO_TEST
+                        number of batches to test, (default: 200)
+  -z NUM_BATCHES_TO_SAVE_MODEL, --num_batches_to_save_model NUM_BATCHES_TO_SAVE_MODEL
+                        number of batches to output model, (default: 400)
+```
+
+## 用训练好的模型预测
+```python
+usage: infer.py [-h] --model_path MODEL_PATH -i DATA_PATH -o
+                PREDICTION_OUTPUT_PATH -y MODEL_TYPE [-s SOURCE_DIC_PATH]
+                [--target_dic_path TARGET_DIC_PATH] -a MODEL_ARCH
+                [--share_network_between_source_target SHARE_NETWORK_BETWEEN_SOURCE_TARGET]
+                [--share_embed SHARE_EMBED] [--dnn_dims DNN_DIMS]
+                [-c CLASS_NUM]
+
+PaddlePaddle DSSM infer
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --model_path MODEL_PATH
+                        path of model parameters file
+  -i DATA_PATH, --data_path DATA_PATH
+                        path of the dataset to infer
+  -o PREDICTION_OUTPUT_PATH, --prediction_output_path PREDICTION_OUTPUT_PATH
+                        path to output the prediction
+  -y MODEL_TYPE, --model_type MODEL_TYPE
+                        model type, 0 for classification, 1 for pairwise rank,
+                        2 for regression (default: classification)
+  -s SOURCE_DIC_PATH, --source_dic_path SOURCE_DIC_PATH
+                        path of the source's word dic
+  --target_dic_path TARGET_DIC_PATH
+                        path of the target's word dic, if not set, the
+                        `source_dic_path` will be used
+  -a MODEL_ARCH, --model_arch MODEL_ARCH
+                        model architecture, 1 for CNN, 0 for FC, 2 for RNN
+  --share_network_between_source_target SHARE_NETWORK_BETWEEN_SOURCE_TARGET
+                        whether to share network parameters between source and
+                        target
+  --share_embed SHARE_EMBED
+                        whether to share word embedding between source and
+                        target
+  --dnn_dims DNN_DIMS   dimentions of dnn layers, default is '256,128,64,32',
+                        which means create a 4-layer dnn, demention of each
+                        layer is 256, 128, 64 and 32
   -c CLASS_NUM, --class_num CLASS_NUM
                         number of categories for classification task.
 ```

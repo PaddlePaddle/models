@@ -23,6 +23,7 @@ class Dataset(object):
 
         assert isinstance(model_type, ModelType)
         self.record_reader = _record_reader[model_type.mode]
+        self.is_infer = False
 
     def train(self):
         '''
@@ -37,9 +38,15 @@ class Dataset(object):
         '''
         Load testset.
         '''
-        logger.info("[reader] load testset from %s" % self.test_path)
+        # logger.info("[reader] load testset from %s" % self.test_path)
         with open(self.test_path) as f:
             for line_id, line in enumerate(f):
+                yield self.record_reader(line)
+
+    def infer(self):
+        self.is_infer = True
+        with open(self.train_path) as f:
+            for line in f:
                 yield self.record_reader(line)
 
     def _read_classification_record(self, line):
@@ -56,8 +63,10 @@ class Dataset(object):
             "<source words> [TAB] <target words> [TAB] <label>'"
         source = sent2ids(fs[0], self.source_dic)
         target = sent2ids(fs[1], self.target_dic)
-        label = int(fs[2])
-        return (source, target, label, )
+        if not self.is_infer:
+            label = int(fs[2])
+            return (source, target, label, )
+        return source, target
 
     def _read_regression_record(self, line):
         '''
@@ -73,8 +82,10 @@ class Dataset(object):
             "<source words> [TAB] <target words> [TAB] <label>'"
         source = sent2ids(fs[0], self.source_dic)
         target = sent2ids(fs[1], self.target_dic)
-        label = float(fs[2])
-        return (source, target, [label], )
+        if not self.is_infer:
+            label = float(fs[2])
+            return (source, target, [label], )
+        return source, target
 
     def _read_rank_record(self, line):
         '''
@@ -89,9 +100,10 @@ class Dataset(object):
         source = sent2ids(fs[0], self.source_dic)
         left_target = sent2ids(fs[1], self.target_dic)
         right_target = sent2ids(fs[2], self.target_dic)
-        label = int(fs[3])
-
-        return (source, left_target, right_target, label)
+        if not self.is_infer:
+            label = int(fs[3])
+            return (source, left_target, right_target, label)
+        return source, left_target, right_target
 
 
 if __name__ == '__main__':
