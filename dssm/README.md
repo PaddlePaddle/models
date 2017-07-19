@@ -438,6 +438,16 @@ optional arguments:
                         number of batches to output model, (default: 400)
 ```
 
+重要的参数描述如下
+
+- `train_data_path` 训练数据路径
+- `test_data_path` 测试数据路局，可以不设置
+- `source_dic_path` 源字典字典路径
+- `target_dic_path` 目标字典路径
+- `model_type` 模型的损失函数的类型，分类0，排序1，回归2
+- `model_arch` 模型结构，FC 0， CNN 1, RNN 2
+- `dnn_dims` 模型各层的维度设置，默认为 `256,128,64,32`，即模型有4层，各层维度如上设置
+
 ## 用训练好的模型预测
 ```python
 usage: infer.py [-h] --model_path MODEL_PATH -i DATA_PATH -o
@@ -479,6 +489,11 @@ optional arguments:
   -c CLASS_NUM, --class_num CLASS_NUM
                         number of categories for classification task.
 ```
+
+部分参数可以参考 `train.py`，重要参数解释如下
+
+- `data_path` 需要预测的数据路径
+- `prediction_output_path` 预测的输出路径
 
 ## 参考文献
 
