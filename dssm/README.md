@@ -449,7 +449,7 @@ optional arguments:
 - `dnn_dims` 模型各层的维度设置，默认为 `256,128,64,32`，即模型有4层，各层维度如上设置
 
 ## 用训练好的模型预测
-```python
+```
 usage: infer.py [-h] --model_path MODEL_PATH -i DATA_PATH -o
                 PREDICTION_OUTPUT_PATH -y MODEL_TYPE [-s SOURCE_DIC_PATH]
                 [--target_dic_path TARGET_DIC_PATH] -a MODEL_ARCH
