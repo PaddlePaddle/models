@@ -102,7 +102,7 @@ def ranknet_infer(pass_id):
     feature_dim = 46
 
     # we just need half_ranknet to predict a rank score, which can be used in sort documents
-    output = half_ranknet("left", feature_dim)
+    output = half_ranknet("infer", feature_dim)
     parameters = paddle.parameters.Parameters.from_tar(
         gzip.open("ranknet_params_%d.tar.gz" % (pass_id - 1)))
 
