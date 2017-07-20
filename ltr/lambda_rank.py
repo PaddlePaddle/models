@@ -129,4 +129,4 @@ if __name__ == '__main__':
     if args.run_type == "train":
         train_lambda_rank(args.num_passes)
     elif args.run_type == "infer":
-        lambda_rank_infer(pass_id=args.pass_num - 1)
+        lambda_rank_infer(pass_id=args.num_passes - 1)

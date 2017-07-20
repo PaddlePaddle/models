@@ -5,13 +5,13 @@
 RankNet模型在命令行输入：
 
 ```python
-python ranknet.py
+bash ./run_ranknet.sh
 ```
 
 LambdaRank模型在命令行输入：
 
 ```python
-python lambda_rank.py
+bash ./run_lambdarank.sh
 ```
 
 用户只需要使用以上命令就完成排序模型的训练和预测，程序会自动下载内置数据集，无需手动下载。
@@ -150,7 +150,7 @@ def ranknet(input_dim):
 RankNet的训练只需要运行命令：
 
 ```python
-python ranknet.py
+run ./run_ranknet.sh
 ```
 将会自动下载数据，训练RankNet模型，并将每个轮次的模型参数存储下来。
 
@@ -277,7 +277,7 @@ def lambda_rank(input_dim):
 训练LambdaRank模型只需要运行命令：
 
 ```python
-python lambda_rank.py
+bash ./run_lambdarank.sh
 ```
 
 脚本会自动下载数据，训练LambdaRank模型，并将每个轮次的模型存储下来。
