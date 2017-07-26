@@ -4,14 +4,14 @@
 
 RankNet模型在命令行输入：
 
-```python
-python ranknet.py
+```bash
+bash ./run_ranknet.sh
 ```
 
 LambdaRank模型在命令行输入：
 
-```python
-python lambda_rank.py
+```bash
+bash ./run_lambdarank.sh
 ```
 
 用户只需要使用以上命令就完成排序模型的训练和预测，程序会自动下载内置数据集，无需手动下载。
@@ -54,7 +54,7 @@ python lambda_rank.py
 
 例如调用接口
 
-```python
+```bash
 pairwise_train_dataset = functools.partial(paddle.dataset.mq2007.train, format="pairwise")
 for label, left_doc, right_doc in pairwise_train_dataset():
     ...
@@ -104,7 +104,7 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}} = \frac{1}{2}(1-S_{i,j})-\fra
 
 由于Pairwise中的网络结构是左右对称，可定义一半网络结构，另一半共享网络参数。在PaddlePaddle中允许网络结构中共享连接，具有相同名字的参数将会共享参数。使用PaddlePaddle实现RankNet排序模型，定义网络结构的示例代码如下：
 
-```python
+```bash
 import paddle.v2 as paddle
 
 def half_ranknet(name_prefix, input_dim):
@@ -150,7 +150,7 @@ def ranknet(input_dim):
 RankNet的训练只需要运行命令：
 
 ```python
-python ranknet.py
+run ./run_ranknet.sh
 ```
 将会自动下载数据，训练RankNet模型，并将每个轮次的模型参数存储下来。
 
@@ -277,7 +277,7 @@ def lambda_rank(input_dim):
 训练LambdaRank模型只需要运行命令：
 
 ```python
-python lambda_rank.py
+bash ./run_lambdarank.sh
 ```
 
 脚本会自动下载数据，训练LambdaRank模型，并将每个轮次的模型存储下来。
@@ -303,7 +303,7 @@ query_id : 2, relevance_score:2, feature_vector 0:0.1, 1:0.4, 2:0.1  #doc1
 
 需要转换为Listwise格式，例如
 
-<query_id><relevance_score> <feature_vector>
+`<query_id><relevance_score> <feature_vector>`
 
 ```tex
 1    1    0.1,0.2,0.4

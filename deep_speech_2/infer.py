@@ -10,7 +10,9 @@ import multiprocessing
 import paddle.v2 as paddle
 from data_utils.data import DataGenerator
 from model import deep_speech2
-from decoder import ctc_decode
+from decoder import *
+from lm.lm_scorer import LmScorer
+from error_rate import wer
 import utils
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -45,6 +47,17 @@ parser.add_argument(
     type=int,
     help="Number of cpu threads for preprocessing data. (default: %(default)s)")
 parser.add_argument(
+    "--num_processes_beam_search",
+    default=multiprocessing.cpu_count(),
+    type=int,
+    help="Number of cpu processes for beam search. (default: %(default)s)")
+parser.add_argument(
+    "--specgram_type",
+    default='linear',
+    type=str,
+    help="Feature type of audio data: 'linear' (power spectrum)"
+    " or 'mfcc'. (default: %(default)s)")
+parser.add_argument(
     "--mean_std_filepath",
     default='mean_std.npz',
     type=str,
@@ -64,16 +77,54 @@ parser.add_argument(
     default='datasets/vocab/eng_vocab.txt',
     type=str,
     help="Vocabulary filepath. (default: %(default)s)")
+parser.add_argument(
+    "--decode_method",
+    default='beam_search',
+    type=str,
+    help="Method for ctc decoding: best_path or beam_search. (default: %(default)s)"
+)
+parser.add_argument(
+    "--beam_size",
+    default=500,
+    type=int,
+    help="Width for beam search decoding. (default: %(default)d)")
+parser.add_argument(
+    "--num_results_per_sample",
+    default=1,
+    type=int,
+    help="Number of output per sample in beam search. (default: %(default)d)")
+parser.add_argument(
+    "--language_model_path",
+    default="lm/data/common_crawl_00.prune01111.trie.klm",
+    type=str,
+    help="Path for language model. (default: %(default)s)")
+parser.add_argument(
+    "--alpha",
+    default=0.26,
+    type=float,
+    help="Parameter associated with language model. (default: %(default)f)")
+parser.add_argument(
+    "--beta",
+    default=0.1,
+    type=float,
+    help="Parameter associated with word count. (default: %(default)f)")
+parser.add_argument(
+    "--cutoff_prob",
+    default=0.99,
+    type=float,
+    help="The cutoff probability of pruning"
+    "in beam search. (default: %(default)f)")
 args = parser.parse_args()
 
 
 def infer():
-    """Max-ctc-decoding for DeepSpeech2."""
+    """Inference for DeepSpeech2."""
     # initialize data generator
     data_generator = DataGenerator(
         vocab_filepath=args.vocab_filepath,
         mean_std_filepath=args.mean_std_filepath,
         augmentation_config='{}',
+        specgram_type=args.specgram_type,
         num_threads=args.num_threads_data)
 
     # create network config
@@ -102,6 +153,7 @@ def infer():
     batch_reader = data_generator.batch_reader_creator(
         manifest_path=args.decode_manifest_path,
         batch_size=args.num_samples,
+        min_batch_size=1,
         sortagrad=False,
         shuffle_method=None)
     infer_data = batch_reader().next()
@@ -115,16 +167,52 @@ def infer():
         for i in xrange(len(infer_data))
     ]
 
-    # decode and print
-    for i, probs in enumerate(probs_split):
-        output_transcription = ctc_decode(
-            probs_seq=probs,
-            vocabulary=data_generator.vocab_list,
-            method="best_path")
-        target_transcription = ''.join(
+    # targe transcription
+    target_transcription = [
+        ''.join(
             [data_generator.vocab_list[index] for index in infer_data[i][1]])
-        print("Target Transcription: %s \nOutput Transcription: %s \n" %
-              (target_transcription, output_transcription))
+        for i, probs in enumerate(probs_split)
+    ]
+
+    ## decode and print
+    # best path decode
+    wer_sum, wer_counter = 0, 0
+    if args.decode_method == "best_path":
+        for i, probs in enumerate(probs_split):
+            best_path_transcription = ctc_best_path_decoder(
+                probs_seq=probs, vocabulary=data_generator.vocab_list)
+            print("\nTarget Transcription: %s\nOutput Transcription: %s" %
+                  (target_transcription[i], best_path_transcription))
+            wer_cur = wer(target_transcription[i], best_path_transcription)
+            wer_sum += wer_cur
+            wer_counter += 1
+            print("cur wer = %f, average wer = %f" %
+                  (wer_cur, wer_sum / wer_counter))
+    # beam search decode
+    elif args.decode_method == "beam_search":
+        ext_scorer = LmScorer(args.alpha, args.beta, args.language_model_path)
+        beam_search_batch_results = ctc_beam_search_decoder_batch(
+            probs_split=probs_split,
+            vocabulary=data_generator.vocab_list,
+            beam_size=args.beam_size,
+            blank_id=len(data_generator.vocab_list),
+            num_processes=args.num_processes_beam_search,
+            cutoff_prob=args.cutoff_prob,
+            ext_scoring_func=ext_scorer, )
+        for i, beam_search_result in enumerate(beam_search_batch_results):
+            print("\nTarget Transcription:\t%s" % target_transcription[i])
+            for index in xrange(args.num_results_per_sample):
+                result = beam_search_result[index]
+                #output: index, log prob, beam result
+                print("Beam %d: %f \t%s" % (index, result[0], result[1]))
+            wer_cur = wer(target_transcription[i], beam_search_result[0][1])
+            wer_sum += wer_cur
+            wer_counter += 1
+            print("cur wer = %f , average wer = %f" %
+                  (wer_cur, wer_sum / wer_counter))
+    else:
+        raise ValueError("Decoding method [%s] is not supported." %
+                         decode_method)
 
 
 def main():
