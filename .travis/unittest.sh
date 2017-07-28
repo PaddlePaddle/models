@@ -10,6 +10,7 @@ unittest(){
     cd $1 > /dev/null
     if [ -f "setup.sh" ]; then
         sh setup.sh
+        export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     fi
     if [ $? != 0 ]; then
         exit 1
