@@ -48,10 +48,19 @@ parser.add_argument(
     type=distutils.util.strtobool,
     help="If True, remove tar file after unpacking automatically."
     " (default: %(default)s)")
+parser.add_argument(
+    "--char_transcription",
+    default="True",
+    type=distutils.util.strtobool,
+    help="If True, transcription texts would be character-based "
+    "and all whitespace in a transcription text would be removed. "
+    "Otherwise transcription texts would be word-based."
+    " (default: %(default)s)")
 args = parser.parse_args()
 
 
-def create_manifest(transcript_data_dir, audio_data_dir, manifest_path):
+def create_manifest(transcript_data_dir, audio_data_dir, manifest_path,
+                    char_transcription):
     """Create a manifest json file summarizing the data set, with each line
     containing the meta data (i.e. audio filepath, transcription text, audio
     duration) of each audio file within the data set.
@@ -67,7 +76,8 @@ def create_manifest(transcript_data_dir, audio_data_dir, manifest_path):
             raise IOError("Transcript file %s not exists." % \
                     transcript_file_path)
         transcript_text = open(transcript_file_path).readline().strip()
-        transcript_text = ''.join(transcript_text.split(' '))
+        if char_transcription == True:
+            transcript_text = ''.join(transcript_text.split(' '))
         audio_file_path = os.path.join(audio_data_dir, audio_file)
         audio_data, samplerate = soundfile.read(audio_file_path)
         duration = float(len(audio_data)) / samplerate
@@ -84,7 +94,8 @@ def create_manifest(transcript_data_dir, audio_data_dir, manifest_path):
             out_file.write(line + '\n')
 
 
-def prepare_dataset(target_dir, manifest_prefix, download_noisy, rm_tar):
+def prepare_dataset(target_dir, manifest_prefix, char_transcription,
+                    download_noisy, rm_tar):
     def download_unpack(url, md5sum, download_dir, unpack_dir, rm_tar):
         if not os.path.exists(unpack_dir):
             filepath = download(url, md5sum, download_dir)
@@ -97,12 +108,19 @@ def prepare_dataset(target_dir, manifest_prefix, download_noisy, rm_tar):
     download_unpack(URL_CLEAN_DATA, MD5_CLEAN_DATA, target_dir, clean_dir,
                     rm_tar)
     # create [train-clean|dev-clean|test-clean] manifest file
+    if char_transcription == True:
+        transcription_type = 'char'
+    else:
+        transcription_type = 'word'
+
     base_dir = os.path.join(clean_dir, 'data_thchs30')
     transcript_data_dir = os.path.join(base_dir, 'data')
     for data_type in ['train', 'dev', 'test']:
-        manifest_path = manifest_prefix + '.' + data_type + '-clean'
+        manifest_path = '%s.%s-%s-clean' % \
+                (manifest_prefix, transcription_type, data_type)
         audio_data_dir = os.path.join(base_dir, data_type)
-        create_manifest(transcript_data_dir, audio_data_dir, manifest_path)
+        create_manifest(transcript_data_dir, audio_data_dir, manifest_path,
+                        char_transcription)
 
     if download_noisy == True:
         # create test-0db-noise-[cafe|car|white] manifest file
@@ -111,10 +129,11 @@ def prepare_dataset(target_dir, manifest_prefix, download_noisy, rm_tar):
                         target_dir, noisy_test_dir, rm_tar)
         noisy_base_dir = os.path.join(noisy_test_dir, 'test-noise', '0db')
         for data_type in ['cafe', 'car', 'white']:
-            manifest_path = manifest_prefix + '.' + \
-                'test-0db-noise-' + data_type
+            manifest_path = '%s.%s-test-0db-noise-%s' % \
+                    (manifest_prefix, transcription_type, data_type)
             audio_data_dir = os.path.join(noisy_base_dir, data_type)
-            create_manifest(transcript_data_dir, audio_data_dir, manifest_path)
+            create_manifest(transcript_data_dir, audio_data_dir, manifest_path,
+                            char_transcription)
 
 
 def main():
@@ -126,7 +145,11 @@ def main():
     rm_tar = False
     if args.remove_tar == True:
         rm_tar = True
-    prepare_dataset(target_dir, manifest_prefix, download_noisy, rm_tar)
+    char_transcription = False
+    if args.char_transcription == True:
+        char_transcription = True
+    prepare_dataset(target_dir, manifest_prefix, char_transcription,
+                    download_noisy, rm_tar)
 
 
 if __name__ == '__main__':
