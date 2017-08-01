@@ -100,12 +100,12 @@ parser.add_argument(
     help="Path for language model. (default: %(default)s)")
 parser.add_argument(
     "--alpha",
-    default=0.26,
+    default=0.34,
     type=float,
     help="Parameter associated with language model. (default: %(default)f)")
 parser.add_argument(
     "--beta",
-    default=0.1,
+    default=0.35,
     type=float,
     help="Parameter associated with word count. (default: %(default)f)")
 parser.add_argument(
