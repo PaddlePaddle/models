@@ -35,6 +35,7 @@ class DeepSpeech2Model(object):
                              rnn_layer_size)
         self._create_parameters(pretrained_model_path)
         self._inferer = None
+        self._loss_inferer = None
         self._ext_scorer = None
 
     def train(self,
@@ -118,15 +119,33 @@ class DeepSpeech2Model(object):
             num_passes=num_passes,
             feeding=feeding_dict)
 
+    def infer_loss_batch(self, infer_data):
+        """Model inference. Infer the ctc loss for a batch of speech
+        utterances.
+
+        :param infer_data: List of utterances to infer, with each utterance a
+                           tuple of audio features and transcription text (empty
+                           string).
+        :type infer_data: list
+        :return: List of ctc loss.
+        :rtype: List of float
+        """
+        # define inferer
+        if self._loss_inferer == None:
+            self._loss_inferer = paddle.inference.Inference(
+                output_layer=self._loss, parameters=self._parameters)
+        # run inference
+        return self._loss_inferer.infer(input=infer_data)
+
     def infer_batch(self, infer_data, decode_method, beam_alpha, beam_beta,
                     beam_size, cutoff_prob, vocab_list, language_model_path,
                     num_processes):
         """Model inference. Infer the transcription for a batch of speech
         utterances.
 
-        :param infer_data: List of utterances to infer, with each utterance a
-                           tuple of audio features and transcription text (empty
-                           string).
+        :param infer_data: List of utterances to infer, with each utterance
+                           consisting of a tuple of audio features and
+                           transcription text (empty string).
         :type infer_data: list
         :param decode_method: Decoding method name, 'best_path' or
                               'beam search'.
@@ -187,6 +206,7 @@ class DeepSpeech2Model(object):
                 num_processes=num_processes,
                 ext_scoring_func=self._ext_scorer,
                 cutoff_prob=cutoff_prob)
+
             results = [result[0][1] for result in beam_search_results]
         else:
             raise ValueError("Decoding method [%s] is not supported." %

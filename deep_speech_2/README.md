@@ -143,3 +143,28 @@ python tune.py --help
 ```
 
 Then reset parameters with the tuning result before inference or evaluating.
+
+### Playing with the ASR Demo
+
+A real-time ASR demo is built for users to try out the ASR model with their own voice. Please do the following installation on the machine you'd like to run the demo's client (no need for the machine running the demo's server).
+
+For example, on MAC OS X:
+
+```
+brew install portaudio
+pip install pyaudio
+pip install pynput
+```
+After a model and language model is prepared, we can first start the demo's server:
+
+```
+CUDA_VISIBLE_DEVICES=0 python demo_server.py
+```
+And then in another console, start the demo's client:
+
+```
+python demo_client.py
+```
+On the client console, press and hold the "white-space" key on the keyboard to start talking, until you finish your speech and then release the "white-space" key. The decoding results (infered transcription) will be displayed.
+
+It could be possible to start the server and the client in two seperate machines, e.g. `demo_client.py` is usually started in a machine with a microphone hardware, while `demo_server.py` is usually started in a remote server with powerful GPUs. Please first make sure that these two machines have network access to each other, and then use `--host_ip` and `--host_port` to indicate the server machine's actual IP address (instead of the `localhost` as default) and TCP port, in both `demo_server.py` and `demo_client.py`.
