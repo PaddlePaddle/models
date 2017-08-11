@@ -7,22 +7,14 @@ devkit_dir = './VOCdevkit'
 years = ['2007', '2012']
 
 
-def get_img_dir(devkit_dir, year):
-    return osp.join(devkit_dir, 'VOC' + year, 'JPEGImages')
-
-
-def get_annotation_dir(devkit_dir, year):
-    return osp.join(devkit_dir, 'VOC' + year, 'Annotations')
-
-
-def get_filelist_dir(devkit_dir, year):
-    return osp.join(devkit_dir, 'VOC' + year, 'ImageSets/Main')
+def get_dir(devkit_dir, year, type):
+    return osp.join(devkit_dir, 'VOC' + year, type)
 
 
 def walk_dir(devkit_dir, year):
-    filelist_dir = get_filelist_dir(devkit_dir, year)
-    annotation_dir = get_annotation_dir(devkit_dir, year)
-    img_dir = get_img_dir(devkit_dir, year)
+    filelist_dir = get_dir(devkit_dir, year, 'ImageSets/Main')
+    annotation_dir = get_dir(devkit_dir, year, 'Annotations')
+    img_dir = get_dir(devkit_dir, year, 'JPEGImages')
     trainval_list = []
     test_list = []
     added = set()

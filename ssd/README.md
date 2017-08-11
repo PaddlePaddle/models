@@ -6,7 +6,7 @@ SSD使用一个卷积神经网络实现“端到端”的检测，所谓“端�
 
 1. 将最后的fc6、fc7全连接层变为卷积层，卷积层参数通过对原始fc6、fc7参数采样得到。
 2. 将pool5层的参数由2x2-s2（kernel大小为2x2，stride size为2）更改为3x3-s1-p1（kernel大小为3x3，stride size为1，padding size为1）。
-3. 在conv4\_3、conv7、conv8\_2、conv9\_2、conv10\_2及pool11层后面接了priorbox层，priorbox层的主要目的是根据输入的feature map生成一系列的矩形候选框。关于SSD的更详细的介绍可以参考论文\[[1](#引用)\]。
+3. 在conv4\_3、conv7、conv8\_2、conv9\_2、conv10\_2及pool11层后面接了priorbox层，priorbox层的主要目的是根据输入的特征图（feature map）生成一系列的矩形候选框。关于SSD的更详细的介绍可以参考论文\[[1](#引用)\]。
 
 下图为模型（300x300）的总体结构：
 
@@ -17,12 +17,12 @@ SSD使用一个卷积神经网络实现“端到端”的检测，所谓“端�
 
 图中每个矩形盒子代表一个卷积层，最后的两个矩形框分别表示汇总各卷积层输出结果和后处理阶段。具体地，在预测阶段网络会输出一组候选矩形框，每个矩形包含两类信息：位置和类别得分，图中倒数第二个矩形框即表示网络的检测结果的汇总处理，由于候选矩形框数量较多且很多矩形框重叠严重，这时需要经过后处理来筛选出质量较高的少数矩形框，这里的后处理主要指非极大值抑制（Non-maximum Suppression）。
 
-从SSD的网络结构可以看出，候选矩形框在多个feature map上生成，不同的feature map具有的感受野不同，这样可以在不同尺度扫描图像，相对于其他检测方法可以生成更丰富的候选框，从而提高检测精度；另一方面SSD对VGG16的扩展部分以较小的代价实现对候选框的位置和类别得分的计算，整个过程只需要一个卷积神经网络完成，所以速度较快。
+从SSD的网络结构可以看出，候选矩形框在多个特征图（feature map上）生成，不同的feature map具有的感受野不同，这样可以在不同尺度扫描图像，相对于其他检测方法可以生成更丰富的候选框，从而提高检测精度；另一方面SSD对VGG16的扩展部分以较小的代价实现对候选框的位置和类别得分的计算，整个过程只需要一个卷积神经网络完成，所以速度较快。
 
 ## 示例总览
 本示例共包含如下文件：
 <center>
-<center>表1. 示例文件</center>
+表1. 示例文件
 
 文件 |  用途
 ---- | -----
@@ -63,7 +63,7 @@ def prepare_filelist(devkit_dir, years, output_dir):
             ftest.write(item[0] + ' ' + item[1] + '\n')
 ```
 
-该函数首先对每个year的数据进行处理，然后将训练图像的文件路径列表进行随机打乱，最后保存训练文件列表和测试文件列表。默认```prepare_voc_data.py```和```VOCdevkit```在相同目录下，且生成的文件列表也在该目录。需注意```trainval.txt```既包含VOC2007的训练数据，也包含VOC2012的训练数据，```test.txt```只包含VOC2007的测试数据。我们这里提供```trainval.txt```前几行输入作为样例：
+该函数首先对每一年（year）的数据进行处理，然后将训练图像的文件路径列表进行随机打乱，最后保存训练文件列表和测试文件列表。默认```prepare_voc_data.py```和```VOCdevkit```在相同目录下，且生成的文件列表也在该目录。需注意```trainval.txt```既包含VOC2007的训练数据，也包含VOC2012的训练数据，```test.txt```只包含VOC2007的测试数据。我们这里提供```trainval.txt```前几行输入作为样例：
 
 ```
 VOCdevkit/VOC2007/JPEGImages/000005.jpg VOCdevkit/VOC2007/Annotations/000005.xml
@@ -98,6 +98,15 @@ train(train_file_list='./data/trainval.txt',
 2. 调用```data_provider.Settings```配置数据预处理所需参数，其中```cfg.IMG_HEIGHT```和```cfg.IMG_WIDTH```在配置文件```config/vgg_config.py```中设置，这里均为300，300x300是一个典型配置，兼顾效率和检测精度，也可以通过修改配置文件扩展到500x500。
 3. 调用```train```执行训练，其中```train_file_list```指定训练数据列表，```dev_file_list```指定评估数据列表，```init_model_path```指定预训练模型位置。
 4. 训练过程中会打印一些日志信息，每训练10个batch会输出当前的轮数、当前batch的cost及mAP（mean Average Precision，平均精度均值），每训练一个pass，会保存一次模型，默认保存在```checkpoints```目录下（注：需事先创建）。
+
+下面给出SDD300x300在VOC数据集（train包括07+12，test为07）上的mAP曲线，迭代140轮mAP可达到71.52%。
+
+<p align="center">
+<img src="images/SSD300x300_map.png" hspace='10'/> <br/>
+
+图2. SSD300x300 mAP收敛曲线
+</p>
+
 
 ### 模型评估
 执行```python eval.py```即可对模型进行评估，```eval.py```的关键执行逻辑如下：
@@ -134,7 +143,28 @@ infer(
     threshold=0.3)
 ```
 
-其中```eval_file_list```指定图像路径列表；```save_path```指定预测结果保存路径；```data_args```如上；```batch_size```为每多少样本预测一次；```model_path```指模型的位置；```threshold```为置信度阈值，只有得分大于或等于该值的才会输出。示例还提供了一个可视化脚本，直接运行```python visual.py```即可，须指定输出检测结果路径及输出目录。
+其中```eval_file_list```指定图像路径列表；```save_path```指定预测结果保存路径；```data_args```如上；```batch_size```为每多少样本预测一次；```model_path```指模型的位置；```threshold```为置信度阈值，只有得分大于或等于该值的才会输出。下面给出```infer.res```的一些输出样例：
+
+```
+VOCdevkit/VOC2007/JPEGImages/006936.jpg 12 0.997844 131.255611777 162.271582842 396.475315094 334.0
+VOCdevkit/VOC2007/JPEGImages/006936.jpg 14 0.998557 229.160234332 49.5991278887 314.098775387 312.913876176
+VOCdevkit/VOC2007/JPEGImages/006936.jpg 14 0.372522 187.543615699 133.727034628 345.647156239 327.448492289
+...
+```
+
+一共包含4个字段，以tab分割，第一个字段是检测图像路径，第二字段为检测矩形框内类别，第三个字段是置信度，第四个字段是4个坐标值（以空格分割）。
+
+示例还提供了一个可视化脚本，直接运行```python visual.py```即可，须指定输出检测结果路径及输出目录，默认可视化后图像保存在```./visual_res```，下面是用训练好的模型infer部分图像，并可视化的效果：
+
+<p align="center">
+<img src="images/vis_1.jpg" height=150 width=200 hspace='10'/>
+<img src="images/vis_2.jpg" height=150 width=200 hspace='10'/>
+<img src="images/vis_3.jpg" height=150 width=100 hspace='10'/>
+<img src="images/vis_4.jpg" height=150 width=200 hspace='10'/> <br />
+
+图2. SSD300x300 检测可视化示例
+</p>
+
 
 ## 自有数据集
 在自有数据上训练PaddlePaddle SSD需要完成两个关键准备，首先需要适配网络可以接受的输入格式，这里提供一个推荐的结构，以```train.txt```为例

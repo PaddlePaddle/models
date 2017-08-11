@@ -8,17 +8,6 @@ from config.pascal_voc_conf import cfg
 
 
 def train(train_file_list, dev_file_list, data_args, init_model_path):
-    cost, detect_out = vgg_ssd_net.net_conf('train')
-
-    parameters = paddle.parameters.create(cost)
-
-    if not (init_model_path is None):
-        assert os.path.isfile(init_model_path), 'Invalid model.'
-        fparams = paddle.parameters.Parameters.from_tar(
-            gzip.open(init_model_path))
-        for param_name in fparams.names():
-            parameters.set(param_name, fparams.get(param_name))
-
     optimizer = paddle.optimizer.Momentum(
         momentum=cfg.TRAIN.MOMENTUM,
         learning_rate=cfg.TRAIN.LEARNING_RATE,
@@ -27,6 +16,13 @@ def train(train_file_list, dev_file_list, data_args, init_model_path):
         learning_rate_decay_a=cfg.TRAIN.LEARNING_RATE_DECAY_A,
         learning_rate_decay_b=cfg.TRAIN.LEARNING_RATE_DECAY_B,
         learning_rate_schedule=cfg.TRAIN.LEARNING_RATE_SCHEDULE)
+
+    cost, detect_out = vgg_ssd_net.net_conf('train')
+
+    parameters = paddle.parameters.create(cost)
+    if not (init_model_path is None):
+        assert os.path.isfile(init_model_path), 'Invalid model.'
+        parameters.init_from_tar(gzip.open(init_model_path))
 
     trainer = paddle.trainer.SGD(
         cost=cost,
@@ -37,8 +33,7 @@ def train(train_file_list, dev_file_list, data_args, init_model_path):
     feeding = {'image': 0, 'bbox': 1}
 
     train_reader = paddle.batch(
-        paddle.reader.shuffle(
-            data_provider.train(data_args, train_file_list), buf_size=200),
+        data_provider.train(data_args, train_file_list),
         batch_size=cfg.TRAIN.BATCH_SIZE)  # generate a batch image each time
 
     dev_reader = paddle.batch(

@@ -31,15 +31,8 @@ class Settings(object):
 
         self._resize_height = resize_h
         self._resize_width = resize_w
-        self._mean_value = mean_value
-
-        img_size = self._resize_height * self._resize_width
-        self._img_mean = np.zeros(img_size * 3, dtype=np.single)
-        for idx, value in enumerate(self._mean_value):
-            self._img_mean[idx * img_size:(idx + 1) * img_size] = value
-        self._img_mean = self._img_mean.reshape(3, self._resize_height,
-                                                self._resize_width)
-        self._img_mean = self._img_mean.astype('float32')
+        self._img_mean = np.array(mean_value)[:, np.newaxis, np.newaxis].astype(
+            'float32')
 
     @property
     def data_dir(self):
@@ -130,12 +123,12 @@ def _reader_creator(settings, file_list, mode, shuffle):
                             image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.0,
                                                1.0))
                         """ random crop """
-                        sampled_bbox = image_util.generateBatchSamples(
+                        sampled_bbox = image_util.generate_batch_samples(
                             batch_sampler, bbox_labels, img_width, img_height)
 
                         if len(sampled_bbox) > 0:
                             idx = int(random.uniform(0, len(sampled_bbox)))
-                            img, sample_labels = image_util.cropImage(
+                            img, sample_labels = image_util.crop_image(
                                 img, bbox_labels, sampled_bbox[idx], img_width,
                                 img_height)
 

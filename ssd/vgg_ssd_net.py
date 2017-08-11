@@ -9,67 +9,56 @@ def net_conf(mode):
     """
     default_l2regularization = cfg.TRAIN.L2REGULARIZATION
 
-    default_bias_attr = paddle.attr.ParamAttr(
-        l2_rate=0.0, learning_rate=2.0, momentum=cfg.TRAIN.MOMENTUM)
+    default_bias_attr = paddle.attr.ParamAttr(l2_rate=0.0, learning_rate=2.0)
     default_static_bias_attr = paddle.attr.ParamAttr(is_static=True)
 
-    def xavier(channels, filter_size, local_lr, regularization):
-        init_w = (3.0 / (filter_size**2 * channels))**0.5
+    def get_param_attr(local_lr, regularization):
         is_static = False
         if local_lr == 0.0:
             is_static = True
         return paddle.attr.ParamAttr(
-            initial_min=(0.0 - init_w),
-            initial_max=init_w,
-            learning_rate=local_lr,
-            l2_rate=regularization,
-            momentum=cfg.TRAIN.MOMENTUM,
-            is_static=is_static)
+            learning_rate=local_lr, l2_rate=regularization, is_static=is_static)
+
+    def conv_group(stack_num, name_list, input, filter_size_list, num_channels,
+                   num_filters_list, stride_list, padding_list,
+                   common_bias_attr, common_param_attr, common_act):
+        conv = input
+        in_channels = num_channels
+        for i in xrange(stack_num):
+            conv = paddle.layer.img_conv(
+                name=name_list[i],
+                input=conv,
+                filter_size=filter_size_list[i],
+                num_channels=in_channels,
+                num_filters=num_filters_list[i],
+                stride=stride_list[i],
+                padding=padding_list[i],
+                bias_attr=common_bias_attr,
+                param_attr=common_param_attr,
+                act=common_act)
+            in_channels = num_filters_list[i]
+        return conv
 
     def vgg_block(idx_str, input, num_channels, num_filters, pool_size,
                   pool_stride, pool_pad):
         layer_name = "conv%s_" % idx_str
-        conv1 = paddle.layer.img_conv(
-            name=layer_name + "1",
-            input=input,
-            filter_size=3,
-            num_channels=num_channels,
-            num_filters=num_filters,
-            stride=1,
-            padding=1,
-            bias_attr=default_bias_attr,
-            param_attr=xavier(num_filters, 3, 1, default_l2regularization),
-            act=paddle.activation.Relu())
-        conv2 = paddle.layer.img_conv(
-            name=layer_name + "2",
-            input=conv1,
-            filter_size=3,
-            num_channels=num_filters,
-            num_filters=num_filters,
-            stride=1,
-            padding=1,
-            bias_attr=default_bias_attr,
-            param_attr=xavier(num_filters, 3, 1, default_l2regularization),
-            act=paddle.activation.Relu())
-        conv3 = paddle.layer.img_conv(
-            name=layer_name + "3",
-            input=conv2,
-            filter_size=3,
-            num_channels=num_filters,
-            num_filters=num_filters,
-            stride=1,
-            padding=1,
-            bias_attr=default_bias_attr,
-            param_attr=xavier(num_filters, 3, 1, default_l2regularization),
-            act=paddle.activation.Relu())
+        stack_num = 3
+        name_list = [layer_name + str(i + 1) for i in xrange(3)]
+
+        conv = conv_group(stack_num, name_list, input, [3] * stack_num,
+                          num_channels, [num_filters] * stack_num,
+                          [1] * stack_num, [1] * stack_num, default_bias_attr,
+                          get_param_attr(1, default_l2regularization),
+                          paddle.activation.Relu())
+
         pool = paddle.layer.img_pool(
-            input=conv3,
+            input=conv,
             pool_size=pool_size,
             num_channels=num_filters,
             pool_type=paddle.pooling.CudnnMax(),
             stride=pool_stride,
             padding=pool_pad)
-        return conv3, pool
+        return conv, pool
 
     def mbox_block(layer_idx, input, num_channels, filter_size, loc_filters,
                    conf_filters):
@@ -83,8 +72,7 @@ def net_conf(mode):
             stride=1,
             padding=1,
             bias_attr=default_bias_attr,
-            param_attr=xavier(loc_filters, filter_size, 1,
-                              default_l2regularization),
+            param_attr=get_param_attr(1, default_l2regularization),
             act=paddle.activation.Identity())
 
         mbox_conf_name = layer_idx + "_mbox_conf"
@@ -97,8 +85,7 @@ def net_conf(mode):
             stride=1,
             padding=1,
             bias_attr=default_bias_attr,
-            param_attr=xavier(conf_filters, filter_size, 1,
-                              default_l2regularization),
+            param_attr=get_param_attr(1, default_l2regularization),
             act=paddle.activation.Identity())
 
         return mbox_loc, mbox_conf
@@ -106,30 +93,14 @@ def net_conf(mode):
     def ssd_block(layer_idx, input, img_shape, num_channels, num_filters1,
                   num_filters2, aspect_ratio, variance, min_size, max_size):
         layer_name = "conv" + layer_idx + "_"
+        stack_num = 2
         conv1_name = layer_name + "1"
-        conv1 = paddle.layer.img_conv(
-            name=conv1_name,
-            input=input,
-            filter_size=1,
-            num_channels=num_channels,
-            num_filters=num_filters1,
-            stride=1,
-            padding=0,
-            bias_attr=default_bias_attr,
-            param_attr=xavier(num_filters1, 1, 1, default_l2regularization),
-            act=paddle.activation.Relu())
         conv2_name = layer_name + "2"
-        conv2 = paddle.layer.img_conv(
-            name=conv2_name,
-            input=conv1,
-            filter_size=3,
-            num_channels=num_filters1,
-            num_filters=num_filters2,
-            stride=2,
-            padding=1,
-            bias_attr=default_bias_attr,
-            param_attr=xavier(num_filters2, 3, 1, default_l2regularization),
-            act=paddle.activation.Relu())
+        conv2 = conv_group(stack_num, [conv1_name, conv2_name], input, [1, 3],
+                           num_channels, [num_filters1, num_filters2], [1, 2],
+                           [0, 1], default_bias_attr,
+                           get_param_attr(1, default_l2regularization),
+                           paddle.activation.Relu())
 
         loc_filters = (len(aspect_ratio) * 2 + 1 + len(max_size)) * 4
         conf_filters = (
@@ -153,28 +124,12 @@ def net_conf(mode):
         height=cfg.IMG_HEIGHT,
         width=cfg.IMG_WIDTH)
 
-    conv1_1 = paddle.layer.img_conv(
-        name="conv1_1",
-        input=img,
-        filter_size=3,
-        num_channels=3,
-        num_filters=64,
-        stride=1,
-        padding=1,
-        bias_attr=default_static_bias_attr,
-        param_attr=xavier(64, 3, 0, 0),
-        act=paddle.activation.Relu())
-    conv1_2 = paddle.layer.img_conv(
-        name="conv1_2",
-        input=conv1_1,
-        filter_size=3,
-        num_channels=64,
-        num_filters=64,
-        stride=1,
-        padding=1,
-        bias_attr=default_static_bias_attr,
-        param_attr=xavier(64, 3, 0, 0),
-        act=paddle.activation.Relu())
+    stack_num = 2
+    conv1_2 = conv_group(stack_num, ['conv1_1', 'conv1_2'], img,
+                         [3] * stack_num, 3, [64] * stack_num, [1] * stack_num,
+                         [1] * stack_num, default_static_bias_attr,
+                         get_param_attr(0, 0), paddle.activation.Relu())
+
     pool1 = paddle.layer.img_pool(
         name="pool1",
         input=conv1_2,
@@ -183,28 +138,12 @@ def net_conf(mode):
         num_channels=64,
         stride=2)
 
-    conv2_1 = paddle.layer.img_conv(
-        name="conv2_1",
-        input=pool1,
-        filter_size=3,
-        num_channels=64,
-        num_filters=128,
-        stride=1,
-        padding=1,
-        bias_attr=default_static_bias_attr,
-        param_attr=xavier(128, 3, 0, 0),
-        act=paddle.activation.Relu())
-    conv2_2 = paddle.layer.img_conv(
-        name="conv2_2",
-        input=conv2_1,
-        filter_size=3,
-        num_channels=128,
-        num_filters=128,
-        stride=1,
-        padding=1,
-        bias_attr=default_static_bias_attr,
-        param_attr=xavier(128, 3, 0, 0),
-        act=paddle.activation.Relu())
+    stack_num = 2
+    conv2_2 = conv_group(stack_num, ['conv2_1', 'conv2_2'], pool1, [3] *
+                         stack_num, 64, [128] * stack_num, [1] * stack_num,
+                         [1] * stack_num, default_static_bias_attr,
+                         get_param_attr(0, 0), paddle.activation.Relu())
+
     pool2 = paddle.layer.img_pool(
         name="pool2",
         input=conv2_2,
@@ -226,39 +165,18 @@ def net_conf(mode):
         name="conv4_3_norm",
         input=conv4_3,
         param_attr=paddle.attr.ParamAttr(
-            initial_mean=20,
-            initial_std=0,
-            is_static=False,
-            learning_rate=1,
-            momentum=cfg.TRAIN.MOMENTUM))
+            initial_mean=20, initial_std=0, is_static=False, learning_rate=1))
     conv4_3_norm_mbox_loc, conv4_3_norm_mbox_conf = \
             mbox_block("conv4_3_norm", conv4_3_norm, 512, 3, 12, 63)
 
     conv5_3, pool5 = vgg_block("5", pool4, 512, 512, 3, 1, 1)
 
-    fc6 = paddle.layer.img_conv(
-        name="fc6",
-        input=pool5,
-        filter_size=3,
-        num_channels=512,
-        num_filters=1024,
-        stride=1,
-        padding=1,
-        bias_attr=default_bias_attr,
-        param_attr=xavier(1024, 3, 1, default_l2regularization),
-        act=paddle.activation.Relu())
+    stack_num = 2
+    fc7 = conv_group(stack_num, ['fc6', 'fc7'], pool5, [3, 1], 512, [1024] *
+                     stack_num, [1] * stack_num, [1, 0], default_bias_attr,
+                     get_param_attr(1, default_l2regularization),
+                     paddle.activation.Relu())
 
-    fc7 = paddle.layer.img_conv(
-        name="fc7",
-        input=fc6,
-        filter_size=1,
-        num_channels=1024,
-        num_filters=1024,
-        stride=1,
-        padding=0,
-        bias_attr=default_bias_attr,
-        param_attr=xavier(1024, 1, 1, default_l2regularization),
-        act=paddle.activation.Relu())
     fc7_mbox_loc, fc7_mbox_conf = mbox_block("fc7", fc7, 1024, 3, 24, 126)
     fc7_mbox_priorbox = paddle.layer.priorbox(
         input=fc7,
