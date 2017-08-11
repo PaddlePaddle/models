@@ -63,23 +63,20 @@ SSD使用一个卷积神经网络实现“端到端”的检测，所谓“端�
 
 ## 示例总览
 本示例共包含如下文件：
-<center>
-表1. 示例文件
 
-文件 |  用途
----- | -----
-train.py | 训练脚本
-eval.py | 评估脚本，用于评估训好模型
-infer.py | 检测脚本，给定图片及模型，实施检测
-visual.py | 检测结果可视化
-image_util.py | 图像预处理所需公共函数
-data_provider.py | 数据处理脚本，生成训练、评估或检测所需数据
-config/pascal\_voc\_conf.py | 神经网络超参数配置文件
-data/label\_list | 类别列表
-data/prepare\_voc\_data.py | 准备训练PASCAL VOC数据列表
-
-</center>
-
+<table>
+<caption>表1. 示例文件</caption>
+<tr><th>文件</th><th>用途</th></tr>
+<tr><td>train.py</td><td>训练脚本</td></tr>
+<tr><td>eval.py</td><td>评估脚本，用于评估训好模型</td></tr>
+<tr><td>infer.py</td><td>检测脚本，给定图片及模型，实施检测</td></tr>
+<tr><td>visual.py</td><td>检测结果可视化</td></tr>
+<tr><td>image_util.py</td><td>图像预处理所需公共函数</td></tr>
+<tr><td>data_provider.py</td><td>数据处理脚本，生成训练、评估或检测所需数据</td></tr>
+<tr><td>config/pascal_voc_conf.py</td><td>神经网络超参数配置文件</td></tr>
+<tr><td>data/label_list</td><td>类别列表</td></tr>
+<tr><td>data/prepare_voc_data.py</td><td>准备训练PASCAL VOC数据列表</td></tr>
+</table>
 
 训练阶段需要对数据做预处理，包括裁剪、采样等，这部分操作在```image_util.py```和```data_provider.py```中完成。值得注意的是，```config/vgg_config.py```为参数配置文件，包括训练参数、神经网络参数等，本配置文件包含参数是针对PASCAL VOC数据配置的，当训练自有数据时，需要仿照该文件配置新的参数。```data/prepare_voc_data.py```脚本用来生成文件列表，包括切分训练集和测试集，使用时需要用户事先下载并解压数据，默认采用VOC2007和VOC2012。
 
@@ -137,15 +134,14 @@ train(train_file_list='./data/trainval.txt',
 主要包括：
 
 1. 调用```paddle.init```指定使用4卡GPU训练。
-2. 调用```data_provider.Settings```配置数据预处理所需参数，其中```cfg.IMG_HEIGHT```和```cfg.IMG_WIDTH```在配置文件```config/vgg_config.py```中设置，这里均为300，300x300是一个典型配置，兼顾效率和检测精度，也可以通过修改配置文件扩展到500x500。
+2. 调用```data_provider.Settings```配置数据预处理所需参数，其中```cfg.IMG_HEIGHT```和```cfg.IMG_WIDTH```在配置文件```config/vgg_config.py```中设置，这里均为300，300x300是一个典型配置，兼顾效率和检测精度，也可以通过修改配置文件扩展到512x512。
 3. 调用```train```执行训练，其中```train_file_list```指定训练数据列表，```dev_file_list```指定评估数据列表，```init_model_path```指定预训练模型位置。
-4. 训练过程中会打印一些日志信息，每训练10个batch会输出当前的轮数、当前batch的cost及mAP（mean Average Precision，平均精度均值），每训练一个pass，会保存一次模型，默认保存在```checkpoints```目录下（注：需事先创建）。
+4. 训练过程中会打印一些日志信息，每训练1个batch会输出当前的轮数、当前batch的cost及mAP（mean Average Precision，平均精度均值），每训练一个pass，会保存一次模型，默认保存在```checkpoints```目录下（注：需事先创建）。
 
 下面给出SDD300x300在VOC数据集（train包括07+12，test为07）上的mAP曲线，迭代140轮mAP可达到71.52%。
 
 <p align="center">
 <img src="images/SSD300x300_map.png" hspace='10'/> <br/>
-
 图2. SSD300x300 mAP收敛曲线
 </p>
 
@@ -170,7 +166,7 @@ eval(
     model_path='models/pass-00000.tar.gz')
 ```
 
-调用```paddle.init```指定使用4卡GPU评估；```data_provider.Settings```参见训练阶段的配置；调用```eval```执行评估，其中```eval_file_list```指定训练数据列表，```batch_size```指定评估时batch size的大小，```model_path ```指定模型位置。评估结束会输出```loss```信息和```mAP```信息。
+调用```paddle.init```指定使用4卡GPU评估；```data_provider.Settings```参见训练阶段的配置；调用```eval```执行评估，其中```eval_file_list```指定评估数据列表，```batch_size```指定评估时batch size的大小，```model_path ```指定模型位置。评估结束会输出```loss```信息和```mAP```信息。
 
 ### 图像检测
 执行```python infer.py```即可使用训练好的模型对图片实施检测，```infer.py```关键逻辑如下：
@@ -196,15 +192,14 @@ VOCdevkit/VOC2007/JPEGImages/006936.jpg 14 0.372522 187.543615699 133.727034628 
 
 一共包含4个字段，以tab分割，第一个字段是检测图像路径，第二字段为检测矩形框内类别，第三个字段是置信度，第四个字段是4个坐标值（以空格分割）。
 
-示例还提供了一个可视化脚本，直接运行```python visual.py```即可，须指定输出检测结果路径及输出目录，默认可视化后图像保存在```./visual_res```，下面是用训练好的模型infer部分图像，并可视化的效果：
+示例还提供了一个可视化脚本，直接运行```python visual.py```即可，须指定输出检测结果路径及输出目录，默认可视化后图像保存在```./visual_res```，下面是用训练好的模型infer部分图像并可视化的效果：
 
 <p align="center">
 <img src="images/vis_1.jpg" height=150 width=200 hspace='10'/>
 <img src="images/vis_2.jpg" height=150 width=200 hspace='10'/>
 <img src="images/vis_3.jpg" height=150 width=100 hspace='10'/>
 <img src="images/vis_4.jpg" height=150 width=200 hspace='10'/> <br />
-
-图2. SSD300x300 检测可视化示例
+图3. SSD300x300 检测可视化示例
 </p>
 
 
