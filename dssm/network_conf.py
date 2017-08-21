@@ -102,8 +102,7 @@ class DSSM(object):
         '''
         A GRU sentence vector learner.
         '''
-        gru = paddle.networks.simple_gru(
-            input=emb, size=256)
+        gru = paddle.networks.simple_gru(input=emb, size=256)
         sent_vec = paddle.layer.last_seq(gru)
         return sent_vec
 
