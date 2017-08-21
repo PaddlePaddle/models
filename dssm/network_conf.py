@@ -219,7 +219,7 @@ class DSSM(object):
             # but this operator is not supported currently.
             # so AUC will not used.
             return cost, None, label
-        return None, [left_score, right_score], label
+        return right_score
 
     def _build_classification_or_regression_model(self, is_classification):
         '''
@@ -275,4 +275,4 @@ class DSSM(object):
 
         if not self.is_infer:
             return cost, prediction, label
-        return None, prediction, label
+        return prediction
