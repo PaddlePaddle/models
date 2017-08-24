@@ -10,15 +10,10 @@ from config import ModelConfig
 __all__ = ["GNR"]
 
 
-def build_pretrained_embedding(name,
-                               data_type,
-                               vocab_size,
-                               emb_dim,
-                               emb_drop=0.):
-    one_hot_input = paddle.layer.data(
-        name=name, type=paddle.data_type.integer_value_sequence(vocab_size))
+def build_pretrained_embedding(name, data_type, emb_dim, emb_drop=0.):
     return paddle.layer.embedding(
-        input=one_hot_input,
+        input=paddle.layer.data(
+            name=name, type=data_type),
         size=emb_dim,
         param_attr=paddle.attr.Param(
             name="GloveVectors", is_static=True),
@@ -112,25 +107,24 @@ def encode_documents(input_embedding, same_as_question, question_vector,
     ])
 
 
-def search_answer(doc_lstm_outs, sentence_idx, start_idx, end_idx, config):
+def search_answer(doc_lstm_outs, sentence_idx, start_idx, end_idx, config,
+                  is_infer):
     last_state_of_sentence = paddle.layer.last_seq(
         input=doc_lstm_outs, agg_level=paddle.layer.AggregateLevel.TO_SEQUENCE)
-
-    # HERE do not use sequence softmax activition.
     sentence_scores = paddle.layer.fc(input=last_state_of_sentence,
                                       size=1,
-                                      act=paddle.activation.Exp())
+                                      act=paddle.activation.Linear())
     topk_sentence_ids = paddle.layer.kmax_sequence_score(
         input=sentence_scores, beam_size=config.beam_size)
     topk_sen = paddle.layer.sub_nested_seq(
-        input=last_state_of_sentence, selected_indices=topk_sentence_ids)
+        input=doc_lstm_outs, selected_indices=topk_sentence_ids)
 
     # expand beam to search start positions on selected sentences
     start_pos_scores = paddle.layer.fc(input=topk_sen,
                                        size=1,
-                                       act=paddle.activation.Exp())
+                                       act=paddle.activation.Linear())
     topk_start_pos_ids = paddle.layer.kmax_sequence_score(
-        input=sentence_scores, beam_size=config.beam_size)
+        input=start_pos_scores, beam_size=config.beam_size)
     topk_start_spans = paddle.layer.seq_slice(
         input=topk_sen, starts=topk_start_pos_ids, ends=None)
 
@@ -143,33 +137,40 @@ def search_answer(doc_lstm_outs, sentence_idx, start_idx, end_idx, config):
         prefix="__end_span_embeddings__")
     end_pos_scores = paddle.layer.fc(input=end_span_embedding,
                                      size=1,
-                                     act=paddle.activation.Exp())
+                                     act=paddle.activation.Linear())
     topk_end_pos_ids = paddle.layer.kmax_sequence_score(
         input=end_pos_scores, beam_size=config.beam_size)
-    cost = paddle.layer.cross_entropy_over_beam(
-        input=[
-            sentence_scores, topk_sentence_ids, start_pos_scores,
-            topk_start_pos_ids, end_pos_scores, topk_end_pos_ids
-        ],
-        label=[sentence_idx, start_idx, end_idx])
-    return cost
+
+    if is_infer:
+        return [topk_sentence_ids, topk_start_pos_ids, topk_end_pos_ids]
+    else:
+        return paddle.layer.cross_entropy_over_beam(input=[
+            paddle.layer.BeamInput(sentence_scores, topk_sentence_ids,
+                                   sentence_idx),
+            paddle.layer.BeamInput(start_pos_scores, topk_start_pos_ids,
+                                   start_idx),
+            paddle.layer.BeamInput(end_pos_scores, topk_end_pos_ids, end_idx)
+        ])
 
 
-def GNR(config):
+def GNR(config, is_infer=False):
     # encoding question words
     question_embeddings = build_pretrained_embedding(
-        "question", paddle.data_type.integer_value_sequence, config.vocab_size,
+        "question",
+        paddle.data_type.integer_value_sequence(config.vocab_size),
         config.embedding_dim, config.embedding_droprate)
     question_vector, question_lstm_outs = encode_question(
         input_embedding=question_embeddings, config=config, prefix="__ques")
 
     # encoding document words
     document_embeddings = build_pretrained_embedding(
-        "documents", paddle.data_type.integer_value_sub_sequence,
-        config.vocab_size, config.embedding_dim, config.embedding_droprate)
+        "documents",
+        paddle.data_type.integer_value_sub_sequence(config.vocab_size),
+        config.embedding_dim, config.embedding_droprate)
     same_as_question = paddle.layer.data(
         name="same_as_question",
-        type=paddle.data_type.integer_value_sub_sequence(2))
+        type=paddle.data_type.dense_vector_sub_sequence(1))
+
     document_words_ecoding = encode_documents(
         input_embedding=document_embeddings,
         question_vector=question_vector,
@@ -192,7 +193,7 @@ def GNR(config):
     end_idx = paddle.layer.data(
         name="end_idx", type=paddle.data_type.integer_value(1))
     return search_answer(doc_lstm_outs, sentence_idx, start_idx, end_idx,
-                         config)
+                         config, is_infer)
 
 
 if __name__ == "__main__":

@@ -38,9 +38,11 @@ def stacked_bidirectional_lstm(inputs, size, depth, drop_rate=0., prefix=""):
         paddle.layer.last_seq(input=lstm_last[0]),
         paddle.layer.first_seq(input=lstm_last[1]),
     ])
-    return final_states, paddle.layer.concat(
+
+    lstm_outs = paddle.layer.concat(
         input=lstm_last,
-        layer_attr=paddle.attr.ExtraLayerAttribute(drop_rate=drop_rate), )
+        layer_attr=paddle.attr.ExtraLayerAttribute(drop_rate=drop_rate))
+    return final_states, lstm_outs
 
 
 def lstm_by_nested_sequence(input_layer, hidden_dim, name="", reverse=False):
@@ -70,8 +72,9 @@ def lstm_by_nested_sequence(input_layer, hidden_dim, name="", reverse=False):
                 name="__inner_state_%s__" % name,
                 size=hidden_dim,
                 boot_layer=outer_memory)
-            input_proj = paddle.layer.fc(
-                size=hidden_dim * 4, bias_attr=False, input=input_layer)
+            input_proj = paddle.layer.fc(size=hidden_dim * 4,
+                                         bias_attr=False,
+                                         input=input_layer)
             return paddle.networks.lstmemory_unit(
                 input=input_proj,
                 name="__inner_state_%s__" % name,
@@ -91,12 +94,12 @@ def lstm_by_nested_sequence(input_layer, hidden_dim, name="", reverse=False):
             inner_last_output = paddle.layer.first_seq(
                 input=inner_out,
                 name="__inner_%s_last__" % name,
-                agg_level=paddle.layer.AggregateLevel.TO_SEQUENCE)
+                agg_level=paddle.layer.AggregateLevel.TO_NO_SEQUENCE)
         else:
             inner_last_output = paddle.layer.last_seq(
                 input=inner_out,
                 name="__inner_%s_last__" % name,
-                agg_level=paddle.layer.AggregateLevel.TO_SEQUENCE)
+                agg_level=paddle.layer.AggregateLevel.TO_NO_SEQUENCE)
         return inner_out
 
     return paddle.layer.recurrent_group(

@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #coding=utf-8
-import pdb
 import os
 import random
 import json
+import logging
+
+logger = logging.getLogger("paddle")
+logger.setLevel(logging.INFO)
 
 
 def train_reader(data_list, is_train=True):
@@ -14,22 +17,20 @@ def train_reader(data_list, is_train=True):
 
         for train_sample in data_list:
             data = json.load(open(train_sample, "r"))
-            sent_len = data['sent_lengths']
 
-            doc_len = len(data['context'])
-            same_as_question_word = [[[x]]
-                                     for x in data['same_as_question_word']]
+            start_pos = 0
+            doc = []
+            same_as_question_word = []
+            for l in data['sent_lengths']:
+                doc.append(data['context'][start_pos:start_pos + l])
+                same_as_question_word.append([
+                    [[x]] for x in data['same_as_question_word']
+                ][start_pos:start_pos + l])
+                start_pos += l
 
-            ans_sentence = [0] * doc_len
-            ans_sentence[data['ans_sentence']] = 1
-
-            ans_start = [0] * doc_len
-            ans_start[data['ans_start']] = 1
-
-            ans_end = [0] * doc_len
-            ans_end[data['ans_end']] = 1
-            yield (data['question'], data['context'], same_as_question_word,
-                   ans_sentence, ans_start, ans_end)
+            yield (data['question'], doc, same_as_question_word,
+                   data['ans_sentence'], data['ans_start'],
+                   data['ans_end'] - data['ans_start'])
 
     return reader
 

@@ -9,6 +9,7 @@ import logging
 import random
 import glob
 import gzip
+import numpy as np
 
 import reader
 import paddle.v2 as paddle
@@ -21,7 +22,7 @@ logger.setLevel(logging.INFO)
 
 
 def load_pretrained_parameters(path, height, width):
-    return
+    return np.load(path)
 
 
 def save_model(save_path, parameters):
@@ -51,27 +52,30 @@ def choose_samples(path):
     train_samples.sort()
     valid_samples.sort()
 
-    random.shuffle(train_samples)
+    # random.shuffle(train_samples)
 
     return train_samples, valid_samples
 
 
-def build_reader(data_dir):
+def build_reader(data_dir, batch_size):
     """
     Build the data reader for this model.
     """
     train_samples, valid_samples = choose_samples(data_dir)
-    pdb.set_trace()
 
     train_reader = paddle.batch(
         paddle.reader.shuffle(
             reader.train_reader(train_samples), buf_size=102400),
-        batch_size=config.batch_size)
+        batch_size=batch_size)
+
+    # train_reader = paddle.batch(
+    #     reader.train_reader(train_samples), batch_size=batch_size)
 
     # testing data is not shuffled
     test_reader = paddle.batch(
-        reader.train_reader(valid_samples, is_train=False),
-        batch_size=config.batch_size)
+        reader.train_reader(
+            valid_samples, is_train=False),
+        batch_size=batch_size)
     return train_reader, test_reader
 
 
@@ -85,53 +89,65 @@ def build_event_handler(config, parameters, trainer, test_reader):
         """The event handler."""
         if isinstance(event, paddle.event.EndIteration):
             if (not event.batch_id % 100) and event.batch_id:
-                save_model("checkpoint_param.latest.tar.gz", parameters)
+                save_path = os.path.join(config.save_dir,
+                                         "checkpoint_param.latest.tar.gz")
+                save_model(save_path, parameters)
 
-            if not event.batch_id % 5:
+            if not event.batch_id % 1:
                 logger.info(
                     "Pass %d, Batch %d, Cost %f, %s" %
                     (event.pass_id, event.batch_id, event.cost, event.metrics))
 
         if isinstance(event, paddle.event.EndPass):
-            save_model(config.param_save_filename_format % event.pass_id,
-                       parameters)
-            with gzip.open(param_path, 'w') as handle:
-                parameters.to_tar(handle)
+            save_path = os.path.join(config.save_dir,
+                                     "pass_%05d.tar.gz" % event.pass_id)
+            save_model(save_path, parameters)
 
-            result = trainer.test(reader=test_reader)
-            logger.info("Test with Pass %d, %s" %
-                        (event.pass_id, result.metrics))
+            # result = trainer.test(reader=test_reader)
+            # logger.info("Test with Pass %d, %s" %
+            #             (event.pass_id, result.metrics))
 
     return event_handler
 
 
 def train(model_config, trainer_config):
-    paddle.init(use_gpu=True, trainer_count=1)
+    if not os.path.exists(trainer_config.save_dir):
+        os.mkdir(trainer_config.save_dir)
+
+    paddle.init(use_gpu=True, trainer_count=4)
 
     # define the optimizer
     optimizer = paddle.optimizer.Adam(
         learning_rate=trainer_config.learning_rate,
         regularization=paddle.optimizer.L2Regularization(rate=1e-3),
-        model_average=paddle.optimizer.ModelAverage(average_window=0.5))
+        # model_average=paddle.optimizer.ModelAverage(average_window=0.5))
+    )
 
     # define network topology
-    losses = GNR(model_config)
-    parameters = paddle.parameters.create(losses)
-    # print(parse_network(losses))
-    trainer = paddle.trainer.SGD(
-        cost=losses, parameters=parameters, update_equation=optimizer)
-    """
-    parameters.set('GloveVectors',
-                   load_pretrained_parameters(parameter_path, height, width))
-    """
+    loss = GNR(model_config)
+
+    # print(parse_network(loss))
+
+    parameters = paddle.parameters.create(loss)
+    parameters.set("GloveVectors",
+                   load_pretrained_parameters(
+                       ModelConfig.pretrained_emb_path,
+                       height=ModelConfig.vocab_size,
+                       width=ModelConfig.embedding_dim))
+
+    trainer = paddle.trainer.SGD(cost=loss,
+                                 parameters=parameters,
+                                 update_equation=optimizer)
 
     # define data reader
-    train_reader, test_reader = build_reader(trainer_config.data_dir)
+    train_reader, test_reader = build_reader(trainer_config.data_dir,
+                                             trainer_config.batch_size)
 
-    event_handler = build_event_handler(conf, parameters, trainer, test_reader)
+    event_handler = build_event_handler(trainer_config, parameters, trainer,
+                                        test_reader)
     trainer.train(
-        reader=train_reader,
-        num_passes=conf.epochs,
+        reader=data_reader,
+        num_passes=trainer_config.epochs,
         event_handler=event_handler)
 
 
