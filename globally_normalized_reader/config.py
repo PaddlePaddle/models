@@ -5,7 +5,6 @@ __all__ = ["ModelConfig"]
 
 
 class ModelConfig(object):
-    beam_size = 3
     vocab_size = 104808
     embedding_dim = 300
     embedding_droprate = 0.3
@@ -15,7 +14,7 @@ class ModelConfig(object):
     lstm_hidden_droprate = 0.3
 
     passage_indep_embedding_dim = 300
-    passage_aligned_embedding_dim = 128
+    passage_aligned_embedding_dim = 300
 
     beam_size = 32
 
@@ -28,6 +27,16 @@ class TrainerConfig(object):
     data_dir = "data/featurized"
     save_dir = "models"
 
-    batch_size = 12 * 4
+    train_batch_size = 4 * 10
+    test_batch_size = 1
 
     epochs = 100
+
+    # for debug print, if set to 0, no information will be printed.
+    show_parameter_status_period = 0
+    checkpoint_period = 100
+    log_period = 1
+
+    # this is used to resume training, this path can set to previously
+    # trained model.
+    init_model_path = None

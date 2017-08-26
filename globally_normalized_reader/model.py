@@ -113,6 +113,7 @@ def search_answer(doc_lstm_outs, sentence_idx, start_idx, end_idx, config,
         input=doc_lstm_outs, agg_level=paddle.layer.AggregateLevel.TO_SEQUENCE)
     sentence_scores = paddle.layer.fc(input=last_state_of_sentence,
                                       size=1,
+                                      bias_attr=False,
                                       act=paddle.activation.Linear())
     topk_sentence_ids = paddle.layer.kmax_sequence_score(
         input=sentence_scores, beam_size=config.beam_size)
@@ -122,6 +123,7 @@ def search_answer(doc_lstm_outs, sentence_idx, start_idx, end_idx, config,
     # expand beam to search start positions on selected sentences
     start_pos_scores = paddle.layer.fc(input=topk_sen,
                                        size=1,
+                                       bias_attr=False,
                                        act=paddle.activation.Linear())
     topk_start_pos_ids = paddle.layer.kmax_sequence_score(
         input=start_pos_scores, beam_size=config.beam_size)
@@ -137,12 +139,16 @@ def search_answer(doc_lstm_outs, sentence_idx, start_idx, end_idx, config,
         prefix="__end_span_embeddings__")
     end_pos_scores = paddle.layer.fc(input=end_span_embedding,
                                      size=1,
+                                     bias_attr=False,
                                      act=paddle.activation.Linear())
     topk_end_pos_ids = paddle.layer.kmax_sequence_score(
         input=end_pos_scores, beam_size=config.beam_size)
 
     if is_infer:
-        return [topk_sentence_ids, topk_start_pos_ids, topk_end_pos_ids]
+        return [
+            sentence_scores, topk_sentence_ids, start_pos_scores,
+            topk_start_pos_ids, end_pos_scores, topk_end_pos_ids
+        ]
     else:
         return paddle.layer.cross_entropy_over_beam(input=[
             paddle.layer.BeamInput(sentence_scores, topk_sentence_ids,

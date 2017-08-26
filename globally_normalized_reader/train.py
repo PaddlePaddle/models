@@ -21,6 +21,14 @@ logger = logging.getLogger("paddle")
 logger.setLevel(logging.INFO)
 
 
+def load_initial_model(model_path, parameters):
+    """
+    initalize parameters in the network from a trained model.
+    """
+    with gzip.open(model_path, "rb") as f:
+        parameters.init_from_tar(f)
+
+
 def load_pretrained_parameters(path, height, width):
     return np.load(path)
 
@@ -33,6 +41,38 @@ def save_model(save_path, parameters):
 def load_initial_model(model_path, parameters):
     with gzip.open(model_path, "rb") as f:
         parameters.init_from_tar(f)
+
+
+def show_parameter_init_info(parameters):
+    for p in parameters:
+        logger.info("%s : initial_mean %.4f initial_std %.4f" %
+                    (p, parameters.__param_conf__[p].initial_mean,
+                     parameters.__param_conf__[p].initial_std))
+
+
+def dump_value_matrix(param_name, dims, value):
+    np.savetxt(
+        param_name + ".txt",
+        value.reshape(dims[0], dims[1]),
+        fmt="%.4f",
+        delimiter=",")
+
+
+def show_parameter_status(parameters):
+    # for debug print
+    for p in parameters:
+
+        value = parameters.get(p)
+        grad = parameters.get_grad(p)
+
+        avg_abs_value = np.average(np.abs(value))
+        avg_abs_grad = np.average(np.abs(grad))
+
+        logger.info(
+            ("%s avg_abs_value=%.6f avg_abs_grad=%.6f "
+             "min_value=%.6f max_value=%.6f min_grad=%.6f max_grad=%.6f") %
+            (p, avg_abs_value, avg_abs_grad, value.min(), value.max(),
+             grad.min(), grad.max()))
 
 
 def choose_samples(path):
@@ -52,7 +92,7 @@ def choose_samples(path):
     train_samples.sort()
     valid_samples.sort()
 
-    # random.shuffle(train_samples)
+    random.shuffle(train_samples)
 
     return train_samples, valid_samples
 
@@ -65,15 +105,12 @@ def build_reader(data_dir, batch_size):
 
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            reader.train_reader(train_samples), buf_size=102400),
+            reader.data_reader(train_samples), buf_size=102400),
         batch_size=batch_size)
-
-    # train_reader = paddle.batch(
-    #     reader.train_reader(train_samples), batch_size=batch_size)
 
     # testing data is not shuffled
     test_reader = paddle.batch(
-        reader.train_reader(
+        reader.data_reader(
             valid_samples, is_train=False),
         batch_size=batch_size)
     return train_reader, test_reader
@@ -87,16 +124,21 @@ def build_event_handler(config, parameters, trainer, test_reader):
     # End batch and end pass event handler
     def event_handler(event):
         """The event handler."""
+
         if isinstance(event, paddle.event.EndIteration):
-            if (not event.batch_id % 100) and event.batch_id:
+            if  event.batch_id and \
+                    (not event.batch_id % config.checkpoint_period):
                 save_path = os.path.join(config.save_dir,
                                          "checkpoint_param.latest.tar.gz")
                 save_model(save_path, parameters)
 
-            if not event.batch_id % 1:
-                logger.info(
-                    "Pass %d, Batch %d, Cost %f, %s" %
-                    (event.pass_id, event.batch_id, event.cost, event.metrics))
+            if event.batch_id and not event.batch_id % config.log_period:
+                logger.info("Pass %d, Batch %d, Cost %f" %
+                            (event.pass_id, event.batch_id, event.cost))
+
+            if config.show_parameter_status_period and event.batch_id and \
+                    not (event.batch_id % config.show_parameter_status_period):
+                show_parameter_status(parameters)
 
         if isinstance(event, paddle.event.EndPass):
             save_path = os.path.join(config.save_dir,
@@ -119,34 +161,36 @@ def train(model_config, trainer_config):
     # define the optimizer
     optimizer = paddle.optimizer.Adam(
         learning_rate=trainer_config.learning_rate,
-        regularization=paddle.optimizer.L2Regularization(rate=1e-3),
-        # model_average=paddle.optimizer.ModelAverage(average_window=0.5))
-    )
+        regularization=paddle.optimizer.L2Regularization(rate=5e-4),
+        model_average=paddle.optimizer.ModelAverage(average_window=0.5))
 
     # define network topology
     loss = GNR(model_config)
 
-    # print(parse_network(loss))
-
     parameters = paddle.parameters.create(loss)
-    parameters.set("GloveVectors",
-                   load_pretrained_parameters(
-                       ModelConfig.pretrained_emb_path,
-                       height=ModelConfig.vocab_size,
-                       width=ModelConfig.embedding_dim))
+    show_parameter_init_info(parameters)
+
+    if trainer_config.init_model_path:
+        load_initial_model(trainer_config.init_model_path, parameters)
+    else:
+        # load the pre-trained embeddings
+        parameters.set("GloveVectors",
+                       load_pretrained_parameters(
+                           ModelConfig.pretrained_emb_path,
+                           height=ModelConfig.vocab_size,
+                           width=ModelConfig.embedding_dim))
 
     trainer = paddle.trainer.SGD(cost=loss,
                                  parameters=parameters,
                                  update_equation=optimizer)
 
-    # define data reader
     train_reader, test_reader = build_reader(trainer_config.data_dir,
-                                             trainer_config.batch_size)
+                                             trainer_config.train_batch_size)
 
     event_handler = build_event_handler(trainer_config, parameters, trainer,
                                         test_reader)
     trainer.train(
-        reader=data_reader,
+        reader=train_reader,
         num_passes=trainer_config.epochs,
         event_handler=event_handler)
 
