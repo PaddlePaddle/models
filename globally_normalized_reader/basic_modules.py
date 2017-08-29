@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 #coding=utf-8
-import pdb
 import collections
 
 import paddle.v2 as paddle

@@ -27,10 +27,13 @@ class TrainerConfig(object):
     data_dir = "data/featurized"
     save_dir = "models"
 
-    train_batch_size = 4 * 10
-    test_batch_size = 1
+    use_gpu = True
+    trainer_count = 4
+    train_batch_size = trainer_count * 10
 
-    epochs = 100
+    test_batch_size = 4
+
+    epochs = 20
 
     # for debug print, if set to 0, no information will be printed.
     show_parameter_status_period = 0

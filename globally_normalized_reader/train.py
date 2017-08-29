@@ -2,7 +2,6 @@
 #coding=utf-8
 from __future__ import print_function
 
-import pdb
 import os
 import sys
 import logging
@@ -128,8 +127,12 @@ def build_event_handler(config, parameters, trainer, test_reader):
         if isinstance(event, paddle.event.EndIteration):
             if  event.batch_id and \
                     (not event.batch_id % config.checkpoint_period):
+                # save_path = os.path.join(config.save_dir,
+                #                          "checkpoint_param.latest.tar.gz")
+
                 save_path = os.path.join(config.save_dir,
-                                         "checkpoint_param.latest.tar.gz")
+                                         "pass_%05d_%03d.tar.gz" %
+                                         (event.pass_id, event.batch_id))
                 save_model(save_path, parameters)
 
             if event.batch_id and not event.batch_id % config.log_period:
@@ -156,23 +159,27 @@ def train(model_config, trainer_config):
     if not os.path.exists(trainer_config.save_dir):
         os.mkdir(trainer_config.save_dir)
 
-    paddle.init(use_gpu=True, trainer_count=4)
+    paddle.init(
+        use_gpu=trainer_config.use_gpu,
+        trainer_count=trainer_config.trainer_count)
 
     # define the optimizer
     optimizer = paddle.optimizer.Adam(
         learning_rate=trainer_config.learning_rate,
+        gradient_clipping_threshold=50,
         regularization=paddle.optimizer.L2Regularization(rate=5e-4),
-        model_average=paddle.optimizer.ModelAverage(average_window=0.5))
+        model_average=paddle.optimizer.ModelAverage(
+            average_window=0.5, max_average_window=1000))
 
     # define network topology
     loss = GNR(model_config)
 
     parameters = paddle.parameters.create(loss)
-    show_parameter_init_info(parameters)
 
     if trainer_config.init_model_path:
         load_initial_model(trainer_config.init_model_path, parameters)
     else:
+        show_parameter_init_info(parameters)
         # load the pre-trained embeddings
         parameters.set("GloveVectors",
                        load_pretrained_parameters(

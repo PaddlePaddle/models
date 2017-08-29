@@ -5,7 +5,6 @@ import sys
 import gzip
 import logging
 import numpy as np
-import pdb
 
 import paddle.v2 as paddle
 from paddle.v2.layer import parse_network
@@ -14,6 +13,7 @@ import reader
 from model import GNR
 from train import choose_samples
 from config import ModelConfig, TrainerConfig
+from beam_decoding import BeamDecoding
 
 logger = logging.getLogger("paddle")
 logger.setLevel(logging.INFO)
@@ -27,67 +27,44 @@ def load_reverse_dict(dict_file):
     return word_dict
 
 
-def parse_one_sample(raw_input_doc, sub_sen_scores, selected_sentence,
-                     start_span_scores, selected_starts, end_span_scores,
-                     selected_ends):
-    assert len(raw_input_doc) == sub_sen_scores.shape[0]
-    beam_size = selected_sentence.shape[1]
+def print_result(test_batch, predicted_ans, ids_2_word, print_top_k=1):
+    for i, sample in enumerate(test_batch):
+        query_words = [ids_2_word[ids] for ids in sample[0]]
+        print("query:\t%s" % (" ".join(query_words)))
 
-    all_searched_ans = []
-    for i in xrange(selected_ends.shape[0]):
-        for j in xrange(selected_ends.shape[1]):
-            if selected_ends[i][j] == -1.: break
-            all_searched_ans.append({
-                'score': end_span_scores[int(selected_ends[i][j])],
-                'sentence_pos': -1,
-                'start_span_pos': -1,
-                'end_span_pos': int(selected_ends[i][j]),
-                'parent_ids_in_prev_beam': i
-            })
+        print("documents:")
+        for j, sen in enumerate(sample[1]):
+            sen_words = [ids_2_word[ids] for ids in sen]
+            start = sample[4]
+            end = sample[4] + sample[5] + 1
+            print("%d\t%s" % (j, " ".join(sen_words)))
+        print("gold:\t[%d %d %d] %s" % (
+            sample[3], sample[4], sample[5], " ".join(
+                [ids_2_word[ids] for ids in sample[1][sample[3]][start:end]])))
 
-    for path in all_searched_ans:
-        row_id = path['parent_ids_in_prev_beam'] / beam_size
-        col_id = path['parent_ids_in_prev_beam'] % beam_size
-        path['start_span_pos'] = int(selected_starts[row_id][col_id])
-        path['score'] += start_span_scores[path['start_span_pos']]
-        path['parent_ids_in_prev_beam'] = row_id
-
-    for path in all_searched_ans:
-        row_id = path['parent_ids_in_prev_beam'] / beam_size
-        col_id = path['parent_ids_in_prev_beam'] % beam_size
-        path['sentence_pos'] = int(selected_sentence[row_id][col_id])
-        path['score'] += sub_sen_scores[path['sentence_pos']]
-
-    all_searched_ans.sort(key=lambda x: x['score'], reverse=True)
-    return all_searched_ans
+        print("predicted:")
+        for k in range(print_top_k):
+            label = predicted_ans[i][k]["label"]
+            start = label[1]
+            end = label[1] + label[2] + 1
+            ans_words = [
+                ids_2_word[ids] for ids in sample[1][label[0]][start:end]
+            ]
+            print("%.4f\t[%d %d %d] %s" %
+                  (predicted_ans[i][k]["score"], label[0], label[1], label[2],
+                   " ".join(ans_words)))
+        print("\n")
 
 
 def infer_a_batch(inferer, test_batch, ids_2_word, out_layer_count):
     outs = inferer.infer(input=test_batch, flatten_result=False, field="value")
-
-    for test_sample in test_batch:
-        query_word = [ids_2_word[ids] for ids in test_sample[0]]
-        print("query\n\t%s\ndocument" % (" ".join(query_word)))
-
-        # iterate over each word of in document
-        for i, sentence in enumerate(test_sample[1]):
-            sen_word = [ids_2_word[ids] for ids in sentence]
-            print("%d\t%s" % (i, " ".join(sen_word)))
-        print("gold\t[%d %d %d]" %
-              (test_sample[3], test_sample[4], test_sample[5]))
-
-        ans = parse_one_sample(test_sample[1], *outs)[0]
-        ans_ids = test_sample[1][ans['sentence_pos']][ans['start_span_pos']:ans[
-            'start_span_pos'] + ans['end_span_pos']]
-        ans_str = " ".join([ids_2_word[ids] for ids in ans_ids])
-        print("searched answer\t[%d %d %d]\n\t%s" %
-              (ans['sentence_pos'], ans['start_span_pos'], ans['end_span_pos'],
-               ans_str))
+    decoder = BeamDecoding([sample[1] for sample in test_batch], *outs)
+    print_result(test_batch, decoder.decoding(), ids_2_word, print_top_k=10)
 
 
 def infer(model_path, data_dir, test_batch_size, config):
     assert os.path.exists(model_path), "The model does not exist."
-    paddle.init(use_gpu=False, trainer_count=1)
+    paddle.init(use_gpu=True, trainer_count=1)
 
     ids_2_word = load_reverse_dict(config.dict_path)
 
@@ -96,6 +73,8 @@ def infer(model_path, data_dir, test_batch_size, config):
     # load the trained models
     parameters = paddle.parameters.Parameters.from_tar(
         gzip.open(model_path, "r"))
+    logger.info("loading parameter is done.")
+
     inferer = paddle.inference.Inference(
         output_layer=outputs, parameters=parameters)
 
@@ -115,5 +94,6 @@ def infer(model_path, data_dir, test_batch_size, config):
 
 
 if __name__ == "__main__":
-    infer("models/pass_00003.tar.gz", TrainerConfig.data_dir,
+    # infer("models/round1/pass_00000.tar.gz", TrainerConfig.data_dir,
+    infer("models/round2_on_cpu/pass_00000.tar.gz", TrainerConfig.data_dir,
           TrainerConfig.test_batch_size, ModelConfig)
