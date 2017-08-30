@@ -47,29 +47,37 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 - 5.1 [基于 Pairwise 和 Listwise 的排序学习](https://github.com/PaddlePaddle/models/tree/develop/ltr)
 
-## 6. 序列标注
+## 6. 深度结构化语义模型
+ 深度结构化语义模型使用DNN模型在一个连续的语义空间中学习文本低纬的向量表示，最终建模两个句子间的语义相似度。
+
+本例中我们演示如何使用 PaddlePaddle实现一个通用的深度结构化语义模型来建模两个字符串间的语义相似度。
+模型支持CNN(卷积网络)、FC(全连接网络)、RNN(递归神经网络)等不同的网络结构，以及分类、回归、排序等不同损失函数，采用了比较通用的数据格式，用户替换数据便可以在真实场景中使用。
+
+- 6.1 [深度结构化语义模型](https://github.com/PaddlePaddle/models/tree/develop/dssm)
+
+## 7. 序列标注
 
 给定输入序列，序列标注模型为序列中每一个元素贴上一个类别标签，是自然语言处理领域最基础的任务之一。随着深度学习的不断探索和发展，利用循环神经网络学习输入序列的特征表示，条件随机场（Conditional Random Field, CRF）在特征基础上完成序列标注任务，逐渐成为解决序列标注问题的标配解决方案。
 
 在序列标注的例子中，我们以命名实体识别（Named Entity Recognition，NER）任务为例，介绍如何训练一个端到端的序列标注模型。
 
-- 6.1 [命名实体识别](https://github.com/PaddlePaddle/models/tree/develop/sequence_tagging_for_ner)
+- 7.1 [命名实体识别](https://github.com/PaddlePaddle/models/tree/develop/sequence_tagging_for_ner)
 
-## 7. 序列到序列学习
+## 8. 序列到序列学习
 
 序列到序列学习实现两个甚至是多个不定长模型之间的映射，有着广泛的应用，包括：机器翻译、智能对话与问答、广告创意语料生成、自动编码（如金融画像编码）、判断多个文本串之间的语义相关性等。
 
 在序列到序列学习的例子中，我们以机器翻译任务为例，提供了多种改进模型，供大家学习和使用。包括：不带注意力机制的序列到序列映射模型，这一模型是所有序列到序列学习模型的基础；使用 scheduled sampling 改善 RNN 模型在生成任务中的错误累积问题；带外部记忆机制的神经机器翻译，通过增强神经网络的记忆能力，来完成复杂的序列到序列学习任务。
 
-- 7.1 [无注意力机制的编码器解码器模型](https://github.com/PaddlePaddle/models/tree/develop/nmt_without_attention)
+- 8.1 [无注意力机制的编码器解码器模型](https://github.com/PaddlePaddle/models/tree/develop/nmt_without_attention)
 
-## 8. 图像分类
+## 9. 图像分类
 图像相比文字能够提供更加生动、容易理解及更具艺术感的信息，是人们转递与交换信息的重要来源。在图像分类的例子中，我们向大家介绍如何在PaddlePaddle中训练AlexNet、VGG、GoogLeNet和ResNet模型。同时还提供了一个模型转换工具，能够将Caffe训练好的模型文件，转换为PaddlePaddle的模型文件。
 
-- 8.1 [将Caffe模型文件转换为PaddlePaddle模型文件](https://github.com/PaddlePaddle/models/tree/develop/image_classification/caffe2paddle)
-- 8.2 [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
-- 8.3 [VGG](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
-- 8.4 [Residual Network](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 9.1 [将Caffe模型文件转换为PaddlePaddle模型文件](https://github.com/PaddlePaddle/models/tree/develop/image_classification/caffe2paddle)
+- 9.2 [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 9.3 [VGG](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 9.4 [Residual Network](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 
 
 ## Copyright and License

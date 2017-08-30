@@ -63,4 +63,4 @@ def train(save_dir_path, source_dict_dim, target_dict_dim):
 
 
 if __name__ == '__main__':
-    train(save_dir_path="models", source_dict_dim=3000, target_dict_dim=3000)
+    train(save_dir_path="models", source_dict_dim=30000, target_dict_dim=30000)

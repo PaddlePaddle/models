@@ -23,10 +23,10 @@
 
 序列标注可以分为Sequence Classification、Segment Classification和Temporal Classification三类[[1](#参考文献)]，本例只考虑Segment Classification，即对输入序列中的每个元素在输出序列中给出对应的标签。对于NER任务，由于需要标识边界，一般采用[BIO标注方法](http://book.paddlepaddle.org/07.label_semantic_roles/)定义的标签集，如下是一个NER的标注结果示例：
 
-<div  align="center">
-<img src="images/ner_label_ins.png" width = "80%"  align=center /><br>
+<p align="center">
+<img src="images/ner_label_ins.png" width="80%" align="center"/><br/>
 图1. BIO标注方法示例
-</div>
+</p>
 
 根据序列标注结果可以直接得到实体边界和实体类别。类似的，分词、词性标注、语块识别、[语义角色标注](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)等任务都可通过序列标注来解决。使用神经网络模型解决问题的思路通常是：前层网络学习输入的特征表示，网络的最后一层在特征基础上完成最终的任务；对于序列标注问题，通常：使用基于RNN的网络结构学习特征，将学习到的特征接入CRF完成序列标注。实际上是将传统CRF中的线性模型换成了非线性神经网络。沿用CRF的出发点是：CRF使用句子级别的似然概率，能够更好的解决标记偏置问题[[2](#参考文献)]。本例也将基于此思路建立模型。虽然，这里以NER任务作为示例，但所给出的模型可以应用到其他各种序列标注任务中。
 
@@ -43,10 +43,10 @@ NER任务的输入是"一句话"，目标是识别句子中的实体边界及类
 3. 将步骤2中的2个词向量序列作为双向RNN的输入，学习输入序列的特征表示，得到新的特性表示序列；
 4. CRF以步骤3中模型学习到的特征为输入，以标记序列为监督信号，实现序列标注。
 
-<div  align="center">  
-<img src="images/ner_network.png" width = "40%"  align=center /><br>
+<p align="center">
+<img src="images/ner_network.png" width="40%" align="center"/><br/>
 图2. NER 模型网络结构图
-</div>
+</p>
 
 
 ## 数据说明

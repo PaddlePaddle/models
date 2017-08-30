@@ -26,7 +26,7 @@ num_passes = 20  # how many passes to train the model
 log_period = 50
 save_period_by_batches = 50
 
-use_gpu = True  # to use gpu or not
+use_gpu = False  # to use gpu or not
 trainer_count = 1  # number of trainer
 
 ##################  for model configuration  ##################
