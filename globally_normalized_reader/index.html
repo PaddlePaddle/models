@@ -1,0 +1,119 @@
+
+<html>
+<head>
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js", "TeX/AMSsymbols.js", "TeX/AMSmath.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'] ],
+      displayMath: [ ['$$','$$'] ],
+      processEscapes: true
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js" async></script>
+  <script type="text/javascript" src="../.tools/theme/marked.js">
+  </script>
+  <link href="http://cdn.bootcss.com/highlight.js/9.9.0/styles/darcula.min.css" rel="stylesheet">
+  <script src="http://cdn.bootcss.com/highlight.js/9.9.0/highlight.min.js"></script>
+  <link href="http://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/perfect-scrollbar/0.6.14/css/perfect-scrollbar.min.css" rel="stylesheet">
+  <link href="../.tools/theme/github-markdown.css" rel='stylesheet'>
+</head>
+<style type="text/css" >
+.markdown-body {
+    box-sizing: border-box;
+    min-width: 200px;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 45px;
+}
+</style>
+
+
+<body>
+
+<div id="context" class="container-fluid markdown-body">
+</div>
+
+<!-- This block will be replaced by each markdown file content. Please do not change lines below.-->
+<div id="markdown" style='display:none'>
+# Globally Normalized Reader
+
+This model implements the work in the following paper:
+
+Jonathan Raiman and John Miller. Globally Normalized Reader. Empirical Methods in Natural Language Processing (EMNLP), 2017.
+
+If you use the dataset/code in your research, please cite the above paper:
+
+```text
+@inproceedings{raiman2015gnr,
+    author={Raiman, Jonathan and Miller, John},
+    booktitle={Empirical Methods in Natural Language Processing (EMNLP)},
+    title={Globally Normalized Reader},
+    year={2017},
+}
+```
+
+You can also visit https://github.com/baidu-research/GloballyNormalizedReader to get more information.
+
+
+# Installation
+
+1. Please use [docker image](http://doc.paddlepaddle.org/develop/doc/getstarted/build_and_install/docker_install_en.html) to install the latest PaddlePaddle, by running:
+    ```bash
+    docker pull paddledev/paddle
+    ```
+2. Download all necessary data by running:
+   ```bash
+   cd data && ./download.sh
+   ```
+3. Featurize the data by running:
+   ```
+   python featurize.py --datadir data --outdir featurized
+   ```
+
+# Training a Model
+
+- Configurate the model by modifying `config.py` if needed, and then run:
+
+    ```bash
+    python train.py 2>&1 | tee train.log
+    ```
+
+# Inferring by a Trained Model
+
+- Infer by a trained model by running:
+   ```bash
+   python infer.py \
+     --model_path models/pass_00000.tar.gz \
+     --data_dir data/featurized/ \
+     --batch_size 2 \
+     --use_gpu 0 \
+     --trainer_count 1 \
+     2>&1 | tee infer.log
+   ```
+
+</div>
+<!-- You can change the lines below now. -->
+
+<script type="text/javascript">
+marked.setOptions({
+  renderer: new marked.Renderer(),
+  gfm: true,
+  breaks: false,
+  smartypants: true,
+  highlight: function(code, lang) {
+    code = code.replace(/&amp;/g, "&")
+    code = code.replace(/&gt;/g, ">")
+    code = code.replace(/&lt;/g, "<")
+    code = code.replace(/&nbsp;/g, " ")
+    return hljs.highlightAuto(code, [lang]).value;
+  }
+});
+document.getElementById("context").innerHTML = marked(
+        document.getElementById("markdown").innerHTML)
+</script>
+</body>

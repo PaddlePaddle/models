@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-__all__ = ["ModelConfig"]
+__all__ = ["ModelConfig", "TrainerConfig"]
 
 
 class ModelConfig(object):
@@ -24,14 +24,15 @@ class ModelConfig(object):
 
 class TrainerConfig(object):
     learning_rate = 1e-3
+    l2_decay_rate = 5e-4
+    gradient_clipping_threshold = 20
+
     data_dir = "data/featurized"
     save_dir = "models"
 
-    use_gpu = True
-    trainer_count = 4
-    train_batch_size = trainer_count * 10
-
-    test_batch_size = 4
+    use_gpu = False
+    trainer_count = 1
+    train_batch_size = trainer_count * 8
 
     epochs = 20
 

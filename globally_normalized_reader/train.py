@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
+
 from __future__ import print_function
 
 import os
@@ -21,44 +22,59 @@ logger.setLevel(logging.INFO)
 
 
 def load_initial_model(model_path, parameters):
-    """
-    initalize parameters in the network from a trained model.
+    """ Initalize parameters in the network from a trained model.
+
+    This is useful in resuming the training from previously saved models.
+
+    Arguments:
+        - model_path:    The path of a trained model.
+        - parameters:    The parameters in a network which will be initialized
+                         from the specified model.
     """
     with gzip.open(model_path, "rb") as f:
         parameters.init_from_tar(f)
 
 
-def load_pretrained_parameters(path, height, width):
+def load_pretrained_parameters(path):
+    """ Load one pre-trained parameter.
+
+    Arguments:
+        - path:    The path of the pre-trained parameter.
+    """
     return np.load(path)
 
 
 def save_model(save_path, parameters):
+    """ Save the trained parameters.
+
+    Arguments:
+        - save_path:    The path to save the trained parameters.
+        - parameters:   The trained model parameters.
+    """
     with gzip.open(save_path, "w") as f:
         parameters.to_tar(f)
 
 
-def load_initial_model(model_path, parameters):
-    with gzip.open(model_path, "rb") as f:
-        parameters.init_from_tar(f)
-
-
 def show_parameter_init_info(parameters):
+    """ Print the information of initialization mean and std of parameters.
+
+    Arguments:
+        - parameters:   The parameters created in a model.
+    """
     for p in parameters:
         logger.info("%s : initial_mean %.4f initial_std %.4f" %
                     (p, parameters.__param_conf__[p].initial_mean,
                      parameters.__param_conf__[p].initial_std))
 
 
-def dump_value_matrix(param_name, dims, value):
-    np.savetxt(
-        param_name + ".txt",
-        value.reshape(dims[0], dims[1]),
-        fmt="%.4f",
-        delimiter=",")
-
-
 def show_parameter_status(parameters):
-    # for debug print
+    """ Print some statistical information of parameters in a network.
+
+    This is used for debugging the model.
+
+    Arguments:
+        - parameters:   The parameters created in a model.
+    """
     for p in parameters:
 
         value = parameters.get(p)
@@ -75,8 +91,10 @@ def show_parameter_status(parameters):
 
 
 def choose_samples(path):
-    """
-    Load filenames for train, dev, and augmented samples.
+    """Load filenames for train, dev, and augmented samples.
+
+    Arguments:
+        - path:   The path of training data.
     """
     if not os.path.exists(os.path.join(path, "train")):
         print(
@@ -97,8 +115,11 @@ def choose_samples(path):
 
 
 def build_reader(data_dir, batch_size):
-    """
-    Build the data reader for this model.
+    """Build the data reader for this model.
+
+    Arguments:
+        - data_dir:   The path of training data.
+        - batch_size:   batch size for the training task.
     """
     train_samples, valid_samples = choose_samples(data_dir)
 
@@ -109,15 +130,18 @@ def build_reader(data_dir, batch_size):
 
     # testing data is not shuffled
     test_reader = paddle.batch(
-        reader.data_reader(
-            valid_samples, is_train=False),
+        reader.data_reader(valid_samples, is_train=False),
         batch_size=batch_size)
-    return train_reader, test_reader
+    return train_reader, test_reader, len(train_samples)
 
 
-def build_event_handler(config, parameters, trainer, test_reader):
-    """
-    Build the event handler for this model.
+def build_event_handler(config, parameters, trainer):
+    """Build the event handler for this model.
+
+    Arguments:
+        - config:        The training task configuration for this model.
+        - parameters:    The parameters in the network.
+        - trainer:       The trainer object.
     """
 
     # End batch and end pass event handler
@@ -127,12 +151,8 @@ def build_event_handler(config, parameters, trainer, test_reader):
         if isinstance(event, paddle.event.EndIteration):
             if  event.batch_id and \
                     (not event.batch_id % config.checkpoint_period):
-                # save_path = os.path.join(config.save_dir,
-                #                          "checkpoint_param.latest.tar.gz")
-
                 save_path = os.path.join(config.save_dir,
-                                         "pass_%05d_%03d.tar.gz" %
-                                         (event.pass_id, event.batch_id))
+                                         "checkpoint_param.latest.tar.gz")
                 save_model(save_path, parameters)
 
             if event.batch_id and not event.batch_id % config.log_period:
@@ -148,14 +168,17 @@ def build_event_handler(config, parameters, trainer, test_reader):
                                      "pass_%05d.tar.gz" % event.pass_id)
             save_model(save_path, parameters)
 
-            # result = trainer.test(reader=test_reader)
-            # logger.info("Test with Pass %d, %s" %
-            #             (event.pass_id, result.metrics))
-
     return event_handler
 
 
 def train(model_config, trainer_config):
+    """Training the GNR model.
+
+    Arguments:
+        - modle_config:     The model configuration for this model.
+        - trainer_config:   The training task configuration for this model.
+    """
+
     if not os.path.exists(trainer_config.save_dir):
         os.mkdir(trainer_config.save_dir)
 
@@ -163,13 +186,24 @@ def train(model_config, trainer_config):
         use_gpu=trainer_config.use_gpu,
         trainer_count=trainer_config.trainer_count)
 
-    # define the optimizer
+    train_reader, test_reader, train_sample_count = build_reader(
+        trainer_config.data_dir, trainer_config.train_batch_size)
+    """
+    Define the optimizer. The learning rate will decrease according to
+    the following formula:
+
+    lr = learning_rate * pow(learning_rate_decay_a,
+                             floor(num_samples_processed /
+                                   learning_rate_decay_b))
+    """
     optimizer = paddle.optimizer.Adam(
         learning_rate=trainer_config.learning_rate,
-        gradient_clipping_threshold=50,
-        regularization=paddle.optimizer.L2Regularization(rate=5e-4),
-        model_average=paddle.optimizer.ModelAverage(
-            average_window=0.5, max_average_window=1000))
+        gradient_clipping_threshold=trainer_config.gradient_clipping_threshold,
+        regularization=paddle.optimizer.L2Regularization(
+            trainer_config.l2_decay_rate),
+        learning_rate_decay_a=0.5,
+        learning_rate_decay_b=train_sample_count,
+        learning_rate_schedule="discexp")
 
     # define network topology
     loss = GNR(model_config)
@@ -180,22 +214,14 @@ def train(model_config, trainer_config):
         load_initial_model(trainer_config.init_model_path, parameters)
     else:
         show_parameter_init_info(parameters)
-        # load the pre-trained embeddings
-        parameters.set("GloveVectors",
-                       load_pretrained_parameters(
-                           ModelConfig.pretrained_emb_path,
-                           height=ModelConfig.vocab_size,
-                           width=ModelConfig.embedding_dim))
+        parameters.set(
+            "GloveVectors",
+            load_pretrained_parameters(ModelConfig.pretrained_emb_path))
 
-    trainer = paddle.trainer.SGD(cost=loss,
-                                 parameters=parameters,
-                                 update_equation=optimizer)
+    trainer = paddle.trainer.SGD(
+        cost=loss, parameters=parameters, update_equation=optimizer)
 
-    train_reader, test_reader = build_reader(trainer_config.data_dir,
-                                             trainer_config.train_batch_size)
-
-    event_handler = build_event_handler(trainer_config, parameters, trainer,
-                                        test_reader)
+    event_handler = build_event_handler(trainer_config, parameters, trainer)
     trainer.train(
         reader=train_reader,
         num_passes=trainer_config.epochs,

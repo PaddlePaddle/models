@@ -1,14 +1,41 @@
 #!/usr/bin/env python
 #coding=utf-8
-import pdb
+
 import numpy as np
 
 __all__ = ["BeamDecoding"]
 
 
 class BeamDecoding(object):
+    """
+    Decode outputs of the PaddlePaddle layers into readable answers.
+    """
+
     def __init__(self, documents, sentence_scores, selected_sentences,
                  start_scores, selected_starts, end_scores, selected_ends):
+        """ The constructor.
+
+        Arguments:
+            - documents:          The one-hot input of the document words.
+            - sentence_scores:    The score for each sentece in a document.
+            - selected_sentences: The top k seleceted sentence. This is the
+                                  output of the paddle.layer.kmax_seq_score
+                                  layer in the model.
+            - start_scores:       The score for each words in the selected
+                                  sentence indicating whether the it is start
+                                  of the answer.
+            - selected_starts:    The top k selected start spans. This is the
+                                  output of the paddle.layer.kmax_seq_score
+                                  layer in the model.
+            - end_scores:         The score for each words in the sub-sequence
+                                  which is from the selecetd starts till end of
+                                  the selected sentence.
+            - selected_ends:      The top k selected end spans. This is the
+                                  output of the paddle.layer.kmax_seq_score
+                                  layer in the model.
+
+        """
+
         self.documents = documents
 
         self.sentence_scores = sentence_scores
@@ -19,13 +46,14 @@ class BeamDecoding(object):
 
         self.end_scores = end_scores
         self.selected_ends = selected_ends
-
-        # sequence start position information for the three step search
-        # beam1 is to search the sequence index
+        """
+        sequence start position information for the three step search
+        beam1 is to search the sequence index
+        """
         self.beam1_seq_start_positions = []
-        # beam2 is to search the start answer span
+        """beam2 is to search the start answer span"""
         self.beam2_seq_start_positions = []
-        # beam3 is to search the end answer span
+        """beam3 is to search the end answer span """
         self.beam3_seq_start_positions = []
 
         self.ans_per_sample_in_a_batch = [0]
@@ -34,6 +62,11 @@ class BeamDecoding(object):
         self.final_ans = [[] for i in range(len(documents))]
 
     def _build_beam1_seq_info(self):
+        """
+        The internal function to calculate the offset of each test sequence
+        in a batch for the first beam in searching the answer sentence.
+        """
+
         self.beam1_seq_start_positions.append([0])
         for idx, one_doc in enumerate(self.documents):
             for sentence in one_doc:
@@ -45,15 +78,20 @@ class BeamDecoding(object):
                     [self.beam1_seq_start_positions[-1][-1]])
 
     def _build_beam2_seq_info(self):
+        """
+        The internal function to calculate the offset of each test sequence
+        in a batch for the second beam in searching the start spans.
+        """
+
         seq_num, beam_size = self.selected_sentences.shape
         self.beam2_seq_start_positions.append([0])
         for i in range(seq_num):
             for j in range(beam_size):
                 selected_id = int(self.selected_sentences[i][j])
                 if selected_id == -1: break
-                seq_len = self.beam1_seq_start_positions[i][
-                    selected_id + 1] - self.beam1_seq_start_positions[i][
-                        selected_id]
+                seq_len = self.beam1_seq_start_positions[
+                    i][selected_id +
+                       1] - self.beam1_seq_start_positions[i][selected_id]
                 self.beam2_seq_start_positions[-1].append(
                     self.beam2_seq_start_positions[-1][-1] + seq_len)
 
@@ -62,6 +100,11 @@ class BeamDecoding(object):
                     [self.beam2_seq_start_positions[-1][-1]])
 
     def _build_beam3_seq_info(self):
+        """
+        The internal function to calculate the offset of each test sequence
+        in a batch for the third beam in searching the end spans.
+        """
+
         seq_num_in_a_batch = len(self.documents)
 
         seq_id = 0
@@ -71,9 +114,9 @@ class BeamDecoding(object):
         self.beam3_seq_start_positions.append([0])
         sub_seq_num, beam_size = self.selected_starts.shape
         for i in range(sub_seq_num):
-            seq_len = self.beam2_seq_start_positions[seq_id][
-                sub_seq_id + 1] - self.beam2_seq_start_positions[seq_id][
-                    sub_seq_id]
+            seq_len = self.beam2_seq_start_positions[
+                seq_id][sub_seq_id +
+                        1] - self.beam2_seq_start_positions[seq_id][sub_seq_id]
             for j in range(beam_size):
                 start_id = int(self.selected_starts[i][j])
                 if start_id == -1: break
@@ -88,17 +131,27 @@ class BeamDecoding(object):
                         [self.beam3_seq_start_positions[-1][-1]])
                     sub_seq_id = 0
                     seq_id += 1
-                    sub_seq_count = len(self.beam2_seq_start_positions[
-                        seq_id]) - 1
+                    sub_seq_count = len(
+                        self.beam2_seq_start_positions[seq_id]) - 1
         assert (
             self.beam3_seq_start_positions[-1][-1] == self.end_scores.shape[0])
 
     def _build_seq_info_for_each_beam(self):
+        """
+        The internal function to calculate the offset of each test sequence
+        in a batch for beams expanded at all the three search steps.
+        """
+
         self._build_beam1_seq_info()
         self._build_beam2_seq_info()
         self._build_beam3_seq_info()
 
     def _cal_ans_per_sample_in_a_batch(self):
+        """
+        The internal function to calculate there are how many candidate answers
+        for each of the test sequemce in a batch.
+        """
+
         start_row = 0
         for seq in self.beam3_seq_start_positions:
             end_row = start_row + len(seq) - 1
@@ -109,6 +162,13 @@ class BeamDecoding(object):
             start_row = end_row
 
     def _get_valid_seleceted_ids(slef, mat):
+        """
+        The internal function to post-process the output matrix of
+        paddle.layer.kmax_seq_score layer. This function takes off the special
+        dilimeter -1 away and flattens the original two-dimensional output
+        matrix into a python list.
+        """
+
         flattened = []
         height, width = mat.shape
         for i in range(height):
@@ -118,6 +178,11 @@ class BeamDecoding(object):
         return flattened
 
     def decoding(self):
+        """
+        The internal function to decode forward results of the GNR network into
+        readable answers.
+        """
+
         self._build_seq_info_for_each_beam()
         self._cal_ans_per_sample_in_a_batch()
 
@@ -134,11 +199,16 @@ class BeamDecoding(object):
                 if end_pos == -1: break
 
                 self.all_searched_ans.append({
-                    "score": self.end_scores[seq_offset_in_batch + end_pos],
-                    "sentence_pos": -1,
-                    "start_span_pos": -1,
-                    "end_span_pos": end_pos,
-                    "parent_ids_in_prev_beam": i
+                    "score":
+                    self.end_scores[seq_offset_in_batch + end_pos],
+                    "sentence_pos":
+                    -1,
+                    "start_span_pos":
+                    -1,
+                    "end_span_pos":
+                    end_pos,
+                    "parent_ids_in_prev_beam":
+                    i
                 })
 
             sub_seq_id += 1
@@ -196,7 +266,8 @@ class BeamDecoding(object):
                     key=lambda x: x["score"],
                     reverse=True):
                 self.final_ans[i].append({
-                    "score": ans["score"],
+                    "score":
+                    ans["score"],
                     "label": [
                         ans["sentence_pos"], ans["start_span_pos"],
                         ans["end_span_pos"]

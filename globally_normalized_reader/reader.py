@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
+
 import os
 import random
 import json
@@ -10,8 +11,16 @@ logger.setLevel(logging.INFO)
 
 
 def data_reader(data_list, is_train=True):
+    """ Data reader.
+
+    Arguments:
+        - data_list:  A python list which contains path of training samples.
+        - is_train:   A boolean parameter indicating this function is called
+                      in training or in inferring.
+    """
+
     def reader():
-        # every pass shuffle the data list again
+        """shuffle the data list again at the begining of every pass"""
         if is_train:
             random.shuffle(data_list)
 
@@ -33,12 +42,3 @@ def data_reader(data_list, is_train=True):
                    data['ans_end'] - data['ans_start'])
 
     return reader
-
-
-if __name__ == "__main__":
-    from train import choose_samples
-
-    train_list, dev_list = choose_samples("data/featurized")
-    for i, item in enumerate(data_reader(train_list)()):
-        print(item)
-        if i > 5: break
