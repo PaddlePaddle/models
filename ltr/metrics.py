@@ -19,7 +19,7 @@ def ndcg(score_list):
         n = len(score_list)
         cost = .0
         for i in range(n):
-            cost += float(score_list[i]) / np.log((i + 1) + 1)
+            cost += float(np.power(2, score_list[i])) / np.log((i + 1) + 1)
         return cost
 
     dcg_cost = dcg(score_list)
@@ -28,14 +28,11 @@ def ndcg(score_list):
     return dcg_cost / ideal_cost
 
 
-class NdcgTest(unittest.TestCase):
-    def __init__(self):
-        pass
-
-    def runcase(self):
+class TestNDCG(unittest.TestCase):
+    def test_array(self):
         a = [3, 2, 3, 0, 1, 2]
         value = ndcg(a)
-        self.assertAlmostEqual(0.961, value, places=3)
+        self.assertAlmostEqual(0.9583, value, places=3)
 
 
 if __name__ == '__main__':
