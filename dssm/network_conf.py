@@ -270,7 +270,7 @@ class DSSM(object):
                 input=prediction, label=label)
         else:
             prediction = paddle.layer.cos_sim(*semantics)
-            cost = paddle.layer.mse_cost(prediction, label)
+            cost = paddle.layer.square_error_cost(prediction, label)
 
         if not self.is_infer:
             return cost, prediction, label
