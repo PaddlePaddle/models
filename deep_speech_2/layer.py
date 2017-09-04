@@ -72,6 +72,45 @@ def bidirectional_simple_rnn_bn_layer(name, input, size, act):
     return paddle.layer.concat(input=[forward_simple_rnn, backward_simple_rnn])
 
 
+def bidirectional_gru_bn_layer(name, input, size, act):
+    """Bidirectonal gru layer with sequence-wise batch normalization.
+    The batch normalization is only performed on input-state weights.
+
+    :param name: Name of the layer.
+    :type name: string
+    :param input: Input layer.
+    :type input: LayerOutput
+    :param size: Number of RNN cells.
+    :type size: int
+    :param act: Activation type.
+    :type act: BaseActivation
+    :return: Bidirectional simple rnn layer.
+    :rtype: LayerOutput
+    """
+    # input-hidden weights shared across bi-direcitonal rnn.
+    input_proj_forward = paddle.layer.fc(
+        input=input,
+        size=size * 3,
+        act=paddle.activation.Linear(),
+        bias_attr=False)
+    input_proj_backward = paddle.layer.fc(
+        input=input,
+        size=size * 3,
+        act=paddle.activation.Linear(),
+        bias_attr=False)
+    # batch norm is only performed on input-state projection
+    input_proj_bn_forward = paddle.layer.batch_norm(
+        input=input_proj_forward, act=paddle.activation.Linear())
+    input_proj_bn_backward = paddle.layer.batch_norm(
+        input=input_proj_backward, act=paddle.activation.Linear())
+    # forward and backward in time
+    forward_gru = paddle.layer.grumemory(
+        input=input_proj_bn_forward, act=act, reverse=False)
+    backward_gru = paddle.layer.grumemory(
+        input=input_proj_bn_backward, act=act, reverse=True)
+    return paddle.layer.concat(input=[forward_gru, backward_gru])
+
+
 def conv_group(input, num_stacks):
     """Convolution group with stacked convolution layers.
 
@@ -87,9 +126,9 @@ def conv_group(input, num_stacks):
         filter_size=(11, 41),
         num_channels_in=1,
         num_channels_out=32,
-        stride=(3, 2),
+        stride=(2, 2),
         padding=(5, 20),
-        act=paddle.activation.BRelu())
+        act=paddle.activation.Relu())
     for i in xrange(num_stacks - 1):
         conv = conv_bn_layer(
             input=conv,
@@ -98,13 +137,13 @@ def conv_group(input, num_stacks):
             num_channels_out=32,
             stride=(1, 2),
             padding=(5, 10),
-            act=paddle.activation.BRelu())
+            act=paddle.activation.Relu())
     output_num_channels = 32
     output_height = 160 // pow(2, num_stacks) + 1
     return conv, output_num_channels, output_height
 
 
-def rnn_group(input, size, num_stacks):
+def rnn_group(input, size, num_stacks, use_gru):
     """RNN group with stacked bidirectional simple RNN layers.
 
     :param input: Input layer.
@@ -113,13 +152,25 @@ def rnn_group(input, size, num_stacks):
     :type size: int
     :param num_stacks: Number of stacked rnn layers.
     :type num_stacks: int
+    :param use_gru: Use gru if set True. Use simple rnn if set False.
+    :type use_gru: bool
     :return: Output layer of the RNN group.
     :rtype: LayerOutput
     """
     output = input
     for i in xrange(num_stacks):
-        output = bidirectional_simple_rnn_bn_layer(
-            name=str(i), input=output, size=size, act=paddle.activation.BRelu())
+        if use_gru:
+            output = bidirectional_gru_bn_layer(
+                name=str(i),
+                input=output,
+                size=size,
+                act=paddle.activation.Relu())
+        else:
+            output = bidirectional_simple_rnn_bn_layer(
+                name=str(i),
+                input=output,
+                size=size,
+                act=paddle.activation.Relu())
     return output
 
 
@@ -128,7 +179,8 @@ def deep_speech2(audio_data,
                  dict_size,
                  num_conv_layers=2,
                  num_rnn_layers=3,
-                 rnn_size=256):
+                 rnn_size=256,
+                 use_gru=True):
     """
     The whole DeepSpeech2 model structure (a simplified version).
 
@@ -144,6 +196,8 @@ def deep_speech2(audio_data,
     :type num_rnn_layers: int
     :param rnn_size: RNN layer size (number of RNN cells).
     :type rnn_size: int
+    :param use_gru: Use gru if set True. Use simple rnn if set False.
+    :type use_gru: bool
     :return: A tuple of an output unnormalized log probability layer (
              before softmax) and a ctc cost layer.
     :rtype: tuple of LayerOutput
@@ -161,7 +215,10 @@ def deep_speech2(audio_data,
         block_y=conv_group_height)
     # rnn group
     rnn_group_output = rnn_group(
-        input=conv2seq, size=rnn_size, num_stacks=num_rnn_layers)
+        input=conv2seq,
+        size=rnn_size,
+        num_stacks=num_rnn_layers,
+        use_gru=use_gru)
     fc = paddle.layer.fc(
         input=rnn_group_output,
         size=dict_size + 1,
