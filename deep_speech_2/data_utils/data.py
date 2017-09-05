@@ -186,13 +186,18 @@ class DataGenerator(object):
             for instance in instance_reader():
                 batch.append(instance)
                 if len(batch) == batch_size:
-                    yield self._padding_batch(batch, padding_to, flatten)
+                    yield batch
                     batch = []
             if len(batch) >= min_batch_size:
-                yield self._padding_batch(batch, padding_to, flatten)
+                yield batch
             self._epoch += 1
 
-        return batch_reader
+        return paddle.reader.xmap_readers(
+            lambda batch: self._padding_batch(batch, padding_to, flatten),
+            batch_reader,
+            process_num=1,
+            buffer_size=8,
+            order=True)
 
     @property
     def feeding(self):

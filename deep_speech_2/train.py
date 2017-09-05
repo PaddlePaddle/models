@@ -101,7 +101,7 @@ def train():
         rnn_layer_size=args.rnn_layer_size,
         use_gru=args.use_gru,
         pretrained_model_path=args.init_model_path,
-        share_rnn_weights=args.share_weights)
+        share_rnn_weights=args.share_rnn_weights)
     ds2_model.train(
         train_batch_reader=train_batch_reader,
         dev_batch_reader=dev_batch_reader,
