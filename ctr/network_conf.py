@@ -100,6 +100,6 @@ class CTRmodel(object):
         self.output = layer.fc(
             input=merge_layer, size=1, act=paddle.activation.Sigmoid())
         if not self.is_infer:
-            self.train_cost = paddle.layer.mse_cost(
+            self.train_cost = paddle.layer.square_error_cost(
                 input=self.output, label=self.click)
         return self.output
