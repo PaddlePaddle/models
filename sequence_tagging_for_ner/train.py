@@ -106,4 +106,5 @@ if __name__ == "__main__":
         test_data_file="data/test",
         vocab_file="data/vocab.txt",
         target_file="data/target.txt",
-        emb_file="data/wordVectors.txt")
+        emb_file="data/wordVectors.txt",
+        model_save_dir="model/")

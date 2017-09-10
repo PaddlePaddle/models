@@ -11,7 +11,8 @@ class DSSM(object):
                  model_arch=ModelArch.create_cnn(),
                  share_semantic_generator=False,
                  class_num=None,
-                 share_embed=False):
+                 share_embed=False,
+                 is_infer=False):
         '''
         @dnn_dims: list of int
             dimentions of each layer in semantic vector generator.
@@ -40,6 +41,7 @@ class DSSM(object):
         self.model_type = ModelType(model_type)
         self.model_arch = ModelArch(model_arch)
         self.class_num = class_num
+        self.is_infer = is_infer
         logger.warning("build DSSM model with config of %s, %s" %
                        (self.model_type, self.model_arch))
         logger.info("vocabulary sizes: %s" % str(self.vocab_sizes))
@@ -68,9 +70,6 @@ class DSSM(object):
         self.model_type_creater = _model_type[str(self.model_type)]
 
     def __call__(self):
-        # if self.model_type.is_classification():
-        #     return self._build_classification_model()
-        # return self._build_rank_model()
         return self.model_type_creater()
 
     def create_embedding(self, input, prefix=''):
@@ -103,8 +102,7 @@ class DSSM(object):
         '''
         A GRU sentence vector learner.
         '''
-        gru = paddle.layer.gru_memory(
-            input=emb, )
+        gru = paddle.networks.simple_gru(input=emb, size=256)
         sent_vec = paddle.layer.last_seq(gru)
         return sent_vec
 
@@ -189,8 +187,9 @@ class DSSM(object):
         right_target = paddle.layer.data(
             name='right_target_input',
             type=paddle.data_type.integer_value_sequence(self.vocab_sizes[1]))
-        label = paddle.layer.data(
-            name='label_input', type=paddle.data_type.integer_value(1))
+        if not self.is_infer:
+            label = paddle.layer.data(
+                name='label_input', type=paddle.data_type.integer_value(1))
 
         prefixs = '_ _ _'.split(
         ) if self.share_semantic_generator else 'source left right'.split()
@@ -212,12 +211,14 @@ class DSSM(object):
         # cossim score of source and right target
         right_score = paddle.layer.cos_sim(semantics[0], semantics[2])
 
-        # rank cost
-        cost = paddle.layer.rank_cost(left_score, right_score, label=label)
-        # prediction = left_score - right_score
-        # but this operator is not supported currently.
-        # so AUC will not used.
-        return cost, None, None
+        if not self.is_infer:
+            # rank cost
+            cost = paddle.layer.rank_cost(left_score, right_score, label=label)
+            # prediction = left_score - right_score
+            # but this operator is not supported currently.
+            # so AUC will not used.
+            return cost, None, label
+        return right_score
 
     def _build_classification_or_regression_model(self, is_classification):
         '''
@@ -269,39 +270,8 @@ class DSSM(object):
                 input=prediction, label=label)
         else:
             prediction = paddle.layer.cos_sim(*semantics)
-            cost = paddle.layer.mse_cost(prediction, label)
-        return cost, prediction, label
+            cost = paddle.layer.square_error_cost(prediction, label)
 
-
-class RankMetrics(object):
-    '''
-    A custom metrics to calculate AUC.
-
-    Paddle's rank model do not support auc evaluator directly,
-    to make it, infer all the outputs and use python to calculate
-    the metrics.
-    '''
-
-    def __init__(self, model_parameters, left_score_layer, right_score_layer,
-                 label):
-        '''
-        @model_parameters: dict
-            model's parameters
-        @left_score_layer: paddle.layer
-            left part's score
-        @right_score_laeyr: paddle.layer
-            right part's score
-        @label: paddle.data_layer
-            label input
-        '''
-        self.inferer = paddle.inference.Inference(
-            output_layer=[left_score_layer, right_score_layer],
-            parameters=model_parameters)
-
-    def test(self, input):
-        scores = []
-        for id, rcd in enumerate(input()):
-            # output [left_score, right_score, label]
-            res = self.inferer(input=input)
-            scores.append(res)
-        print scores
+        if not self.is_infer:
+            return cost, prediction, label
+        return prediction

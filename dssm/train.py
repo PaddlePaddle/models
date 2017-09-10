@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import argparse
-import gzip
 
 import paddle.v2 as paddle
 from network_conf import DSSM
 import reader
-from utils import TaskType, load_dic, logger, ModelType, ModelArch
+from utils import TaskType, load_dic, logger, ModelType, ModelArch, display_args
 
 parser = argparse.ArgumentParser(description="PaddlePaddle DSSM example")
 
@@ -56,6 +55,7 @@ parser.add_argument(
     % (ModelType.CLASSIFICATION_MODE, ModelType.RANK_MODE,
        ModelType.REGRESSION_MODE))
 parser.add_argument(
+    '-a',
     '--model_arch',
     type=int,
     required=True,
@@ -91,6 +91,29 @@ parser.add_argument(
     type=int,
     default=0,
     help="number of categories for classification task.")
+parser.add_argument(
+    '--model_output_prefix',
+    type=str,
+    default="./",
+    help="prefix of the path for model to store, (default: ./)")
+parser.add_argument(
+    '-g',
+    '--num_batches_to_log',
+    type=int,
+    default=100,
+    help="number of batches to output train log, (default: 100)")
+parser.add_argument(
+    '-e',
+    '--num_batches_to_test',
+    type=int,
+    default=200,
+    help="number of batches to test, (default: 200)")
+parser.add_argument(
+    '-z',
+    '--num_batches_to_save_model',
+    type=int,
+    default=400,
+    help="number of batches to output model, (default: 400)")
 
 # arguments check.
 args = parser.parse_args()
@@ -100,10 +123,7 @@ if args.model_type.is_classification():
     assert args.class_num > 1, "--class_num should be set in classification task."
 
 layer_dims = [int(i) for i in args.dnn_dims.split(',')]
-target_dic_path = args.source_dic_path if not args.target_dic_path else args.target_dic_path
-
-model_save_name_prefix = "dssm_pass_%s_%s" % (args.model_type,
-                                              args.model_arch, )
+args.target_dic_path = args.source_dic_path if not args.target_dic_path else args.target_dic_path
 
 
 def train(train_data_path=None,
@@ -174,15 +194,10 @@ def train(train_data_path=None,
 
     trainer = paddle.trainer.SGD(
         cost=cost,
-        extra_layers=None,
+        extra_layers=paddle.evaluator.auc(input=prediction, label=label)
+        if not model_type.is_rank() else None,
         parameters=parameters,
         update_equation=adam_optimizer)
-    # trainer = paddle.trainer.SGD(
-    #     cost=cost,
-    #     extra_layers=paddle.evaluator.auc(input=prediction, label=label)
-    #     if prediction and model_type.is_classification() else None,
-    #     parameters=parameters,
-    #     update_equation=adam_optimizer)
 
     feeding = {}
     if model_type.is_classification() or model_type.is_regression():
@@ -200,21 +215,29 @@ def train(train_data_path=None,
         Define batch handler
         '''
         if isinstance(event, paddle.event.EndIteration):
-            if event.batch_id % 100 == 0:
-                logger.info("Pass %d, Batch %d, Cost %f, %s\n" % (
+            # output train log
+            if event.batch_id % args.num_batches_to_log == 0:
+                logger.info("Pass %d, Batch %d, Cost %f, %s" % (
                     event.pass_id, event.batch_id, event.cost, event.metrics))
 
-        if isinstance(event, paddle.event.EndPass):
-            if test_reader is not None:
-                if model_type.is_classification():
-                    result = trainer.test(reader=test_reader, feeding=feeding)
-                    logger.info("Test at Pass %d, %s \n" % (event.pass_id,
-                                                            result.metrics))
-                else:
-                    result = None
-            with gzip.open("dssm_%s_pass_%05d.tar.gz" %
-                           (model_save_name_prefix, event.pass_id), "w") as f:
-                parameters.to_tar(f)
+            # test model
+            if event.batch_id > 0 and event.batch_id % args.num_batches_to_test == 0:
+                if test_reader is not None:
+                    if model_type.is_classification():
+                        result = trainer.test(
+                            reader=test_reader, feeding=feeding)
+                        logger.info("Test at Pass %d, %s" % (event.pass_id,
+                                                             result.metrics))
+                    else:
+                        result = None
+            # save model
+            if event.batch_id > 0 and event.batch_id % args.num_batches_to_save_model == 0:
+                model_desc = "{type}_{arch}".format(
+                    type=str(args.model_type), arch=str(args.model_arch))
+                with open("%sdssm_%s_pass_%05d.tar" %
+                          (args.model_output_prefix, model_desc,
+                           event.pass_id), "w") as f:
+                    parameters.to_tar(f)
 
     trainer.train(
         reader=train_reader,
@@ -226,6 +249,7 @@ def train(train_data_path=None,
 
 
 if __name__ == '__main__':
+    display_args(args)
     train(
         train_data_path=args.train_data_path,
         test_data_path=args.test_data_path,

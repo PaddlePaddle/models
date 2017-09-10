@@ -5,7 +5,7 @@ from __future__ import print_function
 
 import numpy as np
 import random
-import data_utils.utils as utils
+from data_utils.utility import read_manifest
 from data_utils.audio import AudioSegment
 
 
@@ -16,7 +16,7 @@ class FeatureNormalizer(object):
     if mean_std_filepath is provided (not None), the normalizer will directly
     initilize from the file. Otherwise, both manifest_path and featurize_func
     should be given for on-the-fly mean and stddev computing.
-    
+
     :param mean_std_filepath: File containing the pre-computed mean and stddev.
     :type mean_std_filepath: None|basestring
     :param manifest_path: Manifest of instances for computing mean and stddev.
@@ -75,7 +75,7 @@ class FeatureNormalizer(object):
 
     def _compute_mean_std(self, manifest_path, featurize_func, num_samples):
         """Compute mean and std from randomly sampled instances."""
-        manifest = utils.read_manifest(manifest_path)
+        manifest = read_manifest(manifest_path)
         sampled_manifest = self._rng.sample(manifest, num_samples)
         features = []
         for instance in sampled_manifest:
