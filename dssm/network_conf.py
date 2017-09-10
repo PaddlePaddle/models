@@ -102,8 +102,7 @@ class DSSM(object):
         '''
         A GRU sentence vector learner.
         '''
-        gru = paddle.layer.gru_memory(
-            input=emb, )
+        gru = paddle.networks.simple_gru(input=emb, size=256)
         sent_vec = paddle.layer.last_seq(gru)
         return sent_vec
 
@@ -219,7 +218,7 @@ class DSSM(object):
             # but this operator is not supported currently.
             # so AUC will not used.
             return cost, None, label
-        return None, [left_score, right_score], label
+        return right_score
 
     def _build_classification_or_regression_model(self, is_classification):
         '''
@@ -271,8 +270,8 @@ class DSSM(object):
                 input=prediction, label=label)
         else:
             prediction = paddle.layer.cos_sim(*semantics)
-            cost = paddle.layer.mse_cost(prediction, label)
+            cost = paddle.layer.square_error_cost(prediction, label)
 
         if not self.is_infer:
             return cost, prediction, label
-        return None, prediction, label
+        return prediction

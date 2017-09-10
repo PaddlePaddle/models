@@ -4,7 +4,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-from data_utils import utils
+from data_utils.utility import read_manifest
 from data_utils.audio import AudioSegment
 from python_speech_features import mfcc
 from python_speech_features import delta
@@ -57,7 +57,7 @@ class AudioFeaturizer(object):
     def featurize(self,
                   audio_segment,
                   allow_downsampling=True,
-                  allow_upsamplling=True):
+                  allow_upsampling=True):
         """Extract audio features from AudioSegment or SpeechSegment.
 
         :param audio_segment: Audio/speech segment to extract features from.
@@ -159,12 +159,12 @@ class AudioFeaturizer(object):
         if max_freq is None:
             max_freq = sample_rate / 2
         if max_freq > sample_rate / 2:
-            raise ValueError("max_freq must be greater than half of "
+            raise ValueError("max_freq must not be greater than half of "
                              "sample rate.")
         if stride_ms > window_ms:
             raise ValueError("Stride size must not be greater than "
                              "window size.")
-        # compute 13 cepstral coefficients, and the first one is replaced
+        # compute the 13 cepstral coefficients, and the first one is replaced
         # by log(frame energy)
         mfcc_feat = mfcc(
             signal=samples,
@@ -176,11 +176,11 @@ class AudioFeaturizer(object):
         d_mfcc_feat = delta(mfcc_feat, 2)
         # Deltas-Deltas
         dd_mfcc_feat = delta(d_mfcc_feat, 2)
+        # transpose
+        mfcc_feat = np.transpose(mfcc_feat)
+        d_mfcc_feat = np.transpose(d_mfcc_feat)
+        dd_mfcc_feat = np.transpose(dd_mfcc_feat)
         # concat above three features
-        concat_mfcc_feat = [
-            np.concatenate((mfcc_feat[i], d_mfcc_feat[i], dd_mfcc_feat[i]))
-            for i in xrange(len(mfcc_feat))
-        ]
-        # transpose to be consistent with the linear specgram situation
-        concat_mfcc_feat = np.transpose(concat_mfcc_feat)
+        concat_mfcc_feat = np.concatenate(
+            (mfcc_feat, d_mfcc_feat, dd_mfcc_feat))
         return concat_mfcc_feat
