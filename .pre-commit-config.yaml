@@ -27,14 +27,6 @@
         files: \.md$
 -   repo: local
     hooks:
-    -   id: clang-format
-        name: clang-format
-        description: Format files with ClangFormat
-        entry: bash .clang_format.hook -i
-        language: system
-        files: \.(c|cc|cxx|cpp|cu|h|hpp|hxx|cuh|proto)$
--   repo: local
-    hooks:
     -   id: convert-markdown-into-html
         name: convert-markdown-into-html
         description: Convert README.md into index.html
