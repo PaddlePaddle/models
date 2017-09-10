@@ -28,10 +28,7 @@ You can also visit https://github.com/baidu-research/GloballyNormalizedReader to
    ```bash
    cd data && ./download.sh
    ```
-3. Featurize the data by running:
-   ```
-   python featurize.py --datadir data --outdir featurized
-   ```
+3. **(TODO) add the preprocess and featurizer scripts.**
 
 # Training a Model
 
