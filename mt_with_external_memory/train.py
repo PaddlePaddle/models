@@ -6,10 +6,11 @@ import sys
 import gzip
 import distutils.util
 import random
+
 import paddle.v2 as paddle
 from external_memory import ExternalMemory
-from model import *
-from data_utils import *
+from model import memory_enhanced_seq2seq
+from data_utils import reader_append_wrapper
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument(
@@ -65,6 +66,12 @@ def train():
     """
     For training.
     """
+    # create optimizer
+    optimizer = paddle.optimizer.Adam(
+        learning_rate=5e-5,
+        gradient_clipping_threshold=5,
+        regularization=paddle.optimizer.L2Regularization(rate=8e-4))
+
     # create network config
     source_words = paddle.layer.data(
         name="source_words",
@@ -85,12 +92,8 @@ def train():
         is_generating=False,
         beam_size=None)
 
-    # create parameters and optimizer
+    # create parameters and trainer
     parameters = paddle.parameters.create(cost)
-    optimizer = paddle.optimizer.Adam(
-        learning_rate=5e-5,
-        gradient_clipping_threshold=5,
-        regularization=paddle.optimizer.L2Regularization(rate=8e-4))
     trainer = paddle.trainer.SGD(
         cost=cost, parameters=parameters, update_equation=optimizer)
 

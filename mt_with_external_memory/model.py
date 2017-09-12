@@ -184,7 +184,7 @@ def memory_enhanced_decoder(input, target, initial_state, source_context, size,
             input=decoder_result, label=target)
         return cost
     else:
-        target_embeddings = paddle.layer.GeneratedInputV2(
+        target_embeddings = paddle.layer.GeneratedInput(
             size=dict_size,
             embedding_name="_decoder_word_embedding",
             embedding_size=word_vec_dim)

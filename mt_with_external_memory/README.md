@@ -32,7 +32,7 @@
 
 #### 动态记忆 2 --- Seq2Seq 中的注意力机制
 
-然而上节所属的单个向量 $h$ 或 $c$ 的信息带宽有限。在序列到序列生成模型中，这样的带宽瓶颈更表现在信息从编码器（Encoder）转移至解码器（Decoder）的过程中：仅仅依赖一个有限长度的状态向量来编码整个变长的源语句，有着较大的潜在信息丢失。
+然而上节所述的单个向量 $h$ 或 $c$ 的信息带宽有限。在序列到序列生成模型中，这样的带宽瓶颈更表现在信息从编码器（Encoder）转移至解码器（Decoder）的过程中：仅仅依赖一个有限长度的状态向量来编码整个变长的源语句，有着较大的潜在信息丢失。
 
 \[[3](#参考文献)\] 提出了注意力机制（Attention Mechanism），以克服上述困难。在解码时，解码器不再仅仅依赖来自编码器的唯一的句级编码向量的信息，而是依赖一个向量组的记忆信息：向量组中的每个向量为编码器的各字符（Token）的编码向量（例如 $h_t$）。通过一组可学习的注意强度（Attention Weights) 来动态分配注意力资源，以线性加权方式读取信息，用于序列的不同时间步的符号生成（可参考 PaddlePaddle Book [机器翻译](https://github.com/PaddlePaddle/book/tree/develop/08.machine_translation)一章）。这种注意强度的分布，可看成基于内容的寻址（请参考神经图灵机 \[[1](#参考文献)\] 中的寻址描述），即在源语句的不同位置根据其内容决定不同的读取强度，起到一种和源语句 “软对齐（Soft Alignment）” 的作用。
 
@@ -40,7 +40,7 @@
 
 #### 动态记忆 3 --- 神经图灵机
 
-图灵机（Turing Machines）或冯诺依曼体系（Von Neumann Architecture），是计算机体系结构的雏形。运算器（如代数计算）、控制器（如逻辑分支控制）和存储器三者一体，共同构成了当代计算机的核心运行机制。神经图灵机（Neural Turing Machines）\[[1](#参考文献)\] 试图利用神经网络模拟可微分（即可通过梯度下降来学习）的图灵机，以实现更复杂的智能。而一般的机器学习模型，大部分忽略了显式的动态存储。神经图灵机正是要弥补这样的潜在缺陷。
+图灵机（Turing Machine）或冯诺依曼体系（Von Neumann Architecture），是计算机体系结构的雏形。运算器（如代数计算）、控制器（如逻辑分支控制）和存储器三者一体，共同构成了当代计算机的核心运行机制。神经图灵机（Neural Turing Machines）\[[1](#参考文献)\] 试图利用神经网络模拟可微分（即可通过梯度下降来学习）的图灵机，以实现更复杂的智能。而一般的机器学习模型，大部分忽略了显式的动态存储。神经图灵机正是要弥补这样的潜在缺陷。
 
 <div align="center">
 <img src="image/turing_machine_cartoon.gif"><br/>
@@ -123,7 +123,7 @@
 
 该类结构如下：
 
-```
+```python
 class ExternalMemory(object):
     """External neural memory class.
 
@@ -214,7 +214,7 @@ class ExternalMemory(object):
     - 输入参数 `name`: 外部记忆单元名，不同实例的相同命名将共享同一外部记忆单元。
     - 输入参数 `mem_slot_size`: 单个记忆槽（向量）的维度。
     - 输入参数 `boot_layer`: 用于内存槽初始化的层。需为序列类型，序列长度表明记忆槽的数量。
-    - 输入参数 `readonly`: 是否打开只读模式（例如打开只读模式，该实例可用于注意力机制）。打开是，`write` 方法不可被调用。
+    - 输入参数 `readonly`: 是否打开只读模式（例如打开只读模式，该实例可用于注意力机制）。打开只读模式，`write` 方法不可被调用。
     - 输入参数 `enable_interpolation`: 是否允许插值寻址（例如当用于注意力机制时，需要关闭插值寻址）。
 - `write`: 写操作。
     - 输入参数 `write_key`：某层的输出，其包含的信息用于写头的寻址和实际写入信息的生成。
@@ -224,14 +224,14 @@ class ExternalMemory(object):
 
 部分关键实现逻辑：
 
-- 神经图灵机的 “外部存储矩阵” 采用 `Paddle.layer.memory`实现，并采用序列形式（`is_seq=True`），该序列的长度表示记忆槽的数量，序列的 `size` 表示记忆槽（向量）的大小。该序列依赖一个外部层作为初始化， 其记忆槽的数量取决于该层输出序列的长度。因此，该类不仅可用来实现有界记忆（Bounded Memory)，同时可用来实现无界记忆 (Unbounded Memory，即记忆槽数量可变)。
+- 神经图灵机的 “外部存储矩阵” 采用 `Paddle.layer.memory`实现。该序列的长度表示记忆槽的数量，序列的 `size` 表示记忆槽（向量）的大小。该序列依赖一个外部层作为初始化， 其记忆槽的数量取决于该层输出序列的长度。因此，该类不仅可用来实现有界记忆（Bounded Memory)，同时可用来实现无界记忆 (Unbounded Memory，即记忆槽数量可变)。
 
-    ```
-    self.external_memory = paddle.layer.memory(
-           name=self.name,
-          size=self.mem_slot_size,
-        is_seq=True,
-        boot_layer=boot_layer)
+   ```python
+   self.external_memory = paddle.layer.memory(
+       name=self.name,
+       size=self.mem_slot_size,
+       is_seq=True,
+       boot_layer=boot_layer)
    ```
 - `ExternalMemory`类的寻址逻辑通过 `_content_addressing` 和 `_interpolation` 两个私有方法实现。读和写操作通过 `read` 和 `write` 两个函数实现，包括上述的寻址操作。并且读和写的寻址独立进行，不同于 \[[2](#参考文献)\] 中的二者共享同一个寻址强度，目的是为了使得该类更通用。
 - 为了简单起见，控制器（Controller）未被专门模块化，而是分散在各个寻址和读写函数中。控制器主要包括寻址操作和写操作时生成写入/擦除向量等，其中寻址操作通过上述的`_content_addressing` 和 `_interpolation` 两个私有方法实现，写操作时的写入/擦除向量的生成则在 `write` 方法中实现。上述均采用简单的前馈网络模拟控制器。读者可尝试剥离控制器逻辑并模块化，同时可尝试循环神经网络做控制器。
@@ -243,7 +243,7 @@ class ExternalMemory(object):
 
 涉及三个主要函数：
 
-```
+```python
 def bidirectional_gru_encoder(input, size, word_vec_dim):
     """Bidirectional GRU encoder.
 
@@ -344,23 +344,23 @@ def memory_enhanced_seq2seq(encoder_input, decoder_input, decoder_target,
 
     - 无界外部记忆：即传统的注意力机制。利用`ExternalMemory`，打开只读开关，关闭插值寻址。并利用解码器的第一组输出作为 `ExternalMemory` 中存储矩阵的初始化（`boot_layer`）。因此，该存储的记忆槽数目是动态可变的，取决于编码器的字符数。
 
-        ```
-            unbounded_memory = ExternalMemory(
-                name="unbounded_memory",
-                mem_slot_size=size * 2,
-                boot_layer=unbounded_memory_init,
-                readonly=True,
-                enable_interpolation=False)
+        ```python
+        unbounded_memory = ExternalMemory(
+            name="unbounded_memory",
+            mem_slot_size=size * 2,
+            boot_layer=unbounded_memory_init,
+            readonly=True,
+            enable_interpolation=False)
         ```
     - 有界外部记忆：利用`ExternalMemory`，关闭只读开关，打开插值寻址。并利用解码器的第一组输出，取均值池化（pooling）后并扩展为指定序列长度后，叠加随机噪声（训练和推断时保持一致），作为 `ExternalMemory` 中存储矩阵的初始化（`boot_layer`）。因此，该存储的记忆槽数目是固定的。即代码中的：
 
-        ```
-               bounded_memory = ExternalMemory(
-                name="bounded_memory",
-                mem_slot_size=size,
-                boot_layer=bounded_memory_init,
-                readonly=False,
-                enable_interpolation=True)
+        ```python
+        bounded_memory = ExternalMemory(
+            name="bounded_memory",
+            mem_slot_size=size,
+            boot_layer=bounded_memory_init,
+            readonly=False,
+            enable_interpolation=True)
         ```
 
     注意到，在我们的实现中，注意力机制（或无界外部存储）和神经图灵机（或有界外部存储）被实现成相同的 `ExternalMemory` 类。前者是**只读**的， 后者**可读可写**。这样处理仅仅是为了便于统一我们对 “注意机制” 和 “记忆机制” 的理解和认识，同时也提供更简洁和统一的实现版本。注意力机制也可以通过 `paddle.networks.simple_attention` 实现。
@@ -377,7 +377,7 @@ def memory_enhanced_seq2seq(encoder_input, decoder_input, decoder_target,
 
 数据是通过无参的 `reader()` 迭代器函数，进入训练过程。因此我们需要为训练数据和测试数据分别构造两个 `reader()` 迭代器。`reader()` 函数使用 `yield` 来实现迭代器功能（即可通过 `for instance in reader()` 方式迭代运行）， 例如
 
-```
+```python
 def reader():
     for instance in data_list:
         yield instance
@@ -389,7 +389,7 @@ def reader():
 
 PaddlePaddle 的接口 [paddle.paddle.wmt14](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/v2/dataset/wmt14.py)， 默认提供了一个经过预处理的、较小规模的 [wmt14 英法翻译数据集的子集](http://paddlepaddle.bj.bcebos.com/demo/wmt_shrinked_data/wmt14.tgz)(该数据集有193319条训练数据，6003条测试数据，词典长度为30000)。并提供了两个reader creator函数如下：
 
-```
+```python
 paddle.dataset.wmt14.train(dict_size)
 paddle.dataset.wmt14.test(dict_size)
 ```
@@ -400,27 +400,27 @@ paddle.dataset.wmt14.test(dict_size)
 
 命令行输入：
 
-```
+```bash
 python mt_with_external_memory.py
 ```
 或自定义部分参数, 例如:
 
-```
-CUDA_VISIBLE_DEVICES=8,9,10,11 python train.py \
-    --dict_size 30000 \
-       --word_vec_dim 512 \
-       --hidden_size 1024 \
-       --memory_slot_num 8 \
-       --use_gpu True \
-       --trainer_count 4 \
-       --num_passes 100 \
-       --batch_size 128 \
-       --memory_perturb_stddev 0.1
+```bash
+python train.py \
+--dict_size 30000 \
+--word_vec_dim 512 \
+--hidden_size 1024 \
+--memory_slot_num 8 \
+--use_gpu False \
+--trainer_count 1 \
+--num_passes 100 \
+--batch_size 128 \
+--memory_perturb_stddev 0.1
 ```
 
 即可运行训练脚本，训练模型将被定期保存于本地 `./checkpoints`。参数含义可运行
 
-```
+```bash
 python train.py --help
 ```
 
@@ -429,28 +429,28 @@ python train.py --help
 
 命令行输入：
 
-```
+```bash
 python infer.py
 ```
 或自定义部分参数, 例如:
 
-```
-CUDA_VISIBLE_DEVICES=8,9,10,11 python train.py \
-    --dict_size 30000 \
-       --word_vec_dim 512 \
-       --hidden_size 1024 \
-       --memory_slot_num 8 \
-       --use_gpu True \
-       --trainer_count 4 \
-       --memory_perturb_stddev 0.1 \
-       --infer_num_data 10 \
-       --model_filepath checkpoints/params.latest.tar.gz
-       --beam_size 3
+```bash
+python train.py \
+--dict_size 30000 \
+--word_vec_dim 512 \
+--hidden_size 1024 \
+--memory_slot_num 8 \
+--use_gpu False \
+--trainer_count 1 \
+--memory_perturb_stddev 0.1 \
+--infer_num_data 10 \
+--model_filepath checkpoints/params.latest.tar.gz \
+--beam_size 3
 ```
 
 即可运行解码脚本，产生示例翻译结果。参数含义可运行：
 
-```
+```bash
 python infer.py --help
 ```
 

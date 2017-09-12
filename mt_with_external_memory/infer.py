@@ -4,10 +4,11 @@
 import distutils.util
 import argparse
 import gzip
+
 import paddle.v2 as paddle
 from external_memory import ExternalMemory
-from model import *
-from data_utils import *
+from model import memory_enhanced_seq2seq
+from data_utils import reader_append_wrapper
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument(

@@ -56,10 +56,7 @@ class ExternalMemory(object):
         self.readonly = readonly
         self.enable_interpolation = enable_interpolation
         self.external_memory = paddle.layer.memory(
-            name=self.name,
-            size=self.mem_slot_size,
-            is_seq=True,
-            boot_layer=boot_layer)
+            name=self.name, size=self.mem_slot_size, boot_layer=boot_layer)
         # prepare a constant (zero) intializer for addressing weights 
         self.zero_addressing_init = paddle.layer.slope_intercept(
             input=paddle.layer.fc(input=boot_layer, size=1),
@@ -114,7 +111,6 @@ class ExternalMemory(object):
         last_addressing_weight = paddle.layer.memory(
             name=self.name + "_addressing_weight_" + head_name,
             size=1,
-            is_seq=True,
             boot_layer=self.zero_addressing_init)
         interpolated_weight = paddle.layer.interpolation(
             name=self.name + "_addressing_weight_" + head_name,
