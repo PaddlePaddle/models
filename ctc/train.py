@@ -74,8 +74,8 @@ def event_handler(event):
     if isinstance(event, paddle.event.EndIteration):
         if event.batch_id % 100 == 0:
             print "Pass %d, batch %d, Samples %d, Cost %f" % (
-                event.pass_id, event.batch_id,
-                event.batch_id * args.batch_size, event.cost)
+                event.pass_id, event.batch_id, event.batch_id * args.batch_size,
+                event.cost)
 
         if event.batch_id > 0 and event.batch_id % args.save_period_by_batch == 0:
             result = trainer.test(
