@@ -35,6 +35,8 @@ class ExternalMemory(object):
                        sequence layer has sequence length indicating the number
                        of memory slots, and size as memory slot size.
     :type boot_layer: LayerOutput
+    :param initial_weight: Initializer for addressing weights.
+    :type initial_weight: LayerOutput
     :param readonly: If true, the memory is read-only, and write function cannot
                      be called. Default is false.
     :type readonly: bool
@@ -49,6 +51,7 @@ class ExternalMemory(object):
                  name,
                  mem_slot_size,
                  boot_layer,
+                 initial_weight,
                  readonly=False,
                  enable_interpolation=True):
         self.name = name
@@ -57,11 +60,7 @@ class ExternalMemory(object):
         self.enable_interpolation = enable_interpolation
         self.external_memory = paddle.layer.memory(
             name=self.name, size=self.mem_slot_size, boot_layer=boot_layer)
-        # prepare a constant (zero) intializer for addressing weights 
-        self.zero_addressing_init = paddle.layer.slope_intercept(
-            input=paddle.layer.fc(input=boot_layer, size=1),
-            slope=0.0,
-            intercept=0.0)
+        self.initial_weight = initial_weight
         # set memory to constant when readonly=True
         if self.readonly:
             self.updated_external_memory = paddle.layer.mixed(
@@ -111,7 +110,7 @@ class ExternalMemory(object):
         last_addressing_weight = paddle.layer.memory(
             name=self.name + "_addressing_weight_" + head_name,
             size=1,
-            boot_layer=self.zero_addressing_init)
+            boot_layer=self.initial_weight)
         interpolated_weight = paddle.layer.interpolation(
             name=self.name + "_addressing_weight_" + head_name,
             input=[addressing_weight, addressing_weight],
