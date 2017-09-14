@@ -135,7 +135,7 @@ def train():
                 sys.stdout.flush()
         if isinstance(event, paddle.event.EndPass):
             result = trainer.test(reader=test_batch_reader, feeding=feeding)
-            print "Pass: %d, TestCost: %f, %s" % (event.pass_id, event.cost,
+            print "Pass: %d, TestCost: %f, %s" % (event.pass_id, result.cost,
                                                   result.metrics)
             with gzip.open("checkpoints/params.pass-%d.tar.gz" % event.pass_id,
                            'w') as f:
