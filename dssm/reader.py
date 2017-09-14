@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+<<<<<<< HEAD
 from utils import UNK, TaskType, load_dic, sent2ids
 
 
@@ -10,29 +11,75 @@ class Dataset(object):
                  source_dic_path,
                  target_dic_path,
                  task_type=TaskType.RANK):
+=======
+from utils import UNK, ModelType, TaskType, load_dic, sent2ids, logger, ModelType
+
+
+class Dataset(object):
+    def __init__(self, train_path, test_path, source_dic_path, target_dic_path,
+                 model_type):
+>>>>>>> 8b5c739a847b03ae8e7daa10f5311ef8cd12290b
         self.train_path = train_path
         self.test_path = test_path
         self.source_dic_path = source_dic_path
         self.target_dic_path = target_dic_path
+<<<<<<< HEAD
         self.task_type = task_type
+=======
+        self.model_type = ModelType(model_type)
+>>>>>>> 8b5c739a847b03ae8e7daa10f5311ef8cd12290b
 
         self.source_dic = load_dic(self.source_dic_path)
         self.target_dic = load_dic(self.target_dic_path)
 
+<<<<<<< HEAD
         self.record_reader = self._read_classification_record \
                                 if self.task_type == TaskType.CLASSFICATION \
                                         else self._read_rank_record
 
     def train(self):
+=======
+        _record_reader = {
+            ModelType.CLASSIFICATION_MODE: self._read_classification_record,
+            ModelType.REGRESSION_MODE: self._read_regression_record,
+            ModelType.RANK_MODE: self._read_rank_record,
+        }
+
+        assert isinstance(model_type, ModelType)
+        self.record_reader = _record_reader[model_type.mode]
+        self.is_infer = False
+
+    def train(self):
+        '''
+        Load trainset.
+        '''
+        logger.info("[reader] load trainset from %s" % self.train_path)
+>>>>>>> 8b5c739a847b03ae8e7daa10f5311ef8cd12290b
         with open(self.train_path) as f:
             for line_id, line in enumerate(f):
                 yield self.record_reader(line)
 
     def test(self):
+<<<<<<< HEAD
+=======
+        '''
+        Load testset.
+        '''
+        # logger.info("[reader] load testset from %s" % self.test_path)
+>>>>>>> 8b5c739a847b03ae8e7daa10f5311ef8cd12290b
         with open(self.test_path) as f:
             for line_id, line in enumerate(f):
                 yield self.record_reader(line)
 
+<<<<<<< HEAD
+=======
+    def infer(self):
+        self.is_infer = True
+        with open(self.train_path) as f:
+            for line in f:
+                yield self.record_reader(line)
+
+>>>>>>> 8b5c739a847b03ae8e7daa10f5311ef8cd12290b
     def _read_classification_record(self, line):
         '''
         data format:
@@ -47,8 +94,34 @@ class Dataset(object):
             "<source words> [TAB] <target words> [TAB] <label>'"
         source = sent2ids(fs[0], self.source_dic)
         target = sent2ids(fs[1], self.target_dic)
+<<<<<<< HEAD
         label = int(fs[2])
         return (source, target, label, )
+=======
+        if not self.is_infer:
+            label = int(fs[2])
+            return (source, target, label, )
+        return source, target
+
+    def _read_regression_record(self, line):
+        '''
+        data format:
+            <source words> [TAB] <target words> [TAB] <label>
+
+        @line: str
+            a string line which represent a record.
+        '''
+        fs = line.strip().split('\t')
+        assert len(fs) == 3, "wrong format for regression\n" + \
+            "the format shoud be " +\
+            "<source words> [TAB] <target words> [TAB] <label>'"
+        source = sent2ids(fs[0], self.source_dic)
+        target = sent2ids(fs[1], self.target_dic)
+        if not self.is_infer:
+            label = float(fs[2])
+            return (source, target, [label], )
+        return source, target
+>>>>>>> 8b5c739a847b03ae8e7daa10f5311ef8cd12290b
 
     def _read_rank_record(self, line):
         '''
@@ -63,9 +136,16 @@ class Dataset(object):
         source = sent2ids(fs[0], self.source_dic)
         left_target = sent2ids(fs[1], self.target_dic)
         right_target = sent2ids(fs[2], self.target_dic)
+<<<<<<< HEAD
         label = int(fs[3])
 
         return (source, left_target, right_target, label)
+=======
+        if not self.is_infer:
+            label = int(fs[3])
+            return (source, left_target, right_target, label)
+        return source, left_target, right_target
+>>>>>>> 8b5c739a847b03ae8e7daa10f5311ef8cd12290b
 
 
 if __name__ == '__main__':
@@ -73,9 +153,16 @@ if __name__ == '__main__':
     test_path = './data/classification/test.txt'
     source_dic = './data/vocab.txt'
     dataset = Dataset(path, test_path, source_dic, source_dic,
+<<<<<<< HEAD
                       TaskType.CLASSFICATION)
 
     for rcd in dataset.train():
         print rcd
     # for i in range(10):
     #     print i, dataset.train().next()
+=======
+                      ModelType.CLASSIFICATION)
+
+    for rcd in dataset.train():
+        print rcd
+>>>>>>> 8b5c739a847b03ae8e7daa10f5311ef8cd12290b

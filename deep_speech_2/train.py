@@ -1,191 +1,121 @@
-"""
-   Trainer for a simplifed version of Baidu DeepSpeech2 model.
-"""
+"""Trainer for DeepSpeech2 model."""
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-import paddle.v2 as paddle
-import distutils.util
 import argparse
-import gzip
-import time
-import sys
-from model import deep_speech2
-from audio_data_utils import DataGenerator
-import numpy as np
+import functools
+import paddle.v2 as paddle
+from model_utils.model import DeepSpeech2Model
+from data_utils.data import DataGenerator
+from utils.utility import add_arguments, print_arguments
 
-#TODO: add WER metric
-
-parser = argparse.ArgumentParser(
-    description='Simplified version of DeepSpeech2 trainer.')
-parser.add_argument(
-    "--batch_size", default=32, type=int, help="Minibatch size.")
-parser.add_argument(
-    "--num_passes",
-    default=20,
-    type=int,
-    help="Training pass number. (default: %(default)s)")
-parser.add_argument(
-    "--num_conv_layers",
-    default=2,
-    type=int,
-    help="Convolution layer number. (default: %(default)s)")
-parser.add_argument(
-    "--num_rnn_layers",
-    default=3,
-    type=int,
-    help="RNN layer number. (default: %(default)s)")
-parser.add_argument(
-    "--rnn_layer_size",
-    default=512,
-    type=int,
-    help="RNN layer cell number. (default: %(default)s)")
-parser.add_argument(
-    "--adam_learning_rate",
-    default=5e-4,
-    type=float,
-    help="Learning rate for ADAM Optimizer. (default: %(default)s)")
-parser.add_argument(
-    "--use_gpu",
-    default=True,
-    type=distutils.util.strtobool,
-    help="Use gpu or not. (default: %(default)s)")
-parser.add_argument(
-    "--use_sortagrad",
-    default=False,
-    type=distutils.util.strtobool,
-    help="Use sortagrad or not. (default: %(default)s)")
-parser.add_argument(
-    "--trainer_count",
-    default=4,
-    type=int,
-    help="Trainer number. (default: %(default)s)")
-parser.add_argument(
-    "--normalizer_manifest_path",
-    default='data/manifest.libri.train-clean-100',
-    type=str,
-    help="Manifest path for normalizer. (default: %(default)s)")
-parser.add_argument(
-    "--train_manifest_path",
-    default='data/manifest.libri.train-clean-100',
-    type=str,
-    help="Manifest path for training. (default: %(default)s)")
-parser.add_argument(
-    "--dev_manifest_path",
-    default='data/manifest.libri.dev-clean',
-    type=str,
-    help="Manifest path for validation. (default: %(default)s)")
-parser.add_argument(
-    "--vocab_filepath",
-    default='data/eng_vocab.txt',
-    type=str,
-    help="Vocabulary filepath. (default: %(default)s)")
+parser = argparse.ArgumentParser(description=__doc__)
+add_arg = functools.partial(add_arguments, argparser=parser)
+# yapf: disable
+add_arg('batch_size',       int,    256,    "Minibatch size.")
+add_arg('trainer_count',    int,    8,      "# of Trainers (CPUs or GPUs).")
+add_arg('num_passes',       int,    200,    "# of training epochs.")
+add_arg('num_proc_data',    int,    12,     "# of CPUs for data preprocessing.")
+add_arg('num_conv_layers',  int,    2,      "# of convolution layers.")
+add_arg('num_rnn_layers',   int,    3,      "# of recurrent layers.")
+add_arg('rnn_layer_size',   int,    2048,   "# of recurrent cells per layer.")
+add_arg('num_iter_print',   int,    100,    "Every # iterations for printing "
+                                            "train cost.")
+add_arg('learning_rate',    float,  5e-4,   "Learning rate.")
+add_arg('max_duration',     float,  27.0,   "Longest audio duration allowed.")
+add_arg('min_duration',     float,  0.0,    "Shortest audio duration allowed.")
+add_arg('use_sortagrad',    bool,   True,   "Use SortaGrad or not.")
+add_arg('use_gpu',          bool,   True,   "Use GPU or not.")
+add_arg('use_gru',          bool,   False,  "Use GRUs instead of simple RNNs.")
+add_arg('is_local',         bool,   True,   "Use pserver or not.")
+add_arg('share_rnn_weights',bool,   True,   "Share input-hidden weights across "
+                                            "bi-directional RNNs. Not for GRU.")
+add_arg('train_manifest',   str,
+        'data/librispeech/manifest.train',
+        "Filepath of train manifest.")
+add_arg('dev_manifest',     str,
+        'data/librispeech/manifest.dev-clean',
+        "Filepath of validation manifest.")
+add_arg('mean_std_path',    str,
+        'data/librispeech/mean_std.npz',
+        "Filepath of normalizer's mean & std.")
+add_arg('vocab_path',       str,
+        'data/librispeech/vocab.txt',
+        "Filepath of vocabulary.")
+add_arg('init_model_path',  str,
+        None,
+        "If None, the training starts from scratch, "
+        "otherwise, it resumes from the pre-trained model.")
+add_arg('output_model_dir', str,
+        "./checkpoints/libri",
+        "Directory for saving checkpoints.")
+add_arg('augment_conf_path',str,
+        'conf/augmentation.config',
+        "Filepath of augmentation configuration file (json-format).")
+add_arg('specgram_type',    str,
+        'linear',
+        "Audio feature type. Options: linear, mfcc.",
+        choices=['linear', 'mfcc'])
+add_arg('shuffle_method',   str,
+        'batch_shuffle_clipped',
+        "Shuffle method.",
+        choices=['instance_shuffle', 'batch_shuffle', 'batch_shuffle_clipped'])
+# yapf: disable
 args = parser.parse_args()
 
 
 def train():
-    """
-    DeepSpeech2 training.
-    """
-    # initialize data generator
-    data_generator = DataGenerator(
-        vocab_filepath=args.vocab_filepath,
-        normalizer_manifest_path=args.normalizer_manifest_path,
-        normalizer_num_samples=200,
-        max_duration=20.0,
-        min_duration=0.0,
-        stride_ms=10,
-        window_ms=20)
+    """DeepSpeech2 training."""
+    train_generator = DataGenerator(
+        vocab_filepath=args.vocab_path,
+        mean_std_filepath=args.mean_std_path,
+        augmentation_config=open(args.augment_conf_path, 'r').read(),
+        max_duration=args.max_duration,
+        min_duration=args.min_duration,
+        specgram_type=args.specgram_type,
+        num_threads=args.num_proc_data)
+    dev_generator = DataGenerator(
+        vocab_filepath=args.vocab_path,
+        mean_std_filepath=args.mean_std_path,
+        augmentation_config="{}",
+        specgram_type=args.specgram_type,
+        num_threads=args.num_proc_data)
+    train_batch_reader = train_generator.batch_reader_creator(
+        manifest_path=args.train_manifest,
+        batch_size=args.batch_size,
+        min_batch_size=args.trainer_count,
+        sortagrad=args.use_sortagrad if args.init_model_path is None else False,
+        shuffle_method=args.shuffle_method)
+    dev_batch_reader = dev_generator.batch_reader_creator(
+        manifest_path=args.dev_manifest,
+        batch_size=args.batch_size,
+        min_batch_size=1,  # must be 1, but will have errors.
+        sortagrad=False,
+        shuffle_method=None)
 
-    # create network config
-    dict_size = data_generator.vocabulary_size()
-    audio_data = paddle.layer.data(
-        name="audio_spectrogram",
-        height=161,
-        width=2000,
-        type=paddle.data_type.dense_vector(322000))
-    text_data = paddle.layer.data(
-        name="transcript_text",
-        type=paddle.data_type.integer_value_sequence(dict_size))
-    cost = deep_speech2(
-        audio_data=audio_data,
-        text_data=text_data,
-        dict_size=dict_size,
+    ds2_model = DeepSpeech2Model(
+        vocab_size=train_generator.vocab_size,
         num_conv_layers=args.num_conv_layers,
         num_rnn_layers=args.num_rnn_layers,
-        rnn_size=args.rnn_layer_size,
-        is_inference=False)
-
-    # create parameters and optimizer
-    parameters = paddle.parameters.create(cost)
-    optimizer = paddle.optimizer.Adam(
-        learning_rate=args.adam_learning_rate, gradient_clipping_threshold=400)
-    trainer = paddle.trainer.SGD(
-        cost=cost, parameters=parameters, update_equation=optimizer)
-
-    # prepare data reader
-    train_batch_reader_sortagrad = data_generator.batch_reader_creator(
-        manifest_path=args.train_manifest_path,
-        batch_size=args.batch_size,
-        padding_to=2000,
-        flatten=True,
-        sort_by_duration=True,
-        shuffle=False)
-    train_batch_reader_nosortagrad = data_generator.batch_reader_creator(
-        manifest_path=args.train_manifest_path,
-        batch_size=args.batch_size,
-        padding_to=2000,
-        flatten=True,
-        sort_by_duration=False,
-        shuffle=True)
-    test_batch_reader = data_generator.batch_reader_creator(
-        manifest_path=args.dev_manifest_path,
-        batch_size=args.batch_size,
-        padding_to=2000,
-        flatten=True,
-        sort_by_duration=False,
-        shuffle=False)
-    feeding = data_generator.data_name_feeding()
-
-    # create event handler
-    def event_handler(event):
-        global start_time, cost_sum, cost_counter
-        if isinstance(event, paddle.event.EndIteration):
-            cost_sum += event.cost
-            cost_counter += 1
-            if event.batch_id % 50 == 0:
-                print "\nPass: %d, Batch: %d, TrainCost: %f" % (
-                    event.pass_id, event.batch_id, cost_sum / cost_counter)
-                cost_sum, cost_counter = 0.0, 0
-                with gzip.open("params.tar.gz", 'w') as f:
-                    parameters.to_tar(f)
-            else:
-                sys.stdout.write('.')
-                sys.stdout.flush()
-        if isinstance(event, paddle.event.BeginPass):
-            start_time = time.time()
-            cost_sum, cost_counter = 0.0, 0
-        if isinstance(event, paddle.event.EndPass):
-            result = trainer.test(reader=test_batch_reader, feeding=feeding)
-            print "\n------- Time: %d sec,  Pass: %d, ValidationCost: %s" % (
-                time.time() - start_time, event.pass_id, result.cost)
-
-    # run train
-    # first pass with sortagrad
-    if args.use_sortagrad:
-        trainer.train(
-            reader=train_batch_reader_sortagrad,
-            event_handler=event_handler,
-            num_passes=1,
-            feeding=feeding)
-        args.num_passes -= 1
-    # other passes without sortagrad
-    trainer.train(
-        reader=train_batch_reader_nosortagrad,
-        event_handler=event_handler,
+        rnn_layer_size=args.rnn_layer_size,
+        use_gru=args.use_gru,
+        pretrained_model_path=args.init_model_path,
+        share_rnn_weights=args.share_rnn_weights)
+    ds2_model.train(
+        train_batch_reader=train_batch_reader,
+        dev_batch_reader=dev_batch_reader,
+        feeding_dict=train_generator.feeding,
+        learning_rate=args.learning_rate,
+        gradient_clipping=400,
         num_passes=args.num_passes,
-        feeding=feeding)
+        num_iterations_print=args.num_iter_print,
+        output_model_dir=args.output_model_dir,
+        is_local=args.is_local)
 
 
 def main():
+    print_arguments(args)
     paddle.init(use_gpu=args.use_gpu, trainer_count=args.trainer_count)
     train()
 

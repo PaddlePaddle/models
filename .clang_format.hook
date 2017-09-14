@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# clang-format hook without version check
+
+clang-format $@

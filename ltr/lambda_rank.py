@@ -3,6 +3,7 @@ import gzip
 import paddle.v2 as paddle
 import numpy as np
 import functools
+import argparse
 
 
 def lambda_rank(input_dim):
@@ -117,6 +118,15 @@ def lambda_rank_infer(pass_id):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='LambdaRank demo')
+    parser.add_argument("--run_type", type=str, help="run type is train|infer")
+    parser.add_argument(
+        "--num_passes",
+        type=int,
+        help="num of passes in train| infer pass number of model")
+    args = parser.parse_args()
     paddle.init(use_gpu=False, trainer_count=1)
-    train_lambda_rank(2)
-    lambda_rank_infer(pass_id=1)
+    if args.run_type == "train":
+        train_lambda_rank(args.num_passes)
+    elif args.run_type == "infer":
+        lambda_rank_infer(pass_id=args.num_passes - 1)
