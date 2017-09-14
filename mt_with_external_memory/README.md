@@ -234,7 +234,6 @@ class ExternalMemory(object):
    self.external_memory = paddle.layer.memory(
        name=self.name,
        size=self.mem_slot_size,
-       is_seq=True,
        boot_layer=boot_layer)
    ```
 - `ExternalMemory`类的寻址逻辑通过 `_content_addressing` 和 `_interpolation` 两个私有方法实现。读和写操作通过 `read` 和 `write` 两个函数实现，包括上述的寻址操作。并且读和写的寻址独立进行，不同于 \[[2](#参考文献)\] 中的二者共享同一个寻址强度，目的是为了使得该类更通用。
@@ -353,6 +352,7 @@ def memory_enhanced_seq2seq(encoder_input, decoder_input, decoder_target,
             name="unbounded_memory",
             mem_slot_size=size * 2,
             boot_layer=unbounded_memory_init,
+            initial_weight=unbounded_memory_weight_init,
             readonly=True,
             enable_interpolation=False)
         ```
@@ -363,6 +363,7 @@ def memory_enhanced_seq2seq(encoder_input, decoder_input, decoder_target,
             name="bounded_memory",
             mem_slot_size=size,
             boot_layer=bounded_memory_init,
+            initial_weight=bounded_memory_weight_init,
             readonly=False,
             enable_interpolation=True)
         ```
