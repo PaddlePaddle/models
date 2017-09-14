@@ -70,8 +70,8 @@ def train_lambda_rank(num_passes):
     #  Define end batch and end pass event handler
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
-            print "Pass %d Batch %d Cost %.9f" % (event.pass_id, event.batch_id,
-                                                  event.cost)
+            print "Pass %d Batch %d Cost %.9f" % (event.pass_id,
+                                                  event.batch_id, event.cost)
         if isinstance(event, paddle.event.EndPass):
             result = trainer.test(reader=test_reader, feeding=feeding)
             print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
