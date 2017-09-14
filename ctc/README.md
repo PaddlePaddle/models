@@ -1,19 +1,19 @@
 # CTC (Connectionist Temporal Classification) 模型CRNN教程
 ## 背景简介
 
-现实世界中的序列学习任务需要从连续的输入序列中预测出对应标签序列，
-比如语音识别任务从连续的语音中得到对应文字序列，类似于seq2seq任务；
-CTC相关模型就是实现此类seq2seq任务的的一类算法，具体地，CTC模型为输入序列中每个时间步做一次分类输出一个标签（CTC中 Classification的来源），
+现实世界中的序列学习任务需要从输入序列中预测出对应标签序列，
+比如语音识别任务从连续的语音中得到对应文字序列；
+CTC相关模型就是实现此类任务的的一类算法，具体地，CTC模型为输入序列中每个时间步做一次分类输出一个标签（CTC中 Classification的来源），
 最终对输出的标签序列处理成对应的输出序列（具体算法参见下文）。
 
-CTC 算法在很多领域中有应用，比如手写数字识别、语音识别、手势识别、连续图像文字识别等，除去不同任务中的专业知识不同，
+CTC 算法在很多领域中有应用，比如手写数字识别、语音识别、手势识别、图像中的文字识别等，除去不同任务中的专业知识不同，
 所有任务均为连续序列输入，标签序列输出。
 
-本文将针对 **场景文字识别 (STR, Scene Text Recognition)** 任务，演示如何用 PaddlePaddle 实现 一个一站式 CTC 的模型 **CRNN(Convolutional Recurrent Neural Network)**
+本文将针对 **场景文字识别 (STR, Scene Text Recognition)** 任务，演示如何用 PaddlePaddle 实现 一个端对端 CTC 的模型 **CRNN(Convolutional Recurrent Neural Network)**
 \[[1](#参考文献)\]，该模型有如下比较显著的特点：
 
-1. 一站式训练，直接从原始数据到目标标签序列学习
-2. 不同于很多其他的算法，其输入图片不需要固定尺寸
+1. 端对端训练，直接从原始数据到目标标签序列学习
+2. 输入的图片数据集不要求有统一的尺寸
 3. 模型更小，性能也更好，容易支持工业级应用
 
 
@@ -38,18 +38,18 @@ Figure 1. 数据示例 "keep"
 
 ## 模型介绍
 
-论文\[[1](#参考文献)\] 中描述的模型的特点是，使用神经网络实现了一个一站式训练的模型，直接从图像输入数据预测出对应的文字标签。
+论文\[[1](#参考文献)\] 中描述的模型的特点是，使用神经网络实现了一个端对端训练的模型，直接从图像输入数据预测出对应的文字标签。
 
 模型的整体结构如下
 
 <p align="center">
-<img src="./images/ctc.png" width="600"/> <br/>
-Figure 2. CTC模型结构
+<img src="./images/ctc.png" width="400"/> <br/>
+Figure 2. CTC模型结构\[[1](#参考文献)\]
 </p>
 
 从下往上的模块分别为
 
--   Convolutional Layers, 自动提取图像特征；最终会产生一个矩形的图像映射，可以拆分成图像特征序列
+-   Convolutional Layers, 自动提取图像特征；最终会产生一个三维的图像特征映射，可以拆分成图像特征序列
 -   Recurrent Layers, 接受图像特征序列，并且在每个时间步上预测出对应标签（字符），所有时间步的字符组成字符串
 -   Transaction Layer, 将预测出的字符串加工成符合语法的单词，比如 **-s-t-aatte** 转化为 **state**
 
@@ -58,7 +58,7 @@ Figure 2. CTC模型结构
 ### 利用CNN进行图像特征序列提取
 模型的第一步是特征的提取，对于图像任务，一般使用CNN来作为特征提取的基本模块。
 
-为了能够兼容对不同尺寸的图片，比如下面 Figure 3中的两张图片，将其高度固定，就变成了长度不相同的图片。
+为了能够兼容对不同尺寸的图片，比如下面 Figure 3中的两张图片，将其高度固定，就变成了宽度不相同的图片。
 
 <p align="center">
 <img src="./images/504.jpg" height="100"/><br/>
@@ -80,7 +80,7 @@ Figure 4. 图像特征序列
 
 CTC 将特征序列中帧与目标标签序列的对应关系建模成一系列的多分类问题，具体地，为每一帧通过多分类模型生成一个标签，如此输入的特征序列会对应预测成标签序列，这个过程中，对输入特征序列建模的就是RNN。
 
-论文中具体使用的RNN算法是LSTM（Long-Short Term Memory）, 此模型应用比较广泛，本教程中不再赘述。
+论文中具体使用的RNN算法是GRU（Gated Recurrent Units）, 是比 `LSTM` 简单一些的RNN实现，此模型应用也比较广泛，具体实现可查看相关文献\[[6](#参考文献)\]，本教程中不再赘述。
 
 RNN的每个时间步可以作多分类输出一个标签的分布（每个标签对应一个预测概率，所有标签的概率构成一个分布，可以表示为一个0~1间的浮点数向量），所有时间步会生成多个向量，也就是一个浮点数向量的序列。
 
@@ -108,7 +108,7 @@ $$
 $$
 
 CRNN模型中继承了\[[3](#参考文献)\]中的`CTC layer`，
-不同于经典NMT(Neural Machine Translation)中使用的beamsearch算法，CTC layer不会考虑已经生成的标签上文的信息，只考虑当前时间步生成某个标签的概率。
+不同于经典NMT(Neural Machine Translation)中使用的beam search算法\[[7](#参考文献)\]，CTC layer不会考虑已经生成的标签上文的信息，只考虑当前时间步生成某个标签的概率。
 
 对应着标签的概率分布，会有多种映射从标签分布转化成目标序列，比如一个10个帧的输入特征序列要生成目标序列 "hello"，可以有如下映射方式(`-`表示空格)：
 
@@ -125,9 +125,7 @@ CRNN模型中继承了\[[3](#参考文献)\]中的`CTC layer`，
 
 因此，模型生成目标序列的学习概率就变成了综合所有能生成目标序列的映射的概率之和，也就是
 
-$$
-p(l|y) = \sum_{\pi:B(\pi)=l} p(\pi | y)
-$$
+$$p(l|y) = \sum_{\pi:B(\pi)=l} p(\pi | y)$$
 
 其中，$l$表示目标序列，$y$ 是标签分布的序列，$\pi$ 表示将预测出的序列分布转化为目标标签序列的映射。
 
@@ -144,95 +142,9 @@ RNN会在为时间步生成标签的概率分布，所有标签分布会交由CT
 ## 用 PaddlePaddle 实现模型算法
 
 ### 图像数据及处理
-本任务使用数据集\[[4](#参考文献)\]，数据中包括了图片数据和对应的目标文本，其中预测的目标文本需要转化为一维的ID列表，我们用如下类来实现
+本任务使用数据集\[[4](#参考文献)\]，数据中包括了图片数据和对应的目标文本，其中预测的目标文本需要转化为一维的ID列表，我们用data_provider.py里的类`AciiDic`来实现。
 
-```python
-from __future__ import absolute_import
-from __future__ import division
-
-import os
-from paddle.v2.image import load_image
-import cv2
-
-class AsciiDic(object):
-    UNK = 0
-
-    def __init__(self):
-        self.dic = {
-            '<unk>': self.UNK,
-        }
-        self.chars = [chr(i) for i in range(40, 171)]
-        for id, c in enumerate(self.chars):
-            self.dic[c] = id
-
-    def lookup(self, w):
-        return self.dic.get(w, self.UNK)
-
-    def word2ids(self, sent):
-        '''
-        transform a word to a list of ids.
-        @sent: str
-        '''
-        return [self.lookup(c) for c in list(sent)]
-
-    def size(self):
-        return len(self.chars)
-```
-
-包括图片处理在内的其他数据集处理封装在类 `ImageDataset`中：
-
-```python
-class ImageDataset(object):
-    def __init__(self,
-                 image_paths_generator,
-                 fixed_shape=None,
-                 testset_size=1000):
-        '''
-        @image_paths_generator: function
-            return a list of images' paths, called like:
-
-                for path in image_paths_generator():
-                    load_image(path)
-        '''
-        self.filelist = [p for p in image_paths_generator]
-        self.fixed_shape = fixed_shape
-        self.testset_size = testset_size
-        self.ascii_dic = AsciiDic()
-```
-
-具体地，使用如下代码在载入图像，并作处理
-
-```python
-    def load_image(self, path):
-        '''
-        load image and transform to 1-dimention vector
-        '''
-        image = load_image(path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        # resize all images to a fixed shape
-
-        if self.fixed_shape:
-            image = cv2.resize(
-                image, self.fixed_shape, interpolation=cv2.INTER_CUBIC)
-        # image = to_chw(image)
-        image = image.flatten() / 255.
-        return image
-```
-
-我们简单将前 $N$ 个记录作为测试集，将后面的记录作为训练集：
-
-```python
-    def train(self):
-        for i, (image, label) in enumerate(self.filelist):
-            if i > self.testset_size:
-                record = self.load_image(image), self.ascii_dic.word2ids(label)
-                yield record
-
-    def test(self):
-        for i, (image, label) in enumerate(self.filelist):
-            if i < self.testset_size:
-                yield self.load_image(image), self.ascii_dic.word2ids(label)
-```
+包括图片处理在内的其他数据集处理封装在data_provider.py里的类 `ImageDataset`中：
 
 ### 模型构建
 
@@ -240,13 +152,15 @@ class ImageDataset(object):
 
 ```python
 class Model(object):
-    def __init__(self, num_classes, shape):
+    def __init__(self, num_classes, shape, is_infer=False):
         self.num_classes = num_classes
         self.shape = shape
+        self.is_infer = is_infer
         self.image_vector_size = shape[0] * shape[1]
 
         self.__declare_input_layers__()
         self.__build_nn__()
+
 ```
 
 其中， `num_classes` 代表文本中字符组成字典的大小（多分类问题的类别数）。
@@ -254,16 +168,18 @@ class Model(object):
 接下来声明模型的输入数据类型:
 
 ```python
-    def __declare_input_layers__(self):
-        self.image = layer.data(
-            name='image',
-            type=paddle.data_type.dense_vector(self.image_vector_size),
-            height=self.shape[0],
-            width=self.shape[1])
+def __declare_input_layers__(self):
+    self.image = layer.data(
+        name='image',
+        type=paddle.data_type.dense_vector(self.image_vector_size),
+        height=self.shape[0],
+        width=self.shape[1])
 
+    if self.is_infer == False:
         self.label = layer.data(
             name='label',
             type=paddle.data_type.integer_value_sequence(self.num_classes))
+
 ```
 
 很明显，`image` 是一个float 的向量表示 `dense_vector` ，而label 代表了文本中字符的 id列表，因此是一个 `integer_value_sequence` 。
@@ -274,7 +190,7 @@ class Model(object):
 这里我们使用了4个 `img_conv_group` ：
 
 ```python
-def ctc_convs(input_image, num, with_bn):
+def conv_groups(input_image, num, with_bn):
     '''
     A deep CNN.
 
@@ -380,7 +296,7 @@ def ctc_convs(input_image, num, with_bn):
 ```
 
 上面利用了一个 `fc` 全连接层，注意其输入时 `input=[gru_forward, gru_backward]`
-将 gru_forward 和 gru_backward 对应位置按元素求和，
+将 gru_forward 和 gru_backward 对应位置进行拼接，
 之后利用 `fc` 映射为维度 `self.num_classes + 1` 的向量（多出来的1表示空格），
 多个时间步会构成一个序列。
 
@@ -403,8 +319,11 @@ def ctc_convs(input_image, num, with_bn):
 载入数据集：
 ```python
 dataset = ImageDataset(
-    get_file_list(args.file_list),
-    fixed_shape=image_shape, )
+    train_generator,
+    test_generator,
+    infer_generator,
+    fixed_shape=image_shape,
+    is_infer=False)
 ```
 
 训练及模型存储相关的设置：
@@ -412,7 +331,7 @@ dataset = ImageDataset(
 ```python
 paddle.init(use_gpu=True, trainer_count=args.trainer_count)
 
-model = Model(AsciiDic().size(), image_shape)
+model = Model(AsciiDic().size(), image_shape, is_infer=False)
 params = paddle.parameters.create(model.cost)
 optimizer = paddle.optimizer.Momentum(momentum=0)
 trainer = paddle.trainer.SGD(
@@ -421,20 +340,20 @@ trainer = paddle.trainer.SGD(
 
 def event_handler(event):
     if isinstance(event, paddle.event.EndIteration):
-        if event.batch_id % 20 == 0:
+        if event.batch_id % 100 == 0:
             print "Pass %d, batch %d, Samples %d, Cost %f" % (
-                event.pass_id, event.batch_id,
-                event.batch_id * args.batch_size, event.cost)
+                event.pass_id, event.batch_id, event.batch_id * args.batch_size,
+                event.cost)
 
         if event.batch_id > 0 and event.batch_id % args.save_period_by_batch == 0:
             result = trainer.test(
                 reader=paddle.batch(dataset.test, batch_size=10),
                 feeding={'image': 0,
                          'label': 1})
-            print "Test %d-%d, Cost %f" % (event.pass_id, event.batch_id,
-                                           result.cost)
+            print "Test %d-%d, Cost %f ,Eval %f" % (event.pass_id, event.batch_id,
+                                           result.cost,result.evals)
 
-            path = "{}-pass-{}-batch-{}-test-{}.tar.gz".format(
+            path = "models/{}-pass-{}-batch-{}-test-{}.tar.gz".format(
                 args.model_output_prefix, event.pass_id, event.batch_id,
                 result.cost)
             with gzip.open(path, 'w') as f:
@@ -443,19 +362,20 @@ def event_handler(event):
 
 trainer.train(
     reader=paddle.batch(
-        paddle.reader.shuffle(dataset.train, buf_size=100),
+        paddle.reader.shuffle(dataset.train, buf_size=500),
         batch_size=args.batch_size),
     feeding={'image': 0,
              'label': 1},
     event_handler=event_handler,
-    num_passes=1000)
+    num_passes=args.num_passes)
 ```
 
 ### 运行训练和测试
 训练脚本参照 [./train.py](./train.py)，设置了如下命令行参数：
 
 ```
-usage: train.py [-h] --image_shape IMAGE_SHAPE --file_list FILE_LIST
+usage: train.py [-h] --image_shape IMAGE_SHAPE --train_file_list
+                TRAIN_FILE_LIST --test_file_list TEST_FILE_LIST
                 [--batch_size BATCH_SIZE]
                 [--model_output_prefix MODEL_OUTPUT_PREFIX]
                 [--trainer_count TRAINER_COUNT]
@@ -468,9 +388,12 @@ optional arguments:
   -h, --help            show this help message and exit
   --image_shape IMAGE_SHAPE
                         image's shape, format is like '173,46'
-  --file_list FILE_LIST
-                        path of the file which contains path list of image
-                        files
+  --train_file_list TRAIN_FILE_LIST
+                        path of the file which contains path list of train
+                        image files
+  --test_file_list TEST_FILE_LIST
+                        path of the file which contains path list of test
+                        image files
   --batch_size BATCH_SIZE
                         size of a mini-batch
   --model_output_prefix MODEL_OUTPUT_PREFIX
@@ -487,27 +410,57 @@ optional arguments:
 其中最重要的几个参数包括：
 
 - `image_shape` 图片的尺寸
-- `file_list` 图片文件的列表文件（每行一个路径加对应的text，格式类似 "./1.png, hello"）
+- `train_file_list` 训练数据的列表文件，每行一个路径加对应的text，格式类似：
+```
+word_1.png, "PROPER"
+```
+- `test_file_list` 测试数据的列表文件，格式同上
 
-具体执行的过程：
+### 预测
+预测部分由infer.py完成，本示例对于ctc的预测使用的是最优路径解码算法(CTC greedy decoder)，即在每个时间步选择一个概率最大的字符。在使用过程中，需要在infer.py中指定具体的模型目录、图片固定尺寸、batch_size和图片文件的列表文件。例如：
+```python
+model_path = "model.ctc-pass-9-batch-150-test-10.0065517931.tar.gz"  
+image_shape = "173,46"
+batch_size = 50
+infer_file_list = 'data/test_data/Challenge2_Test_Task3_GT.txt'
+```
+然后运行```python infer.py```
 
-1. 从官方下载数据\[[4](#参考文献)\]，解压缩，应该会得到一个目录 90kDICT32px
-2. 获取训练数据文件夹中 `train_all.txt` 的路径 (假定为`<filelist>`）
-3. 执行命令 `python train.py --file_list <filelist>` --image_shape '173,46'
+
+### 具体执行的过程：
+
+1. 从官方下载数据\[[8](#参考文献)\]（Task 2.3: Word Recognition (2013 edition)），会有三个文件: Challenge2_Training_Task3_Images_GT.zip、Challenge2_Test_Task3_Images.zip和 Challenge2_Test_Task3_GT.txt。
+分别对应训练集的图片和图片对应的单词，测试集的图片，测试数据对应的单词，然后执行以下命令，对数据解压并移动至目标文件夹：
+
+```
+mkdir -p data/train_data
+mkdir -p data/test_data
+unzip Challenge2_Training_Task3_Images_GT.zip -d data/train_data
+unzip Challenge2_Test_Task3_Images.zip -d data/test_data
+mv Challenge2_Test_Task3_GT.txt data/test_data
+```
+
+2. 获取训练数据文件夹中 `gt.txt` 的路径 (data/train_data）和测试数据文件夹中`Challenge2_Test_Task3_GT.txt`的路径(data/test_data)
+3. 执行命令
+```
+python train.py --train_file_list data/train_data/gt.txt --test_file_list data/test_data/Challenge2_Test_Task3_GT.txt --image_shape '173,46'
+```
 4. 训练过程中，模型参数会自动备份到指定目录，默认为 ./model.ctc
+5. 设置infer.py中的相关参数，运行```python infer.py``` 进行预测
 
 ## 写在最后
 ### 有用的数据集
 下面列出一些可用的数据集作为参考：
+-   [SynthText in the Wild Dataset](http://www.robots.ox.ac.uk/~vgg/data/scenetext/)(41G)
 
 -   [ICDAR 2003 Robust Reading Competitions](http://www.iapr-tc11.org/mediawiki/index.php?title=ICDAR_2003_Robust_Reading_Competitions)
-- [Focused Scene Text](http://rrc.cvc.uab.es/?ch=2&com=introduction)
+
 
 ### 一些注意事项
 
 - 由于模型依赖的 `warp CTC` 只有CUDA的实现，本模型只支持 GPU 运行
 - 本模型参数较多，占用显存比较大，实际执行时可以调节batch_size 控制显存占用
-- 本模型使用的数据集有40G，可以跑其中一小部分做实验，或者选用其他[小的数据集](#有用的数据集)
+- 本模型使用的数据集较小，可以选用其他更大的数据集\[[4](#参考文献)\]来训练需要的模型
 
 ## 参考文献
 
@@ -517,3 +470,6 @@ APA
 3. Graves A, Fernández S, Gomez F, et al. [Connectionist temporal classification: labelling unsegmented sequence data with recurrent neural networks](http://machinelearning.wustl.edu/mlpapers/paper_files/icml2006_GravesFGS06.pdf)[C]//Proceedings of the 23rd international conference on Machine learning. ACM, 2006: 369-376.
 4. [SynthText in the Wild Dataset](http://www.robots.ox.ac.uk/~vgg/data/scenetext/)
 5. [warp CTC github](https://github.com/baidu-research/warp-ctc)
+6. Junyoung Chung, Caglar Gulcehre, KyungHyun Cho, et al. [Empirical Evaluation of Gated Recurrent Neural Networks on Sequence Modeling](https://arxiv.org/pdf/1412.3555.pdf)[C]//Proceedings of  Deep Learning and Representation Learning Workshop of the 27th NIPS, 2014.
+7. [beam search](https://en.wikipedia.org/wiki/Beam_search)
+8. [Focused Scene Text](http://rrc.cvc.uab.es/?ch=2&com=introduction)

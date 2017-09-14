@@ -12,23 +12,28 @@ parser.add_argument(
     required=True,
     help="image's shape, format is like '173,46'")
 parser.add_argument(
-    '--file_list',
+    '--train_file_list',
     type=str,
     required=True,
-    help='path of the file which contains path list of image files')
+    help='path of the file which contains path list of train image files')
 parser.add_argument(
-    '--batch_size', type=int, default=30, help='size of a mini-batch')
+    '--test_file_list',
+    type=str,
+    required=True,
+    help='path of the file which contains path list of test image files')
+parser.add_argument(
+    '--batch_size', type=int, default=5, help='size of a mini-batch')
 parser.add_argument(
     '--model_output_prefix',
     type=str,
     default='model.ctc',
     help='prefix of path for model to store (default: ./model.ctc)')
 parser.add_argument(
-    '--trainer_count', type=int, default=1, help='number of training threads')
+    '--trainer_count', type=int, default=4, help='number of training threads')
 parser.add_argument(
     '--save_period_by_batch',
     type=int,
-    default=100,
+    default=50,
     help='save model to disk every N batches')
 parser.add_argument(
     '--num_passes',
@@ -42,15 +47,23 @@ image_shape = tuple(map(int, args.image_shape.split(',')))
 
 print 'image_shape', image_shape
 print 'batch_size', args.batch_size
-print 'file_list', args.file_list
+print 'train_file_list', args.train_file_list
+print 'test_file_list', args.test_file_list
+
+train_generator = get_file_list(args.train_file_list)
+test_generator = get_file_list(args.test_file_list)
+infer_generator = None
 
 dataset = ImageDataset(
-    get_file_list(args.file_list),
-    fixed_shape=image_shape, )
+    train_generator,
+    test_generator,
+    infer_generator,
+    fixed_shape=image_shape,
+    is_infer=False)
 
 paddle.init(use_gpu=True, trainer_count=args.trainer_count)
 
-model = Model(AsciiDic().size(), image_shape)
+model = Model(AsciiDic().size(), image_shape, is_infer=False)
 params = paddle.parameters.create(model.cost)
 optimizer = paddle.optimizer.Momentum(momentum=0)
 trainer = paddle.trainer.SGD(
@@ -59,7 +72,7 @@ trainer = paddle.trainer.SGD(
 
 def event_handler(event):
     if isinstance(event, paddle.event.EndIteration):
-        if event.batch_id % 20 == 0:
+        if event.batch_id % 100 == 0:
             print "Pass %d, batch %d, Samples %d, Cost %f" % (
                 event.pass_id, event.batch_id, event.batch_id * args.batch_size,
                 event.cost)
@@ -69,8 +82,8 @@ def event_handler(event):
                 reader=paddle.batch(dataset.test, batch_size=10),
                 feeding={'image': 0,
                          'label': 1})
-            print "Test %d-%d, Cost %f" % (event.pass_id, event.batch_id,
-                                           result.cost)
+            print "Test %d-%d, Cost %f " % (event.pass_id, event.batch_id,
+                                            result.cost)
 
             path = "{}-pass-{}-batch-{}-test-{}.tar.gz".format(
                 args.model_output_prefix, event.pass_id, event.batch_id,
@@ -81,7 +94,7 @@ def event_handler(event):
 
 trainer.train(
     reader=paddle.batch(
-        paddle.reader.shuffle(dataset.train, buf_size=100),
+        paddle.reader.shuffle(dataset.train, buf_size=500),
         batch_size=args.batch_size),
     feeding={'image': 0,
              'label': 1},

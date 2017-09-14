@@ -1,13 +1,13 @@
 from paddle import v2 as paddle
 from paddle.v2 import layer
+from paddle.v2 import evaluator
 from paddle.v2.activation import Relu, Linear
 from paddle.v2.networks import img_conv_group, simple_gru
 
 
-def ctc_convs(input_image, num, with_bn):
+def conv_groups(input_image, num, with_bn):
     '''
     a deep CNN.
-
     @input_image: input image
     @num: number of CONV filters
     @with_bn: whether with batch normal
@@ -59,7 +59,7 @@ def ctc_convs(input_image, num, with_bn):
 
 
 class Model(object):
-    def __init__(self, num_classes, shape):
+    def __init__(self, num_classes, shape, is_infer=False):
         '''
         @num_classes: int
             size of the character dict
@@ -68,6 +68,7 @@ class Model(object):
         '''
         self.num_classes = num_classes
         self.shape = shape
+        self.is_infer = is_infer
         self.image_vector_size = shape[0] * shape[1]
 
         self.__declare_input_layers__()
@@ -82,13 +83,14 @@ class Model(object):
             width=self.shape[1])
 
         # label input as a ID list
-        self.label = layer.data(
-            name='label',
-            type=paddle.data_type.integer_value_sequence(self.num_classes))
+        if self.is_infer == False:
+            self.label = layer.data(
+                name='label',
+                type=paddle.data_type.integer_value_sequence(self.num_classes))
 
     def __build_nn__(self):
         # CNN output image features, 128 float matrixes
-        conv_features = ctc_convs(self.image, 8, True)
+        conv_features = conv_groups(self.image, 8, True)
 
         # cutting CNN output into a sequence of feature vectors, which are
         # 1 pixel wide and 11 pixel high.
@@ -111,10 +113,15 @@ class Model(object):
             size=self.num_classes + 1,
             act=Linear())
 
+        self.log_probs = paddle.layer.mixed(
+            input=paddle.layer.identity_projection(input=self.output),
+            act=paddle.activation.Softmax())
+
         # warp CTC to calculate cost for a CTC task.
-        self.cost = layer.warp_ctc(
-            input=self.output,
-            label=self.label,
-            size=self.num_classes + 1,
-            norm_by_times=True,
-            blank=self.num_classes)
+        if self.is_infer == False:
+            self.cost = layer.warp_ctc(
+                input=self.output,
+                label=self.label,
+                size=self.num_classes + 1,
+                norm_by_times=True,
+                blank=self.num_classes)

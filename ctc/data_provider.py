@@ -15,10 +15,17 @@ class AsciiDic(object):
         }
         self.chars = [chr(i) for i in range(40, 171)]
         for id, c in enumerate(self.chars):
-            self.dic[c] = id
+            self.dic[c] = id + 1
 
     def lookup(self, w):
         return self.dic.get(w, self.UNK)
+
+    def id2word(self):
+        self.id2word = {}
+        for key, value in self.dic.items():
+            self.id2word[value] = key
+
+        return self.id2word
 
     def word2ids(self, sent):
         '''
@@ -28,14 +35,16 @@ class AsciiDic(object):
         return [self.lookup(c) for c in list(sent)]
 
     def size(self):
-        return len(self.chars)
+        return len(self.dic)
 
 
 class ImageDataset(object):
     def __init__(self,
-                 image_paths_generator,
+                 train_image_paths_generator,
+                 test_image_paths_generator,
+                 infer_image_paths_generator,
                  fixed_shape=None,
-                 testset_size=1000):
+                 is_infer=False):
         '''
         @image_paths_generator: function
             return a list of images' paths, called like:
@@ -43,20 +52,26 @@ class ImageDataset(object):
                 for path in image_paths_generator():
                     load_image(path)
         '''
-        self.filelist = [p for p in image_paths_generator]
+        if is_infer == False:
+            self.train_filelist = [p for p in train_image_paths_generator]
+            self.test_filelist = [p for p in test_image_paths_generator]
+        else:
+            self.infer_filelist = [p for p in infer_image_paths_generator]
+
         self.fixed_shape = fixed_shape
-        self.testset_size = testset_size
         self.ascii_dic = AsciiDic()
 
     def train(self):
-        for i, (image, label) in enumerate(self.filelist):
-            if i > self.testset_size:
-                yield self.load_image(image), self.ascii_dic.word2ids(label)
+        for i, (image, label) in enumerate(self.train_filelist):
+            yield self.load_image(image), self.ascii_dic.word2ids(label)
 
     def test(self):
-        for i, (image, label) in enumerate(self.filelist):
-            if i < self.testset_size:
-                yield self.load_image(image), self.ascii_dic.word2ids(label)
+        for i, (image, label) in enumerate(self.test_filelist):
+            yield self.load_image(image), self.ascii_dic.word2ids(label)
+
+    def infer(self):
+        for i, (image, label) in enumerate(self.infer_filelist):
+            yield self.load_image(image), label
 
     def load_image(self, path):
         '''
@@ -69,7 +84,7 @@ class ImageDataset(object):
         if self.fixed_shape:
             image = cv2.resize(
                 image, self.fixed_shape, interpolation=cv2.INTER_CUBIC)
-        # image = to_chw(image)
+
         image = image.flatten() / 255.
         return image
 
@@ -79,16 +94,6 @@ def get_file_list(image_file_list):
     with open(image_file_list) as f:
         for line in f:
             fs = line.strip().split(',')
-            file = fs[0] + '.jpg'
+            file = fs[0].strip()
             path = os.path.join(pwd, file)
-            yield path, fs[1]
-
-
-if __name__ == '__main__':
-    image_file_list = '/home/disk1/yanchunwei/90kDICT32px/train_all.txt'
-
-    image_dataset = ImageDataset(
-        get_file_list(image_file_list), fixed_shape=(173, 46))
-
-    for i, image in enumerate(image_dataset.train()):
-        print 'image', image
+            yield path, fs[1][2:-1]
