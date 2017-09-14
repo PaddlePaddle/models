@@ -126,14 +126,14 @@ def memory_enhanced_decoder(input, target, initial_state, source_context, size,
         ],
         act=paddle.activation.Linear())
     bounded_memory_weight_init = paddle.layer.slope_intercept(
-            input=paddle.layer.fc(input=bounded_memory_init, size=1),
-            slope=0.0,
-            intercept=0.0)
+        input=paddle.layer.fc(input=bounded_memory_init, size=1),
+        slope=0.0,
+        intercept=0.0)
     unbounded_memory_init = source_context
     unbounded_memory_weight_init = paddle.layer.slope_intercept(
-            input=paddle.layer.fc(input=unbounded_memory_init, size=1),
-            slope=0.0,
-            intercept=0.0)
+        input=paddle.layer.fc(input=unbounded_memory_init, size=1),
+        slope=0.0,
+        intercept=0.0)
 
     # prepare step function for reccurent group
     def recurrent_decoder_step(cur_embedding):
@@ -144,14 +144,14 @@ def memory_enhanced_decoder(input, target, initial_state, source_context, size,
             name="bounded_memory",
             mem_slot_size=size,
             boot_layer=bounded_memory_init,
-            initial_weight = bounded_memory_weight_init,
+            initial_weight=bounded_memory_weight_init,
             readonly=False,
             enable_interpolation=True)
         unbounded_memory = ExternalMemory(
             name="unbounded_memory",
             mem_slot_size=size * 2,
             boot_layer=unbounded_memory_init,
-            initial_weight = unbounded_memory_weight_init,
+            initial_weight=unbounded_memory_weight_init,
             readonly=True,
             enable_interpolation=False)
         # write bounded memory
@@ -164,7 +164,7 @@ def memory_enhanced_decoder(input, target, initial_state, source_context, size,
             size=size,
             act=paddle.activation.Tanh(),
             bias_attr=False)
-        # read unbounded memory (i.e. attention mechanism) 
+        # read unbounded memory (i.e. attention mechanism)
         context = unbounded_memory.read(key_for_unbounded_memory)
         # gated recurrent unit
         gru_inputs = paddle.layer.fc(
