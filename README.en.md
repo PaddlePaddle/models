@@ -1,8 +1,4 @@
-# models Introduction
-
-[! [Documentation Status] (https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)] (https://github.com/PaddlePaddle/models)
-[! [Documentation Status] (https://img.shields.io/badge/ Chinese document - latest -brightgreen.svg)] (https://github.com/PaddlePaddle/models)
-[! [License] (https://img.shields.io/badge/license-Apache%202-blue.svg)] (LICENSE)
+# Introduction to models
 
 PaddlePaddle provides a rich set of computing units to help you build a modular approach to the ever-changing learning model to solve different application problems. Here, we are for the common machine learning tasks, providing a different neural network model for everyone to learn and use.
 
