@@ -46,7 +46,7 @@ The algorithms for learning to rank are usually categorized into three groups by
 ## 6. Semantic model
 The deep structured semantic model uses the DNN model to learn the vector representation of the low latitude in a continuous semantic space, finally models the semantic similarity between the two sentences.
 
-In this example, we demonstrate how to use PaddlePaddle to implement a generic deep structured semantic model to model the semantic similarity between two strings. The model supports different network structures such as CNN (Convolutional Network), FC (Fully Connected Network), RNN (Recurrent Neural Network), and different loss functions such as classification, regression, and sequencing. 
+In this example, we demonstrate how to use PaddlePaddle to implement a generic deep structured semantic model to model the semantic similarity between two strings. The model supports different network structures such as CNN (Convolutional Network), FC (Fully Connected Network), RNN (Recurrent Neural Network), and different loss functions such as classification, regression, and sequencing.
 
 - 6.1 [Deep structured semantic model] (https://github.com/PaddlePaddle/models/tree/develop/dssm)
 
@@ -77,4 +77,5 @@ For the example of image classification, we show you how to train AlexNet, VGG, 
 
 
 ## Copyright and License
+
 PaddlePaddle is provided under the [Apache-2.0 license] (LICENSE).
