@@ -15,7 +15,7 @@ In the example of word vectors, we show how to use Hierarchical-Sigmoid and Nois
 
 ## 2. Generate text using the recurrent neural network language model
 
-Language model is an important model in the field of natural language processing. In addition to getting the word vector (a by-product of language model training), it can also help us to generate text. Given a number of words, the language model can help us predict the next most likely word. In the example of using language model to generate text, we focus on the recurrent neural network language model. We can use the instructions in the document quickly adapt to their training corpus, complete automatic writing poetry, automatic writing prose and other interesting models.
+The language model is important in the field of natural language processing. In addition to getting the word vector (a by-product of language model training), it can also help us to generate text. Given a number of words, the language model can help us predict the next most likely word. In the example of using the language model to generate text, we focus on the recurrent neural network language model. We can use the instructions in the document quickly adapt to their training corpus, complete automatic writing poetry, automatic writing prose and other interesting models.
 
 - 2.1 [Generate text using the annotated neural network language model] (https://github.com/PaddlePaddle/models/tree/develop/generate_sequence_by_rnn_lm)
 
@@ -46,7 +46,7 @@ The algorithms for learning to rank are usually categorized into three groups by
 ## 6. Semantic model
 The deep structured semantic model uses the DNN model to learn the vector representation of the low latitude in a continuous semantic space, finally models the semantic similarity between the two sentences.
 
-In this example, we demonstrate how to use PaddlePaddle to implement a generic deep structured semantic model to model the semantic similarity between two strings. The model supports different network structures such as CNN (Convolutional Network), FC (Fully Connected Network), RNN (Recurrent Neural Network), and different loss functions such as classification, regression, and sequencing. 
+In this example, we demonstrate how to use PaddlePaddle to implement a generic deep structured semantic model to model the semantic similarity between two strings. The model supports different network structures such as CNN (Convolutional Network), FC (Fully Connected Network), RNN (Recurrent Neural Network), and different loss functions such as classification, regression, and sequencing.
 
 - 6.1 [Deep structured semantic model] (https://github.com/PaddlePaddle/models/tree/develop/dssm)
 
@@ -77,4 +77,5 @@ For the example of image classification, we show you how to train AlexNet, VGG, 
 
 
 ## Copyright and License
+
 PaddlePaddle is provided under the [Apache-2.0 license] (LICENSE).
