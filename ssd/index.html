@@ -118,7 +118,7 @@ The first field is the relative path of the image file, and the second field is 
 We also provide a pre-trained model using VGG-16 with good performance. To use the model, download the file http://paddlepaddle.bj.bcebos.com/model_zoo/detection/ssd_model/vgg_model.tar.gz, and place it as ```vgg/vgg_model.tar.gz```。
 
 ### Training
-Next, run ```python train.py``` to train the model. Note that this example only supports the CUDA GPU environment, and can not be trained on only CPU. This is mainly because the training is very slow using CPU only.
+Next, run ```python train.py``` to train the model. Note that this example only supports the CUDA GPU environment, and can not be trained using only CPU. This is mainly because the training is very slow using CPU only.
 
 ```python
 paddle.init(use_gpu=True, trainer_count=4)
@@ -139,7 +139,7 @@ Below is a description about this script:
 1. Call ```paddle.init``` with 4 GPUs.
 2. ```data_provider.Settings()``` is to pass configuration parameters. For ```config/vgg_config.py``` setting，300x300 is a typical configuration for both the accuracy and efficiency. It can be extended to 512x512 by modifying the configuration file.
 3. In ```train()```执 function, ```train_file_list``` specifies the training data list, and ```dev_file_list``` specifies the evaluation data list, and ```init_model_path``` specifies the pre-training model location.
-4. During the training process will print some log information, each training a batch will output the current number of rounds, the current batch cost and mAP (mean Average Precision. Each training pass will be saved a model to the default saved directory ```heckpoints``` (Need to be created in advance).
+4. During the training process will print some log information, each training a batch will output the current number of rounds, the current batch cost and mAP (mean Average Precision. Each training pass will be saved a model to the default saved directory ```checkpoints``` (Need to be created in advance).
 
 The following shows the SDD300x300 in the VOC data set.
 
