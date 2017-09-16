@@ -194,7 +194,7 @@ The data used in this example is from [WMT14] (http://www-lium.univ-lemans.fr/~s
 
 Starting the model training is very simple, just in the command line window to execute `python train.py`. The `train ()` function in the `train.py` script of the model training phase completes the following logic:
 
-**a) Define the network, parse the network structure, initialize the model parameters. **
+**a) Define the network, parse the network structure, initialize the model parameters.**
 
 ```python
 # define the network topolgy.
