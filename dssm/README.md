@@ -10,11 +10,8 @@ DSSM \[[1](##References)]is a classic semantic model proposed by the Institute o
 
 
 ## Model Architecture
-<<<<<<< HEAD
+
 In the original paper \[[1](#References)] the DSSM model uses the implicit semantic relation between the user search query and the document as metric. The model structure is as follows
-=======
-In the original paper \[[1](#References)]\[[1](#References\] the DSSM model uses the implicit semantic relation between the user search query and the document as metric. The model structure is as follows
->>>>>>> 5b6cd993c4dcd577787a375c0b0be056325cac52
 
 <p align="center">
 <img src="./images/dssm.png"/><br/><br/>
@@ -396,14 +393,14 @@ optional arguments:
                         number of batches to output model, (default: 400)
 ```
 
-重要的参数描述如下
+Parameter description:
 
 - `train_data_path` Training data path
 - `test_data_path`  Test data path, optional
 - `source_dic_path`  Source dictionary path
 - `target_dic_path` 目Target dictionary path
 - `model_type`  The type of loss function of the model: classification 0, sort 1, regression 2
-- `model_arch` Model structure: FC 0， CNN 1, RNN 2
+- `model_arch` Model structure: FC 0，CNN 1, RNN 2
 - `dnn_dims` The dimension of each layer of the model is set, the default is `256,128,64,32`，with 4 layers.
 
 ## To predict using the trained model
