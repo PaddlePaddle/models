@@ -10,7 +10,11 @@ DSSM \[[1](##References)]is a classic semantic model proposed by the Institute o
 
 
 ## Model Architecture
+<<<<<<< HEAD
 In the original paper \[[1](#References)] the DSSM model uses the implicit semantic relation between the user search query and the document as metric. The model structure is as follows
+=======
+In the original paper \[[1](#References)]\[[1](#References\] the DSSM model uses the implicit semantic relation between the user search query and the document as metric. The model structure is as follows
+>>>>>>> 5b6cd993c4dcd577787a375c0b0be056325cac52
 
 <p align="center">
 <img src="./images/dssm.png"/><br/><br/>
