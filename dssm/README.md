@@ -1,16 +1,16 @@
 # Deep Structured Semantic Models (DSSM)
-Deep Structured Semantic Models (DSSM) is simple but powerful DNN based model for matching web search queries and url based documents. This example demonstrates how to use PaddlePaddle to implement a generic DSSM model for modeling the semantic similarity between two strings.
+Deep Structured Semantic Models (DSSM) is simple but powerful DNN based model for matching web search queries and the URL based documents. This example demonstrates how to use PaddlePaddle to implement a generic DSSM model for modeling the semantic similarity between two strings.
 
 ## Background Introduction
-DSSM \[[1](#References\] is a classic semantic model proposed by the Institute of Physics. It is used to study the semantic distance between two texts. The general implementation of DSSM is as follows.
+DSSM \[[1](##References)]is a classic semantic model proposed by the Institute of Physics. It is used to study the semantic distance between two texts. The general implementation of DSSM is as follows.
 
-1. The CTR predictor \measures the degree of association between a user search query and a candidate web page.
+1. The CTR predictor measures the degree of association between a user search query and a candidate web page.
 2. Text relevance, which measures the degree of semantic correlation between two strings.
 3. Automatically recommend, measure the degree of association between User and the recommended Item.
 
 
 ## Model Architecture
-In the original paper\[[1](#References\] the DSSM model uses the implicit semantic relation between the user search query and the document as metric. The model structure is as follows
+In the original paper \[[1](#References)] the DSSM model uses the implicit semantic relation between the user search query and the document as metric. The model structure is as follows
 
 <p align="center">
 <img src="./images/dssm.png"/><br/><br/>
@@ -18,7 +18,7 @@ Figure 1. DSSM In the original paper
 </p>
 
 
-With the subsequent optimization of the DSSM model to simplify the structure \[[3](#References\]，the model becomes：
+With the subsequent optimization of the DSSM model to simplify the structure \[[3](#References)]，the model becomes：
 
 <p align="center">
 <img src="./images/dssm2.png" width="600"/><br/><br/>
@@ -29,18 +29,18 @@ The blank box in the figure can be replaced by any model, such as fully connecte
 
 In practice，DSSM model serves as a basic building block, with different loss functions to achieve specific functions, such as
 
-- In ranking system, add the pairwise rank loss to the structure in Figure 2
-- In the CTR estimate, instead of the binary classification on the click, use cross entropy loss for a classification model
+- In ranking system, the pairwise rank loss function.
+- In the CTR estimate, instead of the binary classification on the click, use cross-entropy loss for a classification model
 - In regression model,  the cosine similarity is used to calculate the similarity
 
 ## Model Implementation
-At a high level, DSSM model is composed of three components: the left and right DNN, and loss function on top of them. In complex tasks, the structure of the left DNN and the light DNN can be different. In this example, we keep these two DNN structure the same. And we choose any of FC, CNN, and RNN for the DNN architecture.
+At a high level, DSSM model is composed of three components: the left and right DNN, and loss function on top of them. In complex tasks, the structure of the left DNN and the light DNN can be different. In this example, we keep these two DNN structures the same. And we choose any of FC, CNN, and RNN for the DNN architecture.
 
-In PaddlePaddle, the loss functions are supported for any of classification, regression, and ranking. Among them, the distance between the left and right DNN is calculated by the cosine similarity (cossim). In the classification task, the predicted distribution is calculated by softmax.
+In PaddlePaddle, the loss functions are supported for any of classification, regression, and ranking. Among them, the distance between the left and right DNN is calculated by the cosine similarity. In the classification task, the predicted distribution is calculated by softmax.
 
 Here we demonstrate:
 
-- How CNN, FC do text information extraction can refer to[text classification](https://github.com/PaddlePaddle/models/blob/develop/text_classification/README.md#模型详解)
+- How CNN, FC do text information extraction can refer to [text classification](https://github.com/PaddlePaddle/models/blob/develop/text_classification/README.md#模型详解)
 - The contents of the RNN / GRU can be found in  [Machine Translation](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.md#gated-recurrent-unit-gru)
 - For Pairwise Rank learning, please refer to [learn to rank](https://github.com/PaddlePaddle/models/blob/develop/ltr/README.md)
 
