@@ -1,4 +1,5 @@
 #! /usr/bin/env bash
+cd "$(dirname "$0")"
 
 # install python dependencies
 if [ -f "requirements.txt" ]; then
