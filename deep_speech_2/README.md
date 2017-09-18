@@ -5,6 +5,7 @@
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+- [Build Docker Image](#build-docker-image)
 - [Getting Started](#getting-started)
 - [Data Preparation](#data-preparation)
 - [Training a Model](#training-a-model)
@@ -30,6 +31,15 @@ Please make sure the above [prerequisites](#prerequisites) have been satisfied b
 git clone https://github.com/PaddlePaddle/models.git
 cd models/deep_speech_2
 sh setup.sh
+```
+
+## Build Docker Image
+
+You can build a Docker Image contains the runtime enviroment which DeepSpeech2 depends on:
+```bash
+git clone https://github.com/PaddlePaddle/models.git
+cd models/deep_speech_2
+docker build <your repo>/models_ds2:latest-gpu
 ```
 
 ## Getting Started
