@@ -440,7 +440,7 @@ python infer.py
 或自定义部分参数, 例如:
 
 ```bash
-python train.py \
+python infer.py \
 --dict_size 30000 \
 --word_vec_dim 512 \
 --hidden_size 1024 \
@@ -448,7 +448,7 @@ python train.py \
 --use_gpu False \
 --trainer_count 1 \
 --memory_perturb_stddev 0.1 \
---infer_num_data 10 \
+--infer_data_num 10 \
 --model_filepath checkpoints/params.latest.tar.gz \
 --beam_size 3
 ```
