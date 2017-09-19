@@ -1,108 +1,68 @@
-# 深度结构化语义模型 (Deep Structured Semantic Models, DSSM)
-DSSM使用DNN模型在一个连续的语义空间中学习文本低纬的表示向量，并且建模两个句子间的语义相似度。
-本例演示如何使用 PaddlePaddle实现一个通用的DSSM 模型，用于建模两个字符串间的语义相似度，
-模型实现支持通用的数据格式，用户替换数据便可以在真实场景中使用该模型。
+# Deep Structured Semantic Models (DSSM)
+Deep Structured Semantic Models (DSSM) is simple but powerful DNN based model for matching web search queries and the URL based documents. This example demonstrates how to use PaddlePaddle to implement a generic DSSM model for modeling the semantic similarity between two strings.
 
-## 背景介绍
-DSSM \[[1](##参考文献)\]是微软研究院13年提出来的经典的语义模型，用于学习两个文本之间的语义距离，
-广义上模型也可以推广和适用如下场景：
+## Background Introduction
+DSSM \[[1](##References)]is a classic semantic model proposed by the Institute of Physics. It is used to study the semantic distance between two texts. The general implementation of DSSM is as follows.
 
-1. CTR预估模型，衡量用户搜索词（Query）与候选网页集合（Documents）之间的相关联程度。
-2. 文本相关性，衡量两个字符串间的语义相关程度。
-3. 自动推荐，衡量User与被推荐的Item之间的关联程度。
+1. The CTR predictor measures the degree of association between a user search query and a candidate web page.
+2. Text relevance, which measures the degree of semantic correlation between two strings.
+3. Automatically recommend, measure the degree of association between User and the recommended Item.
 
-DSSM 已经发展成了一个框架，可以很自然地建模两个记录之间的距离关系，
-例如对于文本相关性问题，可以用余弦相似度 (cosin similarity) 来刻画语义距离；
-而对于搜索引擎的结果排序，可以在DSSM上接上Rank损失训练处一个排序模型。
 
-## 模型简介
-在原论文\[[1](#参考文献)\]中，DSSM模型用来衡量用户搜索词 Query 和文档集合 Documents 之间隐含的语义关系，模型结构如下
+## Model Architecture
+
+In the original paper \[[1](#References)] the DSSM model uses the implicit semantic relation between the user search query and the document as metric. The model structure is as follows
 
 <p align="center">
 <img src="./images/dssm.png"/><br/><br/>
-图 1. DSSM 原始结构
+Figure 1. DSSM In the original paper
 </p>
 
-其贯彻的思想是， **用DNN将高维特征向量转化为低纬空间的连续向量（图中红色框部分）** ，
-**在上层用cosin similarity来衡量用户搜索词与候选文档间的语义相关性** 。
 
-在最顶层损失函数的设计上，原始模型使用类似Word2Vec中负例采样的方法，
-一个Query会抽取正例 $D+$ 和4个负例 $D-$ 整体上算条件概率用对数似然函数作为损失，
-这也就是图 1中类似 $P(D_1|Q)$ 的结构，具体细节请参考原论文。
-
-随着后续优化DSSM模型的结构得以简化\[[3](#参考文献)\]，演变为：
+With the subsequent optimization of the DSSM model to simplify the structure \[[3](#References)]，the model becomes：
 
 <p align="center">
 <img src="./images/dssm2.png" width="600"/><br/><br/>
-图 2. DSSM通用结构
+Figure 2. DSSM generic structure
 </p>
 
-图中的空白方框可以用任何模型替代，比如全连接FC，卷积CNN，RNN等都可以，
-该模型结构专门用于衡量两个元素（比如字符串）间的语义距离。
+The blank box in the figure can be replaced by any model, such as fully connected FC, convoluted CNN, RNN, etc. The structure is designed to measure the semantic distance between two elements (such as strings).
 
-在现实使用中，DSSM模型会作为基础的积木，搭配上不同的损失函数来实现具体的功能，比如
+In practice，DSSM model serves as a basic building block, with different loss functions to achieve specific functions, such as
 
-- 在排序学习中，将 图 2 中结构添加 pairwise rank损失，变成一个排序模型
-- 在CTR预估中，对点击与否做0，1二元分类，添加交叉熵损失变成一个分类模型
-- 在需要对一个子串打分时，可以使用余弦相似度来计算相似度，变成一个回归模型
+- In ranking system, the pairwise rank loss function.
+- In the CTR estimate, instead of the binary classification on the click, use cross-entropy loss for a classification model
+- In regression model,  the cosine similarity is used to calculate the similarity
 
-本例将尝试面向应用提供一个比较通用的解决方案，在模型任务类型上支持
+## Model Implementation
+At a high level, DSSM model is composed of three components: the left and right DNN, and loss function on top of them. In complex tasks, the structure of the left DNN and the light DNN can be different. In this example, we keep these two DNN structures the same. And we choose any of FC, CNN, and RNN for the DNN architecture.
 
-- 分类
-- [-1, 1] 值域内的回归
-- Pairwise-Rank
+In PaddlePaddle, the loss functions are supported for any of classification, regression, and ranking. Among them, the distance between the left and right DNN is calculated by the cosine similarity. In the classification task, the predicted distribution is calculated by softmax.
 
-在生成低纬语义向量的模型结构上，本模型支持以下三种：
+Here we demonstrate:
 
-- FC, 多层全连接层
-- CNN，卷积神经网络
-- RNN，递归神经网络
+- How CNN, FC do text information extraction can refer to [text classification](https://github.com/PaddlePaddle/models/blob/develop/text_classification/README.md#模型详解)
+- The contents of the RNN / GRU can be found in  [Machine Translation](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.md#gated-recurrent-unit-gru)
+- For Pairwise Rank learning, please refer to [learn to rank](https://github.com/PaddlePaddle/models/blob/develop/ltr/README.md)
 
-## 模型实现
-DSSM模型可以拆成三小块实现，分别是左边和右边的DNN，以及顶层的损失函数。
-在复杂任务中，左右两边DNN的结构可以是不同的，比如在原始论文中左右分别学习Query和Document的semantic vector，
-两者数据的数据不同，建议对应定制DNN的结构。
-
-本例中为了简便和通用，将左右两个DNN的结构都设为相同的，因此只有三个选项FC,CNN,RNN等。
-
-在损失函数的设计方面，也支持三种，分类, 回归, 排序；
-其中，在回归和排序两种损失中，左右两边的匹配程度通过余弦相似度（cossim）来计算；
-在分类任务中，类别预测的分布通过softmax计算。
-
-在其它教程中，对上述很多内容都有过详细的介绍，例如：
-
-- 如何CNN, FC 做文本信息提取可以参考 [text classification](https://github.com/PaddlePaddle/models/blob/develop/text_classification/README.md#模型详解)
-- RNN/GRU 的内容可以参考 [Machine Translation](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.md#gated-recurrent-unit-gru)
-- Pairwise Rank即排序学习可参考 [learn to rank](https://github.com/PaddlePaddle/models/blob/develop/ltr/README.md)
-
-相关原理在此不再赘述，本文接下来的篇幅主要集中介绍使用PaddlePaddle实现这些结构上。
-
-如图3，回归和分类模型的结构很相似
+Figure 3 shows the general architecture for both regression and classification models.
 
 <p align="center">
 <img src="./images/dssm3.jpg"/><br/><br/>
-图 3. DSSM for REGRESSION or CLASSIFICATION
+Figure 3. DSSM for REGRESSION or CLASSIFICATION
 </p>
 
-最重要的组成部分包括词向量，图中`(1)`,`(2)`两个低纬向量的学习器（可以用RNN/CNN/FC中的任意一种实现），
-最上层对应的损失函数。
-
-而Pairwise Rank的结构会复杂一些，类似两个 图 4. 中的结构，增加了对应的损失函数：
-
-- 模型总体思想是，用同一个source(源)为左右两个target(目标)分别打分——`(a),(b)`，学习目标是(a),(b)间的大小关系
-- `(a)`和`(b)`类似图3中结构，用于给source和target的pair打分
-- `(1)`和`(2)`的结构其实是共用的，都表示同一个source，图中为了表达效果展开成两个
+The structure of the Pairwise Rank is more complex, as shown in Figure 4.
 
 <p align="center">
 <img src="./images/dssm2.jpg"/><br/><br/>
 图 4. DSSM for Pairwise Rank
 </p>
 
-下面是各个部分具体的实现方法，所有的代码均包含在 `./network_conf.py` 中。
+In below, we describe how to train DSSM model in PaddlePaddle. All the codes are included in  `./network_conf.py`.
 
 
-### 创建文本的词向量表
-
+### Create a word vector table for the text
 ```python
 def create_embedding(self, input, prefix=''):
     '''
@@ -117,10 +77,9 @@ def create_embedding(self, input, prefix=''):
     return emb
 ```
 
-由于输入给词向量表(embedding table)的是一个句子对应的词的ID的列表 ，因此词向量表输出的是词向量的序列。
+Since the input (embedding table) is a list of the IDs of the words corresponding to a sentence, the word vector table outputs the sequence of word vectors.
 
-### CNN 结构实现
-
+### CNN implementation
 ```python
 def create_cnn(self, emb, prefix=''):
     '''
@@ -151,14 +110,11 @@ def create_cnn(self, emb, prefix=''):
     return conv_3, conv_4
 ```
 
-CNN 接受 embedding table输出的词向量序列，通过卷积和池化操作捕捉到原始句子的关键信息，
-最终输出一个语义向量（可以认为是句子向量）。
+CNN accepts the word sequence of the embedding table, then process the data by convolution and pooling, and finally outputs a semantic vector.
 
-本例的实现中，分别使用了窗口长度为3和4的CNN学到的句子向量按元素求和得到最终的句子向量。
+### RNN implementation
 
-### RNN 结构实现
-
-RNN很适合学习变长序列的信息，使用RNN来学习句子的信息几乎是自然语言处理任务的标配。
+RNN is suitable for learning variable length of the information
 
 ```python
 def create_rnn(self, emb, prefix=''):
@@ -170,7 +126,7 @@ def create_rnn(self, emb, prefix=''):
     return sent_vec
 ```
 
-### FC 结构实现
+### FC implementation
 
 ```python
 def create_fc(self, emb, prefix=''):
@@ -188,11 +144,9 @@ def create_fc(self, emb, prefix=''):
     return fc
 ```
 
-在构建FC时需要首先使用`paddle.layer.pooling` 对词向量序列进行最大池化操作，将边长序列转化为一个固定维度向量，
-作为整个句子的语义表达，使用最大池化能够降低句子长度对句向量表达的影响。
+In the construction of FC, we use `paddle.layer.pooling` for the maximum pooling operation on the word vector sequence. Then we transform the sequence into a fixed dimensional vector.
 
-### 多层DNN实现
-在 CNN/DNN/FC提取出 semantic vector后，在上层可继续接多层FC来实现深层DNN结构。
+### Multi-layer DNN implementation
 
 ```python
 def create_dnn(self, sent_vec, prefix):
@@ -215,8 +169,8 @@ def create_dnn(self, sent_vec, prefix):
     return _input_layer
 ```
 
-### 分类或回归实现
-分类和回归的结构比较相似，因此可以用一个函数创建出来
+### Classification / Regression
+The structure of classification and regression is similar. Below function can be used for both tasks.
 
 ```python
 def _build_classification_or_regression_model(self, is_classification):
@@ -269,9 +223,9 @@ def _build_classification_or_regression_model(self, is_classification):
             prediction, label)
     return cost, prediction, label
 ```
-### Pairwise Rank实现
-Pairwise Rank复用上面的DNN结构，同一个source对两个target求相似度打分，
-如果左边的target打分高，预测为1，否则预测为 0。
+
+### Pairwise Rank
+
 
 ```python
 def _build_rank_model(self):
@@ -323,10 +277,10 @@ def _build_rank_model(self):
     # so AUC will not used.
     return cost, None, None
 ```
-## 数据格式
-在 `./data` 中有简单的示例数据
+## Data Format
+Below is a simple example for the data in `./data`
 
-### 回归的数据格式
+### Regression data format
 ```
 # 3 fields each line:
 #   - source's word ids
@@ -335,13 +289,14 @@ def _build_rank_model(self):
 <ids> \t <ids> \t <float>
 ```
 
-比如：
+The example of this format is as follows.
 
 ```
 3 6 10 \t 6 8 33 \t 0.7
 6 0 \t 6 9 330 \t 0.03
 ```
-### 分类的数据格式
+
+### Classification data format
 ```
 # 3 fields each line:
 #   - source's word ids
@@ -350,7 +305,8 @@ def _build_rank_model(self):
 <ids> \t <ids> \t <label>
 ```
 
-比如：
+The example of this format is as follows.
+
 
 ```
 3 6 10 \t 6 8 33 \t 0
@@ -358,7 +314,7 @@ def _build_rank_model(self):
 ```
 
 
-### 排序的数据格式
+### Ranking data format
 ```
 # 4 fields each line:
 #   - source's word ids
@@ -368,18 +324,17 @@ def _build_rank_model(self):
 <ids> \t <ids> \t <ids> \t <label>
 ```
 
-比如：
+The example of this format is as follows.
 
 ```
 7 2 4 \t 2 10 12 \t 9 2 7 10 23 \t 0
 7 2 4 \t 10 12 \t 9 2 21 23 \t 1
 ```
 
-## 执行训练
+## Training
 
-可以直接执行 `python train.py -y 0 --model_arch 0` 使用 `./data/classification` 目录里简单的数据来训练一个分类的FC模型。
+We use `python train.py -y 0 --model_arch 0` with the data in  `./data/classification` to train a DSSM model for classification.
 
-其他模型结构也可以通过命令行实现定制，详细命令行参数如下
 
 ```
 usage: train.py [-h] [-i TRAIN_DATA_PATH] [-t TEST_DATA_PATH]
@@ -438,17 +393,17 @@ optional arguments:
                         number of batches to output model, (default: 400)
 ```
 
-重要的参数描述如下
+Parameter description:
 
-- `train_data_path` 训练数据路径
-- `test_data_path` 测试数据路局，可以不设置
-- `source_dic_path` 源字典字典路径
-- `target_dic_path` 目标字典路径
-- `model_type` 模型的损失函数的类型，分类0，排序1，回归2
-- `model_arch` 模型结构，FC 0， CNN 1, RNN 2
-- `dnn_dims` 模型各层的维度设置，默认为 `256,128,64,32`，即模型有4层，各层维度如上设置
+- `train_data_path` Training data path
+- `test_data_path`  Test data path, optional
+- `source_dic_path`  Source dictionary path
+- `target_dic_path` 目Target dictionary path
+- `model_type`  The type of loss function of the model: classification 0, sort 1, regression 2
+- `model_arch` Model structure: FC 0，CNN 1, RNN 2
+- `dnn_dims` The dimension of each layer of the model is set, the default is `256,128,64,32`，with 4 layers.
 
-## 用训练好的模型预测
+## To predict using the trained model
 ```
 usage: infer.py [-h] --model_path MODEL_PATH -i DATA_PATH -o
                 PREDICTION_OUTPUT_PATH -y MODEL_TYPE [-s SOURCE_DIC_PATH]
@@ -490,12 +445,12 @@ optional arguments:
                         number of categories for classification task.
 ```
 
-部分参数可以参考 `train.py`，重要参数解释如下
+Important parameters are
 
-- `data_path` 需要预测的数据路径
-- `prediction_output_path` 预测的输出路径
+- `data_path` Path for the data to predict
+- `prediction_output_path` Prediction output path
 
-## 参考文献
+## References
 
 1. Huang P S, He X, Gao J, et al. Learning deep structured semantic models for web search using clickthrough data[C]//Proceedings of the 22nd ACM international conference on Conference on information & knowledge management. ACM, 2013: 2333-2338.
 2. [Microsoft Learning to Rank Datasets](https://www.microsoft.com/en-us/research/project/mslr/)

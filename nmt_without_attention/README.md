@@ -1,54 +1,57 @@
-# 神经网络机器翻译模型
+# Neural Machine Translation Model
 
-## 背景介绍
-机器翻译利用计算机将源语言转换成目标语言的同义表达，是自然语言处理中重要的研究方向，有着广泛的应用需求，其实现方式也经历了不断地演化。传统机器翻译方法主要基于规则或统计模型，需要人为地指定翻译规则或设计语言特征，效果依赖于人对源语言与目标语言的理解程度。近些年来，深度学习的提出与迅速发展使得特征的自动学习成为可能。深度学习首先在图像识别和语音识别中取得成功，进而在机器翻译等自然语言处理领域中掀起了研究热潮。机器翻译中的深度学习模型直接学习源语言到目标语言的映射，大为减少了学习过程中人的介入，同时显著地提高了翻译质量。本例介绍在PaddlePaddle中如何利用循环神经网络（Recurrent Neural Network, RNN）构建一个端到端（End-to-End）的神经网络机器翻译（Neural Machine Translation, NMT）模型。
+## Background Introduction
+Neural Machine Translation (NMT) is a simple new architecture for getting machines to learn to translate. Traditional machine translation methods are mainly based on phrase-based statistical translation approaches that use separately engineered subcomponents rules or statistical models. NMT models use deep learning and representation learning. This example describes how to construct an end-to-end neural machine translation (NMT) model using the recurrent neural network (RNN) in PaddlePaddle.
 
-## 模型概览
-基于 RNN 的神经网络机器翻译模型遵循编码器－解码器结构，其中的编码器和解码器均是一个循环神经网络。将构成编码器和解码器的两个 RNN 沿时间步展开，得到如下的模型结构图：
+## Model Overview
+RNN-based neural machine translation follows the encoder-decoder architecture. A common choice for the encoder and decoder is the recurrent neural network (RNN), used by most NMT models. Below is an example diagram of a general approach for NMT.
 
-<p align="center"><img src="images/encoder-decoder.png" width = "90%" align="center"/><br/>图 1. 编码器－解码器框架 </p>
+<p align="center"><img src="images/encoder-decoder.png" width = "90%" align="center"/><br/>Figure 1. Encoder - Decoder frame </ p>
 
-神经机器翻译模型的输入输出可以是字符，也可以是词或者短语。不失一般性，本例以基于词的模型为例说明编码器／解码器的工作机制：
+The input and output of the neural machine translation model can be any of character, word or phrase. This example illustrates the word-based NMT.
 
-- **编码器**：将源语言句子编码成一个向量，作为解码器的输入。解码器的原始输入是表示词的 `id` 序列 $w = {w_1, w_2, ..., w_T}$，用独热（One-hot）码表示。为了对输入进行降维，同时建立词语之间的语义关联，模型为热独码表示的单词学习一个词嵌入（Word Embedding）表示，也就是常说的词向量，关于词向量的详细介绍请参考 PaddleBook 的[词向量](https://github.com/PaddlePaddle/book/blob/develop/04.word2vec/README.cn.md)一章。最后 RNN 单元逐个词地处理输入，得到完整句子的编码向量。
+- **Encoder**: Encodes the source language sentence into a vector as input to the decoder. The original input of the decoder is the `id` sequence $ w = {w_1, w_2, ..., w_T} $ of the word, expressed in the one-hot code. In order to reduce the input dimension, and to establish the semantic association between words, the model is a word that is expressed by hot independent code. Word embedding is a word vector. For more information about word vector, please refer to PaddleBook [word vector] (https://github.com/PaddlePaddle/book/blob/develop/04.word2vec/README.cn.md) chapter. Finally, the RNN unit processes the input word by word to get the encoding vector of the complete sentence.
 
-- **解码器**：接受编码器的输入，逐个词地解码出目标语言序列 $u = {u_1, u_2, ..., u_{T'}}$。每个时间步，RNN 单元输出一个隐藏向量，之后经 `Softmax` 归一化计算出下一个目标词的条件概率，即 $P(u_i | w, u_1, u_2, ..., u_{t-1})$。因此，给定输入 $w$，其对应的翻译结果为 $u$ 的概率则为
+- **Decoder**: Accepts the input of the encoder, decoding the target language sequence $ u = {u_1, u_2, ..., u_ {T '}} $ one by one. For each time step, the RNN unit outputs a hidden vector. Then the conditional probability of the next target word is calculated by `Softmax` normalization, i.e. $ P (u_i | w, u_1, u_2, ..., u_ {t- 1}) $. Thus, given the input $ w $, the corresponding translation result is $ u $
 
 $$ P(u_1,u_2,...,u_{T'} | w) = \prod_{t=1}^{t={T'}}p(u_t|w, u_1, u_2, u_{t-1})$$
 
-以中文到英文的翻译为例，源语言是中文，目标语言是英文。下面是一句源语言分词后的句子
+In Chinese to English translation, for example, the source language is Chinese, and the target language is English. The following is a sentence after the source language word segmentation.
 
 ```
 祝愿 祖国 繁荣 昌盛
 ```
 
-对应的目标语言英文翻译结果为：
+Corresponding target language English translation results for:
 
 ```
 Wish motherland rich and powerful
 ```
 
-在预处理阶段，准备源语言与目标语言互译的平行语料数据，并分别构建源语言和目标语言的词典；在训练阶段，用这样成对的平行语料训练模型；在模型测试阶段，输入中文句子，模型自动生成对应的英语翻译，然后将生成结果与标准翻译对比进行评估。在机器翻译领域，BLEU 是最流行的自动评估指标之一。
+In the preprocessing step, we prepare the parallel corpus data of the source language and the target language. Then we construct the dictionaries of the source language and the target language respectively. In the training stage, we use the pairwise parallel corpus training model. In the model test stage, the model automatically generates the corresponding English translation, and then it evaluates the resulting results with standard translations. For the evaluation metric, BLEU is most commonly used.
 
-### RNN 单元
-RNN 的原始结构用一个向量来存储隐状态，然而这种结构的 RNN 在训练时容易发生梯度弥散（gradient vanishing），对于长时间的依赖关系难以建模。因此人们对 RNN 单元进行了改进，提出了 LSTM\[[1](#参考文献)] 和 GRU\[[2](#参考文献)]，这两种单元以门来控制应该记住的和遗忘的信息，较好地解决了序列数据的长时依赖问题。以本例所用的 GRU 为例，其基本结构如下：
+### RNN unit
+The original structure of the RNN uses a vector to store the hidden state. However, the RNN of this structure is prone to have gradient vanishing problem, which is difficult to model for a long time. This issue can be addressed by using LSTM \[[1](#References)] and  GRU (Gated Recurrent Unit) \[[2](#References)]. This solves the problem of long-term dependency by carefully forgetting the previous information. In this example, we demonstrate the GRU based model.
 
 <p align="center">
 <img src="images/gru.png" width = "90%" align="center"/><br/>
 图 2. GRU 单元
  </p>
 
-可以看到除了隐含状态以外，GRU 内部还包含了两个门：更新门(Update Gate)、重置门(Reset Gate)。在每一个时间步，门限和隐状态的更新由图 2 右侧的公式决定。这两个门限决定了状态以何种方式更新。
+We can see that, in addition to the implicit state, the GRU also contains two gates: the Update Gate and the Reset Gate. At each time step, the update of the threshold and the hidden state is determined by the formula on the right side of Figure 2. These two thresholds determine how the state is updated.
 
-### 双向编码器
-在上述的基本模型中，编码器在顺序处理输入句子序列时，当前时刻的状态只包含了历史输入信息，而没有未来时刻的序列信息。而对于序列建模，未来时刻的上下文同样包含了重要的信息。可以使用如图 3 所示的这种双向编码器来同时获取当前时刻输入的上下文：
+### Bi-directional Encoder
+In the above basic model, when the encoder sequentially processes the input sentence sequence, the state of the current time contains only the history input information without the sequence information of the future time. For sequence modeling, the context of the future also contains important information. With the bi-directional encoder (Figure 3), we can get both information at the same time:
+
 <p align="center">
 <img src="images/bidirectional-encoder.png" width = "90%" align="center"/><br/>
-图 3. 双向编码器结构示意图
+Figure 3. Bi-directional encoder structure diagram
  </p>
 
-图 3 所示的双向编码器\[[3](#参考文献)\]由两个独立的 RNN 构成，分别从前向和后向对输入序列进行编码，然后将两个 RNN 的输出合并在一起，作为最终的编码输出。
-在 PaddlePaddle 中，双向编码器可以很方便地调用相关 APIs 实现：
+
+The bi-directional encoder \[[3](#References)\] shown in Figure 3 consists of two independent RNNs that encode the input sequence from the forward and backward, respectively. Then it combines the outputs of the two RNNs together, as the final encoding output.
+
+In PaddlePaddle, bi-directional encoders can easily call using APIs:
 
 ```python
 src_word_id = paddle.layer.data(
@@ -70,24 +73,25 @@ encoded_vector = paddle.networks.bidirectional_gru(
     return_seq=True)
 ```
 
-### 柱搜索（Beam Search） 算法
-训练完成后的生成阶段，模型根据源语言输入，解码生成对应的目标语言翻译结果。解码时，一个直接的方式是取每一步条件概率最大的词，作为当前时刻的输出。但局部最优并不一定能得到全局最优，即这种做法并不能保证最后得到的完整句子出现的概率最大。如果对解的全空间进行搜索，其代价又过大。为了解决这个问题，通常采用柱搜索（Beam Search）算法。柱搜索是一种启发式的图搜索算法，用一个参数 $k$ 控制搜索宽度，其要点如下：
+### Beam Search Algorithm
+After the training is completed, the model will input and decode the corresponding target language translation result according to the source language. Decoding, a direct way is to take each step conditional probability of the largest word, as the current moment of output. But the local optimal does not necessarily guarantee the global optimal. If the search for the full space is large, the cost is too large. In order to solve this problem, beam search algorithm is commonly used. Beam search is a heuristic graph search algorithm that controls the search width with a parameter $ k $] as follows:
 
-**1**. 在解码的过程中，始终维护 $k$ 个已解码出的子序列；
+**1**. During decoding, always maintain $ k $ decoded sub-sequences;
 
-**2**. 在中间时刻 $t$, 对于 $k$ 个子序列中的每个序列，计算下一个词出现的概率并取概率最大的前 $k$ 个词，组合得到 $k^2$ 个新子序列；
+**2**. At the middle of time $ t $, for each sequence in the $ k $ sub-sequence, calculate the probability of the next word and take the maximum of $ k $ words with the largest probability, combining $ k ^ 2 $ New child sequence;
 
-**3**. 取 **2** 中这些组合序列中概率最大的前 $k$ 个以更新原来的子序列;
+**3**. Take the maximum probability of $ k $ in these combination sequences to update the original subsequence;
 
-**4**. 不断迭代下去，直至得到 $k$ 个完整的句子，作为翻译结果的候选。
+**4**. iterate through it until you get $ k $ complete sentences as candidates for translation results.
 
-关于柱搜索的更多介绍，可以参考 PaddleBook 中[机器翻译](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md)一章中[柱搜索](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md#柱搜索算法)一节。
+For more information on beam search, refer to the [beam search] chapter in PaddleBook [machine translation] (https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md) (https://github.com/PaddlePaddle/book/blob/develop.org.machine_translation/README.cn.md# beam search algorithm) section.
 
 
-### 无注意力机制的解码器
-- PaddleBook中[机器翻译](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md)的相关章节中，已介绍了带注意力机制（Attention Mechanism）的 Encoder-Decoder 结构，本例介绍的则是不带注意力机制的 Encoder-Decoder 结构。关于注意力机制，读者可进一步参考 PaddleBook 和参考文献\[[3](#参考文献)]。
+### Decoder without Attention mechanism
+- In the relevant section of PaddleBook (https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md), the Attention Mechanism has been introduced. This example demonstrates Encoder-Decoder structure without attention mechanism. With regard to the attention mechanism, please refer to PaddleBook and references \[[3](#References)].
 
-对于流行的RNN单元，PaddlePaddle 已有很好的实现均可直接调用。如果希望在 RNN 每一个时间步实现某些自定义操作，可使用 PaddlePaddle 中的`recurrent_layer_group`。首先，自定义单步逻辑函数，再利用函数 `recurrent_group()` 循环调用单步逻辑函数处理整个序列。本例中的无注意力机制的解码器便是使用`recurrent_layer_group`来实现，其中，单步逻辑函数`gru_decoder_without_attention()`相关代码如下：
+In PaddlePaddle, commonly used RNN units can be conveniently called using APIs. For example, `recurrent_layer_group` can be used to implement custom actions at each point in the RNN. First, customize the single-step logic function, and then use the function `recurrent_group ()` to cycle through the single-step logic function to process the entire sequence. In this case, the unattended mechanism of the decoder uses `recurrent_layer_group` to implement the function` gru_decoder_without_attention () `. Corresponding code is as follows:
+
 
 ```python
 # the initialization state for decoder GRU
@@ -130,12 +134,12 @@ def gru_decoder_without_attention(enc_vec, current_word):
     return out  
 ```
 
-在模型训练和测试阶段，解码器的行为有很大的不同：
+In the model training and testing phase, the behavior of the decoder is different:
 
-- **训练阶段**：目标翻译结果的词向量`trg_embedding`作为参数传递给单步逻辑`gru_decoder_without_attention()`，函数`recurrent_group()`循环调用单步逻辑执行，最后计算目标翻译与实际解码的差异cost并返回；
-- **测试阶段**：解码器根据最后一个生成的词预测下一个词，`GeneratedInput()`自动取出模型预测出的概率最高的$k$个词的词向量传递给单步逻辑，`beam_search()`函数调用单步逻辑函数`gru_decoder_without_attention()`完成柱搜索并作为结果返回。
+- **Training phase**: The word vector of the target translation `trg_embedding` is passed as a parameter to the single step logic` gru_decoder_without_attention () `. The function` recurrent_group () `loop calls the single step logic execution, and finally calculates the target translation with the actual decoding;
+- **Testing phase**: The decoder predicts the next word based on the last generated word, `GeneratedInput ()`. The automatic fetch model predicts the highest probability of the $ k $ word vector passed to the single step logic. Then the beam_search () function calls the function `gru_decoder_without_attention ()` to complete the beam search and returns as a result.
 
-训练和生成的逻辑分别实现在如下的`if-else`条件分支中：
+The training and generated returns are implemented in the following `if-else` conditional branches:
 
 ```python
 group_input1 = paddle.layer.StaticInput(input=encoded_vector)
@@ -181,16 +185,16 @@ else:
     return cost
 ```
 
-## 数据准备
-本例所用到的数据来自[WMT14](http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/)，该数据集是法文到英文互译的平行语料。用[bitexts](http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/data/bitexts.tgz)作为训练数据，[dev+test data](http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/data/dev+test.tgz)作为验证与测试数据。在PaddlePaddle中已经封装好了该数据集的读取接口，在首次运行的时候，程序会自动完成下载，用户无需手动完成相关的数据准备。
+## Data Preparation
+The data used in this example is from [WMT14] (http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/), which is a parallel corpus of French-to-English translation. Use [bitexts] (http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/data/bitexts.tgz) as training data, [dev + test data] (http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/data/dev+test.tgz) as validation and test data. PaddlePaddle has been packaged in the data set of the read interface, in the first run, the program will automatically complete the download. Users do not need to manually complete the relevant data preparation!
 
-## 模型的训练与测试
+## Model Training and Testing
 
-### 模型训练
+### Model Training
 
-启动模型训练的十分简单，只需在命令行窗口中执行`python train.py`。模型训练阶段 `train.py` 脚本中的 `train()` 函数依次完成了如下的逻辑：
+Starting the model training is very simple, just in the command line window to execute `python train.py`. The `train ()` function in the `train.py` script of the model training phase completes the following logic:
 
-**a) 由网络定义，解析网络结构，初始化模型参数**
+**a) Define the network, parse the network structure, initialize the model parameters.**
 
 ```python
 # define the network topolgy.
@@ -198,7 +202,7 @@ cost = seq2seq_net(source_dict_dim, target_dict_dim)
 parameters = paddle.parameters.create(cost)
 ```
 
-**b) 设定训练过程中的优化策略、定义训练数据读取 `reader`**
+**b) Set the training process optimization strategy. Define the training data to read `reader`**
 
 ```python
 # define optimization method
@@ -218,7 +222,7 @@ wmt14_reader = paddle.batch(
     batch_size=55)
 ```
 
-**c) 定义事件句柄，打印训练中间结果、保存模型快照**
+**c) Define the event handle, print the training intermediate results, save the model snapshot**
 
 ```python
 # define the event_handler callback
@@ -236,7 +240,7 @@ def event_handler(event):
                 event.pass_id, event.batch_id, event.cost, event.metrics))
 ```
 
-**d) 开始训练**
+**d) Start training**
 
 ```python
 # start training
@@ -244,7 +248,7 @@ trainer.train(
     reader=wmt14_reader, event_handler=event_handler, num_passes=2)
 ```
 
-输出样例为
+The output sample is
 
 ```text
 Pass 0, Batch 0, Cost 267.674663, {'classification_error_evaluator': 1.0}
@@ -258,10 +262,10 @@ Pass 0, Batch 30, Cost 153.633665, {'classification_error_evaluator': 0.86438035
 Pass 0, Batch 40, Cost 168.170543, {'classification_error_evaluator': 0.8348183631896973}
 ```
 
-### 生成翻译结果
-利用训练好的模型生成翻译文本也十分简单。
+### Generate Translation Results
+In PaddlePaddle, it is also easy to use translated models to generate translated text.
 
-1. 首先请修改`generate.py`脚本中`main`中传递给`generate`函数的参数，以选择使用哪一个保存的模型来生成。默认参数如下所示：
+1. First of all, please modify the `generate.py` script` main` passed to the `generate` function parameters to choose which saved model to use. The default parameters are as follows:
 
     ```python
     generate(
@@ -272,9 +276,9 @@ Pass 0, Batch 40, Cost 168.170543, {'classification_error_evaluator': 0.83481836
         model_path="models/nmt_without_att_params_batch_00100.tar.gz")
     ```
 
-2. 在终端执行命令 `python generate.py`，脚本中的`generate()`执行了依次如下逻辑：
+2. In the terminal phase, execute the `python generate.py` command. The` generate () `in the script executes the following code:
 
-    **a) 加载测试样本**
+    **a) Load the test sample**
 
     ```python
     # load data  samples for generation
@@ -284,7 +288,7 @@ Pass 0, Batch 40, Cost 168.170543, {'classification_error_evaluator': 0.83481836
         gen_data.append((item[0], ))
     ```
 
-    **b) 初始化模型，执行`infer()`为每个输入样本生成`beam search`的翻译结果**
+    **b) Initialize the model, execute `infer ()` for each input sample to generate `beam search` translation results**
 
     ```python
     beam_gen = seq2seq_net(source_dict_dim, target_dict_dim, True)
@@ -298,7 +302,7 @@ Pass 0, Batch 40, Cost 168.170543, {'classification_error_evaluator': 0.83481836
         field=['prob', 'id'])
     ```
 
-    **c) 加载源语言和目标语言词典，将`id`序列表示的句子转化成原语言并输出结果**
+    **c) Next, load the source and target language dictionaries, convert the sentences represented by the `id` sequence into the original language and output the results.**
 
     ```python
     beam_result = inferer.infer(input=test_batch, field=["prob", "id"])
@@ -319,7 +323,7 @@ Pass 0, Batch 40, Cost 168.170543, {'classification_error_evaluator': 0.83481836
         print("\n")
     ```
 
-设置beam search的宽度为3，输入为一个法文句子，则自动为测试数据生成对应的翻译结果，输出格式如下：
+Set the width of the beam search to 3, enter a French sentence. Then it automatically generate the corresponding test data for the translation results, the output format is as follows:
 
 ```text
 Elles connaissent leur entreprise mieux que personne .
@@ -328,17 +332,17 @@ Elles connaissent leur entreprise mieux que personne .
 -5.026885        They know their business better than anybody . <e>
 
 ```
-- 第一行为输入的源语言句子。
-- 第二 ~ beam_size + 1 行是柱搜索生成的 `beam_size` 条翻译结果
-    - 相同行的输出以“\t”分隔为两列，第一列是句子的log 概率，第二列是翻译结果的文本。
-    - 符号`<s>` 表示句子的开始，符号`<e>`表示一个句子的结束，如果出现了在词典中未包含的词，则用符号`<unk>`替代。
+- The first line of input for the source language.
+- Second ~ beam_size + 1 line is the result of the `beam_size` translation generated by the column search
+    - the output of the same row is separated into two columns by "\ t", the first column is the log probability of the sentence, and the second column is the text of the translation result.
+    - the symbol `<s>` represents the beginning of the sentence, the symbol `<e>` indicates the end of a sentence, and if there is a word that is not included in the dictionary, it is replaced with the symbol `<unk>`.
 
-至此，我们在 PaddlePaddle 上实现了一个初步的机器翻译模型。我们可以看到，PaddlePaddle 提供了灵活丰富的API供大家选择和使用，使得我们能够很方便完成各种复杂网络的配置。机器翻译本身也是个快速发展的领域，各种新方法新思想在不断涌现。在学习完本例后，读者若有兴趣和余力，可基于 PaddlePaddle 平台实现更为复杂、性能更优的机器翻译模型。
+So far, we have implemented a basic machine translation model using PaddlePaddle. We can see, PaddlePaddle provides a flexible and rich API. This enables users to easily choose and use a various complex network configuration. NMT itself is also a rapidly developing field, and many new ideas continue to emerge. This example is a basic implementation of NMT. Users can also implement more complex NMT models using PaddlePaddle.
 
 
-## 参考文献
-[1] Sutskever I, Vinyals O, Le Q V. [Sequence to Sequence Learning with Neural Networks](https://arxiv.org/abs/1409.3215)[J]. 2014, 4:3104-3112.
+## References
+[1] Sutskever I, Vinyals O, Le Q V. [Sequence to Sequence Learning with Neural Networks] (https://arxiv.org/abs/1409.3215) [J]. 2014, 4: 3104-3112.
 
-[2]Cho K, Van Merriënboer B, Gulcehre C, et al. [Learning phrase representations using RNN encoder-decoder for statistical machine translation](http://www.aclweb.org/anthology/D/D14/D14-1179.pdf)[C]. Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP), 2014: 1724-1734.
+[2] Cho K, Van Merriënboer B, Gulcehre C, et al. [Learning phrase representations using RNN encoder-decoder for statistical machine translation (http://www.aclweb.org/anthology/D/D14/D14-1179 .pdf) [C]. Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP), 2014: 1724-1734.
 
-[3] Bahdanau D, Cho K, Bengio Y. [Neural machine translation by jointly learning to align and translate](https://arxiv.org/abs/1409.0473)[C]. Proceedings of ICLR 2015, 2015
+[3] Bahdanau D, Cho K, Bengio Y. [Neural machine translation by exclusive learning to align and translate] (https://arxiv.org/abs/1409.0473) [C]. Proceedings of ICLR 2015, 2015
