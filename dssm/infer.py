@@ -94,7 +94,7 @@ class Inferer(object):
     def __init__(self, param_path):
         logger.info("create DSSM model")
 
-        cost, prediction, label = DSSM(
+        prediction = DSSM(
             dnn_dims=layer_dims,
             vocab_sizes=[
                 len(load_dic(path))
@@ -104,7 +104,8 @@ class Inferer(object):
             model_arch=args.model_arch,
             share_semantic_generator=args.share_network_between_source_target,
             class_num=args.class_num,
-            share_embed=args.share_embed)()
+            share_embed=args.share_embed,
+            is_infer=True)()
 
         # load parameter
         logger.info("load model parameters from %s" % param_path)
