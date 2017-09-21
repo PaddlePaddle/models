@@ -113,7 +113,7 @@ class ExternalMemory(object):
             boot_layer=self.initial_weight)
         interpolated_weight = paddle.layer.interpolation(
             name=self.name + "_addressing_weight_" + head_name,
-            input=[addressing_weight, addressing_weight],
+            input=[last_addressing_weight, addressing_weight],
             weight=paddle.layer.expand(input=gate, expand_as=addressing_weight))
         return interpolated_weight
 
