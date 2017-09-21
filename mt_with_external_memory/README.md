@@ -58,7 +58,7 @@
 （详情请参考论文\[[1](#参考文献)\]）。根据寻址情况，图灵机写入 $M$ 或从 $M$ 读出信息，供其他网络使用。神经图灵机结构示意图，见图3，引自\[[1](#参考文献)\]。
 
 <div align="center">
-<img src="image/neural_turing_machine_arch.png"><br/>
+<img src="image/neural_turing_machine_arch.png" width="400"><br/>
 图3. 神经图灵机结构示意图
 </div>
 
