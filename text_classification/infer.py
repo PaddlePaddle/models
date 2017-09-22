@@ -8,7 +8,7 @@ import paddle.v2 as paddle
 
 import reader
 from network_conf import fc_net, convolution_net
-from utils import logger, load_dict
+from utils import logger, load_dict, load_reverse_dict
 
 
 def infer(topology, data_dir, model_path, word_dict_path, label_dict_path,
