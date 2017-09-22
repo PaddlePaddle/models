@@ -3,7 +3,6 @@
 import os
 import sys
 import gzip
-import pdb
 
 import paddle.v2 as paddle
 import config as conf
