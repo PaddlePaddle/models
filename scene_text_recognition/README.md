@@ -112,6 +112,17 @@ RNN为每个时间步建模特征序列中的全局信息，并由 CTC 生成目
 ### 图像数据及处理
 本任务使用数据集\[[4](#参考文献)\]，数据中包括了图片数据和对应的目标文本，其中预测的目标文本需要转化为一维的ID列表，我们用data_provider.py里的类`AciiDic`来实现。
 
+```python
+class AsciiDic(object):
+    UNK = 0
+
+    def __init__(self):
+        self.dic = {
+            '<unk>': self.UNK,
+        }
+    ...
+```
+
 包括图片处理在内的其他数据集处理封装在data_provider.py里的类 `ImageDataset`中：
 
 ### 模型构建
