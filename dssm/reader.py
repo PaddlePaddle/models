@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from utils import UNK, ModelType, TaskType, load_dic, sent2ids, logger, ModelType
+from utils import UNK, ModelType, TaskType, load_dic, \
+        sent2ids, logger, ModelType
 
 
 class Dataset(object):
@@ -38,7 +37,6 @@ class Dataset(object):
         '''
         Load testset.
         '''
-        # logger.info("[reader] load testset from %s" % self.test_path)
         with open(self.test_path) as f:
             for line_id, line in enumerate(f):
                 yield self.record_reader(line)

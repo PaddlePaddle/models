@@ -23,7 +23,7 @@ class ExternalMemory(object):
     Besides, the ExternalMemory class must be used together with
     paddle.layer.recurrent_group (within its step function). It can never be
     used in a standalone manner.
-    
+
     For more details, please refer to
     `Neural Turing Machines <https://arxiv.org/abs/1410.5401>`_.
 

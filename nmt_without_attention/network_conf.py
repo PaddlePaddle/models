@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import paddle.v2 as paddle
 import sys
 import gzip

@@ -12,7 +12,6 @@ def ndcg(score_list):
     e.g. predict rank score list :
     >>> scores =  [3, 2, 3, 0, 1, 2] 
     >>> ndcg_score = ndcg(scores)
-    
     """
 
     def dcg(score_list):

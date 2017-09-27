@@ -1,4 +1,4 @@
-""" 
+"""
     Contains model configuration for external-memory-enhanced seq2seq.
 
     The "external memory" refers to two types of memories.
