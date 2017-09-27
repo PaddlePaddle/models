@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-#coding=utf-8
-
 import os
 import sys
 import gzip
 import logging
 import numpy as np
+import click
 
 import reader
 import paddle.v2 as paddle
@@ -36,19 +34,45 @@ def infer_a_batch(inferer, test_batch, beam_size, id_to_text, fout):
         fout.flush
 
 
+@click.command("generate")
+@click.option(
+    "--model_path",
+    default="",
+    help="The path of the trained model for generation.")
+@click.option(
+    "--word_dict_path", required=True, help="The path of word dictionary.")
+@click.option(
+    "--test_data_path",
+    required=True,
+    help="The path of input data for generation.")
+@click.option(
+    "--batch_size",
+    default=1,
+    help="The number of testing examples in one forward pass in generation.")
+@click.option(
+    "--beam_size", default=5, help="The beam expansion in beam search.")
+@click.option(
+    "--save_file",
+    required=True,
+    help="The file path to save the generated results.")
+@click.option(
+    "--use_gpu", default=False, help="Whether to use GPU in generation.")
 def generate(model_path, word_dict_path, test_data_path, batch_size, beam_size,
              save_file, use_gpu):
-    assert os.path.exists(model_path), "trained model does not exist."
+    assert os.path.exists(model_path), "The given model does not exist."
+    assert os.path.exists(test_data_path), "The given test data does not exist."
 
-    paddle.init(use_gpu=use_gpu, trainer_count=1)
     with gzip.open(model_path, "r") as f:
         parameters = paddle.parameters.Parameters.from_tar(f)
 
     id_to_text = {}
+    assert os.path.exists(
+        word_dict_path), "The given word dictionary path does not exist."
     with open(word_dict_path, "r") as f:
         for i, line in enumerate(f):
             id_to_text[i] = line.strip().split("\t")[0]
 
+    paddle.init(use_gpu=use_gpu, trainer_count=1)
     beam_gen = encoder_decoder_network(
         word_count=len(id_to_text),
         emb_dim=512,
@@ -78,11 +102,4 @@ def generate(model_path, word_dict_path, test_data_path, batch_size, beam_size,
 
 
 if __name__ == "__main__":
-    generate(
-        model_path="models/pass_00025.tar.gz",
-        word_dict_path="data/word_dict.txt",
-        test_data_path="data/input.txt",
-        save_file="gen_result.txt",
-        batch_size=4,
-        beam_size=5,
-        use_gpu=True)
+    generate()

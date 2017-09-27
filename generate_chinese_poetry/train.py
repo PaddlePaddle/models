@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-#coding=utf-8
-
-import gzip
 import os
+import gzip
 import logging
+import click
 
 import paddle.v2 as paddle
 import reader
@@ -24,24 +22,59 @@ def load_initial_model(model_path, parameters):
         parameters.init_from_tar(f)
 
 
-def main(num_passes,
-         batch_size,
-         use_gpu,
-         trainer_count,
-         save_dir_path,
-         encoder_depth,
-         decoder_depth,
-         word_dict_path,
-         train_data_path,
-         init_model_path=""):
+@click.command("train")
+@click.option(
+    "--num_passes", default=10, help="Number of passes for the training task.")
+@click.option(
+    "--batch_size",
+    default=16,
+    help="The number of training examples in one forward/backward pass.")
+@click.option(
+    "--use_gpu", default=False, help="Whether to use gpu to train the model.")
+@click.option(
+    "--trainer_count", default=1, help="The thread number used in training.")
+@click.option(
+    "--save_dir_path",
+    default="models",
+    help="The path to saved the trained models.")
+@click.option(
+    "--encoder_depth",
+    default=3,
+    help="The number of stacked LSTM layers in encoder.")
+@click.option(
+    "--decoder_depth",
+    default=3,
+    help="The number of stacked LSTM layers in encoder.")
+@click.option(
+    "--train_data_path", required=True, help="The path of trainning data.")
+@click.option(
+    "--word_dict_path", required=True, help="The path of word dictionary.")
+@click.option(
+    "--init_model_path",
+    default="",
+    help=("The path of a trained model used to initialized all "
+          "the model parameters."))
+def train(num_passes,
+          batch_size,
+          use_gpu,
+          trainer_count,
+          save_dir_path,
+          encoder_depth,
+          decoder_depth,
+          train_data_path,
+          word_dict_path,
+          init_model_path=""):
     if not os.path.exists(save_dir_path):
         os.mkdir(save_dir_path)
+    assert os.path.exists(
+        word_dict_path), "The given word dictionary does not exist."
+    assert os.path.exists(
+        train_data_path), "The given training data does not exist."
 
     # initialize PaddlePaddle
-    paddle.init(use_gpu=use_gpu, trainer_count=trainer_count, parallel_nn=1)
+    paddle.init(use_gpu=use_gpu, trainer_count=trainer_count)
 
     # define optimization method and the trainer instance
-    # optimizer = paddle.optimizer.Adam(
     optimizer = paddle.optimizer.AdaDelta(
         learning_rate=1e-3,
         gradient_clipping_threshold=25.0,
@@ -74,7 +107,7 @@ def main(num_passes,
     # define the event_handler callback
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
-            if (not event.batch_id % 2000) and event.batch_id:
+            if (not event.batch_id % 1000) and event.batch_id:
                 save_path = os.path.join(save_dir_path,
                                          "pass_%05d_batch_%05d.tar.gz" %
                                          (event.pass_id, event.batch_id))
@@ -94,15 +127,5 @@ def main(num_passes,
         reader=train_reader, event_handler=event_handler, num_passes=num_passes)
 
 
-if __name__ == '__main__':
-    main(
-        num_passes=500,
-        batch_size=4 * 500,
-        use_gpu=True,
-        trainer_count=4,
-        encoder_depth=3,
-        decoder_depth=3,
-        save_dir_path="models",
-        word_dict_path="data/word_dict.txt",
-        train_data_path="data/song.poet.txt",
-        init_model_path="")
+if __name__ == "__main__":
+    train()

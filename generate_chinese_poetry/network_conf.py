@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-#coding=utf-8
-
 import paddle.v2 as paddle
 from paddle.v2.layer import parse_network
 

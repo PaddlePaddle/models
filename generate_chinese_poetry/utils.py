@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-#coding=utf-8
-
 import os
 import sys
 import re
@@ -30,7 +27,3 @@ def find_optiaml_pass(log_file):
         cost_info.iteritems(),
         key=lambda x: sum(x[1]) / (len(x[1])),
         reverse=False)[0][0])
-
-
-if __name__ == '__main__':
-    find_optiaml_pass('trained_models/models_first_round/train.log')
