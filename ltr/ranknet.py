@@ -13,11 +13,11 @@ import argparse
 
 def half_ranknet(name_prefix, input_dim):
     """
-  parameter in same name will be shared in paddle framework,
-  these parameters in ranknet can be used in shared state, e.g. left network and right network
-  shared parameters in detail
-  https://github.com/PaddlePaddle/Paddle/blob/develop/doc/design/api.md
-  """
+    parameter in same name will be shared in paddle framework,
+    these parameters in ranknet can be used in shared state,
+    e.g. left network and right network shared parameters in detail
+    https://github.com/PaddlePaddle/Paddle/blob/develop/doc/design/api.md
+    """
     # data layer
     data = paddle.layer.data(name_prefix + "/data",
                              paddle.data_type.dense_vector(input_dim))
@@ -102,12 +102,14 @@ def ranknet_infer(pass_id):
     print "Begin to Infer..."
     feature_dim = 46
 
-    # we just need half_ranknet to predict a rank score, which can be used in sort documents
+    # we just need half_ranknet to predict a rank score,
+    # which can be used in sort documents
     output = half_ranknet("infer", feature_dim)
     parameters = paddle.parameters.Parameters.from_tar(
         gzip.open("ranknet_params_%d.tar.gz" % (pass_id)))
 
-    # load data of same query and relevance documents, need ranknet to rank these candidates
+    # load data of same query and relevance documents,
+    # need ranknet to rank these candidates
     infer_query_id = []
     infer_data = []
     infer_doc_index = []
@@ -121,7 +123,8 @@ def ranknet_infer(pass_id):
         infer_query_id.append(query_id)
         infer_data.append([feature_vector])
 
-    # predict score of infer_data document. Re-sort the document base on predict score
+    # predict score of infer_data document.
+    # Re-sort the document base on predict score
     # in descending order. then we build the ranking documents
     scores = paddle.infer(
         output_layer=output, parameters=parameters, input=infer_data)

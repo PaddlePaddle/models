@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import argparse
 
 import paddle.v2 as paddle
@@ -31,8 +29,8 @@ parser.add_argument(
     '--target_dic_path',
     type=str,
     required=False,
-    help="path of the target's word dic, if not set, the `source_dic_path` will be used"
-)
+    help=("path of the target's word dictionary, "
+          "if not set, the `source_dic_path` will be used"))
 parser.add_argument(
     '-b',
     '--batch_size',
@@ -221,7 +219,8 @@ def train(train_data_path=None,
                     event.pass_id, event.batch_id, event.cost, event.metrics))
 
             # test model
-            if event.batch_id > 0 and event.batch_id % args.num_batches_to_test == 0:
+            if event.batch_id > 0 and \
+                    event.batch_id % args.num_batches_to_test == 0:
                 if test_reader is not None:
                     if model_type.is_classification():
                         result = trainer.test(
@@ -231,7 +230,8 @@ def train(train_data_path=None,
                     else:
                         result = None
             # save model
-            if event.batch_id > 0 and event.batch_id % args.num_batches_to_save_model == 0:
+            if event.batch_id > 0 and \
+                    event.batch_id % args.num_batches_to_save_model == 0:
                 model_desc = "{type}_{arch}".format(
                     type=str(args.model_type), arch=str(args.model_arch))
                 with open("%sdssm_%s_pass_%05d.tar" %

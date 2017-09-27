@@ -29,9 +29,9 @@ class DSSM(object):
         @class_num: int
             number of categories.
         '''
-        assert len(
-            vocab_sizes
-        ) == 2, "vocab_sizes specify the sizes left and right inputs, and dim should be 2."
+        assert len(vocab_sizes) == 2, (
+            "vocab_sizes specify the sizes left and right inputs, "
+            "and dim should be 2.")
         assert len(dnn_dims) > 1, "more than two layers is needed."
 
         self.dnn_dims = dnn_dims
@@ -91,7 +91,8 @@ class DSSM(object):
         @emb: paddle.layer
             output of the embedding layer
         @prefix: str
-            prefix of layers' names, used to share parameters between more than one `fc` parts.
+            prefix of layers' names, used to share parameters between
+            more than one `fc` parts.
         '''
         _input_layer = paddle.layer.pooling(
             input=emb, pooling_type=paddle.pooling.Max())
@@ -113,7 +114,8 @@ class DSSM(object):
         @emb: paddle.layer
             output of the embedding layer
         @prefix: str
-            prefix of layers' names, used to share parameters between more than one `cnn` parts.
+            prefix of layers' names, used to share parameters between
+            more than one `cnn` parts.
         '''
 
         def create_conv(context_len, hidden_size, prefix):
@@ -174,7 +176,8 @@ class DSSM(object):
           - source sentence
           - left_target sentence
           - right_target sentence
-          - label, 1 if left_target should be sorted in front of right_target, otherwise 0.
+          - label, 1 if left_target should be sorted in front of
+                   right_target, otherwise 0.
         '''
         logger.info("build rank model")
         assert self.model_type.is_rank()

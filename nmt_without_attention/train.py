@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import os
 import logging
 import paddle.v2 as paddle

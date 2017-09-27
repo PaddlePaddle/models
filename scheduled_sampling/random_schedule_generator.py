@@ -30,7 +30,8 @@ class RandomScheduleGenerator:
 
     def getScheduleRate(self):
         """
-        Get the schedule sampling rate. Usually not needed to be called by the users
+        Get the schedule sampling rate. Usually not needed to be
+        called by the users.
         """
         return self.schedule_computer(self.a, self.b, self.data_processed_)
 

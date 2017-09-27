@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import argparse
 import itertools
 
@@ -32,9 +30,10 @@ parser.add_argument(
     type=int,
     required=True,
     default=ModelType.CLASSIFICATION_MODE,
-    help="model type, %d for classification, %d for pairwise rank, %d for regression (default: classification)"
-    % (ModelType.CLASSIFICATION_MODE, ModelType.RANK_MODE,
-       ModelType.REGRESSION_MODE))
+    help=("model type, %d for classification, %d for pairwise rank, "
+          "%d for regression (default: classification)") %
+    (ModelType.CLASSIFICATION_MODE, ModelType.RANK_MODE,
+     ModelType.REGRESSION_MODE))
 parser.add_argument(
     '-s',
     '--source_dic_path',
@@ -45,8 +44,8 @@ parser.add_argument(
     '--target_dic_path',
     type=str,
     required=False,
-    help="path of the target's word dic, if not set, the `source_dic_path` will be used"
-)
+    help=("path of the target's word dictionary, "
+          "if not set, the `source_dic_path` will be used"))
 parser.add_argument(
     '-a',
     '--model_arch',
@@ -69,8 +68,9 @@ parser.add_argument(
     '--dnn_dims',
     type=str,
     default='256,128,64,32',
-    help="dimentions of dnn layers, default is '256,128,64,32', which means create a 4-layer dnn, demention of each layer is 256, 128, 64 and 32"
-)
+    help=("dimentions of dnn layers, default is '256,128,64,32', "
+          "which means create a 4-layer dnn, "
+          "demention of each layer is 256, 128, 64 and 32"))
 parser.add_argument(
     '-c',
     '--class_num',
@@ -85,7 +85,8 @@ if args.model_type.is_classification():
     assert args.class_num > 1, "--class_num should be set in classification task."
 
 layer_dims = map(int, args.dnn_dims.split(','))
-args.target_dic_path = args.source_dic_path if not args.target_dic_path else args.target_dic_path
+args.target_dic_path = args.source_dic_path if not args.target_dic_path \
+        else args.target_dic_path
 
 paddle.init(use_gpu=False, trainer_count=1)
 
@@ -130,9 +131,9 @@ class Inferer(object):
         for id, batch in enumerate(infer_reader()):
             res = self.inferer.infer(input=batch)
             predictions = [' '.join(map(str, x)) for x in res]
-            assert len(batch) == len(
-                predictions), "predict error, %d inputs, but %d predictions" % (
-                    len(batch), len(predictions))
+            assert len(batch) == len(predictions), (
+                "predict error, %d inputs, "
+                "but %d predictions") % (len(batch), len(predictions))
             output_f.write('\n'.join(map(str, predictions)) + '\n')
 
 

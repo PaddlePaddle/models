@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import paddle.v2 as paddle
 from paddle.v2 import layer
 from paddle.v2 import data_type as dtype
