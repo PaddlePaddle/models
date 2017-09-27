@@ -3,7 +3,7 @@
 
 #include "../common/common.h"
 
-#define CONFIG_BIN "./trainer_config.bin"
+#define CONFIG_BIN "../trainer_config.bin"
 
 int main() {
   // Initalize Paddle
@@ -35,7 +35,7 @@ int main() {
                                            /* useGPU */ false);
 
   FILE* fp;
-  if ((fp = fopen("./data.txt", "r")) == NULL) {
+  if ((fp = fopen("../data.txt", "r")) == NULL) {
     printf("open data.txt error!\n");
     exit(1);
   }
@@ -51,7 +51,8 @@ int main() {
   // Settings for sequence start position.
   // The first sample has one dense vector(0) which begins with 0-th row of mat.
   // The second sample has two dense vecor(1,2) which begin with 1-th row of
-  // mat. The third sample has three dense vector(3,4,5) which begin with 3-th
+  // mat.
+  // The third sample has three dense vector(3,4,5) which begin with 3-th
   // row of mat.
   int seq_pos_array[] = {0, 1, 3, 6};
 
