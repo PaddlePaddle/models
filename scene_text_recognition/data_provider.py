@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 from __future__ import division
+from __future__ import print_function
 
 import os
-from paddle.v2.image import load_image
 import cv2
+
+from paddle.v2.image import load_image
 
 
 class AsciiDic(object):
@@ -30,7 +32,6 @@ class AsciiDic(object):
     def word2ids(self, sent):
         '''
         transform a word to a list of ids.
-        @sent: str
         '''
         return [self.lookup(c) for c in list(sent)]
 
@@ -46,11 +47,11 @@ class ImageDataset(object):
                  fixed_shape=None,
                  is_infer=False):
         '''
-        @image_paths_generator: function
-            return a list of images' paths, called like:
-
-                for path in image_paths_generator():
-                    load_image(path)
+        :param train_image_paths_generator:
+                            return list of train images' paths.
+        :type train_image_paths_generator: function
+        :param fixed_shape: fixed shape of images.
+        :type fixed_shape: tuple
         '''
         if is_infer == False:
             self.train_filelist = [p for p in train_image_paths_generator]
@@ -93,7 +94,7 @@ def get_file_list(image_file_list):
     pwd = os.path.dirname(image_file_list)
     with open(image_file_list) as f:
         for line in f:
-            fs = line.strip().split(',')
+            fs = line.strip().split(',', 1)
             file = fs[0].strip()
             path = os.path.join(pwd, file)
             yield path, fs[1][2:-1]

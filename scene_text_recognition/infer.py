@@ -1,13 +1,14 @@
 import logging
 import argparse
-import paddle.v2 as paddle
 import gzip
+
+import paddle.v2 as paddle
 from model import Model
 from data_provider import get_file_list, AsciiDic, ImageDataset
 from decoder import ctc_greedy_decoder
 
 
-def infer(inferer, test_batch, labels):
+def infer_batch(inferer, test_batch, labels):
     infer_results = inferer.infer(input=test_batch)
     num_steps = len(infer_results) // len(test_batch)
     probs_split = [
@@ -23,15 +24,11 @@ def infer(inferer, test_batch, labels):
         results.append(output_transcription)
 
     for result, label in zip(results, labels):
-        print("\nOutput Transcription: %s\nTarget Transcription: %s" % (result,
-                                                                        label))
+        print("\nOutput Transcription: %s\nTarget Transcription: %s" %
+              (result, label))
 
 
-if __name__ == "__main__":
-    model_path = "model.ctc-pass-1-batch-150-test-10.2607016472.tar.gz"
-    image_shape = "173,46"
-    batch_size = 50
-    infer_file_list = 'data/test_data/Challenge2_Test_Task3_GT.txt'
+def infer(model_path, image_shape, batch_size, infer_file_list):
     image_shape = tuple(map(int, image_shape.split(',')))
     infer_generator = get_file_list(infer_file_list)
 
@@ -49,8 +46,17 @@ if __name__ == "__main__":
         test_batch.append([image])
         labels.append(label)
         if len(test_batch) == batch_size:
-            infer(inferer, test_batch, labels)
+            infer_batch(inferer, test_batch, labels)
             test_batch = []
             labels = []
         if test_batch:
-            infer(inferer, test_batch, labels)
+            infer_batch(inferer, test_batch, labels)
+
+
+if __name__ == "__main__":
+    model_path = "model.ctc-pass-9-batch-150-test.tar.gz"
+    image_shape = "173,46"
+    batch_size = 50
+    infer_file_list = 'data/test_data/Challenge2_Test_Task3_GT.txt'
+
+    infer(model_path, image_shape, batch_size, infer_file_list)
