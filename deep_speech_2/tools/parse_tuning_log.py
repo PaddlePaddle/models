@@ -61,17 +61,17 @@ def parse_log():
     with open(args.log_path, "r") as log_file:
         line = log_file.readline()
         while line:
-            if line.find("error_rate_type:") != -1:
+            if err_rate_pat.match(line) is not None:
+                triple = num_pat.findall(line)
+                alphas.append(float(triple[0]))
+                betas.append(float(triple[1]))
+                err_ave.append(float(triple[2]))
+            elif line.find("error_rate_type:") != -1:
                 error_rate_type = line.strip().split()[1]
             elif line.find("num_alphas:") != -1:
                 num_alphas = int(line.strip().split()[1])
             elif line.find("num_betas:") != -1:
                 num_betas = int(line.strip().split()[1])
-            elif err_rate_pat.match(line) is not None:
-                tuples = num_pat.findall(line)
-                alphas.append(float(tuples[0]))
-                betas.append(float(tuples[1]))
-                err_ave.append(float(tuples[2]))
             line = log_file.readline()
 
     if error_rate_type == None:
