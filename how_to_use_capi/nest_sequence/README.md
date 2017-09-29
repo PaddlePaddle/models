@@ -2,7 +2,6 @@
 
 ### 1. 将网络配置转为protobuf二进制文件
 使用C-API进行预测时，需要先将网络配置转换为protobuf二进制文件，在本例的文件目录中包含 ```convert_protobin.sh``` , 它通过调用python中的```dump_config```模块来将目录下的配置文件 ```trainer_config.conf```转化为```trainer_config.bin```。 执行以下命令完成转换：
-
 ```shell
 sh convert_protobin.sh
 ```
