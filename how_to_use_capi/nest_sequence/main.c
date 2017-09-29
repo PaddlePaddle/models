@@ -30,13 +30,13 @@ int main() {
   const int ids_num = 20;
   int sentence_ids[ids_num];
 
-  FILE *fp;
-  if((fp = fopen("../data.txt","r"))==NULL){
+  FILE* fp;
+  if ((fp = fopen("../data.txt", "r")) == NULL) {
     printf("open data.txt error!\n");
     exit(1);
   }
-  for(int i = 0; i < ids_num; ++i){
-      fscanf(fp,"%d", &sentence_ids[i]);
+  for (int i = 0; i < ids_num; ++i) {
+    fscanf(fp, "%d", &sentence_ids[i]);
   }
 
   paddle_ivector sentence = paddle_ivector_create(
