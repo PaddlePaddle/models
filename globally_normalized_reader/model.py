@@ -195,7 +195,7 @@ def search_answer(doc_lstm_outs, sentence_idx, start_idx, end_idx, config,
     """Search the answer from the document.
 
     The search process for this layer begins with searching a target sequence
-    from a nested sequence by using paddle.lauer.kmax_seq_score and
+    from a nested sequence by using paddle.layer.kmax_seq_score and
     paddle.layer.sub_nested_seq_layer. In the first search step, top beam size
     sequences with highest scores, indices of these top k sequences in the
     original nested sequence, and the ground truth (also called gold)
