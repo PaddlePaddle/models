@@ -67,10 +67,13 @@ You can also visit https://github.com/baidu-research/GloballyNormalizedReader to
     docker pull paddledev/paddle
     ```
 2. Download all necessary data by running:
-   ```bash
-   cd data && ./download.sh
-   ```
-3. **(TODO) add the preprocess and featurizer scripts.**
+    ```bash
+    cd data && ./download.sh && cd ..
+    ```
+3. Preprocess and featurizer data:
+    ```bash
+    python featurize.py --datadir data --outdir data/featurized  --glove-path data/glove.840B.300d.txt
+    ```
 
 # Training a Model
 
