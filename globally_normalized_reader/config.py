@@ -5,7 +5,7 @@ __all__ = ["ModelConfig", "TrainerConfig"]
 
 
 class ModelConfig(object):
-    vocab_size = 104808
+    vocab_size = 104810
     embedding_dim = 300
     embedding_droprate = 0.3
 
