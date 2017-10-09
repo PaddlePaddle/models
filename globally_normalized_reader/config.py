@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #coding=utf-8
 
 __all__ = ["ModelConfig", "TrainerConfig"]
@@ -36,11 +35,12 @@ class TrainerConfig(object):
 
     epochs = 20
 
-    # for debug print, if set to 0, no information will be printed.
+    # This parameter is for debug printing.
+    # If it set to 0, no information will be printed.
     show_parameter_status_period = 0
     checkpoint_period = 100
-    log_period = 1
+    log_period = 5
 
-    # this is used to resume training, this path can set to previously
-    # trained model.
+    # This parameter is used to resume training.
+    # This path can be set to a previously trained model.
     init_model_path = None

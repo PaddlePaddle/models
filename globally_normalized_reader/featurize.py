@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#coding=utf-8
 """
 Convert the raw json data into training and validation examples.
 """
