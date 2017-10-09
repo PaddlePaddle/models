@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #coding=utf-8
 
 from __future__ import print_function
@@ -147,21 +146,26 @@ def build_event_handler(config, parameters, trainer):
     # End batch and end pass event handler
     def event_handler(event):
         """The event handler."""
+        """
+        To print the statistical information of gradients of any learnable
+        parameter, the event: EndForwardBackward rather than EndIteration
+        should be handled. For the reason that parameter gradients will be
+        reset to zeros when EndIteration event happens in GPU training.
+        """
+        if config.show_parameter_status_period and \
+                isinstance(event, paddle.event.EndForwardBackward):
+            if not event.batch_id % config.show_parameter_status_period:
+                show_parameter_status(parameters)
 
         if isinstance(event, paddle.event.EndIteration):
-            if  event.batch_id and \
-                    (not event.batch_id % config.checkpoint_period):
+            if event.batch_id and not event.batch_id % config.checkpoint_period:
                 save_path = os.path.join(config.save_dir,
                                          "checkpoint_param.latest.tar.gz")
                 save_model(save_path, parameters)
 
-            if event.batch_id and not event.batch_id % config.log_period:
+            if not event.batch_id % config.log_period:
                 logger.info("Pass %d, Batch %d, Cost %f" %
                             (event.pass_id, event.batch_id, event.cost))
-
-            if config.show_parameter_status_period and event.batch_id and \
-                    not (event.batch_id % config.show_parameter_status_period):
-                show_parameter_status(parameters)
 
         if isinstance(event, paddle.event.EndPass):
             save_path = os.path.join(config.save_dir,
