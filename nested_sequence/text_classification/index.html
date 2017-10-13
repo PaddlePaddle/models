@@ -118,7 +118,7 @@ python train.py
 ### 预测
 训练结束后模型将存储在指定目录当中（默认models目录），在终端执行：
 ```bash
-python infer.py
+python infer.py --model_path 'models/params_pass_00000.tar.gz'
 ```
 默认情况下，预测脚本将加载训练一个pass的模型对 `imdb的测试集` 进行测试。
 
@@ -181,20 +181,21 @@ def train_reader(data_dir, word_dict):
 `train.py`训练脚本中包含以下参数：
 ```
 Options:
-  --train_data_dir TEXT  path of training dataset (default: None). if this
+  --train_data_dir TEXT  The path of training dataset (default: None). If this
                          parameter is not set, imdb dataset will be used.
-  --test_data_dir TEXT   path of testing dataset (default: None). if this
+  --test_data_dir TEXT   The path of testing dataset (default: None). If this
                          parameter is not set, imdb dataset will be used.
-  --word_dict_path TEXT  path of word dictionary (default: None).if this
-                         parameter is not set, imdb dataset will be used.if
+  --word_dict_path TEXT  The path of word dictionary (default: None). If this
+                         parameter is not set, imdb dataset will be used. If
                          this parameter is set, but the file does not exist,
                          word dictionay will be built from the training data
                          automatically.
-  --class_num INTEGER    class number (default: 2).
-  --batch_size INTEGER   the number of training examples in one batch
+  --class_num INTEGER    The class number (default: 2).
+  --batch_size INTEGER   The number of training examples in one batch
                          (default: 32).
-  --num_passes INTEGER   number of passes to train (default: 10).
-  --model_save_dir TEXT  path to save the trained models (default: 'models').
+  --num_passes INTEGER   The number of passes to train (default: 10).
+  --model_save_dir TEXT  The path to save the trained models (default:
+                         'models').
   --help                 Show this message and exit.
 ```
 
@@ -212,20 +213,20 @@ python train.py --train_data_dir 'data/train_data' --test_data_dir 'data/test_da
 
 ```
 Options:
-  --data_path TEXT       path of data for inference (default: None). if this
-                         parameter is not set, imdb test dataset will be used.
-  --model_path TEXT      path of saved model. (default:
-                         'models/params_pass_00000.tar.gz')
-  --word_dict_path TEXT  path of word dictionary (default: None).if this
+  --data_path TEXT       The path of data for inference (default: None). If
+                         this parameter is not set, imdb test dataset will be
+                         used.
+  --model_path TEXT      The path of saved model.  [required]
+  --word_dict_path TEXT  The path of word dictionary (default: None). If this
                          parameter is not set, imdb dataset will be used.
-  --class_num INTEGER    class number (default: 2).
-  --batch_size INTEGER   the number of examples in one batch (default: 32).
+  --class_num INTEGER    The class number (default: 2).
+  --batch_size INTEGER   The number of examples in one batch (default: 32).
   --help                 Show this message and exit.
 ```
 
 2.以`data`目录下的示例数据为例，在终端执行：
 ```bash
-python infer.py --data_path 'data/infer.txt' --word_dict_path 'dict.txt'
+python infer.py --data_path 'data/infer.txt' --word_dict_path 'dict.txt' --model_path 'models/params_pass_00000.tar.gz'
 ```
 
 即可对样例数据进行预测。

@@ -7,8 +7,6 @@ def cnn_cov_group(group_input, hidden_size):
     conv4 = paddle.networks.sequence_conv_pool(
         input=group_input, context_len=4, hidden_size=hidden_size)
 
-    #output_group = paddle.layer.concat(input=[conv3, conv4])
-
     output_group = paddle.layer.fc(
         input=[conv3, conv4],
         size=hidden_size,
