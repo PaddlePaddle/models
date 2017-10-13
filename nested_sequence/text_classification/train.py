@@ -1,22 +1,57 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import os
 import sys
 import gzip
+import click
 
 import paddle.v2 as paddle
 
 import reader
 from network_conf import nest_net
-from utils import logger, parse_train_cmd
+from utils import build_dict, load_dict, logger
 
 
-def train(train_data_dir=None,
-          test_data_dir=None,
-          word_dict_path=None,
-          model_save_dir="models",
-          batch_size=32,
-          num_passes=10):
+@click.command('train')
+@click.option(
+    "--train_data_dir",
+    default=None,
+    help=("path of training dataset (default: None). "
+          "if this parameter is not set, "
+          "imdb dataset will be used."))
+@click.option(
+    "--test_data_dir",
+    default=None,
+    help=("path of testing dataset (default: None). "
+          "if this parameter is not set, "
+          "imdb dataset will be used."))
+@click.option(
+    "--word_dict_path",
+    type=str,
+    default=None,
+    help=("path of word dictionary (default: None)."
+          "if this parameter is not set, imdb dataset will be used."
+          "if this parameter is set, but the file does not exist, "
+          "word dictionay will be built from "
+          "the training data automatically."))
+@click.option(
+    "--class_num", type=int, default=2, help="class number (default: 2).")
+@click.option(
+    "--batch_size",
+    type=int,
+    default=32,
+    help=("the number of training examples in one batch "
+          "(default: 32)."))
+@click.option(
+    "--num_passes",
+    type=int,
+    default=10,
+    help="number of passes to train (default: 10).")
+@click.option(
+    "--model_save_dir",
+    type=str,
+    default="models",
+    help="path to save the trained models (default: 'models').")
+def train(train_data_dir, test_data_dir, word_dict_path, class_num,
+          model_save_dir, batch_size, num_passes):
     """
     :params train_data_path: path of training data, if this parameter
         is not specified, imdb dataset will be used to run this example
@@ -34,6 +69,10 @@ def train(train_data_dir=None,
     :params num_pass: train pass number
     :type num_pass: int
     """
+    if train_data_dir is not None:
+        assert word_dict_path, ("the parameter train_data_dir, word_dict_path "
+                                "should be set at the same time.")
+
     if not os.path.exists(model_save_dir):
         os.mkdir(model_save_dir)
 
@@ -60,14 +99,14 @@ def train(train_data_dir=None,
 
             # build the word dictionary to map the original string-typed
             # words into integer-typed index
-            reader.build_dict(
+            build_dict(
                 data_dir=train_data_dir,
                 save_path=word_dict_path,
                 use_col=1,
                 cutoff_fre=0)
 
-        word_dict = reader.load_dict(word_dict_path)
-        class_num = args.class_num
+        word_dict = load_dict(word_dict_path)
+        class_num = class_num
         logger.info("class number is : %d." % class_num)
 
         train_reader = paddle.batch(
@@ -145,19 +184,5 @@ def train(train_data_dir=None,
     logger.info("Training has finished.")
 
 
-def main(args):
-    train(
-        train_data_dir=args.train_data_dir,
-        test_data_dir=args.test_data_dir,
-        word_dict_path=args.word_dict,
-        batch_size=args.batch_size,
-        num_passes=args.num_passes,
-        model_save_dir=args.model_save_dir)
-
-
 if __name__ == "__main__":
-    args = parse_train_cmd()
-    if args.train_data_dir is not None:
-        assert args.word_dict, ("the parameter train_data_dir, word_dict_path "
-                                "should be set at the same time.")
-    main(args)
+    train()

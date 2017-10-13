@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 IMDB dataset.
 
@@ -155,37 +153,6 @@ def imdb_word_dict():
     """
     return imdb_build_dict(
         re.compile("aclImdb/((train)|(test))/((pos)|(neg))/.*\.txt$"), 150)
-
-
-def build_dict(data_dir, save_path, use_col=1, cutoff_fre=1):
-    values = collections.defaultdict(int)
-
-    for file_name in os.listdir(data_dir):
-        file_path = os.path.join(data_dir, file_name)
-        if not os.path.isfile(file_path):
-            continue
-        with open(file_path, "r") as fdata:
-            for line in fdata:
-                line_splits = line.strip().split("\t")
-                if len(line_splits) < use_col:
-                    continue
-                doc = line_splits[use_col]
-                for sent in doc.strip().split("."):
-                    for w in sent.split():
-                        values[w] += 1
-
-    values['<unk>'] = cutoff_fre
-    with open(save_path, "w") as f:
-        for v, count in sorted(
-                values.iteritems(), key=lambda x: x[1], reverse=True):
-            if count < cutoff_fre:
-                break
-            f.write("%s\t%d\n" % (v, count))
-
-
-def load_dict(dict_path):
-    return dict((line.strip().split("\t")[0], idx)
-                for idx, line in enumerate(open(dict_path, "r").readlines()))
 
 
 def train_reader(data_dir, word_dict):

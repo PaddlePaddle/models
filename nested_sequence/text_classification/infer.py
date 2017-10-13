@@ -1,16 +1,41 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import sys
 import os
 import gzip
+import click
 
 import paddle.v2 as paddle
 
 import reader
 from network_conf import nest_net
-from utils import logger
+from utils import logger, load_dict
 
 
+@click.command('infer')
+@click.option(
+    "--data_path",
+    default=None,
+    help=("path of data for inference (default: None). "
+          "if this parameter is not set, "
+          "imdb test dataset will be used."))
+@click.option(
+    "--model_path",
+    type=str,
+    default='models/params_pass_00000.tar.gz',
+    help=("path of saved model. "
+          "(default: 'models/params_pass_00000.tar.gz')"))
+@click.option(
+    "--word_dict_path",
+    type=str,
+    default=None,
+    help=("path of word dictionary (default: None)."
+          "if this parameter is not set, imdb dataset will be used."))
+@click.option(
+    "--class_num", type=int, default=2, help="class number (default: 2).")
+@click.option(
+    "--batch_size",
+    type=int,
+    default=32,
+    help="the number of examples in one batch (default: 32).")
 def infer(data_path, model_path, word_dict_path, batch_size, class_num):
     def _infer_a_batch(inferer, test_batch, ids_2_word):
         probs = inferer.infer(input=test_batch, field=["value"])
@@ -24,6 +49,7 @@ def infer(data_path, model_path, word_dict_path, batch_size, class_num):
                                   " ".join(["{:0.4f}".format(p)
                                             for p in prob]), word_text))
 
+    assert os.path.exists(model_path), "the trained model does not exist."
     logger.info("begin to predict...")
     use_default_data = (data_path is None)
 
@@ -37,7 +63,7 @@ def infer(data_path, model_path, word_dict_path, batch_size, class_num):
         assert os.path.exists(
             word_dict_path), "the word dictionary file does not exist"
 
-        word_dict = reader.load_dict(word_dict_path)
+        word_dict = load_dict(word_dict_path)
         word_reverse_dict = dict((value, key)
                                  for key, value in word_dict.iteritems())
 
@@ -68,15 +94,4 @@ def infer(data_path, model_path, word_dict_path, batch_size, class_num):
 
 
 if __name__ == "__main__":
-    model_path = "models/params_pass_00000.tar.gz"
-    assert os.path.exists(model_path), "the trained model does not exist."
-
-    infer_path = None
-    word_dict = None
-
-    infer(
-        data_path=infer_path,
-        word_dict_path=word_dict,
-        model_path=model_path,
-        batch_size=10,
-        class_num=2)
+    infer()
