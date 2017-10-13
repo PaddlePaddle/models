@@ -2,6 +2,7 @@
 #define __CAPI_EXAMPLE_COMMON_H__
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #define CHECK(stmt)                                                      \
   do {                                                                   \
@@ -18,11 +19,24 @@ void* read_config(const char* filename, long* size) {
     fprintf(stderr, "Open %s error\n", filename);
     return NULL;
   }
-  fseek(file, 0L, SEEK_END);
-  *size = ftell(file);
-  fseek(file, 0L, SEEK_SET);
+
+  struct stat filestat;
+  stat(filename, &filestat);
+  *size = filestat.st_size;
+
   void* buf = malloc(*size);
-  fread(buf, 1, *size, file);
+  if (buf == NULL) {
+    fprintf(stderr, "Memory error\n");
+    return NULL;
+  }
+
+  size_t result = fread(buf, 1, *size, file);
+  if (result != *size) {
+    fprintf(stderr, "Read %s error\n", filename);
+    free(buf);
+    return NULL;
+  }
+
   fclose(file);
   return buf;
 }
