@@ -265,7 +265,7 @@ for file_name, result in zip(file_list, lab):
 首先从文件中加载训练好的模型（代码里以第10轮迭代的结果为例），然后读取`image_list_file`中的图像。`image_list_file`是一个文本文件，每一行为一个图像路径。代码使用`paddle.infer`判断`image_list_file`中每个图像的类别，并进行输出。
 
 ## 使用预训练模型
-为方便进行测试和fine-tuning，我们提供了一些对应于示例中模型配置的预训练模型，目前包括在ImageNet 1000类上训练的ResNet50、ResNet101和Vgg16，请使用脚本`model_download.sh`进行模型下载，如下载ResNet50可执行"`sh model_download.sh ResNet50`"，完成后同目录下的`Paddle_ResNet50.tar.gz`即是训练好的模型，可以在代码中使用如下两种方式进行加载模：
+为方便进行测试和fine-tuning，我们提供了一些对应于示例中模型配置的预训练模型，目前包括在ImageNet 1000类上训练的ResNet50、ResNet101和Vgg16，请使用`models`目录下的脚本`model_download.sh`进行模型下载，如下载ResNet50可进入`models`目录并执行"`sh model_download.sh ResNet50`"，完成后同目录下的`Paddle_ResNet50.tar.gz`即是训练好的模型，可以在代码中使用如下两种方式进行加载模：
 
 ```python
 parameters = paddle.parameters.Parameters.from_tar(gzip.open('Paddle_ResNet50.tar.gz', 'r'))
