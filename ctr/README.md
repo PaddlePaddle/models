@@ -134,11 +134,11 @@ The model has three inputs as follows.
 ```python
 dnn_merged_input = layer.data(
     name='dnn_input',
-    type=paddle.data_type.sparse_binary_vector(data_meta_info['dnn_input']))
+    type=paddle.data_type.sparse_binary_vector(self.dnn_input_dim))
 
 lr_merged_input = layer.data(
     name='lr_input',
-    type=paddle.data_type.sparse_binary_vector(data_meta_info['lr_input']))
+    type=paddle.data_type.sparse_vector(self.lr_input_dim))
 
 click = paddle.layer.data(name='click', type=dtype.dense_vector(1))
 ```
