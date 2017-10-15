@@ -4,10 +4,10 @@ from config import ModelConfig as conf
 
 def cnn_cov_group(group_input, hidden_size):
     """
-    Covolution group definition
+    Convolution group definition.
     :param group_input: The input of this layer.
     :type group_input: LayerOutput
-    :params hidden_size: Size of FC layer.
+    :params hidden_size: The size of the fully connected layer.
     :type hidden_size: int
     """
     conv3 = paddle.networks.sequence_conv_pool(
@@ -32,7 +32,7 @@ def nested_net(dict_dim, class_num, is_infer=False):
     :type dict_dim: int
     :params class_num: Number of instance class.
     :type class_num: int
-    :params is_infer: The boolean parameter 
+    :params is_infer: The boolean parameter
                         indicating inferring or training.
     :type is_infer: bool
     """

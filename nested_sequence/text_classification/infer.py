@@ -58,6 +58,7 @@ def infer(data_path, model_path, word_dict_path, batch_size, label_dict_path):
         word_reverse_dict = dict((value, key)
                                  for key, value in word_dict.iteritems())
 
+        # The reversed label dict of the imdb dataset 
         label_reverse_dict = {0: "positive", 1: "negative"}
         test_reader = reader.imdb_test(word_dict)
         class_num = 2
@@ -75,10 +76,11 @@ def infer(data_path, model_path, word_dict_path, batch_size, label_dict_path):
         test_reader = reader.infer_reader(data_path, word_dict)()
 
     dict_dim = len(word_dict)
-    prob_layer = nested_net(dict_dim, class_num, is_infer=True)
 
     # initialize PaddlePaddle.
     paddle.init(use_gpu=False, trainer_count=1)
+
+    prob_layer = nested_net(dict_dim, class_num, is_infer=True)
 
     # load the trained models.
     parameters = paddle.parameters.Parameters.from_tar(

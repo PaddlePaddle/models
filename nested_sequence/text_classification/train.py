@@ -37,7 +37,7 @@ from config import TrainerConfig as conf
     "--label_dict_path",
     type=str,
     default=None,
-    help=("The path of label dictionary (default: None)."
+    help=("The path of label dictionary (default: None). "
           "If this parameter is not set, imdb dataset will be used. "
           "If this parameter is set, but the file does not exist, "
           "label dictionay will be built from "
@@ -50,16 +50,16 @@ from config import TrainerConfig as conf
 def train(train_data_dir, test_data_dir, word_dict_path, label_dict_path,
           model_save_dir):
     """
-    :params train_data_path: path of training data, if this parameter
+    :params train_data_path: The path of training data, if this parameter
         is not specified, imdb dataset will be used to run this example
     :type train_data_path: str
-    :params test_data_path: path of testing data, if this parameter
+    :params test_data_path: The path of testing data, if this parameter
         is not specified, imdb dataset will be used to run this example
     :type test_data_path: str
-    :params word_dict_path: path of word dictionary, if this parameter
+    :params word_dict_path: The path of word dictionary, if this parameter
         is not specified, imdb dataset will be used to run this example
     :type word_dict_path: str
-    :params label_dict_path: path of label dictionary, if this parameter
+    :params label_dict_path: The path of label dictionary, if this parameter
         is not specified, imdb dataset will be used to run this example
     :type label_dict_path: str
     :params model_save_dir: dir where models saved

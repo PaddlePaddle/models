@@ -76,8 +76,8 @@ pip install -r requirements.txt
 
 ## 指定训练配置参数
 
-`config.py`脚本中包含训练配置和模型配置的参数设置, 示例代码如下：
-```
+通过 `config.py` 脚本修改训练和模型配置参数，脚本中有对可配置参数的详细解释，示例如下：
+```python
 class TrainerConfig(object):
 
     # whether to use GPU for training
@@ -98,8 +98,7 @@ class ModelConfig(object):
 
     ...
 ```
-用户可以对具体参数进行设置实现训练， 例如通过设置 `use_gpu` 参数来指定是否使用 GPU
- 进行训练。
+修改 `config.py` 对参数进行调整。例如，通过修改 `use_gpu` 参数来指定是否使用 GPU 进行训练。
 
 ## 使用 PaddlePaddle 内置数据运行
 
@@ -200,7 +199,11 @@ Options:
 
 修改`train.py`脚本中的启动参数，可以直接运行本例。 以`data`目录下的示例数据为例，在终端执行：
 ```bash
-python train.py --train_data_dir 'data/train_data' --test_data_dir 'data/test_data' --word_dict_path 'word_dict.txt' --label_dict_path 'label_dict.txt'
+python train.py \
+  --train_data_dir 'data/train_data'  \
+  --test_data_dir 'data/test_data' \
+  --word_dict_path 'word_dict.txt' \
+  --label_dict_path 'label_dict.txt'
 ```
 即可对样例数据进行训练。
 
@@ -226,7 +229,11 @@ Options:
 
 2.以`data`目录下的示例数据为例，在终端执行：
 ```bash
-python infer.py --data_path 'data/infer.txt' --word_dict_path 'word_dict.txt' --label_dict_path 'label_dict.txt' --model_path 'models/params_pass_00000.tar.gz'
+python infer.py \
+  --data_path 'data/infer.txt' \
+  --word_dict_path 'word_dict.txt' \
+  --label_dict_path 'label_dict.txt' \
+  --model_path 'models/params_pass_00000.tar.gz'
 ```
 
 即可对样例数据进行预测。

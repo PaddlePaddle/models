@@ -3,37 +3,44 @@ __all__ = ["TrainerConfig", "ModelConfig"]
 
 class TrainerConfig(object):
 
-    # whether to use GPU for training
+    # Whether to use GPU in training or not.
     use_gpu = False
-    # the number of threads used in one machine
+    # The number of computing threads.
     trainer_count = 1
 
-    # train batch size
+    # The training batch size.
     batch_size = 32
 
-    # number of pass during training
+    # The epoch number.
     num_passes = 10
 
-    # learning rate for optimizer
+    # The global learning rate.
     learning_rate = 1e-3
 
-    # learning rate for L2Regularization
+    # The decay rate for L2Regularization
     l2_learning_rate = 1e-3
 
-    # average_window for ModelAverage
+    # This parameter is used for the averaged SGD.
+    # About the average_window * (number of the processed batch) parameters
+    # are used for average.
+    # To be accurate, between average_window *(number of the processed batch)
+    # and 2 * average_window * (number of the processed batch) parameters
+    # are used for average.
     average_window = 0.5
 
-    # buffer size for shuffling
+    # The buffer size of the data reader.
+    # The number of buffer size samples will be shuffled in training.
     buf_size = 1000
 
-    # log progress every log_period batches
+    # The parameter is used to control logging period.
+    # Training log will be printed every log_period.
     log_period = 100
 
 
 class ModelConfig(object):
 
-    # embedding vector dimension
+    # The dimension of embedding vector.
     emb_size = 28
 
-    # size of sentence vector representation and fc layer in cnn
+    # The hidden size of sentence vectors.
     hidden_size = 128
