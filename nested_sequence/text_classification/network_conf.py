@@ -1,34 +1,47 @@
 import paddle.v2 as paddle
+from config import ModelConfig as conf
 
 
 def cnn_cov_group(group_input, hidden_size):
+    """
+    Covolution group definition
+    :param group_input: The input of this layer.
+    :type group_input: LayerOutput
+    :params hidden_size: Size of FC layer.
+    :type hidden_size: int
+    """
     conv3 = paddle.networks.sequence_conv_pool(
         input=group_input, context_len=3, hidden_size=hidden_size)
     conv4 = paddle.networks.sequence_conv_pool(
         input=group_input, context_len=4, hidden_size=hidden_size)
 
-    output_group = paddle.layer.fc(
+    linear_proj = paddle.layer.fc(
         input=[conv3, conv4],
         size=hidden_size,
         param_attr=paddle.attr.ParamAttr(name='_cov_value_weight'),
         bias_attr=paddle.attr.ParamAttr(name='_cov_value_bias'),
         act=paddle.activation.Linear())
 
-    return output_group
+    return linear_proj
 
 
-def nest_net(dict_dim,
-             emb_size=28,
-             hidden_size=128,
-             class_num=2,
-             is_infer=False):
-
+def nested_net(dict_dim, class_num, is_infer=False):
+    """
+    Nested network definition.
+    :param dict_dim: Size of word dictionary.
+    :type dict_dim: int
+    :params class_num: Number of instance class.
+    :type class_num: int
+    :params is_infer: The boolean parameter 
+                        indicating inferring or training.
+    :type is_infer: bool
+    """
     data = paddle.layer.data(
         "word", paddle.data_type.integer_value_sub_sequence(dict_dim))
 
-    emb = paddle.layer.embedding(input=data, size=emb_size)
+    emb = paddle.layer.embedding(input=data, size=conf.emb_size)
     nest_group = paddle.layer.recurrent_group(
-        input=[paddle.layer.SubsequenceInput(emb), hidden_size],
+        input=[paddle.layer.SubsequenceInput(emb), conf.hidden_size],
         step=cnn_cov_group)
     avg_pool = paddle.layer.pooling(
         input=nest_group,

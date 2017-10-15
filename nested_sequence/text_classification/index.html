@@ -81,16 +81,25 @@ nest_group = paddle.layer.recurrent_group(input=[paddle.layer.SubsequenceInput(e
 CNN网络具体代码实现如下：
 ```python
 def cnn_cov_group(group_input, hidden_size):
+    """
+    Covolution group definition
+    :param group_input: The input of this layer.
+    :type group_input: LayerOutput
+    :params hidden_size: Size of FC layer.
+    :type hidden_size: int
+    """
     conv3 = paddle.networks.sequence_conv_pool(
         input=group_input, context_len=3, hidden_size=hidden_size)
     conv4 = paddle.networks.sequence_conv_pool(
         input=group_input, context_len=4, hidden_size=hidden_size)
-    output_group = paddle.layer.fc(input=[conv3, conv4],
+
+    linear_proj = paddle.layer.fc(input=[conv3, conv4],
                                   size=hidden_size,
                                   param_attr=paddle.attr.ParamAttr(name='_cov_value_weight'),
                                   bias_attr=paddle.attr.ParamAttr(name='_cov_value_bias'),
                                   act=paddle.activation.Linear())
-    return output_group
+
+    return linear_proj
 ```
 PaddlePaddle 中已经封装好的带有池化的文本序列卷积模块：`paddle.networks.sequence_conv_pool`，可直接调用。
 
@@ -106,6 +115,33 @@ prob = paddle.layer.mixed(size=class_num,
 ```bash
 pip install -r requirements.txt
 ```
+
+## 指定训练配置参数
+
+`config.py`脚本中包含训练配置和模型配置的参数设置, 示例代码如下：
+```
+class TrainerConfig(object):
+
+    # whether to use GPU for training
+    use_gpu = False
+    # the number of threads used in one machine
+    trainer_count = 1
+
+    # train batch size
+    batch_size = 32
+
+    ...
+
+
+class ModelConfig(object):
+
+    # embedding vector dimension
+    emb_size = 28
+
+    ...
+```
+用户可以对具体参数进行设置实现训练， 例如通过设置 `use_gpu` 参数来指定是否使用 GPU
+ 进行训练。
 
 ## 使用 PaddlePaddle 内置数据运行
 
@@ -130,15 +166,15 @@ python infer.py --model_path 'models/params_pass_00000.tar.gz'
 输入数据格式如下：每一行为一条样本，以 `\t` 分隔，第一列是类别标签，第二列是输入文本的内容。以下是两条示例数据：
 
     ```
-    1        This movie is very good. The actor is so handsome.
-    0        What a terrible movie. I waste so much time.
+    positive        This movie is very good. The actor is so handsome.
+    negative        What a terrible movie. I waste so much time.
     ```
 
 2.编写数据读取接口
 
 自定义数据读取接口只需编写一个 Python 生成器实现**从原始输入文本中解析一条训练样本**的逻辑。以下代码片段实现了读取原始数据返回类型为： `paddle.data_type.integer_value_sub_sequence` 和 `paddle.data_type.integer_value`
 ```python
-def train_reader(data_dir, word_dict):
+def train_reader(data_dir, word_dict, label_dict):
     """
     Reader interface for training data
 
@@ -147,6 +183,8 @@ def train_reader(data_dir, word_dict):
     :param word_dict: path of word dictionary,
         the dictionary must has a "UNK" in it.
     :type word_dict: Python dict
+    :param label_dict: path of label dictionary.
+    :type label_dict: Python dict
     """
 
     def reader():
@@ -170,38 +208,41 @@ def train_reader(data_dir, word_dict):
                         if sent_ids:
                             doc_ids.append(sent_ids)
 
-                    yield doc_ids, int(line_split[lbl_col])
+                    yield doc_ids, label_dict[line_split[lbl_col]]
 
     return reader
 ```
 需要注意的是， 本例中以英文句号`'.'`作为分隔符， 将一段文本分隔为一定数量的句子， 且每个句子表示为对应词表的索引数组（`sent_ids`）。 由于当前样本的表示(`doc_ids`)中包含了该段文本的所有句子， 因此，它的类型为：`paddle.data_type.integer_value_sub_sequence`。
+
 
 3.指定命令行参数进行训练
 
 `train.py`训练脚本中包含以下参数：
 ```
 Options:
-  --train_data_dir TEXT  The path of training dataset (default: None). If this
-                         parameter is not set, imdb dataset will be used.
-  --test_data_dir TEXT   The path of testing dataset (default: None). If this
-                         parameter is not set, imdb dataset will be used.
-  --word_dict_path TEXT  The path of word dictionary (default: None). If this
-                         parameter is not set, imdb dataset will be used. If
-                         this parameter is set, but the file does not exist,
-                         word dictionay will be built from the training data
-                         automatically.
-  --class_num INTEGER    The class number (default: 2).
-  --batch_size INTEGER   The number of training examples in one batch
-                         (default: 32).
-  --num_passes INTEGER   The number of passes to train (default: 10).
-  --model_save_dir TEXT  The path to save the trained models (default:
-                         'models').
-  --help                 Show this message and exit.
+  --train_data_dir TEXT   The path of training dataset (default: None). If
+                          this parameter is not set, imdb dataset will be
+                          used.
+  --test_data_dir TEXT    The path of testing dataset (default: None). If this
+                          parameter is not set, imdb dataset will be used.
+  --word_dict_path TEXT   The path of word dictionary (default: None). If this
+                          parameter is not set, imdb dataset will be used. If
+                          this parameter is set, but the file does not exist,
+                          word dictionay will be built from the training data
+                          automatically.
+  --label_dict_path TEXT  The path of label dictionary (default: None).If this
+                          parameter is not set, imdb dataset will be used. If
+                          this parameter is set, but the file does not exist,
+                          label dictionay will be built from the training data
+                          automatically.
+  --model_save_dir TEXT   The path to save the trained models (default:
+                          'models').
+  --help                  Show this message and exit.
 ```
 
 修改`train.py`脚本中的启动参数，可以直接运行本例。 以`data`目录下的示例数据为例，在终端执行：
 ```bash
-python train.py --train_data_dir 'data/train_data' --test_data_dir 'data/test_data' --word_dict_path 'dict.txt'
+python train.py --train_data_dir 'data/train_data' --test_data_dir 'data/test_data' --word_dict_path 'word_dict.txt' --label_dict_path 'label_dict.txt'
 ```
 即可对样例数据进行训练。
 
@@ -213,20 +254,21 @@ python train.py --train_data_dir 'data/train_data' --test_data_dir 'data/test_da
 
 ```
 Options:
-  --data_path TEXT       The path of data for inference (default: None). If
-                         this parameter is not set, imdb test dataset will be
-                         used.
-  --model_path TEXT      The path of saved model.  [required]
-  --word_dict_path TEXT  The path of word dictionary (default: None). If this
-                         parameter is not set, imdb dataset will be used.
-  --class_num INTEGER    The class number (default: 2).
-  --batch_size INTEGER   The number of examples in one batch (default: 32).
-  --help                 Show this message and exit.
+  --data_path TEXT        The path of data for inference (default: None). If
+                          this parameter is not set, imdb test dataset will be
+                          used.
+  --model_path TEXT       The path of saved model.  [required]
+  --word_dict_path TEXT   The path of word dictionary (default: None). If this
+                          parameter is not set, imdb dataset will be used.
+  --label_dict_path TEXT  The path of label dictionary (default: None).If this
+                          parameter is not set, imdb dataset will be used.
+  --batch_size INTEGER    The number of examples in one batch (default: 32).
+  --help                  Show this message and exit.
 ```
 
 2.以`data`目录下的示例数据为例，在终端执行：
 ```bash
-python infer.py --data_path 'data/infer.txt' --word_dict_path 'dict.txt' --model_path 'models/params_pass_00000.tar.gz'
+python infer.py --data_path 'data/infer.txt' --word_dict_path 'word_dict.txt' --label_dict_path 'label_dict.txt' --model_path 'models/params_pass_00000.tar.gz'
 ```
 
 即可对样例数据进行预测。

@@ -6,8 +6,8 @@ import click
 import paddle.v2 as paddle
 
 import reader
-from network_conf import nest_net
-from utils import logger, load_dict
+from network_conf import nested_net
+from utils import logger, load_dict, load_reverse_dict
 
 
 @click.command('infer')
@@ -26,14 +26,18 @@ from utils import logger, load_dict
     help=("The path of word dictionary (default: None). "
           "If this parameter is not set, imdb dataset will be used."))
 @click.option(
-    "--class_num", type=int, default=2, help="The class number (default: 2).")
+    "--label_dict_path",
+    type=str,
+    default=None,
+    help=("The path of label dictionary (default: None)."
+          "If this parameter is not set, imdb dataset will be used. "))
 @click.option(
     "--batch_size",
     type=int,
     default=32,
     help="The number of examples in one batch (default: 32).")
-def infer(data_path, model_path, word_dict_path, batch_size, class_num):
-    def _infer_a_batch(inferer, test_batch, ids_2_word):
+def infer(data_path, model_path, word_dict_path, batch_size, label_dict_path):
+    def _infer_a_batch(inferer, test_batch, ids_2_word, ids_2_label):
         probs = inferer.infer(input=test_batch, field=["value"])
         assert len(probs) == len(test_batch)
         for word_ids, prob in zip(test_batch, probs):
@@ -41,7 +45,7 @@ def infer(data_path, model_path, word_dict_path, batch_size, class_num):
             for sent in word_ids[0]:
                 sent_ids.extend(sent)
             word_text = " ".join([ids_2_word[id] for id in sent_ids])
-            print("%s\t%s\t%s" % (prob.argmax(),
+            print("%s\t%s\t%s" % (ids_2_label[prob.argmax()],
                                   " ".join(["{:0.4f}".format(p)
                                             for p in prob]), word_text))
 
@@ -53,25 +57,30 @@ def infer(data_path, model_path, word_dict_path, batch_size, class_num):
         word_dict = reader.imdb_word_dict()
         word_reverse_dict = dict((value, key)
                                  for key, value in word_dict.iteritems())
+
+        label_reverse_dict = {0: "positive", 1: "negative"}
         test_reader = reader.imdb_test(word_dict)
         class_num = 2
     else:
         assert os.path.exists(
             word_dict_path), "The word dictionary file does not exist"
+        assert os.path.exists(
+            label_dict_path), "The label dictionary file does not exist"
 
         word_dict = load_dict(word_dict_path)
         word_reverse_dict = dict((value, key)
                                  for key, value in word_dict.iteritems())
-
+        label_reverse_dict = load_reverse_dict(label_dict_path)
+        class_num = len(label_reverse_dict)
         test_reader = reader.infer_reader(data_path, word_dict)()
 
     dict_dim = len(word_dict)
-    prob_layer = nest_net(dict_dim, class_num=class_num, is_infer=True)
+    prob_layer = nested_net(dict_dim, class_num, is_infer=True)
 
-    # initialize PaddlePaddle
-    paddle.init(use_gpu=True, trainer_count=4)
+    # initialize PaddlePaddle.
+    paddle.init(use_gpu=False, trainer_count=1)
 
-    # load the trained models
+    # load the trained models.
     parameters = paddle.parameters.Parameters.from_tar(
         gzip.open(model_path, "r"))
     inferer = paddle.inference.Inference(
@@ -81,11 +90,13 @@ def infer(data_path, model_path, word_dict_path, batch_size, class_num):
     for idx, item in enumerate(test_reader):
         test_batch.append([item[0]])
         if len(test_batch) == batch_size:
-            _infer_a_batch(inferer, test_batch, word_reverse_dict)
+            _infer_a_batch(inferer, test_batch, word_reverse_dict,
+                           label_reverse_dict)
             test_batch = []
 
     if len(test_batch):
-        _infer_a_batch(inferer, test_batch, word_reverse_dict)
+        _infer_a_batch(inferer, test_batch, word_reverse_dict,
+                       label_reverse_dict)
         test_batch = []
 
 

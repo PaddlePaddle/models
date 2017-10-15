@@ -155,7 +155,7 @@ def imdb_word_dict():
         re.compile("aclImdb/((train)|(test))/((pos)|(neg))/.*\.txt$"), 150)
 
 
-def train_reader(data_dir, word_dict):
+def train_reader(data_dir, word_dict, label_dict):
     """
     Reader interface for training data
 
@@ -164,6 +164,8 @@ def train_reader(data_dir, word_dict):
     :param word_dict: path of word dictionary,
         the dictionary must has a "UNK" in it.
     :type word_dict: Python dict
+    :param label_dict: path of label dictionary.
+    :type label_dict: Python dict
     """
 
     def reader():
@@ -187,7 +189,7 @@ def train_reader(data_dir, word_dict):
                         if sent_ids:
                             doc_ids.append(sent_ids)
 
-                    yield doc_ids, int(line_split[lbl_col])
+                    yield doc_ids, label_dict[line_split[lbl_col]]
 
     return reader
 
