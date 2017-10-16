@@ -68,7 +68,7 @@ PaddlePaddle 实现该网络结构的代码见 `network_conf.py`。
 ``` python
 nest_group = paddle.layer.recurrent_group(input=[paddle.layer.SubsequenceInput(emb),
                                                  hidden_size],
-                                         step=cnn_cov_group)
+                                          step=cnn_cov_group)
 ```
 
 
@@ -82,10 +82,10 @@ CNN网络具体代码实现如下：
 ```python
 def cnn_cov_group(group_input, hidden_size):
     """
-    Covolution group definition
+    Convolution group definition.
     :param group_input: The input of this layer.
     :type group_input: LayerOutput
-    :params hidden_size: Size of FC layer.
+    :params hidden_size: The size of the fully connected layer.
     :type hidden_size: int
     """
     conv3 = paddle.networks.sequence_conv_pool(
@@ -105,11 +105,13 @@ PaddlePaddle 中已经封装好的带有池化的文本序列卷积模块：`pad
 
 在得到每个句子的表示向量之后， 将所有句子表示向量经过一个平均池化层， 得到一个样本的向量表示， 向量经过一个全连接层输出最终的预测结果。 代码如下：
 ```python
-avg_pool = paddle.layer.pooling(input=nest_group, pooling_type=paddle.pooling.Avg(),
-                                    agg_level=paddle.layer.AggregateLevel.TO_NO_SEQUENCE)  
+avg_pool = paddle.layer.pooling(input=nest_group,
+                                pooling_type=paddle.pooling.Avg(),
+                                agg_level=paddle.layer.AggregateLevel.TO_NO_SEQUENCE)
+
 prob = paddle.layer.mixed(size=class_num,
-                                     input=[paddle.layer.full_matrix_projection(input=avg_pool)],
-                                       act=paddle.activation.Softmax())
+                          input=[paddle.layer.full_matrix_projection(input=avg_pool)],
+                          act=paddle.activation.Softmax())
 ```
 ## 安装依赖包
 ```bash
@@ -164,10 +166,10 @@ python infer.py --model_path 'models/params_pass_00000.tar.gz'
 
 输入数据格式如下：每一行为一条样本，以 `\t` 分隔，第一列是类别标签，第二列是输入文本的内容。以下是两条示例数据：
 
-    ```
-    positive        This movie is very good. The actor is so handsome.
-    negative        What a terrible movie. I waste so much time.
-    ```
+```
+positive        This movie is very good. The actor is so handsome.
+negative        What a terrible movie. I waste so much time.
+```
 
 2.编写数据读取接口
 
