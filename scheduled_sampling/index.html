@@ -102,52 +102,52 @@ class RandomScheduleGenerator:
 `__init__`方法对类进行初始化，其`schedule_type`参数指定了使用哪种衰减方式，可选的方式有`constant`、`linear`、`exponential`和`inverse_sigmoid`。`constant`指对所有的mini-batch使用固定的$\epsilon_i$，`linear`指线性衰减方式，`exponential`表示指数衰减方式，`inverse_sigmoid`表示反向Sigmoid衰减。`__init__`方法的参数`a`和`b`表示衰减方法的参数，需要在验证集上调优。`self.schedule_computers`将衰减方式映射为计算$\epsilon_i$的函数。最后一行根据`schedule_type`将选择的衰减函数赋给`self.schedule_computer`变量。
 
 ```python
-    def __init__(self, schedule_type, a, b):
-        """
-        schduled_type: is the type of the decay. It supports constant, linear,
-        exponential, and inverse_sigmoid right now.
-        a: parameter of the decay (MUST BE DOUBLE)
-        b: parameter of the decay (MUST BE DOUBLE)
-        """
-        self.schedule_type = schedule_type
-        self.a = a
-        self.b = b
-        self.data_processed_ = 0
-        self.schedule_computers = {
-            "constant": lambda a, b, d: a,
-            "linear": lambda a, b, d: max(a, 1 - d / b),
-            "exponential": lambda a, b, d: pow(a, d / b),
-            "inverse_sigmoid": lambda a, b, d: b / (b + math.exp(d * a / b)),
-        }
-        assert (self.schedule_type in self.schedule_computers)
-        self.schedule_computer = self.schedule_computers[self.schedule_type]
+def __init__(self, schedule_type, a, b):
+    """
+    schduled_type: is the type of the decay. It supports constant, linear,
+    exponential, and inverse_sigmoid right now.
+    a: parameter of the decay (MUST BE DOUBLE)
+    b: parameter of the decay (MUST BE DOUBLE)
+    """
+    self.schedule_type = schedule_type
+    self.a = a
+    self.b = b
+    self.data_processed_ = 0
+    self.schedule_computers = {
+        "constant": lambda a, b, d: a,
+        "linear": lambda a, b, d: max(a, 1 - d / b),
+        "exponential": lambda a, b, d: pow(a, d / b),
+        "inverse_sigmoid": lambda a, b, d: b / (b + math.exp(d * a / b)),
+    }
+    assert (self.schedule_type in self.schedule_computers)
+    self.schedule_computer = self.schedule_computers[self.schedule_type]
 ```
 
 `getScheduleRate`根据衰减函数和已经处理的数据量计算$\epsilon_i$。
 
 ```python
-    def getScheduleRate(self):
-        """
-        Get the schedule sampling rate. Usually not needed to be called by the users
-        """
-        return self.schedule_computer(self.a, self.b, self.data_processed_)
+def getScheduleRate(self):
+    """
+    Get the schedule sampling rate. Usually not needed to be called by the users
+    """
+    return self.schedule_computer(self.a, self.b, self.data_processed_)
 
 ```
 
 `processBatch`方法根据概率值$\epsilon_i$进行采样，得到`indexes`，`indexes`中每个元素取值为`0`的概率为$\epsilon_i$，取值为`1`的概率为$1-\epsilon_i$。`indexes`决定了解码器的输入是真实元素还是生成的元素，取值为`0`表示使用真实元素，取值为`1`表示使用生成的元素。
 
 ```python
-    def processBatch(self, batch_size):
-        """
-        Get a batch_size of sampled indexes. These indexes can be passed to a
-        MultiplexLayer to select from the grouth truth and generated samples
-        from the last time step.
-        """
-        rate = self.getScheduleRate()
-        numbers = np.random.rand(batch_size)
-        indexes = (numbers >= rate).astype('int32').tolist()
-        self.data_processed_ += batch_size
-        return indexes
+def processBatch(self, batch_size):
+    """
+    Get a batch_size of sampled indexes. These indexes can be passed to a
+    MultiplexLayer to select from the grouth truth and generated samples
+    from the last time step.
+    """
+    rate = self.getScheduleRate()
+    numbers = np.random.rand(batch_size)
+    indexes = (numbers >= rate).astype('int32').tolist()
+    self.data_processed_ += batch_size
+    return indexes
 ```
 
 Scheduled Sampling需要在序列到序列模型的基础上增加一个输入`true_token_flag`，以控制解码器输入。
@@ -190,62 +190,62 @@ def gen_schedule_data(reader):
 训练时`recurrent_group`每一步调用的解码器函数如下：
 
 ```python
-    def gru_decoder_with_attention_train(enc_vec, enc_proj, true_word,
-                                         true_token_flag):
-        """
-        The decoder step for training.
-        :param enc_vec: the encoder vector for attention
-        :type enc_vec: LayerOutput
-        :param enc_proj: the encoder projection for attention
-        :type enc_proj: LayerOutput
-        :param true_word: the ground-truth target word
-        :type true_word: LayerOutput
-        :param true_token_flag: the flag of using the ground-truth target word
-        :type true_token_flag: LayerOutput
-        :return: the softmax output layer
-        :rtype: LayerOutput
-        """
+def gru_decoder_with_attention_train(enc_vec, enc_proj, true_word,
+                                     true_token_flag):
+    """
+    The decoder step for training.
+    :param enc_vec: the encoder vector for attention
+    :type enc_vec: LayerOutput
+    :param enc_proj: the encoder projection for attention
+    :type enc_proj: LayerOutput
+    :param true_word: the ground-truth target word
+    :type true_word: LayerOutput
+    :param true_token_flag: the flag of using the ground-truth target word
+    :type true_token_flag: LayerOutput
+    :return: the softmax output layer
+    :rtype: LayerOutput
+    """
 
-        decoder_mem = paddle.layer.memory(
-            name='gru_decoder', size=decoder_size, boot_layer=decoder_boot)
+    decoder_mem = paddle.layer.memory(
+        name='gru_decoder', size=decoder_size, boot_layer=decoder_boot)
 
-        context = paddle.networks.simple_attention(
-            encoded_sequence=enc_vec,
-            encoded_proj=enc_proj,
-            decoder_state=decoder_mem)
+    context = paddle.networks.simple_attention(
+        encoded_sequence=enc_vec,
+        encoded_proj=enc_proj,
+        decoder_state=decoder_mem)
 
-        gru_out_memory = paddle.layer.memory(
-            name='gru_out', size=target_dict_dim)
+    gru_out_memory = paddle.layer.memory(
+        name='gru_out', size=target_dict_dim)
 
-        generated_word = paddle.layer.max_id(input=gru_out_memory)
+    generated_word = paddle.layer.max_id(input=gru_out_memory)
 
-        generated_word_emb = paddle.layer.embedding(
-            input=generated_word,
-            size=word_vector_dim,
-            param_attr=paddle.attr.ParamAttr(name='_target_language_embedding'))
+    generated_word_emb = paddle.layer.embedding(
+        input=generated_word,
+        size=word_vector_dim,
+        param_attr=paddle.attr.ParamAttr(name='_target_language_embedding'))
 
-        current_word = paddle.layer.multiplex(
-            input=[true_token_flag, true_word, generated_word_emb])
+    current_word = paddle.layer.multiplex(
+        input=[true_token_flag, true_word, generated_word_emb])
 
-        with paddle.layer.mixed(size=decoder_size * 3) as decoder_inputs:
-            decoder_inputs += paddle.layer.full_matrix_projection(input=context)
-            decoder_inputs += paddle.layer.full_matrix_projection(
-                input=current_word)
+    with paddle.layer.mixed(size=decoder_size * 3) as decoder_inputs:
+        decoder_inputs += paddle.layer.full_matrix_projection(input=context)
+        decoder_inputs += paddle.layer.full_matrix_projection(
+            input=current_word)
 
-        gru_step = paddle.layer.gru_step(
-            name='gru_decoder',
-            input=decoder_inputs,
-            output_mem=decoder_mem,
-            size=decoder_size)
+    gru_step = paddle.layer.gru_step(
+        name='gru_decoder',
+        input=decoder_inputs,
+        output_mem=decoder_mem,
+        size=decoder_size)
 
-        with paddle.layer.mixed(
-                name='gru_out',
-                size=target_dict_dim,
-                bias_attr=True,
-                act=paddle.activation.Softmax()) as out:
-            out += paddle.layer.full_matrix_projection(input=gru_step)
+    with paddle.layer.mixed(
+            name='gru_out',
+            size=target_dict_dim,
+            bias_attr=True,
+            act=paddle.activation.Softmax()) as out:
+        out += paddle.layer.full_matrix_projection(input=gru_step)
 
-        return out
+    return out
 ```
 
 该函数使用`memory`层`gru_out_memory`记忆上一时刻生成的元素，根据`gru_out_memory`选择概率最大的词语`generated_word`作为生成的词语。`multiplex`层会在真实元素`true_word`和生成的元素`generated_word`之间做出选择，并将选择的结果作为解码器输入。`multiplex`层使用了三个输入，分别为`true_token_flag`、`true_word`和`generated_word_emb`。对于这三个输入中每个元素，若`true_token_flag`中的值为`0`，则`multiplex`层输出`true_word`中的相应元素；若`true_token_flag`中的值为`1`，则`multiplex`层输出`generated_word_emb`中的相应元素。
