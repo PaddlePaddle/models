@@ -31,7 +31,12 @@ def infer_a_batch(inferer, test_batch, id_to_word):
     default=1,
     help="Whether to use GPU in inference or not.")
 def infer(model_path, batch_size, use_gpu, trainer_count):
-    assert os.path.exists(model_path), "the trained model does not exist."
+    assert os.path.exists(model_path), "The trained model does not exist."
+    assert (batch_size and trainer_count and batch_size >= trainer_count), (
+        "batch_size and trainer_count must both be greater than 0. "
+        "And batch_size must be equal to "
+        "or greater than trainer_count.")
+
     word_to_id = paddle.dataset.imikolov.build_dict()
     id_to_word = dict((v, k) for k, v in word_to_id.items())
     dict_size = len(word_to_id)

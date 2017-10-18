@@ -73,7 +73,20 @@ NCE 层的一些重要参数解释如下：
 | act | 使用何种激活函数| 根据 NCE 的原理，这里应该使用 sigmoid 函数 |
 
 ## 预测
-1. 在命令行运行 `infer.py --model_path XX`，通过`model_path`指定训练好的模型所在的路径。
+1. 在命令行运行 :
+    ```bash
+    python infer.py \
+      --model_path "models/XX" \
+      --batch_size 1 \
+      --use_gpu false \
+      --trainer_count 1
+    ```
+    参数含义如下：
+    - `model_path`：指定训练好的模型所在的路径。必选。
+    - `batch_size`：一次预测并行的样本数目。可选，默认值为 `1`。
+    - `use_gpu`：是否使用 GPU 进行预测。可选，默认值为 `False`。
+    - `trainer_count` : 预测使用的线程数目。可选，默认为 `1`。**注意：预测使用的线程数目必选大于一次预测并行的样本数目**。
+
 2. 需要注意的是：**预测和训练的计算逻辑不同**。预测使用全连接矩阵乘法后接`softmax`激活，输出基于各类别的概率分布，需要替换训练中使用的`paddle.train.nce`层。在PaddlePaddle中，NCE层将可学习参数存储为一个 `[类别数目 × 上一层输出向量宽度]` 大小的矩阵，预测时，**全连接运算在加载NCE层学习到参数时，需要进行转置**，代码如下：
     ```python
     return paddle.layer.mixed(
@@ -85,8 +98,7 @@ NCE 层的一些重要参数解释如下：
     ```
     上述代码片段中的 `paddle.layer.mixed` 必须以 PaddlePaddle 中 `paddle.layer.×_projection` 为输入。`paddle.layer.mixed` 将多个 `projection` （输入可以是多个）计算结果求和作为输出。`paddle.layer.trans_full_matrix_projection` 在计算矩阵乘法时会对参数$W$进行转置。
 
-3. 运行 `python infer.py`。程序首先会加载指定的模型，然后按照 batch 大小依次进行预测，并打印预测结果。预测的输出格式如下：
-
+3. 预测的输出格式如下：
 	```text
 	0.6734  their   may want to move
 	```

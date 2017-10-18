@@ -34,6 +34,7 @@ def ngram_lm(hidden_size, embed_size, dict_size, gram_num=4, is_train=True):
         return paddle.layer.hsigmoid(
             input=hidden_layer,
             label=target_word,
+            num_classes=dict_size,
             param_attr=paddle.attr.Param(name="sigmoid_w"),
             bias_attr=paddle.attr.Param(name="sigmoid_b"))
     else:

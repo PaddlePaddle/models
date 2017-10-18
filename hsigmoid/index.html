@@ -151,7 +151,21 @@ return paddle.layer.mixed(
 训练比较简单，直接运行``` python train.py ```。程序第一次运行会检测用户缓存文件夹中是否包含imikolov数据集，如果未包含，则自动下载。运行过程中，每100个iteration会打印模型训练信息，主要包含训练损失和测试损失，每个pass会保存一次模型。
 
 ## 预测阶段
-预测时，在命令行运行 `infer.py --model_path XX`，通过`model_path`指定训练好的模型所在的路径。程序会首先load模型，然后按照batch方式进行预测，并打印预测结果。预测阶段最重要的就是根据概率得到编码路径，然后遍历路径获取最终的预测类别，这部分逻辑如下：
+在命令行运行 :
+```bash
+python infer.py \
+  --model_path "models/XX" \
+  --batch_size 1 \
+  --use_gpu false \
+  --trainer_count 1
+```
+参数含义如下：
+- `model_path`：指定训练好的模型所在的路径。必选。
+- `batch_size`：一次预测并行的样本数目。可选，默认值为 `1`。
+- `use_gpu`：是否使用 GPU 进行预测。可选，默认值为 `False`。
+- `trainer_count` : 预测使用的线程数目。可选，默认为 `1`。**注意：预测使用的线程数目必选大于一次预测并行的样本数目**。
+
+预测阶段根据多个二分类概率得到编码路径，遍历路径获取最终的预测类别，逻辑如下：
 
 ```python
 def decode_res(infer_res, dict_size):
@@ -184,7 +198,8 @@ def decode_res(infer_res, dict_size):
     return predict_lbls
 ```
 
-预测程序的输入数据格式与训练阶段相同，如have a dream that one，程序会根据have a dream that生成一组概率，通过对概率解码生成预测词，one作为真实词，方便评估。解码函数的输入是一个batch样本的预测概率以及词表的大小，里面的循环是对每条样本的输出概率进行解码，解码方式就是按照左0右1的准则，不断遍历路径，直至到达叶子节点。需要注意的是，本文选用的数据集需要较长的时间训练才能得到较好的结果，预测程序选用第一轮的模型，仅为展示方便，学习效果不能保证。
+预测程序的输入数据格式与训练阶段相同，如`have a dream that one`，程序会根据`have a dream that`生成一组概率，通过对概率解码生成预测词，`one`作为真实词，方便评估。解码函数的输入是一个batch样本的预测概率以及词表的大小，里面的循环是对每条样本的输出概率进行解码，解码方式就是按照左0右1的准则，不断遍历路径，直至到达叶子节点。
+
 ## 参考文献
 1. Morin, F., & Bengio, Y. (2005, January). [Hierarchical Probabilistic Neural Network Language Model](http://www.iro.umontreal.ca/~lisa/pointeurs/hierarchical-nnlm-aistats05.pdf). In Aistats (Vol. 5, pp. 246-252).
 
