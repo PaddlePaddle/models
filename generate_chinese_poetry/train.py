@@ -12,9 +12,9 @@ logger = logging.getLogger("paddle")
 logger.setLevel(logging.INFO)
 
 
-def save_model(save_path, parameters):
+def save_model(trainer, save_path, parameters):
     with gzip.open(save_path, "w") as f:
-        parameters.to_tar(f)
+        trainer.save_parameter_to_tar(f)
 
 
 def load_initial_model(model_path, parameters):
@@ -111,7 +111,7 @@ def train(num_passes,
                 save_path = os.path.join(save_dir_path,
                                          "pass_%05d_batch_%05d.tar.gz" %
                                          (event.pass_id, event.batch_id))
-                save_model(save_path, parameters)
+                save_model(trainer, save_path, parameters)
 
             if not event.batch_id % 5:
                 logger.info("Pass %d, Batch %d, Cost %f, %s" % (
@@ -120,7 +120,7 @@ def train(num_passes,
         if isinstance(event, paddle.event.EndPass):
             save_path = os.path.join(save_dir_path,
                                      "pass_%05d.tar.gz" % event.pass_id)
-            save_model(save_path, parameters)
+            save_model(trainer, save_path, parameters)
 
     # start training
     trainer.train(

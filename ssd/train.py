@@ -55,7 +55,7 @@ def train(train_file_list, dev_file_list, data_args, init_model_path):
         if isinstance(event, paddle.event.EndPass):
             with gzip.open('checkpoints/params_pass_%05d.tar.gz' % \
                     event.pass_id, 'w') as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
             result = trainer.test(reader=dev_reader, feeding=feeding)
             print "\nTest with Pass %d, TestCost: %f, Detection mAP=%g" % \
                     (event.pass_id,

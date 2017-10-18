@@ -38,7 +38,7 @@ def train(model_save_dir):
                                      "model_pass_%05d.tar.gz" % event.pass_id)
             logger.info("Save model into %s ..." % save_path)
             with gzip.open(save_path, "w") as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
     trainer.train(
         paddle.batch(

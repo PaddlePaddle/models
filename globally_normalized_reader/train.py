@@ -43,7 +43,7 @@ def load_pretrained_parameters(path):
     return np.load(path)
 
 
-def save_model(save_path, parameters):
+def save_model(trainer, save_path, parameters):
     """ Save the trained parameters.
 
     Arguments:
@@ -51,7 +51,7 @@ def save_model(save_path, parameters):
         - parameters:   The trained model parameters.
     """
     with gzip.open(save_path, "w") as f:
-        parameters.to_tar(f)
+        trainer.save_parameter_to_tar(f)
 
 
 def show_parameter_init_info(parameters):
@@ -161,7 +161,7 @@ def build_event_handler(config, parameters, trainer):
             if event.batch_id and not event.batch_id % config.checkpoint_period:
                 save_path = os.path.join(config.save_dir,
                                          "checkpoint_param.latest.tar.gz")
-                save_model(save_path, parameters)
+                save_model(trainer, save_path, parameters)
 
             if not event.batch_id % config.log_period:
                 logger.info("Pass %d, Batch %d, Cost %f" %
@@ -170,7 +170,7 @@ def build_event_handler(config, parameters, trainer):
         if isinstance(event, paddle.event.EndPass):
             save_path = os.path.join(config.save_dir,
                                      "pass_%05d.tar.gz" % event.pass_id)
-            save_model(save_path, parameters)
+            save_model(trainer, save_path, parameters)
 
     return event_handler
 

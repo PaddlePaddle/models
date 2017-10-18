@@ -50,7 +50,7 @@ def train(save_dir_path, source_dict_dim, target_dict_dim):
                         os.path.join(save_path,
                                      "nmt_without_att_%05d_batch_%05d.tar.gz" %
                                      event.pass_id, event.batch_id), "w") as f:
-                    parameters.to_tar(f)
+                    trainer.save_parameter_to_tar(f)
 
             if event.batch_id and not event.batch_id % 10:
                 logger.info("Pass %d, Batch %d, Cost %f, %s" % (

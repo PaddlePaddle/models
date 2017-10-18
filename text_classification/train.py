@@ -141,7 +141,7 @@ def train(topology,
             with gzip.open(
                     os.path.join(model_save_dir, "dnn_params_pass_%05d.tar.gz" %
                                  event.pass_id), "w") as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
     trainer.train(
         reader=train_reader,

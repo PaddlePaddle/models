@@ -60,7 +60,7 @@ def train(topology,
                                          "rnn_lm_pass_%05d_batch_%03d.tar.gz" %
                                          (event.pass_id, event.batch_id))
                 with gzip.open(save_name, "w") as f:
-                    parameters.to_tar(f)
+                    trainer.save_parameter_to_tar(f)
 
         if isinstance(event, paddle.event.EndPass):
             if test_reader is not None:
@@ -70,7 +70,7 @@ def train(topology,
             save_name = os.path.join(model_save_dir, "rnn_lm_pass_%05d.tar.gz" %
                                      (event.pass_id))
             with gzip.open(save_name, "w") as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
     logger.info("start training...")
     trainer.train(

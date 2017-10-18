@@ -81,6 +81,13 @@ def main():
         # reader.test_reader('val.list'),
         batch_size=BATCH_SIZE)
 
+    # Create trainer
+    trainer = paddle.trainer.SGD(
+        cost=cost,
+        parameters=parameters,
+        update_equation=optimizer,
+        extra_layers=extra_layers)
+
     # End batch and end pass event handler
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
@@ -89,17 +96,10 @@ def main():
                     event.pass_id, event.batch_id, event.cost, event.metrics)
         if isinstance(event, paddle.event.EndPass):
             with gzip.open('params_pass_%d.tar.gz' % event.pass_id, 'w') as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
             result = trainer.test(reader=test_reader)
             print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
-
-    # Create trainer
-    trainer = paddle.trainer.SGD(
-        cost=cost,
-        parameters=parameters,
-        update_equation=optimizer,
-        extra_layers=extra_layers)
 
     trainer.train(
         reader=train_reader, num_passes=200, event_handler=event_handler)
