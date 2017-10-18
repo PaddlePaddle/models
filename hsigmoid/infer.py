@@ -1,6 +1,7 @@
 import os
 import logging
 import gzip
+import click
 
 import paddle.v2 as paddle
 from network_conf import ngram_lm
@@ -51,10 +52,25 @@ def infer_a_batch(batch_ins, idx_word_dict, dict_size, inferer):
                         for w in ins]) + " -> " + predict_words[i])
 
 
-def infer(model_path, batch_size):
+@click.command("infer")
+@click.option(
+    "--model_path",
+    default="",
+    help="The path of the trained model for generation.")
+@click.option(
+    "--batch_size",
+    default=1,
+    help="The number of testing examples in one forward batch in inferring.")
+@click.option(
+    "--use_gpu", default=False, help="Whether to use GPU in inference or not.")
+@click.option(
+    "--trainer_count",
+    default=1,
+    help="Whether to use GPU in inference or not.")
+def infer(model_path, batch_size, use_gpu, trainer_count):
     assert os.path.exists(model_path), "trained model does not exist."
 
-    paddle.init(use_gpu=False, trainer_count=1)
+    paddle.init(use_gpu=use_gpu, trainer_count=trainer_count)
     word_dict = paddle.dataset.imikolov.build_dict(min_word_freq=2)
     dict_size = len(word_dict)
     prediction_layer = ngram_lm(
@@ -79,4 +95,4 @@ def infer(model_path, batch_size):
 
 
 if __name__ == "__main__":
-    infer("models/hsigmoid_batch_00010.tar.gz", 20)
+    infer()

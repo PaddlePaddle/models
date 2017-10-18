@@ -16,7 +16,13 @@ def main(save_dir="models"):
     paddle.init(use_gpu=False, trainer_count=1)
     word_dict = paddle.dataset.imikolov.build_dict(min_word_freq=2)
     dict_size = len(word_dict)
+
+    adam_optimizer = paddle.optimizer.Adam(
+        learning_rate=3e-3,
+        regularization=paddle.optimizer.L2Regularization(8e-4))
+
     cost = ngram_lm(hidden_size=256, embed_size=32, dict_size=dict_size)
+    parameters = paddle.parameters.create(cost)
 
     def event_handler(event):
         if isinstance(event, paddle.event.EndPass):
@@ -35,10 +41,6 @@ def main(save_dir="models"):
                     "Pass %d, Batch %d, Cost %f, Test Cost %f" %
                     (event.pass_id, event.batch_id, event.cost, result.cost))
 
-    parameters = paddle.parameters.create(cost)
-    adam_optimizer = paddle.optimizer.Adam(
-        learning_rate=3e-3,
-        regularization=paddle.optimizer.L2Regularization(8e-4))
     trainer = paddle.trainer.SGD(cost, parameters, adam_optimizer)
 
     trainer.train(

@@ -1,5 +1,6 @@
 import os
 import gzip
+import click
 import numpy as np
 
 import paddle.v2 as paddle
@@ -14,13 +15,28 @@ def infer_a_batch(inferer, test_batch, id_to_word):
                                 " ".join([id_to_word[w] for w in res[0]])))
 
 
-def infer(model_path, batch_size):
+@click.command("infer")
+@click.option(
+    "--model_path",
+    default="",
+    help="The path of the trained model for generation.")
+@click.option(
+    "--batch_size",
+    default=1,
+    help="The number of testing examples in one forward batch in inferring.")
+@click.option(
+    "--use_gpu", default=False, help="Whether to use GPU in inference or not.")
+@click.option(
+    "--trainer_count",
+    default=1,
+    help="Whether to use GPU in inference or not.")
+def infer(model_path, batch_size, use_gpu, trainer_count):
     assert os.path.exists(model_path), "the trained model does not exist."
     word_to_id = paddle.dataset.imikolov.build_dict()
     id_to_word = dict((v, k) for k, v in word_to_id.items())
     dict_size = len(word_to_id)
 
-    paddle.init(use_gpu=False, trainer_count=1)
+    paddle.init(use_gpu=use_gpu, trainer_count=trainer_count)
 
     # load the trained model.
     with gzip.open(model_path) as f:
@@ -44,4 +60,4 @@ def infer(model_path, batch_size):
 
 
 if __name__ == "__main__":
-    infer("models/model_pass_00000_00020.tar.gz", 10)
+    infer()
