@@ -28,6 +28,11 @@ def train(model_save_dir):
             if event.batch_id and not event.batch_id % 10:
                 logger.info("Pass %d, Batch %d, Cost %f" %
                             (event.pass_id, event.batch_id, event.cost))
+            save_path = os.path.join(model_save_dir,
+                                     "model_pass_%05d.tar.gz" % event.pass_id)
+            logger.info("Save model into %s ..." % save_path)
+            with gzip.open(save_path, "w") as f:
+                parameters.to_tar(f)
 
         if isinstance(event, paddle.event.EndPass):
             result = trainer.test(

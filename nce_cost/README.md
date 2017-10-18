@@ -17,7 +17,7 @@ J^h(\theta )=E_{ P_d^h }\left[ \log { P^h(D=1|w,\theta ) }  \right] +kE_{ P_n }\
 $$
  \\\\\qquad =E_{ P_d^h }\left[ \log { \sigma (\Delta s_\theta(w,h)) }  \right] +kE_{ P_n }\left[ \log (1-\sigma (\Delta s_\theta(w,h)))  \right]$$
 
-总体上来说，NCE 是通过构造逻辑回归（logistic regression），对正样例和负样例做二分类，对于每一个样本，将自身的预测词 label 作为正样例，同时采样出 $k$ 个其他词 label 作为负样例，从而只需要计算样本在这 $k+1$ 个 label 上的概率。相比原始的 `softmax ` 分类需要计算每个类别的分数，然后归一化得到概率，节约了大量的计算时间。
+简单来讲，NCE 是通过构造逻辑回归（logistic regression），对正样例和负样例做二分类，对于每一个样本，将自身的预测词 label 作为正样例，同时采样出 $k$ 个其他词 label 作为负样例，从而只需要计算样本在这 $k+1$ 个 label 上的概率。相比原始的 `softmax ` 分类需要计算每个类别的分数，然后归一化得到概率，节约了大量的计算时间。
 
 ## 实验数据
 本文采用 Penn Treebank (PTB) 数据集（[Tomas Mikolov预处理版本](http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz)）来训练语言模型。PaddlePaddle 提供 [paddle.dataset.imikolov](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/v2/dataset/imikolov.py) 接口来方便调用这些数据，如果当前目录没有找到数据它会自动下载并验证文件的完整性。并提供大小为5的滑动窗口对数据做预处理工作，方便后期处理。语料语种为英文，共有42068句训练数据，3761句测试数据。
@@ -52,7 +52,7 @@ N-gram 神经概率语言模型详细网络结构见图1：
 在模型文件`network_conf.py`中 NCE 调用代码如下：
 
 ```python
-cost = paddle.layer.nce(
+return paddle.layer.nce(
             input=hidden_layer,
             label=next_word,
             num_classes=dict_size,
@@ -73,22 +73,34 @@ NCE 层的一些重要参数解释如下：
 | act | 使用何种激活函数| 根据 NCE 的原理，这里应该使用 sigmoid 函数 |
 
 ## 预测
-1. 首先修改 `infer.py` 脚本的 `main` 函数指定需要测试的模型。
-2. 需要注意的是，**预测和训练的计算逻辑不同**，需要以一个全连接层:`paddle.layer.fc`替换训练使用的`paddle.train.nce`层， 并直接加载NCE学习到的参数，代码如下：
+1. 在命令行运行 :
+    ```bash
+    python infer.py \
+      --model_path "models/XX" \
+      --batch_size 1 \
+      --use_gpu false \
+      --trainer_count 1
+    ```
+    参数含义如下：
+    - `model_path`：指定训练好的模型所在的路径。必选。
+    - `batch_size`：一次预测并行的样本数目。可选，默认值为 `1`。
+    - `use_gpu`：是否使用 GPU 进行预测。可选，默认值为 `False`。
+    - `trainer_count` : 预测使用的线程数目。可选，默认为 `1`。**注意：预测使用的线程数目必选大于一次预测并行的样本数目**。
 
-	```python
-	prediction = paddle.layer.fc(
-	    size=dict_size,
-	    act=paddle.activation.Softmax(),
-	    bias_attr=paddle.attr.Param(name="nce_b"),
-	    input=hidden_layer,
-	    param_attr=paddle.attr.Param(name="nce_w"))
-	```
-3. 运行 `python infer.py`。程序首先会加载指定的模型，然后按照 batch 大小依次进行预测，并打印预测结果。预测的输出格式如下：
+2. 需要注意的是：**预测和训练的计算逻辑不同**。预测使用全连接矩阵乘法后接`softmax`激活，输出基于各类别的概率分布，需要替换训练中使用的`paddle.train.nce`层。在PaddlePaddle中，NCE层将可学习参数存储为一个 `[类别数目 × 上一层输出向量宽度]` 大小的矩阵，预测时，**全连接运算在加载NCE层学习到参数时，需要进行转置**，代码如下：
+    ```python
+    return paddle.layer.mixed(
+          size=dict_size,
+          input=paddle.layer.trans_full_matrix_projection(
+              hidden_layer, param_attr=paddle.attr.Param(name="nce_w")),
+          act=paddle.activation.Sigmoid(),
+          bias_attr=paddle.attr.Param(name="nce_b"))
+    ```
+    上述代码片段中的 `paddle.layer.mixed` 必须以 PaddlePaddle 中 `paddle.layer.×_projection` 为输入。`paddle.layer.mixed` 将多个 `projection` （输入可以是多个）计算结果求和作为输出。`paddle.layer.trans_full_matrix_projection` 在计算矩阵乘法时会对参数$W$进行转置。
 
+3. 预测的输出格式如下：
 	```text
 	0.6734  their   may want to move
-
 	```
 
 	每一行是一条预测结果，内部以“\t”分隔，共计3列：

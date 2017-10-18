@@ -99,7 +99,7 @@ def train_data(filename, word_dict, n):
 图2. 网络配置结构
 </p>
 
-代码实现如下：
+代码如下：
 
 ```python
 def ngram_lm(hidden_size, embed_size, dict_size, gram_num=4, is_train=True):
@@ -128,31 +128,44 @@ def ngram_lm(hidden_size, embed_size, dict_size, gram_num=4, is_train=True):
         param_attr=paddle.attr.Param(
             initial_std=1. / math.sqrt(embed_size * 8), learning_rate=1))
 
-    if is_train == True:
-        cost = paddle.layer.hsigmoid(
-            input=hidden_layer,
-            label=target_word,
-            num_classes=dict_size,
-            param_attr=paddle.attr.Param(name="sigmoid_w"),
-            bias_attr=paddle.attr.Param(name="sigmoid_b"))
-        return cost
-    else:
-        prediction = paddle.layer.fc(
-            size=dict_size - 1,
-            input=hidden_layer,
-            act=paddle.activation.Sigmoid(),
-            bias_attr=paddle.attr.Param(name="sigmoid_b"),
-            param_attr=paddle.attr.Param(name="sigmoid_w"))
-        return prediction
+    return paddle.layer.hsigmoid(
+                input=hidden_layer,
+                label=target_word,
+                param_attr=paddle.attr.Param(name="sigmoid_w"),
+                bias_attr=paddle.attr.Param(name="sigmoid_b"))
 ```
 
-需要注意，在预测阶段，我们需要对hsigmoid参数做一次转置，这里输出的类别数为词典大小减1，对应非叶节点的数量。
+需要注意在 PaddlePaddle 中，hsigmoid 层将可学习参数存储为一个 `[类别数目 - 1 × 隐层向量宽度]` 大小的矩阵。预测时，需要将 hsigmoid 层替换为全连接运算**并固定以 `sigmoid` 为激活**。预测时输出一个宽度为`[batch_size x 类别数目 - 1]` 维度的矩阵（`batch_size = 1`时退化为一个向量）。矩阵行向量的每一维计算了一个输入向量属于一个内部结点的右孩子的概率。**全连接运算在加载 hsigmoid 层学习到的参数矩阵时，需要对参数矩阵进行一次转置**。代码片段如下：
+
+```python
+return paddle.layer.mixed(
+    size=dict_size - 1,
+    input=paddle.layer.trans_full_matrix_projection(
+        hidden_layer, param_attr=paddle.attr.Param(name="sigmoid_w")),
+    act=paddle.activation.Sigmoid(),
+    bias_attr=paddle.attr.Param(name="sigmoid_b"))
+```
+上述代码片段中的 `paddle.layer.mixed` 必须以 PaddlePaddle 中 `paddle.layer.×_projection` 为输入。`paddle.layer.mixed` 将多个 `projection` （输入可以是多个）计算结果求和作为输出。`paddle.layer.trans_full_matrix_projection` 在计算矩阵乘法时会对参数$W$进行转置。
 
 ## 训练阶段
 训练比较简单，直接运行``` python train.py ```。程序第一次运行会检测用户缓存文件夹中是否包含imikolov数据集，如果未包含，则自动下载。运行过程中，每100个iteration会打印模型训练信息，主要包含训练损失和测试损失，每个pass会保存一次模型。
 
 ## 预测阶段
-预测时，直接运行``` python infer.py ```，程序会首先load模型，然后按照batch方式进行预测，并打印预测结果。预测阶段最重要的就是根据概率得到编码路径，然后遍历路径获取最终的预测类别，这部分逻辑如下：
+在命令行运行 :
+```bash
+python infer.py \
+  --model_path "models/XX" \
+  --batch_size 1 \
+  --use_gpu false \
+  --trainer_count 1
+```
+参数含义如下：
+- `model_path`：指定训练好的模型所在的路径。必选。
+- `batch_size`：一次预测并行的样本数目。可选，默认值为 `1`。
+- `use_gpu`：是否使用 GPU 进行预测。可选，默认值为 `False`。
+- `trainer_count` : 预测使用的线程数目。可选，默认为 `1`。**注意：预测使用的线程数目必选大于一次预测并行的样本数目**。
+
+预测阶段根据多个二分类概率得到编码路径，遍历路径获取最终的预测类别，逻辑如下：
 
 ```python
 def decode_res(infer_res, dict_size):
@@ -185,7 +198,8 @@ def decode_res(infer_res, dict_size):
     return predict_lbls
 ```
 
-预测程序的输入数据格式与训练阶段相同，如have a dream that one，程序会根据have a dream that生成一组概率，通过对概率解码生成预测词，one作为真实词，方便评估。解码函数的输入是一个batch样本的预测概率以及词表的大小，里面的循环是对每条样本的输出概率进行解码，解码方式就是按照左0右1的准则，不断遍历路径，直至到达叶子节点。需要注意的是，本文选用的数据集需要较长的时间训练才能得到较好的结果，预测程序选用第一轮的模型，仅为展示方便，学习效果不能保证。
+预测程序的输入数据格式与训练阶段相同，如`have a dream that one`，程序会根据`have a dream that`生成一组概率，通过对概率解码生成预测词，`one`作为真实词，方便评估。解码函数的输入是一个batch样本的预测概率以及词表的大小，里面的循环是对每条样本的输出概率进行解码，解码方式就是按照左0右1的准则，不断遍历路径，直至到达叶子节点。
+
 ## 参考文献
 1. Morin, F., & Bengio, Y. (2005, January). [Hierarchical Probabilistic Neural Network Language Model](http://www.iro.umontreal.ca/~lisa/pointeurs/hierarchical-nnlm-aistats05.pdf). In Aistats (Vol. 5, pp. 246-252).
 
