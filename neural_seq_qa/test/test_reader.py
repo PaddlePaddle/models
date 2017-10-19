@@ -19,11 +19,12 @@ ch = logging.StreamHandler()
 ch.setFormatter(formatter)
 utils.logger.addHandler(ch)
 
+
 class Vocab(object):
     @property
     def data(self):
-        word_dict_path = os.path.join(
-                topdir, "data", "embedding", "wordvecs.vcb")
+        word_dict_path = os.path.join(topdir, "data", "embedding",
+                                      "wordvecs.vcb")
         return utils.load_dict(word_dict_path)
 
 
@@ -52,7 +53,7 @@ class NegativeSampleRatioTest(unittest.TestCase):
     def runTest(self):
         for ratio in [1., 0.25, 0.]:
             self.check_ratio(ratio)
-    
+
 
 class KeepFirstBTest(unittest.TestCase):
     def runTest(self):
@@ -103,7 +104,7 @@ class DictTest(unittest.TestCase):
 
         self.assertGreater(len(q_uniq_ids), 50)
         self.assertGreater(len(e_uniq_ids), 50)
-    
+
 
 if __name__ == '__main__':
     unittest.main()
