@@ -28,8 +28,7 @@ def train(model_save_dir):
             if event.batch_id and not event.batch_id % 10:
                 logger.info("Pass %d, Batch %d, Cost %f" %
                             (event.pass_id, event.batch_id, event.cost))
-
-        if isinstance(event, paddle.event.EndPass):
+        elif isinstance(event, paddle.event.EndPass):
             result = trainer.test(
                 paddle.batch(paddle.dataset.imikolov.test(word_dict, 5), 64))
             logger.info("Test Pass %d, Cost %f" % (event.pass_id, result.cost))
