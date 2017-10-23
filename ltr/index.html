@@ -386,6 +386,10 @@ feeding = {"label":0,
 
 LTR在实际生活中有着广泛的应用。排序模型构造方法一般可划分为PointWise方法，Pairwise方法，Listwise方法，本例以LETOR的mq2007数据为例子，阐述了Pairwise的经典方法RankNet和Listwise方法中的LambdaRank，展示如何使用PaddlePaddle框架构造对应的排序模型结构，并提供了自定义数据类型样例。PaddlePaddle提供了灵活的编程接口，并可以使用一套代码运行在单机单GPU和多机分布式多GPU下实现LTR类型任务。
 
+## 注意事项
+
+本例作为LTR的演示示例，所采用的网络规模较小，在应用中须结合实际情况进行设置。本例实验数据中的特征向量为**查询-文档对**的联合特征，当使用查询和文档的独立特征时，可参考[DSSM](https://github.com/PaddlePaddle/models/tree/develop/dssm)。
+
 ## 参考文献
 
 1. https://en.wikipedia.org/wiki/Learning_to_rank
