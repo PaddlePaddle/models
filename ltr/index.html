@@ -96,7 +96,7 @@ bash ./run_lambdarank.sh
 
 例如调用接口
 
-```bash
+```python
 pairwise_train_dataset = functools.partial(paddle.dataset.mq2007.train, format="pairwise")
 for label, left_doc, right_doc in pairwise_train_dataset():
     ...
@@ -146,7 +146,7 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}} = \frac{1}{2}(1-S_{i,j})-\fra
 
 由于Pairwise中的网络结构是左右对称，可定义一半网络结构，另一半共享网络参数。在PaddlePaddle中允许网络结构中共享连接，具有相同名字的参数将会共享参数。使用PaddlePaddle实现RankNet排序模型，定义网络结构的示例代码如下：
 
-```bash
+```python
 import paddle.v2 as paddle
 
 def half_ranknet(name_prefix, input_dim):
@@ -191,8 +191,8 @@ def ranknet(input_dim):
 
 RankNet的训练只需要运行命令：
 
-```python
-run ./run_ranknet.sh
+```bash
+bash ./run_ranknet.sh
 ```
 将会自动下载数据，训练RankNet模型，并将每个轮次的模型参数存储下来。
 
@@ -318,7 +318,7 @@ def lambda_rank(input_dim):
 
 训练LambdaRank模型只需要运行命令：
 
-```python
+```bash
 bash ./run_lambdarank.sh
 ```
 
@@ -385,6 +385,10 @@ feeding = {"label":0,
 ## 总结
 
 LTR在实际生活中有着广泛的应用。排序模型构造方法一般可划分为PointWise方法，Pairwise方法，Listwise方法，本例以LETOR的mq2007数据为例子，阐述了Pairwise的经典方法RankNet和Listwise方法中的LambdaRank，展示如何使用PaddlePaddle框架构造对应的排序模型结构，并提供了自定义数据类型样例。PaddlePaddle提供了灵活的编程接口，并可以使用一套代码运行在单机单GPU和多机分布式多GPU下实现LTR类型任务。
+
+## 注意事项
+
+本例作为LTR的演示示例，所采用的网络规模较小，在应用中须结合实际情况进行设置。本例实验数据中的特征向量为**查询-文档对**的联合特征，当使用查询和文档的独立特征时，可参考[DSSM](https://github.com/PaddlePaddle/models/tree/develop/dssm)。
 
 ## 参考文献
 
