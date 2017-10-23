@@ -54,7 +54,7 @@ bash ./run_lambdarank.sh
 
 例如调用接口
 
-```bash
+```python
 pairwise_train_dataset = functools.partial(paddle.dataset.mq2007.train, format="pairwise")
 for label, left_doc, right_doc in pairwise_train_dataset():
     ...
@@ -104,7 +104,7 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}} = \frac{1}{2}(1-S_{i,j})-\fra
 
 由于Pairwise中的网络结构是左右对称，可定义一半网络结构，另一半共享网络参数。在PaddlePaddle中允许网络结构中共享连接，具有相同名字的参数将会共享参数。使用PaddlePaddle实现RankNet排序模型，定义网络结构的示例代码如下：
 
-```bash
+```python
 import paddle.v2 as paddle
 
 def half_ranknet(name_prefix, input_dim):
@@ -149,8 +149,8 @@ def ranknet(input_dim):
 
 RankNet的训练只需要运行命令：
 
-```python
-run ./run_ranknet.sh
+```bash
+bash ./run_ranknet.sh
 ```
 将会自动下载数据，训练RankNet模型，并将每个轮次的模型参数存储下来。
 
@@ -276,7 +276,7 @@ def lambda_rank(input_dim):
 
 训练LambdaRank模型只需要运行命令：
 
-```python
+```bash
 bash ./run_lambdarank.sh
 ```
 
