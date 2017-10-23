@@ -237,7 +237,7 @@ def train(train_data_path=None,
                 with open("%sdssm_%s_pass_%05d.tar" %
                           (args.model_output_prefix, model_desc,
                            event.pass_id), "w") as f:
-                    parameters.to_tar(f)
+                    trainer.save_parameter_to_tar(f)
 
     trainer.train(
         reader=train_reader,

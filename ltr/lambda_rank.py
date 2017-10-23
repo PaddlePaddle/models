@@ -82,7 +82,7 @@ def train_lambda_rank(num_passes):
             print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
             with gzip.open("lambda_rank_params_%d.tar.gz" % (event.pass_id),
                            "w") as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
     feeding = {"label": 0, "data": 1}
     trainer.train(

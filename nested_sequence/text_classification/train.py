@@ -179,7 +179,7 @@ def train(train_data_dir, test_data_dir, word_dict_path, label_dict_path,
             with gzip.open(
                     os.path.join(model_save_dir, "params_pass_%05d.tar.gz" %
                                  event.pass_id), "w") as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
     # begin training network
     trainer.train(

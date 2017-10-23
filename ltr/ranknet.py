@@ -86,7 +86,7 @@ def train_ranknet(num_passes):
             print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
             with gzip.open("ranknet_params_%d.tar.gz" % (event.pass_id),
                            "w") as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
     trainer.train(
         reader=train_reader,

@@ -264,7 +264,7 @@ def main():
                 # save parameters
                 with gzip.open('params_pass_%d.tar.gz' % event.pass_id,
                                'w') as f:
-                    parameters.to_tar(f)
+                    trainer.save_parameter_to_tar(f)
 
         # start to train
         trainer.train(

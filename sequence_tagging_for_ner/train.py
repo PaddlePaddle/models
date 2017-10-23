@@ -87,7 +87,7 @@ def main(train_data_file,
             with gzip.open(
                     os.path.join(model_save_dir, "params_pass_%d.tar.gz" %
                                  event.pass_id), "w") as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
             result = trainer.test(reader=test_reader, feeding=feeding)
             logger.info("\nTest with Pass %d, %s" % (event.pass_id,

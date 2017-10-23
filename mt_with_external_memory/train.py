@@ -129,7 +129,7 @@ def train():
                 print "Pass: %d, Batch: %d, TrainCost: %f, %s" % (
                     event.pass_id, event.batch_id, event.cost, event.metrics)
                 with gzip.open("checkpoints/params.latest.tar.gz", 'w') as f:
-                    parameters.to_tar(f)
+                    trainer.save_parameter_to_tar(f)
             else:
                 sys.stdout.write('.')
                 sys.stdout.flush()
@@ -139,7 +139,7 @@ def train():
                                                   result.metrics)
             with gzip.open("checkpoints/params.pass-%d.tar.gz" % event.pass_id,
                            'w') as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
     # run train
     if not os.path.exists('checkpoints'):
