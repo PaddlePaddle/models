@@ -109,7 +109,7 @@ def main():
         test_reader = paddle.batch(
             paddle.reader.shuffle(
                 reader.rnn_reader(**reader_args), buf_size=65536),
-            batch_size=config.batch_size)
+            batch_size=conf.batch_size)
 
     train(
         topology=cost,
