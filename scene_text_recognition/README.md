@@ -4,7 +4,7 @@
 
 在现实生活中，包括路牌、菜单、大厦标语在内的很多场景均会有文字出现，这些场景的照片中的文字为图片场景的理解提供了更多信息，\[[1](#参考文献)\]使用深度学习模型自动识别路牌中的文字，帮助街景应用获取更加准确的地址信息。
 
-本例将演示如何用 PaddlePaddle 完成 **场景文字识别 (STR, Scene Text Recognition)** 任务。以下图为例，给定一个场景图片，STR需要从图片中识别出对应的文字"keep":
+本例将演示如何用 PaddlePaddle 完成 **场景文字识别 (STR, Scene Text Recognition)** 任务。以下图为例，给定一个场景图片，STR需要从图片中识别出对应的文字"keep"。
 
 <p align="center">
 <img src="./images/503.jpg"/><br/>
@@ -14,70 +14,66 @@
 
 ## 使用 PaddlePaddle 训练与预测
 
+### 安装依赖包
+```bash
+pip install -r requirements.txt
+```
+
+### 指定训练配置参数
+
+通过 `config.py` 脚本修改训练和模型配置参数，脚本中有对可配置参数的详细解释，示例如下：
+```python
+class TrainerConfig(object):
+
+      # Whether to use GPU in training or not.
+      use_gpu = True
+      # The number of computing threads.
+      trainer_count = 1
+
+      # The training batch size.
+      batch_size = 10
+
+      ...
+
+
+class ModelConfig(object):
+
+      # Number of the filters for convolution group.
+      filter_num = 8
+
+      ...
+```
+修改 `config.py` 对参数进行调整。例如，通过修改 `use_gpu` 参数来指定是否使用 GPU 进行训练。
+
 ### 模型训练
 训练脚本 [./train.py](./train.py) 中设置了如下命令行参数：
 
 ```
-usage: train.py [-h] --image_shape IMAGE_SHAPE --train_file_list
-                TRAIN_FILE_LIST --test_file_list TEST_FILE_LIST
-                [--batch_size BATCH_SIZE]
-                [--model_output_prefix MODEL_OUTPUT_PREFIX]
-                [--trainer_count TRAINER_COUNT]
-                [--save_period_by_batch SAVE_PERIOD_BY_BATCH]
-                [--num_passes NUM_PASSES]
+Options:
+  --train_file_list_path TEXT  The path of the file which contains path list
+                               of train image files.  [required]
+  --test_file_list_path TEXT   The path of the file which contains path list
+                               of test image files.  [required]
+  --model_save_dir TEXT        The path to save the trained models (default:
+                               'models').
+  --help                       Show this message and exit.
 
-PaddlePaddle CTC example
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --image_shape IMAGE_SHAPE
-                        image's shape, format is like '173,46'
-  --train_file_list TRAIN_FILE_LIST
-                        path of the file which contains path list of train
-                        image files
-  --test_file_list TEST_FILE_LIST
-                        path of the file which contains path list of test
-                        image files
-  --batch_size BATCH_SIZE
-                        size of a mini-batch
-  --model_output_prefix MODEL_OUTPUT_PREFIX
-                        prefix of path for model to store (default:
-                        ./model.ctc)
-  --trainer_count TRAINER_COUNT
-                        number of training threads
-  --save_period_by_batch SAVE_PERIOD_BY_BATCH
-                        save model to disk every N batches
-  --num_passes NUM_PASSES
-                        number of passes to train (default: 1)
 ```
 
-重要的几个参数包括：
-
-- `image_shape` 图片的尺寸
 - `train_file_list` 训练数据的列表文件，每行一个路径加对应的text，具体格式为：
 ```
 word_1.png, "PROPER"
 word_2.png, "FOOD"
 ```
-- `test_file_list` 测试数据的列表文件，格式同上
-
-### 预测
-预测部分由infer.py完成，使用的是最优路径解码算法，即：在每个时间步选择一个概率最大的字符。在使用过程中，需要在infer.py中指定具体的模型目录、图片固定尺寸、batch_size和图片文件的列表文件。例如：
-```python
-model_path = "model.ctc-pass-9-batch-150-test.tar.gz"  
-image_shape = "173,46"
-batch_size = 50
-infer_file_list = 'data/test_data/Challenge2_Test_Task3_GT.txt'
-```
-然后运行```python infer.py```
-
+- `test_file_list` 测试数据的列表文件，格式同上。
+- `model_save_dir` 模型参数会的保存目录目录， 默认为当前目录下的`models`目录。
 
 ### 具体执行的过程：
 
 1.从官方网站下载数据\[[2](#参考文献)\]（Task 2.3: Word Recognition (2013 edition)），会有三个文件: Challenge2_Training_Task3_Images_GT.zip、Challenge2_Test_Task3_Images.zip和 Challenge2_Test_Task3_GT.txt。
 分别对应训练集的图片和图片对应的单词，测试集的图片，测试数据对应的单词，然后执行以下命令，对数据解压并移动至目标文件夹：
 
-```
+```bash
 mkdir -p data/train_data
 mkdir -p data/test_data
 unzip Challenge2_Training_Task3_Images_GT.zip -d data/train_data
@@ -85,16 +81,26 @@ unzip Challenge2_Test_Task3_Images.zip -d data/test_data
 mv Challenge2_Test_Task3_GT.txt data/test_data
 ```
 
-2.获取训练数据文件夹中 `gt.txt` 的路径 (data/train_data）和测试数据文件夹中`Challenge2_Test_Task3_GT.txt`的路径(data/test_data)
+2.获取训练数据文件夹中 `gt.txt` 的路径 (data/train_data）和测试数据文件夹中`Challenge2_Test_Task3_GT.txt`的路径(data/test_data)。
 
-3.执行命令
+3.执行如下命令进行训练：
+```bash
+python train.py \
+--train_file_list_path 'data/train_data/gt.txt' \
+--test_file_list_path 'data/test_data/Challenge2_Test_Task3_GT.txt'
 ```
-python train.py --train_file_list data/train_data/gt.txt --test_file_list data/test_data/Challenge2_Test_Task3_GT.txt --image_shape '173,46'
+4.训练过程中，模型参数会自动备份到指定目录，默认会保存在 `./models` 目录下。
+
+
+### 预测
+预测部分由 `infer.py` 完成，使用的是最优路径解码算法，即：在每个时间步选择一个概率最大的字符。在使用过程中，需要在 `infer.py` 中指定具体的模型目录、图片固定尺寸、batch_size（默认设置为10）和图片文件的列表文件。执行如下代码：
+```bash
+python infer.py \
+--model_path 'models/params_pass_00000.tar.gz' \
+--image_shape '173,46' \
+--infer_file_list_path 'data/test_data/Challenge2_Test_Task3_GT.txt'
 ```
-4.训练过程中，模型参数会自动备份到指定目录，默认为 ./model.ctc
-
-5.设置infer.py中的相关参数(模型所在路径)，运行```python infer.py``` 进行预测
-
+即可进行预测。
 
 ### 其他数据集
 
@@ -104,7 +110,7 @@ python train.py --train_file_list data/train_data/gt.txt --test_file_list data/t
 ### 注意事项
 
 - 由于模型依赖的 `warp CTC` 只有CUDA的实现，本模型只支持 GPU 运行
-- 本模型参数较多，占用显存比较大，实际执行时可以调节batch_size 控制显存占用
+- 本模型参数较多，占用显存比较大，实际执行时可以调节`batch_size`控制显存占用
 - 本模型使用的数据集较小，可以选用其他更大的数据集\[[3](#参考文献)\]来训练需要的模型
 
 ## 参考文献

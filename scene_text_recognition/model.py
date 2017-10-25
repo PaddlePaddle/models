@@ -3,16 +3,17 @@ from paddle.v2 import layer
 from paddle.v2 import evaluator
 from paddle.v2.activation import Relu, Linear
 from paddle.v2.networks import img_conv_group, simple_gru
+from config import ModelConfig as conf
 
 
 class Model(object):
     def __init__(self, num_classes, shape, is_infer=False):
         '''
-        :param num_classes: size of the character dict.
+        :param num_classes: The size of the character dict.
         :type num_classes: int
-        :param shape: size of the input images.
+        :param shape: The size of the input images.
         :type shape: tuple of 2 int
-        :param is_infer: infer mode or not
+        :param is_infer: For inference or not
         :type shape: bool
         '''
         self.num_classes = num_classes
@@ -24,39 +25,50 @@ class Model(object):
         self.__build_nn__()
 
     def __declare_input_layers__(self):
-        # image input as a float vector
+        '''
+        Define the input layer.
+        '''
+        # Image input as a float vector.
         self.image = layer.data(
             name='image',
             type=paddle.data_type.dense_vector(self.image_vector_size),
             height=self.shape[0],
             width=self.shape[1])
 
-        # label input as a ID list
-        if self.is_infer == False:
+        # Label input as an ID list
+        if not self.is_infer:
             self.label = layer.data(
                 name='label',
                 type=paddle.data_type.integer_value_sequence(self.num_classes))
 
     def __build_nn__(self):
-        # CNN output image features, 128 float matrixes
-        conv_features = self.conv_groups(self.image, 8, True)
+        '''
+        Build the network topology.
+        '''
+        # CNN output image features.
+        conv_features = self.conv_groups(self.image, conf.filter_num,
+                                         conf.with_bn)
 
-        # cutting CNN output into a sequence of feature vectors, which are
+        # Cut CNN output into a sequence of feature vectors, which are
         # 1 pixel wide and 11 pixel high.
         sliced_feature = layer.block_expand(
             input=conv_features,
-            num_channels=128,
-            stride_x=1,
-            stride_y=1,
-            block_x=1,
-            block_y=11)
+            num_channels=conf.num_channels,
+            stride_x=conf.stride_x,
+            stride_y=conf.stride_y,
+            block_x=conf.block_x,
+            block_y=conf.block_y)
 
         # RNNs to capture sequence information forwards and backwards.
-        gru_forward = simple_gru(input=sliced_feature, size=128, act=Relu())
+        gru_forward = simple_gru(
+            input=sliced_feature, size=conf.hidden_size, act=Relu())
         gru_backward = simple_gru(
-            input=sliced_feature, size=128, act=Relu(), reverse=True)
+            input=sliced_feature,
+            size=conf.hidden_size,
+            act=Relu(),
+            reverse=True)
 
-        # map each step of RNN to character distribution.
+        # Map each step of RNN to character distribution.
         self.output = layer.fc(
             input=[gru_forward, gru_backward],
             size=self.num_classes + 1,
@@ -66,31 +78,31 @@ class Model(object):
             input=paddle.layer.identity_projection(input=self.output),
             act=paddle.activation.Softmax())
 
-        # warp CTC to calculate cost for a CTC task.
-        if self.is_infer == False:
+        # Use warp CTC to calculate cost for a CTC task.
+        if not self.is_infer:
             self.cost = layer.warp_ctc(
                 input=self.output,
                 label=self.label,
                 size=self.num_classes + 1,
-                norm_by_times=True,
+                norm_by_times=conf.norm_by_times,
                 blank=self.num_classes)
 
             self.eval = evaluator.ctc_error(input=self.output, label=self.label)
 
-    def conv_groups(self, input_image, num, with_bn):
+    def conv_groups(self, input, num, with_bn):
         '''
-        :param input_image: input image.
-        :type input_image: LayerOutput
-        :param num: number of CONV filters.
+        :param input: Input layer.
+        :type input: LayerOutput
+        :param num: Number of the filters.
         :type num: int
-        :param with_bn: whether with batch normal.
+        :param with_bn: Whether with batch normalization.
         :type with_bn: bool
         '''
         assert num % 4 == 0
 
-        filter_num_list = [16, 32, 64, 128]
+        filter_num_list = conf.filter_num_list
         is_input_image = True
-        tmp = input_image
+        tmp = input
 
         for num_filter in filter_num_list:
 
@@ -103,12 +115,12 @@ class Model(object):
             tmp = img_conv_group(
                 input=tmp,
                 num_channels=num_channels,
-                conv_padding=1,
+                conv_padding=conf.conv_padding,
                 conv_num_filter=[num_filter] * (num / 4),
-                conv_filter_size=3,
+                conv_filter_size=conf.conv_filter_size,
                 conv_act=Relu(),
                 conv_with_batchnorm=with_bn,
-                pool_size=2,
-                pool_stride=2, )
+                pool_size=conf.pool_size,
+                pool_stride=conf.pool_stride, )
 
         return tmp

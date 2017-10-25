@@ -1,11 +1,11 @@
-import logging
-import argparse
+import click
 import gzip
 
 import paddle.v2 as paddle
 from model import Model
-from data_provider import get_file_list, AsciiDic, ImageDataset
+from reader import DataGenerator
 from decoder import ctc_greedy_decoder
+from utils import AsciiDic, get_file_list
 
 
 def infer_batch(inferer, test_batch, labels):
@@ -15,9 +15,8 @@ def infer_batch(inferer, test_batch, labels):
         infer_results[i * num_steps:(i + 1) * num_steps]
         for i in xrange(0, len(test_batch))
     ]
-
     results = []
-    # best path decode
+    # Best path decode.
     for i, probs in enumerate(probs_split):
         output_transcription = ctc_greedy_decoder(
             probs_seq=probs, vocabulary=AsciiDic().id2word())
@@ -28,21 +27,42 @@ def infer_batch(inferer, test_batch, labels):
               (result, label))
 
 
-def infer(model_path, image_shape, batch_size, infer_file_list):
+@click.command('infer')
+@click.option(
+    "--model_path", type=str, required=True, help=("The path of saved model."))
+@click.option(
+    "--image_shape",
+    type=str,
+    required=True,
+    help=("The fixed size for image dataset (format is like: '173,46')."))
+@click.option(
+    "--batch_size",
+    type=int,
+    default=10,
+    help=("The number of examples in one batch (default: 10)."))
+@click.option(
+    "--infer_file_list_path",
+    type=str,
+    required=True,
+    help=("The path of the file which contains "
+          "path list of image files for inference."))
+def infer(model_path, image_shape, batch_size, infer_file_list_path):
     image_shape = tuple(map(int, image_shape.split(',')))
-    infer_generator = get_file_list(infer_file_list)
+    infer_file_list = get_file_list(infer_file_list_path)
+    char_dict = AsciiDic()
+    dict_size = char_dict.size()
+    data_generator = DataGenerator(char_dict=char_dict, image_shape=image_shape)
 
-    dataset = ImageDataset(None, None, infer_generator, image_shape, True)
-
-    paddle.init(use_gpu=True, trainer_count=4)
+    paddle.init(use_gpu=True, trainer_count=1)
     parameters = paddle.parameters.Parameters.from_tar(gzip.open(model_path))
-    model = Model(AsciiDic().size(), image_shape, is_infer=True)
+    model = Model(dict_size, image_shape, is_infer=True)
     inferer = paddle.inference.Inference(
         output_layer=model.log_probs, parameters=parameters)
 
     test_batch = []
     labels = []
-    for i, (image, label) in enumerate(dataset.infer()):
+    for i, (image,
+            label) in enumerate(data_generator.infer_reader(infer_file_list)()):
         test_batch.append([image])
         labels.append(label)
         if len(test_batch) == batch_size:
@@ -54,9 +74,4 @@ def infer(model_path, image_shape, batch_size, infer_file_list):
 
 
 if __name__ == "__main__":
-    model_path = "model.ctc-pass-9-batch-150-test.tar.gz"
-    image_shape = "173,46"
-    batch_size = 50
-    infer_file_list = 'data/test_data/Challenge2_Test_Task3_GT.txt'
-
-    infer(model_path, image_shape, batch_size, infer_file_list)
+    infer()
