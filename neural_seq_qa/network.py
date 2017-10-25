@@ -16,7 +16,7 @@ feeding = {
 
 def get_embedding(input, word_vec_dim, wordvecs):
     """
-    Defined word embedding
+    Define word embedding
     
     :param input: layer input
     :type input: LayerOutput
@@ -51,7 +51,7 @@ def encoding_question(question, q_lstm_dim, latent_chain_dim, word_vec_dim,
     :type drop_rate: float
     :param wordvecs: word embedding matrix
     :type wordvecs: numpy array
-    :param default_init_std: default initial std
+    :param default_init_std: default initial standard deviation
     :type default_init_std: float
     :param default_l2_rate: default l2 rate
     :type default_l2_rate: float
@@ -131,7 +131,7 @@ def encoding_evidence(evidence, qe_comm, ee_comm, q_encoding, e_lstm_dim,
     :type drop_rate: float
     :param wordvecs: word embedding matrix
     :type wordvecs: numpy array
-    :param default_init_std: default initial std
+    :param default_init_std: default initial standard deviation
     :type default_init_std: float
     :param default_l2_rate: default l2 rate
     :type default_l2_rate: float

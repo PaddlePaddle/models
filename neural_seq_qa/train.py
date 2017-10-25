@@ -21,7 +21,7 @@ def save_model(trainer, model_save_dir, parameters, pass_id):
 
 def show_parameter_init_info(parameters):
     """
-    Print the information of initialization mean and std of parameters
+    Print the information of initialization mean and standard deviation of parameters
 
     :param parameters: the parameters created in a model
     """
