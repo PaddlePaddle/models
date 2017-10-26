@@ -6,7 +6,7 @@ import paddle.v2 as paddle
 from config import TrainerConfig as conf
 from model import Model
 from reader import DataGenerator
-from utils import get_file_list, AsciiDic
+from utils import get_file_list, build_label_dict, load_dict
 
 
 @click.command('train')
@@ -23,18 +23,34 @@ from utils import get_file_list, AsciiDic
     help=("The path of the file which contains "
           "path list of test image files."))
 @click.option(
+    "--label_dict_path",
+    type=str,
+    required=True,
+    help=("The path of label dictionary. "
+          "If this parameter is set, but the file does not exist, "
+          "label dictionay will be built from "
+          "the training data automatically."))
+@click.option(
     "--model_save_dir",
     type=str,
     default="models",
     help="The path to save the trained models (default: 'models').")
-def train(train_file_list_path, test_file_list_path, model_save_dir):
+def train(train_file_list_path, test_file_list_path, label_dict_path,
+          model_save_dir):
 
     if not os.path.exists(model_save_dir):
         os.mkdir(model_save_dir)
+
     train_file_list = get_file_list(train_file_list_path)
     test_file_list = get_file_list(test_file_list_path)
-    char_dict = AsciiDic()
-    dict_size = char_dict.size()
+
+    if not os.path.exists(label_dict_path):
+        print(("Label dictionary is not given, the dictionary "
+               "is automatically built from the training data."))
+        build_label_dict(train_file_list, label_dict_path)
+
+    char_dict = load_dict(label_dict_path)
+    dict_size = len(char_dict)
     data_generator = DataGenerator(
         char_dict=char_dict, image_shape=conf.image_shape)
 

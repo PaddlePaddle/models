@@ -5,10 +5,10 @@ import paddle.v2 as paddle
 from model import Model
 from reader import DataGenerator
 from decoder import ctc_greedy_decoder
-from utils import AsciiDic, get_file_list
+from utils import get_file_list, load_dict, load_reverse_dict
 
 
-def infer_batch(inferer, test_batch, labels):
+def infer_batch(inferer, test_batch, labels, reversed_char_dict):
     infer_results = inferer.infer(input=test_batch)
     num_steps = len(infer_results) // len(test_batch)
     probs_split = [
@@ -19,7 +19,7 @@ def infer_batch(inferer, test_batch, labels):
     # Best path decode.
     for i, probs in enumerate(probs_split):
         output_transcription = ctc_greedy_decoder(
-            probs_seq=probs, vocabulary=AsciiDic().id2word())
+            probs_seq=probs, vocabulary=reversed_char_dict)
         results.append(output_transcription)
 
     for result, label in zip(results, labels):
@@ -41,16 +41,25 @@ def infer_batch(inferer, test_batch, labels):
     default=10,
     help=("The number of examples in one batch (default: 10)."))
 @click.option(
+    "--label_dict_path",
+    type=str,
+    required=True,
+    help=("The path of label dictionary. "))
+@click.option(
     "--infer_file_list_path",
     type=str,
     required=True,
     help=("The path of the file which contains "
           "path list of image files for inference."))
-def infer(model_path, image_shape, batch_size, infer_file_list_path):
+def infer(model_path, image_shape, batch_size, label_dict_path,
+          infer_file_list_path):
+
     image_shape = tuple(map(int, image_shape.split(',')))
     infer_file_list = get_file_list(infer_file_list_path)
-    char_dict = AsciiDic()
-    dict_size = char_dict.size()
+
+    char_dict = load_dict(label_dict_path)
+    reversed_char_dict = load_reverse_dict(label_dict_path)
+    dict_size = len(char_dict)
     data_generator = DataGenerator(char_dict=char_dict, image_shape=image_shape)
 
     paddle.init(use_gpu=True, trainer_count=1)
@@ -66,11 +75,11 @@ def infer(model_path, image_shape, batch_size, infer_file_list_path):
         test_batch.append([image])
         labels.append(label)
         if len(test_batch) == batch_size:
-            infer_batch(inferer, test_batch, labels)
+            infer_batch(inferer, test_batch, labels, reversed_char_dict)
             test_batch = []
             labels = []
         if test_batch:
-            infer_batch(inferer, test_batch, labels)
+            infer_batch(inferer, test_batch, labels, reversed_char_dict)
 
 
 if __name__ == "__main__":

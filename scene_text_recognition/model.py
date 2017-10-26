@@ -45,12 +45,11 @@ class Model(object):
         '''
         Build the network topology.
         '''
-        # CNN output image features.
+        # Get the image features with CNN.
         conv_features = self.conv_groups(self.image, conf.filter_num,
                                          conf.with_bn)
 
-        # Cut CNN output into a sequence of feature vectors, which are
-        # 1 pixel wide and 11 pixel high.
+        # Expand the output of CNN into a sequence of feature vectors.
         sliced_feature = layer.block_expand(
             input=conv_features,
             num_channels=conf.num_channels,
@@ -59,7 +58,7 @@ class Model(object):
             block_x=conf.block_x,
             block_y=conf.block_y)
 
-        # RNNs to capture sequence information forwards and backwards.
+        # Use RNN to capture sequence information forwards and backwards.
         gru_forward = simple_gru(
             input=sliced_feature, size=conf.hidden_size, act=Relu())
         gru_backward = simple_gru(
@@ -68,7 +67,7 @@ class Model(object):
             act=Relu(),
             reverse=True)
 
-        # Map each step of RNN to character distribution.
+        # Map the output of RNN to character distribution.
         self.output = layer.fc(
             input=[gru_forward, gru_backward],
             size=self.num_classes + 1,

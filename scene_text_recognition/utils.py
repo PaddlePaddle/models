@@ -1,41 +1,5 @@
 import os
-
-
-class AsciiDic(object):
-    UNK_ID = 0
-
-    def __init__(self):
-        self.dic = {
-            '<unk>': self.UNK_ID,
-        }
-        self.chars = [chr(i) for i in range(40, 171)]
-        for id, c in enumerate(self.chars):
-            self.dic[c] = id + 1
-
-    def lookup(self, w):
-        return self.dic.get(w, self.UNK_ID)
-
-    def id2word(self):
-        '''
-        Return a reversed char dict.
-        '''
-        self.id2word = {}
-        for key, value in self.dic.items():
-            self.id2word[value] = key
-
-        return self.id2word
-
-    def word2ids(self, word):
-        '''
-        Transform a word to a list of ids.
-
-        :param word: The word appears in image data.
-        :type word: str
-        '''
-        return [self.lookup(c) for c in list(word)]
-
-    def size(self):
-        return len(self.dic)
+from collections import defaultdict
 
 
 def get_file_list(image_file_list):
@@ -43,7 +7,7 @@ def get_file_list(image_file_list):
     Generate the file list for training and testing data.
     
     :param image_file_list: The path of the file which contains
-                           path list of image files.
+                            path list of image files.
     :type image_file_list: str
     '''
     dirname = os.path.dirname(image_file_list)
@@ -53,7 +17,53 @@ def get_file_list(image_file_list):
             line_split = line.strip().split(',', 1)
             filename = line_split[0].strip()
             path = os.path.join(dirname, filename)
-            label = line_split[1][2:-1]
-            path_list.append((path, label))
+            label = line_split[1][2:-1].strip()
+            if label:
+                path_list.append((path, label))
 
     return path_list
+
+
+def build_label_dict(file_list, save_path):
+    """
+    Build label dictionary from training data.
+    
+    :param file_list: The list which contains the labels 
+                      of training data.
+    :type file_list: list
+    :params save_path: The path where the label dictionary will be saved.
+    :type save_path: str
+    """
+    values = defaultdict(int)
+    for path, label in file_list:
+        for c in label:
+            if c:
+                values[c] += 1
+
+    values['<unk>'] = 0
+    with open(save_path, "w") as f:
+        for v, count in sorted(
+                values.iteritems(), key=lambda x: x[1], reverse=True):
+            f.write("%s\t%d\n" % (v, count))
+
+
+def load_dict(dict_path):
+    """
+    Load label dictionary from the dictionary path.
+    
+    :param dict_path: The path of word dictionary.
+    :type dict_path: str
+    """
+    return dict((line.strip().split("\t")[0], idx)
+                for idx, line in enumerate(open(dict_path, "r").readlines()))
+
+
+def load_reverse_dict(dict_path):
+    """
+    Load the reversed label dictionary from dictionary path.
+    
+    :param dict_path: The path of word dictionary.
+    :type dict_path: str
+    """
+    return dict((idx, line.strip().split("\t")[0])
+                for idx, line in enumerate(open(dict_path, "r").readlines()))
