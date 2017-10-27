@@ -122,6 +122,49 @@ where
 * `INPUT_DATA`: input data in the same format as the validation/test sets of the WebQA dataset.
 * `OUTPUT_FILE`: results in the format specified in the WebQA dataset for the evaluation scripts.
 
+#Pre-trained Models
+
+We have provided two pre-trained models, one for the validation and test sets with annotated evidence, and one for those with retrieved evidence. These two models are selected according to the performance on the corresponding version of validation set, which is consistent with the paper.
+
+The models can be downloaded with
+```bash
+cd pre-trained-models && ./download-models.sh && cd ..
+```
+
+The evaluation result on the test set with annotated evidence can be achieved by
+
+```bash
+PYTHONPATH=data/evaluation:$PYTHONPATH python infer.py \
+  pre-trained-models/params_pass_00010.tar.gz \
+  data/data/test.ann.json.gz \
+  test.ann.output.txt.gz
+
+PYTHONPATH=data/evaluation:$PYTHONPATH \
+  python data/evaluation/evaluate-tagging-result.py \
+  test.ann.output.txt.gz \
+  data/data/test.ann.json.gz \
+  --fuzzy --schema BIO2
+# The result should be
+# chunk_f1=0.739091 chunk_precision=0.686119 chunk_recall=0.800926 true_chunks=3024 result_chunks=3530 correct_chunks=2422
+```
+
+And the evaluation result on the test set with retrieved evidence can be achieved by
+
+```bash
+PYTHONPATH=data/evaluation:$PYTHONPATH python infer.py \
+  pre-trained-models/params_pass_00021.tar.gz \
+  data/data/test.ir.json.gz \
+  test.ir.output.txt.gz
+
+PYTHONPATH=data/evaluation:$PYTHONPATH \
+  python data/evaluation/evaluate-voting-result.py \
+  test.ir.output.txt.gz \
+  data/data/test.ir.json.gz \
+  --fuzzy --schema BIO2
+# The result should be
+# chunk_f1=0.749358 chunk_precision=0.727868 chunk_recall=0.772156 true_chunks=3024 result_chunks=3208 correct_chunks=2335
+```
+
 </div>
 <!-- You can change the lines below now. -->
 
