@@ -2,7 +2,7 @@ import click
 import gzip
 
 import paddle.v2 as paddle
-from model import Model
+from network_conf import Model
 from reader import DataGenerator
 from decoder import ctc_greedy_decoder
 from utils import get_file_list, load_dict, load_reverse_dict

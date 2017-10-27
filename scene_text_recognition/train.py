@@ -4,7 +4,7 @@ import click
 
 import paddle.v2 as paddle
 from config import TrainerConfig as conf
-from model import Model
+from network_conf import Model
 from reader import DataGenerator
 from utils import get_file_list, build_label_dict, load_dict
 

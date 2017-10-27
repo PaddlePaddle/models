@@ -13,7 +13,8 @@ class Model(object):
         :type num_classes: int
         :param shape: The size of the input images.
         :type shape: tuple of 2 int
-        :param is_infer: For inference or not
+        :param is_infer: The boolean parameter indicating
+                         inferring or training.
         :type shape: bool
         '''
         self.num_classes = num_classes
@@ -90,11 +91,13 @@ class Model(object):
 
     def conv_groups(self, input, num, with_bn):
         '''
+        Get the image features with image convolution group.
+
         :param input: Input layer.
         :type input: LayerOutput
         :param num: Number of the filters.
         :type num: int
-        :param with_bn: Whether with batch normalization.
+        :param with_bn: Use batch normalization or not.
         :type with_bn: bool
         '''
         assert num % 4 == 0
