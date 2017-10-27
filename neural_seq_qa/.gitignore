@@ -31,3 +31,6 @@ eval.*.txt
 models*
 *.log
 run.sh
+test.ann.output.txt.gz
+test.ir.output.txt.gz
+pre-trained-models/*.gz
