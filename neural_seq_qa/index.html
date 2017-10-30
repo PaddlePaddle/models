@@ -59,7 +59,7 @@ If you use the dataset/code in your research, please cite the above paper:
 ```
 
 
-# Installation
+## Installation
 
 1. Install PaddlePaddle v0.10.5 by the following commond. Note that v0.10.0 is not supported.
     ```bash
@@ -74,18 +74,18 @@ If you use the dataset/code in your research, please cite the above paper:
    cd data && ./download.sh && cd ..
    ```
 
-#Hyperparameters
+## Hyperparameters
 
 All the hyperparameters are defined in `config.py`. The default values are aligned with the paper.
 
-# Training
+## Training
 
 Training can be launched using the following command:
 
 ```bash
 PYTHONPATH=data/evaluation:$PYTHONPATH python train.py 2>&1 | tee train.log
 ```
-# Validation and Test
+## Validation and Test
 
 WebQA provides two versions of validation and test sets.  Automatic validation and test can be lauched by
 
@@ -105,7 +105,7 @@ Intermediate results are stored in the directory `tmp`. You can delete them safe
 
 The results should be comparable with those shown in Table 3 in the paper.
 
-# Inferring using a Trained Model
+## Inferring using a Trained Model
 
 Infer using a trained model by running:
 ```bash
@@ -122,7 +122,7 @@ where
 * `INPUT_DATA`: input data in the same format as the validation/test sets of the WebQA dataset.
 * `OUTPUT_FILE`: results in the format specified in the WebQA dataset for the evaluation scripts.
 
-#Pre-trained Models
+## Pre-trained Models
 
 We have provided two pre-trained models, one for the validation and test sets with annotated evidence, and one for those with retrieved evidence. These two models are selected according to the performance on the corresponding version of validation set, which is consistent with the paper.
 
