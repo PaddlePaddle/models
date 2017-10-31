@@ -1,5 +1,6 @@
 import argparse
 import itertools
+import distutils.util
 
 import reader
 import paddle.v2 as paddle
@@ -56,12 +57,12 @@ parser.add_argument(
     (ModelArch.CNN_MODE, ModelArch.FC_MODE, ModelArch.RNN_MODE))
 parser.add_argument(
     '--share_network_between_source_target',
-    type=bool,
+    type=distutils.util.strtobool,
     default=False,
     help="whether to share network parameters between source and target")
 parser.add_argument(
     '--share_embed',
-    type=bool,
+    type=distutils.util.strtobool,
     default=False,
     help="whether to share word embedding between source and target")
 parser.add_argument(
