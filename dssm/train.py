@@ -1,4 +1,5 @@
 import argparse
+import distutils.util
 
 import paddle.v2 as paddle
 from network_conf import DSSM
@@ -35,8 +36,8 @@ parser.add_argument(
     '-b',
     '--batch_size',
     type=int,
-    default=10,
-    help="size of mini-batch (default:10)")
+    default=32,
+    help="size of mini-batch (default:32)")
 parser.add_argument(
     '-p',
     '--num_passes',
@@ -62,12 +63,12 @@ parser.add_argument(
     (ModelArch.CNN_MODE, ModelArch.FC_MODE, ModelArch.RNN_MODE))
 parser.add_argument(
     '--share_network_between_source_target',
-    type=bool,
+    type=distutils.util.strtobool,
     default=False,
     help="whether to share network parameters between source and target")
 parser.add_argument(
     '--share_embed',
-    type=bool,
+    type=distutils.util.strtobool,
     default=False,
     help="whether to share word embedding between source and target")
 parser.add_argument(
@@ -80,7 +81,7 @@ parser.add_argument(
     '--num_workers', type=int, default=1, help="num worker threads, default 1")
 parser.add_argument(
     '--use_gpu',
-    type=bool,
+    type=distutils.util.strtobool,
     default=False,
     help="whether to use GPU devices (default: False)")
 parser.add_argument(

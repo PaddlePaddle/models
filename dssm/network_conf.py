@@ -96,14 +96,24 @@ class DSSM(object):
         '''
         _input_layer = paddle.layer.pooling(
             input=emb, pooling_type=paddle.pooling.Max())
-        fc = paddle.layer.fc(input=_input_layer, size=self.dnn_dims[1])
+        fc = paddle.layer.fc(
+            input=_input_layer,
+            size=self.dnn_dims[1],
+            param_attr=ParamAttr(name='%s_fc.w' % prefix),
+            bias_attr=ParamAttr(name="%s_fc.b" % prefix))
         return fc
 
     def create_rnn(self, emb, prefix=''):
         '''
         A GRU sentence vector learner.
         '''
-        gru = paddle.networks.simple_gru(input=emb, size=256)
+        gru = paddle.networks.simple_gru(
+            input=emb,
+            size=self.dnn_dims[1],
+            mixed_param_attr=ParamAttr(name='%s_gru_mixed.w' % prefix),
+            mixed_bias_param_attr=ParamAttr(name="%s_gru_mixed.b" % prefix),
+            gru_param_attr=ParamAttr(name='%s_gru.w' % prefix),
+            gru_bias_attr=ParamAttr(name="%s_gru.b" % prefix))
         sent_vec = paddle.layer.last_seq(gru)
         return sent_vec
 
@@ -147,7 +157,6 @@ class DSSM(object):
                 logger.info("create fc layer [%s] which dimention is %d" %
                             (name, dim))
                 fc = paddle.layer.fc(
-                    name=name,
                     input=_input_layer,
                     size=dim,
                     act=paddle.activation.Tanh(),
@@ -195,7 +204,7 @@ class DSSM(object):
                 name='label_input', type=paddle.data_type.integer_value(1))
 
         prefixs = '_ _ _'.split(
-        ) if self.share_semantic_generator else 'source left right'.split()
+        ) if self.share_semantic_generator else 'source target target'.split()
         embed_prefixs = '_ _'.split(
         ) if self.share_embed else 'source target target'.split()
 
@@ -249,9 +258,9 @@ class DSSM(object):
             if is_classification else paddle.data_type.dense_vector(1))
 
         prefixs = '_ _'.split(
-        ) if self.share_semantic_generator else 'left right'.split()
+        ) if self.share_semantic_generator else 'source target'.split()
         embed_prefixs = '_ _'.split(
-        ) if self.share_embed else 'left right'.split()
+        ) if self.share_embed else 'source target'.split()
 
         word_vecs = []
         for id, input in enumerate([source, target]):
