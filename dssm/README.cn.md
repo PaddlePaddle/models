@@ -24,7 +24,7 @@ DSSM 已经发展成了一个框架，可以很自然地建模两个记录之间
 </p>
 
 其贯彻的思想是， **用DNN将高维特征向量转化为低纬空间的连续向量（图中红色框部分）** ，
-**在上层用cosin similarity来衡量用户搜索词与候选文档间的语义相关性** 。
+**在上层用cosine similarity来衡量用户搜索词与候选文档间的语义相关性** 。
 
 在最顶层损失函数的设计上，原始模型使用类似Word2Vec中负例采样的方法，
 一个Query会抽取正例 $D+$ 和4个负例 $D-$ 整体上算条件概率用对数似然函数作为损失，
@@ -420,7 +420,7 @@ optional arguments:
                         path of the target's word dic, if not set, the
                         `source_dic_path` will be used
   -b BATCH_SIZE, --batch_size BATCH_SIZE
-                        size of mini-batch (default:10)
+                        size of mini-batch (default:32)
   -p NUM_PASSES, --num_passes NUM_PASSES
                         number of passes to run(default:10)
   -y MODEL_TYPE, --model_type MODEL_TYPE
