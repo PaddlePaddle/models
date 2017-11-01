@@ -131,7 +131,7 @@ def train(train_data_path=None,
           target_dic_path=None,
           model_type=ModelType.create_classification(),
           model_arch=ModelArch.create_cnn(),
-          batch_size=10,
+          batch_size=32,
           num_passes=10,
           share_semantic_generator=False,
           share_embed=False,
@@ -187,7 +187,7 @@ def train(train_data_path=None,
     parameters = paddle.parameters.create(cost)
 
     adam_optimizer = paddle.optimizer.Adam(
-        learning_rate=1e-3,
+        learning_rate=2e-4,
         regularization=paddle.optimizer.L2Regularization(rate=1e-3),
         model_average=paddle.optimizer.ModelAverage(average_window=0.5))
 
