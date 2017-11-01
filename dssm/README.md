@@ -121,7 +121,13 @@ def create_rnn(self, emb, prefix=''):
     '''
     A GRU sentence vector learner.
     '''
-    gru = paddle.layer.gru_memory(input=emb,)
+    gru = paddle.networks.simple_gru(
+        input=emb,
+        size=self.dnn_dims[1],
+        mixed_param_attr=ParamAttr(name='%s_gru_mixed.w' % prefix),
+        mixed_bias_param_attr=ParamAttr(name="%s_gru_mixed.b" % prefix),
+        gru_param_attr=ParamAttr(name='%s_gru.w' % prefix),
+        gru_bias_attr=ParamAttr(name="%s_gru.b" % prefix))
     sent_vec = paddle.layer.last_seq(gru)
     return sent_vec
 ```
@@ -140,7 +146,11 @@ def create_fc(self, emb, prefix=''):
     '''
     _input_layer = paddle.layer.pooling(
         input=emb, pooling_type=paddle.pooling.Max())
-    fc = paddle.layer.fc(input=_input_layer, size=self.dnn_dims[1])
+    fc = paddle.layer.fc(
+        input=_input_layer,
+        size=self.dnn_dims[1],
+        param_attr=ParamAttr(name='%s_fc.w' % prefix),
+        bias_attr=ParamAttr(name="%s_fc.b" % prefix))
     return fc
 ```
 
@@ -160,7 +170,6 @@ def create_dnn(self, sent_vec, prefix):
             fc = paddle.layer.fc(
                 input=_input_layer,
                 size=dim,
-                name=name,
                 act=paddle.activation.Tanh(),
                 param_attr=ParamAttr(name='%s.w' % name),
                 bias_attr=ParamAttr(name='%s.b' % name),
@@ -198,9 +207,9 @@ def _build_classification_or_regression_model(self, is_classification):
         if is_classification else paddle.data_type.dense_input)
 
     prefixs = '_ _'.split(
-    ) if self.share_semantic_generator else 'left right'.split()
+    ) if self.share_semantic_generator else 'source target'.split()
     embed_prefixs = '_ _'.split(
-    ) if self.share_embed else 'left right'.split()
+    ) if self.share_embed else 'source target'.split()
 
     word_vecs = []
     for id, input in enumerate([source, target]):
@@ -212,16 +221,21 @@ def _build_classification_or_regression_model(self, is_classification):
         x = self.model_arch_creater(input, prefix=prefixs[id])
         semantics.append(x)
 
-    concated_vector = paddle.layer.concat(semantics)
-    prediction = paddle.layer.fc(
-        input=concated_vector,
-        size=self.class_num,
-        act=paddle.activation.Softmax())
-    cost = paddle.layer.classification_cost(
-        input=prediction,
-        label=label) if is_classification else paddle.layer.mse_cost(
-            prediction, label)
-    return cost, prediction, label
+    if is_classification:
+        concated_vector = paddle.layer.concat(semantics)
+        prediction = paddle.layer.fc(
+            input=concated_vector,
+            size=self.class_num,
+            act=paddle.activation.Softmax())
+        cost = paddle.layer.classification_cost(
+            input=prediction, label=label)
+    else:
+        prediction = paddle.layer.cos_sim(*semantics)
+        cost = paddle.layer.square_error_cost(prediction, label)
+
+    if not self.is_infer:
+        return cost, prediction, label
+    return prediction
 ```
 
 ### Pairwise Rank
@@ -251,7 +265,7 @@ def _build_rank_model(self):
         name='label_input', type=paddle.data_type.integer_value(1))
 
     prefixs = '_ _ _'.split(
-    ) if self.share_semantic_generator else 'source left right'.split()
+    ) if self.share_semantic_generator else 'source target target'.split()
     embed_prefixs = '_ _'.split(
     ) if self.share_embed else 'source target target'.split()
 
@@ -361,7 +375,7 @@ optional arguments:
                         path of the target's word dic, if not set, the
                         `source_dic_path` will be used
   -b BATCH_SIZE, --batch_size BATCH_SIZE
-                        size of mini-batch (default:10)
+                        size of mini-batch (default:32)
   -p NUM_PASSES, --num_passes NUM_PASSES
                         number of passes to run(default:10)
   -y MODEL_TYPE, --model_type MODEL_TYPE

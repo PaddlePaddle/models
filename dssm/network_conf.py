@@ -100,7 +100,7 @@ class DSSM(object):
             input=_input_layer,
             size=self.dnn_dims[1],
             param_attr=ParamAttr(name='%s_fc.w' % prefix),
-            bias_attr=ParamAttr(name="%s_fc.b" % prefix))
+            bias_attr=ParamAttr(name="%s_fc.b" % prefix, initial_std=0.))
         return fc
 
     def create_rnn(self, emb, prefix=''):
@@ -161,7 +161,7 @@ class DSSM(object):
                     size=dim,
                     act=paddle.activation.Tanh(),
                     param_attr=ParamAttr(name='%s.w' % name),
-                    bias_attr=ParamAttr(name='%s.b' % name))
+                    bias_attr=ParamAttr(name='%s.b' % name, initial_std=0.))
                 _input_layer = fc
         return _input_layer
 
