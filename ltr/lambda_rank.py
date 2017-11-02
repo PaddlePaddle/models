@@ -10,14 +10,14 @@ import paddle.v2 as paddle
 
 def lambda_rank(input_dim, is_infer):
     """
-    Lambda_rank is a Listwise rank model, the input data and label
+    LambdaRank is a listwise rank model, the input data and label
     must be sequences.
 
     https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf
     parameters :
       input_dim, one document's dense feature vector dimension
 
-    Format of the dense_vector_sequence:
+    The format of the dense_vector_sequence is as follows:
     [[f, ...], [f, ...], ...], f is a float or an int number
     """
     if not is_infer:
@@ -55,7 +55,7 @@ def lambda_rank(input_dim, is_infer):
 
 
 def train_lambda_rank(num_passes):
-    # Listwise input sequence.
+    # The input for LambdaRank is a sequence.
     fill_default_train = functools.partial(
         paddle.dataset.mq2007.train, format="listwise")
     fill_default_test = functools.partial(
@@ -96,7 +96,7 @@ def train_lambda_rank(num_passes):
 
 
 def lambda_rank_infer(pass_id):
-    """Lambda rank model inference interface.
+    """LambdaRank model inference interface.
 
     Parameters:
         pass_id : inference model in pass_id
