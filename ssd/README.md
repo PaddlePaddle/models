@@ -144,7 +144,7 @@ infer(
 Here ```eval_file_list``` specified image path list, ```save_path``` specifies directory to save the prediction result.
 
 
-```
+```text
 VOCdevkit/VOC2007/JPEGImages/006936.jpg 12 0.997844 131.255611777 162.271582842 396.475315094 334.0
 VOCdevkit/VOC2007/JPEGImages/006936.jpg 14 0.998557 229.160234332 49.5991278887 314.098775387 312.913876176
 VOCdevkit/VOC2007/JPEGImages/006936.jpg 14 0.372522 187.543615699 133.727034628 345.647156239 327.448492289
@@ -167,7 +167,7 @@ Figure 3. SSD300x300 Visualization Example
 ## To Use Custo Data set
 In PaddlePaddle, using the custom data set to train SSD model is also easy! Just input the format that ```train.txt``` can understand. Below is a recommended structure to input for ```train.txt```.
 
-```
+```text
 image00000_file_path    image00000_annotation_file_path
 image00001_file_path    image00001_annotation_file_path
 image00002_file_path    image00002_annotation_file_path
@@ -196,7 +196,7 @@ for object in root.findall('object'):
 
 Now the marked data（e.g. image00000\_annotation\_file\_path）is as follows:
 
-```
+```text
 label1 xmin1 ymin1 xmax1 ymax1
 label2 xmin2 ymin2 xmax2 ymax2
 ...
@@ -204,7 +204,7 @@ label2 xmin2 ymin2 xmax2 ymax2
 
 Here each row corresponds to an object for 5 fields. The first is for the label (note the background 0, need to be numbered from 1), and the remaining four are for the coordinates.
 
-```
+```python
 bbox_labels = []
 with open(label_path) as flabel:
     for line in flabel:
