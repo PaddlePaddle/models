@@ -20,7 +20,7 @@ def gated_conv_with_batchnorm(input,
     :type input: LayerOutput
     :param size: The dimension of the block's output.
     :type size: int
-    :param context_len: The context width of the convolution.
+    :param context_len: The context length of the convolution.
     :type context_len: int
     :param context_start: The start position of the context.
     :type context_start: int
@@ -81,9 +81,9 @@ def encoder(token_emb,
     :type token_emb: LayerOutput
     :param pos_emb: The embedding vector of the input token's position.
     :type pos_emb: LayerOutput
-    :param conv_blocks: The scale list of the convolution blocks. And each element of the
-                        list contains output dimension and context length of the corresponding
-                        convolution block.
+    :param conv_blocks: The scale list of the convolution blocks. Each element of
+                        the list contains output dimension and context length of
+                        the corresponding convolution block.
     :type conv_blocks: list of tuple
     :param num_attention: The total number of the attention modules used in the decoder.
     :type num_attention: int
@@ -109,9 +109,9 @@ def encoder(token_emb,
 
     for (size, context_len) in conv_blocks:
         if block_input.size == size:
-            res = block_input
+            residual = block_input
         else:
-            res = paddle.layer.fc(
+            residual = paddle.layer.fc(
                 input=block_input,
                 size=size,
                 act=paddle.activation.Linear(),
@@ -127,9 +127,10 @@ def encoder(token_emb,
             drop_rate=drop_rate)
 
         with paddle.layer.mixed(size=size) as block_output:
-            block_output += paddle.layer.identity_projection(res)
+            block_output += paddle.layer.identity_projection(residual)
             block_output += paddle.layer.identity_projection(gated_conv)
 
+        # halve the variance of the sum
         block_output = paddle.layer.slope_intercept(
             input=block_output, slope=math.sqrt(0.5))
 
@@ -143,14 +144,15 @@ def encoder(token_emb,
         param_attr=paddle.attr.Param(learning_rate=1.0 / (2.0 * num_attention)),
         bias_attr=True)
 
-    encoded = paddle.layer.addto(input=[encoded_vec, embedding])
+    encoded_sum = paddle.layer.addto(input=[encoded_vec, embedding])
 
-    encoded = paddle.layer.slope_intercept(input=encoded, slope=math.sqrt(0.5))
+    # halve the variance of the sum
+    encoded_sum = paddle.layer.slope_intercept(input=encoded_sum, slope=math.sqrt(0.5))
 
-    return encoded_vec, encoded
+    return encoded_vec, encoded_sum
 
 
-def attention(decoder_state, cur_embedding, encoded_vec, encoded):
+def attention(decoder_state, cur_embedding, encoded_vec, encoded_sum):
     """
     Definition of the attention.
 
@@ -160,12 +162,12 @@ def attention(decoder_state, cur_embedding, encoded_vec, encoded):
     :type cur_embedding: LayerOutput
     :param encoded_vec: The source token encoding.
     :type encoded_vec: LayerOutput
-    :param encoded: The sum of the source token's encoding and embedding.
-    :type encoded: LayerOutput
+    :param encoded_sum: The sum of the source token's encoding and embedding.
+    :type encoded_sum: LayerOutput
     :return: A context vector.
     :rtype: LayerOutput
     """
-    res = decoder_state
+    residual = decoder_state
 
     state_size = decoder_state.size
     emb_dim = cur_embedding.size
@@ -173,6 +175,7 @@ def attention(decoder_state, cur_embedding, encoded_vec, encoded):
         state_summary += paddle.layer.full_matrix_projection(decoder_state)
         state_summary += paddle.layer.identity_projection(cur_embedding)
 
+    # halve the variance of the sum
     state_summary = paddle.layer.slope_intercept(
         input=state_summary, slope=math.sqrt(0.5))
 
@@ -186,7 +189,7 @@ def attention(decoder_state, cur_embedding, encoded_vec, encoded):
         act=paddle.activation.SequenceSoftmax(),
         bias_attr=False)
 
-    scaled = paddle.layer.scaling(weight=attention_weight, input=encoded)
+    scaled = paddle.layer.scaling(weight=attention_weight, input=encoded_sum)
 
     attended = paddle.layer.pooling(
         input=scaled, pooling_type=paddle.pooling.Sum())
@@ -197,9 +200,9 @@ def attention(decoder_state, cur_embedding, encoded_vec, encoded):
         act=paddle.activation.Linear(),
         bias_attr=True)
 
-    # TODO scaled by length
+    attention_result = paddle.layer.addto(input=[attended_proj, residual])
 
-    attention_result = paddle.layer.addto(input=[attended_proj, res])
+    # halve the variance of the sum
     attention_result = paddle.layer.slope_intercept(
         input=attention_result, slope=math.sqrt(0.5))
     return attention_result
@@ -208,7 +211,7 @@ def attention(decoder_state, cur_embedding, encoded_vec, encoded):
 def decoder(token_emb,
             pos_emb,
             encoded_vec,
-            encoded,
+            encoded_sum,
             dict_size,
             conv_blocks=[(256, 3)] * 3,
             drop_rate=0.1):
@@ -221,13 +224,13 @@ def decoder(token_emb,
     :type pos_emb: LayerOutput
     :param encoded_vec: The source token encoding.
     :type encoded_vec: LayerOutput
-    :param encoded: The sum of the source token's encoding and embedding.
-    :type encoded: LayerOutput
+    :param encoded_sum: The sum of the source token's encoding and embedding.
+    :type encoded_sum: LayerOutput
     :param dict_size: The size of the target dictionary.
     :type dict_size: int
-    :param conv_blocks: The scale list of the convolution blocks. And each element of the
-                        list contains output dimension and context length of the corresponding
-                        convolution block.
+    :param conv_blocks: The scale list of the convolution blocks. Each element
+                        of the list contains output dimension and context length
+                        of the corresponding convolution block.
     :type conv_blocks: list of tuple
     :param drop_rate: Dropout rate.
     :type drop_rate: float
@@ -235,23 +238,13 @@ def decoder(token_emb,
     :rtype: LayerOutput
     """
 
-    def attention_step(decoder_state, cur_embedding, encoded_vec, encoded):
+    def attention_step(decoder_state, cur_embedding, encoded_vec, encoded_sum):
         conditional = attention(
             decoder_state=decoder_state,
             cur_embedding=cur_embedding,
             encoded_vec=encoded_vec,
-            encoded=encoded)
+            encoded_sum=encoded_sum)
         return conditional
-
-    def softmax_step(input):
-        return paddle.layer.fc(
-            input=input,
-            size=dict_size,
-            act=paddle.activation.Softmax(),
-            param_attr=paddle.attr.Param(
-                initial_mean=0.,
-                initial_std=math.sqrt((1.0 - drop_rate) / input.size)),
-            bias_attr=True, )
 
     embedding = paddle.layer.addto(
         input=[token_emb, pos_emb],
@@ -269,9 +262,9 @@ def decoder(token_emb,
 
     for (size, context_len) in conv_blocks:
         if block_input.size == size:
-            res = block_input
+            residual = block_input
         else:
-            res = paddle.layer.fc(
+            residual = paddle.layer.fc(
                 input=block_input,
                 size=size,
                 act=paddle.activation.Linear(),
@@ -288,13 +281,15 @@ def decoder(token_emb,
             decoder_state,
             embedding,
             paddle.layer.StaticInput(input=encoded_vec),
-            paddle.layer.StaticInput(input=encoded),
+            paddle.layer.StaticInput(input=encoded_sum),
         ]
 
         conditional = paddle.layer.recurrent_group(
             step=attention_step, input=group_inputs)
 
-        block_output = paddle.layer.addto(input=[conditional, res])
+        block_output = paddle.layer.addto(input=[conditional, residual])
+
+        # halve the variance of the sum
         block_output = paddle.layer.slope_intercept(
             input=block_output, slope=math.sqrt(0.5))
 
@@ -307,8 +302,14 @@ def decoder(token_emb,
         act=paddle.activation.Linear(),
         layer_attr=paddle.attr.Extra(drop_rate=drop_rate))
 
-    decoder_out = paddle.layer.recurrent_group(
-        step=softmax_step, input=[block_output])
+    decoder_out = paddle.layer.fc(
+        input=block_output,
+        size=dict_size,
+        act=paddle.activation.Softmax(),
+        param_attr=paddle.attr.Param(
+            initial_mean=0.,
+            initial_std=math.sqrt((1.0 - drop_rate) / block_output.size)),
+        bias_attr=True)
 
     return decoder_out
 
@@ -333,13 +334,13 @@ def conv_seq2seq(src_dict_size,
     :type pos_size: int
     :param emb_dim: The dimension of the embedding vector.
     :type emb_dim: int
-    :param enc_conv_blocks: The scale list of the encoder's convolution blocks. And each element of
-                            the list contains output dimension and context length of the corresponding
-                            convolution block.
+    :param enc_conv_blocks: The scale list of the encoder's convolution blocks. Each element
+                            of the list contains output dimension and context length of the
+                            corresponding convolution block.
     :type enc_conv_blocks: list of tuple
-    :param dec_conv_blocks: The scale list of the decoder's convolution blocks. And each element of
-                            the list contains output dimension and context length of the corresponding
-                            convolution block.
+    :param dec_conv_blocks: The scale list of the decoder's convolution blocks. Each element
+                            of the list contains output dimension and context length of the
+                            corresponding convolution block.
     :type dec_conv_blocks: list of tuple
     :param drop_rate: Dropout rate.
     :type drop_rate: float
@@ -368,7 +369,7 @@ def conv_seq2seq(src_dict_size,
         param_attr=paddle.attr.Param(initial_mean=0., initial_std=0.1))
 
     num_attention = len(dec_conv_blocks)
-    encoded_vec, encoded = encoder(
+    encoded_vec, encoded_sum = encoder(
         token_emb=src_emb,
         pos_emb=src_pos_emb,
         conv_blocks=enc_conv_blocks,
@@ -399,7 +400,7 @@ def conv_seq2seq(src_dict_size,
         token_emb=trg_emb,
         pos_emb=trg_pos_emb,
         encoded_vec=encoded_vec,
-        encoded=encoded,
+        encoded_sum=encoded_sum,
         dict_size=trg_dict_size,
         conv_blocks=dec_conv_blocks,
         drop_rate=drop_rate)

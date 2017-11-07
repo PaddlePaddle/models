@@ -68,12 +68,12 @@ def parse_args():
         "--beam_size",
         default=1,
         type=int,
-        help="Beam search width. (default: %(default)s)")
+        help="The width of beam expasion. (default: %(default)s)")
     parser.add_argument(
         "--model_path",
         type=str,
         required=True,
-        help="Model path. (default: %(default)s)")
+        help="The path of trained model. (default: %(default)s)")
     return parser.parse_args()
 
 
@@ -122,7 +122,7 @@ def infer(infer_data_path,
     :type drop_rate: float
     :param max_len: The maximum length of the sentence to be generated.
     :type max_len: int
-    :param beam_size: The width of beam search.
+    :param beam_size: The width of beam expansion.
     :type beam_size: int
     """
     # load dict
