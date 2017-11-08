@@ -44,7 +44,7 @@ def load_initial_model(model_path, parameters):
 @click.option(
     "--decoder_depth",
     default=3,
-    help="The number of stacked LSTM layers in encoder.")
+    help="The number of stacked LSTM layers in decoder.")
 @click.option(
     "--train_data_path", required=True, help="The path of trainning data.")
 @click.option(
