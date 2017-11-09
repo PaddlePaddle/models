@@ -1,21 +1,46 @@
-# 噪声对比估计加速词向量训练
+# 使用噪声对比估计加速语言模型训练
 
-词向量是许多自然语言处理任务的基础，详细介绍可见 PaddleBook 中的[词向量](https://github.com/PaddlePaddle/book/blob/develop/04.word2vec/README.cn.md)一节，其中通过训练神经概率语言模型（Neural Probabilistic Language Model, NPLM）得到词向量，是一种流行的方式。然而，神经概率语言模型的最后一层往往需要计算一个词典之上的概率分布，词典越大这一层的计算量也就越大，往往非常耗时。在models的另一篇我们已经介绍了[Hsigmoid加速词向量训练](https://github.com/PaddlePaddle/models/tree/develop/hsigmoid)，这里我们介绍另一种加速词向量训练的方法：使用噪声对比估计（Noise-contrastive estimation, NCE）损失函数\[[1](#参考文献)\]。
+## 为什么需要噪声对比估计
 
-## NCE
-NPLM 的最后一层 `softmax` 函数计算时需要考虑每个类别的指数项，必须计算字典中的所有单词，而在一般语料集上面字典往往非常大\[[3](#参考文献)\]，从而导致整个训练过程十分耗时。NCE 是一种快速对离散分布进行估计的方法。与常用的 hierarchical-sigmoid \[[2](#参考文献)\] 方法相比，NCE 不再使用复杂的二叉树来构造目标函数，而是采用相对简单的随机负采样，以大幅提升计算效率。
+语言模型是许多自然语言处理任务的基础，也是获得词向量表示的一种有效方法。神经概率语言模型（Neural Probabilistic Language Model, NPLM）刻画了词语序列 $\omega_1,...,\omega_T$ 属于某个固定语言的概率 $P(\omega_1^T)$ ：
+$$P(\omega_1^T)= \prod_{t=1}^{T}P(\omega_t|\omega_1^{t-1})$$
 
+为了降低建模和求解的难度，通常会引入一定条件独立假设：词语$w_t$的概率只受之前$n-1$个词语的影响，于是有：
 
-假设已知具体的上下文 $h$，并且知道这个分布为 $P^h(w)$ ，并将从中抽样出来的数据作为正样例，而从一个噪音分布 $P_n(w)$ 抽样的数据作为负样例。我们可以任意选择合适的噪音分布，默认为无偏的均匀分布。这里我们同时假设噪音样例 $k$ 倍于数据样例，则训练数据被抽中的概率为\[[1](#参考文献)\]：
+$$ P(\omega_1^T) \approx \prod P(\omega_t|\omega_{t-n-1}^{t-1}) \tag{1}$$
 
-$$P^h(D=1|w,\theta)=\frac { P_\theta^h(w) }{ P^h_\theta(w)+kP_n(w) } =\sigma (\Delta s_\theta(w,h))$$
+从式($1$)中看到，可以通过建模条件概率 $P(\omega_t|w_{t-n-1},...,\omega_{t-1})$ 进而计算整个序列  $\omega_1,...,\omega_T$ 的概率。于是，我们可以将语言模型求解的任务概括为：**给定词语序列的向量表示 $h$ ，称之为上下文（context），模型预测下一个目标词语 $\omega$ 的概率。** 在[$n$-gram 语言模型](https://github.com/PaddlePaddle/book/tree/develop/04.word2vec)中，上下文取固定的 $n-1$ 个词，[RNN 语言模型](https://github.com/PaddlePaddle/models/tree/develop/generate_sequence_by_rnn_lm)可以处理任意长度的上下文。
 
-其中 $\Delta s_\theta(w,h)=s_\theta(w,h)-\log (kP_n(w))$ ，$s_\theta(w,h)$ 表示选择在生成 $w$ 字并处于上下文 $h$ 时的特征向量，整体目标函数的目的就是增大正样本的概率同时降低负样本的概率。目标函数如下[[1](#参考文献)]：
+给定上下文 $h$，NPLM 学习一个分值函数（scoring function）$s_\theta(\omega, h)$，$s$ 刻画了上下文 $h$ 向量和所有可能的下一个词的向量表示 $\omega'$ 之间的相似度，再通过在全词表空间对打分函数 $s$ 的取值进行归一化（除以归一化因子 $Z$），得到目标词 $\omega$ 的概率分布，其中：$\theta$ 是可学习参数，这一过程用式($2$)表示，也就是 `Softmax` 函数的计算过程。
+
+$$P_\theta^h(\omega) = \frac{\text{exp}{s_\theta(\omega, h)}}{Z}，Z=\sum_{\omega'} \exp{s_\theta(\omega', h)}\tag{2}$$
+
+极大似然估计（MLE，Maximum Likelihood Estimation）是求解概率($2$)最常用的学习准则。然而，不论是估计概率 $P_\theta^h(\omega)$ 还是计算似然（likelihood）的梯度时，都要计算归一化因子$Z$。$Z$ 的计算随着词典大小线性增长，当训练大规模语言模型，例如当词典增长到百万甚至更大级别时，训练时间将变得十分漫长，因此，我们 **需要一种新的学习准则，他的求解过程从计算上应该更加轻便可解。**。
+
+models 的另一篇介绍了使用[Hsigmoid加速词向量训练](https://github.com/PaddlePaddle/models/tree/develop/hsigmoid) ，这里我们介绍另一种基于采样的加速词向量训练的方法：使用噪声对比估计（Noise-contrastive estimation, NCE）\[[1](#参考文献)\]。
+
+## 什么是噪声对比估计
+
+噪声对比估计是一种基于采用思想的概率密度估计准则，用于估计/拟合：概率函数由非归一化的分值函数和归一化因子两部分构成，这样一类特殊的概率函数\[[1](#参考文献)\] 。噪声对比估计通过构造下面这样一个辅助问题避免在全词典空间计算归一化因子 $Z$ ，从而降低计算代价：
+
+给定上下文 $h$ 和任意已知的噪声分布 $P_n$ ，学习一个二类分类器来拟合：目标 $\omega$ 来自真实分布 $P_\theta$ ($D = 1$) 还是噪声分布 $P_n$（$D = 0$）的概率。假设来自噪声分布的负类样本的数量 $k$ 倍于目标样本，于是有：
+
+$$P(D=1|h,\omega) = \frac{P_\theta(h, \omega)}{P_\theta (h, \omega) + kP_n} \tag{3}$$
+
+我们直接用`Sigmoid`函数来刻画式($3$)这样一个二分类概率：
+
+$$P(D=1|h,\omega) \triangleq \sigma (\Delta s_\theta(w,h)) \tag{4}$$
+
+有了上面的问题定义之后，我们就可以基于二分类来进行极大似然估计，增大正样本的概率同时降低负样本的概率[[2](#参考文献)]，也就是最小化下面这样一个损失函数：
 
 $$
 J^h(\theta )=E_{ P_d^h }\left[ \log { P^h(D=1|w,\theta ) }  \right] +kE_{ P_n }\left[ \log P^h (D=0|w,\theta ) \right]$$
 $$
- \\\\\qquad =E_{ P_d^h }\left[ \log { \sigma (\Delta s_\theta(w,h)) }  \right] +kE_{ P_n }\left[ \log (1-\sigma (\Delta s_\theta(w,h)))  \right]$$
+ \\\\\qquad =E_{ P_d^h }\left[ \log { \sigma (\Delta s_\theta(w,h)) }  \right] +kE_{ P_n }\left[ \log (1-\sigma (\Delta s_\theta(w,h)))  \right] \tag{5}$$
+
+式($5$)便是基于噪声对比估计定义的NCE损失函数。
+
+实践中，可以任意选择合适的噪声分布（噪声分布暗含着一定的先验），最常用选择有：使用基于全词典之上的`unigram`分布（词频统计），无偏的均匀分布。在PaddlePaddle中用户如果用户未指定噪声分布，默认采用均匀分布。
 
 简单来讲，NCE 是通过构造逻辑回归（logistic regression），对正样例和负样例做二分类，对于每一个样本，将自身的预测词 label 作为正样例，同时采样出 $k$ 个其他词 label 作为负样例，从而只需要计算样本在这 $k+1$ 个 label 上的概率。相比原始的 `softmax ` 分类需要计算每个类别的分数，然后归一化得到概率，节约了大量的计算时间。
 
@@ -99,19 +124,21 @@ NCE 层的一些重要参数解释如下：
     上述代码片段中的 `paddle.layer.mixed` 必须以 PaddlePaddle 中 `paddle.layer.×_projection` 为输入。`paddle.layer.mixed` 将多个 `projection` （输入可以是多个）计算结果求和作为输出。`paddle.layer.trans_full_matrix_projection` 在计算矩阵乘法时会对参数$W$进行转置。
 
 3. 预测的输出格式如下：
-	```text
-	0.6734  their   may want to move
-	```
+    ```text
+    0.6734  their   may want to move
+    ```
 
-	每一行是一条预测结果，内部以“\t”分隔，共计3列：
-	- 第一列：下一个词的概率。
-	- 第二列：模型预测的下一个词。
-	- 第三列：输入的 $n$ 个词语，内部以空格分隔。
+    每一行是一条预测结果，内部以“\t”分隔，共计3列：
+    - 第一列：下一个词的概率。
+    - 第二列：模型预测的下一个词。
+    - 第三列：输入的 $n$ 个词语，内部以空格分隔。
 
 
 ## 参考文献
+1. Gutmann M, Hyvärinen A. [Noise-contrastive estimation: A new estimation principle for unnormalized statistical models](http://proceedings.mlr.press/v9/gutmann10a/gutmann10a.pdf)[C]//Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics. 2010: 297-304.
+
 1. Mnih A, Kavukcuoglu K. [Learning word embeddings efficiently with noise-contrastive estimation](https://papers.nips.cc/paper/5165-learning-word-embeddings-efficiently-with-noise-contrastive-estimation.pdf)[C]//Advances in neural information processing systems. 2013: 2265-2273.
 
-2. Morin, F., & Bengio, Y. (2005, January). [Hierarchical Probabilistic Neural Network Language Model](http://www.iro.umontreal.ca/~lisa/pointeurs/hierarchical-nnlm-aistats05.pdf). In Aistats (Vol. 5, pp. 246-252).
+1. Morin, F., & Bengio, Y. (2005, January). [Hierarchical Probabilistic Neural Network Language Model](http://www.iro.umontreal.ca/~lisa/pointeurs/hierarchical-nnlm-aistats05.pdf). In Aistats (Vol. 5, pp. 246-252).
 
-3. Mnih A, Teh Y W. [A Fast and Simple Algorithm for Training Neural Probabilistic Language Models](http://xueshu.baidu.com/s?wd=paperuri%3A%280735b97df93976efb333ac8c266a1eb2%29&filter=sc_long_sign&tn=SE_xueshusource_2kduw22v&sc_vurl=http%3A%2F%2Farxiv.org%2Fabs%2F1206.6426&ie=utf-8&sc_us=5770715420073315630)[J]. Computer Science, 2012:1751-1758.
+1. Mnih A, Teh Y W. [A Fast and Simple Algorithm for Training Neural Probabilistic Language Models](http://xueshu.baidu.com/s?wd=paperuri%3A%280735b97df93976efb333ac8c266a1eb2%29&filter=sc_long_sign&tn=SE_xueshusource_2kduw22v&sc_vurl=http%3A%2F%2Farxiv.org%2Fabs%2F1206.6426&ie=utf-8&sc_us=5770715420073315630)[J]. Computer Science, 2012:1751-1758.
