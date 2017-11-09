@@ -9,30 +9,27 @@ from utils import logger, ModelType, ModelArch, load_dic
 
 parser = argparse.ArgumentParser(description="PaddlePaddle DSSM infer")
 parser.add_argument(
-    "--model_path",
-    type=str,
-    required=True,
-    help="path of model parameters file")
+    "--model_path", type=str, required=True, help="The path of trained model.")
 parser.add_argument(
     "-i",
     "--data_path",
     type=str,
     required=True,
-    help="path of the dataset to infer")
+    help="The path of the data for inferring.")
 parser.add_argument(
     "-o",
     "--prediction_output_path",
     type=str,
     required=True,
-    help="path to output the prediction")
+    help="The path to save the predictions.")
 parser.add_argument(
     "-y",
     "--model_type",
     type=int,
     required=True,
     default=ModelType.CLASSIFICATION_MODE,
-    help=("model type, %d for classification, %d for pairwise rank, "
-          "%d for regression (default: classification)") %
+    help=("The model type: %d for classification, %d for pairwise rank, "
+          "%d for regression (default: classification).") %
     (ModelType.CLASSIFICATION_MODE, ModelType.RANK_MODE,
      ModelType.REGRESSION_MODE))
 parser.add_argument(
@@ -40,13 +37,13 @@ parser.add_argument(
     "--source_dic_path",
     type=str,
     required=False,
-    help="path of the source's word dic")
+    help="The path of the source's word dictionary.")
 parser.add_argument(
     "--target_dic_path",
     type=str,
     required=False,
-    help=("path of the target's word dictionary, "
-          "if not set, the `source_dic_path` will be used"))
+    help=("The path of the target's word dictionary, "
+          "if this parameter is not set, the `source_dic_path` will be used."))
 parser.add_argument(
     "-a",
     "--model_arch",
@@ -69,15 +66,15 @@ parser.add_argument(
     "--dnn_dims",
     type=str,
     default="256,128,64,32",
-    help=("dimentions of dnn layers, default is `256,128,64,32`, "
-          "which means create a 4-layer dnn, "
-          "demention of each layer is 256, 128, 64 and 32"))
+    help=("The dimentions of dnn layers, default is `256,128,64,32`, "
+          "which means a dnn with 4 layers with "
+          "dmentions 256, 128, 64 and 32 will be created."))
 parser.add_argument(
     "-c",
     "--class_num",
     type=int,
     default=0,
-    help="number of categories for classification task.")
+    help="The number of categories for classification task.")
 
 args = parser.parse_args()
 args.model_type = ModelType(args.model_type)

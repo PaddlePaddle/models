@@ -8,7 +8,7 @@ logger.setLevel(logging.INFO)
 
 
 def mode_attr_name(mode):
-    return mode.upper() + '_MODE'
+    return mode.upper() + "_MODE"
 
 
 def create_attrs(cls):
@@ -17,9 +17,9 @@ def create_attrs(cls):
 
 
 def make_check_method(cls):
-    '''
+    """
     create methods for classes.
-    '''
+    """
 
     def method(mode):
         def _method(self):
@@ -28,7 +28,7 @@ def make_check_method(cls):
         return _method
 
     for id, mode in enumerate(cls.modes):
-        setattr(cls, 'is_' + mode, method(mode))
+        setattr(cls, "is_" + mode, method(mode))
 
 
 def make_create_method(cls):
@@ -41,10 +41,10 @@ def make_create_method(cls):
         return _method
 
     for id, mode in enumerate(cls.modes):
-        setattr(cls, 'create_' + mode, method(mode))
+        setattr(cls, "create_" + mode, method(mode))
 
 
-def make_str_method(cls, type_name='unk'):
+def make_str_method(cls, type_name="unk"):
     def _str_(self):
         for mode in cls.modes:
             if self.mode == getattr(cls, mode_attr_name(mode)):
@@ -53,9 +53,9 @@ def make_str_method(cls, type_name='unk'):
     def _hash_(self):
         return self.mode
 
-    setattr(cls, '__str__', _str_)
-    setattr(cls, '__repr__', _str_)
-    setattr(cls, '__hash__', _hash_)
+    setattr(cls, "__str__", _str_)
+    setattr(cls, "__repr__", _str_)
+    setattr(cls, "__hash__", _hash_)
     cls.__name__ = type_name
 
 
@@ -65,7 +65,7 @@ def _init_(self, mode, cls):
     elif isinstance(mode, cls):
         self.mode = mode.mode
     else:
-        raise Exception("wrong mode type, get type: %s, value: %s" %
+        raise Exception("A wrong mode type, get type: %s, value: %s." %
                         (type(mode), mode))
 
 
@@ -77,21 +77,21 @@ def build_mode_class(cls):
 
 
 class TaskType(object):
-    modes = 'train test infer'.split()
+    modes = "train test infer".split()
 
     def __init__(self, mode):
         _init_(self, mode, TaskType)
 
 
 class ModelType:
-    modes = 'classification rank regression'.split()
+    modes = "classification rank regression".split()
 
     def __init__(self, mode):
         _init_(self, mode, ModelType)
 
 
 class ModelArch:
-    modes = 'fc cnn rnn'.split()
+    modes = "fc cnn rnn".split()
 
     def __init__(self, mode):
         _init_(self, mode, ModelArch)
@@ -103,22 +103,16 @@ build_mode_class(ModelArch)
 
 
 def sent2ids(sent, vocab):
-    '''
+    """
     transform a sentence to a list of ids.
-
-    @sent: str
-        a sentence.
-    @vocab: dict
-        a word dic
-    '''
+    """
     return [vocab.get(w, UNK) for w in sent.split()]
 
 
 def load_dic(path):
-    '''
-    word dic format:
-      each line is a word
-    '''
+    """
+    The format of word dictionary : each line is a word.
+    """
     dic = {}
     with open(path) as f:
         for id, line in enumerate(f):
@@ -128,13 +122,6 @@ def load_dic(path):
 
 
 def display_args(args):
-    logger.info("arguments passed by command line:")
+    logger.info("The arguments passed by command line is :")
     for k, v in sorted(v for v in vars(args).items()):
         logger.info("{}:\t{}".format(k, v))
-
-
-if __name__ == '__main__':
-    t = TaskType(1)
-    t = TaskType.create_train()
-    print t
-    print 'is', t.is_train()

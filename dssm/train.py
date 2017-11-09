@@ -9,120 +9,129 @@ from utils import TaskType, load_dic, logger, ModelType, ModelArch, display_args
 parser = argparse.ArgumentParser(description="PaddlePaddle DSSM example")
 
 parser.add_argument(
-    '-i',
-    '--train_data_path',
+    "-i",
+    "--train_data_path",
     type=str,
     required=False,
-    help="path of training dataset")
+    help="The path of training data.")
 parser.add_argument(
-    '-t',
-    '--test_data_path',
+    "-t",
+    "--test_data_path",
     type=str,
     required=False,
-    help="path of testing dataset")
+    help="The path of testing data.")
 parser.add_argument(
-    '-s',
-    '--source_dic_path',
+    "-s",
+    "--source_dic_path",
     type=str,
     required=False,
-    help="path of the source's word dic")
+    help="The path of the source's word dictionary.")
 parser.add_argument(
-    '--target_dic_path',
+    "--target_dic_path",
     type=str,
     required=False,
-    help=("path of the target's word dictionary, "
-          "if not set, the `source_dic_path` will be used"))
+    help=("The path of the target's word dictionary, "
+          "if this parameter is not set, the `source_dic_path` will be used"))
 parser.add_argument(
-    '-b',
-    '--batch_size',
+    "-b",
+    "--batch_size",
     type=int,
     default=32,
-    help="size of mini-batch (default:32)")
+    help="The size of mini-batch (default:32).")
 parser.add_argument(
-    '-p',
-    '--num_passes',
+    "-p",
+    "--num_passes",
     type=int,
     default=10,
-    help="number of passes to run(default:10)")
+    help="The number of passes to run(default:10).")
 parser.add_argument(
-    '-y',
-    '--model_type',
+    "-y",
+    "--model_type",
     type=int,
     required=True,
     default=ModelType.CLASSIFICATION_MODE,
-    help="model type, %d for classification, %d for pairwise rank, %d for regression (default: classification)"
-    % (ModelType.CLASSIFICATION_MODE, ModelType.RANK_MODE,
-       ModelType.REGRESSION_MODE))
+    help=("model type, %d for classification, %d for pairwise rank, "
+          "%d for regression (default: classification).") %
+    (ModelType.CLASSIFICATION_MODE, ModelType.RANK_MODE,
+     ModelType.REGRESSION_MODE))
 parser.add_argument(
-    '-a',
-    '--model_arch',
+    "-a",
+    "--model_arch",
     type=int,
     required=True,
     default=ModelArch.CNN_MODE,
-    help="model architecture, %d for CNN, %d for FC, %d for RNN" %
+    help="The model architecture, %d for CNN, %d for FC, %d for RNN." %
     (ModelArch.CNN_MODE, ModelArch.FC_MODE, ModelArch.RNN_MODE))
 parser.add_argument(
-    '--share_network_between_source_target',
+    "--share_network_between_source_target",
     type=distutils.util.strtobool,
     default=False,
-    help="whether to share network parameters between source and target")
+    help="Whether to share network parameters between source and target.")
 parser.add_argument(
-    '--share_embed',
+    "--share_embed",
     type=distutils.util.strtobool,
     default=False,
-    help="whether to share word embedding between source and target")
+    help="Whether to share word embedding between source and target.")
 parser.add_argument(
-    '--dnn_dims',
+    "--dnn_dims",
     type=str,
-    default='256,128,64,32',
-    help="dimentions of dnn layers, default is '256,128,64,32', which means create a 4-layer dnn, demention of each layer is 256, 128, 64 and 32"
-)
+    default="256,128,64,32",
+    help=("The dimentions of dnn layers, default is '256,128,64,32', "
+          "which means create a 4-layer dnn. The dimention of each layer is "
+          "'256, 128, 64 and 32'."))
 parser.add_argument(
-    '--num_workers', type=int, default=1, help="num worker threads, default 1")
+    "--num_workers",
+    type=int,
+    default=1,
+    help="The number of worker threads, default 1.")
 parser.add_argument(
-    '--use_gpu',
+    "--use_gpu",
     type=distutils.util.strtobool,
     default=False,
-    help="whether to use GPU devices (default: False)")
+    help="Whether to use GPU devices (default: False)")
 parser.add_argument(
-    '-c',
-    '--class_num',
+    "-c",
+    "--class_num",
     type=int,
     default=0,
-    help="number of categories for classification task.")
+    help="The number of categories for classification task.")
 parser.add_argument(
-    '--model_output_prefix',
+    "--model_output_prefix",
     type=str,
     default="./",
-    help="prefix of the path for model to store, (default: ./)")
+    help="The prefix of the path to store the trained models (default: ./).")
 parser.add_argument(
-    '-g',
-    '--num_batches_to_log',
+    "-g",
+    "--num_batches_to_log",
     type=int,
     default=100,
-    help="number of batches to output train log, (default: 100)")
+    help=("The log period. Every num_batches_to_test batches, "
+          "a training log will be printed. (default: 100)"))
 parser.add_argument(
-    '-e',
-    '--num_batches_to_test',
+    "-e",
+    "--num_batches_to_test",
     type=int,
     default=200,
-    help="number of batches to test, (default: 200)")
+    help=("The test period. Every num_batches_to_save_model batches, "
+          "the specified test sample will be test (default: 200)."))
 parser.add_argument(
-    '-z',
-    '--num_batches_to_save_model',
+    "-z",
+    "--num_batches_to_save_model",
     type=int,
     default=400,
-    help="number of batches to output model, (default: 400)")
+    help=("Every num_batches_to_save_model batches, "
+          "a trained model will be saved (default: 400)."))
 
-# arguments check.
 args = parser.parse_args()
 args.model_type = ModelType(args.model_type)
 args.model_arch = ModelArch(args.model_arch)
 if args.model_type.is_classification():
-    assert args.class_num > 1, "--class_num should be set in classification task."
+    assert args.class_num > 1, ("The parameter class_num should be set in "
+                                "classification task.")
 
-layer_dims = [int(i) for i in args.dnn_dims.split(',')]
-args.target_dic_path = args.source_dic_path if not args.target_dic_path else args.target_dic_path
+layer_dims = [int(i) for i in args.dnn_dims.split(",")]
+args.target_dic_path = args.source_dic_path if not \
+        args.target_dic_path else args.target_dic_path
 
 
 def train(train_data_path=None,
@@ -138,15 +147,15 @@ def train(train_data_path=None,
           class_num=None,
           num_workers=1,
           use_gpu=False):
-    '''
+    """
     Train the DSSM.
-    '''
-    default_train_path = './data/rank/train.txt'
-    default_test_path = './data/rank/test.txt'
-    default_dic_path = './data/vocab.txt'
+    """
+    default_train_path = "./data/rank/train.txt"
+    default_test_path = "./data/rank/test.txt"
+    default_dic_path = "./data/vocab.txt"
     if not model_type.is_rank():
-        default_train_path = './data/classification/train.txt'
-        default_test_path = './data/classification/test.txt'
+        default_train_path = "./data/classification/train.txt"
+        default_test_path = "./data/classification/test.txt"
 
     use_default_data = not train_data_path
 
@@ -200,19 +209,19 @@ def train(train_data_path=None,
 
     feeding = {}
     if model_type.is_classification() or model_type.is_regression():
-        feeding = {'source_input': 0, 'target_input': 1, 'label_input': 2}
+        feeding = {"source_input": 0, "target_input": 1, "label_input": 2}
     else:
         feeding = {
-            'source_input': 0,
-            'left_target_input': 1,
-            'right_target_input': 2,
-            'label_input': 3
+            "source_input": 0,
+            "left_target_input": 1,
+            "right_target_input": 2,
+            "label_input": 3
         }
 
     def _event_handler(event):
-        '''
+        """
         Define batch handler
-        '''
+        """
         if isinstance(event, paddle.event.EndIteration):
             # output train log
             if event.batch_id % args.num_batches_to_log == 0:
@@ -249,7 +258,7 @@ def train(train_data_path=None,
     logger.info("Training has finished.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     display_args(args)
     train(
         train_data_path=args.train_data_path,
