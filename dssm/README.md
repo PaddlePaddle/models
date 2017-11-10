@@ -65,10 +65,11 @@ In below, we describe how to train DSSM model in PaddlePaddle. All the codes are
 ### Create a word vector table for the text
 ```python
 def create_embedding(self, input, prefix=''):
-    '''
-    Create an embedding table whose name has a `prefix`.
-    '''
-    logger.info("create embedding table [%s] which dimention is %d" %
+    """
+    Create word embedding. The `prefix` is added in front of the name of
+    embedding"s learnable parameter.
+    """
+    logger.info("Create embedding table [%s] whose dimention is %d" %
                 (prefix, self.dnn_dims[0]))
     emb = paddle.layer.embedding(
         input=input,
@@ -82,14 +83,15 @@ Since the input (embedding table) is a list of the IDs of the words correspondin
 ### CNN implementation
 ```python
 def create_cnn(self, emb, prefix=''):
-    '''
-    A multi-layer CNN.
 
-    @emb: paddle.layer
-        output of the embedding layer
-    @prefix: str
-        prefix of layers' names, used to share parameters between more than one `cnn` parts.
-    '''
+    """
+    A multi-layer CNN.
+    :param emb: The word embedding.
+    :type emb: paddle.layer
+    :param prefix: The prefix will be added to of layers' names.
+    :type prefix: str
+    """
+
     def create_conv(context_len, hidden_size, prefix):
         key = "%s_%d_%d" % (prefix, context_len, hidden_size)
         conv = paddle.networks.sequence_conv_pool(
@@ -97,15 +99,13 @@ def create_cnn(self, emb, prefix=''):
             context_len=context_len,
             hidden_size=hidden_size,
             # set parameter attr for parameter sharing
-            context_proj_param_attr=ParamAttr(name=key + 'contex_proj.w'),
-            fc_param_attr=ParamAttr(name=key + '_fc.w'),
-            fc_bias_attr=ParamAttr(name=key + '_fc.b'),
-            pool_bias_attr=ParamAttr(name=key + '_pool.b'))
+            context_proj_param_attr=ParamAttr(name=key + "contex_proj.w"),
+            fc_param_attr=ParamAttr(name=key + "_fc.w"),
+            fc_bias_attr=ParamAttr(name=key + "_fc.b"),
+            pool_bias_attr=ParamAttr(name=key + "_pool.b"))
         return conv
 
-    logger.info('create a sequence_conv_pool which context width is 3')
     conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
-    logger.info('create a sequence_conv_pool which context width is 4')
     conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
     return conv_3, conv_4
 ```
@@ -118,9 +118,9 @@ RNN is suitable for learning variable length of the information
 
 ```python
 def create_rnn(self, emb, prefix=''):
-    '''
+    """
     A GRU sentence vector learner.
-    '''
+    """
     gru = paddle.networks.simple_gru(
         input=emb,
         size=self.dnn_dims[1],
@@ -136,14 +136,15 @@ def create_rnn(self, emb, prefix=''):
 
 ```python
 def create_fc(self, emb, prefix=''):
-    '''
-    A multi-layer fully connected neural networks.
 
-    @emb: paddle.layer
-        output of the embedding layer
-    @prefix: str
-        prefix of layers' names, used to share parameters between more than one `fc` parts.
-    '''
+    """
+    A multi-layer fully connected neural networks.
+    :param emb: The output of the embedding layer
+    :type emb: paddle.layer
+    :param prefix: A prefix will be added to the layers' names.
+    :type prefix: str
+    """
+
     _input_layer = paddle.layer.pooling(
         input=emb, pooling_type=paddle.pooling.Max())
     fc = paddle.layer.fc(
@@ -160,13 +161,10 @@ In the construction of FC, we use `paddle.layer.pooling` for the maximum pooling
 
 ```python
 def create_dnn(self, sent_vec, prefix):
-    # if more than three layers exists, a fc layer will be added.
     if len(self.dnn_dims) > 1:
         _input_layer = sent_vec
         for id, dim in enumerate(self.dnn_dims[1:]):
             name = "%s_fc_%d_%d" % (prefix, id, dim)
-            logger.info("create fc layer [%s] which dimention is %d" %
-                        (name, dim))
             fc = paddle.layer.fc(
                 input=_input_layer,
                 size=dim,
@@ -180,117 +178,12 @@ def create_dnn(self, sent_vec, prefix):
 
 ### Classification / Regression
 The structure of classification and regression is similar. Below function can be used for both tasks.
-
-```python
-def _build_classification_or_regression_model(self, is_classification):
-    '''
-    Build a classification/regression model, and the cost is returned.
-
-    A Classification has 3 inputs:
-      - source sentence
-      - target sentence
-      - classification label
-
-    '''
-    # prepare inputs.
-    assert self.class_num
-
-    source = paddle.layer.data(
-        name='source_input',
-        type=paddle.data_type.integer_value_sequence(self.vocab_sizes[0]))
-    target = paddle.layer.data(
-        name='target_input',
-        type=paddle.data_type.integer_value_sequence(self.vocab_sizes[1]))
-    label = paddle.layer.data(
-        name='label_input',
-        type=paddle.data_type.integer_value(self.class_num)
-        if is_classification else paddle.data_type.dense_input)
-
-    prefixs = '_ _'.split(
-    ) if self.share_semantic_generator else 'source target'.split()
-    embed_prefixs = '_ _'.split(
-    ) if self.share_embed else 'source target'.split()
-
-    word_vecs = []
-    for id, input in enumerate([source, target]):
-        x = self.create_embedding(input, prefix=embed_prefixs[id])
-        word_vecs.append(x)
-
-    semantics = []
-    for id, input in enumerate(word_vecs):
-        x = self.model_arch_creater(input, prefix=prefixs[id])
-        semantics.append(x)
-
-    if is_classification:
-        concated_vector = paddle.layer.concat(semantics)
-        prediction = paddle.layer.fc(
-            input=concated_vector,
-            size=self.class_num,
-            act=paddle.activation.Softmax())
-        cost = paddle.layer.classification_cost(
-            input=prediction, label=label)
-    else:
-        prediction = paddle.layer.cos_sim(*semantics)
-        cost = paddle.layer.square_error_cost(prediction, label)
-
-    if not self.is_infer:
-        return cost, prediction, label
-    return prediction
-```
+Please check the function `_build_classification_or_regression_model` in [network_conf.py]( https://github.com/PaddlePaddle/models/blob/develop/dssm/network_conf.py) for detail implementation.
 
 ### Pairwise Rank
 
+Please check the function `_build_rank_model` in [network_conf.py]( https://github.com/PaddlePaddle/models/blob/develop/dssm/network_conf.py) for implementation.
 
-```python
-def _build_rank_model(self):
-    '''
-    Build a pairwise rank model, and the cost is returned.
-
-    A pairwise rank model has 3 inputs:
-      - source sentence
-      - left_target sentence
-      - right_target sentence
-      - label, 1 if left_target should be sorted in front of right_target, otherwise 0.
-    '''
-    source = paddle.layer.data(
-        name='source_input',
-        type=paddle.data_type.integer_value_sequence(self.vocab_sizes[0]))
-    left_target = paddle.layer.data(
-        name='left_target_input',
-        type=paddle.data_type.integer_value_sequence(self.vocab_sizes[1]))
-    right_target = paddle.layer.data(
-        name='right_target_input',
-        type=paddle.data_type.integer_value_sequence(self.vocab_sizes[1]))
-    label = paddle.layer.data(
-        name='label_input', type=paddle.data_type.integer_value(1))
-
-    prefixs = '_ _ _'.split(
-    ) if self.share_semantic_generator else 'source target target'.split()
-    embed_prefixs = '_ _'.split(
-    ) if self.share_embed else 'source target target'.split()
-
-    word_vecs = []
-    for id, input in enumerate([source, left_target, right_target]):
-        x = self.create_embedding(input, prefix=embed_prefixs[id])
-        word_vecs.append(x)
-
-    semantics = []
-    for id, input in enumerate(word_vecs):
-        x = self.model_arch_creater(input, prefix=prefixs[id])
-        semantics.append(x)
-
-    # cossim score of source and left_target
-    left_score = paddle.layer.cos_sim(semantics[0], semantics[1])
-    # cossim score of source and right target
-    right_score = paddle.layer.cos_sim(semantics[0], semantics[2])
-
-    # rank cost
-    cost = paddle.layer.rank_cost(left_score, right_score, label=label)
-    # prediction = left_score - right_score
-    # but this operator is not supported currently.
-    # so AUC will not used.
-    return cost, None, None
-```
 ## Data Format
 Below is a simple example for the data in `./data`
 
@@ -347,67 +240,7 @@ The example of this format is as follows.
 
 ## Training
 
-We use `python train.py -y 0 --model_arch 0` with the data in  `./data/classification` to train a DSSM model for classification.
-
-
-```
-usage: train.py [-h] [-i TRAIN_DATA_PATH] [-t TEST_DATA_PATH]
-                [-s SOURCE_DIC_PATH] [--target_dic_path TARGET_DIC_PATH]
-                [-b BATCH_SIZE] [-p NUM_PASSES] -y MODEL_TYPE -a MODEL_ARCH
-                [--share_network_between_source_target SHARE_NETWORK_BETWEEN_SOURCE_TARGET]
-                [--share_embed SHARE_EMBED] [--dnn_dims DNN_DIMS]
-                [--num_workers NUM_WORKERS] [--use_gpu USE_GPU] [-c CLASS_NUM]
-                [--model_output_prefix MODEL_OUTPUT_PREFIX]
-                [-g NUM_BATCHES_TO_LOG] [-e NUM_BATCHES_TO_TEST]
-                [-z NUM_BATCHES_TO_SAVE_MODEL]
-
-PaddlePaddle DSSM example
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -i TRAIN_DATA_PATH, --train_data_path TRAIN_DATA_PATH
-                        path of training dataset
-  -t TEST_DATA_PATH, --test_data_path TEST_DATA_PATH
-                        path of testing dataset
-  -s SOURCE_DIC_PATH, --source_dic_path SOURCE_DIC_PATH
-                        path of the source's word dic
-  --target_dic_path TARGET_DIC_PATH
-                        path of the target's word dic, if not set, the
-                        `source_dic_path` will be used
-  -b BATCH_SIZE, --batch_size BATCH_SIZE
-                        size of mini-batch (default:32)
-  -p NUM_PASSES, --num_passes NUM_PASSES
-                        number of passes to run(default:10)
-  -y MODEL_TYPE, --model_type MODEL_TYPE
-                        model type, 0 for classification, 1 for pairwise rank,
-                        2 for regression (default: classification)
-  -a MODEL_ARCH, --model_arch MODEL_ARCH
-                        model architecture, 1 for CNN, 0 for FC, 2 for RNN
-  --share_network_between_source_target SHARE_NETWORK_BETWEEN_SOURCE_TARGET
-                        whether to share network parameters between source and
-                        target
-  --share_embed SHARE_EMBED
-                        whether to share word embedding between source and
-                        target
-  --dnn_dims DNN_DIMS   dimentions of dnn layers, default is '256,128,64,32',
-                        which means create a 4-layer dnn, demention of each
-                        layer is 256, 128, 64 and 32
-  --num_workers NUM_WORKERS
-                        num worker threads, default 1
-  --use_gpu USE_GPU     whether to use GPU devices (default: False)
-  -c CLASS_NUM, --class_num CLASS_NUM
-                        number of categories for classification task.
-  --model_output_prefix MODEL_OUTPUT_PREFIX
-                        prefix of the path for model to store, (default: ./)
-  -g NUM_BATCHES_TO_LOG, --num_batches_to_log NUM_BATCHES_TO_LOG
-                        number of batches to output train log, (default: 100)
-  -e NUM_BATCHES_TO_TEST, --num_batches_to_test NUM_BATCHES_TO_TEST
-                        number of batches to test, (default: 200)
-  -z NUM_BATCHES_TO_SAVE_MODEL, --num_batches_to_save_model NUM_BATCHES_TO_SAVE_MODEL
-                        number of batches to output model, (default: 400)
-```
-
-Parameter description:
+We use `python train.py -y 0 --model_arch 0` with the data in  `./data/classification` to train a DSSM model for classification. The paremeters to execute the script `train.py` can be found by execution `python infer.py --help`. Some important parameters are：
 
 - `train_data_path` Training data path
 - `test_data_path`  Test data path, optional
@@ -418,48 +251,8 @@ Parameter description:
 - `dnn_dims` The dimension of each layer of the model is set, the default is `256,128,64,32`，with 4 layers.
 
 ## To predict using the trained model
-```
-usage: infer.py [-h] --model_path MODEL_PATH -i DATA_PATH -o
-                PREDICTION_OUTPUT_PATH -y MODEL_TYPE [-s SOURCE_DIC_PATH]
-                [--target_dic_path TARGET_DIC_PATH] -a MODEL_ARCH
-                [--share_network_between_source_target SHARE_NETWORK_BETWEEN_SOURCE_TARGET]
-                [--share_embed SHARE_EMBED] [--dnn_dims DNN_DIMS]
-                [-c CLASS_NUM]
 
-PaddlePaddle DSSM infer
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --model_path MODEL_PATH
-                        path of model parameters file
-  -i DATA_PATH, --data_path DATA_PATH
-                        path of the dataset to infer
-  -o PREDICTION_OUTPUT_PATH, --prediction_output_path PREDICTION_OUTPUT_PATH
-                        path to output the prediction
-  -y MODEL_TYPE, --model_type MODEL_TYPE
-                        model type, 0 for classification, 1 for pairwise rank,
-                        2 for regression (default: classification)
-  -s SOURCE_DIC_PATH, --source_dic_path SOURCE_DIC_PATH
-                        path of the source's word dic
-  --target_dic_path TARGET_DIC_PATH
-                        path of the target's word dic, if not set, the
-                        `source_dic_path` will be used
-  -a MODEL_ARCH, --model_arch MODEL_ARCH
-                        model architecture, 1 for CNN, 0 for FC, 2 for RNN
-  --share_network_between_source_target SHARE_NETWORK_BETWEEN_SOURCE_TARGET
-                        whether to share network parameters between source and
-                        target
-  --share_embed SHARE_EMBED
-                        whether to share word embedding between source and
-                        target
-  --dnn_dims DNN_DIMS   dimentions of dnn layers, default is '256,128,64,32',
-                        which means create a 4-layer dnn, demention of each
-                        layer is 256, 128, 64 and 32
-  -c CLASS_NUM, --class_num CLASS_NUM
-                        number of categories for classification task.
-```
-
-Important parameters are
+The paremeters to execute the script `infer.py` can be found by execution `python infer.py --help`. Some important parameters are：
 
 - `data_path` Path for the data to predict
 - `prediction_output_path` Prediction output path

@@ -33,7 +33,6 @@ def ngram_lm(hidden_size, emb_size, dict_size, gram_num=4, is_train=True):
             num_classes=dict_size,
             param_attr=paddle.attr.Param(name="nce_w"),
             bias_attr=paddle.attr.Param(name="nce_b"),
-            act=paddle.activation.Sigmoid(),
             num_neg_samples=25,
             neg_distribution=None)
     else:
@@ -41,7 +40,7 @@ def ngram_lm(hidden_size, emb_size, dict_size, gram_num=4, is_train=True):
             size=dict_size,
             input=paddle.layer.trans_full_matrix_projection(
                 hidden_layer, param_attr=paddle.attr.Param(name="nce_w")),
-            act=paddle.activation.Sigmoid(),
+            act=paddle.activation.Softmax(),
             bias_attr=paddle.attr.Param(name="nce_b"))
 
 
