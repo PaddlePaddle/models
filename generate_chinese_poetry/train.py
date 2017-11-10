@@ -75,10 +75,9 @@ def train(num_passes,
     paddle.init(use_gpu=use_gpu, trainer_count=trainer_count)
 
     # define optimization method and the trainer instance
-    optimizer = paddle.optimizer.AdaDelta(
+    optimizer = paddle.optimizer.Adam(
         learning_rate=1e-3,
-        gradient_clipping_threshold=25.0,
-        regularization=paddle.optimizer.L2Regularization(rate=8e-4),
+        regularization=paddle.optimizer.L2Regularization(rate=1e-5),
         model_average=paddle.optimizer.ModelAverage(
             average_window=0.5, max_average_window=2500))
 
@@ -88,7 +87,10 @@ def train(num_passes,
         encoder_depth=encoder_depth,
         encoder_hidden_dim=512,
         decoder_depth=decoder_depth,
-        decoder_hidden_dim=512)
+        decoder_hidden_dim=512,
+        bos_id=0,
+        eos_id=1,
+        max_length=17)
 
     parameters = paddle.parameters.create(cost)
     if init_model_path:
@@ -113,7 +115,7 @@ def train(num_passes,
                                          (event.pass_id, event.batch_id))
                 save_model(trainer, save_path, parameters)
 
-            if not event.batch_id % 5:
+            if not event.batch_id % 10:
                 logger.info("Pass %d, Batch %d, Cost %f, %s" % (
                     event.pass_id, event.batch_id, event.cost, event.metrics))
 
