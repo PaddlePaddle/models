@@ -78,11 +78,7 @@ Options:
 ### 训练执行
 ```bash
 python train.py \
-<<<<<<< HEAD
     --num_passes 20 \
-=======
-    --num_passes 10 \
->>>>>>> 7943732ab34254df801d72b0b5e04f6f320e4127
     --batch_size 256 \
     --use_gpu True \
     --trainer_count 1 \
@@ -130,16 +126,11 @@ Options:
 例如将诗句 `白日依山盡，黃河入海流` 保存在文件 `input.txt` 中作为预测下句诗的输入，执行命令：
 ```bash
 python generate.py \
-<<<<<<< HEAD
     --model_path models/pass_00014.tar.gz \
-=======
-    --model_path models/pass_00100.tar.gz \
->>>>>>> 7943732ab34254df801d72b0b5e04f6f320e4127
     --word_dict_path data/dict.txt \
     --test_data_path input.txt \
     --save_file output.txt
 ```
-<<<<<<< HEAD
 生成结果将保存在文件 `output.txt` 中。对于上述示例输入，生成的诗句如下：
 ```text
 -21.2048    不 知 身 外 事 ， 何 處 是 閑 遊
@@ -148,6 +139,3 @@ python generate.py \
 -21.7312    不 知 身 外 事 ， 何 事 是 何 求
 -22.1956    不 知 身 外 事 ， 何 處 是 人 愁
 ```
-=======
-生成结果将保存在文件 `output.txt` 中。
->>>>>>> 7943732ab34254df801d72b0b5e04f6f320e4127
