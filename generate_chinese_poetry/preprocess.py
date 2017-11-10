@@ -16,11 +16,7 @@ def build_vocabulary(dataset, cutoff=0):
     dictionary = filter(lambda x: x[1] >= cutoff, dictionary.items())
     dictionary = sorted(dictionary, key=lambda x: (-x[1], x[0]))
     vocab, _ = list(zip(*dictionary))
-<<<<<<< HEAD
     return (u"<s>", u"<e>", u"<unk>") + vocab
-=======
-    return (u"<unk>", u"<s>", u"<e>") + vocab
->>>>>>> 7943732ab34254df801d72b0b5e04f6f320e4127
 
 
 @click.command("preprocess")
