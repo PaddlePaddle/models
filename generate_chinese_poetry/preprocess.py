@@ -52,7 +52,7 @@ def preprocess(datadir, outfile, dictfile):
                         u"！" in p or u"？" in p or u"●" in p or u"□" in p or
                         u"囗" in p or u"）" in p):
                     continue
-                paragraphs = p.split(u"。")
+                paragraphs = re.split(u"。|，", p)
                 paragraphs = filter(lambda x: len(x), paragraphs)
                 if len(paragraphs) > 1:
                     dataset.append((title, author, paragraphs))

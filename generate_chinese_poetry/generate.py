@@ -82,7 +82,7 @@ def generate(model_path, word_dict_path, test_data_path, batch_size, beam_size,
         decoder_hidden_dim=512,
         bos_id=0,
         eos_id=1,
-        max_length=17,
+        max_length=9,
         beam_size=beam_size,
         is_generating=True)
 

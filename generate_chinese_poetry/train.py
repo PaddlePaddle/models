@@ -90,7 +90,7 @@ def train(num_passes,
         decoder_hidden_dim=512,
         bos_id=0,
         eos_id=1,
-        max_length=17)
+        max_length=9)
 
     parameters = paddle.parameters.create(cost)
     if init_model_path:
