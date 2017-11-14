@@ -13,7 +13,7 @@ The word embedding expresses words with a real vector. Each dimension of the vec
 In the example of word vectors, we show how to use Hierarchical-Sigmoid and Noise Contrastive Estimation (NCE) to accelerate word-vector learning.
 
 - 1.1 [Hsigmoid Accelerated Word Vector Training](https://github.com/PaddlePaddle/models/tree/develop/hsigmoid)
-- 1.2 [Noise Contrast Estimation Accelerated Word Vector Training](https://github.com/PaddlePaddle/models/tree/develop/nce_cost)
+- 1.2 [Noise Contrastive Estimation Accelerated Word Vector Training](https://github.com/PaddlePaddle/models/tree/develop/nce_cost)
 
 
 ## 2. RNN language model
