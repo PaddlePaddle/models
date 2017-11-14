@@ -47,4 +47,4 @@ Jonas Gehring, Micheal Auli, David Grangier, et al. Convolutional Sequence to Se
 
 # Notes
 
-Currently, the beam search will forward the whole network when predicting every word, which is a waste of time. And we will fix it later.
+Currently, beam search will forward the encoder multiple times when predicting each target word, which requires extra computations. And we will fix it later.
