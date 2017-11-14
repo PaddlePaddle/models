@@ -12,11 +12,11 @@ In the example of word vectors, we show how to use Hierarchical-Sigmoid and Nois
 - 1.2 [Noise Contrast Estimation Accelerated Word Vector Training](https://github.com/PaddlePaddle/models/tree/develop/nce_cost)
 
 
-## 2. Generate text using the recurrent neural network language model
+## 2. RNN language model
 
 The language model is important in the field of natural language processing. In addition to getting the word vector (a by-product of language model training), it can also help us to generate text. Given a number of words, the language model can help us predict the next most likely word. In the example of using the language model to generate text, we focus on the recurrent neural network language model. We can use the instructions in the document quickly adapt to their training corpus, complete automatic writing poetry, automatic writing prose and other interesting models.
 
-- 2.1 [Generate text using the annotated neural network language model](https://github.com/PaddlePaddle/models/tree/develop/generate_sequence_by_rnn_lm)
+- 2.1 [Generate text using the RNN language model](https://github.com/PaddlePaddle/models/tree/develop/generate_sequence_by_rnn_lm)
 
 ## 3. Click-Through Rate prediction
 The click-through rate model predicts the probability that a user will click on an ad. This is widely used for advertising technology. Logistic Regression has a good learning performance for large-scale sparse features in the early stages of the development of click-through rate prediction. In recent years, DNN model because of its strong learning ability to gradually take the banner rate of the task of the banner.
@@ -74,7 +74,4 @@ For the example of image classification, we show you how to train AlexNet, VGG, 
 - 9.3 [VGG](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 - 9.4 [Residual Network](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 
-
-## Copyright and License
-
-PaddlePaddle is provided under the [Apache-2.0 license](LICENSE).
+This tutorial is contributed by [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) and licensed under the [Apache-2.0 license](LICENSE).
