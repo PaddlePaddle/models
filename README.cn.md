@@ -17,7 +17,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 - 1.2 [噪声对比估计加速词向量训练](https://github.com/PaddlePaddle/models/tree/develop/nce_cost)
 
 
-## 2. 使用循环神经网络语言模型生成文本
+## 2. RNN 语言模型
 
 语言模型是自然语言处理领域里一个重要的基础模型，除了得到词向量（语言模型训练的副产物），还可以帮助我们生成文本。给定若干个词，语言模型可以帮助我们预测下一个最可能出现的词。
 
@@ -50,7 +50,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 - 5.1 [基于Pairwise和Listwise的排序学习](https://github.com/PaddlePaddle/models/tree/develop/ltr)
 
-## 6. 深度结构化语义模型
+## 6. 结构化语义模型
 
 深度结构化语义模型是一种基于神经网络的语义匹配模型框架，可以用于学习两路信息实体或是文本之间的语义相似性。DSSM使用DNN、CNN或是RNN将两路信息实体或是文本映射到同一个连续的低纬度语义空间中。在这个语义空间中，两路实体或是文本可以同时进行表示，然后，通过定义距离度量和匹配函数来刻画并学习不同实体或是文本在同一个语义空间内的语义相似性。
 
@@ -85,7 +85,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 - 9.1 [Globally Normalized Reader](https://github.com/PaddlePaddle/models/tree/develop/globally_normalized_reader)
 
-## 10. 基于神经网络的自动问答（Neural Question Answering）
+## 10. 自动问答
 
 自动问答（Question Answering）系统利用计算机自动回答用户提出的问题，是验证机器是否具备自然语言理解能力的重要任务之一，其研究历史可以追溯到人工智能的原点。与检索系统相比，自动问答系统是信息服务的一种高级形式，系统返回给用户的不再是排序后的基于关键字匹配的检索结果，而是精准的自然语言答案。
 
@@ -120,7 +120,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 - 13.1 [场景文字识别](https://github.com/PaddlePaddle/models/tree/develop/scene_text_recognition)
 
-## 14. 语音识别：DeepSpeech2
+## 14. 语音识别
 
 语音识别技术（Auto Speech Recognize，简称ASR）将人类语音中的词汇内容转化为计算机可读的输入，让机器能够“听懂”人类的语音，在语音助手、语音输入、语音交互等应用中发挥着重要作用。深度学习在语音识别领域取得了瞩目的成绩，端到端的深度学习方法将传统的声学模型、词典、语言模型等模块融为一个整体，不再依赖隐马尔可夫模型中的各种条件独立性假设，令模型变得更加简洁，一个神经网络模型以语音特征为输入，直接输出识别出的文本，目前已经成为语音识别最重要的手段。
 
@@ -128,5 +128,5 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 - 14.1 [语音识别: DeepSpeech2](https://github.com/PaddlePaddle/models/tree/develop/deep_speech_2)
 
-## Copyright and License
-PaddlePaddle is provided under the [Apache-2.0 license](LICENSE).
+
+本教程由[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)创作，采用[Apache-2.0](LICENSE) 许可协议进行许可。
