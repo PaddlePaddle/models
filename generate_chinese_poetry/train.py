@@ -76,7 +76,7 @@ def train(num_passes,
 
     # define optimization method and the trainer instance
     optimizer = paddle.optimizer.Adam(
-        learning_rate=1e-3,
+        learning_rate=1e-4,
         regularization=paddle.optimizer.L2Regularization(rate=1e-5),
         model_average=paddle.optimizer.ModelAverage(
             average_window=0.5, max_average_window=2500))

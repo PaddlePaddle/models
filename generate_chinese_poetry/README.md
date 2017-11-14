@@ -3,13 +3,14 @@
 ## 简介
 基于编码器-解码器(encoder-decoder)神经网络模型，利用全唐诗进行诗句-诗句(sequence to sequence)训练，实现给定诗句后，生成下一诗句。
 
+模型中的编码器、解码器均使用堆叠双向LSTM (stacked bi-directional LSTM)，默认均为3层，带有注意力单元(attention)。
+
 以下是本例的简要目录结构及说明：
 
 ```text
 .
 ├── data                 # 存储训练数据及字典
 │   ├── download.sh      # 下载原始数据
-├── models               # 存储训练好的模型
 ├── README.md            # 文档
 ├── index.html           # 文档(html格式)
 ├── preprocess.py        # 原始数据预处理
@@ -33,37 +34,22 @@ cd data && ./download.sh && cd ..
 python preprocess.py --datadir data/raw --outfile data/poems.txt --dictfile data/dict.txt
 ```
 
-上述脚本执行完后将生成处理好的训练数据poems.txt和数据字典dict.txt。poems.txt中每行为一首唐诗的信息，分为三列，分别为题目、作者、诗内容。
-在诗内容中，诗句之间用`.`分隔。
+上述脚本执行完后将生成处理好的训练数据poems.txt和字典dict.txt。字典的构建以字为单位，使用出现频数至少为10的字构建字典。
+
+poems.txt中每行为一首唐诗的信息，分为三列，分别为题目、作者、诗内容。在诗内容中，诗句之间用`.`分隔。
 
 训练数据示例：
 ```text
-登鸛雀樓  王之渙  白日依山盡，黃河入海流.欲窮千里目，更上一層樓
-觀獵      李白    太守耀清威，乘閑弄晚暉.江沙橫獵騎，山火遶行圍.箭逐雲鴻落，鷹隨月兔飛.不知白日暮，歡賞夜方歸
-晦日重宴  陳嘉言  高門引冠蓋，下客抱支離.綺席珍羞滿，文場翰藻摛.蓂華彫上月，柳色藹春池.日斜歸戚里，連騎勒金羈
+登鸛雀樓  王之渙  白日依山盡.黃河入海流.欲窮千里目.更上一層樓
+觀獵      李白   太守耀清威.乘閑弄晚暉.江沙橫獵騎.山火遶行圍.箭逐雲鴻落.鷹隨月兔飛.不知白日暮.歡賞夜方歸
+晦日重宴  陳嘉言  高門引冠蓋.下客抱支離.綺席珍羞滿.文場翰藻摛.蓂華彫上月.柳色藹春池.日斜歸戚里.連騎勒金羈
 ```
+
+模型训练时，使用每一诗句作为模型输入，下一诗句作为预测目标。
+
 
 ## 模型训练
-训练脚本[train.py](./train.py)中的命令行参数如下：
-```
-Usage: train.py [OPTIONS]
-
-Options:
-  --num_passes INTEGER     Number of passes for the training task.
-  --batch_size INTEGER     The number of training examples in one
-                           forward/backward pass.
-  --use_gpu TEXT           Whether to use gpu to train the model.
-  --trainer_count INTEGER  The thread number used in training.
-  --save_dir_path TEXT     The path to saved the trained models.
-  --encoder_depth INTEGER  The number of stacked LSTM layers in encoder.
-  --decoder_depth INTEGER  The number of stacked LSTM layers in decoder.
-  --train_data_path TEXT   The path of trainning data.  [required]
-  --word_dict_path TEXT    The path of word dictionary.  [required]
-  --init_model_path TEXT   The path of a trained model used to initialized all
-                           the model parameters.
-  --help                   Show this message and exit.
-```
-### 参数说明
+训练脚本[train.py](./train.py)中的命令行参数可以通过`python train.py --help`查看。主要参数说明如下：
 - `num_passes`: 训练pass数
 - `batch_size`: batch大小
 - `use_gpu`: 是否使用GPU
@@ -78,7 +64,7 @@ Options:
 ### 训练执行
 ```bash
 python train.py \
-    --num_passes 20 \
+    --num_passes 50 \
     --batch_size 256 \
     --use_gpu True \
     --trainer_count 1 \
@@ -96,24 +82,8 @@ python -c 'import utils; utils.find_optiaml_pass("./train.log")'
 ```
 
 ## 生成诗句
-使用[generate.py](./generate.py)脚本对输入诗句生成下一诗句，
-命令行参数如下：
-```
-Usage: generate.py [OPTIONS]
-
-Options:
-  --model_path TEXT      The path of the trained model for generation.
-  --word_dict_path TEXT  The path of word dictionary.  [required]
-  --test_data_path TEXT  The path of input data for generation.  [required]
-  --batch_size INTEGER   The number of testing examples in one forward pass in
-                         generation.
-  --beam_size INTEGER    The beam expansion in beam search.
-  --save_file TEXT       The file path to save the generated results.
-                         [required]
-  --use_gpu TEXT         Whether to use GPU in generation.
-  --help                 Show this message and exit.
-```
-### 参数说明
+使用[generate.py](./generate.py)脚本对输入诗句生成下一诗句，命令行参数可通过`python generate.py --help`查看。
+主要参数说明如下：
 - `model_path`: 训练好的模型参数文件
 - `word_dict_path`: 数据字典路径
 - `test_data_path`: 输入数据路径
@@ -123,19 +93,19 @@ Options:
 - `use_gpu`: 是否使用GPU
 
 ### 执行生成
-例如将诗句 `白日依山盡，黃河入海流` 保存在文件 `input.txt` 中作为预测下句诗的输入，执行命令：
+例如将诗句 `孤帆遠影碧空盡` 保存在文件 `input.txt` 中作为预测下句诗的输入，执行命令：
 ```bash
 python generate.py \
-    --model_path models/pass_00014.tar.gz \
+    --model_path models/pass_00049.tar.gz \
     --word_dict_path data/dict.txt \
     --test_data_path input.txt \
     --save_file output.txt
 ```
 生成结果将保存在文件 `output.txt` 中。对于上述示例输入，生成的诗句如下：
 ```text
--21.2048    不 知 身 外 事 ， 何 處 是 閑 遊
--21.3982    不 知 身 外 事 ， 何 處 是 何 由
--21.6564    不 知 身 外 事 ， 何 處 是 何 求
--21.7312    不 知 身 外 事 ， 何 事 是 何 求
--22.1956    不 知 身 外 事 ， 何 處 是 人 愁
+-9.6987	  萬 壑 清 風 黃 葉 多
+-10.0737	萬 里 遠 山 紅 葉 深
+-10.4233	萬 壑 清 波 紅 一 流
+-10.4802	萬 壑 清 風 黃 葉 深
+-10.9060	萬 壑 清 風 紅 葉 多
 ```
