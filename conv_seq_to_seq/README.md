@@ -1,1 +1,50 @@
-[TBD]
+# Convolutional Sequence to Sequence Learning
+This model implements the work in the following paper:
+
+Jonas Gehring, Micheal Auli, David Grangier, et al. Convolutional Sequence to Sequence Learning. Association for Computational Linguistics (ACL), 2017
+
+# Training a Model
+- Modify the following script if needed and then run:
+
+	```bash
+	python train.py \
+	  --train_data_path ./data/train_data \
+	  --test_data_path ./data/test_data \
+	  --src_dict_path ./data/src_dict \
+	  --trg_dict_path ./data/trg_dict \
+	  --enc_blocks "[(256, 3)] * 5" \
+	  --dec_blocks "[(256, 3)] * 3" \
+	  --emb_size 256 \
+	  --pos_size 200 \
+	  --drop_rate 0.1 \
+	  --use_gpu False \
+	  --trainer_count 1 \
+	  --batch_size 32 \
+	  --num_passes 20 \
+	  >train.log 2>&1
+	```
+
+# Inferring by a Trained Model
+- Infer by a trained model by running:
+
+	```bash
+	python infer.py \
+	  --infer_data_path ./data/infer_data \
+	  --src_dict_path ./data/src_dict \
+	  --trg_dict_path ./data/trg_dict \
+	  --enc_blocks "[(256, 3)] * 5" \
+	  --dec_blocks "[(256, 3)] * 3" \
+	  --emb_size 256 \
+	  --pos_size 200 \
+	  --drop_rate 0.1 \
+	  --use_gpu False \
+	  --trainer_count 1 \
+	  --max_len 100 \
+	  --beam_size 1 \
+	  --model_path ./params.pass-0.tar.gz \
+	  1>infer_result 2>infer.log
+	```
+
+# Notes
+
+Currently, the beam search will forward the whole network when predicting every word, which is a waste of time. And we will fix it later.
