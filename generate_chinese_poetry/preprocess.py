@@ -32,7 +32,7 @@ def preprocess(datadir, outfile, dictfile):
     note_pattern5 = re.compile(u"。。.*）$", re.U)
     note_pattern6 = re.compile(u"。。", re.U)
     note_pattern7 = re.compile(u"[《》「」\[\]]", re.U)
-    print("Loading raw data...")
+    print("Load raw data...")
     for fn in os.listdir(datadir):
         with io.open(os.path.join(datadir, fn), "r", encoding="utf8") as f:
             for data in json.load(f):
@@ -56,23 +56,20 @@ def preprocess(datadir, outfile, dictfile):
                 paragraphs = filter(lambda x: len(x), paragraphs)
                 if len(paragraphs) > 1:
                     dataset.append((title, author, paragraphs))
-    print("Finished...")
 
-    print("Constructing vocabularies...")
+    print("Construct vocabularies...")
     vocab = build_vocabulary(dataset, cutoff=10)
     with io.open(dictfile, "w", encoding="utf8") as f:
         for v in vocab:
             f.write(v + "\n")
-    print("Finished...")
 
-    print("Writing processed data...")
+    print("Write processed data...")
     with io.open(outfile, "w", encoding="utf8") as f:
         for data in dataset:
             title = data[0]
             author = data[1]
             paragraphs = ".".join(data[2])
             f.write("\t".join((title, author, paragraphs)) + "\n")
-    print("Finished...")
 
 
 if __name__ == "__main__":
