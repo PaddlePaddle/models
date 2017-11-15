@@ -3,6 +3,14 @@ This model implements the work in the following paper:
 
 Jonas Gehring, Micheal Auli, David Grangier, et al. Convolutional Sequence to Sequence Learning. Association for Computational Linguistics (ACL), 2017
 
+# Data Preparation
+
+- In this tutorial, each line in a data file contains one sample and each sample consists of a source sentence and a target sentence. And the two sentences are seperated by '\t'. So, to use your own data, it should be organized as follows:
+
+	```
+	<source sentence>\t<target sentence>
+	```
+
 # Training a Model
 - Modify the following script if needed and then run:
 
