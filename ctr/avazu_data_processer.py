@@ -2,6 +2,7 @@ import sys
 import csv
 import cPickle
 import argparse
+import os
 import numpy as np
 
 from utils import logger, TaskMode
