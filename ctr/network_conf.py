@@ -50,7 +50,7 @@ class CTRmodel(object):
 
         self.lr_merged_input = layer.data(
             name='lr_input',
-            type=paddle.data_type.sparse_vector(self.lr_input_dim))
+            type=paddle.data_type.sparse_float_vector(self.lr_input_dim))
 
         if not self.is_infer:
             self.click = paddle.layer.data(
