@@ -46,10 +46,10 @@ def train(topology,
         word_dict = paddle.dataset.imdb.word_dict()
         train_reader = paddle.batch(
             paddle.reader.shuffle(
-                lambda: paddle.dataset.imdb.train(word_dict), buf_size=1000),
+                lambda: paddle.dataset.imdb.train(word_dict)(), buf_size=1000),
             batch_size=100)
         test_reader = paddle.batch(
-            lambda: paddle.dataset.imdb.test(word_dict), batch_size=100)
+            lambda: paddle.dataset.imdb.test(word_dict)(), batch_size=100)
 
         class_num = 2
     else:
