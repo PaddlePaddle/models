@@ -17,9 +17,11 @@ addons:
       - python-pip
       - python2.7-dev
   ssh_known_hosts: 52.76.173.135
+
 before_install:
   -  sudo pip install -U virtualenv pre-commit pip
   -  docker pull paddlepaddle/paddle:latest
+
 script:
   - exit_code=0
   - .travis/precommit.sh || exit_code=$(( exit_code | $? ))
@@ -34,6 +36,7 @@ script:
     curl $DEPLOY_DOCS_SH | bash -s $CONTENT_DEC_PASSWD $TRAVIS_BRANCH $MODELS_DIR
     exit_code=$(( exit_code | $? ))
     exit $exit_code
+
 notifications:
   email:
     on_success: change
