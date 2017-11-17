@@ -1,3 +1,4 @@
+import os
 import gzip
 import numpy as np
 

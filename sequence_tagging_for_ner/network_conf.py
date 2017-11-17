@@ -11,16 +11,16 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
     hidden_dim = 128
 
     word = paddle.layer.data(
-        name='word',
+        name="word",
         type=paddle.data_type.integer_value_sequence(word_dict_len))
     word_embedding = paddle.layer.embedding(
         input=word,
         size=word_dim,
         param_attr=paddle.attr.Param(
-            name='emb', initial_std=math.sqrt(1. / word_dim), is_static=True))
+            name="emb", initial_std=math.sqrt(1. / word_dim), is_static=True))
 
     mark = paddle.layer.data(
-        name='mark',
+        name="mark",
         type=paddle.data_type.integer_value_sequence(mark_dict_len))
     mark_embedding = paddle.layer.embedding(
         input=mark,
@@ -35,7 +35,8 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
     hidden_para_attr = paddle.attr.Param(
         initial_std=1 / math.sqrt(hidden_dim), learning_rate=mix_hidden_lr)
 
-    # the first rnn layer shares the input-to-hidden mappings.
+    # the first forward and backward rnn layer share the
+    # input-to-hidden mappings.
     hidden = paddle.layer.fc(
         name="__hidden00__",
         size=hidden_dim,
@@ -72,32 +73,40 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
         input=fea,
         param_attr=[hidden_para_attr, rnn_para_attr] * 2)
 
+    # NOTE: This fully connected layer calculates the emission feature for
+    # the CRF layer. Because the paddle.layer.crf performs global normalization
+    # over all possible sequences internally, it expects UNSCALED emission
+    # feature weights.
+    # Please do not add any nonlinear activation to this fully connected layer.
+    # The default activation for paddle.layer.fc is the tanh, here needs to set
+    # it to linear explictly.
     emission = paddle.layer.fc(
         size=label_dict_len,
         bias_attr=False,
         input=rnn_fea,
+        act=paddle.activation.Linear(),
         param_attr=rnn_para_attr)
 
     if is_train:
         target = paddle.layer.data(
-            name='target',
+            name="target",
             type=paddle.data_type.integer_value_sequence(label_dict_len))
 
         crf = paddle.layer.crf(
             size=label_dict_len,
             input=emission,
             label=target,
-            param_attr=paddle.attr.Param(name='crfw', initial_std=1e-3))
+            param_attr=paddle.attr.Param(name="crfw", initial_std=1e-3))
 
         crf_dec = paddle.layer.crf_decoding(
             size=label_dict_len,
             input=emission,
             label=target,
-            param_attr=paddle.attr.Param(name='crfw'))
+            param_attr=paddle.attr.Param(name="crfw"))
         return crf, crf_dec, target
     else:
         predict = paddle.layer.crf_decoding(
             size=label_dict_len,
             input=emission,
-            param_attr=paddle.attr.Param(name='crfw'))
+            param_attr=paddle.attr.Param(name="crfw"))
         return predict

@@ -1,3 +1,5 @@
+Deprecated: please check out the new repository [DeepSpeech](https://github.com/PaddlePaddle/DeepSpeech).
+
 # DeepSpeech2 on PaddlePaddle
 
 *DeepSpeech2 on PaddlePaddle* is an open-source implementation of end-to-end Automatic Speech Recognition (ASR) engine, based on [Baidu's Deep Speech 2 paper](http://proceedings.mlr.press/v48/amodei16.pdf), with [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) platform. Our vision is to empower both industrial application and academic research on speech recognition, via an easy-to-use, efficient and scalable implementation, including training, inference & testing module, distributed [PaddleCloud](https://github.com/PaddlePaddle/cloud) training, and demo deployment. Besides, several pre-trained models for both English and Mandarin are also released.
@@ -187,7 +189,7 @@ Six optional augmentation components are provided to be selected, configured and
   - Noise Perturbation (need background noise audio files)
   - Impulse Response (need impulse audio files)
 
-In order to inform the trainer of what augmentation components are needed and what their processing orders are, it is required to prepare in advance a *augmentation configuration file* in [JSON](http://www.json.org/) format. For example:
+In order to inform the trainer of what augmentation components are needed and what their processing orders are, it is required to prepare in advance an *augmentation configuration file* in [JSON](http://www.json.org/) format. For example:
 
 ```
 [{
@@ -226,7 +228,7 @@ If you wish to train your own better language model, please refer to [KenLM](htt
 
 #### English LM
 
-The English corpus is from the [Common Crawl Repository](http://commoncrawl.org) and you can download it from [statmt](http://data.statmt.org/ngrams/deduped_en). We use part en.00 to train our English languge model. There are some preprocessing steps before training:
+The English corpus is from the [Common Crawl Repository](http://commoncrawl.org) and you can download it from [statmt](http://data.statmt.org/ngrams/deduped_en). We use part en.00 to train our English language model. There are some preprocessing steps before training:
 
   * Characters not in \[A-Za-z0-9\s'\] (\s represents whitespace characters) are removed and Arabic numbers are converted to English numbers like 1000 to one thousand.
   * Repeated whitespace characters are squeezed to one and the beginning whitespace characters are removed. Notice that all transcriptions are lowercase, so all characters are converted to lowercase.
