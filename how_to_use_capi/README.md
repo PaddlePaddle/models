@@ -1,19 +1,51 @@
-# CAPI 实现模型预测
+# CAPI 模型预测
 
 ## 1. 编译 PaddlePaddle Library
-[TBD]
+CAPI的使用需要依赖 PaddlePaddle 编译得到动态链接库和头文件，可通过执行以下指令编译得到：
+```shell
+DEST_ROOT=/path/of/capi/
+PADDLE_ROOT=/path/of/paddle_source/
+cmake $PADDLE_ROOT -DCMAKE_INSTALL_PREFIX=$DEST_ROOT \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DWITH_C_API=ON \
+      -DWITH_PYTHON=OFF \
+      -DWITH_MKLML=OFF \
+      -DWITH_MKLDNN=OFF \
+      -DWITH_GPU=OFF \
+      -DWITH_SWIG_PY=OFF \
+      -DWITH_GOLANG=OFF \
+make
+make install
+```
+其中，`DEST_ROOT` 表示编译得到的动态链接库和头文件的存储目录。`PADDLE_ROOT` 表示 PaddlePaddle 源码所在目录。
 
 ## 2. CAPI 使用流程指南
 
 ### 1. 序列化模型配置
 
-使用 CAPI 进行预测时，需要先将网络配置转换为 protobuf 二进制文件。假设网络配置文件为 `trainer_config.conf`，通过调用 PaddlePaddle 中的 `dump_config` 模块可以将配置文件  `trainer_config.conf` 转化为 `trainer_config.bin` 。 执行以下命令完成转换：
+由于PaddlePaddle 使用 protobuf 来传输网络配置文件中定义的网络结构和参数，所以，在使用 CAPI 进行预测时，需要先将网络配置文件转换为 protobuf 二进制文件。假设网络配置文件名为 `train.py`，通过调用 PaddlePaddle 中的 `dump_config` 模块可以将配置文件  `train.py` 转化为protobuf 二进制文件： `train.bin` 。 执行以下命令完成转换：
 ```shell
-python -m paddle.utils.dump_config trainer_config.py '' --binary > trainer_config.bin
+python -m paddle.utils.dump_config train.py '' --binary > train.bin
 ```
 
 ### 2. 组织输入数据
-在 PaddlePaddle 中， 神经网络的每个输入会被组织成一个 `arguments` 对象。 本单元的示例将详细介绍如何组织不同类型的数据进行预测。
+在 PaddlePaddle 中， 神经网络的输入会被组织成一个 `paddle_arguments` 对象，以 dense 输入类型为例，可通过创建 paddle_matrix 实例读取输入数据， 并为`paddle_arguments`对象赋值。 示例代码如下：
+```c
+paddle_arguments in_args = paddle_arguments_create_none();
+
+// There is only one input of this network.
+CHECK(paddle_arguments_resize(in_args, 1));
+
+// Create input matrix.
+paddle_matrix mat = paddle_matrix_create(/* sample_num */ 10,
+                                         /* size */ 784,
+                                         /* useGPU */ false);
+
+// Assign the value of mat with input data.
+...
+
+CHECK(paddle_arguments_set_value(in_args, 0, mat));
+```
 
 ### 3. 初始化/加载模型
 
@@ -23,6 +55,7 @@ python -m paddle.utils.dump_config trainer_config.py '' --binary > trainer_confi
 char* argv[] = {"--use_gpu=False"};
 paddle_init(1, (char**)argv);
 ```
+
 #### 加载模型
 在 PaddlePaddle 中， `gradient machine` 表示一个可以进行前向计算和后向传播的神经网络结构,我们可以构建一个 `gradient machine` 对象，从磁盘中加载参数进行模型预测。示例代码如下：
 ```c
