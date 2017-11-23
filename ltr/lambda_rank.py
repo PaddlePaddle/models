@@ -31,19 +31,22 @@ def lambda_rank(input_dim, is_infer):
                              paddle.data_type.dense_vector_sequence(input_dim))
 
     # Define the hidden layer.
-    hd1 = paddle.layer.fc(input=data,
-                          size=128,
-                          act=paddle.activation.Tanh(),
-                          param_attr=paddle.attr.Param(initial_std=0.01))
+    hd1 = paddle.layer.fc(
+        input=data,
+        size=128,
+        act=paddle.activation.Tanh(),
+        param_attr=paddle.attr.Param(initial_std=0.01))
 
-    hd2 = paddle.layer.fc(input=hd1,
-                          size=10,
-                          act=paddle.activation.Tanh(),
-                          param_attr=paddle.attr.Param(initial_std=0.01))
-    output = paddle.layer.fc(input=hd2,
-                             size=1,
-                             act=paddle.activation.Linear(),
-                             param_attr=paddle.attr.Param(initial_std=0.01))
+    hd2 = paddle.layer.fc(
+        input=hd1,
+        size=10,
+        act=paddle.activation.Tanh(),
+        param_attr=paddle.attr.Param(initial_std=0.01))
+    output = paddle.layer.fc(
+        input=hd2,
+        size=1,
+        act=paddle.activation.Linear(),
+        param_attr=paddle.attr.Param(initial_std=0.01))
 
     if not is_infer:
         # Define the cost layer.
@@ -61,8 +64,7 @@ def lambda_rank_train(num_passes, model_save_dir):
         paddle.dataset.mq2007.test, format="listwise")
 
     train_reader = paddle.batch(
-        paddle.reader.shuffle(
-            fill_default_train, buf_size=100), batch_size=32)
+        paddle.reader.shuffle(fill_default_train, buf_size=100), batch_size=32)
     test_reader = paddle.batch(fill_default_test, batch_size=32)
 
     # Training dataset: mq2007, input_dim = 46, dense format.

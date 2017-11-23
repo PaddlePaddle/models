@@ -87,9 +87,9 @@ def ranknet_train(num_passes, model_save_dir):
         if isinstance(event, paddle.event.EndIteration):
             if event.batch_id % 25 == 0:
                 diff = score_diff(
-                    event.gm.getLayerOutputs("right_score")["right_score"][
-                        "value"],
                     event.gm.getLayerOutputs("left_score")["left_score"][
+                        "value"],
+                    event.gm.getLayerOutputs("right_score")["right_score"][
                         "value"])
                 logger.info(("Pass %d Batch %d : Cost %.6f, "
                              "average absolute diff scores: %.6f") %
@@ -120,7 +120,7 @@ def ranknet_infer(model_path):
 
     # we just need half_ranknet to predict a rank score,
     # which can be used in sort documents
-    output = half_ranknet("infer", feature_dim)
+    output = half_ranknet("right", feature_dim)
     parameters = paddle.parameters.Parameters.from_tar(gzip.open(model_path))
 
     # load data of same query and relevance documents,
@@ -143,9 +143,8 @@ def ranknet_infer(model_path):
     # in descending order. then we build the ranking documents
     scores = paddle.infer(
         output_layer=output, parameters=parameters, input=infer_data)
-    print scores
     for query_id, score in zip(infer_query_id, scores):
-        print "query_id : ", query_id, " ranknet rank document order : ", score
+        print "query_id : ", query_id, " score : ", score
 
 
 if __name__ == "__main__":
