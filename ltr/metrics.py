@@ -10,7 +10,7 @@ def ndcg(score_list):
         score_list: np.array, shape=(sample_num,1)
 
     e.g. predict rank score list :
-    >>> scores =  [3, 2, 3, 0, 1, 2] 
+    >>> scores =  [3, 2, 3, 0, 1, 2]
     >>> ndcg_score = ndcg(scores)
     """
 
