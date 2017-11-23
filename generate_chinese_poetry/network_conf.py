@@ -73,8 +73,10 @@ def encoder_decoder_network(word_count,
                             encoder_hidden_dim,
                             decoder_depth,
                             decoder_hidden_dim,
+                            bos_id,
+                            eos_id,
+                            max_length,
                             beam_size=10,
-                            max_length=15,
                             is_generating=False):
     src_emb = paddle.layer.embedding(
         input=paddle.layer.data(
@@ -106,8 +108,8 @@ def encoder_decoder_network(word_count,
             name=decoder_group_name,
             step=_attended_decoder_step,
             input=group_inputs + [gen_trg_emb],
-            bos_id=0,
-            eos_id=1,
+            bos_id=bos_id,
+            eos_id=eos_id,
             beam_size=beam_size,
             max_length=max_length)
 

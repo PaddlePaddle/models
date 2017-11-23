@@ -28,7 +28,7 @@ def infer_a_batch(inferer, test_batch, beam_size, id_to_text, fout):
         for j in xrange(beam_size):
             end_pos = gen_sen_idx[i * beam_size + j]
             fout.write("%s\n" % ("%.4f\t%s" % (beam_result[0][i][j], " ".join(
-                id_to_text[w] for w in beam_result[1][start_pos:end_pos]))))
+                id_to_text[w] for w in beam_result[1][start_pos:end_pos - 1]))))
             start_pos = end_pos + 2
         fout.write("\n")
         fout.flush
@@ -80,9 +80,11 @@ def generate(model_path, word_dict_path, test_data_path, batch_size, beam_size,
         encoder_hidden_dim=512,
         decoder_depth=3,
         decoder_hidden_dim=512,
-        is_generating=True,
+        bos_id=0,
+        eos_id=1,
+        max_length=9,
         beam_size=beam_size,
-        max_length=10)
+        is_generating=True)
 
     inferer = paddle.inference.Inference(
         output_layer=beam_gen, parameters=parameters)

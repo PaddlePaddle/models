@@ -147,7 +147,8 @@ def encoder(token_emb,
     encoded_sum = paddle.layer.addto(input=[encoded_vec, embedding])
 
     # halve the variance of the sum
-    encoded_sum = paddle.layer.slope_intercept(input=encoded_sum, slope=math.sqrt(0.5))
+    encoded_sum = paddle.layer.slope_intercept(
+        input=encoded_sum, slope=math.sqrt(0.5))
 
     return encoded_vec, encoded_sum
 
