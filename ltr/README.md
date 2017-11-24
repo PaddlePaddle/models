@@ -2,20 +2,6 @@
 
 排序学习技术\[[1](#参考文献1)\]是构建排序模型的机器学习方法，在信息检索、自然语言处理，数据挖掘等机器学场景中具有重要作用。排序学习的主要目的是对给定一组文档，对任意查询请求给出反映相关性的文档排序。在本例子中，利用标注过的语料库训练两种经典排序模型RankNet[[4](#参考文献4)\]和LamdaRank[[6](#参考文献6)\]，分别可以生成对应的排序模型，能够对任意查询请求，给出相关性文档排序。
 
-RankNet模型在命令行输入：
-
-```bash
-bash ./run_ranknet.sh
-```
-
-LambdaRank模型在命令行输入：
-
-```bash
-bash ./run_lambdarank.sh
-```
-
-用户只需要使用以上命令就完成排序模型的训练和预测，程序会自动下载内置数据集，无需手动下载。
-
 ## 背景介绍
 
 排序学习技术随着互联网的快速增长而受到越来越多关注，是机器学习中的常见任务之一。一方面人工排序规则不能处理海量规模的候选数据，另一方面无法为不同渠道的候选数据给于合适的权重，因此排序学习在日常生活中应用非常广泛。排序学习起源于信息检索领域，目前仍然是许多信息检索场景中的核心模块，例如搜索引擎搜索结果排序，推荐系统候选集排序，在线广告排序等等。本例以文档检索任务阐述排序学习模型。
@@ -102,59 +88,26 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}} = \frac{1}{2}(1-S_{i,j})-\fra
 - 全连接层(fully connected layer) : 指上一层中的每个节点都连接到下层网络。本例子中同样使用`paddle.layer.fc`实现，注意输入到RankCost层的全连接层维度为1。
 - RankCost层： RankCost层是排序网络RankNet的核心，度量docA相关性是否比docB好，给出预测值并和label比较。使用了交叉熵(cross enctropy)作为度量损失函数，使用梯度下降方法进行优化。细节可见[RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf)[4]。
 
-由于Pairwise中的网络结构是左右对称，可定义一半网络结构，另一半共享网络参数。在PaddlePaddle中允许网络结构中共享连接，具有相同名字的参数将会共享参数。使用PaddlePaddle实现RankNet排序模型，定义网络结构的示例代码如下：
+由于Pairwise中的网络结构是左右对称，可定义一半网络结构，另一半共享网络参数。在PaddlePaddle中允许网络结构中共享连接，具有相同名字的参数将会共享参数。使用PaddlePaddle实现RankNet排序模型，定义网络结构的示例代码见 [ranknet.py](ranknet.py) 中的 `half_ranknet` 函数。
 
-```python
-import paddle.v2 as paddle
-
-def half_ranknet(name_prefix, input_dim):
-  """
-  parameter with a same name will be shared in PaddlePaddle framework,
-  these parameters in ranknet can be used in shared state, e.g. left network and right network in detail
-  https://github.com/PaddlePaddle/Paddle/blob/develop/doc/design/api.md
-  """
-  # data layer
-  data = paddle.layer.data(name_prefix+"/data", paddle.data_type.dense_vector(input_dim))
-
-  # fully connect layer
-  hd1 = paddle.layer.fc(
-    input=data,
-    size=10,
-    act=paddle.activation.Tanh(),
-    param_attr=paddle.attr.Param(initial_std=0.01, name="hidden_w1"))
-  # fully connected layer/ output layer
-  output = paddle.layer.fc(
-    input=hd1,
-    size=1,
-    act=paddle.activation.Linear(),
-    param_attr=paddle.attr.Param(initial_std=0.01, name="output"))
-  return output
-
-def ranknet(input_dim):
-  # label layer
-  label = paddle.layer.data("label", paddle.data_type.integer_value(1))
-
-  # reuse the parameter in half_ranknet
-  output_left = half_ranknet("left", input_dim)  
-  output_right = half_ranknet("right", input_dim)
-
-  # rankcost layer
-  cost = paddle.layer.rank_cost(name="cost", left=output_left, right=output_right, label=label)
-  return cost
-```
-
-上述结构中使用了和图3相同的模型结构：两层隐藏层，分别是`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例中的input_dim指输入**单个文档**的特征的维度，label取值为1，0。每条输入样本为`<label>，<docA, docB>`的结构，以docA为例，输入`input_dim`的文档特征，依次变换成10维，1维特征，最终输入到RankCost层中，比较docA和docB在RankCost输出得到预测值。
+`half_ranknet` 函数中定义的结构使用了和图3相同的模型结构：两层隐藏层，分别是`hidden_size=10`的全连接层和`hidden_size=1`的全连接层。本例中的`input_dim`指输入**单个文档**的特征的维度，label取值为1，0。每条输入样本为`<label>，<docA, docB>`的结构，以`docA`为例，输入`input_dim`的文档特征，依次变换成10维，1维特征，最终输入到RankCost层中，比较docA和docB在RankCost输出得到预测值。
 
 ### RankNet模型训练
 
-RankNet的训练只需要运行命令：
-
+训练`RankNet`模型在命令行执行：
 ```bash
-bash ./run_ranknet.sh
+python ranknet.py
 ```
-将会自动下载数据，训练RankNet模型，并将每个轮次的模型参数存储下来。
+初次执行会自动下载数据，训练RankNet模型，并将每个轮次的模型参数存储下来。
 
 ### RankNet模型预测
+
+使用训练好的`RankNet`模型继续进行预测，在命令行执行：
+```bash
+python ranknet.py \
+  --run_type infer \
+  --test_model_path models/ranknet_params_0.tar.gz
+```
 
 本例提供了rankNet模型的训练和预测两个部分。完成训练后的模型分为拓扑结构(需要注意`rank_cost`不是模型拓扑结构的一部分)和模型参数文件两部分。在本例子中复用了`ranknet`训练时的模型拓扑结构`half_ranknet`，模型参数从外存中加载。模型预测的输入为单个文档的特征向量，模型会给出相关性得分。将预测得分排序即可得到最终的文档相关性排序结果。
 
@@ -209,8 +162,6 @@ feeding = { "label":0,
             "right/data":2}
 ```
 
-
-
 ## LambdaRank排序模型
 
 [LambdaRank](https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf)\[[6](#参考文献))\]是Listwise的排序方法，是Bugers[6]等人从RankNet发展而来，使用构造lambda函数(LambdaRank名字的由来)的方法优化度量标准NDCG(Normalized Discounted Cumulative Gain)，每个查询后得到的结果文档列表都单独作为一个训练样本。NDCG是信息论中很衡量文档列表排序质量的标准之一，前$K$个文档的NDCG得分记做
@@ -234,57 +185,28 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}}=-\frac{\sigma }{1+e^{\sigma (
 
 - LambdaCost层 : LambdaCost层使用NDCG差值作为Lambda函数，score是一个一维的序列，对于单调训练样本全连接层输出的是1x1的序列，二者的序列长度都等于该条查询得到的文档数量。Lambda函数的构造详细见[LambdaRank](https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf)
 
-使用PaddlePaddle定义LambdaRank网络结构的示例代码如下：
-
-```python
-import paddle.v2 as paddle
-def lambda_rank(input_dim):
-    """
-    lambda_rank is a ListWise Rank Model, input data and label must be sequence
-    https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf
-    parameters :
-      input_dim, one document's dense feature vector dimension
-
-    dense_vector_sequence format
-    [[f, ...], [f, ...], ...], f is represent for an float or int number
-    """
-    label = paddle.layer.data("label",
-                              paddle.data_type.dense_vector_sequence(1))
-    data = paddle.layer.data("data",
-                             paddle.data_type.dense_vector_sequence(input_dim))
-
-    # hidden layer
-    hd1 = paddle.layer.fc(
-        input=data,
-        size=10,
-        act=paddle.activation.Tanh(),
-        param_attr=paddle.attr.Param(initial_std=0.01))
-    output = paddle.layer.fc(
-        input=hd1,
-        size=1,
-        act=paddle.activation.Linear(),
-        param_attr=paddle.attr.Param(initial_std=0.01))
-    # cost layer
-    cost = paddle.layer.lambda_cost(
-        input=output, score=label, NDCG_num=6, max_sort_size=-1)
-    return cost, output
-```
+使用PaddlePaddle定义LambdaRank网络结构的示例代见 [lambda_rank.py](lambda_rank.py) 中的`lambda_rank`函数。
 
 上述结构中使用了和图3相同的模型结构。和RankNet相似，分别使用了`hidden_size=10`和`hidden_size=1`的两个全连接层。本例中的input_dim指输入**单个文档**的特征的维度。每条输入样本为label，\<docA, docB\>的结构，以docA为例，输入input_dim的文档特征，依次变换成10维，1维特征，最终输入到LambdaCost层中。需要注意这里的label和data格式为**dense_vector_sequence**，表示一列文档得分或者文档特征组成的**序列**。
 
 ### LambdaRank模型训练
 
-训练LambdaRank模型只需要运行命令：
-
+训练`LambdaRank`模型在命令行执行：
 ```bash
-bash ./run_lambdarank.sh
+python lambda_rank.py
 ```
-
-脚本会自动下载数据，训练LambdaRank模型，并将每个轮次的模型存储下来。
+初次运行脚本会自动下载数据训练LambdaRank模型，并将每个轮次的模型存储下来。
 
 ### LambdaRank模型预测
 
 LambdaRank模型预测过程和RankNet相同。预测时的模型拓扑结构复用代码中的模型定义，从外存加载对应的参数文件。预测时的输入是文档列表，输出是该文档列表的各个文档相关性打分，根据打分对文档进行重新排序，即可得到最终的文档排序结果。
+
+使用训练好的`LambdaRank`模型继续进行预测，在命令行执行：
+```bash
+python lambda_rank.py \
+  --run_type infer \
+  --test_model_path models/lambda_rank_params_0.tar.gz
+```
 
 ## 自定义 LambdaRank数据
 
@@ -340,13 +262,42 @@ feeding = {"label":0,
            "data" : 1}
 ```
 
+## 训练过程中输出自定义评估指标
+
+这里，我们以 `RankNet` 为例，介绍如何在训练过程中输出自定义评估指标。这个方法同样可以用来在训练过程中获取网络某一层输出矩阵的值。
+
+`RankNet`网络学习一个打分函数对左右两个输入进行打分，左右两个输入的分值差异越大，打分函数对正负例的区分能力越强，模型的泛化能力越好。假设我们希望输出：训练过程中模型对左右输入打分之差绝对值的平均值这样一个指标。为了计算这个自定义的指标，需要获取每个`mini-batch`之后分值层（对应着`ranknet`中的`name`为`left_score`和`right_score`的层）的输出矩阵。可以通过下面两步来实现这一功能：
+
+1. 在`event_handler`中处理`PaddlePaddle`预定义的`paddle.event.EndIteration`或是`paddle.event.EndPass`事件。
+2. 调用`event.gm.getLayerOutputs`，传入网络中指定层的名字，便可获取该层在一个`mini-batch`前向计算结束后的值。
+
+下面是代码示例：
+
+```python
+def score_diff(right_score, left_score):
+    return np.average(np.abs(right_score - left_score))
+
+def event_handler(event):
+    if isinstance(event, paddle.event.EndIteration):
+        if event.batch_id % 25 == 0:
+            diff = score_diff(
+                event.gm.getLayerOutputs("right_score")["right_score"][
+                    "value"],
+                event.gm.getLayerOutputs("left_score")["left_score"][
+                    "value"])
+            logger.info(("Pass %d Batch %d : Cost %.6f, "
+                         "average absolute diff scores: %.6f") %
+                        (event.pass_id, event.batch_id, event.cost, diff))
+```
+
 ## 总结
 
 LTR在实际生活中有着广泛的应用。排序模型构造方法一般可划分为PointWise方法，Pairwise方法，Listwise方法，本例以LETOR的mq2007数据为例子，阐述了Pairwise的经典方法RankNet和Listwise方法中的LambdaRank，展示如何使用PaddlePaddle框架构造对应的排序模型结构，并提供了自定义数据类型样例。PaddlePaddle提供了灵活的编程接口，并可以使用一套代码运行在单机单GPU和多机分布式多GPU下实现LTR类型任务。
 
 ## 注意事项
 
-本例作为LTR的演示示例，所采用的网络规模较小，在应用中须结合实际情况进行设置。本例实验数据中的特征向量为**查询-文档对**的联合特征，当使用查询和文档的独立特征时，可参考[DSSM](https://github.com/PaddlePaddle/models/tree/develop/dssm)。
+1. 本例作为LTR的演示示例，**所采用的网络规模较小**，在应用中须结合实际情况调整网络复杂度，对网络规模重新进行设置。
+2. 本例实验数据中的特征向量为**查询-文档对**的联合特征，当使用查询和文档的独立特征时，可参考[DSSM](https://github.com/PaddlePaddle/models/tree/develop/dssm)构建网络。
 
 ## 参考文献
 
