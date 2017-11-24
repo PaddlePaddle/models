@@ -5,11 +5,16 @@ Challenge (https://www.kaggle.com/c/criteo-display-ad-challenge).
 import os
 import sys
 import click
+import random
 import collections
 
 # There are 13 integer features and 26 categorical features
 continous_features = range(1, 14)
 categorial_features = range(14, 40)
+
+# Clip integer features. The clip point for each integer feature
+# is derived from the 95% quantile of the total values in each feature
+continous_clip = [20, 600, 100, 50, 64000, 500, 100, 50, 500, 10, 10, 10, 50]
 
 
 class CategoryDictGenerator:
@@ -67,12 +72,14 @@ class ContinuousFeatureGenerator:
                     val = features[continous_features[i]]
                     if val != '':
                         val = int(val)
+                        if val > continous_clip[i]:
+                            val = continous_clip[i]
                         self.min[i] = min(self.min[i], val)
                         self.max[i] = max(self.max[i], val)
 
     def gen(self, idx, val):
         if val == '':
-            return 0
+            return 0.0
         val = float(val)
         return (val - self.min[idx]) / (self.max[idx] - self.min[idx])
 
@@ -101,26 +108,36 @@ def preprocess(datadir, outdir):
         offset = categorial_feature_offset[i - 1] + dict_sizes[i - 1]
         categorial_feature_offset.append(offset)
 
-    with open(os.path.join(outdir, 'train.txt'), 'w') as out:
-        with open(os.path.join(datadir, 'train.txt'), 'r') as f:
-            for line in f:
-                features = line.rstrip('\n').split('\t')
+    random.seed(0)
 
-                continous_vals = []
-                for i in range(0, len(continous_features)):
-                    val = dists.gen(i, features[continous_features[i]])
-                    continous_vals.append(str(val))
-                categorial_vals = []
-                for i in range(0, len(categorial_features)):
-                    val = dicts.gen(i, features[categorial_features[
-                        i]]) + categorial_feature_offset[i]
-                    categorial_vals.append(str(val))
+    # 90% of the data are used for training, and 10% of the data are used
+    # for validation.
+    with open(os.path.join(outdir, 'train.txt'), 'w') as out_train:
+        with open(os.path.join(outdir, 'valid.txt'), 'w') as out_valid:
+            with open(os.path.join(datadir, 'train.txt'), 'r') as f:
+                for line in f:
+                    features = line.rstrip('\n').split('\t')
 
-                continous_vals = ','.join(continous_vals)
-                categorial_vals = ','.join(categorial_vals)
-                label = features[0]
-                out.write('\t'.join([continous_vals, categorial_vals, label]) +
-                          '\n')
+                    continous_vals = []
+                    for i in range(0, len(continous_features)):
+                        val = dists.gen(i, features[continous_features[i]])
+                        continous_vals.append(
+                            "{0:.6f}".format(val).rstrip('0').rstrip('.'))
+                    categorial_vals = []
+                    for i in range(0, len(categorial_features)):
+                        val = dicts.gen(i, features[categorial_features[
+                            i]]) + categorial_feature_offset[i]
+                        categorial_vals.append(str(val))
+
+                    continous_vals = ','.join(continous_vals)
+                    categorial_vals = ','.join(categorial_vals)
+                    label = features[0]
+                    if random.randint(0, 9999) % 10 != 0:
+                        out_train.write('\t'.join(
+                            [continous_vals, categorial_vals, label]) + '\n')
+                    else:
+                        out_valid.write('\t'.join(
+                            [continous_vals, categorial_vals, label]) + '\n')
 
     with open(os.path.join(outdir, 'test.txt'), 'w') as out:
         with open(os.path.join(datadir, 'test.txt'), 'r') as f:
@@ -130,7 +147,8 @@ def preprocess(datadir, outdir):
                 continous_vals = []
                 for i in range(0, len(continous_features)):
                     val = dists.gen(i, features[continous_features[i] - 1])
-                    continous_vals.append(str(val))
+                    continous_vals.append(
+                        "{0:.6f}".format(val).rstrip('0').rstrip('.'))
                 categorial_vals = []
                 for i in range(0, len(categorial_features)):
                     val = dicts.gen(i,

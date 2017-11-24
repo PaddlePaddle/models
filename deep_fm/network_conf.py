@@ -14,7 +14,7 @@ def fm_layer(input, factor_size, fm_param_attr):
         param_attr=fm_param_attr)
     out = paddle.layer.addto(
         input=[first_order, second_order],
-        act=paddle.activation.Sigmoid(),
+        act=paddle.activation.Linear(),
         bias_attr=False)
     return out
 
@@ -68,6 +68,9 @@ def DeepFM(factor_size, infer=False):
             name="label", type=paddle.data_type.dense_vector(1))
         cost = paddle.layer.multi_binary_label_cross_entropy_cost(
             input=predict, label=label)
+        paddle.evaluator.classification_error(
+            name="classification_error", input=predict, label=label)
+        paddle.evaluator.auc(name="auc", input=predict, label=label)
         return cost
     else:
         return predict

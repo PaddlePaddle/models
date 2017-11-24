@@ -18,6 +18,9 @@ class Dataset:
     def train(self, path):
         return self._reader_creator(path, False)
 
+    def test(self, path):
+        return self._reader_creator(path, False)
+
     def infer(self, path):
         return self._reader_creator(path, True)
 
