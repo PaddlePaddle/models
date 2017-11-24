@@ -19,6 +19,13 @@ def net_conf(mode):
         return paddle.attr.ParamAttr(
             learning_rate=local_lr, l2_rate=regularization, is_static=is_static)
 
+    def get_loc_conf_filter_size(aspect_ratio_num, min_size_num, max_size_num):
+        loc_filter_size = (
+            aspect_ratio_num * 2 + min_size_num + max_size_num) * 4
+        conf_filter_size = (
+            aspect_ratio_num * 2 + min_size_num + max_size_num) * cfg.CLASS_NUM
+        return loc_filter_size, conf_filter_size
+
     def conv_group(stack_num, name_list, input, filter_size_list, num_channels,
                    num_filters_list, stride_list, padding_list,
                    common_bias_attr, common_param_attr, common_act):
@@ -102,9 +109,8 @@ def net_conf(mode):
                            get_param_attr(1, default_l2regularization),
                            paddle.activation.Relu())
 
-        loc_filters = (len(aspect_ratio) * 2 + 1 + len(max_size)) * 4
-        conf_filters = (
-            len(aspect_ratio) * 2 + 1 + len(max_size)) * cfg.CLASS_NUM
+        loc_filters, conf_filters = get_loc_conf_filter_size(
+            len(aspect_ratio), len(min_size), len(max_size))
         mbox_loc, mbox_conf = mbox_block(conv2_name, conv2, num_filters2, 3,
                                          loc_filters, conf_filters)
         mbox_priorbox = paddle.layer.priorbox(
@@ -166,8 +172,13 @@ def net_conf(mode):
         input=conv4_3,
         param_attr=paddle.attr.ParamAttr(
             initial_mean=20, initial_std=0, is_static=False, learning_rate=1))
+    CONV4_PB = cfg.NET.CONV4.PB
+    loc_filter_size, conf_filter_size = get_loc_conf_filter_size(
+        len(CONV4_PB.ASPECT_RATIO),
+        len(CONV4_PB.MIN_SIZE), len(CONV4_PB.MAX_SIZE))
     conv4_3_norm_mbox_loc, conv4_3_norm_mbox_conf = \
-            mbox_block("conv4_3_norm", conv4_3_norm, 512, 3, 12, 63)
+            mbox_block("conv4_3_norm", conv4_3_norm, 512, 3,
+                    loc_filter_size, conf_filter_size)
 
     conv5_3, pool5 = vgg_block("5", pool4, 512, 512, 3, 1, 1)
 
@@ -177,7 +188,11 @@ def net_conf(mode):
                      get_param_attr(1, default_l2regularization),
                      paddle.activation.Relu())
 
-    fc7_mbox_loc, fc7_mbox_conf = mbox_block("fc7", fc7, 1024, 3, 24, 126)
+    FC7_PB = cfg.NET.FC7.PB
+    loc_filter_size, conf_filter_size = get_loc_conf_filter_size(
+        len(FC7_PB.ASPECT_RATIO), len(FC7_PB.MIN_SIZE), len(FC7_PB.MAX_SIZE))
+    fc7_mbox_loc, fc7_mbox_conf = mbox_block("fc7", fc7, 1024, 3,
+                                             loc_filter_size, conf_filter_size)
     fc7_mbox_priorbox = paddle.layer.priorbox(
         input=fc7,
         image=img,
@@ -212,8 +227,12 @@ def net_conf(mode):
         num_channels=256,
         stride=1,
         pool_type=paddle.pooling.Avg())
-    pool6_mbox_loc, pool6_mbox_conf = mbox_block("pool6", pool6, 256, 3, 24,
-                                                 126)
+    POOL6_PB = cfg.NET.POOL6.PB
+    loc_filter_size, conf_filter_size = get_loc_conf_filter_size(
+        len(POOL6_PB.ASPECT_RATIO),
+        len(POOL6_PB.MIN_SIZE), len(POOL6_PB.MAX_SIZE))
+    pool6_mbox_loc, pool6_mbox_conf = mbox_block(
+        "pool6", pool6, 256, 3, loc_filter_size, conf_filter_size)
     pool6_mbox_priorbox = paddle.layer.priorbox(
         input=pool6,
         image=img,
