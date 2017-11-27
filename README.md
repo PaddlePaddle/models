@@ -25,9 +25,10 @@ The language model is important in the field of natural language processing. In 
 ## 3. Click-Through Rate prediction
 The click-through rate model predicts the probability that a user will click on an ad. This is widely used for advertising technology. Logistic Regression has a good learning performance for large-scale sparse features in the early stages of the development of click-through rate prediction. In recent years, DNN model because of its strong learning ability to gradually take the banner rate of the task of the banner.
 
-In the example of click-through rate estimates, we give the Google's Wide & Deep model. This model combines the advantages of DNN and the applicable logistic regression model for DNN and large-scale sparse features.
+In the example of click-through rate estimates, we first give the Google's Wide & Deep model. This model combines the advantages of DNN and the applicable logistic regression model for DNN and large-scale sparse features. Then we provide the deep factorization machine for click-through rate prediction. The deep factorization machine combines the factorization machine and deep neural networks to model both low order and high order interactions of input features.
 
 - 3.1 [Click-Through Rate Model](https://github.com/PaddlePaddle/models/tree/develop/ctr)
+- 3.2 [Deep Factorization Machine for Click-Through Rate prediction](https://github.com/PaddlePaddle/models/tree/develop/deep_fm)
 
 ## 4. Text classification
 
