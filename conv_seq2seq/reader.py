@@ -18,7 +18,7 @@ def get_reverse_dict(dictionary):
 
 
 def load_data(data_file, src_dict, trg_dict):
-    UNK_IDX = src_dict['<unk>']
+    UNK_IDX = src_dict['UNK']
     with open(data_file, 'r') as f:
         for line in f:
             line_split = line.strip().split('\t')
@@ -34,7 +34,7 @@ def load_data(data_file, src_dict, trg_dict):
 
 def data_reader(data_file, src_dict, trg_dict, pos_size, padding_num):
     def reader():
-        UNK_IDX = src_dict['<unk>']
+        UNK_IDX = src_dict['UNK']
         word_padding = trg_dict.__len__()
         pos_padding = pos_size
 

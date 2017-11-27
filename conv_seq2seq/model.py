@@ -12,7 +12,8 @@ def gated_conv_with_batchnorm(input,
                               context_len,
                               context_start=None,
                               learning_rate=1.0,
-                              drop_rate=0.):
+                              drop_rate=0.,
+                              with_bn=False):
     """
     Definition of the convolution block.
 
@@ -30,6 +31,9 @@ def gated_conv_with_batchnorm(input,
     :type learning_rate: float
     :param drop_rate: Dropout rate.
     :type drop_rate: float
+    :param with_bn: Whether to use batch normalization or not. False is the default
+                    value.
+    :type with_bn: bool
     :return: The output of the convolution block.
     :rtype: LayerOutput
     """
@@ -50,18 +54,18 @@ def gated_conv_with_batchnorm(input,
             learning_rate=learning_rate),
         bias_attr=False)
 
-    batch_norm_conv = paddle.layer.batch_norm(
-        input=raw_conv,
-        act=paddle.activation.Linear(),
-        param_attr=paddle.attr.Param(learning_rate=learning_rate))
+    if with_bn:
+        raw_conv = paddle.layer.batch_norm(
+            input=raw_conv,
+            act=paddle.activation.Linear(),
+            param_attr=paddle.attr.Param(learning_rate=learning_rate))
 
     with paddle.layer.mixed(size=size) as conv:
-        conv += paddle.layer.identity_projection(
-            batch_norm_conv, size=size, offset=0)
+        conv += paddle.layer.identity_projection(raw_conv, size=size, offset=0)
 
     with paddle.layer.mixed(size=size, act=paddle.activation.Sigmoid()) as gate:
         gate += paddle.layer.identity_projection(
-            batch_norm_conv, size=size, offset=size)
+            raw_conv, size=size, offset=size)
 
     with paddle.layer.mixed(size=size) as gated_conv:
         gated_conv += paddle.layer.dotmul_operator(conv, gate)
@@ -73,7 +77,8 @@ def encoder(token_emb,
             pos_emb,
             conv_blocks=[(256, 3)] * 5,
             num_attention=3,
-            drop_rate=0.1):
+            drop_rate=0.,
+            with_bn=False):
     """
     Definition of the encoder.
 
@@ -89,6 +94,9 @@ def encoder(token_emb,
     :type num_attention: int
     :param drop_rate: Dropout rate.
     :type drop_rate: float
+    :param with_bn: Whether to use batch normalization or not. False is the default
+                    value.
+    :type with_bn: bool
     :return: The input token encoding.
     :rtype: LayerOutput
     """
@@ -124,7 +132,8 @@ def encoder(token_emb,
             size=size,
             context_len=context_len,
             learning_rate=1.0 / (2.0 * num_attention),
-            drop_rate=drop_rate)
+            drop_rate=drop_rate,
+            with_bn=with_bn)
 
         with paddle.layer.mixed(size=size) as block_output:
             block_output += paddle.layer.identity_projection(residual)
@@ -165,7 +174,7 @@ def attention(decoder_state, cur_embedding, encoded_vec, encoded_sum):
     :type encoded_vec: LayerOutput
     :param encoded_sum: The sum of the source token's encoding and embedding.
     :type encoded_sum: LayerOutput
-    :return: A context vector.
+    :return: A context vector and the attention weight.
     :rtype: LayerOutput
     """
     residual = decoder_state
@@ -182,7 +191,7 @@ def attention(decoder_state, cur_embedding, encoded_vec, encoded_sum):
 
     expanded = paddle.layer.expand(input=state_summary, expand_as=encoded_vec)
 
-    m = paddle.layer.linear_comb(weights=expanded, vectors=encoded_vec)
+    m = paddle.layer.dot_prod(input1=expanded, input2=encoded_vec)
 
     attention_weight = paddle.layer.fc(
         input=m,
@@ -206,7 +215,7 @@ def attention(decoder_state, cur_embedding, encoded_vec, encoded_sum):
     # halve the variance of the sum
     attention_result = paddle.layer.slope_intercept(
         input=attention_result, slope=math.sqrt(0.5))
-    return attention_result
+    return attention_result, attention_weight
 
 
 def decoder(token_emb,
@@ -215,7 +224,8 @@ def decoder(token_emb,
             encoded_sum,
             dict_size,
             conv_blocks=[(256, 3)] * 3,
-            drop_rate=0.1):
+            drop_rate=0.,
+            with_bn=False):
     """
     Definition of the decoder.
 
@@ -235,7 +245,10 @@ def decoder(token_emb,
     :type conv_blocks: list of tuple
     :param drop_rate: Dropout rate.
     :type drop_rate: float
-    :return: The probability of the predicted token.
+    :param with_bn: Whether to use batch normalization or not. False is the default
+                    value.
+    :type with_bn: bool
+    :return: The probability of the predicted token and the attention weights.
     :rtype: LayerOutput
     """
 
@@ -261,6 +274,7 @@ def decoder(token_emb,
             initial_std=math.sqrt((1.0 - drop_rate) / embedding.size)),
         bias_attr=True, )
 
+    weight = []
     for (size, context_len) in conv_blocks:
         if block_input.size == size:
             residual = block_input
@@ -276,7 +290,8 @@ def decoder(token_emb,
             size=size,
             context_len=context_len,
             context_start=0,
-            drop_rate=drop_rate)
+            drop_rate=drop_rate,
+            with_bn=with_bn)
 
         group_inputs = [
             decoder_state,
@@ -285,8 +300,9 @@ def decoder(token_emb,
             paddle.layer.StaticInput(input=encoded_sum),
         ]
 
-        conditional = paddle.layer.recurrent_group(
+        conditional, attention_weight = paddle.layer.recurrent_group(
             step=attention_step, input=group_inputs)
+        weight.append(attention_weight)
 
         block_output = paddle.layer.addto(input=[conditional, residual])
 
@@ -312,7 +328,7 @@ def decoder(token_emb,
             initial_std=math.sqrt((1.0 - drop_rate) / block_output.size)),
         bias_attr=True)
 
-    return decoder_out
+    return decoder_out, weight
 
 
 def conv_seq2seq(src_dict_size,
@@ -321,7 +337,8 @@ def conv_seq2seq(src_dict_size,
                  emb_dim,
                  enc_conv_blocks=[(256, 3)] * 5,
                  dec_conv_blocks=[(256, 3)] * 3,
-                 drop_rate=0.1,
+                 drop_rate=0.,
+                 with_bn=False,
                  is_infer=False):
     """
     Definition of convolutional sequence-to-sequence network.
@@ -345,6 +362,8 @@ def conv_seq2seq(src_dict_size,
     :type dec_conv_blocks: list of tuple
     :param drop_rate: Dropout rate.
     :type drop_rate: float
+    :param with_bn: Whether to use batch normalization or not. False is the default value.
+    :type with_bn: bool
     :param is_infer: Whether infer or not.
     :type is_infer: bool
     :return: Cost or output layer.
@@ -375,7 +394,8 @@ def conv_seq2seq(src_dict_size,
         pos_emb=src_pos_emb,
         conv_blocks=enc_conv_blocks,
         num_attention=num_attention,
-        drop_rate=drop_rate)
+        drop_rate=drop_rate,
+        with_bn=with_bn)
 
     trg = paddle.layer.data(
         name='trg_word',
@@ -397,17 +417,18 @@ def conv_seq2seq(src_dict_size,
         name='trg_pos_emb',
         param_attr=paddle.attr.Param(initial_mean=0., initial_std=0.1))
 
-    decoder_out = decoder(
+    decoder_out, weight = decoder(
         token_emb=trg_emb,
         pos_emb=trg_pos_emb,
         encoded_vec=encoded_vec,
         encoded_sum=encoded_sum,
         dict_size=trg_dict_size,
         conv_blocks=dec_conv_blocks,
-        drop_rate=drop_rate)
+        drop_rate=drop_rate,
+        with_bn=with_bn)
 
     if is_infer:
-        return decoder_out
+        return decoder_out, weight
 
     trg_next_word = paddle.layer.data(
         name='trg_next_word',
