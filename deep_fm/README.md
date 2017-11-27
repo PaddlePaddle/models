@@ -73,7 +73,7 @@ python train.py \
         2>&1 | train.log
 ```
 
-## Evaluation
+## Evaluate
 
 After training pass 9 batch 40000, the testing AUC is `0.807178` and the testing
 cost is `0.445196`.
