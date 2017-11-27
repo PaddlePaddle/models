@@ -28,7 +28,7 @@ def infer(topology, data_dir, model_path, word_dict_path, label_dict_path,
         word_reverse_dict = dict((value, key)
                                  for key, value in word_dict.iteritems())
         label_reverse_dict = {0: "positive", 1: "negative"}
-        test_reader = paddle.dataset.imdb.test(word_dict)
+        test_reader = paddle.dataset.imdb.test(word_dict)()
     else:
         assert os.path.exists(
             word_dict_path), "the word dictionary file does not exist"
