@@ -4,10 +4,13 @@
 This model implements the DeepFM proposed in the following paper:
 
 ```text
-Huifeng Guo, Ruiming Tang, Yunming Ye, Zhenguo Li and Xiuqiang He. DeepFM:
-A Factorization-Machine based Neural Network for CTR Prediction. Proceedings
-of the Twenty-Sixth International Joint Conference on Artificial Intelligence
-(IJCAI-17), 2017
+@inproceedings{guo2017deepfm,
+  title={DeepFM: A Factorization-Machine based Neural Network for CTR Prediction},
+  author={Huifeng Guo, Ruiming Tang, Yunming Ye, Zhenguo Li and Xiuqiang He},
+  booktitle={the Twenty-Sixth International Joint Conference on Artificial Intelligence (IJCAI)},
+  pages={1725--1731},
+  year={2017}
+}
 ```
 
 The DeepFm combines factorization machine and deep neural networks to model
