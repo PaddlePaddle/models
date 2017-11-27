@@ -15,22 +15,22 @@ def parse_args():
         '--model_gz_path',
         type=str,
         required=True,
-        help="path of model parameters gz file")
+        help="The path of model parameters gz file")
     parser.add_argument(
         '--data_path',
         type=str,
         required=True,
-        help="path of the dataset to infer")
+        help="The path of the dataset to infer")
     parser.add_argument(
         '--prediction_output_path',
         type=str,
         required=True,
-        help="path to output the prediction")
+        help="The path to output the prediction")
     parser.add_argument(
         '--factor_size',
         type=int,
         default=10,
-        help="the factor size for the factorization machine (default:10)")
+        help="The factor size for the factorization machine (default:10)")
 
     return parser.parse_args()
 

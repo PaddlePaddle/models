@@ -1,16 +1,16 @@
-# Deep Factorization Machines (DeepFM) for Click-Through Rate prediction
+# Deep Factorization Machine for Click-Through Rate prediction
 
 ## Introduction
 This model implements the DeepFM proposed in the following paper:
 
 ```text
-    Huifeng Guo, Ruiming Tang, Yunming Ye, Zhenguo Li and Xiuqiang He. DeepFM:
-    A Factorization-Machine based Neural Network for CTR Prediction.
-    Proceedings of the Twenty-Sixth International Joint Conference on
-    Artificial Intelligence (IJCAI-17), 2017
+Huifeng Guo, Ruiming Tang, Yunming Ye, Zhenguo Li and Xiuqiang He. DeepFM:
+A Factorization-Machine based Neural Network for CTR Prediction. Proceedings
+of the Twenty-Sixth International Joint Conference on Artificial Intelligence
+(IJCAI-17), 2017
 ```
 
-The DeepFm combines factorization machines and deep neural networks to model
+The DeepFm combines factorization machine and deep neural networks to model
 both low order and high order feature interactions. For details of the
 factorization machines, please refer to the paper [factorization
 machines](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf)
@@ -48,7 +48,7 @@ def fm_layer(input, factor_size):
     second_order = paddle.layer.factorization_machine(input=input, factor_size=factor_size)
     fm = paddle.layer.addto(input=[first_order, second_order],
                             act=paddle.activation.Linear(),
-                            ias_attr=False)
+                            bias_attr=False)
     return fm
 ```
 
@@ -72,8 +72,6 @@ python train.py \
         --test_data_path data/valid.txt \
         2>&1 | train.log
 ```
-
-## Evaluate
 
 After training pass 9 batch 40000, the testing AUC is `0.807178` and the testing
 cost is `0.445196`.

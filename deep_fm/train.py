@@ -19,32 +19,32 @@ def parse_args():
         '--train_data_path',
         type=str,
         required=True,
-        help="path of training dataset")
+        help="The path of training dataset")
     parser.add_argument(
         '--test_data_path',
         type=str,
         required=True,
-        help="path of testing dataset")
+        help="The path of testing dataset")
     parser.add_argument(
         '--batch_size',
         type=int,
         default=1000,
-        help="size of mini-batch (default:1000)")
+        help="The size of mini-batch (default:1000)")
     parser.add_argument(
         '--num_passes',
         type=int,
         default=10,
-        help="number of passes to train (default: 10)")
+        help="The number of passes to train (default: 10)")
     parser.add_argument(
         '--factor_size',
         type=int,
         default=10,
-        help="the factor size for the factorization machine (default:10)")
+        help="The factor size for the factorization machine (default:10)")
     parser.add_argument(
         '--model_output_dir',
         type=str,
         default='models',
-        help='path for model to store (default: models)')
+        help='The path for model to store (default: models)')
 
     return parser.parse_args()
 
