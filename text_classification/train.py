@@ -39,7 +39,7 @@ def train(topology,
     use_default_data = (train_data_dir is None)
 
     if use_default_data:
-        logger.info(("No training data are porivided, "
+        logger.info(("No training data are providedd, "
                      "use paddle.dataset.imdb to train the model."))
         logger.info("please wait to build the word dictionary ...")
 
