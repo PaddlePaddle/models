@@ -1,10 +1,10 @@
-import numpy as np
 import math
+import numpy as np
 
 
 class RandomScheduleGenerator:
     """
-    The random sampling rate for scheduled sampling algoithm, which uses devcayed
+    The random sampling rate for scheduled sampling algoithm, which uses decayed
     sampling rate.
     """
 
