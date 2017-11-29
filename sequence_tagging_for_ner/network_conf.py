@@ -8,7 +8,7 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
     mark_dict_len = 2
     word_dim = 50
     mark_dim = 5
-    hidden_dim = 128
+    hidden_dim = 300
 
     word = paddle.layer.data(
         name="word",
@@ -23,9 +23,7 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
         name="mark",
         type=paddle.data_type.integer_value_sequence(mark_dict_len))
     mark_embedding = paddle.layer.embedding(
-        input=mark,
-        size=mark_dim,
-        param_attr=paddle.attr.Param(initial_std=math.sqrt(1. / word_dim)))
+        input=mark, size=mark_dim, param_attr=paddle.attr.Param(initial_std=0.))
 
     word_caps_vector = paddle.layer.concat(
         input=[word_embedding, mark_embedding])
@@ -33,7 +31,7 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
     mix_hidden_lr = 1e-3
     rnn_para_attr = paddle.attr.Param(initial_std=0.0, learning_rate=0.1)
     hidden_para_attr = paddle.attr.Param(
-        initial_std=1 / math.sqrt(hidden_dim), learning_rate=mix_hidden_lr)
+        initial_std=1. / math.sqrt(hidden_dim) / 3, learning_rate=mix_hidden_lr)
 
     # the first forward and backward rnn layer share the
     # input-to-hidden mappings.
@@ -41,9 +39,10 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
         name="__hidden00__",
         size=hidden_dim,
         act=paddle.activation.Tanh(),
-        bias_attr=paddle.attr.Param(initial_std=1.),
+        bias_attr=paddle.attr.Param(initial_std=1. / math.sqrt(hidden_dim) / 3),
         input=word_caps_vector,
-        param_attr=hidden_para_attr)
+        param_attr=paddle.attr.Param(initial_std=1. / math.sqrt(hidden_dim) /
+                                     3))
 
     fea = []
     for direction in ["fwd", "bwd"]:
@@ -68,7 +67,7 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
 
     rnn_fea = paddle.layer.fc(
         size=hidden_dim,
-        bias_attr=paddle.attr.Param(initial_std=1.),
+        bias_attr=paddle.attr.Param(initial_std=1. / math.sqrt(hidden_dim) / 3),
         act=paddle.activation.STanh(),
         input=fea,
         param_attr=[hidden_para_attr, rnn_para_attr] * 2)
@@ -85,7 +84,8 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
         bias_attr=False,
         input=rnn_fea,
         act=paddle.activation.Linear(),
-        param_attr=rnn_para_attr)
+        param_attr=paddle.attr.Param(initial_std=1. / math.sqrt(hidden_dim) /
+                                     3))
 
     if is_train:
         target = paddle.layer.data(
@@ -96,7 +96,10 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
             size=label_dict_len,
             input=emission,
             label=target,
-            param_attr=paddle.attr.Param(name="crfw", initial_std=1e-3))
+            param_attr=paddle.attr.Param(
+                name="crfw",
+                initial_std=1. / math.sqrt(hidden_dim) / 3,
+                learning_rate=mix_hidden_lr))
 
         crf_dec = paddle.layer.crf_decoding(
             size=label_dict_len,
