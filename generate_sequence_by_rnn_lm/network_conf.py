@@ -57,4 +57,4 @@ def rnn_lm(vocab_dim,
     else:
         cost = paddle.layer.classification_cost(input=output, label=target)
 
-        return cost, output
+        return cost
