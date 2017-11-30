@@ -1,7 +1,7 @@
 图像分类
 =======================
 
-这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet和ResNet模型进行图像分类。图像分类问题的描述和这四种模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
+这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet、ResNet和Inception-ResNet-v2模型进行图像分类。图像分类问题的描述和这五种模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
 
 ## 训练模型
 
@@ -11,6 +11,8 @@
 
 ```python
 import gzip
+import argparse
+
 import paddle.v2.dataset.flowers as flowers
 import paddle.v2 as paddle
 import reader
@@ -18,6 +20,7 @@ import vgg
 import resnet
 import alexnet
 import googlenet
+import inception_resnet_v2
 
 
 # PaddlePaddle init
@@ -29,7 +32,7 @@ paddle.init(use_gpu=False, trainer_count=1)
 设置算法参数（如数据维度、类别数目和batch size等参数），定义数据输入层`image`和类别标签`lbl`。
 
 ```python
-DATA_DIM = 3 * 224 * 224
+DATA_DIM = 3 * 224 * 224  # Use 3 * 331 * 331 or 3 * 299 * 299 for Inception-ResNet-v2.
 CLASS_DIM = 102
 BATCH_SIZE = 128
 
@@ -41,7 +44,7 @@ lbl = paddle.layer.data(
 
 ### 获得所用模型
 
-这里可以选择使用AlexNet、VGG、GoogLeNet和ResNet模型中的一个模型进行图像分类。通过调用相应的方法可以获得网络最后的Softmax层。
+这里可以选择使用AlexNet、VGG、GoogLeNet、ResNet和Inception-ResNet-v2模型中的一个模型进行图像分类。通过调用相应的方法可以获得网络最后的Softmax层。
 
 1. 使用AlexNet模型
 
@@ -85,6 +88,16 @@ ResNet模型可以通过下面的代码获取：
 ```python
 out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
 ```
+
+5. 使用Inception-ResNet-v2模型
+
+提供的Inception-ResNet-v2模型支持`3 * 331 * 331`和`3 * 299 * 299`两种大小的输入，同时可以自行设置dropout概率，可以通过如下的代码使用：
+
+```python
+out = inception_resnet_v2.inception_resnet_v2(image, class_dim=CLASS_DIM, dropout_rate=0.5, size=DATA_DIM)
+```
+
+注意，由于和其他几种模型输入大小不同，若配合提供的`reader.py`使用Inception-ResNet-v2时请先将`reader.py`中`paddle.image.simple_transform`中的参数为修改为相应大小。
 
 ### 定义损失函数
 
@@ -173,7 +186,7 @@ def event_handler(event):
 
 ### 定义训练方法
 
-对于AlexNet、VGG和ResNet，可以按下面的代码定义训练方法：
+对于AlexNet、VGG、ResNet和Inception-ResNet-v2，可以按下面的代码定义训练方法：
 
 ```python
 # Create trainer
