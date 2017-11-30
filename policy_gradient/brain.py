@@ -1,12 +1,6 @@
 import numpy as np
 import paddle.v2 as paddle
-import paddle.v2.fluid.core as core
-import paddle.v2.fluid.framework as framework
-import paddle.v2.fluid.layers as layers
-from paddle.v2.fluid.executor import Executor
-from paddle.v2.fluid.io import save_persistables, load_persistables
-from paddle.v2.fluid.optimizer import SGDOptimizer
-
+import paddle.v2.fluid as fluid
 # reproducible
 np.random.seed(1)
 
@@ -25,38 +19,42 @@ class PolicyGradient:
         self.gamma = reward_decay
 
         self.ep_obs, self.ep_as, self.ep_rs = [], [], []
-        self.build_net(self)
-        self.place = core.CPUPlace()
-        self.exe = Executor(self.place)
+
+        self.place = fluid.CPUPlace()
+        self.exe = fluid.Executor(self.place)
 
     def build_net(self):
 
-        obs = layers.data(
-            name='obs', shape=[self.n_features], data_type='float32')
-        acts = layers.data(name='acts', shape=[1], data_type='int32')
-        vt = layers.data(name='vt', shape=[1], data_type='float32')
+        obs = fluid.layers.data(
+            name='obs', shape=[self.n_features], dtype='float32')
+        acts = fluid.layers.data(name='acts', shape=[1], dtype='int64')
+        vt = fluid.layers.data(name='vt', shape=[1], dtype='float32')
         # fc1
-        fc1 = layers.fc(
+        fc1 = fluid.layers.fc(
             input=obs,
             size=10,
             act="tanh"  # tanh activation
         )
         # fc2
-        all_act_prob = layers.fc(input=fc1, size=self.n_actions, act="softmax")
+        self.all_act_prob = fluid.layers.fc(
+            input=fc1, size=self.n_actions, act="softmax")
         # to maximize total reward (log_p * R) is to minimize -(log_p * R)
-        neg_log_prob = layers.cross_entropy(
-            input=all_act_prob,
+        neg_log_prob = fluid.layers.cross_entropy(
+            input=self.all_act_prob,
             label=acts)  # this is negative log of chosen action
-        neg_log_prob_weight = layers.elementwise_mul(x=neg_log_prob, y=vt)
-        loss = layers.reduce_mean(x=neg_log_prob_weight)  # reward guided loss
+        neg_log_prob_weight = fluid.layers.elementwise_mul(x=neg_log_prob, y=vt)
+        loss = fluid.layers.reduce_mean(
+            x=neg_log_prob_weight)  # reward guided loss
 
-        self.optimizer = SGDOptimizer(self.lr).minimize(loss)
+        sgd_optimizer = fluid.optimizer.SGD(self.lr)
+        sgd_optimizer.minimize(loss)
+        self.exe.run(fluid.default_startup_program())
 
     def choose_action(self, observation):
         prob_weights = self.exe.run(
-            framework.default_main_program().prune(all_act_prob),
+            fluid.default_main_program().prune(self.all_act_prob),
             feed={"obs": observation[np.newaxis, :]},
-            fetch_list=[all_act_prob])
+            fetch_list=[self.all_act_prob])
         prob_weights = np.array(prob_weights[0])
         action = np.random.choice(
             range(prob_weights.shape[1]),
@@ -71,23 +69,18 @@ class PolicyGradient:
     def learn(self):
         # discount and normalize episode reward
         discounted_ep_rs_norm = self._discount_and_norm_rewards()
-        #print framework.default_main_program()
-        tensor_obs = core.LoDTensor()
-        tensor_obs.set(np.vstack(self.ep_obs), self.place)
-        tensor_as = core.LoDTensor()
-        tensor_as.set(np.array(self.ep_as), self.place)
-        tensor_vt = core.LoDTensor()
-        tensor_vt.set(discounted_ep_rs_norm, self.place)
-
+        tensor_obs = np.vstack(self.ep_obs).astype("float32")
+        tensor_as = np.array(self.ep_as).astype("int64")
+        tensor_as = tensor_as.reshape([tensor_as.shape[0], 1])
+        tensor_vt = discounted_ep_rs_norm.astype("float32")[:, np.newaxis]
         # train on episode
         self.exe.run(
-            framework.default_main_program(),
+            fluid.default_main_program(),
             feed={
                 "obs": tensor_obs,  # shape=[None, n_obs]
                 "acts": tensor_as,  # shape=[None, ]
                 "vt": tensor_vt  # shape=[None, ]
             })
-
         self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
         return discounted_ep_rs_norm
 
