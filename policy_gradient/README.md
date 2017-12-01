@@ -124,7 +124,7 @@ $$ -\bigtriangledown \overline {R}_\theta
 我们在第一章描述的游戏场景，需要用第二种 ，player每次到达终点都会收到1分的奖励，我们可以按完成任务所用的步数来定义奖励R.
 更进一步，我们认为一局游戏中每步动作对结局的贡献是不同的，有聪明的动作，也有愚蠢的操作。直观的理解，一般是靠前的动作是愚蠢的，靠后的动作是聪明的。既然有了这个价值观，那么我们拿到1分的奖励，就不能平均分给每个动作了。
 如图3所示，让所有动作按先后排队，从后往前衰减地给每个动作奖励，然后再每个动作的奖励再减去所有动作奖励的平均值：
-![图片](https://github.com/PaddlePaddle/models/blob/develop/policy_gradient/images/PG_3.svg)
+![图片](http://bos.nj.bpc.baidu.com/v1/agroup/bf802ee7f900c776d02bcad834acb9b0aaa4479a)
 
 
 
