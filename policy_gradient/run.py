@@ -15,7 +15,7 @@ if __name__ == "__main__":
     done = False
 
     for epoch in range(epoches):
-        if epoch % 100 == 1:
+        if (epoch % 500 == 1) or epoch < 5 or epoch > 3000:
             e.render = True
         else:
             e.render = False
