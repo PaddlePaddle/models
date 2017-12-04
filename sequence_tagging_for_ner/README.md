@@ -109,11 +109,12 @@ Baghdad      NNP  I-NP  I-LOC
 
     ```python
     main(
-        train_data_file='data/train',
-        test_data_file='data/test',
-        vocab_file='data/vocab.txt',
-        target_file='data/target.txt',
-        emb_file='data/wordVectors.txt')
+          train_data_file="data/train",
+          test_data_file="data/test",
+          vocab_file="data/vocab.txt",
+          target_file="data/target.txt",
+          emb_file="data/wordVectors.txt",
+          model_save_dir="models/")
     ```
 
 3. 运行命令 `python train.py` ，**需要注意：直接运行使用的是示例数据，请替换真实的标记数据。**
