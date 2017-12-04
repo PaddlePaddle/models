@@ -108,7 +108,8 @@ class TFModelConverter(ModelConverter):
     @wrap_name_default("conv")
     def convert_conv_layer(self, params, params_names=None, name=None):
         for i in range(len(params)):
-            data = np.transpose(params[i], (3, 2, 0, 1))
+            data = np.transpose(params[i], (
+                3, 2, 0, 1)) if len(params[i].shape) == 4 else params[i]
             if len(params) == 2:
                 suffix = "0" if i == 0 else "bias"
                 file_name = "_%s.w%s" % (name, suffix) if not (
