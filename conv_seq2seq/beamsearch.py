@@ -11,7 +11,6 @@ import reader
 class BeamSearch(object):
     """
     Generate sequence by beam search
-    NOTE: this class only implements generating one sentence at a time.
     """
 
     def __init__(self,
