@@ -6,9 +6,11 @@ import gzip
 import tarfile
 import cStringIO
 import numpy as np
+
+import tensorflow as tf
+
 from paddle.proto.ParameterConfig_pb2 import ParameterConfig
 from paddle.trainer_config_helpers.default_decorators import wrap_name_default
-import tensorflow as tf
 
 
 class ModelConverter(object):
