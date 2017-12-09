@@ -127,7 +127,6 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在语音识别任务中，我们提供了基于 DeepSpeech2 模型的完整流水线，包括：特征提取、数据增强、模型训练、语言模型、解码模块等，并提供一个训练好的模型和体验实例，大家能够使用自己的声音来体验语音识别的乐趣。
 
-- 14.1 [语音识别: DeepSpeech2](https://github.com/PaddlePaddle/models/tree/develop/deep_speech_2)
-
+14.1 [语音识别: DeepSpeech2](https://github.com/PaddlePaddle/DeepSpeech)
 
 本教程由[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)创作，采用[Apache-2.0](LICENSE) 许可协议进行许可。
