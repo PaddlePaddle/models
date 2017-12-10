@@ -61,7 +61,7 @@ RNN是一个序列模型，基本思路是：在时刻$t$，将前一时刻$t-1$
 
 运行本例的方法如下：
 
-* 1，运行`python train.py`命令，开始train模型（默认使用RNN），待训练结束。
+* 1，运行`python train.py`命令，开始train模型（默认使用LSTM），待训练结束。
 * 2，运行`python generate.py`运行文本生成。（输入的文本默认为`data/train_data_examples.txt`，生成的文本默认保存到`data/gen_result.txt`中。）
 
 
