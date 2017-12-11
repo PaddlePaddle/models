@@ -31,7 +31,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在点击率预估任务中，我们首先给出谷歌提出的 Wide & Deep 模型。这一模型融合了适用于学习抽象特征的DNN和适用于大规模稀疏特征的逻谛斯克回归两者的优点，可以作为一种相对成熟的模型框架使用，在工业界也有一定的应用。同时，我们提供基于因子分解机的深度神经网络模型，该模型融合了因子分解机和深度神经网络，分别建模输入属性之间的低阶交互和高阶交互。
 
-- 3.1 [Wide & deep 点击率预估模型](https://github.com/PaddlePaddle/models/tree/develop/ctr)
+- 3.1 [Wide & deep 点击率预估模型](https://github.com/PaddlePaddle/models/tree/develop/ctr/README.cn.md)
 - 3.2 [基于深度因子分解机的点击率预估模型](https://github.com/PaddlePaddle/models/tree/develop/deep_fm)
 
 ## 4. 文本分类
@@ -57,7 +57,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在结构化语义模型任务中，我们演示如何建模两个字符串之间的语义相似度。模型支持DNN(全连接前馈网络)、CNN(卷积网络)、RNN(递归神经网络)等不同的网络结构，以及分类、回归、排序等不同损失函数。本例采用最简单的文本数据作为输入，通过替换自己的训练和预测数据，便可以在真实场景中使用。
 
-- 6.1 [深度结构化语义模型](https://github.com/PaddlePaddle/models/tree/develop/dssm)
+- 6.1 [深度结构化语义模型](https://github.com/PaddlePaddle/models/tree/develop/dssm/README.cn.md)
 
 ## 7. 命名实体识别
 
@@ -73,7 +73,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在序列到序列学习任务中，我们首先以机器翻译任务为例，提供了多种改进模型供大家学习和使用。包括：不带注意力机制的序列到序列映射模型，这一模型是所有序列到序列学习模型的基础；使用Scheduled Sampling改善RNN模型在生成任务中的错误累积问题；带外部记忆机制的神经机器翻译，通过增强神经网络的记忆能力，来完成复杂的序列到序列学习任务。除机器翻译任务之外，我们也提供了一个基于深层LSTM网络生成古诗词，实现同语言生成的模型。
 
-- 8.1 [无注意力机制的神经机器翻译](https://github.com/PaddlePaddle/models/tree/develop/nmt_without_attention)
+- 8.1 [无注意力机制的神经机器翻译](https://github.com/PaddlePaddle/models/tree/develop/nmt_without_attention/README.cn.md)
 - 8.2 [使用Scheduled Sampling改善翻译质量](https://github.com/PaddlePaddle/models/tree/develop/scheduled_sampling)
 - 8.3 [带外部记忆机制的神经机器翻译](https://github.com/PaddlePaddle/models/tree/develop/mt_with_external_memory)
 - 8.4 [生成古诗词](https://github.com/PaddlePaddle/models/tree/develop/generate_chinese_poetry)
@@ -111,7 +111,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在目标检测任务中，我们介绍利用SSD方法完成目标检测。SSD全称：Single Shot MultiBox Detector，是目标检测领域较新且效果较好的检测算法之一，具有检测速度快且检测精度高的特点。
 
-- 12.1 [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/tree/develop/ssd)
+- 12.1 [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/tree/develop/ssd/README.cn.md)
 
 ## 13. 场景文字识别
 
