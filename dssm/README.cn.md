@@ -263,7 +263,7 @@ Pairwise Rank复用上面的DNN结构，同一个source对两个target求相似�
 
 ## 执行训练
 
-可以直接执行 `python train.py -y 0 --model_arch 0` 使用 `./data/classification` 目录里的实例数据来测试能否直接运行训练分类FC模型。
+可以直接执行 `python train.py -y 0 --model_arch 0 --class_num 2` 使用 `./data/classification` 目录里的实例数据来测试能否直接运行训练分类FC模型。
 
 其他模型结构也可以通过命令行实现定制，详细命令行参数请执行 `python train.py --help`进行查阅。
 
