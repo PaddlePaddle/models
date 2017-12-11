@@ -131,7 +131,7 @@ def create_cnn(self, emb, prefix=''):
 
     conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
     conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
-    return conv_3, conv_4
+    return paddle.layer.concat(input=[conv_3, conv_4])
 ```
 
 CNN 接受词向量序列，通过卷积和池化操作捕捉到原始句子的关键信息，最终输出一个语义向量（可以认为是句子向量）。

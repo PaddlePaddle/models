@@ -107,7 +107,7 @@ def create_cnn(self, emb, prefix=''):
 
     conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
     conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
-    return conv_3, conv_4
+    return paddle.layer.concat(input=[conv_3, conv_4])
 ```
 
 CNN accepts the word sequence of the embedding table, then process the data by convolution and pooling, and finally outputs a semantic vector.
