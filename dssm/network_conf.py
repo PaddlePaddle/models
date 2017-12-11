@@ -146,9 +146,9 @@ class DSSM(object):
                 pool_bias_attr=ParamAttr(name=key + "_pool.b"))
             return conv
 
-        logger.info("create a sequence_conv_pool which context width is 3")
+        logger.info("create a sequence_conv_pool whose context width is 3.")
         conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
-        logger.info("create a sequence_conv_pool which context width is 4")
+        logger.info("create a sequence_conv_pool whose context width is 4.")
         conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
 
         return paddle.layer.concat(input=[conv_3, conv_4])
