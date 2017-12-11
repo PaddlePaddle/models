@@ -84,7 +84,7 @@ After the training is completed, the model will input and decode the correspondi
 
 **4**. iterate through it until you get $ k $ complete sentences as candidates for translation results.
 
-For more information on beam search, refer to the [beam search] chapter in PaddleBook [machine translation] (https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md) (https://github.com/PaddlePaddle/book/blob/develop.org.machine_translation/README.cn.md# beam search algorithm) section.
+For more information on beam search, refer to the [beam search](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.md#beam-search-algorithm) section in PaddleBook [machine translation](https://github.com/PaddlePaddle/book/tree/develop/08.machine_translation) chapter.
 
 
 ### Decoder without Attention mechanism
@@ -343,6 +343,6 @@ So far, we have implemented a basic machine translation model using PaddlePaddle
 ## References
 [1] Sutskever I, Vinyals O, Le Q V. [Sequence to Sequence Learning with Neural Networks] (https://arxiv.org/abs/1409.3215) [J]. 2014, 4: 3104-3112.
 
-[2] Cho K, Van Merriënboer B, Gulcehre C, et al. [Learning phrase representations using RNN encoder-decoder for statistical machine translation (http://www.aclweb.org/anthology/D/D14/D14-1179 .pdf) [C]. Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP), 2014: 1724-1734.
+[2] Cho K, Van Merriënboer B, Gulcehre C, et al. [Learning phrase representations using RNN encoder-decoder for statistical machine translation](http://www.aclweb.org/anthology/D/D14/D14-1179.pdf) [C]. Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP), 2014: 1724-1734.
 
 [3] Bahdanau D, Cho K, Bengio Y. [Neural machine translation by exclusive learning to align and translate] (https://arxiv.org/abs/1409.0473) [C]. Proceedings of ICLR 2015, 2015
