@@ -6,6 +6,7 @@ import vgg
 import resnet
 import alexnet
 import googlenet
+import inception_v4
 import argparse
 
 DATA_DIM = 3 * 224 * 224
@@ -19,7 +20,10 @@ def main():
     parser.add_argument(
         'model',
         help='The model for image classification',
-        choices=['alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet'])
+        choices=[
+            'alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet',
+            'inception_v4'
+        ])
     args = parser.parse_args()
 
     # PaddlePaddle init
@@ -52,6 +56,8 @@ def main():
             input=out2, label=lbl, coeff=0.3)
         paddle.evaluator.classification_error(input=out2, label=lbl)
         extra_layers = [loss1, loss2]
+    elif args.model == 'inception_v4':
+        out = inception_v4.inception_v4(image, class_dim=CLASS_DIM)
 
     cost = paddle.layer.classification_cost(input=out, label=lbl)
 

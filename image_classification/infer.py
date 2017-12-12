@@ -5,6 +5,7 @@ import vgg
 import resnet
 import alexnet
 import googlenet
+import inception_v4
 import argparse
 import os
 from PIL import Image
@@ -26,7 +27,10 @@ def main():
     parser.add_argument(
         'model',
         help='The model for image classification',
-        choices=['alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet'])
+        choices=[
+            'alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet',
+            'inception_v4'
+        ])
     parser.add_argument(
         'params_path', help='The file which stores the parameters')
     args = parser.parse_args()
@@ -49,6 +53,8 @@ def main():
         out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
     elif args.model == 'googlenet':
         out, _, _ = googlenet.googlenet(image, class_dim=CLASS_DIM)
+    elif args.model == 'inception_v4':
+        out = inception_v4.inception_v4(image, class_dim=CLASS_DIM)
 
     # load parameters
     with gzip.open(args.params_path, 'r') as f:

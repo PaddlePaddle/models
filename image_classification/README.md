@@ -1,7 +1,7 @@
 图像分类
 =======================
 
-这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet和ResNet模型进行图像分类。图像分类问题的描述和这四种模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
+这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet、ResNet和Inception-v4模型进行图像分类。图像分类问题的描述和这些模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
 
 ## 训练模型
 
@@ -18,6 +18,7 @@ import vgg
 import resnet
 import alexnet
 import googlenet
+import inception_v4
 
 
 # PaddlePaddle init
@@ -41,7 +42,7 @@ lbl = paddle.layer.data(
 
 ### 获得所用模型
 
-这里可以选择使用AlexNet、VGG、GoogLeNet和ResNet模型中的一个模型进行图像分类。通过调用相应的方法可以获得网络最后的Softmax层。
+这里可以选择使用AlexNet、VGG、GoogLeNet、ResNet和Inception-v4模型中的一个模型进行图像分类。通过调用相应的方法可以获得网络最后的Softmax层。
 
 1. 使用AlexNet模型
 
@@ -84,6 +85,14 @@ ResNet模型可以通过下面的代码获取：
 
 ```python
 out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
+```
+
+5. 使用Inception-v4模型
+
+Inception-v4模型可以通过下面的代码获取：
+
+```python
+out = inception_v4.inception_v4(image, class_dim=CLASS_DIM)
 ```
 
 ### 定义损失函数
