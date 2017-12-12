@@ -107,7 +107,7 @@ def create_cnn(self, emb, prefix=''):
 
     conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
     conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
-    return conv_3, conv_4
+    return paddle.layer.concat(input=[conv_3, conv_4])
 ```
 
 CNN accepts the word sequence of the embedding table, then process the data by convolution and pooling, and finally outputs a semantic vector.
@@ -240,12 +240,12 @@ The example of this format is as follows.
 
 ## Training
 
-We use `python train.py -y 0 --model_arch 0` with the data in  `./data/classification` to train a DSSM model for classification. The paremeters to execute the script `train.py` can be found by execution `python infer.py --help`. Some important parameters are：
+We use `python train.py -y 0 --model_arch 0 --class_num 2` with the data in  `./data/classification` to train a DSSM model for classification. The paremeters to execute the script `train.py` can be found by execution `python infer.py --help`. Some important parameters are：
 
 - `train_data_path` Training data path
 - `test_data_path`  Test data path, optional
 - `source_dic_path`  Source dictionary path
-- `target_dic_path` 目Target dictionary path
+- `target_dic_path` Target dictionary path
 - `model_type`  The type of loss function of the model: classification 0, sort 1, regression 2
 - `model_arch` Model structure: FC 0，CNN 1, RNN 2
 - `dnn_dims` The dimension of each layer of the model is set, the default is `256,128,64,32`，with 4 layers.

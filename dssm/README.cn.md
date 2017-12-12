@@ -131,7 +131,7 @@ def create_cnn(self, emb, prefix=''):
 
     conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
     conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
-    return conv_3, conv_4
+    return paddle.layer.concat(input=[conv_3, conv_4])
 ```
 
 CNN 接受词向量序列，通过卷积和池化操作捕捉到原始句子的关键信息，最终输出一个语义向量（可以认为是句子向量）。
@@ -263,7 +263,7 @@ Pairwise Rank复用上面的DNN结构，同一个source对两个target求相似�
 
 ## 执行训练
 
-可以直接执行 `python train.py -y 0 --model_arch 0` 使用 `./data/classification` 目录里的实例数据来测试能否直接运行训练分类FC模型。
+可以直接执行 `python train.py -y 0 --model_arch 0 --class_num 2` 使用 `./data/classification` 目录里的实例数据来测试能否直接运行训练分类FC模型。
 
 其他模型结构也可以通过命令行实现定制，详细命令行参数请执行 `python train.py --help`进行查阅。
 
