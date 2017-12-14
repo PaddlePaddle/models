@@ -120,7 +120,7 @@ The model structure is as follows:
 Figure 2. Wide & Deep Model
 </p>
 
-The wide part of the left side of the model can accommodate large-scale coefficient features and has some memory for some specific information (such as ID); and the Deep part of the right side of the model can learn the implicit relationship between features.
+The wide part of the top side of the model can accommodate large-scale coefficient features and has some memory for some specific information (such as ID); and the Deep part of the bottom side of the model can learn the implicit relationship between features.
 
 
 ### Model Input
