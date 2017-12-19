@@ -190,52 +190,52 @@ Below is a simple example for the data in `./data`
 ### Regression data format
 ```
 # 3 fields each line:
-#   - source's word ids
-#   - target's word ids
+#   - source word list
+#   - target word list
 #   - target
-<ids> \t <ids> \t <float>
+<word list> \t <word list> \t <float>
 ```
 
 The example of this format is as follows.
 
 ```
-3 6 10 \t 6 8 33 \t 0.7
-6 0 \t 6 9 330 \t 0.03
+Six bags of apples    Apple 6s    0.1
+The new driver    The driving school    0.9
 ```
 
 ### Classification data format
 ```
 # 3 fields each line:
-#   - source's word ids
-#   - target's word ids
+#   - source word list
+#   - target word list
 #   - target
-<ids> \t <ids> \t <label>
+<word list> \t <word list> \t <label>
 ```
 
 The example of this format is as follows.
 
 
 ```
-3 6 10 \t 6 8 33 \t 0
-6 10 \t 8 3 1 \t 1
+Six bags of apples    Apple 6s    0
+The new driver    The driving school    1
 ```
 
 
 ### Ranking data format
 ```
 # 4 fields each line:
-#   - source's word ids
-#   - target1's word ids
-#   - target2's word ids
+#   - source word list
+#   - target1 word list
+#   - target2 word list
 #   - label
-<ids> \t <ids> \t <ids> \t <label>
+<word list> \t <word list> \t <word list> \t <label>
 ```
 
 The example of this format is as follows.
 
 ```
-7 2 4 \t 2 10 12 \t 9 2 7 10 23 \t 0
-7 2 4 \t 10 12 \t 9 2 21 23 \t 1
+Six bags of apples    Apple 6s    The new driver    1
+The new driver    The driving school    Apple 6s    1
 ```
 
 ## Training
