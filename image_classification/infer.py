@@ -5,6 +5,7 @@ import vgg
 import resnet
 import alexnet
 import googlenet
+import xception
 import argparse
 import os
 from PIL import Image

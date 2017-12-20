@@ -6,6 +6,7 @@ import vgg
 import resnet
 import alexnet
 import googlenet
+import xception
 import argparse
 
 DATA_DIM = 3 * 224 * 224

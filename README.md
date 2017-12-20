@@ -72,11 +72,12 @@ As an example for sequence-to-sequence learning, we take the machine translation
 
 ## 9. Image classification
 
-For the example of image classification, we show you how to train AlexNet, VGG, GoogLeNet and ResNet models in PaddlePaddle. It also provides a model conversion tool that converts Caffe trained model files into PaddlePaddle model files.
+For the example of image classification, we show you how to train AlexNet, VGG, GoogLeNet, ResNet and Xception models in PaddlePaddle. It also provides a model conversion tool that converts Caffe trained model files into PaddlePaddle model files.
 
 - 9.1 [convert Caffe model file to PaddlePaddle model file](https://github.com/PaddlePaddle/models/tree/develop/image_classification/caffe2paddle)
 - 9.2 [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 - 9.3 [VGG](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 - 9.4 [Residual Network](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 9.5 [Xception](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 
 This tutorial is contributed by [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) and licensed under the [Apache-2.0 license](LICENSE).

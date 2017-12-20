@@ -1,7 +1,7 @@
 图像分类
 =======================
 
-这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet和ResNet模型进行图像分类。图像分类问题的描述和这四种模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
+这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet、ResNet和Xception模型进行图像分类。图像分类问题的描述和这些模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
 
 ## 训练模型
 
@@ -84,6 +84,14 @@ ResNet模型可以通过下面的代码获取：
 
 ```python
 out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
+```
+
+5. 使用Xception模型
+
+Xception模型可以通过下面的代码获取：
+
+```python
+out = xception.xception(image, class_dim=CLASS_DIM)
 ```
 
 ### 定义损失函数
