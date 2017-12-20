@@ -85,9 +85,9 @@ def resnet_cifar10(input, class_dim, depth=32):
     nStages = {16, 64, 128}
     conv1 = conv_bn_layer(
         input, ch_in=3, ch_out=16, filter_size=3, stride=1, padding=1)
-    res1 = layer_warp(basicblock, conv1, 16, 16, n, 1)
-    res2 = layer_warp(basicblock, res1, 16, 32, n, 2)
-    res3 = layer_warp(basicblock, res2, 32, 64, n, 2)
+    res1 = layer_warp(basicblock, conv1, 16, n, 1)
+    res2 = layer_warp(basicblock, res1, 32, n, 2)
+    res3 = layer_warp(basicblock, res2, 64, n, 2)
     pool = paddle.layer.img_pool(
         input=res3, pool_size=8, stride=1, pool_type=paddle.pooling.Avg())
     out = paddle.layer.fc(

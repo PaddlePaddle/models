@@ -131,7 +131,7 @@ def create_cnn(self, emb, prefix=''):
 
     conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
     conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
-    return conv_3, conv_4
+    return paddle.layer.concat(input=[conv_3, conv_4])
 ```
 
 CNN 接受词向量序列，通过卷积和池化操作捕捉到原始句子的关键信息，最终输出一个语义向量（可以认为是句子向量）。
@@ -216,54 +216,54 @@ Pairwise Rank复用上面的DNN结构，同一个source对两个target求相似�
 ### 回归的数据格式
 ```
 # 3 fields each line:
-#   - source's word ids
-#   - target's word ids
+#   - source word list
+#   - target word list
 #   - target
-<ids> \t <ids> \t <float>
+<word list> \t <word list> \t <float>
 ```
 
 比如：
 
 ```
-3 6 10 \t 6 8 33 \t 0.7
-6 0 \t 6 9 330 \t 0.03
+苹果 六 袋    苹果 6s    0.1
+新手 汽车 驾驶    驾校 培训    0.9
 ```
 ### 分类的数据格式
 ```
 # 3 fields each line:
-#   - source's word ids
-#   - target's word ids
+#   - source word list
+#   - target word list
 #   - target
-<ids> \t <ids> \t <label>
+<word list> \t <word list> \t <label>
 ```
 
 比如：
 
 ```
-3 6 10 \t 6 8 33 \t 0
-6 10 \t 8 3 1 \t 1
+苹果 六 袋    苹果 6s    0
+新手 汽车 驾驶    驾校 培训    1
 ```
 
 ### 排序的数据格式
 ```
 # 4 fields each line:
-#   - source's word ids
-#   - target1's word ids
-#   - target2's word ids
+#   - source word list
+#   - target1 word list
+#   - target2 word list
 #   - label
-<ids> \t <ids> \t <ids> \t <label>
+<word list> \t <word list> \t <word list> \t <label>
 ```
 
 比如：
 
 ```
-7 2 4 \t 2 10 12 \t 9 2 7 10 23 \t 0
-7 2 4 \t 10 12 \t 9 2 21 23 \t 1
+苹果 六 袋    苹果 6s    新手 汽车 驾驶    1
+新手 汽车 驾驶    驾校 培训    苹果 6s    1
 ```
 
 ## 执行训练
 
-可以直接执行 `python train.py -y 0 --model_arch 0` 使用 `./data/classification` 目录里的实例数据来测试能否直接运行训练分类FC模型。
+可以直接执行 `python train.py -y 0 --model_arch 0 --class_num 2` 使用 `./data/classification` 目录里的实例数据来测试能否直接运行训练分类FC模型。
 
 其他模型结构也可以通过命令行实现定制，详细命令行参数请执行 `python train.py --help`进行查阅。
 

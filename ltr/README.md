@@ -96,7 +96,7 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}} = \frac{1}{2}(1-S_{i,j})-\fra
 
 训练`RankNet`模型在命令行执行：
 ```bash
-python ranknet.py
+python train.py --model_type ranknet
 ```
 初次执行会自动下载数据，训练RankNet模型，并将每个轮次的模型参数存储下来。
 
@@ -104,9 +104,7 @@ python ranknet.py
 
 使用训练好的`RankNet`模型继续进行预测，在命令行执行：
 ```bash
-python ranknet.py \
-  --run_type infer \
-  --test_model_path models/ranknet_params_0.tar.gz
+python infer.py --model_type ranknet --test_model_path models/ranknet_params_0.tar.gz
 ```
 
 本例提供了rankNet模型的训练和预测两个部分。完成训练后的模型分为拓扑结构(需要注意`rank_cost`不是模型拓扑结构的一部分)和模型参数文件两部分。在本例子中复用了`ranknet`训练时的模型拓扑结构`half_ranknet`，模型参数从外存中加载。模型预测的输入为单个文档的特征向量，模型会给出相关性得分。将预测得分排序即可得到最终的文档相关性排序结果。
@@ -193,7 +191,7 @@ $$\lambda _{i,j}=\frac{\partial C}{\partial s_{i}}=-\frac{\sigma }{1+e^{\sigma (
 
 训练`LambdaRank`模型在命令行执行：
 ```bash
-python lambda_rank.py
+python train.py --model_type lambdarank
 ```
 初次运行脚本会自动下载数据训练LambdaRank模型，并将每个轮次的模型存储下来。
 
@@ -203,9 +201,7 @@ LambdaRank模型预测过程和RankNet相同。预测时的模型拓扑结构复
 
 使用训练好的`LambdaRank`模型继续进行预测，在命令行执行：
 ```bash
-python lambda_rank.py \
-  --run_type infer \
-  --test_model_path models/lambda_rank_params_0.tar.gz
+python infer.py --model_type lambdarank --test_model_path models/lambda_rank_params_0.tar.gz
 ```
 
 ## 自定义 LambdaRank数据

@@ -107,7 +107,7 @@ def create_cnn(self, emb, prefix=''):
 
     conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
     conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
-    return conv_3, conv_4
+    return paddle.layer.concat(input=[conv_3, conv_4])
 ```
 
 CNN accepts the word sequence of the embedding table, then process the data by convolution and pooling, and finally outputs a semantic vector.
@@ -190,62 +190,62 @@ Below is a simple example for the data in `./data`
 ### Regression data format
 ```
 # 3 fields each line:
-#   - source's word ids
-#   - target's word ids
+#   - source word list
+#   - target word list
 #   - target
-<ids> \t <ids> \t <float>
+<word list> \t <word list> \t <float>
 ```
 
 The example of this format is as follows.
 
 ```
-3 6 10 \t 6 8 33 \t 0.7
-6 0 \t 6 9 330 \t 0.03
+Six bags of apples    Apple 6s    0.1
+The new driver    The driving school    0.9
 ```
 
 ### Classification data format
 ```
 # 3 fields each line:
-#   - source's word ids
-#   - target's word ids
+#   - source word list
+#   - target word list
 #   - target
-<ids> \t <ids> \t <label>
+<word list> \t <word list> \t <label>
 ```
 
 The example of this format is as follows.
 
 
 ```
-3 6 10 \t 6 8 33 \t 0
-6 10 \t 8 3 1 \t 1
+Six bags of apples    Apple 6s    0
+The new driver    The driving school    1
 ```
 
 
 ### Ranking data format
 ```
 # 4 fields each line:
-#   - source's word ids
-#   - target1's word ids
-#   - target2's word ids
+#   - source word list
+#   - target1 word list
+#   - target2 word list
 #   - label
-<ids> \t <ids> \t <ids> \t <label>
+<word list> \t <word list> \t <word list> \t <label>
 ```
 
 The example of this format is as follows.
 
 ```
-7 2 4 \t 2 10 12 \t 9 2 7 10 23 \t 0
-7 2 4 \t 10 12 \t 9 2 21 23 \t 1
+Six bags of apples    Apple 6s    The new driver    1
+The new driver    The driving school    Apple 6s    1
 ```
 
 ## Training
 
-We use `python train.py -y 0 --model_arch 0` with the data in  `./data/classification` to train a DSSM model for classification. The paremeters to execute the script `train.py` can be found by execution `python infer.py --help`. Some important parameters are：
+We use `python train.py -y 0 --model_arch 0 --class_num 2` with the data in  `./data/classification` to train a DSSM model for classification. The paremeters to execute the script `train.py` can be found by execution `python infer.py --help`. Some important parameters are：
 
 - `train_data_path` Training data path
 - `test_data_path`  Test data path, optional
 - `source_dic_path`  Source dictionary path
-- `target_dic_path` 目Target dictionary path
+- `target_dic_path` Target dictionary path
 - `model_type`  The type of loss function of the model: classification 0, sort 1, regression 2
 - `model_arch` Model structure: FC 0，CNN 1, RNN 2
 - `dnn_dims` The dimension of each layer of the model is set, the default is `256,128,64,32`，with 4 layers.
