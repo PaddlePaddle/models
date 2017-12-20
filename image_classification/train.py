@@ -19,7 +19,10 @@ def main():
     parser.add_argument(
         'model',
         help='The model for image classification',
-        choices=['alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet'])
+        choices=[
+            'alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet',
+            'xception'
+        ])
     args = parser.parse_args()
 
     # PaddlePaddle init
@@ -52,6 +55,8 @@ def main():
             input=out2, label=lbl, coeff=0.3)
         paddle.evaluator.classification_error(input=out2, label=lbl)
         extra_layers = [loss1, loss2]
+    elif args.model == 'xception':
+        out = xception.xception(image, class_dim=CLASS_DIM)
 
     cost = paddle.layer.classification_cost(input=out, label=lbl)
 
