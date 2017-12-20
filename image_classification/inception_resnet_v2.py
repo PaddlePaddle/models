@@ -8,6 +8,7 @@ def conv_bn_layer(input,
                   padding=0,
                   active_type=paddle.activation.Relu(),
                   ch_in=None):
+    """layer wrapper assembling convolution and batchnorm layer"""
     tmp = paddle.layer.img_conv(
         input=input,
         filter_size=filter_size,
@@ -21,6 +22,7 @@ def conv_bn_layer(input,
 
 
 def sequential_block(input, *layers):
+    """helper function for sequential layers"""
     for layer in layers:
         layer_func, layer_conf = layer
         input = layer_func(input, **layer_conf)

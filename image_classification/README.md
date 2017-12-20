@@ -32,7 +32,8 @@ paddle.init(use_gpu=False, trainer_count=1)
 设置算法参数（如数据维度、类别数目和batch size等参数），定义数据输入层`image`和类别标签`lbl`。
 
 ```python
-DATA_DIM = 3 * 224 * 224  # Use 3 * 331 * 331 or 3 * 299 * 299 for Inception-ResNet-v2.
+# Use 3 * 331 * 331 or 3 * 299 * 299 for DATA_DIM in Inception-ResNet-v2.
+DATA_DIM = 3 * 224 * 224
 CLASS_DIM = 102
 BATCH_SIZE = 128
 
@@ -94,7 +95,8 @@ out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
 提供的Inception-ResNet-v2模型支持`3 * 331 * 331`和`3 * 299 * 299`两种大小的输入，同时可以自行设置dropout概率，可以通过如下的代码使用：
 
 ```python
-out = inception_resnet_v2.inception_resnet_v2(image, class_dim=CLASS_DIM, dropout_rate=0.5, size=DATA_DIM)
+out = inception_resnet_v2.inception_resnet_v2(
+    image, class_dim=CLASS_DIM, dropout_rate=0.5, size=DATA_DIM)
 ```
 
 注意，由于和其他几种模型输入大小不同，若配合提供的`reader.py`使用Inception-ResNet-v2时请先将`reader.py`中`paddle.image.simple_transform`中的参数为修改为相应大小。
