@@ -129,7 +129,7 @@ NCE 层的一些重要参数解释如下：
           size=dict_size,
           input=paddle.layer.trans_full_matrix_projection(
               hidden_layer, param_attr=paddle.attr.Param(name="nce_w")),
-          act=paddle.activation.Sigmoid(),
+          act=paddle.activation.Softmax(),
           bias_attr=paddle.attr.Param(name="nce_b"))
     ```
     上述代码片段中的 `paddle.layer.mixed` 必须以 PaddlePaddle 中 `paddle.layer.×_projection` 为输入。`paddle.layer.mixed` 将多个 `projection` （输入可以是多个）计算结果求和作为输出。`paddle.layer.trans_full_matrix_projection` 在计算矩阵乘法时会对参数$W$进行转置。

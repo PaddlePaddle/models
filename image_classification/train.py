@@ -1,4 +1,6 @@
 import gzip
+import argparse
+
 import paddle.v2.dataset.flowers as flowers
 import paddle.v2 as paddle
 import reader
@@ -7,9 +9,9 @@ import resnet
 import alexnet
 import googlenet
 import inception_v4
-import argparse
+import inception_resnet_v2
 
-DATA_DIM = 3 * 224 * 224
+DATA_DIM = 3 * 224 * 224  # Use 3 * 331 * 331 or 3 * 299 * 299 for Inception-ResNet-v2.
 CLASS_DIM = 102
 BATCH_SIZE = 128
 
@@ -22,7 +24,7 @@ def main():
         help='The model for image classification',
         choices=[
             'alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet',
-            'inception_v4'
+            'inception-resnet-v2', 'inception_v4'
         ])
     args = parser.parse_args()
 
@@ -56,6 +58,10 @@ def main():
             input=out2, label=lbl, coeff=0.3)
         paddle.evaluator.classification_error(input=out2, label=lbl)
         extra_layers = [loss1, loss2]
+    elif args.model == 'inception-resnet-v2':
+        assert DATA_DIM == 3 * 331 * 331 or DATA_DIM == 3 * 299 * 299
+        out = inception_resnet_v2.inception_resnet_v2(
+            image, class_dim=CLASS_DIM, dropout_rate=0.5, data_dim=DATA_DIM)
     elif args.model == 'inception_v4':
         out = inception_v4.inception_v4(image, class_dim=CLASS_DIM)
 
