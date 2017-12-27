@@ -1,19 +1,20 @@
+import os
 import gzip
+import argparse
+import numpy as np
+from PIL import Image
+
 import paddle.v2 as paddle
 import reader
 import vgg
 import resnet
 import alexnet
 import googlenet
+import inception_v4
+import inception_resnet_v2
 import xception
-import argparse
-import os
-from PIL import Image
-import numpy as np
 
-WIDTH = 224
-HEIGHT = 224
-DATA_DIM = 3 * WIDTH * HEIGHT
+DATA_DIM = 3 * 224 * 224  # Use 3 * 331 * 331 or 3 * 299 * 299 for Inception-ResNet-v2.
 CLASS_DIM = 102
 
 
@@ -29,7 +30,7 @@ def main():
         help='The model for image classification',
         choices=[
             'alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet',
-            'xception'
+            'inception-resnet-v2', 'inception_v4', 'xception'
         ])
     parser.add_argument(
         'params_path', help='The file which stores the parameters')
@@ -53,6 +54,12 @@ def main():
         out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
     elif args.model == 'googlenet':
         out, _, _ = googlenet.googlenet(image, class_dim=CLASS_DIM)
+    elif args.model == 'inception-resnet-v2':
+        assert DATA_DIM == 3 * 331 * 331 or DATA_DIM == 3 * 299 * 299
+        out = inception_resnet_v2.inception_resnet_v2(
+            image, class_dim=CLASS_DIM, dropout_rate=0.5, data_dim=DATA_DIM)
+    elif args.model == 'inception_v4':
+        out = inception_v4.inception_v4(image, class_dim=CLASS_DIM)
     elif args.model == 'xception':
         out = xception.xception(image, class_dim=CLASS_DIM)
 
