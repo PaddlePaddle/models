@@ -6,6 +6,7 @@ import paddle.v2 as paddle
 import reader
 import vgg
 import resnet
+import resnext
 import alexnet
 import googlenet
 import inception_resnet_v2
@@ -22,8 +23,8 @@ def main():
         'model',
         help='The model for image classification',
         choices=[
-            'alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet',
-            'inception-resnet-v2'
+            'alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'resnext',
+            'googlenet', 'inception-resnet-v2'
         ])
     args = parser.parse_args()
 
@@ -48,6 +49,8 @@ def main():
     elif args.model == 'resnet':
         out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
         learning_rate = 0.1
+    elif args.model == 'resnext':
+        out = resnext.resnext_50(image, class_dim=CLASS_DIM)
     elif args.model == 'googlenet':
         out, out1, out2 = googlenet.googlenet(image, class_dim=CLASS_DIM)
         loss1 = paddle.layer.cross_entropy_cost(
