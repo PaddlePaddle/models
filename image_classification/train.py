@@ -8,6 +8,7 @@ import vgg
 import resnet
 import alexnet
 import googlenet
+import inception_v4
 import inception_resnet_v2
 
 DATA_DIM = 3 * 224 * 224  # Use 3 * 331 * 331 or 3 * 299 * 299 for Inception-ResNet-v2.
@@ -23,7 +24,7 @@ def main():
         help='The model for image classification',
         choices=[
             'alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet',
-            'inception-resnet-v2'
+            'inception-resnet-v2', 'inception_v4'
         ])
     args = parser.parse_args()
 
@@ -61,6 +62,8 @@ def main():
         assert DATA_DIM == 3 * 331 * 331 or DATA_DIM == 3 * 299 * 299
         out = inception_resnet_v2.inception_resnet_v2(
             image, class_dim=CLASS_DIM, dropout_rate=0.5, data_dim=DATA_DIM)
+    elif args.model == 'inception_v4':
+        out = inception_v4.inception_v4(image, class_dim=CLASS_DIM)
 
     cost = paddle.layer.classification_cost(input=out, label=lbl)
 
