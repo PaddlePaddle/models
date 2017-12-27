@@ -93,7 +93,7 @@ out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
 
 5. 使用Inception-v4模型
 
-Inception-v4模型可以通过下面的代码获取, 本例中使用的模型输入大小为`3 * 224 * 224`：
+Inception-v4模型可以通过下面的代码获取, 本例中使用的模型输入大小为`3 * 224 * 224` (原文献中使用的输入大小为`3 * 299 * 299`)：
 
 ```python
 out = inception_v4.inception_v4(image, class_dim=CLASS_DIM)
