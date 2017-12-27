@@ -278,7 +278,7 @@ Pairwise Rank复用上面的DNN结构，同一个source对两个target求相似�
 - `dnn_dims` 模型各层的维度设置，默认为 `256,128,64,32`，即模型有4层，各层维度如上设置
 
 ## 使用训练好的模型预测
-详细命令行参数请执行 `python train.py --help`进行查阅。重要参数解释如下：
+详细命令行参数请执行 `python infer.py --help`进行查阅。重要参数解释如下：
 
 - `data_path` 需要预测的数据路径
 - `prediction_output_path` 预测的输出路径
