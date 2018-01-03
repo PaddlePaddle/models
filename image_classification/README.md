@@ -2,6 +2,7 @@
 =======================
 
 这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet、ResNet、Inception-v4和Inception-ResNet-v2模型进行图像分类。图像分类问题的描述和这些模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
+所用数据集是[flowers](http://www.robots.ox.ac.uk/~vgg/data/flowers/102/)。因此，CLASS_DIM=102。
 
 ## 训练模型
 
