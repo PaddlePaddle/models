@@ -31,6 +31,7 @@ paddle.init(use_gpu=False, trainer_count=1)
 ### 定义参数和输入
 
 设置算法参数（如数据维度、类别数目和batch size等参数），定义数据输入层`image`和类别标签`lbl`。
+所用数据集是[flowers](http://www.robots.ox.ac.uk/~vgg/data/flowers/102/)。花的种类是102，因此，CLASS_DIM=102。
 
 ```python
 # Use 3 * 331 * 331 or 3 * 299 * 299 for DATA_DIM in Inception-ResNet-v2.
