@@ -1,7 +1,7 @@
 图像分类
 =======================
 
-这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet、ResNet、Inception-v4和Inception-ResNet-v2模型进行图像分类。图像分类问题的描述和这些模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
+这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet、ResNet、Inception-v4、Inception-ResNet-v2和SE-ResNeXt模型进行图像分类。图像分类问题的描述和这些模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
 
 ## 训练模型
 
@@ -22,6 +22,7 @@ import alexnet
 import googlenet
 import inception_v4
 import inception_resnet_v2
+import se_resnext
 
 
 # PaddlePaddle init
@@ -100,7 +101,6 @@ Inception-v4模型可以通过下面的代码获取, 本例中使用的模型输
 out = inception_v4.inception_v4(image, class_dim=CLASS_DIM)
 ```
 
-
 6. 使用Inception-ResNet-v2模型
 
 提供的Inception-ResNet-v2模型支持`3 * 331 * 331`和`3 * 299 * 299`两种大小的输入，同时可以自行设置dropout概率，可以通过如下的代码使用：
@@ -111,6 +111,14 @@ out = inception_resnet_v2.inception_resnet_v2(
 ```
 
 注意，由于和其他几种模型输入大小不同，若配合提供的`reader.py`使用Inception-ResNet-v2时请先将`reader.py`中`paddle.image.simple_transform`中的参数为修改为相应大小。
+
+7. 使用SE-ResNeXt模型
+
+SE-ResNeXt模型可以通过下面的代码获取：
+
+```python
+out = se_resnext.se_resnext50(image, class_dim=CLASS_DIM)
+```
 
 ### 定义损失函数
 
@@ -199,7 +207,8 @@ def event_handler(event):
 
 ### 定义训练方法
 
-对于AlexNet、VGG、ResNet、Inception-v4和Inception-ResNet-v2，可以按下面的代码定义训练方法：
+对于AlexNet、VGG、ResNet、Inception-v4、Inception-ResNet-v2和SE-ResNeXt，
+可以按下面的代码定义训练方法：
 
 ```python
 # Create trainer

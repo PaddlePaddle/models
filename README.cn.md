@@ -98,7 +98,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 图像相比文字能够提供更加生动、容易理解及更具艺术感的信息，是人们转递与交换信息的重要来源。图像分类是根据图像的语义信息对不同类别图像进行区分，是计算机视觉中重要的基础问题，也是图像检测、图像分割、物体跟踪、行为分析等其他高层视觉任务的基础，在许多领域都有着广泛的应用。如：安防领域的人脸识别和智能视频分析等，交通领域的交通场景识别，互联网领域基于内容的图像检索和相册自动归类，医学领域的图像识别等。
 
-在图像分类任务中，我们向大家介绍如何训练AlexNet、VGG、GoogLeNet、ResNet、Inception-v4和Inception-Resnet-V2模型。同时提供了能够将Caffe或TensorFlow训练好的模型文件转换为PaddlePaddle模型文件的模型转换工具。
+在图像分类任务中，我们向大家介绍如何训练AlexNet、VGG、GoogLeNet、ResNet、Inception-v4、Inception-Resnet-V2和SE-ResNeXt模型。同时提供了能够将Caffe或TensorFlow训练好的模型文件转换为PaddlePaddle模型文件的模型转换工具。
 
 - 11.1 [将Caffe模型文件转换为PaddlePaddle模型文件](https://github.com/PaddlePaddle/models/tree/develop/image_classification/caffe2paddle)
 - 11.2 [将TensorFlow模型文件转换为PaddlePaddle模型文件](https://github.com/PaddlePaddle/models/tree/develop/image_classification/tf2paddle)
@@ -107,6 +107,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 - 11.5 [Residual Network](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 - 11.6 [Inception-v4](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 - 11.7 [Inception-Resnet-V2](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 11.8 [SE-ResNeXt](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 
 ## 12. 目标检测
 
