@@ -12,6 +12,7 @@ import alexnet
 import googlenet
 import inception_v4
 import inception_resnet_v2
+import se_resnext
 
 DATA_DIM = 3 * 224 * 224  # Use 3 * 331 * 331 or 3 * 299 * 299 for Inception-ResNet-v2.
 CLASS_DIM = 102
@@ -29,7 +30,7 @@ def main():
         help='The model for image classification',
         choices=[
             'alexnet', 'vgg13', 'vgg16', 'vgg19', 'resnet', 'googlenet',
-            'inception-resnet-v2', 'inception_v4'
+            'inception-resnet-v2', 'inception_v4', 'se-resnext'
         ])
     parser.add_argument(
         'params_path', help='The file which stores the parameters')
@@ -59,6 +60,8 @@ def main():
             image, class_dim=CLASS_DIM, dropout_rate=0.5, data_dim=DATA_DIM)
     elif args.model == 'inception_v4':
         out = inception_v4.inception_v4(image, class_dim=CLASS_DIM)
+    elif args.model == 'se-resnext':
+        out = se_resnext.se_resnext50(image, class_dim=CLASS_DIM)
 
     # load parameters
     with gzip.open(args.params_path, 'r') as f:
