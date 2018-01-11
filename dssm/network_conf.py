@@ -210,7 +210,7 @@ class DSSM(object):
 
         prefixs = "_ _ _".split(
         ) if self.share_semantic_generator else "source target target".split()
-        embed_prefixs = "_ _".split(
+        embed_prefixs = "_ _ _".split(
         ) if self.share_embed else "source target target".split()
 
         word_vecs = []
