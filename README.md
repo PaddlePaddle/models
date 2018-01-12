@@ -34,7 +34,7 @@ In the example of click-through rate estimates, we first give the Google's Wide 
 
 Text classification is one of the most basic tasks in natural language processing. The deep learning method can eliminate the complex feature engineering, and use the original text as input to optimize the classification accuracy.
 
-For text classification, we provide a non-sequential text classification model based on DNN and CNN. (For LSTM-based model, please refer to PaddleBook [Sentiment Analysis](https://github.com/PaddlePaddle/book/blob/develop/06.understand_sentiment/README.cn.md)).
+For text classification, we provide a non-sequential text classification model based on DNN and CNN. (For LSTM-based model, please refer to PaddleBook [Sentiment Analysis](https://github.com/PaddlePaddle/book/blob/develop/06.understand_sentiment/README.md)).
 
 - 4.1 [Sentiment analysis based on DNN / CNN](https://github.com/PaddlePaddle/models/tree/develop/text_classification)
 
@@ -43,7 +43,7 @@ For text classification, we provide a non-sequential text classification model b
 Learning to rank (LTR) is one of the core problems in information retrieval and search engine research. Training data is used by a learning algorithm to produce a ranking model which computes the relevance of documents for actual queries.
 The depth neural network can be used to model the fractional function to form various LTR models based on depth learning.
 
-The algorithms for learning to rank are usually categorized into three groups by their input representation and the loss function. These are pointwise, pairwise and listwise approaches. Here we demonstrate RankLoss loss function method (pairwise approach), and LambdaRank loss function method (listwise approach). (For Pointwise approaches, please refer to [Recommended System](https://github.com/PaddlePaddle/book/blob/develop/05.recommender_system/README.cn.md)).
+The algorithms for learning to rank are usually categorized into three groups by their input representation and the loss function. These are pointwise, pairwise and listwise approaches. Here we demonstrate RankLoss loss function method (pairwise approach), and LambdaRank loss function method (listwise approach). (For Pointwise approaches, please refer to [Recommended System](https://github.com/PaddlePaddle/book/blob/develop/05.recommender_system/README.md)).
 
 - 5.1 [Learning to rank based on Pairwise and Listwise approches](https://github.com/PaddlePaddle/models/tree/develop/ltr)
 
