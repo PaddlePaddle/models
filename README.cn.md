@@ -38,7 +38,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 文本分类是自然语言处理领域最基础的任务之一，深度学习方法能够免除复杂的特征工程，直接使用原始文本作为输入，数据驱动地最优化分类准确率。
 
-在文本分类任务中，我们以情感分类任务为例，提供了基于DNN的非序列文本分类模型，以及基于CNN的序列模型供大家学习和使用（基于LSTM的模型见PaddleBook中[情感分类](https://github.com/PaddlePaddle/book/blob/develop/06.understand_sentiment/README.cn.md)一课）。
+在文本分类任务中，我们以情感分类任务为例，提供了基于DNN的非序列文本分类模型，以及基于CNN的序列模型供大家学习和使用（基于LSTM的模型见PaddleBook中[情感分类](http://www.paddlepaddle.org/docs/develop/book/06.understand_sentiment/index.cn.html)一课）。
 
 - 4.1 [基于DNN/CNN的情感分类](https://github.com/PaddlePaddle/models/tree/develop/text_classification)
 - 4.2 [基于双层序列的文本分类模型](https://github.com/PaddlePaddle/models/tree/develop/nested_sequence/text_classification)
@@ -47,7 +47,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 排序学习(Learning to Rank， LTR)是信息检索和搜索引擎研究的核心问题之一，通过机器学习方法学习一个分值函数对待排序的候选进行打分，再根据分值的高低确定序关系。深度神经网络可以用来建模分值函数，构成各类基于深度学习的LTR模型。
 
-在排序学习任务中，我们介绍基于RankLoss损失函数Pairwise排序模型和基于LambdaRank损失函数的Listwise排序模型(Pointwise学习策略见PaddleBook中[推荐系统](https://github.com/PaddlePaddle/book/blob/develop/05.recommender_system/README.cn.md)一课）。
+在排序学习任务中，我们介绍基于RankLoss损失函数Pairwise排序模型和基于LambdaRank损失函数的Listwise排序模型(Pointwise学习策略见PaddleBook中[推荐系统](http://www.paddlepaddle.org/docs/develop/book/05.recommender_system/index.cn.html)一课）。
 
 - 5.1 [基于Pairwise和Listwise的排序学习](https://github.com/PaddlePaddle/models/tree/develop/ltr)
 
