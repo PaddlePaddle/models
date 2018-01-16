@@ -73,7 +73,7 @@ To train the model:
 python train.py \
         --train_data_path data/train.txt \
         --test_data_path data/valid.txt \
-        2>&1 | train.log
+        2>&1 | tee train.log
 ```
 
 After training pass 9 batch 40000, the testing AUC is `0.807178` and the testing
