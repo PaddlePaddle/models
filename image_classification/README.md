@@ -1,7 +1,7 @@
 图像分类
 =======================
 
-这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet、ResNet、Inception-v4和Inception-ResNet-v2模型进行图像分类。图像分类问题的描述和这些模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
+这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet、ResNet、Inception-v4、Inception-ResNet-v2和Xception模型进行图像分类。图像分类问题的描述和这些模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
 
 ## 训练模型
 
@@ -22,6 +22,7 @@ import alexnet
 import googlenet
 import inception_v4
 import inception_resnet_v2
+import xception
 
 
 # PaddlePaddle init
@@ -47,7 +48,7 @@ lbl = paddle.layer.data(
 
 ### 获得所用模型
 
-这里可以选择使用AlexNet、VGG、GoogLeNet、ResNet、Inception-v4和Inception-ResNet-v2模型中的一个模型进行图像分类。通过调用相应的方法可以获得网络最后的Softmax层。
+这里可以选择使用AlexNet、VGG、GoogLeNet、ResNet、Inception-v4、Inception-ResNet-v2和Xception模型中的一个模型进行图像分类。通过调用相应的方法可以获得网络最后的Softmax层。
 
 1. 使用AlexNet模型
 
@@ -111,6 +112,14 @@ out = inception_resnet_v2.inception_resnet_v2(
 ```
 
 注意，由于和其他几种模型输入大小不同，若配合提供的`reader.py`使用Inception-ResNet-v2时请先将`reader.py`中`paddle.image.simple_transform`中的参数为修改为相应大小。
+
+7. 使用Xception模型
+
+Xception模型可以通过下面的代码获取：
+
+```python
+out = xception.xception(image, class_dim=CLASS_DIM)
+```
 
 ### 定义损失函数
 
@@ -199,7 +208,7 @@ def event_handler(event):
 
 ### 定义训练方法
 
-对于AlexNet、VGG、ResNet、Inception-v4和Inception-ResNet-v2，可以按下面的代码定义训练方法：
+对于AlexNet、VGG、ResNet、Inception-v4、Inception-ResNet-v2和Xception，可以按下面的代码定义训练方法：
 
 ```python
 # Create trainer
