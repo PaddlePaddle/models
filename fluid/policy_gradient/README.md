@@ -96,14 +96,19 @@ $$ -\bigtriangledown \overline {R}_\theta
 
 根据等式(14), 我们的player的模型可以设计为：
 
-![图片](http://bos.nj.bpc.baidu.com/v1/agroup/5f762f001d4a421bc06964d39cc78859e1a1e331)
-
+<p align="center">
+<img src="images/PG_1.svg" width="620" hspace='10'/> <br/>
 图 1
+</p>
+
 用户的在一局游戏中的一次操作可以用元组$(s_t, a_t)$, 就是在状态$s_t$状态下做了动作$a_t$, 我们通过图(1)中的前向网络计算出来cross entropy cost为$−\log P(a_t|s_t,\theta)$， 恰好是等式(15)中我们需要微分的一项。
 图1是我们需要的player模型，我用这个网络的前向计算可以预测任何状态下该做什么动作。但是怎么去训练学习这个网络呢？在等式(15)中还有一项$R(\tau^n)$, 我做反向梯度传播的时候要加上这一项，所以我们需要在图1基础上再加上$R(\tau^n)$， 如 图2 所示：
 
-![图片](http://bos.nj.bpc.baidu.com/v1/agroup/b639162977cc9c1f612be8fdf31ec99d73630f97)
-图2
+<p align="center">
+<img src="images/PG_2.svg" width="620" hspace='10'/> <br/>
+图 2
+</p>
+
 图2就是我们最终的网络结构。
 
 #### 2.3.3 直观理解
@@ -124,10 +129,11 @@ $$ -\bigtriangledown \overline {R}_\theta
 我们在第一章描述的游戏场景，需要用第二种 ，player每次到达终点都会收到1分的奖励，我们可以按完成任务所用的步数来定义奖励R.
 更进一步，我们认为一局游戏中每步动作对结局的贡献是不同的，有聪明的动作，也有愚蠢的操作。直观的理解，一般是靠前的动作是愚蠢的，靠后的动作是聪明的。既然有了这个价值观，那么我们拿到1分的奖励，就不能平均分给每个动作了。
 如图3所示，让所有动作按先后排队，从后往前衰减地给每个动作奖励，然后再每个动作的奖励再减去所有动作奖励的平均值：
-![图片](http://bos.nj.bpc.baidu.com/v1/agroup/bf802ee7f900c776d02bcad834acb9b0aaa4479a)
 
-
-
+<p align="center">
+<img src="images/PG_3.svg" width="620" hspace='10'/> <br/>
+图 3
+</p>
 
 ## 3. 训练效果
 

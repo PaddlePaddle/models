@@ -36,8 +36,9 @@ class PolicyGradient:
             act="tanh"  # tanh activation
         )
         # fc2
-        self.all_act_prob = fluid.layers.fc(
-            input=fc1, size=self.n_actions, act="softmax")
+        self.all_act_prob = fluid.layers.fc(input=fc1,
+                                            size=self.n_actions,
+                                            act="softmax")
         # to maximize total reward (log_p * R) is to minimize -(log_p * R)
         neg_log_prob = fluid.layers.cross_entropy(
             input=self.all_act_prob,
