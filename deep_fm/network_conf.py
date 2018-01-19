@@ -5,8 +5,9 @@ sparse_feature_dim = 117568
 
 
 def fm_layer(input, factor_size, fm_param_attr):
-    first_order = paddle.layer.fc(
-        input=input, size=1, act=paddle.activation.Linear())
+    first_order = paddle.layer.fc(input=input,
+                                  size=1,
+                                  act=paddle.activation.Linear())
     second_order = paddle.layer.factorization_machine(
         input=input,
         factor_size=factor_size,
@@ -51,17 +52,15 @@ def DeepFM(factor_size, infer=False):
     sparse_embed_seq = map(embedding_layer, sparse_input_ids)
     sparse_embed = paddle.layer.concat(sparse_embed_seq)
 
-    fc1 = paddle.layer.fc(
-        input=[sparse_embed, dense_input],
-        size=400,
-        act=paddle.activation.Relu())
+    fc1 = paddle.layer.fc(input=[sparse_embed, dense_input],
+                          size=400,
+                          act=paddle.activation.Relu())
     fc2 = paddle.layer.fc(input=fc1, size=400, act=paddle.activation.Relu())
     fc3 = paddle.layer.fc(input=fc2, size=400, act=paddle.activation.Relu())
 
-    predict = paddle.layer.fc(
-        input=[dense_fm, sparse_fm, fc3],
-        size=1,
-        act=paddle.activation.Sigmoid())
+    predict = paddle.layer.fc(input=[dense_fm, sparse_fm, fc3],
+                              size=1,
+                              act=paddle.activation.Sigmoid())
 
     if not infer:
         label = paddle.layer.data(

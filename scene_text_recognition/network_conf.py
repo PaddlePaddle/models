@@ -69,10 +69,9 @@ class Model(object):
             reverse=True)
 
         # Map the output of RNN to character distribution.
-        self.output = layer.fc(
-            input=[gru_forward, gru_backward],
-            size=self.num_classes + 1,
-            act=Linear())
+        self.output = layer.fc(input=[gru_forward, gru_backward],
+                               size=self.num_classes + 1,
+                               act=Linear())
 
         self.log_probs = paddle.layer.mixed(
             input=paddle.layer.identity_projection(input=self.output),

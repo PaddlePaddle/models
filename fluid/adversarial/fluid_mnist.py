@@ -54,7 +54,8 @@ def main():
     ACC_THRESHOLD = 0.98
     LOSS_THRESHOLD = 10.0
     train_reader = paddle.batch(
-        paddle.reader.shuffle(paddle.dataset.mnist.train(), buf_size=500),
+        paddle.reader.shuffle(
+            paddle.dataset.mnist.train(), buf_size=500),
         batch_size=BATCH_SIZE)
 
     place = fluid.CPUPlace()
@@ -65,10 +66,9 @@ def main():
     for pass_id in range(PASS_NUM):
         accuracy.reset(exe)
         for data in train_reader():
-            loss, acc = exe.run(
-                fluid.default_main_program(),
-                feed=feeder.feed(data),
-                fetch_list=[avg_cost] + accuracy.metrics)
+            loss, acc = exe.run(fluid.default_main_program(),
+                                feed=feeder.feed(data),
+                                fetch_list=[avg_cost] + accuracy.metrics)
             pass_acc = accuracy.eval(exe)
             print("pass_id=" + str(pass_id) + " acc=" + str(acc) + " pass_acc="
                   + str(pass_acc))

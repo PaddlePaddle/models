@@ -96,8 +96,9 @@ def train(num_passes,
     if init_model_path:
         load_initial_model(init_model_path, parameters)
 
-    trainer = paddle.trainer.SGD(
-        cost=cost, parameters=parameters, update_equation=optimizer)
+    trainer = paddle.trainer.SGD(cost=cost,
+                                 parameters=parameters,
+                                 update_equation=optimizer)
 
     # define data reader
     train_reader = paddle.batch(

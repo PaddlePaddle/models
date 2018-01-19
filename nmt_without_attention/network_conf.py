@@ -48,8 +48,9 @@ def seq2seq_net(source_dict_dim,
         return_seq=True)
     #### Decoder
     encoder_last = paddle.layer.last_seq(input=encoded_vector)
-    encoder_last_projected = paddle.layer.fc(
-        size=decoder_size, act=paddle.activation.Tanh(), input=encoder_last)
+    encoder_last_projected = paddle.layer.fc(size=decoder_size,
+                                             act=paddle.activation.Tanh(),
+                                             input=encoder_last)
 
     # gru step
     def gru_decoder_without_attention(enc_vec, current_word):
@@ -68,8 +69,8 @@ def seq2seq_net(source_dict_dim,
 
         context = paddle.layer.last_seq(input=enc_vec)
 
-        decoder_inputs = paddle.layer.fc(
-            size=decoder_size * 3, input=[context, current_word])
+        decoder_inputs = paddle.layer.fc(size=decoder_size * 3,
+                                         input=[context, current_word])
 
         gru_step = paddle.layer.gru_step(
             name="gru_decoder",
@@ -79,11 +80,10 @@ def seq2seq_net(source_dict_dim,
             output_mem=decoder_mem,
             size=decoder_size)
 
-        out = paddle.layer.fc(
-            size=target_dict_dim,
-            bias_attr=True,
-            act=paddle.activation.Softmax(),
-            input=gru_step)
+        out = paddle.layer.fc(size=target_dict_dim,
+                              bias_attr=True,
+                              act=paddle.activation.Softmax(),
+                              input=gru_step)
         return out
 
     group_input1 = paddle.layer.StaticInput(input=encoded_vector)

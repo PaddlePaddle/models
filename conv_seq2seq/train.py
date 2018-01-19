@@ -166,8 +166,7 @@ def train(train_data_path,
     src_dict_size = src_dict.__len__()
     trg_dict_size = trg_dict.__len__()
 
-    optimizer = paddle.optimizer.Adam(
-        learning_rate=1e-3, )
+    optimizer = paddle.optimizer.Adam(learning_rate=1e-3, )
 
     cost = conv_seq2seq(
         src_dict_size=src_dict_size,
@@ -182,8 +181,9 @@ def train(train_data_path,
 
     # create parameters and trainer
     parameters = paddle.parameters.create(cost)
-    trainer = paddle.trainer.SGD(
-        cost=cost, parameters=parameters, update_equation=optimizer)
+    trainer = paddle.trainer.SGD(cost=cost,
+                                 parameters=parameters,
+                                 update_equation=optimizer)
 
     padding_list = [context_len - 1 for (size, context_len) in dec_conv_blocks]
     padding_num = reduce(lambda x, y: x + y, padding_list)

@@ -63,7 +63,10 @@ class Dataset(object):
         target = sent2ids(fs[1], self.target_dic)
         if not self.is_infer:
             label = int(fs[2])
-            return (source, target, label, )
+            return (
+                source,
+                target,
+                label, )
         return source, target
 
     def _read_regression_record(self, line):
@@ -82,7 +85,10 @@ class Dataset(object):
         target = sent2ids(fs[1], self.target_dic)
         if not self.is_infer:
             label = float(fs[2])
-            return (source, target, [label], )
+            return (
+                source,
+                target,
+                [label], )
         return source, target
 
     def _read_rank_record(self, line):

@@ -14,11 +14,10 @@ def eval(eval_file_list, batch_size, data_args, model_path):
 
     optimizer = paddle.optimizer.Momentum()
 
-    trainer = paddle.trainer.SGD(
-        cost=cost,
-        parameters=parameters,
-        extra_layers=[detect_out],
-        update_equation=optimizer)
+    trainer = paddle.trainer.SGD(cost=cost,
+                                 parameters=parameters,
+                                 extra_layers=[detect_out],
+                                 update_equation=optimizer)
 
     feeding = {'image': 0, 'bbox': 1}
 

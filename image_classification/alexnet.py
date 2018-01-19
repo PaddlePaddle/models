@@ -34,17 +34,16 @@ def alexnet(input, class_dim):
         conv_filter_size=3,
         pool_type=paddle.pooling.Max())
 
-    fc1 = paddle.layer.fc(
-        input=pool3,
-        size=4096,
-        act=paddle.activation.Relu(),
-        layer_attr=paddle.attr.Extra(drop_rate=0.5))
-    fc2 = paddle.layer.fc(
-        input=fc1,
-        size=4096,
-        act=paddle.activation.Relu(),
-        layer_attr=paddle.attr.Extra(drop_rate=0.5))
+    fc1 = paddle.layer.fc(input=pool3,
+                          size=4096,
+                          act=paddle.activation.Relu(),
+                          layer_attr=paddle.attr.Extra(drop_rate=0.5))
+    fc2 = paddle.layer.fc(input=fc1,
+                          size=4096,
+                          act=paddle.activation.Relu(),
+                          layer_attr=paddle.attr.Extra(drop_rate=0.5))
 
-    out = paddle.layer.fc(
-        input=fc2, size=class_dim, act=paddle.activation.Softmax())
+    out = paddle.layer.fc(input=fc2,
+                          size=class_dim,
+                          act=paddle.activation.Softmax())
     return out

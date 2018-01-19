@@ -153,8 +153,8 @@ class Word2Vec(object):
                 line = fin.readline()
                 parts = line.rstrip("\n").rstrip().split(" ")
                 if len(parts) != self.vector_size + 1:
-                    raise ValueError(
-                        "invalid vector on line {}".format(word_id))
+                    raise ValueError("invalid vector on line {}".format(
+                        word_id))
                 word, weights = parts[0], [np.float32(x) for x in parts[1:]]
                 self.syn0[word_id] = weights
                 self.index2word.append(word)
@@ -280,5 +280,5 @@ def load_word_vectors(param,
                         param[idx, :] = missing_word_value()
                     missing += 1
     if verbose:
-        print(
-            "Loaded {} words, {} missing".format(len(vocab) - missing, missing))
+        print("Loaded {} words, {} missing".format(
+            len(vocab) - missing, missing))

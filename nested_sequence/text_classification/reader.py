@@ -24,8 +24,8 @@ def tokenize(pattern):
     """
     Read files that match the given pattern.  Tokenize and yield each file.
     """
-    with tarfile.open(
-            paddle.v2.dataset.common.download(URL, 'imdb', MD5)) as tarf:
+    with tarfile.open(paddle.v2.dataset.common.download(URL, 'imdb',
+                                                        MD5)) as tarf:
         tf = tarf.next()
         while tf != None:
             if bool(pattern.match(tf.name)):
@@ -77,11 +77,17 @@ def reader_creator(pos_pattern, neg_pattern, word_idx, buffer_size):
     def reader():
         # Creates two threads that loads positive and negative samples
         # into qs.
-        t0 = threading.Thread(target=load, args=(pos_pattern, qs[0], ))
+        t0 = threading.Thread(
+            target=load, args=(
+                pos_pattern,
+                qs[0], ))
         t0.daemon = True
         t0.start()
 
-        t1 = threading.Thread(target=load, args=(neg_pattern, qs[1], ))
+        t1 = threading.Thread(
+            target=load, args=(
+                neg_pattern,
+                qs[1], ))
         t1.daemon = True
         t1.start()
 

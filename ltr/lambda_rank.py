@@ -19,22 +19,19 @@ def lambda_rank(input_dim, is_infer=False):
                              paddle.data_type.dense_vector_sequence(input_dim))
 
     # Define the hidden layer.
-    hd1 = paddle.layer.fc(
-        input=data,
-        size=128,
-        act=paddle.activation.Tanh(),
-        param_attr=paddle.attr.Param(initial_std=0.01))
+    hd1 = paddle.layer.fc(input=data,
+                          size=128,
+                          act=paddle.activation.Tanh(),
+                          param_attr=paddle.attr.Param(initial_std=0.01))
 
-    hd2 = paddle.layer.fc(
-        input=hd1,
-        size=10,
-        act=paddle.activation.Tanh(),
-        param_attr=paddle.attr.Param(initial_std=0.01))
-    output = paddle.layer.fc(
-        input=hd2,
-        size=1,
-        act=paddle.activation.Linear(),
-        param_attr=paddle.attr.Param(initial_std=0.01))
+    hd2 = paddle.layer.fc(input=hd1,
+                          size=10,
+                          act=paddle.activation.Tanh(),
+                          param_attr=paddle.attr.Param(initial_std=0.01))
+    output = paddle.layer.fc(input=hd2,
+                             size=1,
+                             act=paddle.activation.Linear(),
+                             param_attr=paddle.attr.Param(initial_std=0.01))
 
     if not is_infer:
         label = paddle.layer.data("label",

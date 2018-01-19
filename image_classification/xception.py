@@ -185,9 +185,8 @@ def xception(input, class_dim):
         stride=1,
         num_channels=2048,
         pool_type=paddle.pooling.CudnnAvg())
-    out = paddle.layer.fc(
-        name='xception_fc',
-        input=pool,
-        size=class_dim,
-        act=paddle.activation.Softmax())
+    out = paddle.layer.fc(name='xception_fc',
+                          input=pool,
+                          size=class_dim,
+                          act=paddle.activation.Softmax())
     return out

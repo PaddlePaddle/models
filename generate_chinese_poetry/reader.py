@@ -26,9 +26,8 @@ def train_reader(data_file_path, word_dict_file):
                 l = len(poetry_ids)
                 if l < 2: continue
                 for i in range(l - 1):
-                    yield poetry_ids[i], poetry_ids[i +
-                                                    1][:-1], poetry_ids[i +
-                                                                        1][1:]
+                    yield poetry_ids[i], poetry_ids[i + 1][:-1], poetry_ids[
+                        i + 1][1:]
 
     return reader
 
@@ -43,10 +42,10 @@ def gen_reader(data_file_path, word_dict_file):
 
         with open(data_file_path, "r") as f:
             for line in f:
-                input_line = "".join(
-                    line.strip().decode("utf8", errors="ignore").split())
-                yield [bos_id
-                       ] + [word_dict.get(word, unk_id)
-                            for word in input_line] + [eos_id]
+                input_line = "".join(line.strip().decode(
+                    "utf8", errors="ignore").split())
+                yield [bos_id] + [
+                    word_dict.get(word, unk_id) for word in input_line
+                ] + [eos_id]
 
     return reader

@@ -60,15 +60,14 @@ class CTRmodel(object):
         '''
         build DNN submodel.
         '''
-        dnn_embedding = layer.fc(
-            input=self.dnn_merged_input, size=dnn_layer_dims[0])
+        dnn_embedding = layer.fc(input=self.dnn_merged_input,
+                                 size=dnn_layer_dims[0])
         _input_layer = dnn_embedding
         for i, dim in enumerate(dnn_layer_dims[1:]):
-            fc = layer.fc(
-                input=_input_layer,
-                size=dim,
-                act=paddle.activation.Relu(),
-                name='dnn-fc-%d' % i)
+            fc = layer.fc(input=_input_layer,
+                          size=dim,
+                          act=paddle.activation.Relu(),
+                          name='dnn-fc-%d' % i)
             _input_layer = fc
         return _input_layer
 
@@ -76,8 +75,9 @@ class CTRmodel(object):
         '''
         config LR submodel
         '''
-        fc = layer.fc(
-            input=self.lr_merged_input, size=1, act=paddle.activation.Relu())
+        fc = layer.fc(input=self.lr_merged_input,
+                      size=1,
+                      act=paddle.activation.Relu())
         return fc
 
     def _build_classification_model(self, dnn, lr):
@@ -95,8 +95,9 @@ class CTRmodel(object):
 
     def _build_regression_model(self, dnn, lr):
         merge_layer = layer.concat(input=[dnn, lr])
-        self.output = layer.fc(
-            input=merge_layer, size=1, act=paddle.activation.Sigmoid())
+        self.output = layer.fc(input=merge_layer,
+                               size=1,
+                               act=paddle.activation.Sigmoid())
         if not self.is_infer:
             self.train_cost = paddle.layer.square_error_cost(
                 input=self.output, label=self.click)

@@ -323,6 +323,7 @@ def inception_resnet_v2(input,
         pool_type=paddle.pooling.Avg(),
         exclude_mode=False)
     drop_out = paddle.layer.dropout(input=avgpool_1a, dropout_rate=dropout_rate)
-    out = paddle.layer.fc(
-        input=drop_out, size=class_dim, act=paddle.activation.Softmax())
+    out = paddle.layer.fc(input=drop_out,
+                          size=class_dim,
+                          act=paddle.activation.Softmax())
     return out

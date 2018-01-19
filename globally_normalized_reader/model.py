@@ -19,9 +19,11 @@ def build_pretrained_embedding(name, data_type, emb_dim, emb_drop=0.):
     """
 
     return paddle.layer.embedding(
-        input=paddle.layer.data(name=name, type=data_type),
+        input=paddle.layer.data(
+            name=name, type=data_type),
         size=emb_dim,
-        param_attr=paddle.attr.Param(name="GloveVectors", is_static=True),
+        param_attr=paddle.attr.Param(
+            name="GloveVectors", is_static=True),
         layer_attr=paddle.attr.ExtraLayerAttribute(drop_rate=emb_drop), )
 
 
@@ -56,16 +58,14 @@ def encode_question(input_embedding,
         input_embedding, lstm_hidden_dim, depth, 0., prefix)
 
     # compute passage-independent embeddings.
-    candidates = paddle.layer.fc(
-        input=lstm_outs,
-        bias_attr=False,
-        size=passage_indep_embedding_dim,
-        act=paddle.activation.Linear())
-    weights = paddle.layer.fc(
-        input=lstm_outs,
-        size=1,
-        bias_attr=False,
-        act=paddle.activation.SequenceSoftmax())
+    candidates = paddle.layer.fc(input=lstm_outs,
+                                 bias_attr=False,
+                                 size=passage_indep_embedding_dim,
+                                 act=paddle.activation.Linear())
+    weights = paddle.layer.fc(input=lstm_outs,
+                              size=1,
+                              bias_attr=False,
+                              act=paddle.activation.SequenceSoftmax())
     weighted_candidates = paddle.layer.scaling(input=candidates, weight=weights)
     passage_indep_embedding = paddle.layer.pooling(
         input=weighted_candidates, pooling_type=paddle.pooling.Sum())
@@ -134,10 +134,9 @@ def question_aligned_passage_embedding(question_lstm_outs, document_embeddings,
             return paddle.layer.pooling(
                 input=weighted_candidates, pooling_type=paddle.pooling.Sum())
 
-        question_outs_proj = paddle.layer.fc(
-            input=question_lstm_outs,
-            bias_attr=False,
-            size=passage_aligned_embedding_dim)
+        question_outs_proj = paddle.layer.fc(input=question_lstm_outs,
+                                             bias_attr=False,
+                                             size=passage_aligned_embedding_dim)
         return paddle.layer.recurrent_group(
             input=[
                 paddle.layer.SubsequenceInput(document_embeddings),
@@ -228,11 +227,10 @@ def search_answer(doc_lstm_outs, sentence_idx, start_idx, end_idx, config,
 
     last_state_of_sentence = paddle.layer.last_seq(
         input=doc_lstm_outs, agg_level=paddle.layer.AggregateLevel.TO_SEQUENCE)
-    sentence_scores = paddle.layer.fc(
-        input=last_state_of_sentence,
-        size=1,
-        bias_attr=False,
-        act=paddle.activation.Linear())
+    sentence_scores = paddle.layer.fc(input=last_state_of_sentence,
+                                      size=1,
+                                      bias_attr=False,
+                                      act=paddle.activation.Linear())
     topk_sentence_ids = paddle.layer.kmax_seq_score(
         input=sentence_scores, beam_size=config.beam_size)
     topk_sen = paddle.layer.sub_nested_seq(
@@ -255,11 +253,10 @@ def search_answer(doc_lstm_outs, sentence_idx, start_idx, end_idx, config,
     _, end_span_embedding = basic_modules.stacked_bidirectional_lstm(
         topk_start_spans, config.lstm_hidden_dim, config.lstm_depth,
         config.lstm_hidden_droprate, "__end_span_embeddings__")
-    end_pos_scores = paddle.layer.fc(
-        input=end_span_embedding,
-        size=1,
-        bias_attr=False,
-        act=paddle.activation.Linear())
+    end_pos_scores = paddle.layer.fc(input=end_span_embedding,
+                                     size=1,
+                                     bias_attr=False,
+                                     act=paddle.activation.Linear())
     topk_end_pos_ids = paddle.layer.kmax_seq_score(
         input=end_pos_scores, beam_size=config.beam_size)
 

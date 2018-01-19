@@ -41,19 +41,17 @@ def seqToseq_net(source_dict_dim,
     encoded_vector = paddle.layer.concat(input=[src_forward, src_reverse])
 
     #### Decoder
-    encoded_proj = paddle.layer.fc(
-        input=encoded_vector,
-        size=decoder_size,
-        act=paddle.activation.Linear(),
-        bias_attr=False)
+    encoded_proj = paddle.layer.fc(input=encoded_vector,
+                                   size=decoder_size,
+                                   act=paddle.activation.Linear(),
+                                   bias_attr=False)
 
     reverse_first = paddle.layer.first_seq(input=src_reverse)
 
-    decoder_boot = paddle.layer.fc(
-        input=reverse_first,
-        size=decoder_size,
-        act=paddle.activation.Tanh(),
-        bias_attr=False)
+    decoder_boot = paddle.layer.fc(input=reverse_first,
+                                   size=decoder_size,
+                                   act=paddle.activation.Tanh(),
+                                   bias_attr=False)
 
     def gru_decoder_with_attention_train(enc_vec, enc_proj, true_word,
                                          true_token_flag):
@@ -92,11 +90,10 @@ def seqToseq_net(source_dict_dim,
         current_word = paddle.layer.multiplex(
             input=[true_token_flag, true_word, generated_word_emb])
 
-        decoder_inputs = paddle.layer.fc(
-            input=[context, current_word],
-            size=decoder_size * 3,
-            act=paddle.activation.Linear(),
-            bias_attr=False)
+        decoder_inputs = paddle.layer.fc(input=[context, current_word],
+                                         size=decoder_size * 3,
+                                         act=paddle.activation.Linear(),
+                                         bias_attr=False)
 
         gru_step = paddle.layer.gru_step(
             name='gru_decoder',
@@ -104,11 +101,10 @@ def seqToseq_net(source_dict_dim,
             output_mem=decoder_mem,
             size=decoder_size)
 
-        out = paddle.layer.fc(
-            name='gru_out',
-            input=gru_step,
-            size=target_dict_dim,
-            act=paddle.activation.Softmax())
+        out = paddle.layer.fc(name='gru_out',
+                              input=gru_step,
+                              size=target_dict_dim,
+                              act=paddle.activation.Softmax())
         return out
 
     def gru_decoder_with_attention_gen(enc_vec, enc_proj, current_word):
@@ -132,11 +128,10 @@ def seqToseq_net(source_dict_dim,
             encoded_proj=enc_proj,
             decoder_state=decoder_mem)
 
-        decoder_inputs = paddle.layer.fc(
-            input=[context, current_word],
-            size=decoder_size * 3,
-            act=paddle.activation.Linear(),
-            bias_attr=False)
+        decoder_inputs = paddle.layer.fc(input=[context, current_word],
+                                         size=decoder_size * 3,
+                                         act=paddle.activation.Linear(),
+                                         bias_attr=False)
 
         gru_step = paddle.layer.gru_step(
             name='gru_decoder',
@@ -144,11 +139,10 @@ def seqToseq_net(source_dict_dim,
             output_mem=decoder_mem,
             size=decoder_size)
 
-        out = paddle.layer.fc(
-            name='gru_out',
-            input=gru_step,
-            size=target_dict_dim,
-            act=paddle.activation.Softmax())
+        out = paddle.layer.fc(name='gru_out',
+                              input=gru_step,
+                              size=target_dict_dim,
+                              act=paddle.activation.Softmax())
         return out
 
     decoder_group_name = "decoder_group"

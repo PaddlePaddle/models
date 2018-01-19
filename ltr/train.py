@@ -16,7 +16,8 @@ logger.setLevel(logging.INFO)
 
 def ranknet_train(input_dim, num_passes, model_save_dir):
     train_reader = paddle.batch(
-        paddle.reader.shuffle(paddle.dataset.mq2007.train, buf_size=100),
+        paddle.reader.shuffle(
+            paddle.dataset.mq2007.train, buf_size=100),
         batch_size=100)
     test_reader = paddle.batch(paddle.dataset.mq2007.test, batch_size=100)
 
@@ -70,7 +71,8 @@ def lambda_rank_train(input_dim, num_passes, model_save_dir):
         paddle.dataset.mq2007.test, format="listwise")
 
     train_reader = paddle.batch(
-        paddle.reader.shuffle(fill_default_train, buf_size=100), batch_size=32)
+        paddle.reader.shuffle(
+            fill_default_train, buf_size=100), batch_size=32)
     test_reader = paddle.batch(fill_default_test, batch_size=32)
 
     cost = lambda_rank(input_dim)

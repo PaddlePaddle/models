@@ -72,13 +72,16 @@ def train(dict_size, batch_size, num_passes, beam_size, schedule_type, decay_a,
 
     parameters = paddle.parameters.create(cost)
 
-    trainer = paddle.trainer.SGD(
-        cost=cost, parameters=parameters, update_equation=optimizer)
+    trainer = paddle.trainer.SGD(cost=cost,
+                                 parameters=parameters,
+                                 update_equation=optimizer)
 
     wmt14_reader = reader.gen_schedule_data(
         paddle.reader.shuffle(
             paddle.dataset.wmt14.train(dict_size), buf_size=8192),
-        schedule_type, decay_a, decay_b)
+        schedule_type,
+        decay_a,
+        decay_b)
 
     # define event_handler callback
     def event_handler(event):
@@ -98,7 +101,8 @@ def train(dict_size, batch_size, num_passes, beam_size, schedule_type, decay_a,
 
     # start to train
     trainer.train(
-        reader=paddle.batch(wmt14_reader, batch_size=batch_size),
+        reader=paddle.batch(
+            wmt14_reader, batch_size=batch_size),
         event_handler=event_handler,
         feeding=reader.feeding,
         num_passes=num_passes)

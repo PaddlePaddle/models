@@ -17,20 +17,20 @@ def half_ranknet(name_prefix, input_dim):
                              paddle.data_type.dense_vector(input_dim))
 
     # hidden layer
-    hd1 = paddle.layer.fc(
-        input=data,
-        name=name_prefix + "_hidden",
-        size=10,
-        act=paddle.activation.Tanh(),
-        param_attr=paddle.attr.Param(initial_std=0.01, name="hidden_w1"))
+    hd1 = paddle.layer.fc(input=data,
+                          name=name_prefix + "_hidden",
+                          size=10,
+                          act=paddle.activation.Tanh(),
+                          param_attr=paddle.attr.Param(
+                              initial_std=0.01, name="hidden_w1"))
 
     # fully connected layer and output layer
-    output = paddle.layer.fc(
-        input=hd1,
-        name=name_prefix + "_score",
-        size=1,
-        act=paddle.activation.Linear(),
-        param_attr=paddle.attr.Param(initial_std=0.01, name="output"))
+    output = paddle.layer.fc(input=hd1,
+                             name=name_prefix + "_score",
+                             size=1,
+                             act=paddle.activation.Linear(),
+                             param_attr=paddle.attr.Param(
+                                 initial_std=0.01, name="output"))
     return output
 
 

@@ -54,11 +54,10 @@ def main(train_data_file,
         model_average=paddle.optimizer.ModelAverage(
             average_window=0.5, max_average_window=10000), )
 
-    trainer = paddle.trainer.SGD(
-        cost=crf_cost,
-        parameters=parameters,
-        update_equation=optimizer,
-        extra_layers=crf_dec)
+    trainer = paddle.trainer.SGD(cost=crf_cost,
+                                 parameters=parameters,
+                                 update_equation=optimizer,
+                                 extra_layers=crf_dec)
 
     train_reader = paddle.batch(
         paddle.reader.shuffle(

@@ -91,8 +91,9 @@ def convolution_net(dict_dim,
         input=emb, context_len=4, hidden_size=hid_dim)
 
     # fc and output layer
-    prob = paddle.layer.fc(
-        input=[conv_3, conv_4], size=class_dim, act=paddle.activation.Softmax())
+    prob = paddle.layer.fc(input=[conv_3, conv_4],
+                           size=class_dim,
+                           act=paddle.activation.Softmax())
 
     if is_infer:
         return prob

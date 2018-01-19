@@ -63,8 +63,9 @@ def train():
 
     params = paddle.parameters.create(model)
 
-    trainer = paddle.trainer.SGD(
-        cost=model, parameters=params, update_equation=optimizer)
+    trainer = paddle.trainer.SGD(cost=model,
+                                 parameters=params,
+                                 update_equation=optimizer)
 
     dataset = reader.Dataset()
 

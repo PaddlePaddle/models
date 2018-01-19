@@ -50,7 +50,8 @@ def main(save_dir="models"):
         paddle.batch(
             paddle.reader.shuffle(
                 lambda: paddle.dataset.imikolov.train(word_dict, 5)(),
-                buf_size=1000), 64),
+                buf_size=1000),
+            64),
         num_passes=30,
         event_handler=event_handler)
 
