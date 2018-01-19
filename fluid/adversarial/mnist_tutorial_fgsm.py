@@ -59,7 +59,8 @@ def main():
 
     BATCH_SIZE = 1
     train_reader = paddle.batch(
-        paddle.reader.shuffle(paddle.dataset.mnist.train(), buf_size=500),
+        paddle.reader.shuffle(
+            paddle.dataset.mnist.train(), buf_size=500),
         batch_size=BATCH_SIZE)
     feeder = fluid.DataFeeder(
         feed_list=[IMG_NAME, LABEL_NAME],

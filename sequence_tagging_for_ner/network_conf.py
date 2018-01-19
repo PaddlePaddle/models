@@ -79,27 +79,25 @@ def ner_net(word_dict_len, label_dict_len, stack_num=2, is_train=True):
     # Please do not add any nonlinear activation to this fully connected layer.
     # The default activation for paddle.layer.fc is the tanh, here needs to set
     # it to linear explictly.
-    emission = paddle.layer.fc(
-        size=label_dict_len,
-        bias_attr=False,
-        input=rnn_fea,
-        act=paddle.activation.Linear(),
-        param_attr=paddle.attr.Param(initial_std=1. / math.sqrt(hidden_dim) /
-                                     3))
+    emission = paddle.layer.fc(size=label_dict_len,
+                               bias_attr=False,
+                               input=rnn_fea,
+                               act=paddle.activation.Linear(),
+                               param_attr=paddle.attr.Param(
+                                   initial_std=1. / math.sqrt(hidden_dim) / 3))
 
     if is_train:
         target = paddle.layer.data(
             name="target",
             type=paddle.data_type.integer_value_sequence(label_dict_len))
 
-        crf = paddle.layer.crf(
-            size=label_dict_len,
-            input=emission,
-            label=target,
-            param_attr=paddle.attr.Param(
-                name="crfw",
-                initial_std=1. / math.sqrt(hidden_dim) / 3,
-                learning_rate=mix_hidden_lr))
+        crf = paddle.layer.crf(size=label_dict_len,
+                               input=emission,
+                               label=target,
+                               param_attr=paddle.attr.Param(
+                                   name="crfw",
+                                   initial_std=1. / math.sqrt(hidden_dim) / 3,
+                                   learning_rate=mix_hidden_lr))
 
         crf_dec = paddle.layer.crf_decoding(
             size=label_dict_len,

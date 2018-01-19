@@ -121,8 +121,8 @@ def preprocess(datadir, outdir):
                     continous_vals = []
                     for i in range(0, len(continous_features)):
                         val = dists.gen(i, features[continous_features[i]])
-                        continous_vals.append(
-                            "{0:.6f}".format(val).rstrip('0').rstrip('.'))
+                        continous_vals.append("{0:.6f}".format(val).rstrip('0')
+                                              .rstrip('.'))
                     categorial_vals = []
                     for i in range(0, len(categorial_features)):
                         val = dicts.gen(i, features[categorial_features[
@@ -147,13 +147,12 @@ def preprocess(datadir, outdir):
                 continous_vals = []
                 for i in range(0, len(continous_features)):
                     val = dists.gen(i, features[continous_features[i] - 1])
-                    continous_vals.append(
-                        "{0:.6f}".format(val).rstrip('0').rstrip('.'))
+                    continous_vals.append("{0:.6f}".format(val).rstrip('0')
+                                          .rstrip('.'))
                 categorial_vals = []
                 for i in range(0, len(categorial_features)):
-                    val = dicts.gen(i,
-                                    features[categorial_features[i] -
-                                             1]) + categorial_feature_offset[i]
+                    val = dicts.gen(i, features[categorial_features[
+                        i] - 1]) + categorial_feature_offset[i]
                     categorial_vals.append(str(val))
 
                 continous_vals = ','.join(continous_vals)

@@ -109,11 +109,10 @@ def memory_enhanced_decoder(input, target, initial_state, source_context, size,
     :rtype: LayerOutput
     """
     # prepare initial bounded and unbounded memory
-    bounded_memory_slot_init = paddle.layer.fc(
-        input=paddle.layer.pooling(
-            input=source_context, pooling_type=paddle.pooling.Avg()),
-        size=size,
-        act=paddle.activation.Sigmoid())
+    bounded_memory_slot_init = paddle.layer.fc(input=paddle.layer.pooling(
+        input=source_context, pooling_type=paddle.pooling.Avg()),
+                                               size=size,
+                                               act=paddle.activation.Sigmoid())
     bounded_memory_perturbation = paddle.layer.data(
         name='bounded_memory_perturbation',
         type=paddle.data_type.dense_vector_sequence(size))
@@ -175,11 +174,10 @@ def memory_enhanced_decoder(input, target, initial_state, source_context, size,
         gru_output = paddle.layer.gru_step(
             name="gru_decoder", input=gru_inputs, output_mem=state, size=size)
         # step output
-        return paddle.layer.fc(
-            input=[gru_output, context, cur_embedding],
-            size=dict_size,
-            act=paddle.activation.Softmax(),
-            bias_attr=True)
+        return paddle.layer.fc(input=[gru_output, context, cur_embedding],
+                               size=dict_size,
+                               act=paddle.activation.Softmax(),
+                               bias_attr=True)
 
     if not is_generating:
         target_embeddings = paddle.layer.embedding(

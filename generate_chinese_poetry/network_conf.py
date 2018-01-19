@@ -59,11 +59,10 @@ def _attended_decoder_step(word_count, enc_out, enc_out_proj,
             gate_act=paddle.activation.Sigmoid(),
             state_act=paddle.activation.Tanh())
 
-    next_word = paddle.layer.fc(
-        size=word_count,
-        bias_attr=True,
-        act=paddle.activation.Softmax(),
-        input=lstm)
+    next_word = paddle.layer.fc(size=word_count,
+                                bias_attr=True,
+                                act=paddle.activation.Softmax(),
+                                input=lstm)
     return next_word
 
 
@@ -86,11 +85,10 @@ def encoder_decoder_network(word_count,
         param_attr=paddle.attr.ParamAttr(name="__embedding__"))
     enc_out = _bidirect_lstm_encoder(
         input=src_emb, hidden_dim=encoder_hidden_dim, depth=encoder_depth)
-    enc_out_proj = paddle.layer.fc(
-        act=paddle.activation.Linear(),
-        size=encoder_hidden_dim,
-        bias_attr=False,
-        input=enc_out)
+    enc_out_proj = paddle.layer.fc(act=paddle.activation.Linear(),
+                                   size=encoder_hidden_dim,
+                                   bias_attr=False,
+                                   input=enc_out)
 
     decoder_group_name = "decoder_group"
     group_inputs = [

@@ -88,9 +88,9 @@ class BeamDecoding(object):
             for j in range(beam_size):
                 selected_id = int(self.selected_sentences[i][j])
                 if selected_id == -1: break
-                seq_len = self.beam1_seq_start_positions[
-                    i][selected_id +
-                       1] - self.beam1_seq_start_positions[i][selected_id]
+                seq_len = self.beam1_seq_start_positions[i][
+                    selected_id + 1] - self.beam1_seq_start_positions[i][
+                        selected_id]
                 self.beam2_seq_start_positions[-1].append(
                     self.beam2_seq_start_positions[-1][-1] + seq_len)
 
@@ -113,9 +113,9 @@ class BeamDecoding(object):
         self.beam3_seq_start_positions.append([0])
         sub_seq_num, beam_size = self.selected_starts.shape
         for i in range(sub_seq_num):
-            seq_len = self.beam2_seq_start_positions[
-                seq_id][sub_seq_id +
-                        1] - self.beam2_seq_start_positions[seq_id][sub_seq_id]
+            seq_len = self.beam2_seq_start_positions[seq_id][
+                sub_seq_id + 1] - self.beam2_seq_start_positions[seq_id][
+                    sub_seq_id]
             for j in range(beam_size):
                 start_id = int(self.selected_starts[i][j])
                 if start_id == -1: break
@@ -130,8 +130,8 @@ class BeamDecoding(object):
                         [self.beam3_seq_start_positions[-1][-1]])
                     sub_seq_id = 0
                     seq_id += 1
-                    sub_seq_count = len(
-                        self.beam2_seq_start_positions[seq_id]) - 1
+                    sub_seq_count = len(self.beam2_seq_start_positions[
+                        seq_id]) - 1
         assert (
             self.beam3_seq_start_positions[-1][-1] == self.end_scores.shape[0])
 
@@ -198,16 +198,11 @@ class BeamDecoding(object):
                 if end_pos == -1: break
 
                 self.all_searched_ans.append({
-                    "score":
-                    self.end_scores[seq_offset_in_batch + end_pos],
-                    "sentence_pos":
-                    -1,
-                    "start_span_pos":
-                    -1,
-                    "end_span_pos":
-                    end_pos,
-                    "parent_ids_in_prev_beam":
-                    i
+                    "score": self.end_scores[seq_offset_in_batch + end_pos],
+                    "sentence_pos": -1,
+                    "start_span_pos": -1,
+                    "end_span_pos": end_pos,
+                    "parent_ids_in_prev_beam": i
                 })
 
             sub_seq_id += 1
@@ -265,8 +260,7 @@ class BeamDecoding(object):
                     key=lambda x: x["score"],
                     reverse=True):
                 self.final_ans[i].append({
-                    "score":
-                    ans["score"],
+                    "score": ans["score"],
                     "label": [
                         ans["sentence_pos"], ans["start_span_pos"],
                         ans["end_span_pos"]

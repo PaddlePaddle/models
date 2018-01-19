@@ -518,9 +518,8 @@ def inception_v4(input, class_dim):
         stride=1,
         pool_type=paddle.pooling.Avg())
     drop = paddle.layer.dropout(input=pool, dropout_rate=0.2)
-    out = paddle.layer.fc(
-        name='incept_fc',
-        input=drop,
-        size=class_dim,
-        act=paddle.activation.Softmax())
+    out = paddle.layer.fc(name='incept_fc',
+                          input=drop,
+                          size=class_dim,
+                          act=paddle.activation.Softmax())
     return out

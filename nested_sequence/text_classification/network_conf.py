@@ -17,12 +17,11 @@ def cnn_cov_group(group_input, hidden_size):
 
     fc_param_attr = paddle.attr.ParamAttr(name='_cov_value_weight')
     fc_bias_attr = paddle.attr.ParamAttr(name='_cov_value_bias')
-    linear_proj = paddle.layer.fc(
-        input=[conv3, conv4],
-        size=hidden_size,
-        param_attr=[fc_param_attr, fc_param_attr],
-        bias_attr=fc_bias_attr,
-        act=paddle.activation.Linear())
+    linear_proj = paddle.layer.fc(input=[conv3, conv4],
+                                  size=hidden_size,
+                                  param_attr=[fc_param_attr, fc_param_attr],
+                                  bias_attr=fc_bias_attr,
+                                  act=paddle.activation.Linear())
 
     return linear_proj
 

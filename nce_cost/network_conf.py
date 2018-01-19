@@ -27,14 +27,13 @@ def ngram_lm(hidden_size, emb_size, dict_size, gram_num=4, is_train=True):
         param_attr=paddle.attr.Param(initial_std=1. / math.sqrt(emb_size * 8)))
 
     if is_train:
-        return paddle.layer.nce(
-            input=hidden_layer,
-            label=next_word,
-            num_classes=dict_size,
-            param_attr=paddle.attr.Param(name="nce_w"),
-            bias_attr=paddle.attr.Param(name="nce_b"),
-            num_neg_samples=25,
-            neg_distribution=None)
+        return paddle.layer.nce(input=hidden_layer,
+                                label=next_word,
+                                num_classes=dict_size,
+                                param_attr=paddle.attr.Param(name="nce_w"),
+                                bias_attr=paddle.attr.Param(name="nce_b"),
+                                num_neg_samples=25,
+                                neg_distribution=None)
     else:
         return paddle.layer.mixed(
             size=dict_size,

@@ -173,11 +173,13 @@ def train(train_data_path=None,
         model_type=model_type, )
 
     train_reader = paddle.batch(
-        paddle.reader.shuffle(dataset.train, buf_size=1000),
+        paddle.reader.shuffle(
+            dataset.train, buf_size=1000),
         batch_size=batch_size)
 
     test_reader = paddle.batch(
-        paddle.reader.shuffle(dataset.test, buf_size=1000),
+        paddle.reader.shuffle(
+            dataset.test, buf_size=1000),
         batch_size=batch_size)
 
     paddle.init(use_gpu=use_gpu, trainer_count=num_workers)

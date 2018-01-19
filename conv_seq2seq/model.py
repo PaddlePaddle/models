@@ -193,22 +193,20 @@ def attention(decoder_state, cur_embedding, encoded_vec, encoded_sum):
 
     m = paddle.layer.dot_prod(input1=expanded, input2=encoded_vec)
 
-    attention_weight = paddle.layer.fc(
-        input=m,
-        size=1,
-        act=paddle.activation.SequenceSoftmax(),
-        bias_attr=False)
+    attention_weight = paddle.layer.fc(input=m,
+                                       size=1,
+                                       act=paddle.activation.SequenceSoftmax(),
+                                       bias_attr=False)
 
     scaled = paddle.layer.scaling(weight=attention_weight, input=encoded_sum)
 
     attended = paddle.layer.pooling(
         input=scaled, pooling_type=paddle.pooling.Sum())
 
-    attended_proj = paddle.layer.fc(
-        input=attended,
-        size=state_size,
-        act=paddle.activation.Linear(),
-        bias_attr=True)
+    attended_proj = paddle.layer.fc(input=attended,
+                                    size=state_size,
+                                    act=paddle.activation.Linear(),
+                                    bias_attr=True)
 
     attention_result = paddle.layer.addto(input=[attended_proj, residual])
 
@@ -279,11 +277,10 @@ def decoder(token_emb,
         if block_input.size == size:
             residual = block_input
         else:
-            residual = paddle.layer.fc(
-                input=block_input,
-                size=size,
-                act=paddle.activation.Linear(),
-                bias_attr=True)
+            residual = paddle.layer.fc(input=block_input,
+                                       size=size,
+                                       act=paddle.activation.Linear(),
+                                       bias_attr=True)
 
         decoder_state = gated_conv_with_batchnorm(
             input=block_input,
@@ -381,12 +378,14 @@ def conv_seq2seq(src_dict_size,
         input=src,
         size=emb_dim,
         name='src_word_emb',
-        param_attr=paddle.attr.Param(initial_mean=0., initial_std=0.1))
+        param_attr=paddle.attr.Param(
+            initial_mean=0., initial_std=0.1))
     src_pos_emb = paddle.layer.embedding(
         input=src_pos,
         size=emb_dim,
         name='src_pos_emb',
-        param_attr=paddle.attr.Param(initial_mean=0., initial_std=0.1))
+        param_attr=paddle.attr.Param(
+            initial_mean=0., initial_std=0.1))
 
     num_attention = len(dec_conv_blocks)
     encoded_vec, encoded_sum = encoder(
@@ -410,12 +409,14 @@ def conv_seq2seq(src_dict_size,
         input=trg,
         size=emb_dim,
         name='trg_word_emb',
-        param_attr=paddle.attr.Param(initial_mean=0., initial_std=0.1))
+        param_attr=paddle.attr.Param(
+            initial_mean=0., initial_std=0.1))
     trg_pos_emb = paddle.layer.embedding(
         input=trg_pos,
         size=emb_dim,
         name='trg_pos_emb',
-        param_attr=paddle.attr.Param(initial_mean=0., initial_std=0.1))
+        param_attr=paddle.attr.Param(
+            initial_mean=0., initial_std=0.1))
 
     decoder_out, weight = decoder(
         token_emb=trg_emb,

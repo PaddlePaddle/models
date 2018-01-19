@@ -24,11 +24,10 @@ def train(train_file_list, dev_file_list, data_args, init_model_path):
         assert os.path.isfile(init_model_path), 'Invalid model.'
         parameters.init_from_tar(gzip.open(init_model_path))
 
-    trainer = paddle.trainer.SGD(
-        cost=cost,
-        parameters=parameters,
-        extra_layers=[detect_out],
-        update_equation=optimizer)
+    trainer = paddle.trainer.SGD(cost=cost,
+                                 parameters=parameters,
+                                 extra_layers=[detect_out],
+                                 update_equation=optimizer)
 
     feeding = {'image': 0, 'bbox': 1}
 

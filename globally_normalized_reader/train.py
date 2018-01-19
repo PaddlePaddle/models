@@ -129,7 +129,8 @@ def build_reader(data_dir, batch_size):
 
     # testing data is not shuffled
     test_reader = paddle.batch(
-        reader.data_reader(valid_samples, is_train=False),
+        reader.data_reader(
+            valid_samples, is_train=False),
         batch_size=batch_size)
     return train_reader, test_reader, len(train_samples)
 
@@ -222,8 +223,9 @@ def train(model_config, trainer_config):
             "GloveVectors",
             load_pretrained_parameters(ModelConfig.pretrained_emb_path))
 
-    trainer = paddle.trainer.SGD(
-        cost=loss, parameters=parameters, update_equation=optimizer)
+    trainer = paddle.trainer.SGD(cost=loss,
+                                 parameters=parameters,
+                                 update_equation=optimizer)
 
     event_handler = build_event_handler(trainer_config, parameters, trainer)
     trainer.train(

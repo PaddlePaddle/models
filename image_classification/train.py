@@ -97,11 +97,10 @@ def main():
         batch_size=BATCH_SIZE)
 
     # Create trainer
-    trainer = paddle.trainer.SGD(
-        cost=cost,
-        parameters=parameters,
-        update_equation=optimizer,
-        extra_layers=extra_layers)
+    trainer = paddle.trainer.SGD(cost=cost,
+                                 parameters=parameters,
+                                 update_equation=optimizer,
+                                 extra_layers=extra_layers)
 
     # End batch and end pass event handler
     def event_handler(event):

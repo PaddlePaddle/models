@@ -74,18 +74,16 @@ class ExternalMemory(object):
         """Get write/read head's addressing weights via content-based addressing.
         """
         # content-based addressing: a=tanh(W*M + U*key)
-        key_projection = paddle.layer.fc(
-            input=key_vector,
-            size=self.mem_slot_size,
-            act=paddle.activation.Linear(),
-            bias_attr=False)
+        key_projection = paddle.layer.fc(input=key_vector,
+                                         size=self.mem_slot_size,
+                                         act=paddle.activation.Linear(),
+                                         bias_attr=False)
         key_proj_expanded = paddle.layer.expand(
             input=key_projection, expand_as=self.external_memory)
-        memory_projection = paddle.layer.fc(
-            input=self.external_memory,
-            size=self.mem_slot_size,
-            act=paddle.activation.Linear(),
-            bias_attr=False)
+        memory_projection = paddle.layer.fc(input=self.external_memory,
+                                            size=self.mem_slot_size,
+                                            act=paddle.activation.Linear(),
+                                            bias_attr=False)
         merged_projection = paddle.layer.addto(
             input=[key_proj_expanded, memory_projection],
             act=paddle.activation.Tanh())
@@ -101,11 +99,10 @@ class ExternalMemory(object):
         """Interpolate between previous and current addressing weights.
         """
         # prepare interpolation scalar gate: g=sigmoid(W*key)
-        gate = paddle.layer.fc(
-            input=key_vector,
-            size=1,
-            act=paddle.activation.Sigmoid(),
-            bias_attr=False)
+        gate = paddle.layer.fc(input=key_vector,
+                               size=1,
+                               act=paddle.activation.Sigmoid(),
+                               bias_attr=False)
         # interpolation: w_t = g*w_t+(1-g)*w_{t-1}
         last_addressing_weight = paddle.layer.memory(
             name=self.name + "_addressing_weight_" + head_name,
@@ -114,7 +111,8 @@ class ExternalMemory(object):
         interpolated_weight = paddle.layer.interpolation(
             name=self.name + "_addressing_weight_" + head_name,
             input=[last_addressing_weight, addressing_weight],
-            weight=paddle.layer.expand(input=gate, expand_as=addressing_weight))
+            weight=paddle.layer.expand(
+                input=gate, expand_as=addressing_weight))
         return interpolated_weight
 
     def _get_addressing_weight(self, head_name, key_vector):
@@ -143,16 +141,14 @@ class ExternalMemory(object):
         # get addressing weight for write head
         write_weight = self._get_addressing_weight("write_head", write_key)
         # prepare add_vector and erase_vector
-        erase_vector = paddle.layer.fc(
-            input=write_key,
-            size=self.mem_slot_size,
-            act=paddle.activation.Sigmoid(),
-            bias_attr=False)
-        add_vector = paddle.layer.fc(
-            input=write_key,
-            size=self.mem_slot_size,
-            act=paddle.activation.Sigmoid(),
-            bias_attr=False)
+        erase_vector = paddle.layer.fc(input=write_key,
+                                       size=self.mem_slot_size,
+                                       act=paddle.activation.Sigmoid(),
+                                       bias_attr=False)
+        add_vector = paddle.layer.fc(input=write_key,
+                                     size=self.mem_slot_size,
+                                     act=paddle.activation.Sigmoid(),
+                                     bias_attr=False)
         erase_vector_expand = paddle.layer.expand(
             input=erase_vector, expand_as=self.external_memory)
         add_vector_expand = paddle.layer.expand(

@@ -65,10 +65,9 @@ class PaddleModel(Model):
             place=self._place,
             program=self._program)
         predict_var = self._program.block(0).var(self._predict_name)
-        predict = self._exe.run(
-            self._program,
-            feed=feeder.feed(image_batch),
-            fetch_list=[predict_var])
+        predict = self._exe.run(self._program,
+                                feed=feeder.feed(image_batch),
+                                fetch_list=[predict_var])
         return predict
 
     def num_classes(self):
@@ -96,8 +95,7 @@ class PaddleModel(Model):
             place=self._place,
             program=self._program)
 
-        grad, = self._exe.run(
-            self._program,
-            feed=feeder.feed(image_batch),
-            fetch_list=[self._gradient])
+        grad, = self._exe.run(self._program,
+                              feed=feeder.feed(image_batch),
+                              fetch_list=[self._gradient])
         return grad

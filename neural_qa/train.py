@@ -21,7 +21,8 @@ def save_model(trainer, model_save_dir, parameters, pass_id):
 
 def show_parameter_init_info(parameters):
     """
-    Print the information of initialization mean and standard deviation of parameters
+    Print the information of initialization mean and standard deviation of
+    parameters
 
     :param parameters: the parameters created in a model
     """
@@ -98,8 +99,9 @@ def train(conf):
             max_average_window=conf.max_average_window))
 
     # create trainer
-    trainer = paddle.trainer.SGD(
-        cost=cost, parameters=parameters, update_equation=rmsprop_optimizer)
+    trainer = paddle.trainer.SGD(cost=cost,
+                                 parameters=parameters,
+                                 update_equation=rmsprop_optimizer)
 
     # begin training network
     def _event_handler(event):

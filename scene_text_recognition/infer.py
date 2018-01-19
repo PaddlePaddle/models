@@ -70,8 +70,8 @@ def infer(model_path, image_shape, batch_size, label_dict_path,
 
     test_batch = []
     labels = []
-    for i, (image,
-            label) in enumerate(data_generator.infer_reader(infer_file_list)()):
+    for i, (image, label
+            ) in enumerate(data_generator.infer_reader(infer_file_list)()):
         test_batch.append([image])
         labels.append(label)
         if len(test_batch) == batch_size:

@@ -73,8 +73,9 @@ def resnet_imagenet(input, class_dim, depth=50):
     res4 = layer_warp(block_func, res3, 512, stages[3], 2)
     pool2 = paddle.layer.img_pool(
         input=res4, pool_size=7, stride=1, pool_type=paddle.pooling.Avg())
-    out = paddle.layer.fc(
-        input=pool2, size=class_dim, act=paddle.activation.Softmax())
+    out = paddle.layer.fc(input=pool2,
+                          size=class_dim,
+                          act=paddle.activation.Softmax())
     return out
 
 
@@ -90,6 +91,7 @@ def resnet_cifar10(input, class_dim, depth=32):
     res3 = layer_warp(basicblock, res2, 64, n, 2)
     pool = paddle.layer.img_pool(
         input=res3, pool_size=8, stride=1, pool_type=paddle.pooling.Avg())
-    out = paddle.layer.fc(
-        input=pool, size=class_dim, act=paddle.activation.Softmax())
+    out = paddle.layer.fc(input=pool,
+                          size=class_dim,
+                          act=paddle.activation.Softmax())
     return out

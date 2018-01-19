@@ -42,10 +42,12 @@ class BeamSearch(object):
         for sample_id in sample_list:
             for path in self.candidate_path[sample_id]:
                 if len(path['seq']) < self.win_len:
-                    cur_trg = [self.word_padding] * (self.win_len - len(
-                        path['seq']) - 1) + [self.trg_dict['<s>']] + path['seq']
-                    cur_trg_pos = [self.pos_padding] * (self.win_len - len(
-                        path['seq']) - 1) + [0] + range(1, len(path['seq']) + 1)
+                    cur_trg = [self.word_padding] * (
+                        self.win_len - len(path['seq']) - 1
+                    ) + [self.trg_dict['<s>']] + path['seq']
+                    cur_trg_pos = [self.pos_padding] * (
+                        self.win_len - len(path['seq']) - 1) + [0] + range(
+                            1, len(path['seq']) + 1)
                 else:
                     cur_trg = path['seq'][-self.win_len:]
                     cur_trg_pos = range(
@@ -84,13 +86,11 @@ class BeamSearch(object):
             for seq_id, path in enumerate(self.candidate_path[sample_id]):
                 for w in top_words[idx, :]:
                     score = path['score'] + math.log(prob[idx, w])
-                    candidate_words[sample_id] = candidate_words[sample_id] + [
-                        {
-                            'word': w,
-                            'score': score,
-                            'seq_id': seq_id
-                        }
-                    ]
+                    candidate_words[sample_id] = candidate_words[sample_id] + [{
+                        'word': w,
+                        'score': score,
+                        'seq_id': seq_id
+                    }]
                 idx = idx + 1
 
         return candidate_words
@@ -140,10 +140,8 @@ class BeamSearch(object):
                         w['word']
                     ]
                     new_path[sample_id] = new_path[sample_id] + [{
-                        'seq':
-                        seq,
-                        'score':
-                        w['score']
+                        'seq': seq,
+                        'score': w['score']
                     }]
 
         return new_path

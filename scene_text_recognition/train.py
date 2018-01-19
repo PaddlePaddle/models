@@ -62,11 +62,10 @@ def train(train_file_list_path, test_file_list_path, label_dict_path,
     # Create all the trainable parameters.
     params = paddle.parameters.create(model.cost)
 
-    trainer = paddle.trainer.SGD(
-        cost=model.cost,
-        parameters=params,
-        update_equation=optimizer,
-        extra_layers=model.eval)
+    trainer = paddle.trainer.SGD(cost=model.cost,
+                                 parameters=params,
+                                 update_equation=optimizer,
+                                 extra_layers=model.eval)
     # Feeding dictionary.
     feeding = {'image': 0, 'label': 1}
 
