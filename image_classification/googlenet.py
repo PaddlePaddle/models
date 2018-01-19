@@ -126,8 +126,9 @@ def googlenet(input, class_dim):
         layer_attr=paddle.attr.Extra(drop_rate=0.4),
         act=paddle.activation.Linear())
 
-    out = paddle.layer.fc(
-        input=dropout, size=class_dim, act=paddle.activation.Softmax())
+    out = paddle.layer.fc(input=dropout,
+                          size=class_dim,
+                          act=paddle.activation.Softmax())
 
     # fc for output 1
     pool_o1 = paddle.layer.img_pool(
@@ -144,14 +145,14 @@ def googlenet(input, class_dim):
         num_filters=128,
         stride=1,
         padding=0)
-    fc_o1 = paddle.layer.fc(
-        name="fc_o1",
-        input=conv_o1,
-        size=1024,
-        layer_attr=paddle.attr.Extra(drop_rate=0.7),
-        act=paddle.activation.Relu())
-    out1 = paddle.layer.fc(
-        input=fc_o1, size=class_dim, act=paddle.activation.Softmax())
+    fc_o1 = paddle.layer.fc(name="fc_o1",
+                            input=conv_o1,
+                            size=1024,
+                            layer_attr=paddle.attr.Extra(drop_rate=0.7),
+                            act=paddle.activation.Relu())
+    out1 = paddle.layer.fc(input=fc_o1,
+                           size=class_dim,
+                           act=paddle.activation.Softmax())
 
     # fc for output 2
     pool_o2 = paddle.layer.img_pool(
@@ -168,13 +169,13 @@ def googlenet(input, class_dim):
         num_filters=128,
         stride=1,
         padding=0)
-    fc_o2 = paddle.layer.fc(
-        name="fc_o2",
-        input=conv_o2,
-        size=1024,
-        layer_attr=paddle.attr.Extra(drop_rate=0.7),
-        act=paddle.activation.Relu())
-    out2 = paddle.layer.fc(
-        input=fc_o2, size=class_dim, act=paddle.activation.Softmax())
+    fc_o2 = paddle.layer.fc(name="fc_o2",
+                            input=conv_o2,
+                            size=1024,
+                            layer_attr=paddle.attr.Extra(drop_rate=0.7),
+                            act=paddle.activation.Relu())
+    out2 = paddle.layer.fc(input=fc_o2,
+                           size=class_dim,
+                           act=paddle.activation.Softmax())
 
     return out, out1, out2

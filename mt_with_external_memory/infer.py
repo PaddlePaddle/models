@@ -81,8 +81,8 @@ def parse_beam_search_result(beam_result, dictionary):
         if word != -1:
             sentence.append(word)
         else:
-            sentence_list.append(
-                ' '.join([dictionary.get(word) for word in sentence[1:]]))
+            sentence_list.append(' '.join(
+                [dictionary.get(word) for word in sentence[1:]]))
             sentence = []
     beam_probs = beam_result[0]
     beam_size = len(beam_probs[0])
@@ -127,7 +127,9 @@ def infer():
         append_tuple=(bounded_memory_perturbation, ))
     for i, item in enumerate(test_append_reader()):
         if i < args.infer_data_num:
-            infer_data.append((item[0], item[3], ))
+            infer_data.append((
+                item[0],
+                item[3], ))
 
     # run inference
     beam_result = paddle.infer(

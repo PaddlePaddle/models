@@ -33,8 +33,9 @@ def train(save_dir_path, source_dict_dim, target_dict_dim):
         learning_rate=1e-3,
         gradient_clipping_threshold=10.0,
         regularization=paddle.optimizer.L2Regularization(rate=8e-4))
-    trainer = paddle.trainer.SGD(
-        cost=cost, parameters=parameters, update_equation=optimizer)
+    trainer = paddle.trainer.SGD(cost=cost,
+                                 parameters=parameters,
+                                 update_equation=optimizer)
 
     # define data reader
     wmt14_reader = paddle.batch(

@@ -5,7 +5,12 @@ import sys
 import numpy
 
 __all__ = [
-    "open_file", "cumsum", "logger", "DotBar", "load_dict", "load_wordvecs"
+    "open_file",
+    "cumsum",
+    "logger",
+    "DotBar",
+    "load_dict",
+    "load_wordvecs",
 ]
 
 logger = logging.getLogger("paddle")
@@ -64,8 +69,7 @@ class DotBar(object):
         self.dots_per_line = dots_per_line
         self.f = f
 
-    def __enter__(
-            self, ):
+    def __enter__(self, ):
         self.obj.__enter__()
         self.idx = 0
         return self

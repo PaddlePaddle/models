@@ -102,11 +102,11 @@ class DSSM(object):
         """
         _input_layer = paddle.layer.pooling(
             input=emb, pooling_type=paddle.pooling.Max())
-        fc = paddle.layer.fc(
-            input=_input_layer,
-            size=self.dnn_dims[1],
-            param_attr=ParamAttr(name="%s_fc.w" % prefix),
-            bias_attr=ParamAttr(name="%s_fc.b" % prefix, initial_std=0.))
+        fc = paddle.layer.fc(input=_input_layer,
+                             size=self.dnn_dims[1],
+                             param_attr=ParamAttr(name="%s_fc.w" % prefix),
+                             bias_attr=ParamAttr(
+                                 name="%s_fc.b" % prefix, initial_std=0.))
         return fc
 
     def create_rnn(self, emb, prefix=""):
@@ -146,12 +146,12 @@ class DSSM(object):
                 pool_bias_attr=ParamAttr(name=key + "_pool.b"))
             return conv
 
-        logger.info("create a sequence_conv_pool which context width is 3")
+        logger.info("create a sequence_conv_pool whose context width is 3.")
         conv_3 = create_conv(3, self.dnn_dims[1], "cnn")
-        logger.info("create a sequence_conv_pool which context width is 4")
+        logger.info("create a sequence_conv_pool whose context width is 4.")
         conv_4 = create_conv(4, self.dnn_dims[1], "cnn")
 
-        return conv_3, conv_4
+        return paddle.layer.concat(input=[conv_3, conv_4])
 
     def create_dnn(self, sent_vec, prefix):
         # if more than three layers, than a fc layer will be added.
@@ -161,12 +161,12 @@ class DSSM(object):
                 name = "%s_fc_%d_%d" % (prefix, id, dim)
                 logger.info("create fc layer [%s] which dimention is %d" %
                             (name, dim))
-                fc = paddle.layer.fc(
-                    input=_input_layer,
-                    size=dim,
-                    act=paddle.activation.Tanh(),
-                    param_attr=ParamAttr(name="%s.w" % name),
-                    bias_attr=ParamAttr(name="%s.b" % name, initial_std=0.))
+                fc = paddle.layer.fc(input=_input_layer,
+                                     size=dim,
+                                     act=paddle.activation.Tanh(),
+                                     param_attr=ParamAttr(name="%s.w" % name),
+                                     bias_attr=ParamAttr(
+                                         name="%s.b" % name, initial_std=0.))
                 _input_layer = fc
         return _input_layer
 
@@ -210,7 +210,7 @@ class DSSM(object):
 
         prefixs = "_ _ _".split(
         ) if self.share_semantic_generator else "source target target".split()
-        embed_prefixs = "_ _".split(
+        embed_prefixs = "_ _ _".split(
         ) if self.share_embed else "source target target".split()
 
         word_vecs = []
@@ -278,10 +278,9 @@ class DSSM(object):
 
         if is_classification:
             concated_vector = paddle.layer.concat(semantics)
-            prediction = paddle.layer.fc(
-                input=concated_vector,
-                size=self.class_num,
-                act=paddle.activation.Softmax())
+            prediction = paddle.layer.fc(input=concated_vector,
+                                         size=self.class_num,
+                                         act=paddle.activation.Softmax())
             cost = paddle.layer.classification_cost(
                 input=prediction, label=label)
         else:

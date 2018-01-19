@@ -21,14 +21,15 @@ def ngram_lm(hidden_size, embed_size, dict_size, gram_num=4, is_train=True):
 
     embed_context = paddle.layer.concat(input=emb_layers)
 
-    hidden_layer = paddle.layer.fc(
-        input=embed_context,
-        size=hidden_size,
-        act=paddle.activation.Sigmoid(),
-        layer_attr=paddle.attr.Extra(drop_rate=0.5),
-        bias_attr=paddle.attr.Param(learning_rate=2),
-        param_attr=paddle.attr.Param(
-            initial_std=1. / math.sqrt(embed_size * 8), learning_rate=1))
+    hidden_layer = paddle.layer.fc(input=embed_context,
+                                   size=hidden_size,
+                                   act=paddle.activation.Sigmoid(),
+                                   layer_attr=paddle.attr.Extra(drop_rate=0.5),
+                                   bias_attr=paddle.attr.Param(learning_rate=2),
+                                   param_attr=paddle.attr.Param(
+                                       initial_std=1. /
+                                       math.sqrt(embed_size * 8),
+                                       learning_rate=1))
 
     if is_train == True:
         return paddle.layer.hsigmoid(

@@ -36,7 +36,7 @@ def parse_args():
     parser.add_argument(
         '--emb_size',
         type=int,
-        default=512,
+        default=256,
         help='Dimension of word embedding. (default: %(default)s)')
     parser.add_argument(
         '--pos_size',
@@ -48,6 +48,11 @@ def parse_args():
         type=float,
         default=0.,
         help='Dropout rate. (default: %(default)s)')
+    parser.add_argument(
+        "--use_bn",
+        default=False,
+        type=distutils.util.strtobool,
+        help="Use batch normalization or not. (default: %(default)s)")
     parser.add_argument(
         "--use_gpu",
         default=False,
@@ -65,22 +70,26 @@ def parse_args():
         help="The maximum length of the sentence to be generated. (default: %(default)s)"
     )
     parser.add_argument(
+        "--batch_size",
+        default=1,
+        type=int,
+        help="Size of a mini-batch. (default: %(default)s)")
+    parser.add_argument(
         "--beam_size",
         default=1,
         type=int,
-        help="The width of beam expasion. (default: %(default)s)")
+        help="The width of beam expansion. (default: %(default)s)")
     parser.add_argument(
         "--model_path",
         type=str,
         required=True,
         help="The path of trained model. (default: %(default)s)")
+    parser.add_argument(
+        "--is_show_attention",
+        default=False,
+        type=distutils.util.strtobool,
+        help="Whether to show attention weight or not. (default: %(default)s)")
     return parser.parse_args()
-
-
-def to_sentence(seq, dictionary):
-    raw_sentence = [dictionary[id] for id in seq]
-    sentence = " ".join(raw_sentence)
-    return sentence
 
 
 def infer(infer_data_path,
@@ -89,11 +98,14 @@ def infer(infer_data_path,
           model_path,
           enc_conv_blocks,
           dec_conv_blocks,
-          emb_dim=512,
+          emb_dim=256,
           pos_size=200,
           drop_rate=0.,
+          use_bn=False,
           max_len=100,
-          beam_size=1):
+          batch_size=1,
+          beam_size=1,
+          is_show_attention=False):
     """
     Inference.
 
@@ -120,10 +132,14 @@ def infer(infer_data_path,
     :type pos_size: int
     :param drop_rate: Dropout rate.
     :type drop_rate: float
+    :param use_bn: Whether to use batch normalization or not. False is the default value.
+    :type use_bn: bool
     :param max_len: The maximum length of the sentence to be generated.
     :type max_len: int
     :param beam_size: The width of beam expansion.
     :type beam_size: int
+    :param is_show_attention: Whether to show attention weight or not. False is the default value.
+    :type is_show_attention: bool
     """
     # load dict
     src_dict = reader.load_dict(src_dict_path)
@@ -131,7 +147,7 @@ def infer(infer_data_path,
     src_dict_size = src_dict.__len__()
     trg_dict_size = trg_dict.__len__()
 
-    prob = conv_seq2seq(
+    prob, weight = conv_seq2seq(
         src_dict_size=src_dict_size,
         trg_dict_size=trg_dict_size,
         pos_size=pos_size,
@@ -139,6 +155,7 @@ def infer(infer_data_path,
         enc_conv_blocks=enc_conv_blocks,
         dec_conv_blocks=dec_conv_blocks,
         drop_rate=drop_rate,
+        with_bn=use_bn,
         is_infer=True)
 
     # load parameters
@@ -153,6 +170,26 @@ def infer(infer_data_path,
         pos_size=pos_size,
         padding_num=padding_num)
 
+    if is_show_attention:
+        attention_inferer = paddle.inference.Inference(
+            output_layer=weight, parameters=parameters)
+        for i, data in enumerate(infer_reader()):
+            src_len = len(data[0])
+            trg_len = len(data[2])
+            attention_weight = attention_inferer.infer(
+                [data], field='value', flatten_result=False)
+            attention_weight = [
+                weight.reshape((trg_len, src_len))
+                for weight in attention_weight
+            ]
+            print attention_weight
+            break
+        return
+
+    infer_data = []
+    for i, raw_data in enumerate(infer_reader()):
+        infer_data.append([raw_data[0], raw_data[1]])
+
     inferer = paddle.inference.Inference(
         output_layer=prob, parameters=parameters)
 
@@ -162,15 +199,10 @@ def infer(infer_data_path,
         pos_size=pos_size,
         padding_num=padding_num,
         max_len=max_len,
+        batch_size=batch_size,
         beam_size=beam_size)
 
-    reverse_trg_dict = reader.get_reverse_dict(trg_dict)
-    for i, raw_data in enumerate(infer_reader()):
-        infer_data = [raw_data[0], raw_data[1]]
-        result = searcher.search_one_sample(infer_data)
-        sentence = to_sentence(result, reverse_trg_dict)
-        print sentence
-        sys.stdout.flush()
+    searcher.search(infer_data)
     return
 
 
@@ -178,6 +210,8 @@ def main():
     args = parse_args()
     enc_conv_blocks = eval(args.enc_blocks)
     dec_conv_blocks = eval(args.dec_blocks)
+
+    sys.setrecursionlimit(10000)
 
     paddle.init(use_gpu=args.use_gpu, trainer_count=args.trainer_count)
 
@@ -191,8 +225,11 @@ def main():
         emb_dim=args.emb_size,
         pos_size=args.pos_size,
         drop_rate=args.drop_rate,
+        use_bn=args.use_bn,
         max_len=args.max_len,
-        beam_size=args.beam_size)
+        batch_size=args.batch_size,
+        beam_size=args.beam_size,
+        is_show_attention=args.is_show_attention)
 
 
 if __name__ == '__main__':

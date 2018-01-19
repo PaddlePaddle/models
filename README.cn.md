@@ -29,15 +29,16 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 点击率预估模型预判用户对一条广告点击的概率，对每次广告的点击情况做出预测，是广告技术的核心算法之一。逻谛斯克回归对大规模稀疏特征有着很好的学习能力，在点击率预估任务发展的早期一统天下。近年来，DNN 模型由于其强大的学习能力逐渐接过点击率预估任务的大旗。
 
-在点击率预估任务中，我们给出谷歌提出的 Wide & Deep 模型。这一模型融合了适用于学习抽象特征的DNN和适用于大规模稀疏特征的逻谛斯克回归两者的优点，可以作为一种相对成熟的模型框架使用，在工业界也有一定的应用。
+在点击率预估任务中，我们首先给出谷歌提出的 Wide & Deep 模型。这一模型融合了适用于学习抽象特征的DNN和适用于大规模稀疏特征的逻谛斯克回归两者的优点，可以作为一种相对成熟的模型框架使用，在工业界也有一定的应用。同时，我们提供基于因子分解机的深度神经网络模型，该模型融合了因子分解机和深度神经网络，分别建模输入属性之间的低阶交互和高阶交互。
 
-- 3.1 [Wide & deep 点击率预估模型](https://github.com/PaddlePaddle/models/tree/develop/ctr)
+- 3.1 [Wide & deep 点击率预估模型](https://github.com/PaddlePaddle/models/tree/develop/ctr/README.cn.md)
+- 3.2 [基于深度因子分解机的点击率预估模型](https://github.com/PaddlePaddle/models/tree/develop/deep_fm)
 
 ## 4. 文本分类
 
 文本分类是自然语言处理领域最基础的任务之一，深度学习方法能够免除复杂的特征工程，直接使用原始文本作为输入，数据驱动地最优化分类准确率。
 
-在文本分类任务中，我们以情感分类任务为例，提供了基于DNN的非序列文本分类模型，以及基于CNN的序列模型供大家学习和使用（基于LSTM的模型见PaddleBook中[情感分类](https://github.com/PaddlePaddle/book/blob/develop/06.understand_sentiment/README.cn.md)一课）。
+在文本分类任务中，我们以情感分类任务为例，提供了基于DNN的非序列文本分类模型，以及基于CNN的序列模型供大家学习和使用（基于LSTM的模型见PaddleBook中[情感分类](http://www.paddlepaddle.org/docs/develop/book/06.understand_sentiment/index.cn.html)一课）。
 
 - 4.1 [基于DNN/CNN的情感分类](https://github.com/PaddlePaddle/models/tree/develop/text_classification)
 - 4.2 [基于双层序列的文本分类模型](https://github.com/PaddlePaddle/models/tree/develop/nested_sequence/text_classification)
@@ -46,7 +47,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 排序学习(Learning to Rank， LTR)是信息检索和搜索引擎研究的核心问题之一，通过机器学习方法学习一个分值函数对待排序的候选进行打分，再根据分值的高低确定序关系。深度神经网络可以用来建模分值函数，构成各类基于深度学习的LTR模型。
 
-在排序学习任务中，我们介绍基于RankLoss损失函数Pairwise排序模型和基于LambdaRank损失函数的Listwise排序模型(Pointwise学习策略见PaddleBook中[推荐系统](https://github.com/PaddlePaddle/book/blob/develop/05.recommender_system/README.cn.md)一课）。
+在排序学习任务中，我们介绍基于RankLoss损失函数Pairwise排序模型和基于LambdaRank损失函数的Listwise排序模型(Pointwise学习策略见PaddleBook中[推荐系统](http://www.paddlepaddle.org/docs/develop/book/05.recommender_system/index.cn.html)一课）。
 
 - 5.1 [基于Pairwise和Listwise的排序学习](https://github.com/PaddlePaddle/models/tree/develop/ltr)
 
@@ -56,7 +57,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在结构化语义模型任务中，我们演示如何建模两个字符串之间的语义相似度。模型支持DNN(全连接前馈网络)、CNN(卷积网络)、RNN(递归神经网络)等不同的网络结构，以及分类、回归、排序等不同损失函数。本例采用最简单的文本数据作为输入，通过替换自己的训练和预测数据，便可以在真实场景中使用。
 
-- 6.1 [深度结构化语义模型](https://github.com/PaddlePaddle/models/tree/develop/dssm)
+- 6.1 [深度结构化语义模型](https://github.com/PaddlePaddle/models/tree/develop/dssm/README.cn.md)
 
 ## 7. 命名实体识别
 
@@ -72,7 +73,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在序列到序列学习任务中，我们首先以机器翻译任务为例，提供了多种改进模型供大家学习和使用。包括：不带注意力机制的序列到序列映射模型，这一模型是所有序列到序列学习模型的基础；使用Scheduled Sampling改善RNN模型在生成任务中的错误累积问题；带外部记忆机制的神经机器翻译，通过增强神经网络的记忆能力，来完成复杂的序列到序列学习任务。除机器翻译任务之外，我们也提供了一个基于深层LSTM网络生成古诗词，实现同语言生成的模型。
 
-- 8.1 [无注意力机制的神经机器翻译](https://github.com/PaddlePaddle/models/tree/develop/nmt_without_attention)
+- 8.1 [无注意力机制的神经机器翻译](https://github.com/PaddlePaddle/models/tree/develop/nmt_without_attention/README.cn.md)
 - 8.2 [使用Scheduled Sampling改善翻译质量](https://github.com/PaddlePaddle/models/tree/develop/scheduled_sampling)
 - 8.3 [带外部记忆机制的神经机器翻译](https://github.com/PaddlePaddle/models/tree/develop/mt_with_external_memory)
 - 8.4 [生成古诗词](https://github.com/PaddlePaddle/models/tree/develop/generate_chinese_poetry)
@@ -97,12 +98,16 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 图像相比文字能够提供更加生动、容易理解及更具艺术感的信息，是人们转递与交换信息的重要来源。图像分类是根据图像的语义信息对不同类别图像进行区分，是计算机视觉中重要的基础问题，也是图像检测、图像分割、物体跟踪、行为分析等其他高层视觉任务的基础，在许多领域都有着广泛的应用。如：安防领域的人脸识别和智能视频分析等，交通领域的交通场景识别，互联网领域基于内容的图像检索和相册自动归类，医学领域的图像识别等。
 
-在图像分类任务中，我们向大家介绍如何训练AlexNet、VGG、GoogLeNet和ResNet模型。同时提供了一个够将Caffe训练好的模型文件转换为PaddlePaddle模型文件的模型转换工具。
+在图像分类任务中，我们向大家介绍如何训练AlexNet、VGG、GoogLeNet、ResNet、Inception-v4、Inception-Resnet-V2和Xception模型。同时提供了能够将Caffe或TensorFlow训练好的模型文件转换为PaddlePaddle模型文件的模型转换工具。
 
 - 11.1 [将Caffe模型文件转换为PaddlePaddle模型文件](https://github.com/PaddlePaddle/models/tree/develop/image_classification/caffe2paddle)
-- 11.2 [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
-- 11.3 [VGG](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
-- 11.4 [Residual Network](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 11.2 [将TensorFlow模型文件转换为PaddlePaddle模型文件](https://github.com/PaddlePaddle/models/tree/develop/image_classification/tf2paddle)
+- 11.3 [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 11.4 [VGG](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 11.5 [Residual Network](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 11.6 [Inception-v4](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 11.7 [Inception-Resnet-V2](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
+- 11.8 [Xception](https://github.com/PaddlePaddle/models/tree/develop/image_classification)
 
 ## 12. 目标检测
 
@@ -110,7 +115,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在目标检测任务中，我们介绍利用SSD方法完成目标检测。SSD全称：Single Shot MultiBox Detector，是目标检测领域较新且效果较好的检测算法之一，具有检测速度快且检测精度高的特点。
 
-- 12.1 [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/tree/develop/ssd)
+- 12.1 [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/tree/develop/ssd/README.cn.md)
 
 ## 13. 场景文字识别
 
@@ -126,7 +131,6 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在语音识别任务中，我们提供了基于 DeepSpeech2 模型的完整流水线，包括：特征提取、数据增强、模型训练、语言模型、解码模块等，并提供一个训练好的模型和体验实例，大家能够使用自己的声音来体验语音识别的乐趣。
 
-- 14.1 [语音识别: DeepSpeech2](https://github.com/PaddlePaddle/models/tree/develop/deep_speech_2)
-
+14.1 [语音识别: DeepSpeech2](https://github.com/PaddlePaddle/DeepSpeech)
 
 本教程由[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)创作，采用[Apache-2.0](LICENSE) 许可协议进行许可。

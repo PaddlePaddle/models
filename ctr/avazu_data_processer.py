@@ -79,8 +79,9 @@ all the files are for demo.
 
 feature_dims = {}
 
-categorial_features = ('C1 banner_pos site_category app_category ' +
-                       'device_type device_conn_type').split()
+categorial_features = (
+    'C1 banner_pos site_category app_category ' + 'device_type device_conn_type'
+).split()
 
 id_features = 'id site_id app_id device_id _device_id_cross_site_id'.split()
 
@@ -335,8 +336,8 @@ class AvazuDataset(object):
             else:
                 fea0 = self.fields[key].cross_fea0
                 fea1 = self.fields[key].cross_fea1
-                record.append(
-                    self.fields[key].gen_cross_fea(row[fea0], row[fea1]))
+                record.append(self.fields[key].gen_cross_fea(row[fea0], row[
+                    fea1]))
 
         sparse_input = concat_sparse_vectors(record, self.id_dims)
 
@@ -396,8 +397,9 @@ with open(output_infer_path, 'w') as f:
         dnn_input, lr_input = record
         dnn_input = ids2dense(dnn_input, feature_dims['dnn_input'])
         lr_input = ids2sparse(lr_input)
-        line = "%s\t%s\n" % (' '.join(map(str, dnn_input)),
-                             ' '.join(map(str, lr_input)), )
+        line = "%s\t%s\n" % (
+            ' '.join(map(str, dnn_input)),
+            ' '.join(map(str, lr_input)), )
         f.write(line)
         if id > args.test_set_size:
             break

@@ -40,7 +40,7 @@ def parse_args():
     parser.add_argument(
         '--emb_size',
         type=int,
-        default=512,
+        default=256,
         help='Dimension of word embedding. (default: %(default)s)')
     parser.add_argument(
         '--pos_size',
@@ -52,6 +52,11 @@ def parse_args():
         type=float,
         default=0.,
         help='Dropout rate. (default: %(default)s)')
+    parser.add_argument(
+        "--use_bn",
+        default=False,
+        type=distutils.util.strtobool,
+        help="Use batch normalization or not. (default: %(default)s)")
     parser.add_argument(
         "--use_gpu",
         default=False,
@@ -116,9 +121,10 @@ def train(train_data_path,
           trg_dict_path,
           enc_conv_blocks,
           dec_conv_blocks,
-          emb_dim=512,
+          emb_dim=256,
           pos_size=200,
           drop_rate=0.,
+          use_bn=False,
           batch_size=32,
           num_passes=15):
     """
@@ -147,6 +153,8 @@ def train(train_data_path,
     :type pos_size: int
     :param drop_rate: Dropout rate.
     :type drop_rate: float
+    :param use_bn: Whether to use batch normalization or not. False is the default value.
+    :type use_bn: bool
     :param batch_size: The size of a mini-batch.
     :type batch_size: int
     :param num_passes: The total number of the passes to train.
@@ -158,8 +166,7 @@ def train(train_data_path,
     src_dict_size = src_dict.__len__()
     trg_dict_size = trg_dict.__len__()
 
-    optimizer = paddle.optimizer.Adam(
-        learning_rate=1e-3, )
+    optimizer = paddle.optimizer.Adam(learning_rate=1e-3, )
 
     cost = conv_seq2seq(
         src_dict_size=src_dict_size,
@@ -169,12 +176,14 @@ def train(train_data_path,
         enc_conv_blocks=enc_conv_blocks,
         dec_conv_blocks=dec_conv_blocks,
         drop_rate=drop_rate,
+        with_bn=use_bn,
         is_infer=False)
 
     # create parameters and trainer
     parameters = paddle.parameters.create(cost)
-    trainer = paddle.trainer.SGD(
-        cost=cost, parameters=parameters, update_equation=optimizer)
+    trainer = paddle.trainer.SGD(cost=cost,
+                                 parameters=parameters,
+                                 update_equation=optimizer)
 
     padding_list = [context_len - 1 for (size, context_len) in dec_conv_blocks]
     padding_num = reduce(lambda x, y: x + y, padding_list)
@@ -203,7 +212,6 @@ def train(train_data_path,
                 print "[%s]: Pass: %d, Batch: %d, TrainCost: %f, %s" % (
                     cur_time, event.pass_id, event.batch_id, event.cost,
                     event.metrics)
-            else:
                 sys.stdout.flush()
 
         if isinstance(event, paddle.event.EndPass):
@@ -232,6 +240,8 @@ def main():
     enc_conv_blocks = eval(args.enc_blocks)
     dec_conv_blocks = eval(args.dec_blocks)
 
+    sys.setrecursionlimit(10000)
+
     paddle.init(use_gpu=args.use_gpu, trainer_count=args.trainer_count)
 
     train(
@@ -244,6 +254,7 @@ def main():
         emb_dim=args.emb_size,
         pos_size=args.pos_size,
         drop_rate=args.drop_rate,
+        use_bn=args.use_bn,
         batch_size=args.batch_size,
         num_passes=args.num_passes)
 

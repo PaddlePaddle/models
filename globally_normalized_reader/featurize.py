@@ -235,7 +235,8 @@ def featurize_example(question, context, vocab):
     # Convert to indices
     question_idxs = [
         vocab.word_to_idx(normalize(w))
-        for w in ciseau.tokenize(question, normalize_ascii=False)
+        for w in ciseau.tokenize(
+            question, normalize_ascii=False)
     ]
 
     context_sents = ciseau.sent_tokenize(

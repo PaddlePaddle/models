@@ -24,18 +24,17 @@ def vgg(input, nums, class_dim):
     conv5 = conv_block(conv4, 512, nums[4])
 
     fc_dim = 4096
-    fc1 = paddle.layer.fc(
-        input=conv5,
-        size=fc_dim,
-        act=paddle.activation.Relu(),
-        layer_attr=paddle.attr.Extra(drop_rate=0.5))
-    fc2 = paddle.layer.fc(
-        input=fc1,
-        size=fc_dim,
-        act=paddle.activation.Relu(),
-        layer_attr=paddle.attr.Extra(drop_rate=0.5))
-    out = paddle.layer.fc(
-        input=fc2, size=class_dim, act=paddle.activation.Softmax())
+    fc1 = paddle.layer.fc(input=conv5,
+                          size=fc_dim,
+                          act=paddle.activation.Relu(),
+                          layer_attr=paddle.attr.Extra(drop_rate=0.5))
+    fc2 = paddle.layer.fc(input=fc1,
+                          size=fc_dim,
+                          act=paddle.activation.Relu(),
+                          layer_attr=paddle.attr.Extra(drop_rate=0.5))
+    out = paddle.layer.fc(input=fc2,
+                          size=class_dim,
+                          act=paddle.activation.Softmax())
     return out
 
 

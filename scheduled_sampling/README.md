@@ -37,7 +37,7 @@ Scheduled Sampling主要应用在序列到序列模型的训练阶段，而生�
 
 ## 模型实现
 
-由于Scheduled Sampling是对序列到序列模型的改进，其整体实现框架与序列到序列模型较为相似。为突出本文重点，这里仅介绍与Scheduled Sampling相关的部分，完整的代码见`scheduled_sampling.py`。
+由于Scheduled Sampling是对序列到序列模型的改进，其整体实现框架与序列到序列模型较为相似。为突出本文重点，这里仅介绍与Scheduled Sampling相关的部分，完整的代码见`network_conf.py`。
 
 首先导入需要的包，并定义控制衰减概率的类`RandomScheduleGenerator`，如下：
 
@@ -119,9 +119,10 @@ true_token_flags = paddle.layer.data(
 这里还需要对原始reader进行封装，增加`true_token_flag`的数据生成器。下面以线性衰减为例说明如何调用上面定义的`RandomScheduleGenerator`产生`true_token_flag`的输入数据。
 
 ```python
-schedule_generator = RandomScheduleGenerator("linear", 0.75, 1000000)
-
-def gen_schedule_data(reader):
+def gen_schedule_data(reader,
+                      schedule_type="linear",
+                      decay_a=0.75,
+                      decay_b=1000000):
     """
     Creates a data reader for scheduled sampling.
 
@@ -130,10 +131,17 @@ def gen_schedule_data(reader):
 
     :param reader: the original reader.
     :type reader: callable
+    :param schedule_type: the type of sampling rate decay.
+    :type schedule_type: str
+    :param decay_a: the decay parameter a.
+    :type decay_a: float
+    :param decay_b: the decay parameter b.
+    :type decay_b: float
 
     :return: the new reader with the field "true_token_flag".
     :rtype: callable
     """
+    schedule_generator = RandomScheduleGenerator(schedule_type, decay_a, decay_b)
 
     def data_reader():
         for src_ids, trg_ids, trg_ids_next in reader():
@@ -149,61 +157,60 @@ def gen_schedule_data(reader):
 
 ```python
 def gru_decoder_with_attention_train(enc_vec, enc_proj, true_word,
-                                     true_token_flag):
-    """
-    The decoder step for training.
-    :param enc_vec: the encoder vector for attention
-    :type enc_vec: LayerOutput
-    :param enc_proj: the encoder projection for attention
-    :type enc_proj: LayerOutput
-    :param true_word: the ground-truth target word
-    :type true_word: LayerOutput
-    :param true_token_flag: the flag of using the ground-truth target word
-    :type true_token_flag: LayerOutput
-    :return: the softmax output layer
-    :rtype: LayerOutput
-    """
+                                       true_token_flag):
+      """
+      The decoder step for training.
+      :param enc_vec: the encoder vector for attention
+      :type enc_vec: LayerOutput
+      :param enc_proj: the encoder projection for attention
+      :type enc_proj: LayerOutput
+      :param true_word: the ground-truth target word
+      :type true_word: LayerOutput
+      :param true_token_flag: the flag of using the ground-truth target word
+      :type true_token_flag: LayerOutput
+      :return: the softmax output layer
+      :rtype: LayerOutput
+      """
 
-    decoder_mem = paddle.layer.memory(
-        name='gru_decoder', size=decoder_size, boot_layer=decoder_boot)
+      decoder_mem = paddle.layer.memory(
+          name='gru_decoder', size=decoder_size, boot_layer=decoder_boot)
 
-    context = paddle.networks.simple_attention(
-        encoded_sequence=enc_vec,
-        encoded_proj=enc_proj,
-        decoder_state=decoder_mem)
+      context = paddle.networks.simple_attention(
+          encoded_sequence=enc_vec,
+          encoded_proj=enc_proj,
+          decoder_state=decoder_mem)
 
-    gru_out_memory = paddle.layer.memory(
-        name='gru_out', size=target_dict_dim)
+      gru_out_memory = paddle.layer.memory(
+          name='gru_out', size=target_dict_dim)
 
-    generated_word = paddle.layer.max_id(input=gru_out_memory)
+      generated_word = paddle.layer.max_id(input=gru_out_memory)
 
-    generated_word_emb = paddle.layer.embedding(
-        input=generated_word,
-        size=word_vector_dim,
-        param_attr=paddle.attr.ParamAttr(name='_target_language_embedding'))
+      generated_word_emb = paddle.layer.embedding(
+          input=generated_word,
+          size=word_vector_dim,
+          param_attr=paddle.attr.ParamAttr(name='_target_language_embedding'))
 
-    current_word = paddle.layer.multiplex(
-        input=[true_token_flag, true_word, generated_word_emb])
+      current_word = paddle.layer.multiplex(
+          input=[true_token_flag, true_word, generated_word_emb])
 
-    with paddle.layer.mixed(size=decoder_size * 3) as decoder_inputs:
-        decoder_inputs += paddle.layer.full_matrix_projection(input=context)
-        decoder_inputs += paddle.layer.full_matrix_projection(
-            input=current_word)
+      decoder_inputs = paddle.layer.fc(
+          input=[context, current_word],
+          size=decoder_size * 3,
+          act=paddle.activation.Linear(),
+          bias_attr=False)
 
-    gru_step = paddle.layer.gru_step(
-        name='gru_decoder',
-        input=decoder_inputs,
-        output_mem=decoder_mem,
-        size=decoder_size)
+      gru_step = paddle.layer.gru_step(
+          name='gru_decoder',
+          input=decoder_inputs,
+          output_mem=decoder_mem,
+          size=decoder_size)
 
-    with paddle.layer.mixed(
-            name='gru_out',
-            size=target_dict_dim,
-            bias_attr=True,
-            act=paddle.activation.Softmax()) as out:
-        out += paddle.layer.full_matrix_projection(input=gru_step)
-
-    return out
+      out = paddle.layer.fc(
+          name='gru_out',
+          input=gru_step,
+          size=target_dict_dim,
+          act=paddle.activation.Softmax())
+      return out
 ```
 
 该函数使用`memory`层`gru_out_memory`记忆上一时刻生成的元素，根据`gru_out_memory`选择概率最大的词语`generated_word`作为生成的词语。`multiplex`层会在真实元素`true_word`和生成的元素`generated_word`之间做出选择，并将选择的结果作为解码器输入。`multiplex`层使用了三个输入，分别为`true_token_flag`、`true_word`和`generated_word_emb`。对于这三个输入中每个元素，若`true_token_flag`中的值为`0`，则`multiplex`层输出`true_word`中的相应元素；若`true_token_flag`中的值为`1`，则`multiplex`层输出`generated_word_emb`中的相应元素。

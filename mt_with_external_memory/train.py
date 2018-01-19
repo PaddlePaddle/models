@@ -94,8 +94,9 @@ def train():
 
     # create parameters and trainer
     parameters = paddle.parameters.create(cost)
-    trainer = paddle.trainer.SGD(
-        cost=cost, parameters=parameters, update_equation=optimizer)
+    trainer = paddle.trainer.SGD(cost=cost,
+                                 parameters=parameters,
+                                 update_equation=optimizer)
 
     # create data readers
     feeding = {
@@ -113,13 +114,15 @@ def train():
         reader=paddle.dataset.wmt14.train(args.dict_size),
         append_tuple=(bounded_memory_perturbation, ))
     train_batch_reader = paddle.batch(
-        reader=paddle.reader.shuffle(reader=train_append_reader, buf_size=8192),
+        reader=paddle.reader.shuffle(
+            reader=train_append_reader, buf_size=8192),
         batch_size=args.batch_size)
     test_append_reader = reader_append_wrapper(
         reader=paddle.dataset.wmt14.test(args.dict_size),
         append_tuple=(bounded_memory_perturbation, ))
     test_batch_reader = paddle.batch(
-        reader=paddle.reader.shuffle(reader=test_append_reader, buf_size=8192),
+        reader=paddle.reader.shuffle(
+            reader=test_append_reader, buf_size=8192),
         batch_size=args.batch_size)
 
     # create event handler

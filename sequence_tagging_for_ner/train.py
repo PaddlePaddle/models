@@ -16,8 +16,8 @@ def main(train_data_file,
          target_file,
          emb_file,
          model_save_dir,
-         num_passes=10,
-         batch_size=32):
+         num_passes=100,
+         batch_size=64):
     if not os.path.exists(model_save_dir):
         os.mkdir(model_save_dir)
 
@@ -54,11 +54,10 @@ def main(train_data_file,
         model_average=paddle.optimizer.ModelAverage(
             average_window=0.5, max_average_window=10000), )
 
-    trainer = paddle.trainer.SGD(
-        cost=crf_cost,
-        parameters=parameters,
-        update_equation=optimizer,
-        extra_layers=crf_dec)
+    trainer = paddle.trainer.SGD(cost=crf_cost,
+                                 parameters=parameters,
+                                 update_equation=optimizer,
+                                 extra_layers=crf_dec)
 
     train_reader = paddle.batch(
         paddle.reader.shuffle(
@@ -75,10 +74,10 @@ def main(train_data_file,
 
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
-            if event.batch_id % 1 == 0:
+            if event.batch_id % 5 == 0:
                 logger.info("Pass %d, Batch %d, Cost %f, %s" % (
                     event.pass_id, event.batch_id, event.cost, event.metrics))
-            if event.batch_id % 1 == 0:
+            if event.batch_id % 50 == 0:
                 result = trainer.test(reader=test_reader, feeding=feeding)
                 logger.info("\nTest with Pass %d, Batch %d, %s" %
                             (event.pass_id, event.batch_id, result.metrics))
@@ -108,4 +107,4 @@ if __name__ == "__main__":
         vocab_file="data/vocab.txt",
         target_file="data/target.txt",
         emb_file="data/wordVectors.txt",
-        model_save_dir="model/")
+        model_save_dir="models/")

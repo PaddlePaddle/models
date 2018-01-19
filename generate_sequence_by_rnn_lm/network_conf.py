@@ -48,8 +48,9 @@ def rnn_lm(vocab_dim,
         raise Exception("rnn_type error!")
 
     # fc(full connected) and output layer
-    output = paddle.layer.fc(
-        input=[rnn_cell], size=vocab_dim, act=paddle.activation.Softmax())
+    output = paddle.layer.fc(input=[rnn_cell],
+                             size=vocab_dim,
+                             act=paddle.activation.Softmax())
 
     if is_infer:
         last_word = paddle.layer.last_seq(input=output)
@@ -57,4 +58,4 @@ def rnn_lm(vocab_dim,
     else:
         cost = paddle.layer.classification_cost(input=output, label=target)
 
-        return cost, output
+        return cost

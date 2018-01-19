@@ -62,16 +62,17 @@ def encoding_question(question, q_lstm_dim, latent_chain_dim, word_vec_dim,
     emb = get_embedding(question, word_vec_dim, wordvecs)
 
     # question LSTM
-    wx = paddle.layer.fc(
-        act=paddle.activation.Linear(),
-        size=q_lstm_dim * 4,
-        input=emb,
-        param_attr=paddle.attr.ParamAttr(
-            name="_q_hidden1.w0",
-            initial_std=default_init_std,
-            l2_rate=default_l2_rate),
-        bias_attr=paddle.attr.ParamAttr(
-            name="_q_hidden1.wbias", initial_std=0, l2_rate=default_l2_rate))
+    wx = paddle.layer.fc(act=paddle.activation.Linear(),
+                         size=q_lstm_dim * 4,
+                         input=emb,
+                         param_attr=paddle.attr.ParamAttr(
+                             name="_q_hidden1.w0",
+                             initial_std=default_init_std,
+                             l2_rate=default_l2_rate),
+                         bias_attr=paddle.attr.ParamAttr(
+                             name="_q_hidden1.wbias",
+                             initial_std=0,
+                             l2_rate=default_l2_rate))
     q_rnn = paddle.layer.lstmemory(
         input=wx,
         bias_attr=paddle.attr.ParamAttr(
@@ -83,24 +84,22 @@ def encoding_question(question, q_lstm_dim, latent_chain_dim, word_vec_dim,
     q_rnn = paddle.layer.dropout(q_rnn, drop_rate)
 
     # self attention
-    fc = paddle.layer.fc(
-        act=paddle.activation.Tanh(),
-        size=latent_chain_dim,
-        input=q_rnn,
-        param_attr=paddle.attr.ParamAttr(
-            name="_attention_layer1.w0",
-            initial_std=default_init_std,
-            l2_rate=default_l2_rate),
-        bias_attr=False)
-    weight = paddle.layer.fc(
-        size=1,
-        act=paddle.activation.SequenceSoftmax(),
-        input=fc,
-        param_attr=paddle.attr.ParamAttr(
-            name="_attention_weight.w0",
-            initial_std=default_init_std,
-            l2_rate=default_l2_rate),
-        bias_attr=False)
+    fc = paddle.layer.fc(act=paddle.activation.Tanh(),
+                         size=latent_chain_dim,
+                         input=q_rnn,
+                         param_attr=paddle.attr.ParamAttr(
+                             name="_attention_layer1.w0",
+                             initial_std=default_init_std,
+                             l2_rate=default_l2_rate),
+                         bias_attr=False)
+    weight = paddle.layer.fc(size=1,
+                             act=paddle.activation.SequenceSoftmax(),
+                             input=fc,
+                             param_attr=paddle.attr.ParamAttr(
+                                 name="_attention_weight.w0",
+                                 initial_std=default_init_std,
+                                 l2_rate=default_l2_rate),
+                             bias_attr=False)
 
     scaled_q_rnn = paddle.layer.scaling(input=q_rnn, weight=weight)
 
@@ -262,15 +261,14 @@ def define_common_network(conf):
         conf.default_init_std, conf.default_l2_rate)
 
     # pre-compute CRF features
-    crf_feats = paddle.layer.fc(
-        act=paddle.activation.Linear(),
-        input=e_encoding,
-        size=conf.label_num,
-        param_attr=paddle.attr.ParamAttr(
-            name="_output.w0",
-            initial_std=conf.default_init_std,
-            l2_rate=conf.default_l2_rate),
-        bias_attr=False)
+    crf_feats = paddle.layer.fc(act=paddle.activation.Linear(),
+                                input=e_encoding,
+                                size=conf.label_num,
+                                param_attr=paddle.attr.ParamAttr(
+                                    name="_output.w0",
+                                    initial_std=conf.default_init_std,
+                                    l2_rate=conf.default_l2_rate),
+                                bias_attr=False)
     return crf_feats, label
 
 
@@ -283,15 +281,14 @@ def training_net(conf):
     :rtype: LayerOutput
     """
     e_encoding, label = define_common_network(conf)
-    crf = paddle.layer.crf(
-        input=e_encoding,
-        label=label,
-        size=conf.label_num,
-        param_attr=paddle.attr.ParamAttr(
-            name="_crf.w0",
-            initial_std=conf.default_init_std,
-            l2_rate=conf.default_l2_rate),
-        layer_attr=paddle.attr.ExtraAttr(device=-1))
+    crf = paddle.layer.crf(input=e_encoding,
+                           label=label,
+                           size=conf.label_num,
+                           param_attr=paddle.attr.ParamAttr(
+                               name="_crf.w0",
+                               initial_std=conf.default_init_std,
+                               l2_rate=conf.default_l2_rate),
+                           layer_attr=paddle.attr.ExtraAttr(device=-1))
 
     return crf
 

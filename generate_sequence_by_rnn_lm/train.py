@@ -43,9 +43,13 @@ def train(topology,
 
     # create parameters
     parameters = paddle.parameters.create(topology)
+    # create sum evaluator
+    sum_eval = paddle.evaluator.sum(topology)
     # create trainer
-    trainer = paddle.trainer.SGD(
-        cost=topology, parameters=parameters, update_equation=adam_optimizer)
+    trainer = paddle.trainer.SGD(cost=topology,
+                                 parameters=parameters,
+                                 update_equation=adam_optimizer,
+                                 extra_layers=sum_eval)
 
     # define the event_handler callback
     def event_handler(event):

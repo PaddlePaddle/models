@@ -110,8 +110,9 @@ def lstm_by_nested_sequence(input_layer, hidden_dim, name="", reverse=False):
                 name="__inner_state_%s__" % name,
                 size=hidden_dim,
                 boot_layer=outer_memory)
-            input_proj = paddle.layer.fc(
-                size=hidden_dim * 4, bias_attr=False, input=input_layer)
+            input_proj = paddle.layer.fc(size=hidden_dim * 4,
+                                         bias_attr=False,
+                                         input=input_layer)
             return paddle.networks.lstmemory_unit(
                 input=input_proj,
                 name="__inner_state_%s__" % name,

@@ -103,8 +103,8 @@ class ModelConverter(object):
 
     @wrap_name_default("batch_norm")
     def convert_BatchNorm_layer(self, params, name=None):
-        scale = 1 / np.array(params[-1].data)[0] if np.array(
-            params[-1].data)[0] != 0 else 0
+        scale = 1 / np.array(params[-1].data)[0] if np.array(params[-1].data)[
+            0] != 0 else 0
         for i in range(2):
             data = np.array(params[i].data) * scale
             file_name = "_%s.w%s" % (name, str(i + 1))
