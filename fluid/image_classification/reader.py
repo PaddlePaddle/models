@@ -46,6 +46,12 @@ def crop_image(img, target_size, center):
     return img
 
 
+def rotate_image(img):
+    angle = random.randint(-10, 10)
+    img = img.rotate(angle)
+    return img
+
+
 def distort_color(img):
     def random_brightness(img, lower=0.5, upper=1.5):
         e = random.uniform(lower, upper)
@@ -75,6 +81,7 @@ def process_image(sample, mode):
     img = Image.open(img_path)
     if mode == 'train':
         img = resize_short(img, DATA_DIM + 32)
+        img = rotate_image(img)
     else:
         img = resize_short(img, DATA_DIM)
     img = crop_image(img, target_size=DATA_DIM, center=(mode != 'train'))
