@@ -125,8 +125,8 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    train_reader = paddle.batch(datareader.train(), batch_size=batch_size)
-    test_reader = paddle.batch(datareader.test(), batch_size=batch_size)
+    train_reader = paddle.batch(reader.train(), batch_size=batch_size)
+    test_reader = paddle.batch(reader.test(), batch_size=batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     for pass_id in range(num_passes):
