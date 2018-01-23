@@ -46,7 +46,7 @@ def train(topology,
         word_dict = paddle.dataset.imdb.word_dict()
         train_reader = paddle.batch(
             paddle.reader.shuffle(
-                lambda: paddle.dataset.imdb.train(word_dict)(), buf_size=1000),
+                lambda: paddle.dataset.imdb.train(word_dict)(), buf_size=51200),
             batch_size=100)
         test_reader = paddle.batch(
             lambda: paddle.dataset.imdb.test(word_dict)(), batch_size=100)
@@ -83,16 +83,14 @@ def train(topology,
         train_reader = paddle.batch(
             paddle.reader.shuffle(
                 reader.train_reader(train_data_dir, word_dict, lbl_dict),
-                buf_size=1000),
+                buf_size=51200),
             batch_size=batch_size)
 
         if test_data_dir is not None:
             # here, because training and testing data share a same format,
             # we still use the reader.train_reader to read the testing data.
             test_reader = paddle.batch(
-                paddle.reader.shuffle(
-                    reader.train_reader(test_data_dir, word_dict, lbl_dict),
-                    buf_size=1000),
+                reader.train_reader(test_data_dir, word_dict, lbl_dict),
                 batch_size=batch_size)
         else:
             test_reader = None
