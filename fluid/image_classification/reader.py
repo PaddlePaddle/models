@@ -1,4 +1,5 @@
 import os
+import math
 import random
 import functools
 import numpy as np
@@ -6,10 +7,6 @@ import paddle.v2 as paddle
 from PIL import Image, ImageEnhance
 
 random.seed(0)
-
-_R_MEAN = 123.0
-_G_MEAN = 117.0
-_B_MEAN = 104.0
 
 DATA_DIM = 224
 
@@ -20,7 +17,8 @@ DATA_DIR = 'ILSVRC2012'
 TRAIN_LIST = 'ILSVRC2012/train_list.txt'
 TEST_LIST = 'ILSVRC2012/test_list.txt'
 
-img_mean = np.array([_R_MEAN, _G_MEAN, _B_MEAN]).reshape((3, 1, 1))
+img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
+img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
 
 
 def resize_short(img, target_size):
@@ -43,6 +41,30 @@ def crop_image(img, target_size, center):
     w_end = w_start + size
     h_end = h_start + size
     img = img.crop((w_start, h_start, w_end, h_end))
+    return img
+
+
+def random_crop(img, size, scale=[0.08, 1.0], ratio=[3. / 4., 4. / 3.]):
+    aspect_ratio = math.sqrt(random.uniform(*ratio))
+    w = 1. * aspect_ratio
+    h = 1. / aspect_ratio
+
+    bound = min((float(img.size[0]) / img.size[1]) / (w**2),
+                (float(img.size[1]) / img.size[0]) / (h**2))
+    scale_max = min(scale[1], bound)
+    scale_min = min(scale[0], bound)
+
+    target_area = img.size[0] * img.size[1] * random.uniform(scale_min,
+                                                             scale_max)
+    target_size = math.sqrt(target_area)
+    w = int(target_size * w)
+    h = int(target_size * h)
+
+    i = random.randint(0, img.size[0] - w)
+    j = random.randint(0, img.size[1] - h)
+
+    img = img.crop((i, j, i + w, j + h))
+    img = img.resize((size, size), Image.LANCZOS)
     return img
 
 
@@ -75,26 +97,28 @@ def distort_color(img):
     return img
 
 
-def process_image(sample, mode):
+def process_image(sample, mode, color_jitter, rotate):
     img_path = sample[0]
 
     img = Image.open(img_path)
     if mode == 'train':
-        img = resize_short(img, DATA_DIM + 32)
-        img = rotate_image(img)
+        if rotate: img = rotate_image(img)
+        img = random_crop(img, DATA_DIM)
     else:
         img = resize_short(img, DATA_DIM)
-    img = crop_image(img, target_size=DATA_DIM, center=(mode != 'train'))
+        img = crop_image(img, target_size=DATA_DIM, center=True)
     if mode == 'train':
-        img = distort_color(img)
+        if color_jitter:
+            img = distort_color(img)
         if random.randint(0, 1) == 1:
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
     if img.mode != 'RGB':
         img = img.convert('RGB')
 
-    img = np.array(img).astype('float32').transpose((2, 0, 1))
+    img = np.array(img).astype('float32').transpose((2, 0, 1)) / 255
     img -= img_mean
+    img /= img_std
 
     if mode == 'train' or mode == 'test':
         return img, sample[1]
@@ -102,7 +126,11 @@ def process_image(sample, mode):
         return img
 
 
-def _reader_creator(file_list, mode, shuffle=False):
+def _reader_creator(file_list,
+                    mode,
+                    shuffle=False,
+                    color_jitter=False,
+                    rotate=False):
     def reader():
         with open(file_list) as flist:
             lines = [line.strip() for line in flist]
@@ -117,13 +145,15 @@ def _reader_creator(file_list, mode, shuffle=False):
                     img_path = os.path.join(DATA_DIR, line)
                     yield [img_path]
 
-    mapper = functools.partial(process_image, mode=mode)
+    mapper = functools.partial(
+        process_image, mode=mode, color_jitter=color_jitter, rotate=rotate)
 
     return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE)
 
 
 def train():
-    return _reader_creator(TRAIN_LIST, 'train', shuffle=True)
+    return _reader_creator(
+        TRAIN_LIST, 'train', shuffle=True, color_jitter=True, rotate=True)
 
 
 def test():
