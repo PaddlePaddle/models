@@ -38,9 +38,9 @@ def parse_args():
     return parser.parse_args()
 
 
-def infer():
+def vector():
     """
-    infer
+    print user vector and item vector
     """
     args = parse_args()
 
@@ -101,16 +101,15 @@ def infer_a_batch(inferer, test_batch, nid_to_word):
         field=["value"],
         flatten_result=False)
     for i, res in enumerate(zip(test_batch, probs[0], probs[1])):
-        softmax_output = res[1]
-        sort_nid = res[1].argsort()
-
-        # print top 30 recommended item 
-        for j in range(1, 30):
-            item_id = sort_nid[-1 * j]
-            item_id_to_word = nid_to_word[item_id]
-            print "%s\t%.6f" \
-                    % (item_id_to_word, softmax_output[item_id])
+        print "Sample %s:" % str(i)
+        user_vector = [1.000]
+        for i in res[2]:
+            user_vector.append(i)
+        user_vector.append(0.000)
+        norm = np.linalg.norm(user_vector)
+        user_vector_norm = [_ / norm for _ in user_vector]
+        print user_vector_norm
 
 
 if __name__ == "__main__":
-    infer()
+    vector()

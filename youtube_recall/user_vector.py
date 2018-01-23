@@ -9,12 +9,12 @@ import cPickle
 from reader import Reader
 from network_conf import DNNmodel
 from utils import logger
+import numpy as np
 
 
 def parse_args():
     """
     parse arguments
-    :return:
     """
     parser = argparse.ArgumentParser(
         description="PaddlePaddle Youtube Recall Model Example")
@@ -38,9 +38,9 @@ def parse_args():
     return parser.parse_args()
 
 
-def infer():
+def user_vector():
     """
-    infer
+    get user vectors
     """
     args = parse_args()
 
@@ -56,9 +56,6 @@ def infer():
 
     with open(args.feature_dict) as f:
         feature_dict = cPickle.load(f)
-
-    nid_dict = feature_dict['history_clicked_items']
-    nid_to_word = dict((v, k) for k, v in nid_dict.items())
 
     # load the trained model.
     with gzip.open(args.model_path) as f:
@@ -76,15 +73,15 @@ def infer():
     for idx, item in enumerate(reader.infer(args.infer_set_path)):
         test_batch.append(item)
         if len(test_batch) == args.batch_size:
-            infer_a_batch(inferer, test_batch, nid_to_word)
+            get_a_batch_user_vector(inferer, test_batch)
             test_batch = []
     if len(test_batch):
-        infer_a_batch(inferer, test_batch, nid_to_word)
+        get_a_batch_user_vector(inferer, test_batch)
 
 
-def infer_a_batch(inferer, test_batch, nid_to_word):
+def get_a_batch_user_vector(inferer, test_batch):
     """
-    input a batch of data and infer 
+    input a batch of data and get user vectors
     """
     feeding = {
         'user_id': 0,
@@ -100,17 +97,16 @@ def infer_a_batch(inferer, test_batch, nid_to_word):
         feeding=feeding,
         field=["value"],
         flatten_result=False)
-    for i, res in enumerate(zip(test_batch, probs[0], probs[1])):
-        softmax_output = res[1]
-        sort_nid = res[1].argsort()
-
-        # print top 30 recommended item 
-        for j in range(1, 30):
-            item_id = sort_nid[-1 * j]
-            item_id_to_word = nid_to_word[item_id]
-            print "%s\t%.6f" \
-                    % (item_id_to_word, softmax_output[item_id])
+    for i, res in enumerate(zip(probs[1])):
+        # do simple lsh conversion
+        user_vector = [1.000]
+        for i in res[0]:
+            user_vector.append(i)
+        user_vector.append(0.000)
+        norm = np.linalg.norm(user_vector)
+        user_vector_norm = [str(_ / norm) for _ in user_vector]
+        print ", ".join(user_vector_norm)
 
 
 if __name__ == "__main__":
-    infer()
+    user_vector()
