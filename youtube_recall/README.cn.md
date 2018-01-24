@@ -34,7 +34,7 @@ Figure 1. 推荐系统框图
 - 排序模型: 采用更精细的特征计算得到排序分,对召回得到的候选集合中的视频进行排序。
 
 ## 召回模型简介
-该推荐问题可以被建模成一个"超大规模多分类"问题。即在时刻![](https://www.zhihu.com/equation?tex=t),为用户![](https://www.zhihu.com/equation?tex=U)(已知上下文信息![](https://www.zhihu.com/equation?tex=C))在视频库![](https://www.zhihu.com/equation?tex=V)中预测出观看视频i的类别,
+该推荐问题可以被建模成一个"超大规模多分类"问题。即在时刻![](https://www.zhihu.com/equation?tex=t),为用户![](https://www.zhihu.com/equation?tex=U)(已知上下文信息![](https://www.zhihu.com/equation?tex=C))在视频库![](https://www.zhihu.com/equation?tex=V)中预测出观看视频![](https://www.zhihu.com/equation?tex=i)的类别,
 
 ![](https://www.zhihu.com/equation?tex=P(%5Comega_t%3Di%7CU%2CC)%3D%5Cfrac%7Be%5E%7Bv_iu%7D%7D%7B%5Csum_%7Bj%5Cin%20V%7D%5E%7B%20%7De%5E%7Bv_ju%7D%7D)
 
