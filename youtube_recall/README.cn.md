@@ -172,7 +172,7 @@ def _build_embedding_layer(self):
 ```
 
 ### 隐层
-我们对原paper中做了改进,历史用户点击视频序列,经过embedding后,不再是加权求平均。而是连接lstm层,将用户点击的先后次序纳入模型,再在时间序列上做最大池化,得到定长的向量表示,从而使模型学习到与点击时序相关的隐藏信息。考虑到数据规模与训练性能,我们只用了两个Relu层,也有不错的效果。
+对原paper中做了改进,历史用户点击视频序列,经过embedding后,不再是加权求平均。而是连接lstm层,将用户点击的先后次序纳入模型,再在时间序列上做最大池化,得到定长的向量表示,从而使模型学习到与点击时序相关的隐藏信息。考虑到数据规模与训练性能,这边只用了两个Relu层,也有不错的效果。
 ```python
 self._rnn_cell = paddle.networks.simple_lstm(
             input=self._history_clicked_items_emb, size=64)
@@ -274,9 +274,9 @@ python infer.py --infer_set_path='./data/infer.txt' \
 ```
 
 ## 在线预测
-在线预测的时候，我们采用近似最近邻（approximate nearest neighbor-ANN）算法直接用用户向量查询最相关的topN个视频内容。由于我们的ANN暂时只支持cosine，而模型是根据内积排序的，两者效果差异太大。
+在线预测的时候，采用近似最近邻（approximate nearest neighbor-ANN）算法直接用用户向量查询最相关的topN个视频内容。很多ann算法只支持cosine距离，而模型是根据内积排序的，两者效果差异较大。
 
-为此，我们的解决方案是，对用户和视频向量，作SIMPLE-LSH变换\[[4](#参考文献)\]，使内积排序与cosin排序等价。
+为此，这边的解决方案是，对用户和视频向量，作SIMPLE-LSH变换\[[4](#参考文献)\]，使内积排序与cosin排序等价。
 
 具体如下：
 - 对于视频向量![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D%5Cin%20%5Cmathbb%7BR%7D%5EN)，有![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Cmathbf%7Bv%7D%20%5Cright%20%5C%7C%5Cleqslant%20m)，变换后的![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%5Cin%20%5Cmathbb%7BR%7D%5E%7BN%2B1%7D)，![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%3D%20%5B%5Cfrac%7B%5Cmathbf%7Bv%7D%7D%7Bm%7D%3B%20%5Csqrt%7B1%20-%5Cleft%20%5C%7C%20%5Cmathbf%7B%5Cfrac%7B%5Cmathbf%7Bv%7D%7D%7Bm%7D%7B%7D%7D%20%5Cright%20%5C%7C%5E2%7D%5D)。
@@ -296,7 +296,7 @@ python user_vector.py --infer_set_path='./data/infer.txt' \
 python item_vector.py --model_path='./output/model/model_pass_00000.tar.gz' \
             --feature_dict='./output/feature_dict.pkl'
 ```
-
+因为实时召回需要大量机器资源，这边也可以离线挖掘产出数据，线上召回使用挖掘好的数据。可以产出最热，用户个性化，视频相关等数据。下面的示例产出了用户个性化数据。
 
 ## 参考文献
 1. Covington, Paul, Jay Adams, and Emre Sargin. "Deep neural networks for youtube recommendations." Proceedings of the 10th ACM Conference on Recommender Systems. ACM, 2016.
