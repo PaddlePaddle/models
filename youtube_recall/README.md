@@ -244,7 +244,7 @@ python train.py --train_set_path='./data/train.txt' \
     --item_freq='./output/item_freq.pkl'
 ```
 
-## Use the model for prediction
+## Offline prediction
 Input user related features, and then get the most likely N videos for user.
 ```shell
 python infer.py --infer_set_path='./data/infer.txt' \
@@ -253,7 +253,18 @@ python infer.py --infer_set_path='./data/infer.txt' \
     --batch_size=50
 ```
 
+## Online prediction
+For online prediction，we adopt Approximate Nearest Neighbor(ANN) to directly recall top N mostly likely watch video. However, our ANN system currently only supports cosin sorting, not by inner product sorting, which leads to big effect difference.
+As a result, we sliently modify user and video vectors by a SIMPLE-LSH conversion\[[4](#References)\], so that inner sorting is equivalent to cosin sorting after conversion.
+Details as follows:
+For video vector, $$\mathbf{v}\in \mathbb{R}^N$$, we have $$\left \| \mathbf{v} \right \|\leqslant m$$. The modified video vector $$\tilde{\mathbf{v}}\in \mathbb{R}^{N+1}$$,
+$$\tilde{\mathbf{v}} = [\frac{\mathbf{v}}{m}; \sqrt{1 -\left \| \mathbf{\frac{\mathbf{v}}{m}{}} \right \|^2}]$$
+For user vector, $$\mathbf{u}\in \mathbb{R}^N$$, The modified user vector $$\tilde{\mathbf{u}}\in \mathbb{R}^{N+1}$$,
+$$\tilde{\mathbf{u}} = [\mathbf{u}_{norm}; 0]$$，in which $$\mathbf{u}_{norm}$$ is normalized $$\mathbf{u}$$，
+When online predicting, For a $$\mathbf{u}$$, we need recall $$\mathbf{v} by inner product sorting. After conversion, $$\mathbf{u}\rightarrow \tilde{\mathbf{u}}, \mathbf{v}\rightarrow \tilde{\mathbf{v}}$$, the order of inner prodct sorting is unchanged. Since $$\left \| \tilde{\mathbf{u}} \right \|$$ and $$\left \| \tilde{\mathbf{v}} \right \|$$ are both equal to 1, $$cos(\tilde{\mathbf{u}} ,\tilde{\mathbf{v}}) = \tilde{\mathbf{u}}\cdot \tilde{\mathbf{v}}$$, which makes cosin-supported-only ANN system works. And in order to retain precision, we find that $\tilde{\mathbf{v}} = [\mathbf{v}; \sqrt{m^2 -\left \| \mathbf{\mathbf{v}} \right \|^2}]$$ is also equivalent.
+
 ## References
 1. Covington, Paul, Jay Adams, and Emre Sargin. "Deep neural networks for youtube recommendations." Proceedings of the 10th ACM Conference on Recommender Systems. ACM, 2016.
 2. https://code.google.com/archive/p/word2vec/
 3. http://paddlepaddle.org/docs/develop/models/nce_cost/README.html
+4. Neyshabur, Behnam, and Nathan Srebro. "On symmetric and asymmetric LSHs for inner product search." arXiv preprint arXiv:1410.5518 (2014).

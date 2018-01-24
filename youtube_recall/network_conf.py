@@ -127,7 +127,8 @@ class DNNmodel(object):
         self._fc_0 = paddle.layer.fc(
             name="Relu1",
             input=[
-                self._lstm_last, self._user_id_emb, self._city_emb,
+                self._lstm_last, self._user_id_emb, self._province_emb,
+                self._city_emb, self._avg_emb_cats, self._avg_emb_tags,
                 self._phone_emb
             ],
             size=self._dnn_layer_dims[0],
