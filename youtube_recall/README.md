@@ -75,7 +75,6 @@ The fucntion of this script is as follows:
 - Filter low-frequency features\[[2](#References)\], which appears less than `feat_appear_limit` times.
 - Encode features, and generate dictionary `feature_dict.pkl`.
 - Count the probability of each video appears and write into `item_freq.pkl`, and provide it to NCE layer.
-```
 
 For example, run the following command to accomplish data pre-processing:
 ```
