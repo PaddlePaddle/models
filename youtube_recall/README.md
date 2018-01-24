@@ -25,7 +25,7 @@ where ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7
 
 Figure 2 shows the general network architecture of candidate generation model:
 <p align="center">
-<img src="images/model_network.png" width="500" height="400" hspace='10'/> <br/>
+<img src="images/model_network.png" width="600" height="500" hspace='10'/> <br/>
 Figure 2. Candidate generation model architecture
 </p>
 
