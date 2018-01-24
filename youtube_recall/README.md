@@ -17,9 +17,11 @@ The system is comprised of two neural networks: one for candidate generation and
 - The ranking network: It accomplishes this task by assigning a score to each video according to a desired objective function using a rich set of features describing the video and user.
 
 ## Candidate Generation
-Here, candidate generation is modeled as extreme multiclass classification where the prediction problem becomes accurately classifying a specific video watch $$\omega_t$$ at time $$t$$ among millions of video $$i$$ (classes) from a corpus $$V$$ based on user $$U$$ and context $$C$$,
-$$P(\omega_t=i|U,C)=\frac{e^{v_iu}}{\sum_{j\in V}^{ }e^{v_ju}}$$
-where $$u\in \mathbb{R}^N$$ represents a high-dimensional "embedding" of the user, context pair and the $$v_j\in \mathbb{R}^N$$ represent embeddings of each candidate video. The task of the deep neural network is to learn user embeddings $$u$$ as a function of the user's history and context that are useful for discriminating among videos with a softmax classifier.
+Here, candidate generation is modeled as extreme multiclass classification where the prediction problem becomes accurately classifying a specific video watch ![](https://www.zhihu.com/equation?tex=%5Comega_t) at time ![](https://www.zhihu.com/equation?tex=t) among millions of video ![](https://www.zhihu.com/equation?tex=i) (classes) from a corpus ![](https://www.zhihu.com/equation?tex=V) based on user ![](https://www.zhihu.com/equation?tex=U) and context ![](https://www.zhihu.com/equation?tex=C),
+
+![](https://www.zhihu.com/equation?tex=P(%5Comega_t%3Di%7CU%2CC)%3D%5Cfrac%7Be%5E%7Bv_iu%7D%7D%7B%5Csum_%7Bj%5Cin%20V%7D%5E%7B%20%7De%5E%7Bv_ju%7D%7D)
+
+where ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN) represents a high-dimensional "embedding" of the user, context pair and the ![](https://www.zhihu.com/equation?tex=v_j%5Cin%20%5Cmathbb%7BR%7D%5EN) represent embeddings of each candidate video. The task of the deep neural network is to learn user embeddings ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D) as a function of the user's history and context that are useful for discriminating among videos with a softmax classifier.
 
 Figure 2 shows the general network architecture of candidate generation model:
 <p align="center">
@@ -29,8 +31,8 @@ Figure 2. Candidate generation model architecture
 
 - Input layer: A user's watch history is represented by a variable-length sequence of sparse video IDs, and search history is similarly represented by a variable-length sequence of search tokens.
 - Embedding layer: The input features each is mapped to a fixed-sized dense vector representation via the embeddings, and then simply averaging the embeddings. The embeddings are learned jointly with all other model parameters through normal gradient descent back-propagation updates.
-- Hidden layer: Features are concatenated into a wide first layer, followed by several layers of fully connected Rectified Linear Units (ReLU). The output of the last ReLU layer is the previous mentioned high-dimensional "embedding" of the user $$u$$, so called user vector.
-- Output layer: A softmax classifier is connected to do discriminating millions of classes (videos). To speed up training process, a technique is applied that samples negative classes from background distribution with importance weighting. The previous mentioned high-dimensional "embedding" of the candidate video $$v_j$$ is obtained by weight and bias of the softmax layer. At serving time, the most likely N classes (videos) is computed for presenting to the user. To Score millions of items under a strict serving laterncy, the scoring problem reduces to a nearest neighbor search in the dot product space, and Locality Sensitive Hashing is relied on.
+- Hidden layer: Features are concatenated into a wide first layer, followed by several layers of fully connected Rectified Linear Units (ReLU). The output of the last ReLU layer is the previous mentioned high-dimensional "embedding" of the user ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D), so called user vector.
+- Output layer: A softmax classifier is connected to do discriminating millions of classes (videos). To speed up training process, a technique is applied that samples negative classes from background distribution with importance weighting. The previous mentioned high-dimensional "embedding" of the candidate video ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D) is obtained by weight and bias of the softmax layer. At serving time, the most likely N classes (videos) is computed for presenting to the user. To Score millions of items under a strict serving laterncy, the scoring problem reduces to a nearest neighbor search in the dot product space, and Locality Sensitive Hashing is relied on.
 
 ## Data Pre-processing
 In this example, we moked click log of users as sample data, and its format is as follows:
@@ -258,15 +260,15 @@ For online prediction，we adopt Approximate Nearest Neighbor(ANN) to directly r
 
 As a result, we sliently modify user and video vectors by a SIMPLE-LSH conversion\[[4](#References)\], so that inner sorting is equivalent to cosin sorting after conversion.
 
-Details as follows:
-For video vector, $$\mathbf{v}\in \mathbb{R}^N$$, we have $$\left \| \mathbf{v} \right \|\leqslant m$$. The modified video vector $$\tilde{\mathbf{v}}\in \mathbb{R}^{N+1}$$,
-$$\tilde{\mathbf{v}} = [\frac{\mathbf{v}}{m}; \sqrt{1 -\left \| \mathbf{\frac{\mathbf{v}}{m}{}} \right \|^2}]$$
-For user vector, $$\mathbf{u}\in \mathbb{R}^N$$, The modified user vector $$\tilde{\mathbf{u}}\in \mathbb{R}^{N+1}$$,
-$$\tilde{\mathbf{u}} = [\mathbf{u}_{norm}; 0]$$，in which $$\mathbf{u}_{norm}$$ is normalized $$\mathbf{u}$$.
+Details are as follows:
+- For video vector ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D%5Cin%20%5Cmathbb%7BR%7D%5EN), we have ![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Cmathbf%7Bv%7D%20%5Cright%20%5C%7C%5Cleqslant%20m). The modified video vector ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%5Cin%20%5Cmathbb%7BR%7D%5E%7BN%2B1%7D), and let ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%3D%20%5B%5Cfrac%7B%5Cmathbf%7Bv%7D%7D%7Bm%7D%3B%20%5Csqrt%7B1%20-%5Cleft%20%5C%7C%20%5Cmathbf%7B%5Cfrac%7B%5Cmathbf%7Bv%7D%7D%7Bm%7D%7B%7D%7D%20%5Cright%20%5C%7C%5E2%7D%5D).
 
-When online predicting, For a $$\mathbf{u}$$, we need recall $$\mathbf{v} by inner product sorting. After conversion, $$\mathbf{u}\rightarrow \tilde{\mathbf{u}}, \mathbf{v}\rightarrow \tilde{\mathbf{v}}$$, the order of inner prodct sorting is unchanged. Since $$\left \| \tilde{\mathbf{u}} \right \|$$ and $$\left \| \tilde{\mathbf{v}} \right \|$$ are both equal to 1, $$cos(\tilde{\mathbf{u}} ,\tilde{\mathbf{v}}) = \tilde{\mathbf{u}}\cdot \tilde{\mathbf{v}}$$, which makes cosin-supported-only ANN system works.
+- For user vector ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN), and the modified user vector ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%5Cin%20%5Cmathbb%7BR%7D%5E%7BN%2B1%7D), and let ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%3D%20%5B%5Cmathbf%7Bu%7D_%7Bnorm%7D%3B%200%5D), where ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D_%7Bnorm%7D) is normalized ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D).
 
-And in order to retain precision, we find that $\tilde{\mathbf{v}} = [\mathbf{v}; \sqrt{m^2 -\left \| \mathbf{\mathbf{v}} \right \|^2}]$$ is also equivalent.
+When online predicting, for a coming ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D), we need recall ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D) by inner product sorting. After ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%2C%20%5Cmathbf%7Bv%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D) conversion, the order of inner prodct sorting is unchanged. Since ![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%5Cright%20%5C%7C) and ![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%5Cright%20%5C%7C) are both equal to 1, ![](//www.zhihu.com/equation?tex=cos(%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%2C%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)%20%3D%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%5Ccdot%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D), which makes cosin-supported-only ANN system works.
+
+And in order to retain precision, we find that ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%3D%5B%5Cmathbf%7Bv%7D%3B%5Csqrt%7Bm%5E2-%5Cleft%5C%7C%20%5Cmathbf%7B%5Cmathbf%7Bv%7D%7D%5Cright%5C%7C%5E2%7D%5D) is also equivalent.
+
 
 ## References
 1. Covington, Paul, Jay Adams, and Emre Sargin. "Deep neural networks for youtube recommendations." Proceedings of the 10th ACM Conference on Recommender Systems. ACM, 2016.
