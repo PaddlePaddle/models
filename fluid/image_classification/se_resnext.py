@@ -145,9 +145,9 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
 
         test_accuracy.reset(exe)
         for data in test_reader():
-            out, acc = exe.run(inference_program,
-                               feed=feeder.feed(data),
-                               fetch_list=[avg_cost] + test_accuracy.metrics)
+            loss, acc = exe.run(inference_program,
+                                feed=feeder.feed(data),
+                                fetch_list=[avg_cost] + test_accuracy.metrics)
         test_pass_acc = test_accuracy.eval(exe)
         print("End pass {0}, train_acc {1}, test_acc {2}".format(
             pass_id, pass_acc, test_pass_acc))
