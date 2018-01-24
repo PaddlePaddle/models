@@ -42,7 +42,7 @@ Figure 1. 推荐系统框图
 
 下图展示了召回模型的网络结构:
 <p align="center">
-<img src="images/model_network.png" width="500" height="400" hspace='10'/> <br/>
+<img src="images/model_network.png" width="600" height="500" hspace='10'/> <br/>
 Figure 2. 召回模型网络结构
 </p>
 
