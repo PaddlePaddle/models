@@ -36,9 +36,9 @@ Figure 1. 推荐系统框图
 ## 召回模型简介
 该推荐问题可以被建模成一个"超大规模多分类"问题。即在时刻![](https://www.zhihu.com/equation?tex=t),为用户![](https://www.zhihu.com/equation?tex=U)(已知上下文信息![](https://www.zhihu.com/equation?tex=C))在视频库![](https://www.zhihu.com/equation?tex=V)中预测出观看视频![](https://www.zhihu.com/equation?tex=i)的类别,
 
-![](https://www.zhihu.com/equation?tex=P(%5Comega_t%3Di%7CU%2CC)%3D%5Cfrac%7Be%5E%7Bv_iu%7D%7D%7B%5Csum_%7Bj%5Cin%20V%7D%5E%7B%20%7De%5E%7Bv_ju%7D%7D)
+![](https://www.zhihu.com/equation?tex=%24P(%5Comega_t%3Di%7CU%2CC)%3D%5Cfrac%7Be%5E%7B%5Cmathbf%7Bv_i%7D%5Cmathbf%7Bu%7D%7D%7D%7B%5Csum_%7Bj%5Cin%20V%7D%5E%7B%20%7De%5E%7B%5Cmathbf%7Bv_j%7D%5Cmathbf%7Bu%7D%7D%7D)
 
-其中![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN),是<用户,上下文信息>的高维向量表示。![](https://www.zhihu.com/equation?tex=v_j%5Cin%20%5Cmathbb%7BR%7D%5EN)是视频![](https://www.zhihu.com/equation?tex=j)的高维向量表示。DNN模型的目标是以用户信息和上下文信息为输入条件下,学习用户的高维向量表示,以此输入softmax分类器,来预测视频库中各个视频(类别)的观看概率。
+其中![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN),是<用户,上下文信息>的高维向量表示。![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv_j%7D%5Cin%20%5Cmathbb%7BR%7D%5EN)是视频![](https://www.zhihu.com/equation?tex=j)的高维向量表示。DNN模型的目标是以用户信息和上下文信息为输入条件下,学习用户的高维向量表示,以此输入softmax分类器,来预测视频库中各个视频(类别)的观看概率。
 
 下图展示了召回模型的网络结构:
 <p align="center">

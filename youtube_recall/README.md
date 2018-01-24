@@ -19,9 +19,9 @@ The system is comprised of two neural networks: one for candidate generation and
 ## Candidate Generation
 Here, candidate generation is modeled as extreme multiclass classification where the prediction problem becomes accurately classifying a specific video watch ![](https://www.zhihu.com/equation?tex=%5Comega_t) at time ![](https://www.zhihu.com/equation?tex=t) among millions of video ![](https://www.zhihu.com/equation?tex=i) (classes) from a corpus ![](https://www.zhihu.com/equation?tex=V) based on user ![](https://www.zhihu.com/equation?tex=U) and context ![](https://www.zhihu.com/equation?tex=C),
 
-![](https://www.zhihu.com/equation?tex=P(%5Comega_t%3Di%7CU%2CC)%3D%5Cfrac%7Be%5E%7Bv_iu%7D%7D%7B%5Csum_%7Bj%5Cin%20V%7D%5E%7B%20%7De%5E%7Bv_ju%7D%7D)
+![](https://www.zhihu.com/equation?tex=%24P(%5Comega_t%3Di%7CU%2CC)%3D%5Cfrac%7Be%5E%7B%5Cmathbf%7Bv_i%7D%5Cmathbf%7Bu%7D%7D%7D%7B%5Csum_%7Bj%5Cin%20V%7D%5E%7B%20%7De%5E%7B%5Cmathbf%7Bv_j%7D%5Cmathbf%7Bu%7D%7D%7D)
 
-where ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN) represents a high-dimensional "embedding" of the user, context pair and the ![](https://www.zhihu.com/equation?tex=v_j%5Cin%20%5Cmathbb%7BR%7D%5EN) represent embeddings of each candidate video. The task of the deep neural network is to learn user embeddings ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D) as a function of the user's history and context that are useful for discriminating among videos with a softmax classifier.
+where ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN) represents a high-dimensional "embedding" of the user, context pair and the ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv_j%7D%5Cin%20%5Cmathbb%7BR%7D%5EN) represent embeddings of each candidate video. The task of the deep neural network is to learn user embeddings ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D) as a function of the user's history and context that are useful for discriminating among videos with a softmax classifier.
 
 Figure 2 shows the general network architecture of candidate generation model:
 <p align="center">
