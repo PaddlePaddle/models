@@ -1,13 +1,13 @@
 """
 FGSM demos on mnist using advbox tool.
 """
+import matplotlib.pyplot as plt
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
-import matplotlib.pyplot as plt
-import numpy as np
 
-from advbox.models.paddle import PaddleModel
-from advbox.attacks.gradientsign import GradientSignAttack
+from .advbox import Adversary
+from .advbox.attacks.gradientsign import GradientSignAttack
+from .advbox.models.paddle import PaddleModel
 
 
 def cnn_model(img):
@@ -18,7 +18,7 @@ def cnn_model(img):
     Returns:
         Variable: the label prediction
     """
-    #conv1 = fluid.nets.conv2d()
+    # conv1 = fluid.nets.conv2d()
     conv_pool_1 = fluid.nets.simple_img_conv_pool(
         input=img,
         num_filters=20,
@@ -76,10 +76,11 @@ def main():
     att = GradientSignAttack(m)
     for data in train_reader():
         # fgsm attack
-        adv_img = att(data)
-        plt.imshow(n[0][0], cmap='Greys_r')
-        plt.show()
-        #np.save('adv_img', adv_img)
+        adversary = att(Adversary(data))
+        if adversary.is_successful():
+            plt.imshow(adversary.target, cmap='Greys_r')
+            plt.show()
+            # np.save('adv_img', adversary.target)
         break
 
 
