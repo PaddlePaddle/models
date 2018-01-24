@@ -78,7 +78,7 @@ The fucntion of this script is as follows:
 ```
 
 For example, run the following command to accomplish data pre-processing:
-```shell
+```
 python data_processor.py --train_set_path=./data/train.txt \
                                      --output_dir=./output \
                                      --feat_appear_limit=20
