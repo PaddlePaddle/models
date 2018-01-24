@@ -79,6 +79,7 @@ The fucntion of this script is as follows:
 
 For example, run the following command to accomplish data pre-processing:
 ```shell
+mkdir output
 python data_processor.py --train_set_path=./data/train.txt \
                                      --output_dir=./output \
                                      --feat_appear_limit=20
@@ -193,7 +194,6 @@ return paddle.layer.nce(
                 num_classes=len(self._feature_dict['history_clicked_items']),
                 param_attr=paddle.attr.Param(name="nce_w"),
                 bias_attr=paddle.attr.Param(name="nce_b"),
-                act=paddle.activation.Sigmoid(),
                 num_neg_samples=5,
                 neg_distribution=self._item_freq)
 ```
@@ -240,6 +240,7 @@ reader = Reader(feature_dict, args.window_size)
 ```
 Then start training.
 ```shell
+mkdir output/model
 python train.py --train_set_path='./data/train.txt' \
     --test_set_path='./data/test.txt' \
     --model_output_dir='./output/model/' \

@@ -90,6 +90,7 @@ optional arguments:
 
 例如可执行下列命令, 完成数据预处理:
 ```shell
+mkdir output
 python data_processor.py --train_set_path=./data/train.txt \
                                      --output_dir=./output \
                                      --feat_appear_limit=20
@@ -255,6 +256,7 @@ reader = Reader(feature_dict, args.window_size)
 ```
 接下去就可以开始训练了,可执行以下命令:
 ```shell
+mkdir output/model
 python train.py --train_set_path='./data/train.txt' \
     --test_set_path='./data/test.txt' \
     --model_output_dir='./output/model/' \

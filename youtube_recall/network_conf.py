@@ -147,7 +147,6 @@ class DNNmodel(object):
                 num_classes=len(self._feature_dict['history_clicked_items']),
                 param_attr=paddle.attr.Param(name="nce_w"),
                 bias_attr=paddle.attr.Param(name="nce_b"),
-                act=paddle.activation.Sigmoid(),
                 num_neg_samples=5,
                 neg_distribution=self._item_freq)
         else:
