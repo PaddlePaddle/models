@@ -35,7 +35,11 @@ def squeeze_excitation(input, num_channels, reduction_ratio):
 def shortcut(input, ch_out, stride):
     ch_in = input.shape[1]
     if ch_in != ch_out:
-        return conv_bn_layer(input, ch_out, 3, stride)
+        if stride == 1:
+            filter_size = 1
+        else:
+            filter_size = 3
+        return conv_bn_layer(input, ch_out, filter_size, stride)
     else:
         return input
 
@@ -109,9 +113,9 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
     avg_cost = fluid.layers.mean(x=cost)
 
     optimizer = fluid.optimizer.Momentum(
-        learning_rate=learning_rate / batch_size,
+        learning_rate=learning_rate,
         momentum=0.9,
-        regularization=fluid.regularizer.L2Decay(1e-4 * batch_size))
+        regularization=fluid.regularizer.L2Decay(1e-4))
     opts = optimizer.minimize(avg_cost)
     accuracy = fluid.evaluator.Accuracy(input=out, label=label)
 
@@ -153,4 +157,4 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
 
 
 if __name__ == '__main__':
-    train(learning_rate=0.1, batch_size=7, num_passes=100)
+    train(learning_rate=0.1, batch_size=8, num_passes=100)
