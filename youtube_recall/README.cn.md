@@ -269,13 +269,19 @@ python infer.py --infer_set_path='./data/infer.txt' \
 ```
 
 ## 在线预测
-在线预测的时候，我们采用近似最近邻（approximate nearest neighbor-ANN）算法直接用用户向量查询最相关的topN个视频内容。由于我们的ANN暂时只支持cosine，而模型是根据内积排序的，两者效果差异太大。
-为此，我们的解决方案是，对用户和视频向量，作SIMPLE-LSH变换\[[4](#参考文献)\]，使内积排序与cosin排序等价。具体如下：
+在线预测的时候，我们采用近似最近邻（approximate nearest neighbor-ANN）算法直接用用户向量查询最相关的topN个视频内容。由于我们的ANN暂时只支持cosine，而模型是根据内积排序的，两者效果差异太大。
+
+为此，我们的解决方案是，对用户和视频向量，作SIMPLE-LSH变换\[[4](#参考文献)\]，使内积排序与cosin排序等价。
+
+具体如下：
 对于视频向量$$\mathbf{v}\in \mathbb{R}^N$$，有$$\left \| \mathbf{v} \right \|\leqslant m$$，变换后的$$\tilde{\mathbf{v}}\in \mathbb{R}^{N+1}$$，
 $$\tilde{\mathbf{v}} = [\frac{\mathbf{v}}{m}; \sqrt{1 -\left \| \mathbf{\frac{\mathbf{v}}{m}{}} \right \|^2}]$$
 对于用户向量$$\mathbf{u}\in \mathbb{R}^N$$，变换后的$$\tilde{\mathbf{u}}\in \mathbb{R}^{N+1}$$，
 $$\tilde{\mathbf{u}} = [\mathbf{u}_{norm}; 0]$$，其中$$\mathbf{u}_{norm}$$是模长归一化后的$$\mathbf{u}$$，
-线上对于一个$$\mathbf{u}$$用内积召回$$\mathbf{v},作上述变换$$\mathbf{u}\rightarrow \tilde{\mathbf{u}}, \mathbf{v}\rightarrow \tilde{\mathbf{v}}$$后，不改变内积排序的顺序。又因为$$\left \| \tilde{\mathbf{u}} \right \|$$和$$\left \| \tilde{\mathbf{v}} \right \|$$都为1，因此$$cos(\tilde{\mathbf{u}} ,\tilde{\mathbf{v}}) = \tilde{\mathbf{u}}\cdot \tilde{\mathbf{v}}$$，就可以兼容ANN用cosin的方式召回了，结果等价。线上使用时，为保留精度，可以不除以$$$m$$,也就变成$\tilde{\mathbf{v}} = [\mathbf{v}; \sqrt{m^2 -\left \| \mathbf{\mathbf{v}} \right \|^2}]$$，排序依然等价。
+
+线上对于一个$$\mathbf{u}$$用内积召回$$\mathbf{v},作上述变换$$\mathbf{u}\rightarrow \tilde{\mathbf{u}}, \mathbf{v}\rightarrow \tilde{\mathbf{v}}$$后，不改变内积排序的顺序。又因为$$\left \| \tilde{\mathbf{u}} \right \|$$和$$\left \| \tilde{\mathbf{v}} \right \|$$都为1，因此$$cos(\tilde{\mathbf{u}} ,\tilde{\mathbf{v}}) = \tilde{\mathbf{u}}\cdot \tilde{\mathbf{v}}$$，就可以兼容ANN用cosin的方式召回了，结果等价。
+
+线上使用时，为保留精度，可以不除以$$$m$$,也就变成$\tilde{\mathbf{v}} = [\mathbf{v}; \sqrt{m^2 -\left \| \mathbf{\mathbf{v}} \right \|^2}]$$，排序依然等价。
 
 
 ## 参考文献
