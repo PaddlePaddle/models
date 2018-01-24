@@ -34,9 +34,11 @@ Figure 1. 推荐系统框图
 - 排序模型: 采用更精细的特征计算得到排序分,对召回得到的候选集合中的视频进行排序。
 
 ## 召回模型简介
-该推荐问题可以被建模成一个"超大规模多分类"问题。即在时刻$$t$$,为用户$$U$$(已知上下文信息$$C$$)在视频库$$V$$中预测出观看视频i的类别,
-$$P(\omega_t=i|U,C)=\frac{e^{v_iu}}{\sum_{j\in V}^{ }e^{v_ju}}$$
-其中$$\mathbf{u}\in \mathbb{R}^N$$,是<用户,上下文信息>的高维向量表示。$$\mathbf{v_j}\in \mathbb{R}^N$$是视频`j`的高维向量表示。DNN模型的目标是以用户信息和上下文信息为输入条件下,学习用户的高维向量表示,以此输入softmax分类器,来预测视频库中各个视频(类别)的观看概率。
+该推荐问题可以被建模成一个"超大规模多分类"问题。即在时刻![](https://www.zhihu.com/equation?tex=t),为用户![](https://www.zhihu.com/equation?tex=U)(已知上下文信息![](https://www.zhihu.com/equation?tex=C))在视频库![](https://www.zhihu.com/equation?tex=V)中预测出观看视频i的类别,
+
+![](https://www.zhihu.com/equation?tex=P(%5Comega_t%3Di%7CU%2CC)%3D%5Cfrac%7Be%5E%7Bv_iu%7D%7D%7B%5Csum_%7Bj%5Cin%20V%7D%5E%7B%20%7De%5E%7Bv_ju%7D%7D)
+
+其中![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN),是<用户,上下文信息>的高维向量表示。![](https://www.zhihu.com/equation?tex=v_j%5Cin%20%5Cmathbb%7BR%7D%5EN)是视频![](https://www.zhihu.com/equation?tex=j)的高维向量表示。DNN模型的目标是以用户信息和上下文信息为输入条件下,学习用户的高维向量表示,以此输入softmax分类器,来预测视频库中各个视频(类别)的观看概率。
 
 下图展示了召回模型的网络结构:
 <p align="center">
@@ -46,8 +48,8 @@ Figure 2. 召回模型网络结构
 
 - 输入层:用户的浏览序列、搜索序列、人口统计学特征、和其他上下文信息等
 - embedding层:将用户浏览视频序列接embedding层,再做时间序列上的平均。对于搜索序列同样处理。
-- 隐层:包含三个隐层,用RELU激活函数,最后一层隐层的输出即为高维向量表示$$u$$。
-- 输出层: softmax层,输出视频库中各个视频(类别)的观看概率。在线上预测时,提取模型训练得到的softmax层内部的参数,作为视频$$v_j$$的高维向量表示。可利用类似局部敏感哈希(Locality Sensitive Hashing)用$$u$$查询最相关的N个视频。
+- 隐层:包含三个隐层,用RELU激活函数,最后一层隐层的输出即为高维向量表示![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)。
+- 输出层: softmax层,输出视频库中各个视频(类别)的观看概率。在线上预测时,提取模型训练得到的softmax层内部的参数,作为视频![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D)的高维向量表示。可利用类似局部敏感哈希(Locality Sensitive Hashing)用![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)查询最相关的N个视频。
 
 ## 数据预处理
 本例模拟了用户的视频点击日志,作为样本数据。格式如下:
@@ -274,14 +276,13 @@ python infer.py --infer_set_path='./data/infer.txt' \
 为此，我们的解决方案是，对用户和视频向量，作SIMPLE-LSH变换\[[4](#参考文献)\]，使内积排序与cosin排序等价。
 
 具体如下：
-对于视频向量$$\mathbf{v}\in \mathbb{R}^N$$，有$$\left \| \mathbf{v} \right \|\leqslant m$$，变换后的$$\tilde{\mathbf{v}}\in \mathbb{R}^{N+1}$$，
-$$\tilde{\mathbf{v}} = [\frac{\mathbf{v}}{m}; \sqrt{1 -\left \| \mathbf{\frac{\mathbf{v}}{m}{}} \right \|^2}]$$
-对于用户向量$$\mathbf{u}\in \mathbb{R}^N$$，变换后的$$\tilde{\mathbf{u}}\in \mathbb{R}^{N+1}$$，
-$$\tilde{\mathbf{u}} = [\mathbf{u}_{norm}; 0]$$，其中$$\mathbf{u}_{norm}$$是模长归一化后的$$\mathbf{u}$$，
+- 对于视频向量![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D%5Cin%20%5Cmathbb%7BR%7D%5EN)，有![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Cmathbf%7Bv%7D%20%5Cright%20%5C%7C%5Cleqslant%20m)，变换后的![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%5Cin%20%5Cmathbb%7BR%7D%5E%7BN%2B1%7D)，![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%3D%20%5B%5Cfrac%7B%5Cmathbf%7Bv%7D%7D%7Bm%7D%3B%20%5Csqrt%7B1%20-%5Cleft%20%5C%7C%20%5Cmathbf%7B%5Cfrac%7B%5Cmathbf%7Bv%7D%7D%7Bm%7D%7B%7D%7D%20%5Cright%20%5C%7C%5E2%7D%5D)。
 
-线上对于一个$$\mathbf{u}$$用内积召回$$\mathbf{v},作上述变换$$\mathbf{u}\rightarrow \tilde{\mathbf{u}}, \mathbf{v}\rightarrow \tilde{\mathbf{v}}$$后，不改变内积排序的顺序。又因为$$\left \| \tilde{\mathbf{u}} \right \|$$和$$\left \| \tilde{\mathbf{v}} \right \|$$都为1，因此$$cos(\tilde{\mathbf{u}} ,\tilde{\mathbf{v}}) = \tilde{\mathbf{u}}\cdot \tilde{\mathbf{v}}$$，就可以兼容ANN用cosin的方式召回了，结果等价。
+- 对于用户向量![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN)，变换后的![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%5Cin%20%5Cmathbb%7BR%7D%5E%7BN%2B1%7D)，![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%3D%20%5B%5Cmathbf%7Bu%7D_%7Bnorm%7D%3B%200%5D)，其中![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D_%7Bnorm%7D)是模长归一化后的![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)。
 
-线上使用时，为保留精度，可以不除以$$$m$$,也就变成$\tilde{\mathbf{v}} = [\mathbf{v}; \sqrt{m^2 -\left \| \mathbf{\mathbf{v}} \right \|^2}]$$，排序依然等价。
+线上对于一个![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)用内积召回![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D),作上述变换![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%2C%20%5Cmathbf%7Bv%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)后，不改变内积排序的顺序。又因为![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%5Cright%20%5C%7C) 和![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%5Cright%20%5C%7C)都为1，因此![](https://www.zhihu.com/equation?tex=cos(%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%2C%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)%20%3D%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%5Ccdot%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)，就可以兼容ANN用cosin的方式召回了，结果等价。
+
+线上使用时，为保留精度，可以不除以![](https://www.zhihu.com/equation?tex=m),也就变成![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%3D%5B%5Cmathbf%7Bv%7D%3B%5Csqrt%7Bm%5E2-%5Cleft%5C%7C%20%5Cmathbf%7B%5Cmathbf%7Bv%7D%7D%5Cright%5C%7C%5E2%7D%5D)，排序依然等价。
 
 
 ## 参考文献
