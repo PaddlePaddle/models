@@ -269,6 +269,15 @@ When online predicting, for a coming ![](https://www.zhihu.com/equation?tex=%5Cm
 
 And in order to retain precision, we find that ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%3D%5B%5Cmathbf%7Bv%7D%3B%5Csqrt%7Bm%5E2-%5Cleft%5C%7C%20%5Cmathbf%7B%5Cmathbf%7Bv%7D%7D%5Cright%5C%7C%5E2%7D%5D) is also equivalent.
 
+Use `user_vector.py` and `vector.py` to calculate user and item vectors. For example, run the following commands:
+```shell
+python user_vector.py --infer_set_path='./data/infer.txt' \
+        --model_path='./output/model/model_pass_00000.tar.gz' \
+            --feature_dict='./output/feature_dict.pkl' \
+                --batch_size=50
+python item_vector.py --model_path='./output/model/model_pass_00000.tar.gz' \
+            --feature_dict='./output/feature_dict.pkl'
+```
 
 ## References
 1. Covington, Paul, Jay Adams, and Emre Sargin. "Deep neural networks for youtube recommendations." Proceedings of the 10th ACM Conference on Recommender Systems. ACM, 2016.

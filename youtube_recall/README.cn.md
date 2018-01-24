@@ -284,6 +284,16 @@ python infer.py --infer_set_path='./data/infer.txt' \
 
 线上使用时，为保留精度，可以不除以![](https://www.zhihu.com/equation?tex=m),也就变成![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%3D%5B%5Cmathbf%7Bv%7D%3B%5Csqrt%7Bm%5E2-%5Cleft%5C%7C%20%5Cmathbf%7B%5Cmathbf%7Bv%7D%7D%5Cright%5C%7C%5E2%7D%5D)，排序依然等价。
 
+可使用`user_vector.py`和`vector.py`分别获取用户和视频向量。例如执行下列命令：
+```shell
+python user_vector.py --infer_set_path='./data/infer.txt' \
+        --model_path='./output/model/model_pass_00000.tar.gz' \
+            --feature_dict='./output/feature_dict.pkl' \
+                --batch_size=50
+python item_vector.py --model_path='./output/model/model_pass_00000.tar.gz' \
+            --feature_dict='./output/feature_dict.pkl'
+```
+
 
 ## 参考文献
 1. Covington, Paul, Jay Adams, and Emre Sargin. "Deep neural networks for youtube recommendations." Proceedings of the 10th ACM Conference on Recommender Systems. ACM, 2016.
