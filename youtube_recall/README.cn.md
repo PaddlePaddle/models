@@ -6,7 +6,7 @@
 ├── README.md               # 文档
 ├── README.cn.md            # 中文文档
 ├── data                    # 示例数据
-│   ├── download.sh         # 数据下载脚本
+│   ├── data.tar            # 示例数据
 ├── infer.py                # 预测脚本
 ├── network_conf.py         # 模型网络配置
 ├── reader.py               # data reader
@@ -60,9 +60,10 @@ Figure 2. 召回模型网络结构
 例如:
 USER_ID_15  上海市  上海市    VIDEO_42:CATEGORY_9:TAG115;VIDEO_43:CATEGORY_9:TAG116_TAG115;VIDEO_44:CATEGORY_2:TAG117_TAG71  GO T5
 ```
-运行以下命令可下载该样本数据。
+运行以下命令可解压样本数据。
 ```
-sh download.sh
+cd data
+tar -zxvf data.tar
 ```
 
 然后,脚本`data_preprocess.py`将对训练数据做预处理。具体使用方法参考如下说明：

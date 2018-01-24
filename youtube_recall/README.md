@@ -48,9 +48,10 @@ video-id:category:tag1_tag2_tag3_...tagM
 For example:
 USER_ID_15  Shanghai  Shanghai    VIDEO_42:CATEGORY_9:TAG115;VIDEO_43:CATEGORY_9:TAG116_TAG115;VIDEO_44:CATEGORY_2:TAG117_TAG71  GO T5
 ```
-Run this code to download the sample data.
+Run this code to prepare the sample data.
 ```
-sh download.sh
+cd data
+tar -zxvf data.tar
 ```
 
 Then, run `data_preprocess.py` for data pre-processiong. Refer to the following instructions：
