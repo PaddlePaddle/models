@@ -51,7 +51,8 @@ class PaddleModel(Model):
         loss = self._program.block(0).var(self._cost_name)
         param_grads = fluid.backward.append_backward(
             loss, parameter_list=[self._input_name])
-        self._gradient = dict(param_grads)[self._input_name]
+        self._gradient = filter(lambda p: p[0].name == self._input_name,
+                                param_grads)[0][1]
 
     def predict(self, image_batch):
         """
