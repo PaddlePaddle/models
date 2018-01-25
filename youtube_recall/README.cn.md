@@ -296,6 +296,7 @@ python user_vector.py --infer_set_path='./data/infer.txt' \
 python item_vector.py --model_path='./output/model/model_pass_00000.tar.gz' \
             --feature_dict='./output/feature_dict.pkl'
 ```
+## 离线挖掘
 因为实时召回需要大量机器资源，这边也可以离线挖掘产出数据，线上召回使用挖掘好的数据。可以产出最热，用户个性化，视频相关等数据。下面的示例产出了用户个性化数据。
 
 ## 参考文献
