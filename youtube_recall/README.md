@@ -160,7 +160,7 @@ def _build_embedding_layer(self):
 ```
 
 ### Hiddern layer
-We improves the original networks in \[[1](#References)\] by modifying that the embeddings of video watches are not simply averaged but are connected to a LSTM layer with max temporal pooling instead, so that the deep sequential information related to user interests can be learned well. Considering data scale and efficiency of training, only two ReLU layers are applied, which also leads to good performance.
+Here improves the original networks in \[[1](#References)\] by modifying that the embeddings of video watches are not simply averaged but are connected to a LSTM layer with max temporal pooling instead, so that the deep sequential information related to user interests can be learned well. Considering data scale and efficiency of training, only two ReLU layers are applied, which also leads to good performance.
 
 ```python
 self._rnn_cell = paddle.networks.simple_lstm(input=self._history_clicked_items_emb, size=64)
