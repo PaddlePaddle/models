@@ -15,6 +15,7 @@
 └── data_processer.py       # 数据预处理脚本
 └── user_vector.py          # 获取用户向量脚本
 └── item_vector.py          # 获取视频向量脚本
+├── infer_user.py           # 获取用户个性化脚本
 ```
 
 ## 背景介绍\[[1](#参考文献)\]
@@ -298,6 +299,10 @@ python item_vector.py --model_path='./output/model/model_pass_00000.tar.gz' \
 ```
 ## 离线挖掘
 因为实时召回需要大量机器资源，这边也可以离线挖掘产出数据，线上召回使用挖掘好的数据。可以产出最热，用户个性化，视频相关等数据。下面的示例产出了用户个性化数据。
+```
+python infer_user.py --model_path='./output/model/model_pass_00000.tar.gz' \
+            --feature_dict='./output/feature_dict.pkl'
+```
 
 ## 参考文献
 1. Covington, Paul, Jay Adams, and Emre Sargin. "Deep neural networks for youtube recommendations." Proceedings of the 10th ACM Conference on Recommender Systems. ACM, 2016.
