@@ -1,3 +1,6 @@
+"""
+Paddle model
+"""
 from __future__ import absolute_import
 
 import paddle.v2.fluid as fluid

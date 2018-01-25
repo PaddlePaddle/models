@@ -20,6 +20,14 @@ class GradientSignAttack(Attack):
     """
 
     def _apply(self, adversary, epsilons=1000):
+        """
+          Apply the gradient sign attack.
+          Args:
+              adversary(Adversary): The Adversary object.
+              epsilons(list|tuple|int): The epsilon (input variation parameter).
+          Return:
+              adversary: The Adversary object.
+          """
         assert adversary is not None
 
         if not isinstance(epsilons, Iterable):

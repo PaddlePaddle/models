@@ -29,18 +29,19 @@ class Attack(object):
 
         Args:
         adversary(object): The adversary object.
-        **kwargs: Other params.
+        **kwargs: Other named arguments.
         """
         self._preprocess(adversary)
         return self._apply(adversary, **kwargs)
 
     @abstractmethod
-    def _apply(self, adversary):
+    def _apply(self, adversary, **kwargs):
         """
         Search an adversarial example.
 
         Args:
         adversary(object): The adversary object.
+        **kwargs: Other named arguments.
         """
         raise NotImplementedError
 
@@ -65,6 +66,6 @@ class Attack(object):
 
         logging.info('adversary:\noriginal_label: {}'
                      '\n          target_lable: {}'
-                     '\n          is_targeted_attack: {}'.format(
-                         adversary.original_label, adversary.target_label,
-                         adversary.is_targeted_attack))
+                     '\n          is_targeted_attack: {}'
+                     ''.format(adversary.original_label, adversary.target_label,
+                               adversary.is_targeted_attack))
