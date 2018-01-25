@@ -121,11 +121,11 @@ class Adversary(object):
         return self.__target_label
 
     @target_label.setter
-    def target_label(self):
+    def target_label(self, label):
         """
         :property: target_label
         """
-        return self.__target_label
+        self.__target_label = label
 
     @property
     def target(self):

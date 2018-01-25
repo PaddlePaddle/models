@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
 
-from .advbox import Adversary
-from .advbox.attacks.gradientsign import GradientSignAttack
-from .advbox.models.paddle import PaddleModel
+from advbox import Adversary
+from advbox.attacks.gradientsign import GradientSignAttack
+from advbox.models.paddle import PaddleModel
 
 
 def cnn_model(img):
@@ -76,7 +76,7 @@ def main():
     att = GradientSignAttack(m)
     for data in train_reader():
         # fgsm attack
-        adversary = att(Adversary(data))
+        adversary = att(Adversary(data[0][0], data[0][1]))
         if adversary.is_successful():
             plt.imshow(adversary.target, cmap='Greys_r')
             plt.show()
