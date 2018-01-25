@@ -137,7 +137,7 @@ def _create_emb_attr(self, name):
     create embedding parameter
     """
     return paddle.attr.Param(
-        name=name, initial_std=0.001, learning_rate=1, l2_rate=0, sparse_update=True)
+        name=name, initial_std=0.001, learning_rate=1, l2_rate=0, sparse_update=False)
 
 def _build_embedding_layer(self):
     """

@@ -103,13 +103,14 @@ def infer_a_batch(inferer, test_batch, nid_to_word):
     for i, res in enumerate(zip(test_batch, probs[0], probs[1])):
         softmax_output = res[1]
         sort_nid = res[1].argsort()
-
         # print top 30 recommended item 
+        ret = ""
         for j in range(1, 30):
             item_id = sort_nid[-1 * j]
             item_id_to_word = nid_to_word[item_id]
-            print "%s\t%.6f" \
+            ret += "%s:%.6f," \
                     % (item_id_to_word, softmax_output[item_id])
+        print ret.rstrip(",")
 
 
 if __name__ == "__main__":

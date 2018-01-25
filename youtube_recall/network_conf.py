@@ -74,7 +74,7 @@ class DNNmodel(object):
             initial_std=0.001,
             learning_rate=1,
             l2_rate=0,
-            sparse_update=True)
+            sparse_update=False)
 
     def _build_embedding_layer(self):
         """

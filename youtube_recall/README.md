@@ -35,7 +35,7 @@ Figure 2. Candidate generation model architecture
 - Output layer: A softmax classifier is connected to do discriminating millions of classes (videos). To speed up training process, a technique is applied that samples negative classes from background distribution with importance weighting. The previous mentioned high-dimensional "embedding" of the candidate video ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D) is obtained by weight and bias of the softmax layer. At serving time, the most likely N classes (videos) is computed for presenting to the user. To Score millions of items under a strict serving laterncy, the scoring problem reduces to a nearest neighbor search in the dot product space, and Locality Sensitive Hashing is relied on.
 
 ## Data Pre-processing
-In this example, we moked click log of users as sample data, and its format is as follows:
+In this example, here moke the click log of users as sample data, and its format is as follows:
 ```
 user-id \t province \t city \t history-clicked-video-info-sequence \t phone
 
@@ -125,7 +125,7 @@ def _create_emb_attr(self, name):
     create embedding parameter
     """
     return paddle.attr.Param(
-        name=name, initial_std=0.001, learning_rate=1, l2_rate=0, sparse_update=True)
+        name=name, initial_std=0.001, learning_rate=1, l2_rate=0, sparse_update=False)
 
 def _build_embedding_layer(self):
     """
@@ -160,7 +160,7 @@ def _build_embedding_layer(self):
 ```
 
 ### Hiddern layer
-We improves the original networks in \[[1](#References)\] by modifying that the embeddings of video watches are not simply averaged but are connected to a LSTM layer with max temporal pooling instead, so that the deep sequential information related to user interests can be learned well. Considering data scale and efficiency of training, we only apply two ReLU layers, which also leads to good performance.
+We improves the original networks in \[[1](#References)\] by modifying that the embeddings of video watches are not simply averaged but are connected to a LSTM layer with max temporal pooling instead, so that the deep sequential information related to user interests can be learned well. Considering data scale and efficiency of training, only two ReLU layers are applied, which also leads to good performance.
 
 ```python
 self._rnn_cell = paddle.networks.simple_lstm(input=self._history_clicked_items_emb, size=64)
@@ -257,18 +257,18 @@ python infer.py --infer_set_path='./data/infer.txt' \
 ```
 
 ## Online prediction
-For online prediction，we adopt Approximate Nearest Neighbor(ANN) to directly recall top N most likely watch video. However, our ANN system currently only supports cosin sorting, not by inner product sorting, which leads to big effect difference.
+For online prediction，Approximate Nearest Neighbor(ANN) is adopted to directly recall top N most likely watch video. However, our ANN system currently only supports cosin sorting, not by inner product sorting, which leads to big effect difference.
 
-As a result, we sliently modify user and video vectors by a SIMPLE-LSH conversion\[[4](#References)\], so that inner sorting is equivalent to cosin sorting after conversion.
+To solve it, user and video vectors are sliently modified by a SIMPLE-LSH conversion\[[4](#References)\], so that inner sorting is equivalent to cosin sorting after conversion.
 
 Details are as follows:
-- For video vector ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D%5Cin%20%5Cmathbb%7BR%7D%5EN), we have ![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Cmathbf%7Bv%7D%20%5Cright%20%5C%7C%5Cleqslant%20m). The modified video vector ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%5Cin%20%5Cmathbb%7BR%7D%5E%7BN%2B1%7D), and let ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%3D%20%5B%5Cfrac%7B%5Cmathbf%7Bv%7D%7D%7Bm%7D%3B%20%5Csqrt%7B1%20-%5Cleft%20%5C%7C%20%5Cmathbf%7B%5Cfrac%7B%5Cmathbf%7Bv%7D%7D%7Bm%7D%7B%7D%7D%20%5Cright%20%5C%7C%5E2%7D%5D).
+- For video vector ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D%5Cin%20%5Cmathbb%7BR%7D%5EN), ![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Cmathbf%7Bv%7D%20%5Cright%20%5C%7C%5Cleqslant%20m). The modified video vector ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%5Cin%20%5Cmathbb%7BR%7D%5E%7BN%2B1%7D), and let ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%3D%20%5B%5Cfrac%7B%5Cmathbf%7Bv%7D%7D%7Bm%7D%3B%20%5Csqrt%7B1%20-%5Cleft%20%5C%7C%20%5Cmathbf%7B%5Cfrac%7B%5Cmathbf%7Bv%7D%7D%7Bm%7D%7B%7D%7D%20%5Cright%20%5C%7C%5E2%7D%5D).
 
 - For user vector ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN), and the modified user vector ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%5Cin%20%5Cmathbb%7BR%7D%5E%7BN%2B1%7D), and let ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%3D%20%5B%5Cmathbf%7Bu%7D_%7Bnorm%7D%3B%200%5D), where ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D_%7Bnorm%7D) is normalized ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D).
 
-When online predicting, for a coming ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D), we need recall ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D) by inner product sorting. After ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%2C%20%5Cmathbf%7Bv%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D) conversion, the order of inner prodct sorting is unchanged. Since ![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%5Cright%20%5C%7C) and ![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%5Cright%20%5C%7C) are both equal to 1, ![](https://www.zhihu.com/equation?tex=cos(%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%2C%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)%20%3D%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%5Ccdot%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D), which makes cosin-supported-only ANN system works.
+When online predicting, for a coming ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D), it should recall ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D) by inner product sorting. After ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%2C%20%5Cmathbf%7Bv%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D) conversion, the order of inner prodct sorting is unchanged. Since ![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%5Cright%20%5C%7C) and ![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%5Cright%20%5C%7C) are both equal to 1, ![](https://www.zhihu.com/equation?tex=cos(%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%2C%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)%20%3D%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%5Ccdot%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D), which makes cosin-supported-only ANN system works.
 
-And in order to retain precision, we find that ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%3D%5B%5Cmathbf%7Bv%7D%3B%5Csqrt%7Bm%5E2-%5Cleft%5C%7C%20%5Cmathbf%7B%5Cmathbf%7Bv%7D%7D%5Cright%5C%7C%5E2%7D%5D) is also equivalent.
+And in order to retain precision, use ![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%3D%5B%5Cmathbf%7Bv%7D%3B%5Csqrt%7Bm%5E2-%5Cleft%5C%7C%20%5Cmathbf%7B%5Cmathbf%7Bv%7D%7D%5Cright%5C%7C%5E2%7D%5D) is also equivalent.
 
 Use `user_vector.py` and `vector.py` to calculate user and item vectors. For example, run the following commands:
 ```shell

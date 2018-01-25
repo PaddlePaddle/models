@@ -46,6 +46,13 @@ class Reader(object):
         mode = TaskMode.create_infer()
         return self._reader(path, mode)
 
+    def infer_user(self, user_list):
+        """
+        load user set to infer
+        @user_list: user list
+        """
+        return self._reader_user(user_list)
+
     def _reader(self, path, mode):
         """
         parse data set
@@ -120,6 +127,15 @@ class Reader(object):
                     yield user_id, province, city, \
                           history_clicked_items, history_clicked_categories, \
                           history_clicked_tags, phone
+
+    def _reader_user(self, user_list):
+        """
+        parse user list
+        """
+        USER_ID_UNK = self._feature_dict['user_id'].get('<unk>')
+        for user in user_list:
+            user_id = self._feature_dict['user_id'].get(user, USER_ID_UNK)
+            yield user_id, 0, 0, [0], [0], [0], 0
 
 
 if __name__ == "__main__":
