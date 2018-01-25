@@ -45,9 +45,9 @@ class GradientSignAttack(Attack):
                                              adversary.original_label)])
             gradient_sign = np.sign(gradient) * (max_ - min_)
 
-        adv_img = adversary.original.reshape(gradient_sign.shape)
+        original = adversary.original.reshape(gradient_sign.shape)
         for epsilon in epsilons:
-            adv_img = adv_img + epsilon * gradient_sign
+            adv_img = original + epsilon * gradient_sign
             adv_img = np.clip(adv_img, min_, max_)
             adv_label = np.argmax(self.model.predict([(adv_img, 0)]))
             logging.info('epsilon = {:.3f}, pre_label = {}, adv_label={}'.
