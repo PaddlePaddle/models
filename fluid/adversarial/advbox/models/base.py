@@ -2,21 +2,21 @@
 The base model of the model.
 """
 from abc import ABCMeta
-import abc
+from abc import abstractmethod
 
-abstractmethod = abc.abstractmethod
+import numpy as np
 
 
 class Model(object):
     """
     Base class of model to provide attack.
 
-
     Args:
         bounds(tuple): The lower and upper bound for the image pixel.
-        channel_axis(int): The index of the axis that represents the color channel.
-        preprocess(tuple): Two element tuple used to preprocess the input. First
-            substract the first element, then divide the second element.
+        channel_axis(int): The index of the axis that represents the color
+                channel.
+        preprocess(tuple): Two element tuple used to preprocess the input.
+            First substract the first element, then divide the second element.
     """
     __metaclass__ = ABCMeta
 
@@ -45,10 +45,10 @@ class Model(object):
     def _process_input(self, input_):
         res = input_
         sub, div = self._preprocess
-        if sub != 0:
+        if np.any(sub != 0):
             res = input_ - sub
-        assert div != 0
-        if div != 1:
+        assert np.any(div != 0)
+        if np.any(div != 1):
             res /= div
         return res
 
@@ -58,10 +58,12 @@ class Model(object):
         Calculate the prediction of the image batch.
 
         Args:
-            image_batch(numpy.ndarray): image batch of shape (batch_size, height, width, channels).
+            image_batch(numpy.ndarray): image batch of shape (batch_size,
+            height, width, channels).
 
         Return:
-            numpy.ndarray: predictions of the images with shape (batch_size, num_of_classes).
+            numpy.ndarray: predictions of the images with shape (batch_size,
+                num_of_classes).
         """
         raise NotImplementedError
 
@@ -84,7 +86,7 @@ class Model(object):
             image_batch(list): The image and label tuple list.
 
         Return:
-            numpy.ndarray: gradient of the cross-entropy loss w.r.t the image with
-                the shape (height, width, channel).
+            numpy.ndarray: gradient of the cross-entropy loss w.r.t the image
+                with the shape (height, width, channel).
         """
         raise NotImplementedError

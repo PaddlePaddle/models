@@ -1,9 +1,9 @@
+"""
+Paddle model
+"""
 from __future__ import absolute_import
 
-import numpy as np
-import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
-from paddle.v2.fluid.framework import program_guard
 
 from .base import Model
 
@@ -11,10 +11,12 @@ from .base import Model
 class PaddleModel(Model):
     """
     Create a PaddleModel instance.
-    When you need to generate a adversarial sample, you should construct an instance of PaddleModel.
+    When you need to generate a adversarial sample, you should construct an
+    instance of PaddleModel.
 
     Args:
-        program(paddle.v2.fluid.framework.Program): The program of the model which generate the adversarial sample.
+        program(paddle.v2.fluid.framework.Program): The program of the model
+            which generate the adversarial sample.
         input_name(string): The name of the input.
         logits_name(string): The name of the logits.
         predict_name(string): The name of the predict.
@@ -30,11 +32,11 @@ class PaddleModel(Model):
                  bounds,
                  channel_axis=3,
                  preprocess=None):
-        super(PaddleModel, self).__init__(
-            bounds=bounds, channel_axis=channel_axis, preprocess=preprocess)
-
         if preprocess is None:
             preprocess = (0, 1)
+
+        super(PaddleModel, self).__init__(
+            bounds=bounds, channel_axis=channel_axis, preprocess=preprocess)
 
         self._program = program
         self._place = fluid.CPUPlace()
@@ -59,7 +61,8 @@ class PaddleModel(Model):
             Args:
                 image_batch(list): The image and label tuple list.
             Return:
-                numpy.ndarray: predictions of the images with shape (batch_size, num_of_classes).
+                numpy.ndarray: predictions of the images with shape (batch_size,
+                    num_of_classes).
         """
         feeder = fluid.DataFeeder(
             feed_list=[self._input_name, self._logits_name],
@@ -73,7 +76,7 @@ class PaddleModel(Model):
 
     def num_classes(self):
         """
-            Calculate the number of classes of the output label. 
+            Calculate the number of classes of the output label.
 
         Return:
             int: the number of classes
