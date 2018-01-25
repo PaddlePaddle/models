@@ -87,7 +87,6 @@ class Adversary(object):
 
         :return: bool
         """
-        assert adversarial_example.shape == self.__original.shape
         ok = self._is_successful(adversarial_label)
         if ok:
             self.__adversarial_example = adversarial_example.reshape(
