@@ -280,6 +280,13 @@ python item_vector.py --model_path='./output/model/model_pass_00000.tar.gz' \
             --feature_dict='./output/feature_dict.pkl'
 ```
 
+## Offline data mining
+Since it is inevitable to consume large amount of machine resources for online predicting，an alternative is offline data mining, e.g. hottest videos, user personalized recommendation, item-based recommendation, and online systems directly access it。Here shows an example to get user personalized recommendation.
+```
+python infer_user.py --model_path='./output/model/model_pass_00000.tar.gz' \
+            --feature_dict='./output/feature_dict.pkl'
+```
+
 ## References
 1. Covington, Paul, Jay Adams, and Emre Sargin. "Deep neural networks for youtube recommendations." Proceedings of the 10th ACM Conference on Recommender Systems. ACM, 2016.
 2. https://code.google.com/archive/p/word2vec/
