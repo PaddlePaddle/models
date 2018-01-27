@@ -102,4 +102,4 @@ class PaddleModel(Model):
         grad, = self._exe.run(self._program,
                               feed=feeder.feed(image_batch),
                               fetch_list=[self._gradient])
-        return grad
+        return grad.reshape(image_batch[0][0].shape)
