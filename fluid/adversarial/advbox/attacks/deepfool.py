@@ -38,10 +38,11 @@ class DeepFoolAttack(Attack):
             labels = [adversary.target_label]
         else:
             max_class_count = 10
-            if len(f) > max_class_count:
+            class_count = self.model.num_classes()
+            if class_count > max_class_count:
                 labels = np.argsort(f)[-(max_class_count + 1):-1]
             else:
-                labels = np.arange(len(f))
+                labels = np.arange(class_count)
 
         gradient = self.model.gradient([(adversary.original, pre_label)])
         x = adversary.original.reshape(gradient.shape)
