@@ -19,10 +19,10 @@
 ```
 
 ## 背景介绍\[[1](#参考文献)\]
-Youtube是世界最大的视频网站之一, 其推荐系统帮助10亿以上的用户,从海量视频中,发现个性化的内容。该推荐系统主要面临以下三个挑战:
-- 规模: 许多现有的推荐算法证明在小数据量下运行良好，但不能满足YouTube这样庞大的用户群和内容库的场景,因此需要高度专业化的分布式学习算法和高效的线上服务。
-- 新鲜度: YouTube内容库更新频率极高，每秒上传大量视频。系统应及时追踪新上传的视频和用户的实时行为,并且模型在推荐新/旧视频上有良好平衡能力。
-- 噪音: 噪音来自于两方面,其一,用户历史行为稀疏,且有各种不可观测的外部因素,以及用户满意度不明确。其二,内容本身的数据是非结构化的。因此算法应更具有鲁棒性。
+Youtube是世界最大的视频网站之一，其推荐系统帮助10亿以上的用户，从海量视频中，发现个性化的内容。该推荐系统主要面临以下三个挑战:
+- 规模: 许多现有的推荐算法证明在小数据量下运行良好，但不能满足YouTube这样庞大的用户群和内容库的场景，因此需要高度专业化的分布式学习算法和高效的线上服务。
+- 新鲜度: YouTube内容库更新频率极高，每秒上传大量视频。系统应及时追踪新上传的视频和用户的实时行为，并且模型在推荐新/旧视频上有良好平衡能力。
+- 噪音: 噪音来自于两方面，其一，用户历史行为稀疏，且有各种不可观测的外部因素，以及用户满意度不明确。其二，内容本身的数据是非结构化的。因此算法应更具有鲁棒性。
 
 下图展示了整个推荐系统框图:
 <p align="center">
@@ -31,15 +31,15 @@ Figure 1. 推荐系统框图
 </p>
 
 整个推荐系统有两部分组成: 召回(candidate generation/recall)和排序(ranking)。
-- 召回模型: 输入用户的历史行为, 从大规模的内容库中获得一个小集合(百级别)。召回出的视频与用户高度相关。一个用户是用其历史点击过的视频,搜索过的关键词,和人口统计相关的特征来表征。
-- 排序模型: 采用更精细的特征计算得到排序分,对召回得到的候选集合中的视频进行排序。
+- 召回模型: 输入用户的历史行为，从大规模的内容库中获得一个小集合(百级别)。召回出的视频与用户高度相关。一个用户是用其历史点击过的视频，搜索过的关键词，和人口统计相关的特征来表征。
+- 排序模型: 采用更精细的特征计算得到排序分，对召回得到的候选集合中的视频进行排序。
 
 ## 召回模型简介
-该推荐问题可以被建模成一个"超大规模多分类"问题。即在时刻![](https://www.zhihu.com/equation?tex=t),为用户![](https://www.zhihu.com/equation?tex=U)(已知上下文信息![](https://www.zhihu.com/equation?tex=C))在视频库![](https://www.zhihu.com/equation?tex=V)中预测出观看视频![](https://www.zhihu.com/equation?tex=i)的类别,
+该推荐问题可以被建模成一个"超大规模多分类"问题。即在时刻![](https://www.zhihu.com/equation?tex=t)，为用户![](https://www.zhihu.com/equation?tex=U)(已知上下文信息![](https://www.zhihu.com/equation?tex=C))在视频库![](https://www.zhihu.com/equation?tex=V)中预测出观看视频![](https://www.zhihu.com/equation?tex=i)的类别，
 
 ![](https://www.zhihu.com/equation?tex=%24P(%5Comega_t%3Di%7CU%2CC)%3D%5Cfrac%7Be%5E%7B%5Cmathbf%7Bv_i%7D%5Cmathbf%7Bu%7D%7D%7D%7B%5Csum_%7Bj%5Cin%20V%7D%5E%7B%20%7De%5E%7B%5Cmathbf%7Bv_j%7D%5Cmathbf%7Bu%7D%7D%7D)
 
-其中![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN),是<用户,上下文信息>的高维向量表示。![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv_j%7D%5Cin%20%5Cmathbb%7BR%7D%5EN)是视频![](https://www.zhihu.com/equation?tex=j)的高维向量表示。DNN模型的目标是以用户信息和上下文信息为输入条件下,学习用户的高维向量表示,以此输入softmax分类器,来预测视频库中各个视频(类别)的观看概率。
+其中![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN)，是<用户，上下文信息>的高维向量表示。![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv_j%7D%5Cin%20%5Cmathbb%7BR%7D%5EN)是视频![](https://www.zhihu.com/equation?tex=j)的高维向量表示。DNN模型的目标是以用户信息和上下文信息为输入条件下，学习用户的高维向量表示，以此输入softmax分类器，来预测视频库中各个视频(类别)的观看概率。
 
 下图展示了召回模型的网络结构:
 <p align="center">
@@ -48,12 +48,12 @@ Figure 2. 召回模型网络结构
 </p>
 
 - 输入层:用户的浏览序列、搜索序列、人口统计学特征、和其他上下文信息等
-- embedding层:将用户浏览视频序列接embedding层,再做时间序列上的平均。对于搜索序列同样处理。
-- 隐层:包含三个隐层,用RELU激活函数,最后一层隐层的输出即为高维向量表示![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)。
-- 输出层: softmax层,输出视频库中各个视频(类别)的观看概率。在线上预测时,提取模型训练得到的softmax层内部的参数,作为视频![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D)的高维向量表示。可利用类似局部敏感哈希(Locality Sensitive Hashing)用![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)查询最相关的N个视频。
+- embedding层:将用户浏览视频序列接embedding层，再做时间序列上的平均。对于搜索序列同样处理。
+- 隐层:包含三个隐层，用RELU激活函数，最后一层隐层的输出即为高维向量表示![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)。
+- 输出层: softmax层，输出视频库中各个视频(类别)的观看概率。在线上预测时，提取模型训练得到的softmax层内部的参数，作为视频![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D)的高维向量表示。可利用类似局部敏感哈希(Locality Sensitive Hashing)用![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)查询最相关的N个视频。
 
 ## 数据预处理
-本例模拟了用户的视频点击日志,作为样本数据。格式如下:
+本例模拟了用户的视频点击日志，作为样本数据。格式如下:
 ```
 用户Id \t 所在省份 \t 所在城市 \t 历史点击的视频序列信息 \t 手机型号
 历史点击的视频序列信息的格式为 视频信息1;视频信息2;...;视频信息K
@@ -67,7 +67,7 @@ cd data
 tar -zxvf data.tar
 ```
 
-然后,脚本`data_preprocess.py`将对训练数据做预处理。具体使用方法参考如下说明：
+然后，脚本`data_preprocess.py`将对训练数据做预处理。具体使用方法参考如下说明：
 ```
 usage: data_processor.py [-h] --train_set_path TRAIN_SET_PATH --output_dir
                          OUTPUT_DIR [--feat_appear_limit FEAT_APPEAR_LIMIT]
@@ -75,7 +75,7 @@ usage: data_processor.py [-h] --train_set_path TRAIN_SET_PATH --output_dir
 PaddlePaddle Youtube Recall Model Example
 
 optional arguments:
-  -h, --help            show this help message and exit
+  -h， --help            show this help message and exit
   --train_set_path TRAIN_SET_PATH
                         path of the train set
   --output_dir OUTPUT_DIR
@@ -85,11 +85,11 @@ optional arguments:
                         20)
 ```
 该脚本的作用如下:
-- 借鉴\[[2](#参考文献)\]中对特征的处理,过滤低频特征(样本中出现次数低于`feat_appear_limit`)。
-- 对特征进行编码,生成字典`feature_dict.pkl`。
-- 统计每个视频出现的概率,保存至`item_freq.pkl`,提供给nce层使用。
+- 借鉴\[[2](#参考文献)\]中对特征的处理，过滤低频特征(样本中出现次数低于`feat_appear_limit`)。
+- 对特征进行编码，生成字典`feature_dict.pkl`。
+- 统计每个视频出现的概率，保存至`item_freq.pkl`，提供给nce层使用。
 
-例如可执行下列命令, 完成数据预处理:
+例如可执行下列命令，完成数据预处理:
 ```shell
 mkdir output
 python data_processor.py --train_set_path=./data/train.txt \
@@ -98,7 +98,7 @@ python data_processor.py --train_set_path=./data/train.txt \
 ```
 
 ## 模型实现
-下面是网络中各个部分的具体实现,相关代码均包含在 `./network_conf.py` 中。
+下面是网络中各个部分的具体实现，相关代码均包含在 `./network_conf.py` 中。
 
 ### 输入层
 ```python
@@ -173,7 +173,7 @@ def _build_embedding_layer(self):
 ```
 
 ### 隐层
-对原paper中做了改进,历史用户点击视频序列,经过embedding后,不再是加权求平均。而是连接lstm层,将用户点击的先后次序纳入模型,再在时间序列上做最大池化,得到定长的向量表示,从而使模型学习到与点击时序相关的隐藏信息。考虑到数据规模与训练性能,这边只用了两个Relu层,也有不错的效果。
+对原paper中做了改进，历史用户点击视频序列，经过embedding后，不再是加权求平均。而是连接lstm层，将用户点击的先后次序纳入模型，再在时间序列上做最大池化，得到定长的向量表示，从而使模型学习到与点击时序相关的隐藏信息。考虑到数据规模与训练性能，这边只用了两个Relu层，也有不错的效果。
 ```python
 self._rnn_cell = paddle.networks.simple_lstm(
             input=self._history_clicked_items_emb, size=64)
@@ -203,7 +203,7 @@ self._rnn_cell = paddle.networks.simple_lstm(
 ```
 
 ### 输出层
-为了提高模型训练速度,使用噪声对比估计（Noise-contrastive estimation, NCE）\[[3](#参考文献)\]。将[数据预处理](#数据预处理)中产出的item_freq.pkl,也就是负样例的分布，作为nce层的参数。
+为了提高模型训练速度，使用噪声对比估计（Noise-contrastive estimation， NCE）\[[3](#参考文献)\]。将[数据预处理](#数据预处理)中产出的item_freq.pkl，也就是负样例的分布，作为nce层的参数。
 ```python
 return paddle.layer.nce(
                 input=self._fc_1,
@@ -217,15 +217,15 @@ return paddle.layer.nce(
 ```
 
 ## 训练
-首先,准备`reader.py`,负责将输入原始数据中的特征,转为编码后的特征id。对一条训练数据,根据`window_size`产出多条训练样本给trainer,例如:
+首先，准备`reader.py`，负责将输入原始数据中的特征，转为编码后的特征id。对一条训练数据，根据`window_size`产出多条训练样本给trainer，例如:
 ```
 window_size=2
 原始数据:
 用户Id \t 所在省份 \t 所在城市 \t 视频信息1;视频信息2;...;视频信息K \t 手机型号
 多条训练样本:
-用户Id,所在省份,所在城市,[<unk>,历史点击视频1],[<unk>,历史点击视频类目1],[<unk>,历史点击视频标签1],手机型号,历史点击视频2
-用户Id,所在省份,所在城市,[历史点击视频1,历史点击视频2],[历史点击视频类目1,历史点击视频类目2],[历史点击视频标签1,历史点击视频标签2],手机型号,历史点击视频3
-用户Id,所在省份,所在城市,[历史点击视频2,历史点击视频3],[历史点击视频类目2,历史点击视频类目3],[历史点击视频标签2,历史点击视频标签3],手机型号,历史点击视频4
+用户Id，所在省份，所在城市，[<unk>，历史点击视频1]，[<unk>，历史点击视频类目1]，[<unk>，历史点击视频标签1]，手机型号，历史点击视频2
+用户Id，所在省份，所在城市，[历史点击视频1，历史点击视频2]，[历史点击视频类目1，历史点击视频类目2]，[历史点击视频标签1，历史点击视频标签2]，手机型号，历史点击视频3
+用户Id，所在省份，所在城市，[历史点击视频2，历史点击视频3]，[历史点击视频类目2，历史点击视频类目3]，[历史点击视频标签2，历史点击视频标签3]，手机型号，历史点击视频4
 ......
 ```
 相关代码如下:
@@ -255,7 +255,7 @@ reader = Reader(feature_dict, args.window_size)
         feeding=feeding,
         event_handler=event_handler)
 ```
-接下去就可以开始训练了,可执行以下命令:
+接下去就可以开始训练了，可执行以下命令:
 ```shell
 mkdir output/model
 python train.py --train_set_path='./data/train.txt' \
@@ -266,7 +266,7 @@ python train.py --train_set_path='./data/train.txt' \
 ```
 
 ## 离线预测
-输入用户相关的特征,输出topN个最可能观看的视频,可执行以下命令:
+输入用户相关的特征，输出topN个最可能观看的视频，可执行以下命令:
 ```shell
 python infer.py --infer_set_path='./data/infer.txt' \
     --model_path='./output/model/model_pass_00000.tar.gz' \
@@ -284,9 +284,9 @@ python infer.py --infer_set_path='./data/infer.txt' \
 
 - 对于用户向量![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7BR%7D%5EN)，变换后的![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%5Cin%20%5Cmathbb%7BR%7D%5E%7BN%2B1%7D)，![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%3D%20%5B%5Cmathbf%7Bu%7D_%7Bnorm%7D%3B%200%5D)，其中![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D_%7Bnorm%7D)是模长归一化后的![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)。
 
-线上对于一个![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)用内积召回![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D),作上述变换![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%2C%20%5Cmathbf%7Bv%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)后，不改变内积排序的顺序。又因为![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%5Cright%20%5C%7C) 和![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%5Cright%20%5C%7C)都为1，因此![](https://www.zhihu.com/equation?tex=cos(%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%2C%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)%20%3D%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%5Ccdot%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)，就可以兼容ANN用cosin的方式召回了，结果等价。
+线上对于一个![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D)用内积召回![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bv%7D)，作上述变换![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%2C%20%5Cmathbf%7Bv%7D%5Crightarrow%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)后，不改变内积排序的顺序。又因为![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%5Cright%20%5C%7C) 和![](https://www.zhihu.com/equation?tex=%5Cleft%20%5C%7C%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%20%5Cright%20%5C%7C)都为1，因此![](https://www.zhihu.com/equation?tex=cos(%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%20%2C%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)%20%3D%20%5Ctilde%7B%5Cmathbf%7Bu%7D%7D%5Ccdot%20%5Ctilde%7B%5Cmathbf%7Bv%7D%7D)，就可以兼容ANN用cosin的方式召回了，结果等价。
 
-线上使用时，为保留精度，可以不除以![](https://www.zhihu.com/equation?tex=m),也就变成![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%3D%5B%5Cmathbf%7Bv%7D%3B%5Csqrt%7Bm%5E2-%5Cleft%5C%7C%20%5Cmathbf%7B%5Cmathbf%7Bv%7D%7D%5Cright%5C%7C%5E2%7D%5D)，排序依然等价。
+线上使用时，为保留精度，可以不除以![](https://www.zhihu.com/equation?tex=m)，也就变成![](https://www.zhihu.com/equation?tex=%5Ctilde%7B%5Cmathbf%7Bv%7D%7D%3D%5B%5Cmathbf%7Bv%7D%3B%5Csqrt%7Bm%5E2-%5Cleft%5C%7C%20%5Cmathbf%7B%5Cmathbf%7Bv%7D%7D%5Cright%5C%7C%5E2%7D%5D)，排序依然等价。
 
 可使用`user_vector.py`和`vector.py`分别获取用户和视频向量。例如执行下列命令：
 ```shell

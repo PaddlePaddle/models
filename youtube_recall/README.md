@@ -257,7 +257,7 @@ python infer.py --infer_set_path='./data/infer.txt' \
 ```
 
 ## Online prediction
-For online prediction，Approximate Nearest Neighbor(ANN) is adopted to directly recall top N most likely watch video. However, our ANN system currently only supports cosin sorting, not by inner product sorting, which leads to big effect difference.
+For online prediction, Approximate Nearest Neighbor(ANN) is adopted to directly recall top N most likely watch video. However, our ANN system currently only supports cosin sorting, not by inner product sorting, which leads to big effect difference.
 
 To solve it, user and video vectors are sliently modified by a SIMPLE-LSH conversion\[[4](#References)\], so that inner sorting is equivalent to cosin sorting after conversion.
 
@@ -281,7 +281,7 @@ python item_vector.py --model_path='./output/model/model_pass_00000.tar.gz' \
 ```
 
 ## Offline data mining
-Since it is inevitable to consume large amount of machine resources for online predicting，an alternative is offline data mining, e.g. hottest videos, user personalized recommendation, item-based recommendation, and online systems directly access it。Here shows an example to get user personalized recommendation.
+Since it is inevitable to consume large amount of machine resources for online predicting, an alternative is offline data mining, e.g. hottest videos, user personalized recommendation, item-based recommendation, and online systems directly access it. Here shows an example to get user personalized recommendation.
 ```
 python infer_user.py --model_path='./output/model/model_pass_00000.tar.gz' \
             --feature_dict='./output/feature_dict.pkl'
