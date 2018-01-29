@@ -45,7 +45,7 @@ class DeepFoolAttack(Attack):
                 labels = np.arange(class_count)
 
         gradient = self.model.gradient([(adversary.original, pre_label)])
-        x = adversary.original.reshape(gradient.shape)
+        x = adversary.original
         for iteration in xrange(iterations):
             w = np.inf
             w_norm = np.inf
