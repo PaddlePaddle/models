@@ -34,6 +34,8 @@ Figure 1. 推荐系统框图
 - 召回模型: 输入用户的历史行为，从大规模的内容库中获得一个小集合(百级别)。召回出的视频与用户高度相关。一个用户是用其历史点击过的视频，搜索过的关键词，和人口统计相关的特征来表征。
 - 排序模型: 采用更精细的特征计算得到排序分，对召回得到的候选集合中的视频进行排序。
 
+本文主要详细介绍了召回模型的原理与使用。
+
 ## 召回模型简介
 该推荐问题可以被建模成一个"超大规模多分类"问题。即在时刻![](https://www.zhihu.com/equation?tex=t)，为用户![](https://www.zhihu.com/equation?tex=U)(已知上下文信息![](https://www.zhihu.com/equation?tex=C))在视频库![](https://www.zhihu.com/equation?tex=V)中预测出观看视频![](https://www.zhihu.com/equation?tex=i)的类别，
 
@@ -61,7 +63,7 @@ Figure 2. 召回模型网络结构
 例如:
 USER_ID_15  上海市  上海市    VIDEO_42:CATEGORY_9:TAG115;VIDEO_43:CATEGORY_9:TAG116_TAG115;VIDEO_44:CATEGORY_2:TAG117_TAG71  GO T5
 ```
-运行以下命令可解压样本数据。
+在youtube_recall目录下运行以下命令（下同），可以解压样本数据。
 ```
 cd data
 tar -zxvf data.tar
@@ -173,7 +175,10 @@ def _build_embedding_layer(self):
 ```
 
 ### 隐层
-对原paper中做了改进，历史用户点击视频序列，经过embedding后，不再是加权求平均。而是连接lstm层，将用户点击的先后次序纳入模型，再在时间序列上做最大池化，得到定长的向量表示，从而使模型学习到与点击时序相关的隐藏信息。考虑到数据规模与训练性能，这边只用了两个Relu层，也有不错的效果。
+本文对\[[原论文](#参考文献)\](Covington, Paul, Jay Adams, and Emre Sargin. "Deep neural networks for youtube recommendations." Proceedings of the 10th ACM Conference on Recommender Systems. ACM, 2016.)中的模型做了如下改进：
+- 历史用户点击的视频序列，经过embedding之后，不再使用加权求平均，而是使用lstm序列模型。本文将用户点击的先后次序纳入模型中，然后在时间序列上做最大池化，得到定长向量表示，从而使模型学习到与点击时序相关的隐藏信息。
+- 考虑到数据规模与训练性能，本文只用了两个Relu层，也有很不错的效果。
+
 ```python
 self._rnn_cell = paddle.networks.simple_lstm(
             input=self._history_clicked_items_emb, size=64)

@@ -16,6 +16,8 @@ The system is comprised of two neural networks: one for candidate generation and
 - The candidate generation network: It takes events from the user's YouTube activity history as input and retrieves a small subset(hundreds) of videos, highly relevant to the user, from a large corpus. The similarity between users is expressed in terms of coarse features such as IDs of video watches, search query tokens and demographics.
 - The ranking network: It accomplishes this task by assigning a score to each video according to a desired objective function using a rich set of features describing the video and user.
 
+This markdown describes the principle and use of the candidate generation network in detail.
+
 ## Candidate Generation
 Here, candidate generation is modeled as extreme multiclass classification where the prediction problem becomes accurately classifying a specific video watch ![](https://www.zhihu.com/equation?tex=%5Comega_t) at time ![](https://www.zhihu.com/equation?tex=t) among millions of video ![](https://www.zhihu.com/equation?tex=i) (classes) from a corpus ![](https://www.zhihu.com/equation?tex=V) based on user ![](https://www.zhihu.com/equation?tex=U) and context ![](https://www.zhihu.com/equation?tex=C),
 
@@ -48,7 +50,7 @@ video-id:category:tag1_tag2_tag3_...tagM
 For example:
 USER_ID_15  Shanghai  Shanghai    VIDEO_42:CATEGORY_9:TAG115;VIDEO_43:CATEGORY_9:TAG116_TAG115;VIDEO_44:CATEGORY_2:TAG117_TAG71  GO T5
 ```
-Run this code to prepare the sample data.
+Run this code in `youtube_recall` directory (the same below) to prepare the sample data.
 ```
 cd data
 tar -zxvf data.tar
@@ -160,7 +162,9 @@ def _build_embedding_layer(self):
 ```
 
 ### Hiddern layer
-Here improves the original networks in \[[1](#References)\] by modifying that the embeddings of video watches are not simply averaged but are connected to a LSTM layer with max temporal pooling instead, so that the deep sequential information related to user interests can be learned well. Considering data scale and efficiency of training, only two ReLU layers are applied, which also leads to good performance.
+Here improves the original networks in \[[Original Paper](#References)\](Covington, Paul, Jay Adams, and Emre Sargin. "Deep neural networks for youtube recommendations." Proceedings of the 10th ACM Conference on Recommender Systems. ACM, 2016.)
+- By modifying that the embeddings of video watches are not simply averaged but are connected to a LSTM layer with max temporal pooling instead, so that the deep sequential information related to user interests can be learned well.
+- Considering data scale and efficiency of training, only two ReLU layers are applied, which also leads to good performance.
 
 ```python
 self._rnn_cell = paddle.networks.simple_lstm(input=self._history_clicked_items_emb, size=64)
