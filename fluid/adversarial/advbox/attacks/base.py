@@ -54,7 +54,7 @@ class Attack(object):
         """
         if adversary.original_label is None:
             adversary.original_label = np.argmax(
-                self.model.predict([(adversary.original, 0)]))
+                self.model.predict(adversary.original))
         if adversary.is_targeted_attack and adversary.target_label is None:
             if adversary.target is None:
                 raise ValueError(
@@ -62,7 +62,8 @@ class Attack(object):
                     'adversary.target_label or adversary.target must be set.')
             else:
                 adversary.target_label_label = np.argmax(
-                    self.model.predict([(adversary.target_label, 0)]))
+                    self.model.predict(
+                        self.model.scale_input(adversary.target)))
 
         logging.info('adversary:\noriginal_label: {}'
                      '\n          target_lable: {}'

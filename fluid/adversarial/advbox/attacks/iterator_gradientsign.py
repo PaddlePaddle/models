@@ -38,16 +38,16 @@ class IteratorGradientSignAttack(Attack):
             adv_img = adversary.original
             for _ in range(steps):
                 if adversary.is_targeted_attack:
-                    gradient = self.model.gradient([(adversary.original,
-                                                     adversary.target_label)])
+                    gradient = self.model.gradient(adversary.original,
+                                                   adversary.target_label)
                     gradient_sign = -np.sign(gradient) * (max_ - min_)
                 else:
-                    gradient = self.model.gradient([(adversary.original,
-                                                     adversary.original_label)])
+                    gradient = self.model.gradient(adversary.original,
+                                                   adversary.original_label)
                     gradient_sign = np.sign(gradient) * (max_ - min_)
                 adv_img = adv_img + gradient_sign * epsilon
                 adv_img = np.clip(adv_img, min_, max_)
-                adv_label = np.argmax(self.model.predict([(adv_img, 0)]))
+                adv_label = np.argmax(self.model.predict(adv_img))
                 logging.info('epsilon = {:.3f}, pre_label = {}, adv_label={}'.
                              format(epsilon, pre_label, adv_label))
                 if adversary.try_accept_the_example(adv_img, adv_label):

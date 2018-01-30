@@ -61,7 +61,7 @@ class Adversary(object):
     def _is_successful(self, adversarial_label):
         """
         Is the adversarial_label is the expected adversarial label.
-        
+
         :param adversarial_label: adversarial label.
         :return: bool
         """

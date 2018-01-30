@@ -33,7 +33,7 @@ class DeepFoolAttack(Attack):
 
         pre_label = adversary.original_label
         min_, max_ = self.model.bounds()
-        f = self.model.predict([(adversary.original, 0)])
+        f = self.model.predict(adversary.original)
         if adversary.is_targeted_attack:
             labels = [adversary.target_label]
         else:
@@ -44,7 +44,7 @@ class DeepFoolAttack(Attack):
             else:
                 labels = np.arange(class_count)
 
-        gradient = self.model.gradient([(adversary.original, pre_label)])
+        gradient = self.model.gradient(adversary.original, pre_label)
         x = adversary.original
         for iteration in xrange(iterations):
             w = np.inf
@@ -53,7 +53,7 @@ class DeepFoolAttack(Attack):
             for k in labels:
                 if k == pre_label:
                     continue
-                gradient_k = self.model.gradient([(x, k)])
+                gradient_k = self.model.gradient(x, k)
                 w_k = gradient_k - gradient
                 f_k = f[k] - f[pre_label]
                 w_k_norm = np.linalg.norm(w_k) + 1e-8
@@ -67,8 +67,8 @@ class DeepFoolAttack(Attack):
             x = x + (1 + overshoot) * r_i
             x = np.clip(x, min_, max_)
 
-            f = self.model.predict([(x, 0)])
-            gradient = self.model.gradient([(x, pre_label)])
+            f = self.model.predict(x)
+            gradient = self.model.gradient(x, pre_label)
             adv_label = np.argmax(f)
             logging.info('iteration = {}, f = {}, pre_label = {}'
                          ', adv_label={}'.format(iteration, f[pre_label],

@@ -3,6 +3,7 @@ Paddle model
 """
 from __future__ import absolute_import
 
+import numpy as np
 import paddle.v2.fluid as fluid
 
 from .base import Model
@@ -54,24 +55,28 @@ class PaddleModel(Model):
         self._gradient = filter(lambda p: p[0].name == self._input_name,
                                 param_grads)[0][1]
 
-    def predict(self, image_batch):
+    def predict(self, data):
         """
-            Predict the label of the image_batch.
+        Calculate the prediction of the data.
 
-            Args:
-                image_batch(list): The image and label tuple list.
-            Return:
-                numpy.ndarray: predictions of the images with shape (batch_size,
-                    num_of_classes).
+        Args:
+            data(numpy.ndarray): input data with shape (size,
+            height, width, channels).
+
+        Return:
+            numpy.ndarray: predictions of the data with shape (batch_size,
+                num_of_classes).
         """
+        scaled_data = self._process_input(data)
         feeder = fluid.DataFeeder(
             feed_list=[self._input_name, self._logits_name],
             place=self._place,
             program=self._program)
         predict_var = self._program.block(0).var(self._predict_name)
         predict = self._exe.run(self._program,
-                                feed=feeder.feed(image_batch),
+                                feed=feeder.feed([(scaled_data, 0)]),
                                 fetch_list=[predict_var])
+        predict = np.squeeze(predict, axis=0)
         return predict
 
     def num_classes(self):
@@ -85,21 +90,27 @@ class PaddleModel(Model):
         assert len(predict_var.shape) == 2
         return predict_var.shape[1]
 
-    def gradient(self, image_batch):
+    def gradient(self, data, label):
         """
-        Calculate the gradient of the loss w.r.t the input.
+        Calculate the gradient of the cross-entropy loss w.r.t the image.
 
         Args:
-            image_batch(list): The image and label tuple list.
+            data(numpy.ndarray): input data with shape (size, height, width,
+            channels).
+            label(int): Label used to calculate the gradient.
+
         Return:
-            list: The list of the gradient of the image.
+            numpy.ndarray: gradient of the cross-entropy loss w.r.t the image
+                with the shape (height, width, channel).
         """
+        scaled_data = self._process_input(data)
+
         feeder = fluid.DataFeeder(
             feed_list=[self._input_name, self._logits_name],
             place=self._place,
             program=self._program)
 
         grad, = self._exe.run(self._program,
-                              feed=feeder.feed(image_batch),
+                              feed=feeder.feed([(scaled_data, label)]),
                               fetch_list=[self._gradient])
-        return grad.reshape(image_batch[0][0].shape)
+        return grad.reshape(data.shape)
