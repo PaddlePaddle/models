@@ -16,6 +16,10 @@ class DNNmodel(object):
                  is_infer=False):
         """
         initialize model
+        @dnn_layer_dims: dimension of each hidden layer
+        @feature_dict: dictionary of encoded feature
+        @item_freq: dictionary of feature values and its frequency
+        @is_infer: if infer mode
         """
         self._dnn_layer_dims = dnn_layer_dims
         self._feature_dict = feature_dict

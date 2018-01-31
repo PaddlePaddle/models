@@ -52,13 +52,12 @@ def infer_user():
     # load the trained model.
     with gzip.open(args.model_path) as f:
         parameters = paddle.parameters.Parameters.from_tar(f)
-    parameters.set(
-        '_proj_province',
-        np.zeros(shape=parameters.get('_proj_province').shape))
-    parameters.set(
-        '_proj_city', np.zeros(shape=parameters.get('_proj_city').shape))
-    parameters.set(
-        '_proj_phone', np.zeros(shape=parameters.get('_proj_phone').shape))
+    parameters.set('_proj_province', \
+            np.zeros(shape=parameters.get('_proj_province').shape))
+    parameters.set('_proj_city', \
+            np.zeros(shape=parameters.get('_proj_city').shape))
+    parameters.set('_proj_phone', \
+            np.zeros(shape=parameters.get('_proj_phone').shape))
     parameters.set('_proj_history_clicked_items', \
             np.zeros(shape= parameters.get('_proj_history_clicked_items').shape))
     parameters.set('_proj_history_clicked_categories', \
