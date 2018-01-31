@@ -78,7 +78,7 @@ def SE_ResNeXt(input, class_dim, infer=False):
     conv = conv_bn_layer(
         input=conv, num_filters=128, filter_size=3, stride=1, act='relu')
     conv = fluid.layers.pool2d(
-        input=conv, pool_size=3, pool_stride=2, pool_type='max')
+        input=conv, pool_size=3, pool_stride=2, pool_padding=1, pool_type='max')
 
     for block in range(len(depth)):
         for i in range(depth[block]):
@@ -133,7 +133,7 @@ def train(learning_rate,
     exe.run(fluid.default_startup_program())
 
     if init_model is not None:
-        fluid.io.load_persistables(exe, init_model)
+        fluid.io.load_persistables_if_exist(exe, init_model)
 
     train_reader = paddle.batch(reader.train(), batch_size=batch_size)
     test_reader = paddle.batch(reader.test(), batch_size=batch_size)
