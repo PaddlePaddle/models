@@ -40,10 +40,8 @@ def to_lodtensor(data, place):
 def load_vocab(filename):
     vocab = {}
     with open(filename) as f:
-        wid = 0
-        for line in f:
-            vocab[line.strip()] = wid
-            wid += 1
+        for idx, line in enumerate(f):
+            vocab[line.strip()] = idx
     return vocab
 
 
@@ -101,13 +99,13 @@ def main(dict_path):
     # The training data set.
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            paddle.dataset.imdb.train(word_dict), buf_size=5000),
+            paddle.dataset.imdb.train(word_dict), buf_size=51200),
         batch_size=conf.batch_size)
 
     # The testing data set.
     test_reader = paddle.batch(
         paddle.reader.shuffle(
-            paddle.dataset.imdb.test(word_dict), buf_size=5000),
+            paddle.dataset.imdb.test(word_dict), buf_size=51200),
         batch_size=conf.batch_size)
 
     if conf.use_gpu:
