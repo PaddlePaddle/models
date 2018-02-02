@@ -138,11 +138,10 @@ class DNNmodel(object):
             size=self._dnn_layer_dims[0],
             act=paddle.activation.Relu())
 
-        self._fc_1 = paddle.layer.fc(
-            name="Relu2",
-            input=self._fc_0,
-            size=self._dnn_layer_dims[1],
-            act=paddle.activation.Relu())
+        self._fc_1 = paddle.layer.fc(name="Relu2",
+                                     input=self._fc_0,
+                                     size=self._dnn_layer_dims[1],
+                                     act=paddle.activation.Relu())
 
         if not self._is_infer:
             return paddle.layer.nce(
