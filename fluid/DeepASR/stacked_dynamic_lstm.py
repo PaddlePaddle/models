@@ -9,10 +9,10 @@ import time
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
 import paddle.v2.fluid.profiler as profiler
-import data_utils.load_data as load_data
 import data_utils.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.trans_add_delta as trans_add_delta
 import data_utils.trans_splice as trans_splice
+import data_utils.data_read as reader
 
 
 def parse_args():
@@ -61,6 +61,9 @@ def parse_args():
         '--use_nvprof',
         action='store_true',
         help='If set, use nvprof for CUDA.')
+    parser.add_argument('--mean_var', type=str, help='mean var path')
+    parser.add_argument('--feature_lst', type=str, help='mean var path')
+    parser.add_argument('--label_lst', type=str, help='mean var path')
     args = parser.parse_args()
     return args
 
@@ -159,12 +162,12 @@ def train(args):
 
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
-        trans_mean_variance_norm.TransMeanVarianceNorm(
-            "data/global_mean_var_search26kHr"), trans_splice.TransSplice()
+        trans_mean_variance_norm.TransMeanVarianceNorm(args.mean_var),
+        trans_splice.TransSplice()
     ]
-    load_data.set_trans(ltrans)
-    load_data.load_list("/home/disk2/mini_speech_fbank_40/data/feature.lst",
-                        "/home/disk2/mini_speech_fbank_40/data/label.lst")
+
+    data_reader = reader.DataRead(args.feature_lst, args.label_lst)
+    data_reader.set_trans(ltrans)
 
     res_feature = fluid.LoDTensor()
     res_label = fluid.LoDTensor()
@@ -175,7 +178,7 @@ def train(args):
         batch_id = 0
         while True:
             # load_data
-            one_batch = load_data.get_one_batch(args.batch_size)
+            one_batch = data_reader.get_one_batch(args.batch_size)
             if one_batch == None:
                 break
             (bat_feature, bat_label, lod) = one_batch

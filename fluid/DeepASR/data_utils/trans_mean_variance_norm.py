@@ -1,10 +1,12 @@
-#by zhxfl 2018.01.29
-import numpy
+import numpy as np
 import math
 
 
 class TransMeanVarianceNorm(object):
     """ normalization of mean variance for feature data 
+        Attributes:
+            _mean(numpy.array): the feature mean vector
+            _var(numpy.array): the feature variance 
     """
 
     def __init__(self, snorm_path):
@@ -17,12 +19,14 @@ class TransMeanVarianceNorm(object):
         self._load_norm(snorm_path)
 
     def _load_norm(self, snorm_path):
-        """ load global mean var file
+        """ load mean var file
+            Args: 
+                snorm_path(str):the file path
         """
         lLines = open(snorm_path).readlines()
         nLen = len(lLines)
-        self._mean = numpy.zeros((nLen), dtype="float32")
-        self._var = numpy.zeros((nLen), dtype="float32")
+        self._mean = np.zeros((nLen), dtype="float32")
+        self._var = np.zeros((nLen), dtype="float32")
         self._nLen = nLen
         for nidx, l in enumerate(lLines):
             s = l.split()
@@ -34,11 +38,18 @@ class TransMeanVarianceNorm(object):
 
     def get_mean_var(self):
         """ get mean and var 
+            Args:
+            Returns:
+                (mean, var)
         """
         return (self._mean, self._var)
 
     def perform_trans(self, sample):
         """ feature = (feature - mean) * var
+            Args:
+                sample(object):input sample, contain feature numpy and label numpy
+            Returns:
+                (feature, label)
         """
         (feature, label) = sample
         shape = feature.shape

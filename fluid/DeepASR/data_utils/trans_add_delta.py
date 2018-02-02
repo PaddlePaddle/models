@@ -1,5 +1,4 @@
-#by zhxfl 2018.01.29
-import numpy
+import numpy as np
 import math
 import copy
 
@@ -7,6 +6,10 @@ import copy
 class TransAddDelta(object):
     """ add delta of feature data 
         trans feature for shape(a, b) to shape(a, b * 3)
+
+        Attributes:
+            _norder(int):
+            _window(int):
     """
 
     def __init__(self, norder=2, nwindow=2):
@@ -21,26 +24,30 @@ class TransAddDelta(object):
     def perform_trans(self, sample):
         """ add delta for feature
             trans feature shape from (a,b) to (a, b * 3)
+
+            Args: 
+                sample(object,tuple): contain feature numpy and label numpy
+            Returns:
+                (feature, label)
         """
         (feature, label) = sample
         frame_dim = feature.shape[1]
         d_frame_dim = frame_dim * 3
         head_filled = 5
         tail_filled = 5
-        mat = numpy.zeros(
+        mat = np.zeros(
             (feature.shape[0] + head_filled + tail_filled, d_frame_dim),
             dtype="float32")
         #copy first frame
         for i in xrange(head_filled):
-            numpy.copyto(mat[i, 0:frame_dim], feature[0, :])
+            np.copyto(mat[i, 0:frame_dim], feature[0, :])
 
-        numpy.copyto(
-            mat[head_filled:head_filled + feature.shape[0], 0:frame_dim],
-            feature[:, :])
+        np.copyto(mat[head_filled:head_filled + feature.shape[0], 0:frame_dim],
+                  feature[:, :])
 
         # copy last frame
         for i in xrange(head_filled + feature.shape[0], mat.shape[0], 1):
-            numpy.copyto(mat[i, 0:frame_dim], feature[feature.shape[0] - 1, :])
+            np.copyto(mat[i, 0:frame_dim], feature[feature.shape[0] - 1, :])
 
         nframe = feature.shape[0]
         start = head_filled
@@ -65,6 +72,8 @@ class TransAddDelta(object):
                 size: frame dimentional
                 n: frame num
                 step: 3 * (frame num)
+            Returns:
+                None
         """
         sigma_t2 = 0.0
         delta_window = self._nwindow

@@ -1,4 +1,3 @@
-#by zhxfl 2018.01.31
 def to_lodtensor(data, place):
     """convert tensor to lodtensor
     """

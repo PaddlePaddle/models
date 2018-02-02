@@ -1,7 +1,7 @@
 #by zhxfl 2018.01.31
 import sys
 import unittest
-import numpy
+import numpy as np
 sys.path.append("../")
 import data_utils.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.trans_add_delta as trans_add_delta
@@ -13,7 +13,7 @@ class TestTransMeanVarianceNorm(unittest.TestCase):
     """
 
     def test(self):
-        feature = numpy.zeros((2, 120), dtype="float32")
+        feature = np.zeros((2, 120), dtype="float32")
         feature.fill(1)
         trans = trans_mean_variance_norm.TransMeanVarianceNorm(
             "../data/global_mean_var_search26kHr")
@@ -21,7 +21,7 @@ class TestTransMeanVarianceNorm(unittest.TestCase):
         (mean, var) = trans.get_mean_var()
         feature_flat1 = feature1.flatten()
         feature_flat = feature.flatten()
-        one = numpy.ones((1), dtype="float32")
+        one = np.ones((1), dtype="float32")
         for idx, val in enumerate(feature_flat1):
             cur_idx = idx % 120
             self.assertAlmostEqual(val, (one[0] - mean[cur_idx]) * var[cur_idx])
@@ -34,7 +34,7 @@ class TestTransAddDelta(unittest.TestCase):
     def test_regress(self):
         """test regress
         """
-        feature = numpy.zeros((14, 120), dtype="float32")
+        feature = np.zeros((14, 120), dtype="float32")
         feature[0:5, 0:40].fill(1)
         feature[0 + 5, 0:40].fill(1)
         feature[1 + 5, 0:40].fill(2)
@@ -59,7 +59,7 @@ class TestTransAddDelta(unittest.TestCase):
     def test_perform(self):
         """test perform
         """
-        feature = numpy.zeros((4, 40), dtype="float32")
+        feature = np.zeros((4, 40), dtype="float32")
         feature[0, 0:40].fill(1)
         feature[1, 0:40].fill(2)
         feature[2, 0:40].fill(3)
@@ -83,7 +83,7 @@ class TestTransSplict(unittest.TestCase):
     """
 
     def test_perfrom(self):
-        feature = numpy.zeros((8, 10), dtype="float32")
+        feature = np.zeros((8, 10), dtype="float32")
         for i in xrange(feature.shape[0]):
             feature[i, :].fill(i)
 
@@ -104,8 +104,6 @@ class TestTransSplict(unittest.TestCase):
                     if cur_val < 7:
                         cur_val += 1.0
                     for k in xrange(10):
-                        print i, j, k
-                        print feature[i].reshape(11, 10)
                         self.assertAlmostEqual(feature[i][j * 10 + k], cur_val)
 
 

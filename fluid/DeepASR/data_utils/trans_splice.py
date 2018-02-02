@@ -1,33 +1,43 @@
-#by zhxfl 2018.01.31
-import numpy
+import numpy as np
 import math
 
 
 class TransSplice(object):
-    """ expand feature data from shape (frame_num, frame_dim) 
+    """ copy feature context to construct new feature
+        expand feature data from shape (frame_num, frame_dim) 
         to shape (frame_num, frame_dim * 11)
-        
+
+        Attributes:
+            _nleft_context(int): copy left context number
+            _nright_context(int): copy right context number
     """
 
     def __init__(self, nleft_context=5, nright_context=5):
         """ init construction
+            Args:
+                nleft_context(int):
+                nright_context(int):
         """
         self._nleft_context = nleft_context
         self._nright_context = nright_context
 
     def perform_trans(self, sample):
-        """ splice
+        """ copy feature context 
+        Args:
+            sample(object): input sample(feature, label)
+        Return:
+            (feature, label)
         """
         (feature, label) = sample
         nframe_num = feature.shape[0]
         nframe_dim = feature.shape[1]
         nnew_frame_dim = nframe_dim * (
             self._nleft_context + self._nright_context + 1)
-        mat = numpy.zeros(
+        mat = np.zeros(
             (nframe_num + self._nleft_context + self._nright_context,
              nframe_dim),
             dtype="float32")
-        ret = numpy.zeros((nframe_num, nnew_frame_dim), dtype="float32")
+        ret = np.zeros((nframe_num, nnew_frame_dim), dtype="float32")
 
         #copy left
         for i in xrange(self._nleft_context):
@@ -44,7 +54,7 @@ class TransSplice(object):
         mat = mat.reshape(mat.shape[0] * mat.shape[1])
         ret = ret.reshape(ret.shape[0] * ret.shape[1])
         for i in xrange(nframe_num):
-            numpy.copyto(ret[i * nnew_frame_dim:(i + 1) * nnew_frame_dim],
-                         mat[i * nframe_dim:i * nframe_dim + nnew_frame_dim])
+            np.copyto(ret[i * nnew_frame_dim:(i + 1) * nnew_frame_dim],
+                      mat[i * nframe_dim:i * nframe_dim + nnew_frame_dim])
         ret = ret.reshape((nframe_num, nnew_frame_dim))
         return (ret, label)
