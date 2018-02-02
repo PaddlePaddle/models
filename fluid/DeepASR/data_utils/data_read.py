@@ -8,8 +8,8 @@ import random
 import Queue
 import numpy as np
 import struct
-import data_utils.trans_mean_variance_norm as trans_mean_variance_norm
-import data_utils.trans_add_delta as trans_add_delta
+import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
+import data_utils.augmentor.trans_add_delta as trans_add_delta
 
 
 class OneBlock(object):
