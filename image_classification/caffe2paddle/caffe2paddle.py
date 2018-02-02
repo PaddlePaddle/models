@@ -27,6 +27,8 @@ class ModelConverter(object):
             layer_params = layer.blobs
             layer_type = layer.type
             if len(layer_params) > 0:
+                if layer_type == 'Deconvolution':
+                    layer_type = 'Convolution'
                 self.pre_layer_name = getattr(
                     self, "convert_" + layer_type + "_layer")(
                         layer_params,
@@ -60,6 +62,21 @@ class ModelConverter(object):
     def serialize(data, f):
         f.write(struct.pack("IIQ", 0, 4, data.size))
         f.write(data.tobytes())
+
+    @wrap_name_default("prelu_layer")
+    def convert_PReLU_layer(self, params, name=None):
+        data = np.array(params[0].data, dtype='float32')
+        file_name = "_%s.w%s" % (name, str(0))
+        data = np.transpose(data)
+        param_conf = ParameterConfig()
+        param_conf.name = file_name
+        dims = list(data.shape)
+        if len(dims) < 2:
+            dims.insert(0, 1)
+        param_conf.size = reduce(lambda a, b: a * b, dims)
+        param_conf.dims.extend(dims)
+        self.params[file_name] = (param_conf, data.flatten())
+        return name
 
     @wrap_name_default("conv")
     def convert_Convolution_layer(self, params, name=None):
