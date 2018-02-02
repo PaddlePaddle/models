@@ -9,7 +9,7 @@ YouTube is the world's largest platform for creating, sharing and discovering vi
 The overall structure of the recommendation system is illustrated in Figure 1.
 <p align="center">
 <img src="images/recommendation_system.png" width="500" height="300" hspace='10'/> <br/>
-Figure 1. Recommendation system architecture
+Figure 1. Recommendation system architecture[1]
 </p>
 
 The system is comprised of two neural networks: one for candidate generation and one for ranking.
@@ -28,7 +28,7 @@ where ![](https://www.zhihu.com/equation?tex=%5Cmathbf%7Bu%7D%5Cin%20%5Cmathbb%7
 Figure 2 shows the general network architecture of candidate generation model:
 <p align="center">
 <img src="images/model_network.png" width="600" height="500" hspace='10'/> <br/>
-Figure 2. Candidate generation model architecture
+Figure 2. Candidate generation model architecture[1]
 </p>
 
 - Input layer: A user's watch history is represented by a variable-length sequence of sparse video IDs, and search history is similarly represented by a variable-length sequence of search tokens.

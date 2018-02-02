@@ -27,7 +27,7 @@ Youtube是世界最大的视频网站之一，其推荐系统帮助10亿以上�
 下图展示了整个推荐系统框图:
 <p align="center">
 <img src="images/recommendation_system.png" width="500" height="300" hspace='10'/> <br/>
-Figure 1. 推荐系统框图
+Figure 1. 推荐系统框图（出自论文[1]）
 </p>
 
 整个推荐系统有两部分组成: 召回(candidate generation/recall)和排序(ranking)。
@@ -46,7 +46,7 @@ Figure 1. 推荐系统框图
 下图展示了召回模型的网络结构:
 <p align="center">
 <img src="images/model_network.png" width="600" height="500" hspace='10'/> <br/>
-Figure 2. 召回模型网络结构
+Figure 2. 召回模型网络结构（出自论文[1]）
 </p>
 
 - 输入层:用户的浏览序列、搜索序列、人口统计学特征、和其他上下文信息等
