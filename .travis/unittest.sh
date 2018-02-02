@@ -24,11 +24,22 @@ unittest(){
 trap 'abort' 0
 set -e
 
-for proj in */ ; do
+for proj in * ; do
     if [ -d $proj ]; then
-        unittest $proj
-        if [ $? != 0 ]; then
-            exit 1
+        if [ "$proj" == "fluid" ]; then
+            for proj in fluid/* ; do
+                if [ -d $proj ]; then
+                    unittest $proj
+                    if [ $? != 0 ]; then
+                        exit 1
+                    fi
+                fi
+            done
+        else
+            unittest $proj
+            if [ $? != 0 ]; then
+                exit 1
+            fi
         fi
     fi
 done
