@@ -1,6 +1,7 @@
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-#by zhxfl 2018.01.31
 import sys
 import unittest
 import numpy as np
