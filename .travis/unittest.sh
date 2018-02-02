@@ -26,7 +26,7 @@ set -e
 
 for proj in * ; do
     if [ -d $proj ]; then
-        if [ "$proj" == "fluid" ]; then
+        if [ "$proj" = "fluid" ]; then
             for proj in fluid/* ; do
                 if [ -d $proj ]; then
                     unittest $proj
