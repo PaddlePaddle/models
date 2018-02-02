@@ -4,12 +4,16 @@
    Todos:
         1. multiprocess read block from disk
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import random
 import Queue
 import numpy as np
 import struct
-import data_utils.trans_mean_variance_norm as trans_mean_variance_norm
-import data_utils.trans_add_delta as trans_add_delta
+import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
+import data_utils.augmentor.trans_add_delta as trans_add_delta
 
 
 class OneBlock(object):
@@ -214,7 +218,6 @@ class DataRead(object):
         for (nidx, sample) in enumerate(lsample):
             for trans in self._ltrans:
                 sample = trans.perform_trans(sample)
-            #print nidx
             lsample[nidx] = sample
 
         return lsample
@@ -234,7 +237,6 @@ class DataRead(object):
         for (nidx, sample) in enumerate(lsample):
             for trans in self._ltrans:
                 sample = trans.perform_trans(sample)
-            #print nidx
             lsample[nidx] = sample
 
         return lsample

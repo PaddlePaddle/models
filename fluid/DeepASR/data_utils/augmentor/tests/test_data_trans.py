@@ -1,22 +1,27 @@
-#by zhxfl 2018.01.31
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import sys
 import unittest
 import numpy as np
-sys.path.append("../")
-import data_utils.trans_mean_variance_norm as trans_mean_variance_norm
-import data_utils.trans_add_delta as trans_add_delta
-import data_utils.trans_splice as trans_splice
+import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
+import data_utils.augmentor.trans_add_delta as trans_add_delta
+import data_utils.augmentor.trans_splice as trans_splice
 
 
 class TestTransMeanVarianceNorm(unittest.TestCase):
     """unit test for TransMeanVarianceNorm
     """
 
+    def setUp(self):
+        self._file_path = "./data_utils/augmentor/tests/data/" \
+                          "global_mean_var_search26kHr"
+
     def test(self):
         feature = np.zeros((2, 120), dtype="float32")
         feature.fill(1)
-        trans = trans_mean_variance_norm.TransMeanVarianceNorm(
-            "../data/global_mean_var_search26kHr")
+        trans = trans_mean_variance_norm.TransMeanVarianceNorm(self._file_path)
         (feature1, label1) = trans.perform_trans((feature, None))
         (mean, var) = trans.get_mean_var()
         feature_flat1 = feature1.flatten()

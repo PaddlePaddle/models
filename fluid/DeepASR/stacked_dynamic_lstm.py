@@ -12,7 +12,7 @@ import paddle.v2.fluid.profiler as profiler
 import data_utils.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.trans_add_delta as trans_add_delta
 import data_utils.trans_splice as trans_splice
-import data_utils.data_read as reader
+import data_utils.data_reader as reader
 
 
 def parse_args():
