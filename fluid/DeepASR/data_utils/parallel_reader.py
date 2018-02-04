@@ -224,7 +224,7 @@ class DataReader(object):
 
         finished_process_num = 0
 
-        while True:
+        while finished_process_num < process_num:
             sample = sample_queue.get()
             if isinstance(sample, EpochEndSignal):
                 finished_process_num += 1
