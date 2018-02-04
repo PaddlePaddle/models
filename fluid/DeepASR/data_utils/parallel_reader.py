@@ -45,7 +45,6 @@ class SampleInfoBucket(object):
         self._label_desc_paths = label_desc_paths
 
     def generate_sample_info_list(self):
-        ''' one thread '''
         sample_info_list = []
         for block_idx in xrange(self._block_num):
             label_bin_path = self._label_bin_paths[block_idx]
@@ -158,17 +157,25 @@ class DataReader(object):
 
         def ordered_processing_worker(sample_info_queue, sample_queue,
                                       out_order):
+            def read_bytes(fpath, start, size):
+                f = open(fpath, 'r')
+                f.seek(start, 0)
+                binary_bytes = f.read(size)
+                f.close()
+                return binary_bytes
+
             ins = sample_info_queue.get()
 
             while not isinstance(ins, EpochEndSignal):
-                # @TODO(pkuyym) add block cache to cache several block (LRU) into memory
                 sample_info, order_id = ins
-                f_feature = open(sample_info.feature_bin_path, 'r')
-                f_label = open(sample_info.label_bin_path, 'r')
 
-                f_label.seek(sample_info.label_start, 0)
-                label_bytes = f_label.read(sample_info.label_size)
-                f_label.close()
+                feature_bytes = read_bytes(sample_info.feature_bin_path,
+                                           sample_info.feature_start,
+                                           sample_info.feature_size)
+
+                label_bytes = read_bytes(sample_info.label_bin_path,
+                                         sample_info.label_start,
+                                         sample_info.label_size)
 
                 assert sample_info.label_frame_num * 4 == len(label_bytes)
                 label_array = struct.unpack('I' * sample_info.label_frame_num,
@@ -177,14 +184,11 @@ class DataReader(object):
                     label_array, dtype='int64').reshape(
                         (sample_info.label_frame_num, 1))
 
-                f_feature.seek(sample_info.feature_start, 0)
-                feature_bytes = f_feature.read(sample_info.feature_size)
-                f_feature.close()
-                assert sample_info.feature_frame_num * sample_info.feature_dim * 4 == len(
-                    feature_bytes)
-                feature_array = struct.unpack(
-                    'f' * sample_info.feature_frame_num *
-                    sample_info.feature_dim, feature_bytes)
+                feature_frame_num = sample_info.feature_frame_num
+                feature_dim = sample_info.feature_dim
+                assert feature_frame_num * feature_dim * 4 == len(feature_bytes)
+                feature_array = struct.unpack('f' * feature_frame_num *
+                                              feature_dim, feature_bytes)
                 feature_data = np.array(
                     feature_array, dtype='float32').reshape((
                         sample_info.feature_frame_num, sample_info.feature_dim))
