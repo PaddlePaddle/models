@@ -10,16 +10,16 @@ import time
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
 import paddle.v2.fluid.profiler as profiler
-import data_utils.trans_mean_variance_norm as trans_mean_variance_norm
-import data_utils.trans_add_delta as trans_add_delta
-import data_utils.trans_splice as trans_splice
+import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
+import data_utils.augmentor.trans_add_delta as trans_add_delta
+import data_utils.augmentor.trans_splice as trans_splice
 import data_utils.data_reader as reader
 from model import stacked_lstmp_model
-from utils import print_arguments, lodtensor_to_ndarray
+from data_utils.util import lodtensor_to_ndarray
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("LSTM model benchmark.")
+    parser = argparse.ArgumentParser("Training for stacked LSTMP model.")
     parser.add_argument(
         '--batch_size',
         type=int,
@@ -62,6 +62,8 @@ def parse_args():
         choices=['CPU', 'GPU'],
         help='The device type. (default: %(default)s)')
     parser.add_argument(
+        '--parallel', action='store_true', help='If set, run in parallel.')
+    parser.add_argument(
         '--mean_var',
         type=str,
         default='data/global_mean_var_search26kHr',
@@ -80,23 +82,21 @@ def parse_args():
     return args
 
 
+def print_arguments(args):
+    print('-----------  Configuration Arguments -----------')
+    for arg, value in sorted(vars(args).iteritems()):
+        print('%s: %s' % (arg, value))
+    print('------------------------------------------------')
+
+
 def train(args):
     """train in loop."""
 
-    prediction, label, avg_cost = stacked_lstmp_model(
-        args.hidden_dim, args.proj_dim, args.stacked_num)
+    prediction, avg_cost, accuracy = stacked_lstmp_model(
+        args.hidden_dim, args.proj_dim, args.stacked_num, args.parallel)
 
     adam_optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
     adam_optimizer.minimize(avg_cost)
-
-    accuracy = fluid.evaluator.Accuracy(input=prediction, label=label)
-
-    # clone from default main program
-    inference_program = fluid.default_main_program().clone()
-    with fluid.program_guard(inference_program):
-        test_accuracy = fluid.evaluator.Accuracy(input=prediction, label=label)
-        test_target = [avg_cost] + test_accuracy.metrics + test_accuracy.states
-        inference_program = fluid.io.get_inference_program(test_target)
 
     place = fluid.CPUPlace() if args.device == 'CPU' else fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -115,7 +115,6 @@ def train(args):
     res_label = fluid.LoDTensor()
     for pass_id in xrange(args.pass_num):
         pass_start_time = time.time()
-        accuracy.reset(exe)
         batch_id = 0
         while True:
             # load_data
@@ -132,7 +131,7 @@ def train(args):
             _, acc = exe.run(fluid.default_main_program(),
                              feed={"feature": res_feature,
                                    "label": res_label},
-                             fetch_list=[avg_cost] + accuracy.metrics,
+                             fetch_list=[avg_cost, accuracy],
                              return_numpy=False)
 
             if batch_id > 0 and (batch_id % args.print_per_batches == 0):

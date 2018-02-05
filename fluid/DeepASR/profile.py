@@ -10,16 +10,16 @@ import time
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
 import paddle.v2.fluid.profiler as profiler
-import data_utils.trans_mean_variance_norm as trans_mean_variance_norm
-import data_utils.trans_add_delta as trans_add_delta
-import data_utils.trans_splice as trans_splice
+import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
+import data_utils.augmentor.trans_add_delta as trans_add_delta
+import data_utils.augmentor.trans_splice as trans_splice
 import data_utils.data_reader as reader
 from model import stacked_lstmp_model
-from utils import print_arguments, lodtensor_to_ndarray
+from data_utils.util import lodtensor_to_ndarray
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("LSTM model benchmark.")
+    parser = argparse.ArgumentParser("Profiling for stacked LSTMP model.")
     parser.add_argument(
         '--batch_size',
         type=int,
@@ -51,6 +51,8 @@ def parse_args():
         default='GPU',
         choices=['CPU', 'GPU'],
         help='The device type. (default: %(default)s)')
+    parser.add_argument(
+        '--parallel', action='store_true', help='If set, run in parallel.')
     parser.add_argument(
         '--mean_var',
         type=str,
@@ -91,6 +93,13 @@ def parse_args():
     return args
 
 
+def print_arguments(args):
+    print('-----------  Configuration Arguments -----------')
+    for arg, value in sorted(vars(args).iteritems()):
+        print('%s: %s' % (arg, value))
+    print('------------------------------------------------')
+
+
 def profile(args):
     """profile the training process"""
 
@@ -100,13 +109,11 @@ def profile(args):
     if not args.num_batch_to_skip >= 0:
         raise ValueError("arg 'num_batch_to_skip' must not be smaller than 0.")
 
-    prediction, label, avg_cost = stacked_lstmp_model(
-        args.hidden_dim, args.proj_dim, args.stacked_num)
+    prediction, avg_cost, accuracy = stacked_lstmp_model(
+        args.hidden_dim, args.proj_dim, args.stacked_num, args.parallel)
 
     adam_optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
     adam_optimizer.minimize(avg_cost)
-
-    accuracy = fluid.evaluator.Accuracy(input=prediction, label=label)
 
     place = fluid.CPUPlace() if args.device == 'CPU' else fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -127,7 +134,6 @@ def profile(args):
     sorted_key = None if args.sorted_key is 'None' else args.sorted_key
     with profiler.profiler(args.device, sorted_key) as prof:
         frames_seen, start_time = 0, 0.0
-        accuracy.reset(exe)
         for batch_id in range(0, args.max_batch_num):
             if args.num_batch_to_skip == batch_id:
                 profiler.reset_profiler()
@@ -148,7 +154,7 @@ def profile(args):
             outs = exe.run(fluid.default_main_program(),
                            feed={"feature": res_feature,
                                  "label": res_label},
-                           fetch_list=[avg_cost] + accuracy.metrics,
+                           fetch_list=[avg_cost, accuracy],
                            return_numpy=False)
 
             if args.print_train_acc:
