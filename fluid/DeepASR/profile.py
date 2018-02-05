@@ -71,13 +71,14 @@ def parse_args():
     parser.add_argument(
         '--max_batch_num',
         type=int,
-        default=11,
+        default=10,
         help='Maximum number of batches for profiling. (default: %(default)d)')
     parser.add_argument(
-        '--num_batch_to_skip',
+        '--first_batches_to_skip',
         type=int,
         default=1,
-        help='Number of batches to skip for profiling. (default: %(default)d)')
+        help='Number of first batches to skip for profiling. '
+        '(default: %(default)d)')
     parser.add_argument(
         '--print_train_acc',
         action='store_true',
@@ -103,14 +104,15 @@ def print_arguments(args):
 def profile(args):
     """profile the training process"""
 
-    if not args.num_batch_to_skip < args.max_batch_num:
-        raise ValueError("arg 'num_batch_to_skip' must be smaller than "
+    if not args.first_batches_to_skip < args.max_batch_num:
+        raise ValueError("arg 'first_batches_to_skip' must be smaller than "
                          "'max_batch_num'.")
-    if not args.num_batch_to_skip >= 0:
-        raise ValueError("arg 'num_batch_to_skip' must not be smaller than 0.")
+    if not args.first_batches_to_skip >= 0:
+        raise ValueError(
+            "arg 'first_batches_to_skip' must not be smaller than 0.")
 
-    prediction, avg_cost, accuracy = stacked_lstmp_model(
-        args.hidden_dim, args.proj_dim, args.stacked_num, args.parallel)
+    _, avg_cost, accuracy = stacked_lstmp_model(args.hidden_dim, args.proj_dim,
+                                                args.stacked_num, args.parallel)
 
     adam_optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
     adam_optimizer.minimize(avg_cost)
@@ -135,7 +137,7 @@ def profile(args):
     with profiler.profiler(args.device, sorted_key) as prof:
         frames_seen, start_time = 0, 0.0
         for batch_id in range(0, args.max_batch_num):
-            if args.num_batch_to_skip == batch_id:
+            if args.first_batches_to_skip == batch_id:
                 profiler.reset_profiler()
                 start_time = time.time()
                 frames_seen = 0

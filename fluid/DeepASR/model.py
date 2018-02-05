@@ -84,8 +84,6 @@ def _net_conf(feature, label, hidden_dim, proj_dim, stacked_num, class_num,
                                  size=class_num,
                                  act='softmax')
 
-    if not is_train: return feature, prediction
-
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
     avg_cost = fluid.layers.mean(x=cost)
     acc = fluid.layers.accuracy(input=prediction, label=label)

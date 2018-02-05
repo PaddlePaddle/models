@@ -92,8 +92,8 @@ def print_arguments(args):
 def train(args):
     """train in loop."""
 
-    prediction, avg_cost, accuracy = stacked_lstmp_model(
-        args.hidden_dim, args.proj_dim, args.stacked_num, args.parallel)
+    _, avg_cost, accuracy = stacked_lstmp_model(args.hidden_dim, args.proj_dim,
+                                                args.stacked_num, args.parallel)
 
     adam_optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
     adam_optimizer.minimize(avg_cost)
@@ -144,7 +144,7 @@ def train(args):
         pass_end_time = time.time()
         time_consumed = pass_end_time - pass_start_time
         # need to add test logic (kuke)
-        print("\nPass %d, time: %fs, test accuracy: 0.0f\n" %
+        print("\nPass %d, time consumed: %fs, test accuracy: 0.0f\n" %
               (pass_id, time_consumed))
 
 
