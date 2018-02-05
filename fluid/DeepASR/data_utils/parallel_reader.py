@@ -85,23 +85,26 @@ class DataReader(object):
     def __init__(self,
                  feature_file_list,
                  label_file_list,
+                 frame_dim=120 * 11,
                  drop_sentence_len=512,
+                 drop_frame_len=256,
                  parallel_num=10,
                  sample_buffer_size=1024,
                  sample_info_buffer_size=10000,
+                 shuffle_block_num=1,
                  random_seed=0):
-        self._drop_sentence_len = drop_sentence_len
-        self._frame_dim = 120 * 11
-        self._drop_frame_len = 256
-        self._shuffle_block_num = 1
-        self._drop_frame_len = 256
         self._feature_file_list = feature_file_list
         self._label_file_list = label_file_list
+        self._drop_sentence_len = drop_sentence_len
+        self._frame_dim = frame_dim
+        self._drop_frame_len = drop_frame_len
+        self._shuffle_block_num = shuffle_block_num
         self._block_info_list = None
-        self._bucket_list = None
         self._rng = random.Random(random_seed)
+        self._bucket_list = None
         self.generate_bucket_list(True)
         self._order_id = 0
+        self._manager = Manager()
         self._sample_buffer_size = sample_buffer_size
         self._sample_info_buffer_size = sample_info_buffer_size
         self._process_num = parallel_num
@@ -134,13 +137,13 @@ class DataReader(object):
                     map(lambda info: info[2], bucket_block_info),
                     map(lambda info: info[3], bucket_block_info)))
 
+    # @TODO make this configurable
     def set_transformers(self, transformers):
         self._transformers = transformers
 
     def _sample_generator(self):
-        manager = Manager()
-        sample_info_queue = manager.Queue(self._sample_info_buffer_size)
-        sample_queue = manager.Queue(self._sample_buffer_size)
+        sample_info_queue = self._manager.Queue(self._sample_info_buffer_size)
+        sample_queue = self._manager.Queue(self._sample_buffer_size)
         self._order_id = 0
 
         def ordered_feeding_worker(sample_info_queue):
@@ -215,7 +218,7 @@ class DataReader(object):
 
             sample_queue.put(EpochEndSignal())
 
-        out_order = manager.list([0])
+        out_order = self._manager.list([0])
         args = (sample_info_queue, sample_queue, out_order)
         workers = [
             Process(
