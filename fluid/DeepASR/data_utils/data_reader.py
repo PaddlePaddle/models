@@ -114,15 +114,15 @@ class EpochEndSignal():
 
 class DataReader(object):
     """DataReader provides basic audio sample preprocessing pipeline including
-    I/O and augmentation transformation.
+    I/O and augmentation transforming.
 
     Args:
         feature_file_list (str): File containing feature data related files.
         label_file_list (str): File containing label data related files.
         frame_dim (int): The final feature dimension of one frame after all 
                          augmentation applied.
-        drop_sentence_len (int): Lower threshold bound to filter samples having 
-                                 long sentence.
+        drop_frame_len (int): Lower threshold bound to filter samples having 
+                              long sentence.
         process_num (int): Number of processes for processing data.
         sample_buffer_size (int): Buffer size to indicate the maximum samples 
                                   cached.
@@ -140,8 +140,7 @@ class DataReader(object):
             feature_file_list,
             label_file_list,
             frame_dim=120 * 11,  # @TODO augmentor is responsible for the value
-            drop_sentence_len=512,
-            drop_frame_len=256,
+            drop_frame_len=512,
             process_num=10,
             sample_buffer_size=1024,
             sample_info_buffer_size=1024,
@@ -150,7 +149,6 @@ class DataReader(object):
             random_seed=0):
         self._feature_file_list = feature_file_list
         self._label_file_list = label_file_list
-        self._drop_sentence_len = drop_sentence_len
         self._frame_dim = frame_dim
         self._drop_frame_len = drop_frame_len
         self._shuffle_block_num = shuffle_block_num
@@ -265,7 +263,7 @@ class DataReader(object):
                     time.sleep(0.001)
 
                 # drop long sentence
-                if self._drop_sentence_len >= sample_data[0].shape[0]:
+                if self._drop_frame_len >= sample_data[0].shape[0]:
                     sample_queue.put(sample_data)
 
                 out_order[0] += 1
