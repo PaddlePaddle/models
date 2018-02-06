@@ -173,7 +173,7 @@ def train(args):
         trans_splice.TransSplice()
     ]
 
-    data_reader = reader.DataReader(args.feature_lst, args.label_lst)
+    data_reader = reader.DataReader(args.feature_lst, args.label_lst, -1)
     data_reader.set_transformers(ltrans)
 
     res_feature = fluid.LoDTensor()
@@ -198,7 +198,8 @@ def train(args):
                 fetch_list=[avg_cost] + accuracy.metrics,
                 return_numpy=False)
             train_acc = accuracy.eval(exe)
-            print("acc:", lodtensor_to_ndarray(loss))
+            print("pass_id", pass_id, "batch_id", batch_id, "acc:",
+                  lodtensor_to_ndarray(loss))
 
         pass_end_time = time.time()
         time_consumed = pass_end_time - pass_start_time
