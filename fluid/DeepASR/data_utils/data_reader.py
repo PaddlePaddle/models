@@ -16,7 +16,7 @@ import data_utils.augmentor.trans_add_delta as trans_add_delta
 
 
 class SampleInfo(object):
-    """SampleInfo holds the necessary information to load an example from disk.
+    """SampleInfo holds the necessary information to load a sample from disk.
 
     Args:
         feature_bin_path (str): File containing the feature data.
@@ -46,10 +46,10 @@ class SampleInfo(object):
 
 class SampleInfoBucket(object):
     """SampleInfoBucket contains paths of several description files. Feature
-    description file contains necessary information to access samples' feature 
-    data and label description file contains necessary information to
-    access samples' label data. SampleInfoBucket is the minimum unit to do 
-    shuffle.
+    description file contains necessary information (including path of binary 
+    data, sample start position, sample byte number etc.) to access samples' 
+    feature data and the same with the label description file. SampleInfoBucket 
+    is the minimum unit to do shuffle.
 
     Args:
         feature_bin_paths (list|tuple): Files containing the binary feature 
@@ -114,15 +114,17 @@ class EpochEndSignal():
 
 class DataReader(object):
     """DataReader provides basic audio sample preprocessing pipeline including
-    I/O and augmentation transforming.
+    data loading and data augmentation.
 
     Args:
-        feature_file_list (str): File containing feature data related files.
-        label_file_list (str): File containing label data related files.
+        feature_file_list (str): File containing paths of feature data file and
+                                 corresponding description file.
+        label_file_list (str): File containing paths of label data file and 
+                               corresponding description file.
         frame_dim (int): The final feature dimension of one frame after all 
                          augmentation applied.
-        drop_frame_len (int): Lower threshold bound to filter samples having 
-                              long sentence.
+        drop_frame_len (int): Samples whose label length above the value will be
+                              dropped.
         process_num (int): Number of processes for processing data.
         sample_buffer_size (int): Buffer size to indicate the maximum samples 
                                   cached.
