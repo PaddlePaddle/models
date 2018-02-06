@@ -10,10 +10,11 @@ import Queue
 import time
 import numpy as np
 from threading import Thread
+import signal
 from multiprocessing import Manager, Process
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
-from data_utils.util import suppress_complaints
+from data_utils.util import suppress_complaints, suppress_signal
 
 
 class SampleInfo(object):
@@ -134,9 +135,9 @@ class DataReader(object):
         shuffle_block_num (int): Block number indicating the minimum unit to do 
                                  shuffle.
         random_seed (int): Random seed.
-        verbose (int): Whether to suppress the complaints from sub-process. If
-                       set to 0, all complaints from sub-process will be 
-                       suppressed. If set to 1, all complaints will be printed.
+        verbose (int): If set to 0, complaints including exceptions and signal 
+                       traceback from sub-process will be suppressed. If set 
+                       to 1, all complaints will be printed.
     """
 
     def __init__(self,
@@ -223,6 +224,10 @@ class DataReader(object):
 
         @suppress_complaints(verbose=self._verbose)
         def ordered_processing_task(sample_info_queue, sample_queue, out_order):
+            if self._verbose == 0:
+                signal.signal(signal.SIGTERM, suppress_signal())
+                signal.signal(signal.SIGINT, suppress_signal())
+
             def read_bytes(fpath, start, size):
                 f = open(fpath, 'r')
                 f.seek(start, 0)

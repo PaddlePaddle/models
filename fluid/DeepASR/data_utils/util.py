@@ -33,6 +33,10 @@ def lodtensor_to_ndarray(lod_tensor):
     return ret, lod_tensor.lod()
 
 
+def suppress_signal(signo, stack_frame):
+    pass
+
+
 def suppress_complaints(verbose):
     def decorator_maker(func):
         def suppress_warpper(*args, **kwargs):
