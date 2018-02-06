@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument(
         '--minimum_batch_size',
         type=int,
-        default=32,
+        default=1,
         help='The minimum sequence number of a batch data. (default: %(default)d)'
     )
     parser.add_argument(
