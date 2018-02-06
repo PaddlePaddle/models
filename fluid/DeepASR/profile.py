@@ -26,6 +26,12 @@ def parse_args():
         default=32,
         help='The sequence number of a batch data. (default: %(default)d)')
     parser.add_argument(
+        '--minimum_batch_size',
+        type=int,
+        default=1,
+        help='The minimum sequence number of a batch data. '
+        '(default: %(default)d)')
+    parser.add_argument(
         '--stacked_num',
         type=int,
         default=5,
@@ -127,8 +133,8 @@ def profile(args):
         trans_splice.TransSplice()
     ]
 
-    data_reader = reader.DataRead(args.feature_lst, args.label_lst)
-    data_reader.set_trans(ltrans)
+    data_reader = reader.DataReader(args.feature_lst, args.label_lst)
+    data_reader.set_transformers(ltrans)
 
     res_feature = fluid.LoDTensor()
     res_label = fluid.LoDTensor()
@@ -136,16 +142,17 @@ def profile(args):
     sorted_key = None if args.sorted_key is 'None' else args.sorted_key
     with profiler.profiler(args.device, sorted_key) as prof:
         frames_seen, start_time = 0, 0.0
-        for batch_id in range(0, args.max_batch_num):
+        for batch_id, batch_data in enumerate(
+                data_reader.batch_iterator(args.batch_size,
+                                           args.minimum_batch_size)):
+            if batch_id >= args.max_batch_num:
+                break
             if args.first_batches_to_skip == batch_id:
                 profiler.reset_profiler()
                 start_time = time.time()
                 frames_seen = 0
             # load_data
-            one_batch = data_reader.get_one_batch(args.batch_size)
-            if one_batch == None:
-                break
-            (bat_feature, bat_label, lod) = one_batch
+            (bat_feature, bat_label, lod) = batch_data
             res_feature.set(bat_feature, place)
             res_feature.set_lod([lod])
             res_label.set(bat_label, place)

@@ -14,8 +14,8 @@ import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
 import data_utils.data_reader as reader
-from model import stacked_lstmp_model
 from data_utils.util import lodtensor_to_ndarray
+from model import stacked_lstmp_model
 
 
 def parse_args():
@@ -25,6 +25,12 @@ def parse_args():
         type=int,
         default=32,
         help='The sequence number of a batch data. (default: %(default)d)')
+    parser.add_argument(
+        '--minimum_batch_size',
+        type=int,
+        default=1,
+        help='The minimum sequence number of a batch data. '
+        '(default: %(default)d)')
     parser.add_argument(
         '--stacked_num',
         type=int,
@@ -108,26 +114,23 @@ def train(args):
         trans_splice.TransSplice()
     ]
 
-    data_reader = reader.DataRead(args.feature_lst, args.label_lst)
-    data_reader.set_trans(ltrans)
+    data_reader = reader.DataReader(args.feature_lst, args.label_lst)
+    data_reader.set_transformers(ltrans)
 
     res_feature = fluid.LoDTensor()
     res_label = fluid.LoDTensor()
     for pass_id in xrange(args.pass_num):
         pass_start_time = time.time()
-        batch_id = 0
-        while True:
+        for batch_id, batch_data in enumerate(
+                data_reader.batch_iterator(args.batch_size,
+                                           args.minimum_batch_size)):
             # load_data
-            one_batch = data_reader.get_one_batch(args.batch_size)
-            if one_batch == None:
-                break
-            (bat_feature, bat_label, lod) = one_batch
+            (bat_feature, bat_label, lod) = batch_data
             res_feature.set(bat_feature, place)
             res_feature.set_lod([lod])
             res_label.set(bat_label, place)
             res_label.set_lod([lod])
 
-            batch_id += 1
             _, acc = exe.run(fluid.default_main_program(),
                              feed={"feature": res_feature,
                                    "label": res_label},
