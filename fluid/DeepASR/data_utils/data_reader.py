@@ -62,8 +62,10 @@ class SampleInfoBucket(object):
         label_desc_paths (list|tuple): Files containing the description of
                                        samples' label data.
         split_perturb(int): split long sentence' perturb sub-sentence length value. 
-        split_sentence_threshold(int): sentence length large than split_sentence_threshold trigger split operator.
-        split_sub_sentence_len(int): sub-sentence length is equal to (split_sub_sentence_len + rand() % split_perturb).
+        split_sentence_threshold(int): sentence length large than 
+                                    split_sentence_threshold trigger split operator.
+        split_sub_sentence_len(int): sub-sentence length is equal to 
+                                    (split_sub_sentence_len + rand() % split_perturb).
     """
 
     def __init__(self,
