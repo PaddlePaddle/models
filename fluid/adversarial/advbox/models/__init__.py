@@ -1,5 +1,3 @@
 """
-Paddle model for target of attack
+Models __init__.py
 """
-from .base import Model
-from .paddle import PaddleModel

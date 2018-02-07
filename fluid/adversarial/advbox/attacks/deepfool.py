@@ -56,7 +56,7 @@ class DeepFoolAttack(Attack):
                 gradient_k = self.model.gradient(x, k)
                 w_k = gradient_k - gradient
                 f_k = f[k] - f[pre_label]
-                w_k_norm = np.linalg.norm(w_k) + 1e-8
+                w_k_norm = np.linalg.norm(w_k.flatten()) + 1e-8
                 pert_k = (np.abs(f_k) + 1e-8) / w_k_norm
                 if pert_k < pert:
                     pert = pert_k
