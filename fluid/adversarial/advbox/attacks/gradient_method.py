@@ -32,7 +32,7 @@ class GradientMethodAttack(Attack):
         super(GradientMethodAttack, self).__init__(model)
         self.support_targeted = support_targeted
 
-    def _apply(self, adversary, norm_ord=2, epsilons=0.01, steps=100):
+    def _apply(self, adversary, norm_ord=np.inf, epsilons=0.01, steps=100):
         """
         Apply the gradient attack method.
         :param adversary(Adversary):
