@@ -99,7 +99,8 @@ def parse_args():
         '--model_save_dir',
         type=str,
         default='./checkpoints',
-        help='directory to save model.')
+        help='directory to save model. Do not save model if set to '
+        '.')
     args = parser.parse_args()
     return args
 
@@ -112,7 +113,8 @@ def print_arguments(args):
 
 
 def train(args):
-    """train in loop."""
+    """train in loop.
+    """
 
     prediction, avg_cost, accuracy = stacked_lstmp_model(
         args.hidden_dim, args.proj_dim, args.stacked_num, args.parallel)
@@ -135,8 +137,8 @@ def train(args):
         trans_splice.TransSplice()
     ]
 
-    res_feature = fluid.LoDTensor()
-    res_label = fluid.LoDTensor()
+    feature_t = fluid.LoDTensor()
+    label_t = fluid.LoDTensor()
 
     # validation
     def test(exe):
@@ -153,22 +155,22 @@ def train(args):
                 test_data_reader.batch_iterator(args.batch_size,
                                                 args.minimum_batch_size)):
             # load_data
-            (bat_feature, bat_label, lod) = batch_data
-            res_feature.set(bat_feature, place)
-            res_feature.set_lod([lod])
-            res_label.set(bat_label, place)
-            res_label.set_lod([lod])
+            (features, labels, lod) = batch_data
+            feature_t.set(features, place)
+            feature_t.set_lod([lod])
+            label_t.set(labels, place)
+            label_t.set_lod([lod])
 
-            cost, acc = exe.run(
-                test_program,
-                feed={"feature": res_feature,
-                      "label": res_label},
-                fetch_list=[avg_cost, accuracy],
-                return_numpy=False)
+            cost, acc = exe.run(test_program,
+                                feed={"feature": feature_t,
+                                      "label": label_t},
+                                fetch_list=[avg_cost, accuracy],
+                                return_numpy=False)
             test_costs.append(lodtensor_to_ndarray(cost)[0])
             test_accs.append(lodtensor_to_ndarray(acc)[0])
         return np.mean(test_costs), np.mean(test_accs)
 
+    # train data reader
     train_data_reader = reader.DataReader(args.train_feature_lst,
                                           args.train_label_lst)
     train_data_reader.set_transformers(ltrans)
@@ -179,35 +181,37 @@ def train(args):
                 train_data_reader.batch_iterator(args.batch_size,
                                                  args.minimum_batch_size)):
             # load_data
-            (bat_feature, bat_label, lod) = batch_data
-            res_feature.set(bat_feature, place)
-            res_feature.set_lod([lod])
-            res_label.set(bat_label, place)
-            res_label.set_lod([lod])
+            (features, labels, lod) = batch_data
+            feature_t.set(features, place)
+            feature_t.set_lod([lod])
+            label_t.set(labels, place)
+            label_t.set_lod([lod])
 
-            _, acc = exe.run(fluid.default_main_program(),
-                             feed={"feature": res_feature,
-                                   "label": res_label},
-                             fetch_list=[avg_cost, accuracy],
-                             return_numpy=False)
+            cost, acc = exe.run(fluid.default_main_program(),
+                                feed={"feature": feature_t,
+                                      "label": label_t},
+                                fetch_list=[avg_cost, accuracy],
+                                return_numpy=False)
 
             if batch_id > 0 and (batch_id % args.print_per_batches == 0):
-                print("\nBatch %d, training acc: %f" %
-                      (batch_id, lodtensor_to_ndarray(acc)[0]))
+                print("\nBatch %d, train cost: %f, train acc: %f" %
+                      (batch_id, lodtensor_to_ndarray(cost)[0],
+                       lodtensor_to_ndarray(acc)[0]))
             else:
                 sys.stdout.write('.')
                 sys.stdout.flush()
         # run test
         val_cost, val_acc = test(exe)
-        pass_end_time = time.time()
-        time_consumed = pass_end_time - pass_start_time
         # save model 
-        if args.model_save_dir is not None:
+        if args.model_save_dir != '':
             model_path = os.path.join(
                 args.model_save_dir, "deep_asr.pass_" + str(pass_id) + ".model")
             fluid.io.save_inference_model(model_path, ["feature"],
                                           [prediction], exe)
-
+        # cal pass time
+        pass_end_time = time.time()
+        time_consumed = pass_end_time - pass_start_time
+        # print info at pass end
         print("\nPass %d, time consumed: %f s, val cost: %f, val acc: %f\n" %
               (pass_id, time_consumed, val_cost, val_acc))
 
@@ -216,8 +220,7 @@ if __name__ == '__main__':
     args = parse_args()
     print_arguments(args)
 
-    if args.model_save_dir is not None and \
-       not os.path.exists(args.model_save_dir):
+    if args.model_save_dir != '' and not os.path.exists(args.model_save_dir):
         os.mkdir(args.model_save_dir)
 
     train(args)

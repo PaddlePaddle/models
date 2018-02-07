@@ -19,7 +19,7 @@ from data_utils.util import lodtensor_to_ndarray
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("Profiling for stacked LSTMP model.")
+    parser = argparse.ArgumentParser("Profiling for the stacked LSTMP model.")
     parser.add_argument(
         '--batch_size',
         type=int,
@@ -108,7 +108,8 @@ def print_arguments(args):
 
 
 def profile(args):
-    """profile the training process"""
+    """profile the training process.
+    """
 
     if not args.first_batches_to_skip < args.max_batch_num:
         raise ValueError("arg 'first_batches_to_skip' must be smaller than "
@@ -136,8 +137,8 @@ def profile(args):
     data_reader = reader.DataReader(args.feature_lst, args.label_lst)
     data_reader.set_transformers(ltrans)
 
-    res_feature = fluid.LoDTensor()
-    res_label = fluid.LoDTensor()
+    feature_t = fluid.LoDTensor()
+    label_t = fluid.LoDTensor()
 
     sorted_key = None if args.sorted_key is 'None' else args.sorted_key
     with profiler.profiler(args.device, sorted_key) as prof:
@@ -152,17 +153,17 @@ def profile(args):
                 start_time = time.time()
                 frames_seen = 0
             # load_data
-            (bat_feature, bat_label, lod) = batch_data
-            res_feature.set(bat_feature, place)
-            res_feature.set_lod([lod])
-            res_label.set(bat_label, place)
-            res_label.set_lod([lod])
+            (features, labels, lod) = batch_data
+            feature_t.set(features, place)
+            feature_t.set_lod([lod])
+            label_t.set(labels, place)
+            label_t.set_lod([lod])
 
             frames_seen += lod[-1]
 
             outs = exe.run(fluid.default_main_program(),
-                           feed={"feature": res_feature,
-                                 "label": res_label},
+                           feed={"feature": feature_t,
+                                 "label": label_t},
                            fetch_list=[avg_cost, accuracy],
                            return_numpy=False)
 
