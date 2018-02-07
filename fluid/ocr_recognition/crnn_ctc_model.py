@@ -18,8 +18,8 @@ def conv_bn_pool(input,
             param_attr=param if param_0 is None else param_0,
             act=None,  # LinearActivation
             use_cudnn=True)
-    tmp = fluid.layers.batch_norm(
-        input=tmp, act=act, param_attr=param, bias_attr=bias)
+        tmp = fluid.layers.batch_norm(
+            input=tmp, act=act, param_attr=param, bias_attr=bias)
     tmp = fluid.layers.pool2d(
         input=tmp, pool_size=2, pool_type='max', pool_stride=2, use_cudnn=True)
 
