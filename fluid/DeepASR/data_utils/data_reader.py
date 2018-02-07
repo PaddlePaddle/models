@@ -171,7 +171,7 @@ class DataReader(object):
         label_file_list (str): File containing paths of label data file and 
                                corresponding description file.
         drop_frame_len (int): Samples whose label length above the value will be
-                              dropped.
+                              dropped.(Using '-1' to disable the policy)
         process_num (int): Number of processes for processing data.
         sample_buffer_size (int): Buffer size to indicate the maximum samples 
                                   cached.
