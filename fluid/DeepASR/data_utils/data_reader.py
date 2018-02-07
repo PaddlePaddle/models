@@ -270,8 +270,8 @@ class DataReader(object):
         @suppress_complaints(verbose=self._verbose)
         def ordered_processing_task(sample_info_queue, sample_queue, out_order):
             if self._verbose == 0:
-                signal.signal(signal.SIGTERM, suppress_signal())
-                signal.signal(signal.SIGINT, suppress_signal())
+                signal.signal(signal.SIGTERM, suppress_signal)
+                signal.signal(signal.SIGINT, suppress_signal)
 
             def read_bytes(fpath, start, size):
                 f = open(fpath, 'r')

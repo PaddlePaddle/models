@@ -5,6 +5,8 @@ import sys
 from six import reraise
 from tblib import Traceback
 
+import numpy as np
+
 
 def to_lodtensor(data, place):
     """convert tensor to lodtensor
