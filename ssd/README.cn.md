@@ -82,7 +82,7 @@ SSD使用一个卷积神经网络实现“端到端”的检测：输入为原�
     文件共两个字段，第一个字段为图像文件的相对路径，第二个字段为对应标注文件的相对路径。
 
 ### 预训练模型准备
-下载预训练的VGG-16模型，我们提供了一个转换好的模型，下载好模型后，放置路径为```vgg/vgg_model.tar.gz```。
+下载预训练的VGG-16模型，我们提供了一个转换好的模型，下载模型[http://paddlepaddle.bj.bcebos.com/model_zoo/detection/ssd_model/vgg_model.tar.gz](http://paddlepaddle.bj.bcebos.com/model_zoo/detection/ssd_model/vgg_model.tar.gz)，并将其放置路径为```vgg/vgg_model.tar.gz```。
 
 ### 模型训练
 直接执行```python train.py```即可进行训练。需要注意本示例仅支持CUDA GPU环境，无法在CPU上训练，主要因为使用CPU训练速度很慢，实践中一般使用GPU来处理图像任务，这里实现采用硬编码方式使用cuDNN，不提供CPU版本。```train.py```的一些关键执行逻辑：

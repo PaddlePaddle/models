@@ -1,5 +1,4 @@
 import os
-
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
 import reader
@@ -35,7 +34,11 @@ def squeeze_excitation(input, num_channels, reduction_ratio):
 def shortcut(input, ch_out, stride):
     ch_in = input.shape[1]
     if ch_in != ch_out:
-        return conv_bn_layer(input, ch_out, 3, stride)
+        if stride == 1:
+            filter_size = 1
+        else:
+            filter_size = 3
+        return conv_bn_layer(input, ch_out, filter_size, stride)
     else:
         return input
 
@@ -75,7 +78,7 @@ def SE_ResNeXt(input, class_dim, infer=False):
     conv = conv_bn_layer(
         input=conv, num_filters=128, filter_size=3, stride=1, act='relu')
     conv = fluid.layers.pool2d(
-        input=conv, pool_size=3, pool_stride=2, pool_type='max')
+        input=conv, pool_size=3, pool_stride=2, pool_padding=1, pool_type='max')
 
     for block in range(len(depth)):
         for i in range(depth[block]):
@@ -96,7 +99,11 @@ def SE_ResNeXt(input, class_dim, infer=False):
     return out
 
 
-def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
+def train(learning_rate,
+          batch_size,
+          num_passes,
+          init_model=None,
+          model_save_dir='model'):
     class_dim = 1000
     image_shape = [3, 224, 224]
 
@@ -109,9 +116,9 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
     avg_cost = fluid.layers.mean(x=cost)
 
     optimizer = fluid.optimizer.Momentum(
-        learning_rate=learning_rate / batch_size,
+        learning_rate=learning_rate,
         momentum=0.9,
-        regularization=fluid.regularizer.L2Decay(1e-4 * batch_size))
+        regularization=fluid.regularizer.L2Decay(1e-4))
     opts = optimizer.minimize(avg_cost)
     accuracy = fluid.evaluator.Accuracy(input=out, label=label)
 
@@ -124,6 +131,9 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
+
+    if init_model is not None:
+        fluid.io.load_persistables_if_exist(exe, init_model)
 
     train_reader = paddle.batch(reader.train(), batch_size=batch_size)
     test_reader = paddle.batch(reader.test(), batch_size=batch_size)
@@ -141,16 +151,18 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
 
         test_accuracy.reset(exe)
         for data in test_reader():
-            out, acc = exe.run(inference_program,
-                               feed=feeder.feed(data),
-                               fetch_list=[avg_cost] + test_accuracy.metrics)
+            loss, acc = exe.run(inference_program,
+                                feed=feeder.feed(data),
+                                fetch_list=[avg_cost] + test_accuracy.metrics)
         test_pass_acc = test_accuracy.eval(exe)
         print("End pass {0}, train_acc {1}, test_acc {2}".format(
             pass_id, pass_acc, test_pass_acc))
 
         model_path = os.path.join(model_save_dir, str(pass_id))
-        fluid.io.save_inference_model(model_path, ['image'], [out], exe)
+        if not os.path.isdir(model_path):
+            os.makedirs(model_path)
+        fluid.io.save_persistables(exe, model_path)
 
 
 if __name__ == '__main__':
-    train(learning_rate=0.1, batch_size=7, num_passes=100)
+    train(learning_rate=0.1, batch_size=8, num_passes=100, init_model=None)

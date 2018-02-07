@@ -2,21 +2,21 @@
 The base model of the model.
 """
 from abc import ABCMeta
-import abc
+from abc import abstractmethod
 
-abstractmethod = abc.abstractmethod
+import numpy as np
 
 
 class Model(object):
     """
     Base class of model to provide attack.
 
-
     Args:
         bounds(tuple): The lower and upper bound for the image pixel.
-        channel_axis(int): The index of the axis that represents the color channel.
-        preprocess(tuple): Two element tuple used to preprocess the input. First
-            substract the first element, then divide the second element.
+        channel_axis(int): The index of the axis that represents the color
+                channel.
+        preprocess(tuple): Two element tuple used to preprocess the input.
+            First substract the first element, then divide the second element.
     """
     __metaclass__ = ABCMeta
 
@@ -43,25 +43,32 @@ class Model(object):
         return self._channel_axis
 
     def _process_input(self, input_):
-        res = input_
+        res = None
         sub, div = self._preprocess
-        if sub != 0:
+        if np.any(sub != 0):
             res = input_ - sub
-        assert div != 0
-        if div != 1:
-            res /= div
+        assert np.any(div != 0)
+        if np.any(div != 1):
+            if res is None:  # "res = input_ - sub" is not executed!
+                res = input_ / div
+            else:
+                res /= div
+        if res is None:  # "res = (input_ - sub)/ div" is not executed!
+            return input_
         return res
 
     @abstractmethod
-    def predict(self, image_batch):
+    def predict(self, data):
         """
-        Calculate the prediction of the image batch.
+        Calculate the prediction of the data.
 
         Args:
-            image_batch(numpy.ndarray): image batch of shape (batch_size, height, width, channels).
+            data(numpy.ndarray): input data with shape (size,
+            height, width, channels).
 
         Return:
-            numpy.ndarray: predictions of the images with shape (batch_size, num_of_classes).
+            numpy.ndarray: predictions of the data with shape (batch_size,
+                num_of_classes).
         """
         raise NotImplementedError
 
@@ -76,15 +83,17 @@ class Model(object):
         raise NotImplementedError
 
     @abstractmethod
-    def gradient(self, image_batch):
+    def gradient(self, data, label):
         """
         Calculate the gradient of the cross-entropy loss w.r.t the image.
 
         Args:
-            image_batch(list): The image and label tuple list.
+            data(numpy.ndarray): input data with shape (size, height, width,
+            channels).
+            label(int): Label used to calculate the gradient.
 
         Return:
-            numpy.ndarray: gradient of the cross-entropy loss w.r.t the image with
-                the shape (height, width, channel).
+            numpy.ndarray: gradient of the cross-entropy loss w.r.t the image
+                with the shape (height, width, channel).
         """
         raise NotImplementedError
