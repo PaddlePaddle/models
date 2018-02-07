@@ -14,6 +14,8 @@
 #limitations under the License.
 
 import numpy as np
+import paddle.v2 as paddle
+
 DATA_SHAPE = [1, 512, 512]
 NUM_CLASSES = 20
 
@@ -30,14 +32,14 @@ def _read_creater(num_sample=1024, min_seq_len=1, max_seq_len=10):
     return reader
 
 
-def train(num_sample=16):
+def train(batch_size, num_sample=16):
     """Get train dataset reader."""
-    return _read_creater(num_sample=num_sample)
+    return paddle.batch(_read_creater(num_sample=num_sample), batch_size)
 
 
-def test(num_sample=16):
+def test(batch_size=1, num_sample=16):
     """Get test dataset reader."""
-    return _read_creater(num_sample=num_sample)
+    return paddle.batch(_read_creater(num_sample=num_sample), batch_size)
 
 
 def data_shape():
