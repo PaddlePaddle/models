@@ -115,7 +115,10 @@ class SampleInfoBucket(object):
                 label_frame_num = int(label_desc_split[4])
                 assert feature_frame_num == label_frame_num
 
-                if self._split_sentence_threshold == -1 or self._split_perturb == -1 or self._split_sub_sentence_len == -1 or self._split_sentence_threshold >= feature_frame_num:
+                if self._split_sentence_threshold == -1 or \
+                        self._split_perturb == -1 or \
+                        self._split_sub_sentence_len == -1 \
+                        or self._split_sentence_threshold >= feature_frame_num:
                     sample_info_list.append(
                         SampleInfo(feature_bin_path, feature_start,
                                    feature_size, feature_frame_num, feature_dim,
