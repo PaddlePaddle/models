@@ -67,13 +67,13 @@ def infer(args):
     """ Get one batch of feature data and predicts labels for each sample.
     """
 
-    if args.model_save_path is None or \
-       not os.path.exists(args.model_save_path):
+    if not os.path.exists(args.model_save_path):
         raise IOError("Invalid model path!")
 
     place = fluid.CUDAPlace(0) if args.device == 'GPU' else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
+    # load model
     [infer_program, feed_dicts,
      fetch_targets] = fluid.io.load_inference_model(args.model_save_path, exe)
 
