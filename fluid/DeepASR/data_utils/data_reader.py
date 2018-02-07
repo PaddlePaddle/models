@@ -111,6 +111,7 @@ class SampleInfoBucket(object):
                 label_start = int(label_desc_split[2])
                 label_size = int(label_desc_split[3])
                 label_frame_num = int(label_desc_split[4])
+                assert feature_frame_num == label_frame_num
 
                 if self._split_sentence_threshold == -1 or self._split_perturb == -1 or self._split_sub_sentence_len == -1 or self._split_sentence_threshold >= feature_frame_num:
                     sample_info_list.append(
@@ -272,11 +273,20 @@ class DataReader(object):
                                            sample_info.feature_start,
                                            sample_info.feature_size)
 
+                assert sample_info.feature_frame_num * sample_info.feature_dim * 4 == len(
+                    feature_bytes), (sample_info.feature_bin_path,
+                                     sample_info.feature_frame_num,
+                                     sample_info.feature_dim,
+                                     len(feature_bytes))
+
                 label_bytes = read_bytes(sample_info.label_bin_path,
                                          sample_info.label_start,
                                          sample_info.label_size)
 
-                assert sample_info.label_frame_num * 4 == len(label_bytes)
+                assert sample_info.label_frame_num * 4 == len(label_bytes), (
+                    sample_info.label_bin_path, sample_info.label_array,
+                    len(label_bytes))
+
                 label_array = struct.unpack('I' * sample_info.label_frame_num,
                                             label_bytes)
                 label_data = np.array(
