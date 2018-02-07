@@ -74,7 +74,7 @@ def infer(args):
     exe = fluid.Executor(place)
 
     # load model
-    [infer_program, feed_dicts,
+    [infer_program, feed_dict,
      fetch_targets] = fluid.io.load_inference_model(args.model_save_path, exe)
 
     ltrans = [
@@ -94,7 +94,7 @@ def infer(args):
     feature_t.set_lod([lod])
 
     results = exe.run(infer_program,
-                      feed={feed_dicts[0]: feature_t},
+                      feed={feed_dict[0]: feature_t},
                       fetch_list=fetch_targets,
                       return_numpy=False)
 
