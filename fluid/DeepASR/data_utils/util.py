@@ -35,21 +35,40 @@ def lodtensor_to_ndarray(lod_tensor):
     return ret, lod_tensor.lod()
 
 
+class CriticalException(Exception):
+    pass
+
+
 def suppress_signal(signo, stack_frame):
     pass
 
 
-def suppress_complaints(verbose):
+def suppress_complaints(verbose, notify=None):
     def decorator_maker(func):
         def suppress_warpper(*args, **kwargs):
             try:
                 func(*args, **kwargs)
             except:
                 et, ev, tb = sys.exc_info()
-                tb = Traceback(tb)
-                if verbose == 1:
-                    reraise(et, ev, tb.as_traceback())
+
+                if notify is not None:
+                    notify(except_type=et, except_value=ev, traceback=tb)
+
+                if verbose == 1 or isinstance(ev, CriticalException):
+                    reraise(et, ev, Traceback(tb).as_traceback())
 
         return suppress_warpper
 
     return decorator_maker
+
+
+class ForceExitWrapper(object):
+    def __init__(self, exit_flag):
+        self._exit_flag = exit_flag
+
+    @suppress_complaints(verbose=0)
+    def __call__(self, *args, **kwargs):
+        self._exit_flag.value = True
+
+    def __eq__(self, flag):
+        return self._exit_flag.value == flag
