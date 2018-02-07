@@ -8,15 +8,13 @@ import numpy as np
 import argparse
 import time
 
-import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
-import paddle.v2.fluid.profiler as profiler
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
 import data_utils.data_reader as reader
 from data_utils.util import lodtensor_to_ndarray
-from model import stacked_lstmp_model
+from model_utils.model import stacked_lstmp_model
 
 
 def parse_args():
@@ -116,8 +114,14 @@ def train(args):
     """train in loop.
     """
 
+    # prediction, avg_cost, accuracy = stacked_lstmp_model(args.hidden_dim, 
+    #    args.proj_dim, args.stacked_num, class_num=1749, args.parallel)
     prediction, avg_cost, accuracy = stacked_lstmp_model(
-        args.hidden_dim, args.proj_dim, args.stacked_num, args.parallel)
+        hidden_dim=args.hidden_dim,
+        proj_dim=args.proj_dim,
+        stacked_num=args.stacked_num,
+        class_num=1749,
+        parallel=args.parallel)
 
     adam_optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
     adam_optimizer.minimize(avg_cost)

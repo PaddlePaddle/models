@@ -9,11 +9,15 @@ import paddle.v2.fluid as fluid
 def stacked_lstmp_model(hidden_dim,
                         proj_dim,
                         stacked_num,
+                        class_num,
                         parallel=False,
-                        is_train=True,
-                        class_num=1749):
+                        is_train=True):
     """ The model for DeepASR. The main structure is composed of stacked 
         identical LSTMP (LSTM with recurrent projection) layers.
+
+        When running in training and validation phase, the feeding dictionary
+        is {'feature', 'label'}, fed by the LodTensor for feature data and 
+        label data respectively. And in inference, only `feature` is needed.
 
     Args:
 	hidden_dim(int): The hidden state's dimension of the LSTMP layer.
