@@ -38,7 +38,7 @@ class GradientMethodAttack(Attack):
         :param adversary(Adversary):
             The Adversary object.
         :param norm_ord(int):
-            Order of the norm, such as np.inf, 0, 2, etc.
+            Order of the norm, such as np.inf, 1, 2, etc. It can't be 0.
         :param epsilons(list|tuple|int):
             Attack step size (input variation).
         :param steps:
@@ -46,6 +46,9 @@ class GradientMethodAttack(Attack):
         :return:
             adversary(Adversary): The Adversary object.
         """
+        if norm_ord == 0:
+            raise ValueError("L0 norm is not supported!")
+
         if not self.support_targeted:
             if adversary.is_targeted_attack:
                 raise ValueError(
@@ -62,8 +65,9 @@ class GradientMethodAttack(Attack):
                 self.model.channel_axis() == adversary.original.shape[0] or
                 self.model.channel_axis() == adversary.original.shape[-1])
 
+        step = 1
         adv_img = adversary.original
-        for epsilon in epsilons:
+        for epsilon in epsilons[:steps]:
             if epsilon == 0.0:
                 continue
             if adversary.is_targeted_attack:
@@ -79,10 +83,12 @@ class GradientMethodAttack(Attack):
             adv_img = adv_img + epsilon * gradient_norm * (max_ - min_)
             adv_img = np.clip(adv_img, min_, max_)
             adv_label = np.argmax(self.model.predict(adv_img))
-            logging.info('epsilon = {:.5f}, pre_label = {}, adv_label={}'.
-                         format(epsilon, pre_label, adv_label))
+            logging.info('step={}, epsilon = {:.5f}, pre_label = {}, '
+                         'adv_label={}'.format(step, epsilon, pre_label,
+                                               adv_label))
             if adversary.try_accept_the_example(adv_img, adv_label):
                 return adversary
+            step += 1
         return adversary
 
     @staticmethod
