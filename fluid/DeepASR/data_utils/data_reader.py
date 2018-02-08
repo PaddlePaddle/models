@@ -61,9 +61,9 @@ class SampleInfoBucket(object):
         label_bin_paths (list|tuple): Files containing the binary label data.
         label_desc_paths (list|tuple): Files containing the description of
                                        samples' label data.
-        split_perturb(int): split long sentence' perturb sub-sentence length value. 
-        split_sentence_threshold(int): sentence length large than 
-                                    split_sentence_threshold trigger split operator.
+        split_perturb(int): Random perturb sub-sentence length when split long sentence. 
+        split_sentence_threshold(int): Sentence whose length larger than 
+                                the value will trigger split operation.
         split_sub_sentence_len(int): sub-sentence length is equal to 
                                     (split_sub_sentence_len + rand() % split_perturb).
     """
@@ -133,8 +133,8 @@ class SampleInfoBucket(object):
                     remain_frame_num = feature_frame_num
                     while True:
                         if remain_frame_num > self._split_sentence_threshold:
-                            cur_frame_len = self._split_sub_sentence_len + random.randint(
-                                0, self._split_perturb)
+                            cur_frame_len = self._split_sub_sentence_len + \
+                                    self._rng.randint(0, self._split_perturb)
                             if cur_frame_len > remain_frame_num:
                                 cur_frame_len = remain_frame_num
                         else:
@@ -291,11 +291,12 @@ class DataReader(object):
                                            sample_info.feature_start,
                                            sample_info.feature_size)
 
-                assert sample_info.feature_frame_num * sample_info.feature_dim * 4 == len(
-                    feature_bytes), (sample_info.feature_bin_path,
-                                     sample_info.feature_frame_num,
-                                     sample_info.feature_dim,
-                                     len(feature_bytes))
+                assert sample_info.feature_frame_num * sample_info.feature_dim * 4 \
+                        == len(feature_bytes), \
+                        (sample_info.feature_bin_path,
+                         sample_info.feature_frame_num,
+                         sample_info.feature_dim,
+                         len(feature_bytes))
 
                 label_bytes = read_bytes(sample_info.label_bin_path,
                                          sample_info.label_start,
@@ -329,8 +330,8 @@ class DataReader(object):
                     time.sleep(0.001)
 
                 # drop long sentence
-                if self._drop_frame_len == -1 or self._drop_frame_len >= sample_data[
-                        0].shape[0]:
+                if self._drop_frame_len == -1 or \
+                        self._drop_frame_len >= sample_data[0].shape[0]:
                     sample_queue.put(sample_data)
 
                 out_order[0] += 1
