@@ -29,22 +29,23 @@ def parse_args():
         '--mean_var',
         type=str,
         default='data/global_mean_var_search26kHr',
-        help='mean var path')
+        help="The path for feature's global mean and variance. "
+        "(default: %(default)s)")
     parser.add_argument(
         '--infer_feature_lst',
         type=str,
         default='data/infer_feature.lst',
-        help='feature list path for inference.')
+        help='The feature list path for inference. (default: %(default)s)')
     parser.add_argument(
         '--infer_label_lst',
         type=str,
         default='data/infer_label.lst',
-        help='label list path for inference.')
+        help='The label list path for inference. (default: %(default)s)')
     parser.add_argument(
         '--model_save_path',
         type=str,
         default='./checkpoints/deep_asr.pass_0.model/',
-        help='directory to save model.')
+        help='The directory for saving model. (default: %(default)s)')
     args = parser.parse_args()
     return args
 
@@ -64,7 +65,7 @@ def split_infer_result(infer_seq, lod):
 
 
 def infer(args):
-    """ Get one batch of feature data and predicts labels for each sample.
+    """ Gets one batch of feature data and predicts labels for each sample.
     """
 
     if not os.path.exists(args.model_save_path):
