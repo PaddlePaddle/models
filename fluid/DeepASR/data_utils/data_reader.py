@@ -62,7 +62,8 @@ class SampleInfoBucket(object):
         label_bin_paths (list|tuple): Files containing the binary label data.
         label_desc_paths (list|tuple): Files containing the description of
                                        samples' label data.
-        split_perturb(int): Random perturb sub-sentence length when split long sentence. 
+        split_perturb(int): Maximum perturbation value for length of 
+                            sub-sentence when splitting long sentence.
         split_sentence_threshold(int): Sentence whose length larger than 
                                 the value will trigger split operation.
         split_sub_sentence_len(int): sub-sentence length is equal to 
