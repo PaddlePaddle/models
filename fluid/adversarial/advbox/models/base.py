@@ -30,15 +30,15 @@ class Model(object):
         # Make self._preprocess to be (0,1) if possible, so that don't need
         # to do substract or divide.
         if preprocess is not None:
-            sub, div = preprocess
+            sub, div = np.array(preprocess)
             if not np.any(sub):
-                sub = None
-            if np.all(np.array(div) == 1):
-                div = None
+                sub = 0
+            if np.all(div == 1):
+                div = 1
             assert (div is None) or np.all(div)
             self._preprocess = (sub, div)
         else:
-            self._preprocess = (None, None)
+            self._preprocess = (0, 1)
 
     def bounds(self):
         """
@@ -55,9 +55,9 @@ class Model(object):
     def _process_input(self, input_):
         res = None
         sub, div = self._preprocess
-        if sub is not None:
+        if np.any(sub != 0):
             res = input_ - sub
-        if div is not None:
+        if not np.all(sub == 1):
             if res is None:  # "res = input_ - sub" is not executed!
                 res = input_ / div
             else:
