@@ -63,7 +63,7 @@ class SaliencyMapAttack(Attack):
                     return adversary
 
                 # stop if mask is all zero
-                if not any(mask):
+                if not any(mask.flatten()):
                     return adversary
 
                 logging.info('step = {}, original_label = {}, adv_label={}'.
@@ -104,9 +104,6 @@ class SaliencyMapAttack(Attack):
         target_labels = random.sample(range(num_classes), num_random_target + 1)
         target_labels = [t for t in target_labels if t != original_label]
         target_labels = target_labels[:num_random_target]
-
-        # str_target_labels = [str(t) for t in target_labels]
-        # logging.info('Random target labels: {}'.format(', '.join(str_target_labels)))
 
         return target_labels
 
