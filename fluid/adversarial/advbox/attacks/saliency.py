@@ -36,7 +36,6 @@ class SaliencyMapAttack(Attack):
         assert (adversary.target_label is None) or adversary.is_targeted_attack
 
         target_labels = [adversary.target_label]
-
         for target in target_labels:
             original_image = adversary.original
 
@@ -80,6 +79,8 @@ class SaliencyMapAttack(Attack):
                     mask[idx] = 0
 
                 adv_img = np.clip(adv_img, min_, max_)
+
+        return adversary
 
     def _is_zero_mask(self, mask):
         """
