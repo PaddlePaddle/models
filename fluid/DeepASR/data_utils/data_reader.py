@@ -28,7 +28,7 @@ class SampleInfo(object):
         feature_frame_num (int): Time length of the sample.
         feature_dim (int): Feature dimension of one frame.
         label_bin_path (str): File containing the label data.
-        label_size (int): Byte count of the sample's label data. 
+        label_size (int): Byte count of the sample's label data.
         label_frame_num (int): Label number of the sample.
     """
 
@@ -49,24 +49,24 @@ class SampleInfo(object):
 
 class SampleInfoBucket(object):
     """SampleInfoBucket contains paths of several description files. Feature
-    description file contains necessary information (including path of binary 
-    data, sample start position, sample byte number etc.) to access samples' 
-    feature data and the same with the label description file. SampleInfoBucket 
+    description file contains necessary information (including path of binary
+    data, sample start position, sample byte number etc.) to access samples'
+    feature data and the same with the label description file. SampleInfoBucket
     is the minimum unit to do shuffle.
 
     Args:
-        feature_bin_paths (list|tuple): Files containing the binary feature 
+        feature_bin_paths (list|tuple): Files containing the binary feature
                                         data.
-        feature_desc_paths (list|tuple): Files containing the description of 
-                                         samples' feature data. 
+        feature_desc_paths (list|tuple): Files containing the description of
+                                         samples' feature data.
         label_bin_paths (list|tuple): Files containing the binary label data.
         label_desc_paths (list|tuple): Files containing the description of
                                        samples' label data.
-        split_perturb(int): Maximum perturbation value for length of 
+        split_perturb(int): Maximum perturbation value for length of
                             sub-sentence when splitting long sentence.
-        split_sentence_threshold(int): Sentence whose length larger than 
+        split_sentence_threshold(int): Sentence whose length larger than
                                 the value will trigger split operation.
-        split_sub_sentence_len(int): sub-sentence length is equal to 
+        split_sub_sentence_len(int): sub-sentence length is equal to
                                     (split_sub_sentence_len + rand() % split_perturb).
     """
 
@@ -129,7 +129,7 @@ class SampleInfoBucket(object):
                                    feature_size, feature_frame_num, feature_dim,
                                    label_bin_path, label_start, label_size,
                                    label_frame_num))
-                #split sentence 
+                #split sentence
                 else:
                     cur_frame_pos = 0
                     cur_frame_len = 0
@@ -156,7 +156,6 @@ class SampleInfoBucket(object):
                         if remain_frame_num <= 0:
                             break
 
-        print("generate_sample_info_list size ", len(sample_info_list))
         return sample_info_list
 
 
@@ -171,22 +170,22 @@ class DataReader(object):
     Args:
         feature_file_list (str): File containing paths of feature data file and
                                  corresponding description file.
-        label_file_list (str): File containing paths of label data file and 
+        label_file_list (str): File containing paths of label data file and
                                corresponding description file.
         drop_frame_len (int): Samples whose label length above the value will be
                               dropped.(Using '-1' to disable the policy)
         process_num (int): Number of processes for processing data.
-        sample_buffer_size (int): Buffer size to indicate the maximum samples 
+        sample_buffer_size (int): Buffer size to indicate the maximum samples
                                   cached.
-        sample_info_buffer_size (int): Buffer size to indicate the maximum 
+        sample_info_buffer_size (int): Buffer size to indicate the maximum
                                        sample information cached.
-        batch_buffer_size (int): Buffer size to indicate the maximum batch 
+        batch_buffer_size (int): Buffer size to indicate the maximum batch
                                  cached.
-        shuffle_block_num (int): Block number indicating the minimum unit to do 
+        shuffle_block_num (int): Block number indicating the minimum unit to do
                                  shuffle.
         random_seed (int): Random seed.
-        verbose (int): If set to 0, complaints including exceptions and signal 
-                       traceback from sub-process will be suppressed. If set 
+        verbose (int): If set to 0, complaints including exceptions and signal
+                       traceback from sub-process will be suppressed. If set
                        to 1, all complaints will be printed.
     """
 
