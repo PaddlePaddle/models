@@ -52,6 +52,8 @@ class Attack(object):
         :param adversary: adversary
         :return: None
         """
+        assert self.model.channel_axis() == adversary.original.ndim
+
         if adversary.original_label is None:
             adversary.original_label = np.argmax(
                 self.model.predict(adversary.original))
