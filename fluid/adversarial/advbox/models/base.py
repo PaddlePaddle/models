@@ -24,11 +24,21 @@ class Model(object):
         assert len(bounds) == 2
         assert channel_axis in [0, 1, 2, 3]
 
-        if preprocess is None:
-            preprocess = (0, 1)
         self._bounds = bounds
         self._channel_axis = channel_axis
-        self._preprocess = preprocess
+
+        # Make self._preprocess to be (0,1) if possible, so that don't need
+        # to do substract or divide.
+        if preprocess is not None:
+            sub, div = preprocess
+            if not np.any(sub):
+                sub = None
+            if np.all(np.array(div) == 1):
+                div = None
+            assert (div is None) or np.all(div)
+            self._preprocess = (sub, div)
+        else:
+            self._preprocess = (None, None)
 
     def bounds(self):
         """
@@ -45,10 +55,9 @@ class Model(object):
     def _process_input(self, input_):
         res = None
         sub, div = self._preprocess
-        if np.any(sub != 0):
+        if sub is not None:
             res = input_ - sub
-        assert np.any(div != 0)
-        if np.any(div != 1):
+        if div is not None:
             if res is None:  # "res = input_ - sub" is not executed!
                 res = input_ / div
             else:
