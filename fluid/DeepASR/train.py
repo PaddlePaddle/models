@@ -176,7 +176,7 @@ def train(args):
 
     # train data reader
     train_data_reader = reader.DataReader(args.train_feature_lst,
-                                          args.train_label_lst)
+                                          args.train_label_lst, -1)
     train_data_reader.set_transformers(ltrans)
     # train
     for pass_id in xrange(args.pass_num):
