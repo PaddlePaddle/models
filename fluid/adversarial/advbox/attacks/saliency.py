@@ -57,7 +57,7 @@ class SaliencyMapAttack(Attack):
                     return adversary
 
                 # stop if mask is all zero
-                if self._is_zero_mask(mask):
+                if not any(mask):
                     return adversary
 
                 # get pixel location with highest influence on class
@@ -81,21 +81,6 @@ class SaliencyMapAttack(Attack):
                 adv_img = np.clip(adv_img, min_, max_)
 
         return adversary
-
-    def _is_zero_mask(self, mask):
-        """
-        The elements in mask are all zero or not.
-        Args:
-            mask(list): Each modified pixel with border value is set to zero in mask.
-        Return: bool
-        """
-        is_all_zero = True
-        for item in mask:
-            if item != 0:
-                is_all_zero = False
-                break
-
-        return is_all_zero
 
     def _saliency_map(self, image, target, labels, mask, fast=False):
         """
