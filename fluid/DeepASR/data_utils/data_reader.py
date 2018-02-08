@@ -15,6 +15,7 @@ from multiprocessing import Manager, Process
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 from data_utils.util import suppress_complaints, suppress_signal
+from data_utils.util import CriticalException, ForceExitWrapper
 
 
 class SampleInfo(object):
@@ -89,6 +90,7 @@ class SampleInfoBucket(object):
         self._split_perturb = split_perturb
         self._split_sentence_threshold = split_sentence_threshold
         self._split_sub_sentence_len = split_sub_sentence_len
+        self._rng = random.Random(0)
 
     def generate_sample_info_list(self):
         sample_info_list = []
@@ -213,6 +215,7 @@ class DataReader(object):
         self._batch_buffer_size = batch_buffer_size
         self._process_num = process_num
         self._verbose = verbose
+        self._force_exit = ForceExitWrapper(self._manager.Value('b', False))
 
     def generate_bucket_list(self, is_shuffle):
         if self._block_info_list is None:
@@ -251,15 +254,19 @@ class DataReader(object):
         sample_queue = self._manager.Queue(self._sample_buffer_size)
         self._order_id = 0
 
-        @suppress_complaints(verbose=self._verbose)
+        @suppress_complaints(verbose=self._verbose, notify=self._force_exit)
         def ordered_feeding_task(sample_info_queue):
             for sample_info_bucket in self._bucket_list:
-                sample_info_list = sample_info_bucket.generate_sample_info_list(
-                )
-                self._rng.shuffle(sample_info_list)  # do shuffle here
-                for sample_info in sample_info_list:
-                    sample_info_queue.put((sample_info, self._order_id))
-                    self._order_id += 1
+                try:
+                    sample_info_list = \
+                            sample_info_bucket.generate_sample_info_list()
+                except Exception as e:
+                    raise CriticalException(e)
+                else:
+                    self._rng.shuffle(sample_info_list)  # do shuffle here
+                    for sample_info in sample_info_list:
+                        sample_info_queue.put((sample_info, self._order_id))
+                        self._order_id += 1
 
             for i in xrange(self._process_num):
                 sample_info_queue.put(EpochEndSignal())
@@ -269,18 +276,21 @@ class DataReader(object):
         feeding_thread.daemon = True
         feeding_thread.start()
 
-        @suppress_complaints(verbose=self._verbose)
+        @suppress_complaints(verbose=self._verbose, notify=self._force_exit)
         def ordered_processing_task(sample_info_queue, sample_queue, out_order):
             if self._verbose == 0:
                 signal.signal(signal.SIGTERM, suppress_signal)
                 signal.signal(signal.SIGINT, suppress_signal)
 
             def read_bytes(fpath, start, size):
-                f = open(fpath, 'r')
-                f.seek(start, 0)
-                binary_bytes = f.read(size)
-                f.close()
-                return binary_bytes
+                try:
+                    f = open(fpath, 'r')
+                    f.seek(start, 0)
+                    binary_bytes = f.read(size)
+                    f.close()
+                    return binary_bytes
+                except Exception as e:
+                    raise CriticalException(e)
 
             ins = sample_info_queue.get()
 
@@ -352,16 +362,21 @@ class DataReader(object):
             w.start()
 
         finished_process_num = 0
-        while finished_process_num < self._process_num:
-            sample = sample_queue.get()
-            if isinstance(sample, EpochEndSignal):
-                finished_process_num += 1
-                continue
-            yield sample
 
-        feeding_thread.join()
-        for w in workers:
-            w.join()
+        while self._force_exit == False:
+            try:
+                sample = sample_queue.get_nowait()
+            except Queue.Empty:
+                time.sleep(0.001)
+            else:
+                if isinstance(sample, EpochEndSignal):
+                    finished_process_num += 1
+                    if finished_process_num >= self._process_num:
+                        break
+                    else:
+                        continue
+
+                yield sample
 
     def batch_iterator(self, batch_size, minimum_batch_size):
         def batch_to_ndarray(batch_samples, lod):
@@ -377,7 +392,7 @@ class DataReader(object):
                 start += frame_num
             return (batch_feature, batch_label)
 
-        @suppress_complaints(verbose=self._verbose)
+        @suppress_complaints(verbose=self._verbose, notify=self._force_exit)
         def batch_assembling_task(sample_generator, batch_queue):
             batch_samples = []
             lod = [0]
@@ -406,7 +421,7 @@ class DataReader(object):
         assembling_thread.daemon = True
         assembling_thread.start()
 
-        while True:
+        while self._force_exit == False:
             try:
                 batch_data = batch_queue.get_nowait()
             except Queue.Empty:
@@ -415,5 +430,3 @@ class DataReader(object):
                 if isinstance(batch_data, EpochEndSignal):
                     break
                 yield batch_data
-
-        assembling_thread.join()
