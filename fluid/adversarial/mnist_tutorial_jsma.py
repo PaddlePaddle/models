@@ -75,28 +75,22 @@ def main():
     m = PaddleModel(fluid.default_main_program(), IMG_NAME, LABEL_NAME,
                     logits.name, avg_cost.name, (-1, 1))
     attack = SaliencyMapAttack(m)
-
-    target_label = 1
-    print('target_label = %d' % target_label)
-
+    total_num = 0
+    success_num = 0
     for data in train_reader():
-        # JSMA attack
-        if target_label == data[0][1]:
-            continue
-        print('original label =%d, target_label = %d' %
-              (data[0][1], target_label))
-
-        adversary = Adversary(data[0][0], data[0][1])
-        adversary.set_target(True, target_label=target_label)
-        jsma_attack = attack(adversary)
-        if jsma_attack.is_successful():
+        total_num += 1
+        # adversary.set_target(True, target_label=target_label)
+        jsma_attack = attack(Adversary(data[0][0], data[0][1]))
+        if jsma_attack is not None and jsma_attack.is_successful():
             # plt.imshow(jsma_attack.target, cmap='Greys_r')
             # plt.show()
-            print('adversary examples label =%d' %
-                  jsma_attack.adversarial_label)
-            np.save('adv_img', jsma_attack.adversarial_example)
+            success_num += 1
+            print('original_label=%d, adversary examples label =%d' %
+                  (data[0][1], jsma_attack.adversarial_label))
+            # np.save('adv_img', jsma_attack.adversarial_example)
+        print('total num = %d, success num = %d ' % (total_num, success_num))
+        if total_num == 100:
             break
-        break
 
 
 if __name__ == '__main__':

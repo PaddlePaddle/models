@@ -3,6 +3,8 @@ This module provide the attack method for JSMA's implement.
 """
 from __future__ import division
 
+import logging
+import random
 import numpy as np
 
 from .base import Attack
@@ -33,9 +35,13 @@ class SaliencyMapAttack(Attack):
             adversary: The Adversary object.
         """
         assert adversary is not None
-        assert (adversary.target_label is None) or adversary.is_targeted_attack
 
-        target_labels = [adversary.target_label]
+        if not adversary.is_targeted_attack or (adversary.target_label is None):
+            target_labels = self._generate_random_target(
+                adversary.original_label)
+        else:
+            target_labels = [adversary.target_label]
+
         for target in target_labels:
             original_image = adversary.original
 
@@ -60,6 +66,9 @@ class SaliencyMapAttack(Attack):
                 if not any(mask):
                     return adversary
 
+                logging.info('step = {}, original_label = {}, adv_label={}'.
+                             format(step, adversary.original_label, adv_label))
+
                 # get pixel location with highest influence on class
                 idx, p_sign = self._saliency_map(
                     adv_img, target, labels, mask, fast=fast)
@@ -80,7 +89,26 @@ class SaliencyMapAttack(Attack):
 
                 adv_img = np.clip(adv_img, min_, max_)
 
-        return adversary
+    def _generate_random_target(self, original_label):
+        """
+        Draw random target labels all of which are different and not the original label.
+        Args:
+            original_label(int): Original label.
+        Return:
+            target_labels(list): random target labels
+        """
+        num_random_target = 1
+        num_classes = self.model.num_classes()
+        assert num_random_target <= num_classes - 1
+
+        target_labels = random.sample(range(num_classes), num_random_target + 1)
+        target_labels = [t for t in target_labels if t != original_label]
+        target_labels = target_labels[:num_random_target]
+
+        # str_target_labels = [str(t) for t in target_labels]
+        # logging.info('Random target labels: {}'.format(', '.join(str_target_labels)))
+
+        return target_labels
 
     def _saliency_map(self, image, target, labels, mask, fast=False):
         """
@@ -108,10 +136,10 @@ class SaliencyMapAttack(Attack):
             ], 0)
 
         # compute saliency map (take into account both pos. & neg. perturbations)
-        salmap = np.abs(alphas) * np.abs(betas) * np.sign(alphas * betas)
+        sal_map = np.abs(alphas) * np.abs(betas) * np.sign(alphas * betas)
 
         # find optimal pixel & direction of perturbation
-        idx = np.argmin(salmap)
+        idx = np.argmin(sal_map)
         idx = np.unravel_index(idx, mask.shape)
         pix_sign = np.sign(alphas)[idx]
 
