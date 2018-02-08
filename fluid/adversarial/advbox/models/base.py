@@ -97,3 +97,11 @@ class Model(object):
                 with the shape (height, width, channel).
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def predict_name(self):
+        """
+        Get the predict name, such as "softmax",etc.
+        :return: string
+        """
+        raise NotImplementedError
