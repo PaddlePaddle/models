@@ -209,7 +209,7 @@ def train(args):
         for batch_id, batch_data in enumerate(
                 train_data_reader.batch_iterator(args.batch_size,
                                                  args.minimum_batch_size)):
-            # lo ad_data
+            # load_data
             (features, labels, lod) = batch_data
             feature_t.set(features, place)
             feature_t.set_lod([lod])
