@@ -60,15 +60,14 @@ class Attack(object):
         if adversary.is_targeted_attack and adversary.target_label is None:
             if adversary.target is None:
                 raise ValueError(
-                    'When adversary.is_targeted_attack is True, '
+                    'When adversary.is_targeted_attack is true, '
                     'adversary.target_label or adversary.target must be set.')
             else:
-                adversary.target_label_label = np.argmax(
-                    self.model.predict(
-                        self.model.scale_input(adversary.target)))
+                adversary.target_label = np.argmax(
+                    self.model.predict(adversary.target))
 
         logging.info('adversary:\noriginal_label: {}'
-                     '\n          target_lable: {}'
+                     '\n          target_label: {}'
                      '\n          is_targeted_attack: {}'
                      ''.format(adversary.original_label, adversary.target_label,
                                adversary.is_targeted_attack))
