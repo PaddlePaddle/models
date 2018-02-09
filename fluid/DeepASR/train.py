@@ -143,7 +143,8 @@ def train(args):
         class_num=1749,
         parallel=args.parallel)
 
-    adam_optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
+    adam_optimizer = fluid.optimizer.Momentum(
+        learning_rate=args.learning_rate, momentum=0.9)
     adam_optimizer.minimize(avg_cost)
 
     # program for test
@@ -225,7 +226,7 @@ def train(args):
                 print("\nBatch %d, train cost: %f, train acc: %f" %
                       (batch_id, lodtensor_to_ndarray(cost)[0],
                        lodtensor_to_ndarray(acc)[0]))
-                # save the latest checkpoints
+                # save the latest checkpoint
                 if args.checkpoints != '':
                     model_path = os.path.join(args.checkpoints,
                                               "deep_asr.latest.checkpoint")
