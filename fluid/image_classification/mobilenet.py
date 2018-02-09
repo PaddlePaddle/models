@@ -1,7 +1,11 @@
 import os
+
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
-import time
+from paddle.v2.fluid.initializer import MSRA
+from paddle.v2.fluid.param_attr import ParamAttr
+
+parameter_attr = ParamAttr(initializer=MSRA())
 
 
 def conv_bn_layer(input,
@@ -22,6 +26,7 @@ def conv_bn_layer(input,
         groups=num_groups,
         act=None,
         use_cudnn=use_cudnn,
+        param_attr=parameter_attr,
         bias_attr=False)
     return fluid.layers.batch_norm(input=conv, act=act)
 
@@ -30,7 +35,7 @@ def depthwise_separable(input, num_filters1, num_filters2, num_groups, stride,
                         scale):
     """
     """
-    tmp = conv_bn_layer(
+    depthwise_conv = conv_bn_layer(
         input=input,
         filter_size=3,
         num_filters=int(num_filters1 * scale),
@@ -39,13 +44,13 @@ def depthwise_separable(input, num_filters1, num_filters2, num_groups, stride,
         num_groups=int(num_groups * scale),
         use_cudnn=False)
 
-    tmp = conv_bn_layer(
-        input=tmp,
+    pointwise_conv = conv_bn_layer(
+        input=depthwise_conv,
         filter_size=1,
         num_filters=int(num_filters2 * scale),
         stride=1,
         padding=0)
-    return tmp
+    return pointwise_conv
 
 
 def mobile_net(img, class_dim, scale=1.0):
@@ -67,6 +72,7 @@ def mobile_net(img, class_dim, scale=1.0):
         num_groups=32,
         stride=1,
         scale=scale)
+
     tmp = depthwise_separable(
         tmp,
         num_filters1=64,
@@ -74,6 +80,7 @@ def mobile_net(img, class_dim, scale=1.0):
         num_groups=64,
         stride=2,
         scale=scale)
+
     # 28x28
     tmp = depthwise_separable(
         tmp,
@@ -82,6 +89,7 @@ def mobile_net(img, class_dim, scale=1.0):
         num_groups=128,
         stride=1,
         scale=scale)
+
     tmp = depthwise_separable(
         tmp,
         num_filters1=128,
@@ -89,6 +97,7 @@ def mobile_net(img, class_dim, scale=1.0):
         num_groups=128,
         stride=2,
         scale=scale)
+
     # 14x14
     tmp = depthwise_separable(
         tmp,
@@ -97,6 +106,7 @@ def mobile_net(img, class_dim, scale=1.0):
         num_groups=256,
         stride=1,
         scale=scale)
+
     tmp = depthwise_separable(
         tmp,
         num_filters1=256,
@@ -104,6 +114,7 @@ def mobile_net(img, class_dim, scale=1.0):
         num_groups=256,
         stride=2,
         scale=scale)
+
     # 14x14
     for i in range(5):
         tmp = depthwise_separable(
@@ -121,6 +132,7 @@ def mobile_net(img, class_dim, scale=1.0):
         num_groups=512,
         stride=2,
         scale=scale)
+
     tmp = depthwise_separable(
         tmp,
         num_filters1=1024,
@@ -130,9 +142,16 @@ def mobile_net(img, class_dim, scale=1.0):
         scale=scale)
 
     tmp = fluid.layers.pool2d(
-        input=tmp, pool_size=7, pool_stride=1, pool_type='avg')
+        input=tmp,
+        pool_size=0,
+        pool_stride=1,
+        pool_type='avg',
+        global_pooling=True)
 
-    tmp = fluid.layers.fc(input=tmp, size=class_dim, act='softmax')
+    tmp = fluid.layers.fc(input=tmp,
+                          size=class_dim,
+                          act='softmax',
+                          param_attr=parameter_attr)
     return tmp
 
 
@@ -174,14 +193,11 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
     for pass_id in range(num_passes):
         accuracy.reset(exe)
         for batch_id, data in enumerate(train_reader()):
-            start_time = time.time()
             loss, acc = exe.run(fluid.default_main_program(),
                                 feed=feeder.feed(data),
                                 fetch_list=[avg_cost] + accuracy.metrics)
-            pass_elapsed = time.time() - start_time
             print("Pass {0}, batch {1}, loss {2}, acc {3}".format(
                 pass_id, batch_id, loss[0], acc[0]))
-            print 'cost : %f s' % (pass_elapsed)
         pass_acc = accuracy.eval(exe)
 
         test_accuracy.reset(exe)
@@ -193,10 +209,10 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
         print("End pass {0}, train_acc {1}, test_acc {2}".format(
             pass_id, pass_acc, test_pass_acc))
         if pass_id % 10 == 0:
-            print 'save models'
             model_path = os.path.join(model_save_dir, str(pass_id))
+            print 'save models to %s' % (model_path)
             fluid.io.save_inference_model(model_path, ['image'], [out], exe)
 
 
 if __name__ == '__main__':
-    train(learning_rate=0.005, batch_size=80, num_passes=400)
+    train(learning_rate=0.005, batch_size=40, num_passes=300)
