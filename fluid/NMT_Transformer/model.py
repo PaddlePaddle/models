@@ -142,13 +142,9 @@ def positionwise_feed_forward(x, d_inner_hid, d_hid):
     """
     hidden = layers.fc(input=x,
                        size=d_inner_hid,
-                       bias_attr=False,
                        num_flatten_dims=2,
                        act="relu")
-    out = layers.fc(input=hidden,
-                    size=d_hid,
-                    bias_attr=False,
-                    num_flatten_dims=2)
+    out = layers.fc(input=hidden, size=d_hid, num_flatten_dims=2)
     return out
 
 
