@@ -10,6 +10,8 @@ from scipy.optimize import fmin_l_bfgs_b
 
 from .base import Attack
 
+__all__ = ['LBFGSAttack', 'LBFGS']
+
 
 class LBFGSAttack(Attack):
     """

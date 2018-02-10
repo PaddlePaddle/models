@@ -66,8 +66,9 @@ class Attack(object):
                 adversary.target_label = np.argmax(
                     self.model.predict(adversary.target))
 
-        logging.info('adversary:\noriginal_label: {}'
-                     '\n          target_label: {}'
-                     '\n          is_targeted_attack: {}'
+        logging.info('adversary:'
+                     '\n         original_label: {}'
+                     '\n         target_label: {}'
+                     '\n         is_targeted_attack: {}'
                      ''.format(adversary.original_label, adversary.target_label,
                                adversary.is_targeted_attack))
