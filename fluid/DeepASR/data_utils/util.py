@@ -1,6 +1,11 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import sys
+from six import reraise
+from tblib import Traceback
+
+import numpy as np
 
 
 def to_lodtensor(data, place):
@@ -28,3 +33,42 @@ def lodtensor_to_ndarray(lod_tensor):
     for i in xrange(np.product(dims)):
         ret.ravel()[i] = lod_tensor.get_float_element(i)
     return ret, lod_tensor.lod()
+
+
+class CriticalException(Exception):
+    pass
+
+
+def suppress_signal(signo, stack_frame):
+    pass
+
+
+def suppress_complaints(verbose, notify=None):
+    def decorator_maker(func):
+        def suppress_warpper(*args, **kwargs):
+            try:
+                func(*args, **kwargs)
+            except:
+                et, ev, tb = sys.exc_info()
+
+                if notify is not None:
+                    notify(except_type=et, except_value=ev, traceback=tb)
+
+                if verbose == 1 or isinstance(ev, CriticalException):
+                    reraise(et, ev, Traceback(tb).as_traceback())
+
+        return suppress_warpper
+
+    return decorator_maker
+
+
+class ForceExitWrapper(object):
+    def __init__(self, exit_flag):
+        self._exit_flag = exit_flag
+
+    @suppress_complaints(verbose=0)
+    def __call__(self, *args, **kwargs):
+        self._exit_flag.value = True
+
+    def __eq__(self, flag):
+        return self._exit_flag.value == flag

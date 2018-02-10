@@ -1,255 +1,432 @@
-"""This model read the sample from disk. 
-   use multiprocessing to reading samples
-   push samples from one block to multiprocessing queue 
-   Todos:
-        1. multiprocess read block from disk
+"""This module contains data processing related logic.
 """
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import random
-import Queue
-import numpy as np
 import struct
+import Queue
+import time
+import numpy as np
+from threading import Thread
+import signal
+from multiprocessing import Manager, Process
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
+from data_utils.util import suppress_complaints, suppress_signal
+from data_utils.util import CriticalException, ForceExitWrapper
 
 
-class OneBlock(object):
-    """ struct for one block :
-        contain label, label desc, feature, feature_desc
+class SampleInfo(object):
+    """SampleInfo holds the necessary information to load a sample from disk.
 
-        Attributes:
-            label(str) :  label path of one block
-            label_desc(str) : label description path of one block
-            feature(str) : feature path of on block
-            feature_desc(str) : feature description path of on block
+    Args:
+        feature_bin_path (str): File containing the feature data.
+        feature_start (int): Start position of the sample's feature data.
+        feature_size (int): Byte count of the sample's feature data.
+        feature_frame_num (int): Time length of the sample.
+        feature_dim (int): Feature dimension of one frame.
+        label_bin_path (str): File containing the label data.
+        label_size (int): Byte count of the sample's label data.
+        label_frame_num (int): Label number of the sample.
     """
 
-    def __init__(self):
-        """the constructor."""
+    def __init__(self, feature_bin_path, feature_start, feature_size,
+                 feature_frame_num, feature_dim, label_bin_path, label_start,
+                 label_size, label_frame_num):
+        self.feature_bin_path = feature_bin_path
+        self.feature_start = feature_start
+        self.feature_size = feature_size
+        self.feature_frame_num = feature_frame_num
+        self.feature_dim = feature_dim
 
-        self.label = "label"
-        self.label_desc = "label_desc"
-        self.feature = "feature"
-        self.feature_desc = "feature_desc"
+        self.label_bin_path = label_bin_path
+        self.label_start = label_start
+        self.label_size = label_size
+        self.label_frame_num = label_frame_num
 
 
-class DataRead(object):
+class SampleInfoBucket(object):
+    """SampleInfoBucket contains paths of several description files. Feature
+    description file contains necessary information (including path of binary
+    data, sample start position, sample byte number etc.) to access samples'
+    feature data and the same with the label description file. SampleInfoBucket
+    is the minimum unit to do shuffle.
+
+    Args:
+        feature_bin_paths (list|tuple): Files containing the binary feature
+                                        data.
+        feature_desc_paths (list|tuple): Files containing the description of
+                                         samples' feature data.
+        label_bin_paths (list|tuple): Files containing the binary label data.
+        label_desc_paths (list|tuple): Files containing the description of
+                                       samples' label data.
+        split_perturb(int): Maximum perturbation value for length of
+                            sub-sentence when splitting long sentence.
+        split_sentence_threshold(int): Sentence whose length larger than
+                                the value will trigger split operation.
+        split_sub_sentence_len(int): sub-sentence length is equal to
+                                    (split_sub_sentence_len + rand() % split_perturb).
     """
-    Attributes:
-        _lblock(obj:`OneBlock`) : the list of OneBlock
-        _ndrop_sentence_len(int): dropout the sentence which's frame_num large than _ndrop_sentence_len  
-        _que_sample(obj:`Queue`): sample buffer
-        _nframe_dim(int): the batch sample frame_dim(todo remove)
-        _nstart_block_idx(int): the start block id
-        _nload_block_num(int): the block num
+
+    def __init__(self,
+                 feature_bin_paths,
+                 feature_desc_paths,
+                 label_bin_paths,
+                 label_desc_paths,
+                 split_perturb=50,
+                 split_sentence_threshold=512,
+                 split_sub_sentence_len=256):
+        block_num = len(label_bin_paths)
+        assert len(label_desc_paths) == block_num
+        assert len(feature_bin_paths) == block_num
+        assert len(feature_desc_paths) == block_num
+        self._block_num = block_num
+
+        self._feature_bin_paths = feature_bin_paths
+        self._feature_desc_paths = feature_desc_paths
+        self._label_bin_paths = label_bin_paths
+        self._label_desc_paths = label_desc_paths
+        self._split_perturb = split_perturb
+        self._split_sentence_threshold = split_sentence_threshold
+        self._split_sub_sentence_len = split_sub_sentence_len
+        self._rng = random.Random(0)
+
+    def generate_sample_info_list(self):
+        sample_info_list = []
+        for block_idx in xrange(self._block_num):
+            label_bin_path = self._label_bin_paths[block_idx]
+            label_desc_path = self._label_desc_paths[block_idx]
+            feature_bin_path = self._feature_bin_paths[block_idx]
+            feature_desc_path = self._feature_desc_paths[block_idx]
+
+            label_desc_lines = open(label_desc_path).readlines()
+            feature_desc_lines = open(feature_desc_path).readlines()
+
+            sample_num = int(label_desc_lines[0].split()[1])
+            assert sample_num == int(feature_desc_lines[0].split()[1])
+
+            for i in xrange(sample_num):
+                feature_desc_split = feature_desc_lines[i + 1].split()
+                feature_start = int(feature_desc_split[2])
+                feature_size = int(feature_desc_split[3])
+                feature_frame_num = int(feature_desc_split[4])
+                feature_dim = int(feature_desc_split[5])
+
+                label_desc_split = label_desc_lines[i + 1].split()
+                label_start = int(label_desc_split[2])
+                label_size = int(label_desc_split[3])
+                label_frame_num = int(label_desc_split[4])
+                assert feature_frame_num == label_frame_num
+
+                if self._split_sentence_threshold == -1 or \
+                        self._split_perturb == -1 or \
+                        self._split_sub_sentence_len == -1 \
+                        or self._split_sentence_threshold >= feature_frame_num:
+                    sample_info_list.append(
+                        SampleInfo(feature_bin_path, feature_start,
+                                   feature_size, feature_frame_num, feature_dim,
+                                   label_bin_path, label_start, label_size,
+                                   label_frame_num))
+                #split sentence
+                else:
+                    cur_frame_pos = 0
+                    cur_frame_len = 0
+                    remain_frame_num = feature_frame_num
+                    while True:
+                        if remain_frame_num > self._split_sentence_threshold:
+                            cur_frame_len = self._split_sub_sentence_len + \
+                                    self._rng.randint(0, self._split_perturb)
+                            if cur_frame_len > remain_frame_num:
+                                cur_frame_len = remain_frame_num
+                        else:
+                            cur_frame_len = remain_frame_num
+
+                        sample_info_list.append(
+                            SampleInfo(
+                                feature_bin_path, feature_start + cur_frame_pos
+                                * feature_dim * 4, cur_frame_len * feature_dim *
+                                4, cur_frame_len, feature_dim, label_bin_path,
+                                label_start + cur_frame_pos * 4, cur_frame_len *
+                                4, cur_frame_len))
+
+                        remain_frame_num -= cur_frame_len
+                        cur_frame_pos += cur_frame_len
+                        if remain_frame_num <= 0:
+                            break
+
+        return sample_info_list
+
+
+class EpochEndSignal():
+    pass
+
+
+class DataReader(object):
+    """DataReader provides basic audio sample preprocessing pipeline including
+    data loading and data augmentation.
+
+    Args:
+        feature_file_list (str): File containing paths of feature data file and
+                                 corresponding description file.
+        label_file_list (str): File containing paths of label data file and
+                               corresponding description file.
+        drop_frame_len (int): Samples whose label length above the value will be
+                              dropped.(Using '-1' to disable the policy)
+        process_num (int): Number of processes for processing data.
+        sample_buffer_size (int): Buffer size to indicate the maximum samples
+                                  cached.
+        sample_info_buffer_size (int): Buffer size to indicate the maximum
+                                       sample information cached.
+        batch_buffer_size (int): Buffer size to indicate the maximum batch
+                                 cached.
+        shuffle_block_num (int): Block number indicating the minimum unit to do
+                                 shuffle.
+        random_seed (int): Random seed.
+        verbose (int): If set to 0, complaints including exceptions and signal
+                       traceback from sub-process will be suppressed. If set
+                       to 1, all complaints will be printed.
     """
 
-    def __init__(self, sfeature_lst, slabel_lst, ndrop_sentence_len=512):
-        """
-        Args:
-            sfeature_lst(str):feature lst path
-            slabel_lst(str):label lst path
-        Returns:
-            None
-        """
-        self._lblock = []
-        self._ndrop_sentence_len = ndrop_sentence_len
-        self._que_sample = Queue.Queue()
-        self._nframe_dim = 120 * 11
-        self._nstart_block_idx = 0
-        self._nload_block_num = 1
-        self._ndrop_frame_len = 256
+    def __init__(self,
+                 feature_file_list,
+                 label_file_list,
+                 drop_frame_len=512,
+                 process_num=10,
+                 sample_buffer_size=1024,
+                 sample_info_buffer_size=1024,
+                 batch_buffer_size=1024,
+                 shuffle_block_num=10,
+                 random_seed=0,
+                 verbose=0):
+        self._feature_file_list = feature_file_list
+        self._label_file_list = label_file_list
+        self._drop_frame_len = drop_frame_len
+        self._shuffle_block_num = shuffle_block_num
+        self._block_info_list = None
+        self._rng = random.Random(random_seed)
+        self._bucket_list = None
+        self.generate_bucket_list(True)
+        self._order_id = 0
+        self._manager = Manager()
+        self._sample_buffer_size = sample_buffer_size
+        self._sample_info_buffer_size = sample_info_buffer_size
+        self._batch_buffer_size = batch_buffer_size
+        self._process_num = process_num
+        self._verbose = verbose
+        self._force_exit = ForceExitWrapper(self._manager.Value('b', False))
 
-        self._load_list(sfeature_lst, slabel_lst)
+    def generate_bucket_list(self, is_shuffle):
+        if self._block_info_list is None:
+            block_feature_info_lines = open(self._feature_file_list).readlines()
+            block_label_info_lines = open(self._label_file_list).readlines()
+            assert len(block_feature_info_lines) == len(block_label_info_lines)
+            self._block_info_list = []
+            for i in xrange(0, len(block_feature_info_lines), 2):
+                block_info = (block_feature_info_lines[i],
+                              block_feature_info_lines[i + 1],
+                              block_label_info_lines[i],
+                              block_label_info_lines[i + 1])
+                self._block_info_list.append(
+                    map(lambda line: line.strip(), block_info))
 
-    def _load_list(self, sfeature_lst, slabel_lst):
-        """ load list and shuffle
-        Args:
-            sfeature_lst(str):feature lst path
-            slabel_lst(str):label lst path
-        Returns:
-            None
-        """
-        lfeature = open(sfeature_lst).readlines()
-        llabel = open(slabel_lst).readlines()
-        assert len(llabel) == len(lfeature)
-        for i in range(0, len(lfeature), 2):
-            one_block = OneBlock()
+        if is_shuffle:
+            self._rng.shuffle(self._block_info_list)
 
-            one_block.label = llabel[i]
-            one_block.label_desc = llabel[i + 1]
-            one_block.feature = lfeature[i]
-            one_block.feature_desc = lfeature[i + 1]
-            self._lblock.append(one_block)
+        self._bucket_list = []
+        for i in xrange(0, len(self._block_info_list), self._shuffle_block_num):
+            bucket_block_info = self._block_info_list[i:i +
+                                                      self._shuffle_block_num]
+            self._bucket_list.append(
+                SampleInfoBucket(
+                    map(lambda info: info[0], bucket_block_info),
+                    map(lambda info: info[1], bucket_block_info),
+                    map(lambda info: info[2], bucket_block_info),
+                    map(lambda info: info[3], bucket_block_info)))
 
-        random.shuffle(self._lblock)
+    # @TODO make this configurable
+    def set_transformers(self, transformers):
+        self._transformers = transformers
 
-    def _load_one_block(self, lsample, id):
-        """read one block by id and push load sample in list lsample 
-        Args:
-            lsample(list): return sample list
-            id(int): block id 
-        Returns:
-            None
-        """
-        if id >= len(self._lblock):
-            return
+    def _sample_generator(self):
+        sample_info_queue = self._manager.Queue(self._sample_info_buffer_size)
+        sample_queue = self._manager.Queue(self._sample_buffer_size)
+        self._order_id = 0
 
-        slabel_path = self._lblock[id].label.strip()
-        slabel_desc_path = self._lblock[id].label_desc.strip()
-        sfeature_path = self._lblock[id].feature.strip()
-        sfeature_desc_path = self._lblock[id].feature_desc.strip()
+        @suppress_complaints(verbose=self._verbose, notify=self._force_exit)
+        def ordered_feeding_task(sample_info_queue):
+            for sample_info_bucket in self._bucket_list:
+                try:
+                    sample_info_list = \
+                            sample_info_bucket.generate_sample_info_list()
+                except Exception as e:
+                    raise CriticalException(e)
+                else:
+                    self._rng.shuffle(sample_info_list)  # do shuffle here
+                    for sample_info in sample_info_list:
+                        sample_info_queue.put((sample_info, self._order_id))
+                        self._order_id += 1
 
-        llabel_line = open(slabel_desc_path).readlines()
-        lfeature_line = open(sfeature_desc_path).readlines()
+            for i in xrange(self._process_num):
+                sample_info_queue.put(EpochEndSignal())
 
-        file_lable_bin = open(slabel_path, "r")
-        file_feature_bin = open(sfeature_path, "r")
+        feeding_thread = Thread(
+            target=ordered_feeding_task, args=(sample_info_queue, ))
+        feeding_thread.daemon = True
+        feeding_thread.start()
 
-        sample_num = int(llabel_line[0].split()[1])
-        assert sample_num == int(lfeature_line[0].split()[1])
+        @suppress_complaints(verbose=self._verbose, notify=self._force_exit)
+        def ordered_processing_task(sample_info_queue, sample_queue, out_order):
+            if self._verbose == 0:
+                signal.signal(signal.SIGTERM, suppress_signal)
+                signal.signal(signal.SIGINT, suppress_signal)
 
-        llabel_line = llabel_line[1:]
-        lfeature_line = lfeature_line[1:]
+            def read_bytes(fpath, start, size):
+                try:
+                    f = open(fpath, 'r')
+                    f.seek(start, 0)
+                    binary_bytes = f.read(size)
+                    f.close()
+                    return binary_bytes
+                except Exception as e:
+                    raise CriticalException(e)
 
-        for i in range(sample_num):
-            # read label 
-            llabel_split = llabel_line[i].split()
-            nlabel_start = int(llabel_split[2])
-            nlabel_size = int(llabel_split[3])
-            nlabel_frame_num = int(llabel_split[4])
+            ins = sample_info_queue.get()
 
-            file_lable_bin.seek(nlabel_start, 0)
-            label_bytes = file_lable_bin.read(nlabel_size)
-            assert nlabel_frame_num * 4 == len(label_bytes)
-            label_array = struct.unpack('I' * nlabel_frame_num, label_bytes)
-            label_data = np.array(label_array, dtype="int64")
-            label_data = label_data.reshape((nlabel_frame_num, 1))
+            while not isinstance(ins, EpochEndSignal):
+                sample_info, order_id = ins
 
-            # read feature
-            lfeature_split = lfeature_line[i].split()
-            nfeature_start = int(lfeature_split[2])
-            nfeature_size = int(lfeature_split[3])
-            nfeature_frame_num = int(lfeature_split[4])
-            nfeature_frame_dim = int(lfeature_split[5])
+                feature_bytes = read_bytes(sample_info.feature_bin_path,
+                                           sample_info.feature_start,
+                                           sample_info.feature_size)
 
-            file_feature_bin.seek(nfeature_start, 0)
-            feature_bytes = file_feature_bin.read(nfeature_size)
-            assert nfeature_frame_num * nfeature_frame_dim * 4 == len(
-                feature_bytes)
-            feature_array = struct.unpack('f' * nfeature_frame_num *
-                                          nfeature_frame_dim, feature_bytes)
-            feature_data = np.array(feature_array, dtype="float32")
-            feature_data = feature_data.reshape(
-                (nfeature_frame_num, nfeature_frame_dim))
+                assert sample_info.feature_frame_num * sample_info.feature_dim * 4 \
+                        == len(feature_bytes), \
+                        (sample_info.feature_bin_path,
+                         sample_info.feature_frame_num,
+                         sample_info.feature_dim,
+                         len(feature_bytes))
 
-            #drop long sentence
-            if self._ndrop_frame_len < feature_data.shape[0]:
-                continue
-            lsample.append((feature_data, label_data))
+                label_bytes = read_bytes(sample_info.label_bin_path,
+                                         sample_info.label_start,
+                                         sample_info.label_size)
 
-    def get_one_batch(self, nbatch_size):
-        """construct one batch(feature, label), batch size is nbatch_size
-        Args:
-            nbatch_size(int): batch size
-        Returns:
-            None
-        """
-        if self._que_sample.empty():
-            lsample = self._load_block(
-                range(self._nstart_block_idx, self._nstart_block_idx +
-                      self._nload_block_num, 1))
-            self._move_sample(lsample)
-            self._nstart_block_idx += self._nload_block_num
+                assert sample_info.label_frame_num * 4 == len(label_bytes), (
+                    sample_info.label_bin_path, sample_info.label_array,
+                    len(label_bytes))
 
-        if self._que_sample.empty():
-            self._nstart_block_idx = 0
-            return None
-        #cal all frame num
-        ncur_len = 0
-        lod = [0]
-        samples = []
-        bat_feature = np.zeros((nbatch_size, self._nframe_dim))
-        for i in range(nbatch_size):
-            # empty clear zero 
-            if self._que_sample.empty():
-                self._nstart_block_idx = 0
-            # copy
+                label_array = struct.unpack('I' * sample_info.label_frame_num,
+                                            label_bytes)
+                label_data = np.array(
+                    label_array, dtype='int64').reshape(
+                        (sample_info.label_frame_num, 1))
+
+                feature_frame_num = sample_info.feature_frame_num
+                feature_dim = sample_info.feature_dim
+                assert feature_frame_num * feature_dim * 4 == len(feature_bytes)
+                feature_array = struct.unpack('f' * feature_frame_num *
+                                              feature_dim, feature_bytes)
+                feature_data = np.array(
+                    feature_array, dtype='float32').reshape((
+                        sample_info.feature_frame_num, sample_info.feature_dim))
+
+                sample_data = (feature_data, label_data)
+                for transformer in self._transformers:
+                    # @TODO(pkuyym) to make transfomer only accept feature_data
+                    sample_data = transformer.perform_trans(sample_data)
+
+                while order_id != out_order[0]:
+                    time.sleep(0.001)
+
+                # drop long sentence
+                if self._drop_frame_len == -1 or \
+                        self._drop_frame_len >= sample_data[0].shape[0]:
+                    sample_queue.put(sample_data)
+
+                out_order[0] += 1
+                ins = sample_info_queue.get()
+
+            sample_queue.put(EpochEndSignal())
+
+        out_order = self._manager.list([0])
+        args = (sample_info_queue, sample_queue, out_order)
+        workers = [
+            Process(
+                target=ordered_processing_task, args=args)
+            for _ in xrange(self._process_num)
+        ]
+
+        for w in workers:
+            w.daemon = True
+            w.start()
+
+        finished_process_num = 0
+
+        while self._force_exit == False:
+            try:
+                sample = sample_queue.get_nowait()
+            except Queue.Empty:
+                time.sleep(0.001)
             else:
-                (one_feature, one_label) = self._que_sample.get()
-                samples.append((one_feature, one_label))
-                ncur_len += one_feature.shape[0]
-                lod.append(ncur_len)
+                if isinstance(sample, EpochEndSignal):
+                    finished_process_num += 1
+                    if finished_process_num >= self._process_num:
+                        break
+                    else:
+                        continue
 
-        bat_feature = np.zeros((ncur_len, self._nframe_dim), dtype="float32")
-        bat_label = np.zeros((ncur_len, 1), dtype="int64")
-        ncur_len = 0
-        for sample in samples:
-            one_feature = sample[0]
-            one_label = sample[1]
-            nframe_num = one_feature.shape[0]
-            nstart = ncur_len
-            nend = ncur_len + nframe_num
-            bat_feature[nstart:nend, :] = one_feature
-            bat_label[nstart:nend, :] = one_label
-            ncur_len += nframe_num
-        return (bat_feature, bat_label, lod)
+                yield sample
 
-    def set_trans(self, ltrans):
-        """ set transform list
-        Args:
-            ltrans(list): data tranform list
-        Returns:
-            None
-        """
-        self._ltrans = ltrans
+    def batch_iterator(self, batch_size, minimum_batch_size):
+        def batch_to_ndarray(batch_samples, lod):
+            assert len(batch_samples)
+            frame_dim = batch_samples[0][0].shape[1]
+            batch_feature = np.zeros((lod[-1], frame_dim), dtype="float32")
+            batch_label = np.zeros((lod[-1], 1), dtype="int64")
+            start = 0
+            for sample in batch_samples:
+                frame_num = sample[0].shape[0]
+                batch_feature[start:start + frame_num, :] = sample[0]
+                batch_label[start:start + frame_num, :] = sample[1]
+                start += frame_num
+            return (batch_feature, batch_label)
 
-    def _load_block(self, lblock_id):
-        """read blocks
-        """
-        lsample = []
-        for id in lblock_id:
-            self._load_one_block(lsample, id)
+        @suppress_complaints(verbose=self._verbose, notify=self._force_exit)
+        def batch_assembling_task(sample_generator, batch_queue):
+            batch_samples = []
+            lod = [0]
+            for sample in sample_generator():
+                batch_samples.append(sample)
+                lod.append(lod[-1] + sample[0].shape[0])
+                if len(batch_samples) == batch_size:
+                    (batch_feature, batch_label) = batch_to_ndarray(
+                        batch_samples, lod)
+                    batch_queue.put((batch_feature, batch_label, lod))
+                    batch_samples = []
+                    lod = [0]
 
-        # transform sample
-        for (nidx, sample) in enumerate(lsample):
-            for trans in self._ltrans:
-                sample = trans.perform_trans(sample)
-            lsample[nidx] = sample
+            if len(batch_samples) >= minimum_batch_size:
+                (batch_feature, batch_label) = batch_to_ndarray(batch_samples,
+                                                                lod)
+                batch_queue.put((batch_feature, batch_label, lod))
 
-        return lsample
+            batch_queue.put(EpochEndSignal())
 
-    def load_block(self, lblock_id):
-        """read blocks
-        Args:
-            lblock_id(list):the block list id
-        Returns:
-            None
-        """
-        lsample = []
-        for id in lblock_id:
-            self._load_one_block(lsample, id)
+        batch_queue = Queue.Queue(self._batch_buffer_size)
 
-        # transform sample
-        for (nidx, sample) in enumerate(lsample):
-            for trans in self._ltrans:
-                sample = trans.perform_trans(sample)
-            lsample[nidx] = sample
+        assembling_thread = Thread(
+            target=batch_assembling_task,
+            args=(self._sample_generator, batch_queue))
+        assembling_thread.daemon = True
+        assembling_thread.start()
 
-        return lsample
-
-    def _move_sample(self, lsample):
-        """move sample to queue
-        Args:
-            lsample(list): one block of samples read from disk
-        Returns:
-            None
-        """
-        # random
-        random.shuffle(lsample)
-
-        for sample in lsample:
-            self._que_sample.put(sample)
+        while self._force_exit == False:
+            try:
+                batch_data = batch_queue.get_nowait()
+            except Queue.Empty:
+                time.sleep(0.001)
+            else:
+                if isinstance(batch_data, EpochEndSignal):
+                    break
+                yield batch_data
