@@ -143,9 +143,9 @@ def train(args):
         class_num=1749,
         parallel=args.parallel)
 
-    adam_optimizer = fluid.optimizer.Momentum(
+    optimizer = fluid.optimizer.Momentum(
         learning_rate=args.learning_rate, momentum=0.9)
-    adam_optimizer.minimize(avg_cost)
+    optimizer.minimize(avg_cost)
 
     # program for test
     test_program = fluid.default_main_program().clone()
