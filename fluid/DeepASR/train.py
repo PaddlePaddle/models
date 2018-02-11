@@ -98,8 +98,8 @@ def parse_args():
         '--init_model_path',
         type=str,
         default=None,
-        help="The model path which the training resumes from. If None, train "
-        "the model from scratch. (default: %(default)s)")
+        help="The model (checkpoint) path which the training resumes from. "
+        "If None, train the model from scratch. (default: %(default)s)")
     parser.add_argument(
         '--checkpoints',
         type=str,
