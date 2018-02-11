@@ -125,8 +125,9 @@ def profile(args):
         class_num=1749,
         parallel=args.parallel)
 
-    adam_optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
-    adam_optimizer.minimize(avg_cost)
+    optimizer = fluid.optimizer.Momentum(
+        learning_rate=args.learning_rate, momentum=0.9)
+    optimizer.minimize(avg_cost)
 
     place = fluid.CPUPlace() if args.device == 'CPU' else fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
