@@ -1,8 +1,11 @@
 import numpy as np
+
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
+
 from model import transformer, position_encoding_init
-from config import *
+from config import TrainTaskConfig, ModelHyperParams, \
+        pos_enc_param_names, input_data_names
 
 
 def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
@@ -14,12 +17,12 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
     """
     input_dict = {}
 
-    def pad_batch_data(insts,
-                       pad_idx,
-                       is_target=False,
-                       return_pos=True,
-                       return_attn_bias=True,
-                       return_max_len=True):
+    def __pad_batch_data(insts,
+                         pad_idx,
+                         is_target=False,
+                         return_pos=True,
+                         return_attn_bias=True,
+                         return_max_len=True):
         """
         Pad the instances to the max sequence length in batch, and generate the
         corresponding position data and attention bias.
@@ -66,14 +69,14 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
             tensor.set(data_list[i], place)
             input_dict[name_list[i]] = tensor
 
-    src_word, src_pos, src_slf_attn_bias, src_max_len = pad_batch_data(
+    src_word, src_pos, src_slf_attn_bias, src_max_len = __pad_batch_data(
         [inst[0] for inst in insts], src_pad_idx, is_target=False)
-    trg_word, trg_pos, trg_slf_attn_bias, trg_max_len = pad_batch_data(
+    trg_word, trg_pos, trg_slf_attn_bias, trg_max_len = __pad_batch_data(
         [inst[1] for inst in insts], trg_pad_idx, is_target=True)
     trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
                                 [1, 1, trg_max_len, 1]).astype("float32")
-    lbl_word = pad_batch_data([inst[2] for inst in insts], trg_pad_idx, False,
-                              False, False, False)
+    lbl_word = __pad_batch_data([inst[2] for inst in insts], trg_pad_idx, False,
+                                False, False, False)
 
     data_to_tensor([
         src_word, src_pos, trg_word, trg_pos, src_slf_attn_bias,
@@ -84,22 +87,30 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
 
 
 def main():
-    avg_cost = transformer(src_vocab_size + 1, trg_vocab_size + 1,
-                           max_length + 1, n_layer, n_head, d_key, d_value,
-                           d_model, d_inner_hid, dropout, src_pad_idx,
-                           trg_pad_idx, pos_pad_idx)
+    avg_cost = transformer(
+        ModelHyperParams.src_vocab_size + 1,
+        ModelHyperParams.trg_vocab_size + 1, ModelHyperParams.max_length + 1,
+        ModelHyperParams.n_layer, ModelHyperParams.n_head,
+        ModelHyperParams.d_key, ModelHyperParams.d_value,
+        ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
+        ModelHyperParams.dropout, ModelHyperParams.src_pad_idx,
+        ModelHyperParams.trg_pad_idx, ModelHyperParams.pos_pad_idx)
 
     optimizer = fluid.optimizer.Adam(
-        learning_rate=learning_rate, beta1=beta1, beta2=beta2, epsilon=eps)
+        learning_rate=TrainTaskConfig.learning_rate,
+        beta1=TrainTaskConfig.beta1,
+        beta2=TrainTaskConfig.beta2,
+        epsilon=TrainTaskConfig.eps)
     optimizer.minimize(avg_cost)
 
     train_data = paddle.batch(
         paddle.reader.shuffle(
-            paddle.dataset.wmt16.train(src_vocab_size, trg_vocab_size),
-            buf_size=1000),
-        batch_size=batch_size)
+            paddle.dataset.wmt16.train(ModelHyperParams.src_vocab_size,
+                                       ModelHyperParams.trg_vocab_size),
+            buf_size=51200),
+        batch_size=TrainTaskConfig.batch_size)
 
-    place = fluid.CPUPlace()
+    place = fluid.CUDAPlace(0) if TrainTaskConfig.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
     # Initialize the parameters.
@@ -108,21 +119,21 @@ def main():
         pos_enc_param = fluid.global_scope().find_var(
             pos_enc_param_name).get_tensor()
         pos_enc_param.set(
-            position_encoding_init(max_length + 1, d_model), place)
+            position_encoding_init(ModelHyperParams.max_length + 1,
+                                   ModelHyperParams.d_model), place)
 
-    batch_id = 0
-    for pass_id in xrange(pass_num):
-        for data in train_data():
-            data_input = prepare_batch_input(data, input_data_names,
-                                             src_pad_idx, trg_pad_idx,
-                                             max_length, n_head, place)
+    for pass_id in xrange(TrainTaskConfig.pass_num):
+        for batch_id, data in enumerate(train_data()):
+            data_input = prepare_batch_input(
+                data, input_data_names, ModelHyperParams.src_pad_idx,
+                ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
+                ModelHyperParams.n_head, place)
             outs = exe.run(fluid.framework.default_main_program(),
                            feed=data_input,
                            fetch_list=[avg_cost])
             avg_cost_val = np.array(outs[0])
-            print("pass_id=" + str(pass_id) + " batch=" + str(batch_id) +
-                  " avg_cost=" + str(avg_cost_val))
-            batch_id += 1
+            print("pass_id = " + str(pass_id) + " batch = " + str(batch_id) +
+                  " avg_cost = " + str(avg_cost_val))
 
 
 if __name__ == "__main__":
