@@ -476,7 +476,8 @@ def transformer(
     cost = layers.cross_entropy(input=predict, label=gold)
     # The actual shape of weights in runtime is:
     # [batch_size * max_trg_length_in_a_batch, 1].
-    # This is used to remove the losses resulting from paddings.
+    # Padding index do not contribute to the total loss. This Weight is used to
+    # cancel padding index in calculating the loss.
     weights = layers.data(
         name=input_data_names[8],
         shape=[batch_size * max_length, 1],
