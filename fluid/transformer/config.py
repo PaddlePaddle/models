@@ -70,4 +70,5 @@ input_data_names = (
     "src_slf_attn_bias",
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
-    "lbl_word", )
+    "lbl_word",
+    "lbl_weight", )
