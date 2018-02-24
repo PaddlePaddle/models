@@ -1,3 +1,7 @@
+运行本目录下的程序示例需要使用PaddlePaddle v0.11.0 版本。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
+
+---
+
 # 带外部记忆机制的神经机器翻译
 
 带**外部记忆**（External Memory）机制的神经机器翻译模型（Neural Machine Translation, NMT），是神经机器翻译模型的一个重要扩展。它引入可微分的记忆网络作为额外的记忆单元，拓展神经翻译模型内部工作记忆（Working Memory）的容量或带宽，辅助完成翻译等任务中信息的临时存取，改善模型表现。
