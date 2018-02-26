@@ -114,3 +114,10 @@ class PaddleModel(Model):
                               feed=feeder.feed([(scaled_data, label)]),
                               fetch_list=[self._gradient])
         return grad.reshape(data.shape)
+
+    def predict_name(self):
+        """
+        Get the predict name, such as "softmax",etc.
+        :return: string
+        """
+        return self._program.block(0).var(self._predict_name).op.type
