@@ -12,6 +12,9 @@ class TrainTaskConfig(object):
     beta2 = 0.98
     eps = 1e-9
 
+    # the params for learning rate scheduling
+    warmup_steps = 4000
+
 
 class ModelHyperParams(object):
     # Dictionary size for source and target language. This model directly uses

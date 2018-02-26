@@ -4,6 +4,7 @@ import paddle.v2 as paddle
 import paddle.fluid as fluid
 
 from model import transformer, position_encoding_init
+from optim import LearningRateScheduler
 from config import TrainTaskConfig, ModelHyperParams, \
         pos_enc_param_names, input_data_names
 
@@ -88,6 +89,9 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
 
 
 def main():
+    place = fluid.CUDAPlace(0) if TrainTaskConfig.use_gpu else fluid.CPUPlace()
+    exe = fluid.Executor(place)
+
     cost = transformer(
         ModelHyperParams.src_vocab_size + 1,
         ModelHyperParams.trg_vocab_size + 1, ModelHyperParams.max_length + 1,
@@ -97,8 +101,11 @@ def main():
         ModelHyperParams.dropout, ModelHyperParams.src_pad_idx,
         ModelHyperParams.trg_pad_idx, ModelHyperParams.pos_pad_idx)
 
+    lr_scheduler = LearningRateScheduler(ModelHyperParams.d_model,
+                                         TrainTaskConfig.warmup_steps, place,
+                                         TrainTaskConfig.learning_rate)
     optimizer = fluid.optimizer.Adam(
-        learning_rate=TrainTaskConfig.learning_rate,
+        learning_rate=lr_scheduler.learning_rate,
         beta1=TrainTaskConfig.beta1,
         beta2=TrainTaskConfig.beta2,
         epsilon=TrainTaskConfig.eps)
@@ -111,9 +118,6 @@ def main():
             buf_size=51200),
         batch_size=TrainTaskConfig.batch_size)
 
-    place = fluid.CUDAPlace(0) if TrainTaskConfig.use_gpu else fluid.CPUPlace()
-    exe = fluid.Executor(place)
-
     # Initialize the parameters.
     exe.run(fluid.framework.default_startup_program())
     for pos_enc_param_name in pos_enc_param_names:
@@ -125,10 +129,15 @@ def main():
 
     for pass_id in xrange(TrainTaskConfig.pass_num):
         for batch_id, data in enumerate(train_data()):
+            # The current program desc is coupled with batch_size, thus all
+            # mini-batches must have the same number of instances currently.
+            if len(data) != TrainTaskConfig.batch_size:
+                continue
             data_input = prepare_batch_input(
                 data, input_data_names, ModelHyperParams.src_pad_idx,
                 ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
                 ModelHyperParams.n_head, place)
+            lr_scheduler.update_learning_rate(data_input)
             outs = exe.run(fluid.framework.default_main_program(),
                            feed=data_input,
                            fetch_list=[cost])
