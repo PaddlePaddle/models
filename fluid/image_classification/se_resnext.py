@@ -1,6 +1,6 @@
 import os
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 import reader
 
 

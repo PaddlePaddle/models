@@ -4,7 +4,7 @@ Paddle model
 from __future__ import absolute_import
 
 import numpy as np
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 
 from .base import Model
 
@@ -16,7 +16,7 @@ class PaddleModel(Model):
     instance of PaddleModel.
 
     Args:
-        program(paddle.v2.fluid.framework.Program): The program of the model
+        program(paddle.fluid.framework.Program): The program of the model
             which generate the adversarial sample.
         input_name(string): The name of the input.
         logits_name(string): The name of the logits.

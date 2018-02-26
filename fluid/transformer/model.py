@@ -2,8 +2,8 @@ from functools import partial
 import numpy as np
 
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
-import paddle.v2.fluid.layers as layers
+import paddle.fluid as fluid
+import paddle.fluid.layers as layers
 
 from config import TrainTaskConfig, input_data_names, pos_enc_param_names
 

@@ -8,7 +8,7 @@ import numpy as np
 import argparse
 import time
 
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
