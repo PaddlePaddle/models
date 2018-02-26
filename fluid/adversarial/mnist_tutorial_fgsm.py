@@ -3,7 +3,7 @@ FGSM demos on mnist using advbox tool.
 """
 import matplotlib.pyplot as plt
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 
 from advbox import Adversary
 from advbox.attacks.gradientsign import GradientSignAttack

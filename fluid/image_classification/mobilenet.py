@@ -1,9 +1,9 @@
 import os
 
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
-from paddle.v2.fluid.initializer import MSRA
-from paddle.v2.fluid.param_attr import ParamAttr
+import paddle.fluid as fluid
+from paddle.fluid.initializer import MSRA
+from paddle.fluid.param_attr import ParamAttr
 
 parameter_attr = ParamAttr(initializer=MSRA())
 

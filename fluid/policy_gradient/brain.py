@@ -1,6 +1,6 @@
 import numpy as np
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 # reproducible
 np.random.seed(1)
 

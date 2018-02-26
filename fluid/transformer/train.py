@@ -1,7 +1,7 @@
 import numpy as np
 
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 
 from model import transformer, position_encoding_init
 from config import TrainTaskConfig, ModelHyperParams, \
