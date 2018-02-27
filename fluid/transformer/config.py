@@ -12,6 +12,9 @@ class TrainTaskConfig(object):
     beta2 = 0.98
     eps = 1e-9
 
+    # the params for learning rate scheduling
+    warmup_steps = 4000
+
 
 class ModelHyperParams(object):
     # Dictionary size for source and target language. This model directly uses
@@ -70,4 +73,5 @@ input_data_names = (
     "src_slf_attn_bias",
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
-    "lbl_word", )
+    "lbl_word",
+    "lbl_weight", )

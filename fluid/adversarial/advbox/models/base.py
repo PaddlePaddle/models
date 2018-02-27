@@ -24,11 +24,21 @@ class Model(object):
         assert len(bounds) == 2
         assert channel_axis in [0, 1, 2, 3]
 
-        if preprocess is None:
-            preprocess = (0, 1)
         self._bounds = bounds
         self._channel_axis = channel_axis
-        self._preprocess = preprocess
+
+        # Make self._preprocess to be (0,1) if possible, so that don't need
+        # to do substract or divide.
+        if preprocess is not None:
+            sub, div = np.array(preprocess)
+            if not np.any(sub):
+                sub = 0
+            if np.all(div == 1):
+                div = 1
+            assert (div is None) or np.all(div)
+            self._preprocess = (sub, div)
+        else:
+            self._preprocess = (0, 1)
 
     def bounds(self):
         """
@@ -47,8 +57,7 @@ class Model(object):
         sub, div = self._preprocess
         if np.any(sub != 0):
             res = input_ - sub
-        assert np.any(div != 0)
-        if np.any(div != 1):
+        if not np.all(sub == 1):
             if res is None:  # "res = input_ - sub" is not executed!
                 res = input_ / div
             else:
@@ -95,5 +104,13 @@ class Model(object):
         Return:
             numpy.ndarray: gradient of the cross-entropy loss w.r.t the image
                 with the shape (height, width, channel).
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def predict_name(self):
+        """
+        Get the predict name, such as "softmax",etc.
+        :return: string
         """
         raise NotImplementedError

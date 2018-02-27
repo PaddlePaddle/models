@@ -10,6 +10,8 @@ import numpy as np
 
 from .base import Attack
 
+__all__ = ['DeepFoolAttack']
+
 
 class DeepFoolAttack(Attack):
     """
@@ -56,7 +58,7 @@ class DeepFoolAttack(Attack):
                 gradient_k = self.model.gradient(x, k)
                 w_k = gradient_k - gradient
                 f_k = f[k] - f[pre_label]
-                w_k_norm = np.linalg.norm(w_k) + 1e-8
+                w_k_norm = np.linalg.norm(w_k.flatten()) + 1e-8
                 pert_k = (np.abs(f_k) + 1e-8) / w_k_norm
                 if pert_k < pert:
                     pert = pert_k
@@ -70,9 +72,12 @@ class DeepFoolAttack(Attack):
             f = self.model.predict(x)
             gradient = self.model.gradient(x, pre_label)
             adv_label = np.argmax(f)
-            logging.info('iteration = {}, f = {}, pre_label = {}'
-                         ', adv_label={}'.format(iteration, f[pre_label],
-                                                 pre_label, adv_label))
+            logging.info('iteration={}, f[pre_label]={}, f[target_label]={}'
+                         ', f[adv_label]={}, pre_label={}, adv_label={}'
+                         ''.format(iteration, f[pre_label], (
+                             f[adversary.target_label]
+                             if adversary.is_targeted_attack else 'NaN'), f[
+                                 adv_label], pre_label, adv_label))
             if adversary.try_accept_the_example(x, adv_label):
                 return adversary
 

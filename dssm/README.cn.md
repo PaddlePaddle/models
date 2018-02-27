@@ -1,3 +1,7 @@
+运行本目录下的程序示例需要使用PaddlePaddle v0.10.0 版本。如果您的PaddlePaddle安装版本低于此版本要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
+
+---
+
 # 深度结构化语义模型 (Deep Structured Semantic Models, DSSM)
 DSSM使用DNN模型在一个连续的语义空间中学习文本低纬的表示向量，并且建模两个句子间的语义相似度。本例演示如何使用PaddlePaddle实现一个通用的DSSM 模型，用于建模两个字符串间的语义相似度，模型实现支持通用的数据格式，用户替换数据便可以在真实场景中使用该模型。
 

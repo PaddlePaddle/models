@@ -1,9 +1,10 @@
 import numpy as np
 
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 
 from model import transformer, position_encoding_init
+from optim import LearningRateScheduler
 from config import TrainTaskConfig, ModelHyperParams, \
         pos_enc_param_names, input_data_names
 
@@ -77,17 +78,21 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
                                 [1, 1, trg_max_len, 1]).astype("float32")
     lbl_word = __pad_batch_data([inst[2] for inst in insts], trg_pad_idx, False,
                                 False, False, False)
+    lbl_weight = (lbl_word != trg_pad_idx).astype("float32").reshape([-1, 1])
 
     data_to_tensor([
         src_word, src_pos, trg_word, trg_pos, src_slf_attn_bias,
-        trg_slf_attn_bias, trg_src_attn_bias, lbl_word
+        trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight
     ], input_data_names, input_dict, place)
 
     return input_dict
 
 
 def main():
-    avg_cost = transformer(
+    place = fluid.CUDAPlace(0) if TrainTaskConfig.use_gpu else fluid.CPUPlace()
+    exe = fluid.Executor(place)
+
+    cost = transformer(
         ModelHyperParams.src_vocab_size + 1,
         ModelHyperParams.trg_vocab_size + 1, ModelHyperParams.max_length + 1,
         ModelHyperParams.n_layer, ModelHyperParams.n_head,
@@ -96,12 +101,15 @@ def main():
         ModelHyperParams.dropout, ModelHyperParams.src_pad_idx,
         ModelHyperParams.trg_pad_idx, ModelHyperParams.pos_pad_idx)
 
+    lr_scheduler = LearningRateScheduler(ModelHyperParams.d_model,
+                                         TrainTaskConfig.warmup_steps, place,
+                                         TrainTaskConfig.learning_rate)
     optimizer = fluid.optimizer.Adam(
-        learning_rate=TrainTaskConfig.learning_rate,
+        learning_rate=lr_scheduler.learning_rate,
         beta1=TrainTaskConfig.beta1,
         beta2=TrainTaskConfig.beta2,
         epsilon=TrainTaskConfig.eps)
-    optimizer.minimize(avg_cost)
+    optimizer.minimize(cost)
 
     train_data = paddle.batch(
         paddle.reader.shuffle(
@@ -109,9 +117,6 @@ def main():
                                        ModelHyperParams.trg_vocab_size),
             buf_size=51200),
         batch_size=TrainTaskConfig.batch_size)
-
-    place = fluid.CUDAPlace(0) if TrainTaskConfig.use_gpu else fluid.CPUPlace()
-    exe = fluid.Executor(place)
 
     # Initialize the parameters.
     exe.run(fluid.framework.default_startup_program())
@@ -124,16 +129,21 @@ def main():
 
     for pass_id in xrange(TrainTaskConfig.pass_num):
         for batch_id, data in enumerate(train_data()):
+            # The current program desc is coupled with batch_size, thus all
+            # mini-batches must have the same number of instances currently.
+            if len(data) != TrainTaskConfig.batch_size:
+                continue
             data_input = prepare_batch_input(
                 data, input_data_names, ModelHyperParams.src_pad_idx,
                 ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
                 ModelHyperParams.n_head, place)
+            lr_scheduler.update_learning_rate(data_input)
             outs = exe.run(fluid.framework.default_main_program(),
                            feed=data_input,
-                           fetch_list=[avg_cost])
-            avg_cost_val = np.array(outs[0])
+                           fetch_list=[cost])
+            cost_val = np.array(outs[0])
             print("pass_id = " + str(pass_id) + " batch = " + str(batch_id) +
-                  " avg_cost = " + str(avg_cost_val))
+                  " avg_cost = " + str(cost_val))
 
 
 if __name__ == "__main__":

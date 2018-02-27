@@ -2,8 +2,8 @@ from functools import partial
 import numpy as np
 
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
-import paddle.v2.fluid.layers as layers
+import paddle.fluid as fluid
+import paddle.fluid.layers as layers
 
 from config import TrainTaskConfig, input_data_names, pos_enc_param_names
 
@@ -474,4 +474,14 @@ def transformer(
         dtype="int64",
         append_batch_size=False)
     cost = layers.cross_entropy(input=predict, label=gold)
-    return layers.mean(x=cost)
+    # The actual shape of weights in runtime is:
+    # [batch_size * max_trg_length_in_a_batch, 1].
+    # Padding index do not contribute to the total loss. This Weight is used to
+    # cancel padding index in calculating the loss.
+    weights = layers.data(
+        name=input_data_names[8],
+        shape=[batch_size * max_length, 1],
+        dtype="float32",
+        append_batch_size=False)
+    weighted_cost = cost * weights
+    return layers.reduce_sum(weighted_cost)
