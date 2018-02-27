@@ -32,7 +32,7 @@ def _read_creater(num_sample=1024, min_seq_len=1, max_seq_len=10):
     return reader
 
 
-def train(batch_size, num_sample=16):
+def train(batch_size, num_sample=128):
     """Get train dataset reader."""
     return paddle.batch(_read_creater(num_sample=num_sample), batch_size)
 

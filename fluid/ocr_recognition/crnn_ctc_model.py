@@ -1,4 +1,4 @@
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 
 
 def conv_bn_pool(input,
@@ -7,7 +7,8 @@ def conv_bn_pool(input,
                  act="relu",
                  param=None,
                  bias=None,
-                 param_0=None):
+                 param_0=None,
+                 is_test=False):
     tmp = input
     for i in xrange(group):
         tmp = fluid.layers.conv2d(
@@ -19,14 +20,23 @@ def conv_bn_pool(input,
             act=None,  # LinearActivation
             use_cudnn=True)
         tmp = fluid.layers.batch_norm(
-            input=tmp, act=act, param_attr=param, bias_attr=bias)
+            input=tmp,
+            act=act,
+            param_attr=param,
+            bias_attr=bias,
+            is_test=is_test)
     tmp = fluid.layers.pool2d(
         input=tmp, pool_size=2, pool_type='max', pool_stride=2, use_cudnn=True)
 
     return tmp
 
 
-def ocr_convs(input, num, with_bn, regularizer=None, gradient_clip=None):
+def ocr_convs(input,
+              num,
+              with_bn,
+              regularizer=None,
+              gradient_clip=None,
+              is_test=False):
     assert (num % 4 == 0)
 
     b = fluid.ParamAttr(
@@ -42,10 +52,11 @@ def ocr_convs(input, num, with_bn, regularizer=None, gradient_clip=None):
         gradient_clip=gradient_clip,
         initializer=fluid.initializer.Normal(0.0, 0.01))
     tmp = input
-    tmp = conv_bn_pool(tmp, 2, [16, 16], param=w1, bias=b, param_0=w0)
-    tmp = conv_bn_pool(tmp, 2, [32, 32], param=w1, bias=b)
-    tmp = conv_bn_pool(tmp, 2, [64, 64], param=w1, bias=b)
-    tmp = conv_bn_pool(tmp, 2, [128, 128], param=w1, bias=b)
+    tmp = conv_bn_pool(
+        tmp, 2, [16, 16], param=w1, bias=b, param_0=w0, is_test=is_test)
+    tmp = conv_bn_pool(tmp, 2, [32, 32], param=w1, bias=b, is_test=is_test)
+    tmp = conv_bn_pool(tmp, 2, [64, 64], param=w1, bias=b, is_test=is_test)
+    tmp = conv_bn_pool(tmp, 2, [128, 128], param=w1, bias=b, is_test=is_test)
     return tmp
 
 
@@ -53,9 +64,15 @@ def encoder_net(images,
                 num_classes,
                 rnn_hidden_size=200,
                 regularizer=None,
-                gradient_clip=None):
+                gradient_clip=None,
+                is_test=False):
     conv_features = ocr_convs(
-        images, 8, True, regularizer=regularizer, gradient_clip=gradient_clip)
+        images,
+        8,
+        True,
+        regularizer=regularizer,
+        gradient_clip=gradient_clip,
+        is_test=is_test)
     sliced_feature = fluid.layers.im2sequence(
         input=conv_features,
         stride=[1, 1],
@@ -111,12 +128,12 @@ def encoder_net(images,
                              size=num_classes + 1,
                              param_attr=w_attr,
                              bias_attr=b_attr)
+
     return fc_out
 
 
 def ctc_train_net(images, label, args, num_classes):
     regularizer = fluid.regularizer.L2Decay(args.l2)
-    # gradient_clip=fluid.clip.GradientClipByValue(args.max_clip, args.min_clip)
     gradient_clip = None
     fc_out = encoder_net(
         images,
@@ -127,7 +144,7 @@ def ctc_train_net(images, label, args, num_classes):
     cost = fluid.layers.warpctc(
         input=fc_out,
         label=label,
-        size=num_classes + 1,
+        #        size=num_classes + 1,
         blank=num_classes,
         norm_by_times=True)
     avg_cost = fluid.layers.mean(x=cost)
@@ -142,3 +159,27 @@ def ctc_train_net(images, label, args, num_classes):
     error_evaluator = fluid.evaluator.EditDistance(
         input=decoded_out, label=casted_label)
     return avg_cost, error_evaluator
+
+
+def ctc_infer(images, num_classes):
+    fc_out = encoder_net(images, num_classes, is_test=True)
+    return fluid.layers.ctc_greedy_decoder(input=fc_out, blank=num_classes)
+
+
+def ctc_eval(images, label, num_classes):
+    fc_out = encoder_net(images, num_classes, is_test=True)
+    decoded_out = fluid.layers.ctc_greedy_decoder(
+        input=fc_out, blank=num_classes)
+
+    casted_label = fluid.layers.cast(x=label, dtype='int64')
+    error_evaluator = fluid.evaluator.EditDistance(
+        input=decoded_out, label=casted_label)
+
+    cost = fluid.layers.warpctc(
+        input=fc_out,
+        label=label,
+        #size=num_classes + 1,
+        blank=num_classes,
+        norm_by_times=True)
+
+    return error_evaluator, cost
