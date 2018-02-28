@@ -1,3 +1,7 @@
+运行本目录下的程序示例需要使用PaddlePaddle v0.10.0 版本。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
+
+---
+
 # 命名实体识别
 
 以下是本例的简要目录结构及说明：
@@ -88,14 +92,14 @@ Baghdad      NNP  I-NP  I-LOC
 预处理完成后，一条训练样本包含3个部分作为神经网络的输入信息用于训练：（1）句子序列；（2）首字母大写标记序列；（3）标注序列，下表是一条训练样本的示例：
 
 | 句子序列 | 大写标记序列 | 标注序列 |
-|---|---|---|
-| u.n. | 1 | B-ORG |
-| official | 0 | O |
-| ekeus | 1 | B-PER |
-| heads | 0 | O |
-| for | 0 | O |
-| baghdad | 1 | B-LOC |
-| . | 0 | O |
+| -------- | ------------ | -------- |
+| u.n.     | 1            | B-ORG    |
+| official | 0            | O        |
+| ekeus    | 1            | B-PER    |
+| heads    | 0            | O        |
+| for      | 0            | O        |
+| baghdad  | 1            | B-LOC    |
+| .        | 0            | O        |
 
 ## 运行
 ### 编写数据读取接口

@@ -1,3 +1,7 @@
+The minimum PaddlePaddle version needed for the code sample in this directory is v0.10.0. If you are on a version of PaddlePaddle earlier than v0.10.0, [please update your installation](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html).
+
+---
+
 # Neural Recurrent Sequence Labeling Model for Open-Domain Factoid Question Answering
 
 This model implements the work in the following paper:

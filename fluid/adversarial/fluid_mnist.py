@@ -2,7 +2,7 @@
 CNN on mnist data using fluid api of paddlepaddle
 """
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 
 
 def mnist_cnn_model(img):
