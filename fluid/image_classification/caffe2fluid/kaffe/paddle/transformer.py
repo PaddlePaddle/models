@@ -273,7 +273,6 @@ class TensorFlowEmitter(object):
                 b += self.emit_node(node)
             blocks.append(b[:-1])
         s = s + '\n\n'.join(blocks)
-
         s += self.emit_convert_def(input_nodes)
         s += self.emit_main_def(name)
         return s

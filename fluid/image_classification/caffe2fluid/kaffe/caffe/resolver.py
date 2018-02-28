@@ -1,6 +1,16 @@
+import os
 import sys
 
 SHARED_CAFFE_RESOLVER = None
+
+
+def import_caffepb():
+    p = os.path.realpath(__file__)
+    p = os.path.dirname(p)
+    p = os.path.join(p, '../../proto')
+    sys.path.insert(0, p)
+    import caffepb
+    return caffepb
 
 
 class CaffeResolver(object):
@@ -15,8 +25,7 @@ class CaffeResolver(object):
             self.caffe = caffe
         except ImportError:
             # Fall back to the protobuf implementation
-            from . import caffepb
-            self.caffepb = caffepb
+            self.caffepb = import_caffepb()
             show_fallback_warning()
         if self.caffe:
             # Use the protobuf code from the imported distribution.

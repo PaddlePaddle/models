@@ -165,7 +165,6 @@ class Network(object):
 
         # Get the number of channels in the input
         h_i, w_i = input.shape[2:]
-
         fluid = import_fluid()
         output = fluid.layers.pool2d(
             input=input,
@@ -182,7 +181,6 @@ class Network(object):
 
         # Get the number of channels in the input
         h_i, w_i = input.shape[2:]
-
         fluid = import_fluid()
         output = fluid.layers.pool2d(
             input=input,

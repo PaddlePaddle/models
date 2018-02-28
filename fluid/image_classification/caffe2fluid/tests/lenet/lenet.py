@@ -61,8 +61,8 @@ class Network(object):
         fluid = import_fluid()
         #load fluid mode directly
         if os.path.isdir(data_path):
-            assert (
-                exe is not None), 'must provide a executor to load fluid model'
+            assert (exe is not None), \
+                'must provide a executor to load fluid model'
             fluid.io.load_persistables_if_exist(executor=exe, dirname=data_path)
             return True
 
@@ -167,7 +167,6 @@ class Network(object):
 
         # Get the number of channels in the input
         h_i, w_i = input.shape[2:]
-
         fluid = import_fluid()
         output = fluid.layers.pool2d(
             input=input,
@@ -184,7 +183,6 @@ class Network(object):
 
         # Get the number of channels in the input
         h_i, w_i = input.shape[2:]
-
         fluid = import_fluid()
         output = fluid.layers.pool2d(
             input=input,

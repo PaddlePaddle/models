@@ -2,6 +2,8 @@
 
 #function:
 #   convert a caffe model
+#   eg:
+#       bash ./convert.sh ./model.caffe/lenet.prototxt ./model.caffe/lenet.caffemodel lenet.py lenet.npy
 
 if [[ $# -ne 4 ]];then
     echo "usage:"

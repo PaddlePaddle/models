@@ -1,6 +1,8 @@
 ### convert lenet model from caffe format into paddle format(fluid api)
 
 ### howto
+    0, prepare your caffepb.py
+
     1, download a lenet caffe-model
         lenet_iter_10000.caffemodel
             download address: https://github.com/ethereon/caffe-tensorflow/raw/master/examples/mnist/lenet_iter_10000.caffemodel
