@@ -19,9 +19,11 @@ def rnn_lm(vocab_dim,
     label = fluid.layers.data(name="label", shape=[1], dtype="int64", lod_level=1)
     input_emb = fluid.layers.embedding(input=data, size=[vocab_dim, emb_dim])
     print input_emb
+    forward_proj = fluid.layers.fc(input=input_emb, size=hidden_dim * 4,
+            act=None, bias_attr=None)
     # only support lstm here
     forward, _ = fluid.layers.dynamic_lstm(
-            input=input_emb,
+            input=forward_proj,
             size=hidden_dim * 4,
             use_peepholes=False);
     prediction = fluid.layers.fc(input=forward, size=vocab_dim, act='softmax')
