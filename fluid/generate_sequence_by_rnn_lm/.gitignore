@@ -1,3 +1,4 @@
 *.pyc
 *.tar.gz
 models
+*.swp
