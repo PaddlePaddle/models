@@ -169,7 +169,8 @@ def profile(args):
             outs = exe.run(fluid.default_main_program(),
                            feed={"feature": feature_t,
                                  "label": label_t},
-                           fetch_list=[avg_cost, accuracy],
+                           fetch_list=[avg_cost, accuracy]
+                           if args.print_train_acc else [],
                            return_numpy=False)
 
             if args.print_train_acc:
