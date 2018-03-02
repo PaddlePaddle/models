@@ -9,7 +9,7 @@ This tool is used to convert a Caffe model to Fluid model
     2) download one from github directly
         cd proto/ && wget https://github.com/ethereon/caffe-tensorflow/blob/master/kaffe/caffe/caffepb.py
 
-2, Convert the caffe model using convert.py which will generate a python code and weight(in .npy)
+2, Convert the caffe model using 'convert.py' which will generate a python script and a weight(in .npy) file
 
 3, Use the converted model to predict
     see more detail info in 'tests/lenet/README.md'
