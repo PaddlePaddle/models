@@ -34,7 +34,6 @@ def load_parameter(place):
         t.set(params[name], place)
 
 
-
 def train(args, data_reader=dummy_reader):
     """OCR CTC training"""
     num_classes = data_reader.num_classes()
@@ -42,7 +41,7 @@ def train(args, data_reader=dummy_reader):
     # define network
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int32', lod_level=1)
-    avg_cost, error_evaluator = ctc_train_net(images, label, args, num_classes)
+    sum_cost, error_evaluator = ctc_train_net(images, label, args, num_classes)
     # data reader
     train_reader = data_reader.train(args.batch_size)
     test_reader = data_reader.test()
@@ -53,19 +52,9 @@ def train(args, data_reader=dummy_reader):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    load_parameter(place)
+    #load_parameter(place)
 
     inference_program = fluid.io.get_inference_program(error_evaluator)
-
-    # evaluate model on test data
-    error_evaluator.reset(exe)
-    for data in test_reader():
-        exe.run(inference_program, feed=get_feeder_data(data, place))
-    _, test_seq_error = error_evaluator.eval(exe)
-    print "\nEnd pass[%d]; Test seq error: %s.\n" % (
-            -1, str(test_seq_error[0]))
-
-
 
     for pass_id in range(args.pass_num):
         error_evaluator.reset(exe)
@@ -77,7 +66,7 @@ def train(args, data_reader=dummy_reader):
             batch_loss, _, batch_seq_error = exe.run(
                 fluid.default_main_program(),
                 feed=get_feeder_data(data, place),
-                fetch_list=[avg_cost] + error_evaluator.metrics)
+                fetch_list=[sum_cost] + error_evaluator.metrics)
             total_loss += batch_loss[0]
             total_seq_error += batch_seq_error[0]
             if batch_id % 10 == 1:
@@ -85,7 +74,7 @@ def train(args, data_reader=dummy_reader):
                 sys.stdout.flush()
             if batch_id % args.log_period == 1:
                 print "\nPass[%d]-batch[%d]; Avg Warp-CTC loss: %s; Avg seq error: %s." % (
-                    pass_id, batch_id, total_loss / batch_id, total_seq_error / (batch_id * args.batch_size))
+                    pass_id, batch_id, total_loss / (batch_id * args.batch_size), total_seq_error / (batch_id * args.batch_size))
                 sys.stdout.flush()
             batch_id += 1
 

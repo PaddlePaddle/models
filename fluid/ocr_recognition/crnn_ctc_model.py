@@ -54,6 +54,7 @@ def ocr_convs(input,
     tmp = input
     tmp = conv_bn_pool(
         tmp, 2, [16, 16], param=w1, bias=b, param_0=w0, is_test=is_test)
+
     tmp = conv_bn_pool(tmp, 2, [32, 32], param=w1, bias=b, is_test=is_test)
     tmp = conv_bn_pool(tmp, 2, [64, 64], param=w1, bias=b, is_test=is_test)
     tmp = conv_bn_pool(tmp, 2, [128, 128], param=w1, bias=b, is_test=is_test)
@@ -142,23 +143,19 @@ def ctc_train_net(images, label, args, num_classes):
         gradient_clip=gradient_clip)
 
     cost = fluid.layers.warpctc(
-        input=fc_out,
-        label=label,
-        #        size=num_classes + 1,
-        blank=num_classes,
-        norm_by_times=True)
-    avg_cost = fluid.layers.mean(x=cost)
+        input=fc_out, label=label, blank=num_classes, norm_by_times=True)
+    sum_cost = fluid.layers.reduce_sum(cost)
 
     optimizer = fluid.optimizer.Momentum(
         learning_rate=args.learning_rate, momentum=args.momentum)
-    optimizer.minimize(avg_cost)
-    # decoder and evaluator
+    optimizer.minimize(sum_cost)
+
     decoded_out = fluid.layers.ctc_greedy_decoder(
         input=fc_out, blank=num_classes)
     casted_label = fluid.layers.cast(x=label, dtype='int64')
     error_evaluator = fluid.evaluator.EditDistance(
         input=decoded_out, label=casted_label)
-    return avg_cost, error_evaluator
+    return sum_cost, error_evaluator
 
 
 def ctc_infer(images, num_classes):
@@ -176,10 +173,6 @@ def ctc_eval(images, label, num_classes):
         input=decoded_out, label=casted_label)
 
     cost = fluid.layers.warpctc(
-        input=fc_out,
-        label=label,
-        #size=num_classes + 1,
-        blank=num_classes,
-        norm_by_times=True)
+        input=fc_out, label=label, blank=num_classes, norm_by_times=True)
 
     return error_evaluator, cost
