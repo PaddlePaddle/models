@@ -44,7 +44,8 @@ class PolicyGradient:
             input=self.all_act_prob,
             label=acts)  # this is negative log of chosen action
         neg_log_prob_weight = fluid.layers.elementwise_mul(x=neg_log_prob, y=vt)
-        loss = fluid.layers.reduce_mean(neg_log_prob_weight)  # reward guided loss
+        loss = fluid.layers.reduce_mean(
+            neg_log_prob_weight)  # reward guided loss
 
         sgd_optimizer = fluid.optimizer.SGD(self.lr)
         sgd_optimizer.minimize(loss)
