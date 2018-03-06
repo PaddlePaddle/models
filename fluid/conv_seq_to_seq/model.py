@@ -202,6 +202,8 @@ class ConvDecoder:
         x = self.fc2(x)
         x = Op.dropout(x, self.dropout)
         x = self.fc3(x)
+        # NOTE this is different from fairseq, the predictions are negative and avg_cost will be nan
+        x = Op.softmax(x)
         return x, avg_attn_scores
 
     def _transpose_if_training(self, x):
@@ -310,7 +312,7 @@ def build_trainer():
 
     optimizer = fluid.optimizer.Adagrad(learning_rate=1e-4)
     optimize_ops, params_grads = optimizer.minimize(avg_cost)
-    return avg_cost
+    return avg_cost, predictions
 
 
 def set_init_lod(data, lod, place):
@@ -347,7 +349,7 @@ def pad_batch_data(data):
 def train_main():
     place = fluid.CPUPlace()
 
-    avg_cost = build_trainer()
+    touts = build_trainer()
 
     train_data = paddle.batch(
         paddle.reader.shuffle(
@@ -373,16 +375,16 @@ def train_main():
             target_pre_pos = to_tensor(target_pre_pos)
             target = to_tensor(target)
 
-            avg_cost = exe.run(framework.default_main_program(),
-                               feed={
-                                   'src_word_id': src_word,
-                                   'src_posi_id': src_posi,
-                                   'trg_pre_word_id': target_pre,
-                                   'trg_pre_posi_id': target_pre_pos,
-                                   'trg_word_id': target,
-                               },
-                               fetch_list=[avg_cost])
-            print 'avg_cost', avg_cost
+            outs = exe.run(framework.default_main_program(),
+                           feed={
+                               'src_word_id': src_word,
+                               'src_posi_id': src_posi,
+                               'trg_pre_word_id': target_pre,
+                               'trg_pre_posi_id': target_pre_pos,
+                               'trg_word_id': target,
+                           },
+                           fetch_list=[touts[0], touts[1]])
+            print 'avg_cost', outs[0]
             break
 
 

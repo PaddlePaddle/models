@@ -40,6 +40,25 @@ class Op:
     def dropout(x, prob, is_test=is_test):
         return pd.dropout(x, dropout_prob=prob, is_test=is_test)
 
+    @staticmethod
+    def sigmoid(x):
+        return pd.sigmoid(x=x)
+
+    @staticmethod
+    def softmax(x):
+        '''
+        Softmax the last dim.
+        '''
+        dims = get_dims(x)
+        if len(dims) > 2:
+            first_dim = np.prod(dims[:-1])
+            last_dim = dims[-1]
+            x = Op.reshape(x, [first_dim, last_dim])
+        x = pd.softmax(x=x)
+        if len(dims) > 2:
+            x = Op.reshape(x, dims)
+        return x
+
 
 class Embedding:
     def __init__(self, num_embeddings, embed_dim, padding_idx=-1):
