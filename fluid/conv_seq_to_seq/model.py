@@ -310,6 +310,7 @@ def build_trainer():
 
     optimizer = fluid.optimizer.Adagrad(learning_rate=1e-4)
     optimize_ops, params_grads = optimizer.minimize(avg_cost)
+    return avg_cost
 
 
 def set_init_lod(data, lod, place):
@@ -346,7 +347,7 @@ def pad_batch_data(data):
 def train_main():
     place = fluid.CPUPlace()
 
-    build_trainer()
+    avg_cost = build_trainer()
 
     train_data = paddle.batch(
         paddle.reader.shuffle(
@@ -372,14 +373,16 @@ def train_main():
             target_pre_pos = to_tensor(target_pre_pos)
             target = to_tensor(target)
 
-            outs = exe.run(framework.default_main_program(),
-                           feed={
-                               'src_word_id': src_word,
-                               'src_posi_id': src_posi,
-                               'trg_pre_word_id': target_pre,
-                               'trg_pre_posi_id': target_pre_pos,
-                               'trg_word_id': target,
-                           })
+            avg_cost = exe.run(framework.default_main_program(),
+                               feed={
+                                   'src_word_id': src_word,
+                                   'src_posi_id': src_posi,
+                                   'trg_pre_word_id': target_pre,
+                                   'trg_pre_posi_id': target_pre_pos,
+                                   'trg_word_id': target,
+                               },
+                               fetch_list=[avg_cost])
+            print 'avg_cost', avg_cost
             break
 
 
