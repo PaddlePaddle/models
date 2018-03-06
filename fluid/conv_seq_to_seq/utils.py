@@ -7,17 +7,38 @@ import paddle.fluid.nets as nets
 import paddle.fluid.framework as framework
 import paddle.fluid.debuger as debuger
 from paddle.fluid.framework import framework_pb2
-'''
-Reference the paper: Convolutional Sequence to Sequence Learning
-
-
-
-Some difference with the pytorch implementation:
-
-- conv2d padding will change output, need a special strategy
-'''
 
 is_test = False
+
+
+def set_init_lod(data, lod, place):
+    res = fluid.LoDTensor()
+    res.set(data, place)
+    res.set_lod(lod)
+    return res
+
+
+def pad(ids, max_len):
+    if len(ids) < max_len:
+        for i in xrange(max_len - len(ids)):
+            ids.append(0)
+    return ids
+
+
+def to_tensor(data, max_len):
+    for inst in data:
+        inst = pad(inst, max_len)
+    return np.array(data, dtype='int64')
+
+
+def pad_batch_data(data, max_len):
+    '''
+    data: a batch of input
+    '''
+    for sent in data:
+        if len(sent) < max_len:
+            sent += [0 for i in xrange(max_len - len(sent))]
+    return data
 
 
 class Op:
@@ -176,14 +197,14 @@ class Atom(object):
             dropout = self.kwargs['dropout']
             del self.kwargs['dropout']
             if dropout is not None:
-                x = self.op(x,
-                            param_attr=fluid.ParamAttr(name=self.name),
-                            **self.kwargs)
+                x = self.op(
+                    x,
+                    param_attr=fluid.ParamAttr(name=self.name),
+                    **self.kwargs)
                 return Op.dropout(x, dropout, is_test=is_test)
 
-        return self.op(x,
-                       param_attr=fluid.ParamAttr(name=self.name),
-                       **self.kwargs)
+        return self.op(
+            x, param_attr=fluid.ParamAttr(name=self.name), **self.kwargs)
 
 
 def get_var_desc(var):
