@@ -5,6 +5,7 @@ import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 import reader
+import numpy as np
 
 parameter_attr = ParamAttr(initializer=MSRA())
 
@@ -234,19 +235,19 @@ def train(train_file_list,
     mbox_locs, mbox_confs, box, box_var = mobile_net(image, image_shape)
     nmsed_out = fluid.layers.detection_output(mbox_locs, mbox_confs, box,
                                               box_var)
-    loss = fluid.layers.ssd_loss(mbox_locs, mbox_confs, gt_box, gt_label, box,
-                                 box_var)
-    avg_loss = fluid.layers.mean(x=loss)
+    loss_vec = fluid.layers.ssd_loss(mbox_locs, mbox_confs, gt_box, gt_label,
+                                     box, box_var)
+    loss = fluid.layers.nn.reduce_sum(loss_vec)
+
     optimizer = fluid.optimizer.Momentum(
         learning_rate=fluid.learning_rate_decay.exponential_decay(
             learning_rate=learning_rate,
-            global_step=global_step,
             decay_steps=40000,
             decay_rate=0.1,
             staircase=True),
         momentum=0.9,
-        regularization=fluid.regularizer.L2Decay(5 * 1e-5))
-    opts = optimizer.minimize(avg_loss)
+        regularization=fluid.regularizer.L2Decay(5 * 1e-5), )
+    opts = optimizer.minimize(loss)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -260,12 +261,13 @@ def train(train_file_list,
 
     for pass_id in range(num_passes):
         for batch_id, data in enumerate(train_reader()):
-            avg_loss_v = exe.run(fluid.default_main_program(),
-                                 feed=feeder.feed(data),
-                                 fetch_list=[avg_loss])
-            print("Pass {0}, batch {1}, loss {2}".format(pass_id, batch_id,
-                                                         avg_loss_v[0]))
-        if pass_id % 10 == 0:
+            loss_v = exe.run(fluid.default_main_program(),
+                             feed=feeder.feed(data),
+                             fetch_list=[loss])
+            if batch_id % 50 == 0:
+                print("Pass {0}, batch {1}, loss {2}".format(pass_id, batch_id,
+                                                             np.sum(loss_v)))
+        if pass_id % 1 == 0:
             model_path = os.path.join(model_save_dir, str(pass_id))
             print 'save models to %s' % (model_path)
             fluid.io.save_inference_model(model_path, ['image'], [nmsed_out],
