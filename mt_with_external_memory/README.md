@@ -116,7 +116,7 @@
 算法实现于以下几个文件中：
 
 - `external_memory.py`: 主要实现简化版的 **神经图灵机** 于 `ExternalMemory` 类，对外提供初始化和读写函数。
-- `model.py`: 相关模型配置函数，包括双向 GPU 编码器（`bidirectional_gru_encoder`），带外部记忆强化的解码器（`memory_enhanced_decoder`），带外部记忆强化的序列到序列模型（`memory_enhanced_decoder`）。
+- `model.py`: 相关模型配置函数，包括双向 GPU 编码器（`bidirectional_gru_encoder`），带外部记忆强化的解码器（`memory_enhanced_decoder`），带外部记忆强化的序列到序列模型（`memory_enhanced_seq2seq`）。
 - `data_utils.py`: 相关数据处理辅助函数。
 - `train.py`: 模型训练。
 - `infer.py`: 部分示例样本的翻译（模型推断）。
@@ -170,6 +170,7 @@ class ExternalMemory(object):
                                      a learnable gate function.
         :type enable_interpolation: bool
         """
+        pass
 
     def _content_addressing(self, key_vector):
         """Get write/read head's addressing weights via content-based addressing.
@@ -194,6 +195,7 @@ class ExternalMemory(object):
         :param write_key: Key vector for write heads to generate writing
                           content and addressing signals.
         :type write_key: LayerOutput
+        """
         pass
 
     def read(self, read_key):
@@ -410,7 +412,7 @@ paddle.dataset.wmt14.test(dict_size)
 命令行输入：
 
 ```bash
-python mt_with_external_memory.py
+python train.py
 ```
 或自定义部分参数, 例如:
 
