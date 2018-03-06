@@ -26,7 +26,7 @@ class Op:
         return pd.reshape(x=x, shape=shape)
 
     @staticmethod
-    def transpose(x, *offsets):
+    def transpose(x, offsets):
         ndims = len(list(get_tensor(x).dims))
         dims = [i for i in range(ndims)]
         assert len(dims) >= 2
@@ -144,7 +144,7 @@ class Conv1D:
         # conv2d's input should be format NCHW, which is
         # - batch_size, channels, height, width
         B, T, C = dims
-        x = Op.transpose(x, 1, 2)
+        x = Op.transpose(x, [1, 2])
         x = Op.reshape(x, (B, C, 1, T))
 
         x = self.atom(x)

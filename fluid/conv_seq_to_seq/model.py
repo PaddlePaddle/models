@@ -207,12 +207,12 @@ class ConvDecoder:
         return x, avg_attn_scores
 
     def _transpose_if_training(self, x):
-        x = Op.transpose(x, 0, 1)
+        x = Op.transpose(x, [0, 1])
         return x
 
     def _split_encoder_out(self, encoder_out):
         encoder_a, encoder_b = encoder_out
-        encoder_a = Op.transpose(encoder_a, 1, 2)
+        encoder_a = Op.transpose(encoder_a, [1, 2])
         result = (encoder_a, encoder_b)
         return result
 
@@ -232,8 +232,8 @@ class AttentionLayer:
         residual = x
         encoder_a, encoder_b = encoder_out
         # here just a trick
-        encoder_a = Op.transpose(encoder_a, 1, 2)
-        encoder_b = Op.transpose(encoder_b, 1, 2)
+        encoder_a = Op.transpose(encoder_a, [1, 2])
+        encoder_b = Op.transpose(encoder_b, [1, 2])
 
         # di = fc(hi) + gi(decoder embedding)
         x = self.in_projection(x)
@@ -332,7 +332,6 @@ def pad(ids, max_len=MAX_LEN):
 def to_tensor(data):
     for inst in data:
         inst = pad(inst)
-    # print 'data', np.array(data)
     return np.array(data, dtype='int64')
 
 
