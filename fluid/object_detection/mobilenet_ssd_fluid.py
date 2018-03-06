@@ -240,7 +240,6 @@ def train(train_file_list,
     optimizer = fluid.optimizer.Momentum(
         learning_rate=fluid.learning_rate_decay.exponential_decay(
             learning_rate=learning_rate,
-            global_step=global_step,
             decay_steps=40000,
             decay_rate=0.1,
             staircase=True),
