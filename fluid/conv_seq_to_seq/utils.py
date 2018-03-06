@@ -157,14 +157,14 @@ class Atom(object):
             dropout = self.kwargs['dropout']
             del self.kwargs['dropout']
             if dropout is not None:
-                x = self.op(
-                    x,
-                    param_attr=fluid.ParamAttr(name=self.name),
-                    **self.kwargs)
+                x = self.op(x,
+                            param_attr=fluid.ParamAttr(name=self.name),
+                            **self.kwargs)
                 return Op.dropout(x, dropout, is_test=is_test)
 
-        return self.op(
-            x, param_attr=fluid.ParamAttr(name=self.name), **self.kwargs)
+        return self.op(x,
+                       param_attr=fluid.ParamAttr(name=self.name),
+                       **self.kwargs)
 
 
 def get_var_desc(var):

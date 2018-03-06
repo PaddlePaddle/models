@@ -129,8 +129,7 @@ class ConvDecoder:
         self.embed_positions = Embedding(
             max_positions + 1,
             embed_dim,
-            max_positions,
-        )
+            max_positions, )
 
         self.fc1 = Linear(in_channels, dropout=dropout)
         self.projections = []
@@ -288,8 +287,7 @@ def build_trainer():
         dict_size,
         embed_dim,
         max_positions=max_positions,
-        convolutions=([embed_dim, 3], ),
-    )
+        convolutions=([embed_dim, 3], ), )
 
     encoder_out = encoder.forward(src_tokens, src_positions)
 
@@ -300,8 +298,7 @@ def build_trainer():
         out_embed_dim,
         max_positions,
         convolutions=([embed_dim, 3], ),
-        attention=True,
-    )
+        attention=True, )
 
     predictions, _ = decoder.forward(trg_pre_tokens, trg_pre_positions,
                                      encoder_out)
@@ -375,15 +372,14 @@ def train_main():
             target_pre_pos = to_tensor(target_pre_pos)
             target = to_tensor(target)
 
-            outs = exe.run(
-                framework.default_main_program(),
-                feed={
-                    'src_word_id': src_word,
-                    'src_posi_id': src_posi,
-                    'trg_pre_word_id': target_pre,
-                    'trg_pre_posi_id': target_pre_pos,
-                    'trg_word_id': target,
-                })
+            outs = exe.run(framework.default_main_program(),
+                           feed={
+                               'src_word_id': src_word,
+                               'src_posi_id': src_posi,
+                               'trg_pre_word_id': target_pre,
+                               'trg_pre_posi_id': target_pre_pos,
+                               'trg_word_id': target,
+                           })
             break
 
 
