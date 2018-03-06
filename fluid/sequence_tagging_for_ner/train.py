@@ -7,6 +7,7 @@ import os
 import math
 import numpy as np
 
+
 def to_lodtensor(data, place):
     seq_lens = [len(seq) for seq in data]
     cur_len = 0
@@ -21,17 +22,19 @@ def to_lodtensor(data, place):
     res.set_lod([lod])
     return res
 
+
 def test(exe, chunk_evaluator, inference_program, test_data, place):
     chunk_evaluator.reset(exe)
     for data in test_data():
-        word = to_lodtensor(map(lambda x:x[0], data), place)
-        mark = to_lodtensor(map(lambda x:x[1], data), place)
-        target = to_lodtensor(map(lambda x:x[2], data), place)
+        word = to_lodtensor(map(lambda x: x[0], data), place)
+        mark = to_lodtensor(map(lambda x: x[1], data), place)
+        target = to_lodtensor(map(lambda x: x[2], data), place)
         acc = exe.run(inference_program,
                       feed={"word": word,
                             "mark": mark,
                             "target": target})
-    return  chunk_evaluator.eval(exe)
+    return chunk_evaluator.eval(exe)
+
 
 def main(train_data_file,
          test_data_file,
@@ -52,12 +55,11 @@ def main(train_data_file,
     word_dict_len = len(word_dict)
     label_dict_len = len(label_dict)
 
-    crf_cost, feature_out, word, mark, target = ner_net(word_dict_len, label_dict_len)    
+    crf_cost, feature_out, word, mark, target = ner_net(word_dict_len,
+                                                        label_dict_len)
     avg_cost = fluid.layers.mean(x=crf_cost)
-    
-    sgd_optimizer = fluid.optimizer.Momentum(
-        momentum=0.0,
-        learning_rate=1e-3)
+
+    sgd_optimizer = fluid.optimizer.Momentum(momentum=0.0, learning_rate=1e-3)
     sgd_optimizer.minimize(avg_cost)
 
     crf_decode = fluid.layers.crf_decoding(
@@ -73,7 +75,7 @@ def main(train_data_file,
     with fluid.program_guard(inference_program):
         test_target = chunk_evaluator.metrics + chunk_evaluator.states
         inference_program = fluid.io.get_inference_program(test_target)
-    
+
     train_reader = paddle.batch(
         paddle.reader.shuffle(
             reader.data_reader(train_data_file, word_dict, label_dict),
@@ -86,11 +88,7 @@ def main(train_data_file,
         batch_size=batch_size)
 
     place = fluid.CPUPlace()
-    feeder = fluid.DataFeeder(
-        feed_list=[
-            word, mark, target
-        ],
-        place=place)
+    feeder = fluid.DataFeeder(feed_list=[word, mark, target], place=place)
     exe = fluid.Executor(place)
 
     exe.run(fluid.default_startup_program())
@@ -107,14 +105,22 @@ def main(train_data_file,
                 fluid.default_main_program(),
                 feed=feeder.feed(data),
                 fetch_list=[avg_cost] + chunk_evaluator.metrics)
-	    if batch_id % 5 == 0:
-                print("Pass " + str(pass_id) + ", Batch " + str(batch_id) + ", Cost " + str(cost) + ", Precision " + str(precision) + ", Recall " + str(recall) + ", F1_score" + str(f1_score))
+            if batch_id % 5 == 0:
+                print("Pass " + str(pass_id) + ", Batch " + str(batch_id) +
+                      ", Cost " + str(cost) + ", Precision " + str(precision) +
+                      ", Recall " + str(recall) + ", F1_score" + str(f1_score))
             batch_id = batch_id + 1
 
-        pass_precision, pass_recall, pass_f1_score = test(exe, chunk_evaluator, inference_program, train_reader, place)
-	print("[TrainSet] pass_id:" + str(pass_id) + " pass_precision:" + str(pass_precision) + " pass_recall:" + str(pass_recall) + " pass_f1_score:" + str(pass_f1_score))
-        pass_precision, pass_recall, pass_f1_score = test(exe, chunk_evaluator, inference_program, test_reader, place)
-        print("[TestSet] pass_id:" + str(pass_id) + " pass_precision:" + str(pass_precision) + " pass_recall:" + str(pass_recall) + " pass_f1_score:" + str(pass_f1_score))
+        pass_precision, pass_recall, pass_f1_score = test(
+            exe, chunk_evaluator, inference_program, train_reader, place)
+        print("[TrainSet] pass_id:" + str(pass_id) + " pass_precision:" + str(
+            pass_precision) + " pass_recall:" + str(pass_recall) +
+              " pass_f1_score:" + str(pass_f1_score))
+        pass_precision, pass_recall, pass_f1_score = test(
+            exe, chunk_evaluator, inference_program, test_reader, place)
+        print("[TestSet] pass_id:" + str(pass_id) + " pass_precision:" + str(
+            pass_precision) + " pass_recall:" + str(pass_recall) +
+              " pass_f1_score:" + str(pass_f1_score))
 
 
 if __name__ == "__main__":
@@ -125,4 +131,4 @@ if __name__ == "__main__":
         target_file="data/target.txt",
         emb_file="data/wordVectors.txt",
         model_save_dir="models/",
-	num_passes=1000)
+        num_passes=1000)
