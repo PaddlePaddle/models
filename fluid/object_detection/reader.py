@@ -159,7 +159,8 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     if mode == 'train' and len(sample_labels) == 0: continue
                     yield img.astype(
                         'float32'
-                    ), sample_labels[:, 1:5], sample_labels[:, 0].astype('int')
+                    ), sample_labels[:, 1:5], sample_labels[:, 0].astype(
+                        'int32'), sample_labels[:, 5].astype('int32')
                 elif mode == 'infer':
                     yield img.astype('float32')
 
