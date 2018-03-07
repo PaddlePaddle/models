@@ -28,6 +28,7 @@ def pad(ids, max_len):
 def to_tensor(data, max_len):
     for inst in data:
         inst = pad(inst, max_len)
+    print np.array(data)
     return np.array(data, dtype='int64')
 
 
@@ -149,12 +150,14 @@ class Conv1D:
                  out_channels,
                  kernel_size,
                  stride=1,
-                 padding=0,
                  dropout=None):
+        self.stride = stride
+        self.kernel_size = kernel_size
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+
         # for 1D conv
-        filter_size = [1, kernel_size]
-        padding = [1, padding]
-        self.atom = conv2d(out_channels, filter_size, padding=padding)
+        self.atom = None  #conv2d(out_channels, filter_size, padding=padding)
         self.recover_proj = None
 
     def __call__(self, x):
@@ -168,16 +171,23 @@ class Conv1D:
         x = Op.transpose(x, [1, 2])
         x = Op.reshape(x, (B, C, 1, T))
 
-        x = self.atom(x)
-
         # here something bug, conv2d will change the original width and height by padding.
         # just use a fc to map to the original size, need to change latter
         N, C, H, W = get_tensor(x).dims
-        if H != 1 or W != T:
-            if self.recover_proj is None:
-                self.recover_proj = Linear(1 * T)
-            x = Op.reshape(x, (N * C, -1))
-            x = self.recover_proj(x)
+
+        #H = (H + 2 * padding - kernel_size) / stride + 1
+        if self.atom is None:
+            size = [H, W]
+            self.kernel_size = [1, self.kernel_size]
+            padding = [
+                ((size[i] - 1) * self.stride + self.kernel_size[i] - size[i]) /
+                2 for i in range(2)
+            ]
+            self.atom = conv2d(
+                self.out_channels, self.kernel_size, padding=padding)
+
+        x = self.atom(x)
+
         x = Op.reshape(x, (B, T, -1))
         return x
 

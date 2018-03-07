@@ -25,7 +25,7 @@ batch_size = 10
 dict_size = 30000
 source_dict_dim = target_dict_dim = dict_size
 hidden_dim = 32
-word_dim = 16
+word_dim = 512
 batch_size = 2
 max_length = 8
 topk_size = 50
@@ -66,7 +66,7 @@ class ConvEncoder:
                     in_channels,
                     out_channels * 2,
                     kernel_size,
-                    padding=pad,
+                    # padding=pad,
                     dropout=dropout))
             in_channels = out_channels
 
@@ -143,7 +143,7 @@ class ConvDecoder:
                     in_channels,
                     out_channels * 2,
                     kernel_size,
-                    padding=pad,
+                    # padding=pad,
                     dropout=dropout))
             self.attention.append(
                 AttentionLayer(out_channels, embed_dim)
@@ -282,13 +282,13 @@ def build_trainer():
         dtype='int64',
         append_batch_size=False)
 
-    embed_dim = 10
+    embed_dim = word_dim
     max_positions = MAX_LEN
     encoder = ConvEncoder(
         dict_size,
         embed_dim,
         max_positions=max_positions,
-        convolutions=([embed_dim, 3], ),
+        convolutions=[[embed_dim, 3]] * 20,
     )
 
     encoder_out = encoder.forward(src_tokens, src_positions)
@@ -299,7 +299,7 @@ def build_trainer():
         embed_dim,
         out_embed_dim,
         max_positions,
-        convolutions=([embed_dim, 3], ),
+        convolutions=[[embed_dim, 3]] * 20,
         attention=True,
     )
 
