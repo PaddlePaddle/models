@@ -11,37 +11,6 @@ from paddle.fluid.framework import framework_pb2
 is_test = False
 
 
-def set_init_lod(data, lod, place):
-    res = fluid.LoDTensor()
-    res.set(data, place)
-    res.set_lod(lod)
-    return res
-
-
-def pad(ids, max_len):
-    if len(ids) < max_len:
-        for i in xrange(max_len - len(ids)):
-            ids.append(0)
-    return ids
-
-
-def to_tensor(data, max_len):
-    for inst in data:
-        inst = pad(inst, max_len)
-    print np.array(data)
-    return np.array(data, dtype='int64')
-
-
-def pad_batch_data(data, max_len):
-    '''
-    data: a batch of input
-    '''
-    for sent in data:
-        if len(sent) < max_len:
-            sent += [0 for i in xrange(max_len - len(sent))]
-    return data
-
-
 class Op:
     @staticmethod
     def reshape(x, shape):
@@ -127,10 +96,6 @@ class Linear:
         return x
 
 
-# def Linear(size, dropout=None):
-#     return Atom(pd.fc, "fc", size=size, dropout=dropout)
-
-
 def conv2d(num_filters, filter_size, padding):
     return Atom(
         pd.conv2d,
@@ -172,7 +137,7 @@ class Conv1D:
         x = Op.reshape(x, (B, C, 1, T))
 
         # here something bug, conv2d will change the original width and height by padding.
-        # just use a fc to map to the original size, need to change latter
+        # just use a trick to map to the original size
         N, C, H, W = get_tensor(x).dims
 
         #H = (H + 2 * padding - kernel_size) / stride + 1
@@ -237,3 +202,36 @@ def log(*args):
     for a in args:
         res += " " + str(a)
     logging.warning(res)
+
+
+def set_init_lod(data, lod, place):
+    res = fluid.LoDTensor()
+    res.set(data, place)
+    res.set_lod(lod)
+    return res
+
+
+def pad(ids, max_len):
+    if len(ids) < max_len:
+        for i in xrange(max_len - len(ids)):
+            ids.append(0)
+    return ids
+
+
+def to_tensor(data, max_len):
+    datas = []
+    for inst in data:
+        inst = inst[:max_len]
+        inst = pad(inst, max_len)
+        datas.append(inst)
+    return np.array(datas, dtype='int64')
+
+
+def pad_batch_data(data, max_len):
+    '''
+    data: a batch of input
+    '''
+    for sent in data:
+        if len(sent) < max_len:
+            sent += [0 for i in xrange(max_len - len(sent))]
+    return data
