@@ -19,7 +19,7 @@ import paddle.v2.fluid.core as core
 import paddle.v2.fluid.framework as framework
 import paddle.v2.fluid.layers as pd
 from paddle.v2.fluid.executor import Executor
-from beam_search import BasicRNNCell, TrainingDecoder, BeamSearchDecoder
+from beam_search_api import *
 
 dict_size = 30000
 source_dict_dim = target_dict_dim = dict_size
@@ -56,6 +56,19 @@ def encoder():
 
 
 def decoder_train(context):
+    h = InitState(init=context)
+    state_cell = StateCell(
+        cell_size=decoder_size, inputs={'x': None}, states={'h': h})
+    from functools import partial
+
+    def updater(state_cell):
+        current_word = state_cell.get_input('x')
+        prev_h = state_cell.get_state('h')
+        h = pd.fc(input=[current_word, prev_h], size=decoder_size, act='tanh')
+        state_cell.set_state('h', h)
+
+    state_cell.register_updater(partial(updater, state_cell))
+
     # decoder
     trg_language_word = pd.data(
         name="target_language_word", shape=[1], dtype='int64', lod_level=1)
@@ -66,12 +79,16 @@ def decoder_train(context):
         is_sparse=IS_SPARSE,
         param_attr=fluid.ParamAttr(name='vemb'))
 
-    rnn_cell = BasicRNNCell(cell_size=decoder_size)
-    decoder = TrainingDecoder(
-        rnn_cell,
-        step_inputs=[trg_embedding],
-        label_dim=target_dict_dim,
-        init_states=[context])
+    training_decoder = TrainingDecoder(state_cell)
+
+    with training_decoder.block() as decoder:
+        current_word = decoder.step_input(trg_embedding)
+        decoder.state_cell.compute_state(inputs={'x': current_word})
+        current_score = pd.fc(input=decoder.state_cell.state('h'),
+                              size=target_dict_dim,
+                              act='softmax')
+        decoder.state_cell.update_state()
+        decoder.output(current_score)
 
     return decoder()
 
@@ -207,5 +224,5 @@ def decode_main():
 
 
 if __name__ == '__main__':
-    #train_main()
-    decode_main()
+    train_main()
+    #decode_main()
