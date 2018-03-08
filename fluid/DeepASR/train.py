@@ -58,7 +58,7 @@ def parse_args():
     parser.add_argument(
         '--learning_rate',
         type=float,
-        default=0.002,
+        default=0.00016,
         help='Learning rate used to train. (default: %(default)f)')
     parser.add_argument(
         '--device',
@@ -143,8 +143,7 @@ def train(args):
         class_num=1749,
         parallel=args.parallel)
 
-    optimizer = fluid.optimizer.Momentum(
-        learning_rate=args.learning_rate, momentum=0.9)
+    optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
     optimizer.minimize(avg_cost)
 
     # program for test
