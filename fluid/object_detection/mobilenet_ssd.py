@@ -174,7 +174,7 @@ def train(train_file_list,
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
-        reader.test(data_args, train_file_list), batch_size=batch_size)
+        reader.test(data_args, val_file_list), batch_size=batch_size)
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, difficult])
 
@@ -217,6 +217,6 @@ if __name__ == '__main__':
         train_file_list='./data/trainval.txt',
         val_file_list='./data/test.txt',
         data_args=data_args,
-        learning_rate=0.004,
+        learning_rate=0.001,
         batch_size=32,
         num_passes=300)
