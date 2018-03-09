@@ -4,6 +4,10 @@ import numpy as np
 from PIL import Image
 
 from paddle.v2.image import load_image
+import paddle.v2 as paddle
+
+NUM_CLASSES = 10784
+DATA_SHAPE = [1, 48, 512]
 
 
 class DataGenerator(object):
@@ -15,10 +19,10 @@ class DataGenerator(object):
         Reader interface for training.
 
         :param img_root_dir: The root path of the image for training.
-        :type file_list: str 
+        :type file_list: str
 
         :param img_label_list: The path of the <image_name, label> file for training.
-        :type file_list: str 
+        :type file_list: str
 
         '''
 
@@ -76,7 +80,7 @@ class DataGenerator(object):
         Reader interface for inference.
 
         :param img_root_dir: The root path of the images for training.
-        :type file_list: str 
+        :type file_list: str
 
         :param img_label_list: The path of the <image_name, label> file for testing.
         :type file_list: list
@@ -95,3 +99,28 @@ class DataGenerator(object):
                 yield img, label
 
         return reader
+
+
+def num_classes():
+    return NUM_CLASSES
+
+
+def data_shape():
+    return DATA_SHAPE
+
+
+def train(batch_size):
+    generator = DataGenerator()
+    return generator.train_reader(
+        "/home/disk1/wanghaoshuang/models/fluid/ocr_recognition/data/train_images/",
+        "/home/disk1/wanghaoshuang/models/fluid/ocr_recognition/data/train.list",
+        batch_size)
+
+
+def test(batch_size=1):
+    generator = DataGenerator()
+    return paddle.batch(
+        generator.test_reader(
+            "/home/disk1/wanghaoshuang/models/fluid/ocr_recognition/data/test_images/",
+            "/home/disk1/wanghaoshuang/models/fluid/ocr_recognition/data/test.list"
+        ), batch_size)
