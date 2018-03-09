@@ -30,8 +30,9 @@ class ConvEncoder:
                  pos_pad_id,
                  dropout=0.1):
         self.dropout = dropout
-        self.embed_tokens = Embedding(dict_size+1, embed_dim, pad_id)
-        self.embed_positions = Embedding(max_positions+1, embed_dim, pos_pad_id)
+        self.embed_tokens = Embedding(dict_size + 1, embed_dim, pad_id)
+        self.embed_positions = Embedding(max_positions + 1, embed_dim,
+                                         pos_pad_id)
 
         in_channels = convolutions[0][0]
         self.fc1 = Linear(in_channels, dropout=dropout)
@@ -106,12 +107,11 @@ class ConvDecoder:
         if isinstance(attention, bool):
             attention = [attention] * len(convolutions)
 
-        self.embed_tokens = Embedding(dict_size+1, embed_dim, pad_id)
+        self.embed_tokens = Embedding(dict_size + 1, embed_dim, pad_id)
         self.embed_positions = Embedding(
             max_positions + 1,
             embed_dim,
-            pos_pad_id,
-        )
+            pos_pad_id, )
 
         self.fc1 = Linear(in_channels, dropout=dropout)
         self.projections = []
@@ -134,7 +134,7 @@ class ConvDecoder:
             in_channels = out_channels
 
         self.fc2 = Linear(out_embed_dim)
-        self.fc3 = Linear(dict_size+1, dropout=dropout)
+        self.fc3 = Linear(dict_size + 1, dropout=dropout)
 
     def forward(self, prev_output_tokens, prev_positions, encoder_out):
         '''

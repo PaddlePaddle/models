@@ -48,8 +48,7 @@ def build_trainer(config):
         max_positions=config.max_len,
         convolutions=config.encoder.convolutions,
         pad_id=config.encoder.pad_id,
-        pos_pad_id=config.max_len,
-    )
+        pos_pad_id=config.max_len, )
 
     encoder_out = encoder.forward(src_tokens, src_positions)
 
@@ -61,8 +60,7 @@ def build_trainer(config):
         convolutions=config.decoder.convolutions,
         pad_id=config.decoder.pad_id,
         pos_pad_id=config.max_len,
-        attention=True,
-    )
+        attention=True, )
 
     predictions, _ = decoder.forward(trg_pre_tokens, trg_pre_positions,
                                      encoder_out)
@@ -120,16 +118,15 @@ def train_main(config):
                               config.decoder.end_id, config.decoder.pad_id,
                               config.max_len)
 
-        outs = exe.run(
-            framework.default_main_program(),
-            feed={
-                'src_word_id': src_word,
-                'src_posi_id': src_posi,
-                'trg_pre_word_id': target_pre,
-                'trg_pre_posi_id': target_pre_pos,
-                'trg_word_id': target,
-            },
-            fetch_list=[touts[0], touts[1]])
+        outs = exe.run(framework.default_main_program(),
+                       feed={
+                           'src_word_id': src_word,
+                           'src_posi_id': src_posi,
+                           'trg_pre_word_id': target_pre,
+                           'trg_pre_posi_id': target_pre_pos,
+                           'trg_word_id': target,
+                       },
+                       fetch_list=[touts[0], touts[1]])
         return outs
 
     for pass_id in xrange(config.num_pass):

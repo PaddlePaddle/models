@@ -21,8 +21,7 @@ train_config = objdic(
         convolutions=[[512, 3]] * 20,
         end_id=end_id,
         start_id=start_id,
-        unk_id=unk_id,
-    ),
+        unk_id=unk_id, ),
     decoder=objdic(
         dict_size=30000,
         num_embeddings=30000 + 1,
@@ -32,8 +31,7 @@ train_config = objdic(
         convolutions=[[512, 3]] * 20,
         end_id=end_id,
         start_id=start_id,
-        unk_id=unk_id,
-    ))
+        unk_id=unk_id, ))
 
 debug_train_config = objdic(
     mode='debug',
@@ -50,8 +48,7 @@ debug_train_config = objdic(
         convolutions=[[128, 3]] * 3,
         end_id=end_id,
         start_id=start_id,
-        unk_id=unk_id,
-    ),
+        unk_id=unk_id, ),
     decoder=objdic(
         dict_size=30000,
         num_embeddings=30000 + 1,
@@ -61,5 +58,4 @@ debug_train_config = objdic(
         convolutions=[[128, 3]] * 3,
         end_id=end_id,
         start_id=start_id,
-        unk_id=unk_id,
-    ))
+        unk_id=unk_id, ))

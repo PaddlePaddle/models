@@ -144,10 +144,9 @@ class Conv1D:
         if self.atom is None:
             size = [H, W]
             self.kernel_size = [1, self.kernel_size]
-            padding = [
-                ((size[i] - 1) * self.stride + self.kernel_size[i] - size[i]) /
-                2 for i in range(2)
-            ]
+            padding = [(
+                (size[i] - 1) * self.stride + self.kernel_size[i] - size[i]) / 2
+                       for i in range(2)]
             self.atom = conv2d(
                 self.out_channels, self.kernel_size, padding=padding)
 
@@ -172,14 +171,14 @@ class Atom(object):
             dropout = self.kwargs['dropout']
             del self.kwargs['dropout']
             if dropout is not None:
-                x = self.op(
-                    x,
-                    param_attr=fluid.ParamAttr(name=self.name),
-                    **self.kwargs)
+                x = self.op(x,
+                            param_attr=fluid.ParamAttr(name=self.name),
+                            **self.kwargs)
                 return Op.dropout(x, dropout, is_test=is_test)
 
-        return self.op(
-            x, param_attr=fluid.ParamAttr(name=self.name), **self.kwargs)
+        return self.op(x,
+                       param_attr=fluid.ParamAttr(name=self.name),
+                       **self.kwargs)
 
 
 def get_var_desc(var):
@@ -231,24 +230,21 @@ def prepare_data(sents, start_id, end_id, pad_id, max_len, offset=0):
         if len(sent) < max_len:
             sent += [pad_id for i in xrange(max_len - len(sent))]
         else:
-            sent = sent[:max_len-1]
+            sent = sent[:max_len - 1]
             sent.append(end_id)
         res.append(sent)
     return np.array(res, dtype='int64')
 
 
 if __name__ == '__main__':
-    sents = [[0, 1, 2, 6], [0, 2, 5, 7, 6], [0, 1,2,3,4,5,7,8,9,10,6]]
+    sents = [[0, 1, 2, 6], [0, 2, 5, 7, 6], [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 6]]
     max_len = 6
     print 'words', prepare_data(sents, 0, 6, 10, max_len)
     print 'prewords', prepare_data(sents, 0, 6, 10, max_len, offset=-1)
 
     poses = []
     for sent in sents:
-        poses.append([i for i in range(len(sent)-2)])
+        poses.append([i for i in range(len(sent) - 2)])
     print poses
 
     print 'poses', prepare_data(poses, max_len, max_len, max_len, max_len)
-
-
-
