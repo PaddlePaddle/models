@@ -6,6 +6,24 @@ from paddle.fluid.param_attr import ParamAttr
 import reader
 import numpy as np
 import load_model as load_model
+import argparse
+
+parser = argparse.ArgumentParser(description=__doc__)
+add_arg = functools.partial(add_arguments, argparser=parser)
+# yapf: disable
+add_arg('batch_size',     int,   32,     "Minibatch size.")
+add_arg('pass_num',       int,   100,     "# of training epochs.")
+add_arg('log_period',     int,   1000,   "Log period.")
+add_arg('learning_rate',  float, 1.0e-3, "Learning rate.")
+add_arg('l2',             float, 0.0004, "L2 regularizer.")
+add_arg('max_clip',       float, 10.0,   "Max clip threshold.")
+add_arg('min_clip',       float, -10.0,  "Min clip threshold.")
+add_arg('momentum',       float, 0.9,    "Momentum.")
+add_arg('rnn_hidden_size',int,   200,    "Hidden size of rnn layers.")
+add_arg('device',         int,   0,      "Device id.'-1' means running on CPU"
+                                         "while '0' means GPU-0.")
+
+
 
 parameter_attr = ParamAttr(initializer=MSRA())
 
@@ -178,6 +196,16 @@ def train(train_file_list,
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, difficult])
 
+    def test(pass_id):
+        map_eval.reset(exe)
+        test_map = None
+        for _, data in enumerate(test_reader()):
+            test_map = exe.run(test_program,
+                               feed=feeder.feed(data),
+                               fetch_list=[accum_map])
+        print("Test {0}, map {1}".format(pass_id, test_map[0]))
+
+
     #print fluid.default_main_program()
     map, accum_map = map_eval.get_map_var()
     for pass_id in range(num_passes):
@@ -190,14 +218,7 @@ def train(train_file_list,
             print(
                 "Pass {0}, batch {1}, loss {2}, cur_map {3}, map {4}"
                 .format(pass_id, batch_id, loss_v[0], map_v[0], accum_map_v[0]))
-
-        map_eval.reset(exe)
-        test_map = None
-        for _, data in enumerate(test_reader()):
-            test_map = exe.run(test_program,
-                               feed=feeder.feed(data),
-                               fetch_list=[accum_map])
-        print("Test {0}, map {1}".format(pass_id, test_map[0]))
+        test(pass_id)
 
         if pass_id % 10 == 0:
             model_path = os.path.join(model_save_dir, str(pass_id))
