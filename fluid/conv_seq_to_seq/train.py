@@ -142,3 +142,4 @@ def train_main(config):
 
 if __name__ == '__main__':
     train_main(config.debug_train_config)
+    # train_main(config.train_config)
