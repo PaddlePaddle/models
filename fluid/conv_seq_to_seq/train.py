@@ -8,19 +8,6 @@ from utils import *
 from model import ConvEncoder, ConvDecoder
 import config
 
-MAX_LEN = 40
-MAX_LEN_WITH_PAD = MAX_LEN + 1
-batch_size = 10
-dict_size = 30000
-source_dict_dim = target_dict_dim = dict_size
-hidden_dim = 32
-word_dim = 128
-batch_size = 10
-max_length = 8
-topk_size = 50
-trg_dic_size = 10000
-beam_size = 2
-
 # special tokens
 pad_id = 0  # need to make sure the pad embedding is zero
 start_id = 1
@@ -55,26 +42,25 @@ def build_trainer(config):
         dtype='int64',
         append_batch_size=False)
 
-    embed_dim = word_dim
-    max_positions = MAX_LEN
     encoder = ConvEncoder(
-        dict_size,
-        embed_dim,
-        max_positions=max_positions,
+        config.encoder.dict_size,
+        config.encoder.word_dim,
+        max_positions=config.max_len,
         convolutions=config.encoder.convolutions,
-        pad_id=pad_id,
+        pad_id=config.encoder.pad_id,
+        pos_pad_id=config.max_len,
     )
 
     encoder_out = encoder.forward(src_tokens, src_positions)
 
-    out_embed_dim = embed_dim
     decoder = ConvDecoder(
-        dict_size,
-        embed_dim,
-        out_embed_dim,
-        max_positions,
+        config.decoder.dict_size,
+        config.decoder.word_dim,
+        config.decoder.word_dim,
+        config.max_len,
         convolutions=config.decoder.convolutions,
-        pad_id=pad_id,
+        pad_id=config.decoder.pad_id,
+        pos_pad_id=config.max_len,
         attention=True,
     )
 
@@ -98,28 +84,41 @@ def train_main(config):
 
     train_data = paddle.batch(
         paddle.reader.shuffle(
-            paddle.dataset.wmt14.train(dict_size), buf_size=1000),
-        batch_size=batch_size)
+            paddle.dataset.wmt14.train(config.encoder.dict_size),
+            buf_size=1000),
+        batch_size=config.batch_size)
     exe = fluid.Executor(place)
     exe.run(fluid.framework.default_startup_program())
 
     one_batch_data = train_data().next()
 
-    for pass_id in xrange(1000):
-        # for data in train_data():
-        data = one_batch_data
-        source = map(lambda x: x[0], data)
+    def learn_one_batch(data):
+        source = [x[0] for x in data]
         source_pos = [[i for i in range(len(x))] for x in source]
         # TODO need to process the pre
-        target_pre = map(lambda x: x[1], data)
+        target_pre = [x[1] for x in data]
+        #print 'target_pre', target_pre
         target_pre_pos = [[i for i in range(len(x))] for x in target_pre]
-        target = map(lambda x: x[1], data)
+        target = [x[1] for x in data]
 
-        src_word = to_tensor(source, MAX_LEN)
-        src_posi = to_tensor(source_pos, MAX_LEN)
-        target_pre = to_tensor(target_pre, MAX_LEN)
-        target_pre_pos = to_tensor(target_pre_pos, MAX_LEN)
-        target = to_tensor(target, MAX_LEN)
+        src_word = prepare_data(source, config.encoder.start_id,
+                                config.encoder.end_id, config.encoder.pad_id,
+                                config.max_len)
+        src_posi = prepare_data(source_pos, config.max_len, config.max_len,
+                                config.max_len, config.max_len)
+        target_pre = prepare_data(
+            target_pre,
+            config.decoder.start_id,
+            config.decoder.end_id,
+            config.decoder.pad_id,
+            config.max_len,
+            offset=-1)
+        target_pre_pos = prepare_data(target_pre_pos, config.max_len,
+                                      config.max_len, config.max_len,
+                                      config.max_len)
+        target = prepare_data(target, config.decoder.start_id,
+                              config.decoder.end_id, config.decoder.pad_id,
+                              config.max_len)
 
         outs = exe.run(
             framework.default_main_program(),
@@ -131,7 +130,17 @@ def train_main(config):
                 'trg_word_id': target,
             },
             fetch_list=[touts[0], touts[1]])
-        print 'avg_cost', outs[0]
+        return outs
+
+    for pass_id in xrange(config.num_pass):
+        if config.mode == 'debug':
+            data = one_batch_data
+            outs = learn_one_batch(data)
+            print 'avg_cost', outs[0]
+        elif config.mode == 'train':
+            for data in train_data():
+                outs = learn_one_batch(data)
+                print 'avg_cost', outs[0]
 
 
 if __name__ == '__main__':

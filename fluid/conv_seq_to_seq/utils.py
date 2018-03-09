@@ -204,34 +204,51 @@ def log(*args):
     logging.warning(res)
 
 
-def set_init_lod(data, lod, place):
-    res = fluid.LoDTensor()
-    res.set(data, place)
-    res.set_lod(lod)
-    return res
+class objdic(dict):
+    def __setattr__(self, key, value):
+        self[key] = value
+
+    def __getattr__(self, key):
+        return self[key]
 
 
-def pad(ids, max_len):
-    if len(ids) < max_len:
-        for i in xrange(max_len - len(ids)):
-            ids.append(0)
-    return ids
+def prepare_data(sents, start_id, end_id, pad_id, max_len, offset=0):
+    res = []
+    for sent in sents:
+        # if offset == 1:
+        #     if sent[0] == start_id:
+        #         sent[0] = pad_id
+        #     sent.insert(0, start_id)
+        if offset == -1:
+            if sent[0] == start_id:
+                del sent[0]
+        else:
+            if sent[0] != start_id:
+                sent.insert(0, start_id)
 
-
-def to_tensor(data, max_len):
-    datas = []
-    for inst in data:
-        inst = inst[:max_len]
-        inst = pad(inst, max_len)
-        datas.append(inst)
-    return np.array(datas, dtype='int64')
-
-
-def pad_batch_data(data, max_len):
-    '''
-    data: a batch of input
-    '''
-    for sent in data:
+        if sent[-1] != end_id:
+            sent.append(end_id)
         if len(sent) < max_len:
-            sent += [0 for i in xrange(max_len - len(sent))]
-    return data
+            sent += [pad_id for i in xrange(max_len - len(sent))]
+        else:
+            sent = sent[:max_len-1]
+            sent.append(end_id)
+        res.append(sent)
+    return np.array(res, dtype='int64')
+
+
+if __name__ == '__main__':
+    sents = [[0, 1, 2, 6], [0, 2, 5, 7, 6], [0, 1,2,3,4,5,7,8,9,10,6]]
+    max_len = 6
+    print 'words', prepare_data(sents, 0, 6, 10, max_len)
+    print 'prewords', prepare_data(sents, 0, 6, 10, max_len, offset=-1)
+
+    poses = []
+    for sent in sents:
+        poses.append([i for i in range(len(sent)-2)])
+    print poses
+
+    print 'poses', prepare_data(poses, max_len, max_len, max_len, max_len)
+
+
+
