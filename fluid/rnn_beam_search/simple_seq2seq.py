@@ -55,18 +55,17 @@ def encoder():
     return encoder_out
 
 
-def updater(state_cell):
-    current_word = state_cell.get_input('x')
-    prev_h = state_cell.get_state('h')
-    h = pd.fc(input=[current_word, prev_h], size=decoder_size, act='tanh')
-    state_cell.set_state('h', h)
-
-
 def decoder_train(context):
     h = InitState(init=context)
     state_cell = StateCell(
         cell_size=decoder_size, inputs={'x': None}, states={'h': h})
-    state_cell.register_updater(updater)
+
+    @state_cell.state_updater
+    def updater(state_cell):
+        current_word = state_cell.get_input('x')
+        prev_h = state_cell.get_state('h')
+        h = pd.fc(input=[current_word, prev_h], size=decoder_size, act='tanh')
+        state_cell.set_state('h', h)
 
     # decoder
     trg_language_word = pd.data(

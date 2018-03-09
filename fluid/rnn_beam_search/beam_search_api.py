@@ -108,6 +108,7 @@ class StateCell(object):
         self._in_decoder = False
         self._states_holder = {}
         self._switched_decoder = False
+        self._state_updater = None
 
     def enter_decoder(self, decoder_obj):
         if self._in_decoder == True or self._cur_decoder_obj is not None:
@@ -172,8 +173,16 @@ class StateCell(object):
     def set_state(self, state_name, state_value):
         self._cur_states[state_name] = state_value
 
-    def register_updater(self, state_updater):
-        self._state_updater = state_updater
+    def state_updater(self, updater):
+        self._state_updater = updater
+
+        def _decorator(state_cell):
+            if state_cell == self:
+                raise TypeError('Updater should only accept a StateCell object '
+                                'as argument.')
+            updater(state_cell)
+
+        return _decorator
 
     def compute_state(self, inputs):
         if self._in_decoder and not self._switched_decoder:
