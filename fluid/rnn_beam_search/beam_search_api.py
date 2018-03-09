@@ -1,9 +1,9 @@
-import paddle.v2.fluid as fluid
-import paddle.v2.fluid.layers as layers
-from paddle.v2.fluid.framework import Variable
+import paddle.fluid as fluid
+import paddle.fluid.layers as layers
+from paddle.fluid.framework import Variable
 import contextlib
-from paddle.v2.fluid.layer_helper import LayerHelper, unique_name
-import paddle.v2.fluid.core as core
+from paddle.fluid.layer_helper import LayerHelper, unique_name
+import paddle.fluid.core as core
 
 
 class DecoderType:
@@ -28,12 +28,17 @@ class InitState(object):
     def value(self):
         return self._init  # may create a LoDTensor
 
+    @property
+    def need_reorder(self):
+        return self._need_reorder
+
 
 class MemoryState(object):
     def __init__(self, state_name, rnn_obj, init_state):
         self._state_name = state_name  # each is a rnn.memory
         self._rnn_obj = rnn_obj
-        self._state_mem = self._rnn_obj.memory(init=init_state.value)
+        self._state_mem = self._rnn_obj.memory(
+            init=init_state.value, need_reorder=init_state.need_reorder)
 
     def get_state(self):
         return self._state_mem

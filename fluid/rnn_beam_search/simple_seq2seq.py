@@ -13,17 +13,17 @@
 # limitations under the License.
 
 import numpy as np
-import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
-import paddle.v2.fluid.core as core
-import paddle.v2.fluid.framework as framework
-import paddle.v2.fluid.layers as pd
-from paddle.v2.fluid.executor import Executor
+import paddle.v2
+import paddle.fluid as fluid
+import paddle.fluid.core as core
+import paddle.fluid.framework as framework
+import paddle.fluid.layers as pd
+from paddle.fluid.executor import Executor
 from beam_search_api import *
 
 dict_size = 30000
 source_dict_dim = target_dict_dim = dict_size
-src_dict, trg_dict = paddle.dataset.wmt14.get_dict(dict_size)
+src_dict, trg_dict = paddle.v2.dataset.wmt14.get_dict(dict_size)
 hidden_dim = 32
 word_dim = 16
 IS_SPARSE = True
@@ -166,9 +166,9 @@ def train_main():
     optimizer = fluid.optimizer.Adagrad(learning_rate=1e-4)
     optimizer.minimize(avg_cost)
 
-    train_data = paddle.batch(
-        paddle.reader.shuffle(
-            paddle.dataset.wmt14.train(dict_size), buf_size=1000),
+    train_data = paddle.v2.batch(
+        paddle.v2.reader.shuffle(
+            paddle.v2.dataset.wmt14.train(dict_size), buf_size=1000),
         batch_size=batch_size)
 
     exe = Executor(place)
@@ -235,5 +235,5 @@ def decode_main():
 
 
 if __name__ == '__main__':
-    #train_main()
-    decode_main()
+    train_main()
+    #decode_main()
