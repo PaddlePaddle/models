@@ -152,10 +152,13 @@ class BeamSearchDecoder(object):
         array_len = layers.fill_constant(
             shape=[1], dtype='int64', value=max_length)
         self.counter = layers.zeros(shape=[1], dtype='int64')
+
         ids_array = layers.create_array('int64')
         layers.array_write(init_ids, array=ids_array, i=self.counter)
+
         scores_array = layers.create_array('float32')
         layers.array_write(init_scores, array=scores_array, i=self.counter)
+
         cond = layers.less_than(x=self.counter, y=array_len)
 
         cell_obj.inject_decoder(self, init_states=init_states)

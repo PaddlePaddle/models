@@ -55,19 +55,18 @@ def encoder():
     return encoder_out
 
 
+def updater(state_cell):
+    current_word = state_cell.get_input('x')
+    prev_h = state_cell.get_state('h')
+    h = pd.fc(input=[current_word, prev_h], size=decoder_size, act='tanh')
+    state_cell.set_state('h', h)
+
+
 def decoder_train(context):
     h = InitState(init=context)
     state_cell = StateCell(
         cell_size=decoder_size, inputs={'x': None}, states={'h': h})
-    from functools import partial
-
-    def updater(state_cell):
-        current_word = state_cell.get_input('x')
-        prev_h = state_cell.get_state('h')
-        h = pd.fc(input=[current_word, prev_h], size=decoder_size, act='tanh')
-        state_cell.set_state('h', h)
-
-    state_cell.register_updater(partial(updater, state_cell))
+    state_cell.register_updater(updater)
 
     # decoder
     trg_language_word = pd.data(
@@ -79,22 +78,26 @@ def decoder_train(context):
         is_sparse=IS_SPARSE,
         param_attr=fluid.ParamAttr(name='vemb'))
 
-    training_decoder = TrainingDecoder(state_cell)
+    decoder = TrainingDecoder(state_cell)
 
-    with training_decoder.block() as decoder:
+    with decoder.block():
         current_word = decoder.step_input(trg_embedding)
         decoder.state_cell.compute_state(inputs={'x': current_word})
-        current_score = pd.fc(input=decoder.state_cell.state('h'),
+        current_score = pd.fc(input=decoder.state_cell.get_state('h'),
                               size=target_dict_dim,
                               act='softmax')
-        decoder.state_cell.update_state()
+        decoder.state_cell.update_states()
         decoder.output(current_score)
 
     return decoder()
 
 
 def decoder_decode(context):
-    rnn_cell = BasicRNNCell(cell_size=decoder_size)
+    h = InitState(init=context)
+    state_cell = StateCell(
+        cell_size=decoder_size, inputs={'x': None}, states={'h': h})
+    state_cell.register_updater(updater)
+
     init_ids = pd.data(name="init_ids", shape=[1], dtype="int64", lod_level=2)
     init_scores = pd.data(
         name="init_scores", shape=[1], dtype="float32", lod_level=2)
@@ -106,16 +109,24 @@ def decoder_decode(context):
             dtype='float32',
             is_sparse=IS_SPARSE)
 
-    decoder = BeamSearchDecoder(
-        cell_obj=rnn_cell,
-        init_ids=init_ids,
-        init_scores=init_scores,
-        init_states=context,
-        max_length=max_length,
-        label_dim=trg_dic_size,
-        eos_token=10,
-        beam_width=beam_size,
-        embedding_layer=embedding)
+    decoder = BeamSearchDecoder(state_cell, max_len=max_length)
+
+    with decoder.block():
+        prev_ids = decoder.read_array(init=init_ids, is_ids=True)
+        prev_scores = decoder.read_array(init=init_scores, is_scores=True)
+        prev_ids_embedding = embedding(prev_ids)
+        prev_state = decoder.state_cell.get_state('h')
+        prev_state_expanded = pd.sequence_expand(prev_state, prev_scores)
+        decoder.state_cell.set_state('h', prev_state_expanded)
+        decoder.state_cell.compute_state(inputs={'x': prev_ids_embedding})
+        current_state = decoder.state_cell.get_state('h')
+        scores = pd.fc(input=current_state, size=target_dict_dim, act='softmax')
+        topk_scores, topk_indices = pd.topk(scores, k=50)
+        selected_ids, selected_scores = pd.beam_search(
+            prev_ids, topk_indices, topk_scores, beam_size, end_id=10, level=0)
+        decoder.state_cell.update_states()
+        decoder.update_array(prev_ids, selected_ids)
+        decoder.update_array(prev_scores, selected_scores)
 
     translation_ids, translation_scores = decoder()
 
@@ -180,7 +191,7 @@ def train_main():
             avg_cost_val = np.array(outs[0])
             print('pass_id=' + str(pass_id) + ' batch=' + str(batch_id) +
                   " avg_cost=" + str(avg_cost_val))
-            if batch_id > 3:
+            if batch_id > 3000:
                 break
             batch_id += 1
 
@@ -220,9 +231,9 @@ def decode_main():
             fetch_list=[translation_ids, translation_scores],
             return_numpy=False)
         print result_ids.lod()
-        break
+        #break
 
 
 if __name__ == '__main__':
-    train_main()
-    #decode_main()
+    #train_main()
+    decode_main()
