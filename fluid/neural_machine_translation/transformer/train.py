@@ -115,7 +115,7 @@ def main():
         paddle.reader.shuffle(
             paddle.dataset.wmt16.train(ModelHyperParams.src_vocab_size,
                                        ModelHyperParams.trg_vocab_size),
-            buf_size=51200),
+            buf_size=100000),
         batch_size=TrainTaskConfig.batch_size)
 
     # Initialize the parameters.
@@ -143,7 +143,7 @@ def main():
                            fetch_list=[cost])
             cost_val = np.array(outs[0])
             print("pass_id = " + str(pass_id) + " batch = " + str(batch_id) +
-                  " avg_cost = " + str(cost_val))
+                  " cost = " + str(cost_val))
 
 
 if __name__ == "__main__":
