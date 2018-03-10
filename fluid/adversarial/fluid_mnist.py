@@ -47,7 +47,9 @@ def main():
     optimizer = fluid.optimizer.Adam(learning_rate=0.01)
     optimizer.minimize(avg_cost)
 
-    accuracy = fluid.evaluator.Accuracy(input=logits, label=label)
+    batch_size = fluid.layers.create_tensor(dtype='int64')
+    batch_acc = fluid.layers.accuracy(
+        input=logits, label=label, total=batch_size)
 
     BATCH_SIZE = 50
     PASS_NUM = 3
@@ -63,20 +65,21 @@ def main():
     feeder = fluid.DataFeeder(feed_list=[img, label], place=place)
     exe.run(fluid.default_startup_program())
 
+    pass_acc = fluid.average.WeightedAverage()
     for pass_id in range(PASS_NUM):
-        accuracy.reset(exe)
+        pass_acc.reset()
         for data in train_reader():
-            loss, acc = exe.run(fluid.default_main_program(),
-                                feed=feeder.feed(data),
-                                fetch_list=[avg_cost] + accuracy.metrics)
-            pass_acc = accuracy.eval(exe)
-            print("pass_id=" + str(pass_id) + " acc=" + str(acc) + " pass_acc="
-                  + str(pass_acc))
+            loss, acc, b_size = exe.run(fluid.default_main_program(),
+                                        feed=feeder.feed(data),
+                                        fetch_list=[avg_cost, batch_acc, batch_size])
+            pass_acc.add(value=acc, weight=b_size)
+            print("pass_id=" + str(pass_id) + " acc=" + str(acc[0]) + " pass_acc="
+                  + str(pass_acc.eval()[0]))
             if loss < LOSS_THRESHOLD and pass_acc > ACC_THRESHOLD:
                 break
 
-        pass_acc = accuracy.eval(exe)
-        print("pass_id=" + str(pass_id) + " pass_acc=" + str(pass_acc))
+        print("pass_id=" + str(pass_id) +
+              " pass_acc=" + str(pass_acc.eval()[0]))
     fluid.io.save_params(
         exe, dirname='./mnist', main_program=fluid.default_main_program())
     print('train mnist done')
