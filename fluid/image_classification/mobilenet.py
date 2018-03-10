@@ -196,21 +196,24 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
     for pass_id in range(num_passes):
         train_pass_acc_evaluator.reset()
         for batch_id, data in enumerate(train_reader()):
-            loss, acc, size = exe.run(fluid.default_main_program(),
-                                      feed=feeder.feed(data),
-                                      fetch_list=[avg_cost, b_acc_var, b_size_var])
+            loss, acc, size = exe.run(
+                fluid.default_main_program(),
+                feed=feeder.feed(data),
+                fetch_list=[avg_cost, b_acc_var, b_size_var])
             train_pass_acc_evaluator.add(value=acc, weight=size)
             print("Pass {0}, batch {1}, loss {2}, acc {3}".format(
                 pass_id, batch_id, loss[0], acc[0]))
 
         test_pass_acc_evaluator.reset()
         for data in test_reader():
-            loss, acc, size = exe.run(inference_program,
-                                      feed=feeder.feed(data),
-                                      fetch_list=[avg_cost, b_acc_var, b_size_var])
+            loss, acc, size = exe.run(
+                inference_program,
+                feed=feeder.feed(data),
+                fetch_list=[avg_cost, b_acc_var, b_size_var])
             test_pass_acc_evaluator.add(value=acc, weight=size)
         print("End pass {0}, train_acc {1}, test_acc {2}".format(
-            pass_id, train_pass_acc_evaluator.eval(), test_pass_acc_evaluator.eval()))
+            pass_id,
+            train_pass_acc_evaluator.eval(), test_pass_acc_evaluator.eval()))
         if pass_id % 10 == 0:
             model_path = os.path.join(model_save_dir, str(pass_id))
             print 'save models to %s' % (model_path)

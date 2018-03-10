@@ -69,17 +69,18 @@ def main():
     for pass_id in range(PASS_NUM):
         pass_acc.reset()
         for data in train_reader():
-            loss, acc, b_size = exe.run(fluid.default_main_program(),
-                                        feed=feeder.feed(data),
-                                        fetch_list=[avg_cost, batch_acc, batch_size])
+            loss, acc, b_size = exe.run(
+                fluid.default_main_program(),
+                feed=feeder.feed(data),
+                fetch_list=[avg_cost, batch_acc, batch_size])
             pass_acc.add(value=acc, weight=b_size)
-            print("pass_id=" + str(pass_id) + " acc=" + str(acc[0]) + " pass_acc="
-                  + str(pass_acc.eval()[0]))
+            print("pass_id=" + str(pass_id) + " acc=" + str(acc[0]) +
+                  " pass_acc=" + str(pass_acc.eval()[0]))
             if loss < LOSS_THRESHOLD and pass_acc > ACC_THRESHOLD:
                 break
 
-        print("pass_id=" + str(pass_id) +
-              " pass_acc=" + str(pass_acc.eval()[0]))
+        print("pass_id=" + str(pass_id) + " pass_acc=" + str(pass_acc.eval()[
+            0]))
     fluid.io.save_params(
         exe, dirname='./mnist', main_program=fluid.default_main_program())
     print('train mnist done')

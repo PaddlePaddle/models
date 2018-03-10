@@ -150,7 +150,8 @@ def main(dict_path):
             train_pass_acc_evaluator.add(value=acc_val, weight=size_val)
             if batch_id and batch_id % conf.log_period == 0:
                 print("Pass id: %d, batch id: %d, cost: %f, pass_acc: %f" %
-                      (pass_id, batch_id, cost_val, train_pass_acc_evaluator.eval()))
+                      (pass_id, batch_id, cost_val,
+                       train_pass_acc_evaluator.eval()))
         end_time = time.time()
         total_time += (end_time - start_time)
         pass_test_acc = test(exe)
