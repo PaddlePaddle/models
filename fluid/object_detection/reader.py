@@ -153,6 +153,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                 img = img.astype('float32')
                 img -= settings.img_mean
                 img = img.flatten()
+                img = img * 0.007843
 
                 sample_labels = np.array(sample_labels)
                 if mode == 'train' or mode == 'test':
@@ -160,7 +161,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     yield img.astype(
                         'float32'
                     ), sample_labels[:, 1:5], sample_labels[:, 0].astype(
-                        'int32'), sample_labels[:, 5].astype('int32')
+                        'int32'), sample_labels[:, -1].astype('int32')
                 elif mode == 'infer':
                     yield img.astype('float32')
 

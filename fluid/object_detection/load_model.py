@@ -37,7 +37,7 @@ def load_and_set_vars(place):
 
 
 # From Paddle V1
-def load_paddlev1_vars():
+def load_paddlev1_vars(place):
     vars = {}
     name_map = {}
     with open('./caffe2paddle/names.map', 'r') as map_file:
@@ -51,6 +51,7 @@ def load_paddlev1_vars():
         with open(file_name, 'rb') as f:
             f.read(16)
             arr = np.fromfile(f, dtype=np.float32)
+            #print(arr.size, reduce(mul, shape), file_name)
             assert arr.size == reduce(mul, shape)
             return arr.reshape(shape)
 
