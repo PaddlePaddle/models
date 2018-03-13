@@ -10,6 +10,7 @@
 ├── reader.py            # 数据读取接口
 ├── README.md            # 文档
 ├── train.py             # 训练脚本
+├── infer.py             # 预测脚本
 └── utils.py             # 定义同样的函数
 ```
 
@@ -113,6 +114,47 @@ Baghdad      NNP  I-NP  I-LOC
     Pass 0, Batch 0, Cost 41.430110, {'ner_chunk.precision': 0.01587301678955555, 'ner_chunk.F1-score': 0.028368793427944183, 'ner_chunk.recall': 0.13333334028720856, 'error': 0.939393937587738}
     Test with Pass 0, Batch 0, {'ner_chunk.precision': 0.0, 'ner_chunk.F1-score': 0.0, 'ner_chunk.recall': 0.0, 'error': 0.16260161995887756}
     ```
+### 预测
+1. 修改 [infer.py](./infer.py) 的 `main` 函数，指定：需要测试的模型的路径、测试数据、字典文件，预测标记文件的路径，默认参数如下：
+
+    ```python
+    infer(
+        model_path="models/params_pass_0",
+        batch_size=2,
+        test_data_file="data/test",
+        vocab_file="data/vocab.txt",
+        target_file="data/target.txt")
+    ```
+
+2. 在终端运行 `python infer.py`，开始测试，会看到如下预测结果（以下为训练70个pass所得模型的部分预测结果）：
+
+```text
+leicestershire  B-ORG   B-LOC
+extended        O       O
+their   O       O
+first   O       O
+innings O       O
+by      O       O
+DGDG    O       O
+runs    O       O
+before  O       O
+being   O       O
+bowled  O       O
+out     O       O
+for     O       O
+296     O       O
+with    O       O
+england B-LOC   B-LOC
+discard O       O
+andy    B-PER   B-PER
+caddick I-PER   I-PER
+taking  O       O
+three   O       O
+for     O       O
+DGDG    O       O
+.       O       O
+```
+   输出分为三列，以“\t” 分隔，第一列是输入的词语，第二列是标准结果，第三列为生成的标记结果。多条输入序列之间以空行分隔。
 
 ## 参考文献
 
