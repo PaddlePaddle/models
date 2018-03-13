@@ -128,7 +128,7 @@ Baghdad      NNP  I-NP  I-LOC
 
 2. 在终端运行 `python infer.py`，开始测试，会看到如下预测结果（以下为训练70个pass所得模型的部分预测结果）：
 
-```text
+```
 leicestershire  B-ORG   B-LOC
 extended        O       O
 their   O       O
@@ -154,7 +154,14 @@ for     O       O
 DGDG    O       O
 .       O       O
 ```
-   输出分为三列，以“\t” 分隔，第一列是输入的词语，第二列是标准结果，第三列为生成的标记结果。多条输入序列之间以空行分隔。
+输出分为三列，以“\t” 分隔，第一列是输入的词语，第二列是标准结果，第三列为生成的标记结果。多条输入序列之间以空行分隔。
+   
+### 真实结果示例
+<p align="center">
+<img src="imgs/convergent_curve.png" width="80%" align="center"/><br/>
+图1. Fluid下实验结果示例
+</p>
+
 
 ## 参考文献
 
