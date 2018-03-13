@@ -3,15 +3,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import numpy as np
-import argparse
-import time
-import distutils.util
-
-import paddle.v2 as paddle
 import paddle.fluid as fluid
-import paddle.fluid.core as core
-import paddle.fluid.framework as framework
 
 from config import ModelConfig as model_conf
 

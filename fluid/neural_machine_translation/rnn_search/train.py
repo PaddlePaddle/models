@@ -6,7 +6,6 @@ from __future__ import print_function
 import numpy as np
 import argparse
 import time
-import distutils.util
 
 import paddle.v2 as paddle
 import paddle.fluid as fluid
@@ -71,15 +70,15 @@ def train():
 
     train_batch_generator = paddle.batch(
         paddle.reader.shuffle(
-            paddle.dataset.wmt16.train(train_conf.dict_size,
-                                       train_conf.dict_size),
+            paddle.dataset.wmt16.train(train_conf.source_dict_dim,
+                                       train_conf.target_dict_dim),
             buf_size=1000),
         batch_size=train_conf.batch_size)
 
     test_batch_generator = paddle.batch(
         paddle.reader.shuffle(
-            paddle.dataset.wmt16.test(train_conf.dict_size,
-                                      train_conf.dict_size),
+            paddle.dataset.wmt16.test(train_conf.source_dict_dim,
+                                      train_conf.target_dict_dim),
             buf_size=1000),
         batch_size=train_conf.batch_size)
 
