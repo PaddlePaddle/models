@@ -98,7 +98,6 @@ def main(train_data_file, test_data_file, vocab_file, target_file, emb_file,
     for pass_id in xrange(num_passes):
         chunk_evaluator.reset(exe)
         for data in train_reader():
-            print len(data)
             cost, batch_precision, batch_recall, batch_f1_score = exe.run(
                 fluid.default_main_program(),
                 feed=feeder.feed(data),
