@@ -15,6 +15,23 @@ class TrainTaskConfig(object):
     # the params for learning rate scheduling
     warmup_steps = 4000
 
+    # the directory for saving inference models
+    model_dir = "transformer_model"
+
+
+class InferTaskConfig(object):
+    use_gpu = False
+    # number of sequences contained in a mini-batch
+    batch_size = 1
+
+    # the params for beam search
+    beam_size = 5
+    max_length = 30
+    n_best = 1
+
+    # the directory for loading inference model
+    model_path = "transformer_model/pass_1.infer.model"
+
 
 class ModelHyperParams(object):
     # Dictionary size for source and target language. This model directly uses
@@ -32,6 +49,11 @@ class ModelHyperParams(object):
     trg_vocab_size = 10000
     # index for <pad> token in target language.
     trg_pad_idx = trg_vocab_size
+
+    # index for <bos> token
+    bos_idx = 0
+    # index for <eos> token
+    eos_idx = 1
 
     # position value corresponding to the <pad> token.
     pos_pad_idx = 0
@@ -64,14 +86,21 @@ pos_enc_param_names = (
     "src_pos_enc_table",
     "trg_pos_enc_table", )
 
-# Names of all data layers listed in order.
-input_data_names = (
+# Names of all data layers in encoder listed in order.
+encoder_input_data_names = (
     "src_word",
     "src_pos",
+    "src_slf_attn_bias", )
+
+# Names of all data layers in decoder listed in order.
+decoder_input_data_names = (
     "trg_word",
     "trg_pos",
-    "src_slf_attn_bias",
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
+    "enc_output", )
+
+# Names of label related data layers listed in order.
+label_data_names = (
     "lbl_word",
     "lbl_weight", )
