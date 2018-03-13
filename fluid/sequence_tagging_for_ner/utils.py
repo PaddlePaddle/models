@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import logging
-import os
-import re
-import argparse
+
 import numpy as np
-from collections import defaultdict
 
 logger = logging.getLogger("paddle")
 logger.setLevel(logging.INFO)

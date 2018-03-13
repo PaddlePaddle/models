@@ -1,8 +1,7 @@
 """
 Conll03 dataset.
 """
-
-from utils import *
+import re
 
 __all__ = ["data_reader"]
 
