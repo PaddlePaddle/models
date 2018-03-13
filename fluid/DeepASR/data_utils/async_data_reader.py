@@ -11,7 +11,6 @@ import time
 import numpy as np
 from threading import Thread
 import signal
-import multiprocessing
 from multiprocessing import Manager, Process
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta

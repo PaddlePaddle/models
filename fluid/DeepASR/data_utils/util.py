@@ -77,6 +77,15 @@ class CriticalException(Exception):
 
 
 class SharedNDArray(object):
+    """SharedNDArray utilizes shared memory to avoid data serialization when
+    object of which shared between different processes. We can reconstruct the
+    ndarray when memory address provided.
+
+    Args:
+        name (str): Address name of shared memory.
+        is_verify (bool): Whether to do validation for writing operation.
+    """
+
     def __init__(self, name, is_verify=False):
         self._name = name
         self._shm = None
@@ -130,6 +139,18 @@ class SharedNDArray(object):
 
 
 class SharedMemoryPoolManager(object):
+    """SharedMemoryPoolManager maintains a multiprocessing.Manager.dict object.
+    All available addresses are allocated once and will be reused. Though this
+    class is not process-safe, the pool can be shared between processes. All
+    shared memory should be unlinked before the main process exited.
+
+    Args:
+        pool_size (int): Size of shared memory pool.
+        manager (dict): A multiprocessing.Manager object, the pool is
+                        maintained by the proxy process.
+        name_prefix (str): Address prefix of shared memory.
+    """
+
     def __init__(self, pool_size, manager, name_prefix='/deep_asr'):
         self._names = []
         self._dict = manager.dict()
