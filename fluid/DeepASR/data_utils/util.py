@@ -78,21 +78,21 @@ class CriticalException(Exception):
 
 class SharedNDArray(object):
     """SharedNDArray utilizes shared memory to avoid data serialization when
-    object of which shared between different processes. We can reconstruct the
-    ndarray when memory address provided.
+    data object shared among different processes. We can reconstruct the
+    `ndarray` when memory address, shape and dtype provided.
 
     Args:
         name (str): Address name of shared memory.
-        is_verify (bool): Whether to do validation for writing operation.
+        whether_verify (bool): Whether to validate the writing operation.
     """
 
-    def __init__(self, name, is_verify=False):
+    def __init__(self, name, whether_verify=False):
         self._name = name
         self._shm = None
         self._buf = None
         self._array = np.zeros(1, dtype=np.float32)
         self._inited = False
-        self._is_verify = is_verify
+        self._whether_verify = whether_verify
 
     def zeros_like(self, shape, dtype):
         size = int(np.prod(shape)) * np.dtype(dtype).itemsize
@@ -111,7 +111,7 @@ class SharedNDArray(object):
         self._buf.flush()
         self._inited = True
 
-        if self._is_verify:
+        if self._whether_verify:
             shm = posix_ipc.SharedMemory(self._name)
             buf = mmap.mmap(shm.fd, size)
             array = np.ndarray(ndarray.shape, ndarray.dtype, buf, order='C')
@@ -129,13 +129,13 @@ class SharedNDArray(object):
 
     def __getstate__(self):
         return (self._name, self._array.shape, self._array.dtype, self._inited,
-                self._is_verify)
+                self._whether_verify)
 
     def __setstate__(self, state):
         self._name = state[0]
         self._inited = state[3]
         self.zeros_like(state[1], state[2])
-        self._is_verify = state[4]
+        self._whether_verify = state[4]
 
 
 class SharedMemoryPoolManager(object):
