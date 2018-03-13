@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import logging
 
+import paddle.fluid as fluid
+
 import numpy as np
 
 logger = logging.getLogger("paddle")
@@ -42,3 +44,18 @@ def load_reverse_dict(dict_path):
     """
     return dict((idx, line.strip().split("\t")[0])
                 for idx, line in enumerate(open(dict_path, "r").readlines()))
+
+
+def to_lodtensor(data, place):
+    seq_lens = [len(seq) for seq in data]
+    cur_len = 0
+    lod = [cur_len]
+    for l in seq_lens:
+        cur_len += l
+        lod.append(cur_len)
+    flattened_data = np.concatenate(data, axis=0).astype("int64")
+    flattened_data = flattened_data.reshape([len(flattened_data), 1])
+    res = fluid.LoDTensor()
+    res.set(flattened_data, place)
+    res.set_lod([lod])
+    return res

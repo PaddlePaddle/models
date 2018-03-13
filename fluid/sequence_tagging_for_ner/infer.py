@@ -1,18 +1,14 @@
-import gzip
 import numpy as np
-import reader
 import paddle.fluid as fluid
 import paddle.v2 as paddle
+
 from network_conf import ner_net
-from utils import load_dict, load_reverse_dict
+import reader
+from utils import load_dict, load_reverse_dict, to_lodtensor
 
 
-def infer(model_path, batch_size, test_data_file, vocab_file, target_file):
-    word = fluid.layers.data(name='word', shape=[1], dtype='int64', lod_level=1)
-    mark = fluid.layers.data(name='mark', shape=[1], dtype='int64', lod_level=1)
-    target = fluid.layers.data(
-        name='target', shape=[1], dtype='int64', lod_level=1)
-
+def infer(model_path, batch_size, test_data_file, vocab_file, target_file,
+          use_gpu):
     word_dict = load_dict(vocab_file)
     word_reverse_dict = load_reverse_dict(vocab_file)
 
@@ -22,8 +18,7 @@ def infer(model_path, batch_size, test_data_file, vocab_file, target_file):
     test_data = paddle.batch(
         reader.data_reader(test_data_file, word_dict, label_dict),
         batch_size=batch_size)
-    place = fluid.CPUPlace()
-    feeder = fluid.DataFeeder(feed_list=[word, mark, target], place=place)
+    place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
     inference_scope = fluid.core.Scope()
@@ -31,10 +26,16 @@ def infer(model_path, batch_size, test_data_file, vocab_file, target_file):
         [inference_program, feed_target_names,
          fetch_targets] = fluid.io.load_inference_model(model_path, exe)
         for data in test_data():
-            crf_decode = exe.run(inference_program,
-                                 feed=feeder.feed(data),
-                                 fetch_list=fetch_targets,
-                                 return_numpy=False)
+            word = to_lodtensor(map(lambda x: x[0], data), place)
+            mark = to_lodtensor(map(lambda x: x[1], data), place)
+            target = to_lodtensor(map(lambda x: x[2], data), place)
+            crf_decode = exe.run(
+                inference_program,
+                feed={"word": word,
+                      "mark": mark,
+                      "target": target},
+                fetch_list=fetch_targets,
+                return_numpy=False)
             lod_info = (crf_decode[0].lod())[0]
             np_data = np.array(crf_decode[0])
             assert len(data) == len(lod_info) - 1
@@ -59,4 +60,5 @@ if __name__ == "__main__":
         batch_size=6,
         test_data_file="data/test",
         vocab_file="data/vocab.txt",
-        target_file="data/target.txt")
+        target_file="data/target.txt",
+        use_gpu=False)

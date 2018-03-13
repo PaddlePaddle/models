@@ -7,22 +7,7 @@ import paddle.fluid as fluid
 
 import reader
 from network_conf import ner_net
-from utils import logger, load_dict, get_embedding
-
-
-def to_lodtensor(data, place):
-    seq_lens = [len(seq) for seq in data]
-    cur_len = 0
-    lod = [cur_len]
-    for l in seq_lens:
-        cur_len += l
-        lod.append(cur_len)
-    flattened_data = np.concatenate(data, axis=0).astype("int64")
-    flattened_data = flattened_data.reshape([len(flattened_data), 1])
-    res = fluid.LoDTensor()
-    res.set(flattened_data, place)
-    res.set_lod([lod])
-    return res
+from utils import logger, load_dict, get_embedding, to_lodtensor
 
 
 def test(exe, chunk_evaluator, inference_program, test_data, place):
@@ -84,7 +69,6 @@ def main(train_data_file, test_data_file, vocab_file, target_file, emb_file,
         batch_size=BATCH_SIZE)
 
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
-    #place = fluid.CPUPlace()
     feeder = fluid.DataFeeder(feed_list=[word, mark, target], place=place)
     exe = fluid.Executor(place)
 
@@ -93,6 +77,8 @@ def main(train_data_file, test_data_file, vocab_file, target_file, emb_file,
     embedding_name = 'emb'
     embedding_param = fluid.global_scope().find_var(embedding_name).get_tensor()
     embedding_param.set(word_vector_values, place)
+
+    print fluid.default_main_program()
 
     batch_id = 0
     for pass_id in xrange(num_passes):
@@ -103,20 +89,21 @@ def main(train_data_file, test_data_file, vocab_file, target_file, emb_file,
                 feed=feeder.feed(data),
                 fetch_list=[avg_cost] + chunk_evaluator.metrics)
             if batch_id % 5 == 0:
-                print("Pass " + str(pass_id) + ", Batch " + str(
-                    batch_id) + ", Cost " + str(cost[0]) + ", Precision " + str(
-                        batch_precision[0]) + ", Recall " + str(batch_recall[0])
-                      + ", F1_score" + str(batch_f1_score[0]))
+                print(
+                    "Pass " + str(pass_id) + ", Batch " + str(batch_id) +
+                    ", Cost " + str(cost[0]) + ", Precision " +
+                    str(batch_precision[0]) + ", Recall " + str(batch_recall[0])
+                    + ", F1_score" + str(batch_f1_score[0]))
             batch_id = batch_id + 1
 
         pass_precision, pass_recall, pass_f1_score = chunk_evaluator.eval(exe)
-        print("[TrainSet] pass_id:" + str(pass_id) + " pass_precision:" + str(
-            pass_precision) + " pass_recall:" + str(pass_recall) +
+        print("[TrainSet] pass_id:" + str(pass_id) + " pass_precision:" +
+              str(pass_precision) + " pass_recall:" + str(pass_recall) +
               " pass_f1_score:" + str(pass_f1_score))
         pass_precision, pass_recall, pass_f1_score = test(
             exe, chunk_evaluator, inference_program, test_reader, place)
-        print("[TestSet] pass_id:" + str(pass_id) + " pass_precision:" + str(
-            pass_precision) + " pass_recall:" + str(pass_recall) +
+        print("[TestSet] pass_id:" + str(pass_id) + " pass_precision:" +
+              str(pass_precision) + " pass_recall:" + str(pass_recall) +
               " pass_f1_score:" + str(pass_f1_score))
 
         save_dirname = os.path.join(model_save_dir, "params_pass_%d" % pass_id)
@@ -134,4 +121,4 @@ if __name__ == "__main__":
         model_save_dir="models",
         num_passes=1000,
         use_gpu=False,
-        parallel=True)
+        parallel=False)
