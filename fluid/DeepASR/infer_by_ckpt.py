@@ -78,8 +78,7 @@ def parse_args():
         '--checkpoint',
         type=str,
         default='./checkpoint',
-        help="Checkpoints. Do not save checkpoint if set to ''. (default: %(default)s)"
-    )
+        help="The checkpoint path to init model. (default: %(default)s)")
     args = parser.parse_args()
     return args
 
@@ -92,8 +91,7 @@ def print_arguments(args):
 
 
 def infer_from_ckpt(args):
-    """inference by using checkpoint.
-    """
+    """Inference by using checkpoint."""
 
     if not os.path.exists(args.checkpoint):
         raise IOError("Invalid checkpoint!")
