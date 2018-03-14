@@ -50,6 +50,13 @@ def batch_to_ndarray(batch_samples, lod):
     return (batch_feature, batch_label)
 
 
+def split_infer_result(infer_seq, lod):
+    infer_batch = []
+    for i in xrange(0, len(lod[0]) - 1):
+        infer_batch.append(infer_seq[lod[0][i]:lod[0][i + 1]])
+    return infer_batch
+
+
 class DaemonProcessGroup(object):
     def __init__(self, proc_num, target, args):
         self._proc_num = proc_num
