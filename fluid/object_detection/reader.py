@@ -150,6 +150,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     img = np.swapaxes(img, 1, 2)
                     img = np.swapaxes(img, 1, 0)
 
+                img = img[[2, 1, 0], :, :]
                 img = img.astype('float32')
                 img -= settings.img_mean
                 img = img.flatten()
