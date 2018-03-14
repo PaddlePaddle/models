@@ -32,20 +32,18 @@ def train(train_file_list,
                                      box, box_var)
     loss = fluid.layers.nn.reduce_sum(loss_vec)
 
-    map_eval = fluid.evaluator.DetectionMAP(
-        nmsed_out,
-        gt_label,
-        gt_box,
-        difficult,
-        21,
-        overlap_threshold=0.5,
-        evaluate_difficult=False,
-        ap_version='11point')
-    map, accum_map = map_eval.get_map_var()
-
+    map_eval = None
     test_program = fluid.default_main_program().clone(for_test=True)
     with fluid.program_guard(test_program):
-        test_program = fluid.io.get_inference_program([loss, map, accum_map])
+        map_eval = fluid.evaluator.DetectionMAP(
+            nmsed_out,
+            gt_label,
+            gt_box,
+            difficult,
+            21,
+            overlap_threshold=0.5,
+            evaluate_difficult=False,
+            ap_version='11point')
 
     optimizer = fluid.optimizer.DecayedAdagrad(
         learning_rate=fluid.layers.exponential_decay(
@@ -55,13 +53,13 @@ def train(train_file_list,
             staircase=True),
         regularization=fluid.regularizer.L2Decay(0.0005), )
 
-    opts = optimizer.minimize(loss)
+    optimizer.minimize(loss)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    #load_model.load_and_set_vars(place)
+    load_model.load_and_set_vars(place)
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
@@ -69,7 +67,9 @@ def train(train_file_list,
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, difficult])
 
+    #print 'test_program ', test_program
     def test(pass_id):
+        _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
         test_map = None
         for _, data in enumerate(test_reader()):
@@ -78,17 +78,14 @@ def train(train_file_list,
                                fetch_list=[accum_map])
         print("Test {0}, map {1}".format(pass_id, test_map[0]))
 
-    #print fluid.default_main_program()
+    #print 'main_program ', fluid.default_main_program()
     for pass_id in range(num_passes):
-        map_eval.reset(exe)
         for batch_id, data in enumerate(train_reader()):
-            loss_v, map_v, accum_map_v = exe.run(
-                fluid.default_main_program(),
-                feed=feeder.feed(data),
-                fetch_list=[loss, map, accum_map])
-            print(
-                "Pass {0}, batch {1}, loss {2}, cur_map {3}, map {4}"
-                .format(pass_id, batch_id, loss_v[0], map_v[0], accum_map_v[0]))
+            loss_v = exe.run(fluid.default_main_program(),
+                             feed=feeder.feed(data),
+                             fetch_list=[loss])
+            print("Pass {0}, batch {1}, loss {2}"
+                  .format(pass_id, batch_id, loss_v[0]))
         test(pass_id)
 
         if pass_id % 10 == 0:

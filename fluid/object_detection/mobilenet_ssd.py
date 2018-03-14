@@ -25,8 +25,7 @@ def conv_bn(input,
         use_cudnn=use_cudnn,
         param_attr=parameter_attr,
         bias_attr=False)
-    bn = fluid.layers.batch_norm(input=conv, act=act)
-    return bn
+    return fluid.layers.batch_norm(input=conv, act=act, epsilon=0.00001)
 
 
 def depthwise_separable(input, num_filters1, num_filters2, num_groups, stride,
@@ -109,7 +108,6 @@ def mobile_net(img, img_shape, scale=1.0):
         aspect_ratios=[[2.], [2., 3.], [2., 3.], [2., 3.], [2., 3.], [2., 3.]],
         base_size=img_shape[2],
         offset=0.5,
-        flip=True,
-        clip=True)
+        flip=True)
 
     return mbox_locs, mbox_confs, box, box_var
