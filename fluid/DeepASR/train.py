@@ -143,13 +143,11 @@ def train(args):
         class_num=1749,
         parallel=args.parallel)
 
-    optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
-    optimizer.minimize(avg_cost)
-
     # program for test
     test_program = fluid.default_main_program().clone()
-    with fluid.program_guard(test_program):
-        test_program = fluid.io.get_inference_program([avg_cost, accuracy])
+
+    optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
+    optimizer.minimize(avg_cost)
 
     place = fluid.CPUPlace() if args.device == 'CPU' else fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
