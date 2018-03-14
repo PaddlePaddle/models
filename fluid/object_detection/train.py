@@ -45,13 +45,14 @@ def train(train_file_list,
             evaluate_difficult=False,
             ap_version='11point')
 
-    optimizer = fluid.optimizer.DecayedAdagrad(
+    optimizer = fluid.optimizer.Momentum(
         learning_rate=fluid.layers.exponential_decay(
             learning_rate=learning_rate,
             decay_steps=40000,
             decay_rate=0.1,
             staircase=True),
-        regularization=fluid.regularizer.L2Decay(0.0005), )
+        momentum=0.9,
+        regularization=fluid.regularizer.L2Decay(0.00005), )
 
     optimizer.minimize(loss)
 
@@ -59,7 +60,7 @@ def train(train_file_list,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    load_model.load_and_set_vars(place)
+    load_model.load_paddlev1_vars(place)
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
