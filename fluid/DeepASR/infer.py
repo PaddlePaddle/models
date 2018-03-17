@@ -10,6 +10,7 @@ import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
 import data_utils.data_reader as reader
 from data_utils.util import lodtensor_to_ndarray
+from data_utils.util import split_infer_result
 
 
 def parse_args():
@@ -56,13 +57,6 @@ def print_arguments(args):
     for arg, value in sorted(vars(args).iteritems()):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
-
-
-def split_infer_result(infer_seq, lod):
-    infer_batch = []
-    for i in xrange(0, len(lod[0]) - 1):
-        infer_batch.append(infer_seq[lod[0][i]:lod[0][i + 1]])
-    return infer_batch
 
 
 def infer(args):

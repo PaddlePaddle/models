@@ -13,8 +13,10 @@ import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
 import data_utils.async_data_reader as reader
+import decoder.decoder as decoder
 from data_utils.util import lodtensor_to_ndarray
 from model_utils.model import stacked_lstmp_model
+from data_utils.util import split_infer_result
 
 
 def parse_args():
@@ -141,13 +143,20 @@ def infer_from_ckpt(args):
 
         infer_data_reader.recycle(features, labels, lod)
 
-        cost, acc = exe.run(infer_program,
-                            feed={"feature": feature_t,
-                                  "label": label_t},
-                            fetch_list=[avg_cost, accuracy],
-                            return_numpy=False)
-        infer_costs.append(lodtensor_to_ndarray(cost)[0])
-        infer_accs.append(lodtensor_to_ndarray(acc)[0])
+        results = exe.run(infer_program,
+                          feed={"feature": feature_t,
+                                "label": label_t},
+                          fetch_list=[prediction, avg_cost, accuracy],
+                          return_numpy=False)
+        infer_costs.append(lodtensor_to_ndarray(results[1])[0])
+        infer_accs.append(lodtensor_to_ndarray(results[2])[0])
+
+        probs, lod = lodtensor_to_ndarray(results[0])
+        infer_batch = split_infer_result(probs, lod)
+        for index, sample in enumerate(infer_batch):
+            print("Decoding %d: " % (batch_id * args.batch_size + index),
+                  decoder.decode(sample))
+
     print(np.mean(infer_costs), np.mean(infer_accs))
 
 
