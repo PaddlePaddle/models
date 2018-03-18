@@ -195,7 +195,6 @@ class StateCell(object):
                                  'Please make sure %s in input '
                                  'place holder.' % (input_name, input_name))
             self._inputs[input_name] = input_value
-
         self._state_updater(self)
 
     def update_states(self):
