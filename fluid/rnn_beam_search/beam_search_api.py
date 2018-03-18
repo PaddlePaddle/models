@@ -1,8 +1,9 @@
+import contextlib
 import paddle.fluid as fluid
 import paddle.fluid.layers as layers
 from paddle.fluid.framework import Variable
-import contextlib
-from paddle.fluid.layer_helper import LayerHelper, unique_name
+from paddle.fluid import framework, unique_name
+from paddle.fluid.layer_helper import LayerHelper
 import paddle.fluid.core as core
 
 
@@ -53,12 +54,12 @@ class ArrayState(object):
         self._block = block
 
         self._state_array = self._block.create_var(
-            name=unique_name('array_state_array'),
+            name=unique_name.generate('array_state_array'),
             type=core.VarDesc.VarType.LOD_TENSOR_ARRAY,
             dtype=init_state.value.dtype)
 
         self._counter = self._block.create_var(
-            name=unique_name('array_state_counter'),
+            name=unique_name.generate('array_state_counter'),
             type=core.VarDesc.VarType.LOD_TENSOR,
             dtype='int64')
 
@@ -135,15 +136,15 @@ class StateCell(object):
                 self._states_holder[state_name] = {}
 
                 if self._cur_decoder_obj.type == DecoderType.TRAINING:
-                    self._states_holder[state_name][id(self._cur_decoder_obj)] = \
-                            MemoryState(state_name,
-                                        self._cur_decoder_obj.dynamic_rnn,
-                                        state)
+                    self._states_holder[state_name][id(self._cur_decoder_obj)] \
+                            = MemoryState(state_name,
+                                          self._cur_decoder_obj.dynamic_rnn,
+                                          state)
                 elif self._cur_decoder_obj.type == DecoderType.BEAM_SEARCH:
-                    self._states_holder[state_name][id(self._cur_decoder_obj)] = \
-                            ArrayState(state_name,
-                                       self._cur_decoder_obj.parent_block(),
-                                       state)
+                    self._states_holder[state_name][id(self._cur_decoder_obj)] \
+                            = ArrayState(state_name,
+                                         self._cur_decoder_obj.parent_block(),
+                                         state)
                 else:
                     raise ValueError('Unknown decoder type, only support '
                                      '[TRAINING, BEAM_SEARCH]')
@@ -218,7 +219,7 @@ class StateCell(object):
 
         self._in_decoder = False
         self._cur_decoder_obj = None
-        self._switched_decoder = True
+        self._switched_decoder = False
 
 
 class TrainingDecoder(object):
@@ -345,7 +346,7 @@ class BeamSearchDecoder(object):
 
         parent_block = self.parent_block()
         array = parent_block.create_var(
-            name=unique_name('beam_search_decoder_array'),
+            name=unique_name.generate('beam_search_decoder_array'),
             type=core.VarDesc.VarType.LOD_TENSOR_ARRAY,
             dtype=init.dtype)
         parent_block.append_op(

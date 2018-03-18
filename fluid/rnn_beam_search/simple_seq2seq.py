@@ -55,7 +55,7 @@ def encoder():
     return encoder_out
 
 
-def decoder_train(context):
+def decoder_state_cell(context):
     h = InitState(init=context)
     state_cell = StateCell(
         cell_size=decoder_size, inputs={'x': None}, states={'h': h})
@@ -67,6 +67,10 @@ def decoder_train(context):
         h = pd.fc(input=[current_word, prev_h], size=decoder_size, act='tanh')
         state_cell.set_state('h', h)
 
+    return state_cell
+
+
+def decoder_train(state_cell):
     # decoder
     trg_language_word = pd.data(
         name="target_language_word", shape=[1], dtype='int64', lod_level=1)
@@ -91,22 +95,18 @@ def decoder_train(context):
     return decoder()
 
 
-def decoder_decode(context):
-    h = InitState(init=context)
-    state_cell = StateCell(
-        cell_size=decoder_size, inputs={'x': None}, states={'h': h})
-    state_cell.register_updater(updater)
-
+def decoder_decode(state_cell):
     init_ids = pd.data(name="init_ids", shape=[1], dtype="int64", lod_level=2)
     init_scores = pd.data(
         name="init_scores", shape=[1], dtype="float32", lod_level=2)
 
     def embedding(input):
-        return pd.embedding(
+        pd.embedding(
             input=input,
-            size=[dict_size, word_dim],
+            size=[dict_dim, word_dim],
             dtype='float32',
-            is_sparse=IS_SPARSE)
+            is_sparse=IS_SPARSE,
+            param_attr=fluid.ParamAttr('vemb'))
 
     decoder = BeamSearchDecoder(state_cell, max_len=max_length)
 
@@ -119,6 +119,7 @@ def decoder_decode(context):
         decoder.state_cell.set_state('h', prev_state_expanded)
         decoder.state_cell.compute_state(inputs={'x': prev_ids_embedding})
         current_state = decoder.state_cell.get_state('h')
+        # copy lod from prev_ids to current_state
         scores = pd.fc(input=current_state, size=target_dict_dim, act='softmax')
         topk_scores, topk_indices = pd.topk(scores, k=50)
         selected_ids, selected_scores = pd.beam_search(
@@ -156,7 +157,8 @@ def to_lodtensor(data, place):
 
 def train_main():
     context = encoder()
-    rnn_out = decoder_train(context)
+    state_cell = decoder_state_cell(context)
+    rnn_out = decoder_train(state_cell)
     label = pd.data(
         name="target_language_next_word", shape=[1], dtype='int64', lod_level=1)
     cost = pd.cross_entropy(input=rnn_out, label=label)
@@ -197,7 +199,8 @@ def train_main():
 
 def decode_main():
     context = encoder()
-    translation_ids, translation_scores = decoder_decode(context)
+    state_cell = decoder_state_cell(context)
+    translation_ids, translation_scores = decoder_decode(state_cell)
 
     exe = Executor(place)
     exe.run(framework.default_startup_program())
@@ -210,9 +213,9 @@ def decode_main():
     init_lod = [i for i in range(batch_size)] + [batch_size]
     init_lod = [init_lod, init_lod]
 
-    train_data = paddle.batch(
-        paddle.reader.shuffle(
-            paddle.dataset.wmt14.train(dict_size), buf_size=1000),
+    train_data = paddle.v2.batch(
+        paddle.v2.reader.shuffle(
+            paddle.v2.dataset.wmt14.train(dict_size), buf_size=1000),
         batch_size=batch_size)
     for _, data in enumerate(train_data()):
         init_ids = set_init_lod(init_ids_data, init_lod, place)

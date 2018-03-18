@@ -124,7 +124,8 @@ def seq_to_seq_net(embedding_dim, encoder_size, decoder_size, source_dict_dim,
     src_embedding = fluid.layers.embedding(
         input=src_word_idx,
         size=[source_dict_dim, embedding_dim],
-        dtype='float32')
+        dtype='float32',
+        param_attr=fluid.ParamAttr(name='src_embedding'))
 
     src_forward, src_reversed = bi_lstm_encoder(
         input_seq=src_embedding, gate_size=encoder_size)
@@ -202,7 +203,8 @@ def seq_to_seq_net(embedding_dim, encoder_size, decoder_size, source_dict_dim,
         trg_embedding = fluid.layers.embedding(
             input=trg_word_idx,
             size=[target_dict_dim, embedding_dim],
-            dtype='float32')
+            dtype='float32',
+            param_attr=fluid.ParamAttr('trg_embedding'))
 
         decoder = TrainingDecoder(state_cell)
 
@@ -242,12 +244,18 @@ def seq_to_seq_net(embedding_dim, encoder_size, decoder_size, source_dict_dim,
             size=[source_dict_dim, embedding_dim],
             dtype='float32')
         '''
-
-        src_embedding = fluid.layers.embedding(
-            input=src_word_idx,
-            size=[source_dict_dim, embedding_dim],
+        fluid.layers.embedding(
+            input=trg_word_idx,
+            size=[target_dict_dim, embedding_dim],
             dtype='float32',
-            ParamAttr=())
+            param_attr=fluid.ParamAttr('trg_embedding'))
+
+        def embedding(input):
+            fluid.layers.embedding(
+                input=input,
+                size=[target_dict_dim, embedding_dim],
+                dtype='float32',
+                param_attr=fluid.ParamAttr('trg_embedding'))
 
         decoder = BeamSearchDecoder(state_cell, max_len=max_length)
 
@@ -272,6 +280,7 @@ def seq_to_seq_net(embedding_dim, encoder_size, decoder_size, source_dict_dim,
             })
 
             current_state = decoder.state_cell.get_state('h')
+            # we can copy lod from prev_ids to current_state
             scores = fluid.layers.fc(input=current_state,
                                      size=target_dict_dim,
                                      act='softmax')
