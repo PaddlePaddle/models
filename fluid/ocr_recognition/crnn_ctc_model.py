@@ -26,7 +26,12 @@ def conv_bn_pool(input,
             bias_attr=bias,
             is_test=is_test)
     tmp = fluid.layers.pool2d(
-        input=tmp, pool_size=2, pool_type='max', pool_stride=2, use_cudnn=True)
+        input=tmp,
+        pool_size=2,
+        pool_type='max',
+        pool_stride=2,
+        use_cudnn=True,
+        ceil_mode=True)
 
     return tmp
 
@@ -148,14 +153,20 @@ def ctc_train_net(images, label, args, num_classes):
 
     optimizer = fluid.optimizer.Momentum(
         learning_rate=args.learning_rate, momentum=args.momentum)
-    optimizer.minimize(sum_cost)
-
+    _, params_grads = optimizer.minimize(sum_cost)
+    model_average = None
+    if args.model_average:
+        model_average = fluid.optimizer.ModelAverage(
+            params_grads,
+            args.average_window,
+            min_average_window=args.min_average_window,
+            max_average_window=args.max_average_window)
     decoded_out = fluid.layers.ctc_greedy_decoder(
         input=fc_out, blank=num_classes)
     casted_label = fluid.layers.cast(x=label, dtype='int64')
     error_evaluator = fluid.evaluator.EditDistance(
         input=decoded_out, label=casted_label)
-    return sum_cost, error_evaluator
+    return sum_cost, error_evaluator, model_average
 
 
 def ctc_infer(images, num_classes):
