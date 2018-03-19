@@ -140,7 +140,8 @@ def main():
             lr_scheduler.update_learning_rate(data_input)
             outs = exe.run(fluid.framework.default_main_program(),
                            feed=data_input,
-                           fetch_list=[cost])
+                           fetch_list=[cost],
+                           use_program_cache=True)
             cost_val = np.array(outs[0])
             print("pass_id = " + str(pass_id) + " batch = " + str(batch_id) +
                   " cost = " + str(cost_val))
