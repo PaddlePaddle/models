@@ -169,13 +169,15 @@ def seq_to_seq_net(embedding_dim, encoder_size, decoder_size, source_dict_dim,
                                              bias_attr=False)
         decoder_state_expand = fluid.layers.sequence_expand(
             x=decoder_state_proj, y=encoder_proj)
+        # concated lod should inherit from encoder_proj
         concated = fluid.layers.concat(
-            input=[decoder_state_expand, encoder_proj], axis=1)
+            input=[encoder_proj, decoder_state_expand], axis=1)
         attention_weights = fluid.layers.fc(input=concated,
                                             size=1,
                                             act='tanh',
                                             bias_attr=False)
-        attention_weights = fluid.layers.sequence_softmax(x=attention_weights)
+        attention_weights = fluid.layers.sequence_softmax(
+            input=attention_weights)
         weigths_reshape = fluid.layers.reshape(x=attention_weights, shape=[-1])
         scaled = fluid.layers.elementwise_mul(
             x=encoder_vec, y=weigths_reshape, axis=0)
@@ -238,20 +240,9 @@ def seq_to_seq_net(embedding_dim, encoder_size, decoder_size, source_dict_dim,
             name="init_ids", shape=[1], dtype="int64", lod_level=2)
         init_scores = fluid.layers.data(
             name="init_scores", shape=[1], dtype="float32", lod_level=2)
-        '''
-        src_embedding = fluid.layers.embedding(
-            input=src_word_idx,
-            size=[source_dict_dim, embedding_dim],
-            dtype='float32')
-        '''
-        fluid.layers.embedding(
-            input=trg_word_idx,
-            size=[target_dict_dim, embedding_dim],
-            dtype='float32',
-            param_attr=fluid.ParamAttr('trg_embedding'))
 
         def embedding(input):
-            fluid.layers.embedding(
+            return fluid.layers.embedding(
                 input=input,
                 size=[target_dict_dim, embedding_dim],
                 dtype='float32',
@@ -260,28 +251,30 @@ def seq_to_seq_net(embedding_dim, encoder_size, decoder_size, source_dict_dim,
         decoder = BeamSearchDecoder(state_cell, max_len=max_length)
 
         with decoder.block():
-            # encoder_vec = prev_scores
-            # encoder_proj = prev_scores
+            encoder_vec = decoder.read_array(init=encoded_vector)
+            encoder_proj = decoder.read_array(init=encoded_proj)
             prev_ids = decoder.read_array(init=init_ids, is_ids=True)
             prev_scores = decoder.read_array(init=init_scores, is_scores=True)
-            # need make sure the weight shared
-            prev_ids_embedding = fluid.layers.embedding(prev_ids)
+            prev_ids_embedding = embedding(prev_ids)
             prev_h = decoder.state_cell.get_state('h')
             prev_c = decoder.state_cell.get_state('c')
             prev_h_expanded = fluid.layers.sequence_expand(prev_h, prev_scores)
             prev_c_expanded = fluid.layers.sequence_expand(prev_c, prev_scores)
+            encoder_vec_expanded = fluid.layers.sequence_expand(encoder_vec,
+                                                                prev_scores)
+            encoder_proj_expanded = fluid.layers.sequence_expand(encoder_proj,
+                                                                 prev_scores)
             decoder.state_cell.set_state('h', prev_h_expanded)
             decoder.state_cell.set_state('c', prev_c_expanded)
-
             decoder.state_cell.compute_state(inputs={
                 'x': prev_ids_embedding,
-                'encoder_vec': None,
-                'encoder_proj': None
+                'encoder_vec': encoder_vec_expanded,
+                'encoder_proj': encoder_proj_expanded
             })
-
             current_state = decoder.state_cell.get_state('h')
-            # we can copy lod from prev_ids to current_state
-            scores = fluid.layers.fc(input=current_state,
+            current_state_with_lod = fluid.layers.lod_reset(
+                x=current_state, y=prev_scores)
+            scores = fluid.layers.fc(input=current_state_with_lod,
                                      size=target_dict_dim,
                                      act='softmax')
             topk_scores, topk_indices = fluid.layers.topk(scores, k=beam_size)
@@ -290,29 +283,29 @@ def seq_to_seq_net(embedding_dim, encoder_size, decoder_size, source_dict_dim,
                 topk_indices,
                 topk_scores,
                 beam_size,
-                end_id=10,
+                end_id=1,
                 level=0)
             decoder.state_cell.update_states()
             decoder.update_array(prev_ids, selected_ids)
             decoder.update_array(prev_scores, selected_scores)
+            decoder.update_array(encoder_vec, encoder_vec_expanded)
+            decoder.update_array(encoder_proj, encoder_proj_expanded)
 
         translation_ids, translation_scores = decoder()
 
-        feeding_list = [
-            "source_sequence", "target_sequence", "init_ids", "init_scores"
-        ]
+        feeding_list = ["source_sequence", "init_ids", "init_scores"]
 
         return translation_ids, translation_scores, feeding_list
 
 
-def to_lodtensor(data, place):
+def to_lodtensor(data, place, dtype='int64'):
     seq_lens = [len(seq) for seq in data]
     cur_len = 0
     lod = [cur_len]
     for l in seq_lens:
         cur_len += l
         lod.append(cur_len)
-    flattened_data = np.concatenate(data, axis=0).astype("int64")
+    flattened_data = np.concatenate(data, axis=0).astype(dtype)
     flattened_data = flattened_data.reshape([len(flattened_data), 1])
     lod_t = core.LoDTensor()
     lod_t.set(flattened_data, place)
@@ -436,21 +429,25 @@ def infer():
     exe.run(framework.default_startup_program())
 
     for batch_id, data in enumerate(test_batch_generator()):
-        src_seq, word_num = to_lodtensor(map(lambda x: x[0], data), place)
-        trg_seq, word_num = to_lodtensor(map(lambda x: x[1], data), place)
-        lbl_seq, _ = to_lodtensor(map(lambda x: x[2], data), place)
+        batch_size = len(data)
+        src_seq, _ = to_lodtensor(map(lambda x: x[0], data), place)
+        init_ids, _ = to_lodtensor([[0] for _ in xrange(batch_size)], place)
+        init_ids.set_lod(init_ids.lod() + [init_ids.lod()[-1]])
+        init_scores, _ = to_lodtensor([[1.0] for _ in xrange(batch_size)],
+                                      place, 'float32')
+        init_scores.set_lod(init_scores.lod() + [init_scores.lod()[-1]])
 
         fetch_outs = exe.run(framework.default_main_program(),
                              feed={
                                  feeding_list[0]: src_seq,
-                                 feeding_list[1]: trg_seq,
-                                 feeding_list[2]: lbl_seq
+                                 feeding_list[1]: init_ids,
+                                 feeding_list[2]: init_scores
                              },
-                             fetch_list=[avg_cost])
+                             fetch_list=[translation_ids, translation_scores],
+                             return_numpy=False)
 
-        avg_cost_val = np.array(fetch_outs[0])
-        print('pass_id=%d, batch_id=%d, train_loss: %f' % (pass_id, batch_id,
-                                                           avg_cost_val))
+        print(fetch_outs[0].lod())
+        break
 
 
 if __name__ == '__main__':

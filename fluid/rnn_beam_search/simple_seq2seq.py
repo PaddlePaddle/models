@@ -120,11 +120,14 @@ def decoder_decode(state_cell):
         decoder.state_cell.set_state('h', prev_state_expanded)
         decoder.state_cell.compute_state(inputs={'x': prev_ids_embedding})
         current_state = decoder.state_cell.get_state('h')
+        current_state_with_lod = pd.lod_reset(x=current_state, y=prev_scores)
         # copy lod from prev_ids to current_state
-        scores = pd.fc(input=current_state, size=target_dict_dim, act='softmax')
+        scores = pd.fc(input=current_state_with_lod,
+                       size=target_dict_dim,
+                       act='softmax')
         topk_scores, topk_indices = pd.topk(scores, k=50)
         selected_ids, selected_scores = pd.beam_search(
-            prev_ids, topk_indices, topk_scores, beam_size, end_id=10, level=0)
+            prev_ids, topk_indices, topk_scores, beam_size, end_id=1, level=0)
         decoder.state_cell.update_states()
         decoder.update_array(prev_ids, selected_ids)
         decoder.update_array(prev_scores, selected_scores)
@@ -206,7 +209,7 @@ def decode_main():
     exe = Executor(place)
     exe.run(framework.default_startup_program())
 
-    init_ids_data = np.array([1 for _ in range(batch_size)], dtype='int64')
+    init_ids_data = np.array([0 for _ in range(batch_size)], dtype='int64')
     init_scores_data = np.array(
         [1. for _ in range(batch_size)], dtype='float32')
     init_ids_data = init_ids_data.reshape((batch_size, 1))
