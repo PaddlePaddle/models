@@ -1,13 +1,14 @@
 import os
 import math
-
 import numpy as np
+
 import paddle.v2 as paddle
 import paddle.fluid as fluid
 
 import reader
 from network_conf import ner_net
-from utils import logger, load_dict, get_embedding, to_lodtensor
+from utils import logger, load_dict
+from utils_extend import to_lodtensor, get_embedding
 
 
 def test(exe, chunk_evaluator, inference_program, test_data, place):

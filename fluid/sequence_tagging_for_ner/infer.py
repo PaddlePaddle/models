@@ -1,14 +1,21 @@
 import numpy as np
+
 import paddle.fluid as fluid
 import paddle.v2 as paddle
 
 from network_conf import ner_net
 import reader
-from utils import load_dict, load_reverse_dict, to_lodtensor
+from utils import load_dict, load_reverse_dict
+from utils_extend import to_lodtensor
 
 
 def infer(model_path, batch_size, test_data_file, vocab_file, target_file,
           use_gpu):
+    """
+    use the model under model_path to predict the test data, the result will be printed on the screen
+
+    return nothing
+    """
     word_dict = load_dict(vocab_file)
     word_reverse_dict = load_reverse_dict(vocab_file)
 
