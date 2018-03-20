@@ -18,36 +18,36 @@
     year={2017},
 }
 ```
-
 您也可以访问 https://github.com/baidu-research/GloballyNormalizedReader 以获取更多信息。
 
 # 安装
 
 1. 请使用 [docker image](http://doc.paddlepaddle.org/develop/doc/getstarted/build_and_install/docker_install_en.html) 安装最新的PaddlePad，运行方法：
-    ```bash
+   ```bash
     docker pull paddledev/paddle
-    ```
+   ```
+    
 2. 下载所有必要的数据：
     ```bash
     cd data && ./download.sh && cd ..
-    ``` 
+   ```
+    
 3. 预处理并特征化数据：
     ```bash
     python featurize.py --datadir data --outdir data/featurized  --glove-path data/glove.840B.300d.txt
     ```
-   
+    
 # 模型训练
 
 - 根据需要修改config.py来配置模型，然后运行：
-
-    ```bash
+   ```bash
     python train.py 2>&1 | tee train.log
     ```
 
 # 使用训练过的模型推断
 
 - 运行以下训练模型来推断：
-   ```bash
+ ```bash
    python infer.py \
      --model_path models/pass_00000.tar.gz \
      --data_dir data/featurized/ \
