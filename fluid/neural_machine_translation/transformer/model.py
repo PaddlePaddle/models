@@ -1,3 +1,5 @@
+import sys
+
 from functools import partial
 import numpy as np
 
@@ -84,7 +86,7 @@ def multi_head_attention(queries,
         hidden_size = x.shape[-1]
         # FIXME(guosheng): Decouple the program desc with batch_size.
         reshaped = layers.reshape(
-            x=x, shape=[batch_size, -1, n_head, hidden_size // n_head])
+            x=x, shape=[batch_size / 2, -1, n_head, hidden_size // n_head])
 
         # permuate the dimensions into:
         # [batch_size, n_head, max_sequence_len, hidden_size_per_head]
@@ -104,7 +106,7 @@ def multi_head_attention(queries,
         return layers.reshape(
             x=trans_x,
             shape=map(int,
-                      [batch_size, -1, trans_x.shape[2] * trans_x.shape[3]]))
+                      [batch_size / 2, -1, trans_x.shape[2] * trans_x.shape[3]]))
 
     def scaled_dot_product_attention(q, k, v, attn_bias, d_model, dropout_rate):
         """
@@ -230,7 +232,8 @@ def prepare_encoder(src_word,
     enc_input = src_word_emb + src_pos_enc
 
     # FIXME(guosheng): Decouple the program desc with batch_size.
-    enc_input = layers.reshape(x=enc_input, shape=[batch_size, -1, src_emb_dim])
+    enc_input = layers.reshape(x=enc_input,
+                               shape=[batch_size / 2, -1, src_emb_dim])
     return layers.dropout(
         enc_input, dropout_prob=dropout,
         is_test=False) if dropout else enc_input
@@ -442,56 +445,7 @@ def transformer(
         dtype="float32",
         append_batch_size=False)
 
-    enc_input = prepare_encoder(
-        src_word,
-        src_pos,
-        src_vocab_size,
-        d_model,
-        src_pad_idx,
-        max_length,
-        dropout_rate, )
-    enc_output = encoder(
-        enc_input,
-        src_slf_attn_bias,
-        n_layer,
-        n_head,
-        d_key,
-        d_value,
-        d_model,
-        d_inner_hid,
-        dropout_rate, )
 
-    dec_input = prepare_decoder(
-        trg_word,
-        trg_pos,
-        trg_vocab_size,
-        d_model,
-        trg_pad_idx,
-        max_length,
-        dropout_rate, )
-    dec_output = decoder(
-        dec_input,
-        enc_output,
-        trg_slf_attn_bias,
-        trg_src_attn_bias,
-        n_layer,
-        n_head,
-        d_key,
-        d_value,
-        d_model,
-        d_inner_hid,
-        dropout_rate, )
-
-    # TODO(guosheng): Share the weight matrix between the embedding layers and
-    # the pre-softmax linear transformation.
-    predict = layers.reshape(
-        x=layers.fc(input=dec_output,
-                    size=trg_vocab_size,
-                    param_attr=fluid.initializer.Xavier(uniform=False),
-                    bias_attr=False,
-                    num_flatten_dims=2),
-        shape=[-1, trg_vocab_size],
-        act="softmax")
     # The actual shape of gold in runtime is:
     # [batch_size * max_trg_length_in_a_batch, 1].
     gold = layers.data(
@@ -499,7 +453,7 @@ def transformer(
         shape=[batch_size * max_length, 1],
         dtype="int64",
         append_batch_size=False)
-    cost = layers.cross_entropy(input=predict, label=gold)
+
     # The actual shape of weights in runtime is:
     # [batch_size * max_trg_length_in_a_batch, 1].
     # Padding index do not contribute to the total loss. This Weight is used to
@@ -509,5 +463,107 @@ def transformer(
         shape=[batch_size * max_length, 1],
         dtype="float32",
         append_batch_size=False)
-    weighted_cost = cost * weights
-    return layers.reduce_sum(weighted_cost)
+
+    places = fluid.layers.get_places()
+    pd = fluid.layers.ParallelDo(places, use_nccl=False)
+
+    src_word = fluid.layers.reshape(x=src_word,
+                                    shape=[batch_size, -1, 1])
+    src_pos = fluid.layers.reshape(x=src_pos,
+                                   shape=[batch_size, -1, 1])
+    trg_word = fluid.layers.reshape(x=trg_word,
+                                    shape=[batch_size, -1, 1])
+    trg_pos = fluid.layers.reshape(x=trg_pos,
+                                   shape=[batch_size, -1, 1])
+    gold = fluid.layers.reshape(x=gold,
+                                shape=[batch_size, -1, 1])
+    weights = fluid.layers.reshape(x=weights,
+                                   shape=[batch_size, -1, 1])
+
+    with pd.do():
+        src_word = pd.read_input(src_word)
+        src_pos = pd.read_input(src_pos)
+        trg_word = pd.read_input(trg_word)
+        trg_pos = pd.read_input(trg_pos)
+        gold = pd.read_input(gold)
+        weights = pd.read_input(weights)
+        src_slf_attn_bias = pd.read_input(src_slf_attn_bias)
+        trg_slf_attn_bias = pd.read_input(trg_slf_attn_bias)
+        trg_src_attn_bias = pd.read_input(trg_src_attn_bias)
+
+        src_word = fluid.layers.reshape(
+            x=src_word, shape=[-1, 1])
+        src_word.stop_gradient = True
+        src_pos = fluid.layers.reshape(
+            x=src_pos, shape=[-1, 1])
+        src_pos.stop_gradient = True
+        trg_word = fluid.layers.reshape(
+            x=trg_word, shape=[-1, 1])
+        trg_word.stop_gradient = True
+        trg_pos = fluid.layers.reshape(
+            x=trg_pos, shape=[-1, 1])
+        trg_pos.stop_gradient = True
+        gold = fluid.layers.reshape(
+            x=gold, shape=[-1, 1])
+        gold.stop_gradient = True
+        weights = fluid.layers.reshape(
+            x=weights, shape=[-1, 1])
+        weights.stop_gradient = True
+
+        enc_input = prepare_encoder(
+            src_word,
+            src_pos,
+            src_vocab_size,
+            d_model,
+            src_pad_idx,
+            max_length,
+            dropout_rate, )
+        enc_output = encoder(
+            enc_input,
+            src_slf_attn_bias,
+            n_layer,
+            n_head,
+            d_key,
+            d_value,
+            d_model,
+            d_inner_hid,
+            dropout_rate, )
+
+        dec_input = prepare_decoder(
+            trg_word,
+            trg_pos,
+            trg_vocab_size,
+            d_model,
+            trg_pad_idx,
+            max_length,
+            dropout_rate, )
+        dec_output = decoder(
+            dec_input,
+            enc_output,
+            trg_slf_attn_bias,
+            trg_src_attn_bias,
+            n_layer,
+            n_head,
+            d_key,
+            d_value,
+            d_model,
+            d_inner_hid,
+            dropout_rate, )
+
+        # TODO(guosheng): Share the weight matrix between the embedding layers and
+        # the pre-softmax linear transformation.
+        predict = layers.reshape(
+            x=layers.fc(input=dec_output,
+                        size=trg_vocab_size,
+                        param_attr=fluid.initializer.Xavier(uniform=False),
+                        bias_attr=False,
+                        num_flatten_dims=2),
+            shape=[-1, trg_vocab_size],
+            act="softmax")
+        cost = layers.cross_entropy(input=predict, label=gold)
+
+        weighted_cost = cost * weights
+        cost = layers.reduce_sum(weighted_cost)
+        pd.write_output(cost)
+    cost = pd()
+    return fluid.layers.mean(x=cost)

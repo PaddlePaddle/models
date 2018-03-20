@@ -1,10 +1,10 @@
 class TrainTaskConfig(object):
-    use_gpu = False
+    use_gpu = True
     # the epoch number to train.
     pass_num = 2
 
     # number of sequences contained in a mini-batch.
-    batch_size = 64
+    batch_size = 32
 
     # the hyper params for Adam optimizer.
     learning_rate = 0.001
