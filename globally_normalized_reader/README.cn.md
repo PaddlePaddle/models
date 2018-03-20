@@ -2,7 +2,7 @@
 
 ---
 
-# Globally Normalized Reader
+# 全球标准化阅读器
 
 该模型实现以下功能：
 
