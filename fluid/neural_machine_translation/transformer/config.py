@@ -3,34 +3,36 @@ class TrainTaskConfig(object):
     # the epoch number to train.
     pass_num = 2
 
-    # number of sequences contained in a mini-batch.
+    # the number of sequences contained in a mini-batch.
     batch_size = 64
 
-    # the hyper params for Adam optimizer.
+    # the hyper parameters for Adam optimizer.
     learning_rate = 0.001
     beta1 = 0.9
     beta2 = 0.98
     eps = 1e-9
 
-    # the params for learning rate scheduling
+    # the parameters for learning rate scheduling.
     warmup_steps = 4000
 
-    # the directory for saving inference models
-    model_dir = "transformer_model"
+    # the directory for saving trained models.
+    model_dir = "trained_models"
 
 
 class InferTaskConfig(object):
     use_gpu = False
-    # number of sequences contained in a mini-batch
+    # the number of examples in one run for sequence generation.
+    # currently the batch size can only be set to 1.
     batch_size = 1
 
-    # the params for beam search
+    # the parameters for beam search.
     beam_size = 5
     max_length = 30
+    # the number of decoded sentences to output.
     n_best = 1
 
-    # the directory for loading inference model
-    model_path = "transformer_model/pass_1.infer.model"
+    # the directory for loading the trained model.
+    model_path = "trained_models/pass_1.infer.model"
 
 
 class ModelHyperParams(object):

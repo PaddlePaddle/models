@@ -66,12 +66,19 @@ def translate_batch(exe, src_words, encoder, enc_in_names, enc_out_names,
         trg_pos = np.array([[1]] * batch_size * beam_size, dtype="int64")
         src_max_length, src_slf_attn_bias, trg_max_len = enc_in_data[
             -1], enc_in_data[-2], 1
+        # This is used to remove attention on subsequent words.
+        trg_slf_attn_bias = np.ones((batch_size * beam_size, trg_max_len,
+                                     trg_max_len))
+        trg_slf_attn_bias = np.triu(trg_slf_attn_bias, 1).reshape(
+            [-1, 1, trg_max_len, trg_max_len])
+        trg_slf_attn_bias = (np.tile(trg_slf_attn_bias, [1, n_head, 1, 1]) *
+                             [-1e9]).astype("float32")
+        # This is used to remove attention on the paddings of source sequences.
         trg_src_attn_bias = np.tile(
             src_slf_attn_bias[:, :, ::src_max_length, :],
             [beam_size, 1, trg_max_len, 1])
         enc_output = np.tile(enc_output, [beam_size, 1, 1])
-        # No need for trg_slf_attn_bias because of no paddings.
-        return trg_words, trg_pos, None, trg_src_attn_bias, enc_output
+        return trg_words, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, enc_output
 
     def update_dec_in_data(dec_in_data, next_ids, active_beams):
         """
@@ -79,6 +86,7 @@ def translate_batch(exe, src_words, encoder, enc_in_names, enc_out_names,
         input data and dropping the finished instance beams.
         """
         trg_words, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, enc_output = dec_in_data
+        trg_cur_len = len(next_ids[0]) + 1  # include the <bos>
         trg_words = np.array(
             [
                 beam_backtrace(
@@ -88,14 +96,22 @@ def translate_batch(exe, src_words, encoder, enc_in_names, enc_out_names,
             dtype="int64")
         trg_words = trg_words.reshape([-1, 1])
         trg_pos = np.array(
-            [range(1, len(next_ids[0]) + 2)] * len(active_beams) * beam_size,
+            [range(1, trg_cur_len + 1)] * len(active_beams) * beam_size,
             dtype="int64").reshape([-1, 1])
         active_beams_indice = (
             (np.array(active_beams) * beam_size)[:, np.newaxis] +
             np.array(range(beam_size))[np.newaxis, :]).flatten()
+        # This is used to remove attention on subsequent words.
+        trg_slf_attn_bias = np.ones((len(active_beams) * beam_size, trg_cur_len,
+                                     trg_cur_len))
+        trg_slf_attn_bias = np.triu(trg_slf_attn_bias, 1).reshape(
+            [-1, 1, trg_cur_len, trg_cur_len])
+        trg_slf_attn_bias = (np.tile(trg_slf_attn_bias, [1, n_head, 1, 1]) *
+                             [-1e9]).astype("float32")
+        # This is used to remove attention on the paddings of source sequences.
         trg_src_attn_bias = np.tile(trg_src_attn_bias[
             active_beams_indice, :, ::trg_src_attn_bias.shape[2], :],
-                                    [1, 1, len(next_ids[0]) + 1, 1])
+                                    [1, 1, trg_cur_len, 1])
         enc_output = enc_output[active_beams_indice, :, :]
         return trg_words, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, enc_output
 
@@ -103,9 +119,7 @@ def translate_batch(exe, src_words, encoder, enc_in_names, enc_out_names,
                                    enc_output)
     for i in range(max_length):
         predict_all = exe.run(decoder,
-                              feed=dict(
-                                  filter(lambda item: item[1] is not None,
-                                         zip(dec_in_names, dec_in_data))),
+                              feed=dict(zip(dec_in_names, dec_in_data)),
                               fetch_list=dec_out_names)[0]
         predict_all = np.log(predict_all)
         predict_all = (
@@ -206,9 +220,9 @@ def main():
             encoder_input_data_names, [enc_output.name], decoder_program,
             decoder_input_data_names, [predict.name], InferTaskConfig.beam_size,
             InferTaskConfig.max_length, InferTaskConfig.n_best,
-            InferTaskConfig.batch_size, ModelHyperParams.n_head,
-            ModelHyperParams.src_pad_idx, ModelHyperParams.trg_pad_idx,
-            ModelHyperParams.bos_idx, ModelHyperParams.eos_idx)
+            len(data), ModelHyperParams.n_head, ModelHyperParams.src_pad_idx,
+            ModelHyperParams.trg_pad_idx, ModelHyperParams.bos_idx,
+            ModelHyperParams.eos_idx)
         for i in range(len(batch_seqs)):
             seqs = batch_seqs[i]
             scores = batch_scores[i]

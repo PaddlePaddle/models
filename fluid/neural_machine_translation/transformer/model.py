@@ -283,8 +283,15 @@ def encoder(enc_input,
     encoder_layer.
     """
     for i in range(n_layer):
-        enc_output = encoder_layer(enc_input, attn_bias, n_head, d_key, d_value,
-                                   d_model, d_inner_hid, dropout_rate)
+        enc_output = encoder_layer(
+            enc_input,
+            attn_bias,
+            n_head,
+            d_key,
+            d_value,
+            d_model,
+            d_inner_hid,
+            dropout_rate, )
         enc_input = enc_output
     return enc_output
 
@@ -381,9 +388,10 @@ def make_inputs(input_data_names,
                 d_model,
                 batch_size,
                 max_length,
+                is_pos,
                 slf_attn_bias_flag,
                 src_attn_bias_flag,
-                pos_flag=1):
+                enc_output_flag=False):
     """
     Define the input data layers for the transformer model.
     """
@@ -391,35 +399,43 @@ def make_inputs(input_data_names,
     # The shapes here act as placeholder.
     # The shapes set here is to pass the infer-shape in compile time.
     word = layers.data(
-        name=input_data_names[0],
+        name=input_data_names[len(input_layers)],
         shape=[batch_size * max_length, 1],
         dtype="int64",
         append_batch_size=False)
     input_layers += [word]
     # This is used for position data or label weight.
     pos = layers.data(
-        name=input_data_names[1],
+        name=input_data_names[len(input_layers)],
         shape=[batch_size * max_length, 1],
-        dtype="int64" if pos_flag else "float32",
+        dtype="int64" if is_pos else "float32",
         append_batch_size=False)
     input_layers += [pos]
     if slf_attn_bias_flag:
-        # This is used for attention bias or encoder output.
+        # This input is used to remove attention weights on paddings for the
+        # encoder and to remove attention weights on subsequent words for the
+        # decoder.
         slf_attn_bias = layers.data(
-            name=input_data_names[2]
-            if slf_attn_bias_flag == 1 else input_data_names[-1],
-            shape=[batch_size, n_head, max_length, max_length]
-            if slf_attn_bias_flag == 1 else [batch_size, max_length, d_model],
+            name=input_data_names[len(input_layers)],
+            shape=[batch_size, n_head, max_length, max_length],
             dtype="float32",
             append_batch_size=False)
         input_layers += [slf_attn_bias]
     if src_attn_bias_flag:
+        # This input is used to remove attention weights on paddings.
         src_attn_bias = layers.data(
-            name=input_data_names[3],
+            name=input_data_names[len(input_layers)],
             shape=[batch_size, n_head, max_length, max_length],
             dtype="float32",
             append_batch_size=False)
         input_layers += [src_attn_bias]
+    if enc_output_flag:
+        enc_output = layers.data(
+            name=input_data_names[len(input_layers)],
+            shape=[batch_size, max_length, d_model],
+            dtype="float32",
+            append_batch_size=False)
+        input_layers += [enc_output]
     return input_layers
 
 
@@ -438,7 +454,7 @@ def transformer(
         trg_pad_idx,
         pos_pad_idx, ):
     enc_input_layers = make_inputs(encoder_input_data_names, n_head, d_model,
-                                   batch_size, max_length, 1, 0)
+                                   batch_size, max_length, True, True, False)
 
     enc_output = wrap_encoder(
         src_vocab_size,
@@ -455,7 +471,7 @@ def transformer(
         enc_input_layers, )
 
     dec_input_layers = make_inputs(decoder_input_data_names, n_head, d_model,
-                                   batch_size, max_length, 1, 1)
+                                   batch_size, max_length, True, True, True)
 
     predict = wrap_decoder(
         trg_vocab_size,
@@ -475,7 +491,7 @@ def transformer(
     # Padding index do not contribute to the total loss. The weights is used to
     # cancel padding index in calculating the loss.
     gold, weights = make_inputs(label_data_names, n_head, d_model, batch_size,
-                                max_length, 0, 0, 0)
+                                max_length, False, False, False)
     cost = layers.cross_entropy(input=predict, label=gold)
     weighted_cost = cost * weights
     return layers.reduce_sum(weighted_cost), predict
@@ -500,7 +516,7 @@ def wrap_encoder(src_vocab_size,
         # This is used to implement independent encoder program in inference.
         src_word, src_pos, src_slf_attn_bias = make_inputs(
             encoder_input_data_names, n_head, d_model, batch_size, max_length,
-            True, False)
+            True, True, False)
     else:
         src_word, src_pos, src_slf_attn_bias = enc_input_layers
     enc_input = prepare_encoder(
@@ -542,11 +558,9 @@ def wrap_decoder(trg_vocab_size,
     """
     if dec_input_layers is None:
         # This is used to implement independent decoder program in inference.
-        # No need for trg_slf_attn_bias because of no paddings in inference.
-        trg_word, trg_pos, enc_output, trg_src_attn_bias = make_inputs(
+        trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, enc_output = make_inputs(
             decoder_input_data_names, n_head, d_model, batch_size, max_length,
-            2, 1)
-        trg_slf_attn_bias = None
+            True, True, True, True)
     else:
         trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias = dec_input_layers
 
