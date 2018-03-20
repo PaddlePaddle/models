@@ -10,7 +10,7 @@
 ├── README.md            # 文档
 ├── train.py             # 训练脚本
 ├── infer.py             # 预测脚本
-└── utils.py             # 定义通用的函数, 从外部获取
+├── utils.py             # 定义通用的函数, 从外部获取
 └── utils_extend.py      # 对utils.py的拓展
 ```
 
@@ -22,13 +22,13 @@
 
 ## 数据获取
 
-参照https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/README.md中的数据获取方式，将获取的data目录复制到本目录下。
+参照https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/README.md 中的数据获取方式，将获取的data目录复制到本目录下。
 
 ## 通用脚本获取
 
-本例需要使用https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/reader.py以及https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/utils.py，请将这两个文件复制到本目录下。
+本例需要使用https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/reader.py 以及 https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/utils.py ，请将这两个文件复制到本目录下。
 
-### 训练
+## 训练
 
 1. 运行 `sh data/download.sh`
 2. 修改 `train.py` 的 `main` 函数，指定数据路径
@@ -43,7 +43,7 @@
         model_save_dir="models",
         num_passes=1000,
         use_gpu=False,
-        parallel=True)
+        parallel=False)
     ```
 
 3. 运行命令 `python train.py` ，**需要注意：直接运行使用的是示例数据，请替换真实的标记数据。**
@@ -67,7 +67,7 @@
     [TrainSet] pass_id:127 pass_precision:[0.46023396] pass_recall:[0.43197003] pass_f1_score:[0.44565433]
     [TestSet] pass_id:127 pass_precision:[0.4708409] pass_recall:[0.47971722] pass_f1_score:[0.4752376]
     ```
-### 预测
+## 预测
 1. 修改 [infer.py](./infer.py) 的 `infer` 函数，指定：需要测试的模型的路径、测试数据、字典文件，预测标记文件的路径，默认参数如下：
 
     ```python
@@ -116,5 +116,5 @@
 
 <p align="center">
 <img src="imgs/convergence_curve.png" width="80%" align="center"/><br/>
-图1. Paddle下实验结果示例, 横轴表示训练轮数，纵轴表示F1值
+图1. 学习曲线, 横轴表示训练轮数，纵轴表示F1值
 </p>
