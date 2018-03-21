@@ -1,4 +1,4 @@
-此目录中代码示例所需的最小PaddlePad版本为v0.11.0。如果您使用的PaddlePad版本早于v0.11.0的， [请更新](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html).
+此目录中代码示例PaddlePaddle所需版本至少为v0.11.0。如果您使用的PaddlePaddle版本早于v0.11.0， [请更新](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html).
 
 ---
 
@@ -6,7 +6,7 @@
 
 该模型实现以下功能：
 
-乔纳森 莱曼和约翰 米勒。全球标准化阅读器。自然语言处理中的实证方法（EMNLP），2017。
+Jonathan Raiman and John Miller. Globally Normalized Reader. Empirical Methods in Natural Language Processing (EMNLP), 2017
 
 如果您在研究中使用数据集/代码，请引用上述论文：
 
@@ -24,11 +24,11 @@
 
 # 安装
 
-1. 请使用 [docker image](http://doc.paddlepaddle.org/develop/doc/getstarted/build_and_install/docker_install_en.html) 安装最新的PaddlePad，运行方法：
+1. 请使用 [docker image](http://doc.paddlepaddle.org/develop/doc/getstarted/build_and_install/docker_install_en.html) 安装最新的PaddlePaddle，运行方法：
     ```bash
     docker pull paddledev/paddle
     ```
-2. 下载所有必要的数据：
+2. 下载所有必要的数据，运行方法：
     ```bash
     cd data && ./download.sh && cd ..
     ```
