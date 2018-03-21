@@ -166,7 +166,7 @@ The data_reader funtion in reader.py generate 3 return data: the word's index in
     ```
     
 The  second column is the predicted tag.
-Congratulations! job done.
+Congratulations! job done!
 
 
 ## Reference
