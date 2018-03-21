@@ -15,18 +15,18 @@
 ```
 
 
-## 简介，模型详解与数据说明
+## 简介，模型详解
 
-参考https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/README.md
-在模型上，我们使用LSTM代替原始的RNN。
+在PaddlePaddle v2版本[命名实体识别](https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/README.md)中对于命名实体识别任务有较详细的介绍。
+在模型上，我们沿用了v2版本的模型结构，唯一区别是我们使用LSTM代替原始的RNN。
 
 ## 数据获取
 
-参照https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/README.md 中的数据获取方式，将获取的data目录复制到本目录下。
+请参考PaddlePaddle v2版本[命名实体识别](https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/README.md) 一节中数据获取方式，将该例中的data文件夹拷贝至本例目录下，运行其中的download.sh脚本获取训练和测试数据。
 
 ## 通用脚本获取
 
-本例需要使用https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/reader.py 以及 https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/utils.py ，请将这两个文件复制到本目录下。
+请将PaddlePaddle v2版本[命名实体识别](https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/README.md)中提供的用于数据读取的文件[reader.py](https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/reader.py)以及包含字典导入等通用功能的文件[utils.py](https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/utils.py)复制到本目录下。
 
 ## 训练
 
