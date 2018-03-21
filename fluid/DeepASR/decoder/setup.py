@@ -13,27 +13,50 @@
 # limitations under the License.
 
 import os
+import glob
 from distutils.core import setup, Extension
 from distutils.sysconfig import get_config_vars
 
-args = ['-std=c++11']
+args = [
+    '-std=c++11', '-Wno-sign-compare', '-Wno-unused-variable',
+    '-Wno-unused-local-typedefs', '-Wno-unused-but-set-variable',
+    '-Wno-deprecated-declarations', '-Wno-unused-function'
+]
 
 # remove warning about -Wstrict-prototypes
 (opt, ) = get_config_vars('OPT')
 os.environ['OPT'] = " ".join(flag for flag in opt.split()
                              if flag != '-Wstrict-prototypes')
+os.environ['CC'] = 'g++'
+
+LIBS = [
+    'fst', 'kaldi-base', 'kaldi-util', 'kaldi-matrix', 'kaldi-tree',
+    'kaldi-hmm', 'kaldi-fstext', 'kaldi-decoder', 'kaldi-lat'
+]
+
+LIB_DIRS = [
+    'kaldi/tools/openfst/lib', 'kaldi/src/base', 'kaldi/src/matrix',
+    'kaldi/src/util', 'kaldi/src/tree', 'kaldi/src/hmm', 'kaldi/src/fstext',
+    'kaldi/src/decoder', 'kaldi/src/lat'
+]
 
 ext_modules = [
     Extension(
-        'decoder',
-        ['pybind.cc', 'decoder.cc'],
-        include_dirs=['pybind11/include', '.'],
+        'post_decode_faster',
+        ['pybind.cc', 'post_decode_faster.cc'],
+        include_dirs=[
+            'pybind11/include', '.', 'kaldi/src/',
+            'kaldi/tools/openfst/src/include'
+        ],
+        libraries=LIBS,
         language='c++',
+        library_dirs=LIB_DIRS,
+        runtime_library_dirs=LIB_DIRS,
         extra_compile_args=args, ),
 ]
 
 setup(
-    name='decoder',
+    name='post_decode_faster',
     version='0.0.1',
     author='Paddle',
     author_email='',

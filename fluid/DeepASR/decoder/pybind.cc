@@ -15,11 +15,11 @@ limitations under the License. */
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "decoder.h"
+#include "post_decode_faster.h"
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(decoder, m) {
+PYBIND11_MODULE(post_decode_faster, m) {
   m.doc() = "Decode function for Deep ASR model";
 
   m.def("decode",

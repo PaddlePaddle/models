@@ -15,4 +15,9 @@ limitations under the License. */
 #include <string>
 #include <vector>
 
-std::string decode(std::vector<std::vector<float>> probs_mat);
+std::vector<std::string> decode(std::string word_syms_filename,
+                                std::string fst_in_filename,
+                                std::string logprior_rxfilename,
+                                std::string posterior_respecifier,
+                                std::string words_wspecifier,
+                                std::string alignment_wspecifier = "");
