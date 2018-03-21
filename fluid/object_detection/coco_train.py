@@ -1,7 +1,7 @@
 import paddle.v2 as paddle
 import paddle.fluid as fluid
 import os
-import reader
+import coco_reader as reader
 import numpy as np
 import load_model as load_model
 from mobilenet_ssd import mobile_net
