@@ -146,6 +146,8 @@ def main():
               " cost = " + str(cost_val))
         return time.time() - t1
 
+    # with open('/tmp/program', 'w') as f:
+    #     f.write('%s' % fluid.framework.default_main_program())
     total_time = 0.0
     count = 0
     for pass_id in xrange(TrainTaskConfig.pass_num):

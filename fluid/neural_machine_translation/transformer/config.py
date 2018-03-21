@@ -6,6 +6,9 @@ class TrainTaskConfig(object):
     # number of sequences contained in a mini-batch.
     batch_size = 32
 
+    # number of gpu devices
+    num_gpus = 4
+
     # the hyper params for Adam optimizer.
     learning_rate = 0.001
     beta1 = 0.9

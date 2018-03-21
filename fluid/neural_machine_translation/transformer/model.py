@@ -10,6 +10,7 @@ from config import TrainTaskConfig, input_data_names, pos_enc_param_names
 
 # FIXME(guosheng): Remove out the batch_size from the model.
 batch_size = TrainTaskConfig.batch_size
+num_gpus = TrainTaskConfig.num_gpus
 
 
 def position_encoding_init(n_position, d_pos_vec):
@@ -86,7 +87,8 @@ def multi_head_attention(queries,
         hidden_size = x.shape[-1]
         # FIXME(guosheng): Decouple the program desc with batch_size.
         reshaped = layers.reshape(
-            x=x, shape=[batch_size / 2, -1, n_head, hidden_size // n_head])
+            x=x, shape=[batch_size / num_gpus, -1, n_head,
+                        hidden_size // n_head])
 
         # permuate the dimensions into:
         # [batch_size, n_head, max_sequence_len, hidden_size_per_head]
@@ -106,7 +108,8 @@ def multi_head_attention(queries,
         return layers.reshape(
             x=trans_x,
             shape=map(int,
-                      [batch_size / 2, -1, trans_x.shape[2] * trans_x.shape[3]]))
+                      [batch_size / num_gpus, -1,
+                       trans_x.shape[2] * trans_x.shape[3]]))
 
     def scaled_dot_product_attention(q, k, v, attn_bias, d_model, dropout_rate):
         """
@@ -233,7 +236,7 @@ def prepare_encoder(src_word,
 
     # FIXME(guosheng): Decouple the program desc with batch_size.
     enc_input = layers.reshape(x=enc_input,
-                               shape=[batch_size / 2, -1, src_emb_dim])
+                               shape=[batch_size / num_gpus, -1, src_emb_dim])
     return layers.dropout(
         enc_input, dropout_prob=dropout,
         is_test=False) if dropout else enc_input
@@ -465,7 +468,7 @@ def transformer(
         append_batch_size=False)
 
     places = fluid.layers.get_places()
-    pd = fluid.layers.ParallelDo(places, use_nccl=False)
+    pd = fluid.layers.ParallelDo(places, use_nccl=True)
 
     src_word = fluid.layers.reshape(x=src_word,
                                     shape=[batch_size, -1, 1])
