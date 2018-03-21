@@ -45,13 +45,10 @@ def train(train_file_list,
             evaluate_difficult=False,
             ap_version='11point')
 
-    optimizer = fluid.optimizer.Momentum(
-        learning_rate=fluid.layers.exponential_decay(
-            learning_rate=learning_rate,
-            decay_steps=40000,
-            decay_rate=0.1,
-            staircase=True),
-        momentum=0.9,
+    boundaries = [40000, 60000]
+    values = [0.001, 0.0005, 0.00025]
+    optimizer = fluid.optimizer.RMSProp(
+        learning_rate=fluid.layers.piecewise_decay(boundaries, values),
         regularization=fluid.regularizer.L2Decay(0.00005), )
 
     optimizer.minimize(loss)
@@ -60,7 +57,8 @@ def train(train_file_list,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    load_model.load_paddlev1_vars(place)
+    load_model.load_and_set_vars(place)
+    #load_model.load_paddlev1_vars(place)
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
@@ -85,8 +83,9 @@ def train(train_file_list,
             loss_v = exe.run(fluid.default_main_program(),
                              feed=feeder.feed(data),
                              fetch_list=[loss])
-            print("Pass {0}, batch {1}, loss {2}"
-                  .format(pass_id, batch_id, loss_v[0]))
+            if batch_id % 20 == 0:
+                print("Pass {0}, batch {1}, loss {2}"
+                      .format(pass_id, batch_id, loss_v[0]))
         test(pass_id)
 
         if pass_id % 10 == 0:
@@ -100,6 +99,8 @@ if __name__ == '__main__':
     data_args = reader.Settings(
         data_dir='./data',
         label_file='label_list',
+        apply_distort=True,
+        apply_expand=True,
         resize_h=300,
         resize_w=300,
         mean_value=[127.5, 127.5, 127.5])
