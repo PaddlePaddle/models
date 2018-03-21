@@ -11,7 +11,6 @@
 ├── images              # 文档中的图片
 │   ├── cnn_net.png
 │   └── dnn_net.png
-├── index.html          # 文档
 ├── infer.py            # 预测脚本
 ├── network_conf.py     # 本例中涉及的各种网络结构均定义在此文件中，若进一步修改模型结构，请查看此文件
 ├── reader.py           # 读取数据接口，若使用自定义格式的数据，请查看此文件
