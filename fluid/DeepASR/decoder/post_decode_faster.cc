@@ -14,7 +14,6 @@ limitations under the License. */
 
 #include "post_decode_faster.h"
 
-using namespace kaldi;
 typedef kaldi::int32 int32;
 using fst::SymbolTable;
 using fst::VectorFst;
@@ -27,11 +26,11 @@ Decoder::Decoder(std::string word_syms_filename,
       "Decode, reading log-likelihoods (of transition-ids or whatever symbol "
       "is on the graph) as matrices.";
 
-  ParseOptions po(usage);
+  kaldi::ParseOptions po(usage);
   binary = true;
   acoustic_scale = 1.5;
   allow_partial = true;
-  FasterDecoderOptions decoder_opts;
+  kaldi::FasterDecoderOptions decoder_opts;
   decoder_opts.Register(&po, true);  // true == include obscure settings.
   po.Register("binary", &binary, "Write output in binary mode");
   po.Register("allow-partial",
@@ -59,7 +58,7 @@ Decoder::Decoder(std::string word_syms_filename,
   // lot of virtual memory.
   decode_fst = fst::ReadFstKaldi(fst_in_filename);
 
-  decoder = new FasterDecoder(*decode_fst, decoder_opts);
+  decoder = new kaldi::FasterDecoder(*decode_fst, decoder_opts);
 }
 
 
@@ -70,17 +69,17 @@ Decoder::~Decoder() {
 }
 
 std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
-  SequentialBaseFloatMatrixReader posterior_reader(posterior_rspecifier);
+  kaldi::SequentialBaseFloatMatrixReader posterior_reader(posterior_rspecifier);
   std::vector<std::string> decoding_results;
 
-  BaseFloat tot_like = 0.0;
+  kaldi::BaseFloat tot_like = 0.0;
   kaldi::int64 frame_count = 0;
   int num_success = 0, num_fail = 0;
 
-  Timer timer;
+  kaldi::Timer timer;
   for (; !posterior_reader.Done(); posterior_reader.Next()) {
     std::string key = posterior_reader.Key();
-    Matrix<BaseFloat> loglikes(posterior_reader.Value());
+    kaldi::Matrix<kaldi::BaseFloat> loglikes(posterior_reader.Value());
 
     if (loglikes.NumRows() == 0) {
       KALDI_WARN << "Zero-length utterance: " << key;
@@ -92,10 +91,10 @@ std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
     loglikes.ApplyLog();
     loglikes.AddVecToRows(-1.0, logprior);
 
-    DecodableMatrixScaled decodable(loglikes, acoustic_scale);
+    kaldi::DecodableMatrixScaled decodable(loglikes, acoustic_scale);
     decoder->Decode(&decodable);
 
-    VectorFst<LatticeArc> decoded;  // linear FST.
+    VectorFst<kaldi::LatticeArc> decoded;  // linear FST.
 
     if ((allow_partial || decoder->ReachedFinal()) &&
         decoder->GetBestPath(&decoded)) {
@@ -106,7 +105,7 @@ std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
 
       std::vector<int32> alignment;
       std::vector<int32> words;
-      LatticeWeight weight;
+      kaldi::LatticeWeight weight;
       frame_count += loglikes.NumRows();
 
       GetLinearSymbolSequence(decoded, &alignment, &words, &weight);
@@ -121,7 +120,7 @@ std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
         }
         decoding_results.push_back(res);
       }
-      BaseFloat like = -weight.Value1() - weight.Value2();
+      kaldi::BaseFloat like = -weight.Value1() - weight.Value2();
       tot_like += like;
     } else {
       num_fail++;
