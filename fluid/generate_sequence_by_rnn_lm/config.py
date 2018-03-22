@@ -32,13 +32,3 @@ rnn_type = "lstm"  # "gru" or "lstm"
 emb_dim = 256
 hidden_size = 64
 stacked_rnn_num = 2
-
-##################  for text generation  ##################
-gen_file = "data/train_data_examples.txt"
-gen_result = "data/gen_result.txt"
-max_gen_len = 25  # the max number of words to generate
-beam_size = 5
-model_path = "models/rnn_lm_pass_00000.tar.gz"
-
-if not os.path.exists(model_save_dir):
-    os.mkdir(model_save_dir)
