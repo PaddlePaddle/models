@@ -15,6 +15,7 @@ from paddle.fluid.executor import Executor
 
 from model import seq_to_seq_net
 from config import TrainConfig as train_conf
+from config import ModelConfig as model_conf
 
 
 def to_lodtensor(data, place):
@@ -54,15 +55,37 @@ def train():
             src_word_idx_ = pd.read_input(src_word_idx)
             trg_word_idx_ = pd.read_input(trg_word_idx)
             label_ = pd.read_input(label)
-            avg_cost = seq_to_seq_net(src_word_idx_, trg_word_idx_, label_)
+            avg_cost = seq_to_seq_net(
+                src_word_idx_,
+                trg_word_idx_,
+                label_,
+                embedding_dim=model_conf.embedding_dim,
+                encoder_size=model_conf.encoder_size,
+                decoder_size=model_conf.decoder_size,
+                source_dict_dim=model_conf.source_dict_dim,
+                target_dict_dim=model_conf.target_dict_dim,
+                is_generating=model_conf.is_generating,
+                beam_size=model_conf.beam_size,
+                max_length=model_conf.max_length)
             pd.write_output(avg_cost)
         avg_cost = pd()
         avg_cost = fluid.layers.mean(x=avg_cost)
     else:
-        avg_cost = seq_to_seq_net(src_word_idx, trg_word_idx, label)
+        avg_cost = seq_to_seq_net(
+            src_word_idx,
+            trg_word_idx,
+            label,
+            embedding_dim=model_conf.embedding_dim,
+            encoder_size=model_conf.encoder_size,
+            decoder_size=model_conf.decoder_size,
+            source_dict_dim=model_conf.source_dict_dim,
+            target_dict_dim=model_conf.target_dict_dim,
+            is_generating=model_conf.is_generating,
+            beam_size=model_conf.beam_size,
+            max_length=model_conf.max_length)
 
     feeding_list = ["source_sequence", "target_sequence", "label_sequence"]
-
+    # clone from default main program
     inference_program = fluid.default_main_program().clone()
 
     optimizer = fluid.optimizer.Adam(learning_rate=train_conf.learning_rate)
@@ -70,16 +93,16 @@ def train():
 
     train_batch_generator = paddle.batch(
         paddle.reader.shuffle(
-            paddle.dataset.wmt16.train(train_conf.source_dict_dim,
-                                       train_conf.target_dict_dim),
-            buf_size=1000),
+            paddle.dataset.wmt16.train(model_conf.source_dict_dim,
+                                       model_conf.target_dict_dim),
+            buf_size=train_conf.buf_size),
         batch_size=train_conf.batch_size)
 
     test_batch_generator = paddle.batch(
         paddle.reader.shuffle(
-            paddle.dataset.wmt16.test(train_conf.source_dict_dim,
-                                      train_conf.target_dict_dim),
-            buf_size=1000),
+            paddle.dataset.wmt16.test(model_conf.source_dict_dim,
+                                      model_conf.target_dict_dim),
+            buf_size=train_conf.buf_size),
         batch_size=train_conf.batch_size)
 
     place = core.CUDAPlace(0) if train_conf.use_gpu else core.CPUPlace()

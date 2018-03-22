@@ -5,8 +5,6 @@ from __future__ import print_function
 
 import paddle.fluid as fluid
 
-from config import ModelConfig as model_conf
-
 
 def lstm_step(x_t, hidden_t_prev, cell_t_prev, size):
     def linear(inputs):
@@ -29,16 +27,10 @@ def lstm_step(x_t, hidden_t_prev, cell_t_prev, size):
     return hidden_t, cell_t
 
 
-def seq_to_seq_net(src_word_idx, trg_word_idx, label):
+def seq_to_seq_net(src_word_idx, trg_word_idx, label, embedding_dim,
+                   encoder_size, decoder_size, source_dict_dim, target_dict_dim,
+                   is_generating, beam_size, max_length):
     """Construct a seq2seq network."""
-    embedding_dim = model_conf.embedding_dim
-    encoder_size = model_conf.encoder_size
-    decoder_size = model_conf.decoder_size
-    source_dict_dim = model_conf.source_dict_dim
-    target_dict_dim = model_conf.target_dict_dim
-    is_generating = model_conf.is_generating
-    beam_size = model_conf.beam_size
-    max_length = model_conf.max_length
 
     def bi_lstm_encoder(input_seq, gate_size):
         # Linear transformation part for input gate, output gate, forget gate
@@ -93,13 +85,12 @@ def seq_to_seq_net(src_word_idx, trg_word_idx, label):
             decoder_state_expand = fluid.layers.sequence_expand(
                 x=decoder_state_proj, y=encoder_proj)
             concated = fluid.layers.concat(
-                input=[decoder_state_expand, encoder_proj], axis=1)
+                input=[encoder_proj, decoder_state_expand], axis=1)
             attention_weights = fluid.layers.fc(input=concated,
                                                 size=1,
                                                 act='tanh',
                                                 bias_attr=False)
-            attention_weights = fluid.layers.sequence_softmax(
-                x=attention_weights)
+            attention_weights = fluid.layers.sequence_softmax(attention_weights)
             weigths_reshape = fluid.layers.reshape(
                 x=attention_weights, shape=[-1])
             scaled = fluid.layers.elementwise_mul(
