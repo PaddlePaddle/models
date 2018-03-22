@@ -29,10 +29,10 @@ Text classification is an important basic work in the filed of Natural Language 
 
 The trained classifier can **automatically** predict whether the emotion of new user reviews are positive or negative, and play an important role in public opinion monitoring, marketing planning, product brand value assessment and other tasks. The above process is also the routine process that we need to follow for a new text classification task. It can be seen that the great advantage of the deep learning algorithm is that **there is no need to extract complex features and only need to clean and annotate the original text**.
 
-[PaddleBook](https://github.com/PaddlePaddle/book) 中的[情感分类](https://github.com/PaddlePaddle/book/blob/develop/06.understand_sentiment/README.cn.md)介绍了一个较为复杂的栈式双向 LSTM 模型，循环神经网络在一些需要理解语言语义的复杂任务中有着明显的优势，但计算量大，通常对调参技巧也有着更高的要求。在对计算时间有一定限制的任务中，也会考虑其它模型。除了计算时间的考量，更重要的一点：**模型选择往往是机器学习任务成功的基础**。机器学习任务的目标始终是提高泛化能力，也就是对未知的新的样本预测的能力：
+The [Emotional Classification](https://github.com/PaddlePaddle/book/blob/develop/06.understand_sentiment/README.md) in [PaddleBook](https://github.com/PaddlePaddle/book) introduces a complex bidirectional LSTM model. RNN has obvious advantages in some complicated tasks that need to understand language and semantics, but it has a large amount of computation and usually has higher requirements for parameter adjustment techniques. Other models are also considered in a task that has a certain limit on the time of calculation. In addition to time, it is more important that **model selection is the basis for the success of machine learning tasks**. The goal of a machine learning task is always to improve the generalization ability, that is, the ability to predict the unknown new sample：
 
-1. 简单模型拟合能力不足，无法精确拟合训练样本，更加无法期待模型能够准确地预测没有出现在训练样本集中的未知样本，这就是**欠拟合**问题。
-2. 然而，过于复杂的模型轻松“记忆”了训练样本集中的每一个样本，但对于没有出现在训练样本集中的未知样本却毫无识别能力，这就是**过拟合**问题。
+1. The simple model can't fit the training samples accurately, and can't accurately predict the unknown samples that have not appeared in the training set. This is the **underfitting**.
+2. However, too complex models can easily memorizing every sample in training samples, but it has no recognition ability for unknown samples that do not appear in training set. This is the **overfitting**.
 
 "No Free Lunch (NFL)" 是机器学习任务基本原则之一：没有任何一种模型是天生优于其他模型的。模型的设计和选择建立在了解不同模型特性的基础之上，但同时也是一个多次实验评估的过程。在本例中，我们继续向大家介绍几种最常用的文本分类模型，它们的能力和复杂程度不同，帮助大家对比学习这些模型学习效果之间的差异，针对不同的场景选择使用。
 
