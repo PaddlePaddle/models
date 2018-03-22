@@ -40,9 +40,6 @@ private:
   kaldi::FasterDecoder *decoder;
   kaldi::Vector<kaldi::BaseFloat> logprior;
 
-  kaldi::Int32VectorWriter *words_writer;
-  kaldi::Int32VectorWriter *alignment_writer;
-
   bool binary;
   kaldi::BaseFloat acoustic_scale;
   bool allow_partial;

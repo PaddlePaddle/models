@@ -27,8 +27,6 @@ Decoder::Decoder(std::string word_syms_filename,
       "Decode, reading log-likelihoods (of transition-ids or whatever symbol "
       "is on the graph) as matrices.";
 
-  std::string words_wspecifier = "ark,t:out.ark";
-  std::string alignment_wspecifier = "";
   ParseOptions po(usage);
   binary = true;
   acoustic_scale = 1.5;
@@ -43,9 +41,6 @@ Decoder::Decoder(std::string word_syms_filename,
               &acoustic_scale,
               "Scaling factor for acoustic likelihoods");
 
-  words_writer = new Int32VectorWriter(words_wspecifier);
-
-  alignment_writer = new Int32VectorWriter(alignment_wspecifier);
   word_syms = NULL;
   if (word_syms_filename != "") {
     word_syms = fst::SymbolTable::ReadText(word_syms_filename);
@@ -72,8 +67,6 @@ Decoder::~Decoder() {
   if (!word_syms) delete word_syms;
   delete decode_fst;
   delete decoder;
-  delete words_writer;
-  delete alignment_writer;
 }
 
 std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
@@ -88,8 +81,6 @@ std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
   for (; !posterior_reader.Done(); posterior_reader.Next()) {
     std::string key = posterior_reader.Key();
     Matrix<BaseFloat> loglikes(posterior_reader.Value());
-    KALDI_LOG << key << " " << loglikes.NumRows() << " x "
-              << loglikes.NumCols();
 
     if (loglikes.NumRows() == 0) {
       KALDI_WARN << "Zero-length utterance: " << key;
@@ -120,8 +111,6 @@ std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
 
       GetLinearSymbolSequence(decoded, &alignment, &words, &weight);
 
-      words_writer->Write(key, words);
-      if (alignment_writer->IsOpen()) alignment_writer->Write(key, alignment);
       if (word_syms != NULL) {
         std::string res;
         for (size_t i = 0; i < words.size(); i++) {
@@ -129,16 +118,11 @@ std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
           res += s;
           if (s == "")
             KALDI_ERR << "Word-id " << words[i] << " not in symbol table.";
-          std::cerr << s << ' ';
         }
         decoding_results.push_back(res);
       }
       BaseFloat like = -weight.Value1() - weight.Value2();
       tot_like += like;
-      KALDI_LOG << "Log-like per frame for utterance " << key << " is "
-                << (like / loglikes.NumRows()) << " over " << loglikes.NumRows()
-                << " frames.";
-
     } else {
       num_fail++;
       KALDI_WARN << "Did not successfully decode utterance " << key
