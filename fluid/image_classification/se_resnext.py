@@ -270,7 +270,6 @@ if __name__ == '__main__':
     lr_strategy = {"bd": bd, "lr": lr}
 
     use_nccl = True
-
     # layers: 50, 152
     layers = 50
 
