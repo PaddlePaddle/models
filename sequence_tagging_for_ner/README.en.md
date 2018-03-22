@@ -66,11 +66,11 @@ We use [CoNLL 2003 NER TASK](http://www.clips.uantwerpen.be/conll2003/ner/)as a 
     1. a dictionary for words
     2. pre-trained word vectors
     3. a dictionary for labels
-   dictionary for words and pre-trained vectors come from [Stanford CS224d](http://cs224d.stanford.edu/) work. 
+   dictionary for words and pre-trained vectors come from [Stanford CS224d](http://cs224d.stanford.edu/) work.
    run the doenload.sh in data directory will get the dictionary for words and vectors.
    data/vocab.txt for the dictionary for words and data/wordVectors.txt for vectors.
 
-CoNLL 2003 original data format：
+CoNLL 2003 original data format:
 
 ```
 U.N.         NNP  I-NP  I-ORG
@@ -98,7 +98,7 @@ In reader.py,  I-TYPE scheme is transformed into BIO method scheme. Here are som
 ## Run
 ### Implement a data reader interface
 
-The data_reader funtion in reader.py generate 3 return data: the word's index in dictionary, is it a upper case, the tagged lable of the word.   These data are response for 3 input data_layer defined at network_conf.ner_net.
+The data_reader funtion in reader.py generate 3 return data: the word's index in dictionary, is it a upper case, the tagged lable of the word.These data are response for 3 input data_layer defined at network_conf.ner_net.
 
 ### Train
 
