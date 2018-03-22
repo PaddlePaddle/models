@@ -17,6 +17,12 @@ import glob
 from distutils.core import setup, Extension
 from distutils.sysconfig import get_config_vars
 
+try:
+    kaldi_root = os.environ['KALDI_ROOT']
+except:
+    raise ValueError("Enviroment variable 'KALDI_ROOT' is not defined. Please "
+                     "install kaldi and export KALDI_ROOT=<kaldi's root dir> .")
+
 args = [
     '-std=c++11', '-Wno-sign-compare', '-Wno-unused-variable',
     '-Wno-unused-local-typedefs', '-Wno-unused-but-set-variable',
@@ -35,21 +41,21 @@ LIBS = [
 ]
 
 LIB_DIRS = [
-    'kaldi/tools/openfst/lib', 'kaldi/src/base', 'kaldi/src/matrix',
-    'kaldi/src/util', 'kaldi/src/tree', 'kaldi/src/hmm', 'kaldi/src/fstext',
-    'kaldi/src/decoder', 'kaldi/src/lat'
+    'tools/openfst/lib', 'src/base', 'src/matrix', 'src/util', 'src/tree',
+    'src/hmm', 'src/fstext', 'src/decoder', 'src/lat'
 ]
+LIB_DIRS = [os.path.join(kaldi_root, path) for path in LIB_DIRS]
 
 ext_modules = [
     Extension(
         'post_decode_faster',
         ['pybind.cc', 'post_decode_faster.cc'],
         include_dirs=[
-            'pybind11/include', '.', 'kaldi/src/',
-            'kaldi/tools/openfst/src/include'
+            'pybind11/include', '.', os.path.join(kaldi_root, 'src'),
+            os.path.join(kaldi_root, 'tools/openfst/src/include')
         ],
-        libraries=LIBS,
         language='c++',
+        libraries=LIBS,
         library_dirs=LIB_DIRS,
         runtime_library_dirs=LIB_DIRS,
         extra_compile_args=args, ),
