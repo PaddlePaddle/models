@@ -15,20 +15,19 @@ The following is a description of the files contained in this example:
 ├── network_conf.py     # The various network structures involved in this example are defined in this file, and if you further modify the model structure, look at this file
 ├── reader.py           # The interface used to read data, if you use custom format data, look at this file
 ├── README.md           # The document
-├── run.sh              # 
-├── train.py            # 训练脚本
-└── utils.py            # 定义通用的函数，例如：打印日志、解析命令行参数、构建字典、加载字典等
+├── run.sh              # Running script for training task, if you run the script directly, start the training task with the default parameters
+├── train.py            # training script
+└── utils.py            # Define common functions. Such as printing logs, parsing command line parameters, building dictionaries, loading dictionaries, and so on
 ```
 
-## 简介
-文本分类任务根据给定一条文本的内容，判断该文本所属的类别，是自然语言处理领域的一项重要的基础任务。[PaddleBook](https://github.com/PaddlePaddle/book) 中的[情感分类](https://github.com/PaddlePaddle/book/blob/develop/06.understand_sentiment/README.cn.md)一课，正是一个典型的文本分类任务，任务流程如下：
+## Introduction
+Text classification is an important basic work in the filed of Natural Language Processing.The task is to assign a text to one or more classes or categories, The [Emotional Classification](https://github.com/PaddlePaddle/book/blob/develop/06.understand_sentiment/README.md) in [PaddleBook](https://github.com/PaddlePaddle/book) is a typical text classification task. The process is as follows:
+1. Collect user comment data from the movie review site.
+2. Clean and annotate data.
+3. Design the model.
+4. Evaluate learning effect of the model.
 
-1. 收集电影评论网站的用户评论数据。
-2. 清洗，标记。
-3. 模型设计。
-4. 模型学习效果评估。
-
-训练好的分类器能够**自动判断**新出现的用户评论的情感是正面还是负面，在舆情监控、营销策划、产品品牌价值评估等任务中，能够起到重要作用。以上过程也是我们去完成一个新的文本分类任务需要遵循的常规流程。可以看到，深度学习方法的巨大优势体现在：**免除复杂的特征的设计，只需要对原始文本进行基础的清理、标注即可**。
+The trained classifier can **automatically** predict whether the emotion of new user reviews are positive or negative, and play an important role in public opinion monitoring, marketing planning, product brand value assessment and other tasks. The above process is also the routine process that we need to follow for a new text classification task. It can be seen that the great advantage of the deep learning algorithm is that **there is no need to extract complex features and only need to clean and annotate the original text**.
 
 [PaddleBook](https://github.com/PaddlePaddle/book) 中的[情感分类](https://github.com/PaddlePaddle/book/blob/develop/06.understand_sentiment/README.cn.md)介绍了一个较为复杂的栈式双向 LSTM 模型，循环神经网络在一些需要理解语言语义的复杂任务中有着明显的优势，但计算量大，通常对调参技巧也有着更高的要求。在对计算时间有一定限制的任务中，也会考虑其它模型。除了计算时间的考量，更重要的一点：**模型选择往往是机器学习任务成功的基础**。机器学习任务的目标始终是提高泛化能力，也就是对未知的新的样本预测的能力：
 
