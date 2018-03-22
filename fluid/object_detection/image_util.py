@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageEnhance
 import numpy as np
 import random
 import math
@@ -159,3 +159,77 @@ def crop_image(img, bbox_labels, sample_bbox, image_width, image_height):
     sample_img = img[ymin:ymax, xmin:xmax]
     sample_labels = transform_labels(bbox_labels, sample_bbox)
     return sample_img, sample_labels
+
+
+def random_brightness(img, settings):
+    prob = random.uniform(0, 1)
+    if prob < settings._brightness_prob:
+        delta = random.uniform(-settings._brightness_delta,
+                               settings._brightness_delta) + 1
+        img = ImageEnhance.Brightness(img).enhance(delta)
+    return img
+
+
+def random_contrast(img, settings):
+    prob = random.uniform(0, 1)
+    if prob < settings._contrast_prob:
+        delta = random.uniform(-settings._contrast_delta,
+                               settings._contrast_delta) + 1
+        img = ImageEnhance.Contrast(img).enhance(delta)
+    return img
+
+
+def random_saturation(img, settings):
+    prob = random.uniform(0, 1)
+    if prob < settings._saturation_prob:
+        delta = random.uniform(-settings._saturation_delta,
+                               settings._saturation_delta) + 1
+        img = ImageEnhance.Color(img).enhance(delta)
+    return img
+
+
+def random_hue(img, settings):
+    prob = random.uniform(0, 1)
+    if prob < settings._hue_prob:
+        delta = random.uniform(-settings._hue_delta, settings._hue_delta)
+        img_hsv = np.array(img.convert('HSV'))
+        img_hsv[:, :, 0] = img_hsv[:, :, 0] + delta
+        img = Image.fromarray(img_hsv, mode='HSV').convert('RGB')
+    return img
+
+
+def distort_image(img, settings):
+    prob = random.uniform(0, 1)
+    # Apply different distort order
+    if prob > 0.5:
+        img = random_brightness(img, settings)
+        img = random_contrast(img, settings)
+        img = random_saturation(img, settings)
+        img = random_hue(img, settings)
+    else:
+        img = random_brightness(img, settings)
+        img = random_saturation(img, settings)
+        img = random_hue(img, settings)
+        img = random_contrast(img, settings)
+    return img
+
+
+def expand_image(img, bbox_labels, img_width, img_height, settings):
+    prob = random.uniform(0, 1)
+    if prob < settings._hue_prob:
+        expand_ratio = random.uniform(1, settings._expand_max_ratio)
+        if expand_ratio - 1 >= 0.01:
+            height = int(img_height * expand_ratio)
+            width = int(img_width * expand_ratio)
+            h_off = math.floor(random.uniform(0, height - img_height))
+            w_off = math.floor(random.uniform(0, width - img_width))
+            expand_bbox = bbox(-w_off / img_width, -h_off / img_height,
+                               (width - w_off) / img_width,
+                               (height - h_off) / img_height)
+            expand_img = np.ones((height, width, 3))
+            expand_img = np.uint8(expand_img * np.squeeze(settings._img_mean))
+            expand_img = Image.fromarray(expand_img)
+            expand_img.paste(img, (int(w_off), int(h_off)))
+            bbox_labels = transform_labels(bbox_labels, expand_bbox)
+            return expand_img, bbox_labels
+    return img, bbox_labels
