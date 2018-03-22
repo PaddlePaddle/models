@@ -14,10 +14,36 @@ limitations under the License. */
 
 #include <string>
 #include <vector>
+#include "base/kaldi-common.h"
+#include "base/timer.h"
+#include "decoder/decodable-matrix.h"
+#include "decoder/faster-decoder.h"
+#include "fstext/fstext-lib.h"
+#include "hmm/transition-model.h"
+#include "lat/kaldi-lattice.h"  // for {Compact}LatticeArc
+#include "tree/context-dep.h"
+#include "util/common-utils.h"
 
-std::vector<std::string> decode(std::string word_syms_filename,
-                                std::string fst_in_filename,
-                                std::string logprior_rxfilename,
-                                std::string posterior_respecifier,
-                                std::string words_wspecifier,
-                                std::string alignment_wspecifier = "");
+
+class Decoder {
+public:
+  Decoder(std::string word_syms_filename,
+          std::string fst_in_filename,
+          std::string logprior_rxfilename);
+  ~Decoder();
+
+  std::vector<std::string> decode(std::string posterior_rspecifier);
+
+private:
+  fst::SymbolTable *word_syms;
+  fst::VectorFst<fst::StdArc> *decode_fst;
+  kaldi::FasterDecoder *decoder;
+  kaldi::Vector<kaldi::BaseFloat> logprior;
+
+  kaldi::Int32VectorWriter *words_writer;
+  kaldi::Int32VectorWriter *alignment_writer;
+
+  bool binary;
+  kaldi::BaseFloat acoustic_scale;
+  bool allow_partial;
+};

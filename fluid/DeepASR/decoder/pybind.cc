@@ -20,10 +20,12 @@ limitations under the License. */
 namespace py = pybind11;
 
 PYBIND11_MODULE(post_decode_faster, m) {
-  m.doc() = "Decode function for Deep ASR model";
+  m.doc() = "Decoder for Deep ASR model";
 
-  m.def("decode",
-        &decode,
-        "Decode one input probability matrix "
-        "and return the transcription");
+  py::class_<Decoder>(m, "Decoder")
+      .def(py::init<std::string, std::string, std::string>())
+      .def("decode",
+           &Decoder::decode,
+           "Decode one input probability matrix "
+           "and return the transcription");
 }
