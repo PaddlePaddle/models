@@ -1,4 +1,7 @@
 import os
+import numpy as np
+import time
+import sys
 import paddle.v2 as paddle
 import paddle.fluid as fluid
 import reader
@@ -65,20 +68,44 @@ def bottleneck_block(input, num_filters, stride, cardinality, reduction_ratio):
     return fluid.layers.elementwise_add(x=short, y=scale, act='relu')
 
 
-def SE_ResNeXt(input, class_dim, infer=False):
-    cardinality = 64
-    reduction_ratio = 16
-    depth = [3, 8, 36, 3]
-    num_filters = [128, 256, 512, 1024]
+def SE_ResNeXt(input, class_dim, infer=False, layers=50):
+    supported_layers = [50, 152]
+    if layers not in supported_layers:
+        print("supported layers are", supported_layers, "but input layer is ",
+              layers)
+        exit()
+    if layers == 50:
+        cardinality = 32
+        reduction_ratio = 16
+        depth = [3, 4, 6, 3]
+        num_filters = [128, 256, 512, 1024]
 
-    conv = conv_bn_layer(
-        input=input, num_filters=64, filter_size=3, stride=2, act='relu')
-    conv = conv_bn_layer(
-        input=conv, num_filters=64, filter_size=3, stride=1, act='relu')
-    conv = conv_bn_layer(
-        input=conv, num_filters=128, filter_size=3, stride=1, act='relu')
-    conv = fluid.layers.pool2d(
-        input=conv, pool_size=3, pool_stride=2, pool_padding=1, pool_type='max')
+        conv = conv_bn_layer(
+            input=input, num_filters=64, filter_size=7, stride=2, act='relu')
+        conv = fluid.layers.pool2d(
+            input=conv,
+            pool_size=3,
+            pool_stride=2,
+            pool_padding=1,
+            pool_type='max')
+    elif layers == 152:
+        cardinality = 64
+        reduction_ratio = 16
+        depth = [3, 8, 36, 3]
+        num_filters = [128, 256, 512, 1024]
+
+        conv = conv_bn_layer(
+            input=input, num_filters=64, filter_size=3, stride=2, act='relu')
+        conv = conv_bn_layer(
+            input=conv, num_filters=64, filter_size=3, stride=1, act='relu')
+        conv = conv_bn_layer(
+            input=conv, num_filters=128, filter_size=3, stride=1, act='relu')
+        conv = fluid.layers.pool2d(
+            input=conv,
+            pool_size=3,
+            pool_stride=2,
+            pool_padding=1,
+            pool_type='max')
 
     for block in range(len(depth)):
         for i in range(depth[block]):
@@ -104,7 +131,10 @@ def train(learning_rate,
           num_passes,
           init_model=None,
           model_save_dir='model',
-          parallel=True):
+          parallel=True,
+          use_nccl=True,
+          lr_strategy=None,
+          layers=50):
     class_dim = 1000
     image_shape = [3, 224, 224]
 
@@ -113,36 +143,52 @@ def train(learning_rate,
 
     if parallel:
         places = fluid.layers.get_places()
-        pd = fluid.layers.ParallelDo(places)
+        pd = fluid.layers.ParallelDo(places, use_nccl=use_nccl)
 
         with pd.do():
             image_ = pd.read_input(image)
             label_ = pd.read_input(label)
-            out = SE_ResNeXt(input=image_, class_dim=class_dim)
+            out = SE_ResNeXt(input=image_, class_dim=class_dim, layers=layers)
             cost = fluid.layers.cross_entropy(input=out, label=label_)
             avg_cost = fluid.layers.mean(x=cost)
-            accuracy = fluid.layers.accuracy(input=out, label=label_)
+            acc_top1 = fluid.layers.accuracy(input=out, label=label_, k=1)
+            acc_top5 = fluid.layers.accuracy(input=out, label=label_, k=5)
             pd.write_output(avg_cost)
-            pd.write_output(accuracy)
+            pd.write_output(acc_top1)
+            pd.write_output(acc_top5)
 
-        avg_cost, accuracy = pd()
+        avg_cost, acc_top1, acc_top5 = pd()
         avg_cost = fluid.layers.mean(x=avg_cost)
-        accuracy = fluid.layers.mean(x=accuracy)
+        acc_top1 = fluid.layers.mean(x=acc_top1)
+        acc_top5 = fluid.layers.mean(x=acc_top5)
     else:
-        out = SE_ResNeXt(input=image, class_dim=class_dim)
+        out = SE_ResNeXt(input=image, class_dim=class_dim, layers=layers)
         cost = fluid.layers.cross_entropy(input=out, label=label)
         avg_cost = fluid.layers.mean(x=cost)
-        accuracy = fluid.layers.accuracy(input=out, label=label)
+        acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
+        acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
 
-    optimizer = fluid.optimizer.Momentum(
-        learning_rate=learning_rate,
-        momentum=0.9,
-        regularization=fluid.regularizer.L2Decay(1e-4))
+    if lr_strategy is None:
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=learning_rate,
+            momentum=0.9,
+            regularization=fluid.regularizer.L2Decay(1e-4))
+    else:
+        bd = lr_strategy["bd"]
+        lr = lr_strategy["lr"]
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=fluid.layers.piecewise_decay(
+                boundaries=bd, values=lr),
+            momentum=0.9,
+            regularization=fluid.regularizer.L2Decay(1e-4))
+
     opts = optimizer.minimize(avg_cost)
+    fluid.memory_optimize(fluid.default_main_program())
 
     inference_program = fluid.default_main_program().clone()
     with fluid.program_guard(inference_program):
-        inference_program = fluid.io.get_inference_program([avg_cost, accuracy])
+        inference_program = fluid.io.get_inference_program(
+            [avg_cost, acc_top1, acc_top5])
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -156,34 +202,84 @@ def train(learning_rate,
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     for pass_id in range(num_passes):
+        train_info = [[], [], []]
+        test_info = [[], [], []]
         for batch_id, data in enumerate(train_reader()):
-            loss = exe.run(fluid.default_main_program(),
-                           feed=feeder.feed(data),
-                           fetch_list=[avg_cost])
-            print("Pass {0}, batch {1}, loss {2}".format(pass_id, batch_id,
-                                                         float(loss[0])))
+            t1 = time.time()
+            loss, acc1, acc5 = exe.run(
+                fluid.default_main_program(),
+                feed=feeder.feed(data),
+                fetch_list=[avg_cost, acc_top1, acc_top5])
+            t2 = time.time()
+            period = t2 - t1
+            train_info[0].append(loss[0])
+            train_info[1].append(acc1[0])
+            train_info[2].append(acc5[0])
+            if batch_id % 10 == 0:
+                print(
+                    "Pass {0}, trainbatch {1}, loss {2}, acc1 {3}, acc5 {4} time {5}".
+                    format(pass_id, batch_id, loss[0], acc1[0], acc5[0],
+                           "%2.2f sec" % period))
+                sys.stdout.flush()
 
-        total_loss = 0.0
-        total_acc = 0.0
-        total_batch = 0
+        train_loss = np.array(train_info[0]).mean()
+        train_acc1 = np.array(train_info[1]).mean()
+        train_acc5 = np.array(train_info[2]).mean()
         for data in test_reader():
-            loss, acc = exe.run(inference_program,
-                                feed=feeder.feed(data),
-                                fetch_list=[avg_cost, accuracy])
-            total_loss += float(loss)
-            total_acc += float(acc)
-            total_batch += 1
-        print("End pass {0}, test_loss {1}, test_acc {2}".format(
-            pass_id, total_loss / total_batch, total_acc / total_batch))
+            t1 = time.time()
+            loss, acc1, acc5 = exe.run(
+                inference_program,
+                feed=feeder.feed(data),
+                fetch_list=[avg_cost, acc_top1, acc_top5])
+            t2 = time.time()
+            period = t2 - t1
+            test_info[0].append(loss[0])
+            test_info[1].append(acc1[0])
+            test_info[2].append(acc5[0])
+            if batch_id % 10 == 0:
+                print(
+                    "Pass {0}, testbatch {1}, loss {2}, acc1 {3}, acc5 {4} time {5}".
+                    format(pass_id, batch_id, loss[0], acc1[0], acc5[0],
+                           "%2.2f sec" % period))
+                sys.stdout.flush()
+
+        test_loss = np.array(test_info[0]).mean()
+        test_acc1 = np.array(test_info[1]).mean()
+        test_acc5 = np.array(test_info[2]).mean()
+
+        print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3},\
+              test_loss {4}, test_acc1 {5}, test_acc5 {6}"
+                                                          .format(pass_id,  \
+              train_loss, train_acc1, train_acc5, test_loss, test_acc1, test_acc5))
+        sys.stdout.flush()
 
         model_path = os.path.join(model_save_dir, str(pass_id))
-        fluid.io.save_inference_model(model_path, ['image'], [out], exe)
+        if not os.path.isdir(model_path):
+            os.makedirs(model_path)
+        fluid.io.save_persistables(exe, model_path)
 
 
 if __name__ == '__main__':
+    epoch_points = [30, 60, 90]
+    total_images = 1281167
+    batch_size = 256
+    step = int(total_images / batch_size + 1)
+    bd = [e * step for e in epoch_points]
+    lr = [0.1, 0.01, 0.001, 0.0001]
+
+    lr_strategy = {"bd": bd, "lr": lr}
+
+    use_nccl = True
+
+    # layers: 50, 152
+    layers = 50
+
     train(
         learning_rate=0.1,
-        batch_size=8,
-        num_passes=100,
+        batch_size=batch_size,
+        num_passes=120,
         init_model=None,
-        parallel=False)
+        parallel=True,
+        use_nccl=True,
+        lr_strategy=lr_strategy,
+        layers=layers)
