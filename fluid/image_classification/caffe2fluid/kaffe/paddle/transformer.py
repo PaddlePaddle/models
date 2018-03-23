@@ -133,7 +133,7 @@ class TensorFlowMapper(NodeMapper):
         # We'll account for that here.
         alpha = params.alpha / float(params.local_size)
         return TensorFlowNode('lrn',
-                              int(params.local_size / 2), alpha, params.beta)
+                              params.local_size, alpha, params.beta)
 
     def map_concat(self, node):
         return TensorFlowNode('concat', node.parameters.axis)
@@ -191,22 +191,33 @@ class TensorFlowEmitter(object):
     def emit_setup_def(self):
         return self.statement('def setup(self):')
 
-    def emit_convert_def(self, input_nodes):
-        def data_layer_def(name, shape, dtype=None):
-            if dtype is None:
-                dtype = 'float32'
+    def emit_shape_def(self, input_nodes):
+        self.outdent()
+        func_def = self.statement('@classmethod')
+        func_def += self.statement('def input_shapes(cls):')
+        self.indent()
 
-            layer_var = name + '_layer'
-            shape = [str(s) for s in shape[1:]]
-            layer_def = '%s = fluid.layers.data(name="%s", shape=[%s], dtype="%s")'\
-                    % (layer_var, name, ','.join(shape), dtype)
-            return layer_var, layer_def
-
-        codes = []
-        inputs = {}
+        input_shapes = {}
         for n in input_nodes:
             name = n.name
-            layer_var, layer_def = data_layer_def(n.name, n.output_shape)
+            output_shape = n.output_shape
+            shape = [str(s) for s in output_shape[1:]]
+            input_shapes[name] = ', '.join(shape)
+        input_shapes = ['"%s": [%s]' % (n, l) for n, l in input_shapes.items()]
+        shape_str = ','.join(input_shapes)
+        func_def += self.statement('return {%s}' % (shape_str))
+        return '\n\n' + func_def
+
+    def emit_convert_def(self, input_nodes):
+        codes = []
+        inputs = {}
+        codes.append('shapes = cls.input_shapes()')
+        for n in input_nodes:
+            name = n.name
+            layer_var = name + '_layer'
+            layer_def = '%s = fluid.layers.data(name="%s", shape=shapes["%s"],'\
+                    ' dtype="float32")' % (layer_var, name, name)
+            #layer_var, layer_def = data_layer_def(n.name, n.output_shape)
             codes.append(layer_def)
             inputs[name] = layer_var
 
@@ -229,7 +240,7 @@ class TensorFlowEmitter(object):
         func_def += self.statement('import paddle.v2.fluid as fluid')
         for l in codes:
             func_def += self.statement(l)
-        return '\n\n' + func_def
+        return '\n' + func_def
 
     def emit_main_def(self, name):
         if name is None:
@@ -273,6 +284,7 @@ class TensorFlowEmitter(object):
                 b += self.emit_node(node)
             blocks.append(b[:-1])
         s = s + '\n\n'.join(blocks)
+        s += self.emit_shape_def(input_nodes)
         s += self.emit_convert_def(input_nodes)
         s += self.emit_main_def(name)
         return s
