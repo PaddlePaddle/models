@@ -126,7 +126,7 @@ negative        0.0300 0.9700   i love scifi and am willing to put up with a lot
 
 输出日志每一行是对一条样本预测的结果，以 `\t` 分隔，共 3 列，分别是：（1）预测类别标签；（2）样本分别属于每一类的概率，内部以空格分隔；（3）输入文本。
 
-## 使用自定义数据训练和预测
+## Using custom data training and prediction
 
 ### 如何训练
 
