@@ -34,19 +34,20 @@ The [Emotional Classification](https://github.com/PaddlePaddle/book/blob/develop
 1. The simple model can't fit the training samples accurately, and can't accurately predict the unknown samples that have not appeared in the training set. This is the **underfitting**.
 2. However, too complex models can easily memorizing every sample in training samples, but it has no recognition ability for unknown samples that do not appear in training set. This is the **overfitting**.
 
-"No Free Lunch (NFL)" 是机器学习任务基本原则之一：没有任何一种模型是天生优于其他模型的。模型的设计和选择建立在了解不同模型特性的基础之上，但同时也是一个多次实验评估的过程。在本例中，我们继续向大家介绍几种最常用的文本分类模型，它们的能力和复杂程度不同，帮助大家对比学习这些模型学习效果之间的差异，针对不同的场景选择使用。
+"No Free Lunch (NFL)" is one of the basic principles of a machine learning task: No model is superior to others inherently. The design and selection of the model is based on understanding the characteristics of different models, but it is also a process of multiple experimental evaluation. In this case, we continue to introduce some of the most commonly used text classification models. Their ability and complexity are different, which can help you compare learning differences between these models, and choose different models in different scenarios.
 
-## 模型详解
 
-`network_conf.py` 中包括以下模型：
+## Model Description
 
-1. `fc_net`： DNN 模型，是一个非序列模型。使用基本的全连接结构。
-2. `convolution_net`：浅层 CNN 模型，是一个基础的序列模型，能够处理变长的序列输入，提取一个局部区域之内的特征。
+The following model is included in the `network_conf.py`：
 
-我们以情感分类任务为例，简单说明序列模型和非序列模型之间的差异。情感分类是一项常见的文本分类任务，模型自动判断文本中表现出的情感是正向还是负向。以句子 "The apple is not bad" 为例，"not bad" 是决定这个句子情感的关键：
+1. `fc_net`： DNN model，which is a non-sequence model and uses a basic fully connected structure.
+2. `convolution_net`：Shallow CNN model，which is a basic sequence model that can handle the variable long sequence input and extract the features within a local region.
 
-- 对于 DNN 模型来说，只知道句子中有一个 "not" 和一个 "bad"，两者之间的顺序关系在输入网络时已丢失，网络不再有机会学习序列之间的顺序信息。
-- CNN 模型接受文本序列作为输入，保留了 "not bad" 之间的顺序信息。
+We take the task of emotional classification as an example to explain the difference between the sequence model and the non sequence model. Emotional classification is a common text classification task, and the model automatically determines whether the emotion is positive or negative. For example, "not bad" in sentence "The apple is not bad" is the key to determining the emotion of the sentence.
+
+- For the DNN model, we only know that there is a "not" and a "bad" in the sentence. The order relation between them is lost in the input network, and the network no longer has the chance to learn the sequence information between sequences.
+- The CNN model accepts text sequences as input and preserves the sequence information between "not bad".
 
 两者各自的一些特点简单总结如下：
 
