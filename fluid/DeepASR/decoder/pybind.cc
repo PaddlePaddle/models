@@ -25,7 +25,14 @@ PYBIND11_MODULE(post_decode_faster, m) {
   py::class_<Decoder>(m, "Decoder")
       .def(py::init<std::string, std::string, std::string>())
       .def("decode",
-           &Decoder::decode,
+           (std::vector<std::string> (Decoder::*)(std::string)) &
+               Decoder::decode,
+           "Decode one input probability matrix "
+           "and return the transcription")
+      .def("decode",
+           (std::string (Decoder::*)(
+               std::string, std::vector<std::vector<kaldi::BaseFloat>>&)) &
+               Decoder::decode,
            "Decode one input probability matrix "
            "and return the transcription");
 }

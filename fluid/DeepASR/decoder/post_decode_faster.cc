@@ -22,7 +22,7 @@ using fst::StdArc;
 Decoder::Decoder(std::string word_syms_filename,
                  std::string fst_in_filename,
                  std::string logprior_rxfilename) {
-  const char *usage =
+  const char* usage =
       "Decode, reading log-likelihoods (of transition-ids or whatever symbol "
       "is on the graph) as matrices.";
 
@@ -67,6 +67,23 @@ Decoder::~Decoder() {
   delete decode_fst;
   delete decoder;
 }
+
+std::string Decoder::decode(
+    std::string key, std::vector<std::vector<kaldi::BaseFloat>>& log_probs) {
+  size_t num_frames = log_probs.size();
+  size_t dim_label = log_probs[0].size();
+
+  kaldi::Matrix<kaldi::BaseFloat> loglikes(
+      num_frames, dim_label, kaldi::kSetZero, kaldi::kStrideEqualNumCols);
+  for (size_t i = 0; i < num_frames; ++i) {
+    memcpy(loglikes.Data() + i * dim_label,
+           log_probs[i].data(),
+           sizeof(kaldi::BaseFloat) * dim_label);
+  }
+
+  return decode(key, loglikes);
+}
+
 
 std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
   kaldi::SequentialBaseFloatMatrixReader posterior_reader(posterior_rspecifier);
@@ -138,4 +155,47 @@ std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
             << (tot_like / frame_count) << " over " << frame_count
             << " frames.";
   return decoding_results;
+}
+
+
+std::string Decoder::decode(std::string key,
+                            kaldi::Matrix<kaldi::BaseFloat>& loglikes) {
+  std::string decoding_result;
+
+  if (loglikes.NumRows() == 0) {
+    KALDI_WARN << "Zero-length utterance: " << key;
+  }
+  KALDI_ASSERT(loglikes.NumCols() == logprior.Dim());
+
+  loglikes.ApplyLog();
+  loglikes.AddVecToRows(-1.0, logprior);
+
+  kaldi::DecodableMatrixScaled decodable(loglikes, acoustic_scale);
+  decoder->Decode(&decodable);
+
+  VectorFst<kaldi::LatticeArc> decoded;  // linear FST.
+
+  if ((allow_partial || decoder->ReachedFinal()) &&
+      decoder->GetBestPath(&decoded)) {
+    if (!decoder->ReachedFinal())
+      KALDI_WARN << "Decoder did not reach end-state, outputting partial "
+                    "traceback.";
+
+    std::vector<int32> alignment;
+    std::vector<int32> words;
+    kaldi::LatticeWeight weight;
+
+    GetLinearSymbolSequence(decoded, &alignment, &words, &weight);
+
+    if (word_syms != NULL) {
+      for (size_t i = 0; i < words.size(); i++) {
+        std::string s = word_syms->Find(words[i]);
+        decoding_result += s;
+        if (s == "")
+          KALDI_ERR << "Word-id " << words[i] << " not in symbol table.";
+      }
+    }
+  }
+
+  return decoding_result;
 }

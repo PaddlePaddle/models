@@ -34,7 +34,13 @@ public:
 
   std::vector<std::string> decode(std::string posterior_rspecifier);
 
+  std::string decode(std::string key,
+                     std::vector<std::vector<kaldi::BaseFloat>> &log_probs);
+
 private:
+  std::string decode(std::string key,
+                     kaldi::Matrix<kaldi::BaseFloat> &loglikes);
+
   fst::SymbolTable *word_syms;
   fst::VectorFst<fst::StdArc> *decode_fst;
   kaldi::FasterDecoder *decoder;
