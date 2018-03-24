@@ -89,71 +89,13 @@ std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
   kaldi::SequentialBaseFloatMatrixReader posterior_reader(posterior_rspecifier);
   std::vector<std::string> decoding_results;
 
-  kaldi::BaseFloat tot_like = 0.0;
-  kaldi::int64 frame_count = 0;
-  int num_success = 0, num_fail = 0;
-
-  kaldi::Timer timer;
   for (; !posterior_reader.Done(); posterior_reader.Next()) {
     std::string key = posterior_reader.Key();
     kaldi::Matrix<kaldi::BaseFloat> loglikes(posterior_reader.Value());
 
-    if (loglikes.NumRows() == 0) {
-      KALDI_WARN << "Zero-length utterance: " << key;
-      num_fail++;
-      continue;
-    }
-    KALDI_ASSERT(loglikes.NumCols() == logprior.Dim());
-
-    loglikes.ApplyLog();
-    loglikes.AddVecToRows(-1.0, logprior);
-
-    kaldi::DecodableMatrixScaled decodable(loglikes, acoustic_scale);
-    decoder->Decode(&decodable);
-
-    VectorFst<kaldi::LatticeArc> decoded;  // linear FST.
-
-    if ((allow_partial || decoder->ReachedFinal()) &&
-        decoder->GetBestPath(&decoded)) {
-      num_success++;
-      if (!decoder->ReachedFinal())
-        KALDI_WARN << "Decoder did not reach end-state, outputting partial "
-                      "traceback.";
-
-      std::vector<int32> alignment;
-      std::vector<int32> words;
-      kaldi::LatticeWeight weight;
-      frame_count += loglikes.NumRows();
-
-      GetLinearSymbolSequence(decoded, &alignment, &words, &weight);
-
-      if (word_syms != NULL) {
-        std::string res;
-        for (size_t i = 0; i < words.size(); i++) {
-          std::string s = word_syms->Find(words[i]);
-          res += s;
-          if (s == "")
-            KALDI_ERR << "Word-id " << words[i] << " not in symbol table.";
-        }
-        decoding_results.push_back(res);
-      }
-      kaldi::BaseFloat like = -weight.Value1() - weight.Value2();
-      tot_like += like;
-    } else {
-      num_fail++;
-      KALDI_WARN << "Did not successfully decode utterance " << key
-                 << ", len = " << loglikes.NumRows();
-    }
+    decoding_results.push_back(decode(key, loglikes));
   }
 
-  double elapsed = timer.Elapsed();
-  KALDI_LOG << "Time taken [excluding initialization] " << elapsed
-            << "s: real-time factor assuming 100 frames/sec is "
-            << (elapsed * 100.0 / frame_count);
-  KALDI_LOG << "Done " << num_success << " utterances, failed for " << num_fail;
-  KALDI_LOG << "Overall log-likelihood per frame is "
-            << (tot_like / frame_count) << " over " << frame_count
-            << " frames.";
   return decoding_results;
 }
 

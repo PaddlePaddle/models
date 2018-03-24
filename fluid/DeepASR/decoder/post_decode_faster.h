@@ -32,12 +32,16 @@ public:
           std::string logprior_rxfilename);
   ~Decoder();
 
+  // Interface to accept the scores read from specifier and return
+  // the batch decoding results
   std::vector<std::string> decode(std::string posterior_rspecifier);
 
+  // Accept the scores of one utterance and return the decoding result
   std::string decode(std::string key,
                      std::vector<std::vector<kaldi::BaseFloat>> &log_probs);
 
 private:
+  // For decoding one utterance
   std::string decode(std::string key,
                      kaldi::Matrix<kaldi::BaseFloat> &loglikes);
 
