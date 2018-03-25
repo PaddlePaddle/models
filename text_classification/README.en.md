@@ -49,39 +49,39 @@ We take the task of emotional classification as an example to explain the differ
 - For the DNN model, we only know that there is a "not" and a "bad" in the sentence. The order relation between them is lost in the input network, and the network no longer has the chance to learn the sequence information between sequences.
 - The CNN model accepts text sequences as input and preserves the sequence information between "not bad".
 
-两者各自的一些特点简单总结如下：
+The characteristics of the two models are summarized as follows:
 
-1. DNN 的计算量可以远低于 CNN / RNN 模型，在对响应时间有要求的任务中具有优势。
-2. DNN 刻画的往往是频繁词特征，潜在会受到分词错误的影响，但对一些依赖关键词特征也能做的不错的任务：如 Spam 短信检测，依然是一个有效的模型。
-3. 在大多数需要一定语义理解（例如，借助上下文消除语义中的歧义）的文本分类任务上，以 CNN / RNN 为代表的序列模型的效果往往好于 DNN 模型。
+1. The computation complexity of the DNN model can be far lower than the CNN/RNN model, and has the advantage in the tasks with limited time.
+2. DNN is often characterized by frequent words, which can be influenced by participle error. But it is still an effective model for some tasks that rely on keyword features, such as spam message detection.
+3. In most cases that require some semantic understanding of text classification tasks, the sequence models represented by CNN/RNN are often better than DNN models, such as eliminating ambiguity in context by context.
 
-### 1. DNN 模型
+### 1. DNN model
 
-**DNN 模型结构入下图所示：**
+**DNN model structure:**
 
 <p align="center">
-<img src="images/dnn_net.png" width = "90%" align="center"/><br/>
-图1. 本例中的 DNN 文本分类模型
+<img src="images/dnn_net_en.png" width = "90%" align="center"/><br/>
+Figure 1. DNN text classification model in this example
 </p>
 
-在 PaddlePaddle 实现该 DNN 结构的代码见 `network_conf.py` 中的 `fc_net` 函数，模型主要分为如下几个部分：
+The code to implement the DNN structure in PaddlePaddle is seen the `fc_net` function in `network_conf.py`. The model is divided into the following parts：
 
-- **词向量层**：为了更好地表示不同词之间语义上的关系，首先将词语转化为固定维度的向量。训练完成后，词与词语义上的相似程度可以用它们的词向量之间的距离来表示，语义上越相似，距离越近。关于词向量的更多信息请参考PaddleBook中的[词向量](https://github.com/PaddlePaddle/book/tree/develop/04.word2vec)一节。
+- **Word vector layer**：In order to better express the semantic relationship between different words, the words are first transformed into a vector of fixed dimensions. After the completion of the training, the similarity between words and words can be expressed by the distance between their vectors. The more similar semantics, the closer distance is. For more information on the word vector, refer to the [Word2Vec](https://github.com/PaddlePaddle/book/tree/develop/04.word2vec) in PaddleBook.
 
-- **最大池化层**：最大池化在时间序列上进行，池化过程消除了不同语料样本在单词数量多少上的差异，并提炼出词向量中每一下标位置上的最大值。经过池化后，词向量层输出的向量序列被转化为一条固定维度的向量。例如，假设最大池化前向量的序列为`[[2,3,5],[7,3,6],[1,4,0]]`，则最大池化的结果为：`[7,4,6]`。
+- **Max-pooling layer**：The max-pooling is carried out on the time series, and eliminates the difference in the number of words in different corpus samples, and extracts the maximum value of each position in the word vector. After being pooled, the vector sequence of the word vector layer is transformed into a vector of a fixed dimension. For example, it is assumed that the vector before the max-pooling is `[[2,3,5],[7,3,6],[1,4,0]]`，Then the max-pooling result is `[7,4,6]`。
 
-- **全连接隐层**：经过最大池化后的向量被送入两个连续的隐层，隐层之间为全连接结构。
+- **Full connected layer**：After the max-pooling, the vector is sent into two continuous hidden layers, and the hidden layers are full connected.
 
-- **输出层**：输出层的神经元数量和样本的类别数一致，例如在二分类问题中，输出层会有2个神经元。通过Softmax激活函数，输出结果是一个归一化的概率分布，和为1，因此第$i$个神经元的输出就可以认为是样本属于第$i$类的预测概率。
+- **Output layer**：The number of neurons in the output layer is consistent with the category of the samples. For example, in the two classification problem, there are 2 neurons in the output layer. Through the Softmax activation function, the output result is a normalized probability distribution, and the sum is 1. Therefore, the output of the $i$ neuron can be considered as the prediction probability of the sample belonging to class $i$.
 
-该 DNN 模型默认对输入的语料进行二分类（`class_dim=2`），embedding（词向量）维度默认为28（`emd_dim=28`），两个隐层均使用Tanh激活函数（`act=paddle.activation.Tanh()`）。需要注意的是，该模型的输入数据为整数序列，而不是原始的单词序列。事实上，为了处理方便，我们一般会事先将单词根据词频顺序进行 id 化，即将词语转化成在字典中的序号。
+The default DNN model is two classification (`class_dim=2`), and the embedding (word vector) dimension is 28 (`emd_dim=28`), and two hidden layers use Tanh activation function (`act=paddle.activation.Tanh()`). It is important to note that the input data of the model is an integer sequence, not the original word sequence. In fact, in order to deal with convenience, we usually id the words in the order of word frequency to convert the words into the serial number in the dictionary.
 
 ### 2. CNN 模型
 
 **CNN 模型结构如下图所示：**
 
 <p align="center">
-<img src="images/cnn_net.png" width = "90%" align="center"/><br/>
+<img src="images/cnn_net_en.png" width = "90%" align="center"/><br/>
 图2. 本例中的 CNN 文本分类模型
 </p>
 
