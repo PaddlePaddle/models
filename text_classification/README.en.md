@@ -72,28 +72,29 @@ The code to implement the DNN structure in PaddlePaddle is seen the `fc_net` fun
 
 - **Full connected layer**：After the max-pooling, the vector is sent into two continuous hidden layers, and the hidden layers are full connected.
 
-- **Output layer**：The number of neurons in the output layer is consistent with the category of the samples. For example, in the two classification problem, there are 2 neurons in the output layer. Through the Softmax activation function, the output result is a normalized probability distribution, and the sum is 1. Therefore, the output of the $i$ neuron can be considered as the prediction probability of the sample belonging to class $i$.
+- **Output layer**：The number of neurons in the output layer is in accordance with the number of the sample classes. For example, in the two classification problem, there are 2 neurons in the output layer. Through the Softmax activation function, the output result is a normalized probability distribution, and the sum is 1. Therefore, the output of the $i$ neuron can be considered as the prediction probability of the sample belonging to class $i$.
 
 The default DNN model is two classification (`class_dim=2`), and the embedding (word vector) dimension is 28 (`emd_dim=28`), and two hidden layers use Tanh activation function (`act=paddle.activation.Tanh()`). It is important to note that the input data of the model is an integer sequence, not the original word sequence. In fact, in order to deal with convenience, we usually id the words in the order of word frequency to convert the words into the serial number in the dictionary.
 
-### 2. CNN 模型
+### 2. CNN model
 
-**CNN 模型结构如下图所示：**
+**CNN model structure：**
 
 <p align="center">
 <img src="images/cnn_net_en.png" width = "90%" align="center"/><br/>
-图2. 本例中的 CNN 文本分类模型
+Figure 2. CNN text classification model in this example
 </p>
 
-通过 PaddlePaddle 实现该 CNN 结构的代码见 `network_conf.py` 中的 `convolution_net` 函数，模型主要分为如下几个部分:
+The code to implement the CNN structure in PaddlePaddle is seen the `convolution_net` function in `network_conf.py`. The model is divided into the following parts：
 
-- **词向量层**：与 DNN 中词向量层的作用一样，将词语转化为固定维度的向量，利用向量之间的距离来表示词之间的语义相关程度。如图2所示，将得到的词向量定义为行向量，再将语料中所有的单词产生的行向量拼接在一起组成矩阵。假设词向量维度为5，句子 “The cat sat on the read mat” 含 7 个词语，那么得到的矩阵维度为 7*5。关于词向量的更多信息请参考 PaddleBook 中的[词向量](https://github.com/PaddlePaddle/book/tree/develop/04.word2vec)一节。
+- **Word vector layer**：The word vector layer in CNN is the same as in DNN. It transforms words into fixed dimension vectors, and uses the distance between vectors to express the semantic similarity between words. As shown in Figure 2, the word vector is defined as a line vector, and then a matrix is formed by the splicing of all the word vectors in the sentence. If the vector dimension of the word is 5, the sentence "The cat sat on the read mat
+" contains 7 words, then the matrix dimension is 7*5. For more information on the word vector, refer to the [Word2Vec](https://github.com/PaddlePaddle/book/tree/develop/04.word2vec) in PaddleBook.
 
-- **卷积层**： 文本分类中的卷积在时间序列上进行，即卷积核的宽度和词向量层产出的矩阵一致，卷积沿着矩阵的高度方向进行。卷积后得到的结果被称为“特征图”（feature map）。假设卷积核的高度为 $h$，矩阵的高度为 $N$，卷积的步长为 1，则得到的特征图为一个高度为 $N+1-h$ 的向量。可以同时使用多个不同高度的卷积核，得到多个特征图。
+- **Convolution layer**： The convolution in the text classification is carried out on the time series, that is, the width of the convolution kernel is consistent with the matrix of the word vector layer, and the convolution is carried out along the height direction of the matrix. The results obtained after convolution are called "feature map". Assuming that the height of the convolution kernel is $h$, the height of the matrix is $N$ and the convolution step is 1, then the feature map is a vector with a height of $N+1-h$. The convolution kernels with multiple different height can be used at the same time, and multiple feature maps are obtained.
 
-- **最大池化层**: 对卷积得到的各个特征图分别进行最大池化操作。由于特征图本身已经是向量，因此这里的最大池化实际上就是简单地选出各个向量中的最大元素。各个最大元素又被拼接在一起，组成新的向量，显然，该向量的维度等于特征图的数量，也就是卷积核的数量。举例来说，假设我们使用了四个不同的卷积核，卷积产生的特征图分别为：`[2,3,5]`、`[8,2,1]`、`[5,7,7,6]` 和 `[4,5,1,8]`，由于卷积核的高度不同，因此产生的特征图尺寸也有所差异。分别在这四个特征图上进行最大池化，结果为：`[5]`、`[8]`、`[7]`和`[8]`，最后将池化结果拼接在一起，得到`[5,8,7,8]`。
+- **Max-pooling layer**: The max-pooling operation is carried out for each feature map obtained by convolution. Because the feature map is already a vector, so the max-pooling is actually simply selecting the largest elements in each vector, and the largest elements are spliced together to form a new vector. Obviously, the dimension of the vector is equal to the number of the feature map, that is, the number of the convolution kernel. For example, suppose we use four different convolution kernels, and the convolution generated feature maps are: `[2,3,5]`、`[8,2,1]`、`[5,7,7,6]` and `[4,5,1,8]`. Because the height of the convolution kernel is different, the size of the feature maps is different. The max-pooling is carried out on the four feature maps, and the results are as follows: `[5]`、`[8]`、`[7]` and `[8]`. Finally, the pooling results are spliced together to get `[5,8,7,8]`。
 
-- **全连接与输出层**：将最大池化的结果通过全连接层输出，与 DNN 模型一样，最后输出层的神经元个数与样本的类别数量一致，且输出之和为 1。
+- **全连接与输出层**：The max-pooling results are output through the full connected layer. As with the DNN model, the number of neurons in the final output layer is the same as the number of sample classes, and the sum of the output is 1.
 
 CNN 网络的输入数据类型和 DNN 一致。PaddlePaddle 中已经封装好的带有池化的文本序列卷积模块：`paddle.networks.sequence_conv_pool`，可直接调用。该模块的 `context_len` 参数用于指定卷积核在同一时间覆盖的文本长度，即图 2 中的卷积核的高度。`hidden_size` 用于指定该类型的卷积核的数量。本例代码默认使用了 128 个大小为 3 的卷积核和 128 个大小为 4 的卷积核，这些卷积的结果经过最大池化和结果拼接后产生一个 256 维的向量，向量经过一个全连接层输出最终的预测结果。
 
