@@ -17,6 +17,7 @@ add_arg('pass_num',       int,   100,     "# of training epochs.")
 add_arg('log_period',     int,   1000,   "Log period.")
 add_arg('learning_rate',  float, 1.0e-3, "Learning rate.")
 add_arg('l2',             float, 0.0004, "L2 regularizer.")
+#add_arg('l2',             float, 0.0, "L2 regularizer.")
 add_arg('max_clip',       float, 10.0,   "Max clip threshold.")
 add_arg('min_clip',       float, -10.0,  "Min clip threshold.")
 add_arg('momentum',       float, 0.9,    "Momentum.")
@@ -31,6 +32,7 @@ def load_parameter(place):
     for name in params:
         t = fluid.global_scope().find_var(name).get_tensor()
         t.set(params[name], place)
+    print "finish load model."
 
 
 def train(args, data_reader=dummy_reader):
@@ -40,8 +42,7 @@ def train(args, data_reader=dummy_reader):
     # define network
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int32', lod_level=1)
-    sum_cost, error_evaluator, inference_program = ctc_train_net(images, label, args, num_classes)
-
+    sum_cost, error_count, inference_program = ctc_train_net(images, label, args, num_classes)
     # data reader
     train_reader = data_reader.train(args.batch_size)
     test_reader = data_reader.test()
@@ -51,19 +52,31 @@ def train(args, data_reader=dummy_reader):
         place = fluid.CUDAPlace(args.device)
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-    #load_parameter(place)
+
+    load_parameter(place)
+
+    def test(pass_id):
+        error_num = 0
+        count = 0
+        for data in test_reader():
+            seq_error_num = exe.run(inference_program, feed=get_feeder_data(data, place),
+                    fetch_list=[error_count])
+            error_num += seq_error_num[0]
+            count += 1
+        print "\nass[%d]-batch[%d]; Test seq error: %s.\n" % (pass_id, batch_id, float(error_num)/count)
+
+
 
     for pass_id in range(args.pass_num):
-        error_evaluator.reset(exe)
         batch_id = 1
         total_loss = 0.0
         total_seq_error = 0.0
         # train a pass
         for data in train_reader():
-            batch_loss, _, batch_seq_error = exe.run(
+            batch_loss, batch_seq_error = exe.run(
                 fluid.default_main_program(),
                 feed=get_feeder_data(data, place),
-                fetch_list=[sum_cost] + error_evaluator.metrics)
+                fetch_list=[sum_cost, error_count])
             total_loss += batch_loss[0]
             total_seq_error += batch_seq_error[0]
             if batch_id % 10 == 1:
@@ -74,13 +87,9 @@ def train(args, data_reader=dummy_reader):
                     pass_id, batch_id, total_loss / (batch_id * args.batch_size), total_seq_error / (batch_id * args.batch_size))
                 sys.stdout.flush()
             batch_id += 1
+            if batch_id % 5000 == 1:
+                test(pass_id)
 
-        error_evaluator.reset(exe)
-        for data in test_reader():
-            exe.run(inference_program, feed=get_feeder_data(data, place))
-        _, test_seq_error = error_evaluator.eval(exe)
-        print "\nEnd pass[%d]; Test seq error: %s.\n" % (
-            pass_id, str(test_seq_error[0]))
 
 def main():
     args = parser.parse_args()
