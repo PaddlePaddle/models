@@ -1,13 +1,24 @@
 import paddle.v2 as paddle
 import paddle.fluid as fluid
-import os
 import coco_reader as reader
-import numpy as np
 import load_model as load_model
 from mobilenet_ssd import mobile_net
+from utility import add_arguments, print_arguments
+import os
+import numpy as np
+import argparse
+import functools
+
+parser = argparse.ArgumentParser(description=__doc__)
+add_arg = functools.partial(add_arguments, argparser=parser)
+# yapf: disable
+add_arg('parallel',    bool,   False,     "Whether use parallel training.")
+add_arg('use_gpu',     bool,   True,     "Whether use GPU.")
+# yapf: disable
 
 
-def train(train_file_list,
+def train(args,
+          train_file_list,
           val_file_list,
           data_args,
           learning_rate,
@@ -25,16 +36,37 @@ def train(train_file_list,
     difficult = fluid.layers.data(
         name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
 
-    mbox_locs, mbox_confs, box, box_var = mobile_net(image, image_shape)
-    nmsed_out = fluid.layers.detection_output(
-        mbox_locs, mbox_confs, box, box_var, nms_threshold=0.45)
-    loss_vec = fluid.layers.ssd_loss(mbox_locs, mbox_confs, gt_box, gt_label,
-                                     box, box_var)
-    loss = fluid.layers.nn.reduce_sum(loss_vec)
+    if args.parallel:
+        places = fluid.layers.get_places()
+        pd = fluid.layers.ParallelDo(places)
+        with pd.do():
+            image_ = pd.read_input(image)
+            gt_box_ = pd.read_input(gt_box)
+            gt_label_ = pd.read_input(gt_label)
+            difficult_ = pd.read_input(difficult)
+            locs, confs, box, box_var = mobile_net(image_, image_shape)
+            loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_,
+                                         box, box_var)
+            pd.write_output(loss)
+            pd.write_output(locs)
+            pd.write_output(confs)
+            pd.write_output(box)
+            pd.write_output(box_var)
 
-    map_eval = None
+        loss, locs, confs, box, box_var = pd()
+        loss = fluid.layers.reduce_sum(loss)
+    else:
+        locs, confs, box, box_var = mobile_net(image, image_shape)
+        nmsed_out = fluid.layers.detection_output(
+            locs, confs, box, box_var, nms_threshold=0.45)
+        loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label,
+                                     box, box_var)
+        loss = fluid.layers.reduce_sum(loss)
+
     test_program = fluid.default_main_program().clone(for_test=True)
     with fluid.program_guard(test_program):
+        nmsed_out = fluid.layers.detection_output(
+            locs, confs, box, box_var, nms_threshold=0.45)
         map_eval = fluid.evaluator.DetectionMAP(
             nmsed_out,
             gt_label,
@@ -45,26 +77,24 @@ def train(train_file_list,
             evaluate_difficult=False,
             ap_version='11point')
 
-    optimizer = fluid.optimizer.Momentum(
-        learning_rate=fluid.layers.exponential_decay(
-            learning_rate=learning_rate,
-            decay_steps=40000,
-            decay_rate=0.1,
-            staircase=True),
-        momentum=0.9,
+    boundaries = [40000, 60000]
+    values = [0.001, 0.0005, 0.00025]
+    optimizer = fluid.optimizer.RMSProp(
+        learning_rate=fluid.layers.piecewise_decay(boundaries, values),
         regularization=fluid.regularizer.L2Decay(0.00005), )
 
     optimizer.minimize(loss)
 
-    place = fluid.CUDAPlace(0)
+    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    load_model.load_paddlev1_vars(place)
+    load_model.load_and_set_vars(place)
+    #load_model.load_paddlev1_vars(place)
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
-        reader.val(data_args, val_file_list), batch_size=batch_size)
+        reader.test(data_args, val_file_list), batch_size=batch_size)
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, difficult])
 
@@ -85,8 +115,9 @@ def train(train_file_list,
             loss_v = exe.run(fluid.default_main_program(),
                              feed=feeder.feed(data),
                              fetch_list=[loss])
-            print("Pass {0}, batch {1}, loss {2}"
-                  .format(pass_id, batch_id, loss_v[0]))
+            if batch_id % 20 == 0:
+                print("Pass {0}, batch {1}, loss {2}"
+                      .format(pass_id, batch_id, loss_v[0]))
         test(pass_id)
 
         if pass_id % 10 == 0:
@@ -97,12 +128,18 @@ def train(train_file_list,
 
 
 if __name__ == '__main__':
+    args = parser.parse_args()
+    print_arguments(args)
     data_args = reader.Settings(
+        dataset='coco', # coco or pascalvoc
         data_dir='./data/coco',
+        label_file='label_list',
+        apply_distort=True,
+        apply_expand=True,
         resize_h=300,
         resize_w=300,
         mean_value=[127.5, 127.5, 127.5])
-    train(
+    train(args,
         train_file_list='./data/coco/annotations/instances_train2014.json',
         val_file_list='./data/coco/annotations/instances_val2014.json',
         data_args=data_args,
