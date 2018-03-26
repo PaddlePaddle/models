@@ -45,6 +45,7 @@ LIB_DIRS = [
     'src/hmm', 'src/fstext', 'src/decoder', 'src/lat'
 ]
 LIB_DIRS = [os.path.join(kaldi_root, path) for path in LIB_DIRS]
+LIB_DIRS = [os.path.abspath(path) for path in LIB_DIRS]
 
 ext_modules = [
     Extension(
