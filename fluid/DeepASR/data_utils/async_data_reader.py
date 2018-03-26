@@ -218,8 +218,6 @@ class AsyncDataReader(object):
         self._sample_proc_num = self._proc_num - 2
         self._verbose = verbose
         self._force_exit = ForceExitWrapper(self._manager.Value('b', False))
-        self._pool_manager = SharedMemoryPoolManager(self._batch_buffer_size *
-                                                     3, self._manager)
 
     def generate_bucket_list(self, is_shuffle):
         if self._block_info_list is None:
@@ -424,6 +422,9 @@ class AsyncDataReader(object):
         sample_queue = self._start_async_processing()
         batch_queue = self._manager.Queue(self._batch_buffer_size)
 
+        self._pool_manager = SharedMemoryPoolManager(self._batch_buffer_size *
+                                                     3, self._manager)
+
         assembling_proc = DaemonProcessGroup(
             proc_num=1,
             target=batch_assembling_task,
@@ -439,3 +440,6 @@ class AsyncDataReader(object):
                 if isinstance(batch_data, EpochEndSignal):
                     break
                 yield batch_data
+
+        # clean the shared memory
+        del self._pool_manager
