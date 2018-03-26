@@ -132,8 +132,7 @@ class TensorFlowMapper(NodeMapper):
         # just scales by alpha (as does Krizhevsky's paper).
         # We'll account for that here.
         alpha = params.alpha / float(params.local_size)
-        return TensorFlowNode('lrn',
-                              params.local_size, alpha, params.beta)
+        return TensorFlowNode('lrn', params.local_size, alpha, params.beta)
 
     def map_concat(self, node):
         return TensorFlowNode('concat', node.parameters.axis)

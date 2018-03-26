@@ -285,8 +285,5 @@ class Network(object):
     def dropout(self, input, drop_prob, name, is_test=True):
         fluid = import_fluid()
         output = fluid.layers.dropout(
-                input,
-                dropout_prob=drop_prob,
-                is_test=is_test,
-                name=name)
+            input, dropout_prob=drop_prob, is_test=is_test, name=name)
         return output

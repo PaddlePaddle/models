@@ -91,6 +91,8 @@ LayerType = type('LayerType', (), {t: t for t in LAYER_TYPES})
 
 #map the layer name in V1 to standard name
 V1_LAYER_MAP = {'_not_init_': True}
+
+
 def get_v1_layer_map():
     global V1_LAYER_MAP
     if '_not_init_' not in V1_LAYER_MAP:
