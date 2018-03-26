@@ -64,7 +64,7 @@ def train(train_file_list,
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
-        reader.test(data_args, val_file_list), batch_size=batch_size)
+        reader.val(data_args, val_file_list), batch_size=batch_size)
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, difficult])
 
@@ -98,15 +98,14 @@ def train(train_file_list,
 
 if __name__ == '__main__':
     data_args = reader.Settings(
-        data_dir='./data',
-        label_file='label_list',
+        data_dir='./data/coco',
         resize_h=300,
         resize_w=300,
         mean_value=[127.5, 127.5, 127.5])
     train(
-        train_file_list='./data/trainval.txt',
-        val_file_list='./data/test.txt',
+        train_file_list='./data/coco/annotations/instances_train2014.json',
+        val_file_list='./data/coco/annotations/instances_val2014.json',
         data_args=data_args,
         learning_rate=0.001,
-        batch_size=4,
-        num_passes=300)
+        batch_size=1,
+        num_passes=1)
