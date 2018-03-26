@@ -163,12 +163,16 @@ def ctc_train_net(images, label, args, num_classes):
 
             decoded_out = fluid.layers.ctc_greedy_decoder(
                 input=fc_out, blank=num_classes)
+            casted_label = fluid.layers.cast(x=label_, dtype='int64')
+            error_evaluator = fluid.evaluator.EditDistance1(
+                input=decoded_out, label=casted_label)
 
             pd.write_output(sum_cost)
-            pd.write_output(decoded_out)
+            pd.write_output(error_evaluator.metrics[1])
 
-        sum_cost, decoded_out = pd()
+        sum_cost, error_count = pd()
         sum_cost = fluid.layers.reduce_sum(sum_cost)
+        error_count = fluid.layers.reduce_sum(error_count)
 
     else:
         fc_out = encoder_net(
@@ -182,20 +186,18 @@ def ctc_train_net(images, label, args, num_classes):
         sum_cost = fluid.layers.reduce_sum(cost)
         decoded_out = fluid.layers.ctc_greedy_decoder(
             input=fc_out, blank=num_classes)
+        casted_label = fluid.layers.cast(x=label, dtype='int64')
+        error_evaluator = fluid.evaluator.EditDistance1(
+            input=decoded_out, label=casted_label)
+        error_count = error_evaluator.metrics[1]
 
-    casted_label = fluid.layers.cast(x=label, dtype='int64')
-    error_evaluator = fluid.evaluator.EditDistance(
-        input=decoded_out, label=casted_label)
-
-    inference_program = fluid.default_main_program().clone()
-    with fluid.program_guard(inference_program):
-        inference_program = fluid.io.get_inference_program(error_evaluator)
+    inference_program = fluid.default_main_program().clone(for_test=True)
 
     optimizer = fluid.optimizer.Momentum(
         learning_rate=args.learning_rate, momentum=args.momentum)
     _, params_grads = optimizer.minimize(sum_cost)
 
-    return sum_cost, error_evaluator, inference_program
+    return sum_cost, error_count, inference_program
 
 
 def ctc_infer(images, num_classes):
