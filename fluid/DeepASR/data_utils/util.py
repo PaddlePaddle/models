@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import sys
+import sys, time
 from six import reraise
 from tblib import Traceback
 from multiprocessing import Manager, Process
@@ -161,9 +161,10 @@ class SharedMemoryPoolManager(object):
     def __init__(self, pool_size, manager, name_prefix='/deep_asr'):
         self._names = []
         self._dict = manager.dict()
+        self._time_prefix = time.strftime('%Y%m%d%H%M%S')
 
         for i in xrange(pool_size):
-            name = name_prefix + '_' + str(i)
+            name = name_prefix + '_' + self._time_prefix + '_' + str(i)
             self._dict[name] = SharedNDArray(name)
             self._names.append(name)
 
