@@ -1,6 +1,6 @@
 import paddle.v2 as paddle
 import paddle.fluid as fluid
-import reader
+import coco_reader as reader
 import load_model as load_model
 from mobilenet_ssd import mobile_net
 from utility import add_arguments, print_arguments
@@ -12,7 +12,7 @@ import functools
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('parallel',    bool,   True,     "Whether use parallel training.")
+add_arg('parallel',    bool,   False,     "Whether use parallel training.")
 add_arg('use_gpu',     bool,   True,     "Whether use GPU.")
 # yapf: disable
 
@@ -58,8 +58,8 @@ def train(args,
     else:
         locs, confs, box, box_var = mobile_net(image, image_shape)
         nmsed_out = fluid.layers.detection_output(
-            locs, mbox_confs, box, box_var, nms_threshold=0.45)
-        loss = fluid.layers.ssd_loss(locs, mbox_confs, gt_box, gt_label,
+            locs, confs, box, box_var, nms_threshold=0.45)
+        loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label,
                                      box, box_var)
         loss = fluid.layers.reduce_sum(loss)
 
@@ -131,10 +131,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
     data_args = reader.Settings(
-        data_dir='./data',
+        dataset='coco', # coco or pascalvoc
+        data_dir='./data/coco',
         label_file='label_list',
         apply_distort=True,
         apply_expand=True,
         resize_h=300,
         resize_w=300,
         mean_value=[127.5, 127.5, 127.5])
+    train(args,
+        train_file_list='./data/coco/annotations/instances_train2014.json',
+        val_file_list='./data/coco/annotations/instances_val2014.json',
+        data_args=data_args,
+        learning_rate=0.001,
+        batch_size=1,
+        num_passes=1)
