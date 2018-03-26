@@ -10,6 +10,7 @@ import numpy as np
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
 
+
 def test_model(exe, test_program, fetch_list, test_reader, feeder):
     acc_set = []
 
@@ -75,12 +76,11 @@ if __name__ == "__main__":
     argc = len(sys.argv)
     if argc == 3:
         net_file = sys.argv[1]
-        weight_file =  sys.argv[2]
+        weight_file = sys.argv[2]
     elif argc > 1:
         print('usage:')
         print('\tpython %s [net_file] [weight_file]' % (sys.argv[0]))
-        print('\teg:python %s %s %s %s' % (sys.argv[0], 
-            net_file, weight_file))
+        print('\teg:python %s %s %s %s' % (sys.argv[0], net_file, weight_file))
         sys.exit(1)
 
     evaluate(net_file, weight_file)

@@ -13,6 +13,7 @@ import numpy as np
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
 
+
 def load_data(imgfile, shape):
     h, w = shape[1:]
     from PIL import Image
@@ -35,7 +36,8 @@ def load_data(imgfile, shape):
 
 
 def build_model(net_file, net_name):
-    print('build model with net_file[%s] and net_name[%s]' % (net_file, net_name))
+    print('build model with net_file[%s] and net_name[%s]' %
+          (net_file, net_name))
 
     net_path = os.path.dirname(net_file)
     module_name = os.path.basename(net_file).rstrip('.py')
@@ -102,9 +104,9 @@ def infer(net_file, net_name, model_file, imgfile, debug=False):
             fetch_list_name.append(k)
 
     np_images = load_data(imgfile, input_shape)
-    results = exe.run(program=test_program, 
-            feed={'image': np_images},
-            fetch_list=fetch_list_var)
+    results = exe.run(program=test_program,
+                      feed={'image': np_images},
+                      fetch_list=fetch_list_var)
 
     if debug is True:
         dump_path = 'results.layers'
@@ -126,14 +128,15 @@ if __name__ == "__main__":
     argc = len(sys.argv)
     if argc == 5:
         net_file = sys.argv[1]
-        weight_file =  sys.argv[2]
+        weight_file = sys.argv[2]
         imgfile = sys.argv[3]
-        net_name= sys.argv[4]
+        net_name = sys.argv[4]
     elif argc > 1:
         print('usage:')
-        print('\tpython %s [net_file] [weight_file] [imgfile] [net_name]' % (sys.argv[0]))
-        print('\teg:python %s %s %s %s %s' % (sys.argv[0], 
-            net_file, weight_file, imgfile, net_name))
+        print('\tpython %s [net_file] [weight_file] [imgfile] [net_name]' %
+              (sys.argv[0]))
+        print('\teg:python %s %s %s %s %s' % (sys.argv[0], net_file,
+                                              weight_file, imgfile, net_name))
         sys.exit(1)
 
     infer(net_file, net_name, weight_file, imgfile)
