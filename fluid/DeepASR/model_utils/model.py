@@ -21,13 +21,13 @@ def stacked_lstmp_model(frame_dim,
         label data respectively. And in inference, only `feature` is needed.
 
     Args:
-    frame_dim(int): The frame dimension of feature data.
-	hidden_dim(int): The hidden state's dimension of the LSTMP layer.
-	proj_dim(int): The projection size of the LSTMP layer.
-	stacked_num(int): The number of stacked LSTMP layers.
-	parallel(bool): Run in parallel or not, default `False`.
-	is_train(bool): Run in training phase or not, default `True`.
-	class_dim(int): The number of output classes.
+        frame_dim(int): The frame dimension of feature data.
+        hidden_dim(int): The hidden state's dimension of the LSTMP layer.
+        proj_dim(int): The projection size of the LSTMP layer.
+        stacked_num(int): The number of stacked LSTMP layers.
+        parallel(bool): Run in parallel or not, default `False`.
+        is_train(bool): Run in training phase or not, default `True`.
+        class_dim(int): The number of output classes.
     """
 
     # network configuration
