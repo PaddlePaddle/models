@@ -71,7 +71,7 @@ def bottleneck_block(input, num_filters, stride, cardinality, reduction_ratio):
 def SE_ResNeXt(input, class_dim, infer=False, layers=50):
     supported_layers = [50, 152]
     if layers not in supported_layers:
-        print("supported layers are", supported_layers, "but input layer is ",
+        print("supported layers are", supported_layers, "but input layer is",
               layers)
         exit()
     if layers == 50:
@@ -216,10 +216,11 @@ def train(learning_rate,
             train_info[1].append(acc1[0])
             train_info[2].append(acc5[0])
             if batch_id % 10 == 0:
-                print(
-                    "Pass {0}, trainbatch {1}, loss {2}, acc1 {3}, acc5 {4} time {5}".
-                    format(pass_id, batch_id, loss[0], acc1[0], acc5[0],
-                           "%2.2f sec" % period))
+                print("Pass {0}, trainbatch {1}, loss {2}, \
+                       acc1 {3}, acc5 {4} time {5}"
+                                                   .format(pass_id, \
+                       batch_id, loss[0], acc1[0], acc5[0], \
+                       "%2.2f sec" % period))
                 sys.stdout.flush()
 
         train_loss = np.array(train_info[0]).mean()
@@ -237,20 +238,22 @@ def train(learning_rate,
             test_info[1].append(acc1[0])
             test_info[2].append(acc5[0])
             if batch_id % 10 == 0:
-                print(
-                    "Pass {0}, testbatch {1}, loss {2}, acc1 {3}, acc5 {4} time {5}".
-                    format(pass_id, batch_id, loss[0], acc1[0], acc5[0],
-                           "%2.2f sec" % period))
+                print("Pass {0}, testbatch {1}, loss {2}, \
+                       acc1 {3}, acc5 {4} time {5}"
+                                                   .format(pass_id, \
+                       batch_id, loss[0], acc1[0], acc5[0], \
+                       "%2.2f sec" % period))
                 sys.stdout.flush()
 
         test_loss = np.array(test_info[0]).mean()
         test_acc1 = np.array(test_info[1]).mean()
         test_acc5 = np.array(test_info[2]).mean()
 
-        print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3},\
+        print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3}, \
               test_loss {4}, test_acc1 {5}, test_acc5 {6}"
-                                                          .format(pass_id,  \
-              train_loss, train_acc1, train_acc5, test_loss, test_acc1, test_acc5))
+                                                          .format(pass_id, \
+              train_loss, train_acc1, train_acc5, test_loss, test_acc1, \
+              test_acc5))
         sys.stdout.flush()
 
         model_path = os.path.join(model_save_dir, str(pass_id))
