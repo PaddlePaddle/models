@@ -3,10 +3,11 @@ from __future__ import division
 from __future__ import print_function
 
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 
 
-def stacked_lstmp_model(hidden_dim,
+def stacked_lstmp_model(frame_dim,
+                        hidden_dim,
                         proj_dim,
                         stacked_num,
                         class_num,
@@ -20,12 +21,13 @@ def stacked_lstmp_model(hidden_dim,
         label data respectively. And in inference, only `feature` is needed.
 
     Args:
-	hidden_dim(int): The hidden state's dimension of the LSTMP layer.
-	proj_dim(int): The projection size of the LSTMP layer.
-	stacked_num(int): The number of stacked LSTMP layers.
-	parallel(bool): Run in parallel or not, default `False`.
-	is_train(bool): Run in training phase or not, default `True`.
-	class_dim(int): The number of output classes.
+        frame_dim(int): The frame dimension of feature data.
+        hidden_dim(int): The hidden state's dimension of the LSTMP layer.
+        proj_dim(int): The projection size of the LSTMP layer.
+        stacked_num(int): The number of stacked LSTMP layers.
+        parallel(bool): Run in parallel or not, default `False`.
+        is_train(bool): Run in training phase or not, default `True`.
+        class_dim(int): The number of output classes.
     """
 
     # network configuration
@@ -78,7 +80,7 @@ def stacked_lstmp_model(hidden_dim,
 
     # data feeder
     feature = fluid.layers.data(
-        name="feature", shape=[-1, 120 * 11], dtype="float32", lod_level=1)
+        name="feature", shape=[-1, frame_dim], dtype="float32", lod_level=1)
     label = fluid.layers.data(
         name="label", shape=[-1, 1], dtype="int64", lod_level=1)
 
@@ -92,11 +94,12 @@ def stacked_lstmp_model(hidden_dim,
             feat_ = pd.read_input(feature)
             label_ = pd.read_input(label)
             prediction, avg_cost, acc = _net_conf(feat_, label_)
-            for out in [avg_cost, acc]:
+            for out in [prediction, avg_cost, acc]:
                 pd.write_output(out)
 
         # get mean loss and acc through every devices.
-        avg_cost, acc = pd()
+        prediction, avg_cost, acc = pd()
+        prediction.stop_gradient = True
         avg_cost = fluid.layers.mean(x=avg_cost)
         acc = fluid.layers.mean(x=acc)
     else:

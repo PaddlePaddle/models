@@ -27,7 +27,7 @@ add_arg('model_average',     bool,   True,     "Whether to aevrage model for eva
 add_arg('min_average_window',     int,   10000,     "Min average window.")
 add_arg('max_average_window',     int,   15625,     "Max average window.")
 add_arg('average_window',     float,   0.15,     "Average window.")
-
+add_arg('parallel',     bool,   True,     "Whether use parallel training.")
 # yapf: disable
 
 def load_parameter(place):
@@ -44,7 +44,7 @@ def train(args, data_reader=dummy_reader):
     # define network
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int32', lod_level=1)
-    sum_cost, error_evaluator, model_average = ctc_train_net(images, label, args, num_classes)
+    sum_cost, error_evaluator, inference_program, model_average = ctc_train_net(images, label, args, num_classes)
 
     # data reader
     train_reader = data_reader.train(args.batch_size)
@@ -56,8 +56,6 @@ def train(args, data_reader=dummy_reader):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
     #load_parameter(place)
-
-    inference_program = fluid.io.get_inference_program(error_evaluator)
 
     for pass_id in range(args.pass_num):
         error_evaluator.reset(exe)

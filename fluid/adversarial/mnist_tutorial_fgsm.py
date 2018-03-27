@@ -3,10 +3,10 @@ FGSM demos on mnist using advbox tool.
 """
 import matplotlib.pyplot as plt
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 
-from advbox import Adversary
-from advbox.attacks.gradientsign import GradientSignAttack
+from advbox.adversary import Adversary
+from advbox.attacks.gradient_method import FGSM
 from advbox.models.paddle import PaddleModel
 
 
@@ -73,7 +73,7 @@ def main():
     # advbox demo
     m = PaddleModel(fluid.default_main_program(), IMG_NAME, LABEL_NAME,
                     logits.name, avg_cost.name, (-1, 1))
-    att = GradientSignAttack(m)
+    att = FGSM(m)
     for data in train_reader():
         # fgsm attack
         adversary = att(Adversary(data[0][0], data[0][1]))

@@ -5,7 +5,7 @@ import argparse
 import time
 
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
+import paddle.fluid as fluid
 
 from config import TrainConfig as conf
 
@@ -89,12 +89,14 @@ def main(dict_path):
     sgd_optimizer = fluid.optimizer.SGD(learning_rate=conf.learning_rate)
     sgd_optimizer.minimize(avg_cost)
 
-    accuracy = fluid.evaluator.Accuracy(input=prediction, label=label)
+    batch_size_var = fluid.layers.create_tensor(dtype='int64')
+    batch_acc_var = fluid.layers.accuracy(
+        input=prediction, label=label, total=batch_size_var)
 
     inference_program = fluid.default_main_program().clone()
     with fluid.program_guard(inference_program):
-        test_target = accuracy.metrics + accuracy.states
-        inference_program = fluid.io.get_inference_program(test_target)
+        inference_program = fluid.io.get_inference_program(
+            target_vars=[batch_acc_var, batch_size_var])
 
     # The training data set.
     train_reader = paddle.batch(
@@ -119,31 +121,37 @@ def main(dict_path):
 
     exe.run(fluid.default_startup_program())
 
+    train_pass_acc_evaluator = fluid.average.WeightedAverage()
+    test_pass_acc_evaluator = fluid.average.WeightedAverage()
+
     def test(exe):
-        accuracy.reset(exe)
+        test_pass_acc_evaluator.reset()
         for batch_id, data in enumerate(test_reader()):
             input_seq = to_lodtensor(map(lambda x: x[0], data), place)
             y_data = np.array(map(lambda x: x[1], data)).astype("int64")
             y_data = y_data.reshape([-1, 1])
-            acc = exe.run(inference_program,
-                          feed={"words": input_seq,
-                                "label": y_data})
-        test_acc = accuracy.eval(exe)
+            b_acc, b_size = exe.run(inference_program,
+                                    feed={"words": input_seq,
+                                          "label": y_data},
+                                    fetch_list=[batch_acc_var, batch_size_var])
+            test_pass_acc_evaluator.add(value=b_acc, weight=b_size)
+        test_acc = test_pass_acc_evaluator.eval()
         return test_acc
 
     total_time = 0.
     for pass_id in xrange(conf.num_passes):
-        accuracy.reset(exe)
+        train_pass_acc_evaluator.reset()
         start_time = time.time()
         for batch_id, data in enumerate(train_reader()):
-            cost_val, acc_val = exe.run(
+            cost_val, acc_val, size_val = exe.run(
                 fluid.default_main_program(),
                 feed=feeder.feed(data),
-                fetch_list=[avg_cost, accuracy.metrics[0]])
-            pass_acc = accuracy.eval(exe)
+                fetch_list=[avg_cost, batch_acc_var, batch_size_var])
+            train_pass_acc_evaluator.add(value=acc_val, weight=size_val)
             if batch_id and batch_id % conf.log_period == 0:
-                print("Pass id: %d, batch id: %d, cost: %f, pass_acc %f" %
-                      (pass_id, batch_id, cost_val, pass_acc))
+                print("Pass id: %d, batch id: %d, cost: %f, pass_acc: %f" %
+                      (pass_id, batch_id, cost_val,
+                       train_pass_acc_evaluator.eval()))
         end_time = time.time()
         total_time += (end_time - start_time)
         pass_test_acc = test(exe)

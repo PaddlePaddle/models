@@ -15,6 +15,9 @@ from multiprocessing import Manager, Process
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 from data_utils.util import suppress_complaints, suppress_signal
+from data_utils.util import SharedNDArray, SharedMemoryPoolManager
+from data_utils.util import DaemonProcessGroup, batch_to_ndarray
+from data_utils.util import CriticalException, ForceExitWrapper, EpochEndSignal
 
 
 class SampleInfo(object):
@@ -27,7 +30,7 @@ class SampleInfo(object):
         feature_frame_num (int): Time length of the sample.
         feature_dim (int): Feature dimension of one frame.
         label_bin_path (str): File containing the label data.
-        label_size (int): Byte count of the sample's label data. 
+        label_size (int): Byte count of the sample's label data.
         label_frame_num (int): Label number of the sample.
     """
 
@@ -48,23 +51,36 @@ class SampleInfo(object):
 
 class SampleInfoBucket(object):
     """SampleInfoBucket contains paths of several description files. Feature
-    description file contains necessary information (including path of binary 
-    data, sample start position, sample byte number etc.) to access samples' 
-    feature data and the same with the label description file. SampleInfoBucket 
+    description file contains necessary information (including path of binary
+    data, sample start position, sample byte number etc.) to access samples'
+    feature data and the same with the label description file. SampleInfoBucket
     is the minimum unit to do shuffle.
 
     Args:
-        feature_bin_paths (list|tuple): Files containing the binary feature 
+        feature_bin_paths (list|tuple): Files containing the binary feature
                                         data.
-        feature_desc_paths (list|tuple): Files containing the description of 
-                                         samples' feature data. 
+        feature_desc_paths (list|tuple): Files containing the description of
+                                         samples' feature data.
         label_bin_paths (list|tuple): Files containing the binary label data.
         label_desc_paths (list|tuple): Files containing the description of
                                        samples' label data.
+        split_perturb(int): Maximum perturbation value for length of
+                            sub-sentence when splitting long sentence.
+        split_sentence_threshold(int): Sentence whose length larger than
+                                the value will trigger split operation.
+        split_sub_sentence_len(int): sub-sentence length is equal to
+                                    (split_sub_sentence_len + \
+                                     rand() % split_perturb).
     """
 
-    def __init__(self, feature_bin_paths, feature_desc_paths, label_bin_paths,
-                 label_desc_paths):
+    def __init__(self,
+                 feature_bin_paths,
+                 feature_desc_paths,
+                 label_bin_paths,
+                 label_desc_paths,
+                 split_perturb=50,
+                 split_sentence_threshold=512,
+                 split_sub_sentence_len=256):
         block_num = len(label_bin_paths)
         assert len(label_desc_paths) == block_num
         assert len(feature_bin_paths) == block_num
@@ -75,6 +91,10 @@ class SampleInfoBucket(object):
         self._feature_desc_paths = feature_desc_paths
         self._label_bin_paths = label_bin_paths
         self._label_desc_paths = label_desc_paths
+        self._split_perturb = split_perturb
+        self._split_sentence_threshold = split_sentence_threshold
+        self._split_sub_sentence_len = split_sub_sentence_len
+        self._rng = random.Random(0)
 
     def generate_sample_info_list(self):
         sample_info_list = []
@@ -101,42 +121,70 @@ class SampleInfoBucket(object):
                 label_start = int(label_desc_split[2])
                 label_size = int(label_desc_split[3])
                 label_frame_num = int(label_desc_split[4])
+                assert feature_frame_num == label_frame_num
 
-                sample_info_list.append(
-                    SampleInfo(feature_bin_path, feature_start, feature_size,
-                               feature_frame_num, feature_dim, label_bin_path,
-                               label_start, label_size, label_frame_num))
+                if self._split_sentence_threshold == -1 or \
+                        self._split_perturb == -1 or \
+                        self._split_sub_sentence_len == -1 \
+                        or self._split_sentence_threshold >= feature_frame_num:
+                    sample_info_list.append(
+                        SampleInfo(feature_bin_path, feature_start,
+                                   feature_size, feature_frame_num, feature_dim,
+                                   label_bin_path, label_start, label_size,
+                                   label_frame_num))
+                #split sentence
+                else:
+                    cur_frame_pos = 0
+                    cur_frame_len = 0
+                    remain_frame_num = feature_frame_num
+                    while True:
+                        if remain_frame_num > self._split_sentence_threshold:
+                            cur_frame_len = self._split_sub_sentence_len + \
+                                    self._rng.randint(0, self._split_perturb)
+                            if cur_frame_len > remain_frame_num:
+                                cur_frame_len = remain_frame_num
+                        else:
+                            cur_frame_len = remain_frame_num
+
+                        sample_info_list.append(
+                            SampleInfo(
+                                feature_bin_path, feature_start + cur_frame_pos
+                                * feature_dim * 4, cur_frame_len * feature_dim *
+                                4, cur_frame_len, feature_dim, label_bin_path,
+                                label_start + cur_frame_pos * 4, cur_frame_len *
+                                4, cur_frame_len))
+
+                        remain_frame_num -= cur_frame_len
+                        cur_frame_pos += cur_frame_len
+                        if remain_frame_num <= 0:
+                            break
 
         return sample_info_list
 
 
-class EpochEndSignal():
-    pass
-
-
-class DataReader(object):
+class AsyncDataReader(object):
     """DataReader provides basic audio sample preprocessing pipeline including
     data loading and data augmentation.
 
     Args:
         feature_file_list (str): File containing paths of feature data file and
                                  corresponding description file.
-        label_file_list (str): File containing paths of label data file and 
+        label_file_list (str): File containing paths of label data file and
                                corresponding description file.
         drop_frame_len (int): Samples whose label length above the value will be
-                              dropped.
-        process_num (int): Number of processes for processing data.
-        sample_buffer_size (int): Buffer size to indicate the maximum samples 
+                              dropped.(Using '-1' to disable the policy)
+        proc_num (int): Number of processes for processing data.
+        sample_buffer_size (int): Buffer size to indicate the maximum samples
                                   cached.
-        sample_info_buffer_size (int): Buffer size to indicate the maximum 
+        sample_info_buffer_size (int): Buffer size to indicate the maximum
                                        sample information cached.
-        batch_buffer_size (int): Buffer size to indicate the maximum batch 
+        batch_buffer_size (int): Buffer size to indicate the maximum batch
                                  cached.
-        shuffle_block_num (int): Block number indicating the minimum unit to do 
+        shuffle_block_num (int): Block number indicating the minimum unit to do
                                  shuffle.
         random_seed (int): Random seed.
-        verbose (int): If set to 0, complaints including exceptions and signal 
-                       traceback from sub-process will be suppressed. If set 
+        verbose (int): If set to 0, complaints including exceptions and signal
+                       traceback from sub-process will be suppressed. If set
                        to 1, all complaints will be printed.
     """
 
@@ -144,11 +192,11 @@ class DataReader(object):
                  feature_file_list,
                  label_file_list,
                  drop_frame_len=512,
-                 process_num=10,
+                 proc_num=10,
                  sample_buffer_size=1024,
                  sample_info_buffer_size=1024,
-                 batch_buffer_size=1024,
-                 shuffle_block_num=1,
+                 batch_buffer_size=10,
+                 shuffle_block_num=10,
                  random_seed=0,
                  verbose=0):
         self._feature_file_list = feature_file_list
@@ -164,8 +212,12 @@ class DataReader(object):
         self._sample_buffer_size = sample_buffer_size
         self._sample_info_buffer_size = sample_info_buffer_size
         self._batch_buffer_size = batch_buffer_size
-        self._process_num = process_num
+        self._proc_num = proc_num
+        if self._proc_num <= 2:
+            raise ValueError("Value of `proc_num` should be greater than 2.")
+        self._sample_proc_num = self._proc_num - 2
         self._verbose = verbose
+        self._force_exit = ForceExitWrapper(self._manager.Value('b', False))
 
     def generate_bucket_list(self, is_shuffle):
         if self._block_info_list is None:
@@ -199,41 +251,57 @@ class DataReader(object):
     def set_transformers(self, transformers):
         self._transformers = transformers
 
-    def _sample_generator(self):
+    def recycle(self, *args):
+        for shared_ndarray in args:
+            if not isinstance(shared_ndarray, SharedNDArray):
+                raise Value("Only support recycle SharedNDArray object.")
+            shared_ndarray.recycle(self._pool_manager.pool)
+
+    def _start_async_processing(self):
         sample_info_queue = self._manager.Queue(self._sample_info_buffer_size)
         sample_queue = self._manager.Queue(self._sample_buffer_size)
         self._order_id = 0
 
-        @suppress_complaints(verbose=self._verbose)
+        @suppress_complaints(verbose=self._verbose, notify=self._force_exit)
         def ordered_feeding_task(sample_info_queue):
-            for sample_info_bucket in self._bucket_list:
-                sample_info_list = sample_info_bucket.generate_sample_info_list(
-                )
-                self._rng.shuffle(sample_info_list)  # do shuffle here
-                for sample_info in sample_info_list:
-                    sample_info_queue.put((sample_info, self._order_id))
-                    self._order_id += 1
+            if self._verbose == 0:
+                signal.signal(signal.SIGTERM, suppress_signal)
+                signal.signal(signal.SIGINT, suppress_signal)
 
-            for i in xrange(self._process_num):
+            for sample_info_bucket in self._bucket_list:
+                try:
+                    sample_info_list = \
+                            sample_info_bucket.generate_sample_info_list()
+                except Exception as e:
+                    raise CriticalException(e)
+                else:
+                    self._rng.shuffle(sample_info_list)  # do shuffle here
+                    for sample_info in sample_info_list:
+                        sample_info_queue.put((sample_info, self._order_id))
+                        self._order_id += 1
+
+            for i in xrange(self._sample_proc_num):
                 sample_info_queue.put(EpochEndSignal())
 
-        feeding_thread = Thread(
-            target=ordered_feeding_task, args=(sample_info_queue, ))
-        feeding_thread.daemon = True
-        feeding_thread.start()
+        feeding_proc = DaemonProcessGroup(
+            proc_num=1, target=ordered_feeding_task, args=(sample_info_queue, ))
+        feeding_proc.start_all()
 
-        @suppress_complaints(verbose=self._verbose)
+        @suppress_complaints(verbose=self._verbose, notify=self._force_exit)
         def ordered_processing_task(sample_info_queue, sample_queue, out_order):
             if self._verbose == 0:
                 signal.signal(signal.SIGTERM, suppress_signal)
                 signal.signal(signal.SIGINT, suppress_signal)
 
             def read_bytes(fpath, start, size):
-                f = open(fpath, 'r')
-                f.seek(start, 0)
-                binary_bytes = f.read(size)
-                f.close()
-                return binary_bytes
+                try:
+                    f = open(fpath, 'r')
+                    f.seek(start, 0)
+                    binary_bytes = f.read(size)
+                    f.close()
+                    return binary_bytes
+                except Exception as e:
+                    raise CriticalException(e)
 
             ins = sample_info_queue.get()
 
@@ -244,11 +312,21 @@ class DataReader(object):
                                            sample_info.feature_start,
                                            sample_info.feature_size)
 
+                assert sample_info.feature_frame_num \
+                       * sample_info.feature_dim * 4 == len(feature_bytes), \
+                       (sample_info.feature_bin_path,
+                        sample_info.feature_frame_num,
+                        sample_info.feature_dim,
+                        len(feature_bytes))
+
                 label_bytes = read_bytes(sample_info.label_bin_path,
                                          sample_info.label_start,
                                          sample_info.label_size)
 
-                assert sample_info.label_frame_num * 4 == len(label_bytes)
+                assert sample_info.label_frame_num * 4 == len(label_bytes), (
+                    sample_info.label_bin_path, sample_info.label_array,
+                    len(label_bytes))
+
                 label_array = struct.unpack('I' * sample_info.label_frame_num,
                                             label_bytes)
                 label_data = np.array(
@@ -273,7 +351,8 @@ class DataReader(object):
                     time.sleep(0.001)
 
                 # drop long sentence
-                if self._drop_frame_len >= sample_data[0].shape[0]:
+                if self._drop_frame_len == -1 or \
+                        self._drop_frame_len >= sample_data[0].shape[0]:
                     sample_queue.put(sample_data)
 
                 out_order[0] += 1
@@ -283,73 +362,76 @@ class DataReader(object):
 
         out_order = self._manager.list([0])
         args = (sample_info_queue, sample_queue, out_order)
-        workers = [
-            Process(
-                target=ordered_processing_task, args=args)
-            for _ in xrange(self._process_num)
-        ]
+        sample_proc = DaemonProcessGroup(
+            proc_num=self._sample_proc_num,
+            target=ordered_processing_task,
+            args=args)
+        sample_proc.start_all()
 
-        for w in workers:
-            w.daemon = True
-            w.start()
-
-        finished_process_num = 0
-
-        while finished_process_num < self._process_num:
-            sample = sample_queue.get()
-            if isinstance(sample, EpochEndSignal):
-                finished_process_num += 1
-                continue
-            yield sample
-
-        feeding_thread.join()
-        for w in workers:
-            w.join()
+        return sample_queue
 
     def batch_iterator(self, batch_size, minimum_batch_size):
-        def batch_to_ndarray(batch_samples, lod):
-            assert len(batch_samples)
-            frame_dim = batch_samples[0][0].shape[1]
-            batch_feature = np.zeros((lod[-1], frame_dim), dtype="float32")
-            batch_label = np.zeros((lod[-1], 1), dtype="int64")
-            start = 0
-            for sample in batch_samples:
-                frame_num = sample[0].shape[0]
-                batch_feature[start:start + frame_num, :] = sample[0]
-                batch_label[start:start + frame_num, :] = sample[1]
-                start += frame_num
-            return (batch_feature, batch_label)
+        @suppress_complaints(verbose=self._verbose, notify=self._force_exit)
+        def batch_assembling_task(sample_queue, batch_queue, pool):
+            def conv_to_shared(ndarray):
+                while self._force_exit == False:
+                    try:
+                        (name, shared_ndarray) = pool.popitem()
+                    except Exception as e:
+                        time.sleep(0.001)
+                    else:
+                        shared_ndarray.copy(ndarray)
+                        return shared_ndarray
 
-        @suppress_complaints(verbose=self._verbose)
-        def batch_assembling_task(sample_generator, batch_queue):
+            if self._verbose == 0:
+                signal.signal(signal.SIGTERM, suppress_signal)
+                signal.signal(signal.SIGINT, suppress_signal)
+
             batch_samples = []
             lod = [0]
-            for sample in sample_generator():
-                batch_samples.append(sample)
-                lod.append(lod[-1] + sample[0].shape[0])
-                if len(batch_samples) == batch_size:
-                    (batch_feature, batch_label) = batch_to_ndarray(
-                        batch_samples, lod)
-                    batch_queue.put((batch_feature, batch_label, lod))
-                    batch_samples = []
-                    lod = [0]
+            done_num = 0
+            while done_num < self._sample_proc_num:
+                sample = sample_queue.get()
+                if isinstance(sample, EpochEndSignal):
+                    done_num += 1
+                else:
+                    batch_samples.append(sample)
+                    lod.append(lod[-1] + sample[0].shape[0])
+                    if len(batch_samples) == batch_size:
+                        feature, label = batch_to_ndarray(batch_samples, lod)
+
+                        feature = conv_to_shared(feature)
+                        label = conv_to_shared(label)
+                        lod = conv_to_shared(np.array(lod).astype('int64'))
+
+                        batch_queue.put((feature, label, lod))
+                        batch_samples = []
+                        lod = [0]
 
             if len(batch_samples) >= minimum_batch_size:
-                (batch_feature, batch_label) = batch_to_ndarray(batch_samples,
-                                                                lod)
-                batch_queue.put((batch_feature, batch_label, lod))
+                (feature, label) = batch_to_ndarray(batch_samples, lod)
+
+                feature = conv_to_shared(feature)
+                label = conv_to_shared(label)
+                lod = conv_to_shared(np.array(lod).astype('int64'))
+
+                batch_queue.put((feature, label, lod))
 
             batch_queue.put(EpochEndSignal())
 
-        batch_queue = Queue.Queue(self._batch_buffer_size)
+        sample_queue = self._start_async_processing()
+        batch_queue = self._manager.Queue(self._batch_buffer_size)
 
-        assembling_thread = Thread(
+        self._pool_manager = SharedMemoryPoolManager(self._batch_buffer_size *
+                                                     3, self._manager)
+
+        assembling_proc = DaemonProcessGroup(
+            proc_num=1,
             target=batch_assembling_task,
-            args=(self._sample_generator, batch_queue))
-        assembling_thread.daemon = True
-        assembling_thread.start()
+            args=(sample_queue, batch_queue, self._pool_manager.pool))
+        assembling_proc.start_all()
 
-        while True:
+        while self._force_exit == False:
             try:
                 batch_data = batch_queue.get_nowait()
             except Queue.Empty:
@@ -359,4 +441,5 @@ class DataReader(object):
                     break
                 yield batch_data
 
-        assembling_thread.join()
+        # clean the shared memory
+        del self._pool_manager

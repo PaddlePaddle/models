@@ -1,3 +1,7 @@
+运行本目录下的程序示例需要使用PaddlePaddle v0.10.0 版本。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
+
+---
+
 # SSD目标检测
 ## 概述
 SSD全称：Single Shot MultiBox Detector，是目标检测领域较新且效果较好的检测算法之一\[[1](#引用)\]，有着检测速度快且检测精度高的有的。PaddlePaddle已集成SSD算法，本示例旨在介绍如何使用PaddlePaddle中的SSD模型进行目标检测。下文首先简要介绍SSD原理，然后介绍示例包含文件及如何使用，接着介绍如何在PASCAL VOC数据集上训练、评估及检测，最后简要介绍如何在自有数据集上使用SSD。

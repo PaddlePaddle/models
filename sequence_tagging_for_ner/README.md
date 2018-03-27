@@ -1,3 +1,7 @@
+运行本目录下的程序示例需要使用PaddlePaddle v0.10.0 版本。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
+
+---
+
 # 命名实体识别
 
 以下是本例的简要目录结构及说明：
@@ -21,16 +25,16 @@
 
 命名实体识别（Named Entity Recognition，NER）又称作“专名识别”，是指识别文本中具有特定意义的实体，主要包括人名、地名、机构名、专有名词等，是自然语言处理研究的一个基础问题。NER任务通常包括实体边界识别、确定实体类别两部分，可以将其作为序列标注问题解决。
 
-序列标注可以分为Sequence Classification、Segment Classification和Temporal Classification三类[[1](#参考文献)]，本例只考虑Segment Classification，即对输入序列中的每个元素在输出序列中给出对应的标签。对于NER任务，由于需要标识边界，一般采用[BIO标注方法](http://book.paddlepaddle.org/07.label_semantic_roles/)定义的标签集，如下是一个NER的标注结果示例：
+序列标注可以分为Sequence Classification、Segment Classification和Temporal Classification三类[[1](#参考文献)]，本例只考虑Segment Classification，即对输入序列中的每个元素在输出序列中给出对应的标签。对于NER任务，由于需要标识边界，一般采用[BIO标注方法](http://www.paddlepaddle.org/docs/develop/book/07.label_semantic_roles/index.cn.html)定义的标签集，如下是一个NER的标注结果示例：
 
 <p align="center">
 <img src="images/ner_label_ins.png" width="80%" align="center"/><br/>
 图1. BIO标注方法示例
 </p>
 
-根据序列标注结果可以直接得到实体边界和实体类别。类似的，分词、词性标注、语块识别、[语义角色标注](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)等任务都可通过序列标注来解决。使用神经网络模型解决问题的思路通常是：前层网络学习输入的特征表示，网络的最后一层在特征基础上完成最终的任务；对于序列标注问题，通常：使用基于RNN的网络结构学习特征，将学习到的特征接入CRF完成序列标注。实际上是将传统CRF中的线性模型换成了非线性神经网络。沿用CRF的出发点是：CRF使用句子级别的似然概率，能够更好的解决标记偏置问题[[2](#参考文献)]。本例也将基于此思路建立模型。虽然，这里以NER任务作为示例，但所给出的模型可以应用到其他各种序列标注任务中。
+根据序列标注结果可以直接得到实体边界和实体类别。类似的，分词、词性标注、语块识别、[语义角色标注](http://www.paddlepaddle.org/docs/develop/book/07.label_semantic_roles/index.cn.html)等任务都可通过序列标注来解决。使用神经网络模型解决问题的思路通常是：前层网络学习输入的特征表示，网络的最后一层在特征基础上完成最终的任务；对于序列标注问题，通常：使用基于RNN的网络结构学习特征，将学习到的特征接入CRF完成序列标注。实际上是将传统CRF中的线性模型换成了非线性神经网络。沿用CRF的出发点是：CRF使用句子级别的似然概率，能够更好的解决标记偏置问题[[2](#参考文献)]。本例也将基于此思路建立模型。虽然，这里以NER任务作为示例，但所给出的模型可以应用到其他各种序列标注任务中。
 
-由于序列标注问题的广泛性，产生了[CRF](http://book.paddlepaddle.org/07.label_semantic_roles/index.cn.html)等经典的序列模型，这些模型大多只能使用局部信息或需要人工设计特征。随着深度学习研究的发展，循环神经网络（Recurrent Neural Network，RNN等 序列模型能够处理序列元素之间前后关联问题，能够从原始输入文本中学习特征表示，而更加适合序列标注任务，更多相关知识可参考PaddleBook中[语义角色标注](https://github.com/PaddlePaddle/book/blob/develop/07.label_semantic_roles/README.cn.md)一课。
+由于序列标注问题的广泛性，产生了[CRF](http://www.paddlepaddle.org/docs/develop/book/07.label_semantic_roles/index.cn.html)等经典的序列模型，这些模型大多只能使用局部信息或需要人工设计特征。随着深度学习研究的发展，循环神经网络（Recurrent Neural Network，RNN等 序列模型能够处理序列元素之间前后关联问题，能够从原始输入文本中学习特征表示，而更加适合序列标注任务，更多相关知识可参考PaddleBook中[语义角色标注](https://github.com/PaddlePaddle/book/blob/develop/07.label_semantic_roles/README.cn.md)一课。
 
 ## 模型详解
 
@@ -88,14 +92,14 @@ Baghdad      NNP  I-NP  I-LOC
 预处理完成后，一条训练样本包含3个部分作为神经网络的输入信息用于训练：（1）句子序列；（2）首字母大写标记序列；（3）标注序列，下表是一条训练样本的示例：
 
 | 句子序列 | 大写标记序列 | 标注序列 |
-|---|---|---|
-| u.n. | 1 | B-ORG |
-| official | 0 | O |
-| ekeus | 1 | B-PER |
-| heads | 0 | O |
-| for | 0 | O |
-| baghdad | 1 | B-LOC |
-| . | 0 | O |
+| -------- | ------------ | -------- |
+| u.n.     | 1            | B-ORG    |
+| official | 0            | O        |
+| ekeus    | 1            | B-PER    |
+| heads    | 0            | O        |
+| for      | 0            | O        |
+| baghdad  | 1            | B-LOC    |
+| .        | 0            | O        |
 
 ## 运行
 ### 编写数据读取接口

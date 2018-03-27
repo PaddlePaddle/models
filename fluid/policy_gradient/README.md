@@ -1,4 +1,8 @@
-﻿# Policy Gradient RL by PaddlePaddle
+﻿运行本目录下的程序示例需要使用PaddlePaddle的最新develop分枝。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
+
+---
+
+# Policy Gradient RL by PaddlePaddle
 本文介绍了如何使用PaddlePaddle通过policy-based的强化学习方法来训练一个player（actor model）, 我们希望这个player可以完成简单的走阶梯任务。
 
  内容分为:
