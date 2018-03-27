@@ -22,17 +22,38 @@ import os
 
 
 class Settings(object):
-    def __init__(self, data_dir, label_file, resize_h, resize_w, mean_value):
+    def __init__(self, data_dir, label_file, resize_h, resize_w, mean_value,
+                 apply_distort, apply_expand):
         self._data_dir = data_dir
         self._label_list = []
         label_fpath = os.path.join(data_dir, label_file)
         for line in open(label_fpath):
             self._label_list.append(line.strip())
 
+        self._apply_distort = apply_distort
+        self._apply_expand = apply_expand
         self._resize_height = resize_h
         self._resize_width = resize_w
         self._img_mean = np.array(mean_value)[:, np.newaxis, np.newaxis].astype(
             'float32')
+        self._expand_prob = 0.5
+        self._expand_max_ratio = 4
+        self._hue_prob = 0.5
+        self._hue_delta = 18
+        self._contrast_prob = 0.5
+        self._contrast_delta = 0.5
+        self._saturation_prob = 0.5
+        self._saturation_delta = 0.5
+        self._brightness_prob = 0.5
+        self._brightness_delta = 0.125
+
+    @property
+    def apply_distort(self):
+        return self._apply_expand
+
+    @property
+    def apply_distort(self):
+        return self._apply_distort
 
     @property
     def data_dir(self):
@@ -71,7 +92,6 @@ def _reader_creator(settings, file_list, mode, shuffle):
 
                 img = Image.open(img_path)
                 img_width, img_height = img.size
-                img = np.array(img)
 
                 # layout: label | xmin | ymin | xmax | ymax | difficult
                 if mode == 'train' or mode == 'test':
@@ -99,6 +119,12 @@ def _reader_creator(settings, file_list, mode, shuffle):
 
                     sample_labels = bbox_labels
                     if mode == 'train':
+                        if settings._apply_distort:
+                            img = image_util.distort_image(img, settings)
+                        if settings._apply_expand:
+                            img, bbox_labels = image_util.expand_image(
+                                img, bbox_labels, img_width, img_height,
+                                settings)
                         batch_sampler = []
                         # hard-code here
                         batch_sampler.append(
@@ -126,13 +152,14 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         sampled_bbox = image_util.generate_batch_samples(
                             batch_sampler, bbox_labels, img_width, img_height)
 
+                        img = np.array(img)
                         if len(sampled_bbox) > 0:
                             idx = int(random.uniform(0, len(sampled_bbox)))
                             img, sample_labels = image_util.crop_image(
                                 img, bbox_labels, sampled_bbox[idx], img_width,
                                 img_height)
 
-                img = Image.fromarray(img)
+                        img = Image.fromarray(img)
                 img = img.resize((settings.resize_w, settings.resize_h),
                                  Image.ANTIALIAS)
                 img = np.array(img)
