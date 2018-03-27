@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 PaddlePaddle Authors. All Rights Reserved.
+/* Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,8 +37,9 @@ public:
   std::vector<std::string> decode(std::string posterior_rspecifier);
 
   // Accept the scores of one utterance and return the decoding result
-  std::string decode(std::string key,
-                     std::vector<std::vector<kaldi::BaseFloat>> &log_probs);
+  std::string decode(
+      std::string key,
+      const std::vector<std::vector<kaldi::BaseFloat>> &log_probs);
 
 private:
   // For decoding one utterance

@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 PaddlePaddle Authors. All Rights Reserved.
+/* Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -69,7 +69,8 @@ Decoder::~Decoder() {
 }
 
 std::string Decoder::decode(
-    std::string key, std::vector<std::vector<kaldi::BaseFloat>>& log_probs) {
+    std::string key,
+    const std::vector<std::vector<kaldi::BaseFloat>>& log_probs) {
   size_t num_frames = log_probs.size();
   size_t dim_label = log_probs[0].size();
 
