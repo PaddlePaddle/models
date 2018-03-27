@@ -94,15 +94,15 @@ The code to implement the CNN structure in PaddlePaddle is seen the `convolution
 
 - **Max-pooling layer**: The max-pooling operation is carried out for each feature map obtained by convolution. Because the feature map is already a vector, so the max-pooling is actually simply selecting the largest elements in each vector, and the largest elements are spliced together to form a new vector. Obviously, the dimension of the vector is equal to the number of the feature map, that is, the number of the convolution kernel. For example, suppose we use four different convolution kernels, and the convolution generated feature maps are: `[2,3,5]`、`[8,2,1]`、`[5,7,7,6]` and `[4,5,1,8]`. Because the height of the convolution kernel is different, the size of the feature maps is different. The max-pooling is carried out on the four feature maps, and the results are as follows: `[5]`、`[8]`、`[7]` and `[8]`. Finally, the pooling results are spliced together to get `[5,8,7,8]`。
 
-- **全连接与输出层**：The max-pooling results are output through the full connected layer. As with the DNN model, the number of neurons in the final output layer is the same as the number of sample classes, and the sum of the output is 1.
+- **Full connected and output layer**：The max-pooling results are output through the full connected layer. As with the DNN model, the number of neurons in the final output layer is the same as the number of sample classes, and the sum of the output is 1.
 
-CNN 网络的输入数据类型和 DNN 一致。PaddlePaddle 中已经封装好的带有池化的文本序列卷积模块：`paddle.networks.sequence_conv_pool`，可直接调用。该模块的 `context_len` 参数用于指定卷积核在同一时间覆盖的文本长度，即图 2 中的卷积核的高度。`hidden_size` 用于指定该类型的卷积核的数量。本例代码默认使用了 128 个大小为 3 的卷积核和 128 个大小为 4 的卷积核，这些卷积的结果经过最大池化和结果拼接后产生一个 256 维的向量，向量经过一个全连接层输出最终的预测结果。
+The input data of the CNN are consistent with the DNN. The pooling text sequence convolution module has been encapsulated in PaddlePaddle: `paddle.networks.sequence_conv_pool`，which can be invoked directly. The `context_len` parameter of the module is used to specify the length of the text covered by the convolution kernel, that is, the height of the convolution kernel in Figure 2. `hidden_size` is used to specify the number of convolution kernels of this type. This code uses 128 convolution cores with 3 sizes and 128 convolution cores with a size of 4. After max-pooling of the convolution results, a 256 dimensional vector is generated, and the vector passes through a full connected layer to output the final prediction result.
 
-## 使用 PaddlePaddle 内置数据运行
+## Running with built-in data of Paddlepaddle
 
-### 如何训练
+### How to train
 
-在终端中执行 `sh run.sh` 以下命令， 将以 PaddlePaddle 内置的情感分类数据集：`paddle.dataset.imdb` 直接运行本例，会看到如下输入：
+Executing the `sh run.sh` command in the terminal will directly run the example with the built-in sentiment classification dataset built by PaddlePaddle: `paddle.dataset.imdb`, and we will see the following input:
 
 ```text
 Pass 0, Batch 0, Cost 0.696031, {'__auc_evaluator_0__': 0.47360000014305115, 'classification_error_evaluator': 0.5}
@@ -110,22 +110,22 @@ Pass 0, Batch 100, Cost 0.544438, {'__auc_evaluator_0__': 0.839249312877655, 'cl
 Pass 0, Batch 200, Cost 0.406581, {'__auc_evaluator_0__': 0.9030032753944397, 'classification_error_evaluator': 0.2199999988079071}
 Test at Pass 0, {'__auc_evaluator_0__': 0.9289745092391968, 'classification_error_evaluator': 0.14927999675273895}
 ```
-日志每隔 100 个 batch 输出一次，输出信息包括：（1）Pass 序号；（2）Batch 序号；（3）依次输出当前 Batch 上评估指标的评估结果。评估指标在配置网络拓扑结构时指定，在上面的输出中，输出了训练样本集之的 AUC 以及错误率指标。
+The log is output once every 100 batch, and the output information includes: (1) the Pass sequence number; (2) the Batch sequence number; (3) The results of the current Batch evaluation index. The evaluation index is specified when configuring the network topology, and in the above output, the AUC of the training sample set and the error rate index are output.
 
-### 如何预测
+### How to predict
 
-训练结束后模型默认存储在当前工作目录下，在终端中执行 `python infer.py` ，预测脚本会加载训练好的模型进行预测。
+After training, the model is stored in the current working directory by default. Execute `python infer.py` in the terminal, and the prediction script will load the trained model for prediction.
 
-- 默认加载使用 `paddle.data.imdb.train` 训练一个 Pass 产出的 DNN 模型对 `paddle.dataset.imdb.test` 进行测试
+- The default use `paddle.data.imdb.train` to train a Pass to produce a DNN model and test the `paddle.dataset.imdb.test`
 
-会看到如下输出：
+You will see the following output：
 
 ```text
 positive        0.9275 0.0725   previous reviewer <unk> <unk> gave a much better <unk> of the films plot details than i could what i recall mostly is that it was just so beautiful in every sense emotionally visually <unk> just <unk> br if you like movies that are wonderful to look at and also have emotional content to which that beauty is relevant i think you will be glad to have seen this extraordinary and unusual work of <unk> br on a scale of 1 to 10 id give it about an <unk> the only reason i shy away from 9 is that it is a mood piece if you are in the mood for a really artistic very romantic film then its a 10 i definitely think its a mustsee but none of us can be in that mood all the time so overall <unk>
 negative        0.0300 0.9700   i love scifi and am willing to put up with a lot scifi <unk> are usually <unk> <unk> and <unk> i tried to like this i really did but it is to good tv scifi as <unk> 5 is to star trek the original silly <unk> cheap cardboard sets stilted dialogues cg that doesnt match the background and painfully onedimensional characters cannot be overcome with a scifi setting im sure there are those of you out there who think <unk> 5 is good scifi tv its not its clichéd and <unk> while us viewers might like emotion and character development scifi is a genre that does not take itself seriously <unk> star trek it may treat important issues yet not as a serious philosophy its really difficult to care about the characters here as they are not simply <unk> just missing a <unk> of life their actions and reactions are wooden and predictable often painful to watch the makers of earth know its rubbish as they have to always say gene <unk> earth otherwise people would not continue watching <unk> <unk> must be turning in their <unk> as this dull cheap poorly edited watching it without <unk> breaks really brings this home <unk> <unk> of a show <unk> into space spoiler so kill off a main character and then bring him back as another actor <unk> <unk> all over again
 ```
 
-输出日志每一行是对一条样本预测的结果，以 `\t` 分隔，共 3 列，分别是：（1）预测类别标签；（2）样本分别属于每一类的概率，内部以空格分隔；（3）输入文本。
+Each row of output log is the result of prediction for a sample. It is divided into 3 columns by `\t`, which are: (1) Category labels for prediction; (2) the probability that samples belong to each class, separated by spaces, and (3) input text.
 
 ## Using custom data training and prediction
 
