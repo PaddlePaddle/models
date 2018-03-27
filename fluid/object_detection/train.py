@@ -50,11 +50,12 @@ def train(args,
                                          box, box_var)
             nmsed_out = fluid.layers.detection_output(
                 locs, confs, box, box_var, nms_threshold=0.45)
+            loss = fluid.layers.reduce_sum(loss)
             pd.write_output(loss)
             pd.write_output(nmsed_out)
 
         loss, nmsed_out = pd()
-        loss = fluid.layers.reduce_sum(loss)
+        loss = fluid.layers.mean(loss)
     else:
         locs, confs, box, box_var = mobile_net(image, image_shape)
         nmsed_out = fluid.layers.detection_output(
