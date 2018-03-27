@@ -216,7 +216,7 @@ def distort_image(img, settings):
 
 def expand_image(img, bbox_labels, img_width, img_height, settings):
     prob = random.uniform(0, 1)
-    if prob < settings._hue_prob:
+    if prob < settings._expand_prob:
         expand_ratio = random.uniform(1, settings._expand_max_ratio)
         if expand_ratio - 1 >= 0.01:
             height = int(img_height * expand_ratio)
