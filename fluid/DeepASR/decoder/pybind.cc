@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 PaddlePaddle Authors. All Rights Reserved.
+/* Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,15 +15,25 @@ limitations under the License. */
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "decoder.h"
+#include "post_decode_faster.h"
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(decoder, m) {
-  m.doc() = "Decode function for Deep ASR model";
+PYBIND11_MODULE(post_decode_faster, m) {
+  m.doc() = "Decoder for Deep ASR model";
 
-  m.def("decode",
-        &decode,
-        "Decode one input probability matrix "
-        "and return the transcription");
+  py::class_<Decoder>(m, "Decoder")
+      .def(py::init<std::string, std::string, std::string>())
+      .def("decode",
+           (std::vector<std::string> (Decoder::*)(std::string)) &
+               Decoder::decode,
+           "Decode for the probability matrices in specifier "
+           "and return the transcriptions.")
+      .def(
+          "decode",
+          (std::string (Decoder::*)(
+              std::string, const std::vector<std::vector<kaldi::BaseFloat>>&)) &
+              Decoder::decode,
+          "Decode one input probability matrix "
+          "and return the transcription.");
 }
