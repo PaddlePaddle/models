@@ -23,7 +23,7 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 在利用语言模型生成文本的任务中，我们重点介绍循环神经网络语言模型，大家可以通过文档中的使用说明快速适配到自己的训练语料，完成自动写诗、自动写散文等有趣的模型。
 
-- 2.1 [使用循环神经网络语言模型生成文本](https://github.com/PaddlePaddle/models/tree/develop/generate_sequence_by_rnn_lm)
+- 2.1 [使用循环神经网络语言模型生成文本](https://github.com/PaddlePaddle/models/tree/develop/text_generation/generate_sequence_by_rnn_lm)
 
 ## 3. 点击率预估
 
@@ -75,8 +75,8 @@ PaddlePaddle提供了丰富的运算单元，帮助大家以模块化的方式�
 
 - 8.1 [无注意力机制的神经机器翻译](https://github.com/PaddlePaddle/models/tree/develop/nmt_without_attention/README.cn.md)
 - 8.2 [使用Scheduled Sampling改善翻译质量](https://github.com/PaddlePaddle/models/tree/develop/scheduled_sampling)
-- 8.3 [带外部记忆机制的神经机器翻译](https://github.com/PaddlePaddle/models/tree/develop/mt_with_external_memory)
-- 8.4 [生成古诗词](https://github.com/PaddlePaddle/models/tree/develop/generate_chinese_poetry)
+- 8.3 [带外部记忆机制的神经机器翻译](https://github.com/PaddlePaddle/models/tree/develop/text_generation/nmt_with_external_memory)
+- 8.4 [生成古诗词](https://github.com/PaddlePaddle/models/tree/develop/text_generation/generate_chinese_poetry)
 
 ## 9. 阅读理解
 
