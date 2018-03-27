@@ -238,9 +238,9 @@ def train(learning_rate,
             test_info[1].append(acc1[0])
             test_info[2].append(acc5[0])
             if batch_id % 10 == 0:
-                print("Pass {0}, testbatch {1}, loss {2}, \
-                       acc1 {3}, acc5 {4} time {5}"
-                                                   .format(pass_id, \
+                print("Pass {0},testbatch {1},loss {2}, \
+                       acc1 {3},acc5 {4},time {5}"
+                                                  .format(pass_id, \
                        batch_id, loss[0], acc1[0], acc5[0], \
                        "%2.2f sec" % period))
                 sys.stdout.flush()
@@ -250,8 +250,8 @@ def train(learning_rate,
         test_acc5 = np.array(test_info[2]).mean()
 
         print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3}, \
-              test_loss {4}, test_acc1 {5}, test_acc5 {6}"
-                                                          .format(pass_id, \
+               test_loss {4}, test_acc1 {5}, test_acc5 {6}"
+                                                           .format(pass_id, \
               train_loss, train_acc1, train_acc5, test_loss, test_acc1, \
               test_acc5))
         sys.stdout.flush()
