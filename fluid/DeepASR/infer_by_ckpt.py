@@ -13,7 +13,7 @@ import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
 import data_utils.async_data_reader as reader
-import decoder.decoder as decoder
+from decoder.post_decode_faster import Decoder
 from data_utils.util import lodtensor_to_ndarray
 from model_utils.model import stacked_lstmp_model
 from data_utils.util import split_infer_result
@@ -91,6 +91,21 @@ def parse_args():
         type=str,
         default='./checkpoint',
         help="The checkpoint path to init model. (default: %(default)s)")
+    parser.add_argument(
+        '--vocabulary',
+        type=str,
+        default='./decoder/graph/words.txt',
+        help="The path to vocabulary. (default: %(default)s)")
+    parser.add_argument(
+        '--graphs',
+        type=str,
+        default='./decoder/graph/TLG.fst',
+        help="The path to TLG graphs for decoding. (default: %(default)s)")
+    parser.add_argument(
+        '--log_prior',
+        type=str,
+        default="./decoder/logprior",
+        help="The log prior probs for training data. (default: %(default)s)")
     args = parser.parse_args()
     return args
 
@@ -165,8 +180,9 @@ def infer_from_ckpt(args):
         probs, lod = lodtensor_to_ndarray(results[0])
         infer_batch = split_infer_result(probs, lod)
         for index, sample in enumerate(infer_batch):
-            print("Decoding %d: " % (batch_id * args.batch_size + index),
-                  decoder.decode(sample))
+            key = "utter#%d" % (batch_id * args.batch_size + index)
+            print(key, ": ", decoder.decode(key, sample), "\n")
+
     print(np.mean(infer_costs), np.mean(infer_accs))
 
 
