@@ -56,7 +56,7 @@ def pad_batch_data(insts,
 
 
 def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
-                        max_length, n_head):
+                        n_head, d_model):
     """
     Put all padded data needed by training into a dict.
     """
@@ -69,10 +69,13 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
     lbl_word = pad_batch_data([inst[2] for inst in insts], trg_pad_idx, n_head,
                               False, False, False, False)
     lbl_weight = (lbl_word != trg_pad_idx).astype("float32").reshape([-1, 1])
+    src_data_shape = np.array([len(insts), src_max_len, d_model], dtype="int32")
+    trg_data_shape = np.array([len(insts), trg_max_len, d_model], dtype="int32")
     input_dict = dict(
         zip(input_data_names, [
-            src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
-            trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight
+            src_word, src_pos, src_slf_attn_bias, src_data_shape, trg_word,
+            trg_pos, trg_slf_attn_bias, trg_src_attn_bias, trg_data_shape,
+            lbl_word, lbl_weight
         ]))
     return input_dict
 
@@ -119,13 +122,11 @@ def main():
     def test(exe):
         test_costs = []
         for batch_id, data in enumerate(val_data()):
-            if len(data) != TrainTaskConfig.batch_size:
-                continue
             data_input = prepare_batch_input(
                 data, encoder_input_data_names + decoder_input_data_names[:-1] +
                 label_data_names, ModelHyperParams.src_pad_idx,
-                ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
-                ModelHyperParams.n_head)
+                ModelHyperParams.trg_pad_idx, ModelHyperParams.n_head,
+                ModelHyperParams.d_model)
             test_cost = exe.run(test_program,
                                 feed=data_input,
                                 fetch_list=[cost])[0]
@@ -143,15 +144,11 @@ def main():
 
     for pass_id in xrange(TrainTaskConfig.pass_num):
         for batch_id, data in enumerate(train_data()):
-            # The current program desc is coupled with batch_size, thus all
-            # mini-batches must have the same number of instances currently.
-            if len(data) != TrainTaskConfig.batch_size:
-                continue
             data_input = prepare_batch_input(
                 data, encoder_input_data_names + decoder_input_data_names[:-1] +
                 label_data_names, ModelHyperParams.src_pad_idx,
-                ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
-                ModelHyperParams.n_head)
+                ModelHyperParams.trg_pad_idx, ModelHyperParams.n_head,
+                ModelHyperParams.d_model)
             lr_scheduler.update_learning_rate(data_input)
             outs = exe.run(fluid.framework.default_main_program(),
                            feed=data_input,
