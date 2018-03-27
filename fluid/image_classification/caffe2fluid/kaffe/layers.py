@@ -51,9 +51,66 @@ LAYER_DESCRIPTORS = {
     'Threshold': shape_identity,
 }
 
-LAYER_TYPES = LAYER_DESCRIPTORS.keys()
+# layer types in 'V1LayerParameter'
+# (v1layertype name, enum value, mapped to layer type)
+v1_layertypes = [
+    ('ABSVAL', 35),
+    ('ACCURACY', 1),
+    ('ARGMAX', 30),
+    ('BNLL', 2),
+    ('CONCAT', 3),
+    ('CONVOLUTION', 4),
+    ('DATA', 5),
+    ('DECONVOLUTION', 39),
+    ('DROPOUT', 6),
+    ('ELTWISE', 25),
+    ('EXP', 38),
+    ('FLATTEN', 8),
+    ('IM2COL', 11),
+    ('INNERPRODUCT', 14),
+    ('LRN', 15),
+    ('MEMORYDATA', 29),
+    ('MULTINOMIALLOGISTICLOSS', 16),
+    ('MVN', 34),
+    ('POOLING', 17),
+    ('POWER', 26),
+    ('RELU', 18),
+    ('SIGMOID', 19),
+    ('SIGMOIDCROSSENTROPYLOSS', 27),
+    ('SILENCE', 36),
+    ('SOFTMAX', 20),
+    ('SPLIT', 22),
+    ('SLICE', 33),
+    ('TANH', 23),
+    ('WINDOWDATA', 24),
+    ('THRESHOLD', 31),
+]
 
+LAYER_TYPES = LAYER_DESCRIPTORS.keys()
 LayerType = type('LayerType', (), {t: t for t in LAYER_TYPES})
+
+#map the layer name in V1 to standard name
+V1_LAYER_MAP = {'_not_init_': True}
+
+
+def get_v1_layer_map():
+    global V1_LAYER_MAP
+    if '_not_init_' not in V1_LAYER_MAP:
+        return V1_LAYER_MAP
+    else:
+        del V1_LAYER_MAP['_not_init_']
+
+    name2layer = {}
+    for n in LAYER_TYPES:
+        name2layer[n.upper()] = n
+
+    for l in v1_layertypes:
+        n, v = l
+        if n in name2layer and v not in V1_LAYER_MAP:
+            V1_LAYER_MAP[v] = name2layer[n]
+        else:
+            raise KaffeError('not found v1 layer type %s' % n)
+    return V1_LAYER_MAP
 
 
 class NodeKind(LayerType):
@@ -61,7 +118,12 @@ class NodeKind(LayerType):
     def map_raw_kind(kind):
         if kind in LAYER_TYPES:
             return kind
-        return None
+
+        v1_layers = get_v1_layer_map()
+        if kind in v1_layers:
+            return v1_layers[kind]
+        else:
+            return None
 
     @staticmethod
     def compute_output_shape(node):
