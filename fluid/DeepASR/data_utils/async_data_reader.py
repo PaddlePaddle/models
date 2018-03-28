@@ -31,16 +31,18 @@ class SampleInfo(object):
         label_bin_path (str): File containing the label data.
         label_size (int): Byte count of the sample's label data.
         label_frame_num (int): Label number of the sample.
+        sample_name (str): key of the sample
     """
 
     def __init__(self, feature_bin_path, feature_start, feature_size,
                  feature_frame_num, feature_dim, label_bin_path, label_start,
-                 label_size, label_frame_num):
+                 label_size, label_frame_num, sample_name):
         self.feature_bin_path = feature_bin_path
         self.feature_start = feature_start
         self.feature_size = feature_size
         self.feature_frame_num = feature_frame_num
         self.feature_dim = feature_dim
+        self.sample_name = sample_name
 
         self.label_bin_path = label_bin_path
         self.label_start = label_start
@@ -113,6 +115,7 @@ class SampleInfoBucket(object):
 
             for i in xrange(sample_num):
                 feature_desc_split = feature_desc_lines[i + 1].split()
+                sample_name = feature_desc_split[0]
                 feature_start = int(feature_desc_split[2])
                 feature_size = int(feature_desc_split[3])
                 feature_frame_num = int(feature_desc_split[4])
@@ -136,7 +139,7 @@ class SampleInfoBucket(object):
                         SampleInfo(feature_bin_path, feature_start,
                                    feature_size, feature_frame_num, feature_dim,
                                    label_bin_path, label_start, label_size,
-                                   label_frame_num))
+                                   label_frame_num, sample_name))
                 #split sentence
                 else:
                     cur_frame_pos = 0
@@ -157,7 +160,7 @@ class SampleInfoBucket(object):
                                 * feature_dim * 4, cur_frame_len * feature_dim *
                                 4, cur_frame_len, feature_dim, label_bin_path,
                                 label_start + cur_frame_pos * 4, cur_frame_len *
-                                4, cur_frame_len))
+                                4, cur_frame_len, sample_name))
 
                         remain_frame_num -= cur_frame_len
                         cur_frame_pos += cur_frame_len
@@ -361,8 +364,8 @@ class AsyncDataReader(object):
                 feature_data = np.array(
                     feature_array, dtype='float32').reshape((
                         sample_info.feature_frame_num, sample_info.feature_dim))
-
-                sample_data = (feature_data, label_data)
+                sample_data = (feature_data, label_data,
+                               sample_info.sample_name)
                 for transformer in self._transformers:
                     # @TODO(pkuyym) to make transfomer only accept feature_data
                     sample_data = transformer.perform_trans(sample_data)
@@ -415,24 +418,26 @@ class AsyncDataReader(object):
                     batch_samples.append(sample)
                     lod.append(lod[-1] + sample[0].shape[0])
                     if len(batch_samples) == batch_size:
-                        feature, label = batch_to_ndarray(batch_samples, lod)
+                        feature, label, name_lst = batch_to_ndarray(
+                            batch_samples, lod)
 
                         feature = conv_to_shared(feature)
                         label = conv_to_shared(label)
                         lod = conv_to_shared(np.array(lod).astype('int64'))
 
-                        batch_queue.put((feature, label, lod))
+                        batch_queue.put((feature, label, lod, name_lst))
                         batch_samples = []
                         lod = [0]
 
             if len(batch_samples) >= minimum_batch_size:
-                (feature, label) = batch_to_ndarray(batch_samples, lod)
+                (feature, label, name_lst) = batch_to_ndarray(batch_samples,
+                                                              lod)
 
                 feature = conv_to_shared(feature)
                 label = conv_to_shared(label)
                 lod = conv_to_shared(np.array(lod).astype('int64'))
 
-                batch_queue.put((feature, label, lod))
+                batch_queue.put((feature, label, lod, name_lst))
 
             batch_queue.put(EpochEndSignal())
 

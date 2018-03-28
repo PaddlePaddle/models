@@ -220,7 +220,7 @@ def train(args):
                 train_data_reader.batch_iterator(args.batch_size,
                                                  args.minimum_batch_size)):
             # load_data
-            (features, labels, lod) = batch_data
+            (features, labels, lod, name_lst) = batch_data
             feature_t.set(features.ndarray, place)
             feature_t.set_lod([lod.ndarray])
             label_t.set(labels.ndarray, place)

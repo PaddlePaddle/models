@@ -42,12 +42,14 @@ def batch_to_ndarray(batch_samples, lod):
     batch_feature = np.zeros((lod[-1], frame_dim), dtype="float32")
     batch_label = np.zeros((lod[-1], 1), dtype="int64")
     start = 0
+    name_lst = []
     for sample in batch_samples:
         frame_num = sample[0].shape[0]
         batch_feature[start:start + frame_num, :] = sample[0]
         batch_label[start:start + frame_num, :] = sample[1]
         start += frame_num
-    return (batch_feature, batch_label)
+        name_lst.append(sample[2])
+    return (batch_feature, batch_label, name_lst)
 
 
 def split_infer_result(infer_seq, lod):
