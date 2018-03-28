@@ -112,7 +112,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
         if shuffle:
             random.shuffle(images)
 
-        for image in images[:1]:
+        for image in images:
             if settings.dataset == 'coco':
                 image_name = image['file_name']
                 image_path = os.path.join(settings.data_dir, image_name)
