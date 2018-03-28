@@ -1,0 +1,5 @@
+*.DS_Store
+*.pyc
+data
+models/*.tar.gz
+pre-trained-models/*.tar.gz
