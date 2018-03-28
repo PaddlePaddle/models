@@ -27,9 +27,10 @@ from pycocotools.cocoeval import COCOeval
 
 
 class Settings(object):
-    def __init__(self, dataset, data_dir, label_file, resize_h, resize_w,
+    def __init__(self, dataset, toy, data_dir, label_file, resize_h, resize_w,
                  mean_value, apply_distort, apply_expand):
         self._dataset = dataset
+        self._toy = toy
         self._data_dir = data_dir
         if dataset == "pascalvoc":
             self._label_list = []
@@ -57,6 +58,10 @@ class Settings(object):
     @property
     def dataset(self):
         return self._dataset
+
+    @property
+    def toy(self):
+        return self._toy
 
     @property
     def apply_distort(self):
@@ -99,17 +104,25 @@ def _reader_creator(settings, file_list, mode, shuffle):
             images = coco.loadImgs(image_ids)
         elif settings.dataset == 'pascalvoc':
             flist = open(file_list)
-            lines = [line.strip() for line in flist]
+            images = [line.strip() for line in flist]
+
+        if settings.toy:
+            images = images[:1] if len(images) > 1 else images
+
         if shuffle:
             random.shuffle(images)
 
-        for image in images:
+        for image in images[:1]:
             if settings.dataset == 'coco':
                 image_name = image['file_name']
                 image_path = os.path.join(settings.data_dir, image_name)
             elif settings.dataset == 'pascalvoc':
-                flist = open(file_list)
-                lines = [line.strip() for line in flist]
+                if mode == 'train' or mode == 'test':
+                    image_path, label_path = image.split()
+                    image_path = os.path.join(settings.data_dir, image_path)
+                    label_path = os.path.join(settings.data_dir, label_path)
+                elif mode == 'infer':
+                    image_path = os.path.join(settings.data_dir, image)
 
             img = Image.open(image_path)
             img_width, img_height = img.size

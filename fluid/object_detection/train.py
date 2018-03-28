@@ -12,14 +12,17 @@ import functools
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('learning_rate', float, 0.001, "Learning rate.")
-add_arg('batch_size', int, 32, "Minibatch size.")
-add_arg('num_passes', int, 300, "Iteration number.")
+add_arg('batch_size', int, 1, "Minibatch size.")
+add_arg('num_passes', int, 1, "Iteration number.")
 add_arg('parallel', bool, True, "Whether use parallel training.")
-add_arg('use_gpu', bool, True, "Whether use GPU.")
+add_arg('use_gpu', bool, False, "Whether use GPU.")
 add_arg('train_file_list', str,
         './data/coco/annotations/instances_train2014.json', "train file list")
 add_arg('val_file_list', str, './data/coco/annotations/instances_val2014.json',
         "vaild file list")
+
+add_arg('is_toy', bool, True,
+        "Is Toy for quick debug, which use only one sample")
 
 
 def train(args,
@@ -49,7 +52,8 @@ def train(args,
             gt_box_ = pd.read_input(gt_box)
             gt_label_ = pd.read_input(gt_label)
             difficult_ = pd.read_input(difficult)
-            locs, confs, box, box_var = mobile_net(image_, image_shape)
+            locs, confs, box, box_var = mobile_net(data_args, image_,
+                                                   image_shape)
             loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_, box,
                                          box_var)
             nmsed_out = fluid.layers.detection_output(
@@ -61,7 +65,7 @@ def train(args,
         loss, nmsed_out = pd()
         loss = fluid.layers.mean(loss)
     else:
-        locs, confs, box, box_var = mobile_net(image, image_shape)
+        locs, confs, box, box_var = mobile_net(data_args, image, image_shape)
         nmsed_out = fluid.layers.detection_output(
             locs, confs, box, box_var, nms_threshold=0.45)
         loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
@@ -133,6 +137,7 @@ if __name__ == '__main__':
     print_arguments(args)
     data_args = reader.Settings(
         dataset='coco',  # coco or pascalvoc
+        toy=args.is_toy,
         data_dir='./data/coco',
         label_file='label_list',
         apply_distort=True,

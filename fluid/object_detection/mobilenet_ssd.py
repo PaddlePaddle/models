@@ -76,7 +76,7 @@ def extra_block(input, num_filters1, num_filters2, num_groups, stride, scale):
     return normal_conv
 
 
-def mobile_net(img, img_shape, scale=1.0):
+def mobile_net(data_args, img, img_shape, scale=1.0):
     # 300x300
     tmp = conv_bn(img, 3, int(32 * scale), 2, 1, 3)
     # 150x150
@@ -104,10 +104,15 @@ def mobile_net(img, img_shape, scale=1.0):
     module16 = extra_block(module15, 128, 256, 1, 2, scale)
     # 2x2
     module17 = extra_block(module16, 64, 128, 1, 2, scale)
+
+    if data_args.dataset == 'coco':
+        num_classes = 81
+    elif data_args.dataset == 'pascalvoc':
+        num_classes = 21
     mbox_locs, mbox_confs, box, box_var = fluid.layers.multi_box_head(
         inputs=[module11, module13, module14, module15, module16, module17],
         image=img,
-        num_classes=21,
+        num_classes=num_classes,
         min_ratio=20,
         max_ratio=90,
         min_sizes=[60.0, 105.0, 150.0, 195.0, 240.0, 285.0],
