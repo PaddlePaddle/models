@@ -84,8 +84,11 @@ def translate_batch(exe, src_words, encoder, enc_in_names, enc_out_names,
                              [-1e9]).astype("float32")
         # This is used to remove attention on the paddings of source sequences.
         trg_src_attn_bias = np.tile(
-            src_slf_attn_bias[:, :, ::src_max_length, :],
-            [beam_size, 1, trg_max_len, 1])
+            src_slf_attn_bias[:, :, ::src_max_length, :][:, np.newaxis],
+            [1, beam_size, 1, trg_max_len, 1]).reshape([
+                -1, src_slf_attn_bias.shape[1], trg_max_len,
+                src_slf_attn_bias.shape[-1]
+            ])
         trg_data_shape = np.array(
             [batch_size * beam_size, trg_max_len, d_model], dtype="int32")
         enc_output = np.tile(
