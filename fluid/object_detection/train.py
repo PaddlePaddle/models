@@ -1,6 +1,6 @@
 import paddle.v2 as paddle
 import paddle.fluid as fluid
-import coco_reader as reader
+import reader
 import load_model as load_model
 from mobilenet_ssd import mobile_net
 from utility import add_arguments, print_arguments
@@ -11,10 +11,15 @@ import functools
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
-# yapf: disable
-add_arg('parallel',    bool,   False,     "Whether use parallel training.")
-add_arg('use_gpu',     bool,   True,     "Whether use GPU.")
-# yapf: disable
+add_arg('learning_rate', float, 0.001, "Learning rate.")
+add_arg('batch_size', int, 32, "Minibatch size.")
+add_arg('num_passes', int, 300, "Iteration number.")
+add_arg('parallel', bool, True, "Whether use parallel training.")
+add_arg('use_gpu', bool, True, "Whether use GPU.")
+add_arg('train_file_list', str,
+        './data/coco/annotations/instances_train2014.json', "train file list")
+add_arg('val_file_list', str, './data/coco/annotations/instances_val2014.json',
+        "vaild file list")
 
 
 def train(args,
@@ -45,28 +50,26 @@ def train(args,
             gt_label_ = pd.read_input(gt_label)
             difficult_ = pd.read_input(difficult)
             locs, confs, box, box_var = mobile_net(image_, image_shape)
-            loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_,
-                                         box, box_var)
+            loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_, box,
+                                         box_var)
+            nmsed_out = fluid.layers.detection_output(
+                locs, confs, box, box_var, nms_threshold=0.45)
+            loss = fluid.layers.reduce_sum(loss)
             pd.write_output(loss)
-            pd.write_output(locs)
-            pd.write_output(confs)
-            pd.write_output(box)
-            pd.write_output(box_var)
+            pd.write_output(nmsed_out)
 
-        loss, locs, confs, box, box_var = pd()
-        loss = fluid.layers.reduce_sum(loss)
+        loss, nmsed_out = pd()
+        loss = fluid.layers.mean(loss)
     else:
         locs, confs, box, box_var = mobile_net(image, image_shape)
         nmsed_out = fluid.layers.detection_output(
             locs, confs, box, box_var, nms_threshold=0.45)
-        loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label,
-                                     box, box_var)
+        loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
+                                     box_var)
         loss = fluid.layers.reduce_sum(loss)
 
     test_program = fluid.default_main_program().clone(for_test=True)
     with fluid.program_guard(test_program):
-        nmsed_out = fluid.layers.detection_output(
-            locs, confs, box, box_var, nms_threshold=0.45)
         map_eval = fluid.evaluator.DetectionMAP(
             nmsed_out,
             gt_label,
@@ -98,7 +101,6 @@ def train(args,
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, difficult])
 
-    #print 'test_program ', test_program
     def test(pass_id):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
@@ -109,7 +111,6 @@ def train(args,
                                fetch_list=[accum_map])
         print("Test {0}, map {1}".format(pass_id, test_map[0]))
 
-    #print 'main_program ', fluid.default_main_program()
     for pass_id in range(num_passes):
         for batch_id, data in enumerate(train_reader()):
             loss_v = exe.run(fluid.default_main_program(),
@@ -131,7 +132,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
     data_args = reader.Settings(
-        dataset='coco', # coco or pascalvoc
+        dataset='coco',  # coco or pascalvoc
         data_dir='./data/coco',
         label_file='label_list',
         apply_distort=True,
@@ -139,10 +140,11 @@ if __name__ == '__main__':
         resize_h=300,
         resize_w=300,
         mean_value=[127.5, 127.5, 127.5])
-    train(args,
-        train_file_list='./data/coco/annotations/instances_train2014.json',
-        val_file_list='./data/coco/annotations/instances_val2014.json',
+    train(
+        args,
+        train_file_list=args.train_file_list,
+        val_file_list=args.val_file_list,
         data_args=data_args,
-        learning_rate=0.001,
-        batch_size=1,
-        num_passes=1)
+        learning_rate=args.learning_rate,
+        batch_size=args.batch_size,
+        num_passes=args.num_passes)

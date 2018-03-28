@@ -54,7 +54,6 @@ def show_fallback_warning():
     WARNING: PyCaffe not found!
     Falling back to a pure protocol buffer implementation.
     * Conversions will be drastically slower.
-    * This backend is UNTESTED!
 ------------------------------------------------------------
 
 '''

@@ -32,6 +32,11 @@ def parse_args():
         help='The minimum sequence number of a batch data. '
         '(default: %(default)d)')
     parser.add_argument(
+        '--frame_dim',
+        type=int,
+        default=120 * 11,
+        help='Frame dimension of feature data. (default: %(default)d)')
+    parser.add_argument(
         '--stacked_num',
         type=int,
         default=5,
@@ -46,6 +51,11 @@ def parse_args():
         type=int,
         default=1024,
         help='Hidden size of lstmp unit. (default: %(default)d)')
+    parser.add_argument(
+        '--class_num',
+        type=int,
+        default=1749,
+        help='Number of classes in label. (default: %(default)d)')
     parser.add_argument(
         '--learning_rate',
         type=float,
@@ -119,10 +129,11 @@ def profile(args):
             "arg 'first_batches_to_skip' must not be smaller than 0.")
 
     _, avg_cost, accuracy = stacked_lstmp_model(
+        frame_dim=args.frame_dim,
         hidden_dim=args.hidden_dim,
         proj_dim=args.proj_dim,
         stacked_num=args.stacked_num,
-        class_num=1749,
+        class_num=args.class_num,
         parallel=args.parallel)
 
     optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
