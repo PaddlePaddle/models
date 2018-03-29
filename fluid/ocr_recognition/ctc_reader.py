@@ -1,13 +1,24 @@
 import os
 import cv2
+import tarfile
 import numpy as np
 from PIL import Image
-
+from os import path
 from paddle.v2.image import load_image
 import paddle.v2 as paddle
 
 NUM_CLASSES = 10784
 DATA_SHAPE = [1, 48, 512]
+
+DATA_MD5 = "1de60d54d19632022144e4e58c2637b5"
+DATA_URL = "http://cloud.dlnel.org/filepub/?uuid=df937251-3c0b-480d-9a7b-0080dfeee65c"
+CACHE_DIR_NAME = "ctc_data"
+SAVED_FILE_NAME = "data.tar.gz"
+DATA_DIR_NAME = "data"
+TRAIN_DATA_DIR_NAME = "train_images"
+TEST_DATA_DIR_NAME = "test_images"
+TRAIN_LIST_FILE_NAME = "train.list"
+TEST_LIST_FILE_NAME = "test.list"
 
 
 class DataGenerator(object):
@@ -102,25 +113,42 @@ class DataGenerator(object):
 
 
 def num_classes():
+    '''Get classes number of this dataset.
+    '''
     return NUM_CLASSES
 
 
 def data_shape():
+    '''Get image shape of this dataset. It is a dummy shape for this dataset.
+    '''
     return DATA_SHAPE
 
 
 def train(batch_size):
     generator = DataGenerator()
+    data_dir = download_data()
     return generator.train_reader(
-        "/home/disk1/wanghaoshuang/models/fluid/ocr_recognition/data/train_images/",
-        "/home/disk1/wanghaoshuang/models/fluid/ocr_recognition/data/train.list",
-        batch_size)
+        path.join(data_dir, TRAIN_DATA_DIR_NAME),
+        path.join(data_dir, TRAIN_LIST_FILE_NAME), batch_size)
 
 
 def test(batch_size=1):
     generator = DataGenerator()
+    data_dir = download_data()
     return paddle.batch(
         generator.test_reader(
-            "/home/disk1/wanghaoshuang/models/fluid/ocr_recognition/data/test_images/",
-            "/home/disk1/wanghaoshuang/models/fluid/ocr_recognition/data/test.list"
-        ), batch_size)
+            path.join(data_dir, TRAIN_DATA_DIR_NAME),
+            path.join(data_dir, TRAIN_LIST_FILE_NAME)), batch_size)
+
+
+def download_data():
+    '''Download train and test data.
+    '''
+    tar_file = paddle.dataset.common.download(
+        DATA_URL, CACHE_DIR_NAME, DATA_MD5, save_name=SAVED_FILE_NAME)
+    data_dir = path.join(path.dirname(tar_file), DATA_DIR_NAME)
+    if not path.isdir(data_dir):
+        t = tarfile.open(tar_file, "r:gz")
+        t.extractall(path=path.dirname(tar_file))
+        t.close()
+    return data_dir

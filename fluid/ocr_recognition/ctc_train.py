@@ -8,6 +8,7 @@ import functools
 import sys
 from utility import add_arguments, print_arguments, to_lodtensor, get_feeder_data
 from crnn_ctc_model import ctc_train_net
+import time
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -23,11 +24,10 @@ add_arg('momentum',       float, 0.9,    "Momentum.")
 add_arg('rnn_hidden_size',int,   200,    "Hidden size of rnn layers.")
 add_arg('device',         int,   0,      "Device id.'-1' means running on CPU"
                                          "while '0' means GPU-0.")
-add_arg('model_average',     bool,   True,     "Whether to aevrage model for evaluation.")
 add_arg('min_average_window',     int,   10000,     "Min average window.")
 add_arg('max_average_window',     int,   15625,     "Max average window.")
 add_arg('average_window',     float,   0.15,     "Average window.")
-add_arg('parallel',     bool,   True,     "Whether use parallel training.")
+add_arg('parallel',     bool,   False,     "Whether use parallel training.")
 # yapf: disable
 
 def load_parameter(place):
@@ -70,11 +70,12 @@ def train(args, data_reader=dummy_reader):
                 fetch_list=[sum_cost] + error_evaluator.metrics)
             total_loss += batch_loss[0]
             total_seq_error += batch_seq_error[0]
-            if batch_id % 10 == 1:
+            if batch_id % 100 == 1:
                 print '.',
                 sys.stdout.flush()
             if batch_id % args.log_period == 1:
-                print "\nPass[%d]-batch[%d]; Avg Warp-CTC loss: %s; Avg seq error: %s." % (
+                print "\nTime: %s; Pass[%d]-batch[%d]; Avg Warp-CTC loss: %s; Avg seq error: %s." % (
+                    time.time(),
                     pass_id, batch_id, total_loss / (batch_id * args.batch_size), total_seq_error / (batch_id * args.batch_size))
                 sys.stdout.flush()
             batch_id += 1
@@ -84,8 +85,6 @@ def train(args, data_reader=dummy_reader):
             for data in test_reader():
                 exe.run(inference_program, feed=get_feeder_data(data, place))
             _, test_seq_error = error_evaluator.eval(exe)
-            if model_average != None:
-                model_average.restore(exe)
 
             print "\nEnd pass[%d]; Test seq error: %s.\n" % (
                 pass_id, str(test_seq_error[0]))
