@@ -15,13 +15,13 @@ add_arg('learning_rate', float, 0.001, "Learning rate.")
 add_arg('batch_size', int, 1, "Minibatch size.")
 add_arg('num_passes', int, 1, "Iteration number.")
 add_arg('parallel', bool, True, "Whether use parallel training.")
-add_arg('use_gpu', bool, False, "Whether use GPU.")
+add_arg('use_gpu', bool, True, "Whether use GPU.")
 add_arg('train_file_list', str,
         './data/coco/annotations/instances_train2014.json', "train file list")
 add_arg('val_file_list', str, './data/coco/annotations/instances_val2014.json',
         "vaild file list")
 
-add_arg('is_toy', bool, True,
+add_arg('is_toy', bool, False,
         "Is Toy for quick debug, which use only one sample")
 
 
@@ -73,18 +73,22 @@ def train(args,
         loss = fluid.layers.reduce_sum(loss)
 
     test_program = fluid.default_main_program().clone(for_test=True)
+    if data_args.dataset == 'coco':
+        num_classes = 81
+    elif data_args.dataset == 'pascalvoc':
+        num_classes = 21
     with fluid.program_guard(test_program):
         map_eval = fluid.evaluator.DetectionMAP(
             nmsed_out,
             gt_label,
             gt_box,
             difficult,
-            21,
+            num_classes,
             overlap_threshold=0.5,
             evaluate_difficult=False,
             ap_version='11point')
 
-    boundaries = [40000, 60000]
+    boundaries = [160000, 240000]
     values = [0.001, 0.0005, 0.00025]
     optimizer = fluid.optimizer.RMSProp(
         learning_rate=fluid.layers.piecewise_decay(boundaries, values),

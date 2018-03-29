@@ -217,7 +217,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
 
             if mode == 'train':
                 mirror = int(random.uniform(0, 2))
-                if mirror == 1:
+                if mirror == 1 and len(img.shape) == 3:
                     img = img[:, ::-1, :]
                     for i in xrange(len(sample_labels)):
                         tmp = sample_labels[i][1]
