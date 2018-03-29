@@ -106,6 +106,11 @@ def parse_args():
         type=str,
         default="./decoder/logprior",
         help="The log prior probs for training data. (default: %(default)s)")
+    parser.add_argument(
+        '--acoustic_scale',
+        type=float,
+        default=0.2,
+        help="Scaling factor for acoustic likelihoods. (default: %(default)f)")
     args = parser.parse_args()
     return args
 
@@ -165,12 +170,10 @@ def infer_from_ckpt(args):
                                              args.minimum_batch_size)):
         # load_data
         (features, labels, lod) = batch_data
-        feature_t.set(features.ndarray, place)
-        feature_t.set_lod([lod.ndarray])
-        label_t.set(labels.ndarray, place)
-        label_t.set_lod([lod.ndarray])
-
-        infer_data_reader.recycle(features, labels, lod)
+        feature_t.set(features, place)
+        feature_t.set_lod([lod])
+        label_t.set(labels, place)
+        label_t.set_lod([lod])
 
         results = exe.run(infer_program,
                           feed={"feature": feature_t,

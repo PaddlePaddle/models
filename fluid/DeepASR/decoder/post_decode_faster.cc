@@ -21,14 +21,15 @@ using fst::StdArc;
 
 Decoder::Decoder(std::string word_syms_filename,
                  std::string fst_in_filename,
-                 std::string logprior_rxfilename) {
+                 std::string logprior_rxfilename,
+                 kaldi::BaseFloat acoustic_scale) {
   const char* usage =
       "Decode, reading log-likelihoods (of transition-ids or whatever symbol "
       "is on the graph) as matrices.";
 
   kaldi::ParseOptions po(usage);
   binary = true;
-  acoustic_scale = 1.5;
+  this->acoustic_scale = acoustic_scale;
   allow_partial = true;
   kaldi::FasterDecoderOptions decoder_opts;
   decoder_opts.Register(&po, true);  // true == include obscure settings.
