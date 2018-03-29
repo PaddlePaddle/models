@@ -193,12 +193,10 @@ def train(args):
                                                 args.minimum_batch_size)):
             # load_data
             (features, labels, lod) = batch_data
-            feature_t.set(features.ndarray, place)
-            feature_t.set_lod([lod.ndarray])
-            label_t.set(labels.ndarray, place)
-            label_t.set_lod([lod.ndarray])
-
-            test_data_reader.recycle(features, labels, lod)
+            feature_t.set(features, place)
+            feature_t.set_lod([lod])
+            label_t.set(labels, place)
+            label_t.set_lod([lod])
 
             cost, acc = exe.run(test_program,
                                 feed={"feature": feature_t,
@@ -221,12 +219,10 @@ def train(args):
                                                  args.minimum_batch_size)):
             # load_data
             (features, labels, lod) = batch_data
-            feature_t.set(features.ndarray, place)
-            feature_t.set_lod([lod.ndarray])
-            label_t.set(labels.ndarray, place)
-            label_t.set_lod([lod.ndarray])
-
-            train_data_reader.recycle(features, labels, lod)
+            feature_t.set(features, place)
+            feature_t.set_lod([lod])
+            label_t.set(labels, place)
+            label_t.set_lod([lod])
 
             to_print = batch_id > 0 and (batch_id % args.print_per_batches == 0)
             outs = exe.run(fluid.default_main_program(),
