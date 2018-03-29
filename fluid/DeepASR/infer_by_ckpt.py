@@ -162,12 +162,10 @@ def infer_from_ckpt(args):
                                              args.minimum_batch_size)):
         # load_data
         (features, labels, lod) = batch_data
-        feature_t.set(features.ndarray, place)
-        feature_t.set_lod([lod.ndarray])
-        label_t.set(labels.ndarray, place)
-        label_t.set_lod([lod.ndarray])
-
-        infer_data_reader.recycle(features, labels, lod)
+        feature_t.set(features, place)
+        feature_t.set_lod([lod])
+        label_t.set(labels, place)
+        label_t.set_lod([lod])
 
         results = exe.run(infer_program,
                           feed={"feature": feature_t,
