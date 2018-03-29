@@ -35,6 +35,13 @@ def lodtensor_to_ndarray(lod_tensor):
     return ret, lod_tensor.lod()
 
 
+def split_infer_result(infer_seq, lod):
+    infer_batch = []
+    for i in xrange(0, len(lod[0]) - 1):
+        infer_batch.append(infer_seq[lod[0][i]:lod[0][i + 1]])
+    return infer_batch
+
+
 class CriticalException(Exception):
     pass
 

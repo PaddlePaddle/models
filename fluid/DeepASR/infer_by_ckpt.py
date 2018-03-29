@@ -106,6 +106,11 @@ def parse_args():
         type=str,
         default="./decoder/logprior",
         help="The log prior probs for training data. (default: %(default)s)")
+    parser.add_argument(
+        '--acoustic_scale',
+        type=float,
+        default=0.2,
+        help="Scaling factor for acoustic likelihoods. (default: %(default)f)")
     args = parser.parse_args()
     return args
 
