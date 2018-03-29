@@ -1,5 +1,4 @@
 import paddle.fluid as fluid
-import sys
 
 
 def conv_bn_pool(input,
