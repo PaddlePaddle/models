@@ -149,7 +149,8 @@ def infer_from_ckpt(args):
     fluid.io.load_persistables(exe, args.checkpoint)
 
     # init decoder
-    decoder = Decoder(args.vocabulary, args.graphs, args.log_prior)
+    decoder = Decoder(args.vocabulary, args.graphs, args.log_prior,
+                      args.acoustic_scale)
 
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
