@@ -29,7 +29,8 @@ class Decoder {
 public:
   Decoder(std::string word_syms_filename,
           std::string fst_in_filename,
-          std::string logprior_rxfilename);
+          std::string logprior_rxfilename,
+          kaldi::BaseFloat acoustic_scale);
   ~Decoder();
 
   // Interface to accept the scores read from specifier and return
