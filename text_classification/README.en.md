@@ -129,20 +129,20 @@ Each row of output log is the result of prediction for a sample. It is divided i
 
 ## Using custom data training and prediction
 
-### 如何训练
+### How to train
 
-1. 数据组织
+1. The structure of data
 
-    假设有如下格式的训练数据：每一行为一条样本，以 `\t` 分隔，第一列是类别标签，第二列是输入文本的内容，文本内容中的词语以空格分隔。以下是两条示例数据：
+    Suppose there are training data in the following format: Each line is a sample separated by `\t`, the first column is a class label, and the second column is the content of the input text, and the words are separated by space. The following are two sample data：
 
     ```
     positive        PaddlePaddle is good
     negative        What a terrible weather
     ```
 
-2. 编写数据读取接口
+2. Writing the data reading interface
 
-    自定义数据读取接口只需编写一个 Python 生成器实现**从原始输入文本中解析一条训练样本**的逻辑。以下代码片段实现了读取原始数据返回类型为： `paddle.data_type.integer_value_sequence`（词语在字典的序号）和 `paddle.data_type.integer_value`（类别标签）的 2 个输入给网络中定义的 2 个 `data_layer` 的功能。
+    A custom data reading interface only needs to write a Python generator to implement the logic of parsing a training sample from the original input text. The following code is implemented to read the original data, and the return type is: `paddle.data_type.integer_value_sequence`(the number of words in the dictionary) and `paddle.data_type.integer_value`(class label), and these 2 inputs give the function of the 2 `data_layer` defined in the network.
     ```python
     def train_reader(data_dir, word_dict, label_dict):
         def reader():
@@ -163,10 +163,10 @@ Each row of output log is the result of prediction for a sample. It is divided i
         return reader
     ```
 
-    - 关于 PaddlePaddle 中 `data_layer` 接受输入数据的类型，以及数据读取接口对应该返回数据的格式，请参考 [input-types](http://www.paddlepaddle.org/release_doc/0.9.0/doc_cn/ui/data_provider/pydataprovider2.html#input-types) 一节。
-    - 以上代码片段详见本例目录下的 `reader.py` 脚本，`reader.py` 同时提供了读取测试数据的全部代码。
+    - For the type of input data accepted by `data_layer` in PaddlePaddle and the return format for the data reading interface, refer to [input-types](http://www.paddlepaddle.org/release_doc/0.9.0/doc_cn/ui/data_provider/pydataprovider2.html#input-types)。
+    - The above code is detailed in the `reader.py` script in this directory, and `reader.py` provides all the code to read the test data.
 
-    接下来，只需要将数据读取函数 `train_reader` 作为参数传递给 `train.py` 脚本中的 `paddle.batch` 接口即可使用自定义数据接口读取数据，调用方式如下：
+    Next, we only need to pass the data read function `train_reader` as a parameter to the `paddle.batch` interface in the `train.py` script, and then we can read data using the custom data interface. The way to invoke is as follows:
 
     ```python
     train_reader = paddle.batch(
@@ -176,27 +176,26 @@ Each row of output log is the result of prediction for a sample. It is divided i
             batch_size=batch_size)
     ```
 
-3. 修改命令行参数
+3. Modifying the command line parameters
 
-    - 如果将数据组织成示例数据的同样的格式，只需在 `run.sh` 脚本中修改 `train.py` 启动参数，指定 `train_data_dir` 参数，可以直接运行本例，无需修改数据读取接口 `reader.py`。
-    - 执行 `python train.py --help` 可以获取`train.py` 脚本各项启动参数的详细说明，主要参数如下：
-        - `nn_type`：选择要使用的模型，目前支持两种：“dnn” 或者 “cnn”。
-        - `train_data_dir`：指定训练数据所在的文件夹，使用自定义数据训练，必须指定此参数，否则使用`paddle.dataset.imdb`训练，同时忽略`test_data_dir`，`word_dict`，和 `label_dict` 参数。  
-        - `test_data_dir`：指定测试数据所在的文件夹，若不指定将不进行测试。
-        - `word_dict`：字典文件所在的路径，若不指定，将从训练数据根据词频统计，自动建立字典。
-        - `label_dict`：类别标签字典，用于将字符串类型的类别标签，映射为整数类型的序号。
-        - `batch_size`：指定多少条样本后进行一次神经网络的前向运行及反向更新。
-        - `num_passes`：指定训练多少个轮次。
+    - If data is processed into the same format of sample data, it is necessary to modify `train.py` boot parameters and specify `train_data_dir` parameters in `run.sh` script. Then you can run this example directly without modifying the data read interface `reader.py`.
+    - The execution `python train.py --help` can get a detailed description of the startup parameters of the `train.py` script. The main parameters are as follows:
+        - `nn_type`：Choosing the model to use, there are two types of support currently: "DNN" or "CNN".
+        - `train_data_dir`：Specify the folder where the training data is located, and you must specify this parameter by using custom data training. Otherwise, `paddle.dataset.imdb` training is used, and `test_data_dir`, `word_dict`, and `label_dict` parameters are ignored.
+        - `test_data_dir`：Specify the folder where the test data is located, and if it does not specify it will not be tested.
+        - `word_dict`：The path of the dictionary file, if not specified, will automatically establish a dictionary from the training data according to the word frequency statistics.
+        - `label_dict`：A category label dictionary, which is used to map a class label of a string type to an integer type sequence number.
+        - `batch_size`：Specify how many samples are used each time the forward calculation and the backpropagation are used.
+        - `num_passes`：How many rounds of training.
 
-### 如何预测
+### How to predict
 
-1. 修改 `infer.py` 中以下变量，指定使用的模型、指定测试数据。
-
+1. Modify the following variables in the `infer.py`, specify the model used and the test data.
     ```python
-    model_path = "dnn_params_pass_00000.tar.gz"  # 指定模型所在的路径
-    nn_type = "dnn"      # 指定测试使用的模型
-    test_dir = "./data/test"      # 指定测试文件所在的目录
-    word_dict = "./data/dict/word_dict.txt"     # 指定字典所在的路径
-    label_dict = "./data/dict/label_dict.txt"    # 指定类别标签字典的路径
+    model_path = "dnn_params_pass_00000.tar.gz"  # The path of the model
+    nn_type = "dnn"      # Specify the model used for the test
+    test_dir = "./data/test"      # Specify the directory where the test file is located
+    word_dict = "./data/dict/word_dict.txt"     # Specify the path of the dictionary
+    label_dict = "./data/dict/label_dict.txt"    # The path of the category label dictionary
     ```
-2. 在终端中执行 `python infer.py`。
+2. Execute `python infer.py` in the terminal.
