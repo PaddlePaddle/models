@@ -241,6 +241,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
             sample_labels = np.array(sample_labels)
             if mode == 'train' or mode == 'test':
                 if mode == 'train' and len(sample_labels) == 0: continue
+                if mode == 'test' and len(sample_labels) == 0: continue
                 yield img.astype(
                     'float32'
                 ), sample_labels[:, 1:5], sample_labels[:, 0].astype(
