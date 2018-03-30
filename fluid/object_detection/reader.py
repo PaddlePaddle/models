@@ -125,6 +125,8 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     image_path = os.path.join(settings.data_dir, image)
 
             img = Image.open(image_path)
+            if img.mode == 'L':
+                img = img.convert('RGB')
             img_width, img_height = img.size
 
             if mode == 'train' or mode == 'test':
@@ -217,7 +219,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
 
             if mode == 'train':
                 mirror = int(random.uniform(0, 2))
-                if mirror == 1 and len(img.shape) == 3:
+                if mirror == 1:
                     img = img[:, ::-1, :]
                     for i in xrange(len(sample_labels)):
                         tmp = sample_labels[i][1]

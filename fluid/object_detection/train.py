@@ -12,8 +12,8 @@ import functools
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('learning_rate', float, 0.001, "Learning rate.")
-add_arg('batch_size', int, 1, "Minibatch size.")
-add_arg('num_passes', int, 1, "Iteration number.")
+add_arg('batch_size', int, 64, "Minibatch size.")
+add_arg('num_passes', int, 10, "Epoch number.")
 add_arg('parallel', bool, True, "Whether use parallel training.")
 add_arg('use_gpu', bool, True, "Whether use GPU.")
 add_arg('train_file_list', str,
@@ -100,8 +100,8 @@ def train(args,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    load_model.load_and_set_vars(place)
-    #load_model.load_paddlev1_vars(place)
+    #load_model.load_and_set_vars(place)
+    load_model.load_paddlev1_vars(place)
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
@@ -121,12 +121,14 @@ def train(args,
 
     for pass_id in range(num_passes):
         for batch_id, data in enumerate(train_reader()):
+            start_time = time.time()
             loss_v = exe.run(fluid.default_main_program(),
                              feed=feeder.feed(data),
                              fetch_list=[loss])
+            end_time = time.time()
             if batch_id % 20 == 0:
-                print("Pass {0}, batch {1}, loss {2}"
-                      .format(pass_id, batch_id, loss_v[0]))
+                print("Pass {0}, batch {1}, loss {2}, time {3}".format(
+                    pass_id, batch_id, loss_v[0], end_time - start_time))
         test(pass_id)
 
         if pass_id % 10 == 0:

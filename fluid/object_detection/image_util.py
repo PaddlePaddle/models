@@ -190,7 +190,7 @@ def random_saturation(img, settings):
 
 def random_hue(img, settings):
     prob = random.uniform(0, 1)
-    if prob < settings._hue_prob and len(img.shape) == 3:
+    if prob < settings._hue_prob:
         delta = random.uniform(-settings._hue_delta, settings._hue_delta)
         img_hsv = np.array(img.convert('HSV'))
         img_hsv[:, :, 0] = img_hsv[:, :, 0] + delta
