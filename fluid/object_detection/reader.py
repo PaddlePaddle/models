@@ -19,6 +19,7 @@ from PIL import Image
 import numpy as np
 import xml.etree.ElementTree
 import os
+import time
 import copy
 
 # cocoapi 
@@ -106,8 +107,9 @@ def _reader_creator(settings, file_list, mode, shuffle):
             flist = open(file_list)
             images = [line.strip() for line in flist]
 
-        if settings.toy:
-            images = images[:1] if len(images) > 1 else images
+        if not settings.toy == 0:
+            images = images[:settings.toy] if len(
+                images) > settings.toy else images
 
         if shuffle:
             random.shuffle(images)
@@ -148,11 +150,11 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         bbox_sample.append(float(xmax) / img_width)
                         bbox_sample.append(float(ymax) / img_height)
                         bbox_sample.append(ann['iscrowd'])
-                        bbox_sample.append(ann['bbox'])
-                        bbox_sample.append(ann['segmentation'])
-                        bbox_sample.append(ann['area'])
-                        bbox_sample.append(ann['image_id'])
-                        bbox_sample.append(ann['id'])
+                        #bbox_sample.append(ann['bbox'])
+                        #bbox_sample.append(ann['segmentation'])
+                        #bbox_sample.append(ann['area'])
+                        #bbox_sample.append(ann['image_id'])
+                        #bbox_sample.append(ann['id'])
                         bbox_labels.append(bbox_sample)
                 elif settings.dataset == 'pascalvoc':
                     # layout: label | xmin | ymin | xmax | ymax | difficult

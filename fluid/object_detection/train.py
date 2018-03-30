@@ -5,6 +5,7 @@ import load_model as load_model
 from mobilenet_ssd import mobile_net
 from utility import add_arguments, print_arguments
 import os
+import time
 import numpy as np
 import argparse
 import functools
@@ -13,7 +14,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('learning_rate', float, 0.001, "Learning rate.")
 add_arg('batch_size', int, 64, "Minibatch size.")
-add_arg('num_passes', int, 10, "Epoch number.")
+add_arg('num_passes', int, 20, "Epoch number.")
 add_arg('parallel', bool, True, "Whether use parallel training.")
 add_arg('use_gpu', bool, True, "Whether use GPU.")
 add_arg('train_file_list', str,
@@ -21,8 +22,10 @@ add_arg('train_file_list', str,
 add_arg('val_file_list', str, './data/coco/annotations/instances_val2014.json',
         "vaild file list")
 
-add_arg('is_toy', bool, False,
-        "Is Toy for quick debug, which use only one sample")
+add_arg(
+    'is_toy', int, 0,
+    "Is Toy for quick debug, 0 means using all data, while n means using only n sample"
+)
 
 
 def train(args,
@@ -120,15 +123,20 @@ def train(args,
         print("Test {0}, map {1}".format(pass_id, test_map[0]))
 
     for pass_id in range(num_passes):
+        start_time = time.time()
+        prev_start_time = start_time
+        end_time = 0
         for batch_id, data in enumerate(train_reader()):
+            prev_start_time = start_time
             start_time = time.time()
+            #print("Batch {} start at {:.2f}".format(batch_id, start_time))
             loss_v = exe.run(fluid.default_main_program(),
                              feed=feeder.feed(data),
                              fetch_list=[loss])
             end_time = time.time()
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
-                    pass_id, batch_id, loss_v[0], end_time - start_time))
+                    pass_id, batch_id, loss_v[0], start_time - prev_start_time))
         test(pass_id)
 
         if pass_id % 10 == 0:
