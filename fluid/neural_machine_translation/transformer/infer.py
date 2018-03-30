@@ -111,7 +111,6 @@ def translate_batch(exe, src_words, encoder, enc_in_names, enc_out_names,
             trg_slf_attn_pre_softmax_shape, trg_slf_attn_post_softmax_shape, \
             trg_src_attn_pre_softmax_shape, trg_src_attn_post_softmax_shape, \
             enc_output = dec_in_data
-        # trg_words, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, enc_output = dec_in_data
         trg_cur_len = len(next_ids[0]) + 1  # include the <bos>
         trg_words = np.array(
             [
