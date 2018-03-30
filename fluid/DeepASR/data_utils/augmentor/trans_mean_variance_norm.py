@@ -53,9 +53,9 @@ class TransMeanVarianceNorm(object):
             Args:
                 sample(object):input sample, contain feature numpy and label numpy
             Returns:
-                (feature, label, sample_name)
+                (feature, label)
         """
-        (feature, label, sample_name) = sample
+        (feature, label) = sample
         shape = feature.shape
         assert len(shape) == 2
         nfeature_len = shape[0] * shape[1]
@@ -68,4 +68,4 @@ class TransMeanVarianceNorm(object):
             feature[ncur_idx:ncur_idx + self._nLen] = block
             ncur_idx += self._nLen
         feature = feature.reshape(shape)
-        return (feature, label, sample_name)
+        return (feature, label)

@@ -31,18 +31,16 @@ class SampleInfo(object):
         label_bin_path (str): File containing the label data.
         label_size (int): Byte count of the sample's label data.
         label_frame_num (int): Label number of the sample.
-        sample_name (str): key of the sample
     """
 
     def __init__(self, feature_bin_path, feature_start, feature_size,
                  feature_frame_num, feature_dim, label_bin_path, label_start,
-                 label_size, label_frame_num, sample_name):
+                 label_size, label_frame_num):
         self.feature_bin_path = feature_bin_path
         self.feature_start = feature_start
         self.feature_size = feature_size
         self.feature_frame_num = feature_frame_num
         self.feature_dim = feature_dim
-        self.sample_name = sample_name
 
         self.label_bin_path = label_bin_path
         self.label_start = label_start
@@ -104,32 +102,24 @@ class SampleInfoBucket(object):
             feature_bin_path = self._feature_bin_paths[block_idx]
             feature_desc_path = self._feature_desc_paths[block_idx]
 
+            label_desc_lines = open(label_desc_path).readlines()
             feature_desc_lines = open(feature_desc_path).readlines()
-            label_desc_lines = None
-            if label_desc_path != "":
-                label_desc_lines = open(label_desc_path).readlines()
 
-            sample_num = int(feature_desc_lines[0].split()[1])
-            if label_desc_path != "":
-                assert sample_num == int(label_desc_lines[0].split()[1])
+            sample_num = int(label_desc_lines[0].split()[1])
+            assert sample_num == int(feature_desc_lines[0].split()[1])
 
             for i in xrange(sample_num):
                 feature_desc_split = feature_desc_lines[i + 1].split()
-                sample_name = feature_desc_split[0]
                 feature_start = int(feature_desc_split[2])
                 feature_size = int(feature_desc_split[3])
                 feature_frame_num = int(feature_desc_split[4])
                 feature_dim = int(feature_desc_split[5])
 
-                label_start = -1
-                label_size = -1
-                label_frame_num = feature_frame_num
-                if label_desc_path != "":
-                    label_desc_split = label_desc_lines[i + 1].split()
-                    label_start = int(label_desc_split[2])
-                    label_size = int(label_desc_split[3])
-                    label_frame_num = int(label_desc_split[4])
-                    assert feature_frame_num == label_frame_num
+                label_desc_split = label_desc_lines[i + 1].split()
+                label_start = int(label_desc_split[2])
+                label_size = int(label_desc_split[3])
+                label_frame_num = int(label_desc_split[4])
+                assert feature_frame_num == label_frame_num
 
                 if self._split_sentence_threshold == -1 or \
                         self._split_perturb == -1 or \
@@ -139,7 +129,7 @@ class SampleInfoBucket(object):
                         SampleInfo(feature_bin_path, feature_start,
                                    feature_size, feature_frame_num, feature_dim,
                                    label_bin_path, label_start, label_size,
-                                   label_frame_num, sample_name))
+                                   label_frame_num))
                 #split sentence
                 else:
                     cur_frame_pos = 0
@@ -160,7 +150,7 @@ class SampleInfoBucket(object):
                                 * feature_dim * 4, cur_frame_len * feature_dim *
                                 4, cur_frame_len, feature_dim, label_bin_path,
                                 label_start + cur_frame_pos * 4, cur_frame_len *
-                                4, cur_frame_len, sample_name))
+                                4, cur_frame_len))
 
                         remain_frame_num -= cur_frame_len
                         cur_frame_pos += cur_frame_len
@@ -197,7 +187,7 @@ class AsyncDataReader(object):
 
     def __init__(self,
                  feature_file_list,
-                 label_file_list="",
+                 label_file_list,
                  drop_frame_len=512,
                  proc_num=10,
                  sample_buffer_size=1024,
@@ -231,25 +221,16 @@ class AsyncDataReader(object):
     def generate_bucket_list(self, is_shuffle):
         if self._block_info_list is None:
             block_feature_info_lines = open(self._feature_file_list).readlines()
+            block_label_info_lines = open(self._label_file_list).readlines()
+            assert len(block_feature_info_lines) == len(block_label_info_lines)
             self._block_info_list = []
-            if self._label_file_list != "":
-                block_label_info_lines = open(self._label_file_list).readlines()
-                #block_label_info_lines = open(self._label_file_list).readlines()
-                assert len(block_feature_info_lines) == len(
-                    block_label_info_lines)
-                for i in xrange(0, len(block_feature_info_lines), 2):
-                    block_info = (block_feature_info_lines[i],
-                                  block_feature_info_lines[i + 1],
-                                  block_label_info_lines[i],
-                                  block_label_info_lines[i + 1])
-                    self._block_info_list.append(
-                        map(lambda line: line.strip(), block_info))
-            else:
-                for i in xrange(0, len(block_feature_info_lines), 2):
-                    block_info = (block_feature_info_lines[i],
-                                  block_feature_info_lines[i + 1], "", "")
-                    self._block_info_list.append(
-                        map(lambda line: line.strip(), block_info))
+            for i in xrange(0, len(block_feature_info_lines), 2):
+                block_info = (block_feature_info_lines[i],
+                              block_feature_info_lines[i + 1],
+                              block_label_info_lines[i],
+                              block_label_info_lines[i + 1])
+                self._block_info_list.append(
+                    map(lambda line: line.strip(), block_info))
 
         if is_shuffle:
             self._rng.shuffle(self._block_info_list)
@@ -337,24 +318,19 @@ class AsyncDataReader(object):
                         sample_info.feature_dim,
                         len(feature_bytes))
 
-                if sample_info.label_bin_path != "":
-                    label_bytes = read_bytes(sample_info.label_bin_path,
-                                             sample_info.label_start,
-                                             sample_info.label_size)
+                label_bytes = read_bytes(sample_info.label_bin_path,
+                                         sample_info.label_start,
+                                         sample_info.label_size)
 
-                    assert sample_info.label_frame_num * 4 == len(
-                        label_bytes), (sample_info.label_bin_path,
-                                       sample_info.label_array,
-                                       len(label_bytes))
+                assert sample_info.label_frame_num * 4 == len(label_bytes), (
+                    sample_info.label_bin_path, sample_info.label_array,
+                    len(label_bytes))
 
-                    label_array = struct.unpack(
-                        'I' * sample_info.label_frame_num, label_bytes)
-                    label_data = np.array(
-                        label_array, dtype='int64').reshape(
-                            (sample_info.label_frame_num, 1))
-                else:
-                    label_data = np.zeros(
-                        (sample_info.label_frame_num, 1), dtype='int64')
+                label_array = struct.unpack('I' * sample_info.label_frame_num,
+                                            label_bytes)
+                label_data = np.array(
+                    label_array, dtype='int64').reshape(
+                        (sample_info.label_frame_num, 1))
 
                 feature_frame_num = sample_info.feature_frame_num
                 feature_dim = sample_info.feature_dim
@@ -364,11 +340,12 @@ class AsyncDataReader(object):
                 feature_data = np.array(
                     feature_array, dtype='float32').reshape((
                         sample_info.feature_frame_num, sample_info.feature_dim))
-                sample_data = (feature_data, label_data,
-                               sample_info.sample_name)
+
+                sample_data = (feature_data, label_data)
                 for transformer in self._transformers:
                     # @TODO(pkuyym) to make transfomer only accept feature_data
                     sample_data = transformer.perform_trans(sample_data)
+
                 while order_id != out_order[0]:
                     time.sleep(0.001)
 
@@ -418,26 +395,24 @@ class AsyncDataReader(object):
                     batch_samples.append(sample)
                     lod.append(lod[-1] + sample[0].shape[0])
                     if len(batch_samples) == batch_size:
-                        feature, label, name_lst = batch_to_ndarray(
-                            batch_samples, lod)
+                        feature, label = batch_to_ndarray(batch_samples, lod)
 
                         feature = conv_to_shared(feature)
                         label = conv_to_shared(label)
                         lod = conv_to_shared(np.array(lod).astype('int64'))
 
-                        batch_queue.put((feature, label, lod, name_lst))
+                        batch_queue.put((feature, label, lod))
                         batch_samples = []
                         lod = [0]
 
             if len(batch_samples) >= minimum_batch_size:
-                (feature, label, name_lst) = batch_to_ndarray(batch_samples,
-                                                              lod)
+                (feature, label) = batch_to_ndarray(batch_samples, lod)
 
                 feature = conv_to_shared(feature)
                 label = conv_to_shared(label)
                 lod = conv_to_shared(np.array(lod).astype('int64'))
 
-                batch_queue.put((feature, label, lod, name_lst))
+                batch_queue.put((feature, label, lod))
 
             batch_queue.put(EpochEndSignal())
 

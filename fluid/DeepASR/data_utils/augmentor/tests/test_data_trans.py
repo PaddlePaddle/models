@@ -22,7 +22,7 @@ class TestTransMeanVarianceNorm(unittest.TestCase):
         feature = np.zeros((2, 120), dtype="float32")
         feature.fill(1)
         trans = trans_mean_variance_norm.TransMeanVarianceNorm(self._file_path)
-        (feature1, label1, name) = trans.perform_trans((feature, None, None))
+        (feature1, label1) = trans.perform_trans((feature, None))
         (mean, var) = trans.get_mean_var()
         feature_flat1 = feature1.flatten()
         feature_flat = feature.flatten()
@@ -70,7 +70,7 @@ class TestTransAddDelta(unittest.TestCase):
         feature[2, 0:40].fill(3)
         feature[3, 0:40].fill(4)
         trans = trans_add_delta.TransAddDelta()
-        (feature, label, name) = trans.perform_trans((feature, None, None))
+        (feature, label) = trans.perform_trans((feature, None))
         self.assertAlmostEqual(feature.shape[0], 4)
         self.assertAlmostEqual(feature.shape[1], 120)
         self.assertAlmostEqual(1.0, feature[0][0])
@@ -93,7 +93,7 @@ class TestTransSplict(unittest.TestCase):
             feature[i, :].fill(i)
 
         trans = trans_splice.TransSplice()
-        (feature, label, name) = trans.perform_trans((feature, None, None))
+        (feature, label) = trans.perform_trans((feature, None))
         self.assertEqual(feature.shape[1], 110)
 
         for i in xrange(8):
