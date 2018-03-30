@@ -210,6 +210,7 @@ def train(args):
     # train data reader
     train_data_reader = reader.AsyncDataReader(args.train_feature_lst,
                                                args.train_label_lst, -1)
+
     train_data_reader.set_transformers(ltrans)
     # train
     for pass_id in xrange(args.pass_num):
@@ -218,7 +219,7 @@ def train(args):
                 train_data_reader.batch_iterator(args.batch_size,
                                                  args.minimum_batch_size)):
             # load_data
-            (features, labels, lod) = batch_data
+            (features, labels, lod, name_lst) = batch_data
             feature_t.set(features, place)
             feature_t.set_lod([lod])
             label_t.set(labels, place)
