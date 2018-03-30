@@ -30,9 +30,9 @@ class TransSplice(object):
         Args:
             sample(object): input sample(feature, label)
         Return:
-            (feature, label)
+            (feature, label, name)
         """
-        (feature, label) = sample
+        (feature, label, name) = sample
         nframe_num = feature.shape[0]
         nframe_dim = feature.shape[1]
         nnew_frame_dim = nframe_dim * (
@@ -61,4 +61,4 @@ class TransSplice(object):
             np.copyto(ret[i * nnew_frame_dim:(i + 1) * nnew_frame_dim],
                       mat[i * nframe_dim:i * nframe_dim + nnew_frame_dim])
         ret = ret.reshape((nframe_num, nnew_frame_dim))
-        return (ret, label)
+        return (ret, label, name)
