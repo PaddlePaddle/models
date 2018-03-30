@@ -169,7 +169,7 @@ def positionwise_feed_forward(x, d_inner_hid, d_hid):
     return out
 
 
-def pre_post_process_layer(prev_out, out, process_cmd, dropout=0.):
+def pre_post_process_layer(prev_out, out, process_cmd, dropout_rate=0.):
     """
     Add residual connection, layer normalization and droput to the out tensor
     optionally according to the value of process_cmd.
@@ -187,8 +187,9 @@ def pre_post_process_layer(prev_out, out, process_cmd, dropout=0.):
                 param_attr=fluid.initializer.Constant(1.),
                 bias_attr=fluid.initializer.Constant(0.))
         elif cmd == "d":  # add dropout
-            if dropout:
-                out = layers.dropout(out, dropout_prob=dropout, is_test=False)
+            if dropout_rate:
+                out = layers.dropout(
+                    out, dropout_prob=dropout_rate, is_test=False)
     return out
 
 
@@ -202,7 +203,7 @@ def prepare_encoder(src_word,
                     src_emb_dim,
                     src_pad_idx,
                     src_max_len,
-                    dropout=0.,
+                    dropout_rate=0.,
                     pos_pad_idx=0,
                     pos_enc_param_name=None):
     """Add word embeddings and position encodings.
@@ -227,8 +228,8 @@ def prepare_encoder(src_word,
     # FIXME(guosheng): Decouple the program desc with batch_size.
     enc_input = layers.reshape(x=enc_input, shape=[batch_size, -1, src_emb_dim])
     return layers.dropout(
-        enc_input, dropout_prob=dropout,
-        is_test=False) if dropout else enc_input
+        enc_input, dropout_prob=dropout_rate,
+        is_test=False) if dropout_rate else enc_input
 
 
 prepare_encoder = partial(
@@ -565,7 +566,7 @@ def transformer(
         enc_output_flag=False,
         slf_attn_shape_flag=False,
         src_attn_shape_flag=False)
-    cost = layers.cross_entropy(input=predict, label=gold)
+    cost = layers.softmax_with_cross_entropy(logits=predict, label=gold)
     weighted_cost = cost * weights
     return layers.reduce_sum(weighted_cost), predict
 
@@ -689,12 +690,12 @@ def wrap_decoder(trg_vocab_size,
         slf_attn_post_softmax_shape,
         src_attn_pre_softmax_shape,
         src_attn_post_softmax_shape, )
-
+    # Return logits for training and probs for inference.
     predict = layers.reshape(
         x=layers.fc(input=dec_output,
                     size=trg_vocab_size,
                     bias_attr=False,
                     num_flatten_dims=2),
         shape=[-1, trg_vocab_size],
-        act="softmax")
+        act="softmax" if dec_input_layers is None else None)
     return predict
