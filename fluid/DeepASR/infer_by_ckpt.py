@@ -148,6 +148,10 @@ def infer_from_ckpt(args):
     # load checkpoint.
     fluid.io.load_persistables(exe, args.checkpoint)
 
+    # init decoder
+    decoder = Decoder(args.vocabulary, args.graphs, args.log_prior,
+                      args.acoustic_scale)
+
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
         trans_mean_variance_norm.TransMeanVarianceNorm(args.mean_var),
@@ -184,7 +188,7 @@ def infer_from_ckpt(args):
         infer_batch = split_infer_result(probs, lod)
         for index, sample in enumerate(infer_batch):
             key = "utter#%d" % (batch_id * args.batch_size + index)
-            print(key, ": ", decoder.decode(key, sample), "\n")
+            print(key, ": ", decoder.decode(key, sample).encode("utf8"), "\n")
 
     print(np.mean(infer_costs), np.mean(infer_accs))
 
