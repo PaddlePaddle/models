@@ -22,11 +22,11 @@ Advbox provides many stable reference implementations of modern methods to gener
 3. Use advbox to generate the adversarial samples.
 
 
-### Dependencies
+#### Dependencies
 * PaddlePaddle: [the lastest develop branch](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html)
 * Python 2.x
 
-### Structure
+#### Structure
 
 Network models, attack method's implements and the criterion that defines adversarial examples are three essential elements to generate adversarial examples. Misclassification is adopted as the adversarial criterion for briefness in Advbox.
 
@@ -73,7 +73,7 @@ Adversary contains the original object, the target and the adversarial examples.
 ## Tutorials
 The `./tutorials/` folder provides some tutorials to generate adversarial examples on the MNIST dataset. You can slightly modify the code to apply to other dataset. These attack methods are supported in Advbox:
 
-* [L-BFGS](https://arxiv.org/abs/1510.05328)
+* [L-BFGS](https://arxiv.org/abs/1312.6199)
 * [FGSM](https://arxiv.org/abs/1412.6572)
 * [BIM](https://arxiv.org/abs/1607.02533)
 * [ILCM](https://arxiv.org/abs/1607.02533)
@@ -96,11 +96,11 @@ Benchmarks on a vanilla CNN model.
 
 * The strength (higher for more asterisks) is based on the impression from the reviewed literature.
 
---
+---
 ## References
- * [Intriguing properties of neural networks](https://arxiv.org/abs/1312.6199), C. Szegedy et al., arxiv 2014
- * [Explaining and Harnessing Adversarial Examples](https://arxiv.org/abs/1412.6572), I. Goodfellow et al., ICLR 2015
- * [Adversarial Examples In The Physical World](https://arxiv.org/pdf/1607.02533v3.pdf), A. Kurakin et al., ICLR workshop 2017
+* [Intriguing properties of neural networks](https://arxiv.org/abs/1312.6199), C. Szegedy et al., arxiv 2014
+* [Explaining and Harnessing Adversarial Examples](https://arxiv.org/abs/1412.6572), I. Goodfellow et al., ICLR 2015
+* [Adversarial Examples In The Physical World](https://arxiv.org/pdf/1607.02533v3.pdf), A. Kurakin et al., ICLR workshop 2017
 * [The Limitations of Deep Learning in Adversarial Settings](https://arxiv.org/abs/1511.07528), N. Papernot et al., ESSP 2016
 * [DeepFool: a simple and accurate method to fool deep neural networks](https://arxiv.org/abs/1511.04599), S. Moosavi-Dezfooli et al., CVPR 2016
 * [Foolbox: A Python toolbox to benchmark the robustness of machine learning models] (https://arxiv.org/abs/1707.04131), Jonas Rauber et al., arxiv 2018
