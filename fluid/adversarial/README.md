@@ -59,9 +59,11 @@ The structure of Advbox module are as follows:
     └── README.md
 
 **advbox.attack**
+
 Advbox implements several popular adversarial attacks which search adversarial examples. Each attack method uses a distance measure(L1, L2, etc.) to quantify the size of adversarial perturbations. Advbox is easy to craft adversarial example as some attack methods could perform internal hyperparameter tuning to find the minimum perturbation.
 
 **advbox.model**
+
 Advbox implements interfaces to PaddlePaddle. Additionally, other deep learning framworks such as TensorFlow can also be defined and employed. The module is use to compute predictions and gradients for given inputs in a specific framework.
 
 **advbox.adversary**
@@ -83,15 +85,16 @@ Benchmarks on a vanilla CNN model.
 
 > MNIST
 
-|  adversarial attacks  |  fooling rate (non-targeted)  | fooling rate (targeted) | max_epsilon | iterations | comments |
+|  adversarial attacks  |  fooling rate (non-targeted)  | fooling rate (targeted) | max_epsilon | iterations | Strength |
 |:-----:| :----: | :---: | :----: | :----: | :----: |
-|L-BFGS| --- | --- | --- | One shot |  |
-|FGSM| 57.8% | 5.5% | 0.3 | One shot|  |
-|BIM| 98.4% | --- | 0.1 | 100 |  |
-|ILCM| ---  | 100.0% | 0.1 | 100 |  |
-|JSMA| --- | --- | 0.1 | 2000 |  |
-|DeepFool|  | --- | 0.02(overshoot) | 100 |  |
+|L-BFGS| --- | 89.2% | --- | One shot | *** |
+|FGSM| 57.8% | 26.55% | 0.3 | One shot| *** |
+|BIM| 97.4% | --- | 0.1 | 100 | **** |
+|ILCM| ---  | 100.0% | 0.1 | 100 | **** |
+|JSMA| 96.8% | 90.4%| 0.1 | 2000 | *** |
+|DeepFool| 97.7% | 51.3% | --- | 100 | **** |
 
+* The strength (higher for more asterisks) is based on the impression from the reviewed literature.
 
 --
 ## References
@@ -102,3 +105,4 @@ Benchmarks on a vanilla CNN model.
 * [DeepFool: a simple and accurate method to fool deep neural networks](https://arxiv.org/abs/1511.04599), S. Moosavi-Dezfooli et al., CVPR 2016
 * [Foolbox: A Python toolbox to benchmark the robustness of machine learning models] (https://arxiv.org/abs/1707.04131), Jonas Rauber et al., arxiv 2018
 * [CleverHans: An adversarial example library for constructing attacks, building defenses, and benchmarking both](https://github.com/tensorflow/cleverhans#setting-up-cleverhans)
+* [Threat of Adversarial Attacks on Deep Learning in Computer Vision: A Survey](https://arxiv.org/abs/1801.00553), Naveed Akhtar, Ajmal Mian, arxiv 2018
