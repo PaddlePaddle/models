@@ -124,21 +124,25 @@ def data_shape():
     return DATA_SHAPE
 
 
-def train(batch_size):
+def train(batch_size, train_images_dir=None, train_list_file=None):
     generator = DataGenerator()
-    data_dir = download_data()
-    return generator.train_reader(
-        path.join(data_dir, TRAIN_DATA_DIR_NAME),
-        path.join(data_dir, TRAIN_LIST_FILE_NAME), batch_size)
+    if train_images_dir is None:
+        data_dir = download_data()
+        train_images_dir = path.join(data_dir, TRAIN_DATA_DIR_NAME)
+    if train_list_file is None:
+        train_list_file = path.join(data_dir, TRAIN_LIST_FILE_NAME)
+    return generator.train_reader(train_images_dir, train_list_file, batch_size)
 
 
-def test(batch_size=1):
+def test(batch_size=1, test_images_dir=None, test_list_file=None):
     generator = DataGenerator()
-    data_dir = download_data()
+    if test_images_dir is None:
+        data_dir = download_data()
+        test_images_dir = path.join(data_dir, TEST_DATA_DIR_NAME)
+    if test_list_file is None:
+        test_list_file = path.join(data_dir, TEST_LIST_FILE_NAME)
     return paddle.batch(
-        generator.test_reader(
-            path.join(data_dir, TRAIN_DATA_DIR_NAME),
-            path.join(data_dir, TRAIN_LIST_FILE_NAME)), batch_size)
+        generator.test_reader(test_images_dir, test_list_file), batch_size)
 
 
 def download_data():
