@@ -169,14 +169,12 @@ def profile(args):
                 frames_seen = 0
             # load_data
             (features, labels, lod) = batch_data
-            feature_t.set(features.ndarray, place)
-            feature_t.set_lod([lod.ndarray])
-            label_t.set(labels.ndarray, place)
-            label_t.set_lod([lod.ndarray])
+            feature_t.set(features, place)
+            feature_t.set_lod([lod])
+            label_t.set(labels, place)
+            label_t.set_lod([lod])
 
-            frames_seen += lod.ndarray[-1]
-
-            data_reader.recycle(features, labels, lod)
+            frames_seen += lod[-1]
 
             outs = exe.run(fluid.default_main_program(),
                            feed={"feature": feature_t,
