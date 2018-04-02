@@ -387,60 +387,34 @@ def transformer(
         src_pad_idx,
         trg_pad_idx,
         pos_pad_idx, ):
-    # The shapes here act as placeholder.
-    # The shapes set here is to pass the infer-shape in compile time. The actual
-    # shape of src_word in run time is:
-    # [batch_size * max_src_length_in_a_batch, 1].
-    src_word = layers.data(
-        name=input_data_names[0],
-        shape=[batch_size * max_length, 1],
-        dtype="int64",
-        append_batch_size=False)
-    # The actual shape of src_pos in runtime is:
-    # [batch_size * max_src_length_in_a_batch, 1].
-    src_pos = layers.data(
-        name=input_data_names[1],
-        shape=[batch_size * max_length, 1],
-        dtype="int64",
-        append_batch_size=False)
-    # The actual shape of trg_word is in runtime is:
-    # [batch_size * max_trg_length_in_a_batch, 1].
-    trg_word = layers.data(
-        name=input_data_names[2],
-        shape=[batch_size * max_length, 1],
-        dtype="int64",
-        append_batch_size=False)
-    # The actual shape of trg_pos in runtime is:
-    # [batch_size * max_trg_length_in_a_batch, 1].
-    trg_pos = layers.data(
-        name=input_data_names[3],
-        shape=[batch_size * max_length, 1],
-        dtype="int64",
-        append_batch_size=False)
-    # The actual shape of src_slf_attn_bias in runtime is:
-    # [batch_size, n_head, max_src_length_in_a_batch, max_src_length_in_a_batch].
-    # This input is used to remove attention weights on paddings.
-    src_slf_attn_bias = layers.data(
-        name=input_data_names[4],
-        shape=[batch_size, n_head, max_length, max_length],
-        dtype="float32",
-        append_batch_size=False)
-    # The actual shape of trg_slf_attn_bias in runtime is:
-    # [batch_size, n_head, max_trg_length_in_batch, max_trg_length_in_batch].
-    # This is used to remove attention weights on paddings and subsequent words.
-    trg_slf_attn_bias = layers.data(
-        name=input_data_names[5],
-        shape=[batch_size, n_head, max_length, max_length],
-        dtype="float32",
-        append_batch_size=False)
-    # The actual shape of trg_src_attn_bias in runtime is:
-    # [batch_size, n_head, max_trg_length_in_batch, max_src_length_in_batch].
-    # This is used to remove attention weights on paddings.
-    trg_src_attn_bias = layers.data(
-        name=input_data_names[6],
-        shape=[batch_size, n_head, max_length, max_length],
-        dtype="float32",
-        append_batch_size=False)
+    file_obj = fluid.layers.open_recordio_file(
+        filename='./wmt16.recordio',
+        shapes=[
+            [batch_size * max_length, 1],
+            [batch_size * max_length, 1],
+            [batch_size * max_length, 1],
+            [batch_size * max_length, 1],
+            [batch_size, n_head, max_length, max_length],
+            [batch_size, n_head, max_length, max_length],
+            [batch_size, n_head, max_length, max_length],
+            [batch_size * max_length, 1],
+            [batch_size * max_length, 1],
+        ],
+        dtypes=[
+            'int64',
+            'int64',
+            'int64',
+            'int64',
+            'float32',
+            'float32',
+            'float32',
+            'int64',
+            'float32',
+        ],
+        lod_levels=[0] * 9)
+
+    src_word, src_pos, trg_word, trg_pos, src_slf_attn_bias, trg_slf_attn_bias, trg_src_attn_bias, gold, weights = fluid.layers.read_file(
+        file_obj)
 
     enc_input = prepare_encoder(
         src_word,
@@ -492,22 +466,6 @@ def transformer(
                     num_flatten_dims=2),
         shape=[-1, trg_vocab_size],
         act="softmax")
-    # The actual shape of gold in runtime is:
-    # [batch_size * max_trg_length_in_a_batch, 1].
-    gold = layers.data(
-        name=input_data_names[7],
-        shape=[batch_size * max_length, 1],
-        dtype="int64",
-        append_batch_size=False)
     cost = layers.cross_entropy(input=predict, label=gold)
-    # The actual shape of weights in runtime is:
-    # [batch_size * max_trg_length_in_a_batch, 1].
-    # Padding index do not contribute to the total loss. This Weight is used to
-    # cancel padding index in calculating the loss.
-    weights = layers.data(
-        name=input_data_names[8],
-        shape=[batch_size * max_length, 1],
-        dtype="float32",
-        append_batch_size=False)
     weighted_cost = cost * weights
     return layers.reduce_sum(weighted_cost)
