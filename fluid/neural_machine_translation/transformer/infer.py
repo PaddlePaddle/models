@@ -1,6 +1,6 @@
 import numpy as np
 
-import paddle.v2 as paddle
+import paddle
 import paddle.fluid as fluid
 
 import model
@@ -27,11 +27,19 @@ def translate_batch(exe, src_words, encoder, enc_in_names, enc_out_names,
         is_target=False,
         return_pos=True,
         return_attn_bias=True,
-        return_max_len=True)
-    enc_in_data = enc_in_data[:-1] + [
+        return_max_len=False)
+    # Append the data shape input to reshape the output of embedding layer.
+    enc_in_data = enc_in_data + [
         np.array(
-            [batch_size, enc_in_data[-1], d_model], dtype="int32")
-    ]  # Append the data shape input.
+            [-1, enc_in_data[2].shape[-1], d_model], dtype="int32")
+    ]
+    # Append the shape inputs to reshape before and after softmax in encoder
+    # self attention.
+    enc_in_data = enc_in_data + [
+        np.array(
+            [-1, enc_in_data[2].shape[-1]], dtype="int32"), np.array(
+                enc_in_data[2].shape, dtype="int32")
+    ]
     enc_output = exe.run(encoder,
                          feed=dict(zip(enc_in_names, enc_in_data)),
                          fetch_list=enc_out_names)[0]
@@ -73,8 +81,8 @@ def translate_batch(exe, src_words, encoder, enc_in_names, enc_out_names,
         trg_words = np.array(
             [[bos_idx]] * batch_size * beam_size, dtype="int64")
         trg_pos = np.array([[1]] * batch_size * beam_size, dtype="int64")
-        src_max_length, src_slf_attn_bias, trg_max_len = enc_in_data[-1][
-            1], enc_in_data[-2], 1
+        src_max_length, src_slf_attn_bias, trg_max_len = enc_in_data[2].shape[
+            -1], enc_in_data[2], 1
         # This is used to remove attention on subsequent words.
         trg_slf_attn_bias = np.ones((batch_size * beam_size, trg_max_len,
                                      trg_max_len))
@@ -89,19 +97,38 @@ def translate_batch(exe, src_words, encoder, enc_in_names, enc_out_names,
                 -1, src_slf_attn_bias.shape[1], trg_max_len,
                 src_slf_attn_bias.shape[-1]
             ])
+        # Append the shape input to reshape the output of embedding layer.
         trg_data_shape = np.array(
             [batch_size * beam_size, trg_max_len, d_model], dtype="int32")
+        # Append the shape inputs to reshape before and after softmax in
+        # decoder self attention.
+        trg_slf_attn_pre_softmax_shape = np.array(
+            [-1, trg_slf_attn_bias.shape[-1]], dtype="int32")
+        trg_slf_attn_post_softmax_shape = np.array(
+            trg_slf_attn_bias.shape, dtype="int32")
+        # Append the shape inputs to reshape before and after softmax in
+        # encoder-decoder attention.
+        trg_src_attn_pre_softmax_shape = np.array(
+            [-1, trg_src_attn_bias.shape[-1]], dtype="int32")
+        trg_src_attn_post_softmax_shape = np.array(
+            trg_src_attn_bias.shape, dtype="int32")
         enc_output = np.tile(
             enc_output[:, np.newaxis], [1, beam_size, 1, 1]).reshape(
                 [-1, enc_output.shape[-2], enc_output.shape[-1]])
-        return trg_words, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, trg_data_shape, enc_output
+        return trg_words, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, \
+            trg_data_shape, trg_slf_attn_pre_softmax_shape, \
+            trg_slf_attn_post_softmax_shape, trg_src_attn_pre_softmax_shape, \
+            trg_src_attn_post_softmax_shape, enc_output
 
     def update_dec_in_data(dec_in_data, next_ids, active_beams, beam_inst_map):
         """
         Update the input data of decoder mainly by slicing from the previous
         input data and dropping the finished instance beams.
         """
-        trg_words, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, trg_data_shape, enc_output = dec_in_data
+        trg_words, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, \
+            trg_data_shape, trg_slf_attn_pre_softmax_shape, \
+            trg_slf_attn_post_softmax_shape, trg_src_attn_pre_softmax_shape, \
+            trg_src_attn_post_softmax_shape, enc_output = dec_in_data
         trg_cur_len = trg_slf_attn_bias.shape[-1] + 1
         trg_words = np.array(
             [
@@ -129,11 +156,27 @@ def translate_batch(exe, src_words, encoder, enc_in_names, enc_out_names,
         trg_src_attn_bias = np.tile(trg_src_attn_bias[
             active_beams_indice, :, ::trg_src_attn_bias.shape[2], :],
                                     [1, 1, trg_cur_len, 1])
+        # Append the shape input to reshape the output of embedding layer.
         trg_data_shape = np.array(
             [len(active_beams) * beam_size, trg_cur_len, d_model],
             dtype="int32")
+        # Append the shape inputs to reshape before and after softmax in
+        # decoder self attention.
+        trg_slf_attn_pre_softmax_shape = np.array(
+            [-1, trg_slf_attn_bias.shape[-1]], dtype="int32")
+        trg_slf_attn_post_softmax_shape = np.array(
+            trg_slf_attn_bias.shape, dtype="int32")
+        # Append the shape inputs to reshape before and after softmax in
+        # encoder-decoder attention.
+        trg_src_attn_pre_softmax_shape = np.array(
+            [-1, trg_src_attn_bias.shape[-1]], dtype="int32")
+        trg_src_attn_post_softmax_shape = np.array(
+            trg_src_attn_bias.shape, dtype="int32")
         enc_output = enc_output[active_beams_indice, :, :]
-        return trg_words, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, trg_data_shape, enc_output
+        return trg_words, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, \
+            trg_data_shape, trg_slf_attn_pre_softmax_shape, \
+            trg_slf_attn_post_softmax_shape, trg_src_attn_pre_softmax_shape, \
+            trg_src_attn_post_softmax_shape, enc_output
 
     dec_in_data = init_dec_in_data(batch_size, beam_size, enc_in_data,
                                    enc_output)

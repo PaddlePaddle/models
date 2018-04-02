@@ -22,7 +22,7 @@ class TrainTaskConfig(object):
 class InferTaskConfig(object):
     use_gpu = False
     # the number of examples in one run for sequence generation.
-    batch_size = 10
+    batch_size = 1
 
     # the parameters for beam search.
     beam_size = 5
@@ -92,7 +92,9 @@ encoder_input_data_names = (
     "src_word",
     "src_pos",
     "src_slf_attn_bias",
-    "src_data_shape", )
+    "src_data_shape",
+    "src_slf_attn_pre_softmax_shape",
+    "src_slf_attn_post_softmax_shape", )
 
 # Names of all data layers in decoder listed in order.
 decoder_input_data_names = (
@@ -101,6 +103,10 @@ decoder_input_data_names = (
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
     "trg_data_shape",
+    "trg_slf_attn_pre_softmax_shape",
+    "trg_slf_attn_post_softmax_shape",
+    "trg_src_attn_pre_softmax_shape",
+    "trg_src_attn_post_softmax_shape",
     "enc_output", )
 
 # Names of label related data layers listed in order.

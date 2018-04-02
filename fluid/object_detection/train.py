@@ -12,8 +12,9 @@ import functools
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('parallel',    bool,   True,     "Whether use parallel training.")
-add_arg('use_gpu',     bool,   True,     "Whether use GPU.")
+add_arg('batch_size',   int,    32,       "Minibatch size.")
+add_arg('parallel',     bool,   True,     "Whether use parallel training.")
+add_arg('use_gpu',      bool,   True,     "Whether use GPU.")
 # yapf: disable
 
 
@@ -47,26 +48,24 @@ def train(args,
             locs, confs, box, box_var = mobile_net(image_, image_shape)
             loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_,
                                          box, box_var)
+            nmsed_out = fluid.layers.detection_output(
+                locs, confs, box, box_var, nms_threshold=0.45)
+            loss = fluid.layers.reduce_sum(loss)
             pd.write_output(loss)
-            pd.write_output(locs)
-            pd.write_output(confs)
-            pd.write_output(box)
-            pd.write_output(box_var)
+            pd.write_output(nmsed_out)
 
-        loss, locs, confs, box, box_var = pd()
-        loss = fluid.layers.reduce_sum(loss)
+        loss, nmsed_out = pd()
+        loss = fluid.layers.mean(loss)
     else:
         locs, confs, box, box_var = mobile_net(image, image_shape)
         nmsed_out = fluid.layers.detection_output(
-            locs, mbox_confs, box, box_var, nms_threshold=0.45)
-        loss = fluid.layers.ssd_loss(locs, mbox_confs, gt_box, gt_label,
+            locs, confs, box, box_var, nms_threshold=0.45)
+        loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label,
                                      box, box_var)
         loss = fluid.layers.reduce_sum(loss)
 
     test_program = fluid.default_main_program().clone(for_test=True)
     with fluid.program_guard(test_program):
-        nmsed_out = fluid.layers.detection_output(
-            locs, confs, box, box_var, nms_threshold=0.45)
         map_eval = fluid.evaluator.DetectionMAP(
             nmsed_out,
             gt_label,
@@ -77,13 +76,10 @@ def train(args,
             evaluate_difficult=False,
             ap_version='11point')
 
-    optimizer = fluid.optimizer.Momentum(
-        learning_rate=fluid.layers.exponential_decay(
-            learning_rate=learning_rate,
-            decay_steps=40000,
-            decay_rate=0.1,
-            staircase=True),
-        momentum=0.9,
+    boundaries = [40000, 60000]
+    values = [0.001, 0.0005, 0.00025]
+    optimizer = fluid.optimizer.RMSProp(
+        learning_rate=fluid.layers.piecewise_decay(boundaries, values),
         regularization=fluid.regularizer.L2Decay(0.00005), )
 
     optimizer.minimize(loss)
@@ -92,7 +88,8 @@ def train(args,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    load_model.load_paddlev1_vars(place)
+    load_model.load_and_set_vars(place)
+    #load_model.load_paddlev1_vars(place)
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
@@ -100,7 +97,6 @@ def train(args,
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, difficult])
 
-    #print 'test_program ', test_program
     def test(pass_id):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
@@ -111,14 +107,14 @@ def train(args,
                                fetch_list=[accum_map])
         print("Test {0}, map {1}".format(pass_id, test_map[0]))
 
-    #print 'main_program ', fluid.default_main_program()
     for pass_id in range(num_passes):
         for batch_id, data in enumerate(train_reader()):
             loss_v = exe.run(fluid.default_main_program(),
                              feed=feeder.feed(data),
                              fetch_list=[loss])
-            print("Pass {0}, batch {1}, loss {2}"
-                  .format(pass_id, batch_id, loss_v[0]))
+            if batch_id % 20 == 0:
+                print("Pass {0}, batch {1}, loss {2}"
+                      .format(pass_id, batch_id, loss_v[0]))
         test(pass_id)
 
         if pass_id % 10 == 0:
@@ -134,6 +130,8 @@ if __name__ == '__main__':
     data_args = reader.Settings(
         data_dir='./data',
         label_file='label_list',
+        apply_distort=True,
+        apply_expand=True,
         resize_h=300,
         resize_w=300,
         mean_value=[127.5, 127.5, 127.5])
@@ -142,5 +140,5 @@ if __name__ == '__main__':
           val_file_list='./data/test.txt',
           data_args=data_args,
           learning_rate=0.001,
-          batch_size=32,
+          batch_size=args.batch_size,
           num_passes=300)

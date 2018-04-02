@@ -4,11 +4,11 @@
 #   demo to show how to use converted model using caffe2fluid
 #
 
+import sys
+import os
 import numpy as np
 import paddle.v2 as paddle
 import paddle.v2.fluid as fluid
-
-from lenet import LeNet as MyNet
 
 
 def test_model(exe, test_program, fetch_list, test_reader, feeder):
@@ -24,10 +24,15 @@ def test_model(exe, test_program, fetch_list, test_reader, feeder):
     return float(acc_val)
 
 
-def main(model_path):
+def evaluate(net_file, model_file):
     """ main
     """
-    print('load fluid model in %s' % (model_path))
+    #1, build model
+    net_path = os.path.dirname(net_file)
+    if net_path not in sys.path:
+        sys.path.insert(0, net_path)
+
+    from lenet import LeNet as MyNet
 
     with_gpu = False
     paddle.init(use_gpu=with_gpu)
@@ -45,10 +50,10 @@ def main(model_path):
     exe.run(fluid.default_startup_program())
 
     #2, load weights
-    if model_path.find('.npy') > 0:
-        net.load(data_path=model_path, exe=exe, place=place)
+    if model_file.find('.npy') > 0:
+        net.load(data_path=model_file, exe=exe, place=place)
     else:
-        net.load(data_path=model_path, exe=exe)
+        net.load(data_path=model_file, exe=exe)
 
     #3, test this model
     test_program = fluid.default_main_program().clone()
@@ -65,10 +70,17 @@ def main(model_path):
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) == 2:
-        fluid_model_path = sys.argv[1]
-    else:
-        fluid_model_path = './model.fluid'
+    net_file = 'models/lenet/lenet.py'
+    weight_file = 'models/lenet/lenet.npy'
 
-    main(fluid_model_path)
+    argc = len(sys.argv)
+    if argc == 3:
+        net_file = sys.argv[1]
+        weight_file = sys.argv[2]
+    elif argc > 1:
+        print('usage:')
+        print('\tpython %s [net_file] [weight_file]' % (sys.argv[0]))
+        print('\teg:python %s %s %s %s' % (sys.argv[0], net_file, weight_file))
+        sys.exit(1)
+
+    evaluate(net_file, weight_file)

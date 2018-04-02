@@ -13,7 +13,7 @@ import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
 import data_utils.async_data_reader as reader
-import decoder.decoder as decoder
+from decoder.post_decode_faster import Decoder
 from data_utils.util import lodtensor_to_ndarray
 from model_utils.model import stacked_lstmp_model
 from data_utils.util import split_infer_result
@@ -33,6 +33,11 @@ def parse_args():
         help='The minimum sequence number of a batch data. '
         '(default: %(default)d)')
     parser.add_argument(
+        '--frame_dim',
+        type=int,
+        default=120 * 11,
+        help='Frame dimension of feature data. (default: %(default)d)')
+    parser.add_argument(
         '--stacked_num',
         type=int,
         default=5,
@@ -47,6 +52,11 @@ def parse_args():
         type=int,
         default=1024,
         help='Hidden size of lstmp unit. (default: %(default)d)')
+    parser.add_argument(
+        '--class_num',
+        type=int,
+        default=1749,
+        help='Number of classes in label. (default: %(default)d)')
     parser.add_argument(
         '--learning_rate',
         type=float,
@@ -81,6 +91,26 @@ def parse_args():
         type=str,
         default='./checkpoint',
         help="The checkpoint path to init model. (default: %(default)s)")
+    parser.add_argument(
+        '--vocabulary',
+        type=str,
+        default='./decoder/graph/words.txt',
+        help="The path to vocabulary. (default: %(default)s)")
+    parser.add_argument(
+        '--graphs',
+        type=str,
+        default='./decoder/graph/TLG.fst',
+        help="The path to TLG graphs for decoding. (default: %(default)s)")
+    parser.add_argument(
+        '--log_prior',
+        type=str,
+        default="./decoder/logprior",
+        help="The log prior probs for training data. (default: %(default)s)")
+    parser.add_argument(
+        '--acoustic_scale',
+        type=float,
+        default=0.2,
+        help="Scaling factor for acoustic likelihoods. (default: %(default)f)")
     args = parser.parse_args()
     return args
 
@@ -99,10 +129,11 @@ def infer_from_ckpt(args):
         raise IOError("Invalid checkpoint!")
 
     prediction, avg_cost, accuracy = stacked_lstmp_model(
+        frame_dim=args.frame_dim,
         hidden_dim=args.hidden_dim,
         proj_dim=args.proj_dim,
         stacked_num=args.stacked_num,
-        class_num=1749,
+        class_num=args.class_num,
         parallel=args.parallel)
 
     infer_program = fluid.default_main_program().clone()
@@ -116,6 +147,10 @@ def infer_from_ckpt(args):
 
     # load checkpoint.
     fluid.io.load_persistables(exe, args.checkpoint)
+
+    # init decoder
+    decoder = Decoder(args.vocabulary, args.graphs, args.log_prior,
+                      args.acoustic_scale)
 
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
@@ -136,12 +171,10 @@ def infer_from_ckpt(args):
                                              args.minimum_batch_size)):
         # load_data
         (features, labels, lod) = batch_data
-        feature_t.set(features.ndarray, place)
-        feature_t.set_lod([lod.ndarray])
-        label_t.set(labels.ndarray, place)
-        label_t.set_lod([lod.ndarray])
-
-        infer_data_reader.recycle(features, labels, lod)
+        feature_t.set(features, place)
+        feature_t.set_lod([lod])
+        label_t.set(labels, place)
+        label_t.set_lod([lod])
 
         results = exe.run(infer_program,
                           feed={"feature": feature_t,
@@ -154,8 +187,8 @@ def infer_from_ckpt(args):
         probs, lod = lodtensor_to_ndarray(results[0])
         infer_batch = split_infer_result(probs, lod)
         for index, sample in enumerate(infer_batch):
-            print("Decoding %d: " % (batch_id * args.batch_size + index),
-                  decoder.decode(sample))
+            key = "utter#%d" % (batch_id * args.batch_size + index)
+            print(key, ": ", decoder.decode(key, sample).encode("utf8"), "\n")
 
     print(np.mean(infer_costs), np.mean(infer_accs))
 
