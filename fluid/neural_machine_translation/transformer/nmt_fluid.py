@@ -126,13 +126,29 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
         [inst[1] for inst in insts], trg_pad_idx, n_head, is_target=True)
     trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
                                 [1, 1, trg_max_len, 1]).astype("float32")
+    src_slf_attn_pre_softmax_shape = np.array(
+        [-1, src_slf_attn_bias.shape[-1]], dtype="int32")
+    src_slf_attn_post_softmax_shape = np.array(
+        src_slf_attn_bias.shape, dtype="int32")
+    trg_slf_attn_pre_softmax_shape = np.array(
+        [-1, trg_slf_attn_bias.shape[-1]], dtype="int32")
+    trg_slf_attn_post_softmax_shape = np.array(
+        trg_slf_attn_bias.shape, dtype="int32")
+    trg_src_attn_pre_softmax_shape = np.array(
+        [-1, trg_src_attn_bias.shape[-1]], dtype="int32")
+    trg_src_attn_post_softmax_shape = np.array(
+        trg_src_attn_bias.shape, dtype="int32")
     lbl_word = pad_batch_data([inst[2] for inst in insts], trg_pad_idx, n_head,
                               False, False, False, False)
     lbl_weight = (lbl_word != trg_pad_idx).astype("float32").reshape([-1, 1])
     input_dict = dict(
         zip(input_data_names, [
-            src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
-            trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight
+            src_word, src_pos, src_slf_attn_bias,
+            src_slf_attn_pre_softmax_shape, src_slf_attn_post_softmax_shape,
+            trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias,
+            trg_slf_attn_pre_softmax_shape, trg_slf_attn_post_softmax_shape,
+            trg_src_attn_pre_softmax_shape, trg_src_attn_post_softmax_shape,
+            lbl_word, lbl_weight
         ]))
     return input_dict
 
@@ -304,4 +320,5 @@ def print_arguments():
     print('------------------------------------------------')
 
 if __name__ == "__main__":
+    print_arguments()
     main()
