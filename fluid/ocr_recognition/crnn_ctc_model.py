@@ -187,25 +187,17 @@ def ctc_train_net(images, label, args, num_classes):
     error_evaluator = fluid.evaluator.EditDistance(
         input=decoded_out, label=casted_label)
 
-    inference_program = fluid.default_main_program().clone()
-    with fluid.program_guard(inference_program):
-        inference_program = fluid.io.get_inference_program(error_evaluator)
+    inference_program = fluid.default_main_program().clone(for_test=True)
 
     optimizer = fluid.optimizer.Momentum(
         learning_rate=args.learning_rate, momentum=args.momentum)
     _, params_grads = optimizer.minimize(sum_cost)
-    model_average = None
-    if args.model_average:
-        model_average = fluid.optimizer.ModelAverage(
-            params_grads,
-            args.average_window,
-            min_average_window=args.min_average_window,
-            max_average_window=args.max_average_window)
-    decoded_out = fluid.layers.ctc_greedy_decoder(
-        input=fc_out, blank=num_classes)
-    casted_label = fluid.layers.cast(x=label, dtype='int64')
-    error_evaluator = fluid.evaluator.EditDistance(
-        input=decoded_out, label=casted_label)
+    model_average = fluid.optimizer.ModelAverage(
+        params_grads,
+        args.average_window,
+        min_average_window=args.min_average_window,
+        max_average_window=args.max_average_window)
+
     return sum_cost, error_evaluator, inference_program, model_average
 
 
