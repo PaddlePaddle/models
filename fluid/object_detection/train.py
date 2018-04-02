@@ -18,9 +18,9 @@ add_arg('num_passes', int, 20, "Epoch number.")
 add_arg('parallel', bool, True, "Whether use parallel training.")
 add_arg('use_gpu', bool, True, "Whether use GPU.")
 add_arg('train_file_list', str,
-        './data/COCO17/annotations/stuff_train2017.json', "train file list")
-add_arg('val_file_list', str, './data/COCO17/annotations/stuff_val2017.json',
-        "vaild file list")
+        './data/COCO17/annotations/instances_train2017.json', "train file list")
+add_arg('val_file_list', str,
+        './data/COCO17/annotations/instances_val2017.json', "vaild file list")
 add_arg('model_save_dir', str, 'model_coco_pretrain', "where to save model")
 
 add_arg('dataset', str, 'coco', "coco or pascalvoc")
