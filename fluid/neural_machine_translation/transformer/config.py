@@ -1,5 +1,4 @@
 class TrainTaskConfig(object):
-    use_gpu = False
     # the epoch number to train.
     pass_num = 2
 

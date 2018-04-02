@@ -9,6 +9,65 @@ from optim import LearningRateScheduler
 from config import TrainTaskConfig, ModelHyperParams, pos_enc_param_names, \
         encoder_input_data_names, decoder_input_data_names, label_data_names
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument(
+    '--batch_size', type=int, default=TrainTaskConfig.batch_size, help="Batch size for training.")
+
+parser.add_argument(
+    '--learning_rate',
+    type=float,
+    default=TrainTaskConfig.learning_rate,
+    help="Learning rate for training.")
+
+parser.add_argument('--num_passes', type=int, default=50, help="No. of passes.")
+
+parser.add_argument(
+    '--device',
+    type=str,
+    default='CPU',
+    choices=['CPU', 'GPU'],
+    help="The device type.")
+
+parser.add_argument('--device_id', type=int, default=0, help="The device id.")
+
+parser.add_argument(
+    '--local',
+    type=str2bool,
+    default=True,
+    help='Whether to run as local mode.')
+
+parser.add_argument(
+    "--ps_hosts",
+    type=str,
+    default="",
+    help="Comma-separated list of hostname:port pairs")
+
+parser.add_argument(
+    "--trainer_hosts",
+    type=str,
+    default="",
+    help="Comma-separated list of hostname:port pairs")
+
+parser.add_argument(
+    "--pass_num",
+    type=int,
+    default=TrainTaskConfig.pass_num,
+    help="Comma-separated list of hostname:port pairs")
+
+
+# Flags for defining the tf.train.Server
+parser.add_argument(
+    "--task_index", type=int, default=0, help="Index of task within the job")
+args = parser.parse_args()
+
 
 def pad_batch_data(insts,
                    pad_idx,
@@ -78,7 +137,8 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
 
 
 def main():
-    place = fluid.CUDAPlace(0) if TrainTaskConfig.use_gpu else fluid.CPUPlace()
+    place = core.CPUPlace() if args.device == 'CPU' else core.CUDAPlace(
+        args.device_id)
     exe = fluid.Executor(place)
 
     cost, predict = transformer(
@@ -100,75 +160,138 @@ def main():
         epsilon=TrainTaskConfig.eps)
     optimizer.minimize(cost)
 
-    train_data = paddle.batch(
-        paddle.reader.shuffle(
-            paddle.dataset.wmt16.train(ModelHyperParams.src_vocab_size,
-                                       ModelHyperParams.trg_vocab_size),
-            buf_size=100000),
-        batch_size=TrainTaskConfig.batch_size)
-
-    # Program to do validation.
-    test_program = fluid.default_main_program().clone()
+    inference_program = fluid.default_main_program().clone()
     with fluid.program_guard(test_program):
-        test_program = fluid.io.get_inference_program([cost])
-    val_data = paddle.batch(
-        paddle.dataset.wmt16.validation(ModelHyperParams.src_vocab_size,
-                                        ModelHyperParams.trg_vocab_size),
-        batch_size=TrainTaskConfig.batch_size)
+        inference_program = fluid.io.get_inference_program([cost])
 
     def test(exe):
         test_costs = []
-        for batch_id, data in enumerate(val_data()):
-            if len(data) != TrainTaskConfig.batch_size:
+        #for batch_id, data in enumerate(val_data()):
+        for batch_id, data in enumerate(test_reader()):
+            if len(data) != args.batch_size:
                 continue
+
             data_input = prepare_batch_input(
                 data, encoder_input_data_names + decoder_input_data_names[:-1] +
                 label_data_names, ModelHyperParams.src_pad_idx,
                 ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
                 ModelHyperParams.n_head)
+
             test_cost = exe.run(test_program,
                                 feed=data_input,
                                 fetch_list=[cost])[0]
+
             test_costs.append(test_cost)
         return np.mean(test_costs)
 
-    # Initialize the parameters.
-    exe.run(fluid.framework.default_startup_program())
-    for pos_enc_param_name in pos_enc_param_names:
-        pos_enc_param = fluid.global_scope().find_var(
-            pos_enc_param_name).get_tensor()
-        pos_enc_param.set(
-            position_encoding_init(ModelHyperParams.max_length + 1,
-                                   ModelHyperParams.d_model), place)
+    def train_loop(exe, trainer_prog):
+        for pass_id in xrange(args.pass_num):
+            for batch_id, data in enumerate(train_reader()):
+                # The current program desc is coupled with batch_size, thus all
+                # mini-batches must have the same number of instances currently.
+                if len(data) != args.batch_size:
+                    continue
 
-    for pass_id in xrange(TrainTaskConfig.pass_num):
-        for batch_id, data in enumerate(train_data()):
-            # The current program desc is coupled with batch_size, thus all
-            # mini-batches must have the same number of instances currently.
-            if len(data) != TrainTaskConfig.batch_size:
-                continue
-            data_input = prepare_batch_input(
-                data, encoder_input_data_names + decoder_input_data_names[:-1] +
-                label_data_names, ModelHyperParams.src_pad_idx,
-                ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
-                ModelHyperParams.n_head)
-            lr_scheduler.update_learning_rate(data_input)
-            outs = exe.run(fluid.framework.default_main_program(),
-                           feed=data_input,
-                           fetch_list=[cost],
-                           use_program_cache=True)
-            cost_val = np.array(outs[0])
-            print("pass_id = " + str(pass_id) + " batch = " + str(batch_id) +
-                  " cost = " + str(cost_val))
-        # Validate and save the model for inference.
-        val_cost = test(exe)
-        print("pass_id = " + str(pass_id) + " val_cost = " + str(val_cost))
-        fluid.io.save_inference_model(
-            os.path.join(TrainTaskConfig.model_dir,
-                         "pass_" + str(pass_id) + ".infer.model"),
-            encoder_input_data_names + decoder_input_data_names[:-1],
-            [predict], exe)
+                data_input = prepare_batch_input(
+                    data, encoder_input_data_names + decoder_input_data_names[:-1] +
+                    label_data_names, ModelHyperParams.src_pad_idx,
+                    ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
+                    ModelHyperParams.n_head)
 
+                lr_scheduler.update_learning_rate(data_input)
+
+                outs = exe.run(fluid.framework.default_main_program(),
+                               feed=data_input,
+                               fetch_list=[cost],
+                               use_program_cache=True)
+
+                cost_val = np.array(outs[0])
+                print("pass_id = " + str(pass_id) + " batch = " + str(batch_id) +
+                      " cost = " + str(cost_val))
+
+            # Validate and save the model for inference.
+            val_cost = test(exe)
+            print("pass_id = " + str(pass_id) + " val_cost = " + str(val_cost))
+
+    if args.local:
+        # Initialize the parameters.
+        exe.run(fluid.framework.default_startup_program())
+        for pos_enc_param_name in pos_enc_param_names:
+            pos_enc_param = fluid.global_scope().find_var(
+                pos_enc_param_name).get_tensor()
+            pos_enc_param.set(
+                position_encoding_init(ModelHyperParams.max_length + 1,
+                                       ModelHyperParams.d_model), place)
+
+        train_reader = paddle.batch(
+            paddle.reader.shuffle(
+                paddle.dataset.wmt16.train(ModelHyperParams.src_vocab_size,
+                                           ModelHyperParams.trg_vocab_size),
+                buf_size=100000),
+            batch_size=args.batch_size)
+
+        test_reader = paddle.batch(
+            paddle.dataset.wmt16.validation(ModelHyperParams.src_vocab_size,
+                                            ModelHyperParams.trg_vocab_size),
+            batch_size=args.batch_size)
+
+         train_loop(exe, fluid.default_main_program())
+    else:
+        trainers = int(os.getenv("TRAINERS"))  # total trainer count
+        print("trainers total: ", trainers)
+
+        training_role = os.getenv(
+            "TRAINING_ROLE",
+            "TRAINER")  # get the training role: trainer/pserver
+
+        t = fluid.DistributeTranspiler()
+        t.transpile(
+            optimize_ops,
+            params_grads,
+            trainer_id=args.task_index,
+            pservers=args.ps_hosts,
+            trainers=trainers)
+
+        if training_role == "PSERVER":
+            current_endpoint = os.getenv("POD_IP") + ":" + os.getenv(
+                "PADDLE_INIT_PORT")
+            if not current_endpoint:
+                print("need env SERVER_ENDPOINT")
+                exit(1)
+            pserver_prog = t.get_pserver_program(current_endpoint)
+            pserver_startup = t.get_startup_program(current_endpoint,
+                                                    pserver_prog)
+            exe.run(pserver_startup)
+            exe.run(pserver_prog)
+        elif training_role == "TRAINER":
+            # Parameter initialization
+            exe.run(fluid.default_startup_program())
+
+            train_reader = paddle.batch(
+                paddle.reader.shuffle(
+                    paddle.dataset.wmt16.train(ModelHyperParams.src_vocab_size,
+                                               ModelHyperParams.trg_vocab_size),
+                    buf_size=100000),
+                batch_size=args.batch_size)
+
+            test_reader = paddle.batch(
+                paddle.dataset.wmt16.validation(ModelHyperParams.src_vocab_size,
+                                                ModelHyperParams.trg_vocab_size),
+                batch_size=args.batch_size)
+
+            trainer_prog = t.get_trainer_program()
+            # feeder = fluid.DataFeeder(feed_list=[images, label], place=place)
+            # TODO(typhoonzero): change trainer startup program to fetch parameters from pserver
+            exe.run(fluid.default_startup_program())
+            train_loop(exe, trainer_prog)
+        else:
+            print("environment var TRAINER_ROLE should be TRAINER os PSERVER")
+
+def print_arguments():
+    print('-----------  Configuration Arguments -----------')
+    for arg, value in sorted(vars(args).iteritems()):
+        print('%s: %s' % (arg, value))
+    print('------------------------------------------------')
 
 if __name__ == "__main__":
     main()
