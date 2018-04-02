@@ -18,14 +18,29 @@ add_arg('num_passes', int, 20, "Epoch number.")
 add_arg('parallel', bool, True, "Whether use parallel training.")
 add_arg('use_gpu', bool, True, "Whether use GPU.")
 add_arg('train_file_list', str,
-        './data/coco/annotations/instances_train2014.json', "train file list")
-add_arg('val_file_list', str, './data/coco/annotations/instances_val2014.json',
+        './data/COCO17/annotations/stuff_train2017.json', "train file list")
+add_arg('val_file_list', str, './data/COCO17/annotations/stuff_val2017.json',
         "vaild file list")
+add_arg('model_save_dir', str, 'model_coco_pretrain', "where to save model")
 
+add_arg('dataset', str, 'coco', "coco or pascalvoc")
 add_arg(
     'is_toy', int, 0,
     "Is Toy for quick debug, 0 means using all data, while n means using only n sample"
 )
+add_arg('data_dir', str, './data/COCO17', "Root path of data")
+add_arg('label_file', str, 'label_list',
+        "Lable file which lists all label name")
+add_arg('apply_distort', bool, True, "Whether apply distort")
+add_arg('apply_expand', bool, True, "Whether appley expand")
+add_arg('resize_h', int, 300, "resize image size")
+add_arg('resize_w', int, 300, "resize image size")
+add_arg('mean_value_B', float, 127.5,
+        "mean value which will be subtracted")  #123.68
+add_arg('mean_value_G', float, 127.5,
+        "mean value which will be subtracted")  #116.78
+add_arg('mean_value_R', float, 127.5,
+        "mean value which will be subtracted")  #103.94
 
 
 def train(args,
@@ -103,8 +118,8 @@ def train(args,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    #load_model.load_and_set_vars(place)
-    load_model.load_paddlev1_vars(place)
+    load_model.load_and_set_vars(place)
+    #load_model.load_paddlev1_vars(place)
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
@@ -150,15 +165,15 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
     data_args = reader.Settings(
-        dataset='coco',  # coco or pascalvoc
+        dataset=args.dataset,  # coco or pascalvoc
         toy=args.is_toy,
-        data_dir='./data/coco',
-        label_file='label_list',
-        apply_distort=True,
-        apply_expand=True,
-        resize_h=300,
-        resize_w=300,
-        mean_value=[127.5, 127.5, 127.5])
+        data_dir=args.data_dir,
+        label_file=args.label_file,
+        apply_distort=args.apply_distort,
+        apply_expand=args.apply_expand,
+        resize_h=args.resize_h,
+        resize_w=args.resize_w,
+        mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R])
     train(
         args,
         train_file_list=args.train_file_list,
@@ -166,4 +181,5 @@ if __name__ == '__main__':
         data_args=data_args,
         learning_rate=args.learning_rate,
         batch_size=args.batch_size,
-        num_passes=args.num_passes)
+        num_passes=args.num_passes,
+        model_save_dir=args.model_save_dir)

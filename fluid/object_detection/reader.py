@@ -110,6 +110,8 @@ def _reader_creator(settings, file_list, mode, shuffle):
         if not settings.toy == 0:
             images = images[:settings.toy] if len(
                 images) > settings.toy else images
+        print("{} on {} with {} images".format(mode, settings.dataset,
+                                               len(images)))
 
         if shuffle:
             random.shuffle(images)
@@ -228,10 +230,11 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         sample_labels[i][1] = 1 - sample_labels[i][3]
                         sample_labels[i][3] = 1 - tmp
 
+            # HWC to CHW
             if len(img.shape) == 3:
                 img = np.swapaxes(img, 1, 2)
                 img = np.swapaxes(img, 1, 0)
-
+            # RBG to BGR
             img = img[[2, 1, 0], :, :]
             img = img.astype('float32')
             img -= settings.img_mean
@@ -255,8 +258,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
 def train(settings, file_list, shuffle=True):
     if settings.dataset == 'coco':
         train_settings = copy.copy(settings)
-        train_settings.data_dir = os.path.join(settings.data_dir,
-                                               "coco_train2014")
+        train_settings.data_dir = os.path.join(settings.data_dir, "train2017")
         return _reader_creator(train_settings, file_list, 'train', shuffle)
     elif settings.dataset == 'pascalvoc':
         return _reader_creator(settings, file_list, 'train', shuffle)
@@ -265,7 +267,7 @@ def train(settings, file_list, shuffle=True):
 def test(settings, file_list):
     if settings.dataset == 'coco':
         test_settings = copy.copy(settings)
-        test_settings.data_dir = os.path.join(settings.data_dir, "coco_val2014")
+        test_settings.data_dir = os.path.join(settings.data_dir, "val2017")
         return _reader_creator(test_settings, file_list, 'test', False)
     elif settings.dataset == 'pascalvoc':
         return _reader_creator(settings, file_list, 'test', False)
