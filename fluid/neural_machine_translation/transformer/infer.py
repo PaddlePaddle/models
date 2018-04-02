@@ -1,6 +1,6 @@
 import numpy as np
 
-import paddle.v2 as paddle
+import paddle
 import paddle.fluid as fluid
 
 import model

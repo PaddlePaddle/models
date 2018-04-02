@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-import paddle.v2 as paddle
+import paddle
 import paddle.fluid as fluid
 
 from model import transformer, position_encoding_init
