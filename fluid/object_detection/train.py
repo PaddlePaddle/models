@@ -13,14 +13,15 @@ import functools
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('learning_rate', float, 0.001, "Learning rate.")
-add_arg('batch_size', int, 64, "Minibatch size.")
+add_arg('batch_size', int, 32, "Minibatch size.")
 add_arg('num_passes', int, 20, "Epoch number.")
 add_arg('parallel', bool, True, "Whether use parallel training.")
 add_arg('use_gpu', bool, True, "Whether use GPU.")
-add_arg('train_file_list', str,
-        './data/COCO17/annotations/instances_train2017.json', "train file list")
-add_arg('val_file_list', str,
-        './data/COCO17/annotations/instances_val2017.json', "vaild file list")
+add_arg('data_dir', str, './data/coco', "Root path of data")
+add_arg('train_file_list', str, 'annotations/instances_train2014.json',
+        "train file list")
+add_arg('val_file_list', str, 'annotations/instances_minival2014.json',
+        "vaild file list")
 add_arg('model_save_dir', str, 'model_coco_pretrain', "where to save model")
 
 add_arg('dataset', str, 'coco', "coco or pascalvoc")
@@ -28,11 +29,10 @@ add_arg(
     'is_toy', int, 0,
     "Is Toy for quick debug, 0 means using all data, while n means using only n sample"
 )
-add_arg('data_dir', str, './data/COCO17', "Root path of data")
 add_arg('label_file', str, 'label_list',
         "Lable file which lists all label name")
-add_arg('apply_distort', bool, True, "Whether apply distort")
-add_arg('apply_expand', bool, True, "Whether appley expand")
+add_arg('apply_distort', bool, False, "Whether apply distort")
+add_arg('apply_expand', bool, False, "Whether appley expand")
 add_arg('resize_h', int, 300, "resize image size")
 add_arg('resize_w', int, 300, "resize image size")
 add_arg('mean_value_B', float, 127.5,
@@ -64,7 +64,7 @@ def train(args,
 
     if args.parallel:
         places = fluid.layers.get_places()
-        pd = fluid.layers.ParallelDo(places)
+        pd = fluid.layers.ParallelDo(places, use_nccl=True)
         with pd.do():
             image_ = pd.read_input(image)
             gt_box_ = pd.read_input(gt_box)
@@ -72,16 +72,19 @@ def train(args,
             difficult_ = pd.read_input(difficult)
             locs, confs, box, box_var = mobile_net(data_args, image_,
                                                    image_shape)
-            loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_, box,
-                                         box_var)
+            loss, w = fluid.layers.ssd_loss(
+                locs, confs, gt_box_, gt_label_, box, box_var, normalize=False)
             nmsed_out = fluid.layers.detection_output(
                 locs, confs, box, box_var, nms_threshold=0.45)
-            loss = fluid.layers.reduce_sum(loss)
+            #loss = fluid.layers.reduce_sum(loss)
             pd.write_output(loss)
+            pd.write_output(w)
             pd.write_output(nmsed_out)
 
-        loss, nmsed_out = pd()
-        loss = fluid.layers.mean(loss)
+        loss, w, nmsed_out = pd()
+        normalizer = fluid.layers.reduce_sum(w)
+        loss = loss / normalizer
+        loss = fluid.layers.reduce_sum(loss)
     else:
         locs, confs, box, box_var = mobile_net(data_args, image, image_shape)
         nmsed_out = fluid.layers.detection_output(
@@ -104,10 +107,10 @@ def train(args,
             num_classes,
             overlap_threshold=0.5,
             evaluate_difficult=False,
-            ap_version='11point')
+            ap_version='integral')
 
-    boundaries = [160000, 240000]
-    values = [0.001, 0.0005, 0.00025]
+    boundaries = [16000, 24000]
+    values = [0.0001, 0.00005, 0.000025]
     optimizer = fluid.optimizer.RMSProp(
         learning_rate=fluid.layers.piecewise_decay(boundaries, values),
         regularization=fluid.regularizer.L2Decay(0.00005), )

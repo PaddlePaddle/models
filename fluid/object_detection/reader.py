@@ -258,7 +258,12 @@ def _reader_creator(settings, file_list, mode, shuffle):
 def train(settings, file_list, shuffle=True):
     if settings.dataset == 'coco':
         train_settings = copy.copy(settings)
-        train_settings.data_dir = os.path.join(settings.data_dir, "train2017")
+        if '2014' in file_list:
+            sub_dir = "train2014"
+        elif '2017' in file_list:
+            sub_dir = "train2017"
+        train_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
+        file_list = os.path.join(settings.data_dir, file_list)
         return _reader_creator(train_settings, file_list, 'train', shuffle)
     elif settings.dataset == 'pascalvoc':
         return _reader_creator(settings, file_list, 'train', shuffle)
@@ -267,7 +272,12 @@ def train(settings, file_list, shuffle=True):
 def test(settings, file_list):
     if settings.dataset == 'coco':
         test_settings = copy.copy(settings)
-        test_settings.data_dir = os.path.join(settings.data_dir, "val2017")
+        if '2014' in file_list:
+            sub_dir = "val2014"
+        elif '2017' in file_list:
+            sub_dir = "val2017"
+        test_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
+        file_list = os.path.join(settings.data_dir, file_list)
         return _reader_creator(test_settings, file_list, 'test', False)
     elif settings.dataset == 'pascalvoc':
         return _reader_creator(settings, file_list, 'test', False)
