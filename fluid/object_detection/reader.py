@@ -16,6 +16,7 @@ import image_util
 from paddle.utils.image_util import *
 import random
 from PIL import Image
+from PIL import ImageDraw
 import numpy as np
 import xml.etree.ElementTree
 import os
@@ -103,6 +104,10 @@ def _reader_creator(settings, file_list, mode, shuffle):
             coco = COCO(file_list)
             image_ids = coco.getImgIds()
             images = coco.loadImgs(image_ids)
+            category_ids = coco.getCatIds()
+            category_names = [
+                item['name'] for item in coco.loadCats(category_ids)
+            ]
         elif settings.dataset == 'pascalvoc':
             flist = open(file_list)
             images = [line.strip() for line in flist]
@@ -142,7 +147,8 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     for ann in anns:
                         bbox_sample = []
                         # start from 1
-                        bbox_sample.append(ann['category_id'])
+                        bbox_sample.append(
+                            float(category_ids.index(ann['category_id'])))
                         bbox = ann['bbox']
                         xmin, ymin, w, h = bbox
                         xmax = xmin + w
@@ -151,7 +157,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         bbox_sample.append(float(ymin) / img_height)
                         bbox_sample.append(float(xmax) / img_width)
                         bbox_sample.append(float(ymax) / img_height)
-                        bbox_sample.append(ann['iscrowd'])
+                        bbox_sample.append(float(ann['iscrowd']))
                         #bbox_sample.append(ann['bbox'])
                         #bbox_sample.append(ann['segmentation'])
                         #bbox_sample.append(ann['area'])
@@ -230,6 +236,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         sample_labels[i][1] = 1 - sample_labels[i][3]
                         sample_labels[i][3] = 1 - tmp
 
+            #draw_bounding_box_on_image(img, sample_labels, image_name, category_names, normalized=True)
             # HWC to CHW
             if len(img.shape) == 3:
                 img = np.swapaxes(img, 1, 2)
@@ -253,6 +260,38 @@ def _reader_creator(settings, file_list, mode, shuffle):
                 yield img.astype('float32')
 
     return reader
+
+
+def draw_bounding_box_on_image(image,
+                               sample_labels,
+                               image_name,
+                               category_names,
+                               color='red',
+                               thickness=4,
+                               with_text=True,
+                               normalized=True):
+    image = Image.fromarray(image)
+    draw = ImageDraw.Draw(image)
+    im_width, im_height = image.size
+    if not normalized:
+        im_width, im_height = 1, 1
+    for item in sample_labels:
+        label = item[0]
+        category_name = category_names[int(label)]
+        bbox = item[1:5]
+        xmin, ymin, xmax, ymax = bbox
+        (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
+                                      ymin * im_height, ymax * im_height)
+        draw.line(
+            [(left, top), (left, bottom), (right, bottom), (right, top),
+             (left, top)],
+            width=thickness,
+            fill=color)
+        #draw.rectangle([xmin, ymin, xmax, ymax], outline=color)
+        if with_text:
+            if image.mode == 'RGB':
+                draw.text((left, top), category_name, (255, 255, 0))
+    image.save(image_name)
 
 
 def train(settings, file_list, shuffle=True):

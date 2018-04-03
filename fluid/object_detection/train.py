@@ -12,7 +12,7 @@ import functools
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
-add_arg('learning_rate', float, 0.001, "Learning rate.")
+add_arg('learning_rate', float, 0.0001, "Learning rate.")
 add_arg('batch_size', int, 32, "Minibatch size.")
 add_arg('num_passes', int, 20, "Epoch number.")
 add_arg('parallel', bool, True, "Whether use parallel training.")
@@ -64,7 +64,7 @@ def train(args,
 
     if args.parallel:
         places = fluid.layers.get_places()
-        pd = fluid.layers.ParallelDo(places, use_nccl=True)
+        pd = fluid.layers.ParallelDo(places)
         with pd.do():
             image_ = pd.read_input(image)
             gt_box_ = pd.read_input(gt_box)
@@ -72,19 +72,16 @@ def train(args,
             difficult_ = pd.read_input(difficult)
             locs, confs, box, box_var = mobile_net(data_args, image_,
                                                    image_shape)
-            loss, w = fluid.layers.ssd_loss(
-                locs, confs, gt_box_, gt_label_, box, box_var, normalize=False)
+            loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_, box,
+                                         box_var)
             nmsed_out = fluid.layers.detection_output(
                 locs, confs, box, box_var, nms_threshold=0.45)
-            #loss = fluid.layers.reduce_sum(loss)
+            loss = fluid.layers.reduce_sum(loss)
             pd.write_output(loss)
-            pd.write_output(w)
             pd.write_output(nmsed_out)
 
-        loss, w, nmsed_out = pd()
-        normalizer = fluid.layers.reduce_sum(w)
-        loss = loss / normalizer
-        loss = fluid.layers.reduce_sum(loss)
+        loss, nmsed_out = pd()
+        loss = fluid.layers.mean(loss)
     else:
         locs, confs, box, box_var = mobile_net(data_args, image, image_shape)
         nmsed_out = fluid.layers.detection_output(
