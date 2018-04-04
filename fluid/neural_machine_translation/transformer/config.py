@@ -15,6 +15,9 @@ class TrainTaskConfig(object):
     # the parameters for learning rate scheduling.
     warmup_steps = 4000
 
+    # the flag indicating to use average loss or sum loss when training.
+    use_avg_cost = False
+
     # the directory for saving trained models.
     model_dir = "trained_models"
 
