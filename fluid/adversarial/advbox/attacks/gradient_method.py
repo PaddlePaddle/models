@@ -32,7 +32,12 @@ class GradientMethodAttack(Attack):
         super(GradientMethodAttack, self).__init__(model)
         self.support_targeted = support_targeted
 
-    def _apply(self, adversary, norm_ord=np.inf, epsilons=0.01, steps=100):
+    def _apply(self,
+               adversary,
+               norm_ord=np.inf,
+               epsilons=0.01,
+               steps=1,
+               epsilon_steps=100):
         """
         Apply the gradient attack method.
         :param adversary(Adversary):
@@ -41,8 +46,11 @@ class GradientMethodAttack(Attack):
             Order of the norm, such as np.inf, 1, 2, etc. It can't be 0.
         :param epsilons(list|tuple|int):
             Attack step size (input variation).
+            Largest step size if epsilons is not iterable.
         :param steps:
-            The number of iterator steps.
+            The number of attack iteration.
+        :param epsilon_steps:
+            The number of Epsilons' iteration for each attack iteration.
         :return:
             adversary(Adversary): The Adversary object.
         """
@@ -55,7 +63,7 @@ class GradientMethodAttack(Attack):
                     "This attack method doesn't support targeted attack!")
 
         if not isinstance(epsilons, Iterable):
-            epsilons = np.linspace(epsilons, epsilons + 1e-10, num=steps)
+            epsilons = np.linspace(0, epsilons, num=epsilon_steps)
 
         pre_label = adversary.original_label
         min_, max_ = self.model.bounds()
@@ -65,30 +73,33 @@ class GradientMethodAttack(Attack):
                 self.model.channel_axis() == adversary.original.shape[0] or
                 self.model.channel_axis() == adversary.original.shape[-1])
 
-        step = 1
-        adv_img = adversary.original
-        for epsilon in epsilons[:steps]:
-            if epsilon == 0.0:
-                continue
-            if adversary.is_targeted_attack:
-                gradient = -self.model.gradient(adv_img, adversary.target_label)
-            else:
-                gradient = self.model.gradient(adv_img,
-                                               adversary.original_label)
-            if norm_ord == np.inf:
-                gradient_norm = np.sign(gradient)
-            else:
-                gradient_norm = gradient / self._norm(gradient, ord=norm_ord)
+        for epsilon in epsilons[:]:
+            step = 1
+            adv_img = adversary.original
+            for i in range(steps):
+                if epsilon == 0.0:
+                    continue
+                if adversary.is_targeted_attack:
+                    gradient = -self.model.gradient(adv_img,
+                                                    adversary.target_label)
+                else:
+                    gradient = self.model.gradient(adv_img,
+                                                   adversary.original_label)
+                if norm_ord == np.inf:
+                    gradient_norm = np.sign(gradient)
+                else:
+                    gradient_norm = gradient / self._norm(
+                        gradient, ord=norm_ord)
 
-            adv_img = adv_img + epsilon * gradient_norm * (max_ - min_)
-            adv_img = np.clip(adv_img, min_, max_)
-            adv_label = np.argmax(self.model.predict(adv_img))
-            logging.info('step={}, epsilon = {:.5f}, pre_label = {}, '
-                         'adv_label={}'.format(step, epsilon, pre_label,
-                                               adv_label))
-            if adversary.try_accept_the_example(adv_img, adv_label):
-                return adversary
-            step += 1
+                adv_img = adv_img + epsilon * gradient_norm * (max_ - min_)
+                adv_img = np.clip(adv_img, min_, max_)
+                adv_label = np.argmax(self.model.predict(adv_img))
+                logging.info('step={}, epsilon = {:.5f}, pre_label = {}, '
+                             'adv_label={}'.format(step, epsilon, pre_label,
+                                                   adv_label))
+                if adversary.try_accept_the_example(adv_img, adv_label):
+                    return adversary
+                step += 1
         return adversary
 
     @staticmethod
@@ -113,7 +124,7 @@ class FastGradientSignMethodTargetedAttack(GradientMethodAttack):
     Paper link: https://arxiv.org/abs/1412.6572
     """
 
-    def _apply(self, adversary, epsilons=0.03):
+    def _apply(self, adversary, epsilons=0.01):
         return GradientMethodAttack._apply(
             self,
             adversary=adversary,
@@ -144,7 +155,7 @@ class IterativeLeastLikelyClassMethodAttack(GradientMethodAttack):
     Paper link: https://arxiv.org/abs/1607.02533
     """
 
-    def _apply(self, adversary, epsilons=0.001, steps=1000):
+    def _apply(self, adversary, epsilons=0.01, steps=1000):
         return GradientMethodAttack._apply(
             self,
             adversary=adversary,
