@@ -8,7 +8,7 @@ Run these examples of programs in this directory require PaddlePaddle v0.10.0 . 
 
 The generate target of sequence generate task is to maximize the probability of target sequence when a given source is input. During the training, the model input real elements as decoders to each step, then maximize the probability of next element. During the generation, the element created in the previous decoder step is used as current input, consequently generate the next element. In this case, It can been seen probability distribution in training stage and generation stage are not consistent.
 
-Scheduled Sampling \[[1](#参考文献)\]是一种解决训练和生成时输入数据分布不一致的方法。在训练早期该方法主要使用目标序列中的真实元素作为解码器输入，可以将模型从随机初始化的状态快速引导至一个合理的状态。随着训练的进行，该方法会逐渐更多地使用生成的元素作为解码器输入，以解决数据分布不一致的问题。
+Scheduled Sampling \[[1](#参考文献)\] is a method to solve the inconsistent distribution of input data during training and generation.In the early stage of training, this method mainly uses the real elements in the target sequence as the decoder input, and can quickly guide the model from a randomly initialized state to a reasonable state. As training progresses, the method will gradually increase the use of the generated element as decoder input to solve the problem of inconsistent data distribution.
 
 标准的序列到序列模型中，如果序列前面生成了错误的元素，后面的输入状态将会收到影响，而该误差会随着生成过程不断向后累积。Scheduled Sampling以一定概率将生成的元素作为解码器输入，这样即使前面生成错误，其训练目标仍然是最大化真实目标序列的概率，模型会朝着正确的方向进行训练。因此这种方式增加了模型的容错能力。
 
