@@ -1,19 +1,18 @@
-Run these examples of programs in this directory require PaddlePaddle v0.10.0 . If your PaddlePaddle installation is lower than this
-requirement, Follow the instructions in the [installation documentation](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) to update the PaddlePaddle installation.
+Run these examples of programs in this directory require PaddlePaddle v0.10.0 . If your PaddlePaddle installation is lower than this requirement, follow the instructions in the [installation documentation](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) to update the PaddlePaddle version.
 ---
 
 # Scheduled Sampling
 
-## 概述
+## Introduction
 
-序列生成任务的生成目标是在给定源输入的条件下，最大化目标序列的概率。训练时该模型将目标序列中的真实元素作为解码器每一步的输入，然后最大化下一个元素的概率。生成时上一步解码得到的元素被用作当前的输入，然后生成下一个元素。可见这种情况下训练阶段和生成阶段的解码器输入数据的概率分布并不一致。
+The generate target of sequence generate task is to maximize the probability of target sequence when a given source is input. During the training, the model input real elements as decoders to each step, then maximize the probability of next element. During the generation, the element created in the previous decoder step is used as current input, consequently generate the next element. In this case, It can been seen probability distribution in training stage and generation stage are not consistent.
 
 Scheduled Sampling \[[1](#参考文献)\]是一种解决训练和生成时输入数据分布不一致的方法。在训练早期该方法主要使用目标序列中的真实元素作为解码器输入，可以将模型从随机初始化的状态快速引导至一个合理的状态。随着训练的进行，该方法会逐渐更多地使用生成的元素作为解码器输入，以解决数据分布不一致的问题。
 
 标准的序列到序列模型中，如果序列前面生成了错误的元素，后面的输入状态将会收到影响，而该误差会随着生成过程不断向后累积。Scheduled Sampling以一定概率将生成的元素作为解码器输入，这样即使前面生成错误，其训练目标仍然是最大化真实目标序列的概率，模型会朝着正确的方向进行训练。因此这种方式增加了模型的容错能力。
 
 ## 算法简介
-Scheduled Sampling主要应用在序列到序列模型的训练阶段，而生成阶段则不需要使用。
+Scheduled Sampling is mainly used in the training stage from sequence to sequence model.But It doesn't require Scheduled Sampling in  generation phrase
 
 训练阶段解码器在最大化第$t$个元素概率时，标准序列到序列模型使用上一时刻的真实元素$y_{t-1}$作为输入。设上一时刻生成的元素为$g_{t-1}$，Scheduled Sampling算法会以一定概率使用$g_{t-1}$作为解码器输入。
 
