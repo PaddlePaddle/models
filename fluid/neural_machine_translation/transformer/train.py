@@ -177,7 +177,7 @@ def main():
                            fetch_list=[sum_cost, avg_cost],
                            use_program_cache=True)
             sum_cost_val, avg_cost_val = np.array(outs[0]), np.array(outs[1])
-            print("epoch: %d, batch: %d,  sum loss: %f, avg loss: %f, ppl: %f" %
+            print("epoch: %d, batch: %d, sum loss: %f, avg loss: %f, ppl: %f" %
                   (pass_id, batch_id, sum_cost_val, avg_cost_val,
                    np.exp([min(avg_cost_val[0], 100)])))
         # Validate and save the model for inference.
