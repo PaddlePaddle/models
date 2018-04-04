@@ -1,4 +1,4 @@
-import paddle.v2 as paddle
+import paddle
 import paddle.fluid as fluid
 import reader
 import load_model as load_model
@@ -12,7 +12,7 @@ import functools
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
-add_arg('learning_rate', float, 0.0001, "Learning rate.")
+add_arg('learning_rate', float, 0.001, "Learning rate.")
 add_arg('batch_size', int, 32, "Minibatch size.")
 add_arg('num_passes', int, 20, "Epoch number.")
 add_arg('parallel', bool, True, "Whether use parallel training.")
@@ -22,7 +22,7 @@ add_arg('train_file_list', str, 'annotations/instances_train2014.json',
         "train file list")
 add_arg('val_file_list', str, 'annotations/instances_minival2014.json',
         "vaild file list")
-add_arg('model_save_dir', str, 'model_coco_pretrain', "where to save model")
+add_arg('model_save_dir', str, 'model', "where to save model")
 
 add_arg('dataset', str, 'coco', "coco or pascalvoc")
 add_arg(
@@ -106,8 +106,8 @@ def train(args,
             evaluate_difficult=False,
             ap_version='integral')
 
-    boundaries = [16000, 24000]
-    values = [0.0001, 0.00005, 0.000025]
+    boundaries = [32000, 48000]
+    values = [learning_rate, learning_rate * 0.5, learning_rate * 0.25]
     optimizer = fluid.optimizer.RMSProp(
         learning_rate=fluid.layers.piecewise_decay(boundaries, values),
         regularization=fluid.regularizer.L2Decay(0.00005), )
@@ -118,8 +118,8 @@ def train(args,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    load_model.load_and_set_vars(place)
-    #load_model.load_paddlev1_vars(place)
+    #load_model.load_and_set_vars(place)
+    load_model.load_paddlev1_vars(place)
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(

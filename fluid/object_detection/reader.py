@@ -146,9 +146,9 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     anns = coco.loadAnns(annIds)
                     for ann in anns:
                         bbox_sample = []
-                        # start from 1
+                        # start from 1, leave 0 to background
                         bbox_sample.append(
-                            float(category_ids.index(ann['category_id'])))
+                            float(category_ids.index(ann['category_id'])) + 1)
                         bbox = ann['bbox']
                         xmin, ymin, w, h = bbox
                         xmax = xmin + w
