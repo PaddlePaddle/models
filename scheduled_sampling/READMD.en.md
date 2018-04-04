@@ -1,4 +1,5 @@
-The minimum PaddlePaddle version needed for the code sample in this directory is v0.11.0. If you are on a version of PaddlePaddle earlier than v0.11.0, [please update your installation](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html).
+Run these examples of programs in this directory require PaddlePaddle v0.10.0 . If your PaddlePaddle installation is lower than this requirement, follow the instructions in the [installation documentation](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) to update the PaddlePaddle version.
+
 ---
 
 # Scheduled Sampling
