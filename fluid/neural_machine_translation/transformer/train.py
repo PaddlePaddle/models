@@ -147,7 +147,6 @@ def main():
                 test_program, feed=data_input, fetch_list=[sum_cost, avg_cost])
             test_sum_costs.append(test_sum_cost)
             test_avg_costs.append(test_avg_cost)
-            break
         return np.mean(test_sum_costs), np.mean(test_avg_costs)
 
     # Initialize the parameters.
@@ -180,13 +179,11 @@ def main():
                   " sum_cost = " + str(sum_cost_val) + " avg_cost = " + str(
                       avg_cost_val) + " ppl = " + str(
                           np.exp([min(avg_cost_val[0], 100)])))
-            break
         # Validate and save the model for inference.
         val_sum_cost, val_avg_cost = test(exe)
         print("pass_id = " + str(pass_id) + " val_sum_cost = " + str(
             val_sum_cost) + " val_avg_cost = " + str(val_avg_cost) +
               " val_ppl = " + str(np.exp(min(val_avg_cost, 100))))
-        break
         fluid.io.save_inference_model(
             os.path.join(TrainTaskConfig.model_dir,
                          "pass_" + str(pass_id) + ".infer.model"),
