@@ -115,7 +115,7 @@ def main():
         beta1=TrainTaskConfig.beta1,
         beta2=TrainTaskConfig.beta2,
         epsilon=TrainTaskConfig.eps)
-    optimizer.minimize(avg_cost if TrainTaskConfig.use_avg else sum_cost)
+    optimizer.minimize(avg_cost if TrainTaskConfig.use_avg_cost else sum_cost)
 
     train_data = paddle.batch(
         paddle.reader.shuffle(
@@ -184,9 +184,9 @@ def main():
         val_sum_cost, val_avg_cost = test(exe)
         pass_end_time = time.time()
         time_consumed = pass_end_time - pass_start_time
-        print(
-            "epoch: %d, val sum loss: %f, val avg loss: %f, val ppl: %f, consumed %fs"
-            % (pass_id, val_sum_cost, val_avg_cost,
+        print("epoch: %d, val sum loss: %f, val avg loss: %f, val ppl: %f, "
+              "consumed %fs" %
+              (pass_id, val_sum_cost, val_avg_cost,
                np.exp([min(val_avg_cost, 100)]), time_consumed))
         fluid.io.save_inference_model(
             os.path.join(TrainTaskConfig.model_dir,

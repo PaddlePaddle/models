@@ -16,7 +16,7 @@ class TrainTaskConfig(object):
     warmup_steps = 4000
 
     # the flag indicating to use average loss or sum loss when training.
-    use_avg = False
+    use_avg_cost = False
 
     # the directory for saving trained models.
     model_dir = "trained_models"
