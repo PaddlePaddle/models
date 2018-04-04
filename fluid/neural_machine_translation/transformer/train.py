@@ -97,7 +97,7 @@ def main():
     place = fluid.CUDAPlace(0) if TrainTaskConfig.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    cost, predict = transformer(
+    sum_cost, avg_cost, predict = transformer(
         ModelHyperParams.src_vocab_size + 1,
         ModelHyperParams.trg_vocab_size + 1, ModelHyperParams.max_length + 1,
         ModelHyperParams.n_layer, ModelHyperParams.n_head,
@@ -114,7 +114,7 @@ def main():
         beta1=TrainTaskConfig.beta1,
         beta2=TrainTaskConfig.beta2,
         epsilon=TrainTaskConfig.eps)
-    optimizer.minimize(cost)
+    optimizer.minimize(avg_cost if TrainTaskConfig.use_avg else sum_cost)
 
     train_data = paddle.batch(
         paddle.reader.shuffle(
@@ -126,14 +126,15 @@ def main():
     # Program to do validation.
     test_program = fluid.default_main_program().clone()
     with fluid.program_guard(test_program):
-        test_program = fluid.io.get_inference_program([cost])
+        test_program = fluid.io.get_inference_program([avg_cost])
     val_data = paddle.batch(
         paddle.dataset.wmt16.validation(ModelHyperParams.src_vocab_size,
                                         ModelHyperParams.trg_vocab_size),
         batch_size=TrainTaskConfig.batch_size)
 
     def test(exe):
-        test_costs = []
+        test_sum_costs = []
+        test_avg_costs = []
         for batch_id, data in enumerate(val_data()):
             if len(data) != TrainTaskConfig.batch_size:
                 continue
@@ -142,11 +143,11 @@ def main():
                 label_data_names, ModelHyperParams.src_pad_idx,
                 ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
                 ModelHyperParams.n_head)
-            test_cost = exe.run(test_program,
-                                feed=data_input,
-                                fetch_list=[cost])[0]
-            test_costs.append(test_cost)
-        return np.mean(test_costs)
+            test_sum_cost, test_avg_cost = exe.run(
+                test_program, feed=data_input, fetch_list=[sum_cost, avg_cost])
+            test_sum_costs.append(test_sum_cost)
+            test_avg_costs.append(test_avg_cost)
+        return np.mean(test_sum_costs), np.mean(test_avg_costs)
 
     # Initialize the parameters.
     exe.run(fluid.framework.default_startup_program())
@@ -171,14 +172,18 @@ def main():
             lr_scheduler.update_learning_rate(data_input)
             outs = exe.run(fluid.framework.default_main_program(),
                            feed=data_input,
-                           fetch_list=[cost],
+                           fetch_list=[sum_cost, avg_cost],
                            use_program_cache=True)
-            cost_val = np.array(outs[0])
+            sum_cost_val, avg_cost_val = np.array(outs[0]), np.array(outs[1])
             print("pass_id = " + str(pass_id) + " batch = " + str(batch_id) +
-                  " cost = " + str(cost_val))
+                  " sum_cost = " + str(sum_cost_val) + " avg_cost = " + str(
+                      avg_cost_val) + " ppl = " + str(
+                          np.exp([min(avg_cost_val[0], 100)])))
         # Validate and save the model for inference.
-        val_cost = test(exe)
-        print("pass_id = " + str(pass_id) + " val_cost = " + str(val_cost))
+        val_sum_cost, val_avg_cost = test(exe)
+        print("pass_id = " + str(pass_id) + " val_sum_cost = " + str(
+            val_sum_cost) + " val_avg_cost = " + str(val_avg_cost) +
+              " val_ppl = " + str(np.exp([min(val_avg_cost, 100)])))
         fluid.io.save_inference_model(
             os.path.join(TrainTaskConfig.model_dir,
                          "pass_" + str(pass_id) + ".infer.model"),
