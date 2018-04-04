@@ -203,7 +203,7 @@ def translate_batch(exe,
         predict_all = np.log(
             predict_all.reshape([len(beam_inst_map) * beam_size, i + 1, -1])
             [:, -1, :])
-        predict_all = (predict_all + scores[beam_inst_map].reshape(
+        predict_all = (predict_all + scores[active_beams].reshape(
             [len(beam_inst_map) * beam_size, -1])).reshape(
                 [len(beam_inst_map), beam_size, -1])
         if not output_unk:  # To exclude the <unk> token.
