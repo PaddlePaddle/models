@@ -591,7 +591,10 @@ def transformer(
         src_attn_shape_flag=False)
     cost = layers.softmax_with_cross_entropy(logits=predict, label=gold)
     weighted_cost = cost * weights
-    return layers.reduce_sum(weighted_cost), predict
+    sum_cost = layers.reduce_sum(weighted_cost)
+    token_num = layers.reduce_sum(weights)
+    avg_cost = sum_cost / token_num
+    return sum_cost, avg_cost, predict
 
 
 def wrap_encoder(src_vocab_size,
