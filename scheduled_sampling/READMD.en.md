@@ -38,11 +38,11 @@ Scheduled Sampling is mainly used in the training stage from sequence to sequenc
 图2. Scheduled Sampling选择不同元素作为解码器输入示意图
 </p>
 
-## 模型实现
+## Model implementation
 
-由于Scheduled Sampling是对序列到序列模型的改进，其整体实现框架与序列到序列模型较为相似。为突出本文重点，这里仅介绍与Scheduled Sampling相关的部分，完整的代码见`network_conf.py`。
+Because Scheduled Sampling is an improvement over the sequence-to-sequence model, its whole implementation framework is similar to the sequence-to-sequence model. To emphasize the point of this article, only the parts related to Scheduled Sampling are introduced here. For complete code, see network_conf.py.
 
-首先导入需要的包，并定义控制衰减概率的类`RandomScheduleGenerator`，如下：
+First import the required package and define the class that controls the decay probability `RandomScheduleGenerator` , as follows:
 
 ```python
 import numpy as np
