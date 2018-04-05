@@ -16,7 +16,7 @@ In the process from a standard sequence to a sequence model, if an incorrect ele
 
 Scheduled Sampling is mainly used in the training stage from sequence to sequence model.But It doesn't require Scheduled Sampling in  generation phrase
 
-When the decoder maximizes the probability of the $ t $ element during the training phase, the standard sequence-to-sequence model uses the real element $ y_{t-1} $ at the previous moment as input. Let's assume that the element generated at a time is $g_{t-1}$, and the Scheduled Sampling algorithm uses $g_{t-1}$ as a decoder input with a certain probability.
+When the decoder maximizes the probability of the $ t $ element during the training phase, the standard sequence-to-sequence model uses the real element <img src="http://chart.googleapis.com/chart?cht=tx&chl= y_{t-1}" style="border:none;"> at the previous moment as input. Let's assume that the element generated at a time is $g_{t-1}$, and the Scheduled Sampling algorithm uses $g_{t-1}$ as a decoder input with a certain probability.
 
 Suppose that the $i$ mini-batch is currently trained. The Scheduled Sampling defines a probability $\epsilon_i$ to control the decoder's input. $\epsilon_i$ is a variable that decays as $i$ increases. The common definition is as follows:
 
