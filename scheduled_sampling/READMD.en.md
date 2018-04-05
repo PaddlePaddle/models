@@ -10,15 +10,13 @@ The generate target of sequence generate task is to maximize the probability of 
 
 Scheduled Sampling \[[1](#参考文献)\] is a method to solve the inconsistent distribution of input data during training and generation.In the early stage of training, this method mainly uses the real elements in the target sequence as the decoder input, and can quickly guide the model from a randomly initialized state to a reasonable state. As training progresses, the method will gradually increase the use of the generated element as decoder input to solve the problem of inconsistent data distribution.
 
-标准的序列到序列模型中，如果序列前面生成了错误的元素，后面的输入状态将会收到影响，而该误差会随着生成过程不断向后累积。Scheduled Sampling以一定概率将生成的元素作为解码器输入，这样即使前面生成错误，其训练目标仍然是最大化真实目标序列的概率，模型会朝着正确的方向进行训练。因此这种方式增加了模型的容错能力。
-In the process from a standard sequence to a sequence model, if an incorrect element is created in the preceding part of the sequence , the subsequent input state will be affected, and the error will gradually accumulate as the generation proceeds forwards. 
-The element generated  with a certain probability is input as a decoder , so that even if the previous one generates error, its training target is still to maximize the probability of the real target sequence, and the model will do the training in the right direction.
-Therefore, this method increases the fault-tolerant capability of the model. 
+In the process from a standard sequence to a sequence model, if an incorrect element is created in the preceding part of the sequence , the subsequent input state will be affected, and the error will gradually accumulate as the generation proceeds forwards. Scheduled Sampling uses the generated element as a decoder input with a certain probability, so that even if the previous one generates error, its training target is still to maximize the probability of the real target sequence, and the model will do the training in the right direction. Therefore, this method increases the fault-tolerant capability of the model. 
 
-## 算法简介
+## Algorithm Introduction
+
 Scheduled Sampling is mainly used in the training stage from sequence to sequence model.But It doesn't require Scheduled Sampling in  generation phrase
 
-训练阶段解码器在最大化第$t$个元素概率时，标准序列到序列模型使用上一时刻的真实元素$y_{t-1}$作为输入。设上一时刻生成的元素为$g_{t-1}$，Scheduled Sampling算法会以一定概率使用$g_{t-1}$作为解码器输入。
+When the decoder maximizes the probability of the $t$ element during the training phase, the standard sequence-to-sequence model uses the real element $y_{t-1}$ at the previous moment as input. Let's assume that the element generated at a time is $g_{t-1}$, and the Scheduled Sampling algorithm uses $g_{t-1}$ as a decoder input with a certain probability.
 
 设当前已经训练到了第$i$个mini-batch，Scheduled Sampling定义了一个概率$\epsilon_i$控制解码器的输入。$\epsilon_i$是一个随着$i$增大而衰减的变量，常见的定义方式有：
 
