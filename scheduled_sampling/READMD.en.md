@@ -16,7 +16,7 @@ In the process from a standard sequence to a sequence model, if an incorrect ele
 
 Scheduled Sampling is mainly used in the training stage from sequence to sequence model.But It doesn't require Scheduled Sampling in  generation phrase
 
-When the decoder maximizes the probability of the $t$ element during the training phase, the standard sequence-to-sequence model uses the real element $$ y_{t-1} $$ at the previous moment as input. Let's assume that the element generated at a time is $g_{t-1}$, and the Scheduled Sampling algorithm uses $g_{t-1}$ as a decoder input with a certain probability.
+When the decoder maximizes the probability of the $ t $ element during the training phase, the standard sequence-to-sequence model uses the real element $ y_{t-1} $ at the previous moment as input. Let's assume that the element generated at a time is $g_{t-1}$, and the Scheduled Sampling algorithm uses $g_{t-1}$ as a decoder input with a certain probability.
 
 Suppose that the $i$ mini-batch is currently trained. The Scheduled Sampling defines a probability $\epsilon_i$ to control the decoder's input. $\epsilon_i$ is a variable that decays as $i$ increases. The common definition is as follows:
 
@@ -33,7 +33,7 @@ Figure 1 shows the attenuation curves for these three methods.
 Figure 1. Attenuation curves for linear decay, exponential decay, and inverse Sigmoid decay
 </p>
 
-As shown in Figure 2, at the decoder's $t$ time, the Scheduled Sampling uses the element $y_{t-1}$ generated at the previous moment as the decoder input with the probability of $\epsilon_i$, and uses the element $g_{t-1}$ generated at the last moment  as a decoder input with the probability of $1-\epsilon_i$. From Figure 1, it can be seen that as $i$ increases, $\epsilon_i$ will continue to decrease. The decoder will continue to use the generated elements as input, and the data distribution during the training phase and the generation phase will become more and more consistent.
+As shown in Figure 2, at the decoder's $ t $ time, the Scheduled Sampling uses the element $y_{t-1}$ generated at the previous moment as the decoder input with the probability of $\epsilon_i$, and uses the element $g_{t-1}$ generated at the last moment  as a decoder input with the probability of $1-\epsilon_i$. From Figure 1, it can be seen that as $i$ increases, $\epsilon_i$ will continue to decrease. The decoder will continue to use the generated elements as input, and the data distribution during the training phase and the generation phase will become more and more consistent.
 
 <p align="center">
 <img src="images/Scheduled_Sampling.jpg" width="50%" align="center"><br>
