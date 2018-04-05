@@ -19,18 +19,19 @@ Scheduled Sampling is mainly used in the training stage from sequence to sequenc
 When the decoder maximizes the probability of the $t$ element during the training phase, the standard sequence-to-sequence model uses the real element $y_{t-1}$ at the previous moment as input. Let's assume that the element generated at a time is $g_{t-1}$, and the Scheduled Sampling algorithm uses $g_{t-1}$ as a decoder input with a certain probability.
 
 设当前已经训练到了第$i$个mini-batch，Scheduled Sampling定义了一个概率$\epsilon_i$控制解码器的输入。$\epsilon_i$是一个随着$i$增大而衰减的变量，常见的定义方式有：
+Suppose that the $i$ mini-batch is currently trained. The Scheduled Sampling defines a probability $\epsilon_i$ to control the decoder's input. $\epsilon_i$ is a variable that decays as $i$ increases. The common definition is as follows:
 
- - 线性衰减：$\epsilon_i=max(\epsilon,k-c*i)$，其中$\epsilon$限制$\epsilon_i$的最小值，$k$和$c$控制线性衰减的幅度。
+ - Linear decay：$\epsilon_i=max(\epsilon,k-c*i)$，Where $\epsilon$ limits the minimum value of $\epsilon_i$, $k$ and $c$ control the magnitude of linear decay.
 
- - 指数衰减：$\epsilon_i=k^i$，其中$0<k<1$，$k$控制着指数衰减的幅度。
+ - Exponential decay：$\epsilon_i=k^i$，Where $0<k<1$ and $k$ control the magnitude of the exponential decay.
 
- - 反向Sigmoid衰减：$\epsilon_i=k/(k+exp(i/k))$，其中$k>1$，$k$同样控制衰减的幅度。
+ - Sigmoid reverse decay：$\epsilon_i=k/(k+exp(i/k))$，Where $k>1$, $k$ also controls the magnitude of attenuation.
 
-图1给出了这三种方式的衰减曲线，
+Figure 1 shows the attenuation curves for these three methods.
 
 <p align="center">
 <img src="images/decay.jpg" width="50%" align="center"><br>
-图1. 线性衰减、指数衰减和反向Sigmoid衰减的衰减曲线
+Figure 1. Attenuation curves for linear decay, exponential decay, and inverse Sigmoid decay
 </p>
 
 如图2所示，在解码器的$t$时刻Scheduled Sampling以概率$\epsilon_i$使用上一时刻的真实元素$y_{t-1}$作为解码器输入，以概率$1-\epsilon_i$使用上一时刻生成的元素$g_{t-1}$作为解码器输入。从图1可知随着$i$的增大$\epsilon_i$会不断减小，解码器将不断倾向于使用生成的元素作为输入，训练阶段和生成阶段的数据分布将变得越来越一致。
