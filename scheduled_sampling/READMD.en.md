@@ -24,7 +24,7 @@ Suppose that the $i$ mini-batch is currently trained. The Scheduled Sampling def
 
  - Exponential decay：$\epsilon_i=k^i$，Where $0<k<1$ and $k$ control the magnitude of the exponential decay.
 
- - Sigmoid reverse decay：$\epsilon_i=k/(k+exp(i/k))$，Where $k>1$, $k$ also controls the magnitude of attenuation.
+ - Reverse Sigmoid decay：$\epsilon_i=k/(k+exp(i/k))$，Where $k>1$, $k$ also controls the magnitude of attenuation.
 
 Figure 1 shows the attenuation curves for these three methods.
 
@@ -59,10 +59,9 @@ class RandomScheduleGenerator:
     """
     ...
 ```
+The following three methods of class `RandomScheduleGenerator` will be defined respectively: `__init__`, `getScheduleRate` and `processBatch`.
 
-下面将分别定义类`RandomScheduleGenerator`的`__init__`、`getScheduleRate`和`processBatch`三个方法。
-
-`__init__`方法对类进行初始化，其`schedule_type`参数指定了使用哪种衰减方式，可选的方式有`constant`、`linear`、`exponential`和`inverse_sigmoid`。`constant`指对所有的mini-batch使用固定的$\epsilon_i$，`linear`指线性衰减方式，`exponential`表示指数衰减方式，`inverse_sigmoid`表示反向Sigmoid衰减。`__init__`方法的参数`a`和`b`表示衰减方法的参数，需要在验证集上调优。`self.schedule_computers`将衰减方式映射为计算$\epsilon_i$的函数。最后一行根据`schedule_type`将选择的衰减函数赋给`self.schedule_computer`变量。
+The `__init__` method initializes the class, and its `schedule_type` parameter specifies which attenuation method to use, the options being `constant`, `linear`, `exponential`, and `inverse_sigmoid`. `Constant` refers to the use of a fixed $\epsilon_i$ for all mini-batch, `linear` for linear decay, ʻexponential` for exponential decay, and ʻinverse_sigmoid` for inverse Sigmoid decay. The parameters `a` and `b` for the `__init__` method represent the parameters of the decay method and need to be tuned on the validation set. `self.schedule_computers` maps the decay mode to a function that computes $\epsilon_i$. The last line assigns the selected attenuation function to the `self.schedule_computer` variable according to `schedule_type`.
 
 ```python
 def __init__(self, schedule_type, a, b):
@@ -86,7 +85,7 @@ def __init__(self, schedule_type, a, b):
     self.schedule_computer = self.schedule_computers[self.schedule_type]
 ```
 
-`getScheduleRate`根据衰减函数和已经处理的数据量计算$\epsilon_i$。
+`getScheduleRate` calculate $\epsilon_i$ based on the decay function and the amount of data already processed.
 
 ```python
 def getScheduleRate(self):
@@ -97,7 +96,7 @@ def getScheduleRate(self):
 
 ```
 
-`processBatch`方法根据概率值$\epsilon_i$进行采样，得到`indexes`，`indexes`中每个元素取值为`0`的概率为$\epsilon_i$，取值为`1`的概率为$1-\epsilon_i$。`indexes`决定了解码器的输入是真实元素还是生成的元素，取值为`0`表示使用真实元素，取值为`1`表示使用生成的元素。
+The `processBatch` method is sampled according to the probability value $\epsilon_i$ to get `indexes`, and the probability that each element in `indexes` takes `0` is $\epsilon_i$, and the probability that the value is `1` is $1. -\epsilon_i$. `indexes` determines whether the decoder's input is a real or generated element. A value of `0` indicates that a real element is used, and a value `1` indicates that the generated element is used.
 
 ```python
 def processBatch(self, batch_size):
@@ -113,7 +112,7 @@ def processBatch(self, batch_size):
     return indexes
 ```
 
-Scheduled Sampling需要在序列到序列模型的基础上增加一个输入`true_token_flag`，以控制解码器输入。
+Scheduled Sampling needs to add an input `true_token_flag` to the sequence-to-sequence model to control the decoder input.
 
 ```python
 true_token_flags = paddle.layer.data(
@@ -121,7 +120,7 @@ true_token_flags = paddle.layer.data(
     type=paddle.data_type.integer_value_sequence(2))
 ```
 
-这里还需要对原始reader进行封装，增加`true_token_flag`的数据生成器。下面以线性衰减为例说明如何调用上面定义的`RandomScheduleGenerator`产生`true_token_flag`的输入数据。
+Here also need to encapsulate the original reader, add the data generator of `true_token_flag`. The following uses linear decay as an example to show how to call `RandomScheduleGenerator` defined above to generate input data for `true_token_flag`.
 
 ```python
 def gen_schedule_data(reader,
@@ -156,9 +155,9 @@ def gen_schedule_data(reader,
     return data_reader
 ```
 
-这段代码在原始输入数据（即源序列元素`src_ids`、目标序列元素`trg_ids`和目标序列下一个元素`trg_ids_next`）后追加了控制解码器输入的数据。由于解码器第一个元素是序列开始符，因此将追加的数据第一个元素设置为`0`，表示解码器第一步始终使用真实目标序列的第一个元素（即序列开始符）。
+This code adds the data inputed by control decoder after the original input data(the source sequence element `src_ids`, the target sequence element `trg_ids`, and the next element `trg_ids_next` of target element sequence ). Since the first element of the decoder is the sequence starter, the first element of the appended data is set to `0`, indicating that the first step of the decoder always uses the first element of the real target sequence (ie, the sequence start symbol).
 
-训练时`recurrent_group`每一步调用的解码器函数如下：
+The decoder function called at each step of `recurrent_group` during training is as follows:
 
 ```python
 def gru_decoder_with_attention_train(enc_vec, enc_proj, true_word,
@@ -218,8 +217,9 @@ def gru_decoder_with_attention_train(enc_vec, enc_proj, true_word,
       return out
 ```
 
-该函数使用`memory`层`gru_out_memory`记忆上一时刻生成的元素，根据`gru_out_memory`选择概率最大的词语`generated_word`作为生成的词语。`multiplex`层会在真实元素`true_word`和生成的元素`generated_word`之间做出选择，并将选择的结果作为解码器输入。`multiplex`层使用了三个输入，分别为`true_token_flag`、`true_word`和`generated_word_emb`。对于这三个输入中每个元素，若`true_token_flag`中的值为`0`，则`multiplex`层输出`true_word`中的相应元素；若`true_token_flag`中的值为`1`，则`multiplex`层输出`generated_word_emb`中的相应元素。
+This function uses the `memory` layer `gru_out_memory` to remember the elements generated at a time and selects the most probable word `generated_word` as the generated word according to `gru_out_memory`. The `multiplex` layer will choose between the real element `true_word` and the generated element `generated_word`, and will use the result of the selection as a decoder input. The `multiplex` layer uses three inputs, `true_token_flag`, `true_word`, and `generated_word_emb`. For each of these three inputs, if the value of `true_token_flag` is `0`, then the `multiplex` layer outputs the corresponding element in `true_word`; if the value in `true_token_flag` is `1`, then ` The multiplex` layer outputs the corresponding elements in `generated_word_emb`.
 
-## 参考文献
+
+## References
 
 [1] Bengio S, Vinyals O, Jaitly N, et al. [Scheduled sampling for sequence prediction with recurrent neural networks](http://papers.nips.cc/paper/5956-scheduled-sampling-for-sequence-prediction-with-recurrent-neural-networks)//Advances in Neural Information Processing Systems. 2015: 1171-1179.
