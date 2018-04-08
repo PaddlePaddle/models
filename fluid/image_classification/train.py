@@ -13,10 +13,10 @@ from utility import add_arguments, print_arguments
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
-add_arg('batch_size', int, 256, "Minibatch size.")
-add_arg('num_layers', int, 50,  "How many layers for SE-ResNeXt model.")
+# yapf: disable
+add_arg('batch_size',   int,  256, "Minibatch size.")
+add_arg('num_layers',   int,  50,  "How many layers for SE-ResNeXt model.")
 add_arg('parallel_exe', bool, True, "Whether use ParallelExecutor to train.")
-
 
 def train_paralle_do(learning_rate,
                      batch_size,
