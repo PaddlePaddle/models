@@ -594,7 +594,7 @@ def transformer(
     sum_cost = layers.reduce_sum(weighted_cost)
     token_num = layers.reduce_sum(weights)
     avg_cost = sum_cost / token_num
-    return sum_cost, avg_cost, predict
+    return sum_cost, avg_cost, predict, token_num
 
 
 def wrap_encoder(src_vocab_size,
