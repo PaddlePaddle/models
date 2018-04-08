@@ -16,7 +16,6 @@ import image_util
 from paddle.utils.image_util import *
 import random
 from PIL import Image
-from PIL import ImageDraw
 import numpy as np
 import xml.etree.ElementTree
 import os
@@ -137,10 +136,11 @@ def _reader_creator(settings, file_list, mode, shuffle):
             if img.mode == 'L':
                 img = img.convert('RGB')
             img_width, img_height = img.size
+            img_id = image['id']
 
             if mode == 'train' or mode == 'test':
                 if settings.dataset == 'coco':
-                    # layout: category_id | xmin | ymin | xmax | ymax | iscrowd | origin_coco_bbox | segmentation | area | image_id | annotation_id
+                    # layout: label | xmin | ymin | xmax | ymax | iscrowd | area | image_id | category_id
                     bbox_labels = []
                     annIds = coco.getAnnIds(imgIds=image['id'])
                     anns = coco.loadAnns(annIds)
@@ -148,7 +148,8 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         bbox_sample = []
                         # start from 1, leave 0 to background
                         bbox_sample.append(
-                            float(category_ids.index(ann['category_id'])) + 1)
+                            float(ann['category_id']))
+                            #float(category_ids.index(ann['category_id'])) + 1)
                         bbox = ann['bbox']
                         xmin, ymin, w, h = bbox
                         xmax = xmin + w
@@ -158,11 +159,12 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         bbox_sample.append(float(xmax) / img_width)
                         bbox_sample.append(float(ymax) / img_height)
                         bbox_sample.append(float(ann['iscrowd']))
-                        #bbox_sample.append(ann['bbox'])
-                        #bbox_sample.append(ann['segmentation'])
                         #bbox_sample.append(ann['area'])
                         #bbox_sample.append(ann['image_id'])
+                        #bbox_sample.append(ann['category_id'])
                         #bbox_sample.append(ann['id'])
+                        #bbox_sample.append(ann['bbox'])
+                        #bbox_sample.append(ann['segmentation'])
                         bbox_labels.append(bbox_sample)
                 elif settings.dataset == 'pascalvoc':
                     # layout: label | xmin | ymin | xmax | ymax | difficult
@@ -236,7 +238,6 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         sample_labels[i][1] = 1 - sample_labels[i][3]
                         sample_labels[i][3] = 1 - tmp
 
-            #draw_bounding_box_on_image(img, sample_labels, image_name, category_names, normalized=True)
             # HWC to CHW
             if len(img.shape) == 3:
                 img = np.swapaxes(img, 1, 2)
@@ -248,51 +249,25 @@ def _reader_creator(settings, file_list, mode, shuffle):
             img = img.flatten()
             img = img * 0.007843
 
-            sample_labels = np.array(sample_labels)
             if mode == 'train' or mode == 'test':
-                if mode == 'train' and len(sample_labels) == 0: continue
-                if mode == 'test' and len(sample_labels) == 0: continue
-                yield img.astype(
-                    'float32'
-                ), sample_labels[:, 1:5], sample_labels[:, 0].astype(
-                    'int32'), sample_labels[:, -1].astype('int32')
+                sample_labels = np.array(sample_labels)
+                if len(sample_labels) == 0:
+                    continue
+                if settings.dataset == 'coco':
+                    yield img.astype('float32'), \
+                        sample_labels[:, 1:5], \
+                        sample_labels[:, 0].astype('int32'), \
+                        sample_labels[:, 5].astype('int32'), \
+                        [img_id, img_width, img_height]
+                elif settings.dataset == 'pascalvoc':
+                    yield img.astype(
+                        'float32'
+                    ), sample_labels[:, 1:5], sample_labels[:, 0].astype(
+                        'int32'), sample_labels[:, -1].astype('int32')
             elif mode == 'infer':
                 yield img.astype('float32')
 
     return reader
-
-
-def draw_bounding_box_on_image(image,
-                               sample_labels,
-                               image_name,
-                               category_names,
-                               color='red',
-                               thickness=4,
-                               with_text=True,
-                               normalized=True):
-    image = Image.fromarray(image)
-    draw = ImageDraw.Draw(image)
-    im_width, im_height = image.size
-    if not normalized:
-        im_width, im_height = 1, 1
-    for item in sample_labels:
-        label = item[0]
-        category_name = category_names[int(label)]
-        bbox = item[1:5]
-        xmin, ymin, xmax, ymax = bbox
-        (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
-                                      ymin * im_height, ymax * im_height)
-        draw.line(
-            [(left, top), (left, bottom), (right, bottom), (right, top),
-             (left, top)],
-            width=thickness,
-            fill=color)
-        #draw.rectangle([xmin, ymin, xmax, ymax], outline=color)
-        if with_text:
-            if image.mode == 'RGB':
-                draw.text((left, top), category_name, (255, 255, 0))
-    image.save(image_name)
-
 
 def train(settings, file_list, shuffle=True):
     if settings.dataset == 'coco':

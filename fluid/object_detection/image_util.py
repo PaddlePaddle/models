@@ -1,4 +1,4 @@
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageDraw
 import numpy as np
 import random
 import math
@@ -145,7 +145,8 @@ def transform_labels(bbox_labels, sample_bbox):
             sample_label.append(float(proj_bbox.ymin))
             sample_label.append(float(proj_bbox.xmax))
             sample_label.append(float(proj_bbox.ymax))
-            sample_label.append(bbox_labels[i][5])
+            #sample_label.append(bbox_labels[i][5])
+            sample_label = sample_label + bbox_labels[i][5:]
             sample_labels.append(sample_label)
     return sample_labels
 
@@ -233,3 +234,35 @@ def expand_image(img, bbox_labels, img_width, img_height, settings):
             bbox_labels = transform_labels(bbox_labels, expand_bbox)
             return expand_img, bbox_labels
     return img, bbox_labels
+
+
+def draw_bounding_box_on_image(image,
+                               sample_labels,
+                               image_name,
+                               category_names,
+                               color='red',
+                               thickness=4,
+                               with_text=True,
+                               normalized=True):
+    image = Image.fromarray(image)
+    draw = ImageDraw.Draw(image)
+    im_width, im_height = image.size
+    if not normalized:
+        im_width, im_height = 1, 1
+    for item in sample_labels:
+        label = item[0]
+        category_name = category_names[int(label)]
+        bbox = item[1:5]
+        xmin, ymin, xmax, ymax = bbox
+        (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
+                                      ymin * im_height, ymax * im_height)
+        draw.line(
+            [(left, top), (left, bottom), (right, bottom), (right, top),
+             (left, top)],
+            width=thickness,
+            fill=color)
+        #draw.rectangle([xmin, ymin, xmax, ymax], outline=color)
+        if with_text:
+            if image.mode == 'RGB':
+                draw.text((left, top), category_name, (255, 255, 0))
+    image.save(image_name)

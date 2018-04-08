@@ -1,6 +1,7 @@
 import paddle
 import paddle.fluid as fluid
 import reader
+import image_util
 import load_model as load_model
 from mobilenet_ssd import mobile_net
 from utility import add_arguments, print_arguments
@@ -14,9 +15,10 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('learning_rate', float, 0.001, "Learning rate.")
 add_arg('batch_size', int, 32, "Minibatch size.")
-add_arg('num_passes', int, 25, "Epoch number.")
-add_arg('parallel', bool, True, "Whether use parallel training.")
-add_arg('use_gpu', bool, True, "Whether use GPU.")
+add_arg('num_passes', int, 0, "Epoch number.")
+add_arg('nms_threshold', float, 0.5, "NMS threshold.")
+add_arg('parallel', bool, False, "Whether use parallel training.")
+add_arg('use_gpu', bool, False, "Whether use GPU.")
 add_arg('data_dir', str, './data/COCO17', "Root path of data")
 add_arg('train_file_list', str, 'annotations/instances_train2017.json',
         "train file list")
@@ -26,7 +28,7 @@ add_arg('model_save_dir', str, 'model_COCO17', "where to save model")
 
 add_arg('dataset', str, 'coco', "coco or pascalvoc")
 add_arg(
-    'is_toy', int, 0,
+    'is_toy', int, 4,
     "Is Toy for quick debug, 0 means using all data, while n means using only n sample"
 )
 add_arg('label_file', str, 'label_list',
@@ -54,7 +56,7 @@ def train(args,
           init_model_path=None):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if data_args.dataset == 'coco':
-        num_classes = 81
+        num_classes = 91
     elif data_args.dataset == 'pascalvoc':
         num_classes = 21
 
@@ -65,6 +67,10 @@ def train(args,
         name='gt_label', shape=[1], dtype='int32', lod_level=1)
     difficult = fluid.layers.data(
         name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
+    gt_iscrowd = fluid.layers.data(
+        name='gt_iscrowd', shape=[1], dtype='int32', lod_level=1)
+    gt_image_info = fluid.layers.data(
+        name='gt_image_id', shape=[3], dtype='int32', lod_level=1)
 
     if args.parallel:
         places = fluid.layers.get_places()
@@ -79,7 +85,7 @@ def train(args,
             loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_, box,
                                          box_var)
             nmsed_out = fluid.layers.detection_output(
-                locs, confs, box, box_var, nms_threshold=0.45)
+                locs, confs, box, box_var, nms_threshold=args.nms_threshold)
             loss = fluid.layers.reduce_sum(loss)
             pd.write_output(loss)
             pd.write_output(nmsed_out)
@@ -89,7 +95,7 @@ def train(args,
     else:
         locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
         nmsed_out = fluid.layers.detection_output(
-            locs, confs, box, box_var, nms_threshold=0.45)
+            locs, confs, box, box_var, nms_threshold=args.nms_threshold)
         loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
                                      box_var)
         loss = fluid.layers.reduce_sum(loss)
@@ -131,19 +137,74 @@ def train(args,
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
         reader.test(data_args, val_file_list), batch_size=batch_size)
-    feeder = fluid.DataFeeder(
-        place=place, feed_list=[image, gt_box, gt_label, difficult])
+    if data_args.dataset == 'coco':
+        feeder = fluid.DataFeeder(
+            place=place, feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
+    elif data_args.dataset == 'pascalvoc':
+        feeder = fluid.DataFeeder(
+            place=place, feed_list=[image, gt_box, gt_label, difficult])
 
     def test(pass_id):
-        _, accum_map = map_eval.get_map_var()
-        map_eval.reset(exe)
-        test_map = None
-        for _, data in enumerate(test_reader()):
-            test_map = exe.run(test_program,
-                               feed=feeder.feed(data),
-                               fetch_list=[accum_map])
-        print("Test {0}, map {1}".format(pass_id, test_map[0]))
+        if data_args.dataset == 'coco':
+            dts_res = []
+            import json
 
+            for batch_id, data in enumerate(test_reader()):
+                nmsed_out_v = exe.run(fluid.default_main_program(),
+                                        feed=feeder.feed(data),
+                                        fetch_list=[nmsed_out],
+                                        return_numpy=False)
+                lod = nmsed_out_v[0].lod()[0]
+                nmsed_out_v = np.array(nmsed_out_v[0])
+                real_batch_size = min(batch_size, len(data))
+                assert (len(lod) == real_batch_size + 1), \
+                "Error Lod Tensor offset dimension. Lod({}) vs. batch_size({})".format(len(lod), batch_size)
+                k = 0
+                for i in range(real_batch_size):
+                    dt_num_this_img = lod[i + 1] - lod[i]
+                    image_id = int(data[i][4][0])
+                    image_width = int(data[i][4][1])
+                    image_height = int(data[i][4][2])
+                    for j in range(dt_num_this_img):
+                        dt = nmsed_out_v[k]
+                        k = k + 1
+                        category_id, score, xmin, ymin, xmax, ymax = dt.tolist()
+                        xmin = max(min(xmin, 1.0), 0.0) * image_width
+                        ymin = max(min(ymin, 1.0), 0.0) * image_height
+                        xmax = max(min(xmax, 1.0), 0.0) * image_width
+                        ymax = max(min(ymax, 1.0), 0.0) * image_height
+                        w = xmax - xmin
+                        h = ymax - ymin
+                        bbox = [xmin, ymin, w, h]
+                        dt_res = {
+                            'image_id' : image_id,
+                            'category_id' : category_id,
+                            'bbox' : bbox,
+                            'score' : score
+                        }
+                        dts_res.append(dt_res)
+                with open("detection_result.json", 'w') as outfile:
+                    json.dump(dts_res, outfile)
+                print("start evaluate using coco api")
+                from pycocotools.coco import COCO
+                from pycocotools.cocoeval import COCOeval
+                cocoGt=COCO(os.path.join(args.data_dir,args.val_file_list))
+                cocoDt=cocoGt.loadRes("detection_result.json")
+                cocoEval = COCOeval(cocoGt,cocoDt,"bbox")
+                cocoEval.evaluate()
+                cocoEval.accumulate()
+                cocoEval.summarize()
+
+        elif data_args.dataset == 'pascalvoc':
+            _, accum_map = map_eval.get_map_var()
+            map_eval.reset(exe)
+            test_map = None
+            for _, data in enumerate(test_reader()):
+                test_map = exe.run(test_program,
+                                   feed=feeder.feed(data),
+                                   fetch_list=[accum_map])
+            print("Test {0}, map {1}".format(pass_id, test_map[0]))
+    test(-1)
     for pass_id in range(num_passes):
         start_time = time.time()
         prev_start_time = start_time
