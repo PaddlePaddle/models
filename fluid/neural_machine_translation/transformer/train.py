@@ -13,7 +13,6 @@ from config import TrainTaskConfig, ModelHyperParams, pos_enc_param_names, \
 
 def pad_batch_data(insts,
                    pad_idx,
-                   eos_idx,
                    n_head,
                    is_target=False,
                    is_label=False,
@@ -25,12 +24,10 @@ def pad_batch_data(insts,
     """
     return_list = []
     max_len = max(len(inst) for inst in insts)
-    # Since we restrict the predicted probs excluding the <pad> to avoid
-    # generating the <pad>, also replace the <pad> with others in labels.
-    inst_data = np.array([
-        inst + [eos_idx if is_label else pad_idx] * (max_len - len(inst))
-        for inst in insts
-    ])
+    # Any token included in dict can be used to pad, since the paddings' loss
+    # will be masked out by weights and make no effect on parameter gradients.
+    inst_data = np.array(
+        [inst + [pad_idx] * (max_len - len(inst)) for inst in insts])
     return_list += [inst_data.astype("int64").reshape([-1, 1])]
     if is_label:  # label weight
         inst_weight = np.array(
@@ -66,22 +63,14 @@ def pad_batch_data(insts,
 
 
 def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
-                        eos_idx, n_head, d_model):
+                        n_head, d_model):
     """
     Put all padded data needed by training into a dict.
     """
     src_word, src_pos, src_slf_attn_bias, src_max_len = pad_batch_data(
-        [inst[0] for inst in insts],
-        src_pad_idx,
-        eos_idx,
-        n_head,
-        is_target=False)
+        [inst[0] for inst in insts], src_pad_idx, n_head, is_target=False)
     trg_word, trg_pos, trg_slf_attn_bias, trg_max_len = pad_batch_data(
-        [inst[1] for inst in insts],
-        trg_pad_idx,
-        eos_idx,
-        n_head,
-        is_target=True)
+        [inst[1] for inst in insts], trg_pad_idx, n_head, is_target=True)
     trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
                                 [1, 1, trg_max_len, 1]).astype("float32")
 
@@ -104,7 +93,6 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
     lbl_word, lbl_weight = pad_batch_data(
         [inst[2] for inst in insts],
         trg_pad_idx,
-        eos_idx,
         n_head,
         is_target=False,
         is_label=True,
@@ -128,13 +116,11 @@ def main():
     exe = fluid.Executor(place)
 
     sum_cost, avg_cost, predict, token_num = transformer(
-        ModelHyperParams.src_vocab_size + 1,
-        ModelHyperParams.trg_vocab_size + 1, ModelHyperParams.max_length + 1,
-        ModelHyperParams.n_layer, ModelHyperParams.n_head,
-        ModelHyperParams.d_key, ModelHyperParams.d_value,
-        ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
-        ModelHyperParams.dropout, ModelHyperParams.src_pad_idx,
-        ModelHyperParams.trg_pad_idx, ModelHyperParams.pos_pad_idx)
+        ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size,
+        ModelHyperParams.max_length, ModelHyperParams.n_layer,
+        ModelHyperParams.n_head, ModelHyperParams.d_key,
+        ModelHyperParams.d_value, ModelHyperParams.d_model,
+        ModelHyperParams.d_inner_hid, ModelHyperParams.dropout)
 
     lr_scheduler = LearningRateScheduler(ModelHyperParams.d_model,
                                          TrainTaskConfig.warmup_steps, place,
@@ -168,9 +154,9 @@ def main():
         for batch_id, data in enumerate(val_data()):
             data_input = prepare_batch_input(
                 data, encoder_input_data_names + decoder_input_data_names[:-1] +
-                label_data_names, ModelHyperParams.src_pad_idx,
-                ModelHyperParams.trg_pad_idx, ModelHyperParams.eos_idx,
-                ModelHyperParams.n_head, ModelHyperParams.d_model)
+                label_data_names, ModelHyperParams.eos_idx,
+                ModelHyperParams.eos_idx, ModelHyperParams.n_head,
+                ModelHyperParams.d_model)
             test_sum_cost, test_token_num = exe.run(
                 test_program,
                 feed=data_input,
@@ -188,7 +174,7 @@ def main():
         pos_enc_param = fluid.global_scope().find_var(
             pos_enc_param_name).get_tensor()
         pos_enc_param.set(
-            position_encoding_init(ModelHyperParams.max_length + 1,
+            position_encoding_init(ModelHyperParams.max_length,
                                    ModelHyperParams.d_model), place)
 
     for pass_id in xrange(TrainTaskConfig.pass_num):
@@ -196,9 +182,9 @@ def main():
         for batch_id, data in enumerate(train_data()):
             data_input = prepare_batch_input(
                 data, encoder_input_data_names + decoder_input_data_names[:-1] +
-                label_data_names, ModelHyperParams.src_pad_idx,
-                ModelHyperParams.trg_pad_idx, ModelHyperParams.eos_idx,
-                ModelHyperParams.n_head, ModelHyperParams.d_model)
+                label_data_names, ModelHyperParams.eos_idx,
+                ModelHyperParams.eos_idx, ModelHyperParams.n_head,
+                ModelHyperParams.d_model)
             lr_scheduler.update_learning_rate(data_input)
             outs = exe.run(fluid.framework.default_main_program(),
                            feed=data_input,

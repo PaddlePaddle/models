@@ -251,22 +251,20 @@ def main():
     encoder_program = fluid.Program()
     with fluid.program_guard(main_program=encoder_program):
         enc_output = encoder(
-            ModelHyperParams.src_vocab_size + 1,
-            ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
-            ModelHyperParams.n_head, ModelHyperParams.d_key,
-            ModelHyperParams.d_value, ModelHyperParams.d_model,
-            ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
-            ModelHyperParams.src_pad_idx, ModelHyperParams.pos_pad_idx)
+            ModelHyperParams.src_vocab_size, ModelHyperParams.max_length,
+            ModelHyperParams.n_layer, ModelHyperParams.n_head,
+            ModelHyperParams.d_key, ModelHyperParams.d_value,
+            ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
+            ModelHyperParams.dropout)
 
     decoder_program = fluid.Program()
     with fluid.program_guard(main_program=decoder_program):
-        predict = decoder(
-            ModelHyperParams.trg_vocab_size + 1,
-            ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
-            ModelHyperParams.n_head, ModelHyperParams.d_key,
-            ModelHyperParams.d_value, ModelHyperParams.d_model,
-            ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
-            ModelHyperParams.trg_pad_idx, ModelHyperParams.pos_pad_idx)
+        predict = decoder(ModelHyperParams.trg_vocab_size,
+                          ModelHyperParams.max_length, ModelHyperParams.n_layer,
+                          ModelHyperParams.n_head, ModelHyperParams.d_key,
+                          ModelHyperParams.d_value, ModelHyperParams.d_model,
+                          ModelHyperParams.d_inner_hid,
+                          ModelHyperParams.dropout)
 
     # Load model parameters of encoder and decoder separately from the saved
     # transformer model.

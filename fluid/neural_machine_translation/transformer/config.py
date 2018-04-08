@@ -45,19 +45,13 @@ class InferTaskConfig(object):
 class ModelHyperParams(object):
     # Dictionary size for source and target language. This model directly uses
     # paddle.dataset.wmt16 in which <bos>, <eos> and <unk> token has
-    # alreay been added, but the <pad> token is not added. Transformer requires
-    # sequences in a mini-batch are padded to have the same length. A <pad> token is
-    # added into the original dictionary in paddle.dateset.wmt16.
+    # alreay been added.
 
     # size of source word dictionary.
     src_vocab_size = 10000
-    # index for <pad> token in source language.
-    src_pad_idx = src_vocab_size
 
     # size of target word dictionay
     trg_vocab_size = 10000
-    # index for <pad> token in target language.
-    trg_pad_idx = trg_vocab_size
 
     # index for <bos> token
     bos_idx = 0
