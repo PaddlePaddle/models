@@ -25,7 +25,7 @@ class TrainTaskConfig(object):
 class InferTaskConfig(object):
     use_gpu = False
     # the number of examples in one run for sequence generation.
-    batch_size = 1
+    batch_size = 10
 
     # the parameters for beam search.
     beam_size = 5
