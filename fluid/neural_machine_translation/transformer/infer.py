@@ -301,6 +301,9 @@ def main():
 
     trg_idx2word = paddle.dataset.wmt16.get_dict(
         "de", dict_size=ModelHyperParams.trg_vocab_size, reverse=True)
+    # Append the <pad> token since the dict provided by dataset.wmt16 does
+    # not include it.
+    trg_idx2word[ModelHyperParams.trg_pad_idx] = "<pad>"
 
     def post_process_seq(seq,
                          bos_idx=ModelHyperParams.bos_idx,
