@@ -25,7 +25,7 @@ def inference(args, infer=ctc_infer, data_reader=ctc_reader):
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
     sequence = infer(images, num_classes)
     # data reader
-    test_reader = data_reader.test(test_images_dir=args.input_images_dir, test_list_file=args.input_images_list)
+    infer_reader = data_reader.inference(infer_images_dir=args.input_images_dir, infer_list_file=args.input_images_list)
     # prepare environment
     place = fluid.CPUPlace()
     if args.device >= 0:
@@ -44,7 +44,7 @@ def inference(args, infer=ctc_infer, data_reader=ctc_reader):
     print "Init model from: %s." % args.model_path
 
 
-    for data in test_reader():
+    for data in infer_reader():
         result = exe.run(fluid.default_main_program(),
                          feed=get_feeder_data(
                              data, place, need_label=False),

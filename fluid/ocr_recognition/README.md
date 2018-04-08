@@ -85,7 +85,9 @@
 
 **C. 待预测数据集**
 
-待预测数据集的格式与训练集也类似，只不过list文件中的最后一列可以放任意占位字符或字符串，如下所示：
+预测支持三种形式的输入：
+
+第一种：设置`--input_images_dir`和`--input_images_list`, 与训练集类似, 只不过list文件中的最后一列可以放任意占位字符或字符串，如下所示：
 
 ```
 185 48 00508_0215.jpg s
@@ -94,99 +96,75 @@
 ...
 ```
 
-在做inference时，通过inference.py的选项`--input_images_dir`和`--input_images_list` 来设置输入数据的路径。
+第二种：仅设置`--input_images_list`, 其中list文件中只需放图片的完整路径，如下所示：
 
+```
+data/test_images/00000.jpg
+data/test_images/00001.jpg
+data/test_images/00003.jpg
+```
+
+第三种：从stdin读入一张图片的path，然后进行一次inference.
 
 #### 1.2 训练
 
-通过以下命令调用训练脚本进行训练：
+Train on one GPU with defalut trainning data:
 
 ```
-python ctc_train.py [options]
+env CUDA_VISIABLE_DEVICES=0 python ctc_train.py \
+    --device=0 \
+    --parallel=False \
+    --batch_size=32
 ```
 
-其中，options支持配置以下训练相关的参数：
-
-**- -batch_size :** Minibatch 大小，默认为32.
-
-**- -pass_num :** 训练多少个pass。默认为100。
-
-**- -log_period :**  每隔多少个minibatch打印一次训练日志， 默认为1000.
-
-**- -save_model_period :** 每隔多少个minibatch保存一次模型。默认为15000。
-如果设置为-1，则永不保存模型。
-
-**- -eval_period :** 每隔多少个minibatch用测试集测试一次模型。默认为15000。如果设置为-1，则永不进行测试。
-
-**- -save_model_dir :** 保存模型文件的路径，默认为“./models”，如果指定路径不存在，则会自动创建路径。
-
-**- -init_model :** 初始化模型的路径。如果模型是以单个文件存储的，这里需要指定具体文件的路径；如果模型是以多个文件存储的，这里只需指定多个文件所在文件夹的路径。该选项默认为 None，意思是不用预训练模型做初始化。
-
-**- -learning_rate :**  全局learning rate. 默认为 0.001.
-
-**- -l2 :**  L2 regularizer. 默认为0.0004.
-
-**- -max_clip :** Max gradient clipping threshold. 默认为10.0.
-
-**- -momentum :** Momentum. 默认为0.9.
-
-**- -rnn_hidden_size :** RNN 隐藏层大小。 默认为200。
-
-**- -device DEVICE :** 设备ID。设置为-1，训练在CPU执行；设置为0，训练在GPU上执行。默认为0。
-
-**- -min_average_window :** Min average window. 默认为10000.
-
-**- -max_average_window :** Max average window. 建议大小设置为一个pass内minibatch的数量。默认为15625.
-
-**- -average_window :** Average window. 默认为0.15.
-
-**- -parallel :** 是否使用多卡进行训练。默认为True.
-
-**- -train_images :** 存放训练集图片的路径，如果设置为None，ctc_reader会自动下载使用默认数据集。如果使用自己的数据进行训练，需要修改该选项。默认为None。
-
-**- -train_list :** 存放训练集图片信息的list文件，如果设置为None，ctc_reader会自动下载使用默认数据集。如果使用自己的数据进行训练，需要修改该选项。默认为None。
-
-**- -test_images :** 存放测试集图片的路径，如果设置为None，ctc_reader会自动下载使用默认数据集。如果使用自己的数据进行测试，需要修改该选项。默认为None。
-
-**- -test_list :** 存放测试集图片信息的list文件，如果设置为None，ctc_reader会自动下载使用默认数据集。如果使用自己的数据进行测试，需要修改该选项。默认为None。
-
-**- -num_classes :** 字符集的大小。如果设置为None, 则使用ctc_reader提供的字符集大小。如果使用自己的数据进行训练，需要修改该选项。默认为None.
-
-
-### 1.3 Inference
-
-通过以下命令调用预测脚本进行预测：
+Train on multi-GPU with defalut trainning data:
 
 ```
-python inference.py [options]
+env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py \
+    --device=0 \
+    --parallel=True \
+    --batch_size=128
 ```
 
-其中，options支持配置以下预测相关的参数：
+执行`python ctc_train.py --help`可查看更多使用方式和参数详细说明。
 
-**--model_path :**  用来做预测的模型文件。如果模型是以单个文件存储的，这里需要指定具体文件的路径；如果模型是以多个文件存储的，这里只需指定多个文件所在文件夹的路径。为必设置选项。
+图2为使用默认参数和默认数据集训练的收敛曲线，其中横坐标轴为训练pass数，纵轴为在测试集上的sequence_error.
 
-**--input_images_dir :** 存放待预测图片的文件夹路径。如果设置为None, 则使用ctc_reader提供的默认数据。默认为None.
+<p align="center">
+<img src="images/train.jpg" width="620" hspace='10'/> <br/>
+<strong>图 2</strong>
+</p>
 
-**--input_images_list :**  存放待预测图片信息的list文件的路径。如果设置为None, 则使用ctc_reader提供的默认数据。默认为None.
 
-**--device DEVICE :** 设备ID。设置为-1，运行在CPU上；设置为0，运行在GPU上。默认为0。
 
-预测结果会print到标准输出。
-
-### 1.4 Evaluate
+### 1.3 Evaluate
 
 通过以下命令调用评估脚本用指定数据集对模型进行评估：
 
 ```
-python eval.py [options]
+env CUDA_VISIBLE_DEVICE=0 python eval.py \
+    --model_path="./models/model_0" \
+    --input_images_dir="./eval_data/images/" \
+    --input_images_list="./eval_data/eval_list\" \
+    --device 0
 ```
 
-其中，options支持配置以下评估相关的参数：
+执行`python ctc_train.py --help`可查看参数详细说明。
 
-**--model_path :**  待评估模型的文件路径。如果模型是以单个文件存储的，这里需要指定具体文件的路径；如果模型是以多个文件存储的，这里只需指定多个文件所在文件夹的路径。为必设置选项。
 
-**--input_images_dir :** 存放待评估图片的文件夹路径。如果设置为None, 则使用ctc_reader提供的默认数据。默认为None.
+### 1.4 Inference
 
-**--input_images_list :**  存放待评估图片信息的list文件的路径。如果设置为None, 则使用ctc_reader提供的默认数据。默认为None.
+Read image path from stdin and inference：
 
-**--device DEVICE :** 设备ID。设置为-1，运行在CPU上；设置为0，运行在GPU上。默认为0。
+```
+env CUDA_VISIBLE_DEVICE=0 python inference.py \
+    --model_path models/model_00044_15000
+```
+
+Read image path from list file and inference：
+
+```
+env CUDA_VISIBLE_DEVICE=0 python inference.py \
+    --model_path=models/model_00044_15000 \
+    --input_images_list="data/test.list"
+```
