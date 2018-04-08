@@ -25,8 +25,7 @@ class TrainTaskConfig(object):
 class InferTaskConfig(object):
     use_gpu = False
     # the number of examples in one run for sequence generation.
-    # currently the batch size can only be set to 1.
-    batch_size = 1
+    batch_size = 10
 
     # the parameters for beam search.
     beam_size = 5
@@ -103,6 +102,7 @@ encoder_input_data_names = (
     "src_word",
     "src_pos",
     "src_slf_attn_bias",
+    "src_data_shape",
     "src_slf_attn_pre_softmax_shape",
     "src_slf_attn_post_softmax_shape", )
 
@@ -112,6 +112,7 @@ decoder_input_data_names = (
     "trg_pos",
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
+    "trg_data_shape",
     "trg_slf_attn_pre_softmax_shape",
     "trg_slf_attn_post_softmax_shape",
     "trg_src_attn_pre_softmax_shape",
