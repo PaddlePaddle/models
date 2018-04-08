@@ -39,9 +39,10 @@ def translate_batch(exe,
     enc_in_data = pad_batch_data(
         src_words,
         src_pad_idx,
+        eos_idx,
         n_head,
         is_target=False,
-        return_pos=True,
+        is_label=False,
         return_attn_bias=True,
         return_max_len=False)
     # Append the data shape input to reshape the output of embedding layer.

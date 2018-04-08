@@ -724,10 +724,11 @@ def wrap_decoder(trg_vocab_size,
         src_attn_post_softmax_shape, )
     # Return logits for training and probs for inference.
     predict = layers.reshape(
-        x=layers.fc(input=dec_output,
-                    size=trg_vocab_size,
-                    bias_attr=False,
-                    num_flatten_dims=2),
-        shape=[-1, trg_vocab_size],
+        x=layers.fc(
+            input=dec_output,
+            size=trg_vocab_size - 1,  # To exclude <pad>.
+            bias_attr=False,
+            num_flatten_dims=2),
+        shape=[-1, trg_vocab_size - 1],
         act="softmax" if dec_inputs is None else None)
     return predict
