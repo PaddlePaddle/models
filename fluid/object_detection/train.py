@@ -183,17 +183,18 @@ def train(args,
                             'score' : score
                         }
                         dts_res.append(dt_res)
-                with open("detection_result.json", 'w') as outfile:
-                    json.dump(dts_res, outfile)
-                print("start evaluate using coco api")
-                from pycocotools.coco import COCO
-                from pycocotools.cocoeval import COCOeval
-                cocoGt=COCO(os.path.join(args.data_dir,args.val_file_list))
-                cocoDt=cocoGt.loadRes("detection_result.json")
-                cocoEval = COCOeval(cocoGt,cocoDt,"bbox")
-                cocoEval.evaluate()
-                cocoEval.accumulate()
-                cocoEval.summarize()
+            
+            with open("detection_result.json", 'w') as outfile:
+                json.dump(dts_res, outfile)
+            print("start evaluate using coco api")
+            from pycocotools.coco import COCO
+            from pycocotools.cocoeval import COCOeval
+            cocoGt=COCO(os.path.join(args.data_dir,args.val_file_list))
+            cocoDt=cocoGt.loadRes("detection_result.json")
+            cocoEval = COCOeval(cocoGt,cocoDt,"bbox")
+            cocoEval.evaluate()
+            cocoEval.accumulate()
+            cocoEval.summarize()
 
         elif data_args.dataset == 'pascalvoc':
             _, accum_map = map_eval.get_map_var()

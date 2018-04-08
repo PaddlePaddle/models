@@ -8,7 +8,7 @@ import paddle.fluid as fluid
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
-import data_utils.data_reader as reader
+import data_utils.async_data_reader as reader
 from data_utils.util import lodtensor_to_ndarray
 from data_utils.util import split_infer_result
 
@@ -79,12 +79,13 @@ def infer(args):
         trans_splice.TransSplice()
     ]
 
-    infer_data_reader = reader.DataReader(args.infer_feature_lst,
-                                          args.infer_label_lst)
+    infer_data_reader = reader.AsyncDataReader(args.infer_feature_lst,
+                                               args.infer_label_lst)
     infer_data_reader.set_transformers(ltrans)
 
     feature_t = fluid.LoDTensor()
     one_batch = infer_data_reader.batch_iterator(args.batch_size, 1).next()
+
     (features, labels, lod) = one_batch
     feature_t.set(features, place)
     feature_t.set_lod([lod])

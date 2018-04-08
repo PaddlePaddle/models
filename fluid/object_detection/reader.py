@@ -16,6 +16,7 @@ import image_util
 from paddle.utils.image_util import *
 import random
 from PIL import Image
+from PIL import ImageDraw
 import numpy as np
 import xml.etree.ElementTree
 import os
