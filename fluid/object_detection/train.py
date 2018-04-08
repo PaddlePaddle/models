@@ -14,15 +14,15 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('learning_rate', float, 0.001, "Learning rate.")
 add_arg('batch_size', int, 32, "Minibatch size.")
-add_arg('num_passes', int, 20, "Epoch number.")
+add_arg('num_passes', int, 25, "Epoch number.")
 add_arg('parallel', bool, True, "Whether use parallel training.")
 add_arg('use_gpu', bool, True, "Whether use GPU.")
-add_arg('data_dir', str, './data/coco', "Root path of data")
-add_arg('train_file_list', str, 'annotations/instances_train2014.json',
+add_arg('data_dir', str, './data/COCO17', "Root path of data")
+add_arg('train_file_list', str, 'annotations/instances_train2017.json',
         "train file list")
-add_arg('val_file_list', str, 'annotations/instances_minival2014.json',
+add_arg('val_file_list', str, 'annotations/instances_val2017.json',
         "vaild file list")
-add_arg('model_save_dir', str, 'model', "where to save model")
+add_arg('model_save_dir', str, 'model_COCO17', "where to save model")
 
 add_arg('dataset', str, 'coco', "coco or pascalvoc")
 add_arg(
@@ -31,7 +31,7 @@ add_arg(
 )
 add_arg('label_file', str, 'label_list',
         "Lable file which lists all label name")
-add_arg('apply_distort', bool, False, "Whether apply distort")
+add_arg('apply_distort', bool, True, "Whether apply distort")
 add_arg('apply_expand', bool, False, "Whether appley expand")
 add_arg('resize_h', int, 300, "resize image size")
 add_arg('resize_w', int, 300, "resize image size")
@@ -53,6 +53,10 @@ def train(args,
           model_save_dir='model',
           init_model_path=None):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
+    if data_args.dataset == 'coco':
+        num_classes = 81
+    elif data_args.dataset == 'pascalvoc':
+        num_classes = 21
 
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     gt_box = fluid.layers.data(
@@ -70,7 +74,7 @@ def train(args,
             gt_box_ = pd.read_input(gt_box)
             gt_label_ = pd.read_input(gt_label)
             difficult_ = pd.read_input(difficult)
-            locs, confs, box, box_var = mobile_net(data_args, image_,
+            locs, confs, box, box_var = mobile_net(num_classes, image_,
                                                    image_shape)
             loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_, box,
                                          box_var)
@@ -83,7 +87,7 @@ def train(args,
         loss, nmsed_out = pd()
         loss = fluid.layers.mean(loss)
     else:
-        locs, confs, box, box_var = mobile_net(data_args, image, image_shape)
+        locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
         nmsed_out = fluid.layers.detection_output(
             locs, confs, box, box_var, nms_threshold=0.45)
         loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
@@ -91,10 +95,6 @@ def train(args,
         loss = fluid.layers.reduce_sum(loss)
 
     test_program = fluid.default_main_program().clone(for_test=True)
-    if data_args.dataset == 'coco':
-        num_classes = 81
-    elif data_args.dataset == 'pascalvoc':
-        num_classes = 21
     with fluid.program_guard(test_program):
         map_eval = fluid.evaluator.DetectionMAP(
             nmsed_out,
@@ -106,7 +106,14 @@ def train(args,
             evaluate_difficult=False,
             ap_version='integral')
 
-    boundaries = [32000, 48000]
+    if data_args.dataset == 'coco':
+        # learning rate decay in 12, 19 pass, respectively
+        if '2014' in train_file_list:
+            boundaries = [82783 / batch_size * 12, 82783 / batch_size * 19]
+        elif '2017' in train_file_list:
+            boundaries = [118287 / batch_size * 12, 118287 / batch_size * 19]
+    elif data_args.dataset == 'pascalvoc':
+        boundaries = [40000, 60000]
     values = [learning_rate, learning_rate * 0.5, learning_rate * 0.25]
     optimizer = fluid.optimizer.RMSProp(
         learning_rate=fluid.layers.piecewise_decay(boundaries, values),
@@ -154,7 +161,7 @@ def train(args,
                     pass_id, batch_id, loss_v[0], start_time - prev_start_time))
         test(pass_id)
 
-        if pass_id % 10 == 0:
+        if pass_id % 10 == 0 or pass_id == num_passes - 1:
             model_path = os.path.join(model_save_dir, str(pass_id))
             print 'save models to %s' % (model_path)
             fluid.io.save_inference_model(model_path, ['image'], [nmsed_out],
