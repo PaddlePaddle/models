@@ -117,7 +117,7 @@ def main():
 
     sum_cost, avg_cost, predict, token_num = transformer(
         ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size,
-        ModelHyperParams.max_length, ModelHyperParams.n_layer,
+        ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
         ModelHyperParams.n_head, ModelHyperParams.d_key,
         ModelHyperParams.d_value, ModelHyperParams.d_model,
         ModelHyperParams.d_inner_hid, ModelHyperParams.dropout)
@@ -174,7 +174,7 @@ def main():
         pos_enc_param = fluid.global_scope().find_var(
             pos_enc_param_name).get_tensor()
         pos_enc_param.set(
-            position_encoding_init(ModelHyperParams.max_length,
+            position_encoding_init(ModelHyperParams.max_length + 1,
                                    ModelHyperParams.d_model), place)
 
     for pass_id in xrange(TrainTaskConfig.pass_num):

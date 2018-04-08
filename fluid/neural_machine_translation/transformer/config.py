@@ -60,11 +60,10 @@ class ModelHyperParams(object):
     # index for <unk> token
     unk_idx = 2
 
-    # position value corresponding to the <pad> token.
-    pos_pad_idx = 0
-
-    # max length of sequences. It should plus 1 to include position
-    # padding token for position encoding.
+    # max length of sequences.
+    # The size of position encoding table should plus 1, since the sinusoid
+    # position encoding start from 1 and 0 can be used as the padding token
+    # for position encoding.
     max_length = 50
 
     # the dimension for word embeddings, which is also the last dimension of
