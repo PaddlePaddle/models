@@ -1,4 +1,4 @@
-
+﻿
 The program under this directory depends on PaddlePaddle v0.10.0 or upper. update it following this [instruction](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)  if your PaddlePaddle version is lower.
 
 ---
@@ -30,7 +30,7 @@ Suppose that the $i$ mini-batch is currently trained. The Scheduled Sampling def
 Figure 1 shows the attenuation curves for these three methods.
 
 <p align="center">
-<img src="images/decay.jpg" width="50%" align="center"><br>
+<img src="images/decay_en.jpg" width="50%" align="center"><br>
 Figure 1. Attenuation curves for linear decay, exponential decay, and inverse Sigmoid decay
 </p>
 
