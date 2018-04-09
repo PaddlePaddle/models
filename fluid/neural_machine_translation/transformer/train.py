@@ -57,7 +57,7 @@ def pad_batch_data(insts,
 
 
 def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
-                        max_length, n_head):
+                        n_head, d_model):
     """
     Put all padded data needed by training into a dict.
     """
@@ -67,6 +67,10 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
         [inst[1] for inst in insts], trg_pad_idx, n_head, is_target=True)
     trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
                                 [1, 1, trg_max_len, 1]).astype("float32")
+
+    # These shape tensors are used in reshape_op.
+    src_data_shape = np.array([len(insts), src_max_len, d_model], dtype="int32")
+    trg_data_shape = np.array([len(insts), trg_max_len, d_model], dtype="int32")
     src_slf_attn_pre_softmax_shape = np.array(
         [-1, src_slf_attn_bias.shape[-1]], dtype="int32")
     src_slf_attn_post_softmax_shape = np.array(
@@ -79,17 +83,19 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
         [-1, trg_src_attn_bias.shape[-1]], dtype="int32")
     trg_src_attn_post_softmax_shape = np.array(
         trg_src_attn_bias.shape, dtype="int32")
+
     lbl_word = pad_batch_data([inst[2] for inst in insts], trg_pad_idx, n_head,
                               False, False, False, False)
     lbl_weight = (lbl_word != trg_pad_idx).astype("float32").reshape([-1, 1])
+
     input_dict = dict(
         zip(input_data_names, [
-            src_word, src_pos, src_slf_attn_bias,
+            src_word, src_pos, src_slf_attn_bias, src_data_shape,
             src_slf_attn_pre_softmax_shape, src_slf_attn_post_softmax_shape,
             trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias,
-            trg_slf_attn_pre_softmax_shape, trg_slf_attn_post_softmax_shape,
-            trg_src_attn_pre_softmax_shape, trg_src_attn_post_softmax_shape,
-            lbl_word, lbl_weight
+            trg_data_shape, trg_slf_attn_pre_softmax_shape,
+            trg_slf_attn_post_softmax_shape, trg_src_attn_pre_softmax_shape,
+            trg_src_attn_post_softmax_shape, lbl_word, lbl_weight
         ]))
     return input_dict
 
@@ -98,7 +104,7 @@ def main():
     place = fluid.CUDAPlace(0) if TrainTaskConfig.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    sum_cost, avg_cost, predict = transformer(
+    sum_cost, avg_cost, predict, token_num = transformer(
         ModelHyperParams.src_vocab_size + 1,
         ModelHyperParams.trg_vocab_size + 1, ModelHyperParams.max_length + 1,
         ModelHyperParams.n_layer, ModelHyperParams.n_head,
@@ -134,21 +140,24 @@ def main():
         batch_size=TrainTaskConfig.batch_size)
 
     def test(exe):
-        test_sum_costs = []
-        test_avg_costs = []
+        test_total_cost = 0
+        test_total_token = 0
         for batch_id, data in enumerate(val_data()):
-            if len(data) != TrainTaskConfig.batch_size:
-                continue
             data_input = prepare_batch_input(
                 data, encoder_input_data_names + decoder_input_data_names[:-1] +
                 label_data_names, ModelHyperParams.src_pad_idx,
-                ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
-                ModelHyperParams.n_head)
-            test_sum_cost, test_avg_cost = exe.run(
-                test_program, feed=data_input, fetch_list=[sum_cost, avg_cost])
-            test_sum_costs.append(test_sum_cost)
-            test_avg_costs.append(test_avg_cost)
-        return np.mean(test_sum_costs), np.mean(test_avg_costs)
+                ModelHyperParams.trg_pad_idx, ModelHyperParams.n_head,
+                ModelHyperParams.d_model)
+            test_sum_cost, test_token_num = exe.run(
+                test_program,
+                feed=data_input,
+                fetch_list=[sum_cost, token_num],
+                use_program_cache=True)
+            test_total_cost += test_sum_cost
+            test_total_token += test_token_num
+        test_avg_cost = test_total_cost / test_total_token
+        test_ppl = np.exp([min(test_avg_cost, 100)])
+        return test_avg_cost, test_ppl
 
     # Initialize the parameters.
     exe.run(fluid.framework.default_startup_program())
@@ -162,15 +171,11 @@ def main():
     for pass_id in xrange(TrainTaskConfig.pass_num):
         pass_start_time = time.time()
         for batch_id, data in enumerate(train_data()):
-            # The current program desc is coupled with batch_size, thus all
-            # mini-batches must have the same number of instances currently.
-            if len(data) != TrainTaskConfig.batch_size:
-                continue
             data_input = prepare_batch_input(
                 data, encoder_input_data_names + decoder_input_data_names[:-1] +
                 label_data_names, ModelHyperParams.src_pad_idx,
-                ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
-                ModelHyperParams.n_head)
+                ModelHyperParams.trg_pad_idx, ModelHyperParams.n_head,
+                ModelHyperParams.d_model)
             lr_scheduler.update_learning_rate(data_input)
             outs = exe.run(fluid.framework.default_main_program(),
                            feed=data_input,
@@ -181,13 +186,11 @@ def main():
                   (pass_id, batch_id, sum_cost_val, avg_cost_val,
                    np.exp([min(avg_cost_val[0], 100)])))
         # Validate and save the model for inference.
-        val_sum_cost, val_avg_cost = test(exe)
+        val_avg_cost, val_ppl = test(exe)
         pass_end_time = time.time()
         time_consumed = pass_end_time - pass_start_time
-        print("epoch: %d, val sum loss: %f, val avg loss: %f, val ppl: %f, "
-              "consumed %fs" %
-              (pass_id, val_sum_cost, val_avg_cost,
-               np.exp([min(val_avg_cost, 100)]), time_consumed))
+        print("epoch: %d, val avg loss: %f, val ppl: %f, "
+              "consumed %fs" % (pass_id, val_avg_cost, val_ppl, time_consumed))
         fluid.io.save_inference_model(
             os.path.join(TrainTaskConfig.model_dir,
                          "pass_" + str(pass_id) + ".infer.model"),
