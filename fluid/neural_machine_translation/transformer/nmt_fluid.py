@@ -237,7 +237,7 @@ def main():
             # Validate and save the model for inference.
             val_cost = test(exe)
             print("pass_id = %d cost = %f avg_speed = %.2f sample/s" %
-                  (pass_id, batch_id, cost_val, len(data) / (time.time() - ts)))
+                  (pass_id, cost_val, len(data) / (time.time() - ts)))
 
     if args.local:
         # Initialize the parameters.
