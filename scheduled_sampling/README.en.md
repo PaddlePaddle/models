@@ -1,5 +1,5 @@
 ﻿
-The program under this directory depends on PaddlePaddle v0.10.0 or upper. update it following this [instruction](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)  if your PaddlePaddle version is lower.
+The program under this directory depends on PaddlePaddle v0.10.0 or upper. In order to update it, follow these [instructions](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html).
 
 ---
 
@@ -7,15 +7,15 @@ The program under this directory depends on PaddlePaddle v0.10.0 or upper. updat
 
 ## Introduction
 
-The generate target of sequence generate task is to maximize the probability of target sequence when a given source is input. During the training, the model input real elements as decoders to each step, then maximize the probability of next element. During the generation, the element created in the previous decoder step is used as current input, consequently generate the next element. In this case, it can been seen that probability distribution in training stage and generation stage are not consistent.
+The generated target of sequence generation task is to maximize the probability of target sequence when a given source is input. During training, the model input real elements as decoders to each step, then maximizes the probability of next element. During the generation, the element created in the previous decoder step is used as current input to consequently generate the next element. In this case, it can been seen that the probability distribution in training stage and generation stage are not consistent.
 
-Scheduled Sampling \[[1](#参考文献)\] is a method to solve the inconsistent distribution of input data during training and generation.In the early stage of training, this method mainly uses the real elements in the target sequence as the decoder input, and can quickly guide the model from a randomly initialized state to a reasonable state. As training progresses, the method will gradually increase the use of the generated element as decoder input to solve the problem of inconsistent data distribution.
+Scheduled Sampling \[[1](#参考文献)\] is a method to solve the inconsistent distribution of input data during training and generation. In the early stages of training, this method mainly uses the real elements in the target sequence as the decoder input, and can quickly guide the model from a randomly initialized state to a reasonable state. As training progresses, the method will gradually increase the use of the generated element as decoder input to solve the problem of inconsistent data distribution.
 
-In the process from a standard sequence to a sequence model, if an incorrect element is created in the preceding part of the sequence , the subsequent input state will be affected, and the error will gradually accumulate as the generation proceeds forwards. Scheduled Sampling uses the generated element as a decoder input with a certain probability, so that even if the previous one generates error, its training target is still to maximize the probability of the real target sequence, and the model will do the training in the right direction. Therefore, this method increases the fault-tolerant capability of the model.
+In the process from a standard sequence to a sequence model, if an incorrect element is created in the preceding part of the sequence , the subsequent input state will be affected, and the error will gradually accumulate as the generation proceeds forward. Scheduled Sampling uses the generated element as a decoder input with a certain probability, so that even if the previous one generates error, its training target is still to maximize the probability of the real target sequence, and the model will do the training in the right direction. Therefore, this method increases the fault-tolerant capability of the model.
 
 ## Algorithm Introduction
 
-Scheduled Sampling is mainly used in the training stage from sequence to sequence model.But It doesn't require Scheduled Sampling in  generation phrase
+Scheduled Sampling is mainly used in the training stage from sequence to sequence model. But It doesn't require Scheduled Sampling in  generation phrase
 
 When the decoder maximizes the probability of the $t$ element during the training phase, the standard sequence-to-sequence model uses the real element $y_{t-1}$ at the previous moment as input. Let's assume that the element generated at a time is $g_{t-1}$, and the Scheduled Sampling algorithm uses $g_{t-1}$ as a decoder input with a certain probability.
 
