@@ -10,7 +10,6 @@ from config import TrainTaskConfig, pos_enc_param_names, \
 # FIXME(guosheng): Remove out the batch_size from the model.
 batch_size = TrainTaskConfig.batch_size
 
-
 def position_encoding_init(n_position, d_pos_vec):
     """
     Generate the initial values for the sinusoid position encoding table.
