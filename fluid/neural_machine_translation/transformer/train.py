@@ -197,6 +197,12 @@ def main():
             encoder_input_data_names + decoder_input_data_names[:-1],
             [predict], exe)
 
+def print_arguments():
+    print('-----------  Configuration Arguments -----------')
+    for arg, value in sorted(vars(args).iteritems()):
+        print('%s: %s' % (arg, value))
+    print('------------------------------------------------')
 
 if __name__ == "__main__":
+    print_arguments()
     main()
