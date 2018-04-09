@@ -16,9 +16,11 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('batch_size',   int,  256, "Minibatch size.")
 add_arg('num_layers',   int,  50,  "How many layers for SE-ResNeXt model.")
-add_arg('parallel_exe', bool, True, "Whether use ParallelExecutor to train.")
+add_arg('with_mem_opt', bool, True, "Whether to use memory optimization or not.")
+add_arg('parallel_exe', bool, True, "Whether to use ParallelExecutor to train or not.")
 
-def train_paralle_do(learning_rate,
+def train_paralle_do(args,
+                     learning_rate,
                      batch_size,
                      num_passes,
                      init_model=None,
@@ -74,13 +76,12 @@ def train_paralle_do(learning_rate,
             momentum=0.9,
             regularization=fluid.regularizer.L2Decay(1e-4))
 
-    opts = optimizer.minimize(avg_cost)
-    fluid.memory_optimize(fluid.default_main_program())
+    inference_program = fluid.default_main_program().clone(for_test=True)
 
-    inference_program = fluid.default_main_program().clone()
-    with fluid.program_guard(inference_program):
-        inference_program = fluid.io.get_inference_program(
-            [avg_cost, acc_top1, acc_top5])
+    opts = optimizer.minimize(avg_cost)
+    if args.with_mem_opt:
+        fluid.memory_optimize(fluid.default_main_program())
+        fluid.memory_optimize(inference_program)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -153,7 +154,8 @@ def train_paralle_do(learning_rate,
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path)
 
-def train_parallel_exe(learning_rate,
+def train_parallel_exe(args,
+                       learning_rate,
                        batch_size,
                        num_passes,
                        init_model=None,
@@ -190,7 +192,10 @@ def train_parallel_exe(learning_rate,
             regularization=fluid.regularizer.L2Decay(1e-4))
 
     opts = optimizer.minimize(avg_cost)
-    fluid.memory_optimize(fluid.default_main_program())
+
+    if args.with_mem_opt:
+        fluid.memory_optimize(fluid.default_main_program())
+        fluid.memory_optimize(test_program)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -199,13 +204,8 @@ def train_parallel_exe(learning_rate,
     if init_model is not None:
         fluid.io.load_persistables(exe, init_model)
 
-    import paddle.dataset.flowers as flowers
-
-    #train_reader = paddle.batch(reader.train(), batch_size=batch_size)
-    #test_reader = paddle.batch(reader.test(), batch_size=batch_size)
-
-    train_reader = paddle.batch(flowers.train(), batch_size=batch_size)
-    test_reader = paddle.batch(flowers.test(), batch_size=batch_size)
+    train_reader = paddle.batch(reader.train(), batch_size=batch_size)
+    test_reader = paddle.batch(reader.test(), batch_size=batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     train_exe = fluid.ParallelExecutor(use_cuda=True, loss_name=avg_cost.name)
@@ -300,7 +300,8 @@ if __name__ == '__main__':
     # layers: 50, 152
     layers = args.num_layers
     method = train_parallel_exe if args.parallel_exe else train_parallel_do
-    method(learning_rate=0.1,
+    method(args,
+           learning_rate=0.1,
            batch_size=batch_size,
            num_passes=120,
            init_model=None,
