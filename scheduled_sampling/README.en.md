@@ -11,7 +11,7 @@ The generate target of sequence generate task is to maximize the probability of 
 
 Scheduled Sampling \[[1](#参考文献)\] is a method to solve the inconsistent distribution of input data during training and generation.In the early stage of training, this method mainly uses the real elements in the target sequence as the decoder input, and can quickly guide the model from a randomly initialized state to a reasonable state. As training progresses, the method will gradually increase the use of the generated element as decoder input to solve the problem of inconsistent data distribution.
 
-In the process from a standard sequence to a sequence model, if an incorrect element is created in the preceding part of the sequence , the subsequent input state will be affected, and the error will gradually accumulate as the generation proceeds forwards. Scheduled Sampling uses the generated element as a decoder input with a certain probability, so that even if the previous one generates error, its training target is still to maximize the probability of the real target sequence, and the model will do the training in the right direction. Therefore, this method increases the fault-tolerant capability of the model. 
+In the process from a standard sequence to a sequence model, if an incorrect element is created in the preceding part of the sequence , the subsequent input state will be affected, and the error will gradually accumulate as the generation proceeds forwards. Scheduled Sampling uses the generated element as a decoder input with a certain probability, so that even if the previous one generates error, its training target is still to maximize the probability of the real target sequence, and the model will do the training in the right direction. Therefore, this method increases the fault-tolerant capability of the model.
 
 ## Algorithm Introduction
 
@@ -219,6 +219,7 @@ def gru_decoder_with_attention_train(enc_vec, enc_proj, true_word,
 ```
 
 This function uses the `memory` layer `gru_out_memory` to remember the elements generated at a time and selects the most probable word `generated_word` as the generated word according to `gru_out_memory`. The `multiplex` layer will choose between the real element `true_word` and the generated element `generated_word`, and will use the result of the selection as a decoder input. The `multiplex` layer uses three inputs, `true_token_flag`, `true_word`, and `generated_word_emb`. For each of these three inputs, if the value of `true_token_flag` is `0`, then the `multiplex` layer outputs the corresponding element in `true_word`; if the value in `true_token_flag` is `1`, then ` The multiplex` layer outputs the corresponding elements in `generated_word_emb`.
+
 
 
 ## References
