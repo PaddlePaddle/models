@@ -1,5 +1,5 @@
 
-Run these examples of programs in this directory require PaddlePaddle v0.10.0 . If your PaddlePaddle installation is lower than this requirement, please follow the instructions in the [installation documentation](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) to update the PaddlePaddle version.
+The program under this directory depends on PaddlePaddle v0.10.0 or upper. update it following this [instruction](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)  if your PaddlePaddle version is lower.
 
 ---
 
@@ -7,7 +7,7 @@ Run these examples of programs in this directory require PaddlePaddle v0.10.0 . 
 
 ## Introduction
 
-The generate target of sequence generate task is to maximize the probability of target sequence when a given source is input. During the training, the model input real elements as decoders to each step, then maximize the probability of next element. During the generation, the element created in the previous decoder step is used as current input, consequently generate the next element. In this case, It can been seen probability distribution in training stage and generation stage are not consistent.
+The generate target of sequence generate task is to maximize the probability of target sequence when a given source is input. During the training, the model input real elements as decoders to each step, then maximize the probability of next element. During the generation, the element created in the previous decoder step is used as current input, consequently generate the next element. In this case, it can been seen that probability distribution in training stage and generation stage are not consistent.
 
 Scheduled Sampling \[[1](#参考文献)\] is a method to solve the inconsistent distribution of input data during training and generation.In the early stage of training, this method mainly uses the real elements in the target sequence as the decoder input, and can quickly guide the model from a randomly initialized state to a reasonable state. As training progresses, the method will gradually increase the use of the generated element as decoder input to solve the problem of inconsistent data distribution.
 
