@@ -28,6 +28,7 @@ class LearningRateScheduler(object):
             dtype="float32",
             persistable=True)
         self.place = place
+        #print("LearningRateScheduler init learning_rate_name:", self.learning_rate.name)
 
     def update_learning_rate(self, data_input):
         self.current_steps += 1
@@ -37,4 +38,7 @@ class LearningRateScheduler(object):
         ])
         lr_tensor = fluid.LoDTensor()
         lr_tensor.set(np.array([lr_value], dtype="float32"), self.place)
+        #print("in learning_rate")
+        #print("learning_rate_name:", self.learning_rate.name)
+        #print("data_input:", data_input)
         data_input[self.learning_rate.name] = lr_tensor

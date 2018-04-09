@@ -11,6 +11,7 @@ from model import transformer, position_encoding_init
 from optim import LearningRateScheduler
 from config import TrainTaskConfig, ModelHyperParams, pos_enc_param_names, \
         encoder_input_data_names, decoder_input_data_names, label_data_names
+import paddle.fluid.debuger as debuger
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -117,6 +118,7 @@ def pad_batch_data(insts,
 
 def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
                         max_length, n_head):
+    print("input_data_name:", input_data_names)
     """
     Put all padded data needed by training into a dict.
     """
@@ -150,6 +152,7 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
             trg_src_attn_pre_softmax_shape, trg_src_attn_post_softmax_shape,
             lbl_word, lbl_weight
         ]))
+    #print("input_dict", input_dict)
     return input_dict
 
 
@@ -171,7 +174,8 @@ def main():
                                          TrainTaskConfig.warmup_steps, place,
                                          TrainTaskConfig.learning_rate)
     optimizer = fluid.optimizer.Adam(
-        learning_rate=lr_scheduler.learning_rate,
+        #learning_rate=lr_scheduler.learning_rate,
+        learning_rate=TrainTaskConfig.learning_rate,
         beta1=TrainTaskConfig.beta1,
         beta2=TrainTaskConfig.beta2,
         epsilon=TrainTaskConfig.eps)
@@ -185,7 +189,6 @@ def main():
 
     def test(exe):
         test_costs = []
-        #for batch_id, data in enumerate(val_data()):
         for batch_id, data in enumerate(test_reader()):
             if len(data) != args.batch_size:
                 continue
@@ -207,6 +210,7 @@ def main():
         ts = time.time()
         for pass_id in xrange(args.pass_num):
             for batch_id, data in enumerate(train_reader()):
+                print("batch_id:", batch_id)
                 # The current program desc is coupled with batch_size, thus all
                 # mini-batches must have the same number of instances currently.
                 if len(data) != args.batch_size:
@@ -219,16 +223,17 @@ def main():
                     ModelHyperParams.trg_pad_idx, ModelHyperParams.max_length,
                     ModelHyperParams.n_head)
 
-                lr_scheduler.update_learning_rate(data_input)
+                #print("feed0:", data_input)
+                #print("fetch_list0:", [cost])
 
-                outs = exe.run(fluid.framework.default_main_program(),
-                               feed=data_input,
-                               fetch_list=[cost],
-                               use_program_cache=True)
+                lr_scheduler.update_learning_rate(data_input)
+                print("before exe run in train_loop")
+                outs = exe.run(trainer_prog,
+                           feed=data_input,
+                           fetch_list=[cost],
+                           use_program_cache=True)
 
                 cost_val = np.array(outs[0])
-                #print("pass_id = " + str(pass_id) + " batch = " + str(batch_id) +
-                #      " cost = " + str(cost_val) + "Speed = %.2f img/s")
                 print("pass_id = %d batch = %d  cost = %f speed = %.2f sample/s" %
                       (pass_id, batch_id, cost_val, len(data) / (time.time() - start_time)))
 
@@ -242,7 +247,10 @@ def main():
     if args.local:
         # Initialize the parameters.
         exe.run(fluid.framework.default_startup_program())
+        #print("local start_up:")
+        #print(debuger.pprint_program_codes(fluid.framework.default_startup_program()))
         for pos_enc_param_name in pos_enc_param_names:
+            #print("pos_enc_param_name:", pos_enc_param_name)
             pos_enc_param = fluid.global_scope().find_var(
                 pos_enc_param_name).get_tensor()
             pos_enc_param.set(
@@ -290,8 +298,22 @@ def main():
             exe.run(pserver_startup)
             exe.run(pserver_prog)
         elif training_role == "TRAINER":
+            #print("cost 0:", cost)
+            #print("before run start up")
+
             # Parameter initialization
             exe.run(fluid.default_startup_program())
+
+            #print("cluster start_up:")
+            #print(debuger.pprint_program_codes(fluid.framework.default_startup_program()))
+
+            for pos_enc_param_name in pos_enc_param_names:
+                #print("pos_enc_param_name:", pos_enc_param_name)
+                pos_enc_param = fluid.global_scope().find_var(
+                    pos_enc_param_name).get_tensor()
+                pos_enc_param.set(
+                    position_encoding_init(ModelHyperParams.max_length + 1,
+                                           ModelHyperParams.d_model), place)
 
             train_reader = paddle.batch(
                 paddle.reader.shuffle(
@@ -305,10 +327,13 @@ def main():
                                                 ModelHyperParams.trg_vocab_size),
                 batch_size=args.batch_size)
 
+            #print("before get trainer program")
             trainer_prog = t.get_trainer_program()
+            #print("before start")
             # feeder = fluid.DataFeeder(feed_list=[images, label], place=place)
             # TODO(typhoonzero): change trainer startup program to fetch parameters from pserver
-            exe.run(fluid.default_startup_program())
+            # exe.run(fluid.default_startup_program())
+
             train_loop(exe, trainer_prog)
         else:
             print("environment var TRAINER_ROLE should be TRAINER os PSERVER")
