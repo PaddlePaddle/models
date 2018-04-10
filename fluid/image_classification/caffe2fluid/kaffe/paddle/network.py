@@ -64,7 +64,7 @@ class Network(object):
         if os.path.isdir(data_path):
             assert (exe is not None), \
                 'must provide a executor to load fluid model'
-            fluid.io.load_persistables_if_exist(executor=exe, dirname=data_path)
+            fluid.io.load_persistables(executor=exe, dirname=data_path)
             return True
 
         #load model from a npy file
