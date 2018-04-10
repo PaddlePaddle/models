@@ -476,12 +476,16 @@ def make_inputs(input_data_names,
             append_batch_size=False)
         input_layers += [slf_attn_post_softmax_shape]
     if src_attn_shape_flag:
+        # This shape input is used to reshape before softmax in encoder-decoder
+        # attention.
         src_attn_pre_softmax_shape = layers.data(
             name=input_data_names[len(input_layers)],
             shape=[2],
             dtype="int32",
             append_batch_size=False)
         input_layers += [src_attn_pre_softmax_shape]
+        # This shape input is used to reshape after softmax in encoder-decoder
+        # attention.
         src_attn_post_softmax_shape = layers.data(
             name=input_data_names[len(input_layers)],
             shape=[4],

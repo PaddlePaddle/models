@@ -43,9 +43,10 @@ class InferTaskConfig(object):
 
 
 class ModelHyperParams(object):
-    # Dictionary size for source and target language. This model directly uses
-    # paddle.dataset.wmt16 in which <bos>, <eos> and <unk> token has
-    # alreay been added.
+    # This model directly uses paddle.dataset.wmt16 in which <bos>, <eos> and
+    # <unk> token has alreay been added. As for the <pad> token, any token
+    # included in dict can be used to pad, since the paddings' loss will be
+    # masked out and make no effect on parameter gradients.
 
     # size of source word dictionary.
     src_vocab_size = 10000
@@ -61,9 +62,9 @@ class ModelHyperParams(object):
     unk_idx = 2
 
     # max length of sequences.
-    # The size of position encoding table should plus 1, since the sinusoid
-    # position encoding start from 1 and 0 can be used as the padding token
-    # for position encoding.
+    # The size of position encoding table should at least plus 1, since the
+    # sinusoid position encoding starts from 1 and 0 can be used as the padding
+    # token for position encoding.
     max_length = 50
 
     # the dimension for word embeddings, which is also the last dimension of

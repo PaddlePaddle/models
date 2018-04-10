@@ -180,6 +180,8 @@ def main():
     for pass_id in xrange(TrainTaskConfig.pass_num):
         pass_start_time = time.time()
         for batch_id, data in enumerate(train_data()):
+            if len(data) != TrainTaskConfig.batch_size:
+                continue
             data_input = prepare_batch_input(
                 data, encoder_input_data_names + decoder_input_data_names[:-1] +
                 label_data_names, ModelHyperParams.eos_idx,
