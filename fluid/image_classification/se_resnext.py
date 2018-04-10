@@ -19,23 +19,28 @@ def conv_bn_layer(input, num_filters, filter_size, stride=1, groups=1,
 def squeeze_excitation(input, num_channels, reduction_ratio):
     pool = fluid.layers.pool2d(
         input=input, pool_size=0, pool_type='avg', global_pooling=True)
+    stdv = 1.0 / math.sqrt(num_channels * 1.0 / reduction_ratio)
     squeeze = fluid.layers.fc(input=pool,
                               size=num_channels / reduction_ratio,
-                              act='relu')
+                              act='relu',
+                              param_attr=fluid.param_attr.ParamAttr(
+                                  initializer=fluid.initializer.Uniform(-stdv,
+                                                                        stdv)))
+    stdv = 1.0 / math.sqrt(num_channels * 1.0)
     excitation = fluid.layers.fc(input=squeeze,
                                  size=num_channels,
-                                 act='sigmoid')
+                                 act='sigmoid',
+                                 param_attr=fluid.param_attr.ParamAttr(
+                                     initializer=fluid.initializer.Uniform(
+                                         -stdv, stdv)))
     scale = fluid.layers.elementwise_mul(x=input, y=excitation, axis=0)
     return scale
 
 
 def shortcut(input, ch_out, stride):
     ch_in = input.shape[1]
-    if ch_in != ch_out:
-        if stride == 1:
-            filter_size = 1
-        else:
-            filter_size = 3
+    if ch_in != ch_out or stride != 1:
+        filter_size = 1
         return conv_bn_layer(input, ch_out, filter_size, stride)
     else:
         return input
