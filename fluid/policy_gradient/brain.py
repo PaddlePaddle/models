@@ -37,8 +37,8 @@ class PolicyGradient:
         )
         # fc2
         all_act_prob = fluid.layers.fc(input=fc1,
-                                            size=self.n_actions,
-                                            act="softmax")
+                                       size=self.n_actions,
+                                       act="softmax")
         self.inferece_program = fluid.defaul_main_program().clone()
         # to maximize total reward (log_p * R) is to minimize -(log_p * R)
         neg_log_prob = fluid.layers.cross_entropy(
@@ -53,14 +53,13 @@ class PolicyGradient:
         self.exe.run(fluid.default_startup_program())
 
     def choose_action(self, observation):
-        prob_weights = self.exe.run(
-            self.inferece_program,
-            feed={"obs": observation[np.newaxis, :]},
-            fetch_list=[self.all_act_prob])
+        prob_weights = self.exe.run(self.inferece_program,
+                                    feed={"obs": observation[np.newaxis, :]},
+                                    fetch_list=[self.all_act_prob])
         prob_weights = np.array(prob_weights[0])
+        # select action w.r.t the actions prob
         action = np.random.choice(
-            range(prob_weights.shape[1]),
-            p=prob_weights.ravel())  # select action w.r.t the actions prob
+            range(prob_weights.shape[1]), p=prob_weights.ravel())
         return action
 
     def store_transition(self, s, a, r):

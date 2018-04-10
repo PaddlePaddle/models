@@ -19,6 +19,7 @@ add_arg('num_layers',   int,  50,  "How many layers for SE-ResNeXt model.")
 add_arg('with_mem_opt', bool, True, "Whether to use memory optimization or not.")
 add_arg('parallel_exe', bool, True, "Whether to use ParallelExecutor to train or not.")
 
+
 def train_paralle_do(args,
                      learning_rate,
                      batch_size,
