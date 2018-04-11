@@ -27,6 +27,9 @@ def layer(op):
         self.layers[name] = layer_output
         # This output is now the input for the next layer.
         self.feed(layer_output)
+        #print('output shape of %s:' % (name))
+        #print layer_output.shape
+
         # Return self for chained calls.
         return self
 
@@ -158,41 +161,64 @@ class Network(object):
         output = fluid.layers.relu(x=input)
         return output
 
-    @layer
-    def max_pool(self, input, k_h, k_w, s_h, s_w, name, padding=None):
-        if padding is None:
-            padding = [0, 0]
+    def _adjust_pad_if_needed(self, i_hw, k_hw, s_hw, p_hw):
+        #adjust the padding if needed
+        i_h, i_w = i_hw
+        k_h, k_w = k_hw
+        s_h, s_w = s_hw
+        p_h, p_w = p_hw
 
+        def is_consistent(i, k, s, p):
+            o = i + 2 * p - k
+            if o % s == 0:
+                return True
+            else:
+                return False
+
+        real_p_h = 0
+        real_p_w = 0
+        if is_consistent(i_h, k_h, s_h, p_h) is False:
+            real_p_h = int(k_h / 2)
+
+        if is_consistent(i_w, k_w, s_w, p_w) is False:
+            real_p_w = int(k_w / 2)
+
+        return [real_p_h, real_p_w]
+
+    def pool(self, pool_type, input, k_h, k_w, s_h, s_w, name, padding):
         # Get the number of channels in the input
-        h_i, w_i = input.shape[2:]
+        in_hw = input.shape[2:]
+        k_hw = [k_h, k_w]
+        s_hw = [s_h, s_w]
+
+        if padding is None:
+            #fix bug about the difference between conv and pool
+            #more info: https://github.com/BVLC/caffe/issues/1318
+            padding = self._adjust_pad_if_needed(in_hw, k_hw, s_hw, [0, 0])
+
         fluid = import_fluid()
         output = fluid.layers.pool2d(
             input=input,
-            pool_size=[k_h, k_w],
-            pool_stride=[s_h, s_w],
+            pool_size=k_hw,
+            pool_stride=s_hw,
             pool_padding=padding,
-            pool_type='max')
+            pool_type=pool_type)
         return output
+
+    @layer
+    def max_pool(self, input, k_h, k_w, s_h, s_w, name, padding=None):
+        return self.pool('max', input, k_h, k_w, s_h, s_w, name, padding)
 
     @layer
     def avg_pool(self, input, k_h, k_w, s_h, s_w, name, padding=None):
-        if padding is None:
-            padding = [0, 0]
-
-        # Get the number of channels in the input
-        h_i, w_i = input.shape[2:]
-        fluid = import_fluid()
-        output = fluid.layers.pool2d(
-            input=input,
-            pool_size=[k_h, k_w],
-            pool_stride=[s_h, s_w],
-            pool_padding=padding,
-            pool_type='avg')
-        return output
+        return self.pool('avg', input, k_h, k_w, s_h, s_w, name, padding)
 
     @layer
     def lrn(self, input, radius, alpha, beta, name, bias=1.0):
-        raise Exception('lrn() not implemented yet')
+        fluid = import_fluid()
+        output = fluid.layers.lrn(input=input, \
+                n=radius, k=bias, alpha=alpha, beta=beta, name=name)
+        return output
 
     @layer
     def concat(self, inputs, axis, name):
@@ -228,7 +254,7 @@ class Network(object):
     @layer
     def softmax(self, input, name):
         fluid = import_fluid()
-        output = fluid.layers.softmax(x=input, name=name)
+        output = fluid.layers.softmax(input)
         return output
 
     @layer
@@ -256,5 +282,8 @@ class Network(object):
         return output
 
     @layer
-    def dropout(self, input, keep_prob, name):
-        raise Exception('dropout() not implemented yet')
+    def dropout(self, input, drop_prob, name, is_test=True):
+        fluid = import_fluid()
+        output = fluid.layers.dropout(
+            input, dropout_prob=drop_prob, is_test=is_test, name=name)
+        return output

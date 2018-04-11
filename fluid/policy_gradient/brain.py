@@ -36,16 +36,17 @@ class PolicyGradient:
             act="tanh"  # tanh activation
         )
         # fc2
-        self.all_act_prob = fluid.layers.fc(input=fc1,
+        all_act_prob = fluid.layers.fc(input=fc1,
                                             size=self.n_actions,
                                             act="softmax")
+        self.inferece_program = fluid.defaul_main_program().clone()
         # to maximize total reward (log_p * R) is to minimize -(log_p * R)
         neg_log_prob = fluid.layers.cross_entropy(
             input=self.all_act_prob,
             label=acts)  # this is negative log of chosen action
         neg_log_prob_weight = fluid.layers.elementwise_mul(x=neg_log_prob, y=vt)
         loss = fluid.layers.reduce_mean(
-            x=neg_log_prob_weight)  # reward guided loss
+            neg_log_prob_weight)  # reward guided loss
 
         sgd_optimizer = fluid.optimizer.SGD(self.lr)
         sgd_optimizer.minimize(loss)
@@ -53,7 +54,7 @@ class PolicyGradient:
 
     def choose_action(self, observation):
         prob_weights = self.exe.run(
-            fluid.default_main_program().prune(self.all_act_prob),
+            self.inferece_program,
             feed={"obs": observation[np.newaxis, :]},
             fetch_list=[self.all_act_prob])
         prob_weights = np.array(prob_weights[0])
