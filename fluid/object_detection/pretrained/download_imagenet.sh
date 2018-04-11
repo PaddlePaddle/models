@@ -3,6 +3,6 @@ cd "$DIR"
 
 # Download the data.
 echo "Downloading..."
-wget http://paddlemodels.bj.bcebos.com/mobilenet_imagenet.tar.gz
+wget http://paddlemodels.bj.bcebos.com/mobilenet_v1_imagenet.tar.gz
 echo "Extractint..."
-tar -xf ssd_mobilenet_imagenet.tar.gz
+tar -xf mobilenet_v1_imagenet.tar.gz
