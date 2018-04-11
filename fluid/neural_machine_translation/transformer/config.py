@@ -15,6 +15,9 @@ class TrainTaskConfig(object):
     # the parameters for learning rate scheduling.
     warmup_steps = 4000
 
+    # the flag indicating to use average loss or sum loss when training.
+    use_avg_cost = False
+
     # the directory for saving trained models.
     model_dir = "trained_models"
 
@@ -22,14 +25,18 @@ class TrainTaskConfig(object):
 class InferTaskConfig(object):
     use_gpu = False
     # the number of examples in one run for sequence generation.
-    # currently the batch size can only be set to 1.
-    batch_size = 1
+    batch_size = 10
 
     # the parameters for beam search.
     beam_size = 5
     max_length = 30
     # the number of decoded sentences to output.
     n_best = 1
+
+    # the flags indicating whether to output the special tokens.
+    output_bos = False
+    output_eos = False
+    output_unk = False
 
     # the directory for loading the trained model.
     model_path = "trained_models/pass_1.infer.model"
@@ -56,6 +63,8 @@ class ModelHyperParams(object):
     bos_idx = 0
     # index for <eos> token
     eos_idx = 1
+    # index for <unk> token
+    unk_idx = 2
 
     # position value corresponding to the <pad> token.
     pos_pad_idx = 0
@@ -93,6 +102,7 @@ encoder_input_data_names = (
     "src_word",
     "src_pos",
     "src_slf_attn_bias",
+    "src_data_shape",
     "src_slf_attn_pre_softmax_shape",
     "src_slf_attn_post_softmax_shape", )
 
@@ -102,6 +112,7 @@ decoder_input_data_names = (
     "trg_pos",
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
+    "trg_data_shape",
     "trg_slf_attn_pre_softmax_shape",
     "trg_slf_attn_post_softmax_shape",
     "trg_src_attn_pre_softmax_shape",
