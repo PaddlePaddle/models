@@ -1,7 +1,7 @@
 ﻿
 [toc]
 
-运行本目录下的程序示例需要使用PaddlePaddle v0.11.0 版本。如果您的PaddlePaddle安装版本低于此要求，请按照安装文档中的说明更新PaddlePaddle安装版本。
+运行本目录下的程序示例需要使用PaddlePaddle develop最新版本。如果您的PaddlePaddle安装版本低于此要求，请按照安装文档中的说明更新PaddlePaddle安装版本。
 
 # Optical Character Recognition
 
@@ -108,22 +108,16 @@ data/test_images/00003.jpg
 
 #### 1.2 训练
 
-Train on one GPU with defalut trainning data:
+使用默认数据在GPU单卡上训练:
 
 ```
-env CUDA_VISIABLE_DEVICES=0 python ctc_train.py \
-    --device=0 \
-    --parallel=False \
-    --batch_size=32
+env CUDA_VISIABLE_DEVICES=0 python ctc_train.py
 ```
 
-Train on multi-GPU with defalut trainning data:
+使用默认数据在GPU多卡上训练:
 
 ```
-env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py \
-    --device=0 \
-    --parallel=True \
-    --batch_size=128
+env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
 ```
 
 执行`python ctc_train.py --help`可查看更多使用方式和参数详细说明。
@@ -137,7 +131,7 @@ env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py \
 
 
 
-### 1.3 Evaluate
+### 1.3 评估
 
 通过以下命令调用评估脚本用指定数据集对模型进行评估：
 
@@ -146,25 +140,40 @@ env CUDA_VISIBLE_DEVICE=0 python eval.py \
     --model_path="./models/model_0" \
     --input_images_dir="./eval_data/images/" \
     --input_images_list="./eval_data/eval_list\" \
-    --device 0
 ```
 
 执行`python ctc_train.py --help`可查看参数详细说明。
 
 
-### 1.4 Inference
+### 1.4 预测
 
-Read image path from stdin and inference：
-
-```
-env CUDA_VISIBLE_DEVICE=0 python inference.py \
-    --model_path models/model_00044_15000
-```
-
-Read image path from list file and inference：
+从标准输入读取一张图片的路径，并对齐进行预测：
 
 ```
 env CUDA_VISIBLE_DEVICE=0 python inference.py \
-    --model_path=models/model_00044_15000 \
+    --model_path="models/model_00044_15000"
+```
+
+执行上述命令进行预测的效果如下：
+
+```
+-----------  Configuration Arguments -----------
+use_gpu: True
+input_images_dir: None
+input_images_list: None
+model_path: /home/work/models/fluid/ocr_recognition/models/model_00052_15000
+------------------------------------------------
+Init model from: /home/work/models/fluid/ocr_recognition/models/model_00052_15000.
+Please input the path of image: /home/work/models/fluid/ocr_recognition/data/test_images/00001_0060.jpg
+result: [3298 2371 4233 6514 2378 3298 2363]
+Please input the path of image: /home/work/models/fluid/ocr_recognition/data/test_images/00001_0429.jpg
+result: [2067 2067 8187 8477 5027 7191 2431 1462]
+```
+
+从文件中批量读取图片路径，并对其进行预测：
+
+```
+env CUDA_VISIBLE_DEVICE=0 python inference.py \
+    --model_path="models/model_00044_15000" \
     --input_images_list="data/test.list"
 ```
