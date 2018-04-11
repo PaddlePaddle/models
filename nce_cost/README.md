@@ -2,7 +2,7 @@ Running the following program need use PaddlePaddle v0.10.0 version。If your Pa
 
 ---
 
-# Using the NCE(noise contrastive estimation)to accelerate the language model training 
+# Using the NCE(noise contrastive estimation)to accelerate the language model training
 
 ##  Why we need NCE
 
