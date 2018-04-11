@@ -18,19 +18,19 @@ This tool is used to convert a Caffe model to Fluid model
 
 
 ### Tested models
-- Lenet on mnist dataset
+- Lenet
 
 - ResNets:(ResNet-50, ResNet-101, ResNet-152)
-    model addr: `https://onedrive.live.com/?authkey=%21AAFW2-FVoxeVRck&id=4006CBB8476FF777%2117887&cid=4006CBB8476FF777`_
+[model addr](https://onedrive.live.com/?authkey=%21AAFW2-FVoxeVRck&id=4006CBB8476FF777%2117887&cid=4006CBB8476FF777)
 
 - GoogleNet:
-    model addr: `https://gist.github.com/jimmie33/7ea9f8ac0da259866b854460f4526034`_
+[model addr](https://gist.github.com/jimmie33/7ea9f8ac0da259866b854460f4526034)
 
 - VGG:
-    model addr: `https://gist.github.com/ksimonyan/211839e770f7b538e2d8`_
+[model addr](https://gist.github.com/ksimonyan/211839e770f7b538e2d8)
 
 - AlexNet:
-    model addr: `https://github.com/BVLC/caffe/tree/master/models/bvlc_alexnet`_
+[model addr](https://github.com/BVLC/caffe/tree/master/models/bvlc_alexnet)
 
 ### Notes
 Some of this code come from here: https://github.com/ethereon/caffe-tensorflow
