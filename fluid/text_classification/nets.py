@@ -37,7 +37,7 @@ def bow_net(data, label,
     return avg_cost, acc, prediction
 
 
-def conv_net(data, label,
+def cnn_net(data, label,
             dict_dim,
             emb_dim=128,
             hid_dim=128,

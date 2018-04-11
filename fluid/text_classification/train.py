@@ -1,164 +1,108 @@
+"""
+For http://wiki.baidu.com/display/LegoNet/Text+Classification
+"""
+import paddle.fluid as fluid
+import paddle.v2 as paddle
 import numpy as np
 import sys
-import os
-import argparse
 import time
+import unittest
+import contextlib
+import utils
+from nets import bow_net
+from nets import cnn_net
+from nets import lstm_net
+from nets import gru_net
 
-import paddle.v2 as paddle
-import paddle.fluid as fluid
-
-from config import TrainConfig as conf
-
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--dict_path',
-        type=str,
-        required=True,
-        help="Path of the word dictionary.")
-    return parser.parse_args()
-
-
-# Define to_lodtensor function to process the sequential data.
-def to_lodtensor(data, place):
-    seq_lens = [len(seq) for seq in data]
-    cur_len = 0
-    lod = [cur_len]
-    for l in seq_lens:
-        cur_len += l
-        lod.append(cur_len)
-    flattened_data = np.concatenate(data, axis=0).astype("int64")
-    flattened_data = flattened_data.reshape([len(flattened_data), 1])
-    res = fluid.LoDTensor()
-    res.set(flattened_data, place)
-    res.set_lod([lod])
-    return res
-
-
-# Load the dictionary.
-def load_vocab(filename):
-    vocab = {}
-    with open(filename) as f:
-        for idx, line in enumerate(f):
-            vocab[line.strip()] = idx
-    return vocab
-
-
-# Define the convolution model.
-def conv_net(dict_dim,
-             window_size=3,
-             emb_dim=128,
-             num_filters=128,
-             fc0_dim=96,
-             class_dim=2):
-
+def train(train_reader,
+        word_dict,
+        network,
+        use_cuda,
+        parallel,
+        save_dirname,
+        lr=0.2,
+        batch_size=128,
+        pass_num=30):
+    """
+    train network
+    """
     data = fluid.layers.data(
-        name="words", shape=[1], dtype="int64", lod_level=1)
+        name="words", 
+        shape=[1], 
+        dtype="int64", 
+        lod_level=1)
 
-    label = fluid.layers.data(name="label", shape=[1], dtype="int64")
+    label = fluid.layers.data(
+        name="label", 
+        shape=[1], 
+        dtype="int64")
 
-    emb = fluid.layers.embedding(input=data, size=[dict_dim, emb_dim])
-
-    conv_3 = fluid.nets.sequence_conv_pool(
-        input=emb,
-        num_filters=num_filters,
-        filter_size=window_size,
-        act="tanh",
-        pool_type="max")
-
-    fc_0 = fluid.layers.fc(input=[conv_3], size=fc0_dim)
-
-    prediction = fluid.layers.fc(input=[fc_0], size=class_dim, act="softmax")
-
-    cost = fluid.layers.cross_entropy(input=prediction, label=label)
-
-    avg_cost = fluid.layers.mean(x=cost)
-
-    return data, label, prediction, avg_cost
-
-
-def main(dict_path):
-    word_dict = load_vocab(dict_path)
-    word_dict["<unk>"] = len(word_dict)
-    dict_dim = len(word_dict)
-    print("The dictionary size is : %d" % dict_dim)
-
-    data, label, prediction, avg_cost = conv_net(dict_dim)
-
-    sgd_optimizer = fluid.optimizer.SGD(learning_rate=conf.learning_rate)
-    sgd_optimizer.minimize(avg_cost)
-
-    batch_size_var = fluid.layers.create_tensor(dtype='int64')
-    batch_acc_var = fluid.layers.accuracy(
-        input=prediction, label=label, total=batch_size_var)
-
-    inference_program = fluid.default_main_program().clone()
-    with fluid.program_guard(inference_program):
-        inference_program = fluid.io.get_inference_program(
-            target_vars=[batch_acc_var, batch_size_var])
-
-    # The training data set.
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
-            paddle.dataset.imdb.train(word_dict), buf_size=51200),
-        batch_size=conf.batch_size)
-
-    # The testing data set.
-    test_reader = paddle.batch(
-        paddle.reader.shuffle(
-            paddle.dataset.imdb.test(word_dict), buf_size=51200),
-        batch_size=conf.batch_size)
-
-    if conf.use_gpu:
-        place = fluid.CUDAPlace(0)
+    if not parallel:
+        cost, acc, prediction = network(
+            data, label, len(word_dict))
     else:
-        place = fluid.CPUPlace()
+        places = fluid.layers.get_places(device_count = 2)
+        pd = fluid.layers.ParallelDo(places)
+        with pd.do():
+            cost, acc, prediction = network(
+            pd.read_input(data), 
+            pd.read_input(label), 
+            len(word_dict))
 
+            pd.write_output(cost)
+            pd.write_output(acc)
+
+        cost, acc = pd()
+        cost = fluid.layers.mean(cost)
+        acc = fluid.layers.mean(acc)
+
+    sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=lr)
+    sgd_optimizer.minimize(cost)
+
+    place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
-
     feeder = fluid.DataFeeder(feed_list=[data, label], place=place)
 
     exe.run(fluid.default_startup_program())
+    for pass_id in xrange(pass_num):
+        avg_cost_list, avg_acc_list = [], []
+        for data in train_reader():
+            avg_cost_np, avg_acc_np = exe.run(fluid.default_main_program(),
+                                        feed=feeder.feed(data),
+                                        fetch_list=[cost, acc])
+            avg_cost_list.append(avg_cost_np)
+            avg_acc_list.append(avg_acc_np)
+        print("pass_id: %d, avg_acc: %f" % (pass_id, np.mean(avg_acc_list)))
+    # save_model
+    fluid.io.save_inference_model(
+            save_dirname, 
+            ["words", "label"],
+            acc, exe)
 
-    train_pass_acc_evaluator = fluid.average.WeightedAverage()
-    test_pass_acc_evaluator = fluid.average.WeightedAverage()
+def train_net():
+    word_dict, train_reader, test_reader = utils.prepare_data(
+            "imdb", self_dict = False,
+            batch_size = 128, buf_size = 50000)
+    
+    if sys.argv[1] == "bow":
+        train(train_reader, word_dict, bow_net, use_cuda=False,
+                parallel=False, save_dirname="bow_model", lr=0.002,
+                pass_num=1, batch_size=128)
+    elif sys.argv[1] == "cnn":
+        train(train_reader, word_dict, cnn_net, use_cuda=True,
+                parallel=False, save_dirname="cnn_model", lr=0.01,
+                pass_num=30, batch_size=4)
+    elif sys.argv[1] == "lstm":
+        train(train_reader, word_dict, lstm_net, use_cuda=True,
+                parallel=False, save_dirname="lstm_model", lr=0.05,
+                pass_num=30, batch_size=4)
+    elif sys.argv[1] == "gru":
+        train(train_reader, word_dict, bow_net, use_cuda=True,
+                parallel=False, save_dirname="gru_model", lr=0.05,
+                pass_num=30, batch_size=128)
+    else:
+        print("network name cannot be found!")
+        sys.exit(1)    
 
-    def test(exe):
-        test_pass_acc_evaluator.reset()
-        for batch_id, data in enumerate(test_reader()):
-            input_seq = to_lodtensor(map(lambda x: x[0], data), place)
-            y_data = np.array(map(lambda x: x[1], data)).astype("int64")
-            y_data = y_data.reshape([-1, 1])
-            b_acc, b_size = exe.run(inference_program,
-                                    feed={"words": input_seq,
-                                          "label": y_data},
-                                    fetch_list=[batch_acc_var, batch_size_var])
-            test_pass_acc_evaluator.add(value=b_acc, weight=b_size)
-        test_acc = test_pass_acc_evaluator.eval()
-        return test_acc
-
-    total_time = 0.
-    for pass_id in xrange(conf.num_passes):
-        train_pass_acc_evaluator.reset()
-        start_time = time.time()
-        for batch_id, data in enumerate(train_reader()):
-            cost_val, acc_val, size_val = exe.run(
-                fluid.default_main_program(),
-                feed=feeder.feed(data),
-                fetch_list=[avg_cost, batch_acc_var, batch_size_var])
-            train_pass_acc_evaluator.add(value=acc_val, weight=size_val)
-            if batch_id and batch_id % conf.log_period == 0:
-                print("Pass id: %d, batch id: %d, cost: %f, pass_acc: %f" %
-                      (pass_id, batch_id, cost_val,
-                       train_pass_acc_evaluator.eval()))
-        end_time = time.time()
-        total_time += (end_time - start_time)
-        pass_test_acc = test(exe)
-        print("Pass id: %d, test_acc: %f" % (pass_id, pass_test_acc))
-    print("Total train time: %f" % (total_time))
-
-
-if __name__ == '__main__':
-    args = parse_args()
-    main(args.dict_path)
+if __name__ == "__main__":
+    train_net()
