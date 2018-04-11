@@ -259,5 +259,31 @@ parameters = paddle.parameters.create(cost)
 parameters.init_from_tar(gzip.open('Paddle_ResNet50.tar.gz', 'r'))
 ```
 
+如果想过滤掉最后一层，按照如下步骤：
+
+- 找到需要过滤的层的名称
+
+    将models/model_download.sh中下载的模型解压
+    ```bash
+    tar -xzvf XXX.tar.gz
+    ```
+    根据模型找出不需要的layer名称，`__fc_layer_2__`的layer名字就是`fc_layer_2`
+    
+- 在加载模型时，过滤掉不需要的层
+    参考[#2721](https://github.com/PaddlePaddle/Paddle/issues/2721)
+    
+    ```python
+    parameters = paddle.parameters.create(cost)
+    with gzip.open('model.tar.gz', 'r') as f:
+        fparameters = paddle.parameters.Parameters.from_tar(f)
+    for param_name in fparameters.names():
+        if args.model == "vgg16" and  "fc_layer_2" in param_name:
+                continue
+            if args.model == "resnet" and "fc_layer_0" in param_name:
+                continue
+        if param_name in parameters.names(): # append some rules to filter
+            parameters.set(param_name, fparameters.get(param_name))
+    ```
+
 ### 注意事项
 模型压缩包中所含各文件的文件名和模型配置中的参数名一一对应，是加载模型参数的依据。我们提供的预训练模型均使用了示例代码中的配置，如需修改网络配置，请多加注意，需要保证网络配置中的参数名和压缩包中的文件名能够正确对应。
