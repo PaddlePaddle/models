@@ -46,6 +46,6 @@ if __name__ == "__main__":
             batch_size = 128, buf_size = 50000)
 
     model_path = sys.argv[1]
-    test(test_reader, use_cuda=True,
+    infer(test_reader, use_cuda=False,
             save_dirname=model_path)
 
