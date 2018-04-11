@@ -193,7 +193,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     if settings._apply_distort:
                         img = image_util.distort_image(img, settings)
                     if settings._apply_expand:
-                        img, bbox_labels = image_util.expand_image(
+                        img, bbox_labels, img_width, img_height = image_util.expand_image(
                             img, bbox_labels, img_width, img_height, settings)
                     batch_sampler = []
                     # hard-code here
