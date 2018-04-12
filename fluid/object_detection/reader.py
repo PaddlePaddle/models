@@ -23,10 +23,6 @@ import os
 import time
 import copy
 
-# cocoapi 
-from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
-
 
 class Settings(object):
     def __init__(self, dataset, toy, data_dir, label_file, resize_h, resize_w,
@@ -101,6 +97,10 @@ class Settings(object):
 def _reader_creator(settings, file_list, mode, shuffle):
     def reader():
         if settings.dataset == 'coco':
+            # cocoapi 
+            from pycocotools.coco import COCO
+            from pycocotools.cocoeval import COCOeval
+
             coco = COCO(file_list)
             image_ids = coco.getImgIds()
             images = coco.loadImgs(image_ids)
@@ -193,7 +193,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     if settings._apply_distort:
                         img = image_util.distort_image(img, settings)
                     if settings._apply_expand:
-                        img, bbox_labels = image_util.expand_image(
+                        img, bbox_labels, img_width, img_height = image_util.expand_image(
                             img, bbox_labels, img_width, img_height, settings)
                     batch_sampler = []
                     # hard-code here
@@ -236,7 +236,6 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         sample_labels[i][1] = 1 - sample_labels[i][3]
                         sample_labels[i][3] = 1 - tmp
 
-            #draw_bounding_box_on_image(img, sample_labels, image_name, category_names, normalized=True)
             # HWC to CHW
             if len(img.shape) == 3:
                 img = np.swapaxes(img, 1, 2)
@@ -287,7 +286,6 @@ def draw_bounding_box_on_image(image,
              (left, top)],
             width=thickness,
             fill=color)
-        #draw.rectangle([xmin, ymin, xmax, ymax], outline=color)
         if with_text:
             if image.mode == 'RGB':
                 draw.text((left, top), category_name, (255, 255, 0))
@@ -295,6 +293,7 @@ def draw_bounding_box_on_image(image,
 
 
 def train(settings, file_list, shuffle=True):
+    file_list = os.path.join(settings.data_dir, file_list)
     if settings.dataset == 'coco':
         train_settings = copy.copy(settings)
         if '2014' in file_list:
@@ -302,13 +301,13 @@ def train(settings, file_list, shuffle=True):
         elif '2017' in file_list:
             sub_dir = "train2017"
         train_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        file_list = os.path.join(settings.data_dir, file_list)
         return _reader_creator(train_settings, file_list, 'train', shuffle)
     elif settings.dataset == 'pascalvoc':
         return _reader_creator(settings, file_list, 'train', shuffle)
 
 
 def test(settings, file_list):
+    file_list = os.path.join(settings.data_dir, file_list)
     if settings.dataset == 'coco':
         test_settings = copy.copy(settings)
         if '2014' in file_list:
@@ -316,7 +315,6 @@ def test(settings, file_list):
         elif '2017' in file_list:
             sub_dir = "val2017"
         test_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        file_list = os.path.join(settings.data_dir, file_list)
         return _reader_creator(test_settings, file_list, 'test', False)
     elif settings.dataset == 'pascalvoc':
         return _reader_creator(settings, file_list, 'test', False)
