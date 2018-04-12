@@ -15,14 +15,15 @@ The current code support the training of [SE-ResNeXt](https://arxiv.org/abs/1709
 
 1. Download ImageNet-2012 dataset
 ```
-# get training set
-wget XXX
-# get validation set
-wget YYY
-# prepare directory
 mkdir ILSVRC2012/
-tar zxf XXX
-tar zxf YYY
+cd ILSVRC2012/
+# get training set
+wget http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_train.tar
+# get validation set
+wget http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_val.tar
+# prepare directory
+tar xf ILSVRC2012_img_train.tar
+tar xf ILSVRC2012_img_val.tar
 ```
 
 2. Generate training and validation file
