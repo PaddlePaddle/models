@@ -168,7 +168,7 @@ def profile(args):
                 start_time = time.time()
                 frames_seen = 0
             # load_data
-            (features, labels, lod) = batch_data
+            (features, labels, lod, _) = batch_data
             feature_t.set(features, place)
             feature_t.set_lod([lod])
             label_t.set(labels, place)

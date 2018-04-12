@@ -30,8 +30,9 @@ def mnist_cnn_model(img):
         pool_size=2,
         pool_stride=2,
         act='relu')
+    fc = fluid.layers.fc(input=conv_pool_2, size=50, act='relu')
 
-    logits = fluid.layers.fc(input=conv_pool_2, size=10, act='softmax')
+    logits = fluid.layers.fc(input=fc, size=10, act='softmax')
     return logits
 
 
@@ -60,7 +61,10 @@ def main():
             paddle.dataset.mnist.train(), buf_size=500),
         batch_size=BATCH_SIZE)
 
+    # use CPU
     place = fluid.CPUPlace()
+    # use GPU
+    # place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
     feeder = fluid.DataFeeder(feed_list=[img, label], place=place)
     exe.run(fluid.default_startup_program())
@@ -74,9 +78,11 @@ def main():
                 feed=feeder.feed(data),
                 fetch_list=[avg_cost, batch_acc, batch_size])
             pass_acc.add(value=acc, weight=b_size)
+            pass_acc_val = pass_acc.eval()[0]
             print("pass_id=" + str(pass_id) + " acc=" + str(acc[0]) +
-                  " pass_acc=" + str(pass_acc.eval()[0]))
-            if loss < LOSS_THRESHOLD and pass_acc > ACC_THRESHOLD:
+                  " pass_acc=" + str(pass_acc_val))
+            if loss < LOSS_THRESHOLD and pass_acc_val > ACC_THRESHOLD:
+                # early stop
                 break
 
         print("pass_id=" + str(pass_id) + " pass_acc=" + str(pass_acc.eval()[
