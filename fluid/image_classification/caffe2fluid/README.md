@@ -3,19 +3,27 @@ This tool is used to convert a Caffe model to Fluid model
 
 ### Howto
 1, Prepare caffepb.py in ./proto if your python has no 'pycaffe' module, two options provided here:
+- generate it from caffe.proto using protoc
+    bash ./proto/compile.sh
 
-    1) generate it from caffe.proto using protoc
-        bash ./proto/compile.sh
+- download one from github directly
+    cd proto/ && wget https://github.com/ethereon/caffe-tensorflow/blob/master/kaffe/caffe/caffepb.py
 
-    2) download one from github directly
-        cd proto/ && wget https://github.com/ethereon/caffe-tensorflow/blob/master/kaffe/caffe/caffepb.py
+2, Convert the caffe model to fluid model
+- generate fluid code and weight file
+    python convert.py alexnet.prototxt \
+        --caffemodel alexnet.caffemodel \
+        --data-output-path alexnet.npy \
+        --code-output-path alexnet.py
 
-2, Convert the caffe model using 'convert.py' which will generate a python script and a weight(in .npy) file
+- save weights as fluid model file
+    python alexnet.py alexnet.npy ./fluid_model
 
-3, Use the converted model to predict
+4, Use the converted model to predict
+- see more detail info in 'examples/imagenet/run.sh'
 
-    see more detail info in 'examples/xxx'
-
+5, compare the inference results with caffe
+- see more detail info in 'examples/imagenet/diff.sh'
 
 ### Tested models
 - Lenet
