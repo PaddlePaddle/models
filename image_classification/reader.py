@@ -11,8 +11,9 @@ def train_mapper(sample):
     img, label = sample
     img = paddle.image.load_image(img)
     # https://github.com/PaddlePaddle/Paddle/blob/d52fa26fdab7a0497a3e7f49833d1b3827955c44/python/paddle/v2/dataset/flowers.py#L65
-    # mean:根据加载的预训练模型的mean设置。如果不加载预训练模型，则根据自己喜好设置
-    # paddlepaddle的代码中，默认减去这个mean值，如果加载的预训练模型使用的mean与这个值不一样，需要修改
+    # mean: setting mean val as needed
+    # mean=[103.94, 116.78, 123.68] is the same value as paddlepaddle used
+    # ref paddlepaddle code python/paddle/v2/dataset/flowers.py#L65
     img = paddle.image.simple_transform(img, 256, 224, True, mean=[103.94, 116.78, 123.68])
     return img.flatten().astype('float32'), label
 
@@ -23,7 +24,7 @@ def test_mapper(sample):
     '''
     img, label = sample
     img = paddle.image.load_image(img)
-    # 同上
+    # same as above
     img = paddle.image.simple_transform(img, 256, 224, True, mean=[103.94, 116.78, 123.68])
     return img.flatten().astype('float32'), label
 
