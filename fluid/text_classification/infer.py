@@ -11,13 +11,14 @@ import contextlib
 import utils
 
 
-def infer(test_reader, use_cuda, 
-        save_dirname=None):
+def infer(test_reader,
+          use_cuda, 
+          model_path=None):
     """
     inference function
     """
-    if save_dirname is None:
-        print(str(save_dirname) + " cannot be found")
+    if model_path is None:
+        print(str(model_path) + " cannot be found")
         return
 
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
@@ -26,7 +27,7 @@ def infer(test_reader, use_cuda,
     inference_scope = fluid.core.Scope()
     with fluid.scope_guard(inference_scope):
         [inference_program, feed_target_names,
-        fetch_targets] = fluid.io.load_inference_model(save_dirname, exe)
+        fetch_targets] = fluid.io.load_inference_model(model_path, exe)
 
         total_acc = 0.0
         total_count = 0
@@ -37,7 +38,9 @@ def infer(test_reader, use_cuda,
                     return_numpy=True)
             total_acc += acc[0] * len(data)
             total_count += len(data)
-        print("test_acc: %f" % (total_acc / total_count))
+        
+        avg_acc = total_acc / total_count
+        print("model_path: %s, avg_acc: %f" % (model_path, avg_acc))
 
 
 if __name__ == "__main__":
@@ -46,6 +49,8 @@ if __name__ == "__main__":
             batch_size = 128, buf_size = 50000)
 
     model_path = sys.argv[1]
-    infer(test_reader, use_cuda=False,
-            save_dirname=model_path)
+    for i in range(30):
+        epoch_path = model_path + "/" + "epoch" + str(i)
+        infer(test_reader, use_cuda=False,
+                model_path=epoch_path)
 

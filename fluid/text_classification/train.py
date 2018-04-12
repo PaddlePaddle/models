@@ -65,19 +65,26 @@ def train(train_reader,
 
     exe.run(fluid.default_startup_program())
     for pass_id in xrange(pass_num):
-        avg_cost_list, avg_acc_list = [], []
+        data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
         for data in train_reader():
             avg_cost_np, avg_acc_np = exe.run(fluid.default_main_program(),
                                         feed=feeder.feed(data),
                                         fetch_list=[cost, acc])
-            avg_cost_list.append(avg_cost_np)
-            avg_acc_list.append(avg_acc_np)
-        print("pass_id: %d, avg_acc: %f" % (pass_id, np.mean(avg_acc_list)))
-    # save_model
-    fluid.io.save_inference_model(
-            save_dirname, 
-            ["words", "label"],
-            acc, exe)
+            data_size = len(data)
+            total_acc += data_size * avg_acc_np
+            total_cost += data_size * avg_cost_np
+            data_count += data_size
+        
+        avg_cost = total_cost / data_count
+        avg_acc = total_acc / data_count
+        print("pass_id: %d, avg_acc: %f, avg_cost: %f" % (pass_id, avg_acc, avg_cost))
+        
+        epoch_model = save_dirname + "/" + "epoch" + str(pass_id)
+        fluid.io.save_inference_model(
+                epoch_model, 
+                ["words", "label"],
+                acc, exe)
+
 
 def train_net():
     word_dict, train_reader, test_reader = utils.prepare_data(
@@ -85,7 +92,7 @@ def train_net():
             batch_size = 128, buf_size = 50000)
     
     if sys.argv[1] == "bow":
-        train(train_reader, word_dict, bow_net, use_cuda=True,
+        train(train_reader, word_dict, bow_net, use_cuda=False,
                 parallel=False, save_dirname="bow_model", lr=0.002,
                 pass_num=30, batch_size=128)
     elif sys.argv[1] == "cnn":
