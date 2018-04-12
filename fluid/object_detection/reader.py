@@ -193,7 +193,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     if settings._apply_distort:
                         img = image_util.distort_image(img, settings)
                     if settings._apply_expand:
-                        img, bbox_labels = image_util.expand_image(
+                        img, bbox_labels, img_width, img_height = image_util.expand_image(
                             img, bbox_labels, img_width, img_height, settings)
                     batch_sampler = []
                     # hard-code here
@@ -236,7 +236,6 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         sample_labels[i][1] = 1 - sample_labels[i][3]
                         sample_labels[i][3] = 1 - tmp
 
-            #draw_bounding_box_on_image(img, sample_labels, image_name, category_names, normalized=True)
             # HWC to CHW
             if len(img.shape) == 3:
                 img = np.swapaxes(img, 1, 2)
@@ -287,7 +286,6 @@ def draw_bounding_box_on_image(image,
              (left, top)],
             width=thickness,
             fill=color)
-        #draw.rectangle([xmin, ymin, xmax, ymax], outline=color)
         if with_text:
             if image.mode == 'RGB':
                 draw.text((left, top), category_name, (255, 255, 0))
