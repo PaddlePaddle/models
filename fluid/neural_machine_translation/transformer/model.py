@@ -199,10 +199,8 @@ def prepare_encoder(src_word,
                     src_pos,
                     src_vocab_size,
                     src_emb_dim,
-                    src_pad_idx,
                     src_max_len,
                     dropout_rate=0.,
-                    pos_pad_idx=0,
                     src_data_shape=None,
                     pos_enc_param_name=None):
     """Add word embeddings and position encodings.
@@ -214,12 +212,10 @@ def prepare_encoder(src_word,
     src_word_emb = layers.embedding(
         src_word,
         size=[src_vocab_size, src_emb_dim],
-        padding_idx=src_pad_idx,
         param_attr=fluid.initializer.Normal(0., 1.))
     src_pos_enc = layers.embedding(
         src_pos,
         size=[src_max_len, src_emb_dim],
-        padding_idx=pos_pad_idx,
         param_attr=fluid.ParamAttr(
             name=pos_enc_param_name, trainable=False))
     enc_input = src_word_emb + src_pos_enc
@@ -480,12 +476,16 @@ def make_inputs(input_data_names,
             append_batch_size=False)
         input_layers += [slf_attn_post_softmax_shape]
     if src_attn_shape_flag:
+        # This shape input is used to reshape before softmax in encoder-decoder
+        # attention.
         src_attn_pre_softmax_shape = layers.data(
             name=input_data_names[len(input_layers)],
             shape=[2],
             dtype="int32",
             append_batch_size=False)
         input_layers += [src_attn_pre_softmax_shape]
+        # This shape input is used to reshape after softmax in encoder-decoder
+        # attention.
         src_attn_post_softmax_shape = layers.data(
             name=input_data_names[len(input_layers)],
             shape=[4],
@@ -516,10 +516,7 @@ def transformer(
         d_value,
         d_model,
         d_inner_hid,
-        dropout_rate,
-        src_pad_idx,
-        trg_pad_idx,
-        pos_pad_idx, ):
+        dropout_rate, ):
     enc_inputs = make_inputs(
         encoder_input_data_names,
         n_head,
@@ -543,8 +540,6 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
-        src_pad_idx,
-        pos_pad_idx,
         enc_inputs, )
 
     dec_inputs = make_inputs(
@@ -570,8 +565,6 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
-        trg_pad_idx,
-        pos_pad_idx,
         dec_inputs,
         enc_output, )
 
@@ -606,8 +599,6 @@ def wrap_encoder(src_vocab_size,
                  d_model,
                  d_inner_hid,
                  dropout_rate,
-                 src_pad_idx,
-                 pos_pad_idx,
                  enc_inputs=None):
     """
     The wrapper assembles together all needed layers for the encoder.
@@ -637,10 +628,8 @@ def wrap_encoder(src_vocab_size,
         src_pos,
         src_vocab_size,
         d_model,
-        src_pad_idx,
         max_length,
         dropout_rate,
-        pos_pad_idx,
         src_data_shape, )
     enc_output = encoder(
         enc_input,
@@ -666,8 +655,6 @@ def wrap_decoder(trg_vocab_size,
                  d_model,
                  d_inner_hid,
                  dropout_rate,
-                 trg_pad_idx,
-                 pos_pad_idx,
                  dec_inputs=None,
                  enc_output=None):
     """
@@ -701,10 +688,8 @@ def wrap_decoder(trg_vocab_size,
         trg_pos,
         trg_vocab_size,
         d_model,
-        trg_pad_idx,
         max_length,
         dropout_rate,
-        pos_pad_idx,
         trg_data_shape, )
     dec_output = decoder(
         dec_input,
