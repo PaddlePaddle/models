@@ -142,7 +142,13 @@ class TensorFlowMapper(NodeMapper):
 
     def map_batch_norm(self, node):
         scale_offset = len(node.data) == 4
-        kwargs = {} if scale_offset else {'scale_offset': False}
+
+        #this default value comes from caffe's param in batch_norm
+        default_eps = 1e-5
+        kwargs = {'scale_offset': scale_offset}
+        if node.parameters.eps != default_eps:
+            kwargs['eps'] = node.parameters.eps
+
         return MaybeActivated(
             node, default=False)('batch_normalization', **kwargs)
 
@@ -236,7 +242,7 @@ class TensorFlowEmitter(object):
         func_def = self.statement('@classmethod')
         func_def += self.statement('def convert(cls, npy_model, fluid_path):')
         self.indent()
-        func_def += self.statement('import paddle.v2.fluid as fluid')
+        func_def += self.statement('fluid = import_fluid()')
         for l in codes:
             func_def += self.statement(l)
         return '\n' + func_def

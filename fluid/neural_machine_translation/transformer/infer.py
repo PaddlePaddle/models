@@ -41,7 +41,7 @@ def translate_batch(exe,
         src_pad_idx,
         n_head,
         is_target=False,
-        return_pos=True,
+        is_label=False,
         return_attn_bias=True,
         return_max_len=False)
     # Append the data shape input to reshape the output of embedding layer.
@@ -250,22 +250,20 @@ def main():
     encoder_program = fluid.Program()
     with fluid.program_guard(main_program=encoder_program):
         enc_output = encoder(
-            ModelHyperParams.src_vocab_size + 1,
-            ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
-            ModelHyperParams.n_head, ModelHyperParams.d_key,
-            ModelHyperParams.d_value, ModelHyperParams.d_model,
-            ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
-            ModelHyperParams.src_pad_idx, ModelHyperParams.pos_pad_idx)
+            ModelHyperParams.src_vocab_size, ModelHyperParams.max_length + 1,
+            ModelHyperParams.n_layer, ModelHyperParams.n_head,
+            ModelHyperParams.d_key, ModelHyperParams.d_value,
+            ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
+            ModelHyperParams.dropout)
 
     decoder_program = fluid.Program()
     with fluid.program_guard(main_program=decoder_program):
         predict = decoder(
-            ModelHyperParams.trg_vocab_size + 1,
-            ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
-            ModelHyperParams.n_head, ModelHyperParams.d_key,
-            ModelHyperParams.d_value, ModelHyperParams.d_model,
-            ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
-            ModelHyperParams.trg_pad_idx, ModelHyperParams.pos_pad_idx)
+            ModelHyperParams.trg_vocab_size, ModelHyperParams.max_length + 1,
+            ModelHyperParams.n_layer, ModelHyperParams.n_head,
+            ModelHyperParams.d_key, ModelHyperParams.d_value,
+            ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
+            ModelHyperParams.dropout)
 
     # Load model parameters of encoder and decoder separately from the saved
     # transformer model.
@@ -301,9 +299,6 @@ def main():
 
     trg_idx2word = paddle.dataset.wmt16.get_dict(
         "de", dict_size=ModelHyperParams.trg_vocab_size, reverse=True)
-    # Append the <pad> token since the dict provided by dataset.wmt16 does
-    # not include it.
-    trg_idx2word[ModelHyperParams.trg_pad_idx] = "<pad>"
 
     def post_process_seq(seq,
                          bos_idx=ModelHyperParams.bos_idx,
@@ -327,19 +322,22 @@ def main():
 
     for batch_id, data in enumerate(test_data()):
         batch_seqs, batch_scores = translate_batch(
-            exe, [item[0] for item in data],
+            exe,
+            [item[0] for item in data],
             encoder_program,
-            encoder_input_data_names, [enc_output.name],
+            encoder_input_data_names,
+            [enc_output.name],
             decoder_program,
-            decoder_input_data_names, [predict.name],
+            decoder_input_data_names,
+            [predict.name],
             InferTaskConfig.beam_size,
             InferTaskConfig.max_length,
             InferTaskConfig.n_best,
             len(data),
             ModelHyperParams.n_head,
             ModelHyperParams.d_model,
-            ModelHyperParams.src_pad_idx,
-            ModelHyperParams.trg_pad_idx,
+            ModelHyperParams.eos_idx,  # Use eos_idx to pad.
+            ModelHyperParams.eos_idx,  # Use eos_idx to pad.
             ModelHyperParams.bos_idx,
             ModelHyperParams.eos_idx,
             ModelHyperParams.unk_idx,
