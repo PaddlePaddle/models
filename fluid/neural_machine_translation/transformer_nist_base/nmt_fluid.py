@@ -1,7 +1,7 @@
 import os
-import numpy as np
 import time
 import argparse
+import numpy as np
 
 import paddle
 import paddle.fluid as fluid
@@ -35,7 +35,7 @@ parser.add_argument(
 parser.add_argument(
     '--device',
     type=str,
-    default='CPU',
+    default='GPU',
     choices=['CPU', 'GPU'],
     help="The device type.")
 
@@ -187,7 +187,6 @@ def main():
                                          TrainTaskConfig.warmup_steps, place,
                                          TrainTaskConfig.learning_rate)
     optimizer = fluid.optimizer.Adam(
-        #learning_rate=lr_scheduler.learning_rate,
         learning_rate=TrainTaskConfig.learning_rate,
         beta1=TrainTaskConfig.beta1,
         beta2=TrainTaskConfig.beta2,
@@ -196,9 +195,11 @@ def main():
 
 
     # Program to do validation.
+    '''
     inference_program = fluid.default_main_program().clone()
     with fluid.program_guard(inference_program):
         inference_program = fluid.io.get_inference_program([avg_cost])
+    '''
 
 
     def test(exe):
@@ -263,17 +264,17 @@ def main():
             pass_end_time = time.time()
             time_consumed = pass_end_time - pass_start_time
             print("pass_id = " + str(pass_id) + " time_consumed = " +
-                  str(time_consumed))
-            print("pass_id = %d cost = %f avg_speed = %.2f sample/s" %
-                  (pass_id, val_cost, total / (time.time() - ts)))
+                  str(time_consumed) + " speed= %.2f sample/s" %(total / (time.time() - ts)))
 
             #print("epoch: %d, val avg loss: %f, val ppl: %f, "
             #      "consumed %fs" % (pass_id, val_avg_cost, val_ppl, time_consumed))
+            """
             fluid.io.save_inference_model(
                 os.path.join(TrainTaskConfig.model_dir,
                              "pass_" + str(pass_id) + ".infer.model"),
                 encoder_input_data_names + decoder_input_data_names[:-1],
                 [predict], exe)
+            """
 
     if args.local:
         # Initialize the parameters.
@@ -295,10 +296,12 @@ def main():
                 buf_size=100000),
             batch_size=TrainTaskConfig.batch_size)
 
+        '''
         test_reader = paddle.batch(
                 nist_data_provider.train("data", ModelHyperParams.src_vocab_size,
                                          ModelHyperParams.trg_vocab_size),
             batch_size=TrainTaskConfig.batch_size)
+        '''
 
         train_loop(exe, fluid.default_main_program())
     else:
@@ -350,10 +353,12 @@ def main():
                     buf_size=100000),
                 batch_size=TrainTaskConfig.batch_size)
 
+            '''
             test_reader = paddle.batch(
                     nist_data_provider.train("data", ModelHyperParams.src_vocab_size,
                                              ModelHyperParams.trg_vocab_size),
                 batch_size=TrainTaskConfig.batch_size)
+            '''
 
             trainer_prog = t.get_trainer_program()
             train_loop(exe, trainer_prog)
