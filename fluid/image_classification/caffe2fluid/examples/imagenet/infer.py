@@ -10,8 +10,11 @@ import os
 import sys
 import inspect
 import numpy as np
-import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
+
+
+def import_fluid():
+    import paddle.fluid as fluid
+    return fluid
 
 
 def load_data(imgfile, shape):
@@ -52,8 +55,10 @@ def build_model(net_file, net_name):
         print(e)
         return None
 
-    input_name = 'data'
-    input_shape = MyNet.input_shapes()[input_name]
+    fluid = import_fluid()
+    inputs_dict = MyNet.input_shapes()
+    input_name = inputs_dict.keys()[0]
+    input_shape = inputs_dict[input_name]
     images = fluid.layers.data(name='image', shape=input_shape, dtype='float32')
     #label = fluid.layers.data(name='label', shape=[1], dtype='int64')
 
@@ -64,7 +69,7 @@ def build_model(net_file, net_name):
 
 def dump_results(results, names, root):
     if os.path.exists(root) is False:
-        os.path.mkdir(root)
+        os.mkdir(root)
 
     for i in range(len(names)):
         n = names[i]
@@ -73,9 +78,12 @@ def dump_results(results, names, root):
         np.save(filename + '.npy', res)
 
 
-def infer(net_file, net_name, model_file, imgfile, debug=False):
+def infer(net_file, net_name, model_file, imgfile, debug=True):
     """ do inference using a model which consist 'xxx.py' and 'xxx.npy'
     """
+
+    fluid = import_fluid()
+
     #1, build model
     net, input_shape = build_model(net_file, net_name)
     prediction = net.get_output()
@@ -109,12 +117,47 @@ def infer(net_file, net_name, model_file, imgfile, debug=False):
                       fetch_list=fetch_list_var)
 
     if debug is True:
-        dump_path = 'results.layers'
+        dump_path = 'results.paddle'
         dump_results(results, fetch_list_name, dump_path)
-        print('all results dumped to [%s]' % (dump_path))
+        print('all result of layers dumped to [%s]' % (dump_path))
     else:
         result = results[0]
         print('predicted class:', np.argmax(result))
+
+    return 0
+
+
+def caffe_infer(prototxt, caffemodel, datafile):
+    """ do inference using pycaffe for debug,
+        all intermediate results will be dumpped to 'results.caffe'
+    """
+    import caffe
+
+    net = caffe.Net(prototxt, caffemodel, caffe.TEST)
+    input_layer = net.blobs.keys()[0]
+    print('got name of input layer is:%s' % (input_layer))
+    input_shape = list(net.blobs[input_layer].data.shape[1:])
+
+    if '.npy' in datafile:
+        np_images = np.load(datafile)
+    else:
+        np_images = load_data(datafile, input_shape)
+
+    inputs = {input_layer: np_images}
+    net.forward_all(**inputs)
+
+    results = []
+    names = []
+    for k, v in net.blobs.items():
+        k = k.rstrip('_output')
+        k = k.replace('/', '_')
+        names.append(k)
+        results.append(v.data.copy())
+
+    dump_path = 'results.caffe'
+    dump_results(results, names, dump_path)
+    print('all result of layers dumped to [%s]' % (dump_path))
+    return 0
 
 
 if __name__ == "__main__":
@@ -122,21 +165,31 @@ if __name__ == "__main__":
     """
     net_file = 'models/resnet50/resnet50.py'
     weight_file = 'models/resnet50/resnet50.npy'
-    imgfile = 'data/65.jpeg'
+    datafile = 'data/65.jpeg'
     net_name = 'ResNet50'
 
     argc = len(sys.argv)
-    if argc == 5:
+    if sys.argv[1] == 'caffe':
+        if len(sys.argv) != 5:
+            print('usage:')
+            print('\tpython %s caffe [prototxt] [caffemodel] [datafile]' %
+                  (sys.argv[0]))
+            sys.exit(1)
+        prototxt = sys.argv[2]
+        caffemodel = sys.argv[3]
+        datafile = sys.argv[4]
+        sys.exit(caffe_infer(prototxt, caffemodel, datafile))
+    elif argc == 5:
         net_file = sys.argv[1]
         weight_file = sys.argv[2]
-        imgfile = sys.argv[3]
+        datafile = sys.argv[3]
         net_name = sys.argv[4]
     elif argc > 1:
         print('usage:')
-        print('\tpython %s [net_file] [weight_file] [imgfile] [net_name]' %
+        print('\tpython %s [net_file] [weight_file] [datafile] [net_name]' %
               (sys.argv[0]))
         print('\teg:python %s %s %s %s %s' % (sys.argv[0], net_file,
-                                              weight_file, imgfile, net_name))
+                                              weight_file, datafile, net_name))
         sys.exit(1)
 
-    infer(net_file, net_name, weight_file, imgfile)
+    infer(net_file, net_name, weight_file, datafile)

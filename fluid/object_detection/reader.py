@@ -23,10 +23,6 @@ import os
 import time
 import copy
 
-# cocoapi 
-from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
-
 
 class Settings(object):
     def __init__(self, dataset, toy, data_dir, label_file, resize_h, resize_w,
@@ -101,6 +97,10 @@ class Settings(object):
 def _reader_creator(settings, file_list, mode, shuffle):
     def reader():
         if settings.dataset == 'coco':
+            # cocoapi 
+            from pycocotools.coco import COCO
+            from pycocotools.cocoeval import COCOeval
+
             coco = COCO(file_list)
             image_ids = coco.getImgIds()
             images = coco.loadImgs(image_ids)
@@ -196,7 +196,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     if settings._apply_distort:
                         img = image_util.distort_image(img, settings)
                     if settings._apply_expand:
-                        img, bbox_labels = image_util.expand_image(
+                        img, bbox_labels, img_width, img_height = image_util.expand_image(
                             img, bbox_labels, img_width, img_height, settings)
                     batch_sampler = []
                     # hard-code here
@@ -216,7 +216,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0))
                     """ random crop """
                     sampled_bbox = image_util.generate_batch_samples(
-                        batch_sampler, bbox_labels, img_width, img_height)
+                        batch_sampler, bbox_labels)
 
                     img = np.array(img)
                     if len(sampled_bbox) > 0:
@@ -270,7 +270,40 @@ def _reader_creator(settings, file_list, mode, shuffle):
 
     return reader
 
+
+def draw_bounding_box_on_image(image,
+                               sample_labels,
+                               image_name,
+                               category_names,
+                               color='red',
+                               thickness=4,
+                               with_text=True,
+                               normalized=True):
+    image = Image.fromarray(image)
+    draw = ImageDraw.Draw(image)
+    im_width, im_height = image.size
+    if not normalized:
+        im_width, im_height = 1, 1
+    for item in sample_labels:
+        label = item[0]
+        category_name = category_names[int(label)]
+        bbox = item[1:5]
+        xmin, ymin, xmax, ymax = bbox
+        (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
+                                      ymin * im_height, ymax * im_height)
+        draw.line(
+            [(left, top), (left, bottom), (right, bottom), (right, top),
+             (left, top)],
+            width=thickness,
+            fill=color)
+        if with_text:
+            if image.mode == 'RGB':
+                draw.text((left, top), category_name, (255, 255, 0))
+    image.save(image_name)
+
+
 def train(settings, file_list, shuffle=True):
+    file_list = os.path.join(settings.data_dir, file_list)
     if settings.dataset == 'coco':
         train_settings = copy.copy(settings)
         if '2014' in file_list:
@@ -278,13 +311,13 @@ def train(settings, file_list, shuffle=True):
         elif '2017' in file_list:
             sub_dir = "train2017"
         train_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        file_list = os.path.join(settings.data_dir, file_list)
         return _reader_creator(train_settings, file_list, 'train', shuffle)
     elif settings.dataset == 'pascalvoc':
         return _reader_creator(settings, file_list, 'train', shuffle)
 
 
 def test(settings, file_list):
+    file_list = os.path.join(settings.data_dir, file_list)
     if settings.dataset == 'coco':
         test_settings = copy.copy(settings)
         if '2014' in file_list:
@@ -292,7 +325,6 @@ def test(settings, file_list):
         elif '2017' in file_list:
             sub_dir = "val2017"
         test_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        file_list = os.path.join(settings.data_dir, file_list)
         return _reader_creator(test_settings, file_list, 'test', False)
     elif settings.dataset == 'pascalvoc':
         return _reader_creator(settings, file_list, 'test', False)

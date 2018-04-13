@@ -85,8 +85,7 @@ def satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
     return False
 
 
-def generate_batch_samples(batch_sampler, bbox_labels, image_width,
-                           image_height):
+def generate_batch_samples(batch_sampler, bbox_labels):
     sampled_bbox = []
     index = []
     c = 0
@@ -218,8 +217,8 @@ def distort_image(img, settings):
 def expand_image(img, bbox_labels, img_width, img_height, settings):
     prob = random.uniform(0, 1)
     if prob < settings._expand_prob:
-        expand_ratio = random.uniform(1, settings._expand_max_ratio)
-        if expand_ratio - 1 >= 0.01:
+        if settings._expand_max_ratio - 1 >= 0.01:
+            expand_ratio = random.uniform(1, settings._expand_max_ratio)
             height = int(img_height * expand_ratio)
             width = int(img_width * expand_ratio)
             h_off = math.floor(random.uniform(0, height - img_height))
@@ -232,37 +231,5 @@ def expand_image(img, bbox_labels, img_width, img_height, settings):
             expand_img = Image.fromarray(expand_img)
             expand_img.paste(img, (int(w_off), int(h_off)))
             bbox_labels = transform_labels(bbox_labels, expand_bbox)
-            return expand_img, bbox_labels
-    return img, bbox_labels
-
-
-def draw_bounding_box_on_image(image,
-                               sample_labels,
-                               image_name,
-                               category_names,
-                               color='red',
-                               thickness=4,
-                               with_text=True,
-                               normalized=True):
-    image = Image.fromarray(image)
-    draw = ImageDraw.Draw(image)
-    im_width, im_height = image.size
-    if not normalized:
-        im_width, im_height = 1, 1
-    for item in sample_labels:
-        label = item[0]
-        category_name = category_names[int(label)]
-        bbox = item[1:5]
-        xmin, ymin, xmax, ymax = bbox
-        (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
-                                      ymin * im_height, ymax * im_height)
-        draw.line(
-            [(left, top), (left, bottom), (right, bottom), (right, top),
-             (left, top)],
-            width=thickness,
-            fill=color)
-        #draw.rectangle([xmin, ymin, xmax, ymax], outline=color)
-        if with_text:
-            if image.mode == 'RGB':
-                draw.text((left, top), category_name, (255, 255, 0))
-    image.save(image_name)
+            return expand_img, bbox_labels, width, height
+    return img, bbox_labels, img_width, img_height

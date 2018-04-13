@@ -52,7 +52,10 @@ class Graph(object):
     def __init__(self, nodes=None, name=None):
         self.nodes = nodes or []
         self.node_lut = {node.name: node for node in self.nodes}
-        self.name = name
+        if name is None or name == '':
+            self.name = 'MyNet'
+        else:
+            self.name = name
 
     def add_node(self, node):
         self.nodes.append(node)

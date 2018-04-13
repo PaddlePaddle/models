@@ -13,47 +13,35 @@ import functools
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
-add_arg('learning_rate', float, 0.001, "Learning rate.")
-add_arg('batch_size', int, 32, "Minibatch size.")
-add_arg('num_passes', int, 0, "Epoch number.")
-add_arg('nms_threshold', float, 0.5, "NMS threshold.")
-add_arg('parallel', bool, False, "Whether use parallel training.")
-add_arg('use_gpu', bool, False, "Whether use GPU.")
-add_arg('data_dir', str, './data/COCO17', "Root path of data")
-add_arg('train_file_list', str, 'annotations/instances_train2017.json',
-        "train file list")
-add_arg('val_file_list', str, 'annotations/instances_val2017.json',
-        "vaild file list")
-add_arg('model_save_dir', str, 'model_COCO17', "where to save model")
+# yapf: disable
+add_arg('learning_rate',    float, 0.001,     "Learning rate.")
+add_arg('batch_size',       int,   32,        "Minibatch size.")
+add_arg('num_passes',       int,   25,        "Epoch number.")
+add_arg('parallel',         bool,  True,      "Whether use parallel training.")
+add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
+add_arg('use_nccl',         bool,  False,     "Whether use NCCL.")
+add_arg('dataset',          str, 'pascalvoc', "coco or pascalvoc.")
+add_arg('model_save_dir',   str, 'model',     "The path to save model.")
+add_arg('pretrained_model', str, 'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
+add_arg('apply_distort',    bool, True,   "Whether apply distort")
+add_arg('apply_expand',     bool, False,  "Whether appley expand")
+add_arg('resize_h',         int,  300,    "resize image size")
+add_arg('resize_w',         int,  300,    "resize image size")
+add_arg('mean_value_B',     float, 127.5, "mean value which will be subtracted")  #123.68
+add_arg('mean_value_G',     float, 127.5, "mean value which will be subtracted")  #116.78
+add_arg('mean_value_R',     float, 127.5, "mean value which will be subtracted")  #103.94
+add_arg('is_toy',           int, 0, "Toy for quick debug, 0 means using all data, while n means using only n sample")
+# yapf: disable
 
-add_arg('dataset', str, 'coco', "coco or pascalvoc")
-add_arg(
-    'is_toy', int, 4,
-    "Is Toy for quick debug, 0 means using all data, while n means using only n sample"
-)
-add_arg('label_file', str, 'label_list',
-        "Lable file which lists all label name")
-add_arg('apply_distort', bool, True, "Whether apply distort")
-add_arg('apply_expand', bool, False, "Whether appley expand")
-add_arg('resize_h', int, 300, "resize image size")
-add_arg('resize_w', int, 300, "resize image size")
-add_arg('mean_value_B', float, 127.5,
-        "mean value which will be subtracted")  #123.68
-add_arg('mean_value_G', float, 127.5,
-        "mean value which will be subtracted")  #116.78
-add_arg('mean_value_R', float, 127.5,
-        "mean value which will be subtracted")  #103.94
-
-
-def train(args,
-          train_file_list,
-          val_file_list,
-          data_args,
-          learning_rate,
-          batch_size,
-          num_passes,
-          model_save_dir='model',
-          init_model_path=None):
+def parallel_exe(args,
+                 train_file_list,
+                 val_file_list,
+                 data_args,
+                 learning_rate,
+                 batch_size,
+                 num_passes,
+                 model_save_dir,
+                 pretrained_model=None):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if data_args.dataset == 'coco':
         num_classes = 91
@@ -72,33 +60,12 @@ def train(args,
     gt_image_info = fluid.layers.data(
         name='gt_image_id', shape=[3], dtype='int32', lod_level=1)
 
-    if args.parallel:
-        places = fluid.layers.get_places()
-        pd = fluid.layers.ParallelDo(places)
-        with pd.do():
-            image_ = pd.read_input(image)
-            gt_box_ = pd.read_input(gt_box)
-            gt_label_ = pd.read_input(gt_label)
-            difficult_ = pd.read_input(difficult)
-            locs, confs, box, box_var = mobile_net(num_classes, image_,
-                                                   image_shape)
-            loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_, box,
-                                         box_var)
-            nmsed_out = fluid.layers.detection_output(
-                locs, confs, box, box_var, nms_threshold=args.nms_threshold)
-            loss = fluid.layers.reduce_sum(loss)
-            pd.write_output(loss)
-            pd.write_output(nmsed_out)
-
-        loss, nmsed_out = pd()
-        loss = fluid.layers.mean(loss)
-    else:
-        locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
-        nmsed_out = fluid.layers.detection_output(
-            locs, confs, box, box_var, nms_threshold=args.nms_threshold)
-        loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
-                                     box_var)
-        loss = fluid.layers.reduce_sum(loss)
+    locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
+    nmsed_out = fluid.layers.detection_output(
+        locs, confs, box, box_var, nms_threshold=args.nms_threshold)
+    loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
+                                 box_var)
+    loss = fluid.layers.reduce_sum(loss)
 
     test_program = fluid.default_main_program().clone(for_test=True)
     with fluid.program_guard(test_program):
@@ -131,8 +98,14 @@ def train(args,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    #load_model.load_and_set_vars(place)
-    load_model.load_paddlev1_vars(place)
+    if pretrained_model:
+        def if_exist(var):
+            return os.path.exists(os.path.join(pretrained_model, var.name))
+        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
+
+    train_exe = fluid.ParallelExecutor(use_cuda=args.use_gpu,
+                                       loss_name=loss.name)
+
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
@@ -205,50 +178,59 @@ def train(args,
                                    feed=feeder.feed(data),
                                    fetch_list=[accum_map])
             print("Test {0}, map {1}".format(pass_id, test_map[0]))
-    test(-1)
+
     for pass_id in range(num_passes):
         start_time = time.time()
         prev_start_time = start_time
         end_time = 0
+        test(pass_id)
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
-            #print("Batch {} start at {:.2f}".format(batch_id, start_time))
-            loss_v = exe.run(fluid.default_main_program(),
-                             feed=feeder.feed(data),
-                             fetch_list=[loss])
+            loss_v, = train_exe.run(fetch_list=[loss.name],
+                                   feed_dict=feeder.feed(data))
             end_time = time.time()
+            loss_v = np.mean(np.array(loss_v))
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
-                    pass_id, batch_id, loss_v[0], start_time - prev_start_time))
-        test(pass_id)
+                    pass_id, batch_id, loss_v, start_time - prev_start_time))
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             model_path = os.path.join(model_save_dir, str(pass_id))
             print 'save models to %s' % (model_path)
-            fluid.io.save_inference_model(model_path, ['image'], [nmsed_out],
-                                          exe)
-
+            fluid.io.save_persistables(exe, model_path)
 
 if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
+
+    data_dir = 'data/pascalvoc'
+    train_file_list = 'trainval.txt'
+    val_file_list = 'test.txt'
+    label_file = 'label_list'
+    model_save_dir = args.model_save_dir
+    if args.dataset == 'coco':
+        data_dir = './data/COCO17'
+        train_file_list = 'annotations/instances_train2017.json'
+        val_file_list = 'annotations/instances_val2017.json'
+
     data_args = reader.Settings(
-        dataset=args.dataset,  # coco or pascalvoc
+        dataset=args.dataset,
         toy=args.is_toy,
-        data_dir=args.data_dir,
-        label_file=args.label_file,
+        data_dir=data_dir,
+        label_file=label_file,
         apply_distort=args.apply_distort,
         apply_expand=args.apply_expand,
         resize_h=args.resize_h,
         resize_w=args.resize_w,
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R])
-    train(
-        args,
-        train_file_list=args.train_file_list,
-        val_file_list=args.val_file_list,
-        data_args=data_args,
-        learning_rate=args.learning_rate,
-        batch_size=args.batch_size,
-        num_passes=args.num_passes,
-        model_save_dir=args.model_save_dir)
+    method = parallel_exe
+    method(args,
+           train_file_list=train_file_list,
+           val_file_list=val_file_list,
+           data_args=data_args,
+           learning_rate=args.learning_rate,
+           batch_size=args.batch_size,
+           num_passes=args.num_passes,
+           model_save_dir=model_save_dir,
+           pretrained_model=args.pretrained_model)
