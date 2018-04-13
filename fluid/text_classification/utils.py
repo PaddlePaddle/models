@@ -1,6 +1,3 @@
-"""
-For http://wiki.baidu.com/display/LegoNet/Text+Classification
-"""
 import paddle.fluid as fluid
 import paddle.v2 as paddle
 import numpy as np
@@ -8,6 +5,7 @@ import sys
 import time
 import light_imdb
 import tiny_imdb
+
 
 def to_lodtensor(data, place):
     """
@@ -45,16 +43,16 @@ def data2tensor(data, place):
     """
     data2tensor
     """
-    input_seq = to_lodtensor(map(lambda x:x[0], data), place)
+    input_seq = to_lodtensor(map(lambda x: x[0], data), place)
     y_data = np.array(map(lambda x: x[1], data)).astype("int64")
     y_data = y_data.reshape([-1, 1])
     return {"words": input_seq, "label": y_data}
 
 
-def prepare_data(data_type="imdb", 
-                self_dict=False,
-                batch_size=128,
-                buf_size=50000):
+def prepare_data(data_type="imdb",
+                 self_dict=False,
+                 batch_size=128,
+                 buf_size=50000):
     """
     prepare data
     """
@@ -73,10 +71,9 @@ def prepare_data(data_type="imdb",
     if data_type == "imdb":
         train_reader = paddle.batch(
             paddle.reader.shuffle(
-                paddle.dataset.imdb.train(word_dict), 
-                buf_size = buf_size),
+                paddle.dataset.imdb.train(word_dict), buf_size = buf_size),
             batch_size = batch_size)
-        
+
         test_reader = paddle.batch(
             paddle.reader.shuffle(
                 paddle.dataset.imdb.test(word_dict), 
@@ -86,27 +83,23 @@ def prepare_data(data_type="imdb",
     elif data_type == "light_imdb":
         train_reader = paddle.batch(
             paddle.reader.shuffle(
-                light_imdb.train(word_dict), 
-                buf_size = buf_size),
+                light_imdb.train(word_dict), buf_size = buf_size),
             batch_size = batch_size)
-        
+
         test_reader = paddle.batch(
             paddle.reader.shuffle(
-                light_imdb.test(word_dict), 
-                buf_size = buf_size),
+                light_imdb.test(word_dict), buf_size = buf_size),
             batch_size = batch_size)
 
     elif data_type == "tiny_imdb":
         train_reader = paddle.batch(
             paddle.reader.shuffle(
-                tiny_imdb.train(word_dict), 
-                buf_size = buf_size),
+                tiny_imdb.train(word_dict), buf_size = buf_size),
             batch_size = batch_size)
-        
+
         test_reader = paddle.batch(
             paddle.reader.shuffle(
-                tiny_imdb.test(word_dict), 
-                buf_size = buf_size),
+                tiny_imdb.test(word_dict), buf_size = buf_size),
             batch_size = batch_size)
     else:
         raise RuntimeError("no such dataset")
