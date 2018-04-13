@@ -13,6 +13,7 @@ from optim import LearningRateScheduler
 from config import TrainTaskConfig, ModelHyperParams, pos_enc_param_names, \
         encoder_input_data_names, decoder_input_data_names, label_data_names
 import paddle.fluid.debuger as debuger
+import nist_data_provider
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -70,6 +71,7 @@ parser.add_argument(
     "--task_index", type=int, default=0, help="Index of task within the job")
 args = parser.parse_args()
 
+TrainTaskConfig.batch_size = args.batch_size
 
 def pad_batch_data(insts,
                    pad_idx,
@@ -187,7 +189,7 @@ def main():
                                          TrainTaskConfig.warmup_steps, place,
                                          TrainTaskConfig.learning_rate)
     optimizer = fluid.optimizer.Adam(
-        learning_rate=TrainTaskConfig.learning_rate,
+        learning_rate=lr_scheduler.learning_rate,
         beta1=TrainTaskConfig.beta1,
         beta2=TrainTaskConfig.beta2,
         epsilon=TrainTaskConfig.eps)
@@ -239,7 +241,7 @@ def main():
             ts = time.time()
             total = 0
             for batch_id, data in enumerate(train_reader()):
-                if len(data) != TrainTaskConfig.batch_size:
+                if len(data) != args.batch_size:
                     continue
 
                 total += len(data)
@@ -249,7 +251,8 @@ def main():
                     label_data_names, ModelHyperParams.eos_idx,
                     ModelHyperParams.eos_idx, ModelHyperParams.n_head,
                     ModelHyperParams.d_model)
-                lr_scheduler.update_learning_rate(data_input)
+                if args.local:
+                    lr_scheduler.update_learning_rate(data_input)
                 outs = exe.run(trainer_prog,
                                feed=data_input,
                                fetch_list=[sum_cost, avg_cost],
@@ -294,7 +297,7 @@ def main():
                 nist_data_provider.train("data", ModelHyperParams.src_vocab_size,
                                          ModelHyperParams.trg_vocab_size),
                 buf_size=100000),
-            batch_size=TrainTaskConfig.batch_size)
+            batch_size=args.batch_size)
 
         '''
         test_reader = paddle.batch(
@@ -351,7 +354,7 @@ def main():
                     nist_data_provider.train("data", ModelHyperParams.src_vocab_size,
                                              ModelHyperParams.trg_vocab_size),
                     buf_size=100000),
-                batch_size=TrainTaskConfig.batch_size)
+                batch_size=args.batch_size)
 
             '''
             test_reader = paddle.batch(
