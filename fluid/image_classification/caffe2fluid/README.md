@@ -2,28 +2,31 @@
 This tool is used to convert a Caffe model to Fluid model
 
 ### Howto
-1, Prepare caffepb.py in ./proto if your python has no 'pycaffe' module, two options provided here:
-- generate it from caffe.proto using protoc
-    bash ./proto/compile.sh
+1. Prepare caffepb.py in ./proto if your python has no 'pycaffe' module, two options provided here:
+- Generate pycaffe from caffe.proto
+  <pre><code>bash ./proto/compile.sh</code></pre>
 
 - download one from github directly
-    cd proto/ && wget https://github.com/ethereon/caffe-tensorflow/blob/master/kaffe/caffe/caffepb.py
+  <pre><code>cd proto/ && wget https://github.com/ethereon/caffe-tensorflow/blob/master/kaffe/caffe/caffepb.py
+</code></pre>
 
-2, Convert the caffe model to fluid model
+2. Convert the Caffe model to Fluid model
 - generate fluid code and weight file
-    python convert.py alexnet.prototxt \
+  <pre><code>python convert.py alexnet.prototxt \
         --caffemodel alexnet.caffemodel \
         --data-output-path alexnet.npy \
         --code-output-path alexnet.py
+</code></pre>
 
 - save weights as fluid model file
-    python alexnet.py alexnet.npy ./fluid_model
+  <pre><code>python alexnet.py alexnet.npy ./fluid_model
+</code></pre>
 
-4, Use the converted model to predict
-- see more detail info in 'examples/imagenet/run.sh'
+3. Use the converted model to infer
+- see more details in '*examples/imagenet/run.sh*'
 
-5, compare the inference results with caffe
-- see more detail info in 'examples/imagenet/diff.sh'
+4. compare the inference results with caffe
+- see more details in '*examples/imagenet/diff.sh*'
 
 ### Tested models
 - Lenet
@@ -41,4 +44,4 @@ This tool is used to convert a Caffe model to Fluid model
 [model addr](https://github.com/BVLC/caffe/tree/master/models/bvlc_alexnet)
 
 ### Notes
-Some of this code come from here: https://github.com/ethereon/caffe-tensorflow
+Some of this code come from here: [caffe-tensorflow](https://github.com/ethereon/caffe-tensorflow)

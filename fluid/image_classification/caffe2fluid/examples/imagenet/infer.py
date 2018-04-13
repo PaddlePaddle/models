@@ -59,12 +59,12 @@ def build_model(net_file, net_name):
     inputs_dict = MyNet.input_shapes()
     input_name = inputs_dict.keys()[0]
     input_shape = inputs_dict[input_name]
-    images = fluid.layers.data(name='image', shape=input_shape, dtype='float32')
+    images = fluid.layers.data(
+        name=input_name, shape=input_shape, dtype='float32')
     #label = fluid.layers.data(name='label', shape=[1], dtype='int64')
 
     net = MyNet({input_name: images})
-    input_shape = MyNet.input_shapes()[input_name]
-    return net, input_shape
+    return net, inputs_dict
 
 
 def dump_results(results, names, root):
@@ -78,26 +78,27 @@ def dump_results(results, names, root):
         np.save(filename + '.npy', res)
 
 
-def infer(net_file, net_name, model_file, imgfile, debug=True):
-    """ do inference using a model which consist 'xxx.py' and 'xxx.npy'
+def load_model(exe, place, net_file, net_name, net_weight, debug):
+    """ load model using xxxnet.py and xxxnet.npy
     """
-
     fluid = import_fluid()
 
     #1, build model
-    net, input_shape = build_model(net_file, net_name)
+    net, input_map = build_model(net_file, net_name)
+    feed_names = input_map.keys()
+    feed_shapes = [v for k, v in input_map.items()]
+
     prediction = net.get_output()
 
     #2, load weights for this model
-    place = fluid.CPUPlace()
-    exe = fluid.Executor(place)
     startup_program = fluid.default_startup_program()
     exe.run(startup_program)
 
-    if model_file.find('.npy') > 0:
-        net.load(data_path=model_file, exe=exe, place=place)
+    #place = fluid.CPUPlace()
+    if net_weight.find('.npy') > 0:
+        net.load(data_path=net_weight, exe=exe, place=place)
     else:
-        net.load(data_path=model_file, exe=exe)
+        raise ValueError('not found weight file')
 
     #3, test this model
     test_program = fluid.default_main_program().clone()
@@ -111,10 +112,75 @@ def infer(net_file, net_name, model_file, imgfile, debug=True):
             fetch_list_var.append(v)
             fetch_list_name.append(k)
 
+    return {
+        'program': test_program,
+        'feed_names': feed_names,
+        'fetch_vars': fetch_list_var,
+        'fetch_names': fetch_list_name,
+        'feed_shapes': feed_shapes
+    }
+
+
+def get_shape(fluid, program, name):
+    for var in program.list_vars():
+        if var.name == 'data':
+            return list(var.shape[1:])
+
+    raise ValueError('not found shape for input layer[%s], '
+                     'you can specify by yourself' % (name))
+
+
+def load_inference_model(dirname, exe):
+    """ load fluid's inference model
+    """
+    fluid = import_fluid()
+    model_fn = 'model'
+    params_fn = 'params'
+    if os.path.exists(os.path.join(dirname, model_fn)) \
+            and os.path.exists(os.path.join(dirname, params_fn)):
+        program, feed_names, fetch_targets = fluid.io.load_inference_model(\
+                dirname, exe, model_fn, params_fn)
+    else:
+        raise ValueError('not found model files in direcotry[%s]' % (dirname))
+
+    #print fluid.global_scope().find_var(feed_names[0])
+    input_shape = get_shape(fluid, program, feed_names[0])
+    feed_shapes = [input_shape]
+
+    return program, feed_names, fetch_targets, feed_shapes
+
+
+def infer(model_path, imgfile, net_file=None, net_name=None, debug=True):
+    """ do inference using a model which consist 'xxx.py' and 'xxx.npy'
+    """
+
+    fluid = import_fluid()
+
+    place = fluid.CPUPlace()
+    exe = fluid.Executor(place)
+    try:
+        ret = load_inference_model(model_path, exe)
+        program, feed_names, fetch_targets, feed_shapes = ret
+        debug = False
+        print('found a inference model for fluid')
+    except ValueError as e:
+        pass
+        print('try to load model using net file and weight file')
+        net_weight = model_path
+        ret = load_model(exe, place, net_file, net_name, net_weight, debug)
+        program = ret['program']
+        feed_names = ret['feed_names']
+        fetch_targets = ret['fetch_vars']
+        fetch_list_name = ret['fetch_names']
+        feed_shapes = ret['feed_shapes']
+
+    input_name = feed_names[0]
+    input_shape = feed_shapes[0]
+
     np_images = load_data(imgfile, input_shape)
-    results = exe.run(program=test_program,
-                      feed={'image': np_images},
-                      fetch_list=fetch_list_var)
+    results = exe.run(program=program,
+                      feed={input_name: np_images},
+                      fetch_list=fetch_targets)
 
     if debug is True:
         dump_path = 'results.paddle'
@@ -122,7 +188,7 @@ def infer(net_file, net_name, model_file, imgfile, debug=True):
         print('all result of layers dumped to [%s]' % (dump_path))
     else:
         result = results[0]
-        print('predicted class:', np.argmax(result))
+        print('succeed infer with results[class:%d]' % (np.argmax(result)))
 
     return 0
 
@@ -167,9 +233,12 @@ if __name__ == "__main__":
     weight_file = 'models/resnet50/resnet50.npy'
     datafile = 'data/65.jpeg'
     net_name = 'ResNet50'
+    model_file = 'models/resnet50/fluid'
 
-    argc = len(sys.argv)
-    if sys.argv[1] == 'caffe':
+    ret = None
+    if len(sys.argv) <= 2:
+        pass
+    elif sys.argv[1] == 'caffe':
         if len(sys.argv) != 5:
             print('usage:')
             print('\tpython %s caffe [prototxt] [caffemodel] [datafile]' %
@@ -178,18 +247,34 @@ if __name__ == "__main__":
         prototxt = sys.argv[2]
         caffemodel = sys.argv[3]
         datafile = sys.argv[4]
-        sys.exit(caffe_infer(prototxt, caffemodel, datafile))
-    elif argc == 5:
-        net_file = sys.argv[1]
-        weight_file = sys.argv[2]
+        ret = caffe_infer(prototxt, caffemodel, datafile)
+    elif sys.argv[1] == 'infer':
+        if len(sys.argv) != 4:
+            print('usage:')
+            print('\tpython %s infer [fluid_model] [datafile]' % (sys.argv[0]))
+            sys.exit(1)
+        model_path = sys.argv[2]
         datafile = sys.argv[3]
-        net_name = sys.argv[4]
-    elif argc > 1:
+        ret = infer(model_path, datafile)
+    elif sys.argv[1] == 'dump':
+        if len(sys.argv) != 6:
+            print('usage:')
+            print('\tpython %s dump [net_file] [weight_file] [datafile] [net_name]' \
+                    % (sys.argv[0]))
+            print('\teg:python dump %s %s %s %s %s' % (sys.argv[0],\
+                net_file, weight_file, datafile, net_name))
+            sys.exit(1)
+
+        net_file = sys.argv[2]
+        weight_file = sys.argv[3]
+        datafile = sys.argv[4]
+        net_name = sys.argv[5]
+        ret = infer(weight_file, datafile, net_file, net_name)
+
+    if ret is None:
         print('usage:')
-        print('\tpython %s [net_file] [weight_file] [datafile] [net_name]' %
-              (sys.argv[0]))
-        print('\teg:python %s %s %s %s %s' % (sys.argv[0], net_file,
-                                              weight_file, datafile, net_name))
+        print(' python %s [infer] [fluid_model] [imgfile]' % (sys.argv[0]))
+        print(' eg:python %s infer %s %s' % (sys.argv[0], model_file, datafile))
         sys.exit(1)
 
-    infer(net_file, net_name, weight_file, datafile)
+    sys.exit(ret)
