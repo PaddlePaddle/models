@@ -1,15 +1,74 @@
 import os
-import time
 import numpy as np
+import time
+import argparse
 
 import paddle
 import paddle.fluid as fluid
+import paddle.fluid.core as core
 
 from model import transformer, position_encoding_init
+import model
 from optim import LearningRateScheduler
 from config import TrainTaskConfig, ModelHyperParams, pos_enc_param_names, \
         encoder_input_data_names, decoder_input_data_names, label_data_names
-import nist_data_provider
+import paddle.fluid.debuger as debuger
+
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument(
+    '--batch_size', type=int, default=TrainTaskConfig.batch_size, help="Batch size for training.")
+
+parser.add_argument(
+    '--learning_rate',
+    type=float,
+    default=TrainTaskConfig.learning_rate,
+    help="Learning rate for training.")
+
+parser.add_argument(
+    '--device',
+    type=str,
+    default='CPU',
+    choices=['CPU', 'GPU'],
+    help="The device type.")
+
+parser.add_argument('--device_id', type=int, default=0, help="The device id.")
+
+parser.add_argument(
+    '--local',
+    type=str2bool,
+    default=True,
+    help='Whether to run as local mode.')
+
+parser.add_argument(
+    "--ps_hosts",
+    type=str,
+    default="",
+    help="Comma-separated list of hostname:port pairs")
+
+parser.add_argument(
+    "--trainer_hosts",
+    type=str,
+    default="",
+    help="Comma-separated list of hostname:port pairs")
+
+parser.add_argument(
+    "--pass_num",
+    type=int,
+    default=TrainTaskConfig.pass_num,
+    help="pass num of train")
+
+# Flags for defining the tf.train.Server
+parser.add_argument(
+    "--task_index", type=int, default=0, help="Index of task within the job")
+args = parser.parse_args()
 
 
 def pad_batch_data(insts,
@@ -113,7 +172,8 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
 
 
 def main():
-    place = fluid.CUDAPlace(0) if TrainTaskConfig.use_gpu else fluid.CPUPlace()
+    place = core.CPUPlace() if args.device == 'CPU' else core.CUDAPlace(
+        args.device_id)
     exe = fluid.Executor(place)
 
     sum_cost, avg_cost, predict, token_num = transformer(
@@ -127,7 +187,8 @@ def main():
                                          TrainTaskConfig.warmup_steps, place,
                                          TrainTaskConfig.learning_rate)
     optimizer = fluid.optimizer.Adam(
-        learning_rate=lr_scheduler.learning_rate,
+        #learning_rate=lr_scheduler.learning_rate,
+        learning_rate=TrainTaskConfig.learning_rate,
         beta1=TrainTaskConfig.beta1,
         beta2=TrainTaskConfig.beta2,
         epsilon=TrainTaskConfig.eps)
@@ -141,9 +202,9 @@ def main():
         batch_size=TrainTaskConfig.batch_size)
 
     # Program to do validation.
-    '''test_program = fluid.default_main_program().clone()
-    with fluid.program_guard(test_program):
-        test_program = fluid.io.get_inference_program([avg_cost])
+    inference_program = fluid.default_main_program().clone()
+    with fluid.program_guard(inference_program):
+        inference_program = fluid.io.get_inference_program([avg_cost])
     val_data = paddle.batch(
             nist_data_provider.train("data", ModelHyperParams.src_vocab_size,
                                      ModelHyperParams.trg_vocab_size),
@@ -212,6 +273,100 @@ def main():
             [predict], exe)
 
 
+ if args.local:
+        # Initialize the parameters.
+        exe.run(fluid.framework.default_startup_program())
+        #print("local start_up:")
+        #print(debuger.pprint_program_codes(fluid.framework.default_startup_program()))
+        for pos_enc_param_name in pos_enc_param_names:
+            #print("pos_enc_param_name:", pos_enc_param_name)
+            pos_enc_param = fluid.global_scope().find_var(
+                pos_enc_param_name).get_tensor()
+            pos_enc_param.set(
+                position_encoding_init(ModelHyperParams.max_length + 1,
+                                       ModelHyperParams.d_model), place)
+
+        train_reader = paddle.batch(
+            paddle.reader.shuffle(
+                paddle.dataset.wmt16.train(ModelHyperParams.src_vocab_size,
+                                           ModelHyperParams.trg_vocab_size),
+                buf_size=100000),
+            batch_size=args.batch_size)
+
+        test_reader = paddle.batch(
+            paddle.dataset.wmt16.validation(ModelHyperParams.src_vocab_size,
+                                            ModelHyperParams.trg_vocab_size),
+            batch_size=args.batch_size)
+
+        train_loop(exe, fluid.default_main_program())
+    else:
+        trainers = int(os.getenv("TRAINERS"))  # total trainer count
+        print("trainers total: ", trainers)
+
+        training_role = os.getenv(
+            "TRAINING_ROLE",
+            "TRAINER")  # get the training role: trainer/pserver
+
+        t = fluid.DistributeTranspiler()
+        t.transpile(
+            optimize_ops,
+            params_grads,
+            trainer_id=args.task_index,
+            pservers=args.ps_hosts,
+            trainers=trainers)
+
+        if training_role == "PSERVER":
+            current_endpoint = os.getenv("POD_IP") + ":" + os.getenv(
+                "PADDLE_INIT_PORT")
+            if not current_endpoint:
+                print("need env SERVER_ENDPOINT")
+                exit(1)
+            pserver_prog = t.get_pserver_program(current_endpoint)
+            pserver_startup = t.get_startup_program(current_endpoint,
+                                                    pserver_prog)
+            exe.run(pserver_startup)
+            exe.run(pserver_prog)
+        elif training_role == "TRAINER":
+            # Parameter initialization
+            exe.run(fluid.default_startup_program())
+
+            #print("cluster start_up:")
+            #print(debuger.pprint_program_codes(fluid.framework.default_startup_program()))
+
+            for pos_enc_param_name in pos_enc_param_names:
+                #print("pos_enc_param_name:", pos_enc_param_name)
+                pos_enc_param = fluid.global_scope().find_var(
+                    pos_enc_param_name).get_tensor()
+                pos_enc_param.set(
+                    position_encoding_init(ModelHyperParams.max_length + 1,
+                                           ModelHyperParams.d_model), place)
+
+            train_reader = paddle.batch(
+                paddle.reader.shuffle(
+                    paddle.dataset.wmt16.train(ModelHyperParams.src_vocab_size,
+                                               ModelHyperParams.trg_vocab_size),
+                    buf_size=100000),
+                batch_size=args.batch_size)
+
+            test_reader = paddle.batch(
+                paddle.dataset.wmt16.validation(ModelHyperParams.src_vocab_size,
+                                                ModelHyperParams.trg_vocab_size),
+                batch_size=args.batch_size)
+
+            trainer_prog = t.get_trainer_program()
+            train_loop(exe, trainer_prog)
+        else:
+            print("environment var TRAINER_ROLE should be TRAINER os PSERVER")
+
+def print_arguments():
+    print('-----------  Configuration Arguments -----------')
+    for arg, value in sorted(vars(args).iteritems()):
+        print('%s: %s' % (arg, value))
+    print('------------------------------------------------')
+
+if __name__ == "__main__":
+    print_arguments()
+    main()
 if __name__ == "__main__":
     main()
 
