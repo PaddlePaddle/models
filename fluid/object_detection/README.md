@@ -6,7 +6,7 @@ The minimum PaddlePaddle version needed for the code sample in this directory is
 
 ### Introduction
 
-[Single Shot MultiBox Detector (SSD)](https://arxiv.org/abs/1512.02325) framework for object detection is based on a feed-forward convolutional network. The early network is a standard convolutional architecture for image classification, such as VGG, ResNet, or MobileNet, which is als called base network. In this tutorial we used [MobileNet](https://arxiv.org/abs/1704.04861).
+[Single Shot MultiBox Detector (SSD)](https://arxiv.org/abs/1512.02325) framework for object detection is based on a feed-forward convolutional network. The early network is a standard convolutional architecture for image classification, such as VGG, ResNet, or MobileNet, which is also called base network. In this tutorial we used [MobileNet](https://arxiv.org/abs/1704.04861).
 
 ### Data Preparation
 
@@ -63,11 +63,11 @@ Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https
 #### Train on MS-COCO
   - Train on one device (/GPU).
   ```python
-  env CUDA_VISIABLE_DEVICES=0 python -u train.py --parallel=False --data='coco' --pretrained_model='pretrained/mobilenet_imagenet/'
+  env CUDA_VISIABLE_DEVICES=0 python -u train.py --parallel=False --data='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
   ```
   - Train on multi devices (/GPUs).
   ```python
-  env CUDA_VISIABLE_DEVICES=0,1 python -u train.py --batch_size=64 --data='coco' --pretrained_model='pretrained/mobilenet_imagenet/'
+  env CUDA_VISIABLE_DEVICES=0,1 python -u train.py --batch_size=64 --data='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
   ```
 
 TBD

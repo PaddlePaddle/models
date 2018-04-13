@@ -18,17 +18,18 @@ add_arg('learning_rate',    float, 0.001,     "Learning rate.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
 add_arg('num_passes',       int,   25,        "Epoch number.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
-add_arg('dataset',          str, 'coco2014',  "coco2014, coco2017, and pascalvoc.")
-add_arg('model_save_dir',   str, 'model',     "The path to save model.")
-add_arg('pretrained_model', str, 'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
-add_arg('apply_distort',    bool, True,   "Whether apply distort")
-add_arg('apply_expand',     bool, False,  "Whether appley expand")
-add_arg('resize_h',         int,  300,    "resize image size")
-add_arg('resize_w',         int,  300,    "resize image size")
+add_arg('dataset',          str,   'coco2014',  "coco2014, coco2017, and pascalvoc.")
+add_arg('model_save_dir',   str,   'model',     "The path to save model.")
+add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
+add_arg('apply_distort',    bool,  True,   "Whether apply distort")
+add_arg('apply_expand',     bool,  False,  "Whether appley expand")
+add_arg('nms_threshold',    float, 0.5,    "resize image size")
+add_arg('resize_h',         int,   300,    "resize image size")
+add_arg('resize_w',         int,   300,    "resize image size")
 add_arg('mean_value_B',     float, 127.5, "mean value which will be subtracted")  #123.68
 add_arg('mean_value_G',     float, 127.5, "mean value which will be subtracted")  #116.78
 add_arg('mean_value_R',     float, 127.5, "mean value which will be subtracted")  #103.94
-add_arg('is_toy',           int, 0, "Toy for quick debug, 0 means using all data, while n means using only n sample")
+add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all data, while n means using only n sample")
 # yapf: disable
 
 def parallel_exe(args,
@@ -208,12 +209,11 @@ if __name__ == '__main__':
     label_file = 'label_list'
     model_save_dir = args.model_save_dir
     if 'coco' in args.dataset:
+        data_dir = './data/coco'
         if '2014' in args.dataset:
-            data_dir = './data/coco'
             train_file_list = 'annotations/instances_train2014.json'
             val_file_list = 'annotations/instances_val2014.json'
         elif '2017' in args.dataset:
-            data_dir = './data/COCO17'
             train_file_list = 'annotations/instances_train2017.json'
             val_file_list = 'annotations/instances_val2017.json'
 
