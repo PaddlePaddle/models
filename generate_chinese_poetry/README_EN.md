@@ -5,17 +5,17 @@ The minimum PaddlePaddle version needed for the code sample in this directory is
 # Chinese Poem Generator
 
 ## Introduction
-The Chinese poem generator is based on encoder-decoder sequence to sequence network model. Using full poems as training data, when given a poem sentence, the model could generate the next poem sentence. 
+The Chinese poem generator is based on encoder-decoder sequence to sequence network model. Using full poems as training data, when given a poem sentence, the model could generate the next poem sentence.
 
-Encoders and decoders in the model use a stacked bi-directional LSTM with attention mechanism. The default number of LSTM layers is 3. 
+Encoders and decoders in the model use a stacked bi-directional LSTM with attention mechanism. The default number of LSTM layers is 3.
 
 The following is the directory structure of this example:
 
 ```text
 .
-├── data                 
-│   ├── download.sh      
-├── README.md            
+├── data  
+│   ├── download.sh  
+├── README.md  
 ├── index.html           # doc(html)
 ├── preprocess.py        # preprocess original data
 ├── generate.py          # generate poem sentences
@@ -39,7 +39,7 @@ python preprocess.py --datadir data/raw --outfile data/poems.txt --dictfile data
 ```
 The script above generates two data files: `poems.txt` and `dict.txt`. `poems.txt` contains preprocessed training data. `dict.txt` is a dictionary file, which contains Chinese characters which have appeared for at least 10 times.  
 
-Each row of `poems.txt`, which contains information of a single poem, is split into 3 columns: title, author and poem content. Poem sentences are separated by `.`. 
+Each row of `poems.txt`, which contains information of a single poem, is split into 3 columns: title, author and poem content. Poem sentences are separated by `.`.
 
 Data Sample:
 ```text
@@ -62,7 +62,7 @@ Run `python train.py --help` to see [train.py](./train.py)'s command line argume
 - `decoder_depth`: LSTM depth of decoders, default: 3
 - `train_data_path`: training data path
 - `word_dict_path`: dictionary path
-- `init_model_path`: model to start training with, unnecessary if train from scratch 
+- `init_model_path`: model to start training with, unnecessary if train from scratch
 
 ### Start Training
 ```bash
@@ -97,7 +97,7 @@ Some important arguments are:
 
 
 ### Generate Poem Sentences
-For example, `input.txt` contains a poem sentence: `孤帆遠影碧空盡`. Use `input.txt` as the input file to generate the next poem sentence of `孤帆遠影碧空盡`. 
+For example, `input.txt` contains a poem sentence: `孤帆遠影碧空盡`. Use `input.txt` as the input file to generate the next poem sentence of `孤帆遠影碧空盡`.
 ```bash
 python generate.py \
     --model_path models/pass_00049.tar.gz \
