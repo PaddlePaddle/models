@@ -18,7 +18,7 @@ def infer(test_reader, use_cuda, model_path=None):
 
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    
+
     inference_scope = fluid.core.Scope()
     with fluid.scope_guard(inference_scope):
         [inference_program, feed_target_names,
@@ -46,4 +46,3 @@ if __name__ == "__main__":
     for i in range(30):
         epoch_path = model_path + "/" + "epoch" + str(i)
         infer(test_reader, use_cuda=False, model_path=epoch_path)
-
