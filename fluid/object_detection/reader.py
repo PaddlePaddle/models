@@ -30,7 +30,7 @@ class Settings(object):
         self._dataset = dataset
         self._toy = toy
         self._data_dir = data_dir
-        if dataset == "pascalvoc":
+        if 'pascalvoc' in dataset:
             self._label_list = []
             label_fpath = os.path.join(data_dir, label_file)
             for line in open(label_fpath):
@@ -96,7 +96,7 @@ class Settings(object):
 
 def _reader_creator(settings, file_list, mode, shuffle):
     def reader():
-        if settings.dataset == 'coco':
+        if 'coco'in settings.dataset:
             # cocoapi 
             from pycocotools.coco import COCO
             from pycocotools.cocoeval import COCOeval
@@ -108,7 +108,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
             category_names = [
                 item['name'] for item in coco.loadCats(category_ids)
             ]
-        elif settings.dataset == 'pascalvoc':
+        elif 'pascalvoc' in settings.dataset:
             flist = open(file_list)
             images = [line.strip() for line in flist]
 
@@ -122,10 +122,10 @@ def _reader_creator(settings, file_list, mode, shuffle):
             random.shuffle(images)
 
         for image in images:
-            if settings.dataset == 'coco':
+            if 'coco'in settings.dataset:
                 image_name = image['file_name']
                 image_path = os.path.join(settings.data_dir, image_name)
-            elif settings.dataset == 'pascalvoc':
+            elif 'pascalvoc' in settings.dataset:
                 if mode == 'train' or mode == 'test':
                     image_path, label_path = image.split()
                     image_path = os.path.join(settings.data_dir, image_path)
@@ -140,7 +140,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
             img_id = image['id']
 
             if mode == 'train' or mode == 'test':
-                if settings.dataset == 'coco':
+                if 'coco'in settings.dataset:
                     # layout: label | xmin | ymin | xmax | ymax | iscrowd | area | image_id | category_id
                     bbox_labels = []
                     annIds = coco.getAnnIds(imgIds=image['id'])
@@ -167,7 +167,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         #bbox_sample.append(ann['bbox'])
                         #bbox_sample.append(ann['segmentation'])
                         bbox_labels.append(bbox_sample)
-                elif settings.dataset == 'pascalvoc':
+                elif 'pascalvoc' in settings.dataset:
                     # layout: label | xmin | ymin | xmax | ymax | difficult
                     bbox_labels = []
                     root = xml.etree.ElementTree.parse(label_path).getroot()
@@ -254,13 +254,13 @@ def _reader_creator(settings, file_list, mode, shuffle):
                 sample_labels = np.array(sample_labels)
                 if len(sample_labels) == 0:
                     continue
-                if settings.dataset == 'coco':
+                if 'coco'in settings.dataset:
                     yield img.astype('float32'), \
                         sample_labels[:, 1:5], \
                         sample_labels[:, 0].astype('int32'), \
                         sample_labels[:, 5].astype('int32'), \
                         [img_id, img_width, img_height]
-                elif settings.dataset == 'pascalvoc':
+                elif 'pascalvoc' in settings.dataset:
                     yield img.astype(
                         'float32'
                     ), sample_labels[:, 1:5], sample_labels[:, 0].astype(
@@ -304,7 +304,7 @@ def draw_bounding_box_on_image(image,
 
 def train(settings, file_list, shuffle=True):
     file_list = os.path.join(settings.data_dir, file_list)
-    if settings.dataset == 'coco':
+    if 'coco'in settings.dataset:
         train_settings = copy.copy(settings)
         if '2014' in file_list:
             sub_dir = "train2014"
@@ -312,13 +312,13 @@ def train(settings, file_list, shuffle=True):
             sub_dir = "train2017"
         train_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
         return _reader_creator(train_settings, file_list, 'train', shuffle)
-    elif settings.dataset == 'pascalvoc':
+    elif 'pascalvoc' in settings.dataset:
         return _reader_creator(settings, file_list, 'train', shuffle)
 
 
 def test(settings, file_list):
     file_list = os.path.join(settings.data_dir, file_list)
-    if settings.dataset == 'coco':
+    if 'coco'in settings.dataset:
         test_settings = copy.copy(settings)
         if '2014' in file_list:
             sub_dir = "val2014"
@@ -326,7 +326,7 @@ def test(settings, file_list):
             sub_dir = "val2017"
         test_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
         return _reader_creator(test_settings, file_list, 'test', False)
-    elif settings.dataset == 'pascalvoc':
+    elif 'pascalvoc' in settings.dataset:
         return _reader_creator(settings, file_list, 'test', False)
 
 

@@ -17,10 +17,8 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('learning_rate',    float, 0.001,     "Learning rate.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
 add_arg('num_passes',       int,   25,        "Epoch number.")
-add_arg('parallel',         bool,  True,      "Whether use parallel training.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
-add_arg('use_nccl',         bool,  False,     "Whether use NCCL.")
-add_arg('dataset',          str, 'pascalvoc', "coco or pascalvoc.")
+add_arg('dataset',          str, 'coco2014',  "coco2014, coco2017, and pascalvoc.")
 add_arg('model_save_dir',   str, 'model',     "The path to save model.")
 add_arg('pretrained_model', str, 'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
 add_arg('apply_distort',    bool, True,   "Whether apply distort")
@@ -43,9 +41,9 @@ def parallel_exe(args,
                  model_save_dir,
                  pretrained_model=None):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
-    if data_args.dataset == 'coco':
+    if 'coco' in data_args.dataset:
         num_classes = 91
-    elif data_args.dataset == 'pascalvoc':
+    elif 'pascalvoc' in data_args.dataset:
         num_classes = 21
 
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
@@ -79,13 +77,13 @@ def parallel_exe(args,
             evaluate_difficult=False,
             ap_version='integral')
 
-    if data_args.dataset == 'coco':
+    if 'coco' in data_args.dataset:
         # learning rate decay in 12, 19 pass, respectively
-        if '2014' in train_file_list:
+        if '2014' in data_args.dataset:
             boundaries = [82783 / batch_size * 12, 82783 / batch_size * 19]
-        elif '2017' in train_file_list:
+        elif '2017' in data_args.dataset:
             boundaries = [118287 / batch_size * 12, 118287 / batch_size * 19]
-    elif data_args.dataset == 'pascalvoc':
+    elif 'pascalvoc' in data_args.dataset:
         boundaries = [40000, 60000]
     values = [learning_rate, learning_rate * 0.5, learning_rate * 0.25]
     optimizer = fluid.optimizer.RMSProp(
@@ -110,15 +108,15 @@ def parallel_exe(args,
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
         reader.test(data_args, val_file_list), batch_size=batch_size)
-    if data_args.dataset == 'coco':
+    if 'coco' in data_args.dataset:
         feeder = fluid.DataFeeder(
             place=place, feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
-    elif data_args.dataset == 'pascalvoc':
+    elif 'pascalvoc' in data_args.dataset:
         feeder = fluid.DataFeeder(
             place=place, feed_list=[image, gt_box, gt_label, difficult])
 
     def test(pass_id):
-        if data_args.dataset == 'coco':
+        if 'coco' in data_args.dataset:
             dts_res = []
             import json
 
@@ -169,7 +167,7 @@ def parallel_exe(args,
             cocoEval.accumulate()
             cocoEval.summarize()
 
-        elif data_args.dataset == 'pascalvoc':
+        elif 'pascalvoc' in data_args.dataset:
             _, accum_map = map_eval.get_map_var()
             map_eval.reset(exe)
             test_map = None
@@ -209,10 +207,15 @@ if __name__ == '__main__':
     val_file_list = 'test.txt'
     label_file = 'label_list'
     model_save_dir = args.model_save_dir
-    if args.dataset == 'coco':
-        data_dir = './data/COCO17'
-        train_file_list = 'annotations/instances_train2017.json'
-        val_file_list = 'annotations/instances_val2017.json'
+    if 'coco' in args.dataset:
+        if '2014' in args.dataset:
+            data_dir = './data/coco'
+            train_file_list = 'annotations/instances_train2014.json'
+            val_file_list = 'annotations/instances_val2014.json'
+        elif '2017' in args.dataset:
+            data_dir = './data/COCO17'
+            train_file_list = 'annotations/instances_train2017.json'
+            val_file_list = 'annotations/instances_val2017.json'
 
     data_args = reader.Settings(
         dataset=args.dataset,
