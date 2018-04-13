@@ -41,7 +41,8 @@ def cnn_net(data,
     """
     emb = fluid.layers.embedding(input=data, size=[dict_dim, emb_dim])
 
-    conv_3 = fluid.nets.sequence_conv_pool(input=emb,
+    conv_3 = fluid.nets.sequence_conv_pool(
+        input=emb,
         num_filters=hid_dim,
         filter_size=win_size,
         act="tanh",
@@ -69,7 +70,7 @@ def lstm_net(data,
     lstm net
     """
     emb = fluid.layers.embedding(
-        input=data, 
+        input=data,
         size=[dict_dim, emb_dim],
         param_attr=fluid.ParamAttr(learning_rate=emb_lr))
 
@@ -120,4 +121,3 @@ def gru_net(data,
     acc = fluid.layers.accuracy(input=prediction, label=label)
 
     return avg_cost, acc, prediction
-

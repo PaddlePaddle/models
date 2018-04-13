@@ -40,7 +40,7 @@ def infer(test_reader, use_cuda, model_path=None):
 
 if __name__ == "__main__":
     word_dict, train_reader, test_reader = utils.prepare_data(
-        "imdb", self_dict = False, batch_size = 128, buf_size = 50000)
+        "imdb", self_dict=False, batch_size=128, buf_size=50000)
 
     model_path = sys.argv[1]
     for i in range(30):

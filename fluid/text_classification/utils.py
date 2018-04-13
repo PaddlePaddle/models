@@ -71,38 +71,36 @@ def prepare_data(data_type="imdb",
     if data_type == "imdb":
         train_reader = paddle.batch(
             paddle.reader.shuffle(
-                paddle.dataset.imdb.train(word_dict), buf_size = buf_size),
-            batch_size = batch_size)
+                paddle.dataset.imdb.train(word_dict), buf_size=buf_size),
+            batch_size=batch_size)
 
         test_reader = paddle.batch(
             paddle.reader.shuffle(
-                paddle.dataset.imdb.test(word_dict), 
-                buf_size = buf_size),
-            batch_size = batch_size)
+                paddle.dataset.imdb.test(word_dict), buf_size=buf_size),
+            batch_size=batch_size)
     
     elif data_type == "light_imdb":
         train_reader = paddle.batch(
             paddle.reader.shuffle(
-                light_imdb.train(word_dict), buf_size = buf_size),
-            batch_size = batch_size)
+                light_imdb.train(word_dict), buf_size=buf_size),
+            batch_size=batch_size)
 
         test_reader = paddle.batch(
             paddle.reader.shuffle(
-                light_imdb.test(word_dict), buf_size = buf_size),
-            batch_size = batch_size)
+                light_imdb.test(word_dict), buf_size=buf_size),
+            batch_size=batch_size)
 
     elif data_type == "tiny_imdb":
-        train_reader = paddle.batch(
+        train_reader=paddle.batch(
             paddle.reader.shuffle(
-                tiny_imdb.train(word_dict), buf_size = buf_size),
-            batch_size = batch_size)
+                tiny_imdb.train(word_dict), buf_size=buf_size),
+            batch_size=batch_size)
 
         test_reader = paddle.batch(
             paddle.reader.shuffle(
-                tiny_imdb.test(word_dict), buf_size = buf_size),
-            batch_size = batch_size)
+                tiny_imdb.test(word_dict), buf_size=buf_size),
+            batch_size=batch_size)
     else:
         raise RuntimeError("no such dataset")
 
     return word_dict, train_reader, test_reader
-

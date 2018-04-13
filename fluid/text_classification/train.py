@@ -11,6 +11,7 @@ from nets import cnn_net
 from nets import lstm_net
 from nets import gru_net
 
+
 def train(train_reader,
           word_dict,
           network,
@@ -56,15 +57,16 @@ def train(train_reader,
         data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
         for data in train_reader():
             avg_cost_np, avg_acc_np = exe.run(fluid.default_main_program(),
-                feed=feeder.feed(data), fetch_list=[cost, acc])
+                                              feed=feeder.feed(data),
+                                              fetch_list=[cost, acc])
             data_size = len(data)
             total_acc += data_size * avg_acc_np
             total_cost += data_size * avg_cost_np
             data_count += data_size
-        
         avg_cost = total_cost / data_count
+
         avg_acc = total_acc / data_count
-        print("pass_id: %d, avg_acc: %f, avg_cost: %f" % 
+        print("pass_id: %d, avg_acc: %f, avg_cost: %f" %
               (pass_id, avg_acc, avg_cost))
 
         epoch_model = save_dirname + "/" + "epoch" + str(pass_id)
@@ -74,7 +76,7 @@ def train(train_reader,
 def train_net():
     word_dict, train_reader, test_reader = utils.prepare_data(
         "imdb", self_dict=False, batch_size=128, buf_size=50000)
-    
+
     if sys.argv[1] == "bow":
         train(
             train_reader,
@@ -121,7 +123,7 @@ def train_net():
             batch_size=128)
     else:
         print("network name cannot be found!")
-        sys.exit(1)    
+        sys.exit(1)
 
 if __name__ == "__main__":
     train_net()
