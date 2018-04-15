@@ -10,9 +10,9 @@ Such models can not only be used in translation, but also other tasks which need
 
 The External Memory Mechanism is this article, is mainly refer to **Neural Turing Machine** \[[1](#reference)\]. It is worth mentioning that Neural Turing Machines is only one of the attempts in the area of simulating Memory Mechanism by neural network. Memory Mechanism has long been widely studied, and recently in the background of deep learning a series of valuable work is developed, like Memory Networks, Differentiable Neural Computer(DNC), etc. In this article only Neural Turing Machine mechanism is discussed and implemented.
 
-The implementation of this article mainly refers to \[[2](#reference)\], and assumes readers have fully read and understood [Machine Translation chapter](https://github.com/PaddlePaddle/book/tree/develop/08.machine_translation) in PaddlePaddle Book.  
+The implementation of this article mainly refers to \[[2](#reference)\], and assumes readers have fully read and understood [Machine Translation chapter](https://github.com/PaddlePaddle/book/tree/develop/08.machine_translation) in PaddlePaddle Book.
 
-## Overview 
+## Overview
 
 ### Introduction of Memory Mechanism
 
@@ -36,15 +36,15 @@ Fig 1. state vector in LSTM as memory path
 
 The bandwidth of vector $h$ or $c$ described in the previous section is limited. In the Seq2Seq generation model, such bottleneck appears in the process of transferring information from an encoder to a decoder. A large potential loss of information happens when only relying on a finite-length state vector to encode the entire variable-length source statement.
 
-An attention mechanism was proposed to overcome the above difficulties\[[3](#reference)\]. 
-When decoding, the decoder no longer only relies on the information of the sentence-level encoding vector from the encoder, but instead relies on the memory of a group vectors: each vector in the group is the encoding vector of tokens in encoder.  
+An attention mechanism was proposed to overcome the above difficulties\[[3](#reference)\].
+When decoding, the decoder no longer only relies on the information of the sentence-level encoding vector from the encoder, but instead relies on the memory of a group vectors: each vector in the group is the encoding vector of tokens in encoder.
 Attention resources are dynamically allocated through a set of attentional weights which can be trained, and information is read with linear weights. In this way the symbols can be generated at different time steps of the sequence(see the PaddlePaddle Book [Machine Translation](https://github.com/PaddlePaddle/book/tree/develop/08.machine_translation)). This distribution of attention can be seen as content-based addressing(please refer to the addressing description in Neural Turing Machine\[[1](#reference)\]), that is, read strengths are determined according to the content in different positions of source statement, which is same as Soft Alignment of source statement.
 
 Compared with the single state vector in the previous section, the vector group here contains more and more accurate information. For example, it can be considered as an Unbounded External Memory, which effectively broadens the memory information bandwidth. Unbounded here refers to the fact that the number of vectors in the vector group can be changed with the number of characters with no limit. When the encoding of source sentence is completed, the external storage is initialized as the state vector of each character, and is used in the subsequent decoding process.
 
 #### Dynamic Memory 3 -- Neural Turing Machine
 
-Turing Machine or Von Neumann Architecture is the prototype of computer architecture. Operators like algebraic computation, controllers like logic branch control, and memory constitute the core operating mechanism all together. Neural Turing Machines\[[1](#参考文献)\] try to use a neural network to simulate a Turing Machine that can be differentiated(ie, can learn by gradient descent) and achieve more complex intelligence. 
+Turing Machine or Von Neumann Architecture is the prototype of computer architecture. Operators like algebraic computation, controllers like logic branch control, and memory constitute the core operating mechanism all together. Neural Turing Machines\[[1](#参考文献)\] try to use a neural network to simulate a Turing Machine that can be differentiated(ie, can learn by gradient descent) and achieve more complex intelligence.
 Most of the general machine learning models ignore explicit dynamic storage. Neural Turing Machine is to make up for such potential defects.
 
 <div align="center">
@@ -61,7 +61,7 @@ The Neural Turing Machine simulates the tape with the matrix $M \in \mathcal{R}^
   - Content-based Addressing：The addressing strength depends on the content of the memory slot and the actual content of reading and writing.
   - Location-based Addressing：The addressing strength depends on the addressing strength of the previous addressing operation(eg, offset).
   - Hybrid addressing：Mix the above addressing modes(eg linear interpolation). For detail please refer to \[[1](#参考文献)\]）。
-  
+
   Depending on the addressing , the Turing machine writes $M$ or reads information from $M$ for use by other networks. The structure of Neural Turing machine is shown in Fig 3.(from \[[1](#参考文献)\]).
 
 <div align="center">
@@ -69,30 +69,30 @@ The Neural Turing Machine simulates the tape with the matrix $M \in \mathcal{R}^
 Fig 3. The structure of Neural Turing Machine
 </div>
 
-Compared with the attention mechanism in previous section, Neural Turing machine has many similarities and differences. 
+Compared with the attention mechanism in previous section, Neural Turing machine has many similarities and differences.
 Similar points such as:
-Both use external storage in the form of a matrix(or group of vectors). Both use differentiatied addressing. 
+Both use external storage in the form of a matrix(or group of vectors). Both use differentiatied addressing.
 The difference is:
 The Neural Turing Machine has reading and writing and is the actural memorizer;
 The attention mechanism initializes stored contents when the encoding is finished(only simple buffering, non-differentiable writing operations), and read-only during the subsequent decoding process.
 Neural Turing Machine not only has content-based addressing, but also makes tasks such as "sequence replication" that require "sequential addressing" easier. While the attention mechanism only considers content-based addressing to achieve soft aligment. Neural Turing Machines use Bounded storage, while attention mechanisms use Unbounded storage.
 
-Compared with the attention mechanism in previous section, Neural Turing Machine has many similarities and differences. 
+Compared with the attention mechanism in previous section, Neural Turing Machine has many similarities and differences.
 
 Similar points:
 
 - Both take matrix or vector group to do external storage.
-- Both addressing method are differentiated. 
+- Both addressing method are differentiated.
 
 The differences:
 
 - The Neural Turing Machine has reading and writing and is the actually memory unit; The attention mechanism initializes stored contents when the encoding is finished(only simple buffering, non-differentiable writing operations), and read-only during the subsequent decoding process.
-- Neural Turing Machine not only has content-based addressing, but also makes tasks such as sequence replication that require sequential addressing easier. While the attention mechanism only considers content-based addressing to achieve Soft Aligment. 
+- Neural Turing Machine not only has content-based addressing, but also makes tasks such as sequence replication that require sequential addressing easier. While the attention mechanism only considers content-based addressing to achieve Soft Aligment.
 - Neural Turing Machines use Bounded storage, while attention mechanisms use Unbounded storage.
 
 #### Mix three storage methods to strengthen NMT
 
-Although attention mechanism is already common in general seq2seq. 
+Although attention mechanism is already common in general seq2seq.
 The external storage in the attention mechanism is only used to store the encoder information. Inside the decoder, the information path still relies on the RNN state vector $h$ or $c$. Therefore, to supplement the single vector information path inside the decoder by external storage mechanism of the Neural Turing Machine becomes a natural idea.
 
 Thus, we mixed three dynamic memory mechanisms above. The original state vector of RNN and the attention mechanism are preserved. And a bounded external memory mechanism based on a simplified version Neural Turing Machine is introduced to supplement the memory of single state vector in decoder.
@@ -125,12 +125,12 @@ The structure of decoder, explained as follows：
 
 The algorithm is implemented in the following files:
 - `external_memory.py`: Mainly implements a simplified version of **Neural Turing Machine** in the class`External Memory`, providing initialization and read-write functions.
-- `model.py`: Model configuration function including bidirectional GRU encoder(`bidirectional_gru_encoder`), memory enhanced decoder(`memory_enhanced_decoder`), memory enhanced seq2seq(`memory_enhanced_seq2seq`). 
+- `model.py`: Model configuration function including bidirectional GRU encoder(`bidirectional_gru_encoder`), memory enhanced decoder(`memory_enhanced_decoder`), memory enhanced seq2seq(`memory_enhanced_seq2seq`).
 - `data_utils.py`: Data processing functions.
 - `train.py`: Train model.
 - `infer.py`: Translation of some samples(model inference).
 
-### `ExternalMemory` 
+### `ExternalMemory`
 
 `ExternalMemory` implements a generic, simplified version of **Neural Turing Machine**. Compared with full version of Neural Turing Machine, this class only implements Content Addressing interpolation rather than Convolutional Shift(Sharpening). Readers can complement it as a complete Neural Turing Machine by themselves.
 
@@ -253,7 +253,6 @@ length of the sequence represents the number of memory slot, and the size of the
 - Class `ExternalMemory` can only be used in conjunction with `paddle.layer.recurrent_group`, specifically used in the user defined function `step` which can not exist alone.
 
 ### `memory_enhanced_seq2seq` and related functions.
-
 It involves three main functions:
 
 ```python
@@ -351,13 +350,13 @@ def memory_enhanced_seq2seq(encoder_input, decoder_input, decoder_target,
     pass
 ```
 
-- `bidirectonal_gru_encoder`: The function implements a bidirectional single layer GRU(Gated Recurrent Unit) encoder. Two sets of result are returned: one are character lever encoded vector sequences(including forward and backward) and the other are sentence-level encoded vectors(backward only) for the entire source statement. 
+- `bidirectonal_gru_encoder`: The function implements a bidirectional single layer GRU(Gated Recurrent Unit) encoder. Two sets of result are returned: one are character lever encoded vector sequences(including forward and backward) and the other are sentence-level encoded vectors(backward only) for the entire source statement.
 The former is used to initialize the memory matrix in the attentional mechanism of the decoder, and the latter is used to initialize the state vector of decoder.
 
-- `memory_enhanced_decoder`: The function implements an external memory enhanced GRU decoder. It uses the same class `ExternalMemory` to implement two external memory modules. 
+- `memory_enhanced_decoder`: The function implements an external memory enhanced GRU decoder. It uses the same class `ExternalMemory` to implement two external memory modules.
 
     - `Unbounded external memory`: The traditional attention mechanism. With `ExternalMemory`, turn on the read-only switch and turn off interpolation addressing. The first output of the decoder is used as the initialization of the storage matrix in `ExternalMemory`(`boot_layer`). Therefore, the number of memory slots stored is dynamically variable, depending on the number of characters in the encoder.
-    
+
         ```python
         unbounded_memory = ExternalMemory(
             name="unbounded_memory",
@@ -367,7 +366,7 @@ The former is used to initialize the memory matrix in the attentional mechanism 
             readonly=True,
             enable_interpolation=False)
         ```
-        
+
     - `Bounded external memory`: Using External Memory to turn-off read-only switch and open interpolation addressing. And taking the first set of output of the decoder, after the mean pool(pooling) is taken and extended to the specified sequence length, the superposition of random noise(when training and inference is consistent) is used as the initialization of the memory matrix in the External Memory(boot_layer). Therefore, the number of memory slot is fixed. That is, the code:
         ```python
         bounded_memory = ExternalMemory(
@@ -408,7 +407,7 @@ paddle.dataset.wmt14.test(dict_size)
 
 When these two functions are called, the corresponding `reader()` function is returned for `paddle.trainer.SGD.train`. When we need to use other data, we can refer to [paddle.paddle.wmt14](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/v2/dataset/wmt14.py) to construct the corresponding data creator and replace `paddle.dataset.wmt14.train` and `paddle.dataset wmt14.train` as the corresponding function names.
 
-### Train
+### train
 
 In command line input:
 
@@ -478,7 +477,7 @@ The differences are：
 3. The addressing logic of external memory mechanism of read-write is different: In original paper they share the same addressing strength, which is equivalent to the Weight Tying regularization. This example does not apply this rule, with reading and writing independently.
 4. The order of external memory in the same time step is different: In original it is first reading and then writing. The example is first writing and then reading. In essence they are equivalent.
 
-## Reference
+## References
 
 1. Alex Graves, Greg Wayne, Ivo Danihelka, [Neural Turing Machines](https://arxiv.org/abs/1410.5401). arXiv preprint arXiv:1410.5401, 2014.
 2. Mingxuan Wang, Zhengdong Lu, Hang Li, Qun Liu, [Memory-enhanced Decoder Neural Machine Translation](https://arxiv.org/abs/1606.02003). In Proceedings of EMNLP, 2016, pages 278–286.
