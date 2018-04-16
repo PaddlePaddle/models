@@ -1,11 +1,11 @@
-The  program under this directory needs to use the PaddlePaddle v0.10.0 version. If your PaddlePaddle  version is below, update it follow the instructions in the installation [document](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html)
+The  program under this directory needs to use the PaddlePaddle v0.10.0 version. If your PaddlePaddle  version is below, update it follow the instructions in the installation [document](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html) .
 
 
 ---
 
 # Named Entity Recognition (NER)
 
-The following is the  directory structure and description of this example:
+The following is the  directory structure and description of this example.
 
 ```text
 .
@@ -24,9 +24,9 @@ The following is the  directory structure and description of this example:
 
 ## Introduction
 
-Named Entity Recognition (NER), it means identifying specific entities in text, including persons, locations, organizations  and proper nouns. It is a basic problem in Natural Language Processing (NLP). NER tasks usually include two subtasks, one is to indentify entity boundaries, another is to classify the entity into categories. The NER task can be solved as a sequence tagging problem.
+Named Entity Recognition (NER), it means identifying specific entities in text, including persons, locations, organizations  and proper nouns. It is a basic problem of Natural Language Processing (NLP). NER tasks usually include two subtaskses, one is to identify entity boundaries, another is to classify the entity into categories. The NER task can be solved as a sequence tagging problem.
 
-sequence tagging could be classified into 3 categories, namely Sequence Classification, Segment Classification and Temporal Classification[1]. In this example, only Segment Classification is considered. That is, giving each element in the input sequence a corresponding label in the output sequence. BIO tagging method could indentify entities boundearies, it was widely used. Here is a example of BIO tagging.
+Sequence tagging could be classified into 3 categories, namely Sequence Classification, Segment Classification and Temporal Classification[1]. In this example, only Segment Classification is considered. That is, giving each element in the input sequence a corresponding label in the output sequence. BIO tagging method could identify entities boundaries, it was widely used. Here is an example of BIO tagging.
 
 <p align="center">
 <img src="images/BIO tag example.png" width="80%" align="center"/><br/>
@@ -35,15 +35,15 @@ fig.1  BIO tagging example
 
 According to the sequence tagging results, the entity boundary and the entity category can be obtained directly. Similarly, word segmentation, part of speech tagging, block recognition and semantic role tagging can be solved by sequence tagging.
 
-When using neural network  to solve  problem,  the frontal layers of the network do feature representation learning with input, the last layer of netwok solve the final task based on the learned features. For sequence tagging problem, Recurrent Neural Networs (RNN) are usually used to learn representation features. After that a CRF layer will do the tagging job.
-In fact, the linear part in tradiontal  CRF model is replaced by a nonlinear neural network. The main reason for the use of CRF is that it can better solve the label bias problem by using the likelihood probability of sentence level[2].
-This example is built on the above ideas. Although the NER task is used here as an example, the given model can be applied to a variety of other sequence tagging tasks.
+When using neural network  to solve  problem,  the frontal layers of the network does feature representation learning with input, the last layer of network solves the final task based on the learned features. For sequence tagging problem, Recurrent Neural Networs (RNN) are usually used to learn representation features. After that a CRF layer will do the tagging job.
+In fact, the linear part in traditiontal CRF model is replaced by a nonlinear neural network. The main reason for the use of CRF are that it can better solve the label bias problem by using the likelihood probability of sentence level[2].
+This example is built on the above ideas. Although the NER task is used here as an example, the given model can be applied to a variety of other sequences tagging tasks.
 
 Because of the wide use of sequence tagging, CRF and other classical sequence models are generated. Most of these models only use local information or need human design features. With the development of deep learning research, Recurrent Neural Network (RNN) and other sequential models can deal with the problem of correlation between sequence elements, and can learn feature representation from original input text, which is more suitable for sequence tagging task.
 
 ## Model Details
 
-Input of NER is a sentence,  model is going to identify the entities boundaries and categoris. As in [2], only for some simple preprocessing of the original sentence are needed: each word is converted to lowercase, weather it is a uppercase word is a input feature. As shown in Figure 2, the workflow is:
+Input of NER is a sentence,  model is going to identify the entities boundaries and categories. As in [2], only for some simple preprocessing of the original sentence are needed: each word is converted to lowercase, weather it is a uppercase word is a input feature. As shown in Figure 2, the workflow is:
 
 1. yeild input
  - use one-hot method to represent a sentence
@@ -63,12 +63,12 @@ fig.2 NER model
 We use [CoNLL 2003 NER TASK](http://www.clips.uantwerpen.be/conll2003/ner/)as a example, please down the data as instructions.
 
 + We only put some example tata at the data directory as train and test file to demonstrate the data format.
-+ The program also need these data:
++ The program also needs these data:
     1. a dictionary for words
     2. pre-trained word vectors
     3. a dictionary for labels
    dictionary for words and pre-trained vectors come from [Stanford CS224d](http://cs224d.stanford.edu/) work.
-   run the doenload.sh in data directory will get the dictionary for words and vectors.
+   run the download.sh in data directory will get the dictionary for words and vectors.
    data/vocab.txt for the dictionary for words and data/wordVectors.txt for vectors.
 
 CoNLL 2003 original data format：
@@ -83,7 +83,7 @@ Baghdad      NNP  I-NP  I-LOC
 .            .    O     O
 ```
 
-First column is the sentense, Second and third columns are not used. Fouth column is the NER tag but in I-TYPE scheme.
+First column is the sentence, Second and third columns are not used. Fouth column is the NER tag but in I-TYPE scheme.
 In reader.py,  I-TYPE scheme is transformed into BIO method scheme. Here are some generated example data.
 
 | sentense | is upper case| tagged labble |
@@ -99,7 +99,7 @@ In reader.py,  I-TYPE scheme is transformed into BIO method scheme. Here are som
 ## Run
 ### Implement a data reader interface
 
-The data_reader funtion in reader.py generate 3 return data: the word's index in dictionary, is it a upper case, the tagged lable of the word.   These data are response for 3 input data_layer defined at network_conf.ner_net.
+The data_reader funtion in reader.py generates 3 return data: the word's index in dictionary, is it an upper case, the tagged label of the word. These data are response for 3 input data_layers defined at network_conf.ner_net.
 
 ### Train
 
@@ -127,7 +127,7 @@ The data_reader funtion in reader.py generate 3 return data: the word's index in
     ```
 
 ### Infer
-1. config `main` in [infer.py](./infer.py), config the model's path, test data, vocabulary file for dictionary, target file for tagged labels.
+1. configure `main` in [infer.py](./infer.py), configure the model's path, test data, vocabulary file for dictionary, target file for tagged labels.
 
     ```python
     infer(
@@ -138,7 +138,7 @@ The data_reader funtion in reader.py generate 3 return data: the word's index in
         target_file="data/target.txt")
     ```
 
-2. run `python infer.py`，to start testing. Out may be different to  this depending on your trained models:
+2. run `python infer.py`，to starts testing. Output may be different to  this depending on your trained models:
 
     ```text
     cricket             O
@@ -164,7 +164,7 @@ The data_reader funtion in reader.py generate 3 return data: the word's index in
 
     ```
 
-The  second column is the predicted tag.
+The  second column are the predicted tags.
 Congratulations! job done.
 
 ## Reference
