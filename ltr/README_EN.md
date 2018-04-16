@@ -45,7 +45,7 @@ for label, left_doc, right_doc in pairwise_train_dataset():
 
 For the ranking model, the RankNet model of the Pairwise method and the LambdaRank of the Listwise method are provided in this example, respectively representing two types of the learning methods. The ranking model of the Pointwise method can be degraded to the regression problem. Please refer to the  [recommendation system](https://github.com/PaddlePaddle/book/blob/develop/05.recommender_system/README.cn.md) in the PaddleBook.
 
-### RankNet model
+## RankNet model
 
 [RankNet](http://icml.cc/2015/wp-content/uploads/2015/06/icml_ranking.pdf) is a classic Pairwise ranking learning method, which is a typical forward neural network ranking model. The $i$ document in the document collection $S$ is denoted as $U_i$, its document feature vector is denoted as $x_i$, and for a given document pair $U_i$, $U_j$, RankNet maps the input single document feature vector $x$ to $f(x)$, and gets $s_i=f(x_i),$s_j=f(x_j)$.The probability that  the correlation of $U_i$ is better than $U_j$ is recorded as $P_{i,j}$.
 
@@ -87,7 +87,7 @@ Because the network structure in Pairwise is Left-right symmetrical, half of the
 
 The structure defined in the ***half_ranknet*** function uses the same model structure as in FIG 3: two hidden layers, a fully connected layer with **hidden_size=10** and a fully connected layer with **hidden_size=1**. In this example, **input_dim** refers to the dimension of the characteristic of the input **single document**. The value of label is 1,0. Each input sample is the structure of **<label>, <docA, docB>**. Take docA as an example, input the **input_dim** document features, turn into 10-dimensional, 1-dimensional features, and finally input into the RankCost layer, compare docA and docB. The RankCost output gives the predicted value.
 
-#### RankNet model training
+### RankNet model training
 
 Train **RankNet** model executes on the command line:
 
@@ -97,7 +97,7 @@ python train.py --model_type ranknet
 
 The initial execution automatically downloads data and trains the RankNet model,which stores the parameters of the model at each round.
 
-#### RankNet model prediction
+### RankNet model prediction
 Use the trained **RankNet** model to continue the prediction and execute it on the command line:
 
 ```
@@ -106,7 +106,7 @@ python infer.py --model_type ranknet --test_model_path models/ranknet_params_0.t
 
 This example provides training and prediction part of the RankNet model. After completing the training,The model is divided into two parts, topology structure (the **rank_cost** is not part of the model topology) and the model's parameter file. In this example, the topology **half_ranknet** during the **ranknet** training is reused, and the parameters of the model are loaded from the external memory. The input of the prediction of the model is the feature vector of a single document,and the model will give a relevance score. Sorting the forecast scores to get the final document relevance ranking result.
 
-#### User-defined RankNet data
+## User-defined RankNet data
 
 The above code uses PaddlePaddle's built-in sorting data. If you want to use custom format data, you can refer to the PaddlePaddle's built-in **mq2007** data set and write a new generator function. For example, the input data is in the following format, containing only three documents doc0-doc2.
 
@@ -161,7 +161,7 @@ feeding = { "label":0,
             "right/data":2}
 ```
 
-### LambdaRank ranking model
+## LambdaRank ranking model
 [LambdaRank](https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf)[6] is Listwise's ranking method. It is developed by Bugers et al.[6] from RankNet. It uses the method of constructing lambda function (the origin of LambdaRank name) to optimize the metric NDCG (Normalized Discounted Cumulative Gain). The resulting list is used individually as a training sample. The NDCG is one of the standards in the information theory that measures the ranking quality of the document list. The NDCG scores of the previous $K$ documents are recorded as
 
 $$NDCG@K=Z_{k}\sum (2^{rel_{i}})1/log(k+1)$$
@@ -187,7 +187,7 @@ An example of a LambdaRank network structure defined using PaddlePaddle is the *
 
 The same model structure as FIG. 3 is used in the above structure. Similar to RankNet, two fully connected layers of **hidden_size=10** and **hidden_size=1** are used respectively. The input_dim in this example refers to the dimension of the characteristic of the input single document. Each input sample is the structure of label, <docA, docB>. Take docA as an example, with inputing the input_dim's document features,which are turned into 10-dimensional, 1-dimensional features, and finally is inputed into the LambdaCost layer. It should be noted that the label and data formats here are **dense_vector_sequences**, which represent a sequence of document scores or document features.
 
-#### LambdaRank model training
+### LambdaRank model training
 
 Execute on the command line to train the **LambdaRank** model:
 
@@ -197,7 +197,7 @@ python train.py --model_type lambdarank
 
 The first run of the script will automatically download the data and train the LambdaRank model and store the model of each round.
 
-#### LambdaRank model prediction
+### LambdaRank model prediction
 The prediction process of the LambdaRank model is the same as RankNet. The model's topology in the prediction model reuses the model definition in the code and loads the corresponding parameter file from the external memory. The input during the forecast is a document list, and the output is the relevance score of each document in the document list. The document is re-sorted according to the score, to obtaine the final document's sorting result.
 
 Use the trained LambdaRank model to continue the prediction:
@@ -206,7 +206,7 @@ Use the trained LambdaRank model to continue the prediction:
 python infer.py --model_type lambdarank --test_model_path models/lambda_rank_params_0.tar.gz
 ```
 
-#### Customize LambdaRank data
+## Customize LambdaRank data
 The above code uses the built-in mq2007 data from PaddlePaddle, and if you want to use custom format data, you can refer to the built-in mq2007 data set in PaddlePaddle and write a generator function. For example, the input data is in the following format, which only has three documents doc0-doc2.
 
 <query_id> <relevance_score> <feature_vector>
@@ -233,7 +233,7 @@ Convert the format to the Listwise, for example:
 2    2    0.1,0.4,0.1
 ......
 ```
-#### Data format attention
+**Data format attention**
 - The number of documents corresponding to each sample in the data must be more than the NDCG_num of **lambda_cost** layer.
 - If the document of the single sample is 0, the correlation of the document is 0, and the calculation of NDCG is invalid, then we can determine that the query is invalid, and we can filter out such query during training.
 
@@ -260,7 +260,7 @@ feeding = {"label":0,
 ```
 
 
-#### Output custom evaluation index during training.
+## Output custom evaluation index during training.
 Here, we take **RankNet** as an example of how to export custom evaluation metrics during training. This method can also be used to obtain the value of an output matrix of the network in the training process.
 
 The RankNet network learns a scoring function to score the inputs of left and right.The greater the difference between the scores of the two inputs,the stronger the discrimination ability of the scoring function for positive and negative , and the better the model's generalization ability. If we want to get the average value of the difference between the right and left inputs in the training process. To compute this custom metric, we need to get the output matrix for each mini-batch after the split layer (which corresponds to the layer in ranknet with the name of left_score and right_score). We can do this with the following two steps:
@@ -295,8 +295,8 @@ LTR is widely used in real life. The construction method of ranking model can ge
 2. In this case, the feature vectors in the experimental data are the joint features of the query-document. When using the independent features of the query-document, [DSSM](https://github.com/PaddlePaddle/models/tree/develop/dssm) can be used to build the network.
 ## Reference
 1. https://en.wikipedia.org/wiki/Learning_to_rank
-2. Liu T Y. Learning to rank for information retrieval[J]. Foundations and Trends® in Information Retrieval, 2009, 3(3): 225-331.
-3. Li H. Learning to rank for information retrieval and natural language processing[J]. Synthesis Lectures on Human Language Technologies, 2014, 7(3): 1-121.
-4. Burges C, Shaked T, Renshaw E, et al. Learning to rank using gradient descent[C]//Proceedings of the 22nd international conference on Machine learning. ACM, 2005: 89-96.
-5. Cao Z, Qin T, Liu T Y, et al. Learning to rank: from pairwise approach to listwise approach[C]//Proceedings of the 24th international conference on Machine learning. ACM, 2007: 129-136.
-6. Burges C J C, Ragno R, Le Q V. Learning to rank with nonsmooth cost functions[C]//NIPS. 2006, 6: 193-200.
+2. Liu T Y. [Learning to rank for information retrieval](http://ftp.nowpublishers.com/article/DownloadSummary/INR-016)[J]. Foundations and Trends® in Information Retrieval, 2009, 3(3): 225-331.
+3. Li H. [Learning to rank for information retrieval and natural language processing](http://www.morganclaypool.com/doi/abs/10.2200/S00607ED2V01Y201410HLT026)[J]. Synthesis Lectures on Human Language Technologies, 2014, 7(3): 1-121.
+4. Burges C, Shaked T, Renshaw E, et al. [Learning to rank using gradient descent](http://machinelearning.wustl.edu/mlpapers/paper_files/icml2005_BurgesSRLDHH05.pdf)[C]//Proceedings of the 22nd international conference on Machine learning. ACM, 2005: 89-96.
+5. Cao Z, Qin T, Liu T Y, et al. [Learning to rank: from pairwise approach to listwise approach](http://machinelearning.wustl.edu/mlpapers/paper_files/icml2007_CaoQLTL07.pdf)[C]//Proceedings of the 24th international conference on Machine learning. ACM, 2007: 129-136.
+6. Burges C J C, Ragno R, Le Q V. [Learning to rank with nonsmooth cost functions](https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf)[C]//NIPS. 2006, 6: 193-200.
