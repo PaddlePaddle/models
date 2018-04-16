@@ -39,3 +39,4 @@ class LearningRateScheduler(object):
         lr_tensor.set(np.array([lr_value], dtype="float32"), self.place)
         data_input[self.learning_rate.name] = lr_tensor
 
+        layers.Print(self.learning_rate)
