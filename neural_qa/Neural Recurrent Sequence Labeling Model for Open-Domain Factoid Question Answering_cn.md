@@ -67,7 +67,7 @@
 上述模型可以通过下面命令下载：
 
     cd pre-trained-models && ./download-models.sh && cd ..
-    
+
 具有注释证据的测试集的评估结果可以利用下面的命令获取：
 
     PYTHONPATH=data/evaluation:$PYTHONPATH python infer.py \
@@ -97,4 +97,3 @@
     --fuzzy --schema BIO2
     # The result should be
     # chunk_f1=0.749358 chunk_precision=0.727868 chunk_recall=0.772156 true_chunks=3024 result_chunks=3208 correct_chunks=2335
-
