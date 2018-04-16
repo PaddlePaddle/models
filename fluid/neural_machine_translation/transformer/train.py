@@ -225,7 +225,6 @@ def main():
                                                                     fluid.CUDAPlace(place_id))
 
                 for var_name in util_input_dict:
-                    print var_name, local_scope.find_var(var_name)
                     local_scope.var(var_name).get_tensor().set(util_input_dict[var_name],
                                                                     fluid.CUDAPlace(place_id))
 
