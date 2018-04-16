@@ -4,7 +4,7 @@ class TrainTaskConfig(object):
     pass_num = 20
 
     # the number of sequences contained in a mini-batch.
-    batch_size = 64
+    batch_size = 32
 
     # the hyper parameters for Adam optimizer.
     learning_rate = 0.001
