@@ -75,7 +75,7 @@ The meaning of the expression is the increase or decrease of the document $U_i$ 
 
 Based on the above inference, the RankNet network structure is constructed, which is composed of several layers of hidden layers and full connected layers. As shown in the figure, the document features are used in the hidden layers, and the all connected layer is transformed by layer by layer,completing the transformation from the underlying feature space to the high-level feature space. The structure of docA and docB is symmetrical and they are input into the final RankCost layer.
 
-![image](https://github.com/PaddlePaddle/models/blob/develop/ltr/images/ranknet.jpg?raw=true)
+![image](https://github.com/sunshine-2015/models/blob/patch-4/ltr/images/ranknet_en.png?raw=true)
 
 Figure.3 The structure diagram of RankNet network
 
@@ -174,7 +174,7 @@ Replace the gradient representation in RankNet and get the ranking model called 
 
 From the above derivation we can see that the LambdaRank network structure is very similar to the RankNet structure. as the picture shows
 
-![image](https://github.com/PaddlePaddle/models/blob/develop/ltr/images/lambdarank.jpg?raw=true)
+![image](https://github.com/sunshine-2015/models/blob/patch-4/ltr/images/LambdaRank_EN.png?raw=true)
 
 Figure 4. Network structure of LambdaRank
 
