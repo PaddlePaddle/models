@@ -1,10 +1,12 @@
-import paddle.fluid as fluid
-import paddle.v2 as paddle
-import numpy as np
 import sys
 import time
 import unittest
 import contextlib
+import numpy as np
+
+import paddle.fluid as fluid
+import paddle.v2 as paddle
+
 import utils
 
 

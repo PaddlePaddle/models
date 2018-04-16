@@ -1,8 +1,10 @@
-import paddle.fluid as fluid
-import paddle.v2 as paddle
-import numpy as np
 import sys
 import time
+import numpy as np
+
+import paddle.fluid as fluid
+import paddle.v2 as paddle
+
 import light_imdb
 import tiny_imdb
 
