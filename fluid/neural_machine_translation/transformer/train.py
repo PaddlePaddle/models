@@ -120,7 +120,8 @@ def main():
         ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
         ModelHyperParams.n_head, ModelHyperParams.d_key,
         ModelHyperParams.d_value, ModelHyperParams.d_model,
-        ModelHyperParams.d_inner_hid, ModelHyperParams.dropout)
+        ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
+        TrainTaskConfig.label_smooth_eps)
 
     lr_scheduler = LearningRateScheduler(ModelHyperParams.d_model,
                                          TrainTaskConfig.warmup_steps, place,
