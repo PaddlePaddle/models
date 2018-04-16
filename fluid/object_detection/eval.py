@@ -15,24 +15,21 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('dataset',          str, 'pascalvoc', "coco or pascalvoc.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
-add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
-add_arg('data_dir',         str,   '',        "The path to save model.")
-add_arg('test_list',        str,   '',        "The path to save model.")
-add_arg('label_file',       str,   '',        "Label file.")
-add_arg('model_dir',        str,   '',        "The path to save model.")
+add_arg('use_gpu',          bool,  True,      "Whether to use GPU or not.")
+add_arg('data_dir',         str,   '',        "The data root path.")
+add_arg('test_list',        str,   '',        "The testing data lists.")
+add_arg('label_file',       str,   '',        "The label file, which save the real name and is only used for Pascal VOC.")
+add_arg('model_dir',        str,   '',        "The model path.")
 add_arg('ap_version',       str,  '11point',  "11point or integral")
-add_arg('resize_h',         int,  300,    "resize image size")
-add_arg('resize_w',         int,  300,    "resize image size")
-add_arg('mean_value_B',     float, 127.5, "mean value which will be subtracted")  #123.68
-add_arg('mean_value_G',     float, 127.5, "mean value which will be subtracted")  #116.78
-add_arg('mean_value_R',     float, 127.5, "mean value which will be subtracted")  #103.94
-# yapf: disable
+add_arg('resize_h',         int,  300,         "The resized image height.")
+add_arg('resize_w',         int,  300,         "The resized image width.")
+add_arg('mean_value_B',     float, 127.5,      "mean value for B channel which will be subtracted")  #123.68
+add_arg('mean_value_G',     float, 127.5,      "mean value for G channel which will be subtracted")  #116.78
+add_arg('mean_value_R',     float, 127.5,      "mean value for R channel which will be subtracted")  #103.94
+# yapf: enable
 
-def eval(args,
-         data_args,
-         test_list,
-         batch_size,
-         model_dir=None):
+
+def eval(args, data_args, test_list, batch_size, model_dir=None):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if data_args.dataset == 'coco':
         num_classes = 81
@@ -50,8 +47,7 @@ def eval(args,
     locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
     nmsed_out = fluid.layers.detection_output(
         locs, confs, box, box_var, nms_threshold=0.45)
-    loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
-                                 box_var)
+    loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box, box_var)
     loss = fluid.layers.reduce_sum(loss)
 
     test_program = fluid.default_main_program().clone(for_test=True)
@@ -71,8 +67,10 @@ def eval(args,
     #exe.run(fluid.default_startup_program())
 
     if model_dir:
+
         def if_exist(var):
             return os.path.exists(os.path.join(model_dir, var.name))
+
         fluid.io.load_vars(exe, model_dir, predicate=if_exist)
     #fluid.io.load_persistables(exe, model_dir, main_program=test_program)
 
@@ -89,6 +87,7 @@ def eval(args,
                            fetch_list=[accum_map])
     print("Test model {0}, map {1}".format(model_dir, test_map[0]))
 
+
 if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
@@ -99,8 +98,9 @@ if __name__ == '__main__':
         resize_h=args.resize_h,
         resize_w=args.resize_w,
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R])
-    eval(args,
-         test_list=args.test_list,
-         data_args=data_args,
-         batch_size=args.batch_size,
-         model_dir=args.model_dir)
+    eval(
+        args,
+        test_list=args.test_list,
+        data_args=data_args,
+        batch_size=args.batch_size,
+        model_dir=args.model_dir)

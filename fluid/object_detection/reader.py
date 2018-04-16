@@ -329,18 +329,23 @@ def test(settings, file_list):
 
 
 def infer(settings, image_path):
-    im = Image.open(image_path)
-    if im.mode == 'L':
-        im = im.convert('RGB')
-    im_width, im_height = im.size
-    img = img.resize((settings.resize_w, settings.resize_h), Image.ANTIALIAS)
-    img = np.array(img)
-    # HWC to CHW
-    if len(img.shape) == 3:
-        img = np.swapaxes(img, 1, 2)
-        img = np.swapaxes(img, 1, 0)
-    # RBG to BGR
-    img = img[[2, 1, 0], :, :]
-    img = img.astype('float32')
-    img -= settings.img_mean
-    img = img * 0.007843
+    def reader():
+        im = Image.open(image_path)
+        if im.mode == 'L':
+            im = im.convert('RGB')
+        im_width, im_height = im.size
+        img = img.resize((settings.resize_w, settings.resize_h),
+                         Image.ANTIALIAS)
+        img = np.array(img)
+        # HWC to CHW
+        if len(img.shape) == 3:
+            img = np.swapaxes(img, 1, 2)
+            img = np.swapaxes(img, 1, 0)
+        # RBG to BGR
+        img = img[[2, 1, 0], :, :]
+        img = img.astype('float32')
+        img -= settings.img_mean
+        img = img * 0.007843
+        yield img
+
+    return reader

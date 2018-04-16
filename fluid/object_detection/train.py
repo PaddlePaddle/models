@@ -16,23 +16,23 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('learning_rate',    float, 0.001,     "Learning rate.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
-add_arg('num_passes',       int,   120,        "Epoch number.")
+add_arg('num_passes',       int,   120,       "Epoch number.")
 add_arg('parallel',         bool,  True,      "Whether use parallel training.")
-add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
-add_arg('use_nccl',         bool,  False,     "Whether use NCCL.")
+add_arg('use_gpu',          bool,  True,      "Whether to use GPU or not.")
+add_arg('use_nccl',         bool,  False,     "Whether to use NCCL or not.")
 add_arg('dataset',          str, 'pascalvoc', "coco or pascalvoc.")
 add_arg('model_save_dir',   str, 'model',     "The path to save model.")
 add_arg('pretrained_model', str, 'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
 add_arg('apply_distort',    bool, True,       "Whether apply distort")
 add_arg('apply_expand',     bool, True,       "Whether appley expand")
 add_arg('ap_version',       str,  '11point',  "11point or integral")
-add_arg('resize_h',         int,  300,    "resize image size")
-add_arg('resize_w',         int,  300,    "resize image size")
-add_arg('mean_value_B',     float, 127.5, "mean value which will be subtracted")  #123.68
-add_arg('mean_value_G',     float, 127.5, "mean value which will be subtracted")  #116.78
-add_arg('mean_value_R',     float, 127.5, "mean value which will be subtracted")  #103.94
+add_arg('resize_h',         int,  300,        "The resized image height.")
+add_arg('resize_w',         int,  300,        "The resized image width.")
+add_arg('mean_value_B',     float, 127.5,     "mean value for B channel which will be subtracted")  #123.68
+add_arg('mean_value_G',     float, 127.5,     "mean value for G channel which will be subtracted")  #116.78
+add_arg('mean_value_R',     float, 127.5,     "mean value for R channel which will be subtracted")  #103.94
 add_arg('is_toy',           int, 0, "Toy for quick debug, 0 means using all data, while n means using only n sample")
-# yapf: disable
+# yapf: enable
 
 
 def parallel_do(args,
@@ -118,8 +118,10 @@ def parallel_do(args,
     exe.run(fluid.default_startup_program())
 
     if pretrained_model:
+
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
+
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     train_reader = paddle.batch(
@@ -190,8 +192,7 @@ def parallel_exe(args,
     locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
     nmsed_out = fluid.layers.detection_output(
         locs, confs, box, box_var, nms_threshold=0.45)
-    loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
-                                 box_var)
+    loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box, box_var)
     loss = fluid.layers.reduce_sum(loss)
 
     test_program = fluid.default_main_program().clone(for_test=True)
@@ -217,7 +218,10 @@ def parallel_exe(args,
     elif data_args.dataset == 'pascalvoc':
         epocs = 19200 / batch_size
         boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
-    values = [learning_rate, learning_rate * 0.5, learning_rate * 0.25, learning_rate * 0.1, learning_rate * 0.01]
+    values = [
+        learning_rate, learning_rate * 0.5, learning_rate * 0.25,
+        learning_rate * 0.1, learning_rate * 0.01
+    ]
     optimizer = fluid.optimizer.RMSProp(
         learning_rate=fluid.layers.piecewise_decay(boundaries, values),
         regularization=fluid.regularizer.L2Decay(0.00005), )
@@ -229,12 +233,14 @@ def parallel_exe(args,
     exe.run(fluid.default_startup_program())
 
     if pretrained_model:
+
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
+
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    train_exe = fluid.ParallelExecutor(use_cuda=args.use_gpu,
-                                       loss_name=loss.name)
+    train_exe = fluid.ParallelExecutor(
+        use_cuda=args.use_gpu, loss_name=loss.name)
 
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
@@ -251,6 +257,7 @@ def parallel_exe(args,
         fluid.io.save_persistables(exe, model_path)
 
     best_map = 0.
+
     def test(pass_id, best_map):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
@@ -273,7 +280,7 @@ def parallel_exe(args,
             start_time = time.time()
             if len(data) < devices_num: continue
             loss_v, = train_exe.run(fetch_list=[loss.name],
-                                   feed_dict=feeder.feed(data))
+                                    feed_dict=feeder.feed(data))
             end_time = time.time()
             loss_v = np.mean(np.array(loss_v))
             if batch_id % 20 == 0:
@@ -283,6 +290,7 @@ def parallel_exe(args,
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
     print("Best test map {0}".format(best_map))
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -311,12 +319,13 @@ if __name__ == '__main__':
         toy=args.is_toy)
     #method = parallel_do
     method = parallel_exe
-    method(args,
-           train_file_list=train_file_list,
-           val_file_list=val_file_list,
-           data_args=data_args,
-           learning_rate=args.learning_rate,
-           batch_size=args.batch_size,
-           num_passes=args.num_passes,
-           model_save_dir=model_save_dir,
-           pretrained_model=args.pretrained_model)
+    method(
+        args,
+        train_file_list=train_file_list,
+        val_file_list=val_file_list,
+        data_args=data_args,
+        learning_rate=args.learning_rate,
+        batch_size=args.batch_size,
+        num_passes=args.num_passes,
+        model_save_dir=model_save_dir,
+        pretrained_model=args.pretrained_model)
