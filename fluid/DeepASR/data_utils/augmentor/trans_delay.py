@@ -22,7 +22,8 @@ class TransDelay(object):
     def perform_trans(self, sample):
         """ 
             Args:
-                sample(object):input sample, contain feature numpy and label numpy, sample name list
+                sample(object):input sample, contain feature numpy 
+                                and label numpy, sample name list
             Returns:
                 (feature, label, name)
         """
