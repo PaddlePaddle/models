@@ -50,7 +50,7 @@ def stacked_lstmp_model(frame_dim,
         for i in range(stacked_num):
             fc = fluid.layers.fc(input=stack_input,
                                  size=hidden_dim * 4,
-                                 bias_attr=True)
+                                 bias_attr=None)
             proj, cell = fluid.layers.dynamic_lstmp(
                 input=fc,
                 size=hidden_dim * 4,

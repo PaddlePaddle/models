@@ -12,6 +12,7 @@ import paddle.fluid as fluid
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
+import data_utils.augmentor.trans_delay as trans_delay
 import data_utils.async_data_reader as reader
 from data_utils.util import lodtensor_to_ndarray
 from model_utils.model import stacked_lstmp_model
@@ -171,7 +172,7 @@ def train(args):
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
         trans_mean_variance_norm.TransMeanVarianceNorm(args.mean_var),
-        trans_splice.TransSplice()
+        trans_splice.TransSplice(), trans_delay.TransDelay(5)
     ]
 
     feature_t = fluid.LoDTensor()
