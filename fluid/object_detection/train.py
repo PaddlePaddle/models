@@ -1,7 +1,6 @@
 import paddle
 import paddle.fluid as fluid
 import reader
-import load_model as load_model
 from mobilenet_ssd import mobile_net
 from utility import add_arguments, print_arguments
 import os
