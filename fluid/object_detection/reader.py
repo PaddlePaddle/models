@@ -25,8 +25,16 @@ import copy
 
 
 class Settings(object):
-    def __init__(self, dataset, toy, data_dir, label_file, resize_h, resize_w,
-                 mean_value, apply_distort, apply_expand):
+    def __init__(self,
+                 dataset=None,
+                 data_dir=None,
+                 label_file=None,
+                 resize_h=300,
+                 resize_w=300,
+                 mean_value=[127.5, 127.5, 127.5],
+                 apply_distort=True,
+                 apply_expand=True,
+                 toy=0):
         self._dataset = dataset
         self._toy = toy
         self._data_dir = data_dir
@@ -108,7 +116,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
             category_names = [
                 item['name'] for item in coco.loadCats(category_ids)
             ]
-        elif settings.dataset == 'pascalvoc':
+        else:
             flist = open(file_list)
             images = [line.strip() for line in flist]
 
@@ -213,7 +221,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                         image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0))
                     """ random crop """
                     sampled_bbox = image_util.generate_batch_samples(
-                        batch_sampler, bbox_labels, img_width, img_height)
+                        batch_sampler, bbox_labels)
 
                     img = np.array(img)
                     if len(sampled_bbox) > 0:
@@ -302,7 +310,7 @@ def train(settings, file_list, shuffle=True):
             sub_dir = "train2017"
         train_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
         return _reader_creator(train_settings, file_list, 'train', shuffle)
-    elif settings.dataset == 'pascalvoc':
+    else:
         return _reader_creator(settings, file_list, 'train', shuffle)
 
 
@@ -316,7 +324,7 @@ def test(settings, file_list):
             sub_dir = "val2017"
         test_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
         return _reader_creator(test_settings, file_list, 'test', False)
-    elif settings.dataset == 'pascalvoc':
+    else:
         return _reader_creator(settings, file_list, 'test', False)
 
 

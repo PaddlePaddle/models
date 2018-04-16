@@ -6,3 +6,4 @@ pretrained/ssd_mobilenet_v1_coco
 pretrained/mobilenet_v1_imagenet.tar.gz
 pretrained/mobilenet_v1_imagenet
 log*
+*.log

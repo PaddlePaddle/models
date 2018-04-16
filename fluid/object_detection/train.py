@@ -1,29 +1,30 @@
-import paddle
-import paddle.fluid as fluid
-import reader
-import load_model as load_model
-from mobilenet_ssd import mobile_net
-from utility import add_arguments, print_arguments
 import os
 import time
 import numpy as np
 import argparse
 import functools
 
+import paddle
+import paddle.fluid as fluid
+import reader
+from mobilenet_ssd import mobile_net
+from utility import add_arguments, print_arguments
+
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('learning_rate',    float, 0.001,     "Learning rate.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
-add_arg('num_passes',       int,   25,        "Epoch number.")
+add_arg('num_passes',       int,   120,        "Epoch number.")
 add_arg('parallel',         bool,  True,      "Whether use parallel training.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
 add_arg('use_nccl',         bool,  False,     "Whether use NCCL.")
 add_arg('dataset',          str, 'pascalvoc', "coco or pascalvoc.")
 add_arg('model_save_dir',   str, 'model',     "The path to save model.")
 add_arg('pretrained_model', str, 'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
-add_arg('apply_distort',    bool, True,   "Whether apply distort")
-add_arg('apply_expand',     bool, False,  "Whether appley expand")
+add_arg('apply_distort',    bool, True,       "Whether apply distort")
+add_arg('apply_expand',     bool, True,       "Whether appley expand")
+add_arg('ap_version',       str,  '11point',  "11point or integral")
 add_arg('resize_h',         int,  300,    "resize image size")
 add_arg('resize_w',         int,  300,    "resize image size")
 add_arg('mean_value_B',     float, 127.5, "mean value which will be subtracted")  #123.68
@@ -94,7 +95,7 @@ def parallel_do(args,
             num_classes,
             overlap_threshold=0.5,
             evaluate_difficult=False,
-            ap_version='integral')
+            ap_version=args.ap_version)
 
     if data_args.dataset == 'coco':
         # learning rate decay in 12, 19 pass, respectively
@@ -202,17 +203,21 @@ def parallel_exe(args,
             num_classes,
             overlap_threshold=0.5,
             evaluate_difficult=False,
-            ap_version='integral')
+            ap_version=args.ap_version)
 
+    print('ParallelExecutor, ap_version = ', args.ap_version)
     if data_args.dataset == 'coco':
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in train_file_list:
-            boundaries = [82783 / batch_size * 12, 82783 / batch_size * 19]
+            epocs = 82783 / batch_size
+            boundaries = [epocs * 12, epocs * 19]
         elif '2017' in train_file_list:
-            boundaries = [118287 / batch_size * 12, 118287 / batch_size * 19]
+            epocs = 118287 / batch_size
+            boundaries = [epcos * 12, epocs * 19]
     elif data_args.dataset == 'pascalvoc':
-        boundaries = [40000, 60000]
-    values = [learning_rate, learning_rate * 0.5, learning_rate * 0.25]
+        epocs = 19200 / batch_size
+        boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
+    values = [learning_rate, learning_rate * 0.5, learning_rate * 0.25, learning_rate * 0.1, learning_rate * 0.01]
     optimizer = fluid.optimizer.RMSProp(
         learning_rate=fluid.layers.piecewise_decay(boundaries, values),
         regularization=fluid.regularizer.L2Decay(0.00005), )
@@ -287,14 +292,14 @@ if __name__ == '__main__':
 
     data_args = reader.Settings(
         dataset=args.dataset,
-        toy=args.is_toy,
         data_dir=data_dir,
         label_file=label_file,
         apply_distort=args.apply_distort,
         apply_expand=args.apply_expand,
         resize_h=args.resize_h,
         resize_w=args.resize_w,
-        mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R])
+        mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R],
+        toy=args.is_toy)
     #method = parallel_do
     method = parallel_exe
     method(args,
