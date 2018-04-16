@@ -3,6 +3,7 @@ import time
 import numpy as np
 import argparse
 import functools
+import shutil
 
 import paddle
 import paddle.fluid as fluid
@@ -205,7 +206,6 @@ def parallel_exe(args,
             evaluate_difficult=False,
             ap_version=args.ap_version)
 
-    print('ParallelExecutor, ap_version = ', args.ap_version)
     if data_args.dataset == 'coco':
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in train_file_list:
@@ -243,7 +243,15 @@ def parallel_exe(args,
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, difficult])
 
-    def test(pass_id):
+    def save_model(postfix):
+        model_path = os.path.join(model_save_dir, postfix)
+        if os.path.isdir(model_path):
+            shutil.rmtree(model_path)
+        print 'save models to %s' % (model_path)
+        fluid.io.save_persistables(exe, model_path)
+
+    best_map = 0.
+    def test(pass_id, best_map):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
         test_map = None
@@ -251,13 +259,15 @@ def parallel_exe(args,
             test_map = exe.run(test_program,
                                feed=feeder.feed(data),
                                fetch_list=[accum_map])
+        if test_map[0] > best_map:
+            best_map = test_map[0]
+            save_model('best_model')
         print("Test {0}, map {1}".format(pass_id, test_map[0]))
 
     for pass_id in range(num_passes):
         start_time = time.time()
         prev_start_time = start_time
         end_time = 0
-        test(pass_id)
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
@@ -269,11 +279,10 @@ def parallel_exe(args,
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
-
+        test(pass_id, best_map)
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
-            model_path = os.path.join(model_save_dir, str(pass_id))
-            print 'save models to %s' % (model_path)
-            fluid.io.save_persistables(exe, model_path)
+            save_model(str(pass_id))
+    print("Best test map {0}".format(best_map))
 
 if __name__ == '__main__':
     args = parser.parse_args()
