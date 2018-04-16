@@ -23,7 +23,7 @@ add_arg('model_save_dir',   str,   'model',     "The path to save model.")
 add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
 add_arg('apply_distort',    bool,  True,   "Whether apply distort")
 add_arg('apply_expand',     bool,  False,  "Whether appley expand")
-add_arg('nms_threshold',    float, 0.5,    "resize image size")
+add_arg('nms_threshold',    float, 0.5,    "nms threshold")
 add_arg('resize_h',         int,   300,    "resize image size")
 add_arg('resize_w',         int,   300,    "resize image size")
 add_arg('mean_value_B',     float, 127.5, "mean value which will be subtracted")  #123.68
@@ -31,6 +31,133 @@ add_arg('mean_value_G',     float, 127.5, "mean value which will be subtracted")
 add_arg('mean_value_R',     float, 127.5, "mean value which will be subtracted")  #103.94
 add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all data, while n means using only n sample")
 # yapf: disable
+
+
+def parallel_do(args,
+                train_file_list,
+                val_file_list,
+                data_args,
+                learning_rate,
+                batch_size,
+                num_passes,
+                model_save_dir,
+                pretrained_model=None):
+    image_shape = [3, data_args.resize_h, data_args.resize_w]
+    if data_args.dataset == 'coco':
+        num_classes = 81
+    elif data_args.dataset == 'pascalvoc':
+        num_classes = 21
+
+    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
+    gt_box = fluid.layers.data(
+        name='gt_box', shape=[4], dtype='float32', lod_level=1)
+    gt_label = fluid.layers.data(
+        name='gt_label', shape=[1], dtype='int32', lod_level=1)
+    difficult = fluid.layers.data(
+        name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
+
+    if args.parallel:
+        places = fluid.layers.get_places()
+        pd = fluid.layers.ParallelDo(places, use_nccl=args.use_nccl)
+        with pd.do():
+            image_ = pd.read_input(image)
+            gt_box_ = pd.read_input(gt_box)
+            gt_label_ = pd.read_input(gt_label)
+            difficult_ = pd.read_input(difficult)
+            locs, confs, box, box_var = mobile_net(num_classes, image_,
+                                                   image_shape)
+            loss = fluid.layers.ssd_loss(locs, confs, gt_box_, gt_label_, box,
+                                         box_var)
+            nmsed_out = fluid.layers.detection_output(
+                locs, confs, box, box_var, nms_threshold=0.45)
+            loss = fluid.layers.reduce_sum(loss)
+            pd.write_output(loss)
+            pd.write_output(nmsed_out)
+
+        loss, nmsed_out = pd()
+        loss = fluid.layers.mean(loss)
+    else:
+        locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
+        nmsed_out = fluid.layers.detection_output(
+            locs, confs, box, box_var, nms_threshold=0.45)
+        loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
+                                     box_var)
+        loss = fluid.layers.reduce_sum(loss)
+
+    test_program = fluid.default_main_program().clone(for_test=True)
+    with fluid.program_guard(test_program):
+        map_eval = fluid.evaluator.DetectionMAP(
+            nmsed_out,
+            gt_label,
+            gt_box,
+            difficult,
+            num_classes,
+            overlap_threshold=0.5,
+            evaluate_difficult=False,
+            ap_version='integral')
+
+    if data_args.dataset == 'coco':
+        # learning rate decay in 12, 19 pass, respectively
+        if '2014' in train_file_list:
+            boundaries = [82783 / batch_size * 12, 82783 / batch_size * 19]
+        elif '2017' in train_file_list:
+            boundaries = [118287 / batch_size * 12, 118287 / batch_size * 19]
+    elif data_args.dataset == 'pascalvoc':
+        boundaries = [40000, 60000]
+    values = [learning_rate, learning_rate * 0.5, learning_rate * 0.25]
+    optimizer = fluid.optimizer.RMSProp(
+        learning_rate=fluid.layers.piecewise_decay(boundaries, values),
+        regularization=fluid.regularizer.L2Decay(0.00005), )
+
+    optimizer.minimize(loss)
+
+    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
+
+    if pretrained_model:
+        def if_exist(var):
+            return os.path.exists(os.path.join(pretrained_model, var.name))
+        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
+
+    train_reader = paddle.batch(
+        reader.train(data_args, train_file_list), batch_size=batch_size)
+    test_reader = paddle.batch(
+        reader.test(data_args, val_file_list), batch_size=batch_size)
+    feeder = fluid.DataFeeder(
+        place=place, feed_list=[image, gt_box, gt_label, difficult])
+
+    def test(pass_id):
+        _, accum_map = map_eval.get_map_var()
+        map_eval.reset(exe)
+        test_map = None
+        for _, data in enumerate(test_reader()):
+            test_map = exe.run(test_program,
+                               feed=feeder.feed(data),
+                               fetch_list=[accum_map])
+        print("Test {0}, map {1}".format(pass_id, test_map[0]))
+
+    for pass_id in range(num_passes):
+        start_time = time.time()
+        prev_start_time = start_time
+        end_time = 0
+        for batch_id, data in enumerate(train_reader()):
+            prev_start_time = start_time
+            start_time = time.time()
+            loss_v = exe.run(fluid.default_main_program(),
+                             feed=feeder.feed(data),
+                             fetch_list=[loss])
+            end_time = time.time()
+            if batch_id % 20 == 0:
+                print("Pass {0}, batch {1}, loss {2}, time {3}".format(
+                    pass_id, batch_id, loss_v[0], start_time - prev_start_time))
+        test(pass_id)
+
+        if pass_id % 10 == 0 or pass_id == num_passes - 1:
+            model_path = os.path.join(model_save_dir, str(pass_id))
+            print 'save models to %s' % (model_path)
+            fluid.io.save_persistables(exe, model_path)
+
 
 def parallel_exe(args,
                  train_file_list,

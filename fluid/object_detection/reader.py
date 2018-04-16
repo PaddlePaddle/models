@@ -96,7 +96,7 @@ class Settings(object):
 
 def _reader_creator(settings, file_list, mode, shuffle):
     def reader():
-        if 'coco'in settings.dataset:
+        if 'coco' in settings.dataset:
             # cocoapi 
             from pycocotools.coco import COCO
             from pycocotools.cocoeval import COCOeval
@@ -122,7 +122,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
             random.shuffle(images)
 
         for image in images:
-            if 'coco'in settings.dataset:
+            if 'coco' in settings.dataset:
                 image_name = image['file_name']
                 image_path = os.path.join(settings.data_dir, image_name)
             elif 'pascalvoc' in settings.dataset:
@@ -140,7 +140,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
             img_id = image['id']
 
             if mode == 'train' or mode == 'test':
-                if 'coco'in settings.dataset:
+                if 'coco' in settings.dataset:
                     # layout: label | xmin | ymin | xmax | ymax | iscrowd | area | image_id | category_id
                     bbox_labels = []
                     annIds = coco.getAnnIds(imgIds=image['id'])
@@ -148,9 +148,8 @@ def _reader_creator(settings, file_list, mode, shuffle):
                     for ann in anns:
                         bbox_sample = []
                         # start from 1, leave 0 to background
-                        bbox_sample.append(
-                            float(ann['category_id']))
-                            #float(category_ids.index(ann['category_id'])) + 1)
+                        bbox_sample.append(float(ann['category_id']))
+                        #float(category_ids.index(ann['category_id'])) + 1)
                         bbox = ann['bbox']
                         xmin, ymin, w, h = bbox
                         xmax = xmin + w
@@ -254,7 +253,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                 sample_labels = np.array(sample_labels)
                 if len(sample_labels) == 0:
                     continue
-                if 'coco'in settings.dataset:
+                if 'coco' in settings.dataset:
                     yield img.astype('float32'), \
                         sample_labels[:, 1:5], \
                         sample_labels[:, 0].astype('int32'), \
@@ -304,7 +303,7 @@ def draw_bounding_box_on_image(image,
 
 def train(settings, file_list, shuffle=True):
     file_list = os.path.join(settings.data_dir, file_list)
-    if 'coco'in settings.dataset:
+    if 'coco' in settings.dataset:
         train_settings = copy.copy(settings)
         if '2014' in file_list:
             sub_dir = "train2014"
@@ -318,7 +317,7 @@ def train(settings, file_list, shuffle=True):
 
 def test(settings, file_list):
     file_list = os.path.join(settings.data_dir, file_list)
-    if 'coco'in settings.dataset:
+    if 'coco' in settings.dataset:
         test_settings = copy.copy(settings)
         if '2014' in file_list:
             sub_dir = "val2014"
