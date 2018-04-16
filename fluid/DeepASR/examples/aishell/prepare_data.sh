@@ -24,7 +24,7 @@ if [ $md5sum_tmp !=  $md5 ]; then
 fi
 
 echo "Untar aishell_data.tar.gz ..."
-#tar xzf $data_dir/aishell_data.tar.gz -C $data_dir
+tar xzf $data_dir/aishell_data.tar.gz -C $data_dir
 
 if [ ! -e data ]; then
     mkdir data
