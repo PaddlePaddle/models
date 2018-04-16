@@ -19,6 +19,7 @@ def conv_bn_pool(input,
             param_attr=param if param_0 is None else param_0,
             act=None,  # LinearActivation
             use_cudnn=True)
+        #tmp = fluid.layers.Print(tmp)
         tmp = fluid.layers.batch_norm(
             input=tmp,
             act=act,
@@ -139,13 +140,12 @@ def encoder_net(images,
 
 
 def ctc_train_net(images, label, args, num_classes):
-    regularizer = fluid.regularizer.L2Decay(args.l2)
-    gradient_clip = None
-    fc_out = encoder_net(
-        images,
-        num_classes,
-        regularizer=regularizer,
-        gradient_clip=gradient_clip)
+    L2_RATE = 0.0004
+    LR = 1.0e-3
+    MOMENTUM = 0.9
+    regularizer = fluid.regularizer.L2Decay(L2_RATE)
+
+    fc_out = encoder_net(images, num_classes, regularizer=regularizer)
     cost = fluid.layers.warpctc(
         input=fc_out, label=label, blank=num_classes, norm_by_times=True)
     sum_cost = fluid.layers.reduce_sum(cost)
@@ -156,8 +156,7 @@ def ctc_train_net(images, label, args, num_classes):
         input=decoded_out, label=casted_label)
     #    error_evaluator = None
     inference_program = fluid.default_main_program().clone(for_test=True)
-    optimizer = fluid.optimizer.Momentum(
-        learning_rate=args.learning_rate, momentum=args.momentum)
+    optimizer = fluid.optimizer.Momentum(learning_rate=LR, momentum=MOMENTUM)
     _, params_grads = optimizer.minimize(sum_cost)
     model_average = None
     if args.average_window > 0:
