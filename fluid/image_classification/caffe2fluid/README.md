@@ -56,7 +56,7 @@ This tool is used to convert a Caffe model to a Fluid model
 6. Use the converted model when loading model in 'xxxnet.py' and 'xxxnet.npy'(no need if model is already in 'fluid/model' and 'fluid/params')
 
 ### Tested models
-- Lenet
+- Lenet:
 [model addr](https://github.com/ethereon/caffe-tensorflow/blob/master/examples/mnist)
 
 - ResNets:(ResNet-50, ResNet-101, ResNet-152)
