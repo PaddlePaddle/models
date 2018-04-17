@@ -57,6 +57,7 @@ This tool is used to convert a Caffe model to a Fluid model
 
 ### Tested models
 - Lenet
+[model addr](https://github.com/ethereon/caffe-tensorflow/blob/master/examples/mnist)
 
 - ResNets:(ResNet-50, ResNet-101, ResNet-152)
 [model addr](https://onedrive.live.com/?authkey=%21AAFW2-FVoxeVRck&id=4006CBB8476FF777%2117887&cid=4006CBB8476FF777)
