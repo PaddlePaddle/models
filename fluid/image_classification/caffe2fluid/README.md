@@ -3,18 +3,18 @@ This tool is used to convert a Caffe model to a Fluid model
 
 ### HowTo
 1. Prepare caffepb.py in ./proto if your python has no 'pycaffe' module, two options provided here:
-- Generate pycaffe from caffe.proto
-  ```
-  bash ./proto/compile.sh
-  ```
+    - Generate pycaffe from caffe.proto
+        ```
+        bash ./proto/compile.sh
+        ```
 
-- download one from github directly
-  ```
-  cd proto/ && wget https://github.com/ethereon/caffe-tensorflow/blob/master/kaffe/caffe/caffepb.py
-  ```
+    - Download one from github directly
+        ```
+        cd proto/ && wget https://github.com/ethereon/caffe-tensorflow/blob/master/kaffe/caffe/caffepb.py
+        ```
 
 2. Convert the Caffe model to Fluid model
-   - generate fluid code and weight file
+   - Generate fluid code and weight file
         ```
         python convert.py alexnet.prototxt \
                 --caffemodel alexnet.caffemodel \
@@ -22,23 +22,23 @@ This tool is used to convert a Caffe model to a Fluid model
                 --code-output-path alexnet.py
      ```
 
-    - save weights as fluid model file
+    - Save weights as fluid model file
         ```
         python alexnet.py alexnet.npy ./fluid
       ```
 
 3. Use the converted model to infer
-    - see more details in '*examples/imagenet/run.sh*'
+    - See more details in '*examples/imagenet/run.sh*'
 
 4. Compare the inference results with caffe
-    - see more details in '*examples/imagenet/diff.sh*'
+    - See more details in '*examples/imagenet/diff.sh*'
 
 ### How to convert custom layer
 1. Implement your custom layer in a file under '*kaffe/custom_layers*', eg: mylayer.py
-    - implement ```shape_func(input_shape, [other_caffe_params])``` to calculate the output shape
-    - implement ```layer_func(inputs, name, [other_caffe_params])``` to construct a fluid layer
-    - register these two functions ```register(kind='MyType', shape=shape_func, layer=layer_func)```
-    - notes: more examples can be found in '*kaffe/custom_layers*'
+    - Implement ```shape_func(input_shape, [other_caffe_params])``` to calculate the output shape
+    - Implement ```layer_func(inputs, name, [other_caffe_params])``` to construct a fluid layer
+    - Register these two functions ```register(kind='MyType', shape=shape_func, layer=layer_func)```
+    - Notes: more examples can be found in '*kaffe/custom_layers*'
 
 2. Add ```import mylayer``` to  '*kaffe/custom_layers/\_\_init__.py*'
 
