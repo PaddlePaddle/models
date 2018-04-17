@@ -2,9 +2,13 @@
 """
 
 from .register import get_registered_layers
+#custom layer import begins
+
 import axpy
 import flatten
 import argmax
+
+#custom layer import ends
 
 custom_layers = get_registered_layers()
 
