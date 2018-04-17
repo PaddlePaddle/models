@@ -168,18 +168,23 @@ def main():
     def test(exe):
         test_total_cost = 0
         test_total_token = 0
-        for batch_id, data in enumerate(val_data()):
-            data_input_dict, util_input_dict = prepare_batch_input(
-                data, data_input_names, util_input_names,
-                ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
-                ModelHyperParams.n_head, ModelHyperParams.d_model)
-            test_sum_cost, test_token_num = exe.run(
-                test_program,
-                feed=dict(data_input_dict.items() + util_input_dict.items()),
-                fetch_list=[sum_cost, token_num],
-                use_program_cache=True)
-            test_total_cost += test_sum_cost
-            test_total_token += test_token_num
+        test_data = read_multiple(reader=val_data, count=dev_count)
+        for batch_id, data in enumerate(test_data()):
+            feed_list = []
+            for place_id, data_buffer in enumerate(data):
+                data_input_dict, util_input_dict = prepare_batch_input(
+                    data_buffer, data_input_names, util_input_names,
+                    ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
+                    ModelHyperParams.n_head, ModelHyperParams.d_model)
+                feed_list.append(
+                    dict(data_input_dict.items() + util_input_dict.items()))
+
+            outs = exe.run(
+                feed=feed_list,
+                fetch_list=[sum_cost.name, token_num.name])
+            sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[1])
+            test_total_cost += sum_cost_val.sum()
+            test_total_token += token_num_val.sum()
         test_avg_cost = test_total_cost / test_total_token
         test_ppl = np.exp([min(test_avg_cost, 100)])
         return test_avg_cost, test_ppl
@@ -196,39 +201,37 @@ def main():
         loss_name=avg_cost.name
         if TrainTaskConfig.use_avg_cost else sum_cost.name)
 
+    test_exe = fluid.ParallelExecutor(
+        use_cuda=True, main_program=test_program, share_vars_from=train_exe)
+
     dev_count = fluid.core.get_cuda_device_count()
 
-    for pos_enc_param_name in pos_enc_param_names:
-        tensor = position_encoding_init(ModelHyperParams.max_length + 1, ModelHyperParams.d_model)
-        for place_id in xrange(dev_count):
-            local_scope = train_exe.executor.local_scope(place_id)
-            local_scope.var(pos_enc_param_name).get_tensor().set(tensor, fluid.CUDAPlace(place_id))
 
+    init = False
     train_data = read_multiple(reader=train_data, count=dev_count)
     for pass_id in xrange(TrainTaskConfig.pass_num):
         pass_start_time = time.time()
         for batch_id, data in enumerate(train_data()):
+            feed_list = []
+            lr_rate = lr_scheduler.update_learning_rate()
             for place_id, data_buffer in enumerate(data):
                 data_input_dict, util_input_dict = prepare_batch_input(
                     data_buffer, data_input_names, util_input_names,
                     ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
                     ModelHyperParams.n_head, ModelHyperParams.d_model)
+                feed_list.append(
+                    dict(data_input_dict.items() + util_input_dict.items() +
+                         {lr_scheduler.learning_rate.name: lr_rate}.items()))
 
-                local_scope = train_exe.executor.local_scope(place_id)
+                if not init:
+                    for pos_enc_param_name in pos_enc_param_names:
+                        tensor = position_encoding_init(
+                            ModelHyperParams.max_length + 1,
+                            ModelHyperParams.d_model)
+                        feed_list[place_id][pos_enc_param_name] = tensor
 
-                local_scope.find_var(lr_scheduler.learning_rate.name).get_tensor().set(
-                    lr_scheduler.update_learning_rate(),
-                    fluid.CUDAPlace(place_id))
-
-                for var_name in data_input_dict:
-                    local_scope.var(var_name).get_tensor().set(data_input_dict[var_name],
-                                                                    fluid.CUDAPlace(place_id))
-
-                for var_name in util_input_dict:
-                    local_scope.var(var_name).get_tensor().set(util_input_dict[var_name],
-                                                                    fluid.CUDAPlace(place_id))
-
-            outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name])
+            outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name],
+                                 feed=feed_list)
             sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[1])
             total_sum_cost = sum_cost_val.sum(
             )  # sum the cost from multi devices
@@ -237,8 +240,9 @@ def main():
             print("epoch: %d, batch: %d, sum loss: %f, avg loss: %f, ppl: %f" %
                   (pass_id, batch_id, total_sum_cost, total_avg_cost,
                    np.exp([min(total_avg_cost, 100)])))
+            init = True
         # Validate and save the model for inference.
-        val_avg_cost, val_ppl = test(exe)
+        val_avg_cost, val_ppl = test(test_exe)
         pass_end_time = time.time()
         time_consumed = pass_end_time - pass_start_time
         print("epoch: %d, val avg loss: %f, val ppl: %f, "
