@@ -26,12 +26,19 @@ def argmax_shape(input_shape, out_max_val=False, top_k=1, axis=-1):
     if axis < 0:
         axis += len(input_shape)
 
-    output_shape = []
+    assert (axis + 1 == len(input_shape)
+            ), 'only can be applied on the last dimension now'
+    """
+    #more general implementation
     for i in range(len(input_shape)):
         if i == axis:
             continue
         else:
             output_shape.append(input_shape[i])
+    """
+
+    output_shape = input_shape
+    output_shape[-1] = top_k
 
     return output_shape
 
@@ -50,9 +57,16 @@ def argmax_layer(input, name, out_max_val=False, top_k=1, axis=-1):
         output (variable): output variable for this layer
     """
 
-    #output = input
-    #return output 
-    raise NotImplemented('argmax not implemented')
+    fluid = import_fluid()
+
+    if axis < 0:
+        axis += len(input.shape)
+
+    assert (axis + 1 == len(input_shape)
+            ), 'only can be applied on the last dimension now'
+
+    output = fluid.layers.topk(input=input, k=top_k)
+    return output
 
 
 register(kind='ArgMax', shape=argmax_shape, layer=argmax_layer)
