@@ -2,6 +2,7 @@ import re
 import numbers
 from collections import namedtuple
 
+import custom_layers
 from .shapes import *
 
 LAYER_DESCRIPTORS = {
@@ -116,6 +117,9 @@ def get_v1_layer_map():
 class NodeKind(LayerType):
     @staticmethod
     def map_raw_kind(kind):
+        if custom_layers.has_layer(kind):
+            return kind
+
         if kind in LAYER_TYPES:
             return kind
 
@@ -127,6 +131,9 @@ class NodeKind(LayerType):
 
     @staticmethod
     def compute_output_shape(node):
+        if custom_layers.has_layer(node.kind):
+            return custom_layers.compute_output_shape(node.kind, node)
+
         try:
             val = LAYER_DESCRIPTORS[node.kind](node)
             return val
@@ -137,14 +144,13 @@ class NodeKind(LayerType):
 
 
 class NodeDispatchError(KaffeError):
-
     pass
 
 
 class NodeDispatch(object):
     @staticmethod
     def get_handler_name(node_kind):
-        if len(node_kind) <= 4:
+        if len(node_kind) <= 6:
             # A catch-all for things like ReLU and tanh
             return node_kind.lower()
         # Convert from CamelCase to under_scored
@@ -152,6 +158,9 @@ class NodeDispatch(object):
         return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
 
     def get_handler(self, node_kind, prefix):
+        if custom_layers.has_layer(node_kind):
+            return getattr(self, 'map_custom')
+
         name = self.get_handler_name(node_kind)
         name = '_'.join((prefix, name))
         try:
@@ -174,8 +183,10 @@ class LayerAdapter(object):
         try:
             return getattr(self.layer, name)
         except AttributeError:
+            print(dir(self.layer))
             raise NodeDispatchError(
-                'Caffe parameters not found for layer kind: %s' % (self.kind))
+                'Caffe parameters not found attr[%s] for layer kind[%s]' %
+                (name, self.kind))
 
     @staticmethod
     def get_kernel_value(scalar, repeated, idx, default=None):
