@@ -4,45 +4,56 @@ This tool is used to convert a Caffe model to a Fluid model
 ### HowTo
 1. Prepare caffepb.py in ./proto if your python has no 'pycaffe' module, two options provided here:
 - Generate pycaffe from caffe.proto
-  <pre><code>bash ./proto/compile.sh</code></pre>
+  ```
+  bash ./proto/compile.sh
+  ```
 
 - download one from github directly
-  <pre><code>cd proto/ && wget https://github.com/ethereon/caffe-tensorflow/blob/master/kaffe/caffe/caffepb.py</code></pre>
+  ```
+  cd proto/ && wget https://github.com/ethereon/caffe-tensorflow/blob/master/kaffe/caffe/caffepb.py
+  ```
 
 2. Convert the Caffe model to Fluid model
-- generate fluid code and weight file
-  <pre><code>python convert.py alexnet.prototxt \
-        --caffemodel alexnet.caffemodel \
-        --data-output-path alexnet.npy \
-        --code-output-path alexnet.py</code></pre>
+   - generate fluid code and weight file
+        ```
+        python convert.py alexnet.prototxt \
+                --caffemodel alexnet.caffemodel \
+                --data-output-path alexnet.npy \
+                --code-output-path alexnet.py
+     ```
 
-- save weights as fluid model file
-  <pre><code>python alexnet.py alexnet.npy ./fluid_model</code></pre>
+    - save weights as fluid model file
+        ```
+        python alexnet.py alexnet.npy ./fluid
+      ```
 
 3. Use the converted model to infer
-- see more details in '*examples/imagenet/run.sh*'
+    - see more details in '*examples/imagenet/run.sh*'
 
-4. compare the inference results with caffe
-- see more details in '*examples/imagenet/diff.sh*'
+4. Compare the inference results with caffe
+    - see more details in '*examples/imagenet/diff.sh*'
 
 ### How to convert custom layer
-1. implement your custom layer in a file under '*kaffe/custom_layers*', eg: mylayer.py
-- implement a 'shape_func(input_shape, [other_caffe_params])' to calculate the output shape
-- implement a 'layer_func(inputs, name, [other_caffe_params])' to construct a fluid layer
-- register these two functions using '*register*'
-- notes: more examples can be found in '*kaffe/custom_layers*'
+1. Implement your custom layer in a file under '*kaffe/custom_layers*', eg: mylayer.py
+    - implement ```shape_func(input_shape, [other_caffe_params])``` to calculate the output shape
+    - implement ```layer_func(inputs, name, [other_caffe_params])``` to construct a fluid layer
+    - register these two functions ```register(kind='MyType', shape=shape_func, layer=layer_func)```
+    - notes: more examples can be found in '*kaffe/custom_layers*'
 
-2. edit '*kaffe/custom_layers/\_\_init__.py*' to add your custom layer after line 5
-   <pre><code>import mylayer</code></pre>
+2. Add ```import mylayer``` to  '*kaffe/custom_layers/\_\_init__.py*'
 
-3. prepare your pycaffe as your customized version(same as previous env prepare)
-- (option1) replace 'proto/caffe.proto' with your own caffe.proto and compile it
-- (option2) change your pycaffe to the customized version
+3. Prepare your pycaffe as your customized version(same as previous env prepare)
+    - (option1) replace 'proto/caffe.proto' with your own caffe.proto and compile it
+    - (option2) change your pycaffe to the customized version
 
-4. convert the model
-5. set env $CAFFE2FLUID_CUSTOM_LAYERS to the directory of 'custom_layers'
-   <pre><code>export CAFFE2FLUID_CUSTOM_LAYERS=/path/to/caffe2fluid/kaffe</code></pre>
-6. use the converted model when loading model in 'xxx.py' and 'xxx.npy'(no need if model is already in 'fluid/model' and 'fluid/params')
+4. Convert the Caffe model to Fluid model
+
+5. Set env $CAFFE2FLUID_CUSTOM_LAYERS to the parent directory of 'custom_layers'
+   ```
+   export CAFFE2FLUID_CUSTOM_LAYERS=/path/to/caffe2fluid/kaffe
+   ```
+
+6. Use the converted model when loading model in 'xxxnet.py' and 'xxxnet.npy'(no need if model is already in 'fluid/model' and 'fluid/params')
 
 ### Tested models
 - Lenet
