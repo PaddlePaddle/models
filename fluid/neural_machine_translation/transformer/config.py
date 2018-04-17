@@ -43,21 +43,16 @@ class InferTaskConfig(object):
 
 
 class ModelHyperParams(object):
-    # Dictionary size for source and target language. This model directly uses
-    # paddle.dataset.wmt16 in which <bos>, <eos> and <unk> token has
-    # alreay been added, but the <pad> token is not added. Transformer requires
-    # sequences in a mini-batch are padded to have the same length. A <pad> token is
-    # added into the original dictionary in paddle.dateset.wmt16.
+    # This model directly uses paddle.dataset.wmt16 in which <bos>, <eos> and
+    # <unk> token has alreay been added. As for the <pad> token, any token
+    # included in dict can be used to pad, since the paddings' loss will be
+    # masked out and make no effect on parameter gradients.
 
     # size of source word dictionary.
     src_vocab_size = 10000
-    # index for <pad> token in source language.
-    src_pad_idx = src_vocab_size
 
     # size of target word dictionay
     trg_vocab_size = 10000
-    # index for <pad> token in target language.
-    trg_pad_idx = trg_vocab_size
 
     # index for <bos> token
     bos_idx = 0
@@ -66,11 +61,10 @@ class ModelHyperParams(object):
     # index for <unk> token
     unk_idx = 2
 
-    # position value corresponding to the <pad> token.
-    pos_pad_idx = 0
-
-    # max length of sequences. It should plus 1 to include position
-    # padding token for position encoding.
+    # max length of sequences.
+    # The size of position encoding table should at least plus 1, since the
+    # sinusoid position encoding starts from 1 and 0 can be used as the padding
+    # token for position encoding.
     max_length = 50
 
     # the dimension for word embeddings, which is also the last dimension of

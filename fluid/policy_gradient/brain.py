@@ -30,11 +30,7 @@ class PolicyGradient:
         acts = fluid.layers.data(name='acts', shape=[1], dtype='int64')
         vt = fluid.layers.data(name='vt', shape=[1], dtype='float32')
         # fc1
-        fc1 = fluid.layers.fc(
-            input=obs,
-            size=10,
-            act="tanh"  # tanh activation
-        )
+        fc1 = fluid.layers.fc(input=obs, size=10, act="tanh")  # tanh activation
         # fc2
         all_act_prob = fluid.layers.fc(input=fc1,
                                        size=self.n_actions,
