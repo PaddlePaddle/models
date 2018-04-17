@@ -135,7 +135,7 @@ def parallel_do(args,
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
         test_map = None
-        for _, data in enumerate(test_reader()):
+        for data in test_reader():
             test_map = exe.run(test_program,
                                feed=feeder.feed(data),
                                fetch_list=[accum_map])
@@ -262,7 +262,7 @@ def parallel_exe(args,
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
         test_map = None
-        for _, data in enumerate(test_reader()):
+        for data in test_reader():
             test_map = exe.run(test_program,
                                feed=feeder.feed(data),
                                fetch_list=[accum_map])

@@ -64,7 +64,6 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    #exe.run(fluid.default_startup_program())
 
     if model_dir:
 
@@ -72,7 +71,6 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
             return os.path.exists(os.path.join(model_dir, var.name))
 
         fluid.io.load_vars(exe, model_dir, predicate=if_exist)
-    #fluid.io.load_persistables(exe, model_dir, main_program=test_program)
 
     test_reader = paddle.batch(
         reader.test(data_args, test_list), batch_size=batch_size)
@@ -81,10 +79,12 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
 
     _, accum_map = map_eval.get_map_var()
     map_eval.reset(exe)
-    for _, data in enumerate(test_reader()):
+    for idx, data in enumerate(test_reader()):
         test_map = exe.run(test_program,
                            feed=feeder.feed(data),
                            fetch_list=[accum_map])
+        if idx % 50 == 0:
+            print("Batch {0}, map {1}".format(idx, test_map[0]))
     print("Test model {0}, map {1}".format(model_dir, test_map[0]))
 
 

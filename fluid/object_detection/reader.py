@@ -157,7 +157,6 @@ def preprocess(img, bbox_labels, mode, settings):
     img = img[[2, 1, 0], :, :]
     img = img.astype('float32')
     img -= settings.img_mean
-    #img = img.flatten()
     img = img * 0.007843
     return img, sampled_labels
 
