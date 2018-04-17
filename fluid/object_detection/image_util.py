@@ -1,8 +1,10 @@
 from PIL import Image, ImageEnhance, ImageDraw
+from PIL import ImageFile
 import numpy as np
 import random
 import math
 
+ImageFile.LOAD_TRUNCATED_IMAGES = True #otherwise IOError raised image file is truncated
 
 class sampler():
     def __init__(self, max_sample, max_trial, min_scale, max_scale,

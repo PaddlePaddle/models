@@ -2,7 +2,6 @@ import paddle
 import paddle.fluid as fluid
 import reader
 import image_util
-import load_model as load_model
 from mobilenet_ssd import mobile_net
 from utility import add_arguments, print_arguments
 import os
@@ -24,6 +23,7 @@ add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The ini
 add_arg('apply_distort',    bool,  True,   "Whether apply distort")
 add_arg('apply_expand',     bool,  False,  "Whether appley expand")
 add_arg('nms_threshold',    float, 0.5,    "nms threshold")
+add_arg('map_version',      str,   'integral',   "integral, 11points, and cocoMAP")
 add_arg('resize_h',         int,   300,    "resize image size")
 add_arg('resize_w',         int,   300,    "resize image size")
 add_arg('mean_value_B',     float, 127.5, "mean value which will be subtracted")  #123.68
@@ -236,15 +236,15 @@ def parallel_exe(args,
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
         reader.test(data_args, val_file_list), batch_size=batch_size)
-    if 'coco' in data_args.dataset:
+    if 'cocoMAP' in data_args.map_version:
         feeder = fluid.DataFeeder(
             place=place, feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
-    elif 'pascalvoc' in data_args.dataset:
+    else:
         feeder = fluid.DataFeeder(
             place=place, feed_list=[image, gt_box, gt_label, difficult])
 
     def test(pass_id):
-        if 'coco' in data_args.dataset:
+        if 'cocoMAP' in data_args.map_version:
             dts_res = []
             import json
 
@@ -253,6 +253,9 @@ def parallel_exe(args,
                                         feed=feeder.feed(data),
                                         fetch_list=[nmsed_out],
                                         return_numpy=False)
+                if batch_id % 20 == 0:
+                    print("Batch {0}".format(batch_id))
+
                 lod = nmsed_out_v[0].lod()[0]
                 nmsed_out_v = np.array(nmsed_out_v[0])
                 real_batch_size = min(batch_size, len(data))
@@ -295,21 +298,23 @@ def parallel_exe(args,
             cocoEval.accumulate()
             cocoEval.summarize()
 
-        elif 'pascalvoc' in data_args.dataset:
+        else:
             _, accum_map = map_eval.get_map_var()
             map_eval.reset(exe)
             test_map = None
-            for _, data in enumerate(test_reader()):
+            for batch_id, data in enumerate(test_reader()):
                 test_map = exe.run(test_program,
                                    feed=feeder.feed(data),
                                    fetch_list=[accum_map])
+                if batch_id % 20 == 0:
+                    print("Batch {0}".format(batch_id))
             print("Test {0}, map {1}".format(pass_id, test_map[0]))
+    #test(-1)
 
     for pass_id in range(num_passes):
         start_time = time.time()
         prev_start_time = start_time
         end_time = 0
-        test(pass_id)
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
@@ -339,13 +344,14 @@ if __name__ == '__main__':
         data_dir = './data/coco'
         if '2014' in args.dataset:
             train_file_list = 'annotations/instances_train2014.json'
-            val_file_list = 'annotations/instances_val2014.json'
+            val_file_list = 'annotations/instances_minival2014.json'
         elif '2017' in args.dataset:
             train_file_list = 'annotations/instances_train2017.json'
             val_file_list = 'annotations/instances_val2017.json'
 
     data_args = reader.Settings(
         dataset=args.dataset,
+        map_version = args.map_version,
         toy=args.is_toy,
         data_dir=data_dir,
         label_file=label_file,
