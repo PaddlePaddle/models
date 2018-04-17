@@ -1,5 +1,6 @@
-import paddle.v2 as paddle
+import paddle
 import paddle.fluid as fluid
+import math
 
 
 def conv_bn_layer(input, num_filters, filter_size, stride=1, groups=1,

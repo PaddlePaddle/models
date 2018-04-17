@@ -3,7 +3,7 @@ import math
 import random
 import functools
 import numpy as np
-import paddle.v2 as paddle
+import paddle
 from PIL import Image, ImageEnhance
 
 random.seed(0)
@@ -13,9 +13,9 @@ DATA_DIM = 224
 THREAD = 8
 BUF_SIZE = 1024
 
-DATA_DIR = 'ILSVRC2012'
-TRAIN_LIST = 'ILSVRC2012/train_list.txt'
-TEST_LIST = 'ILSVRC2012/test_list.txt'
+DATA_DIR = 'data/ILSVRC2012'
+TRAIN_LIST = 'data/ILSVRC2012/train_list.txt'
+TEST_LIST = 'data/ILSVRC2012/val_list.txt'
 
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
@@ -153,7 +153,7 @@ def _reader_creator(file_list,
 
 def train():
     return _reader_creator(
-        TRAIN_LIST, 'train', shuffle=True, color_jitter=True, rotate=True)
+        TRAIN_LIST, 'train', shuffle=True, color_jitter=False, rotate=False)
 
 
 def test():
