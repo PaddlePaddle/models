@@ -1,0 +1,8 @@
+./data/pascalvoc/VOCdevkit/
+data/pascalvoc/test.txt
+data/pascalvoc/trainval.txt
+pretrained/ssd_mobilenet_v1_coco.tar.gz
+pretrained/ssd_mobilenet_v1_coco
+pretrained/mobilenet_v1_imagenet.tar.gz
+pretrained/mobilenet_v1_imagenet
+log*

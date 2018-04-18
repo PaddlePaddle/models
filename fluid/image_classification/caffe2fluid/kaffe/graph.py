@@ -3,7 +3,7 @@ from google.protobuf import text_format
 from .caffe import get_caffe_resolver
 from .errors import KaffeError, print_stderr
 from .layers import LayerAdapter, LayerType, NodeKind, NodeDispatch
-from .shapes import TensorShape
+from .shapes import make_tensor
 
 
 class Node(object):
@@ -52,7 +52,10 @@ class Graph(object):
     def __init__(self, nodes=None, name=None):
         self.nodes = nodes or []
         self.node_lut = {node.name: node for node in self.nodes}
-        self.name = name
+        if name is None or name == '':
+            self.name = 'MyNet'
+        else:
+            self.name = name
 
     def add_node(self, node):
         self.nodes.append(node)
@@ -95,7 +98,7 @@ class Graph(object):
     def compute_output_shapes(self):
         sorted_nodes = self.topologically_sorted()
         for node in sorted_nodes:
-            node.output_shape = TensorShape(
+            node.output_shape = make_tensor(
                 *NodeKind.compute_output_shape(node))
 
     def replaced(self, new_nodes):
@@ -108,6 +111,7 @@ class Graph(object):
             if graph is None:
                 raise KaffeError('Transformer failed: {}'.format(transformer))
             assert isinstance(graph, Graph)
+
         return graph
 
     def __contains__(self, key):
@@ -234,6 +238,7 @@ class GraphBuilder(object):
                 if (parent_node is None) or (parent_node == node):
                     parent_node = graph.get_node(input_name)
                 node.add_parent(parent_node)
+
             if len(layer.top) > 1:
                 raise KaffeError('Multiple top nodes are not supported.')
 

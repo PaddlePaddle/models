@@ -30,10 +30,10 @@ class DataGenerator(object):
         Reader interface for training.
 
         :param img_root_dir: The root path of the image for training.
-        :type file_list: str
+        :type img_root_dir: str
 
         :param img_label_list: The path of the <image_name, label> file for training.
-        :type file_list: str
+        :type img_label_list: str
 
         '''
 
@@ -91,10 +91,10 @@ class DataGenerator(object):
         Reader interface for inference.
 
         :param img_root_dir: The root path of the images for training.
-        :type file_list: str
+        :type img_root_dir: str
 
         :param img_label_list: The path of the <image_name, label> file for testing.
-        :type file_list: list
+        :type img_label_list: str
         '''
 
         def reader():
@@ -111,6 +111,42 @@ class DataGenerator(object):
 
         return reader
 
+    def infer_reader(self, img_root_dir=None, img_label_list=None):
+        '''A reader interface for inference.
+
+        :param img_root_dir: The root path of the images for training.
+        :type img_root_dir: str
+
+        :param img_label_list: The path of the <image_name, label> file for
+        inference. It should be the path of <image_path> file if img_root_dir
+        was None. If img_label_list was set to None, it will read image path
+        from stdin.
+        :type img_root_dir: str
+        '''
+
+        def reader():
+            if img_label_list is not None:
+                for line in open(img_label_list):
+                    if img_root_dir is not None:
+                        # h, w, img_name, labels
+                        img_name = line.split(' ')[2]
+                        img_path = os.path.join(img_root_dir, img_name)
+                    else:
+                        img_path = line.strip("\t\n\r")
+                    img = Image.open(img_path).convert('L')
+                    img = np.array(img) - 127.5
+                    img = img[np.newaxis, ...]
+                    yield img, label
+            else:
+                while True:
+                    img_path = raw_input("Please input the path of image: ")
+                    img = Image.open(img_path).convert('L')
+                    img = np.array(img) - 127.5
+                    img = img[np.newaxis, ...]
+                    yield img, [[0]]
+
+        return reader
+
 
 def num_classes():
     '''Get classes number of this dataset.
@@ -124,21 +160,31 @@ def data_shape():
     return DATA_SHAPE
 
 
-def train(batch_size):
+def train(batch_size, train_images_dir=None, train_list_file=None):
     generator = DataGenerator()
-    data_dir = download_data()
-    return generator.train_reader(
-        path.join(data_dir, TRAIN_DATA_DIR_NAME),
-        path.join(data_dir, TRAIN_LIST_FILE_NAME), batch_size)
+    if train_images_dir is None:
+        data_dir = download_data()
+        train_images_dir = path.join(data_dir, TRAIN_DATA_DIR_NAME)
+    if train_list_file is None:
+        train_list_file = path.join(data_dir, TRAIN_LIST_FILE_NAME)
+    return generator.train_reader(train_images_dir, train_list_file, batch_size)
 
 
-def test(batch_size=1):
+def test(batch_size=1, test_images_dir=None, test_list_file=None):
     generator = DataGenerator()
-    data_dir = download_data()
+    if test_images_dir is None:
+        data_dir = download_data()
+        test_images_dir = path.join(data_dir, TEST_DATA_DIR_NAME)
+    if test_list_file is None:
+        test_list_file = path.join(data_dir, TEST_LIST_FILE_NAME)
     return paddle.batch(
-        generator.test_reader(
-            path.join(data_dir, TRAIN_DATA_DIR_NAME),
-            path.join(data_dir, TRAIN_LIST_FILE_NAME)), batch_size)
+        generator.test_reader(test_images_dir, test_list_file), batch_size)
+
+
+def inference(infer_images_dir=None, infer_list_file=None):
+    generator = DataGenerator()
+    return paddle.batch(
+        generator.infer_reader(infer_images_dir, infer_list_file), 1)
 
 
 def download_data():

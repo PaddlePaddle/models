@@ -3,7 +3,7 @@
 #function:
 #   a tool used to:
 #       1, convert a caffe model
-#       2, do inference using this model
+#       2, do inference(only in fluid) using this model
 #
 #usage:
 #   bash run.sh resnet50 ./models.caffe/resnet50 ./models/resnet50
@@ -65,8 +65,13 @@ if [[ -z $only_convert ]];then
         PYTHON=`which python`
     fi
     imgfile="data/65.jpeg"
-    net_name=`grep "name" $proto_file | head -n1 | perl -ne 'if(/\"([^\"]+)\"/){ print $1."\n";}'`
-    $PYTHON ./infer.py $net_file $weight_file $imgfile $net_name
+    #FIX ME:
+    #   only look the first line in prototxt file for the name of this network, maybe not correct
+    net_name=`grep "name" $proto_file | head -n1 | perl -ne 'if(/^\s*name\s*:\s*\"([^\"]+)\"/){ print $1."\n";}'`
+    if [[ -z $net_name ]];then
+        net_name="MyNet"
+    fi
+    $PYTHON ./infer.py dump $net_file $weight_file $imgfile $net_name
     ret=$?
 fi
 exit $ret

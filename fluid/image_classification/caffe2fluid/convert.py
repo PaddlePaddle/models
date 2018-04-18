@@ -43,11 +43,17 @@ def convert(def_path, caffemodel_path, data_output_path, code_output_path,
             print_stderr('Saving source...')
             with open(code_output_path, 'wb') as src_out:
                 src_out.write(transformer.transform_source())
+        print_stderr('set env variable before using converted model '\
+                'if used custom_layers:')
+        custom_pk_path = os.path.dirname(os.path.abspath(__file__))
+        custom_pk_path = os.path.join(custom_pk_path, 'kaffe')
+        print_stderr('export CAFFE2FLUID_CUSTOM_LAYERS=%s' % (custom_pk_path))
         print_stderr('Done.')
+        return 0
     except KaffeError as err:
         fatal_error('Error encountered: {}'.format(err))
 
-    return 0
+    return 1
 
 
 def main():

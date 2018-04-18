@@ -60,4 +60,5 @@ def prepare_filelist(devkit_dir, years, output_dir):
             ftest.write(item[0] + ' ' + item[1] + '\n')
 
 
-prepare_filelist(devkit_dir, years, '.')
+if __name__ == '__main__':
+    prepare_filelist(devkit_dir, years, '.')
