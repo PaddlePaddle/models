@@ -14,6 +14,7 @@ from config import TrainTaskConfig, ModelHyperParams, pos_enc_param_names, \
         encoder_input_data_names, decoder_input_data_names, label_data_names
 import paddle.fluid.debuger as debuger
 import nist_data_provider
+import sys
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -204,7 +205,7 @@ def main():
 
     lr_decay = fluid.layers\
         .learning_rate_scheduler\
-        .nmt_nist_decay(d_model, warmup_steps)
+        .noam_decay(d_model, warmup_steps)
 
     optimizer = fluid.optimizer.Adam(
         learning_rate = lr_decay,
