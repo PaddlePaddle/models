@@ -164,7 +164,6 @@ def infer(model_path, imgfile, net_file=None, net_name=None, debug=True):
         debug = False
         print('found a inference model for fluid')
     except ValueError as e:
-        pass
         print('try to load model using net file and weight file')
         net_weight = model_path
         ret = load_model(exe, place, net_file, net_name, net_weight, debug)

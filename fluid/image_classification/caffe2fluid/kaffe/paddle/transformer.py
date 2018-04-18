@@ -109,9 +109,17 @@ class TensorFlowMapper(NodeMapper):
             # Stochastic pooling, for instance.
             raise KaffeError('Unsupported pooling type.')
         (kernel_params, padding) = self.get_kernel_params(node)
+        ceil_mode = getattr(node.layer.parameters, 'ceil_mode', True)
         return TensorFlowNode(pool_op, kernel_params.kernel_h,
                               kernel_params.kernel_w, kernel_params.stride_h,
-                              kernel_params.stride_w, **padding)
+                              kernel_params.stride_w, ceil_mode, **padding)
+
+    def map_sigmoid(self, node):
+        return TensorFlowNode('sigmoid')
+
+    def map_custom(self, node):
+        from .. import custom_layers
+        return custom_layers.make_node(TensorFlowNode, node.kind, node)
 
     def map_inner_product(self, node):
         #TODO: Axis
@@ -347,6 +355,7 @@ class Transformer(object):
             # (Caffe's GoogLeNet implementation uses slashes)
             NodeRenamer(lambda node: node.name.replace('/', '_'))
         ]
+
         self.graph = graph.transformed(transformers)
 
         # Display the graph
