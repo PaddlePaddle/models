@@ -92,7 +92,6 @@ Below is the examples after running python infer.py to inference and visualize t
 <p align="center">
 <img src="images/COCO_val2014_000000000139.jpg" height=300 width=400 hspace='10'/>
 <img src="images/COCO_val2014_000000000785.jpg" height=300 width=400 hspace='10'/>
-<img src="images/COCO_val2014_000000000885.jpg" height=400 width=200 hspace='10'/>
 <img src="images/COCO_val2014_000000142324.jpg" height=300 width=400 hspace='10'/>
 <img src="images/COCO_val2014_000000144003.jpg" height=300 width=400 hspace='10'/> <br />
 MobileNet-SSD300x300 Visualization Examples
