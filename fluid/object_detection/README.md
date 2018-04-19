@@ -90,24 +90,14 @@ env CUDA_VISIABLE_DEVICES=0 python infer.py --model_dir='train_coco_model/20' --
 ```
 Below is the examples after running python infer.py to inference and visualize the model result.
 <p align="center">
-<img src="images/COCO_val2014_000000000139.jpg" height=150 width=200 hspace='10'/>
-<img src="images/COCO_val2014_000000000785.jpg" height=150 width=200 hspace='10'/>
-<img src="images/COCO_val2014_000000000885.jpg" height=150 width=100 hspace='10'/>
-<img src="images/COCO_val2014_000000142324.jpg" height=150 width=200 hspace='10'/>
-<img src="images/COCO_val2014_000000144003.jpg" height=150 width=200 hspace='10'/> <br />
+<img src="images/COCO_val2014_000000000139.jpg" height=300 width=400 hspace='10'/>
+<img src="images/COCO_val2014_000000000785.jpg" height=300 width=400 hspace='10'/>
+<img src="images/COCO_val2014_000000000885.jpg" height=400 width=200 hspace='10'/>
+<img src="images/COCO_val2014_000000142324.jpg" height=300 width=400 hspace='10'/>
+<img src="images/COCO_val2014_000000144003.jpg" height=300 width=400 hspace='10'/> <br />
 MobileNet-SSD300x300 Visualization Examples
 </p>
 
-COCO_val2014_000000000139
-![COCO_val2014_000000000139.jpg](images/COCO_val2014_000000000139.jpg)
-COCO_val2014_000000000785
-![COCO_val2014_000000000785.jpg](images/COCO_val2014_000000000785.jpg)
-COCO_val2014_000000000885
-![COCO_val2014_000000000885.jpg](images/COCO_val2014_000000000885.jpg)
-COCO_val2014_000000142324
-![COCO_val2014_000000142324.jpg](images/COCO_val2014_000000142324.jpg)
-COCO_val2014_000000144003
-![COCO_val2014_000000144003.jpg](images/COCO_val2014_000000144003.jpg)
 TBD
 
 ### Released Model
