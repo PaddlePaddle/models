@@ -15,17 +15,15 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('learning_rate',    float, 0.001,     "Learning rate.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
-#add_arg('num_passes',       int,   25,        "Epoch number.")
-add_arg('num_passes',       int,   0,        "Epoch number.")
+add_arg('num_passes',       int,   25,        "Epoch number.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
 add_arg('dataset',          str,   'coco2014',  "coco2014, coco2017, and pascalvoc.")
 add_arg('model_save_dir',   str,   'model',     "The path to save model.")
-#add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
-add_arg('pretrained_model', str,   'train_coco_pre/24/', "The init model path.")
+add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
 add_arg('apply_distort',    bool,  True,   "Whether apply distort")
 add_arg('apply_expand',     bool,  False,  "Whether appley expand")
 add_arg('nms_threshold',    float, 0.5,    "nms threshold")
-add_arg('ap_version',       str,   'integral',   "integral, 11points, and cocoMAP")
+add_arg('ap_version',       str,   'integral',   "integral, 11points")
 add_arg('resize_h',         int,   300,    "resize image size")
 add_arg('resize_w',         int,   300,    "resize image size")
 add_arg('mean_value_B',     float, 127.5, "mean value which will be subtracted")  #123.68
@@ -195,6 +193,18 @@ def parallel_exe(args,
                                  box_var)
     loss = fluid.layers.reduce_sum(loss)
 
+    test_program = fluid.default_main_program().clone(for_test=True)
+    with fluid.program_guard(test_program):
+        map_eval = fluid.evaluator.DetectionMAP(
+            nmsed_out,
+            gt_label,
+            gt_box,
+            difficult,
+            num_classes,
+            overlap_threshold=0.5,
+            evaluate_difficult=False,
+            ap_version=args.ap_version)
+
     if 'coco' in data_args.dataset:
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in data_args.dataset:
@@ -226,91 +236,19 @@ def parallel_exe(args,
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
         reader.test(data_args, val_file_list), batch_size=batch_size)
-    if 'cocoMAP' in data_args.ap_version:
-        feeder = fluid.DataFeeder(
-            place=place, feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
-    else:
-        feeder = fluid.DataFeeder(
-            place=place, feed_list=[image, gt_box, gt_label, difficult])
+    feeder = fluid.DataFeeder(
+        place=place, feed_list=[image, gt_box, gt_label, difficult])
 
     def test(pass_id):
-        if 'cocoMAP' in data_args.ap_version:
-            dts_res = []
-            import json
-
-            for batch_id, data in enumerate(test_reader()):
-                nmsed_out_v = exe.run(fluid.default_main_program(),
-                                        feed=feeder.feed(data),
-                                        fetch_list=[nmsed_out],
-                                        return_numpy=False)
-                if batch_id % 20 == 0:
-                    print("Batch {0}".format(batch_id))
-
-                lod = nmsed_out_v[0].lod()[0]
-                nmsed_out_v = np.array(nmsed_out_v[0])
-                real_batch_size = min(batch_size, len(data))
-                assert (len(lod) == real_batch_size + 1), \
-                "Error Lod Tensor offset dimension. Lod({}) vs. batch_size({})".format(len(lod), batch_size)
-                k = 0
-                for i in range(real_batch_size):
-                    dt_num_this_img = lod[i + 1] - lod[i]
-                    image_id = int(data[i][4][0])
-                    image_width = int(data[i][4][1])
-                    image_height = int(data[i][4][2])
-                    for j in range(dt_num_this_img):
-                        dt = nmsed_out_v[k]
-                        k = k + 1
-                        category_id, score, xmin, ymin, xmax, ymax = dt.tolist()
-                        xmin = max(min(xmin, 1.0), 0.0) * image_width
-                        ymin = max(min(ymin, 1.0), 0.0) * image_height
-                        xmax = max(min(xmax, 1.0), 0.0) * image_width
-                        ymax = max(min(ymax, 1.0), 0.0) * image_height
-                        w = xmax - xmin
-                        h = ymax - ymin
-                        bbox = [xmin, ymin, w, h]
-                        dt_res = {
-                            'image_id' : image_id,
-                            'category_id' : category_id,
-                            'bbox' : bbox,
-                            'score' : score
-                        }
-                        dts_res.append(dt_res)
-            
-            with open("detection_result.json", 'w') as outfile:
-                json.dump(dts_res, outfile)
-            print("start evaluate using coco api")
-            from pycocotools.coco import COCO
-            from pycocotools.cocoeval import COCOeval
-            cocoGt=COCO(os.path.join(data_args.data_dir, val_file_list))
-            cocoDt=cocoGt.loadRes("detection_result.json")
-            cocoEval = COCOeval(cocoGt,cocoDt,"bbox")
-            cocoEval.evaluate()
-            cocoEval.accumulate()
-            cocoEval.summarize()
-
-        else:
-            test_program = fluid.default_main_program().clone(for_test=True)
-            with fluid.program_guard(test_program):
-                map_eval = fluid.evaluator.DetectionMAP(
-                    nmsed_out,
-                    gt_label,
-                    gt_box,
-                    difficult,
-                    num_classes,
-                    overlap_threshold=0.5,
-                    evaluate_difficult=False,
-                    ap_version=args.ap_version)
-
-            _, accum_map = map_eval.get_map_var()
-            map_eval.reset(exe)
-            for batch_id, data in enumerate(test_reader()):
-                test_map = exe.run(test_program,
-                                   feed=feeder.feed(data),
-                                   fetch_list=[accum_map])
-                if batch_id % 20 == 0:
-                    print("Batch {0}, map {1}".format(batch_id, test_map[0]))
-            print("Test model {0}, map {1}".format(model_dir, test_map[0]))
-    test(-1)
+        _, accum_map = map_eval.get_map_var()
+        map_eval.reset(exe)
+        for batch_id, data in enumerate(test_reader()):
+            test_map = exe.run(test_program,
+                               feed=feeder.feed(data),
+                               fetch_list=[accum_map])
+            if batch_id % 20 == 0:
+                print("Batch {0}, map {1}".format(batch_id, test_map[0]))
+        print("Pass {0}, map {1}".format(pass_id, test_map[0]))
 
     for pass_id in range(num_passes):
         start_time = time.time()
@@ -326,7 +264,7 @@ def parallel_exe(args,
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
-    test(pass_id)
+        test(pass_id)
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             model_path = os.path.join(model_save_dir, str(pass_id))
