@@ -15,11 +15,13 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('learning_rate',    float, 0.001,     "Learning rate.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
-add_arg('num_passes',       int,   25,        "Epoch number.")
+#add_arg('num_passes',       int,   25,        "Epoch number.")
+add_arg('num_passes',       int,   0,        "Epoch number.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
 add_arg('dataset',          str,   'coco2014',  "coco2014, coco2017, and pascalvoc.")
 add_arg('model_save_dir',   str,   'model',     "The path to save model.")
-add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
+#add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
+add_arg('pretrained_model', str,   'train_coco_pre/24/', "The init model path.")
 add_arg('apply_distort',    bool,  True,   "Whether apply distort")
 add_arg('apply_expand',     bool,  False,  "Whether appley expand")
 add_arg('nms_threshold',    float, 0.5,    "nms threshold")
@@ -309,7 +311,7 @@ def parallel_exe(args,
                 if batch_id % 20 == 0:
                     print("Batch {0}".format(batch_id))
             print("Test {0}, map {1}".format(pass_id, test_map[0]))
-    #test(-1)
+    test(-1)
 
     for pass_id in range(num_passes):
         start_time = time.time()
@@ -325,6 +327,7 @@ def parallel_exe(args,
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
+	test(pass_id)
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             model_path = os.path.join(model_save_dir, str(pass_id))
