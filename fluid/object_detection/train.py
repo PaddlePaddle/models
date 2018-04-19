@@ -205,7 +205,7 @@ def parallel_exe(args,
             num_classes,
             overlap_threshold=0.5,
             evaluate_difficult=False,
-            ap_version='integral')
+            ap_version=args.ap_version)
 
     if 'coco' in data_args.dataset:
         # learning rate decay in 12, 19 pass, respectively
@@ -327,7 +327,7 @@ def parallel_exe(args,
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
-	test(pass_id)
+    test(pass_id)
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             model_path = os.path.join(model_save_dir, str(pass_id))
