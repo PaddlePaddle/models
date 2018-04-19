@@ -75,17 +75,39 @@ TBD
 ### Evaluate
 
 ```python
-env CUDA_VISIABLE_DEVICES=0 python eval.py --model_dir='model/90' --test_list=''
+env CUDA_VISIABLE_DEVICES=0 python eval.py --model_dir='train_pascal_model/90' --test_list='' --ap_version='integral'
+env CUDA_VISIABLE_DEVICES=0 python eval.py --model_dir='train_coco_model/20' --ap_version='cocoMAP'
 ```
+You can evaluate your trained model in difference metric like 11point, integral and cocoMAP which is a special mAP metric used in COCO dataset.
+Note we set the defualt test list to the dataset's test/val list, you can use your own test list by setting test_list args.
 
 TBD
 
 ### Infer and Visualize
 
 ```python
-env CUDA_VISIABLE_DEVICES=0 python infer.py --batch_size=2 --model_dir='model/90' --test_list=''
+env CUDA_VISIABLE_DEVICES=0 python infer.py --model_dir='train_coco_model/20' --image_path='./data/coco/val2014/COCO_val2014_000000000139.jpg'
 ```
+Below is the examples after running python infer.py to inference and visualize the model result.
+<p align="center">
+<img src="images/COCO_val2014_000000000139.jpg" height=150 width=200 hspace='10'/>
+<img src="images/COCO_val2014_000000000785.jpg" height=150 width=200 hspace='10'/>
+<img src="images/COCO_val2014_000000000885.jpg" height=150 width=100 hspace='10'/>
+<img src="images/COCO_val2014_000000142324.jpg" height=150 width=200 hspace='10'/>
+<img src="images/COCO_val2014_000000144003.jpg" height=150 width=200 hspace='10'/> <br />
+MobileNet-SSD300x300 Visualization Examples
+</p>
 
+COCO_val2014_000000000139
+![COCO_val2014_000000000139.jpg](images/COCO_val2014_000000000139.jpg)
+COCO_val2014_000000000785
+![COCO_val2014_000000000785.jpg](images/COCO_val2014_000000000785.jpg)
+COCO_val2014_000000000885
+![COCO_val2014_000000000885.jpg](images/COCO_val2014_000000000885.jpg)
+COCO_val2014_000000142324
+![COCO_val2014_000000142324.jpg](images/COCO_val2014_000000142324.jpg)
+COCO_val2014_000000144003
+![COCO_val2014_000000144003.jpg](images/COCO_val2014_000000144003.jpg)
 TBD
 
 ### Released Model

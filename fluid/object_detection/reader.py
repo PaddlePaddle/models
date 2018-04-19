@@ -273,38 +273,6 @@ def _reader_creator(settings, file_list, mode, shuffle):
 
     return reader
 
-
-def draw_bounding_box_on_image(image,
-                               sample_labels,
-                               image_name,
-                               category_names,
-                               color='red',
-                               thickness=4,
-                               with_text=True,
-                               normalized=True):
-    image = Image.fromarray(image)
-    draw = ImageDraw.Draw(image)
-    im_width, im_height = image.size
-    if not normalized:
-        im_width, im_height = 1, 1
-    for item in sample_labels:
-        label = item[0]
-        category_name = category_names[int(label)]
-        bbox = item[1:5]
-        xmin, ymin, xmax, ymax = bbox
-        (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
-                                      ymin * im_height, ymax * im_height)
-        draw.line(
-            [(left, top), (left, bottom), (right, bottom), (right, top),
-             (left, top)],
-            width=thickness,
-            fill=color)
-        if with_text:
-            if image.mode == 'RGB':
-                draw.text((left, top), category_name, (255, 255, 0))
-    image.save(image_name)
-
-
 def train(settings, file_list, shuffle=True):
     file_list = os.path.join(settings.data_dir, file_list)
     if 'coco' in settings.dataset:
@@ -333,5 +301,24 @@ def test(settings, file_list):
         return _reader_creator(settings, file_list, 'test', False)
 
 
-def infer(settings, file_list):
-    return _reader_creator(settings, file_list, 'infer', False)
+def infer(settings, image_path):
+    def reader():
+        img = Image.open(image_path)
+        if img.mode == 'L':
+            img = im.convert('RGB')
+        im_width, im_height = img.size
+        img = img.resize((settings.resize_w, settings.resize_h),
+                         Image.ANTIALIAS)
+        img = np.array(img)
+        # HWC to CHW
+        if len(img.shape) == 3:
+            img = np.swapaxes(img, 1, 2)
+            img = np.swapaxes(img, 1, 0)
+        # RBG to BGR
+        img = img[[2, 1, 0], :, :]
+        img = img.astype('float32')
+        img -= settings.img_mean
+        img = img * 0.007843
+        return img
+
+    return reader
