@@ -109,9 +109,17 @@ class TensorFlowMapper(NodeMapper):
             # Stochastic pooling, for instance.
             raise KaffeError('Unsupported pooling type.')
         (kernel_params, padding) = self.get_kernel_params(node)
+        ceil_mode = getattr(node.layer.parameters, 'ceil_mode', True)
         return TensorFlowNode(pool_op, kernel_params.kernel_h,
                               kernel_params.kernel_w, kernel_params.stride_h,
-                              kernel_params.stride_w, **padding)
+                              kernel_params.stride_w, ceil_mode, **padding)
+
+    def map_sigmoid(self, node):
+        return TensorFlowNode('sigmoid')
+
+    def map_custom(self, node):
+        from .. import custom_layers
+        return custom_layers.make_node(TensorFlowNode, node.kind, node)
 
     def map_inner_product(self, node):
         #TODO: Axis
@@ -216,7 +224,10 @@ class TensorFlowEmitter(object):
     def emit_convert_def(self, input_nodes):
         codes = []
         inputs = {}
+        #codes.append('shapes = cls.input_shapes()')
         codes.append('shapes = cls.input_shapes()')
+        codes.append('input_name = shapes.keys()[0]')
+        codes.append('input_shape = shapes[input_name]')
         for n in input_nodes:
             name = n.name
             layer_var = name + '_layer'
@@ -235,8 +246,14 @@ class TensorFlowEmitter(object):
         codes.append("exe = fluid.Executor(place)")
         codes.append("exe.run(fluid.default_startup_program())")
         codes.append("net.load(data_path=npy_model, exe=exe, place=place)")
+        codes.append("output_vars = [net.get_output()]")
+        codes.append("fluid.io.save_inference_model(" \
+                "fluid_path, [input_name],output_vars," \
+                "exe, main_program=None, model_filename='model'," \
+                "params_filename='params')")
         codes.append(
-            "fluid.io.save_persistables(executor=exe, dirname=fluid_path)")
+            "print('save fluid model as [model] and [params] in directory [%s]' % (fluid_path))"
+        )
 
         self.outdent()
         func_def = self.statement('@classmethod')
@@ -254,8 +271,17 @@ class TensorFlowEmitter(object):
         self.prefix = ''
         main_def = self.statement('if __name__ == "__main__":')
         self.indent()
-        main_def += self.statement("#usage: python xxxnet.py xxx.npy ./model\n")
+        main_def += self.statement(
+            "#usage: save as an inference model for online service\n")
         main_def += self.statement("import sys")
+        main_def += self.statement("if len(sys.argv) != 3:")
+        self.indent()
+        main_def += self.statement("print('usage:')")
+        main_def += self.statement(
+            "print('\tpython %s [xxxnet.npy] [save_dir]' % (sys.argv[0]))")
+        main_def += self.statement("exit(1)")
+
+        self.outdent()
         main_def += self.statement("npy_weight = sys.argv[1]")
         main_def += self.statement("fluid_model = sys.argv[2]")
         main_def += self.statement("%s.convert(npy_weight, fluid_model)" %
@@ -329,6 +355,7 @@ class Transformer(object):
             # (Caffe's GoogLeNet implementation uses slashes)
             NodeRenamer(lambda node: node.name.replace('/', '_'))
         ]
+
         self.graph = graph.transformed(transformers)
 
         # Display the graph

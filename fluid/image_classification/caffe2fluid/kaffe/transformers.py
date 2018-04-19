@@ -113,7 +113,10 @@ class DataReshaper(object):
         try:
             parent = node.get_only_parent()
             s = parent.output_shape
-            return s.height > 1 or s.width > 1
+            if len(s) == 4:
+                return s.height > 1 or s.width > 1
+            else:
+                return False
         except KaffeError:
             return False
 
@@ -121,8 +124,8 @@ class DataReshaper(object):
         try:
             return self.mapping[node_kind]
         except KeyError:
-            raise
-            #raise KaffeError('Ordering not found for node kind: {}'.format(node_kind))
+            raise KaffeError('Ordering not found for node kind: {}'.format(
+                node_kind))
 
     def __call__(self, graph):
         for node in graph.nodes:
@@ -178,7 +181,8 @@ class SubNodeFuser(object):
                 continue
             # Rewrite the fused node's children to its parent.
             for child in node.children:
-                child.parents.remove(node)
+                pos = child.parents.index(node)
+                child.parents[pos] = parent
                 parent.add_child(child)
             # Disconnect the fused node from the graph.
             parent.children.remove(node)

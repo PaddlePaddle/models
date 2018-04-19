@@ -1,14 +1,15 @@
-import paddle
-import paddle.fluid as fluid
-import reader
-import image_util
-from mobilenet_ssd import mobile_net
-from utility import add_arguments, print_arguments
 import os
 import time
 import numpy as np
 import argparse
 import functools
+import shutil
+
+import paddle
+import paddle.fluid as fluid
+import reader
+from mobilenet_ssd import mobile_net
+from utility import add_arguments, print_arguments
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -31,7 +32,6 @@ add_arg('mean_value_G',     float, 127.5, "mean value which will be subtracted")
 add_arg('mean_value_R',     float, 127.5, "mean value which will be subtracted")  #103.94
 add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all data, while n means using only n sample")
 # yapf: disable
-
 
 def parallel_do(args,
                 train_file_list,
@@ -94,7 +94,7 @@ def parallel_do(args,
             num_classes,
             overlap_threshold=0.5,
             evaluate_difficult=False,
-            ap_version='integral')
+            ap_version=args.ap_version)
 
     if data_args.dataset == 'coco':
         # learning rate decay in 12, 19 pass, respectively
@@ -116,8 +116,10 @@ def parallel_do(args,
     exe.run(fluid.default_startup_program())
 
     if pretrained_model:
+
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
+
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     train_reader = paddle.batch(
@@ -131,7 +133,7 @@ def parallel_do(args,
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
         test_map = None
-        for _, data in enumerate(test_reader()):
+        for data in test_reader():
             test_map = exe.run(test_program,
                                feed=feeder.feed(data),
                                fetch_list=[accum_map])
@@ -174,6 +176,9 @@ def parallel_exe(args,
     elif 'pascalvoc' in data_args.dataset:
         num_classes = 21
 
+    devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
+    devices_num = len(devices.split(","))
+
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     gt_box = fluid.layers.data(
         name='gt_box', shape=[4], dtype='float32', lod_level=1)
@@ -207,13 +212,19 @@ def parallel_exe(args,
 
     if 'coco' in data_args.dataset:
         # learning rate decay in 12, 19 pass, respectively
-        if '2014' in data_args.dataset:
-            boundaries = [82783 / batch_size * 12, 82783 / batch_size * 19]
-        elif '2017' in data_args.dataset:
-            boundaries = [118287 / batch_size * 12, 118287 / batch_size * 19]
-    elif 'pascalvoc' in data_args.dataset:
-        boundaries = [40000, 60000]
-    values = [learning_rate, learning_rate * 0.5, learning_rate * 0.25]
+        if '2014' in train_file_list:
+            epocs = 82783 / batch_size
+            boundaries = [epocs * 12, epocs * 19]
+        elif '2017' in train_file_list:
+            epocs = 118287 / batch_size
+            boundaries = [epcos * 12, epocs * 19]
+    elif data_args.dataset == 'pascalvoc':
+        epocs = 19200 / batch_size
+        boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
+    values = [
+        learning_rate, learning_rate * 0.5, learning_rate * 0.25,
+        learning_rate * 0.1, learning_rate * 0.01
+    ]
     optimizer = fluid.optimizer.RMSProp(
         learning_rate=fluid.layers.piecewise_decay(boundaries, values),
         regularization=fluid.regularizer.L2Decay(0.00005), )
@@ -225,12 +236,14 @@ def parallel_exe(args,
     exe.run(fluid.default_startup_program())
 
     if pretrained_model:
+
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
+
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    train_exe = fluid.ParallelExecutor(use_cuda=args.use_gpu,
-                                       loss_name=loss.name)
+    train_exe = fluid.ParallelExecutor(
+        use_cuda=args.use_gpu, loss_name=loss.name)
 
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
@@ -239,7 +252,16 @@ def parallel_exe(args,
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, difficult])
 
-    def test(pass_id):
+    def save_model(postfix):
+        model_path = os.path.join(model_save_dir, postfix)
+        if os.path.isdir(model_path):
+            shutil.rmtree(model_path)
+        print 'save models to %s' % (model_path)
+        fluid.io.save_persistables(exe, model_path)
+
+    best_map = 0.
+
+    def test(pass_id, best_map):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
         for batch_id, data in enumerate(test_reader()):
@@ -248,6 +270,9 @@ def parallel_exe(args,
                                fetch_list=[accum_map])
             if batch_id % 20 == 0:
                 print("Batch {0}, map {1}".format(batch_id, test_map[0]))
+        if test_map[0] > best_map:
+            best_map = test_map[0]
+            save_model('best_model')
         print("Pass {0}, map {1}".format(pass_id, test_map[0]))
 
     for pass_id in range(num_passes):
@@ -257,19 +282,19 @@ def parallel_exe(args,
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
+            if len(data) < devices_num: continue
             loss_v, = train_exe.run(fetch_list=[loss.name],
-                                   feed_dict=feeder.feed(data))
+                                    feed_dict=feeder.feed(data))
             end_time = time.time()
             loss_v = np.mean(np.array(loss_v))
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
-        test(pass_id)
-
+        test(pass_id, best_map)
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
-            model_path = os.path.join(model_save_dir, str(pass_id))
-            print 'save models to %s' % (model_path)
-            fluid.io.save_persistables(exe, model_path)
+            save_model(str(pass_id))
+    print("Best test map {0}".format(best_map))
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -301,12 +326,13 @@ if __name__ == '__main__':
         resize_w=args.resize_w,
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R])
     method = parallel_exe
-    method(args,
-           train_file_list=train_file_list,
-           val_file_list=val_file_list,
-           data_args=data_args,
-           learning_rate=args.learning_rate,
-           batch_size=args.batch_size,
-           num_passes=args.num_passes,
-           model_save_dir=model_save_dir,
-           pretrained_model=args.pretrained_model)
+    method(
+        args,
+        train_file_list=train_file_list,
+        val_file_list=val_file_list,
+        data_args=data_args,
+        learning_rate=args.learning_rate,
+        batch_size=args.batch_size,
+        num_passes=args.num_passes,
+        model_save_dir=model_save_dir,
+        pretrained_model=args.pretrained_model)
