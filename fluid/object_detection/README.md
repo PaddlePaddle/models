@@ -52,22 +52,22 @@ Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https
 #### Train on PASCAL VOC
   - Train on one device (/GPU).
   ```python
-  env CUDA_VISIABLE_DEVICES=0 python -u train.py --parallel=False --data='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
+  env CUDA_VISIABLE_DEVICES=0 python -u train.py --parallel=False --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
   ```
   - Train on multi devices (/GPUs).
 
   ```python
-  env CUDA_VISIABLE_DEVICES=0,1 python -u train.py --batch_size=64 --data='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
+  env CUDA_VISIABLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
   ```
 
 #### Train on MS-COCO
   - Train on one device (/GPU).
   ```python
-  env CUDA_VISIABLE_DEVICES=0 python -u train.py --parallel=False --data='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
+  env CUDA_VISIABLE_DEVICES=0 python -u train.py --parallel=False --dataset='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
   ```
   - Train on multi devices (/GPUs).
   ```python
-  env CUDA_VISIABLE_DEVICES=0,1 python -u train.py --batch_size=64 --data='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
+  env CUDA_VISIABLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
   ```
 
 TBD
@@ -75,7 +75,7 @@ TBD
 ### Evaluate
 
 ```python
-env CUDA_VISIABLE_DEVICES=0 python eval.py --model='model/90' --test_list=''
+env CUDA_VISIABLE_DEVICES=0 python eval.py --model_dir='model/90' --test_list=''
 ```
 
 TBD
@@ -83,7 +83,7 @@ TBD
 ### Infer and Visualize
 
 ```python
-env CUDA_VISIABLE_DEVICES=0 python infer.py --batch_size=2 --model='model/90' --test_list=''
+env CUDA_VISIABLE_DEVICES=0 python infer.py --batch_size=2 --model_dir='model/90' --test_list=''
 ```
 
 TBD
