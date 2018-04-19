@@ -122,7 +122,7 @@ env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
 
 执行`python ctc_train.py --help`可查看更多使用方式和参数详细说明。
 
-图2为使用默认参数和默认数据集训练的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为在测试集上的样本级错误率。在45轮迭代训练中，最低错误率为第42轮的21.11%.
+图2为使用默认参数和默认数据集训练的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。在45轮迭代训练中，测试集上最低错误率为第60轮的21.11%.
 
 <p align="center">
 <img src="images/train.jpg" width="620" hspace='10'/> <br/>
@@ -163,10 +163,10 @@ input_images_dir: None
 input_images_list: None
 model_path: /home/work/models/fluid/ocr_recognition/models/model_00052_15000
 ------------------------------------------------
-Init model from: /home/work/models/fluid/ocr_recognition/models/model_00052_15000.
-Please input the path of image: /home/work/models/fluid/ocr_recognition/data/test_images/00001_0060.jpg
+Init model from: ./models/model_00052_15000.
+Please input the path of image: ./test_images/00001_0060.jpg
 result: [3298 2371 4233 6514 2378 3298 2363]
-Please input the path of image: /home/work/models/fluid/ocr_recognition/data/test_images/00001_0429.jpg
+Please input the path of image: ./test_images/00001_0429.jpg
 result: [2067 2067 8187 8477 5027 7191 2431 1462]
 ```
 
