@@ -39,22 +39,22 @@ RNN is a sequence model,the basic idea: at time $t$,put the hidden layer output 
 The implementation of the RNN language model in this example is as follows:
 * **Define model parameters** :```config.py```defines parameter variables for the model.
 * **Define the model structure** :```rnn_lm``` function in ```network_conf.py```defines the structure of the model,as follow:
-	+ Input layer : Map the input word (or word) sequence into a vector, the word vector layer : ```embedding```.
-	+ Middle layer : According to the configuration of the RNN layer, the ```embedding``` vector sequence obtained in the previous step is taken as input.
-	+ Output layer : Use ```softmax``` to normalize the probability of calculating words.
-	+ loss : Multiple classes of cross entropy are defined as the loss function of the model.
+ + Input layer : Map the input word (or word) sequence into a vector, the word vector layer : ```embedding```.
+ + Middle layer : According to the configuration of the RNN layer, the ```embedding``` vector sequence obtained in the previous step is taken as input.
+ + Output layer : Use ```softmax``` to normalize the probability of calculating words.
+ + loss : Multiple classes of cross entropy are defined as the loss function of the model.
 
 * **Training model** : Function ```main``` in ```train.py``` implements the training of the model and the implementation process is as follows:
-	+ Prepare input data : Create and save dictionaries and build readers for train and test data.
-	+ Initialize the model : Including the structure and parameters of the model
-	+ Building the trainer : The demo uses the Adam optimization algorithm
-	+ Define the callback function : Build ```event_handler``` to track changes in loss during training and save model parameters at the end of each round of training.
-	+ training : Train the model using the trainer.
+ + Prepare input data : Create and save dictionaries and build readers for train and test data.
+ + Initialize the model : Including the structure and parameters of the model
+ + Building the trainer : The demo uses the Adam optimization algorithm
+ + Define the callback function : Build ```event_handler``` to track changes in loss during training and save model parameters at the end of each round of training.
+ + training : Train the model using the trainer.
 
 * **Generate text ** : ```Generate.py``` implements the generation of the text. The implementation flow is as follows:
-	+ Load trained models and dictionary files
-	+ Read ```gen_file file```, each line is a sentence prefix, using the [column search algorithm (Beam Search)](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md#%E6%9F%B1%E6%90%9C%E7%B4%A2%E7%AE%97%E6%B3%95) to generate text based on the prefix.
-	+ Save the generated text and its prefix to the file ```gen_result```
+ + Load trained models and dictionary files
+ + Read ```gen_file file```, each line is a sentence prefix, using the [column search algorithm (Beam Search)](https://github.com/PaddlePaddle/book/blob/develop/08.machine_translation/README.cn.md#%E6%9F%B1%E6%90%9C%E7%B4%A2%E7%AE%97%E6%B3%95) to generate text based on the prefix.
+ + Save the generated text and its prefix to the file ```gen_result```
 
 ####Instructions for use
 Here's how to run this example:
@@ -81,13 +81,13 @@ model_save_dir = "models"
 * When the specified dictionary file does not exist, word frequency statistics will be performed on the training data. The automatic construction of the dictionary config.py has the following two parameters related to the construction of the dictionary:
 ``max_word_num = 51200 - 2
 cutoff_word_fre = 0``
-	1. ```max_word_num```: Specifies how many words are in the dictionary.
-	2. ```cutoff_word_fre```: The lowest frequency of words in the dictionary in the training corpus.
+ 1. ```max_word_num```: Specifies how many words are in the dictionary.
+ 2. ```cutoff_word_fre```: The lowest frequency of words in the dictionary in the training corpus.
 
 * Join specified ```max_word_num = 5000```, and ```cutoff_word_fre = 10```, Word frequency statistics found that there were only 3,000 words in the training corpora that had a frequency higher than 10, and that eventually 3,000 words would constitute a dictionary.
 * When you build a dictionary, two special symbols are automatically added:
-	1.	```<unk>```: Words that do not appear in the dictionary
-	2.	```<e>```: Sentence terminator
+ 1. ```<unk>```: Words that do not appear in the dictionary
+ 2. ```<e>```: Sentence terminator
 
 Note: It should be noted that the larger the dictionary is, the richer the content is, but the longer the training takes.After the general Chinese word corpus in different words can have tens or even hundreds of thousands, if ```max_word_num``` value is too small then lead to ```<unk>``` proportion is too high, if ```max_word_num``` larger value, then seriously affect the speed of training (for accuracy Also has influence).Therefore, there are also ways to train models by "words",scilicet,Considering each Chinese character as a word, the number of commonly used Chinese characters is also a few thousand, making the size of the dictionary not too large and not losing too much information, but the semantics of the same word in Chinese differs greatly in different words, sometimes leading to models. The effect is not ideal.It is recommended to try more and choose "word training" or "word training" according to the actual situation.
 
@@ -126,9 +126,9 @@ Write the text prefix to be generated into the file in this format;
 -14.2741    一样 。 他 是 我 的 <e>
 -14.6250    一样 。 他 是 我 的 朋友 <e>```
 among them:
-	1. The first line 81 is looming like a ghost, like death, separated by \t. There are two columns:
-		+ The first column is the sequence number of the input prefix in the training sample set.
-		+ The second column is the input prefix.
-	2. The second ~beam_size + 1 line is the generated result, also separated into two columns with \t:
-		+ The first column is the logarithmic probability of the generated sequence(log probability)
-		+ The second column is the generated text sequence. The normal generation result will end with the symbol ```<e>```. If it does not end with ```<e>```, it means that the maximum sequence length is exceeded and the forced termination is generated.
+ 1. The first line 81 is looming like a ghost, like death, separated by \t. There are two columns:
+  + The first column is the sequence number of the input prefix in the training sample set.
+  + The second column is the input prefix.
+ 2. The second ~beam_size + 1 line is the generated result, also separated into two columns with \t:
+  + The first column is the logarithmic probability of the generated sequence(log probability)
+  + The second column is the generated text sequence. The normal generation result will end with the symbol ```<e>```. If it does not end with ```<e>```, it means that the maximum sequence length is exceeded and the forced termination is generated.
