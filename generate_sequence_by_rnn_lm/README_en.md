@@ -71,10 +71,10 @@ test_file = ""
 vocab_file = "data/word_vocab.txt"
 model_save_dir = "models"
 ``
-1.	```rain_file```: Specify the path to training data, **Pre-segmentation is required**
-2.	```test_file```: Specify the test data path. If the training data is not empty, the specified test data will be tested at the end of each ```pass``` training.
-3.	```vocab_file```: Specify the path of the dictionary. If the dictionary file does not exist, word frequency statistics will be made on the training corpus and a dictionary will be
-4.	```model_save_dir```: Specifies the path where the model is saved. If the specified folder does not exist, it will be automatically created.
+1. ```rain_file```: Specify the path to training data, **Pre-segmentation is required**
+2. ```test_file```: Specify the test data path. If the training data is not empty, the specified test data will be tested at the end of each ```pass``` training.
+3. ```vocab_file```: Specify the path of the dictionary. If the dictionary file does not exist, word frequency statistics will be made on the training corpus and a dictionary will be
+4. ```model_save_dir```: Specifies the path where the model is saved. If the specified folder does not exist, it will be automatically created.
 
 ####Strategies for building a dictionary
 
