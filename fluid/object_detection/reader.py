@@ -320,5 +320,4 @@ def infer(settings, image_path):
         img -= settings.img_mean
         img = img * 0.007843
         return img
-
     return reader

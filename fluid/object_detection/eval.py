@@ -18,14 +18,14 @@ add_arg('batch_size',       int,   32,        "Minibatch size.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
 add_arg('data_dir',         str,   '',        "The data root path.")
 add_arg('test_list',        str,   '',        "The testing data lists.")
-add_arg('model_dir',        str,   '',     "The path to save model.")
+add_arg('model_dir',        str,   '',     "The model path.")
 add_arg('nms_threshold',    float, 0.5,    "nms threshold")
 add_arg('ap_version',       str,   'integral',   "integral, 11points, and cocoMAP")
 add_arg('resize_h',         int,   300,    "resize image size")
 add_arg('resize_w',         int,   300,    "resize image size")
-add_arg('mean_value_B',     float, 127.5, "mean value for B channel which will be subtracted")  #123.68
-add_arg('mean_value_G',     float, 127.5, "mean value for G channel which will be subtracted")  #116.78
-add_arg('mean_value_R',     float, 127.5, "mean value for R channel which will be subtracted")  #103.94
+add_arg('mean_value_B',     float, 127.5,  "mean value for B channel which will be subtracted")  #123.68
+add_arg('mean_value_G',     float, 127.5,  "mean value for G channel which will be subtracted")  #116.78
+add_arg('mean_value_R',     float, 127.5,  "mean value for R channel which will be subtracted")  #103.94
 # yapf: enable
 
 
