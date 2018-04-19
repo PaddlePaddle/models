@@ -54,18 +54,6 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
     loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box, box_var)
     loss = fluid.layers.reduce_sum(loss)
 
-    test_program = fluid.default_main_program().clone(for_test=True)
-    with fluid.program_guard(test_program):
-        map_eval = fluid.evaluator.DetectionMAP(
-            nmsed_out,
-            gt_label,
-            gt_box,
-            difficult,
-            num_classes,
-            overlap_threshold=0.5,
-            evaluate_difficult=False,
-            ap_version=args.ap_version)
-
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
@@ -141,6 +129,18 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
             cocoEval.summarize()
 
         else:
+            test_program = fluid.default_main_program().clone(for_test=True)
+            with fluid.program_guard(test_program):
+                map_eval = fluid.evaluator.DetectionMAP(
+                    nmsed_out,
+                    gt_label,
+                    gt_box,
+                    difficult,
+                    num_classes,
+                    overlap_threshold=0.5,
+                    evaluate_difficult=False,
+                    ap_version=args.ap_version)
+
             _, accum_map = map_eval.get_map_var()
             map_eval.reset(exe)
             for batch_id, data in enumerate(test_reader()):
@@ -148,7 +148,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
                                    feed=feeder.feed(data),
                                    fetch_list=[accum_map])
                 if batch_id % 20 == 0:
-                    print("Batch {0}, map {1}".format(idx, test_map[0]))
+                    print("Batch {0}, map {1}".format(batch_id, test_map[0]))
             print("Test model {0}, map {1}".format(model_dir, test_map[0]))
     test()
 
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R])
     eval(
         args,
-        test_list=args.test_list,
         data_args=data_args,
+        test_list=args.test_list if len(args.test_list) > 0 else test_list,
         batch_size=args.batch_size,
         model_dir=args.model_dir)

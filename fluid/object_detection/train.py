@@ -195,18 +195,6 @@ def parallel_exe(args,
                                  box_var)
     loss = fluid.layers.reduce_sum(loss)
 
-    test_program = fluid.default_main_program().clone(for_test=True)
-    with fluid.program_guard(test_program):
-        map_eval = fluid.evaluator.DetectionMAP(
-            nmsed_out,
-            gt_label,
-            gt_box,
-            difficult,
-            num_classes,
-            overlap_threshold=0.5,
-            evaluate_difficult=False,
-            ap_version=args.ap_version)
-
     if 'coco' in data_args.dataset:
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in data_args.dataset:
@@ -301,16 +289,27 @@ def parallel_exe(args,
             cocoEval.summarize()
 
         else:
+            test_program = fluid.default_main_program().clone(for_test=True)
+            with fluid.program_guard(test_program):
+                map_eval = fluid.evaluator.DetectionMAP(
+                    nmsed_out,
+                    gt_label,
+                    gt_box,
+                    difficult,
+                    num_classes,
+                    overlap_threshold=0.5,
+                    evaluate_difficult=False,
+                    ap_version=args.ap_version)
+
             _, accum_map = map_eval.get_map_var()
             map_eval.reset(exe)
-            test_map = None
             for batch_id, data in enumerate(test_reader()):
                 test_map = exe.run(test_program,
                                    feed=feeder.feed(data),
                                    fetch_list=[accum_map])
                 if batch_id % 20 == 0:
-                    print("Batch {0}".format(batch_id))
-            print("Test {0}, map {1}".format(pass_id, test_map[0]))
+                    print("Batch {0}, map {1}".format(batch_id, test_map[0]))
+            print("Test model {0}, map {1}".format(model_dir, test_map[0]))
     test(-1)
 
     for pass_id in range(num_passes):
