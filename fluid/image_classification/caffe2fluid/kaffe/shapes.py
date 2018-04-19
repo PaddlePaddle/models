@@ -3,8 +3,24 @@ from collections import namedtuple
 
 from .errors import KaffeError
 
-TensorShape = namedtuple('TensorShape',
-                         ['batch_size', 'channels', 'height', 'width'])
+Tensor4DShape = namedtuple('Tensor4DShape',
+                           ['batch_size', 'channels', 'height', 'width'])
+
+Tensor2DShape = namedtuple('Tensor2DShape', ['batch_size', 'data'])
+
+ScalarShape = namedtuple('ScalarShape', ['batch_size'])
+
+
+def make_tensor(batch_size, d1=None, d2=None, d3=None):
+    if d3 is not None:
+        return Tensor4DShape(batch_size, d1, d2, d3)
+    elif d1 is not None and d2 is None:
+        return Tensor2DShape(batch_size, d1)
+    elif d1 is None and d2 is None and d3 is None:
+        return ScalarShape(batch_size)
+    else:
+        raise NotImplementedError('invalid params for make_tensor %s' \
+                % (str((batch_size, d1, d2, d3))))
 
 
 def get_filter_output_shape(i_h, i_w, params, round_func):
@@ -23,7 +39,7 @@ def get_strided_kernel_output_shape(node, round_func):
     params = node.layer.parameters
     has_c_o = hasattr(params, 'num_output')
     c = params.num_output if has_c_o else input_shape.channels
-    return TensorShape(input_shape.batch_size, c, o_h, o_w)
+    return make_tensor(input_shape.batch_size, c, o_h, o_w)
 
 
 def shape_not_implemented(node):
@@ -36,7 +52,7 @@ def shape_identity(node):
 
 
 def shape_scalar(node):
-    return TensorShape(1, 1, 1, 1)
+    return make_tensor(1, 1, 1, 1)
 
 
 def shape_data(node):
@@ -59,7 +75,7 @@ def shape_data(node):
 
 def shape_mem_data(node):
     params = node.parameters
-    return TensorShape(params.batch_size, params.channels, params.height,
+    return make_tensor(params.batch_size, params.channels, params.height,
                        params.width)
 
 
@@ -79,10 +95,15 @@ def shape_convolution(node):
 
 
 def shape_pool(node):
-    return get_strided_kernel_output_shape(node, math.ceil)
+    ceil_mode = getattr(node.layer.parameters, 'ceil_mode', True)
+    if ceil_mode is True:
+        method = math.ceil
+    else:
+        method = math.floor
+
+    return get_strided_kernel_output_shape(node, method)
 
 
 def shape_inner_product(node):
     input_shape = node.get_only_parent().output_shape
-    return TensorShape(input_shape.batch_size, node.layer.parameters.num_output,
-                       1, 1)
+    return make_tensor(input_shape.batch_size, node.layer.parameters.num_output)
