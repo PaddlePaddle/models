@@ -1,4 +1,5 @@
 To run the codes in this directory, we need to use  v0.10.0 version. If your PaddlePaddle version is lower than this version, please update the PaddlePaddle according to the instructions in [installation document][1]
+
 ---
 
 # Scene Text Recognition(STR)
