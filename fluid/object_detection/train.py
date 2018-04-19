@@ -25,7 +25,7 @@ add_arg('pretrained_model', str,   'train_coco_pre/24/', "The init model path.")
 add_arg('apply_distort',    bool,  True,   "Whether apply distort")
 add_arg('apply_expand',     bool,  False,  "Whether appley expand")
 add_arg('nms_threshold',    float, 0.5,    "nms threshold")
-add_arg('map_version',      str,   'integral',   "integral, 11points, and cocoMAP")
+add_arg('ap_version',       str,   'integral',   "integral, 11points, and cocoMAP")
 add_arg('resize_h',         int,   300,    "resize image size")
 add_arg('resize_w',         int,   300,    "resize image size")
 add_arg('mean_value_B',     float, 127.5, "mean value which will be subtracted")  #123.68
@@ -238,7 +238,7 @@ def parallel_exe(args,
         reader.train(data_args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
         reader.test(data_args, val_file_list), batch_size=batch_size)
-    if 'cocoMAP' in data_args.map_version:
+    if 'cocoMAP' in data_args.ap_version:
         feeder = fluid.DataFeeder(
             place=place, feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
     else:
@@ -246,7 +246,7 @@ def parallel_exe(args,
             place=place, feed_list=[image, gt_box, gt_label, difficult])
 
     def test(pass_id):
-        if 'cocoMAP' in data_args.map_version:
+        if 'cocoMAP' in data_args.ap_version:
             dts_res = []
             import json
 
@@ -354,7 +354,7 @@ if __name__ == '__main__':
 
     data_args = reader.Settings(
         dataset=args.dataset,
-        map_version = args.map_version,
+        ap_version = args.ap_version,
         toy=args.is_toy,
         data_dir=data_dir,
         label_file=label_file,

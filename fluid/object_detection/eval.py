@@ -20,7 +20,7 @@ add_arg('data_dir',         str,   '',        "The data root path.")
 add_arg('test_list',        str,   '',        "The testing data lists.")
 add_arg('model_dir',        str,   '',     "The path to save model.")
 add_arg('nms_threshold',    float, 0.5,    "nms threshold")
-add_arg('map_version',      str,   'integral',   "integral, 11points, and cocoMAP")
+add_arg('ap_version',       str,   'integral',   "integral, 11points, and cocoMAP")
 add_arg('resize_h',         int,   300,    "resize image size")
 add_arg('resize_w',         int,   300,    "resize image size")
 add_arg('mean_value_B',     float, 127.5, "mean value for B channel which will be subtracted")  #123.68
@@ -78,7 +78,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
 
     test_reader = paddle.batch(
         reader.test(data_args, test_list), batch_size=batch_size)
-    if 'cocoMAP' in data_args.map_version:
+    if 'cocoMAP' in data_args.ap_version:
         feeder = fluid.DataFeeder(
             place=place, feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
     else:
@@ -86,7 +86,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
             place=place, feed_list=[image, gt_box, gt_label, difficult])
 
     def test():
-        if 'cocoMAP' in data_args.map_version:
+        if 'cocoMAP' in data_args.ap_version:
             dts_res = []
             import json
 
@@ -168,12 +168,12 @@ if __name__ == '__main__':
 
     data_args = reader.Settings(
         dataset=args.dataset,
-        map_version = args.map_version,
+        ap_version = args.ap_version,
         toy=0,
         data_dir=data_dir,
         label_file=label_file,
-        apply_distort=args.apply_distort,
-        apply_expand=args.apply_expand,
+        apply_distort=False,
+        apply_expand=False,
         resize_h=args.resize_h,
         resize_w=args.resize_w,
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R])

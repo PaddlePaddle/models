@@ -25,10 +25,10 @@ import copy
 
 
 class Settings(object):
-    def __init__(self, dataset, map_version, toy, data_dir, label_file, resize_h, resize_w,
+    def __init__(self, dataset, ap_version, toy, data_dir, label_file, resize_h, resize_w,
                  mean_value, apply_distort, apply_expand):
         self._dataset = dataset
-        self._map_version = map_version
+        self._ap_version = ap_version
         self._toy = toy
         self._data_dir = data_dir
         if 'pascalvoc' in dataset:
@@ -59,8 +59,8 @@ class Settings(object):
         return self._dataset
 
     @property
-    def map_version(self):
-        return self._map_version
+    def ap_version(self):
+        return self._ap_version
     @property
     def toy(self):
         return self._toy
@@ -257,7 +257,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
                 sample_labels = np.array(sample_labels)
                 if len(sample_labels) == 0:
                     continue
-                if 'cocoMAP' in settings.map_version:
+                if 'cocoMAP' in settings.ap_version:
                     yield img.astype('float32'), \
                         sample_labels[:, 1:5], \
                         sample_labels[:, 0].astype('int32'), \
