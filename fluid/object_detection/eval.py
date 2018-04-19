@@ -121,7 +121,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
             print("start evaluate using coco api")
             from pycocotools.coco import COCO
             from pycocotools.cocoeval import COCOeval
-            cocoGt=COCO(os.path.join(args.data_dir,args.val_file_list))
+            cocoGt=COCO(os.path.join(data_args.data_dir, test_list))
             cocoDt=cocoGt.loadRes("detection_result.json")
             cocoEval = COCOeval(cocoGt,cocoDt,"bbox")
             cocoEval.evaluate()
@@ -170,7 +170,7 @@ if __name__ == '__main__':
         dataset=args.dataset,
         ap_version = args.ap_version,
         toy=0,
-        data_dir=data_dir,
+        data_dir=args.data_dir if len(args.data_dir) > 0 else data_dir,
         label_file=label_file,
         apply_distort=False,
         apply_expand=False,

@@ -281,7 +281,7 @@ def parallel_exe(args,
             print("start evaluate using coco api")
             from pycocotools.coco import COCO
             from pycocotools.cocoeval import COCOeval
-            cocoGt=COCO(os.path.join(args.data_dir,args.val_file_list))
+            cocoGt=COCO(os.path.join(data_args.data_dir, val_file_list))
             cocoDt=cocoGt.loadRes("detection_result.json")
             cocoEval = COCOeval(cocoGt,cocoDt,"bbox")
             cocoEval.evaluate()
