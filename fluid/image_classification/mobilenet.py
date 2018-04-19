@@ -179,7 +179,7 @@ def train(learning_rate, batch_size, num_passes, model_save_dir='model'):
     inference_program = fluid.default_main_program().clone()
     with fluid.program_guard(inference_program):
         inference_program = fluid.io.get_inference_program(
-            target_vars=[b_acc_var, b_size_var])
+            target_vars=[avg_cost, b_acc_var, b_size_var])
 
     place = fluid.CPUPlace()
     exe = fluid.Executor(place)
