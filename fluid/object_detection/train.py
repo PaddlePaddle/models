@@ -18,20 +18,20 @@ add_arg('learning_rate',    float, 0.001,     "Learning rate.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
 add_arg('num_passes',       int,   25,        "Epoch number.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
-add_arg('dataset',          str,   'coco2014',  "coco2014, coco2017, and pascalvoc.")
+add_arg('dataset',          str,   'pascalvoc', "coco2014, coco2017, and pascalvoc.")
 add_arg('model_save_dir',   str,   'model',     "The path to save model.")
 add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
-add_arg('apply_distort',    bool,  True,   "Whether apply distort")
-add_arg('apply_expand',     bool,  False,  "Whether appley expand")
-add_arg('nms_threshold',    float, 0.5,    "nms threshold")
-add_arg('ap_version',       str,   'integral',   "integral, 11points")
-add_arg('resize_h',         int,   300,    "resize image size")
-add_arg('resize_w',         int,   300,    "resize image size")
-add_arg('mean_value_B',     float, 127.5, "mean value which will be subtracted")  #123.68
-add_arg('mean_value_G',     float, 127.5, "mean value which will be subtracted")  #116.78
-add_arg('mean_value_R',     float, 127.5, "mean value which will be subtracted")  #103.94
-add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all data, while n means using only n sample")
-# yapf: disable
+add_arg('apply_distort',    bool,  True,   "Whether apply distort.")
+add_arg('apply_expand',     bool,  False,  "Whether appley expand.")
+add_arg('nms_threshold',    float, 0.45,   "NMS threshold.")
+add_arg('ap_version',       str,   'integral',   "integral, 11point.")
+add_arg('resize_h',         int,   300,    "The resized image height.")
+add_arg('resize_w',         int,   300,    "The resized image height.")
+add_arg('mean_value_B',     float, 127.5,  "Mean value for B channel which will be subtracted.")  #123.68
+add_arg('mean_value_G',     float, 127.5,  "Mean value for G channel which will be subtracted.")  #116.78
+add_arg('mean_value_R',     float, 127.5,  "Mean value for R channel which will be subtracted.")  #103.94
+add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all data, while n means using only n sample.")
+#yapf: enable
 
 def parallel_do(args,
                 train_file_list,
@@ -319,15 +319,15 @@ if __name__ == '__main__':
 
     data_args = reader.Settings(
         dataset=args.dataset,
-        ap_version = args.ap_version,
-        toy=args.is_toy,
         data_dir=data_dir,
         label_file=label_file,
-        apply_distort=args.apply_distort,
-        apply_expand=args.apply_expand,
         resize_h=args.resize_h,
         resize_w=args.resize_w,
-        mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R])
+        mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R],
+        apply_distort=args.apply_distort,
+        apply_expand=args.apply_expand,
+        ap_version = args.ap_version,
+        toy=args.is_toy)
     method = parallel_exe
     method(
         args,

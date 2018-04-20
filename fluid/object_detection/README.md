@@ -75,10 +75,10 @@ TBD
 ### Evaluate
 
 ```python
-env CUDA_VISIABLE_DEVICES=0 python eval.py --model_dir='train_pascal_model/90' --test_list='' --ap_version='integral'
-env CUDA_VISIABLE_DEVICES=0 python eval.py --model_dir='train_coco_model/20' --ap_version='cocoMAP'
+env CUDA_VISIABLE_DEVICES=0 python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/90' --test_list='' --ap_version='11point'
+env CUDA_VISIABLE_DEVICES=0 python eval_cocoMAP.py --dataset='coco2014' --model_dir='train_coco_model/24'
 ```
-You can evaluate your trained model in difference metric like 11point, integral and cocoMAP which is a special mAP metric used in COCO dataset.
+You can evaluate your trained model in difference metric like 11point, integral on both PASCAL VOC and COCO dataset. Moreover, we provide eval_cocoMAP.py which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). To use this eval_cocoMAP.py, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 Note we set the defualt test list to the dataset's test/val list, you can use your own test list by setting test_list args.
 
 TBD

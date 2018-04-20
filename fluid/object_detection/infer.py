@@ -15,17 +15,17 @@ from utility import add_arguments, print_arguments
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('dataset',          str,   'coco',    "coco and pascalvoc.")
+add_arg('dataset',          str,   'pascalvoc',    "coco and pascalvoc.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
 add_arg('image_path',       str,   '',        "The image used to inference and visualize.")
 add_arg('model_dir',        str,   '',     "The model path.")
-add_arg('nms_threshold',    float, 0.5,    "nms threshold")
-add_arg('confs_threshold',  float, 0.2,    "confidence threshold for draw bbox")
-add_arg('resize_h',         int,   300,    "resize image size")
-add_arg('resize_w',         int,   300,    "resize image size")
-add_arg('mean_value_B',     float, 127.5,  "mean value for B channel which will be subtracted")  #123.68
-add_arg('mean_value_G',     float, 127.5,  "mean value for G channel which will be subtracted")  #116.78
-add_arg('mean_value_R',     float, 127.5,  "mean value for R channel which will be subtracted")  #103.94
+add_arg('nms_threshold',    float, 0.45,   "NMS threshold.")
+add_arg('confs_threshold',  float, 0.2,    "Confidence threshold to draw bbox.")
+add_arg('resize_h',         int,   300,    "The resized image height.")
+add_arg('resize_w',         int,   300,    "The resized image height.")
+add_arg('mean_value_B',     float, 127.5,  "Mean value for B channel which will be subtracted.")  #123.68
+add_arg('mean_value_G',     float, 127.5,  "Mean value for G channel which will be subtracted.")  #116.78
+add_arg('mean_value_R',     float, 127.5,  "Mean value for R channel which will be subtracted.")  #103.94
 # yapf: enable
 
 
@@ -98,15 +98,15 @@ if __name__ == '__main__':
 
     data_args = reader.Settings(
         dataset=args.dataset,
-        ap_version='',
-        toy=0,
         data_dir='',
         label_file='',
-        apply_distort=False,
-        apply_expand=False,
         resize_h=args.resize_h,
         resize_w=args.resize_w,
-        mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R])
+        mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R],
+        apply_distort=False,
+        apply_expand=False,
+        ap_version='',
+        toy=0)
     infer(
         args,
         data_args=data_args,
