@@ -68,7 +68,8 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
         reader.test(data_args, test_list), batch_size=batch_size)
     if 'cocoMAP' in data_args.ap_version:
         feeder = fluid.DataFeeder(
-            place=place, feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
+            place=place,
+            feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
     else:
         feeder = fluid.DataFeeder(
             place=place, feed_list=[image, gt_box, gt_label, difficult])
@@ -80,9 +81,9 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
 
             for batch_id, data in enumerate(test_reader()):
                 nmsed_out_v = exe.run(fluid.default_main_program(),
-                                        feed=feeder.feed(data),
-                                        fetch_list=[nmsed_out],
-                                        return_numpy=False)
+                                      feed=feeder.feed(data),
+                                      fetch_list=[nmsed_out],
+                                      return_numpy=False)
                 if batch_id % 20 == 0:
                     print("Batch {0}".format(batch_id))
 
@@ -109,21 +110,21 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
                         h = ymax - ymin
                         bbox = [xmin, ymin, w, h]
                         dt_res = {
-                            'image_id' : image_id,
-                            'category_id' : category_id,
-                            'bbox' : bbox,
-                            'score' : score
+                            'image_id': image_id,
+                            'category_id': category_id,
+                            'bbox': bbox,
+                            'score': score
                         }
                         dts_res.append(dt_res)
-            
+
             with open("detection_result.json", 'w') as outfile:
                 json.dump(dts_res, outfile)
             print("start evaluate using coco api")
             from pycocotools.coco import COCO
             from pycocotools.cocoeval import COCOeval
-            cocoGt=COCO(os.path.join(data_args.data_dir, test_list))
-            cocoDt=cocoGt.loadRes("detection_result.json")
-            cocoEval = COCOeval(cocoGt,cocoDt,"bbox")
+            cocoGt = COCO(os.path.join(data_args.data_dir, test_list))
+            cocoDt = cocoGt.loadRes("detection_result.json")
+            cocoEval = COCOeval(cocoGt, cocoDt, "bbox")
             cocoEval.evaluate()
             cocoEval.accumulate()
             cocoEval.summarize()
@@ -150,7 +151,9 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
                 if batch_id % 20 == 0:
                     print("Batch {0}, map {1}".format(batch_id, test_map[0]))
             print("Test model {0}, map {1}".format(model_dir, test_map[0]))
+
     test()
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -168,7 +171,7 @@ if __name__ == '__main__':
 
     data_args = reader.Settings(
         dataset=args.dataset,
-        ap_version = args.ap_version,
+        ap_version=args.ap_version,
         toy=0,
         data_dir=args.data_dir if len(args.data_dir) > 0 else data_dir,
         label_file=label_file,

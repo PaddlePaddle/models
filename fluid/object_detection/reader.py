@@ -25,8 +25,8 @@ import copy
 
 
 class Settings(object):
-    def __init__(self, dataset, ap_version, toy, data_dir, label_file, resize_h, resize_w,
-                 mean_value, apply_distort, apply_expand):
+    def __init__(self, dataset, ap_version, toy, data_dir, label_file, resize_h,
+                 resize_w, mean_value, apply_distort, apply_expand):
         self._dataset = dataset
         self._ap_version = ap_version
         self._toy = toy
@@ -61,6 +61,7 @@ class Settings(object):
     @property
     def ap_version(self):
         return self._ap_version
+
     @property
     def toy(self):
         return self._toy
@@ -273,6 +274,7 @@ def _reader_creator(settings, file_list, mode, shuffle):
 
     return reader
 
+
 def train(settings, file_list, shuffle=True):
     file_list = os.path.join(settings.data_dir, file_list)
     if 'coco' in settings.dataset:
@@ -320,4 +322,5 @@ def infer(settings, image_path):
         img -= settings.img_mean
         img = img * 0.007843
         return img
+
     return reader

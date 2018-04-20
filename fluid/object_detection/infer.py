@@ -28,6 +28,7 @@ add_arg('mean_value_G',     float, 127.5,  "mean value for G channel which will 
 add_arg('mean_value_R',     float, 127.5,  "mean value for R channel which will be subtracted")  #103.94
 # yapf: enable
 
+
 def infer(args, data_args, image_path, model_dir):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if 'coco' in data_args.dataset:
@@ -44,25 +45,29 @@ def infer(args, data_args, image_path, model_dir):
     exe = fluid.Executor(place)
 
     if model_dir:
+
         def if_exist(var):
             return os.path.exists(os.path.join(model_dir, var.name))
+
         fluid.io.load_vars(exe, model_dir, predicate=if_exist)
 
     infer_reader = reader.infer(data_args, image_path)
-    feeder = fluid.DataFeeder(
-        place=place, feed_list=[image])
+    feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     def infer():
         data = infer_reader()
         nmsed_out_v = exe.run(fluid.default_main_program(),
-                                feed=feeder.feed([[data]]),
-                                fetch_list=[nmsed_out],
-                                return_numpy=False)
+                              feed=feeder.feed([[data]]),
+                              fetch_list=[nmsed_out],
+                              return_numpy=False)
         nmsed_out_v = np.array(nmsed_out_v[0])
-        draw_bounding_box_on_image(image_path, nmsed_out_v, args.confs_threshold)
+        draw_bounding_box_on_image(image_path, nmsed_out_v,
+                                   args.confs_threshold)
         for dt in nmsed_out_v:
             category_id, score, xmin, ymin, xmax, ymax = dt.tolist()
+
     infer()
+
 
 def draw_bounding_box_on_image(image_path, nms_out, confs_threshold):
     image = Image.open(image_path)
@@ -86,13 +91,14 @@ def draw_bounding_box_on_image(image_path, nms_out, confs_threshold):
     print("image with bbox drawed saved as {}".format(image_name))
     image.save(image_name)
 
+
 if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
     data_args = reader.Settings(
         dataset=args.dataset,
-        ap_version = '',
+        ap_version='',
         toy=0,
         data_dir='',
         label_file='',
