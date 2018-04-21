@@ -136,7 +136,7 @@ if __name__ == '__main__':
     data_args = reader.Settings(
         dataset=args.dataset,
         data_dir=args.data_dir if len(args.data_dir) > 0 else data_dir,
-        label_file=label_file,
+        label_file='',
         resize_h=args.resize_h,
         resize_w=args.resize_w,
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R],

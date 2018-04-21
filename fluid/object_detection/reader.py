@@ -193,7 +193,7 @@ def coco(settings, file_list, mode, shuffle):
             if im.mode == 'L':
                 im = im.convert('RGB')
             im_width, im_height = im.size
-            img_id = image['id']
+            im_id = image['id']
 
             # layout: category_id | xmin | ymin | xmax | ymax | iscrowd
             bbox_labels = []
@@ -223,7 +223,7 @@ def coco(settings, file_list, mode, shuffle):
             iscrowd = sample_labels[:, -1].astype('int32')
             if 'cocoMAP' in settings.ap_version:
                 yield im, boxes, lbls, iscrowd, \
-                    [img_id, img_width, img_height]
+                    [im_id, im_width, im_height]
             else:
                 yield im, boxes, lbls, iscrowd
 
