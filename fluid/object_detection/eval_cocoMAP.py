@@ -59,8 +59,10 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
     exe = fluid.Executor(place)
 
     if model_dir:
+
         def if_exist(var):
             return os.path.exists(os.path.join(model_dir, var.name))
+
         fluid.io.load_vars(exe, model_dir, predicate=if_exist)
 
     test_reader = paddle.batch(
@@ -70,55 +72,55 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
         feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
 
     def test():
-            dts_res = []
+        dts_res = []
 
-            for batch_id, data in enumerate(test_reader()):
-                nmsed_out_v = exe.run(fluid.default_main_program(),
-                                      feed=feeder.feed(data),
-                                      fetch_list=[nmsed_out],
-                                      return_numpy=False)
-                if batch_id % 20 == 0:
-                    print("Batch {0}".format(batch_id))
+        for batch_id, data in enumerate(test_reader()):
+            nmsed_out_v = exe.run(fluid.default_main_program(),
+                                  feed=feeder.feed(data),
+                                  fetch_list=[nmsed_out],
+                                  return_numpy=False)
+            if batch_id % 20 == 0:
+                print("Batch {0}".format(batch_id))
 
-                lod = nmsed_out_v[0].lod()[0]
-                nmsed_out_v = np.array(nmsed_out_v[0])
-                real_batch_size = min(batch_size, len(data))
-                assert (len(lod) == real_batch_size + 1), \
-                "Error Lod Tensor offset dimension. Lod({}) vs. batch_size({})".format(len(lod), batch_size)
-                k = 0
-                for i in range(real_batch_size):
-                    dt_num_this_img = lod[i + 1] - lod[i]
-                    image_id = int(data[i][4][0])
-                    image_width = int(data[i][4][1])
-                    image_height = int(data[i][4][2])
-                    for j in range(dt_num_this_img):
-                        dt = nmsed_out_v[k]
-                        k = k + 1
-                        category_id, score, xmin, ymin, xmax, ymax = dt.tolist()
-                        xmin = max(min(xmin, 1.0), 0.0) * image_width
-                        ymin = max(min(ymin, 1.0), 0.0) * image_height
-                        xmax = max(min(xmax, 1.0), 0.0) * image_width
-                        ymax = max(min(ymax, 1.0), 0.0) * image_height
-                        w = xmax - xmin
-                        h = ymax - ymin
-                        bbox = [xmin, ymin, w, h]
-                        dt_res = {
-                            'image_id': image_id,
-                            'category_id': category_id,
-                            'bbox': bbox,
-                            'score': score
-                        }
-                        dts_res.append(dt_res)
+            lod = nmsed_out_v[0].lod()[0]
+            nmsed_out_v = np.array(nmsed_out_v[0])
+            real_batch_size = min(batch_size, len(data))
+            assert (len(lod) == real_batch_size + 1), \
+            "Error Lod Tensor offset dimension. Lod({}) vs. batch_size({})".format(len(lod), batch_size)
+            k = 0
+            for i in range(real_batch_size):
+                dt_num_this_img = lod[i + 1] - lod[i]
+                image_id = int(data[i][4][0])
+                image_width = int(data[i][4][1])
+                image_height = int(data[i][4][2])
+                for j in range(dt_num_this_img):
+                    dt = nmsed_out_v[k]
+                    k = k + 1
+                    category_id, score, xmin, ymin, xmax, ymax = dt.tolist()
+                    xmin = max(min(xmin, 1.0), 0.0) * image_width
+                    ymin = max(min(ymin, 1.0), 0.0) * image_height
+                    xmax = max(min(xmax, 1.0), 0.0) * image_width
+                    ymax = max(min(ymax, 1.0), 0.0) * image_height
+                    w = xmax - xmin
+                    h = ymax - ymin
+                    bbox = [xmin, ymin, w, h]
+                    dt_res = {
+                        'image_id': image_id,
+                        'category_id': category_id,
+                        'bbox': bbox,
+                        'score': score
+                    }
+                    dts_res.append(dt_res)
 
-            with open("detection_result.json", 'w') as outfile:
-                json.dump(dts_res, outfile)
-            print("start evaluate using coco api")
-            cocoGt = COCO(os.path.join(data_args.data_dir, test_list))
-            cocoDt = cocoGt.loadRes("detection_result.json")
-            cocoEval = COCOeval(cocoGt, cocoDt, "bbox")
-            cocoEval.evaluate()
-            cocoEval.accumulate()
-            cocoEval.summarize()
+        with open("detection_result.json", 'w') as outfile:
+            json.dump(dts_res, outfile)
+        print("start evaluate using coco api")
+        cocoGt = COCO(os.path.join(data_args.data_dir, test_list))
+        cocoDt = cocoGt.loadRes("detection_result.json")
+        cocoEval = COCOeval(cocoGt, cocoDt, "bbox")
+        cocoEval.evaluate()
+        cocoEval.accumulate()
+        cocoEval.summarize()
 
     test()
 

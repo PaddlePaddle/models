@@ -54,8 +54,10 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
     exe = fluid.Executor(place)
 
     if model_dir:
+
         def if_exist(var):
             return os.path.exists(os.path.join(model_dir, var.name))
+
         fluid.io.load_vars(exe, model_dir, predicate=if_exist)
 
     test_reader = paddle.batch(

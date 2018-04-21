@@ -35,7 +35,7 @@ class Settings(object):
                  apply_distort=True,
                  apply_expand=True,
                  ap_version='11point',
-                 toy=0): 
+                 toy=0):
         self._dataset = dataset
         self._ap_version = ap_version
         self._toy = toy
