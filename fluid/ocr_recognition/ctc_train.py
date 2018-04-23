@@ -44,7 +44,6 @@ def train(args, data_reader=ctc_reader):
         name='label', shape=[1], dtype='int32', lod_level=1)
     sum_cost, error_evaluator, inference_program, model_average = ctc_train_net(
         images, label, args, num_classes)
-    #    sys.exit(0)
 
     # data reader
     train_reader = data_reader.train(

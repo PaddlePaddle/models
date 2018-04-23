@@ -154,7 +154,6 @@ def ctc_train_net(images, label, args, num_classes):
     casted_label = fluid.layers.cast(x=label, dtype='int64')
     error_evaluator = fluid.evaluator.EditDistance(
         input=decoded_out, label=casted_label)
-    #    error_evaluator = None
     inference_program = fluid.default_main_program().clone(for_test=True)
     optimizer = fluid.optimizer.Momentum(learning_rate=LR, momentum=MOMENTUM)
     _, params_grads = optimizer.minimize(sum_cost)
