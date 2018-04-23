@@ -68,6 +68,13 @@ parser.add_argument(
     help="pass num of train")
 
 parser.add_argument(
+    "--test_save",
+    type=str2bool,
+    default=False,
+    help="test save model")
+
+
+parser.add_argument(
     "--model_path",
     type=str,
     default="/pfs/dlnel/home/work-beijing-163-com/nmt",
@@ -288,6 +295,9 @@ def main():
                        np.exp([min(avg_cost_val[0], 100)]), 
                        len(data) / (time.time() - start_time)))
 
+                if args.test_save:
+                    break
+
             # Validate and save the model for inference.
             # val_avg_cost, val_ppl = test(exe)
             val_avg_cost, val_ppl = 0,0
@@ -302,6 +312,9 @@ def main():
                              "pass_" + str(pass_id) + ".infer.model"),
                 encoder_input_data_names + decoder_input_data_names[:-1],
                 [predict], exe)
+
+            if args.test_save:
+                break
 
     if args.local:
         # Initialize the parameters.
