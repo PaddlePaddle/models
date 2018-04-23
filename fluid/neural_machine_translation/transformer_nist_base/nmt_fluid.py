@@ -67,6 +67,12 @@ parser.add_argument(
     default=TrainTaskConfig.pass_num,
     help="pass num of train")
 
+parser.add_argument(
+    "--model_path",
+    type=str,
+    default=TrainTaskConfig.model_dir,
+    help="model path")
+
 # Flags for defining the tf.train.Server
 parser.add_argument(
     "--task_index", type=int, default=0, help="Index of task within the job")
@@ -290,15 +296,11 @@ def main():
             print("pass_id = " + str(pass_id) + " time_consumed = " +
                   str(time_consumed) + " speed= %.2f sample/s" %(total / (time.time() - ts)))
 
-            #print("epoch: %d, val avg loss: %f, val ppl: %f, "
-            #      "consumed %fs" % (pass_id, val_avg_cost, val_ppl, time_consumed))
-            """
             fluid.io.save_inference_model(
-                os.path.join(TrainTaskConfig.model_dir,
+                os.path.join(args.model_path,
                              "pass_" + str(pass_id) + ".infer.model"),
                 encoder_input_data_names + decoder_input_data_names[:-1],
                 [predict], exe)
-            """
 
     if args.local:
         # Initialize the parameters.
