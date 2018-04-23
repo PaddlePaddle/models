@@ -7,8 +7,7 @@ import paddle.fluid as fluid
 
 from model import transformer, position_encoding_init
 from optim import LearningRateScheduler
-from config import TrainTaskConfig, ModelHyperParams, pos_enc_param_names, \
-        encoder_input_data_names, decoder_input_data_names, label_data_names
+from config import *
 
 
 def pad_batch_data(insts,
@@ -62,8 +61,8 @@ def pad_batch_data(insts,
     return return_list if len(return_list) > 1 else return_list[0]
 
 
-def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
-                        n_head, d_model):
+def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
+                        trg_pad_idx, n_head, d_model):
     """
     Put all padded data needed by training into a dict.
     """
@@ -75,20 +74,20 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
                                 [1, 1, trg_max_len, 1]).astype("float32")
 
     # These shape tensors are used in reshape_op.
-    src_data_shape = np.array([len(insts), src_max_len, d_model], dtype="int32")
-    trg_data_shape = np.array([len(insts), trg_max_len, d_model], dtype="int32")
+    src_data_shape = np.array([-1, src_max_len, d_model], dtype="int32")
+    trg_data_shape = np.array([-1, trg_max_len, d_model], dtype="int32")
     src_slf_attn_pre_softmax_shape = np.array(
         [-1, src_slf_attn_bias.shape[-1]], dtype="int32")
     src_slf_attn_post_softmax_shape = np.array(
-        src_slf_attn_bias.shape, dtype="int32")
+        [-1] + list(src_slf_attn_bias.shape[1:]), dtype="int32")
     trg_slf_attn_pre_softmax_shape = np.array(
         [-1, trg_slf_attn_bias.shape[-1]], dtype="int32")
     trg_slf_attn_post_softmax_shape = np.array(
-        trg_slf_attn_bias.shape, dtype="int32")
+        [-1] + list(trg_slf_attn_bias.shape[1:]), dtype="int32")
     trg_src_attn_pre_softmax_shape = np.array(
         [-1, trg_src_attn_bias.shape[-1]], dtype="int32")
     trg_src_attn_post_softmax_shape = np.array(
-        trg_src_attn_bias.shape, dtype="int32")
+        [-1] + list(trg_src_attn_bias.shape[1:]), dtype="int32")
 
     lbl_word, lbl_weight = pad_batch_data(
         [inst[2] for inst in insts],
@@ -99,16 +98,19 @@ def prepare_batch_input(insts, input_data_names, src_pad_idx, trg_pad_idx,
         return_attn_bias=False,
         return_max_len=False)
 
-    input_dict = dict(
-        zip(input_data_names, [
-            src_word, src_pos, src_slf_attn_bias, src_data_shape,
-            src_slf_attn_pre_softmax_shape, src_slf_attn_post_softmax_shape,
-            trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias,
-            trg_data_shape, trg_slf_attn_pre_softmax_shape,
-            trg_slf_attn_post_softmax_shape, trg_src_attn_pre_softmax_shape,
-            trg_src_attn_post_softmax_shape, lbl_word, lbl_weight
+    data_input_dict = dict(
+        zip(data_input_names, [
+            src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
+            trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight
         ]))
-    return input_dict
+    util_input_dict = dict(
+        zip(util_input_names, [
+            src_data_shape, src_slf_attn_pre_softmax_shape,
+            src_slf_attn_post_softmax_shape, trg_data_shape,
+            trg_slf_attn_pre_softmax_shape, trg_slf_attn_post_softmax_shape,
+            trg_src_attn_pre_softmax_shape, trg_src_attn_post_softmax_shape
+        ]))
+    return data_input_dict, util_input_dict
 
 
 def main():
@@ -123,7 +125,7 @@ def main():
         ModelHyperParams.d_inner_hid, ModelHyperParams.dropout)
 
     lr_scheduler = LearningRateScheduler(ModelHyperParams.d_model,
-                                         TrainTaskConfig.warmup_steps, place,
+                                         TrainTaskConfig.warmup_steps,
                                          TrainTaskConfig.learning_rate)
     optimizer = fluid.optimizer.Adam(
         learning_rate=lr_scheduler.learning_rate,
@@ -152,14 +154,13 @@ def main():
         test_total_cost = 0
         test_total_token = 0
         for batch_id, data in enumerate(val_data()):
-            data_input = prepare_batch_input(
-                data, encoder_input_data_names + decoder_input_data_names[:-1] +
-                label_data_names, ModelHyperParams.eos_idx,
-                ModelHyperParams.eos_idx, ModelHyperParams.n_head,
-                ModelHyperParams.d_model)
+            data_input_dict, util_input_dict = prepare_batch_input(
+                data, data_input_names, util_input_names,
+                ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
+                ModelHyperParams.n_head, ModelHyperParams.d_model)
             test_sum_cost, test_token_num = exe.run(
                 test_program,
-                feed=data_input,
+                feed=dict(data_input_dict.items() + util_input_dict.items()),
                 fetch_list=[sum_cost, token_num],
                 use_program_cache=True)
             test_total_cost += test_sum_cost
@@ -168,34 +169,46 @@ def main():
         test_ppl = np.exp([min(test_avg_cost, 100)])
         return test_avg_cost, test_ppl
 
+    def set_util_input(input_name_value):
+        tensor = fluid.global_scope().find_var(input_name_value[0]).get_tensor()
+        tensor.set(input_name_value[1], place)
+
     # Initialize the parameters.
     exe.run(fluid.framework.default_startup_program())
     for pos_enc_param_name in pos_enc_param_names:
-        pos_enc_param = fluid.global_scope().find_var(
-            pos_enc_param_name).get_tensor()
-        pos_enc_param.set(
-            position_encoding_init(ModelHyperParams.max_length + 1,
-                                   ModelHyperParams.d_model), place)
+        set_util_input((pos_enc_param_name, position_encoding_init(
+            ModelHyperParams.max_length + 1, ModelHyperParams.d_model)))
+
+    data_input_names = encoder_data_input_fields + decoder_data_input_fields[:
+                                                                             -1] + label_data_names
+    util_input_names = encoder_util_input_fields + decoder_util_input_fields
+
+    train_exe = fluid.ParallelExecutor(
+        use_cuda=TrainTaskConfig.use_gpu,
+        loss_name=avg_cost.name
+        if TrainTaskConfig.use_avg_cost else sum_cost.name)
 
     for pass_id in xrange(TrainTaskConfig.pass_num):
         pass_start_time = time.time()
         for batch_id, data in enumerate(train_data()):
-            if len(data) != TrainTaskConfig.batch_size:
-                continue
-            data_input = prepare_batch_input(
-                data, encoder_input_data_names + decoder_input_data_names[:-1] +
-                label_data_names, ModelHyperParams.eos_idx,
-                ModelHyperParams.eos_idx, ModelHyperParams.n_head,
-                ModelHyperParams.d_model)
-            lr_scheduler.update_learning_rate(data_input)
-            outs = exe.run(fluid.framework.default_main_program(),
-                           feed=data_input,
-                           fetch_list=[sum_cost, avg_cost],
-                           use_program_cache=True)
-            sum_cost_val, avg_cost_val = np.array(outs[0]), np.array(outs[1])
+            data_input_dict, util_input_dict = prepare_batch_input(
+                data, data_input_names, util_input_names,
+                ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
+                ModelHyperParams.n_head, ModelHyperParams.d_model)
+            map(set_util_input,
+                zip(util_input_dict.keys() + [lr_scheduler.learning_rate.name],
+                    util_input_dict.values() +
+                    [lr_scheduler.update_learning_rate()]))
+            outs = train_exe.run(feed_dict=data_input_dict,
+                                 fetch_list=[sum_cost.name, token_num.name])
+            sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[1])
+            total_sum_cost = sum_cost_val.sum(
+            )  # sum the cost from multi devices
+            total_token_num = token_num_val.sum()
+            total_avg_cost = total_sum_cost / total_token_num
             print("epoch: %d, batch: %d, sum loss: %f, avg loss: %f, ppl: %f" %
-                  (pass_id, batch_id, sum_cost_val, avg_cost_val,
-                   np.exp([min(avg_cost_val[0], 100)])))
+                  (pass_id, batch_id, total_sum_cost, total_avg_cost,
+                   np.exp([min(total_avg_cost, 100)])))
         # Validate and save the model for inference.
         val_avg_cost, val_ppl = test(exe)
         pass_end_time = time.time()

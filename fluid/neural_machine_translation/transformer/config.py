@@ -1,7 +1,7 @@
 class TrainTaskConfig(object):
-    use_gpu = False
+    use_gpu = True
     # the epoch number to train.
-    pass_num = 2
+    pass_num = 20
 
     # the number of sequences contained in a mini-batch.
     batch_size = 64
@@ -117,3 +117,52 @@ decoder_input_data_names = (
 label_data_names = (
     "lbl_word",
     "lbl_weight", )
+
+encoder_data_input_fields = (
+    "src_word",
+    "src_pos",
+    "src_slf_attn_bias", )
+encoder_util_input_fields = (
+    "src_data_shape",
+    "src_slf_attn_pre_softmax_shape",
+    "src_slf_attn_post_softmax_shape", )
+decoder_data_input_fields = (
+    "trg_word",
+    "trg_pos",
+    "trg_slf_attn_bias",
+    "trg_src_attn_bias",
+    "enc_output", )
+decoder_util_input_fields = (
+    "trg_data_shape",
+    "trg_slf_attn_pre_softmax_shape",
+    "trg_slf_attn_post_softmax_shape",
+    "trg_src_attn_pre_softmax_shape",
+    "trg_src_attn_post_softmax_shape", )
+
+input_descs = {
+    "src_word": [(1 * (ModelHyperParams.max_length + 1), 1L), "int64"],
+    "src_pos": [(1 * (ModelHyperParams.max_length + 1), 1L), "int64"],
+    "src_slf_attn_bias":
+    [(1, ModelHyperParams.n_head, (ModelHyperParams.max_length + 1),
+      (ModelHyperParams.max_length + 1)), "float32"],
+    "src_data_shape": [(3L, ), "int32"],
+    "src_slf_attn_pre_softmax_shape": [(2L, ), "int32"],
+    "src_slf_attn_post_softmax_shape": [(4L, ), "int32"],
+    "trg_word": [(1 * (ModelHyperParams.max_length + 1), 1L), "int64"],
+    "trg_pos": [(1 * (ModelHyperParams.max_length + 1), 1L), "int64"],
+    "trg_slf_attn_bias": [(1, ModelHyperParams.n_head,
+                           (ModelHyperParams.max_length + 1),
+                           (ModelHyperParams.max_length + 1)), "float32"],
+    "trg_src_attn_bias": [(1, ModelHyperParams.n_head,
+                           (ModelHyperParams.max_length + 1),
+                           (ModelHyperParams.max_length + 1)), "float32"],
+    "trg_data_shape": [(3L, ), "int32"],
+    "trg_slf_attn_pre_softmax_shape": [(2L, ), "int32"],
+    "trg_slf_attn_post_softmax_shape": [(4L, ), "int32"],
+    "trg_src_attn_pre_softmax_shape": [(2L, ), "int32"],
+    "trg_src_attn_post_softmax_shape": [(4L, ), "int32"],
+    "enc_output": [(1, (ModelHyperParams.max_length + 1),
+                    ModelHyperParams.d_model), "float32"],
+    "lbl_word": [(1 * (ModelHyperParams.max_length + 1), 1L), "int64"],
+    "lbl_weight": [(1 * (ModelHyperParams.max_length + 1), 1L), "float32"],
+}
