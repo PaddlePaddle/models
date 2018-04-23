@@ -239,8 +239,9 @@ def parallel_exe(args,
 
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    train_exe = fluid.ParallelExecutor(
-        use_cuda=args.use_gpu, loss_name=loss.name)
+    if args.parallel:
+        train_exe = fluid.ParallelExecutor(
+            use_cuda=args.use_gpu, loss_name=loss.name)
 
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
@@ -279,8 +280,13 @@ def parallel_exe(args,
             prev_start_time = start_time
             start_time = time.time()
             if len(data) < devices_num: continue
-            loss_v, = train_exe.run(fetch_list=[loss.name],
-                                    feed_dict=feeder.feed(data))
+            if args.parallel:
+                loss_v, = train_exe.run(fetch_list=[loss.name],
+                                        feed_dict=feeder.feed(data))
+            else:
+                loss_v, = exe.run(fluid.default_main_program(),
+                                  feed=feeder.feed(data),
+                                  fetch_list=[loss])
             end_time = time.time()
             loss_v = np.mean(np.array(loss_v))
             if batch_id % 20 == 0:
