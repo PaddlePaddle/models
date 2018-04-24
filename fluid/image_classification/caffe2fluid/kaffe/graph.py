@@ -124,10 +124,18 @@ class Graph(object):
         for node in self.topologically_sorted():
             # If the node has learned parameters, display the first one's shape.
             # In case of convolutions, this corresponds to the weights.
-            data_shape = node.data[0].shape if node.data else '--'
-            out_shape = node.output_shape or '--'
-            s.append('{:<20} {:<30} {:>20} {:>20}'.format(
-                node.kind, node.name, data_shape, tuple(out_shape)))
+            if node.data is None:
+                data_shape = '--'
+                out_shape = node.output_shape or '--'
+                s.append('{:<20} {:<30} {:>20} {:>20}'.format(
+                    node.kind, node.name, data_shape, tuple(out_shape)))
+            else:
+                for d in node.data:
+                    #data_shape = node.data[0].shape if node.data else '--'
+                    data_shape = d.shape
+                    out_shape = node.output_shape or '--'
+                    s.append('{:<20} {:<30} {:>20} {:>20}'.format(
+                        node.kind, node.name, data_shape, tuple(out_shape)))
         return '\n'.join(s)
 
 
