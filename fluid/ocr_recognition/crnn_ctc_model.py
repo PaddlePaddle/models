@@ -143,7 +143,7 @@ def ctc_train_net(images, label, args, num_classes):
     gradient_clip = None
     if args.parallel:
         places = fluid.layers.get_places()
-        pd = fluid.layers.ParallelDo(places)
+        pd = fluid.layers.ParallelDo(places, use_nccl=True)
         with pd.do():
             images_ = pd.read_input(images)
             label_ = pd.read_input(label)

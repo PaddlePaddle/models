@@ -17,6 +17,7 @@ from decoder.post_decode_faster import Decoder
 from data_utils.util import lodtensor_to_ndarray
 from model_utils.model import stacked_lstmp_model
 from data_utils.util import split_infer_result
+from tools.error_rate import char_errors
 
 
 def parse_args():
@@ -87,6 +88,11 @@ def parse_args():
         default='data/infer_label.lst',
         help='The label list path for inference. (default: %(default)s)')
     parser.add_argument(
+        '--ref_txt',
+        type=str,
+        default='data/text.test',
+        help='The reference text for decoding. (default: %(default)s)')
+    parser.add_argument(
         '--checkpoint',
         type=str,
         default='./checkpoint',
@@ -106,6 +112,16 @@ def parse_args():
         type=str,
         default="./decoder/logprior",
         help="The log prior probs for training data. (default: %(default)s)")
+    parser.add_argument(
+        '--acoustic_scale',
+        type=float,
+        default=0.2,
+        help="Scaling factor for acoustic likelihoods. (default: %(default)f)")
+    parser.add_argument(
+        '--target_trans',
+        type=str,
+        default="./decoder/target_trans.txt",
+        help="The path to target transcription. (default: %(default)s)")
     args = parser.parse_args()
     return args
 
@@ -115,6 +131,18 @@ def print_arguments(args):
     for arg, value in sorted(vars(args).iteritems()):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
+
+
+def get_trg_trans(args):
+    trans_dict = {}
+    with open(args.target_trans) as trg_trans:
+        line = trg_trans.readline()
+        while line:
+            items = line.strip().split()
+            key = items[0]
+            trans_dict[key] = ''.join(items[1:])
+            line = trg_trans.readline()
+    return trans_dict
 
 
 def infer_from_ckpt(args):
@@ -140,8 +168,13 @@ def infer_from_ckpt(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
+    trg_trans = get_trg_trans(args)
     # load checkpoint.
     fluid.io.load_persistables(exe, args.checkpoint)
+
+    # init decoder
+    decoder = Decoder(args.vocabulary, args.graphs, args.log_prior,
+                      args.acoustic_scale)
 
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
@@ -157,17 +190,16 @@ def infer_from_ckpt(args):
                                                args.infer_label_lst)
     infer_data_reader.set_transformers(ltrans)
     infer_costs, infer_accs = [], []
+    total_edit_dist, total_ref_len = 0.0, 0
     for batch_id, batch_data in enumerate(
             infer_data_reader.batch_iterator(args.batch_size,
                                              args.minimum_batch_size)):
         # load_data
-        (features, labels, lod) = batch_data
-        feature_t.set(features.ndarray, place)
-        feature_t.set_lod([lod.ndarray])
-        label_t.set(labels.ndarray, place)
-        label_t.set_lod([lod.ndarray])
-
-        infer_data_reader.recycle(features, labels, lod)
+        (features, labels, lod, name_lst) = batch_data
+        feature_t.set(features, place)
+        feature_t.set_lod([lod])
+        label_t.set(labels, place)
+        label_t.set_lod([lod])
 
         results = exe.run(infer_program,
                           feed={"feature": feature_t,
@@ -179,11 +211,19 @@ def infer_from_ckpt(args):
 
         probs, lod = lodtensor_to_ndarray(results[0])
         infer_batch = split_infer_result(probs, lod)
-        for index, sample in enumerate(infer_batch):
-            key = "utter#%d" % (batch_id * args.batch_size + index)
-            print(key, ": ", decoder.decode(key, sample), "\n")
 
-    print(np.mean(infer_costs), np.mean(infer_accs))
+        for index, sample in enumerate(infer_batch):
+            key = name_lst[index]
+            ref = trg_trans[key]
+            hyp = decoder.decode(key, sample)
+            edit_dist, ref_len = char_errors(ref.decode("utf8"), hyp)
+            total_edit_dist += edit_dist
+            total_ref_len += ref_len
+            print(key + "|Ref:", ref)
+            print(key + "|Hyp:", hyp.encode("utf8"))
+            print("Instance CER: ", edit_dist / ref_len)
+
+    print("Total CER = %f" % (total_edit_dist / total_ref_len))
 
 
 if __name__ == '__main__':

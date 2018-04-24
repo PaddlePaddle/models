@@ -23,7 +23,7 @@ PYBIND11_MODULE(post_decode_faster, m) {
   m.doc() = "Decoder for Deep ASR model";
 
   py::class_<Decoder>(m, "Decoder")
-      .def(py::init<std::string, std::string, std::string>())
+      .def(py::init<std::string, std::string, std::string, kaldi::BaseFloat>())
       .def("decode",
            (std::vector<std::string> (Decoder::*)(std::string)) &
                Decoder::decode,

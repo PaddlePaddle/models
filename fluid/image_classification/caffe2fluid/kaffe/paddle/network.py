@@ -1,10 +1,11 @@
-import math
+import sys
 import os
+import math
 import numpy as np
 
 
 def import_fluid():
-    import paddle.v2.fluid as fluid
+    import paddle.fluid as fluid
     return fluid
 
 
@@ -64,7 +65,7 @@ class Network(object):
         if os.path.isdir(data_path):
             assert (exe is not None), \
                 'must provide a executor to load fluid model'
-            fluid.io.load_persistables_if_exist(executor=exe, dirname=data_path)
+            fluid.io.load_persistables(executor=exe, dirname=data_path)
             return True
 
         #load model from a npy file
@@ -161,40 +162,12 @@ class Network(object):
         output = fluid.layers.relu(x=input)
         return output
 
-    def _adjust_pad_if_needed(self, i_hw, k_hw, s_hw, p_hw):
-        #adjust the padding if needed
-        i_h, i_w = i_hw
-        k_h, k_w = k_hw
-        s_h, s_w = s_hw
-        p_h, p_w = p_hw
-
-        def is_consistent(i, k, s, p):
-            o = i + 2 * p - k
-            if o % s == 0:
-                return True
-            else:
-                return False
-
-        real_p_h = 0
-        real_p_w = 0
-        if is_consistent(i_h, k_h, s_h, p_h) is False:
-            real_p_h = int(k_h / 2)
-
-        if is_consistent(i_w, k_w, s_w, p_w) is False:
-            real_p_w = int(k_w / 2)
-
-        return [real_p_h, real_p_w]
-
-    def pool(self, pool_type, input, k_h, k_w, s_h, s_w, name, padding):
+    def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
+             name):
         # Get the number of channels in the input
         in_hw = input.shape[2:]
         k_hw = [k_h, k_w]
         s_hw = [s_h, s_w]
-
-        if padding is None:
-            #fix bug about the difference between conv and pool
-            #more info: https://github.com/BVLC/caffe/issues/1318
-            padding = self._adjust_pad_if_needed(in_hw, k_hw, s_hw, [0, 0])
 
         fluid = import_fluid()
         output = fluid.layers.pool2d(
@@ -202,16 +175,40 @@ class Network(object):
             pool_size=k_hw,
             pool_stride=s_hw,
             pool_padding=padding,
+            ceil_mode=ceil_mode,
             pool_type=pool_type)
         return output
 
     @layer
-    def max_pool(self, input, k_h, k_w, s_h, s_w, name, padding=None):
-        return self.pool('max', input, k_h, k_w, s_h, s_w, name, padding)
+    def max_pool(self,
+                 input,
+                 k_h,
+                 k_w,
+                 s_h,
+                 s_w,
+                 ceil_mode,
+                 padding=[0, 0],
+                 name=None):
+        return self.pool('max', input, k_h, k_w, s_h, s_w, ceil_mode, padding,
+                         name)
 
     @layer
-    def avg_pool(self, input, k_h, k_w, s_h, s_w, name, padding=None):
-        return self.pool('avg', input, k_h, k_w, s_h, s_w, name, padding)
+    def avg_pool(self,
+                 input,
+                 k_h,
+                 k_w,
+                 s_h,
+                 s_w,
+                 ceil_mode,
+                 padding=[0, 0],
+                 name=None):
+        return self.pool('avg', input, k_h, k_w, s_h, s_w, ceil_mode, padding,
+                         name)
+
+    @layer
+    def sigmoid(self, input, name):
+        fluid = import_fluid()
+        return fluid.layers.sigmoid(input)
 
     @layer
     def lrn(self, input, radius, alpha, beta, name, bias=1.0):
@@ -258,7 +255,12 @@ class Network(object):
         return output
 
     @layer
-    def batch_normalization(self, input, name, scale_offset=True, relu=False):
+    def batch_normalization(self,
+                            input,
+                            name,
+                            scale_offset=True,
+                            eps=1e-5,
+                            relu=False):
         # NOTE: Currently, only inference is supported
         fluid = import_fluid()
         prefix = name + '_'
@@ -276,7 +278,7 @@ class Network(object):
             bias_attr=bias_attr,
             moving_mean_name=mean_name,
             moving_variance_name=variance_name,
-            epsilon=1e-5,
+            epsilon=eps,
             act='relu' if relu is True else None)
 
         return output
@@ -287,3 +289,16 @@ class Network(object):
         output = fluid.layers.dropout(
             input, dropout_prob=drop_prob, is_test=is_test, name=name)
         return output
+
+    def custom_layer_factory(self):
+        """ get a custom layer maker provided by subclass
+        """
+        raise NotImplementedError(
+            '[custom_layer_factory] must be implemented by the subclass.')
+
+    @layer
+    def custom_layer(self, inputs, kind, name, *args, **kwargs):
+        """ make custom layer
+        """
+        layer_factory = self.custom_layer_factory()
+        return layer_factory(kind, inputs, name, *args, **kwargs)
