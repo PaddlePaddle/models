@@ -290,7 +290,7 @@ def main():
                                fetch_list=[sum_cost, avg_cost],
                                use_program_cache=True)
                 sum_cost_val, avg_cost_val = np.array(outs[0]), np.array(outs[1])
-                print("epoch: %d, batch: %d, sum loss: %f, avg loss: %f, ppl: %f, speed=%.2f /s" %
+                print("epoch: %d, batch: %d, sum loss: %f, avg loss: %f, ppl: %f, speed: %.2f" %
                       (pass_id, batch_id, sum_cost_val, avg_cost_val,
                        np.exp([min(avg_cost_val[0], 100)]), 
                        len(data) / (time.time() - start_time)))
@@ -303,7 +303,7 @@ def main():
             val_avg_cost, val_ppl = 0,0
             pass_end_time = time.time()
             time_consumed = pass_end_time - pass_start_time
-            print("pass_id = %s time_consumed = %s val_avg_cost=%f val_ppl=%f speed= %.2f sample/s" % \
+            print("pass_id = %s time_consumed = %s val_avg_cost=%f val_ppl=%f speed: %.2f" % \
                   (str(pass_id), str(time_consumed), \
                      val_avg_cost, val_ppl, total / (time.time() - ts)))
 
