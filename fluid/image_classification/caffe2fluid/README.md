@@ -24,7 +24,8 @@ This tool is used to convert a Caffe model to a Fluid model
 
     - Save weights as fluid model file
         ```
-        python alexnet.py alexnet.npy ./fluid
+        python alexnet.py alexnet.npy ./fluid #only infer the last layer's result
+        python alexnet.py alexnet.npy ./fluid fc8,prob #infer these 2 layer's result
       ```
 
 3. Use the converted model to infer

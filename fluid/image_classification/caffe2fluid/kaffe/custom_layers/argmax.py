@@ -27,7 +27,9 @@ def argmax_shape(input_shape, out_max_val=False, top_k=1, axis=-1):
         axis += len(input_shape)
 
     assert (axis + 1 == len(input_shape)
-            ), 'only can be applied on the last dimension now'
+            ), 'only can be applied on the last dimension[axis:%d, %s] now,'\
+                    'make sure you have set axis param in xxx.prototxt file' \
+                    % (axis, str(input_shape))
 
     output_shape = input_shape
     output_shape[-1] = top_k
@@ -56,14 +58,13 @@ def argmax_layer(input, name, out_max_val=False, top_k=1, axis=-1):
     if axis < 0:
         axis += len(input.shape)
 
-    assert (axis + 1 == len(input_shape)
-            ), 'only can be applied on the last dimension now'
-
     topk_var, index_var = fluid.layers.topk(input=input, k=top_k)
     if out_max_val is True:
-        output = fluid.layers.concate([topk_var, index_var], axis=axis)
+        index_var = fluid.layers.cast(index_var, dtype=topk_var.dtype)
+        output = fluid.layers.concat([index_var, topk_var], axis=axis)
     else:
-        output = topk_var
+        output = index_var
+
     return output
 
 

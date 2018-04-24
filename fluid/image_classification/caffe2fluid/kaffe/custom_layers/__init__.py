@@ -30,8 +30,9 @@ def set_args(f, params):
     kwargs = {}
     for arg_name in arg_list:
         try:
-            v = getattr(node.layer.parameters, arg_name, None)
+            v = getattr(params, arg_name, None)
         except Exception as e:
+            #maybe failed to extract caffe's parameters
             v = None
 
         if v is not None:

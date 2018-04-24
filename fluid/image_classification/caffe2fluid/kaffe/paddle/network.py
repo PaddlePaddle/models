@@ -290,20 +290,15 @@ class Network(object):
             input, dropout_prob=drop_prob, is_test=is_test, name=name)
         return output
 
+    def custom_layer_factory(self):
+        """ get a custom layer maker provided by subclass
+        """
+        raise NotImplementedError(
+            '[custom_layer_factory] must be implemented by the subclass.')
+
     @layer
     def custom_layer(self, inputs, kind, name, *args, **kwargs):
-        """ make custom layer from the package specified by '$CAFFE2FLUID_CUSTOM_LAYERS'
+        """ make custom layer
         """
-        #fluid = import_fluid()
-        #import custom package
-        default = os.path.dirname(os.path.abspath(__file__))
-        p = os.environ.get('CAFFE2FLUID_CUSTOM_LAYERS', default)
-        pk = os.path.join(p, 'custom_layers')
-        assert os.path.exists(pk) is True, "not found custom_layer package [%s],"\
-                "you need to set $CAFFE2FLUID_CUSTOM_LAYERS" % (pk)
-
-        if p not in sys.path:
-            sys.path.insert(0, p)
-
-        from custom_layers import make_custom_layer
-        return make_custom_layer(kind, inputs, name, *args, **kwargs)
+        layer_factory = self.custom_layer_factory()
+        return layer_factory(kind, inputs, name, *args, **kwargs)
