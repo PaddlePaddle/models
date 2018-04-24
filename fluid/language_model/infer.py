@@ -18,7 +18,7 @@ def infer(test_reader, use_cuda, model_path):
 
     with fluid.scope_guard(fluid.core.Scope()):
         infer_program, feed_target_names, fetch_vars = fluid.io.load_inference_model(
-                model_path, exe)
+            model_path, exe)
 
         accum_cost = 0.0
         accum_words = 0
@@ -26,9 +26,11 @@ def infer(test_reader, use_cuda, model_path):
         for data in test_reader():
             src_wordseq = utils.to_lodtensor(map(lambda x: x[0], data), place)
             dst_wordseq = utils.to_lodtensor(map(lambda x: x[1], data), place)
-            avg_cost = exe.run(infer_program, 
-                    feed={"src_wordseq": src_wordseq, "dst_wordseq": dst_wordseq}, 
-                    fetch_list=fetch_vars)
+            avg_cost = exe.run(
+                infer_program,
+                feed={"src_wordseq": src_wordseq,
+                      "dst_wordseq": dst_wordseq},
+                fetch_list=fetch_vars)
 
             nwords = src_wordseq.lod()[0][-1]
 
@@ -38,7 +40,8 @@ def infer(test_reader, use_cuda, model_path):
 
         ppl = math.exp(accum_cost / accum_words)
         t1 = time.time()
-        print("model:%s ppl:%.3f time_cost(s):%.2f" % (model_path, ppl, t1 - t0))
+        print("model:%s ppl:%.3f time_cost(s):%.2f" %
+              (model_path, ppl, t1 - t0))
 
 
 if __name__ == "__main__":
@@ -55,12 +58,8 @@ if __name__ == "__main__":
         exit(-1)
 
     vocab, train_reader, test_reader = utils.prepare_data(
-            batch_size=20,
-            buffer_size=1000,
-            word_freq_threshold=0)
+        batch_size=20, buffer_size=1000, word_freq_threshold=0)
 
-    for epoch in xrange(start_index, last_index+1):
+    for epoch in xrange(start_index, last_index + 1):
         epoch_path = model_dir + "/epoch_" + str(epoch)
-        infer(test_reader=test_reader,
-                use_cuda=True,
-                model_path=epoch_path)
+        infer(test_reader=test_reader, use_cuda=True, model_path=epoch_path)

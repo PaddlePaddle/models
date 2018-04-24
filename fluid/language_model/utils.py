@@ -26,13 +26,15 @@ def prepare_data(batch_size, buffer_size=1000, word_freq_threshold=0):
     """ prepare the English Pann Treebank (PTB) data """
     vocab = paddle.dataset.imikolov.build_dict(word_freq_threshold)
     train_reader = paddle.batch(
-            paddle.reader.shuffle(
-                paddle.dataset.imikolov.train(
-                    vocab, buffer_size, data_type=paddle.dataset.imikolov.DataType.SEQ),
-                buf_size=buffer_size),
-            batch_size)
+        paddle.reader.shuffle(
+            paddle.dataset.imikolov.train(
+                vocab,
+                buffer_size,
+                data_type=paddle.dataset.imikolov.DataType.SEQ),
+            buf_size=buffer_size),
+        batch_size)
     test_reader = paddle.batch(
-            paddle.dataset.imikolov.test(
-                vocab, buffer_size, data_type=paddle.dataset.imikolov.DataType.SEQ), 
-            batch_size)
-    return vocab, train_reader, test_reader 
+        paddle.dataset.imikolov.test(
+            vocab, buffer_size, data_type=paddle.dataset.imikolov.DataType.SEQ),
+        batch_size)
+    return vocab, train_reader, test_reader
