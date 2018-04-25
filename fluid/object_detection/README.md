@@ -74,12 +74,30 @@ TBD
 
 ### Evaluate
 
-```python
-env CUDA_VISIABLE_DEVICES=0 python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/90' --test_list='' --ap_version='11point'
-env CUDA_VISIABLE_DEVICES=0 python eval_cocoMAP.py --dataset='coco2014' --model_dir='train_coco_model/24'
+You can evaluate your trained model in different metric like 11point, integral on both PASCAL VOC and COCO dataset. Moreover, we provide eval_coco_map.py which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). To use this eval_coco_map.py, [cocoapi](https://github.com/cocodataset/cocoapi) is needed. 
+Install the cocoapi:
 ```
-You can evaluate your trained model in difference metric like 11point, integral on both PASCAL VOC and COCO dataset. Moreover, we provide eval_cocoMAP.py which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). To use this eval_cocoMAP.py, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
+# COCOAPI=/path/to/clone/cocoapi
+git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
+cd $COCOAPI/PythonAPI
+# Install into global site-packages
+make install
+# Alternatively, if you do not have permissions or prefer
+# not to install the COCO API into global site-packages
+python2 setup.py install --user
+```
 Note we set the defualt test list to the dataset's test/val list, you can use your own test list by setting test_list args.
+
+#### Evaluate on PASCAL VOC
+```python
+env CUDA_VISIABLE_DEVICES=0 python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/90' --data_dir='data/pascalvoc' --test_list='test.txt' --ap_version='11point'
+```
+
+#### Evaluate on MS-COCO
+```python
+env CUDA_VISIABLE_DEVICES=0 python eval.py --dataset='coco2014' --nms_threshold=0.5 --model_dir='train_coco_model/40' --test_list='annotations/instances_minival2014.json' --ap_version='integral'
+env CUDA_VISIABLE_DEVICES=0 python eval_coco_map.py --dataset='coco2017' --nms_threshold=0.5 --model_dir='train_coco_model/40' --test_list='annotations/instances_minival2017.json'
+```
 
 TBD
 

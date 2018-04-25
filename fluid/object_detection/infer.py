@@ -45,10 +45,8 @@ def infer(args, data_args, image_path, model_dir):
     exe = fluid.Executor(place)
 
     if model_dir:
-
         def if_exist(var):
             return os.path.exists(os.path.join(model_dir, var.name))
-
         fluid.io.load_vars(exe, model_dir, predicate=if_exist)
 
     infer_reader = reader.infer(data_args, image_path)

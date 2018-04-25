@@ -16,7 +16,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('learning_rate',    float, 0.001,     "Learning rate.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
-add_arg('num_passes',       int,   25,        "Epoch number.")
+add_arg('num_passes',       int,   120,       "Epoch number.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
 add_arg('dataset',          str,   'pascalvoc', "coco2014, coco2017, and pascalvoc.")
 add_arg('model_save_dir',   str,   'model',     "The path to save model.")
@@ -116,10 +116,8 @@ def parallel_do(args,
     exe.run(fluid.default_startup_program())
 
     if pretrained_model:
-
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
-
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     train_reader = paddle.batch(
@@ -137,7 +135,7 @@ def parallel_do(args,
             test_map = exe.run(test_program,
                                feed=feeder.feed(data),
                                fetch_list=[accum_map])
-        print("Test {0}, map {1}".format(pass_id, test_map[0]))
+        print("Pass {0}, test map {1}".format(pass_id, test_map[0]))
 
     for pass_id in range(num_passes):
         start_time = time.time()
@@ -239,10 +237,8 @@ def parallel_exe(args,
     exe.run(fluid.default_startup_program())
 
     if pretrained_model:
-
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
-
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     train_exe = fluid.ParallelExecutor(
@@ -276,7 +272,7 @@ def parallel_exe(args,
         if test_map[0] > best_map:
             best_map = test_map[0]
             save_model('best_model')
-        print("Pass {0}, map {1}".format(pass_id, test_map[0]))
+        print("Pass {0}, test map {1}".format(pass_id, test_map[0]))
 
     for pass_id in range(num_passes):
         start_time = time.time()
