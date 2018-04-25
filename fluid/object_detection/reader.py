@@ -25,8 +25,16 @@ import copy
 
 
 class Settings(object):
-    def __init__(self, dataset, toy, data_dir, label_file, resize_h, resize_w,
-                 mean_value, apply_distort, apply_expand):
+    def __init__(self,
+                 dataset=None,
+                 data_dir=None,
+                 label_file=None,
+                 resize_h=300,
+                 resize_w=300,
+                 mean_value=[127.5, 127.5, 127.5],
+                 apply_distort=True,
+                 apply_expand=True,
+                 toy=0):
         self._dataset = dataset
         self._toy = toy
         self._data_dir = data_dir
@@ -94,169 +102,168 @@ class Settings(object):
         return self._img_mean
 
 
-def _reader_creator(settings, file_list, mode, shuffle):
+def preprocess(img, bbox_labels, mode, settings):
+    img_width, img_height = img.size
+    sampled_labels = bbox_labels
+    if mode == 'train':
+        if settings._apply_distort:
+            img = image_util.distort_image(img, settings)
+        if settings._apply_expand:
+            img, bbox_labels, img_width, img_height = image_util.expand_image(
+                img, bbox_labels, img_width, img_height, settings)
+        # sampling
+        batch_sampler = []
+        # hard-code here
+        batch_sampler.append(
+            image_util.sampler(1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0))
+        batch_sampler.append(
+            image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0))
+        batch_sampler.append(
+            image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0))
+        batch_sampler.append(
+            image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0))
+        batch_sampler.append(
+            image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0))
+        batch_sampler.append(
+            image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0))
+        batch_sampler.append(
+            image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0))
+        sampled_bbox = image_util.generate_batch_samples(batch_sampler,
+                                                         bbox_labels)
+
+        img = np.array(img)
+        if len(sampled_bbox) > 0:
+            idx = int(random.uniform(0, len(sampled_bbox)))
+            img, sampled_labels = image_util.crop_image(
+                img, bbox_labels, sampled_bbox[idx], img_width, img_height)
+
+        img = Image.fromarray(img)
+    img = img.resize((settings.resize_w, settings.resize_h), Image.ANTIALIAS)
+    img = np.array(img)
+
+    if mode == 'train':
+        mirror = int(random.uniform(0, 2))
+        if mirror == 1:
+            img = img[:, ::-1, :]
+            for i in xrange(len(sampled_labels)):
+                tmp = sampled_labels[i][1]
+                sampled_labels[i][1] = 1 - sampled_labels[i][3]
+                sampled_labels[i][3] = 1 - tmp
+    # HWC to CHW
+    if len(img.shape) == 3:
+        img = np.swapaxes(img, 1, 2)
+        img = np.swapaxes(img, 1, 0)
+    # RBG to BGR
+    img = img[[2, 1, 0], :, :]
+    img = img.astype('float32')
+    img -= settings.img_mean
+    img = img * 0.007843
+    return img, sampled_labels
+
+
+def coco(settings, file_list, mode, shuffle):
+    # cocoapi
+    from pycocotools.coco import COCO
+    from pycocotools.cocoeval import COCOeval
+
+    coco = COCO(file_list)
+    image_ids = coco.getImgIds()
+    images = coco.loadImgs(image_ids)
+    category_ids = coco.getCatIds()
+    category_names = [item['name'] for item in coco.loadCats(category_ids)]
+
+    if not settings.toy == 0:
+        images = images[:settings.toy] if len(images) > settings.toy else images
+    print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
+
     def reader():
-        if settings.dataset == 'coco':
-            # cocoapi 
-            from pycocotools.coco import COCO
-            from pycocotools.cocoeval import COCOeval
-
-            coco = COCO(file_list)
-            image_ids = coco.getImgIds()
-            images = coco.loadImgs(image_ids)
-            category_ids = coco.getCatIds()
-            category_names = [
-                item['name'] for item in coco.loadCats(category_ids)
-            ]
-        elif settings.dataset == 'pascalvoc':
-            flist = open(file_list)
-            images = [line.strip() for line in flist]
-
-        if not settings.toy == 0:
-            images = images[:settings.toy] if len(
-                images) > settings.toy else images
-        print("{} on {} with {} images".format(mode, settings.dataset,
-                                               len(images)))
-
-        if shuffle:
+        if mode == 'train' and shuffle:
             random.shuffle(images)
-
         for image in images:
-            if settings.dataset == 'coco':
-                image_name = image['file_name']
-                image_path = os.path.join(settings.data_dir, image_name)
-            elif settings.dataset == 'pascalvoc':
-                if mode == 'train' or mode == 'test':
-                    image_path, label_path = image.split()
-                    image_path = os.path.join(settings.data_dir, image_path)
-                    label_path = os.path.join(settings.data_dir, label_path)
-                elif mode == 'infer':
-                    image_path = os.path.join(settings.data_dir, image)
+            image_name = image['file_name']
+            image_path = os.path.join(settings.data_dir, image_name)
 
-            img = Image.open(image_path)
-            if img.mode == 'L':
-                img = img.convert('RGB')
-            img_width, img_height = img.size
+            im = Image.open(image_path)
+            if im.mode == 'L':
+                im = im.convert('RGB')
+            im_width, im_height = im.size
 
-            if mode == 'train' or mode == 'test':
-                if settings.dataset == 'coco':
-                    # layout: category_id | xmin | ymin | xmax | ymax | iscrowd | origin_coco_bbox | segmentation | area | image_id | annotation_id
-                    bbox_labels = []
-                    annIds = coco.getAnnIds(imgIds=image['id'])
-                    anns = coco.loadAnns(annIds)
-                    for ann in anns:
-                        bbox_sample = []
-                        # start from 1, leave 0 to background
-                        bbox_sample.append(
-                            float(category_ids.index(ann['category_id'])) + 1)
-                        bbox = ann['bbox']
-                        xmin, ymin, w, h = bbox
-                        xmax = xmin + w
-                        ymax = ymin + h
-                        bbox_sample.append(float(xmin) / img_width)
-                        bbox_sample.append(float(ymin) / img_height)
-                        bbox_sample.append(float(xmax) / img_width)
-                        bbox_sample.append(float(ymax) / img_height)
-                        bbox_sample.append(float(ann['iscrowd']))
-                        #bbox_sample.append(ann['bbox'])
-                        #bbox_sample.append(ann['segmentation'])
-                        #bbox_sample.append(ann['area'])
-                        #bbox_sample.append(ann['image_id'])
-                        #bbox_sample.append(ann['id'])
-                        bbox_labels.append(bbox_sample)
-                elif settings.dataset == 'pascalvoc':
-                    # layout: label | xmin | ymin | xmax | ymax | difficult
-                    bbox_labels = []
-                    root = xml.etree.ElementTree.parse(label_path).getroot()
-                    for object in root.findall('object'):
-                        bbox_sample = []
-                        # start from 1
-                        bbox_sample.append(
-                            float(
-                                settings.label_list.index(
-                                    object.find('name').text)))
-                        bbox = object.find('bndbox')
-                        difficult = float(object.find('difficult').text)
-                        bbox_sample.append(
-                            float(bbox.find('xmin').text) / img_width)
-                        bbox_sample.append(
-                            float(bbox.find('ymin').text) / img_height)
-                        bbox_sample.append(
-                            float(bbox.find('xmax').text) / img_width)
-                        bbox_sample.append(
-                            float(bbox.find('ymax').text) / img_height)
-                        bbox_sample.append(difficult)
-                        bbox_labels.append(bbox_sample)
-
-                sample_labels = bbox_labels
-                if mode == 'train':
-                    if settings._apply_distort:
-                        img = image_util.distort_image(img, settings)
-                    if settings._apply_expand:
-                        img, bbox_labels, img_width, img_height = image_util.expand_image(
-                            img, bbox_labels, img_width, img_height, settings)
-                    batch_sampler = []
-                    # hard-code here
-                    batch_sampler.append(
-                        image_util.sampler(1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0))
-                    batch_sampler.append(
-                        image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0))
-                    batch_sampler.append(
-                        image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0))
-                    batch_sampler.append(
-                        image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0))
-                    batch_sampler.append(
-                        image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0))
-                    batch_sampler.append(
-                        image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0))
-                    batch_sampler.append(
-                        image_util.sampler(1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0))
-                    """ random crop """
-                    sampled_bbox = image_util.generate_batch_samples(
-                        batch_sampler, bbox_labels, img_width, img_height)
-
-                    img = np.array(img)
-                    if len(sampled_bbox) > 0:
-                        idx = int(random.uniform(0, len(sampled_bbox)))
-                        img, sample_labels = image_util.crop_image(
-                            img, bbox_labels, sampled_bbox[idx], img_width,
-                            img_height)
-
-                    img = Image.fromarray(img)
-            img = img.resize((settings.resize_w, settings.resize_h),
-                             Image.ANTIALIAS)
-            img = np.array(img)
-
-            if mode == 'train':
-                mirror = int(random.uniform(0, 2))
-                if mirror == 1:
-                    img = img[:, ::-1, :]
-                    for i in xrange(len(sample_labels)):
-                        tmp = sample_labels[i][1]
-                        sample_labels[i][1] = 1 - sample_labels[i][3]
-                        sample_labels[i][3] = 1 - tmp
-
-            # HWC to CHW
-            if len(img.shape) == 3:
-                img = np.swapaxes(img, 1, 2)
-                img = np.swapaxes(img, 1, 0)
-            # RBG to BGR
-            img = img[[2, 1, 0], :, :]
-            img = img.astype('float32')
-            img -= settings.img_mean
-            img = img.flatten()
-            img = img * 0.007843
-
+            # layout: category_id | xmin | ymin | xmax | ymax | iscrowd |
+            # origin_coco_bbox | segmentation | area | image_id | annotation_id
+            bbox_labels = []
+            annIds = coco.getAnnIds(imgIds=image['id'])
+            anns = coco.loadAnns(annIds)
+            for ann in anns:
+                bbox_sample = []
+                # start from 1, leave 0 to background
+                bbox_sample.append(
+                    float(category_ids.index(ann['category_id'])) + 1)
+                bbox = ann['bbox']
+                xmin, ymin, w, h = bbox
+                xmax = xmin + w
+                ymax = ymin + h
+                bbox_sample.append(float(xmin) / im_width)
+                bbox_sample.append(float(ymin) / im_height)
+                bbox_sample.append(float(xmax) / im_width)
+                bbox_sample.append(float(ymax) / im_height)
+                bbox_sample.append(float(ann['iscrowd']))
+                bbox_labels.append(bbox_sample)
+            im, sample_labels = preprocess(im, bbox_labels, mode, settings)
             sample_labels = np.array(sample_labels)
-            if mode == 'train' or mode == 'test':
-                if mode == 'train' and len(sample_labels) == 0: continue
-                if mode == 'test' and len(sample_labels) == 0: continue
-                yield img.astype(
-                    'float32'
-                ), sample_labels[:, 1:5], sample_labels[:, 0].astype(
-                    'int32'), sample_labels[:, -1].astype('int32')
-            elif mode == 'infer':
-                yield img.astype('float32')
+            if len(sample_labels) == 0: continue
+            im = im.astype('float32')
+            boxes = sample_labels[:, 1:5]
+            lbls = sample_labels[:, 0].astype('int32')
+            difficults = sample_labels[:, -1].astype('int32')
+            yield im, boxes, lbls, difficults
+
+    return reader
+
+
+def pascalvoc(settings, file_list, mode, shuffle):
+    flist = open(file_list)
+    images = [line.strip() for line in flist]
+    if not settings.toy == 0:
+        images = images[:settings.toy] if len(images) > settings.toy else images
+    print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
+
+    def reader():
+        if mode == 'train' and shuffle:
+            random.shuffle(images)
+        for image in images:
+            image_path, label_path = image.split()
+            image_path = os.path.join(settings.data_dir, image_path)
+            label_path = os.path.join(settings.data_dir, label_path)
+
+            im = Image.open(image_path)
+            if im.mode == 'L':
+                im = im.convert('RGB')
+            im_width, im_height = im.size
+
+            # layout: label | xmin | ymin | xmax | ymax | difficult
+            bbox_labels = []
+            root = xml.etree.ElementTree.parse(label_path).getroot()
+            for object in root.findall('object'):
+                bbox_sample = []
+                # start from 1
+                bbox_sample.append(
+                    float(settings.label_list.index(object.find('name').text)))
+                bbox = object.find('bndbox')
+                difficult = float(object.find('difficult').text)
+                bbox_sample.append(float(bbox.find('xmin').text) / im_width)
+                bbox_sample.append(float(bbox.find('ymin').text) / im_height)
+                bbox_sample.append(float(bbox.find('xmax').text) / im_width)
+                bbox_sample.append(float(bbox.find('ymax').text) / im_height)
+                bbox_sample.append(difficult)
+                bbox_labels.append(bbox_sample)
+            im, sample_labels = preprocess(im, bbox_labels, mode, settings)
+            sample_labels = np.array(sample_labels)
+            if len(sample_labels) == 0: continue
+            im = im.astype('float32')
+            boxes = sample_labels[:, 1:5]
+            lbls = sample_labels[:, 0].astype('int32')
+            difficults = sample_labels[:, -1].astype('int32')
+            yield im, boxes, lbls, difficults
 
     return reader
 
@@ -301,9 +308,9 @@ def train(settings, file_list, shuffle=True):
         elif '2017' in file_list:
             sub_dir = "train2017"
         train_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        return _reader_creator(train_settings, file_list, 'train', shuffle)
-    elif settings.dataset == 'pascalvoc':
-        return _reader_creator(settings, file_list, 'train', shuffle)
+        return coco(train_settings, file_list, 'train', shuffle)
+    else:
+        return pascalvoc(settings, file_list, 'train', shuffle)
 
 
 def test(settings, file_list):
@@ -315,10 +322,29 @@ def test(settings, file_list):
         elif '2017' in file_list:
             sub_dir = "val2017"
         test_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        return _reader_creator(test_settings, file_list, 'test', False)
-    elif settings.dataset == 'pascalvoc':
-        return _reader_creator(settings, file_list, 'test', False)
+        return coco(test_settings, file_list, 'test', False)
+    else:
+        return pascalvoc(settings, file_list, 'test', False)
 
 
-def infer(settings, file_list):
-    return _reader_creator(settings, file_list, 'infer', False)
+def infer(settings, image_path):
+    def reader():
+        im = Image.open(image_path)
+        if im.mode == 'L':
+            im = im.convert('RGB')
+        im_width, im_height = im.size
+        img = img.resize((settings.resize_w, settings.resize_h),
+                         Image.ANTIALIAS)
+        img = np.array(img)
+        # HWC to CHW
+        if len(img.shape) == 3:
+            img = np.swapaxes(img, 1, 2)
+            img = np.swapaxes(img, 1, 0)
+        # RBG to BGR
+        img = img[[2, 1, 0], :, :]
+        img = img.astype('float32')
+        img -= settings.img_mean
+        img = img * 0.007843
+        yield img
+
+    return reader

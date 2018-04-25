@@ -109,9 +109,17 @@ class TensorFlowMapper(NodeMapper):
             # Stochastic pooling, for instance.
             raise KaffeError('Unsupported pooling type.')
         (kernel_params, padding) = self.get_kernel_params(node)
+        ceil_mode = getattr(node.layer.parameters, 'ceil_mode', True)
         return TensorFlowNode(pool_op, kernel_params.kernel_h,
                               kernel_params.kernel_w, kernel_params.stride_h,
-                              kernel_params.stride_w, **padding)
+                              kernel_params.stride_w, ceil_mode, **padding)
+
+    def map_sigmoid(self, node):
+        return TensorFlowNode('sigmoid')
+
+    def map_custom(self, node):
+        from .. import custom_layers
+        return custom_layers.make_node(TensorFlowNode, node.kind, node)
 
     def map_inner_product(self, node):
         #TODO: Axis
@@ -190,18 +198,10 @@ class TensorFlowEmitter(object):
         codes.append(network_source + '\n')
         return self.statement('\n'.join(codes))
 
-    def emit_class_def(self, name):
-        return self.statement('class %s(Network):' % (name))
-
     def emit_setup_def(self):
         return self.statement('def setup(self):')
 
-    def emit_shape_def(self, input_nodes):
-        self.outdent()
-        func_def = self.statement('@classmethod')
-        func_def += self.statement('def input_shapes(cls):')
-        self.indent()
-
+    def get_inputs_info(self, input_nodes):
         input_shapes = {}
         for n in input_nodes:
             name = n.name
@@ -210,42 +210,7 @@ class TensorFlowEmitter(object):
             input_shapes[name] = ', '.join(shape)
         input_shapes = ['"%s": [%s]' % (n, l) for n, l in input_shapes.items()]
         shape_str = ','.join(input_shapes)
-        func_def += self.statement('return {%s}' % (shape_str))
-        return '\n\n' + func_def
-
-    def emit_convert_def(self, input_nodes):
-        codes = []
-        inputs = {}
-        codes.append('shapes = cls.input_shapes()')
-        for n in input_nodes:
-            name = n.name
-            layer_var = name + '_layer'
-            layer_def = '%s = fluid.layers.data(name="%s", shape=shapes["%s"],'\
-                    ' dtype="float32")' % (layer_var, name, name)
-            #layer_var, layer_def = data_layer_def(n.name, n.output_shape)
-            codes.append(layer_def)
-            inputs[name] = layer_var
-
-        input_dict = ','.join(['"%s": %s' % (n, l) for n, l in inputs.items()])
-
-        codes.append('feed_data = {' + input_dict + '}')
-        codes.append('net = cls(feed_data)')
-
-        codes.append("place = fluid.CPUPlace()")
-        codes.append("exe = fluid.Executor(place)")
-        codes.append("exe.run(fluid.default_startup_program())")
-        codes.append("net.load(data_path=npy_model, exe=exe, place=place)")
-        codes.append(
-            "fluid.io.save_persistables(executor=exe, dirname=fluid_path)")
-
-        self.outdent()
-        func_def = self.statement('@classmethod')
-        func_def += self.statement('def convert(cls, npy_model, fluid_path):')
-        self.indent()
-        func_def += self.statement('fluid = import_fluid()')
-        for l in codes:
-            func_def += self.statement(l)
-        return '\n' + func_def
+        return '{%s}' % (shape_str)
 
     def emit_main_def(self, name):
         if name is None:
@@ -254,13 +219,7 @@ class TensorFlowEmitter(object):
         self.prefix = ''
         main_def = self.statement('if __name__ == "__main__":')
         self.indent()
-        main_def += self.statement("#usage: python xxxnet.py xxx.npy ./model\n")
-        main_def += self.statement("import sys")
-        main_def += self.statement("npy_weight = sys.argv[1]")
-        main_def += self.statement("fluid_model = sys.argv[2]")
-        main_def += self.statement("%s.convert(npy_weight, fluid_model)" %
-                                   (name))
-        main_def += self.statement("exit(0)")
+        main_def += self.statement('exit(main())')
         return '\n\n' + main_def
 
     def emit_parents(self, chain):
@@ -275,10 +234,17 @@ class TensorFlowEmitter(object):
         return self.statement('self.' + node.emit())
 
     def emit(self, name, chains, input_nodes=None):
+        from ..net_template import generate_net_code
+        from ..net_template import generate_main_code
+
         self.net_name = name
+        inputs_info = self.get_inputs_info(input_nodes)
+
         s = self.emit_imports()
-        s += self.emit_class_def(name)
+        s += generate_net_code(name, inputs_info) + '\n'
         self.indent()
+
+        # define the net using api
         s += self.emit_setup_def()
         self.indent()
         blocks = []
@@ -289,8 +255,9 @@ class TensorFlowEmitter(object):
                 b += self.emit_node(node)
             blocks.append(b[:-1])
         s = s + '\n\n'.join(blocks)
-        s += self.emit_shape_def(input_nodes)
-        s += self.emit_convert_def(input_nodes)
+
+        # define the main function
+        s += '\n\n\n' + generate_main_code(name)
         s += self.emit_main_def(name)
         return s
 
@@ -329,6 +296,7 @@ class Transformer(object):
             # (Caffe's GoogLeNet implementation uses slashes)
             NodeRenamer(lambda node: node.name.replace('/', '_'))
         ]
+
         self.graph = graph.transformed(transformers)
 
         # Display the graph
@@ -340,9 +308,6 @@ class Transformer(object):
             transformers = [
                 # Reshape the parameters to TensorFlow's ordering
                 DataReshaper({
-                    # (c_o, c_i, h, w) -> (h, w, c_i, c_o) for TF
-                    NodeKind.Convolution: (0, 1, 2, 3),
-
                     # (c_o, c_i) -> (c_i, c_o)
                     NodeKind.InnerProduct: (1, 0)
                 }),

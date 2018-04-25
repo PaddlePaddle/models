@@ -67,11 +67,11 @@ if [[ -z $only_convert ]];then
     imgfile="data/65.jpeg"
     #FIX ME:
     #   only look the first line in prototxt file for the name of this network, maybe not correct
-    net_name=`grep "name" $proto_file | head -n1 | perl -ne 'if(/^\s*name\s*:\s*\"([^\"]+)\"/){ print $1."\n";}'`
+    net_name=`grep "name" $proto_file | head -n1 | perl -ne 'if(/^name\s*:\s*\"([^\"]+)\"/){ print $1."\n";}'`
     if [[ -z $net_name ]];then
         net_name="MyNet"
     fi
-    $PYTHON ./infer.py $net_file $weight_file $imgfile $net_name
+    $PYTHON ./infer.py dump $net_file $weight_file $imgfile $net_name
     ret=$?
 fi
 exit $ret

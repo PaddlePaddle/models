@@ -1,5 +1,6 @@
-import math
+import sys
 import os
+import math
 import numpy as np
 
 
@@ -161,7 +162,8 @@ class Network(object):
         output = fluid.layers.relu(x=input)
         return output
 
-    def pool(self, pool_type, input, k_h, k_w, s_h, s_w, name, padding):
+    def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
+             name):
         # Get the number of channels in the input
         in_hw = input.shape[2:]
         k_hw = [k_h, k_w]
@@ -173,17 +175,40 @@ class Network(object):
             pool_size=k_hw,
             pool_stride=s_hw,
             pool_padding=padding,
-            ceil_mode=True,
+            ceil_mode=ceil_mode,
             pool_type=pool_type)
         return output
 
     @layer
-    def max_pool(self, input, k_h, k_w, s_h, s_w, name, padding=[0, 0]):
-        return self.pool('max', input, k_h, k_w, s_h, s_w, name, padding)
+    def max_pool(self,
+                 input,
+                 k_h,
+                 k_w,
+                 s_h,
+                 s_w,
+                 ceil_mode,
+                 padding=[0, 0],
+                 name=None):
+        return self.pool('max', input, k_h, k_w, s_h, s_w, ceil_mode, padding,
+                         name)
 
     @layer
-    def avg_pool(self, input, k_h, k_w, s_h, s_w, name, padding=[0, 0]):
-        return self.pool('avg', input, k_h, k_w, s_h, s_w, name, padding)
+    def avg_pool(self,
+                 input,
+                 k_h,
+                 k_w,
+                 s_h,
+                 s_w,
+                 ceil_mode,
+                 padding=[0, 0],
+                 name=None):
+        return self.pool('avg', input, k_h, k_w, s_h, s_w, ceil_mode, padding,
+                         name)
+
+    @layer
+    def sigmoid(self, input, name):
+        fluid = import_fluid()
+        return fluid.layers.sigmoid(input)
 
     @layer
     def lrn(self, input, radius, alpha, beta, name, bias=1.0):
@@ -264,3 +289,16 @@ class Network(object):
         output = fluid.layers.dropout(
             input, dropout_prob=drop_prob, is_test=is_test, name=name)
         return output
+
+    def custom_layer_factory(self):
+        """ get a custom layer maker provided by subclass
+        """
+        raise NotImplementedError(
+            '[custom_layer_factory] must be implemented by the subclass.')
+
+    @layer
+    def custom_layer(self, inputs, kind, name, *args, **kwargs):
+        """ make custom layer
+        """
+        layer_factory = self.custom_layer_factory()
+        return layer_factory(kind, inputs, name, *args, **kwargs)
