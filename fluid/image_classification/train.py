@@ -220,8 +220,7 @@ def train_parallel_exe(args,
         test_info = [[], [], []]
         for batch_id, data in enumerate(train_reader()):
             t1 = time.time()
-            loss, acc1, acc5 = train_exe.run(fetch_list,
-                                             feed_dict=feeder.feed(data))
+            loss, acc1, acc5 = train_exe.run(fetch_list, feed=feeder.feed(data))
             t2 = time.time()
             period = t2 - t1
             loss = np.mean(np.array(loss))
@@ -243,8 +242,7 @@ def train_parallel_exe(args,
         train_acc5 = np.array(train_info[2]).mean()
         for data in test_reader():
             t1 = time.time()
-            loss, acc1, acc5 = test_exe.run(fetch_list,
-                                            feed_dict=feeder.feed(data))
+            loss, acc1, acc5 = test_exe.run(fetch_list, feed=feeder.feed(data))
             t2 = time.time()
             period = t2 - t1
             loss = np.mean(np.array(loss))
