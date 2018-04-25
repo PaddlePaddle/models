@@ -64,6 +64,11 @@ class MaybeActivated(object):
         if node.metadata.get('relu', False) != default:
             self.inject_kwargs['relu'] = not default
 
+        default_slope = 0.0
+        slope = node.metadata.get('relu_negative_slope', default_slope)
+        if slope != default_slope:
+            self.inject_kwargs['relu_negative_slope'] = slope
+
     def __call__(self, *args, **kwargs):
         kwargs.update(self.inject_kwargs)
         return TensorFlowNode(*args, **kwargs)
@@ -108,11 +113,19 @@ class TensorFlowMapper(NodeMapper):
         else:
             # Stochastic pooling, for instance.
             raise KaffeError('Unsupported pooling type.')
-        (kernel_params, padding) = self.get_kernel_params(node)
+
         ceil_mode = getattr(node.layer.parameters, 'ceil_mode', True)
-        return TensorFlowNode(pool_op, kernel_params.kernel_h,
-                              kernel_params.kernel_w, kernel_params.stride_h,
-                              kernel_params.stride_w, ceil_mode, **padding)
+        global_pool = getattr(node.layer.parameters, 'global_pooling', False)
+        if global_pool:
+            input_shape = node.get_only_parent().output_shape
+            return TensorFlowNode(pool_op, input_shape.height,
+                                  input_shape.width, 1, 1, ceil_mode)
+        else:
+            (kernel_params, padding) = self.get_kernel_params(node)
+            return TensorFlowNode(pool_op, kernel_params.kernel_h,
+                                  kernel_params.kernel_w,
+                                  kernel_params.stride_h,
+                                  kernel_params.stride_w, ceil_mode, **padding)
 
     def map_sigmoid(self, node):
         return TensorFlowNode('sigmoid')
@@ -168,6 +181,11 @@ class TensorFlowMapper(NodeMapper):
         except KeyError:
             raise KaffeError('Unknown elementwise operation: {}'.format(
                 op_code))
+
+    def map_scale(self, node):
+        params = node.parameters
+        return TensorFlowNode(
+            'scale', axis=params.axis, num_axes=params.num_axes)
 
     def commit(self, chains):
         return chains

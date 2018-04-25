@@ -121,6 +121,7 @@ def generate_net_code(net_name, inputs_info):
 
     net_codes = str(inspect.getsource(MyNet))
     net_codes = net_codes.replace('MyNet(object)', '%s(Network)' % net_name)
+    net_codes = net_codes.replace('MyNet', net_name)
     net_codes = net_codes.replace('"INPUTS_INFO"', inputs_info)
 
     custom_layer_dir = os.path.dirname(os.path.abspath(__file__))

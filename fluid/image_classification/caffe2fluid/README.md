@@ -1,6 +1,15 @@
 ### Caffe2Fluid
 This tool is used to convert a Caffe model to a Fluid model
 
+### Key Features
+1. Convert caffe model to fluid model with codes of defining a network(useful for re-training)
+
+2. Pycaffe is not necessary when just want convert model without do caffe-inference
+
+3. Caffe's customized layers convertion also be supported by extending this tool
+
+4. A bunch of tools in '*examples/imagenet/tools*' are provided to compare the difference
+
 ### HowTo
 1. Prepare caffepb.py in ./proto if your python has no 'pycaffe' module, two options provided here:
     - Generate pycaffe from caffe.proto
@@ -29,10 +38,10 @@ This tool is used to convert a Caffe model to a Fluid model
       ```
 
 3. Use the converted model to infer
-    - See more details in '*examples/imagenet/run.sh*'
+    - See more details in '*examples/imagenet/tools/run.sh*'
 
 4. Compare the inference results with caffe
-    - See more details in '*examples/imagenet/diff.sh*'
+    - See more details in '*examples/imagenet/tools/diff.sh*'
 
 ### How to convert custom layer
 1. Implement your custom layer in a file under '*kaffe/custom_layers*', eg: mylayer.py

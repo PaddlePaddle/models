@@ -213,7 +213,6 @@ def caffe_infer(prototxt, caffemodel, datafile):
     results = []
     names = []
     for k, v in net.blobs.items():
-        k = k.rstrip('_output')
         k = k.replace('/', '_')
         names.append(k)
         results.append(v.data.copy())
@@ -259,7 +258,7 @@ if __name__ == "__main__":
             print('usage:')
             print('\tpython %s dump [net_file] [weight_file] [datafile] [net_name]' \
                     % (sys.argv[0]))
-            print('\teg:python dump %s %s %s %s %s' % (sys.argv[0],\
+            print('\teg:python %s dump %s %s %s %s' % (sys.argv[0],\
                 net_file, weight_file, datafile, net_name))
             sys.exit(1)
 
