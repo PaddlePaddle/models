@@ -5,19 +5,19 @@
 
 # Optical Character Recognition
 
-这里将介绍如何在PaddlePaddle fluid下使用CRNN-CTC 和 CRNN-Attention模型对图片中的文字内容进行识别。
+这里将介绍如何在PaddlePaddle Fluid下使用CRNN-CTC 和 CRNN-Attention模型对图片中的文字内容进行识别。
 
 ## 1. CRNN-CTC
 
-本章的任务是识别含有单行汉语字符图片，首先采用卷积将图片转为`features map`, 然后使用`im2sequence op`将`features map`转为`sequence`，经过`双向GRU RNN`得到每个step的汉语字符的概率分布。训练过程选用的损失函数为CTC loss，最终的评估指标为`instance error rate`。
+本章的任务是识别含有单行汉语字符图片，首先采用卷积将图片转为特征图, 然后使用`im2sequence op`将特征图转为序列，通过`双向GRU`学习到序列特征。训练过程选用的损失函数为CTC(Connectionist Temporal Classification) loss，最终的评估指标为样本级别的错误率。
 
 本路径下各个文件的作用如下：
 
 - **ctc_reader.py :** 下载、读取、处理数据。提供方法`train()` 和 `test()` 分别产生训练集和测试集的数据迭代器。
 - **crnn_ctc_model.py :** 在该脚本中定义了训练网络、预测网络和evaluate网络。
 - **ctc_train.py :** 用于模型的训练，可通过命令`python train.py --help` 获得使用方法。
-- **inference.py :** 加载训练好的模型文件，对新数据进行预测。可通过命令`python inference.py --help` 获得使用方法。
-- **eval.py :** 评估模型在指定数据集上的效果。可通过命令`python inference.py --help` 获得使用方法。
+- **infer.py :** 加载训练好的模型文件，对新数据进行预测。可通过命令`python infer.py --help` 获得使用方法。
+- **eval.py :** 评估模型在指定数据集上的效果。可通过命令`python infer.py --help` 获得使用方法。
 - **utility.py :** 实现的一些通用方法，包括参数配置、tensor的构造等。
 
 
@@ -34,11 +34,11 @@
 <strong>图 1</strong>
 </p>
 
-在训练集中，每张图片对应的label是由若干数字组成的sequence。 Sequence中的每个数字表示一个字符在字典中的index。 `图1` 对应的label如下所示：
+在训练集中，每张图片对应的label是汉字在词典中的索引。 `图1` 对应的label如下所示：
 ```
 3835,8371,7191,2369,6876,4162,1938,168,1517,4590,3793
 ```
-在上边这个label中，`3835` 表示字符‘两’的index，`4590` 表示中文字符逗号的index。
+在上边这个label中，`3835` 表示字符‘两’的索引，`4590` 表示中文字符逗号的索引。
 
 
 #### 1.1.2 数据准备
@@ -122,7 +122,7 @@ env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
 
 执行`python ctc_train.py --help`可查看更多使用方式和参数详细说明。
 
-图2为使用默认参数和默认数据集训练的收敛曲线，其中横坐标轴为训练pass数，纵轴为在测试集上的sequence_error.
+图2为使用默认参数和默认数据集训练的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。在45轮迭代训练中，测试集上最低错误率为第60轮的21.11%.
 
 <p align="center">
 <img src="images/train.jpg" width="620" hspace='10'/> <br/>
@@ -150,7 +150,7 @@ env CUDA_VISIBLE_DEVICE=0 python eval.py \
 从标准输入读取一张图片的路径，并对齐进行预测：
 
 ```
-env CUDA_VISIBLE_DEVICE=0 python inference.py \
+env CUDA_VISIBLE_DEVICE=0 python infer.py \
     --model_path="models/model_00044_15000"
 ```
 
@@ -163,17 +163,17 @@ input_images_dir: None
 input_images_list: None
 model_path: /home/work/models/fluid/ocr_recognition/models/model_00052_15000
 ------------------------------------------------
-Init model from: /home/work/models/fluid/ocr_recognition/models/model_00052_15000.
-Please input the path of image: /home/work/models/fluid/ocr_recognition/data/test_images/00001_0060.jpg
+Init model from: ./models/model_00052_15000.
+Please input the path of image: ./test_images/00001_0060.jpg
 result: [3298 2371 4233 6514 2378 3298 2363]
-Please input the path of image: /home/work/models/fluid/ocr_recognition/data/test_images/00001_0429.jpg
+Please input the path of image: ./test_images/00001_0429.jpg
 result: [2067 2067 8187 8477 5027 7191 2431 1462]
 ```
 
 从文件中批量读取图片路径，并对其进行预测：
 
 ```
-env CUDA_VISIBLE_DEVICE=0 python inference.py \
+env CUDA_VISIBLE_DEVICE=0 python infer.py \
     --model_path="models/model_00044_15000" \
     --input_images_list="data/test.list"
 ```

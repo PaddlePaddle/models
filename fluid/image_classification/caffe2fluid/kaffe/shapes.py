@@ -95,12 +95,16 @@ def shape_convolution(node):
 
 
 def shape_pool(node):
+    global_pool = getattr(node.layer.parameters, 'global_pooling', False)
+    if global_pool:
+        input_shape = node.get_only_parent().output_shape
+        return make_tensor(input_shape.batch_size, input_shape.channels, 1, 1)
+
     ceil_mode = getattr(node.layer.parameters, 'ceil_mode', True)
     if ceil_mode is True:
         method = math.ceil
     else:
         method = math.floor
-
     return get_strided_kernel_output_shape(node, method)
 
 
