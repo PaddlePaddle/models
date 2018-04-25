@@ -57,12 +57,12 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
-
+# yapf: disable
     if model_dir:
         def if_exist(var):
             return os.path.exists(os.path.join(model_dir, var.name))
         fluid.io.load_vars(exe, model_dir, predicate=if_exist)
-
+# yapf: enable
     test_reader = paddle.batch(
         reader.test(data_args, test_list), batch_size=batch_size)
     feeder = fluid.DataFeeder(
