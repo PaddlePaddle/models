@@ -69,7 +69,7 @@ This example uses a Penn Treebank (PTB) data set ([Tomas Mikolov pre-processing 
 The detailed network structure of the 5-gram neural probabilistic language model is shown in Figure 1:
 
 <p align="center">
-<img src="images/network_conf.png" width = "70%" align="center"/><br/>
+<img src="images/network_conf_en.png" width = "70%" align="center"/><br/>
 Figure1. 5-gram Network configuration structure
 </p>
 
