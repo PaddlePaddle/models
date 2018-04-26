@@ -13,8 +13,8 @@ class Node(object):
         self.layer = LayerAdapter(layer, kind) if layer else None
         self.parents = []
         self.children = []
-        self.data = None
-        self.output_shape = None
+        self.data = None  #parameters of this node
+        self.output_shape = None  #output shape of this node
         self.metadata = {}
 
     def add_parent(self, parent_node):
@@ -37,9 +37,23 @@ class Node(object):
 
     @property
     def parameters(self):
+        """ get parameters stored in a protobuf object
+        """
         if self.layer is not None:
             return self.layer.parameters
         return None
+
+    @property
+    def params(self):
+        """ get parameters stored in a dict
+        """
+        from .protobuf_to_dict import protobuf_to_dict
+
+        p = self.parameters
+        if p is not None:
+            return protobuf_to_dict(p)
+        else:
+            return None
 
     def __str__(self):
         return '[%s] %s' % (self.kind, self.name)
