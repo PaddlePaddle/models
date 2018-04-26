@@ -2,7 +2,6 @@ import os
 import numpy as np
 import time
 import sys
-#import paddle.v2 as paddle
 import paddle
 import paddle.fluid as fluid
 import reader
@@ -22,14 +21,9 @@ def cosine_decay(learning_rate, step_each_epoch, epochs=120):
     global_step = _decay_step_counter()
 
     with init_on_cpu():
-        # update 
         epoch = ops.floor(global_step / step_each_epoch)
         decayed_lr = learning_rate * \
                      (ops.cos(epoch * (math.pi / epochs)) + 1)/2
-    #if global_step % step_each_epoch == 0:
-    #    print("epoch={0}, global_step={1},decayed_lr={2} \
-    #          (step_each_epoch={3})".format( \
-    #          epoch,global_step,decayed_lr,step_each_epoch))
     return decayed_lr
 
 
@@ -50,8 +44,6 @@ def conv_bn_layer(input, num_filters, filter_size, stride=1, groups=1,
 def squeeze_excitation(input, num_channels, reduction_ratio):
     pool = fluid.layers.pool2d(
         input=input, pool_size=0, pool_type='avg', global_pooling=True)
-    ### initializer parameter
-    #print >> sys.stderr, "pool shape:", pool.shape
     stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
     squeeze = fluid.layers.fc(input=pool,
                               size=num_channels / reduction_ratio,
@@ -59,7 +51,6 @@ def squeeze_excitation(input, num_channels, reduction_ratio):
                               param_attr=fluid.param_attr.ParamAttr(
                                   initializer=fluid.initializer.Uniform(-stdv,
                                                                         stdv)))
-    #print >> sys.stderr, "squeeze shape:", squeeze.shape
     stdv = 1.0 / math.sqrt(squeeze.shape[1] * 1.0)
     excitation = fluid.layers.fc(input=squeeze,
                                  size=num_channels,
@@ -69,18 +60,6 @@ def squeeze_excitation(input, num_channels, reduction_ratio):
                                          -stdv, stdv)))
     scale = fluid.layers.elementwise_mul(x=input, y=excitation, axis=0)
     return scale
-
-
-def shortcut_old(input, ch_out, stride):
-    ch_in = input.shape[1]
-    if ch_in != ch_out:
-        if stride == 1:
-            filter_size = 1
-        else:
-            filter_size = 3
-        return conv_bn_layer(input, ch_out, filter_size, stride)
-    else:
-        return input
 
 
 def shortcut(input, ch_out, stride):
@@ -165,7 +144,6 @@ def SE_ResNeXt(input, class_dim, infer=False, layers=50):
         drop = fluid.layers.dropout(x=pool, dropout_prob=0.5)
     else:
         drop = pool
-    #print >> sys.stderr, "drop shape:", drop.shape
     stdv = 1.0 / math.sqrt(drop.shape[1] * 1.0)
     out = fluid.layers.fc(input=drop,
                           size=class_dim,

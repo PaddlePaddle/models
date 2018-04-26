@@ -123,7 +123,7 @@ def process_image(sample, mode, color_jitter, rotate):
     if mode == 'train' or mode == 'test':
         return img, sample[1]
     elif mode == 'infer':
-        return img
+        return [img]
 
 
 def _reader_creator(file_list,
@@ -151,13 +151,13 @@ def _reader_creator(file_list,
     return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE)
 
 
-def train():
+def train(file_list=TRAIN_LIST):
     return _reader_creator(
-        TRAIN_LIST, 'train', shuffle=True, color_jitter=False, rotate=False)
+        file_list, 'train', shuffle=True, color_jitter=False, rotate=False)
 
 
-def test():
-    return _reader_creator(TEST_LIST, 'test', shuffle=False)
+def test(file_list=TEST_LIST):
+    return _reader_creator(file_list, 'test', shuffle=False)
 
 
 def infer(file_list):
