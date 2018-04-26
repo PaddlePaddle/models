@@ -14,25 +14,27 @@ from utility import add_arguments, print_arguments
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
-# yapf: disable
-add_arg('batch_size',   int,  256, "Minibatch size.")
-add_arg('num_layers',   int,  50,  "How many layers for SE-ResNeXt model.")
-add_arg('with_mem_opt', bool, True, "Whether to use memory optimization or not.")
-add_arg('parallel_exe', bool, True, "Whether to use ParallelExecutor to train or not.")
+add_arg('batch_size', int, 256, "Minibatch size.")
+add_arg('num_layers', int, 50, "How many layers for SE-ResNeXt model.")
+add_arg('with_mem_opt', bool, True,
+        "Whether to use memory optimization or not.")
+add_arg('parallel_exe', bool, True,
+        "Whether to use ParallelExecutor to train or not.")
 add_arg('init_model', str, None, "Whether to use initialized model.")
 add_arg('pretrained_model', str, None, "Whether to use pretrained model.")
 
+
 def train_parallel_do(args,
-                     learning_rate,
-                     batch_size,
-                     num_passes,
-                     init_model=None,
-                     pretrained_model=None,
-                     model_save_dir='model',
-                     parallel=True,
-                     use_nccl=True,
-                     lr_strategy=None,
-                     layers=50):
+                      learning_rate,
+                      batch_size,
+                      num_passes,
+                      init_model=None,
+                      pretrained_model=None,
+                      model_save_dir='model',
+                      parallel=True,
+                      use_nccl=True,
+                      lr_strategy=None,
+                      layers=50):
     class_dim = 1000
     image_shape = [3, 224, 224]
 
@@ -103,8 +105,10 @@ def train_parallel_do(args,
         fluid.io.load_persistables(exe, init_model)
 
     if pretrained_model:
+
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
+
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     train_reader = paddle.batch(reader.train(), batch_size=batch_size)
@@ -228,8 +232,10 @@ def train_parallel_exe(args,
         fluid.io.load_persistables(exe, init_model)
 
     if pretrained_model:
+
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
+
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     train_reader = paddle.batch(reader.train(), batch_size=batch_size)
@@ -323,13 +329,14 @@ if __name__ == '__main__':
     method = train_parallel_exe if args.parallel_exe else train_parallel_do
     init_model = args.init_model if args.init_model else None
     pretrained_model = args.pretrained_model if args.pretrained_model else None
-    method(args,
-           learning_rate=0.1,
-           batch_size=batch_size,
-           num_passes=120,
-           init_model=init_model,
-           pretrained_model=pretrained_model,
-           parallel=True,
-           use_nccl=True,
-           lr_strategy=lr_strategy,
-           layers=layers)
+    method(
+        args,
+        learning_rate=0.1,
+        batch_size=batch_size,
+        num_passes=120,
+        init_model=init_model,
+        pretrained_model=pretrained_model,
+        parallel=True,
+        use_nccl=True,
+        lr_strategy=lr_strategy,
+        layers=layers)
