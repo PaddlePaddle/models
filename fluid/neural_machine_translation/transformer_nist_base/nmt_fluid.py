@@ -15,6 +15,7 @@ from config import TrainTaskConfig, ModelHyperParams, pos_enc_param_names, \
 import paddle.fluid.debuger as debuger
 import nist_data_provider
 import sys
+#from memory_profiler import profile
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -27,6 +28,12 @@ def str2bool(v):
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument(
     '--batch_size', type=int, default=TrainTaskConfig.batch_size, help="Batch size for training.")
+
+parser.add_argument(
+    '--save_graph', type=str2bool, default=False, help="Save graph of network.")
+
+parser.add_argument(
+    '--exit_batch_id', type=int, default=200, help="Program exits when batch_id==exit_batch_id.")
 
 parser.add_argument(
     '--learning_rate',
@@ -195,6 +202,7 @@ def get_var(name,value):
             dtype="float32",
             persistable=True)
 
+#@profile
 def main():
     place = core.CPUPlace() if args.device == 'CPU' else core.CUDAPlace(
         args.device_id)
@@ -296,7 +304,9 @@ def main():
                        len(data) / (time.time() - start_time)))
 
                 if args.test_save:
-                    break
+                    if batch_id == args.exit_batch_id:
+                        print("batch_id: %d exit!" % batch_id)
+                        break
 
             # Validate and save the model for inference.
             # val_avg_cost, val_ppl = test(exe)
@@ -309,7 +319,7 @@ def main():
 
             fluid.io.save_inference_model(
                 os.path.join(args.model_path,
-                             "pass_" + str(pass_id) + ".infer.model"),
+                             "pass_" + str(pass_id) + "_" + str(args.task_index) + ".infer.model"),
                 encoder_input_data_names + decoder_input_data_names[:-1],
                 [predict], exe)
 
@@ -336,10 +346,12 @@ def main():
                 buf_size=100000),
             batch_size=args.batch_size)
 
+        '''
         test_reader = paddle.batch(
                 nist_data_provider.train("data", ModelHyperParams.src_vocab_size,
                                          ModelHyperParams.trg_vocab_size),
             batch_size=TrainTaskConfig.batch_size)
+        '''
 
         train_loop(exe, fluid.default_main_program())
     else:
@@ -367,8 +379,24 @@ def main():
             pserver_prog = t.get_pserver_program(current_endpoint)
             pserver_startup = t.get_startup_program(current_endpoint,
                                                     pserver_prog)
-            exe.run(pserver_startup)
-            exe.run(pserver_prog)
+
+            if args.save_graph: 
+                block_no=0
+                for t in pserver_startup.blocks: 
+                    block_name="pserver_startup_block_%04d" % block_no
+                    print block_name
+                    print(debuger.draw_block_graphviz(t, path="./" + block_name+".dot"))
+                    block_no+=1
+
+                block_no=0
+                for t in pserver_prog.blocks:
+                    block_name="pserver_prog_block_%04d" % block_no
+                    print(debuger.draw_block_graphviz(t, path="./" + block_name+".dot"))
+                    block_no+=1
+
+            print "begin run"
+            exe.run(pserver_startup, save_program_to_file="./pserver_startup.desc")
+            exe.run(pserver_prog, save_program_to_file="./pserver_loop.desc")
         elif training_role == "TRAINER":
             # Parameter initialization
             exe.run(fluid.default_startup_program())
@@ -391,10 +419,12 @@ def main():
                     buf_size=100000),
                 batch_size=args.batch_size)
 
+            '''
             test_reader = paddle.batch(
                     nist_data_provider.train("data", ModelHyperParams.src_vocab_size,
                                              ModelHyperParams.trg_vocab_size),
                 batch_size=TrainTaskConfig.batch_size)
+            '''
 
             trainer_prog = t.get_trainer_program()
             train_loop(exe, trainer_prog)
