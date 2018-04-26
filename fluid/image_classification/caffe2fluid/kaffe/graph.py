@@ -3,7 +3,7 @@ from google.protobuf import text_format
 from .caffe import get_caffe_resolver
 from .errors import KaffeError, print_stderr
 from .layers import LayerAdapter, LayerType, NodeKind, NodeDispatch
-from .shapes import TensorShape
+from .shapes import make_tensor
 
 
 class Node(object):
@@ -98,7 +98,7 @@ class Graph(object):
     def compute_output_shapes(self):
         sorted_nodes = self.topologically_sorted()
         for node in sorted_nodes:
-            node.output_shape = TensorShape(
+            node.output_shape = make_tensor(
                 *NodeKind.compute_output_shape(node))
 
     def replaced(self, new_nodes):
@@ -111,6 +111,7 @@ class Graph(object):
             if graph is None:
                 raise KaffeError('Transformer failed: {}'.format(transformer))
             assert isinstance(graph, Graph)
+
         return graph
 
     def __contains__(self, key):
@@ -123,10 +124,18 @@ class Graph(object):
         for node in self.topologically_sorted():
             # If the node has learned parameters, display the first one's shape.
             # In case of convolutions, this corresponds to the weights.
-            data_shape = node.data[0].shape if node.data else '--'
-            out_shape = node.output_shape or '--'
-            s.append('{:<20} {:<30} {:>20} {:>20}'.format(
-                node.kind, node.name, data_shape, tuple(out_shape)))
+            if node.data is None:
+                data_shape = '--'
+                out_shape = node.output_shape or '--'
+                s.append('{:<20} {:<30} {:>20} {:>20}'.format(
+                    node.kind, node.name, data_shape, tuple(out_shape)))
+            else:
+                for d in node.data:
+                    #data_shape = node.data[0].shape if node.data else '--'
+                    data_shape = d.shape
+                    out_shape = node.output_shape or '--'
+                    s.append('{:<20} {:<30} {:>20} {:>20}'.format(
+                        node.kind, node.name, data_shape, tuple(out_shape)))
         return '\n'.join(s)
 
 
@@ -237,6 +246,7 @@ class GraphBuilder(object):
                 if (parent_node is None) or (parent_node == node):
                     parent_node = graph.get_node(input_name)
                 node.add_parent(parent_node)
+
             if len(layer.top) > 1:
                 raise KaffeError('Multiple top nodes are not supported.')
 
