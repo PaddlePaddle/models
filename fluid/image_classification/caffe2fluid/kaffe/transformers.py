@@ -66,12 +66,14 @@ class DataInjector(object):
     def adjust_parameters(self, node, data):
         if not self.did_use_pb:
             return data
+
         # When using the protobuf-backend, each parameter initially has four dimensions.
         # In certain cases (like FC layers), we want to eliminate the singleton dimensions.
         # This implementation takes care of the common cases. However, it does leave the
         # potential for future issues.
         # The Caffe-backend does not suffer from this problem.
         data = list(data)
+
         squeeze_indices = [1]  # Squeeze biases.
         if node.kind == NodeKind.InnerProduct:
             squeeze_indices.append(0)  # Squeeze FC.
@@ -80,8 +82,22 @@ class DataInjector(object):
             if idx >= len(data):
                 continue
 
-            shape_old = data[idx].shape
-            data[idx] = np.squeeze(data[idx])
+            d = data[idx]
+            assert len(
+                d.shape
+            ) == 4, 'invalid shape[%s] from caffe when adjust_parameters' % (
+                str(d.shape))
+
+            shape_old = d.shape
+            sq_axis = None
+            if idx == 0:
+                sq_axis = (0, 1)
+            elif idx == 1:
+                sq_axis = (0, 1, 2)
+            else:
+                continue
+
+            data[idx] = np.squeeze(d, axis=sq_axis)
             shape_new = data[idx].shape
             if len(shape_old) != shape_new:
                 debug('squeeze idx:%d, with kind:%s,name:%s' % \
@@ -113,7 +129,10 @@ class DataReshaper(object):
         try:
             parent = node.get_only_parent()
             s = parent.output_shape
-            return s.height > 1 or s.width > 1
+            if len(s) == 4:
+                return s.height > 1 or s.width > 1
+            else:
+                return False
         except KaffeError:
             return False
 
@@ -121,25 +140,26 @@ class DataReshaper(object):
         try:
             return self.mapping[node_kind]
         except KeyError:
-            raise
-            #raise KaffeError('Ordering not found for node kind: {}'.format(node_kind))
+            raise KaffeError('Ordering not found for node kind: {}'.format(
+                node_kind))
 
     def __call__(self, graph):
         for node in graph.nodes:
             if node.data is None:
                 continue
+
             if node.kind not in self.reshaped_node_types:
                 # Check for 2+ dimensional data
                 if any(len(tensor.shape) > 1 for tensor in node.data):
                     notice('parmaters not reshaped for node: {}'.format(node))
                 continue
+
             transpose_order = self.map(node.kind)
             weights = node.data[0]
-            if (node.kind == NodeKind.InnerProduct
-                ) and self.has_spatial_parent(node):
+            if node.kind == NodeKind.InnerProduct:
                 # The FC layer connected to the spatial layer needs to be
                 # re-wired to match the new spatial ordering.
-                in_shape = node.get_only_parent().output_shape
+                #in_shape = node.get_only_parent().output_shape
                 fc_shape = weights.shape
                 output_channels = fc_shape[0]
                 weights = weights.reshape((output_channels, -1))
@@ -178,7 +198,8 @@ class SubNodeFuser(object):
                 continue
             # Rewrite the fused node's children to its parent.
             for child in node.children:
-                child.parents.remove(node)
+                pos = child.parents.index(node)
+                child.parents[pos] = parent
                 parent.add_child(child)
             # Disconnect the fused node from the graph.
             parent.children.remove(node)

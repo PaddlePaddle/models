@@ -8,6 +8,7 @@ import functools
 import sys
 import time
 import os
+import numpy as np
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -19,32 +20,23 @@ add_arg('save_model_period', int,   15000,      "Save model period. '-1' means n
 add_arg('eval_period',       int,   15000,      "Evaluate period. '-1' means never evaluating the model.")
 add_arg('save_model_dir',    str,   "./models", "The directory the model to be saved to.")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
-add_arg('learning_rate',     float, 1.0e-3,    "Learning rate.")
-add_arg('l2',                float, 0.0004,    "L2 regularizer.")
-add_arg('momentum',          float, 0.9,       "Momentum.")
-add_arg('rnn_hidden_size',   int,   200,       "Hidden size of rnn layers.")
 add_arg('use_gpu',           bool,  True,      "Whether use GPU to train.")
 add_arg('min_average_window',int,   10000,     "Min average window.")
 add_arg('max_average_window',int,   15625,     "Max average window. It is proposed to be set as the number of minibatch in a pass.")
 add_arg('average_window',    float, 0.15,      "Average window.")
 add_arg('parallel',          bool,  False,     "Whether use parallel training.")
-add_arg('train_images',      str,   None,    "The directory of training images."
-        "None means using the default training images of reader.")
-add_arg('train_list',        str,   None,    "The list file of training images."
-        "None means using the default train_list file of reader.")
-add_arg('test_images',      str,    None,    "The directory of training images."
-        "None means using the default test images of reader.")
-add_arg('test_list',        str,    None,   "The list file of training images."
-        "None means using the default test_list file of reader.")
-add_arg('num_classes',      int,    None,      "The number of classes."
-        "None means using the default num_classes from reader.")
 # yapf: enable
 
 
 def train(args, data_reader=ctc_reader):
     """OCR CTC training"""
+    num_classes = None
+    train_images = None
+    train_list = None
+    test_images = None
+    test_list = None
     num_classes = data_reader.num_classes(
-    ) if args.num_classes is None else args.num_classes
+    ) if num_classes is None else num_classes
     data_shape = data_reader.data_shape()
     # define network
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
@@ -56,10 +48,10 @@ def train(args, data_reader=ctc_reader):
     # data reader
     train_reader = data_reader.train(
         args.batch_size,
-        train_images_dir=args.train_images,
-        train_list_file=args.train_list)
+        train_images_dir=train_images,
+        train_list_file=train_list)
     test_reader = data_reader.test(
-        test_images_dir=args.test_images, test_list_file=args.test_list)
+        test_images_dir=test_images, test_list_file=test_list)
 
     # prepare environment
     place = fluid.CPUPlace()
@@ -78,45 +70,72 @@ def train(args, data_reader=ctc_reader):
         fluid.io.load_params(exe, dirname=model_dir, filename=model_file_name)
         print "Init model from: %s." % args.init_model
 
-    for pass_id in range(args.pass_num):
+    train_exe = exe
+    if args.parallel:
+        train_exe = fluid.ParallelExecutor(
+            use_cuda=True, loss_name=sum_cost.name)
+
+    fetch_vars = [sum_cost] + error_evaluator.metrics
+
+    def train_one_batch(data):
+        var_names = [var.name for var in fetch_vars]
+        if args.parallel:
+            results = train_exe.run(var_names,
+                                    feed_dict=get_feeder_data(data, place))
+            results = [np.array(result).sum() for result in results]
+        else:
+            results = exe.run(feed=get_feeder_data(data, place),
+                              fetch_list=fetch_vars)
+            results = [result[0] for result in results]
+        return results
+
+    def test(pass_id, batch_id):
         error_evaluator.reset(exe)
+        for data in test_reader():
+            exe.run(inference_program, feed=get_feeder_data(data, place))
+        _, test_seq_error = error_evaluator.eval(exe)
+        print "\nTime: %s; Pass[%d]-batch[%d]; Test seq error: %s.\n" % (
+            time.time(), pass_id, batch_id, str(test_seq_error[0]))
+
+    def save_model(args, exe, pass_id, batch_id):
+        filename = "model_%05d_%d" % (pass_id, batch_id)
+        fluid.io.save_params(
+            exe, dirname=args.save_model_dir, filename=filename)
+        print "Saved model to: %s/%s." % (args.save_model_dir, filename)
+
+    error_evaluator.reset(exe)
+    for pass_id in range(args.pass_num):
         batch_id = 1
         total_loss = 0.0
         total_seq_error = 0.0
         # train a pass
         for data in train_reader():
-            batch_loss, _, batch_seq_error = exe.run(
-                fluid.default_main_program(),
-                feed=get_feeder_data(data, place),
-                fetch_list=[sum_cost] + error_evaluator.metrics)
-            total_loss += batch_loss[0]
-            total_seq_error += batch_seq_error[0]
+            results = train_one_batch(data)
+            total_loss += results[0]
+            total_seq_error += results[2]
             # training log
             if batch_id % args.log_period == 0:
-                print "\nTime: %s; Pass[%d]-batch[%d]; Avg Warp-CTC loss: %s; Avg seq error: %s." % (
+                print "\nTime: %s; Pass[%d]-batch[%d]; Avg Warp-CTC loss: %s; Avg seq err: %s" % (
                     time.time(), pass_id, batch_id,
                     total_loss / (batch_id * args.batch_size),
                     total_seq_error / (batch_id * args.batch_size))
                 sys.stdout.flush()
+
             # evaluate
             if batch_id % args.eval_period == 0:
-                with model_average.apply(exe):
-                    error_evaluator.reset(exe)
-                    for data in test_reader():
-                        exe.run(inference_program,
-                                feed=get_feeder_data(data, place))
-                    _, test_seq_error = error_evaluator.eval(exe)
+                if model_average:
+                    with model_average.apply(exe):
+                        test(pass_id, batch_id)
+                else:
+                    test(pass_id, batch_d)
 
-                    print "\nTime: %s; Pass[%d]-batch[%d]; Test seq error: %s.\n" % (
-                        time.time(), pass_id, batch_id, str(test_seq_error[0]))
             # save model
             if batch_id % args.save_model_period == 0:
-                with model_average.apply(exe):
-                    filename = "model_%05d_%d" % (pass_id, batch_id)
-                    fluid.io.save_params(
-                        exe, dirname=args.save_model_dir, filename=filename)
-                    print "Saved model to: %s/%s." % (args.save_model_dir,
-                                                      filename)
+                if model_average:
+                    with model_average.apply(exe):
+                        save_model(args, exe, pass_id, batch_id)
+                else:
+                    save_model(args, exe, pass_id, batch_id)
 
             batch_id += 1
 

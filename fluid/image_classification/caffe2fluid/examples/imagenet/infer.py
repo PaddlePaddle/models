@@ -43,7 +43,7 @@ def build_model(net_file, net_name):
           (net_file, net_name))
 
     net_path = os.path.dirname(net_file)
-    module_name = os.path.basename(net_file).rstrip('.py')
+    module_name = os.path.splitext(os.path.basename(net_file))[0]
     if net_path not in sys.path:
         sys.path.insert(0, net_path)
 
@@ -51,7 +51,7 @@ def build_model(net_file, net_name):
         m = __import__(module_name, fromlist=[net_name])
         MyNet = getattr(m, net_name)
     except Exception as e:
-        print('failed to load module[%s]' % (module_name))
+        print('failed to load module[%s.%s]' % (module_name, net_name))
         print(e)
         return None
 
@@ -153,7 +153,6 @@ def load_inference_model(dirname, exe):
 def infer(model_path, imgfile, net_file=None, net_name=None, debug=True):
     """ do inference using a model which consist 'xxx.py' and 'xxx.npy'
     """
-
     fluid = import_fluid()
 
     place = fluid.CPUPlace()
@@ -164,7 +163,6 @@ def infer(model_path, imgfile, net_file=None, net_name=None, debug=True):
         debug = False
         print('found a inference model for fluid')
     except ValueError as e:
-        pass
         print('try to load model using net file and weight file')
         net_weight = model_path
         ret = load_model(exe, place, net_file, net_name, net_weight, debug)

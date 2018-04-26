@@ -66,6 +66,8 @@ def train_parallel_do(args,
         acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
 
+    inference_program = fluid.default_main_program().clone(for_test=True)
+
     if lr_strategy is None:
         optimizer = fluid.optimizer.Momentum(
             learning_rate=learning_rate,
@@ -80,12 +82,9 @@ def train_parallel_do(args,
             momentum=0.9,
             regularization=fluid.regularizer.L2Decay(1e-4))
 
-    inference_program = fluid.default_main_program().clone(for_test=True)
-
     opts = optimizer.minimize(avg_cost)
     if args.with_mem_opt:
         fluid.memory_optimize(fluid.default_main_program())
-        fluid.memory_optimize(inference_program)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -163,6 +162,7 @@ def train_parallel_do(args,
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path)
 
+
 def train_parallel_exe(args,
                        learning_rate,
                        batch_size,
@@ -205,7 +205,6 @@ def train_parallel_exe(args,
 
     if args.with_mem_opt:
         fluid.memory_optimize(fluid.default_main_program())
-        fluid.memory_optimize(test_program)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -225,9 +224,7 @@ def train_parallel_exe(args,
 
     train_exe = fluid.ParallelExecutor(use_cuda=True, loss_name=avg_cost.name)
     test_exe = fluid.ParallelExecutor(
-        use_cuda=True,
-        main_program=test_program,
-        share_vars_from=train_exe)
+        use_cuda=True, main_program=test_program, share_vars_from=train_exe)
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
 
@@ -236,9 +233,7 @@ def train_parallel_exe(args,
         test_info = [[], [], []]
         for batch_id, data in enumerate(train_reader()):
             t1 = time.time()
-            loss, acc1, acc5 = train_exe.run(
-                fetch_list,
-                feed_dict=feeder.feed(data))
+            loss, acc1, acc5 = train_exe.run(fetch_list, feed=feeder.feed(data))
             t2 = time.time()
             period = t2 - t1
             loss = np.mean(np.array(loss))
@@ -260,9 +255,7 @@ def train_parallel_exe(args,
         train_acc5 = np.array(train_info[2]).mean()
         for data in test_reader():
             t1 = time.time()
-            loss, acc1, acc5 = test_exe.run(
-                fetch_list,
-                feed_dict=feeder.feed(data))
+            loss, acc1, acc5 = test_exe.run(fetch_list, feed=feeder.feed(data))
             t2 = time.time()
             period = t2 - t1
             loss = np.mean(np.array(loss))
@@ -294,8 +287,6 @@ def train_parallel_exe(args,
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path)
-
-
 
 
 if __name__ == '__main__':
