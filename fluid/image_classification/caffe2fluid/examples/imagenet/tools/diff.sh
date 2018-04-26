@@ -36,7 +36,7 @@ model_caffemodel="models.caffe/${model_name}/${model_name}.caffemodel"
 paddle_results="$results_root/${model_name}.paddle"
 rm -rf $paddle_results
 rm -rf "results.paddle"
-bash run.sh $model_name ./models.caffe/$model_name ./models/$model_name
+bash ./tools/run.sh $model_name ./models.caffe/$model_name ./models/$model_name
 if [[ $? -ne 0 ]] || [[ ! -e "results.paddle" ]];then
     echo "not found paddle's results, maybe failed to convert"
     exit 1

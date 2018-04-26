@@ -22,15 +22,13 @@ def layer(op):
             layer_input = self.terminals[0]
         else:
             layer_input = list(self.terminals)
+
         # Perform the operation and get the output.
         layer_output = op(self, layer_input, *args, **kwargs)
         # Add to layer LUT.
         self.layers[name] = layer_output
         # This output is now the input for the next layer.
         self.feed(layer_output)
-        #print('output shape of %s:' % (name))
-        #print layer_output.shape
-
         # Return self for chained calls.
         return self
 
@@ -129,6 +127,7 @@ class Network(object):
              s_w,
              name,
              relu=True,
+             relu_negative_slope=0.0,
              padding=None,
              group=1,
              biased=True):
@@ -144,6 +143,14 @@ class Network(object):
 
         fluid = import_fluid()
         prefix = name + '_'
+        leaky_relu = False
+        act = 'relu'
+        if relu is False:
+            act = None
+        elif relu_negative_slope != 0.0:
+            leaky_relu = True
+            act = None
+
         output = fluid.layers.conv2d(
             input=input,
             filter_size=[k_h, k_w],
@@ -153,7 +160,11 @@ class Network(object):
             groups=group,
             param_attr=fluid.ParamAttr(name=prefix + "weights"),
             bias_attr=fluid.ParamAttr(name=prefix + "biases"),
-            act="relu" if relu is True else None)
+            act=act)
+
+        if leaky_relu:
+            output = fluid.layers.leaky_relu(output, alpha=relu_negative_slope)
+
         return output
 
     @layer
@@ -286,8 +297,32 @@ class Network(object):
     @layer
     def dropout(self, input, drop_prob, name, is_test=True):
         fluid = import_fluid()
-        output = fluid.layers.dropout(
-            input, dropout_prob=drop_prob, is_test=is_test, name=name)
+        if is_test:
+            output = input
+        else:
+            output = fluid.layers.dropout(
+                input, dropout_prob=drop_prob, is_test=is_test)
+        return output
+
+    @layer
+    def scale(self, input, axis=1, num_axes=1, name=None):
+        fluid = import_fluid()
+
+        assert num_axes == 1, "layer scale not support this num_axes[%d] now" % (
+            num_axes)
+
+        prefix = name + '_'
+        scale_shape = input.shape[axis:axis + num_axes]
+        param_attr = fluid.ParamAttr(name=prefix + 'scale')
+        scale_param = fluid.layers.create_parameter(
+            shape=scale_shape, dtype=input.dtype, name=name, attr=param_attr)
+
+        offset_attr = fluid.ParamAttr(name=prefix + 'offset')
+        offset_param = fluid.layers.create_parameter(
+            shape=scale_shape, dtype=input.dtype, name=name, attr=offset_attr)
+
+        output = fluid.layers.elementwise_mul(input, scale_param, axis=axis)
+        output = fluid.layers.elementwise_add(output, offset_param, axis=axis)
         return output
 
     def custom_layer_factory(self):
