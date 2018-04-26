@@ -227,15 +227,6 @@ def train_parallel_exe(args,
 
     train_reader = paddle.batch(reader.train(), batch_size=batch_size)
     test_reader = paddle.batch(reader.test(), batch_size=batch_size)
-
-    # data reader
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
-            paddle.dataset.flowers.train(), buf_size=5120),
-        batch_size=batch_size)
-    test_reader = paddle.batch(
-        paddle.dataset.flowers.test(), batch_size=batch_size)
-
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     train_exe = fluid.ParallelExecutor(use_cuda=True, loss_name=avg_cost.name)
