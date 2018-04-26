@@ -5,6 +5,10 @@ class TrainTaskConfig(object):
 
     # the number of sequences contained in a mini-batch.
     batch_size = 56
+    token_batch_size = 0
+    # the flag indicating whether to sort all sequences by length,
+    # which can accelerate training but may damp the accuracy slightly.
+    sort_by_length = True
 
     # the hyper parameters for Adam optimizer.
     learning_rate = 0.001

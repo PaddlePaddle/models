@@ -15,7 +15,7 @@ from config import TrainTaskConfig, ModelHyperParams, pos_enc_param_names, \
 import paddle.fluid.debuger as debuger
 import nist_data_provider
 import sys
-#from memory_profiler import profile
+import data_util
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -261,6 +261,7 @@ def main():
         test_ppl = np.exp([min(test_avg_cost, 100)])
         return test_avg_cost, test_ppl
 
+    '''
     def train_loop(exe, trainer_prog):
         # Initialize the parameters.
         """
@@ -272,13 +273,15 @@ def main():
             pos_enc_param.set(
                 position_encoding_init(ModelHyperParams.max_length + 1,
                                        ModelHyperParams.d_model), place)
+    '''
 
     def train_loop(exe, trainer_prog):
         for pass_id in xrange(args.pass_num):
             ts = time.time()
             total = 0
             pass_start_time = time.time()
-            for batch_id, data in enumerate(train_reader()):
+            for batch_id, data in enumerate(train_reader):
+                print len(data)
                 if len(data) != args.batch_size:
                     continue
 
@@ -412,6 +415,16 @@ def main():
                     position_encoding_init(ModelHyperParams.max_length + 1,
                                            ModelHyperParams.d_model), place)
 
+            train_reader = data_util.DataLoader(
+                src_vocab_fpath="/root/data/nist06n/cn_30001.dict",
+                trg_vocab_fpath="/root/data/nist06n/en_30001.dict",
+                fpattern="/root/data/nist06/data-%d/part-*" % (args.task_index),
+                batch_size=args.batch_size,
+                token_batch_size=TrainTaskConfig.token_batch_size,
+                sort_by_length=TrainTaskConfig.sort_by_length,
+                shuffle=True)
+
+            '''
             train_reader = paddle.batch(
                 paddle.reader.shuffle(
                     nist_data_provider.train("data", ModelHyperParams.src_vocab_size,
@@ -419,7 +432,6 @@ def main():
                     buf_size=100000),
                 batch_size=args.batch_size)
 
-            '''
             test_reader = paddle.batch(
                     nist_data_provider.train("data", ModelHyperParams.src_vocab_size,
                                              ModelHyperParams.trg_vocab_size),
