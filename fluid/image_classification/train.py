@@ -5,6 +5,7 @@ import sys
 import paddle.v2 as paddle
 import paddle.fluid as fluid
 from se_resnext import SE_ResNeXt
+from mobilenet import mobile_net
 import reader
 
 import argparse
@@ -18,6 +19,11 @@ add_arg('batch_size',   int,  256, "Minibatch size.")
 add_arg('num_layers',   int,  50,  "How many layers for SE-ResNeXt model.")
 add_arg('with_mem_opt', bool, True, "Whether to use memory optimization or not.")
 add_arg('parallel_exe', bool, True, "Whether to use ParallelExecutor to train or not.")
+add_arg('model',
+        type=str,
+        choices=['mobilenet', 'se_resnext'],
+        default='se_resnext',
+        help="Which model to use.")
 # yapf: enable
 
 
@@ -44,7 +50,12 @@ def train_parallel_do(args,
         with pd.do():
             image_ = pd.read_input(image)
             label_ = pd.read_input(label)
-            out = SE_ResNeXt(input=image_, class_dim=class_dim, layers=layers)
+            if args.model is 'se_resnext':
+                out = SE_ResNeXt(
+                    input=image_, class_dim=class_dim, layers=layers)
+            else:
+                out = mobile_net(img=image_, class_dim=class_dim)
+
             cost = fluid.layers.cross_entropy(input=out, label=label_)
             avg_cost = fluid.layers.mean(x=cost)
             acc_top1 = fluid.layers.accuracy(input=out, label=label_, k=1)
@@ -58,7 +69,11 @@ def train_parallel_do(args,
         acc_top1 = fluid.layers.mean(x=acc_top1)
         acc_top5 = fluid.layers.mean(x=acc_top5)
     else:
-        out = SE_ResNeXt(input=image, class_dim=class_dim, layers=layers)
+        if args.model is 'se_resnext':
+            out = SE_ResNeXt(input=image, class_dim=class_dim, layers=layers)
+        else:
+            out = mobile_net(img=image, class_dim=class_dim)
+
         cost = fluid.layers.cross_entropy(input=out, label=label)
         avg_cost = fluid.layers.mean(x=cost)
         acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
@@ -150,7 +165,8 @@ def train_parallel_do(args,
               test_acc5))
         sys.stdout.flush()
 
-        model_path = os.path.join(model_save_dir, str(pass_id))
+        model_path = os.path.join(model_save_dir + '/' + args.model,
+                                  str(pass_id))
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path)
@@ -171,7 +187,11 @@ def train_parallel_exe(args,
 
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
-    out = SE_ResNeXt(input=image, class_dim=class_dim, layers=layers)
+    if args.model is 'se_resnext':
+        out = SE_ResNeXt(input=image, class_dim=class_dim, layers=layers)
+    else:
+        out = mobile_net(img=image, class_dim=class_dim)
+
     cost = fluid.layers.cross_entropy(input=out, label=label)
     acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
@@ -207,6 +227,15 @@ def train_parallel_exe(args,
 
     train_reader = paddle.batch(reader.train(), batch_size=batch_size)
     test_reader = paddle.batch(reader.test(), batch_size=batch_size)
+
+    # data reader
+    train_reader = paddle.batch(
+        paddle.reader.shuffle(
+            paddle.dataset.flowers.train(), buf_size=5120),
+        batch_size=batch_size)
+    test_reader = paddle.batch(
+        paddle.dataset.flowers.test(), batch_size=batch_size)
+
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     train_exe = fluid.ParallelExecutor(use_cuda=True, loss_name=avg_cost.name)
@@ -270,7 +299,8 @@ def train_parallel_exe(args,
               test_acc5))
         sys.stdout.flush()
 
-        model_path = os.path.join(model_save_dir, str(pass_id))
+        model_path = os.path.join(model_save_dir + '/' + args.model,
+                                  str(pass_id))
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path)
