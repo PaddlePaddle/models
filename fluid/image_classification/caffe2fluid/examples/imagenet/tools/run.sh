@@ -6,7 +6,7 @@
 #       2, do inference(only in fluid) using this model
 #
 #usage:
-#   bash run.sh resnet50 ./models.caffe/resnet50 ./models/resnet50
+#   cd caffe2fluid/examples/imagenet && bash run.sh resnet50 ./models.caffe/resnet50 ./models/resnet50
 #
 
 #set -x

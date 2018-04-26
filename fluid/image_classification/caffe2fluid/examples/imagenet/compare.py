@@ -17,8 +17,21 @@ def walk_dir(rootdir):
 def calc_diff(f1, f2):
     import numpy as np
 
-    d1 = np.load(f1).flatten()
-    d2 = np.load(f2).flatten()
+    d1 = np.load(f1)
+    d2 = np.load(f2)
+
+    print d1.shape
+    print d2.shape
+    #print d1[0, 0, 0:10, 0:10]
+    #print d2[0, 0, 0:10, 0:10]
+    #d1 = d1[:, :, 1:-2, 1:-2]
+    #d2 = d2[:, :, 1:-2, 1:-2]
+
+    d1 = d1.flatten()
+    d2 = d2.flatten()
+
+    #print d1[:10]
+    #print d2[:10]
 
     d1_num = reduce(lambda x, y: x * y, d1.shape)
     d2_num = reduce(lambda x, y: x * y, d2.shape)
@@ -36,15 +49,16 @@ def calc_diff(f1, f2):
         return -1.0, -1.0
 
 
-def compare(path1, path2):
+def compare(path1, path2, no_exception):
     def diff(f1, f2):
         max_df, sq_df = calc_diff(f1, f2)
-        print('compare %s <=> %s with result[max_df:%.4e, sq_df:%.4e]' %
-              (f1, f2, max_df, sq_df))
-        assert (max_df < 1e-5), \
-                'max_df is too large with value[%.6e]' % (max_df)
-        assert (sq_df < 1e-10), \
-                'sq_df is too large with value[%.6e]' % (sq_df)
+        print('[max_df:%.4e, sq_df:%.4e] when compare %s <=> %s' %
+              (max_df, sq_df, os.path.basename(f1), os.path.basename(f2)))
+        if no_exception is False:
+            assert (max_df < 1e-5), \
+                    'max_df is too large with value[%.6e]' % (max_df)
+            assert (sq_df < 1e-10), \
+                    'sq_df is too large with value[%.6e]' % (sq_df)
 
     if os.path.exists(path1) is False:
         print('not found %s' % (path1))
@@ -73,13 +87,17 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         path1 = 'lenet.tf/results'
         path2 = 'lenet.paddle/results'
-    elif len(sys.argv) == 3:
+    elif len(sys.argv) >= 3:
         path1 = sys.argv[1]
         path2 = sys.argv[2]
+        if len(sys.argv) == 4:
+            no_exception = True
+        else:
+            no_exception = False
     else:
         print('usage:')
         print(' %s [path1] [path2]' % (sys.argv[0]))
         exit(1)
 
-    print('compare inner result in %s %s' % (path1, path2))
-    exit(compare(path1, path2))
+    #print('compare inner result in %s %s' % (path1, path2))
+    exit(compare(path1, path2, no_exception))

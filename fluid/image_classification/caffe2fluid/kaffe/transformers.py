@@ -150,8 +150,8 @@ class DataReshaper(object):
 
             if node.kind not in self.reshaped_node_types:
                 # Check for 2+ dimensional data
-                if any(len(tensor.shape) > 1 for tensor in node.data):
-                    notice('parmaters not reshaped for node: {}'.format(node))
+                #if any(len(tensor.shape) > 1 for tensor in node.data):
+                #    notice('parmaters not reshaped for node: {}'.format(node))
                 continue
 
             transpose_order = self.map(node.kind)
@@ -233,8 +233,9 @@ class ReLUFuser(SubNodeFuser):
                 parent.kind in self.allowed_parent_types) and \
                 child.kind == NodeKind.ReLU)
 
-    def merge(self, parent, _):
+    def merge(self, parent, child):
         parent.metadata['relu'] = True
+        parent.metadata['relu_negative_slope'] = child.parameters.negative_slope
 
 
 class BatchNormScaleBiasFuser(SubNodeFuser):
@@ -316,8 +317,11 @@ class ParameterNamer(object):
                 names = ('mean', 'variance')
                 if len(node.data) == 4:
                     names += ('scale', 'offset')
+            elif node.kind == NodeKind.Scale:
+                names = ('scale', 'offset')
             else:
-                warn('Unhandled parameters: {}'.format(node.kind))
+                warn('Unhandled parameters when naming this it[%s]' %
+                     (node.kind))
                 continue
             assert len(names) == len(node.data)
             node.data = dict(zip(names, node.data))
