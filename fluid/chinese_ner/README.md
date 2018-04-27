@@ -31,7 +31,7 @@ pass_id:2, time_cost:0.740842103958s
 ```
 
 ## 预测
-修改 [infer.py](./infer.py) 的 `infer` 函数，指定：需要测试的模型的路径、测试数据、字典文件，预测标记文件的路径，运行`python infer.py`开始预测。
+修改 [infer.py](./infer.py) 的 `infer` 函数，指定：需要测试的模型的路径、测试数据、预测标记文件的路径，运行`python infer.py`开始预测。
 
 预测结果如下
 ```txt
