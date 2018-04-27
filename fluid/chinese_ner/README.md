@@ -1,22 +1,22 @@
-#ʹ��ParallelExecutor����������ʵ��ʶ��ʾ��
+# 使用ParallelExecutor的中文命名实体识别示例
 
-�����Ǳ����ļ�ҪĿ¼�ṹ��˵����
+以下是本例的简要目录结构及说明：
 
 ```text
 .
-������ data                 # �洢���б��������������ݣ����ⲿ��ȡ
-������ reader.py            # ���ݶ�ȡ�ӿ�, ���ⲿ��ȡ
-������ README.md            # �ĵ�
-������ train.py             # ѵ���ű�
-������ infer.py             # Ԥ��ű�
+├── data                 # 存储运行本例所依赖的数据，从外部获取
+├── reader.py            # 数据读取接口, 从外部获取
+├── README.md            # 文档
+├── train.py             # 训练脚本
+├── infer.py             # 预测脚本
 ```
 
-##����
-��dataĿ¼�£��������ļ��У�train_files�б������ѵ�����ݣ�test_files�б�����ǲ������ݣ���Ϊʾ������Ŀ¼�����Ǹ������������ļ���ʵ��ѵ��ʱ�������Լ���ʵ����Ҫ�����ݷ����ڶ�ӦĿ¼�����������ݸ�ʽ���޸�reader.py�е����ݶ�ȡ������
+## 数据
+在data目录下，有两个文件夹，train_files中保存的是训练数据，test_files中保存的是测试数据，作为示例，在目录下我们各放置了两个文件，实际训练时，根据自己的实际需要将数据放置在对应目录，并根据数据格式，修改reader.py中的数据读取函数。
 
-#ѵ��
-�޸ġ`train.py` �� `main` ������ָ������·��������`python train.py`��ʼѵ��
-ѵ����¼����
+## 训练
+修改train.py` 的 `main` 函数，指定数据路径，运行`python train.py`开始训练
+训练记录形如
 ```txt
 pass_id:0, time_cost:4.92960214615s
 [Train] precision:0.000862136531076, recall:0.0059880239521, f1:0.00150726226363
@@ -29,9 +29,9 @@ pass_id:2, time_cost:0.740842103958s
 [Test] precision:0, recall:0.0, f1:0
 ```
 
-#Ԥ��
-�޸� [infer.py](./infer.py) �� `infer` ������ָ������Ҫ���Ե�ģ�͵�·�����������ݡ��ֵ��ļ���Ԥ�����ļ���·��������`python infer.py`��ʼԤ��
-Ԥ��������
+## 预测
+修改 [infer.py](./infer.py) 的 `infer` 函数，指定：需要测试的模型的路径、测试数据、字典文件，预测标记文件的路径，运行`python infer.py`开始预测
+预测结果如下
 ```txt
 152804  O       O
 130048  O       O
@@ -50,4 +50,4 @@ pass_id:2, time_cost:0.740842103958s
 247     24-B    O
 401     24-I    O
 ```
-�����Ϊ���У���"\t"�ָ��һ��������Ĵ������ţ��ڶ����Ǳ�׼�����������Ϊ��ǽ����������������֮���Կ��зָ���
+输出分为三列，以"\t"分割，第一列是输入的词语的序号，第二列是标准结果，第三列为标记结果。多条输入序列之间以空行分隔。
