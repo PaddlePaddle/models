@@ -1,6 +1,7 @@
 import numpy as np
 import paddle.fluid as fluid
 import paddle
+
 import reader
 
 
