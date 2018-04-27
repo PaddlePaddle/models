@@ -15,7 +15,8 @@
 在data目录下，有两个文件夹，train_files中保存的是训练数据，test_files中保存的是测试数据，作为示例，在目录下我们各放置了两个文件，实际训练时，根据自己的实际需要将数据放置在对应目录，并根据数据格式，修改reader.py中的数据读取函数。
 
 ## 训练
-修改 [train.py](./train.py) 的 `main` 函数，指定数据路径，运行`python train.py`开始训练
+修改 [train.py](./train.py) 的 `main` 函数，指定数据路径，运行`python train.py`开始训练。
+
 训练记录形如
 ```txt
 pass_id:0, time_cost:4.92960214615s
@@ -30,7 +31,8 @@ pass_id:2, time_cost:0.740842103958s
 ```
 
 ## 预测
-修改 [infer.py](./infer.py) 的 `infer` 函数，指定：需要测试的模型的路径、测试数据、字典文件，预测标记文件的路径，运行`python infer.py`开始预测
+修改 [infer.py](./infer.py) 的 `infer` 函数，指定：需要测试的模型的路径、测试数据、字典文件，预测标记文件的路径，运行`python infer.py`开始预测。
+
 预测结果如下
 ```txt
 152804  O       O
