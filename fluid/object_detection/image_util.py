@@ -1,7 +1,10 @@
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageDraw
+from PIL import ImageFile
 import numpy as np
 import random
 import math
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True  #otherwise IOError raised image file is truncated
 
 
 class sampler():
@@ -144,7 +147,8 @@ def transform_labels(bbox_labels, sample_bbox):
             sample_label.append(float(proj_bbox.ymin))
             sample_label.append(float(proj_bbox.xmax))
             sample_label.append(float(proj_bbox.ymax))
-            sample_label.append(bbox_labels[i][5])
+            #sample_label.append(bbox_labels[i][5])
+            sample_label = sample_label + bbox_labels[i][5:]
             sample_labels.append(sample_label)
     return sample_labels
 

@@ -17,23 +17,21 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('learning_rate',    float, 0.001,     "Learning rate.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
 add_arg('num_passes',       int,   120,       "Epoch number.")
-add_arg('parallel',         bool,  True,      "Whether use parallel training.")
-add_arg('use_gpu',          bool,  True,      "Whether to use GPU or not.")
-add_arg('use_nccl',         bool,  False,     "Whether to use NCCL or not.")
-add_arg('dataset',          str, 'pascalvoc', "coco or pascalvoc.")
-add_arg('model_save_dir',   str, 'model',     "The path to save model.")
-add_arg('pretrained_model', str, 'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
-add_arg('apply_distort',    bool, True,       "Whether apply distort")
-add_arg('apply_expand',     bool, True,       "Whether appley expand")
-add_arg('ap_version',       str,  '11point',  "11point or integral")
-add_arg('resize_h',         int,  300,        "The resized image height.")
-add_arg('resize_w',         int,  300,        "The resized image width.")
-add_arg('mean_value_B',     float, 127.5,     "mean value for B channel which will be subtracted")  #123.68
-add_arg('mean_value_G',     float, 127.5,     "mean value for G channel which will be subtracted")  #116.78
-add_arg('mean_value_R',     float, 127.5,     "mean value for R channel which will be subtracted")  #103.94
-add_arg('is_toy',           int, 0, "Toy for quick debug, 0 means using all data, while n means using only n sample")
-# yapf: enable
-
+add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
+add_arg('dataset',          str,   'pascalvoc', "coco2014, coco2017, and pascalvoc.")
+add_arg('model_save_dir',   str,   'model',     "The path to save model.")
+add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
+add_arg('apply_distort',    bool,  True,   "Whether apply distort.")
+add_arg('apply_expand',     bool,  False,  "Whether appley expand.")
+add_arg('nms_threshold',    float, 0.45,   "NMS threshold.")
+add_arg('ap_version',       str,   'integral',   "integral, 11point.")
+add_arg('resize_h',         int,   300,    "The resized image height.")
+add_arg('resize_w',         int,   300,    "The resized image height.")
+add_arg('mean_value_B',     float, 127.5,  "Mean value for B channel which will be subtracted.")  #123.68
+add_arg('mean_value_G',     float, 127.5,  "Mean value for G channel which will be subtracted.")  #116.78
+add_arg('mean_value_R',     float, 127.5,  "Mean value for R channel which will be subtracted.")  #103.94
+add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all data, while n means using only n sample.")
+#yapf: enable
 
 def parallel_do(args,
                 train_file_list,
@@ -118,10 +116,8 @@ def parallel_do(args,
     exe.run(fluid.default_startup_program())
 
     if pretrained_model:
-
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
-
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     train_reader = paddle.batch(
@@ -139,7 +135,7 @@ def parallel_do(args,
             test_map = exe.run(test_program,
                                feed=feeder.feed(data),
                                fetch_list=[accum_map])
-        print("Test {0}, map {1}".format(pass_id, test_map[0]))
+        print("Pass {0}, test map {1}".format(pass_id, test_map[0]))
 
     for pass_id in range(num_passes):
         start_time = time.time()
@@ -170,12 +166,12 @@ def parallel_exe(args,
                  learning_rate,
                  batch_size,
                  num_passes,
-                 model_save_dir='model',
+                 model_save_dir,
                  pretrained_model=None):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
-    if data_args.dataset == 'coco':
-        num_classes = 81
-    elif data_args.dataset == 'pascalvoc':
+    if 'coco' in data_args.dataset:
+        num_classes = 91
+    elif 'pascalvoc' in data_args.dataset:
         num_classes = 21
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
@@ -188,11 +184,16 @@ def parallel_exe(args,
         name='gt_label', shape=[1], dtype='int32', lod_level=1)
     difficult = fluid.layers.data(
         name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
+    gt_iscrowd = fluid.layers.data(
+        name='gt_iscrowd', shape=[1], dtype='int32', lod_level=1)
+    gt_image_info = fluid.layers.data(
+        name='gt_image_id', shape=[3], dtype='int32', lod_level=1)
 
     locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
     nmsed_out = fluid.layers.detection_output(
-        locs, confs, box, box_var, nms_threshold=0.45)
-    loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box, box_var)
+        locs, confs, box, box_var, nms_threshold=args.nms_threshold)
+    loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
+                                 box_var)
     loss = fluid.layers.reduce_sum(loss)
 
     test_program = fluid.default_main_program().clone(for_test=True)
@@ -207,7 +208,7 @@ def parallel_exe(args,
             evaluate_difficult=False,
             ap_version=args.ap_version)
 
-    if data_args.dataset == 'coco':
+    if 'coco' in data_args.dataset:
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in train_file_list:
             epocs = 82783 / batch_size
@@ -215,13 +216,16 @@ def parallel_exe(args,
         elif '2017' in train_file_list:
             epocs = 118287 / batch_size
             boundaries = [epcos * 12, epocs * 19]
+        values = [
+            learning_rate, learning_rate * 0.5, learning_rate * 0.25
+        ]
     elif data_args.dataset == 'pascalvoc':
         epocs = 19200 / batch_size
         boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
-    values = [
-        learning_rate, learning_rate * 0.5, learning_rate * 0.25,
-        learning_rate * 0.1, learning_rate * 0.01
-    ]
+        values = [
+            learning_rate, learning_rate * 0.5, learning_rate * 0.25,
+            learning_rate * 0.1, learning_rate * 0.01
+        ]
     optimizer = fluid.optimizer.RMSProp(
         learning_rate=fluid.layers.piecewise_decay(boundaries, values),
         regularization=fluid.regularizer.L2Decay(0.00005), )
@@ -233,10 +237,8 @@ def parallel_exe(args,
     exe.run(fluid.default_startup_program())
 
     if pretrained_model:
-
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
-
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     if args.parallel:
@@ -262,15 +264,16 @@ def parallel_exe(args,
     def test(pass_id, best_map):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
-        test_map = None
-        for data in test_reader():
+        for batch_id, data in enumerate(test_reader()):
             test_map = exe.run(test_program,
                                feed=feeder.feed(data),
                                fetch_list=[accum_map])
+            if batch_id % 20 == 0:
+                print("Batch {0}, map {1}".format(batch_id, test_map[0]))
         if test_map[0] > best_map:
             best_map = test_map[0]
             save_model('best_model')
-        print("Test {0}, map {1}".format(pass_id, test_map[0]))
+        print("Pass {0}, test map {1}".format(pass_id, test_map[0]))
 
     for pass_id in range(num_passes):
         start_time = time.time()
@@ -307,23 +310,26 @@ if __name__ == '__main__':
     val_file_list = 'test.txt'
     label_file = 'label_list'
     model_save_dir = args.model_save_dir
-    if args.dataset == 'coco':
-        data_dir = './data/COCO17'
-        train_file_list = 'annotations/instances_train2017.json'
-        val_file_list = 'annotations/instances_val2017.json'
-        label_file = 'label_list'
+    if 'coco' in args.dataset:
+        data_dir = './data/coco'
+        if '2014' in args.dataset:
+            train_file_list = 'annotations/instances_train2014.json'
+            val_file_list = 'annotations/instances_minival2014.json'
+        elif '2017' in args.dataset:
+            train_file_list = 'annotations/instances_train2017.json'
+            val_file_list = 'annotations/instances_val2017.json'
 
     data_args = reader.Settings(
         dataset=args.dataset,
         data_dir=data_dir,
         label_file=label_file,
-        apply_distort=args.apply_distort,
-        apply_expand=args.apply_expand,
         resize_h=args.resize_h,
         resize_w=args.resize_w,
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R],
+        apply_distort=args.apply_distort,
+        apply_expand=args.apply_expand,
+        ap_version = args.ap_version,
         toy=args.is_toy)
-    #method = parallel_do
     method = parallel_exe
     method(
         args,
