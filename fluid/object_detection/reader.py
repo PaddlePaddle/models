@@ -34,11 +34,13 @@ class Settings(object):
                  mean_value=[127.5, 127.5, 127.5],
                  apply_distort=True,
                  apply_expand=True,
+                 ap_version='11point',
                  toy=0):
         self._dataset = dataset
+        self._ap_version = ap_version
         self._toy = toy
         self._data_dir = data_dir
-        if dataset == "pascalvoc":
+        if 'pascalvoc' in dataset:
             self._label_list = []
             label_fpath = os.path.join(data_dir, label_file)
             for line in open(label_fpath):
@@ -64,6 +66,10 @@ class Settings(object):
     @property
     def dataset(self):
         return self._dataset
+
+    @property
+    def ap_version(self):
+        return self._ap_version
 
     @property
     def toy(self):
@@ -187,17 +193,17 @@ def coco(settings, file_list, mode, shuffle):
             if im.mode == 'L':
                 im = im.convert('RGB')
             im_width, im_height = im.size
+            im_id = image['id']
 
-            # layout: category_id | xmin | ymin | xmax | ymax | iscrowd |
-            # origin_coco_bbox | segmentation | area | image_id | annotation_id
+            # layout: category_id | xmin | ymin | xmax | ymax | iscrowd
             bbox_labels = []
             annIds = coco.getAnnIds(imgIds=image['id'])
             anns = coco.loadAnns(annIds)
             for ann in anns:
                 bbox_sample = []
                 # start from 1, leave 0 to background
-                bbox_sample.append(
-                    float(category_ids.index(ann['category_id'])) + 1)
+                bbox_sample.append(float(ann['category_id']))
+                #float(category_ids.index(ann['category_id'])) + 1)
                 bbox = ann['bbox']
                 xmin, ymin, w, h = bbox
                 xmax = xmin + w
@@ -214,8 +220,12 @@ def coco(settings, file_list, mode, shuffle):
             im = im.astype('float32')
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
-            difficults = sample_labels[:, -1].astype('int32')
-            yield im, boxes, lbls, difficults
+            iscrowd = sample_labels[:, -1].astype('int32')
+            if 'cocoMAP' in settings.ap_version:
+                yield im, boxes, lbls, iscrowd, \
+                    [im_id, im_width, im_height]
+            else:
+                yield im, boxes, lbls, iscrowd
 
     return reader
 
@@ -268,40 +278,9 @@ def pascalvoc(settings, file_list, mode, shuffle):
     return reader
 
 
-def draw_bounding_box_on_image(image,
-                               sample_labels,
-                               image_name,
-                               category_names,
-                               color='red',
-                               thickness=4,
-                               with_text=True,
-                               normalized=True):
-    image = Image.fromarray(image)
-    draw = ImageDraw.Draw(image)
-    im_width, im_height = image.size
-    if not normalized:
-        im_width, im_height = 1, 1
-    for item in sample_labels:
-        label = item[0]
-        category_name = category_names[int(label)]
-        bbox = item[1:5]
-        xmin, ymin, xmax, ymax = bbox
-        (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
-                                      ymin * im_height, ymax * im_height)
-        draw.line(
-            [(left, top), (left, bottom), (right, bottom), (right, top),
-             (left, top)],
-            width=thickness,
-            fill=color)
-        if with_text:
-            if image.mode == 'RGB':
-                draw.text((left, top), category_name, (255, 255, 0))
-    image.save(image_name)
-
-
 def train(settings, file_list, shuffle=True):
     file_list = os.path.join(settings.data_dir, file_list)
-    if settings.dataset == 'coco':
+    if 'coco' in settings.dataset:
         train_settings = copy.copy(settings)
         if '2014' in file_list:
             sub_dir = "train2014"
@@ -315,7 +294,7 @@ def train(settings, file_list, shuffle=True):
 
 def test(settings, file_list):
     file_list = os.path.join(settings.data_dir, file_list)
-    if settings.dataset == 'coco':
+    if 'coco' in settings.dataset:
         test_settings = copy.copy(settings)
         if '2014' in file_list:
             sub_dir = "val2014"
@@ -329,10 +308,10 @@ def test(settings, file_list):
 
 def infer(settings, image_path):
     def reader():
-        im = Image.open(image_path)
-        if im.mode == 'L':
-            im = im.convert('RGB')
-        im_width, im_height = im.size
+        img = Image.open(image_path)
+        if img.mode == 'L':
+            img = im.convert('RGB')
+        im_width, im_height = img.size
         img = img.resize((settings.resize_w, settings.resize_h),
                          Image.ANTIALIAS)
         img = np.array(img)
@@ -345,6 +324,6 @@ def infer(settings, image_path):
         img = img.astype('float32')
         img -= settings.img_mean
         img = img * 0.007843
-        yield img
+        return img
 
     return reader
