@@ -2,29 +2,45 @@ import os
 import numpy as np
 import time
 import sys
-import paddle.v2 as paddle
+import paddle
 import paddle.fluid as fluid
 from se_resnext import SE_ResNeXt
 from mobilenet import mobile_net
 import reader
-
 import argparse
 import functools
+import paddle.fluid.layers.ops as ops
 from utility import add_arguments, print_arguments
+from paddle.fluid.initializer import init_on_cpu
+from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
+import math
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
-# yapf: disable
-add_arg('batch_size',   int,  256, "Minibatch size.")
-add_arg('num_layers',   int,  50,  "How many layers for SE-ResNeXt model.")
-add_arg('with_mem_opt', bool, True, "Whether to use memory optimization or not.")
-add_arg('parallel_exe', bool, True, "Whether to use ParallelExecutor to train or not.")
-add_arg('model',
-        type=str,
-        choices=['mobilenet', 'se_resnext'],
-        default='se_resnext',
-        help="Which model to use.")
-# yapf: enable
+add_arg('batch_size', int, 256, "Minibatch size.")
+add_arg('num_layers', int, 50, "How many layers for SE-ResNeXt model.")
+add_arg('with_mem_opt', bool, True,
+        "Whether to use memory optimization or not.")
+add_arg('parallel_exe', bool, True,
+        "Whether to use ParallelExecutor to train or not.")
+add_arg('init_model', str, None, "Whether to use initialized model.")
+add_arg('pretrained_model', str, None, "Whether to use pretrained model.")
+add_arg('lr_strategy', str, "cosine_decay",
+        "Set the learning rate decay strategy.")
+add_arg('model', str, "se_resnext", "Set the network to use.")
+
+
+def cosine_decay(learning_rate, step_each_epoch, epochs=120):
+    """Applies cosine decay to the learning rate.
+    lr = 0.05 * (math.cos(epoch * (math.pi / 120)) + 1)
+    """
+    global_step = _decay_step_counter()
+
+    with init_on_cpu():
+        epoch = ops.floor(global_step / step_each_epoch)
+        decayed_lr = learning_rate * \
+                     (ops.cos(epoch * (math.pi / epochs)) + 1)/2
+    return decayed_lr
 
 
 def train_parallel_do(args,
@@ -32,6 +48,7 @@ def train_parallel_do(args,
                       batch_size,
                       num_passes,
                       init_model=None,
+                      pretrained_model=None,
                       model_save_dir='model',
                       parallel=True,
                       use_nccl=True,
@@ -81,17 +98,27 @@ def train_parallel_do(args,
 
     inference_program = fluid.default_main_program().clone(for_test=True)
 
-    if lr_strategy is None:
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=learning_rate,
-            momentum=0.9,
-            regularization=fluid.regularizer.L2Decay(1e-4))
-    else:
-        bd = lr_strategy["bd"]
-        lr = lr_strategy["lr"]
+    if "piecewise_decay" in lr_strategy:
+        bd = lr_strategy["piecewise_decay"]["bd"]
+        lr = lr_strategy["piecewise_decay"]["lr"]
         optimizer = fluid.optimizer.Momentum(
             learning_rate=fluid.layers.piecewise_decay(
                 boundaries=bd, values=lr),
+            momentum=0.9,
+            regularization=fluid.regularizer.L2Decay(1e-4))
+    elif "cosine_decay" in lr_strategy:
+        step_each_epoch = lr_strategy["cosine_decay"]["step_each_epoch"]
+        epochs = lr_strategy["cosine_decay"]["epochs"]
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=cosine_decay(
+                learning_rate=learning_rate,
+                step_each_epoch=step_each_epoch,
+                epochs=epochs),
+            momentum=0.9,
+            regularization=fluid.regularizer.L2Decay(1e-4))
+    else:
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=learning_rate,
             momentum=0.9,
             regularization=fluid.regularizer.L2Decay(1e-4))
 
@@ -105,6 +132,13 @@ def train_parallel_do(args,
 
     if init_model is not None:
         fluid.io.load_persistables(exe, init_model)
+
+    if pretrained_model:
+
+        def if_exist(var):
+            return os.path.exists(os.path.join(pretrained_model, var.name))
+
+        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     train_reader = paddle.batch(reader.train(), batch_size=batch_size)
     test_reader = paddle.batch(reader.test(), batch_size=batch_size)
@@ -177,6 +211,7 @@ def train_parallel_exe(args,
                        batch_size,
                        num_passes,
                        init_model=None,
+                       pretrained_model=None,
                        model_save_dir='model',
                        parallel=True,
                        use_nccl=True,
@@ -199,17 +234,27 @@ def train_parallel_exe(args,
 
     test_program = fluid.default_main_program().clone(for_test=True)
 
-    if lr_strategy is None:
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=learning_rate,
-            momentum=0.9,
-            regularization=fluid.regularizer.L2Decay(1e-4))
-    else:
-        bd = lr_strategy["bd"]
-        lr = lr_strategy["lr"]
+    if "piecewise_decay" in lr_strategy:
+        bd = lr_strategy["piecewise_decay"]["bd"]
+        lr = lr_strategy["piecewise_decay"]["lr"]
         optimizer = fluid.optimizer.Momentum(
             learning_rate=fluid.layers.piecewise_decay(
                 boundaries=bd, values=lr),
+            momentum=0.9,
+            regularization=fluid.regularizer.L2Decay(1e-4))
+    elif "cosine_decay" in lr_strategy:
+        step_each_epoch = lr_strategy["cosine_decay"]["step_each_epoch"]
+        epochs = lr_strategy["cosine_decay"]["epochs"]
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=cosine_decay(
+                learning_rate=learning_rate,
+                step_each_epoch=step_each_epoch,
+                epochs=epochs),
+            momentum=0.9,
+            regularization=fluid.regularizer.L2Decay(1e-4))
+    else:
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=learning_rate,
             momentum=0.9,
             regularization=fluid.regularizer.L2Decay(1e-4))
 
@@ -224,6 +269,13 @@ def train_parallel_exe(args,
 
     if init_model is not None:
         fluid.io.load_persistables(exe, init_model)
+
+    if pretrained_model:
+
+        def if_exist(var):
+            return os.path.exists(os.path.join(pretrained_model, var.name))
+
+        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     train_reader = paddle.batch(reader.train(), batch_size=batch_size)
     test_reader = paddle.batch(reader.test(), batch_size=batch_size)
@@ -301,25 +353,39 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
-    epoch_points = [30, 60, 90]
     total_images = 1281167
     batch_size = args.batch_size
     step = int(total_images / batch_size + 1)
-    bd = [e * step for e in epoch_points]
-    lr = [0.1, 0.01, 0.001, 0.0001]
+    num_epochs = 120
 
-    lr_strategy = {"bd": bd, "lr": lr}
+    learning_rate_mode = args.lr_strategy
+    lr_strategy = {}
+    if learning_rate_mode == "piecewise_decay":
+        epoch_points = [30, 60, 90]
+        bd = [e * step for e in epoch_points]
+        lr = [0.1, 0.01, 0.001, 0.0001]
+        lr_strategy[learning_rate_mode] = {"bd": bd, "lr": lr}
+    elif learning_rate_mode == "cosine_decay":
+        lr_strategy[learning_rate_mode] = {
+            "step_each_epoch": step,
+            "epochs": num_epochs
+        }
+    else:
+        lr_strategy = None
 
     use_nccl = True
     # layers: 50, 152
     layers = args.num_layers
     method = train_parallel_exe if args.parallel_exe else train_parallel_do
+    init_model = args.init_model if args.init_model else None
+    pretrained_model = args.pretrained_model if args.pretrained_model else None
     method(
         args,
         learning_rate=0.1,
         batch_size=batch_size,
-        num_passes=120,
-        init_model=None,
+        num_passes=num_epochs,
+        init_model=init_model,
+        pretrained_model=pretrained_model,
         parallel=True,
         use_nccl=True,
         lr_strategy=lr_strategy,

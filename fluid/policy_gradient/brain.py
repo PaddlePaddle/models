@@ -53,9 +53,9 @@ class PolicyGradient:
                                     feed={"obs": observation[np.newaxis, :]},
                                     fetch_list=[self.all_act_prob])
         prob_weights = np.array(prob_weights[0])
+        # select action w.r.t the actions prob
         action = np.random.choice(
-            range(prob_weights.shape[1]),
-            p=prob_weights.ravel())  # select action w.r.t the actions prob
+            range(prob_weights.shape[1]), p=prob_weights.ravel())
         return action
 
     def store_transition(self, s, a, r):
