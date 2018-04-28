@@ -20,7 +20,6 @@ def run_episode(agent, env, exp, train_or_test):
   for step in range(200):
     action = agent.act(state, train_or_test)
     next_state, reward, isOver, _ = env.step(action)
-    #print('state:{}  next_state:{} act:{}   reward:{}   isOver:{}'.format(state, next_state, action, reward, isOver))
     if train_or_test == 'train':
       exp.append(Experience(state, action, reward, isOver))
       # train model

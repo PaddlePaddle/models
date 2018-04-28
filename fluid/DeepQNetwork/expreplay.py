@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 #File: expreplay.py
 #Author: yobobobo(zhouboacmer@qq.com)
+
 from tensorpack.utils import logger
 from collections import namedtuple
 import numpy as np
@@ -27,10 +28,6 @@ class ReplayMemory(object):
     else:
       self._assign(self._curr_pos, exp)
     self._curr_pos = (self._curr_pos + 1) % self.max_size
-    #if self._curr_size > 10:
-    #  st = self._curr_size - 5
-    #  end = self._curr_size
-    #  logger.info("debug_state:{}".format(self.state[st:end]))
 
   def _assign(self, pos, exp):
     self.state[pos] = exp.state
@@ -43,13 +40,10 @@ class ReplayMemory(object):
 
   def sample(self, batch_idx):
     for i, idx in enumerate(batch_idx):
-      #while (idx + 1) % self._curr_size == self._curr_pos or \
-      #    (self.isOver[idx] and self.reward[idx] < 0):
       while (idx + 1) % self._curr_size == self._curr_pos:
-        #print '-------------re-pick----------'
         idx = np.random.randint(self._curr_size)
       batch_idx[i] = idx
-    #logger.info("_curr_pos:{} batch_idx:{}".format(self._curr_pos, batch_idx[:10]))
+
     next_idx = (batch_idx + 1) % self._curr_size
     state = self.state[batch_idx]
     reward = self.reward[batch_idx]
