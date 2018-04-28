@@ -7,24 +7,8 @@ import paddle.fluid as fluid
 import reader
 import paddle.fluid.layers.control_flow as control_flow
 import paddle.fluid.layers.nn as nn
-import paddle.fluid.layers.ops as ops
 import paddle.fluid.layers.tensor as tensor
-from paddle.fluid.initializer import init_on_cpu
-from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
 import math
-
-
-def cosine_decay(learning_rate, step_each_epoch, epochs=120):
-    """Applies cosine decay to the learning rate.
-    lr = 0.05 * (math.cos(epoch * (math.pi / 120)) + 1)
-    """
-    global_step = _decay_step_counter()
-
-    with init_on_cpu():
-        epoch = ops.floor(global_step / step_each_epoch)
-        decayed_lr = learning_rate * \
-                     (ops.cos(epoch * (math.pi / epochs)) + 1)/2
-    return decayed_lr
 
 
 def conv_bn_layer(input, num_filters, filter_size, stride=1, groups=1,
