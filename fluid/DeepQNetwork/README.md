@@ -18,11 +18,10 @@ A car is on a one-dimensional track, positioned between two "mountains". The goa
    + tqdm
    + paddle-fluid
 + Start Training:
-```
-# use mountain-car enviroment as default
-python DQN.py
-
-# use other enviorment
-python DQN.py --env CartPole-v0
-
-```
+   ```
+   # use mountain-car enviroment as default
+   python DQN.py
+   
+   # use other enviorment
+   python DQN.py --env CartPole-v0
+   ```
