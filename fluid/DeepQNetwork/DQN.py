@@ -11,7 +11,9 @@ import numpy as np
 import os
 
 UPDATE_FREQ = 4
+
 MEMORY_WARMUP_SIZE = 1000 
+
 
 def run_episode(agent, env, exp, train_or_test):
     assert train_or_test in ['train', 'test'], train_or_test
@@ -27,8 +29,10 @@ def run_episode(agent, env, exp, train_or_test):
             if len(exp) > MEMORY_WARMUP_SIZE:
                 batch_idx = np.random.randint(len(exp), size=(args.batch_size))
                 if step % UPDATE_FREQ == 0:
-                    batch_state, batch_action, batch_reward, batch_next_state, batch_isOver = exp.sample(batch_idx)
-                    agent.train(batch_state, batch_action, batch_reward, batch_next_state, batch_isOver)
+                    batch_state, batch_action, batch_reward, \
+                    batch_next_state, batch_isOver = exp.sample(batch_idx)
+                    agent.train(batch_state, batch_action, batch_reward, \
+                                batch_next_state, batch_isOver)
         total_reward += reward
         state = next_state
         if isOver:
@@ -54,7 +58,7 @@ def train_agent():
     for episode in xrange(max_episode):
         # start epoch
         total_reward = run_episode(agent, env, exp, train_or_test='train')
-        pbar.set_description('training, exploration:{}'.format(agent.exploration))
+        pbar.set_description('[train]exploration:{}'.format(agent.exploration))
         pbar.update()
 
         # recent 100 reward
@@ -62,7 +66,8 @@ def train_agent():
         recent_100_reward.append(total_reward)
         if len(recent_100_reward) > 100:
             recent_100_reward = recent_100_reward[1:]
-        pbar.write("episode:{}    test_reward:{}".format(episode, np.mean(recent_100_reward)))
+        pbar.write("episode:{}    test_reward:{}".format(\
+                    episode, np.mean(recent_100_reward)))
 
     pbar.close()
 

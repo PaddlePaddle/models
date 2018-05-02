@@ -13,10 +13,10 @@ class ReplayMemory(object):
         self.max_size = int(max_size)
         self.state_shape = state_shape
 
-        self.state = np.zeros((self.max_size,) + state_shape, dtype='float32')
-        self.action = np.zeros((self.max_size,), dtype='int32')
-        self.reward = np.zeros((self.max_size,), dtype='float32')
-        self.isOver = np.zeros((self.max_size,), dtype='bool')
+        self.state = np.zeros((self.max_size, ) + state_shape, dtype='float32')
+        self.action = np.zeros((self.max_size, ), dtype='int32')
+        self.reward = np.zeros((self.max_size, ), dtype='float32')
+        self.isOver = np.zeros((self.max_size, ), dtype='bool')
 
         self._curr_size = 0
         self._curr_pos = 0

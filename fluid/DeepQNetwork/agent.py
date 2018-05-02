@@ -21,11 +21,16 @@ class Model(object):
         self._build_net()
 
     def _get_inputs(self):
-        return [fluid.layers.data(name='state', shape=[self.state_dim], dtype='float32'),
-                        fluid.layers.data(name='action', shape=[1], dtype='int32'),
-                        fluid.layers.data(name='reward', shape=[], dtype='float32'),
-                        fluid.layers.data(name='next_s', shape=[self.state_dim], dtype='float32'),
-                        fluid.layers.data(name='isOver', shape=[], dtype='bool')]
+        return [fluid.layers.data(\
+                    name='state', shape=[self.state_dim], dtype='float32'),
+                fluid.layers.data(\
+                    name='action', shape=[1], dtype='int32'), 
+                fluid.layers.data(\
+                    name='reward', shape=[], dtype='float32'),
+                fluid.layers.data(\
+                    name='next_s', shape=[self.state_dim], dtype='float32'),
+                fluid.layers.data(\
+                  name='isOver', shape=[], dtype='bool')]
 
     def _build_net(self):
         state, action, reward, next_s, isOver = self._get_inputs()
@@ -42,8 +47,10 @@ class Model(object):
         best_v = fluid.layers.reduce_max(targetQ_predict_value, dim=1)
         best_v.stop_gradient = True
 
-        target = reward + (1.0 - fluid.layers.cast(isOver, dtype='float32')) * self.gamma * best_v
-        cost = fluid.layers.square_error_cost(input=pred_action_value, label=target)
+        target = reward + (1.0 - fluid.layers.cast(\
+            isOver, dtype='float32')) * self.gamma * best_v
+        cost = fluid.layers.square_error_cost(\
+            input=pred_action_value, label=target)
         cost = fluid.layers.reduce_mean(cost)
 
         self._sync_program = self._build_sync_target_network()
@@ -64,7 +71,7 @@ class Model(object):
         # layer fc1
         param_attr = ParamAttr(name='{}_fc1'.format(variable_field))
         bias_attr = ParamAttr(name='{}_fc1_b'.format(variable_field))
-        fc1 = fluid.layers.fc(input=state, 
+        fc1 = fluid.layers.fc(input=state,
                               size=256,
                               act='relu',
                               param_attr=param_attr,
@@ -72,17 +79,17 @@ class Model(object):
 
         param_attr = ParamAttr(name='{}_fc2'.format(variable_field))
         bias_attr = ParamAttr(name='{}_fc2_b'.format(variable_field))
-        fc2 = fluid.layers.fc(input=fc1, 
-                              size=128, 
-                              act='tanh', 
-                              param_attr=param_attr, 
+        fc2 = fluid.layers.fc(input=fc1,
+                              size=128,
+                              act='tanh',
+                              param_attr=param_attr,
                               bias_attr=bias_attr)
 
         param_attr = ParamAttr(name='{}_fc3'.format(variable_field))
         bias_attr = ParamAttr(name='{}_fc3_b'.format(variable_field))
-        value = fluid.layers.fc(input=fc2, 
-                                size=self.action_dim, 
-                                param_attr=param_attr, 
+        value = fluid.layers.fc(input=fc2,
+                                size=self.action_dim,
+                                param_attr=param_attr,
                                 bias_attr=bias_attr)
 
         return value
@@ -116,13 +123,13 @@ class Model(object):
             act = np.random.randint(self.action_dim)
         else:
             state = np.expand_dims(state, axis=0)
-            pred_Q = self.exe.run(self.predict_program, 
+            pred_Q = self.exe.run(self.predict_program,
                                 feed={'state': state.astype('float32')},
                                 fetch_list=[self.pred_value])[0]
             pred_Q = np.squeeze(pred_Q, axis=0)
             act = np.argmax(pred_Q)
         self.exploration = max(0.1, self.exploration - 1e-6)
-        return act 
+        return act
 
     def train(self, state, action, reward, next_state, isOver):
         if self.global_step % UPDATE_TARGET_STEPS == 0:
