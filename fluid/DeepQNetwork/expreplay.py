@@ -1,8 +1,6 @@
 #-*- coding: utf-8 -*-
 #File: expreplay.py
-#Author: yobobobo(zhouboacmer@qq.com)
 
-from tensorpack.utils import logger
 from collections import namedtuple
 import numpy as np
 

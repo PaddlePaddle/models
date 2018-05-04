@@ -1,6 +1,5 @@
 #-*- coding: utf-8 -*-
 #File: DQN.py
-#Author: yobobobo(zhouboacmer@qq.com)
 
 from agent import Model
 import gym

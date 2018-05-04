@@ -1,6 +1,5 @@
 #-*- coding: utf-8 -*-
 #File: agent.py
-#Author: yobobobo(zhouboacmer@qq.com)
 
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
