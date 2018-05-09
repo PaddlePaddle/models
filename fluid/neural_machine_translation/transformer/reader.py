@@ -136,10 +136,10 @@ class DataReader(object):
         :param seed: The seed for random.
         :type seed: int
         """
-        self._src_vocab = self._load_dict(src_vocab_fpath)
+        self._src_vocab = self.load_dict(src_vocab_fpath)
         self._only_src = True
         if trg_vocab_fpath is not None:
-            self._trg_vocab = self._load_dict(trg_vocab_fpath)
+            self._trg_vocab = self.load_dict(trg_vocab_fpath)
             self._only_src = False
         self._pool_size = pool_size
         self._batch_size = batch_size
@@ -237,7 +237,8 @@ class DataReader(object):
 
         return src_seq_words, trg_seq_words
 
-    def _load_dict(self, dict_path, reverse=False):
+    @staticmethod
+    def load_dict(dict_path, reverse=False):
         word_dict = {}
         with open(dict_path, "r") as fdict:
             for idx, line in enumerate(fdict):

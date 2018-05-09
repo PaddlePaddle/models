@@ -79,7 +79,17 @@ def parse_args():
         default=None,
         nargs=argparse.REMAINDER)
     args = parser.parse_args()
-    merge_cfg_from_list(args.opts, [TrainTaskConfig, ModelHyperParams])
+    # Append args related to dict
+    src_dict = reader.DataReader.load_dict(args.src_vocab_fpath)
+    trg_dict = reader.DataReader.load_dict(args.trg_vocab_fpath)
+    dict_args = [
+        "src_vocab_size", str(len(src_dict)), "trg_vocab_size",
+        str(len(trg_dict)), "bos_idx", str(src_dict[args.special_token[0]]),
+        "eos_idx", str(src_dict[args.special_token[1]]), "unk_idx",
+        str(src_dict[args.special_token[2]])
+    ]
+    merge_cfg_from_list(args.opts + dict_args,
+                        [TrainTaskConfig, ModelHyperParams])
     return args
 
 

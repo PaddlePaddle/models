@@ -51,7 +51,17 @@ def parse_args():
         default=None,
         nargs=argparse.REMAINDER)
     args = parser.parse_args()
-    merge_cfg_from_list(args.opts, [InferTaskConfig, ModelHyperParams])
+    # Append args related to dict
+    src_dict = reader.DataReader.load_dict(args.src_vocab_fpath)
+    trg_dict = reader.DataReader.load_dict(args.trg_vocab_fpath)
+    dict_args = [
+        "src_vocab_size", str(len(src_dict)), "trg_vocab_size",
+        str(len(trg_dict)), "bos_idx", str(src_dict[args.special_token[0]]),
+        "eos_idx", str(src_dict[args.special_token[1]]), "unk_idx",
+        str(src_dict[args.special_token[2]])
+    ]
+    merge_cfg_from_list(args.opts + dict_args,
+                        [InferTaskConfig, ModelHyperParams])
     return args
 
 
@@ -351,7 +361,7 @@ def infer(args):
         unk_mark=args.special_token[2],
         clip_last_batch=False)
 
-    trg_idx2word = test_data._load_dict(
+    trg_idx2word = test_data.load_dict(
         dict_path=args.trg_vocab_fpath, reverse=True)
 
     def post_process_seq(seq,
