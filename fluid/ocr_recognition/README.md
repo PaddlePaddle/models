@@ -1,5 +1,4 @@
 ﻿
-[toc]
 
 运行本目录下的程序示例需要使用PaddlePaddle develop最新版本。如果您的PaddlePaddle安装版本低于此要求，请按照安装文档中的说明更新PaddlePaddle安装版本。
 
@@ -74,7 +73,7 @@
 在训练时，我们通过选项`--train_images` 和 `--train_list` 分别设置准备好的`train_images` 和`train_list`。
 
 
->**注：** 如果`--train_images` 和 `--train_list`都未设置或设置为None， ctc_reader.py会自动下载使用[示例数据](http://cloud.dlnel.org/filepub/?uuid=df937251-3c0b-480d-9a7b-0080dfeee65c)，并将其缓存到`$HOME/.cache/paddle/dataset/ctc_data/data/` 路径下。
+>**注：** 如果`--train_images` 和 `--train_list`都未设置或设置为None， ctc_reader.py会自动下载使用[示例数据](http://paddle-ocr-data.bj.bcebos.com/data.tar.gz)，并将其缓存到`$HOME/.cache/paddle/dataset/ctc_data/data/` 路径下。
 
 
 **B. 测试集和评估集**
@@ -177,3 +176,5 @@ env CUDA_VISIBLE_DEVICE=0 python infer.py \
     --model_path="models/model_00044_15000" \
     --input_images_list="data/test.list"
 ```
+
+>注意：因为版权原因，我们暂时停止提供中文数据集的下载和使用服务，你通过`ctc_reader.py`自动下载的数据将是含有30W图片的英文数据集。在英文数据集上的训练结果会稍后发布。
