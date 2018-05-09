@@ -4,8 +4,8 @@ import os
 import sys
 import numpy as np
 import argparse
-from kaffe import KaffeError, print_stderr
 
+from kaffe import KaffeError, print_stderr
 from kaffe.paddle import Transformer
 
 
@@ -43,9 +43,17 @@ def convert(def_path, caffemodel_path, data_output_path, code_output_path,
             print_stderr('Saving source...')
             with open(code_output_path, 'wb') as src_out:
                 src_out.write(transformer.transform_source())
+        print_stderr('set env variable before using converted model '\
+                'if used custom_layers:')
+        custom_pk_path = os.path.dirname(os.path.abspath(__file__))
+        custom_pk_path = os.path.join(custom_pk_path, 'kaffe')
+        print_stderr('export CAFFE2FLUID_CUSTOM_LAYERS=%s' % (custom_pk_path))
         print_stderr('Done.')
+        return 0
     except KaffeError as err:
         fatal_error('Error encountered: {}'.format(err))
+
+    return 1
 
 
 def main():
@@ -64,9 +72,10 @@ def main():
         help='The phase to convert: test (default) or train')
     args = parser.parse_args()
     validate_arguments(args)
-    convert(args.def_path, args.caffemodel, args.data_output_path,
-            args.code_output_path, args.phase)
+    return convert(args.def_path, args.caffemodel, args.data_output_path,
+                   args.code_output_path, args.phase)
 
 
 if __name__ == '__main__':
-    main()
+    ret = main()
+    sys.exit(ret)

@@ -1,10 +1,11 @@
-import math
+import sys
 import os
+import math
 import numpy as np
 
 
 def import_fluid():
-    import paddle.v2.fluid as fluid
+    import paddle.fluid as fluid
     return fluid
 
 
@@ -21,6 +22,7 @@ def layer(op):
             layer_input = self.terminals[0]
         else:
             layer_input = list(self.terminals)
+
         # Perform the operation and get the output.
         layer_output = op(self, layer_input, *args, **kwargs)
         # Add to layer LUT.
@@ -61,7 +63,7 @@ class Network(object):
         if os.path.isdir(data_path):
             assert (exe is not None), \
                 'must provide a executor to load fluid model'
-            fluid.io.load_persistables_if_exist(executor=exe, dirname=data_path)
+            fluid.io.load_persistables(executor=exe, dirname=data_path)
             return True
 
         #load model from a npy file
@@ -125,6 +127,7 @@ class Network(object):
              s_w,
              name,
              relu=True,
+             relu_negative_slope=0.0,
              padding=None,
              group=1,
              biased=True):
@@ -140,6 +143,14 @@ class Network(object):
 
         fluid = import_fluid()
         prefix = name + '_'
+        leaky_relu = False
+        act = 'relu'
+        if relu is False:
+            act = None
+        elif relu_negative_slope != 0.0:
+            leaky_relu = True
+            act = None
+
         output = fluid.layers.conv2d(
             input=input,
             filter_size=[k_h, k_w],
@@ -149,7 +160,11 @@ class Network(object):
             groups=group,
             param_attr=fluid.ParamAttr(name=prefix + "weights"),
             bias_attr=fluid.ParamAttr(name=prefix + "biases"),
-            act="relu" if relu is True else None)
+            act=act)
+
+        if leaky_relu:
+            output = fluid.layers.leaky_relu(output, alpha=relu_negative_slope)
+
         return output
 
     @layer
@@ -158,41 +173,60 @@ class Network(object):
         output = fluid.layers.relu(x=input)
         return output
 
-    @layer
-    def max_pool(self, input, k_h, k_w, s_h, s_w, name, padding=None):
-        if padding is None:
-            padding = [0, 0]
-
+    def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
+             name):
         # Get the number of channels in the input
-        h_i, w_i = input.shape[2:]
+        in_hw = input.shape[2:]
+        k_hw = [k_h, k_w]
+        s_hw = [s_h, s_w]
+
         fluid = import_fluid()
         output = fluid.layers.pool2d(
             input=input,
-            pool_size=[k_h, k_w],
-            pool_stride=[s_h, s_w],
+            pool_size=k_hw,
+            pool_stride=s_hw,
             pool_padding=padding,
-            pool_type='max')
+            ceil_mode=ceil_mode,
+            pool_type=pool_type)
         return output
 
     @layer
-    def avg_pool(self, input, k_h, k_w, s_h, s_w, name, padding=None):
-        if padding is None:
-            padding = [0, 0]
+    def max_pool(self,
+                 input,
+                 k_h,
+                 k_w,
+                 s_h,
+                 s_w,
+                 ceil_mode,
+                 padding=[0, 0],
+                 name=None):
+        return self.pool('max', input, k_h, k_w, s_h, s_w, ceil_mode, padding,
+                         name)
 
-        # Get the number of channels in the input
-        h_i, w_i = input.shape[2:]
+    @layer
+    def avg_pool(self,
+                 input,
+                 k_h,
+                 k_w,
+                 s_h,
+                 s_w,
+                 ceil_mode,
+                 padding=[0, 0],
+                 name=None):
+        return self.pool('avg', input, k_h, k_w, s_h, s_w, ceil_mode, padding,
+                         name)
+
+    @layer
+    def sigmoid(self, input, name):
         fluid = import_fluid()
-        output = fluid.layers.pool2d(
-            input=input,
-            pool_size=[k_h, k_w],
-            pool_stride=[s_h, s_w],
-            pool_padding=padding,
-            pool_type='avg')
-        return output
+        return fluid.layers.sigmoid(input)
 
     @layer
     def lrn(self, input, radius, alpha, beta, name, bias=1.0):
-        raise Exception('lrn() not implemented yet')
+        fluid = import_fluid()
+        output = fluid.layers.lrn(input=input, \
+                n=radius, k=bias, alpha=alpha, beta=beta, name=name)
+        return output
 
     @layer
     def concat(self, inputs, axis, name):
@@ -228,11 +262,16 @@ class Network(object):
     @layer
     def softmax(self, input, name):
         fluid = import_fluid()
-        output = fluid.layers.softmax(x=input, name=name)
+        output = fluid.layers.softmax(input)
         return output
 
     @layer
-    def batch_normalization(self, input, name, scale_offset=True, relu=False):
+    def batch_normalization(self,
+                            input,
+                            name,
+                            scale_offset=True,
+                            eps=1e-5,
+                            relu=False):
         # NOTE: Currently, only inference is supported
         fluid = import_fluid()
         prefix = name + '_'
@@ -250,11 +289,51 @@ class Network(object):
             bias_attr=bias_attr,
             moving_mean_name=mean_name,
             moving_variance_name=variance_name,
-            epsilon=1e-5,
+            epsilon=eps,
             act='relu' if relu is True else None)
 
         return output
 
     @layer
-    def dropout(self, input, keep_prob, name):
-        raise Exception('dropout() not implemented yet')
+    def dropout(self, input, drop_prob, name, is_test=True):
+        fluid = import_fluid()
+        if is_test:
+            output = input
+        else:
+            output = fluid.layers.dropout(
+                input, dropout_prob=drop_prob, is_test=is_test)
+        return output
+
+    @layer
+    def scale(self, input, axis=1, num_axes=1, name=None):
+        fluid = import_fluid()
+
+        assert num_axes == 1, "layer scale not support this num_axes[%d] now" % (
+            num_axes)
+
+        prefix = name + '_'
+        scale_shape = input.shape[axis:axis + num_axes]
+        param_attr = fluid.ParamAttr(name=prefix + 'scale')
+        scale_param = fluid.layers.create_parameter(
+            shape=scale_shape, dtype=input.dtype, name=name, attr=param_attr)
+
+        offset_attr = fluid.ParamAttr(name=prefix + 'offset')
+        offset_param = fluid.layers.create_parameter(
+            shape=scale_shape, dtype=input.dtype, name=name, attr=offset_attr)
+
+        output = fluid.layers.elementwise_mul(input, scale_param, axis=axis)
+        output = fluid.layers.elementwise_add(output, offset_param, axis=axis)
+        return output
+
+    def custom_layer_factory(self):
+        """ get a custom layer maker provided by subclass
+        """
+        raise NotImplementedError(
+            '[custom_layer_factory] must be implemented by the subclass.')
+
+    @layer
+    def custom_layer(self, inputs, kind, name, *args, **kwargs):
+        """ make custom layer
+        """
+        layer_factory = self.custom_layer_factory()
+        return layer_factory(kind, inputs, name, *args, **kwargs)
