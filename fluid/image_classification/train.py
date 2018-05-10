@@ -6,6 +6,7 @@ import paddle
 import paddle.fluid as fluid
 from se_resnext import SE_ResNeXt
 from mobilenet import mobile_net
+from inception_v4 import inception_v4
 import reader
 import argparse
 import functools
@@ -70,8 +71,10 @@ def train_parallel_do(args,
             if args.model is 'se_resnext':
                 out = SE_ResNeXt(
                     input=image_, class_dim=class_dim, layers=layers)
-            else:
+            elif args.model is 'mobile_net':
                 out = mobile_net(img=image_, class_dim=class_dim)
+            else:
+                out = inception_v4(img=image_, class_dim=class_dim)
 
             cost = fluid.layers.cross_entropy(input=out, label=label_)
             avg_cost = fluid.layers.mean(x=cost)
@@ -88,8 +91,10 @@ def train_parallel_do(args,
     else:
         if args.model is 'se_resnext':
             out = SE_ResNeXt(input=image, class_dim=class_dim, layers=layers)
-        else:
+        elif args.model is 'mobile_net':
             out = mobile_net(img=image, class_dim=class_dim)
+        else:
+            out = inception_v4(img=image, class_dim=class_dim)
 
         cost = fluid.layers.cross_entropy(input=out, label=label)
         avg_cost = fluid.layers.mean(x=cost)
@@ -224,8 +229,10 @@ def train_parallel_exe(args,
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
     if args.model is 'se_resnext':
         out = SE_ResNeXt(input=image, class_dim=class_dim, layers=layers)
-    else:
+    elif args.model is 'mobile_net':
         out = mobile_net(img=image, class_dim=class_dim)
+    else:
+        out = inception_v4(img=image, class_dim=class_dim)
 
     cost = fluid.layers.cross_entropy(input=out, label=label)
     acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
