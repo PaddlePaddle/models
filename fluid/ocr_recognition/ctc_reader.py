@@ -10,8 +10,8 @@ import paddle.v2 as paddle
 NUM_CLASSES = 10784
 DATA_SHAPE = [1, 48, 512]
 
-DATA_MD5 = "1de60d54d19632022144e4e58c2637b5"
-DATA_URL = "http://cloud.dlnel.org/filepub/?uuid=df937251-3c0b-480d-9a7b-0080dfeee65c"
+DATA_MD5 = "7256b1d5420d8c3e74815196e58cdad5"
+DATA_URL = "http://paddle-ocr-data.bj.bcebos.com/data.tar.gz"
 CACHE_DIR_NAME = "ctc_data"
 SAVED_FILE_NAME = "data.tar.gz"
 DATA_DIR_NAME = "data"
