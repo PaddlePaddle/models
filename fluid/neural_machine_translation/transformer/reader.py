@@ -34,7 +34,8 @@ class Pool(object):
 
         if self._sort:
             self._pool.sort(
-                key=lambda sample: max(len(sample[0]), len(sample[1])) if len(sample) > 1 else len(sample[0])
+                key=lambda sample: max(len(sample[0]), len(sample[1])) \
+                if len(sample) > 1 else len(sample[0])
             )
 
         if self._end and len(self._pool) < self._pool_size:
@@ -63,8 +64,28 @@ class Pool(object):
 class DataReader(object):
     """
     The data reader loads all data from files and produces batches of data
-    in the way corresponding to settings.
-    number of tokens or number of sequences.
+    in the way corresponding to settings. See the doc of __init__ function
+    for more setting details.
+
+    An example of returning a generator producing data batches whose data
+    is shuffled in each pass and sorted in each pool:
+
+    ```
+    train_data = DataReader(
+        src_vocab_fpath='data/src_vocab_file',
+        trg_vocab_fpath='data/trg_vocab_file',
+        fpattern='data/part-*',
+        use_token_batch=True,
+        batch_size=2000,
+        pool_size=10000,
+        sort_type=SortType.POOL,
+        shuffle=True,
+        shuffle_batch=True,
+        start_mark='<s>',
+        end_mark='<e>',
+        unk_mark='<unk>',
+        clip_last_batch=False).batch_generator
+    ```
     """
 
     def __init__(self,
@@ -99,11 +120,8 @@ class DataReader(object):
             or the maximum number of tokens (include paddings) contained in a
             mini-batch.
         :type batch_size: int
-        :param pool_size: The buffer size to pool data.
+        :param pool_size: The size of pool buffer.
         :type pool_size: int
-        :param sort_type: The grain to sort by length: 'global' for all
-            instances; 'pool' for instances in pool; 'none' for no sort.
-        :type sort_type: basestring
         :param sort_type: The grain to sort by length: 'global' for all
             instances; 'pool' for instances in pool; 'none' for no sort.
         :type sort_type: basestring

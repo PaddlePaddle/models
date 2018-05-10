@@ -208,7 +208,7 @@ def train(args):
 
     def read_multiple(reader,
                       count=dev_count if args.use_token_batch else 1,
-                      clip_last=False):
+                      clip_last=True):
         """
         Stack data from reader for multi-devices.
         """
