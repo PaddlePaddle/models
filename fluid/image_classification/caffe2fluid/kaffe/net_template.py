@@ -55,22 +55,30 @@ class MyNet(object):
         exe.run(fluid.default_startup_program())
         net.load(data_path=npy_model, exe=exe, place=place)
         output_vars = []
+
+        model_filename = 'model'
+        params_filename = 'params'
         if outputs is None:
             output_vars.append(net.get_output())
         else:
-            if type(outputs) is list:
-                for n in outputs:
-                    assert n in net.layers, 'not found layer with this name[%s]' % (
-                        n)
-                    output_vars.append(net.layers[n])
+            if outputs[0] == 'dump_all':
+                model_filename = None
+                params_filename = None
+                output_vars.append(net.get_output())
+            else:
+                if type(outputs) is list:
+                    for n in outputs:
+                        assert n in net.layers, 'not found layer with this name[%s]' % (
+                            n)
+                        output_vars.append(net.layers[n])
 
         fluid.io.save_inference_model(
             fluid_path, [input_name],
             output_vars,
             exe,
             main_program=None,
-            model_filename='model',
-            params_filename='params')
+            model_filename=model_filename,
+            params_filename=model_filename)
         return 0
 
 
