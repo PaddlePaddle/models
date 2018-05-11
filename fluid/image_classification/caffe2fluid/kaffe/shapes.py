@@ -58,19 +58,22 @@ def shape_scalar(node):
 def shape_data(node):
     if node.output_shape:
         # Old-style input specification
-        return node.output_shape
-    try:
-        # New-style input specification
-        return map(int, node.parameters.shape[0].dim)
-    except:
-        # We most likely have a data layer on our hands. The problem is,
-        # Caffe infers the dimensions of the data from the source (eg: LMDB).
-        # We want to avoid reading datasets here. Fail for now.
-        # This can be temporarily fixed by transforming the data layer to
-        # Caffe's "input" layer (as is usually used in the "deploy" version).
-        # TODO: Find a better solution for this.
-        raise KaffeError('Cannot determine dimensions of data layer.\n'
-                         'See comments in function shape_data for more info.')
+        shape = node.output_shape
+    else:
+        try:
+            # New-style input specification
+            shape = map(int, node.parameters.shape[0].dim)
+        except:
+            # We most likely have a data layer on our hands. The problem is,
+            # Caffe infers the dimensions of the data from the source (eg: LMDB).
+            # We want to avoid reading datasets here. Fail for now.
+            # This can be temporarily fixed by transforming the data layer to
+            # Caffe's "input" layer (as is usually used in the "deploy" version).
+            # TODO: Find a better solution for this.
+            raise KaffeError(
+                'Cannot determine dimensions of data layer.\n'
+                'See comments in function shape_data for more info.')
+    return shape
 
 
 def shape_mem_data(node):

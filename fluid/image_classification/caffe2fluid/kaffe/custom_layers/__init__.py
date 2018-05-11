@@ -60,16 +60,16 @@ def compute_output_shape(kind, node):
 
 
 def make_node(template, kind, node):
-    """ make a TensorFlowNode for custom layer which means construct
+    """ make a PaddleNode for custom layer which means construct
         a piece of code to define a layer implemented in 'custom_layers'
 
     Args:
-        @template (TensorFlowNode): a factory to new a instance of TensorFLowNode
+        @template (PaddleNode): a factory to new a instance of PaddleNode
         @kind (str): type of custom layer
         @node (graph.Node): a layer in the net
 
     Returns:
-        instance of TensorFlowNode
+        instance of PaddleNode
     """
     assert kind in custom_layers, "layer[%s] not exist in custom layers" % (
         kind)
