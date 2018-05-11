@@ -9,8 +9,8 @@ def import_caffepb():
     p = os.path.dirname(p)
     p = os.path.join(p, '../../proto')
     sys.path.insert(0, p)
-    import caffepb
-    return caffepb
+    import caffe_pb2
+    return caffe_pb2
 
 
 class CaffeResolver(object):

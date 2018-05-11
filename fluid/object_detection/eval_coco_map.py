@@ -69,7 +69,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
         place=place,
         feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
 
-    def get_dt_res(nmsed_out_v):
+    def get_dt_res(nmsed_out_v, data):
         dts_res = []
         lod = nmsed_out_v[0].lod()[0]
         nmsed_out_v = np.array(nmsed_out_v[0])
@@ -100,6 +100,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
                     'score': score
                 }
                 dts_res.append(dt_res)
+        return dts_res
 
     def test():
         dts_res = []
@@ -111,7 +112,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
                                   return_numpy=False)
             if batch_id % 20 == 0:
                 print("Batch {0}".format(batch_id))
-            dts_res += get_dt_res(nmsed_out_v)
+            dts_res += get_dt_res(nmsed_out_v, data)
 
         with open("detection_result.json", 'w') as outfile:
             json.dump(dts_res, outfile)
