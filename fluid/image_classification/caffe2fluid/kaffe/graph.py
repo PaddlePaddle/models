@@ -216,15 +216,25 @@ class GraphBuilder(object):
         Newer models use the "Input layer" type.
         '''
         nodes = [Node(name, NodeKind.Data) for name in self.params.input]
-        if len(nodes):
-            input_dim = map(int, self.params.input_dim)
-            if not input_dim:
-                if len(self.params.input_shape) > 0:
-                    input_dim = map(int, self.params.input_shape[0].dim)
-                else:
-                    raise KaffeError('Dimensions for input not specified.')
-            for node in nodes:
-                node.output_shape = tuple(input_dim)
+        inputs_num = len(nodes)
+        if inputs_num > 0:
+            input_dims_num = len(self.params.input_dim)
+            if input_dims_num > 0 and input_dims_num != inputs_num * 4:
+                raise KaffeError('invalid input_dim[%d] param in prototxt' %
+                                 (input_dims_num))
+
+            input_dims = [[]] * inputs_num
+            for i in range(input_dims_num):
+                dim = self.params.input_dim[i]
+                which = int(i / 4)
+                input_dims[which].append(int(dim))
+
+            for i in range(inputs_num):
+                if len(self.params.input_shape) == inputs_num:
+                    input_dim = map(int, self.params.input_shape[i].dim)
+                    input_dims[i] = input_dim
+
+                nodes[i].output_shape = tuple(input_dims[i])
         return nodes
 
     def build(self):
