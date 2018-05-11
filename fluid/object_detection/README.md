@@ -52,22 +52,22 @@ Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https
 #### Train on PASCAL VOC
   - Train on one device (/GPU).
   ```python
-  env CUDA_VISIABLE_DEVICES=0 python -u train.py --parallel=False --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
+  env CUDA_VISIBLE_DEVICES=0 python -u train.py --parallel=False --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
   ```
   - Train on multi devices (/GPUs).
 
   ```python
-  env CUDA_VISIABLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
+  env CUDA_VISIBLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
   ```
 
 #### Train on MS-COCO
   - Train on one device (/GPU).
   ```python
-  env CUDA_VISIABLE_DEVICES=0 python -u train.py --parallel=False --dataset='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
+  env CUDA_VISIBLE_DEVICES=0 python -u train.py --parallel=False --dataset='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
   ```
   - Train on multi devices (/GPUs).
   ```python
-  env CUDA_VISIABLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
+  env CUDA_VISIBLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
   ```
 
 TBD
@@ -90,13 +90,13 @@ Note we set the defualt test list to the dataset's test/val list, you can use yo
 
 #### Evaluate on PASCAL VOC
 ```python
-env CUDA_VISIABLE_DEVICES=0 python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/90' --data_dir='data/pascalvoc' --test_list='test.txt' --ap_version='11point'
+env CUDA_VISIBLE_DEVICES=0 python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/90' --data_dir='data/pascalvoc' --test_list='test.txt' --ap_version='11point'
 ```
 
 #### Evaluate on MS-COCO
 ```python
-env CUDA_VISIABLE_DEVICES=0 python eval.py --dataset='coco2014' --nms_threshold=0.5 --model_dir='train_coco_model/40' --test_list='annotations/instances_minival2014.json' --ap_version='integral'
-env CUDA_VISIABLE_DEVICES=0 python eval_coco_map.py --dataset='coco2017' --nms_threshold=0.5 --model_dir='train_coco_model/40' --test_list='annotations/instances_minival2017.json'
+env CUDA_VISIBLE_DEVICES=0 python eval.py --dataset='coco2014' --nms_threshold=0.5 --model_dir='train_coco_model/40' --test_list='annotations/instances_minival2014.json' --ap_version='integral'
+env CUDA_VISIBLE_DEVICES=0 python eval_coco_map.py --dataset='coco2017' --nms_threshold=0.5 --model_dir='train_coco_model/40' --test_list='annotations/instances_minival2017.json'
 ```
 
 TBD
@@ -104,7 +104,7 @@ TBD
 ### Infer and Visualize
 
 ```python
-env CUDA_VISIABLE_DEVICES=0 python infer.py --model_dir='train_coco_model/20' --image_path='./data/coco/val2014/COCO_val2014_000000000139.jpg'
+env CUDA_VISIBLE_DEVICES=0 python infer.py --model_dir='train_coco_model/20' --image_path='./data/coco/val2014/COCO_val2014_000000000139.jpg'
 ```
 Below is the examples after running python infer.py to inference and visualize the model result.
 <p align="center">

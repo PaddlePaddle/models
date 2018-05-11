@@ -18,6 +18,8 @@ add_arg('learning_rate',    float, 0.001,     "Learning rate.")
 add_arg('batch_size',       int,   32,        "Minibatch size.")
 add_arg('num_passes',       int,   120,       "Epoch number.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
+add_arg('parallel',         bool,  True,      "Parallel.")
+add_arg('use_nccl',         bool,  True,      "NCCL.")
 add_arg('dataset',          str,   'pascalvoc', "coco2014, coco2017, and pascalvoc.")
 add_arg('model_save_dir',   str,   'model',     "The path to save model.")
 add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
@@ -274,6 +276,7 @@ def parallel_exe(args,
             best_map = test_map[0]
             save_model('best_model')
         print("Pass {0}, test map {1}".format(pass_id, test_map[0]))
+        return best_map
 
     for pass_id in range(num_passes):
         start_time = time.time()
@@ -295,7 +298,7 @@ def parallel_exe(args,
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
-        test(pass_id, best_map)
+        best_map = test(pass_id, best_map)
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
     print("Best test map {0}".format(best_map))
