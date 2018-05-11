@@ -64,8 +64,7 @@ class Pool(object):
 class DataReader(object):
     """
     The data reader loads all data from files and produces batches of data
-    in the way corresponding to settings. See the doc of __init__ function
-    for more setting details.
+    in the way corresponding to settings.
 
     An example of returning a generator producing data batches whose data
     is shuffled in each pass and sorted in each pool:
@@ -86,6 +85,50 @@ class DataReader(object):
         unk_mark='<unk>',
         clip_last_batch=False).batch_generator
     ```
+
+    :param src_vocab_fpath: The path of vocabulary file of source language.
+    :type src_vocab_fpath: basestring
+    :param trg_vocab_fpath: The path of vocabulary file of target language.
+    :type trg_vocab_fpath: basestring
+    :param fpattern: The pattern to match data files.
+    :type fpattern: basestring
+    :param batch_size: The number of sequences contained in a mini-batch.
+        or the maximum number of tokens (include paddings) contained in a
+        mini-batch.
+    :type batch_size: int
+    :param pool_size: The size of pool buffer.
+    :type pool_size: int
+    :param sort_type: The grain to sort by length: 'global' for all
+        instances; 'pool' for instances in pool; 'none' for no sort.
+    :type sort_type: basestring
+    :param clip_last_batch: Whether to clip the last uncompleted batch.
+    :type clip_last_batch: bool
+    :param tar_fname: The data file in tar if fpattern matches a tar file.
+    :type tar_fname: basestring
+    :param min_length: The minimum length used to filt sequences.
+    :type min_length: int
+    :param max_length: The maximum length used to filt sequences.
+    :type max_length: int
+    :param shuffle: Whether to shuffle all instances.
+    :type shuffle: bool
+    :param shuffle_batch: Whether to shuffle the generated batches.
+    :type shuffle_batch: bool
+    :param use_token_batch: Whether to produce batch data according to
+        token number.
+    :type use_token_batch: bool
+    :param delimiter: The delimiter used to split source and target in each
+        line of data file.
+    :type delimiter: basestring
+    :param start_mark: The token representing for the beginning of
+        sentences in dictionary.
+    :type start_mark: basestring
+    :param end_mark: The token representing for the end of sentences
+        in dictionary.
+    :type end_mark: basestring
+    :param unk_mark: The token representing for unknown word in dictionary.
+    :type unk_mark: basestring
+    :param seed: The seed for random.
+    :type seed: int
     """
 
     def __init__(self,
@@ -107,53 +150,6 @@ class DataReader(object):
                  end_mark="<e>",
                  unk_mark="<unk>",
                  seed=0):
-        """
-        Load all data from files and set the settings to make mini-batches.
-
-        :param src_vocab_fpath: The path of vocabulary file of source language.
-        :type src_vocab_fpath: basestring
-        :param trg_vocab_fpath: The path of vocabulary file of target language.
-        :type trg_vocab_fpath: basestring
-        :param fpattern: The pattern to match data files.
-        :type fpattern: basestring
-        :param batch_size: The number of sequences contained in a mini-batch.
-            or the maximum number of tokens (include paddings) contained in a
-            mini-batch.
-        :type batch_size: int
-        :param pool_size: The size of pool buffer.
-        :type pool_size: int
-        :param sort_type: The grain to sort by length: 'global' for all
-            instances; 'pool' for instances in pool; 'none' for no sort.
-        :type sort_type: basestring
-        :param clip_last_batch: Whether to clip the last uncompleted batch.
-        :type clip_last_batch: bool
-        :param tar_fname: The data file in tar if fpattern matches a tar file.
-        :type tar_fname: basestring
-        :param min_length: The minimum length used to filt sequences.
-        :type min_length: int
-        :param max_length: The maximum length used to filt sequences.
-        :type max_length: int
-        :param shuffle: Whether to shuffle all instances.
-        :type shuffle: bool
-        :param shuffle_batch: Whether to shuffle the generated batches.
-        :type shuffle_batch: bool
-        :param use_token_batch: Whether to produce batch data according to
-            token number.
-        :type use_token_batch: bool
-        :param delimiter: The delimiter used to split source and target in each
-            line of data file.
-        :type delimiter: basestring
-        :param start_mark: The token representing for the beginning of
-            sentences in dictionary.
-        :type start_mark: basestring
-        :param end_mark: The token representing for the end of sentences
-            in dictionary.
-        :type end_mark: basestring
-        :param unk_mark: The token representing for unknown word in dictionary.
-        :type unk_mark: basestring
-        :param seed: The seed for random.
-        :type seed: int
-        """
         self._src_vocab = self.load_dict(src_vocab_fpath)
         self._only_src = True
         if trg_vocab_fpath is not None:
