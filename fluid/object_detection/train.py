@@ -276,6 +276,7 @@ def parallel_exe(args,
             best_map = test_map[0]
             save_model('best_model')
         print("Pass {0}, test map {1}".format(pass_id, test_map[0]))
+        return best_map
 
     for pass_id in range(num_passes):
         start_time = time.time()
@@ -297,7 +298,7 @@ def parallel_exe(args,
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
-        test(pass_id, best_map)
+        best_map = test(pass_id, best_map)
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
     print("Best test map {0}".format(best_map))
