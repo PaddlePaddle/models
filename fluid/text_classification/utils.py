@@ -5,9 +5,6 @@ import numpy as np
 import paddle.fluid as fluid
 import paddle.v2 as paddle
 
-import light_imdb
-import tiny_imdb
-
 
 def to_lodtensor(data, place):
     """
@@ -63,10 +60,6 @@ def prepare_data(data_type="imdb",
     else:
         if data_type == "imdb":
             word_dict = paddle.dataset.imdb.word_dict()
-        elif data_type == "light_imdb":
-            word_dict = light_imdb.word_dict()
-        elif data_type == "tiny_imdb":
-            word_dict = tiny_imdb.word_dict()
         else:
             raise RuntimeError("No such dataset")
 
@@ -79,28 +72,6 @@ def prepare_data(data_type="imdb",
         test_reader = paddle.batch(
             paddle.reader.shuffle(
                 paddle.dataset.imdb.test(word_dict), buf_size=buf_size),
-            batch_size=batch_size)
-
-    elif data_type == "light_imdb":
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
-                light_imdb.train(word_dict), buf_size=buf_size),
-            batch_size=batch_size)
-
-        test_reader = paddle.batch(
-            paddle.reader.shuffle(
-                light_imdb.test(word_dict), buf_size=buf_size),
-            batch_size=batch_size)
-
-    elif data_type == "tiny_imdb":
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
-                tiny_imdb.train(word_dict), buf_size=buf_size),
-            batch_size=batch_size)
-
-        test_reader = paddle.batch(
-            paddle.reader.shuffle(
-                tiny_imdb.test(word_dict), buf_size=buf_size),
             batch_size=batch_size)
     else:
         raise RuntimeError("no such dataset")
