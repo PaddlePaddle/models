@@ -24,9 +24,7 @@ def main():
     # 训练网络
     if not is_generating:
         # 定义方法并优化训练器
-        optimizer = paddle.optimizer.Adam(
-            learning_rate=5e-5,
-            regularization=paddle.optimizer.L2Regularization(rate=8e-4))
+        optimizer = paddle.optimizer.Adam()
 
         cost = two_layer_lstm_net(source_dict_dim, target_dict_dim, is_generating)
         parameters = paddle.parameters.create(cost)
@@ -37,7 +35,7 @@ def main():
         wmt14_reader = paddle.batch(
             paddle.reader.shuffle(
                 paddle.dataset.wmt14.train(dict_size), buf_size=8192),
-            batch_size=4)
+            batch_size=40)
 
         # 设置event_handler
         def event_handler(event):

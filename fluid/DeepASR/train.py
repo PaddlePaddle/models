@@ -31,6 +31,11 @@ def parse_args():
         help='The minimum sequence number of a batch data. '
         '(default: %(default)d)')
     parser.add_argument(
+        '--frame_dim',
+        type=int,
+        default=120 * 11,
+        help='Frame dimension of feature data. (default: %(default)d)')
+    parser.add_argument(
         '--stacked_num',
         type=int,
         default=5,
@@ -45,6 +50,11 @@ def parse_args():
         type=int,
         default=1024,
         help='Hidden size of lstmp unit. (default: %(default)d)')
+    parser.add_argument(
+        '--class_num',
+        type=int,
+        default=1749,
+        help='Number of classes in label. (default: %(default)d)')
     parser.add_argument(
         '--pass_num',
         type=int,
@@ -137,10 +147,11 @@ def train(args):
         os.mkdir(args.infer_models)
 
     prediction, avg_cost, accuracy = stacked_lstmp_model(
+        frame_dim=args.frame_dim,
         hidden_dim=args.hidden_dim,
         proj_dim=args.proj_dim,
         stacked_num=args.stacked_num,
-        class_num=1749,
+        class_num=args.class_num,
         parallel=args.parallel)
 
     # program for test
@@ -181,13 +192,11 @@ def train(args):
                 test_data_reader.batch_iterator(args.batch_size,
                                                 args.minimum_batch_size)):
             # load_data
-            (features, labels, lod) = batch_data
-            feature_t.set(features.ndarray, place)
-            feature_t.set_lod([lod.ndarray])
-            label_t.set(labels.ndarray, place)
-            label_t.set_lod([lod.ndarray])
-
-            test_data_reader.recycle(features, labels, lod)
+            (features, labels, lod, _) = batch_data
+            feature_t.set(features, place)
+            feature_t.set_lod([lod])
+            label_t.set(labels, place)
+            label_t.set_lod([lod])
 
             cost, acc = exe.run(test_program,
                                 feed={"feature": feature_t,
@@ -201,6 +210,7 @@ def train(args):
     # train data reader
     train_data_reader = reader.AsyncDataReader(args.train_feature_lst,
                                                args.train_label_lst, -1)
+
     train_data_reader.set_transformers(ltrans)
     # train
     for pass_id in xrange(args.pass_num):
@@ -209,13 +219,11 @@ def train(args):
                 train_data_reader.batch_iterator(args.batch_size,
                                                  args.minimum_batch_size)):
             # load_data
-            (features, labels, lod) = batch_data
-            feature_t.set(features.ndarray, place)
-            feature_t.set_lod([lod.ndarray])
-            label_t.set(labels.ndarray, place)
-            label_t.set_lod([lod.ndarray])
-
-            train_data_reader.recycle(features, labels, lod)
+            (features, labels, lod, name_lst) = batch_data
+            feature_t.set(features, place)
+            feature_t.set_lod([lod])
+            label_t.set(labels, place)
+            label_t.set_lod([lod])
 
             to_print = batch_id > 0 and (batch_id % args.print_per_batches == 0)
             outs = exe.run(fluid.default_main_program(),

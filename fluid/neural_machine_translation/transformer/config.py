@@ -15,6 +15,9 @@ class TrainTaskConfig(object):
     # the parameters for learning rate scheduling.
     warmup_steps = 4000
 
+    # the flag indicating to use average loss or sum loss when training.
+    use_avg_cost = False
+
     # the directory for saving trained models.
     model_dir = "trained_models"
 
@@ -22,8 +25,7 @@ class TrainTaskConfig(object):
 class InferTaskConfig(object):
     use_gpu = False
     # the number of examples in one run for sequence generation.
-    # currently the batch size can only be set to 1.
-    batch_size = 1
+    batch_size = 10
 
     # the parameters for beam search.
     beam_size = 5
@@ -31,37 +33,38 @@ class InferTaskConfig(object):
     # the number of decoded sentences to output.
     n_best = 1
 
+    # the flags indicating whether to output the special tokens.
+    output_bos = False
+    output_eos = False
+    output_unk = False
+
     # the directory for loading the trained model.
     model_path = "trained_models/pass_1.infer.model"
 
 
 class ModelHyperParams(object):
-    # Dictionary size for source and target language. This model directly uses
-    # paddle.dataset.wmt16 in which <bos>, <eos> and <unk> token has
-    # alreay been added, but the <pad> token is not added. Transformer requires
-    # sequences in a mini-batch are padded to have the same length. A <pad> token is
-    # added into the original dictionary in paddle.dateset.wmt16.
+    # This model directly uses paddle.dataset.wmt16 in which <bos>, <eos> and
+    # <unk> token has alreay been added. As for the <pad> token, any token
+    # included in dict can be used to pad, since the paddings' loss will be
+    # masked out and make no effect on parameter gradients.
 
     # size of source word dictionary.
     src_vocab_size = 10000
-    # index for <pad> token in source language.
-    src_pad_idx = src_vocab_size
 
     # size of target word dictionay
     trg_vocab_size = 10000
-    # index for <pad> token in target language.
-    trg_pad_idx = trg_vocab_size
 
     # index for <bos> token
     bos_idx = 0
     # index for <eos> token
     eos_idx = 1
+    # index for <unk> token
+    unk_idx = 2
 
-    # position value corresponding to the <pad> token.
-    pos_pad_idx = 0
-
-    # max length of sequences. It should plus 1 to include position
-    # padding token for position encoding.
+    # max length of sequences.
+    # The size of position encoding table should at least plus 1, since the
+    # sinusoid position encoding starts from 1 and 0 can be used as the padding
+    # token for position encoding.
     max_length = 50
 
     # the dimension for word embeddings, which is also the last dimension of
@@ -92,7 +95,10 @@ pos_enc_param_names = (
 encoder_input_data_names = (
     "src_word",
     "src_pos",
-    "src_slf_attn_bias", )
+    "src_slf_attn_bias",
+    "src_data_shape",
+    "src_slf_attn_pre_softmax_shape",
+    "src_slf_attn_post_softmax_shape", )
 
 # Names of all data layers in decoder listed in order.
 decoder_input_data_names = (
@@ -100,6 +106,11 @@ decoder_input_data_names = (
     "trg_pos",
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
+    "trg_data_shape",
+    "trg_slf_attn_pre_softmax_shape",
+    "trg_slf_attn_post_softmax_shape",
+    "trg_src_attn_pre_softmax_shape",
+    "trg_src_attn_post_softmax_shape",
     "enc_output", )
 
 # Names of label related data layers listed in order.

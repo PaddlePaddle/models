@@ -32,9 +32,9 @@ class TransAddDelta(object):
             Args: 
                 sample(object,tuple): contain feature numpy and label numpy
             Returns:
-                (feature, label)
+                (feature, label, name)
         """
-        (feature, label) = sample
+        (feature, label, name) = sample
         frame_dim = feature.shape[1]
         d_frame_dim = frame_dim * 3
         head_filled = 5
@@ -64,7 +64,7 @@ class TransAddDelta(object):
                       start * d_frame_dim + 2 * frame_dim, frame_dim, nframe,
                       d_frame_dim)
         mat.shape = tmp_shape
-        return (mat[head_filled:mat.shape[0] - tail_filled, :], label)
+        return (mat[head_filled:mat.shape[0] - tail_filled, :], label, name)
 
     def _regress(self, data_in, start_in, data_out, start_out, size, n, step):
         """ regress

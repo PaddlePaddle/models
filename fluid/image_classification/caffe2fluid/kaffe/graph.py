@@ -3,7 +3,7 @@ from google.protobuf import text_format
 from .caffe import get_caffe_resolver
 from .errors import KaffeError, print_stderr
 from .layers import LayerAdapter, LayerType, NodeKind, NodeDispatch
-from .shapes import TensorShape
+from .shapes import make_tensor
 
 
 class Node(object):
@@ -13,8 +13,8 @@ class Node(object):
         self.layer = LayerAdapter(layer, kind) if layer else None
         self.parents = []
         self.children = []
-        self.data = None
-        self.output_shape = None
+        self.data = None  #parameters of this node
+        self.output_shape = None  #output shape of this node
         self.metadata = {}
 
     def add_parent(self, parent_node):
@@ -37,9 +37,23 @@ class Node(object):
 
     @property
     def parameters(self):
+        """ get parameters stored in a protobuf object
+        """
         if self.layer is not None:
             return self.layer.parameters
         return None
+
+    @property
+    def params(self):
+        """ get parameters stored in a dict
+        """
+        from .protobuf_to_dict import protobuf_to_dict
+
+        p = self.parameters
+        if p is not None:
+            return protobuf_to_dict(p)
+        else:
+            return None
 
     def __str__(self):
         return '[%s] %s' % (self.kind, self.name)
@@ -52,7 +66,10 @@ class Graph(object):
     def __init__(self, nodes=None, name=None):
         self.nodes = nodes or []
         self.node_lut = {node.name: node for node in self.nodes}
-        self.name = name
+        if name is None or name == '':
+            self.name = 'MyNet'
+        else:
+            self.name = name
 
     def add_node(self, node):
         self.nodes.append(node)
@@ -95,7 +112,7 @@ class Graph(object):
     def compute_output_shapes(self):
         sorted_nodes = self.topologically_sorted()
         for node in sorted_nodes:
-            node.output_shape = TensorShape(
+            node.output_shape = make_tensor(
                 *NodeKind.compute_output_shape(node))
 
     def replaced(self, new_nodes):
@@ -108,6 +125,7 @@ class Graph(object):
             if graph is None:
                 raise KaffeError('Transformer failed: {}'.format(transformer))
             assert isinstance(graph, Graph)
+
         return graph
 
     def __contains__(self, key):
@@ -120,10 +138,18 @@ class Graph(object):
         for node in self.topologically_sorted():
             # If the node has learned parameters, display the first one's shape.
             # In case of convolutions, this corresponds to the weights.
-            data_shape = node.data[0].shape if node.data else '--'
-            out_shape = node.output_shape or '--'
-            s.append('{:<20} {:<30} {:>20} {:>20}'.format(
-                node.kind, node.name, data_shape, tuple(out_shape)))
+            if node.data is None:
+                data_shape = '--'
+                out_shape = node.output_shape or '--'
+                s.append('{:<20} {:<30} {:>20} {:>20}'.format(
+                    node.kind, node.name, data_shape, tuple(out_shape)))
+            else:
+                for d in node.data:
+                    #data_shape = node.data[0].shape if node.data else '--'
+                    data_shape = d.shape
+                    out_shape = node.output_shape or '--'
+                    s.append('{:<20} {:<30} {:>20} {:>20}'.format(
+                        node.kind, node.name, data_shape, tuple(out_shape)))
         return '\n'.join(s)
 
 
@@ -175,6 +201,7 @@ class GraphBuilder(object):
         kind = NodeKind.map_raw_kind(layer.type)
         if kind is None:
             raise KaffeError('Unknown layer type encountered: %s' % layer.type)
+
         # We want to use the layer's top names (the "output" names), rather than the
         # name attribute, which is more of readability thing than a functional one.
         # Other layers will refer to a node by its "top name".
@@ -233,8 +260,10 @@ class GraphBuilder(object):
                 if (parent_node is None) or (parent_node == node):
                     parent_node = graph.get_node(input_name)
                 node.add_parent(parent_node)
+
             if len(layer.top) > 1:
                 raise KaffeError('Multiple top nodes are not supported.')
+
             for output_name in layer.top:
                 if output_name == layer.name:
                     # Output is named the same as the node. No further action required.

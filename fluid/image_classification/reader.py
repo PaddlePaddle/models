@@ -3,7 +3,7 @@ import math
 import random
 import functools
 import numpy as np
-import paddle.v2 as paddle
+import paddle
 from PIL import Image, ImageEnhance
 
 random.seed(0)
@@ -13,9 +13,9 @@ DATA_DIM = 224
 THREAD = 8
 BUF_SIZE = 1024
 
-DATA_DIR = 'ILSVRC2012'
-TRAIN_LIST = 'ILSVRC2012/train_list.txt'
-TEST_LIST = 'ILSVRC2012/test_list.txt'
+DATA_DIR = 'data/ILSVRC2012'
+TRAIN_LIST = 'data/ILSVRC2012/train_list.txt'
+TEST_LIST = 'data/ILSVRC2012/val_list.txt'
 
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
@@ -123,7 +123,7 @@ def process_image(sample, mode, color_jitter, rotate):
     if mode == 'train' or mode == 'test':
         return img, sample[1]
     elif mode == 'infer':
-        return img
+        return [img]
 
 
 def _reader_creator(file_list,
@@ -151,13 +151,13 @@ def _reader_creator(file_list,
     return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE)
 
 
-def train():
+def train(file_list=TRAIN_LIST):
     return _reader_creator(
-        TRAIN_LIST, 'train', shuffle=True, color_jitter=True, rotate=True)
+        file_list, 'train', shuffle=True, color_jitter=False, rotate=False)
 
 
-def test():
-    return _reader_creator(TEST_LIST, 'test', shuffle=False)
+def test(file_list=TEST_LIST):
+    return _reader_creator(file_list, 'test', shuffle=False)
 
 
 def infer(file_list):
