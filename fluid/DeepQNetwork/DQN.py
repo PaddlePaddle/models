@@ -26,7 +26,7 @@ def run_episode(agent, env, exp, train_or_test):
             # train model
             # start training 
             if len(exp) > MEMORY_WARMUP_SIZE:
-                batch_idx = np.random.randint(len(exp), size=(args.batch_size))
+                batch_idx = np.random.randint(len(exp) - 1, size=(args.batch_size))
                 if step % UPDATE_FREQ == 0:
                     batch_state, batch_action, batch_reward, \
                     batch_next_state, batch_isOver = exp.sample(batch_idx)

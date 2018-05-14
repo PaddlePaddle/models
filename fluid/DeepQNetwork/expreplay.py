@@ -37,12 +37,10 @@ class ReplayMemory(object):
         return self._curr_size
 
     def sample(self, batch_idx):
-        for i, idx in enumerate(batch_idx):
-            while (idx + 1) % self._curr_size == self._curr_pos:
-                idx = np.random.randint(self._curr_size)
-            batch_idx[i] = idx
-
+        # index mapping to avoid sampling lastest state
+        batch_idx = (self._curr_pos + batch_idx) % self._curr_size
         next_idx = (batch_idx + 1) % self._curr_size
+
         state = self.state[batch_idx]
         reward = self.reward[batch_idx]
         action = self.action[batch_idx]
