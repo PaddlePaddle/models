@@ -9,6 +9,7 @@ import math
 
 UPDATE_TARGET_STEPS = 200
 
+
 class Model(object):
     def __init__(self, state_dim, action_dim, gamma):
         self.global_step = 0
@@ -23,7 +24,7 @@ class Model(object):
         return [fluid.layers.data(\
                     name='state', shape=[self.state_dim], dtype='float32'),
                 fluid.layers.data(\
-                    name='action', shape=[1], dtype='int32'), 
+                    name='action', shape=[1], dtype='int32'),
                 fluid.layers.data(\
                     name='reward', shape=[], dtype='float32'),
                 fluid.layers.data(\
@@ -123,8 +124,8 @@ class Model(object):
         else:
             state = np.expand_dims(state, axis=0)
             pred_Q = self.exe.run(self.predict_program,
-                                feed={'state': state.astype('float32')},
-                                fetch_list=[self.pred_value])[0]
+                                  feed={'state': state.astype('float32')},
+                                  fetch_list=[self.pred_value])[0]
             pred_Q = np.squeeze(pred_Q, axis=0)
             act = np.argmax(pred_Q)
         self.exploration = max(0.1, self.exploration - 1e-6)

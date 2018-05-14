@@ -6,6 +6,7 @@ import numpy as np
 
 Experience = namedtuple('Experience', ['state', 'action', 'reward', 'isOver'])
 
+
 class ReplayMemory(object):
     def __init__(self, max_size, state_shape):
         self.max_size = int(max_size)

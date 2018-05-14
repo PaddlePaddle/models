@@ -11,7 +11,7 @@ import os
 
 UPDATE_FREQ = 4
 
-MEMORY_WARMUP_SIZE = 1000 
+MEMORY_WARMUP_SIZE = 1000
 
 
 def run_episode(agent, env, exp, train_or_test):
@@ -26,7 +26,8 @@ def run_episode(agent, env, exp, train_or_test):
             # train model
             # start training 
             if len(exp) > MEMORY_WARMUP_SIZE:
-                batch_idx = np.random.randint(len(exp) - 1, size=(args.batch_size))
+                batch_idx = np.random.randint(
+                    len(exp) - 1, size=(args.batch_size))
                 if step % UPDATE_FREQ == 0:
                     batch_state, batch_action, batch_reward, \
                     batch_next_state, batch_isOver = exp.sample(batch_idx)
@@ -37,6 +38,7 @@ def run_episode(agent, env, exp, train_or_test):
         if isOver:
             break
     return total_reward
+
 
 def train_agent():
     env = gym.make(args.env)
@@ -49,7 +51,7 @@ def train_agent():
         run_episode(agent, env, exp, train_or_test='train')
 
     max_episode = 4000
-    
+
     # train
     total_episode = 0
     pbar = tqdm(total=max_episode)
@@ -69,6 +71,7 @@ def train_agent():
                     episode, np.mean(recent_100_reward)))
 
     pbar.close()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
