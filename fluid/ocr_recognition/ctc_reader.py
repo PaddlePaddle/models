@@ -136,6 +136,7 @@ class DataGenerator(object):
                     img = Image.open(img_path).convert('L')
                     img = np.array(img) - 127.5
                     img = img[np.newaxis, ...]
+                    label = [int(c) for c in line.split(' ')[3].split(',')]
                     yield img, label
             else:
                 while True:
