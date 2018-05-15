@@ -222,7 +222,7 @@ def train_parallel_exe(args,
                        use_nccl=True,
                        lr_strategy=None,
                        layers=50):
-    class_dim = 1000
+    class_dim = 101
     image_shape = [3, 224, 224]
 
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
@@ -286,6 +286,7 @@ def train_parallel_exe(args,
 
     train_reader = paddle.batch(reader.train(), batch_size=batch_size)
     test_reader = paddle.batch(reader.test(), batch_size=batch_size)
+
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     train_exe = fluid.ParallelExecutor(use_cuda=True, loss_name=avg_cost.name)
