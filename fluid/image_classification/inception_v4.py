@@ -125,7 +125,7 @@ def stem(input):
             filter_size=3,
             stride=1,
             padding=1)
-        return fluid.layers.concat(input=[l_conv1, r_conv3], axis=3)
+        return fluid.layers.concat(input=[l_conv1, r_conv3], axis=1)
 
     def block2(input):
         conv0 = conv_bn_layer(

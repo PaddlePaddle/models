@@ -222,7 +222,7 @@ def train_parallel_exe(args,
                        use_nccl=True,
                        lr_strategy=None,
                        layers=50):
-    class_dim = 101
+    class_dim = 1000
     image_shape = [3, 224, 224]
 
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
