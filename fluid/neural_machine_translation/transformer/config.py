@@ -103,22 +103,23 @@ def merge_cfg_from_list(cfg_list, g_cfgs):
                 break
 
 
+batch_size = -1
 # Here list the data shapes and data types of all inputs.
 # The shapes here act as placeholder and are set to pass the infer-shape in
 # compile time.
 input_descs = {
     # The actual data shape of src_word is:
     # [batch_size * max_src_len_in_batch, 1]
-    "src_word": [(1 * (ModelHyperParams.max_length + 1), 1L), "int64"],
+    "src_word": [(batch_size * (ModelHyperParams.max_length + 1), 1L), "int64"],
     # The actual data shape of src_pos is:
     # [batch_size * max_src_len_in_batch, 1]
-    "src_pos": [(1 * (ModelHyperParams.max_length + 1), 1L), "int64"],
+    "src_pos": [(batch_size * (ModelHyperParams.max_length + 1), 1L), "int64"],
     # This input is used to remove attention weights on paddings in the
     # encoder.
     # The actual data shape of src_slf_attn_bias is:
     # [batch_size, n_head, max_src_len_in_batch, max_src_len_in_batch]
     "src_slf_attn_bias":
-    [(1, ModelHyperParams.n_head, (ModelHyperParams.max_length + 1),
+    [(batch_size, ModelHyperParams.n_head, (ModelHyperParams.max_length + 1),
       (ModelHyperParams.max_length + 1)), "float32"],
     # This shape input is used to reshape the output of embedding layer.
     "src_data_shape": [(3L, ), "int32"],
@@ -128,22 +129,22 @@ input_descs = {
     "src_slf_attn_post_softmax_shape": [(4L, ), "int32"],
     # The actual data shape of trg_word is:
     # [batch_size * max_trg_len_in_batch, 1]
-    "trg_word": [(1 * (ModelHyperParams.max_length + 1), 1L), "int64"],
+    "trg_word": [(batch_size * (ModelHyperParams.max_length + 1), 1L), "int64"],
     # The actual data shape of trg_pos is:
     # [batch_size * max_trg_len_in_batch, 1]
-    "trg_pos": [(1 * (ModelHyperParams.max_length + 1), 1L), "int64"],
+    "trg_pos": [(batch_size * (ModelHyperParams.max_length + 1), 1L), "int64"],
     # This input is used to remove attention weights on paddings and
     # subsequent words in the decoder.
     # The actual data shape of trg_slf_attn_bias is:
     # [batch_size, n_head, max_trg_len_in_batch, max_trg_len_in_batch]
-    "trg_slf_attn_bias": [(1, ModelHyperParams.n_head,
+    "trg_slf_attn_bias": [(batch_size, ModelHyperParams.n_head,
                            (ModelHyperParams.max_length + 1),
                            (ModelHyperParams.max_length + 1)), "float32"],
     # This input is used to remove attention weights on paddings of the source
     # input in the encoder-decoder attention.
     # The actual data shape of trg_src_attn_bias is:
     # [batch_size, n_head, max_trg_len_in_batch, max_src_len_in_batch]
-    "trg_src_attn_bias": [(1, ModelHyperParams.n_head,
+    "trg_src_attn_bias": [(batch_size, ModelHyperParams.n_head,
                            (ModelHyperParams.max_length + 1),
                            (ModelHyperParams.max_length + 1)), "float32"],
     # This shape input is used to reshape the output of embedding layer.
@@ -170,6 +171,8 @@ input_descs = {
     # The actual data shape of label_weight is:
     # [batch_size * max_trg_len_in_batch, 1]
     "lbl_weight": [(1 * (ModelHyperParams.max_length + 1), 1L), "float32"],
+    # These two inputs are used for beam search decoder.
+    # "start_token": [(1 * 1, 1L), "int64"],
 }
 
 # Names of position encoding table which will be initialized externally.
@@ -200,3 +203,7 @@ decoder_util_input_fields = (
 label_data_input_fields = (
     "lbl_word",
     "lbl_weight", )
+fast_decoder_data_fields = (
+    "trg_word",
+    # "start_token",
+    "trg_src_attn_bias", )

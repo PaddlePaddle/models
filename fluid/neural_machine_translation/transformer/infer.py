@@ -7,6 +7,7 @@ import paddle.fluid as fluid
 import model
 from model import wrap_encoder as encoder
 from model import wrap_decoder as decoder
+from model import fast_decode as fast_decoder
 from config import *
 from train import pad_batch_data
 import reader
@@ -416,5 +417,15 @@ def infer(args):
 
 
 if __name__ == "__main__":
+    fast_decoder(ModelHyperParams.src_vocab_size,
+                 ModelHyperParams.trg_vocab_size,
+                 ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
+                 ModelHyperParams.n_head, ModelHyperParams.d_key,
+                 ModelHyperParams.d_value, ModelHyperParams.d_model,
+                 ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
+                 InferTaskConfig.beam_size, InferTaskConfig.max_length,
+                 ModelHyperParams.eos_idx)
+    print(fluid.default_main_program())
+    exit(0)
     args = parse_args()
     infer(args)
