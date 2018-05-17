@@ -217,11 +217,11 @@ def parallel_exe(args,
             boundaries = [epocs * 12, epocs * 19]
         elif '2017' in train_file_list:
             epocs = 118287 / batch_size
-            boundaries = [epcos * 12, epocs * 19]
+            boundaries = [epocs * 12, epocs * 19]
         values = [
             learning_rate, learning_rate * 0.5, learning_rate * 0.25
         ]
-    elif data_args.dataset == 'pascalvoc':
+    elif 'pascalvoc' in data_args.dataset:
         epocs = 19200 / batch_size
         boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
         values = [
