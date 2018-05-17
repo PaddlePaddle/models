@@ -516,7 +516,8 @@ def transformer(
         d_value,
         d_model,
         d_inner_hid,
-        dropout_rate, ):
+        dropout_rate,
+        label_smooth_eps, ):
     enc_inputs = make_inputs(
         encoder_input_data_names,
         n_head,
@@ -570,7 +571,7 @@ def transformer(
 
     # Padding index do not contribute to the total loss. The weights is used to
     # cancel padding index in calculating the loss.
-    gold, weights = make_inputs(
+    label, weights = make_inputs(
         label_data_names,
         n_head,
         d_model,
@@ -582,7 +583,15 @@ def transformer(
         data_shape_flag=False,
         slf_attn_shape_flag=False,
         src_attn_shape_flag=False)
-    cost = layers.softmax_with_cross_entropy(logits=predict, label=gold)
+    if label_smooth_eps:
+        label = layers.label_smooth(
+            label=layers.one_hot(
+                input=label, depth=trg_vocab_size),
+            epsilon=label_smooth_eps)
+    cost = layers.softmax_with_cross_entropy(
+        logits=predict,
+        label=label,
+        soft_label=True if label_smooth_eps else False)
     weighted_cost = cost * weights
     sum_cost = layers.reduce_sum(weighted_cost)
     token_num = layers.reduce_sum(weights)

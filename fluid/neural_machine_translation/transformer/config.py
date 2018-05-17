@@ -18,6 +18,11 @@ class TrainTaskConfig(object):
     # the flag indicating to use average loss or sum loss when training.
     use_avg_cost = False
 
+    # the weight used to mix up the ground-truth distribution and the fixed
+    # uniform distribution in label smoothing when training.
+    # Set this as zero if label smoothing is not wanted.
+    label_smooth_eps = 0.1
+
     # the directory for saving trained models.
     model_dir = "trained_models"
 
@@ -70,7 +75,6 @@ class ModelHyperParams(object):
     # the dimension for word embeddings, which is also the last dimension of
     # the input and output of multi-head attention, position-wise feed-forward
     # networks, encoder and decoder.
-
     d_model = 512
     # size of the hidden layer in position-wise feed-forward networks.
     d_inner_hid = 1024
