@@ -11,9 +11,9 @@ from . import network
 
 def get_padding_type(kernel_params, input_shape, output_shape):
     '''Translates Caffe's numeric padding to one of ('SAME', 'VALID').
-    Caffe supports arbitrary padding values, while TensorFlow only
+    Caffe supports arbitrary padding values, while Paddle only
     supports 'SAME' and 'VALID' modes. So, not all Caffe paddings
-    can be translated to TensorFlow. There are some subtleties to
+    can be translated to Paddle. There are some subtleties to
     how the padding edge-cases are handled. These are described here:
     https://github.com/Yangqing/caffe2/blob/master/caffe2/proto/caffe2_legacy.proto
     '''
@@ -24,11 +24,11 @@ def get_padding_type(kernel_params, input_shape, output_shape):
         return None
 
 
-class TensorFlowNode(object):
-    '''An intermediate representation for TensorFlow operations.'''
+class PaddleNode(object):
+    '''An intermediate representation for Paddle operations.'''
 
     def __init__(self, op, *args, **kwargs):
-        # A string corresponding to the TensorFlow operation
+        # A string corresponding to the Paddle operation
         self.op = op
         # Positional arguments for the operation
         self.args = args
@@ -71,10 +71,10 @@ class MaybeActivated(object):
 
     def __call__(self, *args, **kwargs):
         kwargs.update(self.inject_kwargs)
-        return TensorFlowNode(*args, **kwargs)
+        return PaddleNode(*args, **kwargs)
 
 
-class TensorFlowMapper(NodeMapper):
+class PaddleMapper(NodeMapper):
     def get_kernel_params(self, node):
         kernel_params = node.layer.kernel_parameters
         input_shape = node.get_only_parent().output_shape
@@ -102,7 +102,7 @@ class TensorFlowMapper(NodeMapper):
             kernel_params.stride_h, kernel_params.stride_w, **kwargs)
 
     def map_relu(self, node):
-        return TensorFlowNode('relu')
+        return PaddleNode('relu')
 
     def map_pooling(self, node):
         pool_type = node.parameters.pool
@@ -118,21 +118,20 @@ class TensorFlowMapper(NodeMapper):
         global_pool = getattr(node.layer.parameters, 'global_pooling', False)
         if global_pool:
             input_shape = node.get_only_parent().output_shape
-            return TensorFlowNode(pool_op, input_shape.height,
-                                  input_shape.width, 1, 1, ceil_mode)
+            return PaddleNode(pool_op, input_shape.height, input_shape.width, 1,
+                              1, ceil_mode)
         else:
             (kernel_params, padding) = self.get_kernel_params(node)
-            return TensorFlowNode(pool_op, kernel_params.kernel_h,
-                                  kernel_params.kernel_w,
-                                  kernel_params.stride_h,
-                                  kernel_params.stride_w, ceil_mode, **padding)
+            return PaddleNode(pool_op, kernel_params.kernel_h,
+                              kernel_params.kernel_w, kernel_params.stride_h,
+                              kernel_params.stride_w, ceil_mode, **padding)
 
     def map_sigmoid(self, node):
-        return TensorFlowNode('sigmoid')
+        return PaddleNode('sigmoid')
 
     def map_custom(self, node):
         from .. import custom_layers
-        return custom_layers.make_node(TensorFlowNode, node.kind, node)
+        return custom_layers.make_node(PaddleNode, node.kind, node)
 
     def map_inner_product(self, node):
         #TODO: Axis
@@ -142,24 +141,24 @@ class TensorFlowMapper(NodeMapper):
         return MaybeActivated(node)('fc', node.parameters.num_output)
 
     def map_softmax(self, node):
-        return TensorFlowNode('softmax')
+        return PaddleNode('softmax')
 
     def map_lrn(self, node):
         params = node.parameters
         # The window size must be an odd value. For a window
-        # size of (2*n+1), TensorFlow defines depth_radius = n.
+        # size of (2*n+1), Paddle defines depth_radius = n.
         assert params.local_size % 2 == 1
-        # Caffe scales by (alpha/(2*n+1)), whereas TensorFlow
+        # Caffe scales by (alpha/(2*n+1)), whereas Paddle
         # just scales by alpha (as does Krizhevsky's paper).
         # We'll account for that here.
         alpha = params.alpha / float(params.local_size)
-        return TensorFlowNode('lrn', params.local_size, alpha, params.beta)
+        return PaddleNode('lrn', params.local_size, alpha, params.beta)
 
     def map_concat(self, node):
-        return TensorFlowNode('concat', node.parameters.axis)
+        return PaddleNode('concat', node.parameters.axis)
 
     def map_dropout(self, node):
-        return TensorFlowNode('dropout', node.parameters.dropout_ratio)
+        return PaddleNode('dropout', node.parameters.dropout_ratio)
 
     def map_batch_norm(self, node):
         scale_offset = len(node.data) == 4
@@ -177,21 +176,20 @@ class TensorFlowMapper(NodeMapper):
         operations = {0: 'multiply', 1: 'add', 2: 'max'}
         op_code = node.parameters.operation
         try:
-            return TensorFlowNode(operations[op_code])
+            return PaddleNode(operations[op_code])
         except KeyError:
             raise KaffeError('Unknown elementwise operation: {}'.format(
                 op_code))
 
     def map_scale(self, node):
         params = node.parameters
-        return TensorFlowNode(
-            'scale', axis=params.axis, num_axes=params.num_axes)
+        return PaddleNode('scale', axis=params.axis, num_axes=params.num_axes)
 
     def commit(self, chains):
         return chains
 
 
-class TensorFlowEmitter(object):
+class PaddleEmitter(object):
     def __init__(self, tab=None):
         self.tab = tab or ' ' * 4
         self.prefix = ''
@@ -309,7 +307,7 @@ class Transformer(object):
             ]),
 
             # Rename nodes
-            # Slashes are used for scoping in TensorFlow. Replace slashes
+            # Slashes are used for scoping in Paddle. Replace slashes
             # in node names with underscores.
             # (Caffe's GoogLeNet implementation uses slashes)
             NodeRenamer(lambda node: node.name.replace('/', '_'))
@@ -324,7 +322,7 @@ class Transformer(object):
     def transform_data(self):
         if self.params is None:
             transformers = [
-                # Reshape the parameters to TensorFlow's ordering
+                # Reshape the parameters to Paddle's ordering
                 DataReshaper({
                     # (c_o, c_i) -> (c_i, c_o)
                     NodeKind.InnerProduct: (1, 0)
@@ -345,9 +343,9 @@ class Transformer(object):
 
     def transform_source(self):
         if self.source is None:
-            mapper = TensorFlowMapper(self.graph)
+            mapper = PaddleMapper(self.graph)
             chains = mapper.map()
-            emitter = TensorFlowEmitter()
+            emitter = PaddleEmitter()
             input_nodes = self.graph.get_input_nodes()
             self.source = emitter.emit(self.graph.name, chains, input_nodes)
         return self.source

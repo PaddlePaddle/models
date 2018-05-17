@@ -262,6 +262,13 @@ class Network(object):
     @layer
     def softmax(self, input, name):
         fluid = import_fluid()
+        shape = input.shape
+        if len(shape) > 2:
+            for sz in shape[2:]:
+                assert sz == 1, "invalid input shape[%s] for softmax" % (
+                    str(shape))
+            input = fluid.layers.reshape(input, shape[0:2])
+
         output = fluid.layers.softmax(input)
         return output
 
