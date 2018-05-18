@@ -5,23 +5,23 @@ Running the program sample in this directory requires the version of the PaddleP
 Learning to rank[1] is a method to build the ranking model of machine learning,which plays an important role in the computer science scene such as information retrieval, natural language processing and data mining. The primary purpose of learning to rank is to order a document that reflects the relevance of any query request for a given set of documents. In this example, using the annotated Corpus training two classical ranking models RankNet[4] and LamdaRank[6],the corresponding ranking model can be generated, and the correlation documents can be sorted by any query request.
 
 ## Background Information
-With the rapid growth of Internet,learning to rank has been paid more and more attention, which is one of the common tasks in machine learning. On the one hand, the manual ranking rules can not deal with the large scale of the candidate data, on the other hand can not give the appropriate weight for the candidate data of different channels, so it is widely used in daily life.Learning to rank originated in the field of information retrieval and is still the core parts of many information retrieval systems,such as the ranking of search results in search engine,ranking of candidate data in the recommendation system,and online advertising, and so on. In this case, we use the document retrieval task to illustrate the learning to rank model.
+Learning to rank is the application of machine learning. On the one hand, the manual ranking rules can not deal with the large scale of the candidate data, on the other hand can not give the appropriate weight for the candidate data of different channels, so it is widely used in daily life.Learning to rank originated in the field of information retrieval and is still the core parts of many information retrieval systems,such as the ranking of search results in search engine,ranking of candidate data in the recommendation system,and online advertising, and so on. In this case, we use the document retrieval task to illustrate the learning to rank model.
 
 ![image](https://github.com/PaddlePaddle/models/blob/develop/ltr/images/search_engine_example.png?raw=true)
 
 Figure.1 the role of ranking model in the typical application search engine of document retrieval.
 
-Assuming that there is a set of documents $S$, the document retrieval task is based on the relevance of the requests to give the order of the documents. According to the query request, the query engine will score every document according to the query request, and arrange the documents in reverse order according to the grading, and get the query results. In the training model, a query is given and the best ranking and scoring of the corresponding document is given. When predicting, the query request is given, the ranking model generates the document sort. The common ranking learning methods are divided into the following three categories.
+Assuming that there is a set of documents $S$, the document retrieval task is based on the relevance of the requests to give the order of the documents. According to the query request, the query engine will score every document according to the query request, and arrange the documents in reverse order according to the grading, and get the query results.Given a query and corresponding documents, the model is trained based the scoring of the document sorts. When it goes to the predicted phase, the model will generate the document sort according to the query received. The common ranking learning methods are divided into the following three categories.
 
 - Pointwise approach
 
-In this case,the learning-to-rank problem can be approximated by a regression problem.The input single sample is the **score-document**,the correlation score of each query-Document pair is used as the real number or the sequence number,so the individual query-document pairs are uesd as a sample point (the origin of the word pointwise) to train the ranking model.When predicting,the correlation score of query-document pair is given for the specified input.
+In this case,the learning-to-rank problem can be viewed as a regression problem.The input single sample is the **score-document**,the correlation score of each query-Document pair is used as the real number or the sequence number,so the individual query-document pairs are uesd as a sample point (the origin of the word pointwise) to train the ranking model.When predicting,the correlation score of query-document pair is given for the specified input.
 - Pairwise approach
 
-In this case, the learning-to-rank problem is approximated by a classification problem — learning a binary classifier that can tell which document is better in a given pair of documents.The input single sample is the **label-document pair**.For multiple result documents of one query,any two documents are combined to form document pairs as input samples.Any two documents are combined to form document pairs as the input samples.That is to learn a two classifier, the input is a pair of documents A-B (the origin of Pairwise), according to whether the correlation of A is better than B,the two classifier gives the classification label 1 or 0.After classifying all the document pairs,we can get a set of partial order relations to construct the order relation of the documents.The principle of this kind of the method is to reduce the number of the reverse order document pairs in the order of the given pair of documents $S$,so as to achieve the goal of optimizing the sorting result.
+In this case, the learning-to-rank problem is approximated by a classification problem — learning a binary classifier that can tell which document is better in a given pair of documents.The single input sample is the **label-document pair**.For multiple result documents of one query,any two documents are combined to form document pairs as input samples.Any two documents are combined to form document pairs as the input samples.That is to learn a two classifier, the input is a pair of documents A-B (the origin of Pairwise), according to whether the correlation of A is better than B,the two classifier gives the classification label 1 or 0.After classifying all the document pairs,we can get a set of partial order relations to construct the order relation of the documents.The principle of this kind of the method is to reduce the number of the reverse order document pairs in the order of the given pair of documents $S$,so as to achieve the goal of optimizing the sorting result.
 - Listwise approach
 
-These algorithms try to directly optimize the value of one of the above evaluation measures, averaged over all queries in the training data.The single input sample is a **document arranged**. By constructing the appropriate measurement function to measure the difference between the current document ranking and the optimal ranking,then optimizes the evaluation measures to get the ranking model. It is difficult to optimize because many of the evaluation measures are not continuous functions with respect to ranking model's parameters.
+These algorithms try to directly optimize the value of one of the above evaluation measures, averaged over all queries in the training data.The single input sample is a **document arranged**. By constructing the appropriate measurement function to measure the difference between the current document ranking and the optimal ranking,then optimizes the evaluation measures to get the ranking model. It is difficult to optimize because most of the ranking loss function are not continuous smooth functions.
 ![image](https://github.com/PaddlePaddle/models/blob/develop/ltr/images/learning_to_rank.jpg?raw=true)
 
 Figure.2 Three methods of the ranking model
@@ -178,7 +178,7 @@ From the above derivation we can see that the LambdaRank network structure is ve
 
 Figure 4. Network structure of LambdaRank
 
-A list of result documents resulting from a query is entered into the network as a sample, replacing RankCost with the LambdaCost layer, and the rest of the structure is the same as RankNet.
+Replacing the pair of the document-score pair with the list of the query-related document as input sample, refactoring the LambdaCost layer to RankCost layer, and keep the rest of the network same with Ranket.
 
 - LambdaCost layer: The LambdaCost layer uses the NDCG difference as the Lambda function. The score is a one-dimensional sequence. For a monotonic training sample, the full-connection layer output is a 1x1 sequence, and the length of the both sequence is equal to the number of documents obtained by the query. The **LambdaRank** function's details  is in [LambdaRank](https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf)
 
@@ -198,7 +198,7 @@ python train.py --model_type lambdarank
 The first run of the script will automatically download the data and train the LambdaRank model and store the model of each round.
 
 ### LambdaRank model prediction
-The prediction process of the LambdaRank model is the same as RankNet. The model's topology in the prediction model reuses the model definition in the code and loads the corresponding parameter file from the external memory. The input during the forecast is a document list, and the output is the relevance score of each document in the document list. The document is re-sorted according to the score, to obtaine the final document's sorting result.
+The prediction process of the LambdaRank model is the same as RankNet. The model's topology in the prediction model reuses the model definition in the code and loads the corresponding parameter file from the external memory. The input during the forecast is a document list, and the output is the relevance score of each document in the document list. The document is re-sorted based the score, to obtaine the final document's sorting result.
 
 Use the trained LambdaRank model to continue the prediction:
 
@@ -207,7 +207,7 @@ python infer.py --model_type lambdarank --test_model_path models/lambda_rank_par
 ```
 
 ## Customize LambdaRank data
-The above code uses the built-in mq2007 data from PaddlePaddle, and if you want to use custom format data, you can refer to the built-in mq2007 data set in PaddlePaddle and write a generator function. For example, the input data is in the following format, which only has three documents doc0-doc2.
+The above code uses the built-in mq2007 data from PaddlePaddle, and if you want to use custom format data, you can refer to the built-in mq2007 dataset in PaddlePaddle and write a generator function. For example, the input data is in the following format, which only has three documents doc0-doc2.
 
 <query_id> <relevance_score> <feature_vector>
 
@@ -233,7 +233,7 @@ Convert the format to the Listwise, for example:
 2    2    0.1,0.4,0.1
 ......
 ```
-**Data format attention**
+**Note Data format**
 - The number of documents corresponding to each sample in the data must be more than the NDCG_num of **lambda_cost** layer.
 - If the document of the single sample is 0, the correlation of the document is 0, and the calculation of NDCG is invalid, then we can determine that the query is invalid, and we can filter out such query during training.
 
