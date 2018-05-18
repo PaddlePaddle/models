@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 
 import paddle
@@ -6,9 +7,62 @@ import paddle.fluid as fluid
 import model
 from model import wrap_encoder as encoder
 from model import wrap_decoder as decoder
-from config import InferTaskConfig, ModelHyperParams, \
-        encoder_input_data_names, decoder_input_data_names
+from config import *
 from train import pad_batch_data
+import reader
+
+
+def parse_args():
+    parser = argparse.ArgumentParser("Training for Transformer.")
+    parser.add_argument(
+        "--src_vocab_fpath",
+        type=str,
+        required=True,
+        help="The path of vocabulary file of source language.")
+    parser.add_argument(
+        "--trg_vocab_fpath",
+        type=str,
+        required=True,
+        help="The path of vocabulary file of target language.")
+    parser.add_argument(
+        "--test_file_pattern",
+        type=str,
+        required=True,
+        help="The pattern to match test data files.")
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=50,
+        help="The number of examples in one run for sequence generation.")
+    parser.add_argument(
+        "--pool_size",
+        type=int,
+        default=10000,
+        help="The buffer size to pool data.")
+    parser.add_argument(
+        "--special_token",
+        type=str,
+        default=["<s>", "<e>", "<unk>"],
+        nargs=3,
+        help="The <bos>, <eos> and <unk> tokens in the dictionary.")
+    parser.add_argument(
+        'opts',
+        help='See config.py for all options',
+        default=None,
+        nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+    # Append args related to dict
+    src_dict = reader.DataReader.load_dict(args.src_vocab_fpath)
+    trg_dict = reader.DataReader.load_dict(args.trg_vocab_fpath)
+    dict_args = [
+        "src_vocab_size", str(len(src_dict)), "trg_vocab_size",
+        str(len(trg_dict)), "bos_idx", str(src_dict[args.special_token[0]]),
+        "eos_idx", str(src_dict[args.special_token[1]]), "unk_idx",
+        str(src_dict[args.special_token[2]])
+    ]
+    merge_cfg_from_list(args.opts + dict_args,
+                        [InferTaskConfig, ModelHyperParams])
+    return args
 
 
 def translate_batch(exe,
@@ -243,7 +297,7 @@ def translate_batch(exe,
     return seqs, scores[:, :n_best].tolist()
 
 
-def main():
+def infer(args):
     place = fluid.CUDAPlace(0) if InferTaskConfig.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
@@ -292,13 +346,23 @@ def main():
     decoder_program = fluid.io.get_inference_program(
         target_vars=[predict], main_program=decoder_program)
 
-    test_data = paddle.batch(
-        paddle.dataset.wmt16.test(ModelHyperParams.src_vocab_size,
-                                  ModelHyperParams.trg_vocab_size),
-        batch_size=InferTaskConfig.batch_size)
+    test_data = reader.DataReader(
+        src_vocab_fpath=args.src_vocab_fpath,
+        trg_vocab_fpath=args.trg_vocab_fpath,
+        fpattern=args.test_file_pattern,
+        batch_size=args.batch_size,
+        use_token_batch=False,
+        pool_size=args.pool_size,
+        sort_type=reader.SortType.NONE,
+        shuffle=False,
+        shuffle_batch=False,
+        start_mark=args.special_token[0],
+        end_mark=args.special_token[1],
+        unk_mark=args.special_token[2],
+        clip_last_batch=False)
 
-    trg_idx2word = paddle.dataset.wmt16.get_dict(
-        "de", dict_size=ModelHyperParams.trg_vocab_size, reverse=True)
+    trg_idx2word = test_data.load_dict(
+        dict_path=args.trg_vocab_fpath, reverse=True)
 
     def post_process_seq(seq,
                          bos_idx=ModelHyperParams.bos_idx,
@@ -320,15 +384,16 @@ def main():
                 (output_eos or idx != eos_idx),
             seq)
 
-    for batch_id, data in enumerate(test_data()):
+    for batch_id, data in enumerate(test_data.batch_generator()):
         batch_seqs, batch_scores = translate_batch(
             exe,
             [item[0] for item in data],
             encoder_program,
-            encoder_input_data_names,
+            encoder_data_input_fields + encoder_util_input_fields,
             [enc_output.name],
             decoder_program,
-            decoder_input_data_names,
+            decoder_data_input_fields[:-1] + decoder_util_input_fields +
+            (decoder_data_input_fields[-1], ),
             [predict.name],
             InferTaskConfig.beam_size,
             InferTaskConfig.max_length,
@@ -351,4 +416,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    infer(args)
