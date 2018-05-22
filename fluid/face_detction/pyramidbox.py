@@ -1,7 +1,10 @@
 import numpy as np
 
 import paddle.fluid as fluid
+from paddle.fluid.param_attr import ParamAttr
+from paddle.fluid.initializer import Xavier
 from paddle.fluid.initializer import Constant
+from paddle.fluid.regularizer import L2Decay
 
 
 def conv_bn(input, filter, ksize, stride, padding, act='relu', bias_attr=False):
@@ -16,10 +19,12 @@ def conv_bn(input, filter, ksize, stride, padding, act='relu', bias_attr=False):
     return fluid.layers.batch_norm(input=conv, act=act)
 
 
-def conv_group(input, groups, filters, ksizes, strides=None, with_pool=True):
+def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
     assert len(filters) == groups
     assert len(ksizes) == groups
     strides = [1] * groups if strides is None else strides
+    w_attr = ParamAttr(learning_rate=1., initializer=Xavier())
+    b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
     conv = input
     for i in xrange(groups):
         conv = fluid.layers.conv2d(
@@ -28,6 +33,8 @@ def conv_group(input, groups, filters, ksizes, strides=None, with_pool=True):
             filter_size=ksizes[i],
             stride=strides[i],
             padding=(ksizes[i] - 1) / 2,
+            param_attr=w_attr,
+            bias_attr=b_attr,
             act='relu')
     if with_pool:
         pool = fluid.layers.pool2d(
@@ -61,24 +68,24 @@ class PyramidBox(object):
                 name='gt_label', shape=[1], dtype='int32', lod_level=1)
 
     def _vgg(self):
-        self.conv1 = conv_group(self.image, 2, [64] * 2, [3] * 2)
-        self.conv2 = conv_group(self.conv1, 2, [128] * 2, [3] * 2)
+        self.conv1 = conv_block(self.image, 2, [64] * 2, [3] * 2)
+        self.conv2 = conv_block(self.conv1, 2, [128] * 2, [3] * 2)
 
         #priorbox min_size is 16
-        self.conv3 = conv_group(self.conv2, 3, [256] * 3, [3] * 3)
+        self.conv3 = conv_block(self.conv2, 3, [256] * 3, [3] * 3)
         #priorbox min_size is 32
-        self.conv4 = conv_group(self.conv3, 3, [512] * 3, [3] * 3)
+        self.conv4 = conv_block(self.conv3, 3, [512] * 3, [3] * 3)
         #priorbox min_size is 64
-        self.conv5 = conv_group(self.conv4, 3, [512] * 3, [3] * 3)
+        self.conv5 = conv_block(self.conv4, 3, [512] * 3, [3] * 3)
 
         # fc6 and fc7 in paper, priorbox min_size is 128
-        self.conv6 = conv_group(
+        self.conv6 = conv_block(
             self.conv5, 2, [1024, 1024], [3, 1], with_pool=False)
         # conv6_1 and conv6_2 in paper, priorbox min_size is 256
-        self.conv7 = conv_group(
+        self.conv7 = conv_block(
             self.conv6, 2, [256, 512], [1, 3], [1, 2], with_pool=False)
         # conv7_1 and conv7_2 in paper, priorbox mini_size is 512
-        self.conv8 = conv_group(
+        self.conv8 = conv_block(
             self.conv7, 2, [128, 256], [1, 3], [1, 2], with_pool=False)
 
     def _low_level_fpn(self):
@@ -88,11 +95,15 @@ class PyramidBox(object):
 
         def fpn(up_from, up_to):
             ch = up_to.shape[1]
-            conv1 = fluid.layers.conv2d(up_from, ch, 1, act='relu')
+            b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
+            conv1 = fluid.layers.conv2d(
+                up_from, ch, 1, act='relu', bias_attr=b_attr)
             # TODO: add group
             conv_trans = fluid.layers.conv2d_transpose(
                 conv1, ch, None, 4, 1, 2, bias_attr=False)
-            conv2 = fluid.layers.conv2d(up_to, ch, 1, act='relu')
+            b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
+            conv2 = fluid.layers.conv2d(
+                up_to, ch, 1, act='relu', bias_attr=b_attr)
             # eltwise mul
             conv_fuse = conv_trans * conv2
             return conv_fuse
@@ -116,11 +127,15 @@ class PyramidBox(object):
             rescomb = fluid.layers.relu(x=sum)
 
             # ssh
-            ssh_1 = fluid.layers.conv2d(rescomb, 256, 3, 1, 1)
-            ssh_dimred = fluid.layers.conv2d(rescomb, 128, 3, 1, 1, act='relu')
-            ssh_2 = fluid.layers.conv2d(ssh_dimred, 128, 3, 1, 1)
-            ssh_3a = fluid.layers.conv2d(ssh_dimred, 128, 3, 1, 1, act='relu')
-            ssh_3b = fluid.layers.conv2d(ssh_3a, 128, 3, 1, 1)
+            b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
+            ssh_1 = fluid.layers.conv2d(rescomb, 256, 3, 1, 1, bias_attr=b_attr)
+            ssh_dimred = fluid.layers.conv2d(
+                rescomb, 128, 3, 1, 1, act='relu', bias_attr=b_attr)
+            ssh_2 = fluid.layers.conv2d(
+                ssh_dimred, 128, 3, 1, 1, bias_attr=b_attr)
+            ssh_3a = fluid.layers.conv2d(
+                ssh_dimred, 128, 3, 1, 1, act='relu', bias_attr=b_attr)
+            ssh_3b = fluid.layers.conv2d(ssh_3a, 128, 3, 1, 1, bias_attr=b_attr)
 
             ssh_concat = fluid.layers.concat([ssh_1, ssh_2, ssh_3b], axis=1)
             ssh_out = fluid.layers.relu(x=ssh_concat)
@@ -173,14 +188,15 @@ class PyramidBox(object):
             self.ssh_conv3_norm, self.ssh_conv4_norm, self.ssh_conv5_norm,
             self.ssh_conv6, self.ssh_conv7, self.ssh_conv8
         ]
+        b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
         for i, input in enumerate(inputs):
-            mbox_loc = fluid.layers.conv2d(input, 8, 3, 1, 1, bias_attr=True)
+            mbox_loc = fluid.layers.conv2d(input, 8, 3, 1, 1, bias_attr=b_attr)
             face_loc, head_loc = fluid.layers.split(
                 mbox_loc, num_or_sections=2, dim=1)
             face_loc = permute_and_reshape(face_loc, 4)
             head_loc = permute_and_reshape(head_loc, 4)
 
-            mbox_conf = fluid.layers.conv2d(input, 6, 3, 1, 1, bias_attr=True)
+            mbox_conf = fluid.layers.conv2d(input, 6, 3, 1, 1, bias_attr=b_attr)
             face_conf1, face_conf3, head_conf = fluid.layers.split(
                 mbox_conf, num_or_sections=[1, 3, 2], dim=1)
             face_conf3_maxin = fluid.layers.reduce_max(

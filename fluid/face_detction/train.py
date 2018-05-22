@@ -39,6 +39,7 @@ def train(args,
     exe.run(fluid.default_startup_program())
     #print(fluid.default_main_program())
     #print(test_program)
+    #fluid.io.save_persistables(exe, "model")
 
 
 if __name__ == '__main__':
