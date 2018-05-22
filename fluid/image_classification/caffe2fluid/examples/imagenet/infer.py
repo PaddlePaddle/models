@@ -43,7 +43,7 @@ def build_model(net_file, net_name):
           (net_file, net_name))
 
     net_path = os.path.dirname(net_file)
-    module_name = os.path.basename(net_file).rstrip('.py')
+    module_name = os.path.splitext(os.path.basename(net_file))[0]
     if net_path not in sys.path:
         sys.path.insert(0, net_path)
 
@@ -51,7 +51,7 @@ def build_model(net_file, net_name):
         m = __import__(module_name, fromlist=[net_name])
         MyNet = getattr(m, net_name)
     except Exception as e:
-        print('failed to load module[%s]' % (module_name))
+        print('failed to load module[%s.%s]' % (module_name, net_name))
         print(e)
         return None
 
@@ -153,7 +153,6 @@ def load_inference_model(dirname, exe):
 def infer(model_path, imgfile, net_file=None, net_name=None, debug=True):
     """ do inference using a model which consist 'xxx.py' and 'xxx.npy'
     """
-
     fluid = import_fluid()
 
     place = fluid.CPUPlace()
@@ -214,7 +213,6 @@ def caffe_infer(prototxt, caffemodel, datafile):
     results = []
     names = []
     for k, v in net.blobs.items():
-        k = k.rstrip('_output')
         k = k.replace('/', '_')
         names.append(k)
         results.append(v.data.copy())
@@ -260,7 +258,7 @@ if __name__ == "__main__":
             print('usage:')
             print('\tpython %s dump [net_file] [weight_file] [datafile] [net_name]' \
                     % (sys.argv[0]))
-            print('\teg:python dump %s %s %s %s %s' % (sys.argv[0],\
+            print('\teg:python %s dump %s %s %s %s' % (sys.argv[0],\
                 net_file, weight_file, datafile, net_name))
             sys.exit(1)
 

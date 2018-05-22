@@ -13,8 +13,8 @@ class Node(object):
         self.layer = LayerAdapter(layer, kind) if layer else None
         self.parents = []
         self.children = []
-        self.data = None
-        self.output_shape = None
+        self.data = None  #parameters of this node
+        self.output_shape = None  #output shape of this node
         self.metadata = {}
 
     def add_parent(self, parent_node):
@@ -37,9 +37,23 @@ class Node(object):
 
     @property
     def parameters(self):
+        """ get parameters stored in a protobuf object
+        """
         if self.layer is not None:
             return self.layer.parameters
         return None
+
+    @property
+    def params(self):
+        """ get parameters stored in a dict
+        """
+        from .protobuf_to_dict import protobuf_to_dict
+
+        p = self.parameters
+        if p is not None:
+            return protobuf_to_dict(p)
+        else:
+            return None
 
     def __str__(self):
         return '[%s] %s' % (self.kind, self.name)
@@ -124,10 +138,18 @@ class Graph(object):
         for node in self.topologically_sorted():
             # If the node has learned parameters, display the first one's shape.
             # In case of convolutions, this corresponds to the weights.
-            data_shape = node.data[0].shape if node.data else '--'
-            out_shape = node.output_shape or '--'
-            s.append('{:<20} {:<30} {:>20} {:>20}'.format(
-                node.kind, node.name, data_shape, tuple(out_shape)))
+            if node.data is None:
+                data_shape = '--'
+                out_shape = node.output_shape or '--'
+                s.append('{:<20} {:<30} {:>20} {:>20}'.format(
+                    node.kind, node.name, data_shape, tuple(out_shape)))
+            else:
+                for d in node.data:
+                    #data_shape = node.data[0].shape if node.data else '--'
+                    data_shape = d.shape
+                    out_shape = node.output_shape or '--'
+                    s.append('{:<20} {:<30} {:>20} {:>20}'.format(
+                        node.kind, node.name, data_shape, tuple(out_shape)))
         return '\n'.join(s)
 
 
@@ -194,15 +216,25 @@ class GraphBuilder(object):
         Newer models use the "Input layer" type.
         '''
         nodes = [Node(name, NodeKind.Data) for name in self.params.input]
-        if len(nodes):
-            input_dim = map(int, self.params.input_dim)
-            if not input_dim:
-                if len(self.params.input_shape) > 0:
-                    input_dim = map(int, self.params.input_shape[0].dim)
-                else:
-                    raise KaffeError('Dimensions for input not specified.')
-            for node in nodes:
-                node.output_shape = tuple(input_dim)
+        inputs_num = len(nodes)
+        if inputs_num > 0:
+            input_dims_num = len(self.params.input_dim)
+            if input_dims_num > 0 and input_dims_num != inputs_num * 4:
+                raise KaffeError('invalid input_dim[%d] param in prototxt' %
+                                 (input_dims_num))
+
+            input_dims = [[]] * inputs_num
+            for i in range(input_dims_num):
+                dim = self.params.input_dim[i]
+                which = int(i / 4)
+                input_dims[which].append(int(dim))
+
+            for i in range(inputs_num):
+                if len(self.params.input_shape) == inputs_num:
+                    input_dim = map(int, self.params.input_shape[i].dim)
+                    input_dims[i] = input_dim
+
+                nodes[i].output_shape = tuple(input_dims[i])
         return nodes
 
     def build(self):

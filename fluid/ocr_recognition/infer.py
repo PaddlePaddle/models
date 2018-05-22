@@ -14,6 +14,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('model_path',         str,  None,   "The model path to be used for inference.")
 add_arg('input_images_dir',   str,  None,   "The directory of images.")
 add_arg('input_images_list',  str,  None,   "The list file of images.")
+add_arg('dict',               str,  None,   "The dictionary. The result of inference will be index sequence if the dictionary was None.")
 add_arg('use_gpu',            bool,  True,      "Whether use GPU to infer.")
 # yapf: enable
 
@@ -31,11 +32,20 @@ def inference(args, infer=ctc_infer, data_reader=ctc_reader):
         infer_list_file=args.input_images_list)
     # prepare environment
     place = fluid.CPUPlace()
-    if use_gpu:
+    if args.use_gpu:
         place = fluid.CUDAPlace(0)
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
+
+    # load dictionary
+    dict_map = None
+    if args.dict is not None and os.path.isfile(args.dict):
+        dict_map = {}
+        with open(args.dict) as dict_file:
+            for i, word in enumerate(dict_file):
+                dict_map[i] = word.strip()
+        print "Loaded dict from %s" % args.dict
 
     # load init model
     model_dir = args.model_path
@@ -52,7 +62,11 @@ def inference(args, infer=ctc_infer, data_reader=ctc_reader):
                              data, place, need_label=False),
                          fetch_list=[sequence],
                          return_numpy=False)
-        print "result: %s" % (np.array(result[0]).flatten(), )
+        indexes = np.array(result[0]).flatten()
+        if dict_map is not None:
+            print "result: %s" % ([dict_map[index] for index in indexes], )
+        else:
+            print "result: %s" % (indexes, )
 
 
 def main():

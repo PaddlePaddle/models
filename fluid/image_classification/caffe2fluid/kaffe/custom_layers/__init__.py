@@ -7,13 +7,14 @@ from .register import get_registered_layers
 import axpy
 import flatten
 import argmax
+import reshape
 
 #custom layer import ends
 
 custom_layers = get_registered_layers()
 
 
-def set_args(f, params):
+def set_args(f, params, node=None):
     """ set args for function 'f' using the parameters in node.layer.parameters
 
     Args:
@@ -24,18 +25,15 @@ def set_args(f, params):
         arg_names (list): a list of argument names
         kwargs (dict): a dict contains needed arguments
     """
+    from ..protobuf_to_dict import protobuf_to_dict
+
     argc = f.__code__.co_argcount
     arg_list = f.__code__.co_varnames[0:argc]
 
     kwargs = {}
     for arg_name in arg_list:
-        try:
-            v = getattr(node.layer.parameters, arg_name, None)
-        except Exception as e:
-            v = None
-
-        if v is not None:
-            kwargs[arg_name] = v
+        if arg_name in params:
+            kwargs[arg_name] = params[arg_name]
 
     return arg_list, kwargs
 
@@ -53,7 +51,7 @@ def compute_output_shape(kind, node):
 
     parents = node.parents
     inputs = [list(p.output_shape) for p in parents]
-    arg_names, kwargs = set_args(shape_func, node.layer.parameters)
+    arg_names, kwargs = set_args(shape_func, node.params)
 
     if len(inputs) == 1:
         inputs = inputs[0]
@@ -62,16 +60,16 @@ def compute_output_shape(kind, node):
 
 
 def make_node(template, kind, node):
-    """ make a TensorFlowNode for custom layer which means construct
+    """ make a PaddleNode for custom layer which means construct
         a piece of code to define a layer implemented in 'custom_layers'
 
     Args:
-        @template (TensorFlowNode): a factory to new a instance of TensorFLowNode
+        @template (PaddleNode): a factory to new a instance of PaddleNode
         @kind (str): type of custom layer
         @node (graph.Node): a layer in the net
 
     Returns:
-        instance of TensorFlowNode
+        instance of PaddleNode
     """
     assert kind in custom_layers, "layer[%s] not exist in custom layers" % (
         kind)
@@ -79,7 +77,7 @@ def make_node(template, kind, node):
     layer_func = custom_layers[kind]['layer']
 
     #construct arguments needed by custom layer function from node's parameters
-    arg_names, kwargs = set_args(layer_func, node.layer.parameters)
+    arg_names, kwargs = set_args(layer_func, node.params, node)
 
     return template('custom_layer', kind, **kwargs)
 

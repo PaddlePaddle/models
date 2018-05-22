@@ -6,7 +6,7 @@
 #       2, do inference(only in fluid) using this model
 #
 #usage:
-#   bash run.sh resnet50 ./models.caffe/resnet50 ./models/resnet50
+#   cd caffe2fluid/examples/imagenet && bash run.sh resnet50 ./models.caffe/resnet50 ./models/resnet50
 #
 
 #set -x
@@ -67,7 +67,7 @@ if [[ -z $only_convert ]];then
     imgfile="data/65.jpeg"
     #FIX ME:
     #   only look the first line in prototxt file for the name of this network, maybe not correct
-    net_name=`grep "name" $proto_file | head -n1 | perl -ne 'if(/^\s*name\s*:\s*\"([^\"]+)\"/){ print $1."\n";}'`
+    net_name=`grep "name" $proto_file | head -n1 | perl -ne 'if(/^name\s*:\s*\"([^\"]+)\"/){ print $1."\n";}'`
     if [[ -z $net_name ]];then
         net_name="MyNet"
     fi

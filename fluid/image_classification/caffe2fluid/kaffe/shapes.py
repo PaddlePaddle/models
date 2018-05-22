@@ -58,19 +58,22 @@ def shape_scalar(node):
 def shape_data(node):
     if node.output_shape:
         # Old-style input specification
-        return node.output_shape
-    try:
-        # New-style input specification
-        return map(int, node.parameters.shape[0].dim)
-    except:
-        # We most likely have a data layer on our hands. The problem is,
-        # Caffe infers the dimensions of the data from the source (eg: LMDB).
-        # We want to avoid reading datasets here. Fail for now.
-        # This can be temporarily fixed by transforming the data layer to
-        # Caffe's "input" layer (as is usually used in the "deploy" version).
-        # TODO: Find a better solution for this.
-        raise KaffeError('Cannot determine dimensions of data layer.\n'
-                         'See comments in function shape_data for more info.')
+        shape = node.output_shape
+    else:
+        try:
+            # New-style input specification
+            shape = map(int, node.parameters.shape[0].dim)
+        except:
+            # We most likely have a data layer on our hands. The problem is,
+            # Caffe infers the dimensions of the data from the source (eg: LMDB).
+            # We want to avoid reading datasets here. Fail for now.
+            # This can be temporarily fixed by transforming the data layer to
+            # Caffe's "input" layer (as is usually used in the "deploy" version).
+            # TODO: Find a better solution for this.
+            raise KaffeError(
+                'Cannot determine dimensions of data layer.\n'
+                'See comments in function shape_data for more info.')
+    return shape
 
 
 def shape_mem_data(node):
@@ -95,12 +98,16 @@ def shape_convolution(node):
 
 
 def shape_pool(node):
+    global_pool = getattr(node.layer.parameters, 'global_pooling', False)
+    if global_pool:
+        input_shape = node.get_only_parent().output_shape
+        return make_tensor(input_shape.batch_size, input_shape.channels, 1, 1)
+
     ceil_mode = getattr(node.layer.parameters, 'ceil_mode', True)
     if ceil_mode is True:
         method = math.ceil
     else:
         method = math.floor
-
     return get_strided_kernel_output_shape(node, method)
 
 

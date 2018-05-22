@@ -6,7 +6,7 @@ The minimum PaddlePaddle version needed for the code sample in this directory is
 
 ### Introduction
 
-[Single Shot MultiBox Detector (SSD)](https://arxiv.org/abs/1512.02325) framework for object detection is based on a feed-forward convolutional network. The early network is a standard convolutional architecture for image classification, such as VGG, ResNet, or MobileNet, which is als called base network. In this tutorial we used [MobileNet](https://arxiv.org/abs/1704.04861).
+[Single Shot MultiBox Detector (SSD)](https://arxiv.org/abs/1512.02325) framework for object detection is based on a feed-forward convolutional network. The early network is a standard convolutional architecture for image classification, such as VGG, ResNet, or MobileNet, which is also called base network. In this tutorial we used [MobileNet](https://arxiv.org/abs/1704.04861).
 
 ### Data Preparation
 
@@ -52,30 +52,51 @@ Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https
 #### Train on PASCAL VOC
   - Train on one device (/GPU).
   ```python
-  env CUDA_VISIABLE_DEVICES=0 python -u train.py --parallel=False --data='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
+  env CUDA_VISIBLE_DEVICES=0 python -u train.py --parallel=False --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
   ```
   - Train on multi devices (/GPUs).
 
   ```python
-  env CUDA_VISIABLE_DEVICES=0,1 python -u train.py --batch_size=64 --data='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
+  env CUDA_VISIBLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
   ```
 
 #### Train on MS-COCO
   - Train on one device (/GPU).
   ```python
-  env CUDA_VISIABLE_DEVICES=0 python -u train.py --parallel=False --data='coco' --pretrained_model='pretrained/mobilenet_imagenet/'
+  env CUDA_VISIBLE_DEVICES=0 python -u train.py --parallel=False --dataset='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
   ```
   - Train on multi devices (/GPUs).
   ```python
-  env CUDA_VISIABLE_DEVICES=0,1 python -u train.py --batch_size=64 --data='coco' --pretrained_model='pretrained/mobilenet_imagenet/'
+  env CUDA_VISIBLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
   ```
 
 TBD
 
 ### Evaluate
 
+You can evaluate your trained model in different metric like 11point, integral on both PASCAL VOC and COCO dataset. Moreover, we provide eval_coco_map.py which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). To use this eval_coco_map.py, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
+Install the cocoapi:
+```
+# COCOAPI=/path/to/clone/cocoapi
+git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
+cd $COCOAPI/PythonAPI
+# Install into global site-packages
+make install
+# Alternatively, if you do not have permissions or prefer
+# not to install the COCO API into global site-packages
+python2 setup.py install --user
+```
+Note we set the defualt test list to the dataset's test/val list, you can use your own test list by setting test_list args.
+
+#### Evaluate on PASCAL VOC
 ```python
-env CUDA_VISIABLE_DEVICES=0 python eval.py --model='model/90' --test_list=''
+env CUDA_VISIBLE_DEVICES=0 python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/90' --data_dir='data/pascalvoc' --test_list='test.txt' --ap_version='11point'
+```
+
+#### Evaluate on MS-COCO
+```python
+env CUDA_VISIBLE_DEVICES=0 python eval.py --dataset='coco2014' --nms_threshold=0.5 --model_dir='train_coco_model/40' --test_list='annotations/instances_minival2014.json' --ap_version='integral'
+env CUDA_VISIBLE_DEVICES=0 python eval_coco_map.py --dataset='coco2017' --nms_threshold=0.5 --model_dir='train_coco_model/40' --test_list='annotations/instances_minival2017.json'
 ```
 
 TBD
@@ -83,8 +104,16 @@ TBD
 ### Infer and Visualize
 
 ```python
-env CUDA_VISIABLE_DEVICES=0 python infer.py --batch_size=2 --model='model/90' --test_list=''
+env CUDA_VISIBLE_DEVICES=0 python infer.py --model_dir='train_coco_model/20' --image_path='./data/coco/val2014/COCO_val2014_000000000139.jpg'
 ```
+Below is the examples after running python infer.py to inference and visualize the model result.
+<p align="center">
+<img src="images/COCO_val2014_000000000139.jpg" height=300 width=400 hspace='10'/>
+<img src="images/COCO_val2014_000000000785.jpg" height=300 width=400 hspace='10'/>
+<img src="images/COCO_val2014_000000142324.jpg" height=300 width=400 hspace='10'/>
+<img src="images/COCO_val2014_000000144003.jpg" height=300 width=400 hspace='10'/> <br />
+MobileNet-SSD300x300 Visualization Examples
+</p>
 
 TBD
 
