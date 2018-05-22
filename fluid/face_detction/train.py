@@ -43,15 +43,15 @@ def train(args,
     exe.run(fluid.default_startup_program())
 
     # load_model.load_and_set_vars(place)
-    #fluid.io.save_inference_model('./vgg_model/', ['image'], [loss], exe)
+    # fluid.io.save_inference_model('./vgg_model/', ['image'], [loss], exe)
     if pretrained_model:
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    #print(fluid.default_main_program())
-    #print(test_program)
-    #fluid.io.save_persistables(exe, "model")
+    # print(fluid.default_main_program())
+    # print(test_program)
+    # fluid.io.save_persistables(exe, "model")
 
 
 if __name__ == '__main__':
