@@ -397,7 +397,7 @@ def infer(args):
             (decoder_data_input_fields[-1], ),
             [predict.name],
             InferTaskConfig.beam_size,
-            InferTaskConfig.max_length,
+            InferTaskConfig.max_out_len,
             InferTaskConfig.n_best,
             len(data),
             ModelHyperParams.n_head,
@@ -416,16 +416,135 @@ def infer(args):
                 print(" ".join([trg_idx2word[idx] for idx in seq]))
 
 
+def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
+                        bos_idx, n_head, d_model, place):
+    """
+    Put all padded data needed by inference into a dict.
+    """
+    src_word, src_pos, src_slf_attn_bias, src_max_len = pad_batch_data(
+        [inst[0] for inst in insts], src_pad_idx, n_head, is_target=False)
+    # start tokens
+    trg_word = np.asarray([[bos_idx]] * len(insts), dtype="int64")
+    trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
+                                [1, 1, 1, 1]).astype("float32")
+
+    # These shape tensors are used in reshape_op.
+    src_data_shape = np.array([-1, src_max_len, d_model], dtype="int32")
+    trg_data_shape = np.array([-1, 1, d_model], dtype="int32")
+    src_slf_attn_pre_softmax_shape = np.array(
+        [-1, src_slf_attn_bias.shape[-1]], dtype="int32")
+    src_slf_attn_post_softmax_shape = np.array(
+        [-1] + list(src_slf_attn_bias.shape[1:]), dtype="int32")
+    trg_slf_attn_pre_softmax_shape = np.array(
+        [-1, 1], dtype="int32")  # only the first time step
+    trg_slf_attn_post_softmax_shape = np.array(
+        [-1, n_head, 1, 1], dtype="int32")  # only the first time step
+    trg_src_attn_pre_softmax_shape = np.array(
+        [-1, trg_src_attn_bias.shape[-1]], dtype="int32")
+    trg_src_attn_post_softmax_shape = np.array(
+        [-1] + list(trg_src_attn_bias.shape[1:]), dtype="int32")
+    # These inputs are used to change the shapes in the loop of while op.
+    attn_pre_softmax_shape_delta = np.array([0, 1], dtype="int32")
+    attn_post_softmax_shape_delta = np.array([0, 0, 0, 1], dtype="int32")
+
+    def to_lodtensor(data, place, lod=None):
+        data_tensor = fluid.LoDTensor()
+        data_tensor.set(data, place)
+        if lod is not None:
+            data_tensor.set_lod(lod)
+        return data_tensor
+
+    # beamsearch_op must use tensors with lod
+    init_score = to_lodtensor(
+        np.zeros_like(
+            trg_word, dtype="float32"),
+        place, [range(trg_word.shape[0] + 1)] * 2)
+    trg_word = to_lodtensor(trg_word, place, [range(trg_word.shape[0] + 1)] * 2)
+
+    data_input_dict = dict(
+        zip(data_input_names, [
+            src_word, src_pos, src_slf_attn_bias, trg_word, init_score,
+            trg_src_attn_bias
+        ]))
+    util_input_dict = dict(
+        zip(util_input_names, [
+            src_data_shape, src_slf_attn_pre_softmax_shape,
+            src_slf_attn_post_softmax_shape, trg_data_shape,
+            trg_slf_attn_pre_softmax_shape, trg_slf_attn_post_softmax_shape,
+            trg_src_attn_pre_softmax_shape, trg_src_attn_post_softmax_shape,
+            attn_pre_softmax_shape_delta, attn_post_softmax_shape_delta
+        ]))
+
+    input_dict = dict(data_input_dict.items() + util_input_dict.items())
+    return input_dict
+
+
+def fast_infer(args):
+    place = fluid.CUDAPlace(0) if InferTaskConfig.use_gpu else fluid.CPUPlace()
+    exe = fluid.Executor(place)
+
+    ids, scores = fast_decoder(
+        ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size,
+        ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
+        ModelHyperParams.n_head, ModelHyperParams.d_key,
+        ModelHyperParams.d_value, ModelHyperParams.d_model,
+        ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
+        InferTaskConfig.beam_size, InferTaskConfig.max_out_len,
+        ModelHyperParams.eos_idx)
+
+    fluid.io.load_vars(
+        exe,
+        InferTaskConfig.model_path,
+        vars=filter(lambda var: isinstance(var, fluid.framework.Parameter),
+                    fluid.default_main_program().list_vars()))
+
+    # This is used here to set dropout to the test mode.
+    infer_program = fluid.default_main_program().inference_optimize()
+
+    test_data = reader.DataReader(
+        src_vocab_fpath=args.src_vocab_fpath,
+        trg_vocab_fpath=args.trg_vocab_fpath,
+        fpattern=args.test_file_pattern,
+        batch_size=args.batch_size,
+        use_token_batch=False,
+        pool_size=args.pool_size,
+        sort_type=reader.SortType.NONE,
+        shuffle=False,
+        shuffle_batch=False,
+        start_mark=args.special_token[0],
+        end_mark=args.special_token[1],
+        unk_mark=args.special_token[2],
+        clip_last_batch=False)
+
+    trg_idx2word = test_data.load_dict(
+        dict_path=args.trg_vocab_fpath, reverse=True)
+
+    for batch_id, data in enumerate(test_data.batch_generator()):
+        data_input = prepare_batch_input(
+            data, encoder_data_input_fields + fast_decoder_data_input_fields,
+            encoder_util_input_fields + fast_decoder_util_input_fields,
+            ModelHyperParams.eos_idx, ModelHyperParams.bos_idx,
+            ModelHyperParams.n_head, ModelHyperParams.d_model, place)
+        seq_ids, seq_scores = exe.run(infer_program,
+                                      feed=data_input,
+                                      fetch_list=[ids, scores],
+                                      return_numpy=False)
+        # print np.array(seq_ids)#, np.array(seq_scores)
+        # print seq_ids.lod()#, seq_scores.lod()
+        hyps = [[] for i in range(len(data))]
+        for i in range(len(seq_ids.lod()[0]) - 1):  # for each source sentence
+            start = seq_ids.lod()[0][i]
+            end = seq_ids.lod()[0][i + 1]
+            for j in range(end - start):  # for each candidate
+                sub_start = seq_ids.lod()[1][start + j]
+                sub_end = seq_ids.lod()[1][start + j + 1]
+                hyps[i].append(" ".join([
+                    trg_idx2word[idx]
+                    for idx in np.array(seq_ids)[sub_start:sub_end]
+                ]))
+            print hyps[i]
+
+
 if __name__ == "__main__":
-    fast_decoder(ModelHyperParams.src_vocab_size,
-                 ModelHyperParams.trg_vocab_size,
-                 ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
-                 ModelHyperParams.n_head, ModelHyperParams.d_key,
-                 ModelHyperParams.d_value, ModelHyperParams.d_model,
-                 ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
-                 InferTaskConfig.beam_size, InferTaskConfig.max_length,
-                 ModelHyperParams.eos_idx)
-    print(fluid.default_main_program())
-    exit(0)
     args = parse_args()
-    infer(args)
+    fast_infer(args)
