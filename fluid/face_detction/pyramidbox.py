@@ -178,12 +178,9 @@ class PyramidBox(object):
             ]
             return fluid.layers.reshape(trans, shape=new_shape)
 
-        face_locs = []
-        face_confs = []
-        head_locs = []
-        head_confs = []
-        boxes = []
-        vars = []
+        face_locs, face_confs = [], []
+        head_locs, head_confs = [], []
+        boxes, vars = [], []
         inputs = [
             self.ssh_conv3_norm, self.ssh_conv4_norm, self.ssh_conv5_norm,
             self.ssh_conv6, self.ssh_conv7, self.ssh_conv8
