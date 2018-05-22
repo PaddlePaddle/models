@@ -3,7 +3,6 @@ import numpy as np
 import argparse
 import functools
 
-import load_model as load_model
 import paddle
 import paddle.fluid as fluid
 from pyramidbox import PyramidBox
@@ -42,7 +41,6 @@ def train(args,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    # load_model.load_and_set_vars(place)
     # fluid.io.save_inference_model('./vgg_model/', ['image'], [loss], exe)
     if pretrained_model:
         def if_exist(var):
