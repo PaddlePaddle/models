@@ -40,12 +40,6 @@ class Settings(object):
         self._ap_version = ap_version
         self._toy = toy
         self._data_dir = data_dir
-        if 'pascalvoc' in dataset:
-            self._label_list = []
-            label_fpath = os.path.join(data_dir, label_file)
-            for line in open(label_fpath):
-                self._label_list.append(line.strip())
-
         self._apply_distort = apply_distort
         self._apply_expand = apply_expand
         self._resize_height = resize_h
@@ -163,70 +157,6 @@ def preprocess(img, bbox_labels, mode, settings):
     return img, sampled_labels
 
 
-def coco(settings, file_list, mode, shuffle):
-    # cocoapi
-    from pycocotools.coco import COCO
-    from pycocotools.cocoeval import COCOeval
-
-    coco = COCO(file_list)
-    image_ids = coco.getImgIds()
-    images = coco.loadImgs(image_ids)
-    category_ids = coco.getCatIds()
-    category_names = [item['name'] for item in coco.loadCats(category_ids)]
-
-    if not settings.toy == 0:
-        images = images[:settings.toy] if len(images) > settings.toy else images
-    print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
-
-    def reader():
-        if mode == 'train' and shuffle:
-            random.shuffle(images)
-        for image in images:
-            image_name = image['file_name']
-            image_path = os.path.join(settings.data_dir, image_name)
-
-            im = Image.open(image_path)
-            if im.mode == 'L':
-                im = im.convert('RGB')
-            im_width, im_height = im.size
-            im_id = image['id']
-
-            # layout: category_id | xmin | ymin | xmax | ymax | iscrowd
-            bbox_labels = []
-            annIds = coco.getAnnIds(imgIds=image['id'])
-            anns = coco.loadAnns(annIds)
-            for ann in anns:
-                bbox_sample = []
-                # start from 1, leave 0 to background
-                bbox_sample.append(float(ann['category_id']))
-                #float(category_ids.index(ann['category_id'])) + 1)
-                bbox = ann['bbox']
-                xmin, ymin, w, h = bbox
-                xmax = xmin + w
-                ymax = ymin + h
-                bbox_sample.append(float(xmin) / im_width)
-                bbox_sample.append(float(ymin) / im_height)
-                bbox_sample.append(float(xmax) / im_width)
-                bbox_sample.append(float(ymax) / im_height)
-                bbox_sample.append(float(ann['iscrowd']))
-                bbox_labels.append(bbox_sample)
-            im, sample_labels = preprocess(im, bbox_labels, mode, settings)
-            sample_labels = np.array(sample_labels)
-            if len(sample_labels) == 0: continue
-            im = im.astype('float32')
-            boxes = sample_labels[:, 1:5]
-            lbls = sample_labels[:, 0].astype('int32')
-            iscrowd = sample_labels[:, -1].astype('int32')
-            if 'cocoMAP' in settings.ap_version:
-                yield im, boxes, lbls, iscrowd, \
-                    [im_id, im_width, im_height]
-            else:
-                yield im, boxes, lbls, iscrowd
-
-    return reader
-
-
-# tangxu @ 2018-05-17
 def put_txt_in_dict(input_txt):
     with open(input_txt, 'r') as f_dir:
         lines_input_txt = f_dir.readlines()
@@ -248,15 +178,16 @@ def put_txt_in_dict(input_txt):
                 x1_min = float(split_str[0])
                 y1_min = float(split_str[1])
                 x2_max = float(split_str[2])
-                y2_max = float(split_str[3])    
-                tmp_line_txt = str(x1_min) + ' ' + str(y1_min) + ' ' + str(x2_max) + ' ' + str(y2_max)
+                y2_max = float(split_str[3])
+                tmp_line_txt = str(x1_min) + ' ' + str(y1_min) + ' ' + str(
+                    x2_max) + ' ' + str(y2_max)
                 dict_input_txt[num_class].append(tmp_line_txt)
             else:
                 dict_input_txt[num_class].append(tmp_line_txt)
 
     return dict_input_txt
 
-# tangxu @ 2018-05-17
+
 def pyramidbox(settings, file_list, mode, shuffle):
 
     dict_input_txt = {}
@@ -281,7 +212,8 @@ def pyramidbox(settings, file_list, mode, shuffle):
                 if index_box >= 2:
                     bbox_sample = []
 
-                    temp_info_box = dict_input_txt[index_image][index_box].split(' ')
+                    temp_info_box = dict_input_txt[index_image][
+                        index_box].split(' ')
                     xmin = float(temp_info_box[0])
                     ymin = float(temp_info_box[1])
                     w = float(temp_info_box[2])
@@ -300,111 +232,17 @@ def pyramidbox(settings, file_list, mode, shuffle):
             if len(sample_labels) == 0: continue
             im = im.astype('float32')
             boxes = sample_labels[:, 0:4]
-            lbls = [1] * len(boxes)  # tangxu  bugs
+            lbls = [1] * len(boxes)
             difficults = [1] * len(boxes)
 
             yield im, boxes, lbls, difficults
 
     return reader
 
-def pascalvoc(settings, file_list, mode, shuffle):
-    flist = open(file_list)
-    images = [line.strip() for line in flist]
-    if not settings.toy == 0:
-        images = images[:settings.toy] if len(images) > settings.toy else images
-    print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
-
-    def reader():
-        if mode == 'train' and shuffle:
-            random.shuffle(images)
-        for image in images:
-            image_path, label_path = image.split()
-            image_path = os.path.join(settings.data_dir, image_path)
-            label_path = os.path.join(settings.data_dir, label_path)
-
-            im = Image.open(image_path)
-            if im.mode == 'L':
-                im = im.convert('RGB')
-            im_width, im_height = im.size
-
-            # layout: label | xmin | ymin | xmax | ymax | difficult
-            bbox_labels = []
-            root = xml.etree.ElementTree.parse(label_path).getroot()
-            for object in root.findall('object'):
-                bbox_sample = []
-                # start from 1
-                bbox_sample.append(
-                    float(settings.label_list.index(object.find('name').text)))
-                bbox = object.find('bndbox')
-                difficult = float(object.find('difficult').text)
-                bbox_sample.append(float(bbox.find('xmin').text) / im_width)
-                bbox_sample.append(float(bbox.find('ymin').text) / im_height)
-                bbox_sample.append(float(bbox.find('xmax').text) / im_width)
-                bbox_sample.append(float(bbox.find('ymax').text) / im_height)
-                bbox_sample.append(difficult)
-                bbox_labels.append(bbox_sample)
-            im, sample_labels = preprocess(im, bbox_labels, mode, settings)
-            sample_labels = np.array(sample_labels)
-            if len(sample_labels) == 0: continue
-            im = im.astype('float32')
-            boxes = sample_labels[:, 1:5]
-            lbls = sample_labels[:, 0].astype('int32')
-            difficults = sample_labels[:, -1].astype('int32')
-            yield im, boxes, lbls, difficults
-
-    return reader
-
 
 def train(settings, file_list, shuffle=True):
-    # file_list = os.path.join(settings.data_dir, file_list)
-    if 'coco' in settings.dataset:
-        train_settings = copy.copy(settings)
-        if '2014' in file_list:
-            sub_dir = "train2014"
-        elif '2017' in file_list:
-            sub_dir = "train2017"
-        train_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        return coco(train_settings, file_list, 'train', shuffle)
-    if 'WIDERFACE' in settings.dataset:
-        return pyramidbox(settings, file_list, 'train', shuffle)
-    else:
-        return pascalvoc(settings, file_list, 'train', shuffle)
+    return pyramidbox(settings, file_list, 'train', shuffle)
 
 
 def test(settings, file_list):
-    # file_list = os.path.join(settings.data_dir, file_list)
-    if 'coco' in settings.dataset:
-        test_settings = copy.copy(settings)
-        if '2014' in file_list:
-            sub_dir = "val2014"
-        elif '2017' in file_list:
-            sub_dir = "val2017"
-        test_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        return coco(test_settings, file_list, 'test', False)
-    if 'WIDERFACE' in settings.dataset:
-        return pyramidbox(settings, file_list, 'test', False)
-    else:
-        return pascalvoc(settings, file_list, 'test', False)
-
-
-def infer(settings, image_path):
-    def reader():
-        img = Image.open(image_path)
-        if img.mode == 'L':
-            img = im.convert('RGB')
-        im_width, im_height = img.size
-        img = img.resize((settings.resize_w, settings.resize_h),
-                         Image.ANTIALIAS)
-        img = np.array(img)
-        # HWC to CHW
-        if len(img.shape) == 3:
-            img = np.swapaxes(img, 1, 2)
-            img = np.swapaxes(img, 1, 0)
-        # RBG to BGR
-        img = img[[2, 1, 0], :, :]
-        img = img.astype('float32')
-        img -= settings.img_mean
-        img = img * 0.007843
-        return img
-
-    return reader
+    return pyramidbox(settings, file_list, 'test', False)
