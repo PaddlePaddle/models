@@ -45,7 +45,7 @@ def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
 
 
 class PyramidBox(object):
-    def __init__(self, data_shape, is_infer=False):
+    def __init__(self, data_shape, is_infer=False, flag_sub_network=False):
         self.data_shape = data_shape
         self.min_sizes = [16., 32., 64., 128., 256., 512.]
         self.steps = [4., 8., 16., 32., 64., 128.]
@@ -54,9 +54,10 @@ class PyramidBox(object):
         # the base network is VGG with atrus layers
         self._input()
         self._vgg()
-        self._low_level_fpn()
-        self._cpm_module()
-        self._pyramidbox()
+        if flag_sub_network:
+            self._low_level_fpn()
+            self._cpm_module()
+            self._pyramidbox()
 
     def _input(self):
         self.image = fluid.layers.data(
@@ -66,6 +67,8 @@ class PyramidBox(object):
                 name='gt_box', shape=[4], dtype='float32', lod_level=1)
             self.gt_label = fluid.layers.data(
                 name='gt_label', shape=[1], dtype='int32', lod_level=1)
+            self.difficult = fluid.layers.data(
+                name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
 
     def _vgg(self):
         self.conv1 = conv_block(self.image, 2, [64] * 2, [3] * 2)
@@ -231,6 +234,36 @@ class PyramidBox(object):
 
         self.prior_boxes = fluid.layers.concat(boxes)
         self.box_vars = fluid.layers.concat(vars)
+
+    def vgg_ssd(self, num_classes, image_shape):  # tangxu
+
+        self.conv3_norm = self._l2_norm_scale(self.conv3)
+        self.conv4_norm = self._l2_norm_scale(self.conv4)
+        self.conv5_norm = self._l2_norm_scale(self.conv5)
+
+        mbox_locs, mbox_confs, box, box_var = fluid.layers.multi_box_head(
+            inputs=[self.conv3_norm, self.conv4_norm, self.conv5_norm, self.conv6, self.conv7, self.conv8],
+            image=self.image,
+            num_classes=num_classes,
+            # min_ratio=20,
+            # max_ratio=90,
+            min_sizes=[16.0, 32.0, 64.0, 128.0, 256.0, 512.0],
+            max_sizes=[[], [], [], [], [], []],
+            # max_sizes=[[], 150.0, 195.0, 240.0, 285.0, 300.0],
+            aspect_ratios=[[1.], [1.], [1.], [1.], [1.], [1.]],
+            steps=[4.0, 8.0, 16.0, 32.0, 64.0, 128.0],
+            base_size=image_shape[2],
+            offset=0.5,
+            flip=False)        
+
+        # locs, confs, box, box_var = vgg_extra_net(num_classes, image, image_shape)
+        # nmsed_out = fluid.layers.detection_output(
+            # locs, confs, box, box_var, nms_threshold=args.nms_threshold)
+        loss = fluid.layers.ssd_loss(mbox_locs, mbox_confs, self.gt_box, self.gt_label, box,
+                                     box_var)
+        loss = fluid.layers.reduce_sum(loss)
+
+        return loss
 
     def train(self):
         face_loss = fluid.layers.ssd_loss(
