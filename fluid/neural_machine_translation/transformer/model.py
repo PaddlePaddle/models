@@ -6,6 +6,8 @@ import paddle.fluid.layers as layers
 
 from config import *
 
+FLAG = False
+
 
 def position_encoding_init(n_position, d_pos_vec):
     """
@@ -121,6 +123,15 @@ def multi_head_attention(queries,
             act="softmax")
         weights = layers.reshape(
             x=weights, shape=product.shape, actual_shape=post_softmax_shape)
+        global FLAG
+        if FLAG:
+            print "hehehehehe"
+            layers.Print(scaled_q)
+            layers.Print(k)
+            layers.Print(v)
+            layers.Print(product)
+            layers.Print(weights)
+            FLAG = False
         if dropout_rate:
             weights = layers.dropout(
                 weights, dropout_prob=dropout_rate, is_test=False)
@@ -133,6 +144,13 @@ def multi_head_attention(queries,
     if cache is not None:  # use cache and concat time steps
         k = cache["k"] = layers.concat([cache["k"], k], axis=1)
         v = cache["v"] = layers.concat([cache["v"], v], axis=1)
+    # global FLAG
+    # if FLAG:
+    #     print "hehehehehe"
+    #     layers.Print(q)
+    #     layers.Print(k)
+    #     layers.Print(v)
+    #     FLAG = False
     q = __split_heads(q, n_head)
     k = __split_heads(k, n_head)
     v = __split_heads(v, n_head)
@@ -147,6 +165,11 @@ def multi_head_attention(queries,
                          param_attr=fluid.initializer.Xavier(uniform=False),
                          bias_attr=False,
                          num_flatten_dims=2)
+    # global FLAG
+    # if FLAG:
+    #     print "hehehehehe"
+    #     layers.Print(proj_out)
+    #     FLAG = False
     return proj_out
 
 
@@ -377,6 +400,9 @@ def decoder(dec_input,
     The decoder is composed of a stack of identical decoder_layer layers.
     """
     for i in range(n_layer):
+        if i == 0:  #n_layer-1:
+            global FLAG
+            FLAG = True
         dec_output = decoder_layer(
             dec_input, enc_output, dec_slf_attn_bias, dec_enc_attn_bias, n_head,
             d_key, d_value, d_model, d_inner_hid, dropout_rate,
@@ -572,7 +598,7 @@ def wrap_decoder(trg_vocab_size,
                     bias_attr=False,
                     num_flatten_dims=2),
         shape=[-1, trg_vocab_size],
-        act="softmax" if dec_inputs is None else None)
+        act="softmax")  # if dec_inputs is None else None)
     return predict
 
 
@@ -645,7 +671,8 @@ def fast_decode(
                 "v": layers.sequence_expand(
                     x=cache["v"], y=pre_scores),
             } for cache in caches]
-            layers.Print(pre_ids)
+            # layers.Print(pre_ids)
+            # layers.Print(pre_pos)
             # layers.Print(pre_enc_output)
             # layers.Print(pre_src_attn_bias)
             # layers.Print(pre_caches[0]["k"])
@@ -667,9 +694,13 @@ def fast_decode(
                     src_attn_pre_softmax_shape, src_attn_post_softmax_shape),
                 enc_output=pre_enc_output,
                 caches=pre_caches)
+            layers.Print(logits)
             topk_scores, topk_indices = layers.topk(logits, k=beam_size)
+            # layers.Print(topk_scores)
+            # layers.Print(topk_indices)
             accu_scores = layers.elementwise_add(
-                x=layers.log(x=layers.softmax(topk_scores)),
+                # x=layers.log(x=layers.softmax(topk_scores)),
+                x=layers.log(topk_scores),
                 y=layers.reshape(
                     pre_scores, shape=[-1]),
                 axis=0)
@@ -690,8 +721,13 @@ def fast_decode(
             for i in range(n_layer):
                 layers.assign(pre_caches[i]["k"], caches[i]["k"])
                 layers.assign(pre_caches[i]["v"], caches[i]["v"])
+            layers.Print(selected_ids)
+            layers.Print(selected_scores)
+            # layers.Print(caches[-1]["k"])
             layers.assign(
-                slf_attn_pre_softmax_shape + attn_pre_softmax_shape_delta,
+                layers.elementwise_add(
+                    x=slf_attn_pre_softmax_shape,
+                    y=attn_pre_softmax_shape_delta),
                 slf_attn_pre_softmax_shape)
             layers.assign(
                 layers.elementwise_add(
@@ -703,7 +739,8 @@ def fast_decode(
             all_finish_cond = layers.less_than(x=step_idx, y=max_len)
             layers.logical_or(x=max_len_cond, y=all_finish_cond, out=cond)
 
-        finished_ids, finished_scores = layers.beam_search_decode(ids, scores)
+        finished_ids, finished_scores = layers.beam_search_decode(ids, scores,
+                                                                  eos_idx)
         return finished_ids, finished_scores
 
     finished_ids, finished_scores = beam_search()

@@ -255,6 +255,8 @@ def translate_batch(exe,
         predict_all = exe.run(decoder,
                               feed=dict(zip(dec_in_names, dec_in_data)),
                               fetch_list=dec_out_names)[0]
+        print predict_all.reshape(
+            [len(beam_inst_map) * beam_size, i + 1, -1])[:, -1, :]
         predict_all = np.log(
             predict_all.reshape([len(beam_inst_map) * beam_size, i + 1, -1])
             [:, -1, :])
@@ -273,11 +275,19 @@ def translate_batch(exe,
             top_k_indice = np.argpartition(predict, -beam_size)[-beam_size:]
             top_scores_ids = top_k_indice[np.argsort(predict[top_k_indice])[::
                                                                             -1]]
+            top_scores_ids = np.asarray(
+                sorted(
+                    top_scores_ids,
+                    lambda x, y: x / predict_all.shape[-1] - y / predict_all.shape[-1]
+                ))  # sort by pre_branch and score to compare with fast_infer
             top_scores = predict[top_scores_ids]
             scores[beam_idx] = top_scores
             prev_branchs[beam_idx].append(top_scores_ids /
                                           predict_all.shape[-1])
             next_ids[beam_idx].append(top_scores_ids % predict_all.shape[-1])
+            print prev_branchs[beam_idx][-1]
+            print next_ids[beam_idx][-1]
+            print top_scores
             if next_ids[beam_idx][-1][0] != eos_idx:
                 active_beams.append(beam_idx)
         if len(active_beams) == 0:
@@ -342,10 +352,8 @@ def infer(args):
     fluid.io.load_vars(exe, InferTaskConfig.model_path, vars=decoder_params)
 
     # This is used here to set dropout to the test mode.
-    encoder_program = fluid.io.get_inference_program(
-        target_vars=[enc_output], main_program=encoder_program)
-    decoder_program = fluid.io.get_inference_program(
-        target_vars=[predict], main_program=decoder_program)
+    encoder_program = encoder_program.inference_optimize()
+    decoder_program = decoder_program.inference_optimize()
 
     test_data = reader.DataReader(
         src_vocab_fpath=args.src_vocab_fpath,
@@ -543,8 +551,10 @@ def fast_infer(args):
                     for idx in np.array(seq_ids)[sub_start:sub_end]
                 ]))
             print hyps[i]
+            print len(hyps[i]), [len(hyp.split()) for hyp in hyps[i]]
 
 
 if __name__ == "__main__":
     args = parse_args()
     fast_infer(args)
+    # infer(args)
