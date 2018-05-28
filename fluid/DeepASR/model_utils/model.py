@@ -44,14 +44,6 @@ def stacked_lstmp_model(frame_dim,
         pool1 = fluid.layers.pool2d(
             conv1, pool_size=3, pool_type="max", pool_stride=2, pool_padding=0)
 
-        #bn1 = fluid.layers.batch_norm(
-        #    input=pool1,
-        #    act="sigmoid",
-        #    is_test=not is_train,
-        #    momentum=0.9,
-        #    epsilon=1e-05,
-        #    data_layout='NCHW')
-
         stack_input = pool1
         for i in range(stacked_num):
             fc = fluid.layers.fc(input=stack_input,
@@ -68,7 +60,6 @@ def stacked_lstmp_model(frame_dim,
                 proj_activation="tanh")
             bn = fluid.layers.batch_norm(
                 input=proj,
-                #act="linear",
                 is_test=not is_train,
                 momentum=0.9,
                 epsilon=1e-05,
