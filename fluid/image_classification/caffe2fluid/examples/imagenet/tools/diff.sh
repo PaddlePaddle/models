@@ -47,7 +47,11 @@ mv results.paddle $paddle_results
 caffe_results="$results_root/${model_name}.caffe"
 rm -rf $caffe_results
 rm -rf "results.caffe"
-cfpython ./infer.py caffe $model_prototxt $model_caffemodel $paddle_results/data.npy
+PYTHON=`which cfpython`
+if [[ -z $PYTHON ]];then
+    PYTHON=`which python`
+fi
+$PYTHON ./infer.py caffe $model_prototxt $model_caffemodel $paddle_results/data.npy
 if [[ $? -ne 0 ]] || [[ ! -e "results.caffe" ]];then
     echo "not found caffe's results, maybe failed to do inference with caffe"
     exit 1
@@ -60,5 +64,5 @@ cat $model_prototxt | grep name | perl -ne 'if(/^\s*name:\s+\"([^\"]+)/){ print 
 #4, compare one by one
 for i in $(cat ".layer_names" | tail -n1);do
     echo "process $i"
-    python compare.py $caffe_results/${i}.npy $paddle_results/${i}.npy
+    $PYTHON compare.py $caffe_results/${i}.npy $paddle_results/${i}.npy
 done

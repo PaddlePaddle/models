@@ -318,7 +318,9 @@ class ParameterNamer(object):
                 if len(node.data) == 4:
                     names += ('scale', 'offset')
             elif node.kind == NodeKind.Scale:
-                names = ('scale', 'offset')
+                names = ('scale', )
+                if getattr(node.parameters, 'bias_term', False):
+                    names = ('scale', 'offset')
             else:
                 warn('Unhandled parameters when naming this it[%s]' %
                      (node.kind))
