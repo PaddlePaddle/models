@@ -32,25 +32,31 @@ def stacked_lstmp_model(frame_dim,
 
     # network configuration
     def _net_conf(feature, label):
-        seq_conv1 = fluid.layers.sequence_conv(
+        conv1 = fluid.layers.conv2d(
             input=feature,
-            num_filters=1024,
+            num_filters=32,
             filter_size=3,
-            filter_stride=1,
-            bias_attr=True)
-        bn1 = fluid.layers.batch_norm(
-            input=seq_conv1,
-            act="sigmoid",
-            is_test=not is_train,
-            momentum=0.9,
-            epsilon=1e-05,
-            data_layout='NCHW')
+            stride=1,
+            padding=1,
+            bias_attr=True,
+            act="relu")
 
-        stack_input = bn1
+        pool1 = fluid.layers.pool2d(
+            conv1, pool_size=3, pool_type="max", pool_stride=2, pool_padding=0)
+
+        #bn1 = fluid.layers.batch_norm(
+        #    input=pool1,
+        #    act="sigmoid",
+        #    is_test=not is_train,
+        #    momentum=0.9,
+        #    epsilon=1e-05,
+        #    data_layout='NCHW')
+
+        stack_input = pool1
         for i in range(stacked_num):
             fc = fluid.layers.fc(input=stack_input,
                                  size=hidden_dim * 4,
-                                 bias_attr=True)
+                                 bias_attr=None)
             proj, cell = fluid.layers.dynamic_lstmp(
                 input=fc,
                 size=hidden_dim * 4,
@@ -62,7 +68,7 @@ def stacked_lstmp_model(frame_dim,
                 proj_activation="tanh")
             bn = fluid.layers.batch_norm(
                 input=proj,
-                act="sigmoid",
+                #act="linear",
                 is_test=not is_train,
                 momentum=0.9,
                 epsilon=1e-05,
@@ -80,7 +86,10 @@ def stacked_lstmp_model(frame_dim,
 
     # data feeder
     feature = fluid.layers.data(
-        name="feature", shape=[-1, frame_dim], dtype="float32", lod_level=1)
+        name="feature",
+        shape=[-1, 3, 11, frame_dim],
+        dtype="float32",
+        lod_level=1)
     label = fluid.layers.data(
         name="label", shape=[-1, 1], dtype="int64", lod_level=1)
 

@@ -12,6 +12,7 @@ import paddle.fluid as fluid
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
+import data_utils.augmentor.trans_delay as trans_delay
 import data_utils.async_data_reader as reader
 from decoder.post_decode_faster import Decoder
 from data_utils.util import lodtensor_to_ndarray
@@ -35,7 +36,7 @@ def parse_args():
     parser.add_argument(
         '--frame_dim',
         type=int,
-        default=120 * 11,
+        default=80,
         help='Frame dimension of feature data. (default: %(default)d)')
     parser.add_argument(
         '--stacked_num',
@@ -155,7 +156,7 @@ def infer_from_ckpt(args):
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
         trans_mean_variance_norm.TransMeanVarianceNorm(args.mean_var),
-        trans_splice.TransSplice()
+        trans_splice.TransSplice(), trans_delay.TransDelay(5)
     ]
 
     feature_t = fluid.LoDTensor()

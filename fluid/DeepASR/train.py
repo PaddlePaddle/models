@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument(
         '--frame_dim',
         type=int,
-        default=120 * 11,
+        default=80,
         help='Frame dimension of feature data. (default: %(default)d)')
     parser.add_argument(
         '--stacked_num',
@@ -54,7 +54,7 @@ def parse_args():
     parser.add_argument(
         '--class_num',
         type=int,
-        default=1749,
+        default=3040,
         help='Number of classes in label. (default: %(default)d)')
     parser.add_argument(
         '--pass_num',
@@ -158,6 +158,7 @@ def train(args):
     # program for test
     test_program = fluid.default_main_program().clone()
 
+    #optimizer = fluid.optimizer.Momentum(learning_rate=args.learning_rate, momentum=0.9)
     optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
     optimizer.minimize(avg_cost)
 
@@ -172,7 +173,7 @@ def train(args):
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
         trans_mean_variance_norm.TransMeanVarianceNorm(args.mean_var),
-        trans_splice.TransSplice(), trans_delay.TransDelay(5)
+        trans_splice.TransSplice(5, 5), trans_delay.TransDelay(5)
     ]
 
     feature_t = fluid.LoDTensor()
@@ -221,6 +222,8 @@ def train(args):
                                                  args.minimum_batch_size)):
             # load_data
             (features, labels, lod, name_lst) = batch_data
+            features = np.reshape(features, (-1, 11, 3, args.frame_dim))
+            features = np.transpose(features, (0, 2, 1, 3))
             feature_t.set(features, place)
             feature_t.set_lod([lod])
             label_t.set(labels, place)
