@@ -27,12 +27,7 @@ def conv_bn(input,
         bias_attr=False)
     parameter_attr = ParamAttr(learning_rate=0.1, initializer=MSRA())
     bias_attr = ParamAttr(learning_rate=0.2)
-    return fluid.layers.batch_norm(
-        input=conv,
-        act=act,
-        epsilon=0.00001,
-        param_attr=parameter_attr,
-        bias_attr=bias_attr)
+    return fluid.layers.batch_norm(input=conv, act=act)
 
 
 def depthwise_separable(input, num_filters1, num_filters2, num_groups, stride,
@@ -76,7 +71,7 @@ def extra_block(input, num_filters1, num_filters2, num_groups, stride, scale):
     return normal_conv
 
 
-def mobile_net(img, img_shape, scale=1.0):
+def mobile_net(num_classes, img, img_shape, scale=1.0):
     # 300x300
     tmp = conv_bn(img, 3, int(32 * scale), 2, 1, 3)
     # 150x150
@@ -104,10 +99,11 @@ def mobile_net(img, img_shape, scale=1.0):
     module16 = extra_block(module15, 128, 256, 1, 2, scale)
     # 2x2
     module17 = extra_block(module16, 64, 128, 1, 2, scale)
+
     mbox_locs, mbox_confs, box, box_var = fluid.layers.multi_box_head(
         inputs=[module11, module13, module14, module15, module16, module17],
         image=img,
-        num_classes=21,
+        num_classes=num_classes,
         min_ratio=20,
         max_ratio=90,
         min_sizes=[60.0, 105.0, 150.0, 195.0, 240.0, 285.0],

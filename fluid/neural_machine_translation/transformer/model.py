@@ -4,11 +4,7 @@ import numpy as np
 import paddle.fluid as fluid
 import paddle.fluid.layers as layers
 
-from config import TrainTaskConfig, pos_enc_param_names, \
-    encoder_input_data_names, decoder_input_data_names, label_data_names
-
-# FIXME(guosheng): Remove out the batch_size from the model.
-batch_size = TrainTaskConfig.batch_size
+from config import *
 
 
 def position_encoding_init(n_position, d_pos_vec):
@@ -85,9 +81,10 @@ def multi_head_attention(queries,
             return x
 
         hidden_size = x.shape[-1]
-        # FIXME(guosheng): Decouple the program desc with batch_size.
+        # The value 0 in shape attr means copying the corresponding dimension
+        # size of the input as the output dimension size.
         reshaped = layers.reshape(
-            x=x, shape=[batch_size, -1, n_head, hidden_size // n_head])
+            x=x, shape=[0, -1, n_head, hidden_size // n_head])
 
         # permuate the dimensions into:
         # [batch_size, n_head, max_sequence_len, hidden_size_per_head]
@@ -103,11 +100,11 @@ def multi_head_attention(queries,
             raise ValueError("Input(x) should be a 4-D Tensor.")
 
         trans_x = layers.transpose(x, perm=[0, 2, 1, 3])
-        # FIXME(guosheng): Decouple the program desc with batch_size.
+        # The value 0 in shape attr means copying the corresponding dimension
+        # size of the input as the output dimension size.
         return layers.reshape(
             x=trans_x,
-            shape=map(int,
-                      [batch_size, -1, trans_x.shape[2] * trans_x.shape[3]]))
+            shape=map(int, [0, -1, trans_x.shape[2] * trans_x.shape[3]]))
 
     def scaled_dot_product_attention(q, k, v, attn_bias, d_model, dropout_rate):
         """
@@ -173,7 +170,6 @@ def pre_post_process_layer(prev_out, out, process_cmd, dropout_rate=0.):
     """
     Add residual connection, layer normalization and droput to the out tensor
     optionally according to the value of process_cmd.
-
     This will be used before or after multi-head attention and position-wise
     feed-forward networks.
     """
@@ -201,32 +197,29 @@ def prepare_encoder(src_word,
                     src_pos,
                     src_vocab_size,
                     src_emb_dim,
-                    src_pad_idx,
                     src_max_len,
                     dropout_rate=0.,
-                    pos_pad_idx=0,
+                    src_data_shape=None,
                     pos_enc_param_name=None):
     """Add word embeddings and position encodings.
     The output tensor has a shape of:
     [batch_size, max_src_length_in_batch, d_model].
-
     This module is used at the bottom of the encoder stacks.
     """
     src_word_emb = layers.embedding(
         src_word,
         size=[src_vocab_size, src_emb_dim],
-        padding_idx=src_pad_idx,
         param_attr=fluid.initializer.Normal(0., 1.))
     src_pos_enc = layers.embedding(
         src_pos,
         size=[src_max_len, src_emb_dim],
-        padding_idx=pos_pad_idx,
         param_attr=fluid.ParamAttr(
             name=pos_enc_param_name, trainable=False))
     enc_input = src_word_emb + src_pos_enc
-
-    # FIXME(guosheng): Decouple the program desc with batch_size.
-    enc_input = layers.reshape(x=enc_input, shape=[batch_size, -1, src_emb_dim])
+    enc_input = layers.reshape(
+        x=enc_input,
+        shape=[-1, src_max_len, src_emb_dim],
+        actual_shape=src_data_shape)
     return layers.dropout(
         enc_input, dropout_prob=dropout_rate,
         is_test=False) if dropout_rate else enc_input
@@ -249,7 +242,6 @@ def encoder_layer(enc_input,
                   pre_softmax_shape=None,
                   post_softmax_shape=None):
     """The encoder layers that can be stacked to form a deep encoder.
-
     This module consits of a multi-head (self) attention followed by
     position-wise feed-forward networks and both the two components companied
     with the post_process_layer to add residual connection, layer normalization
@@ -310,7 +302,6 @@ def decoder_layer(dec_input,
                   src_attn_pre_softmax_shape=None,
                   src_attn_post_softmax_shape=None):
     """ The layer to be stacked in decoder part.
-
     The structure of this module is similar to that in the encoder part except
     a multi-head attention is added to implement encoder-decoder attention.
     """
@@ -398,89 +389,19 @@ def decoder(dec_input,
     return dec_output
 
 
-def make_inputs(input_data_names,
-                n_head,
-                d_model,
-                batch_size,
-                max_length,
-                is_pos,
-                slf_attn_bias_flag,
-                src_attn_bias_flag,
-                enc_output_flag=False,
-                slf_attn_shape_flag=True,
-                src_attn_shape_flag=True):
+def make_all_inputs(input_fields):
     """
     Define the input data layers for the transformer model.
     """
-    input_layers = []
-    # The shapes here act as placeholder.
-    # The shapes set here is to pass the infer-shape in compile time.
-    word = layers.data(
-        name=input_data_names[len(input_layers)],
-        shape=[batch_size * max_length, 1],
-        dtype="int64",
-        append_batch_size=False)
-    input_layers += [word]
-    # This is used for position data or label weight.
-    pos = layers.data(
-        name=input_data_names[len(input_layers)],
-        shape=[batch_size * max_length, 1],
-        dtype="int64" if is_pos else "float32",
-        append_batch_size=False)
-    input_layers += [pos]
-    if slf_attn_bias_flag:
-        # This input is used to remove attention weights on paddings for the
-        # encoder and to remove attention weights on subsequent words for the
-        # decoder.
-        slf_attn_bias = layers.data(
-            name=input_data_names[len(input_layers)],
-            shape=[batch_size, n_head, max_length, max_length],
-            dtype="float32",
+    inputs = []
+    for input_field in input_fields:
+        input_var = layers.data(
+            name=input_field,
+            shape=input_descs[input_field][0],
+            dtype=input_descs[input_field][1],
             append_batch_size=False)
-        input_layers += [slf_attn_bias]
-    if src_attn_bias_flag:
-        # This input is used to remove attention weights on paddings.
-        src_attn_bias = layers.data(
-            name=input_data_names[len(input_layers)],
-            shape=[batch_size, n_head, max_length, max_length],
-            dtype="float32",
-            append_batch_size=False)
-        input_layers += [src_attn_bias]
-    if slf_attn_shape_flag:
-        slf_attn_pre_softmax_shape = layers.data(
-            name=input_data_names[len(input_layers)],
-            shape=[3],
-            dtype="int32",
-            append_batch_size=False)
-        input_layers += [slf_attn_pre_softmax_shape]
-        slf_attn_post_softmax_shape = layers.data(
-            name=input_data_names[len(input_layers)],
-            shape=[3],
-            dtype="int32",
-            append_batch_size=False)
-        input_layers += [slf_attn_post_softmax_shape]
-    if src_attn_shape_flag:
-        src_attn_pre_softmax_shape = layers.data(
-            name=input_data_names[len(input_layers)],
-            shape=[3],
-            dtype="int32",
-            append_batch_size=False)
-        input_layers += [src_attn_pre_softmax_shape]
-        src_attn_post_softmax_shape = layers.data(
-            name=input_data_names[len(input_layers)],
-            shape=[3],
-            dtype="int32",
-            append_batch_size=False)
-        input_layers += [src_attn_post_softmax_shape]
-    if enc_output_flag:
-        enc_output = layers.data(
-            name=input_data_names[len(input_layers)],
-            shape=[batch_size, max_length, d_model],
-            dtype="float32",
-            append_batch_size=False)
-        input_layers += [enc_output]
-
-    return input_layers
+        inputs.append(input_var)
+    return inputs
 
 
 def transformer(
@@ -494,21 +415,9 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
-        src_pad_idx,
-        trg_pad_idx,
-        pos_pad_idx, ):
-    enc_input_layers = make_inputs(
-        encoder_input_data_names,
-        n_head,
-        d_model,
-        batch_size,
-        max_length,
-        is_pos=True,
-        slf_attn_bias_flag=True,
-        src_attn_bias_flag=False,
-        enc_output_flag=False,
-        slf_attn_shape_flag=True,
-        src_attn_shape_flag=False)
+        label_smooth_eps, ):
+    enc_inputs = make_all_inputs(encoder_data_input_fields +
+                                 encoder_util_input_fields)
 
     enc_output = wrap_encoder(
         src_vocab_size,
@@ -520,22 +429,10 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
-        src_pad_idx,
-        pos_pad_idx,
-        enc_input_layers, )
+        enc_inputs, )
 
-    dec_input_layers = make_inputs(
-        decoder_input_data_names,
-        n_head,
-        d_model,
-        batch_size,
-        max_length,
-        is_pos=True,
-        slf_attn_bias_flag=True,
-        src_attn_bias_flag=True,
-        enc_output_flag=False,
-        slf_attn_shape_flag=True,
-        src_attn_shape_flag=True)
+    dec_inputs = make_all_inputs(decoder_data_input_fields[:-1] +
+                                 decoder_util_input_fields)
 
     predict = wrap_decoder(
         trg_vocab_size,
@@ -547,31 +444,27 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
-        trg_pad_idx,
-        pos_pad_idx,
-        dec_input_layers,
+        dec_inputs,
         enc_output, )
 
     # Padding index do not contribute to the total loss. The weights is used to
     # cancel padding index in calculating the loss.
-    gold, weights = make_inputs(
-        label_data_names,
-        n_head,
-        d_model,
-        batch_size,
-        max_length,
-        is_pos=False,
-        slf_attn_bias_flag=False,
-        src_attn_bias_flag=False,
-        enc_output_flag=False,
-        slf_attn_shape_flag=False,
-        src_attn_shape_flag=False)
-    cost = layers.softmax_with_cross_entropy(logits=predict, label=gold)
+    label, weights = make_all_inputs(label_data_input_fields)
+    if label_smooth_eps:
+        label = layers.label_smooth(
+            label=layers.one_hot(
+                input=label, depth=trg_vocab_size),
+            epsilon=label_smooth_eps)
+    cost = layers.softmax_with_cross_entropy(
+        logits=predict,
+        label=label,
+        soft_label=True if label_smooth_eps else False)
+    # cost = layers.softmax_with_cross_entropy(logits=predict, label=gold)
     weighted_cost = cost * weights
     sum_cost = layers.reduce_sum(weighted_cost)
     token_num = layers.reduce_sum(weights)
     avg_cost = sum_cost / token_num
-    return sum_cost, avg_cost, predict
+    return sum_cost, avg_cost, predict, token_num
 
 
 def wrap_encoder(src_vocab_size,
@@ -583,38 +476,28 @@ def wrap_encoder(src_vocab_size,
                  d_model,
                  d_inner_hid,
                  dropout_rate,
-                 src_pad_idx,
-                 pos_pad_idx,
-                 enc_input_layers=None):
+                 enc_inputs=None):
     """
     The wrapper assembles together all needed layers for the encoder.
     """
-    if enc_input_layers is None:
+    if enc_inputs is None:
         # This is used to implement independent encoder program in inference.
-        src_word, src_pos, src_slf_attn_bias, slf_attn_pre_softmax_shape, \
-            slf_attn_post_softmax_shape = make_inputs(
-                encoder_input_data_names,
-                n_head,
-                d_model,
-                batch_size,
-                max_length,
-                is_pos=True,
-                slf_attn_bias_flag=True,
-                src_attn_bias_flag=False,
-                enc_output_flag=False,
-                slf_attn_shape_flag=True,
-                src_attn_shape_flag=False)
+        src_word, src_pos, src_slf_attn_bias, src_data_shape, \
+            slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape = \
+            make_all_inputs(encoder_data_input_fields +
+                                 encoder_util_input_fields)
     else:
-        src_word, src_pos, src_slf_attn_bias, slf_attn_pre_softmax_shape, \
-            slf_attn_post_softmax_shape = enc_input_layers
+        src_word, src_pos, src_slf_attn_bias, src_data_shape, \
+            slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape = \
+            enc_inputs
     enc_input = prepare_encoder(
         src_word,
         src_pos,
         src_vocab_size,
         d_model,
-        src_pad_idx,
         max_length,
-        dropout_rate, )
+        dropout_rate,
+        src_data_shape, )
     enc_output = encoder(
         enc_input,
         src_slf_attn_bias,
@@ -639,44 +522,32 @@ def wrap_decoder(trg_vocab_size,
                  d_model,
                  d_inner_hid,
                  dropout_rate,
-                 trg_pad_idx,
-                 pos_pad_idx,
-                 dec_input_layers=None,
+                 dec_inputs=None,
                  enc_output=None):
     """
     The wrapper assembles together all needed layers for the decoder.
     """
-    if dec_input_layers is None:
+    if dec_inputs is None:
         # This is used to implement independent decoder program in inference.
         trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, \
-            slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape, \
-            src_attn_pre_softmax_shape, src_attn_post_softmax_shape, \
-            enc_output = make_inputs(
-                decoder_input_data_names,
-                n_head,
-                d_model,
-                batch_size,
-                max_length,
-                is_pos=True,
-                slf_attn_bias_flag=True,
-                src_attn_bias_flag=True,
-                enc_output_flag=True,
-                slf_attn_shape_flag=True,
-                src_attn_shape_flag=True)
+            enc_output, trg_data_shape, slf_attn_pre_softmax_shape, \
+            slf_attn_post_softmax_shape, src_attn_pre_softmax_shape, \
+            src_attn_post_softmax_shape = make_all_inputs(
+            decoder_data_input_fields + decoder_util_input_fields)
     else:
         trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, \
-            slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape, \
-            src_attn_pre_softmax_shape, src_attn_post_softmax_shape = \
-                dec_input_layers
+            trg_data_shape, slf_attn_pre_softmax_shape, \
+            slf_attn_post_softmax_shape, src_attn_pre_softmax_shape, \
+            src_attn_post_softmax_shape = dec_inputs
 
     dec_input = prepare_decoder(
         trg_word,
         trg_pos,
         trg_vocab_size,
         d_model,
-        trg_pad_idx,
         max_length,
-        dropout_rate, )
+        dropout_rate,
+        trg_data_shape, )
     dec_output = decoder(
         dec_input,
         enc_output,
@@ -700,5 +571,5 @@ def wrap_decoder(trg_vocab_size,
                     bias_attr=False,
                     num_flatten_dims=2),
         shape=[-1, trg_vocab_size],
-        act="softmax" if dec_input_layers is None else None)
+        act="softmax" if dec_inputs is None else None)
     return predict

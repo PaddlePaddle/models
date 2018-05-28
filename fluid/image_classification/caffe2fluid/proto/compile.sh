@@ -11,13 +11,9 @@ if [[ -z $PROTOC ]];then
 fi
 
 WORK_ROOT=$(dirname `readlink -f "$BASH_SOURCE[0]"`)
-PY_NAME="$WORK_ROOT/caffepb.py"
+PY_NAME="$WORK_ROOT/caffe_pb2.py"
 $PROTOC --proto_path=$WORK_ROOT --python_out=$WORK_ROOT $WORK_ROOT/caffe.proto
 ret=$?
-
-if [ $ret -eq 0 ];then
-    mv $WORK_ROOT/caffe_pb2.py $PY_NAME
-fi
 
 if [ -e "$PY_NAME" ];then
     echo "succeed to generate [$PY_NAME]"

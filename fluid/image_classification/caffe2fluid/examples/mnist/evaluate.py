@@ -7,8 +7,8 @@
 import sys
 import os
 import numpy as np
+import paddle.fluid as fluid
 import paddle.v2 as paddle
-import paddle.v2.fluid as fluid
 
 
 def test_model(exe, test_program, fetch_list, test_reader, feeder):
@@ -34,9 +34,6 @@ def evaluate(net_file, model_file):
 
     from lenet import LeNet as MyNet
 
-    with_gpu = False
-    paddle.init(use_gpu=with_gpu)
-
     #1, define network topology
     images = fluid.layers.data(name='image', shape=[1, 28, 28], dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
@@ -45,7 +42,7 @@ def evaluate(net_file, model_file):
     prediction = net.layers['prob']
     acc = fluid.layers.accuracy(input=prediction, label=label)
 
-    place = fluid.CUDAPlace(0) if with_gpu is True else fluid.CPUPlace()
+    place = fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 

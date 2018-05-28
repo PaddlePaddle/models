@@ -19,6 +19,7 @@ def conv_bn_pool(input,
             param_attr=param if param_0 is None else param_0,
             act=None,  # LinearActivation
             use_cudnn=True)
+        #tmp = fluid.layers.Print(tmp)
         tmp = fluid.layers.batch_norm(
             input=tmp,
             act=act,
@@ -139,65 +140,30 @@ def encoder_net(images,
 
 
 def ctc_train_net(images, label, args, num_classes):
-    regularizer = fluid.regularizer.L2Decay(args.l2)
-    gradient_clip = None
-    if args.parallel:
-        places = fluid.layers.get_places()
-        pd = fluid.layers.ParallelDo(places)
-        with pd.do():
-            images_ = pd.read_input(images)
-            label_ = pd.read_input(label)
+    L2_RATE = 0.0004
+    LR = 1.0e-3
+    MOMENTUM = 0.9
+    regularizer = fluid.regularizer.L2Decay(L2_RATE)
 
-            fc_out = encoder_net(
-                images_,
-                num_classes,
-                regularizer=regularizer,
-                gradient_clip=gradient_clip)
-
-            cost = fluid.layers.warpctc(
-                input=fc_out,
-                label=label_,
-                blank=num_classes,
-                norm_by_times=True)
-            sum_cost = fluid.layers.reduce_sum(cost)
-
-            decoded_out = fluid.layers.ctc_greedy_decoder(
-                input=fc_out, blank=num_classes)
-
-            pd.write_output(sum_cost)
-            pd.write_output(decoded_out)
-
-        sum_cost, decoded_out = pd()
-        sum_cost = fluid.layers.reduce_sum(sum_cost)
-
-    else:
-        fc_out = encoder_net(
-            images,
-            num_classes,
-            regularizer=regularizer,
-            gradient_clip=gradient_clip)
-
-        cost = fluid.layers.warpctc(
-            input=fc_out, label=label, blank=num_classes, norm_by_times=True)
-        sum_cost = fluid.layers.reduce_sum(cost)
-        decoded_out = fluid.layers.ctc_greedy_decoder(
-            input=fc_out, blank=num_classes)
-
+    fc_out = encoder_net(images, num_classes, regularizer=regularizer)
+    cost = fluid.layers.warpctc(
+        input=fc_out, label=label, blank=num_classes, norm_by_times=True)
+    sum_cost = fluid.layers.reduce_sum(cost)
+    decoded_out = fluid.layers.ctc_greedy_decoder(
+        input=fc_out, blank=num_classes)
     casted_label = fluid.layers.cast(x=label, dtype='int64')
     error_evaluator = fluid.evaluator.EditDistance(
         input=decoded_out, label=casted_label)
-
     inference_program = fluid.default_main_program().clone(for_test=True)
-
-    optimizer = fluid.optimizer.Momentum(
-        learning_rate=args.learning_rate, momentum=args.momentum)
+    optimizer = fluid.optimizer.Momentum(learning_rate=LR, momentum=MOMENTUM)
     _, params_grads = optimizer.minimize(sum_cost)
-    model_average = fluid.optimizer.ModelAverage(
-        params_grads,
-        args.average_window,
-        min_average_window=args.min_average_window,
-        max_average_window=args.max_average_window)
-
+    model_average = None
+    if args.average_window > 0:
+        model_average = fluid.optimizer.ModelAverage(
+            args.average_window,
+            params_grads,
+            min_average_window=args.min_average_window,
+            max_average_window=args.max_average_window)
     return sum_cost, error_evaluator, inference_program, model_average
 
 
