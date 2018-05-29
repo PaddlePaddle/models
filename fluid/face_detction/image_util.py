@@ -75,11 +75,8 @@ def satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
     if sampler.min_jaccard_overlap == 0 and sampler.max_jaccard_overlap == 0:
         return True
     for i in range(len(bbox_labels)):
-        object_bbox = bbox(
-            bbox_labels[i][0],
-            bbox_labels[i][1],  # tangxu @ 2018-05-17
-            bbox_labels[i][2],
-            bbox_labels[i][3])
+        object_bbox = bbox(bbox_labels[i][0], bbox_labels[i][1],
+                           bbox_labels[i][2], bbox_labels[i][3])
         overlap = jaccard_overlap(sample_bbox, object_bbox)
         if sampler.min_jaccard_overlap != 0 and \
                 overlap < sampler.min_jaccard_overlap:

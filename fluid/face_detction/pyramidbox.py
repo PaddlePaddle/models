@@ -240,8 +240,7 @@ class PyramidBox(object):
         self.prior_boxes = fluid.layers.concat(boxes)
         self.box_vars = fluid.layers.concat(vars)
 
-    def vgg_ssd(self, num_classes, image_shape):  # tangxu
-
+    def vgg_ssd(self, num_classes, image_shape):
         self.conv3_norm = self._l2_norm_scale(self.conv3)
         self.conv4_norm = self._l2_norm_scale(self.conv4)
         self.conv5_norm = self._l2_norm_scale(self.conv5)
