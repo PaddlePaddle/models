@@ -82,8 +82,7 @@ class PyramidBox(object):
         self.conv5 = conv_block(self.conv4, 3, [512] * 3, [3] * 3)
 
         # fc6 and fc7 in paper, priorbox min_size is 128
-        self.conv6 = conv_block(
-            self.conv5, 2, [1024, 1024], [3, 1], with_pool=False)
+        self.conv6 = conv_block(self.conv5, 2, [1024, 1024], [3, 1])
         # conv6_1 and conv6_2 in paper, priorbox min_size is 256
         self.conv7 = conv_block(
             self.conv6, 2, [256, 512], [1, 3], [1, 2], with_pool=False)
@@ -101,9 +100,15 @@ class PyramidBox(object):
             b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
             conv1 = fluid.layers.conv2d(
                 up_from, ch, 1, act='relu', bias_attr=b_attr)
-            # TODO: add group
             conv_trans = fluid.layers.conv2d_transpose(
-                conv1, ch, None, 4, 1, 2, bias_attr=False)
+                conv1,
+                ch,
+                output_size=None,
+                filter_size=4,
+                padding=1,
+                stride=2,
+                groups=ch,
+                bias_attr=False)
             b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
             conv2 = fluid.layers.conv2d(
                 up_to, ch, 1, act='relu', bias_attr=b_attr)
@@ -275,7 +280,10 @@ class PyramidBox(object):
         head_loss = fluid.layers.ssd_loss(
             self.head_mbox_loc, self.head_mbox_conf, self.gt_box, self.gt_label,
             self.prior_boxes, self.box_vars)
-        return face_loss, head_loss
+        face_loss = fluid.layers.reduce_sum(face_loss)
+        head_loss = fluid.layers.reduce_sum(head_loss)
+        total_loss = face_loss + head_loss
+        return face_loss, head_loss, total_loss
 
     def test(self):
         test_program = fluid.default_main_program().clone(for_test=True)

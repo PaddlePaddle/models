@@ -19,6 +19,7 @@ add_arg('learning_rate', float, 0.0001, "Learning rate.")
 add_arg('batch_size', int, 16, "Minibatch size.")
 add_arg('num_passes', int, 120, "Epoch number.")
 add_arg('use_gpu', bool, True, "Whether use GPU.")
+add_arg('use_pyramidbox', bool, False, "Whether use GPU.")
 add_arg('dataset', str, 'WIDERFACE', "coco2014, coco2017, and pascalvoc.")
 add_arg('model_save_dir', str, 'model', "The path to save model.")
 add_arg('pretrained_model', str, './vgg_model/', "The init model path.")
@@ -37,8 +38,12 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
 
     image_shape = [3, data_args.resize_h, data_args.resize_w]
 
-    network = PyramidBox(image_shape)
-    loss = network.vgg_ssd(num_classes, image_shape)
+    if args.use_pyramidbox:
+        network = PyramidBox(image_shape, sub_network=args.use_pyramidbox)
+        face_loss, head_loss, loss = network.train()
+    else:
+        network = PyramidBox(image_shape, sub_network=args.use_pyramidbox)
+        loss = network.vgg_ssd(num_classes, image_shape)
 
     epocs = 12880 / batch_size
     boundaries = [epocs * 100, epocs * 125, epocs * 150]
@@ -46,6 +51,7 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
         learning_rate, learning_rate * 0.1, learning_rate * 0.01,
         learning_rate * 0.001
     ]
+    #print('main program ', fluid.default_main_program())
 
     optimizer = fluid.optimizer.RMSProp(
         learning_rate=fluid.layers.piecewise_decay(boundaries, values),
@@ -60,10 +66,8 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
 
     # fluid.io.save_inference_model('./vgg_model/', ['image'], [loss], exe)
     if pretrained_model:
-
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
-
         print('Load pre-trained model.')
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
@@ -108,7 +112,6 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
             if batch_id % 1 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
-        test(pass_id, best_map)
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
     print("Best test map {0}".format(best_map))
