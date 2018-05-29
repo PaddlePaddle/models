@@ -39,7 +39,7 @@ def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
     if with_pool:
         pool = fluid.layers.pool2d(
             input=conv, pool_size=2, pool_type='max', pool_stride=2)
-        return pool
+        return conv, pool
     else:
         return conv
 
@@ -71,18 +71,19 @@ class PyramidBox(object):
                 name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
 
     def _vgg(self):
-        self.conv1 = conv_block(self.image, 2, [64] * 2, [3] * 2)
-        self.conv2 = conv_block(self.conv1, 2, [128] * 2, [3] * 2)
+        self.conv1, self.pool1 = conv_block(self.image, 2, [64] * 2, [3] * 2)
+        self.conv2, self.pool2 = conv_block(self.pool1, 2, [128] * 2, [3] * 2)
 
         #priorbox min_size is 16
-        self.conv3 = conv_block(self.conv2, 3, [256] * 3, [3] * 3)
+        self.conv3, self.pool3 = conv_block(self.pool2, 3, [256] * 3, [3] * 3)
         #priorbox min_size is 32
-        self.conv4 = conv_block(self.conv3, 3, [512] * 3, [3] * 3)
+        self.conv4, self.pool4 = conv_block(self.pool3, 3, [512] * 3, [3] * 3)
         #priorbox min_size is 64
-        self.conv5 = conv_block(self.conv4, 3, [512] * 3, [3] * 3)
+        self.conv5, self.pool5 = conv_block(self.pool4, 3, [512] * 3, [3] * 3)
 
         # fc6 and fc7 in paper, priorbox min_size is 128
-        self.conv6 = conv_block(self.conv5, 2, [1024, 1024], [3, 1])
+        self.conv6 = conv_block(
+            self.pool5, 2, [1024, 1024], [3, 1], with_pool=False)
         # conv6_1 and conv6_2 in paper, priorbox min_size is 256
         self.conv7 = conv_block(
             self.conv6, 2, [256, 512], [1, 3], [1, 2], with_pool=False)
