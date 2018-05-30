@@ -1,3 +1,13 @@
+# Data and saved models
+fluid/object_detection/model/
+fluid/object_detection/data/pascalvoc/*.tar
+fluid/object_detection/data/pascalvoc/VOCdevkit/
+fluid/object_detection/data/coco/train2017/
+fluid/object_detection/data/coco/train2014/
+fluid/object_detection/data/coco/val2017/
+fluid/object_detection/data/coco/val2014/
+fluid/object_detection/data/coco/*.zip
+fluid/object_detection/data/coco/annotations/
 .DS_Store
 *.pyc
 .*~
