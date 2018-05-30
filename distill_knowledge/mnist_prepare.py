@@ -25,7 +25,7 @@ test_y = np.vstack(label_list)  # ((60000, 784), (60000, 1))
 print(test_x.shape, test_y.shape)  # ((10000, 784), (10000, 1))
 
 np.savez(
-    './mnist.npz',
+    './data/mnist.npz',
     train_x=train_x,
     train_y=train_y,
     test_x=test_x,
