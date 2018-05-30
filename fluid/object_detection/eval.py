@@ -96,6 +96,10 @@ if __name__ == '__main__':
     data_dir = 'data/pascalvoc'
     test_list = 'test.txt'
     label_file = 'label_list'
+
+    if not os.path.exists(args.model_dir):
+        raise ValueError("The model path [%s] does not exist." %
+                         (args.model_dir))
     if 'coco' in args.dataset:
         data_dir = './data/coco'
         if '2014' in args.dataset:
