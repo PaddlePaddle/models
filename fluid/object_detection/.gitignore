@@ -1,4 +1,15 @@
-./data/pascalvoc/VOCdevkit/
+# Saved model
+model/
+
+# coco and pascalvoc data
+data/coco/train2017/
+data/coco/train2014/
+data/coco/val2017/
+data/coco/val2014/
+data/coco/*.zip
+data/coco/annotations/
+data/pascalvoc/VOCdevkit/
+data/pascalvoc/*.tar
 data/pascalvoc/test.txt
 data/pascalvoc/trainval.txt
 pretrained/ssd_mobilenet_v1_coco.tar.gz
