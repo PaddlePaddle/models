@@ -1,5 +1,10 @@
-# Saved model
+# saved model
 model/
+
+pretrained/ssd_mobilenet_v1_coco.tar.gz
+pretrained/ssd_mobilenet_v1_coco
+pretrained/mobilenet_v1_imagenet.tar.gz
+pretrained/mobilenet_v1_imagenet
 
 # coco and pascalvoc data
 data/coco/train2017/
@@ -12,9 +17,6 @@ data/pascalvoc/VOCdevkit/
 data/pascalvoc/*.tar
 data/pascalvoc/test.txt
 data/pascalvoc/trainval.txt
-pretrained/ssd_mobilenet_v1_coco.tar.gz
-pretrained/ssd_mobilenet_v1_coco
-pretrained/mobilenet_v1_imagenet.tar.gz
-pretrained/mobilenet_v1_imagenet
+
 log*
 *.log
