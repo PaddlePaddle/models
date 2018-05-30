@@ -63,11 +63,11 @@ Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https
 #### Train on MS-COCO
   - Train on one device (/GPU).
   ```python
-  env CUDA_VISIBLE_DEVICES=0 python -u train.py --parallel=False --dataset='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
+  env CUDA_VISIBLE_DEVICES=0 python -u train.py --parallel=False --dataset='coco2014' --pretrained_model='pretrained/mobilenet_v1_imagenet/'
   ```
   - Train on multi devices (/GPUs).
   ```python
-  env CUDA_VISIBLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='coco2014' --pretrained_model='pretrained/mobilenet_imagenet/'
+  env CUDA_VISIBLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='coco2014' --pretrained_model='pretrained/mobilenet_v1_imagenet/'
   ```
 
 TBD
@@ -104,7 +104,7 @@ TBD
 ### Infer and Visualize
 
 ```python
-env CUDA_VISIBLE_DEVICES=0 python infer.py --model_dir='train_coco_model/20' --image_path='./data/coco/val2014/COCO_val2014_000000000139.jpg'
+env CUDA_VISIBLE_DEVICES=0 python infer.py --dataset='coco' --nms_threshold=0.5 --model_dir='train_coco_model/20' --image_path='./data/coco/val2014/COCO_val2014_000000000139.jpg'
 ```
 Below is the examples after running python infer.py to inference and visualize the model result.
 <p align="center">
