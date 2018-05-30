@@ -109,7 +109,7 @@ def mlp_student(img, drop_prob, h_size):
 | StudentNet 30units with 4.0temp soft targets | 97.01%  |
 
 训练过程中的测试集准确率如下图所示，可以看到使用soft targets训练的小网络的收敛速度快于不使用soft targets的网络。
-![收敛](https://raw.githubusercontent.com/likesiwell/models/master/images/plots.png)
+![收敛](https://github.com/likesiwell/models/blob/develop/distill_knowledge/images/plots.png)
 
 
 ## 参考文献
