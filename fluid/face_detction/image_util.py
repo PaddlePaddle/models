@@ -37,9 +37,11 @@ def bbox_area(src_bbox):
 
 def generate_sample(sampler):
     scale = random.uniform(sampler.min_scale, sampler.max_scale)
-    min_aspect_ratio = max(sampler.min_aspect_ratio, (scale**2.0))
-    max_aspect_ratio = min(sampler.max_aspect_ratio, 1 / (scale**2.0))
-    aspect_ratio = random.uniform(min_aspect_ratio, max_aspect_ratio)
+    aspect_ratio = random.uniform(sampler.min_aspect_ratio,
+                                  sampler.max_aspect_ratio)
+    aspect_ratio = max(aspect_ratio, (scale**2.0))
+    aspect_ratio = min(aspect_ratio, 1 / (scale**2.0))
+
     bbox_width = scale * (aspect_ratio**0.5)
     bbox_height = scale / (aspect_ratio**0.5)
     xmin_bound = 1 - bbox_width
