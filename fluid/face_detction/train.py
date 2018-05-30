@@ -29,7 +29,7 @@ add_arg('resize_w', int, 640, "The resized image height.")
 
 
 def train(args, data_args, learning_rate, batch_size, pretrained_model,
-          num_passes):
+          num_passes, optimizer_method):
 
     num_classes = 2
 
@@ -51,12 +51,19 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
         learning_rate, learning_rate * 0.1, learning_rate * 0.01,
         learning_rate * 0.001
     ]
-    #print('main program ', fluid.default_main_program())
 
-    optimizer = fluid.optimizer.RMSProp(
-        learning_rate=fluid.layers.piecewise_decay(boundaries, values),
-        regularization=fluid.regularizer.L2Decay(0.0005),
-    )
+    if optimizer_method == "momentum":
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=fluid.layers.piecewise_decay(
+                boundaries=boundaries, values=values),
+            momentum=0.9,
+            regularization=fluid.regularizer.L2Decay(0.0005),
+        )
+    else:
+        optimizer = fluid.optimizer.RMSProp(
+            learning_rate=fluid.layers.piecewise_decay(boundaries, values),
+            regularization=fluid.regularizer.L2Decay(0.0005),
+        )
 
     optimizer.minimize(loss)
 
@@ -131,6 +138,8 @@ if __name__ == '__main__':
         data_dir=data_dir,
         resize_h=args.resize_h,
         resize_w=args.resize_w,
+        apply_expand=False,
+        mean_value=[104., 117., 123],
         ap_version='11point')
     train(
         args,
@@ -138,4 +147,5 @@ if __name__ == '__main__':
         learning_rate=0.01,
         batch_size=args.batch_size,
         pretrained_model=args.pretrained_model,
-        num_passes=args.num_passes)
+        num_passes=args.num_passes,
+        optimizer_method="momentum")

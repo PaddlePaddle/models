@@ -29,9 +29,9 @@ class Settings(object):
                  dataset=None,
                  data_dir=None,
                  label_file=None,
-                 resize_h=300,
-                 resize_w=300,
-                 mean_value=[127.5, 127.5, 127.5],
+                 resize_h=None,
+                 resize_w=None,
+                 mean_value=[104., 117., 123.],
                  apply_distort=True,
                  apply_expand=True,
                  ap_version='11point',
@@ -55,6 +55,8 @@ class Settings(object):
         self._saturation_prob = 0.5
         self._saturation_delta = 0.5
         self._brightness_prob = 0.5
+        # _brightness_delta is the normalized value by 256
+        # self._brightness_delta = 32
         self._brightness_delta = 0.125
 
     @property
@@ -115,17 +117,17 @@ def preprocess(img, bbox_labels, mode, settings):
         batch_sampler = []
         # hard-code here
         batch_sampler.append(
-            image_util.sampler(1, 50, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0))
+            image_util.sampler(1, 50, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 1.0))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 1.0))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 1.0))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 1.0))
-        sampled_bbox = image_util.generate_batch_samples(batch_sampler,
-                                                         bbox_labels)
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+        sampled_bbox = image_util.generate_batch_samples(
+            batch_sampler, bbox_labels, img_width, img_height)
 
         img = np.array(img)
         if len(sampled_bbox) > 0:

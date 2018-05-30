@@ -8,9 +8,16 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True  #otherwise IOError raised image file is 
 
 
 class sampler():
-    def __init__(self, max_sample, max_trial, min_scale, max_scale,
-                 min_aspect_ratio, max_aspect_ratio, min_jaccard_overlap,
-                 max_jaccard_overlap):
+    def __init__(self,
+                 max_sample,
+                 max_trial,
+                 min_scale,
+                 max_scale,
+                 min_aspect_ratio,
+                 max_aspect_ratio,
+                 min_jaccard_overlap,
+                 max_jaccard_overlap,
+                 use_square=False):
         self.max_sample = max_sample
         self.max_trial = max_trial
         self.min_scale = min_scale
@@ -19,6 +26,7 @@ class sampler():
         self.max_aspect_ratio = max_aspect_ratio
         self.min_jaccard_overlap = min_jaccard_overlap
         self.max_jaccard_overlap = max_jaccard_overlap
+        self.use_square = use_square
 
 
 class bbox():
@@ -35,13 +43,23 @@ def bbox_area(src_bbox):
     return width * height
 
 
-def generate_sample(sampler):
+def generate_sample(sampler, image_width, image_height):
     scale = random.uniform(sampler.min_scale, sampler.max_scale)
-    min_aspect_ratio = max(sampler.min_aspect_ratio, (scale**2.0))
-    max_aspect_ratio = min(sampler.max_aspect_ratio, 1 / (scale**2.0))
-    aspect_ratio = random.uniform(min_aspect_ratio, max_aspect_ratio)
+    aspect_ratio = random.uniform(sampler.min_aspect_ratio,
+                                  sampler.max_aspect_ratio)
+    aspect_ratio = max(aspect_ratio, (scale**2.0))
+    aspect_ratio = min(aspect_ratio, 1 / (scale**2.0))
+
     bbox_width = scale * (aspect_ratio**0.5)
     bbox_height = scale / (aspect_ratio**0.5)
+
+    # guarantee a squared image patch after cropping
+    if sampler.use_square:
+        if image_height < image_width:
+            bbox_width = bbox_height * image_height / image_width
+        else:
+            bbox_height = bbox_width * image_width / image_height
+
     xmin_bound = 1 - bbox_width
     ymin_bound = 1 - bbox_height
     xmin = random.uniform(0, xmin_bound)
@@ -77,6 +95,7 @@ def satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
     for i in range(len(bbox_labels)):
         object_bbox = bbox(bbox_labels[i][0], bbox_labels[i][1],
                            bbox_labels[i][2], bbox_labels[i][3])
+        # now only support constraint by jaccard overlap
         overlap = jaccard_overlap(sample_bbox, object_bbox)
         if sampler.min_jaccard_overlap != 0 and \
                 overlap < sampler.min_jaccard_overlap:
@@ -88,7 +107,8 @@ def satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
     return False
 
 
-def generate_batch_samples(batch_sampler, bbox_labels):
+def generate_batch_samples(batch_sampler, bbox_labels, image_width,
+                           image_height):
     sampled_bbox = []
     index = []
     c = 0
@@ -97,7 +117,7 @@ def generate_batch_samples(batch_sampler, bbox_labels):
         for i in range(sampler.max_trial):
             if found >= sampler.max_sample:
                 break
-            sample_bbox = generate_sample(sampler)
+            sample_bbox = generate_sample(sampler, image_width, image_height)
             if satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
                 sampled_bbox.append(sample_bbox)
                 found = found + 1
@@ -125,15 +145,14 @@ def meet_emit_constraint(src_bbox, sample_bbox):
     return False
 
 
-def transform_labels(bbox_labels, sample_bbox):
-    proj_bbox = bbox(0, 0, 0, 0)
-    sample_labels = []
-    for i in range(len(bbox_labels)):
-        sample_label = []
-        object_bbox = bbox(bbox_labels[i][0], bbox_labels[i][1],
-                           bbox_labels[i][2], bbox_labels[i][3])
-        if not meet_emit_constraint(object_bbox, sample_bbox):
-            continue
+def project_bbox(object_bbox, sample_bbox):
+    if object_bbox.xmin >= sample_bbox.xmax or \
+       object_bbox.xmax <= sample_bbox.xmin or \
+       object_bbox.ymin >= sample_bbox.ymax or \
+       object_bbox.ymax <= sample_bbox.ymin:
+        return False
+    else:
+        proj_bbox = bbox(0, 0, 0, 0)
         sample_width = sample_bbox.xmax - sample_bbox.xmin
         sample_height = sample_bbox.ymax - sample_bbox.ymin
         proj_bbox.xmin = (object_bbox.xmin - sample_bbox.xmin) / sample_width
@@ -142,12 +161,26 @@ def transform_labels(bbox_labels, sample_bbox):
         proj_bbox.ymax = (object_bbox.ymax - sample_bbox.ymin) / sample_height
         proj_bbox = clip_bbox(proj_bbox)
         if bbox_area(proj_bbox) > 0:
+            return proj_bbox
+        else:
+            return False
+
+
+def transform_labels(bbox_labels, sample_bbox):
+    sample_labels = []
+    for i in range(len(bbox_labels)):
+        sample_label = []
+        object_bbox = bbox(bbox_labels[i][0], bbox_labels[i][1],
+                           bbox_labels[i][2], bbox_labels[i][3])
+        if not meet_emit_constraint(object_bbox, sample_bbox):
+            continue
+        proj_bbox = project_bbox(object_bbox, sample_bbox)
+        if proj_bbox:
             sample_label.append(bbox_labels[i][0])
             sample_label.append(float(proj_bbox.xmin))
             sample_label.append(float(proj_bbox.ymin))
             sample_label.append(float(proj_bbox.xmax))
             sample_label.append(float(proj_bbox.ymax))
-            #sample_label.append(bbox_labels[i][5])
             sample_label = sample_label + bbox_labels[i][5:]
             sample_labels.append(sample_label)
     return sample_labels
