@@ -144,7 +144,7 @@ if __name__ == '__main__':
     train(
         args,
         data_args=data_args,
-        learning_rate=0.01,
+        learning_rate=args.learning_rate,
         batch_size=args.batch_size,
         pretrained_model=args.pretrained_model,
         num_passes=args.num_passes,
