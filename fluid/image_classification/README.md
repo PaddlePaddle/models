@@ -22,7 +22,7 @@ tar xf ImageNet2012_dataset.tar
 wget paddl_imagenet2012_label_url/ImageNet2012_label.tar
 tar xf ImageNet2012_label.tar
 ```
-there are two label files which train and validation image labels respectively:
+there are two label files which contain train and validation image labels respectively:
 
 **train_list.txt**: label file imagenet-2012 training set, with each line seperated by SPACE, like:
 ```
