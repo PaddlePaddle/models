@@ -112,9 +112,9 @@ python infer.py \
 
 ## Supported models and performances
 
-The SE-ResNeXt-50 model is trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each ```10``` epoches. Top-1/Top-5 Validation Accuracy on ImageNet 2012 is listed in table.
+Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each ```10``` epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 is listed in table.
 
-|model | top1/top5 accuracy
+|model | top-1/top-5 accuracy
 |- | -:
 |AlexNet | -
 |VGG11 | -
