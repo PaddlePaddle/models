@@ -16,7 +16,6 @@ DATA_DIM = 3 * 224 * 224  # Use 3 * 331 * 331 or 3 * 299 * 299 for Inception-Res
 CLASS_DIM = 102
 BATCH_SIZE = 128
 
-
 def main():
     # parse the argument
     parser = argparse.ArgumentParser()
