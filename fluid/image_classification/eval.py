@@ -1,83 +1,124 @@
 import os
-import sys
 import numpy as np
-import argparse
-import functools
-
+import time
+import sys
 import paddle
 import paddle.fluid as fluid
-from utility import add_arguments, print_arguments
-from se_resnext import SE_ResNeXt
+import models
 import reader
+import argparse
+import functools
+from models.learning_rate import cosine_decay
+from utility import add_arguments, print_arguments
+import math
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
-# yapf: disable
-add_arg('batch_size',       int,   32,        "Minibatch size.")
-add_arg('use_gpu',          bool,  True,      "Whether to use GPU or not.")
-add_arg('test_list',        str,   '',        "The testing data lists.")
-add_arg('num_layers',       int,  50,         "How many layers for SE-ResNeXt model.")
-add_arg('model_dir',        str,   '',        "The model path.")
-# yapf: enable
+add_arg('batch_size', int, 256, "Minibatch size.")
+add_arg('class_dim', int, 1000, "Class number.")
+add_arg('image_shape', str, "3,224,224", "input image size")
+add_arg('with_mem_opt', bool, True,
+        "Whether to use memory optimization or not.")
+add_arg('pretrained_model', str, None, "Whether to use pretrained model.")
+add_arg('model', str, "SE_ResNeXt50_32x4d", "Set the network to use.")
+
+model_list = [m for m in dir(models) if "__" not in m]
 
 
 def eval(args):
-    class_dim = 1000
-    image_shape = [3, 224, 224]
+    # parameters from arguments
+    class_dim = args.class_dim
+    model_name = args.model
+    pretrained_model = args.pretrained_model
+    with_memory_optimization = args.with_mem_opt
+    image_shape = [int(m) for m in args.image_shape.split(",")]
+
+    assert model_name in model_list, "{} is not in lists: {}".format(args.model,
+                                                                     model_list)
+
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
-    out = SE_ResNeXt(input=image, class_dim=class_dim, layers=args.num_layers)
-    cost = fluid.layers.cross_entropy(input=out, label=label)
-    acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
-    acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
-    avg_cost = fluid.layers.mean(x=cost)
 
-    inference_program = fluid.default_main_program().clone(for_test=True)
+    # model definition
+    model = models.__dict__[model_name]()
 
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    if model_name in ["GoogleNet"]:
+        out0, out1, out2 = model.net(input=image, class_dim=class_dim)
+        cost0 = fluid.layers.cross_entropy(input=out0, label=label)
+        cost1 = fluid.layers.cross_entropy(input=out1, label=label)
+        cost2 = fluid.layers.cross_entropy(input=out2, label=label)
+        avg_cost0 = fluid.layers.mean(x=cost0)
+        avg_cost1 = fluid.layers.mean(x=cost1)
+        avg_cost2 = fluid.layers.mean(x=cost2)
+
+        avg_cost = avg_cost0 + 0.3 * avg_cost1 + 0.3 * avg_cost2
+        acc_top1 = fluid.layers.accuracy(input=out0, label=label, k=1)
+        acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
+    else:
+        out = model.net(input=image, class_dim=class_dim)
+        cost = fluid.layers.cross_entropy(input=out, label=label)
+
+        avg_cost = fluid.layers.mean(x=cost)
+        acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
+        acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
+
+    test_program = fluid.default_main_program().clone(for_test=True)
+
+    if with_memory_optimization:
+        fluid.memory_optimize(fluid.default_main_program())
+
+    place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
 
-    if not os.path.exists(args.model_dir):
-        raise ValueError("The model path [%s] does not exist." %
-                         (args.model_dir))
-    if not os.path.exists(args.test_list):
-        raise ValueError("The test lists [%s] does not exist." %
-                         (args.test_list))
+    if pretrained_model:
 
-    def if_exist(var):
-        return os.path.exists(os.path.join(args.model_dir, var.name))
+        def if_exist(var):
+            return os.path.exists(os.path.join(pretrained_model, var.name))
 
-    fluid.io.load_vars(exe, args.model_dir, predicate=if_exist)
+        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    test_reader = paddle.batch(
-        reader.test(args.test_list), batch_size=args.batch_size)
+    test_batch_size = 128
+    val_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
-    fetch_list = [avg_cost, acc_top1, acc_top5]
+    fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
 
     test_info = [[], [], []]
-    for batch_id, data in enumerate(test_reader()):
-        loss, acc1, acc5 = exe.run(inference_program,
-                                   feed=feeder.feed(data),
-                                   fetch_list=fetch_list)
-        test_info[0].append(loss[0])
-        test_info[1].append(acc1[0])
-        test_info[2].append(acc5[0])
+    for batch_id, data in enumerate(val_reader()):
+        t1 = time.time()
+        loss, acc1, acc5 = exe.run(test_program,
+                                   fetch_list=fetch_list,
+                                   feed=feeder.feed(data))
+        t2 = time.time()
+        period = t2 - t1
+        loss = np.mean(np.array(loss))
+        acc1 = np.mean(np.array(acc1))
+        acc5 = np.mean(np.array(acc5))
+        test_info[0].append(loss)
+        test_info[1].append(acc1)
+        test_info[2].append(acc5)
         if batch_id % 1 == 0:
-            print("Test {0}, loss {1}, acc1 {2}, acc5 {3}"
-                  .format(batch_id, loss[0], acc1[0], acc5[0]))
+            print("Testbatch {0},loss {1}, "
+                  "acc1 {2},acc5 {3},time {4}".format(batch_id, \
+                  loss, acc1, acc5, \
+                  "%2.2f sec" % period))
             sys.stdout.flush()
 
     test_loss = np.array(test_info[0]).mean()
     test_acc1 = np.array(test_info[1]).mean()
     test_acc5 = np.array(test_info[2]).mean()
 
-    print("Test loss {0}, acc1 {1}, acc5 {2}".format(test_loss, test_acc1,
-                                                     test_acc5))
+    print("Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
+        test_loss, test_acc1, test_acc5))
     sys.stdout.flush()
 
 
-if __name__ == '__main__':
+def main():
     args = parser.parse_args()
     print_arguments(args)
     eval(args)
+
+
+if __name__ == '__main__':
+    main()
