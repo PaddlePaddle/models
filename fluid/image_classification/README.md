@@ -112,7 +112,7 @@ python infer.py \
 
 ## Supported models and performances
 
-Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each ```10``` epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 is listed in table.
+Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each ```30``` epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 is listed in table.
 
 |model | top-1/top-5 accuracy
 |- | -:
