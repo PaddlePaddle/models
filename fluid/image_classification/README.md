@@ -5,7 +5,8 @@ The minimum PaddlePaddle version needed for the code sample in this directory is
 # SE-ResNeXt for image classification
 
 This model built with paddle fluid is still under active development and is not
-the final version. We welcome feedbacks.
+ang
+he final version. We welcome feedbacks.
 
 ## Introduction
 
@@ -57,18 +58,54 @@ val/ILSVRC2012_val_00000005.jpeg 516
 To start a training task, one can use command line as:
 
 ```
-python train.py --num_layers=50 --batch_size=8 --with_mem_opt=True --parallel_exe=False
+python train.py \
+       --model=SE_ResNeXt101_32x4d \
+       --batch_size=32 \
+       --total_images=1281167 \
+       --class_dim=1000
+       --image_shape=3,224,224 \
+       --model_save_dir=output/ \
+       --with_mem_opt=False \
+       --lr_strategy=piecewise_decay \
+       --lr=0.1
 ```
-## Finetune a model
+
+## Finetuning
 ```
-python train.py --num_layers=50 --batch_size=8 --with_mem_opt=True --parallel_exe=False --pretrained_model="pretrain/96/"
+python train.py
+       --model=SE_ResNeXt101_32x4d \
+       --pretrained_model=${path_to_pretrain_model} \
+       --batch_size=32 \
+       --total_images=1281167 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --model_save_dir=output/ \
+       --with_mem_opt=False \
+       --lr_strategy=piecewise_decay \
+       --lr=0.1
 ```
-TBD
+
+## Evaluation
+```
+python eval.py \
+       --model=SE_ResNeXt50_32x4d \
+       --batch_size=32 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --with_mem_opt=False \
+       --pretrained_model=${path_to_pretrain_model}
+```
+
 ## Inference
 ```
-python infer.py --num_layers=50 --batch_size=8 --model='model/90' --test_list=''
+python infer.py \
+       --model=SE_ResNeXt50_32x4d \
+       --batch_size=32 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --with_mem_opt=False \
+       --pretrained_model=${path_to_pretrain_model}
 ```
-TBD
 
 ## Results
 
@@ -77,7 +114,6 @@ The SE-ResNeXt-50 model is trained by starting with learning rate ```0.1``` and 
 |model | [original paper(Fig.5)](https://arxiv.org/abs/1709.01507) | Pytorch | Paddle fluid
 |- | :-: |:-: | -:
 |SE-ResNeXt-50 | 77.6%/- | 77.71%/93.63% | 77.42%/93.50%
-
 
 
 ## Released models
