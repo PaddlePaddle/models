@@ -85,7 +85,7 @@ python -c 'import utils; utils.find_optiaml_pass("./train.log")'
 ```
 
 ## Generating Verses
-Use the ["generate.py"](./generate.py) script to generate the next verse for the input verses. Command line arguments can be viewed with `python generate.py --help`. 
+Use the ["generate.py"](./generate.py) script to generate the next verse for the input verses. Command line arguments can be viewed with `python generate.py --help`.
 The main parameters are described as follows:
 - `model_path`: trained model parameter file
 - `word_dict_path`: data dictionary path
