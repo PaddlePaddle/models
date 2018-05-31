@@ -147,7 +147,7 @@ def profile(args):
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
         trans_mean_variance_norm.TransMeanVarianceNorm(args.mean_var),
-        trans_splice.TransSplice(), trans_delay.TransDelay(5)
+        trans_splice.TransSplice(5, 5), trans_delay.TransDelay(5)
     ]
 
     data_reader = reader.AsyncDataReader(args.feature_lst, args.label_lst, -1)
@@ -170,6 +170,8 @@ def profile(args):
                 frames_seen = 0
             # load_data
             (features, labels, lod, _) = batch_data
+            features = np.reshape(features, (-1, 11, 3, args.frame_dim))
+            features = np.transpose(features, (0, 2, 1, 3))
             feature_t.set(features, place)
             feature_t.set_lod([lod])
             label_t.set(labels, place)
