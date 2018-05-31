@@ -1,4 +1,4 @@
-Running sample code in this directory requires PaddelPaddle v0.10.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) and make an update.
+Running sample code in this directory requires PaddelPaddle v0.10.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) and make an update.
 ---
 
 # Chinese Ancient Poetry Generation
