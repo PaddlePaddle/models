@@ -131,7 +131,7 @@ negative        What a terrible movie. I waste so much time.
 
 2.Write the Data Reading Interface
 
-To define a custom data reading interface, we only need to write a Python generator to **parsing a training sample from the original input text**. The following code fragment is implemented to read the return type of the original data: `paddle.data_type.integer_value_sub_sequence` and `paddle.data_type.integer_value`
+To define a custom data reading interface, we only need to write a Python generator to **parse the input text**. The following code fragment is implemented to read the return type of the original data: `paddle.data_type.integer_value_sub_sequence` and `paddle.data_type.integer_value`
 ```python
 def train_reader(data_dir, word_dict, label_dict):
     """
