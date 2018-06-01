@@ -58,8 +58,7 @@ def main():
         "--temp",
         type=float,
         default=4.0,
-        help='The temperature of softmax which is used to generate soft targets'
-    )
+        help='The temperature of softmax which is used to generate soft targets')
     parser.add_argument(
         "--teacher_dir",
         type=str,
@@ -74,8 +73,7 @@ def main():
         "--use_soft",
         type=bool,
         default=False,
-        help=
-        "Whether using soft targets to train student network, set a switch to True"
+        help="Whether using soft targets to train student network, set a switch to True"
     )
     parser.add_argument(
         "--epoch_num", type=int, default=200, help="Number of training epoches")
@@ -125,10 +123,9 @@ def main():
             train_acc_list = []
             for i in range(train_iternum):
                 train_batch = train_set.next_batch(Tr_batch_size)
-                loss, acc = exe.run(
-                    fluid.default_main_program(),
-                    feed=feeder.feed(train_batch),
-                    fetch_list=[avg_cost, batch_acc])
+                loss, acc = exe.run(fluid.default_main_program(),
+                                    feed=feeder.feed(train_batch),
+                                    fetch_list=[avg_cost, batch_acc])
                 train_loss_list.append(loss)
                 train_acc_list.append(acc)
 
@@ -136,18 +133,19 @@ def main():
             test_acc_list = []
             for i in range(test_iternum):
                 test_batch = list(
-                    zip(test_x[i * T_batch_size:(i + 1) * T_batch_size],
-                        test_y[i * T_batch_size:(i + 1) * T_batch_size]))
-                loss, acc = exe.run(
-                    inference_program,
-                    feed=feeder.feed(test_batch),
-                    fetch_list=[avg_cost, batch_acc])
+                    zip(test_x[i * T_batch_size:(i + 1) * T_batch_size], test_y[
+                        i * T_batch_size:(i + 1) * T_batch_size]))
+                loss, acc = exe.run(inference_program,
+                                    feed=feeder.feed(test_batch),
+                                    fetch_list=[avg_cost, batch_acc])
                 test_loss_list.append(loss)
                 test_acc_list.append(acc)
 
             print(
                 "Epoch {}, train acc {}, train loss {} ; test acc {}, test loss {} ".
-                format(epoch, np.mean(train_acc_list), np.mean(train_loss_list),
+                format(epoch,
+                       np.mean(train_acc_list),
+                       np.mean(train_loss_list),
                        np.mean(test_acc_list), np.mean(test_loss_list)))
         fluid.io.save_params(
             exe, dirname=teacher_dir, main_program=fluid.default_main_program())
@@ -212,10 +210,9 @@ def main():
             train_acc_list = []
             for i in range(train_iternum):
                 train_batch = train_set.next_batch(Tr_batch_size)
-                loss, acc = exe.run(
-                    fluid.default_main_program(),
-                    feed=feeder.feed(train_batch),
-                    fetch_list=[avg_cost, batch_acc])
+                loss, acc = exe.run(fluid.default_main_program(),
+                                    feed=feeder.feed(train_batch),
+                                    fetch_list=[avg_cost, batch_acc])
                 train_loss_list.append(loss)
                 train_acc_list.append(acc)
 
@@ -223,18 +220,19 @@ def main():
             test_acc_list = []
             for i in range(test_iternum):
                 test_batch = list(
-                    zip(test_x[i * T_batch_size:(i + 1) * T_batch_size],
-                        test_y[i * T_batch_size:(i + 1) * T_batch_size],
-                        test_soft_y[i * T_batch_size:(i + 1) * T_batch_size]))
-                loss, acc = exe.run(
-                    inference_program,
-                    feed=feeder.feed(test_batch),
-                    fetch_list=[avg_cost, batch_acc])
+                    zip(test_x[i * T_batch_size:(i + 1) * T_batch_size], test_y[
+                        i * T_batch_size:(i + 1) * T_batch_size], test_soft_y[
+                            i * T_batch_size:(i + 1) * T_batch_size]))
+                loss, acc = exe.run(inference_program,
+                                    feed=feeder.feed(test_batch),
+                                    fetch_list=[avg_cost, batch_acc])
                 test_loss_list.append(loss)
                 test_acc_list.append(acc)
             print(
                 "Epoch {}, train acc {}, train loss {} ; test acc {}, test loss {} ".
-                format(epoch, np.mean(train_acc_list), np.mean(train_loss_list),
+                format(epoch,
+                       np.mean(train_acc_list),
+                       np.mean(train_loss_list),
                        np.mean(test_acc_list), np.mean(test_loss_list)))
 
         fluid.io.save_params(

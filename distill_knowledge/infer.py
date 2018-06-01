@@ -58,8 +58,7 @@ def main():
         "--temp",
         type=float,
         default=4.0,
-        help="The temperature of softmax which is used to generate soft targets"
-    )
+        help="The temperature of softmax which is used to generate soft targets")
     parser.add_argument(
         "--teacher_dir",
         type=str,
@@ -79,8 +78,7 @@ def main():
         "--use_soft",
         type=bool,
         default=False,
-        help=
-        "Whether using soft targets to train student network, set a switch to True"
+        help="Whether using soft targets to train student network, set a switch to True"
     )
 
     args = parser.parse_args()
@@ -125,12 +123,11 @@ def main():
         test_acc_list = []
         for i in range(test_iternum):
             test_batch = list(
-                zip(test_x[i * T_batch_size:(i + 1) * T_batch_size],
-                    test_y[i * T_batch_size:(i + 1) * T_batch_size]))
-            loss, acc = exe.run(
-                inference_program,
-                feed=feeder.feed(test_batch),
-                fetch_list=[avg_cost, batch_acc])
+                zip(test_x[i * T_batch_size:(i + 1) * T_batch_size], test_y[
+                    i * T_batch_size:(i + 1) * T_batch_size]))
+            loss, acc = exe.run(inference_program,
+                                feed=feeder.feed(test_batch),
+                                fetch_list=[avg_cost, batch_acc])
             test_loss_list.append(loss)
             test_acc_list.append(acc)
 
@@ -142,8 +139,8 @@ def main():
         soft_list = []
         for i in range(g_iternum):
             g_batch = list(
-                zip(train_x[i * G_batch_size:(i + 1) * G_batch_size],
-                    train_y[i * G_batch_size:(i + 1) * G_batch_size]))
+                zip(train_x[i * G_batch_size:(i + 1) * G_batch_size], train_y[
+                    i * G_batch_size:(i + 1) * G_batch_size]))
             soft_targets, gb_acc = exe.run(
                 inference_program,
                 feed=feeder.feed(g_batch),
@@ -220,9 +217,9 @@ def main():
         sl_list = []
         for i in range(test_iternum):
             test_batch = list(
-                zip(test_x[i * T_batch_size:(i + 1) * T_batch_size],
-                    test_y[i * T_batch_size:(i + 1) * T_batch_size],
-                    test_soft_y[i * T_batch_size:(i + 1) * T_batch_size]))
+                zip(test_x[i * T_batch_size:(i + 1) * T_batch_size], test_y[
+                    i * T_batch_size:(i + 1) * T_batch_size], test_soft_y[
+                        i * T_batch_size:(i + 1) * T_batch_size]))
             loss, acc, sl = exe.run(
                 inference_program,
                 feed=feeder.feed(test_batch),
