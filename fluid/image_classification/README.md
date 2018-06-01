@@ -86,7 +86,7 @@ python train.py \
 
 **data reader introduction:**
 
-Data reader is defined in ```reader.py```. In [trainiing stage](#training-a-model), random crop and flipping are used, while center crop is used in [evaluation](#inference) and [inference](#inference) stages. Supported data augmentation includes:
+Data reader is defined in ```reader.py```. In [training stage](#training-a-model), random crop and flipping are used, while center crop is used in [evaluation](#inference) and [inference](#inference) stages. Supported data augmentation includes:
 * rotation
 * color jitter
 * random crop
