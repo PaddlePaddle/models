@@ -1,14 +1,25 @@
-# Image Classification and Paddle Model Zoo
-This page introduces how to do image classification with Paddle fluid. To run the examples below, please [install](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html) the newest Paddle first.
+# Image Classification and Model Zoo
+Image classification, which is an important field of computer vision, is to classify an image into pre-defined labels. Recently, many researchers developed different kinds of neural networks and highly improve the classification performance. This page introduces how to do image classification with PaddlePaddle, including [data preparation](#data-preparation), [training](#training-a-model), [finetuning](#finetuning), [evaluation](#evaluation) and [inference](#inference).
 
 ---
+## Table of Contents
+- [Installation](#installation)
+- [Data Preparation](#data-preparation)
+- [Training a Model with flexible parameters](#training-a-model)
+- [Finetuning](#finetuning)
+- [Evaluation](#evaluation)
+- [Inference](#inference)
+- [Supported models and performances](#supported-models)
 
-To train a model using ImageNet dataset, please follow the steps below.
+## Installation
 
+Running sample code in this directory requires PaddelPaddle v0.10.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) and make an update.
 
-## Data Preparation
+## Data preparation
 
-1. Download ImageNet-2012 dataset from website
+An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done with two steps:
+
+##step-1:## Download ImageNet-2012 dataset from website
 ```
 cd data/
 mkdir -p ILSVRC2012/
@@ -17,14 +28,14 @@ wget paddl_imagenet2012_dataset_url/ImageNet2012_dataset.tar
 tar xf ImageNet2012_dataset.tar
 ```
 
-2. Download training and validation label files
+##step-2:## Download training and validation label files
 ```
 wget paddl_imagenet2012_label_url/ImageNet2012_label.tar
 tar xf ImageNet2012_label.tar
 ```
 there are two label files which contain train and validation image labels respectively:
 
-**train_list.txt**: label file imagenet-2012 training set, with each line seperated by SPACE, like:
+* *train_list.txt*: label file imagenet-2012 training set, with each line seperated by SPACE, like:
 ```
 train/n02483708/n02483708_2436.jpeg 369
 train/n03998194/n03998194_7015.jpeg 741
@@ -33,7 +44,7 @@ train/n04596742/n04596742_3032.jpeg 909
 train/n03208938/n03208938_7065.jpeg 535
 ...
 ```
-**val_list.txt**: label file of imagenet-2012 validation set, with each line seperated by SPACE, like.
+* *val_list.txt*: label file of imagenet-2012 validation set, with each line seperated by SPACE, like.
 ```
 val/ILSVRC2012_val_00000001.jpeg 65
 val/ILSVRC2012_val_00000002.jpeg 970
