@@ -132,7 +132,7 @@ negative        What a terrible movie. I waste so much time.
 
 2.编写数据读取接口
 
-自定义数据读取接口只需编写一个 Python 生成器，实现**解析训练样本**的逻辑。以下代码片段实现了读取原始数据返回类型为： `paddle.data_type.integer_value_sub_sequence` 和 `paddle.data_type.integer_value`
+自定义数据读取接口只需编写一个 Python 生成器，实现**解析输入文本**的逻辑。以下代码片段实现了读取原始数据返回类型为： `paddle.data_type.integer_value_sub_sequence` 和 `paddle.data_type.integer_value`
 ```python
 def train_reader(data_dir, word_dict, label_dict):
     """
