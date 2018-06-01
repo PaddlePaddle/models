@@ -5,4 +5,4 @@ Double sequence is a very flexible data organization method supported by PaddleP
 
 This unit will introduce how to use a double sequence in PaddlePaddle.
 
-- [Text classification based on double sequence](https://github.com/PaddlePaddle/models/tree/develop/nested_sequence/text_classification)
+- [Text Classification Based on Double Sequence](https://github.com/PaddlePaddle/models/tree/develop/nested_sequence/text_classification)
