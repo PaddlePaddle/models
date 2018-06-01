@@ -60,7 +60,7 @@ After data preparation, one can start  the training by:
 
 ```
 python train.py \
-       --model=SE_ResNeXt101_32x4d \
+       --model=SE_ResNeXt50_32x4d \
        --batch_size=32 \
        --total_images=1281167 \
        --class_dim=1000
@@ -97,7 +97,7 @@ Data reader is defined in ```reader.py```. In [training stage](#training-a-model
 ## Finetuning
 ```
 python train.py
-       --model=SE_ResNeXt101_32x4d \
+       --model=SE_ResNeXt50_32x4d \
        --pretrained_model=${path_to_pretrain_model} \
        --batch_size=32 \
        --total_images=1281167 \
