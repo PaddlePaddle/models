@@ -195,6 +195,8 @@ def train(args):
                                                 args.minimum_batch_size)):
             # load_data
             (features, labels, lod, _) = batch_data
+            features = np.reshape(features, (-1, 11, 3, args.frame_dim))
+            features = np.transpose(features, (0, 2, 1, 3))
             feature_t.set(features, place)
             feature_t.set_lod([lod])
             label_t.set(labels, place)
