@@ -4,8 +4,8 @@ Image classification, which is an important field of computer vision, is to clas
 ---
 ## Table of Contents
 - [Installation](#installation)
-- [Data Preparation](#data-preparation)
-- [Training a Model with flexible parameters](#training-a-model)
+- [Data preparation](#data-preparation)
+- [Training a model with flexible parameters](#training-a-model)
 - [Finetuning](#finetuning)
 - [Evaluation](#evaluation)
 - [Inference](#inference)
@@ -83,6 +83,19 @@ python train.py \
 * **lr**: initialized learning rate. Default: 0.1.
 * **pretrained_model**: model path for pretraining. Default: None.
 * **checkpoint**: the checkpoint path to resume. Default: None.
+
+**data reader introduction:**
+Data reader is defined in ```reader.py```. Supported data augmentation includes:
+* rotation
+* color jitter
+* random crop
+* center crop
+* resize
+* flipping
+
+The default data augmentation used in training and evaluation/inference are
+* training: random crop, and flipping.
+* evaluation/inference: center crop
 
 ## Finetuning
 ```
