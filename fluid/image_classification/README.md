@@ -19,7 +19,7 @@ Running sample code in this directory requires PaddelPaddle v0.10.0 and later. I
 
 An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done with two steps:
 
-##step-1:## Download ImageNet-2012 dataset from website
+**step-1:** Download ImageNet-2012 dataset from website
 ```
 cd data/
 mkdir -p ILSVRC2012/
@@ -28,7 +28,7 @@ wget paddl_imagenet2012_dataset_url/ImageNet2012_dataset.tar
 tar xf ImageNet2012_dataset.tar
 ```
 
-##step-2:## Download training and validation label files
+**step-2:** Download training and validation label files
 ```
 wget paddl_imagenet2012_label_url/ImageNet2012_label.tar
 tar xf ImageNet2012_label.tar
