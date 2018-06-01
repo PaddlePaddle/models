@@ -112,33 +112,26 @@ python infer.py \
 
 ## Supported models and performances
 
-Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each ```30``` epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 is listed in table.
+Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each ```30``` epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 is listed in table. Pretrained models can be downloaded by clicking related model names.
 
 |model | top-1/top-5 accuracy
 |- | -:
-|AlexNet | -
-|VGG11 | -
-|VGG13 | -
-|VGG16 | -
-|VGG19 | -
-|GoogleNet | -
-|InceptionV4 | -
-|MobileNet | -
-|ResNet50 | -
-|ResNet101 | -
-|ResNet152 | -
-|SE_ResNeXt50_32x4d | 77.42%/93.50%
-|SE_ResNeXt101_32x4d | -
-|SE_ResNeXt152_32x4d | -
-|DPN68 | -
-|DPN92 | -
-|DPN98 | -
-|DPN107 | -
-|DPN131 | -
-
-
-## Download models
-|model | url
-|- | -:
-|SE-ResNeXt-50 | [url]()
-TBD
+|[AlexNet]() | -
+|[VGG11]() | -
+|[VGG13]() | -
+|[VGG16]() | -
+|[VGG19]() | -
+|[GoogleNet]() | -
+|[InceptionV4]() | -
+|[MobileNet]() | -
+|[ResNet50]() | -
+|[ResNet101]() | -
+|[ResNet152]() | -
+|[SE_ResNeXt50_32x4d]() | 77.42%/93.50%
+|[SE_ResNeXt101_32x4d]() | -
+|[SE_ResNeXt152_32x4d]() | -
+|[DPN68]() | -
+|[DPN92]() | -
+|[DPN98]() | -
+|[DPN107]() | -
+|[DPN131]() | -
