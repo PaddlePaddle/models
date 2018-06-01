@@ -94,10 +94,6 @@ Data reader is defined in ```reader.py```. In [trainiing stage](#training-a-mode
 * resize
 * flipping
 
-The default data augmentation are used:
-* **training:** random crop, and flipping.
-* **evaluation/inference:** center crop
-
 ## Finetuning
 ```
 python train.py
