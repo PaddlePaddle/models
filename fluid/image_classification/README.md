@@ -85,7 +85,8 @@ python train.py \
 * **checkpoint**: the checkpoint path to resume. Default: None.
 
 **data reader introduction:**
-Data reader is defined in ```reader.py```. Supported data augmentation includes:
+
+Data reader is defined in ```reader.py```. In [trainiing stage](#training-a-model), random crop and flipping are used, while center crop is used in [evaluation](#inference) and [inference](#inference) stages. Supported data augmentation includes:
 * rotation
 * color jitter
 * random crop
@@ -93,9 +94,9 @@ Data reader is defined in ```reader.py```. Supported data augmentation includes:
 * resize
 * flipping
 
-The default data augmentation used in training and evaluation/inference are
-* training: random crop, and flipping.
-* evaluation/inference: center crop
+The default data augmentation are used:
+* **training:** random crop, and flipping.
+* **evaluation/inference:** center crop
 
 ## Finetuning
 ```
