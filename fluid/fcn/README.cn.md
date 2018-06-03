@@ -12,7 +12,7 @@ FCN基于卷积神经网络实现“端到端”的分割：输入是测试图�
 2. 使用转置卷积的方式对特征图进行上采样，以输出和输入图像相同分辨率的特征图。
 3. 引入Skip-Connection的连接方式，在网络深层引入浅层信息，以得到更精细的分割结果。
 下图为FCN框架：
-![FCN框架](https://github.com/chengyuz/models/blob/yucheng/fluid/fcn/images/fcn_network.jpg)
+![FCN框架](https://github.com/chengyuz/models/raw/master/fluid/fcn/images/fcn_network.jpg)
 
 深度网络浅层具有丰富的空间细节信息，而语义信息主要集中于网络深层，由此论文在网络深层引入浅层信息作为补充。具体来说，论文中提出了三个分割模型：FCN-32s，FCN-16s和FCN-8s，FCN-32s直接使用转置卷积的方式对pool5层的输出进行上采样；FCN-16s首先对pool5层的输出进行上采样，然后和pool4层的输出使用sum操作进行特征融合，再进行上采样；FCN-8s引入了更浅层的pool3层信息进行特征融合。
 
