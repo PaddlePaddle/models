@@ -1,11 +1,11 @@
-﻿#**Fully Convolutional Networks for Semantic Segmentation**
+﻿**Fully Convolutional Networks for Semantic Segmentation**
 ---
 
-##**Introduction**
+**Introduction**
 ---
 FCN[1]（Fully Convolutional Networks) is one of the pioneering work in semantic segmentation. This example demonstrates how to use the FCN model in PaddlePaddle for image segmentation. We first provide a brief introduction to the FCN principle, and then describe how to train and evaluate the model in PASCAL VOC dataset.
 
-##**FCN Architecture**
+**FCN Architecture**
 ---
 FCN is an end-to-end network for semantic segmentation, it takes the input image and with a froward propagation, the output is the predicted result. FCN is based on VGG16[2], but differs as following:
 1. Convert the fully connected layers into fully convolutional layers, so as to take input of arbitrary size.
@@ -17,7 +17,7 @@ The overall structure of FCN is shown below:
 
 FCN learns to combine coarse, high layer information with fine, low layer information. Layers are shown as grids that reveal relative spatial coarseness. Only pooling and prediction layers are shown, intermediate convolutional layers are omitted. FCN-32s upsamples stride 32 predictions back to pixels in a single step. FCN-16s combines predictions from both the final layer and the pool4 layer, at stride 16, so the net predict finer details, while retaining high-level semantic information. FCN-8s adds predictions from pool3, at stride 8, provide further precision.
 
-##**Example Overview**
+**Example Overview**
 ---
 This example contains the following files:
 Table 1. Directory structure
@@ -30,9 +30,9 @@ Table 1. Directory structure
 | utils.py                          | Contains common functions                            |   
 | data/prepare_voc_data.py          | Prepare PASCAL VOC data list for training                  | 
 
-##**PASCAL VOC Data set**
+**PASCAL VOC Data set**
 ---
-###**Data Preparation**
+**Data Preparation**
 First download the data set: [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)[3] train dataset and [VOC2007](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/index.html)[4] test dataset, and then unzip the data as `data/VOCdevkit/VOC2012` and `data/VOCdevkit/VOC2007`. 
 Next, run `python prepare_voc_data.py` to generate `voc2012_trainval.txt` and `voc2007_test.txt`. 
 The data in `voc2012_trainval.txt` will look like:
@@ -48,10 +48,10 @@ VOCdevkit/VOC2007/JPEGImages/000175.jpg
 VOCdevkit/VOC2007/JPEGImages/000243.jpg
 ```
 
-###**To Use Pre-trained Model**
+**To Use Pre-trained Model**
 We also provide a pre-trained model of VGG16. To use the model, download the file: [VGG16](https://pan.baidu.com/s/1sagfVaxkEP9Sfq7dYR979Q) and place it in: `models/vgg16_weights.tar`, and then unzip.
 
-###**Training**
+**Training**
 Next, run `python train.py --fcn_arch fcn-32s` to train the FCN-32s model, we also provide model structure of FCN-16s and FCN-8s. The relevant function is as following:
 ```python
 weights_dict = resolve_caffe_model(args.pretrain_model)
@@ -74,7 +74,7 @@ Below is the description about this script:
 Below is the training loss of FCN-32s, FCN-16s and FCN-8s in VOC dataset.
 ![FCN_LOSS](https://github.com/chengyuz/models/blob/yucheng/fluid/fcn/images/train_loss.jpg)
 
-###**Model Assessment**
+**Model Assessment**
 Run `python infer.py` to evaluate the trained model, the predicted result is save in `demo` directory, which can be set by `--vis_dir` in command line. The relevant function is as following:
 ```python
 model_dir = os.path.join(args.model_dir, '%s-model' % args.fcn_arch)
@@ -95,13 +95,9 @@ We provide the trained FCN model:
 [FCN-16s](https://pan.baidu.com/s/1idapCRSxWsJKSqqswUGDSw)(Password: q8gu)
 [FCN-8s](https://pan.baidu.com/s/1GcO-mcOWo_VF65X3xwPnpA)(Password: du9x)
 
-##**References**
+**References**
 ---
 1. Jonathan Long, Evan Shelhamer, Trevor Darrell. [Fully convolutional networks for semantic segmentation](https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf). IEEE conference on computer vision and pattern recognition, 2015.
 2. Simonyan, Karen, and Andrew Zisserman. [Very deep convolutional networks for large-scale image recognition](https://arxiv.org/abs/1409.1556). arXiv preprint arXiv:1409.1556 (2014).
 3. [Visual Object Classes Challenge 2012 (VOC2012)](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)
 4. [The PASCAL Visual Object Classes Challenge 2007](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/index.html)
-
-
-
-
