@@ -110,7 +110,7 @@ When we train the small network with soft targets of temperature 4.0, we get the
 | StudentNet 30units with 4.0temp soft targets | 97.01%  |
 
 The testing accuracy during training procedure are visualized here. We can see that using soft targets speed up the convergence.
-![convergence](https://github.com/likesiwell/models/blob/develop/distill_knowledge/images/plots.png)
+![convergence](https://github.com/likesiwell/models/blob/distill-branch/distill_knowledge/images/plots.png)
 
 
 
