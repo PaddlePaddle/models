@@ -13,22 +13,24 @@ FCN is an end-to-end network for semantic segmentation, it takes the input image
 3. The skip-connection architecture is defined to combine deep, coarse, semantic information and shallow, fine, apperance information.
 
 The overall structure of FCN is shown below:
-![FCN_ARCH](/images/fcn_network.jpg)
+![FCN_ARCH](https://github.com/chengyuz/models/blob/yucheng/fluid/fcn/images/fcn_network.png?raw=true)
 
 FCN learns to combine coarse, high layer information with fine, low layer information. Layers are shown as grids that reveal relative spatial coarseness. Only pooling and prediction layers are shown, intermediate convolutional layers are omitted. FCN-32s upsamples stride 32 predictions back to pixels in a single step. FCN-16s combines predictions from both the final layer and the pool4 layer, at stride 16, so the net predict finer details, while retaining high-level semantic information. FCN-8s adds predictions from pool3, at stride 8, provide further precision.
 
 **Example Overview**
 ---
 This example contains the following files:
+
 Table 1. Directory structure
- File                              | Description                                    |
- -------------------------         | -------------------------------------   | 
- train.py                          | Training script                                |  
- infer.py                          | Prediction using the trained model      |  
- vgg_fcn.py                        | Defining FCN structure                     |   
- data_provider.py                  | Data processing scripts, generating train and test data   |   
- utils.py                          | Contains common functions                            |   
- data/prepare_voc_data.py          | Prepare PASCAL VOC data list for training                  | 
+
+File                              | Description                                    |
+-------------------------         | -------------------------------------   | 
+train.py                          | Training script                                |  
+infer.py                          | Prediction using the trained model      |  
+vgg_fcn.py                        | Defining FCN structure                     |   
+data_provider.py                  | Data processing scripts, generating train and test data   |   
+utils.py                          | Contains common functions                            |   
+data/prepare_voc_data.py          | Prepare PASCAL VOC data list for training                  | 
 
 **PASCAL VOC Data set**
 ---
@@ -75,7 +77,7 @@ Below is the description about this script:
 3. Call `fluid.io.save_inference_model` to save the model per epoch.
 
 Below is the training loss of FCN-32s, FCN-16s and FCN-8s in VOC dataset.
-![FCN_LOSS](/images/train_loss.jpg)
+![FCN_LOSS](https://github.com/chengyuz/models/blob/yucheng/fluid/fcn/images/train_loss.png?raw=true)
 
 **Model Assessment**
 
@@ -92,7 +94,7 @@ res = convert_to_color_label(res)
 Description: the `fluid.io.load_inference_model` is called to load the trained model, the `convert_to_color_label` function is used to visualize the predicted as VOC format.
 
 Below is the segmentation result of FCN-32s:
-![FCN-32s-seg](/images/seg_res.jpg)
+![FCN-32s-seg](https://github.com/chengyuz/models/blob/yucheng/fluid/fcn/images/seg_res.png?raw=true)
 
 We provide the trained FCN model:
 [FCN-32s](https://pan.baidu.com/s/1j8pltdzgssmxbXFgHWmCNQ)[Password: dk0i]
