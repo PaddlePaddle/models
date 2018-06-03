@@ -30,14 +30,16 @@ infer.py                          | Prediction using the trained model      |
 vgg_fcn.py                        | Defining FCN structure                     |   
 data_provider.py                  | Data processing scripts, generating train and test data   |   
 utils.py                          | Contains common functions                            |   
-data/prepare_voc_data.py          | Prepare PASCAL VOC data list for training                  | 
+data/prepare_voc_data.py          | Prepare PASCAL VOC data list for training and test   | 
 
 **PASCAL VOC Data set**
 ---
 **Data Preparation**
 
 First download the data set: [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)[3] train dataset and [VOC2007](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/index.html)[4] test dataset, and then unzip the data as `data/VOCdevkit/VOC2012` and `data/VOCdevkit/VOC2007`. 
+
 Next, run `python prepare_voc_data.py` to generate `voc2012_trainval.txt` and `voc2007_test.txt`. 
+
 The data in `voc2012_trainval.txt` will look like:
 ```
 VOCdevkit/VOC2012/JPEGImages/2007_000032.jpg voc_processed/2007_000032.png 
@@ -53,7 +55,7 @@ VOCdevkit/VOC2007/JPEGImages/000243.jpg
 
 **To Use Pre-trained Model**
 
-We also provide a pre-trained model of VGG16. To use the model, download the file: [VGG16](https://pan.baidu.com/s/1sagfVaxkEP9Sfq7dYR979Q) and place it in: `models/vgg16_weights.tar`, and then unzip.
+We also provide a pre-trained model of VGG16. To use the model, download the file: [VGG16](https://pan.baidu.com/s/1ekZ5O-lp3lGvAOZ4KSXKDQ) and place it in: `models/vgg16_weights.tar`, and then unzip.
 
 **Training**
 
@@ -91,9 +93,10 @@ predict = exe.run(inference_program, feed={feed_target_names[0]:img_data}, fetch
 res = np.argmax(np.squeeze(predict[0]), axis=0)
 res = convert_to_color_label(res)
 ```
-Description: the `fluid.io.load_inference_model` is called to load the trained model, the `convert_to_color_label` function is used to visualize the predicted as VOC format.
+Description: 
+the `fluid.io.load_inference_model` is called to load the trained model, the `convert_to_color_label` function is used to visualize the predicted as VOC format.
 
-Below is the segmentation result of FCN-32s:
+Below is the segmentation result of FCN-32s, FCN-16s and FCN-8s:
 ![FCN-32s-seg](https://github.com/chengyuz/models/blob/yucheng/fluid/fcn/images/seg_res.png?raw=true)
 
 We provide the trained FCN model:

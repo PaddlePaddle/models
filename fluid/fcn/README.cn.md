@@ -30,7 +30,7 @@ infer.py                          | 测试脚本，给定图片及模型，完�
 vgg_fcn.py                        | FCN模型框架定义脚本                     |   
 data_provider.py                  | 数据处理脚本，生成训练和测试数据        |   
 utils.py                          | 常用函数脚本                            |   
-data/prepare_voc_data.py          | 准备PASCAL VOC训练文件                  |   
+data/prepare_voc_data.py          | 准备PASCAL VOC训练和测试文件                  |   
 
 **PASCAL VOC数据集**
 ---
@@ -54,7 +54,7 @@ VOCdevkit/VOC2007/JPEGImages/000243.jpg
 
 **预训练模型准备**
 
-下载预训练的VGG16模型，我们提供了一个转化好的模型，下载地址：[VGG16](https://pan.baidu.com/s/1sagfVaxkEP9Sfq7dYR979Q)，将其放置到：`models/vgg16_weights.tar`, 然后解压用于初始化。
+下载预训练的VGG16模型，我们提供了一个转化好的模型，下载地址：[VGG16](https://pan.baidu.com/s/1ekZ5O-lp3lGvAOZ4KSXKDQ)，将其放置到：`models/vgg16_weights.tar`, 然后解压用于初始化。
 
 **模型训练**
 
@@ -97,7 +97,7 @@ res = convert_to_color_label(res)
 1. 调用`fluid.io.load_inference_model`加载训练好的模型。
 2. 调用`convert_to_color_label`将模型预测结果可视化为VOC对应格式。
 
-下图是FCN-32s的部分测试结果：
+下图是FCN-32s，FCN-16s和FCN-8s的部分测试结果：
 
 ![FCN-32s分割结果](https://github.com/chengyuz/models/blob/yucheng/fluid/fcn/images/seg_res.png?raw=true)
 
