@@ -12,7 +12,8 @@ FCN基于卷积神经网络实现“端到端”的分割：输入是测试图�
 2. 使用转置卷积的方式对特征图进行上采样，以输出和输入图像相同分辨率的特征图。
 3. 引入Skip-Connection的连接方式，在网络深层引入浅层信息，以得到更精细的分割结果。
 下图为FCN框架：
-![FCN框架](/images/fcn_network.jpg)
+
+![FCN框架](https://github.com/chengyuz/models/blob/yucheng/fluid/fcn/images/fcn_network.png?raw=true)
 
 深度网络浅层具有丰富的空间细节信息，而语义信息主要集中于网络深层，由此论文在网络深层引入浅层信息作为补充。具体来说，论文中提出了三个分割模型：FCN-32s，FCN-16s和FCN-8s，FCN-32s直接使用转置卷积的方式对pool5层的输出进行上采样；FCN-16s首先对pool5层的输出进行上采样，然后和pool4层的输出使用sum操作进行特征融合，再进行上采样；FCN-8s引入了更浅层的pool3层信息进行特征融合。
 
@@ -20,14 +21,15 @@ FCN基于卷积神经网络实现“端到端”的分割：输入是测试图�
 ---
 本示例共包含以下文件：
 表1. 示例文件
-  文件                              | 用途                                   |
- -------------------------         | -------------------------------------   | 
- train.py                          | 训练脚本                                |  
- infer.py                          | 测试脚本，给定图片及模型，完成测试      |  
- vgg_fcn.py                        | FCN模型框架定义脚本                     |   
- data_provider.py                  | 数据处理脚本，生成训练和测试数据        |   
- utils.py                          | 常用函数脚本                            |   
- data/prepare_voc_data.py          | 准备PASCAL VOC训练文件                  |   
+
+文件                              | 用途                                   |
+-------------------------         | -------------------------------------   | 
+train.py                          | 训练脚本                                |  
+infer.py                          | 测试脚本，给定图片及模型，完成测试      |  
+vgg_fcn.py                        | FCN模型框架定义脚本                     |   
+data_provider.py                  | 数据处理脚本，生成训练和测试数据        |   
+utils.py                          | 常用函数脚本                            |   
+data/prepare_voc_data.py          | 准备PASCAL VOC训练文件                  |   
 
 **PASCAL VOC数据集**
 ---
@@ -75,7 +77,8 @@ data_args = data_provider.Settings(
 3. 训练中每隔一定epoch会调用`fluid.io.save_inference_model`存储模型。
 
 下面给出了FCN-32s在VOC数据集上训练的Loss曲线：
-![FCN训练损失曲线](/images/train_loss.jpg)
+
+![FCN训练损失曲线](https://github.com/chengyuz/models/blob/yucheng/fluid/fcn/images/train_loss.png?raw=true)
 
 **模型测试**
 
@@ -94,7 +97,8 @@ res = convert_to_color_label(res)
 2. 调用`convert_to_color_label`将模型预测结果可视化为VOC对应格式。
 
 下图是FCN-32s的部分测试结果：
-![FCN-32s分割结果](images/seg_res.jpg)
+
+![FCN-32s分割结果](https://github.com/chengyuz/models/blob/yucheng/fluid/fcn/images/seg_res.png?raw=true)
 
 我们提供了训练好的模型用于测试：
 [FCN-32s](https://pan.baidu.com/s/1j8pltdzgssmxbXFgHWmCNQ)（密码：dk0i）
