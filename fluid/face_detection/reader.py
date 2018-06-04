@@ -133,14 +133,17 @@ def preprocess(img, bbox_labels, mode, settings):
                                True))
         sampled_bbox = image_util.generate_batch_samples(
             batch_sampler, bbox_labels, img_width, img_height)
+
         img = np.array(img)
         if len(sampled_bbox) > 0:
             idx = int(random.uniform(0, len(sampled_bbox)))
             img, sampled_labels = image_util.crop_image(
                 img, bbox_labels, sampled_bbox[idx], img_width, img_height)
+
         img = Image.fromarray(img)
     img = img.resize((settings.resize_w, settings.resize_h), Image.ANTIALIAS)
     img = np.array(img)
+
     if mode == 'train':
         mirror = int(random.uniform(0, 2))
         if mirror == 1:
@@ -209,6 +212,7 @@ def pyramidbox(settings, file_list, mode, shuffle):
             if im.mode == 'L':
                 im = im.convert('RGB')
             im_width, im_height = im.size
+
             # layout: label | xmin | ymin | xmax | ymax
             bbox_labels = []
             for index_box in range(len(dict_input_txt[index_image])):
@@ -222,6 +226,7 @@ def pyramidbox(settings, file_list, mode, shuffle):
                     h = float(temp_info_box[3])
                     xmax = xmin + w
                     ymax = ymin + h
+
                     bbox_sample.append(1)
                     bbox_sample.append(float(xmin) / im_width)
                     bbox_sample.append(float(ymin) / im_height)
@@ -236,6 +241,7 @@ def pyramidbox(settings, file_list, mode, shuffle):
             boxes = sample_labels[:, 1:5]
             lbls = [1] * len(boxes)
             difficults = [1] * len(boxes)
+
             yield im, boxes, lbls, difficults
 
     return reader
