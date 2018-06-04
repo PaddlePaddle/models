@@ -24,32 +24,32 @@ This example contains the following files:
 Table 1. Directory structure
 
 File                              | Description                                    |
--------------------------         | -------------------------------------   | 
+-------------------------         | -------------------------------------   |
 train.py                          | Training script                                |  
 infer.py                          | Prediction using the trained model      |  
-vgg_fcn.py                        | Defining FCN structure                     |   
-data_provider.py                  | Data processing scripts, generating train and test data   |   
-utils.py                          | Contains common functions                            |   
-data/prepare_voc_data.py          | Prepare PASCAL VOC data list for training and test   | 
+vgg_fcn.py                        | Defining FCN structure                     |  
+data_provider.py                  | Data processing scripts, generating train and test data   |  
+utils.py                          | Contains common functions                            |  
+data/prepare_voc_data.py          | Prepare PASCAL VOC data list for training and test   |
 
 **PASCAL VOC Data set**
 ---
 **Data Preparation**
 
-First download the data set: [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)[3] train dataset and [VOC2007](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/index.html)[4] test dataset, and then unzip the data as `data/VOCdevkit/VOC2012` and `data/VOCdevkit/VOC2007`. 
+First download the data set: [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html)[3] train dataset and [VOC2007](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/index.html)[4] test dataset, and then unzip the data as `data/VOCdevkit/VOC2012` and `data/VOCdevkit/VOC2007`.
 
-Next, run `python prepare_voc_data.py` to generate `voc2012_trainval.txt` and `voc2007_test.txt`. 
+Next, run `python prepare_voc_data.py` to generate `voc2012_trainval.txt` and `voc2007_test.txt`.
 
 The data in `voc2012_trainval.txt` will look like:
 ```
-VOCdevkit/VOC2012/JPEGImages/2007_000032.jpg voc_processed/2007_000032.png 
-VOCdevkit/VOC2012/JPEGImages/2007_000033.jpg voc_processed/2007_000033.png 
-VOCdevkit/VOC2012/JPEGImages/2007_000039.jpg voc_processed/2007_000039.png 
+VOCdevkit/VOC2012/JPEGImages/2007_000032.jpg voc_processed/2007_000032.png
+VOCdevkit/VOC2012/JPEGImages/2007_000033.jpg voc_processed/2007_000033.png
+VOCdevkit/VOC2012/JPEGImages/2007_000039.jpg voc_processed/2007_000039.png
 ```
 The data in `voc2007_test.txt` will look like:
 ```
-VOCdevkit/VOC2007/JPEGImages/000068.jpg 
-VOCdevkit/VOC2007/JPEGImages/000175.jpg 
+VOCdevkit/VOC2007/JPEGImages/000068.jpg
+VOCdevkit/VOC2007/JPEGImages/000175.jpg
 VOCdevkit/VOC2007/JPEGImages/000243.jpg
 ```
 
@@ -66,7 +66,7 @@ for k, v in weights_dict.items():
     _tensor = fluid.global_scope().find_var(k).get_tensor()
     _shape = np.array(_tensor).shape
     _tensor.set(v, place)
-    
+
 data_args = data_provider.Settings(
         data_dir=args.data_dir,
         resize_h=args.img_height,
@@ -93,7 +93,7 @@ predict = exe.run(inference_program, feed={feed_target_names[0]:img_data}, fetch
 res = np.argmax(np.squeeze(predict[0]), axis=0)
 res = convert_to_color_label(res)
 ```
-Description: 
+Description:
 the `fluid.io.load_inference_model` is called to load the trained model, the `convert_to_color_label` function is used to visualize the predicted as VOC format.
 
 Below is the segmentation result of FCN-32s, FCN-16s and FCN-8s:

@@ -15,6 +15,7 @@ import data_provider
 from utils import convert_to_color_label
 from utils import process_dir
 
+
 def parse_args():
     parser = argparse.ArgumentParser('Inferring of FCN model.')
     parser.add_argument(
@@ -56,47 +57,56 @@ def parse_args():
         '--fcn_arch',
         type=str,
         default='fcn-8s',
-        help='The fcn architecture for testing, currently support : fcn-32s, fcn-16s and fcn-8s. (default: %(default)s)')
-    
-    args = parser.parse_args()    
+        help='The fcn architecture for testing, currently support : fcn-32s, fcn-16s and fcn-8s. (default: %(default)s)'
+    )
+
+    args = parser.parse_args()
     return args
-    
+
+
 def print_arguments(args):
     print('-----------  Configuration Arguments -----------')
     for arg, value in sorted(vars(args).iteritems()):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
 
-def main(args):    
+
+def main(args):
     data_shape = [3, args.img_height, args.img_width]
     place = core.CUDAPlace(0)
     exe = fluid.Executor(place)
-    
+
     model_dir = os.path.join(args.model_dir, '%s-model' % args.fcn_arch)
-    assert(os.path.exists(model_dir))
-    [inference_program, feed_target_names, fetch_targets] = fluid.io.load_inference_model(model_dir, exe)
-    
+    assert (os.path.exists(model_dir))
+    [inference_program, feed_target_names,
+     fetch_targets] = fluid.io.load_inference_model(model_dir, exe)
+
     mean_value = [104, 117, 123]
     data_args = data_provider.Settings(
         data_dir=args.data_dir,
         resize_h=args.img_height,
         resize_w=args.img_width,
         mean_value=mean_value)
-    
+
     infer_reader = paddle.batch(
-        data_provider.infer(data_args, args.test_list), batch_size=args.batch_size)
-       
+        data_provider.infer(data_args, args.test_list),
+        batch_size=args.batch_size)
+
     process_dir(args.vis_dir)
     for batch_id, data in enumerate(infer_reader()):
         img_data = np.array(map(lambda x: x[0], data)).astype('float32')
         img_path = np.array(map(lambda x: x[1], data))[0]
         h, w, c = cv2.imread(img_path).shape
-        predict = exe.run(inference_program, feed={feed_target_names[0]:img_data}, fetch_list=fetch_targets)
+        predict = exe.run(inference_program,
+                          feed={feed_target_names[0]: img_data},
+                          fetch_list=fetch_targets)
         res = np.argmax(np.squeeze(predict[0]), axis=0)
         res = convert_to_color_label(res)
-        res = cv2.resize(res, (w, h), interpolation = cv2.INTER_NEAREST)
-        out_img_path = os.path.join(args.vis_dir, '%s.png' % os.path.basename(img_path))
+        res = cv2.resize(res, (w, h), interpolation=cv2.INTER_NEAREST)
+        out_img_path = os.path.join(args.vis_dir,
+                                    '%s.png' % os.path.basename(img_path))
         cv2.imwrite(out_img_path, res)
+
 
 if __name__ == '__main__':
     args = parse_args()

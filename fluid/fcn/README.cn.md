@@ -24,13 +24,13 @@ FCN基于卷积神经网络实现“端到端”的分割：输入是测试图�
 表1. 示例文件
 
 文件                              | 用途                                   |
--------------------------         | -------------------------------------   | 
-train.py                          | 训练脚本                                |  
-infer.py                          | 测试脚本，给定图片及模型，完成测试      |  
-vgg_fcn.py                        | FCN模型框架定义脚本                     |   
-data_provider.py                  | 数据处理脚本，生成训练和测试数据        |   
-utils.py                          | 常用函数脚本                            |   
-data/prepare_voc_data.py          | 准备PASCAL VOC训练和测试文件                  |   
+-------------------------         | -------------------------------------   |
+ train.py                          | 训练脚本                                |  
+ infer.py                          | 测试脚本，给定图片及模型，完成测试      |  
+ vgg_fcn.py                        | FCN模型框架定义脚本                     |  
+ data_provider.py                  | 数据处理脚本，生成训练和测试数据        |  
+ utils.py                          | 常用函数脚本                            |  
+ data/prepare_voc_data.py          | 准备PASCAL VOC训练和测试文件            |  
 
 **PASCAL VOC数据集**
 ---
@@ -41,14 +41,14 @@ data/prepare_voc_data.py          | 准备PASCAL VOC训练和测试文件       
 
 下面是`voc2012_trainval.txt`前几行输入示例：
 ```
-VOCdevkit/VOC2012/JPEGImages/2007_000032.jpg voc_processed/2007_000032.png 
-VOCdevkit/VOC2012/JPEGImages/2007_000033.jpg voc_processed/2007_000033.png 
-VOCdevkit/VOC2012/JPEGImages/2007_000039.jpg voc_processed/2007_000039.png 
+ VOCdevkit/VOC2012/JPEGImages/2007_000032.jpg voc_processed/2007_000032.png
+ VOCdevkit/VOC2012/JPEGImages/2007_000033.jpg voc_processed/2007_000033.png
+ VOCdevkit/VOC2012/JPEGImages/2007_000039.jpg voc_processed/2007_000039.png
 ```
 下面是`voc2007_test.txt`前几行输入示例：
 ```
-VOCdevkit/VOC2007/JPEGImages/000068.jpg 
-VOCdevkit/VOC2007/JPEGImages/000175.jpg 
+VOCdevkit/VOC2007/JPEGImages/000068.jpg
+VOCdevkit/VOC2007/JPEGImages/000175.jpg
 VOCdevkit/VOC2007/JPEGImages/000243.jpg
 ```
 
@@ -65,7 +65,7 @@ for k, v in weights_dict.items():
     _tensor = fluid.global_scope().find_var(k).get_tensor()
     _shape = np.array(_tensor).shape
     _tensor.set(v, place)
-    
+
 data_args = data_provider.Settings(
         data_dir=args.data_dir,
         resize_h=args.img_height,
