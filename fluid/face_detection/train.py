@@ -1,4 +1,5 @@
 import os
+import shutil
 import numpy as np
 import time
 import argparse
@@ -22,7 +23,7 @@ add_arg('use_gpu', bool, True, "Whether use GPU.")
 add_arg('use_pyramidbox', bool, False, "Whether use PyramidBox model.")
 add_arg('dataset', str, 'WIDERFACE', "coco2014, coco2017, and pascalvoc.")
 add_arg('model_save_dir', str, 'model', "The path to save model.")
-add_arg('pretrained_model', str, './vgg_model/', "The init model path.")
+add_arg('pretrained_model', str, './pretrained/', "The init model path.")
 add_arg('resize_h', int, 640, "The resized image height.")
 add_arg('resize_w', int, 640, "The resized image height.")
 #yapf: enable
@@ -71,7 +72,6 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    # fluid.io.save_inference_model('./vgg_model/', ['image'], [loss], exe)
     if pretrained_model:
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))

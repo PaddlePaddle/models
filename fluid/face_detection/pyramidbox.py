@@ -51,7 +51,7 @@ class PyramidBox(object):
         self.steps = [4., 8., 16., 32., 64., 128.]
         self.is_infer = is_infer
 
-        # the base network is VGG with atrus layers
+        # the base network is VGG with atrous layers
         self._input()
         self._vgg()
         if sub_network:
