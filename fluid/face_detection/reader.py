@@ -72,7 +72,7 @@ class Settings(object):
         return self._toy
 
     @property
-    def apply_distort(self):
+    def apply_expand(self):
         return self._apply_expand
 
     @property
@@ -117,15 +117,20 @@ def preprocess(img, bbox_labels, mode, settings):
         batch_sampler = []
         # hard-code here
         batch_sampler.append(
-            image_util.sampler(1, 50, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+            image_util.sampler(1, 50, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                               True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                               True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                               True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                               True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                               True))
         sampled_bbox = image_util.generate_batch_samples(
             batch_sampler, bbox_labels, img_width, img_height)
 
@@ -208,12 +213,11 @@ def pyramidbox(settings, file_list, mode, shuffle):
                 im = im.convert('RGB')
             im_width, im_height = im.size
 
-            # layout: category_id | xmin | ymin | xmax | ymax | iscrowd
+            # layout: label | xmin | ymin | xmax | ymax
             bbox_labels = []
             for index_box in range(len(dict_input_txt[index_image])):
                 if index_box >= 2:
                     bbox_sample = []
-
                     temp_info_box = dict_input_txt[index_image][
                         index_box].split(' ')
                     xmin = float(temp_info_box[0])
@@ -223,6 +227,7 @@ def pyramidbox(settings, file_list, mode, shuffle):
                     xmax = xmin + w
                     ymax = ymin + h
 
+                    bbox_sample.append(1)
                     bbox_sample.append(float(xmin) / im_width)
                     bbox_sample.append(float(ymin) / im_height)
                     bbox_sample.append(float(xmax) / im_width)
@@ -233,7 +238,7 @@ def pyramidbox(settings, file_list, mode, shuffle):
             sample_labels = np.array(sample_labels)
             if len(sample_labels) == 0: continue
             im = im.astype('float32')
-            boxes = sample_labels[:, 0:4]
+            boxes = sample_labels[:, 1:5]
             lbls = [1] * len(boxes)
             difficults = [1] * len(boxes)
 

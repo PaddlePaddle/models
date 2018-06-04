@@ -1,0 +1,5 @@
+model/
+data/
+label/
+pretrained/
+*.swp

@@ -17,6 +17,8 @@ class sampler():
                  max_aspect_ratio,
                  min_jaccard_overlap,
                  max_jaccard_overlap,
+                 min_object_coverage,
+                 max_object_coverage,
                  use_square=False):
         self.max_sample = max_sample
         self.max_trial = max_trial
@@ -26,6 +28,8 @@ class sampler():
         self.max_aspect_ratio = max_aspect_ratio
         self.min_jaccard_overlap = min_jaccard_overlap
         self.max_jaccard_overlap = max_jaccard_overlap
+        self.min_object_coverage = min_object_coverage
+        self.max_object_coverage = max_object_coverage
         self.use_square = use_square
 
 
@@ -37,10 +41,36 @@ class bbox():
         self.ymax = ymax
 
 
+def intersect_bbox(bbox1, bbox2):
+    if bbox2.xmin > bbox1.xmax or bbox2.xmax < bbox1.xmin or \
+        bbox2.ymin > bbox1.ymax or bbox2.ymax < bbox1.ymin:
+        intersection_box = bbox(0.0, 0.0, 0.0, 0.0)
+    else:
+        intersection_box = bbox(
+            max(bbox1.xmin, bbox2.xmin),
+            max(bbox1.ymin, bbox2.ymin),
+            min(bbox1.xmax, bbox2.xmax), min(bbox1.ymax, bbox2.ymax))
+    return intersection_box
+
+
+def bbox_coverage(bbox1, bbox2):
+    inter_box = intersect_bbox(bbox1, bbox2)
+    intersect_size = bbox_area(inter_box)
+
+    if intersect_size > 0:
+        bbox1_size = bbox_area(bbox1)
+        return intersect_size / bbox1_size
+    else:
+        return 0.
+
+
 def bbox_area(src_bbox):
-    width = src_bbox.xmax - src_bbox.xmin
-    height = src_bbox.ymax - src_bbox.ymin
-    return width * height
+    if src_bbox.xmax < src_bbox.xmin or src_bbox.ymax < src_bbox.ymin:
+        return 0.
+    else:
+        width = src_bbox.xmax - src_bbox.xmin
+        height = src_bbox.ymax - src_bbox.ymin
+        return width * height
 
 
 def generate_sample(sampler, image_width, image_height):
@@ -90,21 +120,35 @@ def jaccard_overlap(sample_bbox, object_bbox):
 
 
 def satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
-    if sampler.min_jaccard_overlap == 0 and sampler.max_jaccard_overlap == 0:
+    has_jaccard_overlap = False if sampler.min_jaccard_overlap == 0 and sampler.max_jaccard_overlap == 0 else True
+    has_object_coverage = False if sampler.min_object_coverage == 0 and sampler.max_object_coverage == 0 else True
+    if not has_jaccard_overlap and not has_object_coverage:
         return True
+    found = False
     for i in range(len(bbox_labels)):
         object_bbox = bbox(bbox_labels[i][0], bbox_labels[i][1],
                            bbox_labels[i][2], bbox_labels[i][3])
-        # now only support constraint by jaccard overlap
-        overlap = jaccard_overlap(sample_bbox, object_bbox)
-        if sampler.min_jaccard_overlap != 0 and \
-                overlap < sampler.min_jaccard_overlap:
-            continue
-        if sampler.max_jaccard_overlap != 0 and \
-                overlap > sampler.max_jaccard_overlap:
-            continue
-        return True
-    return False
+        if has_jaccard_overlap:
+            overlap = jaccard_overlap(sample_bbox, object_bbox)
+            if sampler.min_jaccard_overlap != 0 and \
+                    overlap < sampler.min_jaccard_overlap:
+                continue
+            if sampler.max_jaccard_overlap != 0 and \
+                    overlap > sampler.max_jaccard_overlap:
+                continue
+            found = True
+        if has_object_coverage:
+            object_coverage = bbox_coverage(object_bbox, sample_bbox)
+            if sampler.min_object_coverage != 0 and \
+                    object_coverage < sampler.min_object_coverage:
+                continue
+            if sampler.max_object_coverage != 0 and \
+                    object_coverage > sampler.max_object_coverage:
+                continue
+            found = True
+        if found:
+            return True
+    return found
 
 
 def generate_batch_samples(batch_sampler, bbox_labels, image_width,
