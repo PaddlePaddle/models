@@ -211,12 +211,12 @@ def main(train_data_file, test_data_file, model_save_dir, num_passes):
         avg_cost, feature_out, word, mention, target = ner_net(word_dict_len,
                                                                label_dict_len)
 
-        sgd_optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
-        sgd_optimizer.minimize(avg_cost)
-
         crf_decode = fluid.layers.crf_decoding(
             input=feature_out, param_attr=fluid.ParamAttr(
-                name='crfw', ))
+                name='crfw'))
+
+        sgd_optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
+        sgd_optimizer.minimize(avg_cost)
 
         (precision, recall, f1_score, num_infer_chunks, num_label_chunks,
          num_correct_chunks) = fluid.layers.chunk_eval(
@@ -290,7 +290,7 @@ def main(train_data_file, test_data_file, model_save_dir, num_passes):
             save_dirname = os.path.join(model_save_dir,
                                         "params_pass_%d" % pass_id)
             fluid.io.save_inference_model(
-                save_dirname, ['word', 'mention', 'target'], [crf_decode], exe)
+                save_dirname, ['word', 'mention'], [crf_decode], exe)
 
 
 if __name__ == "__main__":
