@@ -195,6 +195,30 @@ def put_txt_in_dict(input_txt):
     return dict_input_txt
 
 
+def expand_bboxes(bboxes,
+                  expand_left=2.,
+                  expand_up=2.,
+                  expand_right=2.,
+                  expand_down=2.):
+    """
+    Expand bboxes, expand 2 times by defalut.
+    """
+    expand_boxes = []
+    for bbox in bboxes:
+        xmin = bbox[0]
+        ymin = bbox[1]
+        xmax = bbox[2]
+        ymax = bbox[3]
+        w = xmax - xmin
+        h = ymax - ymin
+        ex_xmin = max(xmin - w / expand_left, 0.)
+        ex_ymin = max(ymin - h / expand_up, 0.)
+        ex_xmax = min(xmax + w / expand_right, 1.)
+        ex_ymax = min(ymax + h / expand_down, 1.)
+        expand_boxes.append([ex_xmin, ex_ymin, ex_xmax, ex_ymax])
+    return expand_boxes
+
+
 def pyramidbox(settings, file_list, mode, shuffle):
 
     dict_input_txt = {}
@@ -241,15 +265,10 @@ def pyramidbox(settings, file_list, mode, shuffle):
             boxes = sample_labels[:, 1:5]
             lbls = [1] * len(boxes)
             difficults = [1] * len(boxes)
-
-            yield im, boxes, lbls, difficults
+            yield im, boxes, expand_bboxes(boxes), lbls, difficults
 
     return reader
 
 
 def train(settings, file_list, shuffle=True):
     return pyramidbox(settings, file_list, 'train', shuffle)
-
-
-def test(settings, file_list):
-    return pyramidbox(settings, file_list, 'test', False)

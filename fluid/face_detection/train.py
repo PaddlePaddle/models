@@ -39,12 +39,15 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
 
     image_shape = [3, data_args.resize_h, data_args.resize_w]
 
+    fetches = []
     if args.use_pyramidbox:
         network = PyramidBox(image_shape, sub_network=args.use_pyramidbox)
         face_loss, head_loss, loss = network.train()
+        fetches = [face_loss, head_loss]
     else:
         network = PyramidBox(image_shape, sub_network=args.use_pyramidbox)
         loss = network.vgg_ssd(num_classes, image_shape)
+        fetches = [loss]
 
     epocs = 12880 / batch_size
     boundaries = [epocs * 100, epocs * 125, epocs * 150]
@@ -73,9 +76,11 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
     exe.run(fluid.default_startup_program())
 
     if pretrained_model:
+        if not os.path.exists(pretrained_model):
+            raise ValueError("The pre-trained model path [%s] does not exist." %
+                             (pretrained_model))
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
-        print('Load pre-trained model.')
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
     if args.parallel:
@@ -84,11 +89,7 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
 
     train_reader = paddle.batch(
         reader.train(data_args, train_file_list), batch_size=batch_size)
-    feeder = fluid.DataFeeder(
-        place=place,
-        feed_list=[
-            network.image, network.gt_box, network.gt_label, network.difficult
-        ])
+    feeder = fluid.DataFeeder(place=place, feed_list=network.feeds())
 
     def save_model(postfix):
         model_path = os.path.join(model_save_dir, postfix)
@@ -96,8 +97,6 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
             shutil.rmtree(model_path)
         print 'save models to %s' % (model_path)
         fluid.io.save_persistables(exe, model_path)
-
-    best_map = 0.
 
     for pass_id in range(num_passes):
         start_time = time.time()
@@ -108,20 +107,27 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
             start_time = time.time()
             if len(data) < devices_num: continue
             if args.parallel:
-                loss_v, = train_exe.run(fetch_list=[loss.name],
-                                        feed=feeder.feed(data))
+                fetch_vars = train_exe.run(fetch_list=[v.name for v in fetches],
+                                           feed=feeder.feed(data))
             else:
-                loss_v, = exe.run(fluid.default_main_program(),
-                                  feed=feeder.feed(data),
-                                  fetch_list=[loss])
+                fetch_vars = exe.run(fluid.default_main_program(),
+                                     feed=feeder.feed(data),
+                                     fetch_list=fetches)
             end_time = time.time()
-            loss_v = np.mean(np.array(loss_v))
+            fetch_vars = [np.mean(np.array(v)) for v in fetch_vars]
             if batch_id % 1 == 0:
-                print("Pass {0}, batch {1}, loss {2}, time {3}".format(
-                    pass_id, batch_id, loss_v, start_time - prev_start_time))
+                if not args.use_pyramidbox:
+                    print("Pass {0}, batch {1}, loss {2}, time {3}".format(
+                        pass_id, batch_id, fetch_vars[0],
+                        start_time - prev_start_time))
+                else:
+                    print("Pass {0}, batch {1}, face loss {2}, head loss {3}, " \
+                          "time {4}".format(pass_id,
+                           batch_id, fetch_vars[0], fetch_vars[1],
+                           start_time - prev_start_time))
+
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
-    print("Best test map {0}".format(best_map))
 
 
 if __name__ == '__main__':
