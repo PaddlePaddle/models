@@ -120,14 +120,21 @@ def jaccard_overlap(sample_bbox, object_bbox):
 
 
 def satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
-    has_jaccard_overlap = False if sampler.min_jaccard_overlap == 0 and sampler.max_jaccard_overlap == 0 else True
-    has_object_coverage = False if sampler.min_object_coverage == 0 and sampler.max_object_coverage == 0 else True
+    if sampler.min_jaccard_overlap == 0 and sampler.max_jaccard_overlap == 0:
+        has_jaccard_overlap = False
+    else:
+        has_jaccard_overlap = True
+    if sampler.min_object_coverage == 0 and sampler.max_object_coverage == 0:
+        has_object_coverage = False
+    else:
+        has_object_coverage = True
+
     if not has_jaccard_overlap and not has_object_coverage:
         return True
     found = False
     for i in range(len(bbox_labels)):
-        object_bbox = bbox(bbox_labels[i][0], bbox_labels[i][1],
-                           bbox_labels[i][2], bbox_labels[i][3])
+        object_bbox = bbox(bbox_labels[i][1], bbox_labels[i][2],
+                           bbox_labels[i][3], bbox_labels[i][4])
         if has_jaccard_overlap:
             overlap = jaccard_overlap(sample_bbox, object_bbox)
             if sampler.min_jaccard_overlap != 0 and \
@@ -214,8 +221,8 @@ def transform_labels(bbox_labels, sample_bbox):
     sample_labels = []
     for i in range(len(bbox_labels)):
         sample_label = []
-        object_bbox = bbox(bbox_labels[i][0], bbox_labels[i][1],
-                           bbox_labels[i][2], bbox_labels[i][3])
+        object_bbox = bbox(bbox_labels[i][1], bbox_labels[i][2],
+                           bbox_labels[i][3], bbox_labels[i][4])
         if not meet_emit_constraint(object_bbox, sample_bbox):
             continue
         proj_bbox = project_bbox(object_bbox, sample_bbox)

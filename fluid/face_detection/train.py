@@ -43,7 +43,7 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
     if args.use_pyramidbox:
         network = PyramidBox(image_shape, sub_network=args.use_pyramidbox)
         face_loss, head_loss, loss = network.train()
-        fetches = [face_loss, head_loss, loss]
+        fetches = [face_loss, head_loss]
     else:
         network = PyramidBox(image_shape, sub_network=args.use_pyramidbox)
         loss = network.vgg_ssd(num_classes, image_shape)
@@ -122,9 +122,9 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
                         start_time - prev_start_time))
                 else:
                     print("Pass {0}, batch {1}, face loss {2}, head loss {3}, " \
-                          "total loss {4}, time {5}".format(pass_id,
+                          "time {4}".format(pass_id,
                            batch_id, fetch_vars[0], fetch_vars[1],
-                           fetch_vars[2], start_time - prev_start_time))
+                           start_time - prev_start_time))
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
