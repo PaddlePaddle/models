@@ -50,6 +50,7 @@ class PyramidBox(object):
         self.min_sizes = [16., 32., 64., 128., 256., 512.]
         self.steps = [4., 8., 16., 32., 64., 128.]
         self.is_infer = is_infer
+        self.sub_network = sub_network
 
         # the base network is VGG with atrous layers
         self._input()
@@ -59,12 +60,23 @@ class PyramidBox(object):
             self._cpm_module()
             self._pyramidbox()
 
+    def feeds(self):
+        if self.is_infer:
+            return [self.image]
+        else:
+            return [
+                self.image, self.face_box, self.head_box, self.gt_label,
+                self.difficult
+            ]
+
     def _input(self):
         self.image = fluid.layers.data(
             name='image', shape=self.data_shape, dtype='float32')
         if not self.is_infer:
-            self.gt_box = fluid.layers.data(
-                name='gt_box', shape=[4], dtype='float32', lod_level=1)
+            self.face_box = fluid.layers.data(
+                name='face_box', shape=[4], dtype='float32', lod_level=1)
+            self.head_box = fluid.layers.data(
+                name='head_box', shape=[4], dtype='float32', lod_level=1)
             self.gt_label = fluid.layers.data(
                 name='gt_label', shape=[1], dtype='int32', lod_level=1)
             self.difficult = fluid.layers.data(
@@ -267,7 +279,7 @@ class PyramidBox(object):
         # locs, confs, box, box_var = vgg_extra_net(num_classes, image, image_shape)
         # nmsed_out = fluid.layers.detection_output(
         # locs, confs, box, box_var, nms_threshold=args.nms_threshold)
-        loss = fluid.layers.ssd_loss(mbox_locs, mbox_confs, self.gt_box,
+        loss = fluid.layers.ssd_loss(mbox_locs, mbox_confs, self.face_box,
                                      self.gt_label, box, box_var)
         loss = fluid.layers.reduce_sum(loss)
 
@@ -275,11 +287,11 @@ class PyramidBox(object):
 
     def train(self):
         face_loss = fluid.layers.ssd_loss(
-            self.face_mbox_loc, self.face_mbox_conf, self.gt_box, self.gt_label,
-            self.prior_boxes, self.box_vars)
+            self.face_mbox_loc, self.face_mbox_conf, self.face_box,
+            self.gt_label, self.prior_boxes, self.box_vars)
         head_loss = fluid.layers.ssd_loss(
-            self.head_mbox_loc, self.head_mbox_conf, self.gt_box, self.gt_label,
-            self.prior_boxes, self.box_vars)
+            self.head_mbox_loc, self.head_mbox_conf, self.head_box,
+            self.gt_label, self.prior_boxes, self.box_vars)
         face_loss = fluid.layers.reduce_sum(face_loss)
         head_loss = fluid.layers.reduce_sum(head_loss)
         total_loss = face_loss + head_loss
@@ -303,14 +315,14 @@ class PyramidBox(object):
             face_map_eval = fluid.evaluator.DetectionMAP(
                 face_nmsed_out,
                 self.gt_label,
-                self.gt_box,
+                self.face_box,
                 class_num=2,
                 overlap_threshold=0.5,
                 ap_version='11point')
             head_map_eval = fluid.evaluator.DetectionMAP(
                 head_nmsed_out,
                 self.gt_label,
-                self.gt_box,
+                self.head_box,
                 class_num=2,
                 overlap_threshold=0.5,
                 ap_version='11point')
