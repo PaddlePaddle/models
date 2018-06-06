@@ -272,3 +272,29 @@ def pyramidbox(settings, file_list, mode, shuffle):
 
 def train(settings, file_list, shuffle=True):
     return pyramidbox(settings, file_list, 'train', shuffle)
+
+
+def infer(settings, image_path):
+    def batch_reader():
+        img = Image.open(image_path)
+        if img.mode == 'L':
+            img = im.convert('RGB')
+        im_width, im_height = img.size
+        if settings.resize_w and settings.resize_h:
+            img = img.resize((settings.resize_w, settings.resize_h),
+                             Image.ANTIALIAS)
+        img = np.array(img)
+        # HWC to CHW
+        if len(img.shape) == 3:
+            img = np.swapaxes(img, 1, 2)
+            img = np.swapaxes(img, 1, 0)
+        # RBG to BGR
+        img = img[[2, 1, 0], :, :]
+        img = img.astype('float32')
+        img -= settings.img_mean
+        img = img * 0.007843
+        img = [img]
+        img = np.array(img)
+        return img
+
+    return batch_reader

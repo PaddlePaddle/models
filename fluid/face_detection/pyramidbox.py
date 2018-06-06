@@ -45,12 +45,17 @@ def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
 
 
 class PyramidBox(object):
-    def __init__(self, data_shape, is_infer=False, sub_network=False):
+    def __init__(self,
+                 data_shape,
+                 num_classes,
+                 is_infer=False,
+                 sub_network=False):
         self.data_shape = data_shape
         self.min_sizes = [16., 32., 64., 128., 256., 512.]
         self.steps = [4., 8., 16., 32., 64., 128.]
         self.is_infer = is_infer
         self.sub_network = sub_network
+        self.num_classes = num_classes
 
         # the base network is VGG with atrous layers
         self._input()
@@ -59,6 +64,8 @@ class PyramidBox(object):
             self._low_level_fpn()
             self._cpm_module()
             self._pyramidbox()
+        else:
+            self._vgg_ssd()
 
     def feeds(self):
         if self.is_infer:
@@ -188,9 +195,10 @@ class PyramidBox(object):
         """
         Get prior-boxes and pyramid-box
         """
-        self.ssh_conv3_norm = self._l2_norm_scale(self.ssh_conv3)
-        self.ssh_conv4_norm = self._l2_norm_scale(self.ssh_conv4)
-        self.ssh_conv5_norm = self._l2_norm_scale(self.ssh_conv5)
+        self.ssh_conv3_norm = self._l2_norm_scale(
+            self.ssh_conv3, init_scale=10.)
+        self.ssh_conv4_norm = self._l2_norm_scale(self.ssh_conv4, init_scale=8.)
+        self.ssh_conv5_norm = self._l2_norm_scale(self.ssh_conv5, init_scale=5.)
 
         def permute_and_reshape(input, last_dim):
             trans = fluid.layers.transpose(input, perm=[0, 2, 3, 1])
@@ -253,10 +261,10 @@ class PyramidBox(object):
         self.prior_boxes = fluid.layers.concat(boxes)
         self.box_vars = fluid.layers.concat(vars)
 
-    def vgg_ssd(self, num_classes, image_shape):
-        self.conv3_norm = self._l2_norm_scale(self.conv3)
-        self.conv4_norm = self._l2_norm_scale(self.conv4)
-        self.conv5_norm = self._l2_norm_scale(self.conv5)
+    def _vgg_ssd(self):
+        self.conv3_norm = self._l2_norm_scale(self.conv3, init_scale=10.)
+        self.conv4_norm = self._l2_norm_scale(self.conv4, init_scale=8.)
+        self.conv5_norm = self._l2_norm_scale(self.conv5, init_scale=5.)
 
         mbox_locs, mbox_confs, box, box_var = fluid.layers.multi_box_head(
             inputs=[
@@ -264,23 +272,30 @@ class PyramidBox(object):
                 self.conv7, self.conv8
             ],
             image=self.image,
-            num_classes=num_classes,
-            # min_ratio=20,
-            # max_ratio=90,
+            num_classes=self.num_classes,
             min_sizes=[16.0, 32.0, 64.0, 128.0, 256.0, 512.0],
             max_sizes=[[], [], [], [], [], []],
-            # max_sizes=[[], 150.0, 195.0, 240.0, 285.0, 300.0],
             aspect_ratios=[[1.], [1.], [1.], [1.], [1.], [1.]],
             steps=[4.0, 8.0, 16.0, 32.0, 64.0, 128.0],
-            base_size=image_shape[2],
+            base_size=self.data_shape[2],
             offset=0.5,
             flip=False)
 
-        # locs, confs, box, box_var = vgg_extra_net(num_classes, image, image_shape)
-        # nmsed_out = fluid.layers.detection_output(
-        # locs, confs, box, box_var, nms_threshold=args.nms_threshold)
-        loss = fluid.layers.ssd_loss(mbox_locs, mbox_confs, self.face_box,
-                                     self.gt_label, box, box_var)
+        self.face_mbox_loc = mbox_locs
+        self.face_mbox_conf = mbox_confs
+        self.prior_boxes = box
+        self.box_vars = box_var
+
+    def vgg_ssd_loss(self):
+        loss = fluid.layers.ssd_loss(
+            self.face_mbox_loc,
+            self.face_mbox_conf,
+            self.face_box,
+            self.gt_label,
+            self.prior_boxes,
+            self.box_vars,
+            overlap_threshold=0.35,
+            neg_overlap=0.35)
         loss = fluid.layers.reduce_sum(loss)
 
         return loss
@@ -297,7 +312,7 @@ class PyramidBox(object):
         total_loss = face_loss + head_loss
         return face_loss, head_loss, total_loss
 
-    def test(self):
+    def infer(self):
         test_program = fluid.default_main_program().clone(for_test=True)
         with fluid.program_guard(test_program):
             face_nmsed_out = fluid.layers.detection_output(
@@ -306,24 +321,4 @@ class PyramidBox(object):
                 self.prior_boxes,
                 self.box_vars,
                 nms_threshold=0.45)
-            head_nmsed_out = fluid.layers.detection_output(
-                self.head_mbox_loc,
-                self.head_mbox_conf,
-                self.prior_boxes,
-                self.box_vars,
-                nms_threshold=0.45)
-            face_map_eval = fluid.evaluator.DetectionMAP(
-                face_nmsed_out,
-                self.gt_label,
-                self.face_box,
-                class_num=2,
-                overlap_threshold=0.5,
-                ap_version='11point')
-            head_map_eval = fluid.evaluator.DetectionMAP(
-                head_nmsed_out,
-                self.gt_label,
-                self.head_box,
-                class_num=2,
-                overlap_threshold=0.5,
-                ap_version='11point')
-        return test_program, face_map_eval, head_map_eval
+        return test_program, face_nmsed_out
