@@ -8,56 +8,54 @@ import numpy as np
 from tqdm import tqdm
 import math
 from rllab.utils import logger
-from rllab import lab
-from tensorpack.utils.globvars import globalns as param
-
 
 UPDATE_TARGET_STEPS = 10000 // 4
 
-
 class Model(object):
-    def __init__(self, state_dim, action_dim, gamma):
+    def __init__(self, state_dim, action_dim, gamma, hist_len, use_cuda = False):
         self.img_height = state_dim[0]
         self.img_width = state_dim[1]
         self.action_dim = action_dim
         self.gamma = gamma
         self.exploration = 1.1
+        self.hist_len = hist_len
+        self.use_cuda = use_cuda
 
         self.global_step = 0
         self._build_net()
 
     def _get_inputs(self):
-        return [lab.data(name='state', shape=[param.hist_len, self.img_height, self.img_width], dtype='float32'),
-                lab.data(name='action', shape=[1], dtype='int32'), 
-                lab.data(name='reward', shape=[], dtype='float32'),
-                lab.data(name='next_s', shape=[param.hist_len, self.img_height, self.img_width], dtype='float32'),
-                lab.data(name='isOver', shape=[], dtype='bool')]
+        return [fluid.layers.data(
+                    name='state', shape=[self.hist_len, self.img_height, self.img_width], dtype='float32'),
+                fluid.layers.data(
+                    name='action', shape=[1], dtype='int32'), 
+                fluid.layers.data(
+                    name='reward', shape=[], dtype='float32'),
+                fluid.layers.data(
+                    name='next_s', shape=[self.hist_len, self.img_height, self.img_width], dtype='float32'),
+                fluid.layers.data(
+                    name='isOver', shape=[], dtype='bool')]
 
     def _build_net(self):
         state, action, reward, next_s, isOver = self._get_inputs()
-        state = lab.cast(state, 'float32')
-        with lab.variable_scope('policy'):
-            self.pred_value = self.get_DQN_prediction(state)
+        self.pred_value = self.get_DQN_prediction(state)
         self.predict_program = fluid.default_main_program().clone()
 
-        next_s = lab.cast(next_s, 'float32')
-        reward = lab.clip(reward, min=-1.0, max=1.0)
+        reward = fluid.layers.clip(reward, min=-1.0, max=1.0)
 
-        action_onehot = lab.one_hot(action, self.action_dim)
-        action_onehot = lab.cast(action_onehot, dtype='float32')
+        action_onehot = fluid.layers.one_hot(action, self.action_dim)
+        action_onehot = fluid.layers.cast(action_onehot, dtype='float32')
 
-        pred_action_value = lab.reduce_sum(\
-                            lab.elementwise_mul(action_onehot, self.pred_value), dim=1)
+        pred_action_value = fluid.layers.reduce_sum(
+                                fluid.layers.elementwise_mul(action_onehot, self.pred_value), dim=1)
 
-        with lab.variable_scope('target'):
-            targetQ_predict_value = self.get_DQN_prediction(next_s)
-        best_v = lab.reduce_max(targetQ_predict_value, dim=1)
-        best_v = lab.StopGradient(best_v)
-        #best_v.stop_gradient = True
+        targetQ_predict_value = self.get_DQN_prediction(next_s, target=True)
+        best_v = fluid.layers.reduce_max(targetQ_predict_value, dim=1)
+        best_v.stop_gradient = True
 
-        target = reward + (1.0 - lab.cast(isOver, dtype='float32')) * self.gamma * best_v
-        cost = lab.SquareError(pred_action_value, target)
-        cost = lab.reduce_mean(cost)
+        target = reward + (1.0 - fluid.layers.cast(isOver, dtype='float32')) * self.gamma * best_v
+        cost = fluid.layers.SquareError(pred_action_value, target)
+        cost = fluid.layers.reduce_mean(cost)
 
         self._sync_program = self._build_sync_target_network()
 
@@ -68,29 +66,62 @@ class Model(object):
         self.train_program = fluid.default_main_program()
 
         # fluid exe
-        place = fluid.CUDAPlace(0)
+        place = fluid.CUDAPlace(0) if self.use_cuda else fluid.CPUPlace()
         #place = fluid.CPUPlace()
         self.exe = fluid.Executor(place)
         self.exe.run(fluid.default_startup_program())
 
-    def get_DQN_prediction(self, image):
+    def get_DQN_prediction(self, image, target = False):
         image = image / 255.0
-        l = lab.Conv2D('conv1', image, num_filters=32, filter_size=[5, 5], padding=[2, 2], act='relu')
-        l = lab.MaxPooling(l, pool_size=[2, 2], pool_stride=[2, 2])
 
-        l = lab.Conv2D('conv2', l, num_filters=32, filter_size=[5, 5], padding=[2, 2], act='relu')
-        l = lab.MaxPooling(l, pool_size=[2, 2], pool_stride=[2, 2])
-
-        l = lab.Conv2D('conv3', l, num_filters=64, filter_size=[4, 4], padding=[1, 1], act='relu')
-        l = lab.MaxPooling(l, pool_size=[2, 2], pool_stride=[2, 2])
-
-        l = lab.Conv2D('conv4', l, num_filters=64, filter_size=[3, 3], padding=[1, 1], act='relu')
-        logger.info("l:{}".format(l))
+        variable_field = 'target' if target else 'policy'
         
-        l = lab.reshape(l, shape=[-1, 6400])
-        value = lab.FullyConnected('value', l, self.action_dim)
+        conv1 = fluid.layers.conv2d(input=image,
+                                    num_filters = 32,
+                                    filter_size = [5, 5],
+                                    stride = [1, 1],
+                                    padding = [2, 2],
+                                    act = 'relu',
+                                    param_attr=ParamAttr(name='{}_conv1'.format(variable_field)),
+                                    bias_attr=ParamAttr(name='{}_conv1_b'.format(variable_field)))
+        max_pool1 = fluid.layers.pool2d(input=conv1, pool_size=[2, 2], pool_stride=[2, 2], pool_type='max')
 
-        return value
+        conv2 = fluid.layers.conv2d(input=max_pool1,
+                                    num_filters = 32,
+                                    filter_size = [5, 5],
+                                    stride = [1, 1],
+                                    padding = [2, 2],
+                                    act = 'relu',
+                                    param_attr=ParamAttr(name='{}_conv2'.format(variable_field)),
+                                    bias_attr=ParamAttr(name='{}_conv2_b'.format(variable_field)))
+        max_pool2 = fluid.layers.pool2d(input=conv2, pool_size=[2, 2], pool_stride=[2, 2], pool_type='max')
+
+        conv3 = fluid.layers.conv2d(input=max_pool2,
+                                    num_filters = 64,
+                                    filter_size = [4, 4],
+                                    stride = [1, 1],
+                                    padding = [1, 1],
+                                    act = 'relu',
+                                    param_attr=ParamAttr(name='{}_conv3'.format(variable_field)),
+                                    bias_attr=ParamAttr(name='{}_conv3_b'.format(variable_field)))
+        max_pool3 = fluid.layers.pool2d(input=conv3, pool_size=[2, 2], pool_stride=[2, 2], pool_type='max')
+
+        conv4 = fluid.layers.conv2d(input=max_pool3,
+                                    num_filters = 64,
+                                    filter_size = [3, 3],
+                                    stride = [1, 1],
+                                    padding = [1, 1],
+                                    act = 'relu',
+                                    param_attr=ParamAttr(name='{}_conv4'.format(variable_field)),
+                                    bias_attr=ParamAttr(name='{}_conv4_b'.format(variable_field)))
+        
+        flatten = fluid.layers.reshape(conv4, shape=[-1, np.prod(conv4.shape[1:])])
+        
+        out = fluid.layers.fc(input=flatten,
+                            size = self.action_dim,
+                            param_attr=ParamAttr(name='{}_fc1'.format(variable_field)),
+                            bias_attr=ParamAttr(name='{}_fc1_b'.format(variable_field)))
+        return out
 
     def _build_sync_target_network(self):
         vars = list(fluid.default_main_program().list_vars())
@@ -104,7 +135,7 @@ class Model(object):
             sync_ops = []
             for i, var in enumerate(policy_vars):
                 logger.info("[assign] policy:{}   target:{}".format(policy_vars[i].name, target_vars[i].name))
-                sync_op = lab.assign(policy_vars[i], target_vars[i])
+                sync_op = fluid.layers.assign(policy_vars[i], target_vars[i])
                 sync_ops.append(sync_op)
         sync_program = sync_program.prune(sync_ops)
         return sync_program

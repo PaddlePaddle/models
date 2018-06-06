@@ -6,7 +6,6 @@ import numpy as np
 import copy
 from collections import deque, namedtuple
 import threading
-from tensorpack.utils.globvars import globalns as param
 from six.moves import queue, range
 
 from tensorpack.utils import logger
@@ -98,8 +97,8 @@ class ReplayMemory(object):
         self.action[pos] = exp.action
         self.isOver[pos] = exp.isOver
 
-    def sample_batch(self):
-        batch_idx = np.random.randint(self._curr_size - self.history_len - 1, size=param.batch_size)
+    def sample_batch(self, batch_size):
+        batch_idx = np.random.randint(self._curr_size - self.history_len - 1, size=batch_size)
         batch_idx = (self._curr_pos + batch_idx) % self._curr_size
         batch_exp = [self.sample(i) for i in batch_idx]
         return self._process_batch(batch_exp)

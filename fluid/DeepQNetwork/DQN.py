@@ -13,24 +13,19 @@ import numpy as np
 import os
 from tensorpack.utils import logger
 from atari_wrapper import FrameStack, MapState, FireResetEnv, LimitLength
-from tensorpack.utils.globvars import globalns as param
 from collections import deque
 from utils import Summary
 
-param.hist_len = 4
+HIST_LEN = 4
 UPDATE_FREQ = 4
 
 #MEMORY_WARMUP_SIZE = 2000
 MEMORY_SIZE = 1e6
 MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20
-BATCH_SIZE = 64
 IMAGE_SIZE = (84, 84)
 FRAME_HISTORY = 4
 ACTION_REPEAT = 4   # aka FRAME_SKIP
 UPDATE_FREQ = 4
-
-ROM_FILE = None
-
 
 def run_train_episode(agent, env, exp):
     total_reward = 0
@@ -50,8 +45,8 @@ def run_train_episode(agent, env, exp):
         # start training 
         if len(exp) > MEMORY_WARMUP_SIZE:
             if step % UPDATE_FREQ == 0:
-                batch_all_state, batch_action, batch_reward, batch_isOver = exp.sample_batch()
-                batch_state = batch_all_state[:,:,:,:param.hist_len]
+                batch_all_state, batch_action, batch_reward, batch_isOver = exp.sample_batch(args.batch_size)
+                batch_state = batch_all_state[:,:,:,:HIST_LEN]
                 batch_next_state = batch_all_state[:,:,:,1:]
                 #logger.info("batch_state:{}   batch_next_state:{}".format(batch_state.shape, batch_next_state.shape))
                 agent.train(batch_state, batch_action, batch_reward, batch_next_state, batch_isOver)
@@ -62,7 +57,7 @@ def run_train_episode(agent, env, exp):
     return total_reward, step
 
 def get_player(viz=False, train=False):
-    env = AtariPlayer(ROM_FILE, frame_skip=ACTION_REPEAT, viz=viz,
+    env = AtariPlayer(args.rom, frame_skip=ACTION_REPEAT, viz=viz,
                       live_lost_as_eoe=train, max_num_frames=60000)
     env = FireResetEnv(env)
     env = MapState(env, lambda im: cv2.resize(im, IMAGE_SIZE))
@@ -94,9 +89,9 @@ def train_agent():
     env = get_player(train=True)
     test_env = get_player()
     logger.info("build player [end]")
-    exp = ReplayMemory(args.mem_size, IMAGE_SIZE, param.hist_len)
+    exp = ReplayMemory(args.mem_size, IMAGE_SIZE, HIST_LEN)
     action_dim = env.action_space.n
-    agent = Model(IMAGE_SIZE, action_dim, args.gamma)
+    agent = Model(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN, args.use_cuda)
 
     logger.info("fill ReplayMemory before training")
     with tqdm(total=MEMORY_WARMUP_SIZE) as pbar:
@@ -130,21 +125,17 @@ def train_agent():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, default='MountainCar-v0', \
-                        help='enviroment to train DQN model, e.g CartPole-v0')
-    parser.add_argument('--gamma', type=float, default=0.99, \
+    parser.add_argument('--use_cuda', action='store_true',
+                        help='if set, use cuda')
+    parser.add_argument('--gamma', type=float, default=0.99,
                         help='discount factor for accumulated reward computation')
-    parser.add_argument('--mem_size', type=int, default=1000000, \
+    parser.add_argument('--mem_size', type=int, default=1000000,
                         help='memory size for experience replay')
-    parser.add_argument('--batch_size', type=int, default=64, \
+    parser.add_argument('--batch_size', type=int, default=64,
                         help='batch size for training')
     parser.add_argument('--rom', help='atari rom', required=True)
     args = parser.parse_args()
 
-    ROM_FILE = args.rom
-    param.batch_size = args.batch_size
-
-
     logger.set_logger_dir(os.path.join('train_log', 'DQN-{}'.format(
-        os.path.basename(ROM_FILE).split('.')[0])), action='d')
+        os.path.basename(args.rom).split('.')[0])), action='d')
     train_agent()
