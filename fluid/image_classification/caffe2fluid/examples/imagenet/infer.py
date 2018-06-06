@@ -78,6 +78,54 @@ def dump_results(results, names, root):
         np.save(filename + '.npy', res)
 
 
+def normalize_name(name_map):
+    return {
+        k.replace('/', '_'): v.replace('/', '_')
+        for k, v in name_map.items()
+    }
+
+
+def rename_layer_name(names, net):
+    """ because the names of output layers from caffe maybe changed for 'INPLACE' operation,
+        and paddle's layers maybe fused, so we need to re-mapping their relationship for comparing
+    """
+    #build a mapping from paddle's name to caffe's name
+    trace = getattr(net, 'name_trace', None)
+    cf_trace = trace['caffe']
+    real2cf = normalize_name(cf_trace['real2chg'])
+
+    pd_trace = trace['paddle']
+    pd2real = normalize_name(pd_trace['chg2real'])
+    pd_deleted = normalize_name(pd_trace['deleted'])
+
+    pd2cf_name = {}
+    for pd_name, real_name in pd2real.items():
+        if real_name in real2cf:
+            pd2cf_name[pd_name] = '%s.%s.%s.both_changed' \
+                    % (real2cf[real_name], real_name, pd_name)
+        else:
+            pd2cf_name[pd_name] = '%s.%s.pd_changed' % (real_name, pd_name)
+
+    for pd_name, trace in pd_deleted.items():
+        assert pd_name not in pd2cf_name, "this name[%s] has already exist" % (
+            pd_name)
+        pd2cf_name[pd_name] = '%s.pd_deleted' % (pd_name)
+
+    for real_name, cf_name in real2cf.items():
+        if cf_name not in pd2cf_name:
+            pd2cf_name[cf_name] = '%s.cf_deleted' % (cf_name)
+
+        if real_name not in pd2cf_name:
+            pd2cf_name[real_name] = '%s.%s.cf_changed' % (cf_name, real_name)
+
+    ret = []
+    for name in names:
+        new_name = pd2cf_name[name] if name in pd2cf_name else name
+        print('remap paddle name[%s] to output name[%s]' % (name, new_name))
+        ret.append(new_name)
+    return ret
+
+
 def load_model(exe, place, net_file, net_name, net_weight, debug):
     """ load model using xxxnet.py and xxxnet.npy
     """
@@ -117,7 +165,8 @@ def load_model(exe, place, net_file, net_name, net_weight, debug):
         'feed_names': feed_names,
         'fetch_vars': fetch_list_var,
         'fetch_names': fetch_list_name,
-        'feed_shapes': feed_shapes
+        'feed_shapes': feed_shapes,
+        'net': net
     }
 
 
@@ -171,6 +220,7 @@ def infer(model_path, imgfile, net_file=None, net_name=None, debug=True):
         fetch_targets = ret['fetch_vars']
         fetch_list_name = ret['fetch_names']
         feed_shapes = ret['feed_shapes']
+        net = ret['net']
 
     input_name = feed_names[0]
     input_shape = feed_shapes[0]
@@ -182,7 +232,8 @@ def infer(model_path, imgfile, net_file=None, net_name=None, debug=True):
 
     if debug is True:
         dump_path = 'results.paddle'
-        dump_results(results, fetch_list_name, dump_path)
+        dump_names = rename_layer_name(fetch_list_name, net)
+        dump_results(results, dump_names, dump_path)
         print('all result of layers dumped to [%s]' % (dump_path))
     else:
         result = results[0]
