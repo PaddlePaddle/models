@@ -49,8 +49,8 @@ LIB_DIRS = [os.path.abspath(path) for path in LIB_DIRS]
 
 ext_modules = [
     Extension(
-        'post_decode_faster',
-        ['pybind.cc', 'post_decode_faster.cc'],
+        'post_latgen_faster_mapped',
+        ['pybind.cc', 'post_latgen_faster_mapped.cc'],
         include_dirs=[
             'pybind11/include', '.', os.path.join(kaldi_root, 'src'),
             os.path.join(kaldi_root, 'tools/openfst/src/include')
@@ -63,8 +63,8 @@ ext_modules = [
 ]
 
 setup(
-    name='post_decode_faster',
-    version='0.0.1',
+    name='post_latgen_faster_mapped',
+    version='0.1.0',
     author='Paddle',
     author_email='',
     description='Decoder for Deep ASR model',

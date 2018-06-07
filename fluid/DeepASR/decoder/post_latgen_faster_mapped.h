@@ -17,19 +17,18 @@ limitations under the License. */
 #include "base/kaldi-common.h"
 #include "base/timer.h"
 #include "decoder/decodable-matrix.h"
-#include "decoder/faster-decoder.h"
-#include "fstext/fstext-lib.h"
+#include "decoder/decoder-wrappers.h"
+#include "fstext/kaldi-fst-io.h"
 #include "hmm/transition-model.h"
-#include "lat/kaldi-lattice.h"  // for {Compact}LatticeArc
 #include "tree/context-dep.h"
 #include "util/common-utils.h"
 
-
 class Decoder {
 public:
-  Decoder(std::string word_syms_filename,
+  Decoder(std::string trans_model_in_filename,
+          std::string word_syms_filename,
           std::string fst_in_filename,
-          std::string logprior_rxfilename,
+          std::string logprior_in_filename,
           kaldi::BaseFloat acoustic_scale);
   ~Decoder();
 
@@ -48,11 +47,18 @@ private:
                      kaldi::Matrix<kaldi::BaseFloat> &loglikes);
 
   fst::SymbolTable *word_syms;
-  fst::VectorFst<fst::StdArc> *decode_fst;
-  kaldi::FasterDecoder *decoder;
+  fst::Fst<fst::StdArc> *decode_fst;
+  kaldi::LatticeFasterDecoder *decoder;
   kaldi::Vector<kaldi::BaseFloat> logprior;
+  kaldi::TransitionModel trans_model;
+
+  kaldi::CompactLatticeWriter compact_lattice_writer;
+  kaldi::LatticeWriter lattice_writer;
+  kaldi::Int32VectorWriter *words_writer;
+  kaldi::Int32VectorWriter *alignment_writer;
 
   bool binary;
+  bool determinize;
   kaldi::BaseFloat acoustic_scale;
   bool allow_partial;
 };

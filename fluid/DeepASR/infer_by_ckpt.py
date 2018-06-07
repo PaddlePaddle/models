@@ -14,7 +14,7 @@ import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
 import data_utils.augmentor.trans_delay as trans_delay
 import data_utils.async_data_reader as reader
-from decoder.post_decode_faster import Decoder
+from decoder.post_latgen_faster_mapped import Decoder
 from data_utils.util import lodtensor_to_ndarray
 from model_utils.model import stacked_lstmp_model
 from data_utils.util import split_infer_result
@@ -99,19 +99,24 @@ def parse_args():
         default='./checkpoint',
         help="The checkpoint path to init model. (default: %(default)s)")
     parser.add_argument(
+        '--trans_model',
+        type=str,
+        default='./graph/trans_model',
+        help="The path to vocabulary. (default: %(default)s)")
+    parser.add_argument(
         '--vocabulary',
         type=str,
-        default='./decoder/graph/words.txt',
+        default='./graph/words.txt',
         help="The path to vocabulary. (default: %(default)s)")
     parser.add_argument(
         '--graphs',
         type=str,
-        default='./decoder/graph/TLG.fst',
+        default='./graph/TLG.fst',
         help="The path to TLG graphs for decoding. (default: %(default)s)")
     parser.add_argument(
         '--log_prior',
         type=str,
-        default="./decoder/logprior",
+        default="./logprior",
         help="The log prior probs for training data. (default: %(default)s)")
     parser.add_argument(
         '--acoustic_scale',
@@ -123,6 +128,11 @@ def parse_args():
         type=str,
         default="./decoder/target_trans.txt",
         help="The path to target transcription. (default: %(default)s)")
+    parser.add_argument(
+        '--post_matrix_path',
+        type=str,
+        default=None,
+        help="The path to output post prob matrix. (default: %(default)s)")
     args = parser.parse_args()
     return args
 
@@ -144,6 +154,16 @@ def get_trg_trans(args):
             trans_dict[key] = ''.join(items[1:])
             line = trg_trans.readline()
     return trans_dict
+
+
+def out_post_matrix(key, prob):
+    with open(args.post_matrix_path, "a") as post_matrix:
+        post_matrix.write(key + " [\n")
+        for i in range(prob.shape[0]):
+            for j in range(prob.shape[1]):
+                post_matrix.write(str(prob[i][j]) + " ")
+            post_matrix.write("\n")
+        post_matrix.write("]\n")
 
 
 def infer_from_ckpt(args):
@@ -174,13 +194,13 @@ def infer_from_ckpt(args):
     fluid.io.load_persistables(exe, args.checkpoint)
 
     # init decoder
-    decoder = Decoder(args.vocabulary, args.graphs, args.log_prior,
-                      args.acoustic_scale)
+    decoder = Decoder(args.trans_model, args.vocabulary, args.graphs,
+                      args.log_prior, args.acoustic_scale)
 
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
         trans_mean_variance_norm.TransMeanVarianceNorm(args.mean_var),
-        trans_splice.TransSplice(), trans_delay.TransDelay(5)
+        trans_splice.TransSplice(5, 5), trans_delay.TransDelay(5)
     ]
 
     feature_t = fluid.LoDTensor()
@@ -197,6 +217,8 @@ def infer_from_ckpt(args):
                                              args.minimum_batch_size)):
         # load_data
         (features, labels, lod, name_lst) = batch_data
+        features = np.reshape(features, (-1, 11, 3, args.frame_dim))
+        features = np.transpose(features, (0, 2, 1, 3))
         feature_t.set(features, place)
         feature_t.set_lod([lod])
         label_t.set(labels, place)
@@ -216,6 +238,9 @@ def infer_from_ckpt(args):
         for index, sample in enumerate(infer_batch):
             key = name_lst[index]
             ref = trg_trans[key]
+            if args.post_matrix_path is not None:
+                out_post_matrix(key, sample)
+            '''
             hyp = decoder.decode(key, sample)
             edit_dist, ref_len = char_errors(ref.decode("utf8"), hyp)
             total_edit_dist += edit_dist
@@ -223,6 +248,8 @@ def infer_from_ckpt(args):
             print(key + "|Ref:", ref)
             print(key + "|Hyp:", hyp.encode("utf8"))
             print("Instance CER: ", edit_dist / ref_len)
+            '''
+        print("batch: ", batch_id)
 
     print("Total CER = %f" % (total_edit_dist / total_ref_len))
 

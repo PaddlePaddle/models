@@ -15,15 +15,19 @@ limitations under the License. */
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "post_decode_faster.h"
+#include "post_latgen_faster_mapped.h"
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(post_decode_faster, m) {
+PYBIND11_MODULE(post_latgen_faster_mapped, m) {
   m.doc() = "Decoder for Deep ASR model";
 
   py::class_<Decoder>(m, "Decoder")
-      .def(py::init<std::string, std::string, std::string, kaldi::BaseFloat>())
+      .def(py::init<std::string,
+                    std::string,
+                    std::string,
+                    std::string,
+                    kaldi::BaseFloat>())
       .def("decode",
            (std::vector<std::string> (Decoder::*)(std::string)) &
                Decoder::decode,
