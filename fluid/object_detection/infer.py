@@ -52,19 +52,14 @@ def infer(args, data_args, image_path, model_dir):
     infer_reader = reader.infer(data_args, image_path)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
-    def infer():
-        data = infer_reader()
-        nmsed_out_v = exe.run(fluid.default_main_program(),
-                              feed=feeder.feed([[data]]),
-                              fetch_list=[nmsed_out],
-                              return_numpy=False)
-        nmsed_out_v = np.array(nmsed_out_v[0])
-        draw_bounding_box_on_image(image_path, nmsed_out_v,
-                                   args.confs_threshold)
-        for dt in nmsed_out_v:
-            category_id, score, xmin, ymin, xmax, ymax = dt.tolist()
-
-    infer()
+    data = infer_reader()
+    nmsed_out_v = exe.run(fluid.default_main_program(),
+                          feed=feeder.feed([[data]]),
+                          fetch_list=[nmsed_out],
+                          return_numpy=False)
+    nmsed_out_v = np.array(nmsed_out_v[0])
+    draw_bounding_box_on_image(image_path, nmsed_out_v,
+                               args.confs_threshold)
 
 
 def draw_bounding_box_on_image(image_path, nms_out, confs_threshold):
@@ -96,8 +91,8 @@ if __name__ == '__main__':
 
     data_args = reader.Settings(
         dataset=args.dataset,
-        data_dir='',
-        label_file='',
+        data_dir='data/pascalvoc',
+        label_file='label_list',
         resize_h=args.resize_h,
         resize_w=args.resize_w,
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R],
