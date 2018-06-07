@@ -40,13 +40,13 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
     image_shape = [3, data_args.resize_h, data_args.resize_w]
 
     fetches = []
+    network = PyramidBox(image_shape, num_classes,
+                         sub_network=args.use_pyramidbox)
     if args.use_pyramidbox:
-        network = PyramidBox(image_shape, sub_network=args.use_pyramidbox)
         face_loss, head_loss, loss = network.train()
         fetches = [face_loss, head_loss]
     else:
-        network = PyramidBox(image_shape, sub_network=args.use_pyramidbox)
-        loss = network.vgg_ssd(num_classes, image_shape)
+        loss = network.vgg_ssd_loss()
         fetches = [loss]
 
     epocs = 12880 / batch_size
@@ -126,7 +126,7 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
                            batch_id, fetch_vars[0], fetch_vars[1],
                            start_time - prev_start_time))
 
-        if pass_id % 10 == 0 or pass_id == num_passes - 1:
+        if pass_id % 1 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
 
 
