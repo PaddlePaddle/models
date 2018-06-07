@@ -4,6 +4,7 @@
 
 from agent import Model
 from atari import AtariPlayer
+import paddle.fluid as fluid
 import gym
 import argparse
 import cv2
@@ -56,8 +57,8 @@ def run_train_episode(agent, env, exp):
             break
     return total_reward, step
 
-def get_player(viz=False, train=False):
-    env = AtariPlayer(args.rom, frame_skip=ACTION_REPEAT, viz=viz,
+def get_player(rom, viz=False, train=False):
+    env = AtariPlayer(rom, frame_skip=ACTION_REPEAT, viz=viz,
                       live_lost_as_eoe=train, max_num_frames=60000)
     env = FireResetEnv(env)
     env = MapState(env, lambda im: cv2.resize(im, IMAGE_SIZE))
@@ -86,8 +87,8 @@ def eval_agent(agent, env):
 
 def train_agent():
     logger.info("build player")
-    env = get_player(train=True)
-    test_env = get_player()
+    env = get_player(args.rom, train=True)
+    test_env = get_player(args.rom)
     logger.info("build player [end]")
     exp = ReplayMemory(args.mem_size, IMAGE_SIZE, HIST_LEN)
     action_dim = env.action_space.n
@@ -103,6 +104,7 @@ def train_agent():
     
     # train
     test_flag = 0
+    save_flag = 0
     summary = Summary(logger.get_logger_dir())
     logger.info("dir:{}".format(logger.get_logger_dir()))
     pbar = tqdm(total=1e8)
@@ -115,12 +117,22 @@ def train_agent():
         pbar.set_description('[train]exploration:{}'.format(agent.exploration))
         pbar.update(step)
 
-        if total_step // 100000 == test_flag:
+        if total_step // args.test_every_steps == test_flag:
             pbar.write("testing")
             eval_reward = eval_agent(agent, test_env)
             test_flag += 1
             summary.log_scalar('eval_reward', eval_reward, total_step)
             logger.info("eval_agent done, eval_reward:{}".format(eval_reward))
+
+        if total_step // args.save_every_steps == save_flag:
+            save_flag += 1
+            save_path = os.path.join(args.model_dirname, 'DQN-{}'.format(os.path.basename(args.rom).split('.')[0]),
+                    'step{}'.format(total_step))
+            fluid.io.save_inference_model(save_path, 
+                                          ['state'],
+                                          agent.pred_value,
+                                          agent.exe,
+                                          agent.predict_program)
     pbar.close()
 
 if __name__ == '__main__':
@@ -134,6 +146,12 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=64,
                         help='batch size for training')
     parser.add_argument('--rom', help='atari rom', required=True)
+    parser.add_argument('--model_dirname', type=str, default='saved_model',
+                        help='dirname to save model')
+    parser.add_argument('--save_every_steps', type=int, default=100000,
+                        help='every steps number to save model')
+    parser.add_argument('--test_every_steps', type=int, default=100000,
+                        help='every steps number to run test')
     args = parser.parse_args()
 
     logger.set_logger_dir(os.path.join('train_log', 'DQN-{}'.format(
