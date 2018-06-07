@@ -97,6 +97,60 @@ Decoder::~Decoder() {
 }
 
 
+std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
+  std::vector<std::string> ret;
+
+  try {
+    double tot_like = 0.0;
+    kaldi::int64 frame_count = 0;
+    // int num_success = 0, num_fail = 0;
+
+    KALDI_ASSERT(ClassifyRspecifier(fst_in_filename, NULL, NULL) ==
+                 kNoRspecifier);
+    SequentialBaseFloatMatrixReader posterior_reader("ark:" +
+                                                     posterior_rspecifier);
+
+    Timer timer;
+    timer.Reset();
+
+    {
+      for (; !posterior_reader.Done(); posterior_reader.Next()) {
+        std::string utt = posterior_reader.Key();
+        Matrix<BaseFloat> &loglikes(posterior_reader.Value());
+        KALDI_LOG << utt << " " << loglikes.NumRows() << " x "
+                  << loglikes.NumCols();
+        ret.push_back(decode(utt, loglikes));
+      }
+    }
+
+    double elapsed = timer.Elapsed();
+    return ret;
+  } catch (const std::exception &e) {
+    std::cerr << e.what();
+    // ret.push_back("error");
+    return ret;
+  }
+}
+
+
+std::string Decoder::decode(
+    std::string key,
+    const std::vector<std::vector<kaldi::BaseFloat>> &log_probs) {
+  size_t num_frames = log_probs.size();
+  size_t dim_label = log_probs[0].size();
+
+  kaldi::Matrix<kaldi::BaseFloat> loglikes(
+      num_frames, dim_label, kaldi::kSetZero, kaldi::kStrideEqualNumCols);
+  for (size_t i = 0; i < num_frames; ++i) {
+    memcpy(loglikes.Data() + i * dim_label,
+           log_probs[i].data(),
+           sizeof(kaldi::BaseFloat) * dim_label);
+  }
+
+  return decode(key, loglikes);
+}
+
+
 std::string Decoder::decode(std::string key,
                             kaldi::Matrix<kaldi::BaseFloat> &loglikes) {
   std::string decoding_result;
@@ -134,39 +188,4 @@ std::string Decoder::decode(std::string key,
     decoding_result = "fail!";
   }
   return decoding_result;
-}
-
-std::vector<std::string> Decoder::decode(std::string posterior_rspecifier) {
-  std::vector<std::string> ret;
-
-  try {
-    double tot_like = 0.0;
-    kaldi::int64 frame_count = 0;
-    // int num_success = 0, num_fail = 0;
-
-    KALDI_ASSERT(ClassifyRspecifier(fst_in_filename, NULL, NULL) ==
-                 kNoRspecifier);
-    SequentialBaseFloatMatrixReader posterior_reader("ark:" +
-                                                     posterior_rspecifier);
-
-    Timer timer;
-    timer.Reset();
-
-    {
-      for (; !posterior_reader.Done(); posterior_reader.Next()) {
-        std::string utt = posterior_reader.Key();
-        Matrix<BaseFloat> &loglikes(posterior_reader.Value());
-        KALDI_LOG << utt << " " << loglikes.NumRows() << " x "
-                  << loglikes.NumCols();
-        ret.push_back(decode(utt, loglikes));
-      }
-    }
-
-    double elapsed = timer.Elapsed();
-    return ret;
-  } catch (const std::exception &e) {
-    std::cerr << e.what();
-    // ret.push_back("error");
-    return ret;
-  }
 }
