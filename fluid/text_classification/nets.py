@@ -75,7 +75,7 @@ def lstm_net(data,
         size=[dict_dim, emb_dim],
         param_attr=fluid.ParamAttr(learning_rate=emb_lr))
 
-    fc0 = fluid.layers.fc(input=emb, size=hid_dim * 4, act='tanh')
+    fc0 = fluid.layers.fc(input=emb, size=hid_dim * 4)
 
     lstm_h, c = fluid.layers.dynamic_lstm(
         input=fc0, size=hid_dim * 4, is_reverse=False)
