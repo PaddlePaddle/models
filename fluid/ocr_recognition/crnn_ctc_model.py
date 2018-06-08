@@ -4,6 +4,8 @@ import paddle.fluid as fluid
 def conv_bn_pool(input,
                  group,
                  out_ch,
+                 use_mkldnn,
+                 use_cudnn,
                  act="relu",
                  param=None,
                  bias=None,
@@ -18,20 +20,23 @@ def conv_bn_pool(input,
             padding=1,
             param_attr=param if param_0 is None else param_0,
             act=None,  # LinearActivation
-            use_cudnn=True)
+            use_mkldnn=use_mkldnn,
+            use_cudnn=use_cudnn)
         #tmp = fluid.layers.Print(tmp)
         tmp = fluid.layers.batch_norm(
             input=tmp,
             act=act,
             param_attr=param,
             bias_attr=bias,
+            use_mkldnn=use_mkldnn,
             is_test=is_test)
     tmp = fluid.layers.pool2d(
         input=tmp,
         pool_size=2,
         pool_type='max',
         pool_stride=2,
-        use_cudnn=True,
+        use_cudnn=use_cudnn,
+        use_mkldnn=use_mkldnn,
         ceil_mode=True)
 
     return tmp
@@ -40,6 +45,8 @@ def conv_bn_pool(input,
 def ocr_convs(input,
               num,
               with_bn,
+              use_mkldnn,
+              use_cudnn,
               regularizer=None,
               gradient_clip=None,
               is_test=False):
@@ -59,16 +66,46 @@ def ocr_convs(input,
         initializer=fluid.initializer.Normal(0.0, 0.01))
     tmp = input
     tmp = conv_bn_pool(
-        tmp, 2, [16, 16], param=w1, bias=b, param_0=w0, is_test=is_test)
+        tmp,
+        2, [16, 16],
+        param=w1,
+        bias=b,
+        param_0=w0,
+        is_test=is_test,
+        use_mkldnn=use_mkldnn,
+        use_cudnn=use_cudnn)
 
-    tmp = conv_bn_pool(tmp, 2, [32, 32], param=w1, bias=b, is_test=is_test)
-    tmp = conv_bn_pool(tmp, 2, [64, 64], param=w1, bias=b, is_test=is_test)
-    tmp = conv_bn_pool(tmp, 2, [128, 128], param=w1, bias=b, is_test=is_test)
+    tmp = conv_bn_pool(
+        tmp,
+        2, [32, 32],
+        param=w1,
+        bias=b,
+        is_test=is_test,
+        use_mkldnn=use_mkldnn,
+        use_cudnn=use_cudnn)
+    tmp = conv_bn_pool(
+        tmp,
+        2, [64, 64],
+        param=w1,
+        bias=b,
+        is_test=is_test,
+        use_mkldnn=use_mkldnn,
+        use_cudnn=use_cudnn)
+    tmp = conv_bn_pool(
+        tmp,
+        2, [128, 128],
+        param=w1,
+        bias=b,
+        is_test=is_test,
+        use_mkldnn=use_mkldnn,
+        use_cudnn=use_cudnn)
     return tmp
 
 
 def encoder_net(images,
                 num_classes,
+                use_mkldnn,
+                use_cudnn,
                 rnn_hidden_size=200,
                 regularizer=None,
                 gradient_clip=None,
@@ -79,6 +116,8 @@ def encoder_net(images,
         True,
         regularizer=regularizer,
         gradient_clip=gradient_clip,
+        use_mkldnn=use_mkldnn,
+        use_cudnn=use_cudnn,
         is_test=is_test)
     sliced_feature = fluid.layers.im2sequence(
         input=conv_features,
@@ -102,12 +141,13 @@ def encoder_net(images,
     fc_1 = fluid.layers.fc(input=sliced_feature,
                            size=rnn_hidden_size * 3,
                            param_attr=para_attr,
-                           bias_attr=bias_attr_nobias)
+                           bias_attr=bias_attr_nobias,
+                           use_mkldnn=use_mkldnn)
     fc_2 = fluid.layers.fc(input=sliced_feature,
                            size=rnn_hidden_size * 3,
                            param_attr=para_attr,
-                           bias_attr=bias_attr_nobias)
-
+                           bias_attr=bias_attr_nobias,
+                           use_mkldnn=use_mkldnn)
     gru_forward = fluid.layers.dynamic_gru(
         input=fc_1,
         size=rnn_hidden_size,
@@ -134,6 +174,7 @@ def encoder_net(images,
     fc_out = fluid.layers.fc(input=[gru_forward, gru_backward],
                              size=num_classes + 1,
                              param_attr=w_attr,
+                             use_mkldnn=use_mkldnn,
                              bias_attr=b_attr)
 
     return fc_out
@@ -145,7 +186,12 @@ def ctc_train_net(images, label, args, num_classes):
     MOMENTUM = 0.9
     regularizer = fluid.regularizer.L2Decay(L2_RATE)
 
-    fc_out = encoder_net(images, num_classes, regularizer=regularizer)
+    fc_out = encoder_net(
+        images,
+        num_classes,
+        regularizer=regularizer,
+        use_mkldnn=args.use_mkldnn,
+        use_cudnn=True if args.use_gpu else False)
     cost = fluid.layers.warpctc(
         input=fc_out, label=label, blank=num_classes, norm_by_times=True)
     sum_cost = fluid.layers.reduce_sum(cost)
@@ -167,13 +213,23 @@ def ctc_train_net(images, label, args, num_classes):
     return sum_cost, error_evaluator, inference_program, model_average
 
 
-def ctc_infer(images, num_classes):
-    fc_out = encoder_net(images, num_classes, is_test=True)
+def ctc_infer(images, num_classes, use_mkldnn, use_cudnn):
+    fc_out = encoder_net(
+        images,
+        num_classes,
+        is_test=True,
+        use_mkldnn=use_mkldnn,
+        use_cudnn=use_cudnn)
     return fluid.layers.ctc_greedy_decoder(input=fc_out, blank=num_classes)
 
 
-def ctc_eval(images, label, num_classes):
-    fc_out = encoder_net(images, num_classes, is_test=True)
+def ctc_eval(images, label, num_classes, use_mkldnn, use_cudnn):
+    fc_out = encoder_net(
+        images,
+        num_classes,
+        is_test=True,
+        use_mkldnn=use_mkldnn,
+        use_cudnn=use_cudnn)
     decoded_out = fluid.layers.ctc_greedy_decoder(
         input=fc_out, blank=num_classes)
 
