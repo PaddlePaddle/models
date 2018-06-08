@@ -42,9 +42,9 @@ class InferTaskConfig(object):
     # the number of decoded sentences to output.
     n_best = 1
     # the flags indicating whether to output the special tokens.
-    output_bos = False
-    output_eos = False
-    output_unk = False
+    output_bos = True  #False
+    output_eos = True  #False
+    output_unk = True  #False
     # the directory for loading the trained model.
     model_path = "trained_models/pass_1.infer.model"
 

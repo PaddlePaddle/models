@@ -275,11 +275,11 @@ def translate_batch(exe,
             top_k_indice = np.argpartition(predict, -beam_size)[-beam_size:]
             top_scores_ids = top_k_indice[np.argsort(predict[top_k_indice])[::
                                                                             -1]]
-            top_scores_ids = np.asarray(
-                sorted(
-                    top_scores_ids,
-                    lambda x, y: x / predict_all.shape[-1] - y / predict_all.shape[-1]
-                ))  # sort by pre_branch and score to compare with fast_infer
+            # top_scores_ids = np.asarray(
+            #     sorted(
+            #         top_scores_ids,
+            #         lambda x, y: x / predict_all.shape[-1] - y / predict_all.shape[-1]
+            #     ))  # sort by pre_branch and score to compare with fast_infer
             top_scores = predict[top_scores_ids]
             scores[beam_idx] = top_scores
             prev_branchs[beam_idx].append(top_scores_ids /
@@ -368,6 +368,7 @@ def infer(args):
         start_mark=args.special_token[0],
         end_mark=args.special_token[1],
         unk_mark=args.special_token[2],
+        max_length=ModelHyperParams.max_length,
         clip_last_batch=False)
 
     trg_idx2word = test_data.load_dict(
@@ -394,6 +395,8 @@ def infer(args):
             seq)
 
     for batch_id, data in enumerate(test_data.batch_generator()):
+        if batch_id != 0:
+            continue
         batch_seqs, batch_scores = translate_batch(
             exe,
             [item[0] for item in data],
@@ -422,6 +425,8 @@ def infer(args):
             scores = batch_scores[i]
             for seq in seqs:
                 print(" ".join([trg_idx2word[idx] for idx in seq]))
+            print scores
+        exit(0)
 
 
 def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
@@ -522,12 +527,15 @@ def fast_infer(args):
         start_mark=args.special_token[0],
         end_mark=args.special_token[1],
         unk_mark=args.special_token[2],
+        max_length=ModelHyperParams.max_length,
         clip_last_batch=False)
 
     trg_idx2word = test_data.load_dict(
         dict_path=args.trg_vocab_fpath, reverse=True)
 
     for batch_id, data in enumerate(test_data.batch_generator()):
+        if batch_id != 0:
+            continue
         data_input = prepare_batch_input(
             data, encoder_data_input_fields + fast_decoder_data_input_fields,
             encoder_util_input_fields + fast_decoder_util_input_fields,
@@ -540,6 +548,7 @@ def fast_infer(args):
         # print np.array(seq_ids)#, np.array(seq_scores)
         # print seq_ids.lod()#, seq_scores.lod()
         hyps = [[] for i in range(len(data))]
+        scores = [[] for i in range(len(data))]
         for i in range(len(seq_ids.lod()[0]) - 1):  # for each source sentence
             start = seq_ids.lod()[0][i]
             end = seq_ids.lod()[0][i + 1]
@@ -550,8 +559,11 @@ def fast_infer(args):
                     trg_idx2word[idx]
                     for idx in np.array(seq_ids)[sub_start:sub_end]
                 ]))
+                scores[i].append(np.array(seq_scores)[sub_end - 1])
             print hyps[i]
+            print scores[i]
             print len(hyps[i]), [len(hyp.split()) for hyp in hyps[i]]
+        exit(0)
 
 
 if __name__ == "__main__":

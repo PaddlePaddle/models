@@ -123,15 +123,15 @@ def multi_head_attention(queries,
             act="softmax")
         weights = layers.reshape(
             x=weights, shape=product.shape, actual_shape=post_softmax_shape)
-        global FLAG
-        if FLAG:
-            print "hehehehehe"
-            layers.Print(scaled_q)
-            layers.Print(k)
-            layers.Print(v)
-            layers.Print(product)
-            layers.Print(weights)
-            FLAG = False
+        # global FLAG
+        # if FLAG:
+        #     print "hehehehehe"
+        #     layers.Print(scaled_q)
+        #     layers.Print(k)
+        #     layers.Print(v)
+        #     layers.Print(product)
+        #     layers.Print(weights)
+        #     FLAG = False
         if dropout_rate:
             weights = layers.dropout(
                 weights, dropout_prob=dropout_rate, is_test=False)
@@ -694,7 +694,7 @@ def fast_decode(
                     src_attn_pre_softmax_shape, src_attn_post_softmax_shape),
                 enc_output=pre_enc_output,
                 caches=pre_caches)
-            layers.Print(logits)
+            # layers.Print(logits)
             topk_scores, topk_indices = layers.topk(logits, k=beam_size)
             # layers.Print(topk_scores)
             # layers.Print(topk_indices)
@@ -708,6 +708,7 @@ def fast_decode(
             topk_indices = layers.lod_reset(topk_indices, pre_ids)
             selected_ids, selected_scores = layers.beam_search(
                 pre_ids=pre_ids,
+                pre_scores=pre_scores,
                 ids=topk_indices,
                 scores=accu_scores,
                 beam_size=beam_size,
@@ -735,12 +736,16 @@ def fast_decode(
                     y=attn_post_softmax_shape_delta),
                 slf_attn_post_softmax_shape)
 
-            max_len_cond = layers.less_than(x=step_idx, y=max_len)
-            all_finish_cond = layers.less_than(x=step_idx, y=max_len)
-            layers.logical_or(x=max_len_cond, y=all_finish_cond, out=cond)
-
-        finished_ids, finished_scores = layers.beam_search_decode(ids, scores,
-                                                                  eos_idx)
+            length_cond = layers.less_than(x=step_idx, y=max_len)
+            finish_cond = layers.logical_not(layers.is_empty(x=selected_ids))
+            # layers.Print(length_cond)
+            # layers.Print(finish_cond)
+            layers.logical_and(x=length_cond, y=finish_cond, out=cond)
+        layers.Print(step_idx)
+        # finished_ids, finished_scores = layers.beam_search_decode(ids, scores,
+        #                                                           eos_idx)
+        finished_ids, finished_scores = layers.beam_search_decode(
+            ids, scores, beam_size=beam_size, end_id=eos_idx)
         return finished_ids, finished_scores
 
     finished_ids, finished_scores = beam_search()
