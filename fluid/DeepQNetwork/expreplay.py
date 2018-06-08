@@ -58,35 +58,19 @@ class ReplayMemory(object):
     def sample(self, idx):
         """ return a tuple of (s,r,a,o),
             where s is of shape STATE_SIZE + (hist_len+1,)"""
-        k = self.history_len + 1
-        if idx + k <= self._curr_size:
-            state = self.state[idx: idx + k]
-            reward = self.reward[idx: idx + k]
-            action = self.action[idx: idx + k]
-            isOver = self.isOver[idx: idx + k]
-        else:
-            end = idx + k - self._curr_size
-            state = self._slice(self.state, idx, end)
-            reward = self._slice(self.reward, idx, end)
-            action = self._slice(self.action, idx, end)
-            isOver = self._slice(self.isOver, idx, end)
-        ret = self._pad_sample(state, reward, action, isOver)
-        return ret
-
-    # the next_state is a different episode if current_state.isOver==True
-    def _pad_sample(self, state, reward, action, isOver):
-        for k in range(self.history_len - 2, -1, -1):
-            if isOver[k]:
-                state = copy.deepcopy(state)
-                state[:k + 1].fill(0)
+        state = np.zeros((self.history_len,) + self.state_shape, dtype=np.uint8)
+        cur_idx = idx
+        for k in range(history_len):
+            cur_idx = (idx + k) % self._curr_size
+            state = self.state[cur_idx]
+            if isOver[cur_idx]:
                 break
-        state = state.transpose(1, 2, 0)
-        return (state, reward[-2], action[-2], isOver[-2])
 
-    def _slice(self, arr, start, end):
-        s1 = arr[start:]
-        s2 = arr[:end]
-        return np.concatenate((s1, s2), axis=0)
+        action = self.action[cur_idx]
+        reward = self.reward[cur_idx]
+        isOver = self.isOver[cur_idx]
+        state = state.transpose(1, 2, 0)
+        return state, reward, action, isOver
 
     def __len__(self):
         return self._curr_size
