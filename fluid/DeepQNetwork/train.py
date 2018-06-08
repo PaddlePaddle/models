@@ -2,7 +2,9 @@
 #File: DQN.py
 #Author: yobobobo(zhouboacmer@qq.com)
 
-from agent import Model
+from DQN_agent import DQNModel
+from DoubleDQN_agent import DoubleDQNModel
+from DuelingDQN_agent import DuelingDQNModel
 from atari import AtariPlayer
 import paddle.fluid as fluid
 import gym
@@ -92,7 +94,12 @@ def train_agent():
     logger.info("build player [end]")
     exp = ReplayMemory(args.mem_size, IMAGE_SIZE, HIST_LEN)
     action_dim = env.action_space.n
-    agent = Model(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN, args.use_cuda)
+    if args.rl == 'DoubleDQN':
+        agent = DoubleDQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN, args.use_cuda)
+    elif args.rl == 'DuelingDQN':
+        agent = DuelingDQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN, args.use_cuda)
+    else:
+        agent = DQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN, args.use_cuda)
 
     logger.info("fill ReplayMemory before training")
     with tqdm(total=MEMORY_WARMUP_SIZE) as pbar:
@@ -126,7 +133,8 @@ def train_agent():
 
         if total_step // args.save_every_steps == save_flag:
             save_flag += 1
-            save_path = os.path.join(args.model_dirname, 'DQN-{}'.format(os.path.basename(args.rom).split('.')[0]),
+            save_path = os.path.join(args.model_dirname, 
+                    '{}-{}'.format(args.rl, os.path.basename(args.rom).split('.')[0]),
                     'step{}'.format(total_step))
             fluid.io.save_inference_model(save_path, 
                                           ['state'],
@@ -137,6 +145,8 @@ def train_agent():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--rl', type=str, default='DQN',
+                        help='Reinforcement learning algorithm, support: DQN, DoubleDQN, DeulingDQN')
     parser.add_argument('--use_cuda', action='store_true',
                         help='if set, use cuda')
     parser.add_argument('--gamma', type=float, default=0.99,
@@ -154,6 +164,6 @@ if __name__ == '__main__':
                         help='every steps number to run test')
     args = parser.parse_args()
 
-    logger.set_logger_dir(os.path.join('train_log', 'DQN-{}'.format(
-        os.path.basename(args.rom).split('.')[0])), action='d')
+    logger.set_logger_dir(os.path.join('train_log', 
+        '{}-{}'.format(args.rl, os.path.basename(args.rom).split('.')[0])), action='d')
     train_agent()

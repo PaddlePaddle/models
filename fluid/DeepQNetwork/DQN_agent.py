@@ -11,8 +11,8 @@ from rllab.utils import logger
 
 UPDATE_TARGET_STEPS = 10000 // 4
 
-class Model(object):
-    def __init__(self, state_dim, action_dim, gamma, hist_len, use_cuda = False):
+class DQNModel(object):
+    def __init__(self, state_dim, action_dim, gamma, hist_len, use_cuda=False):
         self.img_height = state_dim[0]
         self.img_width = state_dim[1]
         self.action_dim = action_dim
@@ -67,11 +67,10 @@ class Model(object):
 
         # fluid exe
         place = fluid.CUDAPlace(0) if self.use_cuda else fluid.CPUPlace()
-        #place = fluid.CPUPlace()
         self.exe = fluid.Executor(place)
         self.exe.run(fluid.default_startup_program())
 
-    def get_DQN_prediction(self, image, target = False):
+    def get_DQN_prediction(self, image, target=False):
         image = image / 255.0
 
         variable_field = 'target' if target else 'policy'
@@ -168,11 +167,11 @@ class Model(object):
         next_state = np.transpose(next_state, [0, 3, 1, 2])
 
         action = np.expand_dims(action, -1)
-        self.exe.run(self.train_program, \
-                  feed={'state': state.astype('float32'), \
-                        'action': action.astype('int32'), \
-                        'reward': reward, \
-                        'next_s': next_state.astype('float32'), \
+        self.exe.run(self.train_program,
+                  feed={'state': state.astype('float32'),
+                        'action': action.astype('int32'),
+                        'reward': reward,
+                        'next_s': next_state.astype('float32'),
                         'isOver': isOver})
 
     def sync_target_network(self):
