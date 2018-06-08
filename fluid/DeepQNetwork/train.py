@@ -14,6 +14,8 @@ from tqdm import tqdm
 from expreplay import ReplayMemory, Experience
 import numpy as np
 import os
+
+from datetime import datetime
 from tensorpack.utils import logger
 from atari_wrapper import FrameStack, MapState, FireResetEnv, LimitLength
 from collections import deque
@@ -165,5 +167,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logger.set_logger_dir(os.path.join('train_log', 
-        '{}-{}'.format(args.rl, os.path.basename(args.rom).split('.')[0])), action='d')
+        '{}-{}-{}'.format(args.rl, os.path.basename(args.rom).split('.')[0], str(datetime.now()))), action='d')
     train_agent()

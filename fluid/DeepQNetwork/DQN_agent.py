@@ -8,6 +8,7 @@ import numpy as np
 from tqdm import tqdm
 import math
 from rllab.utils import logger
+from utils import fluid_flatten
 
 UPDATE_TARGET_STEPS = 10000 // 4
 
@@ -76,50 +77,50 @@ class DQNModel(object):
         variable_field = 'target' if target else 'policy'
         
         conv1 = fluid.layers.conv2d(input=image,
-                                    num_filters = 32,
-                                    filter_size = [5, 5],
-                                    stride = [1, 1],
-                                    padding = [2, 2],
-                                    act = 'relu',
+                                    num_filters=32,
+                                    filter_size=[5, 5],
+                                    stride=[1, 1],
+                                    padding=[2, 2],
+                                    act='relu',
                                     param_attr=ParamAttr(name='{}_conv1'.format(variable_field)),
                                     bias_attr=ParamAttr(name='{}_conv1_b'.format(variable_field)))
         max_pool1 = fluid.layers.pool2d(input=conv1, pool_size=[2, 2], pool_stride=[2, 2], pool_type='max')
 
         conv2 = fluid.layers.conv2d(input=max_pool1,
-                                    num_filters = 32,
-                                    filter_size = [5, 5],
-                                    stride = [1, 1],
-                                    padding = [2, 2],
-                                    act = 'relu',
+                                    num_filters=32,
+                                    filter_size=[5, 5],
+                                    stride=[1, 1],
+                                    padding=[2, 2],
+                                    act='relu',
                                     param_attr=ParamAttr(name='{}_conv2'.format(variable_field)),
                                     bias_attr=ParamAttr(name='{}_conv2_b'.format(variable_field)))
         max_pool2 = fluid.layers.pool2d(input=conv2, pool_size=[2, 2], pool_stride=[2, 2], pool_type='max')
 
         conv3 = fluid.layers.conv2d(input=max_pool2,
-                                    num_filters = 64,
-                                    filter_size = [4, 4],
-                                    stride = [1, 1],
-                                    padding = [1, 1],
-                                    act = 'relu',
+                                    num_filters=64,
+                                    filter_size=[4, 4],
+                                    stride=[1, 1],
+                                    padding=[1, 1],
+                                    act='relu',
                                     param_attr=ParamAttr(name='{}_conv3'.format(variable_field)),
                                     bias_attr=ParamAttr(name='{}_conv3_b'.format(variable_field)))
         max_pool3 = fluid.layers.pool2d(input=conv3, pool_size=[2, 2], pool_stride=[2, 2], pool_type='max')
 
         conv4 = fluid.layers.conv2d(input=max_pool3,
-                                    num_filters = 64,
-                                    filter_size = [3, 3],
-                                    stride = [1, 1],
-                                    padding = [1, 1],
-                                    act = 'relu',
+                                    num_filters=64,
+                                    filter_size=[3, 3],
+                                    stride=[1, 1],
+                                    padding=[1, 1],
+                                    act='relu',
                                     param_attr=ParamAttr(name='{}_conv4'.format(variable_field)),
                                     bias_attr=ParamAttr(name='{}_conv4_b'.format(variable_field)))
         
-        flatten = fluid.layers.reshape(conv4, shape=[-1, np.prod(conv4.shape[1:])])
+        flatten = fluid_flatten(conv4)
         
         out = fluid.layers.fc(input=flatten,
-                            size = self.action_dim,
-                            param_attr=ParamAttr(name='{}_fc1'.format(variable_field)),
-                            bias_attr=ParamAttr(name='{}_fc1_b'.format(variable_field)))
+                              size=self.action_dim,
+                              param_attr=ParamAttr(name='{}_fc1'.format(variable_field)),
+                              bias_attr=ParamAttr(name='{}_fc1_b'.format(variable_field)))
         return out
 
     def _build_sync_target_network(self):
