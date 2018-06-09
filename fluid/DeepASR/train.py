@@ -187,7 +187,7 @@ def train(args):
             return -1.0, -1.0
         # test data reader
         test_data_reader = reader.AsyncDataReader(args.val_feature_lst,
-                                                  args.val_label_lst)
+                                                  args.val_label_lst, -1)
         test_data_reader.set_transformers(ltrans)
         test_costs, test_accs = [], []
         for batch_id, batch_data in enumerate(

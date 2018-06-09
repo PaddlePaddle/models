@@ -207,8 +207,11 @@ def infer_from_ckpt(args):
     label_t = fluid.LoDTensor()
 
     # infer data reader
-    infer_data_reader = reader.AsyncDataReader(args.infer_feature_lst,
-                                               args.infer_label_lst)
+    infer_data_reader = reader.AsyncDataReader(
+        args.infer_feature_lst,
+        args.infer_label_lst,
+        drop_frame_len=-1,
+        split_sentence_threshold=-1)
     infer_data_reader.set_transformers(ltrans)
     infer_costs, infer_accs = [], []
     total_edit_dist, total_ref_len = 0.0, 0
