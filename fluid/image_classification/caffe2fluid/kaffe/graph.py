@@ -63,9 +63,10 @@ class Node(object):
 
 
 class Graph(object):
-    def __init__(self, nodes=None, name=None):
+    def __init__(self, nodes=None, name=None, trace={}):
         self.nodes = nodes or []
         self.node_lut = {node.name: node for node in self.nodes}
+        self.output_trace = trace
         if name is None or name == '':
             self.name = 'MyNet'
         else:
@@ -80,6 +81,15 @@ class Graph(object):
             return self.node_lut[name]
         except KeyError:
             raise KaffeError('Layer not found: %s' % name)
+
+    def add_name_trace(self, trace, which='caffe'):
+        self.output_trace[which] = trace
+
+    def get_name_trace(self, which=None):
+        if which is not None:
+            return self.output_trace[which]
+        else:
+            return self.output_trace
 
     def get_input_nodes(self):
         return [node for node in self.nodes if len(node.parents) == 0]
@@ -116,7 +126,7 @@ class Graph(object):
                 *NodeKind.compute_output_shape(node))
 
     def replaced(self, new_nodes):
-        return Graph(nodes=new_nodes, name=self.name)
+        return Graph(nodes=new_nodes, name=self.name, trace=self.output_trace)
 
     def transformed(self, transformers):
         graph = self
@@ -262,6 +272,7 @@ class GraphBuilder(object):
         # The current implementation only supports single-output nodes (note that a node can still
         # have multiple children, since multiple child nodes can refer to the single top's name).
         node_outputs = {}
+        output_trace = {}
         for layer in layers:
             node = graph.get_node(layer.name)
             for input_name in layer.bottom:
@@ -291,7 +302,26 @@ class GraphBuilder(object):
                 #
                 # For both cases, future references to this top re-routes to this node.
                 node_outputs[output_name] = node
+                if output_name in output_trace:
+                    output_trace[output_name].append(node.name)
+                else:
+                    output_trace[output_name] = [output_name, node.name]
 
+        #build a mapping from real-name to changed-name(for caffe's INPLACE inference)
+        real2chg = {}
+        deleted = {}
+        for k, v in output_trace.items():
+            real2chg[v[-1]] = k
+            for n in v:
+                if n in real2chg:
+                    continue
+                if n not in deleted:
+                    deleted[n] = '%s.%s' % (k, v[-1])
+
+        graph.add_name_trace({
+            'real2chg': real2chg,
+            'deleted': deleted
+        }, 'caffe')
         graph.compute_output_shapes()
         return graph
 
