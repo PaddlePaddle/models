@@ -17,7 +17,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
 add_arg('use_pyramidbox',   bool,  False, "Whether use PyramidBox model.")
-add_arg('confs_threshold',  float, 0.15,    "Confidence threshold to draw bbox.")
+add_arg('confs_threshold',  float, 0.25,    "Confidence threshold to draw bbox.")
 add_arg('image_path',       str,   '',        "The data root path.")
 add_arg('model_dir',        str,   '',     "The model path.")
 add_arg('resize_h',         int,   0,    "The resized image height.")
