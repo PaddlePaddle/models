@@ -149,7 +149,6 @@ class DQNModel(object):
                 act = np.random.randint(self.action_dim)
             else:
                 state = np.expand_dims(state, axis=0)
-                state = np.transpose(state, [0, 3, 1, 2])
                 pred_Q = self.exe.run(self.predict_program,
                                     feed={'state': state.astype('float32')},
                                     fetch_list=[self.pred_value])[0]
@@ -163,9 +162,6 @@ class DQNModel(object):
         if self.global_step % UPDATE_TARGET_STEPS == 0:
             self.sync_target_network()
         self.global_step += 1
-        # state -> nchw
-        state = np.transpose(state, [0, 3, 1, 2])
-        next_state = np.transpose(next_state, [0, 3, 1, 2])
 
         action = np.expand_dims(action, -1)
         self.exe.run(self.train_program,

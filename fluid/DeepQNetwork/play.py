@@ -7,7 +7,7 @@ import os
 import numpy as np
 import paddle.fluid as fluid
 
-from DQN import get_player
+from train import get_player
 from tqdm import tqdm
 
 def predict_action(exe, state, predict_program, feed_names, fetch_targets, action_dim):

@@ -40,7 +40,7 @@ def run_train_episode(agent, env, exp):
         step += 1
         history = exp.recent_state()
         history.append(state)
-        history = np.stack(history, axis=2)
+        history = np.stack(history, axis=0)
         action = agent.act(history, train_or_test='train')
         next_state, reward, isOver, _ = env.step(action)
         if reward > 1:
@@ -51,8 +51,8 @@ def run_train_episode(agent, env, exp):
         if len(exp) > MEMORY_WARMUP_SIZE:
             if step % UPDATE_FREQ == 0:
                 batch_all_state, batch_action, batch_reward, batch_isOver = exp.sample_batch(args.batch_size)
-                batch_state = batch_all_state[:,:,:,:HIST_LEN]
-                batch_next_state = batch_all_state[:,:,:,1:]
+                batch_state = batch_all_state[:,:HIST_LEN,:,:]
+                batch_next_state = batch_all_state[:,1:,:,:]
                 #logger.info("batch_state:{}   batch_next_state:{}".format(batch_state.shape, batch_next_state.shape))
                 agent.train(batch_state, batch_action, batch_reward, batch_next_state, batch_isOver)
         total_reward += reward
