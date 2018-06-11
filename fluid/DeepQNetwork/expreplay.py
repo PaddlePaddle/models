@@ -5,15 +5,8 @@
 import numpy as np
 import copy
 from collections import deque, namedtuple
-import threading
-from six.moves import queue, range
 
-from tensorpack.utils import logger
-
-__all__ = ['ExpReplay']
-
-Experience = namedtuple('Experience',
-                        ['state', 'action', 'reward', 'isOver'])
+Experience = namedtuple('Experience', ['state', 'action', 'reward', 'isOver'])
 
 
 class ReplayMemory(object):
@@ -32,61 +25,52 @@ class ReplayMemory(object):
         self._hist = deque(maxlen=history_len - 1)
 
     def append(self, exp):
-        """
-        Args:
-            exp (Experience):
+        """append a new experience into replay memory
         """
         if self._curr_size < self.max_size:
             self._assign(self._curr_pos, exp)
-            self._curr_pos = (self._curr_pos + 1) % self.max_size
             self._curr_size += 1
         else:
             self._assign(self._curr_pos, exp)
-            self._curr_pos = (self._curr_pos + 1) % self.max_size
+        self._curr_pos = (self._curr_pos + 1) % self.max_size
         if exp.isOver:
             self._hist.clear()
         else:
             self._hist.append(exp)
 
     def recent_state(self):
-        """ return a list of (hist_len-1,) + STATE_SIZE """
+        """ maintain recent state for training"""
         lst = list(self._hist)
         states = [np.zeros(self.state_shape, dtype='uint8')] * (self._hist.maxlen - len(lst))
         states.extend([k.state for k in lst])
         return states
 
     def sample(self, idx):
-        """ return a tuple of (s,r,a,o),
-            where s is of shape STATE_SIZE + (hist_len+1,)"""
-        k = self.history_len + 1
-        if idx + k <= self._curr_size:
-            state = self.state[idx: idx + k]
-            reward = self.reward[idx: idx + k]
-            action = self.action[idx: idx + k]
-            isOver = self.isOver[idx: idx + k]
-        else:
-            end = idx + k - self._curr_size
-            state = self._slice(self.state, idx, end)
-            reward = self._slice(self.reward, idx, end)
-            action = self._slice(self.action, idx, end)
-            isOver = self._slice(self.isOver, idx, end)
-        ret = self._pad_sample(state, reward, action, isOver)
-        return ret
+        """ return state, action, reward, isOver,
+            note that some frames in state may be generated from last episode,
+            they should be removed from state
+            """
+        state = np.zeros((self.history_len + 1,) + self.state_shape, dtype=np.uint8)
+        state_idx = np.arange(idx, idx + self.history_len + 1) % self._curr_size
 
-    # the next_state is a different episode if current_state.isOver==True
-    def _pad_sample(self, state, reward, action, isOver):
+        # confirm that no frame was generated from last episode
+        has_last_episode = False
         for k in range(self.history_len - 2, -1, -1):
-            if isOver[k]:
-                state = copy.deepcopy(state)
-                state[:k + 1].fill(0)
+            to_check_idx = state_idx[k]
+            if self.isOver[to_check_idx]:
+                has_last_episode = True
+                state_idx = state_idx[k + 1:]
+                state[k + 1:] = self.state[state_idx]
                 break
-        state = state.transpose(1, 2, 0)
-        return (state, reward[-2], action[-2], isOver[-2])
 
-    def _slice(self, arr, start, end):
-        s1 = arr[start:]
-        s2 = arr[:end]
-        return np.concatenate((s1, s2), axis=0)
+        if not has_last_episode:
+            state = self.state[state_idx]
+
+        real_idx = (idx + self.history_len - 1) % self._curr_size
+        action = self.action[real_idx]
+        reward = self.reward[real_idx]
+        isOver = self.isOver[real_idx]
+        return state, reward, action, isOver
 
     def __len__(self):
         return self._curr_size
@@ -98,6 +82,8 @@ class ReplayMemory(object):
         self.isOver[pos] = exp.isOver
 
     def sample_batch(self, batch_size):
+        """sample a batch from replay memory for training
+        """
         batch_idx = np.random.randint(self._curr_size - self.history_len - 1, size=batch_size)
         batch_idx = (self._curr_pos + batch_idx) % self._curr_size
         batch_exp = [self.sample(i) for i in batch_idx]
