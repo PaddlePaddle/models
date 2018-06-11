@@ -22,7 +22,7 @@ PaddlePaddle 实现该网络结构的代码见 `network_conf.py`。
 
 对双层时间序列的处理，需要先将双层时间序列数据变换成单层时间序列数据，再对每一个单层时间序列进行处理。 在 PaddlePaddle 中 ，`recurrent_group` 是帮助我们构建处理双层序列的层次化模型的主要工具。这里，我们使用两个嵌套的 `recurrent_group` 。外层的 `recurrent_group` 将段落拆解为句子，`step` 函数中拿到的输入是句子序列；内层的 `recurrent_group` 将句子拆解为词语，`step` 函数中拿到的输入是非序列的词语。
 
-在词语级别，我们通过 CNN 网络以词向量为输入输出学习到的句子表示；在段落级别，将每个句子的表示通过池化作用得到段落表示。
+在词语级别，我们运用 CNN 网络，以词向量为输入，输出学习到的句子表示；在段落级别，我们通过池化作用，从若干句子的表示中得到段落的表示。
 
 ``` python
 nest_group = paddle.layer.recurrent_group(input=[paddle.layer.SubsequenceInput(emb),
@@ -112,18 +112,18 @@ python train.py
 ```
 将以 PaddlePaddle 内置的情感分类数据集: `imdb` 运行本例。
 ### 预测
-训练结束后模型将存储在指定目录当中（默认models目录），在终端执行：
+训练结束后，模型将被存储在指定目录当中（默认models目录），在终端执行：
 ```bash
 python infer.py --model_path 'models/params_pass_00000.tar.gz'
 ```
-默认情况下，预测脚本将加载训练一个pass的模型对 `imdb的测试集` 进行测试。
+预测脚本将加载、训练一个pass的模型，并用这个模型对 `imdb的测试集` 进行测试。
 
 ## 使用自定义数据训练和预测
 
 ### 训练
 1.数据组织
 
-输入数据格式如下：每一行为一条样本，以 `\t` 分隔，第一列是类别标签，第二列是输入文本的内容。以下是两条示例数据：
+每一行为一条样本，以 `\t` 分隔，第一列是类别标签，第二列是输入文本的内容。
 
 ```
 positive        This movie is very good. The actor is so handsome.
@@ -132,7 +132,7 @@ negative        What a terrible movie. I waste so much time.
 
 2.编写数据读取接口
 
-自定义数据读取接口只需编写一个 Python 生成器实现**从原始输入文本中解析一条训练样本**的逻辑。以下代码片段实现了读取原始数据返回类型为： `paddle.data_type.integer_value_sub_sequence` 和 `paddle.data_type.integer_value`
+自定义数据读取接口只需编写一个 Python 生成器，实现**解析输入文本**的逻辑。以下代码片段实现了读取原始数据返回类型为： `paddle.data_type.integer_value_sub_sequence` 和 `paddle.data_type.integer_value`
 ```python
 def train_reader(data_dir, word_dict, label_dict):
     """

@@ -20,8 +20,8 @@ def calc_diff(f1, f2):
     d1 = np.load(f1)
     d2 = np.load(f2)
 
-    print d1.shape
-    print d2.shape
+    #print d1.shape
+    #print d2.shape
     #print d1[0, 0, 0:10, 0:10]
     #print d2[0, 0, 0:10, 0:10]
     #d1 = d1[:, :, 1:-2, 1:-2]

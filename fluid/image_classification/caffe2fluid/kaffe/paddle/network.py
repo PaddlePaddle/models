@@ -47,6 +47,8 @@ class Network(object):
         self.trainable = trainable
         # Switch variable for dropout
         self.paddle_env = None
+        self.output_names = []
+        self.name_trace = None
         self.setup()
 
     def setup(self):
@@ -79,6 +81,10 @@ class Network(object):
 
         data_dict = np.load(data_path).item()
         for op_name in data_dict:
+            if op_name == 'caffe2fluid_name_trace':
+                self.name_trace = data_dict[op_name]
+                continue
+
             layer = self.layers[op_name]
             for param_name, data in data_dict[op_name].iteritems():
                 try:
@@ -117,6 +123,15 @@ class Network(object):
         ident = sum(t.startswith(prefix) for t, _ in self.layers.items()) + 1
         return '%s_%d' % (prefix, ident)
 
+    def get_unique_output_name(self, prefix, layertype):
+        '''Returns an index-suffixed unique name for the given prefix.
+            This is used for auto-generating layer names based on the type-prefix.
+        '''
+        ident = sum(t.startswith(prefix) for t in self.output_names) + 1
+        unique_name = '%s.%s.output.%d' % (prefix, layertype, ident)
+        self.output_names.append(unique_name)
+        return unique_name
+
     @layer
     def conv(self,
              input,
@@ -152,6 +167,7 @@ class Network(object):
             act = None
 
         output = fluid.layers.conv2d(
+            name=self.get_unique_output_name(name, 'conv2d'),
             input=input,
             filter_size=[k_h, k_w],
             num_filters=c_o,
@@ -170,7 +186,8 @@ class Network(object):
     @layer
     def relu(self, input, name):
         fluid = import_fluid()
-        output = fluid.layers.relu(x=input)
+        output = fluid.layers.relu(
+            name=self.get_unique_output_name(name, 'relu'), x=input)
         return output
 
     def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
@@ -182,6 +199,7 @@ class Network(object):
 
         fluid = import_fluid()
         output = fluid.layers.pool2d(
+            name=name,
             input=input,
             pool_size=k_hw,
             pool_stride=s_hw,
@@ -200,8 +218,16 @@ class Network(object):
                  ceil_mode,
                  padding=[0, 0],
                  name=None):
-        return self.pool('max', input, k_h, k_w, s_h, s_w, ceil_mode, padding,
-                         name)
+        return self.pool(
+            'max',
+            input,
+            k_h,
+            k_w,
+            s_h,
+            s_w,
+            ceil_mode,
+            padding,
+            name=self.get_unique_output_name(name, 'max_pool'))
 
     @layer
     def avg_pool(self,
@@ -213,25 +239,41 @@ class Network(object):
                  ceil_mode,
                  padding=[0, 0],
                  name=None):
-        return self.pool('avg', input, k_h, k_w, s_h, s_w, ceil_mode, padding,
-                         name)
+        return self.pool(
+            'avg',
+            input,
+            k_h,
+            k_w,
+            s_h,
+            s_w,
+            ceil_mode,
+            padding,
+            name=self.get_unique_output_name(name, 'avg_pool'))
 
     @layer
     def sigmoid(self, input, name):
         fluid = import_fluid()
-        return fluid.layers.sigmoid(input)
+        return fluid.layers.sigmoid(
+            input, name=self.get_unique_output_name(name, 'sigmoid'))
 
     @layer
     def lrn(self, input, radius, alpha, beta, name, bias=1.0):
         fluid = import_fluid()
-        output = fluid.layers.lrn(input=input, \
-                n=radius, k=bias, alpha=alpha, beta=beta, name=name)
+        output = fluid.layers.lrn(input=input,
+                                  n=radius,
+                                  k=bias,
+                                  alpha=alpha,
+                                  beta=beta,
+                                  name=self.get_unique_output_name(name, 'lrn'))
         return output
 
     @layer
     def concat(self, inputs, axis, name):
         fluid = import_fluid()
-        output = fluid.layers.concat(input=inputs, axis=axis)
+        output = fluid.layers.concat(
+            input=inputs,
+            axis=axis,
+            name=self.get_unique_output_name(name, 'concat'))
         return output
 
     @layer
@@ -239,7 +281,8 @@ class Network(object):
         fluid = import_fluid()
         output = inputs[0]
         for i in inputs[1:]:
-            output = fluid.layers.elementwise_add(x=output, y=i)
+            output = fluid.layers.elementwise_add(
+                x=output, y=i, name=self.get_unique_output_name(name, 'add'))
         return output
 
     @layer
@@ -251,7 +294,7 @@ class Network(object):
 
         prefix = name + '_'
         output = fluid.layers.fc(
-            name=name,
+            name=self.get_unique_output_name(name, 'fc'),
             input=input,
             size=num_out,
             act=act,
@@ -269,7 +312,8 @@ class Network(object):
                     str(shape))
             input = fluid.layers.reshape(input, shape[0:2])
 
-        output = fluid.layers.softmax(input)
+        output = fluid.layers.softmax(
+            input, name=self.get_unique_output_name(name, 'softmax'))
         return output
 
     @layer
@@ -289,7 +333,7 @@ class Network(object):
         mean_name = prefix + 'mean'
         variance_name = prefix + 'variance'
         output = fluid.layers.batch_norm(
-            name=name,
+            name=self.get_unique_output_name(name, 'batch_norm'),
             input=input,
             is_test=True,
             param_attr=param_attr,
@@ -308,7 +352,10 @@ class Network(object):
             output = input
         else:
             output = fluid.layers.dropout(
-                input, dropout_prob=drop_prob, is_test=is_test)
+                input,
+                dropout_prob=drop_prob,
+                is_test=is_test,
+                name=self.get_unique_output_name(name, 'dropout'))
         return output
 
     @layer
@@ -328,8 +375,16 @@ class Network(object):
         offset_param = fluid.layers.create_parameter(
             shape=scale_shape, dtype=input.dtype, name=name, attr=offset_attr)
 
-        output = fluid.layers.elementwise_mul(input, scale_param, axis=axis)
-        output = fluid.layers.elementwise_add(output, offset_param, axis=axis)
+        output = fluid.layers.elementwise_mul(
+            input,
+            scale_param,
+            axis=axis,
+            name=self.get_unique_output_name(name, 'scale_mul'))
+        output = fluid.layers.elementwise_add(
+            output,
+            offset_param,
+            axis=axis,
+            name=self.get_unique_output_name(name, 'scale_add'))
         return output
 
     def custom_layer_factory(self):
@@ -342,5 +397,6 @@ class Network(object):
     def custom_layer(self, inputs, kind, name, *args, **kwargs):
         """ make custom layer
         """
+        name = self.get_unique_output_name(name, kind)
         layer_factory = self.custom_layer_factory()
         return layer_factory(kind, inputs, name, *args, **kwargs)
