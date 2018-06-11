@@ -3,8 +3,6 @@ import sys
 import numpy as np
 import shutil
 import cv2
-
-from config.fcn_conf import cfg
 import pdb
 
 
@@ -69,7 +67,7 @@ def convert_to_color_label(img):
     g = np.zeros((img.shape[0], img.shape[1]))
     b = np.zeros((img.shape[0], img.shape[1]))
 
-    for l in range(cfg.CLASS_NUM):
+    for l in range(21):
         r[img == l] = palette[l][0]
         g[img == l] = palette[l][1]
         b[img == l] = palette[l][2]
