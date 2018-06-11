@@ -5,15 +5,8 @@
 import numpy as np
 import copy
 from collections import deque, namedtuple
-import threading
-from six.moves import queue, range
 
-from tensorpack.utils import logger
-
-__all__ = ['ExpReplay']
-
-Experience = namedtuple('Experience',
-                        ['state', 'action', 'reward', 'isOver'])
+Experience = namedtuple('Experience', ['state', 'action', 'reward', 'isOver'])
 
 
 class ReplayMemory(object):
@@ -32,44 +25,51 @@ class ReplayMemory(object):
         self._hist = deque(maxlen=history_len - 1)
 
     def append(self, exp):
-        """
-        Args:
-            exp (Experience):
+        """append a new experience into replay memory
         """
         if self._curr_size < self.max_size:
             self._assign(self._curr_pos, exp)
-            self._curr_pos = (self._curr_pos + 1) % self.max_size
             self._curr_size += 1
         else:
             self._assign(self._curr_pos, exp)
-            self._curr_pos = (self._curr_pos + 1) % self.max_size
+        self._curr_pos = (self._curr_pos + 1) % self.max_size
         if exp.isOver:
             self._hist.clear()
         else:
             self._hist.append(exp)
 
     def recent_state(self):
-        """ return a list of (hist_len-1,) + STATE_SIZE """
+        """ maintain recent state for training"""
         lst = list(self._hist)
         states = [np.zeros(self.state_shape, dtype='uint8')] * (self._hist.maxlen - len(lst))
         states.extend([k.state for k in lst])
         return states
 
     def sample(self, idx):
-        """ return a tuple of (s,r,a,o),
-            where s is of shape STATE_SIZE + (hist_len+1,)"""
-        state = np.zeros((self.history_len,) + self.state_shape, dtype=np.uint8)
-        cur_idx = idx
-        for k in range(history_len):
-            cur_idx = (idx + k) % self._curr_size
-            state = self.state[cur_idx]
-            if isOver[cur_idx]:
+        """ return state, action, reward, isOver,
+            note that some frames in state may be generated from last episode,
+            they should be removed from state
+            """
+        state = np.zeros((self.history_len + 1,) + self.state_shape, dtype=np.uint8)
+        state_idx = np.arange(idx, idx + self.history_len + 1) % self._curr_size
+
+        # confirm that no frame was generated from last episode
+        has_last_episode = False
+        for k in range(self.history_len - 2, -1, -1):
+            to_check_idx = state_idx[k]
+            if self.isOver[to_check_idx]:
+                has_last_episode = True
+                state_idx = state_idx[k + 1:]
+                state[k + 1:] = self.state[state_idx]
                 break
 
-        action = self.action[cur_idx]
-        reward = self.reward[cur_idx]
-        isOver = self.isOver[cur_idx]
-        state = state.transpose(1, 2, 0)
+        if not has_last_episode:
+            state = self.state[state_idx]
+
+        real_idx = (idx + self.history_len - 1) % self._curr_size
+        action = self.action[real_idx]
+        reward = self.reward[real_idx]
+        isOver = self.isOver[real_idx]
         return state, reward, action, isOver
 
     def __len__(self):
@@ -82,6 +82,8 @@ class ReplayMemory(object):
         self.isOver[pos] = exp.isOver
 
     def sample_batch(self, batch_size):
+        """sample a batch from replay memory for training
+        """
         batch_idx = np.random.randint(self._curr_size - self.history_len - 1, size=batch_size)
         batch_idx = (self._curr_pos + batch_idx) % self._curr_size
         batch_exp = [self.sample(i) for i in batch_idx]

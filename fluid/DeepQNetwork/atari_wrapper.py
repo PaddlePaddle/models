@@ -53,10 +53,7 @@ class FrameStack(gym.Wrapper):
 
     def observation(self):
         assert len(self.frames) == self.k
-        if self.frames[-1].ndim == 2:
-            return np.stack(self.frames, axis=-1)
-        else:
-            return np.concatenate(self.frames, axis=2)
+        return np.stack(self.frames, axis=0)
 
 
 class _FireResetEnv(gym.Wrapper):
