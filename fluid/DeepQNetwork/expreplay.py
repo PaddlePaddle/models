@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# File: expreplay.py
-# Author: Yuxin Wu
 
 import numpy as np
 import copy
@@ -15,10 +13,10 @@ class ReplayMemory(object):
         self.state_shape = state_shape
         self.history_len = int(history_len)
 
-        self.state = np.zeros((self.max_size,) + state_shape, dtype='uint8')
-        self.action = np.zeros((self.max_size,), dtype='int32')
-        self.reward = np.zeros((self.max_size,), dtype='float32')
-        self.isOver = np.zeros((self.max_size,), dtype='bool')
+        self.state = np.zeros((self.max_size, ) + state_shape, dtype='uint8')
+        self.action = np.zeros((self.max_size, ), dtype='int32')
+        self.reward = np.zeros((self.max_size, ), dtype='float32')
+        self.isOver = np.zeros((self.max_size, ), dtype='bool')
 
         self._curr_size = 0
         self._curr_pos = 0
@@ -41,7 +39,8 @@ class ReplayMemory(object):
     def recent_state(self):
         """ maintain recent state for training"""
         lst = list(self._hist)
-        states = [np.zeros(self.state_shape, dtype='uint8')] * (self._hist.maxlen - len(lst))
+        states = [np.zeros(
+            self.state_shape, dtype='uint8')] * (self._hist.maxlen - len(lst))
         states.extend([k.state for k in lst])
         return states
 
@@ -50,7 +49,8 @@ class ReplayMemory(object):
             note that some frames in state may be generated from last episode,
             they should be removed from state
             """
-        state = np.zeros((self.history_len + 1,) + self.state_shape, dtype=np.uint8)
+        state = np.zeros(
+            (self.history_len + 1, ) + self.state_shape, dtype=np.uint8)
         state_idx = np.arange(idx, idx + self.history_len + 1) % self._curr_size
 
         # confirm that no frame was generated from last episode
@@ -84,7 +84,8 @@ class ReplayMemory(object):
     def sample_batch(self, batch_size):
         """sample a batch from replay memory for training
         """
-        batch_idx = np.random.randint(self._curr_size - self.history_len - 1, size=batch_size)
+        batch_idx = np.random.randint(
+            self._curr_size - self.history_len - 1, size=batch_size)
         batch_idx = (self._curr_pos + batch_idx) % self._curr_size
         batch_exp = [self.sample(i) for i in batch_idx]
         return self._process_batch(batch_exp)

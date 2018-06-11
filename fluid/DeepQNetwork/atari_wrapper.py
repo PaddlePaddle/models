@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File: atari_wrapper.py
 
 import numpy as np
 from collections import deque
@@ -10,8 +8,6 @@ from gym import spaces
 
 _v0, _v1 = gym.__version__.split('.')[:2]
 assert int(_v0) > 0 or int(_v1) >= 10, gym.__version__
-
-
 """
 The following wrappers are copied or modified from openai/baselines:
 https://github.com/openai/baselines/blob/master/baselines/common/atari_wrappers.py
@@ -35,8 +31,10 @@ class FrameStack(gym.Wrapper):
         self.frames = deque([], maxlen=k)
         shp = env.observation_space.shape
         chan = 1 if len(shp) == 2 else shp[2]
-        self.observation_space = spaces.Box(
-            low=0, high=255, shape=(shp[0], shp[1], chan * k), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0,
+                                            high=255,
+                                            shape=(shp[0], shp[1], chan * k),
+                                            dtype=np.uint8)
 
     def reset(self):
         """Clear buffer and re-fill by duplicating the first observation."""

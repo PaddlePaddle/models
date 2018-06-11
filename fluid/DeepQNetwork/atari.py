@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
-# File: atari.py
-# Author: Yuxin Wu
 
 import numpy as np
 import os
 import cv2
 import threading
-import six
-from six.moves import range
-from tensorpack.utils import logger
-from tensorpack.utils.utils import get_rng, execute_only_once
-from tensorpack.utils.fs import get_dataset_path
 
 import gym
 from gym import spaces
@@ -22,6 +15,10 @@ __all__ = ['AtariPlayer']
 
 ROM_URL = "https://github.com/openai/atari-py/tree/master/atari_py/atari_roms"
 _ALE_LOCK = threading.Lock()
+"""
+The following AtariPlayer are copied or modified from tensorpack/tensorpack:
+    https://github.com/tensorpack/tensorpack/blob/master/examples/DeepQNetwork/atari_wrapper.py
+"""
 
 
 class AtariPlayer(gym.Env):
@@ -32,9 +29,13 @@ class AtariPlayer(gym.Env):
         gameOver: True when the current game is Over
     """
 
-    def __init__(self, rom_file, viz=0,
-                 frame_skip=4, nullop_start=30,
-                 live_lost_as_eoe=True, max_num_frames=0):
+    def __init__(self,
+                 rom_file,
+                 viz=0,
+                 frame_skip=4,
+                 nullop_start=30,
+                 live_lost_as_eoe=True,
+                 max_num_frames=0):
         """
         Args:
             rom_file: path to the rom
@@ -48,22 +49,18 @@ class AtariPlayer(gym.Env):
             max_num_frames: maximum number of frames per episode.
         """
         super(AtariPlayer, self).__init__()
-        if not os.path.isfile(rom_file) and '/' not in rom_file:
-            rom_file = get_dataset_path('atari_rom', rom_file)
         assert os.path.isfile(rom_file), \
             "rom {} not found. Please download at {}".format(rom_file, ROM_URL)
 
         try:
             ALEInterface.setLoggerMode(ALEInterface.Logger.Error)
         except AttributeError:
-            if execute_only_once():
-                logger.warn("You're not using latest ALE")
+            print "You're not using latest ALE"
 
         # avoid simulator bugs: https://github.com/mgbellemare/Arcade-Learning-Environment/issues/86
         with _ALE_LOCK:
             self.ale = ALEInterface()
-            self.rng = get_rng(self)
-            self.ale.setInt(b"random_seed", self.rng.randint(0, 30000))
+            self.ale.setInt(b"random_seed", np.random.randint(0, 30000))
             self.ale.setInt(b"max_num_frames_per_episode", max_num_frames)
             self.ale.setBool(b"showinfo", False)
 
@@ -73,7 +70,7 @@ class AtariPlayer(gym.Env):
             self.ale.setFloat(b'repeat_action_probability', 0.0)
 
             # viz setup
-            if isinstance(viz, six.string_types):
+            if isinstance(viz, str):
                 assert os.path.isdir(viz), viz
                 self.ale.setString(b'record_screen_dir', viz)
                 viz = 0
@@ -94,8 +91,10 @@ class AtariPlayer(gym.Env):
         self.nullop_start = nullop_start
 
         self.action_space = spaces.Discrete(len(self.actions))
-        self.observation_space = spaces.Box(
-            low=0, high=255, shape=(self.height, self.width), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0,
+                                            high=255,
+                                            shape=(self.height, self.width),
+                                            dtype=np.uint8)
         self._restart_episode()
 
     def get_action_meanings(self):
@@ -129,7 +128,7 @@ class AtariPlayer(gym.Env):
             self.ale.reset_game()
 
         # random null-ops start
-        n = self.rng.randint(self.nullop_start)
+        n = np.random.randint(self.nullop_start)
         self.last_raw_screen = self._grab_raw_image()
         for k in range(n):
             if k == n - 1:
@@ -159,18 +158,3 @@ class AtariPlayer(gym.Env):
 
         info = {'ale.lives': newlives}
         return self._current_state(), r, isOver, info
-
-
-if __name__ == '__main__':
-    import sys
-
-    a = AtariPlayer(sys.argv[1], viz=0.03)
-    num = a.action_space.n
-    rng = get_rng(num)
-    while True:
-        act = rng.choice(range(num))
-        state, reward, isOver, info = a.step(act)
-        if isOver:
-            print(info)
-            a.reset()
-        print("Reward:", reward)

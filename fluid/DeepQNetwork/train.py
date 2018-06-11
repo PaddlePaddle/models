@@ -1,6 +1,4 @@
 #-*- coding: utf-8 -*-
-#File: DQN.py
-#Author: yobobobo(zhouboacmer@qq.com)
 
 from DQN_agent import DQNModel
 from DoubleDQN_agent import DoubleDQNModel
@@ -16,10 +14,8 @@ import numpy as np
 import os
 
 from datetime import datetime
-from tensorpack.utils import logger
 from atari_wrapper import FrameStack, MapState, FireResetEnv, LimitLength
 from collections import deque
-from utils import Summary
 
 HIST_LEN = 4
 UPDATE_FREQ = 4
@@ -29,8 +25,9 @@ MEMORY_SIZE = 1e6
 MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20
 IMAGE_SIZE = (84, 84)
 FRAME_HISTORY = 4
-ACTION_REPEAT = 4   # aka FRAME_SKIP
+ACTION_REPEAT = 4  # aka FRAME_SKIP
 UPDATE_FREQ = 4
+
 
 def run_train_episode(agent, env, exp):
     total_reward = 0
@@ -43,33 +40,38 @@ def run_train_episode(agent, env, exp):
         history = np.stack(history, axis=0)
         action = agent.act(history, train_or_test='train')
         next_state, reward, isOver, _ = env.step(action)
-        if reward > 1:
-            logger.info("reward:{}".format(reward))
         exp.append(Experience(state, action, reward, isOver))
         # train model
         # start training 
         if len(exp) > MEMORY_WARMUP_SIZE:
             if step % UPDATE_FREQ == 0:
-                batch_all_state, batch_action, batch_reward, batch_isOver = exp.sample_batch(args.batch_size)
-                batch_state = batch_all_state[:,:HIST_LEN,:,:]
-                batch_next_state = batch_all_state[:,1:,:,:]
-                #logger.info("batch_state:{}   batch_next_state:{}".format(batch_state.shape, batch_next_state.shape))
-                agent.train(batch_state, batch_action, batch_reward, batch_next_state, batch_isOver)
+                batch_all_state, batch_action, batch_reward, batch_isOver = exp.sample_batch(
+                    args.batch_size)
+                batch_state = batch_all_state[:, :HIST_LEN, :, :]
+                batch_next_state = batch_all_state[:, 1:, :, :]
+                agent.train(batch_state, batch_action, batch_reward,
+                            batch_next_state, batch_isOver)
         total_reward += reward
         state = next_state
         if isOver:
             break
     return total_reward, step
 
+
 def get_player(rom, viz=False, train=False):
-    env = AtariPlayer(rom, frame_skip=ACTION_REPEAT, viz=viz,
-                      live_lost_as_eoe=train, max_num_frames=60000)
+    env = AtariPlayer(
+        rom,
+        frame_skip=ACTION_REPEAT,
+        viz=viz,
+        live_lost_as_eoe=train,
+        max_num_frames=60000)
     env = FireResetEnv(env)
     env = MapState(env, lambda im: cv2.resize(im, IMAGE_SIZE))
     if not train:
         # in training, history is taken care of in expreplay buffer
         env = FrameStack(env, FRAME_HISTORY)
     return env
+
 
 def eval_agent(agent, env):
     episode_reward = []
@@ -83,39 +85,39 @@ def eval_agent(agent, env):
             state, reward, isOver, info = env.step(action)
             total_reward += reward
             if isOver:
-                #logger.info("info:{}".format(info['ale.lives']))
                 break
         episode_reward.append(total_reward)
     eval_reward = np.mean(episode_reward)
     return eval_reward
 
+
 def train_agent():
-    logger.info("build player")
     env = get_player(args.rom, train=True)
     test_env = get_player(args.rom)
-    logger.info("build player [end]")
     exp = ReplayMemory(args.mem_size, IMAGE_SIZE, HIST_LEN)
     action_dim = env.action_space.n
-    if args.rl == 'DoubleDQN':
-        agent = DoubleDQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN, args.use_cuda)
-    elif args.rl == 'DuelingDQN':
-        agent = DuelingDQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN, args.use_cuda)
-    else:
-        agent = DQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN, args.use_cuda)
 
-    logger.info("fill ReplayMemory before training")
+    if args.alg == 'DQN':
+        agent = DQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN,
+                         args.use_cuda)
+    elif args.alg == 'DoubleDQN':
+        agent = DoubleDQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN,
+                               args.use_cuda)
+    elif args.alg == 'DuelingDQN':
+        agent = DuelingDQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN,
+                                args.use_cuda)
+    else:
+        print('Input algorithm name error!')
+        return
+
     with tqdm(total=MEMORY_WARMUP_SIZE) as pbar:
         while len(exp) < MEMORY_WARMUP_SIZE:
             total_reward, step = run_train_episode(agent, env, exp)
             pbar.update(step)
 
-    logger.info("start training, action_dim:{}".format(action_dim))
-    
     # train
     test_flag = 0
     save_flag = 0
-    summary = Summary(logger.get_logger_dir())
-    logger.info("dir:{}".format(logger.get_logger_dir()))
     pbar = tqdm(total=1e8)
     recent_100_reward = []
     total_step = 0
@@ -130,42 +132,57 @@ def train_agent():
             pbar.write("testing")
             eval_reward = eval_agent(agent, test_env)
             test_flag += 1
-            summary.log_scalar('eval_reward', eval_reward, total_step)
-            logger.info("eval_agent done, eval_reward:{}".format(eval_reward))
+            print("eval_agent done, (steps, eval_reward): ({}, {})".format(
+                total_step, eval_reward))
 
         if total_step // args.save_every_steps == save_flag:
             save_flag += 1
-            save_path = os.path.join(args.model_dirname, 
-                    '{}-{}'.format(args.rl, os.path.basename(args.rom).split('.')[0]),
-                    'step{}'.format(total_step))
-            fluid.io.save_inference_model(save_path, 
-                                          ['state'],
-                                          agent.pred_value,
-                                          agent.exe,
+            save_path = os.path.join(args.model_dirname, '{}-{}'.format(
+                args.alg, os.path.basename(args.rom).split('.')[0]),
+                                     'step{}'.format(total_step))
+            fluid.io.save_inference_model(save_path, ['state'],
+                                          agent.pred_value, agent.exe,
                                           agent.predict_program)
     pbar.close()
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rl', type=str, default='DQN',
-                        help='Reinforcement learning algorithm, support: DQN, DoubleDQN, DeulingDQN')
-    parser.add_argument('--use_cuda', action='store_true',
-                        help='if set, use cuda')
-    parser.add_argument('--gamma', type=float, default=0.99,
-                        help='discount factor for accumulated reward computation')
-    parser.add_argument('--mem_size', type=int, default=1000000,
-                        help='memory size for experience replay')
-    parser.add_argument('--batch_size', type=int, default=64,
-                        help='batch size for training')
+    parser.add_argument(
+        '--alg',
+        type=str,
+        default='DQN',
+        help='Reinforcement learning algorithm, support: DQN, DoubleDQN, DuelingDQN'
+    )
+    parser.add_argument(
+        '--use_cuda', action='store_true', help='if set, use cuda')
+    parser.add_argument(
+        '--gamma',
+        type=float,
+        default=0.99,
+        help='discount factor for accumulated reward computation')
+    parser.add_argument(
+        '--mem_size',
+        type=int,
+        default=1000000,
+        help='memory size for experience replay')
+    parser.add_argument(
+        '--batch_size', type=int, default=64, help='batch size for training')
     parser.add_argument('--rom', help='atari rom', required=True)
-    parser.add_argument('--model_dirname', type=str, default='saved_model',
-                        help='dirname to save model')
-    parser.add_argument('--save_every_steps', type=int, default=100000,
-                        help='every steps number to save model')
-    parser.add_argument('--test_every_steps', type=int, default=100000,
-                        help='every steps number to run test')
+    parser.add_argument(
+        '--model_dirname',
+        type=str,
+        default='saved_model',
+        help='dirname to save model')
+    parser.add_argument(
+        '--save_every_steps',
+        type=int,
+        default=100000,
+        help='every steps number to save model')
+    parser.add_argument(
+        '--test_every_steps',
+        type=int,
+        default=100000,
+        help='every steps number to run test')
     args = parser.parse_args()
-
-    logger.set_logger_dir(os.path.join('train_log', 
-        '{}-{}-{}'.format(args.rl, os.path.basename(args.rom).split('.')[0], str(datetime.now()))), action='d')
     train_agent()

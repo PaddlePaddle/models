@@ -8,7 +8,7 @@
 [Dueling Network Architectures for Deep Reinforcement Learning](http://proceedings.mlr.press/v48/wangf16.html)
 
 # Atari benchmark & performance
-+ [Atari 2600 games](https://gym.openai.com/envs/#atari)
+## [Atari games introduction](https://gym.openai.com/envs/#atari)
 
 + Pong game result
 ![DQN result](assets/dqn.png)
@@ -23,17 +23,22 @@
 + Start Training:
     ```
     # To train a model for Pong game with gpu (use DQN model as default)
-    python train.py --rom pong.bin --use_cuda
- 
+    python train.py --rom ./rom_files/pong.bin --use_cuda
+
     # To train a model for Pong with DoubleDQN
-    python train.py --rom pong.bin --use_cuda --rl DoubleDQN
- 
+    python train.py --rom ./rom_files/pong.bin --use_cuda --rl DoubleDQN
+
     # To train a model for Pong with DuelingDQN
-    python train.py --rom pong.bin --use_cuda --rl DuelingDQN
+    python train.py --rom ./rom_files/pong.bin --use_cuda --rl DuelingDQN
+
+    # To train more games, can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms)
     ```
 
 + Start Testing:
     ```
     # Play the game with saved model and calculate the average rewards
-    python play.py --rom pong.bin --use_cuda --model_path ./saved_model/DQN-pong/step600872
+    python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong/stepXXXXX
+
+    # Play the game with visualization
+    python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong/stepXXXXX --viz 0.01
     ```
