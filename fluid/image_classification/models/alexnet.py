@@ -21,7 +21,7 @@ class AlexNet():
     def __init__(self):
         self.params = train_parameters
 
-    def net(self, input, class_dim):
+    def net(self, input, class_dim=1000):
         stdv = 1.0 / math.sqrt(input.shape[1] * 11 * 11)
         conv1 = fluid.layers.conv2d(
             input=input,

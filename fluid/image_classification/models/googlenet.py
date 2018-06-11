@@ -82,7 +82,7 @@ class GoogleNet():
         cat = fluid.layers.concat(input=[conv1, conv3, conv5, convprj], axis=1)
         return cat
 
-    def net(self, input, class_dim):
+    def net(self, input, class_dim=1000):
         conv = self.conv_layer(
             input=input, num_filters=64, filter_size=7, stride=2, act=None)
         pool = fluid.layers.pool2d(

@@ -21,7 +21,7 @@ class InceptionV4():
     def __init__(self):
         self.params = train_parameters
 
-    def net(self, input, class_dim):
+    def net(self, input, class_dim=1000):
         x = self.inception_stem(input)
 
         for i in range(4):

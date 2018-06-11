@@ -21,7 +21,7 @@ class MobileNet():
     def __init__(self):
         self.params = train_parameters
 
-    def net(self, input, class_dim, scale=1.0):
+    def net(self, input, class_dim=1000, scale=1.0):
         # conv1: 112x112
         input = self.conv_bn_layer(
             input,

@@ -25,7 +25,7 @@ class SE_ResNeXt():
         self.params = train_parameters
         self.layers = layers
 
-    def net(self, input, class_dim):
+    def net(self, input, class_dim=1000):
         layers = self.layers
         supported_layers = [50, 101, 152]
         assert layers in supported_layers, \
