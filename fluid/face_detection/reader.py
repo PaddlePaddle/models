@@ -72,7 +72,7 @@ class Settings(object):
         return self._toy
 
     @property
-    def apply_distort(self):
+    def apply_expand(self):
         return self._apply_expand
 
     @property
@@ -117,15 +117,20 @@ def preprocess(img, bbox_labels, mode, settings):
         batch_sampler = []
         # hard-code here
         batch_sampler.append(
-            image_util.sampler(1, 50, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+            image_util.sampler(1, 50, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                               True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                               True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                               True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                               True))
         batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 1.0, 0.0, True))
+            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                               True))
         sampled_bbox = image_util.generate_batch_samples(
             batch_sampler, bbox_labels, img_width, img_height)
 
@@ -190,6 +195,30 @@ def put_txt_in_dict(input_txt):
     return dict_input_txt
 
 
+def expand_bboxes(bboxes,
+                  expand_left=2.,
+                  expand_up=2.,
+                  expand_right=2.,
+                  expand_down=2.):
+    """
+    Expand bboxes, expand 2 times by defalut.
+    """
+    expand_boxes = []
+    for bbox in bboxes:
+        xmin = bbox[0]
+        ymin = bbox[1]
+        xmax = bbox[2]
+        ymax = bbox[3]
+        w = xmax - xmin
+        h = ymax - ymin
+        ex_xmin = max(xmin - w / expand_left, 0.)
+        ex_ymin = max(ymin - h / expand_up, 0.)
+        ex_xmax = min(xmax + w / expand_right, 1.)
+        ex_ymax = min(ymax + h / expand_down, 1.)
+        expand_boxes.append([ex_xmin, ex_ymin, ex_xmax, ex_ymax])
+    return expand_boxes
+
+
 def pyramidbox(settings, file_list, mode, shuffle):
 
     dict_input_txt = {}
@@ -208,12 +237,11 @@ def pyramidbox(settings, file_list, mode, shuffle):
                 im = im.convert('RGB')
             im_width, im_height = im.size
 
-            # layout: category_id | xmin | ymin | xmax | ymax | iscrowd
+            # layout: label | xmin | ymin | xmax | ymax
             bbox_labels = []
             for index_box in range(len(dict_input_txt[index_image])):
                 if index_box >= 2:
                     bbox_sample = []
-
                     temp_info_box = dict_input_txt[index_image][
                         index_box].split(' ')
                     xmin = float(temp_info_box[0])
@@ -223,6 +251,7 @@ def pyramidbox(settings, file_list, mode, shuffle):
                     xmax = xmin + w
                     ymax = ymin + h
 
+                    bbox_sample.append(1)
                     bbox_sample.append(float(xmin) / im_width)
                     bbox_sample.append(float(ymin) / im_height)
                     bbox_sample.append(float(xmax) / im_width)
@@ -233,11 +262,10 @@ def pyramidbox(settings, file_list, mode, shuffle):
             sample_labels = np.array(sample_labels)
             if len(sample_labels) == 0: continue
             im = im.astype('float32')
-            boxes = sample_labels[:, 0:4]
+            boxes = sample_labels[:, 1:5]
             lbls = [1] * len(boxes)
             difficults = [1] * len(boxes)
-
-            yield im, boxes, lbls, difficults
+            yield im, boxes, expand_bboxes(boxes), lbls, difficults
 
     return reader
 
@@ -246,5 +274,27 @@ def train(settings, file_list, shuffle=True):
     return pyramidbox(settings, file_list, 'train', shuffle)
 
 
-def test(settings, file_list):
-    return pyramidbox(settings, file_list, 'test', False)
+def infer(settings, image_path):
+    def batch_reader():
+        img = Image.open(image_path)
+        if img.mode == 'L':
+            img = im.convert('RGB')
+        im_width, im_height = img.size
+        if settings.resize_w and settings.resize_h:
+            img = img.resize((settings.resize_w, settings.resize_h),
+                             Image.ANTIALIAS)
+        img = np.array(img)
+        # HWC to CHW
+        if len(img.shape) == 3:
+            img = np.swapaxes(img, 1, 2)
+            img = np.swapaxes(img, 1, 0)
+        # RBG to BGR
+        img = img[[2, 1, 0], :, :]
+        img = img.astype('float32')
+        img -= settings.img_mean
+        img = img * 0.007843
+        img = [img]
+        img = np.array(img)
+        return img
+
+    return batch_reader
