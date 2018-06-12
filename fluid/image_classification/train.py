@@ -181,7 +181,6 @@ def train(args):
                        batch_id, loss, acc1, acc5, \
                        "%2.2f sec" % period))
                 sys.stdout.flush()
-                break
 
         train_loss = np.array(train_info[0]).mean()
         train_acc1 = np.array(train_info[1]).mean()
