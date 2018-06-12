@@ -33,10 +33,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '--viz',
         type=float,
-        help='''viz: visualization to be done.
-                                Set to 0 to disable;
-                                Set to a positive number to be the delay between frames to show.
-                             ''')
+        default=0,
+        help='''viz: visualization setting:
+                Set to 0 to disable;
+                Set to a positive number to be the delay between frames to show.
+             ''')
     args = parser.parse_args()
 
     env = get_player(args.rom, viz=args.viz)

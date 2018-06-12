@@ -23,19 +23,20 @@ class DuelingDQNModel(object):
         self._build_net()
 
     def _get_inputs(self):
-        return [
-            fluid.layers.data(
-                name='state',
-                shape=[self.hist_len, self.img_height, self.img_width],
-                dtype='float32'), fluid.layers.data(
-                    name='action', shape=[1], dtype='int32'), fluid.layers.data(
-                        name='reward', shape=[], dtype='float32'),
-            fluid.layers.data(
-                name='next_s',
-                shape=[self.hist_len, self.img_height, self.img_width],
-                dtype='float32'), fluid.layers.data(
-                    name='isOver', shape=[], dtype='bool')
-        ]
+        return fluid.layers.data(
+                   name='state',
+                   shape=[self.hist_len, self.img_height, self.img_width],
+                   dtype='float32'), \
+               fluid.layers.data(
+                   name='action', shape=[1], dtype='int32'), \
+               fluid.layers.data(
+                   name='reward', shape=[], dtype='float32'), \
+               fluid.layers.data(
+                   name='next_s',
+                   shape=[self.hist_len, self.img_height, self.img_width],
+                   dtype='float32'), \
+               fluid.layers.data(
+                   name='isOver', shape=[], dtype='bool')
 
     def _build_net(self):
         state, action, reward, next_s, isOver = self._get_inputs()
