@@ -148,7 +148,7 @@ Models are trained by starting with learning rate ```0.1``` and decaying it by `
 |[ResNet50]() | 76.44%/93.21%
 |[ResNet101]() | -
 |[ResNet152]() | -
-|[SE_ResNeXt50_32x4d]() | 77.42%/93.50%
+|[SE_ResNeXt50_32x4d]() | 78.25%/93.97%
 |[SE_ResNeXt101_32x4d]() | -
 |[SE_ResNeXt152_32x4d]() | -
 |[DPN68]() | -
