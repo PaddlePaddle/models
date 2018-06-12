@@ -26,10 +26,10 @@
     python train.py --rom ./rom_files/pong.bin --use_cuda
 
     # To train a model for Pong with DoubleDQN
-    python train.py --rom ./rom_files/pong.bin --use_cuda --rl DoubleDQN
+    python train.py --rom ./rom_files/pong.bin --use_cuda --alg DoubleDQN
 
     # To train a model for Pong with DuelingDQN
-    python train.py --rom ./rom_files/pong.bin --use_cuda --rl DuelingDQN
+    python train.py --rom ./rom_files/pong.bin --use_cuda --alg DuelingDQN
     ```
 
 To train more games, can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms)
