@@ -11,6 +11,7 @@ The minimum PaddlePaddle version needed for the code sample in this directory is
 <img src="images/SSD_paper_figure.jpg" height=300 width=900 hspace='10'/> <br />
 The Single Shot MultiBox Detector (SSD)
 </p>
+
 SSD is readily pluggable into a wide variant standard convolutional network, such as VGG, ResNet, or MobileNet, which is also called base network or backbone. In this tutorial we used [MobileNet](https://arxiv.org/abs/1704.04861).
 
 
@@ -57,6 +58,7 @@ We will release the pre-trained models by ourself in the upcoming soon.
     ```
 
 #### Train on PASCAL VOC
+
 `train.py` is the main caller of the training module. Examples of usage are shown below.
   ```bash
   python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
@@ -64,10 +66,12 @@ We will release the pre-trained models by ourself in the upcoming soon.
    - Set ```export CUDA_VISIBLE_DEVICES=0,1``` to specifiy the number of GPU you want to use.
    - Set ```--dataset='coco2014'``` or ```--dataset='coco2017'``` to train model on MS COCO dataset.
    - For more help on arguments:
-    ```bash
-    python train.py --help
-    ```
-We used RMSProp optimizer with mini-batch size 64 to train the MobileNet-SSD. The initial learning rate is 0.001, and was decayed in 40, 60, 80, 100 epochs with multiplier 0.5, 0.25, 0.1, 0.01, respectively. Weight decay is 0.00005. After 120 epochs we achive XXX% mAP under 11point metric.
+
+  ```bash
+  python train.py --help
+  ```
+
+We used RMSProp optimizer with mini-batch size 64 to train the MobileNet-SSD. The initial learning rate is 0.001, and was decayed at 40, 60, 80, 100 epochs with multiplier 0.5, 0.25, 0.1, 0.01, respectively. Weight decay is 0.00005. After 120 epochs we achive XXX% mAP under 11point metric.
 
 ### Evaluate
 
@@ -102,7 +106,7 @@ Below are the examples of running the inference and visualizing the model result
 <img src="images/009956.jpg" height=300 width=400 hspace='10'/>
 <img src="images/009960.jpg" height=300 width=400 hspace='10'/>
 <img src="images/009962.jpg" height=300 width=400 hspace='10'/> <br />
-MobileNet-SSD300x300 Visualization Examples
+MobileNet-v1-SSD 300x300 Visualization Examples
 </p>
 
 
