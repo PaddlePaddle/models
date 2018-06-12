@@ -85,6 +85,7 @@ def eval(args):
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
 
     test_info = [[], [], []]
+    cnt = 0
     for batch_id, data in enumerate(val_reader()):
         t1 = time.time()
         loss, acc1, acc5 = exe.run(test_program,
@@ -92,22 +93,24 @@ def eval(args):
                                    feed=feeder.feed(data))
         t2 = time.time()
         period = t2 - t1
-        loss = np.mean(np.array(loss))
-        acc1 = np.mean(np.array(acc1))
-        acc5 = np.mean(np.array(acc5))
-        test_info[0].append(loss)
-        test_info[1].append(acc1)
-        test_info[2].append(acc5)
-        if batch_id % 1 == 0:
+        loss = np.mean(loss)
+        acc1 = np.mean(acc1)
+        acc5 = np.mean(acc5)
+        test_info[0].append(loss * len(data))
+        test_info[1].append(acc1 * len(data))
+        test_info[2].append(acc5 * len(data))
+        cnt += len(data)
+        print("total_number:", cnt)
+        if batch_id % 10 == 0:
             print("Testbatch {0},loss {1}, "
                   "acc1 {2},acc5 {3},time {4}".format(batch_id, \
                   loss, acc1, acc5, \
                   "%2.2f sec" % period))
             sys.stdout.flush()
 
-    test_loss = np.array(test_info[0]).mean()
-    test_acc1 = np.array(test_info[1]).mean()
-    test_acc5 = np.array(test_info[2]).mean()
+    test_loss = np.sum(test_info[0]) / cnt
+    test_acc1 = np.sum(test_info[1]) / cnt
+    test_acc5 = np.sum(test_info[2]) / cnt
 
     print("Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
         test_loss, test_acc1, test_acc5))

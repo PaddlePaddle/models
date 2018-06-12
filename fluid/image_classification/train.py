@@ -185,31 +185,32 @@ def train(args):
         train_loss = np.array(train_info[0]).mean()
         train_acc1 = np.array(train_info[1]).mean()
         train_acc5 = np.array(train_info[2]).mean()
-        for data in test_reader():
+        cnt = 0
+        for test_batch_id, data in enumerate(test_reader()):
             t1 = time.time()
             loss, acc1, acc5 = exe.run(test_program,
                                        fetch_list=fetch_list,
                                        feed=feeder.feed(data))
             t2 = time.time()
             period = t2 - t1
-            loss = np.mean(np.array(loss))
-            acc1 = np.mean(np.array(acc1))
-            acc5 = np.mean(np.array(acc5))
-            test_info[0].append(loss)
-            test_info[1].append(acc1)
-            test_info[2].append(acc5)
-            if batch_id % 10 == 0:
+            loss = np.mean(loss)
+            acc1 = np.mean(acc1)
+            acc5 = np.mean(acc5)
+            test_info[0].append(loss * len(data))
+            test_info[1].append(acc1 * len(data))
+            test_info[2].append(acc5 * len(data))
+            cnt += len(data)
+            if test_batch_id % 10 == 0:
                 print("Pass {0},testbatch {1},loss {2}, \
                        acc1 {3},acc5 {4},time {5}"
                                                   .format(pass_id, \
-                       batch_id, loss, acc1, acc5, \
+                       test_batch_id, loss, acc1, acc5, \
                        "%2.2f sec" % period))
                 sys.stdout.flush()
-                break
 
-        test_loss = np.array(test_info[0]).mean()
-        test_acc1 = np.array(test_info[1]).mean()
-        test_acc5 = np.array(test_info[2]).mean()
+        test_loss = np.sum(test_info[0]) / cnt
+        test_acc1 = np.sum(test_info[1]) / cnt
+        test_acc5 = np.sum(test_info[2]) / cnt
 
         print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3}, "
               "test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(pass_id, \
