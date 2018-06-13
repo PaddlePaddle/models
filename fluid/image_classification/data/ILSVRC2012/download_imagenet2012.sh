@@ -14,7 +14,7 @@ valid_folder=val/
 
 echo "Download imagenet training data..."
 mkdir -p ${train_folder}
-wget -nd -c ${root_url}/${train_tar}
+#wget -nd -c ${root_url}/${train_tar}
 tar xf ${train_tar} -C ${train_folder}
 
 cd ${train_folder}
@@ -23,17 +23,18 @@ do
   filename=`basename $x .tar`
   mkdir -p $filename
   tar -xf $x -C $filename
+  rm -rf $x
 done
 cd -
 
 echo "Download imagenet validation data..."
 mkdir -p ${valid_folder}
-wget -nd -c ${root_url}/${valid_tar}
+#wget -nd -c ${root_url}/${valid_tar}
 tar xf ${valid_tar} -C ${valid_folder}
 
 echo "Download imagenet label file: val_list.txt & train_list.txt"
 label_file=ImageNet_label.tgz
 label_url=http://imagenet-data.bj.bcebos.com/${label_file}
-wget -nd -c ${label_url}
+#wget -nd -c ${label_url}
 tar zxf ${label_file}
 
