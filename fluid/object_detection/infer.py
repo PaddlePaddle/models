@@ -54,11 +54,13 @@ def infer(args, data_args, image_path, model_dir):
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     data = infer_reader()
-    nmsed_out_v = exe.run(fluid.default_main_program(),
-                          feed=feeder.feed([[data]]),
-                          fetch_list=[nmsed_out],
-                          return_numpy=False)
-    nmsed_out_v = np.array(nmsed_out_v[0])
+    # switch network to test mode (i.e. batch norm test mode)
+    test_program = fluid.default_main_program().clone(for_test=True)
+    nmsed_out_v, = exe.run(test_program,
+                           feed=feeder.feed([[data]]),
+                           fetch_list=[nmsed_out],
+                           return_numpy=False)
+    nmsed_out_v = np.array(nmsed_out_v)
     draw_bounding_box_on_image(image_path, nmsed_out_v, args.confs_threshold,
                                data_args.label_list)
 
