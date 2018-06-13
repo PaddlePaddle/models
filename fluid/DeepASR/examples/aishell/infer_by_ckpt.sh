@@ -1,5 +1,5 @@
 export CUDA_VISIBLE_DEVICES=0,1
-python -u ../../infer_by_ckpt.py --batch_size 64  \
+python -u ../../infer_by_ckpt.py --batch_size 48  \
                         --checkpoint deep_asr.pass_20.checkpoint \
                         --infer_feature_lst data/test_feature.lst  \
                         --infer_label_lst data/test_label.lst  \

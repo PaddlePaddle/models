@@ -41,10 +41,19 @@ public:
       std::string key,
       const std::vector<std::vector<kaldi::BaseFloat>> &log_probs);
 
+  // Accept the scores of utterances in batch and return the decoding results
+  std::vector<std::string> decode_batch(
+      std::vector<std::string> key,
+      const std::vector<std::vector<std::vector<kaldi::BaseFloat>>>
+          &log_probs_batch);
+
 private:
   // For decoding one utterance
   std::string decode(std::string key,
                      kaldi::Matrix<kaldi::BaseFloat> &loglikes);
+  std::string DecodeUtteranceLatticeFaster(kaldi::DecodableInterface &decodable,
+                                           std::string utt,
+                                           double *like_ptr);
 
   fst::SymbolTable *word_syms;
   fst::Fst<fst::StdArc> *decode_fst;
