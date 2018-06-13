@@ -17,25 +17,19 @@ Running sample code in this directory requires PaddelPaddle v0.10.0 and later. I
 
 ## Data preparation
 
-An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done with two steps:
-
-**step-1:** Download ImageNet-2012 dataset from website
+An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
 ```
-cd data/
-mkdir -p ILSVRC2012/
-cd ILSVRC2012/
-wget paddl_imagenet2012_dataset_url/ImageNet2012_dataset.tar
-tar xf ImageNet2012_dataset.tar
+cd data/ILSVRC2012/
+sh download_imagenet2012.sh
 ```
 
-**step-2:** Download training and validation label files
-```
-wget paddl_imagenet2012_label_url/ImageNet2012_label.tar
-tar xf ImageNet2012_label.tar
-```
-there are two label files which contain train and validation image labels respectively:
+In the shell script ```download_imagenet2012.sh```,  there are two steps to prepare data:
 
-* *train_list.txt*: label file imagenet-2012 training set, with each line seperated by SPACE, like:
+**step-1:** Download ImageNet-2012 dataset from website. The training and validation data will be downloaded into folder "train" and "val" respectively.
+
+**step-2:** Download training and validation label files. There are two label files which contain train and validation image labels respectively:
+
+* *train_list.txt*: label file of imagenet-2012 training set, with each line seperated by ```SPACE```, like:
 ```
 train/n02483708/n02483708_2436.jpeg 369
 train/n03998194/n03998194_7015.jpeg 741
@@ -44,7 +38,7 @@ train/n04596742/n04596742_3032.jpeg 909
 train/n03208938/n03208938_7065.jpeg 535
 ...
 ```
-* *val_list.txt*: label file of imagenet-2012 validation set, with each line seperated by SPACE, like.
+* *val_list.txt*: label file of imagenet-2012 validation set, with each line seperated by ```SPACE```, like.
 ```
 val/ILSVRC2012_val_00000001.jpeg 65
 val/ILSVRC2012_val_00000002.jpeg 970
@@ -56,7 +50,7 @@ val/ILSVRC2012_val_00000005.jpeg 516
 
 ## Training a model with flexible parameters
 
-After data preparation, one can start  the training by:
+After data preparation, one can start the training step by:
 
 ```
 python train.py \
@@ -96,6 +90,8 @@ Data reader is defined in ```reader.py```. In [training stage](#training-a-model
 * flipping
 
 ## Finetuning
+
+Finetuning is to finetune model weights in a specific task by loading pretrained weights. After initializing ```path_to_pretrain_model``` , one can finetune a model as:
 ```
 python train.py
        --model=SE_ResNeXt50_32x4d \
@@ -105,30 +101,32 @@ python train.py
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
-       --with_mem_opt=False \
+       --with_mem_opt=True \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 ```
 
 ## Evaluation
+Evaluation is to evaluate the performance of a trained model. One can get top1/top5 accuracy by running the following command:
 ```
 python eval.py \
        --model=SE_ResNeXt50_32x4d \
        --batch_size=32 \
        --class_dim=1000 \
        --image_shape=3,224,224 \
-       --with_mem_opt=False \
+       --with_mem_opt=True \
        --pretrained_model=${path_to_pretrain_model}
 ```
 
 ## Inference
+Inference is used to get prediction score or image features based on trained models.
 ```
 python infer.py \
        --model=SE_ResNeXt50_32x4d \
        --batch_size=32 \
        --class_dim=1000 \
        --image_shape=3,224,224 \
-       --with_mem_opt=False \
+       --with_mem_opt=True \
        --pretrained_model=${path_to_pretrain_model}
 ```
 
