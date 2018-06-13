@@ -13,15 +13,16 @@ from utility import add_arguments, print_arguments
 import math
 
 parser = argparse.ArgumentParser(description=__doc__)
+# yapf: disable
 add_arg = functools.partial(add_arguments, argparser=parser)
-add_arg('batch_size', int, 256, "Minibatch size.")
-add_arg('use_gpu', bool, True, "Whether to use GPU or not.")
-add_arg('class_dim', int, 1000, "Class number.")
-add_arg('image_shape', str, "3,224,224", "input image size")
-add_arg('with_mem_opt', bool, True,
-        "Whether to use memory optimization or not.")
-add_arg('pretrained_model', str, None, "Whether to use pretrained model.")
-add_arg('model', str, "SE_ResNeXt50_32x4d", "Set the network to use.")
+add_arg('batch_size',       int,  256,                  "Minibatch size.")
+add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
+add_arg('class_dim',        int,  1000,                 "Class number.")
+add_arg('image_shape',      str,  "3,224,224",          "Input image size")
+add_arg('with_mem_opt',     bool, True,                 "Whether to use memory optimization or not.")
+add_arg('pretrained_model', str,  None,                 "Whether to use pretrained model.")
+add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
+# yapf: enable
 
 model_list = [m for m in dir(models) if "__" not in m]
 
