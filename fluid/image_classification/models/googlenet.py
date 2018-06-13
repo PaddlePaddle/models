@@ -138,4 +138,5 @@ class GoogleNet():
         dropout_o2 = fluid.layers.dropout(x=fc_o2, dropout_prob=0.7)
         out2 = fluid.layers.fc(input=dropout_o2, size=class_dim, act='softmax')
 
+        # last fc layer is "out"
         return out, out1, out2
