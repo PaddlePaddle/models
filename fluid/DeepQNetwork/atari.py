@@ -17,7 +17,7 @@ ROM_URL = "https://github.com/openai/atari-py/tree/master/atari_py/atari_roms"
 _ALE_LOCK = threading.Lock()
 """
 The following AtariPlayer are copied or modified from tensorpack/tensorpack:
-    https://github.com/tensorpack/tensorpack/blob/master/examples/DeepQNetwork/atari_wrapper.py
+    https://github.com/tensorpack/tensorpack/blob/master/examples/DeepQNetwork/atari.py
 """
 
 

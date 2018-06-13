@@ -17,14 +17,13 @@ from datetime import datetime
 from atari_wrapper import FrameStack, MapState, FireResetEnv, LimitLength
 from collections import deque
 
-HIST_LEN = 4
 UPDATE_FREQ = 4
 
 #MEMORY_WARMUP_SIZE = 2000
 MEMORY_SIZE = 1e6
 MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20
 IMAGE_SIZE = (84, 84)
-FRAME_HISTORY = 4
+CONTEXT_LEN = 4
 ACTION_REPEAT = 4  # aka FRAME_SKIP
 UPDATE_FREQ = 4
 
@@ -35,10 +34,10 @@ def run_train_episode(agent, env, exp):
     step = 0
     while True:
         step += 1
-        history = exp.recent_state()
-        history.append(state)
-        history = np.stack(history, axis=0)
-        action = agent.act(history, train_or_test='train')
+        context = exp.recent_state()
+        context.append(state)
+        context = np.stack(context, axis=0)
+        action = agent.act(context, train_or_test='train')
         next_state, reward, isOver, _ = env.step(action)
         exp.append(Experience(state, action, reward, isOver))
         # train model
@@ -47,7 +46,7 @@ def run_train_episode(agent, env, exp):
             if step % UPDATE_FREQ == 0:
                 batch_all_state, batch_action, batch_reward, batch_isOver = exp.sample_batch(
                     args.batch_size)
-                batch_state = batch_all_state[:, :HIST_LEN, :, :]
+                batch_state = batch_all_state[:, :CONTEXT_LEN, :, :]
                 batch_next_state = batch_all_state[:, 1:, :, :]
                 agent.train(batch_state, batch_action, batch_reward,
                             batch_next_state, batch_isOver)
@@ -68,8 +67,8 @@ def get_player(rom, viz=False, train=False):
     env = FireResetEnv(env)
     env = MapState(env, lambda im: cv2.resize(im, IMAGE_SIZE))
     if not train:
-        # in training, history is taken care of in expreplay buffer
-        env = FrameStack(env, FRAME_HISTORY)
+        # in training, context is taken care of in expreplay buffer
+        env = FrameStack(env, CONTEXT_LEN)
     return env
 
 
@@ -94,17 +93,17 @@ def eval_agent(agent, env):
 def train_agent():
     env = get_player(args.rom, train=True)
     test_env = get_player(args.rom)
-    exp = ReplayMemory(args.mem_size, IMAGE_SIZE, HIST_LEN)
+    exp = ReplayMemory(args.mem_size, IMAGE_SIZE, CONTEXT_LEN)
     action_dim = env.action_space.n
 
     if args.alg == 'DQN':
-        agent = DQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN,
+        agent = DQNModel(IMAGE_SIZE, action_dim, args.gamma, CONTEXT_LEN,
                          args.use_cuda)
     elif args.alg == 'DoubleDQN':
-        agent = DoubleDQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN,
+        agent = DoubleDQNModel(IMAGE_SIZE, action_dim, args.gamma, CONTEXT_LEN,
                                args.use_cuda)
     elif args.alg == 'DuelingDQN':
-        agent = DuelingDQNModel(IMAGE_SIZE, action_dim, args.gamma, HIST_LEN,
+        agent = DuelingDQNModel(IMAGE_SIZE, action_dim, args.gamma, CONTEXT_LEN,
                                 args.use_cuda)
     else:
         print('Input algorithm name error!')

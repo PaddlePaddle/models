@@ -166,7 +166,7 @@ class DuelingDQNModel(object):
         if train_or_test == 'train' and sample < self.exploration:
             act = np.random.randint(self.action_dim)
         else:
-            if np.random.randint(100) == 0:
+            if np.random.random() < 0.01:
                 act = np.random.randint(self.action_dim)
             else:
                 state = np.expand_dims(state, axis=0)

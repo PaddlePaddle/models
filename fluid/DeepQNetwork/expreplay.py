@@ -8,10 +8,10 @@ Experience = namedtuple('Experience', ['state', 'action', 'reward', 'isOver'])
 
 
 class ReplayMemory(object):
-    def __init__(self, max_size, state_shape, history_len):
+    def __init__(self, max_size, state_shape, context_len):
         self.max_size = int(max_size)
         self.state_shape = state_shape
-        self.history_len = int(history_len)
+        self.context_len = int(context_len)
 
         self.state = np.zeros((self.max_size, ) + state_shape, dtype='uint8')
         self.action = np.zeros((self.max_size, ), dtype='int32')
@@ -20,7 +20,7 @@ class ReplayMemory(object):
 
         self._curr_size = 0
         self._curr_pos = 0
-        self._hist = deque(maxlen=history_len - 1)
+        self._context = deque(maxlen=context_len - 1)
 
     def append(self, exp):
         """append a new experience into replay memory
@@ -32,15 +32,15 @@ class ReplayMemory(object):
             self._assign(self._curr_pos, exp)
         self._curr_pos = (self._curr_pos + 1) % self.max_size
         if exp.isOver:
-            self._hist.clear()
+            self._context.clear()
         else:
-            self._hist.append(exp)
+            self._context.append(exp)
 
     def recent_state(self):
         """ maintain recent state for training"""
-        lst = list(self._hist)
+        lst = list(self._context)
         states = [np.zeros(
-            self.state_shape, dtype='uint8')] * (self._hist.maxlen - len(lst))
+            self.state_shape, dtype='uint8')] * (self._context.maxlen - len(lst))
         states.extend([k.state for k in lst])
         return states
 
@@ -50,12 +50,12 @@ class ReplayMemory(object):
             they should be removed from state
             """
         state = np.zeros(
-            (self.history_len + 1, ) + self.state_shape, dtype=np.uint8)
-        state_idx = np.arange(idx, idx + self.history_len + 1) % self._curr_size
+            (self.context_len + 1, ) + self.state_shape, dtype=np.uint8)
+        state_idx = np.arange(idx, idx + self.context_len + 1) % self._curr_size
 
         # confirm that no frame was generated from last episode
         has_last_episode = False
-        for k in range(self.history_len - 2, -1, -1):
+        for k in range(self.context_len - 2, -1, -1):
             to_check_idx = state_idx[k]
             if self.isOver[to_check_idx]:
                 has_last_episode = True
@@ -66,7 +66,7 @@ class ReplayMemory(object):
         if not has_last_episode:
             state = self.state[state_idx]
 
-        real_idx = (idx + self.history_len - 1) % self._curr_size
+        real_idx = (idx + self.context_len - 1) % self._curr_size
         action = self.action[real_idx]
         reward = self.reward[real_idx]
         isOver = self.isOver[real_idx]
@@ -85,7 +85,7 @@ class ReplayMemory(object):
         """sample a batch from replay memory for training
         """
         batch_idx = np.random.randint(
-            self._curr_size - self.history_len - 1, size=batch_size)
+            self._curr_size - self.context_len - 1, size=batch_size)
         batch_idx = (self._curr_pos + batch_idx) % self._curr_size
         batch_exp = [self.sample(i) for i in batch_idx]
         return self._process_batch(batch_exp)
