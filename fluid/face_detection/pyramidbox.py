@@ -4,6 +4,7 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Xavier
 from paddle.fluid.initializer import Constant
+from paddle.fluid.initializer import Bilinear
 from paddle.fluid.regularizer import L2Decay
 
 
@@ -48,14 +49,16 @@ class PyramidBox(object):
     def __init__(self,
                  data_shape,
                  num_classes,
+                 use_transposed_conv2d=True,
                  is_infer=False,
                  sub_network=False):
         self.data_shape = data_shape
         self.min_sizes = [16., 32., 64., 128., 256., 512.]
         self.steps = [4., 8., 16., 32., 64., 128.]
+        self.num_classes = num_classes
+        self.use_transposed_conv2d = use_transposed_conv2d
         self.is_infer = is_infer
         self.sub_network = sub_network
-        self.num_classes = num_classes
 
         # the base network is VGG with atrous layers
         self._input()
@@ -120,20 +123,30 @@ class PyramidBox(object):
             b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
             conv1 = fluid.layers.conv2d(
                 up_from, ch, 1, act='relu', bias_attr=b_attr)
-            conv_trans = fluid.layers.conv2d_transpose(
-                conv1,
-                ch,
-                output_size=None,
-                filter_size=4,
-                padding=1,
-                stride=2,
-                groups=ch,
-                bias_attr=False)
+            if self.use_transposed_conv2d:
+                w_attr = ParamAttr(
+                    learning_rate=0.,
+                    regularizer=L2Decay(0.),
+                    initializer=Bilinear())
+                conv_up = fluid.layers.conv2d_transpose(
+                    conv1,
+                    ch,
+                    output_size=None,
+                    filter_size=4,
+                    padding=1,
+                    stride=2,
+                    groups=ch,
+                    param_attr=w_attr,
+                    bias_attr=False)
+            else:
+                conv_up = fluid.layers.resize_bilinear(
+                    conv1, out_shape=up_to.shape[2:])
+
             b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
             conv2 = fluid.layers.conv2d(
                 up_to, ch, 1, act='relu', bias_attr=b_attr)
             # eltwise mul
-            conv_fuse = conv_trans * conv2
+            conv_fuse = conv_up * conv2
             return conv_fuse
 
         self.lfpn2_on_conv5 = fpn(self.conv6, self.conv5)
@@ -245,6 +258,8 @@ class PyramidBox(object):
                 min_sizes=[self.min_sizes[i]],
                 steps=[self.steps[i]] * 2,
                 aspect_ratios=[1.],
+                clip=False,
+                flip=True,
                 offset=0.5)
             box = fluid.layers.reshape(box, shape=[-1, 4])
             var = fluid.layers.reshape(var, shape=[-1, 4])
@@ -284,7 +299,7 @@ class PyramidBox(object):
         mbox_conf = fluid.layers.conv2d(
             self.conv3_norm, 4, 3, 1, 1, bias_attr=b_attr)
         conf1, conf3 = fluid.layers.split(
-            mbox_conf, num_or_sections=[1, 3], dim=1)
+            mbox_conf, num_or_sections=[3, 1], dim=1)
         conf3_maxin = fluid.layers.reduce_max(conf3, dim=1, keep_dim=True)
         conf = fluid.layers.concat([conf1, conf3_maxin], axis=1)
         conf = permute_and_reshape(conf, 2)
@@ -322,6 +337,8 @@ class PyramidBox(object):
                 min_sizes=[min_sizes[i]],
                 steps=[steps[i]] * 2,
                 aspect_ratios=[1.],
+                clip=False,
+                flip=True,
                 offset=0.5)
             box = fluid.layers.reshape(box, shape=[-1, 4])
             var = fluid.layers.reshape(var, shape=[-1, 4])
