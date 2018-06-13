@@ -109,10 +109,10 @@ class AtariPlayer(gym.Env):
 
     def _current_state(self):
         """
-        :returns: a gray-scale (h, w) uint8 image
+        returns: a gray-scale (h, w) uint8 image
         """
         ret = self._grab_raw_image()
-        # max-pooled over the last screen
+        # avoid missing frame issue: max-pooled over the last screen
         ret = np.maximum(ret, self.last_raw_screen)
         if self.viz:
             if isinstance(self.viz, float):

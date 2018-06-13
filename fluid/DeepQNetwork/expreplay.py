@@ -39,8 +39,8 @@ class ReplayMemory(object):
     def recent_state(self):
         """ maintain recent state for training"""
         lst = list(self._context)
-        states = [np.zeros(
-            self.state_shape, dtype='uint8')] * (self._context.maxlen - len(lst))
+        states = [np.zeros(self.state_shape, dtype='uint8')] * \
+                    (self._context.maxlen - len(lst))
         states.extend([k.state for k in lst])
         return states
 
