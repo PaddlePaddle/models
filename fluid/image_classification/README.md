@@ -74,6 +74,7 @@ python train.py \
 * **model**: name model to use. Default: "SE_ResNeXt50_32x4d".
 * **num_epochs**: the number of epochs. Default: 120.
 * **batch_size**: the size of each mini-batch. Default: 256.
+* **use_gpu**: whether to use GPU or not. Default: True.
 * **total_images**: total number of images in the training set. Default: 1281167.
 * **class_dim**: the class number of the classification task. Default: 1000.
 * **image_shape**: input size of the network. Default: "3,224,224".
