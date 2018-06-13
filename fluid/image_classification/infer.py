@@ -15,6 +15,7 @@ import math
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size', int, 256, "Minibatch size.")
+add_arg('use_gpu', bool, True, "Whether to use GPU or not.")
 add_arg('class_dim', int, 1000, "Class number.")
 add_arg('image_shape', str, "3,224,224", "input image size")
 add_arg('with_mem_opt', bool, True,
@@ -41,7 +42,7 @@ def infer(args):
     # model definition
     model = models.__dict__[model_name]()
 
-    if model_name in ["GoogleNet"]:
+    if model_name is "GoogleNet":
         out, _, _ = model.net(input=image, class_dim=class_dim)
     else:
         out = model.net(input=image, class_dim=class_dim)
@@ -51,7 +52,7 @@ def infer(args):
     if with_memory_optimization:
         fluid.memory_optimize(fluid.default_main_program())
 
-    place = fluid.CUDAPlace(0)
+    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 

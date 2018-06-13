@@ -15,6 +15,7 @@ import math
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size', int, 256, "Minibatch size.")
+add_arg('use_gpu', bool, True, "Whether to use GPU or not.")
 add_arg('total_images', int, 1281167, "Training image number.")
 add_arg('num_epochs', int, 120, "number of epochs.")
 add_arg('class_dim', int, 1000, "Class number.")
@@ -99,7 +100,7 @@ def train(args):
     # model definition
     model = models.__dict__[model_name]()
 
-    if model_name in ["GoogleNet"]:
+    if model_name is "GoogleNet":
         out0, out1, out2 = model.net(input=image, class_dim=class_dim)
         cost0 = fluid.layers.cross_entropy(input=out0, label=label)
         cost1 = fluid.layers.cross_entropy(input=out1, label=label)
@@ -136,7 +137,7 @@ def train(args):
     if with_memory_optimization:
         fluid.memory_optimize(fluid.default_main_program())
 
-    place = fluid.CUDAPlace(0)
+    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 

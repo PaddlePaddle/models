@@ -15,6 +15,7 @@ import math
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size', int, 256, "Minibatch size.")
+add_arg('use_gpu', bool, True, "Whether to use GPU or not.")
 add_arg('class_dim', int, 1000, "Class number.")
 add_arg('image_shape', str, "3,224,224", "input image size")
 add_arg('with_mem_opt', bool, True,
@@ -42,7 +43,7 @@ def eval(args):
     # model definition
     model = models.__dict__[model_name]()
 
-    if model_name in ["GoogleNet"]:
+    if model_name is "GoogleNet":
         out0, out1, out2 = model.net(input=image, class_dim=class_dim)
         cost0 = fluid.layers.cross_entropy(input=out0, label=label)
         cost1 = fluid.layers.cross_entropy(input=out1, label=label)
@@ -67,7 +68,7 @@ def eval(args):
     if with_memory_optimization:
         fluid.memory_optimize(fluid.default_main_program())
 
-    place = fluid.CUDAPlace(0)
+    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
@@ -99,7 +100,6 @@ def eval(args):
         test_info[1].append(acc1 * len(data))
         test_info[2].append(acc5 * len(data))
         cnt += len(data)
-        print("total_number:", cnt)
         if batch_id % 10 == 0:
             print("Testbatch {0},loss {1}, "
                   "acc1 {2},acc5 {3},time {4}".format(batch_id, \
