@@ -137,7 +137,7 @@ Models are trained by starting with learning rate ```0.1``` and decaying it by `
 
 |model | top-1/top-5 accuracy
 |- | -:
-|[AlexNet](http://paddle-imagenet-models.bj.bcebos.com/alexnet_model.tar) | 56.65%/79.20%
+|[AlexNet](http://paddle-imagenet-models.bj.bcebos.com/alexnet_model.tar) | 57.21%/79.72%
 |VGG11 | -
 |VGG13 | -
 |VGG16 | -
@@ -145,10 +145,10 @@ Models are trained by starting with learning rate ```0.1``` and decaying it by `
 |GoogleNet | -
 |InceptionV4 | -
 |MobileNet | -
-|[ResNet50](http://paddle-imagenet-models.bj.bcebos.com/resnet_50_model.tar) | 76.44%/93.21%
+|[ResNet50](http://paddle-imagenet-models.bj.bcebos.com/resnet_50_model.tar) | 76.63%/93.10%
 |ResNet101 | -
 |ResNet152 | -
-|[SE_ResNeXt50_32x4d](http://paddle-imagenet-models.bj.bcebos.com/se_resnext_50_model.tar) | 78.25%/93.97%
+|[SE_ResNeXt50_32x4d](http://paddle-imagenet-models.bj.bcebos.com/se_resnext_50_model.tar) | 78.33%/93.96%
 |SE_ResNeXt101_32x4d | -
 |SE_ResNeXt152_32x4d | -
 |DPN68 | -
