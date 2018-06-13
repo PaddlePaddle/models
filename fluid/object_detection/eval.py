@@ -102,7 +102,7 @@ if __name__ == '__main__':
         raise ValueError("The model path [%s] does not exist." %
                          (args.model_dir))
     if 'coco' in args.dataset:
-        data_dir = './data/coco'
+        data_dir = 'data/coco'
         if '2014' in args.dataset:
             test_list = 'annotations/instances_minival2014.json'
         elif '2017' in args.dataset:

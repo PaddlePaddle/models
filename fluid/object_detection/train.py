@@ -186,7 +186,7 @@ if __name__ == '__main__':
     label_file = 'label_list'
     model_save_dir = args.model_save_dir
     if 'coco' in args.dataset:
-        data_dir = './data/coco'
+        data_dir = 'data/coco'
         if '2014' in args.dataset:
             train_file_list = 'annotations/instances_train2014.json'
             val_file_list = 'annotations/instances_minival2014.json'
