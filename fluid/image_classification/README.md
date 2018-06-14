@@ -91,9 +91,9 @@ Data reader is defined in ```reader.py```. In [training stage](#training-a-model
 * resize
 * flipping
 
-**training curve:"
+**training curve:**
 
-The training curve can be drawn based on training log. For example, the log of training AlexNet is like:
+The training curve can be drawn based on training log. For example, the log from training AlexNet is like:
 ```
 End pass 1, train_loss 6.23153877258, train_acc1 0.0150696625933, train_acc5 0.0552518665791, test_loss 5.41981744766, test_acc1 0.0519132651389, test_acc5 0.156150355935
 End pass 2, train_loss 5.15442800522, train_acc1 0.0784279331565, train_acc5 0.211050540209, test_loss 4.45795249939, test_acc1 0.140469551086, test_acc5 0.333163291216
@@ -131,7 +131,7 @@ python train.py
 ```
 
 ## Evaluation
-Evaluation is to evaluate the performance of a trained model. One can download [pretrained models(#supported-models) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
+Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
 ```
 python eval.py \
        --model=SE_ResNeXt50_32x4d \
