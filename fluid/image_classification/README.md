@@ -27,7 +27,7 @@ In the shell script ```download_imagenet2012.sh```,  there are three steps to pr
 
 **step-1:** Register at ```image-net.org``` first in order to get a pair of ```Username``` and ```AccessKey```, which are used to download ImageNet data.
 
-**step-2:** Download ImageNet-2012 dataset from website. The training and validation data will be downloaded into folder "train" and "val" respectively.
+**step-2:** Download ImageNet-2012 dataset from website. The training and validation data will be downloaded into folder "train" and "val" respectively. Please note that the size of data is more than 40 GB, it will take much time to download. Users who have downloaded the ImageNet data can organize it into ```data/ILSVRC2012``` directly.
 
 **step-3:** Download training and validation label files. There are two label files which contain train and validation image labels respectively:
 
