@@ -104,17 +104,18 @@ End pass 6, train_loss 3.6929500103, train_acc1 0.255628824234, train_acc5 0.487
 End pass 7, train_loss 3.55882954597, train_acc1 0.275381118059, train_acc5 0.511990904808, test_loss 3.03736782074, test_acc1 0.349035382271, test_acc5 0.606293857098
 End pass 8, train_loss 3.45595097542, train_acc1 0.291462600231, train_acc5 0.530815005302, test_loss 2.96034455299, test_acc1 0.362228929996, test_acc5 0.617390751839
 End pass 9, train_loss 3.3745200634, train_acc1 0.303871691227, train_acc5 0.545210540295, test_loss 2.93932366371, test_acc1 0.37129303813, test_acc5 0.623573005199
+...
 ```
 
 The error rate curves of AlexNet, ResNet50 and SE-ResNeXt-50 are shown in the figure below.
 <p align="center">
 <img src="images/curve.jpg" height=480 width=640 hspace='10'/> <br />
-Training Curve
+Training and validation Curves
 </p>
 
 ## Finetuning
 
-Finetuning is to finetune model weights in a specific task by loading pretrained weights. After initializing ```path_to_pretrain_model``` , one can finetune a model as:
+Finetuning is to finetune model weights in a specific task by loading pretrained weights. After initializing ```path_to_pretrain_model```, one can finetune a model as:
 ```
 python train.py
        --model=SE_ResNeXt50_32x4d \
@@ -181,11 +182,12 @@ Test-9-score: [15.135801], class [315]
 Test-10-score: [14.585114], class [920]
 Test-11-score: [13.739927], class [679]
 Test-12-score: [15.040644], class [386]
+...
 ```
 
 ## Supported models and performances
 
-Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each ```30``` epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 is listed in table. Pretrained models can be downloaded by clicking related model names.
+Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each pre-defined epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. Pretrained models can be downloaded by clicking related model names.
 
 |model | top-1/top-5 accuracy
 |- | -:
