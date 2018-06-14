@@ -81,9 +81,7 @@ python train.py \
 * **pretrained_model**: model path for pretraining. Default: None.
 * **checkpoint**: the checkpoint path to resume. Default: None.
 
-**data reader introduction:**
-
-Data reader is defined in ```reader.py```. In [training stage](#training-a-model), random crop and flipping are used, while center crop is used in [evaluation](#inference) and [inference](#inference) stages. Supported data augmentation includes:
+**data reader introduction:** Data reader is defined in ```reader.py```. In [training stage](#training-a-model), random crop and flipping are used, while center crop is used in [evaluation](#inference) and [inference](#inference) stages. Supported data augmentation includes:
 * rotation
 * color jitter
 * random crop
@@ -91,9 +89,7 @@ Data reader is defined in ```reader.py```. In [training stage](#training-a-model
 * resize
 * flipping
 
-**training curve:**
-
-The training curve can be drawn based on training log. For example, the log from training AlexNet is like:
+**training curve:** The training curve can be drawn based on training log. For example, the log from training AlexNet is like:
 ```
 End pass 1, train_loss 6.23153877258, train_acc1 0.0150696625933, train_acc5 0.0552518665791, test_loss 5.41981744766, test_acc1 0.0519132651389, test_acc5 0.156150355935
 End pass 2, train_loss 5.15442800522, train_acc1 0.0784279331565, train_acc5 0.211050540209, test_loss 4.45795249939, test_acc1 0.140469551086, test_acc5 0.333163291216
