@@ -27,7 +27,7 @@ sh download_imagenet2012.sh
 
 **步骤一：** 首先在```image-net.org```网站上完成注册，用于获得一对```Username```和```AccessKey```。
 
-**步骤二：** 从ImageNet官网下载ImageNet-2012的图像数据。训练以及验证数据集会分别被下载到"train" 和 "val" 目录中。请注意，ImaegNet数据的大小超过40GB，下载非常耗时；已经自行下载ImageNet的用户可以直接将数据组织到```data/ILSVRC2012```。
+**步骤二：** 从ImageNet官网下载ImageNet-2012的图像数据。训练以及验证数据集会分别被下载到"train" 和 "val" 目录中。请注意，ImaegNet数据的大小超过40GB，下载非常耗时；已经自行下载ImageNet的用户可以直接将数据组织放置到```data/ILSVRC2012```。
 
 **步骤三：** 下载训练与验证集合对应的标签文件。下面两个文件分别包含了训练集合与验证集合中图像的标签：
 
@@ -80,9 +80,7 @@ python train.py \
 * **pretrained_model**: model path for pretraining. Default: None.
 * **checkpoint**: the checkpoint path to resume. Default: None.
 
-**数据读取器说明：**
-
-数据读取器定义在```reader.py```中。在[训练阶段](#training-a-model), 默认采用的增广方式是随机裁剪与水平翻转, 而在[评估](#inference)与[推断](#inference)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
+**数据读取器说明：** 数据读取器定义在```reader.py```中。在[训练阶段](#training-a-model), 默认采用的增广方式是随机裁剪与水平翻转, 而在[评估](#inference)与[推断](#inference)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
 * 旋转
 * 颜色抖动
 * 随机裁剪
@@ -90,8 +88,7 @@ python train.py \
 * 长宽调整
 * 水平翻转
 
-**训练曲线：**
-通过训练过程中的日志可以画出训练曲线。举个例子，训练AlexNet出来的日志如下所示：
+**训练曲线：** 通过训练过程中的日志可以画出训练曲线。举个例子，训练AlexNet出来的日志如下所示：
 ```
 End pass 1, train_loss 6.23153877258, train_acc1 0.0150696625933, train_acc5 0.0552518665791, test_loss 5.41981744766, test_acc1 0.0519132651389, test_acc5 0.156150355935
 End pass 2, train_loss 5.15442800522, train_acc1 0.0784279331565, train_acc5 0.211050540209, test_loss 4.45795249939, test_acc1 0.140469551086, test_acc5 0.333163291216
@@ -167,7 +164,7 @@ python infer.py \
        --with_mem_opt=True \
        --pretrained_model=${path_to_pretrain_model}
 ```
-输出的预测结果包括最终类别分数(未经过softmax处理)以及相应的预测标签。
+输出的预测结果包括最高分数(未经过softmax处理)以及相应的预测标签。
 ```
 Test-0-score: [13.168352], class [491]
 Test-1-score: [7.913302], class [975]
@@ -187,7 +184,7 @@ Test-12-score: [15.040644], class [386]
 
 ## 已有模型及其性能
 
-表格中列出了在"models"目录下支持的神经网络种类，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度；如无特征说明，训练模型的初始学习率为0.1，每隔预定的epochs会下降0.1。预训练模型可以通过点击相应模型的名称进行下载。
+表格中列出了在"models"目录下支持的神经网络种类，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度；如无特征说明，训练模型的初始学习率为```0.1```，每隔预定的epochs会下降```0.1```。预训练模型可以通过点击相应模型的名称进行下载。
 
 |model | top-1/top-5 accuracy
 |- | -:
