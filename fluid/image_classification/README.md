@@ -91,10 +91,24 @@ Data reader is defined in ```reader.py```. In [training stage](#training-a-model
 
 **training curve:"
 
-The training curve can be drawn based on training log. The error rate curves of AlexNet, ResNet50 and SE-ResNeXt-50 are below. Each Figure gives 
-<p align="center">
-<img src="images/alexnet_curve.jpg" height=300 width=300 hspace='10'/> <br />
-""
+The training curve can be drawn based on training log. For example, the log of training AlexNet is like:
+```shell
+End pass 1, train_loss 6.23153877258, train_acc1 0.0150696625933, train_acc5 0.0552518665791, test_loss 5.41981744766, test_acc1 0.0519132651389, test_acc5 0.156150355935
+End pass 2, train_loss 5.15442800522, train_acc1 0.0784279331565, train_acc5 0.211050540209, test_loss 4.45795249939, test_acc1 0.140469551086, test_acc5 0.333163291216
+End pass 3, train_loss 4.51505613327, train_acc1 0.145300447941, train_acc5 0.331567406654, test_loss 3.86548018456, test_acc1 0.219443559647, test_acc5 0.446448504925
+End pass 4, train_loss 4.12735557556, train_acc1 0.19437250495, train_acc5 0.405713528395, test_loss 3.56990146637, test_acc1 0.264536827803, test_acc5 0.507190704346
+End pass 5, train_loss 3.87505435944, train_acc1 0.229518383741, train_acc5 0.453582793474, test_loss 3.35345435143, test_acc1 0.297349333763, test_acc5 0.54753267765
+End pass 6, train_loss 3.6929500103, train_acc1 0.255628824234, train_acc5 0.487188398838, test_loss 3.17112898827, test_acc1 0.326953113079, test_acc5 0.581780135632
+End pass 7, train_loss 3.55882954597, train_acc1 0.275381118059, train_acc5 0.511990904808, test_loss 3.03736782074, test_acc1 0.349035382271, test_acc5 0.606293857098
+End pass 8, train_loss 3.45595097542, train_acc1 0.291462600231, train_acc5 0.530815005302, test_loss 2.96034455299, test_acc1 0.362228929996, test_acc5 0.617390751839
+End pass 9, train_loss 3.3745200634, train_acc1 0.303871691227, train_acc5 0.545210540295, test_loss 2.93932366371, test_acc1 0.37129303813, test_acc5 0.623573005199
+```
+
+The error rate curves of AlexNet, ResNet50 and SE-ResNeXt-50 are shown in figures below from left to right.
+<p align="left">
+<img src="images/alexnet_curve.jpg" height=240 width=320 hspace='10'/> 
+<img src="images/resnet_50_curve.jpg" height=240 width=320 hspace='10'/> 
+<img src="images/se_resnext_50_curve.jpg" height=240 width=320 hspace='10'/> 
 </p>
 
 ## Finetuning
