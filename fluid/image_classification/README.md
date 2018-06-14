@@ -13,7 +13,7 @@ Image classification, which is an important field of computer vision, is to clas
 
 ## Installation
 
-Running sample code in this directory requires PaddelPaddle v0.10.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v0.13.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) and make an update.
 
 ## Data preparation
 
@@ -23,11 +23,13 @@ cd data/ILSVRC2012/
 sh download_imagenet2012.sh
 ```
 
-In the shell script ```download_imagenet2012.sh```,  there are two steps to prepare data:
+In the shell script ```download_imagenet2012.sh```,  there are three steps to prepare data:
 
-**step-1:** Download ImageNet-2012 dataset from website. The training and validation data will be downloaded into folder "train" and "val" respectively.
+**step-1:** Register at ```image-net.org``` first in order to get a pair of ```Username``` and ```AccessKey```, which are used to download ImageNet data.
 
-**step-2:** Download training and validation label files. There are two label files which contain train and validation image labels respectively:
+**step-2:** Download ImageNet-2012 dataset from website. The training and validation data will be downloaded into folder "train" and "val" respectively.
+
+**step-3:** Download training and validation label files. There are two label files which contain train and validation image labels respectively:
 
 * *train_list.txt*: label file of imagenet-2012 training set, with each line seperated by ```SPACE```, like:
 ```
