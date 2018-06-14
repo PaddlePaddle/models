@@ -14,7 +14,7 @@
 
 ## 安装
 
-在当前目录下运行样例代码需要PadddlePaddle的v0.10.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v0.13.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明来更新PaddlePaddle。
 
 ## 数据准备
 
@@ -23,11 +23,13 @@
 cd data/ILSVRC2012/
 sh download_imagenet2012.sh
 ```
-在```download_imagenet2012.sh```脚本中，通过下面两步来准备数据：
+在```download_imagenet2012.sh```脚本中，通过下面三步来准备数据：
 
-**步骤一：** 从ImageNet官网下载ImageNet-2012的图像数据。训练以及验证数据集会分别被下载到"train" 和 "val" 目录中。
+**步骤一：** 首先在```image-net.org```网站上完成注册，用于获得一对```Username```和```AccessKey```。
 
-**步骤二：** 下载训练与验证集合对应的标签文件。下面两个文件分别包含了训练集合与验证集合中图像的标签：
+**步骤二：** 从ImageNet官网下载ImageNet-2012的图像数据。训练以及验证数据集会分别被下载到"train" 和 "val" 目录中。请注意，ImaegNet数据的大小超过40GB，下载非常耗时；已经自行下载ImageNet的用户可以直接将数据组织到```data/ILSVRC2012```。
+
+**步骤三：** 下载训练与验证集合对应的标签文件。下面两个文件分别包含了训练集合与验证集合中图像的标签：
 
 * *train_list.txt*: ImageNet-2012训练集合的标签文件，每一行采用"空格"分隔图像路径与标注，例如：
 ```
@@ -88,6 +90,28 @@ python train.py \
 * 长宽调整
 * 水平翻转
 
+**训练曲线：**
+通过训练过程中的日志可以画出训练曲线。举个例子，训练AlexNet出来的日志如下所示：
+```
+End pass 1, train_loss 6.23153877258, train_acc1 0.0150696625933, train_acc5 0.0552518665791, test_loss 5.41981744766, test_acc1 0.0519132651389, test_acc5 0.156150355935
+End pass 2, train_loss 5.15442800522, train_acc1 0.0784279331565, train_acc5 0.211050540209, test_loss 4.45795249939, test_acc1 0.140469551086, test_acc5 0.333163291216
+End pass 3, train_loss 4.51505613327, train_acc1 0.145300447941, train_acc5 0.331567406654, test_loss 3.86548018456, test_acc1 0.219443559647, test_acc5 0.446448504925
+End pass 4, train_loss 4.12735557556, train_acc1 0.19437250495, train_acc5 0.405713528395, test_loss 3.56990146637, test_acc1 0.264536827803, test_acc5 0.507190704346
+End pass 5, train_loss 3.87505435944, train_acc1 0.229518383741, train_acc5 0.453582793474, test_loss 3.35345435143, test_acc1 0.297349333763, test_acc5 0.54753267765
+End pass 6, train_loss 3.6929500103, train_acc1 0.255628824234, train_acc5 0.487188398838, test_loss 3.17112898827, test_acc1 0.326953113079, test_acc5 0.581780135632
+End pass 7, train_loss 3.55882954597, train_acc1 0.275381118059, train_acc5 0.511990904808, test_loss 3.03736782074, test_acc1 0.349035382271, test_acc5 0.606293857098
+End pass 8, train_loss 3.45595097542, train_acc1 0.291462600231, train_acc5 0.530815005302, test_loss 2.96034455299, test_acc1 0.362228929996, test_acc5 0.617390751839
+End pass 9, train_loss 3.3745200634, train_acc1 0.303871691227, train_acc5 0.545210540295, test_loss 2.93932366371, test_acc1 0.37129303813, test_acc5 0.623573005199
+...
+```
+
+下图给出了AlexNet、ResNet50以及SE-ResNeXt-50网络的错误率曲线：
+<p align="center">
+<img src="images/curve.jpg" height=480 width=640 hspace='10'/> <br />
+训练集合与验证集合上的错误率曲线
+</p>
+
+
 ## 参数微调
 
 参数微调是指在特定任务上微调已训练模型的参数。通过初始化```path_to_pretrain_model```，微调一个模型可以采用如下的命令：
@@ -106,7 +130,7 @@ python train.py
 ```
 
 ## 模型评估
-模型评估是指对训练完毕的模型评估各类性能指标。运行如下的命令，可以获得一个模型top-1/top-5精度:
+模型评估是指对训练完毕的模型评估各类性能指标。用户可以下载[预训练模型](#supported-models)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得一个模型top-1/top-5精度:
 ```
 python eval.py \
        --model=SE_ResNeXt50_32x4d \
@@ -116,6 +140,21 @@ python eval.py \
        --with_mem_opt=True \
        --pretrained_model=${path_to_pretrain_model}
 ```
+
+根据这个评估程序的配置，输出日志形式如下：
+```
+Testbatch 0,loss 2.1786134243, acc1 0.625,acc5 0.8125,time 0.48 sec
+Testbatch 10,loss 0.898496925831, acc1 0.75,acc5 0.9375,time 0.51 sec
+Testbatch 20,loss 1.32524681091, acc1 0.6875,acc5 0.9375,time 0.37 sec
+Testbatch 30,loss 1.46830511093, acc1 0.5,acc5 0.9375,time 0.51 sec
+Testbatch 40,loss 1.12802267075, acc1 0.625,acc5 0.9375,time 0.35 sec
+Testbatch 50,loss 0.881597697735, acc1 0.8125,acc5 1.0,time 0.32 sec
+Testbatch 60,loss 0.300163716078, acc1 0.875,acc5 1.0,time 0.48 sec
+Testbatch 70,loss 0.692037761211, acc1 0.875,acc5 1.0,time 0.35 sec
+Testbatch 80,loss 0.0969972759485, acc1 1.0,acc5 1.0,time 0.41 sec
+...
+```
+
 
 ## 模型推断
 模型推断可以获取一个模型的预测分数或者图像的特征：
@@ -128,10 +167,27 @@ python infer.py \
        --with_mem_opt=True \
        --pretrained_model=${path_to_pretrain_model}
 ```
+输出的预测结果包括最终类别分数(未经过softmax处理)以及相应的预测标签。
+```
+Test-0-score: [13.168352], class [491]
+Test-1-score: [7.913302], class [975]
+Test-2-score: [16.959702], class [21]
+Test-3-score: [14.197695], class [383]
+Test-4-score: [12.607652], class [878]
+Test-5-score: [17.725458], class [15]
+Test-6-score: [12.678599], class [118]
+Test-7-score: [12.353498], class [505]
+Test-8-score: [20.828007], class [747]
+Test-9-score: [15.135801], class [315]
+Test-10-score: [14.585114], class [920]
+Test-11-score: [13.739927], class [679]
+Test-12-score: [15.040644], class [386]
+...
+```
 
 ## 已有模型及其性能
 
-表格中列出了在"models"目录下支持的神经网络种类，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度。预训练模型可以通过点击相应模型的名称进行下载。
+表格中列出了在"models"目录下支持的神经网络种类，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度；如无特征说明，训练模型的初始学习率为0.1，每隔预定的epochs会下降0.1。预训练模型可以通过点击相应模型的名称进行下载。
 
 |model | top-1/top-5 accuracy
 |- | -:
