@@ -89,6 +89,14 @@ Data reader is defined in ```reader.py```. In [training stage](#training-a-model
 * resize
 * flipping
 
+**training curve:"
+
+The training curve can be drawn based on training log. The error rate curves of AlexNet, ResNet50 and SE-ResNeXt-50 are below. Each Figure gives 
+<p align="center">
+<img src="images/alexnet_curve.jpg" height=300 width=300 hspace='10'/> <br />
+""
+</p>
+
 ## Finetuning
 
 Finetuning is to finetune model weights in a specific task by loading pretrained weights. After initializing ```path_to_pretrain_model``` , one can finetune a model as:
