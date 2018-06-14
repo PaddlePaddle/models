@@ -92,7 +92,7 @@ Data reader is defined in ```reader.py```. In [training stage](#training-a-model
 **training curve:"
 
 The training curve can be drawn based on training log. For example, the log of training AlexNet is like:
-```shell
+```
 End pass 1, train_loss 6.23153877258, train_acc1 0.0150696625933, train_acc5 0.0552518665791, test_loss 5.41981744766, test_acc1 0.0519132651389, test_acc5 0.156150355935
 End pass 2, train_loss 5.15442800522, train_acc1 0.0784279331565, train_acc5 0.211050540209, test_loss 4.45795249939, test_acc1 0.140469551086, test_acc5 0.333163291216
 End pass 3, train_loss 4.51505613327, train_acc1 0.145300447941, train_acc5 0.331567406654, test_loss 3.86548018456, test_acc1 0.219443559647, test_acc5 0.446448504925
@@ -104,11 +104,10 @@ End pass 8, train_loss 3.45595097542, train_acc1 0.291462600231, train_acc5 0.53
 End pass 9, train_loss 3.3745200634, train_acc1 0.303871691227, train_acc5 0.545210540295, test_loss 2.93932366371, test_acc1 0.37129303813, test_acc5 0.623573005199
 ```
 
-The error rate curves of AlexNet, ResNet50 and SE-ResNeXt-50 are shown in figures below from left to right.
-<p align="left">
-<img src="images/alexnet_curve.jpg" height=240 width=320 hspace='10'/> 
-<img src="images/resnet_50_curve.jpg" height=240 width=320 hspace='10'/> 
-<img src="images/se_resnext_50_curve.jpg" height=240 width=320 hspace='10'/> 
+The error rate curves of AlexNet, ResNet50 and SE-ResNeXt-50 are shown in the figure below.
+<p align="center">
+<img src="images/curve.jpg" height=480 width=640 hspace='10'/> <br />
+Training Curve
 </p>
 
 ## Finetuning
@@ -129,7 +128,7 @@ python train.py
 ```
 
 ## Evaluation
-Evaluation is to evaluate the performance of a trained model. One can get top1/top5 accuracy by running the following command:
+Evaluation is to evaluate the performance of a trained model. One can download [pretrained models(#supported-models) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
 ```
 python eval.py \
        --model=SE_ResNeXt50_32x4d \
@@ -138,6 +137,20 @@ python eval.py \
        --image_shape=3,224,224 \
        --with_mem_opt=True \
        --pretrained_model=${path_to_pretrain_model}
+```
+
+According to the congfiguration of evaluation, the output log is like:
+```
+Testbatch 0,loss 2.1786134243, acc1 0.625,acc5 0.8125,time 0.48 sec
+Testbatch 10,loss 0.898496925831, acc1 0.75,acc5 0.9375,time 0.51 sec
+Testbatch 20,loss 1.32524681091, acc1 0.6875,acc5 0.9375,time 0.37 sec
+Testbatch 30,loss 1.46830511093, acc1 0.5,acc5 0.9375,time 0.51 sec
+Testbatch 40,loss 1.12802267075, acc1 0.625,acc5 0.9375,time 0.35 sec
+Testbatch 50,loss 0.881597697735, acc1 0.8125,acc5 1.0,time 0.32 sec
+Testbatch 60,loss 0.300163716078, acc1 0.875,acc5 1.0,time 0.48 sec
+Testbatch 70,loss 0.692037761211, acc1 0.875,acc5 1.0,time 0.35 sec
+Testbatch 80,loss 0.0969972759485, acc1 1.0,acc5 1.0,time 0.41 sec
+...
 ```
 
 ## Inference
@@ -150,6 +163,22 @@ python infer.py \
        --image_shape=3,224,224 \
        --with_mem_opt=True \
        --pretrained_model=${path_to_pretrain_model}
+```
+The output contains predication results, including maximum score (before softmax) and corresponding predicted label.
+```
+Test-0-score: [13.168352], class [491]
+Test-1-score: [7.913302], class [975]
+Test-2-score: [16.959702], class [21]
+Test-3-score: [14.197695], class [383]
+Test-4-score: [12.607652], class [878]
+Test-5-score: [17.725458], class [15]
+Test-6-score: [12.678599], class [118]
+Test-7-score: [12.353498], class [505]
+Test-8-score: [20.828007], class [747]
+Test-9-score: [15.135801], class [315]
+Test-10-score: [14.585114], class [920]
+Test-11-score: [13.739927], class [679]
+Test-12-score: [15.040644], class [386]
 ```
 
 ## Supported models and performances
