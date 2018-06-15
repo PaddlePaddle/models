@@ -77,6 +77,7 @@ def infer(args, data_args, image_path, model_dir):
     draw_bounding_box_on_image(image_path, nmsed_out_v, args.confs_threshold,
                                label_list)
 
+
 def draw_bounding_box_on_image(image_path, nms_out, confs_threshold,
                                label_list):
     image = Image.open(image_path)
@@ -115,7 +116,7 @@ if __name__ == '__main__':
                          (args.model_dir))
     if 'coco' in args.dataset:
         data_dir = 'data/coco'
-        label_file = 'annotations/instances_minival2014.json'
+        label_file = 'annotations/instances_val2014.json'
 
     data_args = reader.Settings(
         dataset=args.dataset,

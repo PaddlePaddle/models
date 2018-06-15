@@ -189,7 +189,7 @@ if __name__ == '__main__':
         data_dir = 'data/coco'
         if '2014' in args.dataset:
             train_file_list = 'annotations/instances_train2014.json'
-            val_file_list = 'annotations/instances_minival2014.json'
+            val_file_list = 'annotations/instances_val2014.json'
         elif '2017' in args.dataset:
             train_file_list = 'annotations/instances_train2017.json'
             val_file_list = 'annotations/instances_val2017.json'
