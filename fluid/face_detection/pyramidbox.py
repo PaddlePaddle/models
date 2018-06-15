@@ -52,6 +52,9 @@ class PyramidBox(object):
                  use_transposed_conv2d=True,
                  is_infer=False,
                  sub_network=False):
+        """
+        TODO(qingqing): add comments.
+        """
         self.data_shape = data_shape
         self.min_sizes = [16., 32., 64., 128., 256., 512.]
         self.steps = [4., 8., 16., 32., 64., 128.]
@@ -128,7 +131,7 @@ class PyramidBox(object):
                     learning_rate=0.,
                     regularizer=L2Decay(0.),
                     initializer=Bilinear())
-                conv_up = fluid.layers.conv2d_transpose(
+                upsampling = fluid.layers.conv2d_transpose(
                     conv1,
                     ch,
                     output_size=None,
@@ -139,14 +142,14 @@ class PyramidBox(object):
                     param_attr=w_attr,
                     bias_attr=False)
             else:
-                conv_up = fluid.layers.resize_bilinear(
+                upsampling = fluid.layers.resize_bilinear(
                     conv1, out_shape=up_to.shape[2:])
 
             b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
             conv2 = fluid.layers.conv2d(
                 up_to, ch, 1, act='relu', bias_attr=b_attr)
             # eltwise mul
-            conv_fuse = conv_up * conv2
+            conv_fuse = upsampling * conv2
             return conv_fuse
 
         self.lfpn2_on_conv5 = fpn(self.conv6, self.conv5)
@@ -299,7 +302,7 @@ class PyramidBox(object):
         mbox_conf = fluid.layers.conv2d(
             self.conv3_norm, 4, 3, 1, 1, bias_attr=b_attr)
         conf1, conf3 = fluid.layers.split(
-            mbox_conf, num_or_sections=[3, 1], dim=1)
+            mbox_conf, num_or_sections=[1, 3], dim=1)
         conf3_maxin = fluid.layers.reduce_max(conf3, dim=1, keep_dim=True)
         conf = fluid.layers.concat([conf1, conf3_maxin], axis=1)
         conf = permute_and_reshape(conf, 2)
