@@ -19,4 +19,6 @@ if [[ $# -eq 3 ]];then
 else
     caffe_file="./results/${model_name}.caffe/${2}.npy"
 fi
-python ./compare.py $paddle_file $caffe_file
+cmd="python ./compare.py $paddle_file $caffe_file"
+echo $cmd
+eval $cmd
