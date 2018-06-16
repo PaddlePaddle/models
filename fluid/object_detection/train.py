@@ -35,15 +35,15 @@ add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all da
 #yapf: enable
 
 
-def parallel_exe(args,
-                 train_file_list,
-                 val_file_list,
-                 data_args,
-                 learning_rate,
-                 batch_size,
-                 num_passes,
-                 model_save_dir,
-                 pretrained_model=None):
+def train(args,
+          train_file_list,
+          val_file_list,
+          data_args,
+          learning_rate,
+          batch_size,
+          num_passes,
+          model_save_dir,
+          pretrained_model=None):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if 'coco' in data_args.dataset:
         num_classes = 91
@@ -205,8 +205,7 @@ if __name__ == '__main__':
         apply_expand=args.apply_expand,
         ap_version = args.ap_version,
         toy=args.is_toy)
-    method = parallel_exe
-    method(
+    train(
         args,
         train_file_list=train_file_list,
         val_file_list=val_file_list,
