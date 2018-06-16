@@ -81,7 +81,7 @@ Data reader is defined in `reader.py`. All images will be resized to 300x300. In
    - crop: crop image with respect to different scale, aspect ratio, and overlap.
    - flip: flip horizontally.
 
-We used RMSProp optimizer with mini-batch size 64 to train the MobileNet-SSD. The initial learning rate is 0.001, and was decayed at 40, 60, 80, 100 epochs with multiplier 0.5, 0.25, 0.1, 0.01, respectively. Weight decay is 0.00005. After 120 epochs we achieve XXX% mAP under 11point metric.
+We used RMSProp optimizer with mini-batch size 64 to train the MobileNet-SSD. The initial learning rate is 0.001, and was decayed at 40, 60, 80, 100 epochs with multiplier 0.5, 0.25, 0.1, 0.01, respectively. Weight decay is 0.00005. After 120 epochs we achieve 73.32% mAP under 11point metric.
 
 ### Evaluate
 
@@ -125,4 +125,4 @@ MobileNet-v1-SSD 300x300 Visualization Examples
 
 | Model                    | Pre-trained Model  | Training data    | Test data    | mAP |
 |:------------------------:|:------------------:|:----------------:|:------------:|:----:|
-|MobileNet-v1-SSD 300x300  | COCO MobileNet SSD | VOC07+12 trainval| VOC07 test   | XXX%  |
+|MobileNet-v1-SSD 300x300  | COCO MobileNet SSD | VOC07+12 trainval| VOC07 test   | 73.32%  |
