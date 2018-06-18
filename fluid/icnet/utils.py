@@ -78,7 +78,7 @@ def to_lodtensor(data, place):
 
 
 def get_feeder_data(data, place, for_test=False):
-    feed_dict={}
+    feed_dict = {}
     image_t = core.LoDTensor()
     image_t.set(data[0], place)
     feed_dict["image"] = image_t
@@ -90,7 +90,7 @@ def get_feeder_data(data, place, for_test=False):
         mask_sub1_t = core.LoDTensor()
         mask_sub2_t = core.LoDTensor()
         mask_sub4_t = core.LoDTensor()
-    
+
         labels_sub1_t.set(data[1], place)
         labels_sub2_t.set(data[3], place)
         mask_sub1_t.set(data[2], place)
@@ -105,10 +105,10 @@ def get_feeder_data(data, place, for_test=False):
         feed_dict["mask_sub4"] = mask_sub4_t
     else:
         label_t = core.LoDTensor()
-        mask_t = core.LoDTensor() 
+        mask_t = core.LoDTensor()
         label_t.set(data[1], place)
         mask_t.set(data[2], place)
         feed_dict["label"] = label_t
         feed_dict["mask"] = mask_t
-        
+
     return feed_dict
