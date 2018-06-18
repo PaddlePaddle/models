@@ -13,8 +13,10 @@
 
 ## 简介
 
-Image Cascade Network（ICNet），在兼顾实时性的同时，比原来的Fast Semantic Segmentation,比如SQ, SegNet, ENet等大大地提高了准确率，足以与Deeplab v2媲美，给语义分割的落地提供了可能。
-ICNet利用了低分辨率图片的高效处理和高分辨率图片的高推断质量两种优点。主要思想是：让低分辨率图像经过整个语义网络输出一个粗糙的预测，然后利用文中提出的级联融合单元来引入中分辨率和高分辨率图像的特征，从而逐渐提高精度。整个网络结构如下：
+Image Cascade Network（ICNet)主要用于图像实时语义分割。相较于其它压缩计算的方法，ICNet即考虑了速度，也考虑了准确性。
+ICNet的主要思想是将输入图像变换为不同的分辨率，然后用不同计算复杂度的子网络计算不同分辨率的输入，然后将结果合并。ICNet由三个子网络组成，计算复杂度高的网络处理低分辨率输入，计算复杂度低的网络处理分辨率高的网络，通过这种方式在高分辨率图像的准确性和低复杂度网络的效率之间获得平衡。
+
+整个网络结构如下：
 
 <p align="center">
 <img src="images/icnet.png" width="620" hspace='10'/> <br/>
@@ -26,7 +28,7 @@ ICNet利用了低分辨率图片的高效处理和高分辨率图片的高推断
 
 
 
-本文采用Cityscape数据集，请前往[Cityscape官网]()注册下载。下载数据之后，按照[这里](https://github.com/mcordts/cityscapesScripts)的说明和工具处理数据。
+本文采用Cityscape数据集，请前往[Cityscape官网](https://www.cityscapes-dataset.com)注册下载。下载数据之后，按照[这里](https://github.com/mcordts/cityscapesScripts/blob/master/cityscapesscripts/preparation/createTrainIdLabelImgs.py#L3)的说明和工具处理数据。
 处理之后的数据
 ```
 data/cityscape/
@@ -53,7 +55,7 @@ leftImg8bit/train/stuttgart/stuttgart_000072_000019_leftImg8bit.png gtFine/train
 ### 训练
 执行以下命令进行训练:
 ```
-python train.py --batch_size=16 --use_gpu=True 
+python train.py --batch_size=16 --use_gpu=True
 ```
 使用以下命令获得更多使用说明：
 ```
@@ -90,6 +92,8 @@ python infer.py \
 <strong>图 2</strong>
 </p>
 
+在训练集上训练，在validation数据集上验证的结果为：mean_IoU=67.0%(论文67.7%)
+
 图3是使用`infer.py`脚本预测产生的结果示例，其中，第一行为输入的原始图片，第二行为人工的标注，第三行为我们模型计算的结果。
 <p align="center">
 <img src="images/result.png" width="620" hspace='10'/> <br/>
@@ -97,14 +101,10 @@ python infer.py \
 </p>
 
 ## 其他信息
-|数据集 | pretrained model | 
+|数据集 | pretrained model |
 |---|---|
-|CityScape | [Model]()[md: ] | 
+|CityScape | [Model]()[md: ] |
 
 ## 参考
 
 - [ICNet for Real-Time Semantic Segmentation on High-Resolution Images](https://arxiv.org/abs/1704.08545)
-- https://github.com/hszhao/ICNet
-- https://github.com/hellochick/ICNet-tensorflow
-- https://github.com/mcordts/cityscapesScripts
-- https://zhuanlan.zhihu.com/p/26653218

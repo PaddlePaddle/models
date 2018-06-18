@@ -1,5 +1,5 @@
 """Trainer for ICNet model."""
-import network
+from icnet import icnet
 import cityscape
 import argparse
 import functools
@@ -25,16 +25,17 @@ add_arg('random_scaling',    bool,  True,       "Whether prepare by random scali
 LAMBDA1 = 0.16
 LAMBDA2 = 0.4
 LAMBDA3 = 1.0
-LEARNING_RATE=0.003
-POWER=0.9
-LOG_PERIOD=1
-CHECKPOINT_PERIOD=1000
-TOTAL_STEP=60000
+LEARNING_RATE = 0.003
+POWER = 0.9
+LOG_PERIOD = 1
+CHECKPOINT_PERIOD = 1000
+TOTAL_STEP = 60000
 
-no_grad_set=[]
+no_grad_set = []
+
 
 def create_loss(predict, label, mask, num_classes):
-    predict = fluid.layers.transpose(predict, perm=[0,2,3,1])
+    predict = fluid.layers.transpose(predict, perm=[0, 2, 3, 1])
     predict = fluid.layers.reshape(predict, shape=[-1, num_classes])
     label = fluid.layers.reshape(label, shape=[-1, 1])
     predict = fluid.layers.gather(predict, mask)
@@ -44,15 +45,17 @@ def create_loss(predict, label, mask, num_classes):
     no_grad_set.append(label.name)
     return fluid.layers.reduce_mean(loss)
 
+
 def poly_decay():
     global_step = _decay_step_counter()
     with init_on_cpu():
-        decayed_lr = LEARNING_RATE * (fluid.layers.pow((1-global_step/TOTAL_STEP), POWER))
+        decayed_lr = LEARNING_RATE * (fluid.layers.pow(
+            (1 - global_step / TOTAL_STEP), POWER))
     return decayed_lr
 
 
 def train(args):
-    data_shape =cityscape.train_data_shape()
+    data_shape = cityscape.train_data_shape()
     num_classes = cityscape.num_classes()
     # define network
     images = fluid.layers.data(name='image', shape=data_shape, dtype='float32')
@@ -63,17 +66,16 @@ def train(args):
     mask_sub2 = fluid.layers.data(name='mask_sub2', shape=[-1], dtype='int32')
     mask_sub4 = fluid.layers.data(name='mask_sub4', shape=[-1], dtype='int32')
 
-    sub4_out, sub24_out, sub124_out = network.icnet(args, images, num_classes, np.array(data_shape[1:]).astype("float32"), is_test=False)
+    sub4_out, sub24_out, sub124_out = icnet(
+        images, num_classes, np.array(data_shape[1:]).astype("float32"))
     loss_sub4 = create_loss(sub4_out, label_sub4, mask_sub4, num_classes)
     loss_sub24 = create_loss(sub24_out, label_sub2, mask_sub2, num_classes)
     loss_sub124 = create_loss(sub124_out, label_sub1, mask_sub1, num_classes)
-    reduced_loss = LAMBDA1 * loss_sub4 +  LAMBDA2 * loss_sub24 + LAMBDA3 * loss_sub124
+    reduced_loss = LAMBDA1 * loss_sub4 + LAMBDA2 * loss_sub24 + LAMBDA3 * loss_sub124
 
     regularizer = fluid.regularizer.L2Decay(0.0001)
     optimizer = fluid.optimizer.Momentum(
-	learning_rate=poly_decay(),
-	momentum=0.9,
-	regularization=regularizer)
+        learning_rate=poly_decay(), momentum=0.9, regularization=regularizer)
     _, params_grads = optimizer.minimize(reduced_loss, no_grad_set=no_grad_set)
 
     # prepare environment
@@ -88,44 +90,48 @@ def train(args):
         sys.stdout.flush()
         fluid.io.load_params(exe, args.init_model)
 
-    iter_id=0
+    iter_id = 0
     t_loss = 0.
     sub4_loss = 0.
     sub24_loss = 0.
     sub124_loss = 0.
-    train_reader = cityscape.train(args.batch_size, random_mirror=args.random_mirror, random_scaling=args.random_scaling)
+    train_reader = cityscape.train(
+        args.batch_size, flip=args.random_mirror, scaling=args.random_scaling)
     while True:
         # train a pass
         for data in train_reader():
             if iter_id > TOTAL_STEP:
                 return
-	    iter_id += 1
-            results = exe.run(feed=get_feeder_data(data, place),
-                              fetch_list=[reduced_loss, loss_sub4, loss_sub24, loss_sub124])
+            iter_id += 1
+            results = exe.run(
+                feed=get_feeder_data(data, place),
+                fetch_list=[reduced_loss, loss_sub4, loss_sub24, loss_sub124])
             t_loss += results[0]
             sub4_loss += results[1]
             sub24_loss += results[2]
             sub124_loss += results[3]
             # training log
             if iter_id % LOG_PERIOD == 0:
-                print "Iter[%d]; train loss: %.3f; sub4_loss: %.3f; sub24_loss: %.3f; sub124_loss: %.3f" % (iter_id, t_loss / LOG_PERIOD, sub4_loss / LOG_PERIOD,
+                print "Iter[%d]; train loss: %.3f; sub4_loss: %.3f; sub24_loss: %.3f; sub124_loss: %.3f" % (
+                    iter_id, t_loss / LOG_PERIOD, sub4_loss / LOG_PERIOD,
                     sub24_loss / LOG_PERIOD, sub124_loss / LOG_PERIOD)
                 t_loss = 0.
                 sub4_loss = 0.
                 sub24_loss = 0.
                 sub124_loss = 0.
                 sys.stdout.flush()
-	    
+
             if iter_id % CHECKPOINT_PERIOD == 0:
                 dir_name = args.checkpoint_path + "/" + str(iter_id)
                 fluid.io.save_persistables(exe, dirname=dir_name)
                 print "Saved checkpoint: %s" % (dir_name)
-	
+
 
 def main():
     args = parser.parse_args()
     print_arguments(args)
     train(args)
+
 
 if __name__ == "__main__":
     main()
