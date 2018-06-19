@@ -124,4 +124,4 @@ MobileNet-v1-SSD 300x300 预测可视化
 
 | 模型                    | 预训练模型  | 训练数据    | 测试数据    | mAP |
 |:------------------------:|:------------------:|:----------------:|:------------:|:----:|
-|MobileNet-v1-SSD 300x300  | COCO MobileNet SSD | VOC07+12 trainval| VOC07 test   | 73.32%  |
+|[MobileNet-v1-SSD 300x300](http://paddlemodels.bj.bcebos.com/ssd_mobilenet_v1_pascalvoc.tar.gz) | COCO MobileNet SSD | VOC07+12 trainval| VOC07 test   | 73.32%  |
