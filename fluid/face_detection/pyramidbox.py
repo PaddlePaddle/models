@@ -153,7 +153,7 @@ class PyramidBox(object):
             conv2 = fluid.layers.conv2d(
                 up_to, ch, 1, act='relu', bias_attr=b_attr)
             if self.is_infer:
-                upsampling = fluid.layers.crop(conv_up, shape=conv2)
+                upsampling = fluid.layers.crop(upsampling, shape=conv2)
             # eltwise mul
             conv_fuse = upsampling * conv2
             return conv_fuse

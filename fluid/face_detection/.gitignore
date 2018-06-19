@@ -3,3 +3,6 @@ data/
 label/
 pretrained/
 *.swp
+log*
+output*
+WIDER_val
