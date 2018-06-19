@@ -1,8 +1,10 @@
 class TrainTaskConfig(object):
+    # only support GPU currently
     use_gpu = True
     # the epoch number to train.
     pass_num = 30
     # the number of sequences contained in a mini-batch.
+    # deprecated, set batch_size in args.
     batch_size = 32
     # the hyper parameters for Adam optimizer.
     # This static learning_rate will be multiplied to the LearningRateScheduler
@@ -13,8 +15,6 @@ class TrainTaskConfig(object):
     eps = 1e-9
     # the parameters for learning rate scheduling.
     warmup_steps = 4000
-    # the flag indicating to use average loss or sum loss when training.
-    use_avg_cost = True
     # the weight used to mix up the ground-truth distribution and the fixed
     # uniform distribution in label smoothing when training.
     # Set this as zero if label smoothing is not wanted.
@@ -38,22 +38,20 @@ class InferTaskConfig(object):
     batch_size = 10
     # the parameters for beam search.
     beam_size = 5
-    max_length = 30
+    max_length = 256
     # the number of decoded sentences to output.
     n_best = 1
     # the flags indicating whether to output the special tokens.
     output_bos = False
     output_eos = False
-    output_unk = False
+    output_unk = True
     # the directory for loading the trained model.
     model_path = "trained_models/pass_1.infer.model"
 
 
 class ModelHyperParams(object):
-    # This model directly uses paddle.dataset.wmt16 in which <bos>, <eos> and
-    # <unk> token has alreay been added. As for the <pad> token, any token
-    # included in dict can be used to pad, since the paddings' loss will be
-    # masked out and make no effect on parameter gradients.
+    # These following five vocabularies related configurations will be set
+    # automatically according to the passed vocabulary path and special tokens.
     # size of source word dictionary.
     src_vocab_size = 10000
     # size of target word dictionay
@@ -68,13 +66,13 @@ class ModelHyperParams(object):
     # The size of position encoding table should at least plus 1, since the
     # sinusoid position encoding starts from 1 and 0 can be used as the padding
     # token for position encoding.
-    max_length = 50
+    max_length = 256
     # the dimension for word embeddings, which is also the last dimension of
     # the input and output of multi-head attention, position-wise feed-forward
     # networks, encoder and decoder.
     d_model = 512
     # size of the hidden layer in position-wise feed-forward networks.
-    d_inner_hid = 1024
+    d_inner_hid = 2048
     # the dimension that keys are projected to for dot-product attention.
     d_key = 64
     # the dimension that values are projected to for dot-product attention.
@@ -85,6 +83,9 @@ class ModelHyperParams(object):
     n_layer = 6
     # dropout rate used by all dropout layers.
     dropout = 0.1
+    # the flag indicating whether to share embedding and softmax weights.
+    # vocabularies in source and target should be same for weight sharing.
+    weight_sharing = True
 
 
 def merge_cfg_from_list(cfg_list, g_cfgs):
@@ -172,6 +173,10 @@ input_descs = {
     "lbl_weight": [(1 * (ModelHyperParams.max_length + 1), 1L), "float32"],
 }
 
+# Names of word embedding table which might be reused for weight sharing.
+word_emb_param_names = (
+    "src_word_emb_table",
+    "trg_word_emb_table", )
 # Names of position encoding table which will be initialized externally.
 pos_enc_param_names = (
     "src_pos_enc_table",
