@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('batch_size',        int,   32,         "Minibatch size.")
-add_arg('pass_num',          int,   100,        "Number of training epochs.")
+add_arg('total_step',        int,   720000,    "Number of training iterations.")
 add_arg('log_period',        int,   1000,       "Log period.")
 add_arg('save_model_period', int,   15000,      "Save model period. '-1' means never saving the model.")
 add_arg('eval_period',       int,   15000,      "Evaluate period. '-1' means never evaluating the model.")
@@ -22,7 +22,7 @@ add_arg('save_model_dir',    str,   "./models", "The directory the model to be s
 add_arg('init_model',        str,   None,       "The init model file of directory.")
 add_arg('use_gpu',           bool,  True,      "Whether use GPU to train.")
 add_arg('min_average_window',int,   10000,     "Min average window.")
-add_arg('max_average_window',int,   15625,     "Max average window. It is proposed to be set as the number of minibatch in a pass.")
+add_arg('max_average_window',int,   12500,     "Max average window. It is proposed to be set as the number of minibatch in a pass.")
 add_arg('average_window',    float, 0.15,      "Average window.")
 add_arg('parallel',          bool,  False,     "Whether use parallel training.")
 # yapf: enable
@@ -90,54 +90,57 @@ def train(args, data_reader=ctc_reader):
             results = [result[0] for result in results]
         return results
 
-    def test(pass_id, batch_id):
+    def test(iter_num):
         error_evaluator.reset(exe)
         for data in test_reader():
             exe.run(inference_program, feed=get_feeder_data(data, place))
         _, test_seq_error = error_evaluator.eval(exe)
-        print "\nTime: %s; Pass[%d]-batch[%d]; Test seq error: %s.\n" % (
-            time.time(), pass_id, batch_id, str(test_seq_error[0]))
+        print "\nTime: %s; Iter[%d]; Test seq error: %s.\n" % (
+            time.time(), iter_num, str(test_seq_error[0]))
 
-    def save_model(args, exe, pass_id, batch_id):
-        filename = "model_%05d_%d" % (pass_id, batch_id)
+    def save_model(args, exe, iter_num):
+        filename = "model_%05d" % iter_num
         fluid.io.save_params(
             exe, dirname=args.save_model_dir, filename=filename)
         print "Saved model to: %s/%s." % (args.save_model_dir, filename)
 
-    for pass_id in range(args.pass_num):
-        batch_id = 1
+    iter_num = 0
+    while True:
         total_loss = 0.0
         total_seq_error = 0.0
         # train a pass
         for data in train_reader():
+            iter_num += 1
+            if iter_num > args.total_step:
+                return
             results = train_one_batch(data)
             total_loss += results[0]
             total_seq_error += results[2]
             # training log
-            if batch_id % args.log_period == 0:
-                print "\nTime: %s; Pass[%d]-batch[%d]; Avg Warp-CTC loss: %s; Avg seq err: %s" % (
-                    time.time(), pass_id, batch_id,
-                    total_loss / (batch_id * args.batch_size),
-                    total_seq_error / (batch_id * args.batch_size))
+            if iter_num % args.log_period == 0:
+                print "\nTime: %s; Iter[%d]; Avg Warp-CTC loss: %.3f; Avg seq err: %.3f" % (
+                    time.time(), iter_num,
+                    total_loss / (args.log_period * args.batch_size),
+                    total_seq_error / (args.log_period * args.batch_size))
                 sys.stdout.flush()
+                total_loss = 0.0
+                total_seq_error = 0.0
 
             # evaluate
-            if batch_id % args.eval_period == 0:
+            if iter_num % args.eval_period == 0:
                 if model_average:
                     with model_average.apply(exe):
-                        test(pass_id, batch_id)
+                        test(iter_num)
                 else:
-                    test(pass_id, batch_d)
+                    test(iter_num)
 
             # save model
-            if batch_id % args.save_model_period == 0:
+            if iter_num % args.save_model_period == 0:
                 if model_average:
                     with model_average.apply(exe):
-                        save_model(args, exe, pass_id, batch_id)
+                        save_model(args, exe, iter_num)
                 else:
-                    save_model(args, exe, pass_id, batch_id)
-
-            batch_id += 1
+                    save_model(args, exe, iter_num)
 
 
 def main():
