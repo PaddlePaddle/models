@@ -39,7 +39,11 @@ def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
             act='relu')
     if with_pool:
         pool = fluid.layers.pool2d(
-            input=conv, pool_size=2, pool_type='max', pool_stride=2)
+            input=conv,
+            pool_size=2,
+            pool_type='max',
+            pool_stride=2,
+            ceil_mode=True)
         return conv, pool
     else:
         return conv
@@ -52,9 +56,6 @@ class PyramidBox(object):
                  use_transposed_conv2d=True,
                  is_infer=False,
                  sub_network=False):
-        """
-        TODO(qingqing): add comments.
-        """
         self.data_shape = data_shape
         self.min_sizes = [16., 32., 64., 128., 256., 512.]
         self.steps = [4., 8., 16., 32., 64., 128.]
@@ -131,7 +132,7 @@ class PyramidBox(object):
                     learning_rate=0.,
                     regularizer=L2Decay(0.),
                     initializer=Bilinear())
-                upsampling = fluid.layers.conv2d_transpose(
+                conv_up = fluid.layers.conv2d_transpose(
                     conv1,
                     ch,
                     output_size=None,
@@ -142,14 +143,16 @@ class PyramidBox(object):
                     param_attr=w_attr,
                     bias_attr=False)
             else:
-                upsampling = fluid.layers.resize_bilinear(
+                conv_up = fluid.layers.resize_bilinear(
                     conv1, out_shape=up_to.shape[2:])
 
             b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
             conv2 = fluid.layers.conv2d(
                 up_to, ch, 1, act='relu', bias_attr=b_attr)
+            if self.is_infer:
+                conv_up = fluid.layers.crop(conv_up, shape=conv2)
             # eltwise mul
-            conv_fuse = upsampling * conv2
+            conv_fuse = conv_up * conv2
             return conv_fuse
 
         self.lfpn2_on_conv5 = fpn(self.conv6, self.conv5)
@@ -393,8 +396,9 @@ class PyramidBox(object):
         total_loss = face_loss + head_loss
         return face_loss, head_loss, total_loss
 
-    def infer(self):
-        test_program = fluid.default_main_program().clone(for_test=True)
+    def infer(self, main_program):
+        # test_program = fluid.default_main_program().clone(for_test=True)
+        test_program = main_program.clone(for_test=True)
         with fluid.program_guard(test_program):
             face_nmsed_out = fluid.layers.detection_output(
                 self.face_mbox_loc,
