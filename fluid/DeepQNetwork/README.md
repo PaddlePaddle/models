@@ -19,12 +19,20 @@
     + gym
     + tqdm
     + opencv-python
-    + paddlepaddle-gpu==0.12.0
+    + paddlepaddle-gpu==0.12.0 
+    + ale_python_interface
 
-    可以通过以下命令来下载所需依赖：
++ 下载依赖：
+    + 安装PaddlePaddle
+    使用官方提供的PaddlePaddle编译环境和源码，通过源码编译安装
+        1. 下载源码：git clone https://github.com/PaddlePaddle/Paddle.git
+        2. 获取编译环境docker：docker pull docker.paddlepaddlehub.com/paddle:latest-dev
+        3. 在该环境中编译PaddlePaddle源码，并安装python包
+    + 下载其它依赖
     ```
     pip install -r requirement.txt 
     ```
+    安装ale_python_interface可以参考：https://github.com/mgbellemare/Arcade-Learning-Environment
 
 + 训练模型：
     ```
