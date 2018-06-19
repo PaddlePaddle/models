@@ -31,6 +31,7 @@
     + 下载其它依赖
     ```
     pip install -r requirement.txt 
+    pip install gym[atari]
     ```
     安装ale_python_interface可以参考：https://github.com/mgbellemare/Arcade-Learning-Environment
 
