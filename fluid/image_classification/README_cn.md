@@ -1,37 +1,37 @@
-# Image Classification and Model Zoo
-Image classification, which is an important field of computer vision, is to classify an image into pre-defined labels. Recently, many researchers developed different kinds of neural networks and highly improve the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid, including [data preparation](#data-preparation), [training](#training-a-model), [finetuning](#finetuning), [evaluation](#evaluation) and [inference](#inference).
+
+# 图像分类以及模型库
+图像分类是计算机视觉的重要领域，它的目标是将图像分类到预定义的标签。近期，需要研究者提出很多不同种类的神经网络，并且极大的提升了分类算法的性能。本页将介绍如何使用PaddlePaddle进行图像分类，包括[数据准备](#data-preparation)、 [训练](#training-a-model)、[参数微调](#finetuning)、[模型评估](#evaluation)以及[模型推断](#inference)。
 
 ---
-## Table of Contents
-- [Installation](#installation)
-- [Data preparation](#data-preparation)
-- [Training a model with flexible parameters](#training-a-model)
-- [Finetuning](#finetuning)
-- [Evaluation](#evaluation)
-- [Inference](#inference)
-- [Supported models and performances](#supported-models)
+## 内容
+- [安装](#installation)
+- [数据准备](#data-preparation)
+- [模型训练](#training-a-model)
+- [参数微调](#finetuning)
+- [模型评估](#evaluation)
+- [模型推断](#inference)
+- [已有模型及其性能](#supported-models)
 
-## Installation
+## 安装
 
-Running sample code in this directory requires PaddelPaddle Fluid v0.13.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) and make an update.
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v0.13.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明来更新PaddlePaddle。
 
-## Data preparation
+## 数据准备
 
-An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
+下面给出了ImageNet分类任务的样例，首先，通过如下的方式进行数据的准备：
 ```
 cd data/ILSVRC2012/
 sh download_imagenet2012.sh
 ```
+在```download_imagenet2012.sh```脚本中，通过下面三步来准备数据：
 
-In the shell script ```download_imagenet2012.sh```,  there are three steps to prepare data:
+**步骤一：** 首先在```image-net.org```网站上完成注册，用于获得一对```Username```和```AccessKey```。
 
-**step-1:** Register at ```image-net.org``` first in order to get a pair of ```Username``` and ```AccessKey```, which are used to download ImageNet data.
+**步骤二：** 从ImageNet官网下载ImageNet-2012的图像数据。训练以及验证数据集会分别被下载到"train" 和 "val" 目录中。请注意，ImaegNet数据的大小超过40GB，下载非常耗时；已经自行下载ImageNet的用户可以直接将数据组织放置到```data/ILSVRC2012```。
 
-**step-2:** Download ImageNet-2012 dataset from website. The training and validation data will be downloaded into folder "train" and "val" respectively. Please note that the size of data is more than 40 GB, it will take much time to download. Users who have downloaded the ImageNet data can organize it into ```data/ILSVRC2012``` directly.
+**步骤三：** 下载训练与验证集合对应的标签文件。下面两个文件分别包含了训练集合与验证集合中图像的标签：
 
-**step-3:** Download training and validation label files. There are two label files which contain train and validation image labels respectively:
-
-* *train_list.txt*: label file of imagenet-2012 training set, with each line seperated by ```SPACE```, like:
+* *train_list.txt*: ImageNet-2012训练集合的标签文件，每一行采用"空格"分隔图像路径与标注，例如：
 ```
 train/n02483708/n02483708_2436.jpeg 369
 train/n03998194/n03998194_7015.jpeg 741
@@ -40,7 +40,7 @@ train/n04596742/n04596742_3032.jpeg 909
 train/n03208938/n03208938_7065.jpeg 535
 ...
 ```
-* *val_list.txt*: label file of imagenet-2012 validation set, with each line seperated by ```SPACE```, like.
+* *val_list.txt*: ImageNet-2012验证集合的标签文件，每一行采用"空格"分隔图像路径与标注，例如：
 ```
 val/ILSVRC2012_val_00000001.jpeg 65
 val/ILSVRC2012_val_00000002.jpeg 970
@@ -50,10 +50,9 @@ val/ILSVRC2012_val_00000005.jpeg 516
 ...
 ```
 
-## Training a model with flexible parameters
+## 模型训练
 
-After data preparation, one can start the training step by:
-
+数据准备完毕后，可以通过如下的方式启动训练：
 ```
 python train.py \
        --model=SE_ResNeXt50_32x4d \
@@ -66,7 +65,7 @@ python train.py \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 ```
-**parameter introduction:**
+**参数说明：**
 * **model**: name model to use. Default: "SE_ResNeXt50_32x4d".
 * **num_epochs**: the number of epochs. Default: 120.
 * **batch_size**: the size of each mini-batch. Default: 256.
@@ -81,15 +80,15 @@ python train.py \
 * **pretrained_model**: model path for pretraining. Default: None.
 * **checkpoint**: the checkpoint path to resume. Default: None.
 
-**data reader introduction:** Data reader is defined in ```reader.py```. In [training stage](#training-a-model), random crop and flipping are used, while center crop is used in [evaluation](#inference) and [inference](#inference) stages. Supported data augmentation includes:
-* rotation
-* color jitter
-* random crop
-* center crop
-* resize
-* flipping
+**数据读取器说明：** 数据读取器定义在```reader.py```中。在[训练阶段](#training-a-model), 默认采用的增广方式是随机裁剪与水平翻转, 而在[评估](#inference)与[推断](#inference)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
+* 旋转
+* 颜色抖动
+* 随机裁剪
+* 中心裁剪
+* 长宽调整
+* 水平翻转
 
-**training curve:** The training curve can be drawn based on training log. For example, the log from training AlexNet is like:
+**训练曲线：** 通过训练过程中的日志可以画出训练曲线。举个例子，训练AlexNet出来的日志如下所示：
 ```
 End pass 1, train_loss 6.23153877258, train_acc1 0.0150696625933, train_acc5 0.0552518665791, test_loss 5.41981744766, test_acc1 0.0519132651389, test_acc5 0.156150355935
 End pass 2, train_loss 5.15442800522, train_acc1 0.0784279331565, train_acc5 0.211050540209, test_loss 4.45795249939, test_acc1 0.140469551086, test_acc5 0.333163291216
@@ -103,15 +102,16 @@ End pass 9, train_loss 3.3745200634, train_acc1 0.303871691227, train_acc5 0.545
 ...
 ```
 
-The error rate curves of AlexNet, ResNet50 and SE-ResNeXt-50 are shown in the figure below.
+下图给出了AlexNet、ResNet50以及SE-ResNeXt-50网络的错误率曲线：
 <p align="center">
 <img src="images/curve.jpg" height=480 width=640 hspace='10'/> <br />
-Training and validation Curves
+训练集合与验证集合上的错误率曲线
 </p>
 
-## Finetuning
 
-Finetuning is to finetune model weights in a specific task by loading pretrained weights. After initializing ```path_to_pretrain_model```, one can finetune a model as:
+## 参数微调
+
+参数微调是指在特定任务上微调已训练模型的参数。通过初始化```path_to_pretrain_model```，微调一个模型可以采用如下的命令：
 ```
 python train.py
        --model=SE_ResNeXt50_32x4d \
@@ -126,8 +126,8 @@ python train.py
        --lr=0.1
 ```
 
-## Evaluation
-Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
+## 模型评估
+模型评估是指对训练完毕的模型评估各类性能指标。用户可以下载[预训练模型](#supported-models)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得一个模型top-1/top-5精度:
 ```
 python eval.py \
        --model=SE_ResNeXt50_32x4d \
@@ -138,7 +138,7 @@ python eval.py \
        --pretrained_model=${path_to_pretrain_model}
 ```
 
-According to the congfiguration of evaluation, the output log is like:
+根据这个评估程序的配置，输出日志形式如下：
 ```
 Testbatch 0,loss 2.1786134243, acc1 0.625,acc5 0.8125,time 0.48 sec
 Testbatch 10,loss 0.898496925831, acc1 0.75,acc5 0.9375,time 0.51 sec
@@ -152,8 +152,9 @@ Testbatch 80,loss 0.0969972759485, acc1 1.0,acc5 1.0,time 0.41 sec
 ...
 ```
 
-## Inference
-Inference is used to get prediction score or image features based on trained models.
+
+## 模型推断
+模型推断可以获取一个模型的预测分数或者图像的特征：
 ```
 python infer.py \
        --model=SE_ResNeXt50_32x4d \
@@ -163,7 +164,7 @@ python infer.py \
        --with_mem_opt=True \
        --pretrained_model=${path_to_pretrain_model}
 ```
-The output contains predication results, including maximum score (before softmax) and corresponding predicted label.
+输出的预测结果包括最高分数(未经过softmax处理)以及相应的预测标签。
 ```
 Test-0-score: [13.168352], class [491]
 Test-1-score: [7.913302], class [975]
@@ -181,9 +182,9 @@ Test-12-score: [15.040644], class [386]
 ...
 ```
 
-## Supported models and performances
+## 已有模型及其性能
 
-Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each pre-defined epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. Pretrained models can be downloaded by clicking related model names.
+表格中列出了在"models"目录下支持的神经网络种类，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度；如无特征说明，训练模型的初始学习率为```0.1```，每隔预定的epochs会下降```0.1```。预训练模型可以通过点击相应模型的名称进行下载。
 
 |model | top-1/top-5 accuracy
 |- | -:
