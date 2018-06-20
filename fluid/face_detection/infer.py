@@ -181,9 +181,10 @@ def detect_face(image, shrink):
 
 
 def flip_test(image, shrink):
-    image = image.transpose(Image.FLIP_LEFT_RIGHT)
-    det_f = detect_face(image, shrink)
+    img = image.transpose(Image.FLIP_LEFT_RIGHT)
+    det_f = detect_face(img, shrink)
     det_t = np.zeros(det_f.shape)
+    # image.size: [width, height]
     det_t[:, 0] = image.size[0] - det_f[:, 2]
     det_t[:, 1] = det_f[:, 1]
     det_t[:, 2] = image.size[0] - det_f[:, 0]
@@ -263,6 +264,7 @@ def infer(args, batch_size, data_args):
         image = img[0][0]
         image_path = img[0][1]
 
+        # image.size: [width, height]
         image_shape = [3, image.size[1], image.size[0]]
 
         shrink, max_shrink = get_im_shrink(image_shape)
