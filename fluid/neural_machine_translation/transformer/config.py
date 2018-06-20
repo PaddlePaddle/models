@@ -98,7 +98,7 @@ def merge_cfg_from_list(cfg_list, g_cfgs):
             if hasattr(g_cfg, key):
                 try:
                     value = eval(value)
-                except SyntaxError:  # for file path
+                except Exception:  # for file path
                     pass
                 setattr(g_cfg, key, value)
                 break
