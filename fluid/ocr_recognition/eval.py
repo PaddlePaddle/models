@@ -14,7 +14,8 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('model_path',         str,  None,   "The model path to be used for inference.")
 add_arg('input_images_dir',   str,  None,   "The directory of images.")
 add_arg('input_images_list',  str,  None,   "The list file of images.")
-add_arg('use_gpu',            bool,  True,      "Whether use GPU to eval.")
+add_arg('use_gpu',            bool, True,   "Whether use GPU to eval.")
+add_arg('use_mkldnn',         bool, False,  "Whether to use MKLDNN to eval.")
 # yapf: enable
 
 
@@ -26,7 +27,8 @@ def evaluate(args, eval=ctc_eval, data_reader=ctc_reader):
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
     label = fluid.layers.data(
         name='label', shape=[1], dtype='int32', lod_level=1)
-    evaluator, cost = eval(images, label, num_classes)
+    evaluator, cost = eval(images, label, num_classes, args.use_mkldnn, True
+                           if args.use_gpu else False)
 
     # data reader
     test_reader = data_reader.test(
@@ -35,7 +37,7 @@ def evaluate(args, eval=ctc_eval, data_reader=ctc_reader):
 
     # prepare environment
     place = fluid.CPUPlace()
-    if use_gpu:
+    if args.use_gpu:
         place = fluid.CUDAPlace(0)
 
     exe = fluid.Executor(place)

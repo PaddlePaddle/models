@@ -118,6 +118,10 @@ env CUDA_VISIABLE_DEVICES=0 python ctc_train.py
 ```
 env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
 ```
+使用默认数据在CPU上训练:
+```
+env OMP_NUM_THREADS=<num_of_physical_cores> KMP_AFFINITY=granularity=fine,compact,1,0 python ctc_train.py --use_gpu False --use_mkldnn True --parallel=False
+```
 
 执行`python ctc_train.py --help`可查看更多使用方式和参数详细说明。
 
