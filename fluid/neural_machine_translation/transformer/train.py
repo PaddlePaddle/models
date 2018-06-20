@@ -43,9 +43,11 @@ def parse_args():
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=2000,
+        default=2048,
         help="The number of sequences contained in a mini-batch, or the maximum "
-        "number of tokens (include paddings) contained in a mini-batch.")
+        "number of tokens (include paddings) contained in a mini-batch. Note "
+        "that this represents the number on single device and the actual batch "
+        "size for multi-devices will multiply the device number.")
     parser.add_argument(
         "--pool_size",
         type=int,
