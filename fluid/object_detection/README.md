@@ -1,20 +1,33 @@
-The minimum PaddlePaddle version needed for the code sample in this directory is the lastest develop branch. If you are on a version of PaddlePaddle earlier than this, [please update your installation](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html).
+The minimum PaddlePaddle version needed for the code sample in this directory is the latest develop branch. If you are on a version of PaddlePaddle earlier than this, [please update your installation](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html).
 
 ---
 
 ## SSD Object Detection
 
+## Table of Contents
+- [Introduction](#introduction)
+- [Data Preparation](#data-preparation)
+- [Train](#train)
+- [Evaluate](#evaluate)
+- [Infer and Visualize](#infer-and-visualize)
+- [Released Model](#released-model)
+
 ### Introduction
 
-[Single Shot MultiBox Detector (SSD)](https://arxiv.org/abs/1512.02325) framework for object detection is based on a feed-forward convolutional network. The early network is a standard convolutional architecture for image classification, such as VGG, ResNet, or MobileNet, which is also called base network. In this tutorial we used [MobileNet](https://arxiv.org/abs/1704.04861).
+[Single Shot MultiBox Detector (SSD)](https://arxiv.org/abs/1512.02325) framework for object detection can be categorized as a single stage detector. A single stage detector simplifies object detection as a regression problem, which directly predicts the bounding boxes and class probabilities without region proposal. SSD further makes improves by producing these predictions of different scales from different layers, as shown below. Six levels predictions are made in six different scale feature maps. And there are two 3x3 convolutional layers in each feature map, which predict category or a shape offset relative to the prior box(also called anchor), respectively. Thus, we get 38x38x4 + 19x19x6 + 10x10x6 + 5x5x6 + 3x3x4 + 1x1x4 = 8732 detections per class.
+<p align="center">
+<img src="images/SSD_paper_figure.jpg" height=300 width=900 hspace='10'/> <br />
+The Single Shot MultiBox Detector (SSD)
+</p>
+
+SSD is readily pluggable into a wide variant standard convolutional network, such as VGG, ResNet, or MobileNet, which is also called base network or backbone. In this tutorial we used [MobileNet](https://arxiv.org/abs/1704.04861).
+
 
 ### Data Preparation
 
 You can use [PASCAL VOC dataset](http://host.robots.ox.ac.uk/pascal/VOC/) or [MS-COCO dataset](http://cocodataset.org/#download).
 
-#### PASCAL VOC Dataset
-
-If you want to train model on PASCAL VOC dataset, please download datset at first, skip this step if you already have one.
+If you want to train a model on PASCAL VOC dataset, please download dataset at first, skip this step if you already have one.
 
 ```bash
 cd data/pascalvoc
@@ -23,9 +36,7 @@ cd data/pascalvoc
 
 The command `download.sh` also will create training and testing file lists.
 
-#### MS-COCO Dataset
-
-If you want to train model on MS-COCO dataset, please download datset at first, skip this step if you already have one.
+If you want to train a model on MS-COCO dataset, please download dataset at first, skip this step if you already have one.
 
 ```
 cd data/coco
@@ -36,45 +47,52 @@ cd data/coco
 
 #### Download the Pre-trained Model.
 
-We provide two pre-trained models. The one is MobileNet-v1 SSD trained on COCO dataset, but removed the convolutional predictors for COCO dataset. This model can be used to initialize the models when training other dataset, like PASCAL VOC. Then other pre-trained model is MobileNet v1 trained on ImageNet 2012 dataset, but removed the last weights and bias in Fully-Connected layer.
+We provide two pre-trained models. The one is MobileNet-v1 SSD trained on COCO dataset, but removed the convolutional predictors for COCO dataset. This model can be used to initialize the models when training other datasets, like PASCAL VOC. The other pre-trained model is MobileNet-v1 trained on ImageNet 2012 dataset but removed the last weights and bias in the Fully-Connected layer.
 
-Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https://github.com/tensorflow/models/blob/f87a58cd96d45de73c9a8330a06b2ab56749a7fa/research/object_detection/g3doc/detection_model_zoo.md). The MobileNet v1 model is converted [Caffe](https://github.com/shicai/MobileNet-Caffe).
+Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https://github.com/tensorflow/models/blob/f87a58cd96d45de73c9a8330a06b2ab56749a7fa/research/object_detection/g3doc/detection_model_zoo.md). The MobileNet-v1 model is converted from [Caffe](https://github.com/shicai/MobileNet-Caffe).
+We will release the pre-trained models by ourself in the upcoming soon.
 
   - Download MobileNet-v1 SSD:
-    ```
+    ```bash
     ./pretrained/download_coco.sh
     ```
   - Download MobileNet-v1:
-    ```
+    ```bash
     ./pretrained/download_imagenet.sh
     ```
 
 #### Train on PASCAL VOC
-  - Train on one device (/GPU).
-  ```python
-  env CUDA_VISIBLE_DEVICES=0 python -u train.py --parallel=False --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
-  ```
-  - Train on multi devices (/GPUs).
 
-  ```python
-  env CUDA_VISIBLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
+`train.py` is the main caller of the training module. Examples of usage are shown below.
+  ```bash
+  python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
   ```
+   - Set ```export CUDA_VISIBLE_DEVICES=0,1``` to specifiy the number of GPU you want to use.
+   - Set ```--dataset='coco2014'``` or ```--dataset='coco2017'``` to train model on MS COCO dataset.
+   - For more help on arguments:
 
-#### Train on MS-COCO
-  - Train on one device (/GPU).
-  ```python
-  env CUDA_VISIBLE_DEVICES=0 python -u train.py --parallel=False --dataset='coco2014' --pretrained_model='pretrained/mobilenet_v1_imagenet/'
-  ```
-  - Train on multi devices (/GPUs).
-  ```python
-  env CUDA_VISIBLE_DEVICES=0,1 python -u train.py --batch_size=64 --dataset='coco2014' --pretrained_model='pretrained/mobilenet_v1_imagenet/'
+  ```bash
+  python train.py --help
   ```
 
-TBD
+Data reader is defined in `reader.py`. All images will be resized to 300x300. In training stage, images are randomly distorted, expanded, cropped and flipped:
+   - distort: distort brightness, contrast, saturation, and hue.
+   - expand: put the original image into a larger expanded image which is initialized using image mean.
+   - crop: crop image with respect to different scale, aspect ratio, and overlap.
+   - flip: flip horizontally.
+
+We used RMSProp optimizer with mini-batch size 64 to train the MobileNet-SSD. The initial learning rate is 0.001, and was decayed at 40, 60, 80, 100 epochs with multiplier 0.5, 0.25, 0.1, 0.01, respectively. Weight decay is 0.00005. After 120 epochs we achieve 73.32% mAP under 11point metric.
 
 ### Evaluate
 
-You can evaluate your trained model in different metric like 11point, integral on both PASCAL VOC and COCO dataset. Moreover, we provide eval_coco_map.py which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). To use this eval_coco_map.py, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
+You can evaluate your trained model in different metrics like 11point, integral on both PASCAL VOC and COCO dataset. Note we set the default test list to the dataset's test/val list, you can use your own test list by setting ```--test_list``` args.
+
+`eval.py` is the main caller of the evaluating module. Examples of usage are shown below.
+```bash
+python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/best_model' --data_dir='data/pascalvoc' --test_list='test.txt' --ap_version='11point' --nms_threshold=0.45
+```
+
+You can set ```--dataset``` to ```coco2014``` or ```coco2017``` to evaluate COCO dataset. Moreover, we provide `eval_coco_map.py` which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). To use this eval_coco_map.py, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 Install the cocoapi:
 ```
 # COCOAPI=/path/to/clone/cocoapi
@@ -86,44 +104,25 @@ make install
 # not to install the COCO API into global site-packages
 python2 setup.py install --user
 ```
-Note we set the defualt test list to the dataset's test/val list, you can use your own test list by setting test_list args.
-
-#### Evaluate on PASCAL VOC
-```python
-env CUDA_VISIBLE_DEVICES=0 python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/90' --data_dir='data/pascalvoc' --test_list='test.txt' --ap_version='11point'
-```
-
-#### Evaluate on MS-COCO
-```python
-env CUDA_VISIBLE_DEVICES=0 python eval.py --dataset='coco2014' --nms_threshold=0.5 --model_dir='train_coco_model/40' --test_list='annotations/instances_minival2014.json' --ap_version='integral'
-env CUDA_VISIBLE_DEVICES=0 python eval_coco_map.py --dataset='coco2017' --nms_threshold=0.5 --model_dir='train_coco_model/40' --test_list='annotations/instances_minival2017.json'
-```
-
-TBD
 
 ### Infer and Visualize
-
-```python
-env CUDA_VISIBLE_DEVICES=0 python infer.py --dataset='coco' --nms_threshold=0.5 --model_dir='train_coco_model/20' --image_path='./data/coco/val2014/COCO_val2014_000000000139.jpg'
+`infer.py` is the main caller of the inferring module. Examples of usage are shown below.
+```bash
+python infer.py --dataset='pascalvoc' --nms_threshold=0.45 --model_dir='train_pascal_model/best_model' --image_path='./data/pascalvoc/VOCdevkit/VOC2007/JPEGImages/009963.jpg'
 ```
-Below is the examples after running python infer.py to inference and visualize the model result.
+Below are the examples of running the inference and visualizing the model result.
 <p align="center">
-<img src="images/COCO_val2014_000000000139.jpg" height=300 width=400 hspace='10'/>
-<img src="images/COCO_val2014_000000000785.jpg" height=300 width=400 hspace='10'/>
-<img src="images/COCO_val2014_000000142324.jpg" height=300 width=400 hspace='10'/>
-<img src="images/COCO_val2014_000000144003.jpg" height=300 width=400 hspace='10'/> <br />
-MobileNet-SSD300x300 Visualization Examples
+<img src="images/009943.jpg" height=300 width=400 hspace='10'/>
+<img src="images/009956.jpg" height=300 width=400 hspace='10'/>
+<img src="images/009960.jpg" height=300 width=400 hspace='10'/>
+<img src="images/009962.jpg" height=300 width=400 hspace='10'/> <br />
+MobileNet-v1-SSD 300x300 Visualization Examples
 </p>
 
-TBD
 
 ### Released Model
 
 
 | Model                    | Pre-trained Model  | Training data    | Test data    | mAP |
 |:------------------------:|:------------------:|:----------------:|:------------:|:----:|
-|MobileNet-v1-SSD 300x300  | COCO MobileNet SSD | VOC07+12 trainval| VOC07 test   | xx%  |
-|MobileNet-v1-SSD 300x300  | ImageNet MobileNet | VOC07+12 trainval| VOC07 test   | xx%  |
-|MobileNet-v1-SSD 300x300  | ImageNet MobileNet | MS-COCO trainval | MS-COCO test | xx%  |
-
-TBD
+|[MobileNet-v1-SSD 300x300](http://paddlemodels.bj.bcebos.com/ssd_mobilenet_v1_pascalvoc.tar.gz) | COCO MobileNet SSD | VOC07+12 trainval| VOC07 test   | 73.32%  |
