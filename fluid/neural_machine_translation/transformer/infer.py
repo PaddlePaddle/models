@@ -308,7 +308,7 @@ def infer(args):
             ModelHyperParams.n_layer, ModelHyperParams.n_head,
             ModelHyperParams.d_key, ModelHyperParams.d_value,
             ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
-            ModelHyperParams.dropout)
+            ModelHyperParams.dropout, ModelHyperParams.weight_sharing)
 
     decoder_program = fluid.Program()
     with fluid.program_guard(main_program=decoder_program):
@@ -317,7 +317,7 @@ def infer(args):
             ModelHyperParams.n_layer, ModelHyperParams.n_head,
             ModelHyperParams.d_key, ModelHyperParams.d_value,
             ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
-            ModelHyperParams.dropout)
+            ModelHyperParams.dropout, ModelHyperParams.weight_sharing)
 
     # Load model parameters of encoder and decoder separately from the saved
     # transformer model.
@@ -359,6 +359,7 @@ def infer(args):
         start_mark=args.special_token[0],
         end_mark=args.special_token[1],
         unk_mark=args.special_token[2],
+        max_length=ModelHyperParams.max_length,
         clip_last_batch=False)
 
     trg_idx2word = test_data.load_dict(
