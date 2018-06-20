@@ -269,9 +269,6 @@ def pyramidbox(settings, file_list, mode, shuffle):
                 yield im, boxes, expand_bboxes(boxes), lbls, difficults
 
             if mode == 'test':
-                if settings.resize_w and settings.resize_h:
-                    im = im.resize((settings.resize_w, settings.resize_h),
-                                   Image.ANTIALIAS)
                 yield im, image_path
 
     return reader
