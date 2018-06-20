@@ -32,9 +32,10 @@ public:
           kaldi::BaseFloat acoustic_scale);
   ~Decoder();
 
-  // Interface to accept the scores read from specifier and return
-  // the batch decoding results
-  std::vector<std::string> decode(std::string posterior_rspecifier);
+  // Interface to accept the scores read from specifier and print
+  // the decoding results directly
+  void decode_from_file(std::string posterior_rspecifier,
+                        size_t num_processes = 1);
 
   // Accept the scores of one utterance and return the decoding result
   std::string decode(
@@ -45,21 +46,26 @@ public:
   std::vector<std::string> decode_batch(
       std::vector<std::string> key,
       const std::vector<std::vector<std::vector<kaldi::BaseFloat>>>
-          &log_probs_batch);
+          &log_probs_batch,
+      size_t num_processes = 1);
 
 private:
   // For decoding one utterance
-  std::string decode(std::string key,
-                     kaldi::Matrix<kaldi::BaseFloat> &loglikes);
-  std::string DecodeUtteranceLatticeFaster(kaldi::DecodableInterface &decodable,
+  std::string decode_internal(kaldi::LatticeFasterDecoder *decoder,
+                              std::string key,
+                              kaldi::Matrix<kaldi::BaseFloat> &loglikes);
+
+  std::string DecodeUtteranceLatticeFaster(kaldi::LatticeFasterDecoder *decoder,
+                                           kaldi::DecodableInterface &decodable,
                                            std::string utt,
                                            double *like_ptr);
 
   fst::SymbolTable *word_syms;
   fst::Fst<fst::StdArc> *decode_fst;
-  kaldi::LatticeFasterDecoder *decoder;
+  std::vector<kaldi::LatticeFasterDecoder *> decoder_pool;
   kaldi::Vector<kaldi::BaseFloat> logprior;
   kaldi::TransitionModel trans_model;
+  kaldi::LatticeFasterDecoderConfig config;
 
   kaldi::CompactLatticeWriter compact_lattice_writer;
   kaldi::LatticeWriter lattice_writer;

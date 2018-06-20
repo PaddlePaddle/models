@@ -28,16 +28,23 @@ PYBIND11_MODULE(post_latgen_faster_mapped, m) {
                     std::string,
                     std::string,
                     kaldi::BaseFloat>())
-      .def("decode",
-           (std::vector<std::string> (Decoder::*)(std::string)) &
-               Decoder::decode,
+      .def("decode_from_file",
+           (void (Decoder::*)(std::string, size_t)) & Decoder::decode_from_file,
            "Decode for the probability matrices in specifier "
-           "and return the transcriptions.")
+           "and print the transcriptions.")
       .def(
           "decode",
           (std::string (Decoder::*)(
               std::string, const std::vector<std::vector<kaldi::BaseFloat>>&)) &
               Decoder::decode,
           "Decode one input probability matrix "
-          "and return the transcription.");
+          "and return the transcription.")
+      .def("decode_batch",
+           (std::vector<std::string> (Decoder::*)(
+               std::string,
+               const std::vector<std::vector<std::vector<kaldi::BaseFloat>>>&,
+               size_t num_processes)) &
+               Decoder::decode_batch,
+           "Decode one batch of probability matrices "
+           "and return the transcriptions.");
 }

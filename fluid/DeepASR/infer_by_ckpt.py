@@ -238,10 +238,10 @@ def infer_from_ckpt(args):
         probs, lod = lodtensor_to_ndarray(results[0])
         infer_batch = split_infer_result(probs, lod)
 
-        for index, sample in enumerate(infer_batch):
-            key = name_lst[index]
-            ref = trg_trans[key]
-            if args.post_matrix_path is not None:
+        decoder.decode_batch(name_lst, infer_batch)
+        if args.post_matrix_path is not None:
+            for index, sample in enumerate(infer_batch):
+                key = name_lst[index]
                 out_post_matrix(key, sample)
             '''
             hyp = decoder.decode(key, sample)
@@ -252,9 +252,9 @@ def infer_from_ckpt(args):
             print(key + "|Hyp:", hyp.encode("utf8"))
             print("Instance CER: ", edit_dist / ref_len)
             '''
-        print("batch: ", batch_id)
+        #print("batch: ", batch_id)
 
-    print("Total CER = %f" % (total_edit_dist / total_ref_len))
+        #print("Total CER = %f" % (total_edit_dist / total_ref_len))
 
 
 if __name__ == '__main__':

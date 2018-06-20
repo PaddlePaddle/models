@@ -6,7 +6,6 @@ python -u ../../infer_by_ckpt.py --batch_size 48  \
                         --mean_var data/aishell/global_mean_var \
                         --frame_dim 80  \
                         --class_num 3040 \
-                        --post_matrix_path post_matrix.decoded \
                         --target_trans data/text.test \
                         --trans_model mapped_decoder_data/exp/tri5a/final.mdl \
                         --log_prior mapped_decoder_data/logprior \

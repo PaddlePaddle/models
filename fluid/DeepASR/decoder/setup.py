@@ -24,7 +24,7 @@ except:
                      "install kaldi and export KALDI_ROOT=<kaldi's root dir> .")
 
 args = [
-    '-std=c++11', '-Wno-sign-compare', '-Wno-unused-variable',
+    '-std=c++11', '-fopenmp', '-Wno-sign-compare', '-Wno-unused-variable',
     '-Wno-unused-local-typedefs', '-Wno-unused-but-set-variable',
     '-Wno-deprecated-declarations', '-Wno-unused-function'
 ]
@@ -53,7 +53,7 @@ ext_modules = [
         ['pybind.cc', 'post_latgen_faster_mapped.cc'],
         include_dirs=[
             'pybind11/include', '.', os.path.join(kaldi_root, 'src'),
-            os.path.join(kaldi_root, 'tools/openfst/src/include')
+            os.path.join(kaldi_root, 'tools/openfst/src/include'), 'ThreadPool'
         ],
         language='c++',
         libraries=LIBS,
