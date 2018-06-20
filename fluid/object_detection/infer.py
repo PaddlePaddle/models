@@ -34,8 +34,20 @@ def infer(args, data_args, image_path, model_dir):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if 'coco' in data_args.dataset:
         num_classes = 91
+        # cocoapi
+        from pycocotools.coco import COCO
+        from pycocotools.cocoeval import COCOeval
+        label_fpath = os.path.join(data_dir, label_file)
+        coco = COCO(label_fpath)
+        category_ids = coco.getCatIds()
+        label_list = {
+            item['id']: item['name']
+            for item in coco.loadCats(category_ids)
+        }
+        label_list[0] = ['background']
     elif 'pascalvoc' in data_args.dataset:
         num_classes = 21
+        label_list = data_args.label_list
 
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
@@ -54,13 +66,16 @@ def infer(args, data_args, image_path, model_dir):
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     data = infer_reader()
-    nmsed_out_v = exe.run(fluid.default_main_program(),
-                          feed=feeder.feed([[data]]),
-                          fetch_list=[nmsed_out],
-                          return_numpy=False)
-    nmsed_out_v = np.array(nmsed_out_v[0])
+
+    # switch network to test mode (i.e. batch norm test mode)
+    test_program = fluid.default_main_program().clone(for_test=True)
+    nmsed_out_v, = exe.run(test_program,
+                           feed=feeder.feed([[data]]),
+                           fetch_list=[nmsed_out],
+                           return_numpy=False)
+    nmsed_out_v = np.array(nmsed_out_v)
     draw_bounding_box_on_image(image_path, nmsed_out_v, args.confs_threshold,
-                               data_args.label_list)
+                               label_list)
 
 
 def draw_bounding_box_on_image(image_path, nms_out, confs_threshold,
@@ -93,10 +108,20 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
+    data_dir = 'data/pascalvoc'
+    label_file = 'label_list'
+
+    if not os.path.exists(args.model_dir):
+        raise ValueError("The model path [%s] does not exist." %
+                         (args.model_dir))
+    if 'coco' in args.dataset:
+        data_dir = 'data/coco'
+        label_file = 'annotations/instances_val2014.json'
+
     data_args = reader.Settings(
         dataset=args.dataset,
-        data_dir='data/pascalvoc',
-        label_file='label_list',
+        data_dir=data_dir,
+        label_file=label_file,
         resize_h=args.resize_h,
         resize_w=args.resize_w,
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R],

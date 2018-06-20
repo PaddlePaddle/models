@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
     data_dir = './data/coco'
     if '2014' in args.dataset:
-        test_list = 'annotations/instances_minival2014.json'
+        test_list = 'annotations/instances_val2014.json'
     elif '2017' in args.dataset:
         test_list = 'annotations/instances_val2017.json'
 

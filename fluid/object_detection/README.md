@@ -4,6 +4,14 @@ The minimum PaddlePaddle version needed for the code sample in this directory is
 
 ## SSD Object Detection
 
+## Table of Contents
+- [Introduction](#introduction)
+- [Data Preparation](#data-preparation)
+- [Train](#train)
+- [Evaluate](#evaluate)
+- [Infer and Visualize](#infer-and-visualize)
+- [Released Model](#released-model)
+
 ### Introduction
 
 [Single Shot MultiBox Detector (SSD)](https://arxiv.org/abs/1512.02325) framework for object detection can be categorized as a single stage detector. A single stage detector simplifies object detection as a regression problem, which directly predicts the bounding boxes and class probabilities without region proposal. SSD further makes improves by producing these predictions of different scales from different layers, as shown below. Six levels predictions are made in six different scale feature maps. And there are two 3x3 convolutional layers in each feature map, which predict category or a shape offset relative to the prior box(also called anchor), respectively. Thus, we get 38x38x4 + 19x19x6 + 10x10x6 + 5x5x6 + 3x3x4 + 1x1x4 = 8732 detections per class.
@@ -19,8 +27,6 @@ SSD is readily pluggable into a wide variant standard convolutional network, suc
 
 You can use [PASCAL VOC dataset](http://host.robots.ox.ac.uk/pascal/VOC/) or [MS-COCO dataset](http://cocodataset.org/#download).
 
-#### PASCAL VOC Dataset
-
 If you want to train a model on PASCAL VOC dataset, please download dataset at first, skip this step if you already have one.
 
 ```bash
@@ -29,8 +35,6 @@ cd data/pascalvoc
 ```
 
 The command `download.sh` also will create training and testing file lists.
-
-#### MS-COCO Dataset
 
 If you want to train a model on MS-COCO dataset, please download dataset at first, skip this step if you already have one.
 
@@ -71,7 +75,13 @@ We will release the pre-trained models by ourself in the upcoming soon.
   python train.py --help
   ```
 
-We used RMSProp optimizer with mini-batch size 64 to train the MobileNet-SSD. The initial learning rate is 0.001, and was decayed at 40, 60, 80, 100 epochs with multiplier 0.5, 0.25, 0.1, 0.01, respectively. Weight decay is 0.00005. After 120 epochs we achive XXX% mAP under 11point metric.
+Data reader is defined in `reader.py`. All images will be resized to 300x300. In training stage, images are randomly distorted, expanded, cropped and flipped:
+   - distort: distort brightness, contrast, saturation, and hue.
+   - expand: put the original image into a larger expanded image which is initialized using image mean.
+   - crop: crop image with respect to different scale, aspect ratio, and overlap.
+   - flip: flip horizontally.
+
+We used RMSProp optimizer with mini-batch size 64 to train the MobileNet-SSD. The initial learning rate is 0.001, and was decayed at 40, 60, 80, 100 epochs with multiplier 0.5, 0.25, 0.1, 0.01, respectively. Weight decay is 0.00005. After 120 epochs we achieve 73.32% mAP under 11point metric.
 
 ### Evaluate
 
@@ -115,4 +125,4 @@ MobileNet-v1-SSD 300x300 Visualization Examples
 
 | Model                    | Pre-trained Model  | Training data    | Test data    | mAP |
 |:------------------------:|:------------------:|:----------------:|:------------:|:----:|
-|MobileNet-v1-SSD 300x300  | COCO MobileNet SSD | VOC07+12 trainval| VOC07 test   | XXX%  |
+|[MobileNet-v1-SSD 300x300](http://paddlemodels.bj.bcebos.com/ssd_mobilenet_v1_pascalvoc.tar.gz) | COCO MobileNet SSD | VOC07+12 trainval| VOC07 test   | 73.32%  |
