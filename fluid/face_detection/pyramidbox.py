@@ -39,7 +39,11 @@ def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
             act='relu')
     if with_pool:
         pool = fluid.layers.pool2d(
-            input=conv, pool_size=2, pool_type='max', pool_stride=2)
+            input=conv,
+            pool_size=2,
+            pool_type='max',
+            pool_stride=2,
+            ceil_mode=True)
         return conv, pool
     else:
         return conv
@@ -148,6 +152,8 @@ class PyramidBox(object):
             b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
             conv2 = fluid.layers.conv2d(
                 up_to, ch, 1, act='relu', bias_attr=b_attr)
+            if self.is_infer:
+                upsampling = fluid.layers.crop(upsampling, shape=conv2)
             # eltwise mul
             conv_fuse = upsampling * conv2
             return conv_fuse
@@ -393,8 +399,11 @@ class PyramidBox(object):
         total_loss = face_loss + head_loss
         return face_loss, head_loss, total_loss
 
-    def infer(self):
-        test_program = fluid.default_main_program().clone(for_test=True)
+    def infer(self, main_program=None):
+        if main_program is None:
+            test_program = fluid.default_main_program().clone(for_test=True)
+        else:
+            test_program = main_program.clone(for_test=True)
         with fluid.program_guard(test_program):
             face_nmsed_out = fluid.layers.detection_output(
                 self.face_mbox_loc,

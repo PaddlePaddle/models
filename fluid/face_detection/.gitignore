@@ -1,5 +1,16 @@
+# saved model
 model/
+
+# pretrained model
+pretrained/
+
+# used data and label
 data/
 label/
-pretrained/
+
+# log and swap files
 *.swp
+*.log
+
+# infer
+infer_results/

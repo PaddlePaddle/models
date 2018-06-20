@@ -238,40 +238,51 @@ def pyramidbox(settings, file_list, mode, shuffle):
             im_width, im_height = im.size
 
             # layout: label | xmin | ymin | xmax | ymax
-            bbox_labels = []
-            for index_box in range(len(dict_input_txt[index_image])):
-                if index_box >= 2:
-                    bbox_sample = []
-                    temp_info_box = dict_input_txt[index_image][
-                        index_box].split(' ')
-                    xmin = float(temp_info_box[0])
-                    ymin = float(temp_info_box[1])
-                    w = float(temp_info_box[2])
-                    h = float(temp_info_box[3])
-                    xmax = xmin + w
-                    ymax = ymin + h
+            if mode == 'train':
+                bbox_labels = []
+                for index_box in range(len(dict_input_txt[index_image])):
+                    if index_box >= 2:
+                        bbox_sample = []
+                        temp_info_box = dict_input_txt[index_image][
+                            index_box].split(' ')
+                        xmin = float(temp_info_box[0])
+                        ymin = float(temp_info_box[1])
+                        w = float(temp_info_box[2])
+                        h = float(temp_info_box[3])
+                        xmax = xmin + w
+                        ymax = ymin + h
 
-                    bbox_sample.append(1)
-                    bbox_sample.append(float(xmin) / im_width)
-                    bbox_sample.append(float(ymin) / im_height)
-                    bbox_sample.append(float(xmax) / im_width)
-                    bbox_sample.append(float(ymax) / im_height)
-                    bbox_labels.append(bbox_sample)
+                        bbox_sample.append(1)
+                        bbox_sample.append(float(xmin) / im_width)
+                        bbox_sample.append(float(ymin) / im_height)
+                        bbox_sample.append(float(xmax) / im_width)
+                        bbox_sample.append(float(ymax) / im_height)
+                        bbox_labels.append(bbox_sample)
 
-            im, sample_labels = preprocess(im, bbox_labels, mode, settings)
-            sample_labels = np.array(sample_labels)
-            if len(sample_labels) == 0: continue
-            im = im.astype('float32')
-            boxes = sample_labels[:, 1:5]
-            lbls = [1] * len(boxes)
-            difficults = [1] * len(boxes)
-            yield im, boxes, expand_bboxes(boxes), lbls, difficults
+                im, sample_labels = preprocess(im, bbox_labels, mode, settings)
+                sample_labels = np.array(sample_labels)
+                if len(sample_labels) == 0: continue
+                im = im.astype('float32')
+                boxes = sample_labels[:, 1:5]
+                lbls = [1] * len(boxes)
+                difficults = [1] * len(boxes)
+                yield im, boxes, expand_bboxes(boxes), lbls, difficults
+
+            if mode == 'test':
+                if settings.resize_w and settings.resize_h:
+                    im = im.resize((settings.resize_w, settings.resize_h),
+                                   Image.ANTIALIAS)
+                yield im, image_path
 
     return reader
 
 
 def train(settings, file_list, shuffle=True):
     return pyramidbox(settings, file_list, 'train', shuffle)
+
+
+def test(settings, file_list):
+    return pyramidbox(settings, file_list, 'test', False)
 
 
 def infer(settings, image_path):
