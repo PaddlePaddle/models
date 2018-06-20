@@ -3,7 +3,6 @@ import time
 import numpy as np
 import argparse
 import functools
-import cv2
 from PIL import Image
 from PIL import ImageDraw
 
@@ -281,7 +280,7 @@ def infer(args, batch_size, data_args):
 
         f = open('./infer_results/' + image_class.encode('utf-8') + '/' +
                  image_name.encode('utf-8')[:-4] + '.txt', 'w')
-        # write_to_txt(image_path, f, dets)
+        write_to_txt(image_path, f, dets)
         # draw_bounding_box_on_image(image_path, dets, args.confs_threshold)
     print "Done"
 
