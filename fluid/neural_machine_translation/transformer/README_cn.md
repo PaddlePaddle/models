@@ -20,27 +20,45 @@
 
 ### 简介
 
-Transformer 是论文 [Attention Is All You Need](https://arxiv.org/abs/1706.03762) 中提出的用以完成机器翻译（Machine Translation, MT）等序列到序列（Sequence to Sequence, Seq2Seq）学习任务的一种全新网络结构。正如论文标题所示，Transformer 完全使用注意力机制（Attention Mechanisms）来获取序列中各位置的上下文信息，这种序列建模的方法摒弃了此前 Seq2Seq 模型中广泛使用的循环神经网络（Recurrent Neural Network, RNN），这使得计算并行度显著提高，训练时间大幅减少；同时在机器翻译任务上的实验结果也表明，这种网络结构能够取得现今最佳的翻译效果；而且作为一种通用的网络结构，它易于迁移到其他任务当中；因而 Transformer 正在被越来越多的使用。
+Transformer 是论文 [Attention Is All You Need](https://arxiv.org/abs/1706.03762) 中提出的用以完成机器翻译（machine translation, MT）等序列到序列（sequence to sequence, Seq2Seq）学习任务的一种全新网络结构，其完全使用注意力（Attention）机制来实现序列到序列的建模。
+
+相较于此前 Seq2Seq 模型中广泛使用的循环神经网络（Recurrent Neural Network， RNN），使用（Self）Attention 进行输入序列到输出序列的变换主要具有以下优势：
+
+- 计算复杂度小
+  - 特征维度为 d 、长度为 n 的序列，在 RNN 中计算复杂度为 `O(n * d * d)` （n 个时间步，每个时间步计算 d 维的矩阵向量乘法），在 Self-Attention 中计算复杂度为 `O(n * n * d)` （n 个时间步两两计算 d 维的向量点积或其他得分函数），n 通常要小于 d 。
+- 计算并行度高
+  - RNN 中当前时间步的计算要依赖前一个时间步的计算结果；Self-Attention 中各时间步的计算只依赖输入不依赖之前时间步输出，各时间步可以完全并行。
+- 容易学习长程依赖（long-range dependencies）
+  - RNN 中相距为 n 的两个位置间的关联需要 n 步才能建立；Self-Attention 中任何两个位置都直接相连；路径越短信号传播越容易。
+
+这些也在机器翻译任务中得到了印证，Transformer 模型在训练时间大幅减少的同时取得了 WMT'14 英德翻译任务 BLEU 值的新高。此外，Transformer 在应用于成分句法分析（Constituency Parsing）任务时也有着不俗的表现，这也说明其具有较高的通用性，容易迁移到其他应用场景中。这些都表明 Transformer 有着广阔的前景。
 
 ### 模型概览
 
-Transformer 同样使用了 Seq2Seq 模型中典型的编码器-解码器（Encoder-Decoder）的框架结构，整体网络结构如图1所示。Encoder 和 Decoder 由若干相同的 layer 堆叠组成，主要包括 Multi-Head Attention 和 Position-wise Feed-Forward Networks 两种模块，
-
-- Encoder 和 Decoder 由若干相同的 layer 堆叠组成
-- 每个 layer 主要包括 Multi-Head Attention 和 Position-wise Feed-Forward Networks 两种 sub-layer
-- 每个 sub-layer 后辅以 Residual Connection 和 Layer Normalization
-- Decoder 比 Encoder 所使用的 layer 额外多 Multi-Head Attention
+Transformer 同样使用了 Seq2Seq 模型中典型的编码器-解码器（Encoder-Decoder）的框架结构，整体网络结构如图1所示。
 
 <p align="center">
-<img src="images/transformer_network.png" height=300 hspace='10'/> <br />
-图1. Transformer 网络结构图
+<img src="images/transformer_network.png" height=400 hspace='10'/> <br />
+图 1. Transformer 网络结构图
 </p>
 
+Encoder 由若干相同的 layer 堆叠组成，每个 layer 主要由多头注意力（Multi-Head Attention）和全连接的前馈（Feed-Forward）网络这两个 sub-layer 构成。
+- Multi-Head Attention 在这里用于实现 Self-Attention，计算过程参见图2；相比于简单的 Attention 机制，其将输入进行多路线性变换后分别计算 Attention 的结果，并将所有结果拼接后再次进行线性变换作为输出。
+- Feed-Forward 网络会对序列中的每个位置进行相同的计算（Position-wise），其采用的是两次线性变换中间加以 ReLU 激活的结构。
+
+此外，每个 sub-layer 后还施以 Residual Connection 和 Layer Normalization 来促进梯度传播和模型收敛。
+
+<p align="center">
+<img src="images/multi_head_attention.png" height=300 hspace='10'/> <br />
+图 2. Multi-Head Attention
+</p>
+
+Decoder 具有和 Encoder 类似的结构，只是相比于组成 Encoder 的 layer ，在组成 Decoder 的 layer 中还多了一个 Multi-Head Attention 的 sub-layer 来实现对 Encoder 输出的 Attention，这个 Encoder-Decoder Attention 在其他 Seq2Seq 模型中也是存在的。
 
 
 ### 数据准备
 
-我们这里使用 [WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)，同时参照论文中的设置使用 [BPE（byte-pair encoding）]()编码的数据，使用这种方式表示的数据能够更好的解决开放词汇（out-of-vocabulary，OOV）的问题。用到的 BPE 数据可以参照[这里](https://github.com/google/seq2seq/blob/master/docs/data.md)进行下载，下载后解压，其中 `train.tok.clean.bpe.32000.en` 和 `train.tok.clean.bpe.32000.de` 为使用 BPE 的训练数据（平行语料，分别对应了英语和德语），`newstest2013.tok.bpe.32000.en` 和 `newstest2013.tok.bpe.32000.de` 等为测试数据，`vocab.bpe.32000` 为相应的词典文件（源语言和目标语言共享该词典文件）。
+我们这里使用 [WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)，同时参照论文中的设置使用 [BPE（byte-pair encoding）]()编码的数据，使用这种方式表示的数据能够更好的解决未登录词（out-of-vocabulary，OOV）的问题。用到的 BPE 数据可以参照[这里](https://github.com/google/seq2seq/blob/master/docs/data.md)进行下载，下载后解压，其中 `train.tok.clean.bpe.32000.en` 和 `train.tok.clean.bpe.32000.de` 为使用 BPE 的训练数据（平行语料，分别对应了英语和德语），`newstest2013.tok.bpe.32000.en` 和 `newstest2013.tok.bpe.32000.de` 等为测试数据（`newstest2013.tok.en` 和 `newstest2013.tok.de` 等则为对应的未使用 BPE 的测试数据），`vocab.bpe.32000` 为相应的词典文件（源语言和目标语言共享该词典文件）。
 
 由于本示例中的数据读取脚本 `reader.py` 使用的样本数据的格式为 `\t` 分隔的的源语言和目标语言句子对， 因此需要将源语言到目标语言的平行语料库文件合并为一个文件，可以执行以下命令进行合并：
 ```sh
@@ -57,30 +75,30 @@ paste -d '\t' train.tok.clean.bpe.32000.en train.tok.clean.bpe.32000.de > train.
 python -u train.py \
   --src_vocab_fpath data/vocab.bpe.32000 \
   --trg_vocab_fpath data/vocab.bpe.32000 \
+  --special_token '<s>' '<e>' '<unk>' \
   --train_file_pattern data/train.tok.clean.bpe.32000.en-de \
   --use_token_batch True \
   --batch_size 3200 \
-  --pool_size 200000 \
   --sort_type pool \
-  --special_token '<s>' '<e>' '<unk>'
+  --pool_size 200000 \
 ```
-上述命令中需要设置源语言词典文件路径（`src_vocab_fpath`）、目标语言词典文件路径（`trg_vocab_fpath`）、训练数据文件（`train_file_pattern`）和 batch （`use_token_batch` 指出数据按照 token 数目或者 sequence 数目组成 batch）等数据相关的参数。有关这些参数更详细的信息可以通过执行以下命令查看：
+上述命令中设置了源语言词典文件路径（`src_vocab_fpath`）、目标语言词典文件路径（`trg_vocab_fpath`）、训练数据文件（`train_file_pattern`）等数据相关的参数和构造 batch 方式（`use_token_batch` 指出数据按照 token 数目或者 sequence 数目组成 batch）等 reader 相关的参数。有关这些参数更详细的信息可以通过执行以下命令查看：
 ```sh
 python train.py --help
 ```
 
-更多模型训练相关的参数则在 `config.py` 中的 `ModelHyperParams` 和 `TrainTaskConfig` 内定义，其中默认使用了 Transformer 论文中 base model 的配置，如需调整可以在该脚本中进行修改。另外这些参数同样可在执行训练脚本的命令行中设置，传入的配置会合并并覆盖`config.py`中的配置，如可以通过以下命令来训练 Transformer 论文中的 big model ：
+更多模型训练相关的参数则在 `config.py` 中的 `ModelHyperParams` 和 `TrainTaskConfig` 内定义；`ModelHyperParams` 定义了 embedding 维度等模型超参数，`TrainTaskConfig` 定义了 warmup 步数等训练需要的参数。这些参数默认使用了 Transformer 论文中 base model 的配置，如需调整可以在该脚本中进行修改。另外这些参数同样可在执行训练脚本的命令行中设置，传入的配置会合并并覆盖 `config.py` 中的配置，如可以通过以下命令来训练 Transformer 论文中的 big model ：
 
 ```sh
 python -u train.py \
   --src_vocab_fpath data/vocab.bpe.32000 \
   --trg_vocab_fpath data/vocab.bpe.32000 \
+  --special_token '<s>' '<e>' '<unk>' \
   --train_file_pattern data/train.tok.clean.bpe.32000.en-de \
   --use_token_batch True \
   --batch_size 3200 \
-  --pool_size 200000 \
   --sort_type pool \
-  --special_token '<s>' '<e>' '<unk>' \
+  --pool_size 200000 \
   n_layer 8 \
   n_head 16 \
   d_model 1024 \
@@ -89,9 +107,44 @@ python -u train.py \
 ```
 有关这些参数更详细信息的还请参考 `config.py` 中的注释说明。
 
+在训练过程中，每个 epoch 结束后将保存模型到参数设定时 `model_dir` 指定的目录，每个 iteration 将打印如下的日志到标准输出：
+```txt
+epoch: 0, batch: 0, sum loss: 258793.343750, avg loss: 11.069005, ppl: 64151.644531
+epoch: 0, batch: 1, sum loss: 256140.718750, avg loss: 11.059616, ppl: 63552.148438
+epoch: 0, batch: 2, sum loss: 258931.093750, avg loss: 11.064013, ppl: 63832.167969
+epoch: 0, batch: 3, sum loss: 256837.875000, avg loss: 11.058206, ppl: 63462.574219
+epoch: 0, batch: 4, sum loss: 256461.000000, avg loss: 11.053401, ppl: 63158.390625
+epoch: 0, batch: 5, sum loss: 257064.562500, avg loss: 11.019099, ppl: 61028.683594
+epoch: 0, batch: 6, sum loss: 256180.125000, avg loss: 11.008556, ppl: 60388.644531
+epoch: 0, batch: 7, sum loss: 256619.671875, avg loss: 11.007106, ppl: 60301.113281
+epoch: 0, batch: 8, sum loss: 255716.734375, avg loss: 10.966025, ppl: 57874.105469
+epoch: 0, batch: 9, sum loss: 245157.500000, avg loss: 10.966562, ppl: 57905.187500
+```
+
+整个训练过程 cost 曲线如下：
+
 ### 模型预测
+
+`infer.py` 是模型预测脚本，模型训练完成后可以执行以下命令对指定文件中的文本进行翻译：
+```sh
+python -u infer.py \
+  --src_vocab_fpath data/vocab.bpe.32000 \
+  --trg_vocab_fpath data/vocab.bpe.32000 \
+  --special_token '<s>' '<e>' '<unk>' \
+  --test_file_pattern data/newstest2013.tok.bpe.32000.en-de \
+  --batch_size 16 \
+  model_path trained_models/pass_20.infer.model \
+  beam_size 5
+```
+和模型训练时类似，预测时也需要设置数据和 reader 相关的参数，并可以执行 `python infer.py --help` 查看这些参数的说明（部分参数意义和训练时略有不同）；同样可以在预测命令中设置模型超参数，但应与模型训练时的设置一致；此外相比于模型训练，预测时还有一些额外的参数，如需要设置 `model_path` 来模型所在目录，可以设置 `beam_size` 来指定 Beam Search 算法的搜索宽度，这些参数也可以在 `config.py` 中的 `InferTaskConfig` 内查阅注释说明并进行更改设置。
+
+执行以上预测命令会打印翻译结果到标准输出，每行输出是对应行输入的得分最高的翻译。需要注意，由于训练时使用了 BPE 的数据，预测出的翻译结果也是 BPE 表示的数据，要恢复成原始的数据才能进行正确的评估，可以使用以下命令进行恢复。
 
 ```sh
 sed 's/@@ //g' predict.txt > predict_tok.txt
+```
+
+计算 BLEU 指标，用到的脚本可以从[这里](https://raw.githubusercontent.com/moses-smt/mosesdecoder/master/scripts/generic/multi-bleu.perl)获取。
+```sh
 perl multi_bleu.perl data/newstest2013.tok.de < prdict_tok.txt
 ```
