@@ -100,80 +100,73 @@ def generate_sample(sampler, image_width, image_height):
     return sampled_bbox
 
 
-# tangxu @ 2018-06-17
-# data-anchor-sampling
-def generate_sample(sampler, bbox_labels, image_width, image_height,
-                    size_num_vec, resize_width, resize_heigh):
+def data_anchor_sampling(sampler, bbox_labels, image_width, image_height,
+                         scale_array, resize_width, resize_height):
     num_gt = len(bbox_labels)
-    rng_rand = random.randint(1, num_gt)
-    if num_gt != 0:
-        rand_idx = rng_rand() % num_gt
-    else:
-        rand_idx = 0
+    # np.random.randint range: [low, high)
+    rand_idx = np.random.randint(0, num_gt) if num_gt != 0 else 0
 
     if num_gt != 0:
-        xmin = bbox_labels[rand_idx][0]
-        ymin = bbox_labels[rand_idx][1]
-        xmax = bbox_labels[rand_idx][2]
-        ymax = bbox_labels[rand_idx][3]
+        norm_xmin = bbox_labels[rand_idx][0]
+        norm_ymin = bbox_labels[rand_idx][1]
+        norm_xmax = bbox_labels[rand_idx][2]
+        norm_ymax = bbox_labels[rand_idx][3]
 
-        face_xmin = xmin * image_width
-        face_ymin = ymin * image_height
-        face_wid = image_width * (xmax - xmin)
-        face_hei = image_height * (ymax - ymin)
+        xmin = norm_xmin * image_width
+        ymin = norm_ymin * image_height
+        wid = image_width * (norm_xmax - norm_xmin)
+        hei = image_height * (norm_ymax - norm_ymin)
         range_size = 0
 
-        for scale_ind in range(0, len(size_num_vec)):
-            area = face_wid * face_hei
-
-            if area > pow(scale_array[scale_ind], 2) and area < pow(
-                    scale_array[scale_ind + 1], 2):
+        for scale_ind in range(0, len(scale_array) - 1):
+            area = wid * hei
+            if area > scale_array[scale_ind] ** 2 and area < \
+                    scale_array[scale_ind + 1] ** 2:
                 range_size = scale_ind + 1
                 break
 
         scale_choose = 0.0
-        rng_rand_size = random.randint(1, range_size)
         if range_size == 0:
             rand_idx_size = range_size + 1
         else:
+            # np.random.randint range: [low, high)
+            rng_rand_size = np.random.randint(0, range_size)
             rand_idx_size = rng_rand_size % range_size
 
-        scale_choose = random.randint(size_num_vec[rand_idx_size] / 2.0,
-                                      2.0 * size_num_vec[rand_idx_size])
+        scale_choose = random.uniform(scale_array[rand_idx_size] / 2.0,
+                                      2.0 * scale_array[rand_idx_size])
 
-        sample_bbox_size = face_wid * resize_width / scale_choose
+        sample_bbox_size = wid * resize_width / scale_choose
 
         w_off_orig = 0.0
         h_off_orig = 0.0
-        if sample_bbox_size < max(img_hei, img_wid):
-            if (face_wid <= sample_bbox_size):
-                w_off_orig = random.randint(
-                    face_xmin + face_wid - sample_bbox_size, face_xmin)
-            elif (face_wid > sample_bbox_size):
-                w_off_orig = random.randint(
-                    face_xmin, face_xmin + face_wid - sample_bbox_size)
-            if (face_hei <= sample_bbox_size):
-                h_off_orig = random.randint(
-                    face_ymin + face_hei - sample_bbox_size, face_ymin)
-            elif (face_hei > sample_bbox_size):
-                h_off_orig = random.randint(
-                    face_ymin, face_ymin + face_hei - sample_bbox_size)
-        elif (sample_bbox_size >= max(img_hei, img_wid)):
-            w_off_orig = random.randint(img_wid - sample_bbox_size, 0.0)
-            h_off_orig = random.randint(img_hei - sample_bbox_size, 0.0)
+        if sample_bbox_size < max(image_height, image_width):
+            if wid <= sample_bbox_size:
+                w_off_orig = random.uniform(xmin + wid - sample_bbox_size, xmin)
+            else:
+                w_off_orig = random.uniform(xmin, xmin + wid - sample_bbox_size)
 
-        w_off_orig = floor(w_off_orig)
-        h_off_orig = floor(h_off_orig)
+            if hei <= sample_bbox_size:
+                h_off_orig = random.uniform(ymin + hei - sample_bbox_size, ymin)
+            else:
+                h_off_orig = random.uniform(ymin, ymin + hei - sample_bbox_size)
+
+        else:
+            w_off_orig = random.uniform(image_width - sample_bbox_size, 0.0)
+            h_off_orig = random.uniform(image_height - sample_bbox_size, 0.0)
+
+        w_off_orig = math.floor(w_off_orig)
+        h_off_orig = math.floor(h_off_orig)
 
         # Figure out top left coordinates.
         w_off = 0.0
         h_off = 0.0
-        w_off = float(w_off_orig / img_wid)
-        h_off = float(h_off_orig / img_hei)
+        w_off = float(w_off_orig / image_width)
+        h_off = float(h_off_orig / image_height)
 
         sampled_bbox = bbox(w_off, h_off,
-                            w_off + float(sample_bbox_size / img_wid),
-                            h_off + float(sample_bbox_size / img_hei))
+                            w_off + float(sample_bbox_size / image_width),
+                            h_off + float(sample_bbox_size / image_height))
         return sampled_bbox
 
 
@@ -254,11 +247,9 @@ def generate_batch_samples(batch_sampler, bbox_labels, image_width,
     return sampled_bbox
 
 
-# tangxu @ 2018-06-17
-# data-anchor-sampling
-def generate_batch_samples(batch_sampler, bbox_labels, image_width,
-                           image_height, size_num_vec, resize_width,
-                           resize_heigh):
+def generate_batch_random_samples(batch_sampler, bbox_labels, image_width,
+                                  image_height, scale_array, resize_width,
+                                  resize_height):
     sampled_bbox = []
     index = []
     c = 0
@@ -267,9 +258,9 @@ def generate_batch_samples(batch_sampler, bbox_labels, image_width,
         for i in range(sampler.max_trial):
             if found >= sampler.max_sample:
                 break
-            sample_bbox = generate_sample(sampler, bbox_labels, image_width,
-                                          image_height, size_num_vec,
-                                          resize_width, resize_heigh)
+            sample_bbox = data_anchor_sampling(
+                sampler, bbox_labels, image_width, image_height, scale_array,
+                resize_width, resize_height)
             if satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
                 sampled_bbox.append(sample_bbox)
                 found = found + 1
@@ -278,14 +269,14 @@ def generate_batch_samples(batch_sampler, bbox_labels, image_width,
     return sampled_bbox
 
 
-def clip_bbox(src_bbox, out_of_range):
+def clip_bbox(src_bbox, out_of_range=False):
     if not out_of_range:
         src_bbox.xmin = max(min(src_bbox.xmin, 1.0), 0.0)
         src_bbox.ymin = max(min(src_bbox.ymin, 1.0), 0.0)
         src_bbox.xmax = max(min(src_bbox.xmax, 1.0), 0.0)
         src_bbox.ymax = max(min(src_bbox.ymax, 1.0), 0.0)
         return src_bbox
-    elif out_of_range:
+    else:
         src_bbox.xmin = src_bbox.xmin
         src_bbox.ymin = src_bbox.ymin
         src_bbox.xmax = src_bbox.xmax
@@ -345,31 +336,8 @@ def transform_labels(bbox_labels, sample_bbox):
     return sample_labels
 
 
-# tangxu @ 2018-06-20
-# data-anchor-sampling
-def transform_labels_sampling(bbox_labels, sample_bbox):
-    sample_labels = []
-    for i in range(len(bbox_labels)):
-        sample_label = []
-        object_bbox = bbox(bbox_labels[i][1], bbox_labels[i][2],
-                           bbox_labels[i][3], bbox_labels[i][4])
-        if not meet_emit_constraint(object_bbox, sample_bbox):
-            continue
-        proj_bbox = project_bbox(object_bbox, sample_bbox)
-        if proj_bbox:
-            sample_label.append(bbox_labels[i][0])
-            sample_label.append(float(proj_bbox.xmin))
-            sample_label.append(float(proj_bbox.ymin))
-            sample_label.append(float(proj_bbox.xmax))
-            sample_label.append(float(proj_bbox.ymax))
-            sample_label = sample_label + bbox_labels[i][5:]
-            sample_labels.append(sample_label)
-    return sample_labels
-
-
 def crop_image(img, bbox_labels, sample_bbox, image_width, image_height):
-    out_of_range = false
-    sample_bbox = clip_bbox(sample_bbox, out_of_range)
+    sample_bbox = clip_bbox(sample_bbox)
     xmin = int(sample_bbox.xmin * image_width)
     xmax = int(sample_bbox.xmax * image_width)
     ymin = int(sample_bbox.ymin * image_height)
@@ -380,12 +348,9 @@ def crop_image(img, bbox_labels, sample_bbox, image_width, image_height):
     return sample_img, sample_labels
 
 
-# tangxu @ 2018-06-20
-# data-anchor-sampling
 def crop_image_sampling(img, bbox_labels, sample_bbox, image_width,
-                        image_height, resize_width, resize_heigh):
-    out_of_range = true
-    sample_bbox = clip_bbox(sample_bbox, out_of_range)
+                        image_height, resize_width, resize_height):
+    sample_bbox = clip_bbox(sample_bbox, True)
     xmin = int(sample_bbox.xmin * image_width)
     xmax = int(sample_bbox.xmax * image_width)
     ymin = int(sample_bbox.ymin * image_height)
@@ -396,69 +361,60 @@ def crop_image_sampling(img, bbox_labels, sample_bbox, image_width,
     width = xmax - xmin
     height = ymax - ymin
 
-    w_off = floor(w_off)
-    h_off = floor(h_off)
     cross_xmin = max(0.0, float(w_off))
     cross_ymin = max(0.0, float(h_off))
-    cross_xmax = min(float(w_off + width - 1.0), float(floor(img_width)))
-    cross_ymax = min(float(h_off + height - 1.0), float(floor(img_height)))
+    cross_xmax = min(float(w_off + width - 1.0), float(image_width))
+    cross_ymax = min(float(h_off + height - 1.0), float(image_height))
     cross_width = cross_xmax - cross_xmin
     cross_height = cross_ymax - cross_ymin
 
-    if w_off >= 0:
-        roi_xmin_after = 0
-    else:
-        roi_xmin_after = abs(w_off)
-
-    if h_off >= 0:
-        roi_ymin_after = 0
-    else:
-        roi_ymin_after = abs(h_off)
-    roi_width_after = cross_width
-    roi_height_after = cross_height
+    roi_xmin = 0 if w_off >= 0 else abs(w_off)
+    roi_ymin = 0 if h_off >= 0 else abs(h_off)
+    roi_width = cross_width
+    roi_height = cross_height
 
     sample_img = np.zeros((width, height, 3))
-    sample_img[roi_xmin_after:roi_width_after, roi_ymin_after:
-               roi_height_after] = img[cross_xmin:cross_width, cross_ymin:
-                                       cross_height]
-    sample_img = cv2.resize(
-        sample_img, (resize_width, resize_heigh), interpolation=cv2.INTER_AREA)
+    sample_img[roi_xmin : roi_xmin + roi_width, roi_ymin : roi_ymin + roi_height] = \
+        img[cross_xmin : cross_xmin + cross_width, cross_ymin : cross_ymin + cross_height]
 
-    sample_labels = transform_labels_sampling(bbox_labels, sample_bbox)
+    sample_img = cv2.resize(
+        sample_img, (resize_width, resize_height), interpolation=cv2.INTER_AREA)
+
+    sample_labels = transform_labels(bbox_labels, sample_bbox)
     return sample_img, sample_labels
 
 
 def random_brightness(img, settings):
     prob = random.uniform(0, 1)
-    if prob < settings._brightness_prob:
-        delta = random.uniform(-settings._brightness_delta,
-                               settings._brightness_delta) + 1
+    if prob < settings.brightness_prob:
+        delta = random.uniform(-settings.brightness_delta,
+                               settings.brightness_delta) + 1
         img = ImageEnhance.Brightness(img).enhance(delta)
     return img
 
 
 def random_contrast(img, settings):
     prob = random.uniform(0, 1)
-    if prob < settings._contrast_prob:
-        delta = random.uniform(-settings._contrast_delta,
-                               settings._contrast_delta) + 1
+    if prob < settings.contrast_prob:
+        delta = random.uniform(-settings.contrast_delta,
+                               settings.contrast_delta) + 1
         img = ImageEnhance.Contrast(img).enhance(delta)
     return img
 
 
 def random_saturation(img, settings):
     prob = random.uniform(0, 1)
-    if prob < settings._saturation_prob:
-        delta = random.uniform(-settings._saturation_delta,
-                               settings._saturation_delta) + 1
+    if prob < settings.saturation_prob:
+        delta = random.uniform(-settings.saturation_delta,
+                               settings.saturation_delta) + 1
         img = ImageEnhance.Color(img).enhance(delta)
     return img
 
 
 def random_hue(img, settings):
     prob = random.uniform(0, 1)
-    if prob < settings._hue_prob:
-        delta = random.uniform(-settings._hue_delta, settings._hue_delta)
+    if prob < settings.hue_prob:
+        delta = random.uniform(-settings.hue_delta, settings.hue_delta)
         img_hsv = np.array(img.convert('HSV'))
         img_hsv[:, :, 0] = img_hsv[:, :, 0] + delta
         img = Image.fromarray(img_hsv, mode='HSV').convert('RGB')
@@ -483,9 +439,9 @@ def distort_image(img, settings):
 
 def expand_image(img, bbox_labels, img_width, img_height, settings):
     prob = random.uniform(0, 1)
-    if prob < settings._expand_prob:
-        if settings._expand_max_ratio - 1 >= 0.01:
-            expand_ratio = random.uniform(1, settings._expand_max_ratio)
+    if prob < settings.expand_prob:
+        if settings.expand_max_ratio - 1 >= 0.01:
+            expand_ratio = random.uniform(1, settings.expand_max_ratio)
             height = int(img_height * expand_ratio)
             width = int(img_width * expand_ratio)
             h_off = math.floor(random.uniform(0, height - img_height))
@@ -494,7 +450,7 @@ def expand_image(img, bbox_labels, img_width, img_height, settings):
                                (width - w_off) / img_width,
                                (height - h_off) / img_height)
             expand_img = np.ones((height, width, 3))
-            expand_img = np.uint8(expand_img * np.squeeze(settings._img_mean))
+            expand_img = np.uint8(expand_img * np.squeeze(settings.img_mean))
             expand_img = Image.fromarray(expand_img)
             expand_img.paste(img, (int(w_off), int(h_off)))
             bbox_labels = transform_labels(bbox_labels, expand_bbox)

@@ -15,34 +15,41 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 
 # yapf: disable
-add_arg('parallel', bool, True, "parallel")
-add_arg('learning_rate', float, 0.001, "Learning rate.")
-add_arg('batch_size', int, 12, "Minibatch size.")
-add_arg('num_passes', int, 120, "Epoch number.")
-add_arg('use_gpu', bool, True, "Whether use GPU.")
-add_arg('use_pyramidbox', bool, True, "Whether use PyramidBox model.")
-add_arg('dataset', str, 'WIDERFACE', "coco2014, coco2017, and pascalvoc.")
-add_arg('model_save_dir', str, 'model', "The path to save model.")
-add_arg('pretrained_model', str, './pretrained/', "The init model path.")
-add_arg('resize_h', int, 640, "The resized image height.")
-add_arg('resize_w', int, 640, "The resized image height.")
+add_arg('parallel',         bool,  True,            "parallel")
+add_arg('learning_rate',    float, 0.001,           "Learning rate.")
+add_arg('batch_size',       int,   12,              "Minibatch size.")
+add_arg('num_passes',       int,   120,             "Epoch number.")
+add_arg('use_gpu',          bool,  True,            "Whether use GPU.")
+add_arg('use_pyramidbox',   bool,  True,            "Whether use PyramidBox model.")
+add_arg('model_save_dir',   str,   'output',        "The path to save model.")
+add_arg('pretrained_model', str,   './pretrained/', "The init model path.")
+add_arg('resize_h',         int,   640,             "The resized image height.")
+add_arg('resize_w',         int,   640,             "The resized image height.")
 #yapf: enable
 
 
-def train(args, data_args, learning_rate, batch_size, pretrained_model,
-          num_passes, optimizer_method):
+def train(args, config, train_file_list, optimizer_method):
+    learning_rate = args.learning_rate
+    batch_size = args.batch_size
+    num_passes = args.num_passes
+    height = args.resize_h
+    width = args.resize_w
+    use_gpu = args.use_gpu
+    use_pyramidbox = args.use_pyramidbox
+    model_save_dir = args.model_save_dir
+    pretrained_model = args.pretrained_model
 
     num_classes = 2
+    image_shape = [3, height, width]
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
 
-    image_shape = [3, data_args.resize_h, data_args.resize_w]
 
     fetches = []
     network = PyramidBox(image_shape, num_classes,
-                         sub_network=args.use_pyramidbox)
-    if args.use_pyramidbox:
+                         sub_network=use_pyramidbox)
+    if use_pyramidbox:
         face_loss, head_loss, loss = network.train()
         fetches = [face_loss, head_loss]
     else:
@@ -72,7 +79,7 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
     optimizer.minimize(loss)
     # fluid.memory_optimize(fluid.default_main_program())
 
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
@@ -80,7 +87,7 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
     if pretrained_model:
         if pretrained_model.isdigit():
             start_pass = int(pretrained_model) + 1
-            pretrained_model = os.path.join(args.model_save_dir, pretrained_model)
+            pretrained_model = os.path.join(model_save_dir, pretrained_model)
             print("Resume from %s " %(pretrained_model))
 
         if not os.path.exists(pretrained_model):
@@ -92,10 +99,10 @@ def train(args, data_args, learning_rate, batch_size, pretrained_model,
 
     if args.parallel:
         train_exe = fluid.ParallelExecutor(
-            use_cuda=args.use_gpu, loss_name=loss.name)
+            use_cuda=use_gpu, loss_name=loss.name)
 
     train_reader = paddle.batch(
-        reader.train(data_args, train_file_list), batch_size=batch_size)
+        reader.train(config, train_file_list), batch_size=batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=network.feeds())
 
     def save_model(postfix):
@@ -143,22 +150,12 @@ if __name__ == '__main__':
 
     data_dir = 'data/WIDERFACE/WIDER_train/images/'
     train_file_list = 'label/train_gt_widerface.res'
-    val_file_list = 'label/val_gt_widerface.res'
-    model_save_dir = args.model_save_dir
 
-    data_args = reader.Settings(
-        dataset=args.dataset,
+    config = reader.Settings(
         data_dir=data_dir,
         resize_h=args.resize_h,
         resize_w=args.resize_w,
         apply_expand=False,
         mean_value=[104., 117., 123],
         ap_version='11point')
-    train(
-        args,
-        data_args=data_args,
-        learning_rate=args.learning_rate,
-        batch_size=args.batch_size,
-        pretrained_model=args.pretrained_model,
-        num_passes=args.num_passes,
-        optimizer_method="momentum")
+    train(args, config, train_file_list, optimizer_method="momentum")
