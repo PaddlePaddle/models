@@ -1,5 +1,7 @@
 model/
+pretrained/
 data/
 label/
-pretrained/
 *.swp
+*.log
+infer_results/

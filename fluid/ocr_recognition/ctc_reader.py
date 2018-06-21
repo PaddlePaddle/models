@@ -7,7 +7,7 @@ from os import path
 from paddle.v2.image import load_image
 import paddle.v2 as paddle
 
-NUM_CLASSES = 10784
+NUM_CLASSES = 95
 DATA_SHAPE = [1, 48, 512]
 
 DATA_MD5 = "7256b1d5420d8c3e74815196e58cdad5"

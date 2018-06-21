@@ -43,9 +43,11 @@ def parse_args():
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=2000,
+        default=2048,
         help="The number of sequences contained in a mini-batch, or the maximum "
-        "number of tokens (include paddings) contained in a mini-batch.")
+        "number of tokens (include paddings) contained in a mini-batch. Note "
+        "that this represents the number on single device and the actual batch "
+        "size for multi-devices will multiply the device number.")
     parser.add_argument(
         "--pool_size",
         type=int,
@@ -203,50 +205,50 @@ def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
         [num_token], dtype="float32")
 
 
-def train(args):
-    dev_count = fluid.core.get_cuda_device_count()
+def read_multiple(reader, count, clip_last=True):
+    """
+    Stack data from reader for multi-devices.
+    """
 
-    def read_multiple(reader,
-                      count=dev_count if args.use_token_batch else 1,
-                      clip_last=True):
-        """
-        Stack data from reader for multi-devices.
-        """
-
-        def __impl__():
-            res = []
-            for item in reader():
-                res.append(item)
-                if len(res) == count:
-                    yield res
-                    res = []
+    def __impl__():
+        res = []
+        for item in reader():
+            res.append(item)
             if len(res) == count:
                 yield res
-            elif not clip_last:
-                data = []
-                for item in res:
-                    data += item
-                if len(data) > count:
-                    inst_num_per_part = len(data) // count
-                    yield [
-                        data[inst_num_per_part * i:inst_num_per_part * (i + 1)]
-                        for i in range(count)
-                    ]
+                res = []
+        if len(res) == count:
+            yield res
+        elif not clip_last:
+            data = []
+            for item in res:
+                data += item
+            if len(data) > count:
+                inst_num_per_part = len(data) // count
+                yield [
+                    data[inst_num_per_part * i:inst_num_per_part * (i + 1)]
+                    for i in range(count)
+                ]
 
-        return __impl__
+    return __impl__
 
-    def split_data(data, num_part=dev_count):
-        """
-        Split data for each device.
-        """
-        if len(data) == num_part:
-            return data
-        data = data[0]
-        inst_num_per_part = len(data) // num_part
-        return [
-            data[inst_num_per_part * i:inst_num_per_part * (i + 1)]
-            for i in range(num_part)
-        ]
+
+def split_data(data, num_part):
+    """
+    Split data for each device.
+    """
+    if len(data) == num_part:
+        return data
+    data = data[0]
+    inst_num_per_part = len(data) // num_part
+    return [
+        data[inst_num_per_part * i:inst_num_per_part * (i + 1)]
+        for i in range(num_part)
+    ]
+
+
+def train(args):
+    dev_count = fluid.core.get_cuda_device_count()
 
     sum_cost, avg_cost, predict, token_num = transformer(
         ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size,
@@ -254,7 +256,7 @@ def train(args):
         ModelHyperParams.n_head, ModelHyperParams.d_key,
         ModelHyperParams.d_value, ModelHyperParams.d_model,
         ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
-        TrainTaskConfig.label_smooth_eps)
+        ModelHyperParams.weight_sharing, TrainTaskConfig.label_smooth_eps)
 
     lr_scheduler = LearningRateScheduler(ModelHyperParams.d_model,
                                          TrainTaskConfig.warmup_steps,
@@ -288,9 +290,12 @@ def train(args):
         start_mark=args.special_token[0],
         end_mark=args.special_token[1],
         unk_mark=args.special_token[2],
+        max_length=ModelHyperParams.max_length,
         clip_last_batch=False)
+    train_data = read_multiple(
+        reader=train_data.batch_generator,
+        count=dev_count if args.use_token_batch else 1)
 
-    train_data = read_multiple(reader=train_data.batch_generator)
     build_strategy = fluid.BuildStrategy()
     # Since the token number differs among devices, customize gradient scale to
     # use token average cost among multi-devices. and the gradient scale is
@@ -303,9 +308,11 @@ def train(args):
 
     def test_context():
         # Context to do validation.
-        test_program = fluid.default_main_program().clone()
-        with fluid.program_guard(test_program):
-            test_program = fluid.io.get_inference_program([avg_cost])
+        test_program = fluid.default_main_program().clone(for_test=True)
+        test_exe = fluid.ParallelExecutor(
+            use_cuda=TrainTaskConfig.use_gpu,
+            main_program=test_program,
+            share_vars_from=train_exe)
 
         val_data = reader.DataReader(
             src_vocab_fpath=args.src_vocab_fpath,
@@ -319,22 +326,22 @@ def train(args):
             start_mark=args.special_token[0],
             end_mark=args.special_token[1],
             unk_mark=args.special_token[2],
+            max_length=ModelHyperParams.max_length,
             clip_last_batch=False,
             shuffle=False,
             shuffle_batch=False)
 
-        test_exe = fluid.ParallelExecutor(
-            use_cuda=TrainTaskConfig.use_gpu,
-            main_program=test_program,
-            share_vars_from=train_exe)
-
         def test(exe=test_exe):
             test_total_cost = 0
             test_total_token = 0
-            test_data = read_multiple(reader=val_data.batch_generator)
+            test_data = read_multiple(
+                reader=val_data.batch_generator,
+                count=dev_count if args.use_token_batch else 1)
             for batch_id, data in enumerate(test_data()):
                 feed_list = []
-                for place_id, data_buffer in enumerate(split_data(data)):
+                for place_id, data_buffer in enumerate(
+                        split_data(
+                            data, num_part=dev_count)):
                     data_input_dict, util_input_dict, _ = prepare_batch_input(
                         data_buffer, data_input_names, util_input_names,
                         ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
@@ -367,7 +374,9 @@ def train(args):
             feed_list = []
             total_num_token = 0
             lr_rate = lr_scheduler.update_learning_rate()
-            for place_id, data_buffer in enumerate(split_data(data)):
+            for place_id, data_buffer in enumerate(
+                    split_data(
+                        data, num_part=dev_count)):
                 data_input_dict, util_input_dict, num_token = prepare_batch_input(
                     data_buffer, data_input_names, util_input_names,
                     ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
@@ -377,17 +386,14 @@ def train(args):
                     dict(data_input_dict.items() + util_input_dict.items() +
                          {lr_scheduler.learning_rate.name: lr_rate}.items()))
 
-                if not init:
+                if not init:  # init the position encoding table
                     for pos_enc_param_name in pos_enc_param_names:
                         pos_enc = position_encoding_init(
                             ModelHyperParams.max_length + 1,
                             ModelHyperParams.d_model)
                         feed_list[place_id][pos_enc_param_name] = pos_enc
             for feed_dict in feed_list:
-                feed_dict[
-                    sum_cost.name +
-                    "@GRAD"] = 1. / total_num_token if TrainTaskConfig.use_avg_cost else np.asarray(
-                        [1.], dtype="float32")
+                feed_dict[sum_cost.name + "@GRAD"] = 1. / total_num_token
             outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name],
                                  feed=feed_list)
             sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[1])

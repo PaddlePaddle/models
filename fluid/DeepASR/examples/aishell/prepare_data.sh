@@ -1,7 +1,7 @@
 data_dir=~/.cache/paddle/dataset/speech/deep_asr_data/aishell
 data_url='http://deep-asr-data.gz.bcebos.com/aishell_data.tar.gz'
 lst_url='http://deep-asr-data.gz.bcebos.com/aishell_lst.tar.gz'
-md5=e017d858d9e509c8a84b73f673f08b9a
+md5=17669b8d63331c9326f4a9393d289bfb
 
 if [ ! -e $data_dir ]; then
     mkdir -p $data_dir

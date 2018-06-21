@@ -35,7 +35,7 @@ def evaluate(args, eval=ctc_eval, data_reader=ctc_reader):
 
     # prepare environment
     place = fluid.CPUPlace()
-    if use_gpu:
+    if args.use_gpu:
         place = fluid.CUDAPlace(0)
 
     exe = fluid.Executor(place)
