@@ -4,25 +4,6 @@ from paddle.fluid.initializer import init_on_cpu
 import math
 
 
-def poly_decay(learning_rate, total_step, power):
-    global_step = _decay_step_counter()
-    with init_on_cpu():
-        decayed_lr = learning_rate * (fluid.layers.pow(
-            (1 - global_step / total_step), power))
-    return decayed_lr
-
-
-def cosine_decay(learning_rate, total_step):
-    """Applies cosine decay to the learning rate.
-    lr = 0.05 * (math.cos(global_step * (math.pi / total_step)) + 1)
-    """
-    global_step = _decay_step_counter()
-    with init_on_cpu():
-        decayed_lr = learning_rate * \
-                     (fluid.ops.cos(global_step * (math.pi / total_step)) + 1)/2
-    return decayed_lr
-
-
 def conv_bn_pool(input,
                  group,
                  out_ch,
@@ -158,7 +139,7 @@ def ctc_train_net(images, label, args, num_classes):
     L2_RATE = 0.0004
     LR = 1.0e-3
     MOMENTUM = 0.9
-    learning_rate_decay = cosine_decay
+    learning_rate_decay = None
     regularizer = fluid.regularizer.L2Decay(L2_RATE)
 
     fc_out = encoder_net(images, num_classes, regularizer=regularizer)
@@ -171,10 +152,10 @@ def ctc_train_net(images, label, args, num_classes):
     error_evaluator = fluid.evaluator.EditDistance(
         input=decoded_out, label=casted_label)
     inference_program = fluid.default_main_program().clone(for_test=True)
-    if learning_rate_decay == "cosine_decay":
-        learning_rate = cosine_decay(LR, args.total_step)
-    elif learning_rate_decay == "poly_decay":
-        learning_rate = poly_decay(LR, args.total_step)
+    if learning_rate_decay == "piecewise_decay":
+        learning_rate = fluid.layers.piecewise_decay([
+            args.total_step / 4, args.total_step / 2, args.total_step * 3 / 4
+        ], [LR, LR * 0.1, LR * 0.01, LR * 0.001])
     else:
         learning_rate = LR
 
