@@ -1,6 +1,6 @@
-export CUDA_VISIBLE_DEVICES=0,1
-python -u ../../infer_by_ckpt.py --batch_size 48  \
-                        --checkpoint deep_asr.pass_20.checkpoint \
+export CUDA_VISIBLE_DEVICES=2,3,4,5
+python -u ../../infer_by_ckpt.py --batch_size 96  \
+                        --checkpoint checkpoints/deep_asr.pass_20.checkpoint \
                         --infer_feature_lst data/test_feature.lst  \
                         --infer_label_lst data/test_label.lst  \
                         --mean_var data/aishell/global_mean_var \

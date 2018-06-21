@@ -60,6 +60,11 @@ def parse_args():
         default=1749,
         help='Number of classes in label. (default: %(default)d)')
     parser.add_argument(
+        '--num_threads',
+        type=int,
+        default=10,
+        help='The number of threads for decoding. (default: %(default)d)')
+    parser.add_argument(
         '--learning_rate',
         type=float,
         default=0.00016,
@@ -189,7 +194,7 @@ def infer_from_ckpt(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    trg_trans = get_trg_trans(args)
+    #trg_trans = get_trg_trans(args)
     # load checkpoint.
     fluid.io.load_persistables(exe, args.checkpoint)
 
@@ -238,7 +243,9 @@ def infer_from_ckpt(args):
         probs, lod = lodtensor_to_ndarray(results[0])
         infer_batch = split_infer_result(probs, lod)
 
-        decoder.decode_batch(name_lst, infer_batch)
+        decoded = decoder.decode_batch(name_lst, infer_batch, args.num_threads)
+        for res in decoded:
+            print(res.encode("utf8"))
         if args.post_matrix_path is not None:
             for index, sample in enumerate(infer_batch):
                 key = name_lst[index]

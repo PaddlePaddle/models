@@ -41,7 +41,7 @@ PYBIND11_MODULE(post_latgen_faster_mapped, m) {
           "and return the transcription.")
       .def("decode_batch",
            (std::vector<std::string> (Decoder::*)(
-               std::string,
+               std::vector<std::string>,
                const std::vector<std::vector<std::vector<kaldi::BaseFloat>>>&,
                size_t num_processes)) &
                Decoder::decode_batch,
