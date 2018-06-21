@@ -100,6 +100,83 @@ def generate_sample(sampler, image_width, image_height):
     return sampled_bbox
 
 
+# tangxu @ 2018-06-17
+# data-anchor-sampling
+def generate_sample(sampler, bbox_labels, image_width, image_height,
+                    size_num_vec, resize_width, resize_heigh):
+    num_gt = len(bbox_labels)
+    rng_rand = random.randint(1, num_gt)
+    if num_gt != 0:
+        rand_idx = rng_rand() % num_gt
+    else:
+        rand_idx = 0
+
+    if num_gt != 0:
+        xmin = bbox_labels[rand_idx][0]
+        ymin = bbox_labels[rand_idx][1]
+        xmax = bbox_labels[rand_idx][2]
+        ymax = bbox_labels[rand_idx][3]
+
+        face_xmin = xmin * image_width
+        face_ymin = ymin * image_height
+        face_wid = image_width * (xmax - xmin)
+        face_hei = image_height * (ymax - ymin)
+        range_size = 0
+
+        for scale_ind in range(0, len(size_num_vec)):
+            area = face_wid * face_hei
+
+            if area > pow(scale_array[scale_ind], 2) and area < pow(
+                    scale_array[scale_ind + 1], 2):
+                range_size = scale_ind + 1
+                break
+
+        scale_choose = 0.0
+        rng_rand_size = random.randint(1, range_size)
+        if range_size == 0:
+            rand_idx_size = range_size + 1
+        else:
+            rand_idx_size = rng_rand_size % range_size
+
+        scale_choose = random.randint(size_num_vec[rand_idx_size] / 2.0,
+                                      2.0 * size_num_vec[rand_idx_size])
+
+        sample_bbox_size = face_wid * resize_width / scale_choose
+
+        w_off_orig = 0.0
+        h_off_orig = 0.0
+        if sample_bbox_size < max(img_hei, img_wid):
+            if (face_wid <= sample_bbox_size):
+                w_off_orig = random.randint(
+                    face_xmin + face_wid - sample_bbox_size, face_xmin)
+            elif (face_wid > sample_bbox_size):
+                w_off_orig = random.randint(
+                    face_xmin, face_xmin + face_wid - sample_bbox_size)
+            if (face_hei <= sample_bbox_size):
+                h_off_orig = random.randint(
+                    face_ymin + face_hei - sample_bbox_size, face_ymin)
+            elif (face_hei > sample_bbox_size):
+                h_off_orig = random.randint(
+                    face_ymin, face_ymin + face_hei - sample_bbox_size)
+        elif (sample_bbox_size >= max(img_hei, img_wid)):
+            w_off_orig = random.randint(img_wid - sample_bbox_size, 0.0)
+            h_off_orig = random.randint(img_hei - sample_bbox_size, 0.0)
+
+        w_off_orig = floor(w_off_orig)
+        h_off_orig = floor(h_off_orig)
+
+        # Figure out top left coordinates.
+        w_off = 0.0
+        h_off = 0.0
+        w_off = float(w_off_orig / img_wid)
+        h_off = float(h_off_orig / img_hei)
+
+        sampled_bbox = bbox(w_off, h_off,
+                            w_off + float(sample_bbox_size / img_wid),
+                            h_off + float(sample_bbox_size / img_hei))
+        return sampled_bbox
+
+
 def jaccard_overlap(sample_bbox, object_bbox):
     if sample_bbox.xmin >= object_bbox.xmax or \
             sample_bbox.xmax <= object_bbox.xmin or \
@@ -177,12 +254,43 @@ def generate_batch_samples(batch_sampler, bbox_labels, image_width,
     return sampled_bbox
 
 
-def clip_bbox(src_bbox):
-    src_bbox.xmin = max(min(src_bbox.xmin, 1.0), 0.0)
-    src_bbox.ymin = max(min(src_bbox.ymin, 1.0), 0.0)
-    src_bbox.xmax = max(min(src_bbox.xmax, 1.0), 0.0)
-    src_bbox.ymax = max(min(src_bbox.ymax, 1.0), 0.0)
-    return src_bbox
+# tangxu @ 2018-06-17
+# data-anchor-sampling
+def generate_batch_samples(batch_sampler, bbox_labels, image_width,
+                           image_height, size_num_vec, resize_width,
+                           resize_heigh):
+    sampled_bbox = []
+    index = []
+    c = 0
+    for sampler in batch_sampler:
+        found = 0
+        for i in range(sampler.max_trial):
+            if found >= sampler.max_sample:
+                break
+            sample_bbox = generate_sample(sampler, bbox_labels, image_width,
+                                          image_height, size_num_vec,
+                                          resize_width, resize_heigh)
+            if satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
+                sampled_bbox.append(sample_bbox)
+                found = found + 1
+                index.append(c)
+        c = c + 1
+    return sampled_bbox
+
+
+def clip_bbox(src_bbox, out_of_range):
+    if not out_of_range:
+        src_bbox.xmin = max(min(src_bbox.xmin, 1.0), 0.0)
+        src_bbox.ymin = max(min(src_bbox.ymin, 1.0), 0.0)
+        src_bbox.xmax = max(min(src_bbox.xmax, 1.0), 0.0)
+        src_bbox.ymax = max(min(src_bbox.ymax, 1.0), 0.0)
+        return src_bbox
+    elif out_of_range:
+        src_bbox.xmin = src_bbox.xmin
+        src_bbox.ymin = src_bbox.ymin
+        src_bbox.xmax = src_bbox.xmax
+        src_bbox.ymax = src_bbox.ymax
+        return src_bbox
 
 
 def meet_emit_constraint(src_bbox, sample_bbox):
@@ -237,14 +345,86 @@ def transform_labels(bbox_labels, sample_bbox):
     return sample_labels
 
 
+# tangxu @ 2018-06-20
+# data-anchor-sampling
+def transform_labels_sampling(bbox_labels, sample_bbox):
+    sample_labels = []
+    for i in range(len(bbox_labels)):
+        sample_label = []
+        object_bbox = bbox(bbox_labels[i][1], bbox_labels[i][2],
+                           bbox_labels[i][3], bbox_labels[i][4])
+        if not meet_emit_constraint(object_bbox, sample_bbox):
+            continue
+        proj_bbox = project_bbox(object_bbox, sample_bbox)
+        if proj_bbox:
+            sample_label.append(bbox_labels[i][0])
+            sample_label.append(float(proj_bbox.xmin))
+            sample_label.append(float(proj_bbox.ymin))
+            sample_label.append(float(proj_bbox.xmax))
+            sample_label.append(float(proj_bbox.ymax))
+            sample_label = sample_label + bbox_labels[i][5:]
+            sample_labels.append(sample_label)
+    return sample_labels
+
+
 def crop_image(img, bbox_labels, sample_bbox, image_width, image_height):
-    sample_bbox = clip_bbox(sample_bbox)
+    out_of_range = false
+    sample_bbox = clip_bbox(sample_bbox, out_of_range)
     xmin = int(sample_bbox.xmin * image_width)
     xmax = int(sample_bbox.xmax * image_width)
     ymin = int(sample_bbox.ymin * image_height)
     ymax = int(sample_bbox.ymax * image_height)
+
     sample_img = img[ymin:ymax, xmin:xmax]
     sample_labels = transform_labels(bbox_labels, sample_bbox)
+    return sample_img, sample_labels
+
+
+# tangxu @ 2018-06-20
+# data-anchor-sampling
+def crop_image_sampling(img, bbox_labels, sample_bbox, image_width,
+                        image_height, resize_width, resize_heigh):
+    out_of_range = true
+    sample_bbox = clip_bbox(sample_bbox, out_of_range)
+    xmin = int(sample_bbox.xmin * image_width)
+    xmax = int(sample_bbox.xmax * image_width)
+    ymin = int(sample_bbox.ymin * image_height)
+    ymax = int(sample_bbox.ymax * image_height)
+
+    w_off = xmin
+    h_off = ymin
+    width = xmax - xmin
+    height = ymax - ymin
+
+    w_off = floor(w_off)
+    h_off = floor(h_off)
+    cross_xmin = max(0.0, float(w_off))
+    cross_ymin = max(0.0, float(h_off))
+    cross_xmax = min(float(w_off + width - 1.0), float(floor(img_width)))
+    cross_ymax = min(float(h_off + height - 1.0), float(floor(img_height)))
+    cross_width = cross_xmax - cross_xmin
+    cross_height = cross_ymax - cross_ymin
+
+    if w_off >= 0:
+        roi_xmin_after = 0
+    else:
+        roi_xmin_after = abs(w_off)
+
+    if h_off >= 0:
+        roi_ymin_after = 0
+    else:
+        roi_ymin_after = abs(h_off)
+    roi_width_after = cross_width
+    roi_height_after = cross_height
+
+    sample_img = np.zeros((width, height, 3))
+    sample_img[roi_xmin_after:roi_width_after, roi_ymin_after:
+               roi_height_after] = img[cross_xmin:cross_width, cross_ymin:
+                                       cross_height]
+    sample_img = cv2.resize(
+        sample_img, (resize_width, resize_heigh), interpolation=cv2.INTER_AREA)
+
+    sample_labels = transform_labels_sampling(bbox_labels, sample_bbox)
     return sample_img, sample_labels
 
 

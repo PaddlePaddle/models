@@ -22,6 +22,7 @@ import xml.etree.ElementTree
 import os
 import time
 import copy
+import random
 
 
 class Settings(object):
@@ -40,7 +41,6 @@ class Settings(object):
         self._ap_version = ap_version
         self._toy = toy
         self._data_dir = data_dir
-        self._apply_distort = apply_distort
         self._apply_expand = apply_expand
         self._resize_height = resize_h
         self._resize_width = resize_w
@@ -164,6 +164,63 @@ def preprocess(img, bbox_labels, mode, settings):
     return img, sampled_labels
 
 
+# tangxu @ 2018-06-17
+# use this to do data-anchor-sampling
+def data_anchor_sampling(img, bbox_labels, mode, settings):
+    img_width, img_height = img.size
+    sampled_labels = bbox_labels
+    if mode == 'train':
+        if settings._apply_distort:
+            img = image_util.distort_image(img, settings)
+        if settings._apply_expand:
+            img, bbox_labels, img_width, img_height = image_util.expand_image(
+                img, bbox_labels, img_width, img_height, settings)
+
+        # set the size_num
+        size_num_vec = np.array([16, 32, 64, 128, 256, 512])
+
+        # sampling
+        batch_sampler = []
+        # hard-code here
+        batch_sampler.append(
+            image_util.sampler(1, 10, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.2, 0.0,
+                               True))
+
+        sampled_bbox = image_util.generate_batch_samples(
+            batch_sampler, bbox_labels, img_width, img_height, size_num_vec,
+            settings._resize_width, settings._resize_height)
+
+        img = np.array(img)
+        if len(sampled_bbox) > 0:
+            idx = int(random.uniform(0, len(sampled_bbox)))
+            img, sampled_labels = image_util.crop_image_sampling(
+                img, bbox_labels, sampled_bbox[idx], img_width, img_height,
+                resize_width, resize_heigh)
+
+        img = Image.fromarray(img)
+    img = img.resize((settings.resize_w, settings.resize_h), Image.ANTIALIAS)
+    img = np.array(img)
+
+    if mode == 'train':
+        mirror = int(random.uniform(0, 2))
+        if mirror == 1:
+            img = img[:, ::-1, :]
+            for i in xrange(len(sampled_labels)):
+                tmp = sampled_labels[i][1]
+                sampled_labels[i][1] = 1 - sampled_labels[i][3]
+                sampled_labels[i][3] = 1 - tmp
+    # HWC to CHW
+    if len(img.shape) == 3:
+        img = np.swapaxes(img, 1, 2)
+        img = np.swapaxes(img, 1, 0)
+    # RBG to BGR
+    img = img[[2, 1, 0], :, :]
+    img = img.astype('float32')
+    img -= settings.img_mean
+    img = img * 0.007843
+    return img, sampled_labels
+
+
 def put_txt_in_dict(input_txt):
     with open(input_txt, 'r') as f_dir:
         lines_input_txt = f_dir.readlines()
@@ -259,7 +316,16 @@ def pyramidbox(settings, file_list, mode, shuffle):
                         bbox_sample.append(float(ymax) / im_height)
                         bbox_labels.append(bbox_sample)
 
-                im, sample_labels = preprocess(im, bbox_labels, mode, settings)
+                prob_sampling = random.random()
+                prob_setting = 0.5
+
+                if prob_sampling < prob_setting:
+                    im, sample_labels = preprocess(im, bbox_labels, mode,
+                                                   settings)
+                elif prob_sampling > prob_setting:
+                    im, sample_labels = data_anchor_sampling(im, bbox_labels,
+                                                             mode, settings)
+
                 sample_labels = np.array(sample_labels)
                 if len(sample_labels) == 0: continue
                 im = im.astype('float32')
@@ -268,7 +334,25 @@ def pyramidbox(settings, file_list, mode, shuffle):
                 difficults = [1] * len(boxes)
                 yield im, boxes, expand_bboxes(boxes), lbls, difficults
 
-            if mode == 'test':
+            if mode == 'val':
+                if settings.resize_w and settings.resize_h:
+                    im = im.resize((settings.resize_w, settings.resize_h),
+                                   Image.ANTIALIAS)
+                '''
+                img = np.array(im)
+                # HWC to CHW
+                if len(img.shape) == 3:
+                   img = np.swapaxes(img, 1, 2)
+                   img = np.swapaxes(img, 1, 0)
+                # RBG to BGR
+                img = img[[2, 1, 0], :, :]
+                img = img.astype('float32')
+                img -= settings.img_mean
+                img = img * 0.007843
+                img = [img]
+                img = np.array(img)
+                yield img, image_path 
+                '''
                 yield im, image_path
 
     return reader
@@ -278,8 +362,8 @@ def train(settings, file_list, shuffle=True):
     return pyramidbox(settings, file_list, 'train', shuffle)
 
 
-def test(settings, file_list):
-    return pyramidbox(settings, file_list, 'test', False)
+def val(settings, file_list):
+    return pyramidbox(settings, file_list, 'val', False)
 
 
 def infer(settings, image_path):
