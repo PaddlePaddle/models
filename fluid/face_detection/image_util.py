@@ -231,8 +231,6 @@ def satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
 def generate_batch_samples(batch_sampler, bbox_labels, image_width,
                            image_height):
     sampled_bbox = []
-    index = []
-    c = 0
     for sampler in batch_sampler:
         found = 0
         for i in range(sampler.max_trial):
@@ -242,8 +240,6 @@ def generate_batch_samples(batch_sampler, bbox_labels, image_width,
             if satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
                 sampled_bbox.append(sample_bbox)
                 found = found + 1
-                index.append(c)
-        c = c + 1
     return sampled_bbox
 
 
@@ -251,8 +247,6 @@ def generate_batch_random_samples(batch_sampler, bbox_labels, image_width,
                                   image_height, scale_array, resize_width,
                                   resize_height):
     sampled_bbox = []
-    index = []
-    c = 0
     for sampler in batch_sampler:
         found = 0
         for i in range(sampler.max_trial):
@@ -264,8 +258,6 @@ def generate_batch_random_samples(batch_sampler, bbox_labels, image_width,
             if satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
                 sampled_bbox.append(sample_bbox)
                 found = found + 1
-                index.append(c)
-        c = c + 1
     return sampled_bbox
 
 
