@@ -85,6 +85,15 @@ def preprocess(img, bbox_labels, mode, settings):
             sampled_bbox = image_util.generate_batch_random_samples(
                 batch_sampler, bbox_labels, img_width, img_height, scale_array,
                 settings.resize_width, settings.resize_height)
+            img = np.array(img)
+            if len(sampled_bbox) > 0:
+                idx = int(random.uniform(0, len(sampled_bbox)))
+                img, sampled_labels = image_util.crop_image_sampling(
+                    img, bbox_labels, sampled_bbox[idx], img_width, img_height,
+                    resize_width, resize_heigh)
+
+            img = Image.fromarray(img)
+
         else:
             # hard-code here
             batch_sampler.append(
@@ -250,8 +259,8 @@ def train(settings, file_list, shuffle=True):
     return pyramidbox(settings, file_list, 'train', shuffle)
 
 
-def val(settings, file_list):
-    return pyramidbox(settings, file_list, 'val', False)
+def test(settings, file_list):
+    return pyramidbox(settings, file_list, 'test', False)
 
 
 def infer(settings, image_path):

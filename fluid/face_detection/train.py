@@ -77,7 +77,7 @@ def train(args, config, train_file_list, optimizer_method):
         )
 
     optimizer.minimize(loss)
-    # fluid.memory_optimize(fluid.default_main_program())
+    #fluid.memory_optimize(fluid.default_main_program())
 
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

@@ -269,19 +269,12 @@ def generate_batch_random_samples(batch_sampler, bbox_labels, image_width,
     return sampled_bbox
 
 
-def clip_bbox(src_bbox, out_of_range=False):
-    if not out_of_range:
-        src_bbox.xmin = max(min(src_bbox.xmin, 1.0), 0.0)
-        src_bbox.ymin = max(min(src_bbox.ymin, 1.0), 0.0)
-        src_bbox.xmax = max(min(src_bbox.xmax, 1.0), 0.0)
-        src_bbox.ymax = max(min(src_bbox.ymax, 1.0), 0.0)
-        return src_bbox
-    else:
-        src_bbox.xmin = src_bbox.xmin
-        src_bbox.ymin = src_bbox.ymin
-        src_bbox.xmax = src_bbox.xmax
-        src_bbox.ymax = src_bbox.ymax
-        return src_bbox
+def clip_bbox(src_bbox):
+    src_bbox.xmin = max(min(src_bbox.xmin, 1.0), 0.0)
+    src_bbox.ymin = max(min(src_bbox.ymin, 1.0), 0.0)
+    src_bbox.xmax = max(min(src_bbox.xmax, 1.0), 0.0)
+    src_bbox.ymax = max(min(src_bbox.ymax, 1.0), 0.0)
+    return src_bbox
 
 
 def meet_emit_constraint(src_bbox, sample_bbox):
@@ -350,7 +343,7 @@ def crop_image(img, bbox_labels, sample_bbox, image_width, image_height):
 
 def crop_image_sampling(img, bbox_labels, sample_bbox, image_width,
                         image_height, resize_width, resize_height):
-    sample_bbox = clip_bbox(sample_bbox, True)
+    # no clipping here
     xmin = int(sample_bbox.xmin * image_width)
     xmax = int(sample_bbox.xmax * image_width)
     ymin = int(sample_bbox.ymin * image_height)
