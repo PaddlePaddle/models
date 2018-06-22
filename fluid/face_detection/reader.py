@@ -22,6 +22,7 @@ import xml.etree.ElementTree
 import os
 import time
 import copy
+import random
 
 
 class Settings(object):
@@ -36,112 +37,93 @@ class Settings(object):
                  apply_expand=True,
                  ap_version='11point',
                  toy=0):
-        self._dataset = dataset
-        self._ap_version = ap_version
-        self._toy = toy
-        self._data_dir = data_dir
-        self._apply_distort = apply_distort
-        self._apply_expand = apply_expand
-        self._resize_height = resize_h
-        self._resize_width = resize_w
-        self._img_mean = np.array(mean_value)[:, np.newaxis, np.newaxis].astype(
+        self.dataset = dataset
+        self.ap_version = ap_version
+        self.toy = toy
+        self.data_dir = data_dir
+        self.apply_distort = apply_distort
+        self.apply_expand = apply_expand
+        self.resize_height = resize_h
+        self.resize_width = resize_w
+        self.img_mean = np.array(mean_value)[:, np.newaxis, np.newaxis].astype(
             'float32')
-        self._expand_prob = 0.5
-        self._expand_max_ratio = 4
-        self._hue_prob = 0.5
-        self._hue_delta = 18
-        self._contrast_prob = 0.5
-        self._contrast_delta = 0.5
-        self._saturation_prob = 0.5
-        self._saturation_delta = 0.5
-        self._brightness_prob = 0.5
+        self.expand_prob = 0.5
+        self.expand_max_ratio = 4
+        self.hue_prob = 0.5
+        self.hue_delta = 18
+        self.contrast_prob = 0.5
+        self.contrast_delta = 0.5
+        self.saturation_prob = 0.5
+        self.saturation_delta = 0.5
+        self.brightness_prob = 0.5
         # _brightness_delta is the normalized value by 256
         # self._brightness_delta = 32
-        self._brightness_delta = 0.125
-
-    @property
-    def dataset(self):
-        return self._dataset
-
-    @property
-    def ap_version(self):
-        return self._ap_version
-
-    @property
-    def toy(self):
-        return self._toy
-
-    @property
-    def apply_expand(self):
-        return self._apply_expand
-
-    @property
-    def apply_distort(self):
-        return self._apply_distort
-
-    @property
-    def data_dir(self):
-        return self._data_dir
-
-    @data_dir.setter
-    def data_dir(self, data_dir):
-        self._data_dir = data_dir
-
-    @property
-    def label_list(self):
-        return self._label_list
-
-    @property
-    def resize_h(self):
-        return self._resize_height
-
-    @property
-    def resize_w(self):
-        return self._resize_width
-
-    @property
-    def img_mean(self):
-        return self._img_mean
+        self.brightness_delta = 0.125
+        self.scale = 0.007843  # 1 / 127.5
+        self.data_anchor_sampling_prob = 0.5
 
 
 def preprocess(img, bbox_labels, mode, settings):
     img_width, img_height = img.size
     sampled_labels = bbox_labels
     if mode == 'train':
-        if settings._apply_distort:
+        if settings.apply_distort:
             img = image_util.distort_image(img, settings)
-        if settings._apply_expand:
+        if settings.apply_expand:
             img, bbox_labels, img_width, img_height = image_util.expand_image(
                 img, bbox_labels, img_width, img_height, settings)
+
         # sampling
         batch_sampler = []
-        # hard-code here
-        batch_sampler.append(
-            image_util.sampler(1, 50, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                               True))
-        batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                               True))
-        batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                               True))
-        batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                               True))
-        batch_sampler.append(
-            image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                               True))
-        sampled_bbox = image_util.generate_batch_samples(
-            batch_sampler, bbox_labels, img_width, img_height)
 
-        img = np.array(img)
-        if len(sampled_bbox) > 0:
-            idx = int(random.uniform(0, len(sampled_bbox)))
-            img, sampled_labels = image_util.crop_image(
-                img, bbox_labels, sampled_bbox[idx], img_width, img_height)
+        prob = random.uniform(0., 1.)
+        if prob > settings.data_anchor_sampling_prob:
+            scale_array = np.array([16, 32, 64, 128, 256, 512])
+            batch_sampler.append(
+                image_util.sampler(1, 10, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.2,
+                                   0.0, True))
+            sampled_bbox = image_util.generate_batch_random_samples(
+                batch_sampler, bbox_labels, img_width, img_height, scale_array,
+                settings.resize_width, settings.resize_height)
+            img = np.array(img)
+            if len(sampled_bbox) > 0:
+                idx = int(random.uniform(0, len(sampled_bbox)))
+                img, sampled_labels = image_util.crop_image_sampling(
+                    img, bbox_labels, sampled_bbox[idx], img_width, img_height,
+                    resize_width, resize_heigh)
 
-        img = Image.fromarray(img)
-    img = img.resize((settings.resize_w, settings.resize_h), Image.ANTIALIAS)
+            img = Image.fromarray(img)
+
+        else:
+            # hard-code here
+            batch_sampler.append(
+                image_util.sampler(1, 50, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                                   0.0, True))
+            batch_sampler.append(
+                image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                                   0.0, True))
+            batch_sampler.append(
+                image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                                   0.0, True))
+            batch_sampler.append(
+                image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                                   0.0, True))
+            batch_sampler.append(
+                image_util.sampler(1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                                   0.0, True))
+            sampled_bbox = image_util.generate_batch_samples(
+                batch_sampler, bbox_labels, img_width, img_height)
+
+            img = np.array(img)
+            if len(sampled_bbox) > 0:
+                idx = int(random.uniform(0, len(sampled_bbox)))
+                img, sampled_labels = image_util.crop_image(
+                    img, bbox_labels, sampled_bbox[idx], img_width, img_height)
+
+            img = Image.fromarray(img)
+
+    img = img.resize((settings.resize_width, settings.resize_height),
+                     Image.ANTIALIAS)
     img = np.array(img)
 
     if mode == 'train':
@@ -160,7 +142,7 @@ def preprocess(img, bbox_labels, mode, settings):
     img = img[[2, 1, 0], :, :]
     img = img.astype('float32')
     img -= settings.img_mean
-    img = img * 0.007843
+    img = img * settings.scale
     return img, sampled_labels
 
 
@@ -180,7 +162,6 @@ def put_txt_in_dict(input_txt):
             dict_input_txt[num_class].append(tmp_line_txt)
         if '--' not in tmp_line_txt:
             if len(tmp_line_txt) > 6:
-                # tmp_line_txt = tmp_line_txt[:-2]
                 split_str = tmp_line_txt.split(' ')
                 x1_min = float(split_str[0])
                 y1_min = float(split_str[1])
@@ -288,8 +269,8 @@ def infer(settings, image_path):
         if img.mode == 'L':
             img = im.convert('RGB')
         im_width, im_height = img.size
-        if settings.resize_w and settings.resize_h:
-            img = img.resize((settings.resize_w, settings.resize_h),
+        if settings.resize_width and settings.resize_height:
+            img = img.resize((settings.resize_width, settings.resize_height),
                              Image.ANTIALIAS)
         img = np.array(img)
         # HWC to CHW
@@ -300,9 +281,7 @@ def infer(settings, image_path):
         img = img[[2, 1, 0], :, :]
         img = img.astype('float32')
         img -= settings.img_mean
-        img = img * 0.007843
-        img = [img]
-        img = np.array(img)
-        return img
+        img = img * settings.scale
+        return np.array([img])
 
     return batch_reader
