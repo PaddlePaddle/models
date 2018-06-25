@@ -29,8 +29,8 @@ fi
 
 mkdir -p $results_root
 
-model_prototxt="models.caffe/$model_name/${model_name}.prototxt"
-model_caffemodel="models.caffe/${model_name}/${model_name}.caffemodel"
+prototxt="models.caffe/$model_name/${model_name}.prototxt"
+caffemodel="models.caffe/${model_name}/${model_name}.caffemodel"
 
 #1, dump layers' results from paddle
 paddle_results="$results_root/${model_name}.paddle"
@@ -47,7 +47,11 @@ mv results.paddle $paddle_results
 caffe_results="$results_root/${model_name}.caffe"
 rm -rf $caffe_results
 rm -rf "results.caffe"
-cfpython ./infer.py caffe $model_prototxt $model_caffemodel $paddle_results/data.npy
+PYTHON=`which cfpython`
+if [[ -z $PYTHON ]];then
+    PYTHON=`which python`
+fi
+$PYTHON ./infer.py caffe $prototxt $caffemodel $paddle_results/data.npy
 if [[ $? -ne 0 ]] || [[ ! -e "results.caffe" ]];then
     echo "not found caffe's results, maybe failed to do inference with caffe"
     exit 1
@@ -55,10 +59,25 @@ fi
 mv results.caffe $caffe_results
 
 #3, extract layer names
-cat $model_prototxt | grep name | perl -ne 'if(/^\s*name:\s+\"([^\"]+)/){ print $1."\n";}' >.layer_names
+cat $prototxt | grep name | perl -ne 'if(/^\s*name\s*:\s+\"([^\"]+)/){ print $1."\n";}' >.layer_names
+
+final_layer=$(cat $prototxt | perl -ne 'if(/^\s*top\s*:\s+\"([^\"]+)/){ print $1."\n";}' | tail -n1)
+ret=$(grep "^$final_layer$" .layer_names | wc -l)
+if [[ $ret -eq 0 ]];then
+    echo $final_layer >>.layer_names
+fi
 
 #4, compare one by one
-for i in $(cat ".layer_names" | tail -n1);do
+#for i in $(cat .layer_names);do
+for i in $(cat .layer_names | tail -n1);do
+    i=${i//\//_}
     echo "process $i"
-    python compare.py $caffe_results/${i}.npy $paddle_results/${i}.npy
+    pd_npy=$(find $paddle_results/ -iname "${i}.*npy" | grep deleted -v | head -n1)
+    #pd_npy="$paddle_results/${i}.npy"
+    if [[ -f $pd_npy ]];then
+        $PYTHON compare.py $caffe_results/${i}.npy $pd_npy
+    else
+        echo "not found npy file[${i}.*npy] for layer[$i]"
+        exit 1
+    fi
 done

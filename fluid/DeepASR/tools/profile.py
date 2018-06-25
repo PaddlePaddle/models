@@ -13,6 +13,7 @@ import _init_paths
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
+import data_utils.augmentor.trans_delay as trans_delay
 import data_utils.async_data_reader as reader
 from model_utils.model import stacked_lstmp_model
 from data_utils.util import lodtensor_to_ndarray
@@ -87,7 +88,7 @@ def parse_args():
     parser.add_argument(
         '--max_batch_num',
         type=int,
-        default=10,
+        default=11,
         help='Maximum number of batches for profiling. (default: %(default)d)')
     parser.add_argument(
         '--first_batches_to_skip',
@@ -146,10 +147,10 @@ def profile(args):
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),
         trans_mean_variance_norm.TransMeanVarianceNorm(args.mean_var),
-        trans_splice.TransSplice()
+        trans_splice.TransSplice(5, 5), trans_delay.TransDelay(5)
     ]
 
-    data_reader = reader.AsyncDataReader(args.feature_lst, args.label_lst)
+    data_reader = reader.AsyncDataReader(args.feature_lst, args.label_lst, -1)
     data_reader.set_transformers(ltrans)
 
     feature_t = fluid.LoDTensor()
@@ -169,6 +170,8 @@ def profile(args):
                 frames_seen = 0
             # load_data
             (features, labels, lod, _) = batch_data
+            features = np.reshape(features, (-1, 11, 3, args.frame_dim))
+            features = np.transpose(features, (0, 2, 1, 3))
             feature_t.set(features, place)
             feature_t.set_lod([lod])
             label_t.set(labels, place)

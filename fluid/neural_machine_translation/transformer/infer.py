@@ -319,7 +319,7 @@ def infer(args):
             ModelHyperParams.n_layer, ModelHyperParams.n_head,
             ModelHyperParams.d_key, ModelHyperParams.d_value,
             ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
-            ModelHyperParams.dropout)
+            ModelHyperParams.dropout, ModelHyperParams.weight_sharing)
 
     decoder_program = fluid.Program()
     with fluid.program_guard(main_program=decoder_program):
@@ -328,7 +328,7 @@ def infer(args):
             ModelHyperParams.n_layer, ModelHyperParams.n_head,
             ModelHyperParams.d_key, ModelHyperParams.d_value,
             ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
-            ModelHyperParams.dropout)
+            ModelHyperParams.dropout, ModelHyperParams.weight_sharing)
 
     # Load model parameters of encoder and decoder separately from the saved
     # transformer model.

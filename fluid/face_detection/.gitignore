@@ -1,0 +1,7 @@
+model/
+pretrained/
+data/
+label/
+*.swp
+*.log
+infer_results/

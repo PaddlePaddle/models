@@ -64,6 +64,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
         place=place, feed_list=[image, gt_box, gt_label, difficult])
 
     def test():
+        # switch network to test mode (i.e. batch norm test mode)
         test_program = fluid.default_main_program().clone(for_test=True)
         with fluid.program_guard(test_program):
             map_eval = fluid.evaluator.DetectionMAP(
@@ -79,12 +80,12 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
         for batch_id, data in enumerate(test_reader()):
-            test_map = exe.run(test_program,
-                               feed=feeder.feed(data),
-                               fetch_list=[accum_map])
+            test_map, = exe.run(test_program,
+                                feed=feeder.feed(data),
+                                fetch_list=[accum_map])
             if batch_id % 20 == 0:
-                print("Batch {0}, map {1}".format(batch_id, test_map[0]))
-        print("Test model {0}, map {1}".format(model_dir, test_map[0]))
+                print("Batch {0}, map {1}".format(batch_id, test_map))
+        print("Test model {0}, map {1}".format(model_dir, test_map))
 
     test()
 
@@ -96,10 +97,14 @@ if __name__ == '__main__':
     data_dir = 'data/pascalvoc'
     test_list = 'test.txt'
     label_file = 'label_list'
+
+    if not os.path.exists(args.model_dir):
+        raise ValueError("The model path [%s] does not exist." %
+                         (args.model_dir))
     if 'coco' in args.dataset:
-        data_dir = './data/coco'
+        data_dir = 'data/coco'
         if '2014' in args.dataset:
-            test_list = 'annotations/instances_minival2014.json'
+            test_list = 'annotations/instances_val2014.json'
         elif '2017' in args.dataset:
             test_list = 'annotations/instances_val2017.json'
 

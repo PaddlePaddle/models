@@ -49,26 +49,14 @@ def multi_head_attention(queries,
         """
         q = layers.fc(input=queries,
                       size=d_key * n_head,
-                      param_attr=fluid.initializer.Xavier(
-                          uniform=False,
-                          fan_in=d_model * d_key,
-                          fan_out=n_head * d_key),
                       bias_attr=False,
                       num_flatten_dims=2)
         k = layers.fc(input=keys,
                       size=d_key * n_head,
-                      param_attr=fluid.initializer.Xavier(
-                          uniform=False,
-                          fan_in=d_model * d_key,
-                          fan_out=n_head * d_key),
                       bias_attr=False,
                       num_flatten_dims=2)
         v = layers.fc(input=values,
                       size=d_value * n_head,
-                      param_attr=fluid.initializer.Xavier(
-                          uniform=False,
-                          fan_in=d_model * d_value,
-                          fan_out=n_head * d_value),
                       bias_attr=False,
                       num_flatten_dims=2)
         return q, k, v
@@ -168,7 +156,6 @@ def multi_head_attention(queries,
     # Project back to the model size.
     proj_out = layers.fc(input=out,
                          size=d_model,
-                         param_attr=fluid.initializer.Xavier(uniform=False),
                          bias_attr=False,
                          num_flatten_dims=2)
     # global FLAG
@@ -188,14 +175,8 @@ def positionwise_feed_forward(x, d_inner_hid, d_hid):
     hidden = layers.fc(input=x,
                        size=d_inner_hid,
                        num_flatten_dims=2,
-                       param_attr=fluid.initializer.Uniform(
-                           low=-(d_hid**-0.5), high=(d_hid**-0.5)),
                        act="relu")
-    out = layers.fc(input=hidden,
-                    size=d_hid,
-                    num_flatten_dims=2,
-                    param_attr=fluid.initializer.Uniform(
-                        low=-(d_inner_hid**-0.5), high=(d_inner_hid**-0.5)))
+    out = layers.fc(input=hidden, size=d_hid, num_flatten_dims=2)
     return out
 
 
@@ -233,6 +214,7 @@ def prepare_encoder(src_word,
                     src_max_len,
                     dropout_rate=0.,
                     src_data_shape=None,
+                    word_emb_param_name=None,
                     pos_enc_param_name=None):
     """Add word embeddings and position encodings.
     The output tensor has a shape of:
@@ -242,7 +224,10 @@ def prepare_encoder(src_word,
     src_word_emb = layers.embedding(
         src_word,
         size=[src_vocab_size, src_emb_dim],
-        param_attr=fluid.initializer.Normal(0., 1.))
+        param_attr=fluid.ParamAttr(
+            name=word_emb_param_name,
+            initializer=fluid.initializer.Normal(0., src_emb_dim**-0.5)))
+    src_word_emb = layers.scale(x=src_word_emb, scale=src_emb_dim**0.5)
     src_pos_enc = layers.embedding(
         src_pos,
         size=[src_max_len, src_emb_dim],
@@ -447,7 +432,12 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
+        weight_sharing,
         label_smooth_eps, ):
+    if weight_sharing:
+        assert src_vocab_size == src_vocab_size, (
+            "Vocabularies in source and target should be same for weight sharing."
+        )
     enc_inputs = make_all_inputs(encoder_data_input_fields +
                                  encoder_util_input_fields)
 
@@ -461,6 +451,7 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
+        weight_sharing,
         enc_inputs, )
 
     dec_inputs = make_all_inputs(decoder_data_input_fields[:-1] +
@@ -476,6 +467,7 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
+        weight_sharing,
         dec_inputs,
         enc_output, )
 
@@ -507,6 +499,7 @@ def wrap_encoder(src_vocab_size,
                  d_model,
                  d_inner_hid,
                  dropout_rate,
+                 weight_sharing,
                  enc_inputs=None):
     """
     The wrapper assembles together all needed layers for the encoder.
@@ -528,7 +521,8 @@ def wrap_encoder(src_vocab_size,
         d_model,
         max_length,
         dropout_rate,
-        src_data_shape, )
+        src_data_shape,
+        word_emb_param_name=word_emb_param_names[0])
     enc_output = encoder(
         enc_input,
         src_slf_attn_bias,
@@ -553,6 +547,7 @@ def wrap_decoder(trg_vocab_size,
                  d_model,
                  d_inner_hid,
                  dropout_rate,
+                 weight_sharing,
                  dec_inputs=None,
                  enc_output=None,
                  caches=None):
@@ -579,7 +574,9 @@ def wrap_decoder(trg_vocab_size,
         d_model,
         max_length,
         dropout_rate,
-        trg_data_shape, )
+        trg_data_shape,
+        word_emb_param_name=word_emb_param_names[0]
+        if weight_sharing else word_emb_param_names[1])
     dec_output = decoder(
         dec_input,
         enc_output,
@@ -598,13 +595,22 @@ def wrap_decoder(trg_vocab_size,
         src_attn_post_softmax_shape,
         caches, )
     # Return logits for training and probs for inference.
-    predict = layers.reshape(
-        x=layers.fc(input=dec_output,
-                    size=trg_vocab_size,
-                    bias_attr=False,
-                    num_flatten_dims=2),
-        shape=[-1, trg_vocab_size],
-        act="softmax" if dec_inputs is None else None)
+    if weight_sharing:
+        predict = layers.reshape(
+            x=layers.matmul(
+                x=dec_output,
+                y=fluid.get_var(word_emb_param_names[0]),
+                transpose_y=True),
+            shape=[-1, trg_vocab_size],
+            act="softmax" if dec_inputs is None else None)
+    else:
+        predict = layers.reshape(
+            x=layers.fc(input=dec_output,
+                        size=trg_vocab_size,
+                        bias_attr=False,
+                        num_flatten_dims=2),
+            shape=[-1, trg_vocab_size],
+            act="softmax" if dec_inputs is None else None)
     return predict
 
 

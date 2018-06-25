@@ -1,32 +1,31 @@
 ﻿
 
-运行本目录下的程序示例需要使用PaddlePaddle develop最新版本。如果您的PaddlePaddle安装版本低于此要求，请按照安装文档中的说明更新PaddlePaddle安装版本。
+运行本目录下的程序示例需要使用PaddlePaddle develop最新版本。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
 
-# Optical Character Recognition
+## 代码结构
+```
+├── ctc_reader.py  # 下载、读取、处理数据。
+├── crnn_ctc_model.py   # 定义了训练网络、预测网络和evaluate网络。
+├── ctc_train.py   # 用于模型的训练。
+├── infer.py   # 加载训练好的模型文件，对新数据进行预测。
+├── eval.py     # 评估模型在指定数据集上的效果。
+└── utils.py    # 定义通用的函数。
+```
 
-这里将介绍如何在PaddlePaddle Fluid下使用CRNN-CTC 和 CRNN-Attention模型对图片中的文字内容进行识别。
 
-## 1. CRNN-CTC
+## 简介
 
 本章的任务是识别含有单行汉语字符图片，首先采用卷积将图片转为特征图, 然后使用`im2sequence op`将特征图转为序列，通过`双向GRU`学习到序列特征。训练过程选用的损失函数为CTC(Connectionist Temporal Classification) loss，最终的评估指标为样本级别的错误率。
 
-本路径下各个文件的作用如下：
-
-- **ctc_reader.py :** 下载、读取、处理数据。提供方法`train()` 和 `test()` 分别产生训练集和测试集的数据迭代器。
-- **crnn_ctc_model.py :** 在该脚本中定义了训练网络、预测网络和evaluate网络。
-- **ctc_train.py :** 用于模型的训练，可通过命令`python train.py --help` 获得使用方法。
-- **infer.py :** 加载训练好的模型文件，对新数据进行预测。可通过命令`python infer.py --help` 获得使用方法。
-- **eval.py :** 评估模型在指定数据集上的效果。可通过命令`python infer.py --help` 获得使用方法。
-- **utility.py :** 实现的一些通用方法，包括参数配置、tensor的构造等。
 
 
-### 1.1 数据
+## 数据
 
 数据的下载和简单预处理都在`ctc_reader.py`中实现。
 
-#### 1.1.1 数据格式
+### 数据示例
 
-我们使用的训练和测试数据如`图1`所示，每张图片包含单行不定长的中文字符串，这些图片都是经过检测算法进行预框选处理的。
+我们使用的训练和测试数据如`图1`所示，每张图片包含单行不定长的英文字符串，这些图片都是经过检测算法进行预框选处理的。
 
 <p align="center">
 <img src="images/demo.jpg" width="620" hspace='10'/> <br/>
@@ -35,12 +34,12 @@
 
 在训练集中，每张图片对应的label是汉字在词典中的索引。 `图1` 对应的label如下所示：
 ```
-3835,8371,7191,2369,6876,4162,1938,168,1517,4590,3793
+80,84,68,82,83,72,78,77,68,67
 ```
-在上边这个label中，`3835` 表示字符‘两’的索引，`4590` 表示中文字符逗号的索引。
+在上边这个label中，`80` 表示字符`Q`的索引，`67` 表示英文字符`D`的索引。
 
 
-#### 1.1.2 数据准备
+### 数据准备
 
 **A. 训练集**
 
@@ -105,7 +104,9 @@ data/test_images/00003.jpg
 
 第三种：从stdin读入一张图片的path，然后进行一次inference.
 
-#### 1.2 训练
+## 模型训练与预测
+
+### 训练
 
 使用默认数据在GPU单卡上训练:
 
@@ -121,7 +122,7 @@ env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
 
 执行`python ctc_train.py --help`可查看更多使用方式和参数详细说明。
 
-图2为使用默认参数和默认数据集训练的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。在45轮迭代训练中，测试集上最低错误率为第60轮的21.11%.
+图2为使用默认参数和默认数据集训练的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。在60轮迭代训练中，测试集上最低错误率为第32轮的22.0%.
 
 <p align="center">
 <img src="images/train.jpg" width="620" hspace='10'/> <br/>
@@ -130,7 +131,7 @@ env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
 
 
 
-### 1.3 评估
+## 测试
 
 通过以下命令调用评估脚本用指定数据集对模型进行评估：
 
@@ -144,7 +145,7 @@ env CUDA_VISIBLE_DEVICE=0 python eval.py \
 执行`python ctc_train.py --help`可查看参数详细说明。
 
 
-### 1.4 预测
+### 预测
 
 从标准输入读取一张图片的路径，并对齐进行预测：
 
@@ -176,5 +177,3 @@ env CUDA_VISIBLE_DEVICE=0 python infer.py \
     --model_path="models/model_00044_15000" \
     --input_images_list="data/test.list"
 ```
-
->注意：因为版权原因，我们暂时停止提供中文数据集的下载和使用服务，你通过`ctc_reader.py`自动下载的数据将是含有30W图片的英文数据集。在英文数据集上的训练结果会稍后发布。

@@ -181,6 +181,20 @@ class SubNodeFuser(object):
     '''
     An abstract helper for merging a single-child with its single-parent.
     '''
+    _traced_names = {}
+
+    @classmethod
+    def traced_names(cls):
+        return cls._traced_names
+
+    @classmethod
+    def trace(cls, fname, tname):
+        """ recording the names mapping,
+            the value of 'fname' will be replaced by value of 'tname'
+        """
+        if fname not in cls._traced_names:
+            cls._traced_names[fname] = []
+        cls._traced_names[fname].append(tname)
 
     def __call__(self, graph):
         nodes = graph.nodes
@@ -234,6 +248,7 @@ class ReLUFuser(SubNodeFuser):
                 child.kind == NodeKind.ReLU)
 
     def merge(self, parent, child):
+        SubNodeFuser.trace(parent.name, child.name)
         parent.metadata['relu'] = True
         parent.metadata['relu_negative_slope'] = child.parameters.negative_slope
 
@@ -255,6 +270,7 @@ class BatchNormScaleBiasFuser(SubNodeFuser):
                 child.parameters.bias_term == True)
 
     def merge(self, parent, child):
+        SubNodeFuser.trace(parent.name, child.name)
         parent.scale_bias_node = child
 
 
@@ -318,7 +334,9 @@ class ParameterNamer(object):
                 if len(node.data) == 4:
                     names += ('scale', 'offset')
             elif node.kind == NodeKind.Scale:
-                names = ('scale', 'offset')
+                names = ('scale', )
+                if getattr(node.parameters, 'bias_term', False):
+                    names = ('scale', 'offset')
             else:
                 warn('Unhandled parameters when naming this it[%s]' %
                      (node.kind))

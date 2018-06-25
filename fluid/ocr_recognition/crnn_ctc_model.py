@@ -1,4 +1,7 @@
 import paddle.fluid as fluid
+from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
+from paddle.fluid.initializer import init_on_cpu
+import math
 
 
 def conv_bn_pool(input,
@@ -8,7 +11,8 @@ def conv_bn_pool(input,
                  param=None,
                  bias=None,
                  param_0=None,
-                 is_test=False):
+                 is_test=False,
+                 pooling=True):
     tmp = input
     for i in xrange(group):
         tmp = fluid.layers.conv2d(
@@ -19,32 +23,25 @@ def conv_bn_pool(input,
             param_attr=param if param_0 is None else param_0,
             act=None,  # LinearActivation
             use_cudnn=True)
-        #tmp = fluid.layers.Print(tmp)
         tmp = fluid.layers.batch_norm(
             input=tmp,
             act=act,
             param_attr=param,
             bias_attr=bias,
             is_test=is_test)
-    tmp = fluid.layers.pool2d(
-        input=tmp,
-        pool_size=2,
-        pool_type='max',
-        pool_stride=2,
-        use_cudnn=True,
-        ceil_mode=True)
+    if pooling:
+        tmp = fluid.layers.pool2d(
+            input=tmp,
+            pool_size=2,
+            pool_type='max',
+            pool_stride=2,
+            use_cudnn=True,
+            ceil_mode=True)
 
     return tmp
 
 
-def ocr_convs(input,
-              num,
-              with_bn,
-              regularizer=None,
-              gradient_clip=None,
-              is_test=False):
-    assert (num % 4 == 0)
-
+def ocr_convs(input, regularizer=None, gradient_clip=None, is_test=False):
     b = fluid.ParamAttr(
         regularizer=regularizer,
         gradient_clip=gradient_clip,
@@ -63,7 +60,8 @@ def ocr_convs(input,
 
     tmp = conv_bn_pool(tmp, 2, [32, 32], param=w1, bias=b, is_test=is_test)
     tmp = conv_bn_pool(tmp, 2, [64, 64], param=w1, bias=b, is_test=is_test)
-    tmp = conv_bn_pool(tmp, 2, [128, 128], param=w1, bias=b, is_test=is_test)
+    tmp = conv_bn_pool(
+        tmp, 2, [128, 128], param=w1, bias=b, is_test=is_test, pooling=False)
     return tmp
 
 
@@ -75,8 +73,6 @@ def encoder_net(images,
                 is_test=False):
     conv_features = ocr_convs(
         images,
-        8,
-        True,
         regularizer=regularizer,
         gradient_clip=gradient_clip,
         is_test=is_test)
@@ -143,6 +139,7 @@ def ctc_train_net(images, label, args, num_classes):
     L2_RATE = 0.0004
     LR = 1.0e-3
     MOMENTUM = 0.9
+    learning_rate_decay = None
     regularizer = fluid.regularizer.L2Decay(L2_RATE)
 
     fc_out = encoder_net(images, num_classes, regularizer=regularizer)
@@ -155,7 +152,15 @@ def ctc_train_net(images, label, args, num_classes):
     error_evaluator = fluid.evaluator.EditDistance(
         input=decoded_out, label=casted_label)
     inference_program = fluid.default_main_program().clone(for_test=True)
-    optimizer = fluid.optimizer.Momentum(learning_rate=LR, momentum=MOMENTUM)
+    if learning_rate_decay == "piecewise_decay":
+        learning_rate = fluid.layers.piecewise_decay([
+            args.total_step / 4, args.total_step / 2, args.total_step * 3 / 4
+        ], [LR, LR * 0.1, LR * 0.01, LR * 0.001])
+    else:
+        learning_rate = LR
+
+    optimizer = fluid.optimizer.Momentum(
+        learning_rate=learning_rate, momentum=MOMENTUM)
     _, params_grads = optimizer.minimize(sum_cost)
     model_average = None
     if args.average_window > 0:

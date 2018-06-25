@@ -1,69 +1,92 @@
 import os
-import sys
 import numpy as np
-import argparse
-import functools
-
+import time
+import sys
 import paddle
 import paddle.fluid as fluid
-from utility import add_arguments, print_arguments
-from se_resnext import SE_ResNeXt
+import models
 import reader
+import argparse
+import functools
+from models.learning_rate import cosine_decay
+from utility import add_arguments, print_arguments
+import math
 
 parser = argparse.ArgumentParser(description=__doc__)
-add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('batch_size',       int,   1,        "Minibatch size.")
-add_arg('use_gpu',          bool,  True,      "Whether to use GPU or not.")
-add_arg('test_list',        str,   '',        "The testing data lists.")
-add_arg('num_layers',       int,  50,         "How many layers for SE-ResNeXt model.")
-add_arg('model_dir',        str,   '',        "The model path.")
+add_arg = functools.partial(add_arguments, argparser=parser)
+add_arg('batch_size',       int,  256,                  "Minibatch size.")
+add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
+add_arg('class_dim',        int,  1000,                 "Class number.")
+add_arg('image_shape',      str,  "3,224,224",          "Input image size")
+add_arg('with_mem_opt',     bool, True,                 "Whether to use memory optimization or not.")
+add_arg('pretrained_model', str,  None,                 "Whether to use pretrained model.")
+add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
 # yapf: enable
+
+model_list = [m for m in dir(models) if "__" not in m]
 
 
 def infer(args):
-    class_dim = 1000
-    image_shape = [3, 224, 224]
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    out = SE_ResNeXt(input=image, class_dim=class_dim, layers=args.num_layers)
-    out = fluid.layers.softmax(input=out)
+    # parameters from arguments
+    class_dim = args.class_dim
+    model_name = args.model
+    pretrained_model = args.pretrained_model
+    with_memory_optimization = args.with_mem_opt
+    image_shape = [int(m) for m in args.image_shape.split(",")]
 
-    inference_program = fluid.default_main_program().clone(for_test=True)
+    assert model_name in model_list, "{} is not in lists: {}".format(args.model,
+                                                                     model_list)
+
+    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
+
+    # model definition
+    model = models.__dict__[model_name]()
+
+    if model_name is "GoogleNet":
+        out, _, _ = model.net(input=image, class_dim=class_dim)
+    else:
+        out = model.net(input=image, class_dim=class_dim)
+
+    test_program = fluid.default_main_program().clone(for_test=True)
+
+    if with_memory_optimization:
+        fluid.memory_optimize(fluid.default_main_program())
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
 
-    if not os.path.exists(args.model_dir):
-        raise ValueError("The model path [%s] does not exist." %
-                         (args.model_dir))
-    if not os.path.exists(args.test_list):
-        raise ValueError("The test lists [%s] does not exist." %
-                         (args.test_list))
+    if pretrained_model:
 
-    def if_exist(var):
-        return os.path.exists(os.path.join(args.model_dir, var.name))
+        def if_exist(var):
+            return os.path.exists(os.path.join(pretrained_model, var.name))
 
-    fluid.io.load_vars(exe, args.model_dir, predicate=if_exist)
+        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    test_reader = paddle.batch(
-        reader.infer(args.test_list), batch_size=args.batch_size)
+    test_batch_size = 1
+    test_reader = paddle.batch(reader.test(), batch_size=test_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
-    fetch_list = [out]
+    fetch_list = [out.name]
 
     TOPK = 1
     for batch_id, data in enumerate(test_reader()):
-        result = exe.run(inference_program,
-                         feed=feeder.feed(data),
-                         fetch_list=fetch_list)
-        result = result[0]
-        pred_label = np.argsort(result)[::-1][0][0]
-        print("Test {0}-score {1}, class {2}: "
-              .format(batch_id, result[0][pred_label], pred_label))
+        result = exe.run(test_program,
+                         fetch_list=fetch_list,
+                         feed=feeder.feed(data))
+        result = result[0][0]
+        pred_label = np.argsort(result)[::-1][:TOPK]
+        print("Test-{0}-score: {1}, class {2}"
+              .format(batch_id, result[pred_label], pred_label))
         sys.stdout.flush()
 
 
-if __name__ == '__main__':
+def main():
     args = parser.parse_args()
     print_arguments(args)
     infer(args)
+
+
+if __name__ == '__main__':
+    main()

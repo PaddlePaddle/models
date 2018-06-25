@@ -78,7 +78,7 @@ class MyNet(object):
             exe,
             main_program=None,
             model_filename=model_filename,
-            params_filename=model_filename)
+            params_filename=params_filename)
         return 0
 
 

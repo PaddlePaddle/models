@@ -8,6 +8,7 @@ import numpy as np
 import data_utils.augmentor.trans_mean_variance_norm as trans_mean_variance_norm
 import data_utils.augmentor.trans_add_delta as trans_add_delta
 import data_utils.augmentor.trans_splice as trans_splice
+import data_utils.augmentor.trans_delay as trans_delay
 
 
 class TestTransMeanVarianceNorm(unittest.TestCase):
@@ -110,6 +111,25 @@ class TestTransSplict(unittest.TestCase):
                         cur_val += 1.0
                     for k in xrange(10):
                         self.assertAlmostEqual(feature[i][j * 10 + k], cur_val)
+
+
+class TestTransDelay(unittest.TestCase):
+    """unittest TransDelay
+    """
+
+    def test_perform(self):
+        label = np.zeros((10, 1), dtype="int64")
+        for i in xrange(10):
+            label[i][0] = i
+
+        trans = trans_delay.TransDelay(5)
+        (_, label, _) = trans.perform_trans((None, label, None))
+
+        for i in xrange(5):
+            self.assertAlmostEqual(label[i + 5][0], i)
+
+        for i in xrange(5):
+            self.assertAlmostEqual(label[i][0], 0)
 
 
 if __name__ == '__main__':
