@@ -1,5 +1,5 @@
 # 基于PaddlePaddle的Fluid版本复现DQN, DoubleDQN, DuelingDQN三个模型
-
+基于Paddle下一代API fluid复现了深度强化学习领域的DQN模型，在经典的Atari 游戏上复现了论文同等水平的指标，模型接收游戏的图像作为输入，采用端到端的模型直接预测下一步要执行的控制信号，本仓库一共包含以下3类模型。
 + DQN模型： 
 [Human-level Control Through Deep Reinforcement Learning](http://www.nature.com/nature/journal/v518/n7540/full/nature14236.html)
 + DoubleDQN模型：
@@ -7,7 +7,7 @@
 + DuelingDQN模型：
 [Dueling Network Architectures for Deep Reinforcement Learning](http://proceedings.mlr.press/v48/wangf16.html)
 
-# Atari游戏表现
+# 模型效果：Atari游戏表现
 ## [Atari游戏介绍](https://gym.openai.com/envs/#atari)
 
 + Pong游戏训练结果
