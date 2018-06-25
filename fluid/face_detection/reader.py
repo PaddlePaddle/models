@@ -23,6 +23,7 @@ import os
 import time
 import copy
 import random
+import cv2
 
 
 class Settings(object):
@@ -63,7 +64,7 @@ class Settings(object):
         self.data_anchor_sampling_prob = 0.5
 
 
-def preprocess(img, bbox_labels, mode, settings):
+def preprocess(img, bbox_labels, mode, settings, image_path):
     img_width, img_height = img.size
     sampled_labels = bbox_labels
     if mode == 'train':
@@ -86,14 +87,16 @@ def preprocess(img, bbox_labels, mode, settings):
                 batch_sampler, bbox_labels, img_width, img_height, scale_array,
                 settings.resize_width, settings.resize_height)
             img = np.array(img)
+            #img_save = Image.fromarray(img)
             if len(sampled_bbox) > 0:
                 idx = int(random.uniform(0, len(sampled_bbox)))
                 img, sampled_labels = image_util.crop_image_sampling(
                     img, bbox_labels, sampled_bbox[idx], img_width, img_height,
-                    resize_width, resize_heigh)
+                    settings.resize_width, settings.resize_height)
 
+            img = img.astype('uint8')
             img = Image.fromarray(img)
-
+            #img.save('final_img.jpg')
         else:
             # hard-code here
             batch_sampler.append(
@@ -214,6 +217,7 @@ def pyramidbox(settings, file_list, mode, shuffle):
             image_path = os.path.join(settings.data_dir, image_name)
 
             im = Image.open(image_path)
+            #im.save('basic_orig_img.jpg')
             if im.mode == 'L':
                 im = im.convert('RGB')
             im_width, im_height = im.size
@@ -240,7 +244,8 @@ def pyramidbox(settings, file_list, mode, shuffle):
                         bbox_sample.append(float(ymax) / im_height)
                         bbox_labels.append(bbox_sample)
 
-                im, sample_labels = preprocess(im, bbox_labels, mode, settings)
+                im, sample_labels = preprocess(im, bbox_labels, mode, settings,
+                                               image_path)
                 sample_labels = np.array(sample_labels)
                 if len(sample_labels) == 0: continue
                 im = im.astype('float32')

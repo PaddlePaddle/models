@@ -3,6 +3,7 @@ from PIL import ImageFile
 import numpy as np
 import random
 import math
+import cv2
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True  #otherwise IOError raised image file is truncated
 
@@ -107,10 +108,10 @@ def data_anchor_sampling(sampler, bbox_labels, image_width, image_height,
     rand_idx = np.random.randint(0, num_gt) if num_gt != 0 else 0
 
     if num_gt != 0:
-        norm_xmin = bbox_labels[rand_idx][0]
-        norm_ymin = bbox_labels[rand_idx][1]
-        norm_xmax = bbox_labels[rand_idx][2]
-        norm_ymax = bbox_labels[rand_idx][3]
+        norm_xmin = bbox_labels[rand_idx][1]
+        norm_ymin = bbox_labels[rand_idx][2]
+        norm_xmax = bbox_labels[rand_idx][3]
+        norm_ymax = bbox_labels[rand_idx][4]
 
         xmin = norm_xmin * image_width
         ymin = norm_ymin * image_height
@@ -358,9 +359,19 @@ def crop_image_sampling(img, bbox_labels, sample_bbox, image_width,
     roi_width = cross_width
     roi_height = cross_height
 
-    sample_img = np.zeros((width, height, 3))
-    sample_img[roi_xmin : roi_xmin + roi_width, roi_ymin : roi_ymin + roi_height] = \
-        img[cross_xmin : cross_xmin + cross_width, cross_ymin : cross_ymin + cross_height]
+    roi_ymax = int(roi_ymin + roi_height)
+    roi_ymin = int(roi_ymin)
+    roi_xmax = int(roi_xmin + roi_width)
+    roi_xmin = int(roi_xmin)
+
+    cross_ymax = int(cross_ymin + cross_height)
+    cross_ymin = int(cross_ymin)
+    cross_xmax = int(cross_xmin + cross_width)
+    cross_xmin = int(cross_xmin)
+
+    sample_img = np.zeros((height, width, 3))
+    sample_img[roi_ymin : roi_ymax, roi_xmin : roi_xmax] = \
+        img[cross_ymin : cross_ymax, cross_xmin : cross_xmax]
 
     sample_img = cv2.resize(
         sample_img, (resize_width, resize_height), interpolation=cv2.INTER_AREA)
