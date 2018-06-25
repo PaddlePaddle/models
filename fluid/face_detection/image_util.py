@@ -322,7 +322,34 @@ def transform_labels(bbox_labels, sample_bbox):
     return sample_labels
 
 
-def crop_image(img, bbox_labels, sample_bbox, image_width, image_height):
+def transform_labels_sampling(bbox_labels, sample_bbox, resize_val,
+                              min_face_size):
+    sample_labels = []
+    for i in range(len(bbox_labels)):
+        sample_label = []
+        object_bbox = bbox(bbox_labels[i][1], bbox_labels[i][2],
+                           bbox_labels[i][3], bbox_labels[i][4])
+        if not meet_emit_constraint(object_bbox, sample_bbox):
+            continue
+        proj_bbox = project_bbox(object_bbox, sample_bbox)
+        if proj_bbox:
+            real_width = float((proj_bbox.xmax - proj_bbox.xmin) * resize_val)
+            real_height = float((proj_bbox.ymax - proj_bbox.ymin) * resize_val)
+            if real_width * real_height < float(min_face_size * min_face_size):
+                continue
+            else:
+                sample_label.append(bbox_labels[i][0])
+                sample_label.append(float(proj_bbox.xmin))
+                sample_label.append(float(proj_bbox.ymin))
+                sample_label.append(float(proj_bbox.xmax))
+                sample_label.append(float(proj_bbox.ymax))
+                sample_label = sample_label + bbox_labels[i][5:]
+                sample_labels.append(sample_label)
+    return sample_labels
+
+
+def crop_image(img, bbox_labels, sample_bbox, image_width, image_height,
+               resize_width, resize_height, min_face_size):
     sample_bbox = clip_bbox(sample_bbox)
     xmin = int(sample_bbox.xmin * image_width)
     xmax = int(sample_bbox.xmax * image_width)
@@ -330,12 +357,15 @@ def crop_image(img, bbox_labels, sample_bbox, image_width, image_height):
     ymax = int(sample_bbox.ymax * image_height)
 
     sample_img = img[ymin:ymax, xmin:xmax]
-    sample_labels = transform_labels(bbox_labels, sample_bbox)
+    resize_val = resize_width
+    sample_labels = transform_labels_sampling(bbox_labels, sample_bbox,
+                                              resize_val, min_face_size)
     return sample_img, sample_labels
 
 
 def crop_image_sampling(img, bbox_labels, sample_bbox, image_width,
-                        image_height, resize_width, resize_height):
+                        image_height, resize_width, resize_height,
+                        min_face_size):
     # no clipping here
     xmin = int(sample_bbox.xmin * image_width)
     xmax = int(sample_bbox.xmax * image_width)
@@ -359,24 +389,16 @@ def crop_image_sampling(img, bbox_labels, sample_bbox, image_width,
     roi_width = cross_width
     roi_height = cross_height
 
-    roi_ymax = int(roi_ymin + roi_height)
-    roi_ymin = int(roi_ymin)
-    roi_xmax = int(roi_xmin + roi_width)
-    roi_xmin = int(roi_xmin)
-
-    cross_ymax = int(cross_ymin + cross_height)
-    cross_ymin = int(cross_ymin)
-    cross_xmax = int(cross_xmin + cross_width)
-    cross_xmin = int(cross_xmin)
-
     sample_img = np.zeros((height, width, 3))
-    sample_img[roi_ymin : roi_ymax, roi_xmin : roi_xmax] = \
-        img[cross_ymin : cross_ymax, cross_xmin : cross_xmax]
+    sample_img[int(roi_ymin) : int(roi_ymin + roi_height), int(roi_xmin) : int(roi_xmin + roi_width)] = \
+        img[int(cross_ymin) : int(cross_ymin + cross_height), int(cross_xmin) : int(cross_xmin + cross_width)]
 
     sample_img = cv2.resize(
         sample_img, (resize_width, resize_height), interpolation=cv2.INTER_AREA)
 
-    sample_labels = transform_labels(bbox_labels, sample_bbox)
+    resize_val = resize_width
+    sample_labels = transform_labels_sampling(bbox_labels, sample_bbox,
+                                              resize_val, min_face_size)
     return sample_img, sample_labels
 
 

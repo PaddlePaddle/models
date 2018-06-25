@@ -155,6 +155,7 @@ if __name__ == '__main__':
         data_dir=data_dir,
         resize_h=args.resize_h,
         resize_w=args.resize_w,
+        apply_distort=True,
         apply_expand=False,
         mean_value=[104., 117., 123.],
         ap_version='11point')

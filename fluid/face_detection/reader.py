@@ -62,6 +62,26 @@ class Settings(object):
         self.brightness_delta = 0.125
         self.scale = 0.007843  # 1 / 127.5
         self.data_anchor_sampling_prob = 0.5
+        self.min_face_size = 8.0
+
+
+def draw_image(faces_pred, img, resize_val):
+    for i in range(len(faces_pred)):
+        draw_rotate_rectange(img, faces_pred[i], resize_val, (0, 255, 0), 3)
+
+
+def draw_rotate_rectange(img, face, resize_val, color, thickness):
+    cv2.line(img, (int(face[1] * resize_val), int(face[2] * resize_val)), (int(
+        face[3] * resize_val), int(face[2] * resize_val)), color, thickness)
+
+    cv2.line(img, (int(face[3] * resize_val), int(face[2] * resize_val)), (int(
+        face[3] * resize_val), int(face[4] * resize_val)), color, thickness)
+
+    cv2.line(img, (int(face[1] * resize_val), int(face[2] * resize_val)), (int(
+        face[1] * resize_val), int(face[4] * resize_val)), color, thickness)
+
+    cv2.line(img, (int(face[3] * resize_val), int(face[4] * resize_val)), (int(
+        face[1] * resize_val), int(face[4] * resize_val)), color, thickness)
 
 
 def preprocess(img, bbox_labels, mode, settings, image_path):
@@ -87,16 +107,29 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
                 batch_sampler, bbox_labels, img_width, img_height, scale_array,
                 settings.resize_width, settings.resize_height)
             img = np.array(img)
-            #img_save = Image.fromarray(img)
+            # Debug
+            # img_save = Image.fromarray(img)
+            # img_save.save('img_orig.jpg')
             if len(sampled_bbox) > 0:
                 idx = int(random.uniform(0, len(sampled_bbox)))
                 img, sampled_labels = image_util.crop_image_sampling(
                     img, bbox_labels, sampled_bbox[idx], img_width, img_height,
-                    settings.resize_width, settings.resize_height)
+                    settings.resize_width, settings.resize_height,
+                    settings.min_face_size)
 
             img = img.astype('uint8')
+            # Debug: visualize the gt bbox
+            visualize_bbox = 0
+            if visualize_bbox:
+                img_show = img
+                draw_image(sampled_labels, img_show, settings.resize_height)
+                img_show = Image.fromarray(img_show)
+                img_show.save('final_img_show.jpg')
+
             img = Image.fromarray(img)
-            #img.save('final_img.jpg')
+            # Debug
+            # img.save('final_img.jpg')
+
         else:
             # hard-code here
             batch_sampler.append(
@@ -121,7 +154,9 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
             if len(sampled_bbox) > 0:
                 idx = int(random.uniform(0, len(sampled_bbox)))
                 img, sampled_labels = image_util.crop_image(
-                    img, bbox_labels, sampled_bbox[idx], img_width, img_height)
+                    img, bbox_labels, sampled_bbox[idx], img_width, img_height,
+                    settings.resize_width, settings.resize_height,
+                    settings.min_face_size)
 
             img = Image.fromarray(img)
 
@@ -217,7 +252,6 @@ def pyramidbox(settings, file_list, mode, shuffle):
             image_path = os.path.join(settings.data_dir, image_name)
 
             im = Image.open(image_path)
-            #im.save('basic_orig_img.jpg')
             if im.mode == 'L':
                 im = im.convert('RGB')
             im_width, im_height = im.size
