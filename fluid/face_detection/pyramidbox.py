@@ -410,5 +410,8 @@ class PyramidBox(object):
                 self.face_mbox_conf,
                 self.prior_boxes,
                 self.box_vars,
-                nms_threshold=0.45)
+                nms_threshold=0.3,
+                nms_top_k=5000,
+                keep_top_k=750,
+                score_threshold=0.05)
         return test_program, face_nmsed_out
