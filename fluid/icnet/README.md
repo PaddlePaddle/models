@@ -53,9 +53,9 @@ leftImg8bit/train/stuttgart/stuttgart_000072_000019_leftImg8bit.png gtFine/train
 ## 模型训练与预测
 
 ### 训练
-执行以下命令进行训练:
+执行以下命令进行训练，同时指定checkpoint保存路径:
 ```
-python train.py --batch_size=16 --use_gpu=True
+python train.py --batch_size=16 --use_gpu=True --checkpoint_path="./chkpnt/"
 ```
 使用以下命令获得更多使用说明：
 ```
