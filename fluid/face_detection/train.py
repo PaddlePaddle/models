@@ -77,7 +77,7 @@ def train(args, config, train_file_list, optimizer_method):
         )
 
     optimizer.minimize(loss)
-    #fluid.memory_optimize(fluid.default_main_program())
+    fluid.memory_optimize(fluid.default_main_program())
 
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -156,6 +156,6 @@ if __name__ == '__main__':
         resize_h=args.resize_h,
         resize_w=args.resize_w,
         apply_expand=False,
-        mean_value=[104., 117., 123],
+        mean_value=[104., 117., 123.],
         ap_version='11point')
     train(args, config, train_file_list, optimizer_method="momentum")

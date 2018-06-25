@@ -395,8 +395,11 @@ class PyramidBox(object):
             overlap_threshold=0.35,
             neg_overlap=0.35)
         face_loss = fluid.layers.reduce_sum(face_loss)
+        face_loss.persistable = True
         head_loss = fluid.layers.reduce_sum(head_loss)
+        head_loss.persistable = True
         total_loss = face_loss + head_loss
+        total_loss.persistable = True
         return face_loss, head_loss, total_loss
 
     def infer(self, main_program=None):
