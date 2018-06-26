@@ -122,7 +122,7 @@ def train_agent():
     total_step = 0
     max_reward = None
     save_path = os.path.join(args.model_dirname, '{}-{}'.format(
-                args.alg, os.path.basename(args.rom).split('.')[0]))
+        args.alg, os.path.basename(args.rom).split('.')[0]))
     while True:
         # start epoch
         total_reward, step = run_train_episode(agent, env, exp)
@@ -136,7 +136,7 @@ def train_agent():
             test_flag += 1
             print("eval_agent done, (steps, eval_reward): ({}, {})".format(
                 total_step, eval_reward))
-            
+
             if max_reward is None or eval_reward > max_reward:
                 max_reward = eval_reward
                 fluid.io.save_inference_model(save_path, ['state'],
