@@ -137,7 +137,12 @@ def profile(args):
         class_num=args.class_num,
         parallel=args.parallel)
 
-    optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
+    optimizer = fluid.optimizer.Adam(
+        learning_rate=fluid.layers.exponential_decay(
+            learning_rate=args.learning_rate,
+            decay_steps=1879,
+            decay_rate=1 / 1.2,
+            staircase=True))
     optimizer.minimize(avg_cost)
 
     place = fluid.CPUPlace() if args.device == 'CPU' else fluid.CUDAPlace(0)
