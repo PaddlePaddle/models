@@ -23,14 +23,14 @@
     + ale_python_interface
 
 + 下载依赖：
-    + 安装PaddlePaddle
-    建议通过PaddlePaddle源码进行编译安装    
-    + 下载其它依赖
-    ```
-    pip install -r requirement.txt 
-    pip install gym[atari]
-    ```
-    安装ale_python_interface可以参考：https://github.com/mgbellemare/Arcade-Learning-Environment
+    + 安装PaddlePaddle：
+        建议通过PaddlePaddle源码进行编译安装    
+    + 下载其它依赖：
+        ```
+        pip install -r requirement.txt 
+        pip install gym[atari]
+        ```
+        安装ale_python_interface可以参考：https://github.com/mgbellemare/Arcade-Learning-Environment
 
 + 训练模型：
     ```

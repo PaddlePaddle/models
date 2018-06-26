@@ -25,14 +25,14 @@ Based on PaddlePaddle's next-generation API Fluid, the DQN model of deep reinfor
     + ale_python_interface
 
 + Install Dependencies:
-    + Install PaddlePaddle
-    Recommended to compile and install PaddlePaddle from source code
+    + Install PaddlePaddle:
+        recommended to compile and install PaddlePaddle from source code
     + Install other dependencies:
-    ```
-    pip install -r requirement.txt 
-    pip install gym[atari]
-    ```
-    Install ale_python_interface, can reference：https://github.com/mgbellemare/Arcade-Learning-Environment
+        ```
+        pip install -r requirement.txt 
+        pip install gym[atari]
+        ```
+        Install ale_python_interface, can reference：https://github.com/mgbellemare/Arcade-Learning-Environment
 
 
 + Start Training:
