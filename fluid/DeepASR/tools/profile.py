@@ -155,7 +155,8 @@ def profile(args):
         trans_splice.TransSplice(5, 5), trans_delay.TransDelay(5)
     ]
 
-    data_reader = reader.AsyncDataReader(args.feature_lst, args.label_lst, -1)
+    data_reader = reader.AsyncDataReader(
+        args.feature_lst, args.label_lst, -1, split_sentence_threshold=1024)
     data_reader.set_transformers(ltrans)
 
     feature_t = fluid.LoDTensor()
