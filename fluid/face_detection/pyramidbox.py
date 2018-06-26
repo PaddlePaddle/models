@@ -385,6 +385,7 @@ class PyramidBox(object):
             self.box_vars,
             overlap_threshold=0.35,
             neg_overlap=0.35)
+        face_loss.persistable = True
         head_loss = fluid.layers.ssd_loss(
             self.head_mbox_loc,
             self.head_mbox_conf,
@@ -394,9 +395,13 @@ class PyramidBox(object):
             self.box_vars,
             overlap_threshold=0.35,
             neg_overlap=0.35)
+        head_loss.persistable = True
         face_loss = fluid.layers.reduce_sum(face_loss)
+        face_loss.persistable = True
         head_loss = fluid.layers.reduce_sum(head_loss)
+        head_loss.persistable = True
         total_loss = face_loss + head_loss
+        total_loss.persistable = True
         return face_loss, head_loss, total_loss
 
     def infer(self, main_program=None):
@@ -410,5 +415,8 @@ class PyramidBox(object):
                 self.face_mbox_conf,
                 self.prior_boxes,
                 self.box_vars,
-                nms_threshold=0.45)
+                nms_threshold=0.3,
+                nms_top_k=5000,
+                keep_top_k=750,
+                score_threshold=0.05)
         return test_program, face_nmsed_out
