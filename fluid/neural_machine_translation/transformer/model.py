@@ -6,8 +6,6 @@ import paddle.fluid.layers as layers
 
 from config import *
 
-FLAG = False
-
 
 def position_encoding_init(n_position, d_pos_vec):
     """
@@ -103,12 +101,6 @@ def multi_head_attention(queries,
         """
         scaled_q = layers.scale(x=q, scale=d_model**-0.5)
         product = layers.matmul(x=scaled_q, y=k, transpose_y=True)
-        # global FLAG
-        # if FLAG and attn_bias:
-        #     print "hehehehehe"
-        #     layers.Print(product, message="product")
-        #     layers.Print(attn_bias, message="bias")
-        #     FLAG = False
         weights = layers.reshape(
             x=layers.elementwise_add(
                 x=product, y=attn_bias) if attn_bias else product,
@@ -117,19 +109,9 @@ def multi_head_attention(queries,
             act="softmax")
         weights = layers.reshape(
             x=weights, shape=product.shape, actual_shape=post_softmax_shape)
-        # global FLAG
-        # if FLAG:
-        #     print "hehehehehe"
-        #     layers.Print(scaled_q)
-        #     layers.Print(k)
-        #     layers.Print(v)
-        #     layers.Print(product)
-        #     layers.Print(weights)
-        #     FLAG = False
         if dropout_rate:
             weights = layers.dropout(
                 weights, dropout_prob=dropout_rate, is_test=False)
-
         out = layers.matmul(weights, v)
         return out
 
@@ -138,13 +120,7 @@ def multi_head_attention(queries,
     if cache is not None:  # use cache and concat time steps
         k = cache["k"] = layers.concat([cache["k"], k], axis=1)
         v = cache["v"] = layers.concat([cache["v"], v], axis=1)
-    # global FLAG
-    # if FLAG:
-    #     print "hehehehehe"
-    #     layers.Print(q)
-    #     layers.Print(k)
-    #     layers.Print(v)
-    #     FLAG = False
+
     q = __split_heads(q, n_head)
     k = __split_heads(k, n_head)
     v = __split_heads(v, n_head)
@@ -153,16 +129,12 @@ def multi_head_attention(queries,
                                                   dropout_rate)
 
     out = __combine_heads(ctx_multiheads)
+
     # Project back to the model size.
     proj_out = layers.fc(input=out,
                          size=d_model,
                          bias_attr=False,
                          num_flatten_dims=2)
-    # global FLAG
-    # if FLAG:
-    #     print "hehehehehe"
-    #     layers.Print(proj_out)
-    #     FLAG = False
     return proj_out
 
 
@@ -391,15 +363,22 @@ def decoder(dec_input,
     The decoder is composed of a stack of identical decoder_layer layers.
     """
     for i in range(n_layer):
-        if i == 0:  #n_layer-1:
-            global FLAG
-            FLAG = True
         dec_output = decoder_layer(
-            dec_input, enc_output, dec_slf_attn_bias, dec_enc_attn_bias, n_head,
-            d_key, d_value, d_model, d_inner_hid, dropout_rate,
-            slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape,
-            src_attn_pre_softmax_shape, src_attn_post_softmax_shape, None
-            if caches is None else caches[i])
+            dec_input,
+            enc_output,
+            dec_slf_attn_bias,
+            dec_enc_attn_bias,
+            n_head,
+            d_key,
+            d_value,
+            d_model,
+            d_inner_hid,
+            dropout_rate,
+            slf_attn_pre_softmax_shape,
+            slf_attn_post_softmax_shape,
+            src_attn_pre_softmax_shape,
+            src_attn_post_softmax_shape,
+            None if caches is None else caches[i], )
         dec_input = dec_output
     return dec_output
 
@@ -625,12 +604,17 @@ def fast_decode(
         d_model,
         d_inner_hid,
         dropout_rate,
+        weight_sharing,
         beam_size,
         max_out_len,
         eos_idx, ):
+    """
+    Use beam search to decode. Caches will be used to store states of history
+    steps which can make the decoding faster.
+    """
     enc_output = wrap_encoder(src_vocab_size, max_in_len, n_layer, n_head,
                               d_key, d_value, d_model, d_inner_hid,
-                              dropout_rate)
+                              dropout_rate, weight_sharing)
     start_tokens, init_scores, trg_src_attn_bias, trg_data_shape, \
         slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape, \
         src_attn_pre_softmax_shape, src_attn_post_softmax_shape, \
@@ -643,16 +627,14 @@ def fast_decode(
             shape=[1], dtype=start_tokens.dtype, value=max_out_len)
         step_idx = layers.fill_constant(
             shape=[1], dtype=start_tokens.dtype, value=0)
-        # cond = layers.fill_constant(
-        #     shape=[1], dtype='bool', value=1, force_cpu=True)
         cond = layers.less_than(x=step_idx, y=max_len)
         while_op = layers.While(cond)
-        # init_scores = layers.fill_constant_batch_size_like(
-        #     input=start_tokens, shape=[-1, 1], dtype="float32", value=0)
-        # array states
+        # array states will be stored for each step.
         ids = layers.array_write(start_tokens, step_idx)
         scores = layers.array_write(init_scores, step_idx)
-        # cell states (can be overwrited)
+        # cell states will be overwrited at each step.
+        # caches contains states of history steps to reduce redundant
+        # computation in decoder.
         caches = [{
             "k": layers.fill_constant_batch_size_like(
                 input=start_tokens,
@@ -668,9 +650,10 @@ def fast_decode(
         with while_op.block():
             pre_ids = layers.array_read(array=ids, i=step_idx)
             pre_scores = layers.array_read(array=scores, i=step_idx)
+            # sequence_expand can gather sequences according to lod thus can be
+            # used in beam search to sift states corresponding to selected ids.
             pre_src_attn_bias = layers.sequence_expand(
                 x=trg_src_attn_bias, y=pre_scores)
-            # layers.Print(pre_src_attn_bias)
             pre_enc_output = layers.sequence_expand(x=enc_output, y=pre_scores)
             pre_caches = [{
                 "k": layers.sequence_expand(
@@ -687,13 +670,6 @@ def fast_decode(
                 y=layers.increment(
                     x=step_idx, value=1.0, in_place=False),
                 axis=0)
-            # layers.Print(pre_ids, summarize=10)
-            # layers.Print(pre_pos, summarize=10)
-            # layers.Print(pre_enc_output, summarize=10)
-            # layers.Print(pre_src_attn_bias, summarize=10)
-            # layers.Print(pre_caches[0]["k"], summarize=10)
-            # layers.Print(pre_caches[0]["v"], summarize=10)
-            # layers.Print(slf_attn_post_softmax_shape)
             logits = wrap_decoder(
                 trg_vocab_size,
                 max_in_len,
@@ -704,19 +680,16 @@ def fast_decode(
                 d_model,
                 d_inner_hid,
                 dropout_rate,
+                weight_sharing,
                 dec_inputs=(
                     pre_ids, pre_pos, None, pre_src_attn_bias, trg_data_shape,
                     slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape,
                     src_attn_pre_softmax_shape, src_attn_post_softmax_shape),
                 enc_output=pre_enc_output,
                 caches=pre_caches)
-            # layers.Print(logits)
             topk_scores, topk_indices = layers.topk(
                 input=layers.softmax(logits), k=beam_size)
-            # layers.Print(topk_scores)
-            # layers.Print(topk_indices)
             accu_scores = layers.elementwise_add(
-                # x=layers.log(x=layers.softmax(topk_scores)),
                 x=layers.log(topk_scores),
                 y=layers.reshape(
                     pre_scores, shape=[-1]),
@@ -739,9 +712,6 @@ def fast_decode(
             for i in range(n_layer):
                 layers.assign(pre_caches[i]["k"], caches[i]["k"])
                 layers.assign(pre_caches[i]["v"], caches[i]["v"])
-            layers.Print(selected_ids)
-            layers.Print(selected_scores)
-            # layers.Print(caches[-1]["k"])
             layers.assign(
                 layers.elementwise_add(
                     x=slf_attn_pre_softmax_shape,
@@ -755,12 +725,8 @@ def fast_decode(
 
             length_cond = layers.less_than(x=step_idx, y=max_len)
             finish_cond = layers.logical_not(layers.is_empty(x=selected_ids))
-            # layers.Print(length_cond)
-            # layers.Print(finish_cond)
             layers.logical_and(x=length_cond, y=finish_cond, out=cond)
-        layers.Print(step_idx)
-        # finished_ids, finished_scores = layers.beam_search_decode(ids, scores,
-        #                                                           eos_idx)
+
         finished_ids, finished_scores = layers.beam_search_decode(
             ids, scores, beam_size=beam_size, end_id=eos_idx)
         return finished_ids, finished_scores

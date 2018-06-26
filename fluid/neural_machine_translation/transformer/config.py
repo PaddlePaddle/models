@@ -33,9 +33,9 @@ class TrainTaskConfig(object):
 
 
 class InferTaskConfig(object):
-    use_gpu = False
+    use_gpu = True
     # the number of examples in one run for sequence generation.
-    batch_size = 2
+    batch_size = 10
     # the parameters for beam search.
     beam_size = 5
     max_out_len = 256
@@ -108,7 +108,7 @@ def merge_cfg_from_list(cfg_list, g_cfgs):
 # consistent with some ops' infer-shape output in compile time, such as the
 # sequence_expand op used in beamsearch decoder.
 batch_size = -1
-# The placeholder for squence length in compile time. 
+# The placeholder for squence length in compile time.
 seq_len = ModelHyperParams.max_length
 # Here list the data shapes and data types of all inputs.
 # The shapes here act as placeholder and are set to pass the infer-shape in
