@@ -185,6 +185,9 @@ class AsyncDataReader(object):
                                corresponding description file.
         drop_frame_len (int): Samples whose label length above the value will be
                               dropped.(Using '-1' to disable the policy)
+        split_sentence_threshold(int): Sentence whose length larger than
+                                the value will trigger split operation.
+                                (Assign -1 to disable split)
         proc_num (int): Number of processes for processing data.
         sample_buffer_size (int): Buffer size to indicate the maximum samples
                                   cached.
@@ -204,6 +207,7 @@ class AsyncDataReader(object):
                  feature_file_list,
                  label_file_list="",
                  drop_frame_len=512,
+                 split_sentence_threshold=1024,
                  proc_num=10,
                  sample_buffer_size=1024,
                  sample_info_buffer_size=1024,
@@ -214,6 +218,7 @@ class AsyncDataReader(object):
         self._feature_file_list = feature_file_list
         self._label_file_list = label_file_list
         self._drop_frame_len = drop_frame_len
+        self._split_sentence_threshold = split_sentence_threshold
         self._shuffle_block_num = shuffle_block_num
         self._block_info_list = None
         self._rng = random.Random(random_seed)
@@ -262,7 +267,8 @@ class AsyncDataReader(object):
                     map(lambda info: info[0], bucket_block_info),
                     map(lambda info: info[1], bucket_block_info),
                     map(lambda info: info[2], bucket_block_info),
-                    map(lambda info: info[3], bucket_block_info)))
+                    map(lambda info: info[3], bucket_block_info),
+                    split_sentence_threshold=self._split_sentence_threshold))
 
     # @TODO make this configurable
     def set_transformers(self, transformers):
