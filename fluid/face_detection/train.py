@@ -18,13 +18,14 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('parallel',         bool,  True,            "parallel")
 add_arg('learning_rate',    float, 0.001,           "Learning rate.")
 add_arg('batch_size',       int,   12,              "Minibatch size.")
-add_arg('num_passes',       int,   120,             "Epoch number.")
+add_arg('num_passes',       int,   160,             "Epoch number.")
 add_arg('use_gpu',          bool,  True,            "Whether use GPU.")
 add_arg('use_pyramidbox',   bool,  True,            "Whether use PyramidBox model.")
 add_arg('model_save_dir',   str,   'output',        "The path to save model.")
 add_arg('pretrained_model', str,   './pretrained/', "The init model path.")
 add_arg('resize_h',         int,   640,             "The resized image height.")
 add_arg('resize_w',         int,   640,             "The resized image height.")
+add_arg('with_mem_opt',     bool,  False,           "Whether to use memory optimization or not.")
 #yapf: enable
 
 
@@ -38,6 +39,7 @@ def train(args, config, train_file_list, optimizer_method):
     use_pyramidbox = args.use_pyramidbox
     model_save_dir = args.model_save_dir
     pretrained_model = args.pretrained_model
+    with_memory_optimization = args.with_mem_opt
 
     num_classes = 2
     image_shape = [3, height, width]
@@ -57,7 +59,7 @@ def train(args, config, train_file_list, optimizer_method):
         fetches = [loss]
 
     epocs = 12880 / batch_size
-    boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
+    boundaries = [epocs * 50, epocs * 80, epocs * 120, epocs * 140]
     values = [
         learning_rate, learning_rate * 0.5, learning_rate * 0.25,
         learning_rate * 0.1, learning_rate * 0.01
@@ -77,7 +79,8 @@ def train(args, config, train_file_list, optimizer_method):
         )
 
     optimizer.minimize(loss)
-    fluid.memory_optimize(fluid.default_main_program())
+    if with_memory_optimization:
+        fluid.memory_optimize(fluid.default_main_program())
 
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
