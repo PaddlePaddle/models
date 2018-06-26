@@ -15,6 +15,8 @@ from squeezenet import squeeze_net
 # from paddle.v2.fluid.initializer import init_on_cpu
 from paddle.fluid.layers import learning_rate_scheduler
 import pdb
+import psutil
+from meliae import scanner
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -25,7 +27,7 @@ add_arg('parallel_exe', bool, False,
         "Whether to use ParallelExecutor to train or not.")
 add_arg('init_model', str, None, "Whether to use initialized model.")
 add_arg('pretrained_model', str, None, "Whether to use pretrained model.")
-add_arg('lr_strategy', str, "poly_decay",
+add_arg('lr_strategy', str, 'poly_decay',
         "Set the learning rate decay strategy.")
 add_arg('model', str, "", "Set the network to use.")
 add_arg('train_list', str, "data/ILSVRC2012/train_list.txt",
@@ -149,6 +151,11 @@ def train_parallel_do(
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     for pass_id in range(num_passes):
+        info = psutil.virtual_memory()
+        print "rss: {}".format(psutil.Process(os.getpid()).memory_info().rss)
+        print "total mem: {}".format(info.total)
+        print "mem%: {}".format(info.percent)
+        scanner.dump_all_objects('output/logs/dump_{}.txt'.format(pass_id))
         train_info = [[], [], []]
         test_info = [[], [], []]
         for batch_id, data in enumerate(train_reader()):
@@ -165,8 +172,8 @@ def train_parallel_do(
             if batch_id % 10 == 0:
                 print("Train: Pass: {}, Batch: {}, Loss: {:.10f},"
                       " Acc1: {:.4f}, Acc5: {:.4f}, Time: {}".format(
-                          pass_id, batch_id, loss[0], acc1[0], acc5[
-                              0], "{:.2f} sec".format(period)))
+                          pass_id, batch_id, loss[0], acc1[0], acc5[0],
+                          "{:.2f} sec".format(period)))
                 sys.stdout.flush()
 
         train_loss = np.array(train_info[0]).mean()
@@ -186,8 +193,8 @@ def train_parallel_do(
             if batch_id % 10 == 0:
                 print("TEST: Pass: {}, Batch: {}, Loss: {:.10f},"
                       "Acc1: {:.4f}, Acc5: {:.4f}, Time: {}".format(
-                          pass_id, batch_id, loss[0], acc1[0], acc5[
-                              0], "{.2f} sec".format(period)))
+                          pass_id, batch_id, loss[0], acc1[0], acc5[0],
+                          "{.2f} sec".format(period)))
                 sys.stdout.flush()
 
         test_loss = np.array(test_info[0]).mean()
