@@ -23,6 +23,7 @@ import os
 import time
 import copy
 import random
+import collections
 
 
 class Settings(object):
@@ -36,7 +37,9 @@ class Settings(object):
                  apply_distort=True,
                  apply_expand=True,
                  ap_version='11point',
-                 toy=0):
+                 toy=0,
+                 slice_num=1,
+                 slice_index=0):
         self.dataset = dataset
         self.ap_version = ap_version
         self.toy = toy
@@ -61,6 +64,9 @@ class Settings(object):
         self.brightness_delta = 0.125
         self.scale = 0.007843  # 1 / 127.5
         self.data_anchor_sampling_prob = 0.5
+
+        self.slice_num = slice_num
+        self.slice_index = slice_index
 
 
 def preprocess(img, bbox_labels, mode, settings):
@@ -146,11 +152,12 @@ def preprocess(img, bbox_labels, mode, settings):
     return img, sampled_labels
 
 
-def put_txt_in_dict(input_txt):
+def put_txt_in_dict(input_txt, settings):
+    import collections
     with open(input_txt, 'r') as f_dir:
         lines_input_txt = f_dir.readlines()
 
-    dict_input_txt = {}
+    dict_input_txt = collections.OrderedDict()
     num_class = 0
     for i in range(len(lines_input_txt)):
         tmp_line_txt = lines_input_txt[i].strip('\n\t\r')
@@ -173,7 +180,22 @@ def put_txt_in_dict(input_txt):
             else:
                 dict_input_txt[num_class].append(tmp_line_txt)
 
-    return dict_input_txt
+    num_ins = num_class + 1
+    if num_ins != len(dict_input_txt):
+        raise ValueError("%d != $d" % (num_ins, len(dict_input_txt)))
+
+    start = int(num_ins * settings.slice_index / settings.slice_num)
+    end = int(num_ins * (settings.slice_index + 1) / settings.slice_num)
+    if settings.slice_num > 1:
+        sliced_data = {i: dict_input_txt[i] for i in range(start, end)}
+    else:
+        sliced_data = dict_input_txt
+
+    assert (end - start) == len(sliced_data)
+
+    print("Total image number: %d" % (num_ins))
+    print("Sliced data from %d to %d" % (start, end))
+    return sliced_data
 
 
 def expand_bboxes(bboxes,
@@ -202,13 +224,13 @@ def expand_bboxes(bboxes,
 
 def pyramidbox(settings, file_list, mode, shuffle):
 
-    dict_input_txt = {}
-    dict_input_txt = put_txt_in_dict(file_list)
+    dict_input_txt = put_txt_in_dict(file_list, settings)
 
     def reader():
         if mode == 'train' and shuffle:
             random.shuffle(dict_input_txt)
-        for index_image in range(len(dict_input_txt)):
+        #for index_image in range(len(dict_input_txt)):
+        for index_image in dict_input_txt.keys():
 
             image_name = dict_input_txt[index_image][0] + '.jpg'
             image_path = os.path.join(settings.data_dir, image_name)

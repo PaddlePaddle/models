@@ -144,7 +144,8 @@ class PyramidBox(object):
                     stride=2,
                     groups=ch,
                     param_attr=w_attr,
-                    bias_attr=False)
+                    bias_attr=False,
+                    use_cudnn=False)
             else:
                 upsampling = fluid.layers.resize_bilinear(
                     conv1, out_shape=up_to.shape[2:])
@@ -209,6 +210,11 @@ class PyramidBox(object):
             shape=shape,
             dtype=input.dtype,
             default_initializer=Constant(init_scale))
+        #scale = fluid.layers.create_parameter(
+        #    shape=shape,
+        #    dtype=input.dtype,
+        #    attr=helper.param_attr,
+        #    default_initializer=Constant(init_scale))
         out = fluid.layers.elementwise_mul(
             x=l2_norm, y=scale, axis=-1 if channel_shared else 1)
         return out

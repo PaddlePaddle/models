@@ -14,14 +14,14 @@ from utility import add_arguments, print_arguments
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
-add_arg('use_pyramidbox',   bool,  True, "Whether use PyramidBox model.")
-add_arg('confs_threshold',  float, 0.25,    "Confidence threshold to draw bbox.")
-add_arg('image_path',       str,   '',        "The data root path.")
-add_arg('model_dir',        str,   '',     "The model path.")
+add_arg('use_gpu',          bool,  True,     "Whether use GPU.")
+add_arg('use_pyramidbox',   bool,  True,     "Whether use PyramidBox model.")
+add_arg('confs_threshold',  float, 0.25,     "Confidence threshold to draw bbox.")
+add_arg('image_path',       str,   '',       "The data root path.")
+add_arg('model_dir',        str,   '',        "The model path.")
+add_arg('slice_num',        int,   1,         "Split number.")
+add_arg('slice_index',     int,    1,         "Index.")
 # yapf: enable
-
-MODEL_INIT = 0
 
 
 def draw_bounding_box_on_image(image_path, nms_out, confs_threshold):
@@ -146,73 +146,66 @@ def detect_face(image, shrink):
     print "image_shape:", image_shape
     img = image_preprocess(image)
 
+    scope = fluid.core.Scope()
     main_program = fluid.Program()
     startup_program = fluid.Program()
 
-    with fluid.unique_name.guard():
-        with fluid.program_guard(main_program, startup_program):
-            fetches = []
-            network = PyramidBox(
-                image_shape,
-                num_classes,
-                sub_network=args.use_pyramidbox,
-                is_infer=True)
-            infer_program, nmsed_out = network.infer(main_program)
-            fetches = [nmsed_out]
-            global MODEL_INIT
-            if MODEL_INIT == 0:
+    with fluid.scope_guard(scope):
+        with fluid.unique_name.guard():
+            with fluid.program_guard(main_program, startup_program):
+                fetches = []
+                network = PyramidBox(
+                    image_shape,
+                    num_classes,
+                    sub_network=args.use_pyramidbox,
+                    is_infer=True)
+                infer_program, nmsed_out = network.infer(main_program)
+                fetches = [nmsed_out]
                 fluid.io.load_persistables(
-                    exe, args.model_dir, main_program=infer_program)
-                MODEL_INIT == 1
+                    exe, args.model_dir, main_program=main_program)
 
-            detection, = exe.run(infer_program,
-                                 feed={'image': img},
-                                 fetch_list=fetches,
-                                 return_numpy=False)
-            detection = np.array(detection)
+                detection, = exe.run(infer_program,
+                                     feed={'image': img},
+                                     fetch_list=fetches,
+                                     return_numpy=False)
+                detection = np.array(detection)
     # layout: xmin, ymin, xmax. ymax, score
-    if detection.size == 1 and detection[0] == -1:
-        print('No detected results.')
+    if detection.shape == (1, ):
+        print "no face detected"
         return np.array([[0, 0, 0, 0, 0]])
-    else:
-        det_conf = detection[:, 1]
-        det_xmin = image_shape[2] * detection[:, 2] / shrink
-        det_ymin = image_shape[1] * detection[:, 3] / shrink
-        det_xmax = image_shape[2] * detection[:, 4] / shrink
-        det_ymax = image_shape[1] * detection[:, 5] / shrink
+    det_conf = detection[:, 1]
+    det_xmin = image_shape[2] * detection[:, 2] / shrink
+    det_ymin = image_shape[1] * detection[:, 3] / shrink
+    det_xmax = image_shape[2] * detection[:, 4] / shrink
+    det_ymax = image_shape[1] * detection[:, 5] / shrink
 
-        det = np.column_stack(
-            (det_xmin, det_ymin, det_xmax, det_ymax, det_conf))
-        keep_index = np.where(det[:, 4] >= 0)[0]
-        det = det[keep_index, :]
-        return det
+    det = np.column_stack((det_xmin, det_ymin, det_xmax, det_ymax, det_conf))
+    keep_index = np.where(det[:, 4] >= 0)[0]
+    det = det[keep_index, :]
+    return det
 
 
 def flip_test(image, shrink):
     img = image.transpose(Image.FLIP_LEFT_RIGHT)
     det_f = detect_face(img, shrink)
-    if len(det_f) > 0:
-        det_t = np.zeros(det_f.shape)
-        # image.size: [width, height]
-        det_t[:, 0] = image.size[0] - det_f[:, 2]
-        det_t[:, 1] = det_f[:, 1]
-        det_t[:, 2] = image.size[0] - det_f[:, 0]
-        det_t[:, 3] = det_f[:, 3]
-        det_t[:, 4] = det_f[:, 4]
-        return det_t
-    else:
-        return det_f
+    det_t = np.zeros(det_f.shape)
+    # image.size: [width, height]
+    det_t[:, 0] = image.size[0] - det_f[:, 2]
+    det_t[:, 1] = det_f[:, 1]
+    det_t[:, 2] = image.size[0] - det_f[:, 0]
+    det_t[:, 3] = det_f[:, 3]
+    det_t[:, 4] = det_f[:, 4]
+    return det_t
 
 
 def multi_scale_test(image, max_shrink):
     # shrink detecting and shrink only detect big face
     st = 0.5 if max_shrink >= 0.75 else 0.5 * max_shrink
     det_s = detect_face(image, st)
-    if len(det_s) > 0:
-        index = np.where(
-            np.maximum(det_s[:, 2] - det_s[:, 0] + 1,
-                       det_s[:, 3] - det_s[:, 1] + 1) > 30)[0]
-        det_s = det_s[index, :]
+    index = np.where(
+        np.maximum(det_s[:, 2] - det_s[:, 0] + 1, det_s[:, 3] - det_s[:, 1] + 1)
+        > 30)[0]
+    det_s = det_s[index, :]
     # enlarge one times
     bt = min(2, max_shrink) if max_shrink > 1 else (st + max_shrink) / 2
     det_b = detect_face(image, bt)
@@ -226,18 +219,44 @@ def multi_scale_test(image, max_shrink):
         det_b = np.row_stack((det_b, detect_face(image, max_shrink)))
 
     # enlarge only detect small face
-    if len(det_b) > 0:
-        if bt > 1:
-            index = np.where(
-                np.minimum(det_b[:, 2] - det_b[:, 0] + 1,
-                           det_b[:, 3] - det_b[:, 1] + 1) < 100)[0]
-            det_b = det_b[index, :]
-        else:
-            index = np.where(
-                np.maximum(det_b[:, 2] - det_b[:, 0] + 1,
-                           det_b[:, 3] - det_b[:, 1] + 1) > 30)[0]
-            det_b = det_b[index, :]
+    if bt > 1:
+        index = np.where(
+            np.minimum(det_b[:, 2] - det_b[:, 0] + 1,
+                       det_b[:, 3] - det_b[:, 1] + 1) < 100)[0]
+        det_b = det_b[index, :]
+    else:
+        index = np.where(
+            np.maximum(det_b[:, 2] - det_b[:, 0] + 1,
+                       det_b[:, 3] - det_b[:, 1] + 1) > 30)[0]
+        det_b = det_b[index, :]
     return det_s, det_b
+
+
+def multi_scale_test_pyramid(image, max_shrink):
+    # shrink detecting and shrink only detect big face
+    det_b = detect_face(image, 0.25)
+    index = np.where(
+        np.maximum(det_b[:, 2] - det_b[:, 0] + 1, det_b[:, 3] - det_b[:, 1] + 1)
+        > 30)[0]
+    det_b = det_b[index, :]
+
+    st = [0.5, 0.75, 1.25, 1.5, 1.75, 2.25]
+    for i in range(len(st)):
+        if (st[i] <= max_shrink):
+            det_temp = detect_face(image, st[i])
+            # enlarge only detect small face
+            if st[i] > 1:
+                index = np.where(
+                    np.minimum(det_temp[:, 2] - det_temp[:, 0] + 1,
+                               det_temp[:, 3] - det_temp[:, 1] + 1) < 100)[0]
+                det_temp = det_temp[index, :]
+            else:
+                index = np.where(
+                    np.maximum(det_temp[:, 2] - det_temp[:, 0] + 1,
+                               det_temp[:, 3] - det_temp[:, 1] + 1) > 30)[0]
+                det_temp = det_temp[index, :]
+            det_b = np.row_stack((det_b, det_temp))
+    return det_b
 
 
 def get_im_shrink(image_shape):
@@ -285,7 +304,8 @@ def infer(args, batch_size, data_args):
         det0 = detect_face(image, shrink)
         det1 = flip_test(image, shrink)
         [det2, det3] = multi_scale_test(image, max_shrink)
-        det = np.row_stack((det0, det1, det2, det3))
+        det4 = multi_scale_test_pyramid(image, max_shrink)
+        det = np.row_stack((det0, det1, det2, det3, det4))
         dets = bbox_vote(det)
 
         image_name = image_path.split('/')[-1]
@@ -301,7 +321,6 @@ def infer(args, batch_size, data_args):
 
 
 if __name__ == '__main__':
-    start = time.time()
     args = parser.parse_args()
     print_arguments(args)
 
@@ -313,8 +332,6 @@ if __name__ == '__main__':
         mean_value=[104., 117., 123],
         apply_distort=False,
         apply_expand=False,
-        ap_version='11point')
+        slice_num=args.slice_num,
+        slice_index=args.slice_index)
     infer(args, batch_size=1, data_args=data_args)
-
-    total_time = time.time() - start
-    print("Total time: {0} h".format(total_time / 60. / 60.))
