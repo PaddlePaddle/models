@@ -81,10 +81,7 @@ class PyramidBox(object):
         if self.is_infer:
             return [self.image]
         else:
-            return [
-                self.image, self.face_box, self.head_box, self.gt_label,
-                self.difficult
-            ]
+            return [self.image, self.face_box, self.head_box, self.gt_label]
 
     def _input(self):
         self.image = fluid.layers.data(
@@ -96,8 +93,6 @@ class PyramidBox(object):
                 name='head_box', shape=[4], dtype='float32', lod_level=1)
             self.gt_label = fluid.layers.data(
                 name='gt_label', shape=[1], dtype='int32', lod_level=1)
-            self.difficult = fluid.layers.data(
-                name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
 
     def _vgg(self):
         self.conv1, self.pool1 = conv_block(self.image, 2, [64] * 2, [3] * 2)

@@ -104,9 +104,7 @@ def train(args, config, train_file_list, optimizer_method):
         train_exe = fluid.ParallelExecutor(
             use_cuda=use_gpu, loss_name=loss.name)
 
-    train_reader = paddle.batch(
-        reader.train(config, train_file_list), batch_size=batch_size)
-    feeder = fluid.DataFeeder(place=place, feed_list=network.feeds())
+    train_reader = reader.train_batch_reader(config, train_file_list, batch_size=batch_size)
 
     def save_model(postfix):
         model_path = os.path.join(model_save_dir, postfix)
@@ -115,20 +113,36 @@ def train(args, config, train_file_list, optimizer_method):
         print 'save models to %s' % (model_path)
         fluid.io.save_persistables(exe, model_path)
 
+    def tensor(data, place, lod=None):
+        t = fluid.core.LoDTensor()
+        t.set(data, place)
+        if lod:
+            t.set_lod(lod)
+        return t
+
+    batch_nums = 806
     for pass_id in range(start_pass, num_passes):
         start_time = time.time()
         prev_start_time = start_time
         end_time = 0
-        for batch_id, data in enumerate(train_reader()):
+        for batch_id in range(batch_nums):
+            # data reader
+            im, face_box, head_box, labels, lod = next(train_reader)
+            im_t = tensor(im, place)
+            box1 = tensor(face_box, place, [lod])
+            box2 = tensor(head_box, place, [lod])
+            lbl_t = tensor(labels, place, [lod])
+            feeding = {'image': im_t, 'face_box': box1,
+                       'head_box': box2, 'gt_label': lbl_t}
+
             prev_start_time = start_time
             start_time = time.time()
-            if len(data) < 2 * devices_num: continue
             if args.parallel:
                 fetch_vars = train_exe.run(fetch_list=[v.name for v in fetches],
-                                           feed=feeder.feed(data))
+                                           feed=feeding)
             else:
                 fetch_vars = exe.run(fluid.default_main_program(),
-                                     feed=feeder.feed(data),
+                                     feed=feeding,
                                      fetch_list=fetches)
             end_time = time.time()
             fetch_vars = [np.mean(np.array(v)) for v in fetch_vars]
