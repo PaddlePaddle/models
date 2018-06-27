@@ -1,3 +1,7 @@
+"""
+This code is refer https://github.com/fchollet/keras/blob/master/keras/utils/data_utils.py
+"""
+
 import time
 import numpy as np
 import threading

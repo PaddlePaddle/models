@@ -244,11 +244,10 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
     while True:
         if shuffle:
             random.shuffle(file_dict)
-        images, face_boxes, head_boxes, label_ids, label_offs = [], [], [], [], [
-            0
-        ]
+        images, face_boxes, head_boxes, label_ids = [], [], [], []
+        label_offs = [0]
 
-        for index_image in range(len(file_dict)):
+        for index_image in file_dict.keys():
             image_name = file_dict[index_image][0] + '.jpg'
             image_path = os.path.join(settings.data_dir, image_name)
             im = Image.open(image_path)
@@ -331,7 +330,7 @@ def test(settings, file_list):
     file_dict = load_file_list(file_list)
 
     def reader():
-        for index_image in range(len(file_dict)):
+        for index_image in file_dict.keys():
             image_name = file_dict[index_image][0] + '.jpg'
             image_path = os.path.join(settings.data_dir, image_name)
             im = Image.open(image_path)
