@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
-add_arg('use_pyramidbox',   bool,  False, "Whether use PyramidBox model.")
+add_arg('use_pyramidbox',   bool,  True, "Whether use PyramidBox model.")
 add_arg('confs_threshold',  float, 0.25,    "Confidence threshold to draw bbox.")
 add_arg('image_path',       str,   '',        "The data root path.")
 add_arg('model_dir',        str,   '',     "The model path.")
@@ -168,6 +168,9 @@ def detect_face(image, shrink):
                                      return_numpy=False)
                 detection = np.array(detection)
     # layout: xmin, ymin, xmax. ymax, score
+    if detection.shape == (1, ):
+        print "no face detected"
+        return np.array([[0, 0, 0, 0, 0]])
     det_conf = detection[:, 1]
     det_xmin = image_shape[2] * detection[:, 2] / shrink
     det_ymin = image_shape[1] * detection[:, 3] / shrink
@@ -227,6 +230,33 @@ def multi_scale_test(image, max_shrink):
     return det_s, det_b
 
 
+def multi_scale_test_pyramid(image, max_shrink):
+    # shrink detecting and shrink only detect big face
+    det_b = detect_face(image, 0.25)
+    index = np.where(
+        np.maximum(det_b[:, 2] - det_b[:, 0] + 1, det_b[:, 3] - det_b[:, 1] + 1)
+        > 30)[0]
+    det_b = det_b[index, :]
+
+    st = [0.5, 0.75, 1.25, 1.5, 1.75, 2.25]
+    for i in range(len(st)):
+        if (st[i] <= max_shrink):
+            det_temp = detect_face(image, st[i])
+            # enlarge only detect small face
+            if st[i] > 1:
+                index = np.where(
+                    np.minimum(det_temp[:, 2] - det_temp[:, 0] + 1,
+                               det_temp[:, 3] - det_temp[:, 1] + 1) < 100)[0]
+                det_temp = det_temp[index, :]
+            else:
+                index = np.where(
+                    np.maximum(det_temp[:, 2] - det_temp[:, 0] + 1,
+                               det_temp[:, 3] - det_temp[:, 1] + 1) > 30)[0]
+                det_temp = det_temp[index, :]
+            det_b = np.row_stack((det_b, det_temp))
+    return det_b
+
+
 def get_im_shrink(image_shape):
     max_shrink_v1 = (0x7fffffff / 577.0 /
                      (image_shape[1] * image_shape[2]))**0.5
@@ -272,7 +302,8 @@ def infer(args, batch_size, data_args):
         det0 = detect_face(image, shrink)
         det1 = flip_test(image, shrink)
         [det2, det3] = multi_scale_test(image, max_shrink)
-        det = np.row_stack((det0, det1, det2, det3))
+        det4 = multi_scale_test_pyramid(image, max_shrink)
+        det = np.row_stack((det0, det1, det2, det3, det4))
         dets = bbox_vote(det)
 
         image_name = image_path.split('/')[-1]
