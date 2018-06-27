@@ -7,6 +7,7 @@ import paddle.fluid as fluid
 import model
 from model import wrap_encoder as encoder
 from model import wrap_decoder as decoder
+from model import fast_decode as fast_decoder
 from config import *
 from train import pad_batch_data
 import reader
@@ -87,7 +88,8 @@ def translate_batch(exe,
                     output_unk=True):
     """
     Run the encoder program once and run the decoder program multiple times to
-    implement beam search externally.
+    implement beam search externally. This is deprecated since a faster beam
+    search decoder based solely on Fluid operators has been added.
     """
     # Prepare data for encoder and run the encoder.
     enc_in_data = pad_batch_data(
@@ -297,7 +299,32 @@ def translate_batch(exe,
     return seqs, scores[:, :n_best].tolist()
 
 
-def infer(args):
+def post_process_seq(seq,
+                     bos_idx=ModelHyperParams.bos_idx,
+                     eos_idx=ModelHyperParams.eos_idx,
+                     output_bos=InferTaskConfig.output_bos,
+                     output_eos=InferTaskConfig.output_eos):
+    """
+    Post-process the beam-search decoded sequence. Truncate from the first
+    <eos> and remove the <bos> and <eos> tokens currently.
+    """
+    eos_pos = len(seq) - 1
+    for i, idx in enumerate(seq):
+        if idx == eos_idx:
+            eos_pos = i
+            break
+    seq = seq[:eos_pos + 1]
+    return filter(
+        lambda idx: (output_bos or idx != bos_idx) and \
+            (output_eos or idx != eos_idx),
+        seq)
+
+
+def py_infer(test_data, trg_idx2word):
+    """
+    Inference by beam search implented by python, while the calculations from
+    symbols to probilities execute by Fluid operators.
+    """
     place = fluid.CUDAPlace(0) if InferTaskConfig.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
@@ -341,49 +368,8 @@ def infer(args):
     fluid.io.load_vars(exe, InferTaskConfig.model_path, vars=decoder_params)
 
     # This is used here to set dropout to the test mode.
-    encoder_program = fluid.io.get_inference_program(
-        target_vars=[enc_output], main_program=encoder_program)
-    decoder_program = fluid.io.get_inference_program(
-        target_vars=[predict], main_program=decoder_program)
-
-    test_data = reader.DataReader(
-        src_vocab_fpath=args.src_vocab_fpath,
-        trg_vocab_fpath=args.trg_vocab_fpath,
-        fpattern=args.test_file_pattern,
-        batch_size=args.batch_size,
-        use_token_batch=False,
-        pool_size=args.pool_size,
-        sort_type=reader.SortType.NONE,
-        shuffle=False,
-        shuffle_batch=False,
-        start_mark=args.special_token[0],
-        end_mark=args.special_token[1],
-        unk_mark=args.special_token[2],
-        max_length=ModelHyperParams.max_length,
-        clip_last_batch=False)
-
-    trg_idx2word = test_data.load_dict(
-        dict_path=args.trg_vocab_fpath, reverse=True)
-
-    def post_process_seq(seq,
-                         bos_idx=ModelHyperParams.bos_idx,
-                         eos_idx=ModelHyperParams.eos_idx,
-                         output_bos=InferTaskConfig.output_bos,
-                         output_eos=InferTaskConfig.output_eos):
-        """
-        Post-process the beam-search decoded sequence. Truncate from the first
-        <eos> and remove the <bos> and <eos> tokens currently.
-        """
-        eos_pos = len(seq) - 1
-        for i, idx in enumerate(seq):
-            if idx == eos_idx:
-                eos_pos = i
-                break
-        seq = seq[:eos_pos + 1]
-        return filter(
-            lambda idx: (output_bos or idx != bos_idx) and \
-                (output_eos or idx != eos_idx),
-            seq)
+    encoder_program = encoder_program.inference_optimize()
+    decoder_program = decoder_program.inference_optimize()
 
     for batch_id, data in enumerate(test_data.batch_generator()):
         batch_seqs, batch_scores = translate_batch(
@@ -397,7 +383,7 @@ def infer(args):
             (decoder_data_input_fields[-1], ),
             [predict.name],
             InferTaskConfig.beam_size,
-            InferTaskConfig.max_length,
+            InferTaskConfig.max_out_len,
             InferTaskConfig.n_best,
             len(data),
             ModelHyperParams.n_head,
@@ -414,6 +400,154 @@ def infer(args):
             scores = batch_scores[i]
             for seq in seqs:
                 print(" ".join([trg_idx2word[idx] for idx in seq]))
+
+
+def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
+                        bos_idx, n_head, d_model, place):
+    """
+    Put all padded data needed by beam search decoder into a dict.
+    """
+    src_word, src_pos, src_slf_attn_bias, src_max_len = pad_batch_data(
+        [inst[0] for inst in insts], src_pad_idx, n_head, is_target=False)
+    # start tokens
+    trg_word = np.asarray([[bos_idx]] * len(insts), dtype="int64")
+    trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
+                                [1, 1, 1, 1]).astype("float32")
+
+    # These shape tensors are used in reshape_op.
+    src_data_shape = np.array([-1, src_max_len, d_model], dtype="int32")
+    trg_data_shape = np.array([-1, 1, d_model], dtype="int32")
+    src_slf_attn_pre_softmax_shape = np.array(
+        [-1, src_slf_attn_bias.shape[-1]], dtype="int32")
+    src_slf_attn_post_softmax_shape = np.array(
+        [-1] + list(src_slf_attn_bias.shape[1:]), dtype="int32")
+    trg_slf_attn_pre_softmax_shape = np.array(
+        [-1, 1], dtype="int32")  # only the first time step
+    trg_slf_attn_post_softmax_shape = np.array(
+        [-1, n_head, 1, 1], dtype="int32")  # only the first time step
+    trg_src_attn_pre_softmax_shape = np.array(
+        [-1, trg_src_attn_bias.shape[-1]], dtype="int32")
+    trg_src_attn_post_softmax_shape = np.array(
+        [-1] + list(trg_src_attn_bias.shape[1:]), dtype="int32")
+    # These inputs are used to change the shapes in the loop of while op.
+    attn_pre_softmax_shape_delta = np.array([0, 1], dtype="int32")
+    attn_post_softmax_shape_delta = np.array([0, 0, 0, 1], dtype="int32")
+
+    def to_lodtensor(data, place, lod=None):
+        data_tensor = fluid.LoDTensor()
+        data_tensor.set(data, place)
+        if lod is not None:
+            data_tensor.set_lod(lod)
+        return data_tensor
+
+    # beamsearch_op must use tensors with lod
+    init_score = to_lodtensor(
+        np.zeros_like(
+            trg_word, dtype="float32"),
+        place, [range(trg_word.shape[0] + 1)] * 2)
+    trg_word = to_lodtensor(trg_word, place, [range(trg_word.shape[0] + 1)] * 2)
+
+    data_input_dict = dict(
+        zip(data_input_names, [
+            src_word, src_pos, src_slf_attn_bias, trg_word, init_score,
+            trg_src_attn_bias
+        ]))
+    util_input_dict = dict(
+        zip(util_input_names, [
+            src_data_shape, src_slf_attn_pre_softmax_shape,
+            src_slf_attn_post_softmax_shape, trg_data_shape,
+            trg_slf_attn_pre_softmax_shape, trg_slf_attn_post_softmax_shape,
+            trg_src_attn_pre_softmax_shape, trg_src_attn_post_softmax_shape,
+            attn_pre_softmax_shape_delta, attn_post_softmax_shape_delta
+        ]))
+
+    input_dict = dict(data_input_dict.items() + util_input_dict.items())
+    return input_dict
+
+
+def fast_infer(test_data, trg_idx2word):
+    """
+    Inference by beam search decoder based solely on Fluid operators.
+    """
+    place = fluid.CUDAPlace(0) if InferTaskConfig.use_gpu else fluid.CPUPlace()
+    exe = fluid.Executor(place)
+
+    out_ids, out_scores = fast_decoder(
+        ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size,
+        ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
+        ModelHyperParams.n_head, ModelHyperParams.d_key,
+        ModelHyperParams.d_value, ModelHyperParams.d_model,
+        ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
+        ModelHyperParams.weight_sharing, InferTaskConfig.beam_size,
+        InferTaskConfig.max_out_len, ModelHyperParams.eos_idx)
+
+    fluid.io.load_vars(
+        exe,
+        InferTaskConfig.model_path,
+        vars=filter(lambda var: isinstance(var, fluid.framework.Parameter),
+                    fluid.default_main_program().list_vars()))
+
+    # This is used here to set dropout to the test mode.
+    infer_program = fluid.default_main_program().inference_optimize()
+
+    for batch_id, data in enumerate(test_data.batch_generator()):
+        data_input = prepare_batch_input(
+            data, encoder_data_input_fields + fast_decoder_data_input_fields,
+            encoder_util_input_fields + fast_decoder_util_input_fields,
+            ModelHyperParams.eos_idx, ModelHyperParams.bos_idx,
+            ModelHyperParams.n_head, ModelHyperParams.d_model, place)
+        seq_ids, seq_scores = exe.run(infer_program,
+                                      feed=data_input,
+                                      fetch_list=[out_ids, out_scores],
+                                      return_numpy=False)
+        # How to parse the results:
+        #   Suppose the lod of seq_ids is:
+        #     [[0, 3, 6], [0, 12, 24, 40, 54, 67, 82]]
+        #   then from lod[0]:
+        #     there are 2 source sentences, beam width is 3.
+        #   from lod[1]:
+        #     the first source sentence has 3 hyps; the lengths are 12, 12, 16
+        #     the second source sentence has 3 hyps; the lengths are 14, 13, 15
+        hyps = [[] for i in range(len(data))]
+        scores = [[] for i in range(len(data))]
+        for i in range(len(seq_ids.lod()[0]) - 1):  # for each source sentence
+            start = seq_ids.lod()[0][i]
+            end = seq_ids.lod()[0][i + 1]
+            for j in range(end - start):  # for each candidate
+                sub_start = seq_ids.lod()[1][start + j]
+                sub_end = seq_ids.lod()[1][start + j + 1]
+                hyps[i].append(" ".join([
+                    trg_idx2word[idx]
+                    for idx in post_process_seq(
+                        np.array(seq_ids)[sub_start:sub_end])
+                ]))
+                scores[i].append(np.array(seq_scores)[sub_end - 1])
+                print hyps[i][-1]
+                if len(hyps[i]) >= InferTaskConfig.n_best:
+                    break
+
+
+def infer(args, inferencer=fast_infer):
+    place = fluid.CUDAPlace(0) if InferTaskConfig.use_gpu else fluid.CPUPlace()
+    exe = fluid.Executor(place)
+    test_data = reader.DataReader(
+        src_vocab_fpath=args.src_vocab_fpath,
+        trg_vocab_fpath=args.trg_vocab_fpath,
+        fpattern=args.test_file_pattern,
+        batch_size=args.batch_size,
+        use_token_batch=False,
+        pool_size=args.pool_size,
+        sort_type=reader.SortType.NONE,
+        shuffle=False,
+        shuffle_batch=False,
+        start_mark=args.special_token[0],
+        end_mark=args.special_token[1],
+        unk_mark=args.special_token[2],
+        max_length=ModelHyperParams.max_length,
+        clip_last_batch=False)
+    trg_idx2word = test_data.load_dict(
+        dict_path=args.trg_vocab_fpath, reverse=True)
+    inferencer(test_data, trg_idx2word)
 
 
 if __name__ == "__main__":

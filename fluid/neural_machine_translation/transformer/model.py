@@ -30,7 +30,8 @@ def multi_head_attention(queries,
                          n_head=1,
                          dropout_rate=0.,
                          pre_softmax_shape=None,
-                         post_softmax_shape=None):
+                         post_softmax_shape=None,
+                         cache=None):
     """
     Multi-Head Attention. Note that attn_bias is added to the logit before
     computing softmax activiation to mask certain selected positions so that
@@ -115,6 +116,10 @@ def multi_head_attention(queries,
         return out
 
     q, k, v = __compute_qkv(queries, keys, values, n_head, d_key, d_value)
+
+    if cache is not None:  # use cache and concat time steps
+        k = cache["k"] = layers.concat([cache["k"], k], axis=1)
+        v = cache["v"] = layers.concat([cache["v"], v], axis=1)
 
     q = __split_heads(q, n_head)
     k = __split_heads(k, n_head)
@@ -203,7 +208,7 @@ def prepare_encoder(src_word,
     enc_input = src_word_emb + src_pos_enc
     enc_input = layers.reshape(
         x=enc_input,
-        shape=[-1, src_max_len, src_emb_dim],
+        shape=[batch_size, seq_len, src_emb_dim],
         actual_shape=src_data_shape)
     return layers.dropout(
         enc_input, dropout_prob=dropout_rate,
@@ -285,7 +290,8 @@ def decoder_layer(dec_input,
                   slf_attn_pre_softmax_shape=None,
                   slf_attn_post_softmax_shape=None,
                   src_attn_pre_softmax_shape=None,
-                  src_attn_post_softmax_shape=None):
+                  src_attn_post_softmax_shape=None,
+                  cache=None):
     """ The layer to be stacked in decoder part.
     The structure of this module is similar to that in the encoder part except
     a multi-head attention is added to implement encoder-decoder attention.
@@ -301,7 +307,8 @@ def decoder_layer(dec_input,
         n_head,
         dropout_rate,
         slf_attn_pre_softmax_shape,
-        slf_attn_post_softmax_shape, )
+        slf_attn_post_softmax_shape,
+        cache, )
     slf_attn_output = post_process_layer(
         dec_input,
         slf_attn_output,
@@ -350,7 +357,8 @@ def decoder(dec_input,
             slf_attn_pre_softmax_shape=None,
             slf_attn_post_softmax_shape=None,
             src_attn_pre_softmax_shape=None,
-            src_attn_post_softmax_shape=None):
+            src_attn_post_softmax_shape=None,
+            caches=None):
     """
     The decoder is composed of a stack of identical decoder_layer layers.
     """
@@ -369,7 +377,8 @@ def decoder(dec_input,
             slf_attn_pre_softmax_shape,
             slf_attn_post_softmax_shape,
             src_attn_pre_softmax_shape,
-            src_attn_post_softmax_shape, )
+            src_attn_post_softmax_shape,
+            None if caches is None else caches[i], )
         dec_input = dec_output
     return dec_output
 
@@ -384,6 +393,8 @@ def make_all_inputs(input_fields):
             name=input_field,
             shape=input_descs[input_field][0],
             dtype=input_descs[input_field][1],
+            lod_level=input_descs[input_field][2]
+            if len(input_descs[input_field]) == 3 else 0,
             append_batch_size=False)
         inputs.append(input_var)
     return inputs
@@ -517,7 +528,8 @@ def wrap_decoder(trg_vocab_size,
                  dropout_rate,
                  weight_sharing,
                  dec_inputs=None,
-                 enc_output=None):
+                 enc_output=None,
+                 caches=None):
     """
     The wrapper assembles together all needed layers for the decoder.
     """
@@ -559,7 +571,8 @@ def wrap_decoder(trg_vocab_size,
         slf_attn_pre_softmax_shape,
         slf_attn_post_softmax_shape,
         src_attn_pre_softmax_shape,
-        src_attn_post_softmax_shape, )
+        src_attn_post_softmax_shape,
+        caches, )
     # Return logits for training and probs for inference.
     if weight_sharing:
         predict = layers.reshape(
@@ -578,3 +591,145 @@ def wrap_decoder(trg_vocab_size,
             shape=[-1, trg_vocab_size],
             act="softmax" if dec_inputs is None else None)
     return predict
+
+
+def fast_decode(
+        src_vocab_size,
+        trg_vocab_size,
+        max_in_len,
+        n_layer,
+        n_head,
+        d_key,
+        d_value,
+        d_model,
+        d_inner_hid,
+        dropout_rate,
+        weight_sharing,
+        beam_size,
+        max_out_len,
+        eos_idx, ):
+    """
+    Use beam search to decode. Caches will be used to store states of history
+    steps which can make the decoding faster.
+    """
+    enc_output = wrap_encoder(src_vocab_size, max_in_len, n_layer, n_head,
+                              d_key, d_value, d_model, d_inner_hid,
+                              dropout_rate, weight_sharing)
+    start_tokens, init_scores, trg_src_attn_bias, trg_data_shape, \
+        slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape, \
+        src_attn_pre_softmax_shape, src_attn_post_softmax_shape, \
+        attn_pre_softmax_shape_delta, attn_post_softmax_shape_delta = \
+        make_all_inputs(fast_decoder_data_input_fields +
+                            fast_decoder_util_input_fields)
+
+    def beam_search():
+        max_len = layers.fill_constant(
+            shape=[1], dtype=start_tokens.dtype, value=max_out_len)
+        step_idx = layers.fill_constant(
+            shape=[1], dtype=start_tokens.dtype, value=0)
+        cond = layers.less_than(x=step_idx, y=max_len)
+        while_op = layers.While(cond)
+        # array states will be stored for each step.
+        ids = layers.array_write(start_tokens, step_idx)
+        scores = layers.array_write(init_scores, step_idx)
+        # cell states will be overwrited at each step.
+        # caches contains states of history steps to reduce redundant
+        # computation in decoder.
+        caches = [{
+            "k": layers.fill_constant_batch_size_like(
+                input=start_tokens,
+                shape=[-1, 0, d_model],
+                dtype=enc_output.dtype,
+                value=0),
+            "v": layers.fill_constant_batch_size_like(
+                input=start_tokens,
+                shape=[-1, 0, d_model],
+                dtype=enc_output.dtype,
+                value=0)
+        } for i in range(n_layer)]
+        with while_op.block():
+            pre_ids = layers.array_read(array=ids, i=step_idx)
+            pre_scores = layers.array_read(array=scores, i=step_idx)
+            # sequence_expand can gather sequences according to lod thus can be
+            # used in beam search to sift states corresponding to selected ids.
+            pre_src_attn_bias = layers.sequence_expand(
+                x=trg_src_attn_bias, y=pre_scores)
+            pre_enc_output = layers.sequence_expand(x=enc_output, y=pre_scores)
+            pre_caches = [{
+                "k": layers.sequence_expand(
+                    x=cache["k"], y=pre_scores),
+                "v": layers.sequence_expand(
+                    x=cache["v"], y=pre_scores),
+            } for cache in caches]
+            pre_pos = layers.elementwise_mul(
+                x=layers.fill_constant_batch_size_like(
+                    input=pre_enc_output,  # cann't use pre_ids here since it has lod
+                    value=1,
+                    shape=[-1, 1],
+                    dtype=pre_ids.dtype),
+                y=layers.increment(
+                    x=step_idx, value=1.0, in_place=False),
+                axis=0)
+            logits = wrap_decoder(
+                trg_vocab_size,
+                max_in_len,
+                n_layer,
+                n_head,
+                d_key,
+                d_value,
+                d_model,
+                d_inner_hid,
+                dropout_rate,
+                weight_sharing,
+                dec_inputs=(
+                    pre_ids, pre_pos, None, pre_src_attn_bias, trg_data_shape,
+                    slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape,
+                    src_attn_pre_softmax_shape, src_attn_post_softmax_shape),
+                enc_output=pre_enc_output,
+                caches=pre_caches)
+            topk_scores, topk_indices = layers.topk(
+                input=layers.softmax(logits), k=beam_size)
+            accu_scores = layers.elementwise_add(
+                x=layers.log(topk_scores),
+                y=layers.reshape(
+                    pre_scores, shape=[-1]),
+                axis=0)
+            # beam_search op uses lod to distinguish branches.
+            topk_indices = layers.lod_reset(topk_indices, pre_ids)
+            selected_ids, selected_scores = layers.beam_search(
+                pre_ids=pre_ids,
+                pre_scores=pre_scores,
+                ids=topk_indices,
+                scores=accu_scores,
+                beam_size=beam_size,
+                end_id=eos_idx)
+            layers.increment(x=step_idx, value=1.0, in_place=True)
+            # update states
+            layers.array_write(selected_ids, i=step_idx, array=ids)
+            layers.array_write(selected_scores, i=step_idx, array=scores)
+            layers.assign(pre_src_attn_bias, trg_src_attn_bias)
+            layers.assign(pre_enc_output, enc_output)
+            for i in range(n_layer):
+                layers.assign(pre_caches[i]["k"], caches[i]["k"])
+                layers.assign(pre_caches[i]["v"], caches[i]["v"])
+            layers.assign(
+                layers.elementwise_add(
+                    x=slf_attn_pre_softmax_shape,
+                    y=attn_pre_softmax_shape_delta),
+                slf_attn_pre_softmax_shape)
+            layers.assign(
+                layers.elementwise_add(
+                    x=slf_attn_post_softmax_shape,
+                    y=attn_post_softmax_shape_delta),
+                slf_attn_post_softmax_shape)
+
+            length_cond = layers.less_than(x=step_idx, y=max_len)
+            finish_cond = layers.logical_not(layers.is_empty(x=selected_ids))
+            layers.logical_and(x=length_cond, y=finish_cond, out=cond)
+
+        finished_ids, finished_scores = layers.beam_search_decode(
+            ids, scores, beam_size=beam_size, end_id=eos_idx)
+        return finished_ids, finished_scores
+
+    finished_ids, finished_scores = beam_search()
+    return finished_ids, finished_scores
