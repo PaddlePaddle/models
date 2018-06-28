@@ -1,6 +1,6 @@
 [中文版](README_cn.md)
 
-# Reproduce DQN, DoubleDQN, DuelingDQN model with Fluid version of PaddlePaddle
+## Reproduce DQN, DoubleDQN, DuelingDQN model with Fluid version of PaddlePaddle
 Based on PaddlePaddle's next-generation API Fluid, the DQN model of deep reinforcement learning is reproduced, and the same level of indicators of the paper is reproduced in the classic Atari game. The model receives the image of the game as input, and uses the end-to-end model to directly predict the next step. The repository contains the following three types of models.
 + DQN in
 [Human-level Control Through Deep Reinforcement Learning](http://www.nature.com/nature/journal/v518/n7540/full/nature14236.html)
@@ -9,13 +9,14 @@ Based on PaddlePaddle's next-generation API Fluid, the DQN model of deep reinfor
 + DuelingDQN in:
 [Dueling Network Architectures for Deep Reinforcement Learning](http://proceedings.mlr.press/v48/wangf16.html)
 
-# Atari benchmark & performance
-## [Atari games introduction](https://gym.openai.com/envs/#atari)
+## Atari benchmark & performance
+### [Atari games introduction](https://gym.openai.com/envs/#atari)
 
-+ Pong game result
+### Pong game result
+The average game rewards that can be obtained for the three models as the number of training steps changes during the training are as follows:
 ![DQN result](assets/dqn.png)
 
-# How to use
+## How to use
 ### Dependencies:
 + python2.7
 + gym
