@@ -17,43 +17,42 @@ Based on PaddlePaddle's next-generation API Fluid, the DQN model of deep reinfor
 
 # How to use
 ### Dependencies:
-    + python2.7
-    + gym
-    + tqdm
-    + opencv-python
-    + paddlepaddle-gpu>=0.12.0
-    + ale_python_interface
++ python2.7
++ gym
++ tqdm
++ opencv-python
++ paddlepaddle-gpu>=0.12.0
++ ale_python_interface
 
 ### Install Dependencies:
-    + Install PaddlePaddle:
-        recommended to compile and install PaddlePaddle from source code
-    + Install other dependencies:
-        ```
-        pip install -r requirement.txt
-        pip install gym[atari]
-        ```
-        Install ale_python_interface, can reference：https://github.com/mgbellemare/Arcade-Learning-Environment
-
++ Install PaddlePaddle:
+    recommended to compile and install PaddlePaddle from source code
++ Install other dependencies:
+    ```
+    pip install -r requirement.txt
+    pip install gym[atari]
+    ```
+    Install ale_python_interface, can reference：https://github.com/mgbellemare/Arcade-Learning-Environment
 
 ### Start Training:
-    ```
-    # To train a model for Pong game with gpu (use DQN model as default)
-    python train.py --rom ./rom_files/pong.bin --use_cuda
+```
+# To train a model for Pong game with gpu (use DQN model as default)
+python train.py --rom ./rom_files/pong.bin --use_cuda
 
-    # To train a model for Pong with DoubleDQN
-    python train.py --rom ./rom_files/pong.bin --use_cuda --alg DoubleDQN
+# To train a model for Pong with DoubleDQN
+python train.py --rom ./rom_files/pong.bin --use_cuda --alg DoubleDQN
 
-    # To train a model for Pong with DuelingDQN
-    python train.py --rom ./rom_files/pong.bin --use_cuda --alg DuelingDQN
-    ```
+# To train a model for Pong with DuelingDQN
+python train.py --rom ./rom_files/pong.bin --use_cuda --alg DuelingDQN
+```
 
-    To train more games, can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms)
+To train more games, can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms)
 
 ### Start Testing:
-    ```
-    # Play the game with saved best model and calculate the average rewards
-    python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong
+```
+# Play the game with saved best model and calculate the average rewards
+python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong
 
-    # Play the game with visualization
-    python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong --viz 0.01
-    ```
+# Play the game with visualization
+python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong --viz 0.01
+```

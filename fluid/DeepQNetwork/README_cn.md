@@ -15,43 +15,43 @@
 
 # 使用教程
 ### 依赖:
-    + python2.7
-    + gym
-    + tqdm
-    + opencv-python
-    + paddlepaddle-gpu>=0.12.0
-    + ale_python_interface
++ python2.7
++ gym
++ tqdm
++ opencv-python
++ paddlepaddle-gpu>=0.12.0
++ ale_python_interface
 
 ### 下载依赖：
-    + 安装PaddlePaddle：
-        建议通过PaddlePaddle源码进行编译安装  
-    + 下载其它依赖：
-        ```
-        pip install -r requirement.txt
-        pip install gym[atari]
-        ```
-        安装ale_python_interface可以参考：https://github.com/mgbellemare/Arcade-Learning-Environment
++ 安装PaddlePaddle：
+    建议通过PaddlePaddle源码进行编译安装  
++ 下载其它依赖：
+    ```
+    pip install -r requirement.txt
+    pip install gym[atari]
+    ```
+    安装ale_python_interface可以参考：https://github.com/mgbellemare/Arcade-Learning-Environment
 
 ### 训练模型：
-    ```
-    # 使用GPU训练Pong游戏（默认使用DQN模型）
-    python train.py --rom ./rom_files/pong.bin --use_cuda
+```
+# 使用GPU训练Pong游戏（默认使用DQN模型）
+python train.py --rom ./rom_files/pong.bin --use_cuda
 
-    # 训练DoubleDQN模型
-    python train.py --rom ./rom_files/pong.bin --use_cuda --alg DoubleDQN
+# 训练DoubleDQN模型
+python train.py --rom ./rom_files/pong.bin --use_cuda --alg DoubleDQN
 
-    # 训练DuelingDQN模型
-    python train.py --rom ./rom_files/pong.bin --use_cuda --alg DuelingDQN
-    ```
+# 训练DuelingDQN模型
+python train.py --rom ./rom_files/pong.bin --use_cuda --alg DuelingDQN
+```
 
-    训练更多游戏，可以下载游戏rom从[这里](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms)
+训练更多游戏，可以下载游戏rom从[这里](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms)
 
 ### 测试模型：
-    ```
-    # Play the game with saved model and calculate the average rewards
-    # 使用训练过程中保存的最好模型玩游戏，以及计算平均奖励（rewards）
-    python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong
+```
+# Play the game with saved model and calculate the average rewards
+# 使用训练过程中保存的最好模型玩游戏，以及计算平均奖励（rewards）
+python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong
 
-    # 以可视化的形式来玩游戏
-    python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong --viz 0.01
-    ```
+# 以可视化的形式来玩游戏
+python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong --viz 0.01
+```
