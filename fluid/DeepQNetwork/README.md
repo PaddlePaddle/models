@@ -13,7 +13,7 @@ Based on PaddlePaddle's next-generation API Fluid, the DQN model of deep reinfor
 ### [Atari games introduction](https://gym.openai.com/envs/#atari)
 
 ### Pong game result
-The average game rewards that can be obtained for the three models as the number of training steps changes during the training are as follows:
+The average game rewards that can be obtained for the three models as the number of training steps changes during the training are as follows(about 3 hours/1 Million steps):
 ![DQN result](assets/dqn.png)
 
 ## How to use
