@@ -36,6 +36,7 @@ class GeneratorEnqueuer(object):
         self._threads = []
         self._stop_event = None
         self.queue = None
+        self._manager = None
         self.seed = random_seed
 
     def start(self, workers=1, max_queue_size=10):
@@ -52,23 +53,38 @@ class GeneratorEnqueuer(object):
             """
             Data generator task.
             """
-            while not self._stop_event.is_set():
-                try:
-                    if self._use_multiprocessing or self.queue.qsize(
-                    ) < max_queue_size:
-                        generator_output = next(self._generator)
-                        self.queue.put(generator_output)
-                    else:
-                        time.sleep(self.wait_time)
-                except Exception:
-                    self._stop_event.set()
-                    raise
+
+            def task():
+                if (self.queue is not None and
+                        self.queue.qsize() < max_queue_size):
+                    generator_output = next(self._generator)
+                    self.queue.put((generator_output))
+                else:
+                    time.sleep(self.wait_time)
+
+            if not self._use_multiprocessing:
+                while not self._stop_event.is_set():
+                    with self.genlock:
+                        try:
+                            task()
+                        except Exception:
+                            self._stop_event.set()
+                            break
+            else:
+                while not self._stop_event.is_set():
+                    try:
+                        task()
+                    except Exception:
+                        self._stop_event.set()
+                        break
 
         try:
             if self._use_multiprocessing:
-                self.queue = multiprocessing.Queue(maxsize=max_queue_size)
+                self._manager = multiprocessing.Manager()
+                self.queue = self._manager.Queue(maxsize=max_queue_size)
                 self._stop_event = multiprocessing.Event()
             else:
+                self.genlock = threading.Lock()
                 self.queue = queue.Queue()
                 self._stop_event = threading.Event()
             for _ in range(workers):
@@ -106,14 +122,14 @@ class GeneratorEnqueuer(object):
         if self.is_running():
             self._stop_event.set()
         for thread in self._threads:
-            if thread.is_alive():
-                if self._use_multiprocessing:
+            if self._use_multiprocessing:
+                if thread.is_alive():
                     thread.terminate()
-                else:
-                    thread.join(timeout)
-        if self._use_multiprocessing:
-            if self.queue is not None:
-                self.queue.close()
+            else:
+                thread.join(timeout)
+        if self._manager:
+            self._manager.shutdown()
+
         self._threads = []
         self._stop_event = None
         self.queue = None
