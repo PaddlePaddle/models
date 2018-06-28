@@ -14,7 +14,7 @@
 ![DQN result](assets/dqn.png)
 
 # 使用教程
-+ 依赖:
+### 依赖:
     + python2.7
     + gym
     + tqdm
@@ -22,7 +22,7 @@
     + paddlepaddle-gpu>=0.12.0
     + ale_python_interface
 
-+ 下载依赖：
+### 下载依赖：
     + 安装PaddlePaddle：
         建议通过PaddlePaddle源码进行编译安装  
     + 下载其它依赖：
@@ -32,7 +32,7 @@
         ```
         安装ale_python_interface可以参考：https://github.com/mgbellemare/Arcade-Learning-Environment
 
-+ 训练模型：
+### 训练模型：
     ```
     # 使用GPU训练Pong游戏（默认使用DQN模型）
     python train.py --rom ./rom_files/pong.bin --use_cuda
@@ -46,7 +46,7 @@
 
     训练更多游戏，可以下载游戏rom从[这里](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms)
 
-+ 测试模型：
+### 测试模型：
     ```
     # Play the game with saved model and calculate the average rewards
     # 使用训练过程中保存的最好模型玩游戏，以及计算平均奖励（rewards）
