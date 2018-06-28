@@ -169,7 +169,7 @@ def detect_face(image, shrink):
                 detection = np.array(detection)
     # layout: xmin, ymin, xmax. ymax, score
     if detection.shape == (1, ):
-        print ("No face detected")
+        print("No face detected")
         return np.array([[0, 0, 0, 0, 0]])
     det_conf = detection[:, 1]
     det_xmin = image_shape[2] * detection[:, 2] / shrink
