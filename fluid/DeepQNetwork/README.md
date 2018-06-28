@@ -57,3 +57,4 @@ python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/
 # Play the game with visualization
 python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong --viz 0.01
 ```
+[Here](https://pan.baidu.com/s/1gIsbNw5V7tMeb74ojx-TMA) is saved models for Pong and Breakout games. You can use it to play the game directly.

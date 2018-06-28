@@ -56,4 +56,4 @@ python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/
 # 以可视化的形式来玩游戏
 python play.py --rom ./rom_files/pong.bin --use_cuda --model_path ./saved_model/DQN-pong --viz 0.01
 ```
-
+[这里](https://pan.baidu.com/s/1gIsbNw5V7tMeb74ojx-TMA)是Pong和Breakout游戏训练好的模型，可以直接用来测试。
