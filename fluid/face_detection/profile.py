@@ -41,6 +41,7 @@ def train(args, config, train_file_list, optimizer_method):
     pretrained_model = args.pretrained_model
     skip_reader = args.skip_reader
     num_iterations = args.num_iteration
+    parallel = args.parallel
 
     num_classes = 2
     image_shape = [3, height, width]
@@ -99,7 +100,7 @@ def train(args, config, train_file_list, optimizer_method):
             return os.path.exists(os.path.join(pretrained_model, var.name))
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    if args.parallel:
+    if parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=use_gpu, loss_name=loss.name)
 
@@ -138,7 +139,7 @@ def train(args, config, train_file_list, optimizer_method):
             reader_time.append(end_time - start_time)
 
             start_time = time.time()
-            if args.parallel:
+            if parallel:
                 fetch_vars = train_exe.run(fetch_list=[v.name for v in fetches],
                                            feed=feed_data)
             else:
@@ -161,11 +162,15 @@ def train(args, config, train_file_list, optimizer_method):
 
     # profiling
     start = time.time()
-    with profiler.profiler('All', 'total', '/tmp/profile_file'):
+    if not parallel:
+        with profiler.profiler('All', 'total', '/tmp/profile_file'):
+            reader_time, run_time = run(num_iterations, feed_data)
+    else:
         reader_time, run_time = run(num_iterations, feed_data)
     end = time.time()
     total_time = end - start
-    print("Total time: {0}, reader time: {1} s, run time: {2} s".format(total_time, np.sum(reader_time), np.sum(run_time)))
+    print("Total time: {0}, reader time: {1} s, run time: {2} s".format(
+        total_time, np.sum(reader_time), np.sum(run_time)))
 
 
 if __name__ == '__main__':
@@ -180,6 +185,6 @@ if __name__ == '__main__':
         resize_h=args.resize_h,
         resize_w=args.resize_w,
         apply_expand=False,
-        mean_value=[104., 117., 123],
+        mean_value=[104., 117., 123.],
         ap_version='11point')
     train(args, config, train_file_list, optimizer_method="momentum")

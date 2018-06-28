@@ -1,5 +1,5 @@
 """
-This code is refer https://github.com/fchollet/keras/blob/master/keras/utils/data_utils.py
+This code is based on https://github.com/fchollet/keras/blob/master/keras/utils/data_utils.py
 """
 
 import time
@@ -13,13 +13,15 @@ except ImportError:
 
 
 class GeneratorEnqueuer(object):
-    """Builds a queue out of a data generator.
-    Used in `fit_generator`, `evaluate_generator`, `predict_generator`.
-    # Arguments
+    """
+    Builds a queue out of a data generator.
+
+    Args:
         generator: a generator function which endlessly yields data
-        use_multiprocessing: use multiprocessing if True, otherwise threading
-        wait_time: time to sleep in-between calls to `put()`
-        random_seed: Initial seed for workers,
+        use_multiprocessing (bool): use multiprocessing if True,
+            otherwise use threading.
+        wait_time (float): time to sleep in-between calls to `put()`.
+        random_seed (int): Initial seed for workers,
             will be incremented by one for each workers.
     """
 
@@ -37,10 +39,12 @@ class GeneratorEnqueuer(object):
         self.seed = random_seed
 
     def start(self, workers=1, max_queue_size=10):
-        """Kicks off threads which add data from the generator into the queue.
-        # Arguments
-            workers: number of worker threads
-            max_queue_size: queue size
+        """
+        Start worker threads which add data from the generator into the queue.
+
+        Args:
+            workers (int): number of worker threads
+            max_queue_size (int): queue size
                 (when full, threads could block on `put()`)
         """
 
@@ -86,15 +90,18 @@ class GeneratorEnqueuer(object):
 
     def is_running(self):
         """
-        Is running.
+        Returns:
+            bool: Whether the worker theads are running.
         """
         return self._stop_event is not None and not self._stop_event.is_set()
 
     def stop(self, timeout=None):
-        """Stops running threads and wait for them to exit, if necessary.
+        """
+        Stops running threads and wait for them to exit, if necessary.
         Should be called by the same thread which called `start()`.
-        # Arguments
-            timeout: maximum time to wait on `thread.join()`.
+
+        Args:
+            timeout(int|None): maximum time to wait on `thread.join()`.
         """
         if self.is_running():
             self._stop_event.set()
@@ -112,10 +119,12 @@ class GeneratorEnqueuer(object):
         self.queue = None
 
     def get(self):
-        """Creates a generator to extract data from the queue.
+        """
+        Creates a generator to extract data from the queue.
         Skip the data if it is `None`.
-        # Returns
-            A generator
+
+        # Yields
+            tuple of data in the queue.
         """
         while self.is_running():
             if not self.queue.empty():
