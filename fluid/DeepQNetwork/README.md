@@ -1,7 +1,7 @@
 [中文版](README_cn.md)
 
 ## Reproduce DQN, DoubleDQN, DuelingDQN model with Fluid version of PaddlePaddle
-Based on PaddlePaddle's next-generation API Fluid, the DQN model of deep reinforcement learning is reproduced, and the same level of indicators of the paper is reproduced in the classic Atari game. The model receives the image of the game as input, and uses the end-to-end model to directly predict the next step. The repository contains the following three types of models.
+Based on PaddlePaddle's next-generation API Fluid, the DQN model of deep reinforcement learning is reproduced, and the same level of indicators of the paper is reproduced in the classic Atari game. The model receives the image of the game as input, and uses the end-to-end model to directly predict the next step. The repository contains the following three types of models:
 + DQN in
 [Human-level Control Through Deep Reinforcement Learning](http://www.nature.com/nature/journal/v518/n7540/full/nature14236.html)
 + DoubleDQN in:
@@ -10,11 +10,18 @@ Based on PaddlePaddle's next-generation API Fluid, the DQN model of deep reinfor
 [Dueling Network Architectures for Deep Reinforcement Learning](http://proceedings.mlr.press/v48/wangf16.html)
 
 ## Atari benchmark & performance
-### [Atari games introduction](https://gym.openai.com/envs/#atari)
+
+### Atari games introduction
+
+Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari game.
 
 ### Pong game result
+
 The average game rewards that can be obtained for the three models as the number of training steps changes during the training are as follows(about 3 hours/1 Million steps):
-![DQN result](assets/dqn.png)
+
+<div align="center">
+<img src="assets/dqn.png" width="600" height="300" alt="DQN result"></img>
+</div>
 
 ## How to use
 ### Dependencies:
@@ -33,7 +40,7 @@ The average game rewards that can be obtained for the three models as the number
     pip install -r requirement.txt
     pip install gym[atari]
     ```
-    Install ale_python_interface, can reference：https://github.com/mgbellemare/Arcade-Learning-Environment
+    Install ale_python_interface, please see [here](https://github.com/mgbellemare/Arcade-Learning-Environment).
 
 ### Start Training:
 ```
@@ -47,7 +54,7 @@ python train.py --rom ./rom_files/pong.bin --use_cuda --alg DoubleDQN
 python train.py --rom ./rom_files/pong.bin --use_cuda --alg DuelingDQN
 ```
 
-To train more games, can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms)
+To train more games, you can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms).
 
 ### Start Testing:
 ```
