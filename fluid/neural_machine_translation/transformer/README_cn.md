@@ -58,13 +58,16 @@ Decoder 具有和 Encoder 类似的结构，只是相比于组成 Encoder 的 la
 
 ### 数据准备
 
-我们这里使用 [WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)，同时参照论文中的设置使用 BPE（byte-pair encoding）[4]编码的数据，使用这种方式表示的数据能够更好的解决未登录词（out-of-vocabulary，OOV）的问题。用到的 BPE 数据可以参照[这里](https://github.com/google/seq2seq/blob/master/docs/data.md)进行下载，下载后解压，其中 `train.tok.clean.bpe.32000.en` 和 `train.tok.clean.bpe.32000.de` 为使用 BPE 的训练数据（平行语料，分别对应了英语和德语），`newstest2013.tok.bpe.32000.en` 和 `newstest2013.tok.bpe.32000.de` 等为测试数据（`newstest2013.tok.en` 和 `newstest2013.tok.de` 等则为对应的未使用 BPE 的测试数据），`vocab.bpe.32000` 为相应的词典文件（源语言和目标语言共享该词典文件）。
+我们以 [WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)作为示例，同时参照论文中的设置使用 BPE（byte-pair encoding）[4]编码的数据，使用这种方式表示的数据能够更好的解决未登录词（out-of-vocabulary，OOV）的问题。用到的 BPE 数据可以参照[这里](https://github.com/google/seq2seq/blob/master/docs/data.md)进行下载，下载后解压，其中 `train.tok.clean.bpe.32000.en` 和 `train.tok.clean.bpe.32000.de` 为使用 BPE 的训练数据（平行语料，分别对应了英语和德语，经过了 tokenize 和 BPE 的处理），`newstest2013.tok.bpe.32000.en` 和 `newstest2013.tok.bpe.32000.de` 等为测试数据（`newstest2013.tok.en` 和 `newstest2013.tok.de` 等则为对应的未使用 BPE 的测试数据），`vocab.bpe.32000` 为相应的词典文件（源语言和目标语言共享该词典文件）。
 
-由于本示例中的数据读取脚本 `reader.py` 使用的样本数据的格式为 `\t` 分隔的的源语言和目标语言句子对， 因此需要将源语言到目标语言的平行语料库文件合并为一个文件，可以执行以下命令进行合并：
+由于本示例中的数据读取脚本 `reader.py` 使用的样本数据的格式为 `\t` 分隔的的源语言和目标语言句子对（句子中的词之间使用空格分隔）， 因此需要将源语言到目标语言的平行语料库文件合并为一个文件，可以执行以下命令进行合并：
 ```sh
 paste -d '\t' train.tok.clean.bpe.32000.en train.tok.clean.bpe.32000.de > train.tok.clean.bpe.32000.en-de
 ```
-此外还需要在词典文件中加上表示序列的开始、序列的结束和未登录词的3个特殊符号 `<s>` 、`<e>` 和 `<unk>` 。
+此外，下载的词典文件 `vocab.bpe.32000` 中未包含表示序列开始、序列结束和未登录词的特殊符号，可以使用如下命令在词典中加入 `<s>` 、`<e>` 和 `<unk>` 作为这三个特殊符号。
+```sh
+sed -i '1i\<s>\n<e>\n<unk>' vocab.bpe.32000
+```
 
 对于其他自定义数据，遵循或转换为上述的数据格式即可。如果希望在自定义数据中使用 BPE 编码，可以参照[这里](https://github.com/rsennrich/subword-nmt)进行预处理。
 
@@ -82,7 +85,7 @@ python -u train.py \
   --sort_type pool \
   --pool_size 200000 \
 ```
-上述命令中设置了源语言词典文件路径（`src_vocab_fpath`）、目标语言词典文件路径（`trg_vocab_fpath`）、训练数据文件（`train_file_pattern`）等数据相关的参数和构造 batch 方式（`use_token_batch` 指出数据按照 token 数目或者 sequence 数目组成 batch）等 reader 相关的参数。有关这些参数更详细的信息可以通过执行以下命令查看：
+上述命令中设置了源语言词典文件路径（`src_vocab_fpath`）、目标语言词典文件路径（`trg_vocab_fpath`）、训练数据文件（`train_file_pattern`，支持通配符）等数据相关的参数和构造 batch 方式（`use_token_batch` 指出数据按照 token 数目或者 sequence 数目组成 batch）等 reader 相关的参数。有关这些参数更详细的信息可以通过执行以下命令查看：
 ```sh
 python train.py --help
 ```
@@ -107,7 +110,7 @@ python -u train.py \
 ```
 有关这些参数更详细信息的还请参考 `config.py` 中的注释说明。
 
-训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。在训练过程中，每个 epoch 结束后将保存模型到参数设定时 `model_dir` 指定的目录，每个 iteration 将打印如下的日志到标准输出：
+训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。在训练过程中，每个 epoch 结束后将保存模型到参数 `model_dir` 指定的目录，每个 iteration 将打印如下的日志到标准输出：
 ```txt
 epoch: 0, batch: 0, sum loss: 258793.343750, avg loss: 11.069005, ppl: 64151.644531
 epoch: 0, batch: 1, sum loss: 256140.718750, avg loss: 11.059616, ppl: 63552.148438
@@ -130,14 +133,14 @@ python -u infer.py \
   --trg_vocab_fpath data/vocab.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
   --test_file_pattern data/newstest2013.tok.bpe.32000.en-de \
-  --batch_size 16 \
+  --batch_size 4 \
   model_path trained_models/pass_20.infer.model \
   beam_size 5
-  max_length 256
+  max_out_len 256
 ```
-和模型训练时类似，预测时也需要设置数据和 reader 相关的参数，并可以执行 `python infer.py --help` 查看这些参数的说明（部分参数意义和训练时略有不同）；同样可以在预测命令中设置模型超参数，但应与模型训练时的设置一致；此外相比于模型训练，预测时还有一些额外的参数，如需要设置 `model_path` 来模型所在目录，可以设置 `beam_size` 和 `max_length` 来指定 Beam Search 算法的搜索宽度和最大深度，这些参数也可以在 `config.py` 中的 `InferTaskConfig` 内查阅注释说明并进行更改设置。
+和模型训练时类似，预测时也需要设置数据和 reader 相关的参数，并可以执行 `python infer.py --help` 查看这些参数的说明（部分参数意义和训练时略有不同）；同样可以在预测命令中设置模型超参数，但应与模型训练时的设置一致；此外相比于模型训练，预测时还有一些额外的参数，如需要设置 `model_path` 来给出模型所在目录，可以设置 `beam_size` 和 `max_out_len` 来指定 Beam Search 算法的搜索宽度和最大深度（翻译长度），这些参数也可以在 `config.py` 中的 `InferTaskConfig` 内查阅注释说明并进行更改设置。
 
-执行以上预测命令会打印翻译结果到标准输出，每行输出是对应行输入的得分最高的翻译。需要注意，由于训练时使用了 BPE 的数据，预测出的翻译结果也是 BPE 表示的数据，要恢复成原始的数据（指 tokenize 后的数据，训练时使用的 BPE 数据也是对 tokenize 后的数据进行了 BPE 的处理）才能进行正确的评估，可以使用以下命令来恢复 `predict.txt` 内的翻译结果到 `predict.tok.txt` 中。
+执行以上预测命令会打印翻译结果到标准输出，每行输出是对应行输入的得分最高的翻译。需要注意，对于使用 BPE 的数据，预测出的翻译结果也将是 BPE 表示的数据，要恢复成原始的数据（这里指 tokenize 后的数据）才能进行正确的评估，可以使用以下命令来恢复 `predict.txt` 内的翻译结果到 `predict.tok.txt` 中。
 
 ```sh
 sed 's/@@ //g' predict.txt > predict.tok.txt
@@ -145,9 +148,9 @@ sed 's/@@ //g' predict.txt > predict.tok.txt
 
 接下来就可以使用参考翻译（这里使用的是 `newstest2013.tok.de`）对翻译结果进行 BLEU 指标的评估了。计算 BLEU 值的一个较为广泛使用的脚本可以从[这里](https://raw.githubusercontent.com/moses-smt/mosesdecoder/master/scripts/generic/multi-bleu.perl)获取，获取后执行如下命令：
 ```sh
-perl multi_bleu.perl data/newstest2013.tok.de < prdict.tok.txt
+perl multi-bleu.perl data/newstest2013.tok.de < predict.tok.txt
 ```
-可以看到如下的评估结果。
+可以看到类似如下的结果。
 ```
 BLEU = 25.08, 58.3/31.5/19.6/12.6 (BP=0.966, ratio=0.967, hyp_len=61321, ref_len=63412)
 ```
@@ -155,6 +158,6 @@ BLEU = 25.08, 58.3/31.5/19.6/12.6 (BP=0.966, ratio=0.967, hyp_len=61321, ref_len
 ### 参考文献
 
 1. Vaswani A, Shazeer N, Parmar N, et al. [Attention is all you need](http://papers.nips.cc/paper/7181-attention-is-all-you-need.pdf)[C]//Advances in Neural Information Processing Systems. 2017: 6000-6010.
-2. He K, Zhang X, Ren S, et al. Deep residual learning for image recognition[C]//Proceedings of the IEEE conference on computer vision and pattern recognition. 2016: 770-778.
-3. Ba J L, Kiros J R, Hinton G E. Layer normalization[J]. arXiv preprint arXiv:1607.06450, 2016.
+2. He K, Zhang X, Ren S, et al. [Deep residual learning for image recognition](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)[C]//Proceedings of the IEEE conference on computer vision and pattern recognition. 2016: 770-778.
+3. Ba J L, Kiros J R, Hinton G E. [Layer normalization](https://arxiv.org/pdf/1607.06450.pdf)[J]. arXiv preprint arXiv:1607.06450, 2016.
 4. Sennrich R, Haddow B, Birch A. [Neural machine translation of rare words with subword units](https://arxiv.org/pdf/1508.07909)[J]. arXiv preprint arXiv:1508.07909, 2015.
