@@ -207,7 +207,7 @@ class AsyncDataReader(object):
                  feature_file_list,
                  label_file_list="",
                  drop_frame_len=512,
-                 split_sentence_threshold=512,
+                 split_sentence_threshold=1024,
                  proc_num=10,
                  sample_buffer_size=1024,
                  sample_info_buffer_size=1024,

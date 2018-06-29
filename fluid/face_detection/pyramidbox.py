@@ -81,10 +81,7 @@ class PyramidBox(object):
         if self.is_infer:
             return [self.image]
         else:
-            return [
-                self.image, self.face_box, self.head_box, self.gt_label,
-                self.difficult
-            ]
+            return [self.image, self.face_box, self.head_box, self.gt_label]
 
     def _input(self):
         self.image = fluid.layers.data(
@@ -96,8 +93,6 @@ class PyramidBox(object):
                 name='head_box', shape=[4], dtype='float32', lod_level=1)
             self.gt_label = fluid.layers.data(
                 name='gt_label', shape=[1], dtype='int32', lod_level=1)
-            self.difficult = fluid.layers.data(
-                name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
 
     def _vgg(self):
         self.conv1, self.pool1 = conv_block(self.image, 2, [64] * 2, [3] * 2)
@@ -144,7 +139,8 @@ class PyramidBox(object):
                     stride=2,
                     groups=ch,
                     param_attr=w_attr,
-                    bias_attr=False)
+                    bias_attr=False,
+                    use_cudnn=True)
             else:
                 upsampling = fluid.layers.resize_bilinear(
                     conv1, out_shape=up_to.shape[2:])
@@ -385,6 +381,7 @@ class PyramidBox(object):
             self.box_vars,
             overlap_threshold=0.35,
             neg_overlap=0.35)
+        face_loss.persistable = True
         head_loss = fluid.layers.ssd_loss(
             self.head_mbox_loc,
             self.head_mbox_conf,
@@ -394,9 +391,13 @@ class PyramidBox(object):
             self.box_vars,
             overlap_threshold=0.35,
             neg_overlap=0.35)
+        head_loss.persistable = True
         face_loss = fluid.layers.reduce_sum(face_loss)
+        face_loss.persistable = True
         head_loss = fluid.layers.reduce_sum(head_loss)
+        head_loss.persistable = True
         total_loss = face_loss + head_loss
+        total_loss.persistable = True
         return face_loss, head_loss, total_loss
 
     def infer(self, main_program=None):
@@ -410,5 +411,8 @@ class PyramidBox(object):
                 self.face_mbox_conf,
                 self.prior_boxes,
                 self.box_vars,
-                nms_threshold=0.45)
+                nms_threshold=0.3,
+                nms_top_k=5000,
+                keep_top_k=750,
+                score_threshold=0.05)
         return test_program, face_nmsed_out

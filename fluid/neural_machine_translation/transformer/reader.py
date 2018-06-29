@@ -198,7 +198,8 @@ class DataReader(object):
         for line in f_obj:
             fields = line.strip().split(self._delimiter)
 
-            if len(fields) != 2 or (self._only_src and len(fields) != 1):
+            if (not self._only_src and len(fields) != 2) or (self._only_src and
+                                                             len(fields) != 1):
                 continue
 
             sample_words = []
@@ -275,7 +276,7 @@ class DataReader(object):
 
         for sample_idx in self._sample_idxs:
             if self._only_src:
-                yield (self._src_seq_ids[sample_idx])
+                yield (self._src_seq_ids[sample_idx], )
             else:
                 yield (self._src_seq_ids[sample_idx],
                        self._trg_seq_ids[sample_idx][:-1],
