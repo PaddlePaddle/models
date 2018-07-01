@@ -4,4 +4,6 @@ data/
 label/
 *.swp
 *.log
-infer_results/
+log*
+output*
+infer_results*
