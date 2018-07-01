@@ -120,6 +120,9 @@ def train_agent():
     pbar = tqdm(total=1e8)
     recent_100_reward = []
     total_step = 0
+    max_reward = None
+    save_path = os.path.join(args.model_dirname, '{}-{}'.format(
+        args.alg, os.path.basename(args.rom).split('.')[0]))
     while True:
         # start epoch
         total_reward, step = run_train_episode(agent, env, exp)
@@ -134,14 +137,11 @@ def train_agent():
             print("eval_agent done, (steps, eval_reward): ({}, {})".format(
                 total_step, eval_reward))
 
-        if total_step // args.save_every_steps == save_flag:
-            save_flag += 1
-            save_path = os.path.join(args.model_dirname, '{}-{}'.format(
-                args.alg, os.path.basename(args.rom).split('.')[0]),
-                                     'step{}'.format(total_step))
-            fluid.io.save_inference_model(save_path, ['state'],
-                                          agent.pred_value, agent.exe,
-                                          agent.predict_program)
+            if max_reward is None or eval_reward > max_reward:
+                max_reward = eval_reward
+                fluid.io.save_inference_model(save_path, ['state'],
+                                              agent.pred_value, agent.exe,
+                                              agent.predict_program)
     pbar.close()
 
 
@@ -173,11 +173,6 @@ if __name__ == '__main__':
         type=str,
         default='saved_model',
         help='dirname to save model')
-    parser.add_argument(
-        '--save_every_steps',
-        type=int,
-        default=100000,
-        help='every steps number to save model')
     parser.add_argument(
         '--test_every_steps',
         type=int,
