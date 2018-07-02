@@ -543,7 +543,8 @@ def infer(args, inferencer=fast_infer):
         start_mark=args.special_token[0],
         end_mark=args.special_token[1],
         unk_mark=args.special_token[2],
-        max_length=ModelHyperParams.max_length,
+        # count start and end tokens out
+        max_length=ModelHyperParams.max_length - 2,
         clip_last_batch=False)
     trg_idx2word = test_data.load_dict(
         dict_path=args.trg_vocab_fpath, reverse=True)
