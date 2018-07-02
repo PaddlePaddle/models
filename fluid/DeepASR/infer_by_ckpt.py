@@ -28,6 +28,11 @@ def parse_args():
         default=32,
         help='The sequence number of a batch data. (default: %(default)d)')
     parser.add_argument(
+        '--beam_size',
+        type=int,
+        default=11,
+        help='The beam size for decoding. (default: %(default)d)')
+    parser.add_argument(
         '--minimum_batch_size',
         type=int,
         default=1,
@@ -211,7 +216,7 @@ def infer_from_ckpt(args):
 
     # init decoder
     decoder = Decoder(args.trans_model, args.vocabulary, args.graphs,
-                      args.log_prior, args.acoustic_scale)
+                      args.log_prior, args.beam_size, args.acoustic_scale)
 
     ltrans = [
         trans_add_delta.TransAddDelta(2, 2),

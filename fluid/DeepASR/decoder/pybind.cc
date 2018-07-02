@@ -27,6 +27,7 @@ PYBIND11_MODULE(post_latgen_faster_mapped, m) {
                     std::string,
                     std::string,
                     std::string,
+                    size_t,
                     kaldi::BaseFloat>())
       .def("decode_from_file",
            (void (Decoder::*)(std::string, size_t)) & Decoder::decode_from_file,

@@ -29,6 +29,7 @@ public:
           std::string word_syms_filename,
           std::string fst_in_filename,
           std::string logprior_in_filename,
+          size_t beam_size,
           kaldi::BaseFloat acoustic_scale);
   ~Decoder();
 

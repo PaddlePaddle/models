@@ -26,6 +26,7 @@ Decoder::Decoder(std::string trans_model_in_filename,
                  std::string word_syms_filename,
                  std::string fst_in_filename,
                  std::string logprior_in_filename,
+                 size_t beam_size,
                  kaldi::BaseFloat acoustic_scale) {
   const char *usage =
       "Generate lattices using neural net model.\n"
@@ -51,7 +52,7 @@ Decoder::Decoder(std::string trans_model_in_filename,
 
   int argc = 2;
   char *argv[] = {(char *)"post-latgen-faster-mapped",
-                  (char *)("--beam=" + std::string("11")).c_str()};
+                  (char *)("--beam=" + std::to_string(beam_size)).c_str()};
 
   po.Read(argc, argv);
 
