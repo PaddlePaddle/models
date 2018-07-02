@@ -56,7 +56,6 @@ Decoder::Decoder(std::string trans_model_in_filename,
 
   po.Read(argc, argv);
 
-  po.PrintConfig(std::cout);
   std::ifstream is_logprior(logprior_in_filename);
   logprior.Read(is_logprior, false);
 
@@ -294,12 +293,13 @@ std::string Decoder::DecodeUtteranceLatticeFaster(
     // We'll write the lattice without acoustic scaling.
     if (acoustic_scale != 0.0)
       fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &clat);
-    compact_lattice_writer.Write(utt, clat);
+    // disable output lattice temporarily
+    // compact_lattice_writer.Write(utt, clat);
   } else {
     // We'll write the lattice without acoustic scaling.
     if (acoustic_scale != 0.0)
       fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &lat);
-    lattice_writer.Write(utt, lat);
+    // lattice_writer.Write(utt, lat);
   }
   return ret;
 }
