@@ -118,7 +118,7 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 
 验证集的评估需要两个步骤：先预测出验证集的检测框和置信度，再利用WIDER FACE官方提供的评估脚本得到评估结果。
 
-- 预测检测结果
+1. 预测检测结果
 
   ```bash
   python -u widerface_eval.py --model_dir=output/159 --save_dir=pred
@@ -130,7 +130,7 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
   ```
   **注意**： `widerface_eval.py`中multi_scale_test_pyramid可用可不用，由于Data-anchor-sampling的作用，更加密集的anchors对性能有更大的提升。
 
-- 评估AP指标
+2. 评估AP指标
 
   下载官方评估脚本，评估average precision(AP)指标：
 
