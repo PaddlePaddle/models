@@ -310,7 +310,6 @@ def test(settings, file_list):
         for index_image in file_dict.keys():
             image_name = file_dict[index_image][0]
             image_path = os.path.join(settings.data_dir, image_name)
-            print(image_path)
             im = Image.open(image_path)
             if im.mode == 'L':
                 im = im.convert('RGB')

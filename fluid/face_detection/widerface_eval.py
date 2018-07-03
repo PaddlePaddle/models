@@ -127,7 +127,6 @@ def detect_face(image, shrink):
     det_ymax = image_shape[1] * detection[:, 5] / shrink
 
     det = np.column_stack((det_xmin, det_ymin, det_xmax, det_ymax, det_conf))
-    keep_index = np.where(det[:, 4] >= 0)[0]
     det = det[keep_index, :]
     return det
 
@@ -200,7 +199,7 @@ def multi_scale_test(image, max_shrink):
     bt = min(2, max_shrink) if max_shrink > 1 else (st + max_shrink) / 2
     det_b = detect_face(image, bt)
 
-    # Enlarge small image x times for small face
+    # Enlarge small image x times for small faces
     if max_shrink > 2:
         bt *= 2
         while bt < max_shrink:
@@ -208,13 +207,13 @@ def multi_scale_test(image, max_shrink):
             bt *= 2
         det_b = np.row_stack((det_b, detect_face(image, max_shrink)))
 
-    # Enlarged images are only used to detect small face.
+    # Enlarged images are only used to detect small faces.
     if bt > 1:
         index = np.where(
             np.minimum(det_b[:, 2] - det_b[:, 0] + 1,
                        det_b[:, 3] - det_b[:, 1] + 1) < 100)[0]
         det_b = det_b[index, :]
-    # Reduced images are only used to detect big face.
+    # Shrinked images are only used to detect big faces.
     else:
         index = np.where(
             np.maximum(det_b[:, 2] - det_b[:, 0] + 1,
@@ -231,17 +230,17 @@ def multi_scale_test_pyramid(image, max_shrink):
         > 30)[0]
     det_b = det_b[index, :]
 
-    st = [0.5, 0.75, 1.25, 1.5, 1.75, 2.25]
+    st = [0.75, 1.25, 1.5, 1.75]
     for i in range(len(st)):
         if (st[i] <= max_shrink):
             det_temp = detect_face(image, st[i])
-            # Enlarged images are only used to detect small face.
+            # Enlarged images are only used to detect small faces.
             if st[i] > 1:
                 index = np.where(
                     np.minimum(det_temp[:, 2] - det_temp[:, 0] + 1,
                                det_temp[:, 3] - det_temp[:, 1] + 1) < 100)[0]
                 det_temp = det_temp[index, :]
-            # Reduced images are only used to detect big face.
+            # Shrinked images are only used to detect big faces.
             else:
                 index = np.where(
                     np.maximum(det_temp[:, 2] - det_temp[:, 0] + 1,
