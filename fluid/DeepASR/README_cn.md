@@ -2,7 +2,7 @@
 
 ---
 
-DeepASR (Deep Automatic Speech Recognition) 是一个基于PaddlePaddle FLuid与[kaldi](http://www.kaldi-asr.org)的语音识别系统。其利用Fluid框架完成语音识别中声学模型的配置和训练，并集成kaldi的解码器。旨在方便已对kaldi的较为熟悉的用户实现中声学模型的快速、大规模训练，并利用kaldi完成复杂的语音数据预处理和最终的解码过程。
+DeepASR (Deep Automatic Speech Recognition) 是一个基于PaddlePaddle FLuid与[Kaldi](http://www.kaldi-asr.org)的语音识别系统。其利用Fluid框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器。旨在方便已对 Kaldi 的较为熟悉的用户实现中声学模型的快速、大规模训练，并利用kaldi完成复杂的语音数据预处理和最终的解码过程。
 
 ### 目录
 - [模型概览](#model-overview)
