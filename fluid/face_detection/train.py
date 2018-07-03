@@ -5,27 +5,26 @@ import time
 import argparse
 import functools
 
-import reader
-import paddle
 import paddle.fluid as fluid
 from pyramidbox import PyramidBox
+import reader
 from utility import add_arguments, print_arguments
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 
 # yapf: disable
-add_arg('parallel',         bool,  True,            "parallel")
-add_arg('learning_rate',    float, 0.001,           "Learning rate.")
-add_arg('batch_size',       int,   12,              "Minibatch size.")
+add_arg('parallel',         bool,  True,            "Whether use multi-GPU/threads or not.")
+add_arg('learning_rate',    float, 0.001,           "The start learning rate.")
+add_arg('batch_size',       int,   16,              "Minibatch size.")
 add_arg('num_passes',       int,   160,             "Epoch number.")
 add_arg('use_gpu',          bool,  True,            "Whether use GPU.")
 add_arg('use_pyramidbox',   bool,  True,            "Whether use PyramidBox model.")
 add_arg('model_save_dir',   str,   'output',        "The path to save model.")
-add_arg('pretrained_model', str,   './pretrained/', "The init model path.")
 add_arg('resize_h',         int,   640,             "The resized image height.")
-add_arg('resize_w',         int,   640,             "The resized image height.")
-add_arg('with_mem_opt',     bool,  False,           "Whether to use memory optimization or not.")
+add_arg('resize_w',         int,   640,             "The resized image width.")
+add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optimization or not.")
+add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
 #yapf: enable
 
 
@@ -145,7 +144,7 @@ def train(args, config, train_file_list, optimizer_method):
                                      fetch_list=fetches)
             end_time = time.time()
             fetch_vars = [np.mean(np.array(v)) for v in fetch_vars]
-            if batch_id % 1 == 0:
+            if batch_id % 10 == 0:
                 if not args.use_pyramidbox:
                     print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                         pass_id, batch_id, fetch_vars[0],
@@ -164,8 +163,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
-    data_dir = 'data/WIDERFACE/WIDER_train/images/'
-    train_file_list = 'label/train_gt_widerface.res'
+    data_dir = 'data/WIDER_train/images/'
+    train_file_list = 'data/wider_face_split/wider_face_train_bbx_gt.txt'
 
     config = reader.Settings(
         data_dir=data_dir,

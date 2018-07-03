@@ -5,20 +5,20 @@ import argparse
 import functools
 from PIL import Image
 
-import paddle
 import paddle.fluid as fluid
 import reader
 from pyramidbox import PyramidBox
 from utility import add_arguments, print_arguments
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
+
 # yapf: disable
 add_arg('use_gpu',        bool, True,                              "Whether use GPU or not.")
 add_arg('use_pyramidbox', bool, True,                              "Whether use PyramidBox model.")
 add_arg('data_dir',       str,  'data/WIDER_val/images/',          "The validation dataset path.")
-add_arg('val_list',       str,  'data/label/val_gt_widerface.res', "The validation dataset path.")
 add_arg('model_dir',      str,  '',                                "The model path.")
-add_arg('save_dir',       str,  'eval_results',                    "The path to save the evaluation results.")
+add_arg('pred_dir',       str,  'pred',                            "The path to save the evaluation results.")
+add_arg('file_list',      str,  'data/wider_face_split/wider_face_val_bbx_gt.txt', "The validation dataset path.")
 # yapf: enable
 
 
@@ -26,17 +26,16 @@ def infer(args, config):
     batch_size = 1
     model_dir = args.model_dir
     data_dir = args.data_dir
-    val_list = args.val_list
+    file_list = args.file_list
+    pred_dir = args.pred_dir
 
     if not os.path.exists(model_dir):
         raise ValueError("The model path [%s] does not exist." % (model_dir))
 
-    infer_reader = paddle.batch(
-        reader.test(config, val_list), batch_size=batch_size)
+    test_reader = reader.test(config, file_list)
 
-    for image, image_path in infer_reader():
-
-        shrink, max_shrink = get_im_shrink(image.size[1], image.size[0])
+    for image, image_path in test_reader():
+        shrink, max_shrink = get_shrink(image.size[1], image.size[0])
 
         det0 = detect_face(image, shrink)
         det1 = flip_test(image, shrink)
@@ -45,7 +44,7 @@ def infer(args, config):
         det = np.row_stack((det0, det1, det2, det3, det4))
         dets = bbox_vote(det)
 
-        save_widerface_bboxes(image_path, f, dets)
+        save_widerface_bboxes(image_path, dets, pred_dir)
 
     print("Finish evaluation.")
 
@@ -69,23 +68,22 @@ def save_widerface_bboxes(image_path, bboxes_scores, output_dir):
     if not os.path.exists(odir):
         os.makedirs(odir)
 
-    ofname = os.path.join(odir, '%s/%s.txt' % (image_class, image_name[:-4]))
-    with open(ofname, 'w') as f:
-        f.write('{:s}\n'.format(image_class + '/' + image_name))
-        f.write('{:d}\n'.format(bboxes_scores.shape[0]))
-        for box_score in bboxes_scores:
-            xmin, ymin, xmax, ymax, score = box_score
-            f.write('{:.1f} {:.1f} {:.1f} {:.1f} {:.3f}\n'.format(xmin, ymin, (
-                xmax - xmin + 1), (ymax - ymin + 1), score))
-    print("The predicted result is saved as {}".format())
+    ofname = os.path.join(odir, '%s.txt' % (image_name[:-4]))
+    f = open(ofname, 'w')
+    f.write('{:s}\n'.format(image_class + '/' + image_name))
+    f.write('{:d}\n'.format(bboxes_scores.shape[0]))
+    for box_score in bboxes_scores:
+        xmin, ymin, xmax, ymax, score = box_score
+        f.write('{:.1f} {:.1f} {:.1f} {:.1f} {:.3f}\n'.format(xmin, ymin, (
+            xmax - xmin + 1), (ymax - ymin + 1), score))
+    f.close()
+    print("The predicted result is saved as {}".format(ofname))
 
 
 def detect_face(image, shrink):
     image_shape = [3, image.size[1], image.size[0]]
-    num_classes = 2
-
     if shrink != 1:
-        h, w = image_shape[1] * shrink, image_shape[2] * shrink
+        h, w = int(image_shape[1] * shrink), int(image_shape[2] * shrink)
         image = image.resize((w, h), Image.ANTIALIAS)
         image_shape = [3, h, w]
 
@@ -93,6 +91,7 @@ def detect_face(image, shrink):
     img = reader.to_chw_bgr(img)
     mean = [104., 117., 123.]
     scale = 0.007843
+    img = img.astype('float32')
     img -= np.array(mean)[:, np.newaxis, np.newaxis].astype('float32')
     img = img * scale
     img = [img]
@@ -100,29 +99,23 @@ def detect_face(image, shrink):
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    scope = fluid.core.Scope()
     main_program = fluid.Program()
     startup_program = fluid.Program()
 
-    with fluid.scope_guard(scope):
-        with fluid.unique_name.guard():
-            with fluid.program_guard(main_program, startup_program):
-                fetches = []
-                network = PyramidBox(
-                    image_shape,
-                    num_classes,
-                    sub_network=args.use_pyramidbox,
-                    is_infer=True)
-                infer_program, nmsed_out = network.infer(main_program)
-                fetches = [nmsed_out]
-                fluid.io.load_persistables(
-                    exe, args.model_dir, main_program=main_program)
+    with fluid.unique_name.guard():
+        with fluid.program_guard(main_program, startup_program):
+            network = PyramidBox(
+                image_shape, sub_network=args.use_pyramidbox, is_infer=True)
+            infer_program, nmsed_out = network.infer(main_program)
+            fetches = [nmsed_out]
+            fluid.io.load_persistables(
+                exe, args.model_dir, main_program=main_program)
 
-                detection, = exe.run(infer_program,
-                                     feed={'image': img},
-                                     fetch_list=fetches,
-                                     return_numpy=False)
-                detection = np.array(detection)
+            detection, = exe.run(infer_program,
+                                 feed={'image': img},
+                                 fetch_list=fetches,
+                                 return_numpy=False)
+            detection = np.array(detection)
     # layout: xmin, ymin, xmax. ymax, score
     if detection.shape == (1, ):
         print("No face detected")
@@ -196,7 +189,7 @@ def flip_test(image, shrink):
 
 
 def multi_scale_test(image, max_shrink):
-    # Shrink detecting is only used to detected big face
+    # Shrink detecting is only used to detect big faces
     st = 0.5 if max_shrink >= 0.75 else 0.5 * max_shrink
     det_s = detect_face(image, st)
     index = np.where(
@@ -264,6 +257,7 @@ def get_shrink(height, width):
         height (int): image height.
         width (int): image width.
     """
+    # avoid out of memory
     max_shrink_v1 = (0x7fffffff / 577.0 / (height * width))**0.5
     max_shrink_v2 = ((678 * 1024 * 2.0 * 2.0) / (height * width))**0.5
 
@@ -279,7 +273,6 @@ def get_shrink(height, width):
                 return x
 
     max_shrink = get_round(min(max_shrink_v1, max_shrink_v2), 2) - 0.3
-
     if max_shrink >= 1.5 and max_shrink < 2:
         max_shrink = max_shrink - 0.1
     elif max_shrink >= 2 and max_shrink < 3:
@@ -298,5 +291,5 @@ def get_shrink(height, width):
 if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
-    config = reader.Settings(data_dir=data_dir)
+    config = reader.Settings(data_dir=args.data_dir)
     infer(args, config)

@@ -59,7 +59,6 @@ class Settings(object):
         self.saturation_delta = 0.5
         self.brightness_prob = 0.5
         # _brightness_delta is the normalized value by 256
-        # self._brightness_delta = 32
         self.brightness_delta = 0.125
         self.scale = 0.007843  # 1 / 127.5
         self.data_anchor_sampling_prob = 0.5
@@ -171,25 +170,24 @@ def load_file_list(input_txt):
     file_dict = {}
     num_class = 0
     for i in range(len(lines_input_txt)):
-        tmp_line_txt = lines_input_txt[i].strip('\n\t\r')
-        if '--' in tmp_line_txt:
+        line_txt = lines_input_txt[i].strip('\n\t\r')
+        if '--' in line_txt:
             if i != 0:
                 num_class += 1
             file_dict[num_class] = []
-            dict_name = tmp_line_txt
-            file_dict[num_class].append(tmp_line_txt)
-        if '--' not in tmp_line_txt:
-            if len(tmp_line_txt) > 6:
-                split_str = tmp_line_txt.split(' ')
+            file_dict[num_class].append(line_txt)
+        if '--' not in line_txt:
+            if len(line_txt) > 6:
+                split_str = line_txt.split(' ')
                 x1_min = float(split_str[0])
                 y1_min = float(split_str[1])
                 x2_max = float(split_str[2])
                 y2_max = float(split_str[3])
-                tmp_line_txt = str(x1_min) + ' ' + str(y1_min) + ' ' + str(
+                line_txt = str(x1_min) + ' ' + str(y1_min) + ' ' + str(
                     x2_max) + ' ' + str(y2_max)
-                file_dict[num_class].append(tmp_line_txt)
+                file_dict[num_class].append(line_txt)
             else:
-                file_dict[num_class].append(tmp_line_txt)
+                file_dict[num_class].append(line_txt)
 
     return file_dict
 
@@ -227,7 +225,7 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
         label_offs = [0]
 
         for index_image in file_dict.keys():
-            image_name = file_dict[index_image][0] + '.jpg'
+            image_name = file_dict[index_image][0]
             image_path = os.path.join(settings.data_dir, image_name)
             im = Image.open(image_path)
             if im.mode == 'L':
@@ -310,8 +308,10 @@ def test(settings, file_list):
 
     def reader():
         for index_image in file_dict.keys():
-            image_path = file_dict[index_image][0] + '.jpg'
-            im = Image.open(image_name)
+            image_name = file_dict[index_image][0]
+            image_path = os.path.join(settings.data_dir, image_name)
+            print(image_path)
+            im = Image.open(image_path)
             if im.mode == 'L':
                 im = im.convert('RGB')
             yield im, image_path
@@ -329,12 +329,7 @@ def infer(settings, image_path):
             img = img.resize((settings.resize_width, settings.resize_height),
                              Image.ANTIALIAS)
         img = np.array(img)
-        # HWC to CHW
-        if len(img.shape) == 3:
-            img = np.swapaxes(img, 1, 2)
-            img = np.swapaxes(img, 1, 0)
-        # RBG to BGR
-        img = img[[2, 1, 0], :, :]
+        img = to_chw_bgr(img)
         img = img.astype('float32')
         img -= settings.img_mean
         img = img * settings.scale
