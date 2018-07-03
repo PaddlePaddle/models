@@ -59,30 +59,25 @@ class Settings(object):
         self.saturation_delta = 0.5
         self.brightness_prob = 0.5
         # _brightness_delta is the normalized value by 256
-        # self._brightness_delta = 32
         self.brightness_delta = 0.125
         self.scale = 0.007843  # 1 / 127.5
         self.data_anchor_sampling_prob = 0.5
         self.min_face_size = 8.0
 
 
-def draw_image(faces_pred, img, resize_val):
-    for i in range(len(faces_pred)):
-        draw_rotate_rectange(img, faces_pred[i], resize_val, (0, 255, 0), 3)
-
-
-def draw_rotate_rectange(img, face, resize_val, color, thickness):
-    cv2.line(img, (int(face[1] * resize_val), int(face[2] * resize_val)), (int(
-        face[3] * resize_val), int(face[2] * resize_val)), color, thickness)
-
-    cv2.line(img, (int(face[3] * resize_val), int(face[2] * resize_val)), (int(
-        face[3] * resize_val), int(face[4] * resize_val)), color, thickness)
-
-    cv2.line(img, (int(face[1] * resize_val), int(face[2] * resize_val)), (int(
-        face[1] * resize_val), int(face[4] * resize_val)), color, thickness)
-
-    cv2.line(img, (int(face[3] * resize_val), int(face[4] * resize_val)), (int(
-        face[1] * resize_val), int(face[4] * resize_val)), color, thickness)
+def to_chw_bgr(image):
+    """
+    Transpose image from HWC to CHW and from RBG to BGR.
+    Args:
+        image (np.array): an image with HWC and RBG layout.
+    """
+    # HWC to CHW
+    if len(image.shape) == 3:
+        image = np.swapaxes(image, 1, 2)
+        image = np.swapaxes(image, 1, 0)
+    # RBG to BGR
+    image = image[[2, 1, 0], :, :]
+    return image
 
 
 def preprocess(img, bbox_labels, mode, settings, image_path):
@@ -108,9 +103,6 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
                 batch_sampler, bbox_labels, img_width, img_height, scale_array,
                 settings.resize_width, settings.resize_height)
             img = np.array(img)
-            # Debug
-            # img_save = Image.fromarray(img)
-            # img_save.save('img_orig.jpg')
             if len(sampled_bbox) > 0:
                 idx = int(random.uniform(0, len(sampled_bbox)))
                 img, sampled_labels = image_util.crop_image_sampling(
@@ -119,17 +111,7 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
                     settings.min_face_size)
 
             img = img.astype('uint8')
-            # Debug: visualize the gt bbox
-            visualize_bbox = 0
-            if visualize_bbox:
-                img_show = img
-                draw_image(sampled_labels, img_show, settings.resize_height)
-                img_show = Image.fromarray(img_show)
-                img_show.save('final_img_show.jpg')
-
             img = Image.fromarray(img)
-            # Debug
-            # img.save('final_img.jpg')
 
         else:
             # hard-code here
@@ -173,12 +155,8 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
                 tmp = sampled_labels[i][1]
                 sampled_labels[i][1] = 1 - sampled_labels[i][3]
                 sampled_labels[i][3] = 1 - tmp
-    # HWC to CHW
-    if len(img.shape) == 3:
-        img = np.swapaxes(img, 1, 2)
-        img = np.swapaxes(img, 1, 0)
-    # RBG to BGR
-    img = img[[2, 1, 0], :, :]
+
+    img = to_chw_bgr(img)
     img = img.astype('float32')
     img -= settings.img_mean
     img = img * settings.scale
@@ -192,25 +170,24 @@ def load_file_list(input_txt):
     file_dict = {}
     num_class = 0
     for i in range(len(lines_input_txt)):
-        tmp_line_txt = lines_input_txt[i].strip('\n\t\r')
-        if '--' in tmp_line_txt:
+        line_txt = lines_input_txt[i].strip('\n\t\r')
+        if '--' in line_txt:
             if i != 0:
                 num_class += 1
             file_dict[num_class] = []
-            dict_name = tmp_line_txt
-            file_dict[num_class].append(tmp_line_txt)
-        if '--' not in tmp_line_txt:
-            if len(tmp_line_txt) > 6:
-                split_str = tmp_line_txt.split(' ')
+            file_dict[num_class].append(line_txt)
+        if '--' not in line_txt:
+            if len(line_txt) > 6:
+                split_str = line_txt.split(' ')
                 x1_min = float(split_str[0])
                 y1_min = float(split_str[1])
                 x2_max = float(split_str[2])
                 y2_max = float(split_str[3])
-                tmp_line_txt = str(x1_min) + ' ' + str(y1_min) + ' ' + str(
+                line_txt = str(x1_min) + ' ' + str(y1_min) + ' ' + str(
                     x2_max) + ' ' + str(y2_max)
-                file_dict[num_class].append(tmp_line_txt)
+                file_dict[num_class].append(line_txt)
             else:
-                file_dict[num_class].append(tmp_line_txt)
+                file_dict[num_class].append(line_txt)
 
     return file_dict
 
@@ -248,7 +225,7 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
         label_offs = [0]
 
         for index_image in file_dict.keys():
-            image_name = file_dict[index_image][0] + '.jpg'
+            image_name = file_dict[index_image][0]
             image_path = os.path.join(settings.data_dir, image_name)
             im = Image.open(image_path)
             if im.mode == 'L':
@@ -331,7 +308,7 @@ def test(settings, file_list):
 
     def reader():
         for index_image in file_dict.keys():
-            image_name = file_dict[index_image][0] + '.jpg'
+            image_name = file_dict[index_image][0]
             image_path = os.path.join(settings.data_dir, image_name)
             im = Image.open(image_path)
             if im.mode == 'L':
@@ -351,12 +328,7 @@ def infer(settings, image_path):
             img = img.resize((settings.resize_width, settings.resize_height),
                              Image.ANTIALIAS)
         img = np.array(img)
-        # HWC to CHW
-        if len(img.shape) == 3:
-            img = np.swapaxes(img, 1, 2)
-            img = np.swapaxes(img, 1, 0)
-        # RBG to BGR
-        img = img[[2, 1, 0], :, :]
+        img = to_chw_bgr(img)
         img = img.astype('float32')
         img -= settings.img_mean
         img = img * settings.scale

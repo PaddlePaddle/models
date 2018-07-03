@@ -131,12 +131,13 @@ def data_anchor_sampling(sampler, bbox_labels, image_width, image_height,
             rand_idx_size = range_size + 1
         else:
             # np.random.randint range: [low, high)
-            rng_rand_size = np.random.randint(0, range_size)
-            rand_idx_size = rng_rand_size % range_size
+            rng_rand_size = np.random.randint(0, range_size + 1)
+            rand_idx_size = rng_rand_size % (range_size + 1)
 
-        scale_choose = random.uniform(scale_array[rand_idx_size] / 2.0,
-                                      2.0 * scale_array[rand_idx_size])
-
+        min_resize_val = scale_array[rand_idx_size] / 2.0
+        max_resize_val = min(2.0 * scale_array[rand_idx_size],
+                             2 * math.sqrt(wid * hei))
+        scale_choose = random.uniform(min_resize_val, max_resize_val)
         sample_bbox_size = wid * resize_width / scale_choose
 
         w_off_orig = 0.0
@@ -389,9 +390,19 @@ def crop_image_sampling(img, bbox_labels, sample_bbox, image_width,
     roi_width = cross_width
     roi_height = cross_height
 
+    roi_y1 = int(roi_ymin)
+    roi_y2 = int(roi_ymin + roi_height)
+    roi_x1 = int(roi_xmin)
+    roi_x2 = int(roi_xmin + roi_width)
+
+    cross_y1 = int(cross_ymin)
+    cross_y2 = int(cross_ymin + cross_height)
+    cross_x1 = int(cross_xmin)
+    cross_x2 = int(cross_xmin + cross_width)
+
     sample_img = np.zeros((height, width, 3))
-    sample_img[int(roi_ymin) : int(roi_ymin + roi_height), int(roi_xmin) : int(roi_xmin + roi_width)] = \
-        img[int(cross_ymin) : int(cross_ymin + cross_height), int(cross_xmin) : int(cross_xmin + cross_width)]
+    sample_img[roi_y1 : roi_y2, roi_x1 : roi_x2] = \
+        img[cross_y1 : cross_y2, cross_x1 : cross_x2]
 
     sample_img = cv2.resize(
         sample_img, (resize_width, resize_height), interpolation=cv2.INTER_AREA)
