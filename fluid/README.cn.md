@@ -25,7 +25,7 @@
 开放环境中的检测人脸，尤其是小的、模糊的和部分遮挡的人脸也是一个具有挑战的任务。我们也介绍了如何基于[WIDER FACE](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/)数据训练百度自研的人脸检测PyramidBox模型，该算法于2018年3月份在WIDER FACE的多项评测中均获得[第一名](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/WiderFace_Results.html)。
 
 - [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/blob/develop/fluid/object_detection/README_cn.md)
-- [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/fluid/face_detection/README.md)
+- [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/fluid/face_detection/README_cn.md)
 
 
 ## 图像语义分割
