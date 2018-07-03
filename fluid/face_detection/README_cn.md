@@ -2,6 +2,7 @@
 
 ---
 
+
 ## Pyramidbox 人脸检测
 
 ## Table of Contents
@@ -66,7 +67,7 @@ data
     `-- images
         |-- 0--Parade
         ...
-        `-- 9--Press_Conference        
+        `-- 9--Press_Conference
 ```
 
 
@@ -85,7 +86,7 @@ tar -xf vgg_ilsvrc_16_fc_reduced.tar.gz && rm -f vgg_ilsvrc_16_fc_reduced.tar.gz
 声明：该预训练模型转换自[Caffe](http://cs.unc.edu/~wliu/projects/ParseNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel)，我们不久也会发布我们自己预训练的模型。
 
 
-#### 开始训练 
+#### 开始训练
 
 
 `train.py` 是训练模块的主要执行程序，调用示例如下：
