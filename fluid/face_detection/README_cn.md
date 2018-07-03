@@ -15,8 +15,9 @@
 ### 简介
 
 在不受控制的环境中，检测小的、模糊的和部分遮挡的人脸是一个挑战。[PyramidBox](https://arxiv.org/pdf/1803.07737.pdf) 是一种基于SSD的单阶段人脸检测器，它利用上下文信息解决困难人脸的检测问题。如下图所示，PyramidBox在六个尺度的特征图上进行不同层级的预测。该工作主要包括以下模块：LFPN、Pyramid Anchors、CPM、Data-anchor-sampling。具体可以参考该方法对应的论文 https://arxiv.org/pdf/1803.07737.pdf ，下面进行简要的介绍。
+
 <p align="center">
-<img src="images/architecture_of_pyramidbox.jpg" height=300 width=900 hspace='10'/> <br />
+<img src="images/architecture_of_pyramidbox.jpg" height=316 width=415 hspace='10'/> <br />
 Pyramidbox 人脸检测模型
 </p>
 
@@ -30,7 +31,7 @@ Pyramidbox 人脸检测模型
 
 Pyramidbox模型可以在以下示例图片上展示鲁棒的检测性能，该图有一千张人脸，该模型检测出其中的880张人脸。
 <p align="center">
-<img src="images/demo_img.jpg" height=300 width=900 hspace='10'/> <br />
+<img src="images/demo_img.jpg" height=255 width=455 hspace='10'/> <br />
 Pyramidbox 人脸检测性能展示
 </p>
 
@@ -102,9 +103,9 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 
 模型训练所采用的数据增强：
 
-**数据增强**：数据的读取行为定义在 `reader.py` 中，所有的图片都会被缩放到640x640。在训练时还会对图片进行数据增强，包括随机扰动、扩张、翻转、裁剪，和[物体检测](https://github.com/PaddlePaddle/models/blob/develop/fluid/object_detection/README_cn.md#%E8%AE%AD%E7%BB%83-pascal-voc-%E6%95%B0%E6%8D%AE%E9%9B%86)中数据增强类似，除此之外，增加了上面提到的Data-anchor-sampling:
+**数据增强**：数据的读取行为定义在 `reader.py` 中，所有的图片都会被缩放到640x640。在训练时还会对图片进行数据增强，包括随机扰动、翻转、裁剪等，和[物体检测SSD算法](https://github.com/PaddlePaddle/models/blob/develop/fluid/object_detection/README_cn.md#%E8%AE%AD%E7%BB%83-pascal-voc-%E6%95%B0%E6%8D%AE%E9%9B%86)中数据增强类似，除此之外，增加了上面提到的Data-anchor-sampling:
 
-  **尺度变换(Data-anchor-sampling)**：根据SSD模型中anchor的配置来随机将图片尺度变换到一定范围的尺度，大大增强人脸的尺度变化。具体操作为根据随机选择的人脸长heigh和宽width，得到$val=\sqrt{width*heigh}$，判断$val$的值在表示scale相关的向量的哪个区间[16，32，64，128，256，512]。假设val=45，则选定32<val<64，以均匀分布的概率选取[16，32，64]中的任意一个值。若选中64，则该人脸的resize区间在[64/2，min(val*2, 64*2)]中选定。
+  **尺度变换(Data-anchor-sampling)**：根据SSD模型中anchor的配置来随机将图片尺度变换到一定范围的尺度，大大增强人脸的尺度变化。具体操作为根据随机选择的人脸长height和宽width，得到$v=\\sqrt{width * height}$，判断$vl$的值在表示scale相关的向量的哪个区间$[16，32，64，128，256，512]$。假设$v=45$，则选定$32<v<64$，以均匀分布的概率选取$[16，32，64]$中的任意一个值。若选中$64$，则该人脸的缩放区间在 $[64 / 2，min(v * 2, 64 * 2)]$中选定。
 
 
 
@@ -117,45 +118,41 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 
 验证集的评估需要两个步骤：先预测出验证集的检测框和置信度，再利用WIDER FACE官方提供的评估脚本得到评估结果。
 
-1. 预测检测结果
+- 预测检测结果
 
-```bash
-python -u widerface_eval.py --model_dir=output/159 --save_dir=pred
-```
+  ```bash
+  python -u widerface_eval.py --model_dir=output/159 --save_dir=pred
+  ```
+  更多的可选参数:
 
-更多的可选参数:
+  ```bash
+  python -u widerface_eval.py --help
+  ```
+  **注意**： `widerface_eval.py`中`multi_scale_test_pyramid`可用可不用，由于Data-anchor-sampling的作用，更加密集的anchors对性能有更大的提升。
 
-```bash
-python -u widerface_eval.py --help
-```
+- 评估AP指标
 
+  下载官方评估脚本，评估average precision(AP)指标：
 
-- 评估优化： `widerface_eval.py`中multi_scale_test_pyramid可用可不用，由于Data-anchor-sampling的作用，更加密集的anchors对性能有更大的提升。
+  ```bash
+  wget http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/support/eval_script/eval_tools.zip
+  unzip eval_tools.zip && rm -f eval_tools.zip
+  ```
 
-2. 评估指标
+  修改`eval_tools/wider_eval.m`中检测结果保存的路径和将要画出的曲线名称：
 
-下载官方评估脚本:
+  ```txt
+  # 此处修改存放结果的文件夹名字
+  pred_dir = './pred';  
+  # 此处修改将要画出的曲线名称
+  legend_name = 'Fluid-PyramidBox';
+  ```
 
-```
-wget http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/support/eval_script/eval_tools.zip
-unzip eval_tools.zip && rm -f eval_tools.zip
-```
+  `wider_eval.m`是评估模块的主要执行程序，命令行式的运行命令如下：
 
-修改`eval_tools/wider_eval.m`中检测结果保存的路径和将要画出的曲线名称：
-
-```
-# 此处修改存放结果的文件夹名字
-pred_dir = './pred';  
-# 此处修改将要画出的曲线名称
-legend_name = 'Fluid-PyramidBox';
-```
-
-`wider_eval.m`是评估模块的主要执行程序，命令行式的运行命令如下：
-
-```bash
-matlab -nodesktop -nosplash -nojvm -r "run wider_eval.m;quit;"
-```
-
+  ```bash
+  matlab -nodesktop -nosplash -nojvm -r "run wider_eval.m;quit;"
+  ```
 
 ### 模型发布
 
