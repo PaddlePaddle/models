@@ -127,7 +127,6 @@ def detect_face(image, shrink):
     det_ymax = image_shape[1] * detection[:, 5] / shrink
 
     det = np.column_stack((det_xmin, det_ymin, det_xmax, det_ymax, det_conf))
-    det = det[keep_index, :]
     return det
 
 
