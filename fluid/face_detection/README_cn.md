@@ -164,8 +164,8 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 
 #### 性能曲线
 <p align="center">
-    <img src="images/wider_pr_cruve_int_easy_val.jpg" width="280" />
-    <img src="images/wider_pr_cruve_int_medium_val.jpg" width="280" />
-    <img src="images/wider_pr_cruve_int_hard_val.jpg" width="280" /></br>
+    <img src="images/wider_pr_cruve_int_easy_val.jpg" width="380" />
+    <img src="images/wider_pr_cruve_int_medium_val.jpg" width="380" />
+    <img src="images/wider_pr_cruve_int_hard_val.jpg" width="380" /></br>
 WIDER FACE Easy/Medimum/Hard set
 </p>
