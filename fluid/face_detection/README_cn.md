@@ -121,7 +121,7 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 - 预测检测结果
 
   ```bash
-  python -u widerface_eval.py --model_dir=output/159 --save_dir=pred
+  python -u widerface_eval.py --model_dir=output/159 --pred_dir=pred
   ```
   更多的可选参数:
 
@@ -170,4 +170,4 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 WIDER FACE Easy/Medium/Hard set
 </p>
 
-> 目前，基于PaddlePaddle重新实现过程中参数需要调整优化，与论文结果一致的代码会在后续release
+> 目前，基于PaddlePaddle的实现过程中模型参数仍在调优，比上图更优的结果会在后续发布
