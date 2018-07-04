@@ -7,6 +7,8 @@ from os import path
 from paddle.v2.image import load_image
 import paddle.v2 as paddle
 
+SOS = 0
+EOS = 1
 NUM_CLASSES = 95
 DATA_SHAPE = [1, 48, 512]
 
@@ -22,8 +24,8 @@ TEST_LIST_FILE_NAME = "test.list"
 
 
 class DataGenerator(object):
-    def __init__(self):
-        pass
+    def __init__(self, model="crnn_ctc"):
+        self.model = model
 
     def train_reader(self, img_root_dir, img_label_list, batchsize):
         '''
@@ -81,7 +83,10 @@ class DataGenerator(object):
                     img = img.resize((sz[0], sz[1]))
                     img = np.array(img) - 127.5
                     img = img[np.newaxis, ...]
-                    result.append([img, label])
+                    if self.model == "ctc":
+                        result.append([img, label])
+                    else:
+                        result.append([img, [SOS] + label, label + [EOS]])
                 yield result
 
         return reader
@@ -161,8 +166,11 @@ def data_shape():
     return DATA_SHAPE
 
 
-def train(batch_size, train_images_dir=None, train_list_file=None):
-    generator = DataGenerator()
+def train(batch_size,
+          train_images_dir=None,
+          train_list_file=None,
+          model="crnn_ctc"):
+    generator = DataGenerator(model)
     if train_images_dir is None:
         data_dir = download_data()
         train_images_dir = path.join(data_dir, TRAIN_DATA_DIR_NAME)
@@ -171,8 +179,11 @@ def train(batch_size, train_images_dir=None, train_list_file=None):
     return generator.train_reader(train_images_dir, train_list_file, batch_size)
 
 
-def test(batch_size=1, test_images_dir=None, test_list_file=None):
-    generator = DataGenerator()
+def test(batch_size=1,
+         test_images_dir=None,
+         test_list_file=None,
+         model="crnn_ctc"):
+    generator = DataGenerator(model)
     if test_images_dir is None:
         data_dir = download_data()
         test_images_dir = path.join(data_dir, TEST_DATA_DIR_NAME)
@@ -182,8 +193,8 @@ def test(batch_size=1, test_images_dir=None, test_list_file=None):
         generator.test_reader(test_images_dir, test_list_file), batch_size)
 
 
-def inference(infer_images_dir=None, infer_list_file=None):
-    generator = DataGenerator()
+def inference(infer_images_dir=None, infer_list_file=None, model="crnn_ctc"):
+    generator = DataGenerator(model)
     return paddle.batch(
         generator.infer_reader(infer_images_dir, infer_list_file), 1)
 

@@ -135,12 +135,16 @@ def encoder_net(images,
     return fc_out
 
 
-def ctc_train_net(images, label, args, num_classes):
+def ctc_train_net(args, data_shape, num_classes):
     L2_RATE = 0.0004
     LR = 1.0e-3
     MOMENTUM = 0.9
     learning_rate_decay = None
     regularizer = fluid.regularizer.L2Decay(L2_RATE)
+
+    images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
+    label = fluid.layers.data(
+        name='label', shape=[1], dtype='int32', lod_level=1)
 
     fc_out = encoder_net(images, num_classes, regularizer=regularizer)
     cost = fluid.layers.warpctc(
@@ -177,7 +181,11 @@ def ctc_infer(images, num_classes):
     return fluid.layers.ctc_greedy_decoder(input=fc_out, blank=num_classes)
 
 
-def ctc_eval(images, label, num_classes):
+def ctc_eval(data_shape, num_classes):
+
+    images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
+    label = fluid.layers.data(
+        name='label', shape=[1], dtype='int32', lod_level=1)
     fc_out = encoder_net(images, num_classes, is_test=True)
     decoded_out = fluid.layers.ctc_greedy_decoder(
         input=fc_out, blank=num_classes)

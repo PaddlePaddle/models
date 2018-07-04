@@ -1,9 +1,10 @@
 import paddle.v2 as paddle
 import paddle.fluid as fluid
-from utility import add_arguments, print_arguments, to_lodtensor, get_feeder_data
+from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_data
 from crnn_ctc_model import ctc_infer
+from attention_model import attention_infer
 import numpy as np
-import ctc_reader
+import data_reader
 import argparse
 import functools
 import os
@@ -11,6 +12,7 @@ import os
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
+add_arg('model',    str,   "crnn_ctc",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
 add_arg('model_path',         str,  None,   "The model path to be used for inference.")
 add_arg('input_images_dir',   str,  None,   "The directory of images.")
 add_arg('input_images_list',  str,  None,   "The list file of images.")
@@ -19,8 +21,15 @@ add_arg('use_gpu',            bool,  True,      "Whether use GPU to infer.")
 # yapf: enable
 
 
-def inference(args, infer=ctc_infer, data_reader=ctc_reader):
+def inference(args):
     """OCR inference"""
+    if args.model == "crnn_ctc":
+        infer = ctc_infer
+        get_feeder_data = get_ctc_feeder_data
+    else:
+        infer = attention_infer
+        get_feeder_data = get_attention_feeder_data
+
     num_classes = data_reader.num_classes()
     data_shape = data_reader.data_shape()
     # define network
@@ -29,7 +38,8 @@ def inference(args, infer=ctc_infer, data_reader=ctc_reader):
     # data reader
     infer_reader = data_reader.inference(
         infer_images_dir=args.input_images_dir,
-        infer_list_file=args.input_images_list)
+        infer_list_file=args.input_images_list,
+        model=args.model)
     # prepare environment
     place = fluid.CPUPlace()
     if args.use_gpu:
@@ -72,7 +82,7 @@ def inference(args, infer=ctc_infer, data_reader=ctc_reader):
 def main():
     args = parser.parse_args()
     print_arguments(args)
-    inference(args, data_reader=ctc_reader)
+    inference(args)
 
 
 if __name__ == "__main__":

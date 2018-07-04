@@ -1,8 +1,9 @@
-"""Trainer for OCR CTC model."""
+"""Trainer for OCR CTC or attention model."""
 import paddle.fluid as fluid
-from utility import add_arguments, print_arguments, to_lodtensor, get_feeder_data
+from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_data
 from crnn_ctc_model import ctc_train_net
-import ctc_reader
+from attention_model import attention_train_net
+import data_reader
 import argparse
 import functools
 import sys
@@ -19,6 +20,7 @@ add_arg('log_period',        int,   1000,       "Log period.")
 add_arg('save_model_period', int,   15000,      "Save model period. '-1' means never saving the model.")
 add_arg('eval_period',       int,   15000,      "Evaluate period. '-1' means never evaluating the model.")
 add_arg('save_model_dir',    str,   "./models", "The directory the model to be saved to.")
+add_arg('model',    str,   "crnn_ctc",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
 add_arg('use_gpu',           bool,  True,      "Whether use GPU to train.")
 add_arg('min_average_window',int,   10000,     "Min average window.")
@@ -28,8 +30,16 @@ add_arg('parallel',          bool,  False,     "Whether use parallel training.")
 # yapf: enable
 
 
-def train(args, data_reader=ctc_reader):
-    """OCR CTC training"""
+def train(args):
+    """OCR training"""
+
+    if args.model == "crnn_ctc":
+        train_net = ctc_train_net
+        get_feeder_data = get_ctc_feeder_data
+    else:
+        train_net = attention_train_net
+        get_feeder_data = get_attention_feeder_data
+
     num_classes = None
     train_images = None
     train_list = None
@@ -39,19 +49,17 @@ def train(args, data_reader=ctc_reader):
     ) if num_classes is None else num_classes
     data_shape = data_reader.data_shape()
     # define network
-    images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
-    label = fluid.layers.data(
-        name='label', shape=[1], dtype='int32', lod_level=1)
-    sum_cost, error_evaluator, inference_program, model_average = ctc_train_net(
-        images, label, args, num_classes)
+    sum_cost, error_evaluator, inference_program, model_average = train_net(
+        args, data_shape, num_classes)
 
     # data reader
     train_reader = data_reader.train(
         args.batch_size,
         train_images_dir=train_images,
-        train_list_file=train_list)
+        train_list_file=train_list,
+        model=args.model)
     test_reader = data_reader.test(
-        test_images_dir=test_images, test_list_file=test_list)
+        test_images_dir=test_images, test_list_file=test_list, model=args.model)
 
     # prepare environment
     place = fluid.CPUPlace()
@@ -118,7 +126,7 @@ def train(args, data_reader=ctc_reader):
             total_seq_error += results[2]
             # training log
             if iter_num % args.log_period == 0:
-                print "\nTime: %s; Iter[%d]; Avg Warp-CTC loss: %.3f; Avg seq err: %.3f" % (
+                print "\nTime: %s; Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f" % (
                     time.time(), iter_num,
                     total_loss / (args.log_period * args.batch_size),
                     total_seq_error / (args.log_period * args.batch_size))
@@ -146,7 +154,7 @@ def train(args, data_reader=ctc_reader):
 def main():
     args = parser.parse_args()
     print_arguments(args)
-    train(args, data_reader=ctc_reader)
+    train(args)
 
 
 if __name__ == "__main__":
