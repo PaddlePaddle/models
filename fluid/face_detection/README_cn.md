@@ -169,3 +169,4 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
     <img src="images/wider_pr_cruve_int_hard_val.jpg" width="280" /></br>
 WIDER FACE Easy/Medium/Hard set
 </p>
+> 目前，基于PaddlePaddle重新实现过程中参数需要调整优化，与论文结果一致的代码会在后续release
