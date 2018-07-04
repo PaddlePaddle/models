@@ -14,16 +14,16 @@
 
 ### 简介
 
-在不受控制的环境中，检测小的、模糊的和部分遮挡的人脸是一个挑战。[PyramidBox](https://arxiv.org/pdf/1803.07737.pdf) 是一种基于SSD的单阶段人脸检测器，它利用上下文信息解决困难人脸的检测问题。如下图所示，PyramidBox在六个尺度的特征图上进行不同层级的预测。该工作主要包括以下模块：LFPN、Pyramid Anchors、CPM、Data-anchor-sampling。具体可以参考该方法对应的论文 https://arxiv.org/pdf/1803.07737.pdf ，下面进行简要的介绍。
+人脸检测是经典的计算机视觉任务，非受控场景中的小脸、模糊和遮挡的人脸检测是这个方向上最有挑战的问题。[PyramidBox](https://arxiv.org/pdf/1803.07737.pdf) 是一种基于SSD的单阶段人脸检测器，它利用上下文信息解决困难人脸的检测问题。如下图所示，PyramidBox在六个尺度的特征图上进行不同层级的预测。该工作主要包括以下模块：LFPN、Pyramid Anchors、CPM、Data-anchor-sampling。具体可以参考该方法对应的论文 https://arxiv.org/pdf/1803.07737.pdf ，下面进行简要的介绍。
 
 <p align="center">
 <img src="images/architecture_of_pyramidbox.jpg" height=316 width=415 hspace='10'/> <br />
 Pyramidbox 人脸检测模型
 </p>
 
-**LFPN**: LFPN全称Low-level Feature Pyramid Networks, 在检测任务中，LFPN可以充分结合高层次的包含更多上下文的特征和低层次的包含更多纹理的特征。高层级特征被用于检测尺寸较大的人脸，而低层级特征被用于检测尺寸较小的人脸。为了将高层级特征整合到高分辨率的低层级特征上，我们从中间层开始做自上而下的融合，构建Low-level FPN。另外，该中间层的感受野接近于输入尺寸的一半。
+**LFPN**: LFPN全称Low-level Feature Pyramid Networks, 在检测任务中，LFPN可以充分结合高层次的包含更多上下文的特征和低层次的包含更多纹理的特征。高层级特征被用于检测尺寸较大的人脸，而低层级特征被用于检测尺寸较小的人脸。为了将高层级特征整合到高分辨率的低层级特征上，我们从中间层开始做自上而下的融合，构建Low-level FPN。
 
-**Pyramid Anchors**: 该算法使用半监督解决方案来生成与人脸检测相关的具有语义的近似标签，提出基于anchor的语境辅助方法，它引入有监督的信息来学习较小的、模糊的和部分遮挡的人脸的语境特征。使用者可以根据ground truth的人脸标签，按照一定的比例扩充，得到头部的标签（上下左右各扩充1/2）和人体的标签（可自定义扩充比例）。
+**Pyramid Anchors**: 该算法使用半监督解决方案来生成与人脸检测相关的具有语义的近似标签，提出基于anchor的语境辅助方法，它引入有监督的信息来学习较小的、模糊的和部分遮挡的人脸的语境特征。使用者可以根据标注的人脸标签，按照一定的比例扩充，得到头部的标签（上下左右各扩充1/2）和人体的标签（可自定义扩充比例）。
 
 **CPM**: CPM全称Context-sensitive Predict Module, 本方法设计了一种上下文敏感结构(CPM)来提高预测网络的表达能力。
 
@@ -39,11 +39,11 @@ Pyramidbox 人脸检测性能展示
 
 ### 数据准备
 
-你可以使用 [WIDER FACE 数据集](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/) 来进行模型的训练测试工作，官网给出了详尽的数据介绍。
+本教程使用 [WIDER FACE 数据集](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/) 来进行模型的训练测试工作，官网给出了详尽的数据介绍。
 
-WIDER FACE数据集包含32,203张图片，其中包含393,703个人脸，数据集的人脸在尺度、姿态、遮挡方面有较大的差异性。另外WIDER FACE数据集是基于61个事件类归类的，然后针对每个事件类，随意的挑选40%作为训练集，10%作为验证集，50%作为测试集。
+WIDER FACE数据集包含32,203张图片，其中包含393,703个人脸，数据集的人脸在尺度、姿态、遮挡方面有较大的差异性。另外WIDER FACE数据集是基于61个场景归类的，然后针对每个场景，随机的挑选40%作为训练集，10%作为验证集，50%作为测试集。
 
-从官网训练集和验证集，放在`data`目录，官网提供了谷歌云和百度云下载地址，请依据情况自行下载。并下载训练集和验证集的标注信息:
+首先，从官网训练集和验证集，放在`data`目录，官网提供了谷歌云和百度云下载地址，请依据情况自行下载。并下载训练集和验证集的标注信息:
 
 ```bash
 ./data/download.sh
@@ -76,7 +76,7 @@ data
 
 #### 下载预训练模型
 
-我们提供了预训练模型，模型基于VGGNet主干网络训练。
+我们提供了预训练模型，模型是基于VGGNet的主干网络，使用如下命令下载：
 
 
 ```bash
@@ -84,7 +84,7 @@ wget http://paddlemodels.bj.bcebos.com/vgg_ilsvrc_16_fc_reduced.tar.gz
 tar -xf vgg_ilsvrc_16_fc_reduced.tar.gz && rm -f vgg_ilsvrc_16_fc_reduced.tar.gz
 ```
 
-声明：该预训练模型转换自[Caffe](http://cs.unc.edu/~wliu/projects/ParseNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel)，我们不久也会发布我们自己预训练的模型。
+声明：该预训练模型转换自[Caffe](http://cs.unc.edu/~wliu/projects/ParseNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel)。不久，我们会发布自己预训练的模型。
 
 
 #### 开始训练
@@ -105,7 +105,7 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 
 **数据增强**：数据的读取行为定义在 `reader.py` 中，所有的图片都会被缩放到640x640。在训练时还会对图片进行数据增强，包括随机扰动、翻转、裁剪等，和[物体检测SSD算法](https://github.com/PaddlePaddle/models/blob/develop/fluid/object_detection/README_cn.md#%E8%AE%AD%E7%BB%83-pascal-voc-%E6%95%B0%E6%8D%AE%E9%9B%86)中数据增强类似，除此之外，增加了上面提到的Data-anchor-sampling:
 
-  **尺度变换(Data-anchor-sampling)**：根据SSD模型中anchor的配置来随机将图片尺度变换到一定范围的尺度，大大增强人脸的尺度变化。具体操作为根据随机选择的人脸长height和宽width，得到$v=\\sqrt{width * height}$，判断$vl$的值在表示scale相关的向量的哪个区间$[16，32，64，128，256，512]$。假设$v=45$，则选定$32<v<64$，以均匀分布的概率选取$[16，32，64]$中的任意一个值。若选中$64$，则该人脸的缩放区间在 $[64 / 2，min(v * 2, 64 * 2)]$中选定。
+  **尺度变换(Data-anchor-sampling)**：随机将图片尺度变换到一定范围的尺度，大大增强人脸的尺度变化。具体操作为根据随机选择的人脸高(height)和宽(width)，得到$v=\\sqrt{width * height}$，判断$v$的值位于缩放区间$[16，32，64，128，256，512]$中的的哪一个。假设$v=45$，则选定$32<v<64$，以均匀分布的概率选取$[16，32，64]$中的任意一个值。若选中$64$，则该人脸的缩放区间在 $[64 / 2，min(v * 2, 64 * 2)]$中选定。
 
 
 
@@ -169,3 +169,5 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
     <img src="images/wider_pr_cruve_int_hard_val.jpg" width="280" /></br>
 WIDER FACE Easy/Medium/Hard set
 </p>
+
+> 目前，基于PaddlePaddle重新实现过程中参数需要调整优化，与论文结果一致的代码会在后续release
