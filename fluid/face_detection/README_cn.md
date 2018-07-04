@@ -160,4 +160,12 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 
 | 模型                    | 预训练模型  | 训练数据    | 测试数据    | mAP |
 |:------------------------:|:------------------:|:----------------:|:------------:|:----:|
-|[Pyramidbox-v1-SSD 640x640]() | [VGGNet](http://paddlemodels.bj.bcebos.com/vgg_ilsvrc_16_fc_reduced.tar.gz) | WIDER FACE train | WIDER FACE Val   | 95.6%/ 94.6%/ 89.4%  |
+|[Pyramidbox-v1-SSD 640x640]() | [VGGNet](http://paddlemodels.bj.bcebos.com/vgg_ilsvrc_16_fc_reduced.tar.gz) | WIDER FACE train | WIDER FACE Val   | 95.6%/ 94.7%/ 89.3%  |
+
+#### 性能曲线
+<p align="center">
+    <img src="images/wider_pr_cruve_int_easy_val.jpg" width="280" />
+    <img src="images/wider_pr_cruve_int_medium_val.jpg" width="280" />
+    <img src="images/wider_pr_cruve_int_hard_val.jpg" width="280" /></br>
+WIDER FACE Easy/Medium/Hard set
+</p>
