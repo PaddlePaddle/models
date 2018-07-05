@@ -24,23 +24,23 @@ add_arg('file_list',      str,  'data/wider_face_split/wider_face_val_bbx_gt.txt
 
 def infer(args, config):
     batch_size = 1
-    model_dir = args.model_dir
+    choose = (args.use_gpu, args.use_pyramidbox, args.model_dir)
     data_dir = args.data_dir
     file_list = args.file_list
     pred_dir = args.pred_dir
 
-    if not os.path.exists(model_dir):
-        raise ValueError("The model path [%s] does not exist." % (model_dir))
+    if not os.path.exists(choose[2]):
+        raise ValueError("The model path [%s] does not exist." % (choose[2]))
 
     test_reader = reader.test(config, file_list)
 
     for image, image_path in test_reader():
         shrink, max_shrink = get_shrink(image.size[1], image.size[0])
 
-        det0 = detect_face(image, shrink)
-        det1 = flip_test(image, shrink)
-        [det2, det3] = multi_scale_test(image, max_shrink)
-        det4 = multi_scale_test_pyramid(image, max_shrink)
+        det0 = detect_face(image, shrink, choose)
+        det1 = flip_test(image, shrink, chosse)
+        [det2, det3] = multi_scale_test(image, max_shrink, choose)
+        det4 = multi_scale_test_pyramid(image, max_shrink, choose)
         det = np.row_stack((det0, det1, det2, det3, det4))
         dets = bbox_vote(det)
 
@@ -80,7 +80,7 @@ def save_widerface_bboxes(image_path, bboxes_scores, output_dir):
     print("The predicted result is saved as {}".format(ofname))
 
 
-def detect_face(image, shrink):
+def detect_face(image, shrink, choose):
     image_shape = [3, image.size[1], image.size[0]]
     if shrink != 1:
         h, w = int(image_shape[1] * shrink), int(image_shape[2] * shrink)
@@ -97,7 +97,10 @@ def detect_face(image, shrink):
     img = [img]
     img = np.array(img)
 
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    use_gpu = choose[0]
+    use_pyramidbox = choose[1]
+    model_dir = choose[2]
+    place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     main_program = fluid.Program()
     startup_program = fluid.Program()
@@ -105,11 +108,11 @@ def detect_face(image, shrink):
     with fluid.unique_name.guard():
         with fluid.program_guard(main_program, startup_program):
             network = PyramidBox(
-                image_shape, sub_network=args.use_pyramidbox, is_infer=True)
+                image_shape, sub_network=use_pyramidbox, is_infer=True)
             infer_program, nmsed_out = network.infer(main_program)
             fetches = [nmsed_out]
             fluid.io.load_persistables(
-                exe, args.model_dir, main_program=main_program)
+                exe, model_dir, main_program=main_program)
 
             detection, = exe.run(infer_program,
                                  feed={'image': img},
@@ -173,9 +176,9 @@ def bbox_vote(det):
     return dets
 
 
-def flip_test(image, shrink):
+def flip_test(image, shrink, choose):
     img = image.transpose(Image.FLIP_LEFT_RIGHT)
-    det_f = detect_face(img, shrink)
+    det_f = detect_face(img, shrink, choose)
     det_t = np.zeros(det_f.shape)
     # image.size: [width, height]
     det_t[:, 0] = image.size[0] - det_f[:, 2]
@@ -186,25 +189,25 @@ def flip_test(image, shrink):
     return det_t
 
 
-def multi_scale_test(image, max_shrink):
+def multi_scale_test(image, max_shrink, choose):
     # Shrink detecting is only used to detect big faces
     st = 0.5 if max_shrink >= 0.75 else 0.5 * max_shrink
-    det_s = detect_face(image, st)
+    det_s = detect_face(image, st, choose)
     index = np.where(
         np.maximum(det_s[:, 2] - det_s[:, 0] + 1, det_s[:, 3] - det_s[:, 1] + 1)
         > 30)[0]
     det_s = det_s[index, :]
     # Enlarge one times
     bt = min(2, max_shrink) if max_shrink > 1 else (st + max_shrink) / 2
-    det_b = detect_face(image, bt)
+    det_b = detect_face(image, bt, choose)
 
     # Enlarge small image x times for small faces
     if max_shrink > 2:
         bt *= 2
         while bt < max_shrink:
-            det_b = np.row_stack((det_b, detect_face(image, bt)))
+            det_b = np.row_stack((det_b, detect_face(image, bt, choose)))
             bt *= 2
-        det_b = np.row_stack((det_b, detect_face(image, max_shrink)))
+        det_b = np.row_stack((det_b, detect_face(image, max_shrink, choose)))
 
     # Enlarged images are only used to detect small faces.
     if bt > 1:
@@ -221,9 +224,9 @@ def multi_scale_test(image, max_shrink):
     return det_s, det_b
 
 
-def multi_scale_test_pyramid(image, max_shrink):
+def multi_scale_test_pyramid(image, max_shrink, choose):
     # Use image pyramids to detect faces
-    det_b = detect_face(image, 0.25)
+    det_b = detect_face(image, 0.25, choose)
     index = np.where(
         np.maximum(det_b[:, 2] - det_b[:, 0] + 1, det_b[:, 3] - det_b[:, 1] + 1)
         > 30)[0]
@@ -232,7 +235,7 @@ def multi_scale_test_pyramid(image, max_shrink):
     st = [0.75, 1.25, 1.5, 1.75]
     for i in range(len(st)):
         if (st[i] <= max_shrink):
-            det_temp = detect_face(image, st[i])
+            det_temp = detect_face(image, st[i], choose)
             # Enlarged images are only used to detect small faces.
             if st[i] > 1:
                 index = np.where(
