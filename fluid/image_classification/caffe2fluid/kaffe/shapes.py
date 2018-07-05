@@ -6,6 +6,8 @@ from .errors import KaffeError
 Tensor4DShape = namedtuple('Tensor4DShape',
                            ['batch_size', 'channels', 'height', 'width'])
 
+Tensor3DShape = namedtuple('Tensor3DShape', ['batch_size', 'data1', 'data2'])
+
 Tensor2DShape = namedtuple('Tensor2DShape', ['batch_size', 'data'])
 
 ScalarShape = namedtuple('ScalarShape', ['batch_size'])
@@ -14,6 +16,8 @@ ScalarShape = namedtuple('ScalarShape', ['batch_size'])
 def make_tensor(batch_size, d1=None, d2=None, d3=None):
     if d3 is not None:
         return Tensor4DShape(batch_size, d1, d2, d3)
+    elif d1 is not None and d2 is not None:
+        return Tensor3DShape(batch_size, d1, d2)
     elif d1 is not None and d2 is None:
         return Tensor2DShape(batch_size, d1)
     elif d1 is None and d2 is None and d3 is None:
@@ -24,10 +28,14 @@ def make_tensor(batch_size, d1=None, d2=None, d3=None):
 
 
 def get_filter_output_shape(i_h, i_w, params, round_func):
-    o_h = (i_h + 2 * params.pad_h - params.kernel_h
-           ) / float(params.stride_h) + 1
-    o_w = (i_w + 2 * params.pad_w - params.kernel_w
-           ) / float(params.stride_w) + 1
+    dila_h = getattr(params, 'dila_h', 1)
+    dila_w = getattr(params, 'dila_w', 1)
+
+    o_h = (i_h + 2 * params.pad_h -
+           (dila_h * (params.kernel_h - 1) + 1)) / float(params.stride_h) + 1
+    o_w = (i_w + 2 * params.pad_w -
+           (dila_w * (params.kernel_w - 1) + 1)) / float(params.stride_w) + 1
+
     return (int(round_func(o_h)), int(round_func(o_w)))
 
 

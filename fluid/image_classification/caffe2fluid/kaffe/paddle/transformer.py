@@ -9,21 +9,6 @@ from ..transformers import (DataInjector, DataReshaper, NodeRenamer,
 from . import network
 
 
-def get_padding_type(kernel_params, input_shape, output_shape):
-    '''Translates Caffe's numeric padding to one of ('SAME', 'VALID').
-    Caffe supports arbitrary padding values, while Paddle only
-    supports 'SAME' and 'VALID' modes. So, not all Caffe paddings
-    can be translated to Paddle. There are some subtleties to
-    how the padding edge-cases are handled. These are described here:
-    https://github.com/Yangqing/caffe2/blob/master/caffe2/proto/caffe2_legacy.proto
-    '''
-    k_h, k_w, s_h, s_w, p_h, p_w = kernel_params
-    if p_h > 0 or p_w > 0:
-        return [p_h, p_w]
-    else:
-        return None
-
-
 class PaddleNode(object):
     '''An intermediate representation for Paddle operations.'''
 
@@ -78,10 +63,11 @@ class PaddleMapper(NodeMapper):
     def get_kernel_params(self, node):
         kernel_params = node.layer.kernel_parameters
         input_shape = node.get_only_parent().output_shape
-        padding = get_padding_type(kernel_params, input_shape,
-                                   node.output_shape)
-        # Only emit the padding if it's not the default value.
-        padding = {'padding': padding} if padding is not None else {}
+        padding = [kernel_params.pad_h, kernel_params.pad_w]
+        if padding[0] == 0 and padding[1] == 0:
+            padding = {}
+        else:
+            padding = {'padding': padding}
         return (kernel_params, padding)
 
     def map_convolution(self, node):
@@ -95,6 +81,10 @@ class PaddleMapper(NodeMapper):
             kwargs['group'] = group
         if not node.parameters.bias_term:
             kwargs['biased'] = False
+
+        if kernel_params.dila_h != 1 or kernel_params.dila_w != 1:
+            kwargs['dilation'] = (kernel_params.dila_h, kernel_params.dila_w)
+
         assert kernel_params.kernel_h == h
         assert kernel_params.kernel_w == w
         return MaybeActivated(node)(
