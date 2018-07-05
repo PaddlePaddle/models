@@ -4,11 +4,6 @@
 from .register import register
 
 
-def import_fluid():
-    import paddle.fluid as fluid
-    return fluid
-
-
 def flatten_shape(input_shape, axis=1, end_axis=-1):
     """ calculate the output shape of this layer using input shape
 
@@ -28,7 +23,7 @@ def flatten_shape(input_shape, axis=1, end_axis=-1):
         start_axis += len(input_shape)
 
     if end_axis < 0:
-        end_axis += len(input_shape)
+        end_axis += len(input_shape) + 1
 
     assert start_axis <= end_axis, 'invalid axis[%d] or end_axis[%d] params'\
             % (start_axis, end_axis)
@@ -52,18 +47,16 @@ def flatten_layer(input, name, axis=1, end_axis=-1):
     Returns:
         output (variable): output variable for this layer
     """
-    fluid = import_fluid()
+    import paddle.fluid as fluid
 
     input_shape = list(input.shape)
-    dims = len(input_shape)
-    start_axis = axis if axis >= 0 else axis + dims
-    end_axis = end_axis if end_axis >= 0 else end_axis + dims
 
-    assert start_axis <= end_axis, 'invalid axis or end_axis params'
-    output_shape = input_shape[0:start_axis]
-    flat_sz = reduce(lambda a, b: a * b, input_shape[start_axis:end_axis])
-    output_shape += [flat_sz]
-    output_shape += input_shape[end_axis:-1]
+    if input_shape[0] == -1:
+        input_shape[0] = 1
+        output_shape = flatten_shape(input_shape, axis=axis, end_axis=end_axis)
+        output_shape[0] = -1
+    else:
+        output_shape = flatten_shape(input_shape, axis=axis, end_axis=end_axis)
 
     output = fluid.layers.reshape(input, shape=output_shape, name=name)
 
