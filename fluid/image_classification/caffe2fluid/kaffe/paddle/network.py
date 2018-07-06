@@ -144,6 +144,7 @@ class Network(object):
              relu=True,
              relu_negative_slope=0.0,
              padding=None,
+             dilation=1,
              group=1,
              biased=True):
         if padding is None:
@@ -173,6 +174,7 @@ class Network(object):
             num_filters=c_o,
             stride=[s_h, s_w],
             padding=padding,
+            dilation=dilation,
             groups=group,
             param_attr=fluid.ParamAttr(name=prefix + "weights"),
             bias_attr=fluid.ParamAttr(name=prefix + "biases"),
