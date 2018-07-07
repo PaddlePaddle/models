@@ -4,8 +4,6 @@ import numpy as np
 import argparse
 import functools
 from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
 
 import paddle.fluid as fluid
 import reader
