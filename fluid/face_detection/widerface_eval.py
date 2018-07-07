@@ -38,7 +38,7 @@ def infer(args, config):
         shrink, max_shrink = get_shrink(image.size[1], image.size[0])
 
         det0 = detect_face(image, shrink, choose)
-        det1 = flip_test(image, shrink, chosse)
+        det1 = flip_test(image, shrink, choose)
         [det2, det3] = multi_scale_test(image, max_shrink, choose)
         det4 = multi_scale_test_pyramid(image, max_shrink, choose)
         det = np.row_stack((det0, det1, det2, det3, det4))
