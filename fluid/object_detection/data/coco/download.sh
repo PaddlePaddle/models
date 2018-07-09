@@ -10,7 +10,7 @@ wget http://images.cocodataset.org/zips/val2017.zip
 wget http://images.cocodataset.org/annotations/annotations_trainval2014.zip
 wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
 # Extract the data.
-echo "Extractint..."
+echo "Extracting..."
 unzip train2014.tar
 unzip val2014.tar
 unzip train2017.tar

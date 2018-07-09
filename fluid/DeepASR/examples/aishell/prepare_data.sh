@@ -1,7 +1,9 @@
 data_dir=~/.cache/paddle/dataset/speech/deep_asr_data/aishell
 data_url='http://deep-asr-data.gz.bcebos.com/aishell_data.tar.gz'
 lst_url='http://deep-asr-data.gz.bcebos.com/aishell_lst.tar.gz'
+aux_url='http://deep-asr-data.gz.bcebos.com/aux.tar.gz'
 md5=17669b8d63331c9326f4a9393d289bfb
+aux_md5=50e3125eba1e3a2768a6f2e499cc1749
 
 if [ ! -e $data_dir ]; then
     mkdir -p $data_dir
@@ -35,3 +37,7 @@ wget -c -P data $lst_url
 tar xvf data/aishell_lst.tar.gz -C data
 
 ln -s $data_dir data/aishell
+
+echo "Download and untar aux files ..."
+wget -c $aux_url
+tar xvf aux.tar.gz 

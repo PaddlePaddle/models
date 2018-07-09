@@ -1,9 +1,11 @@
 model/
-pretrained/
-data/
-label/
+data/WIDER_train
+data/WIDER_val
+data/wider_face_split
+vgg_ilsvrc_16_fc_reduced*
 *.swp
 *.log
 log*
 output*
-infer_results*
+pred
+eval_tools

@@ -62,10 +62,8 @@ class ModelHyperParams(object):
     eos_idx = 1
     # index for <unk> token
     unk_idx = 2
-    # max length of sequences.
-    # The size of position encoding table should at least plus 1, since the
-    # sinusoid position encoding starts from 1 and 0 can be used as the padding
-    # token for position encoding.
+    # max length of sequences deciding the size of position encoding table.
+    # Start from 1 and count start and end tokens in.
     max_length = 256
     # the dimension for word embeddings, which is also the last dimension of
     # the input and output of multi-head attention, position-wise feed-forward

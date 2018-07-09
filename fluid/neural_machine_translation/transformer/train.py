@@ -340,9 +340,13 @@ def train(args):
             start_mark=args.special_token[0],
             end_mark=args.special_token[1],
             unk_mark=args.special_token[2],
+            # count start and end tokens out
+            max_length=ModelHyperParams.max_length - 2,
             clip_last_batch=False)
+        train_data = read_multiple(
+            reader=train_data.batch_generator,
+            count=dev_count if args.use_token_batch else 1)
 
-        train_data = read_multiple(reader=train_data.batch_generator)
         build_strategy = fluid.BuildStrategy()
         # Since the token number differs among devices, customize gradient scale to
         # use token average cost among multi-devices. and the gradient scale is
@@ -372,6 +376,8 @@ def train(args):
                 start_mark=args.special_token[0],
                 end_mark=args.special_token[1],
                 unk_mark=args.special_token[2],
+                # count start and end tokens out
+                max_length=ModelHyperParams.max_length - 2,
                 clip_last_batch=False,
                 shuffle=False,
                 shuffle_batch=False)

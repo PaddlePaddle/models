@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 def predict_action(exe, state, predict_program, feed_names, fetch_targets,
                    action_dim):
-    if np.random.randint(100) == 0:
+    if np.random.random() < 0.01:
         act = np.random.randint(action_dim)
     else:
         state = np.expand_dims(state, axis=0)

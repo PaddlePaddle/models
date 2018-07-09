@@ -24,6 +24,7 @@ import time
 import copy
 import random
 import cv2
+from data_util import GeneratorEnqueuer
 
 
 class Settings(object):
@@ -58,30 +59,25 @@ class Settings(object):
         self.saturation_delta = 0.5
         self.brightness_prob = 0.5
         # _brightness_delta is the normalized value by 256
-        # self._brightness_delta = 32
         self.brightness_delta = 0.125
         self.scale = 0.007843  # 1 / 127.5
         self.data_anchor_sampling_prob = 0.5
         self.min_face_size = 8.0
 
 
-def draw_image(faces_pred, img, resize_val):
-    for i in range(len(faces_pred)):
-        draw_rotate_rectange(img, faces_pred[i], resize_val, (0, 255, 0), 3)
-
-
-def draw_rotate_rectange(img, face, resize_val, color, thickness):
-    cv2.line(img, (int(face[1] * resize_val), int(face[2] * resize_val)), (int(
-        face[3] * resize_val), int(face[2] * resize_val)), color, thickness)
-
-    cv2.line(img, (int(face[3] * resize_val), int(face[2] * resize_val)), (int(
-        face[3] * resize_val), int(face[4] * resize_val)), color, thickness)
-
-    cv2.line(img, (int(face[1] * resize_val), int(face[2] * resize_val)), (int(
-        face[1] * resize_val), int(face[4] * resize_val)), color, thickness)
-
-    cv2.line(img, (int(face[3] * resize_val), int(face[4] * resize_val)), (int(
-        face[1] * resize_val), int(face[4] * resize_val)), color, thickness)
+def to_chw_bgr(image):
+    """
+    Transpose image from HWC to CHW and from RBG to BGR.
+    Args:
+        image (np.array): an image with HWC and RBG layout.
+    """
+    # HWC to CHW
+    if len(image.shape) == 3:
+        image = np.swapaxes(image, 1, 2)
+        image = np.swapaxes(image, 1, 0)
+    # RBG to BGR
+    image = image[[2, 1, 0], :, :]
+    return image
 
 
 def preprocess(img, bbox_labels, mode, settings, image_path):
@@ -107,9 +103,6 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
                 batch_sampler, bbox_labels, img_width, img_height, scale_array,
                 settings.resize_width, settings.resize_height)
             img = np.array(img)
-            # Debug
-            # img_save = Image.fromarray(img)
-            # img_save.save('img_orig.jpg')
             if len(sampled_bbox) > 0:
                 idx = int(random.uniform(0, len(sampled_bbox)))
                 img, sampled_labels = image_util.crop_image_sampling(
@@ -118,17 +111,7 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
                     settings.min_face_size)
 
             img = img.astype('uint8')
-            # Debug: visualize the gt bbox
-            visualize_bbox = 0
-            if visualize_bbox:
-                img_show = img
-                draw_image(sampled_labels, img_show, settings.resize_height)
-                img_show = Image.fromarray(img_show)
-                img_show.save('final_img_show.jpg')
-
             img = Image.fromarray(img)
-            # Debug
-            # img.save('final_img.jpg')
 
         else:
             # hard-code here
@@ -172,46 +155,41 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
                 tmp = sampled_labels[i][1]
                 sampled_labels[i][1] = 1 - sampled_labels[i][3]
                 sampled_labels[i][3] = 1 - tmp
-    # HWC to CHW
-    if len(img.shape) == 3:
-        img = np.swapaxes(img, 1, 2)
-        img = np.swapaxes(img, 1, 0)
-    # RBG to BGR
-    img = img[[2, 1, 0], :, :]
+
+    img = to_chw_bgr(img)
     img = img.astype('float32')
     img -= settings.img_mean
     img = img * settings.scale
     return img, sampled_labels
 
 
-def put_txt_in_dict(input_txt):
+def load_file_list(input_txt):
     with open(input_txt, 'r') as f_dir:
         lines_input_txt = f_dir.readlines()
 
-    dict_input_txt = {}
+    file_dict = {}
     num_class = 0
     for i in range(len(lines_input_txt)):
-        tmp_line_txt = lines_input_txt[i].strip('\n\t\r')
-        if '--' in tmp_line_txt:
+        line_txt = lines_input_txt[i].strip('\n\t\r')
+        if '--' in line_txt:
             if i != 0:
                 num_class += 1
-            dict_input_txt[num_class] = []
-            dict_name = tmp_line_txt
-            dict_input_txt[num_class].append(tmp_line_txt)
-        if '--' not in tmp_line_txt:
-            if len(tmp_line_txt) > 6:
-                split_str = tmp_line_txt.split(' ')
+            file_dict[num_class] = []
+            file_dict[num_class].append(line_txt)
+        if '--' not in line_txt:
+            if len(line_txt) > 6:
+                split_str = line_txt.split(' ')
                 x1_min = float(split_str[0])
                 y1_min = float(split_str[1])
                 x2_max = float(split_str[2])
                 y2_max = float(split_str[3])
-                tmp_line_txt = str(x1_min) + ' ' + str(y1_min) + ' ' + str(
+                line_txt = str(x1_min) + ' ' + str(y1_min) + ' ' + str(
                     x2_max) + ' ' + str(y2_max)
-                dict_input_txt[num_class].append(tmp_line_txt)
+                file_dict[num_class].append(line_txt)
             else:
-                dict_input_txt[num_class].append(tmp_line_txt)
+                file_dict[num_class].append(line_txt)
 
-    return dict_input_txt
+    return file_dict
 
 
 def expand_bboxes(bboxes,
@@ -238,68 +216,106 @@ def expand_bboxes(bboxes,
     return expand_boxes
 
 
-def pyramidbox(settings, file_list, mode, shuffle):
+def train_generator(settings, file_list, batch_size, shuffle=True):
+    file_dict = load_file_list(file_list)
+    while True:
+        if shuffle:
+            random.shuffle(file_dict)
+        images, face_boxes, head_boxes, label_ids = [], [], [], []
+        label_offs = [0]
 
-    dict_input_txt = {}
-    dict_input_txt = put_txt_in_dict(file_list)
-
-    def reader():
-        if mode == 'train' and shuffle:
-            random.shuffle(dict_input_txt)
-        for index_image in range(len(dict_input_txt)):
-
-            image_name = dict_input_txt[index_image][0] + '.jpg'
+        for index_image in file_dict.keys():
+            image_name = file_dict[index_image][0]
             image_path = os.path.join(settings.data_dir, image_name)
-
             im = Image.open(image_path)
             if im.mode == 'L':
                 im = im.convert('RGB')
             im_width, im_height = im.size
 
             # layout: label | xmin | ymin | xmax | ymax
-            if mode == 'train':
-                bbox_labels = []
-                for index_box in range(len(dict_input_txt[index_image])):
-                    if index_box >= 2:
-                        bbox_sample = []
-                        temp_info_box = dict_input_txt[index_image][
-                            index_box].split(' ')
-                        xmin = float(temp_info_box[0])
-                        ymin = float(temp_info_box[1])
-                        w = float(temp_info_box[2])
-                        h = float(temp_info_box[3])
-                        xmax = xmin + w
-                        ymax = ymin + h
+            bbox_labels = []
+            for index_box in range(len(file_dict[index_image])):
+                if index_box >= 2:
+                    bbox_sample = []
+                    temp_info_box = file_dict[index_image][index_box].split(' ')
+                    xmin = float(temp_info_box[0])
+                    ymin = float(temp_info_box[1])
+                    w = float(temp_info_box[2])
+                    h = float(temp_info_box[3])
+                    xmax = xmin + w
+                    ymax = ymin + h
 
-                        bbox_sample.append(1)
-                        bbox_sample.append(float(xmin) / im_width)
-                        bbox_sample.append(float(ymin) / im_height)
-                        bbox_sample.append(float(xmax) / im_width)
-                        bbox_sample.append(float(ymax) / im_height)
-                        bbox_labels.append(bbox_sample)
+                    bbox_sample.append(1)
+                    bbox_sample.append(float(xmin) / im_width)
+                    bbox_sample.append(float(ymin) / im_height)
+                    bbox_sample.append(float(xmax) / im_width)
+                    bbox_sample.append(float(ymax) / im_height)
+                    bbox_labels.append(bbox_sample)
 
-                im, sample_labels = preprocess(im, bbox_labels, mode, settings,
-                                               image_path)
-                sample_labels = np.array(sample_labels)
-                if len(sample_labels) == 0: continue
-                im = im.astype('float32')
-                boxes = sample_labels[:, 1:5]
-                lbls = [1] * len(boxes)
-                difficults = [1] * len(boxes)
-                yield im, boxes, expand_bboxes(boxes), lbls, difficults
+            im, sample_labels = preprocess(im, bbox_labels, "train", settings,
+                                           image_path)
+            sample_labels = np.array(sample_labels)
+            if len(sample_labels) == 0: continue
 
-            if mode == 'test':
-                yield im, image_path
+            im = im.astype('float32')
+            face_box = sample_labels[:, 1:5]
+            head_box = expand_bboxes(face_box)
+            label = [1] * len(face_box)
 
-    return reader
+            images.append(im)
+            face_boxes.extend(face_box)
+            head_boxes.extend(head_box)
+            label_ids.extend(label)
+            label_offs.append(label_offs[-1] + len(face_box))
+
+            if len(images) == batch_size:
+                images = np.array(images).astype('float32')
+                face_boxes = np.array(face_boxes).astype('float32')
+                head_boxes = np.array(head_boxes).astype('float32')
+                label_ids = np.array(label_ids).astype('int32')
+                yield images, face_boxes, head_boxes, label_ids, label_offs
+                images, face_boxes, head_boxes = [], [], []
+                label_ids, label_offs = [], [0]
 
 
-def train(settings, file_list, shuffle=True):
-    return pyramidbox(settings, file_list, 'train', shuffle)
+def train_batch_reader(settings,
+                       file_list,
+                       batch_size,
+                       shuffle=True,
+                       num_workers=8):
+    try:
+        enqueuer = GeneratorEnqueuer(
+            train_generator(settings, file_list, batch_size, shuffle),
+            use_multiprocessing=False)
+        enqueuer.start(max_queue_size=24, workers=num_workers)
+        generator_output = None
+        while True:
+            while enqueuer.is_running():
+                if not enqueuer.queue.empty():
+                    generator_output = enqueuer.queue.get()
+                    break
+                else:
+                    time.sleep(0.01)
+            yield generator_output
+            generator_output = None
+    finally:
+        if enqueuer is not None:
+            enqueuer.stop()
 
 
 def test(settings, file_list):
-    return pyramidbox(settings, file_list, 'test', False)
+    file_dict = load_file_list(file_list)
+
+    def reader():
+        for index_image in file_dict.keys():
+            image_name = file_dict[index_image][0]
+            image_path = os.path.join(settings.data_dir, image_name)
+            im = Image.open(image_path)
+            if im.mode == 'L':
+                im = im.convert('RGB')
+            yield im, image_path
+
+    return reader
 
 
 def infer(settings, image_path):
@@ -312,12 +328,7 @@ def infer(settings, image_path):
             img = img.resize((settings.resize_width, settings.resize_height),
                              Image.ANTIALIAS)
         img = np.array(img)
-        # HWC to CHW
-        if len(img.shape) == 3:
-            img = np.swapaxes(img, 1, 2)
-            img = np.swapaxes(img, 1, 0)
-        # RBG to BGR
-        img = img[[2, 1, 0], :, :]
+        img = to_chw_bgr(img)
         img = img.astype('float32')
         img -= settings.img_mean
         img = img * settings.scale
