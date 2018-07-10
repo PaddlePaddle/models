@@ -154,31 +154,31 @@ perl multi-bleu.perl data/newstest2013.tok.de < predict.tok.txt
 ```
 BLEU = 25.08, 58.3/31.5/19.6/12.6 (BP=0.966, ratio=0.967, hyp_len=61321, ref_len=63412)
 ```
-###分布式训练
+### 分布式训练
 
 transformer 模型支持同步或者异步的分布式训练。分布式的配置主要两个方面:
 
 1 命令行配置
 
-  --local参数，这个参数有两个取值，True表示单机训练，而False表示使用分布式训练。默认为单机训练模式。
+  - --local参数，这个参数有两个取值，True表示单机训练，而False表示使用分布式训练。默认为单机训练模式。
 
-  --sync参数，这个参数有两个取值，但只有当--local参数为False才会产生影响，其中True表示同步训练模式，False表示异步训练模式。默认为同步训练模式。
+  - --sync参数，这个参数有两个取值，但只有当--local参数为False才会产生影响，其中True表示同步训练模式，False表示异步训练模式。默认为同步训练模式。
 
 2 环境变量配置
 
   在分布式训练模式下，会手动配置训练的trainer数量和pserver数量。在网络拓扑上，每一个trainer都会和pserver相连，每一个pserver也会和trainer相连，pserver作为服务端，而trainer作为客户端。下面分pserver和trainer说明具体的参数配置：
 
-1)pserver配置
+1) pserver配置
 
-PADDLE_IS_LOCAL=[0|1]:是否是分布式训练，0标识是分布式，1标识是单机
+- `PADDLE_IS_LOCAL=[0|1]` 是否是分布式训练，0标识是分布式，1标识是单机
 
-TRAINING_ROLE=PSERVER:标识当前节点是pserver
+- `TRAINING_ROLE=PSERVER` 标识当前节点是pserver
 
-POD_IP=ip:设置当前pserver使用对外服务的地址
+- `POD_IP=ip` 设置当前pserver使用对外服务的地址
 
-PADDLE_PORT=port:设置当前pserver对外服务监听端口号，和POD_IP共同构成对外的唯一标识
+- `PADDLE_PORT=port` 设置当前pserver对外服务监听端口号，和POD_IP共同构成对外的唯一标识
 
-PADDLE_TRAINERS_NUM=num:设置pserver连接的trainer的数量
+- `PADDLE_TRAINERS_NUM=num` :设置pserver连接的trainer的数量
 
 下面是配置的示例,使用两个pserver,192.168.2.2上的配置如下:
 ```
@@ -198,17 +198,17 @@ export TRAINING_ROLE=PSERVER
 export PADDLE_IS_LOCAL=0
 export PADDLE_PORT=6177
 ```
-2)trainer配置
+2) trainer配置
 
-PADDLE_IS_LOCAL=[0|1]:是否是分布式训练，0标识是分布式，1标识是单机
+- `PADDLE_IS_LOCAL=[0|1]` 是否是分布式训练，0标识是分布式，1标识是单机
 
-TRAINING_ROLE=TRAINER:标识当前节点是trainer
+- `TRAINING_ROLE=TRAINER` 标识当前节点是trainer
 
-PADDLE_PSERVERS=[ip1,ip2,……]:设置pserver的ip地址,用于告知trainer互联的pserver的ip,使用","分割
+- `PADDLE_PSERVERS=[ip1,ip2,……]` 设置pserver的ip地址,用于告知trainer互联的pserver的ip,使用","分割
 
-PADDLE_TRAINER_ID=num:设置当前节点的编号,编号的取值范围为0到N-1的整数
+- `PADDLE_TRAINER_ID=num` 设置当前节点的编号,编号的取值范围为0到N-1的整数
 
-PADDLE_PORT=port:设置请求的pserver服务端口号
+- `PADDLE_PORT=port` 设置请求的pserver服务端口号
 
 下面是配置的示例,使用两个trainer,trainer 1上的配置如下:
 ```
