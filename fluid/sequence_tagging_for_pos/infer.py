@@ -61,13 +61,13 @@ def infer(test_reader, window_size=5, use_cuda=False, model_path=None):
             label_tag = [reverse_lbl_dict[d[1]] for d in data_]
             prediction_tag = [
                 reverse_lbl_dict[p.argmax()] for p in prediction[0]
-                ]
+            ]
 
             # get the source string and prediction string of POS work
             source_POS = " ".join(
-                ["/".join(items) for items in zip(words,label_tag)])
+                ["/".join(items) for items in zip(words, label_tag)])
             prediction_POS = " ".join(
-                ["/".join(items) for items in zip(words,prediction_tag)])
+                ["/".join(items) for items in zip(words, prediction_tag)])
 
             # print the result for compare
             print("-" * 40)
@@ -79,7 +79,8 @@ def infer(test_reader, window_size=5, use_cuda=False, model_path=None):
 if __name__ == "__main__":
 
     #define the test_data_dir, word_dict_path, label_dict_path
-    train_data_dir, test_data_dir, word_dict_path, label_dict_path = load_default_data()
+    train_data_dir, test_data_dir, word_dict_path, label_dict_path = load_default_data(
+    )
 
     logger.info(
         "train_data_dir = %s\ntest_data_dir = %s\nword_dict_path = %s\nlabel_dict_path = %s\n"
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     ## we use the reader.train_reader to read the testing data.
     logger.info("loading test reader")
     test_reader = paddle.batch(
-        reader.train_reader(test_data_dir, word_dict, lbl_dict),batch_size=32)
+        reader.train_reader(test_data_dir, word_dict, lbl_dict), batch_size=32)
 
     ##running model infer ...
     logger.info("running model infer ...")

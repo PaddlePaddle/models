@@ -60,7 +60,8 @@ def train(topology,
                      "use Brown corpus to train the model."))
 
         logger.info("downloading Brown corpus...")
-        train_data_dir,test_data_dir,word_dict_path,label_dict_path = load_default_data( )
+        train_data_dir,test_data_dir,word_dict_path,label_dict_path = load_default_data(
+        )
 
         logger.info("please wait to build the word dictionary ...")
 
@@ -100,7 +101,8 @@ def train(topology,
     # get train data reader
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            reader.train_reader(train_data_dir, word_dict, lbl_dict, window_size),
+            reader.train_reader(train_data_dir, word_dict, lbl_dict,
+                                window_size),
             buf_size=51200),
         batch_size=batch_size)
 
@@ -109,7 +111,8 @@ def train(topology,
         # here, because training and testing data share a same format,
         # we still use the reader.train_reader to read the testing data.
         test_reader = paddle.batch(
-            reader.train_reader(test_data_dir, word_dict, lbl_dict, window_size),
+            reader.train_reader(test_data_dir, word_dict, lbl_dict,
+                                window_size),
             batch_size=batch_size)
     else:
         test_reader = None
@@ -156,7 +159,8 @@ def train(topology,
 
             if (i + 1) % 1000 == 0:
                 logger.info("pass_id: %d, batch %d, avg_acc: %f, avg_cost: %f" %
-                        (pass_id, i + 1,total_acc/data_count, total_cost/data_count))
+                        (pass_id, i + 1,total_acc / data_count,
+                         total_cost / data_count))
 
         avg_cost = total_cost / data_count
         avg_acc = total_acc / data_count
@@ -167,9 +171,10 @@ def train(topology,
         if test_reader is not None:
             data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
             for i, data in enumerate(test_reader()):
-                avg_cost_np, avg_acc_np,prediction_np = exe.run(prog,
-                                                                feed=feeder.feed(data),
-                                                                fetch_list=[cost, acc, prediction])
+                avg_cost_np, avg_acc_np,prediction_np = exe.run(
+                    prog,
+                    feed=feeder.feed(data),
+                    fetch_list=[cost, acc, prediction])
                 data_size = len(data)
                 total_acc += data_size * avg_acc_np
                 total_cost += data_size * avg_cost_np
@@ -177,11 +182,12 @@ def train(topology,
 
             avg_cost = total_cost / data_count
             avg_acc = total_acc / data_count
-            logger.info("Test result -- pass_id: %d,  avg_acc: %f, avg_cost: %f" %
-                        (pass_id, avg_acc, avg_cost))
+            logger.info("Test result -- pass_id: %d,  avg_acc: %f, avg_cost: %f"
+                        % (pass_id, avg_acc, avg_cost))
 
         ## save inference model
-        epoch_model = model_save_dir + "/" + args.nn_type + "_epoch" + str(pass_id % 5)
+        epoch_model = model_save_dir + "/" + args.nn_type + "_epoch" + str(
+            pass_id % 5)
         logger.info("Saving inference model at %s" % (epoch_model))
 
         ##prediction is the topology return value

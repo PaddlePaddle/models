@@ -7,14 +7,13 @@
 
 import paddle.fluid as fluid
 
-def window_net(
-        data,
-        label,
-        dict_dim,
-        class_num,
-        emb_dim=32,
-        linear_layer_size=64,
-        window_size=5):
+def window_net(data,
+               label,
+               dict_dim,
+               class_num,
+               emb_dim=32,
+               linear_layer_size=64,
+               window_size=5):
     """
     define the topology of the window network
 
@@ -65,15 +64,14 @@ def window_net(
     return avg_cost, acc, prediction
 
 
-def sentence_net(
-        data,
-        label,
-        dict_dim,
-        class_num,
-        emb_dim=32,
-        hid_dim=64,
-        kernel_width=3,
-        tanh_layer_size=64):
+def sentence_net(data,
+                 label,
+                 dict_dim,
+                 class_num,
+                 emb_dim=32,
+                 hid_dim=64,
+                 kernel_width=3,
+                 tanh_layer_size=64):
     """
     sentence network definition
 
@@ -105,10 +103,13 @@ def sentence_net(
         pool_type="max")
 
     # Linear Layer and tanh Layer
-    tanh_layer = fluid.layers.fc(input=[conv_layer], size=tanh_layer_size, act="tanh")
+    tanh_layer = fluid.layers.fc(
+        input=[conv_layer], size=tanh_layer_size, act="tanh")
 
     # prediction
-    prediction = fluid.layers.fc(input=[tanh_layer], size=class_num, act="softmax")
+    prediction = fluid.layers.fc(input=[tanh_layer],
+                                 size=class_num,
+                                 act="softmax")
 
     # cost and batch average cost
     cost = fluid.layers.cross_entropy(input=prediction, label=label)

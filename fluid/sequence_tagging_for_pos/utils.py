@@ -64,10 +64,7 @@ def parse_train_cmd():
         default=False,
         help="Whether use the cuda or not.")
     parser.add_argument(
-        "--window_size",
-        type=int,
-        default=5,
-        help="The size of window width.")
+        "--window_size", type=int, default=5, help="The size of window width.")
     parser.add_argument(
         "--learning_rate",
         type=float,
@@ -156,8 +153,10 @@ def load_default_data():
     default_data_dir_brown = zip_filename[:-4]
     default_data_train_dir = os.path.join(default_data_dir_brown, "train")
     default_data_test_dir = os.path.join(default_data_dir_brown, "test")
-    default_word_dict_path = os.path.join(default_data_dir_brown, "default_word.dict")
-    default_label_dict_path = os.path.join(default_data_dir_brown, "default_label.dict")
+    default_word_dict_path = os.path.join(default_data_dir_brown,
+                                          "default_word.dict")
+    default_label_dict_path = os.path.join(default_data_dir_brown,
+                                           "default_label.dict")
 
     if not os.path.exists(default_data_dir_brown):
         os.makedirs(default_data_dir_brown)
@@ -166,10 +165,10 @@ def load_default_data():
     md5sum = "a0a8630959d3d937873b1265b0a05497"
 
     if (not (os.path.exists(zip_filename)) or md5file(zip_filename) != md5sum):
-        if os.path.exists(zip_filename) :
+        if os.path.exists(zip_filename):
             os.remove(zip_filename)
 
-        os.system("wget -O %s -c %s" % (zip_filename,data_url))
+        os.system("wget -O %s -c %s" % (zip_filename, data_url))
 
     if not (os.path.exists(default_data_train_dir)) or not (
             os.path.exists(default_data_test_dir)):
@@ -186,7 +185,8 @@ def load_default_data():
                 save_dir = default_data_test_dir
 
             data = f.read(filename)
-            with open(os.path.join(save_dir , filename.split("/")[-1]), 'w+b') as f_:
+            with open(os.path.join(save_dir , filename.split("/")[-1]),
+                      'w+b') as f_:
                 f_.write(data)
 
         f.close()

@@ -34,9 +34,11 @@ def train_reader(data_dir, word_dict, label_dict, window_size=5):
 
                     line_split = line.encode("utf-8").strip().split()
                     ##sentence with a special "PADDING" word
-                    #               replicated window_size/2 times at the begining and end
+                    #      replicated window_size/2 times at the begining and end
                     # "PADDING" at the begining
-                    word_ids, label_ids = [UNK_WID] * interest_word_window, [UNK_LID] * interest_word_window
+                    word_ids, label_ids = [UNK_WID] * interest_word_window, [
+                        UNK_LID
+                    ] * interest_word_window
                     for item in line_split:
                         try:
                             items = item.split("/")
@@ -53,16 +55,17 @@ def train_reader(data_dir, word_dict, label_dict, window_size=5):
                     word_ids += [UNK_WID] * interest_word_window
                     label_ids += [UNK_LID] * interest_word_window
 
-                    if len(word_ids) <  interest_word_window:
+                    if len(word_ids) < interest_word_window:
                         continue
 
-                    if len(word_ids) <  window_size:
+                    if len(word_ids) < window_size:
                         yield word_ids + [UNK_WID] * (
                             window_size - len(word_ids)
                         ), label_ids[interest_word_window]
 
                     for i in range(len(word_ids) - window_size):
-                        yield word_ids[i:i + window_size], label_ids[i + interest_word_window]
+                        yield word_ids[i:i + window_size], label_ids[
+                            i + interest_word_window]
 
     return reader
 
