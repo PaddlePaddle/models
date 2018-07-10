@@ -10,7 +10,7 @@
 #
 
 import os
-from utils import load_default_data,load_dict,logger,reverse_dict
+from utils import load_default_data, load_dict, logger, reverse_dict
 import paddle.fluid as fluid
 import paddle.v2 as paddle
 import reader

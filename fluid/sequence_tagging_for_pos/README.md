@@ -111,9 +111,9 @@ Each two row in the output log is prediction result of a sample. There are 2 row
 1. Data organization
     It’s assumed that training data of the following format exist: each row is a sample, isolated by spacing, and each item after isolation is isolated into two parts by "/", the first part is word and the second part is tag. The following are two sample data:
     ```
-	The/at old-time/jj bridges/nns over/in the/at Merrimac/np-tl River/nn-tl in/in Massachusetts/np are/ber of/in unusual/jj interest/nn in/in many/ap respects/nns ./.
-	For/in their/pp$ length/nn ,/, their/pp$ types/nns of/in construction/nn ,/, their/pp$ picturesque/jj settings/nns ,/, and/cc their/pp$ literary/jj associations/nns ,/, they/ppss should/md be/be known/vbn and/cc remembered/vbn ./.
-	```
+    The/at old-time/jj bridges/nns over/in the/at Merrimac/np-tl River/nn-tl in/in Massachusetts/np are/ber of/in unusual/jj interest/nn in/in many/ap respects/nns ./.
+    For/in their/pp$ length/nn ,/, their/pp$ types/nns of/in construction/nn ,/, their/pp$ picturesque/jj settings/nns ,/, and/cc their/pp$ literary/jj associations/nns ,/, they/ppss should/md be/be known/vbn and/cc remembered/vbn ./.
+    ```
 
 2. Interface of reading data
 Read interface for self-defining data only needs to compile a Python generator to implement the logic of “analyze a training sample in original input text”.
@@ -131,8 +131,8 @@ Read interface for self-defining data only needs to compile a Python generator t
 
 3. Modify command line arguments
 
-	- If data are organized into the same format of sample data, it’s only necessary to modify `train.py` starting arguments in `run.sh` script and designate `nn_type` arguments, then this sample can be directly run, and it’s unnecessary to modify data reader interface  `reader.py`.
-	- Detailed descriptions of starting parameters in `train.py` script can be acquired by executing `python train.py --help` , and main parameters are as follows:
+    - If data are organized into the same format of sample data, it’s only necessary to modify `train.py` starting arguments in `run.sh` script and designate `nn_type` arguments, then this sample can be directly run, and it’s unnecessary to modify data reader interface  `reader.py`.
+    - Detailed descriptions of starting parameters in `train.py` script can be acquired by executing `python train.py --help` , and main parameters are as follows:
         - `nn_type`：select the model to be used, “window” or “sentence” is now supported.
         - `train_data_dir`：designate the folder where training data are located, self-defining data are used for training, and this arguments must be designated, or otherwise `Brown corpus` in the network should be used for training, and `test_data_dir`, `word_dict` and `label_dict` are default arguments.
         - `test_data_dir`：designate the fold where test data are located, if not, test will not be implemented unless default corpus is used.
