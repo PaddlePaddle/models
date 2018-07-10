@@ -8,13 +8,13 @@
 import paddle.fluid as fluid
 
 def window_net(
-           data,
-           label,
-           dict_dim,
-           class_num,
-           emb_dim=32,
-           linear_layer_size=64,
-           window_size=5):
+        data,
+        label,
+        dict_dim,
+        class_num,
+        emb_dim=32,
+        linear_layer_size=64,
+        window_size=5):
     """
     define the topology of the window network
 
@@ -33,7 +33,11 @@ def window_net(
     """
 
     # lookup table, the embedding layer
-    emb = fluid.layers.embedding(input=data, size=[dict_dim, emb_dim],param_attr='emb.w', is_sparse=True)
+    emb = fluid.layers.embedding(
+        input=data,
+        size=[dict_dim, emb_dim],
+        param_attr='emb.w',
+        is_sparse=True)
 
     # Linear Layer of global full connect
     # the filter_size equal to emb size
@@ -48,7 +52,8 @@ def window_net(
     tanh_layer = fluid.layers.tanh(emb_fc_layer)
 
     # prediction
-    prediction = fluid.layers.fc(input=[tanh_layer], size=class_num, act="softmax")
+    prediction = fluid.layers.fc(
+        input=[tanh_layer], size=class_num, act="softmax")
 
     # cost and batch average cost
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
@@ -61,14 +66,14 @@ def window_net(
 
 
 def sentence_net(
-                 data,
-                 label,
-                 dict_dim,
-                 class_num,
-                 emb_dim=32,
-                 hid_dim=64,
-                 kernel_width=3,
-                 tanh_layer_size=64):
+        data,
+        label,
+        dict_dim,
+        class_num,
+        emb_dim=32,
+        hid_dim=64,
+        kernel_width=3,
+        tanh_layer_size=64):
     """
     sentence network definition
 

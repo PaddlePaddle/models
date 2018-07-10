@@ -16,14 +16,11 @@ import paddle.v2 as paddle
 import reader
 
 
-def infer(test_reader,
-          window_size=5,
-          use_cuda=False,
-          model_path=None):
+def infer(test_reader, window_size=5, use_cuda=False, model_path=None):
     """
     inference function
     """
-    if model_path is None or not os.path.exists(model_path) :
+    if model_path is None or not os.path.exists(model_path):
         print(str(model_path) + " cannot be found")
         return
 
@@ -56,22 +53,26 @@ def infer(test_reader,
 
             # use the infer to predict
             prediction = exe.run(inference_program,
-                          feed=feeder.feed(words_index),
-                          fetch_list=fetch_targets,
-                          return_numpy=True)
+                                 feed=feeder.feed(words_index),
+                                 fetch_list=fetch_targets,
+                                 return_numpy=True)
 
             # get the label tag and the prediction tag
             label_tag = [reverse_lbl_dict[d[1]] for d in data_]
-            prediction_tag = [reverse_lbl_dict[p.argmax()] for p in prediction[0]]
+            prediction_tag = [
+                reverse_lbl_dict[p.argmax()] for p in prediction[0]
+                ]
 
             # get the source string and prediction string of POS work
-            source_POS = " ".join(["/".join(items) for items in zip(words,label_tag)])
-            prediction_POS = " ".join(["/".join(items) for items in zip(words,prediction_tag)])
+            source_POS = " ".join(
+                ["/".join(items) for items in zip(words,label_tag)])
+            prediction_POS = " ".join(
+                ["/".join(items) for items in zip(words,prediction_tag)])
 
             # print the result for compare
-            print("-"*40)
-            print("s_POS = %s"%source_POS)
-            print("p_POS = %s"%prediction_POS)
+            print("-" * 40)
+            print("s_POS = %s" % source_POS)
+            print("p_POS = %s" % prediction_POS)
 
 
 
@@ -80,8 +81,9 @@ if __name__ == "__main__":
     #define the test_data_dir, word_dict_path, label_dict_path
     train_data_dir, test_data_dir, word_dict_path, label_dict_path = load_default_data()
 
-    logger.info("train_data_dir = %s\ntest_data_dir = %s\nword_dict_path = %s\nlabel_dict_path = %s\n"
-           %(train_data_dir, test_data_dir, word_dict_path, label_dict_path))
+    logger.info(
+        "train_data_dir = %s\ntest_data_dir = %s\nword_dict_path = %s\nlabel_dict_path = %s\n"
+        % (train_data_dir, test_data_dir, word_dict_path, label_dict_path))
 
     ##get dictionary
     logger.info("loading dictionary")
@@ -91,10 +93,9 @@ if __name__ == "__main__":
     ## we use the reader.train_reader to read the testing data.
     logger.info("loading test reader")
     test_reader = paddle.batch(
-        reader.train_reader(test_data_dir, word_dict, lbl_dict),
-        batch_size=32)
+        reader.train_reader(test_data_dir, word_dict, lbl_dict),batch_size=32)
 
     ##running model infer ...
     logger.info("running model infer ...")
     epoch_path = "./models/sentence_epoch3"
-    infer(test_reader, window_size = 5, use_cuda=False, model_path=epoch_path)
+    infer(test_reader, window_size=5, use_cuda=False, model_path=epoch_path)
