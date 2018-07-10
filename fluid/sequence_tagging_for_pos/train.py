@@ -164,8 +164,8 @@ def train(topology,
 
         avg_cost = total_cost / data_count
         avg_acc = total_acc / data_count
-        logger.info("Train result -- pass_id: %d,  avg_acc: %f, avg_cost: %f" %
-                    (pass_id, avg_acc, avg_cost))
+        logger.info("Train result -- pass_id: %d,  avg_acc: %f, avg_cost: %f"
+                    % (pass_id, avg_acc, avg_cost))
 
         ## running the test data
         if test_reader is not None:
