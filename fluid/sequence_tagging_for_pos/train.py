@@ -158,9 +158,9 @@ def train(topology,
             data_count += data_size
 
             if (i + 1) % 1000 == 0:
-                logger.info("pass_id: %d, batch %d, avg_acc: %f, avg_cost: %f" %
-                        (pass_id, i + 1, total_acc / data_count,
-                         total_cost / data_count))
+                logger.info("pass_id: %d, batch %d, avg_acc: %f, avg_cost: %f"
+                            % (pass_id, i + 1, total_acc / data_count,
+                              total_cost / data_count))
 
         avg_cost = total_cost / data_count
         avg_acc = total_acc / data_count
