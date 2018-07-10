@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 
+
 #you can use 'python train.py --help' command to get more arguments infomation
 python train.py \
 --nn_type="window" \
