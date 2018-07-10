@@ -52,7 +52,9 @@ def window_net(data,
 
     # prediction
     prediction = fluid.layers.fc(
-        input=[tanh_layer], size=class_num, act="softmax")
+        input=[tanh_layer],
+        size=class_num,
+        act="softmax")
 
     # cost and batch average cost
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
@@ -104,7 +106,9 @@ def sentence_net(data,
 
     # Linear Layer and tanh Layer
     tanh_layer = fluid.layers.fc(
-        input=[conv_layer], size=tanh_layer_size, act="tanh")
+        input=[conv_layer],
+        size=tanh_layer_size,
+        act="tanh")
 
     # prediction
     prediction = fluid.layers.fc(input=[tanh_layer],

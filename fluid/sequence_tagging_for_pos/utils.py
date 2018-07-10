@@ -185,8 +185,7 @@ def load_default_data():
                 save_dir = default_data_test_dir
 
             data = f.read(filename)
-            with open(os.path.join(save_dir , filename.split("/")[-1]),
-                      'w+b') as f_:
+            with open(os.path.join(save_dir, filename.split("/")[-1]), 'w+b') as f_:
                 f_.write(data)
 
         f.close()
