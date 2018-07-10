@@ -130,14 +130,14 @@ p_POS = from/in Kansas/np City/nn-tl Before/in his/pp$ departure/nn ,/, a/at gro
     假设有如下格式的训练数据：每一行为一条样本，以空格 分隔，分隔后的每一个item以"/"分隔为两部分，第一部分是单词，第二部分是tag。以下是两条示例数据：
 
     ```
-	The/at old-time/jj bridges/nns over/in the/at Merrimac/np-tl River/nn-tl in/in Massachusetts/np are/ber of/in unusual/jj interest/nn in/in many/ap respects/nns ./.
-	For/in their/pp$ length/nn ,/, their/pp$ types/nns of/in construction/nn ,/, their/pp$ picturesque/jj settings/nns ,/, and/cc their/pp$ literary/jj associations/nns ,/, they/ppss should/md be/be known/vbn and/cc remembered/vbn ./.
-	```
+ The/at old-time/jj bridges/nns over/in the/at Merrimac/np-tl River/nn-tl in/in Massachusetts/np are/ber of/in unusual/jj interest/nn in/in many/ap respects/nns ./.
+ For/in their/pp$ length/nn ,/, their/pp$ types/nns of/in construction/nn ,/, their/pp$ picturesque/jj settings/nns ,/, and/cc their/pp$ literary/jj associations/nns ,/, they/ppss should/md be/be known/vbn and/cc remembered/vbn ./.
+ ```
 
 2. 编写数据读取接口
 
     自定义数据读取接口只需编写一个 Python 生成器实现**从原始输入文本中解析一条训练样本**的逻辑。
-    
+
     - 详见本例目录下的 `reader.py` 脚本，`reader.py` 提供了读取测试数据的全部代码。
 
     接下来，只需要将数据读取函数 `train_reader` 作为参数传递给 `train.py` 脚本中的 `paddle.batch` 接口即可使用自定义数据接口读取数据，调用方式如下：
@@ -155,7 +155,7 @@ p_POS = from/in Kansas/np City/nn-tl Before/in his/pp$ departure/nn ,/, a/at gro
     - 如果将数据组织成示例数据的同样的格式，只需在 `run.sh` 脚本中修改 `train.py` 启动参数，指定 `nn_type` 参数，可以直接运行本例，无需修改数据读取接口 `reader.py`。
     - 执行 `python train.py --help` 可以获取`train.py` 脚本各项启动参数的详细说明，主要参数如下：
         - `nn_type`：选择要使用的模型，目前支持两种：“window” 或者 “sentence”。
-        - `train_data_dir`：指定训练数据所在的文件夹，使用自定义数据训练，必须指定此参数，否则使用网络中`Brown corpus`训练，同时默认`test_data_dir`，`word_dict`，和 `label_dict` 参数。  
+        - `train_data_dir`：指定训练数据所在的文件夹，使用自定义数据训练，必须指定此参数，否则使用网络中`Brown corpus`训练，同时默认`test_data_dir`，`word_dict`，和 `label_dict` 参数。
         - `test_data_dir`：指定测试数据所在的文件夹，若不指定将不进行测试，除非使用默认语料。
         - `word_dict`：字典文件所在的路径，若不指定，将从训练数据根据词频统计，自动建立字典。
         - `label_dict`：类别标签字典，用于将字符串类型的类别标签，映射为整数类型的序号。
