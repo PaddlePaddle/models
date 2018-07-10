@@ -68,4 +68,3 @@ def train_reader(data_dir, word_dict, label_dict, window_size=5):
                             i + interest_word_window]
 
     return reader
-

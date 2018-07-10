@@ -15,7 +15,6 @@ import paddle.fluid as fluid
 import paddle.v2 as paddle
 import reader
 
-
 def infer(test_reader, window_size=5, use_cuda=False, model_path=None):
     """
     inference function
@@ -73,8 +72,6 @@ def infer(test_reader, window_size=5, use_cuda=False, model_path=None):
             print("-" * 40)
             print("s_POS = %s" % source_POS)
             print("p_POS = %s" % prediction_POS)
-
-
 
 if __name__ == "__main__":
 
