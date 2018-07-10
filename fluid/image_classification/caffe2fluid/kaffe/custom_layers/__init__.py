@@ -8,6 +8,11 @@ import axpy
 import flatten
 import argmax
 import reshape
+import roipooling
+import priorbox
+import permute
+import detection_out
+import normalize
 
 #custom layer import ends
 

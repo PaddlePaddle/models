@@ -337,6 +337,8 @@ class ParameterNamer(object):
                 names = ('scale', )
                 if getattr(node.parameters, 'bias_term', False):
                     names = ('scale', 'offset')
+            elif node.kind == "Normalize":
+                names = ('scale', )
             else:
                 warn('Unhandled parameters when naming this it[%s]' %
                      (node.kind))

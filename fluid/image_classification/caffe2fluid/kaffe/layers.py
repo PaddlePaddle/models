@@ -179,6 +179,9 @@ class LayerAdapter(object):
     @property
     def parameters(self):
         name = NodeDispatch.get_handler_name(self.kind)
+        if self.kind.lower() == "normalize":
+            name = "norm"
+
         name = '_'.join((name, 'param'))
         try:
             return getattr(self.layer, name)
@@ -217,9 +220,25 @@ class LayerAdapter(object):
             params.stride_w, params.stride, 1, default=1)
         p_h = self.get_kernel_value(params.pad_h, params.pad, 0, default=0)
         p_w = self.get_kernel_value(params.pad_w, params.pad, 1, default=0)
-        return KernelParameters(k_h, k_w, s_h, s_w, p_h, p_w)
+
+        dila_h = dila_w = 1
+        if self.kind in (NodeKind.Convolution, ):
+            dila_len = len(params.dilation)
+            if dila_len == 2:
+                dila_h = params.dilation[0]
+                dila_w = params.dilation[1]
+            elif dila_len == 1:
+                dila_h = dila_w = params.dilation[0]
+            else:
+                assert dila_len == 0, "invalid length[%s] of dilation in convolution" % (
+                    dila_len)
+
+        return KernelParameters(k_h, k_w, s_h, s_w, p_h, p_w, dila_h, dila_w)
 
 
-KernelParameters = namedtuple('KernelParameters', [
-    'kernel_h', 'kernel_w', 'stride_h', 'stride_w', 'pad_h', 'pad_w'
-])
+KernelParameters = namedtuple(
+    'KernelParameters',
+    [
+        'kernel_h', 'kernel_w', 'stride_h', 'stride_w', 'pad_h', 'pad_w',
+        'dila_h', 'dila_w'
+    ], )
