@@ -105,6 +105,34 @@ def shape_convolution(node):
     return get_strided_kernel_output_shape(node, math.floor)
 
 
+def shape_deconvolution(node):
+    assert node.layer is not None
+    input_shape = node.get_only_parent().output_shape
+    h_i = input_shape.height
+    w_i = input_shape.width
+
+    params = node.layer.kernel_parameters
+    p_h = params.pad_h
+    p_w = params.pad_w
+
+    dila_h = params.dila_h
+    dila_w = params.dila_w
+
+    k_h = params.kernel_h
+    k_w = params.kernel_w
+
+    s_h = params.stride_h
+    s_w = params.stride_w
+
+    h_o = (h_i - 1) * s_h - 2 * p_h + dila_h * (k_h - 1) + 1
+    w_o = (w_i - 1) * s_w - 2 * p_w + dila_w * (k_w - 1) + 1
+
+    params = node.layer.parameters
+    has_c_o = hasattr(params, 'num_output')
+    c = params.num_output if has_c_o else input_shape.channels
+    return make_tensor(input_shape.batch_size, c, h_o, w_o)
+
+
 def shape_pool(node):
     global_pool = getattr(node.layer.parameters, 'global_pooling', False)
     if global_pool:
