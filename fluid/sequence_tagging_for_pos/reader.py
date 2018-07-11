@@ -4,7 +4,6 @@
 # Author:Lin_Bo
 # Version 1.0
 # filename: reader.py
-
 import os
 
 def train_reader(data_dir, word_dict, label_dict, window_size=5):

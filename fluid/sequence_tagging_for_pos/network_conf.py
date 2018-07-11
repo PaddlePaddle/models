@@ -1,10 +1,10 @@
 # Copyright(c) 2018 PaddlePaddle.  All rights reserved.
 # Created on 2018
-#
 # Author:Lin_Bo
 # Version 1.0
 # filename: network_conf.py
-
+import paddle
+from paddle import fluid
 import paddle.fluid as fluid
 
 def window_net(data,

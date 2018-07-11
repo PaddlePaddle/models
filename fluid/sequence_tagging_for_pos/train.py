@@ -9,6 +9,8 @@
 # filename: train.py
 
 import os
+import paddle
+from paddle import fluid
 import paddle.fluid as fluid
 import paddle.v2 as paddle
 import reader

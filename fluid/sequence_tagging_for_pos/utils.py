@@ -121,8 +121,7 @@ def build_dict(data_dir,
 
         for v, count in sorted(
                 values.iteritems(), key=lambda x: x[1], reverse=True):
-            if count < cutoff_fre:
-                break
+            if count < cutoff_fre: break
             f.write("%s\t%d\n" % (v, count))
 
 def load_dict(dict_path):
@@ -139,8 +138,7 @@ def reverse_dict(word_dict):
 def md5file(fname):
     hash_md5 = hashlib.md5()
     f = open(fname, "rb")
-    for chunk in iter(lambda: f.read(4096), b""):
-        hash_md5.update(chunk)
+    for chunk in iter(lambda: f.read(4096), b""): hash_md5.update(chunk)
     f.close()
     return hash_md5.hexdigest()
 

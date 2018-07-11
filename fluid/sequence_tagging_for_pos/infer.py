@@ -10,10 +10,16 @@
 #
 
 import os
-from utils import load_default_data, load_dict, logger, reverse_dict
+import paddle
+from paddle import fluid
 import paddle.fluid as fluid
 import paddle.v2 as paddle
 import reader
+from utils import load_default_data
+from utils import load_dict
+from utils import logger
+from utils import reverse_dict
+
 
 def infer(test_reader, window_size=5, use_cuda=False, model_path=None):
     """
@@ -70,8 +76,7 @@ def infer(test_reader, window_size=5, use_cuda=False, model_path=None):
 
             # print the result for compare
             print("-" * 40)
-            print("s_POS = %s" % source_POS)
-            print("p_POS = %s" % prediction_POS)
+            print("s_POS = %s\np_POS = %s" % (source_POS, prediction_POS))
 
 if __name__ == "__main__":
 
