@@ -8,6 +8,7 @@ import paddle
 from paddle import fluid
 import paddle.fluid as fluid
 
+
 def window_net(data,
                label,
                dict_dim,
@@ -37,7 +38,7 @@ def window_net(data,
         size=[dict_dim, emb_dim],
         param_attr='emb.w',
         is_sparse=True)
-		
+
     # Linear Layer of global full connect
     # the filter_size equal to emb size
     emb_fc_layer = fluid.nets.sequence_conv_pool(
@@ -46,23 +47,24 @@ def window_net(data,
         filter_size=window_size,
         act=None,
         pool_type="sum")
-		
+
     # Tanh Layer
     tanh_layer = fluid.layers.tanh(emb_fc_layer)
-	
+
     # prediction
     prediction = fluid.layers.fc(input=[tanh_layer],
                                  size=class_num,
                                  act="softmax")
-								 
+
     # cost and batch average cost
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
     avg_cost = fluid.layers.mean(x=cost)
-	
+
     # batch accuracy
     acc = fluid.layers.accuracy(input=prediction, label=label)
-	
+
     return avg_cost, acc, prediction
+
 
 def sentence_net(data,
                  label,
@@ -92,7 +94,7 @@ def sentence_net(data,
     """
     # lookup table, the embedding layer
     emb = fluid.layers.embedding(input=data, size=[dict_dim, emb_dim])
-	
+
     # convolution layers with max pooling
     conv_layer = fluid.nets.sequence_conv_pool(
         input=emb,
@@ -100,22 +102,22 @@ def sentence_net(data,
         filter_size=kernel_width,
         act=None,
         pool_type="max")
-		
+
     # Linear Layer and tanh Layer
     tanh_layer = fluid.layers.fc(input=[conv_layer],
                                  size=tanh_layer_size,
                                  act="tanh")
-								 
+
     # prediction
     prediction = fluid.layers.fc(input=[tanh_layer],
                                  size=class_num,
                                  act="softmax")
-								 
+
     # cost and batch average cost
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
     avg_cost = fluid.layers.mean(x=cost)
-	
+
     # batch accuracy
     acc = fluid.layers.accuracy(input=prediction, label=label)
-	
+
     return avg_cost, acc, prediction

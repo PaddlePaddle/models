@@ -16,6 +16,7 @@ import random
 logger = logging.getLogger("paddle")
 logger.setLevel(logging.INFO)
 
+
 def parse_train_cmd():
     parser = argparse.ArgumentParser(
         description="PaddlePaddle part-of-speech tag example.")
@@ -87,6 +88,7 @@ def parse_train_cmd():
         default="models")
     return parser.parse_args()
 
+
 def build_dict(data_dir,
                save_path,
                use_col=0,
@@ -122,16 +124,20 @@ def build_dict(data_dir,
             if count < cutoff_fre: break
             f.write("%s\t%d\n" % (v, count))
 
+
 def load_dict(dict_path):
     return dict((line.strip().split("\t")[0], idx)
                 for idx, line in enumerate(open(dict_path, "r").readlines()))
+
 
 def load_reverse_dict(dict_path):
     return dict((idx, line.strip().split("\t")[0])
                 for idx, line in enumerate(open(dict_path, "r").readlines()))
 
+
 def reverse_dict(word_dict):
     return dict(zip(word_dict.values(), word_dict.keys()))
+
 
 def md5file(fname):
     hash_md5 = hashlib.md5()
@@ -140,6 +146,7 @@ def md5file(fname):
         hash_md5.update(chunk)
     f.close()
     return hash_md5.hexdigest()
+
 
 def load_default_data():
     default_data_dir = "./data/"

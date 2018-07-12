@@ -6,6 +6,7 @@
 # filename: reader.py
 import os
 
+
 def train_reader(data_dir, word_dict, label_dict, window_size=5):
     """
     Reader interface for training data
@@ -20,12 +21,13 @@ def train_reader(data_dir, word_dict, label_dict, window_size=5):
     :param window_size: the sequence window size
     :type window_size: int
     """
+
     def reader():
         UNK_WID = word_dict["<UNK>"]
         UNK_LID = label_dict["<UNK>"]
         word_col, lbl_col = 0, 1
         interest_word_window = int(window_size / 2)
-		
+
         for file_name in os.listdir(data_dir):
             with open(os.path.join(data_dir, file_name), "r") as f:
                 for line in f:
@@ -63,4 +65,5 @@ def train_reader(data_dir, word_dict, label_dict, window_size=5):
                     for i in range(len(word_ids) - window_size):
                         yield word_ids[i:i + window_size], label_ids[
                             i + interest_word_window]
+
     return reader
