@@ -4,7 +4,6 @@
 """
 
 from .register import register
-import paddle as pd
 
 
 def priorbox_shape(input_shapes, min_size, max_size=None, aspect_ratio=None):
@@ -53,9 +52,20 @@ def priorbox_layer(inputs,
     assert len(inputs) == 2, "invalid inputs for Priorbox[%s]" % (name)
     input = inputs[0]
     image = inputs[1]
-    box, variance_ = fluid.layers.prior_box(input, image, min_size, max_size,
-                                            aspect_ratio, variance, flip, clip,
-                                            (step, step), offset)
+    box, variance_ = fluid.layers.prior_box(
+        input,
+        image,
+        min_size,
+        max_size,
+        aspect_ratio,
+        variance,
+        flip,
+        clip, (step, step),
+        offset,
+        min_max_aspect_ratios_order=True)
+    """
+    #adjust layout when the output is not consistent with caffe's
+
     feat_shape = list(input.shape)
     H = feat_shape[2]
     W = feat_shape[3]
@@ -77,12 +87,14 @@ def priorbox_layer(inputs,
 
     tensor_list_gathered = [tensor_list[ii] for ii in index_list]
     caffe_prior_bbx = fluid.layers.concat(tensor_list_gathered, axis=2)
+    box = fluid.layers.reshape(caffe_prior_bbx, [1, 1, -1])
+    """
 
-    caffe_prior_bbx = fluid.layers.reshape(caffe_prior_bbx, [1, 1, -1])
+    box = fluid.layers.reshape(box, [1, 1, -1])
     variance_ = fluid.layers.reshape(variance_, [1, 1, -1])
-    paddle_prior_bbx = fluid.layers.concat([caffe_prior_bbx, variance_], axis=1)
+    output = fluid.layers.concat([box, variance_], axis=1)
 
-    return paddle_prior_bbx
+    return output
 
 
 register(kind='PriorBox', shape=priorbox_shape, layer=priorbox_layer)

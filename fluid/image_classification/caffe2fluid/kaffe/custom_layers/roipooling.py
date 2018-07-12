@@ -4,12 +4,7 @@
 from .register import register
 
 
-def import_fluid():
-    import paddle.fluid as fluid
-    return fluid
-
-
-def ROIPooling_shape(input_shapes, pooled_h, pooled_w, spatial_scale):
+def roipooling_shape(input_shapes, pooled_h, pooled_w, spatial_scale):
     """ calculate the output shape of this layer using input shape
 
     Args:
@@ -31,7 +26,7 @@ def ROIPooling_shape(input_shapes, pooled_h, pooled_w, spatial_scale):
     return output_shape
 
 
-def ROIPooling_layer(inputs, name, pooled_h, pooled_w, spatial_scale):
+def roipooling_layer(inputs, name, pooled_h, pooled_w, spatial_scale):
     """ build a layer of type 'ROIPooling' using fluid
 
     Args:
@@ -45,8 +40,7 @@ def ROIPooling_layer(inputs, name, pooled_h, pooled_w, spatial_scale):
         output (variable): output variable for this layer
     """
 
-    fluid = import_fluid()
-
+    import paddle.fluid as fluid
     assert len(inputs) == 2, "not valid input shape for roipooling layer"
     base_fea = inputs[0]
     rois = inputs[1][:, 1:5]
@@ -56,4 +50,4 @@ def ROIPooling_layer(inputs, name, pooled_h, pooled_w, spatial_scale):
     return rois_fea
 
 
-register(kind='ROIPooling', shape=ROIPooling_shape, layer=ROIPooling_layer)
+register(kind='ROIPooling', shape=roipooling_shape, layer=roipooling_layer)
