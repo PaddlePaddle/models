@@ -7,6 +7,7 @@ sos = 0
 eos = 1
 gradient_clip = 10
 learning_rate = 1.0
+beam_size = 2
 
 
 def conv_bn_pool(input, group, out_ch, act="relu", is_test=False, pool=True):
@@ -191,8 +192,131 @@ def attention_train_net(args, data_shape, num_classes):
     return sum_cost, error_evaluator, inference_program, model_average
 
 
-def attention_infer():
-    pass
+def simple_attention(encoder_vec, encoder_proj, decoder_state, decoder_size):
+    decoder_state_proj = fluid.layers.fc(input=decoder_state,
+                                         size=decoder_size,
+                                         bias_attr=False)
+    decoder_state_expand = fluid.layers.sequence_expand(
+        x=decoder_state_proj, y=encoder_proj)
+    concated = fluid.layers.elementwise_add(encoder_proj, decoder_state_expand)
+    concated = fluid.layers.tanh(x=concated)
+    attention_weights = fluid.layers.fc(input=concated,
+                                        size=1,
+                                        act=None,
+                                        bias_attr=False)
+    attention_weights = fluid.layers.sequence_softmax(input=attention_weights)
+    weigths_reshape = fluid.layers.reshape(x=attention_weights, shape=[-1])
+    scaled = fluid.layers.elementwise_mul(
+        x=encoder_vec, y=weigths_reshape, axis=0)
+    context = fluid.layers.sequence_pool(input=scaled, pool_type='sum')
+    return context
+
+
+def attention_infer(images, num_classes):
+
+    max_length = 10
+    gru_backward, encoded_vector, encoded_proj = encoder_net(images)
+
+    backward_first = fluid.layers.sequence_pool(
+        input=gru_backward, pool_type='first')
+    decoder_boot = fluid.layers.fc(input=backward_first,
+                                   size=decoder_size,
+                                   bias_attr=False,
+                                   act="relu")
+    init_state = decoder_boot
+    array_len = fluid.layers.fill_constant(
+        shape=[1], dtype='int64', value=max_length)
+    counter = fluid.layers.zeros(shape=[1], dtype='int64', force_cpu=True)
+
+    # fill the first element with init_state
+    state_array = fluid.layers.create_array('float32')
+    fluid.layers.array_write(init_state, array=state_array, i=counter)
+
+    # ids, scores as memory
+    ids_array = fluid.layers.create_array('int64')
+    scores_array = fluid.layers.create_array('float32')
+
+    init_ids = fluid.layers.data(
+        name="init_ids", shape=[1], dtype="int64", lod_level=2)
+    init_scores = fluid.layers.data(
+        name="init_scores", shape=[1], dtype="float32", lod_level=2)
+
+    fluid.layers.array_write(init_ids, array=ids_array, i=counter)
+    fluid.layers.array_write(init_scores, array=scores_array, i=counter)
+
+    cond = fluid.layers.less_than(x=counter, y=array_len)
+    while_op = fluid.layers.While(cond=cond)
+    with while_op.block():
+        pre_ids = fluid.layers.array_read(array=ids_array, i=counter)
+        pre_state = fluid.layers.array_read(array=state_array, i=counter)
+        pre_score = fluid.layers.array_read(array=scores_array, i=counter)
+
+        pre_ids_emb = fluid.layers.embedding(
+            input=pre_ids,
+            size=[num_classes + 2, word_vector_dim],
+            dtype='float32')
+
+        context = simple_attention(encoded_vector, encoded_proj, pre_state,
+                                   decoder_size)
+
+        # expand the recursive_sequence_lengths of pre_state to be the same with pre_score
+        pre_state_expanded = fluid.layers.sequence_expand(pre_state, pre_score)
+        context_expanded = fluid.layers.sequence_expand(context, pre_score)
+        fc_1 = fluid.layers.fc(input=context_expanded,
+                               size=decoder_size * 3,
+                               bias_attr=False)
+        fc_2 = fluid.layers.fc(input=pre_ids_emb,
+                               size=decoder_size * 3,
+                               bias_attr=False)
+
+        decoder_inputs = fc_1 + fc_2
+        current_state, _, _ = fluid.layers.gru_unit(
+            input=decoder_inputs,
+            hidden=pre_state_expanded,
+            size=decoder_size * 3)
+
+        current_state_with_lod = fluid.layers.lod_reset(
+            x=current_state, y=pre_score)
+        # use score to do beam search
+        current_score = fluid.layers.fc(input=current_state_with_lod,
+                                        size=num_classes + 2,
+                                        bias_attr=True,
+                                        act='softmax')
+        topk_scores, topk_indices = fluid.layers.topk(
+            current_score, k=beam_size)
+
+        # calculate accumulated scores after topk to reduce computation cost
+        accu_scores = fluid.layers.elementwise_add(
+            x=fluid.layers.log(topk_scores),
+            y=fluid.layers.reshape(
+                pre_score, shape=[-1]),
+            axis=0)
+        selected_ids, selected_scores = fluid.layers.beam_search(
+            pre_ids,
+            pre_score,
+            topk_indices,
+            accu_scores,
+            beam_size,
+            end_id=10,
+            level=0)
+
+        fluid.layers.increment(x=counter, value=1, in_place=True)
+
+        # update the memories
+        fluid.layers.array_write(current_state, array=state_array, i=counter)
+        fluid.layers.array_write(selected_ids, array=ids_array, i=counter)
+        fluid.layers.array_write(selected_scores, array=scores_array, i=counter)
+
+        # update the break condition: up to the max length or all candidates of
+        # source sentences have ended.
+        length_cond = fluid.layers.less_than(x=counter, y=array_len)
+        finish_cond = fluid.layers.logical_not(
+            fluid.layers.is_empty(x=selected_ids))
+        fluid.layers.logical_and(x=length_cond, y=finish_cond, out=cond)
+
+    translation_ids, translation_scores = fluid.layers.beam_search_decode(
+        ids=ids_array, scores=scores_array, beam_size=beam_size, end_id=10)
+    return translation_ids, translation_scores
 
 
 def attention_eval(data_shape, num_classes):

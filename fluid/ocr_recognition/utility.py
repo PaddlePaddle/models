@@ -106,3 +106,29 @@ def get_attention_feeder_data(data, place, need_label=True):
         }
     else:
         return {"pixel": pixel_tensor}
+
+
+def get_attention_feeder_for_infer(data, place):
+    batch_size = len(data)
+    init_ids_data = np.array([0 for _ in range(batch_size)], dtype='int64')
+    init_scores_data = np.array(
+        [1. for _ in range(batch_size)], dtype='float32')
+    init_ids_data = init_ids_data.reshape((batch_size, 1))
+    init_scores_data = init_scores_data.reshape((batch_size, 1))
+    init_recursive_seq_lens = [1] * batch_size
+    init_recursive_seq_lens = [init_recursive_seq_lens, init_recursive_seq_lens]
+    init_ids = fluid.create_lod_tensor(init_ids_data, init_recursive_seq_lens,
+                                       place)
+    init_scores = fluid.create_lod_tensor(init_scores_data,
+                                          init_recursive_seq_lens, place)
+
+    pixel_tensor = core.LoDTensor()
+    pixel_data = None
+    pixel_data = np.concatenate(
+        map(lambda x: x[0][np.newaxis, :], data), axis=0).astype("float32")
+    pixel_tensor.set(pixel_data, place)
+    return {
+        "pixel": pixel_tensor,
+        "init_ids": init_ids,
+        "init_scores": init_scores
+    }
