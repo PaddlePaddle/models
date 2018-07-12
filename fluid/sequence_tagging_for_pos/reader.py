@@ -30,15 +30,15 @@ def train_reader(data_dir, word_dict, label_dict, window_size=5):
             with open(os.path.join(data_dir, file_name), "r") as f:
                 for line in f:
                     line_split = line.encode("utf-8").strip().split()
-                    
-					##sentence with a special "PADDING" word
+
+                    ##sentence with a special "PADDING" word
                     #      replicated window_size/2 times at the begining and end
                     # "PADDING" at the begining
                     word_ids, label_ids = [UNK_WID] * interest_word_window, [
                         UNK_LID
                     ] * interest_word_window
-                    
-					for item in line_split:
+
+                    for item in line_split:
                         try:
                             items = item.split("/")
                             w = word_dict.get(items[word_col].strip(), UNK_WID)
@@ -47,20 +47,20 @@ def train_reader(data_dir, word_dict, label_dict, window_size=5):
                             label_ids.append(l)
                         except:
                             continue
-                    
-					#"PADDING" at the end
+
+                    #"PADDING" at the end
                     word_ids += [UNK_WID] * interest_word_window
                     label_ids += [UNK_LID] * interest_word_window
-                    
-					if len(word_ids) < interest_word_window:
+
+                    if len(word_ids) < interest_word_window:
                         continue
-                    
-					if len(word_ids) < window_size:
+
+                    if len(word_ids) < window_size:
                         yield word_ids + [UNK_WID] * (
                             window_size - len(word_ids)
                         ), label_ids[interest_word_window]
-                    
-					for i in range(len(word_ids) - window_size):
+
+                    for i in range(len(word_ids) - window_size):
                         yield word_ids[i:i + window_size], label_ids[
                             i + interest_word_window]
     return reader

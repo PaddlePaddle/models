@@ -113,9 +113,9 @@ def sentence_net(data,
 								 
     # cost and batch average cost
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
-    avg_cost = fluid.layers.mean(x=cost
+    avg_cost = fluid.layers.mean(x=cost)
 	
     # batch accuracy
-    acc = fluid.layers.accuracy(input=prediction, label=label
+    acc = fluid.layers.accuracy(input=prediction, label=label)
 	
     return avg_cost, acc, prediction

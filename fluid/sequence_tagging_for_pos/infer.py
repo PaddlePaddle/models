@@ -97,5 +97,5 @@ if __name__ == "__main__":
 
     ##running model infer ...
     logger.info("running model infer ...")
-    epoch_path = "./models/sentence_epoch3"
+    epoch_path = "./models/window_epoch3"
     infer(test_reader, window_size=5, use_cuda=False, model_path=epoch_path)

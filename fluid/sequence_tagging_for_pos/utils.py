@@ -94,30 +94,30 @@ def build_dict(data_dir,
                insert_extra_words=[]):
 
     values = defaultdict(int)
-    
-	for file_name in os.listdir(data_dir):
+
+    for file_name in os.listdir(data_dir):
         file_path = os.path.join(data_dir, file_name)
-        
-		if not os.path.isfile(file_path):
+
+        if not os.path.isfile(file_path):
             continue
-        
-		with open(file_path, "r") as fdata:
+
+        with open(file_path, "r") as fdata:
             for i, line in enumerate(fdata):
                 if len(line) < 2:
                     continue
-                
-				for item in line.strip().split():
+
+                for item in line.strip().split():
                     try:
                         w = item.split("/")[use_col]
                     except:
                         continue
                     values[w] += 1
-    
-	with open(save_path, "w") as f:
+
+    with open(save_path, "w") as f:
         for w in insert_extra_words:
             f.write("%s\t-1\n" % (w))
-        
-		for v, count in sorted(
+
+        for v, count in sorted(
                 values.iteritems(), key=lambda x: x[1], reverse=True):
             if count < cutoff_fre: break
             f.write("%s\t%d\n" % (v, count))
@@ -143,11 +143,11 @@ def md5file(fname):
 
 def load_default_data():
     default_data_dir = "./data/"
-    
-	if not os.path.exists(default_data_dir):
+
+    if not os.path.exists(default_data_dir):
         os.makedirs(default_data_dir)
-    
-	zip_filename = default_data_dir + "brown.zip"
+
+    zip_filename = default_data_dir + "brown.zip"
     default_data_dir_brown = zip_filename[:-4]
     default_data_train_dir = os.path.join(default_data_dir_brown, "train")
     default_data_test_dir = os.path.join(default_data_dir_brown, "test")
@@ -155,38 +155,38 @@ def load_default_data():
                                           "default_word.dict")
     default_label_dict_path = os.path.join(default_data_dir_brown,
                                            "default_label.dict")
-    
-	if not os.path.exists(default_data_dir_brown):
+
+    if not os.path.exists(default_data_dir_brown):
         os.makedirs(default_data_dir_brown)
-    
-	data_url = "https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/brown.zip"
+
+    data_url = "https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/brown.zip"
     md5sum = "a0a8630959d3d937873b1265b0a05497"
-    
-	if (not (os.path.exists(zip_filename)) or md5file(zip_filename) != md5sum):
+
+    if (not (os.path.exists(zip_filename)) or md5file(zip_filename) != md5sum):
         if os.path.exists(zip_filename):
             os.remove(zip_filename)
         os.system("wget -O %s -c %s" % (zip_filename, data_url))
-    
-	if not (os.path.exists(default_data_train_dir)) or not (
+
+    if not (os.path.exists(default_data_train_dir)) or not (
             os.path.exists(default_data_test_dir)):
-        
-		os.makedirs(default_data_train_dir)
+
+        os.makedirs(default_data_train_dir)
         os.makedirs(default_data_test_dir)
-        
-		f = zipfile.ZipFile(zip_filename, 'r')
+
+        f = zipfile.ZipFile(zip_filename, 'r')
         for filename in f.namelist():
             if not filename[-1].isdigit():
                 continue
-            
-			if random.random() > 0.2:
+
+            if random.random() > 0.2:
                 save_dir = default_data_train_dir
             else:
                 save_dir = default_data_test_dir
-            
-			data = f.read(filename)            
-			with open(os.path.join(save_dir, filename.split("/")[-1]),
+
+            data = f.read(filename)
+            with open(os.path.join(save_dir, filename.split("/")[-1]),
                       'w+b') as f_:
                 f_.write(data)
         f.close()
-    
-	return default_data_train_dir, default_data_test_dir, default_word_dict_path, default_label_dict_path
+
+    return default_data_train_dir, default_data_test_dir, default_word_dict_path, default_label_dict_path
