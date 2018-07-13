@@ -15,7 +15,10 @@ $$\textbf{z}=s(\textbf{W}'\textbf{y}+\textbf{b}')$$
 $$L(\textbf{x},\textbf{z})=-\sum_{k=1}^{d}[\textbf{x}_klog\textbf{z}_k+(1-\textbf{x}_k)log(1-\textbf{z}_k)]$$
 
 **示例总览**
+---
+
 本示例共包含以下文件：
+
 表1. 示例文件
 
  文件                              | 用途                                    |
