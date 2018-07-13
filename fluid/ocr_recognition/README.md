@@ -113,6 +113,10 @@ data/test_images/00003.jpg
 ```
 env CUDA_VISIABLE_DEVICES=0 python ctc_train.py
 ```
+使用默认数据在CPU上训练:
+```
+env OMP_NUM_THREADS=<num_of_physical_cores> KMP_AFFINITY=granularity=fine,compact,1,0 python ctc_train.py --use_gpu False --parallel=False
+```
 
 使用默认数据在GPU多卡上训练:
 
