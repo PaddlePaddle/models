@@ -18,6 +18,7 @@ $$L(\textbf{x},\textbf{z})=-\sum_{k=1}^{d}[\textbf{x}_klog\textbf{z}_k+(1-\textb
 ---
 This example contains the following files:
 Table 1. Directory structure
+
  File                              | Description                              |
  -------------------------         | -------------------------------------   |
  autoencoder.py    | Autoencoder definition script                      |  
