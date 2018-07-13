@@ -85,6 +85,7 @@ Specifically:
 4. Run `python infer.py --mode SAE` to evaluate SAE model
 
 The classification result is shown as following:
+
  Model                  | Top1 Accuracy                   |
  -------------------------         | -------------------------------------   |
  SDA    |          0.967             |
