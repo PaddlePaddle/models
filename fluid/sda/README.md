@@ -1,13 +1,12 @@
-﻿** Stacked Denoising Autoencoders**
-
+**Stacked Denoising Autoencoders**
 ---
 
 **Introduction**
+---
 The stacked denoising autoencoders(SDA)[1] is stacked by denoising autoencoder. SDA to initialize a deep network is much the same way as stacking RBMs in deep belief networks. Let us specify that input corruption is only used for the initial denoising-training of each individual layer, it may learn useful feature extractors. Once the mapping has thus been learnt, it will hence force be used on uncorrupted inputs. In particular no corruption is applied to produce the representation that will serve as clean input for training the next layer.
 
----
-
 **Autoencoder Architecture**
+---
 The architecture of SDA is based on autoencoder, there are two parts in autoencoder: encoder and decoder. The encoder transforms the input d-dimensional vector $\textbf{x}$ into hidden representation:
 $$\textbf{y}=s(\textbf{Wx}+\textbf{b})$$
 where $\textbf{W}$ is the weight matrix and the $\textbf{b}$ is the bias. The resulting hidden representation is then mapped back to a reconstructed d-dimensional vector:
@@ -15,9 +14,8 @@ $$\textbf{z}=s(\textbf{W}'\textbf{y}+\textbf{b}')$$
 The autoencoder is trained with cross entropy loss function：
 $$L(\textbf{x},\textbf{z})=-\sum_{k=1}^{d}[\textbf{x}_klog\textbf{z}_k+(1-\textbf{x}_k)log(1-\textbf{z}_k)]$$
 
----
-
 **Example Overview**
+---
 This example contains the following files:
 Table 1. Directory structure
  File                              | Description                              |
@@ -31,11 +29,10 @@ Table 1. Directory structure
  train_sda.sh      | SDA training shell script  |
 
 
----
-
 **Experiment**
 ---
 **Denoising Autoencoders**
+
 The goal of this part is to better understand the qualitative effect of noise level. So we trained several denoising autoencoders, all start from the same initial random point in weight space, but with different noise level. For this experiment, we use denoising autoencoders with tied weights, cross-entropy reconstruction error, and zero-maksing noise, the experiment is based on MNIST dataset.
 
 Run `python train_da.py` to train denoising autoencoders, and visualize the learned filters. The definition of autoencoder (autoencoder.py)is like:
@@ -51,9 +48,10 @@ def denoise_autoencoder(input, args):
     return out
 ```
 Below is the result of learned filter. As can be seen, with no noise, many filters remain similary uninteresting, as we increase the noise level, denoising training forces the filters to differentiate more, and capture more distinctive features.
-![The filters learned by denoising autoencoders](https://github.com/chengyuz/models/blob/yucheng/fluid/sda/images/da_res.jpg)
+![The filters learned by denoising autoencoders](https://github.com/chengyuz/models/blob/yucheng_sda/fluid/sda/images/da_res.png)
 
 **Stacked Denoising Autoencoders**
+
 In this section, we evaluate denoising autoencoders as a pretraining strategy for building deep networks, using stacking procedure. We will mainly compare the classification performance of networks pretrained by stacking denoising autoencoders(SDAE), versus stacking regular autoencoders(SAE). The experiment is based on MNIST dataset, and zero-masking corruption noise is added.
 
 The definition of stacking autoencoders is like:
