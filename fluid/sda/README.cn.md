@@ -84,6 +84,7 @@ def build_model(self, layer_input):
 4. 运行`python infer.py --mode SAE`测试普通层叠自编码器
 
 实验结果如下：
+
  Model                  | Top1 Accuracy                   |
  -------------------------         | -------------------------------------   |
  SDA    |        0.967               |
