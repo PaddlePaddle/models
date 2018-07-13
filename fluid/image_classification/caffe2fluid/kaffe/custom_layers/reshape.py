@@ -68,15 +68,23 @@ def reshape_shape(input_sp, shape, axis=0, num_axes=-1):
         top_dim = shape['dim'][i]
         if top_dim == 0:
             copy_axes.append(i)
+            copy_axis_index = start_axis + i
+            output_shape[copy_axis_index] = input_shape[copy_axis_index]
         elif top_dim == -1:
             assert inferred_axis == -1, "[Reshape]new shape contains multiple -1 dims"
+            inferred_axis = i
         else:
             constant_count *= top_dim
 
     if inferred_axis >= 0:
         explicit_count = constant_count
-        explicit_count *= count(input_shape[0:start_axis])
-        explicit_count *= count(input_shape[end_axis:])
+        l = input_shape[0:start_axis]
+        if len(l) > 0:
+            explicit_count *= count(l)
+
+        l = input_shape[end_axis:]
+        if len(l) > 0:
+            explicit_count *= count(l)
 
         for i in range(len(copy_axes)):
             explicit_count *= output_shape[start_axis + copy_axes[i]]
@@ -84,6 +92,7 @@ def reshape_shape(input_sp, shape, axis=0, num_axes=-1):
         assert input_count % explicit_count == 0, "[Reshape]botom count[%d] "\
                 "must be divisible by product of the specified dimensions[%d] "\
                 % (input_count, explicit_count)
+        output_shape[start_axis + inferred_axis] = input_count / explicit_count
 
     output_count = count(output_shape)
     assert output_count == input_count, "[Reshape]output count[%d] must match input count[%d]" % (
@@ -117,6 +126,7 @@ def reshape_layer(input, name, shape, axis=0, num_axes=-1):
         output_shape = reshape_shape(input_shape, shape, axis, num_axes)
 
     output = fluid.layers.reshape(input, shape=output_shape, name=name)
+
     return output
 
 
