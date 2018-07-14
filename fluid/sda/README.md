@@ -1,13 +1,14 @@
-﻿**Stacked Denoising Autoencoders**
-
+**Stacked Denoising Autoencoders**
 ---
 
 **Introduction**
 ---
+
 The stacked denoising autoencoders(SDA)[1] is stacked by denoising autoencoder. SDA to initialize a deep network is much the same way as stacking RBMs in deep belief networks. Let us specify that input corruption is only used for the initial denoising-training of each individual layer, it may learn useful feature extractors. Once the mapping has thus been learnt, it will hence force be used on uncorrupted inputs. In particular no corruption is applied to produce the representation that will serve as clean input for training the next layer.
 
 **Autoencoder Architecture**
 ---
+
 The architecture of SDA is based on autoencoder, there are two parts in autoencoder: encoder and decoder. The encoder transforms the input d-dimensional vector $\textbf{x}$ into hidden representation:
 $$\textbf{y}=s(\textbf{Wx}+\textbf{b})$$
 where $\textbf{W}$ is the weight matrix and the $\textbf{b}$ is the bias. The resulting hidden representation is then mapped back to a reconstructed d-dimensional vector:
@@ -17,8 +18,11 @@ $$L(\textbf{x},\textbf{z})=-\sum_{k=1}^{d}[\textbf{x}_klog\textbf{z}_k+(1-\textb
 
 **Example Overview**
 ---
+
 This example contains the following files:
+
 Table 1. Directory structure
+
  File                              | Description                              |
  -------------------------         | -------------------------------------   |
  autoencoder.py    | Autoencoder definition script                      |  
@@ -31,6 +35,7 @@ Table 1. Directory structure
 
 **Experiment**
 ---
+
 **Denoising Autoencoders**
 
 The goal of this part is to better understand the qualitative effect of noise level. So we trained several denoising autoencoders, all start from the same initial random point in weight space, but with different noise level. For this experiment, we use denoising autoencoders with tied weights, cross-entropy reconstruction error, and zero-maksing noise, the experiment is based on MNIST dataset.
@@ -85,14 +90,13 @@ Specifically:
 4. Run `python infer.py --mode SAE` to evaluate SAE model
 
 The classification result is shown as following:
+
  Model                  | Top1 Accuracy                   |
  -------------------------         | -------------------------------------   |
  SDA    |          0.967             |
 SAE|  0.961 |
 
 We can see the top1 accuracy of SDA is better than SAE, so denoising pretraining being better than no pretraining.
-
----
 
 **References**
 ---
