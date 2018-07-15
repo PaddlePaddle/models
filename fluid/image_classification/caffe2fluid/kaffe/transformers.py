@@ -325,7 +325,8 @@ class ParameterNamer(object):
         for node in graph.nodes:
             if node.data is None:
                 continue
-            if node.kind in (NodeKind.Convolution, NodeKind.InnerProduct):
+            if node.kind in (NodeKind.Convolution, NodeKind.InnerProduct,\
+                    NodeKind.Deconvolution):
                 names = ('weights', )
                 if node.parameters.bias_term:
                     names += ('biases', )

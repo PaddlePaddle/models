@@ -16,7 +16,7 @@ LAYER_DESCRIPTORS = {
     'Concat': shape_concat,
     'ContrastiveLoss': shape_scalar,
     'Convolution': shape_convolution,
-    'Deconvolution': shape_not_implemented,
+    'Deconvolution': shape_deconvolution,
     'Data': shape_data,
     'Dropout': shape_identity,
     'DummyData': shape_data,
@@ -181,6 +181,8 @@ class LayerAdapter(object):
         name = NodeDispatch.get_handler_name(self.kind)
         if self.kind.lower() == "normalize":
             name = "norm"
+        elif self.kind.lower() == "deconvolution":
+            name = "convolution"
 
         name = '_'.join((name, 'param'))
         try:
@@ -210,7 +212,9 @@ class LayerAdapter(object):
 
     @property
     def kernel_parameters(self):
-        assert self.kind in (NodeKind.Convolution, NodeKind.Pooling)
+        assert self.kind in (NodeKind.Convolution, NodeKind.Pooling,\
+                    NodeKind.Deconvolution)
+
         params = self.parameters
         k_h = self.get_kernel_value(params.kernel_h, params.kernel_size, 0)
         k_w = self.get_kernel_value(params.kernel_w, params.kernel_size, 1)
@@ -222,7 +226,7 @@ class LayerAdapter(object):
         p_w = self.get_kernel_value(params.pad_w, params.pad, 1, default=0)
 
         dila_h = dila_w = 1
-        if self.kind in (NodeKind.Convolution, ):
+        if self.kind in (NodeKind.Convolution, NodeKind.Deconvolution):
             dila_len = len(params.dilation)
             if dila_len == 2:
                 dila_h = params.dilation[0]
