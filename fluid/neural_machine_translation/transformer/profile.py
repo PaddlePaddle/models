@@ -52,7 +52,7 @@ def parse_args():
         "--num_iters",
         type=int,
         default=10,
-        help="The number of iterations profiling over.")
+        help="The maximum number of iterations profiling over.")
     parser.add_argument(
         "--pool_size",
         type=int,
@@ -114,8 +114,6 @@ def train_loop(exe, train_progm, init, num_iters, train_data, dev_count,
                                                                              -1] + label_data_input_fields
     util_input_names = encoder_util_input_fields + decoder_util_input_fields
 
-    #for pass_id in xrange(TrainTaskConfig.pass_num):
-
     start_time = time.time()
     exec_time = 0.0
     for batch_id, data in enumerate(train_data()):
@@ -175,7 +173,7 @@ def profile(args):
 
     if not TrainTaskConfig.use_gpu:
         place = fluid.CPUPlace()
-        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+        dev_count = multiprocessing.cpu_count()
     else:
         place = fluid.CUDAPlace(0)
         dev_count = fluid.core.get_cuda_device_count()
