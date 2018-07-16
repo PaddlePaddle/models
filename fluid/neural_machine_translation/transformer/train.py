@@ -77,6 +77,19 @@ def parse_args():
         nargs=3,
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
     parser.add_argument(
+        "--use_wordpiece",
+        type=ast.literal_eval,
+        default=False,
+        help="The flag indicating if the data is wordpiece data. The EN-FR "
+        "data we provided is wordpiece data.")
+    parser.add_argument(
+        "--token_delimiter",
+        type=str,
+        default=" ",
+        help="The delimiter used to split tokens in source or target sentences. "
+        "For EN-DE BPE data we provided, use spaces as token delimiter.; "
+        "For EN-FR wordpiece data we provided, use '\x01' as token delimiter.")
+    parser.add_argument(
         'opts',
         help='See config.py for all options',
         default=None,
@@ -273,6 +286,7 @@ def test_context(train_progm, avg_cost, train_exe, dev_count, data_input_names,
         src_vocab_fpath=args.src_vocab_fpath,
         trg_vocab_fpath=args.trg_vocab_fpath,
         fpattern=args.val_file_pattern,
+        token_delimiter=args.token_delimiter,
         use_token_batch=args.use_token_batch,
         batch_size=args.batch_size * (1 if args.use_token_batch else dev_count),
         pool_size=args.pool_size,
@@ -335,6 +349,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
         src_vocab_fpath=args.src_vocab_fpath,
         trg_vocab_fpath=args.trg_vocab_fpath,
         fpattern=args.train_file_pattern,
+        token_delimiter=args.token_delimiter,
         use_token_batch=args.use_token_batch,
         batch_size=args.batch_size * (1 if args.use_token_batch else dev_count),
         pool_size=args.pool_size,

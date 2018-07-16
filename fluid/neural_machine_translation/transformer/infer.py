@@ -52,10 +52,17 @@ def parse_args():
         "--use_wordpiece",
         type=ast.literal_eval,
         default=False,
-        help="The flag indicating if the data is wordpiece data. The EN-FR data we "
-        "provided is wordpiece data. For wordpiece data, converting ids to "
+        help="The flag indicating if the data is wordpiece data. The EN-FR data "
+        "we provided is wordpiece data. For wordpiece data, converting ids to "
         "original words is a little different and some special codes are "
         "provided in util.py to do this.")
+    parser.add_argument(
+        "--token_delimiter",
+        type=str,
+        default=" ",
+        help="The delimiter used to split tokens in source or target sentences. "
+        "For EN-DE BPE data we provided, use spaces as token delimiter.; "
+        "For EN-FR wordpiece data we provided, use '\x01' as token delimiter.")
     parser.add_argument(
         'opts',
         help='See config.py for all options',
@@ -549,8 +556,9 @@ def infer(args, inferencer=fast_infer):
         src_vocab_fpath=args.src_vocab_fpath,
         trg_vocab_fpath=args.trg_vocab_fpath,
         fpattern=args.test_file_pattern,
-        batch_size=args.batch_size,
+        token_delimiter=args.token_delimiter,
         use_token_batch=False,
+        batch_size=args.batch_size,
         pool_size=args.pool_size,
         sort_type=reader.SortType.NONE,
         shuffle=False,
