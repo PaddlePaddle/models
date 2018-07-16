@@ -91,7 +91,7 @@ class Network(object):
                     name = '%s_%s' % (op_name, param_name)
                     v = fluid.global_scope().find_var(name)
                     w = v.get_tensor()
-                    w.set(data, place)
+                    w.set(data.reshape(w.shape()), place)
                 except ValueError:
                     if not ignore_missing:
                         raise
@@ -144,6 +144,7 @@ class Network(object):
              relu=True,
              relu_negative_slope=0.0,
              padding=None,
+             dilation=1,
              group=1,
              biased=True):
         if padding is None:
@@ -173,7 +174,60 @@ class Network(object):
             num_filters=c_o,
             stride=[s_h, s_w],
             padding=padding,
+            dilation=dilation,
             groups=group,
+            param_attr=fluid.ParamAttr(name=prefix + "weights"),
+            bias_attr=fluid.ParamAttr(name=prefix + "biases"),
+            act=act)
+
+        if leaky_relu:
+            output = fluid.layers.leaky_relu(output, alpha=relu_negative_slope)
+
+        return output
+
+    @layer
+    def deconv(self,
+               input,
+               k_h,
+               k_w,
+               c_o,
+               s_h,
+               s_w,
+               name,
+               relu=True,
+               relu_negative_slope=0.0,
+               padding=None,
+               dilation=1,
+               biased=True):
+        if padding is None:
+            padding = [0, 0]
+
+        # Get the number of channels in the input
+        c_i, h_i, w_i = input.shape[1:]
+
+        fluid = import_fluid()
+        prefix = name + '_'
+        leaky_relu = False
+        act = 'relu'
+        if relu is False:
+            act = None
+        elif relu_negative_slope != 0.0:
+            leaky_relu = True
+            act = None
+
+        p_h = padding[0]
+        p_w = padding[1]
+        h_o = (h_i - 1) * s_h - 2 * p_h + dilation * (k_h - 1) + 1
+        w_o = (w_i - 1) * s_w - 2 * p_w + dilation * (k_w - 1) + 1
+        output = fluid.layers.conv2d_transpose(
+            name=self.get_unique_output_name(name, 'conv2d_transpose'),
+            input=input,
+            num_filters=c_o,
+            output_size=[h_o, w_o],
+            filter_size=[k_h, k_w],
+            padding=padding,
+            stride=[s_h, s_w],
+            dilation=dilation,
             param_attr=fluid.ParamAttr(name=prefix + "weights"),
             bias_attr=fluid.ParamAttr(name=prefix + "biases"),
             act=act)
@@ -255,6 +309,12 @@ class Network(object):
         fluid = import_fluid()
         return fluid.layers.sigmoid(
             input, name=self.get_unique_output_name(name, 'sigmoid'))
+
+    @layer
+    def tanh(self, input, name):
+        fluid = import_fluid()
+        return fluid.layers.tanh(
+            input, name=self.get_unique_output_name(name, 'tanh'))
 
     @layer
     def lrn(self, input, radius, alpha, beta, name, bias=1.0):

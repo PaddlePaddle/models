@@ -60,7 +60,7 @@ cd data/coco
     ./pretrained/download_imagenet.sh
     ```
 
-#### 训练 PASCAL VOC 数据集
+#### 训练
 
 `train.py` 是训练模块的主要执行程序，调用示例如下：
   ```bash

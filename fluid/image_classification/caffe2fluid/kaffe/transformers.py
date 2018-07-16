@@ -325,7 +325,8 @@ class ParameterNamer(object):
         for node in graph.nodes:
             if node.data is None:
                 continue
-            if node.kind in (NodeKind.Convolution, NodeKind.InnerProduct):
+            if node.kind in (NodeKind.Convolution, NodeKind.InnerProduct,\
+                    NodeKind.Deconvolution):
                 names = ('weights', )
                 if node.parameters.bias_term:
                     names += ('biases', )
@@ -337,6 +338,8 @@ class ParameterNamer(object):
                 names = ('scale', )
                 if getattr(node.parameters, 'bias_term', False):
                     names = ('scale', 'offset')
+            elif node.kind == "Normalize":
+                names = ('scale', )
             else:
                 warn('Unhandled parameters when naming this it[%s]' %
                      (node.kind))

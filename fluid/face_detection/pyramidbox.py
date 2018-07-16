@@ -52,7 +52,7 @@ def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
 class PyramidBox(object):
     def __init__(self,
                  data_shape,
-                 num_classes,
+                 num_classes=None,
                  use_transposed_conv2d=True,
                  is_infer=False,
                  sub_network=False):
@@ -414,5 +414,5 @@ class PyramidBox(object):
                 nms_threshold=0.3,
                 nms_top_k=5000,
                 keep_top_k=750,
-                score_threshold=0.05)
+                score_threshold=0.01)
         return test_program, face_nmsed_out

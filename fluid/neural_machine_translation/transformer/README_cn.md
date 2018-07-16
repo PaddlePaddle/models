@@ -110,7 +110,7 @@ python -u train.py \
 ```
 有关这些参数更详细信息的还请参考 `config.py` 中的注释说明。
 
-训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。在训练过程中，每个 epoch 结束后将保存模型到参数 `model_dir` 指定的目录，每个 iteration 将打印如下的日志到标准输出：
+训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。也可以只使用CPU训练(通过参数--divice CPU)，训练速度相对较慢。在训练过程中，每个 epoch 结束后将保存模型到参数 `model_dir` 指定的目录，每个 iteration 将打印如下的日志到标准输出：
 ```txt
 epoch: 0, batch: 0, sum loss: 258793.343750, avg loss: 11.069005, ppl: 64151.644531
 epoch: 0, batch: 1, sum loss: 256140.718750, avg loss: 11.059616, ppl: 63552.148438
@@ -154,9 +154,82 @@ perl multi-bleu.perl data/newstest2013.tok.de < predict.tok.txt
 ```
 BLEU = 25.08, 58.3/31.5/19.6/12.6 (BP=0.966, ratio=0.967, hyp_len=61321, ref_len=63412)
 ```
+### 分布式训练
+
+transformer 模型支持同步或者异步的分布式训练。分布式的配置主要两个方面:
+
+1 命令行配置
+
+  - `--local`，有两个取值，`True`表示单机训练，而`False`表示使用分布式训练。默认为单机训练模式。
+
+  - `--sync`，有两个取值，但只有当`--local`参数为False才会产生影响，其中`True`表示同步训练模式，`False`表示异步训练模式。默认为同步训练模式。
+
+2 环境变量配置
+
+  在分布式训练模式下，会手动配置训练的trainer数量和pserver数量。在网络拓扑上，每一个trainer都会和每一个pserver相连，pserver作为服务端，而trainer作为客户端。下面分pserver和trainer说明具体的参数配置：
+
+1) pserver配置
+
+- `PADDLE_IS_LOCAL=[0|1]` 是否是分布式训练，`0`标识是分布式，`1`标识是单机
+
+- `TRAINING_ROLE=PSERVER` 标识当前节点是pserver
+
+- `POD_IP=ip` 设置当前pserver使用对外服务的地址
+
+- `PADDLE_PORT=port` 设置当前pserver对外服务监听端口号，和`POD_IP`共同构成对外的唯一标识
+
+- `PADDLE_TRAINERS_NUM=num` 设置pserver连接的trainer的数量
+
+下面是配置的示例, 使用两个pserver, 192.168.2.2上的配置如下:
+```
+export PADDLE_PSERVERS=192.168.2.2,192.168.2.3
+export POD_IP=192.168.2.2
+export PADDLE_TRAINERS_NUM=2
+export TRAINING_ROLE=PSERVER
+export PADDLE_IS_LOCAL=0
+export PADDLE_PORT=6177
+```
+192.168.2.3上的配置如下:
+```
+export PADDLE_PSERVERS=192.168.2.2,192.168.2.3
+export POD_IP=192.168.2.3
+export PADDLE_TRAINERS_NUM=2
+export TRAINING_ROLE=PSERVER
+export PADDLE_IS_LOCAL=0
+export PADDLE_PORT=6177
+```
+2) trainer配置
+
+- `PADDLE_IS_LOCAL=[0|1]` 是否是分布式训练，`0`标识是分布式，`1`标识是单机
+
+- `TRAINING_ROLE=TRAINER` 标识当前节点是trainer
+
+- `PADDLE_PSERVERS=[ip1,ip2,……]` 设置pserver的ip地址,用于告知trainer互联的pserver的ip, 使用`,`分割
+
+- `PADDLE_TRAINER_ID=num` 设置当前节点的编号, 编号的取值范围为0到N-1的整数
+
+- `PADDLE_PORT=port` 设置请求的pserver服务端口号
+
+下面是配置的示例, 使用两个trainer, trainer 1上的配置如下:
+```
+export TRAINING_ROLE=TRAINER
+export PADDLE_PSERVERS=192.168.2.2,192.168.2.3
+export PADDLE_TRAINERS_NUM=2
+export PADDLE_TRAINER_ID=0
+export PADDLE_IS_LOCAL=0
+export PADDLE_PORT=6177
+```
+trainer 2上的配置如下:
+```
+export TRAINING_ROLE=TRAINER
+export PADDLE_PSERVERS=192.168.2.2,192.168.2.3
+export PADDLE_TRAINERS_NUM=2
+export PADDLE_TRAINER_ID=1
+export PADDLE_IS_LOCAL=0
+export PADDLE_PORT=6177
+```
 
 ### 参考文献
-
 1. Vaswani A, Shazeer N, Parmar N, et al. [Attention is all you need](http://papers.nips.cc/paper/7181-attention-is-all-you-need.pdf)[C]//Advances in Neural Information Processing Systems. 2017: 6000-6010.
 2. He K, Zhang X, Ren S, et al. [Deep residual learning for image recognition](http://openaccess.thecvf.com/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf)[C]//Proceedings of the IEEE conference on computer vision and pattern recognition. 2016: 770-778.
 3. Ba J L, Kiros J R, Hinton G E. [Layer normalization](https://arxiv.org/pdf/1607.06450.pdf)[J]. arXiv preprint arXiv:1607.06450, 2016.
