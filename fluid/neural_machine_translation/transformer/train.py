@@ -77,17 +77,11 @@ def parse_args():
         nargs=3,
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
     parser.add_argument(
-        "--use_wordpiece",
-        type=ast.literal_eval,
-        default=False,
-        help="The flag indicating if the data is wordpiece data. The EN-FR "
-        "data we provided is wordpiece data.")
-    parser.add_argument(
         "--token_delimiter",
         type=str,
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
-        "For EN-DE BPE data we provided, use spaces as token delimiter.; "
+        "For EN-DE BPE data we provided, use spaces as token delimiter. "
         "For EN-FR wordpiece data we provided, use '\x01' as token delimiter.")
     parser.add_argument(
         'opts',

@@ -263,9 +263,9 @@ class DataReader(object):
         with open(dict_path, "r") as fdict:
             for idx, line in enumerate(fdict):
                 if reverse:
-                    word_dict[idx] = line.strip()
+                    word_dict[idx] = line.strip('\n')
                 else:
-                    word_dict[line.strip()] = idx
+                    word_dict[line.strip('\n')] = idx
         return word_dict
 
     def _sample_generator(self):
