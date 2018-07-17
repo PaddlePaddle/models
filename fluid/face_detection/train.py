@@ -16,14 +16,14 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('parallel',         bool,  True,            "Whether use multi-GPU/threads or not.")
 add_arg('learning_rate',    float, 0.001,           "The start learning rate.")
-add_arg('batch_size',       int,   16,              "Minibatch size.")
+add_arg('batch_size',       int,   12,              "Minibatch size.")
 add_arg('num_passes',       int,   160,             "Epoch number.")
 add_arg('use_gpu',          bool,  True,            "Whether use GPU.")
 add_arg('use_pyramidbox',   bool,  True,            "Whether use PyramidBox model.")
 add_arg('model_save_dir',   str,   'output',        "The path to save model.")
 add_arg('resize_h',         int,   640,             "The resized image height.")
 add_arg('resize_w',         int,   640,             "The resized image width.")
-add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optimization or not.")
+add_arg('with_mem_opt',     bool,  False,            "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
 #yapf: enable
 
