@@ -4,6 +4,7 @@ import argparse
 import ast
 import numpy as np
 import multiprocessing
+from functools import partial
 
 import paddle
 import paddle.fluid as fluid
@@ -78,7 +79,8 @@ def parse_args():
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
     parser.add_argument(
         "--token_delimiter",
-        type=str,
+        type=partial(
+            str.decode, encoding="string-escape"),
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter. "
