@@ -83,7 +83,7 @@ class DataGenerator(object):
                     img = img.resize((sz[0], sz[1]))
                     img = np.array(img) - 127.5
                     img = img[np.newaxis, ...]
-                    if self.model == "ctc":
+                    if self.model == "crnn_ctc":
                         result.append([img, label])
                     else:
                         result.append([img, [SOS] + label, label + [EOS]])
@@ -112,7 +112,10 @@ class DataGenerator(object):
                     'L')
                 img = np.array(img) - 127.5
                 img = img[np.newaxis, ...]
-                yield img, label
+                if self.model == "crnn_ctc":
+                    yield img, label
+                else:
+                    yield img, [SOS] + label, label + [EOS]
 
         return reader
 
