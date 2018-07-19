@@ -423,6 +423,10 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
             print("epoch: %d, batch: %d, sum loss: %f, avg loss: %f, ppl: %f" %
                   (pass_id, batch_id, total_sum_cost, total_avg_cost,
                    np.exp([min(total_avg_cost, 100)])))
+            if batch_id > 0 and batch_id % 1000 == 0:
+                fluid.io.save_persistables(
+                    exe,
+                    os.path.join(TrainTaskConfig.ckpt_dir, "latest.checkpoint"))
             init = True
         # Validate and save the model for inference.
         print("epoch: %d, " % pass_id +

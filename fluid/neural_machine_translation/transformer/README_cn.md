@@ -108,17 +108,18 @@ python -u train.py \
   --trg_vocab_fpath data/vocab.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
   --train_file_pattern data/train.tok.clean.bpe.32000.en-de \
+  --token_delimiter ' ' \
   --use_token_batch True \
   --batch_size 3200 \
   --sort_type pool \
   --pool_size 200000 \
-  n_layer 8 \
+  n_layer 6 \
   n_head 16 \
   d_model 1024 \
   d_inner_hid 4096 \
   dropout 0.3
 ```
-有关这些参数更详细信息的还请参考 `config.py` 中的注释说明。对于英法翻译数据，执行训练和英德翻译训练类似，要注意的是由于英法翻译数据 token 间不是使用空格进行分隔，需要修改 `token_delimiter` 参数的设置为 `--token_delimiter '\x01'`。
+有关这些参数更详细信息的还请参考 `config.py` 中的注释说明。对于英法翻译数据，执行训练和英德翻译训练类似，修改命令中的词典和数据文件为英法数据相应文件的路径，另外要注意的是由于英法翻译数据 token 间不是使用空格进行分隔，需要修改 `token_delimiter` 参数的设置为 `--token_delimiter '\x01'`。
 
 训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。也可以只使用 CPU 训练(通过参数 `--divice CPU` 设置)，训练速度相对较慢。在训练过程中，每个 epoch 结束后将保存模型到参数 `model_dir` 指定的目录，每个 iteration 将打印如下的日志到标准输出：
 ```txt
@@ -157,7 +158,7 @@ python -u infer.py \
 sed 's/@@ //g' predict.txt > predict.tok.txt
 ```
 
-对于英法翻译的 wordpiece 数据，执行预测和英德翻译预测类似。需要注意修改 `token_delimiter` 参数的设置为 `--token_delimiter '\x01'`；同时要修改 `use_wordpiece` 参数的设置为 `--use_wordpiece True`，这会在预测时将翻译得到的 wordpiece 数据还原为原始数据输出。为了使用 tokenize 的数据进行评估，还需要对翻译结果进行 tokenize 的处理，[Moses](https://github.com/moses-smt/mosesdecoder) 提供了一系列机器翻译相关的脚本。执行 `git clone https://github.com/moses-smt/mosesdecoder.git` 克隆 mosesdecoder 仓库后，可以使用其中的 `tokenizer.perl` 脚本对 `predict.txt` 内的翻译结果进行 tokenize 处理并输出到 `predict.tok.txt` 中，如下：
+对于英法翻译的 wordpiece 数据，执行预测和英德翻译预测类似，修改命令中的词典和数据文件为英法数据相应文件的路径，另外需要注意修改 `token_delimiter` 参数的设置为 `--token_delimiter '\x01'`；同时要修改 `use_wordpiece` 参数的设置为 `--use_wordpiece True`，这会在预测时将翻译得到的 wordpiece 数据还原为原始数据输出。为了使用 tokenize 的数据进行评估，还需要对翻译结果进行 tokenize 的处理，[Moses](https://github.com/moses-smt/mosesdecoder) 提供了一系列机器翻译相关的脚本。执行 `git clone https://github.com/moses-smt/mosesdecoder.git` 克隆 mosesdecoder 仓库后，可以使用其中的 `tokenizer.perl` 脚本对 `predict.txt` 内的翻译结果进行 tokenize 处理并输出到 `predict.tok.txt` 中，如下：
 ```sh
 perl mosesdecoder/scripts/tokenizer/tokenizer.perl -l fr < predict.txt > predict.tok.txt
 ```
