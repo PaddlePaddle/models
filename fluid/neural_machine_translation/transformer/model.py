@@ -466,6 +466,7 @@ def transformer(
     sum_cost = layers.reduce_sum(weighted_cost)
     token_num = layers.reduce_sum(weights)
     avg_cost = sum_cost / token_num
+    avg_cost.stop_gradient = True
     return sum_cost, avg_cost, predict, token_num
 
 

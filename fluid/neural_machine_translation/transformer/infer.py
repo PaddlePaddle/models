@@ -529,7 +529,6 @@ def fast_infer(test_data, trg_idx2word):
 
 def infer(args, inferencer=fast_infer):
     place = fluid.CUDAPlace(0) if InferTaskConfig.use_gpu else fluid.CPUPlace()
-    exe = fluid.Executor(place)
     test_data = reader.DataReader(
         src_vocab_fpath=args.src_vocab_fpath,
         trg_vocab_fpath=args.trg_vocab_fpath,

@@ -1,17 +1,16 @@
-import os
-import time
 import argparse
 import ast
-import numpy as np
 import multiprocessing
+import os
+import time
 
-import paddle
+import numpy as np
 import paddle.fluid as fluid
 
+import reader
+from config import *
 from model import transformer, position_encoding_init
 from optim import LearningRateScheduler
-from config import *
-import reader
 
 
 def parse_args():
