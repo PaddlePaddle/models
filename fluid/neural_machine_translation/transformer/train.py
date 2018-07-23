@@ -320,12 +320,11 @@ def test_context(train_progm, avg_cost, train_exe, dev_count, data_input_names,
     return test
 
 
-def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
-               token_num, predict):
+def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
+               predict):
     # Initialize the parameters.
     if TrainTaskConfig.ckpt_path:
         fluid.io.load_persistables(exe, TrainTaskConfig.ckpt_path)
-        lr_scheduler.current_steps = TrainTaskConfig.start_step
     else:
         print "init fluid.framework.default_startup_program"
         exe.run(fluid.framework.default_startup_program())
@@ -350,16 +349,10 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
         reader=train_data.batch_generator,
         count=dev_count if args.use_token_batch else 1)
 
-    build_strategy = fluid.BuildStrategy()
-    # Since the token number differs among devices, customize gradient scale to
-    # use token average cost among multi-devices. and the gradient scale is
-    # `1 / token_number` for average cost.
-    build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
     train_exe = fluid.ParallelExecutor(
         use_cuda=TrainTaskConfig.use_gpu,
-        loss_name=sum_cost.name,
-        main_program=train_progm,
-        build_strategy=build_strategy)
+        loss_name=avg_cost.name,
+        main_program=train_progm)
 
     data_input_names = encoder_data_input_fields + decoder_data_input_fields[:
                                                                              -1] + label_data_input_fields
@@ -386,11 +379,6 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
                 total_num_token += num_token
                 feed_kv_pairs = data_input_dict.items() + util_input_dict.items(
                 )
-                if args.local:
-                    lr_rate = lr_scheduler.update_learning_rate()
-                    feed_kv_pairs += {
-                        lr_scheduler.learning_rate.name: lr_rate
-                    }.items()
                 feed_list.append(dict(feed_kv_pairs))
 
                 if not init:
@@ -399,8 +387,6 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
                             ModelHyperParams.max_length + 1,
                             ModelHyperParams.d_model)
                         feed_list[place_id][pos_enc_param_name] = pos_enc
-            for feed_dict in feed_list:
-                feed_dict[sum_cost.name + "@GRAD"] = 1. / total_num_token
             outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name],
                                  feed=feed_list)
             sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[1])
@@ -455,38 +441,32 @@ def train(args):
         ModelHyperParams.d_value, ModelHyperParams.d_model,
         ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
         ModelHyperParams.weight_sharing, TrainTaskConfig.label_smooth_eps)
-    lr_scheduler = LearningRateScheduler(ModelHyperParams.d_model,
-                                         TrainTaskConfig.warmup_steps,
-                                         TrainTaskConfig.learning_rate)
 
     if args.local:
         optimizer = fluid.optimizer.Adam(
-            learning_rate=lr_scheduler.learning_rate,
+            learning_rate=fluid.layers.learning_rate_scheduler.noam_decay(
+                ModelHyperParams.d_model, TrainTaskConfig.warmup_steps),
             beta1=TrainTaskConfig.beta1,
             beta2=TrainTaskConfig.beta2,
             epsilon=TrainTaskConfig.eps)
-        optimizer.minimize(sum_cost)
-    elif args.sync == False:
+        optimizer.minimize(avg_cost)
+    elif not args.sync:
         optimizer = fluid.optimizer.SGD(0.003)
-        optimizer.minimize(sum_cost)
+        optimizer.minimize(avg_cost)
     else:
-        lr_decay = fluid.layers\
-         .learning_rate_scheduler\
-         .noam_decay(ModelHyperParams.d_model,
-            TrainTaskConfig.warmup_steps)
-
         optimizer = fluid.optimizer.Adam(
-            learning_rate=lr_decay,
+            learning_rate=fluid.layers.learning_rate_scheduler.noam_decay(
+                ModelHyperParams.d_model, TrainTaskConfig.warmup_steps),
             beta1=TrainTaskConfig.beta1,
             beta2=TrainTaskConfig.beta2,
             epsilon=TrainTaskConfig.eps)
-        optimizer.minimize(sum_cost)
+        optimizer.minimize(avg_cost)
 
     if args.local:
         print("local start_up:")
         train_loop(exe,
                    fluid.default_main_program(), dev_count, sum_cost, avg_cost,
-                   lr_scheduler, token_num, predict)
+                   token_num, predict)
     else:
         port = os.getenv("PADDLE_PORT", "6174")
         pserver_ips = os.getenv("PADDLE_PSERVERS")  # ip,ip...
@@ -495,7 +475,6 @@ def train(args):
             eplist.append(':'.join([ip, port]))
         pserver_endpoints = ",".join(eplist)  # ip:port,ip:port...
         trainers = int(os.getenv("PADDLE_TRAINERS_NUM", "0"))
-        current_endpoint = os.getenv("POD_IP") + ":" + port
         trainer_id = int(os.getenv("PADDLE_TRAINER_ID"))
         t = fluid.DistributeTranspiler()
         t.transpile(trainer_id, pservers=pserver_endpoints, trainers=trainers)
@@ -523,7 +502,7 @@ def train(args):
             with open('trainer_prog.desc', 'w') as f:
                 f.write(str(trainer_prog))
             train_loop(exe, trainer_prog, dev_count, sum_cost, avg_cost,
-                       lr_scheduler, token_num, predict)
+                       token_num, predict)
         else:
             print("environment var TRAINER_ROLE should be TRAINER os PSERVER")
 
