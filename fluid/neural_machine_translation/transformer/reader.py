@@ -264,7 +264,6 @@ class DataReader(object):
 
     def batch_generator(self):
         # global sort or global shuffle
-        beg = time.time()
         if self._sort_type == SortType.GLOBAL:
             infos = sorted(
                 self._sample_infos,
