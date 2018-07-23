@@ -362,7 +362,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
             encoder_data_input_fields + encoder_util_input_fields + decoder_data_input_fields[
                                                                     :-1] + decoder_util_input_fields + label_data_input_fields
 
-        for data in train_data.batch_generator():
+        for batch_id, data in enumerate(train_data.batch_generator()):
             data_input_dict, util_input_dict, num_token = \
                 prepare_batch_input(data, data_input_names, util_input_names, ModelHyperParams.eos_idx,
                                     ModelHyperParams.eos_idx, ModelHyperParams.n_head, ModelHyperParams.d_model)
@@ -372,6 +372,8 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
             for name in pos_enc_param_names:
                 total_dict[name] = pos_enc
             yield [total_dict[item] for item in feed_order]
+            if batch_id / 8 == 10:
+                break
 
     pyreader.decorate_tensor_provider(train_reader_provider)
     for pass_id in xrange(TrainTaskConfig.pass_num):
@@ -432,8 +434,7 @@ def train(args):
 
     if args.local:
         optimizer = fluid.optimizer.Adam(
-            learning_rate=fluid.layers.learning_rate_scheduler.noam_decay(
-                ModelHyperParams.d_model, TrainTaskConfig.warmup_steps),
+            learning_rate=1e-2,
             beta1=TrainTaskConfig.beta1,
             beta2=TrainTaskConfig.beta2,
             epsilon=TrainTaskConfig.eps)

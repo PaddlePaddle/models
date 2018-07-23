@@ -2,7 +2,7 @@ class TrainTaskConfig(object):
     # only support GPU currently
     use_gpu = True
     # the epoch number to train.
-    pass_num = 30
+    pass_num = 1
     # the number of sequences contained in a mini-batch.
     # deprecated, set batch_size in args.
     batch_size = 32
