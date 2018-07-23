@@ -74,8 +74,7 @@ def eval(args):
         fluid.io.load_vars(exe, test_model, vars=vars)
 
     # reader
-    #test_reader = paddle.batch(reader.test(seg_num), batch_size=batch_size / 16)
-    test_reader = paddle.batch(reader.test(seg_num), batch_size=1)
+    test_reader = paddle.batch(reader.test(seg_num), batch_size=batch_size / 16)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
