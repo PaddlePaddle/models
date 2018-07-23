@@ -36,7 +36,7 @@ There are two demo files <em>train.list</em> and <em>test.list</em> in <code>dat
 
 ### Training
 After data preparation, users can start the PaddlePaddle Fluid training by:
-<code>
+```
 python train.py \
     --batch_size=128 \
     --total_videos=9537 \
@@ -49,27 +49,29 @@ python train.py \
     --num_layers=50 \
     --seg_num=7 \
     --pretrained_model={path_to_pretrained_model}
-</code>
+```
 
 <strong>parameter introduction:</strong>
-<li>batch_size</li>: the size of each mini-batch.
-<li>total_videos</li>: total number of videos in the training set.
-<li>class_dim</li>: the class number of the classification task.
-<li>num_epochs</li>: the number of epochs.
-<li>image_shape</li>: input size of the network.
-<li>model_save_dir</li>: the directory to save trained model.
-<li>with_mem_opt</li>: whether to use memory optimization or not.
-<li>lr_init</li>: initialized learning rate.
-<li>num_layers</li>: the number of layers for ResNet.
-<li>seg_num</li>: the number of segments in TSN.
-<li>pretrained_model</li>: model path for pretraining.
+<li>batch_size: the size of each mini-batch.</li>
+<li>total_videos: total number of videos in the training set.</li>
+<li>class_dim: the class number of the classification task.</li>
+<li>num_epochs: the number of epochs.</li>
+<li>image_shape: input size of the network.</li>
+<li>model_save_dir: the directory to save trained model.</li>
+<li>with_mem_opt: whether to use memory optimization or not.</li>
+<li>lr_init: initialized learning rate.</li>
+<li>num_layers: the number of layers for ResNet.</li>
+<li>seg_num: the number of segments in TSN.</li>
+<li>pretrained_model: model path for pretraining.</li>
+
 
 <strong>data reader introduction:</strong>
 Data reader is defined in <code>reader.py</code>. Note that we use group operation for all frames in one video.
 
+
 <strong>training:</strong>
 The training log is like:
-<code>
+```
 [TRAIN] Pass: 0	trainbatch: 0	loss: 4.630959	acc1: 0.0	acc5: 0.0390625	time: 3.09 sec
 [TRAIN] Pass: 0	trainbatch: 10	loss: 4.559069	acc1: 0.0546875	acc5: 0.1171875	time: 3.91 sec
 [TRAIN] Pass: 0	trainbatch: 20	loss: 4.040092	acc1: 0.09375	acc5: 0.3515625	time: 3.88 sec
@@ -78,11 +80,11 @@ The training log is like:
 [TRAIN] Pass: 0	trainbatch: 50	loss: 2.585245	acc1: 0.4609375	acc5: 0.7265625	time: 3.13 sec
 [TRAIN] Pass: 0	trainbatch: 60	loss: 2.151489	acc1: 0.4921875	acc5: 0.8203125	time: 3.35 sec
 [TRAIN] Pass: 0	trainbatch: 70	loss: 1.981680	acc1: 0.578125	acc5: 0.8359375	time: 3.30 sec
-</code>
+```
 
 ### Evaluation
 Evaluation is to evaluate the performance of a trained model. One can download pretrained models and set its path to path_to_pretrain_model. Then top1/top5 accuracy can be obtained by running the following command:
-<code>
+```
 python eval.py \
     --batch_size=128 \
     --class_dim=101 \
@@ -91,10 +93,10 @@ python eval.py \
     --num_layers=50 \
     --seg_num=7 \
     --test_model={path_to_pretrained_model}
-</code>
+```
 
 According to the congfiguration of evaluation, the output log is like:
-<code>
+```
 [TEST] Pass: 0	testbatch: 0	loss: 0.011551	acc1: 1.0	acc5: 1.0	time: 0.48 sec
 [TEST] Pass: 0	testbatch: 10	loss: 0.710330	acc1: 0.75	acc5: 1.0	time: 0.49 sec
 [TEST] Pass: 0	testbatch: 20	loss: 0.000547	acc1: 1.0	acc5: 1.0	time: 0.48 sec
@@ -105,11 +107,11 @@ According to the congfiguration of evaluation, the output log is like:
 [TEST] Pass: 0	testbatch: 70	loss: 1.720186	acc1: 0.5	acc5: 0.875	time: 0.48 sec
 [TEST] Pass: 0	testbatch: 80	loss: 0.199669	acc1: 0.875	acc5: 1.0	time: 0.48 sec
 [TEST] Pass: 0	testbatch: 90	loss: 0.195510	acc1: 1.0	acc5: 1.0	time: 0.48 sec
-</code>
+```
 
 ### Inference
 Inference is used to get prediction score or video features based on trained models.
-<code>
+```
 python infer.py \
     --batch_size=128 \
     --class_dim=101 \
@@ -118,10 +120,10 @@ python infer.py \
     --num_layers=50 \
     --seg_num=7 \
     --test_model={path_to_pretrained_model}
-</code>
+```
 
 The output contains predication results, including maximum score (before softmax) and corresponding predicted label.
-<code>
+```
 Test sample: PlayingGuitar_g01_c03, score: [21.418629], class [62]
 Test sample: SalsaSpin_g05_c06, score: [13.238657], class [76]
 Test sample: TrampolineJumping_g04_c01, score: [21.722862], class [93]
@@ -132,7 +134,7 @@ Test sample: PlayingCello_g05_c05, score: [18.795723], class [58]
 Test sample: LongJump_g03_c04, score: [7.100088], class [50]
 Test sample: SkyDiving_g06_c03, score: [15.144707], class [82]
 Test sample: UnevenBars_g07_c04, score: [22.114838], class [95]
-</code>
+```
 
 ### Performance
 Configuration | top-1/top-5 acc
