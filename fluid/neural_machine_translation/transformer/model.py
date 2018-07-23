@@ -403,7 +403,7 @@ def make_all_inputs(input_fields):
 def make_all_py_reader_inputs(input_fields):
     print 'feed ', input_fields
     reader = layers.py_reader(
-        capacity=10,
+        capacity=20,
         shapes=[input_descs[input_field][0] for input_field in input_fields],
         dtypes=[input_descs[input_field][1] for input_field in input_fields],
         lod_levels=[
@@ -493,8 +493,8 @@ def transformer(src_vocab_size,
     weighted_cost = cost * weights
     sum_cost = layers.reduce_sum(weighted_cost)
     token_num = layers.reduce_sum(weights)
+    token_num.stop_gradient = True
     avg_cost = sum_cost / token_num
-    avg_cost.stop_gradient = True
     return sum_cost, avg_cost, predict, token_num, reader if use_py_reader else None
 
 

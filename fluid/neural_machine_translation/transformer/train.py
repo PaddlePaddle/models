@@ -349,7 +349,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
     build_strategy = fluid.BuildStrategy()
     train_exe = fluid.ParallelExecutor(
         use_cuda=TrainTaskConfig.use_gpu,
-        loss_name=sum_cost.name,
+        loss_name=avg_cost.name,
         main_program=train_progm,
         build_strategy=build_strategy)
 
@@ -357,19 +357,15 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
                                                                              -1] + label_data_input_fields
     util_input_names = encoder_util_input_fields + decoder_util_input_fields
 
-    if args.val_file_pattern is not None:
-        test = test_context(train_progm, avg_cost, train_exe, dev_count,
-                            data_input_names, util_input_names, sum_cost,
-                            token_num)
-
     def train_reader_provider():
         feed_order = \
-            encoder_data_input_fields + encoder_util_input_fields + decoder_data_input_fields[:-1] + decoder_util_input_fields + label_data_input_fields
+            encoder_data_input_fields + encoder_util_input_fields + decoder_data_input_fields[
+                                                                    :-1] + decoder_util_input_fields + label_data_input_fields
 
         for data in train_data.batch_generator():
             data_input_dict, util_input_dict, num_token = \
                 prepare_batch_input(data, data_input_names, util_input_names, ModelHyperParams.eos_idx,
-                                ModelHyperParams.eos_idx, ModelHyperParams.n_head, ModelHyperParams.d_model)
+                                    ModelHyperParams.eos_idx, ModelHyperParams.n_head, ModelHyperParams.d_model)
             pos_enc = position_encoding_init(ModelHyperParams.max_length + 1,
                                              ModelHyperParams.d_model)
             total_dict = dict(data_input_dict.items() + util_input_dict.items())
@@ -382,7 +378,9 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
         pyreader.start()
         while True:
             try:
+                beg = time.time()
                 outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name])
+                print 'batch time ', time.time() - beg
             except:
                 pyreader.reset()
                 break
@@ -394,20 +392,6 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
             print("epoch: %d, sum loss: %f, avg loss: %f, ppl: %f" %
                   (pass_id, total_sum_cost, total_avg_cost,
                    np.exp([min(total_avg_cost, 100)])))
-            init = True
-        # Validate and save the model for inference.
-        # print("epoch: %d, " % pass_id +
-        #       ("val avg loss: %f, val ppl: %f, " % test()
-        #        if args.val_file_pattern is not None else "") + "consumed %fs" %
-        #       (time.time() - pass_start_time))
-        # fluid.io.save_persistables(
-        #     exe,
-        #     os.path.join(TrainTaskConfig.ckpt_dir,
-        #                  "pass_" + str(pass_id) + ".checkpoint"))
-        # fluid.io.save_inference_model(
-        #     os.path.join(TrainTaskConfig.model_dir,
-        #                  "pass_" + str(pass_id) + ".infer.model"),
-        #     data_input_names[:-2] + util_input_names, [predict], exe)
 
 
 def train(args):
@@ -453,22 +437,22 @@ def train(args):
             beta1=TrainTaskConfig.beta1,
             beta2=TrainTaskConfig.beta2,
             epsilon=TrainTaskConfig.eps)
-        optimizer.minimize(sum_cost)
+        optimizer.minimize(avg_cost)
     elif args.sync == False:
         optimizer = fluid.optimizer.SGD(0.003)
-        optimizer.minimize(sum_cost)
+        optimizer.minimize(avg_cost)
     else:
-        lr_decay = fluid.layers\
-         .learning_rate_scheduler\
-         .noam_decay(ModelHyperParams.d_model,
-            TrainTaskConfig.warmup_steps)
+        lr_decay = fluid.layers \
+            .learning_rate_scheduler \
+            .noam_decay(ModelHyperParams.d_model,
+                        TrainTaskConfig.warmup_steps)
 
         optimizer = fluid.optimizer.Adam(
             learning_rate=lr_decay,
             beta1=TrainTaskConfig.beta1,
             beta2=TrainTaskConfig.beta2,
             epsilon=TrainTaskConfig.eps)
-        optimizer.minimize(sum_cost)
+        optimizer.minimize(avg_cost)
 
     if args.local:
         print("local start_up:")

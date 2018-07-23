@@ -2,7 +2,6 @@ import glob
 import os
 import random
 import tarfile
-import time
 
 
 class SortType(object):
