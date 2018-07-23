@@ -291,7 +291,7 @@ class DataReader(object):
         if not self._clip_last_batch and len(batch_creator.batch) != 0:
             batches.append(batch_creator.batch)
 
-        if self._shuffle:
+        if self._shuffle_batch:
             self._random.shuffle(batches)
 
         for batch in batches:
