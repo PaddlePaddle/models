@@ -264,14 +264,21 @@ class DataReader(object):
     def batch_generator(self):
         # global sort or global shuffle
         if self._sort_type == SortType.GLOBAL:
-            infos = sorted(
-                self._sample_infos,
-                key=lambda x: max(x[1], x[2]) if not self._only_src else x[1])
-        elif self._shuffle:
-            infos = self._sample_infos
-            self._random.shuffle(infos)
+            infos = sorted(self._sample_infos, key=lambda x: x.max_len)
         else:
-            infos = self._sample_infos
+            if self._shuffle:
+                infos = self._sample_infos
+                self._random.shuffle(infos)
+            else:
+                infos = self._sample_infos
+
+            if self._sort_type == SortType.POOL:
+                for i in range(0, len(infos), self._pool_size):
+                    infos[i * self._pool_size:(i + 1) *
+                          self._pool_size] = sorted(
+                              infos[i * self._pool_size:(i + 1) *
+                                    self._pool_size],
+                              key=lambda x: x.max_len)
 
         # concat batch
         batches = []
@@ -293,14 +300,7 @@ class DataReader(object):
             self._random.shuffle(batches)
 
         for batch in batches:
-            if self._sort_type == SortType.POOL:
-                batch_ids = [
-                    info.i
-                    for info in sorted(
-                        batch, key=lambda info: info.max_len)
-                ]
-            else:
-                batch_ids = [info.i for info in batch]
+            batch_ids = [info.i for info in batch]
 
             if self._only_src:
                 yield [[self._src_seq_ids[idx]] for idx in batch_ids]
