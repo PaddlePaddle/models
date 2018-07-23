@@ -357,6 +357,9 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
                                                                              -1] + label_data_input_fields
     util_input_names = encoder_util_input_fields + decoder_util_input_fields
 
+    pos_enc = position_encoding_init(ModelHyperParams.max_length + 1,
+                                     ModelHyperParams.d_model)
+
     def train_reader_provider():
         feed_order = \
             encoder_data_input_fields + encoder_util_input_fields + decoder_data_input_fields[
@@ -366,13 +369,11 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
             data_input_dict, util_input_dict, num_token = \
                 prepare_batch_input(data, data_input_names, util_input_names, ModelHyperParams.eos_idx,
                                     ModelHyperParams.eos_idx, ModelHyperParams.n_head, ModelHyperParams.d_model)
-            pos_enc = position_encoding_init(ModelHyperParams.max_length + 1,
-                                             ModelHyperParams.d_model)
             total_dict = dict(data_input_dict.items() + util_input_dict.items())
             for name in pos_enc_param_names:
                 total_dict[name] = pos_enc
             yield [total_dict[item] for item in feed_order]
-            if batch_id / 8 == 10:
+            if batch_id / 8 == 100:
                 break
 
     pyreader.decorate_tensor_provider(train_reader_provider)
@@ -381,6 +382,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
         while True:
             try:
                 beg = time.time()
+                print pyreader.queue.size()
                 outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name])
                 print 'batch time ', time.time() - beg
             except:
