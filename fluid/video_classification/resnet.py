@@ -10,6 +10,7 @@ import paddle.fluid.layers.nn as nn
 import paddle.fluid.layers.tensor as tensor
 import math
 
+
 def conv_bn_layer(input, num_filters, filter_size, stride=1, groups=1,
                   act=None):
     conv = fluid.layers.conv2d(
@@ -23,12 +24,14 @@ def conv_bn_layer(input, num_filters, filter_size, stride=1, groups=1,
         bias_attr=False)
     return fluid.layers.batch_norm(input=conv, act=act)
 
+
 def shortcut(input, ch_out, stride):
     ch_in = input.shape[1]
     if ch_in != ch_out or stride != 1:
         return conv_bn_layer(input, ch_out, 1, stride)
     else:
         return input
+
 
 def bottleneck_block(input, num_filters, stride):
     conv0 = conv_bn_layer(
@@ -45,6 +48,7 @@ def bottleneck_block(input, num_filters, stride):
     short = shortcut(input, num_filters * 4, stride)
 
     return fluid.layers.elementwise_add(x=short, y=conv2, act='relu')
+
 
 def ResNet(input, seg_num, class_dim, layers=50):
     supported_layers = [50, 101, 152]
@@ -67,11 +71,7 @@ def ResNet(input, seg_num, class_dim, layers=50):
     conv = conv_bn_layer(
         input=input, num_filters=64, filter_size=7, stride=2, act='relu')
     conv = fluid.layers.pool2d(
-        input=conv,
-        pool_size=3,
-        pool_stride=2,
-        pool_padding=1,
-        pool_type='max')
+        input=conv, pool_size=3, pool_stride=2, pool_padding=1, pool_type='max')
 
     for block in range(len(depth)):
         for i in range(depth[block]):

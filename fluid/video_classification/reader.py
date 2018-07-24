@@ -12,15 +12,16 @@ random.seed(0)
 
 DATA_DIM = 224
 
-THREAD = 8  
+THREAD = 8
 BUF_SIZE = 1024
 
 TRAIN_LIST = 'data/train.list'
-TEST_LIST  = 'data/val.list'
+TEST_LIST = 'data/val.list'
 INFER_LIST = 'data/val.list'
 
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
-img_std  = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
+img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
+
 
 def imageloader(buf):
     if isinstance(buf, str):
@@ -34,7 +35,8 @@ def imageloader(buf):
         img = Image.open(StringIO(buf))
 
     return img.convert('RGB')
-       
+
+
 def group_scale(imgs, target_size):
     resized_imgs = []
     for i in range(len(imgs)):
@@ -55,6 +57,7 @@ def group_scale(imgs, target_size):
 
     return resized_imgs
 
+
 def group_random_crop(img_group, target_size):
     w, h = img_group[0].size
     th, tw = target_size, target_size
@@ -71,6 +74,7 @@ def group_random_crop(img_group, target_size):
 
     return out_images
 
+
 def group_random_flip(img_group):
     v = random.random()
     if v < 0.5:
@@ -78,6 +82,7 @@ def group_random_flip(img_group):
         return ret
     else:
         return img_group
+
 
 def group_center_crop(img_group, target_size):
     img_crop = []
@@ -89,6 +94,7 @@ def group_center_crop(img_group, target_size):
         img_crop.append(img.crop((x1, y1, x1 + tw, y1 + th)))
 
     return img_crop
+
 
 def video_loader(frames, nsample, mode):
     videolen = len(frames)
@@ -116,11 +122,12 @@ def video_loader(frames, nsample, mode):
 
     return imgs
 
+
 def decode_pickle(sample, mode, seg_num, short_size, target_size):
     pickle_path = sample[0]
     data_loaded = cPickle.load(open(pickle_path))
     vid, label, frames = data_loaded
-    
+
     imgs = video_loader(frames, seg_num, mode)
     imgs = group_scale(imgs, short_size)
 
@@ -129,10 +136,12 @@ def decode_pickle(sample, mode, seg_num, short_size, target_size):
         imgs = group_random_flip(imgs)
     else:
         imgs = group_center_crop(imgs, target_size)
-    
-    np_imgs = (np.array(imgs[0]).astype('float32').transpose((2, 0, 1))).reshape(1, 3, 224, 224) / 255
+
+    np_imgs = (np.array(imgs[0]).astype('float32').transpose(
+        (2, 0, 1))).reshape(1, 3, 224, 224) / 255
     for i in range(len(imgs) - 1):
-        img = (np.array(imgs[i + 1]).astype('float32').transpose((2, 0, 1))).reshape(1, 3, 224, 224) / 255
+        img = (np.array(imgs[i + 1]).astype('float32').transpose(
+            (2, 0, 1))).reshape(1, 3, 224, 224) / 255
         np_imgs = np.concatenate((np_imgs, img))
     imgs = np_imgs
     imgs -= img_mean
@@ -159,22 +168,41 @@ def _reader_creator(pickle_list,
                 pickle_path = line.strip()
                 yield [pickle_path]
 
-    mapper = functools.partial(decode_pickle, mode=mode, seg_num=seg_num,
-                               short_size=short_size, target_size=target_size)
+    mapper = functools.partial(
+        decode_pickle,
+        mode=mode,
+        seg_num=seg_num,
+        short_size=short_size,
+        target_size=target_size)
 
     return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE)
 
 
 def train(seg_num):
     return _reader_creator(
-        TRAIN_LIST, 'train', shuffle=True, seg_num=seg_num, short_size=256, target_size=224)
+        TRAIN_LIST,
+        'train',
+        shuffle=True,
+        seg_num=seg_num,
+        short_size=256,
+        target_size=224)
 
 
 def test(seg_num):
     return _reader_creator(
-        TEST_LIST, 'test', shuffle=False, seg_num=seg_num, short_size=256, target_size=224)
+        TEST_LIST,
+        'test',
+        shuffle=False,
+        seg_num=seg_num,
+        short_size=256,
+        target_size=224)
 
 
 def infer(seg_num):
     return _reader_creator(
-        INFER_LIST, 'infer', shuffle=False, seg_num=seg_num, short_size=256, target_size=224)
+        INFER_LIST,
+        'infer',
+        shuffle=False,
+        seg_num=seg_num,
+        short_size=256,
+        target_size=224)

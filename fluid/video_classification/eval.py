@@ -4,7 +4,7 @@ import time
 import sys
 import paddle.v2 as paddle
 import paddle.fluid as fluid
-from resnet import ResNet 
+from resnet import ResNet
 import reader
 
 import argparse
@@ -29,6 +29,7 @@ add_arg('total_videos',     int,    9537,           "Training video number.")
 add_arg('lr_init',          float,  0.01,           "Set initial learning rate.")
 # yapf: enable
 
+
 def eval(args):
     # parameters from arguments
     seg_num = args.seg_num
@@ -38,7 +39,7 @@ def eval(args):
     test_model = args.test_model
 
     if test_model == None:
-        print ('Please specify the test model ...')
+        print('Please specify the test model ...')
         return
 
     image_shape = [int(m) for m in args.image_shape.split(",")]
@@ -48,9 +49,10 @@ def eval(args):
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
 
-    out = ResNet(input=image, seg_num=seg_num, class_dim=class_dim, layers=num_layers)
+    out = ResNet(
+        input=image, seg_num=seg_num, class_dim=class_dim, layers=num_layers)
     cost = fluid.layers.cross_entropy(input=out, label=label)
-    
+
     avg_cost = fluid.layers.mean(x=cost)
     acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
@@ -85,7 +87,9 @@ def eval(args):
     test_info = [[], [], []]
     for batch_id, data in enumerate(test_reader()):
         t1 = time.time()
-        loss, acc1, acc5 = exe.run(inference_program, fetch_list=fetch_list, feed=feeder.feed(data))
+        loss, acc1, acc5 = exe.run(inference_program,
+                                   fetch_list=fetch_list,
+                                   feed=feeder.feed(data))
         t2 = time.time()
         period = t2 - t1
         loss = np.mean(loss)
@@ -96,8 +100,10 @@ def eval(args):
         test_info[2].append(acc5 * len(data))
         cnt += len(data)
         if batch_id % 10 == 0:
-            print("[TEST] Pass: {0}\ttestbatch: {1}\tloss: {2}\tacc1: {3}\tacc5: {4}\ttime: {5}"
-                   .format(pass_id, batch_id, '%.6f'%loss, acc1, acc5, "%2.2f sec" % period))
+            print(
+                "[TEST] Pass: {0}\ttestbatch: {1}\tloss: {2}\tacc1: {3}\tacc5: {4}\ttime: {5}"
+                .format(pass_id, batch_id, '%.6f' % loss, acc1, acc5,
+                        "%2.2f sec" % period))
             sys.stdout.flush()
 
     test_loss = np.sum(test_info[0]) / cnt
@@ -105,13 +111,16 @@ def eval(args):
     test_acc5 = np.sum(test_info[2]) / cnt
 
     print("+ End pass: {0}, test_loss: {1}, test_acc1: {2}, test_acc5: {3}"
-          .format(pass_id, '%.3f'%test_loss, '%.3f'%test_acc1, '%.3f'%test_acc5))
+          .format(pass_id, '%.3f' % test_loss, '%.3f' % test_acc1, '%.3f' %
+                  test_acc5))
     sys.stdout.flush()
+
 
 def main():
     args = parser.parse_args()
     print_arguments(args)
     eval(args)
+
 
 if __name__ == '__main__':
     main()

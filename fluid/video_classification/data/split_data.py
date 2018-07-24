@@ -25,4 +25,3 @@ for line in f.readlines():
 
     shutil.move(frame_dir + folder, test_path + vidid)
 f.close()
-

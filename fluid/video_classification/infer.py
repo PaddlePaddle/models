@@ -4,7 +4,7 @@ import time
 import sys
 import paddle.v2 as paddle
 import paddle.fluid as fluid
-from resnet import ResNet 
+from resnet import ResNet
 import reader
 
 import argparse
@@ -29,6 +29,7 @@ add_arg('total_videos',     int,    9537,           "Training video number.")
 add_arg('lr_init',          float,  0.01,           "Set initial learning rate.")
 # yapf: enable
 
+
 def infer(args):
     # parameters from arguments
     seg_num = args.seg_num
@@ -38,7 +39,7 @@ def infer(args):
     test_model = args.test_model
 
     if test_model == None:
-        print ('Please specify the test model ...')
+        print('Please specify the test model ...')
         return
 
     image_shape = [int(m) for m in args.image_shape.split(",")]
@@ -47,8 +48,9 @@ def infer(args):
     # model definition
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
 
-    out = ResNet(input=image, seg_num=seg_num, class_dim=class_dim, layers=num_layers)
-    
+    out = ResNet(
+        input=image, seg_num=seg_num, class_dim=class_dim, layers=num_layers)
+
     # for test
     inference_program = fluid.default_main_program().clone(for_test=True)
 
@@ -78,16 +80,21 @@ def infer(args):
     for batch_id, data in enumerate(test_reader()):
         data, vid = data[0]
         data = [[data]]
-        result = exe.run(inference_program, fetch_list=fetch_list, feed=feeder.feed(data))
+        result = exe.run(inference_program,
+                         fetch_list=fetch_list,
+                         feed=feeder.feed(data))
         result = result[0][0]
         pred_label = np.argsort(result)[::-1][:TOPK]
-        print ("Test sample: {0}, score: {1}, class {2}".format(vid, result[pred_label], pred_label))
+        print("Test sample: {0}, score: {1}, class {2}".format(vid, result[
+            pred_label], pred_label))
         sys.stdout.flush()
+
 
 def main():
     args = parser.parse_args()
     print_arguments(args)
     infer(args)
+
 
 if __name__ == '__main__':
     main()

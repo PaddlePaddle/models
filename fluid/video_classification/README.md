@@ -137,10 +137,10 @@ Test sample: UnevenBars_g07_c04, score: [22.114838], class [95]
 ```
 
 ### Performance
-Configuration | top-1/top-5 acc
+Configuration | top-1 acc
 ------------- | ---------------
-seg=7, size=224 | 0.859 /
-seg=10, size=224 | 0.863 /
+seg=7, size=224 | 0.859
+seg=10, size=224 | 0.863
 seg=25, size=224 |
 seg=7, size=256 |
 seg=10, size=256 |

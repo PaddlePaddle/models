@@ -23,8 +23,7 @@ for folder in os.listdir(path):
         fout.close()
 
     res = [vidid, this_label, this_feat]
-    
+
     outp = open(savepath + vidid + '.pkl', 'wb')
     cPickle.dump(res, outp, protocol=cPickle.HIGHEST_PROTOCOL)
     outp.close()
-
