@@ -63,7 +63,7 @@ python train.py \
 <li>num_layers: the number of layers for ResNet.</li>
 <li>seg_num: the number of segments in TSN.</li>
 <li>pretrained_model: model path for pretraining.</li>
-
+</br>
 
 <strong>data reader introduction:</strong>
 Data reader is defined in <code>reader.py</code>. Note that we use group operation for all frames in one video.
@@ -72,14 +72,14 @@ Data reader is defined in <code>reader.py</code>. Note that we use group operati
 <strong>training:</strong>
 The training log is like:
 ```
-[TRAIN] Pass: 0	trainbatch: 0	loss: 4.630959	acc1: 0.0	acc5: 0.0390625	time: 3.09 sec
-[TRAIN] Pass: 0	trainbatch: 10	loss: 4.559069	acc1: 0.0546875	acc5: 0.1171875	time: 3.91 sec
-[TRAIN] Pass: 0	trainbatch: 20	loss: 4.040092	acc1: 0.09375	acc5: 0.3515625	time: 3.88 sec
-[TRAIN] Pass: 0	trainbatch: 30	loss: 3.478214	acc1: 0.3203125	acc5: 0.5546875	time: 3.32 sec
-[TRAIN] Pass: 0	trainbatch: 40	loss: 3.005404	acc1: 0.3515625	acc5: 0.6796875	time: 3.33 sec
-[TRAIN] Pass: 0	trainbatch: 50	loss: 2.585245	acc1: 0.4609375	acc5: 0.7265625	time: 3.13 sec
-[TRAIN] Pass: 0	trainbatch: 60	loss: 2.151489	acc1: 0.4921875	acc5: 0.8203125	time: 3.35 sec
-[TRAIN] Pass: 0	trainbatch: 70	loss: 1.981680	acc1: 0.578125	acc5: 0.8359375	time: 3.30 sec
+[TRAIN] Pass: 0    trainbatch: 0    loss: 4.630959    acc1: 0.0    acc5: 0.0390625    time: 3.09 sec
+[TRAIN] Pass: 0    trainbatch: 10    loss: 4.559069    acc1: 0.0546875    acc5: 0.1171875    time: 3.91 sec
+[TRAIN] Pass: 0    trainbatch: 20    loss: 4.040092    acc1: 0.09375    acc5: 0.3515625    time: 3.88 sec
+[TRAIN] Pass: 0    trainbatch: 30    loss: 3.478214    acc1: 0.3203125    acc5: 0.5546875    time: 3.32 sec
+[TRAIN] Pass: 0    trainbatch: 40    loss: 3.005404    acc1: 0.3515625    acc5: 0.6796875    time: 3.33 sec
+[TRAIN] Pass: 0    trainbatch: 50    loss: 2.585245    acc1: 0.4609375    acc5: 0.7265625    time: 3.13 sec
+[TRAIN] Pass: 0    trainbatch: 60    loss: 2.151489    acc1: 0.4921875    acc5: 0.8203125    time: 3.35 sec
+[TRAIN] Pass: 0    trainbatch: 70    loss: 1.981680    acc1: 0.578125    acc5: 0.8359375    time: 3.30 sec
 ```
 
 ### Evaluation
@@ -97,16 +97,16 @@ python eval.py \
 
 According to the congfiguration of evaluation, the output log is like:
 ```
-[TEST] Pass: 0	testbatch: 0	loss: 0.011551	acc1: 1.0	acc5: 1.0	time: 0.48 sec
-[TEST] Pass: 0	testbatch: 10	loss: 0.710330	acc1: 0.75	acc5: 1.0	time: 0.49 sec
-[TEST] Pass: 0	testbatch: 20	loss: 0.000547	acc1: 1.0	acc5: 1.0	time: 0.48 sec
-[TEST] Pass: 0	testbatch: 30	loss: 0.036623	acc1: 1.0	acc5: 1.0	time: 0.48 sec
-[TEST] Pass: 0	testbatch: 40	loss: 0.138705	acc1: 1.0	acc5: 1.0	time: 0.48 sec
-[TEST] Pass: 0	testbatch: 50	loss: 0.056909	acc1: 1.0	acc5: 1.0	time: 0.49 sec
-[TEST] Pass: 0	testbatch: 60	loss: 0.742937	acc1: 0.75	acc5: 1.0	time: 0.49 sec
-[TEST] Pass: 0	testbatch: 70	loss: 1.720186	acc1: 0.5	acc5: 0.875	time: 0.48 sec
-[TEST] Pass: 0	testbatch: 80	loss: 0.199669	acc1: 0.875	acc5: 1.0	time: 0.48 sec
-[TEST] Pass: 0	testbatch: 90	loss: 0.195510	acc1: 1.0	acc5: 1.0	time: 0.48 sec
+[TEST] Pass: 0    testbatch: 0    loss: 0.011551    acc1: 1.0    acc5: 1.0    time: 0.48 sec
+[TEST] Pass: 0    testbatch: 10    loss: 0.710330    acc1: 0.75    acc5: 1.0    time: 0.49 sec
+[TEST] Pass: 0    testbatch: 20    loss: 0.000547    acc1: 1.0    acc5: 1.0    time: 0.48 sec
+[TEST] Pass: 0    testbatch: 30    loss: 0.036623    acc1: 1.0    acc5: 1.0    time: 0.48 sec
+[TEST] Pass: 0    testbatch: 40    loss: 0.138705    acc1: 1.0    acc5: 1.0    time: 0.48 sec
+[TEST] Pass: 0    testbatch: 50    loss: 0.056909    acc1: 1.0    acc5: 1.0    time: 0.49 sec
+[TEST] Pass: 0    testbatch: 60    loss: 0.742937    acc1: 0.75    acc5: 1.0    time: 0.49 sec
+[TEST] Pass: 0    testbatch: 70    loss: 1.720186    acc1: 0.5    acc5: 0.875    time: 0.48 sec
+[TEST] Pass: 0    testbatch: 80    loss: 0.199669    acc1: 0.875    acc5: 1.0    time: 0.48 sec
+[TEST] Pass: 0    testbatch: 90    loss: 0.195510    acc1: 1.0    acc5: 1.0    time: 0.48 sec
 ```
 
 ### Inference
@@ -139,4 +139,9 @@ Test sample: UnevenBars_g07_c04, score: [22.114838], class [95]
 ### Performance
 Configuration | top-1/top-5 acc
 ------------- | ---------------
-xxx | 0.86
+seg=7, size=224 | 0.859 /
+seg=10, size=224 | 0.863 /
+seg=25, size=224 |
+seg=7, size=256 |
+seg=10, size=256 |
+seg=25, size=256 |
