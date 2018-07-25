@@ -372,13 +372,14 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
             for name in pos_enc_param_names:
                 total_dict[name] = pos_enc
             yield [total_dict[item] for item in feed_order]
-            if batch_id / 8 == 100:
+            if batch_id / 8 == 20:
                 break
 
     pyreader.decorate_tensor_provider(train_reader_provider)
     batch_time = []
     for pass_id in xrange(TrainTaskConfig.pass_num):
         pyreader.start()
+        bid = 0
         while True:
             try:
                 beg = time.time()
@@ -393,9 +394,10 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
             )  # sum the cost from multi-devices
             total_token_num = token_num_val.sum()
             total_avg_cost = total_sum_cost / total_token_num
-            print("epoch: %d, sum loss: %f, avg loss: %f, ppl: %f" %
-                  (pass_id, total_sum_cost, total_avg_cost,
+            print("epoch: %d, batch: %d, sum loss: %f, avg loss: %f, ppl: %f" %
+                  (pass_id, bid, total_sum_cost, total_avg_cost,
                    np.exp([min(total_avg_cost, 100)])))
+            bid += 1
             if len(batch_time) > 1:
                 print 'Epoch batch per second ', 1 / np.array(batch_time[
                     1:]).mean()
