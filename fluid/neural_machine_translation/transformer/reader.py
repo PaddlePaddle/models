@@ -230,8 +230,7 @@ class DataReader(object):
                 lens.append(len(src_trg_ids[1]))
             self._sample_infos.append(SampleInfo(i, max(lens), min(lens)))
 
-    @staticmethod
-    def _load_lines(fpattern, tar_fname):
+    def _load_lines(self, fpattern, tar_fname):
         fpaths = glob.glob(fpattern)
 
         if len(fpaths) == 1 and tarfile.is_tarfile(fpaths[0]):
@@ -240,7 +239,7 @@ class DataReader(object):
 
             f = tarfile.open(fpaths[0], 'r')
             for line in f.extractfile(tar_fname):
-                yield line.split()
+                yield line.split(self._delimiter)
         else:
             for fpath in fpaths:
                 if not os.path.isfile(fpath):
@@ -248,7 +247,7 @@ class DataReader(object):
 
                 with open(fpath, 'r') as f:
                     for line in f:
-                        yield line.split()
+                        yield line.split(self._delimiter)
 
     @staticmethod
     def load_dict(dict_path, reverse=False):
