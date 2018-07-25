@@ -2,6 +2,7 @@ import glob
 import os
 import random
 import tarfile
+import multiprocessing
 
 
 class SortType(object):
@@ -263,7 +264,8 @@ class DataReader(object):
     def batch_generator(self):
         # global sort or global shuffle
         if self._sort_type == SortType.GLOBAL:
-            infos = sorted(self._sample_infos, key=lambda x: x.max_len)
+            infos = sorted(
+                self._sample_infos, key=lambda x: x.max_len, reverse=True)
         else:
             if self._shuffle:
                 infos = self._sample_infos
@@ -277,7 +279,8 @@ class DataReader(object):
                           self._pool_size] = sorted(
                               infos[i * self._pool_size:(i + 1) *
                                     self._pool_size],
-                              key=lambda x: x.max_len)
+                              key=lambda x: x.max_len,
+                              reverse=True)
 
         # concat batch
         batches = []
