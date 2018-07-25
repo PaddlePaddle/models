@@ -343,7 +343,8 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
         unk_mark=args.special_token[2],
         # count start and end tokens out
         max_length=ModelHyperParams.max_length - 2,
-        clip_last_batch=False)
+        clip_last_batch=False,
+        pkl_filename='train.pkl')
 
     build_strategy = fluid.BuildStrategy()
     train_exe = fluid.ParallelExecutor(
