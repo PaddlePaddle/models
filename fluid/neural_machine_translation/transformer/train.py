@@ -377,6 +377,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
                 break
 
     pyreader.decorate_tensor_provider(train_reader_provider)
+    batch_time = []
     for pass_id in xrange(TrainTaskConfig.pass_num):
         pyreader.start()
         while True:
@@ -384,7 +385,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
                 beg = time.time()
                 print pyreader.queue.size()
                 outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name])
-                print 'batch time ', time.time() - beg
+                batch_time.append(time.time() - beg)
             except:
                 pyreader.reset()
                 break
@@ -396,6 +397,9 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
             print("epoch: %d, sum loss: %f, avg loss: %f, ppl: %f" %
                   (pass_id, total_sum_cost, total_avg_cost,
                    np.exp([min(total_avg_cost, 100)])))
+            if len(batch_time) > 1:
+                print 'Epoch batch per second ', 1 / np.array(batch_time[
+                    1:]).mean()
 
 
 def train(args):

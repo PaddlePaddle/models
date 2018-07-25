@@ -179,15 +179,15 @@ pre_process_layer = partial(pre_post_process_layer, None)
 post_process_layer = pre_post_process_layer
 
 
-def prepare_encoder(src_word,
-                    src_pos,
-                    src_vocab_size,
-                    src_emb_dim,
-                    src_max_len,
-                    dropout_rate=0.,
-                    src_data_shape=None,
-                    word_emb_param_name=None,
-                    pos_enc_param_name=None):
+def prepare_encoder_decoder(src_word,
+                            src_pos,
+                            src_vocab_size,
+                            src_emb_dim,
+                            src_max_len,
+                            dropout_rate=0.,
+                            src_data_shape=None,
+                            word_emb_param_name=None,
+                            pos_enc_param_name=None):
     """Add word embeddings and position encodings.
     The output tensor has a shape of:
     [batch_size, max_src_length_in_batch, d_model].
@@ -216,9 +216,9 @@ def prepare_encoder(src_word,
 
 
 prepare_encoder = partial(
-    prepare_encoder, pos_enc_param_name=pos_enc_param_names[0])
+    prepare_encoder_decoder, pos_enc_param_name=pos_enc_param_names[0])
 prepare_decoder = partial(
-    prepare_encoder, pos_enc_param_name=pos_enc_param_names[1])
+    prepare_encoder_decoder, pos_enc_param_name=pos_enc_param_names[1])
 
 
 def encoder_layer(enc_input,
