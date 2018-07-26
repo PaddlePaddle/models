@@ -6,5 +6,6 @@ export CUDA_VISIBLE_DEVICES=$cudaid
 if [ ! -d "/root/.cache/paddle/dataset/pascalvoc" ];then
     mkdir -p /root/.cache/paddle/dataset/pascalvoc
     ./data/pascalvoc/download.sh
+    bash ./.move.sh
 fi
-FLAGS_benchmark=true  python train.py --batch_size=64 --num_passes=2 --for_model_ce=True --train_list=/root/.cache/paddle/dataset/pascalvoc/trainval.txt --test_list=/root/.cache/paddle/dataset/pascalvoc/test.txt 
+FLAGS_benchmark=true  python train.py --batch_size=64 --num_passes=2 --for_model_ce=True --data_dir=/root/.cache/paddle/dataset/pascalvoc/ 

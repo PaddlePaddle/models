@@ -33,8 +33,7 @@ add_arg('mean_value_G',     float, 127.5,  "Mean value for G channel which will 
 add_arg('mean_value_R',     float, 127.5,  "Mean value for R channel which will be subtracted.")  #103.94
 add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all data, while n means using only n sample.")
 add_arg('for_model_ce',     bool,  False, "Use CE to evaluate the model")
-add_arg('train_list',       str,   '', "CE train file list")
-add_arg('val_list',        str,   '', "CE val file list")
+add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
 add_arg('skip_batch_num',   int,    5,  "the num of minibatch to skip.")
 add_arg('iterations',       int,   120,  "mini batchs.")
 #yapf: enable
@@ -212,23 +211,19 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
-    data_dir = 'data/pascalvoc'
+    data_dir = args.data_dir
     label_file = 'label_list'
     model_save_dir = args.model_save_dir
-    if not args.for_model_ce:
-        train_file_list = 'trainval.txt'
-        val_file_list = 'test.txt'
-        if 'coco' in args.dataset:
-            data_dir = 'data/coco'
-            if '2014' in args.dataset:
-                train_file_list = 'annotations/instances_train2014.json'
-                val_file_list = 'annotations/instances_val2014.json'
-            elif '2017' in args.dataset:
-                train_file_list = 'annotations/instances_train2017.json'
-                val_file_list = 'annotations/instances_val2017.json'
-    else:
-        train_file_list = args.train_list
-        val_file_list = args.val_list
+    train_file_list = 'trainval.txt'
+    val_file_list = 'test.txt'
+    if 'coco' in args.dataset:
+        data_dir = 'data/coco'
+        if '2014' in args.dataset:
+            train_file_list = 'annotations/instances_train2014.json'
+            val_file_list = 'annotations/instances_val2014.json'
+        elif '2017' in args.dataset:
+            train_file_list = 'annotations/instances_train2017.json'
+            val_file_list = 'annotations/instances_val2017.json'
 
     data_args = reader.Settings(
         dataset=args.dataset,
