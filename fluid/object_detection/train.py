@@ -193,13 +193,10 @@ def train(args,
         if args.for_model_ce and pass_id == num_passes - 1:
             expamples_per_sec = train_num / total_train_time
             cost = np.mean(every_pass_loss)
-            s = open("train_speed_factor.txt", 'w')
-            c = open("train_cost_factor.txt", 'w')
-            s.write('{:f}\n'.format(examples_per_sec))
-            c.write('{:f}\n'.format(cost))
-            s.close()
-            c.close()
-
+            with open("train_speed_factor.txt", 'w') as f:
+                f.write('{:f}\n'.format(examples_per_sec))
+            with open("test_acc_factor.txt", 'a+') as f:
+                f.write('{:f}\n'.format(cost))
 
         best_map = test(pass_id, best_map)
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
