@@ -195,7 +195,7 @@ def train(args,
             cost = np.mean(every_pass_loss)
             with open("train_speed_factor.txt", 'w') as f:
                 f.write('{:f}\n'.format(examples_per_sec))
-            with open("test_acc_factor.txt", 'a+') as f:
+            with open("train_cost_factor.txt", 'a+') as f:
                 f.write('{:f}\n'.format(cost))
 
         best_map = test(pass_id, best_map)
