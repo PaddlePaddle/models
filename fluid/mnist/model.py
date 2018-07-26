@@ -22,10 +22,7 @@ def parse_args():
     parser.add_argument(
         '--batch_size', type=int, default=128, help='The minibatch size.')
     parser.add_argument(
-        '--iterations',
-        type=int,
-        default=35,
-        help='The number of minibatches.')
+        '--iterations', type=int, default=35, help='The number of minibatches.')
     parser.add_argument(
         '--pass_num', type=int, default=5, help='The number of passes.')
     parser.add_argument(
@@ -170,8 +167,8 @@ def run_benchmark(model, args):
             end = time.time()
             accuracy.add(value=acc, weight=weight)
             every_pass_loss.append(loss)
-            print ("Pass = %d, Iter = %d, Loss = %f, Accuracy = %f" %
-                    (pass_id, batch_id, loss, acc))
+            print("Pass = %d, Iter = %d, Loss = %f, Accuracy = %f" %
+                  (pass_id, batch_id, loss, acc))
 
         pass_end = time.time()
 
@@ -180,8 +177,10 @@ def run_benchmark(model, args):
         test_avg_acc = eval_test(exe, batch_acc, batch_size_tensor,
                                  inference_program)
 
-        print("pass=%d, train_avg_acc=%f,train_avg_loss=%f, test_avg_acc=%f, elapse=%f" %
-              (pass_id, train_avg_acc, train_avg_loss, test_avg_acc, (pass_end - pass_start)))
+        print(
+            "pass=%d, train_avg_acc=%f,train_avg_loss=%f, test_avg_acc=%f, elapse=%f"
+            % (pass_id, train_avg_acc, train_avg_loss, test_avg_acc,
+               (pass_end - pass_start)))
 
         with open("train_acc_factor.txt", 'a+') as f:
             f.write("%s\n" % train_avg_acc)
