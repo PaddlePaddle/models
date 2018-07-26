@@ -121,6 +121,7 @@ class Graph(object):
 
     def compute_output_shapes(self):
         sorted_nodes = self.topologically_sorted()
+
         for node in sorted_nodes:
             node.output_shape = make_tensor(
                 *NodeKind.compute_output_shape(node))
