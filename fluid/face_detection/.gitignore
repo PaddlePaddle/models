@@ -9,3 +9,4 @@ log*
 output*
 pred
 eval_tools
+box*

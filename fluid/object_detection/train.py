@@ -191,7 +191,7 @@ def train(args,
         total_train_time += pass_duration
 
         if args.for_model_ce and pass_id == num_passes - 1:
-            expamples_per_sec = train_num / total_train_time
+            examples_per_sec = train_num / total_train_time
             cost = np.mean(every_pass_loss)
             with open("train_speed_factor.txt", 'w') as f:
                 f.write('{:f}\n'.format(examples_per_sec))
