@@ -35,11 +35,13 @@ def parse_log(log):
     train_acc\t1.2
     "
     '''
-    for line in log.split():
+    #kpi_map = {}
+    for line in log.split('\n'):
         fs = line.strip().split('\t')
-        if len(fs) == 2:
-            kpi_name = fs[0]
-            kpi_value = float(fs[1])
+        print (fs)
+        if len(fs) == 3 and fs[0] == 'kpis':
+            kpi_name = fs[1]
+            kpi_value = float(fs[2])
             yield kpi_name, kpi_value
 
 
@@ -49,7 +51,9 @@ def log_to_ce(log):
         kpi_tracker[kpi.name] = kpi
 
     for (kpi_name, kpi_value) in parse_log(log):
+        print (kpi_name, kpi_value)
         kpi_tracker[kpi_name].add_record(kpi_value)
+        kpi_tracker[kpi_name].persist()
 
 
 if __name__ == '__main__':
