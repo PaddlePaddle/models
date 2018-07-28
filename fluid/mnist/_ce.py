@@ -35,7 +35,6 @@ def parse_log(log):
     train_acc\t1.2
     "
     '''
-    #kpi_map = {}
     for line in log.split('\n'):
         fs = line.strip().split('\t')
         print (fs)
