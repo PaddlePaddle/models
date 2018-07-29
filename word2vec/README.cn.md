@@ -20,7 +20,7 @@ $$\frac{1}{T}\sum_t f(w_t, w_{t-1}, ..., w_{t-n+1};\theta) + R(\theta)$$
 其中$f(w_t, w_{t-1}, ..., w_{t-n+1})$表示根据历史n-1个词得到当前词$w_t$的条件概率，$R(\theta)$表示参数正则项。
 
 <p align="center">
-       <img src="image/nnlm.png" width=500><br/>
+       <img src="https://github.com/BAYMAX1314/models/blob/develop/word2vec/images/nnlm.png" width=500><br/>
        图1. N-gram神经网络模型
 </p>
 
