@@ -20,7 +20,7 @@ $$\frac{1}{T}\sum_t f(w_t, w_{t-1}, ..., w_{t-n+1};\theta) + R(\theta)$$
 where $f(w_t, w_{t-1}, ..., w_{t-n+1})$ represents the conditional logarithmic probability of the current word $w_t$ given its previous $n-1$ words, and $R(\theta)$ represents parameter regularization term.
 
 <p align="center">
-       ![image](https://github.com/BAYMAX1314/models/blob/develop/word2vec/images/nnlm_en.png)
+     
        <img src="https://github.com/BAYMAX1314/models/blob/develop/word2vec/images/nnlm_en.png" width=500><br/>
        Figure 1. N-gram neural network model
 </p>
