@@ -102,7 +102,7 @@ At last, each data instance will be converted into an integer sequence according
 The neural network that we will be using is illustrated in the graph below:
 
 <p align="center">
-    <img src="https://github.com/BAYMAX1314/models/tree/develop/word2vec/images/ngram.en.png" width=400><br/>
+    <img src="https://github.com/BAYMAX1314/models/blob/develop/word2vec/images/ngram.en.png" width=400><br/>
     Figure 2. N-gram neural network model in model configuration
 </p>
 
