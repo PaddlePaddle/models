@@ -99,7 +99,7 @@ dream that one day <e>
 本配置的模型结构如下图所示：
 
 <p align="center">
-    <img src="image/ngram.png" width=400><br/>
+    <img src="https://github.com/BAYMAX1314/models/blob/develop/word2vec/images/ngram.png" width=400><br/>
     图2. 模型配置中的N-gram神经网络模型
 </p>
 
