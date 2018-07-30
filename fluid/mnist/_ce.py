@@ -57,5 +57,4 @@ def log_to_ce(log):
 
 if __name__ == '__main__':
     log = sys.stdin.read()
-    log_to_ce(log) 
-    
+    log_to_ce(log)

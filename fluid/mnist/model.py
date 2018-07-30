@@ -184,9 +184,9 @@ def run_benchmark(model, args):
         #Note: The following logs are special for CE monitoring.
         #Other situations do not need to care about these logs.
         print("kpis	train_acc	%f" % train_avg_acc)
-        print("kpis	train_cost	%f" % train_avg_loss)  
-        print("kpis	test_acc	%f" % test_avg_acc)  
-        print("kpis	train_duration	%f" % (pass_end - pass_start))  
+        print("kpis	train_cost	%f" % train_avg_loss)
+        print("kpis	test_acc	%f" % test_avg_acc)
+        print("kpis	train_duration	%f" % (pass_end - pass_start))
 
 
 if __name__ == '__main__':
