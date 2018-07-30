@@ -1,6 +1,23 @@
 #!/bin/bash
 export MKL_NUM_THREADS=1
 export OMP_NUM_THREADS=1
+export LD_LIBRARY_PATH=/usr/local/lib
+
+mode=$1 # gpu, cpu, mkldnn
+if [ "$mode" = "CPU" ] || [ "$mode" = "cpu" ]; then
+  use_gpu="False"
+  model_path="cpu_model"
+elif [ "$mode" = "GPU" ] || [ "$mode" = "gpu" ]; then
+  use_gpu="True"
+  model_path="gpu_model"
+elif [ "$mode" = "MKLDNN" ] || [ "$mode" = "mkldnn" ]; then
+  use_gpu="False"
+  model_path="mkldnn_model"
+  export FLAGS_use_mkldnn=1
+else
+  echo "Invalid mode provided. Please use one of {GPU, CPU, MKLDNN}"
+  exit 1
+fi
 
 ht=`lscpu |grep "per core"|awk -F':' '{print $2}'|xargs`
 if [ $ht -eq 1 ]; then # HT is OFF
@@ -17,10 +34,10 @@ else # HT is ON
 fi
 
 python ../infer.py \
-    --model_path cpu_model/model_00001 \
+    --model_path $model_path/model_00001 \
     --input_images_list ~/.cache/paddle/dataset/ctc_data/data/test.list \
     --input_images_dir ~/.cache/paddle/dataset/ctc_data/data/test_images \
-    --use_gpu False \
+    --use_gpu $use_gpu \
     --batch_size 32 \
     --iterations 5 \
     --skip_batch_num 2

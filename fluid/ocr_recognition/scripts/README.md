@@ -13,34 +13,34 @@ In order to run the training and inference, no special requirements are posed.
 To run training on *CPU*, please execute:
 
 ```sh
-source train_cpu.sh
+source train.sh CPU
 ```
 
 To run training on *CPU* with MKL-DNN, please execute:
 
 ```sh
-source train_mkldnn.sh
+source train.sh MKLDNN
 ```
 
 To run training on *GPU*, please execute:
 
 ```sh
-source train_gpu.sh
+source train.sh GPU
 ```
 
 ## Inference
 To perform inference on the trained model using *CPU*, please run:
 ```sh
-source infer_cpu.sh
+source infer.sh CPU
 ```
 
 To perform inference on the trained model using *CPU* with MKL-DNN, please run:
 ```sh
-source infer_mkldnn.sh
+source infer.sh MKLDNN
 ```
 
 To perform inference on the trained model using *GPU*, please run:
 
 ```sh
-source infer_gpu.sh
+source infer.sh GPU
 ```
