@@ -25,9 +25,8 @@ def parse_train_cmd():
         "--train_features_path",
         type=str,
         required=False,
-        help=(
-            "The path of training dataset (default: None). If this parameter "
-            "is not set, flickr30k-images will be used."),
+        help=("The path of training dataset (default: None). If this parameter "
+              "is not set, flickr30k-images will be used."),
         default=None)
     parser.add_argument(
         "--test_features_path",
@@ -237,8 +236,7 @@ if __name__ == "__main__":
     default_data_train_dir, default_data_test_dir, tar_token_filename = load_default_data(
     )
 
-    default_img2sent_dict_path, default_word_dict_path = get_default_dict_path(
-    )
+    default_img2sent_dict_path, default_word_dict_path = get_default_dict_path()
 
     build_dict(
         tar_token_filename,

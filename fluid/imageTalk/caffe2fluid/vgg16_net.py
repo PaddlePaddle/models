@@ -261,13 +261,12 @@ class Network(object):
     @layer
     def lrn(self, input, radius, alpha, beta, name, bias=1.0):
         fluid = import_fluid()
-        output = fluid.layers.lrn(
-            input=input,
-            n=radius,
-            k=bias,
-            alpha=alpha,
-            beta=beta,
-            name=self.get_unique_output_name(name, 'lrn'))
+        output = fluid.layers.lrn(input=input,
+                                  n=radius,
+                                  k=bias,
+                                  alpha=alpha,
+                                  beta=beta,
+                                  name=self.get_unique_output_name(name, 'lrn'))
         return output
 
     @layer

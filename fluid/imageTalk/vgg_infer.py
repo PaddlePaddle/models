@@ -143,9 +143,7 @@ if __name__ == "__main__":
         [default_data_train_dir, default_data_test_dir]):
 
         file_list = os.listdir(data_dir)
-        file_list = [
-            os.path.join(data_dir, img_path) for img_path in file_list
-        ]
+        file_list = [os.path.join(data_dir, img_path) for img_path in file_list]
         feats = extract_feats(weight_file, file_list)
         vgg_feats = {}
         vgg_feats['feats'] = feats

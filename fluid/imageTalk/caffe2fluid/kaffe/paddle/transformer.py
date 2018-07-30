@@ -118,8 +118,8 @@ class PaddleMapper(NodeMapper):
         global_pool = getattr(node.layer.parameters, 'global_pooling', False)
         if global_pool:
             input_shape = node.get_only_parent().output_shape
-            return PaddleNode(pool_op, input_shape.height, input_shape.width,
-                              1, 1, ceil_mode)
+            return PaddleNode(pool_op, input_shape.height, input_shape.width, 1,
+                              1, ceil_mode)
         else:
             (kernel_params, padding) = self.get_kernel_params(node)
             return PaddleNode(pool_op, kernel_params.kernel_h,

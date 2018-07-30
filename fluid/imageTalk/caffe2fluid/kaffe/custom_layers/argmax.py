@@ -64,8 +64,7 @@ def argmax_layer(input, name, out_max_val=False, top_k=1, axis=-1):
         output = fluid.layers.concat(
             [index_var, topk_var], axis=axis, name=name)
     else:
-        topk_var, index_var = fluid.layers.topk(
-            input=input, k=top_k, name=name)
+        topk_var, index_var = fluid.layers.topk(input=input, k=top_k, name=name)
         output = index_var
 
     return output

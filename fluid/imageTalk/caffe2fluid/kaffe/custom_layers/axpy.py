@@ -16,8 +16,7 @@ def axpy_shape(input_shapes):
         @output_shape (list of num): a list of numbers represent the output shape
     """
     assert len(input_shapes) == 3, "not valid input shape for axpy layer"
-    assert len(input_shapes[0]) == len(input_shapes[
-        1]), 'should have same dims'
+    assert len(input_shapes[0]) == len(input_shapes[1]), 'should have same dims'
 
     output_shape = input_shapes[1]
     assert (input_shapes[2] == output_shape),\

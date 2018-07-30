@@ -34,8 +34,7 @@ def reshape_shape(input_sp, shape, axis=0, num_axes=-1):
     start_axis = input_start_axis if input_start_axis >= 0 \
             else input_num_axes + input_start_axis + 1
 
-    assert start_axis >= 0, "[Reshape]axis %d out of range" % (
-        input_start_axis)
+    assert start_axis >= 0, "[Reshape]axis %d out of range" % (input_start_axis)
     assert start_axis <= input_num_axes, "[Reshape]axis %d out of range for %d-D input data"\
             % (input_start_axis, input_num_axes)
 

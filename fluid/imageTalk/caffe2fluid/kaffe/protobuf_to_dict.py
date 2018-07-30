@@ -116,8 +116,7 @@ def _get_field_mapping(pb, dict_value, strict):
             continue
         if key not in pb.DESCRIPTOR.fields_by_name:
             if strict:
-                raise KeyError("%s does not have a field called %s" %
-                               (pb, key))
+                raise KeyError("%s does not have a field called %s" % (pb, key))
             continue
         field_mapping.append(
             (pb.DESCRIPTOR.fields_by_name[key], value, getattr(pb, key, None)))

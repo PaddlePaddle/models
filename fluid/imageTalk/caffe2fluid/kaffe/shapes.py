@@ -35,8 +35,7 @@ def get_strided_kernel_output_shape(node, round_func):
     assert node.layer is not None
     input_shape = node.get_only_parent().output_shape
     o_h, o_w = get_filter_output_shape(input_shape.height, input_shape.width,
-                                       node.layer.kernel_parameters,
-                                       round_func)
+                                       node.layer.kernel_parameters, round_func)
     params = node.layer.parameters
     has_c_o = hasattr(params, 'num_output')
     c = params.num_output if has_c_o else input_shape.channels
@@ -114,5 +113,4 @@ def shape_pool(node):
 
 def shape_inner_product(node):
     input_shape = node.get_only_parent().output_shape
-    return make_tensor(input_shape.batch_size,
-                       node.layer.parameters.num_output)
+    return make_tensor(input_shape.batch_size, node.layer.parameters.num_output)

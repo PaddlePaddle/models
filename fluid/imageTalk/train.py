@@ -165,9 +165,9 @@ def train(train_features_path=None,
             data_count += data_size
 
             if (i + 5) % 10 == 0:
-                logger.info("pass_id: %d, batch %d, avg_acc: %f, avg_cost: %f"
-                            % (pass_id, i + 1, total_acc / data_count,
-                               total_cost / data_count))
+                logger.info("pass_id: %d, batch %d, avg_acc: %f, avg_cost: %f" %
+                            (pass_id, i + 1, total_acc / data_count,
+                             total_cost / data_count))
 
         avg_cost = total_cost / data_count
         avg_acc = total_acc / data_count
@@ -212,9 +212,8 @@ def train(train_features_path=None,
 
             avg_cost = total_cost / data_count
             avg_acc = total_acc / data_count
-            logger.info(
-                "Test result -- pass_id: %d,  avg_acc: %f, avg_cost: %f" %
-                (pass_id, avg_acc, avg_cost))
+            logger.info("Test result -- pass_id: %d,  avg_acc: %f, avg_cost: %f"
+                        % (pass_id, avg_acc, avg_cost))
 
         ## save inference model
         epoch_model = model_save_dir + "/" + "img2sentence_epoch" + str(pass_id
@@ -223,9 +222,9 @@ def train(train_features_path=None,
 
         ##prediction is the topology return value
         ##if we use the prediction value as the infer result
-        fluid.io.save_inference_model(
-            epoch_model, ["hidden", "cell", "pre_words"],
-            [prediction, prev_hidden, prev_cell], exe)
+        fluid.io.save_inference_model(epoch_model,
+                                      ["hidden", "cell", "pre_words"],
+                                      [prediction, prev_hidden, prev_cell], exe)
 
     logger.info("Training has finished.")
 
