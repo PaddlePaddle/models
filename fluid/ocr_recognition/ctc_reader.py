@@ -35,6 +35,10 @@ class DataGenerator(object):
         :param img_label_list: The path of the <image_name, label> file for training.
         :type img_label_list: str
 
+        :param cycle: If number of iterations is greater than dataset_size / batch_size
+        it reiterates dataset over as many times as necessary.
+        :type cycle: bool
+        
         '''
 
         img_label_lines = []
@@ -127,6 +131,10 @@ class DataGenerator(object):
         was None. If img_label_list was set to None, it will read image path
         from stdin.
         :type img_root_dir: str
+        
+        :param cycle: If number of iterations is greater than dataset_size /
+        batch_size it reiterates dataset over as many times as necessary.
+        :type cycle: bool
         '''
 
         def reader():
