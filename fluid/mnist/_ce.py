@@ -37,7 +37,7 @@ def parse_log(log):
     '''
     for line in log.split('\n'):
         fs = line.strip().split('\t')
-        print (fs)
+        print(fs)
         if len(fs) == 3 and fs[0] == 'kpis':
             kpi_name = fs[1]
             kpi_value = float(fs[2])
@@ -50,7 +50,7 @@ def log_to_ce(log):
         kpi_tracker[kpi.name] = kpi
 
     for (kpi_name, kpi_value) in parse_log(log):
-        print (kpi_name, kpi_value)
+        print(kpi_name, kpi_value)
         kpi_tracker[kpi_name].add_record(kpi_value)
         kpi_tracker[kpi_name].persist()
 
