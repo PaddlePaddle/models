@@ -16,7 +16,7 @@ tracking_kpis = [
     train_acc_kpi,
     train_cost_kpi,
     test_acc_kpi,
-    train_duration_kpi,
+    train_duration_kpi
 ]
 
 def parse_log(log):
