@@ -63,22 +63,22 @@ WMT 数据集是机器翻译领域公认的主流数据集；WMT 英德和英法
 
 #### WMT 英德翻译数据
 
-[WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)是一个中等规模的数据集。参照论文设置，英德数据集我们使用 BPE 编码的数据，这能够更好的解决未登录词（out-of-vocabulary，OOV）的问题[4]。用到的 BPE 数据可以参照[这里](https://github.com/google/seq2seq/blob/master/docs/data.md)进行下载（如果希望在自定义数据中使用 BPE 编码，可以参照[这里](https://github.com/rsennrich/subword-nmt)进行预处理），下载后解压，其中 `train.tok.clean.bpe.32000.en` 和 `train.tok.clean.bpe.32000.de` 为使用 BPE 的训练数据（平行语料，分别对应了英语和德语，经过了 tokenize 和 BPE 的处理），`newstest2013.tok.bpe.32000.en` 和 `newstest2013.tok.bpe.32000.de` 等为测试数据（`newstest2013.tok.en` 和 `newstest2013.tok.de` 等则为对应的未使用 BPE 的测试数据），`vocab.bpe.32000` 为相应的词典文件（源语言和目标语言共享该词典文件）。
+[WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)是一个中等规模的数据集。参照论文，英德数据集我们使用 BPE 编码的数据，这能够更好的解决未登录词（out-of-vocabulary，OOV）的问题[4]。用到的 BPE 数据可以参照[这里](https://github.com/google/seq2seq/blob/master/docs/data.md)进行下载（如果希望在自定义数据中使用 BPE 编码，可以参照[这里](https://github.com/rsennrich/subword-nmt)进行预处理），下载后解压，其中 `train.tok.clean.bpe.32000.en` 和 `train.tok.clean.bpe.32000.de` 为使用 BPE 的训练数据（平行语料，分别对应了英语和德语，经过了 tokenize 和 BPE 的处理），`newstest2013.tok.bpe.32000.en` 和 `newstest2013.tok.bpe.32000.de` 等为测试数据（`newstest2013.tok.en` 和 `newstest2013.tok.de` 等则为对应的未使用 BPE 的测试数据），`vocab.bpe.32000` 为相应的词典文件（源语言和目标语言共享该词典文件）。
 
 由于本示例中的数据读取脚本 `reader.py` 默认使用的样本数据的格式为 `\t` 分隔的的源语言和目标语言句子对（默认句子中的词之间使用空格分隔），因此需要将源语言到目标语言的平行语料库文件合并为一个文件，可以执行以下命令进行合并：
 ```sh
 paste -d '\t' train.tok.clean.bpe.32000.en train.tok.clean.bpe.32000.de > train.tok.clean.bpe.32000.en-de
 ```
-此外，下载的词典文件 `vocab.bpe.32000` 中未包含表示序列开始、序列结束和未登录词的特殊符号，可以使用如下命令在词典中加入 `<s>` 、`<e>` 和 `<unk>` 作为这三个特殊符号（BPE 数据不包含未登录词，这里加入只是做通用处理）。
+此外，下载的词典文件 `vocab.bpe.32000` 中未包含表示序列开始、序列结束和未登录词的特殊符号，可以使用如下命令在词典中加入 `<s>` 、`<e>` 和 `<unk>` 作为这三个特殊符号（用 BPE 表示数据已有效避免了未登录词的问题，这里加入只是做通用处理）。
 ```sh
 sed -i '1i\<s>\n<e>\n<unk>' vocab.bpe.32000
 ```
 
 #### WMT 英法翻译数据
 
-[WMT'14 EN-FR 数据集](http://www.statmt.org/wmt14/translation-task.html)是一个较大规模的数据集。参照论文设置，英法数据我们使用 wordpiece 的数据，wordpiece 和 BPE 类似同为采用 sub-word units 来解决 OOV 问题的方法[5]。我们提供了所使用的 wordpiece 数据的下载，可以从[这里](http://transformer-data.bj.bcebos.com/wmt14_enfr.tar)下载，下载后解压，其中 `train.wordpiece.en-fr` 为使用 wordpiece 的训练数据，`newstest2014.wordpiece.en-fr` 为测试数据（`newstest2014.tok.en` 和 `newstest2014.tok.fr` 为对应的未使用 wordpiece 的测试数据，使用[脚本](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/tokenizer/tokenizer.perl)进行了 tokenize 的处理），`vocab.wordpiece.en-fr` 为相应的词典文件（源语言和目标语言共享该词典文件）。
+[WMT'14 EN-FR 数据集](http://www.statmt.org/wmt14/translation-task.html)是一个较大规模的数据集。参照论文，英法数据我们使用 wordpiece 表示的数据，wordpiece 和 BPE 类似同为采用 sub-word units 来解决 OOV 问题的方法[5]。我们提供了已完成预处理的 wordpiece 数据的下载，可以从[这里](http://transformer-data.bj.bcebos.com/wmt14_enfr.tar)下载，其中 `train.wordpiece.en-fr` 为使用 wordpiece 的训练数据，`newstest2014.wordpiece.en-fr` 为测试数据（`newstest2014.tok.en` 和 `newstest2014.tok.fr` 为对应的未经 wordpiece 处理过的测试数据，使用[脚本](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/tokenizer/tokenizer.perl)进行了 tokenize 的处理），`vocab.wordpiece.en-fr` 为相应的词典文件（源语言和目标语言共享该词典文件）。
 
-提供的英法翻译数据无需进行额外的处理，可以直接使用；但需要注意，该 wordpiece 数据中句子内的 token 之间使用 `\x01` 而非空格进行分隔（部分 token 内包含空格），这需要在训练时进行指定。
+提供的英法翻译数据无需进行额外的处理，可以直接使用；需要注意的是，这些用 wordpiece 表示的数据中句子内的 token 之间使用 `\x01` 而非空格进行分隔（因部分 token 内包含空格），这需要在训练时进行指定。
 
 ### 模型训练
 
@@ -95,7 +95,7 @@ python -u train.py \
   --sort_type pool \
   --pool_size 200000
 ```
-上述命令中设置了源语言词典文件路径（`src_vocab_fpath`）、目标语言词典文件路径（`trg_vocab_fpath`）、训练数据文件（`train_file_pattern`，支持通配符）等数据相关的参数和构造 batch 方式（`use_token_batch` 指出数据按照 token 数目或者 sequence 数目组成 batch）等 reader 相关的参数。有关这些参数更详细的信息可以通过执行以下命令查看：
+上述命令中设置了源语言词典文件路径（`src_vocab_fpath`）、目标语言词典文件路径（`trg_vocab_fpath`）、训练数据文件（`train_file_pattern`，支持通配符）等数据相关的参数和构造 batch 方式（`use_token_batch` 指定了数据按照 token 数目或者 sequence 数目组成 batch）等 reader 相关的参数。有关这些参数更详细的信息可以通过执行以下命令查看：
 ```sh
 python train.py --help
 ```
@@ -119,9 +119,9 @@ python -u train.py \
   d_inner_hid 4096 \
   dropout 0.3
 ```
-有关这些参数更详细信息的还请参考 `config.py` 中的注释说明。对于英法翻译数据，执行训练和英德翻译训练类似，修改命令中的词典和数据文件为英法数据相应文件的路径，另外要注意的是由于英法翻译数据 token 间不是使用空格进行分隔，需要修改 `token_delimiter` 参数的设置为 `--token_delimiter '\x01'`。
+有关这些参数更详细信息的请参考 `config.py` 中的注释说明。对于英法翻译数据，执行训练和英德翻译训练类似，修改命令中的词典和数据文件为英法数据相应文件的路径，另外要注意的是由于英法翻译数据 token 间不是使用空格进行分隔，需要修改 `token_delimiter` 参数的设置为 `--token_delimiter '\x01'`。
 
-训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。也可以只使用 CPU 训练(通过参数 `--divice CPU` 设置)，训练速度相对较慢。在训练过程中，每个 epoch 结束后将保存模型到参数 `model_dir` 指定的目录，每个 iteration 将打印如下的日志到标准输出：
+训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。也可以只使用 CPU 训练(通过参数 `--divice CPU` 设置)，训练速度相对较慢。在训练过程中，每个 epoch 结束后将保存模型到参数 `model_dir` 指定的目录，每个 epoch 内也会每隔1000个 iteration 进行一次保存，每个 iteration 将打印如下的日志到标准输出：
 ```txt
 epoch: 0, batch: 0, sum loss: 258793.343750, avg loss: 11.069005, ppl: 64151.644531
 epoch: 0, batch: 1, sum loss: 256140.718750, avg loss: 11.059616, ppl: 63552.148438
@@ -153,7 +153,7 @@ python -u infer.py \
 ```
 和模型训练时类似，预测时也需要设置数据和 reader 相关的参数，并可以执行 `python infer.py --help` 查看这些参数的说明（部分参数意义和训练时略有不同）；同样可以在预测命令中设置模型超参数，但应与模型训练时的设置一致；此外相比于模型训练，预测时还有一些额外的参数，如需要设置 `model_path` 来给出模型所在目录，可以设置 `beam_size` 和 `max_out_len` 来指定 Beam Search 算法的搜索宽度和最大深度（翻译长度），这些参数也可以在 `config.py` 中的 `InferTaskConfig` 内查阅注释说明并进行更改设置。
 
-执行以上预测命令会打印翻译结果到标准输出，每行输出是对应行输入的得分最高的翻译。对于使用 BPE 的英德数据，预测出的翻译结果也将是 BPE 表示的数据，要恢复成原始的数据（这里指 tokenize 后的数据）才能进行正确的评估，可以使用以下命令来恢复 `predict.txt` 内的翻译结果到 `predict.tok.txt` 中（无需再次 tokenize 处理）：
+执行以上预测命令会打印翻译结果到标准输出，每行输出是对应行输入的得分最高的翻译。对于使用 BPE 的英德数据，预测出的翻译结果也将是 BPE 表示的数据，要还原成原始的数据（这里指 tokenize 后的数据）才能进行正确的评估，可以使用以下命令来恢复 `predict.txt` 内的翻译结果到 `predict.tok.txt` 中（无需再次 tokenize 处理）：
 ```sh
 sed 's/@@ //g' predict.txt > predict.tok.txt
 ```

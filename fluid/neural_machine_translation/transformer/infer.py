@@ -53,7 +53,7 @@ def parse_args():
         "--use_wordpiece",
         type=ast.literal_eval,
         default=False,
-        help="The flag indicating if the data is wordpiece data. The EN-FR data "
+        help="The flag indicating if the data in wordpiece. The EN-FR data "
         "we provided is wordpiece data. For wordpiece data, converting ids to "
         "original words is a little different and some special codes are "
         "provided in util.py to do this.")
