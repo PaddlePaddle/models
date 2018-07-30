@@ -1,15 +1,16 @@
 #!/bin/bash
 export MKL_NUM_THREADS=1
 export OMP_NUM_THREADS=1
+export LD_LIBRARY_PATH=/usr/local/lib
 
 mode=$1 # gpu, cpu, mkldnn
-if [ "$mode" = "CPU" ]; then
+if [ "$mode" = "CPU" ] || [ "$mode" = "cpu" ]; then
   use_gpu="False"
   model_path="cpu_model"
-elif [ "$mode" = "GPU" ]; then
+elif [ "$mode" = "GPU" ] || [ "$mode" = "gpu" ]; then
   use_gpu="True"
   model_path="gpu_model"
-elif [ "$mode" = "MKLDNN" ]; then
+elif [ "$mode" = "MKLDNN" ] || [ "$mode" = "mkldnn" ]; then
   use_gpu="False"
   model_path="mkldnn_model"
   export FLAGS_use_mkldnn=1
