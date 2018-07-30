@@ -1,6 +1,7 @@
 import os
 import cPickle
 
+# read class file
 dd = {}
 f = open('ucfTrainTestlist/classInd.txt')
 for line in f.readlines():
@@ -8,11 +9,13 @@ for line in f.readlines():
     dd[name.lower()] = int(label) - 1
 f.close()
 
+# generate pkl
 path = 'train/'
 savepath = 'train_pkl/'
 if not os.path.exists(savepath):
     os.makedirs(savepath)
 
+fw = open('train.list', 'w')
 for folder in os.listdir(path):
     vidid = folder.split('_', 1)[1]
     this_label = dd[folder.split('_')[1].lower()]
@@ -27,3 +30,6 @@ for folder in os.listdir(path):
     outp = open(savepath + vidid + '.pkl', 'wb')
     cPickle.dump(res, outp, protocol=cPickle.HIGHEST_PROTOCOL)
     outp.close()
+
+    fw.write('data/train_pkl/%s.pkl\n' % vidid)
+fw.close()

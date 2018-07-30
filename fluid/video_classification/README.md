@@ -30,9 +30,7 @@ We follow the split 1 of UCF-101 dataset. After data splitting, users can get 95
 
 #### save pickle for training
 As stated above, we save all data as <code>pickle</code> format for training. All information in each video is saved into one pickle, includes video id, frames binary and label. Please refer to the script <code>data/generate_train_data.py</code>.
-
-#### generate train.list and test.list
-There are two demo files <em>train.list</em> and <em>test.list</em> in <code>data/</code>, with each line seperated by SPACE.
+After this operation, one can get two directories containing training and testing data in <code>pickle</code> format, and two files <em>train.list</em> and <em>test.list</em>, with each line seperated by SPACE.
 
 ### Training
 After data preparation, users can start the PaddlePaddle Fluid training by:
@@ -137,11 +135,7 @@ Test sample: UnevenBars_g07_c04, score: [22.114838], class [95]
 ```
 
 ### Performance
-Configuration | top-1 acc
-------------- | ---------------
-seg=7, size=224 | 0.859
+Configuration | Top-1 acc
+------------- | ---------------:
+seg=7,  size=224 | 0.859
 seg=10, size=224 | 0.863
-seg=25, size=224 |
-seg=7, size=256 |
-seg=10, size=256 |
-seg=25, size=256 |

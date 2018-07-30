@@ -1,6 +1,7 @@
 import os
 import shutil
 
+# set path
 train_path = 'train/'
 if not os.path.exists(train_path):
     os.makedirs(train_path)
@@ -9,6 +10,7 @@ test_path = 'test/'
 if not os.path.exists(test_path):
     os.makedirs(test_path)
 
+# move data
 frame_dir = 'frame/'
 f = open('ucfTrainTestlist/trainlist01.txt')
 for line in f.readlines():
