@@ -181,15 +181,12 @@ def run_benchmark(model, args):
             "pass=%d, train_avg_acc=%f,train_avg_loss=%f, test_avg_acc=%f, elapse=%f"
             % (pass_id, train_avg_acc, train_avg_loss, test_avg_acc,
                (pass_end - pass_start)))
-
-        with open("train_acc_factor.txt", 'a+') as f:
-            f.write("%s\n" % train_avg_acc)
-        with open("train_cost_factor.txt", 'a+') as f:
-            f.write('%s\n' % [train_avg_loss])
-        with open("test_acc_factor.txt", 'a+') as f:
-            f.write("%s\n" % test_avg_acc)
-        with open("train_duration_factor.txt", 'a+') as f:
-            f.write('%s\n' % [pass_end - pass_start])
+        #Note: The following logs are special for CE monitoring.
+        #Other situations do not need to care about these logs.
+        print ("kpis	train_acc	%f" % train_avg_acc)
+        print ("kpis	train_cost	%f" % train_avg_loss)  
+        print ("kpis	test_acc	%f" % test_avg_acc)  
+        print ("kpis	train_duration	%f" % (pass_end - pass_start))  
 
 
 if __name__ == '__main__':
