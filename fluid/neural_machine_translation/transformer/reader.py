@@ -274,11 +274,8 @@ class DataReader(object):
 
             if self._sort_type == SortType.POOL:
                 for i in range(0, len(infos), self._pool_size):
-                    infos[i * self._pool_size:(i + 1) *
-                          self._pool_size] = sorted(
-                              infos[i * self._pool_size:(i + 1) *
-                                    self._pool_size],
-                              key=lambda x: x.max_len)
+                    infos[i:i + self._pool_size] = sorted(
+                        infos[i:i + self._pool_size], key=lambda x: x.max_len)
 
         # concat batch
         batches = []
