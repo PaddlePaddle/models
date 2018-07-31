@@ -18,7 +18,7 @@ Running sample code in this directory requires PaddelPaddle Fluid v0.13.0 and la
 ### Data preparation
 
 #### download UCF-101 dataset
-Users can download the UCF-101 dataset by the provided link in <code>data/download_link</code>. After finish downloading, one can get a file named "UCF101.rar".
+Users can download the UCF-101 dataset by the provided script in <code>data/download.sh</code>.
 
 #### decode video into frame
 To avoid the process of decoding videos in network training, we offline decode them into frames and save it in the <code>pickle</code> format, easily readable for python.

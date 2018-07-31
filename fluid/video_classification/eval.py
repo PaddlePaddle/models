@@ -4,7 +4,7 @@ import time
 import sys
 import paddle.v2 as paddle
 import paddle.fluid as fluid
-from resnet import ResNet
+from resnet import TSN_ResNet
 import reader
 
 import argparse
@@ -18,15 +18,10 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size',       int,    128,            "Minibatch size.")
 add_arg('num_layers',       int,    50,             "How many layers for ResNet model.")
 add_arg('with_mem_opt',     bool,   True,           "Whether to use memory optimization or not.")
-add_arg('num_epochs',       int,    60,             "Number of epochs.")
 add_arg('class_dim',        int,    101,            "Number of class.")
 add_arg('seg_num',          int,    7,              "Number of segments.")
 add_arg('image_shape',      str,    "3,224,224",    "Input image size.")
-add_arg('model_save_dir',   str,    "output",       "Model save directory.")
-add_arg('pretrained_model', str,    None,           "Whether to use pretrained model.")
 add_arg('test_model',       str,    None,           "Test model path.")
-add_arg('total_videos',     int,    9537,           "Training video number.")
-add_arg('lr_init',          float,  0.01,           "Set initial learning rate.")
 # yapf: enable
 
 
@@ -46,11 +41,11 @@ def eval(args):
     image_shape = [seg_num] + image_shape
 
     # model definition
+    model = TSN_ResNet(layers=num_layers, seg_num=seg_num)
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
 
-    out = ResNet(
-        input=image, seg_num=seg_num, class_dim=class_dim, layers=num_layers)
+    out = model.net(input=image, class_dim=class_dim)
     cost = fluid.layers.cross_entropy(input=out, label=label)
 
     avg_cost = fluid.layers.mean(x=cost)

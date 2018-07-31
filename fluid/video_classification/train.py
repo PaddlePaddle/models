@@ -2,9 +2,8 @@ import os
 import numpy as np
 import time
 import sys
-import paddle.v2 as paddle
 import paddle.fluid as fluid
-from resnet import ResNet
+from resnet import TSN_ResNet
 import reader
 
 import argparse
@@ -43,11 +42,12 @@ def train(args):
     image_shape = [seg_num] + image_shape
 
     # model definition
+    model = TSN_ResNet(layers=num_layers, seg_num=seg_num)
+
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
 
-    out = ResNet(
-        input=image, seg_num=seg_num, class_dim=class_dim, layers=num_layers)
+    out = model.net(input=image, class_dim=class_dim)
     cost = fluid.layers.cross_entropy(input=out, label=label)
 
     avg_cost = fluid.layers.mean(x=cost)
