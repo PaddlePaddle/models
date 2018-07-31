@@ -2,18 +2,25 @@
 export MKL_NUM_THREADS=1
 export OMP_NUM_THREADS=1
 
+batch_size=32
+core_num=`lscpu |grep -m1 "CPU(s)"|awk -F':' '{print $2}'|xargs`
 mode=$1 # gpu, cpu, mkldnn
-if [ "$mode" = "CPU" ] || [ "$mode" = "cpu" ]; then
+if [ "$mode" = "CPU" ]; then
+  if [ $core_num -gt $batch_size ]; then
+    echo "Batch size should be greater or equal to the number of 
+          available cores, when parallel mode is set to True."
+  fi
   use_gpu="False"
-  parallel="False"
   save_model_dir="cpu_model"
-elif [ "$mode" = "GPU" ] || [ "$mode" = "gpu" ]; then
+elif [ "$mode" = "GPU" ]; then
   use_gpu="True"
-  parallel="True"
   save_model_dir="gpu_model"
-elif [ "$mode" = "MKLDNN" ] || [ "$mode" = "mkldnn" ]; then
+elif [ "$mode" = "MKLDNN" ]; then
+  if [ $core_num -gt $batch_size ]; then
+    echo "Batch size should be greater or equal to the number of 
+          available cores, when parallel mode is set to True."
+  fi
   use_gpu="False"
-  parallel="False"
   save_model_dir="mkldnn_model"
   export FLAGS_use_mkldnn=1
 else
@@ -37,8 +44,9 @@ fi
 
 python ../ctc_train.py \
     --use_gpu $use_gpu \
-    --parallel $parallel \
-    --batch_size 32 \
+    --parallel True \
+    --batch_size $batch_size \
     --save_model_period 1 \
     --total_step 1 \
     --save_model_dir $save_model_dir
+
