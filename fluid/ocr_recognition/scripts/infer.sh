@@ -1,7 +1,6 @@
 #!/bin/bash
 export MKL_NUM_THREADS=1
 export OMP_NUM_THREADS=1
-export LD_LIBRARY_PATH=/usr/local/lib
 
 mode=$1 # gpu, cpu, mkldnn
 if [ "$mode" = "CPU" ] || [ "$mode" = "cpu" ]; then
