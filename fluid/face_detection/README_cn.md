@@ -1,5 +1,7 @@
 运行本目录下的程序示例需要使用 PaddlePaddle 最新的 develop branch 版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新 PaddlePaddle 安装版本。
 
+本教程部分公式需要安装[插件](https://chrome.google.com/webstore/detail/github-with-mathjax/ioemnmodlmafdkllaclgeombjnmnbima)显示
+
 ---
 
 
@@ -93,13 +95,14 @@ tar -xf vgg_ilsvrc_16_fc_reduced.tar.gz && rm -f vgg_ilsvrc_16_fc_reduced.tar.gz
 `train.py` 是训练模块的主要执行程序，调用示例如下：
 
 ```bash
-python -u train.py --batch_size=12 --pretrained_model=vgg_ilsvrc_16_fc_reduced
+python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 ```
   - 可以通过设置 `export CUDA_VISIBLE_DEVICES=0,1,2,3` 指定想要使用的GPU数量。
   - 更多的可选参数见:
     ```bash
     python train.py --help
     ```
+  - 模型训练150轮以上可以收敛。用Nvidia Tesla P40 GPU 4卡并行，`batch_size=16`的配置，每轮训练大约40分钟，总共训练时长大约100小时
 
 模型训练所采用的数据增强：
 
@@ -152,7 +155,23 @@ python -u train.py --batch_size=12 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 
   ```bash
   matlab -nodesktop -nosplash -nojvm -r "run wider_eval.m;quit;"
+
   ```
+
+### 模型预测以及可视化
+`infer.py`是预测及可视化模块的主要执行程序，调用示例如下：
+
+```bash
+python infer.py --confs_threshold=0.5 --model_dir=output/149/ --image_path="data/WIDER_val/images/47--Matador_Bullfighter/47_Matador_Bullfighter_matadorbullfighting_47_38.jpg"
+```
+下图可视化了模型的预测结果：
+<p align="center">
+<img src="images/infer_1.jpg" height=300 width=400 hspace='10'/>
+<img src="images/infer_2.jpg" height=300 width=400 hspace='10'/>
+<img src="images/infer_3.jpg" height=300 width=400 hspace='10'/>
+<img src="images/infer_4.jpg" height=300 width=400 hspace='10'/>  <br />
+Pyramidbox 预测可视化
+</p>
 
 ### 模型发布
 
