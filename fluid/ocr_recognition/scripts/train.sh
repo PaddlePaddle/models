@@ -12,9 +12,11 @@ if [ "$mode" = "CPU" ]; then
   fi
   use_gpu="False"
   save_model_dir="cpu_model"
+  parallel="True"
 elif [ "$mode" = "GPU" ]; then
   use_gpu="True"
   save_model_dir="gpu_model"
+  parallel="True"
 elif [ "$mode" = "MKLDNN" ]; then
   if [ $core_num -gt $batch_size ]; then
     echo "Batch size should be greater or equal to the number of 
@@ -22,6 +24,7 @@ elif [ "$mode" = "MKLDNN" ]; then
   fi
   use_gpu="False"
   save_model_dir="mkldnn_model"
+  parallel="False"
   export FLAGS_use_mkldnn=1
 else
   echo "Invalid mode provided. Please use one of {GPU, CPU, MKLDNN}"
@@ -44,7 +47,7 @@ fi
 
 python ../ctc_train.py \
     --use_gpu $use_gpu \
-    --parallel True \
+    --parallel $parallel \
     --batch_size $batch_size \
     --save_model_period 1 \
     --total_step 1 \
