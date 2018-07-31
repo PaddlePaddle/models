@@ -3,12 +3,14 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Xavier
+from paddle.fluid.initializer import Normal
 from paddle.fluid.initializer import Constant
 from paddle.fluid.initializer import Bilinear
 from paddle.fluid.regularizer import L2Decay
 
 
 def conv_bn(input, filter, ksize, stride, padding, act='relu', bias_attr=False):
+    w_attr = ParamAttr(learning_rate=1., initializer=Normal(0.0, 0.01))
     conv = fluid.layers.conv2d(
         input=input,
         filter_size=ksize,
@@ -16,6 +18,7 @@ def conv_bn(input, filter, ksize, stride, padding, act='relu', bias_attr=False):
         stride=stride,
         padding=padding,
         act=None,
+        param_attr=w_attr,
         bias_attr=bias_attr)
     return fluid.layers.batch_norm(input=conv, act=act)
 
@@ -122,9 +125,10 @@ class PyramidBox(object):
 
         def fpn(up_from, up_to):
             ch = up_to.shape[1]
+            w_attr = ParamAttr(learning_rate=1., initializer=Normal(0.0, 0.01))
             b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
             conv1 = fluid.layers.conv2d(
-                up_from, ch, 1, act='relu', bias_attr=b_attr)
+                up_from, ch, 1, act='relu', param_attr=w_attr, bias_attr=b_attr)
             if self.use_transposed_conv2d:
                 w_attr = ParamAttr(
                     learning_rate=0.,
@@ -145,9 +149,8 @@ class PyramidBox(object):
                 upsampling = fluid.layers.resize_bilinear(
                     conv1, out_shape=up_to.shape[2:])
 
-            b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
             conv2 = fluid.layers.conv2d(
-                up_to, ch, 1, act='relu', bias_attr=b_attr)
+                up_to, ch, 1, act='relu', param_attr=w_attr, bias_attr=b_attr)
             if self.is_infer:
                 upsampling = fluid.layers.crop(upsampling, shape=conv2)
             # eltwise mul
@@ -173,15 +176,32 @@ class PyramidBox(object):
             rescomb = fluid.layers.relu(x=sum)
 
             # ssh
+            w_attr = ParamAttr(learning_rate=1., initializer=Normal(0.0, 0.01))
             b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
-            ssh_1 = fluid.layers.conv2d(rescomb, 256, 3, 1, 1, bias_attr=b_attr)
+            ssh_1 = fluid.layers.conv2d(
+                rescomb, 256, 3, 1, 1, param_attr=w_attr, bias_attr=b_attr)
             ssh_dimred = fluid.layers.conv2d(
-                rescomb, 128, 3, 1, 1, act='relu', bias_attr=b_attr)
+                rescomb,
+                128,
+                3,
+                1,
+                1,
+                act='relu',
+                param_attr=w_attr,
+                bias_attr=b_attr)
             ssh_2 = fluid.layers.conv2d(
-                ssh_dimred, 128, 3, 1, 1, bias_attr=b_attr)
+                ssh_dimred, 128, 3, 1, 1, param_attr=w_attr, bias_attr=b_attr)
             ssh_3a = fluid.layers.conv2d(
-                ssh_dimred, 128, 3, 1, 1, act='relu', bias_attr=b_attr)
-            ssh_3b = fluid.layers.conv2d(ssh_3a, 128, 3, 1, 1, bias_attr=b_attr)
+                ssh_dimred,
+                128,
+                3,
+                1,
+                1,
+                act='relu',
+                param_attr=w_attr,
+                bias_attr=b_attr)
+            ssh_3b = fluid.layers.conv2d(
+                ssh_3a, 128, 3, 1, 1, param_attr=w_attr, bias_attr=b_attr)
 
             ssh_concat = fluid.layers.concat([ssh_1, ssh_2, ssh_3b], axis=1)
             ssh_out = fluid.layers.relu(x=ssh_concat)
@@ -220,10 +240,13 @@ class PyramidBox(object):
 
         def permute_and_reshape(input, last_dim):
             trans = fluid.layers.transpose(input, perm=[0, 2, 3, 1])
-            new_shape = [
+            compile_shape = [
                 trans.shape[0], np.prod(trans.shape[1:]) / last_dim, last_dim
             ]
-            return fluid.layers.reshape(trans, shape=new_shape)
+            run_shape = fluid.layers.assign(
+                np.array([0, -1, last_dim]).astype("int32"))
+            return fluid.layers.reshape(
+                trans, shape=compile_shape, actual_shape=run_shape)
 
         face_locs, face_confs = [], []
         head_locs, head_confs = [], []
@@ -288,10 +311,13 @@ class PyramidBox(object):
 
         def permute_and_reshape(input, last_dim):
             trans = fluid.layers.transpose(input, perm=[0, 2, 3, 1])
-            new_shape = [
+            compile_shape = [
                 trans.shape[0], np.prod(trans.shape[1:]) / last_dim, last_dim
             ]
-            return fluid.layers.reshape(trans, shape=new_shape)
+            run_shape = fluid.layers.assign(
+                np.array([0, -1, last_dim]).astype("int32"))
+            return fluid.layers.reshape(
+                trans, shape=compile_shape, actual_shape=run_shape)
 
         locs, confs = [], []
         boxes, vars = [], []
