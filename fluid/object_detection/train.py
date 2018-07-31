@@ -32,6 +32,10 @@ add_arg('mean_value_B',     float, 127.5,  "Mean value for B channel which will 
 add_arg('mean_value_G',     float, 127.5,  "Mean value for G channel which will be subtracted.")  #116.78
 add_arg('mean_value_R',     float, 127.5,  "Mean value for R channel which will be subtracted.")  #103.94
 add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all data, while n means using only n sample.")
+add_arg('for_model_ce',     bool,  False, "Use CE to evaluate the model")
+add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
+add_arg('skip_batch_num',   int,    5,  "the num of minibatch to skip.")
+add_arg('iterations',       int,   120,  "mini batchs.")
 #yapf: enable
 
 
@@ -148,13 +152,20 @@ def train(args,
         print("Pass {0}, test map {1}".format(pass_id, test_map))
         return best_map
 
+    train_num = 0
+    total_train_time = 0.0
     for pass_id in range(num_passes):
         start_time = time.time()
         prev_start_time = start_time
-        end_time = 0
+        # end_time = 0
+        every_pass_loss = []
+        iter = 0
+        pass_duration = 0.0
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
+            if args.for_model_ce and iter == args.iterations:
+                break
             if len(data) < (devices_num * 2):
                 print("There are too few data to train on all devices.")
                 continue
@@ -165,11 +176,28 @@ def train(args,
                 loss_v, = exe.run(fluid.default_main_program(),
                                   feed=feeder.feed(data),
                                   fetch_list=[loss])
-            end_time = time.time()
+            # end_time = time.time()
             loss_v = np.mean(np.array(loss_v))
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
+
+            if args.for_model_ce and iter >= args.skip_batch_num or pass_id != 0:
+                batch_duration = time.time() - start_time
+                pass_duration += batch_duration
+                train_num += len(data)
+                every_pass_loss.append(loss_v)
+                iter += 1
+        total_train_time += pass_duration
+
+        if args.for_model_ce and pass_id == num_passes - 1:
+            examples_per_sec = train_num / total_train_time
+            cost = np.mean(every_pass_loss)
+            with open("train_speed_factor.txt", 'w') as f:
+                f.write('{:f}\n'.format(examples_per_sec))
+            with open("train_cost_factor.txt", 'a+') as f:
+                f.write('{:f}\n'.format(cost))
+
         best_map = test(pass_id, best_map)
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
@@ -180,11 +208,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
-    data_dir = 'data/pascalvoc'
-    train_file_list = 'trainval.txt'
-    val_file_list = 'test.txt'
+    data_dir = args.data_dir
     label_file = 'label_list'
     model_save_dir = args.model_save_dir
+    train_file_list = 'trainval.txt'
+    val_file_list = 'test.txt'
     if 'coco' in args.dataset:
         data_dir = 'data/coco'
         if '2014' in args.dataset:

@@ -3,6 +3,7 @@ import ast
 import multiprocessing
 import os
 import time
+from functools import partial
 
 import numpy as np
 import paddle.fluid as fluid
@@ -75,6 +76,14 @@ def parse_args():
         default=["<s>", "<e>", "<unk>"],
         nargs=3,
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
+    parser.add_argument(
+        "--token_delimiter",
+        type=partial(
+            str.decode, encoding="string-escape"),
+        default=" ",
+        help="The delimiter used to split tokens in source or target sentences. "
+        "For EN-DE BPE data we provided, use spaces as token delimiter. "
+        "For EN-FR wordpiece data we provided, use '\x01' as token delimiter.")
     parser.add_argument(
         'opts',
         help='See config.py for all options',
@@ -272,6 +281,7 @@ def test_context(train_progm, avg_cost, train_exe, dev_count, data_input_names,
         src_vocab_fpath=args.src_vocab_fpath,
         trg_vocab_fpath=args.trg_vocab_fpath,
         fpattern=args.val_file_pattern,
+        token_delimiter=args.token_delimiter,
         use_token_batch=args.use_token_batch,
         batch_size=args.batch_size * (1 if args.use_token_batch else dev_count),
         pool_size=args.pool_size,
@@ -334,6 +344,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
         src_vocab_fpath=args.src_vocab_fpath,
         trg_vocab_fpath=args.trg_vocab_fpath,
         fpattern=args.train_file_pattern,
+        token_delimiter=args.token_delimiter,
         use_token_batch=args.use_token_batch,
         batch_size=args.batch_size * (1 if args.use_token_batch else dev_count),
         pool_size=args.pool_size,
@@ -376,6 +387,8 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
         for batch_id, data in enumerate(train_data()):
             feed_list = []
             total_num_token = 0
+            if args.local:
+                lr_rate = lr_scheduler.update_learning_rate()
             for place_id, data_buffer in enumerate(
                     split_data(
                         data, num_part=dev_count)):
@@ -387,7 +400,6 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
                 feed_kv_pairs = data_input_dict.items() + util_input_dict.items(
                 )
                 if args.local:
-                    lr_rate = lr_scheduler.update_learning_rate()
                     feed_kv_pairs += {
                         lr_scheduler.learning_rate.name: lr_rate
                     }.items()
@@ -411,6 +423,10 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
             print("epoch: %d, batch: %d, sum loss: %f, avg loss: %f, ppl: %f" %
                   (pass_id, batch_id, total_sum_cost, total_avg_cost,
                    np.exp([min(total_avg_cost, 100)])))
+            if batch_id > 0 and batch_id % 1000 == 0:
+                fluid.io.save_persistables(
+                    exe,
+                    os.path.join(TrainTaskConfig.ckpt_dir, "latest.checkpoint"))
             init = True
         # Validate and save the model for inference.
         print("epoch: %d, " % pass_id +
