@@ -1,5 +1,6 @@
 """Trainer for OCR CTC model."""
 import paddle.fluid as fluid
+import paddle.fluid.profiler as profiler
 from utility import add_arguments, print_arguments, to_lodtensor, get_feeder_data
 from crnn_ctc_model import ctc_train_net
 import ctc_reader
@@ -14,7 +15,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('batch_size',        int,   32,         "Minibatch size.")
-add_arg('total_step',        int,   720000,    "Number of training iterations.")
+add_arg('total_step',        int,   720000,    "The number of iterations. Zero or less means whole training set. More than 0 means the training set might be looped until # of iterations is reached.")
 add_arg('log_period',        int,   1000,       "Log period.")
 add_arg('save_model_period', int,   15000,      "Save model period. '-1' means never saving the model.")
 add_arg('eval_period',       int,   15000,      "Evaluate period. '-1' means never evaluating the model.")
@@ -25,6 +26,9 @@ add_arg('min_average_window',int,   10000,     "Min average window.")
 add_arg('max_average_window',int,   12500,     "Max average window. It is proposed to be set as the number of minibatch in a pass.")
 add_arg('average_window',    float, 0.15,      "Average window.")
 add_arg('parallel',          bool,  False,     "Whether use parallel training.")
+add_arg('profile',           bool,  False,      "Whether to use profiling.")
+add_arg('skip_batch_num',    int,   0,          "The number of first minibatches to skip as warm-up for better performance test.")
+add_arg('skip_test',         bool,  False,      "Whether to skip test phase.")
 # yapf: enable
 
 
@@ -49,7 +53,8 @@ def train(args, data_reader=ctc_reader):
     train_reader = data_reader.train(
         args.batch_size,
         train_images_dir=train_images,
-        train_list_file=train_list)
+        train_list_file=train_list,
+        cycle=args.total_step > 0)
     test_reader = data_reader.test(
         test_images_dir=test_images, test_list_file=test_list)
 
@@ -74,7 +79,7 @@ def train(args, data_reader=ctc_reader):
     error_evaluator.reset(exe)
     if args.parallel:
         train_exe = fluid.ParallelExecutor(
-            use_cuda=True, loss_name=sum_cost.name)
+            use_cuda=True if args.use_gpu else False, loss_name=sum_cost.name)
 
     fetch_vars = [sum_cost] + error_evaluator.metrics
 
@@ -85,8 +90,8 @@ def train(args, data_reader=ctc_reader):
                                     feed=get_feeder_data(data, place))
             results = [np.array(result).sum() for result in results]
         else:
-            results = exe.run(feed=get_feeder_data(data, place),
-                              fetch_list=fetch_vars)
+            results = train_exe.run(feed=get_feeder_data(data, place),
+                                    fetch_list=fetch_vars)
             results = [result[0] for result in results]
         return results
 
@@ -105,17 +110,29 @@ def train(args, data_reader=ctc_reader):
         print "Saved model to: %s/%s." % (args.save_model_dir, filename)
 
     iter_num = 0
-    while True:
+    stop = False
+    while not stop:
         total_loss = 0.0
         total_seq_error = 0.0
+        batch_times = []
         # train a pass
         for data in train_reader():
-            iter_num += 1
-            if iter_num > args.total_step:
-                return
+            if args.total_step > 0 and iter_num == args.total_step + args.skip_batch_num:
+                stop = True
+                break
+            if iter_num < args.skip_batch_num:
+                print("Warm-up iteration")
+            if iter_num == args.skip_batch_num:
+                profiler.reset_profiler()
+            start = time.time()
             results = train_one_batch(data)
+            batch_time = time.time() - start
+            fps = args.batch_size / batch_time
+            batch_times.append(batch_time)
             total_loss += results[0]
             total_seq_error += results[2]
+
+            iter_num += 1
             # training log
             if iter_num % args.log_period == 0:
                 print "\nTime: %s; Iter[%d]; Avg Warp-CTC loss: %.3f; Avg seq err: %.3f" % (
@@ -127,7 +144,7 @@ def train(args, data_reader=ctc_reader):
                 total_seq_error = 0.0
 
             # evaluate
-            if iter_num % args.eval_period == 0:
+            if not args.skip_test and iter_num % args.eval_period == 0:
                 if model_average:
                     with model_average.apply(exe):
                         test(iter_num)
@@ -141,12 +158,35 @@ def train(args, data_reader=ctc_reader):
                         save_model(args, exe, iter_num)
                 else:
                     save_model(args, exe, iter_num)
+        # Postprocess benchmark data
+        latencies = batch_times[args.skip_batch_num:]
+        latency_avg = np.average(latencies)
+        latency_pc99 = np.percentile(latencies, 99)
+        fpses = np.divide(args.batch_size, latencies)
+        fps_avg = np.average(fpses)
+        fps_pc99 = np.percentile(fpses, 1)
+
+        # Benchmark output
+        print('\nTotal examples (incl. warm-up): %d' %
+              (iter_num * args.batch_size))
+        print('average latency: %.5f s, 99pc latency: %.5f s' % (latency_avg,
+                                                                 latency_pc99))
+        print('average fps: %.5f, fps for 99pc latency: %.5f' % (fps_avg,
+                                                                 fps_pc99))
 
 
 def main():
     args = parser.parse_args()
     print_arguments(args)
-    train(args, data_reader=ctc_reader)
+    if args.profile:
+        if args.use_gpu:
+            with profiler.cuda_profiler("cuda_profiler.txt", 'csv') as nvprof:
+                train(args, data_reader=ctc_reader)
+        else:
+            with profiler.profiler("CPU", sorted_key='total') as cpuprof:
+                train(args, data_reader=ctc_reader)
+    else:
+        train(args, data_reader=ctc_reader)
 
 
 if __name__ == "__main__":
