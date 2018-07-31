@@ -3,13 +3,13 @@ export MKL_NUM_THREADS=1
 export OMP_NUM_THREADS=1
 
 mode=$1 # gpu, cpu, mkldnn
-if [ "$mode" = "CPU" ] || [ "$mode" = "cpu" ]; then
+if [ "$mode" = "CPU" ]; then
   use_gpu="False"
   model_path="cpu_model"
-elif [ "$mode" = "GPU" ] || [ "$mode" = "gpu" ]; then
+elif [ "$mode" = "GPU" ]; then
   use_gpu="True"
   model_path="gpu_model"
-elif [ "$mode" = "MKLDNN" ] || [ "$mode" = "mkldnn" ]; then
+elif [ "$mode" = "MKLDNN" ]; then
   use_gpu="False"
   model_path="mkldnn_model"
   export FLAGS_use_mkldnn=1
