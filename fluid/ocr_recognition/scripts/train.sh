@@ -47,11 +47,7 @@ fi
 
 python ../ctc_train.py \
     --use_gpu $use_gpu \
-<<<<<<< 8b819f32a0f9484a8e648a0a91177e17b134f074
     --parallel $parallel \
-=======
-    --parallel True \
->>>>>>> CRNN-CTC scripts: set parallel to true
     --batch_size $batch_size \
     --save_model_period 1 \
     --total_step 1 \
