@@ -1,6 +1,5 @@
 运行本目录下的程序示例需要使用 PaddlePaddle 最新的 develop branch 版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新 PaddlePaddle 安装版本。
 
-本教程部分公式需要安装[插件](https://chrome.google.com/webstore/detail/github-with-mathjax/ioemnmodlmafdkllaclgeombjnmnbima)显示
 
 ---
 
@@ -97,7 +96,7 @@ tar -xf vgg_ilsvrc_16_fc_reduced.tar.gz && rm -f vgg_ilsvrc_16_fc_reduced.tar.gz
 ```bash
 python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 ```
-  - 可以通过设置 `export CUDA_VISIBLE_DEVICES=0,1,2,3` 指定想要使用的GPU数量。
+  - 可以通过设置 `export CUDA_VISIBLE_DEVICES=0,1,2,3` 指定想要使用的GPU数量，默认`batch_size`数设为`GPU卡数x4`。
   - 更多的可选参数见:
     ```bash
     python train.py --help
@@ -162,7 +161,8 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 `infer.py`是预测及可视化模块的主要执行程序，调用示例如下：
 
 ```bash
-python infer.py --confs_threshold=0.5 --model_dir=output/149/ --image_path="data/WIDER_val/images/47--Matador_Bullfighter/47_Matador_Bullfighter_matadorbullfighting_47_38.jpg"
+python widerface_eval.py --infer=True --confs_threshold=0.15
+ --model_dir=output/159/ --image_path=data/WIDER_train/images/0--Parade/0_Parade_marchingband_1_219.jpg
 ```
 下图可视化了模型的预测结果：
 <p align="center">
