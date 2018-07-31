@@ -55,8 +55,8 @@ parser.add_argument(
     "--dict_size",
     type=int,
     default=30000,
-    help="The dictionary capacity. Dictionaries of source sequence and "
-    "target dictionary have same capacity. (default: %(default)d)")
+    help="The dictionary capacity. Dictionaries of source language and "
+    "target language have same capacity. (default: %(default)d)")
 parser.add_argument(
     "--pass_num",
     type=int,
@@ -73,7 +73,7 @@ parser.add_argument(
     "--beam_size",
     type=int,
     default=3,
-    help="The width for beam searching. (default: %(default)d)")
+    help="The width for beam search. (default: %(default)d)")
 parser.add_argument(
     "--use_gpu",
     type=distutils.util.strtobool,
@@ -83,7 +83,7 @@ parser.add_argument(
     "--max_length",
     type=int,
     default=50,
-    help="The maximum length of sequence when doing generation. "
+    help="The maximum length of sequence in generation. "
     "(default: %(default)d)")
 parser.add_argument(
     "--save_dir",
@@ -343,7 +343,7 @@ def train():
     ]
     feeder = fluid.DataFeeder(feed_list, place)
 
-    def do_validation():
+    def validation():
         # Use test set as validation each pass
         total_loss = 0.0
         count = 0
@@ -379,7 +379,7 @@ def train():
                   (pass_id, batch_id, avg_cost_train))
 
         pass_end_time = time.time()
-        test_loss = do_validation()
+        test_loss = validation()
         time_consumed = pass_end_time - pass_start_time
         words_per_sec = words_seen / time_consumed
         print("pass_id=%d, test_loss: %f, words/s: %f, sec/pass: %f" %

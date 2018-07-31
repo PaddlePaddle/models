@@ -94,23 +94,10 @@ parser.add_argument(
     "(default: %(default)d)")
 
 args = parser.parse_args()
-
-dict_size = args.dict_size
-source_dict_dim = target_dict_dim = dict_size
-encoder_size = args.encoder_size
-embedding_dim = args.embedding_dim
-decoder_size = args.decoder_size
-batch_size = args.batch_size
-max_length = args.max_length
-pass_num = args.pass_num
-save_interval = args.save_interval
 IS_SPARSE = True
 topk_size = 50
-beam_size = args.beam_size
-learning_rate = args.learning_rate
-infer_only = args.infer_only
+source_dict_dim = target_dict_dim = args.dict_size
 place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
-model_save_dir = args.save_dir
 
 
 def seq_to_seq_net(is_generating):
@@ -120,13 +107,14 @@ def seq_to_seq_net(is_generating):
             name="src_word", shape=[1], dtype='int64', lod_level=1)
         src_embedding = layers.embedding(
             input=src_word,
-            size=[dict_size, embedding_dim],
+            size=[args.dict_size, args.embedding_dim],
             dtype='float32',
             is_sparse=IS_SPARSE)
 
-        fc1 = layers.fc(input=src_embedding, size=encoder_size * 4, act='tanh')
+        fc1 = layers.fc(
+            input=src_embedding, size=args.encoder_size * 4, act='tanh')
         lstm_hidden0, lstm_0 = layers.dynamic_lstm(
-            input=fc1, size=encoder_size * 4)
+            input=fc1, size=args.encoder_size * 4)
         encoder_out = layers.sequence_last_step(input=lstm_hidden0)
         return encoder_out
 
@@ -142,7 +130,7 @@ def seq_to_seq_net(is_generating):
             prev_h = state_cell.get_state('h')
             # make sure lod of h heritted from prev_h
             h = layers.fc(input=[prev_h, current_word],
-                          size=decoder_size,
+                          size=args.decoder_size,
                           act='tanh')
             state_cell.set_state('h', h)
 
@@ -154,7 +142,7 @@ def seq_to_seq_net(is_generating):
             name="target_word", shape=[1], dtype='int64', lod_level=1)
         trg_embedding = layers.embedding(
             input=trg_word,
-            size=[dict_size, embedding_dim],
+            size=[args.dict_size, args.embedding_dim],
             dtype='float32',
             is_sparse=IS_SPARSE)
 
@@ -166,7 +154,7 @@ def seq_to_seq_net(is_generating):
             current_word = decoder.step_input(trg_embedding)
             decoder.state_cell.compute_state(inputs={'x': current_word})
             current_score = layers.fc(input=decoder.state_cell.get_state('h'),
-                                      size=target_dict_dim,
+                                      size=args.dict_size,
                                       act='softmax')
             decoder.state_cell.update_states()
             decoder.output(current_score)
@@ -185,13 +173,13 @@ def seq_to_seq_net(is_generating):
             state_cell=state_cell,
             init_ids=init_ids,
             init_scores=init_scores,
-            target_dict_dim=target_dict_dim,
-            word_dim=embedding_dim,
+            target_dict_dim=args.dict_size,
+            word_dim=args.embedding_dim,
             input_var_dict={},
             topk_size=topk_size,
             sparse_emb=IS_SPARSE,
-            max_len=max_length,
-            beam_size=beam_size,
+            max_len=args.max_length,
+            beam_size=args.beam_size,
             end_id=1,
             name=None)
         decoder.decode()
@@ -221,7 +209,7 @@ def train_main():
     avg_cost = layers.mean(x=cost)
 
     optimizer = fluid.optimizer.Adam(
-        learning_rate=learning_rate,
+        learning_rate=args.learning_rate,
         regularization=fluid.regularizer.L2DecayRegularizer(
             regularization_coeff=1e-5))
 
@@ -229,8 +217,8 @@ def train_main():
 
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            paddle.dataset.wmt14.train(dict_size), buf_size=1000),
-        batch_size=batch_size,
+            paddle.dataset.wmt14.train(args.dict_size), buf_size=1000),
+        batch_size=args.batch_size,
         drop_last=False)
 
     exe = Executor(place)
@@ -242,18 +230,18 @@ def train_main():
     ]
     feeder = fluid.DataFeeder(feed_list, place)
 
-    for pass_id in range(1, pass_num + 1):
+    for pass_id in range(1, args.pass_num + 1):
         for batch_id, data in enumerate(train_reader()):
             outs = exe.run(program,
                            feed=feeder.feed(data),
                            fetch_list=[avg_cost])
             avg_cost_val = np.array(outs[0])
-            if pass_id % 1 == 0:
+            if batch_id % 100 == 0:
                 print("pass_id=" + str(pass_id) + " batch=" + str(batch_id) +
                       " avg_cost=" + str(avg_cost_val))
 
-        if pass_id % save_interval == 0:
-            model_path = os.path.join(model_save_dir, str(pass_id))
+        if pass_id % args.save_interval == 0:
+            model_path = os.path.join(args.save_dir, str(pass_id))
             if not os.path.isdir(model_path):
                 os.makedirs(model_path)
 
@@ -271,19 +259,19 @@ def infer_main():
     exe = Executor(place)
     exe.run(framework.default_startup_program())
 
-    model_path = os.path.join(model_save_dir, str(pass_num))
+    model_path = os.path.join(args.save_dir, str(args.pass_num))
     fluid.io.load_persistables(
         executor=exe,
         dirname=model_path,
         main_program=framework.default_main_program())
 
     # Set up the inital ids and initial scores lod tensor for beam search
-    init_ids_data = np.array([0 for _ in range(batch_size)], dtype='int64')
+    init_ids_data = np.array([0 for _ in range(args.batch_size)], dtype='int64')
     init_scores_data = np.array(
-        [1. for _ in range(batch_size)], dtype='float32')
-    init_ids_data = init_ids_data.reshape((batch_size, 1))
-    init_scores_data = init_scores_data.reshape((batch_size, 1))
-    init_recursive_seq_lens = [1] * batch_size
+        [1. for _ in range(args.batch_size)], dtype='float32')
+    init_ids_data = init_ids_data.reshape((args.batch_size, 1))
+    init_scores_data = init_scores_data.reshape((args.batch_size, 1))
+    init_recursive_seq_lens = [1] * args.batch_size
     init_recursive_seq_lens = [init_recursive_seq_lens, init_recursive_seq_lens]
     init_ids = fluid.create_lod_tensor(init_ids_data, init_recursive_seq_lens,
                                        place)
@@ -299,10 +287,10 @@ def infer_main():
 
     test_reader = paddle.batch(
         paddle.reader.shuffle(
-            paddle.dataset.wmt14.test(dict_size), buf_size=1000),
-        batch_size=batch_size)
+            paddle.dataset.wmt14.test(args.dict_size), buf_size=1000),
+        batch_size=args.batch_size)
 
-    src_dict, trg_dict = paddle.dataset.wmt14.get_dict(dict_size)
+    src_dict, trg_dict = paddle.dataset.wmt14.get_dict(args.dict_size)
 
     for _, data in enumerate(test_reader()):
         # Create a feed dict to feed necessary input variables to the program
@@ -339,7 +327,7 @@ def infer_main():
 
 
 if __name__ == '__main__':
-    if infer_only:
+    if args.infer_only:
         infer_main()
     else:
         train_main()
