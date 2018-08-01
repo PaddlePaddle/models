@@ -103,8 +103,8 @@ def infer():
 
         # Feed dict for inference
         feed_dict = feeder.feed(map(lambda x: [x[0]], data))
-        feed_dict[feed_order[1]] = init_ids
-        feed_dict[feed_order[2]] = init_scores
+        feed_dict['init_ids'] = init_ids
+        feed_dict['init_scores'] = init_scores
 
         fetch_outs = exe.run(framework.default_main_program(),
                              feed=feed_dict,
