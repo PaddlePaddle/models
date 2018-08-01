@@ -58,11 +58,13 @@ def argmax_layer(input, name, out_max_val=False, top_k=1, axis=-1):
     if axis < 0:
         axis += len(input.shape)
 
-    topk_var, index_var = fluid.layers.topk(input=input, k=top_k)
     if out_max_val is True:
+        topk_var, index_var = fluid.layers.topk(input=input, k=top_k)
         index_var = fluid.layers.cast(index_var, dtype=topk_var.dtype)
-        output = fluid.layers.concat([index_var, topk_var], axis=axis)
+        output = fluid.layers.concat(
+            [index_var, topk_var], axis=axis, name=name)
     else:
+        topk_var, index_var = fluid.layers.topk(input=input, k=top_k, name=name)
         output = index_var
 
     return output

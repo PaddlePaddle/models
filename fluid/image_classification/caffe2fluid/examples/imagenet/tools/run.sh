@@ -71,7 +71,9 @@ if [[ -z $only_convert ]];then
     if [[ -z $net_name ]];then
         net_name="MyNet"
     fi
-    $PYTHON ./infer.py dump $net_file $weight_file $imgfile $net_name
+    cmd="$PYTHON ./infer.py dump $net_file $weight_file $imgfile $net_name"
+    echo $cmd
+    eval $cmd
     ret=$?
 fi
 exit $ret

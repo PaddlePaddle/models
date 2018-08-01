@@ -3,25 +3,10 @@ import numpy as np
 from ..errors import KaffeError, print_stderr
 from ..graph import GraphBuilder, NodeMapper
 from ..layers import NodeKind
-from ..transformers import (DataInjector, DataReshaper, NodeRenamer, ReLUFuser,
-                            BatchNormScaleBiasFuser, BatchNormPreprocessor,
-                            ParameterNamer)
+from ..transformers import (DataInjector, DataReshaper, NodeRenamer,
+                            SubNodeFuser, ReLUFuser, BatchNormScaleBiasFuser,
+                            BatchNormPreprocessor, ParameterNamer)
 from . import network
-
-
-def get_padding_type(kernel_params, input_shape, output_shape):
-    '''Translates Caffe's numeric padding to one of ('SAME', 'VALID').
-    Caffe supports arbitrary padding values, while Paddle only
-    supports 'SAME' and 'VALID' modes. So, not all Caffe paddings
-    can be translated to Paddle. There are some subtleties to
-    how the padding edge-cases are handled. These are described here:
-    https://github.com/Yangqing/caffe2/blob/master/caffe2/proto/caffe2_legacy.proto
-    '''
-    k_h, k_w, s_h, s_w, p_h, p_w = kernel_params
-    if p_h * p_w > 0:
-        return [p_h, p_w]
-    else:
-        return None
 
 
 class PaddleNode(object):
@@ -78,10 +63,11 @@ class PaddleMapper(NodeMapper):
     def get_kernel_params(self, node):
         kernel_params = node.layer.kernel_parameters
         input_shape = node.get_only_parent().output_shape
-        padding = get_padding_type(kernel_params, input_shape,
-                                   node.output_shape)
-        # Only emit the padding if it's not the default value.
-        padding = {'padding': padding} if padding is not None else {}
+        padding = [kernel_params.pad_h, kernel_params.pad_w]
+        if padding[0] == 0 and padding[1] == 0:
+            padding = {}
+        else:
+            padding = {'padding': padding}
         return (kernel_params, padding)
 
     def map_convolution(self, node):
@@ -95,10 +81,32 @@ class PaddleMapper(NodeMapper):
             kwargs['group'] = group
         if not node.parameters.bias_term:
             kwargs['biased'] = False
+
+        if kernel_params.dila_h != 1 or kernel_params.dila_w != 1:
+            kwargs['dilation'] = (kernel_params.dila_h, kernel_params.dila_w)
+
         assert kernel_params.kernel_h == h
         assert kernel_params.kernel_w == w
         return MaybeActivated(node)(
             'conv', kernel_params.kernel_h, kernel_params.kernel_w, c_o,
+            kernel_params.stride_h, kernel_params.stride_w, **kwargs)
+
+    def map_deconvolution(self, node):
+        (kernel_params, kwargs) = self.get_kernel_params(node)
+        h = kernel_params.kernel_h
+        w = kernel_params.kernel_w
+        c_o = node.output_shape[1]
+        c_i = node.parents[0].output_shape[1]
+        if not node.parameters.bias_term:
+            kwargs['biased'] = False
+
+        if kernel_params.dila_h != 1 or kernel_params.dila_w != 1:
+            kwargs['dilation'] = (kernel_params.dila_h, kernel_params.dila_w)
+
+        assert kernel_params.kernel_h == h
+        assert kernel_params.kernel_w == w
+        return MaybeActivated(node)(
+            'deconv', kernel_params.kernel_h, kernel_params.kernel_w, c_o,
             kernel_params.stride_h, kernel_params.stride_w, **kwargs)
 
     def map_relu(self, node):
@@ -315,6 +323,23 @@ class Transformer(object):
 
         self.graph = graph.transformed(transformers)
 
+        #for the purpose of recording name mapping because of fused nodes
+        trace = SubNodeFuser.traced_names()
+        chg2real = {}
+        deleted = {}
+        for k, v in trace.items():
+            chg2real[k] = v[-1]  #mapping from changed-name to real-name
+            for n in v:
+                if n in chg2real:
+                    continue
+                if n not in deleted:
+                    deleted[n] = '%s.%s' % (k, v[-1])
+
+        self.graph.add_name_trace({
+            'chg2real': chg2real,
+            'deleted': deleted
+        }, 'paddle')
+
         # Display the graph
         if self.verbose:
             print_stderr(self.graph)
@@ -339,6 +364,8 @@ class Transformer(object):
                 node.name: node.data
                 for node in self.graph.nodes if node.data
             }
+            self.params['caffe2fluid_name_trace'] = self.graph.get_name_trace()
+
         return self.params
 
     def transform_source(self):

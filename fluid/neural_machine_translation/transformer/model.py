@@ -30,7 +30,8 @@ def multi_head_attention(queries,
                          n_head=1,
                          dropout_rate=0.,
                          pre_softmax_shape=None,
-                         post_softmax_shape=None):
+                         post_softmax_shape=None,
+                         cache=None):
     """
     Multi-Head Attention. Note that attn_bias is added to the logit before
     computing softmax activiation to mask certain selected positions so that
@@ -46,26 +47,14 @@ def multi_head_attention(queries,
         """
         q = layers.fc(input=queries,
                       size=d_key * n_head,
-                      param_attr=fluid.initializer.Xavier(
-                          uniform=False,
-                          fan_in=d_model * d_key,
-                          fan_out=n_head * d_key),
                       bias_attr=False,
                       num_flatten_dims=2)
         k = layers.fc(input=keys,
                       size=d_key * n_head,
-                      param_attr=fluid.initializer.Xavier(
-                          uniform=False,
-                          fan_in=d_model * d_key,
-                          fan_out=n_head * d_key),
                       bias_attr=False,
                       num_flatten_dims=2)
         v = layers.fc(input=values,
                       size=d_value * n_head,
-                      param_attr=fluid.initializer.Xavier(
-                          uniform=False,
-                          fan_in=d_model * d_value,
-                          fan_out=n_head * d_value),
                       bias_attr=False,
                       num_flatten_dims=2)
         return q, k, v
@@ -84,7 +73,7 @@ def multi_head_attention(queries,
         # The value 0 in shape attr means copying the corresponding dimension
         # size of the input as the output dimension size.
         reshaped = layers.reshape(
-            x=x, shape=[0, -1, n_head, hidden_size // n_head])
+            x=x, shape=[0, 0, n_head, hidden_size // n_head])
 
         # permuate the dimensions into:
         # [batch_size, n_head, max_sequence_len, hidden_size_per_head]
@@ -104,7 +93,7 @@ def multi_head_attention(queries,
         # size of the input as the output dimension size.
         return layers.reshape(
             x=trans_x,
-            shape=map(int, [0, -1, trans_x.shape[2] * trans_x.shape[3]]))
+            shape=map(int, [0, 0, trans_x.shape[2] * trans_x.shape[3]]))
 
     def scaled_dot_product_attention(q, k, v, attn_bias, d_model, dropout_rate):
         """
@@ -128,6 +117,10 @@ def multi_head_attention(queries,
 
     q, k, v = __compute_qkv(queries, keys, values, n_head, d_key, d_value)
 
+    if cache is not None:  # use cache and concat time steps
+        k = cache["k"] = layers.concat([cache["k"], k], axis=1)
+        v = cache["v"] = layers.concat([cache["v"], v], axis=1)
+
     q = __split_heads(q, n_head)
     k = __split_heads(k, n_head)
     v = __split_heads(v, n_head)
@@ -140,7 +133,6 @@ def multi_head_attention(queries,
     # Project back to the model size.
     proj_out = layers.fc(input=out,
                          size=d_model,
-                         param_attr=fluid.initializer.Xavier(uniform=False),
                          bias_attr=False,
                          num_flatten_dims=2)
     return proj_out
@@ -155,14 +147,8 @@ def positionwise_feed_forward(x, d_inner_hid, d_hid):
     hidden = layers.fc(input=x,
                        size=d_inner_hid,
                        num_flatten_dims=2,
-                       param_attr=fluid.initializer.Uniform(
-                           low=-(d_hid**-0.5), high=(d_hid**-0.5)),
                        act="relu")
-    out = layers.fc(input=hidden,
-                    size=d_hid,
-                    num_flatten_dims=2,
-                    param_attr=fluid.initializer.Uniform(
-                        low=-(d_inner_hid**-0.5), high=(d_inner_hid**-0.5)))
+    out = layers.fc(input=hidden, size=d_hid, num_flatten_dims=2)
     return out
 
 
@@ -200,6 +186,7 @@ def prepare_encoder(src_word,
                     src_max_len,
                     dropout_rate=0.,
                     src_data_shape=None,
+                    word_emb_param_name=None,
                     pos_enc_param_name=None):
     """Add word embeddings and position encodings.
     The output tensor has a shape of:
@@ -209,7 +196,10 @@ def prepare_encoder(src_word,
     src_word_emb = layers.embedding(
         src_word,
         size=[src_vocab_size, src_emb_dim],
-        param_attr=fluid.initializer.Normal(0., 1.))
+        param_attr=fluid.ParamAttr(
+            name=word_emb_param_name,
+            initializer=fluid.initializer.Normal(0., src_emb_dim**-0.5)))
+    src_word_emb = layers.scale(x=src_word_emb, scale=src_emb_dim**0.5)
     src_pos_enc = layers.embedding(
         src_pos,
         size=[src_max_len, src_emb_dim],
@@ -218,7 +208,7 @@ def prepare_encoder(src_word,
     enc_input = src_word_emb + src_pos_enc
     enc_input = layers.reshape(
         x=enc_input,
-        shape=[-1, src_max_len, src_emb_dim],
+        shape=[batch_size, seq_len, src_emb_dim],
         actual_shape=src_data_shape)
     return layers.dropout(
         enc_input, dropout_prob=dropout_rate,
@@ -300,7 +290,8 @@ def decoder_layer(dec_input,
                   slf_attn_pre_softmax_shape=None,
                   slf_attn_post_softmax_shape=None,
                   src_attn_pre_softmax_shape=None,
-                  src_attn_post_softmax_shape=None):
+                  src_attn_post_softmax_shape=None,
+                  cache=None):
     """ The layer to be stacked in decoder part.
     The structure of this module is similar to that in the encoder part except
     a multi-head attention is added to implement encoder-decoder attention.
@@ -316,7 +307,8 @@ def decoder_layer(dec_input,
         n_head,
         dropout_rate,
         slf_attn_pre_softmax_shape,
-        slf_attn_post_softmax_shape, )
+        slf_attn_post_softmax_shape,
+        cache, )
     slf_attn_output = post_process_layer(
         dec_input,
         slf_attn_output,
@@ -365,7 +357,8 @@ def decoder(dec_input,
             slf_attn_pre_softmax_shape=None,
             slf_attn_post_softmax_shape=None,
             src_attn_pre_softmax_shape=None,
-            src_attn_post_softmax_shape=None):
+            src_attn_post_softmax_shape=None,
+            caches=None):
     """
     The decoder is composed of a stack of identical decoder_layer layers.
     """
@@ -384,7 +377,8 @@ def decoder(dec_input,
             slf_attn_pre_softmax_shape,
             slf_attn_post_softmax_shape,
             src_attn_pre_softmax_shape,
-            src_attn_post_softmax_shape, )
+            src_attn_post_softmax_shape,
+            None if caches is None else caches[i], )
         dec_input = dec_output
     return dec_output
 
@@ -399,6 +393,8 @@ def make_all_inputs(input_fields):
             name=input_field,
             shape=input_descs[input_field][0],
             dtype=input_descs[input_field][1],
+            lod_level=input_descs[input_field][2]
+            if len(input_descs[input_field]) == 3 else 0,
             append_batch_size=False)
         inputs.append(input_var)
     return inputs
@@ -415,7 +411,12 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
+        weight_sharing,
         label_smooth_eps, ):
+    if weight_sharing:
+        assert src_vocab_size == src_vocab_size, (
+            "Vocabularies in source and target should be same for weight sharing."
+        )
     enc_inputs = make_all_inputs(encoder_data_input_fields +
                                  encoder_util_input_fields)
 
@@ -429,6 +430,7 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
+        weight_sharing,
         enc_inputs, )
 
     dec_inputs = make_all_inputs(decoder_data_input_fields[:-1] +
@@ -444,6 +446,7 @@ def transformer(
         d_model,
         d_inner_hid,
         dropout_rate,
+        weight_sharing,
         dec_inputs,
         enc_output, )
 
@@ -459,7 +462,6 @@ def transformer(
         logits=predict,
         label=label,
         soft_label=True if label_smooth_eps else False)
-    # cost = layers.softmax_with_cross_entropy(logits=predict, label=gold)
     weighted_cost = cost * weights
     sum_cost = layers.reduce_sum(weighted_cost)
     token_num = layers.reduce_sum(weights)
@@ -476,6 +478,7 @@ def wrap_encoder(src_vocab_size,
                  d_model,
                  d_inner_hid,
                  dropout_rate,
+                 weight_sharing,
                  enc_inputs=None):
     """
     The wrapper assembles together all needed layers for the encoder.
@@ -497,7 +500,8 @@ def wrap_encoder(src_vocab_size,
         d_model,
         max_length,
         dropout_rate,
-        src_data_shape, )
+        src_data_shape,
+        word_emb_param_name=word_emb_param_names[0])
     enc_output = encoder(
         enc_input,
         src_slf_attn_bias,
@@ -522,8 +526,10 @@ def wrap_decoder(trg_vocab_size,
                  d_model,
                  d_inner_hid,
                  dropout_rate,
+                 weight_sharing,
                  dec_inputs=None,
-                 enc_output=None):
+                 enc_output=None,
+                 caches=None):
     """
     The wrapper assembles together all needed layers for the decoder.
     """
@@ -547,7 +553,9 @@ def wrap_decoder(trg_vocab_size,
         d_model,
         max_length,
         dropout_rate,
-        trg_data_shape, )
+        trg_data_shape,
+        word_emb_param_name=word_emb_param_names[0]
+        if weight_sharing else word_emb_param_names[1])
     dec_output = decoder(
         dec_input,
         enc_output,
@@ -563,13 +571,165 @@ def wrap_decoder(trg_vocab_size,
         slf_attn_pre_softmax_shape,
         slf_attn_post_softmax_shape,
         src_attn_pre_softmax_shape,
-        src_attn_post_softmax_shape, )
+        src_attn_post_softmax_shape,
+        caches, )
     # Return logits for training and probs for inference.
-    predict = layers.reshape(
-        x=layers.fc(input=dec_output,
-                    size=trg_vocab_size,
-                    bias_attr=False,
-                    num_flatten_dims=2),
-        shape=[-1, trg_vocab_size],
-        act="softmax" if dec_inputs is None else None)
+    if weight_sharing:
+        predict = layers.reshape(
+            x=layers.matmul(
+                x=dec_output,
+                y=fluid.get_var(word_emb_param_names[0]),
+                transpose_y=True),
+            shape=[-1, trg_vocab_size],
+            act="softmax" if dec_inputs is None else None)
+    else:
+        predict = layers.reshape(
+            x=layers.fc(input=dec_output,
+                        size=trg_vocab_size,
+                        bias_attr=False,
+                        num_flatten_dims=2),
+            shape=[-1, trg_vocab_size],
+            act="softmax" if dec_inputs is None else None)
     return predict
+
+
+def fast_decode(
+        src_vocab_size,
+        trg_vocab_size,
+        max_in_len,
+        n_layer,
+        n_head,
+        d_key,
+        d_value,
+        d_model,
+        d_inner_hid,
+        dropout_rate,
+        weight_sharing,
+        beam_size,
+        max_out_len,
+        eos_idx, ):
+    """
+    Use beam search to decode. Caches will be used to store states of history
+    steps which can make the decoding faster.
+    """
+    enc_output = wrap_encoder(src_vocab_size, max_in_len, n_layer, n_head,
+                              d_key, d_value, d_model, d_inner_hid,
+                              dropout_rate, weight_sharing)
+    start_tokens, init_scores, trg_src_attn_bias, trg_data_shape, \
+        slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape, \
+        src_attn_pre_softmax_shape, src_attn_post_softmax_shape, \
+        attn_pre_softmax_shape_delta, attn_post_softmax_shape_delta = \
+        make_all_inputs(fast_decoder_data_input_fields +
+                            fast_decoder_util_input_fields)
+
+    def beam_search():
+        max_len = layers.fill_constant(
+            shape=[1], dtype=start_tokens.dtype, value=max_out_len)
+        step_idx = layers.fill_constant(
+            shape=[1], dtype=start_tokens.dtype, value=0)
+        cond = layers.less_than(x=step_idx, y=max_len)
+        while_op = layers.While(cond)
+        # array states will be stored for each step.
+        ids = layers.array_write(start_tokens, step_idx)
+        scores = layers.array_write(init_scores, step_idx)
+        # cell states will be overwrited at each step.
+        # caches contains states of history steps to reduce redundant
+        # computation in decoder.
+        caches = [{
+            "k": layers.fill_constant_batch_size_like(
+                input=start_tokens,
+                shape=[-1, 0, d_model],
+                dtype=enc_output.dtype,
+                value=0),
+            "v": layers.fill_constant_batch_size_like(
+                input=start_tokens,
+                shape=[-1, 0, d_model],
+                dtype=enc_output.dtype,
+                value=0)
+        } for i in range(n_layer)]
+        with while_op.block():
+            pre_ids = layers.array_read(array=ids, i=step_idx)
+            pre_scores = layers.array_read(array=scores, i=step_idx)
+            # sequence_expand can gather sequences according to lod thus can be
+            # used in beam search to sift states corresponding to selected ids.
+            pre_src_attn_bias = layers.sequence_expand(
+                x=trg_src_attn_bias, y=pre_scores)
+            pre_enc_output = layers.sequence_expand(x=enc_output, y=pre_scores)
+            pre_caches = [{
+                "k": layers.sequence_expand(
+                    x=cache["k"], y=pre_scores),
+                "v": layers.sequence_expand(
+                    x=cache["v"], y=pre_scores),
+            } for cache in caches]
+            pre_pos = layers.elementwise_mul(
+                x=layers.fill_constant_batch_size_like(
+                    input=pre_enc_output,  # cann't use pre_ids here since it has lod
+                    value=1,
+                    shape=[-1, 1],
+                    dtype=pre_ids.dtype),
+                y=layers.increment(
+                    x=step_idx, value=1.0, in_place=False),
+                axis=0)
+            logits = wrap_decoder(
+                trg_vocab_size,
+                max_in_len,
+                n_layer,
+                n_head,
+                d_key,
+                d_value,
+                d_model,
+                d_inner_hid,
+                dropout_rate,
+                weight_sharing,
+                dec_inputs=(
+                    pre_ids, pre_pos, None, pre_src_attn_bias, trg_data_shape,
+                    slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape,
+                    src_attn_pre_softmax_shape, src_attn_post_softmax_shape),
+                enc_output=pre_enc_output,
+                caches=pre_caches)
+            topk_scores, topk_indices = layers.topk(
+                input=layers.softmax(logits), k=beam_size)
+            accu_scores = layers.elementwise_add(
+                x=layers.log(topk_scores),
+                y=layers.reshape(
+                    pre_scores, shape=[-1]),
+                axis=0)
+            # beam_search op uses lod to distinguish branches.
+            topk_indices = layers.lod_reset(topk_indices, pre_ids)
+            selected_ids, selected_scores = layers.beam_search(
+                pre_ids=pre_ids,
+                pre_scores=pre_scores,
+                ids=topk_indices,
+                scores=accu_scores,
+                beam_size=beam_size,
+                end_id=eos_idx)
+            layers.increment(x=step_idx, value=1.0, in_place=True)
+            # update states
+            layers.array_write(selected_ids, i=step_idx, array=ids)
+            layers.array_write(selected_scores, i=step_idx, array=scores)
+            layers.assign(pre_src_attn_bias, trg_src_attn_bias)
+            layers.assign(pre_enc_output, enc_output)
+            for i in range(n_layer):
+                layers.assign(pre_caches[i]["k"], caches[i]["k"])
+                layers.assign(pre_caches[i]["v"], caches[i]["v"])
+            layers.assign(
+                layers.elementwise_add(
+                    x=slf_attn_pre_softmax_shape,
+                    y=attn_pre_softmax_shape_delta),
+                slf_attn_pre_softmax_shape)
+            layers.assign(
+                layers.elementwise_add(
+                    x=slf_attn_post_softmax_shape,
+                    y=attn_post_softmax_shape_delta),
+                slf_attn_post_softmax_shape)
+
+            length_cond = layers.less_than(x=step_idx, y=max_len)
+            finish_cond = layers.logical_not(layers.is_empty(x=selected_ids))
+            layers.logical_and(x=length_cond, y=finish_cond, out=cond)
+
+        finished_ids, finished_scores = layers.beam_search_decode(
+            ids, scores, beam_size=beam_size, end_id=eos_idx)
+        return finished_ids, finished_scores
+
+    finished_ids, finished_scores = beam_search()
+    return finished_ids, finished_scores

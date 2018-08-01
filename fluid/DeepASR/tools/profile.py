@@ -137,7 +137,12 @@ def profile(args):
         class_num=args.class_num,
         parallel=args.parallel)
 
-    optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
+    optimizer = fluid.optimizer.Adam(
+        learning_rate=fluid.layers.exponential_decay(
+            learning_rate=args.learning_rate,
+            decay_steps=1879,
+            decay_rate=1 / 1.2,
+            staircase=True))
     optimizer.minimize(avg_cost)
 
     place = fluid.CPUPlace() if args.device == 'CPU' else fluid.CUDAPlace(0)
@@ -150,7 +155,8 @@ def profile(args):
         trans_splice.TransSplice(5, 5), trans_delay.TransDelay(5)
     ]
 
-    data_reader = reader.AsyncDataReader(args.feature_lst, args.label_lst, -1)
+    data_reader = reader.AsyncDataReader(
+        args.feature_lst, args.label_lst, -1, split_sentence_threshold=1024)
     data_reader.set_transformers(ltrans)
 
     feature_t = fluid.LoDTensor()

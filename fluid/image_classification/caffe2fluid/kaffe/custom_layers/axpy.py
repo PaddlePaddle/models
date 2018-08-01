@@ -43,7 +43,7 @@ def axpy_layer(inputs, name):
     x = inputs[1]
     y = inputs[2]
     output = fluid.layers.elementwise_mul(x, alpha, axis=0)
-    output = fluid.layers.elementwise_add(output, y)
+    output = fluid.layers.elementwise_add(output, y, name=name)
 
     return output
 

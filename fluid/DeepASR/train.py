@@ -159,7 +159,12 @@ def train(args):
     test_program = fluid.default_main_program().clone()
 
     #optimizer = fluid.optimizer.Momentum(learning_rate=args.learning_rate, momentum=0.9)
-    optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
+    optimizer = fluid.optimizer.Adam(
+        learning_rate=fluid.layers.exponential_decay(
+            learning_rate=args.learning_rate,
+            decay_steps=1879,
+            decay_rate=1 / 1.2,
+            staircase=True))
     optimizer.minimize(avg_cost)
 
     place = fluid.CPUPlace() if args.device == 'CPU' else fluid.CUDAPlace(0)
@@ -186,8 +191,11 @@ def train(args):
                 os.path.exists(args.val_label_lst)):
             return -1.0, -1.0
         # test data reader
-        test_data_reader = reader.AsyncDataReader(args.val_feature_lst,
-                                                  args.val_label_lst)
+        test_data_reader = reader.AsyncDataReader(
+            args.val_feature_lst,
+            args.val_label_lst,
+            -1,
+            split_sentence_threshold=1024)
         test_data_reader.set_transformers(ltrans)
         test_costs, test_accs = [], []
         for batch_id, batch_data in enumerate(
@@ -195,6 +203,8 @@ def train(args):
                                                 args.minimum_batch_size)):
             # load_data
             (features, labels, lod, _) = batch_data
+            features = np.reshape(features, (-1, 11, 3, args.frame_dim))
+            features = np.transpose(features, (0, 2, 1, 3))
             feature_t.set(features, place)
             feature_t.set_lod([lod])
             label_t.set(labels, place)
@@ -210,8 +220,11 @@ def train(args):
         return np.mean(test_costs), np.mean(test_accs)
 
     # train data reader
-    train_data_reader = reader.AsyncDataReader(args.train_feature_lst,
-                                               args.train_label_lst, -1)
+    train_data_reader = reader.AsyncDataReader(
+        args.train_feature_lst,
+        args.train_label_lst,
+        -1,
+        split_sentence_threshold=1024)
 
     train_data_reader.set_transformers(ltrans)
     # train

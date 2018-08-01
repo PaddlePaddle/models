@@ -181,6 +181,20 @@ class SubNodeFuser(object):
     '''
     An abstract helper for merging a single-child with its single-parent.
     '''
+    _traced_names = {}
+
+    @classmethod
+    def traced_names(cls):
+        return cls._traced_names
+
+    @classmethod
+    def trace(cls, fname, tname):
+        """ recording the names mapping,
+            the value of 'fname' will be replaced by value of 'tname'
+        """
+        if fname not in cls._traced_names:
+            cls._traced_names[fname] = []
+        cls._traced_names[fname].append(tname)
 
     def __call__(self, graph):
         nodes = graph.nodes
@@ -234,6 +248,7 @@ class ReLUFuser(SubNodeFuser):
                 child.kind == NodeKind.ReLU)
 
     def merge(self, parent, child):
+        SubNodeFuser.trace(parent.name, child.name)
         parent.metadata['relu'] = True
         parent.metadata['relu_negative_slope'] = child.parameters.negative_slope
 
@@ -255,6 +270,7 @@ class BatchNormScaleBiasFuser(SubNodeFuser):
                 child.parameters.bias_term == True)
 
     def merge(self, parent, child):
+        SubNodeFuser.trace(parent.name, child.name)
         parent.scale_bias_node = child
 
 
@@ -309,7 +325,8 @@ class ParameterNamer(object):
         for node in graph.nodes:
             if node.data is None:
                 continue
-            if node.kind in (NodeKind.Convolution, NodeKind.InnerProduct):
+            if node.kind in (NodeKind.Convolution, NodeKind.InnerProduct,\
+                    NodeKind.Deconvolution):
                 names = ('weights', )
                 if node.parameters.bias_term:
                     names += ('biases', )
@@ -321,6 +338,8 @@ class ParameterNamer(object):
                 names = ('scale', )
                 if getattr(node.parameters, 'bias_term', False):
                     names = ('scale', 'offset')
+            elif node.kind == "Normalize":
+                names = ('scale', )
             else:
                 warn('Unhandled parameters when naming this it[%s]' %
                      (node.kind))

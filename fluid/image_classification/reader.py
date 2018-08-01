@@ -11,7 +11,7 @@ random.seed(0)
 DATA_DIM = 224
 
 THREAD = 8
-BUF_SIZE = 1024
+BUF_SIZE = 102400
 
 DATA_DIR = 'data/ILSVRC2012'
 TRAIN_LIST = 'data/ILSVRC2012/train_list.txt'
@@ -105,7 +105,7 @@ def process_image(sample, mode, color_jitter, rotate):
         if rotate: img = rotate_image(img)
         img = random_crop(img, DATA_DIM)
     else:
-        img = resize_short(img, DATA_DIM)
+        img = resize_short(img, target_size=256)
         img = crop_image(img, target_size=DATA_DIM, center=True)
     if mode == 'train':
         if color_jitter:
@@ -120,9 +120,9 @@ def process_image(sample, mode, color_jitter, rotate):
     img -= img_mean
     img /= img_std
 
-    if mode == 'train' or mode == 'test':
+    if mode == 'train' or mode == 'val':
         return img, sample[1]
-    elif mode == 'infer':
+    elif mode == 'test':
         return [img]
 
 
@@ -137,11 +137,11 @@ def _reader_creator(file_list,
             if shuffle:
                 random.shuffle(lines)
             for line in lines:
-                if mode == 'train' or mode == 'test':
+                if mode == 'train' or mode == 'val':
                     img_path, label = line.split()
                     img_path = os.path.join(DATA_DIR, img_path)
                     yield img_path, int(label)
-                elif mode == 'infer':
+                elif mode == 'test':
                     img_path = os.path.join(DATA_DIR, line)
                     yield [img_path]
 
@@ -156,9 +156,9 @@ def train(file_list=TRAIN_LIST):
         file_list, 'train', shuffle=True, color_jitter=False, rotate=False)
 
 
+def val(file_list=TEST_LIST):
+    return _reader_creator(file_list, 'val', shuffle=False)
+
+
 def test(file_list=TEST_LIST):
     return _reader_creator(file_list, 'test', shuffle=False)
-
-
-def infer(file_list):
-    return _reader_creator(file_list, 'infer', shuffle=False)
