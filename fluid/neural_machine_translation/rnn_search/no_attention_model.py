@@ -32,8 +32,7 @@ def seq_to_seq_net(embedding_dim, encoder_size, decoder_size, source_dict_dim,
             dtype='float32',
             is_sparse=True)
 
-        fc1 = layers.fc(
-            input=src_embedding, size=encoder_size * 4, act='tanh')
+        fc1 = layers.fc(input=src_embedding, size=encoder_size * 4, act='tanh')
         lstm_hidden0, lstm_0 = layers.dynamic_lstm(
             input=fc1, size=encoder_size * 4)
         encoder_out = layers.sequence_last_step(input=lstm_hidden0)

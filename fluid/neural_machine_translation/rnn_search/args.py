@@ -59,8 +59,9 @@ def parse_args():
         default=0.01,
         help="Learning rate used to train the model. (default: %(default)f)")
     parser.add_argument(
-        "--no_attention", action='store_true', help="If set, run no attention " 
-        "model instead of attention model.")
+        "--no_attention",
+        action='store_true',
+        help="If set, run no attention model instead of attention model.")
     parser.add_argument(
         "--beam_size",
         type=int,
