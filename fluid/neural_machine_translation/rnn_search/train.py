@@ -141,5 +141,6 @@ def train():
                 dirname=model_path,
                 main_program=framework.default_main_program())
 
+
 if __name__ == '__main__':
     train()
