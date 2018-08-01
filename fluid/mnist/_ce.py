@@ -19,7 +19,6 @@ tracking_kpis = [
     train_duration_kpi,
 ]
 
-
 def parse_log(log):
     '''
     This method should be implemented by model developers.

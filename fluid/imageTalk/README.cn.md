@@ -60,7 +60,7 @@
 
 <p align="center">
 <img src="images/img2lstm_net.png" width = "90%" align="center"/><br/>
-图2. 本例中的 Sentence approach network 文本分类模型
+图2. 本例中的模型结构
 </p>
 该结构包含两部分，一部分为图片特征提取部分，第二部分为lstm预测文本序列部分
 其中图片特征提取部分可迁移经典的网络模型，本例使用vgg16模型进行图片特征提取。
