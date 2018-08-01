@@ -13,6 +13,7 @@ import utils
 # random seed must set before configuring the network.
 fluid.default_startup_program().random_seed = 102
 
+
 def network(src, dst, vocab_size, hid_size, init_low_bound, init_high_bound):
     """ network definition """
     emb_lr_x = 10.0
@@ -77,7 +78,7 @@ def train(train_reader,
     # Train program
     avg_cost = None
     cost = network(src_wordseq, dst_wordseq, vocab_size, hid_size,
-                       init_low_bound, init_high_bound)
+                   init_low_bound, init_high_bound)
     avg_cost = fluid.layers.mean(x=cost)
 
     # Optimization to minimize lost
@@ -97,7 +98,7 @@ def train(train_reader,
     train_exe = fluid.ParallelExecutor(use_cuda=True, loss_name=avg_cost.name)
 
     total_time = 0.0
-    fetch_list=[avg_cost.name]
+    fetch_list = [avg_cost.name]
     for pass_idx in xrange(pass_num):
         epoch_idx = pass_idx + 1
         print "epoch_%d start" % epoch_idx
@@ -111,12 +112,11 @@ def train(train_reader,
                 map(lambda x: x[0], data), place)
             lod_dst_wordseq = utils.to_lodtensor(
                 map(lambda x: x[1], data), place)
-            ret_avg_cost = train_exe.run(
-                                   feed={
-                                       "src_wordseq": lod_src_wordseq,
-                                       "dst_wordseq": lod_dst_wordseq
-                                   },
-                                   fetch_list=fetch_list)
+            ret_avg_cost = train_exe.run(feed={
+                "src_wordseq": lod_src_wordseq,
+                "dst_wordseq": lod_dst_wordseq
+            },
+                                         fetch_list=fetch_list)
             avg_ppl = np.exp(ret_avg_cost[0])
             newest_ppl = np.mean(avg_ppl)
             if i % 100 == 0:
@@ -124,39 +124,44 @@ def train(train_reader,
 
         t1 = time.time()
         total_time += t1 - t0
-        print "epoch:%d num_steps:%d time_cost(s):%f" % (
-            epoch_idx, i, total_time / epoch_idx)
+        print "epoch:%d num_steps:%d time_cost(s):%f" % (epoch_idx, i,
+                                                         total_time / epoch_idx)
 
         if pass_idx == pass_num - 1:
             #Note: The following logs are special for CE monitoring.
             #Other situations do not need to care about these logs.
             gpu_num = get_cards()
             if gpu_num == 1:
-                print("kpis	imikolov_20_pass_duration	%s" % (total_time / epoch_idx))
+                print("kpis	imikolov_20_pass_duration	%s" %
+                      (total_time / epoch_idx))
                 print("kpis	imikolov_20_avg_ppl	%s" % newest_ppl)
             else:
                 print("kpis	imikolov_20_pass_duration_card%s	%s" % \
                                 (gpu_num, total_time / epoch_idx))
-                print("kpis	imikolov_20_avg_ppl_card%s	%s" % (gpu_num, newest_ppl))
+                print("kpis	imikolov_20_avg_ppl_card%s	%s" %
+                      (gpu_num, newest_ppl))
         save_dir = "%s/epoch_%d" % (model_dir, epoch_idx)
         feed_var_names = ["src_wordseq", "dst_wordseq"]
         fetch_vars = [avg_cost]
-        fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars,
-                                      exe)
+        fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars, exe)
         print("model saved in %s" % save_dir)
 
     print("finish training")
+
 
 def get_cards():
     cards = os.environ.get('CUDA_VISIBLE_DEVICES')
     num = len(cards.split(","))
     return num
 
+
 def train_net():
     """ do training """
     batch_size = 20
     vocab, train_reader, test_reader = utils.prepare_data(
-        batch_size=batch_size * get_cards(), buffer_size=1000, word_freq_threshold=0)
+        batch_size=batch_size * get_cards(),
+        buffer_size=1000,
+        word_freq_threshold=0)
     train(
         train_reader=train_reader,
         vocab=vocab,

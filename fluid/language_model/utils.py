@@ -5,6 +5,7 @@ import numpy as np
 import paddle.fluid as fluid
 import paddle
 
+
 def to_lodtensor(data, place):
     """ convert to LODtensor """
     seq_lens = [len(seq) for seq in data]

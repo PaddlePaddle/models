@@ -7,11 +7,11 @@ from kpi import CostKpi
 from kpi import DurationKpi
 
 imikolov_20_avg_ppl_kpi = CostKpi('imikolov_20_avg_ppl', 0.2, 0)
-imikolov_20_pass_duration_kpi = DurationKpi('imikolov_20_pass_duration', 0.02,
-                                            0, actived=True)
+imikolov_20_pass_duration_kpi = DurationKpi(
+    'imikolov_20_pass_duration', 0.02, 0, actived=True)
 imikolov_20_avg_ppl_kpi_card4 = CostKpi('imikolov_20_avg_ppl_card4', 0.2, 0)
-imikolov_20_pass_duration_kpi_card4 = DurationKpi('imikolov_20_pass_duration_card4', 0.03,
-                                            0, actived=True)
+imikolov_20_pass_duration_kpi_card4 = DurationKpi(
+    'imikolov_20_pass_duration_card4', 0.03, 0, actived=True)
 
 tracking_kpis = [
     imikolov_20_avg_ppl_kpi,
@@ -19,6 +19,7 @@ tracking_kpis = [
     imikolov_20_avg_ppl_kpi_card4,
     imikolov_20_pass_duration_kpi_card4,
 ]
+
 
 def parse_log(log):
     '''
@@ -38,7 +39,7 @@ def parse_log(log):
     '''
     for line in log.split('\n'):
         fs = line.strip().split('\t')
-        print (fs)
+        print(fs)
         if len(fs) == 3 and fs[0] == 'kpis':
             kpi_name = fs[1]
             kpi_value = float(fs[2])
@@ -51,12 +52,11 @@ def log_to_ce(log):
         kpi_tracker[kpi.name] = kpi
 
     for (kpi_name, kpi_value) in parse_log(log):
-        print (kpi_name, kpi_value)
+        print(kpi_name, kpi_value)
         kpi_tracker[kpi_name].add_record(kpi_value)
         kpi_tracker[kpi_name].persist()
 
 
 if __name__ == '__main__':
     log = sys.stdin.read()
-    log_to_ce(log) 
-    
+    log_to_ce(log)
