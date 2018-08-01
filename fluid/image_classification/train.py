@@ -270,9 +270,9 @@ def train(args):
         except fluid.core.EOFException:
             test_py_reader.reset()
 
-        test_loss = np.sum(test_info[0])
-        test_acc1 = np.sum(test_info[1])
-        test_acc5 = np.sum(test_info[2])
+        test_loss = np.array(test_info[0]).mean()
+        test_acc1 = np.array(test_info[1]).mean()
+        test_acc5 = np.array(test_info[2]).mean()
 
         print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3}, "
               "test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(
