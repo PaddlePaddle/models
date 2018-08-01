@@ -160,5 +160,5 @@ def val(file_list=TEST_LIST):
     return _reader_creator(file_list, 'val', shuffle=False)
 
 
-def test(file_list):
+def test(file_list=TEST_LIST):
     return _reader_creator(file_list, 'test', shuffle=False)
