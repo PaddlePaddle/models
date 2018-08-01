@@ -16,15 +16,21 @@ For example, you can export them, or add them inside the specific files.
 ## Training
 ### CPU with mkldnn
 Run:
-`train_profile_mkldnn.sh`
+`./train.sh MKLDNN`
 ### CPU without mkldnn
 Run:
-`train_profile.sh`
+`./train.sh CPU`
+### GPU
+Run:
+`./train.sh GPU`
 
 ## Inference
 ### CPU with mkldnn
 Run:
-`infer_profile_mkldnn.sh`
+`./infer.sh MKLDNN`
 ### CPU without mkldnn
 Run:
-`infer_profile.sh`
+`./infer.sh CPU`
+### GPU
+Run:
+`./infer.sh GPU`
