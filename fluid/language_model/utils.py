@@ -3,8 +3,7 @@ import time
 import numpy as np
 
 import paddle.fluid as fluid
-import paddle.v2 as paddle
-
+import paddle
 
 def to_lodtensor(data, place):
     """ convert to LODtensor """
