@@ -62,6 +62,7 @@ def evaluate(args):
     for data in test_reader():
         count += 1
         exe.run(fluid.default_main_program(), feed=get_feeder_data(data, place))
+        print "Read %d samples;\r" % count,
     avg_distance, avg_seq_error = evaluator.eval(exe)
     print "Read %d samples; avg_distance: %s; avg_seq_error: %s" % (
         count, avg_distance, avg_seq_error)

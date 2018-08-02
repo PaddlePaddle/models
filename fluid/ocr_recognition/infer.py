@@ -29,7 +29,8 @@ def inference(args):
     else:
         infer = attention_infer
         get_feeder_data = get_attention_feeder_for_infer
-
+    eos = 1
+    sos = 0
     num_classes = data_reader.num_classes()
     data_shape = data_reader.data_shape()
     # define network
@@ -73,11 +74,22 @@ def inference(args):
                          feed=feed_dict,
                          fetch_list=[ids],
                          return_numpy=False)
-        indexes = np.array(result[0]).flatten()
+        indexes = prune(np.array(result[0]).flatten(), 0, 1)
         if dict_map is not None:
             print "result: %s" % ([dict_map[index] for index in indexes], )
         else:
-            print "result: %s" % (indexes, )
+            print "result: %s;" % (indexes, )
+
+
+def prune(words, sos, eos):
+    """Remove unused tokens in prediction result."""
+    start_index = 0
+    end_index = len(words)
+    if sos in words:
+        start_index = np.where(words == sos)[0][0] + 1
+    if eos in words:
+        end_index = np.where(words == eos)[0][0]
+    return words[start_index:end_index]
 
 
 def main():
