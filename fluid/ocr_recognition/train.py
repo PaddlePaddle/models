@@ -134,14 +134,6 @@ def train(args):
                 total_loss = 0.0
                 total_seq_error = 0.0
 
-            # evaluate
-            if iter_num % args.eval_period == 0:
-                if model_average:
-                    with model_average.apply(exe):
-                        test(iter_num)
-                else:
-                    test(iter_num)
-
             # save model
             if iter_num % args.save_model_period == 0:
                 if model_average:
@@ -149,6 +141,14 @@ def train(args):
                         save_model(args, exe, iter_num)
                 else:
                     save_model(args, exe, iter_num)
+
+            # evaluate
+            if iter_num % args.eval_period == 0:
+                if model_average:
+                    with model_average.apply(exe):
+                        test(iter_num)
+                else:
+                    test(iter_num)
 
 
 def main():

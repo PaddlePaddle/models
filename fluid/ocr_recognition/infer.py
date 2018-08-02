@@ -8,12 +8,11 @@ import data_reader
 import argparse
 import functools
 import os
-import sys
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('model',    str,   "attention",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
+add_arg('model',    str,   "crnn_ctc",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
 add_arg('model_path',         str,  None,   "The model path to be used for inference.")
 add_arg('input_images_dir',   str,  None,   "The directory of images.")
 add_arg('input_images_list',  str,  None,   "The list file of images.")
@@ -35,13 +34,7 @@ def inference(args):
     data_shape = data_reader.data_shape()
     # define network
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
-    sequence = infer(images, num_classes)
-
-    for var in fluid.default_main_program().list_vars():
-        if isinstance(var, fluid.Parameter):
-            print var.name
-
-    sys.exit(0)
+    ids = infer(images, num_classes)
 
     # data reader
     infer_reader = data_reader.inference(
@@ -75,9 +68,10 @@ def inference(args):
     print "Init model from: %s." % args.model_path
 
     for data in infer_reader():
+        feed_dict = get_feeder_data(data, place)
         result = exe.run(fluid.default_main_program(),
-                         feed=get_feeder_data(data, place),
-                         fetch_list=[sequence],
+                         feed=feed_dict,
+                         fetch_list=[ids],
                          return_numpy=False)
         indexes = np.array(result[0]).flatten()
         if dict_map is not None:

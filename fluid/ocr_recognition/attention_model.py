@@ -6,8 +6,9 @@ max_length = 100
 sos = 0
 eos = 1
 gradient_clip = 10
-learning_rate = 1.0
+LR = 1.0
 beam_size = 2
+learning_rate_decay = None
 
 
 def conv_bn_pool(input, group, out_ch, act="relu", is_test=False, pool=True):
@@ -178,6 +179,12 @@ def attention_train_net(args, data_shape, num_classes):
 
     cost = fluid.layers.cross_entropy(input=prediction, label=label_out)
     sum_cost = fluid.layers.reduce_sum(cost)
+
+    if learning_rate_decay == "piecewise_decay":
+        learning_rate = fluid.layers.piecewise_decay([50000], [LR, LR * 0.01])
+    else:
+        learning_rate = LR
+
     optimizer = fluid.optimizer.Adadelta(
         learning_rate=learning_rate, epsilon=1.0e-6, rho=0.9)
     optimizer.minimize(sum_cost)
@@ -214,8 +221,9 @@ def simple_attention(encoder_vec, encoder_proj, decoder_state, decoder_size):
 
 def attention_infer(images, num_classes):
 
-    max_length = 10
-    gru_backward, encoded_vector, encoded_proj = encoder_net(images)
+    max_length = 20
+    gru_backward, encoded_vector, encoded_proj = encoder_net(
+        images, is_test=True)
 
     backward_first = fluid.layers.sequence_pool(
         input=gru_backward, pool_type='first')
@@ -297,8 +305,9 @@ def attention_infer(images, num_classes):
             topk_indices,
             accu_scores,
             beam_size,
-            end_id=10,
-            level=0)
+            1,  # end_id
+            #level=0
+        )
 
         fluid.layers.increment(x=counter, value=1, in_place=True)
 
@@ -314,9 +323,9 @@ def attention_infer(images, num_classes):
             fluid.layers.is_empty(x=selected_ids))
         fluid.layers.logical_and(x=length_cond, y=finish_cond, out=cond)
 
-    translation_ids, translation_scores = fluid.layers.beam_search_decode(
-        ids=ids_array, scores=scores_array, beam_size=beam_size, end_id=10)
-    return translation_ids, translation_scores
+    ids, scores = fluid.layers.beam_search_decode(ids_array, scores_array,
+                                                  beam_size, eos)
+    return ids
 
 
 def attention_eval(data_shape, num_classes):
