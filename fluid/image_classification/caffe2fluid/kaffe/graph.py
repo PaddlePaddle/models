@@ -122,8 +122,8 @@ class Graph(object):
     def compute_output_shapes(self):
         sorted_nodes = self.topologically_sorted()
         for node in sorted_nodes:
-            node.output_shape = make_tensor(*NodeKind.compute_output_shape(
-                node))
+            node.output_shape = make_tensor(
+                *NodeKind.compute_output_shape(node))
 
     def replaced(self, new_nodes):
         return Graph(nodes=new_nodes, name=self.name, trace=self.output_trace)
