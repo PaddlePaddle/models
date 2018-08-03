@@ -25,7 +25,7 @@ class DataGenerator(object):
     def __init__(self):
         pass
 
-    def train_reader(self, img_root_dir, img_label_list, batchsize):
+    def train_reader(self, img_root_dir, img_label_list, batchsize, cycle):
         '''
         Reader interface for training.
 
@@ -35,6 +35,10 @@ class DataGenerator(object):
         :param img_label_list: The path of the <image_name, label> file for training.
         :type img_label_list: str
 
+        :param cycle: If number of iterations is greater than dataset_size / batch_size
+        it reiterates dataset over as many times as necessary.
+        :type cycle: bool
+        
         '''
 
         img_label_lines = []
@@ -65,24 +69,29 @@ class DataGenerator(object):
 
         def reader():
             sizes = len(img_label_lines) / batchsize
-            for i in range(sizes):
-                result = []
-                sz = [0, 0]
-                for j in range(batchsize):
-                    line = img_label_lines[i * batchsize + j]
-                    # h, w, img_name, labels
-                    items = line.split(' ')
+            if sizes == 0:
+                raise ValueError('Batch size is bigger than the dataset size.')
+            while True:
+                for i in range(sizes):
+                    result = []
+                    sz = [0, 0]
+                    for j in range(batchsize):
+                        line = img_label_lines[i * batchsize + j]
+                        # h, w, img_name, labels
+                        items = line.split(' ')
 
-                    label = [int(c) for c in items[-1].split(',')]
-                    img = Image.open(os.path.join(img_root_dir, items[
-                        2])).convert('L')  #zhuanhuidu
-                    if j == 0:
-                        sz = img.size
-                    img = img.resize((sz[0], sz[1]))
-                    img = np.array(img) - 127.5
-                    img = img[np.newaxis, ...]
-                    result.append([img, label])
-                yield result
+                        label = [int(c) for c in items[-1].split(',')]
+                        img = Image.open(os.path.join(img_root_dir, items[
+                            2])).convert('L')  #zhuanhuidu
+                        if j == 0:
+                            sz = img.size
+                        img = img.resize((sz[0], sz[1]))
+                        img = np.array(img) - 127.5
+                        img = img[np.newaxis, ...]
+                        result.append([img, label])
+                    yield result
+                if not cycle:
+                    break
 
         return reader
 
@@ -111,7 +120,7 @@ class DataGenerator(object):
 
         return reader
 
-    def infer_reader(self, img_root_dir=None, img_label_list=None):
+    def infer_reader(self, img_root_dir=None, img_label_list=None, cycle=False):
         '''A reader interface for inference.
 
         :param img_root_dir: The root path of the images for training.
@@ -122,11 +131,15 @@ class DataGenerator(object):
         was None. If img_label_list was set to None, it will read image path
         from stdin.
         :type img_root_dir: str
+        
+        :param cycle: If number of iterations is greater than dataset_size /
+        batch_size it reiterates dataset over as many times as necessary.
+        :type cycle: bool
         '''
 
         def reader():
-            if img_label_list is not None:
-                for line in open(img_label_list):
+            def yield_img_and_label(lines):
+                for line in lines:
                     if img_root_dir is not None:
                         # h, w, img_name, labels
                         img_name = line.split(' ')[2]
@@ -138,6 +151,16 @@ class DataGenerator(object):
                     img = img[np.newaxis, ...]
                     label = [int(c) for c in line.split(' ')[3].split(',')]
                     yield img, label
+
+            if img_label_list is not None:
+                lines = []
+                with open(img_label_list) as f:
+                    lines = f.readlines()
+                for img, label in yield_img_and_label(lines):
+                    yield img, label
+                while cycle:
+                    for img, label in yield_img_and_label(lines):
+                        yield img, label
             else:
                 while True:
                     img_path = raw_input("Please input the path of image: ")
@@ -161,14 +184,15 @@ def data_shape():
     return DATA_SHAPE
 
 
-def train(batch_size, train_images_dir=None, train_list_file=None):
+def train(batch_size, train_images_dir=None, train_list_file=None, cycle=False):
     generator = DataGenerator()
     if train_images_dir is None:
         data_dir = download_data()
         train_images_dir = path.join(data_dir, TRAIN_DATA_DIR_NAME)
     if train_list_file is None:
         train_list_file = path.join(data_dir, TRAIN_LIST_FILE_NAME)
-    return generator.train_reader(train_images_dir, train_list_file, batch_size)
+    return generator.train_reader(train_images_dir, train_list_file, batch_size,
+                                  cycle)
 
 
 def test(batch_size=1, test_images_dir=None, test_list_file=None):
@@ -182,10 +206,14 @@ def test(batch_size=1, test_images_dir=None, test_list_file=None):
         generator.test_reader(test_images_dir, test_list_file), batch_size)
 
 
-def inference(infer_images_dir=None, infer_list_file=None):
+def inference(batch_size=1,
+              infer_images_dir=None,
+              infer_list_file=None,
+              cycle=False):
     generator = DataGenerator()
     return paddle.batch(
-        generator.infer_reader(infer_images_dir, infer_list_file), 1)
+        generator.infer_reader(infer_images_dir, infer_list_file, cycle),
+        batch_size)
 
 
 def download_data():
