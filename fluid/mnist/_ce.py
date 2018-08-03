@@ -54,6 +54,7 @@ def log_to_ce(log):
         kpi_tracker[kpi_name].add_record(kpi_value)
         kpi_tracker[kpi_name].persist()
 
+
 if __name__ == '__main__':
     log = sys.stdin.read()
     log_to_ce(log)
