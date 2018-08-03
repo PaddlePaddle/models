@@ -32,14 +32,12 @@ Based on automatic description of the neural network, the procedures are as belo
 
 This example is based on the research finding [Show and Tell: A Neural Image Caption Generator](https://arxiv.org/abs/1411.4555) of Oriol Vinyals and so on. They proposed a method for automatic depiction of images by combining image characteristic extraction with Istm.
 
-
 ## Model interpretation
 This model is made up of two parts:
 1.	Part 1 is about image characteristic extraction. This part can use the well-trained image characteristic extraction model shared on the network for simplification of the training iterative time. The image characteristic extraction model used in this example is [vgg16 model](http://www.robots.ox.ac.uk/%7Evgg/research/very_deep/).
 2.	Part 2 is about a basic sequence model, which uses the Istm structure for prediction of the word sequence.
 
 Please refer to [Show and Tell: A Neural Image Caption Generator](https://arxiv.org/abs/1411.4555) for details.
-
 
 
 ### 1. Tasks
