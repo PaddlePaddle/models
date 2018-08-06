@@ -112,6 +112,13 @@ class PaddleMapper(NodeMapper):
     def map_relu(self, node):
         return PaddleNode('relu')
 
+    def map_prelu(self, node):
+        channel_shared = getattr(node.parameters, 'channel_shared', False)
+        return PaddleNode('prelu', channel_shared)
+
+    def map_tanh(self, node):
+        return PaddleNode('tanh')
+
     def map_pooling(self, node):
         pool_type = node.parameters.pool
         if pool_type == 0:
