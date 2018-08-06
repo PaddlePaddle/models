@@ -1,6 +1,5 @@
 运行本目录下的程序示例需要使用 PaddlePaddle 最新的 develop branch 版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新 PaddlePaddle 安装版本。
 
-
 ---
 
 
@@ -96,7 +95,7 @@ tar -xf vgg_ilsvrc_16_fc_reduced.tar.gz && rm -f vgg_ilsvrc_16_fc_reduced.tar.gz
 ```bash
 python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 ```
-  - 可以通过设置 `export CUDA_VISIBLE_DEVICES=0,1,2,3` 指定想要使用的GPU数量，默认`batch_size`数设为`GPU卡数x4`。
+  - 可以通过设置 `export CUDA_VISIBLE_DEVICES=0,1,2,3` 指定想要使用的GPU数量，`batch_size`默认设置为12或16。
   - 更多的可选参数见:
     ```bash
     python train.py --help
@@ -158,7 +157,7 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
   ```
 
 ### 模型预测以及可视化
-`infer.py`是预测及可视化模块的主要执行程序，调用示例如下：
+`widerface_eval.py`也可以用来做预测及可视化，调用示例如下：
 
 ```bash
 python widerface_eval.py --infer=True --confs_threshold=0.15
@@ -166,10 +165,10 @@ python widerface_eval.py --infer=True --confs_threshold=0.15
 ```
 下图可视化了模型的预测结果：
 <p align="center">
-<img src="images/infer_1.jpg" height=300 width=400 hspace='10'/>
-<img src="images/infer_2.jpg" height=300 width=400 hspace='10'/>
-<img src="images/infer_3.jpg" height=300 width=400 hspace='10'/>
-<img src="images/infer_4.jpg" height=300 width=400 hspace='10'/>  <br />
+<img src="images/0_Parade_marchingband_1_356.jpg" height=300 width=400 hspace='10'/>
+<img src="images/28_Sports_Fan_Sports_Fan_28_770.jpg" height=300 width=400 hspace='10'/>
+<img src="images/4_Dancing_Dancing_4_194.jpg" height=300 width=400 hspace='10'/>
+<img src="images/2_Demonstration_Demonstration_Or_Protest_2_58.jpg" height=300 width=400 hspace='10'/>  <br />
 Pyramidbox 预测可视化
 </p>
 
