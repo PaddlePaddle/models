@@ -174,8 +174,6 @@ def train(args,
         test_map = np.mean(every_test_map)
         return (train_map, test_map)
 
-    train_num = 0
-    total_train_time = 0.0
     for pass_id in range(num_passes):
         start_time = time.time()
         prev_start_time = start_time
@@ -196,17 +194,16 @@ def train(args,
                                   feed=feeder.feed(data),
                                   fetch_list=[loss])
             loss_v = np.mean(np.array(loss_v))
+            every_pass_loss.append(loss_v)
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
 
         end_time = time.time()
-        every_pass_loss.append(loss_v)
-        total_train_time += pass_duration
-        train_avg_loss = np.mean(every_pass_loss)
 
         best_map = test(pass_id, best_map)
         if args.for_model_ce:
+            train_avg_loss = np.mean(every_pass_loss)
             train_avg_acc, test_avg_acc = ce_map(pass_id, best_map)
             print ("kpis    train_acc         %f" % train_avg_acc)
             print ("kpis    train_cost        %f" % train_avg_loss)
