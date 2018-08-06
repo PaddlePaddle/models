@@ -12,15 +12,17 @@ class SortType(object):
 
 
 class Converter(object):
-    def __init__(self, vocab, beg, end, unk):
+    def __init__(self, vocab, beg, end, unk, delimiter):
         self._vocab = vocab
         self._beg = beg
         self._end = end
         self._unk = unk
+        self._delimiter = delimiter
 
     def __call__(self, sentence):
         return [self._beg] + [
-            self._vocab.get(w, self._unk) for w in sentence.split()
+            self._vocab.get(w, self._unk)
+            for w in sentence.split(self._delimiter)
         ] + [self._end]
 
 
@@ -146,9 +148,12 @@ class DataReader(object):
     :param use_token_batch: Whether to produce batch data according to
         token number.
     :type use_token_batch: bool
-    :param delimiter: The delimiter used to split source and target in each
-        line of data file.
-    :type delimiter: basestring
+    :param field_delimiter: The delimiter used to split source and target in
+        each line of data file.
+    :type field_delimiter: basestring
+    :param token_delimiter: The delimiter used to split tokens in source or
+        target sentences.
+    :type token_delimiter: basestring
     :param start_mark: The token representing for the beginning of
         sentences in dictionary.
     :type start_mark: basestring
@@ -175,12 +180,12 @@ class DataReader(object):
                  shuffle=True,
                  shuffle_batch=False,
                  use_token_batch=False,
-                 delimiter="\t",
+                 field_delimiter="\t",
+                 token_delimiter=" ",
                  start_mark="<s>",
                  end_mark="<e>",
                  unk_mark="<unk>",
-                 seed=0,
-                 pkl_filename=None):
+                 seed=0):
         self._src_vocab = self.load_dict(src_vocab_fpath)
         self._only_src = True
         if trg_vocab_fpath is not None:
@@ -195,24 +200,11 @@ class DataReader(object):
         self._shuffle_batch = shuffle_batch
         self._min_length = min_length
         self._max_length = max_length
-        self._delimiter = delimiter
-
-        if pkl_filename is None:
-            self.load_src_trg_ids(end_mark, fpattern, start_mark, tar_fname,
-                                  unk_mark)
-        else:
-            try:
-                with open(pkl_filename, 'r') as f:
-                    self._src_seq_ids, self._trg_seq_ids, self._sample_infos = cPickle.load(
-                        f)
-            except:
-                self.load_src_trg_ids(end_mark, fpattern, start_mark, tarfile,
-                                      unk_mark)
-                with open(pkl_filename, 'w') as f:
-                    cPickle.dump((self._src_seq_ids, self._trg_seq_ids,
-                                  self._sample_infos), f,
-                                 cPickle.HIGHEST_PROTOCOL)
-
+        self._field_delimiter = field_delimiter
+        self._token_delimiter = token_delimiter
+        self._epoch_batches = []
+        self.load_src_trg_ids(end_mark, fpattern, start_mark, tar_fname,
+                              unk_mark)
         self._random = random.Random(x=seed)
 
     def load_src_trg_ids(self, end_mark, fpattern, start_mark, tar_fname,
@@ -222,7 +214,8 @@ class DataReader(object):
                 vocab=self._src_vocab,
                 beg=self._src_vocab[start_mark],
                 end=self._src_vocab[end_mark],
-                unk=self._src_vocab[unk_mark])
+                unk=self._src_vocab[unk_mark],
+                delimiter=self._token_delimiter)
         ]
         if not self._only_src:
             converters.append(
@@ -230,7 +223,8 @@ class DataReader(object):
                     vocab=self._trg_vocab,
                     beg=self._trg_vocab[start_mark],
                     end=self._trg_vocab[end_mark],
-                    unk=self._trg_vocab[unk_mark]))
+                    unk=self._trg_vocab[unk_mark],
+                    delimiter=self._token_delimiter))
 
         converters = ComposedConverter(converters)
 
@@ -256,7 +250,7 @@ class DataReader(object):
 
             f = tarfile.open(fpaths[0], 'r')
             for line in f.extractfile(tar_fname):
-                yield line.split(self._delimiter)
+                yield line.split(self._field_delimiter)
         else:
             for fpath in fpaths:
                 if not os.path.isfile(fpath):
@@ -264,7 +258,7 @@ class DataReader(object):
 
                 with open(fpath, 'r') as f:
                     for line in f:
-                        yield line.split(self._delimiter)
+                        yield line.split(self._field_delimiter)
 
     @staticmethod
     def load_dict(dict_path, reverse=False):
@@ -272,9 +266,9 @@ class DataReader(object):
         with open(dict_path, "r") as fdict:
             for idx, line in enumerate(fdict):
                 if reverse:
-                    word_dict[idx] = line.strip()
+                    word_dict[idx] = line.strip('\n')
                 else:
-                    word_dict[line.strip()] = idx
+                    word_dict[line.strip('\n')] = idx
         return word_dict
 
     def batch_generator(self):
