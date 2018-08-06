@@ -157,7 +157,8 @@ def train(args):
     test_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
-    train_exe = fluid.ParallelExecutor(use_cuda=True, loss_name=avg_cost.name)
+    train_exe = fluid.ParallelExecutor(
+        use_cuda=True if args.use_gpu else False, loss_name=avg_cost.name)
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
 
