@@ -240,9 +240,15 @@ class Network(object):
     @layer
     def relu(self, input, name):
         fluid = import_fluid()
-        output = fluid.layers.relu(
-            name=self.get_unique_output_name(name, 'relu'), x=input)
+        output = fluid.layers.relu(input)
         return output
+
+    @layer
+    def prelu(self, input, channel_shared, name):
+        #fluid = import_fluid()
+        #output = fluid.layers.relu(input)
+        #return output
+        raise NotImplementedError('prelu not implemented')
 
     def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
              name):
@@ -382,7 +388,8 @@ class Network(object):
                             name,
                             scale_offset=True,
                             eps=1e-5,
-                            relu=False):
+                            relu=False,
+                            relu_negative_slope=0.0):
         # NOTE: Currently, only inference is supported
         fluid = import_fluid()
         prefix = name + '_'
@@ -392,6 +399,15 @@ class Network(object):
             name=prefix + 'offset')
         mean_name = prefix + 'mean'
         variance_name = prefix + 'variance'
+
+        leaky_relu = False
+        act = 'relu'
+        if relu is False:
+            act = None
+        elif relu_negative_slope != 0.0:
+            leaky_relu = True
+            act = None
+
         output = fluid.layers.batch_norm(
             name=self.get_unique_output_name(name, 'batch_norm'),
             input=input,
@@ -401,7 +417,10 @@ class Network(object):
             moving_mean_name=mean_name,
             moving_variance_name=variance_name,
             epsilon=eps,
-            act='relu' if relu is True else None)
+            act=act)
+
+        if leaky_relu:
+            output = fluid.layers.leaky_relu(output, alpha=relu_negative_slope)
 
         return output
 
