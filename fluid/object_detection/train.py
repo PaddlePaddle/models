@@ -11,11 +11,6 @@ import reader
 from mobilenet_ssd import mobile_net
 from utility import add_arguments, print_arguments
 
-SEED = 90
-
-# random seed must set before configuring the network.
-fluid.default_startup_program().random_seed = SEED
-
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
@@ -38,7 +33,7 @@ add_arg('mean_value_G',     float, 127.5,  "Mean value for G channel which will 
 add_arg('mean_value_R',     float, 127.5,  "Mean value for R channel which will be subtracted.")  #103.94
 add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all data, while n means using only n sample.")
 add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
-add_arg('for_model_ce',     bool,  False, "Use CE to evaluate the model")
+add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 #yapf: enable
 
 
@@ -51,6 +46,9 @@ def train(args,
           num_passes,
           model_save_dir,
           pretrained_model=None):
+    if args.enable_ce:
+        fluid.framework.default_startup_program().random_seed = 111
+
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if 'coco' in data_args.dataset:
         num_classes = 91
@@ -124,8 +122,12 @@ def train(args,
         train_exe = fluid.ParallelExecutor(
             use_cuda=args.use_gpu, loss_name=loss.name)
 
-    train_reader = paddle.batch(
-        reader.train(data_args, train_file_list), batch_size=batch_size)
+    if not args.enable_ce:
+        train_reader = paddle.batch(
+            reader.train(data_args, train_file_list), batch_size=batch_size)
+    else:
+        train_reader = paddle.batch(
+            reader.train(data_args, train_file_list, False), batch_size=batch_size)
     test_reader = paddle.batch(
         reader.test(data_args, val_file_list), batch_size=batch_size)
     feeder = fluid.DataFeeder(
@@ -143,17 +145,20 @@ def train(args,
     def test(pass_id, best_map):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
+        every_pass_map=[]
         for batch_id, data in enumerate(test_reader()):
             test_map, = exe.run(test_program,
                                feed=feeder.feed(data),
                                fetch_list=[accum_map])
             if batch_id % 20 == 0:
+                every_pass_map.append(test_map)
                 print("Batch {0}, map {1}".format(batch_id, test_map))
+        mean_map = np.mean(every_pass_map)
         if test_map[0] > best_map:
             best_map = test_map[0]
             save_model('best_model')
         print("Pass {0}, test map {1}".format(pass_id, test_map))
-        return best_map
+        return best_map, mean_map
 
     total_time = 0.0
     for pass_id in range(num_passes):
@@ -183,27 +188,23 @@ def train(args,
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
 
         end_time = time.time()
-        if args.for_model_ce:
-            gpu_num = get_cards()
+        best_map, mean_map = test(pass_id, best_map)
+        if args.enable_ce and pass_id == 1:
             total_time += end_time - start_time
             train_avg_loss = np.mean(every_pass_loss)
-            if gpu_num == 1:
+            if devices_num == 1:
                 print ("kpis    train_cost        %s" % train_avg_loss)
+                print ("kpis    test_acc          %s" % mean_map)
                 print ("kpis    train_speed       %s" % (total_time / epoch_idx))
             else:
                 print ("kpis    train_cost_card%s   %s" % (gpu_num, train_avg_loss))
+                print ("kpis    test_acc_card%s     %s" % (gpu_num, mean_map))
                 print ("kpis    train_speed_card%s  %f" % (gpu_num, total_time / epoch_idx))
 
-        best_map = test(pass_id, best_map)
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
     print("Best test map {0}".format(best_map))
-
-def get_cards():
-    cards = os.environ.get('CUDA_VISIBLE_DEVICES')
-    num = len(cards.split(","))
-    return num
 
 if __name__ == '__main__':
     args = parser.parse_args()
