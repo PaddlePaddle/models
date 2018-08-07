@@ -58,6 +58,6 @@ def log_to_ce(log):
 if __name__ == '__main__':
     log = sys.stdin.read()
     print("*****")
-    print log
+    print(log)
     print("****")
     log_to_ce(log)

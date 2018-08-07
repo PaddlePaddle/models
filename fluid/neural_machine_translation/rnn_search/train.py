@@ -71,6 +71,7 @@ def train():
 
     optimizer.minimize(avg_cost)
 
+    # Disable shuffle for Continuous Evaluation only
     if not args.enable_ce:
         train_batch_generator = paddle.batch(
             paddle.reader.shuffle(
