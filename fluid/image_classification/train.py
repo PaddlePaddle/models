@@ -4,6 +4,7 @@ import time
 import sys
 import paddle
 import paddle.fluid as fluid
+import paddle.dataset.flowers as flowers
 import models
 import reader
 import argparse
@@ -28,6 +29,7 @@ add_arg('checkpoint',       str,   None,                 "Whether to resume chec
 add_arg('lr',               float, 0.1,                  "set learning rate.")
 add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate decay strategy.")
 add_arg('model',            str,   "SE_ResNeXt50_32x4d", "Set the network to use.")
+add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
 # yapf: enable
 
 model_list = [m for m in dir(models) if "__" not in m]
@@ -100,6 +102,9 @@ def train(args):
     # model definition
     model = models.__dict__[model_name]()
 
+    if args.enable_ce:
+        assert model_name == "SE_ResNeXt50_32x4d"
+
     if model_name is "GoogleNet":
         out0, out1, out2 = model.net(input=image, class_dim=class_dim)
         cost0 = fluid.layers.cross_entropy(input=out0, label=label)
@@ -129,6 +134,8 @@ def train(args):
     params["num_epochs"] = args.num_epochs
     params["learning_strategy"]["batch_size"] = args.batch_size
     params["learning_strategy"]["name"] = args.lr_strategy
+    if args.enable_ce:
+        params["dropout_seed"] = 10
 
     # initialize optimizer
     optimizer = optimizer_setting(params)
@@ -136,6 +143,9 @@ def train(args):
 
     if with_memory_optimization:
         fluid.memory_optimize(fluid.default_main_program())
+
+    if args.enable_ce:
+        fluid.default_startup_program().random_seed = 1000
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -153,8 +163,20 @@ def train(args):
 
     train_batch_size = args.batch_size
     test_batch_size = 16
-    train_reader = paddle.batch(reader.train(), batch_size=train_batch_size)
-    test_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
+
+    if not args.enable_ce:
+        train_reader = paddle.batch(reader.train(), batch_size=train_batch_size)
+        test_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
+    else:
+        # use flowers dataset for CE and set use_xmap False to avoid disorder data
+        # but it is time consuming. For faster speed, need another dataset.
+        import random
+        random.seed(0)
+        train_reader = paddle.batch(
+            flowers.train(use_xmap=False), batch_size=train_batch_size)
+        test_reader = paddle.batch(
+            flowers.test(use_xmap=False), batch_size=test_batch_size)
+
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     train_exe = fluid.ParallelExecutor(
@@ -165,6 +187,7 @@ def train(args):
     for pass_id in range(params["num_epochs"]):
         train_info = [[], [], []]
         test_info = [[], [], []]
+        train_time = []
         for batch_id, data in enumerate(train_reader()):
             t1 = time.time()
             loss, acc1, acc5 = train_exe.run(fetch_list, feed=feeder.feed(data))
@@ -176,6 +199,7 @@ def train(args):
             train_info[0].append(loss)
             train_info[1].append(acc1)
             train_info[2].append(acc5)
+            train_time.append(period)
             if batch_id % 10 == 0:
                 print("Pass {0}, trainbatch {1}, loss {2}, \
                        acc1 {3}, acc5 {4} time {5}"
@@ -187,6 +211,7 @@ def train(args):
         train_loss = np.array(train_info[0]).mean()
         train_acc1 = np.array(train_info[1]).mean()
         train_acc5 = np.array(train_info[2]).mean()
+        train_speed = np.array(train_time).mean()
         cnt = 0
         for test_batch_id, data in enumerate(test_reader()):
             t1 = time.time()
@@ -225,6 +250,18 @@ def train(args):
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path)
+
+        # This is for continuous evaluation only
+        if args.enable_ce:
+            # Use the last cost/acc for training
+            print("kpis    train_cost_kpi       %f" % train_info[0][-1])
+            print("kpis    train_acc_top1_kpi   %f" % train_info[1][-1])
+            print("kpis    train_acc_top5_kpi   %f" % train_info[2][-1])
+            # Use the mean cost/acc for testing
+            print("kpis    test_cost_kpi        %f" % test_loss)
+            print("kpis    test_acc_top1_kpi    %f" % test_acc1)
+            print("kpis    test_acc_top5_kpi    %f" % test_acc5)
+            print("kpis    train_speed_kpi      %f" % train_speed)
 
 
 def main():
