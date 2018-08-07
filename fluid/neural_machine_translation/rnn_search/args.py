@@ -89,5 +89,9 @@ def parse_args():
         default=1,
         help="Save the trained model every n passes."
         "(default: %(default)d)")
+    parser.add_argument(
+        "--enable_ce",
+        action='store_true',
+        help="If set, run the task with continuous evaluation logs.")
     args = parser.parse_args()
     return args

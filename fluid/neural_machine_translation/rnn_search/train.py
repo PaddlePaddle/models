@@ -35,6 +35,9 @@ import no_attention_model
 def train():
     args = parse_args()
 
+    if args.enable_ce:
+        framework.default_startup_program().random_seed = 111
+
     # Training process
     if args.no_attention:
         avg_cost, feed_order = no_attention_model.seq_to_seq_net(
@@ -68,17 +71,28 @@ def train():
 
     optimizer.minimize(avg_cost)
 
-    train_batch_generator = paddle.batch(
-        paddle.reader.shuffle(
-            paddle.dataset.wmt14.train(args.dict_size), buf_size=1000),
-        batch_size=args.batch_size,
-        drop_last=False)
+    if not args.enable_ce:
+        train_batch_generator = paddle.batch(
+            paddle.reader.shuffle(
+                paddle.dataset.wmt14.train(args.dict_size), buf_size=1000),
+            batch_size=args.batch_size,
+            drop_last=False)
 
-    test_batch_generator = paddle.batch(
-        paddle.reader.shuffle(
-            paddle.dataset.wmt14.test(args.dict_size), buf_size=1000),
-        batch_size=args.batch_size,
-        drop_last=False)
+        test_batch_generator = paddle.batch(
+            paddle.reader.shuffle(
+                paddle.dataset.wmt14.test(args.dict_size), buf_size=1000),
+            batch_size=args.batch_size,
+            drop_last=False)
+    else:
+        train_batch_generator = paddle.batch(
+            paddle.dataset.wmt14.train(args.dict_size),
+            batch_size=args.batch_size,
+            drop_last=False)
+
+        test_batch_generator = paddle.batch(
+            paddle.dataset.wmt14.test(args.dict_size),
+            batch_size=args.batch_size,
+            drop_last=False)
 
     place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
     exe = Executor(place)
@@ -123,6 +137,9 @@ def train():
             avg_cost_train = np.array(fetch_outs[0])
             print('pass_id=%d, batch_id=%d, train_loss: %f' %
                   (pass_id, batch_id, avg_cost_train))
+            # This is for continuous evaluation only
+            if args.enable_ce and batch_id >= 100:
+                break
 
         pass_end_time = time.time()
         test_loss = validation()
@@ -130,6 +147,13 @@ def train():
         words_per_sec = words_seen / time_consumed
         print("pass_id=%d, test_loss: %f, words/s: %f, sec/pass: %f" %
               (pass_id, test_loss, words_per_sec, time_consumed))
+
+        # This log is for continuous evaluation only
+        if args.enable_ce:
+            print("kpis    train_cost      %f" % avg_cost_train)
+            print("kpis    test_cost       %f" % test_loss)
+            print("kpis    train_duration  %f" % time_consumed)
+
 
         if pass_id % args.save_interval == 0:
             model_path = os.path.join(args.save_dir, str(pass_id))
