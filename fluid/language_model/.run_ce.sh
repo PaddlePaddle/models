@@ -8,7 +8,7 @@ export CUDA_VISIBLE_DEVICES=$cudaid
 
 FLAGS_benchmark=true  python train.py | python _ce.py
 
-cudaid=${language_model_m:=0,1,2,3} # use 0-th card as default
+cudaid=${language_model_m:=0,1,2,3} # use 0,1,2,3 card as default
 export CUDA_VISIBLE_DEVICES=$cudaid
 
 FLAGS_benchmark=true  python train.py | python _ce.py
