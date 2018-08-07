@@ -154,7 +154,6 @@ def train():
             print("kpis    test_cost       %f" % test_loss)
             print("kpis    train_duration  %f" % time_consumed)
 
-
         if pass_id % args.save_interval == 0:
             model_path = os.path.join(args.save_dir, str(pass_id))
             if not os.path.isdir(model_path):
