@@ -54,6 +54,8 @@ python train.py  \
         --model=ResNet50 \
         --pretrained_model=${path_to_pretrain_model} \
         --lr=0.001 \
+        --num_epochs=120 \
+        --use_gpu=True \
         --train_batch_size=20 \
         --test_batch_size=20 \
         --loss_name=tripletloss \
@@ -64,43 +66,24 @@ python train.py  \
 * **num_epochs**: the number of epochs. Default: 120.
 * **batch_size**: the size of each mini-batch. Default: 256.
 * **use_gpu**: whether to use GPU or not. Default: True.
-* **total_images**: total number of images in the training set. Default: 1281167.
-* **class_dim**: the class number of the classification task. Default: 1000.
-* **image_shape**: input size of the network. Default: "3,224,224".
 * **model_save_dir**: the directory to save trained model. Default: "output".
-* **with_mem_opt**: whether to use memory optimization or not. Default: False.
-* **lr_strategy**: learning rate changing strategy. Default: "piecewise_decay".
 * **lr**: initialized learning rate. Default: 0.1.
 * **pretrained_model**: model path for pretraining. Default: None.
-* **checkpoint**: the checkpoint path to resume. Default: None.
 
-**data reader introduction:** Data reader is defined in ```reader.py```. In [training stage](#training-a-model), random crop and flipping are used, while center crop is used in [evaluation](#inference) and [inference](#inference) stages. Supported data augmentation includes:
-* rotation
-* color jitter
-* random crop
-* center crop
-* resize
-* flipping
-
-**training curve:** The training curve can be drawn based on training log. For example, the log from training AlexNet is like:
+**training log:** the log from training ResNet-50 based triplet loss is like:
 ```
-End pass 1, train_loss 6.23153877258, train_acc1 0.0150696625933, train_acc5 0.0552518665791, test_loss 5.41981744766, test_acc1 0.0519132651389, test_acc5 0.156150355935
-End pass 2, train_loss 5.15442800522, train_acc1 0.0784279331565, train_acc5 0.211050540209, test_loss 4.45795249939, test_acc1 0.140469551086, test_acc5 0.333163291216
-End pass 3, train_loss 4.51505613327, train_acc1 0.145300447941, train_acc5 0.331567406654, test_loss 3.86548018456, test_acc1 0.219443559647, test_acc5 0.446448504925
-End pass 4, train_loss 4.12735557556, train_acc1 0.19437250495, train_acc5 0.405713528395, test_loss 3.56990146637, test_acc1 0.264536827803, test_acc5 0.507190704346
-End pass 5, train_loss 3.87505435944, train_acc1 0.229518383741, train_acc5 0.453582793474, test_loss 3.35345435143, test_acc1 0.297349333763, test_acc5 0.54753267765
-End pass 6, train_loss 3.6929500103, train_acc1 0.255628824234, train_acc5 0.487188398838, test_loss 3.17112898827, test_acc1 0.326953113079, test_acc5 0.581780135632
-End pass 7, train_loss 3.55882954597, train_acc1 0.275381118059, train_acc5 0.511990904808, test_loss 3.03736782074, test_acc1 0.349035382271, test_acc5 0.606293857098
-End pass 8, train_loss 3.45595097542, train_acc1 0.291462600231, train_acc5 0.530815005302, test_loss 2.96034455299, test_acc1 0.362228929996, test_acc5 0.617390751839
-End pass 9, train_loss 3.3745200634, train_acc1 0.303871691227, train_acc5 0.545210540295, test_loss 2.93932366371, test_acc1 0.37129303813, test_acc5 0.623573005199
+Pass 0, trainbatch 0, lr 9.99999974738e-05, loss_metric 0.0700866878033, loss_cls 5.23635625839, acc1 0.0, acc5 0.100000008941, time 0.16 sec
+Pass 0, trainbatch 10, lr 9.99999974738e-05, loss_metric 0.0752244070172, loss_cls 5.30303478241, acc1 0.0, acc5 0.100000008941, time 0.14 sec
+Pass 0, trainbatch 20, lr 9.99999974738e-05, loss_metric 0.0840565115213, loss_cls 5.41880941391, acc1 0.0, acc5 0.0333333350718, time 0.14 sec
+Pass 0, trainbatch 30, lr 9.99999974738e-05, loss_metric 0.0698839947581, loss_cls 5.35385560989, acc1 0.0, acc5 0.0333333350718, time 0.14 sec
+Pass 0, trainbatch 40, lr 9.99999974738e-05, loss_metric 0.0596057735384, loss_cls 5.34744024277, acc1 0.0, acc5 0.0, time 0.14 sec
+Pass 0, trainbatch 50, lr 9.99999974738e-05, loss_metric 0.067836754024, loss_cls 5.37124729156, acc1 0.0, acc5 0.0333333350718, time 0.14 sec
+Pass 0, trainbatch 60, lr 9.99999974738e-05, loss_metric 0.0637686774135, loss_cls 5.47412204742, acc1 0.0, acc5 0.0333333350718, time 0.14 sec
+Pass 0, trainbatch 70, lr 9.99999974738e-05, loss_metric 0.0772982165217, loss_cls 5.38295936584, acc1 0.0, acc5 0.0, time 0.14 sec
+Pass 0, trainbatch 80, lr 9.99999974738e-05, loss_metric 0.0861896127462, loss_cls 5.41250753403, acc1 0.0, acc5 0.0, time 0.14 sec
+Pass 0, trainbatch 90, lr 9.99999974738e-05, loss_metric 0.0653102770448, loss_cls 5.53133153915, acc1 0.0, acc5 0.0, time 0.14 sec
 ...
 ```
-
-The error rate curves of AlexNet, ResNet50 and SE-ResNeXt-50 are shown in the figure below.
-<p align="center">
-<img src="images/curve.jpg" height=480 width=640 hspace='10'/> <br />
-Training and validation Curves
-</p>
 
 ## Finetuning
 
