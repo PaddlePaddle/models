@@ -1,7 +1,9 @@
+import os
 import sys
 import time
 import unittest
 import contextlib
+import numpy as np
 
 import paddle.fluid as fluid
 import paddle.v2 as paddle
@@ -25,53 +27,70 @@ def train(train_reader,
     """
     train network
     """
-    data = fluid.layers.data(
-        name="words", shape=[1], dtype="int64", lod_level=1)
 
-    label = fluid.layers.data(name="label", shape=[1], dtype="int64")
+    startup_prog = fluid.Program()
+    train_prog = fluid.Program()
 
-    if not parallel:
-        cost, acc, prediction = network(data, label, len(word_dict))
-    else:
-        places = fluid.layers.get_places(device_count=2)
-        pd = fluid.layers.ParallelDo(places)
-        with pd.do():
-            cost, acc, prediction = network(
-                pd.read_input(data), pd.read_input(label), len(word_dict))
-
-            pd.write_output(cost)
-            pd.write_output(acc)
-
-        cost, acc = pd()
-        cost = fluid.layers.mean(cost)
-        acc = fluid.layers.mean(acc)
-
-    sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=lr)
-    sgd_optimizer.minimize(cost)
+    with fluid.program_guard(train_prog, startup_prog):
+        train_py_reader = fluid.layers.py_reader(
+            capacity=16,
+            shapes=[[-1, 1], [-1, 1]],
+            lod_levels=[1, 0],
+            dtypes=["int64", "int64"],
+            use_double_buffer=True)
+        with fluid.unique_name.guard():
+            data, label = fluid.layers.read_file(train_py_reader)
+            cost, acc, prediction = network(data, label, len(word_dict))
+            sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=lr)
+            sgd_optimizer.minimize(cost)
 
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    feeder = fluid.DataFeeder(feed_list=[data, label], place=place)
+    exe.run(startup_prog)
 
-    exe.run(fluid.default_startup_program())
+    train_py_reader.decorate_paddle_reader(train_reader)
+
+    if parallel:
+        parallel_exe = fluid.ParallelExecutor(
+            main_program=train_prog, use_cuda=use_cuda, loss_name=cost.name)
+
+    train_fetch_list = [cost.name, acc.name]
+
     for pass_id in xrange(pass_num):
-        data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
-        for data in train_reader():
-            avg_cost_np, avg_acc_np = exe.run(fluid.default_main_program(),
-                                              feed=feeder.feed(data),
-                                              fetch_list=[cost, acc])
-            data_size = len(data)
-            total_acc += data_size * avg_acc_np
-            total_cost += data_size * avg_cost_np
-            data_count += data_size
-        avg_cost = total_cost / data_count
+        train_py_reader.start()
+        train_info = [[], []]
+        batch_id = 0
+        try:
+            while True:
+                if not parallel:
+                    avg_cost_np, avg_acc_np = exe.run(
+                        train_prog, fetch_list=train_fetch_list)
+                else:
+                    avg_cost_np, avg_acc_np = parallel_exe.run(
+                        fetch_list=train_fetch_list)
+                avg_cost_np = np.mean(np.array(avg_cost_np))
+                avg_acc_np = np.mean(np.array(avg_acc_np))
+                train_info[0].append(avg_cost_np)
+                train_info[1].append(avg_acc_np)
+                batch_id += 1
+        except fluid.core.EOFException:
+            train_py_reader.reset()
 
-        avg_acc = total_acc / data_count
+        avg_cost = np.array(train_info[0]).mean()
+        avg_acc = np.array(train_info[1]).mean()
+
         print("pass_id: %d, avg_acc: %f, avg_cost: %f" %
-              (pass_id, avg_acc, avg_cost))
+              (pass_id, avg_cost, avg_acc))
+        sys.stdout.flush()
 
-        epoch_model = save_dirname + "/" + "epoch" + str(pass_id)
-        fluid.io.save_inference_model(epoch_model, ["words", "label"], acc, exe)
+        model_path = os.path.join(save_dirname + "/" + "epoch" + str(pass_id))
+        if not os.path.isdir(model_path):
+            os.makedirs(model_path)
+        fluid.io.save_inference_model(
+            model_path, [data.name, label.name],
+            acc,
+            exe,
+            main_program=train_prog)
 
 
 def train_net():

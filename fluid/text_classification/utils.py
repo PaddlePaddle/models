@@ -38,14 +38,14 @@ def load_vocab(filename):
     return vocab
 
 
-def data2tensor(data, place):
+def data2tensor(data, feed_targets, place):
     """
     data2tensor
     """
     input_seq = to_lodtensor(map(lambda x: x[0], data), place)
     y_data = np.array(map(lambda x: x[1], data)).astype("int64")
     y_data = y_data.reshape([-1, 1])
-    return {"words": input_seq, "label": y_data}
+    return {feed_targets[0]: input_seq, feed_targets[1]: y_data}
 
 
 def prepare_data(data_type="imdb",

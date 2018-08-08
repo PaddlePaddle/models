@@ -29,10 +29,11 @@ def infer(test_reader, use_cuda, model_path=None):
         total_acc = 0.0
         total_count = 0
         for data in test_reader():
-            acc = exe.run(inference_program,
-                          feed=utils.data2tensor(data, place),
-                          fetch_list=fetch_targets,
-                          return_numpy=True)
+            acc = exe.run(
+                inference_program,
+                feed=utils.data2tensor(data, feed_target_names, place),
+                fetch_list=fetch_targets,
+                return_numpy=True)
             total_acc += acc[0] * len(data)
             total_count += len(data)
 
