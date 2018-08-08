@@ -1,20 +1,23 @@
-####this file is only used for continuous evaluation test!
+# this file is only used for continuous evaluation test!
 
 import os
 import sys
 sys.path.append(os.environ['ceroot'])
-from kpi import CostKpi, DurationKpi, AccKpi
+from kpi import CostKpi
+from kpi import DurationKpi
 
-#### NOTE kpi.py should shared in models in some way!!!!
-
-train_cost_kpi = CostKpi('train_cost', 0.02, 0, actived=True)
-test_cost_kpi = CostKpi('test_cost', 0.005, 0, actived=True)
-train_duration_kpi = DurationKpi('train_duration', 0.06, 0, actived=True)
+imikolov_20_avg_ppl_kpi = CostKpi('imikolov_20_avg_ppl', 0.2, 0)
+imikolov_20_pass_duration_kpi = DurationKpi(
+    'imikolov_20_pass_duration', 0.02, 0, actived=True)
+imikolov_20_avg_ppl_kpi_card4 = CostKpi('imikolov_20_avg_ppl_card4', 0.2, 0)
+imikolov_20_pass_duration_kpi_card4 = DurationKpi(
+    'imikolov_20_pass_duration_card4', 0.03, 0, actived=True)
 
 tracking_kpis = [
-    train_cost_kpi,
-    test_cost_kpi,
-    train_duration_kpi,
+    imikolov_20_avg_ppl_kpi,
+    imikolov_20_pass_duration_kpi,
+    imikolov_20_avg_ppl_kpi_card4,
+    imikolov_20_pass_duration_kpi_card4,
 ]
 
 
@@ -38,7 +41,6 @@ def parse_log(log):
         fs = line.strip().split('\t')
         print(fs)
         if len(fs) == 3 and fs[0] == 'kpis':
-            print("-----%s" % fs)
             kpi_name = fs[1]
             kpi_value = float(fs[2])
             yield kpi_name, kpi_value
@@ -57,7 +59,4 @@ def log_to_ce(log):
 
 if __name__ == '__main__':
     log = sys.stdin.read()
-    print("*****")
-    print(log)
-    print("****")
     log_to_ce(log)
