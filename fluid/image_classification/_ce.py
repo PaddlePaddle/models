@@ -7,19 +7,35 @@ from kpi import CostKpi, DurationKpi, AccKpi
 
 #### NOTE kpi.py should shared in models in some way!!!!
 
-train_acc_top1_kpi = AccKpi('train_acc_top1_kpi', 0.05, 0, desc='TOP1 ACC')
+train_acc_top1_kpi = AccKpi('train_acc_top1', 0.05, 0, desc='TOP1 ACC')
 train_acc_top5_kpi = AccKpi(
-    'train_acc_top5_kpi', 0.05, 0, actived=False, desc='TOP5 ACC')
-train_cost_kpi = CostKpi(
-    'train_cost_kpi', 0.05, 0, actived=True, desc='train cost')
-test_acc_top1_kpi = AccKpi('test_acc_top1_kpi', 0.05, 0, desc='TOP1 ACC')
+    'train_acc_top5', 0.05, 0, actived=False, desc='TOP5 ACC')
+train_cost_kpi = CostKpi('train_cost', 0.05, 0, actived=True, desc='train cost')
+test_acc_top1_kpi = AccKpi('test_acc_top1', 0.05, 0, desc='TOP1 ACC')
 test_acc_top5_kpi = AccKpi(
-    'test_acc_top5_kpi', 0.05, 0, actived=False, desc='TOP5 ACC')
-test_cost_kpi = CostKpi(
-    'test_cost_kpi', 0.05, 0, actived=True, desc='train cost')
-
+    'test_acc_top5', 0.05, 0, actived=False, desc='TOP5 ACC')
+test_cost_kpi = CostKpi('test_cost', 0.05, 0, actived=True, desc='train cost')
 train_speed_kpi = AccKpi(
-    'train_speed_kpi',
+    'train_speed',
+    0.05,
+    0,
+    actived=True,
+    unit_repr='images/s',
+    desc='train speed in one GPU card')
+train_acc_top1_card4_kpi = AccKpi(
+    'train_acc_top1_card4', 0.05, 0, desc='TOP1 ACC')
+train_acc_top5_card4_kpi = AccKpi(
+    'train_acc_top5_card4', 0.05, 0, actived=False, desc='TOP5 ACC')
+train_cost_card4_kpi = CostKpi(
+    'train_cost_kpi', 0.05, 0, actived=True, desc='train cost')
+test_acc_top1_card4_kpi = AccKpi(
+    'test_acc_top1_card4', 0.05, 0, desc='TOP1 ACC')
+test_acc_top5_card4_kpi = AccKpi(
+    'test_acc_top5_card4', 0.05, 0, actived=False, desc='TOP5 ACC')
+test_cost_card4_kpi = CostKpi(
+    'test_cost_card4', 0.05, 0, actived=True, desc='train cost')
+train_speed_card4_kpi = AccKpi(
+    'train_speed_card4',
     0.05,
     0,
     actived=True,
@@ -27,7 +43,9 @@ train_speed_kpi = AccKpi(
     desc='train speed in one GPU card')
 tracking_kpis = [
     train_acc_top1_kpi, train_acc_top5_kpi, train_cost_kpi, test_acc_top1_kpi,
-    test_acc_top5_kpi, test_cost_kpi, train_speed_kpi
+    test_acc_top5_kpi, test_cost_kpi, train_speed_kpi, train_acc_top1_card4_kpi,
+    train_acc_top5_card4_kpi, train_cost_card4_kpi, test_acc_top1_card4_kpi,
+    test_acc_top5_card4_kpi, test_cost_card4_kpi, train_speed_card4_kpi
 ]
 
 
