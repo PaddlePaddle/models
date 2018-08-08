@@ -19,7 +19,7 @@ Running sample code in this directory requires PaddelPaddle Fluid v0.14.0 and la
 
 An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
 ```
-cd data
+cd data/
 sh download_cub200.sh
 ```
 The script ```data/split.py``` is used to split train/valid set. In our settings, we use images from first 100 classes(001-100) as training data while the other 100 classes are validation data. After the splitting, there are two label files which contain train and validation image labels respectively:
