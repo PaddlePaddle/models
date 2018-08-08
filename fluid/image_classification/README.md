@@ -22,42 +22,49 @@ An example for ImageNet classification is as follows. First of all, preparation 
 cd data/ILSVRC2012/
 sh download_imagenet2012.sh
 ```
-The script ```data/split.py``` is used to split train/valid set. In our settings, we use images from first 100 classes(001-100) as training data while the other 100 classes are validation data. After the splitting, there are two label files which contain train and validation image labels respectively:
 
-* *CUB200_train.txt*: label file of CUB-200 training set, with each line seperated by ```SPACE```, like:
+In the shell script ```download_imagenet2012.sh```,  there are three steps to prepare data:
+
+**step-1:** Register at ```image-net.org``` first in order to get a pair of ```Username``` and ```AccessKey```, which are used to download ImageNet data.
+
+**step-2:** Download ImageNet-2012 dataset from website. The training and validation data will be downloaded into folder "train" and "val" respectively. Please note that the size of data is more than 40 GB, it will take much time to download. Users who have downloaded the ImageNet data can organize it into ```data/ILSVRC2012``` directly.
+
+**step-3:** Download training and validation label files. There are two label files which contain train and validation image labels respectively:
+
+* *train_list.txt*: label file of imagenet-2012 training set, with each line seperated by ```SPACE```, like:
 ```
-current_path/images/097.Orchard_Oriole/Orchard_Oriole_0021_2432168643.jpg 97
-current_path/images/097.Orchard_Oriole/Orchard_Oriole_0022_549995638.jpg 97
-current_path/images/097.Orchard_Oriole/Orchard_Oriole_0034_2244771004.jpg 97
-current_path/images/097.Orchard_Oriole/Orchard_Oriole_0010_2501839798.jpg 97
-current_path/images/097.Orchard_Oriole/Orchard_Oriole_0008_491860362.jpg 97
-current_path/images/097.Orchard_Oriole/Orchard_Oriole_0015_2545116359.jpg 97
+train/n02483708/n02483708_2436.jpeg 369
+train/n03998194/n03998194_7015.jpeg 741
+train/n04523525/n04523525_38118.jpeg 884
+train/n04596742/n04596742_3032.jpeg 909
+train/n03208938/n03208938_7065.jpeg 535
 ...
 ```
-* *CUB200_val.txt*: label file of CUB-200 validation set, with each line seperated by ```SPACE```, like.
+* *val_list.txt*: label file of imagenet-2012 validation set, with each line seperated by ```SPACE```, like.
 ```
-current_path/images/154.Red_eyed_Vireo/Red_eyed_Vireo_0029_59210443.jpg 154
-current_path/images/154.Red_eyed_Vireo/Red_eyed_Vireo_0021_2693953672.jpg 154
-current_path/images/154.Red_eyed_Vireo/Red_eyed_Vireo_0016_2917350638.jpg 154
-current_path/images/154.Red_eyed_Vireo/Red_eyed_Vireo_0027_2503540454.jpg 154
-current_path/images/154.Red_eyed_Vireo/Red_eyed_Vireo_0026_2502710393.jpg 154
-current_path/images/154.Red_eyed_Vireo/Red_eyed_Vireo_0022_2693134681.jpg 154
+val/ILSVRC2012_val_00000001.jpeg 65
+val/ILSVRC2012_val_00000002.jpeg 970
+val/ILSVRC2012_val_00000003.jpeg 230
+val/ILSVRC2012_val_00000004.jpeg 809
+val/ILSVRC2012_val_00000005.jpeg 516
 ...
 ```
 
-## Training metric learning models
+## Training a model with flexible parameters
 
-To train a metric learning model, one need to set the neural network as backbone and the metric loss function to optimize. One example of training triplet loss using ResNet-50 is shown below:
+After data preparation, one can start the training step by:
 
 ```
-python train.py  \
-        --model=ResNet50 \
-        --pretrained_model=${path_to_pretrain_model} \
-        --lr=0.001 \
-        --train_batch_size=20 \
-        --test_batch_size=20 \
-        --loss_name=tripletloss \
-        --model_save_dir="output_tripletloss"
+python train.py \
+       --model=SE_ResNeXt50_32x4d \
+       --batch_size=32 \
+       --total_images=1281167 \
+       --class_dim=1000
+       --image_shape=3,224,224 \
+       --model_save_dir=output/ \
+       --with_mem_opt=False \
+       --lr_strategy=piecewise_decay \
+       --lr=0.1
 ```
 **parameter introduction:**
 * **model**: name model to use. Default: "SE_ResNeXt50_32x4d".

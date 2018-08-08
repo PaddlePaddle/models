@@ -18,6 +18,7 @@ import math
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size',        int,     120,                  "Minibatch size.")
+add_arg('use_gpu',          bool,  True,                 "Whether to use GPU or not.")
 add_arg('image_shape',       str,     "3,224,224",          "input image size")
 add_arg('with_mem_opt',      bool,    False,                "Whether to use memory optimization or not.")
 add_arg('pretrained_model',  str,     None,                 "Whether to use pretrained model.")
@@ -61,7 +62,7 @@ def eval(args):
     if with_memory_optimization:
         fluid.memory_optimize(fluid.default_main_program())
 
-    place = fluid.CUDAPlace(0)
+    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 

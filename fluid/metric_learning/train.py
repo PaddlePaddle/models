@@ -19,6 +19,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('train_batch_size', int, 80, "Minibatch size.")
 add_arg('test_batch_size', int, 10, "Minibatch size.")
+add_arg('use_gpu',          bool,  True,                 "Whether to use GPU or not.")
 add_arg('num_epochs', int, 120, "number of epochs.")
 add_arg('image_shape', str, "3,224,224", "input image size")
 add_arg('model_save_dir', str, "output", "model save directory")
@@ -131,7 +132,7 @@ def train(args):
 
     global_lr = optimizer._global_learning_rate()
 
-    place = fluid.CUDAPlace(0)
+    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
@@ -147,7 +148,8 @@ def train(args):
     test_reader = metricloss.test_reader
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
-    train_exe = fluid.ParallelExecutor(use_cuda=True, loss_name=avg_cost.name)
+    train_exe = fluid.ParallelExecutor(
+        use_cuda=True if args.use_gpu else False, loss_name=avg_cost.name)
 
     fetch_list_train = [avg_cost_metric.name, avg_cost_cls.name, acc_top1.name, acc_top5.name, global_lr.name]
     fetch_list_test = [out[0].name]
