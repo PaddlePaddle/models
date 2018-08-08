@@ -105,6 +105,9 @@ def train(args):
         )
         cost_metric = metricloss.loss(out[0])
         avg_cost_metric = fluid.layers.mean(x=cost_metric)
+    else:
+        print("loss name is not supported!")
+        exit()
 
     cost_cls = fluid.layers.cross_entropy(input=out[1], label=label)
     avg_cost_cls = fluid.layers.mean(x=cost_cls)
@@ -126,7 +129,7 @@ def train(args):
     optimizer = optimizer_setting(params)
     opts = optimizer.minimize(avg_cost)
 
-    global_lr = optimizer.global_learning_rate()
+    global_lr = optimizer._global_learning_rate()
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
