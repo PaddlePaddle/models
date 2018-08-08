@@ -153,7 +153,7 @@ Test-12-feature: [0.17515017 0.41597834 0.45567667 ... 0.45650777 0.5987687 0.25
 
 ## Performances
 
-For comparation, many metric learning models with different neural networks and loss functions are trained using corresponding parameters. Recall@Rank-1 is used as evaluation metric and the performance is listed in the table. Pretrained models can be downloaded by clicking related model names.
+For comparation, many metric learning models with different neural networks and loss functions are trained using corresponding experiential parameters. Recall@Rank-1 is used as evaluation metric and the performance is listed in the table. Pretrained models can be downloaded by clicking related model names.
 
 |model | ResNet50 | SE-ResNeXt-50
 |- | - | -:
