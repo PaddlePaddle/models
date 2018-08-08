@@ -52,7 +52,6 @@ To train a metric learning model, one need to set the neural network as backbone
 ```
 python train.py  \
         --model=ResNet50 \
-        --pretrained_model=${path_to_pretrain_model} \
         --lr=0.001 \
         --num_epochs=120 \
         --use_gpu=True \
@@ -89,80 +88,75 @@ Pass 0, trainbatch 90, lr 9.99999974738e-05, loss_metric 0.0653102770448, loss_c
 
 Finetuning is to finetune model weights in a specific task by loading pretrained weights. After initializing ```path_to_pretrain_model```, one can finetune a model as:
 ```
-python train.py
-       --model=SE_ResNeXt50_32x4d \
-       --pretrained_model=${path_to_pretrain_model} \
-       --batch_size=32 \
-       --total_images=1281167 \
-       --class_dim=1000 \
-       --image_shape=3,224,224 \
-       --model_save_dir=output/ \
-       --with_mem_opt=True \
-       --lr_strategy=piecewise_decay \
-       --lr=0.1
+python train.py  \
+        --model=ResNet50 \
+        --pretrained_model=${path_to_pretrain_model} \
+        --lr=0.001 \
+        --num_epochs=120 \
+        --use_gpu=True \
+        --train_batch_size=20 \
+        --test_batch_size=20 \
+        --loss_name=tripletloss \
+        --model_save_dir="output_tripletloss"
 ```
 
 ## Evaluation
-Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
+Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models) and set its path to ```path_to_pretrain_model```. Then Recall@Rank-1 can be obtained by running the following command:
 ```
 python eval.py \
-       --model=SE_ResNeXt50_32x4d \
-       --batch_size=32 \
-       --class_dim=1000 \
-       --image_shape=3,224,224 \
-       --with_mem_opt=True \
-       --pretrained_model=${path_to_pretrain_model}
+       --model=ResNet50 \
+       --pretrained_model=${path_to_pretrain_model} \
+       --batch_size=30 \
+       --loss_name=tripletloss
 ```
 
 According to the congfiguration of evaluation, the output log is like:
 ```
-Testbatch 0,loss 2.1786134243, acc1 0.625,acc5 0.8125,time 0.48 sec
-Testbatch 10,loss 0.898496925831, acc1 0.75,acc5 0.9375,time 0.51 sec
-Testbatch 20,loss 1.32524681091, acc1 0.6875,acc5 0.9375,time 0.37 sec
-Testbatch 30,loss 1.46830511093, acc1 0.5,acc5 0.9375,time 0.51 sec
-Testbatch 40,loss 1.12802267075, acc1 0.625,acc5 0.9375,time 0.35 sec
-Testbatch 50,loss 0.881597697735, acc1 0.8125,acc5 1.0,time 0.32 sec
-Testbatch 60,loss 0.300163716078, acc1 0.875,acc5 1.0,time 0.48 sec
-Testbatch 70,loss 0.692037761211, acc1 0.875,acc5 1.0,time 0.35 sec
-Testbatch 80,loss 0.0969972759485, acc1 1.0,acc5 1.0,time 0.41 sec
+testbatch 0, loss 17.0384693146, recall 0.133333333333, time 0.08 sec
+testbatch 10, loss 15.4248628616, recall 0.2, time 0.07 sec
+testbatch 20, loss 19.3986873627, recall 0.0666666666667, time 0.07 sec
+testbatch 30, loss 19.8149013519, recall 0.166666666667, time 0.07 sec
+testbatch 40, loss 18.7500724792, recall 0.0333333333333, time 0.07 sec
+testbatch 50, loss 15.1477527618, recall 0.166666666667, time 0.07 sec
+testbatch 60, loss 21.6039619446, recall 0.0666666666667, time 0.07 sec
+testbatch 70, loss 16.3203811646, recall 0.1, time 0.08 sec
+testbatch 80, loss 17.3300457001, recall 0.133333333333, time 0.14 sec
+testbatch 90, loss 17.9943237305, recall 0.0333333333333, time 0.07 sec
+testbatch 100, loss 20.4538421631, recall 0.1, time 0.07 sec
+End test, test_loss 18.2126255035, test recall 0.573597359736
 ...
 ```
 
 ## Inference
 Inference is used to get prediction score or image features based on trained models.
 ```
-python infer.py \
-       --model=SE_ResNeXt50_32x4d \
-       --batch_size=32 \
-       --class_dim=1000 \
-       --image_shape=3,224,224 \
-       --with_mem_opt=True \
-       --pretrained_model=${path_to_pretrain_model}
+python infer.py --model=ResNet50 \
+                --pretrained_model=${path_to_pretrain_model}
 ```
-The output contains predication results, including maximum score (before softmax) and corresponding predicted label.
+The output contains learned feature for each test sample:
 ```
-Test-0-score: [13.168352], class [491]
-Test-1-score: [7.913302], class [975]
-Test-2-score: [16.959702], class [21]
-Test-3-score: [14.197695], class [383]
-Test-4-score: [12.607652], class [878]
-Test-5-score: [17.725458], class [15]
-Test-6-score: [12.678599], class [118]
-Test-7-score: [12.353498], class [505]
-Test-8-score: [20.828007], class [747]
-Test-9-score: [15.135801], class [315]
-Test-10-score: [14.585114], class [920]
-Test-11-score: [13.739927], class [679]
-Test-12-score: [15.040644], class [386]
+Test-0-feature: [0.1551965  0.48882252 0.3528545  ... 0.35809007 0.6210782 0.34474897]
+Test-1-feature: [0.26215672 0.71406883 0.36118034 ... 0.4711366  0.6783772 0.26591945]
+Test-2-feature: [0.26164916 0.46013424 0.38381338 ... 0.47984493 0.5830286 0.22124235]
+Test-3-feature: [0.22502825 0.44153655 0.29287377 ... 0.45510024 0.81386226 0.21451607]
+Test-4-feature: [0.27748746 0.49068335 0.28269237 ... 0.47356504 0.73254013 0.22317657]
+Test-5-feature: [0.17743547 0.5232162  0.35012805 ... 0.38921246 0.80238944 0.26693743]
+Test-6-feature: [0.18314484 0.4294481  0.37652573 ... 0.4795592  0.7446839 0.24178651]
+Test-7-feature: [0.25836483 0.49866533 0.3469289  ... 0.38316026 0.56015515 0.22388287]
+Test-8-feature: [0.30613047 0.5200348  0.2847372  ... 0.5700768  0.76645917 0.26504722]
+Test-9-feature: [0.3305695  0.46257797 0.27108437 ... 0.42891273 0.5112956 0.26442713]
+Test-10-feature: [0.16024818 0.46871603 0.32608703 ... 0.3341719  0.6876993 0.26097256]
+Test-11-feature: [0.37611157 0.6006333  0.3023942  ... 0.4729057  0.53841203 0.19621202]
+Test-12-feature: [0.17515017 0.41597834 0.45567667 ... 0.45650777 0.5987687 0.25734115]
 ...
 ```
 
 ## Supported models and performances
 
-Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each pre-defined epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. Pretrained models can be downloaded by clicking related model names.
+Many metric learning models with different neural networks and loss functions are trained using corresponding parameters. Available Recalls at Rank-1 are listed in table. Pretrained models can be downloaded by clicking related model names.
 
 |model | ResNet50 | SE-ResNeXt-50
 |- | - | -:
-|triplet loss | 57.36% | 51.62%
-|eml loss | 58.84% | 52.94%  
-|quadruplet loss | 62.67% | 56.40%
+|[triplet loss]() | 57.36% | 51.62%
+|[eml loss]() | 58.84% | 52.94%  
+|[quadruplet loss]() | 62.67% | 56.40%
