@@ -19,8 +19,8 @@ Running sample code in this directory requires PaddelPaddle Fluid v0.14.0 and la
 
 An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
 ```
-cd data/ILSVRC2012/
-sh download_imagenet2012.sh
+cd data
+sh download_cub200.sh
 ```
 The script ```data/split.py``` is used to split train/valid set. In our settings, we use images from first 100 classes(001-100) as training data while the other 100 classes are validation data. After the splitting, there are two label files which contain train and validation image labels respectively:
 
@@ -151,9 +151,9 @@ Test-12-feature: [0.17515017 0.41597834 0.45567667 ... 0.45650777 0.5987687 0.25
 ...
 ```
 
-## Supported models and performances
+## Performances
 
-Many metric learning models with different neural networks and loss functions are trained using corresponding parameters. Available Recalls at Rank-1 are listed in table. Pretrained models can be downloaded by clicking related model names.
+For comparation, many metric learning models with different neural networks and loss functions are trained using corresponding parameters. Recall@Rank-1 is used as evaluation metric and the performance is listed in the table. Pretrained models can be downloaded by clicking related model names.
 
 |model | ResNet50 | SE-ResNeXt-50
 |- | - | -:
