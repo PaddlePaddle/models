@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import unittest
@@ -53,8 +54,12 @@ def train(train_reader,
     exe = fluid.Executor(place)
     feeder = fluid.DataFeeder(feed_list=[data, label], place=place)
 
+    # For internal continuous evaluation
+    if 'CE_MODE_X' in os.environ:
+        fluid.default_startup_program().random_seed = 110
     exe.run(fluid.default_startup_program())
     for pass_id in xrange(pass_num):
+        pass_start = time.time()
         data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
         for data in train_reader():
             avg_cost_np, avg_acc_np = exe.run(fluid.default_main_program(),
@@ -72,6 +77,13 @@ def train(train_reader,
 
         epoch_model = save_dirname + "/" + "epoch" + str(pass_id)
         fluid.io.save_inference_model(epoch_model, ["words", "label"], acc, exe)
+
+        pass_end = time.time()
+        # For internal continuous evaluation
+        if 'CE_MODE_X' in os.environ:
+            print("kpis	train_acc	%f" % avg_acc)
+            print("kpis	train_cost	%f" % avg_cost)
+            print("kpis	train_duration	%f" % (pass_end - pass_start))
 
 
 def train_net():
