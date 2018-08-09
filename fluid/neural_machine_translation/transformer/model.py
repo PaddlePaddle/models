@@ -111,7 +111,10 @@ def multi_head_attention(queries,
             x=weights, shape=product.shape, actual_shape=post_softmax_shape)
         if dropout_rate:
             weights = layers.dropout(
-                weights, dropout_prob=dropout_rate, is_test=False)
+                weights,
+                dropout_prob=dropout_rate,
+                seed=ModelHyperParams.dropout_seed,
+                is_test=False)
         out = layers.matmul(weights, v)
         return out
 
@@ -171,7 +174,10 @@ def pre_post_process_layer(prev_out, out, process_cmd, dropout_rate=0.):
         elif cmd == "d":  # add dropout
             if dropout_rate:
                 out = layers.dropout(
-                    out, dropout_prob=dropout_rate, is_test=False)
+                    out,
+                    dropout_prob=dropout_rate,
+                    seed=ModelHyperParams.dropout_seed,
+                    is_test=False)
     return out
 
 
@@ -211,7 +217,9 @@ def prepare_encoder(src_word,
         shape=[batch_size, seq_len, src_emb_dim],
         actual_shape=src_data_shape)
     return layers.dropout(
-        enc_input, dropout_prob=dropout_rate,
+        enc_input,
+        dropout_prob=dropout_rate,
+        seed=ModelHyperParams.dropout_seed,
         is_test=False) if dropout_rate else enc_input
 
 

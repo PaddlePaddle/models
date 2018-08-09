@@ -1,0 +1,9 @@
+# saved model
+output/
+
+# coco and pascalvoc data
+data/ILSVRC2012/ILSVRC2012_img_val.tar
+data/ILSVRC2012/ILSVRC2012_img_train.tar
+data/ILSVRC2012/ImageNet_label.tgz
+data/ILSVRC2012/train_list.txt
+data/ILSVRC2012/val_list.txt
