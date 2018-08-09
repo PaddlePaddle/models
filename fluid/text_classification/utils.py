@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import numpy as np
@@ -64,15 +65,22 @@ def prepare_data(data_type="imdb",
             raise RuntimeError("No such dataset")
 
     if data_type == "imdb":
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
-                paddle.dataset.imdb.train(word_dict), buf_size=buf_size),
-            batch_size=batch_size)
+        if 'CE_MODE_X' in os.environ:
+            train_reader = paddle.batch(
+                paddle.dataset.imdb.train(word_dict), batch_size=batch_size)
 
-        test_reader = paddle.batch(
-            paddle.reader.shuffle(
-                paddle.dataset.imdb.test(word_dict), buf_size=buf_size),
-            batch_size=batch_size)
+            test_reader = paddle.batch(
+                paddle.dataset.imdb.test(word_dict), batch_size=batch_size)
+        else:
+            train_reader = paddle.batch(
+                paddle.reader.shuffle(
+                    paddle.dataset.imdb.train(word_dict), buf_size=buf_size),
+                batch_size=batch_size)
+
+            test_reader = paddle.batch(
+                paddle.reader.shuffle(
+                    paddle.dataset.imdb.test(word_dict), buf_size=buf_size),
+                batch_size=batch_size)
     else:
         raise RuntimeError("no such dataset")
 
