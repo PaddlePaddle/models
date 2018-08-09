@@ -81,6 +81,8 @@ class ModelHyperParams(object):
     n_layer = 6
     # dropout rate used by all dropout layers.
     dropout = 0.1
+    # random seed used in dropout for CE.
+    dropout_seed = None
     # the flag indicating whether to share embedding and softmax weights.
     # vocabularies in source and target should be same for weight sharing.
     weight_sharing = True
