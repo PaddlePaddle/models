@@ -184,6 +184,8 @@ def train(args):
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
 
+    gpu = os.getenv("CUDA_VISIBLE_DEVICES") or ""
+    gpu_nums = len(gpu.split(","))
     for pass_id in range(params["num_epochs"]):
         train_info = [[], [], []]
         test_info = [[], [], []]
@@ -211,7 +213,7 @@ def train(args):
         train_loss = np.array(train_info[0]).mean()
         train_acc1 = np.array(train_info[1]).mean()
         train_acc5 = np.array(train_info[2]).mean()
-        train_speed = np.array(train_time).mean()
+        train_speed = np.array(train_time).mean() / train_batch_size
         cnt = 0
         for test_batch_id, data in enumerate(test_reader()):
             t1 = time.time()
@@ -252,16 +254,34 @@ def train(args):
         fluid.io.save_persistables(exe, model_path)
 
         # This is for continuous evaluation only
-        if args.enable_ce:
-            # Use the last cost/acc for training
-            print("kpis    train_cost_kpi       %f" % train_info[0][-1])
-            print("kpis    train_acc_top1_kpi   %f" % train_info[1][-1])
-            print("kpis    train_acc_top5_kpi   %f" % train_info[2][-1])
-            # Use the mean cost/acc for testing
-            print("kpis    test_cost_kpi        %f" % test_loss)
-            print("kpis    test_acc_top1_kpi    %f" % test_acc1)
-            print("kpis    test_acc_top5_kpi    %f" % test_acc5)
-            print("kpis    train_speed_kpi      %f" % train_speed)
+        if args.enable_ce and pass_id == args.num_epochs - 1:
+            if gpu_nums == 1:
+                # Use the last cost/acc for training
+                print("kpis	train_cost	%s" % train_loss)
+                print("kpis	train_acc_top1	%s" % train_acc1)
+                print("kpis	train_acc_top5	%s" % train_acc5)
+                # Use the mean cost/acc for testing
+                print("kpis	test_cost	%s" % test_loss)
+                print("kpis	test_acc_top1	%s" % test_acc1)
+                print("kpis	test_acc_top5	%s" % test_acc5)
+                print("kpis	train_speed	%s" % train_speed)
+            else:
+                # Use the last cost/acc for training
+                print("kpis    train_cost_card%s       %s" %
+                      (gpu_nums, train_loss))
+                print("kpis    train_acc_top1_card%s   %s" %
+                      (gpu_nums, train_acc1))
+                print("kpis    train_acc_top5_card%s   %s" %
+                      (gpu_nums, train_acc5))
+                # Use the mean cost/acc for testing
+                print("kpis    test_cost_card%s        %s" %
+                      (gpu_nums, test_loss))
+                print("kpis    test_acc_top1_card%s    %s" %
+                      (gpu_nums, test_acc1))
+                print("kpis    test_acc_top5_card%s    %s" %
+                      (gpu_nums, test_acc5))
+                print("kpis    train_speed_card%s      %s" %
+                      (gpu_nums, train_speed))
 
 
 def main():
