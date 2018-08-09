@@ -1,5 +1,6 @@
 import os
 import math
+import time
 import numpy as np
 
 import paddle
@@ -65,21 +66,31 @@ def main(train_data_file,
         test_target = chunk_evaluator.metrics + chunk_evaluator.states
         inference_program = fluid.io.get_inference_program(test_target)
 
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
+    if "CE_MODE_X" not in os.environ:
+        train_reader = paddle.batch(
+            paddle.reader.shuffle(
+                reader.data_reader(train_data_file, word_dict, label_dict),
+                buf_size=20000),
+            batch_size=batch_size)
+        test_reader = paddle.batch(
+            paddle.reader.shuffle(
+                reader.data_reader(test_data_file, word_dict, label_dict),
+                buf_size=20000),
+            batch_size=batch_size)
+    else:
+        train_reader = paddle.batch(
             reader.data_reader(train_data_file, word_dict, label_dict),
-            buf_size=20000),
-        batch_size=batch_size)
-    test_reader = paddle.batch(
-        paddle.reader.shuffle(
+            batch_size=batch_size)
+        test_reader = paddle.batch(
             reader.data_reader(test_data_file, word_dict, label_dict),
-            buf_size=20000),
-        batch_size=batch_size)
+            batch_size=batch_size)
 
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     feeder = fluid.DataFeeder(feed_list=[word, mark, target], place=place)
     exe = fluid.Executor(place)
 
+    if "CE_MODE_X" in os.environ:
+        fluid.default_startup_program().random_seed = 110
     exe.run(fluid.default_startup_program())
 
     embedding_name = 'emb'
@@ -114,6 +125,13 @@ def main(train_data_file,
         fluid.io.save_inference_model(save_dirname, ['word', 'mark', 'target'],
                                       crf_decode, exe)
 
+        if ("CE_MODE_X" in os.environ) and (pass_id % 50 == 0):
+            if pass_id > 0:
+                print("kpis	train_precision	%f" % pass_precision)
+                print("kpis	test_precision	%f" % test_pass_precision)
+                print("kpis	train_duration	%f" % (time.time() - time_begin))
+            time_begin = time.time()
+
 
 if __name__ == "__main__":
     main(
@@ -123,7 +141,7 @@ if __name__ == "__main__":
         target_file="data/target.txt",
         emb_file="data/wordVectors.txt",
         model_save_dir="models",
-        num_passes=100,
+        num_passes=1000,
         batch_size=1,
         use_gpu=False,
         parallel=False)
