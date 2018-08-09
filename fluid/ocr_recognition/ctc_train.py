@@ -115,6 +115,7 @@ def train(args, data_reader=ctc_reader):
 
     iter_num = 0
     stop = False
+    start_time = time.time()
     while not stop:
         total_loss = 0.0
         total_seq_error = 0.0
