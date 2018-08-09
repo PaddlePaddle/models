@@ -9,7 +9,7 @@ from kpi import CostKpi, DurationKpi, AccKpi
 
 train_acc_kpi = AccKpi('train_acc', 0.005, actived=True)
 train_cost_kpi = CostKpi('train_cost', 0.005, actived=True)
-train_duration_kpi = DurationKpi('train_duration', 0.06, actived=True)
+train_duration_kpi = DurationKpi('train_duration', 0.05, actived=True)
 
 tracking_kpis = [
     train_acc_kpi,
@@ -43,6 +43,6 @@ def log_to_ce(log):
 if __name__ == '__main__':
     log = sys.stdin.read()
     print("*****")
-    print log
+    print(log)
     print("****")
     log_to_ce(log)
