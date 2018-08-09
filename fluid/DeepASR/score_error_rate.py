@@ -17,9 +17,17 @@ def parse_args():
         choices=['cer', 'wer'],
         help="Error rate type. (default: %(default)s)")
     parser.add_argument(
+        '--special_tokens',
+        type=str,
+        default='<SPOKEN_NOISE>',
+        help="Special tokens in scoring CER, seperated by space. "
+        "They shouldn't be splitted and should be treated as one special "
+        "character. Example: '<SPOKEN_NOISE> <bos> <eos>' "
+        "(default: %(default)s)")
+    parser.add_argument(
         '--ref', type=str, required=True, help="The ground truth text.")
     parser.add_argument(
-        '--hyp', type=str, required=True, help="The decoding result.")
+        '--hyp', type=str, required=True, help="The decoding result text.")
     args = parser.parse_args()
     return args
 
@@ -30,6 +38,8 @@ if __name__ == '__main__':
     ref_dict = {}
     sum_errors, sum_ref_len = 0.0, 0
     sent_cnt, not_in_ref_cnt = 0, 0
+
+    special_tokens = args.special_tokens.split(" ")
 
     with open(args.ref, "r") as ref_txt:
         line = ref_txt.readline()
@@ -51,6 +61,8 @@ if __name__ == '__main__':
                 continue
 
             if args.error_rate_type == 'cer':
+                for sp_tok in special_tokens:
+                    sent = sent.replace(sp_tok, '\0')
                 errors, ref_len = char_errors(
                     ref_dict[key].decode("utf8"),
                     sent.decode("utf8"),

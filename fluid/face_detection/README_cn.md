@@ -93,7 +93,7 @@ tar -xf vgg_ilsvrc_16_fc_reduced.tar.gz && rm -f vgg_ilsvrc_16_fc_reduced.tar.gz
 `train.py` 是训练模块的主要执行程序，调用示例如下：
 
 ```bash
-python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
+python -u train.py --batch_size=12 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 ```
   - 可以通过设置 `export CUDA_VISIBLE_DEVICES=0,1,2,3` 指定想要使用的GPU数量。
   - 更多的可选参数见:
