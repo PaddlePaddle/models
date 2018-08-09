@@ -84,6 +84,7 @@ def eval(args):
         sys.stdout.flush()
     iou = cal_mean_iou(out_wrong, out_right)
     print "\nmean iou: %.3f" % iou
+    print "kpis	test_acc	%f" % iou
 
 
 def main():

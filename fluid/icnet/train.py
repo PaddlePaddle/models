@@ -11,6 +11,10 @@ from utils import add_arguments, print_arguments, get_feeder_data
 from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
 from paddle.fluid.initializer import init_on_cpu
 
+SEED = 90
+# random seed must set before configuring the network.
+fluid.default_startup_program().random_seed = SEED
+
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
@@ -27,9 +31,9 @@ LAMBDA2 = 0.4
 LAMBDA3 = 1.0
 LEARNING_RATE = 0.003
 POWER = 0.9
-LOG_PERIOD = 1
-CHECKPOINT_PERIOD = 1000
-TOTAL_STEP = 60000
+LOG_PERIOD = 100
+CHECKPOINT_PERIOD = 100
+TOTAL_STEP = 100
 
 no_grad_set = []
 
@@ -97,10 +101,13 @@ def train(args):
     sub124_loss = 0.
     train_reader = cityscape.train(
         args.batch_size, flip=args.random_mirror, scaling=args.random_scaling)
+    start_time = time.time()
     while True:
         # train a pass
         for data in train_reader():
             if iter_id > TOTAL_STEP:
+                end_time = time.time()
+                print "kpis	train_duration	%f" % (end_time - start_time)
                 return
             iter_id += 1
             results = exe.run(
@@ -115,6 +122,8 @@ def train(args):
                 print "Iter[%d]; train loss: %.3f; sub4_loss: %.3f; sub24_loss: %.3f; sub124_loss: %.3f" % (
                     iter_id, t_loss / LOG_PERIOD, sub4_loss / LOG_PERIOD,
                     sub24_loss / LOG_PERIOD, sub124_loss / LOG_PERIOD)
+                print "kpis	train_cost	%f" % (t_loss / LOG_PERIOD)
+
                 t_loss = 0.
                 sub4_loss = 0.
                 sub24_loss = 0.
