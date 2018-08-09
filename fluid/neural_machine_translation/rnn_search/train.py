@@ -71,6 +71,7 @@ def train():
 
     optimizer.minimize(avg_cost)
 
+    # Disable shuffle for Continuous Evaluation only
     if not args.enable_ce:
         train_batch_generator = paddle.batch(
             paddle.reader.shuffle(
@@ -150,9 +151,9 @@ def train():
 
         # This log is for continuous evaluation only
         if args.enable_ce:
-            print("kpis    train_cost      %f" % avg_cost_train)
-            print("kpis    test_cost       %f" % test_loss)
-            print("kpis    train_duration  %f" % time_consumed)
+            print("kpis\ttrain_cost\t%f" % avg_cost_train)
+            print("kpis\ttest_cost\t%f" % test_loss)
+            print("kpis\ttrain_duration\t%f" % time_consumed)
 
         if pass_id % args.save_interval == 0:
             model_path = os.path.join(args.save_dir, str(pass_id))

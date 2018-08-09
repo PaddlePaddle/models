@@ -7,33 +7,18 @@ from kpi import CostKpi, DurationKpi, AccKpi
 
 #### NOTE kpi.py should shared in models in some way!!!!
 
-train_cost_kpi = CostKpi('train_cost', 0.02, 0, actived=True)
-test_cost_kpi = CostKpi('test_cost', 0.005, 0, actived=True)
-train_duration_kpi = DurationKpi('train_duration', 0.06, 0, actived=True)
+train_acc_kpi = AccKpi('train_acc', 0.005, actived=True)
+train_cost_kpi = CostKpi('train_cost', 0.005, actived=True)
+train_duration_kpi = DurationKpi('train_duration', 0.05, actived=True)
 
 tracking_kpis = [
+    train_acc_kpi,
     train_cost_kpi,
-    test_cost_kpi,
     train_duration_kpi,
 ]
 
 
 def parse_log(log):
-    '''
-    This method should be implemented by model developers.
-
-    The suggestion:
-
-    each line in the log should be key, value, for example:
-
-    "
-    train_cost\t1.0
-    test_cost\t1.0
-    train_cost\t1.0
-    train_cost\t1.0
-    train_acc\t1.2
-    "
-    '''
     for line in log.split('\n'):
         fs = line.strip().split('\t')
         print(fs)
