@@ -17,7 +17,7 @@ Running sample code in this directory requires PaddelPaddle Fluid v0.14.0 and la
 
 ## Data preparation
 
-An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
+Caltech-UCSD Birds 200 (CUB-200) is an image dataset including 200 bird species. We use it to conduct the metric learning experiments. More details of this dataset can be found from its [official website](http://www.vision.caltech.edu/visipedia/CUB-200.html). First of all, preparation of CUB-200 data can be done as:
 ```
 cd data/
 sh download_cub200.sh
