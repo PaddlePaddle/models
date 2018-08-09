@@ -98,6 +98,10 @@ def train(args, data_reader=ctc_reader):
         print "\nTime: %s; Iter[%d]; Test seq error: %s.\n" % (
             time.time(), iter_num, str(test_seq_error[0]))
 
+        #Note: The following logs are special for CE monitoring.
+        #Other situations do not need to care about these logs.
+        print("kpis	test_seq_error	%f" % test_seq_error[0])
+
     def save_model(args, exe, iter_num):
         filename = "model_%05d" % iter_num
         fluid.io.save_params(
