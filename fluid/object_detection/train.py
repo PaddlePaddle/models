@@ -193,13 +193,16 @@ def train(args,
             total_time += end_time - start_time
             train_avg_loss = np.mean(every_pass_loss)
             if devices_num == 1:
-                print ("kpis    train_cost        %s" % train_avg_loss)
-                print ("kpis    test_acc          %s" % mean_map)
-                print ("kpis    train_speed       %s" % (total_time / epoch_idx))
+                print ("kpis	train_cost	%s" % train_avg_loss)
+                print ("kpis	test_acc	%s" % mean_map)
+                print ("kpis	train_speed	%s" % (total_time / epoch_idx))
             else:
-                print ("kpis    train_cost_card%s   %s" % (devices_num, train_avg_loss))
-                print ("kpis    test_acc_card%s     %s" % (devices_num, mean_map))
-                print ("kpis    train_speed_card%s  %f" % (devices_num, total_time / epoch_idx))
+                print ("kpis	train_cost_card%s	%s" %
+                       (devices_num, train_avg_loss))
+                print ("kpis	test_acc_card%s	%s" %
+                       (devices_num, mean_map))
+                print ("kpis	train_speed_card%s	%f" %
+                       (devices_num, total_time / epoch_idx))
 
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
