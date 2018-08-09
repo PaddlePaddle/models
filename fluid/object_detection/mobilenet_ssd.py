@@ -1,4 +1,3 @@
-import paddle.v2 as paddle
 import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
