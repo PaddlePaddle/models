@@ -65,7 +65,7 @@ def prepare_data(data_type="imdb",
             raise RuntimeError("No such dataset")
 
     if data_type == "imdb":
-        if 'CE_MODE_X' in os.environ:
+        if "CE_MODE_X" in os.environ:
             train_reader = paddle.batch(
                 paddle.dataset.imdb.train(word_dict), batch_size=batch_size)
 
