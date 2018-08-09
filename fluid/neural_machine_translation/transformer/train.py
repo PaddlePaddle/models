@@ -463,9 +463,9 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
                          "pass_" + str(pass_id) + ".infer.model"),
             data_input_names[:-2] + util_input_names, [predict], exe)
     if args.enable_ce:  # For CE
-        print("kpis\ttrain_cost\t%f" % total_avg_cost)
-        print("kpis\ttest_cost\t%f" % val_avg_cost)
-        print("kpis\ttrain_duration\t%f" % time_consumed)
+        print("kpis\ttrain_cost_card%d\t%f" % (dev_count, total_avg_cost))
+        print("kpis\ttest_cost_card%d\t%f" % (dev_count, val_avg_cost))
+        print("kpis\ttrain_duration_card%d\t%f" % (dev_count, time_consumed))
 
 
 def train(args):
