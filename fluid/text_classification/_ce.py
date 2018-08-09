@@ -7,40 +7,18 @@ from kpi import CostKpi, DurationKpi, AccKpi
 
 #### NOTE kpi.py should shared in models in some way!!!!
 
-train_cost_kpi = CostKpi('train_cost', 0.02, 0, actived=True)
-test_acc_kpi = AccKpi('test_acc', 0.01, 0, actived=True)
-train_speed_kpi = AccKpi('train_speed', 0.2, 0, actived=True)
-train_cost_card4_kpi = CostKpi('train_cost_card4', 0.02, 0, actived=True)
-test_acc_card4_kpi = AccKpi('test_acc_card4', 0.01, 0, actived=True)
-train_speed_card4_kpi = AccKpi('train_speed_card4', 0.2, 0, actived=True)
+train_acc_kpi = AccKpi('train_acc', 0.005, actived=True)
+train_cost_kpi = CostKpi('train_cost', 0.005, actived=True)
+train_duration_kpi = DurationKpi('train_duration', 0.05, actived=True)
 
 tracking_kpis = [
+    train_acc_kpi,
     train_cost_kpi,
-    test_acc_kpi,
-    train_speed_kpi,
-    train_cost_card4_kpi,
-    test_acc_card4_kpi,
-    train_speed_card4_kpi,
+    train_duration_kpi,
 ]
 
 
 def parse_log(log):
-    '''
-    This method should be implemented by model developers.
-
-    The suggestion:
-
-    each line in the log should be key, value, for example:
-
-    "
-    train_cost\t1.0
-    test_cost\t1.0
-    train_cost\t1.0
-    train_cost\t1.0
-    train_acc\t1.2
-    "
-    '''
-    #kpi_map = {}
     for line in log.split('\n'):
         fs = line.strip().split('\t')
         print(fs)
@@ -48,9 +26,7 @@ def parse_log(log):
             print("-----%s" % fs)
             kpi_name = fs[1]
             kpi_value = float(fs[2])
-            #kpi_map[kpi_name] = kpi_value
             yield kpi_name, kpi_value
-    #return kpi_map
 
 
 def log_to_ce(log):
