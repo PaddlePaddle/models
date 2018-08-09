@@ -145,7 +145,7 @@ def train(train_reader,
         if pass_idx == pass_num - 1 and args.enable_ce:
             #Note: The following logs are special for CE monitoring.
             #Other situations do not need to care about these logs.
-            gpu_num = get_cards()
+            gpu_num = get_cards(args.enable_ce)
             if gpu_num == 1:
                 print("kpis	imikolov_20_pass_duration	%s" %
                       (total_time / epoch_idx))

@@ -4,8 +4,8 @@ import time
 import unittest
 import contextlib
 
+import paddle
 import paddle.fluid as fluid
-import paddle.v2 as paddle
 
 import utils
 from nets import bow_net
@@ -55,7 +55,7 @@ def train(train_reader,
     feeder = fluid.DataFeeder(feed_list=[data, label], place=place)
 
     # For internal continuous evaluation
-    if 'CE_MODE_X' in os.environ:
+    if "CE_MODE_X" in os.environ:
         fluid.default_startup_program().random_seed = 110
     exe.run(fluid.default_startup_program())
     for pass_id in xrange(pass_num):
@@ -80,7 +80,7 @@ def train(train_reader,
 
         pass_end = time.time()
         # For internal continuous evaluation
-        if 'CE_MODE_X' in os.environ:
+        if "CE_MODE_X" in os.environ:
             print("kpis	train_acc	%f" % avg_acc)
             print("kpis	train_cost	%f" % avg_cost)
             print("kpis	train_duration	%f" % (pass_end - pass_start))
