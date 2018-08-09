@@ -354,7 +354,10 @@ def py_infer(test_data, trg_idx2word, use_wordpiece):
             ModelHyperParams.n_layer, ModelHyperParams.n_head,
             ModelHyperParams.d_key, ModelHyperParams.d_value,
             ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
-            ModelHyperParams.dropout, ModelHyperParams.weight_sharing)
+            ModelHyperParams.prepostprocess_dropout,
+            ModelHyperParams.attention_dropout, ModelHyperParams.relu_dropout,
+            ModelHyperParams.preprocess_cmd, ModelHyperParams.postprocess_cmd,
+            ModelHyperParams.weight_sharing)
 
     decoder_program = fluid.Program()
     with fluid.program_guard(main_program=decoder_program):
@@ -363,7 +366,10 @@ def py_infer(test_data, trg_idx2word, use_wordpiece):
             ModelHyperParams.n_layer, ModelHyperParams.n_head,
             ModelHyperParams.d_key, ModelHyperParams.d_value,
             ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
-            ModelHyperParams.dropout, ModelHyperParams.weight_sharing)
+            ModelHyperParams.prepostprocess_dropout,
+            ModelHyperParams.attention_dropout, ModelHyperParams.relu_dropout,
+            ModelHyperParams.preprocess_cmd, ModelHyperParams.postprocess_cmd,
+            ModelHyperParams.weight_sharing)
 
     # Load model parameters of encoder and decoder separately from the saved
     # transformer model.
@@ -499,7 +505,9 @@ def fast_infer(test_data, trg_idx2word, use_wordpiece):
         ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
         ModelHyperParams.n_head, ModelHyperParams.d_key,
         ModelHyperParams.d_value, ModelHyperParams.d_model,
-        ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
+        ModelHyperParams.d_inner_hid, ModelHyperParams.prepostprocess_dropout,
+        ModelHyperParams.attention_dropout, ModelHyperParams.relu_dropout,
+        ModelHyperParams.preprocess_cmd, ModelHyperParams.postprocess_cmd,
         ModelHyperParams.weight_sharing, InferTaskConfig.beam_size,
         InferTaskConfig.max_out_len, ModelHyperParams.eos_idx)
 

@@ -79,8 +79,14 @@ class ModelHyperParams(object):
     n_head = 8
     # number of sub-layers to be stacked in the encoder and decoder.
     n_layer = 6
-    # dropout rate used by all dropout layers.
-    dropout = 0.1
+    # dropout rates of different modules.
+    prepostprocess_dropout = 0.1
+    attention_dropout = 0.1
+    relu_dropout = 0.1
+    # to process before each sub-layer
+    preprocess_cmd = "n"  # layer normalization
+    # to process after each sub-layer
+    postprocess_cmd = "da"  # dropout + residual connection
     # the flag indicating whether to share embedding and softmax weights.
     # vocabularies in source and target should be same for weight sharing.
     weight_sharing = True
