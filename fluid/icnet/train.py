@@ -130,7 +130,7 @@ def train(args):
                 sub124_loss = 0.
                 sys.stdout.flush()
 
-            if iter_id % CHECKPOINT_PERIOD == 0:
+            if iter_id % CHECKPOINT_PERIOD == 0 and args.checkpoint_path is not None:
                 dir_name = args.checkpoint_path + "/" + str(iter_id)
                 fluid.io.save_persistables(exe, dirname=dir_name)
                 print "Saved checkpoint: %s" % (dir_name)
