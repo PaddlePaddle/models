@@ -24,14 +24,9 @@ def calc_diff(f1, f2):
     #print d2.shape
     #print d1[0, 0, 0:10, 0:10]
     #print d2[0, 0, 0:10, 0:10]
-    #d1 = d1[:, :, 1:-2, 1:-2]
-    #d2 = d2[:, :, 1:-2, 1:-2]
 
     d1 = d1.flatten()
     d2 = d2.flatten()
-
-    #print d1[:10]
-    #print d2[:10]
 
     d1_num = reduce(lambda x, y: x * y, d1.shape)
     d2_num = reduce(lambda x, y: x * y, d2.shape)
@@ -41,7 +36,11 @@ def calc_diff(f1, f2):
         assert (d1_num == d2_num), "their shape is not consistent"
 
     try:
+        mask = np.abs(d1) >= np.abs(d2)
+        mask = mask.astype('int32')
+
         df = np.abs(d1 - d2)
+        df = df / (1.0e-10 + np.abs(d1) * mask + np.abs(d2) * (1 - mask))
         max_df = np.max(df)
         sq_df = np.mean(df * df)
         return max_df, sq_df

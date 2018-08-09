@@ -34,7 +34,7 @@ tar xf ${valid_tar} -C ${valid_folder}
 
 echo "Download imagenet label file: val_list.txt & train_list.txt"
 label_file=ImageNet_label.tgz
-label_url=http://imagenet-data.bj.bcebos.com/${label_file}
+label_url=http://paddle-imagenet-models.bj.bcebos.com/${label_file}
 wget -nd -c ${label_url}
 tar zxf ${label_file}
 

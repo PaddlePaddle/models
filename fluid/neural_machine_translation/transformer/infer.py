@@ -1,5 +1,7 @@
 import argparse
+import ast
 import numpy as np
+from functools import partial
 
 import paddle
 import paddle.fluid as fluid
@@ -11,6 +13,7 @@ from model import fast_decode as fast_decoder
 from config import *
 from train import pad_batch_data
 import reader
+import util
 
 
 def parse_args():
@@ -46,6 +49,22 @@ def parse_args():
         default=["<s>", "<e>", "<unk>"],
         nargs=3,
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
+    parser.add_argument(
+        "--use_wordpiece",
+        type=ast.literal_eval,
+        default=False,
+        help="The flag indicating if the data in wordpiece. The EN-FR data "
+        "we provided is wordpiece data. For wordpiece data, converting ids to "
+        "original words is a little different and some special codes are "
+        "provided in util.py to do this.")
+    parser.add_argument(
+        "--token_delimiter",
+        type=partial(
+            str.decode, encoding="string-escape"),
+        default=" ",
+        help="The delimiter used to split tokens in source or target sentences. "
+        "For EN-DE BPE data we provided, use spaces as token delimiter.; "
+        "For EN-FR wordpiece data we provided, use '\x01' as token delimiter.")
     parser.add_argument(
         'opts',
         help='See config.py for all options',
@@ -320,7 +339,7 @@ def post_process_seq(seq,
         seq)
 
 
-def py_infer(test_data, trg_idx2word):
+def py_infer(test_data, trg_idx2word, use_wordpiece):
     """
     Inference by beam search implented by python, while the calculations from
     symbols to probilities execute by Fluid operators.
@@ -399,7 +418,10 @@ def py_infer(test_data, trg_idx2word):
             seqs = map(post_process_seq, batch_seqs[i])
             scores = batch_scores[i]
             for seq in seqs:
-                print(" ".join([trg_idx2word[idx] for idx in seq]))
+                if use_wordpiece:
+                    print(util.subword_ids_to_str(seq, trg_idx2word))
+                else:
+                    print(" ".join([trg_idx2word[idx] for idx in seq]))
 
 
 def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
@@ -465,7 +487,7 @@ def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
     return input_dict
 
 
-def fast_infer(test_data, trg_idx2word):
+def fast_infer(test_data, trg_idx2word, use_wordpiece):
     """
     Inference by beam search decoder based solely on Fluid operators.
     """
@@ -520,7 +542,9 @@ def fast_infer(test_data, trg_idx2word):
                     trg_idx2word[idx]
                     for idx in post_process_seq(
                         np.array(seq_ids)[sub_start:sub_end])
-                ]))
+                ]) if not use_wordpiece else util.subtoken_ids_to_str(
+                    post_process_seq(np.array(seq_ids)[sub_start:sub_end]),
+                    trg_idx2word))
                 scores[i].append(np.array(seq_scores)[sub_end - 1])
                 print hyps[i][-1]
                 if len(hyps[i]) >= InferTaskConfig.n_best:
@@ -534,8 +558,9 @@ def infer(args, inferencer=fast_infer):
         src_vocab_fpath=args.src_vocab_fpath,
         trg_vocab_fpath=args.trg_vocab_fpath,
         fpattern=args.test_file_pattern,
-        batch_size=args.batch_size,
+        token_delimiter=args.token_delimiter,
         use_token_batch=False,
+        batch_size=args.batch_size,
         pool_size=args.pool_size,
         sort_type=reader.SortType.NONE,
         shuffle=False,
@@ -548,7 +573,7 @@ def infer(args, inferencer=fast_infer):
         clip_last_batch=False)
     trg_idx2word = test_data.load_dict(
         dict_path=args.trg_vocab_fpath, reverse=True)
-    inferencer(test_data, trg_idx2word)
+    inferencer(test_data, trg_idx2word, args.use_wordpiece)
 
 
 if __name__ == "__main__":
