@@ -5,8 +5,8 @@ import unittest
 import contextlib
 import numpy as np
 
+import paddle
 import paddle.fluid as fluid
-import paddle.v2 as paddle
 
 import utils
 from nets import bow_net
@@ -30,6 +30,9 @@ def train(train_reader,
 
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
+    # For internal continuous evaluation
+    if "CE_MODE_X" in os.environ:
+        startup_prog.random_seed = 110
 
     with fluid.program_guard(train_prog, startup_prog):
         train_py_reader = fluid.layers.py_reader(
@@ -57,6 +60,7 @@ def train(train_reader,
     train_fetch_list = [cost.name, acc.name]
 
     for pass_id in xrange(pass_num):
+        pass_start = time.time()
         train_py_reader.start()
         train_info = [[], []]
         batch_id = 0
@@ -91,6 +95,13 @@ def train(train_reader,
             acc,
             exe,
             main_program=train_prog)
+
+        pass_end = time.time()
+        # For internal continuous evaluation
+        if "CE_MODE_X" in os.environ:
+            print("kpis	train_acc	%f" % avg_acc)
+            print("kpis	train_cost	%f" % avg_cost)
+            print("kpis	train_duration	%f" % (pass_end - pass_start))
 
 
 def train_net():

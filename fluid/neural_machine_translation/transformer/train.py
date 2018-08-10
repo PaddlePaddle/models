@@ -103,6 +103,12 @@ def parse_args():
         help="The device type.")
     parser.add_argument(
         '--sync', type=ast.literal_eval, default=True, help="sync mode.")
+    parser.add_argument(
+        "--enable_ce",
+        type=ast.literal_eval,
+        default=True,
+        help="The flag indicating whether to run the task "
+        "for continuous evaluation.")
 
     args = parser.parse_args()
     # Append args related to dict
@@ -382,6 +388,12 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
                             data_input_names, util_input_names, sum_cost,
                             token_num)
 
+    # the best cross-entropy value with label smoothing
+    loss_normalizer = -((1. - TrainTaskConfig.label_smooth_eps) * np.log(
+        (1. - TrainTaskConfig.label_smooth_eps
+         )) + TrainTaskConfig.label_smooth_eps *
+                        np.log(TrainTaskConfig.label_smooth_eps / (
+                            ModelHyperParams.trg_vocab_size - 1) + 1e-20))
     init = False
     for pass_id in xrange(TrainTaskConfig.pass_num):
         pass_start_time = time.time()
@@ -421,19 +433,27 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
             )  # sum the cost from multi-devices
             total_token_num = token_num_val.sum()
             total_avg_cost = total_sum_cost / total_token_num
-            print("epoch: %d, batch: %d, sum loss: %f, avg loss: %f, ppl: %f" %
-                  (pass_id, batch_id, total_sum_cost, total_avg_cost,
-                   np.exp([min(total_avg_cost, 100)])))
+            print("epoch: %d, batch: %d, avg loss: %f, normalized loss: %f,"
+                  " ppl: %f" % (pass_id, batch_id, total_avg_cost,
+                                total_avg_cost - loss_normalizer,
+                                np.exp([min(total_avg_cost, 100)])))
             if batch_id > 0 and batch_id % 1000 == 0:
                 fluid.io.save_persistables(
                     exe,
                     os.path.join(TrainTaskConfig.ckpt_dir, "latest.checkpoint"))
             init = True
+
+        time_consumed = time.time() - pass_start_time
         # Validate and save the model for inference.
-        print("epoch: %d, " % pass_id +
-              ("val avg loss: %f, val ppl: %f, " % test()
-               if args.val_file_pattern is not None else "") + "consumed %fs" %
-              (time.time() - pass_start_time))
+        if args.val_file_pattern is not None:
+            val_avg_cost, val_ppl = test()
+            print(
+                "epoch: %d, val avg loss: %f, val normalized loss: %f, val ppl: %f,"
+                " consumed %fs" % (pass_id, val_avg_cost,
+                                   val_avg_cost - loss_normalizer, val_ppl,
+                                   time_consumed))
+        else:
+            print("epoch: %d, consumed %fs" % (pass_id, time_consumed))
         fluid.io.save_persistables(
             exe,
             os.path.join(TrainTaskConfig.ckpt_dir,
@@ -442,6 +462,10 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
             os.path.join(TrainTaskConfig.model_dir,
                          "pass_" + str(pass_id) + ".infer.model"),
             data_input_names[:-2] + util_input_names, [predict], exe)
+    if args.enable_ce:  # For CE
+        print("kpis\ttrain_cost_card%d\t%f" % (dev_count, total_avg_cost))
+        print("kpis\ttest_cost_card%d\t%f" % (dev_count, val_avg_cost))
+        print("kpis\ttrain_duration_card%d\t%f" % (dev_count, time_consumed))
 
 
 def train(args):
@@ -464,6 +488,9 @@ def train(args):
         dev_count = fluid.core.get_cuda_device_count()
 
     exe = fluid.Executor(place)
+
+    if args.enable_ce:
+        fluid.default_startup_program().random_seed = 1000
 
     sum_cost, avg_cost, predict, token_num = transformer(
         ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size,
