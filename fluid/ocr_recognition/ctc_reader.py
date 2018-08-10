@@ -193,11 +193,8 @@ def train(batch_size, train_images_dir=None, train_list_file=None, cycle=False):
     if train_list_file is None:
         train_list_file = path.join(data_dir, TRAIN_LIST_FILE_NAME)
     shuffle = True
-    print "os.environ: %s" % os.environ
     if 'ce_mode' in os.environ:
-        print "----------ce_mode is in env----------"
         shuffle = False
-    print "shuffle: %s" % shuffle
     return generator.train_reader(
         train_images_dir, train_list_file, batch_size, cycle, shuffle=shuffle)
 
