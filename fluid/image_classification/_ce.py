@@ -10,14 +10,14 @@ from kpi import CostKpi, DurationKpi, AccKpi
 train_acc_top1_kpi = AccKpi('train_acc_top1', 0.05, 0, desc='TOP1 ACC')
 train_acc_top5_kpi = AccKpi(
     'train_acc_top5', 0.05, 0, actived=False, desc='TOP5 ACC')
-train_cost_kpi = CostKpi('train_cost', 0.3, 0, actived=True, desc='train cost')
+train_cost_kpi = CostKpi('train_cost', 0.5, 0, actived=True, desc='train cost')
 test_acc_top1_kpi = AccKpi('test_acc_top1', 0.05, 0, desc='TOP1 ACC')
 test_acc_top5_kpi = AccKpi(
     'test_acc_top5', 0.05, 0, actived=False, desc='TOP5 ACC')
 test_cost_kpi = CostKpi('test_cost', 1.0, 0, actived=True, desc='train cost')
 train_speed_kpi = AccKpi(
     'train_speed',
-    0.05,
+    0.5,
     0,
     actived=True,
     unit_repr='seconds/image',
@@ -36,7 +36,7 @@ test_cost_card4_kpi = CostKpi(
     'test_cost_card4', 1.0, 0, actived=True, desc='train cost')
 train_speed_card4_kpi = AccKpi(
     'train_speed_card4',
-    0.05,
+    0.5,
     0,
     actived=True,
     unit_repr='seconds/image',
