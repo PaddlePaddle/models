@@ -40,23 +40,24 @@ def calc_diff(f1, f2):
         mask = mask.astype('int32')
 
         df = np.abs(d1 - d2)
+        absolute_df = np.max(df)
         df = df / (1.0e-10 + np.abs(d1) * mask + np.abs(d2) * (1 - mask))
         max_df = np.max(df)
         sq_df = np.mean(df * df)
-        return max_df, sq_df
+        return max_df, sq_df, absolute_df
     except Exception as e:
-        return -1.0, -1.0
+        return -1.0, -1.0, -1.0
 
 
 def compare(path1, path2, no_exception):
     def diff(f1, f2):
-        max_df, sq_df = calc_diff(f1, f2)
-        print('[max_df:%.4e, sq_df:%.4e] when compare %s <=> %s' %
-              (max_df, sq_df, os.path.basename(f1), os.path.basename(f2)))
+        max_df, sq_df, abs_df = calc_diff(f1, f2)
+        print('[max_df:%.4e, sq_df:%.4e, abs_df:%.20e] when compare %s <=> %s' %
+              (max_df, sq_df, abs_df, os.path.basename(f1), os.path.basename(f2)))
         if no_exception is False:
-            assert (max_df < 1e-5), \
+            assert (max_df < 1e-3), \
                     'max_df is too large with value[%.6e]' % (max_df)
-            assert (sq_df < 1e-10), \
+            assert (sq_df < 1e-6), \
                     'sq_df is too large with value[%.6e]' % (sq_df)
 
     if os.path.exists(path1) is False:
