@@ -2,7 +2,7 @@
 
 import os
 import sys
-sys.path.append(os.environ['ceroot'])
+sys.path.insert(0, os.environ['ceroot'])
 from kpi import CostKpi, DurationKpi, AccKpi
 
 #### NOTE kpi.py should shared in models in some way!!!!
