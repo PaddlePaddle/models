@@ -1,4 +1,5 @@
 import os
+import six
 import sys
 import time
 import unittest
@@ -58,7 +59,7 @@ def train(train_reader,
     if "CE_MODE_X" in os.environ:
         fluid.default_startup_program().random_seed = 110
     exe.run(fluid.default_startup_program())
-    for pass_id in xrange(pass_num):
+    for pass_id in six.moves.xrange(pass_num):
         pass_start = time.time()
         data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
         for data in train_reader():

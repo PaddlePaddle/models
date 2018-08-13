@@ -43,8 +43,8 @@ def data2tensor(data, place):
     """
     data2tensor
     """
-    input_seq = to_lodtensor(map(lambda x: x[0], data), place)
-    y_data = np.array(map(lambda x: x[1], data)).astype("int64")
+    input_seq = to_lodtensor([x[0] for x in data], place)
+    y_data = np.array([x[1] for x in data]).astype("int64")
     y_data = y_data.reshape([-1, 1])
     return {"words": input_seq, "label": y_data}
 
