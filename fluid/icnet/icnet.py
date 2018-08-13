@@ -184,7 +184,7 @@ def res_block(input, filter_num, padding=0, dilation=None, name=None):
     tmp = conv(tmp, 1, 1, filter_num, 1, 1, name=name + "_1_1_increase")
     tmp = bn(tmp, relu=False)
     tmp = input + tmp
-    tmp = fluid.layers.relu(tmp, name=name + "_relu")
+    tmp = fluid.layers.relu(tmp)
     return tmp
 
 
@@ -227,7 +227,7 @@ def proj_block(input, filter_num, padding=0, dilation=None, stride=1,
     tmp = conv(tmp, 1, 1, filter_num, 1, 1, name=name + "_1_1_increase")
     tmp = bn(tmp, relu=False)
     tmp = proj_bn + tmp
-    tmp = fluid.layers.relu(tmp, name=name + "_relu")
+    tmp = fluid.layers.relu(tmp)
     return tmp
 
 
