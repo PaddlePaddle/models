@@ -88,7 +88,7 @@ def stacked_lstmp_model(frame_dim,
         # When the execution place is specified to CUDAPlace, the program will
         # run on all $CUDA_VISIBLE_DEVICES GPUs. Otherwise the program will 
         # run on all CPU devices.
-        places = fluid.layers.get_places()
+        places = fluid.layers.device.get_places()
         pd = fluid.layers.ParallelDo(places)
         with pd.do():
             feat_ = pd.read_input(feature)
