@@ -34,7 +34,7 @@ def train(train_reader,
     if not parallel:
         cost, acc, prediction = network(data, label, len(word_dict))
     else:
-        places = fluid.layers.get_places(device_count=2)
+        places = fluid.layers.device.get_places(device_count=2)
         pd = fluid.layers.ParallelDo(places)
         with pd.do():
             cost, acc, prediction = network(
