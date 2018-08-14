@@ -40,6 +40,11 @@ def parse_args():
         default='data/train_files',
         help='A directory with train data files. (default: %(default)s)')
     parser.add_argument(
+        '--parallel',
+        type=bool,
+        default=False,
+        help="Whether to use parallel training. (default: %(default)s)")
+    parser.add_argument(
         '--test_data_dir',
         type=str,
         default='data/test_files',
@@ -297,12 +302,17 @@ def main(args):
         exe = fluid.Executor(place)
 
         exe.run(startup)
-        train_exe = fluid.ParallelExecutor(
-            loss_name=avg_cost.name, use_cuda=(args.device == 'GPU'))
-        test_exe = fluid.ParallelExecutor(
-            use_cuda=(args.device == 'GPU'),
-            main_program=inference_program,
-            share_vars_from=train_exe)
+        if args.parallel:
+            train_exe = fluid.ParallelExecutor(
+                loss_name=avg_cost.name, use_cuda=(args.device == 'GPU'))
+            test_exe = fluid.ParallelExecutor(
+                use_cuda=(args.device == 'GPU'),
+                main_program=inference_program,
+                share_vars_from=train_exe)
+        else:
+            train_exe = exe
+            test_exe = exe
+
         batch_id = 0
         for pass_id in xrange(args.num_passes):
             chunk_evaluator.reset()

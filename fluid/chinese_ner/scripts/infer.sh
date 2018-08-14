@@ -3,7 +3,7 @@ export MKL_NUM_THREADS=1
 export OMP_NUM_THREADS=1
 
 mode=$1 # gpu, cpu, mkldnn
-if [ "$mode" = "CPU" ] then
+if [ "$mode" = "CPU" ]; then
   device="CPU"
   model_path="cpu_model"
 elif [ "$mode" = "GPU" ]; then
@@ -34,7 +34,7 @@ fi
 
 python ../infer.py \
 	--device $device \
-	--num_passes 100 \
+	--num_passes 1 \
 	--skip_pass_num 2 \
 	--profile \
 	--test_data_dir ../data/test_files \

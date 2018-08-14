@@ -5,12 +5,15 @@ export OMP_NUM_THREADS=1
 mode=$1 # gpu, cpu, mkldnn
 if [ "$mode" = "CPU" ]; then
   device="CPU"
+  parallel="--parallel True"
   save_model_dir="cpu_model"
 elif [ "$mode" = "GPU" ]; then
   device="GPU"
+  parallel="--parallel True"
   save_model_dir="gpu_model"
 elif [ "$mode" = "MKLDNN" ]; then
   device="CPU"
+  parallel=""
   save_model_dir="mkldnn_model"
   export FLAGS_use_mkldnn=1
 else
@@ -34,6 +37,7 @@ fi
 
 python ../train.py \
 	--device $device \
+  $parallel \
 	--model_save_dir $save_model_dir \
 	--test_data_dir ../data/test_files \
 	--train_data_dir ../data/train_files \
