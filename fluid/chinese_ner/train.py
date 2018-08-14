@@ -1,6 +1,7 @@
 import os
 import math
 import time
+import argparse
 
 import numpy as np
 import paddle
@@ -8,6 +9,65 @@ import paddle.fluid as fluid
 from paddle.fluid.initializer import NormalInitializer
 
 import reader
+
+
+def parse_args():
+    parser = argparse.ArgumentParser("Run inference.")
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=256,
+        help='The size of a batch. (default: %(default)d)')
+    parser.add_argument(
+        '--word_dict_len',
+        type=int,
+        default=1942563,
+        help='The lenght of the word dictionary. (default: %(default)d)')
+    parser.add_argument(
+        '--label_dict_len',
+        type=int,
+        default=49,
+        help='The lenght of the label dictionary. (default: %(default)d)')
+    parser.add_argument(
+        '--device',
+        type=str,
+        default='GPU',
+        choices=['CPU', 'GPU'],
+        help='The device type. (default: %(default)s)')
+    parser.add_argument(
+        '--train_data_dir',
+        type=str,
+        default='data/train_files',
+        help='A directory with train data files. (default: %(default)s)')
+    parser.add_argument(
+        '--parallel',
+        type=bool,
+        default=False,
+        help="Whether to use parallel training. (default: %(default)s)")
+    parser.add_argument(
+        '--test_data_dir',
+        type=str,
+        default='data/test_files',
+        help='A directory with test data files. (default: %(default)s)')
+    parser.add_argument(
+        '--model_save_dir',
+        type=str,
+        default='./output',
+        help='A directory for saving models. (default: %(default)s)')
+    parser.add_argument(
+        '--num_passes',
+        type=int,
+        default=1000,
+        help='The number of epochs. (default: %(default)d)')
+    args = parser.parse_args()
+    return args
+
+
+def print_arguments(args):
+    print('-----------  Configuration Arguments -----------')
+    for arg, value in sorted(vars(args).iteritems()):
+        print('%s: %s' % (arg, value))
+    print('------------------------------------------------')
 
 
 def load_reverse_dict(dict_path):
@@ -197,32 +257,27 @@ def test(test_exe, chunk_evaluator, inference_program, test_data, place,
     return chunk_evaluator.eval()
 
 
-def main(train_data_file, test_data_file, model_save_dir, num_passes):
-    if not os.path.exists(model_save_dir):
-        os.mkdir(model_save_dir)
-
-    BATCH_SIZE = 256
-    word_dict_len = 1942563
-    label_dict_len = 49
+def main(args):
+    if not os.path.exists(args.model_save_dir):
+        os.makedirs(args.model_save_dir)
 
     main = fluid.Program()
     startup = fluid.Program()
     with fluid.program_guard(main, startup):
-        avg_cost, feature_out, word, mention, target = ner_net(word_dict_len,
-                                                               label_dict_len)
+        avg_cost, feature_out, word, mention, target = ner_net(
+            args.word_dict_len, args.label_dict_len)
+        sgd_optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
+        sgd_optimizer.minimize(avg_cost)
 
         crf_decode = fluid.layers.crf_decoding(
             input=feature_out, param_attr=fluid.ParamAttr(name='crfw'))
-
-        sgd_optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
-        sgd_optimizer.minimize(avg_cost)
 
         (precision, recall, f1_score, num_infer_chunks, num_label_chunks,
          num_correct_chunks) = fluid.layers.chunk_eval(
              input=crf_decode,
              label=target,
              chunk_scheme="IOB",
-             num_chunk_types=int(math.ceil((label_dict_len - 1) / 2.0)))
+             num_chunk_types=int(math.ceil((args.label_dict_len - 1) / 2.0)))
 
         chunk_evaluator = fluid.metrics.ChunkEvaluator()
 
@@ -233,28 +288,33 @@ def main(train_data_file, test_data_file, model_save_dir, num_passes):
 
         train_reader = paddle.batch(
             paddle.reader.shuffle(
-                reader.file_reader(train_data_file), buf_size=2000000),
-            batch_size=BATCH_SIZE)
+                reader.file_reader(args.train_data_dir), buf_size=2000000),
+            batch_size=args.batch_size)
         test_reader = paddle.batch(
             paddle.reader.shuffle(
-                reader.file_reader(test_data_file), buf_size=2000000),
-            batch_size=BATCH_SIZE)
+                reader.file_reader(args.test_data_dir), buf_size=2000000),
+            batch_size=args.batch_size)
 
-        place = fluid.CUDAPlace(0)
+        place = fluid.CUDAPlace(0) if args.device == 'GPU' else fluid.CPUPlace()
         feeder = fluid.DataFeeder(
             feed_list=[word, mention, target], place=place)
 
         exe = fluid.Executor(place)
 
         exe.run(startup)
-        train_exe = fluid.ParallelExecutor(
-            loss_name=avg_cost.name, use_cuda=True)
-        test_exe = fluid.ParallelExecutor(
-            use_cuda=True,
-            main_program=inference_program,
-            share_vars_from=train_exe)
+        if args.parallel:
+            train_exe = fluid.ParallelExecutor(
+                loss_name=avg_cost.name, use_cuda=(args.device == 'GPU'))
+            test_exe = fluid.ParallelExecutor(
+                use_cuda=(args.device == 'GPU'),
+                main_program=inference_program,
+                share_vars_from=train_exe)
+        else:
+            train_exe = exe
+            test_exe = exe
+
         batch_id = 0
-        for pass_id in xrange(num_passes):
+        for pass_id in xrange(args.num_passes):
             chunk_evaluator.reset()
             train_reader_iter = train_reader()
             start_time = time.time()
@@ -286,15 +346,13 @@ def main(train_data_file, test_data_file, model_save_dir, num_passes):
                 [num_infer_chunks, num_label_chunks, num_correct_chunks])
             print("[Test] precision:" + str(p) + ", recall:" + str(r) + ", f1:"
                   + str(f1))
-            save_dirname = os.path.join(model_save_dir,
+            save_dirname = os.path.join(args.model_save_dir,
                                         "params_pass_%d" % pass_id)
-            fluid.io.save_inference_model(save_dirname, ['word', 'mention'],
-                                          [crf_decode], exe)
+            fluid.io.save_inference_model(
+                save_dirname, ['word', 'mention', 'target'], [crf_decode], exe)
 
 
 if __name__ == "__main__":
-    main(
-        train_data_file="./data/train_files",
-        test_data_file="./data/test_files",
-        model_save_dir="./output",
-        num_passes=1000)
+    args = parse_args()
+    print_arguments(args)
+    main(args)
