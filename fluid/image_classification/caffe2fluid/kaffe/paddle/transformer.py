@@ -329,7 +329,7 @@ class Transformer(object):
 
             # Fuse Crop
             # Crop is to return a scalar output Blob for an input Blob of arbitrary size.
-            # When one of the input Blob is "input" or "DummyData", we can remove the input Blob
+            # When one of the input Blob is "input" or "DummyData", we can remove this input Blob
             # and put the shape into the reduction layer.
             CropFuser()
         ]
