@@ -176,6 +176,63 @@ class DataReshaper(object):
                     del node.reshaped_data
         return graph
 
+class CropFuser(object):
+    '''
+    Crop is to return a scalar output Blob for an input Blob of arbitrary size.
+    When one of the input Blob is "input" or "DummyData", we can remove the input Blob
+    and put the shape into the reduction layer.
+    '''
+    _traced_names = {}
+
+    @classmethod
+    def traced_names(cls):
+        return cls._traced_names
+
+    @classmethod
+    def trace(cls, fname, tname):
+        """ recording the names mapping,
+            the value of 'fname' will be replaced by value of 'tname'
+        """
+        if fname not in cls._traced_names:
+            cls._traced_names[fname] = []
+        cls._traced_names[fname].append(tname)
+
+    def __init__(self, allowed_parent_types=[NodeKind.Input, NodeKind.DummyData]):
+        self.allowed_parent_types = allowed_parent_types
+
+    def __call__(self, graph):
+        nodes = graph.nodes
+        fused_nodes = []
+        for node in nodes:
+            if len(node.parents) != 2:
+                # reduction layer must has two parent layers.
+                continue
+            parent = node.parents[1]
+            if not self.is_eligible_pair(parent, node):
+                continue
+            # Change the graph structure.
+            parent.children.remove(node)
+            node.parents.remove(parent)
+            # Let the sub-class merge the fused node in any arbitrary way.
+            if not len(parent.children):
+                fused_nodes.append(parent)
+            #fused_nodes.append(parent)
+            self.merge(parent, node)
+        # rebuild the graph
+        transformed_nodes = [node for node in nodes if node not in fused_nodes]
+        return graph.replaced(transformed_nodes)
+
+    def is_eligible_pair(self, parent, child):
+        '''Returns true if this parent/child pair is eligible for fusion.'''
+        return child.kind == NodeKind.Crop
+        #return (self.allowed_parent_types is not None and \
+        #        len(parent.children) == 1 and \
+        #        parent.kind in self.allowed_parent_types and \
+        #        child.kind == NodeKind.Crop)
+
+    def merge(self, parent, child):
+        '''Merge the parent node into the child.'''
+        child.metadata['shape'] = [parent.output_shape.batch_size, parent.output_shape.channels, parent.output_shape.height, parent.output_shape.width]
 
 class SubNodeFuser(object):
     '''

@@ -14,11 +14,12 @@ import permute
 import detection_out
 import normalize
 import select
+import crop
+import reduction
 
 #custom layer import ends
 
 custom_layers = get_registered_layers()
-
 
 def set_args(f, params, node=None):
     """ set args for function 'f' using the parameters in node.layer.parameters
@@ -40,6 +41,9 @@ def set_args(f, params, node=None):
     for arg_name in arg_list:
         if arg_name in params:
             kwargs[arg_name] = params[arg_name]
+
+    if node is not None and len(node.metadata):
+        kwargs.update(node.metadata)
 
     return arg_list, kwargs
 

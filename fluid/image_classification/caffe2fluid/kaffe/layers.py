@@ -20,6 +20,7 @@ LAYER_DESCRIPTORS = {
     'Data': shape_data,
     'Dropout': shape_identity,
     'DummyData': shape_data,
+    'Crop': shape_crop,
     'EuclideanLoss': shape_scalar,
     'Eltwise': shape_identity,
     'Exp': shape_identity,
