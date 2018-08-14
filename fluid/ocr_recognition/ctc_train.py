@@ -63,6 +63,10 @@ def train(args, data_reader=ctc_reader):
     if args.use_gpu:
         place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
+
+    if 'ce_mode' in os.environ:
+        fluid.default_startup_program().random_seed = 90
+
     exe.run(fluid.default_startup_program())
 
     # load init model
@@ -148,7 +152,6 @@ def train(args, data_reader=ctc_reader):
                                                             args.batch_size))
                 print "kpis	train_acc	%f" % (
                     1 - total_seq_error / (args.log_period * args.batch_size))
-                sys.stdout.flush()
                 total_loss = 0.0
                 total_seq_error = 0.0
 
