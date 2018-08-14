@@ -63,6 +63,10 @@ def train(args, data_reader=ctc_reader):
     if args.use_gpu:
         place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
+
+    if 'ce_mode' in os.environ:
+        fluid.default_startup_program().random_seed = 90
+
     exe.run(fluid.default_startup_program())
 
     # load init model
@@ -103,6 +107,10 @@ def train(args, data_reader=ctc_reader):
         print "\nTime: %s; Iter[%d]; Test seq error: %s.\n" % (
             time.time(), iter_num, str(test_seq_error[0]))
 
+        #Note: The following logs are special for CE monitoring.
+        #Other situations do not need to care about these logs.
+        print "kpis	test_acc	%f" % (1 - test_seq_error[0])
+
     def save_model(args, exe, iter_num):
         filename = "model_%05d" % iter_num
         fluid.io.save_params(
@@ -111,6 +119,7 @@ def train(args, data_reader=ctc_reader):
 
     iter_num = 0
     stop = False
+    start_time = time.time()
     while not stop:
         total_loss = 0.0
         total_seq_error = 0.0
@@ -139,11 +148,14 @@ def train(args, data_reader=ctc_reader):
                     time.time(), iter_num,
                     total_loss / (args.log_period * args.batch_size),
                     total_seq_error / (args.log_period * args.batch_size))
-                sys.stdout.flush()
+                print "kpis	train_cost	%f" % (total_loss / (args.log_period *
+                                                            args.batch_size))
+                print "kpis	train_acc	%f" % (
+                    1 - total_seq_error / (args.log_period * args.batch_size))
                 total_loss = 0.0
                 total_seq_error = 0.0
 
-            # evaluate
+# evaluate
             if not args.skip_test and iter_num % args.eval_period == 0:
                 if model_average:
                     with model_average.apply(exe):
@@ -158,6 +170,8 @@ def train(args, data_reader=ctc_reader):
                         save_model(args, exe, iter_num)
                 else:
                     save_model(args, exe, iter_num)
+        end_time = time.time()
+        print "kpis	train_duration	%f" % (end_time - start_time)
         # Postprocess benchmark data
         latencies = batch_times[args.skip_batch_num:]
         latency_avg = np.average(latencies)
