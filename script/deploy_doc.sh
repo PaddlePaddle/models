@@ -20,7 +20,9 @@ docker run -it \
     -e TRAVIS_BRANCH=$TRAVIS_BRANCH \
     -e DEPLOY_DOCS_SH=$DEPLOY_DOCS_SH \
     -e TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST \
+    -e PPO_SCRIPT_BRANCH=$PPO_SCRIPT_BRANCH \
+    -e PADDLE_ROOT=/models \
     -v "$PWD:/models" \
-    -w /paddle \
+    -w /models \
     paddlepaddle/paddle:latest-dev \
-    /bin/bash -c 'cd /models; curl $DEPLOY_DOCS_SH | bash -s $CONTENT_DEC_PASSWD $TRAVIS_BRANCH /models models/build/doc/ ${PPO_SCRIPT_BRANCH}' || exit_code=$(( exit_code | $? ))
+    /bin/bash -c 'curl $DEPLOY_DOCS_SH | bash -s $CONTENT_DEC_PASSWD $TRAVIS_BRANCH /models models/build/doc/ $PPO_SCRIPT_BRANCH' || exit_code=$(( exit_code | $? ))
