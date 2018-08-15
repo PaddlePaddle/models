@@ -15,7 +15,7 @@ fi
 
 export DEPLOY_DOCS_SH=https://raw.githubusercontent.com/PaddlePaddle/PaddlePaddle.org/$PPO_SCRIPT_BRANCH/scripts/deploy/deploy_docs.sh
 
-docker run -i --rm 
+docker run -i --rm \
     -e CONTENT_DEC_PASSWD=$CONTENT_DEC_PASSWD \
     -e TRAVIS_BRANCH=$TRAVIS_BRANCH \
     -e DEPLOY_DOCS_SH=$DEPLOY_DOCS_SH \
