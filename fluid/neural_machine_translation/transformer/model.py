@@ -522,13 +522,13 @@ def wrap_decoder(trg_vocab_size,
             x=dec_output,
             y=fluid.get_var(word_emb_param_names[0]),
             transpose_y=True)
-        predict = layers.softmax(predict)
     else:
         predict = layers.fc(input=dec_output,
                             size=trg_vocab_size,
                             bias_attr=False,
-                            num_flatten_dims=2,
-                            act='softmax')
+                            num_flatten_dims=2)
+    if dec_inputs is None:
+        predict = layers.softmax(predict)
     return predict
 
 
