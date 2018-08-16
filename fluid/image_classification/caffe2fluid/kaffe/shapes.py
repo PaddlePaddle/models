@@ -62,6 +62,8 @@ def shape_identity(node):
 def shape_scalar(node):
     return make_tensor(1, 1, 1, 1)
 
+def shape_crop(node):
+    raise KaffeError('crop function had been defined in customer_layers')
 
 def shape_data(node):
     if node.output_shape:

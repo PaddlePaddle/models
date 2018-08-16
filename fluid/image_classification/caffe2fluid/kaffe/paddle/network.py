@@ -352,6 +352,24 @@ class Network(object):
         return output
 
     @layer
+    def max(self, inputs, name):
+        fluid = import_fluid()
+        output = inputs[0]
+        for i in inputs[1:]:
+            output = fluid.layers.elementwise_max(
+                x=output, y=i, name=self.get_unique_output_name(name, 'max'))
+        return output
+
+    @layer
+    def multiply(self, inputs, name):
+        fluid = import_fluid()
+        output = inputs[0]
+        for i in inputs[1:]:
+            output = fluid.layers.elementwise_mul(
+                x=output, y=i, name=self.get_unique_output_name(name, 'mul'))
+        return output
+
+    @layer
     def fc(self, input, num_out, name, relu=True, act=None):
         fluid = import_fluid()
 
