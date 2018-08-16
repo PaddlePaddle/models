@@ -4,6 +4,7 @@ import cityscape
 import argparse
 import functools
 import sys
+import os
 import time
 import paddle.fluid as fluid
 import numpy as np
@@ -11,9 +12,8 @@ from utils import add_arguments, print_arguments, get_feeder_data
 from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
 from paddle.fluid.initializer import init_on_cpu
 
-SEED = 90
-# random seed must set before configuring the network.
-fluid.default_startup_program().random_seed = SEED
+if 'ce_mode' in os.environ:
+    np.random.seed(10)
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -87,6 +87,10 @@ def train(args):
     if args.use_gpu:
         place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
+
+    if 'ce_mode' in os.environ:
+        fluid.default_startup_program().random_seed = 90
+
     exe.run(fluid.default_startup_program())
 
     if args.init_model is not None:
