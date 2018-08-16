@@ -24,7 +24,7 @@ add_arg('skip_reader',      bool,  False,            "Whether to skip data reade
 add_arg('use_gpu',          bool,  True,            "Whether use GPU.")
 add_arg('use_pyramidbox',   bool,  True,            "Whether use PyramidBox model.")
 add_arg('model_save_dir',   str,   'output',        "The path to save model.")
-add_arg('pretrained_model', str,   './pretrained/', "The init model path.")
+add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced', "The init model path.")
 add_arg('resize_h',         int,   640,             "The resized image height.")
 add_arg('resize_w',         int,   640,             "The resized image height.")
 #yapf: enable
@@ -177,8 +177,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
-    data_dir = 'data/WIDERFACE/WIDER_train/images/'
-    train_file_list = 'label/train_gt_widerface.res'
+    data_dir = 'data/WIDER_train/images/'
+    train_file_list = 'data/wider_face_split/wider_face_train_bbx_gt.txt'
 
     config = reader.Settings(
         data_dir=data_dir,
