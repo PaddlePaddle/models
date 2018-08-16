@@ -104,6 +104,8 @@ def train(args):
 
     if args.enable_ce:
         assert model_name == "SE_ResNeXt50_32x4d"
+        fluid.default_startup_program().random_seed = 1000
+        model.params["dropout_seed"] = 100
 
     if model_name is "GoogleNet":
         out0, out1, out2 = model.net(input=image, class_dim=class_dim)
@@ -134,8 +136,6 @@ def train(args):
     params["num_epochs"] = args.num_epochs
     params["learning_strategy"]["batch_size"] = args.batch_size
     params["learning_strategy"]["name"] = args.lr_strategy
-    if args.enable_ce:
-        params["dropout_seed"] = 10
 
     # initialize optimizer
     optimizer = optimizer_setting(params)
@@ -143,9 +143,6 @@ def train(args):
 
     if with_memory_optimization:
         fluid.memory_optimize(fluid.default_main_program())
-
-    if args.enable_ce:
-        fluid.default_startup_program().random_seed = 1000
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -172,6 +169,7 @@ def train(args):
         # but it is time consuming. For faster speed, need another dataset.
         import random
         random.seed(0)
+        np.random.seed(0)
         train_reader = paddle.batch(
             flowers.train(use_xmap=False), batch_size=train_batch_size)
         test_reader = paddle.batch(
