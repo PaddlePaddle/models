@@ -335,6 +335,10 @@ def decoder(dec_input,
     The decoder is composed of a stack of identical decoder_layer layers.
     """
     for i in range(n_layer):
+        cache = None
+        if caches is not None:
+            cache = caches[i]
+
         dec_output = decoder_layer(
             dec_input,
             enc_output,
@@ -345,7 +349,8 @@ def decoder(dec_input,
             d_value,
             d_model,
             d_inner_hid,
-            dropout_rate, )
+            dropout_rate,
+            cache=cache)
         dec_input = dec_output
     return dec_output
 
@@ -515,7 +520,8 @@ def wrap_decoder(trg_vocab_size,
         d_value,
         d_model,
         d_inner_hid,
-        dropout_rate, )
+        dropout_rate,
+        caches=caches)
     # Return logits for training and probs for inference.
     if weight_sharing:
         predict = layers.matmul(
@@ -565,8 +571,7 @@ def fast_decode(
         cond = layers.less_than(x=step_idx, y=max_len)
         while_op = layers.While(cond)
         # array states will be stored for each step.
-        ids = layers.array_write(start_tokens, step_idx)
-        ids_flatten = layers.array_write(
+        ids = layers.array_write(
             layers.reshape(start_tokens, (-1, 1)), step_idx)
         scores = layers.array_write(init_scores, step_idx)
         # cell states will be overwrited at each step.
@@ -586,6 +591,7 @@ def fast_decode(
         } for i in range(n_layer)]
         with while_op.block():
             pre_ids = layers.array_read(array=ids, i=step_idx)
+            pre_ids = layers.reshape(pre_ids, (-1, 1, 1))
             pre_scores = layers.array_read(array=scores, i=step_idx)
             # sequence_expand can gather sequences according to lod thus can be
             # used in beam search to sift states corresponding to selected ids.
@@ -642,8 +648,6 @@ def fast_decode(
 
             layers.increment(x=step_idx, value=1.0, in_place=True)
             # update states
-            layers.array_write(selected_ids, i=step_idx, array=ids_flatten)
-            selected_ids = layers.reshape(selected_ids, shape=(-1, 1, 1))
             layers.array_write(selected_ids, i=step_idx, array=ids)
             layers.array_write(selected_scores, i=step_idx, array=scores)
             layers.assign(pre_src_attn_bias, trg_src_attn_bias)
@@ -656,7 +660,7 @@ def fast_decode(
             layers.logical_and(x=length_cond, y=finish_cond, out=cond)
 
         finished_ids, finished_scores = layers.beam_search_decode(
-            ids_flatten, scores, beam_size=beam_size, end_id=eos_idx)
+            ids, scores, beam_size=beam_size, end_id=eos_idx)
         return finished_ids, finished_scores
 
     finished_ids, finished_scores = beam_search()
