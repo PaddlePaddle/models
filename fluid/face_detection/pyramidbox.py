@@ -51,7 +51,10 @@ def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
 
 class PyramidBox(object):
     def __init__(self,
-                 data_shape,
+                 image,
+                 face_box,
+                 head_box,
+                 gt_label,
                  num_classes=None,
                  use_transposed_conv2d=True,
                  is_infer=False,
@@ -59,16 +62,18 @@ class PyramidBox(object):
         """
         TODO(qingqing): add comments.
         """
-        self.data_shape = data_shape
         self.min_sizes = [16., 32., 64., 128., 256., 512.]
         self.steps = [4., 8., 16., 32., 64., 128.]
         self.num_classes = num_classes
         self.use_transposed_conv2d = use_transposed_conv2d
         self.is_infer = is_infer
         self.sub_network = sub_network
+        self.image = image
+        self.face_box = face_box
+        self.head_box = head_box
+        self.gt_label = gt_label
 
         # the base network is VGG with atrous layers
-        self._input()
         self._vgg()
         if sub_network:
             self._low_level_fpn()
@@ -76,23 +81,6 @@ class PyramidBox(object):
             self._pyramidbox()
         else:
             self._vgg_ssd()
-
-    def feeds(self):
-        if self.is_infer:
-            return [self.image]
-        else:
-            return [self.image, self.face_box, self.head_box, self.gt_label]
-
-    def _input(self):
-        self.image = fluid.layers.data(
-            name='image', shape=self.data_shape, dtype='float32')
-        if not self.is_infer:
-            self.face_box = fluid.layers.data(
-                name='face_box', shape=[4], dtype='float32', lod_level=1)
-            self.head_box = fluid.layers.data(
-                name='head_box', shape=[4], dtype='float32', lod_level=1)
-            self.gt_label = fluid.layers.data(
-                name='gt_label', shape=[1], dtype='int32', lod_level=1)
 
     def _vgg(self):
         self.conv1, self.pool1 = conv_block(self.image, 2, [64] * 2, [3] * 2)
