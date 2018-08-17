@@ -165,10 +165,10 @@ python widerface_eval.py --infer=True --confs_threshold=0.15
 ```
 下图可视化了模型的预测结果：
 <p align="center">
-<img src="images/0_Parade_marchingband_1_356.jpg" height=300 width=400 hspace='10'/>
-<img src="images/28_Sports_Fan_Sports_Fan_28_770.jpg" height=300 width=400 hspace='10'/>
-<img src="images/4_Dancing_Dancing_4_194.jpg" height=300 width=400 hspace='10'/>
-<img src="images/2_Demonstration_Demonstration_Or_Protest_2_58.jpg" height=300 width=400 hspace='10'/>  <br />
+<img src="images/0_Parade_marchingband_1_356.jpg" height=400 width=400 hspace='10'/>
+<img src="images/28_Sports_Fan_Sports_Fan_28_770.jpg" height=400 width=400 hspace='10'/>
+<img src="images/4_Dancing_Dancing_4_194.jpg" height=400 width=400 hspace='10'/>
+<img src="images/2_Demonstration_Demonstration_Or_Protest_2_58.jpg" height=400 width=400 hspace='10'/>  <br />
 Pyramidbox 预测可视化
 </p>
 
