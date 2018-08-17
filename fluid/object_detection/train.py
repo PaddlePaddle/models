@@ -65,7 +65,6 @@ def train(args,
         name='gt_label', shape=[1], dtype='int32', lod_level=1)
     difficult = fluid.layers.data(
         name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
-
     locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
     nmsed_out = fluid.layers.detection_output(
         locs, confs, box, box_var, nms_threshold=args.nms_threshold)
@@ -126,6 +125,9 @@ def train(args,
         train_reader = paddle.batch(
             reader.train(data_args, train_file_list), batch_size=batch_size)
     else:
+        import random
+        random.seed(0)
+        np.random.seed(0)
         train_reader = paddle.batch(
             reader.train(data_args, train_file_list, False), batch_size=batch_size)
     test_reader = paddle.batch(
