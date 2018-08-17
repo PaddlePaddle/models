@@ -168,8 +168,6 @@ def train(args,
         start_time = time.time()
         prev_start_time = start_time
         every_pass_loss = []
-        iter = 0
-        pass_duration = 0.0
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
