@@ -190,6 +190,6 @@ fast_decoder_data_input_fields = (
     "trg_word",
     "init_score",
     "trg_src_attn_bias", )
-fast_decoder_util_input_fields = (
-    "trg_slf_attn_pre_softmax_shape_delta",
-    "trg_slf_attn_post_softmax_shape_delta", )
+# fast_decoder_util_input_fields = (
+#     "trg_slf_attn_pre_softmax_shape_delta",
+#     "trg_slf_attn_post_softmax_shape_delta", )

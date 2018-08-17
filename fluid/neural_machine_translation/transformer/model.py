@@ -197,6 +197,7 @@ def prepare_encoder(src_word,
         param_attr=fluid.ParamAttr(
             name=word_emb_param_name,
             initializer=fluid.initializer.Normal(0., src_emb_dim**-0.5)))
+
     src_word_emb = layers.scale(x=src_word_emb, scale=src_emb_dim**0.5)
     src_pos_enc = layers.embedding(
         src_pos,
@@ -453,8 +454,7 @@ def wrap_encoder(src_vocab_size,
     if enc_inputs is None:
         # This is used to implement independent encoder program in inference.
         src_word, src_pos, src_slf_attn_bias = \
-            make_all_inputs(encoder_data_input_fields +
-                            encoder_util_input_fields)
+            make_all_inputs(encoder_data_input_fields)
     else:
         src_word, src_pos, src_slf_attn_bias = \
             enc_inputs
@@ -554,12 +554,8 @@ def fast_decode(
     enc_output = wrap_encoder(src_vocab_size, max_in_len, n_layer, n_head,
                               d_key, d_value, d_model, d_inner_hid,
                               dropout_rate, weight_sharing)
-    start_tokens, init_scores, trg_src_attn_bias, trg_data_shape, \
-    slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape, \
-    src_attn_pre_softmax_shape, src_attn_post_softmax_shape, \
-    attn_pre_softmax_shape_delta, attn_post_softmax_shape_delta = \
-        make_all_inputs(fast_decoder_data_input_fields +
-                        fast_decoder_util_input_fields)
+    start_tokens, init_scores, trg_src_attn_bias = \
+        make_all_inputs(fast_decoder_data_input_fields )
 
     def beam_search():
         max_len = layers.fill_constant(
@@ -570,6 +566,8 @@ def fast_decode(
         while_op = layers.While(cond)
         # array states will be stored for each step.
         ids = layers.array_write(start_tokens, step_idx)
+        ids_flatten = layers.array_write(
+            layers.reshape(start_tokens, (-1, 1)), step_idx)
         scores = layers.array_write(init_scores, step_idx)
         # cell states will be overwrited at each step.
         # caches contains states of history steps to reduce redundant
@@ -604,7 +602,7 @@ def fast_decode(
                 x=layers.fill_constant_batch_size_like(
                     input=pre_enc_output,  # cann't use pre_ids here since it has lod
                     value=1,
-                    shape=[-1, 1],
+                    shape=[-1, 1, 1],
                     dtype=pre_ids.dtype),
                 y=layers.increment(
                     x=step_idx, value=1.0, in_place=False),
@@ -620,12 +618,11 @@ def fast_decode(
                 d_inner_hid,
                 dropout_rate,
                 weight_sharing,
-                dec_inputs=(
-                    pre_ids, pre_pos, None, pre_src_attn_bias, trg_data_shape,
-                    slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape,
-                    src_attn_pre_softmax_shape, src_attn_post_softmax_shape),
+                dec_inputs=(pre_ids, pre_pos, None, pre_src_attn_bias),
                 enc_output=pre_enc_output,
                 caches=pre_caches)
+            logits = layers.reshape(logits, (-1, trg_vocab_size))
+
             topk_scores, topk_indices = layers.topk(
                 input=layers.softmax(logits), k=beam_size)
             accu_scores = layers.elementwise_add(
@@ -642,8 +639,11 @@ def fast_decode(
                 scores=accu_scores,
                 beam_size=beam_size,
                 end_id=eos_idx)
+
             layers.increment(x=step_idx, value=1.0, in_place=True)
             # update states
+            layers.array_write(selected_ids, i=step_idx, array=ids_flatten)
+            selected_ids = layers.reshape(selected_ids, shape=(-1, 1, 1))
             layers.array_write(selected_ids, i=step_idx, array=ids)
             layers.array_write(selected_scores, i=step_idx, array=scores)
             layers.assign(pre_src_attn_bias, trg_src_attn_bias)
@@ -651,23 +651,12 @@ def fast_decode(
             for i in range(n_layer):
                 layers.assign(pre_caches[i]["k"], caches[i]["k"])
                 layers.assign(pre_caches[i]["v"], caches[i]["v"])
-            layers.assign(
-                layers.elementwise_add(
-                    x=slf_attn_pre_softmax_shape,
-                    y=attn_pre_softmax_shape_delta),
-                slf_attn_pre_softmax_shape)
-            layers.assign(
-                layers.elementwise_add(
-                    x=slf_attn_post_softmax_shape,
-                    y=attn_post_softmax_shape_delta),
-                slf_attn_post_softmax_shape)
-
             length_cond = layers.less_than(x=step_idx, y=max_len)
             finish_cond = layers.logical_not(layers.is_empty(x=selected_ids))
             layers.logical_and(x=length_cond, y=finish_cond, out=cond)
 
         finished_ids, finished_scores = layers.beam_search_decode(
-            ids, scores, beam_size=beam_size, end_id=eos_idx)
+            ids_flatten, scores, beam_size=beam_size, end_id=eos_idx)
         return finished_ids, finished_scores
 
     finished_ids, finished_scores = beam_search()

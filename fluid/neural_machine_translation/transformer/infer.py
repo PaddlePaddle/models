@@ -424,8 +424,8 @@ def py_infer(test_data, trg_idx2word, use_wordpiece):
                     print(" ".join([trg_idx2word[idx] for idx in seq]))
 
 
-def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
-                        bos_idx, n_head, d_model, place):
+def prepare_batch_input(insts, data_input_names, src_pad_idx, bos_idx, n_head,
+                        d_model, place):
     """
     Put all padded data needed by beam search decoder into a dict.
     """
@@ -435,25 +435,9 @@ def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
     trg_word = np.asarray([[bos_idx]] * len(insts), dtype="int64")
     trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
                                 [1, 1, 1, 1]).astype("float32")
-
-    # These shape tensors are used in reshape_op.
-    src_data_shape = np.array([-1, src_max_len, d_model], dtype="int32")
-    trg_data_shape = np.array([-1, 1, d_model], dtype="int32")
-    src_slf_attn_pre_softmax_shape = np.array(
-        [-1, src_slf_attn_bias.shape[-1]], dtype="int32")
-    src_slf_attn_post_softmax_shape = np.array(
-        [-1] + list(src_slf_attn_bias.shape[1:]), dtype="int32")
-    trg_slf_attn_pre_softmax_shape = np.array(
-        [-1, 1], dtype="int32")  # only the first time step
-    trg_slf_attn_post_softmax_shape = np.array(
-        [-1, n_head, 1, 1], dtype="int32")  # only the first time step
-    trg_src_attn_pre_softmax_shape = np.array(
-        [-1, trg_src_attn_bias.shape[-1]], dtype="int32")
-    trg_src_attn_post_softmax_shape = np.array(
-        [-1] + list(trg_src_attn_bias.shape[1:]), dtype="int32")
-    # These inputs are used to change the shapes in the loop of while op.
-    attn_pre_softmax_shape_delta = np.array([0, 1], dtype="int32")
-    attn_post_softmax_shape_delta = np.array([0, 0, 0, 1], dtype="int32")
+    trg_word = trg_word.reshape(-1, 1, 1)
+    src_word = src_word.reshape(-1, src_max_len, 1)
+    src_pos = src_pos.reshape(-1, src_max_len, 1)
 
     def to_lodtensor(data, place, lod=None):
         data_tensor = fluid.LoDTensor()
@@ -465,7 +449,7 @@ def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
     # beamsearch_op must use tensors with lod
     init_score = to_lodtensor(
         np.zeros_like(
-            trg_word, dtype="float32"),
+            trg_word, dtype="float32").reshape(-1, 1),
         place, [range(trg_word.shape[0] + 1)] * 2)
     trg_word = to_lodtensor(trg_word, place, [range(trg_word.shape[0] + 1)] * 2)
 
@@ -474,16 +458,8 @@ def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
             src_word, src_pos, src_slf_attn_bias, trg_word, init_score,
             trg_src_attn_bias
         ]))
-    util_input_dict = dict(
-        zip(util_input_names, [
-            src_data_shape, src_slf_attn_pre_softmax_shape,
-            src_slf_attn_post_softmax_shape, trg_data_shape,
-            trg_slf_attn_pre_softmax_shape, trg_slf_attn_post_softmax_shape,
-            trg_src_attn_pre_softmax_shape, trg_src_attn_post_softmax_shape,
-            attn_pre_softmax_shape_delta, attn_post_softmax_shape_delta
-        ]))
 
-    input_dict = dict(data_input_dict.items() + util_input_dict.items())
+    input_dict = dict(data_input_dict.items())
     return input_dict
 
 
@@ -515,7 +491,6 @@ def fast_infer(test_data, trg_idx2word, use_wordpiece):
     for batch_id, data in enumerate(test_data.batch_generator()):
         data_input = prepare_batch_input(
             data, encoder_data_input_fields + fast_decoder_data_input_fields,
-            encoder_util_input_fields + fast_decoder_util_input_fields,
             ModelHyperParams.eos_idx, ModelHyperParams.bos_idx,
             ModelHyperParams.n_head, ModelHyperParams.d_model, place)
         seq_ids, seq_scores = exe.run(infer_program,
