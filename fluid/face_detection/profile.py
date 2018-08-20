@@ -59,7 +59,7 @@ def train(args, config, train_file_list, optimizer_method):
         loss = network.vgg_ssd_loss()
         fetches = [loss]
 
-    epocs = 12880 / batch_size
+    epocs = 12880 // batch_size
     boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
     values = [
         learning_rate, learning_rate * 0.5, learning_rate * 0.25,
