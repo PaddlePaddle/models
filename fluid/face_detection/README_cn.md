@@ -17,7 +17,7 @@
 人脸检测是经典的计算机视觉任务，非受控场景中的小脸、模糊和遮挡的人脸检测是这个方向上最有挑战的问题。[PyramidBox](https://arxiv.org/pdf/1803.07737.pdf) 是一种基于SSD的单阶段人脸检测器，它利用上下文信息解决困难人脸的检测问题。如下图所示，PyramidBox在六个尺度的特征图上进行不同层级的预测。该工作主要包括以下模块：LFPN、Pyramid Anchors、CPM、Data-anchor-sampling。具体可以参考该方法对应的论文 https://arxiv.org/pdf/1803.07737.pdf ，下面进行简要的介绍。
 
 <p align="center">
-<img src="images/architecture_of_pyramidbox.jpg" height=316 width=415 hspace='10'/> <br />
+<img src="images/architecture_of_pyramidbox.jpg" height=400 width=600 hspace='10'/> <br />
 Pyramidbox 人脸检测模型
 </p>
 
@@ -31,7 +31,7 @@ Pyramidbox 人脸检测模型
 
 Pyramidbox模型可以在以下示例图片上展示鲁棒的检测性能，该图有一千张人脸，该模型检测出其中的880张人脸。
 <p align="center">
-<img src="images/demo_img.jpg" height=255 width=455 hspace='10'/> <br />
+<img src="images/demo_img.jpg" height=300 width=500 hspace='10'/> <br />
 Pyramidbox 人脸检测性能展示
 </p>
 
