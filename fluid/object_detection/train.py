@@ -36,6 +36,65 @@ add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
 add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 #yapf: enable
 
+def build_program(is_train, main_prog, startup_prog, args):
+    image_shape = [3, data_args.resize_h, data_args.resize_w]
+    if 'coco' in data_args.dataset:
+        num_classes = 91
+    elif 'pascalvoc' in data_args.dataset:
+        num_classes = 21
+    with fluid.program_guard(main_prog, startup_prog):
+        py_reader = fluid.layers.py_reader(
+            capacity=8,
+            shapes=[[-1] + image_shape, [-1, 4], [-1, 1], [-1, 1]],
+            lod_levels=[0, 1, 1, 1],
+            dtypes=["float32", "float32", "int32", "int32"],
+            use_double_buffer=True)
+    with fluid.unique_name.guard():
+        image, gt_box, gt_label, difficult = fluid.layers.read_file(py_reader)
+        locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
+        if is_train:
+            loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
+                box_var)
+            loss = fluid.layers.reduce_sum(loss)
+            if 'coco' in data_args.dataset:
+                # learning rate decay in 12, 19 pass, respectively
+                if '2014' in train_file_list:
+                    epocs = 82783 // batch_size
+                    boundaries = [epocs * 12, epocs * 19]
+                elif '2017' in train_file_list:
+                    epocs = 118287 // batch_size
+                    boundaries = [epocs * 12, epocs * 19]
+                values = [
+                    learning_rate, learning_rate * 0.5, learning_rate * 0.25
+                ]
+            elif 'pascalvoc' in data_args.dataset:
+                epocs = 19200 // batch_size
+                boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
+                values = [
+                    learning_rate, learning_rate * 0.5, learning_rate * 0.25,
+                    learning_rate * 0.1, learning_rate * 0.01
+                ]
+            optimizer = fluid.optimizer.RMSProp(
+                learning_rate=fluid.layers.piecewise_decay(boundaries, values),
+                regularization=fluid.regularizer.L2Decay(0.00005), )
+
+            optimizer.minimize(loss)
+        else:
+            nmsed_out = fluid.layers.detection_output(
+               locs, confs, box, box_var, nms_threshold=args.nms_threshold)
+            with fluid.program_guard(main_prog):
+                loss = fluid.evaluator.DetectionMAP(
+                    nmsed_out,
+                    gt_label,
+                    gt_box,
+                    difficult,
+                    num_classes,
+                    overlap_threshold=0.5,
+                    evaluate_difficult=False,
+                    ap_version=args.ap_version)
+    if not is_train:
+        main_prog = main_prog.clone(for_test=True)
+    return py_reader, loss
 
 def train(args,
           train_file_list,
@@ -58,89 +117,51 @@ def train(args,
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
 
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    gt_box = fluid.layers.data(
-        name='gt_box', shape=[4], dtype='float32', lod_level=1)
-    gt_label = fluid.layers.data(
-        name='gt_label', shape=[1], dtype='int32', lod_level=1)
-    difficult = fluid.layers.data(
-        name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
-    locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
-    nmsed_out = fluid.layers.detection_output(
-        locs, confs, box, box_var, nms_threshold=args.nms_threshold)
-    loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
-                                 box_var)
-    loss = fluid.layers.reduce_sum(loss)
+    startup_prog = fluid.Program()
+    train_prog = fluid.Program()
+    test_prog = fluid.Program()
 
-    test_program = fluid.default_main_program().clone(for_test=True)
-    with fluid.program_guard(test_program):
-        map_eval = fluid.evaluator.DetectionMAP(
-            nmsed_out,
-            gt_label,
-            gt_box,
-            difficult,
-            num_classes,
-            overlap_threshold=0.5,
-            evaluate_difficult=False,
-            ap_version=args.ap_version)
-
-    if 'coco' in data_args.dataset:
-        # learning rate decay in 12, 19 pass, respectively
-        if '2014' in train_file_list:
-            epocs = 82783 // batch_size
-            boundaries = [epocs * 12, epocs * 19]
-        elif '2017' in train_file_list:
-            epocs = 118287 // batch_size
-            boundaries = [epocs * 12, epocs * 19]
-        values = [
-            learning_rate, learning_rate * 0.5, learning_rate * 0.25
-        ]
-    elif 'pascalvoc' in data_args.dataset:
-        epocs = 19200 // batch_size
-        boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
-        values = [
-            learning_rate, learning_rate * 0.5, learning_rate * 0.25,
-            learning_rate * 0.1, learning_rate * 0.01
-        ]
-    optimizer = fluid.optimizer.RMSProp(
-        learning_rate=fluid.layers.piecewise_decay(boundaries, values),
-        regularization=fluid.regularizer.L2Decay(0.00005), )
-
-    optimizer.minimize(loss)
+    train_py_reader, loss = build_program(
+        is_train=True,
+        main_prog=train_prog,
+        startup_prog=startup_prog,
+        args=args)
+    test_py_reader, map_eval = build_program(
+        is_train=False,
+        main_prog=test_prog,
+        startup_prog=startup_prog,
+        args=args)
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
+    exe.run(startup_prog)
 
     if pretrained_model:
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
-        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
+        fluid.io.load_vars(exe, pretrained_model, main_program=train_prog, predicate=if_exist)
 
     if args.parallel:
-        train_exe = fluid.ParallelExecutor(
+        train_exe = fluid.ParallelExecutor(main_program=train_prog,
             use_cuda=args.use_gpu, loss_name=loss.name)
-
+        test_exe = fluid.ParallelExecutor(main_program=test_prog,
+            use_cuda=args.use_gpu, share_vars_from=train_exe)
     if not args.enable_ce:
-        train_reader = paddle.batch(
-            reader.train(data_args, train_file_list), batch_size=batch_size)
+        train_reader = reader.train_batch_reader(config, train_file_list, batch_size=batch_size)
     else:
         import random
         random.seed(0)
         np.random.seed(0)
-        train_reader = paddle.batch(
-            reader.train(data_args, train_file_list, False), batch_size=batch_size)
+        train_reader = reader.train_batch_reader(config, train_file_list, batch_size=batch_size, shuffle=False)
     test_reader = paddle.batch(
         reader.test(data_args, val_file_list), batch_size=batch_size)
-    feeder = fluid.DataFeeder(
-        place=place, feed_list=[image, gt_box, gt_label, difficult])
 
-    def save_model(postfix):
+    def save_model(postfix, train_prog):
         model_path = os.path.join(model_save_dir, postfix)
         if os.path.isdir(model_path):
             shutil.rmtree(model_path)
         print('save models to %s' % (model_path))
-        fluid.io.save_persistables(exe, model_path)
+        fluid.io.save_persistables(exe, model_path, main_program=train_prog)
 
     best_map = 0.
 
@@ -148,17 +169,22 @@ def train(args,
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
         every_pass_map=[]
-        for batch_id, data in enumerate(test_reader()):
-            test_map, = exe.run(test_program,
-                               feed=feeder.feed(data),
-                               fetch_list=[accum_map])
-            if batch_id % 20 == 0:
-                every_pass_map.append(test_map)
-                print("Batch {0}, map {1}".format(batch_id, test_map))
+        test_py_reader.start()
+        batch_id = 0
+        try:
+            while True:
+                test_map, = test_exe.run(test_prog,
+                                   fetch_list=[accum_map])
+                if batch_id % 20 == 0:
+                    every_pass_map.append(test_map)
+                    print("Batch {0}, map {1}".format(batch_id, test_map))
+                batch_id += 1
+        except fluid.core.EOFException:
+            test_py_reader.reset()
         mean_map = np.mean(every_pass_map)
         if test_map[0] > best_map:
             best_map = test_map[0]
-            save_model('best_model')
+            save_model('best_model', test_prog)
         print("Pass {0}, test map {1}".format(pass_id, test_map))
         return best_map, mean_map
 
@@ -166,26 +192,30 @@ def train(args,
     for pass_id in range(num_passes):
         epoch_idx = pass_id + 1
         start_time = time.time()
+        train_py_reader.start()
         prev_start_time = start_time
         every_pass_loss = []
-        for batch_id, data in enumerate(train_reader()):
-            prev_start_time = start_time
-            start_time = time.time()
-            if len(data) < (devices_num * 2):
-                print("There are too few data to train on all devices.")
-                continue
-            if args.parallel:
-                loss_v, = train_exe.run(fetch_list=[loss.name],
-                                        feed=feeder.feed(data))
-            else:
-                loss_v, = exe.run(fluid.default_main_program(),
-                                  feed=feeder.feed(data),
-                                  fetch_list=[loss])
-            loss_v = np.mean(np.array(loss_v))
-            every_pass_loss.append(loss_v)
-            if batch_id % 20 == 0:
-                print("Pass {0}, batch {1}, loss {2}, time {3}".format(
-                    pass_id, batch_id, loss_v, start_time - prev_start_time))
+        batch_id = 0
+        try:
+            while True:
+                prev_start_time = start_time
+                start_time = time.time()
+                if len(data) < (devices_num * 2):
+                    print("There are too few data to train on all devices.")
+                    continue
+                if args.parallel:
+                    loss_v, = train_exe.run(fetch_list=[loss.name])
+                else:
+                    loss_v, = exe.run(train_prog,
+                                      fetch_list=[loss])
+                loss_v = np.mean(np.array(loss_v))
+                every_pass_loss.append(loss_v)
+                if batch_id % 20 == 0:
+                    print("Pass {0}, batch {1}, loss {2}, time {3}".format(
+                        pass_id, batch_id, loss_v, start_time - prev_start_time))
+                batch_id += 1
+        except fluid.core.EOFException:
+            train_py_reader.reset()
 
         end_time = time.time()
         best_map, mean_map = test(pass_id, best_map)
@@ -206,7 +236,7 @@ def train(args,
 
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
-            save_model(str(pass_id))
+            save_model(str(pass_id), train_prog)
     print("Best test map {0}".format(best_map))
 
 if __name__ == '__main__':
