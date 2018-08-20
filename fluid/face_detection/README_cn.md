@@ -95,11 +95,12 @@ tar -xf vgg_ilsvrc_16_fc_reduced.tar.gz && rm -f vgg_ilsvrc_16_fc_reduced.tar.gz
 ```bash
 python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 ```
-  - 可以通过设置 `export CUDA_VISIBLE_DEVICES=0,1,2,3` 指定想要使用的GPU数量。
+  - 可以通过设置 `export CUDA_VISIBLE_DEVICES=0,1,2,3` 指定想要使用的GPU数量，`batch_size`默认设置为12或16。
   - 更多的可选参数见:
     ```bash
     python train.py --help
     ```
+  - 模型训练150轮以上可以收敛。用Nvidia Tesla P40 GPU 4卡并行，`batch_size=16`的配置，每轮训练大约40分钟，总共训练时长大约100小时
 
 模型训练所采用的数据增强：
 
@@ -152,7 +153,24 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 
   ```bash
   matlab -nodesktop -nosplash -nojvm -r "run wider_eval.m;quit;"
+
   ```
+
+### 模型预测以及可视化
+`widerface_eval.py`也可以用来做预测及可视化，调用示例如下：
+
+```bash
+python widerface_eval.py --infer=True --confs_threshold=0.15
+ --model_dir=output/159/ --image_path=data/WIDER_train/images/0--Parade/0_Parade_marchingband_1_219.jpg
+```
+下图可视化了模型的预测结果：
+<p align="center">
+<img src="images/0_Parade_marchingband_1_356.jpg" height=400 width=400 hspace='10'/>
+<img src="images/28_Sports_Fan_Sports_Fan_28_770.jpg" height=400 width=400 hspace='10'/>
+<img src="images/4_Dancing_Dancing_4_194.jpg" height=400 width=400 hspace='10'/>
+<img src="images/2_Demonstration_Demonstration_Or_Protest_2_58.jpg" height=400 width=400 hspace='10'/>  <br />
+Pyramidbox 预测可视化
+</p>
 
 ### 模型发布
 

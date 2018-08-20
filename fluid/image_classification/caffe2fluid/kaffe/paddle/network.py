@@ -91,7 +91,7 @@ class Network(object):
                     name = '%s_%s' % (op_name, param_name)
                     v = fluid.global_scope().find_var(name)
                     w = v.get_tensor()
-                    w.set(data, place)
+                    w.set(data.reshape(w.shape()), place)
                 except ValueError:
                     if not ignore_missing:
                         raise
@@ -144,6 +144,7 @@ class Network(object):
              relu=True,
              relu_negative_slope=0.0,
              padding=None,
+             dilation=1,
              group=1,
              biased=True):
         if padding is None:
@@ -173,7 +174,60 @@ class Network(object):
             num_filters=c_o,
             stride=[s_h, s_w],
             padding=padding,
+            dilation=dilation,
             groups=group,
+            param_attr=fluid.ParamAttr(name=prefix + "weights"),
+            bias_attr=fluid.ParamAttr(name=prefix + "biases"),
+            act=act)
+
+        if leaky_relu:
+            output = fluid.layers.leaky_relu(output, alpha=relu_negative_slope)
+
+        return output
+
+    @layer
+    def deconv(self,
+               input,
+               k_h,
+               k_w,
+               c_o,
+               s_h,
+               s_w,
+               name,
+               relu=True,
+               relu_negative_slope=0.0,
+               padding=None,
+               dilation=1,
+               biased=True):
+        if padding is None:
+            padding = [0, 0]
+
+        # Get the number of channels in the input
+        c_i, h_i, w_i = input.shape[1:]
+
+        fluid = import_fluid()
+        prefix = name + '_'
+        leaky_relu = False
+        act = 'relu'
+        if relu is False:
+            act = None
+        elif relu_negative_slope != 0.0:
+            leaky_relu = True
+            act = None
+
+        p_h = padding[0]
+        p_w = padding[1]
+        h_o = (h_i - 1) * s_h - 2 * p_h + dilation * (k_h - 1) + 1
+        w_o = (w_i - 1) * s_w - 2 * p_w + dilation * (k_w - 1) + 1
+        output = fluid.layers.conv2d_transpose(
+            name=self.get_unique_output_name(name, 'conv2d_transpose'),
+            input=input,
+            num_filters=c_o,
+            output_size=[h_o, w_o],
+            filter_size=[k_h, k_w],
+            padding=padding,
+            stride=[s_h, s_w],
+            dilation=dilation,
             param_attr=fluid.ParamAttr(name=prefix + "weights"),
             bias_attr=fluid.ParamAttr(name=prefix + "biases"),
             act=act)
@@ -186,8 +240,22 @@ class Network(object):
     @layer
     def relu(self, input, name):
         fluid = import_fluid()
-        output = fluid.layers.relu(
-            name=self.get_unique_output_name(name, 'relu'), x=input)
+        output = fluid.layers.relu(input)
+        return output
+
+    @layer
+    def prelu(self, input, channel_shared, name):
+        fluid = import_fluid()
+        if channel_shared:
+            mode = 'all'
+        else:
+            mode = 'channel'
+
+        prefix = name + '_'
+        output = fluid.layers.prelu(
+            input,
+            mode=mode,
+            param_attr=fluid.ParamAttr(name=prefix + 'negslope'))
         return output
 
     def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
@@ -257,6 +325,12 @@ class Network(object):
             input, name=self.get_unique_output_name(name, 'sigmoid'))
 
     @layer
+    def tanh(self, input, name):
+        fluid = import_fluid()
+        return fluid.layers.tanh(
+            input, name=self.get_unique_output_name(name, 'tanh'))
+
+    @layer
     def lrn(self, input, radius, alpha, beta, name, bias=1.0):
         fluid = import_fluid()
         output = fluid.layers.lrn(input=input,
@@ -283,6 +357,24 @@ class Network(object):
         for i in inputs[1:]:
             output = fluid.layers.elementwise_add(
                 x=output, y=i, name=self.get_unique_output_name(name, 'add'))
+        return output
+
+    @layer
+    def max(self, inputs, name):
+        fluid = import_fluid()
+        output = inputs[0]
+        for i in inputs[1:]:
+            output = fluid.layers.elementwise_max(
+                x=output, y=i, name=self.get_unique_output_name(name, 'max'))
+        return output
+
+    @layer
+    def multiply(self, inputs, name):
+        fluid = import_fluid()
+        output = inputs[0]
+        for i in inputs[1:]:
+            output = fluid.layers.elementwise_mul(
+                x=output, y=i, name=self.get_unique_output_name(name, 'mul'))
         return output
 
     @layer
@@ -322,7 +414,8 @@ class Network(object):
                             name,
                             scale_offset=True,
                             eps=1e-5,
-                            relu=False):
+                            relu=False,
+                            relu_negative_slope=0.0):
         # NOTE: Currently, only inference is supported
         fluid = import_fluid()
         prefix = name + '_'
@@ -332,6 +425,15 @@ class Network(object):
             name=prefix + 'offset')
         mean_name = prefix + 'mean'
         variance_name = prefix + 'variance'
+
+        leaky_relu = False
+        act = 'relu'
+        if relu is False:
+            act = None
+        elif relu_negative_slope != 0.0:
+            leaky_relu = True
+            act = None
+
         output = fluid.layers.batch_norm(
             name=self.get_unique_output_name(name, 'batch_norm'),
             input=input,
@@ -341,7 +443,10 @@ class Network(object):
             moving_mean_name=mean_name,
             moving_variance_name=variance_name,
             epsilon=eps,
-            act='relu' if relu is True else None)
+            act=act)
+
+        if leaky_relu:
+            output = fluid.layers.leaky_relu(output, alpha=relu_negative_slope)
 
         return output
 

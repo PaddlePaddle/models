@@ -20,12 +20,12 @@ add_arg('use_gpu',           bool,  True,       "Whether use GPU to test.")
 
 
 def cal_mean_iou(wrong, correct):
-    sum = wrong + cerroct
+    sum = wrong + correct
     true_num = (sum != 0).sum()
-    for i in len(sum):
+    for i in range(len(sum)):
         if sum[i] == 0:
             sum[i] = 1
-    return (cerroct.astype("float64") / sum).sum() / true_num
+    return (correct.astype("float64") / sum).sum() / true_num
 
 
 def create_iou(predict, label, mask, num_classes, image_shape):
@@ -84,6 +84,7 @@ def eval(args):
         sys.stdout.flush()
     iou = cal_mean_iou(out_wrong, out_right)
     print "\nmean iou: %.3f" % iou
+    print "kpis	test_acc	%f" % iou
 
 
 def main():

@@ -6,6 +6,8 @@ from .errors import KaffeError
 Tensor4DShape = namedtuple('Tensor4DShape',
                            ['batch_size', 'channels', 'height', 'width'])
 
+Tensor3DShape = namedtuple('Tensor3DShape', ['batch_size', 'data1', 'data2'])
+
 Tensor2DShape = namedtuple('Tensor2DShape', ['batch_size', 'data'])
 
 ScalarShape = namedtuple('ScalarShape', ['batch_size'])
@@ -14,6 +16,8 @@ ScalarShape = namedtuple('ScalarShape', ['batch_size'])
 def make_tensor(batch_size, d1=None, d2=None, d3=None):
     if d3 is not None:
         return Tensor4DShape(batch_size, d1, d2, d3)
+    elif d1 is not None and d2 is not None:
+        return Tensor3DShape(batch_size, d1, d2)
     elif d1 is not None and d2 is None:
         return Tensor2DShape(batch_size, d1)
     elif d1 is None and d2 is None and d3 is None:
@@ -24,10 +28,14 @@ def make_tensor(batch_size, d1=None, d2=None, d3=None):
 
 
 def get_filter_output_shape(i_h, i_w, params, round_func):
-    o_h = (i_h + 2 * params.pad_h - params.kernel_h
-           ) / float(params.stride_h) + 1
-    o_w = (i_w + 2 * params.pad_w - params.kernel_w
-           ) / float(params.stride_w) + 1
+    dila_h = getattr(params, 'dila_h', 1)
+    dila_w = getattr(params, 'dila_w', 1)
+
+    o_h = (i_h + 2 * params.pad_h -
+           (dila_h * (params.kernel_h - 1) + 1)) / float(params.stride_h) + 1
+    o_w = (i_w + 2 * params.pad_w -
+           (dila_w * (params.kernel_w - 1) + 1)) / float(params.stride_w) + 1
+
     return (int(round_func(o_h)), int(round_func(o_w)))
 
 
@@ -54,6 +62,8 @@ def shape_identity(node):
 def shape_scalar(node):
     return make_tensor(1, 1, 1, 1)
 
+def shape_crop(node):
+    raise KaffeError('crop function had been defined in customer_layers')
 
 def shape_data(node):
     if node.output_shape:
@@ -95,6 +105,34 @@ def shape_concat(node):
 
 def shape_convolution(node):
     return get_strided_kernel_output_shape(node, math.floor)
+
+
+def shape_deconvolution(node):
+    assert node.layer is not None
+    input_shape = node.get_only_parent().output_shape
+    h_i = input_shape.height
+    w_i = input_shape.width
+
+    params = node.layer.kernel_parameters
+    p_h = params.pad_h
+    p_w = params.pad_w
+
+    dila_h = params.dila_h
+    dila_w = params.dila_w
+
+    k_h = params.kernel_h
+    k_w = params.kernel_w
+
+    s_h = params.stride_h
+    s_w = params.stride_w
+
+    h_o = (h_i - 1) * s_h - 2 * p_h + dila_h * (k_h - 1) + 1
+    w_o = (w_i - 1) * s_w - 2 * p_w + dila_w * (k_w - 1) + 1
+
+    params = node.layer.parameters
+    has_c_o = hasattr(params, 'num_output')
+    c = params.num_output if has_c_o else input_shape.channels
+    return make_tensor(input_shape.batch_size, c, h_o, w_o)
 
 
 def shape_pool(node):

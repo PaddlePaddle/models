@@ -5,23 +5,8 @@ from ..graph import GraphBuilder, NodeMapper
 from ..layers import NodeKind
 from ..transformers import (DataInjector, DataReshaper, NodeRenamer,
                             SubNodeFuser, ReLUFuser, BatchNormScaleBiasFuser,
-                            BatchNormPreprocessor, ParameterNamer)
+                            BatchNormPreprocessor, ParameterNamer, CropFuser)
 from . import network
-
-
-def get_padding_type(kernel_params, input_shape, output_shape):
-    '''Translates Caffe's numeric padding to one of ('SAME', 'VALID').
-    Caffe supports arbitrary padding values, while Paddle only
-    supports 'SAME' and 'VALID' modes. So, not all Caffe paddings
-    can be translated to Paddle. There are some subtleties to
-    how the padding edge-cases are handled. These are described here:
-    https://github.com/Yangqing/caffe2/blob/master/caffe2/proto/caffe2_legacy.proto
-    '''
-    k_h, k_w, s_h, s_w, p_h, p_w = kernel_params
-    if p_h > 0 or p_w > 0:
-        return [p_h, p_w]
-    else:
-        return None
 
 
 class PaddleNode(object):
@@ -78,10 +63,11 @@ class PaddleMapper(NodeMapper):
     def get_kernel_params(self, node):
         kernel_params = node.layer.kernel_parameters
         input_shape = node.get_only_parent().output_shape
-        padding = get_padding_type(kernel_params, input_shape,
-                                   node.output_shape)
-        # Only emit the padding if it's not the default value.
-        padding = {'padding': padding} if padding is not None else {}
+        padding = [kernel_params.pad_h, kernel_params.pad_w]
+        if padding[0] == 0 and padding[1] == 0:
+            padding = {}
+        else:
+            padding = {'padding': padding}
         return (kernel_params, padding)
 
     def map_convolution(self, node):
@@ -95,14 +81,43 @@ class PaddleMapper(NodeMapper):
             kwargs['group'] = group
         if not node.parameters.bias_term:
             kwargs['biased'] = False
+
+        if kernel_params.dila_h != 1 or kernel_params.dila_w != 1:
+            kwargs['dilation'] = (kernel_params.dila_h, kernel_params.dila_w)
+
         assert kernel_params.kernel_h == h
         assert kernel_params.kernel_w == w
         return MaybeActivated(node)(
             'conv', kernel_params.kernel_h, kernel_params.kernel_w, c_o,
             kernel_params.stride_h, kernel_params.stride_w, **kwargs)
 
+    def map_deconvolution(self, node):
+        (kernel_params, kwargs) = self.get_kernel_params(node)
+        h = kernel_params.kernel_h
+        w = kernel_params.kernel_w
+        c_o = node.output_shape[1]
+        c_i = node.parents[0].output_shape[1]
+        if not node.parameters.bias_term:
+            kwargs['biased'] = False
+
+        if kernel_params.dila_h != 1 or kernel_params.dila_w != 1:
+            kwargs['dilation'] = (kernel_params.dila_h, kernel_params.dila_w)
+
+        assert kernel_params.kernel_h == h
+        assert kernel_params.kernel_w == w
+        return MaybeActivated(node)(
+            'deconv', kernel_params.kernel_h, kernel_params.kernel_w, c_o,
+            kernel_params.stride_h, kernel_params.stride_w, **kwargs)
+
     def map_relu(self, node):
         return PaddleNode('relu')
+
+    def map_prelu(self, node):
+        channel_shared = getattr(node.parameters, 'channel_shared', False)
+        return PaddleNode('prelu', channel_shared)
+
+    def map_tanh(self, node):
+        return PaddleNode('tanh')
 
     def map_pooling(self, node):
         pool_type = node.parameters.pool
@@ -310,7 +325,13 @@ class Transformer(object):
             # Slashes are used for scoping in Paddle. Replace slashes
             # in node names with underscores.
             # (Caffe's GoogLeNet implementation uses slashes)
-            NodeRenamer(lambda node: node.name.replace('/', '_'))
+            NodeRenamer(lambda node: node.name.replace('/', '_')),
+
+            # Fuse Crop
+            # Crop is to return a scalar output Blob for an input Blob of arbitrary size.
+            # When one of the input Blob is "input" or "DummyData", we can remove this input Blob
+            # and put the shape into the reduction layer.
+            CropFuser()
         ]
 
         self.graph = graph.transformed(transformers)

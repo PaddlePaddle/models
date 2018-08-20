@@ -16,10 +16,11 @@ LAYER_DESCRIPTORS = {
     'Concat': shape_concat,
     'ContrastiveLoss': shape_scalar,
     'Convolution': shape_convolution,
-    'Deconvolution': shape_not_implemented,
+    'Deconvolution': shape_deconvolution,
     'Data': shape_data,
     'Dropout': shape_identity,
     'DummyData': shape_data,
+    'Crop': shape_crop,
     'EuclideanLoss': shape_scalar,
     'Eltwise': shape_identity,
     'Exp': shape_identity,
@@ -39,6 +40,7 @@ LAYER_DESCRIPTORS = {
     'Pooling': shape_pool,
     'Power': shape_identity,
     'ReLU': shape_identity,
+    'PReLU': shape_identity,
     'Scale': shape_identity,
     'Sigmoid': shape_identity,
     'SigmoidCrossEntropyLoss': shape_scalar,
@@ -179,6 +181,11 @@ class LayerAdapter(object):
     @property
     def parameters(self):
         name = NodeDispatch.get_handler_name(self.kind)
+        if self.kind.lower() == "normalize":
+            name = "norm"
+        elif self.kind.lower() == "deconvolution":
+            name = "convolution"
+
         name = '_'.join((name, 'param'))
         try:
             return getattr(self.layer, name)
@@ -207,7 +214,9 @@ class LayerAdapter(object):
 
     @property
     def kernel_parameters(self):
-        assert self.kind in (NodeKind.Convolution, NodeKind.Pooling)
+        assert self.kind in (NodeKind.Convolution, NodeKind.Pooling,\
+                    NodeKind.Deconvolution)
+
         params = self.parameters
         k_h = self.get_kernel_value(params.kernel_h, params.kernel_size, 0)
         k_w = self.get_kernel_value(params.kernel_w, params.kernel_size, 1)
@@ -217,9 +226,25 @@ class LayerAdapter(object):
             params.stride_w, params.stride, 1, default=1)
         p_h = self.get_kernel_value(params.pad_h, params.pad, 0, default=0)
         p_w = self.get_kernel_value(params.pad_w, params.pad, 1, default=0)
-        return KernelParameters(k_h, k_w, s_h, s_w, p_h, p_w)
+
+        dila_h = dila_w = 1
+        if self.kind in (NodeKind.Convolution, NodeKind.Deconvolution):
+            dila_len = len(params.dilation)
+            if dila_len == 2:
+                dila_h = params.dilation[0]
+                dila_w = params.dilation[1]
+            elif dila_len == 1:
+                dila_h = dila_w = params.dilation[0]
+            else:
+                assert dila_len == 0, "invalid length[%s] of dilation in convolution" % (
+                    dila_len)
+
+        return KernelParameters(k_h, k_w, s_h, s_w, p_h, p_w, dila_h, dila_w)
 
 
-KernelParameters = namedtuple('KernelParameters', [
-    'kernel_h', 'kernel_w', 'stride_h', 'stride_w', 'pad_h', 'pad_w'
-])
+KernelParameters = namedtuple(
+    'KernelParameters',
+    [
+        'kernel_h', 'kernel_w', 'stride_h', 'stride_w', 'pad_h', 'pad_w',
+        'dila_h', 'dila_w'
+    ], )
