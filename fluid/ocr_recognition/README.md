@@ -5,8 +5,9 @@
 ## 代码结构
 ```
 ├── ctc_reader.py  # 下载、读取、处理数据。
-├── crnn_ctc_model.py   # 定义了训练网络、预测网络和evaluate网络。
-├── ctc_train.py   # 用于模型的训练。
+├── crnn_ctc_model.py   # 定义了OCR CTC model的网络结构。
+├── attention_model.py   # 定义了OCR attention model的网络结构。
+├── train.py   # 用于模型的训练。
 ├── infer.py   # 加载训练好的模型文件，对新数据进行预测。
 ├── eval.py     # 评估模型在指定数据集上的效果。
 └── utils.py    # 定义通用的函数。
@@ -15,9 +16,16 @@
 
 ## 简介
 
-本章的任务是识别含有单行汉语字符图片，首先采用卷积将图片转为特征图, 然后使用`im2sequence op`将特征图转为序列，通过`双向GRU`学习到序列特征。训练过程选用的损失函数为CTC(Connectionist Temporal Classification) loss，最终的评估指标为样本级别的错误率。
+本章的任务是识别图片中单行英文字符，这里我们分别使用CTC model和attention model两种不同的模型来完成该任务。
 
+这两种模型的有相同的编码部分，首先采用卷积将图片转为特征图, 然后使用`im2sequence op`将特征图转为序列，通过`双向GRU`学习到序列特征。
 
+两种模型的解码部分和使用的损失函数区别如下：
+
+- CTC model: 训练过程选用的损失函数为CTC(Connectionist Temporal Classification) loss, 预测阶段采用的是贪婪策略和CTC解码策略。
+- Attention model: 训练过程选用的是带注意力机制的解码策略和交叉信息熵损失函数，预测阶段采用的是柱搜索策略。
+
+训练以上两种模型的评估指标为样本级别的错误率。
 
 ## 数据
 
@@ -124,15 +132,23 @@ env OMP_NUM_THREADS=<num_of_physical_cores> python ctc_train.py --use_gpu False 
 env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
 ```
 
+默认使用的是`CTC model`, 可以通过选项`--model="attention"`切换为`attention model`。
+
 执行`python ctc_train.py --help`可查看更多使用方式和参数详细说明。
 
-图2为使用默认参数和默认数据集训练的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。在60轮迭代训练中，测试集上最低错误率为第32轮的22.0%.
+图2为使用默认参数在默认数据集上训练`CTC model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为22.0%.
 
 <p align="center">
-<img src="images/train.jpg" width="620" hspace='10'/> <br/>
+<img src="images/train.jpg" width="400" hspace='10'/> <br/>
 <strong>图 2</strong>
 </p>
 
+图3为使用默认参数在默认数据集上训练`attention model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为16.25%.
+
+<p align="center">
+<img src="images/train_attention.jpg" width="400" hspace='10'/> <br/>
+<strong>图 3</strong>
+</p>
 
 
 ## 测试

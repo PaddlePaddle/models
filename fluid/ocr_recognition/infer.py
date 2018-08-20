@@ -1,10 +1,11 @@
 import paddle.v2 as paddle
 import paddle.fluid as fluid
+from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_for_infer
 import paddle.fluid.profiler as profiler
-from utility import add_arguments, print_arguments, to_lodtensor, get_feeder_data
 from crnn_ctc_model import ctc_infer
+from attention_model import attention_infer
 import numpy as np
-import ctc_reader
+import data_reader
 import argparse
 import functools
 import os
@@ -13,6 +14,7 @@ import time
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
+add_arg('model',    str,   "crnn_ctc",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
 add_arg('model_path',         str,  None,   "The model path to be used for inference.")
 add_arg('input_images_dir',   str,  None,   "The directory of images.")
 add_arg('input_images_list',  str,  None,   "The list file of images.")
@@ -25,20 +27,28 @@ add_arg('batch_size',         int,  1,      "The minibatch size.")
 # yapf: enable
 
 
-def inference(args, infer=ctc_infer, data_reader=ctc_reader):
+def inference(args):
     """OCR inference"""
+    if args.model == "crnn_ctc":
+        infer = ctc_infer
+        get_feeder_data = get_ctc_feeder_data
+    else:
+        infer = attention_infer
+        get_feeder_data = get_attention_feeder_for_infer
+    eos = 1
+    sos = 0
     num_classes = data_reader.num_classes()
     data_shape = data_reader.data_shape()
     # define network
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
-    sequence = infer(
-        images, num_classes, use_cudnn=True if args.use_gpu else False)
+    ids = infer(images, num_classes, use_cudnn=True if args.use_gpu else False)
     # data reader
     infer_reader = data_reader.inference(
         batch_size=args.batch_size,
         infer_images_dir=args.input_images_dir,
         infer_list_file=args.input_images_list,
-        cycle=True if args.iterations > 0 else False)
+        cycle=True if args.iterations > 0 else False,
+        model=args.model)
     # prepare environment
     place = fluid.CPUPlace()
     if args.use_gpu:
@@ -68,6 +78,7 @@ def inference(args, infer=ctc_infer, data_reader=ctc_reader):
     batch_times = []
     iters = 0
     for data in infer_reader():
+        feed_dict = get_feeder_data(data, place)
         if args.iterations > 0 and iters == args.iterations + args.skip_batch_num:
             break
         if iters < args.skip_batch_num:
@@ -77,14 +88,13 @@ def inference(args, infer=ctc_infer, data_reader=ctc_reader):
 
         start = time.time()
         result = exe.run(fluid.default_main_program(),
-                         feed=get_feeder_data(
-                             data, place, need_label=False),
-                         fetch_list=[sequence],
+                         feed=feed_dict,
+                         fetch_list=[ids],
                          return_numpy=False)
+        indexes = prune(np.array(result[0]).flatten(), 0, 1)
         batch_time = time.time() - start
         fps = args.batch_size / batch_time
         batch_times.append(batch_time)
-        indexes = np.array(result[0]).flatten()
         if dict_map is not None:
             print "Iteration %d, latency: %.5f s, fps: %f, result: %s" % (
                 iters,
@@ -114,18 +124,29 @@ def inference(args, infer=ctc_infer, data_reader=ctc_reader):
     print('average fps: %.5f, fps for 99pc latency: %.5f' % (fps_avg, fps_pc99))
 
 
+def prune(words, sos, eos):
+    """Remove unused tokens in prediction result."""
+    start_index = 0
+    end_index = len(words)
+    if sos in words:
+        start_index = np.where(words == sos)[0][0] + 1
+    if eos in words:
+        end_index = np.where(words == eos)[0][0]
+    return words[start_index:end_index]
+
+
 def main():
     args = parser.parse_args()
     print_arguments(args)
     if args.profile:
         if args.use_gpu:
             with profiler.cuda_profiler("cuda_profiler.txt", 'csv') as nvprof:
-                inference(args, data_reader=ctc_reader)
+                inference(args)
         else:
             with profiler.profiler("CPU", sorted_key='total') as cpuprof:
-                inference(args, data_reader=ctc_reader)
+                inference(args)
     else:
-        inference(args, data_reader=ctc_reader)
+        inference(args)
 
 
 if __name__ == "__main__":
