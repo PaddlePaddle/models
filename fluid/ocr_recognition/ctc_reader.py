@@ -4,8 +4,8 @@ import tarfile
 import numpy as np
 from PIL import Image
 from os import path
-from paddle.v2.image import load_image
-import paddle.v2 as paddle
+from paddle.dataset.image import load_image
+import paddle
 
 NUM_CLASSES = 95
 DATA_SHAPE = [1, 48, 512]
