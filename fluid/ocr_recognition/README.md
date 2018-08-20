@@ -139,14 +139,14 @@ env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
 图2为使用默认参数在默认数据集上训练`CTC model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为22.0%.
 
 <p align="center">
-<img src="images/train.jpg" width="620" hspace='10'/> <br/>
+<img src="images/train.jpg" width="310" hspace='10'/> <br/>
 <strong>图 2</strong>
 </p>
 
 图3为使用默认参数在默认数据集上训练`attention model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为16.25%.
 
 <p align="center">
-<img src="images/train_attention.jpg" width="620" hspace='10'/> <br/>
+<img src="images/train_attention.jpg" width="310" hspace='10'/> <br/>
 <strong>图 3</strong>
 </p>
 
