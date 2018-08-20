@@ -41,8 +41,7 @@ def inference(args):
     data_shape = data_reader.data_shape()
     # define network
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
-    ids = infer(
-        images, num_classes, use_cudnn=True if args.use_gpu else False)
+    ids = infer(images, num_classes, use_cudnn=True if args.use_gpu else False)
     # data reader
     infer_reader = data_reader.inference(
         batch_size=args.batch_size,

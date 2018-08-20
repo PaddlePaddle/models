@@ -11,7 +11,13 @@ beam_size = 2
 learning_rate_decay = None
 
 
-def conv_bn_pool(input, group, out_ch, act="relu", is_test=False, pool=True):
+def conv_bn_pool(input,
+                 group,
+                 out_ch,
+                 act="relu",
+                 is_test=False,
+                 pool=True,
+                 use_cudnn=True):
     tmp = input
     for i in xrange(group):
         filter_size = 3
@@ -26,7 +32,7 @@ def conv_bn_pool(input, group, out_ch, act="relu", is_test=False, pool=True):
             bias_attr=False,
             param_attr=conv_param,
             act=None,  # LinearActivation
-            use_cudnn=True)
+            use_cudnn=use_cudnn)
 
         tmp = fluid.layers.batch_norm(input=tmp, act=act, is_test=is_test)
     if pool == True:
@@ -35,24 +41,25 @@ def conv_bn_pool(input, group, out_ch, act="relu", is_test=False, pool=True):
             pool_size=2,
             pool_type='max',
             pool_stride=2,
-            use_cudnn=True,
+            use_cudnn=use_cudnn,
             ceil_mode=True)
 
     return tmp
 
 
-def ocr_convs(input, is_test=False):
+def ocr_convs(input, is_test=False, use_cudnn=True):
     tmp = input
-    tmp = conv_bn_pool(tmp, 2, [16, 16], is_test=is_test)
-    tmp = conv_bn_pool(tmp, 2, [32, 32], is_test=is_test)
-    tmp = conv_bn_pool(tmp, 2, [64, 64], is_test=is_test)
-    tmp = conv_bn_pool(tmp, 2, [128, 128], is_test=is_test, pool=False)
+    tmp = conv_bn_pool(tmp, 2, [16, 16], is_test=is_test, use_cudnn=use_cudnn)
+    tmp = conv_bn_pool(tmp, 2, [32, 32], is_test=is_test, use_cudnn=use_cudnn)
+    tmp = conv_bn_pool(tmp, 2, [64, 64], is_test=is_test, use_cudnn=use_cudnn)
+    tmp = conv_bn_pool(
+        tmp, 2, [128, 128], is_test=is_test, pool=False, use_cudnn=use_cudnn)
     return tmp
 
 
-def encoder_net(images, rnn_hidden_size=200, is_test=False):
+def encoder_net(images, rnn_hidden_size=200, is_test=False, use_cudnn=True):
 
-    conv_features = ocr_convs(images, is_test=is_test)
+    conv_features = ocr_convs(images, is_test=is_test, use_cudnn=use_cudnn)
 
     sliced_feature = fluid.layers.im2sequence(
         input=conv_features,
@@ -219,11 +226,11 @@ def simple_attention(encoder_vec, encoder_proj, decoder_state, decoder_size):
     return context
 
 
-def attention_infer(images, num_classes):
+def attention_infer(images, num_classes, use_cudnn=True):
 
     max_length = 20
     gru_backward, encoded_vector, encoded_proj = encoder_net(
-        images, is_test=True)
+        images, is_test=True, use_cudnn=use_cudnn)
 
     backward_first = fluid.layers.sequence_pool(
         input=gru_backward, pool_type='first')

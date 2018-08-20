@@ -225,7 +225,11 @@ def test(batch_size=1,
         generator.test_reader(test_images_dir, test_list_file), batch_size)
 
 
-def inference(batch_size=1, infer_images_dir=None, infer_list_file=None, cycle=False, model="crnn_ctc"):
+def inference(batch_size=1,
+              infer_images_dir=None,
+              infer_list_file=None,
+              cycle=False,
+              model="crnn_ctc"):
     generator = DataGenerator(model)
     return paddle.batch(
         generator.infer_reader(infer_images_dir, infer_list_file, cycle),

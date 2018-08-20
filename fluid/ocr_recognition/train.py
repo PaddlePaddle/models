@@ -196,14 +196,6 @@ def train(args):
         print('average fps: %.5f, fps for 99pc latency: %.5f' % (fps_avg,
                                                                  fps_pc99))
 
-            # evaluate
-            if iter_num % args.eval_period == 0:
-                if model_average:
-                    with model_average.apply(exe):
-                        test(iter_num)
-                else:
-                    test(iter_num)
-
 
 def main():
     args = parser.parse_args()
