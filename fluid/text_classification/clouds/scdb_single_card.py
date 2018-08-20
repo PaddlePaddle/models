@@ -3,6 +3,7 @@ import contextlib
 import paddle
 import paddle.fluid as fluid
 import numpy as np
+import six
 import sys
 import time
 import os
@@ -46,8 +47,8 @@ def data2tensor(data, place):
     """
     data2tensor
     """
-    input_seq = to_lodtensor(map(lambda x: x[0], data), place)
-    y_data = np.array(map(lambda x: x[1], data)).astype("int64")
+    input_seq = to_lodtensor([x[0] for x in data], place)
+    y_data = np.array([x[1] for x in data]).astype("int64")
     y_data = y_data.reshape([-1, 1])
     return {"words": input_seq, "label": y_data}
 
@@ -56,8 +57,8 @@ def data2pred(data, place):
     """
     data2tensor
     """
-    input_seq = to_lodtensor(map(lambda x: x[0], data), place)
-    y_data = np.array(map(lambda x: x[1], data)).astype("int64")
+    input_seq = to_lodtensor([x[0] for x in data], place)
+    y_data = np.array([x[1] for x in data]).astype("int64")
     y_data = y_data.reshape([-1, 1])
     return {"words": input_seq}
 
@@ -79,7 +80,7 @@ def save_dict(word_dict, vocab):
     Save dict into file
     """
     with open(vocab, "w") as fout:
-        for k, v in word_dict.iteritems():
+        for k, v in six.iteritems(word_dict):
             outstr = ("%s\t%s\n" % (k, v)).encode("gb18030")
             fout.write(outstr)
 
@@ -163,7 +164,7 @@ def scdb_train_data(train_dir="scdb_data/train_set/corpus.train.seg",
 
 def scdb_test_data(test_file, w_dict):
     """
-    test_set=["car", "lbs", "spot", "weibo", 
+    test_set=["car", "lbs", "spot", "weibo",
             "baby", "toutiao", "3c", "movie", "haogan"]
     """
     return data_reader(test_file, w_dict)
@@ -422,7 +423,7 @@ def start_train(train_reader,
     feeder = fluid.DataFeeder(feed_list=[data, label], place=place)
 
     exe.run(fluid.default_startup_program())
-    for pass_id in xrange(pass_num):
+    for pass_id in six.moves.xrange(pass_num):
         data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
         for data in train_reader():
             avg_cost_np, avg_acc_np = exe.run(fluid.default_main_program(),

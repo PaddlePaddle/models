@@ -3,6 +3,7 @@ import contextlib
 import paddle
 import paddle.fluid as fluid
 import numpy as np
+import six
 import sys
 import time
 import os
@@ -46,8 +47,8 @@ def data2tensor(data, place):
     """
     data2tensor
     """
-    input_seq = to_lodtensor(map(lambda x: x[0], data), place)
-    y_data = np.array(map(lambda x: x[1], data)).astype("int64")
+    input_seq = to_lodtensor([x[0] for x in data], place)
+    y_data = np.array([x[1] for x in data]).astype("int64")
     y_data = y_data.reshape([-1, 1])
     return {"words": input_seq, "label": y_data}
 
@@ -56,8 +57,8 @@ def data2pred(data, place):
     """
     data2tensor
     """
-    input_seq = to_lodtensor(map(lambda x: x[0], data), place)
-    y_data = np.array(map(lambda x: x[1], data)).astype("int64")
+    input_seq = to_lodtensor([x[0] for x in data], place)
+    y_data = np.array([x[1] for x in data]).astype("int64")
     y_data = y_data.reshape([-1, 1])
     return {"words": input_seq}
 
@@ -79,7 +80,7 @@ def save_dict(word_dict, vocab):
     Save dict into file
     """
     with open(vocab, "w") as fout:
-        for k, v in word_dict.iteritems():
+        for k, v in six.iteritems(word_dict):
             outstr = ("%s\t%s\n" % (k, v)).encode("gb18030")
             fout.write(outstr)
 
@@ -163,7 +164,7 @@ def scdb_train_data(train_dir="scdb_data/train_set/corpus.train.seg",
 
 def scdb_test_data(test_file, w_dict):
     """
-    test_set=["car", "lbs", "spot", "weibo", 
+    test_set=["car", "lbs", "spot", "weibo",
             "baby", "toutiao", "3c", "movie", "haogan"]
     """
     return data_reader(test_file, w_dict)
@@ -424,7 +425,7 @@ def start_train(train_reader,
     start_exe.run(fluid.default_startup_program())
 
     exe = fluid.ParallelExecutor(use_cuda, loss_name=cost.name)
-    for pass_id in xrange(pass_num):
+    for pass_id in six.moves.xrange(pass_num):
         total_acc, total_cost, total_count, avg_cost, avg_acc = 0.0, 0.0, 0.0, 0.0, 0.0
         for data in train_reader():
             cost_val, acc_val = exe.run(feed=feeder.feed(data),
@@ -452,7 +453,7 @@ def train_net(vocab="./thirdparty/train.vocab",
     """
     w_dict = scdb_word_dict(vocab=vocab)
     test_files = [ "./thirdparty" + os.sep + f for f in test_list]
-    
+
     train_reader = paddle.batch(
                         scdb_train_data(train_dir, w_dict),
                         batch_size = 256)
