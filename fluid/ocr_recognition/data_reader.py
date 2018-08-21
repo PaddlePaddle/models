@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import cv2
 import tarfile
@@ -67,11 +70,11 @@ class DataGenerator(object):
                 batchsize
             ) + "; i++) print $(4*i+1)\" \"$(4*i+2)\" \"$(4*i+3)\" \"$(4*i+4);}}' > " + to_file
         os.system(cmd)
-        print "finish batch shuffle"
+        print("finish batch shuffle")
         img_label_lines = open(to_file, 'r').readlines()
 
         def reader():
-            sizes = len(img_label_lines) / batchsize
+            sizes = len(img_label_lines) // batchsize
             if sizes == 0:
                 raise ValueError('Batch size is bigger than the dataset size.')
             while True:

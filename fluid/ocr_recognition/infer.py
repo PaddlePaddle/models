@@ -1,3 +1,4 @@
+from __future__ import print_function
 import paddle.v2 as paddle
 import paddle.fluid as fluid
 from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_for_infer
@@ -64,7 +65,7 @@ def inference(args):
         with open(args.dict) as dict_file:
             for i, word in enumerate(dict_file):
                 dict_map[i] = word.strip()
-        print "Loaded dict from %s" % args.dict
+        print("Loaded dict from %s" % args.dict)
 
     # load init model
     model_dir = args.model_path
@@ -73,7 +74,7 @@ def inference(args):
         model_dir = os.path.dirname(args.model_path)
         model_file_name = os.path.basename(args.model_path)
     fluid.io.load_params(exe, dirname=model_dir, filename=model_file_name)
-    print "Init model from: %s." % args.model_path
+    print("Init model from: %s." % args.model_path)
 
     batch_times = []
     iters = 0
@@ -96,17 +97,17 @@ def inference(args):
         fps = args.batch_size / batch_time
         batch_times.append(batch_time)
         if dict_map is not None:
-            print "Iteration %d, latency: %.5f s, fps: %f, result: %s" % (
+            print("Iteration %d, latency: %.5f s, fps: %f, result: %s" % (
                 iters,
                 batch_time,
                 fps,
-                [dict_map[index] for index in indexes], )
+                [dict_map[index] for index in indexes], ))
         else:
-            print "Iteration %d, latency: %.5f s, fps: %f, result: %s" % (
+            print("Iteration %d, latency: %.5f s, fps: %f, result: %s" % (
                 iters,
                 batch_time,
                 fps,
-                indexes, )
+                indexes, ))
 
         iters += 1
 

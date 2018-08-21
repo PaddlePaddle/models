@@ -55,17 +55,16 @@ def evaluate(args):
         model_dir = os.path.dirname(args.model_path)
         model_file_name = os.path.basename(args.model_path)
     fluid.io.load_params(exe, dirname=model_dir, filename=model_file_name)
-    print "Init model from: %s." % args.model_path
+    print("Init model from: %s." % args.model_path)
 
     evaluator.reset(exe)
     count = 0
     for data in test_reader():
         count += 1
         exe.run(fluid.default_main_program(), feed=get_feeder_data(data, place))
-        print "Read %d samples;\r" % count,
     avg_distance, avg_seq_error = evaluator.eval(exe)
-    print "Read %d samples; avg_distance: %s; avg_seq_error: %s" % (
-        count, avg_distance, avg_seq_error)
+    print("Read %d samples; avg_distance: %s; avg_seq_error: %s" % (
+        count, avg_distance, avg_seq_error))
 
 
 def main():
