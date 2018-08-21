@@ -1,9 +1,12 @@
 """Reader for Cityscape dataset.
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import cv2
 import numpy as np
-import paddle.v2 as paddle
+import paddle.dataset as dataset
 
 DATA_PATH = "./data/cityscape"
 TRAIN_LIST = DATA_PATH + "/train.list"
@@ -83,7 +86,7 @@ class DataGenerater:
         def reader():
             for image, label in self.image_label:
                 image, label = self.load(image, label)
-                image = paddle.image.to_chw(image)[np.newaxis, :]
+                image = dataset.image.to_chw(image)[np.newaxis, :]
                 label = label[np.newaxis, :, :, np.newaxis].astype("float32")
                 label_mask = np.where((label != IGNORE_LABEL).flatten())[
                     0].astype("int32")
@@ -102,20 +105,20 @@ class DataGenerater:
             image, label = self.random_scaling(image, label)
         image, label = self.resize(image, label, out_size=TRAIN_DATA_SHAPE[1:])
         label = label.astype("float32")
-        label_sub1 = paddle.image.to_chw(self.scale_label(label, factor=4))
-        label_sub2 = paddle.image.to_chw(self.scale_label(label, factor=8))
-        label_sub4 = paddle.image.to_chw(self.scale_label(label, factor=16))
-        image = paddle.image.to_chw(image)
+        label_sub1 = dataset.image.to_chw(self.scale_label(label, factor=4))
+        label_sub2 = dataset.image.to_chw(self.scale_label(label, factor=8))
+        label_sub4 = dataset.image.to_chw(self.scale_label(label, factor=16))
+        image = dataset.image.to_chw(image)
         return image, label_sub1, label_sub2, label_sub4
 
     def load(self, image, label):
         """
         Load image from file.
         """
-        image = paddle.image.load_image(
+        image = dataset.image.load_image(
             DATA_PATH + "/" + image, is_color=True).astype("float32")
         image -= IMG_MEAN
-        label = paddle.image.load_image(
+        label = dataset.image.load_image(
             DATA_PATH + "/" + label, is_color=False).astype("float32")
         return image, label
 
@@ -125,8 +128,8 @@ class DataGenerater:
         """
         r = np.random.rand(1)
         if r > 0.5:
-            image = paddle.image.left_right_flip(image, is_color=True)
-            label = paddle.image.left_right_flip(label, is_color=False)
+            image = dataset.image.left_right_flip(image, is_color=True)
+            label = dataset.image.left_right_flip(label, is_color=False)
         return image, label
 
     def random_scaling(self, image, label):
@@ -163,7 +166,7 @@ class DataGenerater:
         combined = np.concatenate((image, label), axis=2)
         combined = self.padding_as(
             combined, out_size[0], out_size[1], is_color=True)
-        combined = paddle.image.random_crop(
+        combined = dataset.image.random_crop(
             combined, out_size[0], is_color=True)
         image = combined[:, :, 0:3]
         label = combined[:, :, 3:4] + ignore_label
@@ -173,8 +176,8 @@ class DataGenerater:
         """
         Scale label according to factor.
         """
-        h = label.shape[0] / factor
-        w = label.shape[1] / factor
+        h = label.shape[0] // factor
+        w = label.shape[1] // factor
         return cv2.resize(
             label, (h, w), interpolation=cv2.INTER_NEAREST)[:, :, np.newaxis]
 

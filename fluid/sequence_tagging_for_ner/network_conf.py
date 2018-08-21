@@ -109,7 +109,7 @@ def ner_net(word_dict_len, label_dict_len, parallel, stack_num=2):
         name="target", shape=[1], dtype='int64', lod_level=1)
 
     if parallel:
-        places = fluid.layers.get_places()
+        places = fluid.layers.device.get_places()
         pd = fluid.layers.ParallelDo(places)
         with pd.do():
             word_ = pd.read_input(word)

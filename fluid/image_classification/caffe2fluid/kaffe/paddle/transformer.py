@@ -5,7 +5,7 @@ from ..graph import GraphBuilder, NodeMapper
 from ..layers import NodeKind
 from ..transformers import (DataInjector, DataReshaper, NodeRenamer,
                             SubNodeFuser, ReLUFuser, BatchNormScaleBiasFuser,
-                            BatchNormPreprocessor, ParameterNamer)
+                            BatchNormPreprocessor, ParameterNamer, CropFuser)
 from . import network
 
 
@@ -111,6 +111,13 @@ class PaddleMapper(NodeMapper):
 
     def map_relu(self, node):
         return PaddleNode('relu')
+
+    def map_prelu(self, node):
+        channel_shared = getattr(node.parameters, 'channel_shared', False)
+        return PaddleNode('prelu', channel_shared)
+
+    def map_tanh(self, node):
+        return PaddleNode('tanh')
 
     def map_pooling(self, node):
         pool_type = node.parameters.pool
@@ -318,7 +325,13 @@ class Transformer(object):
             # Slashes are used for scoping in Paddle. Replace slashes
             # in node names with underscores.
             # (Caffe's GoogLeNet implementation uses slashes)
-            NodeRenamer(lambda node: node.name.replace('/', '_'))
+            NodeRenamer(lambda node: node.name.replace('/', '_')),
+
+            # Fuse Crop
+            # Crop is to return a scalar output Blob for an input Blob of arbitrary size.
+            # When one of the input Blob is "input" or "DummyData", we can remove this input Blob
+            # and put the shape into the reduction layer.
+            CropFuser()
         ]
 
         self.graph = graph.transformed(transformers)
