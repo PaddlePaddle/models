@@ -1,17 +1,20 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import numpy as np
 import time
 import sys
+import functools
+import math
 import paddle
 import paddle.fluid as fluid
 import paddle.dataset.flowers as flowers
 import models
 import reader
 import argparse
-import functools
 from models.learning_rate import cosine_decay
 from utility import add_arguments, print_arguments
-import math
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -106,8 +109,9 @@ def train(args):
         assert model_name == "SE_ResNeXt50_32x4d"
         fluid.default_startup_program().random_seed = 1000
         model.params["dropout_seed"] = 100
+        class_dim = 102
 
-    if model_name is "GoogleNet":
+    if model_name == "GoogleNet":
         out0, out1, out2 = model.net(input=image, class_dim=class_dim)
         cost0 = fluid.layers.cross_entropy(input=out0, label=label)
         cost1 = fluid.layers.cross_entropy(input=out1, label=label)
