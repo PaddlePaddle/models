@@ -36,7 +36,9 @@ add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
 add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 #yapf: enable
 
-def build_program(is_train, main_prog, startup_prog, args):
+def build_program(is_train, train_file_list, main_prog, startup_prog, args):
+    batch_size = args.batch_size
+    learning_rate = args.learning_rate
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if 'coco' in data_args.dataset:
         num_classes = 91
@@ -49,49 +51,49 @@ def build_program(is_train, main_prog, startup_prog, args):
             lod_levels=[0, 1, 1, 1],
             dtypes=["float32", "float32", "int32", "int32"],
             use_double_buffer=True)
-    with fluid.unique_name.guard():
-        image, gt_box, gt_label, difficult = fluid.layers.read_file(py_reader)
-        locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
-        if is_train:
-            loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
-                box_var)
-            loss = fluid.layers.reduce_sum(loss)
-            if 'coco' in data_args.dataset:
-                # learning rate decay in 12, 19 pass, respectively
-                if '2014' in train_file_list:
-                    epocs = 82783 // batch_size
-                    boundaries = [epocs * 12, epocs * 19]
-                elif '2017' in train_file_list:
-                    epocs = 118287 // batch_size
-                    boundaries = [epocs * 12, epocs * 19]
-                values = [
-                    learning_rate, learning_rate * 0.5, learning_rate * 0.25
-                ]
-            elif 'pascalvoc' in data_args.dataset:
-                epocs = 19200 // batch_size
-                boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
-                values = [
-                    learning_rate, learning_rate * 0.5, learning_rate * 0.25,
-                    learning_rate * 0.1, learning_rate * 0.01
-                ]
-            optimizer = fluid.optimizer.RMSProp(
-                learning_rate=fluid.layers.piecewise_decay(boundaries, values),
-                regularization=fluid.regularizer.L2Decay(0.00005), )
+        with fluid.unique_name.guard():
+            image, gt_box, gt_label, difficult = fluid.layers.read_file(py_reader)
+            locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
+            if is_train:
+                loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
+                    box_var)
+                loss = fluid.layers.reduce_sum(loss)
+                if 'coco' in data_args.dataset:
+                    # learning rate decay in 12, 19 pass, respectively
+                    if '2014' in train_file_list:
+                        epocs = 82783 // batch_size
+                        boundaries = [epocs * 12, epocs * 19]
+                    elif '2017' in train_file_list:
+                        epocs = 118287 // batch_size
+                        boundaries = [epocs * 12, epocs * 19]
+                    values = [
+                        learning_rate, learning_rate * 0.5, learning_rate * 0.25
+                    ]
+                elif 'pascalvoc' in data_args.dataset:
+                    epocs = 19200 // batch_size
+                    boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
+                    values = [
+                        learning_rate, learning_rate * 0.5, learning_rate * 0.25,
+                        learning_rate * 0.1, learning_rate * 0.01
+                    ]
+                optimizer = fluid.optimizer.RMSProp(
+                    learning_rate=fluid.layers.piecewise_decay(boundaries, values),
+                    regularization=fluid.regularizer.L2Decay(0.00005), )
 
-            optimizer.minimize(loss)
-        else:
-            nmsed_out = fluid.layers.detection_output(
-               locs, confs, box, box_var, nms_threshold=args.nms_threshold)
-            with fluid.program_guard(main_prog):
-                loss = fluid.evaluator.DetectionMAP(
-                    nmsed_out,
-                    gt_label,
-                    gt_box,
-                    difficult,
-                    num_classes,
-                    overlap_threshold=0.5,
-                    evaluate_difficult=False,
-                    ap_version=args.ap_version)
+                optimizer.minimize(loss)
+            else:
+                nmsed_out = fluid.layers.detection_output(
+                   locs, confs, box, box_var, nms_threshold=args.nms_threshold)
+                with fluid.program_guard(main_prog):
+                    loss = fluid.evaluator.DetectionMAP(
+                        nmsed_out,
+                        gt_label,
+                        gt_box,
+                        difficult,
+                        num_classes,
+                        overlap_threshold=0.5,
+                        evaluate_difficult=False,
+                        ap_version=args.ap_version)
     if not is_train:
         main_prog = main_prog.clone(for_test=True)
     return py_reader, loss
@@ -108,30 +110,24 @@ def train(args,
     if args.enable_ce:
         fluid.framework.default_startup_program().random_seed = 111
 
-    image_shape = [3, data_args.resize_h, data_args.resize_w]
-    if 'coco' in data_args.dataset:
-        num_classes = 91
-    elif 'pascalvoc' in data_args.dataset:
-        num_classes = 21
-
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
 
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()
-
     train_py_reader, loss = build_program(
         is_train=True,
+        train_file_list=train_file_list,
         main_prog=train_prog,
         startup_prog=startup_prog,
         args=args)
     test_py_reader, map_eval = build_program(
         is_train=False,
+        train_file_list=train_file_list,
         main_prog=test_prog,
         startup_prog=startup_prog,
         args=args)
-
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
@@ -147,14 +143,15 @@ def train(args,
         test_exe = fluid.ParallelExecutor(main_program=test_prog,
             use_cuda=args.use_gpu, share_vars_from=train_exe)
     if not args.enable_ce:
-        train_reader = reader.train_batch_reader(config, train_file_list, batch_size=batch_size)
+        train_reader = reader.train_batch_reader(data_args, train_file_list, batch_size)
     else:
         import random
         random.seed(0)
         np.random.seed(0)
-        train_reader = reader.train_batch_reader(config, train_file_list, batch_size=batch_size, shuffle=False)
-    test_reader = paddle.batch(
-        reader.test(data_args, val_file_list), batch_size=batch_size)
+        train_reader = reader.train_batch_reader(data_args, train_file_list, batch_size, shuffle=False)
+    test_reader = reader.test(data_args, val_file_list, batch_size)
+    train_py_reader.decorate_paddle_reader(train_reader)
+    test_py_reader.decorate_paddle_reader(test_reader)
 
     def save_model(postfix, train_prog):
         model_path = os.path.join(model_save_dir, postfix)
@@ -200,9 +197,9 @@ def train(args,
             while True:
                 prev_start_time = start_time
                 start_time = time.time()
-                if len(data) < (devices_num * 2):
-                    print("There are too few data to train on all devices.")
-                    continue
+                #if len(data) < (devices_num * 2):
+                #    print("There are too few data to train on all devices.")
+                #    continue
                 if args.parallel:
                     loss_v, = train_exe.run(fetch_list=[loss.name])
                 else:
@@ -233,7 +230,6 @@ def train(args,
                        (devices_num, mean_map))
                 print("kpis	train_speed_card%s	%f" %
                        (devices_num, total_time / epoch_idx))
-
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id), train_prog)
