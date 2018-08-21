@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('learning_rate',    float, 0.001,     "Learning rate.")
-add_arg('batch_size',       int,   64,        "Minibatch size.")
+add_arg('batch_size',       int,   16,        "Minibatch size.")
 add_arg('num_passes',       int,   120,       "Epoch number.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
 add_arg('parallel',         bool,  True,      "Parallel.")
@@ -36,7 +36,7 @@ add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
 add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 #yapf: enable
 
-def build_program(is_train, train_file_list, main_prog, startup_prog, args):
+def build_program(is_train, main_prog, startup_prog, args, train_file_list=None):
     batch_size = args.batch_size
     learning_rate = args.learning_rate
     image_shape = [3, data_args.resize_h, data_args.resize_w]
@@ -116,15 +116,15 @@ def train(args,
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()
+
     train_py_reader, loss = build_program(
         is_train=True,
-        train_file_list=train_file_list,
         main_prog=train_prog,
         startup_prog=startup_prog,
-        args=args)
+        args=args,
+        train_file_list=train_file_list)
     test_py_reader, map_eval = build_program(
         is_train=False,
-        train_file_list=train_file_list,
         main_prog=test_prog,
         startup_prog=startup_prog,
         args=args)
@@ -153,18 +153,18 @@ def train(args,
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
 
-    def save_model(postfix, train_prog):
+    def save_model(postfix, main_prog):
         model_path = os.path.join(model_save_dir, postfix)
         if os.path.isdir(model_path):
             shutil.rmtree(model_path)
         print('save models to %s' % (model_path))
-        fluid.io.save_persistables(exe, model_path, main_program=train_prog)
+        fluid.io.save_persistables(exe, model_path, main_program=main_prog)
 
     best_map = 0.
 
     def test(pass_id, best_map):
         _, accum_map = map_eval.get_map_var()
-        map_eval.reset(exe)
+        map_eval.reset(test_exe)
         every_pass_map=[]
         test_py_reader.start()
         batch_id = 0
@@ -197,9 +197,7 @@ def train(args,
             while True:
                 prev_start_time = start_time
                 start_time = time.time()
-                #if len(data) < (devices_num * 2):
-                #    print("There are too few data to train on all devices.")
-                #    continue
+
                 if args.parallel:
                     loss_v, = train_exe.run(fetch_list=[loss.name])
                 else:
@@ -216,7 +214,7 @@ def train(args,
 
         end_time = time.time()
         best_map, mean_map = test(pass_id, best_map)
-        if args.enable_ce and pass_id == 1:
+        if args.enable_ce and pass_id == num_passes - 1:
             total_time += end_time - start_time
             train_avg_loss = np.mean(every_pass_loss)
             if devices_num == 1:
