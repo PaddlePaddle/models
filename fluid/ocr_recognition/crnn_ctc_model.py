@@ -1,7 +1,11 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle.fluid as fluid
 from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
 from paddle.fluid.initializer import init_on_cpu
 import math
+import six
 
 
 def conv_bn_pool(input,
@@ -15,7 +19,7 @@ def conv_bn_pool(input,
                  pooling=True,
                  use_cudnn=False):
     tmp = input
-    for i in xrange(group):
+    for i in six.moves.xrange(group):
         tmp = fluid.layers.conv2d(
             input=tmp,
             num_filters=out_ch[i],
@@ -192,7 +196,7 @@ def ctc_train_net(args, data_shape, num_classes):
     inference_program = fluid.default_main_program().clone(for_test=True)
     if learning_rate_decay == "piecewise_decay":
         learning_rate = fluid.layers.piecewise_decay([
-            args.total_step / 4, args.total_step / 2, args.total_step * 3 / 4
+            args.total_step // 4, args.total_step // 2, args.total_step * 3 // 4
         ], [LR, LR * 0.1, LR * 0.01, LR * 0.001])
     else:
         learning_rate = LR

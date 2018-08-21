@@ -1,4 +1,7 @@
 """Trainer for OCR CTC or attention model."""
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle.fluid as fluid
 from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_data
 import paddle.fluid.profiler as profiler
@@ -18,8 +21,8 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size',        int,   32,         "Minibatch size.")
 add_arg('total_step',        int,   720000,    "The number of iterations. Zero or less means whole training set. More than 0 means the training set might be looped until # of iterations is reached.")
 add_arg('log_period',        int,   1000,       "Log period.")
-add_arg('save_model_period', int,   15000,      "Save model period. '-1' means never saving the model.")
-add_arg('eval_period',       int,   15000,      "Evaluate period. '-1' means never evaluating the model.")
+add_arg('save_model_period', int,   15,      "Save model period. '-1' means never saving the model.")
+add_arg('eval_period',       int,   15,      "Evaluate period. '-1' means never evaluating the model.")
 add_arg('save_model_dir',    str,   "./models", "The directory the model to be saved to.")
 add_arg('model',    str,   "crnn_ctc",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
@@ -85,7 +88,7 @@ def train(args):
             model_dir = os.path.dirname(args.init_model)
             model_file_name = os.path.basename(args.init_model)
         fluid.io.load_params(exe, dirname=model_dir, filename=model_file_name)
-        print "Init model from: %s." % args.init_model
+        print("Init model from: %s." % args.init_model)
 
     train_exe = exe
     error_evaluator.reset(exe)
@@ -112,18 +115,18 @@ def train(args):
         for data in test_reader():
             exe.run(inference_program, feed=get_feeder_data(data, place))
         _, test_seq_error = error_evaluator.eval(exe)
-        print "\nTime: %s; Iter[%d]; Test seq error: %s.\n" % (
-            time.time(), iter_num, str(test_seq_error[0]))
+        print("\nTime: %s; Iter[%d]; Test seq error: %s.\n" % (
+            time.time(), iter_num, str(test_seq_error[0])))
 
         #Note: The following logs are special for CE monitoring.
         #Other situations do not need to care about these logs.
-        print "kpis	test_acc	%f" % (1 - test_seq_error[0])
+        print("kpis	test_acc	%f" % (1 - test_seq_error[0]))
 
     def save_model(args, exe, iter_num):
         filename = "model_%05d" % iter_num
         fluid.io.save_params(
             exe, dirname=args.save_model_dir, filename=filename)
-        print "Saved model to: %s/%s." % (args.save_model_dir, filename)
+        print("Saved model to: %s/%s." % (args.save_model_dir, filename))
 
     iter_num = 0
     stop = False
@@ -152,14 +155,14 @@ def train(args):
             iter_num += 1
             # training log
             if iter_num % args.log_period == 0:
-                print "\nTime: %s; Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f" % (
+                print("\nTime: %s; Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f" % (
                     time.time(), iter_num,
                     total_loss / (args.log_period * args.batch_size),
-                    total_seq_error / (args.log_period * args.batch_size))
-                print "kpis	train_cost	%f" % (total_loss / (args.log_period *
-                                                            args.batch_size))
-                print "kpis	train_acc	%f" % (
-                    1 - total_seq_error / (args.log_period * args.batch_size))
+                    total_seq_error / (args.log_period * args.batch_size)))
+                print("kpis	train_cost	%f" % (total_loss / (args.log_period *
+                                                            args.batch_size)))
+                print("kpis	train_acc	%f" % (
+                    1 - total_seq_error / (args.log_period * args.batch_size)))
                 total_loss = 0.0
                 total_seq_error = 0.0
 
@@ -179,7 +182,7 @@ def train(args):
                 else:
                     save_model(args, exe, iter_num)
         end_time = time.time()
-        print "kpis	train_duration	%f" % (end_time - start_time)
+        print("kpis	train_duration	%f" % (end_time - start_time))
         # Postprocess benchmark data
         latencies = batch_times[args.skip_batch_num:]
         latency_avg = np.average(latencies)
