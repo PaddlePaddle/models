@@ -1,5 +1,8 @@
 """Reader for Cityscape dataset.
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import cv2
 import numpy as np
@@ -173,8 +176,8 @@ class DataGenerater:
         """
         Scale label according to factor.
         """
-        h = label.shape[0] / factor
-        w = label.shape[1] / factor
+        h = label.shape[0] // factor
+        w = label.shape[1] // factor
         return cv2.resize(
             label, (h, w), interpolation=cv2.INTER_NEAREST)[:, :, np.newaxis]
 

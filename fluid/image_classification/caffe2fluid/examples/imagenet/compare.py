@@ -45,7 +45,7 @@ def calc_diff(f1, f2):
         sq_df = np.mean(df * df)
         return max_df, sq_df
     except Exception as e:
-        return -1.0, -1.0
+        return 1.0, 1.0
 
 
 def compare(path1, path2, no_exception):

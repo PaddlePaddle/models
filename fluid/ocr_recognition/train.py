@@ -1,9 +1,13 @@
-"""Trainer for OCR CTC model."""
+"""Trainer for OCR CTC or attention model."""
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle.fluid as fluid
+from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_data
 import paddle.fluid.profiler as profiler
-from utility import add_arguments, print_arguments, to_lodtensor, get_feeder_data
 from crnn_ctc_model import ctc_train_net
-import ctc_reader
+from attention_model import attention_train_net
+import data_reader
 import argparse
 import functools
 import sys
@@ -20,6 +24,7 @@ add_arg('log_period',        int,   1000,       "Log period.")
 add_arg('save_model_period', int,   15000,      "Save model period. '-1' means never saving the model.")
 add_arg('eval_period',       int,   15000,      "Evaluate period. '-1' means never evaluating the model.")
 add_arg('save_model_dir',    str,   "./models", "The directory the model to be saved to.")
+add_arg('model',    str,   "crnn_ctc",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
 add_arg('use_gpu',           bool,  True,      "Whether use GPU to train.")
 add_arg('min_average_window',int,   10000,     "Min average window.")
@@ -32,8 +37,16 @@ add_arg('skip_test',         bool,  False,      "Whether to skip test phase.")
 # yapf: enable
 
 
-def train(args, data_reader=ctc_reader):
-    """OCR CTC training"""
+def train(args):
+    """OCR training"""
+
+    if args.model == "crnn_ctc":
+        train_net = ctc_train_net
+        get_feeder_data = get_ctc_feeder_data
+    else:
+        train_net = attention_train_net
+        get_feeder_data = get_attention_feeder_data
+
     num_classes = None
     train_images = None
     train_list = None
@@ -43,20 +56,18 @@ def train(args, data_reader=ctc_reader):
     ) if num_classes is None else num_classes
     data_shape = data_reader.data_shape()
     # define network
-    images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
-    label = fluid.layers.data(
-        name='label', shape=[1], dtype='int32', lod_level=1)
-    sum_cost, error_evaluator, inference_program, model_average = ctc_train_net(
-        images, label, args, num_classes)
+    sum_cost, error_evaluator, inference_program, model_average = train_net(
+        args, data_shape, num_classes)
 
     # data reader
     train_reader = data_reader.train(
         args.batch_size,
         train_images_dir=train_images,
         train_list_file=train_list,
-        cycle=args.total_step > 0)
+        cycle=args.total_step > 0,
+        model=args.model)
     test_reader = data_reader.test(
-        test_images_dir=test_images, test_list_file=test_list)
+        test_images_dir=test_images, test_list_file=test_list, model=args.model)
 
     # prepare environment
     place = fluid.CPUPlace()
@@ -77,7 +88,7 @@ def train(args, data_reader=ctc_reader):
             model_dir = os.path.dirname(args.init_model)
             model_file_name = os.path.basename(args.init_model)
         fluid.io.load_params(exe, dirname=model_dir, filename=model_file_name)
-        print "Init model from: %s." % args.init_model
+        print("Init model from: %s." % args.init_model)
 
     train_exe = exe
     error_evaluator.reset(exe)
@@ -104,18 +115,18 @@ def train(args, data_reader=ctc_reader):
         for data in test_reader():
             exe.run(inference_program, feed=get_feeder_data(data, place))
         _, test_seq_error = error_evaluator.eval(exe)
-        print "\nTime: %s; Iter[%d]; Test seq error: %s.\n" % (
-            time.time(), iter_num, str(test_seq_error[0]))
+        print("\nTime: %s; Iter[%d]; Test seq error: %s.\n" % (
+            time.time(), iter_num, str(test_seq_error[0])))
 
         #Note: The following logs are special for CE monitoring.
         #Other situations do not need to care about these logs.
-        print "kpis	test_acc	%f" % (1 - test_seq_error[0])
+        print("kpis	test_acc	%f" % (1 - test_seq_error[0]))
 
     def save_model(args, exe, iter_num):
         filename = "model_%05d" % iter_num
         fluid.io.save_params(
             exe, dirname=args.save_model_dir, filename=filename)
-        print "Saved model to: %s/%s." % (args.save_model_dir, filename)
+        print("Saved model to: %s/%s." % (args.save_model_dir, filename))
 
     iter_num = 0
     stop = False
@@ -144,18 +155,18 @@ def train(args, data_reader=ctc_reader):
             iter_num += 1
             # training log
             if iter_num % args.log_period == 0:
-                print "\nTime: %s; Iter[%d]; Avg Warp-CTC loss: %.3f; Avg seq err: %.3f" % (
+                print("\nTime: %s; Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f" % (
                     time.time(), iter_num,
                     total_loss / (args.log_period * args.batch_size),
-                    total_seq_error / (args.log_period * args.batch_size))
-                print "kpis	train_cost	%f" % (total_loss / (args.log_period *
-                                                            args.batch_size))
-                print "kpis	train_acc	%f" % (
-                    1 - total_seq_error / (args.log_period * args.batch_size))
+                    total_seq_error / (args.log_period * args.batch_size)))
+                print("kpis	train_cost	%f" % (total_loss / (args.log_period *
+                                                            args.batch_size)))
+                print("kpis	train_acc	%f" % (
+                    1 - total_seq_error / (args.log_period * args.batch_size)))
                 total_loss = 0.0
                 total_seq_error = 0.0
 
-# evaluate
+            # evaluate
             if not args.skip_test and iter_num % args.eval_period == 0:
                 if model_average:
                     with model_average.apply(exe):
@@ -171,7 +182,7 @@ def train(args, data_reader=ctc_reader):
                 else:
                     save_model(args, exe, iter_num)
         end_time = time.time()
-        print "kpis	train_duration	%f" % (end_time - start_time)
+        print("kpis	train_duration	%f" % (end_time - start_time))
         # Postprocess benchmark data
         latencies = batch_times[args.skip_batch_num:]
         latency_avg = np.average(latencies)
@@ -195,12 +206,12 @@ def main():
     if args.profile:
         if args.use_gpu:
             with profiler.cuda_profiler("cuda_profiler.txt", 'csv') as nvprof:
-                train(args, data_reader=ctc_reader)
+                train(args)
         else:
             with profiler.profiler("CPU", sorted_key='total') as cpuprof:
-                train(args, data_reader=ctc_reader)
+                train(args)
     else:
-        train(args, data_reader=ctc_reader)
+        train(args)
 
 
 if __name__ == "__main__":

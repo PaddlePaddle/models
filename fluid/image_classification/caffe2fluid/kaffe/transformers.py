@@ -176,6 +176,7 @@ class DataReshaper(object):
                     del node.reshaped_data
         return graph
 
+
 class CropFuser(object):
     '''
     Crop is to return a scalar output Blob for an input Blob of arbitrary size.
@@ -197,7 +198,8 @@ class CropFuser(object):
             cls._traced_names[fname] = []
         cls._traced_names[fname].append(tname)
 
-    def __init__(self, allowed_parent_types=[NodeKind.Input, NodeKind.DummyData]):
+    def __init__(self,
+                 allowed_parent_types=[NodeKind.Input, NodeKind.DummyData]):
         self.allowed_parent_types = allowed_parent_types
 
     def __call__(self, graph):
@@ -232,7 +234,11 @@ class CropFuser(object):
 
     def merge(self, parent, child):
         '''Merge the parent node into the child.'''
-        child.metadata['shape'] = [parent.output_shape.batch_size, parent.output_shape.channels, parent.output_shape.height, parent.output_shape.width]
+        child.metadata['shape'] = [
+            parent.output_shape.batch_size, parent.output_shape.channels,
+            parent.output_shape.height, parent.output_shape.width
+        ]
+
 
 class SubNodeFuser(object):
     '''
@@ -395,6 +401,8 @@ class ParameterNamer(object):
                 names = ('scale', )
                 if getattr(node.parameters, 'bias_term', False):
                     names = ('scale', 'offset')
+            elif node.kind == NodeKind.PReLU:
+                names = ('negslope', )
             elif node.kind == "Normalize":
                 names = ('scale', )
             else:

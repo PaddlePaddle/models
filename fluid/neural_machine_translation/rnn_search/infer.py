@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import numpy as np
 import os
+import six
 
 import paddle
 import paddle.fluid as fluid
@@ -102,7 +103,7 @@ def infer():
                                               init_recursive_seq_lens, place)
 
         # Feed dict for inference
-        feed_dict = feeder.feed(map(lambda x: [x[0]], data))
+        feed_dict = feeder.feed([[x[0]] for x in data])
         feed_dict['init_ids'] = init_ids
         feed_dict['init_scores'] = init_scores
 
@@ -115,7 +116,7 @@ def infer():
         lod_level_1 = fetch_outs[0].lod()[1]
         token_array = np.array(fetch_outs[0])
         result = []
-        for i in xrange(len(lod_level_1) - 1):
+        for i in six.moves.xrange(len(lod_level_1) - 1):
             sentence_list = [
                 trg_dict[token]
                 for token in token_array[lod_level_1[i]:lod_level_1[i + 1]]
@@ -125,7 +126,7 @@ def infer():
         lod_level_0 = fetch_outs[0].lod()[0]
         paragraphs = [
             result[lod_level_0[i]:lod_level_0[i + 1]]
-            for i in xrange(len(lod_level_0) - 1)
+            for i in six.moves.xrange(len(lod_level_0) - 1)
         ]
 
         for paragraph in paragraphs:

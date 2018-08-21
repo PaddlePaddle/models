@@ -22,6 +22,7 @@ import xml.etree.ElementTree
 import os
 import time
 import copy
+import six
 
 
 class Settings(object):
@@ -151,7 +152,7 @@ def preprocess(img, bbox_labels, mode, settings):
         mirror = int(random.uniform(0, 2))
         if mirror == 1:
             img = img[:, ::-1, :]
-            for i in xrange(len(sampled_labels)):
+            for i in six.moves.xrange(len(sampled_labels)):
                 tmp = sampled_labels[i][1]
                 sampled_labels[i][1] = 1 - sampled_labels[i][3]
                 sampled_labels[i][3] = 1 - tmp

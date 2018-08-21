@@ -245,10 +245,18 @@ class Network(object):
 
     @layer
     def prelu(self, input, channel_shared, name):
-        #fluid = import_fluid()
-        #output = fluid.layers.relu(input)
-        #return output
-        raise NotImplementedError('prelu not implemented')
+        fluid = import_fluid()
+        if channel_shared:
+            mode = 'all'
+        else:
+            mode = 'channel'
+
+        prefix = name + '_'
+        output = fluid.layers.prelu(
+            input,
+            mode=mode,
+            param_attr=fluid.ParamAttr(name=prefix + 'negslope'))
+        return output
 
     def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
              name):

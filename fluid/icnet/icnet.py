@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle.fluid as fluid
 import numpy as np
 import sys
@@ -20,8 +23,8 @@ def conv(input,
     if padding == "SAME":
         padding_h = max(k_h - s_h, 0)
         padding_w = max(k_w - s_w, 0)
-        padding_top = padding_h / 2
-        padding_left = padding_w / 2
+        padding_top = padding_h // 2
+        padding_left = padding_w // 2
         padding_bottom = padding_h - padding_top
         padding_right = padding_w - padding_left
         padding = [
@@ -57,8 +60,8 @@ def atrous_conv(input,
     if padding == "SAME":
         padding_h = max(k_h - s_h, 0)
         padding_w = max(k_w - s_w, 0)
-        padding_top = padding_h / 2
-        padding_left = padding_w / 2
+        padding_top = padding_h // 2
+        padding_left = padding_w // 2
         padding_bottom = padding_h - padding_top
         padding_right = padding_w - padding_left
         padding = [
@@ -141,15 +144,15 @@ def dilation_convs(input):
 
 
 def pyramis_pooling(input, input_shape):
-    shape = np.ceil(input_shape / 32).astype("int32")
+    shape = np.ceil(input_shape // 32).astype("int32")
     h, w = shape
     pool1 = avg_pool(input, h, w, h, w)
     pool1_interp = interp(pool1, shape)
-    pool2 = avg_pool(input, h / 2, w / 2, h / 2, w / 2)
+    pool2 = avg_pool(input, h // 2, w // 2, h // 2, w // 2)
     pool2_interp = interp(pool2, shape)
-    pool3 = avg_pool(input, h / 3, w / 3, h / 3, w / 3)
+    pool3 = avg_pool(input, h // 3, w // 3, h // 3, w // 3)
     pool3_interp = interp(pool3, shape)
-    pool4 = avg_pool(input, h / 4, w / 4, h / 4, w / 4)
+    pool4 = avg_pool(input, h // 4, w // 4, h // 4, w // 4)
     pool4_interp = interp(pool4, shape)
     conv5_3_sum = input + pool4_interp + pool3_interp + pool2_interp + pool1_interp
     return conv5_3_sum
@@ -172,14 +175,14 @@ def shared_convs(image):
 
 
 def res_block(input, filter_num, padding=0, dilation=None, name=None):
-    tmp = conv(input, 1, 1, filter_num / 4, 1, 1, name=name + "_1_1_reduce")
+    tmp = conv(input, 1, 1, filter_num // 4, 1, 1, name=name + "_1_1_reduce")
     tmp = bn(tmp, relu=True)
     tmp = zero_padding(tmp, padding=padding)
     if dilation is None:
-        tmp = conv(tmp, 3, 3, filter_num / 4, 1, 1, name=name + "_3_3")
+        tmp = conv(tmp, 3, 3, filter_num // 4, 1, 1, name=name + "_3_3")
     else:
         tmp = atrous_conv(
-            tmp, 3, 3, filter_num / 4, dilation, name=name + "_3_3")
+            tmp, 3, 3, filter_num // 4, dilation, name=name + "_3_3")
     tmp = bn(tmp, relu=True)
     tmp = conv(tmp, 1, 1, filter_num, 1, 1, name=name + "_1_1_increase")
     tmp = bn(tmp, relu=False)
@@ -195,7 +198,7 @@ def proj_block(input, filter_num, padding=0, dilation=None, stride=1,
     proj_bn = bn(proj, relu=False)
 
     tmp = conv(
-        input, 1, 1, filter_num / 4, stride, stride, name=name + "_1_1_reduce")
+        input, 1, 1, filter_num // 4, stride, stride, name=name + "_1_1_reduce")
     tmp = bn(tmp, relu=True)
 
     tmp = zero_padding(tmp, padding=padding)
@@ -208,7 +211,7 @@ def proj_block(input, filter_num, padding=0, dilation=None, stride=1,
             tmp,
             3,
             3,
-            filter_num / 4,
+            filter_num // 4,
             1,
             1,
             padding=padding,
@@ -218,7 +221,7 @@ def proj_block(input, filter_num, padding=0, dilation=None, stride=1,
             tmp,
             3,
             3,
-            filter_num / 4,
+            filter_num // 4,
             dilation,
             padding=padding,
             name=name + "_3_3")
@@ -232,12 +235,12 @@ def proj_block(input, filter_num, padding=0, dilation=None, stride=1,
 
 
 def sub_net_4(input, input_shape):
-    tmp = interp(input, out_shape=np.ceil(input_shape / 32))
+    tmp = interp(input, out_shape=np.ceil(input_shape // 32))
     tmp = dilation_convs(tmp)
     tmp = pyramis_pooling(tmp, input_shape)
     tmp = conv(tmp, 1, 1, 256, 1, 1, name="conv5_4_k1")
     tmp = bn(tmp, relu=True)
-    tmp = interp(tmp, input_shape / 16)
+    tmp = interp(tmp, input_shape // 16)
     return tmp
 
 
@@ -265,7 +268,7 @@ def CCF24(sub2_out, sub4_out, input_shape):
     tmp = bn(tmp, relu=False)
     tmp = tmp + sub2_out
     tmp = fluid.layers.relu(tmp)
-    tmp = interp(tmp, input_shape / 8)
+    tmp = interp(tmp, input_shape // 8)
     return tmp
 
 
@@ -275,7 +278,7 @@ def CCF124(sub1_out, sub24_out, input_shape):
     tmp = bn(tmp, relu=False)
     tmp = tmp + sub1_out
     tmp = fluid.layers.relu(tmp)
-    tmp = interp(tmp, input_shape / 4)
+    tmp = interp(tmp, input_shape // 4)
     return tmp
 
 
