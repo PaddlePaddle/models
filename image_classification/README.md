@@ -5,7 +5,7 @@
 图像分类
 =======================
 
-这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet、ResNet、Inception-v4、Inception-ResNet-v2和Xception模型进行图像分类。图像分类问题的描述和这些模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
+这里将介绍如何在PaddlePaddle下使用AlexNet、VGG、GoogLeNet、ResNet、ResNeXt、Inception-v4、Inception-ResNet-v2和Xception模型进行图像分类。图像分类问题的描述和这些模型的介绍可以参考[PaddlePaddle book](https://github.com/PaddlePaddle/book/tree/develop/03.image_classification)。
 
 ## 训练模型
 
@@ -22,6 +22,7 @@ import paddle.v2 as paddle
 import reader
 import vgg
 import resnet
+import resnext
 import alexnet
 import googlenet
 import inception_v4
@@ -52,7 +53,9 @@ lbl = paddle.layer.data(
 
 ### 获得所用模型
 
-这里可以选择使用AlexNet、VGG、GoogLeNet、ResNet、Inception-v4、Inception-ResNet-v2和Xception模型中的一个模型进行图像分类。通过调用相应的方法可以获得网络最后的Softmax层。
+这里可以选择使用AlexNet、VGG、GoogLeNet、ResNet、ResNeXt、Inception-v4、
+Inception-ResNet-v2和Xception模型中的一个模型进行图像分类。通过调用相应的方法可以获得
+网络最后的Softmax层。
 
 1. 使用AlexNet模型
 
@@ -97,7 +100,15 @@ ResNet模型可以通过下面的代码获取：
 out = resnet.resnet_imagenet(image, class_dim=CLASS_DIM)
 ```
 
-5. 使用Inception-v4模型
+5. 使用ResNeXt模型
+
+ResNeXt模型可以通过下面的代码获取：
+
+```python
+out = resnext.resnext_50(image, class_dim=CLASS_DIM)
+```
+
+6. 使用Inception-v4模型
 
 Inception-v4模型可以通过下面的代码获取, 本例中使用的模型输入大小为`3 * 224 * 224` (原文献中使用的输入大小为`3 * 299 * 299`)：
 
@@ -106,7 +117,7 @@ out = inception_v4.inception_v4(image, class_dim=CLASS_DIM)
 ```
 
 
-6. 使用Inception-ResNet-v2模型
+7. 使用Inception-ResNet-v2模型
 
 提供的Inception-ResNet-v2模型支持`3 * 331 * 331`和`3 * 299 * 299`两种大小的输入，同时可以自行设置dropout概率，可以通过如下的代码使用：
 
@@ -117,7 +128,7 @@ out = inception_resnet_v2.inception_resnet_v2(
 
 注意，由于和其他几种模型输入大小不同，若配合提供的`reader.py`使用Inception-ResNet-v2时请先将`reader.py`中`paddle.image.simple_transform`中的参数为修改为相应大小。
 
-7. 使用Xception模型
+8. 使用Xception模型
 
 Xception模型可以通过下面的代码获取：
 
@@ -212,7 +223,8 @@ def event_handler(event):
 
 ### 定义训练方法
 
-对于AlexNet、VGG、ResNet、Inception-v4、Inception-ResNet-v2和Xception，可以按下面的代码定义训练方法：
+对于AlexNet、VGG、ResNet、ResNeXt、Inception-v4、Inception-ResNet-v2和Xception，
+可以按下面的代码定义训练方法：
 
 ```python
 # Create trainer
