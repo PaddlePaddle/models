@@ -108,7 +108,7 @@ def train(args):
     if args.enable_ce:
         assert model_name == "SE_ResNeXt50_32x4d"
         fluid.default_startup_program().random_seed = 1000
-        model.params["dropout_seed"] = 100
+        model.params["enable_ce"] = True
         class_dim = 102
 
     if model_name == "GoogleNet":
@@ -258,7 +258,7 @@ def train(args):
         # This is for continuous evaluation only
         if args.enable_ce and pass_id == args.num_epochs - 1:
             if gpu_nums == 1:
-                # Use the last cost/acc for training
+                # Use the mean cost/acc for training
                 print("kpis	train_cost	%s" % train_loss)
                 print("kpis	train_acc_top1	%s" % train_acc1)
                 print("kpis	train_acc_top5	%s" % train_acc5)
@@ -268,21 +268,21 @@ def train(args):
                 print("kpis	test_acc_top5	%s" % test_acc5)
                 print("kpis	train_speed	%s" % train_speed)
             else:
-                # Use the last cost/acc for training
-                print("kpis    train_cost_card%s       %s" %
+                # Use the mean cost/acc for training
+                print("kpis	train_cost_card%s	%s" %
                       (gpu_nums, train_loss))
-                print("kpis    train_acc_top1_card%s   %s" %
+                print("kpis	train_acc_top1_card%s	%s" %
                       (gpu_nums, train_acc1))
-                print("kpis    train_acc_top5_card%s   %s" %
+                print("kpis	train_acc_top5_card%s	%s" %
                       (gpu_nums, train_acc5))
                 # Use the mean cost/acc for testing
-                print("kpis    test_cost_card%s        %s" %
+                print("kpis	test_cost_card%s	%s" %
                       (gpu_nums, test_loss))
-                print("kpis    test_acc_top1_card%s    %s" %
+                print("kpis	test_acc_top1_card%s	%s" %
                       (gpu_nums, test_acc1))
-                print("kpis    test_acc_top5_card%s    %s" %
+                print("kpis	test_acc_top5_card%s	%s" %
                       (gpu_nums, test_acc5))
-                print("kpis    train_speed_card%s      %s" %
+                print("kpis	train_speed_card%s	%s" %
                       (gpu_nums, train_speed))
 
 

@@ -14,7 +14,7 @@ train_parameters = {
     "input_size": [3, 224, 224],
     "input_mean": [0.485, 0.456, 0.406],
     "input_std": [0.229, 0.224, 0.225],
-    "dropout_seed": None,
+    "enable_ce": False,
     "learning_strategy": {
         "name": "piecewise_decay",
         "batch_size": 256,
@@ -105,9 +105,11 @@ class SE_ResNeXt():
 
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
-        # do not set seed when traning, it is only used for debug
-        drop = fluid.layers.dropout(
-            x=pool, dropout_prob=0.5, seed=self.params["dropout_seed"])
+        # enable_ce is used for continuous evaluation to remove the randomness
+        if self.params["enable_ce"]:
+            drop = pool
+        else:
+            drop = fluid.layers.dropout(x=pool, dropout_prob=0.5)
         stdv = 1.0 / math.sqrt(drop.shape[1] * 1.0)
         out = fluid.layers.fc(input=drop,
                               size=class_dim,
