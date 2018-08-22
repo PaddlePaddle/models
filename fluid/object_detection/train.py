@@ -36,7 +36,8 @@ add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
 add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 #yapf: enable
 
-def build_program(is_train, main_prog, startup_prog, args, train_file_list=None):
+def build_program(is_train, main_prog, startup_prog, args, data_args,
+                  train_file_list=None):
     batch_size = args.batch_size
     learning_rate = args.learning_rate
     image_shape = [3, data_args.resize_h, data_args.resize_w]
@@ -44,9 +45,34 @@ def build_program(is_train, main_prog, startup_prog, args, train_file_list=None)
         num_classes = 91
     elif 'pascalvoc' in data_args.dataset:
         num_classes = 21
+    devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
+    devices_num = len(devices.split(","))
+
+    def get_optimizer():
+        if 'coco' in data_args.dataset:
+            # learning rate decay in 12, 19 pass, respectively
+            if '2014' in train_file_list:
+                epocs = 82783 // batch_size // devices_num
+                boundaries = [epocs * 12, epocs * 19]
+            elif '2017' in train_file_list:
+                epocs = 118287 // batch_size // devices_num
+                boundaries = [epocs * 12, epocs * 19]
+            values = [learning_rate, learning_rate * 0.5,
+                learning_rate * 0.25]
+        elif 'pascalvoc' in data_args.dataset:
+            epocs = 19200 // batch_size // devices_num
+            boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
+            values = [
+                learning_rate, learning_rate * 0.5, learning_rate * 0.25,
+                learning_rate * 0.1, learning_rate * 0.01]
+        optimizer = fluid.optimizer.RMSProp(
+            learning_rate=fluid.layers.piecewise_decay(boundaries, values),
+            regularization=fluid.regularizer.L2Decay(0.00005), )
+        return optimizer
+
     with fluid.program_guard(main_prog, startup_prog):
         py_reader = fluid.layers.py_reader(
-            capacity=8,
+            capacity=64,
             shapes=[[-1] + image_shape, [-1, 4], [-1, 1], [-1, 1]],
             lod_levels=[0, 1, 1, 1],
             dtypes=["float32", "float32", "int32", "int32"],
@@ -58,28 +84,7 @@ def build_program(is_train, main_prog, startup_prog, args, train_file_list=None)
                 loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
                     box_var)
                 loss = fluid.layers.reduce_sum(loss)
-                if 'coco' in data_args.dataset:
-                    # learning rate decay in 12, 19 pass, respectively
-                    if '2014' in train_file_list:
-                        epocs = 82783 // batch_size
-                        boundaries = [epocs * 12, epocs * 19]
-                    elif '2017' in train_file_list:
-                        epocs = 118287 // batch_size
-                        boundaries = [epocs * 12, epocs * 19]
-                    values = [
-                        learning_rate, learning_rate * 0.5, learning_rate * 0.25
-                    ]
-                elif 'pascalvoc' in data_args.dataset:
-                    epocs = 19200 // batch_size
-                    boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
-                    values = [
-                        learning_rate, learning_rate * 0.5, learning_rate * 0.25,
-                        learning_rate * 0.1, learning_rate * 0.01
-                    ]
-                optimizer = fluid.optimizer.RMSProp(
-                    learning_rate=fluid.layers.piecewise_decay(boundaries, values),
-                    regularization=fluid.regularizer.L2Decay(0.00005), )
-
+                optimizer = get_optimizer()
                 optimizer.minimize(loss)
             else:
                 nmsed_out = fluid.layers.detection_output(
@@ -107,27 +112,31 @@ def train(args,
           num_passes,
           model_save_dir,
           pretrained_model=None):
-    if args.enable_ce:
-        fluid.framework.default_startup_program().random_seed = 111
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
-
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()
+
+    if args.enable_ce:
+        startup_prog.random_seed = 111
+        train_prog.random_seed = 111
+        test_prog.random_seed = 111
 
     train_py_reader, loss = build_program(
         is_train=True,
         main_prog=train_prog,
         startup_prog=startup_prog,
         args=args,
+        data_args=data_args,
         train_file_list=train_file_list)
     test_py_reader, map_eval = build_program(
         is_train=False,
         main_prog=test_prog,
         startup_prog=startup_prog,
-        args=args)
+        args=args,
+        data_args=data_args)
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
@@ -161,7 +170,6 @@ def train(args,
         fluid.io.save_persistables(exe, model_path, main_program=main_prog)
 
     best_map = 0.
-
     def test(pass_id, best_map):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(test_exe)
