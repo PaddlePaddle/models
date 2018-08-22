@@ -151,9 +151,6 @@ def build_program(is_train, main_prog, startup_prog, args):
                 optimizer = optimizer_setting(params)
                 optimizer.minimize(avg_cost)
 
-    if not is_train:
-        main_prog = main_prog.clone(for_test=True)
-
     return py_reader, avg_cost, acc_top1, acc_top5
 
 
@@ -183,6 +180,7 @@ def train(args):
         main_prog=test_prog,
         startup_prog=startup_prog,
         args=args)
+    test_prog = test_prog.clone(for_test=True)
 
     if with_memory_optimization:
         fluid.memory_optimize(train_prog)
