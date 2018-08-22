@@ -1,7 +1,10 @@
+from __future__ import print_function
+
 import os
 import math
 import time
 import numpy as np
+import six
 
 import paddle
 import paddle.fluid as fluid
@@ -15,9 +18,9 @@ from utils_extend import to_lodtensor, get_embedding
 def test(exe, chunk_evaluator, inference_program, test_data, place):
     chunk_evaluator.reset(exe)
     for data in test_data():
-        word = to_lodtensor(map(lambda x: x[0], data), place)
-        mark = to_lodtensor(map(lambda x: x[1], data), place)
-        target = to_lodtensor(map(lambda x: x[2], data), place)
+        word = to_lodtensor([x[0] for x in data], place)
+        mark = to_lodtensor([x[1] for x in data], place)
+        target = to_lodtensor([x[2] for x in data], place)
         acc = exe.run(inference_program,
                       feed={"word": word,
                             "mark": mark,
@@ -97,7 +100,7 @@ def main(train_data_file,
     embedding_param = fluid.global_scope().find_var(embedding_name).get_tensor()
     embedding_param.set(word_vector_values, place)
 
-    for pass_id in xrange(num_passes):
+    for pass_id in six.moves.xrange(num_passes):
         chunk_evaluator.reset(exe)
         for batch_id, data in enumerate(train_reader()):
             cost, batch_precision, batch_recall, batch_f1_score = exe.run(
@@ -142,6 +145,5 @@ if __name__ == "__main__":
         emb_file="data/wordVectors.txt",
         model_save_dir="models",
         num_passes=1000,
-        batch_size=1,
         use_gpu=False,
         parallel=False)
