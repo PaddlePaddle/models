@@ -37,7 +37,7 @@ add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 #yapf: enable
 
 def build_program(is_train, main_prog, startup_prog, args, data_args,
-                  values=None, train_file_list=None):
+                  boundaries=None, values=None, train_file_list=None):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if 'coco' in data_args.dataset:
         num_classes = 91
@@ -128,6 +128,7 @@ def train(args,
         args=args,
         data_args=data_args,
         values = values,
+        boundaries = boundaries,
         train_file_list=train_file_list)
     test_py_reader, map_eval = build_program(
         is_train=False,
