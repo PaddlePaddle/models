@@ -88,6 +88,8 @@ def train(args, config, train_file_list, optimizer_method):
     model_save_dir = args.model_save_dir
     pretrained_model = args.pretrained_model
     with_memory_optimization = args.with_mem_opt
+    devices_num = len(devices.split(","))
+    steps_per_pass = 12880 / batch_size / devices_num
 
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
@@ -135,6 +137,7 @@ def train(args, config, train_file_list, optimizer_method):
         print 'save models to %s' % (model_path)
         fluid.io.save_persistables(exe, model_path, main_program=program)
 
+    step_per_pass = 12880 // batch_size // devices_num
     for pass_id in range(start_pass, num_passes):
         start_time = time.time()
         train_py_reader.start()
@@ -163,6 +166,8 @@ def train(args, config, train_file_list, optimizer_method):
                                batch_id, fetch_vars[0], fetch_vars[1],
                                start_time - prev_start_time))
                 batch_id += 1
+                if batch_id > step_per_pass:
+                    break
         except fluid.core.EOFException:
             train_py_reader.reset()
 
