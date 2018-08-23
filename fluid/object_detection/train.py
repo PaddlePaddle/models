@@ -37,7 +37,7 @@ add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 #yapf: enable
 
 def build_program(is_train, main_prog, startup_prog, args, data_args,
-                  train_file_list=None):
+                  values=None, train_file_list=None):
     batch_size = args.batch_size
     learning_rate = args.learning_rate
     image_shape = [3, data_args.resize_h, data_args.resize_w]
@@ -49,22 +49,6 @@ def build_program(is_train, main_prog, startup_prog, args, data_args,
     devices_num = len(devices.split(","))
 
     def get_optimizer():
-        if 'coco' in data_args.dataset:
-            # learning rate decay in 12, 19 pass, respectively
-            if '2014' in train_file_list:
-                epocs = 82783 // batch_size // devices_num
-                boundaries = [epocs * 12, epocs * 19]
-            elif '2017' in train_file_list:
-                epocs = 118287 // batch_size // devices_num
-                boundaries = [epocs * 12, epocs * 19]
-            values = [learning_rate, learning_rate * 0.5,
-                learning_rate * 0.25]
-        elif 'pascalvoc' in data_args.dataset:
-            epocs = 19200 // batch_size // devices_num
-            boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
-            values = [
-                learning_rate, learning_rate * 0.5, learning_rate * 0.25,
-                learning_rate * 0.1, learning_rate * 0.01]
         optimizer = fluid.optimizer.RMSProp(
             learning_rate=fluid.layers.piecewise_decay(boundaries, values),
             regularization=fluid.regularizer.L2Decay(0.00005), )
@@ -118,6 +102,22 @@ def train(args,
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()
+    if 'coco' in data_args.dataset:
+        # learning rate decay in 12, 19 pass, respectively
+        if '2014' in train_file_list:
+            epocs = 82783 // batch_size // devices_num
+            boundaries = [epocs * 12, epocs * 19]
+        elif '2017' in train_file_list:
+            epocs = 118287 // batch_size // devices_num
+            boundaries = [epocs * 12, epocs * 19]
+        values = [learning_rate, learning_rate * 0.5,
+            learning_rate * 0.25]
+    elif 'pascalvoc' in data_args.dataset:
+        epocs = 19200 // batch_size // devices_num
+        boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
+        values = [
+            learning_rate, learning_rate * 0.5, learning_rate * 0.25,
+            learning_rate * 0.1, learning_rate * 0.01]
 
     if args.enable_ce:
         startup_prog.random_seed = 111
@@ -130,6 +130,7 @@ def train(args,
         startup_prog=startup_prog,
         args=args,
         data_args=data_args,
+        values = values,
         train_file_list=train_file_list)
     test_py_reader, map_eval = build_program(
         is_train=False,
@@ -217,6 +218,8 @@ def train(args,
                     print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                         pass_id, batch_id, loss_v, start_time - prev_start_time))
                 batch_id += 1
+                if batch_id > epocs:
+                    break
         except fluid.core.EOFException:
             train_py_reader.reset()
 
