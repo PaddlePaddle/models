@@ -203,7 +203,6 @@ class DataReader(object):
         self._max_length = max_length
         self._field_delimiter = field_delimiter
         self._token_delimiter = token_delimiter
-        self._delimiter = delimiter
 
         if pkl_filename is None:
             self.load_src_trg_ids(end_mark, fpattern, start_mark, tar_fname,

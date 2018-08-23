@@ -179,8 +179,8 @@ def pad_batch_data(insts,
     return return_list if len(return_list) > 1 else return_list[0]
 
 
-def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
-                        n_head, d_model):
+def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
+                        trg_pad_idx, n_head, d_model):
     """
     Put all padded data needed by training into a dict.
     """
@@ -195,6 +195,22 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
 
     trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
                                 [1, 1, trg_max_len, 1]).astype("float32")
+
+    # These shape tensors are used in reshape_op.
+    src_data_shape = np.array([-1, src_max_len, d_model], dtype="int32")
+    trg_data_shape = np.array([-1, trg_max_len, d_model], dtype="int32")
+    src_slf_attn_pre_softmax_shape = np.array(
+        [-1, src_slf_attn_bias.shape[-1]], dtype="int32")
+    src_slf_attn_post_softmax_shape = np.array(
+        [-1] + list(src_slf_attn_bias.shape[1:]), dtype="int32")
+    trg_slf_attn_pre_softmax_shape = np.array(
+        [-1, trg_slf_attn_bias.shape[-1]], dtype="int32")
+    trg_slf_attn_post_softmax_shape = np.array(
+        [-1] + list(trg_slf_attn_bias.shape[1:]), dtype="int32")
+    trg_src_attn_pre_softmax_shape = np.array(
+        [-1, trg_src_attn_bias.shape[-1]], dtype="int32")
+    trg_src_attn_post_softmax_shape = np.array(
+        [-1] + list(trg_src_attn_bias.shape[1:]), dtype="int32")
 
     lbl_word, lbl_weight, num_token = pad_batch_data(
         [inst[2] for inst in insts],
@@ -211,7 +227,15 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
             src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
             trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight
         ]))
-    return data_input_dict, np.asarray([num_token], dtype="float32")
+    util_input_dict = dict(
+        zip(util_input_names, [
+            src_data_shape, src_slf_attn_pre_softmax_shape,
+            src_slf_attn_post_softmax_shape, trg_data_shape,
+            trg_slf_attn_pre_softmax_shape, trg_slf_attn_post_softmax_shape,
+            trg_src_attn_pre_softmax_shape, trg_src_attn_post_softmax_shape
+        ]))
+    return data_input_dict, util_input_dict, np.asarray(
+        [num_token], dtype="float32")
 
 
 def read_multiple(reader, count, clip_last=True):
@@ -345,15 +369,22 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
         clip_last_batch=False,
         pkl_filename='train.pkl')
 
+    data_input_names = encoder_data_input_fields + \
+                decoder_data_input_fields[:-1] + label_data_input_fields
+    util_input_names = encoder_util_input_fields + decoder_util_input_fields
+
     def train_reader_provider():
         feed_order = \
-            encoder_data_input_fields + encoder_util_input_fields + decoder_data_input_fields[
-                                                                    :-1] + decoder_util_input_fields + label_data_input_fields
+            encoder_data_input_fields + encoder_util_input_fields + \
+             decoder_data_input_fields[:-1] + \
+             decoder_util_input_fields + label_data_input_fields
 
         for batch_id, data in enumerate(train_data.batch_generator()):
             data_input_dict, util_input_dict, num_token = \
-                prepare_batch_input(data, data_input_names, util_input_names, ModelHyperParams.eos_idx,
-                                    ModelHyperParams.eos_idx, ModelHyperParams.n_head, ModelHyperParams.d_model)
+                prepare_batch_input(data, data_input_names,
+                                    util_input_names,  ModelHyperParams.eos_idx,
+                                    ModelHyperParams.eos_idx,
+                                    ModelHyperParams.n_head, ModelHyperParams.d_model)
             total_dict = dict(data_input_dict.items() + util_input_dict.items())
             for name in pos_enc_param_names:
                 total_dict[name] = pos_enc
@@ -366,13 +397,10 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
         main_program=train_progm,
         build_strategy=build_strategy)
 
-    data_input_names = encoder_data_input_fields + decoder_data_input_fields[:
-                                                                             -1] + label_data_input_fields
-
-    if args.val_file_pattern is not None:
-        test = test_context(train_progm, avg_cost, train_exe, dev_count,
-                            data_input_names, util_input_names, sum_cost,
-                            token_num)
+    # if args.val_file_pattern is not None:
+    #     test = test_context(train_progm, avg_cost, train_exe, dev_count,
+    #                         data_input_names, sum_cost,
+    #                         token_num)
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -((1. - TrainTaskConfig.label_smooth_eps) * np.log(
@@ -386,13 +414,13 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
 
     pyreader.decorate_tensor_provider(train_reader_provider)
     batch_time = []
+    pass_start_time = time.time()
     for pass_id in xrange(TrainTaskConfig.pass_num):
         pyreader.start()
-        bid = 0
+        batch_id = 0
         while True:
             try:
                 beg = time.time()
-                print pyreader.queue.size()
                 outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name])
                 batch_time.append(time.time() - beg)
             except:
@@ -406,7 +434,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
 
             print(
                 "epoch: %d, batch: %d, sum loss: %f, avg loss: %f, normalized loss: %f, ppl: %f"
-                % (pass_id, bid, total_sum_cost, total_avg_cost,
+                % (pass_id, batch_id, total_sum_cost, total_avg_cost,
                    total_avg_cost - loss_normalizer,
                    np.exp([min(total_avg_cost, 100)])))
             if batch_id > 0 and batch_id % 1000 == 0:
@@ -414,34 +442,20 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
                     exe,
                     os.path.join(TrainTaskConfig.ckpt_dir, "latest.checkpoint"))
 
-            if len(batch_time) > 1:
-                print 'Epoch batch per second ', 1 / np.array(batch_time[
-                    1:]).mean()
-            bid += 1
+            batch_id += 1
+
+        print 'Epoch batch per second ', 1 / np.array(batch_time).mean()
 
         time_consumed = time.time() - pass_start_time
-        # Validate and save the model for inference.
-        # if args.val_file_pattern is not None:
-        #     val_avg_cost, val_ppl = test()
-        #     print(
-        #         "epoch: %d, val avg loss: %f, val normalized loss: %f, val ppl: %f,"
-        #         " consumed %fs" % (pass_id, val_avg_cost,
-        #                            val_avg_cost - loss_normalizer, val_ppl,
-        #                            time_consumed))
-        # else:
-        #     print("epoch: %d, consumed %fs" % (pass_id, time_consumed))
-        fluid.io.save_persistables(
-            exe,
-            os.path.join(TrainTaskConfig.ckpt_dir,
-                         "pass_" + str(pass_id) + ".checkpoint"))
-        fluid.io.save_inference_model(
-            os.path.join(TrainTaskConfig.model_dir,
-                         "pass_" + str(pass_id) + ".infer.model"),
-            data_input_names[:-2], [predict], exe)
+        print("epoch: %d, consumed %fs" % (pass_id, time_consumed))
+
+    fluid.io.save_persistables(
+        exe,
+        os.path.join(TrainTaskConfig.ckpt_dir,
+                     "pass_" + str(pass_id) + ".checkpoint"))
 
     if args.enable_ce:  # For CE
         print("kpis\ttrain_cost_card%d\t%f" % (dev_count, total_avg_cost))
-        print("kpis\ttest_cost_card%d\t%f" % (dev_count, val_avg_cost))
         print("kpis\ttrain_duration_card%d\t%f" % (dev_count, time_consumed))
 
 
