@@ -373,10 +373,11 @@ def make_all_inputs(input_fields):
     return inputs
 
 
-def make_all_py_reader_inputs(input_fields):
+def make_all_py_reader_inputs(input_fields, is_test=False):
     print 'feed ', input_fields
     reader = layers.py_reader(
         capacity=20,
+        name="test_reader" if is_test else "train_reader",
         shapes=[input_descs[input_field][0] for input_field in input_fields],
         dtypes=[input_descs[input_field][1] for input_field in input_fields],
         lod_levels=[
@@ -399,7 +400,8 @@ def transformer(src_vocab_size,
                 dropout_rate,
                 weight_sharing,
                 label_smooth_eps,
-                use_py_reader=False):
+                use_py_reader=False,
+                is_test=False):
     if weight_sharing:
         assert src_vocab_size == src_vocab_size, (
             "Vocabularies in source and target should be same for weight sharing."
@@ -418,7 +420,7 @@ def transformer(src_vocab_size,
         all_inputs, reader = make_all_py_reader_inputs(
             encoder_data_input_fields + encoder_util_input_fields +
             decoder_data_input_fields[:-1] + decoder_util_input_fields +
-            label_data_input_fields)
+            label_data_input_fields, is_test)
 
     enc_inputs = all_inputs[0:enc_inputs_len]
     dec_inputs = all_inputs[enc_inputs_len:enc_inputs_len + dec_inputs_len]
