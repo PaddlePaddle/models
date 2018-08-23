@@ -185,7 +185,8 @@ class DataReader(object):
                  start_mark="<s>",
                  end_mark="<e>",
                  unk_mark="<unk>",
-                 seed=0):
+                 seed=0,
+                 pkl_filename=None):
         self._src_vocab = self.load_dict(src_vocab_fpath)
         self._only_src = True
         if trg_vocab_fpath is not None:
@@ -202,8 +203,24 @@ class DataReader(object):
         self._max_length = max_length
         self._field_delimiter = field_delimiter
         self._token_delimiter = token_delimiter
-        self.load_src_trg_ids(end_mark, fpattern, start_mark, tar_fname,
-                              unk_mark)
+        self._delimiter = delimiter
+
+        if pkl_filename is None:
+            self.load_src_trg_ids(end_mark, fpattern, start_mark, tar_fname,
+                                  unk_mark)
+        else:
+            try:
+                with open(pkl_filename, 'r') as f:
+                    self._src_seq_ids, self._trg_seq_ids, self._sample_infos = cPickle.load(
+                        f)
+            except:
+                self.load_src_trg_ids(end_mark, fpattern, start_mark, tarfile,
+                                      unk_mark)
+                with open(pkl_filename, 'w') as f:
+                    cPickle.dump((self._src_seq_ids, self._trg_seq_ids,
+                                  self._sample_infos), f,
+                                 cPickle.HIGHEST_PROTOCOL)
+
         self._random = random.Random(x=seed)
 
     def load_src_trg_ids(self, end_mark, fpattern, start_mark, tar_fname,
@@ -290,8 +307,12 @@ class DataReader(object):
 
             if self._sort_type == SortType.POOL:
                 for i in range(0, len(infos), self._pool_size):
-                    infos[i:i + self._pool_size] = sorted(
-                        infos[i:i + self._pool_size], key=lambda x: x.max_len)
+                    infos[i * self._pool_size:(i + 1) *
+                          self._pool_size] = sorted(
+                              infos[i * self._pool_size:(i + 1) *
+                                    self._pool_size],
+                              key=lambda x: x.max_len,
+                              reverse=True)
 
         # concat batch
         batches = []

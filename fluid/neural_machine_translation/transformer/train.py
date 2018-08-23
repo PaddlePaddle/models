@@ -11,7 +11,6 @@ import paddle.fluid as fluid
 import reader
 from config import *
 from model import transformer, position_encoding_init
-from optim import LearningRateScheduler
 
 
 def parse_args():
@@ -44,7 +43,7 @@ def parse_args():
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=2048,
+        default=4096,
         help="The number of sequences contained in a mini-batch, or the maximum "
         "number of tokens (include paddings) contained in a mini-batch. Note "
         "that this represents the number on single device and the actual batch "
@@ -290,9 +289,11 @@ def test_context(train_progm, avg_cost, train_exe, dev_count, data_input_names,
     def test(exe=test_exe):
         test_total_cost = 0
         test_total_token = 0
+
         test_data = read_multiple(
             reader=val_data.batch_generator,
             count=dev_count if args.use_token_batch else 1)
+
         for batch_id, data in enumerate(test_data()):
             feed_list = []
             for place_id, data_buffer in enumerate(
@@ -316,12 +317,11 @@ def test_context(train_progm, avg_cost, train_exe, dev_count, data_input_names,
     return test
 
 
-def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
-               token_num, predict):
+def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, token_num,
+               predict, pyreader):
     # Initialize the parameters.
     if TrainTaskConfig.ckpt_path:
         fluid.io.load_persistables(exe, TrainTaskConfig.ckpt_path)
-        lr_scheduler.current_steps = TrainTaskConfig.start_step
     else:
         print "init fluid.framework.default_startup_program"
         exe.run(fluid.framework.default_startup_program())
@@ -342,19 +342,27 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
         unk_mark=args.special_token[2],
         # count start and end tokens out
         max_length=ModelHyperParams.max_length - 2,
-        clip_last_batch=False)
-    train_data = read_multiple(
-        reader=train_data.batch_generator,
-        count=dev_count if args.use_token_batch else 1)
+        clip_last_batch=False,
+        pkl_filename='train.pkl')
+
+    def train_reader_provider():
+        feed_order = \
+            encoder_data_input_fields + encoder_util_input_fields + decoder_data_input_fields[
+                                                                    :-1] + decoder_util_input_fields + label_data_input_fields
+
+        for batch_id, data in enumerate(train_data.batch_generator()):
+            data_input_dict, util_input_dict, num_token = \
+                prepare_batch_input(data, data_input_names, util_input_names, ModelHyperParams.eos_idx,
+                                    ModelHyperParams.eos_idx, ModelHyperParams.n_head, ModelHyperParams.d_model)
+            total_dict = dict(data_input_dict.items() + util_input_dict.items())
+            for name in pos_enc_param_names:
+                total_dict[name] = pos_enc
+            yield [total_dict[item] for item in feed_order]
 
     build_strategy = fluid.BuildStrategy()
-    # Since the token number differs among devices, customize gradient scale to
-    # use token average cost among multi-devices. and the gradient scale is
-    # `1 / token_number` for average cost.
-    build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
     train_exe = fluid.ParallelExecutor(
         use_cuda=TrainTaskConfig.use_gpu,
-        loss_name=sum_cost.name,
+        loss_name=avg_cost.name,
         main_program=train_progm,
         build_strategy=build_strategy)
 
@@ -372,65 +380,56 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
          )) + TrainTaskConfig.label_smooth_eps *
                         np.log(TrainTaskConfig.label_smooth_eps / (
                             ModelHyperParams.trg_vocab_size - 1) + 1e-20))
-    init = False
-    for pass_id in xrange(TrainTaskConfig.pass_num):
-        pass_start_time = time.time()
-        for batch_id, data in enumerate(train_data()):
-            feed_list = []
-            total_num_token = 0
-            if args.local:
-                lr_rate = lr_scheduler.update_learning_rate()
-            for place_id, data_buffer in enumerate(
-                    split_data(
-                        data, num_part=dev_count)):
-                data_input_dict, num_token = prepare_batch_input(
-                    data_buffer, data_input_names, ModelHyperParams.eos_idx,
-                    ModelHyperParams.eos_idx, ModelHyperParams.n_head,
-                    ModelHyperParams.d_model)
-                total_num_token += num_token
-                feed_kv_pairs = data_input_dict.items()
-                if args.local:
-                    feed_kv_pairs += {
-                        lr_scheduler.learning_rate.name: lr_rate
-                    }.items()
-                feed_list.append(dict(feed_kv_pairs))
 
-                if not init:
-                    for pos_enc_param_name in pos_enc_param_names:
-                        pos_enc = position_encoding_init(
-                            ModelHyperParams.max_length + 1,
-                            ModelHyperParams.d_model)
-                        feed_list[place_id][pos_enc_param_name] = pos_enc
-            for feed_dict in feed_list:
-                feed_dict[sum_cost.name + "@GRAD"] = 1. / total_num_token
-            outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name],
-                                 feed=feed_list)
+    pos_enc = position_encoding_init(ModelHyperParams.max_length + 1,
+                                     ModelHyperParams.d_model)
+
+    pyreader.decorate_tensor_provider(train_reader_provider)
+    batch_time = []
+    for pass_id in xrange(TrainTaskConfig.pass_num):
+        pyreader.start()
+        bid = 0
+        while True:
+            try:
+                beg = time.time()
+                print pyreader.queue.size()
+                outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name])
+                batch_time.append(time.time() - beg)
+            except:
+                pyreader.reset()
+                break
             sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[1])
             total_sum_cost = sum_cost_val.sum(
             )  # sum the cost from multi-devices
             total_token_num = token_num_val.sum()
             total_avg_cost = total_sum_cost / total_token_num
-            print("epoch: %d, batch: %d, avg loss: %f, normalized loss: %f,"
-                  " ppl: %f" % (pass_id, batch_id, total_avg_cost,
-                                total_avg_cost - loss_normalizer,
-                                np.exp([min(total_avg_cost, 100)])))
+
+            print(
+                "epoch: %d, batch: %d, sum loss: %f, avg loss: %f, normalized loss: %f, ppl: %f"
+                % (pass_id, bid, total_sum_cost, total_avg_cost,
+                   total_avg_cost - loss_normalizer,
+                   np.exp([min(total_avg_cost, 100)])))
             if batch_id > 0 and batch_id % 1000 == 0:
                 fluid.io.save_persistables(
                     exe,
                     os.path.join(TrainTaskConfig.ckpt_dir, "latest.checkpoint"))
-            init = True
+
+            if len(batch_time) > 1:
+                print 'Epoch batch per second ', 1 / np.array(batch_time[
+                    1:]).mean()
+            bid += 1
 
         time_consumed = time.time() - pass_start_time
         # Validate and save the model for inference.
-        if args.val_file_pattern is not None:
-            val_avg_cost, val_ppl = test()
-            print(
-                "epoch: %d, val avg loss: %f, val normalized loss: %f, val ppl: %f,"
-                " consumed %fs" % (pass_id, val_avg_cost,
-                                   val_avg_cost - loss_normalizer, val_ppl,
-                                   time_consumed))
-        else:
-            print("epoch: %d, consumed %fs" % (pass_id, time_consumed))
+        # if args.val_file_pattern is not None:
+        #     val_avg_cost, val_ppl = test()
+        #     print(
+        #         "epoch: %d, val avg loss: %f, val normalized loss: %f, val ppl: %f,"
+        #         " consumed %fs" % (pass_id, val_avg_cost,
+        #                            val_avg_cost - loss_normalizer, val_ppl,
+        #                            time_consumed))
+        # else:
+        #     print("epoch: %d, consumed %fs" % (pass_id, time_consumed))
         fluid.io.save_persistables(
             exe,
             os.path.join(TrainTaskConfig.ckpt_dir,
@@ -439,6 +438,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
             os.path.join(TrainTaskConfig.model_dir,
                          "pass_" + str(pass_id) + ".infer.model"),
             data_input_names[:-2], [predict], exe)
+
     if args.enable_ce:  # For CE
         print("kpis\ttrain_cost_card%d\t%f" % (dev_count, total_avg_cost))
         print("kpis\ttest_cost_card%d\t%f" % (dev_count, val_avg_cost))
@@ -465,49 +465,51 @@ def train(args):
         dev_count = fluid.core.get_cuda_device_count()
 
     exe = fluid.Executor(place)
-
     if args.enable_ce:
         fluid.default_startup_program().random_seed = 1000
+    sum_cost, avg_cost, predict, token_num, pyreader = transformer(
+        ModelHyperParams.src_vocab_size,
+        ModelHyperParams.trg_vocab_size,
+        ModelHyperParams.max_length + 1,
+        ModelHyperParams.n_layer,
+        ModelHyperParams.n_head,
+        ModelHyperParams.d_key,
+        ModelHyperParams.d_value,
+        ModelHyperParams.d_model,
+        ModelHyperParams.d_inner_hid,
+        ModelHyperParams.dropout,
+        ModelHyperParams.weight_sharing,
+        TrainTaskConfig.label_smooth_eps,
+        use_py_reader=True)
 
-    sum_cost, avg_cost, predict, token_num = transformer(
-        ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size,
-        ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
-        ModelHyperParams.n_head, ModelHyperParams.d_key,
-        ModelHyperParams.d_value, ModelHyperParams.d_model,
-        ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
-        ModelHyperParams.weight_sharing, TrainTaskConfig.label_smooth_eps)
-    lr_scheduler = LearningRateScheduler(ModelHyperParams.d_model,
-                                         TrainTaskConfig.warmup_steps,
-                                         TrainTaskConfig.learning_rate)
+    lr_decay = fluid.layers \
+            .learning_rate_scheduler \
+            .noam_decay(ModelHyperParams.d_model,
+                        TrainTaskConfig.warmup_steps)
 
     if args.local:
-        optimizer = fluid.optimizer.Adam(
-            learning_rate=lr_scheduler.learning_rate,
-            beta1=TrainTaskConfig.beta1,
-            beta2=TrainTaskConfig.beta2,
-            epsilon=TrainTaskConfig.eps)
-        optimizer.minimize(sum_cost)
-    elif args.sync == False:
-        optimizer = fluid.optimizer.SGD(0.003)
-        optimizer.minimize(sum_cost)
-    else:
-        lr_decay = fluid.layers\
-         .learning_rate_scheduler\
-         .noam_decay(ModelHyperParams.d_model,
-            TrainTaskConfig.warmup_steps)
-
         optimizer = fluid.optimizer.Adam(
             learning_rate=lr_decay,
             beta1=TrainTaskConfig.beta1,
             beta2=TrainTaskConfig.beta2,
             epsilon=TrainTaskConfig.eps)
-        optimizer.minimize(sum_cost)
+        optimizer.minimize(avg_cost)
+    elif args.sync == False:
+        optimizer = fluid.optimizer.SGD(0.003)
+        optimizer.minimize(avg_cost)
+    else:
+        optimizer = fluid.optimizer.Adam(
+            learning_rate=lr_decay,
+            beta1=TrainTaskConfig.beta1,
+            beta2=TrainTaskConfig.beta2,
+            epsilon=TrainTaskConfig.eps)
+        optimizer.minimize(avg_cost)
 
     if args.local:
         print("local start_up:")
         train_loop(exe,
                    fluid.default_main_program(), dev_count, sum_cost, avg_cost,
-                   lr_scheduler, token_num, predict)
+                   token_num, predict, pyreader)
     else:
         port = os.getenv("PADDLE_PORT", "6174")
         pserver_ips = os.getenv("PADDLE_PSERVERS")  # ip,ip...
@@ -516,7 +518,6 @@ def train(args):
             eplist.append(':'.join([ip, port]))
         pserver_endpoints = ",".join(eplist)  # ip:port,ip:port...
         trainers = int(os.getenv("PADDLE_TRAINERS_NUM", "0"))
-        current_endpoint = os.getenv("POD_IP") + ":" + port
         trainer_id = int(os.getenv("PADDLE_TRAINER_ID"))
         t = fluid.DistributeTranspiler()
         t.transpile(trainer_id, pservers=pserver_endpoints, trainers=trainers)
@@ -544,7 +545,7 @@ def train(args):
             with open('trainer_prog.desc', 'w') as f:
                 f.write(str(trainer_prog))
             train_loop(exe, trainer_prog, dev_count, sum_cost, avg_cost,
-                       lr_scheduler, token_num, predict)
+                       token_num, predict, pyreader)
         else:
             print("environment var TRAINER_ROLE should be TRAINER os PSERVER")
 
