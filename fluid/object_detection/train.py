@@ -38,15 +38,11 @@ add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 
 def build_program(is_train, main_prog, startup_prog, args, data_args,
                   values=None, train_file_list=None):
-    batch_size = args.batch_size
-    learning_rate = args.learning_rate
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if 'coco' in data_args.dataset:
         num_classes = 91
     elif 'pascalvoc' in data_args.dataset:
         num_classes = 21
-    devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
-    devices_num = len(devices.split(","))
 
     def get_optimizer():
         optimizer = fluid.optimizer.RMSProp(
@@ -97,11 +93,12 @@ def train(args,
           model_save_dir,
           pretrained_model=None):
 
-    devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
-    devices_num = len(devices.split(","))
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()
+
+    devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
+    devices_num = len(devices.split(","))
     if 'coco' in data_args.dataset:
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in train_file_list:
@@ -210,8 +207,7 @@ def train(args,
                 if args.parallel:
                     loss_v, = train_exe.run(fetch_list=[loss.name])
                 else:
-                    loss_v, = exe.run(train_prog,
-                                      fetch_list=[loss])
+                    loss_v, = exe.run(train_prog, fetch_list=[loss])
                 loss_v = np.mean(np.array(loss_v))
                 every_pass_loss.append(loss_v)
                 if batch_id % 20 == 0:
