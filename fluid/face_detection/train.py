@@ -22,7 +22,6 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('parallel',         bool,  True,            "Whether use multi-GPU/threads or not.")
 add_arg('learning_rate',    float, 0.001,           "The start learning rate.")
 add_arg('batch_size',       int,   4,              "Minibatch size.")
-
 add_arg('num_passes',       int,   160,             "Epoch number.")
 add_arg('use_gpu',          bool,  True,            "Whether use GPU.")
 add_arg('use_pyramidbox',   bool,  True,            "Whether use PyramidBox model.")
