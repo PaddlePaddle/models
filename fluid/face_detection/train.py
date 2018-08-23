@@ -28,7 +28,7 @@ add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optim
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
 #yapf: enable
 
-def build_program(optimizer_method, main_prog, startup_prog, args):
+def build_program(optimizer_method, steps_per_pass, main_prog, startup_prog, args):
     height = args.resize_h
     width = args.resize_w
     learning_rate = args.learning_rate
@@ -36,6 +36,25 @@ def build_program(optimizer_method, main_prog, startup_prog, args):
     use_pyramidbox = args.use_pyramidbox
     image_shape = [3, height, width]
     num_classes = 2
+    def get_optimizer():
+        boundaries = [steps_per_pass * 50, steps_per_pass * 80,
+                      steps_per_pass * 120, steps_per_pass * 140]
+        values = [
+            learning_rate, learning_rate * 0.5, learning_rate * 0.25,
+            learning_rate * 0.1, learning_rate * 0.01]
+        if optimizer_method == "momentum":
+            optimizer = fluid.optimizer.Momentum(
+                learning_rate=fluid.layers.piecewise_decay(
+                    boundaries=boundaries, values=values),
+                momentum=0.9,
+                regularization=fluid.regularizer.L2Decay(0.0005),
+            )
+        else:
+            optimizer = fluid.optimizer.RMSProp(
+                learning_rate=fluid.layers.piecewise_decay(boundaries, values),
+                regularization=fluid.regularizer.L2Decay(0.0005),
+            )
+        return optimizer
     with fluid.program_guard(main_prog, startup_prog):
         py_reader = fluid.layers.py_reader(
             capacity=8,
@@ -54,26 +73,7 @@ def build_program(optimizer_method, main_prog, startup_prog, args):
             else:
                 loss = network.vgg_ssd_loss()
                 fetches = [loss]
-            devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
-            devices_num = len(devices.split(","))
-            steps_per_pass = 12880 / batch_size / devices_num
-            boundaries = [steps_per_pass * 50, steps_per_pass * 80,
-                          steps_per_pass * 120, steps_per_pass * 140]
-            values = [
-                learning_rate, learning_rate * 0.5, learning_rate * 0.25,
-                learning_rate * 0.1, learning_rate * 0.01]
-            if optimizer_method == "momentum":
-                optimizer = fluid.optimizer.Momentum(
-                    learning_rate=fluid.layers.piecewise_decay(
-                        boundaries=boundaries, values=values),
-                    momentum=0.9,
-                    regularization=fluid.regularizer.L2Decay(0.0005),
-                )
-            else:
-                optimizer = fluid.optimizer.RMSProp(
-                    learning_rate=fluid.layers.piecewise_decay(boundaries, values),
-                    regularization=fluid.regularizer.L2Decay(0.0005),
-                )
+            optimizer = get_optimizer()
             optimizer.minimize(loss)
     return py_reader, fetches, loss
 
@@ -88,14 +88,16 @@ def train(args, config, train_file_list, optimizer_method):
     model_save_dir = args.model_save_dir
     pretrained_model = args.pretrained_model
     with_memory_optimization = args.with_mem_opt
+    devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
-    steps_per_pass = 12880 / batch_size / devices_num
+    steps_per_pass = 12880 // batch_size // devices_num
 
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
 
     train_py_reader, fetches, loss = build_program(
         optimizer_method = optimizer_method,
+        steps_per_pass = steps_per_pass,
         main_prog = train_prog,
         startup_prog = startup_prog,
         args=args)
@@ -137,7 +139,6 @@ def train(args, config, train_file_list, optimizer_method):
         print 'save models to %s' % (model_path)
         fluid.io.save_persistables(exe, model_path, main_program=program)
 
-    step_per_pass = 12880 // batch_size // devices_num
     for pass_id in range(start_pass, num_passes):
         start_time = time.time()
         train_py_reader.start()
@@ -166,7 +167,7 @@ def train(args, config, train_file_list, optimizer_method):
                                batch_id, fetch_vars[0], fetch_vars[1],
                                start_time - prev_start_time))
                 batch_id += 1
-                if batch_id > step_per_pass:
+                if batch_id > steps_per_pass:
                     break
         except fluid.core.EOFException:
             train_py_reader.reset()
