@@ -96,7 +96,6 @@ def train_loop(exe, train_progm, init, num_iters, train_data, dev_count,
 
     data_input_names = encoder_data_input_fields + decoder_data_input_fields[:
                                                                              -1] + label_data_input_fields
-    util_input_names = encoder_util_input_fields + decoder_util_input_fields
 
     start_time = time.time()
     exec_time = 0.0
@@ -108,12 +107,12 @@ def train_loop(exe, train_progm, init, num_iters, train_data, dev_count,
         for place_id, data_buffer in enumerate(
                 split_data(
                     data, num_part=dev_count)):
-            data_input_dict, util_input_dict, num_token = prepare_batch_input(
-                data_buffer, data_input_names, util_input_names,
-                ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
-                ModelHyperParams.n_head, ModelHyperParams.d_model)
+            data_input_dict, num_token = prepare_batch_input(
+                data_buffer, data_input_names, ModelHyperParams.eos_idx,
+                ModelHyperParams.eos_idx, ModelHyperParams.n_head,
+                ModelHyperParams.d_model)
             total_num_token += num_token
-            feed_kv_pairs = data_input_dict.items() + util_input_dict.items()
+            feed_kv_pairs = data_input_dict.items()
             lr_rate = lr_scheduler.update_learning_rate()
             feed_kv_pairs += {lr_scheduler.learning_rate.name: lr_rate}.items()
             feed_list.append(dict(feed_kv_pairs))

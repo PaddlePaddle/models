@@ -14,6 +14,6 @@ cudaid=${object_detection_cudaid:=0}
 export CUDA_VISIBLE_DEVICES=$cudaid
 FLAGS_benchmark=true  python train.py --enable_ce=True --batch_size=64 --num_passes=2 --data_dir=/root/.cache/paddle/dataset/pascalvoc/ | python _ce.py
 
-cudaid=${object_detection_cudaid:=0,1,2,3}
+cudaid=${object_detection_cudaid_m:=0,1,2,3}
 export CUDA_VISIBLE_DEVICES=$cudaid
 FLAGS_benchmark=true  python train.py --enable_ce=True --batch_size=64 --num_passes=2 --data_dir=/root/.cache/paddle/dataset/pascalvoc/ | python _ce.py

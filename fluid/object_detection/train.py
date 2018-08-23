@@ -65,7 +65,6 @@ def train(args,
         name='gt_label', shape=[1], dtype='int32', lod_level=1)
     difficult = fluid.layers.data(
         name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
-
     locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
     nmsed_out = fluid.layers.detection_output(
         locs, confs, box, box_var, nms_threshold=args.nms_threshold)
@@ -88,16 +87,16 @@ def train(args,
     if 'coco' in data_args.dataset:
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in train_file_list:
-            epocs = 82783 / batch_size
+            epocs = 82783 // batch_size
             boundaries = [epocs * 12, epocs * 19]
         elif '2017' in train_file_list:
-            epocs = 118287 / batch_size
+            epocs = 118287 // batch_size
             boundaries = [epocs * 12, epocs * 19]
         values = [
             learning_rate, learning_rate * 0.5, learning_rate * 0.25
         ]
     elif 'pascalvoc' in data_args.dataset:
-        epocs = 19200 / batch_size
+        epocs = 19200 // batch_size
         boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
         values = [
             learning_rate, learning_rate * 0.5, learning_rate * 0.25,
@@ -126,6 +125,9 @@ def train(args,
         train_reader = paddle.batch(
             reader.train(data_args, train_file_list), batch_size=batch_size)
     else:
+        import random
+        random.seed(0)
+        np.random.seed(0)
         train_reader = paddle.batch(
             reader.train(data_args, train_file_list, False), batch_size=batch_size)
     test_reader = paddle.batch(
@@ -137,7 +139,7 @@ def train(args,
         model_path = os.path.join(model_save_dir, postfix)
         if os.path.isdir(model_path):
             shutil.rmtree(model_path)
-        print 'save models to %s' % (model_path)
+        print('save models to %s' % (model_path))
         fluid.io.save_persistables(exe, model_path)
 
     best_map = 0.
@@ -166,8 +168,6 @@ def train(args,
         start_time = time.time()
         prev_start_time = start_time
         every_pass_loss = []
-        iter = 0
-        pass_duration = 0.0
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
@@ -193,15 +193,15 @@ def train(args,
             total_time += end_time - start_time
             train_avg_loss = np.mean(every_pass_loss)
             if devices_num == 1:
-                print ("kpis	train_cost	%s" % train_avg_loss)
-                print ("kpis	test_acc	%s" % mean_map)
-                print ("kpis	train_speed	%s" % (total_time / epoch_idx))
+                print("kpis	train_cost	%s" % train_avg_loss)
+                print("kpis	test_acc	%s" % mean_map)
+                print("kpis	train_speed	%s" % (total_time / epoch_idx))
             else:
-                print ("kpis	train_cost_card%s	%s" %
+                print("kpis	train_cost_card%s	%s" %
                        (devices_num, train_avg_loss))
-                print ("kpis	test_acc_card%s	%s" %
+                print("kpis	test_acc_card%s	%s" %
                        (devices_num, mean_map))
-                print ("kpis	train_speed_card%s	%f" %
+                print("kpis	train_speed_card%s	%f" %
                        (devices_num, total_time / epoch_idx))
 
 

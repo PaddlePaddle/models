@@ -1,18 +1,17 @@
-import os
-import time
 import argparse
 import ast
-import numpy as np
 import multiprocessing
+import os
+import time
 from functools import partial
 
-import paddle
+import numpy as np
 import paddle.fluid as fluid
 
+import reader
+from config import *
 from model import transformer, position_encoding_init
 from optim import LearningRateScheduler
-from config import *
-import reader
 
 
 def parse_args():
@@ -181,33 +180,22 @@ def pad_batch_data(insts,
     return return_list if len(return_list) > 1 else return_list[0]
 
 
-def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
-                        trg_pad_idx, n_head, d_model):
+def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
+                        n_head, d_model):
     """
     Put all padded data needed by training into a dict.
     """
     src_word, src_pos, src_slf_attn_bias, src_max_len = pad_batch_data(
         [inst[0] for inst in insts], src_pad_idx, n_head, is_target=False)
+    src_word = src_word.reshape(-1, src_max_len, 1)
+    src_pos = src_pos.reshape(-1, src_max_len, 1)
     trg_word, trg_pos, trg_slf_attn_bias, trg_max_len = pad_batch_data(
         [inst[1] for inst in insts], trg_pad_idx, n_head, is_target=True)
+    trg_word = trg_word.reshape(-1, trg_max_len, 1)
+    trg_pos = trg_pos.reshape(-1, trg_max_len, 1)
+
     trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
                                 [1, 1, trg_max_len, 1]).astype("float32")
-
-    # These shape tensors are used in reshape_op.
-    src_data_shape = np.array([-1, src_max_len, d_model], dtype="int32")
-    trg_data_shape = np.array([-1, trg_max_len, d_model], dtype="int32")
-    src_slf_attn_pre_softmax_shape = np.array(
-        [-1, src_slf_attn_bias.shape[-1]], dtype="int32")
-    src_slf_attn_post_softmax_shape = np.array(
-        [-1] + list(src_slf_attn_bias.shape[1:]), dtype="int32")
-    trg_slf_attn_pre_softmax_shape = np.array(
-        [-1, trg_slf_attn_bias.shape[-1]], dtype="int32")
-    trg_slf_attn_post_softmax_shape = np.array(
-        [-1] + list(trg_slf_attn_bias.shape[1:]), dtype="int32")
-    trg_src_attn_pre_softmax_shape = np.array(
-        [-1, trg_src_attn_bias.shape[-1]], dtype="int32")
-    trg_src_attn_post_softmax_shape = np.array(
-        [-1] + list(trg_src_attn_bias.shape[1:]), dtype="int32")
 
     lbl_word, lbl_weight, num_token = pad_batch_data(
         [inst[2] for inst in insts],
@@ -224,15 +212,7 @@ def prepare_batch_input(insts, data_input_names, util_input_names, src_pad_idx,
             src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
             trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight
         ]))
-    util_input_dict = dict(
-        zip(util_input_names, [
-            src_data_shape, src_slf_attn_pre_softmax_shape,
-            src_slf_attn_post_softmax_shape, trg_data_shape,
-            trg_slf_attn_pre_softmax_shape, trg_slf_attn_post_softmax_shape,
-            trg_src_attn_pre_softmax_shape, trg_src_attn_post_softmax_shape
-        ]))
-    return data_input_dict, util_input_dict, np.asarray(
-        [num_token], dtype="float32")
+    return data_input_dict, np.asarray([num_token], dtype="float32")
 
 
 def read_multiple(reader, count, clip_last=True):
@@ -318,12 +298,11 @@ def test_context(train_progm, avg_cost, train_exe, dev_count, data_input_names,
             for place_id, data_buffer in enumerate(
                     split_data(
                         data, num_part=dev_count)):
-                data_input_dict, util_input_dict, _ = prepare_batch_input(
+                data_input_dict, _ = prepare_batch_input(
                     data_buffer, data_input_names, util_input_names,
                     ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
                     ModelHyperParams.n_head, ModelHyperParams.d_model)
-                feed_list.append(
-                    dict(data_input_dict.items() + util_input_dict.items()))
+                feed_list.append(data_input_dict)
 
             outs = exe.run(feed=feed_list,
                            fetch_list=[sum_cost.name, token_num.name])
@@ -381,7 +360,6 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
 
     data_input_names = encoder_data_input_fields + decoder_data_input_fields[:
                                                                              -1] + label_data_input_fields
-    util_input_names = encoder_util_input_fields + decoder_util_input_fields
 
     if args.val_file_pattern is not None:
         test = test_context(train_progm, avg_cost, train_exe, dev_count,
@@ -405,13 +383,12 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
             for place_id, data_buffer in enumerate(
                     split_data(
                         data, num_part=dev_count)):
-                data_input_dict, util_input_dict, num_token = prepare_batch_input(
-                    data_buffer, data_input_names, util_input_names,
-                    ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
-                    ModelHyperParams.n_head, ModelHyperParams.d_model)
+                data_input_dict, num_token = prepare_batch_input(
+                    data_buffer, data_input_names, ModelHyperParams.eos_idx,
+                    ModelHyperParams.eos_idx, ModelHyperParams.n_head,
+                    ModelHyperParams.d_model)
                 total_num_token += num_token
-                feed_kv_pairs = data_input_dict.items() + util_input_dict.items(
-                )
+                feed_kv_pairs = data_input_dict.items()
                 if args.local:
                     feed_kv_pairs += {
                         lr_scheduler.learning_rate.name: lr_rate
@@ -461,7 +438,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
         fluid.io.save_inference_model(
             os.path.join(TrainTaskConfig.model_dir,
                          "pass_" + str(pass_id) + ".infer.model"),
-            data_input_names[:-2] + util_input_names, [predict], exe)
+            data_input_names[:-2], [predict], exe)
     if args.enable_ce:  # For CE
         print("kpis\ttrain_cost_card%d\t%f" % (dev_count, total_avg_cost))
         print("kpis\ttest_cost_card%d\t%f" % (dev_count, val_avg_cost))

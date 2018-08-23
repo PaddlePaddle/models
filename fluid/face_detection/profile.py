@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import shutil
 import numpy as np
@@ -71,7 +75,7 @@ def train(args, config, train_file_list, optimizer_method):
                 fetches = [loss]
             devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
             devices_num = len(devices.split(","))
-            steps_per_pass = 12880 / batch_size / devices_num
+            steps_per_pass = 12880 // batch_size // devices_num
             boundaries = [steps_per_pass * 50, steps_per_pass * 80,
                           steps_per_pass * 120, steps_per_pass * 140]
             values = [
@@ -91,6 +95,7 @@ def train(args, config, train_file_list, optimizer_method):
                 )
             optimizer.minimize(loss)
     fluid.memory_optimize(train_prog)
+
 
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

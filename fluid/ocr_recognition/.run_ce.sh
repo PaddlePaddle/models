@@ -1,1 +1,4 @@
-python ctc_train.py --batch_size=128 --total_step=10000 -eval_period=10000 --log_period=10000 --use_gpu=True | python _ce.py
+export ce_mode=1
+python train.py --batch_size=32 --total_step=1 --eval_period=1 --log_period=1 --use_gpu=True 1> ./tmp.log
+cat tmp.log | python _ce.py
+rm tmp.log

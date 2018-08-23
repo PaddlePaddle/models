@@ -1,4 +1,5 @@
 import os
+import six
 import sys
 import time
 import unittest
@@ -34,7 +35,7 @@ def train(train_reader,
     if not parallel:
         cost, acc, prediction = network(data, label, len(word_dict))
     else:
-        places = fluid.layers.get_places(device_count=2)
+        places = fluid.layers.device.get_places(device_count=2)
         pd = fluid.layers.ParallelDo(places)
         with pd.do():
             cost, acc, prediction = network(
@@ -58,7 +59,7 @@ def train(train_reader,
     if "CE_MODE_X" in os.environ:
         fluid.default_startup_program().random_seed = 110
     exe.run(fluid.default_startup_program())
-    for pass_id in xrange(pass_num):
+    for pass_id in six.moves.xrange(pass_num):
         pass_start = time.time()
         data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
         for data in train_reader():

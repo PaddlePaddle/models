@@ -1,12 +1,17 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import cv2
 import tarfile
 import numpy as np
 from PIL import Image
 from os import path
-from paddle.v2.image import load_image
-import paddle.v2 as paddle
+from paddle.dataset.image import load_image
+import paddle
 
+SOS = 0
+EOS = 1
 NUM_CLASSES = 95
 DATA_SHAPE = [1, 48, 512]
 
@@ -22,10 +27,15 @@ TEST_LIST_FILE_NAME = "test.list"
 
 
 class DataGenerator(object):
-    def __init__(self):
-        pass
+    def __init__(self, model="crnn_ctc"):
+        self.model = model
 
-    def train_reader(self, img_root_dir, img_label_list, batchsize, cycle):
+    def train_reader(self,
+                     img_root_dir,
+                     img_label_list,
+                     batchsize,
+                     cycle,
+                     shuffle=True):
         '''
         Reader interface for training.
 
@@ -42,15 +52,12 @@ class DataGenerator(object):
         '''
 
         img_label_lines = []
-        if batchsize == 1:
-            to_file = "tmp.txt"
+        to_file = "tmp.txt"
+        if not shuffle:
+            cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' > " + to_file
+        elif batchsize == 1:
             cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' | shuf > " + to_file
-            print "cmd: " + cmd
-            os.system(cmd)
-            print "finish batch shuffle"
-            img_label_lines = open(to_file, 'r').readlines()
         else:
-            to_file = "tmp.txt"
             #cmd1: partial shuffle
             cmd = "cat " + img_label_list + " | awk '{printf(\"%04d%.4f %s\\n\", $1, rand(), $0)}' | sort | sed 1,$((1 + RANDOM % 100))d | "
             #cmd2: batch merge and shuffle
@@ -62,13 +69,12 @@ class DataGenerator(object):
             ) + " * 4) {for(i = 0; i < " + str(
                 batchsize
             ) + "; i++) print $(4*i+1)\" \"$(4*i+2)\" \"$(4*i+3)\" \"$(4*i+4);}}' > " + to_file
-            print "cmd: " + cmd
-            os.system(cmd)
-            print "finish batch shuffle"
-            img_label_lines = open(to_file, 'r').readlines()
+        os.system(cmd)
+        print("finish batch shuffle")
+        img_label_lines = open(to_file, 'r').readlines()
 
         def reader():
-            sizes = len(img_label_lines) / batchsize
+            sizes = len(img_label_lines) // batchsize
             if sizes == 0:
                 raise ValueError('Batch size is bigger than the dataset size.')
             while True:
@@ -88,7 +94,10 @@ class DataGenerator(object):
                         img = img.resize((sz[0], sz[1]))
                         img = np.array(img) - 127.5
                         img = img[np.newaxis, ...]
-                        result.append([img, label])
+                        if self.model == "crnn_ctc":
+                            result.append([img, label])
+                        else:
+                            result.append([img, [SOS] + label, label + [EOS]])
                     yield result
                 if not cycle:
                     break
@@ -116,7 +125,10 @@ class DataGenerator(object):
                     'L')
                 img = np.array(img) - 127.5
                 img = img[np.newaxis, ...]
-                yield img, label
+                if self.model == "crnn_ctc":
+                    yield img, label
+                else:
+                    yield img, [SOS] + label, label + [EOS]
 
         return reader
 
@@ -184,19 +196,29 @@ def data_shape():
     return DATA_SHAPE
 
 
-def train(batch_size, train_images_dir=None, train_list_file=None, cycle=False):
-    generator = DataGenerator()
+def train(batch_size,
+          train_images_dir=None,
+          train_list_file=None,
+          cycle=False,
+          model="crnn_ctc"):
+    generator = DataGenerator(model)
     if train_images_dir is None:
         data_dir = download_data()
         train_images_dir = path.join(data_dir, TRAIN_DATA_DIR_NAME)
     if train_list_file is None:
         train_list_file = path.join(data_dir, TRAIN_LIST_FILE_NAME)
-    return generator.train_reader(train_images_dir, train_list_file, batch_size,
-                                  cycle)
+    shuffle = True
+    if 'ce_mode' in os.environ:
+        shuffle = False
+    return generator.train_reader(
+        train_images_dir, train_list_file, batch_size, cycle, shuffle=shuffle)
 
 
-def test(batch_size=1, test_images_dir=None, test_list_file=None):
-    generator = DataGenerator()
+def test(batch_size=1,
+         test_images_dir=None,
+         test_list_file=None,
+         model="crnn_ctc"):
+    generator = DataGenerator(model)
     if test_images_dir is None:
         data_dir = download_data()
         test_images_dir = path.join(data_dir, TEST_DATA_DIR_NAME)
@@ -209,8 +231,9 @@ def test(batch_size=1, test_images_dir=None, test_list_file=None):
 def inference(batch_size=1,
               infer_images_dir=None,
               infer_list_file=None,
-              cycle=False):
-    generator = DataGenerator()
+              cycle=False,
+              model="crnn_ctc"):
+    generator = DataGenerator(model)
     return paddle.batch(
         generator.infer_reader(infer_images_dir, infer_list_file, cycle),
         batch_size)

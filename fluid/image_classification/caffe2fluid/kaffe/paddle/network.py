@@ -245,10 +245,18 @@ class Network(object):
 
     @layer
     def prelu(self, input, channel_shared, name):
-        #fluid = import_fluid()
-        #output = fluid.layers.relu(input)
-        #return output
-        raise NotImplementedError('prelu not implemented')
+        fluid = import_fluid()
+        if channel_shared:
+            mode = 'all'
+        else:
+            mode = 'channel'
+
+        prefix = name + '_'
+        output = fluid.layers.prelu(
+            input,
+            mode=mode,
+            param_attr=fluid.ParamAttr(name=prefix + 'negslope'))
+        return output
 
     def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
              name):
@@ -349,6 +357,24 @@ class Network(object):
         for i in inputs[1:]:
             output = fluid.layers.elementwise_add(
                 x=output, y=i, name=self.get_unique_output_name(name, 'add'))
+        return output
+
+    @layer
+    def max(self, inputs, name):
+        fluid = import_fluid()
+        output = inputs[0]
+        for i in inputs[1:]:
+            output = fluid.layers.elementwise_max(
+                x=output, y=i, name=self.get_unique_output_name(name, 'max'))
+        return output
+
+    @layer
+    def multiply(self, inputs, name):
+        fluid = import_fluid()
+        output = inputs[0]
+        for i in inputs[1:]:
+            output = fluid.layers.elementwise_mul(
+                x=output, y=i, name=self.get_unique_output_name(name, 'mul'))
         return output
 
     @layer
