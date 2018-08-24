@@ -103,7 +103,7 @@ def train(args,
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in train_file_list:
             epocs = 82783 // batch_size // devices_num
-            test_epocs = 1
+            test_epocs = 40504 // batch_size
             boundaries = [epocs * 12, epocs * 19]
         elif '2017' in train_file_list:
             epocs = 118287 // batch_size // devices_num
@@ -174,13 +174,13 @@ def train(args,
     best_map = 0.
     def test(pass_id, best_map):
         _, accum_map = map_eval.get_map_var()
-        map_eval.reset(exe)
+        map_eval.reset(test_exe)
         every_pass_map=[]
         test_py_reader.start()
         batch_id = 0
         try:
             while True:
-                test_map, = exe.run(test_prog,
+                test_map, = test_exe.run(test_prog,
                                    fetch_list=[accum_map])
                 if batch_id % 20 == 0:
                     every_pass_map.append(test_map)
