@@ -147,9 +147,15 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
                     settings.min_face_size)
 
             img = Image.fromarray(img)
+    interp_mode = [
+        Image.BILINEAR, Image.HAMMING, Image.NEAREST, Image.BICUBIC,
+        Image.LANCZOS
+    ]
+    interp_indx = np.random.randint(0, 5)
 
-    img = img.resize((settings.resize_width, settings.resize_height),
-                     Image.ANTIALIAS)
+    img = img.resize(
+        (settings.resize_width, settings.resize_height),
+        resample=interp_mode[interp_indx])
     img = np.array(img)
 
     if mode == 'train':
