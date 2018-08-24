@@ -1,5 +1,7 @@
 ####this file is only used for continuous evaluation test!
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import sys
 sys.path.append(os.environ['ceroot'])
@@ -14,7 +16,7 @@ train_cost_kpi = CostKpi('train_cost', 0.5, 0, actived=True, desc='train cost')
 test_acc_top1_kpi = AccKpi('test_acc_top1', 0.05, 0, desc='TOP1 ACC')
 test_acc_top5_kpi = AccKpi(
     'test_acc_top5', 0.05, 0, actived=False, desc='TOP5 ACC')
-test_cost_kpi = CostKpi('test_cost', 1.0, 0, actived=True, desc='train cost')
+test_cost_kpi = CostKpi('test_cost', 0.05, 0, actived=True, desc='train cost')
 train_speed_kpi = AccKpi(
     'train_speed',
     0.5,
@@ -27,13 +29,13 @@ train_acc_top1_card4_kpi = AccKpi(
 train_acc_top5_card4_kpi = AccKpi(
     'train_acc_top5_card4', 0.05, 0, actived=False, desc='TOP5 ACC')
 train_cost_card4_kpi = CostKpi(
-    'train_cost_kpi', 0.3, 0, actived=True, desc='train cost')
+    'train_cost_kpi', 0.05, 0, actived=True, desc='train cost')
 test_acc_top1_card4_kpi = AccKpi(
     'test_acc_top1_card4', 0.05, 0, desc='TOP1 ACC')
 test_acc_top5_card4_kpi = AccKpi(
     'test_acc_top5_card4', 0.05, 0, actived=False, desc='TOP5 ACC')
 test_cost_card4_kpi = CostKpi(
-    'test_cost_card4', 1.0, 0, actived=True, desc='train cost')
+    'test_cost_card4', 0.05, 0, actived=True, desc='train cost')
 train_speed_card4_kpi = AccKpi(
     'train_speed_card4',
     0.5,
