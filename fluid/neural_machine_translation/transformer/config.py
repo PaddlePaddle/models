@@ -90,7 +90,7 @@ class ModelHyperParams(object):
 
 def merge_cfg_from_list(cfg_list, g_cfgs):
     """
-    Set the above global configurations using the cfg_list.
+    Set the above global configurations using the cfg_list. 
     """
     assert len(cfg_list) % 2 == 0
     for key, value in zip(cfg_list[0::2], cfg_list[1::2]):
@@ -126,12 +126,6 @@ input_descs = {
     # [batch_size, n_head, max_src_len_in_batch, max_src_len_in_batch]
     "src_slf_attn_bias": [(batch_size, ModelHyperParams.n_head, seq_len,
                            seq_len), "float32"],
-    # This shape input is used to reshape the output of embedding layer.
-    "src_data_shape": [(3L, ), "int32"],
-    # This shape input is used to reshape before softmax in self attention.
-    "src_slf_attn_pre_softmax_shape": [(2L, ), "int32"],
-    # This shape input is used to reshape after softmax in self attention.
-    "src_slf_attn_post_softmax_shape": [(4L, ), "int32"],
     # The actual data shape of trg_word is:
     # [batch_size * max_trg_len_in_batch, 1]
     "trg_word": [(batch_size, seq_len, 1L), "int64",
@@ -151,18 +145,6 @@ input_descs = {
     # [batch_size, n_head, max_trg_len_in_batch, max_src_len_in_batch]
     "trg_src_attn_bias": [(batch_size, ModelHyperParams.n_head, seq_len,
                            seq_len), "float32"],
-    # This shape input is used to reshape the output of embedding layer.
-    "trg_data_shape": [(3L, ), "int32"],
-    # This shape input is used to reshape before softmax in self attention.
-    "trg_slf_attn_pre_softmax_shape": [(2L, ), "int32"],
-    # This shape input is used to reshape after softmax in self attention.
-    "trg_slf_attn_post_softmax_shape": [(4L, ), "int32"],
-    # This shape input is used to reshape before softmax in encoder-decoder
-    # attention.
-    "trg_src_attn_pre_softmax_shape": [(2L, ), "int32"],
-    # This shape input is used to reshape after softmax in encoder-decoder
-    # attention.
-    "trg_src_attn_post_softmax_shape": [(4L, ), "int32"],
     # This input is used in independent decoder program for inference.
     # The actual data shape of enc_output is:
     # [batch_size, max_src_len_in_batch, d_model]
@@ -193,22 +175,12 @@ encoder_data_input_fields = (
     "src_word",
     "src_pos",
     "src_slf_attn_bias", )
-encoder_util_input_fields = (
-    "src_data_shape",
-    "src_slf_attn_pre_softmax_shape",
-    "src_slf_attn_post_softmax_shape", )
 decoder_data_input_fields = (
     "trg_word",
     "trg_pos",
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
     "enc_output", )
-decoder_util_input_fields = (
-    "trg_data_shape",
-    "trg_slf_attn_pre_softmax_shape",
-    "trg_slf_attn_post_softmax_shape",
-    "trg_src_attn_pre_softmax_shape",
-    "trg_src_attn_post_softmax_shape", )
 label_data_input_fields = (
     "lbl_word",
     "lbl_weight", )
@@ -218,7 +190,3 @@ fast_decoder_data_input_fields = (
     "trg_word",
     "init_score",
     "trg_src_attn_bias", )
-
-fast_decoder_util_input_fields = decoder_util_input_fields + (
-    "trg_slf_attn_pre_softmax_shape_delta",
-    "trg_slf_attn_post_softmax_shape_delta", )

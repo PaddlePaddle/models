@@ -184,7 +184,6 @@ def prepare_encoder_decoder(src_word,
                             src_emb_dim,
                             src_max_len,
                             dropout_rate=0.,
-                            src_data_shape=None,
                             word_emb_param_name=None,
                             pos_enc_param_name=None):
     """Add word embeddings and position encodings.
@@ -406,20 +405,16 @@ def transformer(src_vocab_size,
         assert src_vocab_size == src_vocab_size, (
             "Vocabularies in source and target should be same for weight sharing."
         )
-    enc_inputs_len = len(encoder_data_input_fields) + len(
-        encoder_util_input_fields)
-    dec_inputs_len = len(decoder_data_input_fields[:-1]) + len(
-        decoder_util_input_fields)
+    enc_inputs_len = len(encoder_data_input_fields)
+    dec_inputs_len = len(decoder_data_input_fields[:-1])
 
     if not use_py_reader:
-        all_inputs = make_all_inputs(
-            encoder_data_input_fields + encoder_util_input_fields +
-            decoder_data_input_fields[:-1] + decoder_util_input_fields +
-            label_data_input_fields)
+        all_inputs = make_all_inputs(encoder_data_input_fields +
+                                     decoder_data_input_fields[:-1] +
+                                     label_data_input_fields)
     else:
         all_inputs, reader = make_all_py_reader_inputs(
-            encoder_data_input_fields + encoder_util_input_fields +
-            decoder_data_input_fields[:-1] + decoder_util_input_fields +
+            encoder_data_input_fields + decoder_data_input_fields[:-1] +
             label_data_input_fields, is_test)
 
     enc_inputs = all_inputs[0:enc_inputs_len]
@@ -491,13 +486,10 @@ def wrap_encoder(src_vocab_size,
     """
     if enc_inputs is None:
         # This is used to implement independent encoder program in inference.
-        src_word, src_pos, src_slf_attn_bias, src_data_shape, \
-        slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape = \
-            make_all_inputs(encoder_data_input_fields +
-                            encoder_util_input_fields)
+        src_word, src_pos, src_slf_attn_bias = \
+            make_all_inputs(encoder_data_input_fields)
     else:
-        src_word, src_pos, src_slf_attn_bias, src_data_shape, \
-        slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape = \
+        src_word, src_pos, src_slf_attn_bias = \
             enc_inputs
     enc_input = prepare_encoder(
         src_word,
@@ -530,16 +522,10 @@ def wrap_decoder(trg_vocab_size,
     """
     if dec_inputs is None:
         # This is used to implement independent decoder program in inference.
-        trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, \
-        enc_output, trg_data_shape, slf_attn_pre_softmax_shape, \
-        slf_attn_post_softmax_shape, src_attn_pre_softmax_shape, \
-        src_attn_post_softmax_shape = make_all_inputs(
+        trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias = make_all_inputs(
             decoder_data_input_fields + decoder_util_input_fields)
     else:
-        trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, \
-        trg_data_shape, slf_attn_pre_softmax_shape, \
-        slf_attn_post_softmax_shape, src_attn_pre_softmax_shape, \
-        src_attn_post_softmax_shape = dec_inputs
+        trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias = dec_inputs
 
     dec_input = prepare_decoder(
         trg_word,
@@ -601,12 +587,8 @@ def fast_decode(
     enc_output = wrap_encoder(src_vocab_size, max_in_len, n_layer, n_head,
                               d_key, d_value, d_model, d_inner_hid,
                               dropout_rate, weight_sharing)
-    start_tokens, init_scores, trg_src_attn_bias, trg_data_shape, \
-    slf_attn_pre_softmax_shape, slf_attn_post_softmax_shape, \
-    src_attn_pre_softmax_shape, src_attn_post_softmax_shape, \
-    attn_pre_softmax_shape_delta, attn_post_softmax_shape_delta = \
-        make_all_inputs(fast_decoder_data_input_fields +
-                        fast_decoder_util_input_fields)
+    start_tokens, init_scores, trg_src_attn_bias= \
+        make_all_inputs(fast_decoder_data_input_fields)
 
     def beam_search():
         max_len = layers.fill_constant(
