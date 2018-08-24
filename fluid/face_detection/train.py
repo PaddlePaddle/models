@@ -106,38 +106,6 @@ def train(args, config, train_file_list, optimizer_method):
         startup_prog = startup_prog,
         args=args)
 
-    fetches = []
-    network = PyramidBox(image_shape, num_classes,
-                         sub_network=use_pyramidbox)
-    if use_pyramidbox:
-        face_loss, head_loss, loss = network.train()
-        fetches = [face_loss, head_loss]
-    else:
-        loss = network.vgg_ssd_loss()
-        fetches = [loss]
-
-    steps_per_pass = 12880 // batch_size
-    boundaries = [steps_per_pass * 50, steps_per_pass * 80,
-                  steps_per_pass * 120, steps_per_pass * 140]
-    values = [
-        learning_rate, learning_rate * 0.5, learning_rate * 0.25,
-        learning_rate * 0.1, learning_rate * 0.01
-    ]
-
-    if optimizer_method == "momentum":
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=fluid.layers.piecewise_decay(
-                boundaries=boundaries, values=values),
-            momentum=0.9,
-            regularization=fluid.regularizer.L2Decay(0.0005),
-        )
-    else:
-        optimizer = fluid.optimizer.RMSProp(
-            learning_rate=fluid.layers.piecewise_decay(boundaries, values),
-            regularization=fluid.regularizer.L2Decay(0.0005),
-        )
-
-    optimizer.minimize(loss)
     if with_memory_optimization:
         fluid.memory_optimize(train_prog)
 
