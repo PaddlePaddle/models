@@ -174,13 +174,13 @@ def train(args,
     best_map = 0.
     def test(pass_id, best_map):
         _, accum_map = map_eval.get_map_var()
-        map_eval.reset(test_exe)
+        map_eval.reset(exe)
         every_pass_map=[]
         test_py_reader.start()
         batch_id = 0
         try:
             while True:
-                test_map, = test_exe.run(test_prog,
+                test_map, = exe.run(test_prog,
                                    fetch_list=[accum_map])
                 if batch_id % 20 == 0:
                     every_pass_map.append(test_map)
