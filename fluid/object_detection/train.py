@@ -103,14 +103,17 @@ def train(args,
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in train_file_list:
             epocs = 82783 // batch_size // devices_num
+            test_epocs = 1
             boundaries = [epocs * 12, epocs * 19]
         elif '2017' in train_file_list:
             epocs = 118287 // batch_size // devices_num
+            test_epocs = 5000 // batch_size
             boundaries = [epocs * 12, epocs * 19]
         values = [learning_rate, learning_rate * 0.5,
             learning_rate * 0.25]
     elif 'pascalvoc' in data_args.dataset:
         epocs = 19200 // batch_size // devices_num
+        test_epocs = 4952 // batch_size
         boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
         values = [
             learning_rate, learning_rate * 0.5, learning_rate * 0.25,
@@ -151,13 +154,13 @@ def train(args,
         test_exe = fluid.ParallelExecutor(main_program=test_prog,
             use_cuda=args.use_gpu, share_vars_from=train_exe)
     if not args.enable_ce:
-        train_reader = reader.train_batch_reader(data_args, train_file_list, batch_size)
+        train_reader = reader.batch_reader(data_args, train_file_list, batch_size, "train")
     else:
         import random
         random.seed(0)
         np.random.seed(0)
-        train_reader = reader.train_batch_reader(data_args, train_file_list, batch_size, shuffle=False)
-    test_reader = reader.test(data_args, val_file_list, batch_size)
+        train_reader = reader.batch_reader(data_args, train_file_list, batch_size, "train", shuffle=False)
+    test_reader = reader.batch_reader(data_args, val_file_list, batch_size, "test")
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
 
@@ -171,18 +174,20 @@ def train(args,
     best_map = 0.
     def test(pass_id, best_map):
         _, accum_map = map_eval.get_map_var()
-        map_eval.reset(test_exe)
+        map_eval.reset(exe)
         every_pass_map=[]
         test_py_reader.start()
         batch_id = 0
         try:
             while True:
-                test_map, = test_exe.run(test_prog,
+                test_map, = exe.run(test_prog,
                                    fetch_list=[accum_map])
                 if batch_id % 20 == 0:
                     every_pass_map.append(test_map)
                     print("Batch {0}, map {1}".format(batch_id, test_map))
                 batch_id += 1
+                if batch_id > test_epocs:
+                    break
         except fluid.core.EOFException:
             test_py_reader.reset()
         mean_map = np.mean(every_pass_map)

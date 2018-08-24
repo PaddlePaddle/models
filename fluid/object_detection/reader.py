@@ -185,7 +185,7 @@ def coco(settings, file_list, mode, batch_size, shuffle):
     print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
 
     while True:
-        if mode != "train" and shuffle:
+        if mode == "train" and shuffle:
             random.shuffle(images)
         batch_out = []
         for image in images:
@@ -243,7 +243,7 @@ def pascalvoc(settings, file_list, mode, batch_size, shuffle):
     print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
 
     while True:
-        if mode != "train" and shuffle:
+        if mode == "train" and shuffle:
             random.shuffle(images)
         batch_out = []
         for image in images:
@@ -285,11 +285,12 @@ def pascalvoc(settings, file_list, mode, batch_size, shuffle):
                 batch_out = []
 
 
-def train_batch_reader(settings,
-                       file_list,
-                       batch_size,
-                       shuffle=True,
-                       num_workers=8):
+def batch_reader(settings,
+                 file_list,
+                 batch_size,
+                 mode,
+                 shuffle=True,
+                 num_workers=8):
     file_list = os.path.join(settings.data_dir, file_list)
     if 'coco' in settings.dataset:
         train_settings = copy.copy(settings)
@@ -303,13 +304,11 @@ def train_batch_reader(settings,
         try:
             if 'coco' in settings.dataset:
                 enqueuer = GeneratorEnqueuer(
-                    coco(train_settings, file_list, "train", batch_size,
-                         shuffle),
+                    coco(train_settings, file_list, mode, batch_size, shuffle),
                     use_multiprocessing=False)
             else:
                 enqueuer = GeneratorEnqueuer(
-                    pascalvoc(settings, file_list, "train", batch_size,
-                              shuffle),
+                    pascalvoc(settings, file_list, mode, batch_size, shuffle),
                     use_multiprocessing=False)
             enqueuer.start(max_queue_size=24, workers=num_workers)
             generator_output = None
