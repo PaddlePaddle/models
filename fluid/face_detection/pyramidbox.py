@@ -144,7 +144,7 @@ class PyramidBox(object):
                     groups=ch,
                     param_attr=w_attr,
                     bias_attr=False,
-                    use_cudnn=True)
+                    use_cudnn=False)
             else:
                 upsampling = fluid.layers.resize_bilinear(
                     conv1, out_shape=up_to.shape[2:])

@@ -123,20 +123,23 @@ def data_anchor_sampling(sampler, bbox_labels, image_width, image_height,
         hei = image_height * (norm_ymax - norm_ymin)
         range_size = 0
 
+        area = wid * hei
         for scale_ind in range(0, len(scale_array) - 1):
-            area = wid * hei
             if area > scale_array[scale_ind] ** 2 and area < \
                     scale_array[scale_ind + 1] ** 2:
                 range_size = scale_ind + 1
                 break
 
+        if area > scale_array[len(scale_array) - 2]**2:
+            range_size = 4
+
         scale_choose = 0.0
         if range_size == 0:
-            rand_idx_size = range_size + 1
+            rand_idx_size = 0
         else:
             # np.random.randint range: [low, high)
             rng_rand_size = np.random.randint(0, range_size + 1)
-            rand_idx_size = rng_rand_size % (range_size + 1)
+            rand_idx_size = rng_rand_size
 
         min_resize_val = scale_array[rand_idx_size] / 2.0
         max_resize_val = min(2.0 * scale_array[rand_idx_size],
@@ -174,6 +177,8 @@ def data_anchor_sampling(sampler, bbox_labels, image_width, image_height,
                             w_off + float(sample_bbox_size / image_width),
                             h_off + float(sample_bbox_size / image_height))
         return sampled_bbox
+    else:
+        return 0
 
 
 def jaccard_overlap(sample_bbox, object_bbox):
@@ -261,6 +266,8 @@ def generate_batch_random_samples(batch_sampler, bbox_labels, image_width,
             sample_bbox = data_anchor_sampling(
                 sampler, bbox_labels, image_width, image_height, scale_array,
                 resize_width, resize_height)
+            if sample_bbox == 0:
+                break
             if satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
                 sampled_bbox.append(sample_bbox)
                 found = found + 1
