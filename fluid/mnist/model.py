@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 import argparse
 import time
@@ -5,7 +9,7 @@ import time
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.profiler as profiler
-from functools import reduce
+import six
 
 SEED = 90
 DTYPE = "float32"
@@ -44,7 +48,7 @@ def print_arguments(args):
     vars(args)['use_nvprof'] = (vars(args)['use_nvprof'] and
                                 vars(args)['device'] == 'GPU')
     print('-----------  Configuration Arguments -----------')
-    for arg, value in sorted(vars(args).items()):
+    for arg, value in sorted(six.iteritems(vars(args))):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
 
@@ -68,7 +72,7 @@ def cnn_model(data):
     # TODO(dzhwinter) : refine the initializer and random seed settting
     SIZE = 10
     input_shape = conv_pool_2.shape
-    param_shape = [reduce(lambda a, b: a * b, input_shape[1:], 1)] + [SIZE]
+    param_shape = [six.moves.reduce(lambda a, b: a * b, input_shape[1:], 1)] + [SIZE]
     scale = (2.0 / (param_shape[0]**2 * SIZE))**0.5
 
     predict = fluid.layers.fc(
