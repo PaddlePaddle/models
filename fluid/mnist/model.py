@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import numpy as np
 import argparse
 import time
@@ -9,6 +5,7 @@ import time
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.profiler as profiler
+from functools import reduce
 
 SEED = 90
 DTYPE = "float32"
@@ -47,7 +44,7 @@ def print_arguments(args):
     vars(args)['use_nvprof'] = (vars(args)['use_nvprof'] and
                                 vars(args)['device'] == 'GPU')
     print('-----------  Configuration Arguments -----------')
-    for arg, value in sorted(vars(args).iteritems()):
+    for arg, value in sorted(vars(args).items()):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
 
@@ -89,9 +86,8 @@ def eval_test(exe, batch_acc, batch_size_tensor, inference_program):
         paddle.dataset.mnist.test(), batch_size=args.batch_size)
     test_pass_acc = fluid.average.WeightedAverage()
     for batch_id, data in enumerate(test_reader()):
-        img_data = np.array(map(lambda x: x[0].reshape([1, 28, 28]),
-                                data)).astype(DTYPE)
-        y_data = np.array(map(lambda x: x[1], data)).astype("int64")
+        img_data = np.array([x[0].reshape([1, 28, 28]) for x in data]).astype(DTYPE)
+        y_data = np.array([x[1] for x in data]).astype("int64")
         y_data = y_data.reshape([len(y_data), 1])
 
         acc, weight = exe.run(inference_program,
@@ -153,8 +149,8 @@ def run_benchmark(model, args):
         every_pass_loss = []
         for batch_id, data in enumerate(train_reader()):
             img_data = np.array(
-                map(lambda x: x[0].reshape([1, 28, 28]), data)).astype(DTYPE)
-            y_data = np.array(map(lambda x: x[1], data)).astype("int64")
+                [x[0].reshape([1, 28, 28]) for x in data]).astype(DTYPE)
+            y_data = np.array([x[1] for x in data]).astype("int64")
             y_data = y_data.reshape([len(y_data), 1])
 
             start = time.time()
