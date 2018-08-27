@@ -172,6 +172,7 @@ def train(args):
         # but it is time consuming. For faster speed, need another dataset.
         import random
         random.seed(0)
+        np.random.seed(0)
         train_reader = paddle.batch(
             flowers.train(use_xmap=False), batch_size=train_batch_size)
         test_reader = paddle.batch(
