@@ -207,15 +207,15 @@ def distort_image(img, settings):
     prob = np.random.uniform(0, 1)
     # Apply different distort order
     if prob > 0.5:
-        img = np.random_brightness(img, settings)
-        img = np.random_contrast(img, settings)
-        img = np.random_saturation(img, settings)
-        img = np.random_hue(img, settings)
+        img = random_brightness(img, settings)
+        img = random_contrast(img, settings)
+        img = random_saturation(img, settings)
+        img = random_hue(img, settings)
     else:
-        img = np.random_brightness(img, settings)
-        img = np.random_saturation(img, settings)
-        img = np.random_hue(img, settings)
-        img = np.random_contrast(img, settings)
+        img = random_brightness(img, settings)
+        img = random_saturation(img, settings)
+        img = random_hue(img, settings)
+        img = random_contrast(img, settings)
     return img
 
 

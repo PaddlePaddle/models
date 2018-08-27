@@ -37,8 +37,8 @@ def crop_image(img, target_size, center):
         w_start = (width - size) / 2
         h_start = (height - size) / 2
     else:
-        w_start = np.random.randint(0, width - size)
-        h_start = np.random.randint(0, height - size)
+        w_start = np.random.randint(0, width - size + 1)
+        h_start = np.random.randint(0, height - size + 1)
     w_end = w_start + size
     h_end = h_start + size
     img = img.crop((w_start, h_start, w_end, h_end))
@@ -61,8 +61,8 @@ def random_crop(img, size, scale=[0.08, 1.0], ratio=[3. / 4., 4. / 3.]):
     w = int(target_size * w)
     h = int(target_size * h)
 
-    i = np.random.randint(0, img.size[0] - w)
-    j = np.random.randint(0, img.size[1] - h)
+    i = np.random.randint(0, img.size[0] - w + 1)
+    j = np.random.randint(0, img.size[1] - h + 1)
 
     img = img.crop((i, j, i + w, j + h))
     img = img.resize((size, size), Image.LANCZOS)
@@ -70,7 +70,7 @@ def random_crop(img, size, scale=[0.08, 1.0], ratio=[3. / 4., 4. / 3.]):
 
 
 def rotate_image(img):
-    angle = np.random.randint(-10, 10)
+    angle = np.random.randint(-10, 11)
     img = img.rotate(angle)
     return img
 
@@ -111,7 +111,7 @@ def process_image(sample, mode, color_jitter, rotate):
     if mode == 'train':
         if color_jitter:
             img = distort_color(img)
-        if np.random.randint(0, 1) == 1:
+        if np.random.randint(0, 2) == 1:
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
     if img.mode != 'RGB':
