@@ -464,14 +464,11 @@ def train_loop(exe, train_progm, startup_prog, dev_count, sum_cost, avg_cost,
         exe,
         os.path.join(TrainTaskConfig.ckpt_dir,
                      "pass_" + str(pass_id) + ".checkpoint"))
-    # fluid.io.save_inference_model(
-    #     os.path.join(TrainTaskConfig.model_dir,
-    #                  "pass_" + str(pass_id) + ".infer.model"),
-    #     data_input_names[:-2], [predict], exe)
 
     if args.enable_ce:  # For CE
         print("kpis\ttrain_cost_card%d\t%f" % (dev_count, total_avg_cost))
-        print("kpis\ttest_cost_card%d\t%f" % (dev_count, val_avg_cost))
+        if args.val_file_pattern is not None:
+            print("kpis\ttest_cost_card%d\t%f" % (dev_count, val_avg_cost))
         print("kpis\ttrain_duration_card%d\t%f" % (dev_count, time_consumed))
 
 
