@@ -131,7 +131,7 @@ def data_anchor_sampling(sampler, bbox_labels, image_width, image_height,
                 break
 
         if area > scale_array[len(scale_array) - 2]**2:
-            range_size = 4
+            range_size = len(scale_array) - 2
 
         scale_choose = 0.0
         if range_size == 0:
@@ -139,12 +139,17 @@ def data_anchor_sampling(sampler, bbox_labels, image_width, image_height,
         else:
             # np.random.randint range: [low, high)
             rng_rand_size = np.random.randint(0, range_size + 1)
-            rand_idx_size = rng_rand_size
+            rand_idx_size = rng_rand_size % (range_size + 1)
 
-        min_resize_val = scale_array[rand_idx_size] / 2.0
-        max_resize_val = min(2.0 * scale_array[rand_idx_size],
-                             2 * math.sqrt(wid * hei))
-        scale_choose = random.uniform(min_resize_val, max_resize_val)
+        if rand_idx_size == range_size:
+            min_resize_val = scale_array[rand_idx_size] / 2.0
+            max_resize_val = min(2.0 * scale_array[rand_idx_size],
+                                 2 * math.sqrt(wid * hei))
+            scale_choose = random.uniform(min_resize_val, max_resize_val)
+        else:
+            min_resize_val = scale_array[rand_idx_size] / 2.0
+            max_resize_val = 2.0 * scale_array[rand_idx_size]
+            scale_choose = random.uniform(min_resize_val, max_resize_val)
         sample_bbox_size = wid * resize_width / scale_choose
 
         w_off_orig = 0.0
