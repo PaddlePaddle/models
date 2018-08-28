@@ -17,6 +17,35 @@ _ALPHANUMERIC_CHAR_SET = set(
         unicodedata.category(six.unichr(i)).startswith("N")))
 
 
+# Unicode utility functions that work with Python 2 and 3
+def native_to_unicode(s):
+    return s if is_unicode(s) else to_unicode(s)
+
+
+def unicode_to_native(s):
+    if six.PY2:
+        return s.encode("utf-8") if is_unicode(s) else s
+    else:
+        return s
+
+
+def is_unicode(s):
+    if six.PY2:
+        if isinstance(s, unicode):
+            return True
+    else:
+        if isinstance(s, str):
+            return True
+    return False
+
+
+def to_unicode(s, ignore_errors=False):
+    if is_unicode(s):
+        return s
+    error_mode = "ignore" if ignore_errors else "strict"
+    return s.decode("utf-8", errors=error_mode)
+
+
 def unescape_token(escaped_token):
     """
     Inverse of encoding escaping.
@@ -44,9 +73,7 @@ def subtoken_ids_to_str(subtoken_ids, vocabs):
     subtokens = [vocabs.get(subtoken_id, u"") for subtoken_id in subtoken_ids]
 
     # Convert a list of subtokens to a list of tokens.
-    concatenated = "".join([
-        t if isinstance(t, unicode) else t.decode("utf-8") for t in subtokens
-    ])
+    concatenated = "".join([native_to_unicode(t) for t in subtokens])
     split = concatenated.split("_")
     tokens = []
     for t in split:
@@ -65,4 +92,4 @@ def subtoken_ids_to_str(subtoken_ids, vocabs):
         ret.append(token)
     seq = "".join(ret)
 
-    return seq.encode("utf-8")
+    return unicode_to_native(seq)

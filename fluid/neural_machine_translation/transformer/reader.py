@@ -1,8 +1,8 @@
 import glob
 import os
-import random
 import tarfile
-import cPickle
+
+import numpy as np
 
 
 class SortType(object):
@@ -204,7 +204,8 @@ class DataReader(object):
         self._token_delimiter = token_delimiter
         self.load_src_trg_ids(end_mark, fpattern, start_mark, tar_fname,
                               unk_mark)
-        self._random = random.Random(x=seed)
+        self._random = np.random
+        self._random.seed(seed)
 
     def load_src_trg_ids(self, end_mark, fpattern, start_mark, tar_fname,
                          unk_mark):
