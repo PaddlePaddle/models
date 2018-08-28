@@ -47,9 +47,10 @@ def log_to_ce(log):
         kpi_tracker[kpi.name] = kpi
 
     for (kpi_name, kpi_value) in parse_log(log):
-        print(kpi_name, kpi_value)
-        kpi_tracker[kpi_name].add_record(kpi_value)
-        kpi_tracker[kpi_name].persist()
+        if kpi_name in kpi_tracker:
+            print(kpi_name, kpi_value)
+            kpi_tracker[kpi_name].add_record(kpi_value)
+            kpi_tracker[kpi_name].persist()
 
 
 if __name__ == '__main__':
