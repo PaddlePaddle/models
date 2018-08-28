@@ -120,6 +120,8 @@ input_descs = {
     # The actual data shape of src_pos is:
     # [batch_size, max_src_len_in_batch, 1]
     "src_pos": [(batch_size, seq_len, 1L), "int64"],
+    "src_pos_enc_table": [(seq_len + 1, ModelHyperParams.d_model), "float32"],
+    "trg_pos_enc_table": [(seq_len + 1, ModelHyperParams.d_model), "float32"],
     # This input is used to remove attention weights on paddings in the
     # encoder.
     # The actual data shape of src_slf_attn_bias is:

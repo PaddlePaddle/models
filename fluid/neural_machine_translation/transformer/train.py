@@ -380,7 +380,7 @@ def train_loop(exe, train_progm, startup_prog, dev_count, sum_cost, avg_cost,
         feed_order = \
             encoder_data_input_fields + \
              decoder_data_input_fields[:-1] + \
-              label_data_input_fields
+               pos_enc_param_names + label_data_input_fields
 
         for batch_id, data in enumerate(train_data.batch_generator()):
             data_input_dict, num_token = \
