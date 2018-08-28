@@ -91,6 +91,7 @@ def train(args):
 
     # reader
     train_reader = paddle.batch(reader.train(seg_num), batch_size=batch_size)
+    # test in single GPU
     test_reader = paddle.batch(reader.test(seg_num), batch_size=batch_size / 16)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
