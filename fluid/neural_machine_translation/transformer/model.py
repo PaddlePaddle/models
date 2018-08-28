@@ -415,7 +415,7 @@ def transformer(src_vocab_size,
     else:
         all_inputs, reader = make_all_py_reader_inputs(
             encoder_data_input_fields + decoder_data_input_fields[:-1] +
-            pos_enc_param_names + label_data_input_fields, is_test)
+            label_data_input_fields, is_test)
 
     enc_inputs = all_inputs[0:enc_inputs_len]
     dec_inputs = all_inputs[enc_inputs_len:enc_inputs_len + dec_inputs_len]

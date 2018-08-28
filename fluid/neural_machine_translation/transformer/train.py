@@ -375,12 +375,15 @@ def train_loop(exe, train_progm, startup_prog, dev_count, sum_cost, avg_cost,
 
     pos_enc = position_encoding_init(ModelHyperParams.max_length + 1,
                                      ModelHyperParams.d_model)
+    feed_list = {}
+    for name in pos_enc_param_names:
+        feed_list[name] = pos_enc
 
     def train_reader_provider():
         feed_order = \
             encoder_data_input_fields + \
              decoder_data_input_fields[:-1] + \
-               pos_enc_param_names + label_data_input_fields
+             label_data_input_fields
 
         for batch_id, data in enumerate(train_data.batch_generator()):
             data_input_dict, num_token = \
@@ -389,8 +392,8 @@ def train_loop(exe, train_progm, startup_prog, dev_count, sum_cost, avg_cost,
                                     ModelHyperParams.eos_idx,
                                     ModelHyperParams.n_head, ModelHyperParams.d_model)
             total_dict = dict(data_input_dict.items())
-            for name in pos_enc_param_names:
-                total_dict[name] = pos_enc
+            # for name in pos_enc_param_names:
+            #     total_dict[name] = pos_enc
             yield [total_dict[item] for item in feed_order]
 
     build_strategy = fluid.BuildStrategy()
@@ -413,6 +416,7 @@ def train_loop(exe, train_progm, startup_prog, dev_count, sum_cost, avg_cost,
 
     batch_time = []
     pass_start_time = time.time()
+    init = False
     for pass_id in xrange(TrainTaskConfig.pass_num):
         pyreader.decorate_tensor_provider(train_reader_provider)
         pyreader.start()
@@ -421,7 +425,10 @@ def train_loop(exe, train_progm, startup_prog, dev_count, sum_cost, avg_cost,
         while True:
             try:
                 beg = time.time()
-                outs = train_exe.run(fetch_list=[sum_cost.name, token_num.name])
+                outs = train_exe.run(
+                    fetch_list=[sum_cost.name, token_num.name],
+                    feed_list=feed_list if not init else [])
+                init = True
                 batch_time.append(time.time() - beg)
             except:
                 # The current pass is over.
