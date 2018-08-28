@@ -373,12 +373,6 @@ def train_loop(exe, train_progm, startup_prog, dev_count, sum_cost, avg_cost,
     data_input_names = encoder_data_input_fields + \
                 decoder_data_input_fields[:-1] + label_data_input_fields
 
-    pos_enc = position_encoding_init(ModelHyperParams.max_length + 1,
-                                     ModelHyperParams.d_model)
-    feed_list = {}
-    for name in pos_enc_param_names:
-        feed_list[name] = pos_enc
-
     def train_reader_provider():
         feed_order = \
             encoder_data_input_fields + \
@@ -395,6 +389,15 @@ def train_loop(exe, train_progm, startup_prog, dev_count, sum_cost, avg_cost,
             # for name in pos_enc_param_names:
             #     total_dict[name] = pos_enc
             yield [total_dict[item] for item in feed_order]
+
+    pos_enc = position_encoding_init(ModelHyperParams.max_length + 1,
+                                     ModelHyperParams.d_model)
+    position_encoding_init_list = []
+    for i in range(dev_count):
+        position_encoding = {}
+        for name in pos_enc_param_names:
+            position_encoding[name] = pos_enc
+        position_encoding_init_list.append(position_encoding)
 
     build_strategy = fluid.BuildStrategy()
     train_exe = fluid.ParallelExecutor(
@@ -421,15 +424,14 @@ def train_loop(exe, train_progm, startup_prog, dev_count, sum_cost, avg_cost,
         pyreader.decorate_tensor_provider(train_reader_provider)
         pyreader.start()
         batch_id = 0
-
         while True:
             try:
                 beg = time.time()
                 outs = train_exe.run(
                     fetch_list=[sum_cost.name, token_num.name],
-                    feed_list=feed_list if not init else [])
-                init = True
+                    feed=position_encoding_init_list if not init else None)
                 batch_time.append(time.time() - beg)
+                init = True
             except:
                 # The current pass is over.
                 pyreader.reset()
