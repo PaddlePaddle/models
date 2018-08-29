@@ -45,9 +45,12 @@ def build_program(is_train, main_prog, startup_prog, args, data_args,
         num_classes = 21
 
     def get_optimizer():
-        optimizer = fluid.optimizer.RMSProp(
-            learning_rate=fluid.layers.piecewise_decay(boundaries, values),
-            regularization=fluid.regularizer.L2Decay(0.00005), )
+        if not args.enable_ce:
+            optimizer = fluid.optimizer.RMSProp(
+                learning_rate=fluid.layers.piecewise_decay(boundaries, values),
+                regularization=fluid.regularizer.L2Decay(0.00005), )
+        else:
+            optimizer = fluid.optimizer.RMSProp(learning_rate=0.001)
         return optimizer
 
     with fluid.program_guard(main_prog, startup_prog):
@@ -197,12 +200,10 @@ def train(args,
         print("Pass {0}, test map {1}".format(pass_id, test_map))
         return best_map, mean_map
 
-    total_time = 0.0
     for pass_id in range(num_passes):
-        epoch_idx = pass_id + 1
+        batch_begin = time.time()
         start_time = time.time()
         train_py_reader.start()
-        prev_start_time = start_time
         every_pass_loss = []
         batch_id = 0
         try:
@@ -224,23 +225,22 @@ def train(args,
                     break
         except fluid.core.EOFException:
             train_py_reader.reset()
-
-        end_time = time.time()
+        batch_end = time.time()
         best_map, mean_map = test(pass_id, best_map)
         if args.enable_ce and pass_id == num_passes - 1:
-            total_time += end_time - start_time
+            total_time = batch_end - batch_begin
             train_avg_loss = np.mean(every_pass_loss)
             if devices_num == 1:
                 print("kpis	train_cost	%s" % train_avg_loss)
                 print("kpis	test_acc	%s" % mean_map)
-                print("kpis	train_speed	%s" % (total_time / epoch_idx))
+                print("kpis	train_speed	%s" % (total_time / epocs))
             else:
                 print("kpis	train_cost_card%s	%s" %
                        (devices_num, train_avg_loss))
                 print("kpis	test_acc_card%s	%s" %
                        (devices_num, mean_map))
                 print("kpis	train_speed_card%s	%f" %
-                       (devices_num, total_time / epoch_idx))
+                       (devices_num, total_time / test_epocs))
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id), train_prog)
