@@ -296,8 +296,7 @@ def test_context(exe, avg_cost, train_exe, dev_count, data_input_names,
         max_length=ModelHyperParams.max_length - 2,
         clip_last_batch=False,
         shuffle=False,
-        shuffle_batch=False,
-        pkl_filename='test.pkl')
+        shuffle_batch=False)
 
     def test_reader_provider():
         feed_order = \
@@ -367,8 +366,7 @@ def train_loop(exe, train_progm, startup_prog, dev_count, sum_cost, avg_cost,
         unk_mark=args.special_token[2],
         # count start and end tokens out
         max_length=ModelHyperParams.max_length - 2,
-        clip_last_batch=False,
-        pkl_filename='train.pkl')
+        clip_last_batch=False)
 
     data_input_names = encoder_data_input_fields + \
                 decoder_data_input_fields[:-1] + label_data_input_fields
