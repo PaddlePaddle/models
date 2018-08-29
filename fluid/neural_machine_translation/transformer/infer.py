@@ -59,8 +59,7 @@ def parse_args():
         "provided in util.py to do this.")
     parser.add_argument(
         "--token_delimiter",
-        type=partial(
-            str.decode, encoding="string-escape"),
+        type=lambda x: str(x.encode().decode("unicode-escape")),
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter.; "
@@ -99,11 +98,11 @@ def post_process_seq(seq,
         if idx == eos_idx:
             eos_pos = i
             break
-    seq = seq[:eos_pos + 1]
-    return filter(
-        lambda idx: (output_bos or idx != bos_idx) and \
-            (output_eos or idx != eos_idx),
-        seq)
+    seq = [
+        idx for idx in seq[:eos_pos + 1]
+        if (output_bos or idx != bos_idx) and (output_eos or idx != eos_idx)
+    ]
+    return seq
 
 
 def prepare_batch_input(insts, data_input_names, src_pad_idx, bos_idx, n_head,
@@ -164,8 +163,10 @@ def fast_infer(test_data, trg_idx2word, use_wordpiece):
     fluid.io.load_vars(
         exe,
         InferTaskConfig.model_path,
-        vars=filter(lambda var: isinstance(var, fluid.framework.Parameter),
-                    fluid.default_main_program().list_vars()))
+        vars=[
+            var for var in fluid.default_main_program().list_vars()
+            if isinstance(var, fluid.framework.Parameter)
+        ])
 
     # This is used here to set dropout to the test mode.
     infer_program = fluid.default_main_program().inference_optimize()
@@ -203,7 +204,7 @@ def fast_infer(test_data, trg_idx2word, use_wordpiece):
                     post_process_seq(np.array(seq_ids)[sub_start:sub_end]),
                     trg_idx2word))
                 scores[i].append(np.array(seq_scores)[sub_end - 1])
-                print hyps[i][-1]
+                print(hyps[i][-1])
                 if len(hyps[i]) >= InferTaskConfig.n_best:
                     break
 

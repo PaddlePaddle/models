@@ -115,11 +115,11 @@ seq_len = ModelHyperParams.max_length
 # compile time.
 input_descs = {
     # The actual data shape of src_word is:
-    # [batch_size * max_src_len_in_batch, 1]
-    "src_word": [(batch_size, seq_len, 1L), "int64", 2],
+    # [batch_size, max_src_len_in_batch, 1]
+    "src_word": [(batch_size, seq_len, 1), "int64", 2],
     # The actual data shape of src_pos is:
-    # [batch_size * max_src_len_in_batch, 1]
-    "src_pos": [(batch_size, seq_len, 1L), "int64"],
+    # [batch_size, max_src_len_in_batch, 1]
+    "src_pos": [(batch_size, seq_len, 1), "int64"],
     # This input is used to remove attention weights on paddings in the
     # encoder.
     # The actual data shape of src_slf_attn_bias is:
@@ -127,12 +127,12 @@ input_descs = {
     "src_slf_attn_bias": [(batch_size, ModelHyperParams.n_head, seq_len,
                            seq_len), "float32"],
     # The actual data shape of trg_word is:
-    # [batch_size * max_trg_len_in_batch, 1]
-    "trg_word": [(batch_size, seq_len, 1L), "int64",
+    # [batch_size, max_trg_len_in_batch, 1]
+    "trg_word": [(batch_size, seq_len, 1), "int64",
                  2],  # lod_level is only used in fast decoder.
     # The actual data shape of trg_pos is:
-    # [batch_size * max_trg_len_in_batch, 1]
-    "trg_pos": [(batch_size, seq_len, 1L), "int64"],
+    # [batch_size, max_trg_len_in_batch, 1]
+    "trg_pos": [(batch_size, seq_len, 1), "int64"],
     # This input is used to remove attention weights on paddings and
     # subsequent words in the decoder.
     # The actual data shape of trg_slf_attn_bias is:
@@ -151,15 +151,13 @@ input_descs = {
     "enc_output": [(batch_size, seq_len, ModelHyperParams.d_model), "float32"],
     # The actual data shape of label_word is:
     # [batch_size * max_trg_len_in_batch, 1]
-    "lbl_word": [(batch_size * seq_len, 1L), "int64"],
+    "lbl_word": [(batch_size * seq_len, 1), "int64"],
     # This input is used to mask out the loss of paddding tokens.
     # The actual data shape of label_weight is:
     # [batch_size * max_trg_len_in_batch, 1]
-    "lbl_weight": [(batch_size * seq_len, 1L), "float32"],
-    # These inputs are used to change the shape tensor in beam-search decoder.
-    "trg_slf_attn_pre_softmax_shape_delta": [(2L, ), "int32"],
-    "trg_slf_attn_post_softmax_shape_delta": [(4L, ), "int32"],
-    "init_score": [(batch_size, 1L), "float32"],
+    "lbl_weight": [(batch_size * seq_len, 1), "float32"],
+    # This input is used in beam-search decoder.
+    "init_score": [(batch_size, 1), "float32"],
 }
 
 # Names of word embedding table which might be reused for weight sharing.
