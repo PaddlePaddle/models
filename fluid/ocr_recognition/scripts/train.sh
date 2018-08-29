@@ -41,7 +41,7 @@ else # HT is ON
     fi
 fi
 
-python ../ctc_train.py \
+python ../train.py \
     --use_gpu $use_gpu \
     --parallel $parallel \
     --batch_size $batch_size \
