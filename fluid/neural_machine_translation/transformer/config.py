@@ -1,5 +1,5 @@
 class TrainTaskConfig(object):
-    # only support GPU currently
+    # support both CPU and GPU now.
     use_gpu = True
     # the epoch number to train.
     pass_num = 30
