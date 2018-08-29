@@ -12,7 +12,7 @@ def position_encoding_init(n_position, d_pos_vec):
     Generate the initial values for the sinusoid position encoding table.
     """
     position_enc = np.array([[
-        pos / np.power(10000, 2 * (j // 2) / d_pos_vec)
+        pos / np.power(10000, 2. * (j // 2) / d_pos_vec)
         for j in range(d_pos_vec)
     ] if pos != 0 else np.zeros(d_pos_vec) for pos in range(n_position)])
     position_enc[1:, 0::2] = np.sin(position_enc[1:, 0::2])  # dim 2i
@@ -90,8 +90,7 @@ def multi_head_attention(queries,
         # The value 0 in shape attr means copying the corresponding dimension
         # size of the input as the output dimension size.
         return layers.reshape(
-            x=trans_x,
-            shape=map(int, [0, 0, trans_x.shape[2] * trans_x.shape[3]]))
+            x=trans_x, shape=[0, 0, trans_x.shape[2] * trans_x.shape[3]])
 
     def scaled_dot_product_attention(q, k, v, attn_bias, d_model, dropout_rate):
         """

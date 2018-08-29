@@ -2,8 +2,8 @@ import argparse
 import ast
 import multiprocessing
 import os
+import six
 import time
-from functools import partial
 
 import numpy as np
 import paddle.fluid as fluid
@@ -77,8 +77,7 @@ def parse_args():
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
     parser.add_argument(
         "--token_delimiter",
-        type=partial(
-            str.decode, encoding="string-escape"),
+        type=lambda x: str(x.encode().decode("unicode-escape")),
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter. "
@@ -149,8 +148,6 @@ def pad_batch_data(insts,
     """
     return_list = []
     max_len = max(len(inst) for inst in insts)
-    num_token = reduce(lambda x, y: x + y,
-                       [len(inst) for inst in insts]) if return_num_token else 0
     # Any token included in dict can be used to pad, since the paddings' loss
     # will be masked out by weights and make no effect on parameter gradients.
     inst_data = np.array(
@@ -162,7 +159,7 @@ def pad_batch_data(insts,
         return_list += [inst_weight.astype("float32").reshape([-1, 1])]
     else:  # position data
         inst_pos = np.array([
-            range(1, len(inst) + 1) + [0] * (max_len - len(inst))
+            list(range(1, len(inst) + 1)) + [0] * (max_len - len(inst))
             for inst in insts
         ])
         return_list += [inst_pos.astype("int64").reshape([-1, 1])]
@@ -187,6 +184,9 @@ def pad_batch_data(insts,
     if return_max_len:
         return_list += [max_len]
     if return_num_token:
+        num_token = 0
+        for inst in insts:
+            num_token += len(inst)
         return_list += [num_token]
     return return_list if len(return_list) > 1 else return_list[0]
 
@@ -493,7 +493,7 @@ def train(args):
     is_local = os.getenv("PADDLE_IS_LOCAL", "1")
     if is_local == '0':
         args.local = False
-    print args
+    print(args)
 
     if args.device == 'CPU':
         TrainTaskConfig.use_gpu = False
@@ -583,7 +583,7 @@ def train(args):
             pserver_startup = t.get_startup_program(current_endpoint,
                                                     pserver_prog)
 
-            print "psserver begin run"
+            print("psserver begin run")
             with open('pserver_startup.desc', 'w') as f:
                 f.write(str(pserver_startup))
             with open('pserver_prog.desc', 'w') as f:
