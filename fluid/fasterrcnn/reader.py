@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import image_util
 from paddle.utils.image_util import *
 import random
 from PIL import Image
@@ -89,7 +88,7 @@ class Settings(object):
 
 def preprocess(img, bbox_labels, mode, settings):
     img_width, img_height = img.size
-    sampled_labels = bbox_labels    
+    sampled_labels = bbox_labels
     img = img.resize((settings.resize_w, settings.resize_h), Image.ANTIALIAS)
     img = np.array(img)
 
@@ -114,7 +113,7 @@ def coco(settings, file_list, mode, shuffle):
     # cocoapi
     from pycocotools.coco import COCO
     from pycocotools.cocoeval import COCOeval
-
+    print('loading coco...')
     coco = COCO(file_list)
     image_ids = coco.getImgIds()
     images = coco.loadImgs(image_ids)
@@ -157,7 +156,7 @@ def coco(settings, file_list, mode, shuffle):
                 bbox_sample.append(float(ymax))
                 bbox_sample.append(float(im_width))
                 bbox_sample.append(float(im_height))
-                bbox_sample.append(float(1/16))
+                bbox_sample.append(float(1 / 16))
                 bbox_labels.append(bbox_sample)
             im, sample_labels = preprocess(im, bbox_labels, mode, settings)
             sample_labels = np.array(sample_labels)
@@ -167,11 +166,7 @@ def coco(settings, file_list, mode, shuffle):
             lbls = sample_labels[:, 0].astype('int32')
             im_info = sample_labels[:, -3:].astype('float32')
 
-            if 'cocoMAP' in settings.ap_version:
-                yield im, boxes, lbls, im_info,
-                                  [im_id, im_width, im_height]
-            else:
-                yield im, boxes, lbls, im_info
+            yield im, boxes, lbls, im_info
 
 
 def pascalvoc(settings, file_list, mode, shuffle):
@@ -181,7 +176,7 @@ def pascalvoc(settings, file_list, mode, shuffle):
         images = images[:settings.toy] if len(images) > settings.toy else images
     print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
 
-    def reader:
+    def reader():
         if mode == "train" and shuffle:
             random.shuffle(images)
         for image in images:
@@ -209,7 +204,7 @@ def pascalvoc(settings, file_list, mode, shuffle):
                 bbox_sample.append(float(bbox.find('ymax').text))
                 bbox_sample.append(float(im_width))
                 bbox_sample.append(float(im_height))
-                bbox_sample.append(float(1/16))
+                bbox_sample.append(float(1 / 16))
                 bbox_labels.append(bbox_sample)
             im, sample_labels = preprocess(im, bbox_labels, mode, settings)
             sample_labels = np.array(sample_labels)
@@ -218,7 +213,8 @@ def pascalvoc(settings, file_list, mode, shuffle):
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
             im_info = sample_labels[:, -3:].astype('float32')
-            yield im, boxes, lbls, im_inf
+            yield im, boxes, lbls, im_info
+
 
 def train(settings, file_list, shuffle=True):
     file_list = os.path.join(settings.data_dir, file_list)
@@ -265,4 +261,3 @@ def infer(settings, image_path):
         return img
 
     return reader
-
