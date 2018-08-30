@@ -106,6 +106,11 @@ def parse_args():
         default=True,
         help="The flag indicating whether to run the task "
         "for continuous evaluation.")
+    parser.add_argument(
+        "--open_mem_opt",
+        type=ast.literal_eval,
+        default=True,
+        help="Whether to use memory optimization.")
 
     args = parser.parse_args()
     # Append args related to dict
@@ -555,6 +560,9 @@ def train(args):
                     beta2=TrainTaskConfig.beta2,
                     epsilon=TrainTaskConfig.eps)
                 optimizer.minimize(avg_cost)
+
+    if args.open_mem_opt:
+        fluid.memory_optimize(train_prog)
 
     if args.local:
         print("local start_up:")
