@@ -9,6 +9,7 @@ import time
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.profiler as profiler
+import six
 
 SEED = 90
 DTYPE = "float32"
@@ -47,7 +48,7 @@ def print_arguments(args):
     vars(args)['use_nvprof'] = (vars(args)['use_nvprof'] and
                                 vars(args)['device'] == 'GPU')
     print('-----------  Configuration Arguments -----------')
-    for arg, value in sorted(vars(args).iteritems()):
+    for arg, value in sorted(six.iteritems(vars(args))):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
 
@@ -71,7 +72,7 @@ def cnn_model(data):
     # TODO(dzhwinter) : refine the initializer and random seed settting
     SIZE = 10
     input_shape = conv_pool_2.shape
-    param_shape = [reduce(lambda a, b: a * b, input_shape[1:], 1)] + [SIZE]
+    param_shape = [six.moves.reduce(lambda a, b: a * b, input_shape[1:], 1)] + [SIZE]
     scale = (2.0 / (param_shape[0]**2 * SIZE))**0.5
 
     predict = fluid.layers.fc(
@@ -89,9 +90,8 @@ def eval_test(exe, batch_acc, batch_size_tensor, inference_program):
         paddle.dataset.mnist.test(), batch_size=args.batch_size)
     test_pass_acc = fluid.average.WeightedAverage()
     for batch_id, data in enumerate(test_reader()):
-        img_data = np.array(map(lambda x: x[0].reshape([1, 28, 28]),
-                                data)).astype(DTYPE)
-        y_data = np.array(map(lambda x: x[1], data)).astype("int64")
+        img_data = np.array([x[0].reshape([1, 28, 28]) for x in data]).astype(DTYPE)
+        y_data = np.array([x[1] for x in data]).astype("int64")
         y_data = y_data.reshape([len(y_data), 1])
 
         acc, weight = exe.run(inference_program,
@@ -153,8 +153,8 @@ def run_benchmark(model, args):
         every_pass_loss = []
         for batch_id, data in enumerate(train_reader()):
             img_data = np.array(
-                map(lambda x: x[0].reshape([1, 28, 28]), data)).astype(DTYPE)
-            y_data = np.array(map(lambda x: x[1], data)).astype("int64")
+                [x[0].reshape([1, 28, 28]) for x in data]).astype(DTYPE)
+            y_data = np.array([x[1] for x in data]).astype("int64")
             y_data = y_data.reshape([len(y_data), 1])
 
             start = time.time()

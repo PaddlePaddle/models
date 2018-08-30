@@ -33,8 +33,6 @@ class Settings(object):
                  resize_h=300,
                  resize_w=300,
                  mean_value=[127.5, 127.5, 127.5],
-                 apply_distort=True,
-                 apply_expand=True,
                  ap_version='11point',
                  toy=0):
         self._dataset = dataset

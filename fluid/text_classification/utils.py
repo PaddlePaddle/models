@@ -1,9 +1,10 @@
+import os
 import sys
 import time
 import numpy as np
 
+import paddle
 import paddle.fluid as fluid
-import paddle.v2 as paddle
 
 
 def to_lodtensor(data, place):
@@ -42,8 +43,8 @@ def data2tensor(data, place):
     """
     data2tensor
     """
-    input_seq = to_lodtensor(map(lambda x: x[0], data), place)
-    y_data = np.array(map(lambda x: x[1], data)).astype("int64")
+    input_seq = to_lodtensor([x[0] for x in data], place)
+    y_data = np.array([x[1] for x in data]).astype("int64")
     y_data = y_data.reshape([-1, 1])
     return {"words": input_seq, "label": y_data}
 
@@ -64,15 +65,22 @@ def prepare_data(data_type="imdb",
             raise RuntimeError("No such dataset")
 
     if data_type == "imdb":
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
-                paddle.dataset.imdb.train(word_dict), buf_size=buf_size),
-            batch_size=batch_size)
+        if "CE_MODE_X" in os.environ:
+            train_reader = paddle.batch(
+                paddle.dataset.imdb.train(word_dict), batch_size=batch_size)
 
-        test_reader = paddle.batch(
-            paddle.reader.shuffle(
-                paddle.dataset.imdb.test(word_dict), buf_size=buf_size),
-            batch_size=batch_size)
+            test_reader = paddle.batch(
+                paddle.dataset.imdb.test(word_dict), batch_size=batch_size)
+        else:
+            train_reader = paddle.batch(
+                paddle.reader.shuffle(
+                    paddle.dataset.imdb.train(word_dict), buf_size=buf_size),
+                batch_size=batch_size)
+
+            test_reader = paddle.batch(
+                paddle.reader.shuffle(
+                    paddle.dataset.imdb.test(word_dict), buf_size=buf_size),
+                batch_size=batch_size)
     else:
         raise RuntimeError("no such dataset")
 

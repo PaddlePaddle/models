@@ -20,12 +20,12 @@ add_arg('use_gpu',           bool,  True,       "Whether use GPU to test.")
 
 
 def cal_mean_iou(wrong, correct):
-    sum = wrong + cerroct
+    sum = wrong + correct
     true_num = (sum != 0).sum()
-    for i in len(sum):
+    for i in range(len(sum)):
         if sum[i] == 0:
             sum[i] = 1
-    return (cerroct.astype("float64") / sum).sum() / true_num
+    return (correct.astype("float64") / sum).sum() / true_num
 
 
 def create_iou(predict, label, mask, num_classes, image_shape):
@@ -64,7 +64,7 @@ def eval(args):
     exe.run(fluid.default_startup_program())
     assert os.path.exists(args.model_path)
     fluid.io.load_params(exe, args.model_path)
-    print "loaded model from: %s" % args.model_path
+    print("loaded model from: %s" % args.model_path)
     sys.stdout.flush()
 
     fetch_vars = [iou, out_w, out_r]
@@ -80,10 +80,10 @@ def eval(args):
                          fetch_list=fetch_vars)
         out_wrong += result[1]
         out_right += result[2]
-        print "count: %s; current iou: %.3f;\r" % (count, result[0]),
         sys.stdout.flush()
     iou = cal_mean_iou(out_wrong, out_right)
-    print "\nmean iou: %.3f" % iou
+    print("\nmean iou: %.3f" % iou)
+    print("kpis	test_acc	%f" % iou)
 
 
 def main():

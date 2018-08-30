@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import image_util
 from paddle.utils.image_util import *
 import random
@@ -24,6 +28,7 @@ import time
 import copy
 import random
 import cv2
+import six
 from data_util import GeneratorEnqueuer
 
 
@@ -151,7 +156,7 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
         mirror = int(random.uniform(0, 2))
         if mirror == 1:
             img = img[:, ::-1, :]
-            for i in xrange(len(sampled_labels)):
+            for i in six.moves.xrange(len(sampled_labels)):
                 tmp = sampled_labels[i][1]
                 sampled_labels[i][1] = 1 - sampled_labels[i][3]
                 sampled_labels[i][3] = 1 - tmp

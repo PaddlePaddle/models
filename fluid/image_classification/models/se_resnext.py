@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle
 import paddle.fluid as fluid
 import math
@@ -11,6 +14,7 @@ train_parameters = {
     "input_size": [3, 224, 224],
     "input_mean": [0.485, 0.456, 0.406],
     "input_std": [0.229, 0.224, 0.225],
+    "dropout_seed": None,
     "learning_strategy": {
         "name": "piecewise_decay",
         "batch_size": 256,
@@ -101,7 +105,8 @@ class SE_ResNeXt():
 
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
-        drop = fluid.layers.dropout(x=pool, dropout_prob=0.5)
+        drop = fluid.layers.dropout(
+            x=pool, dropout_prob=0.5, seed=self.params['dropout_seed'])
         stdv = 1.0 / math.sqrt(drop.shape[1] * 1.0)
         out = fluid.layers.fc(input=drop,
                               size=class_dim,
@@ -153,7 +158,7 @@ class SE_ResNeXt():
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
-            padding=(filter_size - 1) / 2,
+            padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
             bias_attr=False)
@@ -164,7 +169,7 @@ class SE_ResNeXt():
             input=input, pool_size=0, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
         squeeze = fluid.layers.fc(input=pool,
-                                  size=num_channels / reduction_ratio,
+                                  size=num_channels // reduction_ratio,
                                   act='relu',
                                   param_attr=fluid.param_attr.ParamAttr(
                                       initializer=fluid.initializer.Uniform(

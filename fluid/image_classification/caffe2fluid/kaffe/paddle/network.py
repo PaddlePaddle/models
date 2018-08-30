@@ -240,8 +240,22 @@ class Network(object):
     @layer
     def relu(self, input, name):
         fluid = import_fluid()
-        output = fluid.layers.relu(
-            name=self.get_unique_output_name(name, 'relu'), x=input)
+        output = fluid.layers.relu(input)
+        return output
+
+    @layer
+    def prelu(self, input, channel_shared, name):
+        fluid = import_fluid()
+        if channel_shared:
+            mode = 'all'
+        else:
+            mode = 'channel'
+
+        prefix = name + '_'
+        output = fluid.layers.prelu(
+            input,
+            mode=mode,
+            param_attr=fluid.ParamAttr(name=prefix + 'negslope'))
         return output
 
     def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
@@ -346,6 +360,24 @@ class Network(object):
         return output
 
     @layer
+    def max(self, inputs, name):
+        fluid = import_fluid()
+        output = inputs[0]
+        for i in inputs[1:]:
+            output = fluid.layers.elementwise_max(
+                x=output, y=i, name=self.get_unique_output_name(name, 'max'))
+        return output
+
+    @layer
+    def multiply(self, inputs, name):
+        fluid = import_fluid()
+        output = inputs[0]
+        for i in inputs[1:]:
+            output = fluid.layers.elementwise_mul(
+                x=output, y=i, name=self.get_unique_output_name(name, 'mul'))
+        return output
+
+    @layer
     def fc(self, input, num_out, name, relu=True, act=None):
         fluid = import_fluid()
 
@@ -382,7 +414,8 @@ class Network(object):
                             name,
                             scale_offset=True,
                             eps=1e-5,
-                            relu=False):
+                            relu=False,
+                            relu_negative_slope=0.0):
         # NOTE: Currently, only inference is supported
         fluid = import_fluid()
         prefix = name + '_'
@@ -392,6 +425,15 @@ class Network(object):
             name=prefix + 'offset')
         mean_name = prefix + 'mean'
         variance_name = prefix + 'variance'
+
+        leaky_relu = False
+        act = 'relu'
+        if relu is False:
+            act = None
+        elif relu_negative_slope != 0.0:
+            leaky_relu = True
+            act = None
+
         output = fluid.layers.batch_norm(
             name=self.get_unique_output_name(name, 'batch_norm'),
             input=input,
@@ -401,7 +443,10 @@ class Network(object):
             moving_mean_name=mean_name,
             moving_variance_name=variance_name,
             epsilon=eps,
-            act='relu' if relu is True else None)
+            act=act)
+
+        if leaky_relu:
+            output = fluid.layers.leaky_relu(output, alpha=relu_negative_slope)
 
         return output
 

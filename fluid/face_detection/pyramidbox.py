@@ -1,5 +1,9 @@
-import numpy as np
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
+import numpy as np
+import six
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Xavier
@@ -27,13 +31,13 @@ def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
     w_attr = ParamAttr(learning_rate=1., initializer=Xavier())
     b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
     conv = input
-    for i in xrange(groups):
+    for i in six.moves.xrange(groups):
         conv = fluid.layers.conv2d(
             input=conv,
             num_filters=filters[i],
             filter_size=ksizes[i],
             stride=strides[i],
-            padding=(ksizes[i] - 1) / 2,
+            padding=(ksizes[i] - 1) // 2,
             param_attr=w_attr,
             bias_attr=b_attr,
             act='relu')
@@ -145,7 +149,6 @@ class PyramidBox(object):
                 upsampling = fluid.layers.resize_bilinear(
                     conv1, out_shape=up_to.shape[2:])
 
-            b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
             conv2 = fluid.layers.conv2d(
                 up_to, ch, 1, act='relu', bias_attr=b_attr)
             if self.is_infer:
@@ -220,10 +223,13 @@ class PyramidBox(object):
 
         def permute_and_reshape(input, last_dim):
             trans = fluid.layers.transpose(input, perm=[0, 2, 3, 1])
-            new_shape = [
-                trans.shape[0], np.prod(trans.shape[1:]) / last_dim, last_dim
+            compile_shape = [
+                trans.shape[0], np.prod(trans.shape[1:]) // last_dim, last_dim
             ]
-            return fluid.layers.reshape(trans, shape=new_shape)
+            run_shape = fluid.layers.assign(
+                np.array([0, -1, last_dim]).astype("int32"))
+            return fluid.layers.reshape(
+                trans, shape=compile_shape, actual_shape=run_shape)
 
         face_locs, face_confs = [], []
         head_locs, head_confs = [], []
@@ -288,10 +294,13 @@ class PyramidBox(object):
 
         def permute_and_reshape(input, last_dim):
             trans = fluid.layers.transpose(input, perm=[0, 2, 3, 1])
-            new_shape = [
-                trans.shape[0], np.prod(trans.shape[1:]) / last_dim, last_dim
+            compile_shape = [
+                trans.shape[0], np.prod(trans.shape[1:]) // last_dim, last_dim
             ]
-            return fluid.layers.reshape(trans, shape=new_shape)
+            run_shape = fluid.layers.assign(
+                np.array([0, -1, last_dim]).astype("int32"))
+            return fluid.layers.reshape(
+                trans, shape=compile_shape, actual_shape=run_shape)
 
         locs, confs = [], []
         boxes, vars = [], []

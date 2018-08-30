@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import shutil
 import numpy as np
@@ -16,14 +20,14 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('parallel',         bool,  True,            "Whether use multi-GPU/threads or not.")
 add_arg('learning_rate',    float, 0.001,           "The start learning rate.")
-add_arg('batch_size',       int,   12,              "Minibatch size.")
+add_arg('batch_size',       int,   16,              "Minibatch size.")
 add_arg('num_passes',       int,   160,             "Epoch number.")
 add_arg('use_gpu',          bool,  True,            "Whether use GPU.")
 add_arg('use_pyramidbox',   bool,  True,            "Whether use PyramidBox model.")
 add_arg('model_save_dir',   str,   'output',        "The path to save model.")
 add_arg('resize_h',         int,   640,             "The resized image height.")
 add_arg('resize_w',         int,   640,             "The resized image width.")
-add_arg('with_mem_opt',     bool,  False,            "Whether to use memory optimization or not.")
+add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
 #yapf: enable
 
@@ -57,7 +61,7 @@ def train(args, config, train_file_list, optimizer_method):
         loss = network.vgg_ssd_loss()
         fetches = [loss]
 
-    steps_per_pass = 12880 / batch_size
+    steps_per_pass = 12880 // batch_size
     boundaries = [steps_per_pass * 50, steps_per_pass * 80,
                   steps_per_pass * 120, steps_per_pass * 140]
     values = [
@@ -110,7 +114,7 @@ def train(args, config, train_file_list, optimizer_method):
         model_path = os.path.join(model_save_dir, postfix)
         if os.path.isdir(model_path):
             shutil.rmtree(model_path)
-        print 'save models to %s' % (model_path)
+        print('save models to %s' % (model_path))
         fluid.io.save_persistables(exe, model_path)
 
     def tensor(data, place, lod=None):

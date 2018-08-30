@@ -18,10 +18,6 @@ elif [ "$mode" = "GPU" ]; then
   save_model_dir="gpu_model"
   parallel="True"
 elif [ "$mode" = "MKLDNN" ]; then
-  if [ $core_num -gt $batch_size ]; then
-    echo "Batch size should be greater or equal to the number of 
-          available cores, when parallel mode is set to True."
-  fi
   use_gpu="False"
   save_model_dir="mkldnn_model"
   parallel="False"
@@ -45,7 +41,7 @@ else # HT is ON
     fi
 fi
 
-python ../ctc_train.py \
+python ../train.py \
     --use_gpu $use_gpu \
     --parallel $parallel \
     --batch_size $batch_size \
