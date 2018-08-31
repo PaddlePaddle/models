@@ -151,6 +151,6 @@ if __name__ == "__main__":
         target_file="data/target.txt",
         emb_file="data/wordVectors.txt",
         model_save_dir="models",
-        num_passes=1000,
+        num_passes=2000,
         use_gpu=False,
         parallel=False)
