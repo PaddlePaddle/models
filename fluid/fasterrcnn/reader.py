@@ -105,6 +105,7 @@ def preprocess(img, bbox_labels, mode, settings):
         img = np.swapaxes(img, 1, 2)
         img = np.swapaxes(img, 1, 0)
     # RBG to BGR
+    img = img.astype('float32')
     img -= settings.img_mean
     return img, sampled_labels
 
@@ -136,7 +137,7 @@ def coco(settings, file_list, mode, shuffle):
                 im = im.convert('RGB')
             im_width, im_height = im.size
             im_id = image['id']
-
+            im_info = [float(im_width), float(im_height), 16.0]
             # layout: category_id | xmin | ymin | xmax | ymax | im_info
             bbox_labels = []
             annIds = coco.getAnnIds(imgIds=image['id'])
@@ -154,9 +155,6 @@ def coco(settings, file_list, mode, shuffle):
                 bbox_sample.append(float(ymin))
                 bbox_sample.append(float(xmax))
                 bbox_sample.append(float(ymax))
-                bbox_sample.append(float(im_width))
-                bbox_sample.append(float(im_height))
-                bbox_sample.append(float(1 / 16))
                 bbox_labels.append(bbox_sample)
             im, sample_labels = preprocess(im, bbox_labels, mode, settings)
             sample_labels = np.array(sample_labels)
@@ -164,8 +162,6 @@ def coco(settings, file_list, mode, shuffle):
             im = im.astype('float32')
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
-            im_info = sample_labels[:, -3:].astype('float32')
-
             yield im, boxes, lbls, im_info
 
 
@@ -188,7 +184,7 @@ def pascalvoc(settings, file_list, mode, shuffle):
             if im.mode == 'L':
                 im = im.convert('RGB')
             im_width, im_height = im.size
-
+            im_info = [float(im_width), float(im_height), 16.0]
             # layout: label | xmin | ymin | xmax | ymax | im_info
             bbox_labels = []
             root = xml.etree.ElementTree.parse(label_path).getroot()
@@ -202,9 +198,6 @@ def pascalvoc(settings, file_list, mode, shuffle):
                 bbox_sample.append(float(bbox.find('ymin').text))
                 bbox_sample.append(float(bbox.find('xmax').text))
                 bbox_sample.append(float(bbox.find('ymax').text))
-                bbox_sample.append(float(im_width))
-                bbox_sample.append(float(im_height))
-                bbox_sample.append(float(1 / 16))
                 bbox_labels.append(bbox_sample)
             im, sample_labels = preprocess(im, bbox_labels, mode, settings)
             sample_labels = np.array(sample_labels)
@@ -212,8 +205,9 @@ def pascalvoc(settings, file_list, mode, shuffle):
             im = im.astype('float32')
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
-            im_info = sample_labels[:, -3:].astype('float32')
             yield im, boxes, lbls, im_info
+
+    return reader
 
 
 def train(settings, file_list, shuffle=True):
