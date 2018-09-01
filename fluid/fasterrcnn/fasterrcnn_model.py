@@ -128,10 +128,15 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
     rpn_cls_score_prob = fluid.layers.sigmoid(rpn_cls_score)
     #rpn_cls_score_prob = fluid.layers.transpose(
     #    rpn_cls_score_prob, perm=[0, 3, 1, 2])
-    fluid.layers.Print(rpn_cls_score_prob)
-    fluid.layers.Print(rpn_bbox_pred)
-    fluid.layers.Print(im_info)
-    fluid.layers.Print(anchor)
+    #fluid.layers.Print(rpn_cls_score_prob)
+    #fluid.layers.Print(rpn_bbox_pred)
+    #fluid.layers.Print(im_info)
+    #fluid.layers.Print(anchor)
+    print(rpn_cls_score_prob.shape)
+    print(rpn_bbox_pred.shape)
+    print(im_info.shape)
+    print(anchor.shape)
+    print(var.shape)
     rpn_rois, rpn_roi_probs = fluid.layers.generate_proposals(
         scores=rpn_cls_score_prob,
         bbox_deltas=rpn_bbox_pred,
@@ -144,7 +149,7 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         min_size=0.0,
         eta=1.0)
     im_scales = fluid.layers.slice(
-        im_info, axes=[1], starts=[2], ends=[1000000])
+        im_info, axes=[1], starts=[2], ends=[3])
     im_scales = fluid.layers.squeeze(im_scales, axes=[1])
     rois, labels_int32, bbox_targets, bbox_inside_weights, bbox_outside_weights = fluid.layers.generate_proposal_labels(
         rpn_rois=rpn_rois,
@@ -160,6 +165,7 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         bbox_reg_weights=[0.1, 0.1, 0.2, 0.2],
         class_nums=class_nums)
 
+    print(res4.shape)
     pool5 = fluid.layers.roi_pool(
         input=res4,
         rois=rois,
@@ -167,6 +173,7 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         pooled_width=14,
         spatial_scale=0.0625)
 
+    print(pool5.shape)
     res5_2_sum = layer_warp(block_func, pool5, 512, stages[3], 2, name="res5")
     res5_pool = fluid.layers.pool2d(res5_2_sum, pool_type='avg', pool_size=7)
 

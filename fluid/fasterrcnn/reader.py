@@ -31,59 +31,19 @@ class Settings(object):
                  label_file=None,
                  resize_h=300,
                  resize_w=300,
-                 mean_value=[127.5, 127.5, 127.5],
-                 ap_version='11point',
-                 toy=0):
-        self._dataset = dataset
-        self._ap_version = ap_version
-        self._toy = toy
-        self._data_dir = data_dir
-        if 'pascalvoc' in dataset:
-            self._label_list = []
-            label_fpath = os.path.join(data_dir, label_file)
-            for line in open(label_fpath):
-                self._label_list.append(line.strip())
+                 mean_value=[127.77, 115.95, 102.98],
+                 ):
+        self.dataset = dataset
+        self.data_dir = data_dir
+        self.label_list = []
+        label_fpath = os.path.join(data_dir, label_file)
+        for line in open(label_fpath):
+            self.label_list.append(line.strip())
 
-        self._resize_height = resize_h
-        self._resize_width = resize_w
-        self._img_mean = np.array(mean_value)[:, np.newaxis, np.newaxis].astype(
+        self.resize_h = resize_h
+        self.resize_w = resize_w
+        self.img_mean = np.array(mean_value)[:, np.newaxis, np.newaxis].astype(
             'float32')
-
-    @property
-    def dataset(self):
-        return self._dataset
-
-    @property
-    def ap_version(self):
-        return self._ap_version
-
-    @property
-    def toy(self):
-        return self._toy
-
-    @property
-    def data_dir(self):
-        return self._data_dir
-
-    @data_dir.setter
-    def data_dir(self, data_dir):
-        self._data_dir = data_dir
-
-    @property
-    def label_list(self):
-        return self._label_list
-
-    @property
-    def resize_h(self):
-        return self._resize_height
-
-    @property
-    def resize_w(self):
-        return self._resize_width
-
-    @property
-    def img_mean(self):
-        return self._img_mean
 
 
 def preprocess(img, bbox_labels, mode, settings):
@@ -121,8 +81,6 @@ def coco(settings, file_list, mode, shuffle):
     category_ids = coco.getCatIds()
     category_names = [item['name'] for item in coco.loadCats(category_ids)]
 
-    if not settings.toy == 0:
-        images = images[:settings.toy] if len(images) > settings.toy else images
     print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
 
     def reader():
@@ -168,8 +126,6 @@ def coco(settings, file_list, mode, shuffle):
 def pascalvoc(settings, file_list, mode, shuffle):
     flist = open(file_list)
     images = [line.strip() for line in flist]
-    if not settings.toy == 0:
-        images = images[:settings.toy] if len(images) > settings.toy else images
     print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
 
     def reader():
@@ -212,30 +168,12 @@ def pascalvoc(settings, file_list, mode, shuffle):
 
 def train(settings, file_list, shuffle=True):
     file_list = os.path.join(settings.data_dir, file_list)
-    if 'coco' in settings.dataset:
-        train_settings = copy.copy(settings)
-        if '2014' in file_list:
-            sub_dir = "train2014"
-        elif '2017' in file_list:
-            sub_dir = "train2017"
-        train_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        return coco(train_settings, file_list, 'train', shuffle)
-    else:
-        return pascalvoc(settings, file_list, 'train', shuffle)
+    return pascalvoc(settings, file_list, 'train', shuffle)
 
 
 def test(settings, file_list):
     file_list = os.path.join(settings.data_dir, file_list)
-    if 'coco' in settings.dataset:
-        test_settings = copy.copy(settings)
-        if '2014' in file_list:
-            sub_dir = "val2014"
-        elif '2017' in file_list:
-            sub_dir = "val2017"
-        test_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        return coco(test_settings, file_list, 'test', False)
-    else:
-        return pascalvoc(settings, file_list, 'test', False)
+    return pascalvoc(settings, file_list, 'test', False)
 
 
 def infer(settings, image_path):
