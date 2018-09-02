@@ -184,7 +184,7 @@ def coco(settings, file_list, mode, shuffle):
 
     def reader():
         if mode == 'train' and shuffle:
-            random.shuffle(images)
+            np.random.shuffle(images)
         for image in images:
             image_name = image['file_name']
             image_path = os.path.join(settings.data_dir, image_name)
@@ -239,7 +239,7 @@ def pascalvoc(settings, file_list, mode, shuffle):
 
     def reader():
         if mode == 'train' and shuffle:
-            random.shuffle(images)
+            np.random.shuffle(images)
         for image in images:
             image_path, label_path = image.split()
             image_path = os.path.join(settings.data_dir, image_path)
