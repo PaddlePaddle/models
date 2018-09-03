@@ -1,5 +1,5 @@
 # Image Classification Models
-本目录下包含6个图像分类模型，都是百度大数据实验室AutoDL项目通过机器自动发现的模型，在CIFAR-10数据集上达到96.1%的准确率。这6个模型分为两类，前3个没有skip link，分别命名为Model 0~2号，后三个网络带有skip link，功能类似于Resnet中的shortcut connection，分别命名Model 3~5号。
+本目录下包含6个图像分类模型，都是百度大数据实验室 Hierarchical Neural Architecture Search (HiNAS) 项目通过机器自动发现的模型，在CIFAR-10数据集上达到96.1%的准确率。这6个模型分为两类，前3个没有skip link，分别命名为 HiNAS 0-2号，后三个网络带有skip link，功能类似于Resnet中的shortcut connection，分别命名 HiNAS 3-5号。
 
 ---
 ## Table of Contents
@@ -24,18 +24,18 @@
 
 
 ## Training a model
-准备好环境后，可以训练模型，训练有2个入口，`train_model.py`和`train_model_res.py`，前者用来训练0~2号不含skip link的模型，后者用来训练3~5号包含skip link的模型。
+准备好环境后，可以训练模型，训练有2个入口，`train_hinas.py`和`train_hinas_res.py`，前者用来训练0-2号不含skip link的模型，后者用来训练3-5号包含skip link的模型。
 
 训练0~2号不含skip link的模型：
 ```
-python train_vgg.py --model=m_id       # m_id can be 0, 1 or 2.
+python train_hinas.py --model=m_id       # m_id can be 0, 1 or 2.
 ```
 训练3~5号包含skip link的模型：
 ```
-python train_resnet.py --model=m_id    # m_id can be 0, 1 or 2.
+python train_hinas_res.py --model=m_id    # m_id can be 0, 1 or 2.
 ```
 
-此外，`train_model.py`和`train_model_res.py` 都支持以下参数：
+此外，`train_hinas.py`和`train_hinas_res.py` 都支持以下参数：
 
 初始化部分：
 
@@ -70,9 +70,9 @@ python train_resnet.py --model=m_id    # m_id can be 0, 1 or 2.
 
 | model    | round 1 | round 2 | round 3 | max    | avg    |
 |----------|---------|---------|---------|--------|--------|
-| Model-0    | 0.9548  | 0.9520  | 0.9513  | 0.9548 | 0.9527 |
-| Model-1    | 0.9452  | 0.9462  | 0.9420  | 0.9462 | 0.9445 |
-| Model-2    | 0.9508  | 0.9506  | 0.9483  | 0.9508 | 0.9499 |
-| Model-3 | 0.9607  | 0.9623  | 0.9601  | 0.9623 | 0.9611 |
-| Model-4 | 0.9611  | 0.9584  | 0.9586  | 0.9611 | 0.9594 |
-| Model-5 | 0.9578  | 0.9588  | 0.9594  | 0.9594 | 0.9586 |
+| HiNAS-0  | 0.9548  | 0.9520  | 0.9513  | 0.9548 | 0.9527 |
+| HiNAS-1  | 0.9452  | 0.9462  | 0.9420  | 0.9462 | 0.9445 |
+| HiNAS-2  | 0.9508  | 0.9506  | 0.9483  | 0.9508 | 0.9499 |
+| HiNAS-3  | 0.9607  | 0.9623  | 0.9601  | 0.9623 | 0.9611 |
+| HiNAS-4  | 0.9611  | 0.9584  | 0.9586  | 0.9611 | 0.9594 |
+| HiNAS-5  | 0.9578  | 0.9588  | 0.9594  | 0.9594 | 0.9586 |
