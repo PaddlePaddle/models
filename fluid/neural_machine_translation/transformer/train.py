@@ -348,15 +348,10 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
         count=dev_count if args.use_token_batch else 1)
 
     build_strategy = fluid.BuildStrategy()
-    # Since the token number differs among devices, customize gradient scale to
-    # use token average cost among multi-devices. and the gradient scale is
-    # `1 / token_number` for average cost.
-    build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
     train_exe = fluid.ParallelExecutor(
         use_cuda=TrainTaskConfig.use_gpu,
-        loss_name=sum_cost.name,
-        main_program=train_progm,
-        build_strategy=build_strategy)
+        loss_name=avg_cost.name,
+        main_program=train_progm)
 
     data_input_names = encoder_data_input_fields + decoder_data_input_fields[:
                                                                              -1] + label_data_input_fields
@@ -492,10 +487,10 @@ def train(args):
             beta1=TrainTaskConfig.beta1,
             beta2=TrainTaskConfig.beta2,
             epsilon=TrainTaskConfig.eps)
-        optimizer.minimize(sum_cost)
+        optimizer.minimize(avg_cost)
     elif args.sync == False:
         optimizer = fluid.optimizer.SGD(0.003)
-        optimizer.minimize(sum_cost)
+        optimizer.minimize(avg_cost)
     else:
         lr_decay = fluid.layers\
          .learning_rate_scheduler\
@@ -507,7 +502,7 @@ def train(args):
             beta1=TrainTaskConfig.beta1,
             beta2=TrainTaskConfig.beta2,
             epsilon=TrainTaskConfig.eps)
-        optimizer.minimize(sum_cost)
+        optimizer.minimize(avg_cost)
 
     if args.local:
         print("local start_up:")
