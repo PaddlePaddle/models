@@ -55,6 +55,9 @@ def main(train_data_file,
     word_dict_len = len(word_dict)
     label_dict_len = len(label_dict)
 
+    if "CE_MODE_X" in os.environ:
+        fluid.default_startup_program().random_seed = 110
+
     avg_cost, feature_out, word, mark, target = ner_net(
         word_dict_len, label_dict_len, parallel)
 
@@ -98,8 +101,6 @@ def main(train_data_file,
     feeder = fluid.DataFeeder(feed_list=[word, mark, target], place=place)
     exe = fluid.Executor(place)
 
-    if "CE_MODE_X" in os.environ:
-        fluid.default_startup_program().random_seed = 110
     exe.run(fluid.default_startup_program())
 
     embedding_name = 'emb'
