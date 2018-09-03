@@ -9,6 +9,7 @@ import models
 import reader
 import argparse
 import functools
+import logging
 from models.learning_rate import cosine_decay
 from utility import add_arguments, print_arguments
 import math
@@ -21,7 +22,7 @@ add_arg('use_gpu',          bool,  True,
         "Whether to use GPU or not.")
 add_arg('total_images',     int,   1281167,
         "Training image number.")
-add_arg('num_epochs',       int,   120,                  "number of epochs.")
+add_arg('num_epochs',       int,   120,                 "number of epochs.")
 add_arg('class_dim',        int,   1000,                 "Class number.")
 add_arg('image_shape',      str,   "3,224,224",          "input image size")
 add_arg('model_save_dir',   str,   "output",
@@ -98,6 +99,8 @@ def net_config(image, label, model, args):
 
     if args.enable_ce:
         assert model_name == "SE_ResNeXt50_32x4d"
+        model.params["dropout_seed"] = 100
+        class_dim = 102
 
     if model_name is "GoogleNet":
         out0, out1, out2 = model.net(input=image, class_dim=class_dim)
@@ -138,6 +141,9 @@ def build_program(is_train, main_prog, startup_prog, args):
         with fluid.unique_name.guard():
             image, label = fluid.layers.read_file(py_reader)
             avg_cost, acc_top1, acc_top5 = net_config(image, label, model, args)
+            avg_cost.persistable = True
+            acc_top1.persistable = True
+            acc_top5.persistable = True
             if is_train:
                 params = model.params
                 params["total_images"] = args.total_images
@@ -145,8 +151,6 @@ def build_program(is_train, main_prog, startup_prog, args):
                 params["num_epochs"] = args.num_epochs
                 params["learning_strategy"]["batch_size"] = args.batch_size
                 params["learning_strategy"]["name"] = args.lr_strategy
-                if args.enable_ce:
-                    params["dropout_seed"] = 10
 
                 optimizer = optimizer_setting(params)
                 optimizer.minimize(avg_cost)
@@ -201,10 +205,16 @@ def train(args):
         fluid.io.load_vars(
             exe, pretrained_model, main_program=train_prog, predicate=if_exist)
 
-    train_batch_size = args.batch_size
-    test_batch_size = 16
+    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
+    if visible_device:
+        device_num = len(visible_device.split(','))
+    else:
+        device_num = subprocess.check_output(['nvidia-smi', '-L']).count('\n')
+
+    train_batch_size = args.batch_size / device_num
+    test_batch_size = 8
     if not args.enable_ce:
-        train_reader = paddle.batch(reader.train(), batch_size=train_batch_size)
+        train_reader = paddle.batch(reader.train(), batch_size=train_batch_size, drop_last=True)
         test_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
     else:
         # use flowers dataset for CE and set use_xmap False to avoid disorder data
@@ -212,7 +222,7 @@ def train(args):
         import random
         random.seed(0)
         train_reader = paddle.batch(
-            flowers.train(use_xmap=False), batch_size=train_batch_size)
+            flowers.train(use_xmap=False), batch_size=train_batch_size, drop_last=True)
         test_reader = paddle.batch(
             flowers.test(use_xmap=False), batch_size=test_batch_size)
 
@@ -223,10 +233,6 @@ def train(args):
         main_program=train_prog,
         use_cuda=args.use_gpu,
         loss_name=train_cost.name)
-    test_exe = fluid.ParallelExecutor(
-        main_program=test_prog,
-        use_cuda=args.use_gpu,
-        share_vars_from=train_exe)
 
     train_fetch_list = [train_cost.name, train_acc1.name, train_acc5.name]
     test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
@@ -234,6 +240,7 @@ def train(args):
     params = models.__dict__[args.model]().params
     gpu = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     gpu_nums = len(gpu.split(","))
+    
 
     for pass_id in range(params["num_epochs"]):
 
@@ -277,7 +284,7 @@ def train(args):
         try:
             while True:
                 t1 = time.time()
-                loss, acc1, acc5 = test_exe.run(fetch_list=test_fetch_list)
+                loss, acc1, acc5 = exe.run(program=test_prog, fetch_list=test_fetch_list)
                 t2 = time.time()
                 period = t2 - t1
                 loss = np.mean(loss)
