@@ -4,9 +4,10 @@ import math
 import unittest
 import contextlib
 import numpy as np
+import six
 
+import paddle
 import paddle.fluid as fluid
-import paddle.v2 as paddle
 
 import utils
 
@@ -24,8 +25,8 @@ def infer(test_reader, use_cuda, model_path):
         accum_words = 0
         t0 = time.time()
         for data in test_reader():
-            src_wordseq = utils.to_lodtensor(map(lambda x: x[0], data), place)
-            dst_wordseq = utils.to_lodtensor(map(lambda x: x[1], data), place)
+            src_wordseq = utils.to_lodtensor([dat[0] for dat in data], place)
+            dst_wordseq = utils.to_lodtensor([dat[1] for dat in data], place)
             avg_cost = exe.run(
                 infer_program,
                 feed={"src_wordseq": src_wordseq,
@@ -60,6 +61,6 @@ if __name__ == "__main__":
     vocab, train_reader, test_reader = utils.prepare_data(
         batch_size=20, buffer_size=1000, word_freq_threshold=0)
 
-    for epoch in xrange(start_index, last_index + 1):
+    for epoch in six.moves.xrange(start_index, last_index + 1):
         epoch_path = model_dir + "/epoch_" + str(epoch)
         infer(test_reader=test_reader, use_cuda=True, model_path=epoch_path)

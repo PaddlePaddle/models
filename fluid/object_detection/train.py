@@ -83,6 +83,7 @@ def build_program(is_train, main_prog, startup_prog, args, data_args,
         main_prog = main_prog.clone(for_test=True)
     return py_reader, loss
 
+
 def train(args,
           train_file_list,
           val_file_list,
@@ -196,6 +197,7 @@ def train(args,
             save_model('best_model', test_prog)
         print("Pass {0}, test map {1}".format(pass_id, test_map))
         return best_map, mean_map
+
 
     train_py_reader.start()
     total_time = 0.0

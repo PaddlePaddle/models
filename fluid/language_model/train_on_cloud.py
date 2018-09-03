@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import six
 
 import numpy as np
 import math
@@ -49,7 +50,7 @@ def build_dict(min_word_freq=50):
     word_freq = filter(lambda x: x[1] > min_word_freq, word_freq.items())
     word_freq_sorted = sorted(word_freq, key=lambda x: (-x[1], x[0]))
     words, _ = list(zip(*word_freq_sorted))
-    word_idx = dict(zip(words, xrange(len(words))))
+    word_idx = dict(zip(words, six.moves.xrange(len(words))))
     word_idx['<unk>'] = len(words)
     return word_idx
 
@@ -212,16 +213,16 @@ def do_train(train_reader,
 
     exe.run(fluid.default_startup_program())
     total_time = 0.0
-    for pass_idx in xrange(pass_num):
+    for pass_idx in six.moves.xrange(pass_num):
         epoch_idx = pass_idx + 1
-        print "epoch_%d start" % epoch_idx
+        print("epoch_%d start" % epoch_idx)
 
         t0 = time.time()
         i = 0
         for data in train_reader():
             i += 1
-            lod_src_wordseq = to_lodtensor(map(lambda x: x[0], data), place)
-            lod_dst_wordseq = to_lodtensor(map(lambda x: x[1], data), place)
+            lod_src_wordseq = to_lodtensor([dat[0] for dat in data], place)
+            lod_dst_wordseq = to_lodtensor([dat[1] for dat in data], place)
             ret_avg_cost = exe.run(fluid.default_main_program(),
                                    feed={
                                        "src_wordseq": lod_src_wordseq,
@@ -231,12 +232,12 @@ def do_train(train_reader,
                                    use_program_cache=True)
             avg_ppl = math.exp(ret_avg_cost[0])
             if i % 100 == 0:
-                print "step:%d ppl:%.3f" % (i, avg_ppl)
+                print("step:%d ppl:%.3f" % (i, avg_ppl))
 
         t1 = time.time()
         total_time += t1 - t0
-        print "epoch:%d num_steps:%d time_cost(s):%f" % (epoch_idx, i,
-                                                         total_time / epoch_idx)
+        print("epoch:%d num_steps:%d time_cost(s):%f" % (epoch_idx, i,
+                                                         total_time / epoch_idx))
 
         save_dir = "%s/epoch_%d" % (model_dir, epoch_idx)
         feed_var_names = ["src_wordseq", "dst_wordseq"]
@@ -258,13 +259,13 @@ def train():
         """ event handler """
         if isinstance(event, paddle.event.EndIteration):
             if event.batch_id % 100 == 0:
-                print "\nPass %d, Batch %d, Cost %f, %s" % (
-                    event.pass_id, event.batch_id, event.cost, event.metrics)
+                print("\nPass %d, Batch %d, Cost %f, %s" % (
+                    event.pass_id, event.batch_id, event.cost, event.metrics))
             else:
                 sys.stdout.write('.')
                 sys.stdout.flush()
         if isinstance(event, paddle.event.EndPass):
-            print "isinstance(event, paddle.event.EndPass)"
+            print("isinstance(event, paddle.event.EndPass)")
 
     do_train(
         train_reader=train_reader,

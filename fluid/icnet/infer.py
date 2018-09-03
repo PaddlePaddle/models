@@ -1,4 +1,5 @@
 """Infer for ICNet model."""
+from __future__ import print_function
 import cityscape
 import argparse
 import functools
@@ -101,7 +102,7 @@ def infer(args):
     exe.run(fluid.default_startup_program())
     assert os.path.exists(args.model_path)
     fluid.io.load_params(exe, args.model_path)
-    print "loaded model from: %s" % args.model_path
+    print("loaded model from: %s" % args.model_path)
     sys.stdout.flush()
 
     if not os.path.isdir(args.out_path):

@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import six
 
 import numpy as np
 import math
@@ -114,9 +115,9 @@ def train(train_reader,
 
     total_time = 0.0
     fetch_list = [avg_cost.name]
-    for pass_idx in xrange(pass_num):
+    for pass_idx in six.moves.xrange(pass_num):
         epoch_idx = pass_idx + 1
-        print "epoch_%d start" % epoch_idx
+        print("epoch_%d start" % epoch_idx)
 
         t0 = time.time()
         i = 0
@@ -124,9 +125,9 @@ def train(train_reader,
         for data in train_reader():
             i += 1
             lod_src_wordseq = utils.to_lodtensor(
-                map(lambda x: x[0], data), place)
+                [dat[0] for dat in data], place)
             lod_dst_wordseq = utils.to_lodtensor(
-                map(lambda x: x[1], data), place)
+                [dat[1] for dat in data], place)
             ret_avg_cost = train_exe.run(feed={
                 "src_wordseq": lod_src_wordseq,
                 "dst_wordseq": lod_dst_wordseq
@@ -135,12 +136,12 @@ def train(train_reader,
             avg_ppl = np.exp(ret_avg_cost[0])
             newest_ppl = np.mean(avg_ppl)
             if i % 100 == 0:
-                print "step:%d ppl:%.3f" % (i, newest_ppl)
+                print("step:%d ppl:%.3f" % (i, newest_ppl))
 
         t1 = time.time()
         total_time += t1 - t0
-        print "epoch:%d num_steps:%d time_cost(s):%f" % (epoch_idx, i,
-                                                         total_time / epoch_idx)
+        print("epoch:%d num_steps:%d time_cost(s):%f" % (epoch_idx, i,
+                                                         total_time / epoch_idx))
 
         if pass_idx == pass_num - 1 and args.enable_ce:
             #Note: The following logs are special for CE monitoring.

@@ -1,7 +1,10 @@
-import numpy as np
+from __future__ import print_function
 
+import numpy as np
+import six
+
+import paddle
 import paddle.fluid as fluid
-import paddle.v2 as paddle
 
 from network_conf import ner_net
 import reader
@@ -33,9 +36,9 @@ def infer(model_path, batch_size, test_data_file, vocab_file, target_file,
         [inference_program, feed_target_names,
          fetch_targets] = fluid.io.load_inference_model(model_path, exe)
         for data in test_data():
-            word = to_lodtensor(map(lambda x: x[0], data), place)
-            mark = to_lodtensor(map(lambda x: x[1], data), place)
-            target = to_lodtensor(map(lambda x: x[2], data), place)
+            word = to_lodtensor([x[0] for x in data], place)
+            mark = to_lodtensor([x[1] for x in data], place)
+            target = to_lodtensor([x[2] for x in data], place)
             crf_decode = exe.run(
                 inference_program,
                 feed={"word": word,
@@ -46,19 +49,19 @@ def infer(model_path, batch_size, test_data_file, vocab_file, target_file,
             lod_info = (crf_decode[0].lod())[0]
             np_data = np.array(crf_decode[0])
             assert len(data) == len(lod_info) - 1
-            for sen_index in xrange(len(data)):
+            for sen_index in six.moves.xrange(len(data)):
                 assert len(data[sen_index][0]) == lod_info[
                     sen_index + 1] - lod_info[sen_index]
                 word_index = 0
-                for tag_index in xrange(lod_info[sen_index],
+                for tag_index in six.moves.xrange(lod_info[sen_index],
                                         lod_info[sen_index + 1]):
                     word = word_reverse_dict[data[sen_index][0][word_index]]
                     gold_tag = label_reverse_dict[data[sen_index][2][
                         word_index]]
                     tag = label_reverse_dict[np_data[tag_index][0]]
-                    print word + "\t" + gold_tag + "\t" + tag
+                    print(word + "\t" + gold_tag + "\t" + tag)
                     word_index += 1
-                print ""
+                print("")
 
 
 if __name__ == "__main__":
