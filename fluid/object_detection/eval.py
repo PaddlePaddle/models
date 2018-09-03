@@ -29,25 +29,12 @@ add_arg('mean_value_R',     float, 127.5,  "Mean value for R channel which will 
 # yapf: enable
 
 
-def build_program(is_train,
-                  main_prog,
-                  startup_prog,
-                  args,
-                  data_args,
-                  boundaries=None,
-                  values=None,
-                  train_file_list=None):
+def build_program(main_prog, startup_prog, args, data_args):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if 'coco' in data_args.dataset:
         num_classes = 91
     elif 'pascalvoc' in data_args.dataset:
         num_classes = 21
-
-    def get_optimizer():
-        optimizer = fluid.optimizer.RMSProp(
-            learning_rate=fluid.layers.piecewise_decay(boundaries, values),
-            regularization=fluid.regularizer.L2Decay(0.00005), )
-        return optimizer
 
     with fluid.program_guard(main_prog, startup_prog):
         py_reader = fluid.layers.py_reader(
@@ -73,25 +60,23 @@ def build_program(is_train,
                     overlap_threshold=0.5,
                     evaluate_difficult=False,
                     ap_version=args.ap_version)
-    if not is_train:
-        main_prog = main_prog.clone(for_test=True)
+    main_prog = main_prog.clone(for_test=True)
     return py_reader, map
 
 
 def eval(args, data_args, test_list, batch_size, model_dir=None):
     if 'coco' in data_args.dataset:
         if '2014' in test_list:
-            test_step = 40504
+            test_step = 40504 // batch_size
         elif '2017' in test_list:
-            test_step = 5000
+            test_step = 5000 // batch_size
     elif 'pascalvoc' in data_args.dataset:
-        test_step = 4952
+        test_step = 4952 // batch_size
 
     startup_prog = fluid.Program()
     test_prog = fluid.Program()
 
     test_py_reader, map_eval = build_program(
-        is_train=False,
         main_prog=test_prog,
         startup_prog=startup_prog,
         args=args,
@@ -103,7 +88,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
     if model_dir:
         def if_exist(var):
             return os.path.exists(os.path.join(model_dir, var.name))
-        fluid.io.load_vars(exe, model_dir, predicate=if_exist)
+        fluid.io.load_vars(exe, model_dir, main_program=test_prog, predicate=if_exist)
     # yapf: enable
     test_reader = paddle.batch(
         reader.test(data_args, test_list), batch_size=batch_size)
