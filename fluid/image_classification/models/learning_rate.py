@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.layers.ops as ops
