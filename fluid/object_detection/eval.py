@@ -29,29 +29,76 @@ add_arg('mean_value_R',     float, 127.5,  "Mean value for R channel which will 
 # yapf: enable
 
 
-def eval(args, data_args, test_list, batch_size, model_dir=None):
+def build_program(is_train,
+                  main_prog,
+                  startup_prog,
+                  args,
+                  data_args,
+                  boundaries=None,
+                  values=None,
+                  train_file_list=None):
     image_shape = [3, data_args.resize_h, data_args.resize_w]
     if 'coco' in data_args.dataset:
         num_classes = 91
     elif 'pascalvoc' in data_args.dataset:
         num_classes = 21
 
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    gt_box = fluid.layers.data(
-        name='gt_box', shape=[4], dtype='float32', lod_level=1)
-    gt_label = fluid.layers.data(
-        name='gt_label', shape=[1], dtype='int32', lod_level=1)
-    difficult = fluid.layers.data(
-        name='gt_difficult', shape=[1], dtype='int32', lod_level=1)
+    def get_optimizer():
+        optimizer = fluid.optimizer.RMSProp(
+            learning_rate=fluid.layers.piecewise_decay(boundaries, values),
+            regularization=fluid.regularizer.L2Decay(0.00005), )
+        return optimizer
 
-    locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
-    nmsed_out = fluid.layers.detection_output(
-        locs, confs, box, box_var, nms_threshold=args.nms_threshold)
-    loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box, box_var)
-    loss = fluid.layers.reduce_sum(loss)
+    with fluid.program_guard(main_prog, startup_prog):
+        py_reader = fluid.layers.py_reader(
+            capacity=64,
+            shapes=[[-1] + image_shape, [-1, 4], [-1, 1], [-1, 1]],
+            lod_levels=[0, 1, 1, 1],
+            dtypes=["float32", "float32", "int32", "int32"],
+            use_double_buffer=True)
+        with fluid.unique_name.guard():
+            image, gt_box, gt_label, difficult = fluid.layers.read_file(
+                py_reader)
+            locs, confs, box, box_var = mobile_net(num_classes, image,
+                                                   image_shape)
+            nmsed_out = fluid.layers.detection_output(
+                locs, confs, box, box_var, nms_threshold=args.nms_threshold)
+            with fluid.program_guard(main_prog):
+                map = fluid.evaluator.DetectionMAP(
+                    nmsed_out,
+                    gt_label,
+                    gt_box,
+                    difficult,
+                    num_classes,
+                    overlap_threshold=0.5,
+                    evaluate_difficult=False,
+                    ap_version=args.ap_version)
+    if not is_train:
+        main_prog = main_prog.clone(for_test=True)
+    return py_reader, map
 
+
+def eval(args, data_args, test_list, batch_size, model_dir=None):
+    if 'coco' in data_args.dataset:
+        if '2014' in test_list:
+            test_step = 40504
+        elif '2017' in test_list:
+            test_step = 5000
+    elif 'pascalvoc' in data_args.dataset:
+        test_step = 4952
+
+    startup_prog = fluid.Program()
+    test_prog = fluid.Program()
+
+    test_py_reader, map_eval = build_program(
+        is_train=False,
+        main_prog=test_prog,
+        startup_prog=startup_prog,
+        args=args,
+        data_args=data_args)
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
+    exe.run(startup_prog)
     # yapf: disable
     if model_dir:
         def if_exist(var):
@@ -60,34 +107,22 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
     # yapf: enable
     test_reader = paddle.batch(
         reader.test(data_args, test_list), batch_size=batch_size)
-    feeder = fluid.DataFeeder(
-        place=place, feed_list=[image, gt_box, gt_label, difficult])
+    test_py_reader.decorate_paddle_reader(test_reader)
 
-    def test():
-        # switch network to test mode (i.e. batch norm test mode)
-        test_program = fluid.default_main_program().clone(for_test=True)
-        with fluid.program_guard(test_program):
-            map_eval = fluid.evaluator.DetectionMAP(
-                nmsed_out,
-                gt_label,
-                gt_box,
-                difficult,
-                num_classes,
-                overlap_threshold=0.5,
-                evaluate_difficult=False,
-                ap_version=args.ap_version)
-
-        _, accum_map = map_eval.get_map_var()
-        map_eval.reset(exe)
-        for batch_id, data in enumerate(test_reader()):
-            test_map, = exe.run(test_program,
-                                feed=feeder.feed(data),
-                                fetch_list=[accum_map])
+    _, accum_map = map_eval.get_map_var()
+    map_eval.reset(exe)
+    test_py_reader.start()
+    try:
+        for batch_id in range(test_step):
+            test_map, = exe.run(test_prog, fetch_list=[accum_map])
             if batch_id % 20 == 0:
                 print("Batch {0}, map {1}".format(batch_id, test_map))
-        print("Test model {0}, map {1}".format(model_dir, test_map))
-
-    test()
+    except fluid.core.EOFException:
+        test_py_reader.reset()
+    except StopIteration:
+        test_py_reader.reset()
+    test_py_reader.reset()
+    print("Test model {0}, map {1}".format(model_dir, test_map))
 
 
 if __name__ == '__main__':
