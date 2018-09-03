@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle
 import paddle.fluid as fluid
 import math
@@ -75,7 +78,7 @@ class ResNet():
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
-            padding=(filter_size - 1) / 2,
+            padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
             bias_attr=False)

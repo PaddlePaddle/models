@@ -135,10 +135,10 @@ class DQNModel(object):
 
     def _build_sync_target_network(self):
         vars = list(fluid.default_main_program().list_vars())
-        policy_vars = filter(
-            lambda x: 'GRAD' not in x.name and 'policy' in x.name, vars)
-        target_vars = filter(
-            lambda x: 'GRAD' not in x.name and 'target' in x.name, vars)
+        policy_vars = list(filter(
+            lambda x: 'GRAD' not in x.name and 'policy' in x.name, vars))
+        target_vars = list(filter(
+            lambda x: 'GRAD' not in x.name and 'target' in x.name, vars))
         policy_vars.sort(key=lambda x: x.name)
         target_vars.sort(key=lambda x: x.name)
 

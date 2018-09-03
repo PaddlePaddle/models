@@ -7,6 +7,7 @@ import paddle
 from PIL import Image, ImageEnhance
 
 random.seed(0)
+np.random.seed(0)
 
 DATA_DIM = 224
 
@@ -36,8 +37,8 @@ def crop_image(img, target_size, center):
         w_start = (width - size) / 2
         h_start = (height - size) / 2
     else:
-        w_start = random.randint(0, width - size)
-        h_start = random.randint(0, height - size)
+        w_start = np.random.randint(0, width - size + 1)
+        h_start = np.random.randint(0, height - size + 1)
     w_end = w_start + size
     h_end = h_start + size
     img = img.crop((w_start, h_start, w_end, h_end))
@@ -45,7 +46,7 @@ def crop_image(img, target_size, center):
 
 
 def random_crop(img, size, scale=[0.08, 1.0], ratio=[3. / 4., 4. / 3.]):
-    aspect_ratio = math.sqrt(random.uniform(*ratio))
+    aspect_ratio = math.sqrt(np.random.uniform(*ratio))
     w = 1. * aspect_ratio
     h = 1. / aspect_ratio
 
@@ -54,14 +55,14 @@ def random_crop(img, size, scale=[0.08, 1.0], ratio=[3. / 4., 4. / 3.]):
     scale_max = min(scale[1], bound)
     scale_min = min(scale[0], bound)
 
-    target_area = img.size[0] * img.size[1] * random.uniform(scale_min,
+    target_area = img.size[0] * img.size[1] * np.random.uniform(scale_min,
                                                              scale_max)
     target_size = math.sqrt(target_area)
     w = int(target_size * w)
     h = int(target_size * h)
 
-    i = random.randint(0, img.size[0] - w)
-    j = random.randint(0, img.size[1] - h)
+    i = np.random.randint(0, img.size[0] - w + 1)
+    j = np.random.randint(0, img.size[1] - h + 1)
 
     img = img.crop((i, j, i + w, j + h))
     img = img.resize((size, size), Image.LANCZOS)
@@ -69,26 +70,26 @@ def random_crop(img, size, scale=[0.08, 1.0], ratio=[3. / 4., 4. / 3.]):
 
 
 def rotate_image(img):
-    angle = random.randint(-10, 10)
+    angle = np.random.randint(-10, 11)
     img = img.rotate(angle)
     return img
 
 
 def distort_color(img):
     def random_brightness(img, lower=0.5, upper=1.5):
-        e = random.uniform(lower, upper)
+        e = np.random.uniform(lower, upper)
         return ImageEnhance.Brightness(img).enhance(e)
 
     def random_contrast(img, lower=0.5, upper=1.5):
-        e = random.uniform(lower, upper)
+        e = np.random.uniform(lower, upper)
         return ImageEnhance.Contrast(img).enhance(e)
 
     def random_color(img, lower=0.5, upper=1.5):
-        e = random.uniform(lower, upper)
+        e = np.random.uniform(lower, upper)
         return ImageEnhance.Color(img).enhance(e)
 
     ops = [random_brightness, random_contrast, random_color]
-    random.shuffle(ops)
+    np.random.shuffle(ops)
 
     img = ops[0](img)
     img = ops[1](img)
@@ -110,7 +111,7 @@ def process_image(sample, mode, color_jitter, rotate):
     if mode == 'train':
         if color_jitter:
             img = distort_color(img)
-        if random.randint(0, 1) == 1:
+        if np.random.randint(0, 2) == 1:
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
     if img.mode != 'RGB':
@@ -135,7 +136,7 @@ def _reader_creator(file_list,
         with open(file_list) as flist:
             lines = [line.strip() for line in flist]
             if shuffle:
-                random.shuffle(lines)
+                np.random.shuffle(lines)
             for line in lines:
                 if mode == 'train' or mode == 'val':
                     img_path, label = line.split()

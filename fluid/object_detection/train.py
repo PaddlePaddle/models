@@ -36,7 +36,6 @@ add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
 add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 #yapf: enable
 
-
 def train(args,
           train_file_list,
           val_file_list,
@@ -162,9 +161,8 @@ def train(args,
         print("Pass {0}, test map {1}".format(pass_id, test_map))
         return best_map, mean_map
 
-    total_time = 0.0
     for pass_id in range(num_passes):
-        epoch_idx = pass_id + 1
+        batch_begin = time.time()
         start_time = time.time()
         prev_start_time = start_time
         every_pass_loss = []
@@ -189,20 +187,20 @@ def train(args,
 
         end_time = time.time()
         best_map, mean_map = test(pass_id, best_map)
-        if args.enable_ce and pass_id == 1:
-            total_time += end_time - start_time
+        if args.enable_ce and pass_id == args.num_passes - 1:
+            total_time = end_time - start_time
             train_avg_loss = np.mean(every_pass_loss)
             if devices_num == 1:
                 print("kpis	train_cost	%s" % train_avg_loss)
                 print("kpis	test_acc	%s" % mean_map)
-                print("kpis	train_speed	%s" % (total_time / epoch_idx))
+                print("kpis	train_speed	%s" % (epocs / total_time))
             else:
                 print("kpis	train_cost_card%s	%s" %
                        (devices_num, train_avg_loss))
                 print("kpis	test_acc_card%s	%s" %
                        (devices_num, mean_map))
                 print("kpis	train_speed_card%s	%f" %
-                       (devices_num, total_time / epoch_idx))
+                       (devices_num, epocs / total_time))
 
 
         if pass_id % 10 == 0 or pass_id == num_passes - 1:

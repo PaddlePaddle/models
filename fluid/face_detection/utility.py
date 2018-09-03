@@ -16,6 +16,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import distutils.util
+import six
 
 
 def print_arguments(args):
@@ -34,7 +35,7 @@ def print_arguments(args):
     :type args: argparse.Namespace
     """
     print("-----------  Configuration Arguments -----------")
-    for arg, value in sorted(vars(args).iteritems()):
+    for arg, value in sorted(six.iteritems(vars(args))):
         print("%s: %s" % (arg, value))
     print("------------------------------------------------")
 

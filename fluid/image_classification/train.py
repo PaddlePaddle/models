@@ -1,7 +1,12 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import numpy as np
 import time
 import sys
+import functools
+import math
 import paddle
 import paddle.fluid as fluid
 import paddle.dataset.flowers as flowers
@@ -9,10 +14,8 @@ import models
 import reader
 import argparse
 import functools
-import logging
 from models.learning_rate import cosine_decay
 from utility import add_arguments, print_arguments
-import math
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -102,7 +105,7 @@ def net_config(image, label, model, args):
         model.params["dropout_seed"] = 100
         class_dim = 102
 
-    if model_name is "GoogleNet":
+    if model_name == "GoogleNet":
         out0, out1, out2 = model.net(input=image, class_dim=class_dim)
         cost0 = fluid.layers.cross_entropy(input=out0, label=label)
         cost1 = fluid.layers.cross_entropy(input=out1, label=label)
@@ -214,15 +217,19 @@ def train(args):
     train_batch_size = args.batch_size / device_num
     test_batch_size = 8
     if not args.enable_ce:
-        train_reader = paddle.batch(reader.train(), batch_size=train_batch_size, drop_last=True)
+        train_reader = paddle.batch(
+            reader.train(), batch_size=train_batch_size, drop_last=True)
         test_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
     else:
         # use flowers dataset for CE and set use_xmap False to avoid disorder data
         # but it is time consuming. For faster speed, need another dataset.
         import random
         random.seed(0)
+        np.random.seed(0)
         train_reader = paddle.batch(
-            flowers.train(use_xmap=False), batch_size=train_batch_size, drop_last=True)
+            flowers.train(use_xmap=False),
+            batch_size=train_batch_size,
+            drop_last=True)
         test_reader = paddle.batch(
             flowers.test(use_xmap=False), batch_size=test_batch_size)
 
@@ -238,9 +245,6 @@ def train(args):
     test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
 
     params = models.__dict__[args.model]().params
-    gpu = os.getenv("CUDA_VISIBLE_DEVICES") or ""
-    gpu_nums = len(gpu.split(","))
-    
 
     for pass_id in range(params["num_epochs"]):
 
@@ -284,7 +288,8 @@ def train(args):
         try:
             while True:
                 t1 = time.time()
-                loss, acc1, acc5 = exe.run(program=test_prog, fetch_list=test_fetch_list)
+                loss, acc1, acc5 = exe.run(program=test_prog,
+                                           fetch_list=test_fetch_list)
                 t2 = time.time()
                 period = t2 - t1
                 loss = np.mean(loss)
@@ -321,8 +326,8 @@ def train(args):
 
         # This is for continuous evaluation only
         if args.enable_ce and pass_id == args.num_epochs - 1:
-            if gpu_nums == 1:
-                # Use the last cost/acc for training
+            if device_num == 1:
+                # Use the mean cost/acc for training
                 print("kpis	train_cost	%s" % train_loss)
                 print("kpis	train_acc_top1	%s" % train_acc1)
                 print("kpis	train_acc_top5	%s" % train_acc5)
@@ -332,22 +337,17 @@ def train(args):
                 print("kpis	test_acc_top5	%s" % test_acc5)
                 print("kpis	train_speed	%s" % train_speed)
             else:
-                # Use the last cost/acc for training
-                print("kpis    train_cost_card%s       %s" %
-                      (gpu_nums, train_loss))
-                print("kpis    train_acc_top1_card%s   %s" %
-                      (gpu_nums, train_acc1))
-                print("kpis    train_acc_top5_card%s   %s" %
-                      (gpu_nums, train_acc5))
+                # Use the mean cost/acc for training
+                print("kpis	train_cost_card%s	%s" % (device_num, train_loss))
+                print("kpis	train_acc_top1_card%s	%s" %
+                      (device_num, train_acc1))
+                print("kpis	train_acc_top5_card%s	%s" %
+                      (device_num, train_acc5))
                 # Use the mean cost/acc for testing
-                print("kpis    test_cost_card%s        %s" %
-                      (gpu_nums, test_loss))
-                print("kpis    test_acc_top1_card%s    %s" %
-                      (gpu_nums, test_acc1))
-                print("kpis    test_acc_top5_card%s    %s" %
-                      (gpu_nums, test_acc5))
-                print("kpis    train_speed_card%s      %s" %
-                      (gpu_nums, train_speed))
+                print("kpis	test_cost_card%s	%s" % (device_num, test_loss))
+                print("kpis	test_acc_top1_card%s	%s" % (device_num, test_acc1))
+                print("kpis	test_acc_top5_card%s	%s" % (device_num, test_acc5))
+                print("kpis	train_speed_card%s	%s" % (device_num, train_speed))
 
 
 def main():

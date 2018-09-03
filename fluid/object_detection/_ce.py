@@ -9,10 +9,10 @@ from kpi import CostKpi, DurationKpi, AccKpi
 
 train_cost_kpi = CostKpi('train_cost', 0.02, 0, actived=True)
 test_acc_kpi = AccKpi('test_acc', 0.01, 0, actived=False)
-train_speed_kpi = AccKpi('train_speed', 0.2, 0, actived=False)
+train_speed_kpi = AccKpi('train_speed', 0.1, 0, actived=True)
 train_cost_card4_kpi = CostKpi('train_cost_card4', 0.02, 0, actived=True)
-test_acc_card4_kpi = AccKpi('test_acc_card4', 0.01, 0, actived=True)
-train_speed_card4_kpi = AccKpi('train_speed_card4', 0.2, 0, actived=True)
+test_acc_card4_kpi = AccKpi('test_acc_card4', 0.01, 0, actived=False)
+train_speed_card4_kpi = AccKpi('train_speed_card4', 0.1, 0, actived=True)
 
 tracking_kpis = [
     train_cost_kpi,

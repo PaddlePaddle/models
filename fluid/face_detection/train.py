@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import shutil
 import numpy as np
@@ -57,7 +61,7 @@ def train(args, config, train_file_list, optimizer_method):
         loss = network.vgg_ssd_loss()
         fetches = [loss]
 
-    steps_per_pass = 12880 / batch_size
+    steps_per_pass = 12880 // batch_size
     boundaries = [steps_per_pass * 50, steps_per_pass * 80,
                   steps_per_pass * 120, steps_per_pass * 140]
     values = [
@@ -110,7 +114,7 @@ def train(args, config, train_file_list, optimizer_method):
         model_path = os.path.join(model_save_dir, postfix)
         if os.path.isdir(model_path):
             shutil.rmtree(model_path)
-        print 'save models to %s' % (model_path)
+        print('save models to %s' % (model_path))
         fluid.io.save_persistables(exe, model_path)
 
     def tensor(data, place, lod=None):

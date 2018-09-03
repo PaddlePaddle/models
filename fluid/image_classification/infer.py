@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import numpy as np
 import time
@@ -15,7 +18,6 @@ import math
 parser = argparse.ArgumentParser(description=__doc__)
 # yapf: disable
 add_arg = functools.partial(add_arguments, argparser=parser)
-add_arg('batch_size',       int,  256,                  "Minibatch size.")
 add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
 add_arg('class_dim',        int,  1000,                 "Class number.")
 add_arg('image_shape',      str,  "3,224,224",          "Input image size")
