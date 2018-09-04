@@ -1,17 +1,20 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import numpy as np
 import time
 import sys
+import functools
+import math
 import paddle
 import paddle.fluid as fluid
 import paddle.dataset.flowers as flowers
 import models
 import reader
 import argparse
-import functools
 from models.learning_rate import cosine_decay
 from utility import add_arguments, print_arguments
-import math
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -104,8 +107,11 @@ def train(args):
 
     if args.enable_ce:
         assert model_name == "SE_ResNeXt50_32x4d"
+        fluid.default_startup_program().random_seed = 1000
+        model.params["dropout_seed"] = 100
+        class_dim = 102
 
-    if model_name is "GoogleNet":
+    if model_name == "GoogleNet":
         out0, out1, out2 = model.net(input=image, class_dim=class_dim)
         cost0 = fluid.layers.cross_entropy(input=out0, label=label)
         cost1 = fluid.layers.cross_entropy(input=out1, label=label)
@@ -134,8 +140,6 @@ def train(args):
     params["num_epochs"] = args.num_epochs
     params["learning_strategy"]["batch_size"] = args.batch_size
     params["learning_strategy"]["name"] = args.lr_strategy
-    if args.enable_ce:
-        params["dropout_seed"] = 10
 
     # initialize optimizer
     optimizer = optimizer_setting(params)
@@ -143,9 +147,6 @@ def train(args):
 
     if with_memory_optimization:
         fluid.memory_optimize(fluid.default_main_program())
-
-    if args.enable_ce:
-        fluid.default_startup_program().random_seed = 1000
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -172,6 +173,7 @@ def train(args):
         # but it is time consuming. For faster speed, need another dataset.
         import random
         random.seed(0)
+        np.random.seed(0)
         train_reader = paddle.batch(
             flowers.train(use_xmap=False), batch_size=train_batch_size)
         test_reader = paddle.batch(
@@ -256,7 +258,7 @@ def train(args):
         # This is for continuous evaluation only
         if args.enable_ce and pass_id == args.num_epochs - 1:
             if gpu_nums == 1:
-                # Use the last cost/acc for training
+                # Use the mean cost/acc for training
                 print("kpis	train_cost	%s" % train_loss)
                 print("kpis	train_acc_top1	%s" % train_acc1)
                 print("kpis	train_acc_top5	%s" % train_acc5)
@@ -266,22 +268,15 @@ def train(args):
                 print("kpis	test_acc_top5	%s" % test_acc5)
                 print("kpis	train_speed	%s" % train_speed)
             else:
-                # Use the last cost/acc for training
-                print("kpis    train_cost_card%s       %s" %
-                      (gpu_nums, train_loss))
-                print("kpis    train_acc_top1_card%s   %s" %
-                      (gpu_nums, train_acc1))
-                print("kpis    train_acc_top5_card%s   %s" %
-                      (gpu_nums, train_acc5))
+                # Use the mean cost/acc for training
+                print("kpis	train_cost_card%s	%s" % (gpu_nums, train_loss))
+                print("kpis	train_acc_top1_card%s	%s" % (gpu_nums, train_acc1))
+                print("kpis	train_acc_top5_card%s	%s" % (gpu_nums, train_acc5))
                 # Use the mean cost/acc for testing
-                print("kpis    test_cost_card%s        %s" %
-                      (gpu_nums, test_loss))
-                print("kpis    test_acc_top1_card%s    %s" %
-                      (gpu_nums, test_acc1))
-                print("kpis    test_acc_top5_card%s    %s" %
-                      (gpu_nums, test_acc5))
-                print("kpis    train_speed_card%s      %s" %
-                      (gpu_nums, train_speed))
+                print("kpis	test_cost_card%s	%s" % (gpu_nums, test_loss))
+                print("kpis	test_acc_top1_card%s	%s" % (gpu_nums, test_acc1))
+                print("kpis	test_acc_top5_card%s	%s" % (gpu_nums, test_acc5))
+                print("kpis	train_speed_card%s	%s" % (gpu_nums, train_speed))
 
 
 def main():

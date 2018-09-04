@@ -18,7 +18,6 @@ from __future__ import print_function
 
 import image_util
 from paddle.utils.image_util import *
-import random
 from PIL import Image
 from PIL import ImageDraw
 import numpy as np
@@ -98,7 +97,7 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
         # sampling
         batch_sampler = []
 
-        prob = random.uniform(0., 1.)
+        prob = np.random.uniform(0., 1.)
         if prob > settings.data_anchor_sampling_prob:
             scale_array = np.array([16, 32, 64, 128, 256, 512])
             batch_sampler.append(
@@ -109,7 +108,7 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
                 settings.resize_width, settings.resize_height)
             img = np.array(img)
             if len(sampled_bbox) > 0:
-                idx = int(random.uniform(0, len(sampled_bbox)))
+                idx = int(np.random.uniform(0, len(sampled_bbox)))
                 img, sampled_labels = image_util.crop_image_sampling(
                     img, bbox_labels, sampled_bbox[idx], img_width, img_height,
                     settings.resize_width, settings.resize_height,
@@ -140,7 +139,7 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
 
             img = np.array(img)
             if len(sampled_bbox) > 0:
-                idx = int(random.uniform(0, len(sampled_bbox)))
+                idx = int(np.random.uniform(0, len(sampled_bbox)))
                 img, sampled_labels = image_util.crop_image(
                     img, bbox_labels, sampled_bbox[idx], img_width, img_height,
                     settings.resize_width, settings.resize_height,
@@ -153,7 +152,7 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
     img = np.array(img)
 
     if mode == 'train':
-        mirror = int(random.uniform(0, 2))
+        mirror = int(np.random.uniform(0, 2))
         if mirror == 1:
             img = img[:, ::-1, :]
             for i in six.moves.xrange(len(sampled_labels)):
@@ -225,7 +224,7 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
     file_dict = load_file_list(file_list)
     while True:
         if shuffle:
-            random.shuffle(file_dict)
+            np.random.shuffle(file_dict)
         images, face_boxes, head_boxes, label_ids = [], [], [], []
         label_offs = [0]
 

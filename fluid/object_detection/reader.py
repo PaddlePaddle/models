@@ -14,7 +14,6 @@
 
 import image_util
 from paddle.utils.image_util import *
-import random
 from PIL import Image
 from PIL import ImageDraw
 import numpy as np
@@ -140,7 +139,7 @@ def preprocess(img, bbox_labels, mode, settings):
 
         img = np.array(img)
         if len(sampled_bbox) > 0:
-            idx = int(random.uniform(0, len(sampled_bbox)))
+            idx = int(np.random.uniform(0, len(sampled_bbox)))
             img, sampled_labels = image_util.crop_image(
                 img, bbox_labels, sampled_bbox[idx], img_width, img_height)
 
@@ -149,7 +148,7 @@ def preprocess(img, bbox_labels, mode, settings):
     img = np.array(img)
 
     if mode == 'train':
-        mirror = int(random.uniform(0, 2))
+        mirror = int(np.random.uniform(0, 2))
         if mirror == 1:
             img = img[:, ::-1, :]
             for i in six.moves.xrange(len(sampled_labels)):
@@ -185,7 +184,7 @@ def coco(settings, file_list, mode, shuffle):
 
     def reader():
         if mode == 'train' and shuffle:
-            random.shuffle(images)
+            np.random.shuffle(images)
         for image in images:
             image_name = image['file_name']
             image_path = os.path.join(settings.data_dir, image_name)
@@ -240,7 +239,7 @@ def pascalvoc(settings, file_list, mode, shuffle):
 
     def reader():
         if mode == 'train' and shuffle:
-            random.shuffle(images)
+            np.random.shuffle(images)
         for image in images:
             image_path, label_path = image.split()
             image_path = os.path.join(settings.data_dir, image_path)
