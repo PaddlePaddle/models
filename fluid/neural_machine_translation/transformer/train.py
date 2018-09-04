@@ -104,7 +104,7 @@ def parse_args():
     parser.add_argument(
         "--enable_ce",
         type=ast.literal_eval,
-        default=True,
+        default=False,
         help="The flag indicating whether to run the task "
         "for continuous evaluation.")
 
@@ -148,7 +148,7 @@ def pad_batch_data(insts,
         return_list += [inst_weight.astype("float32").reshape([-1, 1])]
     else:  # position data
         inst_pos = np.array([
-            list(range(1, len(inst) + 1)) + [0] * (max_len - len(inst))
+            list(range(0, len(inst))) + [0] * (max_len - len(inst))
             for inst in insts
         ])
         return_list += [inst_pos.astype("int64").reshape([-1, 1])]
@@ -419,10 +419,14 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
                 (step_idx, inst_num, pass_id, batch_id, total_avg_cost,
                  total_avg_cost - loss_normalizer,
                  np.exp([min(total_avg_cost, 100)])))
-            if batch_id > 0 and batch_id % 1000 == 0:
+            if step_idx % int(TrainTaskConfig.save_freq) == 0:
                 fluid.io.save_persistables(
                     exe,
                     os.path.join(TrainTaskConfig.ckpt_dir, "latest.checkpoint"))
+                fluid.io.save_inference_model(
+                    os.path.join(TrainTaskConfig.model_dir,
+                                 "iter_" + str(step_idx) + ".infer.model"),
+                    data_input_names[:-2], [predict], exe)
             step_idx += 1
             init = True
 
@@ -480,7 +484,9 @@ def train(args):
         ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
         ModelHyperParams.n_head, ModelHyperParams.d_key,
         ModelHyperParams.d_value, ModelHyperParams.d_model,
-        ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
+        ModelHyperParams.d_inner_hid, ModelHyperParams.prepostprocess_dropout,
+        ModelHyperParams.attention_dropout, ModelHyperParams.relu_dropout,
+        ModelHyperParams.preprocess_cmd, ModelHyperParams.postprocess_cmd,
         ModelHyperParams.weight_sharing, TrainTaskConfig.label_smooth_eps)
     lr_scheduler = LearningRateScheduler(ModelHyperParams.d_model,
                                          TrainTaskConfig.warmup_steps,
