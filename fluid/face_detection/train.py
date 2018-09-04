@@ -144,14 +144,14 @@ def train(args, config, train_file_list, optimizer_method):
         print('save models to %s' % (model_path))
         fluid.io.save_persistables(exe, model_path)
 
-    for pass_id in range(start_pass, num_passes):
-        start_time = time.time()
-        train_py_reader.start()
-        prev_start_time = start_time
-        end_time = 0
-        batch_id = 0
-        try:
-            while True:
+    train_py_reader.start()
+    try:
+        for pass_id in range(start_pass, num_passes):
+            start_time = time.time()
+            prev_start_time = start_time
+            end_time = 0
+            batch_id = 0
+            for batch_id in range(steps_per_pass):
                 prev_start_time = start_time
                 start_time = time.time()
                 if args.parallel:
@@ -171,15 +171,13 @@ def train(args, config, train_file_list, optimizer_method):
                               "time {4}".format(pass_id,
                                batch_id, fetch_vars[0], fetch_vars[1],
                                start_time - prev_start_time))
-                batch_id += 1
-                if batch_id > steps_per_pass:
-                    break
-        except fluid.core.EOFException:
-            train_py_reader.reset()
-
-        if pass_id % 1 == 0 or pass_id == num_passes - 1:
-            save_model(str(pass_id), train_prog)
-
+            if pass_id % 1 == 0 or pass_id == num_passes - 1:
+                save_model(str(pass_id), train_prog)
+    except fluid.core.EOFException:
+        train_py_reader.reset()
+    except StopIteration:
+        train_py_reader.reset()
+    train_py_reader.reset()
 
 if __name__ == '__main__':
     args = parser.parse_args()

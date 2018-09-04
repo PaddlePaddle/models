@@ -128,7 +128,7 @@ def train(args, config, train_file_list, optimizer_method):
         run_time = []
         batch_id = 0
         try:
-            while True:
+            for batch_id in range(num_iterations):
                 start_time = time.time()
                 end_time = time.time()
                 reader_time.append(end_time - start_time)
@@ -147,11 +147,11 @@ def train(args, config, train_file_list, optimizer_method):
                 else:
                     print("Batch {0}, face loss {1}, head loss {2}".format(
                            batch_id, fetch_vars[0], fetch_vars[1]))
-                batch_id += 1
-                if batch_id == iterations:
-                    break
         except fluid.core.EOFException:
             train_py_reader.reset()
+        except StopIteration:
+            train_py_reader.reset()
+        train_py_reader.reset()
         return reader_time, run_time
 
     # start-up

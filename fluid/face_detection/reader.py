@@ -273,12 +273,12 @@ def train_batch_reader(settings,
                        file_list,
                        batch_size,
                        shuffle=True,
-                       num_workers=8):
+                       num_workers=40):
     def reader():
         try:
             enqueuer = GeneratorEnqueuer(
                 train_generator(settings, file_list, batch_size, shuffle),
-                use_multiprocessing=True)
+                use_multiprocessing=False)
             enqueuer.start(max_queue_size=24, workers=num_workers)
             generator_output = None
             while True:
