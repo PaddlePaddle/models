@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 import functools
 import shutil
+import math
 
 import paddle
 import paddle.fluid as fluid
@@ -103,19 +104,19 @@ def train(args,
     if 'coco' in data_args.dataset:
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in train_file_list:
-            step_per_pass = 82783 // batch_size
-            test_step = 40504 // batch_size
-            boundaries = [step_per_pass * 12, step_per_pass * 19]
+            steps_per_pass = 82783 // batch_size
+            test_step = int(math.ceil(40504 / batch_size))
+            boundaries = [steps_per_pass * 12, steps_per_pass * 19]
         elif '2017' in train_file_list:
-            step_per_pass = 118287 // batch_size
-            test_step = 5000 // batch_size
-            boundaries = [step_per_pass * 12, step_per_pass * 19]
+            steps_per_pass = 118287 // batch_size
+            test_step = int(math.ceil(5000 / batch_size))
+            boundaries = [steps_per_pass * 12, steps_per_pass * 19]
         values = [learning_rate, learning_rate * 0.5,
             learning_rate * 0.25]
     elif 'pascalvoc' in data_args.dataset:
-        step_per_pass = 19200 // batch_size
-        test_step = 4952 // batch_size
-        boundaries = [step_per_pass * 40, step_per_pass * 60, step_per_pass * 80, step_per_pass * 100]
+        steps_per_pass = 19200 // batch_size
+        test_step = int(math.ceil(4952 / batch_size))
+        boundaries = [steps_per_pass * 40, steps_per_pass * 60, steps_per_pass * 80, steps_per_pass * 100]
         values = [
             learning_rate, learning_rate * 0.5, learning_rate * 0.25,
             learning_rate * 0.1, learning_rate * 0.01]
@@ -180,12 +181,14 @@ def train(args,
         every_pass_map=[]
         test_py_reader.start()
         try:
-            for batch_id in range(test_step):
+            batch_id = 0
+            while True:
                 test_map, = exe.run(test_prog,
                                    fetch_list=[accum_map])
                 if batch_id % 20 == 0:
                     every_pass_map.append(test_map)
                     print("Batch {0}, map {1}".format(batch_id, test_map))
+                batch_id += 1
         except fluid.core.EOFException:
             test_py_reader.reset()
         except StopIteration:
@@ -207,7 +210,7 @@ def train(args,
             start_time = time.time()
             prev_start_time = start_time
             every_pass_loss = []
-            for batch_id in range(step_per_pass):
+            for batch_id in range(steps_per_pass):
                 prev_start_time = start_time
                 start_time = time.time()
                 if args.parallel:

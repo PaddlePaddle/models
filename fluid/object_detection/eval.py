@@ -3,6 +3,7 @@ import time
 import numpy as np
 import argparse
 import functools
+import math
 
 import paddle
 import paddle.fluid as fluid
@@ -67,11 +68,11 @@ def build_program(main_prog, startup_prog, args, data_args):
 def eval(args, data_args, test_list, batch_size, model_dir=None):
     if 'coco' in data_args.dataset:
         if '2014' in test_list:
-            test_step = 40504 // batch_size
+            test_step = int(math.ceil(40504. / batch_size))
         elif '2017' in test_list:
             test_step = 5000 // batch_size
     elif 'pascalvoc' in data_args.dataset:
-        test_step = 4952 // batch_size
+        test_step = int(math.ceil(4952. / batch_size))
 
     startup_prog = fluid.Program()
     test_prog = fluid.Program()
