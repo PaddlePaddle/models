@@ -190,10 +190,10 @@ def train(args,
             test_py_reader.reset()
         test_py_reader.reset()
         mean_map = np.mean(every_pass_map)
+        print("Pass {0}, test map {1}".format(pass_id, test_map))
         if test_map[0] > best_map:
             best_map = test_map[0]
             save_model('best_model', test_prog)
-        print("Pass {0}, test map {1}".format(pass_id, test_map))
         return best_map, mean_map
 
 
