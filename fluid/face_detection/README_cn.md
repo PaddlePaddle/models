@@ -168,9 +168,10 @@ python widerface_eval.py --infer=True --confs_threshold=0.15
 <img src="images/0_Parade_marchingband_1_356.jpg" height=300 width=300 hspace='10'/>
 <img src="images/28_Sports_Fan_Sports_Fan_28_770.jpg" height=300 width=300 hspace='10'/>
 <img src="images/4_Dancing_Dancing_4_194.jpg" height=300 width=300 hspace='10'/>
-<img src="images/2_Demonstration_Demonstration_Or_Protest_2_58.jpg" height=300 width=300 hspace='10'/>  <br />
+<img src="images/12_Group_Group_12_Group_Group_12_935.jpg" height=300 width=300 hspace='10'/>  <br />
 Pyramidbox 预测可视化
 </p>
+
 
 ### 模型发布
 
