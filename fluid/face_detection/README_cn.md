@@ -188,5 +188,3 @@ Pyramidbox 预测可视化
     <img src="images/wider_pr_cruve_int_hard_val.jpg" width="280" /></br>
 WIDER FACE Easy/Medium/Hard set
 </p>
-
-> 目前，基于PaddlePaddle的实现过程中模型参数仍在调优，比上图更优的结果会在后续发布
