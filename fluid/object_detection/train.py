@@ -154,8 +154,6 @@ def train(args,
     if args.parallel:
         train_exe = fluid.ParallelExecutor(main_program=train_prog,
             use_cuda=args.use_gpu, loss_name=loss.name)
-        test_exe = fluid.ParallelExecutor(main_program=test_prog,
-            use_cuda=args.use_gpu, share_vars_from=train_exe)
     if not args.enable_ce:
         train_reader = reader.train_batch_reader(data_args, train_file_list, batch_size)
     else:
