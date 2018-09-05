@@ -41,7 +41,7 @@ class CycleGAN():
             self.g_loss_B = fluid.layers.elementwise_add(self.cyc_loss, disc_loss_A)
             self.optimizer._name = "g_B"
             vars=[]
-            for var in self.g_A_program.list_vars():
+            for var in self.g_B_program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith("g_B"):
                     vars.append(var.name)
             vars=[] # stop training for debug
@@ -56,7 +56,7 @@ class CycleGAN():
             self.d_loss_A = fluid.layers.reduce_mean(self.d_loss_A)
             self.optimizer._name = "d_A"
             vars=[]
-            for var in self.g_A_program.list_vars():
+            for var in self.d_A_program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith("d_A"):
                     vars.append(var.name)
             self.optimizer.minimize(self.d_loss_A, parameter_list=vars)
@@ -68,7 +68,7 @@ class CycleGAN():
             self.d_loss_B = fluid.layers.reduce_mean(self.d_loss_B)
             self.optimizer._name = "d_B"
             vars=[]
-            for var in self.g_A_program.list_vars():
+            for var in self.d_B_program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith("d_B"):
                     vars.append(var.name)
             self.optimizer.minimize(self.d_loss_B, parameter_list=vars)
