@@ -29,6 +29,7 @@ class CycleGAN():
             for var in self.g_A_program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith("g_A"):
                     vars.append(var.name)
+            vars=[] # stop training for debug
             self.optimizer._name = "g_A"
             self.optimizer.minimize(self.g_loss_A, parameter_list=vars)
 
@@ -43,6 +44,7 @@ class CycleGAN():
             for var in self.g_A_program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith("g_B"):
                     vars.append(var.name)
+            vars=[] # stop training for debug
             self.optimizer.minimize(self.g_loss_B, parameter_list=vars)
 
         self.d_A_program = fluid.default_main_program().clone()
@@ -56,7 +58,7 @@ class CycleGAN():
             vars=[]
             for var in self.g_A_program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith("d_A"):
-                    no_grad_vars.append(var.name)
+                    vars.append(var.name)
             self.optimizer.minimize(self.d_loss_A, parameter_list=vars)
 
         with fluid.program_guard(self.d_B_program):
@@ -67,7 +69,7 @@ class CycleGAN():
             self.optimizer._name = "d_B"
             vars=[]
             for var in self.g_A_program.list_vars():
-                if fluid.io.is_parameter(var) and var.name.startswith("d_A"):
+                if fluid.io.is_parameter(var) and var.name.startswith("d_B"):
                     vars.append(var.name)
             self.optimizer.minimize(self.d_loss_B, parameter_list=vars)
 
