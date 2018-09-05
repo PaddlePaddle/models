@@ -66,14 +66,6 @@ def build_program(main_prog, startup_prog, args, data_args):
 
 
 def eval(args, data_args, test_list, batch_size, model_dir=None):
-    if 'coco' in data_args.dataset:
-        if '2014' in test_list:
-            test_step = int(math.ceil(40504. / batch_size))
-        elif '2017' in test_list:
-            test_step = 5000 // batch_size
-    elif 'pascalvoc' in data_args.dataset:
-        test_step = int(math.ceil(4952. / batch_size))
-
     startup_prog = fluid.Program()
     test_prog = fluid.Program()
 
@@ -99,10 +91,12 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
     map_eval.reset(exe)
     test_py_reader.start()
     try:
-        for batch_id in range(test_step):
+        batch_id = 0
+        while True:
             test_map, = exe.run(test_prog, fetch_list=[accum_map])
             if batch_id % 20 == 0:
                 print("Batch {0}, map {1}".format(batch_id, test_map))
+            batch_id += 1
     except fluid.core.EOFException:
         test_py_reader.reset()
     except StopIteration:

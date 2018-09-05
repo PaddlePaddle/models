@@ -105,17 +105,14 @@ def train(args,
         # learning rate decay in 12, 19 pass, respectively
         if '2014' in train_file_list:
             steps_per_pass = 82783 // batch_size
-            test_step = int(math.ceil(40504 / batch_size))
             boundaries = [steps_per_pass * 12, steps_per_pass * 19]
         elif '2017' in train_file_list:
             steps_per_pass = 118287 // batch_size
-            test_step = int(math.ceil(5000 / batch_size))
             boundaries = [steps_per_pass * 12, steps_per_pass * 19]
         values = [learning_rate, learning_rate * 0.5,
             learning_rate * 0.25]
     elif 'pascalvoc' in data_args.dataset:
         steps_per_pass = 19200 // batch_size
-        test_step = int(math.ceil(4952 / batch_size))
         boundaries = [steps_per_pass * 40, steps_per_pass * 60, steps_per_pass * 80, steps_per_pass * 100]
         values = [
             learning_rate, learning_rate * 0.5, learning_rate * 0.25,
