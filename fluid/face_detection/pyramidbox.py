@@ -72,8 +72,8 @@ class PyramidBox(object):
         TODO(qingqing): add comments.
         """
         self.data_shape = data_shape
-        self.min_sizes = [32., 64., 128., 256., 512.]
-        self.steps = [8., 16., 32., 64., 128.]
+        self.min_sizes = [16., 32., 64., 128., 256., 512.]
+        self.steps = [4., 8., 16., 32., 64., 128.]
         self.num_classes = num_classes
         self.use_transposed_conv2d = use_transposed_conv2d
         self.is_infer = is_infer
@@ -314,8 +314,8 @@ class PyramidBox(object):
             box, var = fluid.layers.prior_box(
                 input,
                 self.image,
-                min_sizes=[self.min_sizes[i]],
-                steps=[self.steps[i]] * 2,
+                min_sizes=[self.min_sizes[i + 1]],
+                steps=[self.steps[i + 1]] * 2,
                 aspect_ratios=[1.],
                 clip=False,
                 flip=True,
