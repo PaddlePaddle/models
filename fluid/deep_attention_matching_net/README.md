@@ -2,11 +2,11 @@
 
 This is the source code of Deep Attention Matching network (DAM), that is proposed for multi-turn response selection in the retrieval-based chatbot.
 
-DAM is a neural matching network that entirely based on attention mechanism. The motivation of DAM is to capture those semantic dependencies, among dialogue elements at different level of granularities, in multi-turn conversation as matching evidences, in order to better match response candidate with its multi-turn context. DAM will appear on ACL-2018, please find our paper at: http://acl2018.org/conference/accepted-papers/.
+DAM is a neural matching network that entirely based on attention mechanism. The motivation of DAM is to capture those semantic dependencies, among dialogue elements at different level of granularities, in multi-turn conversation as matching evidences, in order to better match response candidate with its multi-turn context. DAM appears on ACL-2018, please find our paper at [http://aclweb.org/anthology/P18-1103](http://aclweb.org/anthology/P18-1103).
 
 ## __TensorFlow Version__
 
-DAM is originally implemented with Tensorflow, which can be found at: https://github.com/baidu/Dialogue/DAM . We highly recommend using the PaddlePaddle Fluid version here as it supports parallely training with very large corpus.
+DAM is originally implemented with Tensorflow, which can be found at: [https://github.com/baidu/Dialogue/DAM](https://github.com/baidu/Dialogue/DAM) (in progress). We highly recommend using the PaddlePaddle Fluid version here as it supports parallely training with very large corpus.
 
 
 ## __Network__
@@ -32,27 +32,42 @@ We test DAM on two large-scale multi-turn response selection tasks, i.e., the Ub
 
 ## __Usage__
 
-First, please download [data](https://pan.baidu.com/s/1hakfuuwdS8xl7NyxlWzRiQ "data") and unzip it:
+Take the experiment on the Ubuntu Corpus v1 for Example.
+
+1) Go to the `ubuntu` directory
+
 ```
-cd data
-unzip data.zip
+cd ubuntu
+```
+2) Download the well-preprocessed data for training  
+
+```
+sh download_data.sh
+```
+3) Execute the model training and evaluation by
+
+```
+sh train.sh
+```
+for more detailed explanation about the arguments, please run
+
+```
+python ../train_and_evaluate.py --help
 ```
 
-If you want use well trained models directly, please download [models](https://pan.baidu.com/s/1pl4d63MBxihgrEWWfdAz0w "models") and unzip it:
-```
-cd output
-unzip output.zip
-```
+4) Run test by
 
-Train and test the model by:
 ```
-sh run.sh
+sh test.sh
 ```
+and run the test for different saved models by using different argument `--model_path`.
+
+Similary, one can carry out the experiment on the Douban Conversation Corpus by going to the directory `douban` and following the same procedure.
 
 ## __Dependencies__
 
 - Python >= 2.7.3
-- PaddlePaddle latest develop
+- PaddlePaddle latest develop branch
 
 ## __Citation__
 
