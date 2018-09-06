@@ -6,9 +6,9 @@
 PaddlePaddle provides a rich set of computational units to enable users to adopt a modular approach to solving various learning problems. In this repo, we demonstrate how to use PaddlePaddle to solve common machine learning tasks, providing several different neural network model that anyone can easily learn and use.
 
 
-The [fluid models](fluid) use PaddlePaddle's Fluid APIs. We especially recommend users to use fluid models.
+The [fluid models](fluid) use PaddlePaddle's Fluid APIs. We especially recommend users to use Fluid models.
 
-The [legacy models](legacy) use PaddlePaddle's V2 APIs.
+The [v2 models](v2) use PaddlePaddle's v2 APIs.
 
 
 ## License
