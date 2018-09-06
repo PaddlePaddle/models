@@ -131,6 +131,6 @@ class Net(object):
         sim = fluid.layers.concat(input=sim_turns, axis=2)
 
         # for douban
-        final_info = layers.cnn_3d(sim, 16, 16)
+        final_info = layers.cnn_3d(sim, 32, 16)
         loss, logits = layers.loss(final_info, label)
         return loss, logits

@@ -8,7 +8,6 @@ import paddle.fluid as fluid
 import utils.reader as reader
 import cPickle as pickle
 from utils.util import print_arguments
-import utils.evaluation as eva
 
 from model import Net
 
@@ -50,6 +49,10 @@ def parse_args():
         '--use_cuda',
         action='store_true',
         help='If set, use cuda for training.')
+    parser.add_argument(
+        '--ext_eval',
+        action='store_true',
+        help='If set, use MAP, MRR ect for evaluation.')
     parser.add_argument(
         '--max_turn_num',
         type=int,
@@ -146,6 +149,11 @@ def test(args):
     print("start loading data ...")
     train_data, val_data, test_data = pickle.load(open(args.data_path, 'rb'))
     print("finish loading data ...")
+
+    if args.ext_eval:
+        import utils.douban_evaluation as eva
+    else:
+        import utils.evaluation as eva
 
     test_batches = reader.build_batches(test_data, data_conf)
 

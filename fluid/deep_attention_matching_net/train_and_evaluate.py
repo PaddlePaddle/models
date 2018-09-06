@@ -8,7 +8,6 @@ import paddle.fluid as fluid
 import utils.reader as reader
 import cPickle as pickle
 from utils.util import print_arguments
-import utils.evaluation as eva
 
 from model import Net
 
@@ -34,7 +33,7 @@ def parse_args():
     parser.add_argument(
         '--data_path',
         type=str,
-        default="data/ubuntu/data_small.pkl",
+        default="data/data_small.pkl",
         help='Path to training data. (default: %(default)s)')
     parser.add_argument(
         '--save_path',
@@ -45,6 +44,10 @@ def parse_args():
         '--use_cuda',
         action='store_true',
         help='If set, use cuda for training.')
+    parser.add_argument(
+        '--ext_eval',
+        action='store_true',
+        help='If set, use MAP, MRR ect for evaluation.')
     parser.add_argument(
         '--max_turn_num',
         type=int,
@@ -74,7 +77,7 @@ def parse_args():
         '--_EOS_',
         type=int,
         default=28270,
-        help='The id for end of sentence in vocabulary.')
+        help='The id for the end of sentence in vocabulary.')
     parser.add_argument(
         '--stack_num',
         type=int,
@@ -140,9 +143,15 @@ def train(args):
         main_program=test_program,
         share_vars_from=train_exe)
 
+    if args.ext_eval:
+        import utils.douban_evaluation as eva
+    else:
+        import utils.evaluation as eva
+
     if args.word_emb_init is not None:
         print("start loading word embedding init ...")
-        word_emb = pickle.load(open(args.word_emb_init, 'rb')).astype('float32')
+        word_emb = np.array(pickle.load(open(args.word_emb_init, 'rb'))).astype(
+            'float32')
         print("finish loading word embedding init  ...")
 
     print("start loading data ...")
