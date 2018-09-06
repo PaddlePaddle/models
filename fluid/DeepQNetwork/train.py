@@ -74,7 +74,7 @@ def get_player(rom, viz=False, train=False):
 
 def eval_agent(agent, env):
     episode_reward = []
-    for _ in tqdm(xrange(30), desc='eval agent'):
+    for _ in tqdm(range(30), desc='eval agent'):
         state = env.reset()
         total_reward = 0
         step = 0
