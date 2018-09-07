@@ -61,7 +61,6 @@ def build_program(main_prog, startup_prog, args, data_args):
                     overlap_threshold=0.5,
                     evaluate_difficult=False,
                     ap_version=args.ap_version)
-    main_prog = main_prog.clone(for_test=True)
     return py_reader, map
 
 
@@ -74,6 +73,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
         startup_prog=startup_prog,
         args=args,
         data_args=data_args)
+    test_prog = test_prog.clone(for_test=True)
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
@@ -99,9 +99,6 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
             batch_id += 1
     except fluid.core.EOFException:
         test_py_reader.reset()
-    except StopIteration:
-        test_py_reader.reset()
-    test_py_reader.reset()
     print("Test model {0}, map {1}".format(model_dir, test_map))
 
 

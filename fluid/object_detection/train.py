@@ -80,8 +80,6 @@ def build_program(is_train, main_prog, startup_prog, args, data_args,
                         overlap_threshold=0.5,
                         evaluate_difficult=False,
                         ap_version=args.ap_version)
-    if not is_train:
-        main_prog = main_prog.clone(for_test=True)
     return py_reader, loss
 
 
@@ -139,6 +137,7 @@ def train(args,
         startup_prog=startup_prog,
         args=args,
         data_args=data_args)
+    test_prog = test_prog.clone(for_test=True)
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
@@ -186,9 +185,6 @@ def train(args,
                 batch_id += 1
         except fluid.core.EOFException:
             test_py_reader.reset()
-        except StopIteration:
-            test_py_reader.reset()
-        test_py_reader.reset()
         mean_map = np.mean(every_pass_map)
         print("Pass {0}, test map {1}".format(pass_id, test_map))
         if test_map[0] > best_map:
