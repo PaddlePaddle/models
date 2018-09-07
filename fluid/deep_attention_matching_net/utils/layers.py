@@ -52,7 +52,8 @@ def dot_product_attention(query,
                           d_key,
                           q_mask=None,
                           k_mask=None,
-                          dropout_rate=None):
+                          dropout_rate=None,
+                          mask_cache=None):
     """Dot product layer.
 
      Args:
@@ -75,10 +76,17 @@ def dot_product_attention(query,
     logits = logits * (d_key**(-0.5))
 
     if (q_mask is not None) and (k_mask is not None):
-        q_mask = fluid.layers.unsqueeze(input=q_mask, axes=[-1])
-        k_mask = fluid.layers.unsqueeze(input=k_mask, axes=[-1])
-        mask = fluid.layers.matmul(x=q_mask, y=k_mask, transpose_y=True)
-        logits = mask * logits + (1 - mask) * (-2**32 + 1)
+        if mask_cache is not None and q_mask.name in mask_cache and k_mask.name in mask_cache[
+                q_mask.name]:
+            mask, another_mask = mask_cache[q_mask.name][k_mask.name]
+        else:
+            mask = fluid.layers.matmul(x=q_mask, y=k_mask, transpose_y=True)
+            another_mask = (1 - mask) * (-2**32 + 1)
+            if mask_cache is not None:
+                mask_cache[q_mask.name] = dict()
+                mask_cache[q_mask.name][k_mask.name] = [mask, another_mask]
+
+        logits = mask * logits + another_mask
 
     attention = fluid.layers.softmax(logits)
     if dropout_rate:
@@ -98,12 +106,20 @@ def block(name,
           q_mask=None,
           k_mask=None,
           is_layer_norm=True,
-          dropout_rate=None):
+          dropout_rate=None,
+          mask_cache=None):
     """
     """
 
-    att_out = dot_product_attention(query, key, value, d_key, q_mask, k_mask,
-                                    dropout_rate)
+    att_out = dot_product_attention(
+        query,
+        key,
+        value,
+        d_key,
+        q_mask,
+        k_mask,
+        dropout_rate,
+        mask_cache=mask_cache)
 
     y = query + att_out
     if is_layer_norm:
