@@ -39,26 +39,69 @@ def conv_bn_layer(input,
         is_test=True)
 
 
+def conv_affine_layer(input,
+                      ch_out,
+                      filter_size,
+                      stride,
+                      padding,
+                      act='relu',
+                      name=None):
+    conv = fluid.layers.conv2d(
+        input=input,
+        num_filters=ch_out,
+        filter_size=filter_size,
+        stride=stride,
+        padding=padding,
+        act=None,
+        param_attr=ParamAttr(name=name + "_weights"),
+        bias_attr=ParamAttr(name=name + "_biases"),
+        name=name + '.conv2d.output.1')
+    if name == "conv1":
+        bn_name = "bn_" + name
+    else:
+        bn_name = "bn" + name[3:]
+
+    scale = fluid.layers.create_parameter(
+        shape=[conv.shape[1]],
+        dtype=conv.dtype,
+        attr=ParamAttr(
+            name=bn_name + '_scale', learning_rate=0.),
+        default_initializer=Constant(1.))
+    scale.stop_gradient = True
+    bias = fluid.layers.create_parameter(
+        shape=[conv.shape[1]],
+        dtype=conv.dtype,
+        attr=ParamAttr(
+            bn_name + '_offset', learning_rate=0.),
+        default_initializer=Constant(0.))
+    bias.stop_gradient = True
+
+    elt_mul = fluid.layers.elementwise_mul(x=conv, y=scale, axis=1)
+    out = fluid.layers.elementwise_add(x=elt_mul, y=bias, axis=1)
+    return out
+
+
 def shortcut(input, ch_out, stride, name):
     ch_in = input.shape[1]  # if args.data_format == 'NCHW' else input.shape[-1]
     if ch_in != ch_out:
-        return conv_bn_layer(input, ch_out, 1, stride, 0, None, name=name)
+        return conv_affine_layer(input, ch_out, 1, stride, 0, None, name=name)
     else:
         return input
 
 
 def basicblock(input, ch_out, stride, name):
     short = shortcut(input, ch_out, stride, name=name)
-    conv1 = conv_bn_layer(input, ch_out, 3, stride, 1, name=name)
-    conv2 = conv_bn_layer(conv1, ch_out, 3, 1, 1, act=None, name=name)
+    conv1 = conv_affine_layer(input, ch_out, 3, stride, 1, name=name)
+    conv2 = conv_affine_layer(conv1, ch_out, 3, 1, 1, act=None, name=name)
     return fluid.layers.elementwise_add(x=short, y=conv2, act='relu', name=name)
 
 
 def bottleneck(input, ch_out, stride, name):
     short = shortcut(input, ch_out * 4, stride, name=name + "_branch1")
-    conv1 = conv_bn_layer(input, ch_out, 1, stride, 0, name=name + "_branch2a")
-    conv2 = conv_bn_layer(conv1, ch_out, 3, 1, 1, name=name + "_branch2b")
-    conv3 = conv_bn_layer(
+    conv1 = conv_affine_layer(
+        input, ch_out, 1, stride, 0, name=name + "_branch2a")
+    conv2 = conv_affine_layer(conv1, ch_out, 3, 1, 1, name=name + "_branch2b")
+    conv3 = conv_affine_layer(
         conv2, ch_out * 4, 1, 1, 0, act=None, name=name + "_branch2c")
     return fluid.layers.elementwise_add(
         x=short, y=conv3, act='relu', name=name + ".add.output.5")
@@ -82,7 +125,7 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         152: ([3, 8, 36, 3], bottleneck)
     }
     stages, block_func = cfg[depth]
-    conv1 = conv_bn_layer(
+    conv1 = conv_affine_layer(
         input, ch_out=64, filter_size=7, stride=2, padding=3, name="conv1")
     pool1 = fluid.layers.pool2d(
         input=conv1,
@@ -150,6 +193,7 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         nms_thresh=0.7,
         min_size=0.0,
         eta=1.0)
+    gt_label = fluid.layers.squeeze(input=gt_label, axes=[1])
     rois, labels_int32, bbox_targets, bbox_inside_weights, bbox_outside_weights = fluid.layers.generate_proposal_labels(
         rpn_rois=rpn_rois,
         gt_classes=gt_label,

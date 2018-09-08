@@ -51,6 +51,8 @@ def train(args,
         name='gt_box', shape=[4], dtype='float32', lod_level=1)
     gt_label = fluid.layers.data(
         name='gt_label', shape=[1],  dtype='int32', lod_level=1)
+    is_crowd = fluid.layers.data(
+        name='is_crowd', shape = [1], dtype='bool', lod_level=1)
     im_info = fluid.layers.data(
         name='im_info', shape=[3], dtype='float32')
 
@@ -61,6 +63,7 @@ def train(args,
             variance=[0.1,0.1,0.2,0.2],
             aspect_ratios=args.aspect_ratios,
             gt_box=gt_box,
+            is_crowd=is_crowd,
             gt_label=gt_label,
             im_info=im_info,
             class_nums=class_nums,
@@ -115,7 +118,7 @@ def train(args,
     test_reader = paddle.batch(
         reader.test(data_args, val_file_list), batch_size=batch_size)
     feeder = fluid.DataFeeder(
-        place=place, feed_list=[image, gt_box, gt_label, im_info])
+        place=place, feed_list=[image, gt_box, gt_label, is_crowd, im_info])
 
     def save_model(postfix):
         model_path = os.path.join(model_save_dir, postfix)

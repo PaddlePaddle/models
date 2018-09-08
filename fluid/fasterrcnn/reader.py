@@ -25,14 +25,14 @@ import six
 
 
 class Settings(object):
-    def __init__(self,
-                 dataset=None,
-                 data_dir=None,
-                 label_file=None,
-                 resize_h=300,
-                 resize_w=300,
-                 mean_value=[127.77, 115.95, 102.98],
-                 ):
+    def __init__(
+            self,
+            dataset=None,
+            data_dir=None,
+            label_file=None,
+            resize_h=300,
+            resize_w=300,
+            mean_value=[127.77, 115.95, 102.98], ):
         self.dataset = dataset
         self.data_dir = data_dir
         self.label_list = []
@@ -161,7 +161,8 @@ def pascalvoc(settings, file_list, mode, shuffle):
             im = im.astype('float32')
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
-            yield im, boxes, lbls, im_info
+            is_crowd = np.zeros(len(boxes), dtype='bool')
+            yield im, boxes, lbls, is_crowd, im_info
 
     return reader
 
