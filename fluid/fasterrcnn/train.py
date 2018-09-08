@@ -69,17 +69,19 @@ def train(args,
     cls_loss, reg_loss = RPNloss(rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box)
     rpn_loss = cls_loss + reg_loss
     labels_int32 = fluid.layers.unsqueeze(input=labels_int32, axes=[1])
+    labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
+    labels_int64.stop_gradient = True
     loss_cls = fluid.layers.softmax_with_cross_entropy(
             logits=cls_score,
-            label=labels_int32
+            label=labels_int64
             )
     loss_bbox = fluid.layers.smooth_l1(x=bbox_pred,
                                         y=bbox_targets,
                                         inside_weight=bbox_inside_weights,
                                         outside_weight=bbox_outside_weights,
-                                        sigma=3.0)
-    loss_cls = fluid.layers.reduce_sum(loss_cls)
-    loss_bbox = fluid.layers.reduce_sum(loss_bbox)
+                                        sigma=1.0)
+    loss_cls = fluid.layers.reduce_mean(loss_cls)
+    loss_bbox = fluid.layers.reduce_mean(loss_bbox)
     detection_loss = loss_cls + loss_bbox
     loss = rpn_loss + detection_loss
 

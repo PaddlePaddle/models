@@ -217,9 +217,6 @@ def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box):
     rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
         x=score_pred, label=score_target)
     rpn_cls_loss = fluid.layers.reduce_sum(rpn_cls_loss, name='loss_rpn_cls')
-    #num_foreground = loc_target.shape[0]
-    #inside_weight = fluid.layers.fill_constant(shape=[num_foreground],value=1.0)
-    #outside_weight = fluid.layers.fill_constant(shape=[num_foreground],value=1.0/num_foreground)
 
     rpn_reg_loss = fluid.layers.smooth_l1(x=loc_pred, y=loc_target, sigma=3.0)
     rpn_reg_loss = fluid.layers.reduce_mean(rpn_reg_loss, name='loss_rpn_bbox')
