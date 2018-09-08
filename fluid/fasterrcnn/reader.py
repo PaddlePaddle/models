@@ -161,7 +161,7 @@ def pascalvoc(settings, file_list, mode, shuffle):
             im = im.astype('float32')
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
-            is_crowd = np.zeros(len(boxes), dtype='bool')
+            is_crowd = np.zeros(len(boxes), dtype='int32')
             yield im, boxes, lbls, is_crowd, im_info
 
     return reader

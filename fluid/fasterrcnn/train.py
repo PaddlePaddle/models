@@ -52,7 +52,7 @@ def train(args,
     gt_label = fluid.layers.data(
         name='gt_label', shape=[1],  dtype='int32', lod_level=1)
     is_crowd = fluid.layers.data(
-        name='is_crowd', shape = [1], dtype='bool', lod_level=1)
+        name='is_crowd', shape = [1], dtype='int32', lod_level=1)
     im_info = fluid.layers.data(
         name='im_info', shape=[3], dtype='float32')
 
@@ -71,7 +71,6 @@ def train(args,
 
     cls_loss, reg_loss = RPNloss(rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box)
     rpn_loss = cls_loss + reg_loss
-    labels_int32 = fluid.layers.unsqueeze(input=labels_int32, axes=[1])
     labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
     labels_int64.stop_gradient = True
     loss_cls = fluid.layers.softmax_with_cross_entropy(
@@ -87,6 +86,7 @@ def train(args,
     loss_bbox = fluid.layers.reduce_mean(loss_bbox)
     detection_loss = loss_cls + loss_bbox
     loss = rpn_loss + detection_loss
+    loss = detection_loss
 
     epocs = 19200 / batch_size
     boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
