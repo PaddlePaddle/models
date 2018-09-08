@@ -35,11 +35,9 @@ class Settings(object):
                  mean_value=[127.5, 127.5, 127.5],
                  apply_distort=True,
                  apply_expand=True,
-                 ap_version='11point',
-                 toy=0):
+                 ap_version='11point'):
         self._dataset = dataset
         self._ap_version = ap_version
-        self._toy = toy
         self._data_dir = data_dir
         if 'pascalvoc' in dataset:
             self._label_list = []
@@ -71,10 +69,6 @@ class Settings(object):
     @property
     def ap_version(self):
         return self._ap_version
-
-    @property
-    def toy(self):
-        return self._toy
 
     @property
     def apply_distort(self):

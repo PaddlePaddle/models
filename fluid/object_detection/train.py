@@ -26,7 +26,6 @@ add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The ini
 add_arg('ap_version',       str,   '11point',           "Integral, 11point.")
 add_arg('image_shape',      str,   '3,300,300',         "Input image shape.")
 add_arg('mean_BGR',   str,   '127.5,127.5,127.5', "Mean value for B,G,R channel which will be subtracted.")
-add_arg('is_toy',           int,   0, "Toy for quick debug, 0 means using all data, while n means using only n sample.")
 add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
 add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 #yapf: enable
@@ -301,8 +300,7 @@ if __name__ == '__main__':
         mean_value=mean_BGR,
         apply_distort=True,
         apply_expand=True,
-        ap_version = args.ap_version,
-        toy=args.is_toy)
+        ap_version = args.ap_version)
     train(args,
           data_args,
           train_parameters[dataset],
