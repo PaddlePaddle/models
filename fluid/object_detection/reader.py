@@ -168,67 +168,6 @@ def preprocess(img, bbox_labels, mode, settings):
     return img, sampled_labels
 
 
-def coco_test(settings, file_list, mode):
-    # cocoapi
-    from pycocotools.coco import COCO
-    from pycocotools.cocoeval import COCOeval
-
-    coco = COCO(file_list)
-    image_ids = coco.getImgIds()
-    images = coco.loadImgs(image_ids)
-    category_ids = coco.getCatIds()
-    category_names = [item['name'] for item in coco.loadCats(category_ids)]
-
-    if not settings.toy == 0:
-        images = images[:settings.toy] if len(images) > settings.toy else images
-    print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
-
-    def reader():
-        for image in images:
-            image_name = image['file_name']
-            image_path = os.path.join(settings.data_dir, image_name)
-
-            im = Image.open(image_path)
-            if im.mode == 'L':
-                im = im.convert('RGB')
-            im_width, im_height = im.size
-            im_id = image['id']
-
-            # layout: category_id | xmin | ymin | xmax | ymax | iscrowd
-            bbox_labels = []
-            annIds = coco.getAnnIds(imgIds=image['id'])
-            anns = coco.loadAnns(annIds)
-            for ann in anns:
-                bbox_sample = []
-                # start from 1, leave 0 to background
-                bbox_sample.append(float(ann['category_id']))
-                #float(category_ids.index(ann['category_id'])) + 1)
-                bbox = ann['bbox']
-                xmin, ymin, w, h = bbox
-                xmax = xmin + w
-                ymax = ymin + h
-                bbox_sample.append(float(xmin) / im_width)
-                bbox_sample.append(float(ymin) / im_height)
-                bbox_sample.append(float(xmax) / im_width)
-                bbox_sample.append(float(ymax) / im_height)
-                bbox_sample.append(float(ann['iscrowd']))
-                bbox_labels.append(bbox_sample)
-            im, sample_labels = preprocess(im, bbox_labels, mode, settings)
-            sample_labels = np.array(sample_labels)
-            if len(sample_labels) == 0: continue
-            im = im.astype('float32')
-            boxes = sample_labels[:, 1:5]
-            lbls = sample_labels[:, 0].astype('int32')
-            iscrowd = sample_labels[:, -1].astype('int32')
-            if 'cocoMAP' in settings.ap_version:
-                yield im, boxes, lbls, iscrowd, \
-                    [im_id, im_width, im_height]
-            else:
-                yield im, boxes, lbls, iscrowd
-
-    return reader
-
-
 def coco(settings, file_list, mode, batch_size, shuffle):
     # cocoapi
     from pycocotools.coco import COCO
@@ -237,15 +176,10 @@ def coco(settings, file_list, mode, batch_size, shuffle):
     coco = COCO(file_list)
     image_ids = coco.getImgIds()
     images = coco.loadImgs(image_ids)
-    category_ids = coco.getCatIds()
-    category_names = [item['name'] for item in coco.loadCats(category_ids)]
-
-    if not settings.toy == 0:
-        images = images[:settings.toy] if len(images) > settings.toy else images
     print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
 
-    while True:
-        if shuffle:
+    def reader():
+        if mode == 'train' and shuffle:
             np.random.shuffle(images)
         batch_out = []
         for image in images:
@@ -266,7 +200,6 @@ def coco(settings, file_list, mode, batch_size, shuffle):
                 bbox_sample = []
                 # start from 1, leave 0 to background
                 bbox_sample.append(float(ann['category_id']))
-                #float(category_ids.index(ann['category_id'])) + 1)
                 bbox = ann['bbox']
                 xmin, ymin, w, h = bbox
                 xmax = xmin + w
@@ -284,59 +217,19 @@ def coco(settings, file_list, mode, batch_size, shuffle):
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
             iscrowd = sample_labels[:, -1].astype('int32')
-
             if 'cocoMAP' in settings.ap_version:
                 batch_out.append((im, boxes, lbls, iscrowd,
                                   [im_id, im_width, im_height]))
             else:
                 batch_out.append((im, boxes, lbls, iscrowd))
+
             if len(batch_out) == batch_size:
                 yield batch_out
                 batch_out = []
 
-
-def pascalvoc_test(settings, file_list, mode):
-    flist = open(file_list)
-    images = [line.strip() for line in flist]
-    if not settings.toy == 0:
-        images = images[:settings.toy] if len(images) > settings.toy else images
-    print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
-
-    def reader():
-        for image in images:
-            image_path, label_path = image.split()
-            image_path = os.path.join(settings.data_dir, image_path)
-            label_path = os.path.join(settings.data_dir, label_path)
-
-            im = Image.open(image_path)
-            if im.mode == 'L':
-                im = im.convert('RGB')
-            im_width, im_height = im.size
-
-            # layout: label | xmin | ymin | xmax | ymax | difficult
-            bbox_labels = []
-            root = xml.etree.ElementTree.parse(label_path).getroot()
-            for object in root.findall('object'):
-                bbox_sample = []
-                # start from 1
-                bbox_sample.append(
-                    float(settings.label_list.index(object.find('name').text)))
-                bbox = object.find('bndbox')
-                difficult = float(object.find('difficult').text)
-                bbox_sample.append(float(bbox.find('xmin').text) / im_width)
-                bbox_sample.append(float(bbox.find('ymin').text) / im_height)
-                bbox_sample.append(float(bbox.find('xmax').text) / im_width)
-                bbox_sample.append(float(bbox.find('ymax').text) / im_height)
-                bbox_sample.append(difficult)
-                bbox_labels.append(bbox_sample)
-            im, sample_labels = preprocess(im, bbox_labels, mode, settings)
-            sample_labels = np.array(sample_labels)
-            if len(sample_labels) == 0: continue
-            im = im.astype('float32')
-            boxes = sample_labels[:, 1:5]
-            lbls = sample_labels[:, 0].astype('int32')
-            difficults = sample_labels[:, -1].astype('int32')
-            yield im, boxes, lbls, difficults
+        if mode == 'test' and len(batch_out) > 1:
+            yield batch_out
+            batch_out = []
 
     return reader
 
@@ -344,14 +237,13 @@ def pascalvoc_test(settings, file_list, mode):
 def pascalvoc(settings, file_list, mode, batch_size, shuffle):
     flist = open(file_list)
     images = [line.strip() for line in flist]
-    if not settings.toy == 0:
-        images = images[:settings.toy] if len(images) > settings.toy else images
     print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
 
-    while True:
-        if shuffle:
+    def reader():
+        if mode == 'train' and shuffle:
             np.random.shuffle(images)
         batch_out = []
+        cnt = 0
         for image in images:
             image_path, label_path = image.split()
             image_path = os.path.join(settings.data_dir, image_path)
@@ -385,49 +277,59 @@ def pascalvoc(settings, file_list, mode, batch_size, shuffle):
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
             difficults = sample_labels[:, -1].astype('int32')
+
             batch_out.append((im, boxes, lbls, difficults))
             if len(batch_out) == batch_size:
                 yield batch_out
+                cnt += len(batch_out)
                 batch_out = []
 
+        if mode == 'test' and len(batch_out) > 1:
+            yield batch_out
+            cnt += len(batch_out)
+            batch_out = []
 
-def train_batch_reader(settings,
-                       file_list,
-                       batch_size,
-                       shuffle=True,
-                       num_workers=8):
+    return reader
+
+
+def train(settings,
+          file_list,
+          batch_size,
+          total_iters,
+          shuffle=True,
+          use_multiprocessing=True,
+          num_workers=8,
+          max_queue=24):
     file_list = os.path.join(settings.data_dir, file_list)
+
+    def infinite_reader(gen):
+        while True:
+            for data in gen():
+                yield data
+
     if 'coco' in settings.dataset:
-        train_settings = copy.copy(settings)
-        if '2014' in file_list:
-            sub_dir = "train2014"
-        elif '2017' in file_list:
-            sub_dir = "train2017"
-        train_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
+        generator = coco(settings, file_list, "train", batch_size, shuffle)
+    else:
+        generator = pascalvoc(settings, file_list, "train", batch_size, shuffle)
 
     def reader():
         try:
-            if 'coco' in settings.dataset:
-                enqueuer = GeneratorEnqueuer(
-                    coco(train_settings, file_list, "train", batch_size,
-                         shuffle),
-                    use_multiprocessing=True)
-            else:
-                enqueuer = GeneratorEnqueuer(
-                    pascalvoc(settings, file_list, "train", batch_size,
-                              shuffle),
-                    use_multiprocessing=True)
-            enqueuer.start(max_queue_size=24, workers=num_workers)
+            enqueuer = GeneratorEnqueuer(
+                infinite_reader(generator),
+                use_multiprocessing=use_multiprocessing)
+            enqueuer.start(max_queue_size=max_queue, workers=num_workers)
             generator_output = None
-            while True:
+            iter = 0
+            while iter < total_iters:
                 while enqueuer.is_running():
                     if not enqueuer.queue.empty():
                         generator_output = enqueuer.queue.get()
                         break
                     else:
-                        time.sleep(0.01)
+                        time.sleep(0.02)
                 yield generator_output
                 generator_output = None
+                iter += 1
         finally:
             if enqueuer is not None:
                 enqueuer.stop()
@@ -435,18 +337,12 @@ def train_batch_reader(settings,
     return reader
 
 
-def test(settings, file_list):
+def test(settings, file_list, batch_size):
     file_list = os.path.join(settings.data_dir, file_list)
     if 'coco' in settings.dataset:
-        test_settings = copy.copy(settings)
-        if '2014' in file_list:
-            sub_dir = "val2014"
-        elif '2017' in file_list:
-            sub_dir = "val2017"
-        test_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        return coco_test(test_settings, file_list, 'test')
+        return coco(settings, file_list, 'test', batch_size, False)
     else:
-        return pascalvoc_test(settings, file_list, 'test')
+        return pascalvoc(settings, file_list, 'test', batch_size, False)
 
 
 def infer(settings, image_path):

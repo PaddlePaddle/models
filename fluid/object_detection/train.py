@@ -63,9 +63,9 @@ train_parameters = {
 
 def optimizer_setting(train_params):
     batch_size = train_params["batch_size"]
-    steps = train_params["train_images"] / batch_size
+    iters = train_params["train_images"] / batch_size
     lr = train_params["lr"]
-    boundaries = [i * steps  for i in train_params["lr_epochs"]]
+    boundaries = [i * iters  for i in train_params["lr_epochs"]]
     values = [ i * lr for i in train_params["lr_decay"]]
 
     optimizer = fluid.optimizer.RMSProp(
@@ -123,21 +123,29 @@ def train(args,
     use_gpu = args.use_gpu
     parallel = args.parallel
     enable_ce = args.enable_ce
+    is_shuffle = True
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
     batch_size = train_params['batch_size']
     batch_size_per_device = batch_size // devices_num
-    steps_per_epoc = train_params["train_images"] // batch_size
+    iters_per_epoc = train_params["train_images"] // batch_size
+    total_iters = epoc_num * iters_per_epoc
+    num_workers = 8
 
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()
 
     if enable_ce:
+        import random
+        random.seed(0)
+        np.random.seed(0)
+        is_shuffle = False
         startup_prog.random_seed = 111
         train_prog.random_seed = 111
         test_prog.random_seed = 111
+        num_workers = 1
 
     train_py_reader, loss = build_program(
         main_prog=train_prog,
@@ -165,18 +173,15 @@ def train(args,
         train_exe = fluid.ParallelExecutor(main_program=train_prog,
             use_cuda=use_gpu, loss_name=loss.name)
 
-    if not enable_ce:
-        train_reader = reader.train_batch_reader(data_args,
-            train_file_list, batch_size_per_device)
-    else:
-        import random
-        random.seed(0)
-        np.random.seed(0)
-        train_reader = reader.train_batch_reader(data_args,
-            train_file_list, batch_size_per_device, shuffle=False)
-
-    test_reader = paddle.batch(reader.test(data_args, val_file_list),
-        batch_size=batch_size)
+    train_reader = reader.train(data_args,
+                                train_file_list,
+                                batch_size_per_device,
+                                total_iters,
+                                shuffle=is_shuffle,
+                                use_multiprocessing=True,
+                                num_workers=num_workers,
+                                max_queue=24)
+    test_reader = reader.test(data_args, val_file_list, batch_size)
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
 
@@ -196,9 +201,8 @@ def train(args,
         try:
             batch_id = 0
             while True:
-                test_map, = exe.run(test_prog,
-                                   fetch_list=[accum_map])
-                if batch_id % 20 == 0:
+                test_map, = exe.run(test_prog, fetch_list=[accum_map])
+                if batch_id % 10 == 0:
                     every_epoc_map.append(test_map)
                     print("Batch {0}, map {1}".format(batch_id, test_map))
                 batch_id += 1
@@ -220,7 +224,7 @@ def train(args,
             start_time = time.time()
             prev_start_time = start_time
             every_epoc_loss = []
-            for batch_id in range(steps_per_epoc):
+            for batch_id in range(iters_per_epoc):
                 prev_start_time = start_time
                 start_time = time.time()
                 if parallel:
