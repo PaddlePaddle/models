@@ -83,8 +83,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
             return os.path.exists(os.path.join(model_dir, var.name))
         fluid.io.load_vars(exe, model_dir, main_program=test_prog, predicate=if_exist)
     # yapf: enable
-    test_reader = paddle.batch(
-        reader.test(data_args, test_list), batch_size=batch_size)
+    test_reader = reader.test(data_args, test_list, batch_size=batch_size)
     test_py_reader.decorate_paddle_reader(test_reader)
 
     _, accum_map = map_eval.get_map_var()
@@ -94,7 +93,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
         batch_id = 0
         while True:
             test_map, = exe.run(test_prog, fetch_list=[accum_map])
-            if batch_id % 20 == 0:
+            if batch_id % 10 == 0:
                 print("Batch {0}, map {1}".format(batch_id, test_map))
             batch_id += 1
     except fluid.core.EOFException:
@@ -129,8 +128,7 @@ if __name__ == '__main__':
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R],
         apply_distort=False,
         apply_expand=False,
-        ap_version=args.ap_version,
-        toy=0)
+        ap_version=args.ap_version)
     eval(
         args,
         data_args=data_args,
