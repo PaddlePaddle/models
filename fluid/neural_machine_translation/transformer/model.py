@@ -192,14 +192,14 @@ pre_process_layer = partial(pre_post_process_layer, None)
 post_process_layer = pre_post_process_layer
 
 
-def prepare_encoder(src_word,
-                    src_pos,
-                    src_vocab_size,
-                    src_emb_dim,
-                    src_max_len,
-                    dropout_rate=0.,
-                    word_emb_param_name=None,
-                    pos_enc_param_name=None):
+def prepare_encoder_decoder(src_word,
+                            src_pos,
+                            src_vocab_size,
+                            src_emb_dim,
+                            src_max_len,
+                            dropout_rate=0.,
+                            word_emb_param_name=None,
+                            pos_enc_param_name=None):
     """Add word embeddings and position encodings.
     The output tensor has a shape of:
     [batch_size, max_src_length_in_batch, d_model].
@@ -228,9 +228,9 @@ def prepare_encoder(src_word,
 
 
 prepare_encoder = partial(
-    prepare_encoder, pos_enc_param_name=pos_enc_param_names[0])
+    prepare_encoder_decoder, pos_enc_param_name=pos_enc_param_names[0])
 prepare_decoder = partial(
-    prepare_encoder, pos_enc_param_name=pos_enc_param_names[1])
+    prepare_encoder_decoder, pos_enc_param_name=pos_enc_param_names[1])
 
 
 def encoder_layer(enc_input,
@@ -425,28 +425,58 @@ def make_all_inputs(input_fields):
     return inputs
 
 
-def transformer(
-        src_vocab_size,
-        trg_vocab_size,
-        max_length,
-        n_layer,
-        n_head,
-        d_key,
-        d_value,
-        d_model,
-        d_inner_hid,
-        prepostprocess_dropout,
-        attention_dropout,
-        relu_dropout,
-        preprocess_cmd,
-        postprocess_cmd,
-        weight_sharing,
-        label_smooth_eps, ):
+def make_all_py_reader_inputs(input_fields, is_test=False):
+    reader = layers.py_reader(
+        capacity=20,
+        name="test_reader" if is_test else "train_reader",
+        shapes=[input_descs[input_field][0] for input_field in input_fields],
+        dtypes=[input_descs[input_field][1] for input_field in input_fields],
+        lod_levels=[
+            input_descs[input_field][2]
+            if len(input_descs[input_field]) == 3 else 0
+            for input_field in input_fields
+        ])
+    return layers.read_file(reader), reader
+
+
+def transformer(src_vocab_size,
+                trg_vocab_size,
+                max_length,
+                n_layer,
+                n_head,
+                d_key,
+                d_value,
+                d_model,
+                d_inner_hid,
+                prepostprocess_dropout,
+                attention_dropout,
+                relu_dropout,
+                preprocess_cmd,
+                postprocess_cmd,
+                weight_sharing,
+                label_smooth_eps,
+                use_py_reader=False,
+                is_test=False):
     if weight_sharing:
         assert src_vocab_size == src_vocab_size, (
             "Vocabularies in source and target should be same for weight sharing."
         )
-    enc_inputs = make_all_inputs(encoder_data_input_fields)
+
+    data_input_names = encoder_data_input_fields + \
+                decoder_data_input_fields[:-1] + label_data_input_fields
+
+    if use_py_reader:
+        all_inputs, reader = make_all_py_reader_inputs(data_input_names,
+                                                       is_test)
+    else:
+        all_inputs = make_all_inputs(data_input_names)
+
+    enc_inputs_len = len(encoder_data_input_fields)
+    dec_inputs_len = len(decoder_data_input_fields[:-1])
+    enc_inputs = all_inputs[0:enc_inputs_len]
+    dec_inputs = all_inputs[enc_inputs_len:enc_inputs_len + dec_inputs_len]
+    label = all_inputs[-2]
+    weights = all_inputs[-1]
 
     enc_output = wrap_encoder(
         src_vocab_size,
@@ -464,8 +494,6 @@ def transformer(
         postprocess_cmd,
         weight_sharing,
         enc_inputs, )
-
-    dec_inputs = make_all_inputs(decoder_data_input_fields[:-1])
 
     predict = wrap_decoder(
         trg_vocab_size,
@@ -487,7 +515,6 @@ def transformer(
 
     # Padding index do not contribute to the total loss. The weights is used to
     # cancel padding index in calculating the loss.
-    label, weights = make_all_inputs(label_data_input_fields)
     if label_smooth_eps:
         label = layers.label_smooth(
             label=layers.one_hot(
@@ -502,9 +529,9 @@ def transformer(
     weighted_cost = cost * weights
     sum_cost = layers.reduce_sum(weighted_cost)
     token_num = layers.reduce_sum(weights)
+    token_num.stop_gradient = True
     avg_cost = sum_cost / token_num
-    avg_cost.stop_gradient = True
-    return sum_cost, avg_cost, predict, token_num
+    return sum_cost, avg_cost, predict, token_num, reader if use_py_reader else None
 
 
 def wrap_encoder(src_vocab_size,
