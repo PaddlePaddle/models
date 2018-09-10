@@ -4,7 +4,6 @@ import numpy as np
 import argparse
 import functools
 import shutil
-import load_var
 import paddle
 import paddle.fluid as fluid
 import reader
@@ -29,7 +28,7 @@ add_arg('resize_h',         int,   800,    "The resized image height.")
 add_arg('resize_w',         int,   1333,    "The resized image height.")
 add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
 #yapf: enable
-
+"""
 def exponential_with_warmup_decay(boundaries, values, warmup_iter, warmup_factor):
     global_step = lr_scheduler._decay_step_counter()
     decayed_lr = lr_scheduler.piecewise_decay(boundaries, values)
@@ -39,7 +38,7 @@ def exponential_with_warmup_decay(boundaries, values, warmup_iter, warmup_factor
             factor = warmup_factor * (1 - alpha) + alpha
             decayed_lr = decayed_lr * factor
     return decayed_lr
-
+"""
 def train(args,
           train_file_list,
           val_file_list,
@@ -62,7 +61,7 @@ def train(args,
     gt_label = fluid.layers.data(
         name='gt_label', shape=[1],  dtype='int32', lod_level=1)
     is_crowd = fluid.layers.data(
-        name='is_crowd', shape = [1], dtype='int32', lod_level=1)
+        name='is_crowd', shape = [-1], dtype='int32', lod_level=1, append_batch_size=False)
     im_info = fluid.layers.data(
         name='im_info', shape=[3], dtype='float32')
 
@@ -78,6 +77,7 @@ def train(args,
             im_info=im_info,
             class_nums=class_nums,
             )
+    cls_loss, reg_loss = RPNloss(rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box, is_crowd, im_info)
     rpn_loss = cls_loss + reg_loss
     labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
     labels_int64.stop_gradient = True
@@ -96,6 +96,7 @@ def train(args,
     loss = rpn_loss + detection_loss
     boundaries = [0,120000,160000]
     values = [learning_rate,learning_rate*0.1,learning_rate*0.01,learning_rate*0.001]
+    """
     optimizer = fluid.optimizer.Momentum(
         learning_rate=exponential_with_warmup_decay(boundaries=boundaries,
       values=values,
@@ -104,6 +105,7 @@ def train(args,
         regularization=fluid.regularizer.L2Decay(0.0001),
         momentum=0.9)
     optimizer.minimize(loss)
+    """
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
@@ -131,6 +133,7 @@ def train(args,
         print 'save models to %s' % (model_path)
         fluid.io.save_persistables(exe, model_path)
     total_time = 0.0
+    print('12121212111')
     for pass_id in range(num_passes):
         start_time = time.time()
         prev_start_time = start_time
