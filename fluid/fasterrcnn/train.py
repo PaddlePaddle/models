@@ -100,9 +100,9 @@ def train(args,
 
     optimizer = fluid.optimizer.Momentum(
         learning_rate=exponential_with_warmup_decay(boundaries=boundaries,
-      values=values,
-      warmup_iter=500,
-      warmup_factor=1.0/3.0),
+            values=values,
+            warmup_iter=500,
+            warmup_factor=1.0/3.0),
         regularization=fluid.regularizer.L2Decay(0.0001),
         momentum=0.9)
     optimizer.minimize(loss)
