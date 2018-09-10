@@ -1,6 +1,7 @@
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
+from paddle.fluid.regularizer import L2Decay
 import paddle.fluid as fluid
 import sys
 
@@ -276,16 +277,16 @@ def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd,
     score_target = fluid.layers.cast(x=score_target, dtype='float32')
     rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
         x=score_pred, label=score_target)
-    rpn_cls_loss = fluid.layers.reduce_sum(rpn_cls_loss, name='loss_rpn_cls')
+    rpn_cls_loss = fluid.layers.reduce_mean(rpn_cls_loss, name='loss_rpn_cls')
 
     rpn_reg_loss = fluid.layers.smooth_l1(x=loc_pred, y=loc_target, sigma=9.0)
     rpn_reg_loss = fluid.layers.reduce_sum(rpn_reg_loss, name='loss_rpn_bbox')
-    # norm = fluid.layers.reduce_prod(fluid.layers.shape(score_target))
-    # rpn_reg_loss = rpn_reg_loss / fluid.layers.cast(x=norm, dtype='float32')
     score_shape = fluid.layers.shape(score_target)
     score_shape = fluid.layers.cast(x=score_shape, dtype='float32')
     norm = fluid.layers.reduce_prod(score_shape)
     norm.stop_gradient = True
     rpn_reg_loss = rpn_reg_loss / norm
+    rpn_reg_loss.persistable = True
+    rpn_cls_loss.persistable = True
 
     return rpn_cls_loss, rpn_reg_loss

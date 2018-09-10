@@ -39,7 +39,7 @@ def get_image_blob(roidb, settings):
         'Failed to read image \'{}\''.format(roidb['image'])
     if roidb['flipped']:
         im = im[:, ::-1, :]
-    print(im[10:, 10:, :])
+    #print(im[10:, 10:, :])
     target_size = settings.scales[scale_ind]
     im, im_scale = prep_im_for_blob(im, settings.mean_value, target_size,
                                     settings.max_size)
@@ -57,7 +57,7 @@ def prep_im_for_blob(im, pixel_means, target_size, max_size):
     """
     im = im.astype(np.float32, copy=False)
     im -= pixel_means
-    print(im[10:, 10:, :])
+    #print(im[10:, 10:, :])
 
     im_shape = im.shape
     im_size_min = np.min(im_shape[0:2])
@@ -73,8 +73,8 @@ def prep_im_for_blob(im, pixel_means, target_size, max_size):
         fx=im_scale,
         fy=im_scale,
         interpolation=cv2.INTER_LINEAR)
-    print(im[10:, 10:, :])
+    #print(im[10:, 10:, :])
     channel_swap = (2, 0, 1)  #(batch, channel, height, width)
     im = im.transpose(channel_swap)
-    print(im[10:, 10:, :])
+    #print(im[10:, 10:, :])
     return im, im_scale
