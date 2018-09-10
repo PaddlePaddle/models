@@ -93,7 +93,7 @@ class JsonDataset(object):
                                                                    start_time))
 
             logger.info('Appending horizontally-flipped training examples...')
-            _extend_with_flipped_entries(roidb)
+            self._extend_with_flipped_entries(roidb)
         logger.info('Loaded dataset: {:s}'.format(self.name))
         logger.info('{:d} roidb entries'.format(len(roidb)))
         return roidb
@@ -158,29 +158,28 @@ class JsonDataset(object):
         entry['gt_id'] = np.append(entry['gt_id'], gt_id)
         entry['is_crowd'] = np.append(entry['is_crowd'], is_crowd)
 
+    def _extend_with_flipped_entries(self, roidb):
+        """Flip each entry in the given roidb and return a new roidb that is the
+        concatenation of the original roidb and the flipped entries.
 
-def _extend_with_flipped_entries(roidb):
-    """Flip each entry in the given roidb and return a new roidb that is the
-    concatenation of the original roidb and the flipped entries.
-
-    "Flipping" an entry means that that image and associated metadata (e.g.,
-    ground truth boxes and object proposals) are horizontally flipped.
-    """
-    flipped_roidb = []
-    for entry in roidb:
-        width = entry['width']
-        gt_boxes = entry['gt_boxes'].copy()
-        oldx1 = gt_boxes[:, 0].copy()
-        oldx2 = gt_boxes[:, 2].copy()
-        gt_boxes[:, 0] = width - oldx2 - 1
-        gt_boxes[:, 2] = width - oldx1 - 1
-        assert (gt_boxes[:, 2] >= gt_boxes[:, 0]).all()
-        flipped_entry = {}
-        dont_copy = ('gt_boxes', 'flipped')
-        for k, v in entry.items():
-            if k not in dont_copy:
-                flipped_entry[k] = v
-        flipped_entry['gt_boxes'] = gt_boxes
-        flipped_entry['flipped'] = True
-        flipped_roidb.append(flipped_entry)
-    roidb.extend(flipped_roidb)
+        "Flipping" an entry means that that image and associated metadata (e.g.,
+        ground truth boxes and object proposals) are horizontally flipped.
+        """
+        flipped_roidb = []
+        for entry in roidb:
+            width = entry['width']
+            gt_boxes = entry['gt_boxes'].copy()
+            oldx1 = gt_boxes[:, 0].copy()
+            oldx2 = gt_boxes[:, 2].copy()
+            gt_boxes[:, 0] = width - oldx2 - 1
+            gt_boxes[:, 2] = width - oldx1 - 1
+            assert (gt_boxes[:, 2] >= gt_boxes[:, 0]).all()
+            flipped_entry = {}
+            dont_copy = ('gt_boxes', 'flipped')
+            for k, v in entry.items():
+                if k not in dont_copy:
+                    flipped_entry[k] = v
+            flipped_entry['gt_boxes'] = gt_boxes
+            flipped_entry['flipped'] = True
+            flipped_roidb.append(flipped_entry)
+        roidb.extend(flipped_roidb)
