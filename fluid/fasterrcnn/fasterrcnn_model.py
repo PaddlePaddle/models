@@ -1,6 +1,7 @@
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
+from paddle.fluid.regularizer import L2Decay
 import paddle.fluid as fluid
 import sys
 
@@ -54,7 +55,8 @@ def conv_affine_layer(input,
         padding=padding,
         act=None,
         param_attr=ParamAttr(name=name + "_weights"),
-        bias_attr=ParamAttr(name=name + "_biases"),
+        bias_attr=ParamAttr(
+            name=name + "_biases", learning_rate=2., regularizer=L2Decay(0.)),
         name=name + '.conv2d.output.1')
     if name == "conv1":
         bn_name = "bn_" + name
@@ -142,7 +144,6 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
     #========= RPN ============
 
     # rpn_conv/3*3
-    print(res4)
     rpn_conv = fluid.layers.conv2d(
         input=res4,
         num_filters=1024,
@@ -152,7 +153,8 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         act='relu',
         name='conv_rpn',
         param_attr=ParamAttr(name="conv_rpn_w"),
-        bias_attr=ParamAttr(name="conv_rpn_b"))
+        bias_attr=ParamAttr(
+            name="conv_rpn_b", learning_rate=2., regularizer=L2Decay(0.)))
     anchor, var = fluid.layers.anchor_generator(
         input=rpn_conv,
         anchor_sizes=anchor_sizes,
@@ -169,7 +171,8 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         act=None,
         name='rpn_cls_score',
         param_attr=ParamAttr(name="rpn_cls_logits_w"),
-        bias_attr=ParamAttr(name="rpn_cls_logits_b"))
+        bias_attr=ParamAttr(
+            name="rpn_cls_logits_b", learning_rate=2., regularizer=L2Decay(0.)))
     rpn_bbox_pred = fluid.layers.conv2d(
         rpn_conv,
         num_filters=4 * num_anchor,
@@ -179,7 +182,8 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         act=None,
         name='rpn_bbox_pred',
         param_attr=ParamAttr(name="rpn_bbox_pred_w"),
-        bias_attr=ParamAttr(name="rpn_bbox_pred_b"))
+        bias_attr=ParamAttr(
+            name="rpn_bbox_pred_b", learning_rate=2., regularizer=L2Decay(0.)))
 
     rpn_cls_score_prob = fluid.layers.sigmoid(
         rpn_cls_score, name='rpn_cls_score_prob')
@@ -225,13 +229,19 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
                                 act=None,
                                 name='cls_score',
                                 param_attr=ParamAttr(name='cls_score_w'),
-                                bias_attr=ParamAttr(name='cls_score_b'))
+                                bias_attr=ParamAttr(
+                                    name='cls_score_b',
+                                    learning_rate=2.,
+                                    regularizer=L2Decay(0.)))
     bbox_pred = fluid.layers.fc(input=res5_pool,
                                 size=4 * class_nums,
                                 act=None,
                                 name='bbox_pred',
                                 param_attr=ParamAttr(name='bbox_pred_w'),
-                                bias_attr=ParamAttr(name='bbox_pred_b'))
+                                bias_attr=ParamAttr(
+                                    name='bbox_pred_b',
+                                    learning_rate=2.,
+                                    regularizer=L2Decay(0.)))
 
     return rpn_cls_score, rpn_bbox_pred, anchor, var, cls_score, bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, rois, labels_int32
 
@@ -267,16 +277,16 @@ def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd,
     score_target = fluid.layers.cast(x=score_target, dtype='float32')
     rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
         x=score_pred, label=score_target)
-    rpn_cls_loss = fluid.layers.reduce_sum(rpn_cls_loss, name='loss_rpn_cls')
+    rpn_cls_loss = fluid.layers.reduce_mean(rpn_cls_loss, name='loss_rpn_cls')
 
     rpn_reg_loss = fluid.layers.smooth_l1(x=loc_pred, y=loc_target, sigma=9.0)
     rpn_reg_loss = fluid.layers.reduce_sum(rpn_reg_loss, name='loss_rpn_bbox')
-    # norm = fluid.layers.reduce_prod(fluid.layers.shape(score_target))
-    # rpn_reg_loss = rpn_reg_loss / fluid.layers.cast(x=norm, dtype='float32')
     score_shape = fluid.layers.shape(score_target)
     score_shape = fluid.layers.cast(x=score_shape, dtype='float32')
     norm = fluid.layers.reduce_prod(score_shape)
     norm.stop_gradient = True
     rpn_reg_loss = rpn_reg_loss / norm
+    rpn_reg_loss.persistable = True
+    rpn_cls_loss.persistable = True
 
     return rpn_cls_loss, rpn_reg_loss

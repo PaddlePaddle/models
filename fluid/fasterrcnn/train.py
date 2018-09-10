@@ -19,7 +19,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('parallel',         bool,   False,       "Minibatch size.")
 add_arg('use_gpu',          bool,   False,      "Whether use GPU.")
 add_arg('model_save_dir',   str,    'model',     "The path to save model.")
-add_arg('pretrained_model', str,    'imagenet_resnet50', "The init model path.")
+add_arg('pretrained_model', str,    'imagenet_resnet50_fusebn', "The init model path.")
 add_arg('dataset',          str,    'coco2017', "coco2014, coco2017, and pascalvoc.")
 add_arg('data_dir',         str,    'data/COCO', "data directory")
 # SOLVER
@@ -82,6 +82,7 @@ def train(args):
 
     cls_loss, reg_loss = RPNloss(rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box, is_crowd, im_info)
     rpn_loss = cls_loss + reg_loss
+    rpn_loss.persistable=True
     labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
     labels_int64.stop_gradient = True
     loss_cls = fluid.layers.softmax_with_cross_entropy(
@@ -94,9 +95,19 @@ def train(args):
                                         outside_weight=bbox_outside_weights,
                                         sigma=1.0)
     loss_cls = fluid.layers.reduce_mean(loss_cls)
+    loss_cls.persistable=True
+
     loss_bbox = fluid.layers.reduce_mean(loss_bbox)
+    loss_bbox.persistable=True
     detection_loss = loss_cls + loss_bbox
+    detection_loss.persistable=True
+
     loss = rpn_loss + detection_loss
+    loss.persistable=True
+
+    loss = detection_loss
+    loss.persistable=True
+
     boundaries = [0,120000,160000]
     values = [learning_rate,learning_rate*0.1,learning_rate*0.01,learning_rate*0.001]
 
@@ -108,6 +119,8 @@ def train(args):
         regularization=fluid.regularizer.L2Decay(0.0001),
         momentum=0.9)
     optimizer.minimize(loss)
+
+    #fluid.memory_optimize(fluid.default_main_program())
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -144,7 +157,6 @@ def train(args):
         iter = 0
         pass_duration = 0.0
         for batch_id, data in enumerate(train_reader()):
-            #print(data)
             prev_start_time = start_time
             start_time = time.time()
             image, gt_box, gt_label, is_crowd, im_info = data[0]
@@ -153,22 +165,19 @@ def train(args):
 
             gt_box_t = fluid.core.LoDTensor()
             gt_box_t.set(gt_box, place)
-            print(len(gt_box))
-
             gt_box_t.set_lod([[0, len(gt_box)]])
+
             gt_label_t = fluid.core.LoDTensor()
             gt_label_t.set(gt_label.reshape(-1, 1), place)
-
-            print(len(gt_label))
             gt_label_t.set_lod([[0, len(gt_label)]])
 
             is_crowd_t = fluid.core.LoDTensor()
             is_crowd_t.set(is_crowd, place)
-            print(len(is_crowd))
             is_crowd_t.set_lod([[0, len(is_crowd)]])
 
             im_info_t = fluid.core.LoDTensor()
             im_info_t.set(im_info, place)
+
             feeding = {}
             feeding['image'] = image_t
             feeding['gt_box'] = gt_box_t
@@ -179,16 +188,14 @@ def train(args):
             if args.parallel:
                 loss_v, = train_exe.run(fetch_list=[loss.name],
                                         feed=feeding)
-                print(loss_v)
             else:
                 loss_v, = exe.run(fluid.default_main_program(),
                                   feed=feeding,
                                   fetch_list=[loss])
-                print(loss_v)
 
             loss_v = np.mean(np.array(loss_v))
             every_pass_loss.append(loss_v)
-            if batch_id % 20 == 0:
+            if batch_id % 1 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
