@@ -127,8 +127,7 @@ if __name__ == '__main__':
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R],
         apply_distort=False,
         apply_expand=False,
-        ap_version='',
-        toy=0)
+        ap_version='')
     infer(
         args,
         data_args=data_args,

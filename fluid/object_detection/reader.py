@@ -22,6 +22,7 @@ import os
 import time
 import copy
 import six
+from data_util import GeneratorEnqueuer
 
 
 class Settings(object):
@@ -34,11 +35,9 @@ class Settings(object):
                  mean_value=[127.5, 127.5, 127.5],
                  apply_distort=True,
                  apply_expand=True,
-                 ap_version='11point',
-                 toy=0):
+                 ap_version='11point'):
         self._dataset = dataset
         self._ap_version = ap_version
-        self._toy = toy
         self._data_dir = data_dir
         if 'pascalvoc' in dataset:
             self._label_list = []
@@ -70,10 +69,6 @@ class Settings(object):
     @property
     def ap_version(self):
         return self._ap_version
-
-    @property
-    def toy(self):
-        return self._toy
 
     @property
     def apply_distort(self):
@@ -167,7 +162,7 @@ def preprocess(img, bbox_labels, mode, settings):
     return img, sampled_labels
 
 
-def coco(settings, file_list, mode, shuffle):
+def coco(settings, file_list, mode, batch_size, shuffle):
     # cocoapi
     from pycocotools.coco import COCO
     from pycocotools.cocoeval import COCOeval
@@ -175,16 +170,12 @@ def coco(settings, file_list, mode, shuffle):
     coco = COCO(file_list)
     image_ids = coco.getImgIds()
     images = coco.loadImgs(image_ids)
-    category_ids = coco.getCatIds()
-    category_names = [item['name'] for item in coco.loadCats(category_ids)]
-
-    if not settings.toy == 0:
-        images = images[:settings.toy] if len(images) > settings.toy else images
     print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
 
     def reader():
         if mode == 'train' and shuffle:
             np.random.shuffle(images)
+        batch_out = []
         for image in images:
             image_name = image['file_name']
             image_path = os.path.join(settings.data_dir, image_name)
@@ -203,7 +194,6 @@ def coco(settings, file_list, mode, shuffle):
                 bbox_sample = []
                 # start from 1, leave 0 to background
                 bbox_sample.append(float(ann['category_id']))
-                #float(category_ids.index(ann['category_id'])) + 1)
                 bbox = ann['bbox']
                 xmin, ymin, w, h = bbox
                 xmax = xmin + w
@@ -222,24 +212,32 @@ def coco(settings, file_list, mode, shuffle):
             lbls = sample_labels[:, 0].astype('int32')
             iscrowd = sample_labels[:, -1].astype('int32')
             if 'cocoMAP' in settings.ap_version:
-                yield im, boxes, lbls, iscrowd, \
-                    [im_id, im_width, im_height]
+                batch_out.append((im, boxes, lbls, iscrowd,
+                                  [im_id, im_width, im_height]))
             else:
-                yield im, boxes, lbls, iscrowd
+                batch_out.append((im, boxes, lbls, iscrowd))
+
+            if len(batch_out) == batch_size:
+                yield batch_out
+                batch_out = []
+
+        if mode == 'test' and len(batch_out) > 1:
+            yield batch_out
+            batch_out = []
 
     return reader
 
 
-def pascalvoc(settings, file_list, mode, shuffle):
+def pascalvoc(settings, file_list, mode, batch_size, shuffle):
     flist = open(file_list)
     images = [line.strip() for line in flist]
-    if not settings.toy == 0:
-        images = images[:settings.toy] if len(images) > settings.toy else images
     print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
 
     def reader():
         if mode == 'train' and shuffle:
             np.random.shuffle(images)
+        batch_out = []
+        cnt = 0
         for image in images:
             image_path, label_path = image.split()
             image_path = os.path.join(settings.data_dir, image_path)
@@ -273,37 +271,69 @@ def pascalvoc(settings, file_list, mode, shuffle):
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
             difficults = sample_labels[:, -1].astype('int32')
-            yield im, boxes, lbls, difficults
+
+            batch_out.append((im, boxes, lbls, difficults))
+            if len(batch_out) == batch_size:
+                yield batch_out
+                cnt += len(batch_out)
+                batch_out = []
+
+        if mode == 'test' and len(batch_out) > 1:
+            yield batch_out
+            cnt += len(batch_out)
+            batch_out = []
 
     return reader
 
 
-def train(settings, file_list, shuffle=True):
+def train(settings,
+          file_list,
+          batch_size,
+          shuffle=True,
+          use_multiprocessing=True,
+          num_workers=8,
+          max_queue=24):
     file_list = os.path.join(settings.data_dir, file_list)
+
+    def infinite_reader(gen):
+        while True:
+            for data in gen():
+                yield data
+
     if 'coco' in settings.dataset:
-        train_settings = copy.copy(settings)
-        if '2014' in file_list:
-            sub_dir = "train2014"
-        elif '2017' in file_list:
-            sub_dir = "train2017"
-        train_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        return coco(train_settings, file_list, 'train', shuffle)
+        generator = coco(settings, file_list, "train", batch_size, shuffle)
     else:
-        return pascalvoc(settings, file_list, 'train', shuffle)
+        generator = pascalvoc(settings, file_list, "train", batch_size, shuffle)
+
+    def reader():
+        try:
+            enqueuer = GeneratorEnqueuer(
+                infinite_reader(generator),
+                use_multiprocessing=use_multiprocessing)
+            enqueuer.start(max_queue_size=max_queue, workers=num_workers)
+            generator_output = None
+            while True:
+                while enqueuer.is_running():
+                    if not enqueuer.queue.empty():
+                        generator_output = enqueuer.queue.get()
+                        break
+                    else:
+                        time.sleep(0.02)
+                yield generator_output
+                generator_output = None
+        finally:
+            if enqueuer is not None:
+                enqueuer.stop()
+
+    return reader
 
 
-def test(settings, file_list):
+def test(settings, file_list, batch_size):
     file_list = os.path.join(settings.data_dir, file_list)
     if 'coco' in settings.dataset:
-        test_settings = copy.copy(settings)
-        if '2014' in file_list:
-            sub_dir = "val2014"
-        elif '2017' in file_list:
-            sub_dir = "val2017"
-        test_settings.data_dir = os.path.join(settings.data_dir, sub_dir)
-        return coco(test_settings, file_list, 'test', False)
+        return coco(settings, file_list, 'test', batch_size, False)
     else:
-        return pascalvoc(settings, file_list, 'test', False)
+        return pascalvoc(settings, file_list, 'test', batch_size, False)
 
 
 def infer(settings, image_path):
