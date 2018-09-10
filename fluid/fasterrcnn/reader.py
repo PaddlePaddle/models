@@ -111,6 +111,8 @@ def coco(settings, mode, shuffle):
             gt_boxes = roidb['gt_boxes'].astype('float32')
             gt_classes = roidb['gt_classes'].astype('int32')
             is_crowd = roidb['is_crowd'].astype('int32')
+            if gt_boxes.shape[0] == 0:
+                continue
             yield im, gt_boxes, gt_classes, is_crowd, im_info
 
     return reader
