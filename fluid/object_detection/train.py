@@ -129,7 +129,6 @@ def train(args,
     batch_size = train_params['batch_size']
     batch_size_per_device = batch_size // devices_num
     iters_per_epoc = train_params["train_images"] // batch_size
-    total_iters = epoc_num * iters_per_epoc
     num_workers = 8
 
     startup_prog = fluid.Program()
@@ -175,7 +174,6 @@ def train(args,
     train_reader = reader.train(data_args,
                                 train_file_list,
                                 batch_size_per_device,
-                                total_iters,
                                 shuffle=is_shuffle,
                                 use_multiprocessing=True,
                                 num_workers=num_workers,

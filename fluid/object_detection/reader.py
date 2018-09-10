@@ -289,7 +289,6 @@ def pascalvoc(settings, file_list, mode, batch_size, shuffle):
 def train(settings,
           file_list,
           batch_size,
-          total_iters,
           shuffle=True,
           use_multiprocessing=True,
           num_workers=8,
@@ -313,8 +312,7 @@ def train(settings,
                 use_multiprocessing=use_multiprocessing)
             enqueuer.start(max_queue_size=max_queue, workers=num_workers)
             generator_output = None
-            iter = 0
-            while iter < total_iters:
+            while True:
                 while enqueuer.is_running():
                     if not enqueuer.queue.empty():
                         generator_output = enqueuer.queue.get()
@@ -323,7 +321,6 @@ def train(settings,
                         time.sleep(0.02)
                 yield generator_output
                 generator_output = None
-                iter += 1
         finally:
             if enqueuer is not None:
                 enqueuer.stop()
