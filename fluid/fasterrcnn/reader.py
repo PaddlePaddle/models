@@ -23,27 +23,40 @@ import time
 import copy
 import six
 
+from roidbs import JsonDataset
+import data_utils
+
 
 class Settings(object):
-    def __init__(
-            self,
-            dataset=None,
-            data_dir=None,
-            label_file=None,
-            resize_h=300,
-            resize_w=300,
-            mean_value=[127.77, 115.95, 102.98], ):
-        self.dataset = dataset
-        self.data_dir = data_dir
-        self.label_list = []
-        label_fpath = os.path.join(data_dir, label_file)
-        for line in open(label_fpath):
-            self.label_list.append(line.strip())
+    def __init__(self, args=None):
+        for arg, value in sorted(six.iteritems(vars(args))):
+            setattr(self, arg, value)
 
-        self.resize_h = resize_h
-        self.resize_w = resize_w
-        self.img_mean = np.array(mean_value)[:, np.newaxis, np.newaxis].astype(
-            'float32')
+        if 'coco2014' in args.dataset:
+            self.class_nums = 81
+            self.train_file_list = 'annotations/instances_train2014.json'
+            self.train_data_dir = 'train2014'
+            self.val_file_list = 'annotations/instances_val2014.json'
+            self.val_data_dir = 'val2014'
+        elif 'coco2017' in args.dataset:
+            self.class_nums = 81
+            self.train_file_list = 'annotations/instances_train2017.json'
+            self.train_data_dir = 'train2017'
+            self.val_file_list = 'annotations/instances_val2017.json'
+            self.val_data_dir = 'val2017'
+        elif 'pascalvoc' in args.dataset:
+            self.label_file = 'label_list'
+            self.train_file_list = 'trainval.txt'
+            self.val_file_list = 'test.txt'
+            self.label_list = []
+            label_fpath = os.path.join(self.data_dir, self.label_file)
+            for line in open(label_fpath):
+                self.label_list.append(line.strip())
+        else:
+            raise NotImplementedError('Dataset {} not supported'.format(
+                self.dataset))
+        self.img_mean = np.array(self.mean_value)[:, np.newaxis,
+                                                  np.newaxis].astype('float32')
 
 
 def preprocess(img, bbox_labels, mode, settings):
@@ -71,56 +84,35 @@ def preprocess(img, bbox_labels, mode, settings):
 
 
 def coco(settings, file_list, mode, shuffle):
-    # cocoapi
-    from pycocotools.coco import COCO
-    from pycocotools.cocoeval import COCOeval
-    print('loading coco...')
-    coco = COCO(file_list)
-    image_ids = coco.getImgIds()
-    images = coco.loadImgs(image_ids)
-    category_ids = coco.getCatIds()
-    category_names = [item['name'] for item in coco.loadCats(category_ids)]
+    if mode == 'train':
+        settings.file_list = settings.train_file_list
+        settings.data_dir = os.path.join(settings.data_dir,
+                                         settings.train_data_dir)
+    elif mode == 'test':
+        settings.file_list = settings.train_file_list
+        settings.data_dir = os.path.join(settings.data_dir,
+                                         settings.train_data_dir)
 
-    print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
+    json_dataset = JsonDataset(settings)
+    roidbs = json_dataset.get_roidb(train=(mode == 'train'))
+
+    print("{} on {} with {} roidbs".format(mode, settings.dataset, len(roidbs)))
 
     def reader():
         if mode == "train" and shuffle:
-            random.shuffle(images)
-        for image in images:
-            image_name = image['file_name']
-            image_path = os.path.join(settings.data_dir, image_name)
+            random.shuffle(roidbs)
+        for roidb in roidbs:
+            im, im_scales = data_utils.get_image_blob(roidb, settings)
+            im_height = np.round(roidb['height'] * im_scales)
+            im_width = np.round(roidb['width'] * im_scales)
+            im_info = np.array(
+                [[im_height, im_width, im_scales]], dtype=np.float32)
+            gt_boxes = roidb['gt_boxes'].astype('float32')
+            gt_classes = roidb['gt_classes'].astype('int32')
+            is_crowd = roidb['is_crowd'].astype('int32')
+            yield im, gt_boxes, gt_classes, is_crowd, im_info
 
-            im = Image.open(image_path)
-            if im.mode == 'L':
-                im = im.convert('RGB')
-            im_width, im_height = im.size
-            im_id = image['id']
-            im_info = [float(im_width), float(im_height), 16.0]
-            # layout: category_id | xmin | ymin | xmax | ymax | im_info
-            bbox_labels = []
-            annIds = coco.getAnnIds(imgIds=image['id'])
-            anns = coco.loadAnns(annIds)
-            for ann in anns:
-                bbox_sample = []
-                # start from 1, leave 0 to background
-                bbox_sample.append(float(ann['category_id']))
-                #float(category_ids.index(ann['category_id'])) + 1)
-                bbox = ann['bbox']
-                xmin, ymin, w, h = bbox
-                xmax = xmin + w
-                ymax = ymin + h
-                bbox_sample.append(float(xmin))
-                bbox_sample.append(float(ymin))
-                bbox_sample.append(float(xmax))
-                bbox_sample.append(float(ymax))
-                bbox_labels.append(bbox_sample)
-            im, sample_labels = preprocess(im, bbox_labels, mode, settings)
-            sample_labels = np.array(sample_labels)
-            if len(sample_labels) == 0: continue
-            im = im.astype('float32')
-            boxes = sample_labels[:, 1:5]
-            lbls = sample_labels[:, 0].astype('int32')
-            yield im, boxes, lbls, im_info
+    return reader
 
 
 def pascalvoc(settings, file_list, mode, shuffle):
@@ -169,12 +161,18 @@ def pascalvoc(settings, file_list, mode, shuffle):
 
 def train(settings, file_list, shuffle=True):
     file_list = os.path.join(settings.data_dir, file_list)
-    return pascalvoc(settings, file_list, 'train', shuffle)
+    if 'coco' in settings.dataset:
+        return coco(settings, 'train', shuffle)
+    else:
+        return pascalvoc(settings, file_list, 'train', shuffle)
 
 
 def test(settings, file_list):
     file_list = os.path.join(settings.data_dir, file_list)
-    return pascalvoc(settings, file_list, 'test', False)
+    if 'coco' in settings.dataset:
+        return coco(settings, 'test', False)
+    else:
+        return pascalvoc(settings, file_list, 'test', False)
 
 
 def infer(settings, image_path):

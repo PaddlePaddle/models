@@ -14,34 +14,32 @@ from utility import add_arguments, print_arguments
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('learning_rate',    float, 0.0001,     "Learning rate.")
-add_arg('batch_size',       int,   1,          "Minibatch size.")
-add_arg('parallel',         bool,  False,       "Minibatch size.")
-add_arg('num_passes',       int,   120,        "Epoch number.")
-add_arg('use_gpu',          bool,  False,      "Whether use GPU.")
-add_arg('dataset',          str,   'pascalvoc', "coco2014, coco2017, and pascalvoc.")
-add_arg('model_save_dir',   str,   'model',     "The path to save model.")
-add_arg('pretrained_model', str,   None, "The init model path.")
-add_arg('anchor_sizes',      int,   [32,64,128],  "The size of anchors.")
-add_arg('aspect_ratios',    float,   [0.5,1.0,2.0],    "The ratio of anchors.")
-add_arg('resize_h',         int,   224,    "The resized image height.")
-add_arg('resize_w',         int,   224,    "The resized image height.")
-add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
+# ENV
+add_arg('parallel',         bool,   False,       "Minibatch size.")
+add_arg('use_gpu',          bool,   False,      "Whether use GPU.")
+add_arg('model_save_dir',   str,    'model',     "The path to save model.")
+add_arg('pretrained_model', str,    None, "The init model path.")
+add_arg('dataset',          str,    'coco2017', "coco2014, coco2017, and pascalvoc.")
+add_arg('data_dir',         str,    'data/coco', "data directory")
+# SOLVER
+add_arg('learning_rate',    float,  0.01,     "Learning rate.")
+add_arg('num_passes',       int,    120,        "Epoch number.")
+# RPN
+add_arg('anchor_sizes',     int,    [32,64,128,256,512],  "The size of anchors.")
+add_arg('aspect_ratios',    float,  [0.5,1.0,2.0],    "The ratio of anchors.")
+add_arg('rpn_stride',       float,  16.,    "Stride of the feature map that RPN is attached.")
+# FAST RCNN
+# TRAIN TEST
+add_arg('batch_size',       int,    1,          "Minibatch size.")
+add_arg('max_size',         int,    1333,    "The max resized image size.")
+add_arg('scales',           int,    [800],    "The resized image height.")
+add_arg('batch_size_per_im',int,    512,    "fast rcnn head batch size")
+add_arg('mean_value',       float,  [102.9801, 115.9465, 122.7717], "pixel mean")
 #yapf: enable
 
 
-def train(args,
-          train_file_list,
-          val_file_list,
-          data_args,
-          learning_rate,
-          batch_size,
-          num_passes,
-          model_save_dir,
-          pretrained_model=None):
-
-    image_shape = [3, data_args.resize_h, data_args.resize_w]
-    class_nums = 21
+def train(args):
+    image_shape = [3, args.max_size, args.max_size]
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
@@ -114,9 +112,9 @@ def train(args,
             use_cuda=args.use_gpu, loss_name=loss.name)
 
     train_reader = paddle.batch(
-        reader.train(data_args, train_file_list), batch_size=batch_size)
+        reader.train(args, train_file_list), batch_size=batch_size)
     test_reader = paddle.batch(
-        reader.test(data_args, val_file_list), batch_size=batch_size)
+        reader.test(args, val_file_list), batch_size=batch_size)
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, is_crowd, im_info])
 
@@ -161,25 +159,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
-    data_dir = args.data_dir
-    label_file = 'label_list'
-    model_save_dir = args.model_save_dir
-    train_file_list = 'trainval.txt'
-    val_file_list = 'test.txt'
-    data_args = reader.Settings(
-        dataset=args.dataset,
-        data_dir=data_dir,
-        label_file=label_file,
-        resize_h=args.resize_h,
-        resize_w=args.resize_w)
+    data_args = reader.Settings(args)
     print('train begins...')
-    train(
-        args,
-        train_file_list=train_file_list,
-        val_file_list=val_file_list,
-        data_args=data_args,
-        learning_rate=args.learning_rate,
-        batch_size=args.batch_size,
-        num_passes=args.num_passes,
-        model_save_dir=model_save_dir,
-        pretrained_model=args.pretrained_model)
+    train(data_args)
