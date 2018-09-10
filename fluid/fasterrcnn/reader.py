@@ -40,8 +40,8 @@ class Settings(object):
             self.val_data_dir = 'val2014'
         elif 'coco2017' in args.dataset:
             self.class_nums = 81
-            self.train_file_list = 'annotations/instances_train2017.json'
-            self.train_data_dir = 'train2017'
+            self.train_file_list = 'annotations/instances_val2017.json'
+            self.train_data_dir = 'val2017'
             self.val_file_list = 'annotations/instances_val2017.json'
             self.val_data_dir = 'val2017'
         elif 'pascalvoc' in args.dataset:
@@ -55,8 +55,8 @@ class Settings(object):
         else:
             raise NotImplementedError('Dataset {} not supported'.format(
                 self.dataset))
-        self.img_mean = np.array(self.mean_value)[:, np.newaxis,
-                                                  np.newaxis].astype('float32')
+        self.mean_value = np.array(self.mean_value)[
+            np.newaxis, np.newaxis, :].astype('float32')
 
 
 def preprocess(img, bbox_labels, mode, settings):
@@ -83,18 +83,19 @@ def preprocess(img, bbox_labels, mode, settings):
     return img, sampled_labels
 
 
-def coco(settings, file_list, mode, shuffle):
+def coco(settings, mode, shuffle):
     if mode == 'train':
-        settings.file_list = settings.train_file_list
-        settings.data_dir = os.path.join(settings.data_dir,
-                                         settings.train_data_dir)
+        settings.train_file_list = os.path.join(settings.data_dir,
+                                                settings.train_file_list)
+        settings.train_data_dir = os.path.join(settings.data_dir,
+                                               settings.train_data_dir)
     elif mode == 'test':
-        settings.file_list = settings.train_file_list
-        settings.data_dir = os.path.join(settings.data_dir,
-                                         settings.train_data_dir)
-
-    json_dataset = JsonDataset(settings)
-    roidbs = json_dataset.get_roidb(train=(mode == 'train'))
+        settings.val_file_list = os.path.join(settings.data_dir,
+                                              settings.val_file_list)
+        settings.val_data_dir = os.path.join(settings.data_dir,
+                                             settings.val_data_dir)
+    json_dataset = JsonDataset(settings, train=(mode == 'train'))
+    roidbs = json_dataset.get_roidb()
 
     print("{} on {} with {} roidbs".format(mode, settings.dataset, len(roidbs)))
 
@@ -159,19 +160,19 @@ def pascalvoc(settings, file_list, mode, shuffle):
     return reader
 
 
-def train(settings, file_list, shuffle=True):
-    file_list = os.path.join(settings.data_dir, file_list)
+def train(settings, shuffle=True):
     if 'coco' in settings.dataset:
         return coco(settings, 'train', shuffle)
     else:
+        file_list = os.path.join(settings.data_dir, train_file_list)
         return pascalvoc(settings, file_list, 'train', shuffle)
 
 
-def test(settings, file_list):
-    file_list = os.path.join(settings.data_dir, file_list)
+def test(settings):
     if 'coco' in settings.dataset:
         return coco(settings, 'test', False)
     else:
+        file_list = os.path.join(settings.data_dir, val_file_list)
         return pascalvoc(settings, file_list, 'test', False)
 
 

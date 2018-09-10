@@ -20,6 +20,14 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import cv2
+import numpy as np
+
 
 def get_image_blob(roidb, settings):
     """Builds an input blob from the images in the roidb at the specified
@@ -32,13 +40,10 @@ def get_image_blob(roidb, settings):
     if roidb['flipped']:
         im = im[:, ::-1, :]
     target_size = settings.scales[scale_ind]
-    im, im_scale = prep_im_for_blob(im, settings.pixel_means, target_size,
+    im, im_scale = prep_im_for_blob(im, settings.mean_value, target_size,
                                     settings.max_size)
 
-    # Create a blob to hold the input images
-    blob = im_list_to_blob(im)
-
-    return blob, im_scales
+    return im, im_scale
 
 
 def prep_im_for_blob(im, pixel_means, target_size, max_size):
@@ -65,30 +70,6 @@ def prep_im_for_blob(im, pixel_means, target_size, max_size):
         fx=im_scale,
         fy=im_scale,
         interpolation=cv2.INTER_LINEAR)
+    channel_swap = (2, 0, 1)  #(batch, channel, height, width)
+    im = im.transpose(channel_swap)
     return im, im_scale
-
-
-def im_list_to_blob(ims):
-    """Convert a list of images into a network input. Assumes images were
-    prepared using prep_im_for_blob or equivalent: i.e.
-      - BGR channel order
-      - pixel means subtracted
-      - resized to the desired input size
-      - float32 numpy ndarray format
-    Output is a 4D HCHW tensor of the images concatenated along axis 0 with
-    shape.
-    """
-    if not isinstance(ims, list):
-        ims = [ims]
-    max_shape = np.array([im.shape for im in ims]).max(axis=0)
-    num_images = len(ims)
-    blob = np.zeros(
-        (num_images, max_shape[0], max_shape[1], 3), dtype=np.float32)
-    for i in range(num_images):
-        im = ims[i]
-        blob[i, 0:im.shape[0], 0:im.shape[1], :] = im
-    # Move channels (axis 3) to axis 1
-    # Axis order will become: (batch elem, channel, height, width)
-    channel_swap = (0, 3, 1, 2)
-    blob = blob.transpose(channel_swap)
-    return blob

@@ -20,6 +20,13 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import numpy as np
+
 
 def xywh_to_xyxy(xywh):
     """Convert [x1 y1 w h] box format to [x1 y1 x2 y2] format."""

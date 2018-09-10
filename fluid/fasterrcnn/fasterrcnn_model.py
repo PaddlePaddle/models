@@ -236,7 +236,8 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
     return rpn_cls_score, rpn_bbox_pred, anchor, var, cls_score, bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, rois, labels_int32
 
 
-def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box):
+def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd,
+            im_info):
     rpn_cls_score_reshape = fluid.layers.transpose(
         rpn_cls_prob, perm=[0, 2, 3, 1])
     rpn_bbox_pred_reshape = fluid.layers.transpose(
@@ -250,20 +251,27 @@ def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box):
     rpn_bbox_pred_reshape = fluid.layers.reshape(
         x=rpn_bbox_pred_reshape, shape=(0, -1, 4))
     score_pred, loc_pred, score_target, loc_target = fluid.layers.rpn_target_assign(
-        loc=rpn_bbox_pred_reshape,
-        scores=rpn_cls_score_reshape,
+        bbox_pred=rpn_bbox_pred_reshape,
+        cls_logits=rpn_cls_score_reshape,
         anchor_box=anchor_reshape,
         anchor_var=var_reshape,
-        gt_box=gt_box,
-        rpn_batch_size_per_im=512,
-        fg_fraction=0.25,
+        gt_boxes=gt_box,
+        is_crowd=is_crowd,
+        im_info=im_info,
+        rpn_batch_size_per_im=256,
+        rpn_straddle_thresh=0.0,
+        rpn_fg_fraction=0.5,
         rpn_positive_overlap=0.7,
         rpn_negative_overlap=0.3)
+
     score_target = fluid.layers.cast(x=score_target, dtype='float32')
     rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
         x=score_pred, label=score_target)
     rpn_cls_loss = fluid.layers.reduce_sum(rpn_cls_loss, name='loss_rpn_cls')
 
-    rpn_reg_loss = fluid.layers.smooth_l1(x=loc_pred, y=loc_target, sigma=3.0)
-    rpn_reg_loss = fluid.layers.reduce_mean(rpn_reg_loss, name='loss_rpn_bbox')
+    rpn_reg_loss = fluid.layers.smooth_l1(x=loc_pred, y=loc_target, sigma=9.0)
+    rpn_reg_loss = fluid.layers.reduce_sum(rpn_reg_loss, name='loss_rpn_bbox')
+    norm = fluid.layers.reduce_prod(fluid.layers.shape(score_target))
+    rpn_reg_loss = rpn_reg_loss / fluid.layers.cast(x=norm, dtype='float32')
+
     return rpn_cls_loss, rpn_reg_loss

@@ -20,7 +20,7 @@ add_arg('use_gpu',          bool,   False,      "Whether use GPU.")
 add_arg('model_save_dir',   str,    'model',     "The path to save model.")
 add_arg('pretrained_model', str,    None, "The init model path.")
 add_arg('dataset',          str,    'coco2017', "coco2014, coco2017, and pascalvoc.")
-add_arg('data_dir',         str,    'data/coco', "data directory")
+add_arg('data_dir',         str,    'data/COCO', "data directory")
 # SOLVER
 add_arg('learning_rate',    float,  0.01,     "Learning rate.")
 add_arg('num_passes',       int,    120,        "Epoch number.")
@@ -39,6 +39,9 @@ add_arg('mean_value',       float,  [102.9801, 115.9465, 122.7717], "pixel mean"
 
 
 def train(args):
+    num_passes = args.num_passes
+    batch_size = args.batch_size
+    learning_rate = args.learning_rate
     image_shape = [3, args.max_size, args.max_size]
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
@@ -64,10 +67,10 @@ def train(args):
             is_crowd=is_crowd,
             gt_label=gt_label,
             im_info=im_info,
-            class_nums=class_nums,
+            class_nums=args.class_nums,
             )
 
-    cls_loss, reg_loss = RPNloss(rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box)
+    cls_loss, reg_loss = RPNloss(rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box, is_crowd, im_info)
     rpn_loss = cls_loss + reg_loss
     labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
     labels_int64.stop_gradient = True
@@ -102,24 +105,24 @@ def train(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    if pretrained_model:
+    if args.pretrained_model:
         def if_exist(var):
-            return os.path.exists(os.path.join(pretrained_model, var.name))
-        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
+            return os.path.exists(os.path.join(args.pretrained_model, var.name))
+        fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
     if args.parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=args.use_gpu, loss_name=loss.name)
 
     train_reader = paddle.batch(
-        reader.train(args, train_file_list), batch_size=batch_size)
+        reader.train(args), batch_size=batch_size)
     test_reader = paddle.batch(
-        reader.test(args, val_file_list), batch_size=batch_size)
+        reader.test(args), batch_size=batch_size)
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, is_crowd, im_info])
 
     def save_model(postfix):
-        model_path = os.path.join(model_save_dir, postfix)
+        model_path = os.path.join(args.model_save_dir, postfix)
         if os.path.isdir(model_path):
             shutil.rmtree(model_path)
         print 'save models to %s' % (model_path)
@@ -133,15 +136,45 @@ def train(args):
         iter = 0
         pass_duration = 0.0
         for batch_id, data in enumerate(train_reader()):
+            #print(data)
             prev_start_time = start_time
             start_time = time.time()
+            image, gt_box, gt_label, is_crowd, im_info = data[0]
+            image_t = fluid.core.LoDTensor()
+            image_t.set(image[np.newaxis, :, :, :], place)
+
+            gt_box_t = fluid.core.LoDTensor()
+            gt_box_t.set(gt_box, place)
+            print(len(gt_box))
+
+            gt_box_t.set_lod([[0, len(gt_box)]])
+            gt_label_t = fluid.core.LoDTensor()
+            gt_label_t.set(gt_label.reshape(-1, 1), place)
+
+            print(len(gt_label))
+            gt_label_t.set_lod([[0, len(gt_label)]])
+
+            is_crowd_t = fluid.core.LoDTensor()
+            is_crowd_t.set(is_crowd, place)
+            print(len(is_crowd))
+            is_crowd_t.set_lod([[0, len(is_crowd)]])
+
+            im_info_t = fluid.core.LoDTensor()
+            im_info_t.set(im_info, place)
+            feeding = {}
+            feeding['image'] = image_t
+            feeding['gt_box'] = gt_box_t
+            feeding['gt_label'] = gt_label_t
+            feeding['is_crowd'] = is_crowd_t
+            feeding['im_info'] = im_info_t
+
             if args.parallel:
                 loss_v, = train_exe.run(fetch_list=[loss.name],
-                                        feed=feeder.feed(data))
+                                        feed=feeding)
                 print(loss_v)
             else:
                 loss_v, = exe.run(fluid.default_main_program(),
-                                  feed=feeder.feed(data),
+                                  feed=feeding,
                                   fetch_list=[loss])
                 print(loss_v)
 

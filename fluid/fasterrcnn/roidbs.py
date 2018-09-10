@@ -32,6 +32,7 @@ import numpy as np
 import os
 import scipy.sparse
 import random
+import time
 import matplotlib
 matplotlib.use('Agg')
 from pycocotools.coco import COCO
@@ -43,12 +44,18 @@ logger = logging.getLogger(__name__)
 class JsonDataset(object):
     """A class representing a COCO json dataset."""
 
-    def __init__(self, args):
+    def __init__(self, args, train=False):
         logger.debug('Creating: {}'.format(args.dataset))
         self.name = args.dataset
-        self.image_directory = args.data_dir
-        self.COCO = COCO(args.file_list)
-        self.debug_timer = Timer()
+        self.is_train = train
+        if self.is_train:
+            data_dir = args.train_data_dir
+            file_list = args.train_file_list
+        else:
+            data_dir = args.val_data_dir
+            file_list = args.val_file_list
+        self.image_directory = data_dir
+        self.COCO = COCO(file_list)
         # Set up dataset classes
         category_ids = self.COCO.getCatIds()
         categories = [c['name'] for c in self.COCO.loadCats(category_ids)]
@@ -64,7 +71,7 @@ class JsonDataset(object):
             for k, v in self.json_category_id_to_contiguous_id.items()
         }
 
-    def get_roidb(self, train=False):
+    def get_roidb(self):
         """Return an roidb corresponding to the json dataset. Optionally:
            - include ground truth boxes in the roidb
            - add proposals specified in a proposals file
@@ -76,16 +83,17 @@ class JsonDataset(object):
         roidb = copy.deepcopy(self.COCO.loadImgs(image_ids))
         for entry in roidb:
             self._prep_roidb_entry(entry)
-        if train:
+        if self.is_train:
             # Include ground-truth object annotations
-            self.debug_timer.tic()
+            start_time = time.time()
             for entry in roidb:
                 self._add_gt_annotations(entry)
-            logger.debug('_add_gt_annotations took {:.3f}s'.format(
-                self.debug_timer.toc(average=False)))
+            end_time = time.time()
+            logger.debug('_add_gt_annotations took {:.3f}s'.format(end_time -
+                                                                   start_time))
 
             logger.info('Appending horizontally-flipped training examples...')
-            extend_with_flipped_entries(roidb)
+            _extend_with_flipped_entries(roidb)
         logger.info('Loaded dataset: {:s}'.format(self.name))
         logger.info('{:d} roidb entries'.format(len(roidb)))
         return roidb
