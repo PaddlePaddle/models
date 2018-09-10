@@ -62,11 +62,11 @@ def train(args, config, train_file_list, optimizer_method):
         fetches = [loss]
 
     steps_per_pass = 12880 // batch_size
-    boundaries = [steps_per_pass * 50, steps_per_pass * 80,
-                  steps_per_pass * 120, steps_per_pass * 140]
+    boundaries = [steps_per_pass * 99, steps_per_pass * 124,
+                  steps_per_pass * 149]
     values = [
-        learning_rate, learning_rate * 0.5, learning_rate * 0.25,
-        learning_rate * 0.1, learning_rate * 0.01
+        learning_rate, learning_rate * 0.1,
+        learning_rate * 0.01, learning_rate * 0.001
     ]
 
     if optimizer_method == "momentum":
