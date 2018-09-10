@@ -4,10 +4,11 @@ import numpy as np
 import argparse
 import functools
 import shutil
-
 import paddle
 import paddle.fluid as fluid
 import reader
+import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
+from paddle.fluid.layers import control_flow
 from fasterrcnn_model import FasterRcnn, RPNloss
 from utility import add_arguments, print_arguments
 
@@ -18,12 +19,12 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('parallel',         bool,   False,       "Minibatch size.")
 add_arg('use_gpu',          bool,   False,      "Whether use GPU.")
 add_arg('model_save_dir',   str,    'model',     "The path to save model.")
-add_arg('pretrained_model', str,    None, "The init model path.")
+add_arg('pretrained_model', str,    'imagenet_resnet50', "The init model path.")
 add_arg('dataset',          str,    'coco2017', "coco2014, coco2017, and pascalvoc.")
 add_arg('data_dir',         str,    'data/COCO', "data directory")
 # SOLVER
 add_arg('learning_rate',    float,  0.01,     "Learning rate.")
-add_arg('num_passes',       int,    120,        "Epoch number.")
+add_arg('num_passes',       int,    1,        "Epoch number.")
 # RPN
 add_arg('anchor_sizes',     int,    [32,64,128,256,512],  "The size of anchors.")
 add_arg('aspect_ratios',    float,  [0.5,1.0,2.0],    "The ratio of anchors.")
@@ -37,6 +38,15 @@ add_arg('batch_size_per_im',int,    512,    "fast rcnn head batch size")
 add_arg('mean_value',       float,  [102.9801, 115.9465, 122.7717], "pixel mean")
 #yapf: enable
 
+def exponential_with_warmup_decay(boundaries, values, warmup_iter, warmup_factor):
+    global_step = lr_scheduler._decay_step_counter()
+    decayed_lr = lr_scheduler.piecewise_decay(boundaries, values)
+    with control_flow.Switch() as switch:
+        with switch.case(global_step < warmup_iter):
+            alpha = global_step / warmup_iter
+            factor = warmup_factor * (1 - alpha) + alpha
+            decayed_lr = decayed_lr * factor
+    return decayed_lr
 
 def train(args):
     num_passes = args.num_passes
@@ -53,7 +63,7 @@ def train(args):
     gt_label = fluid.layers.data(
         name='gt_label', shape=[1],  dtype='int32', lod_level=1)
     is_crowd = fluid.layers.data(
-        name='is_crowd', shape = [1], dtype='int32', lod_level=1)
+        name='is_crowd', shape = [-1], dtype='int32', lod_level=1, append_batch_size=False)
     im_info = fluid.layers.data(
         name='im_info', shape=[3], dtype='float32')
 
@@ -87,26 +97,26 @@ def train(args):
     loss_bbox = fluid.layers.reduce_mean(loss_bbox)
     detection_loss = loss_cls + loss_bbox
     loss = rpn_loss + detection_loss
-    loss = detection_loss
+    boundaries = [0,120000,160000]
+    values = [learning_rate,learning_rate*0.1,learning_rate*0.01,learning_rate*0.001]
 
-    epocs = 19200 / batch_size
-    boundaries = [epocs * 40, epocs * 60, epocs * 80, epocs * 100]
-    values = [
-        learning_rate, learning_rate * 0.5, learning_rate * 0.25,
-        learning_rate * 0.1, learning_rate * 0.01
-    ]
-
-    optimizer = fluid.optimizer.RMSProp(
-        learning_rate=fluid.layers.piecewise_decay(boundaries, values),
-        regularization=fluid.regularizer.L2Decay(0.00005), )
-
+    optimizer = fluid.optimizer.Momentum(
+        learning_rate=exponential_with_warmup_decay(boundaries=boundaries,
+            values=values,
+            warmup_iter=500,
+            warmup_factor=1.0/3.0),
+        regularization=fluid.regularizer.L2Decay(0.0001),
+        momentum=0.9)
     optimizer.minimize(loss)
+
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
     if args.pretrained_model:
         def if_exist(var):
+            #if (os.path.exists(os.path.join(pretrained_model, var.name))):
+            #   print(var.name)
             return os.path.exists(os.path.join(args.pretrained_model, var.name))
         fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
@@ -120,7 +130,6 @@ def train(args):
         reader.test(args), batch_size=batch_size)
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, is_crowd, im_info])
-
     def save_model(postfix):
         model_path = os.path.join(args.model_save_dir, postfix)
         if os.path.isdir(model_path):
@@ -129,7 +138,6 @@ def train(args):
         fluid.io.save_persistables(exe, model_path)
     total_time = 0.0
     for pass_id in range(num_passes):
-        epoch_idx = pass_id + 1
         start_time = time.time()
         prev_start_time = start_time
         every_pass_loss = []
@@ -183,7 +191,6 @@ def train(args):
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
-
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
 

@@ -271,7 +271,12 @@ def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd,
 
     rpn_reg_loss = fluid.layers.smooth_l1(x=loc_pred, y=loc_target, sigma=9.0)
     rpn_reg_loss = fluid.layers.reduce_sum(rpn_reg_loss, name='loss_rpn_bbox')
-    norm = fluid.layers.reduce_prod(fluid.layers.shape(score_target))
-    rpn_reg_loss = rpn_reg_loss / fluid.layers.cast(x=norm, dtype='float32')
+    # norm = fluid.layers.reduce_prod(fluid.layers.shape(score_target))
+    # rpn_reg_loss = rpn_reg_loss / fluid.layers.cast(x=norm, dtype='float32')
+    score_shape = fluid.layers.shape(score_target)
+    score_shape = fluid.layers.cast(x=score_shape, dtype='float32')
+    norm = fluid.layers.reduce_prod(score_shape)
+    norm.stop_gradient = True
+    rpn_reg_loss = rpn_reg_loss / norm
 
     return rpn_cls_loss, rpn_reg_loss
