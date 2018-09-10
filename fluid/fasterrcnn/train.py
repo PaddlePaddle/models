@@ -8,6 +8,7 @@ import paddle
 import paddle.fluid as fluid
 import reader
 import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
+from paddle.fluid.layers import control_flow
 from fasterrcnn_model import FasterRcnn, RPNloss
 from utility import add_arguments, print_arguments
 
@@ -24,11 +25,11 @@ add_arg('model_save_dir',   str,   'model',     "The path to save model.")
 add_arg('pretrained_model', str,   'imagenet_resnet50', "The init model path.")
 add_arg('anchor_sizes',      int,   [32,64,128,256,512],  "The size of anchors.")
 add_arg('aspect_ratios',    float,   [0.5,1.0,2.0],    "The ratio of anchors.")
-add_arg('resize_h',         int,   800,    "The resized image height.")
-add_arg('resize_w',         int,   1333,    "The resized image height.")
+add_arg('resize_h',         int,   224,    "The resized image height.")
+add_arg('resize_w',         int,   224,    "The resized image height.")
 add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
 #yapf: enable
-"""
+
 def exponential_with_warmup_decay(boundaries, values, warmup_iter, warmup_factor):
     global_step = lr_scheduler._decay_step_counter()
     decayed_lr = lr_scheduler.piecewise_decay(boundaries, values)
@@ -38,7 +39,7 @@ def exponential_with_warmup_decay(boundaries, values, warmup_iter, warmup_factor
             factor = warmup_factor * (1 - alpha) + alpha
             decayed_lr = decayed_lr * factor
     return decayed_lr
-"""
+
 def train(args,
           train_file_list,
           val_file_list,
@@ -96,7 +97,7 @@ def train(args,
     loss = rpn_loss + detection_loss
     boundaries = [0,120000,160000]
     values = [learning_rate,learning_rate*0.1,learning_rate*0.01,learning_rate*0.001]
-    """
+
     optimizer = fluid.optimizer.Momentum(
         learning_rate=exponential_with_warmup_decay(boundaries=boundaries,
       values=values,
@@ -105,7 +106,7 @@ def train(args,
         regularization=fluid.regularizer.L2Decay(0.0001),
         momentum=0.9)
     optimizer.minimize(loss)
-    """
+
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
@@ -133,7 +134,6 @@ def train(args,
         print 'save models to %s' % (model_path)
         fluid.io.save_persistables(exe, model_path)
     total_time = 0.0
-    print('12121212111')
     for pass_id in range(num_passes):
         start_time = time.time()
         prev_start_time = start_time
