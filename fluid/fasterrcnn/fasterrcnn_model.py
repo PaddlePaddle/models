@@ -23,7 +23,6 @@ def conv_bn_layer(input,
         param_attr=ParamAttr(name=name + "_weights"),
         bias_attr=ParamAttr(name=name + "_biases"),
         name=name + '.conv2d.output.1')
-    conv1.persistable = True
     if name == "conv1":
         bn_name = "bn_" + name
     else:
@@ -119,12 +118,12 @@ def layer_warp(block_func, input, ch_out, count, stride, name):
 
 
 def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
-               is_crowd, gt_label, im_info, class_nums):
+               is_crowd, gt_label, im_info, class_nums, use_random):
 
     cfg = {
         18: ([2, 2, 2, 1], basicblock),
         34: ([3, 4, 6, 3], basicblock),
-        50: ([3, 4, 6, 3], bottleneck),
+        50: ([2, 2, 2, 2], bottleneck),
         101: ([3, 4, 23, 3], bottleneck),
         152: ([3, 8, 36, 3], bottleneck)
     }
@@ -199,7 +198,6 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         nms_thresh=0.7,
         min_size=0.0,
         eta=1.0)
-    gt_label = fluid.layers.squeeze(input=gt_label, axes=[1])
     rois, labels_int32, bbox_targets, bbox_inside_weights, bbox_outside_weights = fluid.layers.generate_proposal_labels(
         rpn_rois=rpn_rois,
         gt_classes=gt_label,
@@ -213,7 +211,8 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         bg_thresh_lo=0.0,
         bbox_reg_weights=[10., 10., 5., 5.],
         class_nums=class_nums,
-        use_random=False)
+        use_random=use_random)
+
     pool5 = fluid.layers.roi_pool(
         input=res4,
         rois=rois,
@@ -246,8 +245,8 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
     return rpn_cls_score, rpn_bbox_pred, anchor, var, cls_score, bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, rois, labels_int32
 
 
-def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd,
-            im_info):
+def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd, im_info,
+            use_random):
     rpn_cls_score_reshape = fluid.layers.transpose(
         rpn_cls_prob, perm=[0, 2, 3, 1])
     rpn_bbox_pred_reshape = fluid.layers.transpose(
@@ -272,7 +271,8 @@ def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd,
         rpn_straddle_thresh=0.0,
         rpn_fg_fraction=0.5,
         rpn_positive_overlap=0.7,
-        rpn_negative_overlap=0.3)
+        rpn_negative_overlap=0.3,
+        use_random=use_random)
 
     score_target = fluid.layers.cast(x=score_target, dtype='float32')
     rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
@@ -286,7 +286,7 @@ def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd,
     norm = fluid.layers.reduce_prod(score_shape)
     norm.stop_gradient = True
     rpn_reg_loss = rpn_reg_loss / norm
-    rpn_reg_loss.persistable = True
-    rpn_cls_loss.persistable = True
+    #rpn_reg_loss.persistable = True
+    #rpn_cls_loss.persistable = True
 
     return rpn_cls_loss, rpn_reg_loss
