@@ -212,8 +212,7 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         bg_thresh_lo=0.0,
         bbox_reg_weights=[0.1, 0.1, 0.2, 0.2],
         class_nums=class_nums,
-        use_random=False)
-    #use_random=use_random)
+        use_random=use_random)
     rois.stop_gradient = True
     labels_int32.stop_gradient = True
     bbox_targets.stop_gradient = True
