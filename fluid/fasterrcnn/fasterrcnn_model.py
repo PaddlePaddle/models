@@ -160,6 +160,7 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         aspect_ratios=aspect_ratios,
         variance=variance,
         stride=[16.0, 16.0])
+
     num_anchor = anchor.shape[2]
     rpn_cls_score = fluid.layers.conv2d(
         rpn_conv,
@@ -209,9 +210,15 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         fg_thresh=0.5,
         bg_thresh_hi=0.5,
         bg_thresh_lo=0.0,
-        bbox_reg_weights=[10., 10., 5., 5.],
+        bbox_reg_weights=[0.1, 0.1, 0.2, 0.2],
         class_nums=class_nums,
-        use_random=use_random)
+        use_random=False)
+    #use_random=use_random)
+    rois.stop_gradient = True
+    labels_int32.stop_gradient = True
+    bbox_targets.stop_gradient = True
+    bbox_inside_weights.stop_gradient = True
+    bbox_outside_weights.stop_gradient = True
 
     pool5 = fluid.layers.roi_pool(
         input=res4,

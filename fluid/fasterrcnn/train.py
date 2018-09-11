@@ -11,6 +11,7 @@ import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 from paddle.fluid.layers import control_flow
 from fasterrcnn_model import FasterRcnn, RPNloss
 from utility import add_arguments, print_arguments
+import cPickle
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -38,6 +39,10 @@ add_arg('batch_size_per_im',int,    512,    "fast rcnn head batch size")
 add_arg('mean_value',       float,  [102.9801, 115.9465, 122.7717], "pixel mean")
 add_arg('debug',            bool,   False,   "Debug mode")
 #yapf: enable
+
+def load(file_name):
+    v = cPickle.load(open(file_name))
+    return v.astype('float32')
 
 def exponential_with_warmup_decay(learning_rate, boundaries, values, warmup_iter, warmup_factor):
     global_step = lr_scheduler._decay_step_counter()
@@ -113,9 +118,9 @@ def train(args):
     rpn_cls_score, rpn_bbox_pred, anchor, var, cls_score, bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, rois, labels_int32 = FasterRcnn(
             input=image,
             depth=50,
-            anchor_sizes=args.anchor_sizes,
-            variance=[0.1,0.1,0.2,0.2],
-            aspect_ratios=args.aspect_ratios,
+            anchor_sizes=[32,64,128,256,512],
+            variance=[1.,1.,1.,1.],
+            aspect_ratios=[0.5,1.0,2.0],
             gt_box=gt_box,
             is_crowd=is_crowd,
             gt_label=gt_label,
@@ -125,6 +130,8 @@ def train(args):
             )
 
     cls_loss, reg_loss = RPNloss(rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box, is_crowd, im_info, use_random=False if args.debug else True)
+    cls_loss.persistable=True
+    reg_loss.persistable=True
     rpn_loss = cls_loss + reg_loss
     rpn_loss.persistable=True
 
@@ -144,6 +151,8 @@ def train(args):
     loss_bbox = fluid.layers.reduce_mean(loss_bbox)
     loss_bbox.persistable=True
 
+    loss_cls.persistable=True
+    loss_bbox.persistable=True
     detection_loss = loss_cls + loss_bbox
     detection_loss.persistable=True
 
@@ -180,11 +189,13 @@ def train(args):
 
     if args.debug:
         import load_var
-        rpn_bbox_pred_w_t, rpn_bbox_pred_b_t = load_var.load_rpn_bbox_pred()
-        rpn_cls_logits_w_t, rpn_cls_logits_b_t = load_var.load_rpn_cls_logits()
         rpn_conv_w_t, rpn_conv_b_t = load_var.load_rpn_conv()
         cls_score_w_t, cls_score_b_t = load_var.load_cls_score()
         bbox_pred_w_t, bbox_pred_b_t = load_var.load_bbox_pred()
+        rpn_cls_logits_w_t = load('detectrondata/rpn_cls_logits_w')
+        rpn_cls_logits_b_t = load('detectrondata/rpn_cls_logits_b')
+        rpn_bbox_pred_w_t = load('detectrondata/rpn_bbox_pred_w')
+        rpn_bbox_pred_b_t = load('detectrondata/rpn_bbox_pred_b')
 
         conv_rpn_w = fluid.global_scope().find_var("conv_rpn_w").get_tensor()
         conv_rpn_b = fluid.global_scope().find_var("conv_rpn_b").get_tensor()
@@ -230,7 +241,7 @@ def train(args):
         fluid.io.save_persistables(exe, model_path)
 
 
-    fetch_list = [loss, rpn_loss, detection_loss]
+    fetch_list = [loss, cls_loss, reg_loss, loss_cls, loss_bbox]
 
     total_time = 0.0
     for epoc_id in range(num_passes):
@@ -283,6 +294,7 @@ def train(args):
             if batch_id % 1 == 0:
                 print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                       epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
+                print('cls_loss ,', losses[1], ' reg_loss ', losses[2], ' loss_cls ', losses[3], ' loss_bbox ', losses[4])
 
         if epoc_id % 10 == 0 or epoc_id == num_passes - 1:
             save_model(str(epoc_id))
