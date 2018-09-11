@@ -249,30 +249,37 @@ def prepare_data_generator(is_test, count, pyreader):
         clip_last_batch=False).batch_generator
 
     def stack(data_reader, count, clip_last=True):
-        res = []
-        for item in data_reader():
-            res.append(item)
+        def __impl__():
+            res = []
+            for item in data_reader():
+                res.append(item)
+                if len(res) == count:
+                    yield res
+                    res = []
             if len(res) == count:
                 yield res
-                res = []
-        if len(res) == count:
-            yield res
-        elif not clip_last:
-            data = []
-            for item in res:
-                data += item
-            if len(data) > count:
-                inst_num_per_part = len(data) // count
-                yield [
-                    data[inst_num_per_part * i:inst_num_per_part * (i + 1)]
-                    for i in range(count)
-                ]
+            elif not clip_last:
+                data = []
+                for item in res:
+                    data += item
+                if len(data) > count:
+                    inst_num_per_part = len(data) // count
+                    yield [
+                        data[inst_num_per_part * i:inst_num_per_part * (i + 1)]
+                        for i in range(count)
+                    ]
+
+        return __impl__
 
     def split(data_reader, count):
-        for item in data_reader():
-            inst_num_per_part = len(item) // count
-            for i in range(count):
-                yield item[inst_num_per_part * i:inst_num_per_part * (i + 1)]
+        def __impl__():
+            for item in data_reader():
+                inst_num_per_part = len(item) // count
+                for i in range(count):
+                    yield item[inst_num_per_part * i:inst_num_per_part * (i + 1
+                                                                          )]
+
+        return __impl__
 
     if not args.use_token_batch:
         # to make data on each device have similar token number
@@ -286,15 +293,15 @@ def prepare_data_generator(is_test, count, pyreader):
     return data_reader
 
 
-def prepare_feed_dict_list(data_reader, init_flag, count):
+def prepare_feed_dict_list(data_generator, init_flag, count):
     """
     Prepare the list of feed dict for multi-devices.
     """
     feed_dict_list = []
-    if data_reader is not None:  # use_py_reader == False
+    if data_generator is not None:  # use_py_reader == False
         data_input_names = encoder_data_input_fields + \
                     decoder_data_input_fields[:-1] + label_data_input_fields
-        data = data_reader.next()
+        data = next(data_generator)
         for idx, data_buffer in enumerate(data):
             data_input_dict, num_token = prepare_batch_input(
                 data_buffer, data_input_names, ModelHyperParams.eos_idx,
@@ -377,13 +384,17 @@ def test_context(exe, train_exe, dev_count):
 
         if args.use_py_reader:
             pyreader.start()
+            data_generator = None
+        else:
+            data_generator = test_data()
         while True:
             try:
-                feed_dict_list = prepare_feed_dict_list(test_data, False,
+                feed_dict_list = prepare_feed_dict_list(data_generator, False,
                                                         dev_count)
                 outs = test_exe.run(fetch_list=[sum_cost.name, token_num.name],
                                     feed=feed_dict_list)
-            except fluid.core.EOFException:
+            except StopIteration, fluid.core.EOFException:
+                # The current pass is over.
                 if args.use_py_reader:
                     pyreader.reset()
                 break
@@ -436,10 +447,13 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
     step_idx = 0
     init_flag = True
     for pass_id in six.moves.xrange(TrainTaskConfig.pass_num):
+        pass_start_time = time.time()
+
         if args.use_py_reader:
             pyreader.start()
-
-        pass_start_time = time.time()
+            data_generator = None
+        else:
+            data_generator = train_data()
 
         batch_id = 0
         while True:
@@ -447,8 +461,8 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
 
                 iter_start_time = time.time()
 
-                feed_dict_list = prepare_feed_dict_list(train_data, init_flag,
-                                                        dev_count)
+                feed_dict_list = prepare_feed_dict_list(data_generator,
+                                                        init_flag, dev_count)
                 outs = train_exe.run(
                     fetch_list=[sum_cost.name, token_num.name],
                     feed=feed_dict_list)
@@ -483,11 +497,11 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                 init_flag = False
                 batch_id += 1
                 step_idx += 1
-            except fluid.core.EOFException:
+            except StopIteration, fluid.core.EOFException:
                 # The current pass is over.
                 if args.use_py_reader:
                     pyreader.reset()
-                    break
+                break
 
         time_consumed = time.time() - pass_start_time
         # Validate and save the persistable.
