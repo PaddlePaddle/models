@@ -393,7 +393,7 @@ def test_context(exe, train_exe, dev_count):
                                                         dev_count)
                 outs = test_exe.run(fetch_list=[sum_cost.name, token_num.name],
                                     feed=feed_dict_list)
-            except StopIteration, fluid.core.EOFException:
+            except (StopIteration, fluid.core.EOFException):
                 # The current pass is over.
                 if args.use_py_reader:
                     pyreader.reset()
@@ -497,7 +497,7 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                 init_flag = False
                 batch_id += 1
                 step_idx += 1
-            except StopIteration, fluid.core.EOFException:
+            except (StopIteration, fluid.core.EOFException):
                 # The current pass is over.
                 if args.use_py_reader:
                     pyreader.reset()
