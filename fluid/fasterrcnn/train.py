@@ -11,20 +11,21 @@ import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 from paddle.fluid.layers import control_flow
 from fasterrcnn_model import FasterRcnn, RPNloss
 from utility import add_arguments, print_arguments
+from paddle.fluid.layers import tensor
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 # ENV
-add_arg('parallel',         bool,   False,       "Minibatch size.")
-add_arg('use_gpu',          bool,   False,      "Whether use GPU.")
+add_arg('parallel',         bool,   True,       "Minibatch size.")
+add_arg('use_gpu',          bool,   True,      "Whether use GPU.")
 add_arg('model_save_dir',   str,    'model',     "The path to save model.")
 add_arg('pretrained_model', str,    'imagenet_resnet50_fusebn', "The init model path.")
 add_arg('dataset',          str,    'coco2017', "coco2014, coco2017, and pascalvoc.")
-add_arg('data_dir',         str,    'data/COCO', "data directory")
+add_arg('data_dir',         str,    'data/COCO17', "data directory")
 # SOLVER
 add_arg('learning_rate',    float,  0.01,     "Learning rate.")
-add_arg('num_passes',       int,    1,        "Epoch number.")
+add_arg('num_passes',       int,    100,        "Epoch number.")
 # RPN
 add_arg('anchor_sizes',     int,    [32,64,128,256,512],  "The size of anchors.")
 add_arg('aspect_ratios',    float,  [0.5,1.0,2.0],    "The ratio of anchors.")
@@ -80,7 +81,6 @@ def exponential_with_warmup_decay(learning_rate, boundaries, values, warmup_iter
 
     return lr
 
-    return decayed_lr
 
 def train(args):
     num_passes = args.num_passes
@@ -214,14 +214,15 @@ def train(args):
     if args.parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=bool(args.use_gpu), loss_name=loss.name)
-
+    """
     train_reader = paddle.batch(
         reader.train(args, shuffle=False if args.debug else True), batch_size=batch_size)
     test_reader = paddle.batch(
         reader.test(args), batch_size=batch_size)
     feeder = fluid.DataFeeder(
         place=place, feed_list=[image, gt_box, gt_label, is_crowd, im_info])
-
+    """
+    train_reader = reader.train(args)
     def save_model(postfix):
         model_path = os.path.join(args.model_save_dir, postfix)
         if os.path.isdir(model_path):
@@ -242,21 +243,22 @@ def train(args):
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
-            image, gt_box, gt_label, is_crowd, im_info = data[0]
+            image, gt_box, gt_label, is_crowd, im_info, lod = data
+            lod = [lod]
             image_t = fluid.core.LoDTensor()
-            image_t.set(image[np.newaxis, :, :, :], place)
+            image_t.set(image, place)
 
             gt_box_t = fluid.core.LoDTensor()
             gt_box_t.set(gt_box, place)
-            gt_box_t.set_lod([[0, len(gt_box)]])
+            gt_box_t.set_lod(lod)
 
             gt_label_t = fluid.core.LoDTensor()
             gt_label_t.set(gt_label.reshape(-1, 1), place)
-            gt_label_t.set_lod([[0, len(gt_label)]])
+            gt_label_t.set_lod(lod)
 
             is_crowd_t = fluid.core.LoDTensor()
             is_crowd_t.set(is_crowd, place)
-            is_crowd_t.set_lod([[0, len(is_crowd)]])
+            is_crowd_t.set_lod(lod)
 
             im_info_t = fluid.core.LoDTensor()
             im_info_t.set(im_info, place)

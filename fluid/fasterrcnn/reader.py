@@ -102,18 +102,34 @@ def coco(settings, mode, shuffle):
     def reader():
         if mode == "train" and shuffle:
             random.shuffle(roidbs)
+        im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out = [],[],[],[],[]
+        lod = [0]
         for roidb in roidbs:
             im, im_scales = data_utils.get_image_blob(roidb, settings)
             im_height = np.round(roidb['height'] * im_scales)
             im_width = np.round(roidb['width'] * im_scales)
             im_info = np.array(
-                [[im_height, im_width, im_scales]], dtype=np.float32)
+                [im_height, im_width, im_scales], dtype=np.float32)
             gt_boxes = roidb['gt_boxes'].astype('float32')
             gt_classes = roidb['gt_classes'].astype('int32')
             is_crowd = roidb['is_crowd'].astype('int32')
             if gt_boxes.shape[0] == 0:
                 continue
-            yield im, gt_boxes, gt_classes, is_crowd, im_info
+            im_out.append(im)
+            gt_boxes_out.extend(gt_boxes)
+            gt_classes_out.extend(gt_classes)
+            is_crowd_out.extend(is_crowd)
+            im_info_out.append(im_info)
+            lod.append(lod[-1] + gt_boxes.shape[0])
+            if len(im_out) == settings.batch_size:
+                im_out = np.array(im_out).astype('float32')
+                gt_boxes_out = np.array(gt_boxes_out).astype('float32')
+                gt_classes_out = np.array(gt_classes_out).astype('int32')
+                is_crowd_out = np.array(is_crowd_out).astype('int32')
+                im_info_out = np.array(im_info_out).astype('float32')
+                yield im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out, lod
+                im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out = [],[],[],[],[]
+                lod = [0]
 
     return reader
 
@@ -126,6 +142,8 @@ def pascalvoc(settings, file_list, mode, shuffle):
     def reader():
         if mode == "train" and shuffle:
             random.shuffle(images)
+        im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out = [],[],[],[],[]
+        lod = [0]
         for image in images:
             image_path, label_path = image.split()
             image_path = os.path.join(settings.data_dir, image_path)
@@ -157,7 +175,23 @@ def pascalvoc(settings, file_list, mode, shuffle):
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
             is_crowd = np.zeros(len(boxes), dtype='int32')
-            yield im, boxes, lbls, is_crowd, im_info
+            if gt_boxes.shape[0] == 0:
+                continue
+            im_out.append(im)
+            gt_boxes_out.extend(boxes)
+            gt_classes_out.extend(lbls)
+            is_crowd_out.extend(is_crowd)
+            im_info_out.append(im_info)
+            lod.append(lod[-1] + boxes.shape[0])
+            if len(im_out) == settings.batch_size:
+                im_out = np.array(im_out).astype('float32')
+                gt_boxes_out = np.array(gt_boxes_out).astype('float32')
+                gt_classes_out = np.array(gt_classes_out).astype('int32')
+                is_crowd_out = np.array(is_crowd_out).astype('int32')
+                im_info_out = np.array(im_info_out).astype('float32')
+                yield im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out, lod
+                im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out = [],[],[],[],[]
+                lod = [0]
 
     return reader
 

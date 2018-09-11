@@ -212,7 +212,6 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         bbox_reg_weights=[10., 10., 5., 5.],
         class_nums=class_nums,
         use_random=use_random)
-
     pool5 = fluid.layers.roi_pool(
         input=res4,
         rois=rois,
