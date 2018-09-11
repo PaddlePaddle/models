@@ -123,7 +123,7 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
     cfg = {
         18: ([2, 2, 2, 1], basicblock),
         34: ([3, 4, 6, 3], basicblock),
-        50: ([2, 2, 2, 2], bottleneck),
+        50: ([3, 4, 6, 3], bottleneck),
         101: ([3, 4, 23, 3], bottleneck),
         152: ([3, 8, 36, 3], bottleneck)
     }
