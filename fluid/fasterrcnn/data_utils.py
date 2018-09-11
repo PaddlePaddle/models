@@ -62,10 +62,10 @@ def prep_im_for_blob(im, pixel_means, target_size, max_size):
     im_shape = im.shape
     im_size_min = np.min(im_shape[0:2])
     im_size_max = np.max(im_shape[0:2])
-    #im_scale = float(target_size) / float(im_size_min)
+    im_scale = float(target_size) / float(im_size_min)
     # Prevent the biggest axis from being more than max_size
-    #if np.round(im_scale * im_size_max) > max_size:
-    im_scale = float(max_size) / float(im_size_max)
+    if np.round(im_scale * im_size_max) > max_size:
+        im_scale = float(max_size) / float(im_size_max)
     im = cv2.resize(
         im,
         None,
@@ -78,7 +78,7 @@ def prep_im_for_blob(im, pixel_means, target_size, max_size):
     padding_im[:im_height, :im_width, :] = im
     #print(padding_im[10:, 10:, :])
     channel_swap = (2, 0, 1)  #(batch, channel, height, width)
-    im = im.transpose(channel_swap)
+    #im = im.transpose(channel_swap)
     padding_im = padding_im.transpose(channel_swap)
     #print(padding_im[10:, 10:, :])
     return padding_im, im_scale
