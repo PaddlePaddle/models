@@ -75,10 +75,10 @@ def prep_im_for_blob(im, pixel_means, target_size, max_size):
         interpolation=cv2.INTER_LINEAR)
     im_height, im_width, channel = im.shape
     padding_im = np.zeros((max_size, max_size, im_shape[2]), dtype=np.float32)
-    paddding_im[:im_height, :im_width, :] = im
-    print(paddding_im[10:, 10:, :])
+    padding_im[:im_height, :im_width, :] = im
+    #print(padding_im[10:, 10:, :])
     channel_swap = (2, 0, 1)  #(batch, channel, height, width)
     im = im.transpose(channel_swap)
-    padding_im = paddding_im.transpose(channel_swap)
-    print(paddding_im[10:, 10:, :])
+    padding_im = padding_im.transpose(channel_swap)
+    #print(padding_im[10:, 10:, :])
     return padding_im, im_scale
