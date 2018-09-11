@@ -132,18 +132,6 @@ def parse_args():
     return args
 
 
-def get_position_enc(dev_count):
-    pos_enc = position_encoding_init(ModelHyperParams.max_length + 1,
-                                     ModelHyperParams.d_model)
-    position_encoding_init_list = []
-    for i in range(dev_count):
-        position_encoding = {}
-        for name in pos_enc_param_names:
-            position_encoding[name] = pos_enc
-        position_encoding_init_list.append(position_encoding)
-    return position_encoding_init_list
-
-
 def pad_batch_data(insts,
                    pad_idx,
                    n_head,
@@ -290,7 +278,8 @@ def prepare_data_generator(is_test, count, pyreader):
         # to make data on each device have similar token number
         data_reader = split(data_reader, count)
     if args.use_py_reader:
-        pyreader.decorate_tensor_provider(py_reader_provider(data_reader))
+        pyreader.decorate_tensor_provider(
+            py_reader_provider_wrapper(data_reader))
         data_reader = None
     else:  # Data generator for multi-devices
         data_reader = stack(data_reader, count)
@@ -314,12 +303,11 @@ def prepare_feed_dict_list(data_reader, init_flag, count):
             feed_dict_list.append(data_input_dict)
     if init_flag:
         for idx in range(count):
+            pos_enc_tables = dict()
+            for pos_enc_param_name in pos_enc_param_names:
+                pos_enc_tables[pos_enc_param_name] = position_encoding_init(
+                    ModelHyperParams.max_length + 1, ModelHyperParams.d_model)
             if len(feed_dict_list) <= idx:
-                pos_enc_tables = dict()
-                for pos_enc_param_name in pos_enc_param_names:
-                    pos_enc_tables[pos_enc_param_name] = position_encoding_init(
-                        ModelHyperParams.max_length + 1,
-                        ModelHyperParams.d_model)
                 feed_dict_list.append(pos_enc_tables)
             else:
                 feed_dict_list[idx] = dict(
@@ -329,19 +317,23 @@ def prepare_feed_dict_list(data_reader, init_flag, count):
     return feed_dict_list if len(feed_dict_list) == count else None
 
 
-def py_reader_provider(data_reader):
+def py_reader_provider_wrapper(data_reader):
     """
     Data provider needed by fluid.layers.py_reader.
     """
-    data_input_names = encoder_data_input_fields + \
-                decoder_data_input_fields[:-1] + label_data_input_fields
-    for batch_id, data in enumerate(data_reader()):
-        data_input_dict, num_token = prepare_batch_input(
-            data, data_input_names, ModelHyperParams.eos_idx,
-            ModelHyperParams.eos_idx, ModelHyperParams.n_head,
-            ModelHyperParams.d_model)
-        total_dict = dict(data_input_dict.items())
-        yield [total_dict[item] for item in data_input_names]
+
+    def py_reader_provider():
+        data_input_names = encoder_data_input_fields + \
+                    decoder_data_input_fields[:-1] + label_data_input_fields
+        for batch_id, data in enumerate(data_reader()):
+            data_input_dict, num_token = prepare_batch_input(
+                data, data_input_names, ModelHyperParams.eos_idx,
+                ModelHyperParams.eos_idx, ModelHyperParams.n_head,
+                ModelHyperParams.d_model)
+            total_dict = dict(data_input_dict.items())
+            yield [total_dict[item] for item in data_input_names]
+
+    return py_reader_provider
 
 
 def test_context(exe, train_exe, dev_count):
@@ -389,10 +381,9 @@ def test_context(exe, train_exe, dev_count):
             try:
                 feed_dict_list = prepare_feed_dict_list(test_data, False,
                                                         dev_count)
-                outs = train_exe.run(
-                    fetch_list=[sum_cost.name, token_num.name],
-                    feed=feed_dict_list)
-            except:
+                outs = test_exe.run(fetch_list=[sum_cost.name, token_num.name],
+                                    feed=feed_dict_list)
+            except fluid.core.EOFException:
                 if args.use_py_reader:
                     pyreader.reset()
                 break
@@ -492,7 +483,7 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                 init_flag = False
                 batch_id += 1
                 step_idx += 1
-            except:
+            except fluid.core.EOFException:
                 # The current pass is over.
                 if args.use_py_reader:
                     pyreader.reset()
