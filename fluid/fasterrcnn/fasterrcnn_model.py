@@ -138,6 +138,7 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         pool_padding=1,
         name="pool1.max_pool.output.1")
     res2 = layer_warp(block_func, pool1, 64, stages[0], 1, name="res2")
+    res2.stop_gradient = True
     res3 = layer_warp(block_func, res2, 128, stages[1], 2, name="res3")
     res4 = layer_warp(block_func, res3, 256, stages[2], 2, name="res4")
     #========= RPN ============
