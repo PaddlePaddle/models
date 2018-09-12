@@ -25,7 +25,7 @@ add_arg('dataset',          str,    'coco2017', "coco2014, coco2017, and pascalv
 add_arg('data_dir',         str,    'data/COCO17', "data directory")
 # SOLVER
 add_arg('learning_rate',    float,  0.01,     "Learning rate.")
-add_arg('num_passes',       int,    100,        "Epoch number.")
+add_arg('num_passes',       int,    20,        "Epoch number.")
 # RPN
 add_arg('anchor_sizes',     int,    [32,64,128,256,512],  "The size of anchors.")
 add_arg('aspect_ratios',    float,  [0.5,1.0,2.0],    "The ratio of anchors.")

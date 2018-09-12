@@ -54,8 +54,7 @@ def conv_affine_layer(input,
         padding=padding,
         act=None,
         param_attr=ParamAttr(name=name + "_weights"),
-        bias_attr=ParamAttr(
-            name=name + "_biases", learning_rate=2., regularizer=L2Decay(0.)),
+        bias_attr=False,
         name=name + '.conv2d.output.1')
     if name == "conv1":
         bn_name = "bn_" + name
