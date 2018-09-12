@@ -414,7 +414,7 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
     if TrainTaskConfig.ckpt_path:
         fluid.io.load_persistables(exe, TrainTaskConfig.ckpt_path)
     else:
-        print "init fluid.framework.default_startup_program"
+        print("init fluid.framework.default_startup_program")
         exe.run(startup_prog)
 
     train_data = prepare_data_generator(
