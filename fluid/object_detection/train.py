@@ -32,7 +32,7 @@ add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 
 train_parameters = {
     "pascalvoc": {
-        "train_images": 19200,
+        "train_images": 16551,
         "image_shape": [3, 300, 300],
         "class_num": 21,
         "batch_size": 64,
@@ -143,7 +143,6 @@ def train(args,
         startup_prog.random_seed = 111
         train_prog.random_seed = 111
         test_prog.random_seed = 111
-        num_workers = 1
 
     train_py_reader, loss = build_program(
         main_prog=train_prog,
@@ -170,14 +169,14 @@ def train(args,
     if parallel:
         train_exe = fluid.ParallelExecutor(main_program=train_prog,
             use_cuda=use_gpu, loss_name=loss.name)
-
     train_reader = reader.train(data_args,
                                 train_file_list,
                                 batch_size_per_device,
                                 shuffle=is_shuffle,
                                 use_multiprocessing=True,
                                 num_workers=num_workers,
-                                max_queue=24)
+                                max_queue=24,
+                                enable_ce=enable_ce)
     test_reader = reader.test(data_args, val_file_list, batch_size)
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)

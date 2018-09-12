@@ -292,24 +292,24 @@ def train(settings,
           shuffle=True,
           use_multiprocessing=True,
           num_workers=8,
-          max_queue=24):
+          max_queue=24,
+          enable_ce=False):
     file_list = os.path.join(settings.data_dir, file_list)
-
-    def infinite_reader(gen):
-        while True:
-            for data in gen():
-                yield data
 
     if 'coco' in settings.dataset:
         generator = coco(settings, file_list, "train", batch_size, shuffle)
     else:
         generator = pascalvoc(settings, file_list, "train", batch_size, shuffle)
 
+    def infinite_reader():
+        while True:
+            for data in generator():
+                yield data
+
     def reader():
         try:
             enqueuer = GeneratorEnqueuer(
-                infinite_reader(generator),
-                use_multiprocessing=use_multiprocessing)
+                infinite_reader(), use_multiprocessing=use_multiprocessing)
             enqueuer.start(max_queue_size=max_queue, workers=num_workers)
             generator_output = None
             while True:
@@ -325,7 +325,10 @@ def train(settings,
             if enqueuer is not None:
                 enqueuer.stop()
 
-    return reader
+    if enable_ce:
+        return infinite_reader
+    else:
+        return reader
 
 
 def test(settings, file_list, batch_size):
