@@ -22,7 +22,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('parallel',         bool,  True,            "parallel")
 add_arg('learning_rate',    float, 0.001,           "Learning rate.")
-add_arg('batch_size',       int,   5,              "Minibatch size.")
+add_arg('batch_size',       int,   20,              "Minibatch size.")
 add_arg('num_iteration',    int,   10,              "Epoch number.")
 add_arg('skip_reader',      bool,  False,            "Whether to skip data reader.")
 add_arg('use_gpu',          bool,  True,            "Whether use GPU.")
@@ -50,9 +50,6 @@ def train(args, config, train_file_list, optimizer_method):
     num_classes = 2
     image_shape = [3, height, width]
 
-    devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
-    devices_num = len(devices.split(","))
-
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
@@ -75,6 +72,7 @@ def train(args, config, train_file_list, optimizer_method):
                 fetches = [loss]
             devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
             devices_num = len(devices.split(","))
+            batch_size_per_device = batch_size // devices_num
             steps_per_pass = 12880 // batch_size // devices_num
             boundaries = [steps_per_pass * 50, steps_per_pass * 80,
                           steps_per_pass * 120, steps_per_pass * 140]
@@ -118,7 +116,7 @@ def train(args, config, train_file_list, optimizer_method):
     if parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=use_gpu, loss_name=loss.name, main_program = train_prog)
-    train_reader = reader.train_batch_reader(config, train_file_list, batch_size)
+    train_reader = reader.train_batch_reader(config, train_file_list, batch_size_per_device)
     train_py_reader.decorate_paddle_reader(train_reader)
 
     def run(iterations):

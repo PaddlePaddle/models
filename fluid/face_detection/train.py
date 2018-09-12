@@ -95,6 +95,7 @@ def train(args, config, train_file_list, optimizer_method):
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
     steps_per_pass = 12880 // batch_size // devices_num
+    batch_size_per_device = batch_size // devices_num
 
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
@@ -127,7 +128,8 @@ def train(args, config, train_file_list, optimizer_method):
             return os.path.exists(os.path.join(pretrained_model, var.name))
         fluid.io.load_vars(
             exe, pretrained_model, main_program=train_prog, predicate=if_exist)
-    train_reader = reader.train_batch_reader(config, train_file_list, batch_size=batch_size)
+    train_reader = reader.train_batch_reader(config, train_file_list,
+                                             batch_size=batch_size_per_device)
     train_py_reader.decorate_paddle_reader(train_reader)
 
     if args.parallel:
