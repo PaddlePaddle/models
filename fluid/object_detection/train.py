@@ -169,29 +169,15 @@ def train(args,
     if parallel:
         train_exe = fluid.ParallelExecutor(main_program=train_prog,
             use_cuda=use_gpu, loss_name=loss.name)
-
-    if enable_ce:
-        train_file_list = os.path.join(data_args.data_dir, train_file_list)
-        val_file_list = os.path.join(data_args.data_dir, val_file_list)
-        if 'coco' in data_args.dataset:
-            train_reader = reader.coco(data_args, train_file_list, "train",
-                batch_size_per_device, is_shuffle)
-            test_reader = reader.coco(data_args, val_file_list, "test",
-                batch_size, is_shuffle)
-        else:
-            train_reader = reader.pascalvoc(data_args, train_file_list, "train",
-                batch_size_per_device, is_shuffle)
-            test_reader = reader.pascalvoc(data_args, val_file_list, "test",
-                batch_size, is_shuffle)
-    else:
-        train_reader = reader.train(data_args,
-                                    train_file_list,
-                                    batch_size_per_device,
-                                    shuffle=is_shuffle,
-                                    use_multiprocessing=True,
-                                    num_workers=num_workers,
-                                    max_queue=24)
-        test_reader = reader.test(data_args, val_file_list, batch_size)
+    train_reader = reader.train(data_args,
+                                train_file_list,
+                                batch_size_per_device,
+                                shuffle=is_shuffle,
+                                use_multiprocessing=True,
+                                num_workers=num_workers,
+                                max_queue=24,
+                                enable_ce=enable_ce)
+    test_reader = reader.test(data_args, val_file_list, batch_size)
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
 
