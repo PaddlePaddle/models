@@ -1,6 +1,7 @@
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
+from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
 import paddle.fluid as fluid
 import sys
@@ -152,9 +153,14 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         padding=1,
         act='relu',
         name='conv_rpn',
-        param_attr=ParamAttr(name="conv_rpn_w"),
+        param_attr=ParamAttr(
+            name="conv_rpn_w", initializer=Normal(
+                loc=0., scale=0.01)),
         bias_attr=ParamAttr(
-            name="conv_rpn_b", learning_rate=2., regularizer=L2Decay(0.)))
+            name="conv_rpn_b",
+            learning_rate=2.,
+            regularizer=L2Decay(0.),
+            initializer=Constant(0.0)))
     anchor, var = fluid.layers.anchor_generator(
         input=rpn_conv,
         anchor_sizes=anchor_sizes,
@@ -171,9 +177,14 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         padding=0,
         act=None,
         name='rpn_cls_score',
-        param_attr=ParamAttr(name="rpn_cls_logits_w"),
+        param_attr=ParamAttr(
+            name="rpn_cls_logits_w", initializer=Normal(
+                loc=0., scale=0.01)),
         bias_attr=ParamAttr(
-            name="rpn_cls_logits_b", learning_rate=2., regularizer=L2Decay(0.)))
+            name="rpn_cls_logits_b",
+            learning_rate=2.,
+            regularizer=L2Decay(0.),
+            initializer=Constant(0.0)))
     rpn_bbox_pred = fluid.layers.conv2d(
         rpn_conv,
         num_filters=4 * num_anchor,
@@ -182,9 +193,14 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         padding=0,
         act=None,
         name='rpn_bbox_pred',
-        param_attr=ParamAttr(name="rpn_bbox_pred_w"),
+        param_attr=ParamAttr(
+            name="rpn_bbox_pred_w", initializer=Normal(
+                loc=0., scale=0.01)),
         bias_attr=ParamAttr(
-            name="rpn_bbox_pred_b", learning_rate=2., regularizer=L2Decay(0.)))
+            name="rpn_bbox_pred_b",
+            learning_rate=2.,
+            regularizer=L2Decay(0.),
+            initializer=Constant(0.0)))
 
     rpn_cls_score_prob = fluid.layers.sigmoid(
         rpn_cls_score, name='rpn_cls_score_prob')
@@ -234,20 +250,28 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
                                 size=class_nums,
                                 act=None,
                                 name='cls_score',
-                                param_attr=ParamAttr(name='cls_score_w'),
+                                param_attr=ParamAttr(
+                                    name='cls_score_w',
+                                    initializer=Normal(
+                                        loc=0.0, scale=0.01)),
                                 bias_attr=ParamAttr(
                                     name='cls_score_b',
                                     learning_rate=2.,
-                                    regularizer=L2Decay(0.)))
+                                    regularizer=L2Decay(0.),
+                                    initializer=Constant(0.0)))
     bbox_pred = fluid.layers.fc(input=res5_pool,
                                 size=4 * class_nums,
                                 act=None,
                                 name='bbox_pred',
-                                param_attr=ParamAttr(name='bbox_pred_w'),
+                                param_attr=ParamAttr(
+                                    name='bbox_pred_w',
+                                    initializer=Normal(
+                                        loc=0.0, scale=0.001)),
                                 bias_attr=ParamAttr(
                                     name='bbox_pred_b',
                                     learning_rate=2.,
-                                    regularizer=L2Decay(0.)))
+                                    regularizer=L2Decay(0.),
+                                    initializer=Constant(0.0)))
 
     return rpn_cls_score, rpn_bbox_pred, anchor, var, cls_score, bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, rois, labels_int32
 

@@ -294,11 +294,13 @@ def train(args):
             if batch_id % 1 == 0:
                 print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                       epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
-                print('cls_loss ,', losses[1], ' reg_loss ', losses[2], ' loss_cls ', losses[3], ' loss_bbox ', losses[4])
+                #print('cls_loss ,', losses[1], ' reg_loss ', losses[2], ' loss_cls ', losses[3], ' loss_bbox ', losses[4])
+            if batch_id % 5000 == 0:
+                save_model('epoch'+str(epoc_id)+'_'+str(batch_id))
         pass_end = time.time()
         print('Epoc {:d}, time {:.5f}'.format(epoc_id,pass_end-pass_start))
         if epoc_id % 10 == 0 or epoc_id == num_passes - 1:
-            save_model(str(epoc_id))
+            save_model('epoch'+str(epoc_id)+'_total')
 
 if __name__ == '__main__':
     print('fasterrcnn')

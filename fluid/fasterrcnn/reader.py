@@ -40,8 +40,8 @@ class Settings(object):
             self.val_data_dir = 'val2014'
         elif 'coco2017' in args.dataset:
             self.class_nums = 81
-            self.train_file_list = 'annotations/instances_val2017.json'
-            self.train_data_dir = 'val2017'
+            self.train_file_list = 'annotations/instances_train2017.json'
+            self.train_data_dir = 'train2017'
             self.val_file_list = 'annotations/instances_val2017.json'
             self.val_data_dir = 'val2017'
         elif 'pascalvoc' in args.dataset:
