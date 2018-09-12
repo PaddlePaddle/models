@@ -32,7 +32,7 @@ add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
 
 train_parameters = {
     "pascalvoc": {
-        "train_images": 19200,
+        "train_images": 16551,
         "image_shape": [3, 300, 300],
         "class_num": 21,
         "batch_size": 64,
