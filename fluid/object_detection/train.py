@@ -62,7 +62,7 @@ train_parameters = {
 
 def optimizer_setting(train_params):
     batch_size = train_params["batch_size"]
-    iters = train_params["train_images"] / batch_size
+    iters = train_params["train_images"] // batch_size
     lr = train_params["lr"]
     boundaries = [i * iters  for i in train_params["lr_epochs"]]
     values = [ i * lr for i in train_params["lr_decay"]]
@@ -118,7 +118,6 @@ def train(args,
 
     model_save_dir = args.model_save_dir
     pretrained_model = args.pretrained_model
-    epoc_num = args.epoc_num
     use_gpu = args.use_gpu
     parallel = args.parallel
     enable_ce = args.enable_ce
@@ -127,6 +126,7 @@ def train(args,
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
     batch_size = train_params['batch_size']
+    epoc_num = train_params['epoch_num']
     batch_size_per_device = batch_size // devices_num
     iters_per_epoc = train_params["train_images"] // batch_size
     num_workers = 8

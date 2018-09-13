@@ -24,13 +24,13 @@ add_arg('parallel',         bool,  True,            "parallel")
 add_arg('learning_rate',    float, 0.001,           "Learning rate.")
 add_arg('batch_size',       int,   20,              "Minibatch size.")
 add_arg('num_iteration',    int,   10,              "Epoch number.")
-add_arg('skip_reader',      bool,  False,            "Whether to skip data reader.")
 add_arg('use_gpu',          bool,  True,            "Whether use GPU.")
 add_arg('use_pyramidbox',   bool,  True,            "Whether use PyramidBox model.")
 add_arg('model_save_dir',   str,   'output',        "The path to save model.")
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced', "The init model path.")
 add_arg('resize_h',         int,   640,             "The resized image height.")
 add_arg('resize_w',         int,   640,             "The resized image height.")
+add_arg('data_dir',         str,   'data',          "The base dir of dataset")
 #yapf: enable
 
 
@@ -122,15 +122,10 @@ def train(args, config, train_file_list, optimizer_method):
     def run(iterations):
         # global feed_data
         train_py_reader.start()
-        reader_time = []
         run_time = []
         batch_id = 0
         try:
             for batch_id in range(num_iterations):
-                start_time = time.time()
-                end_time = time.time()
-                reader_time.append(end_time - start_time)
-
                 start_time = time.time()
                 if parallel:
                     fetch_vars = train_exe.run(fetch_list=[v.name for v in fetches])
@@ -150,7 +145,7 @@ def train(args, config, train_file_list, optimizer_method):
         except StopIteration:
             train_py_reader.reset()
         train_py_reader.reset()
-        return reader_time, run_time
+        return run_time
 
     # start-up
     run(2)
@@ -165,15 +160,16 @@ def train(args, config, train_file_list, optimizer_method):
     end = time.time()
     total_time = end - start
     print("Total time: {0}, reader time: {1} s, run time: {2} s".format(
-        total_time, np.sum(reader_time), np.sum(run_time)))
+        total_time, total_time - np.sum(run_time), np.sum(run_time)))
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
-    data_dir = 'data/WIDER_train/images/'
-    train_file_list = 'data/wider_face_split/wider_face_train_bbx_gt.txt'
+    data_dir = os.path.join(args.data_dir, 'WIDER_train/images/')
+    train_file_list = os.path.join(args.data_dir,
+        'data/wider_face_split/wider_face_train_bbx_gt.txt')
 
     config = reader.Settings(
         data_dir=data_dir,
