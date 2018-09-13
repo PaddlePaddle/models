@@ -203,17 +203,17 @@ def make_one_batch_input(data_batches, index):
 
     for i, turn_len in enumerate(every_turn_len_list):
         feed_dict["turn_mask_%d" % i] = np.ones(
-            (batch_size, max_turn_len)).astype("float32")
+            (batch_size, max_turn_len, 1)).astype("float32")
         for row in xrange(batch_size):
-            feed_dict["turn_mask_%d" % i][row, turn_len[row]:] = 0
+            feed_dict["turn_mask_%d" % i][row, turn_len[row]:, 0] = 0
 
     feed_dict["response"] = response
     feed_dict["response"] = np.expand_dims(feed_dict["response"], axis=-1)
 
     feed_dict["response_mask"] = np.ones(
-        (batch_size, max_turn_len)).astype("float32")
+        (batch_size, max_turn_len, 1)).astype("float32")
     for row in xrange(batch_size):
-        feed_dict["response_mask"][row, response_len[row]:] = 0
+        feed_dict["response_mask"][row, response_len[row]:, 0] = 0
 
     feed_dict["label"] = np.array([data_batches["label"][index]]).reshape(
         [-1, 1]).astype("float32")
