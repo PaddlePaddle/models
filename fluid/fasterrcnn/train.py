@@ -136,10 +136,12 @@ def train(args):
 
     labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
     labels_int64.stop_gradient = True
-    loss_cls = fluid.layers.softmax_with_cross_entropy(
-            logits=cls_score,
-            label=labels_int64
-            )
+    #loss_cls = fluid.layers.softmax_with_cross_entropy(
+    #        logits=cls_score,
+    #        label=labels_int64
+    #        )
+    softmax = fluid.layers.softmax(cls_score, use_cudnn=False)
+    loss_cls = fluid.layers.cross_entropy(softmax, labels_int64)
     loss_cls = fluid.layers.reduce_mean(loss_cls)
     loss_cls.persistable=True
     loss_bbox = fluid.layers.smooth_l1(x=bbox_pred,
@@ -224,14 +226,6 @@ def train(args):
     if args.parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=bool(args.use_gpu), loss_name=loss.name)
-    """
-    train_reader = paddle.batch(
-        reader.train(args, shuffle=False if args.debug else True), batch_size=batch_size)
-    test_reader = paddle.batch(
-        reader.test(args), batch_size=batch_size)
-    feeder = fluid.DataFeeder(
-        place=place, feed_list=[image, gt_box, gt_label, is_crowd, im_info])
-    """
     train_reader = reader.train(args)
     def save_model(postfix):
         model_path = os.path.join(args.model_save_dir, postfix)
@@ -295,7 +289,7 @@ def train(args):
             if batch_id % 1 == 0:
                 print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                       epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
-                print('cls_loss ,', losses[1], ' reg_loss ', losses[2], ' loss_cls ', losses[3], ' loss_bbox ', losses[4])
+                #print('cls_loss ,', losses[1], ' reg_loss ', losses[2], ' loss_cls ', losses[3], ' loss_bbox ', losses[4])
 
         if epoc_id % 10 == 0 or epoc_id == num_passes - 1:
             save_model(str(epoc_id))
