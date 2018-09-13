@@ -79,9 +79,9 @@ def bbox_area(src_bbox):
 
 
 def generate_sample(sampler, image_width, image_height):
-    scale = random.uniform(sampler.min_scale, sampler.max_scale)
-    aspect_ratio = random.uniform(sampler.min_aspect_ratio,
-                                  sampler.max_aspect_ratio)
+    scale = np.random.uniform(sampler.min_scale, sampler.max_scale)
+    aspect_ratio = np.random.uniform(sampler.min_aspect_ratio,
+                                     sampler.max_aspect_ratio)
     aspect_ratio = max(aspect_ratio, (scale**2.0))
     aspect_ratio = min(aspect_ratio, 1 / (scale**2.0))
 
@@ -97,8 +97,8 @@ def generate_sample(sampler, image_width, image_height):
 
     xmin_bound = 1 - bbox_width
     ymin_bound = 1 - bbox_height
-    xmin = random.uniform(0, xmin_bound)
-    ymin = random.uniform(0, ymin_bound)
+    xmin = np.random.uniform(0, xmin_bound)
+    ymin = np.random.uniform(0, ymin_bound)
     xmax = xmin + bbox_width
     ymax = ymin + bbox_height
     sampled_bbox = bbox(xmin, ymin, xmax, ymax)
@@ -123,43 +123,56 @@ def data_anchor_sampling(sampler, bbox_labels, image_width, image_height,
         hei = image_height * (norm_ymax - norm_ymin)
         range_size = 0
 
+        area = wid * hei
         for scale_ind in range(0, len(scale_array) - 1):
-            area = wid * hei
             if area > scale_array[scale_ind] ** 2 and area < \
                     scale_array[scale_ind + 1] ** 2:
                 range_size = scale_ind + 1
                 break
 
+        if area > scale_array[len(scale_array) - 2]**2:
+            range_size = len(scale_array) - 2
+
         scale_choose = 0.0
         if range_size == 0:
-            rand_idx_size = range_size + 1
+            rand_idx_size = 0
         else:
             # np.random.randint range: [low, high)
             rng_rand_size = np.random.randint(0, range_size + 1)
             rand_idx_size = rng_rand_size % (range_size + 1)
 
-        min_resize_val = scale_array[rand_idx_size] / 2.0
-        max_resize_val = min(2.0 * scale_array[rand_idx_size],
-                             2 * math.sqrt(wid * hei))
-        scale_choose = random.uniform(min_resize_val, max_resize_val)
+        if rand_idx_size == range_size:
+            min_resize_val = scale_array[rand_idx_size] / 2.0
+            max_resize_val = min(2.0 * scale_array[rand_idx_size],
+                                 2 * math.sqrt(wid * hei))
+            scale_choose = random.uniform(min_resize_val, max_resize_val)
+        else:
+            min_resize_val = scale_array[rand_idx_size] / 2.0
+            max_resize_val = 2.0 * scale_array[rand_idx_size]
+            scale_choose = random.uniform(min_resize_val, max_resize_val)
+
         sample_bbox_size = wid * resize_width / scale_choose
 
         w_off_orig = 0.0
         h_off_orig = 0.0
         if sample_bbox_size < max(image_height, image_width):
             if wid <= sample_bbox_size:
-                w_off_orig = random.uniform(xmin + wid - sample_bbox_size, xmin)
+                w_off_orig = np.random.uniform(xmin + wid - sample_bbox_size,
+                                               xmin)
             else:
-                w_off_orig = random.uniform(xmin, xmin + wid - sample_bbox_size)
+                w_off_orig = np.random.uniform(xmin,
+                                               xmin + wid - sample_bbox_size)
 
             if hei <= sample_bbox_size:
-                h_off_orig = random.uniform(ymin + hei - sample_bbox_size, ymin)
+                h_off_orig = np.random.uniform(ymin + hei - sample_bbox_size,
+                                               ymin)
             else:
-                h_off_orig = random.uniform(ymin, ymin + hei - sample_bbox_size)
+                h_off_orig = np.random.uniform(ymin,
+                                               ymin + hei - sample_bbox_size)
 
         else:
-            w_off_orig = random.uniform(image_width - sample_bbox_size, 0.0)
-            h_off_orig = random.uniform(image_height - sample_bbox_size, 0.0)
+            w_off_orig = np.random.uniform(image_width - sample_bbox_size, 0.0)
+            h_off_orig = np.random.uniform(image_height - sample_bbox_size, 0.0)
 
         w_off_orig = math.floor(w_off_orig)
         h_off_orig = math.floor(h_off_orig)
@@ -174,6 +187,8 @@ def data_anchor_sampling(sampler, bbox_labels, image_width, image_height,
                             w_off + float(sample_bbox_size / image_width),
                             h_off + float(sample_bbox_size / image_height))
         return sampled_bbox
+    else:
+        return 0
 
 
 def jaccard_overlap(sample_bbox, object_bbox):
@@ -261,6 +276,8 @@ def generate_batch_random_samples(batch_sampler, bbox_labels, image_width,
             sample_bbox = data_anchor_sampling(
                 sampler, bbox_labels, image_width, image_height, scale_array,
                 resize_width, resize_height)
+            if sample_bbox == 0:
+                break
             if satisfy_sample_constraint(sampler, sample_bbox, bbox_labels):
                 sampled_bbox.append(sample_bbox)
                 found = found + 1
@@ -418,36 +435,36 @@ def crop_image_sampling(img, bbox_labels, sample_bbox, image_width,
 
 
 def random_brightness(img, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     if prob < settings.brightness_prob:
-        delta = random.uniform(-settings.brightness_delta,
-                               settings.brightness_delta) + 1
+        delta = np.random.uniform(-settings.brightness_delta,
+                                  settings.brightness_delta) + 1
         img = ImageEnhance.Brightness(img).enhance(delta)
     return img
 
 
 def random_contrast(img, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     if prob < settings.contrast_prob:
-        delta = random.uniform(-settings.contrast_delta,
-                               settings.contrast_delta) + 1
+        delta = np.random.uniform(-settings.contrast_delta,
+                                  settings.contrast_delta) + 1
         img = ImageEnhance.Contrast(img).enhance(delta)
     return img
 
 
 def random_saturation(img, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     if prob < settings.saturation_prob:
-        delta = random.uniform(-settings.saturation_delta,
-                               settings.saturation_delta) + 1
+        delta = np.random.uniform(-settings.saturation_delta,
+                                  settings.saturation_delta) + 1
         img = ImageEnhance.Color(img).enhance(delta)
     return img
 
 
 def random_hue(img, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     if prob < settings.hue_prob:
-        delta = random.uniform(-settings.hue_delta, settings.hue_delta)
+        delta = np.random.uniform(-settings.hue_delta, settings.hue_delta)
         img_hsv = np.array(img.convert('HSV'))
         img_hsv[:, :, 0] = img_hsv[:, :, 0] + delta
         img = Image.fromarray(img_hsv, mode='HSV').convert('RGB')
@@ -455,7 +472,7 @@ def random_hue(img, settings):
 
 
 def distort_image(img, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     # Apply different distort order
     if prob > 0.5:
         img = random_brightness(img, settings)
@@ -471,14 +488,14 @@ def distort_image(img, settings):
 
 
 def expand_image(img, bbox_labels, img_width, img_height, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     if prob < settings.expand_prob:
         if settings.expand_max_ratio - 1 >= 0.01:
-            expand_ratio = random.uniform(1, settings.expand_max_ratio)
+            expand_ratio = np.random.uniform(1, settings.expand_max_ratio)
             height = int(img_height * expand_ratio)
             width = int(img_width * expand_ratio)
-            h_off = math.floor(random.uniform(0, height - img_height))
-            w_off = math.floor(random.uniform(0, width - img_width))
+            h_off = math.floor(np.random.uniform(0, height - img_height))
+            w_off = math.floor(np.random.uniform(0, width - img_width))
             expand_bbox = bbox(-w_off / img_width, -h_off / img_height,
                                (width - w_off) / img_width,
                                (height - h_off) / img_height)

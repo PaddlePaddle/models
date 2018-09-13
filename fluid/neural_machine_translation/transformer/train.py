@@ -2,8 +2,8 @@ import argparse
 import ast
 import multiprocessing
 import os
+import six
 import time
-from functools import partial
 
 import numpy as np
 import paddle.fluid as fluid
@@ -78,8 +78,7 @@ def parse_args():
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
     parser.add_argument(
         "--token_delimiter",
-        type=partial(
-            str.decode, encoding="string-escape"),
+        type=lambda x: str(x.encode().decode("unicode-escape")),
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter. "
@@ -138,8 +137,6 @@ def pad_batch_data(insts,
     """
     return_list = []
     max_len = max(len(inst) for inst in insts)
-    num_token = reduce(lambda x, y: x + y,
-                       [len(inst) for inst in insts]) if return_num_token else 0
     # Any token included in dict can be used to pad, since the paddings' loss
     # will be masked out by weights and make no effect on parameter gradients.
     inst_data = np.array(
@@ -151,7 +148,7 @@ def pad_batch_data(insts,
         return_list += [inst_weight.astype("float32").reshape([-1, 1])]
     else:  # position data
         inst_pos = np.array([
-            range(1, len(inst) + 1) + [0] * (max_len - len(inst))
+            list(range(1, len(inst) + 1)) + [0] * (max_len - len(inst))
             for inst in insts
         ])
         return_list += [inst_pos.astype("int64").reshape([-1, 1])]
@@ -176,6 +173,9 @@ def pad_batch_data(insts,
     if return_max_len:
         return_list += [max_len]
     if return_num_token:
+        num_token = 0
+        for inst in insts:
+            num_token += len(inst)
         return_list += [num_token]
     return return_list if len(return_list) > 1 else return_list[0]
 
@@ -258,7 +258,7 @@ def split_data(data, num_part):
 
 
 def test_context(train_progm, avg_cost, train_exe, dev_count, data_input_names,
-                 util_input_names, sum_cost, token_num):
+                 sum_cost, token_num):
     # Context to do validation.
     test_program = train_progm.clone()
     with fluid.program_guard(test_program):
@@ -299,9 +299,9 @@ def test_context(train_progm, avg_cost, train_exe, dev_count, data_input_names,
                     split_data(
                         data, num_part=dev_count)):
                 data_input_dict, _ = prepare_batch_input(
-                    data_buffer, data_input_names, util_input_names,
-                    ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
-                    ModelHyperParams.n_head, ModelHyperParams.d_model)
+                    data_buffer, data_input_names, ModelHyperParams.eos_idx,
+                    ModelHyperParams.eos_idx, ModelHyperParams.n_head,
+                    ModelHyperParams.d_model)
                 feed_list.append(data_input_dict)
 
             outs = exe.run(feed=feed_list,
@@ -323,7 +323,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
         fluid.io.load_persistables(exe, TrainTaskConfig.ckpt_path)
         lr_scheduler.current_steps = TrainTaskConfig.start_step
     else:
-        print "init fluid.framework.default_startup_program"
+        print("init fluid.framework.default_startup_program")
         exe.run(fluid.framework.default_startup_program())
 
     train_data = reader.DataReader(
@@ -363,8 +363,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
 
     if args.val_file_pattern is not None:
         test = test_context(train_progm, avg_cost, train_exe, dev_count,
-                            data_input_names, util_input_names, sum_cost,
-                            token_num)
+                            data_input_names, sum_cost, token_num)
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -((1. - TrainTaskConfig.label_smooth_eps) * np.log(
@@ -372,8 +371,11 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
          )) + TrainTaskConfig.label_smooth_eps *
                         np.log(TrainTaskConfig.label_smooth_eps / (
                             ModelHyperParams.trg_vocab_size - 1) + 1e-20))
+
+    step_idx = 0
+    inst_num = 0
     init = False
-    for pass_id in xrange(TrainTaskConfig.pass_num):
+    for pass_id in six.moves.xrange(TrainTaskConfig.pass_num):
         pass_start_time = time.time()
         for batch_id, data in enumerate(train_data()):
             feed_list = []
@@ -388,11 +390,12 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
                     ModelHyperParams.eos_idx, ModelHyperParams.n_head,
                     ModelHyperParams.d_model)
                 total_num_token += num_token
-                feed_kv_pairs = data_input_dict.items()
+                inst_num += len(data_buffer)
+                feed_kv_pairs = list(data_input_dict.items())
                 if args.local:
-                    feed_kv_pairs += {
+                    feed_kv_pairs += list({
                         lr_scheduler.learning_rate.name: lr_rate
-                    }.items()
+                    }.items())
                 feed_list.append(dict(feed_kv_pairs))
 
                 if not init:
@@ -410,14 +413,17 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
             )  # sum the cost from multi-devices
             total_token_num = token_num_val.sum()
             total_avg_cost = total_sum_cost / total_token_num
-            print("epoch: %d, batch: %d, avg loss: %f, normalized loss: %f,"
-                  " ppl: %f" % (pass_id, batch_id, total_avg_cost,
-                                total_avg_cost - loss_normalizer,
-                                np.exp([min(total_avg_cost, 100)])))
+            print(
+                "step_idx: %d, total samples: %d, epoch: %d, batch: %d, avg loss: %f, "
+                "normalized loss: %f, ppl: %f" %
+                (step_idx, inst_num, pass_id, batch_id, total_avg_cost,
+                 total_avg_cost - loss_normalizer,
+                 np.exp([min(total_avg_cost, 100)])))
             if batch_id > 0 and batch_id % 1000 == 0:
                 fluid.io.save_persistables(
                     exe,
                     os.path.join(TrainTaskConfig.ckpt_dir, "latest.checkpoint"))
+            step_idx += 1
             init = True
 
         time_consumed = time.time() - pass_start_time
@@ -450,7 +456,7 @@ def train(args):
     is_local = os.getenv("PADDLE_IS_LOCAL", "1")
     if is_local == '0':
         args.local = False
-    print args
+    print(args)
 
     if args.device == 'CPU':
         TrainTaskConfig.use_gpu = False
@@ -531,7 +537,7 @@ def train(args):
             pserver_startup = t.get_startup_program(current_endpoint,
                                                     pserver_prog)
 
-            print "psserver begin run"
+            print("psserver begin run")
             with open('pserver_startup.desc', 'w') as f:
                 f.write(str(pserver_startup))
             with open('pserver_prog.desc', 'w') as f:

@@ -36,8 +36,8 @@ def bbox_area(src_bbox):
 
 
 def generate_sample(sampler):
-    scale = random.uniform(sampler.min_scale, sampler.max_scale)
-    aspect_ratio = random.uniform(sampler.min_aspect_ratio,
+    scale = np.random.uniform(sampler.min_scale, sampler.max_scale)
+    aspect_ratio = np.random.uniform(sampler.min_aspect_ratio,
                                   sampler.max_aspect_ratio)
     aspect_ratio = max(aspect_ratio, (scale**2.0))
     aspect_ratio = min(aspect_ratio, 1 / (scale**2.0))
@@ -46,8 +46,8 @@ def generate_sample(sampler):
     bbox_height = scale / (aspect_ratio**0.5)
     xmin_bound = 1 - bbox_width
     ymin_bound = 1 - bbox_height
-    xmin = random.uniform(0, xmin_bound)
-    ymin = random.uniform(0, ymin_bound)
+    xmin = np.random.uniform(0, xmin_bound)
+    ymin = np.random.uniform(0, ymin_bound)
     xmax = xmin + bbox_width
     ymax = ymin + bbox_height
     sampled_bbox = bbox(xmin, ymin, xmax, ymax)
@@ -167,36 +167,36 @@ def crop_image(img, bbox_labels, sample_bbox, image_width, image_height):
 
 
 def random_brightness(img, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     if prob < settings._brightness_prob:
-        delta = random.uniform(-settings._brightness_delta,
+        delta = np.random.uniform(-settings._brightness_delta,
                                settings._brightness_delta) + 1
         img = ImageEnhance.Brightness(img).enhance(delta)
     return img
 
 
 def random_contrast(img, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     if prob < settings._contrast_prob:
-        delta = random.uniform(-settings._contrast_delta,
+        delta = np.random.uniform(-settings._contrast_delta,
                                settings._contrast_delta) + 1
         img = ImageEnhance.Contrast(img).enhance(delta)
     return img
 
 
 def random_saturation(img, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     if prob < settings._saturation_prob:
-        delta = random.uniform(-settings._saturation_delta,
+        delta = np.random.uniform(-settings._saturation_delta,
                                settings._saturation_delta) + 1
         img = ImageEnhance.Color(img).enhance(delta)
     return img
 
 
 def random_hue(img, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     if prob < settings._hue_prob:
-        delta = random.uniform(-settings._hue_delta, settings._hue_delta)
+        delta = np.random.uniform(-settings._hue_delta, settings._hue_delta)
         img_hsv = np.array(img.convert('HSV'))
         img_hsv[:, :, 0] = img_hsv[:, :, 0] + delta
         img = Image.fromarray(img_hsv, mode='HSV').convert('RGB')
@@ -204,7 +204,7 @@ def random_hue(img, settings):
 
 
 def distort_image(img, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     # Apply different distort order
     if prob > 0.5:
         img = random_brightness(img, settings)
@@ -220,14 +220,14 @@ def distort_image(img, settings):
 
 
 def expand_image(img, bbox_labels, img_width, img_height, settings):
-    prob = random.uniform(0, 1)
+    prob = np.random.uniform(0, 1)
     if prob < settings._expand_prob:
         if settings._expand_max_ratio - 1 >= 0.01:
-            expand_ratio = random.uniform(1, settings._expand_max_ratio)
+            expand_ratio = np.random.uniform(1, settings._expand_max_ratio)
             height = int(img_height * expand_ratio)
             width = int(img_width * expand_ratio)
-            h_off = math.floor(random.uniform(0, height - img_height))
-            w_off = math.floor(random.uniform(0, width - img_width))
+            h_off = math.floor(np.random.uniform(0, height - img_height))
+            w_off = math.floor(np.random.uniform(0, width - img_width))
             expand_bbox = bbox(-w_off / img_width, -h_off / img_height,
                                (width - w_off) / img_width,
                                (height - h_off) / img_height)
