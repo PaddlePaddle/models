@@ -43,7 +43,6 @@ def train(args, config, train_file_list, optimizer_method):
     use_pyramidbox = args.use_pyramidbox
     model_save_dir = args.model_save_dir
     pretrained_model = args.pretrained_model
-    skip_reader = args.skip_reader
     num_iterations = args.num_iteration
     parallel = args.parallel
 
@@ -62,8 +61,8 @@ def train(args, config, train_file_list, optimizer_method):
         with fluid.unique_name.guard():
             image, face_box, head_box, gt_label = fluid.layers.read_file(train_py_reader)
             fetches = []
-            network = PyramidBox(image, face_box, head_box, gt_label,
-                                 num_classes, sub_network=use_pyramidbox)
+            network = PyramidBox(image=image, face_box=face_box, head_box=head_box, gt_label=gt_label,
+                                 sub_network=use_pyramidbox)
             if use_pyramidbox:
                 face_loss, head_loss, loss = network.train()
                 fetches = [face_loss, head_loss]
@@ -73,7 +72,7 @@ def train(args, config, train_file_list, optimizer_method):
             devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
             devices_num = len(devices.split(","))
             batch_size_per_device = batch_size // devices_num
-            steps_per_pass = 12880 // batch_size // devices_num
+            steps_per_pass = 12880 // batch_size
             boundaries = [steps_per_pass * 50, steps_per_pass * 80,
                           steps_per_pass * 120, steps_per_pass * 140]
             values = [
@@ -116,35 +115,34 @@ def train(args, config, train_file_list, optimizer_method):
     if parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=use_gpu, loss_name=loss.name, main_program = train_prog)
-    train_reader = reader.train_batch_reader(config, train_file_list, batch_size_per_device)
+    train_reader = reader.train(config,
+                                train_file_list,
+                                batch_size_per_device,
+                                shuffle=False,
+                                use_multiprocessing=True,
+                                num_workers=8,
+                                max_queue=24)
     train_py_reader.decorate_paddle_reader(train_reader)
 
     def run(iterations):
         # global feed_data
         train_py_reader.start()
         run_time = []
-        batch_id = 0
-        try:
-            for batch_id in range(num_iterations):
-                start_time = time.time()
-                if parallel:
-                    fetch_vars = train_exe.run(fetch_list=[v.name for v in fetches])
-                else:
-                    fetch_vars = exe.run(train_prog,
-                                         fetch_list=fetches)
-                end_time = time.time()
-                run_time.append(end_time - start_time)
-                fetch_vars = [np.mean(np.array(v)) for v in fetch_vars]
-                if not args.use_pyramidbox:
-                    print("Batch {0}, loss {1}".format(batch_id, fetch_vars[0]))
-                else:
-                    print("Batch {0}, face loss {1}, head loss {2}".format(
-                           batch_id, fetch_vars[0], fetch_vars[1]))
-        except fluid.core.EOFException:
-            train_py_reader.reset()
-        except StopIteration:
-            train_py_reader.reset()
-        train_py_reader.reset()
+        for batch_id in range(iterations):
+            start_time = time.time()
+            if parallel:
+                fetch_vars = train_exe.run(fetch_list=[v.name for v in fetches])
+            else:
+                fetch_vars = exe.run(train_prog,
+                                     fetch_list=fetches)
+            end_time = time.time()
+            run_time.append(end_time - start_time)
+            fetch_vars = [np.mean(np.array(v)) for v in fetch_vars]
+            if not args.use_pyramidbox:
+                print("Batch {0}, loss {1}".format(batch_id, fetch_vars[0]))
+            else:
+                print("Batch {0}, face loss {1}, head loss {2}".format(
+                       batch_id, fetch_vars[0], fetch_vars[1]))
         return run_time
 
     # start-up
@@ -154,9 +152,9 @@ def train(args, config, train_file_list, optimizer_method):
     start = time.time()
     if not parallel:
         with profiler.profiler('All', 'total', '/tmp/profile_file'):
-            reader_time, run_time = run(num_iterations)
+            run_time = run(num_iterations)
     else:
-        reader_time, run_time = run(num_iterations)
+        run_time = run(num_iterations)
     end = time.time()
     total_time = end - start
     print("Total time: {0}, reader time: {1} s, run time: {2} s".format(
@@ -169,7 +167,7 @@ if __name__ == '__main__':
 
     data_dir = os.path.join(args.data_dir, 'WIDER_train/images/')
     train_file_list = os.path.join(args.data_dir,
-        'data/wider_face_split/wider_face_train_bbx_gt.txt')
+        'wider_face_split/wider_face_train_bbx_gt.txt')
 
     config = reader.Settings(
         data_dir=data_dir,

@@ -83,8 +83,7 @@ def build_program(train_params, main_prog, startup_prog, args):
         with fluid.unique_name.guard():
             image, face_box, head_box, gt_label = fluid.layers.read_file(py_reader)
             fetches = []
-            network = PyramidBox(image, face_box, head_box, gt_label,
-                                 class_num, sub_network=use_pyramidbox)
+            network = PyramidBox(image=image, face_box=face_box, head_box=head_box, gt_label=gt_label, sub_network=use_pyramidbox)
             if use_pyramidbox:
                 face_loss, head_loss, loss = network.train()
                 fetches = [face_loss, head_loss]
