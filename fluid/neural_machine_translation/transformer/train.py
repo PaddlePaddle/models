@@ -225,7 +225,7 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
     return data_input_dict, np.asarray([num_token], dtype="float32")
 
 
-def prepare_data_generator(is_test, count, pyreader):
+def prepare_data_generator(args, is_test, count, pyreader):
     """
     Data generator wrapper for DataReader. If use py_reader, set the data
     provider for py_reader
@@ -370,7 +370,7 @@ def test_context(exe, train_exe, dev_count):
                 is_test=True)
 
     test_data = prepare_data_generator(
-        is_test=True, count=dev_count, pyreader=pyreader)
+        args, is_test=True, count=dev_count, pyreader=pyreader)
 
     exe.run(startup_prog)
     test_exe = fluid.ParallelExecutor(
@@ -418,7 +418,7 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
         exe.run(startup_prog)
 
     train_data = prepare_data_generator(
-        is_test=False, count=dev_count, pyreader=pyreader)
+        args, is_test=False, count=dev_count, pyreader=pyreader)
 
     build_strategy = fluid.BuildStrategy()
     # Since the token number differs among devices, customize gradient scale to
