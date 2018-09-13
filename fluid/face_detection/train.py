@@ -43,7 +43,8 @@ train_parameters = {
     "lr_epochs": [99, 124, 149],
     "lr_decay": [1, 0.1, 0.01, 0.001],
     "epoc_num": 160,
-    "optimizer_method": "momentum"
+    "optimizer_method": "momentum",
+    "use_pyramidbox": True
 }
 
 def optimizer_setting(train_params):
@@ -69,10 +70,8 @@ def optimizer_setting(train_params):
 
 
 def build_program(train_params, main_prog, startup_prog, args):
-    height = args.resize_h
-    width = args.resize_w
-    use_pyramidbox = args.use_pyramidbox
-    image_shape = [3, height, width]
+    use_pyramidbox = train_params["use_pyramidbox"]
+    image_shape = train_params["image_shape"]
     class_num = train_params["class_num"]
     with fluid.program_guard(main_prog, startup_prog):
         py_reader = fluid.layers.py_reader(
@@ -100,8 +99,9 @@ def train(args, config, train_params, train_file_list):
     batch_size = train_params["batch_size"]
     epoc_num = train_params["epoc_num"]
     optimizer_method = train_params["optimizer_method"]
+    use_pyramidbox = train_params["use_pyramidbox"]
+
     use_gpu = args.use_gpu
-    use_pyramidbox = args.use_pyramidbox
     model_save_dir = args.model_save_dir
     pretrained_model = args.pretrained_model
     with_memory_optimization = args.with_mem_opt
@@ -211,6 +211,7 @@ if __name__ == '__main__':
     mean_BGR = [float(m) for m in args.mean_BGR.split(",")]
     image_shape = [3, int(args.resize_h), int(args.resize_w)]
     train_parameters["image_shape"] = image_shape
+    train_parameters["use_pyramidbox"] = args.use_pyramidbox
     train_parameters["batch_size"] = args.batch_size
     train_parameters["lr"] = args.learning_rate
     train_parameters["epoc_num"] = args.epoc_num
