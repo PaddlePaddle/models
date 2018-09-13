@@ -94,7 +94,7 @@ def parse_args():
     parser.add_argument(
         "--iter_num",
         type=int,
-        default=-1,
+        default=20,
         help="The iteration number to run in profiling.")
     parser.add_argument(
         'opts',
@@ -166,9 +166,6 @@ def main(args):
     else:
         exe.run(startup_prog)
 
-    train_data = prepare_data_generator(
-        args, is_test=False, count=dev_count, pyreader=pyreader)
-
     build_strategy = fluid.BuildStrategy()
     # Since the token number differs among devices, customize gradient scale to
     # use token average cost among multi-devices. and the gradient scale is
@@ -187,71 +184,57 @@ def main(args):
                         np.log(TrainTaskConfig.label_smooth_eps / (
                             ModelHyperParams.trg_vocab_size - 1) + 1e-20))
 
-    def run(iter_num=None, fetch_feq=1):
+    train_data = prepare_data_generator(
+        args, is_test=False, count=dev_count, pyreader=pyreader)
+    if args.use_py_reader:
+        pyreader.start()
+        data_generator = None
+    else:
+        data_generator = train_data()
+
+    def run(iter_num):
         reader_time = []
         run_time = []
-        step_idx = 0
-        init_flag = True
-        for pass_id in six.moves.xrange(TrainTaskConfig.pass_num):
-            pass_start_time = time.time()
 
-            if args.use_py_reader:
-                pyreader.start()
-                data_generator = None
-            else:
-                data_generator = train_data()
+        for step_idx in six.moves.xrange(iter_num):
+            try:
+                start_time = time.time()
+                feed_dict_list = prepare_feed_dict_list(data_generator,
+                                                        init_flag, dev_count)
+                end_time = time.time()
+                reader_time.append(end_time - start_time)
 
-            batch_id = 0
-            while True:
-                try:
-                    start_time = time.time()
-                    feed_dict_list = prepare_feed_dict_list(
-                        data_generator, init_flag, dev_count)
-                    end_time = time.time()
-                    reader_time.append(end_time - start_time)
+                start_time = time.time()
+                outs = train_exe.run(
+                    fetch_list=[sum_cost.name, token_num.name],
+                    feed=feed_dict_list)
+                end_time = time.time()
+                run_time.append(end_time - start_time)
 
-                    if step_idx % fetch_feq == fetch_feq - 1:
-                        start_time = time.time()
-                        outs = train_exe.run(
-                            fetch_list=[sum_cost.name, token_num.name],
-                            feed=feed_dict_list)
-                        end_time = time.time()
-                        sum_cost_val, token_num_val = np.array(outs[
-                            0]), np.array(outs[1])
-                        # sum the cost from multi-devices
-                        total_sum_cost = sum_cost_val.sum()
-                        total_token_num = token_num_val.sum()
-                        total_avg_cost = total_sum_cost / total_token_num
-
-                        print(
-                            "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                            "normalized loss: %f, ppl: %f" %
-                            (step_idx, pass_id, batch_id, total_avg_cost,
-                             total_avg_cost - loss_normalizer,
-                             np.exp([min(total_avg_cost, 100)])))
-                    else:
-                        start_time = time.time()
-                        outs = train_exe.run(fetch_list=[], feed=feed_dict_list)
-                        end_time = time.time()
-                    run_time.append(end_time - start_time)
-
-                    init_flag = False
-                    batch_id += 1
-                    step_idx += 1
-
-                    if iter_num > 0 and step_idx == iter_num:
-                        return reader_time, run_time
-                except (StopIteration, fluid.core.EOFException):
-                    # The current pass is over.
-                    if args.use_py_reader:
-                        pyreader.reset()
-                    break
-
-            pass_end_consumed = time.time()
-            print("epoch: %d, consumed %fs" %
-                  (pass_id, pass_end_consumed - pass_start_time))
+                sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[
+                    1])
+                # sum the cost from multi-devices
+                total_sum_cost = sum_cost_val.sum()
+                total_token_num = token_num_val.sum()
+                total_avg_cost = total_sum_cost / total_token_num
+                print("step_idx: %d, avg loss: %f, "
+                      "normalized loss: %f, ppl: %f" %
+                      (step_idx, total_avg_cost,
+                       total_avg_cost - loss_normalizer,
+                       np.exp([min(total_avg_cost, 100)])))
+            except (StopIteration, fluid.core.EOFException):
+                # The current pass is over.
+                if args.use_py_reader:
+                    pyreader.reset()
+                    pyreader.start()
+                break
 
         return reader_time, run_time
+
+    # start-up
+    init_flag = True
+    run(1)
+    init_flag = False
 
     # profiling
     start = time.time()
