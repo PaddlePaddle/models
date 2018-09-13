@@ -114,6 +114,7 @@ def train(args):
     im_info = fluid.layers.data(
         name='im_info', shape=[3], dtype='float32')
 
+
     rpn_cls_score, rpn_bbox_pred, anchor, var, cls_score, bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, rois, labels_int32 = FasterRcnn(
             input=image,
             depth=50,
@@ -136,10 +137,12 @@ def train(args):
 
     labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
     labels_int64.stop_gradient = True
-    loss_cls = fluid.layers.softmax_with_cross_entropy(
-            logits=cls_score,
-            label=labels_int64
-            )
+    #loss_cls = fluid.layers.softmax_with_cross_entropy(
+    #        logits=cls_score,
+    #        label=labels_int64
+    #        )
+    softmax = fluid.layers.softmax(cls_score, use_cudnn=False)
+    loss_cls = fluid.layers.cross_entropy(softmax, labels_int64)
     loss_cls = fluid.layers.reduce_mean(loss_cls)
     loss_cls.persistable=True
     loss_bbox = fluid.layers.smooth_l1(x=bbox_pred,
@@ -171,8 +174,7 @@ def train(args):
         momentum=0.9)
     optimizer.minimize(loss)
 
-    if args.use_gpu:
-        fluid.memory_optimize(fluid.default_main_program())
+    fluid.memory_optimize(fluid.default_main_program())
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -180,68 +182,30 @@ def train(args):
 
     if args.pretrained_model:
         def if_exist(var):
-            #if (os.path.exists(os.path.join(pretrained_model, var.name))):
-            #   print(var.name)
             return os.path.exists(os.path.join(args.pretrained_model, var.name))
         fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
 
-    if args.debug:
-        import load_var
-        rpn_conv_w_t, rpn_conv_b_t = load_var.load_rpn_conv()
-        cls_score_w_t, cls_score_b_t = load_var.load_cls_score()
-        bbox_pred_w_t, bbox_pred_b_t = load_var.load_bbox_pred()
-        rpn_cls_logits_w_t = load('detectrondata/rpn_cls_logits_w')
-        rpn_cls_logits_b_t = load('detectrondata/rpn_cls_logits_b')
-        rpn_bbox_pred_w_t = load('detectrondata/rpn_bbox_pred_w')
-        rpn_bbox_pred_b_t = load('detectrondata/rpn_bbox_pred_b')
-
-        conv_rpn_w = fluid.global_scope().find_var("conv_rpn_w").get_tensor()
-        conv_rpn_b = fluid.global_scope().find_var("conv_rpn_b").get_tensor()
-        conv_rpn_w.set(rpn_conv_w_t, place)
-        conv_rpn_b.set(rpn_conv_b_t, place)
-
-        rpn_cls_logits_w = fluid.global_scope().find_var("rpn_cls_logits_w").get_tensor()
-        rpn_cls_logits_b = fluid.global_scope().find_var("rpn_cls_logits_b").get_tensor()
-        rpn_cls_logits_w.set(rpn_cls_logits_w_t, place)
-        rpn_cls_logits_b.set(rpn_cls_logits_b_t, place)
-
-        rpn_bbox_pred_w = fluid.global_scope().find_var("rpn_bbox_pred_w").get_tensor()
-        rpn_bbox_pred_b = fluid.global_scope().find_var("rpn_bbox_pred_b").get_tensor()
-        rpn_bbox_pred_w.set(rpn_bbox_pred_w_t, place)
-        rpn_bbox_pred_b.set(rpn_bbox_pred_b_t, place)
-
-        cls_score_w = fluid.global_scope().find_var("cls_score_w").get_tensor()
-        cls_score_b = fluid.global_scope().find_var("cls_score_b").get_tensor()
-        cls_score_w.set(cls_score_w_t, place)
-        cls_score_b.set(cls_score_b_t, place)
-
-        bbox_pred_w = fluid.global_scope().find_var("bbox_pred_w").get_tensor()
-        bbox_pred_b = fluid.global_scope().find_var("bbox_pred_b").get_tensor()
-        bbox_pred_w.set(bbox_pred_w_t, place)
-        bbox_pred_b.set(bbox_pred_b_t, place)
-
     if args.parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=bool(args.use_gpu), loss_name=loss.name)
-    """
-    train_reader = paddle.batch(
-        reader.train(args, shuffle=False if args.debug else True), batch_size=batch_size)
-    test_reader = paddle.batch(
-        reader.test(args), batch_size=batch_size)
-    feeder = fluid.DataFeeder(
-        place=place, feed_list=[image, gt_box, gt_label, is_crowd, im_info])
-    """
+
     train_reader = reader.train(args)
+
     def save_model(postfix):
         model_path = os.path.join(args.model_save_dir, postfix)
         if os.path.isdir(model_path):
             shutil.rmtree(model_path)
-        print 'save models to %s' % (model_path)
         fluid.io.save_persistables(exe, model_path)
 
-
     fetch_list = [loss, cls_loss, reg_loss, loss_cls, loss_bbox]
+
+    def tensor(data, place, lod=None):
+        t = fluid.core.LoDTensor()
+        t.set(data, place)
+        if lod:
+            t.set_lod(lod)
+        return t
 
     total_time = 0.0
     for epoc_id in range(num_passes):
@@ -253,25 +217,13 @@ def train(args):
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
+
             image, gt_box, gt_label, is_crowd, im_info, lod = data
-            lod = [lod]
-            image_t = fluid.core.LoDTensor()
-            image_t.set(image, place)
-
-            gt_box_t = fluid.core.LoDTensor()
-            gt_box_t.set(gt_box, place)
-            gt_box_t.set_lod(lod)
-
-            gt_label_t = fluid.core.LoDTensor()
-            gt_label_t.set(gt_label.reshape(-1, 1), place)
-            gt_label_t.set_lod(lod)
-
-            is_crowd_t = fluid.core.LoDTensor()
-            is_crowd_t.set(is_crowd, place)
-            is_crowd_t.set_lod(lod)
-
-            im_info_t = fluid.core.LoDTensor()
-            im_info_t.set(im_info, place)
+            image_t = tensor(image, place)
+            gt_box_t = tensor(gt_box, place, [lod])
+            gt_label_t = tensor(gt_label, place, [lod])
+            is_crowd_t = tensor(is_crowd, place, [lod])
+            im_info_t = tensor(im_info, place)
 
             feeding = {}
             feeding['image'] = image_t
@@ -280,7 +232,6 @@ def train(args):
             feeding['is_crowd'] = is_crowd_t
             feeding['im_info'] = im_info_t
 
-
             if args.parallel:
                 losses = train_exe.run(fetch_list=[v.name for v in fetch_list],
                                        feed=feeding)
@@ -288,23 +239,21 @@ def train(args):
                 losses = exe.run(fluid.default_main_program(),
                                   feed=feeding,
                                   fetch_list=fetch_list)
-            lr = np.array(fluid.global_scope().find_var('learning_rate').get_tensor())
-
             loss_v = np.mean(np.array(losses[0]))
             every_pass_loss.append(loss_v)
+
+            lr = np.array(fluid.global_scope().find_var('learning_rate').get_tensor())
             if batch_id % 1 == 0:
                 print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                       epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
-                print('cls_loss ,', losses[1], ' reg_loss ', losses[2], ' loss_cls ', losses[3], ' loss_bbox ', losses[4])
+                #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
 
         if epoc_id % 10 == 0 or epoc_id == num_passes - 1:
             save_model(str(epoc_id))
 
 if __name__ == '__main__':
-    print('fasterrcnn')
     args = parser.parse_args()
     print_arguments(args)
 
     data_args = reader.Settings(args)
-    print('train begins...')
     train(data_args)
