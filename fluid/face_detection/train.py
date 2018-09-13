@@ -28,7 +28,7 @@ add_arg('use_pyramidbox',   bool,  True,            "Whether use PyramidBox mode
 add_arg('model_save_dir',   str,   'output',        "The path to save model.")
 add_arg('resize_h',         int,   640,             "The resized image height.")
 add_arg('resize_w',         int,   640,             "The resized image width.")
-add_arg('mean_BGR',   str,   '104., 117., 123.', "Mean value for B,G,R channel which will be subtracted.")
+add_arg('mean_BGR',         str,   '104., 117., 123.', "Mean value for B,G,R channel which will be subtracted.")
 add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
 add_arg('data_dir',         str,   'data',          "The base dir of dataset")
@@ -83,7 +83,11 @@ def build_program(train_params, main_prog, startup_prog, args):
         with fluid.unique_name.guard():
             image, face_box, head_box, gt_label = fluid.layers.read_file(py_reader)
             fetches = []
-            network = PyramidBox(image=image, face_box=face_box, head_box=head_box, gt_label=gt_label, sub_network=use_pyramidbox)
+            network = PyramidBox(image=image,
+                                 face_box=face_box,
+                                 head_box=head_box,
+                                 gt_label=gt_label,
+                                 sub_network=use_pyramidbox)
             if use_pyramidbox:
                 face_loss, head_loss, loss = network.train()
                 fetches = [face_loss, head_loss]
@@ -176,7 +180,8 @@ def train(args, config, train_params, train_file_list):
                 prev_start_time = start_time
                 start_time = time.time()
                 if args.parallel:
-                    fetch_vars = train_exe.run(fetch_list=[v.name for v in fetches])
+                    fetch_vars = train_exe.run(fetch_list=
+                        [v.name for v in fetches])
                 else:
                     fetch_vars = exe.run(train_prog,
                                          fetch_list=fetches)
@@ -188,7 +193,8 @@ def train(args, config, train_params, train_file_list):
                             pass_id, batch_id, fetch_vars[0],
                             start_time - prev_start_time))
                     else:
-                        print("Pass {0}, batch {1}, face loss {2}, head loss {3}, " \
+                        print("Pass {0}, batch {1}, face loss {2}, " \
+                              "head loss {3}, " \
                               "time {4}".format(pass_id,
                                batch_id, fetch_vars[0], fetch_vars[1],
                                start_time - prev_start_time))

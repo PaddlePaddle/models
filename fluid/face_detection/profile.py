@@ -52,16 +52,19 @@ def train(args, config, train_file_list, optimizer_method):
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
-        train_py_reader = fluid.layers.py_reader(
+        py_reader = fluid.layers.py_reader(
             capacity=8,
             shapes=[[-1] + image_shape, [-1, 4], [-1, 4], [-1, 1]],
             lod_levels=[0, 1, 1, 1],
             dtypes=["float32", "float32", "float32", "int32"],
             use_double_buffer=True)
         with fluid.unique_name.guard():
-            image, face_box, head_box, gt_label = fluid.layers.read_file(train_py_reader)
+            image, face_box, head_box, gt_label = fluid.layers.read_file(py_reader)
             fetches = []
-            network = PyramidBox(image=image, face_box=face_box, head_box=head_box, gt_label=gt_label,
+            network = PyramidBox(image=image,
+                                 face_box=face_box,
+                                 head_box=head_box,
+                                 gt_label=gt_label,
                                  sub_network=use_pyramidbox)
             if use_pyramidbox:
                 face_loss, head_loss, loss = network.train()
@@ -87,7 +90,8 @@ def train(args, config, train_file_list, optimizer_method):
                 )
             else:
                 optimizer = fluid.optimizer.RMSProp(
-                    learning_rate=fluid.layers.piecewise_decay(boundaries, values),
+                    learning_rate=
+                    fluid.layers.piecewise_decay(boundaries, values),
                     regularization=fluid.regularizer.L2Decay(0.0005),
                 )
             optimizer.minimize(loss)
@@ -122,11 +126,11 @@ def train(args, config, train_file_list, optimizer_method):
                                 use_multiprocessing=True,
                                 num_workers=8,
                                 max_queue=24)
-    train_py_reader.decorate_paddle_reader(train_reader)
+    py_reader.decorate_paddle_reader(train_reader)
 
     def run(iterations):
         # global feed_data
-        train_py_reader.start()
+        py_reader.start()
         run_time = []
         for batch_id in range(iterations):
             start_time = time.time()
