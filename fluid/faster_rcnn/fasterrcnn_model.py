@@ -1,9 +1,7 @@
-from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 from paddle.fluid.regularizer import L2Decay
 import paddle.fluid as fluid
-import sys
 
 
 def conv_bn_layer(input,
@@ -199,7 +197,8 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         nms_thresh=0.7,
         min_size=0.0,
         eta=1.0)
-    rois, labels_int32, bbox_targets, bbox_inside_weights, bbox_outside_weights = fluid.layers.generate_proposal_labels(
+    rois, labels_int32, bbox_targets, bbox_inside_weights, \
+        bbox_outside_weights = fluid.layers.generate_proposal_labels(
         rpn_rois=rpn_rois,
         gt_classes=gt_label,
         is_crowd=is_crowd,
@@ -248,7 +247,9 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
                                     learning_rate=2.,
                                     regularizer=L2Decay(0.)))
 
-    return rpn_cls_score, rpn_bbox_pred, anchor, var, cls_score, bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, rois, labels_int32
+    return rpn_cls_score, rpn_bbox_pred, anchor, var, cls_score,\
+        bbox_pred, bbox_targets, bbox_inside_weights, \
+        bbox_outside_weights, rois, labels_int32
 
 
 def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd, im_info,
@@ -259,10 +260,8 @@ def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd, im_info,
         rpn_bbox_pred, perm=[0, 2, 3, 1])
     anchor_reshape = fluid.layers.reshape(anchor, shape=(-1, 4))
     var_reshape = fluid.layers.reshape(var, shape=(-1, 4))
-    #rpn_cls_score_reshape
     rpn_cls_score_reshape = fluid.layers.reshape(
         x=rpn_cls_score_reshape, shape=(0, -1, 1))
-    #rpn_bbox_pred_reshape
     rpn_bbox_pred_reshape = fluid.layers.reshape(
         x=rpn_bbox_pred_reshape, shape=(0, -1, 4))
     score_pred, loc_pred, score_target, loc_target = fluid.layers.rpn_target_assign(
@@ -292,7 +291,5 @@ def RPNloss(rpn_cls_prob, rpn_bbox_pred, anchor, var, gt_box, is_crowd, im_info,
     norm = fluid.layers.reduce_prod(score_shape)
     norm.stop_gradient = True
     rpn_reg_loss = rpn_reg_loss / norm
-    #rpn_reg_loss.persistable = True
-    #rpn_cls_loss.persistable = True
 
     return rpn_cls_loss, rpn_reg_loss

@@ -6,7 +6,9 @@ import paddle.fluid as fluid
 import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 from paddle.fluid.layers import control_flow
 
-def exponential_with_warmup_decay(learning_rate, boundaries, values, warmup_iter, warmup_factor):
+
+def exponential_with_warmup_decay(learning_rate, boundaries, values,
+                                  warmup_iter, warmup_factor):
     global_step = lr_scheduler._decay_step_counter()
 
     lr = fluid.layers.create_global_var(
@@ -17,10 +19,7 @@ def exponential_with_warmup_decay(learning_rate, boundaries, values, warmup_iter
         name="learning_rate")
 
     warmup_iter_var = fluid.layers.fill_constant(
-        shape=[1],
-        dtype='float32',
-        value=float(warmup_iter),
-        force_cpu=True)
+        shape=[1], dtype='float32', value=float(warmup_iter), force_cpu=True)
 
     with control_flow.Switch() as switch:
         with switch.case(global_step < warmup_iter_var):

@@ -13,7 +13,6 @@ import reader
 from fasterrcnn_model import FasterRcnn, RPNloss
 from learning_rate import exponential_with_warmup_decay
 
-
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
@@ -40,10 +39,6 @@ add_arg('batch_size_per_im',int,    512,    "fast rcnn head batch size")
 add_arg('mean_value',       float,  [102.9801, 115.9465, 122.7717], "pixel mean")
 add_arg('debug',            bool,   False,   "Debug mode")
 #yapf: enable
-
-def load(file_name):
-    v = cPickle.load(open(file_name))
-    return v.astype('float32')
 
 def train(args):
     num_passes = args.num_passes
@@ -74,7 +69,9 @@ def train(args):
         name='im_info', shape=[3], dtype='float32')
 
 
-    rpn_cls_score, rpn_bbox_pred, anchor, var, cls_score, bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, rois, labels_int32 = FasterRcnn(
+    rpn_cls_score, rpn_bbox_pred, anchor, var, cls_score, bbox_pred,\
+    bbox_targets, bbox_inside_weights, bbox_outside_weights, rois, \
+    labels_int32 = FasterRcnn(
             input=image,
             depth=50,
             anchor_sizes=[32,64,128,256,512],
@@ -88,7 +85,8 @@ def train(args):
             use_random=False if args.debug else True
             )
 
-    cls_loss, reg_loss = RPNloss(rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box, is_crowd, im_info, use_random=False if args.debug else True)
+    cls_loss, reg_loss = RPNloss(rpn_cls_score, rpn_bbox_pred, anchor, var, \
+        gt_box, is_crowd, im_info, use_random=False if args.debug else True)
     cls_loss.persistable=True
     reg_loss.persistable=True
     rpn_loss = cls_loss + reg_loss
