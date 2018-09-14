@@ -71,9 +71,18 @@ def coco(settings, mode, shuffle):
         if mode == "train" and shuffle:
             random.shuffle(roidbs)
         im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out = [],[],[],[],[]
+        if mode == "test":
+            im_id_out = []
         lod = [0]
         for roidb in roidbs:
+            if '000000139' not in roidb['image']:
+                continue
+            print(roidb['image'])
+            print('gt_box: {}'.format(roidb['gt_boxes']))
+            print('gt_class: {}'.format(roidb['gt_classes']))
+            print('im_id: {}'.format(roidb['id']))
             im, im_scales = data_utils.get_image_blob(roidb, settings)
+            im_id = roidb['id']
             im_height = np.round(roidb['height'] * im_scales)
             im_width = np.round(roidb['width'] * im_scales)
             im_info = np.array(
@@ -81,13 +90,16 @@ def coco(settings, mode, shuffle):
             gt_boxes = roidb['gt_boxes'].astype('float32')
             gt_classes = roidb['gt_classes'].astype('int32')
             is_crowd = roidb['is_crowd'].astype('int32')
-            if gt_boxes.shape[0] == 0:
-                continue
+            if mode == "train":
+                if gt_boxes.shape[0] == 0:
+                    continue
             im_out.append(im)
             gt_boxes_out.extend(gt_boxes)
             gt_classes_out.extend(gt_classes)
             is_crowd_out.extend(is_crowd)
             im_info_out.append(im_info)
+            if mode == 'test':
+                im_id_out.append(im_id)
             lod.append(lod[-1] + gt_boxes.shape[0])
             if len(im_out) == settings.batch_size:
                 im_out = np.array(im_out).astype('float32')
@@ -95,9 +107,16 @@ def coco(settings, mode, shuffle):
                 gt_classes_out = np.array(gt_classes_out).astype('int32')
                 is_crowd_out = np.array(is_crowd_out).astype('int32')
                 im_info_out = np.array(im_info_out).astype('float32')
-                yield im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out, lod
+                if mode == 'test':
+                    im_id_out = np.array(im_id_out).astype('int32')
+                if mode == 'test':
+                    yield im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out, lod, im_id_out
+                else:
+                    yield im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out, lod
                 im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out = [],[],[],[],[]
                 lod = [0]
+                if mode == "test":
+                    im_id_out = []
 
     return reader
 
