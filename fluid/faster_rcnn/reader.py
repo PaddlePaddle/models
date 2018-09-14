@@ -75,12 +75,6 @@ def coco(settings, mode, shuffle):
             im_id_out = []
         lod = [0]
         for roidb in roidbs:
-            if '000000139' not in roidb['image']:
-                continue
-            print(roidb['image'])
-            print('gt_box: {}'.format(roidb['gt_boxes']))
-            print('gt_class: {}'.format(roidb['gt_classes']))
-            print('im_id: {}'.format(roidb['id']))
             im, im_scales = data_utils.get_image_blob(roidb, settings)
             im_id = roidb['id']
             im_height = np.round(roidb['height'] * im_scales)
