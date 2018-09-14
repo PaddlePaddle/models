@@ -161,7 +161,6 @@ class JsonDataset(object):
     def _extend_with_flipped_entries(self, roidb):
         """Flip each entry in the given roidb and return a new roidb that is the
         concatenation of the original roidb and the flipped entries.
-
         "Flipping" an entry means that that image and associated metadata (e.g.,
         ground truth boxes and object proposals) are horizontally flipped.
         """

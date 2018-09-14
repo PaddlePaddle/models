@@ -169,6 +169,7 @@ def train(args):
     for epoc_id in range(num_passes):
         start_time = time.time()
         prev_start_time = start_time
+        start = start_time
         every_pass_loss = []
         iter = 0
         pass_duration = 0.0
@@ -176,7 +177,7 @@ def train(args):
             prev_start_time = start_time
             start_time = time.time()
 
-            image, gt_box, gt_label, is_crowd, im_info, lod = data
+            image, gt_box, gt_label, is_crowd, im_info, lod, im_id = data
             image_t = tensor(image, place)
             gt_box_t = tensor(gt_box, place, [lod])
             gt_label_t = tensor(gt_label, place, [lod])
@@ -205,7 +206,11 @@ def train(args):
                 print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                       epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
                 #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
-        if epoc_id % 10 == 0 or epoc_id == num_passes - 1:
+            if batch_id % 5000 == 0:
+                end = time.time()
+                print('time: {}'.format(end-start))
+                save_model('epoch'+str(epoc_id)+'_'+str(batch_id))
+        if epoc_id % 1 == 0 or epoc_id == num_passes - 1:
             save_model(str(epoc_id))
 
 if __name__ == '__main__':

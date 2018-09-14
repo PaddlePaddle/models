@@ -50,16 +50,13 @@ def clip_tiled_boxes(boxes, im_shape):
     return boxes
 
 
-def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info):
+def get_nmsed_box(args, rpn_rois, confs, locs, class_nums, im_info,
+                  numId_to_catId_map):
     lod = rpn_rois.lod()[0]
     rpn_rois_v = np.array(rpn_rois)
     variance_v = np.array([0.1, 0.1, 0.2, 0.2])
     confs_v = np.array(confs)
     locs_v = np.array(locs)
-    #print('rpn roi shape: {}'.format(rpn_rois_v.shape))
-    #print('var shape: {}'.format(variance_v.shape))
-    #print('confs shape: {}'.format(confs_v.shape)) 
-    #print('locs shape: {}'.format(locs_v.shape))
     rois = box_decoder(locs_v, rpn_rois_v, variance_v)
     im_results = [[] for _ in range(len(lod) - 1)]
     new_lod = [0]
@@ -83,15 +80,16 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info):
             keep = box_utils.nms(dets_j, 0.3)
             nms_dets = dets_j[keep, :]
             #add labels
-            label = np.array([j for _ in range(len(keep))])
+            cat_id = numId_to_catId_map[j]
+            label = np.array([cat_id for _ in range(len(keep))])
             nms_dets = np.hstack((nms_dets, label[:, np.newaxis])).astype(
                 np.float32, copy=False)
             cls_boxes[j] = nms_dets
     # Limit to max_per_image detections **over all classes**
         image_scores = np.hstack(
             [cls_boxes[j][:, -2] for j in range(1, class_nums)])
-        if len(image_scores) > 20:
-            image_thresh = np.sort(image_scores)[-20]
+        if len(image_scores) > 100:
+            image_thresh = np.sort(image_scores)[-100]
             for j in range(1, class_nums):
                 keep = np.where(cls_boxes[j][:, -2] >= image_thresh)[0]
                 cls_boxes[j] = cls_boxes[j][keep, :]
@@ -102,9 +100,5 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info):
         boxes = im_results_n[:, :-2]
         scores = im_results_n[:, -2]
         labels = im_results_n[:, -1]
-        print('predict box: {}'.format(boxes))
-        print('predict scores: {}'.format(scores))
-        print('predict labels: {}'.format(labels))
     im_results = np.vstack([im_results[k] for k in range(len(lod) - 1)])
-    #print(im_results.shape)
     return new_lod, im_results
