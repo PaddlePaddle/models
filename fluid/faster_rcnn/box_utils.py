@@ -69,7 +69,6 @@ def clip_xyxy_to_image(x1, y1, x2, y2, height, width):
     y2 = np.minimum(height - 1., np.maximum(0., y2))
     return x1, y1, x2, y2
 
-
 def nms(dets, thresh):
     """Apply classic DPM-style greedy NMS."""
     if dets.shape[0] == 0:
@@ -123,3 +122,4 @@ def nms(dets, thresh):
                 suppressed[j] = 1
 
     return np.where(suppressed == 0)[0]
+

@@ -13,6 +13,8 @@ from paddle.fluid.regularizer import L2Decay
 
 
 def conv_bn(input, filter, ksize, stride, padding, act='relu', bias_attr=False):
+    p_attr = ParamAttr(learning_rate=1., regularizer=L2Decay(0.))
+    b_attr = ParamAttr(learning_rate=0., regularizer=L2Decay(0.))
     conv = fluid.layers.conv2d(
         input=input,
         filter_size=ksize,
@@ -21,7 +23,13 @@ def conv_bn(input, filter, ksize, stride, padding, act='relu', bias_attr=False):
         padding=padding,
         act=None,
         bias_attr=bias_attr)
-    return fluid.layers.batch_norm(input=conv, act=act)
+    return fluid.layers.batch_norm(
+        input=conv,
+        act=act,
+        epsilon=0.001,
+        momentum=0.999,
+        param_attr=p_attr,
+        bias_attr=b_attr)
 
 
 def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
@@ -144,7 +152,7 @@ class PyramidBox(object):
                     groups=ch,
                     param_attr=w_attr,
                     bias_attr=False,
-                    use_cudnn=True)
+                    use_cudnn=False)
             else:
                 upsampling = fluid.layers.resize_bilinear(
                     conv1, out_shape=up_to.shape[2:])
@@ -234,11 +242,51 @@ class PyramidBox(object):
         face_locs, face_confs = [], []
         head_locs, head_confs = [], []
         boxes, vars = [], []
-        inputs = [
-            self.ssh_conv3_norm, self.ssh_conv4_norm, self.ssh_conv5_norm,
-            self.ssh_conv6, self.ssh_conv7, self.ssh_conv8
-        ]
+
         b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
+        mbox_loc = fluid.layers.conv2d(
+            self.ssh_conv3_norm, 8, 3, 1, 1, bias_attr=b_attr)
+        face_loc, head_loc = fluid.layers.split(
+            mbox_loc, num_or_sections=2, dim=1)
+        face_loc = permute_and_reshape(face_loc, 4)
+        head_loc = permute_and_reshape(head_loc, 4)
+
+        mbox_conf = fluid.layers.conv2d(
+            self.ssh_conv3_norm, 8, 3, 1, 1, bias_attr=b_attr)
+        face_conf3, face_conf1, head_conf3, head_conf1 = fluid.layers.split(
+            mbox_conf, num_or_sections=[3, 1, 3, 1], dim=1)
+        face_conf3_maxin = fluid.layers.reduce_max(
+            face_conf3, dim=1, keep_dim=True)
+        face_conf = fluid.layers.concat([face_conf3_maxin, face_conf1], axis=1)
+        head_conf3_maxin = fluid.layers.reduce_max(
+            head_conf3, dim=1, keep_dim=True)
+        head_conf = fluid.layers.concat([head_conf3_maxin, head_conf1], axis=1)
+        face_conf = permute_and_reshape(face_conf, 2)
+        head_conf = permute_and_reshape(head_conf, 2)
+
+        face_locs.append(face_loc)
+        face_confs.append(face_conf)
+        head_locs.append(head_loc)
+        head_confs.append(head_conf)
+
+        box, var = fluid.layers.prior_box(
+            self.ssh_conv3_norm,
+            self.image,
+            min_sizes=[16.],
+            steps=[4.] * 2,
+            aspect_ratios=[1.],
+            clip=False,
+            flip=True,
+            offset=0.5)
+        box = fluid.layers.reshape(box, shape=[-1, 4])
+        var = fluid.layers.reshape(var, shape=[-1, 4])
+        boxes.append(box)
+        vars.append(var)
+
+        inputs = [
+            self.ssh_conv4_norm, self.ssh_conv5_norm, self.ssh_conv6,
+            self.ssh_conv7, self.ssh_conv8
+        ]
         for i, input in enumerate(inputs):
             mbox_loc = fluid.layers.conv2d(input, 8, 3, 1, 1, bias_attr=b_attr)
             face_loc, head_loc = fluid.layers.split(
@@ -266,8 +314,8 @@ class PyramidBox(object):
             box, var = fluid.layers.prior_box(
                 input,
                 self.image,
-                min_sizes=[self.min_sizes[i]],
-                steps=[self.steps[i]] * 2,
+                min_sizes=[self.min_sizes[i + 1]],
+                steps=[self.steps[i + 1]] * 2,
                 aspect_ratios=[1.],
                 clip=False,
                 flip=True,

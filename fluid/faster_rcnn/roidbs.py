@@ -83,11 +83,6 @@ class JsonDataset(object):
         roidb = copy.deepcopy(self.COCO.loadImgs(image_ids))
         for entry in roidb:
             self._prep_roidb_entry(entry)
-        #debug:
-        if not self.is_train:
-            for entry in roidb:
-                self._add_gt_annotations(entry)
-
         if self.is_train:
             # Include ground-truth object annotations
             start_time = time.time()
