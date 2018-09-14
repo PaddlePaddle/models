@@ -166,6 +166,10 @@ def main(args):
     else:
         exe.run(startup_prog)
 
+    exec_strategy = fluid.ExecutionStrategy()
+    # For faster executor
+    exec_strategy.use_experimental_executor = True
+    exec_strategy.num_iteration_per_drop_scope = 5
     build_strategy = fluid.BuildStrategy()
     # Since the token number differs among devices, customize gradient scale to
     # use token average cost among multi-devices. and the gradient scale is
@@ -175,7 +179,8 @@ def main(args):
         use_cuda=TrainTaskConfig.use_gpu,
         loss_name=avg_cost.name,
         main_program=train_prog,
-        build_strategy=build_strategy)
+        build_strategy=build_strategy,
+        exec_strategy=exec_strategy)
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -((1. - TrainTaskConfig.label_smooth_eps) * np.log(
