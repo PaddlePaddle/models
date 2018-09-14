@@ -1,0 +1,110 @@
+import os
+os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = '0.98'
+
+import paddle
+import paddle.fluid as fluid
+import numpy as np
+import argparse
+
+from utils import Cityscape_dataset
+import utils
+Cityscape_dataset = utils.Cityscape_dataset
+
+parser = argparse.ArgumentParser()
+
+def add_argument(name, type, default, help):
+    parser.add_argument('--'+name, default=default, type=type, help=help)
+add_argument('total_step', int, -1, "Number of the step to be evaluated, -1 for full evaluation.")
+add_argument('init_weights_path', str, None, "Path of the weights to evaluate.")
+add_argument('dataset_path', str, None, "Cityscape dataset path.")
+add_argument('verbose', bool, False, "Print mIoU for each step if verbose.")
+
+args = parser.parse_args()
+
+import models
+models.clean()
+models.is_train = False
+deeplabv3p = models.deeplabv3p
+
+image_shape = [1025, 2049]
+eval_shape = [1024, 2048]
+
+sp = fluid.Program()
+tp = fluid.Program()
+batch_size = 1
+utils.default_config['crop_size'] = -1
+utils.default_config['shuffle'] = False
+num_classes = 19
+
+def my_mean_iou(pred, label):
+    label = fluid.layers.elementwise_min(label, fluid.layers.assign(np.array([num_classes], dtype=np.int32)))
+    label_ignore = (label == num_classes).astype('int32')
+    label_nignore = (label != num_classes).astype('int32')
+
+    pred = pred*label_nignore + label_ignore*num_classes
+
+    miou, wrong, correct = fluid.layers.mean_iou(pred, label, num_classes+1)
+    return miou, wrong, correct
+
+with fluid.program_guard(tp, sp):
+    img = fluid.layers.data(name='img', shape=[3,0,0], dtype='float32')
+    label = fluid.layers.data(name='label', shape=eval_shape, dtype='int32')
+    img = fluid.layers.resize_bilinear(img, image_shape)
+    logit = deeplabv3p(img)
+    logit = fluid.layers.resize_bilinear(logit, eval_shape)
+    pred = fluid.layers.argmax(logit, axis=1).astype('int32')
+    miou, out_wrong, out_correct = my_mean_iou(pred, label)
+
+tp = tp.clone(True)
+fluid.memory_optimize(tp, print_log=False, skip_opt_set=[
+    pred.name, miou, out_wrong, out_correct], level=1)
+
+exe = fluid.Executor(fluid.CUDAPlace(0))
+exe.run(sp)
+if args.init_weights_path:
+    print "load from:", args.init_weights_path
+    fluid.io.load_params(exe, dirname=args.init_weights_path, main_program=tp)
+
+utils.default_config['shuffle'] = True
+dataset = Cityscape_dataset('val', args.dataset_path)
+if args.total_step == -1:
+    total_step = len(dataset.label_files)
+else:
+    total_step = args.total_step
+
+def get_batch(n):
+    for i in range(n):
+        imgs, labels, names = dataset.get_batch(batch_size)
+        labels = labels.astype(np.int32)[:,:,:,0]
+        imgs = imgs[:,:,:,::-1].transpose(0,3,1,2).astype(np.float32) / (255.0/2) - 1
+        yield i, imgs, labels, names
+
+batches= get_batch(total_step)
+
+try:
+    from prefetch_generator import BackgroundGenerator
+    batches = BackgroundGenerator(batches, 100)
+except:
+    print "You can install 'prefetch_generator' for acceleration of data reading."
+sum_iou = 0
+all_correct = np.array([0], dtype=np.int64)
+all_wrong = np.array([0], dtype=np.int64)
+
+import sys
+
+for i, imgs, labels, names in batches:
+    result = exe.run(tp, feed={
+            'img':imgs,
+            'label':labels},
+                     fetch_list=[pred, miou, out_wrong, out_correct])
+    wrong = result[2][:-1] + all_wrong
+    right = result[3][:-1] + all_correct
+    all_wrong = wrong.copy()
+    all_correct = right.copy()
+    mp = (wrong+right)!=0
+    miou2 = np.mean((right[mp]*1.0/(right[mp]+wrong[mp])))
+    if args.verbose:
+        print 'step: %s, mIoU: %s' % (i+1, miou2)
+    else
+        print '\rstep: %s, mIoU: %s' % (i+1, miou2), 
+        sys.stdout.flush()
