@@ -1,6 +1,7 @@
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
+from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
 
 
@@ -77,7 +78,9 @@ class FasterRCNN(object):
             padding=1,
             act='relu',
             name='conv_rpn',
-            param_attr=ParamAttr(name="conv_rpn_w"),
+            param_attr=ParamAttr(
+                name="conv_rpn_w", initializer=Normal(
+                    loc=0., scale=0.01)),
             bias_attr=ParamAttr(
                 name="conv_rpn_b", learning_rate=2., regularizer=L2Decay(0.)))
         self.anchor, self.var = fluid.layers.anchor_generator(
@@ -96,7 +99,9 @@ class FasterRCNN(object):
             padding=0,
             act=None,
             name='rpn_cls_score',
-            param_attr=ParamAttr(name="rpn_cls_logits_w"),
+            param_attr=ParamAttr(
+                name="rpn_cls_logits_w", initializer=Normal(
+                    loc=0., scale=0.01)),
             bias_attr=ParamAttr(
                 name="rpn_cls_logits_b",
                 learning_rate=2.,
@@ -110,7 +115,9 @@ class FasterRCNN(object):
             padding=0,
             act=None,
             name='rpn_bbox_pred',
-            param_attr=ParamAttr(name="rpn_bbox_pred_w"),
+            param_attr=ParamAttr(
+                name="rpn_bbox_pred_w", initializer=Normal(
+                    loc=0., scale=0.01)),
             bias_attr=ParamAttr(
                 name="rpn_bbox_pred_b",
                 learning_rate=2.,
@@ -161,22 +168,30 @@ class FasterRCNN(object):
             pooled_width=14,
             spatial_scale=0.0625)
         rcnn_out = self.add_roi_box_head_func(pool)
-        self.cls_score = fluid.layers.fc(
-            input=rcnn_out,
-            size=self.cfg.class_num,
-            act=None,
-            name='cls_score',
-            param_attr=ParamAttr(name='cls_score_w'),
-            bias_attr=ParamAttr(
-                name='cls_score_b', learning_rate=2., regularizer=L2Decay(0.)))
-        self.bbox_pred = fluid.layers.fc(
-            input=rcnn_out,
-            size=4 * self.cfg.class_num,
-            act=None,
-            name='bbox_pred',
-            param_attr=ParamAttr(name='bbox_pred_w'),
-            bias_attr=ParamAttr(
-                name='bbox_pred_b', learning_rate=2., regularizer=L2Decay(0.)))
+        self.cls_score = fluid.layers.fc(input=rcnn_out,
+                                         size=self.cfg.class_num,
+                                         act=None,
+                                         name='cls_score',
+                                         param_attr=ParamAttr(
+                                             name='cls_score_w',
+                                             initializer=Normal(
+                                                 loc=0.0, scale=0.001)),
+                                         bias_attr=ParamAttr(
+                                             name='cls_score_b',
+                                             learning_rate=2.,
+                                             regularizer=L2Decay(0.)))
+        self.bbox_pred = fluid.layers.fc(input=rcnn_out,
+                                         size=4 * self.cfg.class_num,
+                                         act=None,
+                                         name='bbox_pred',
+                                         param_attr=ParamAttr(
+                                             name='bbox_pred_w',
+                                             initializer=Normal(
+                                                 loc=0.0, scale=0.01)),
+                                         bias_attr=ParamAttr(
+                                             name='bbox_pred_b',
+                                             learning_rate=2.,
+                                             regularizer=L2Decay(0.)))
 
     def fast_rcnn_loss(self):
         labels_int64 = fluid.layers.cast(x=self.labels_int32, dtype='int64')
