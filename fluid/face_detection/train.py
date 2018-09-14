@@ -29,6 +29,7 @@ add_arg('resize_h',         int,   640,             "The resized image height.")
 add_arg('resize_w',         int,   640,             "The resized image width.")
 add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
+add_arg('data_dir',         str,   'data',          "The base dir of dataset")
 #yapf: enable
 
 
@@ -62,11 +63,11 @@ def train(args, config, train_file_list, optimizer_method):
         fetches = [loss]
 
     steps_per_pass = 12880 // batch_size
-    boundaries = [steps_per_pass * 50, steps_per_pass * 80,
-                  steps_per_pass * 120, steps_per_pass * 140]
+    boundaries = [steps_per_pass * 99, steps_per_pass * 124,
+                  steps_per_pass * 149]
     values = [
-        learning_rate, learning_rate * 0.5, learning_rate * 0.25,
-        learning_rate * 0.1, learning_rate * 0.01
+        learning_rate, learning_rate * 0.1,
+        learning_rate * 0.01, learning_rate * 0.001
     ]
 
     if optimizer_method == "momentum":
@@ -167,8 +168,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
-    data_dir = 'data/WIDER_train/images/'
-    train_file_list = 'data/wider_face_split/wider_face_train_bbx_gt.txt'
+    data_dir = os.path.join(args.data_dir, 'WIDER_train/images/')
+    train_file_list = os.path.join(args.data_dir,
+        'wider_face_split/wider_face_train_bbx_gt.txt')
 
     config = reader.Settings(
         data_dir=data_dir,

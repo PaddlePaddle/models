@@ -16,12 +16,6 @@ import models.model_builder as model_builder
 import models.resnet as resnet
 from learning_rate import exponential_with_warmup_decay
 
-
-def load(file_name):
-    v = cPickle.load(open(file_name))
-    return v.astype('float32')
-
-
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable

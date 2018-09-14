@@ -123,30 +123,6 @@ ResNet_cfg = {
 }
 
 
-def add_ResNet50_conv4_body(res_in, freeze_at=2):
-    stages, block_func = ResNet_cfg[50]
-    stages = stages[0:3]
-    conv1 = conv_affine_layer(
-        res_in, ch_out=64, filter_size=7, stride=2, padding=3, name="conv1")
-    pool1 = fluid.layers.pool2d(
-        input=conv1,
-        pool_type='max',
-        pool_size=3,
-        pool_stride=2,
-        pool_padding=1)
-    res2 = layer_warp(block_func, pool1, 64, stages[0], 1, name="res2")
-    if freeze_at == 2:
-        res2.stop_gradient = True
-    res3 = layer_warp(block_func, res2, 128, stages[1], 2, name="res3")
-    if freeze_at == 3:
-        res3.stop_gradient = True
-    res4 = layer_warp(block_func, res3, 256, stages[2], 2, name="res4")
-    if freeze_at == 4:
-        res4.stop_gradient = True
-
-    return res4
-
-
 def add_ResNet50_conv4_body(body_input, freeze_at=2):
     stages, block_func = ResNet_cfg[50]
     stages = stages[0:3]

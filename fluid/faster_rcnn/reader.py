@@ -84,7 +84,6 @@ def coco(settings, mode, batch_size=None, shuffle=False):
                 continue
 
             batch_out.append((im, gt_boxes, gt_classes, is_crowd, im_info))
-
             if len(batch_out) == batch_size:
                 yield batch_out
                 batch_out = []
@@ -96,5 +95,5 @@ def train(settings, batch_size, shuffle=True):
     return coco(settings, 'train', batch_size, shuffle)
 
 
-def test(settings):
-    return coco(settings, 'test', shuffle=False)
+def test(settings, batch_size):
+    return coco(settings, 'test', batch_size, shuffle=False)

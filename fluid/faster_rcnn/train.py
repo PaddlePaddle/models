@@ -10,7 +10,6 @@ from utility import add_arguments, print_arguments
 import paddle
 import paddle.fluid as fluid
 import reader
-
 import models.model_builder as model_builder
 import models.resnet as resnet
 from learning_rate import exponential_with_warmup_decay
@@ -50,7 +49,6 @@ def train(cfg):
     batch_size = cfg.batch_size
     learning_rate = cfg.learning_rate
     image_shape = [3, cfg.max_size, cfg.max_size]
-
 
     if cfg.debug:
         fluid.default_startup_program().random_seed = 1000
@@ -148,11 +146,9 @@ def train(cfg):
         start_time = time.time()
         prev_start_time = start_time
         every_pass_loss = []
-
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
-
             losses = train_exe.run(fetch_list=[v.name for v in fetch_list],
                                    feed=feeder.feed(data))
             loss_v = np.mean(np.array(losses[0]))
@@ -171,7 +167,6 @@ def train(cfg):
         else:
             train_step(epoc_id)
         save_model(str(epoc_id))
-
 
 if __name__ == '__main__':
     args = parser.parse_args()

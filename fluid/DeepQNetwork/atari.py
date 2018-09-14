@@ -55,7 +55,7 @@ class AtariPlayer(gym.Env):
         try:
             ALEInterface.setLoggerMode(ALEInterface.Logger.Error)
         except AttributeError:
-            print "You're not using latest ALE"
+            print("You're not using latest ALE")
 
         # avoid simulator bugs: https://github.com/mgbellemare/Arcade-Learning-Environment/issues/86
         with _ALE_LOCK:
