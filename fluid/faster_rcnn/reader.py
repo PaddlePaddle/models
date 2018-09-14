@@ -51,7 +51,7 @@ class Settings(object):
             np.newaxis, np.newaxis, :].astype('float32')
 
 
-def coco(settings, mode, shuffle):
+def coco(settings, mode, batch_size=None, shuffle=False):
     if mode == 'train':
         settings.train_file_list = os.path.join(settings.data_dir,
                                                 settings.train_file_list)
@@ -70,8 +70,7 @@ def coco(settings, mode, shuffle):
     def reader():
         if mode == "train" and shuffle:
             random.shuffle(roidbs)
-        im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out = [],[],[],[],[]
-        lod = [0]
+        batch_out = []
         for roidb in roidbs:
             im, im_scales = data_utils.get_image_blob(roidb, settings)
             im_height = np.round(roidb['height'] * im_scales)
@@ -83,28 +82,19 @@ def coco(settings, mode, shuffle):
             is_crowd = roidb['is_crowd'].astype('int32')
             if gt_boxes.shape[0] == 0:
                 continue
-            im_out.append(im)
-            gt_boxes_out.extend(gt_boxes)
-            gt_classes_out.extend(gt_classes)
-            is_crowd_out.extend(is_crowd)
-            im_info_out.append(im_info)
-            lod.append(lod[-1] + gt_boxes.shape[0])
-            if len(im_out) == settings.batch_size:
-                im_out = np.array(im_out).astype('float32')
-                gt_boxes_out = np.array(gt_boxes_out).astype('float32')
-                gt_classes_out = np.array(gt_classes_out).astype('int32')
-                is_crowd_out = np.array(is_crowd_out).astype('int32')
-                im_info_out = np.array(im_info_out).astype('float32')
-                yield im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out, lod
-                im_out, gt_boxes_out, gt_classes_out, is_crowd_out, im_info_out = [],[],[],[],[]
-                lod = [0]
+
+            batch_out.append((im, gt_boxes, gt_classes, is_crowd, im_info))
+
+            if len(batch_out) == batch_size:
+                yield batch_out
+                batch_out = []
 
     return reader
 
 
-def train(settings, shuffle=True):
-    return coco(settings, 'train', shuffle)
+def train(settings, batch_size, shuffle=True):
+    return coco(settings, 'train', batch_size, shuffle)
 
 
 def test(settings):
-    return coco(settings, 'test', False)
+    return coco(settings, 'test', shuffle=False)
