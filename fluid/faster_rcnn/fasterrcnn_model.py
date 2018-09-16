@@ -150,7 +150,6 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         padding=1,
         act='relu',
         name='conv_rpn',
-
         param_attr=ParamAttr(
             name="conv_rpn_w", initializer=Normal(
                 loc=0., scale=0.01)),
@@ -176,7 +175,6 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
         padding=0,
         act=None,
         name='rpn_cls_score',
-
         param_attr=ParamAttr(
             name="rpn_cls_logits_w", initializer=Normal(
                 loc=0., scale=0.01)),
@@ -202,7 +200,6 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
             learning_rate=2.,
             regularizer=L2Decay(0.),
             initializer=Constant(0.0)))
-
 
     rpn_cls_score_prob = fluid.layers.sigmoid(
         rpn_cls_score, name='rpn_cls_score_prob')
@@ -253,7 +250,6 @@ def FasterRcnn(input, depth, anchor_sizes, variance, aspect_ratios, gt_box,
                                 size=class_nums,
                                 act=None,
                                 name='cls_score',
-
                                 param_attr=ParamAttr(
                                     name='cls_score_w',
                                     initializer=Normal(
