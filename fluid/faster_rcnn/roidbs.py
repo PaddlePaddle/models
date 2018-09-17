@@ -96,6 +96,7 @@ class JsonDataset(object):
             self._extend_with_flipped_entries(roidb)
         logger.info('Loaded dataset: {:s}'.format(self.name))
         logger.info('{:d} roidb entries'.format(len(roidb)))
+        self._filter_for_training(roidb)
         return roidb
 
     def _prep_roidb_entry(self, entry):
@@ -183,3 +184,22 @@ class JsonDataset(object):
             flipped_entry['flipped'] = True
             flipped_roidb.append(flipped_entry)
         roidb.extend(flipped_roidb)
+
+    def _filter_for_training(self, roidb):
+        """Remove roidb entries that have no usable RoIs based on config settings.
+        """
+
+        def is_valid(entry):
+            # Valid images have:
+            #   (1) At least one groundtruth RoI OR
+            #   (2) At least one background RoI
+            gt_boxes = entry['gt_boxes']
+            # image is only valid if such boxes exist
+            valid = len(gt_boxes) > 0
+            return valid
+
+        num = len(roidb)
+        filtered_roidb = [entry for entry in roidb if is_valid(entry)]
+        num_after = len(filtered_roidb)
+        logger.info('Filtered {} roidb entries: {} -> {}'.format(
+            num - num_after, num, num_after))

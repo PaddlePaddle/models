@@ -24,11 +24,12 @@ add_arg('model_save_dir',   str,    'output',     "The path to save model.")
 add_arg('pretrained_model', str,    'imagenet_resnet50_fusebn', "The init model path.")
 add_arg('dataset',          str,    'coco2017', "coco2014, coco2017, and pascalvoc.")
 add_arg('data_dir',         str,    'data/COCO17', "data directory")
-add_arg('class_num',        int,   81,          "Class number.")
+add_arg('class_num',        int,    81,          "Class number.")
 add_arg('use_pyreader',     bool,   True,          "Class number.")
 # SOLVER
 add_arg('learning_rate',    float,  0.01,     "Learning rate.")
-add_arg('num_passes',       int,    20,        "Epoch number.")
+add_arg('num_passes',       int,    7,        "Epoch number.")
+add_arg('max_iter',         int,    180000,        "Iter number.")
 # RPN
 add_arg('anchor_sizes',     int,    [32,64,128,256,512],  "The size of anchors.")
 add_arg('aspect_ratios',    float,  [0.5,1.0,2.0],    "The ratio of anchors.")
@@ -121,7 +122,7 @@ def train(cfg):
 
     fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, loss_cls, loss_bbox]
 
-    def train_step_pyreader(epoc_id):
+    def train_step_pyreader():
         py_reader.start()
         try:
             start_time = time.time()
@@ -132,10 +133,12 @@ def train(cfg):
                 prev_start_time = start_time
                 start_time = time.time()
                 losses = train_exe.run(fetch_list=[v.name for v in fetch_list])
-                every_pass_loss.append(np.mean(np.array(losses[0])))
+                #every_pass_loss.append(np.mean(np.array(losses[0])))
                 lr = np.array(fluid.global_scope().find_var('learning_rate').get_tensor())
-                print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                      epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
+                # print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
+                #       epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
+                print("Batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
+                      batch_id, lr[0], losses[0][0], start_time - prev_start_time))
                 batch_id += 1
                 #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
         except fluid.core.EOFException:
@@ -160,13 +163,13 @@ def train(cfg):
             #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
         return np.mean(every_pass_loss)
 
-
-    for epoc_id in range(num_passes):
-        if cfg.use_pyreader:
-            train_step_pyreader(epoc_id)
-        else:
-            train_step(epoc_id)
-        save_model(str(epoc_id))
+    train_step_pyreader()
+    # for epoc_id in range(num_passes):
+    #     if cfg.use_pyreader:
+    #         train_step_pyreader(epoc_id)
+    #     else:
+    #         train_step(epoc_id)
+    #     save_model(str(epoc_id))
 
 if __name__ == '__main__':
     args = parser.parse_args()
