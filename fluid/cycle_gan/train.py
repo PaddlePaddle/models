@@ -1,121 +1,200 @@
 import data_reader
 import os
-from paddle.fluid import core
-import paddle.fluid as fluid
-import paddle
-import numpy as np
-from network import CycleGAN
-from itertools import izip
 import random
-from scipy.misc import imsave
 import sys
+import paddle
+import argparse
+import functools
+import paddle.fluid as fluid
+import numpy as np
+from paddle.fluid import core
+from trainer import *
+from itertools import izip
+from scipy.misc import imsave
+import paddle.fluid.profiler as profiler
+from utility import add_arguments, print_arguments, ImagePool
 
-class ImagePool(object):
+parser = argparse.ArgumentParser(description=__doc__)
+add_arg = functools.partial(add_arguments, argparser=parser)
+# yapf: disable
+add_arg('batch_size',        int,   1,          "Minibatch size.")
+add_arg('epoch',             int,   2,        "The number of epoched to be trained.")
+add_arg('output',            str,   "./output_1", "The directory the model and the test result to be saved to.")
+add_arg('init_model',        str,   None,       "The init model file of directory.")
+add_arg('save_checkpoints',  bool,  True,       "Whether to save checkpoints.")
+add_arg('run_test',          bool,  True,       "Whether to run test.")
+add_arg('use_gpu',           bool,  True,       "Whether to use GPU to train.")
+add_arg('profile',           bool,  False,       "Whether to profile.")
+# yapf: enable
 
-    def __init__(self, pool_size):
-        self.pool = []
-        self.count = 0
-        self.pool_size = pool_size
- 
-    def pool_image(self, image):
-        if self.count < self.pool_size:
-            self.pool.append(image)
-            self.count += 1
-            return image
-        else:
-            p = random.random()
-            if p > 0.5:
-                random_id = random.randint(0, self.pool_size-1)
-                temp = self.pool[random_id]
-                self.pool[random_id] = image
-                return temp
-            else:
-                return image
 
-def train():
-    batch_size = 1
-    data_shape = [-1, 3, 256, 256]
-    input_A = fluid.layers.data(name='input_A', shape=data_shape, dtype='float32')
-    input_B = fluid.layers.data(name='input_B', shape=data_shape, dtype='float32')
-    fake_pool_A = fluid.layers.data(name='fake_pool_A', shape=data_shape, dtype='float32')
-    fake_pool_B = fluid.layers.data(name='fake_pool_B', shape=data_shape, dtype='float32')
-    
+def train(args):
+    data_shape = [-1] + data_reader.image_shape()
+    max_images_num = data_reader.max_images_num()
 
-    optimizer = fluid.optimizer.Adam(learning_rate=0.0002, beta1=0.5)
-    gan = CycleGAN(input_A, input_B, fake_pool_A, fake_pool_B, optimizer)
+    input_A = fluid.layers.data(
+        name='input_A', shape=data_shape, dtype='float32')
+    input_B = fluid.layers.data(
+        name='input_B', shape=data_shape, dtype='float32')
+    fake_pool_A = fluid.layers.data(
+        name='fake_pool_A', shape=data_shape, dtype='float32')
+    fake_pool_B = fluid.layers.data(
+        name='fake_pool_B', shape=data_shape, dtype='float32')
+
+    g_A_trainer = GATrainer(input_A, input_B)
+    g_B_trainer = GBTrainer(input_A, input_B)
+    d_A_trainer = DATrainer(input_A, fake_pool_A)
+    d_B_trainer = DBTrainer(input_B, fake_pool_B)
 
     # prepare environment
-    place = fluid.CUDAPlace(0)
-#    place = fluid.CPUPlace()
+    place = fluid.CPUPlace()
+    if args.use_gpu:
+        place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program()) 
-    A_pool = ImagePool(100)
-    B_pool = ImagePool(100)
+    exe.run(fluid.default_startup_program())
+    A_pool = ImagePool()
+    B_pool = ImagePool()
 
-    a_reader = paddle.batch(data_reader.a_reader(), batch_size)
-    b_reader = paddle.batch(data_reader.b_reader(), batch_size)
+    A_reader = paddle.batch(data_reader.a_reader(), args.batch_size)()
+    B_reader = paddle.batch(data_reader.b_reader(), args.batch_size)()
 
-    def save_training_images(epoch):
-        print "Save training images..........."
-        if not os.path.exists("./output/imgs"):
-            os.makedirs("./output/imgs")
+    A_test_reader = data_reader.a_test_reader()
+    B_test_reader = data_reader.b_test_reader()
+
+    def test(epoch):
+        out_path = args.output + "/test"
+        if not os.path.exists(out_path):
+            os.makedirs(out_path)
         i = 0
-        for data_A, data_B in izip(a_reader(), b_reader()):
+        for data_A, data_B in izip(A_test_reader(), B_test_reader()):
+            A_name = data_A[1]
+            B_name = data_B[1]
             tensor_A = core.LoDTensor()
             tensor_B = core.LoDTensor()
-            tensor_A.set(data_A, place)
-            tensor_B.set(data_B, place)
-            fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = exe.run(gan.infer_program,
-                                          fetch_list=[gan.fake_A, gan.fake_B, gan.cyc_A, gan.cyc_B],
-                                          feed={"input_A": tensor_A, "input_B": tensor_B})
-#            print "fake_A_tmp type: %s; shape: %s" % (type(fake_A_temp), fake_A_temp.shape)
-            fake_A_temp = np.squeeze(fake_A_temp[0]).transpose([1,2,0])
-            fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1,2,0])
-            cyc_A_temp = np.squeeze(cyc_A_temp[0]).transpose([1,2,0])
-            cyc_B_temp = np.squeeze(cyc_B_temp[0]).transpose([1,2,0])
-             
-            imsave("./output/imgs/fakeB_"+ str(epoch) + "_" + str(i)+".jpg",((fake_A_temp+1)*127.5).astype(np.uint8))
-            imsave("./output/imgs/fakeA_"+ str(epoch) + "_" + str(i)+".jpg",((fake_B_temp+1)*127.5).astype(np.uint8))
-            imsave("./output/imgs/cycA_"+ str(epoch) + "_" + str(i)+".jpg",((cyc_A_temp+1)*127.5).astype(np.uint8))
-            imsave("./output/imgs/cycB_"+ str(epoch) + "_" + str(i)+".jpg",((cyc_B_temp+1)*127.5).astype(np.uint8))
+            tensor_A.set(data_A[0], place)
+            tensor_B.set(data_B[0], place)
+            fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = exe.run(
+                g_A_trainer.infer_program,
+                fetch_list=[
+                    g_A_trainer.fake_A, g_A_trainer.fake_B, g_A_trainer.cyc_A,
+                    g_A_trainer.cyc_B
+                ],
+                feed={"input_A": tensor_A,
+                      "input_B": tensor_B})
+            fake_A_temp = np.squeeze(fake_A_temp[0]).transpose([1, 2, 0])
+            fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
+            cyc_A_temp = np.squeeze(cyc_A_temp[0]).transpose([1, 2, 0])
+            cyc_B_temp = np.squeeze(cyc_B_temp[0]).transpose([1, 2, 0])
+            input_A_temp = np.squeeze(data_A[0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(data_B[0]).transpose([1, 2, 0])
+
+            imsave(out_path + "/fakeB_" + str(epoch) + "_" + A_name, (
+                (fake_B_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/fakeA_" + str(epoch) + "_" + B_name, (
+                (fake_A_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/cycA_" + str(epoch) + "_" + A_name, (
+                (cyc_A_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/cycB_" + str(epoch) + "_" + B_name, (
+                (cyc_B_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/inputA_" + str(epoch) + "_" + A_name, (
+                (input_A_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/inputB_" + str(epoch) + "_" + B_name, (
+                (input_B_temp + 1) * 127.5).astype(np.uint8))
             i += 1
-        print "Saved training images"
 
+    def checkpoints(epoch):
+        out_path = args.output + "/checkpoints/" + str(epoch)
+        if not os.path.exists(out_path):
+            os.makedirs(out_path)
+        fluid.io.save_persistables(
+            exe, out_path + "/g_a", main_program=g_A_trainer.program)
+        fluid.io.save_persistables(
+            exe, out_path + "/g_b", main_program=g_B_trainer.program)
+        fluid.io.save_persistables(
+            exe, out_path + "/d_a", main_program=d_A_trainer.program)
+        fluid.io.save_persistables(
+            exe, out_path + "/d_b", main_program=d_B_trainer.program)
+        print "saved checkpoint to [%s]" % out_path
+        sys.stdout.flush()
 
-    for epoch in range(1):
+    def init_model():
+        assert os.path.exists(
+            args.init_model), "[%s] cann't be found." % args.init_mode
+        fluid.io.load_persistables(
+            exe, args.init_model + "/g_a", main_program=g_A_trainer.program)
+        fluid.io.load_persistables(
+            exe, args.init_model + "/g_b", main_program=g_B_trainer.program)
+        fluid.io.load_persistables(
+            exe, args.init_model + "/d_a", main_program=d_A_trainer.program)
+        fluid.io.load_persistables(
+            exe, args.init_model + "/d_b", main_program=d_B_trainer.program)
+        print "Load model from [%s]" % args.init_model
+
+    if args.init_model:
+        init_model()
+
+    for epoch in range(args.epoch):
         batch_id = 0
-        if epoch % 50 == 1:
-            save_training_images(epoch)
-        for data_A, data_B in izip(a_reader(), b_reader()):
-            batch_id += 1
+        for i in range(max_images_num):
+            data_A = A_reader.next()
+            data_B = B_reader.next()
             tensor_A = core.LoDTensor()
             tensor_B = core.LoDTensor()
             tensor_A.set(data_A, place)
             tensor_B.set(data_B, place)
             # optimize the g_A network
-            g_A_loss, fake_B_tmp = exe.run(gan.g_A_program,
-                                           fetch_list=[gan.g_loss_A, gan.fake_B],
-                                           feed={"input_A": tensor_A, "input_B": tensor_B})
+            g_A_loss, fake_B_tmp = exe.run(
+                g_A_trainer.program,
+                fetch_list=[g_A_trainer.g_loss_A, g_A_trainer.fake_B],
+                feed={"input_A": tensor_A,
+                      "input_B": tensor_B})
+
             fake_pool_B = B_pool.pool_image(fake_B_tmp)
-             
+
             # optimize the d_B network
-            d_B_loss = exe.run(gan.d_B_program,
-                               fetch_list=[gan.d_loss_B],
-                               feed={"input_B": tensor_B, "fake_pool_B": fake_pool_B})
-        
+            d_B_loss = exe.run(
+                d_B_trainer.program,
+                fetch_list=[d_B_trainer.d_loss_B],
+                feed={"input_B": tensor_B,
+                      "fake_pool_B": fake_pool_B})
+
             # optimize the g_B network
-            g_B_loss, fake_A_tmp = exe.run(gan.g_B_program,
-                                           fetch_list=[gan.g_loss_B, gan.fake_A],
-                                           feed={"input_A": tensor_A, "input_B": tensor_B})
-    
+            g_B_loss, fake_A_tmp = exe.run(
+                g_B_trainer.program,
+                fetch_list=[g_B_trainer.g_loss_B, g_B_trainer.fake_A],
+                feed={"input_A": tensor_A,
+                      "input_B": tensor_B})
+
             fake_pool_A = A_pool.pool_image(fake_A_tmp)
-        
+
             # optimize the d_A network
-            d_A_loss = exe.run(gan.d_A_program,
-                               fetch_list=[gan.d_loss_A],
-                               feed={"input_A": tensor_A, "fake_pool_A": fake_pool_A})
-            print "epoch[%d]; batch[%d]; g_A_loss: %s; d_B_loss: %s; g_B_loss: %s; d_A_loss: %s" % (epoch, batch_id, g_A_loss[0], d_B_loss[0], g_B_loss[0], d_A_loss[0])
+            d_A_loss = exe.run(
+                d_A_trainer.program,
+                fetch_list=[d_A_trainer.d_loss_A],
+                feed={"input_A": tensor_A,
+                      "fake_pool_A": fake_pool_A})
+
+            print "epoch[%d]; batch[%d]; g_A_loss: %s; d_B_loss: %s; g_B_loss: %s; d_A_loss: %s;" % (
+                epoch, batch_id, g_A_loss[0], d_B_loss[0], g_B_loss[0],
+                d_A_loss[0])
             sys.stdout.flush()
- 
+            batch_id += 1
+
+        if args.run_test:
+            test(epoch)
+        if args.save_checkpoints:
+            checkpoints(epoch)
+
+
 if __name__ == "__main__":
-    train() 
+    args = parser.parse_args()
+    print_arguments(args)
+    if args.profile:
+        if args.use_gpu:
+            with profiler.cuda_profiler("cuda_profiler.txt", 'csv') as nvprof:
+                train(args)
+        else:
+            with profiler.profiler("CPU", sorted_key='total') as cpuprof:
+                train(args)
+    else:
+        train(args)
