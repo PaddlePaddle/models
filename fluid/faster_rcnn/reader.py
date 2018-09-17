@@ -72,11 +72,6 @@ def coco(settings, mode, batch_size=None, shuffle=False):
             random.shuffle(roidbs)
         batch_out = []
         for roidb in roidbs:
-            print(roidb['image'])
-            #print('gt_box: {}'.format(roidb['gt_boxes']))
-            #cat_id = np.array([json_dataset.contiguous_category_id_to_json_id[lbl] for lbl in roidb['gt_classes']])
-            #print('gt_class: {}'.format(cat_id))
-            #print('im_id: {}'.format(roidb['id']))
             im, im_scales = data_utils.get_image_blob(roidb, settings)
             im_id = roidb['id']
 

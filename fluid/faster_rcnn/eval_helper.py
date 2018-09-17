@@ -66,18 +66,18 @@ def get_nmsed_box(args, rpn_rois, confs, locs, class_nums, im_info,
         if start == end:
             continue
         rois_n = rois[start:end, :]
-        rois_n = rois_n / im_info[i, 2]
-        rois_n = clip_tiled_boxes(rois_n, im_info[i, :2])
+        rois_n = rois_n / im_info[i][2]
+        rois_n = clip_tiled_boxes(rois_n, im_info[i][:2])
 
         cls_boxes = [[] for _ in range(class_nums)]
         scores_n = confs_v[start:end, :]
         for j in range(1, class_nums):
-            inds = np.where(scores_n[:, j] > 0.05)[0]
+            inds = np.where(scores_n[:, j] > args.score_threshold)[0]
             scores_j = scores_n[inds, j]
             rois_j = rois_n[inds, j * 4:(j + 1) * 4]
             dets_j = np.hstack((rois_j, scores_j[:, np.newaxis])).astype(
                 np.float32, copy=False)
-            keep = box_utils.nms(dets_j, 0.3)
+            keep = box_utils.nms(dets_j, args.nms_threshold)
             nms_dets = dets_j[keep, :]
             #add labels
             cat_id = numId_to_catId_map[j]
