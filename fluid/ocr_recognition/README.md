@@ -4,7 +4,7 @@
 
 ## 代码结构
 ```
-├── ctc_reader.py  # 下载、读取、处理数据。
+├── data_reader.py  # 下载、读取、处理数据。
 ├── crnn_ctc_model.py   # 定义了OCR CTC model的网络结构。
 ├── attention_model.py   # 定义了OCR attention model的网络结构。
 ├── train.py   # 用于模型的训练。
@@ -29,7 +29,7 @@
 
 ## 数据
 
-数据的下载和简单预处理都在`ctc_reader.py`中实现。
+数据的下载和简单预处理都在`data_reader.py`中实现。
 
 ### 数据示例
 
@@ -119,7 +119,7 @@ data/test_images/00003.jpg
 使用默认数据在GPU单卡上训练:
 
 ```
-env CUDA_VISIABLE_DEVICES=0 python ctc_train.py
+env CUDA_VISIBLE_DEVICES=0 python ctc_train.py
 ```
 使用默认数据在CPU上训练:
 ```
@@ -129,12 +129,12 @@ env OMP_NUM_THREADS=<num_of_physical_cores> python ctc_train.py --use_gpu False 
 使用默认数据在GPU多卡上训练:
 
 ```
-env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
+env CUDA_VISIBLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
 ```
 
 默认使用的是`CTC model`, 可以通过选项`--model="attention"`切换为`attention model`。
 
-执行`python ctc_train.py --help`可查看更多使用方式和参数详细说明。
+执行`python train.py --help`可查看更多使用方式和参数详细说明。
 
 图2为使用默认参数在默认数据集上训练`CTC model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为22.0%.
 
@@ -162,7 +162,7 @@ env CUDA_VISIBLE_DEVICE=0 python eval.py \
     --input_images_list="./eval_data/eval_list\" \
 ```
 
-执行`python ctc_train.py --help`可查看参数详细说明。
+执行`python train.py --help`可查看参数详细说明。
 
 
 ### 预测
