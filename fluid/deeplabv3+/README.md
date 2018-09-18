@@ -36,6 +36,18 @@ data/cityscape/
     `-- val
 ```
 
+# 预训练模型准备
+
+如果需要从头开始训练模型，用户需要下载我们的初始化模型
+```
+wget http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus_xception65_initialize.tar.gz
+```
+如果需要最终训练模型进行fine tune或者直接用于预测，请下载我们的最终模型
+```
+wget http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus.tar.gz
+```
+
+
 ## 模型训练与预测
 
 ### 训练
@@ -86,9 +98,9 @@ step: 500, mIoU: 0.7873
 ```
 
 ## 其他信息
-|数据集 | pretrained model | trained model |
-|---|---|---|
-|CityScape | [deeplabv3plus_xception65_initialize.tar.gz](http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus_xception65_initialize.tar.gz) | [deeplabv3plus.tar.gz](http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus.tar.gz) |
+|数据集 | pretrained model | trained model | mean IoU
+|---|---|---|---|
+|CityScape | [deeplabv3plus_xception65_initialize.tar.gz](http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus_xception65_initialize.tar.gz) | [deeplabv3plus.tar.gz](http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus.tar.gz) | 0.7873 |
 
 ## 参考
 
