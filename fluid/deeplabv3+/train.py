@@ -5,13 +5,30 @@ import paddle
 import paddle.fluid as fluid
 import numpy as np
 import argparse
-from reader import Cityscape_dataset
+from reader import CityscapeDataset
 import reader
 import models
 
 
 def add_argument(name, type, default, help):
     parser.add_argument('--' + name, default=default, type=type, help=help)
+
+
+def add_arguments():
+    add_argument('batch_size', int, 2,
+                 "The number of images in each batch during training.")
+    add_argument('train_crop_size', int, 769,
+                 "'Image crop size during training.")
+    add_argument('base_lr', float, 0.0001,
+                 "The base learning rate for model training.")
+    add_argument('total_step', int, 90000, "Number of the training step.")
+    add_argument('init_weights_path', str, None,
+                 "Path of the initial weights in paddlepaddle format.")
+    add_argument('save_weights_path', str, None,
+                 "Path of the saved weights during training.")
+    add_argument('dataset_path', str, None, "Cityscape dataset path.")
+    add_argument('parallel', bool, False, "using ParallelExecutor.")
+    add_argument('use_gpu', bool, True, "Whether use GPU or CPU.")
 
 
 def load_model():
@@ -50,21 +67,10 @@ def loss(logit, label):
     return loss, label_nignore
 
 
-Cityscape_dataset = reader.Cityscape_dataset
+CityscapeDataset = reader.CityscapeDataset
 parser = argparse.ArgumentParser()
 
-add_argument('batch_size', int, 2,
-             "The number of images in each batch during training.")
-add_argument('train_crop_size', int, 769, "'Image crop size during training.")
-add_argument('base_lr', float, 0.0001,
-             "The base learning rate for model training.")
-add_argument('total_step', int, 90000, "Number of the training step.")
-add_argument('init_weights_path', str, None,
-             "Path of the initial weights in paddlepaddle format.")
-add_argument('save_weights_path', str, None,
-             "Path of the saved weights during training.")
-add_argument('dataset_path', str, None, "Cityscape dataset path.")
-add_argument('parallel', bool, False, "using ParallelExecutor.")
+add_arguments()
 
 args = parser.parse_args()
 
@@ -113,14 +119,17 @@ with fluid.program_guard(tp, sp):
 fluid.memory_optimize(
     tp, print_log=False, skip_opt_set=[pred.name, loss_mean.name], level=1)
 
-exe = fluid.Executor(fluid.CUDAPlace(0))
+place = fluid.CPUPlace()
+if args.use_gpu:
+    place = fluid.CUDAPlace(0)
+exe = fluid.Executor(place)
 exe.run(sp)
 
 if args.init_weights_path:
     print "load from:", args.init_weights_path
     load_model()
 
-dataset = Cityscape_dataset(args.dataset_path, 'train')
+dataset = CityscapeDataset(args.dataset_path, 'train')
 
 if args.parallel:
     print "Using ParallelExecutor."

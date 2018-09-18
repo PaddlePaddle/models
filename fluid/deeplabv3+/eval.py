@@ -5,7 +5,7 @@ import paddle
 import paddle.fluid as fluid
 import numpy as np
 import argparse
-from reader import Cityscape_dataset
+from reader import CityscapeDataset
 import reader
 import models
 import sys
@@ -13,6 +13,16 @@ import sys
 
 def add_argument(name, type, default, help):
     parser.add_argument('--' + name, default=default, type=type, help=help)
+
+
+def add_arguments():
+    add_argument('total_step', int, -1,
+                 "Number of the step to be evaluated, -1 for full evaluation.")
+    add_argument('init_weights_path', str, None,
+                 "Path of the weights to evaluate.")
+    add_argument('dataset_path', str, None, "Cityscape dataset path.")
+    add_argument('verbose', bool, False, "Print mIoU for each step if verbose.")
+    add_argument('use_gpu', bool, True, "Whether use GPU or CPU.")
 
 
 def mean_iou(pred, label):
@@ -37,15 +47,10 @@ def load_model():
             exe, dirname="", filename=args.init_weights_path, main_program=tp)
 
 
-Cityscape_dataset = reader.Cityscape_dataset
+CityscapeDataset = reader.CityscapeDataset
 
 parser = argparse.ArgumentParser()
-
-add_argument('total_step', int, -1,
-             "Number of the step to be evaluated, -1 for full evaluation.")
-add_argument('init_weights_path', str, None, "Path of the weights to evaluate.")
-add_argument('dataset_path', str, None, "Cityscape dataset path.")
-add_argument('verbose', bool, False, "Print mIoU for each step if verbose.")
+add_arguments()
 
 args = parser.parse_args()
 
@@ -79,14 +84,17 @@ fluid.memory_optimize(
     skip_opt_set=[pred.name, miou, out_wrong, out_correct],
     level=1)
 
-exe = fluid.Executor(fluid.CUDAPlace(0))
+place = fluid.CPUPlace()
+if args.use_gpu:
+    place = fluid.CUDAPlace(0)
+exe = fluid.Executor(place)
 exe.run(sp)
 
 if args.init_weights_path:
     print "load from:", args.init_weights_path
     load_model()
 
-dataset = Cityscape_dataset(args.dataset_path, 'val')
+dataset = CityscapeDataset(args.dataset_path, 'val')
 if args.total_step == -1:
     total_step = len(dataset.label_files)
 else:

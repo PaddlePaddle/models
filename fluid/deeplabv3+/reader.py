@@ -36,7 +36,7 @@ def slice_with_pad(a, s, value=0):
     return a
 
 
-class Cityscape_dataset:
+class CityscapeDataset:
     def __init__(self, dataset_dir, subset='train', config=default_config):
         import commands
         label_dirname = dataset_dir + 'gtFine/' + subset
