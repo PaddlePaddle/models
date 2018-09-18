@@ -5,7 +5,7 @@ import argparse
 import functools
 import shutil
 import cPickle
-from utility import add_arguments, print_arguments
+from utility import add_arguments, print_arguments, SmoothedValue
 
 import paddle
 import paddle.fluid as fluid
@@ -29,7 +29,9 @@ add_arg('use_pyreader',     bool,   True,          "Class number.")
 # SOLVER
 add_arg('learning_rate',    float,  0.01,     "Learning rate.")
 add_arg('num_passes',       int,    7,        "Epoch number.")
-add_arg('max_iter',         int,    180000,        "Iter number.")
+add_arg('max_iter',         int,    180000,   "Iter number.")
+add_arg('log_window',       int,    20,       "Log smooth window, set 1 for debug, set 20 for train.")
+add_arg('snapshot_stride',  int,    10000,    "save model every snapshot stride.")
 # RPN
 add_arg('anchor_sizes',     int,    [32,64,128,256,512],  "The size of anchors.")
 add_arg('aspect_ratios',    float,  [0.5,1.0,2.0],    "The ratio of anchors.")
@@ -124,26 +126,25 @@ def train(cfg):
 
     def train_step_pyreader():
         py_reader.start()
+        smoothed_loss = SmoothedValue(cfg.log_window)
         try:
             start_time = time.time()
             prev_start_time = start_time
-            every_pass_loss = []
-            batch_id = 0
-            while True:
+            for iter_id in range(cfg.max_iter):
                 prev_start_time = start_time
                 start_time = time.time()
                 losses = train_exe.run(fetch_list=[v.name for v in fetch_list])
-                #every_pass_loss.append(np.mean(np.array(losses[0])))
                 lr = np.array(fluid.global_scope().find_var('learning_rate').get_tensor())
                 # print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                #       epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
+                #       epoc_id, iter_id, lr[0], losses[0][0], start_time - prev_start_time))
+                smoothed_loss.add_value(losses[0][0])
                 print("Batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                      batch_id, lr[0], losses[0][0], start_time - prev_start_time))
-                batch_id += 1
+                      iter_id, lr[0], smoothed_loss.get_median_value(), start_time - prev_start_time))
                 #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
+                if (iter_id + 1) % cfg.snapshot_stride == 0:
+                    save_model("model_iter{}".format(iter_id))
         except fluid.core.EOFException:
             py_reader.reset()
-        return np.mean(every_pass_loss)
 
     def train_step(epoc_id):
         start_time = time.time()
@@ -164,6 +165,7 @@ def train(cfg):
         return np.mean(every_pass_loss)
 
     train_step_pyreader()
+    save_model('model_final')
     # for epoc_id in range(num_passes):
     #     if cfg.use_pyreader:
     #         train_step_pyreader(epoc_id)

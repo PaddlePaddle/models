@@ -20,6 +20,7 @@ from __future__ import print_function
 import distutils.util
 import numpy as np
 import six
+from collections import deque
 from paddle.fluid import core
 
 
@@ -62,3 +63,18 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
         type=type,
         help=help + ' Default: %(default)s.',
         **kwargs)
+
+
+class SmoothedValue(object):
+    """Track a series of values and provide access to smoothed values over a
+    window or the global series average.
+    """
+
+    def __init__(self, window_size):
+        self.deque = deque(maxlen=window_size)
+
+    def add_value(self, value):
+        self.deque.append(value)
+
+    def get_median_value(self):
+        return np.median(self.deque)
