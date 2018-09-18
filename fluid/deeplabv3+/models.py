@@ -12,6 +12,12 @@ bn_momentum = 0.99
 dropout_keep_prop = 0.9
 is_train = True
 
+op_results = {}
+
+default_epsilon = 1e-3
+default_norm_type = 'bn'
+default_group_number = 32
+
 
 @contextlib.contextmanager
 def scope(name):
@@ -27,9 +33,6 @@ def check(data, number):
         return [data] * number
     assert len(data) == number
     return data
-
-
-op_results = {}
 
 
 def clean():
@@ -52,11 +55,6 @@ def conv(*args, **kargs):
     else:
         kargs['bias_attr'] = False
     return append_op_result(fluid.layers.conv2d(*args, **kargs), 'conv')
-
-
-default_epsilon = 1e-3
-default_norm_type = 'bn'
-default_group_number = 32
 
 
 def group_norm(input, G, eps=1e-5, param_attr=None, bias_attr=None):
