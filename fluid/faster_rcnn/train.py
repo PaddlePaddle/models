@@ -127,12 +127,14 @@ def train(cfg):
         try:
             start_time = time.time()
             prev_start_time = start_time
+            every_pass_loss = []
             for iter_id in range(cfg.max_iter):
                 prev_start_time = start_time
                 start_time = time.time()
                 losses = train_exe.run(fetch_list=[v.name for v in fetch_list])
+                every_pass_loss.append(np.mean(np.array(losses[0])))
+                smoothed_loss.add_value(np.mean(np.array(losses[0])))
                 lr = np.array(fluid.global_scope().find_var('learning_rate').get_tensor())
-                smoothed_loss.add_value(losses[0][0])
                 print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                       iter_id, lr[0], smoothed_loss.get_median_value(), start_time - prev_start_time))
                 #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
@@ -140,27 +142,36 @@ def train(cfg):
                     save_model("model_iter{}".format(iter_id))
         except fluid.core.EOFException:
             py_reader.reset()
+        return np.mean(every_pass_loss)
 
-    def train_step(epoc_id):
+    def train_step():
         start_time = time.time()
         prev_start_time = start_time
         start = start_time
         every_pass_loss = []
-        for batch_id, data in enumerate(train_reader()):
+        smoothed_loss = SmoothedValue(cfg.log_window)
+        for iter_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
             losses = train_exe.run(fetch_list=[v.name for v in fetch_list],
                                    feed=feeder.feed(data))
             loss_v = np.mean(np.array(losses[0]))
             every_pass_loss.append(loss_v)
-
+            smoothed_loss.add_value(loss_v)
             lr = np.array(fluid.global_scope().find_var('learning_rate').get_tensor())
-            print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                  epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
+            print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
+                  iter_id, lr[0], smoothed_loss.get_median_value(), start_time - prev_start_time))
             #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
+            if (iter_id + 1) % cfg.snapshot_stride == 0:
+                save_model("model_iter{}".format(iter_id))
+            if (iter_id + 1) == cfg.max_iter:
+                break
         return np.mean(every_pass_loss)
 
-    train_step_pyreader()
+    if cfg.use_pyreader:
+        train_step_pyreader()
+    else:
+        train_step()
     save_model('model_final')
 
 if __name__ == '__main__':

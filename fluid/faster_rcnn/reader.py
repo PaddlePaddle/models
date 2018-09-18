@@ -90,7 +90,7 @@ def coco(settings, mode, batch_size=None, shuffle=False):
                 roidb_perm.rotate(-1)
                 if roidb_cur >= len(roidbs):
                     roidb_perm = deque(np.random.permutation(roidbs))
-                im, gt_boxes, gt_classes, is_crowd, im_info = roidb_reader(
+                im, gt_boxes, gt_classes, is_crowd, im_info, im_id = roidb_reader(
                     roidb)
                 if gt_boxes.shape[0] == 0:
                     continue
@@ -102,7 +102,7 @@ def coco(settings, mode, batch_size=None, shuffle=False):
         else:
             batch_out = []
             for roidb in roidbs:
-                im, gt_boxes, gt_classes, is_crowd, im_info = roidb_reader(
+                im, gt_boxes, gt_classes, is_crowd, im_info, im_id = roidb_reader(
                     roidb)
                 batch_out.append(
                     (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
