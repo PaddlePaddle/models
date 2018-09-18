@@ -11,7 +11,7 @@
 
 ## 简介
 
-_TODO_ Deeplabv3+ 是Deeplab语义分割系列网络的最新作，其前作有 Deeplabv1，Deeplabv2, Deeplabv3,
+Deeplabv3+ 是Deeplab语义分割系列网络的最新作，其前作有 Deeplabv1，Deeplabv2, Deeplabv3,
 在最新作中，Deeplab的作者通过encoder-decoder进行多尺度信息的融合，同时保留了原来的空洞卷积和ASSP层，
 其骨干网络使用了Xception模型，提高了语义分割的健壮性和运行速率，在 PASCAL VOC 2012 dataset取得新的state-of-art performance，89.0mIOU。
 
@@ -88,7 +88,7 @@ step: 500, mIoU: 0.7873
 ## 其他信息
 |数据集 | pretrained model | trained model |
 |---|---|---|
-|CityScape | ssh::yq01-gpu-255-120-24-00:/home/cjld/pack/models/deeplabv3p | ssh::yq01-gpu-255-120-24-00:/home/cjld/pack/models/deeplabv3p_init2 |
+|CityScape | [deeplabv3plus_xception65_initialize.tar.gz](http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus_xception65_initialize.tar.gz) | [deeplabv3plus.tar.gz](http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus.tar.gz) |
 
 ## 参考
 
