@@ -1,7 +1,5 @@
 import os
 os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = '0.98'
-#os.environ['GLOG_logtostderr']='1'
-#os.environ['GLOG_v']='1000'
 
 import paddle
 import paddle.fluid as fluid
@@ -39,7 +37,7 @@ crop_size = args.train_crop_size
 batch_size = args.batch_size
 image_shape = [crop_size, crop_size]
 utils.default_config['crop_size'] = crop_size
-utils.default_config['shuffle'] = False
+utils.default_config['shuffle'] = True
 num_classes = 19
 weight_decay = 0.00004
 
@@ -84,12 +82,24 @@ fluid.memory_optimize(tp, print_log=False, skip_opt_set=[
 
 exe = fluid.Executor(fluid.CUDAPlace(0))
 exe.run(sp)
+
+def load_model():
+    if args.init_weights_path.endswith('/'):
+        fluid.io.load_params(exe, dirname=args.init_weights_path, main_program=tp)
+    else:
+        fluid.io.load_params(exe, dirname="", filename=args.init_weights_path, main_program=tp)
+
+def save_model():
+    if args.save_weights_path.endswith('/'):
+        fluid.io.save_params(exe, dirname=args.save_weights_path, main_program=tp)
+    else:
+        fluid.io.save_params(exe, dirname="", filename=args.save_weights_path, main_program=tp)
+
 if args.init_weights_path:
     print "load from:", args.init_weights_path
-    fluid.io.load_params(exe, dirname=args.init_weights_path, main_program=tp)
+    load_model()
 
-utils.default_config['shuffle'] = True
-dataset = Cityscape_dataset('train', args.dataset_path)
+dataset = Cityscape_dataset(args.dataset_path, 'train')
 
 if args.parallel:
     print "Using ParallelExecutor."
@@ -97,28 +107,7 @@ if args.parallel:
         use_cuda=True,
         loss_name=loss_mean.name, main_program=tp)
 
-def get_batch(n=10):
-    for i in range(n):
-        imgs, labels, names = dataset.get_batch(batch_size)
-        labels = labels.astype(np.int32)[:,:,:,0]
-        imgs = imgs[:,:,:,::-1].transpose(0,3,1,2).astype(np.float32) / (255.0/2) - 1
-        yield i, imgs, labels, names
-
-
-def get_batch_only_one(n=10):
-    imgs, labels, names = dataset.get_batch(batch_size)
-    labels = labels.astype(np.int32)[:,:,:,0]
-    imgs = imgs[:,:,:,::-1].transpose(0,3,1,2).astype(np.float32) / (255.0/2) - 1
-    for i in range(n):
-        yield i, imgs, labels, names
-
-batches= get_batch(total_step)
-
-try:
-    from prefetch_generator import BackgroundGenerator
-    batches = BackgroundGenerator(batches, 100)
-except:
-    print "You can install 'prefetch_generator' for acceleration of data reading."
+batches = dataset.get_batch_generator(batch_size, total_step)
 
 for i, imgs, labels, names in batches:
     if args.parallel:
@@ -127,8 +116,8 @@ for i, imgs, labels, names in batches:
         retv = exe.run(tp, feed={ 'img':imgs, 'label':labels}, fetch_list=[pred, loss_mean])
     if i % 100 == 0:
         print "Model is saved to", args.save_weights_path
-        fluid.io.save_params(exe, dirname=args.save_weights_path, main_program=tp)
-    print i, np.mean(retv[1])
+        save_model()
+    print "step %s, loss: %s" % (i, np.mean(retv[1]))
 
 print "Training done. Model is saved to", args.save_weights_path
-fluid.io.save_params(exe, dirname=args.save_weights_path, main_program=tp)
+save_model()

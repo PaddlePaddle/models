@@ -36,7 +36,7 @@ utils.default_config['crop_size'] = -1
 utils.default_config['shuffle'] = False
 num_classes = 19
 
-def my_mean_iou(pred, label):
+def mean_iou(pred, label):
     label = fluid.layers.elementwise_min(label, fluid.layers.assign(np.array([num_classes], dtype=np.int32)))
     label_ignore = (label == num_classes).astype('int32')
     label_nignore = (label != num_classes).astype('int32')
@@ -53,7 +53,7 @@ with fluid.program_guard(tp, sp):
     logit = deeplabv3p(img)
     logit = fluid.layers.resize_bilinear(logit, eval_shape)
     pred = fluid.layers.argmax(logit, axis=1).astype('int32')
-    miou, out_wrong, out_correct = my_mean_iou(pred, label)
+    miou, out_wrong, out_correct = mean_iou(pred, label)
 
 tp = tp.clone(True)
 fluid.memory_optimize(tp, print_log=False, skip_opt_set=[
@@ -61,31 +61,24 @@ fluid.memory_optimize(tp, print_log=False, skip_opt_set=[
 
 exe = fluid.Executor(fluid.CUDAPlace(0))
 exe.run(sp)
+def load_model():
+    if args.init_weights_path.endswith('/'):
+        fluid.io.load_params(exe, dirname=args.init_weights_path, main_program=tp)
+    else:
+        fluid.io.load_params(exe, dirname="", filename=args.init_weights_path, main_program=tp)
+
 if args.init_weights_path:
     print "load from:", args.init_weights_path
-    fluid.io.load_params(exe, dirname=args.init_weights_path, main_program=tp)
+    load_model()
 
-utils.default_config['shuffle'] = True
-dataset = Cityscape_dataset('val', args.dataset_path)
+dataset = Cityscape_dataset(args.dataset_path, 'val')
 if args.total_step == -1:
     total_step = len(dataset.label_files)
 else:
     total_step = args.total_step
 
-def get_batch(n):
-    for i in range(n):
-        imgs, labels, names = dataset.get_batch(batch_size)
-        labels = labels.astype(np.int32)[:,:,:,0]
-        imgs = imgs[:,:,:,::-1].transpose(0,3,1,2).astype(np.float32) / (255.0/2) - 1
-        yield i, imgs, labels, names
+batches = dataset.get_batch_generator(batch_size, total_step)
 
-batches= get_batch(total_step)
-
-try:
-    from prefetch_generator import BackgroundGenerator
-    batches = BackgroundGenerator(batches, 100)
-except:
-    print "You can install 'prefetch_generator' for acceleration of data reading."
 sum_iou = 0
 all_correct = np.array([0], dtype=np.int64)
 all_wrong = np.array([0], dtype=np.int64)
@@ -105,6 +98,6 @@ for i, imgs, labels, names in batches:
     miou2 = np.mean((right[mp]*1.0/(right[mp]+wrong[mp])))
     if args.verbose:
         print 'step: %s, mIoU: %s' % (i+1, miou2)
-    else
-        print '\rstep: %s, mIoU: %s' % (i+1, miou2), 
+    else:
+        print '\rstep: %s, mIoU: %s' % (i+1, miou2),
         sys.stdout.flush()

@@ -35,7 +35,7 @@ def slice_with_pad(a, s, value=0):
     return a
 
 class Cityscape_dataset:
-    def __init__(self, subset='train', dataset_dir='/home/cjld/nfs/liangdun/cityscape-data/', config=default_config):
+    def __init__(self, dataset_dir='/home/cjld/nfs/liangdun/cityscape-data/', subset='train', config=default_config):
         import commands
         label_dirname = dataset_dir + 'gtFine/' + subset
         label_files = commands.getoutput("find %s -type f | grep labelTrainIds | sort" % label_dirname).splitlines()
@@ -77,7 +77,7 @@ class Cityscape_dataset:
         random_scale = np.random.rand(1)*(self.config['max_resize'] - self.config['min_resize']) + self.config['min_resize']
         crop_size = int(shape/random_scale)
         bb = crop_size//2
-        def my_randint(low, high):
+        def _randint(low, high):
             return int(np.random.rand(1) * (high-low)+low)
         offset_x = np.random.randint(bb, max(bb+1,img.shape[0]-bb)) - crop_size//2
         offset_y = np.random.randint(bb, max(bb+1,img.shape[1]-bb)) - crop_size//2
@@ -99,23 +99,17 @@ class Cityscape_dataset:
             self.next_img()
         return np.array(imgs), np.array(labels), names
 
-#dataset = Cityscape_dataset()
-
-import contextlib
-
-def get_handle():
-    import IPython
-    handle = IPython.display.DisplayHandle()
-    handle.display('wait')
-    return handle
-
-@contextlib.contextmanager
-def myfig_display(figsize=(8,8), h=None):
-    import pylab as pl
-    if h == None: h = handle
-    fig = pl.figure(figsize=figsize)
-    try:
-        yield fig
-    finally:
-        h.update(fig)
-        pl.close(fig)
+    def get_batch_generator(self, batch_size, total_step):
+        def do_get_batch():
+            for i in range(total_step):
+                imgs, labels, names = self.get_batch(batch_size)
+                labels = labels.astype(np.int32)[:,:,:,0]
+                imgs = imgs[:,:,:,::-1].transpose(0,3,1,2).astype(np.float32) / (255.0/2) - 1
+                yield i, imgs, labels, names
+        batches = do_get_batch()
+        try:
+            from prefetch_generator import BackgroundGenerator
+            batches = BackgroundGenerator(batches, 100)
+        except:
+            print "You can install 'prefetch_generator' for acceleration of data reading."
+        return batches

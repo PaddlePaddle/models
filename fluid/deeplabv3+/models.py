@@ -19,7 +19,7 @@ def scope(name):
     name_scope = name_scope + name + '/'
     yield
     name_scope = bk
-    
+
 def check(data, number):
     if type(data) == int:
         return [data] * number
@@ -39,7 +39,7 @@ def append_op_result(result, name):
     return result
 
 
-def myconv(*args, **kargs):
+def conv(*args, **kargs):
     kargs['param_attr'] = name_scope + 'weights'
     if kargs.has_key('bias_attr') and kargs['bias_attr']:
         kargs['bias_attr'] = name_scope + 'biases'
@@ -53,7 +53,7 @@ default_group_number = 32
 
 def group_norm(input, G, eps=1e-5, param_attr=None, bias_attr=None):
     helper = fluid.layer_helper.LayerHelper('group_norm', **locals())
-    
+
     N,C,H,W = input.shape
     if C%G != 0:
         print "group can not divide channle:", C, G
@@ -75,7 +75,7 @@ def group_norm(input, G, eps=1e-5, param_attr=None, bias_attr=None):
     x = x - mean
     var = fluid.layers.reduce_mean(fluid.layers.square(x), dim=2, keep_dim=True)
     x = x/fluid.layers.sqrt(var+eps)
-    
+
     scale = helper.create_parameter(
         attr=helper.param_attr,
         shape=param_shape,
@@ -91,43 +91,43 @@ def group_norm(input, G, eps=1e-5, param_attr=None, bias_attr=None):
     #print x.shape, input.shape
     return fluid.layers.reshape(x, input.shape)
 
-def mybn(*args, **kargs):
+def bn(*args, **kargs):
     if default_norm_type == 'bn':
         with scope('BatchNorm'):
-            return append_op_result(fluid.layers.batch_norm(*args, 
+            return append_op_result(fluid.layers.batch_norm(*args,
                                        epsilon=default_epsilon,
                                        momentum=bn_momentum,
-                                       param_attr=name_scope+'gamma', 
-                                       bias_attr=name_scope+'beta', 
+                                       param_attr=name_scope+'gamma',
+                                       bias_attr=name_scope+'beta',
                                        moving_mean_name=name_scope+'moving_mean',
                                        moving_variance_name=name_scope+'moving_variance',
                                        **kargs), 'bn')
     elif default_norm_type == 'gn':
         with scope('GroupNorm'):
             return append_op_result(group_norm(args[0],
-                                       default_group_number, 
+                                       default_group_number,
                                        eps=default_epsilon,
-                                       param_attr=name_scope+'gamma', 
+                                       param_attr=name_scope+'gamma',
                                        bias_attr=name_scope+'beta'), 'gn')
     else:
         raise "Unsupport norm type:" + default_norm_type
-        
 
-def mybn_relu(data):
-    return append_op_result(fluid.layers.relu(mybn(data)), 'relu')
 
-def myrelu(data):
+def bn_relu(data):
+    return append_op_result(fluid.layers.relu(bn(data)), 'relu')
+
+def relu(data):
     return append_op_result(fluid.layers.relu(data), 'relu')
 
 def seq_conv(input, channel, stride, filter, dilation=1, act=None):
     with scope('depthwise'):
-        input = myconv(input, input.shape[1], filter, stride, 
+        input = conv(input, input.shape[1], filter, stride,
                                     groups=input.shape[1], padding=(filter/2)*dilation, dilation=dilation)
-        input = mybn(input)
+        input = bn(input)
         if act: input = act(input)
     with scope('pointwise'):
-        input = myconv(input, channel, 1, 1, groups=1, padding=0)
-        input = mybn(input)
+        input = conv(input, channel, 1, 1, groups=1, padding=0)
+        input = bn(input)
         if act: input = act(input)
     return input
 
@@ -141,30 +141,28 @@ def xception_block(input, channels, strides=1, filters=3, dilation=1, skip_conv=
     for i in range(repeat_number):
         with scope('separable_conv'+str(i+1)):
             if not activation_fn_in_separable_conv:
-                data = myrelu(data)
+                data = relu(data)
                 data = seq_conv(data, channels[i], strides[i], filters[i], dilation=dilation)
             else:
-                data = seq_conv(data, channels[i], strides[i], filters[i], dilation=dilation, act=myrelu)
+                data = seq_conv(data, channels[i], strides[i], filters[i], dilation=dilation, act=relu)
             datum.append(data)
-        #print data.shape, i, strides
     if not has_skip:
         return append_op_result(data, 'xception_block'), datum
     if skip_conv:
         with scope('shortcut'):
-            skip = mybn(myconv(input, channels[-1], 1, strides[-1], groups=1, padding=0))
+            skip = bn(conv(input, channels[-1], 1, strides[-1], groups=1, padding=0))
     else:
         skip = input
-    #print input.shape, skip.shape, data.shape
     return append_op_result(data+skip, 'xception_block'), datum
 
 def entry_flow(data):
     with scope("entry_flow"):
         with scope("conv1"):
-            data = myconv(data, 32, 3, stride=2, padding=1)
-            data = mybn_relu(data)
+            data = conv(data, 32, 3, stride=2, padding=1)
+            data = bn_relu(data)
         with scope("conv2"):
-            data = myconv(data, 64, 3, stride=1, padding=1)
-            data = mybn_relu(data)
+            data = conv(data, 64, 3, stride=1, padding=1)
+            data = bn_relu(data)
         with scope("block1"):
             data, _ = xception_block(data, 128, [1,1,2])
         #print data.shape
@@ -190,51 +188,49 @@ def exit_flow(data):
             data, _ = xception_block(data, [1536, 1536, 2048], [1,1,1], dilation=2,
                                      has_skip=False, activation_fn_in_separable_conv=True)
         return data
-    
-def mydropout(x, keep_rate):
+
+def dropout(x, keep_rate):
     if is_train:
         return fluid.layers.dropout(x, 1-keep_rate) / keep_rate
     else:
         return x
-    
+
 def encoder(input):
     with scope('encoder'):
         channel = 256
         with scope("image_pool"):
             image_avg = fluid.layers.reduce_mean(input, [2,3], keep_dim=True)
             append_op_result(image_avg, 'reduce_mean')
-            image_avg = mybn_relu(myconv(image_avg, channel, 1, 1, groups=1, padding=0))
-            #print (-1,channel)+input.shape[2:], image_avg.shape
+            image_avg = bn_relu(conv(image_avg, channel, 1, 1, groups=1, padding=0))
             image_avg = fluid.layers.resize_bilinear(image_avg, input.shape[2:])
-            
+
         with scope("aspp0"):
-            aspp0 = mybn_relu(myconv(input, channel, 1, 1, groups=1, padding=0))
+            aspp0 = bn_relu(conv(input, channel, 1, 1, groups=1, padding=0))
         with scope("aspp1"):
-            aspp1 = seq_conv(input, channel, 1, 3, dilation=6, act=myrelu)
+            aspp1 = seq_conv(input, channel, 1, 3, dilation=6, act=relu)
         with scope("aspp2"):
-            aspp2 = seq_conv(input, channel, 1, 3, dilation=12, act=myrelu)
+            aspp2 = seq_conv(input, channel, 1, 3, dilation=12, act=relu)
         with scope("aspp3"):
-            aspp3 = seq_conv(input, channel, 1, 3, dilation=18, act=myrelu)
-        #print image_avg, aspp0, aspp1, aspp2, aspp3
+            aspp3 = seq_conv(input, channel, 1, 3, dilation=18, act=relu)
         with scope("concat"):
             data = append_op_result(fluid.layers.concat([image_avg, aspp0, aspp1, aspp2, aspp3], axis=1), 'concat')
-            data = mybn_relu(myconv(data, channel, 1, 1, groups=1, padding=0))
-            data = mydropout(data, dropout_keep_prop)
+            data = bn_relu(conv(data, channel, 1, 1, groups=1, padding=0))
+            data = dropout(data, dropout_keep_prop)
         return data
-    
+
 def decoder(encode_data, decode_shortcut):
     with scope('decoder'):
         with scope('concat'):
-            decode_shortcut = mybn_relu(myconv(decode_shortcut, decode_channel, 1, 1, groups=1, padding=0))
+            decode_shortcut = bn_relu(conv(decode_shortcut, decode_channel, 1, 1, groups=1, padding=0))
             encode_data = fluid.layers.resize_bilinear(encode_data, decode_shortcut.shape[2:])
             encode_data = fluid.layers.concat([encode_data, decode_shortcut], axis=1)
             append_op_result(encode_data, 'concat')
         with scope("separable_conv1"):
-            encode_data = seq_conv(encode_data, encode_channel, 1, 3, dilation=1, act=myrelu)
+            encode_data = seq_conv(encode_data, encode_channel, 1, 3, dilation=1, act=relu)
         with scope("separable_conv2"):
-            encode_data = seq_conv(encode_data, encode_channel, 1, 3, dilation=1, act=myrelu)
+            encode_data = seq_conv(encode_data, encode_channel, 1, 3, dilation=1, act=relu)
         return encode_data
-    
+
 def deeplabv3p(img):
     global default_epsilon
     append_op_result(img, 'img')
@@ -249,8 +245,7 @@ def deeplabv3p(img):
     default_epsilon = 1e-5
     encode_data = encoder(data)
     encode_data = decoder(encode_data, decode_shortcut)
-    #print encode_data
     with scope('logit'):
-        logit = myconv(encode_data, label_number, 1, stride=1, padding=0, bias_attr=True)
+        logit = conv(encode_data, label_number, 1, stride=1, padding=0, bias_attr=True)
         logit = fluid.layers.resize_bilinear(logit, img.shape[2:])
     return logit
