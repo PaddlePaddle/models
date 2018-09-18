@@ -231,9 +231,7 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
     while True:
         if shuffle:
             np.random.shuffle(file_dict)
-        images, face_boxes, head_boxes, label_ids = [], [], [], []
-        label_offs = [0]
-
+        batch_out = []
         for index_image in file_dict.keys():
             image_name = file_dict[index_image][0]
             image_path = os.path.join(settings.data_dir, image_name)
@@ -261,7 +259,6 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
                     bbox_sample.append(float(xmax) / im_width)
                     bbox_sample.append(float(ymax) / im_height)
                     bbox_labels.append(bbox_sample)
-
             im, sample_labels = preprocess(im, bbox_labels, "train", settings,
                                            image_path)
             sample_labels = np.array(sample_labels)
@@ -271,46 +268,40 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
             face_box = sample_labels[:, 1:5]
             head_box = expand_bboxes(face_box)
             label = [1] * len(face_box)
-
-            images.append(im)
-            face_boxes.extend(face_box)
-            head_boxes.extend(head_box)
-            label_ids.extend(label)
-            label_offs.append(label_offs[-1] + len(face_box))
-
-            if len(images) == batch_size:
-                images = np.array(images).astype('float32')
-                face_boxes = np.array(face_boxes).astype('float32')
-                head_boxes = np.array(head_boxes).astype('float32')
-                label_ids = np.array(label_ids).astype('int32')
-                yield images, face_boxes, head_boxes, label_ids, label_offs
-                images, face_boxes, head_boxes = [], [], []
-                label_ids, label_offs = [], [0]
+            batch_out.append((im, face_box, head_box, label))
+            if len(batch_out) == batch_size:
+                yield batch_out
+                batch_out = []
 
 
-def train_batch_reader(settings,
-                       file_list,
-                       batch_size,
-                       shuffle=True,
-                       num_workers=8):
-    try:
-        enqueuer = GeneratorEnqueuer(
-            train_generator(settings, file_list, batch_size, shuffle),
-            use_multiprocessing=False)
-        enqueuer.start(max_queue_size=24, workers=num_workers)
-        generator_output = None
-        while True:
-            while enqueuer.is_running():
-                if not enqueuer.queue.empty():
-                    generator_output = enqueuer.queue.get()
-                    break
-                else:
-                    time.sleep(0.01)
-            yield generator_output
+def train(settings,
+          file_list,
+          batch_size,
+          shuffle=True,
+          use_multiprocessing=True,
+          num_workers=8,
+          max_queue=24):
+    def reader():
+        try:
+            enqueuer = GeneratorEnqueuer(
+                train_generator(settings, file_list, batch_size, shuffle),
+                use_multiprocessing=use_multiprocessing)
+            enqueuer.start(max_queue_size=max_queue, workers=num_workers)
             generator_output = None
-    finally:
-        if enqueuer is not None:
-            enqueuer.stop()
+            while True:
+                while enqueuer.is_running():
+                    if not enqueuer.queue.empty():
+                        generator_output = enqueuer.queue.get()
+                        break
+                    else:
+                        time.sleep(0.02)
+                yield generator_output
+                generator_output = None
+        finally:
+            if enqueuer is not None:
+                enqueuer.stop()
+
+    return reader
 
 
 def test(settings, file_list):

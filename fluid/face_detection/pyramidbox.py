@@ -63,8 +63,11 @@ def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
 
 class PyramidBox(object):
     def __init__(self,
-                 data_shape,
-                 num_classes=None,
+                 data_shape=None,
+                 image=None,
+                 face_box=None,
+                 head_box=None,
+                 gt_label=None,
                  use_transposed_conv2d=True,
                  is_infer=False,
                  sub_network=False):
@@ -74,13 +77,17 @@ class PyramidBox(object):
         self.data_shape = data_shape
         self.min_sizes = [16., 32., 64., 128., 256., 512.]
         self.steps = [4., 8., 16., 32., 64., 128.]
-        self.num_classes = num_classes
         self.use_transposed_conv2d = use_transposed_conv2d
         self.is_infer = is_infer
         self.sub_network = sub_network
+        self.image = image
+        self.face_box = face_box
+        self.head_box = head_box
+        self.gt_label = gt_label
 
         # the base network is VGG with atrous layers
-        self._input()
+        if is_infer:
+            self._input()
         self._vgg()
         if sub_network:
             self._low_level_fpn()
@@ -88,12 +95,6 @@ class PyramidBox(object):
             self._pyramidbox()
         else:
             self._vgg_ssd()
-
-    def feeds(self):
-        if self.is_infer:
-            return [self.image]
-        else:
-            return [self.image, self.face_box, self.head_box, self.gt_label]
 
     def _input(self):
         self.image = fluid.layers.data(
