@@ -144,6 +144,7 @@ def train(cfg):
     def train_step(epoc_id):
         start_time = time.time()
         prev_start_time = start_time
+        start = start_time
         every_pass_loss = []
         for batch_id, data in enumerate(train_reader()):
             prev_start_time = start_time

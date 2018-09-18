@@ -70,13 +70,14 @@ def coco(settings, mode, batch_size=None, shuffle=False):
 
     def roidb_reader(roidb):
         im, im_scales = data_utils.get_image_blob(roidb, settings)
+        im_id = roidb['id']
         im_height = np.round(roidb['height'] * im_scales)
         im_width = np.round(roidb['width'] * im_scales)
         im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
         gt_boxes = roidb['gt_boxes'].astype('float32')
         gt_classes = roidb['gt_classes'].astype('int32')
         is_crowd = roidb['is_crowd'].astype('int32')
-        return im, gt_boxes, gt_classes, is_crowd, im_info
+        return im, gt_boxes, gt_classes, is_crowd, im_info, im_id
 
     def reader():
         if mode == "train":
@@ -93,8 +94,8 @@ def coco(settings, mode, batch_size=None, shuffle=False):
                     roidb)
                 if gt_boxes.shape[0] == 0:
                     continue
-
-                batch_out.append((im, gt_boxes, gt_classes, is_crowd, im_info))
+                batch_out.append(
+                    (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
                 if len(batch_out) == batch_size:
                     yield batch_out
                     batch_out = []
@@ -103,10 +104,8 @@ def coco(settings, mode, batch_size=None, shuffle=False):
             for roidb in roidbs:
                 im, gt_boxes, gt_classes, is_crowd, im_info = roidb_reader(
                     roidb)
-                if gt_boxes.shape[0] == 0:
-                    continue
-
-                batch_out.append((im, gt_boxes, gt_classes, is_crowd, im_info))
+                batch_out.append(
+                    (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
                 if len(batch_out) == batch_size:
                     yield batch_out
                     batch_out = []
