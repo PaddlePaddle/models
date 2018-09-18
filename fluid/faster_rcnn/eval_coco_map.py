@@ -7,7 +7,6 @@ from eval_helper import get_nmsed_box
 import paddle
 import paddle.fluid as fluid
 import reader
-from fasterrcnn_model_test import FasterRcnn_test
 from utility import add_arguments, print_arguments
 from PIL import Image
 from PIL import ImageDraw
@@ -28,7 +27,7 @@ add_arg('batch_size',       int,   1,        "Minibatch size.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
 add_arg('data_dir',         str,   'data/COCO17',        "The data root path.")
 add_arg('model_dir',        str,   '',     "The model path.")
-add_arg('nms_threshold',    float, 0.3,    "NMS threshold.")
+add_arg('nms_threshold',    float, 0.5,    "NMS threshold.")
 add_arg('score_threshold',    float, 0.05,    "score threshold for NMS.")
 add_arg('confs_threshold',  float, 9.,    "Confidence threshold to draw bbox.")
 add_arg('image_path',       str,   '',        "The image used to inference and visualize.")
@@ -90,14 +89,14 @@ def eval(args):
     for batch_id, data in enumerate(test_reader()):
         start = time.time()
         #image, gt_box, gt_label, is_crowd, im_info, im_id = data[0]
+        im_info = []
+        for i in range(len(data)):
+            im_info.append(data[i][4])
+
         rpn_rois_v, confs_v, locs_v = exe.run(
             fetch_list=[v.name for v in fetch_list],
             feed=feeder.feed(data),
             return_numpy=False)
-
-        im_info = []
-        for i in range(len(data)):
-            im_info.append(data[i][4])
         new_lod, nmsed_out = get_nmsed_box(args, rpn_rois_v, confs_v, locs_v,
                                            class_nums, im_info,
                                            numId_to_catId_map)

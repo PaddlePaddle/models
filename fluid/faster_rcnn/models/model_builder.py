@@ -137,7 +137,6 @@ class FasterRCNN(object):
 
         pre_nms_top_n = 12000 if self.is_train else 6000
         post_nms_top_n = 2000 if self.is_train else 1000
-        nms_thresh = 0.7 if self.is_train else 0.5
         rpn_rois, rpn_roi_probs = fluid.layers.generate_proposals(
             scores=rpn_cls_score_prob,
             bbox_deltas=self.rpn_bbox_pred,
@@ -146,7 +145,7 @@ class FasterRCNN(object):
             variances=self.var,
             pre_nms_top_n=pre_nms_top_n,
             post_nms_top_n=post_nms_top_n,
-            nms_thresh=nms_thresh,
+            nms_thresh=0.7,
             min_size=0.0,
             eta=1.0)
         self.rpn_rois = rpn_rois
