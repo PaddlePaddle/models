@@ -8,37 +8,41 @@ default_config = {
     "crop_size": 769,
 }
 
+
 def slice_with_pad(a, s, value=0):
     pads = []
     slices = []
     for i in range(len(a.shape)):
         if i >= len(s):
-            pads.append([0,0])
+            pads.append([0, 0])
             slices.append([0, a.shape[i]])
         else:
-            l,r = s[i]
-            if l<0:
+            l, r = s[i]
+            if l < 0:
                 pl = -l
                 l = 0
             else:
                 pl = 0
-            if r>a.shape[i]:
+            if r > a.shape[i]:
                 pr = r - a.shape[i]
                 r = a.shape[i]
             else:
                 pr = 0
-            pads.append([pl,pr])
-            slices.append([l,r])
-    slices = map(lambda x: slice(x[0],x[1],1), slices)
+            pads.append([pl, pr])
+            slices.append([l, r])
+    slices = map(lambda x: slice(x[0], x[1], 1), slices)
     a = a[slices]
     a = np.pad(a, pad_width=pads, mode='constant', constant_values=value)
     return a
+
 
 class Cityscape_dataset:
     def __init__(self, dataset_dir, subset='train', config=default_config):
         import commands
         label_dirname = dataset_dir + 'gtFine/' + subset
-        label_files = commands.getoutput("find %s -type f | grep labelTrainIds | sort" % label_dirname).splitlines()
+        label_files = commands.getoutput(
+            "find %s -type f | grep labelTrainIds | sort" %
+            label_dirname).splitlines()
         # label_files = !find $label_dirname -type f | grep labelTrainIds
         self.label_files = label_files
         self.label_dirname = label_dirname
@@ -63,7 +67,8 @@ class Cityscape_dataset:
         shape = self.config["crop_size"]
         while True:
             ln = self.label_files[self.index]
-            img_name = self.dataset_dir + 'leftImg8bit/' + self.subset + ln[len(self.label_dirname):]
+            img_name = self.dataset_dir + 'leftImg8bit/' + self.subset + ln[len(
+                self.label_dirname):]
             img_name = img_name.replace('gtFine_labelTrainIds', 'leftImg8bit')
             label = cv2.imread(ln)
             img = cv2.imread(img_name)
@@ -74,18 +79,29 @@ class Cityscape_dataset:
                 break
         if shape == -1:
             return img, label, ln
-        random_scale = np.random.rand(1)*(self.config['max_resize'] - self.config['min_resize']) + self.config['min_resize']
-        crop_size = int(shape/random_scale)
-        bb = crop_size//2
+        random_scale = np.random.rand(1) * (self.config['max_resize'] -
+                                            self.config['min_resize']
+                                            ) + self.config['min_resize']
+        crop_size = int(shape / random_scale)
+        bb = crop_size // 2
+
         def _randint(low, high):
-            return int(np.random.rand(1) * (high-low)+low)
-        offset_x = np.random.randint(bb, max(bb+1,img.shape[0]-bb)) - crop_size//2
-        offset_y = np.random.randint(bb, max(bb+1,img.shape[1]-bb)) - crop_size//2
-        img_crop = slice_with_pad(img, [[offset_x,offset_x+crop_size],[offset_y,offset_y+crop_size]], 128)
-        img = cv2.resize(img_crop, (shape,shape))
-        label_crop = slice_with_pad(label, [[offset_x,offset_x+crop_size],[offset_y,offset_y+crop_size]], 255)
-        label = cv2.resize(label_crop, (shape,shape), interpolation=cv2.INTER_NEAREST)
-        return img, label, ln+str((offset_x, offset_y, crop_size, random_scale))
+            return int(np.random.rand(1) * (high - low) + low)
+
+        offset_x = np.random.randint(bb, max(bb + 1, img.shape[0] -
+                                             bb)) - crop_size // 2
+        offset_y = np.random.randint(bb, max(bb + 1, img.shape[1] -
+                                             bb)) - crop_size // 2
+        img_crop = slice_with_pad(img, [[offset_x, offset_x + crop_size],
+                                        [offset_y, offset_y + crop_size]], 128)
+        img = cv2.resize(img_crop, (shape, shape))
+        label_crop = slice_with_pad(label, [[offset_x, offset_x + crop_size],
+                                            [offset_y, offset_y + crop_size]],
+                                    255)
+        label = cv2.resize(
+            label_crop, (shape, shape), interpolation=cv2.INTER_NEAREST)
+        return img, label, ln + str(
+            (offset_x, offset_y, crop_size, random_scale))
 
     def get_batch(self, batch_size=1):
         imgs = []
@@ -103,9 +119,11 @@ class Cityscape_dataset:
         def do_get_batch():
             for i in range(total_step):
                 imgs, labels, names = self.get_batch(batch_size)
-                labels = labels.astype(np.int32)[:,:,:,0]
-                imgs = imgs[:,:,:,::-1].transpose(0,3,1,2).astype(np.float32) / (255.0/2) - 1
+                labels = labels.astype(np.int32)[:, :, :, 0]
+                imgs = imgs[:, :, :, ::-1].transpose(
+                    0, 3, 1, 2).astype(np.float32) / (255.0 / 2) - 1
                 yield i, imgs, labels, names
+
         batches = do_get_batch()
         try:
             from prefetch_generator import BackgroundGenerator
