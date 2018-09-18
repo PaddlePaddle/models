@@ -119,7 +119,7 @@ data/test_images/00003.jpg
 使用默认数据在GPU单卡上训练:
 
 ```
-env CUDA_VISIABLE_DEVICES=0 python ctc_train.py
+env CUDA_VISIBLE_DEVICES=0 python ctc_train.py
 ```
 使用默认数据在CPU上训练:
 ```
@@ -129,7 +129,7 @@ env OMP_NUM_THREADS=<num_of_physical_cores> python ctc_train.py --use_gpu False 
 使用默认数据在GPU多卡上训练:
 
 ```
-env CUDA_VISIABLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
+env CUDA_VISIBLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
 ```
 
 默认使用的是`CTC model`, 可以通过选项`--model="attention"`切换为`attention model`。
