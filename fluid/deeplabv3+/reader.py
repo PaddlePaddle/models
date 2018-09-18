@@ -43,7 +43,6 @@ class Cityscape_dataset:
         label_files = commands.getoutput(
             "find %s -type f | grep labelTrainIds | sort" %
             label_dirname).splitlines()
-        # label_files = !find $label_dirname -type f | grep labelTrainIds
         self.label_files = label_files
         self.label_dirname = label_dirname
         self.index = 0

@@ -33,7 +33,6 @@ def save_model():
 
 
 def loss(logit, label):
-    #return fluid.layers.reduce_mean(logit)
     label_nignore = (label < num_classes).astype('float32')
     label = fluid.layers.elementwise_min(
         label,

@@ -76,7 +76,6 @@ def group_norm(input, G, eps=1e-5, param_attr=None, bias_attr=None):
     param_shape = (G, )
     x = input
     x = fluid.layers.reshape(x, [N, G, C // G * H * W])
-    #print x.shape
     mean = fluid.layers.reduce_mean(x, dim=2, keep_dim=True)
     x = x - mean
     var = fluid.layers.reduce_mean(fluid.layers.square(x), dim=2, keep_dim=True)
@@ -90,11 +89,9 @@ def group_norm(input, G, eps=1e-5, param_attr=None, bias_attr=None):
 
     bias = helper.create_parameter(
         attr=helper.bias_attr, shape=param_shape, dtype='float32', is_bias=True)
-    #print x.shape, scale.shape, (x * scale).shape
     x = fluid.layers.elementwise_add(
         fluid.layers.elementwise_mul(
             x, scale, axis=1), bias, axis=1)
-    #print x.shape, input.shape
     return fluid.layers.reshape(x, input.shape)
 
 
@@ -208,10 +205,8 @@ def entry_flow(data):
             data = bn_relu(data)
         with scope("block1"):
             data, _ = xception_block(data, 128, [1, 1, 2])
-        #print data.shape
         with scope("block2"):
             data, datum = xception_block(data, 256, [1, 1, 2])
-        #print data.shape
         with scope("block3"):
             data, _ = xception_block(data, 728, [1, 1, 2])
         return data, datum[1]
