@@ -36,16 +36,22 @@ class FasterRCNN(object):
         rpn_cls_loss, rpn_reg_loss = self.rpn_loss()
         return loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss,
 
+    def eval_out(self):
+        return [self.rpn_rois, self.cls_score, self.bbox_pred]
+
     def build_input(self, image_shape):
         if self.use_pyreader:
             self.py_reader = fluid.layers.py_reader(
                 capacity=64,
-                shapes=[[-1] + image_shape, [-1, 4], [-1, 1], [-1, 1], [-1, 3]],
-                lod_levels=[0, 1, 1, 1, 0],
-                dtypes=["float32", "float32", "int32", "int32", "float32"],
+                shapes=[[-1] + image_shape, [-1, 4], [-1, 1], [-1, 1], [-1, 3],
+                        [-1, 1]],
+                lod_levels=[0, 1, 1, 1, 0, 0],
+                dtypes=[
+                    "float32", "float32", "int32", "int32", "float32", "int32"
+                ],
                 use_double_buffer=True)
             self.image, self.gt_box, self.gt_label, self.is_crowd, \
-                self.im_info = fluid.layers.read_file(self.py_reader)
+                self.im_info, self.im_id = fluid.layers.read_file(self.py_reader)
         else:
             self.image = fluid.layers.data(
                 name='image', shape=image_shape, dtype='float32')
@@ -61,10 +67,13 @@ class FasterRCNN(object):
                 append_batch_size=False)
             self.im_info = fluid.layers.data(
                 name='im_info', shape=[3], dtype='float32')
+            self.im_id = fluid.layers.data(
+                name='im_id', shape=[1], dtype='int32')
 
     def feeds(self):
         return [
-            self.image, self.gt_box, self.gt_label, self.is_crowd, self.im_info
+            self.image, self.gt_box, self.gt_label, self.is_crowd, self.im_info,
+            self.im_id
         ]
 
     def rpn_heads(self, rpn_input):
@@ -126,18 +135,20 @@ class FasterRCNN(object):
         rpn_cls_score_prob = fluid.layers.sigmoid(
             self.rpn_cls_score, name='rpn_cls_score_prob')
 
+        pre_nms_top_n = 12000 if self.is_train else 6000
+        post_nms_top_n = 2000 if self.is_train else 1000
         rpn_rois, rpn_roi_probs = fluid.layers.generate_proposals(
             scores=rpn_cls_score_prob,
             bbox_deltas=self.rpn_bbox_pred,
             im_info=self.im_info,
             anchors=self.anchor,
             variances=self.var,
-            pre_nms_top_n=12000,
-            post_nms_top_n=2000,
+            pre_nms_top_n=pre_nms_top_n,
+            post_nms_top_n=post_nms_top_n,
             nms_thresh=0.7,
             min_size=0.0,
             eta=1.0)
-
+        self.rpn_rois = rpn_rois
         if self.is_train:
             outs = fluid.layers.generate_proposal_labels(
                 rpn_rois=rpn_rois,
@@ -161,9 +172,13 @@ class FasterRCNN(object):
             self.bbox_outside_weights = outs[4]
 
     def fast_rcnn_heads(self, roi_input):
+        if self.is_train:
+            pool_rois = self.rois
+        else:
+            pool_rois = self.rpn_rois
         pool = fluid.layers.roi_pool(
             input=roi_input,
-            rois=self.rois,
+            rois=pool_rois,
             pooled_height=14,
             pooled_width=14,
             spatial_scale=0.0625)
