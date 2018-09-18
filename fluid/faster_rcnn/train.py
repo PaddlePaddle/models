@@ -24,13 +24,12 @@ add_arg('model_save_dir',   str,    'output',     "The path to save model.")
 add_arg('pretrained_model', str,    'imagenet_resnet50_fusebn', "The init model path.")
 add_arg('dataset',          str,    'coco2017', "coco2014, coco2017, and pascalvoc.")
 add_arg('data_dir',         str,    'data/COCO17', "data directory")
-add_arg('class_num',        int,    81,          "Class number.")
-add_arg('use_pyreader',     bool,   True,          "Class number.")
+add_arg('class_num',        int,    81,             "Class number.")
+add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
 # SOLVER
 add_arg('learning_rate',    float,  0.01,     "Learning rate.")
-add_arg('num_passes',       int,    7,        "Epoch number.")
 add_arg('max_iter',         int,    180000,   "Iter number.")
-add_arg('log_window',       int,    20,       "Log smooth window, set 1 for debug, set 20 for train.")
+add_arg('log_window',       int,    1,        "Log smooth window, set 1 for debug, set 20 for train.")
 add_arg('snapshot_stride',  int,    10000,    "save model every snapshot stride.")
 # RPN
 add_arg('anchor_sizes',     int,    [32,64,128,256,512],  "The size of anchors.")
@@ -48,8 +47,6 @@ add_arg('debug',            bool,   False,   "Debug mode")
 #yapf: enable
 
 def train(cfg):
-    num_passes = cfg.num_passes
-    batch_size = cfg.batch_size
     learning_rate = cfg.learning_rate
     image_shape = [3, cfg.max_size, cfg.max_size]
 
@@ -135,10 +132,8 @@ def train(cfg):
                 start_time = time.time()
                 losses = train_exe.run(fetch_list=[v.name for v in fetch_list])
                 lr = np.array(fluid.global_scope().find_var('learning_rate').get_tensor())
-                # print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                #       epoc_id, iter_id, lr[0], losses[0][0], start_time - prev_start_time))
                 smoothed_loss.add_value(losses[0][0])
-                print("Batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
+                print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                       iter_id, lr[0], smoothed_loss.get_median_value(), start_time - prev_start_time))
                 #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
                 if (iter_id + 1) % cfg.snapshot_stride == 0:
@@ -166,12 +161,6 @@ def train(cfg):
 
     train_step_pyreader()
     save_model('model_final')
-    # for epoc_id in range(num_passes):
-    #     if cfg.use_pyreader:
-    #         train_step_pyreader(epoc_id)
-    #     else:
-    #         train_step(epoc_id)
-    #     save_model(str(epoc_id))
 
 if __name__ == '__main__':
     args = parser.parse_args()
