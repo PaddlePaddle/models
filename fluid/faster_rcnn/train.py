@@ -5,7 +5,7 @@ import argparse
 import functools
 import shutil
 import cPickle
-from utility import add_arguments, print_arguments
+from utility import add_arguments, print_arguments, SmoothedValue
 
 import paddle
 import paddle.fluid as fluid
@@ -24,11 +24,13 @@ add_arg('model_save_dir',   str,    'output',     "The path to save model.")
 add_arg('pretrained_model', str,    'imagenet_resnet50_fusebn', "The init model path.")
 add_arg('dataset',          str,    'coco2017', "coco2014, coco2017, and pascalvoc.")
 add_arg('data_dir',         str,    'data/COCO17', "data directory")
-add_arg('class_num',        int,   81,          "Class number.")
-add_arg('use_pyreader',     bool,   True,          "Class number.")
+add_arg('class_num',        int,    81,             "Class number.")
+add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
 # SOLVER
 add_arg('learning_rate',    float,  0.01,     "Learning rate.")
-add_arg('num_passes',       int,    20,        "Epoch number.")
+add_arg('max_iter',         int,    180000,   "Iter number.")
+add_arg('log_window',       int,    1,        "Log smooth window, set 1 for debug, set 20 for train.")
+add_arg('snapshot_stride',  int,    10000,    "save model every snapshot stride.")
 # RPN
 add_arg('anchor_sizes',     int,    [32,64,128,256,512],  "The size of anchors.")
 add_arg('aspect_ratios',    float,  [0.5,1.0,2.0],    "The ratio of anchors.")
@@ -45,8 +47,6 @@ add_arg('debug',            bool,   False,   "Debug mode")
 #yapf: enable
 
 def train(cfg):
-    num_passes = cfg.num_passes
-    batch_size = cfg.batch_size
     learning_rate = cfg.learning_rate
     image_shape = [3, cfg.max_size, cfg.max_size]
 
@@ -121,53 +121,58 @@ def train(cfg):
 
     fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, loss_cls, loss_bbox]
 
-    def train_step_pyreader(epoc_id):
+    def train_step_pyreader():
         py_reader.start()
+        smoothed_loss = SmoothedValue(cfg.log_window)
         try:
             start_time = time.time()
             prev_start_time = start_time
             every_pass_loss = []
-            batch_id = 0
-            while True:
+            for iter_id in range(cfg.max_iter):
                 prev_start_time = start_time
                 start_time = time.time()
                 losses = train_exe.run(fetch_list=[v.name for v in fetch_list])
                 every_pass_loss.append(np.mean(np.array(losses[0])))
+                smoothed_loss.add_value(np.mean(np.array(losses[0])))
                 lr = np.array(fluid.global_scope().find_var('learning_rate').get_tensor())
-                print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                      epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
-                batch_id += 1
+                print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
+                      iter_id, lr[0], smoothed_loss.get_median_value(), start_time - prev_start_time))
                 #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
+                if (iter_id + 1) % cfg.snapshot_stride == 0:
+                    save_model("model_iter{}".format(iter_id))
         except fluid.core.EOFException:
             py_reader.reset()
         return np.mean(every_pass_loss)
 
-    def train_step(epoc_id):
+    def train_step():
         start_time = time.time()
         prev_start_time = start_time
         start = start_time
         every_pass_loss = []
-        for batch_id, data in enumerate(train_reader()):
+        smoothed_loss = SmoothedValue(cfg.log_window)
+        for iter_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
             losses = train_exe.run(fetch_list=[v.name for v in fetch_list],
                                    feed=feeder.feed(data))
             loss_v = np.mean(np.array(losses[0]))
             every_pass_loss.append(loss_v)
-
+            smoothed_loss.add_value(loss_v)
             lr = np.array(fluid.global_scope().find_var('learning_rate').get_tensor())
-            print("Epoc {:d}, batch {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                  epoc_id, batch_id, lr[0], losses[0][0], start_time - prev_start_time))
+            print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
+                  iter_id, lr[0], smoothed_loss.get_median_value(), start_time - prev_start_time))
             #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
+            if (iter_id + 1) % cfg.snapshot_stride == 0:
+                save_model("model_iter{}".format(iter_id))
+            if (iter_id + 1) == cfg.max_iter:
+                break
         return np.mean(every_pass_loss)
 
-
-    for epoc_id in range(num_passes):
-        if cfg.use_pyreader:
-            train_step_pyreader(epoc_id)
-        else:
-            train_step(epoc_id)
-        save_model(str(epoc_id))
+    if cfg.use_pyreader:
+        train_step_pyreader()
+    else:
+        train_step()
+    save_model('model_final')
 
 if __name__ == '__main__':
     args = parser.parse_args()

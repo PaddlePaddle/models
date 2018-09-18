@@ -22,6 +22,7 @@ import os
 import time
 import copy
 import six
+from collections import deque
 
 from roidbs import JsonDataset
 import data_utils
@@ -67,28 +68,47 @@ def coco(settings, mode, batch_size=None, shuffle=False):
 
     print("{} on {} with {} roidbs".format(mode, settings.dataset, len(roidbs)))
 
-    def reader():
-        if mode == "train" and shuffle:
-            random.shuffle(roidbs)
-        batch_out = []
-        for roidb in roidbs:
-            im, im_scales = data_utils.get_image_blob(roidb, settings)
-            im_id = roidb['id']
+    def roidb_reader(roidb):
+        im, im_scales = data_utils.get_image_blob(roidb, settings)
+        im_id = roidb['id']
+        im_height = np.round(roidb['height'] * im_scales)
+        im_width = np.round(roidb['width'] * im_scales)
+        im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
+        gt_boxes = roidb['gt_boxes'].astype('float32')
+        gt_classes = roidb['gt_classes'].astype('int32')
+        is_crowd = roidb['is_crowd'].astype('int32')
+        return im, gt_boxes, gt_classes, is_crowd, im_info, im_id
 
-            im_height = np.round(roidb['height'] * im_scales)
-            im_width = np.round(roidb['width'] * im_scales)
-            im_info = np.array(
-                [im_height, im_width, im_scales], dtype=np.float32)
-            gt_boxes = roidb['gt_boxes'].astype('float32')
-            gt_classes = roidb['gt_classes'].astype('int32')
-            is_crowd = roidb['is_crowd'].astype('int32')
-            if mode == 'train' and gt_boxes.shape[0] == 0:
-                continue
-            batch_out.append(
-                (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
-            if len(batch_out) == batch_size:
-                yield batch_out
-                batch_out = []
+    def reader():
+        if mode == "train":
+            roidb_perm = deque(np.random.permutation(roidbs))
+            roidb_cur = 0
+            batch_out = []
+            while True:
+                roidb = roidb_perm[0]
+                roidb_cur += 1
+                roidb_perm.rotate(-1)
+                if roidb_cur >= len(roidbs):
+                    roidb_perm = deque(np.random.permutation(roidbs))
+                im, gt_boxes, gt_classes, is_crowd, im_info, im_id = roidb_reader(
+                    roidb)
+                if gt_boxes.shape[0] == 0:
+                    continue
+                batch_out.append(
+                    (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
+                if len(batch_out) == batch_size:
+                    yield batch_out
+                    batch_out = []
+        else:
+            batch_out = []
+            for roidb in roidbs:
+                im, gt_boxes, gt_classes, is_crowd, im_info, im_id = roidb_reader(
+                    roidb)
+                batch_out.append(
+                    (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
+                if len(batch_out) == batch_size:
+                    yield batch_out
+                    batch_out = []
 
     return reader
 

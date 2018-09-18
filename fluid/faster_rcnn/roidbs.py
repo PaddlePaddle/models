@@ -45,7 +45,7 @@ class JsonDataset(object):
     """A class representing a COCO json dataset."""
 
     def __init__(self, args, train=False):
-        logger.debug('Creating: {}'.format(args.dataset))
+        print('Creating: {}'.format(args.dataset))
         self.name = args.dataset
         self.is_train = train
         if self.is_train:
@@ -89,13 +89,14 @@ class JsonDataset(object):
             for entry in roidb:
                 self._add_gt_annotations(entry)
             end_time = time.time()
-            logger.debug('_add_gt_annotations took {:.3f}s'.format(end_time -
-                                                                   start_time))
+            print('_add_gt_annotations took {:.3f}s'.format(end_time -
+                                                            start_time))
 
-            logger.info('Appending horizontally-flipped training examples...')
+            print('Appending horizontally-flipped training examples...')
             self._extend_with_flipped_entries(roidb)
-        logger.info('Loaded dataset: {:s}'.format(self.name))
-        logger.info('{:d} roidb entries'.format(len(roidb)))
+        print('Loaded dataset: {:s}'.format(self.name))
+        print('{:d} roidb entries'.format(len(roidb)))
+        self._filter_for_training(roidb)
         return roidb
 
     def _prep_roidb_entry(self, entry):
@@ -182,3 +183,22 @@ class JsonDataset(object):
             flipped_entry['flipped'] = True
             flipped_roidb.append(flipped_entry)
         roidb.extend(flipped_roidb)
+
+    def _filter_for_training(self, roidb):
+        """Remove roidb entries that have no usable RoIs based on config settings.
+        """
+
+        def is_valid(entry):
+            # Valid images have:
+            #   (1) At least one groundtruth RoI OR
+            #   (2) At least one background RoI
+            gt_boxes = entry['gt_boxes']
+            # image is only valid if such boxes exist
+            valid = len(gt_boxes) > 0
+            return valid
+
+        num = len(roidb)
+        filtered_roidb = [entry for entry in roidb if is_valid(entry)]
+        num_after = len(filtered_roidb)
+        print('Filtered {} roidb entries: {} -> {}'.format(num - num_after, num,
+                                                           num_after))
