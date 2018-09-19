@@ -41,7 +41,7 @@ env CUDA_VISIBLE_DEVICES=0 python c_gan.py --output="./result"
 conditianalGAN训练19轮的模型预测效果如图2所示：
 
 <p align="center">
-<img src="images/conditionalGAN_demo.jpg" width="620" hspace='10'/> <br/>
+<img src="images/conditionalGAN_demo.png" width="620" hspace='10'/> <br/>
 <strong>图 2</strong>
 </p>
 
