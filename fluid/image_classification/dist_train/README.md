@@ -5,6 +5,8 @@ large-scaled distributed training with two distributed architecture: parameter s
 
 ## Getting Started
 
+Before getting started, please make sure you have finished the imagenet [Data Preparation](../README.md#data-preparation).
+
 1. The entrypoint file is `dist_train.py`, some important flags are as follows:
 
     - `model`, the model to run with, such as `ResNet50`, `ResNet101` and etc..
@@ -43,7 +45,8 @@ In this example, we launched 4 parameter server instances and 4 trainer instance
         --model=ResNet50 \
         --batch_size=32 \
         --update_method=pserver \
-        --device=CPU
+        --device=CPU \
+        --data_dir=../data/ILSVRC2012
     ```
 
 1. launch trainer process
@@ -58,7 +61,8 @@ In this example, we launched 4 parameter server instances and 4 trainer instance
         --model=ResNet50 \
         --batch_size=32 \
         --update_method=pserver \
-        --device=GPU
+        --device=GPU \
+        --data_dir=../data/ILSVRC2012
 
     ```
 
@@ -75,7 +79,8 @@ In this example, we launched 4 parameter server instances and 4 trainer instance
         --model=ResNet50 \
         --batch_size=32 \
         --update_method=pserver \
-        --device=GPU
+        --device=GPU \
+        --data_dir=../data/ILSVRC2012
     ```
 
 ### Training Curve

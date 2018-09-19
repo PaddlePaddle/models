@@ -123,5 +123,11 @@ def parse_args():
         choices=['reduce', 'all_reduce'],
         default='all_reduce',
         help='Specify the reduce strategy, can be reduce, all_reduce')
+    parser.add_argument(
+        '--data_dir',
+        type=str,
+        default="../data/ILSVRC2012",
+        help="The ImageNet dataset root dir."
+    )
     args = parser.parse_args()
     return args

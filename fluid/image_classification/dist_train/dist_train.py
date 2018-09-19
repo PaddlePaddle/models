@@ -26,9 +26,8 @@ import paddle.fluid.transpiler.distribute_transpiler as distribute_transpiler
 import sys
 sys.path.append("..")
 import models
-from imagenet_reader import train, val
-
 from args import *
+from reader import train, val
 
 def get_model(args, is_train, main_prog, startup_prog):
     pyreader = None
@@ -38,9 +37,9 @@ def get_model(args, is_train, main_prog, startup_prog):
     else:
         dshape = [224, 224, 3]
     if is_train:
-        reader = train(xmap=False)
+        reader = train(data_dir=args.data_dir)
     else:
-        reader = val(xmap=False)
+        reader = val(data_dir=args.data_dir)
 
     trainer_count = int(os.getenv("PADDLE_TRAINERS", "1"))
     with fluid.program_guard(main_prog, startup_prog):
