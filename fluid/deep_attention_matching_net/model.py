@@ -137,8 +137,8 @@ class Net(object):
                 r_a_t = fluid.layers.concat(input=r_a_t_stack, axis=1)
 
             # sim shape: [batch_size, 2*(stack_num+2), max_turn_len, max_turn_len]    
-            sim = fluid.layers.matmul(x=t_a_r, y=r_a_t, transpose_y=True)
-            sim = fluid.layers.scale(x=sim, scale=1 / np.sqrt(200.0))
+            sim = fluid.layers.matmul(
+                x=t_a_r, y=r_a_t, transpose_y=True, alpha=1 / np.sqrt(200.0))
             sim_turns.append(sim)
 
         if self.use_stack_op:
