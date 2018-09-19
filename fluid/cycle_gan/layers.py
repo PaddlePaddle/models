@@ -93,7 +93,7 @@ def conv2d(input,
     if norm:
         conv = instance_norm(input=conv, name=name + "_norm")
     if relu:
-        conv = fluid.layers.leaky_relu(conv, relufactor)
+        conv = fluid.layers.leaky_relu(conv, alpha=relufactor)
     return conv
 
 
@@ -148,5 +148,5 @@ def deconv2d(input,
     if norm:
         conv = instance_norm(input=conv, name=name + "_norm")
     if relu:
-        conv = fluid.layers.leaky_relu(conv, relufactor)
+        conv = fluid.layers.leaky_relu(conv, alpha=relufactor)
     return conv
