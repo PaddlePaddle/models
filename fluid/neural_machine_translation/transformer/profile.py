@@ -97,6 +97,11 @@ def parse_args():
         default=20,
         help="The iteration number to run in profiling.")
     parser.add_argument(
+        "--use_parallel_exe",
+        type=bool,
+        default=False,
+        help="The flag indicating whether to use ParallelExecutor.")
+    parser.add_argument(
         'opts',
         help='See config.py for all options',
         default=None,
@@ -210,9 +215,15 @@ def main(args):
                 reader_time.append(end_time - start_time)
 
                 start_time = time.time()
-                outs = train_exe.run(
-                    fetch_list=[sum_cost.name, token_num.name],
-                    feed=feed_dict_list)
+                if args.use_parallel_exe:
+                    outs = train_exe.run(
+                        fetch_list=[sum_cost.name, token_num.name],
+                        feed=feed_dict_list)
+                else:
+                    outs = exe.run(program=train_prog,
+                                   fetch_list=[sum_cost.name, token_num.name],
+                                   feed=feed_dict_list[0]
+                                   if feed_dict_list is not None else None)
                 end_time = time.time()
                 run_time.append(end_time - start_time)
 

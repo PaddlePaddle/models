@@ -420,10 +420,10 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
     train_data = prepare_data_generator(
         args, is_test=False, count=dev_count, pyreader=pyreader)
 
-    exec_strategy = fluid.ExecutionStrategy()
     # For faster executor
+    exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.use_experimental_executor = True
-    exec_strategy.num_iteration_per_drop_scope = 5
+    # exec_strategy.num_iteration_per_drop_scope = 5
     build_strategy = fluid.BuildStrategy()
     # Since the token number differs among devices, customize gradient scale to
     # use token average cost among multi-devices. and the gradient scale is
@@ -446,10 +446,6 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                         np.log(TrainTaskConfig.label_smooth_eps / (
                             ModelHyperParams.trg_vocab_size - 1) + 1e-20))
 
-    interval = 100
-    accu_time = 0
-    data_accu_time = 0
-
     step_idx = 0
     init_flag = True
     for pass_id in six.moves.xrange(TrainTaskConfig.pass_num):
@@ -464,41 +460,27 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
         batch_id = 0
         while True:
             try:
-
-                iter_start_time = time.time()
-
                 feed_dict_list = prepare_feed_dict_list(data_generator,
                                                         init_flag, dev_count)
 
-                prepare_end_time = time.time()
-                data_accu_time += prepare_end_time - iter_start_time
+                outs = train_exe.run(
+                    fetch_list=[sum_cost.name, token_num.name],
+                    feed=feed_dict_list)
+                sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[
+                    1])
+                # sum the cost from multi-devices
+                total_sum_cost = sum_cost_val.sum()
+                total_token_num = token_num_val.sum()
+                total_avg_cost = total_sum_cost / total_token_num
 
-                if step_idx % interval == interval - 1:
-                    outs = train_exe.run(
-                        fetch_list=[sum_cost.name, token_num.name],
-                        feed=feed_dict_list)
-                    sum_cost_val, token_num_val = np.array(outs[0]), np.array(
-                        outs[1])
-                    # sum the cost from multi-devices
-                    total_sum_cost = sum_cost_val.sum()
-                    total_token_num = token_num_val.sum()
-                    total_avg_cost = total_sum_cost / total_token_num
+                print("step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
+                      "normalized loss: %f, ppl: %f" %
+                      (step_idx, pass_id, batch_id, total_avg_cost,
+                       total_avg_cost - loss_normalizer,
+                       np.exp([min(total_avg_cost, 100)])))
 
-                    print("step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                          "normalized loss: %f, ppl: %f" %
-                          (step_idx, pass_id, batch_id, total_avg_cost,
-                           total_avg_cost - loss_normalizer,
-                           np.exp([min(total_avg_cost, 100)])))
-                else:
-                    outs = train_exe.run(fetch_list=[], feed=feed_dict_list)
-
-                iter_end_time = time.time()
-                accu_time += iter_end_time - iter_start_time
-                if step_idx % interval == interval - 1:
-                    print("accu_time: %f, data_accu_time: %f" %
-                          (accu_time, data_accu_time))
-
-                if step_idx % int(TrainTaskConfig.save_freq) == 0:
+                if step_idx % int(TrainTaskConfig.
+                                  save_freq) == TrainTaskConfig.save_freq - 1:
                     fluid.io.save_persistables(
                         exe,
                         os.path.join(TrainTaskConfig.ckpt_dir,
