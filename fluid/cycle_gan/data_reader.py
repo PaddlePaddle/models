@@ -15,7 +15,7 @@ def image_shape():
 
 
 def max_images_num():
-    return 1
+    return 1335
 
 
 def reader_creater(list_file, cycle=True, shuffle=True, return_name=False):
