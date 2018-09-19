@@ -41,8 +41,10 @@ class Settings(object):
             self.val_data_dir = 'val2014'
         elif 'coco2017' in args.dataset:
             self.class_nums = 81
-            self.train_file_list = 'annotations/instances_train2017.json'
-            self.train_data_dir = 'train2017'
+            #self.train_file_list = 'annotations/instances_train2017.json'
+            #self.train_data_dir = 'train2017'
+            self.train_file_list = 'annotations/instances_val2017.json'
+            self.train_data_dir = 'val2017'
             self.val_file_list = 'annotations/instances_val2017.json'
             self.val_data_dir = 'val2017'
         else:
@@ -52,7 +54,14 @@ class Settings(object):
             np.newaxis, np.newaxis, :].astype('float32')
 
 
-def coco(settings, mode, batch_size=None, shuffle=False):
+def coco(settings,
+         mode,
+         batch_size=None,
+         total_batch_size=None,
+         padding_total=False,
+         shuffle=False):
+    assert total_batch_size % batch_size == 0
+    total_batch_size = total_batch_size if total_batch_size else batch_size
     if mode == 'train':
         settings.train_file_list = os.path.join(settings.data_dir,
                                                 settings.train_file_list)
@@ -79,6 +88,22 @@ def coco(settings, mode, batch_size=None, shuffle=False):
         is_crowd = roidb['is_crowd'].astype('int32')
         return im, gt_boxes, gt_classes, is_crowd, im_info, im_id
 
+    def padding_minibatch(batch_data):
+        if len(batch_data) == 1:
+            return batch_data
+
+        max_size = 0
+        for data in batch_data:
+            max_size = np.max([np.max(data[0].shape[1:]), max_size])
+
+        padding_batch = []
+        for data in batch_data:
+            im_c, im_h, im_w = data[0].shape[:]
+            padding_im = np.zeros((im_c, max_size, max_size), dtype=np.float32)
+            padding_im[:, :im_h, :im_w] = data[0]
+            padding_batch.append((padding_im, ) + data[1:])
+        return padding_batch
+
     def reader():
         if mode == "train":
             roidb_perm = deque(np.random.permutation(roidbs))
@@ -96,9 +121,21 @@ def coco(settings, mode, batch_size=None, shuffle=False):
                     continue
                 batch_out.append(
                     (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
-                if len(batch_out) == batch_size:
-                    yield batch_out
-                    batch_out = []
+                if not padding_total:
+                    if len(batch_out) == batch_size:
+                        yield padding_minibatch(batch_out)
+                        batch_out = []
+                else:
+                    if len(batch_out) == total_batch_size:
+                        batch_out = padding_minibatch(batch_out)
+                        for i in range(total_batch_size / batch_size):
+                            sub_batch_out = []
+                            for j in range(batch_size):
+                                sub_batch_out.append(batch_out[i * batch_size +
+                                                               j])
+                            yield sub_batch_out
+                            sub_batch_out = []
+                        batch_out = []
         else:
             batch_out = []
             for roidb in roidbs:
@@ -113,9 +150,19 @@ def coco(settings, mode, batch_size=None, shuffle=False):
     return reader
 
 
-def train(settings, batch_size, shuffle=True):
-    return coco(settings, 'train', batch_size, shuffle)
+def train(settings,
+          batch_size,
+          total_batch_size,
+          padding_total=False,
+          shuffle=True):
+    return coco(
+        settings,
+        'train',
+        batch_size,
+        total_batch_size,
+        padding_total,
+        shuffle=shuffle)
 
 
-def test(settings, batch_size):
-    return coco(settings, 'test', batch_size, shuffle=False)
+def test(settings, batch_size, total_batch_size=None, padding_total=False):
+    return coco(settings, 'test', batch_size, total_batch_size, shuffle=False)
