@@ -41,10 +41,8 @@ class Settings(object):
             self.val_data_dir = 'val2014'
         elif 'coco2017' in args.dataset:
             self.class_nums = 81
-            #self.train_file_list = 'annotations/instances_train2017.json'
-            #self.train_data_dir = 'train2017'
-            self.train_file_list = 'annotations/instances_val2017.json'
-            self.train_data_dir = 'val2017'
+            self.train_file_list = 'annotations/instances_train2017.json'
+            self.train_data_dir = 'train2017'
             self.val_file_list = 'annotations/instances_val2017.json'
             self.val_data_dir = 'val2017'
         else:
@@ -60,8 +58,8 @@ def coco(settings,
          total_batch_size=None,
          padding_total=False,
          shuffle=False):
-    assert total_batch_size % batch_size == 0
     total_batch_size = total_batch_size if total_batch_size else batch_size
+    assert total_batch_size % batch_size == 0
     if mode == 'train':
         settings.train_file_list = os.path.join(settings.data_dir,
                                                 settings.train_file_list)
@@ -92,14 +90,13 @@ def coco(settings,
         if len(batch_data) == 1:
             return batch_data
 
-        max_size = 0
-        for data in batch_data:
-            max_size = np.max([np.max(data[0].shape[1:]), max_size])
+        max_shape = np.array([data[0].shape for data in batch_data]).max(axis=0)
 
         padding_batch = []
         for data in batch_data:
             im_c, im_h, im_w = data[0].shape[:]
-            padding_im = np.zeros((im_c, max_size, max_size), dtype=np.float32)
+            padding_im = np.zeros(
+                (im_c, max_shape[1], max_shape[2]), dtype=np.float32)
             padding_im[:, :im_h, :im_w] = data[0]
             padding_batch.append((padding_im, ) + data[1:])
         return padding_batch
@@ -152,7 +149,7 @@ def coco(settings,
 
 def train(settings,
           batch_size,
-          total_batch_size,
+          total_batch_size=None,
           padding_total=False,
           shuffle=True):
     return coco(
