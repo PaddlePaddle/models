@@ -72,7 +72,8 @@ def eval(args):
         is_train=False,
         use_random=False)
     model.build_model(image_shape)
-    rpn_rois, confs, locs = model.eval_out()
+    rpn_rois, scores, locs = model.eval_out()
+    confs = fluid.layers.softmax(scores, use_cudnn=False)
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     # yapf: disable
@@ -90,12 +91,23 @@ def eval(args):
         start = time.time()
         #image, gt_box, gt_label, is_crowd, im_info, im_id = data[0]
         im_info = []
+        image = []
         for i in range(len(data)):
             im_info.append(data[i][4])
+            image.append(data[i][0])
+        image_t = fluid.core.LoDTensor()
+        image_t.set(image, place)
 
+        im_info_t = fluid.core.LoDTensor()
+        im_info_t.set(im_info, place)
+
+        feeding = {}
+        feeding['image'] = image_t
+        feeding['im_info'] = im_info_t
         rpn_rois_v, confs_v, locs_v = exe.run(
             fetch_list=[v.name for v in fetch_list],
-            feed=feeder.feed(data),
+            #feed=feeder.feed(data),
+            feed=feeding,
             return_numpy=False)
         new_lod, nmsed_out = get_nmsed_box(args, rpn_rois_v, confs_v, locs_v,
                                            class_nums, im_info,
