@@ -65,7 +65,7 @@ def train(cfg):
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
         use_pyreader=cfg.use_pyreader,
-        use_random=False)
+        use_random=True)
     model.build_model(image_shape)
     loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
     loss_cls.persistable=True
