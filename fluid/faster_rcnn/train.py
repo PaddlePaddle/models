@@ -26,6 +26,9 @@ add_arg('dataset',          str,    'coco2017', "coco2014, coco2017, and pascalv
 add_arg('data_dir',         str,    'data/COCO17', "data directory")
 add_arg('class_num',        int,    81,             "Class number.")
 add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
+add_arg('padding_minibatch',bool,   False,
+        "If False, only resize image and not pad, image shape is different between"
+        " GPUs in one mini-batch. If True, image shape is the same in one mini-batch.")
 # SOLVER
 add_arg('learning_rate',    float,  0.01,     "Learning rate.")
 add_arg('max_iter',         int,    180000,   "Iter number.")
@@ -38,7 +41,7 @@ add_arg('variance',         float,  [1.,1.,1.,1.],    "The variance of anchors."
 add_arg('rpn_stride',       float,  16.,    "Stride of the feature map that RPN is attached.")
 # FAST RCNN
 # TRAIN TEST
-add_arg('batch_size',       int,    1,          "Minibatch size.")
+add_arg('batch_size',       int,    8,          "Minibatch size of all devices.")
 add_arg('max_size',         int,    1333,    "The max resized image size.")
 add_arg('scales',           int,    [800],    "The resized image height.")
 add_arg('batch_size_per_im',int,    512,    "fast rcnn head batch size")
@@ -103,13 +106,17 @@ def train(cfg):
         train_exe = fluid.ParallelExecutor(
             use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
 
-
+    assert cfg.batch_size % devices_num == 0
+    batch_size_per_dev = cfg.batch_size / devices_num
     if cfg.use_pyreader:
-        train_reader = reader.train(cfg, batch_size=1, shuffle=not cfg.debug)
+        train_reader = reader.train(cfg, batch_size=batch_size_per_dev,
+                                    total_batch_size=cfg.batch_size,
+                                    padding_total=cfg.padding_minibatch,
+                                    shuffle=True)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
     else:
-        train_reader = reader.train(cfg, batch_size=cfg.batch_size, shuffle=not cfg.debug)
+        train_reader = reader.train(cfg, batch_size=cfg.batch_size, shuffle=True)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
 
