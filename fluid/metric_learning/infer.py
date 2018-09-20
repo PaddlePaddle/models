@@ -56,7 +56,7 @@ def infer(args):
 
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    infer_reader = tripletloss(infer_batch_size=args.batch_size).infer_reader
+    infer_reader = paddle.batch(tripletloss().infer_reader, batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     fetch_list = [out[0].name]
