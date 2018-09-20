@@ -1,17 +1,17 @@
 # Distributed Image Classification Models Training
 
 This folder contains implementations of **Image Classification Models**, they are designed to support
-large-scaled distributed training with two distributed architecture: parameter server with RPC and ring-base with Nvidia NCCL2 library.
+large-scaled distributed training with two distributed mode: parameter server mode and NCCL2(Nvidia NCCL2 communication library) collective mode.
 
 ## Getting Started
 
-Before getting started, please make sure you have finished the imagenet [Data Preparation](../README.md#data-preparation).
+Before getting started, please make sure you have go throught the imagenet [Data Preparation](../README.md#data-preparation).
 
 1. The entrypoint file is `dist_train.py`, some important flags are as follows:
 
     - `model`, the model to run with, such as `ResNet50`, `ResNet101` and etc..
     - `batch_size`, the batch_size per device.
-    - `update_method`, specify the update method, local, pserver or nccl2.
+    - `update_method`, specify the update method, can choose from local, pserver or nccl2.
     - `device`, use CPU or GPU device.
     - `gpus`, the GPU device count that the process used.
 
@@ -29,7 +29,7 @@ Before getting started, please make sure you have finished the imagenet [Data Pr
     - `PADDLE_PSERVER_PORT`, the port of the parameter pserver listened on.
     - `PADDLE_TRAINER_IPS`, the trainer IP list, separated by ",", only be used with upadte_method is nccl2.
 
-### Pserver Server with RPC
+### Parameter Server Mode
 
 In this example, we launched 4 parameter server instances and 4 trainer instances in the cluster:
 
@@ -66,7 +66,7 @@ In this example, we launched 4 parameter server instances and 4 trainer instance
 
     ```
 
-### Ring-base with Nvidia NCCL2 library
+### NCCL2 Collective Mode
 
 1. launch trainer process
 
@@ -83,9 +83,9 @@ In this example, we launched 4 parameter server instances and 4 trainer instance
         --data_dir=../data/ILSVRC2012
     ```
 
-### Training Curve
+### Visualize the Training Process
 
-It's easy to draw the training curve accroding to the training logs, for example,
+It's easy to draw the learning curve accroding to the training logs, for example,
 the logs of ResNet50 is as follows:
 
 ``` text

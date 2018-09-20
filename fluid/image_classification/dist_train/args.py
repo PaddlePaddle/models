@@ -22,7 +22,7 @@ BENCHMARK_MODELS = [
 
 
 def parse_args():
-    parser = argparse.ArgumentParser('Fluid model benchmarks.')
+    parser = argparse.ArgumentParser('Distributed Image Classification Training.')
     parser.add_argument(
         '--model',
         type=str,
@@ -75,8 +75,6 @@ def parse_args():
         choices=['cifar10', 'flowers', 'imagenet'],
         help='Optional dataset for benchmark.')
     parser.add_argument(
-        '--infer_only', action='store_true', help='If set, run forward only.')
-    parser.add_argument(
         '--no_test',
         action='store_true',
         help='If set, do not test the testset during training.')
@@ -84,10 +82,6 @@ def parse_args():
         '--memory_optimize',
         action='store_true',
         help='If set, optimize runtime memory before start.')
-    parser.add_argument(
-        '--use_fake_data',
-        action='store_true',
-        help='If set ommit the actual read data operators.')
     parser.add_argument(
         '--update_method',
         type=str,
@@ -105,18 +99,9 @@ def parse_args():
         default=False,
         help='Whether start pserver in async mode to support ASGD')
     parser.add_argument(
-        '--use_reader_op',
-        action='store_true',
-        help='Whether to use reader op, and must specify the data path if set this to true.'
-    )
-    parser.add_argument(
         '--no_random',
         action='store_true',
         help='If set, keep the random seed and do not shuffle the data.')
-    parser.add_argument(
-        '--use_lars',
-        action='store_true',
-        help='If set, use lars for optimizers, ONLY support resnet module.')
     parser.add_argument(
         '--reduce_strategy',
         type=str,
