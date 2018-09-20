@@ -282,10 +282,7 @@ def main(args):
 
         chunk_evaluator = fluid.metrics.ChunkEvaluator()
 
-        inference_program = fluid.default_main_program().clone()
-        with fluid.program_guard(inference_program):
-            inference_program = fluid.io.get_inference_program(
-                [num_infer_chunks, num_label_chunks, num_correct_chunks])
+        inference_program = fluid.default_main_program().clone(for_test=True)
 
         train_reader = paddle.batch(
             paddle.reader.shuffle(
