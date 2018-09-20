@@ -138,6 +138,8 @@ def coco(settings,
             for roidb in roidbs:
                 im, gt_boxes, gt_classes, is_crowd, im_info, im_id = roidb_reader(
                     roidb)
+                if settings.one_eval and str(im_id) not in settings.image_name:
+                    continue
                 batch_out.append(
                     (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
                 if len(batch_out) == batch_size:

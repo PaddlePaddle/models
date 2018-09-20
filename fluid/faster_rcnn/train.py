@@ -128,7 +128,7 @@ def train(cfg):
 
     fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, loss_cls, loss_bbox]
 
-    def train_step_pyreader():
+    def train_loop_pyreader():
         py_reader.start()
         smoothed_loss = SmoothedValue(cfg.log_window)
         try:
@@ -151,7 +151,7 @@ def train(cfg):
             py_reader.reset()
         return np.mean(every_pass_loss)
 
-    def train_step():
+    def train_loop():
         start_time = time.time()
         prev_start_time = start_time
         start = start_time
@@ -176,9 +176,9 @@ def train(cfg):
         return np.mean(every_pass_loss)
 
     if cfg.use_pyreader:
-        train_step_pyreader()
+        train_loop_pyreader()
     else:
-        train_step()
+        train_loop()
     save_model('model_final')
 
 if __name__ == '__main__':

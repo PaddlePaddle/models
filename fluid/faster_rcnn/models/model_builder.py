@@ -37,7 +37,8 @@ class FasterRCNN(object):
         return loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss,
 
     def eval_out(self):
-        return [self.rpn_rois, self.cls_score, self.bbox_pred]
+        cls_prob = fluid.layers.softmax(self.cls_score, use_cudnn=False)
+        return [self.rpn_rois, cls_prob, self.bbox_pred]
 
     def build_input(self, image_shape):
         if self.use_pyreader:
@@ -215,8 +216,8 @@ class FasterRCNN(object):
         #        logits=cls_score,
         #        label=labels_int64
         #        )
-        softmax = fluid.layers.softmax(self.cls_score, use_cudnn=False)
-        loss_cls = fluid.layers.cross_entropy(softmax, labels_int64)
+        cls_prob = fluid.layers.softmax(self.cls_score, use_cudnn=False)
+        loss_cls = fluid.layers.cross_entropy(cls_prob, labels_int64)
         loss_cls = fluid.layers.reduce_mean(loss_cls)
         loss_bbox = fluid.layers.smooth_l1(
             x=self.bbox_pred,
