@@ -257,13 +257,8 @@ def split_data(data, num_part):
     ]
 
 
-def test_context(train_progm, avg_cost, train_exe, dev_count, data_input_names,
+def test_context(test_program, avg_cost, train_exe, dev_count, data_input_names,
                  sum_cost, token_num):
-    # Context to do validation.
-    test_program = train_progm.clone()
-    with fluid.program_guard(test_program):
-        test_program = fluid.io.get_inference_program([avg_cost])
-
     val_data = reader.DataReader(
         src_vocab_fpath=args.src_vocab_fpath,
         trg_vocab_fpath=args.trg_vocab_fpath,
@@ -317,7 +312,7 @@ def test_context(train_progm, avg_cost, train_exe, dev_count, data_input_names,
 
 
 def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
-               token_num, predict):
+               token_num, predict, test_program):
     # Initialize the parameters.
     if TrainTaskConfig.ckpt_path:
         fluid.io.load_persistables(exe, TrainTaskConfig.ckpt_path)
@@ -362,7 +357,7 @@ def train_loop(exe, train_progm, dev_count, sum_cost, avg_cost, lr_scheduler,
                                                                              -1] + label_data_input_fields
 
     if args.val_file_pattern is not None:
-        test = test_context(train_progm, avg_cost, train_exe, dev_count,
+        test = test_context(test_program, avg_cost, train_exe, dev_count,
                             data_input_names, sum_cost, token_num)
 
     # the best cross-entropy value with label smoothing
@@ -486,6 +481,8 @@ def train(args):
                                          TrainTaskConfig.warmup_steps,
                                          TrainTaskConfig.learning_rate)
 
+    test_program = fluid.default_main_program().clone(for_test=True)
+
     if args.local:
         optimizer = fluid.optimizer.Adam(
             learning_rate=lr_scheduler.learning_rate,
@@ -513,7 +510,7 @@ def train(args):
         print("local start_up:")
         train_loop(exe,
                    fluid.default_main_program(), dev_count, sum_cost, avg_cost,
-                   lr_scheduler, token_num, predict)
+                   lr_scheduler, token_num, predict, test_program)
     else:
         port = os.getenv("PADDLE_PORT", "6174")
         pserver_ips = os.getenv("PADDLE_PSERVERS")  # ip,ip...
@@ -550,7 +547,7 @@ def train(args):
             with open('trainer_prog.desc', 'w') as f:
                 f.write(str(trainer_prog))
             train_loop(exe, trainer_prog, dev_count, sum_cost, avg_cost,
-                       lr_scheduler, token_num, predict)
+                       lr_scheduler, token_num, predict, test_program)
         else:
             print("environment var TRAINER_ROLE should be TRAINER os PSERVER")
 

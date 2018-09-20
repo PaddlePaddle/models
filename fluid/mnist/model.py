@@ -72,7 +72,8 @@ def cnn_model(data):
     # TODO(dzhwinter) : refine the initializer and random seed settting
     SIZE = 10
     input_shape = conv_pool_2.shape
-    param_shape = [six.moves.reduce(lambda a, b: a * b, input_shape[1:], 1)] + [SIZE]
+    param_shape = [six.moves.reduce(lambda a, b: a * b, input_shape[1:], 1)
+                   ] + [SIZE]
     scale = (2.0 / (param_shape[0]**2 * SIZE))**0.5
 
     predict = fluid.layers.fc(
@@ -90,7 +91,8 @@ def eval_test(exe, batch_acc, batch_size_tensor, inference_program):
         paddle.dataset.mnist.test(), batch_size=args.batch_size)
     test_pass_acc = fluid.average.WeightedAverage()
     for batch_id, data in enumerate(test_reader()):
-        img_data = np.array([x[0].reshape([1, 28, 28]) for x in data]).astype(DTYPE)
+        img_data = np.array(
+            [x[0].reshape([1, 28, 28]) for x in data]).astype(DTYPE)
         y_data = np.array([x[1] for x in data]).astype("int64")
         y_data = y_data.reshape([len(y_data), 1])
 
@@ -123,10 +125,7 @@ def run_benchmark(model, args):
         input=predict, label=label, total=batch_size_tensor)
 
     # inference program
-    inference_program = fluid.default_main_program().clone()
-    with fluid.program_guard(inference_program):
-        inference_program = fluid.io.get_inference_program(
-            target_vars=[batch_acc, batch_size_tensor])
+    inference_program = fluid.default_main_program().clone(for_test=True)
 
     # Optimization
     opt = fluid.optimizer.AdamOptimizer(
