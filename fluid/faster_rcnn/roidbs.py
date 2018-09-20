@@ -96,7 +96,8 @@ class JsonDataset(object):
             self._extend_with_flipped_entries(roidb)
         print('Loaded dataset: {:s}'.format(self.name))
         print('{:d} roidb entries'.format(len(roidb)))
-        self._filter_for_training(roidb)
+        if self.is_train:
+            self._filter_for_training(roidb)
         return roidb
 
     def _prep_roidb_entry(self, entry):
