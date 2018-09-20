@@ -49,14 +49,13 @@ def eval(args):
     out = model.net(input=image, class_dim=200)
 
     if loss_name == "tripletloss":
-        metricloss = tripletloss(test_batch_size=args.batch_size, margin=0.1)
+        metricloss = tripletloss()
         cost = metricloss.loss(out[0])
     elif loss_name == "quadrupletloss":
-        metricloss = quadrupletloss(test_batch_size=args.batch_size)
+        metricloss = quadrupletloss()
         cost = metricloss.loss(out[0])
     elif loss_name == "emlloss":
-        metricloss = emlloss(
-            test_batch_size=args.batch_size, samples_each_class=2, fea_dim=2048)
+        metricloss = emlloss()
         cost = metricloss.loss(out[0])
 
     avg_cost = fluid.layers.mean(x=cost)
@@ -76,7 +75,7 @@ def eval(args):
 
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    test_reader = metricloss.test_reader
+    test_reader = paddle.batch(metricloss.test_reader, batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     fetch_list = [avg_cost.name, out[0].name]
@@ -84,11 +83,14 @@ def eval(args):
     test_info = [[]]
     f = []
     l = []
-    for batch_id, (data, label) in enumerate(test_reader()):
+    for batch_id, data in enumerate(test_reader()):
+        if len(data) < args.batch_size:
+            continue
         t1 = time.time()
         loss, feas = exe.run(test_program,
                              fetch_list=fetch_list,
                              feed=feeder.feed(data))
+        label = np.asarray([x[1] for x in data])
         f.append(feas)
         l.append(label)
 
@@ -96,15 +98,13 @@ def eval(args):
         period = t2 - t1
         loss = np.mean(np.array(loss))
         test_info[0].append(loss)
-        if batch_id % 10 == 0:
-            recall = recall_topk(feas, label, k=1)
-            print("testbatch {0}, loss {1}, recall {2}, time {3}".format(  \
-                  batch_id, loss, recall, "%2.2f sec" % period))
-            sys.stdout.flush()
+        if batch_id % 20 == 0:
+            print("testbatch {0}, loss {1}, time {2}".format(  \
+                  batch_id, loss, "%2.2f sec" % period))
 
     test_loss = np.array(test_info[0]).mean()
     f = np.vstack(f)
-    l = np.vstack(l)
+    l = np.hstack(l)
     recall = recall_topk(f, l, k=1)
     print("End test, test_loss {0}, test recall {1}".format(  \
           test_loss, recall))

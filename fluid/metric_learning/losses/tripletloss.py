@@ -2,14 +2,10 @@ import datareader as reader
 import paddle.fluid as fluid
 
 class tripletloss():
-    def __init__(self, 
-                 train_batch_size = 120,
-                 test_batch_size = 120, 
-                 infer_batch_size = 120,
-                 margin=0.1):
+    def __init__(self, train_batch_size = 120, margin=0.1):
         self.train_reader = reader.triplet_train(train_batch_size)
-        self.test_reader = reader.test(test_batch_size)
-        self.infer_reader = reader.infer(infer_batch_size)
+        self.test_reader = reader.test()
+        self.infer_reader = reader.infer()
         self.margin = margin
 
     def loss(self, input):
