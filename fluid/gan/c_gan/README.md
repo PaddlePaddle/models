@@ -31,24 +31,23 @@ env CUDA_VISIBLE_DEVICES=0 python c_gan.py --output="./result"
 
 图1为conditionalGAN训练损失示意图，其中横坐标轴为训练轮数，纵轴为在训练集上的损失。其中，'G_loss'和'D_loss'分别为生成网络和判别器网络的训练损失。conditionalGAN训练19轮的模型预测效果如图2所示.
 
-<p style="background-color: #fff; border: 0px; align: center">
-
+<p style="background-color: #fff; align: center">
 <table>
 <tbody>
 <tr>
-    <td style="border: 0px">
+    <td>
         <img src="images/conditionalGAN_loss.png" width="400" hspace='10'/>
     </td>
-    <td style="border: 0px">
+    <td>
         <img src="images/conditionalGAN_demo.png" width="300" hspace='10'/>
     </td>
 </tr>
-<tr style="background-color: #fff; border-top: 0px">
-    <td style="border: 0px; align: center">
-        <strong>图 1</strong>
+<tr>
+    <td>
+        <strong align="center">图 1</strong>
     </td>
-    <td style="border: 0px; align: center">
-        <strong>图 2</strong>
+    <td>
+        <strong align="center">图 2</strong>
     </td>
 </tr>
 </tbody>
