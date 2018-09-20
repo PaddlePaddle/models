@@ -1,4 +1,5 @@
 import glob
+import six
 import os
 import tarfile
 
@@ -259,8 +260,10 @@ class DataReader(object):
                 if not os.path.isfile(fpath):
                     raise IOError("Invalid file: %s" % fpath)
 
-                with open(fpath, "r") as f:
+                with open(fpath, "rb") as f:
                     for line in f:
+                        if six.PY3:
+                            line = line.decode()
                         fields = line.strip("\n").split(self._field_delimiter)
                         if (not self._only_src and len(fields) == 2) or (
                                 self._only_src and len(fields) == 1):
@@ -269,8 +272,10 @@ class DataReader(object):
     @staticmethod
     def load_dict(dict_path, reverse=False):
         word_dict = {}
-        with open(dict_path, "r") as fdict:
+        with open(dict_path, "rb") as fdict:
             for idx, line in enumerate(fdict):
+                if six.PY3:
+                    line = line.decode()
                 if reverse:
                     word_dict[idx] = line.strip("\n")
                 else:
