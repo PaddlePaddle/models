@@ -59,13 +59,14 @@ def coco(settings,
          padding_total=False,
          shuffle=False):
     total_batch_size = total_batch_size if total_batch_size else batch_size
-    assert total_batch_size % batch_size == 0
+    if mode != 'infer':
+        assert total_batch_size % batch_size == 0
     if mode == 'train':
         settings.train_file_list = os.path.join(settings.data_dir,
                                                 settings.train_file_list)
         settings.train_data_dir = os.path.join(settings.data_dir,
                                                settings.train_data_dir)
-    elif mode == 'test':
+    elif mode == 'test' or mode == 'infer':
         settings.val_file_list = os.path.join(settings.data_dir,
                                               settings.val_file_list)
         settings.val_data_dir = os.path.join(settings.data_dir,
@@ -81,7 +82,7 @@ def coco(settings,
         im_height = np.round(roidb['height'] * im_scales)
         im_width = np.round(roidb['width'] * im_scales)
         im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
-        if mode == 'test':
+        if mode == 'test' or mode == 'infer':
             return im, im_info, im_id
         gt_boxes = roidb['gt_boxes'].astype('float32')
         gt_classes = roidb['gt_classes'].astype('int32')
@@ -135,17 +136,22 @@ def coco(settings,
                             yield sub_batch_out
                             sub_batch_out = []
                         batch_out = []
-        else:
+
+        elif mode == "test":
             batch_out = []
             for roidb in roidbs:
                 im, im_info, im_id = roidb_reader(roidb, mode)
-                if settings.one_eval and str(im_id) not in settings.image_name:
-                    continue
                 batch_out.append((im, im_info, im_id))
                 if len(batch_out) == batch_size:
                     yield batch_out
                     batch_out = []
             if len(batch_out) != 0:
+                yield batch_out
+
+        else:
+            for roidb in roidbs:
+                im, im_info, im_id = roidb_reader(roidb, mode)
+                batch_out = [(im, im_info, im_id)]
                 yield batch_out
 
     return reader
@@ -167,3 +173,7 @@ def train(settings,
 
 def test(settings, batch_size, total_batch_size=None, padding_total=False):
     return coco(settings, 'test', batch_size, total_batch_size, shuffle=False)
+
+
+def infer(settings):
+    return coco(settings, 'infer')

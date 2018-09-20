@@ -159,7 +159,7 @@ class FasterRCNN(object):
                 is_crowd=self.is_crowd,
                 gt_boxes=self.gt_box,
                 im_info=self.im_info,
-                batch_size_per_im=512,
+                batch_size_per_im=self.cfg.batch_size_per_im,
                 fg_fraction=0.25,
                 fg_thresh=0.5,
                 bg_thresh_hi=0.5,
