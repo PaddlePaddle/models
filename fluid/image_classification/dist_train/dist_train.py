@@ -22,7 +22,6 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.core as core
-import paddle.fluid.transpiler.distribute_transpiler as distribute_transpiler
 import sys
 sys.path.append("..")
 import models
@@ -59,8 +58,6 @@ def get_model(args, is_train, main_prog, startup_prog):
 
             batch_acc1 = fluid.layers.accuracy(input=predict, label=label, k=1)
             batch_acc5 = fluid.layers.accuracy(input=predict, label=label, k=5)
-
-            
 
             # configure optimize
             optimizer = None
@@ -147,9 +144,9 @@ def dist_transpile(trainer_id, args, train_prog, startup_prog):
     # the role, should be either PSERVER or TRAINER
     training_role = os.getenv("PADDLE_TRAINING_ROLE")
 
-    config = distribute_transpiler.DistributeTranspilerConfig()
+    config = fluid.DistributeTranspilerConfig()
     config.slice_var_up = not args.no_split_var
-    t = distribute_transpiler.DistributeTranspiler(config=config)
+    t = fluid.DistributeTranspiler(config=config)
     t.transpile(
         trainer_id,
         # NOTE: *MUST* use train_prog, for we are using with guard to
@@ -329,8 +326,6 @@ def main():
     train_prog = fluid.Program()
     test_prog = fluid.Program()
     startup_prog = fluid.Program()
-
-
 
     train_args = list(get_model(args, True, train_prog, startup_prog))
     test_args = list(get_model(args, False, test_prog, startup_prog))
