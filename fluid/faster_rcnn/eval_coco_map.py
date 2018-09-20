@@ -92,10 +92,10 @@ def eval(cfg):
     fetch_list = [rpn_rois, confs, locs]
     for batch_id, batch_data in enumerate(test_reader()):
         start = time.time()
-        #image, gt_box, gt_label, is_crowd, im_info, im_id = batch_data[0]
+        #image, im_info, im_id = batch_data[0]
         im_info = []
         for data in batch_data:
-            im_info.append(data[4])
+            im_info.append(data[1])
         rpn_rois_v, confs_v, locs_v = exe.run(
             fetch_list=[v.name for v in fetch_list],
             feed=feeder.feed(batch_data),
@@ -104,7 +104,7 @@ def eval(cfg):
                                            class_nums, im_info,
                                            numId_to_catId_map)
         for data in batch_data:
-            if str(data[5]) in cfg.image_name:
+            if str(data[-1]) in cfg.image_name:
                 path = os.path.join(cfg.image_path, cfg.image_name)
                 draw_bounding_box_on_image(path, nmsed_out, cfg.draw_threshold,
                                            label_list)

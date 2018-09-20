@@ -117,8 +117,8 @@ def get_dt_res(batch_size, lod, nmsed_out, data):
     for i in range(batch_size):
         dt_num_this_img = lod[i + 1] - lod[i]
         image_id = int(data[i][-1])
-        image_width = int(data[i][4][1])
-        image_height = int(data[i][4][2])
+        image_width = int(data[i][1][1])
+        image_height = int(data[i][1][2])
         for j in range(dt_num_this_img):
             dt = nmsed_out_v[k]
             k = k + 1

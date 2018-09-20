@@ -75,12 +75,14 @@ def coco(settings,
 
     print("{} on {} with {} roidbs".format(mode, settings.dataset, len(roidbs)))
 
-    def roidb_reader(roidb):
+    def roidb_reader(roidb, mode):
         im, im_scales = data_utils.get_image_blob(roidb, settings)
         im_id = roidb['id']
         im_height = np.round(roidb['height'] * im_scales)
         im_width = np.round(roidb['width'] * im_scales)
         im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
+        if mode == 'test':
+            return im, im_info, im_id
         gt_boxes = roidb['gt_boxes'].astype('float32')
         gt_classes = roidb['gt_classes'].astype('int32')
         is_crowd = roidb['is_crowd'].astype('int32')
@@ -113,7 +115,7 @@ def coco(settings,
                 if roidb_cur >= len(roidbs):
                     roidb_perm = deque(np.random.permutation(roidbs))
                 im, gt_boxes, gt_classes, is_crowd, im_info, im_id = roidb_reader(
-                    roidb)
+                    roidb, mode)
                 if gt_boxes.shape[0] == 0:
                     continue
                 batch_out.append(
@@ -136,15 +138,15 @@ def coco(settings,
         else:
             batch_out = []
             for roidb in roidbs:
-                im, gt_boxes, gt_classes, is_crowd, im_info, im_id = roidb_reader(
-                    roidb)
+                im, im_info, im_id = roidb_reader(roidb, mode)
                 if settings.one_eval and str(im_id) not in settings.image_name:
                     continue
-                batch_out.append(
-                    (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
+                batch_out.append((im, im_info, im_id))
                 if len(batch_out) == batch_size:
                     yield batch_out
                     batch_out = []
+            if len(batch_out) != 0:
+                yield batch_out
 
     return reader
 

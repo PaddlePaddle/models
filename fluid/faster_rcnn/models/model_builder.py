@@ -72,6 +72,8 @@ class FasterRCNN(object):
                 name='im_id', shape=[1], dtype='int32')
 
     def feeds(self):
+        if not self.is_train:
+            return [self.image, self.im_info, self.im_id]
         return [
             self.image, self.gt_box, self.gt_label, self.is_crowd, self.im_info,
             self.im_id
