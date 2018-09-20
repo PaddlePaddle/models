@@ -128,7 +128,7 @@ def train(args):
         dev_count = fluid.core.get_cuda_device_count()
     else:
         place = fluid.CPUPlace()
-        dev_count = multiprocessing.cpu_count()
+        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     print("device count %d" % dev_count)
 
