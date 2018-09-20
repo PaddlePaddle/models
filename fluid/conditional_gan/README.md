@@ -27,9 +27,9 @@ env CUDA_VISIBLE_DEVICES=0 python c_gan.py --output="./result"
 
 训练过程中，每隔固定的训练轮数，会取一个batch的数据进行测试，测试结果以图片的形式保存至`--output`选项指定的路径。
 
-执行`python train.py --help`可查看更多使用方式和参数详细说明。
+执行`python c_gan.py --help`可查看更多使用方式和参数详细说明。
 
-图1为conditianalGAN训练损失示意图，其中横坐标轴为训练轮数，纵轴为在训练集上的损失。其中，'G_loss'和'D_loss'分别为生成网络和判别器网络的训练损失。
+图1为conditionalGAN训练损失示意图，其中横坐标轴为训练轮数，纵轴为在训练集上的损失。其中，'G_loss'和'D_loss'分别为生成网络和判别器网络的训练损失。
 
 <p align="center">
 <img src="images/conditionalGAN_loss.png" width="620" hspace='10'/> <br/>
@@ -38,11 +38,30 @@ env CUDA_VISIBLE_DEVICES=0 python c_gan.py --output="./result"
 
 
 
-conditianalGAN训练19轮的模型预测效果如图2所示：
+conditionalGAN训练19轮的模型预测效果如图2所示：
 
 <p align="center">
 <img src="images/conditionalGAN_demo.png" width="620" hspace='10'/> <br/>
 <strong>图 2</strong>
 </p>
 
+
 ## 训练测试DCGAN
+
+在GPU单卡上训练DCGAN:
+
+```
+env CUDA_VISIBLE_DEVICES=0 python dc_gan.py --output="./result"
+```
+
+训练过程中，每隔固定的训练轮数，会取一个batch的数据进行测试，测试结果以图片的形式保存至`--output`选项指定的路径。
+
+执行`python dc_gan.py --help`可查看更多使用方式和参数详细说明。
+
+
+DCGAN训�10轮的模型预测效果如图3所示：
+
+<p align="center">
+<img src="images/DCGAN_demo.png" width="620" hspace='10'/> <br/>
+<strong>图 3</strong>
+</p>

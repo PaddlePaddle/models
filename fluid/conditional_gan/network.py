@@ -121,3 +121,22 @@ def G_cond(z, y):
     h2 = conv_cond_concat(h2, yb)
     h3 = deconv(h2, 1, output_size=[s_h, s_w], act='tanh')
     return fluid.layers.reshape(h3, shape=[-1, s_h * s_w])
+
+
+def D(x):
+    x = fluid.layers.reshape(x=x, shape=[-1, 1, 28, 28])
+    x = conv(x, df_dim, act='leaky_relu')
+    x = bn(conv(x, df_dim * 2), act='leaky_relu')
+    x = bn(fc(x, dfc_dim), act='leaky_relu')
+    x = fc(x, 1, act=None)
+    return x
+
+
+def G(x):
+    x = bn(fc(x, gfc_dim))
+    x = bn(fc(x, gf_dim * 2 * img_dim / 4 * img_dim / 4))
+    x = fluid.layers.reshape(x, [-1, gf_dim * 2, img_dim / 4, img_dim / 4])
+    x = deconv(x, gf_dim * 2, act='relu', output_size=[14, 14])
+    x = deconv(x, 1, filter_size=5, padding=2, act='tanh', output_size=[28, 28])
+    x = fluid.layers.reshape(x, shape=[-1, 28 * 28])
+    return x
