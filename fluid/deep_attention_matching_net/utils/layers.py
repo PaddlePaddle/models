@@ -82,7 +82,10 @@ def dot_product_attention(query,
         else:
             mask = fluid.layers.matmul(x=q_mask, y=k_mask, transpose_y=True)
             another_mask = fluid.layers.scale(
-                mask, scale=2**32 - 1, bias=-1, bias_after_scale=False)
+                mask,
+                scale=float(2**32 - 1),
+                bias=float(-1),
+                bias_after_scale=False)
             if mask_cache is not None:
                 if q_mask.name not in mask_cache:
                     mask_cache[q_mask.name] = dict()
