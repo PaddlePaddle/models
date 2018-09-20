@@ -33,20 +33,20 @@ env CUDA_VISIBLE_DEVICES=0 python c_gan.py --output="./result"
 
 <p align="center">
 
-<table>
+<table >
 <tr>
-    <td>
+    <td style="border: 0px">
         <img src="images/conditionalGAN_loss.png" width="400" hspace='10'/>
     </td>
-    <td>
+    <td style="border: 0px">
         <img src="images/conditionalGAN_demo.png" width="300" hspace='10'/>
     </td>
 </tr>
-<tr>
-    <td>
+<tr style="background-color: #fff; border-top: 0px">
+    <td style="border: 0px; align: center">
         <strong>图 1</strong>
     </td>
-    <td>
+    <td style="border: 0px; align: center">
         <strong>图 2</strong>
     </td>
 </tr>
