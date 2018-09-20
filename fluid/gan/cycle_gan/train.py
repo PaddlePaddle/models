@@ -1,48 +1,36 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+import data_reader
 import os
 import random
 import sys
 import paddle
 import argparse
 import functools
-import time
-import numpy as np
-from scipy.misc import imsave
 import paddle.fluid as fluid
-import paddle.fluid.profiler as profiler
+import numpy as np
 from paddle.fluid import core
-import data_reader
-from utility import add_arguments, print_arguments, ImagePool
 from trainer import *
-
+from itertools import izip
+from scipy.misc import imsave
+import paddle.fluid.profiler as profiler
+from utility import add_arguments, print_arguments, ImagePool
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('batch_size',        int,   1,          "Minibatch size.")
 add_arg('epoch',             int,   2,        "The number of epoched to be trained.")
-add_arg('output',            str,   "./output_0", "The directory the model and the test result to be saved to.")
+add_arg('output',            str,   "./output_1", "The directory the model and the test result to be saved to.")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
 add_arg('save_checkpoints',  bool,  True,       "Whether to save checkpoints.")
 add_arg('run_test',          bool,  True,       "Whether to run test.")
 add_arg('use_gpu',           bool,  True,       "Whether to use GPU to train.")
 add_arg('profile',           bool,  False,       "Whether to profile.")
-add_arg('run_ce',            bool,  False,       "Whether to run for model ce.")
 # yapf: enable
 
 
 def train(args):
-
-    max_images_num = data_reader.max_images_num()
-    shuffle=True
-    if args.run_ce:
-        np.random.seed(10)
-        fluid.default_startup_program().random_seed = 90
-        max_images_num = 1
-        shuffle = False
     data_shape = [-1] + data_reader.image_shape()
+    max_images_num = data_reader.max_images_num()
 
     input_A = fluid.layers.data(
         name='input_A', shape=data_shape, dtype='float32')
@@ -66,19 +54,19 @@ def train(args):
     exe.run(fluid.default_startup_program())
     A_pool = ImagePool()
     B_pool = ImagePool()
-    
-    A_reader = paddle.batch(data_reader.a_reader(shuffle=shuffle), args.batch_size)()
-    B_reader = paddle.batch(data_reader.b_reader(shuffle=shuffle), args.batch_size)()
-    if not args.run_ce:
-        A_test_reader = data_reader.a_test_reader()
-        B_test_reader = data_reader.b_test_reader()
+
+    A_reader = paddle.batch(data_reader.a_reader(), args.batch_size)()
+    B_reader = paddle.batch(data_reader.b_reader(), args.batch_size)()
+
+    A_test_reader = data_reader.a_test_reader()
+    B_test_reader = data_reader.b_test_reader()
 
     def test(epoch):
         out_path = args.output + "/test"
         if not os.path.exists(out_path):
             os.makedirs(out_path)
         i = 0
-        for data_A, data_B in zip(A_test_reader(), B_test_reader()):
+        for data_A, data_B in izip(A_test_reader(), B_test_reader()):
             A_name = data_A[1]
             B_name = data_B[1]
             tensor_A = core.LoDTensor()
@@ -119,14 +107,14 @@ def train(args):
         if not os.path.exists(out_path):
             os.makedirs(out_path)
         fluid.io.save_persistables(
-            exe, out_path + "/g_a", main_program=g_A_trainer.program, filename="params")
+            exe, out_path + "/g_a", main_program=g_A_trainer.program)
         fluid.io.save_persistables(
-            exe, out_path + "/g_b", main_program=g_B_trainer.program, filename="params")
+            exe, out_path + "/g_b", main_program=g_B_trainer.program)
         fluid.io.save_persistables(
-            exe, out_path + "/d_a", main_program=d_A_trainer.program, filename="params")
+            exe, out_path + "/d_a", main_program=d_A_trainer.program)
         fluid.io.save_persistables(
-            exe, out_path + "/d_b", main_program=d_B_trainer.program, filename="params")
-        print("saved checkpoint to {}".format(out_path))
+            exe, out_path + "/d_b", main_program=d_B_trainer.program)
+        print "saved checkpoint to [%s]" % out_path
         sys.stdout.flush()
 
     def init_model():
@@ -140,22 +128,20 @@ def train(args):
             exe, args.init_model + "/d_a", main_program=d_A_trainer.program)
         fluid.io.load_persistables(
             exe, args.init_model + "/d_b", main_program=d_B_trainer.program)
-        print("Load model from {}".format(args.init_model))
+        print "Load model from [%s]" % args.init_model
 
     if args.init_model:
         init_model()
-    losses=[[], []]
-    t_time = 0
+
     for epoch in range(args.epoch):
         batch_id = 0
         for i in range(max_images_num):
-            data_A = next(A_reader)
-            data_B = next(B_reader)
+            data_A = A_reader.next()
+            data_B = B_reader.next()
             tensor_A = core.LoDTensor()
             tensor_B = core.LoDTensor()
             tensor_A.set(data_A, place)
             tensor_B.set(data_B, place)
-            s_time = time.time()
             # optimize the g_A network
             g_A_loss, fake_B_tmp = exe.run(
                 g_A_trainer.program,
@@ -170,7 +156,7 @@ def train(args):
                 d_B_trainer.program,
                 fetch_list=[d_B_trainer.d_loss_B],
                 feed={"input_B": tensor_B,
-                      "fake_pool_B": fake_pool_B})[0]
+                      "fake_pool_B": fake_pool_B})
 
             # optimize the g_B network
             g_B_loss, fake_A_tmp = exe.run(
@@ -186,24 +172,18 @@ def train(args):
                 d_A_trainer.program,
                 fetch_list=[d_A_trainer.d_loss_A],
                 feed={"input_A": tensor_A,
-                      "fake_pool_A": fake_pool_A})[0]
-            t_time += (time.time() - s_time)
-            print("epoch{}; batch{}; g_A_loss: {}; d_B_loss: {}; g_B_loss: {}; d_A_loss: {};".format(
+                      "fake_pool_A": fake_pool_A})
+
+            print "epoch[%d]; batch[%d]; g_A_loss: %s; d_B_loss: %s; g_B_loss: %s; d_A_loss: %s;" % (
                 epoch, batch_id, g_A_loss[0], d_B_loss[0], g_B_loss[0],
-                d_A_loss[0]))
-            losses[0].append(g_A_loss[0])
-            losses[1].append(d_A_loss[0])
+                d_A_loss[0])
             sys.stdout.flush()
             batch_id += 1
 
-        if args.run_test and not args.run_ce:
+        if args.run_test:
             test(epoch)
-        if args.save_checkpoints and not args.run_ce:
+        if args.save_checkpoints:
             checkpoints(epoch)
-    if args.run_ce:
-        print("kpis,g_train_cost,{}".format(np.mean(losses[0])))
-        print("kpis,d_train_cost,{}".format(np.mean(losses[1])))
-        print("kpis,duration,{}".format(t_time / args.epoch))
 
 
 if __name__ == "__main__":

@@ -1,9 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import os
 from PIL import Image
 import numpy as np
+from itertools import izip
 
 A_LIST_FILE = "./data/horse2zebra/trainA.txt"
 B_LIST_FILE = "./data/horse2zebra/trainB.txt"
@@ -46,18 +44,18 @@ def reader_creater(list_file, cycle=True, shuffle=True, return_name=False):
     return reader
 
 
-def a_reader(shuffle=True):
+def a_reader():
     """
     Reader of images with A style for training.
     """
-    return reader_creater(A_LIST_FILE, shuffle=shuffle)
+    return reader_creater(A_LIST_FILE)
 
 
-def b_reader(shuffle=True):
+def b_reader():
     """
     Reader of images with B style for training.
     """
-    return reader_creater(B_LIST_FILE, shuffle=shuffle)
+    return reader_creater(B_LIST_FILE)
 
 
 def a_test_reader():
@@ -72,3 +70,11 @@ def b_test_reader():
     Reader of images with B style for test.
     """
     return reader_creater(B_TEST_LIST_FILE, cycle=False, return_name=True)
+
+
+if __name__ == "__main__":
+    for A, B in izip(a_test_reader()(), a_test_reader()()):
+        print A[0].shape
+        print A[1]
+        print B[0].shape
+        print B[1]
