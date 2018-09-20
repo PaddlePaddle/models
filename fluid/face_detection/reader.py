@@ -18,7 +18,6 @@ from __future__ import print_function
 
 import image_util
 from paddle.utils.image_util import *
-import random
 from PIL import Image
 from PIL import ImageDraw
 import numpy as np
@@ -98,7 +97,7 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
         # sampling
         batch_sampler = []
 
-        prob = random.uniform(0., 1.)
+        prob = np.random.uniform(0., 1.)
         if prob > settings.data_anchor_sampling_prob:
             scale_array = np.array([16, 32, 64, 128, 256, 512])
             batch_sampler.append(
@@ -109,7 +108,7 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
                 settings.resize_width, settings.resize_height)
             img = np.array(img)
             if len(sampled_bbox) > 0:
-                idx = int(random.uniform(0, len(sampled_bbox)))
+                idx = int(np.random.uniform(0, len(sampled_bbox)))
                 img, sampled_labels = image_util.crop_image_sampling(
                     img, bbox_labels, sampled_bbox[idx], img_width, img_height,
                     settings.resize_width, settings.resize_height,
@@ -140,20 +139,26 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
 
             img = np.array(img)
             if len(sampled_bbox) > 0:
-                idx = int(random.uniform(0, len(sampled_bbox)))
+                idx = int(np.random.uniform(0, len(sampled_bbox)))
                 img, sampled_labels = image_util.crop_image(
                     img, bbox_labels, sampled_bbox[idx], img_width, img_height,
                     settings.resize_width, settings.resize_height,
                     settings.min_face_size)
 
             img = Image.fromarray(img)
+    interp_mode = [
+        Image.BILINEAR, Image.HAMMING, Image.NEAREST, Image.BICUBIC,
+        Image.LANCZOS
+    ]
+    interp_indx = np.random.randint(0, 5)
 
-    img = img.resize((settings.resize_width, settings.resize_height),
-                     Image.ANTIALIAS)
+    img = img.resize(
+        (settings.resize_width, settings.resize_height),
+        resample=interp_mode[interp_indx])
     img = np.array(img)
 
     if mode == 'train':
-        mirror = int(random.uniform(0, 2))
+        mirror = int(np.random.uniform(0, 2))
         if mirror == 1:
             img = img[:, ::-1, :]
             for i in six.moves.xrange(len(sampled_labels)):
@@ -225,10 +230,8 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
     file_dict = load_file_list(file_list)
     while True:
         if shuffle:
-            random.shuffle(file_dict)
-        images, face_boxes, head_boxes, label_ids = [], [], [], []
-        label_offs = [0]
-
+            np.random.shuffle(file_dict)
+        batch_out = []
         for index_image in file_dict.keys():
             image_name = file_dict[index_image][0]
             image_path = os.path.join(settings.data_dir, image_name)
@@ -256,7 +259,6 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
                     bbox_sample.append(float(xmax) / im_width)
                     bbox_sample.append(float(ymax) / im_height)
                     bbox_labels.append(bbox_sample)
-
             im, sample_labels = preprocess(im, bbox_labels, "train", settings,
                                            image_path)
             sample_labels = np.array(sample_labels)
@@ -266,46 +268,40 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
             face_box = sample_labels[:, 1:5]
             head_box = expand_bboxes(face_box)
             label = [1] * len(face_box)
-
-            images.append(im)
-            face_boxes.extend(face_box)
-            head_boxes.extend(head_box)
-            label_ids.extend(label)
-            label_offs.append(label_offs[-1] + len(face_box))
-
-            if len(images) == batch_size:
-                images = np.array(images).astype('float32')
-                face_boxes = np.array(face_boxes).astype('float32')
-                head_boxes = np.array(head_boxes).astype('float32')
-                label_ids = np.array(label_ids).astype('int32')
-                yield images, face_boxes, head_boxes, label_ids, label_offs
-                images, face_boxes, head_boxes = [], [], []
-                label_ids, label_offs = [], [0]
+            batch_out.append((im, face_box, head_box, label))
+            if len(batch_out) == batch_size:
+                yield batch_out
+                batch_out = []
 
 
-def train_batch_reader(settings,
-                       file_list,
-                       batch_size,
-                       shuffle=True,
-                       num_workers=8):
-    try:
-        enqueuer = GeneratorEnqueuer(
-            train_generator(settings, file_list, batch_size, shuffle),
-            use_multiprocessing=False)
-        enqueuer.start(max_queue_size=24, workers=num_workers)
-        generator_output = None
-        while True:
-            while enqueuer.is_running():
-                if not enqueuer.queue.empty():
-                    generator_output = enqueuer.queue.get()
-                    break
-                else:
-                    time.sleep(0.01)
-            yield generator_output
+def train(settings,
+          file_list,
+          batch_size,
+          shuffle=True,
+          use_multiprocessing=True,
+          num_workers=8,
+          max_queue=24):
+    def reader():
+        try:
+            enqueuer = GeneratorEnqueuer(
+                train_generator(settings, file_list, batch_size, shuffle),
+                use_multiprocessing=use_multiprocessing)
+            enqueuer.start(max_queue_size=max_queue, workers=num_workers)
             generator_output = None
-    finally:
-        if enqueuer is not None:
-            enqueuer.stop()
+            while True:
+                while enqueuer.is_running():
+                    if not enqueuer.queue.empty():
+                        generator_output = enqueuer.queue.get()
+                        break
+                    else:
+                        time.sleep(0.02)
+                yield generator_output
+                generator_output = None
+        finally:
+            if enqueuer is not None:
+                enqueuer.stop()
+
+    return reader
 
 
 def test(settings, file_list):
