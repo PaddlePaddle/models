@@ -2,7 +2,7 @@ import numpy as np
 import datareader as reader
 import paddle.fluid as fluid
 from metrics import calculate_order_dist_matrix
-from metrics import getgpunum
+from metrics import get_gpu_num
 
 class quadrupletloss():
     def __init__(self, 
@@ -10,7 +10,7 @@ class quadrupletloss():
                  samples_each_class = 2,
                  margin=0.1):
         self.margin = margin
-        num_gpus = getgpunum()
+        num_gpus = get_gpu_num()
         self.samples_each_class = samples_each_class
         self.train_batch_size = train_batch_size
         assert(train_batch_size % num_gpus == 0)

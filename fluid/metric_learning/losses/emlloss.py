@@ -3,11 +3,11 @@ import math
 import numpy as np
 import paddle.fluid as fluid
 from metrics import calculate_order_dist_matrix
-from metrics import getgpunum
+from metrics import get_gpu_num
 
 class emlloss():
     def __init__(self, train_batch_size = 40, samples_each_class=2):
-        num_gpus = getgpunum()
+        num_gpus = get_gpu_num()
         self.samples_each_class = samples_each_class
         self.train_batch_size = train_batch_size
         assert(train_batch_size % num_gpus == 0)
