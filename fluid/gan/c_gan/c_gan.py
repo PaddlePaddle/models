@@ -40,7 +40,10 @@ add_arg('use_gpu',           bool,  True,       "Whether to use GPU to train.")
 
 
 def loss(x, label):
-    return fluid.layers.mean(x * (label - 0.5))
+    #return fluid.layers.mean(x * (label - 0.5))
+    return fluid.layers.mean(
+        fluid.layers.sigmoid_cross_entropy_with_logits(
+            x=x, label=label))
 
 
 def train(args):
@@ -67,7 +70,10 @@ def train(args):
         g_program_test = dg_program.clone(for_test=True)
 
         dg_logit = D_cond(g_img, conditions)
-        dg_loss = loss(dg_logit, 1)
+        dg_loss = loss(
+            dg_logit,
+            fluid.layers.fill_constant_batch_size_like(
+                input=noise, dtype='float32', shape=[-1, 1], value=1.0))
 
     opt = fluid.optimizer.Adam(learning_rate=LEARNING_RATE)
 
