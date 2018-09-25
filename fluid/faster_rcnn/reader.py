@@ -150,6 +150,8 @@ def coco(settings,
 
         else:
             for roidb in roidbs:
+                if settings.image_name not in roidb['image']:
+                    continue
                 im, im_info, im_id = roidb_reader(roidb, mode)
                 batch_out = [(im, im_info, im_id)]
                 yield batch_out
