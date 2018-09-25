@@ -88,6 +88,16 @@ def parse_args():
         type=int,
         default=5,
         help='The number of stacked attentive modules in network.')
+    parser.add_argument(
+        '--channel1_num',
+        type=int,
+        default=32,
+        help="The channels' number of the 1st conv3d layer's output.")
+    parser.add_argument(
+        '--channel2_num',
+        type=int,
+        default=16,
+        help="The channels' number of the 2nd conv3d layer's output.")
     args = parser.parse_args()
     return args
 
@@ -109,7 +119,8 @@ def test(args):
     }
 
     dam = Net(args.max_turn_num, args.max_turn_len, args.vocab_size,
-              args.emb_size, args.stack_num)
+              args.emb_size, args.stack_num, args.channel1_num,
+              args.channel2_num)
     loss, logits = dam.create_network()
 
     loss.persistable = True

@@ -55,6 +55,12 @@ for more detailed explanation about the arguments, please run
 python ../train_and_evaluate.py --help
 ```
 
+By default, the training is executed on one single GPU, which can be switched to multiple-GPU mode easily by simply resetting the visible devices in `train.sh`, e.g.,
+
+```
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+```
+
 4) Run test by
 
 ```
