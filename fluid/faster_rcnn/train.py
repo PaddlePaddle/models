@@ -1,10 +1,25 @@
+#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
-import time
+import sys
 import numpy as np
-import argparse
-import functools
+import time
 import shutil
-import cPickle
 from utility import parse_args, print_arguments, SmoothedValue
 
 import paddle
@@ -117,7 +132,7 @@ def train(cfg):
                     iter_id, lr[0],
                     smoothed_loss.get_median_value(
                     ), start_time - prev_start_time))
-                #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
+                sys.stdout.flush()
                 if (iter_id + 1) % cfg.snapshot_stride == 0:
                     save_model("model_iter{}".format(iter_id))
         except fluid.core.EOFException:
@@ -143,7 +158,7 @@ def train(cfg):
             print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                 iter_id, lr[0],
                 smoothed_loss.get_median_value(), start_time - prev_start_time))
-            #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
+            sys.stdout.flush()
             if (iter_id + 1) % cfg.snapshot_stride == 0:
                 save_model("model_iter{}".format(iter_id))
             if (iter_id + 1) == cfg.max_iter:
