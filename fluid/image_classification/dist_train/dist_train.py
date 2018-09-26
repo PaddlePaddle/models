@@ -22,6 +22,7 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.core as core
+import six
 import sys
 sys.path.append("..")
 import models
@@ -172,7 +173,7 @@ def dist_transpile(trainer_id, args, train_prog, startup_prog):
 
 def test_parallel(exe, test_args, args, test_prog, feeder):
     acc_evaluators = []
-    for i in xrange(len(test_args[2])):
+    for i in six.moves.xrange(len(test_args[2])):
         acc_evaluators.append(fluid.metrics.Accuracy())
 
     to_fetch = [v.name for v in test_args[2]]
@@ -291,7 +292,7 @@ def train_parallel(train_args, test_args, args, train_prog, test_prog,
 
 def print_arguments(args):
     print('----------- Configuration Arguments -----------')
-    for arg, value in sorted(vars(args).iteritems()):
+    for arg, value in sorted(six.iteritems(vars(args))):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
 
@@ -307,7 +308,7 @@ def print_paddle_envs():
     print('----------- Configuration envs -----------')
     for k in os.environ:
         if "PADDLE_" in k:
-            print "ENV %s:%s" % (k, os.environ[k])
+            print("ENV %s:%s" % (k, os.environ[k]))
     print('------------------------------------------------')
 
 
