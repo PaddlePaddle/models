@@ -1,4 +1,4 @@
-# Copyright (c) 2016 PaddlePaddle Authors. All Rights Reserved
+# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -150,6 +150,8 @@ def coco(settings,
 
         else:
             for roidb in roidbs:
+                if settings.image_name not in roidb['image']:
+                    continue
                 im, im_info, im_id = roidb_reader(roidb, mode)
                 batch_out = [(im, im_info, im_id)]
                 yield batch_out
