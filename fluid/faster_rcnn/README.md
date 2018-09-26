@@ -45,8 +45,7 @@ After data preparation, one can start the training step by:
        --max_size=1333 \
        --scales=800 \
        --batch_size=8 \
-       --model_save_dir=output/ \
-       --padding_minibatch=True
+       --model_save_dir=output/
 
 - Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
 - For more help on arguments:
@@ -64,7 +63,7 @@ After data preparation, one can start the training step by:
 
 **model configuration:**
 
-* Use RoIPolling.
+* Use RoIPooling.
 * NMS threshold=0.7. During training, pre\_nms=12000, post\_nms=2000; during test, pre\_nms=6000, post\_nms=1000.
 * In generating proposal lables, fg\_fraction=0.25, fg\_thresh=0.5, bg\_thresh_hi=0.5, bg\_thresh\_lo=0.0.
 * In rpn target assignment, rpn\_fg\_fraction=0.5, rpn\_positive\_overlap=0.7, rpn\_negative\_overlap=0.3.
@@ -93,8 +92,7 @@ Finetuning is to finetune model weights in a specific task by loading pretrained
         --scales=800 \
         --pretrained_model=${path_to_pretrain_model} \
         --batch_size= 8\
-        --model_save_dir=output/ \
-        --padding_minibatch=True
+        --model_save_dir=output/
 
 ## Evaluation
 
@@ -124,14 +122,15 @@ Evalutaion result is shown as below:
 <p align="center">
 <img src="image/mAP.jpg" height=500 width=650 hspace='10'/> <br />
 Faster RCNN mAP
-
-| Model                    | mAP     |
-| :------------------------------ | -------:     |
-| detectron                 | 0.315    |
-| fluid no padding         | 0.308     |
-| fluid minibatch padding | 0.314     |
-| fluid no padding 6gpu     | 0.317     |
 </p>
+
+| Model                    | Batch size     | Max iteration    | mAP  |
+| :------------------------------ | :------------:    | :-------------------:|------: |
+| Detectron                 | 8            |    180000        | 0.315 |
+| Fluid all padding         | 8            |    180000        | 0.308 |
+| Fluid minibatch padding | 8            |    180000        | 0.314 |
+| Fluid no padding         |6            |    240000        | 0.317 |
+
 
 ## Inference and Visualization
 

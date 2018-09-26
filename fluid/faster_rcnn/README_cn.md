@@ -44,8 +44,7 @@ Faster RCNN 目标检测模型
        --max_size=1333 \
        --scales=800 \
        --batch_size=8 \
-       --model_save_dir=output/ \
-       --padding_minibatch=True
+       --model_save_dir=output/
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
 - 可选参数见：
@@ -87,8 +86,7 @@ Faster RCNN 训练loss
         --scales=800 \
         --pretrained_model=${path_to_pretrain_model} \
         --batch_size= 8\
-        --model_save_dir=output/ \
-        --padding_minibatch=True
+        --model_save_dir=output/
 
 ## 模型评估
 
@@ -118,14 +116,15 @@ Faster RCNN 训练loss
 <p align="center">
 <img src="image/mAP.jpg" height=500 width=650 hspace='10'/> <br />
 Faster RCNN mAP
-
-| 模型                    | mAP     |
-| :------------------------------ | -------:     |
-| detectron                 | 0.315    |
-| fluid no padding         | 0.308     |
-| fluid minibatch padding | 0.314     |
-| fluid no padding 6gpu     | 0.317     |
 </p>
+
+| 模型                    | 批量大小     | 迭代次数        | mAP  |
+| :------------------------------ | :------------:    | :------------------:    |------: |
+| Detectron                 | 8            |    180000        | 0.315 |
+| Fluid all padding         | 8            |    180000        | 0.308 |
+| Fluid minibatch padding | 8            |    180000        | 0.314 |
+| Fluid no padding            |6            |    240000        | 0.317 |
+
 
 ## 模型推断及可视化
 
