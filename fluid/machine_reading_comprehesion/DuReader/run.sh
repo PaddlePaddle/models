@@ -1,4 +1,4 @@
-python train.py   \
+python run.py   \
 --trainset 'data/preprocessed/trainset/search.train.json' \
            'data/preprocessed/trainset/zhidao.train.json' \
 --devset 'data/preprocessed/devset/search.dev.json' \
@@ -17,4 +17,6 @@ python train.py   \
 --max_p_len 500 \
 --max_q_len 60 \
 --max_a_len 200 \
---drop_rate 0.2 
+--drop_rate 0.2 \
+--train \
+--test 

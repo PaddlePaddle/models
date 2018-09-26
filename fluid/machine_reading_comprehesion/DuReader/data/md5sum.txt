@@ -1,0 +1,2 @@
+50633b5e5fda12d86e825a5c738d0ca8  dureader_raw.zip
+7a4c28026f7dc94e8135d17203c63664  dureader_preprocessed.zip
