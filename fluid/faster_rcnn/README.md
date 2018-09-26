@@ -14,7 +14,7 @@
 
 ## Installation
 
-Running sample code in this directory requires PaddelPaddle Fluid v0.13.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/zh/0.15.0/beginners_guide/install/install_doc.html#paddlepaddle) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v.1.0.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/zh/0.15.0/beginners_guide/install/install_doc.html#paddlepaddle) and make an update.
 
 ## Introduction
 
@@ -45,17 +45,15 @@ After data preparation, one can start the training step by:
        --max_size=1333 \
        --scales=800 \
        --batch_size=8 \
-       --batch_size_per_im=512 \
-       --class_dim=81 \
        --model_save_dir=output/ \
-       --max_iter=180000 \
-       --learning_rate=0.01 \
        --padding_minibatch=True
 
-- Set ```export CUDA_VISIBLE_DEVICES=0,1``` to specifiy the id of GPU you want to use.
+- Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
 - For more help on arguments:
 
     python train.py --help
+
+**download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer.
 
 **data reader introduction:**
 
@@ -66,7 +64,7 @@ After data preparation, one can start the training step by:
 
 **model configuration:**
 
-* Roi_pool layer takes average pooling.
+* Use RoIPolling.
 * NMS threshold=0.7. During training, pre\_nms=12000, post\_nms=2000; during test, pre\_nms=6000, post\_nms=1000.
 * In generating proposal lables, fg\_fraction=0.25, fg\_thresh=0.5, bg\_thresh_hi=0.5, bg\_thresh\_lo=0.0.
 * In rpn target assignment, rpn\_fg\_fraction=0.5, rpn\_positive\_overlap=0.7, rpn\_negative\_overlap=0.3.
@@ -96,9 +94,7 @@ Finetuning is to finetune model weights in a specific task by loading pretrained
         --pretrained_model=${path_to_pretrain_model} \
         --batch_size= 8\
         --model_save_dir=output/ \
-        --class_dim=81 \
-        --max_iter=180000 \
-        --learning_rate=0.01
+        --padding_minibatch=True
 
 ## Evaluation
 
@@ -128,6 +124,13 @@ Evalutaion result is shown as below:
 <p align="center">
 <img src="image/mAP.jpg" height=500 width=650 hspace='10'/> <br />
 Faster RCNN mAP
+
+| Model                    | mAP     |
+| :------------------------------ | -------:     |
+| detectron                 | 0.315    |
+| fluid no padding         | 0.308     |
+| fluid minibatch padding | 0.314     |
+| fluid no padding 6gpu     | 0.317     |
 </p>
 
 ## Inference and Visualization
@@ -149,45 +152,3 @@ Visualization of infer result is shown as below:
 <img src="image/000000515077.jpg" height=300 width=400 hspace='10'/> <br />
 Faster RCNN Visualization Examples
 </p>
-
-## Appendix
-
-### Debug model
-
-Because of the complicated model and many parameters, one needs to debug each block in model.
-
-#### Input
-
-Fluid does variable assignment as below:
-
-    rpn_rois_t = np.load('rpn_rois')
-    rpn_rois = fluid.core.LoDTensor()
-    rpn_rois.set(rpn_rois_t, place)
-
-If the input variable is LoDTensor, one needs to set lod:
-
-    rpn_rois.set_lod(lod)
-
-In addition, `use_random` should set to False in debug mode.
-
-#### Output
-
-In debug mode, one may want to find the name of variables. Two methods are provided as below:
-
-1. use program.global_block().var to get all variables then find the name.
-2. set variable.persistable to True and print the variable to get the name.
-
-To get the output of variables, three methods are provided as below:
-
-1. use get\_var and the name of variable to fetch the output in exe.run, for example:
-
-        rpn_conv = fluid.get_var('conv_rpn.tmp_1')
-        rpn_conv_v = exe.run(fetch_list=rpn_conv)
-
-2. after exe.run, use global_scope().find_var to get the output of variable, for example:
-
-        rpn_conv_v = fluid.global_scope().find_var('conv_rpn.tmp_1').get_tensor()
-
-3. use Print op to print the output directly, for example:
-
-        fluid.layers.Print(rpn_conv)
