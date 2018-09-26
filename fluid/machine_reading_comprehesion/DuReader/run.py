@@ -385,8 +385,9 @@ def evaluate(logger, args):
 	    ]
 	    feeder = fluid.DataFeeder(feed_list, place)
 
+            inference_program = main_program.clone(for_test=True)
 	    eval_loss, bleu_rouge = validation(
-		main_program, avg_cost, s_probs, e_probs,
+		inference_program, avg_cost, s_probs, e_probs,
 		feed_order, place, vocab, brc_data, logger, args)
 	    logger.info('Dev eval loss {}'.format(eval_loss))
 	    logger.info('Dev eval result: {}'.format(bleu_rouge))
@@ -431,8 +432,9 @@ def predict(logger, args):
 	    ]
 	    feeder = fluid.DataFeeder(feed_list, place)
 
+            inference_program = main_program.clone(for_test=True)
 	    eval_loss, bleu_rouge = validation(
-		main_program, avg_cost, s_probs, e_probs,
+		inference_program, avg_cost, s_probs, e_probs,
 		feed_order, place, vocab, brc_data, logger, args)
 
 
