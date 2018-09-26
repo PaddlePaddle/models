@@ -52,7 +52,11 @@ After data preparation, one can start the training step by:
 
     python train.py --help
 
-**download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer.
+**download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer. One can download pre-trained model as:
+
+    sh ./pretrained/download.sh
+
+Set `pretrained_model` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
 
 **data reader introduction:**
 
@@ -82,6 +86,9 @@ Training result is shown as below：
 <img src="image/train_loss.jpg" height=500 width=650 hspace='10'/> <br />
 Faster RCNN train loss
 </p>
+* Fluid all padding: Each image padding to 1333\*1333.
+* Fluid minibatch padding: Images in one batch padding to the same size. This method is same as detectron.
+* Fluid no padding: Images without padding.
 
 ## Finetuning
 
@@ -127,10 +134,13 @@ Faster RCNN mAP
 | Model                    | Batch size     | Max iteration    | mAP  |
 | :------------------------------ | :------------:    | :-------------------:|------: |
 | Detectron                 | 8            |    180000        | 0.315 |
-| Fluid all padding         | 8            |    180000        | 0.308 |
 | Fluid minibatch padding | 8            |    180000        | 0.314 |
+| Fluid all padding         | 8            |    180000        | 0.308 |
 | Fluid no padding         |6            |    240000        | 0.317 |
 
+* Fluid all padding: Each image padding to 1333\*1333.
+* Fluid minibatch padding: Images in one batch padding to the same size. This method is same as detectron.
+* Fluid no padding: Images without padding.
 
 ## Inference and Visualization
 

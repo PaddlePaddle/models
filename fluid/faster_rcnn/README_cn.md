@@ -44,14 +44,19 @@ Faster RCNN 目标检测模型
        --max_size=1333 \
        --scales=800 \
        --batch_size=8 \
-       --model_save_dir=output/
+       --model_save_dir=output/ \
+       --pretrained_model=${path_to_pretrain_model}
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
 - 可选参数见：
 
     python train.py --help
 
-**下载预训练模型：** 本示例提供Resnet-50预训练模型，该模性转换自Caffe，并对批标准化层(Batch Normalization Layer)进行参数融合。
+**下载预训练模型：** 本示例提供Resnet-50预训练模型，该模性转换自Caffe，并对批标准化层(Batch Normalization Layer)进行参数融合。采用如下命令下载预训练模型：
+
+    sh ./pretrained/download.sh
+
+通过初始化`pretrained_model` 加载预训练模型。同时在参数微调时也采用该设置加载已训练模型。
 
 **数据读取器说明：** 数据读取器定义在reader.py中。所有图像将短边等比例缩放至`scales`，若长边大于`max_size`, 则再次将长边等比例缩放至`max_iter`。在训练阶段，对图像采用水平翻转。支持将同一个batch内的图像padding为相同尺寸。
 
@@ -68,6 +73,9 @@ Faster RCNN 目标检测模型
 <img src="image/train_loss.jpg" height=500 width=650 hspace='10'/> <br />
 Faster RCNN 训练loss
 </p>
+* Fluid all padding: 每张图像填充为1333\*1333大小。
+* Fluid minibatch padding: 同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
+* Fluid no padding: 不对图像做填充处理。
 
 **训练策略：**
 
@@ -76,17 +84,6 @@ Faster RCNN 训练loss
 *  非基础卷积层卷积bias学习率为整体学习率2倍。
 *  基础卷积层中，affine_layers参数不更新，res2层参数不更新。
 *  使用Nvidia Tesla V100 8卡并行，总共训练时长大约40小时。
-
-## 参数微调
-
-参数微调是指在特定任务上微调已训练模型的参数。通过初始化`pretrained_model`，微调一个模型可以采用如下的命令：
-
-    python train.py
-        --max_size=1333 \
-        --scales=800 \
-        --pretrained_model=${path_to_pretrain_model} \
-        --batch_size= 8\
-        --model_save_dir=output/
 
 ## 模型评估
 
@@ -121,10 +118,13 @@ Faster RCNN mAP
 | 模型                    | 批量大小     | 迭代次数        | mAP  |
 | :------------------------------ | :------------:    | :------------------:    |------: |
 | Detectron                 | 8            |    180000        | 0.315 |
-| Fluid all padding         | 8            |    180000        | 0.308 |
 | Fluid minibatch padding | 8            |    180000        | 0.314 |
+| Fluid all padding         | 8            |    180000        | 0.308 |
 | Fluid no padding            |6            |    240000        | 0.317 |
 
+* Fluid all padding: 每张图像填充为1333\*1333大小。
+* Fluid minibatch padding: 同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
+* Fluid no padding: 不对图像做填充处理。
 
 ## 模型推断及可视化
 
