@@ -1,16 +1,29 @@
+#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import time
 import numpy as np
-import argparse
-import functools
 from eval_helper import get_nmsed_box
 from eval_helper import get_dt_res
 import paddle
 import paddle.fluid as fluid
 import reader
 from utility import print_arguments, parse_args
-# A special mAP metric for COCO dataset, which averages AP in different IoUs.
-# To use this eval_coco_map.py, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 import models.model_builder as model_builder
 import models.resnet as resnet
 import json
