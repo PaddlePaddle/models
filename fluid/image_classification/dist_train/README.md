@@ -52,7 +52,7 @@ In this example, we launched 4 parameter server instances and 4 trainer instance
 1. launch trainer process
 
     ``` python
-    PADDLE_TRAINING_ROLE=PSERVER \
+    PADDLE_TRAINING_ROLE=TRAINER \
     PADDLE_TRAINERS=4 \
     PADDLE_PSERVER_IPS=192.168.0.100,192.168.0.101,192.168.0.102,192.168.0.103 \
     PADDLE_TRAINER_ID=0 \
