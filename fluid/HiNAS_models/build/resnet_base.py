@@ -48,7 +48,7 @@ ops = [
 ]
 
 
-def net(inputs, tokens):
+def net(inputs, labels, tokens):
     """ build network with skip links """
 
     x = layers.conv(inputs, FLAGS.width, (3, 3))
@@ -63,7 +63,11 @@ def net(inputs, tokens):
     x = layers.dropout(x)
     logits = layers.fully_connected(x, num_classes)
 
-    return fluid.layers.softmax(logits)
+    cost = fluid.layers.softmax_with_cross_entropy(logits=logits, label=labels)
+    avg_cost = fluid.layers.mean(cost)
+    accuracy = fluid.layers.accuracy(input=logits, label=labels)
+
+    return avg_cost, accuracy
 
 
 def stage(x, tokens, pre_activation=False, downsample=False):

@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 
 import math
+import time
 
 import numpy as np
 import paddle
@@ -38,8 +39,11 @@ flags.DEFINE_integer("num_epochs", 200, "total epochs to train")
 flags.DEFINE_float("weight_decay", 0.0004, "weight decay")
 
 flags.DEFINE_float("momentum", 0.9, "momentum")
+flags.DEFINE_float("gd_clip", 5.0, "gradient clipping")
 
 flags.DEFINE_boolean("shuffle_image", True, "shuffle input images on training")
+
+flags.DEFINE_boolean("use_nccl", True, "Parallel training")
 
 dataset_train_size = 50000
 
@@ -64,29 +68,8 @@ class Model(object):
              * (1.0 + fluid.layers.ops.cos(step / self.max_step * math.pi))
         return lr
 
-    def optimizer_program(self):
-        return fluid.optimizer.Momentum(
-            learning_rate=self.cosine_annealing(),
-            momentum=FLAGS.momentum,
-            use_nesterov=True,
-            regularization=fluid.regularizer.L2DecayRegularizer(
-                FLAGS.weight_decay))
-
-    def inference_network(self):
-        images = fluid.layers.data(
-            name='pixel', shape=[3, 32, 32], dtype='float32')
-        return self.build_fn(images, self.tokens)
-
-    def train_network(self):
-        predict = self.inference_network()
-        label = fluid.layers.data(name='label', shape=[1], dtype='int64')
-        cost = fluid.layers.cross_entropy(input=predict, label=label)
-        avg_cost = fluid.layers.mean(cost)
-        accuracy = fluid.layers.accuracy(input=predict, label=label)
-        # self.parameters = fluid.parameters.create(avg_cost)
-        return [avg_cost, accuracy]
-
     def run(self):
+        # input data
         train_files = reader.train10()
         test_files = reader.test10()
 
@@ -97,42 +80,85 @@ class Model(object):
         else:
             train_reader = paddle.batch(
                 train_files, batch_size=FLAGS.batch_size)
-
         test_reader = paddle.batch(test_files, batch_size=FLAGS.batch_size)
 
+        images = fluid.layers.data(
+            name='pixel', shape=[3, 32, 32], dtype='float32')
+        labels = fluid.layers.data(name='label', shape=[1], dtype='int64')
+
+        # train network
+        avg_loss, accuracy = self.build_fn(images, labels, self.tokens)
+
+        test_program = fluid.default_main_program().clone(for_test=True)
+
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=self.cosine_annealing(),
+            momentum=FLAGS.momentum,
+            use_nesterov=True,
+            regularization=fluid.regularizer.L2DecayRegularizer(
+                FLAGS.weight_decay))
+        optimizer.minimize(avg_loss)
+
+        # run
+        place = fluid.CUDAPlace(0)
+        exe = fluid.Executor(place)
+        exe.run(fluid.default_startup_program())
+
+        if FLAGS.use_nccl:
+            train_exe = fluid.ParallelExecutor(
+                use_cuda=True,
+                loss_name=avg_loss.name,
+                main_program=fluid.default_main_program())
+            test_exe = fluid.ParallelExecutor(
+                use_cuda=True,
+                share_vars_from=train_exe,
+                main_program=test_program)
+
+        feeder = fluid.DataFeeder(place=place, feed_list=[images, labels])
+
+        best_acc = 0.0
         costs = []
         accs = []
-
-        def event_handler(event):
-            if isinstance(event, fluid.EndStepEvent):
-                costs.append(event.metrics[0])
-                accs.append(event.metrics[1])
-                if event.step % 20 == 0:
-                    print("Epoch %d, Step %d, Loss %f, Acc %f" % (
-                        event.epoch, event.step, np.mean(costs), np.mean(accs)))
+        for epoch in range(FLAGS.num_epochs):
+            start_time = time.time()
+            for batch, data in enumerate(train_reader()):
+                if FLAGS.use_nccl:
+                    cost, acc = train_exe.run(
+                        feed=feeder.feed(data),
+                        fetch_list=[avg_loss.name, accuracy.name])
+                else:
+                    cost, acc = exe.run(
+                        fluid.default_main_program(),
+                        feed=feeder.feed(data),
+                        fetch_list=[avg_loss.name, accuracy.name],
+                        use_program_cache=True)
+                costs.append(cost)
+                accs.append(acc)
+                if batch % 10 == 0:
+                    print("Epoch %d, Step %d, Loss %f, Acc %f" %
+                          (epoch, batch, np.mean(costs), np.mean(accs)))
                     del costs[:]
                     del accs[:]
+            print("Epoch done. time elapsed: {}s"
+                  .format(time.time() - start_time))
 
-            if isinstance(event, fluid.EndEpochEvent):
-                if event.epoch % 3 == 0 or event.epoch == FLAGS.num_epochs - 1:
-                    avg_cost, accuracy = trainer.test(
-                        reader=test_reader, feed_order=['pixel', 'label'])
+            if epoch % 3 == 0 or epoch == FLAGS.num_epochs - 1:
+                test_costs = []
+                test_accs = []
+                for data in test_reader():
+                    if FLAGS.use_nccl:
+                        cost, acc = test_exe.run(  #test_program,
+                            feed=feeder.feed(data),
+                            fetch_list=[avg_loss.name, accuracy.name])
+                    else:
+                        cost, acc = exe.run(
+                            test_program,
+                            feed=feeder.feed(data),
+                            fetch_list=[avg_loss.name, accuracy.name])
+                    test_costs.append(cost)
+                    test_accs.append(acc)
 
-                    event_handler.best_acc = max(event_handler.best_acc,
-                                                 accuracy)
-                    print("Test with epoch %d, Loss %f, Acc %f" %
-                          (event.epoch, avg_cost, accuracy))
-                    print("Best acc %f" % event_handler.best_acc)
-
-        event_handler.best_acc = 0.0
-        place = fluid.CUDAPlace(0)
-        trainer = fluid.Trainer(
-            train_func=self.train_network,
-            optimizer_func=self.optimizer_program,
-            place=place)
-
-        trainer.train(
-            reader=train_reader,
-            num_epochs=FLAGS.num_epochs,
-            event_handler=event_handler,
-            feed_order=['pixel', 'label'])
+                print("Test with epoch %d, Loss %f, Acc %f" %
+                      (epoch, np.mean(test_costs), np.mean(test_accs)))
+                best_acc = max(best_acc, np.mean(test_accs))
+                print("Best acc %f" % best_acc)

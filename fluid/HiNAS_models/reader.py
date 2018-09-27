@@ -39,7 +39,7 @@ flags.DEFINE_boolean("cutout", True, "cutout")
 flags.DEFINE_boolean("standardize_image", True, "standardize input images")
 flags.DEFINE_boolean("pad_and_cut_image", True, "pad and cut input images")
 
-__all__ = ['train10', 'test10', 'convert']
+__all__ = ['train10', 'test10']
 
 URL_PREFIX = 'https://www.cs.toronto.edu/~kriz/'
 CIFAR10_URL = URL_PREFIX + 'cifar-10-python.tar.gz'
@@ -92,7 +92,7 @@ def preprocess(sample, is_training):
                 img[i][j][:] = 0.0
 
     img = np.transpose(img, (2, 0, 1))
-    return img.reshape(3 * image_size * image_size)
+    return img  #.reshape(3 * image_size * image_size)
 
 
 def reader_creator(filename, sub_name, is_training):
@@ -143,15 +143,3 @@ def test10():
     return reader_creator(
         paddle.dataset.common.download(CIFAR10_URL, 'cifar', CIFAR10_MD5),
         'test_batch', False)
-
-
-def fetch():
-    paddle.dataset.common.download(CIFAR10_URL, 'cifar', CIFAR10_MD5)
-
-
-def convert(path):
-    """
-    Converts dataset to recordio format
-    """
-    paddle.dataset.common.convert(path, train10(), 1000, "cifar_train10")
-    paddle.dataset.common.convert(path, test10(), 1000, "cifar_test10")
