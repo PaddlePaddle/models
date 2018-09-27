@@ -16,7 +16,7 @@
 ├── reader.py            # 数据读取接口
 ├── README.md            # 文档
 ├── train.py             # 训练脚本
-└── util.py              # wordpiece 数据解码工具
+└── gen_data.sh          # 数据生成脚本
 ```
 
 ### 简介
@@ -59,11 +59,8 @@ Decoder 具有和 Encoder 类似的结构，只是相比于组成 Encoder 的 la
 
 ### 数据准备
 
-WMT 数据集是机器翻译领域公认的主流数据集；WMT 英德和英法数据集也是 Transformer 论文中所用数据集，其中英德数据集使用了 BPE（byte-pair encoding）[4]编码的数据，英法数据集使用了 wordpiece [5]的数据。我们这里也将使用 WMT 英德和英法翻译数据，并和论文保持一致使用 BPE 和 wordpiece 的数据，下面给出了使用的方法。对于其他自定义数据，参照下文遵循或转换为类似的数据格式即可。
-
-#### WMT 英德翻译数据
-
-[WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)是一个中等规模的数据集。参照论文，英德数据集我们使用 BPE 编码的数据，这能够更好的解决未登录词（out-of-vocabulary，OOV）的问题[4]。用到的 BPE 数据可以参照[这里](https://github.com/google/seq2seq/blob/master/docs/data.md)进行下载（如果希望在自定义数据中使用 BPE 编码，可以参照[这里](https://github.com/rsennrich/subword-nmt)进行预处理），下载后解压，其中 `train.tok.clean.bpe.32000.en` 和 `train.tok.clean.bpe.32000.de` 为使用 BPE 的训练数据（平行语料，分别对应了英语和德语，经过了 tokenize 和 BPE 的处理），`newstest2016.tok.bpe.32000.en` 和 `newstest2016.tok.bpe.32000.de` 等为测试数据（`newstest2016.tok.en` 和 `newstest2016.tok.de` 等则为对应的未使用 BPE 的测试数据），`vocab.bpe.32000` 为相应的词典文件（源语言和目标语言共享该词典文件）。
+WMT 数据集是机器翻译领域公认的主流数据集，[WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)是其中一个中等规模的数据集，也是 Transformer 论文中用到的一个数据集，这里将其作为示例，运行 `gen_data.sh` 脚本获取并生成。
+参照论文，英德数据集我们使用 BPE 编码的数据，这能够更好的解决未登录词（out-of-vocabulary，OOV）的问题[4]。用到的 BPE 数据可以参照[这里](https://github.com/google/seq2seq/blob/master/docs/data.md)进行下载（如果希望在自定义数据中使用 BPE 编码，可以参照[这里](https://github.com/rsennrich/subword-nmt)进行预处理），下载后解压，其中 `train.tok.clean.bpe.32000.en` 和 `train.tok.clean.bpe.32000.de` 为使用 BPE 的训练数据（平行语料，分别对应了英语和德语，经过了 tokenize 和 BPE 的处理），`newstest2016.tok.bpe.32000.en` 和 `newstest2016.tok.bpe.32000.de` 等为测试数据（`newstest2016.tok.en` 和 `newstest2016.tok.de` 等则为对应的未使用 BPE 的测试数据），`vocab.bpe.32000` 为相应的词典文件（源语言和目标语言共享该词典文件）。
 
 由于本示例中的数据读取脚本 `reader.py` 默认使用的样本数据的格式为 `\t` 分隔的的源语言和目标语言句子对（默认句子中的词之间使用空格分隔），因此需要将源语言到目标语言的平行语料库文件合并为一个文件，可以执行以下命令进行合并：
 ```sh
@@ -74,11 +71,7 @@ paste -d '\t' train.tok.clean.bpe.32000.en train.tok.clean.bpe.32000.de > train.
 sed -i '1i\<s>\n<e>\n<unk>' vocab.bpe.32000
 ```
 
-#### WMT 英法翻译数据
-
-[WMT'14 EN-FR 数据集](http://www.statmt.org/wmt14/translation-task.html)是一个较大规模的数据集。参照论文，英法数据我们使用 wordpiece 表示的数据，wordpiece 和 BPE 类似同为采用 sub-word units 来解决 OOV 问题的方法[5]。我们提供了已完成预处理的 wordpiece 数据的下载，可以从[这里](http://transformer-data.bj.bcebos.com/wmt14_enfr.tar)下载，其中 `train.wordpiece.en-fr` 为使用 wordpiece 的训练数据，`newstest2014.wordpiece.en-fr` 为测试数据（`newstest2014.tok.en` 和 `newstest2014.tok.fr` 为对应的未经 wordpiece 处理过的测试数据，使用[脚本](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/tokenizer/tokenizer.perl)进行了 tokenize 的处理），`vocab.wordpiece.en-fr` 为相应的词典文件（源语言和目标语言共享该词典文件）。
-
-提供的英法翻译数据无需进行额外的处理，可以直接使用；需要注意的是，这些用 wordpiece 表示的数据中句子内的 token 之间使用 `\x01` 而非空格进行分隔（因部分 token 内包含空格），这需要在训练时进行指定。
+对于其他自定义数据，转换为类似的数据格式即可，如需
 
 ### 模型训练
 
