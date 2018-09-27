@@ -35,7 +35,7 @@ cd utils && bash download_thirdparty.sh
 ```
 
 ### Preprocess the Data
-After the dataset is downloaded, there is still some work to do to run the baseline systems. DuReader dataset offers rich amount of documents for every user question, the documents are too long for popular RC models to cope with. In our baseline models, we preprocess the train set and development set data by selecting the paragraph that is most related to the answer string, while for inferring(no available golden answer), we select the paragraph that is most related to the question string. The preprocessing strategy is implemented in `utils/preprocess.py`. To preprocess the raw data, you should first segment 'question', 'title', 'paragraphs' and then store the segemented result into 'segmented_question', 'segmented_title', 'segmented_paragraphs' like the downloaded preprocessed data, then run:
+After the dataset is downloaded, there is still some work to do to run DuReader. DuReader dataset offers rich amount of documents for every user question, the documents are too long for popular RC models to cope with. In our model, we preprocess the train set and development set data by selecting the paragraph that is most related to the answer string, while for inferring(no available golden answer), we select the paragraph that is most related to the question string. The preprocessing strategy is implemented in `utils/preprocess.py`. To preprocess the raw data, you should first segment 'question', 'title', 'paragraphs' and then store the segemented result into 'segmented_question', 'segmented_title', 'segmented_paragraphs' like the downloaded preprocessed data, then run:
 ```
 cat data/raw/trainset/search.train.json | python utils/preprocess.py > data/preprocessed/trainset/search.train.json
 ```
@@ -57,29 +57,22 @@ python utils/get_vocab.py --files data/demo/trainset/search.train.json data/demo
 For now we've only tested on PaddlePaddle v1.0, to install PaddlePaddle and for more details about PaddlePaddle, see [PaddlePaddle Homepage](http://paddlepaddle.org).
 
 #### Training
-The DuReader model can be trained by run `train.py`, for complete usage run `python train.py -h`.
+The DuReader model can be trained by run `run.py`, for complete usage run `python run.py -h`.
 
 The basic training and infering process has been wrapped in `run.sh`,  the basic usage is:
 ```
-bash run.sh TASK_NAME
+bash run.sh --TASK_NAME
 ```
 For example, to train the model, run:
 ```
-bash run.sh train
+bash run.sh --train
 ```
-
-## Run DuReader on multilingual datasets
-
-To help evaluate the system performance on multilingual datasets, we provide scripts to convert MS MARCO V2 data from its format to DuReader format.
-
-[MS MARCO](http://www.msmarco.org/dataset.aspx) (Microsoft Machine Reading Comprehension) is an English dataset focused on machine reading comprehension and question answering. The design of MS MARCO and DuReader is similiar. It is worthwhile examining the MRC systems on both Chinese (DuReader) and English (MS MARCO) datasets.
-
-You can download MS MARCO V2 data, and run the following scripts to convert the data from MS MARCO V2 format to DuReader format. Then, you can run and evaluate our DuReader baselines or your DuReader systems on MS MARCO data.
-
+#### Inference
+To infer a trained model, run the same command as training and change `train` to `infer`,  and add `--testset <path_to_testset>` argument. for example, suppose a model is successfully trained and parameters of the model are saved in a directory such as `models/1`, to infer the saved model, run:
 ```
-./run_marco2dureader_preprocess.sh ../data/marco/train_v2.1.json ../data/marco/train_v2.1_dureaderformat.json
-./run_marco2dureader_preprocess.sh ../data/marco/dev_v2.1.json ../data/marco/dev_v2.1_dureaderformat.json
+bash run.sh --infer --testset ../data/preprocessed/testset/search.test.json --load_dir models/1  --result_dir infer
 ```
+The result corresponding to the model saved is under `infer` folder, and the evaluation metrics is logged.
 
 ## Copyright and License
 Copyright 2017 Baidu.com, Inc. All Rights Reserved
