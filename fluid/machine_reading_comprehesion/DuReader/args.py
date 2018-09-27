@@ -23,6 +23,10 @@ import distutils.util
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        '--prepare',
+        action='store_true',
+        help='create the directories, prepare the vocabulary and embeddings')
+    parser.add_argument(
         '--train',
         action='store_true',
         help='train the model')

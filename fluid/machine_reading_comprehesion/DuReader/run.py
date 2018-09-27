@@ -41,7 +41,7 @@ import logging
 import pickle
 from utils import normalize
 from utils import compute_bleu_rouge
-
+from vocab import Vocab
 
 def prepare_batch_input(insts, args):
     doc_num = args.doc_num
@@ -437,6 +437,39 @@ def predict(logger, args):
 		inference_program, avg_cost, s_probs, e_probs,
 		feed_order, place, vocab, brc_data, logger, args)
 
+def prepare(logger, args):
+    """
+    checks data, creates the directories, prepare the vocabulary and embeddings
+    """
+    logger.info('Checking the data files...')
+    for data_path in args.trainset + args.devset + args.testset:
+        assert os.path.exists(data_path), '{} file does not exist.'.format(data_path)
+    logger.info('Preparing the directories...')
+    for dir_path in [args.vocab_dir, args.save_dir, args.result_dir]:
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+
+    logger.info('Building vocabulary...')
+    brc_data = BRCDataset(args.max_p_num, args.max_p_len, args.max_q_len,
+                          args.trainset, args.devset, args.testset)
+    vocab = Vocab(lower=True)
+    for word in brc_data.word_iter('train'):
+        vocab.add(word)
+
+    unfiltered_vocab_size = vocab.size()
+    vocab.filter_tokens_by_cnt(min_cnt=2)
+    filtered_num = unfiltered_vocab_size - vocab.size()
+    logger.info('After filter {} tokens, the final vocab size is {}'.format(filtered_num,
+                                                                            vocab.size()))
+
+    logger.info('Assigning embeddings...')
+    vocab.randomly_init_embeddings(args.embed_size)
+
+    logger.info('Saving vocab...')
+    with open(os.path.join(args.vocab_dir, 'vocab.data'), 'wb') as fout:
+        pickle.dump(vocab, fout)
+
+    logger.info('Done with preparing!')
 
 if __name__ == '__main__':
     args = parse_args()
@@ -460,6 +493,8 @@ if __name__ == '__main__':
         logger.addHandler(console_handler)
     args = parse_args()
     logger.info('Running with args : {}'.format(args))
+    if args.prepare:
+        prepare(logger, args)
     if args.train:
         train(logger, args)
     if args.evaluate:
