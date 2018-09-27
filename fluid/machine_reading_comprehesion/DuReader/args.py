@@ -98,7 +98,7 @@ def parse_args():
         "(default: %(default)d)")
     parser.add_argument(
         '--optim', 
-        default='rprop', 
+        default='adam', 
         help='optimizer type')
     parser.add_argument(
         '--trainset',

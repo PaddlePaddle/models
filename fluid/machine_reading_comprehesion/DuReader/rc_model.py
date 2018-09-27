@@ -75,6 +75,7 @@ def encoder(input_name, para_name, shape, hidden_size, args):
         input=input_ids,
         size=shape,
         dtype='float32',
+        is_sparse=True,
         param_attr=fluid.ParamAttr(name='embedding_para'))
 
     encoder_out = bi_lstm_encoder(
