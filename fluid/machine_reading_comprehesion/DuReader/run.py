@@ -43,6 +43,7 @@ from utils import normalize
 from utils import compute_bleu_rouge
 from vocab import Vocab
 
+
 def prepare_batch_input(insts, args):
     doc_num = args.doc_num
 
@@ -93,10 +94,11 @@ def print_para(train_prog, train_exe, logger, args):
             p_array = np.array(train_exe.scope.find_var(p_name).get_tensor())
             param_num = np.prod(p_array.shape)
             num_sum = num_sum + param_num
-            logger.info("param: {0},  mean={1}  max={2}  min={3}  num={4} {5}".format(
-                p_name,
-                p_array.mean(),
-                p_array.max(), p_array.min(), p_array.shape, param_num))
+            logger.info(
+                "param: {0},  mean={1}  max={2}  min={3}  num={4} {5}".format(
+                    p_name,
+                    p_array.mean(),
+                    p_array.max(), p_array.min(), p_array.shape, param_num))
         logger.info("total param num: {0}".format(num_sum))
 
 
@@ -148,16 +150,16 @@ def find_best_answer(sample, start_prob, end_prob, padded_p_len, args):
     return best_answer
 
 
-def validation(inference_program, avg_cost, s_probs, e_probs, feed_order,
-               place, vocab, brc_data, logger, args):
+def validation(inference_program, avg_cost, s_probs, e_probs, feed_order, place,
+               vocab, brc_data, logger, args):
     """
         
     """
     parallel_executor = fluid.ParallelExecutor(
-	main_program=inference_program,
-	use_cuda=bool(args.use_gpu), loss_name=avg_cost.name)
-    print_para(inference_program, parallel_executor,
-	       logger, args)
+        main_program=inference_program,
+        use_cuda=bool(args.use_gpu),
+        loss_name=avg_cost.name)
+    print_para(inference_program, parallel_executor, logger, args)
 
     # Use test set as validation each pass
     total_loss = 0.0
@@ -175,9 +177,9 @@ def validation(inference_program, avg_cost, s_probs, e_probs, feed_order,
     for batch_id, batch in enumerate(dev_batches, 1):
         feed_data = prepare_batch_input(batch, args)
         val_fetch_outs = parallel_executor.run(
-                                 feed=val_feeder.feed(feed_data),
-                                 fetch_list=[avg_cost.name, s_probs.name, e_probs.name],
-                                 return_numpy=False)
+            feed=val_feeder.feed(feed_data),
+            fetch_list=[avg_cost.name, s_probs.name, e_probs.name],
+            return_numpy=False)
 
         total_loss += np.array(val_fetch_outs[0])[0]
 
@@ -207,11 +209,12 @@ def validation(inference_program, avg_cost, s_probs, e_probs, feed_order,
                     'yesno_answers': []
                 })
     if args.result_dir is not None and args.result_name is not None:
-	result_file = os.path.join(args.result_dir, args.result_name + '.json')
-	with open(result_file, 'w') as fout:
-	    for pred_answer in pred_answers:
-		fout.write(json.dumps(pred_answer, ensure_ascii=False) + '\n')
-        logger.info('Saving {} results to {}'.format(args.result_name, result_file))
+        result_file = os.path.join(args.result_dir, args.result_name + '.json')
+        with open(result_file, 'w') as fout:
+            for pred_answer in pred_answers:
+                fout.write(json.dumps(pred_answer, ensure_ascii=False) + '\n')
+        logger.info('Saving {} results to {}'.format(args.result_name,
+                                                     result_file))
 
     ave_loss = 1.0 * total_loss / count
 
@@ -228,6 +231,7 @@ def validation(inference_program, avg_cost, s_probs, e_probs, feed_order,
         bleu_rouge = None
     return ave_loss, bleu_rouge
 
+
 def train(logger, args):
     logger.info('Load data_set and vocab...')
     with open(os.path.join(args.vocab_dir, 'vocab.data'), 'rb') as fin:
@@ -243,108 +247,115 @@ def train(logger, args):
     # build model
     main_program = fluid.Program()
     startup_prog = fluid.Program()
-    main_program.random_seed=args.random_seed
-    startup_prog.random_seed=args.random_seed
+    main_program.random_seed = args.random_seed
+    startup_prog.random_seed = args.random_seed
     with fluid.program_guard(main_program, startup_prog):
         with fluid.unique_name.guard():
             avg_cost, s_probs, e_probs, feed_order = rc_model.rc_model(
-                    args.hidden_size,
-                    vocab,
-                    args)
+                args.hidden_size, vocab, args)
             # clone from default main program and use it as the validation program
             inference_program = main_program.clone(for_test=True)
 
-	    # build optimizer
-	    if args.optim == 'sgd':
-		optimizer = fluid.optimizer.SGD(learning_rate=args.learning_rate)
-	    elif args.optim == 'adam':
-		optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
-	    elif args.optim == 'rprop':
-		optimizer = fluid.optimizer.RMSPropOptimizer(
-		    learning_rate=args.learning_rate)
-	    else:
-		logger.error('Unsupported optimizer: {}'.format(args.optim))
-		exit(-1)
-	    optimizer.minimize(avg_cost)
+            # build optimizer
+            if args.optim == 'sgd':
+                optimizer = fluid.optimizer.SGD(
+                    learning_rate=args.learning_rate)
+            elif args.optim == 'adam':
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=args.learning_rate)
+            elif args.optim == 'rprop':
+                optimizer = fluid.optimizer.RMSPropOptimizer(
+                    learning_rate=args.learning_rate)
+            else:
+                logger.error('Unsupported optimizer: {}'.format(args.optim))
+                exit(-1)
+            optimizer.minimize(avg_cost)
 
-	    # initialize parameters
-	    place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
-	    exe = Executor(place)
-	    if args.load_dir:
-		logger.info('load from {}'.format(args.load_dir))
-		fluid.io.load_persistables(exe, args.load_dir, main_program=main_program)
-	    else:
-		exe.run(startup_prog)
-		embedding_para = fluid.global_scope().find_var(
-		    'embedding_para').get_tensor()
-		embedding_para.set(vocab.embeddings.astype(np.float32), place)
+            # initialize parameters
+            place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
+            exe = Executor(place)
+            if args.load_dir:
+                logger.info('load from {}'.format(args.load_dir))
+                fluid.io.load_persistables(
+                    exe, args.load_dir, main_program=main_program)
+            else:
+                exe.run(startup_prog)
+                embedding_para = fluid.global_scope().find_var(
+                    'embedding_para').get_tensor()
+                embedding_para.set(vocab.embeddings.astype(np.float32), place)
 
-	    # prepare data
-	    feed_list = [
-		main_program.global_block().var(var_name) for var_name in feed_order
-	    ]
-	    feeder = fluid.DataFeeder(feed_list, place)
+            # prepare data
+            feed_list = [
+                main_program.global_block().var(var_name)
+                for var_name in feed_order
+            ]
+            feeder = fluid.DataFeeder(feed_list, place)
 
-	    logger.info('Training the model...')
-	    parallel_executor = fluid.ParallelExecutor(
-		main_program=main_program,
-		use_cuda=bool(args.use_gpu), loss_name=avg_cost.name)
-	    print_para(main_program, parallel_executor,
-		       logger, args)
+            logger.info('Training the model...')
+            parallel_executor = fluid.ParallelExecutor(
+                main_program=main_program,
+                use_cuda=bool(args.use_gpu),
+                loss_name=avg_cost.name)
+            print_para(main_program, parallel_executor, logger, args)
 
-	    for pass_id in range(1, args.pass_num + 1):
-		pass_start_time = time.time()
-		pad_id = vocab.get_id(vocab.pad_token)
-		train_batches = brc_data.gen_mini_batches(
-		    'train', args.batch_size, pad_id, shuffle=True)
-		log_every_n_batch, n_batch_loss = args.log_interval, 0
-		total_num, total_loss = 0, 0
-		for batch_id, batch in enumerate(train_batches, 1):
-		    input_data_dict = prepare_batch_input(batch, args)
-		    fetch_outs = parallel_executor.run(
-			feed=feeder.feed(input_data_dict),
-			fetch_list=[avg_cost.name],
-			return_numpy=False)
-		    cost_train = np.array(fetch_outs[0])[0]
-		    total_num += len(batch['raw_data'])
-		    n_batch_loss += cost_train
-		    total_loss += cost_train * len(batch['raw_data'])
-		    if log_every_n_batch > 0 and batch_id % log_every_n_batch == 0:
-			print_para(main_program,
-				   parallel_executor, logger, args)
-			logger.info('Average loss from batch {} to {} is {}'.format(
-			    batch_id - log_every_n_batch + 1, batch_id, "%.10f" % (
-				n_batch_loss / log_every_n_batch)))
-			n_batch_loss = 0
-		    if args.dev_interval > 0 and batch_id % args.dev_interval == 0:
-			eval_loss, bleu_rouge = validation(
-			    inference_program, avg_cost, s_probs, e_probs,
-			    feed_order, place, vocab, brc_data, logger, args)
-			logger.info('Dev eval loss {}'.format(eval_loss))
-			logger.info('Dev eval result: {}'.format(bleu_rouge))
-		pass_end_time = time.time()
+            for pass_id in range(1, args.pass_num + 1):
+                pass_start_time = time.time()
+                pad_id = vocab.get_id(vocab.pad_token)
+                train_batches = brc_data.gen_mini_batches(
+                    'train', args.batch_size, pad_id, shuffle=True)
+                log_every_n_batch, n_batch_loss = args.log_interval, 0
+                total_num, total_loss = 0, 0
+                for batch_id, batch in enumerate(train_batches, 1):
+                    input_data_dict = prepare_batch_input(batch, args)
+                    fetch_outs = parallel_executor.run(
+                        feed=feeder.feed(input_data_dict),
+                        fetch_list=[avg_cost.name],
+                        return_numpy=False)
+                    cost_train = np.array(fetch_outs[0])[0]
+                    total_num += len(batch['raw_data'])
+                    n_batch_loss += cost_train
+                    total_loss += cost_train * len(batch['raw_data'])
+                    if log_every_n_batch > 0 and batch_id % log_every_n_batch == 0:
+                        print_para(main_program, parallel_executor, logger,
+                                   args)
+                        logger.info(
+                            'Average loss from batch {} to {} is {}'.format(
+                                batch_id - log_every_n_batch + 1, batch_id,
+                                "%.10f" % (n_batch_loss / log_every_n_batch)))
+                        n_batch_loss = 0
+                    if args.dev_interval > 0 and batch_id % args.dev_interval == 0:
+                        eval_loss, bleu_rouge = validation(
+                            inference_program, avg_cost, s_probs, e_probs,
+                            feed_order, place, vocab, brc_data, logger, args)
+                        logger.info('Dev eval loss {}'.format(eval_loss))
+                        logger.info('Dev eval result: {}'.format(bleu_rouge))
+                pass_end_time = time.time()
 
-		logger.info('Evaluating the model after epoch {}'.format(pass_id))
-		if brc_data.dev_set is not None:
-		    eval_loss, bleu_rouge = validation(inference_program, avg_cost,
-						       s_probs, e_probs, feed_order,
-						       place, vocab, brc_data, logger, args)
-		    logger.info('Dev eval loss {}'.format(eval_loss))
-		    logger.info('Dev eval result: {}'.format(bleu_rouge))
-		else:
-		    logger.warning(
-			'No dev set is loaded for evaluation in the dataset!')
-		time_consumed = pass_end_time - pass_start_time
-		logger.info('Average train loss for epoch {} is {}'.format(
-		    pass_id, "%.10f" % (1.0 * total_loss / total_num)))
+                logger.info('Evaluating the model after epoch {}'.format(
+                    pass_id))
+                if brc_data.dev_set is not None:
+                    eval_loss, bleu_rouge = validation(
+                        inference_program, avg_cost, s_probs, e_probs,
+                        feed_order, place, vocab, brc_data, logger, args)
+                    logger.info('Dev eval loss {}'.format(eval_loss))
+                    logger.info('Dev eval result: {}'.format(bleu_rouge))
+                else:
+                    logger.warning(
+                        'No dev set is loaded for evaluation in the dataset!')
+                time_consumed = pass_end_time - pass_start_time
+                logger.info('Average train loss for epoch {} is {}'.format(
+                    pass_id, "%.10f" % (1.0 * total_loss / total_num)))
 
-		if pass_id % args.save_interval == 0:
-		    model_path = os.path.join(args.save_dir, str(pass_id))
-		    if not os.path.isdir(model_path):
-			os.makedirs(model_path)
+                if pass_id % args.save_interval == 0:
+                    model_path = os.path.join(args.save_dir, str(pass_id))
+                    if not os.path.isdir(model_path):
+                        os.makedirs(model_path)
 
-		    fluid.io.save_persistables(
-			executor=exe, dirname=model_path, main_program=main_program)
+                    fluid.io.save_persistables(
+                        executor=exe,
+                        dirname=model_path,
+                        main_program=main_program)
+
 
 def evaluate(logger, args):
     logger.info('Load data_set and vocab...')
@@ -352,8 +363,8 @@ def evaluate(logger, args):
         vocab = pickle.load(fin)
         logger.info('vocab size is {} and embed dim is {}'.format(vocab.size(
         ), vocab.embed_dim))
-    brc_data = BRCDataset(args.max_p_num, args.max_p_len, args.max_q_len,
-                          dev_files=args.devset)
+    brc_data = BRCDataset(
+        args.max_p_num, args.max_p_len, args.max_q_len, dev_files=args.devset)
     logger.info('Converting text into ids...')
     brc_data.convert_to_ids(vocab)
     logger.info('Initialize the model...')
@@ -361,46 +372,48 @@ def evaluate(logger, args):
     # build model
     main_program = fluid.Program()
     startup_prog = fluid.Program()
-    main_program.random_seed=args.random_seed
-    startup_prog.random_seed=args.random_seed
+    main_program.random_seed = args.random_seed
+    startup_prog.random_seed = args.random_seed
     with fluid.program_guard(main_program, startup_prog):
         with fluid.unique_name.guard():
             avg_cost, s_probs, e_probs, feed_order = rc_model.rc_model(
-                    args.hidden_size,
-                    vocab,
-                    args)
-	    # initialize parameters
-	    place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
-	    exe = Executor(place)
-	    if args.load_dir:
-		logger.info('load from {}'.format(args.load_dir))
-		fluid.io.load_persistables(exe, args.load_dir, main_program=main_program)
-	    else:
-		logger.error('No model file to load ...')
-		return
+                args.hidden_size, vocab, args)
+            # initialize parameters
+            place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
+            exe = Executor(place)
+            if args.load_dir:
+                logger.info('load from {}'.format(args.load_dir))
+                fluid.io.load_persistables(
+                    exe, args.load_dir, main_program=main_program)
+            else:
+                logger.error('No model file to load ...')
+                return
 
-	    # prepare data
-	    feed_list = [
-		main_program.global_block().var(var_name) for var_name in feed_order
-	    ]
-	    feeder = fluid.DataFeeder(feed_list, place)
+            # prepare data
+            feed_list = [
+                main_program.global_block().var(var_name)
+                for var_name in feed_order
+            ]
+            feeder = fluid.DataFeeder(feed_list, place)
 
             inference_program = main_program.clone(for_test=True)
-	    eval_loss, bleu_rouge = validation(
-		inference_program, avg_cost, s_probs, e_probs,
-		feed_order, place, vocab, brc_data, logger, args)
-	    logger.info('Dev eval loss {}'.format(eval_loss))
-	    logger.info('Dev eval result: {}'.format(bleu_rouge))
-            logger.info('Predicted answers are saved to {}'.format(os.path.join(args.result_dir)))
-            
+            eval_loss, bleu_rouge = validation(
+                inference_program, avg_cost, s_probs, e_probs, feed_order,
+                place, vocab, brc_data, logger, args)
+            logger.info('Dev eval loss {}'.format(eval_loss))
+            logger.info('Dev eval result: {}'.format(bleu_rouge))
+            logger.info('Predicted answers are saved to {}'.format(
+                os.path.join(args.result_dir)))
+
+
 def predict(logger, args):
     logger.info('Load data_set and vocab...')
     with open(os.path.join(args.vocab_dir, 'vocab.data'), 'rb') as fin:
         vocab = pickle.load(fin)
         logger.info('vocab size is {} and embed dim is {}'.format(vocab.size(
         ), vocab.embed_dim))
-    brc_data = BRCDataset(args.max_p_num, args.max_p_len, args.max_q_len,
-                          dev_files=args.testset)
+    brc_data = BRCDataset(
+        args.max_p_num, args.max_p_len, args.max_q_len, dev_files=args.testset)
     logger.info('Converting text into ids...')
     brc_data.convert_to_ids(vocab)
     logger.info('Initialize the model...')
@@ -408,34 +421,35 @@ def predict(logger, args):
     # build model
     main_program = fluid.Program()
     startup_prog = fluid.Program()
-    main_program.random_seed=args.random_seed
-    startup_prog.random_seed=args.random_seed
+    main_program.random_seed = args.random_seed
+    startup_prog.random_seed = args.random_seed
     with fluid.program_guard(main_program, startup_prog):
         with fluid.unique_name.guard():
             avg_cost, s_probs, e_probs, feed_order = rc_model.rc_model(
-                    args.hidden_size,
-                    vocab,
-                    args)
-	    # initialize parameters
-	    place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
-	    exe = Executor(place)
-	    if args.load_dir:
-		logger.info('load from {}'.format(args.load_dir))
-		fluid.io.load_persistables(exe, args.load_dir, main_program=main_program)
-	    else:
-		logger.error('No model file to load ...')
-		return
+                args.hidden_size, vocab, args)
+            # initialize parameters
+            place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
+            exe = Executor(place)
+            if args.load_dir:
+                logger.info('load from {}'.format(args.load_dir))
+                fluid.io.load_persistables(
+                    exe, args.load_dir, main_program=main_program)
+            else:
+                logger.error('No model file to load ...')
+                return
 
-	    # prepare data
-	    feed_list = [
-		main_program.global_block().var(var_name) for var_name in feed_order
-	    ]
-	    feeder = fluid.DataFeeder(feed_list, place)
+            # prepare data
+            feed_list = [
+                main_program.global_block().var(var_name)
+                for var_name in feed_order
+            ]
+            feeder = fluid.DataFeeder(feed_list, place)
 
             inference_program = main_program.clone(for_test=True)
-	    eval_loss, bleu_rouge = validation(
-		inference_program, avg_cost, s_probs, e_probs,
-		feed_order, place, vocab, brc_data, logger, args)
+            eval_loss, bleu_rouge = validation(
+                inference_program, avg_cost, s_probs, e_probs, feed_order,
+                place, vocab, brc_data, logger, args)
+
 
 def prepare(logger, args):
     """
@@ -443,7 +457,8 @@ def prepare(logger, args):
     """
     logger.info('Checking the data files...')
     for data_path in args.trainset + args.devset + args.testset:
-        assert os.path.exists(data_path), '{} file does not exist.'.format(data_path)
+        assert os.path.exists(data_path), '{} file does not exist.'.format(
+            data_path)
     logger.info('Preparing the directories...')
     for dir_path in [args.vocab_dir, args.save_dir, args.result_dir]:
         if not os.path.exists(dir_path):
@@ -459,8 +474,8 @@ def prepare(logger, args):
     unfiltered_vocab_size = vocab.size()
     vocab.filter_tokens_by_cnt(min_cnt=2)
     filtered_num = unfiltered_vocab_size - vocab.size()
-    logger.info('After filter {} tokens, the final vocab size is {}'.format(filtered_num,
-                                                                            vocab.size()))
+    logger.info('After filter {} tokens, the final vocab size is {}'.format(
+        filtered_num, vocab.size()))
 
     logger.info('Assigning embeddings...')
     vocab.randomly_init_embeddings(args.embed_size)
@@ -470,6 +485,7 @@ def prepare(logger, args):
         pickle.dump(vocab, fout)
 
     logger.info('Done with preparing!')
+
 
 if __name__ == '__main__':
     args = parse_args()
