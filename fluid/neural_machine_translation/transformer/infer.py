@@ -171,7 +171,7 @@ def fast_infer(test_data, trg_idx2word, use_wordpiece):
         ])
 
     # This is used here to set dropout to the test mode.
-    infer_program = fluid.default_main_program().inference_optimize()
+    infer_program = fluid.default_main_program().clone(for_test=True)
 
     for batch_id, data in enumerate(test_data.batch_generator()):
         data_input = prepare_batch_input(
