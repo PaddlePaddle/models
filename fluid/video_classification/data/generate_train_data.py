@@ -9,27 +9,33 @@ for line in f.readlines():
     dd[name.lower()] = int(label) - 1
 f.close()
 
-# generate pkl
-path = 'train/'
-savepath = 'train_pkl/'
-if not os.path.exists(savepath):
-    os.makedirs(savepath)
 
-fw = open('train.list', 'w')
-for folder in os.listdir(path):
-    vidid = folder.split('_', 1)[1]
-    this_label = dd[folder.split('_')[1].lower()]
-    this_feat = []
-    for img in sorted(os.listdir(path + folder)):
-        fout = open(path + folder + '/' + img, 'rb')
-        this_feat.append(fout.read())
-        fout.close()
+def generate_pkl(mode):
+    # generate pkl
+    path = '%s/' % mode
+    savepath = '%s_pkl/' % mode
+    if not os.path.exists(savepath):
+        os.makedirs(savepath)
 
-    res = [vidid, this_label, this_feat]
+    fw = open('%s.list' % mode, 'w')
+    for folder in os.listdir(path):
+        vidid = folder.split('_', 1)[1]
+        this_label = dd[folder.split('_')[1].lower()]
+        this_feat = []
+        for img in sorted(os.listdir(path + folder)):
+            fout = open(path + folder + '/' + img, 'rb')
+            this_feat.append(fout.read())
+            fout.close()
 
-    outp = open(savepath + vidid + '.pkl', 'wb')
-    cPickle.dump(res, outp, protocol=cPickle.HIGHEST_PROTOCOL)
-    outp.close()
+        res = [vidid, this_label, this_feat]
 
-    fw.write('data/train_pkl/%s.pkl\n' % vidid)
-fw.close()
+        outp = open(savepath + vidid + '.pkl', 'wb')
+        cPickle.dump(res, outp, protocol=cPickle.HIGHEST_PROTOCOL)
+        outp.close()
+
+        fw.write('data/%s/%s.pkl\n' % (savepath, vidid))
+    fw.close()
+
+
+generate_pkl('train')
+generate_pkl('test')

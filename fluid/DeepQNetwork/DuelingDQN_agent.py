@@ -158,7 +158,8 @@ class DuelingDQNModel(object):
             for i, var in enumerate(policy_vars):
                 sync_op = fluid.layers.assign(policy_vars[i], target_vars[i])
                 sync_ops.append(sync_op)
-        sync_program = sync_program.prune(sync_ops)
+        # The prune API is deprecated, please don't use it any more.
+        sync_program = sync_program._prune(sync_ops)
         return sync_program
 
     def act(self, state, train_or_test):

@@ -126,7 +126,7 @@ def train(args,
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
     batch_size = train_params['batch_size']
-    epoc_num = train_params['epoch_num']
+    epoc_num = train_params['epoc_num']
     batch_size_per_device = batch_size // devices_num
     iters_per_epoc = train_params["train_images"] // batch_size
     num_workers = 8
