@@ -116,7 +116,7 @@ def parse_args():
     parser.add_argument(
         "--use_mem_opt",
         type=ast.literal_eval,
-        default=True,
+        default=False,
         help="The flag indicating whether to use memory optimization.")
     parser.add_argument(
         "--use_py_reader",
@@ -622,6 +622,7 @@ def train(args):
                 use_py_reader=args.use_py_reader,
                 is_test=False)
 
+            optimizer=None
             if args.local:
                 lr_decay = fluid.layers.learning_rate_scheduler.noam_decay(
                     ModelHyperParams.d_model, TrainTaskConfig.warmup_steps)
