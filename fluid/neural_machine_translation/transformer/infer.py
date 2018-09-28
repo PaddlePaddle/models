@@ -13,7 +13,6 @@ from model import fast_decode as fast_decoder
 from config import *
 from train import pad_batch_data
 import reader
-import util
 
 
 def parse_args():
@@ -50,20 +49,11 @@ def parse_args():
         nargs=3,
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
     parser.add_argument(
-        "--use_wordpiece",
-        type=ast.literal_eval,
-        default=False,
-        help="The flag indicating if the data in wordpiece. The EN-FR data "
-        "we provided is wordpiece data. For wordpiece data, converting ids to "
-        "original words is a little different and some special codes are "
-        "provided in util.py to do this.")
-    parser.add_argument(
         "--token_delimiter",
         type=lambda x: str(x.encode().decode("unicode-escape")),
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
-        "For EN-DE BPE data we provided, use spaces as token delimiter.; "
-        "For EN-FR wordpiece data we provided, use '\x01' as token delimiter.")
+        "For EN-DE BPE data we provided, use spaces as token delimiter. ")
     parser.add_argument(
         'opts',
         help='See config.py for all options',
@@ -144,7 +134,7 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, bos_idx, n_head,
     return input_dict
 
 
-def fast_infer(test_data, trg_idx2word, use_wordpiece):
+def fast_infer(test_data, trg_idx2word):
     """
     Inference by beam search decoder based solely on Fluid operators.
     """
@@ -202,9 +192,7 @@ def fast_infer(test_data, trg_idx2word, use_wordpiece):
                     trg_idx2word[idx]
                     for idx in post_process_seq(
                         np.array(seq_ids)[sub_start:sub_end])
-                ]) if not use_wordpiece else util.subtoken_ids_to_str(
-                    post_process_seq(np.array(seq_ids)[sub_start:sub_end]),
-                    trg_idx2word))
+                ]))
                 scores[i].append(np.array(seq_scores)[sub_end - 1])
                 print(hyps[i][-1])
                 if len(hyps[i]) >= InferTaskConfig.n_best:
@@ -232,7 +220,7 @@ def infer(args, inferencer=fast_infer):
         clip_last_batch=False)
     trg_idx2word = test_data.load_dict(
         dict_path=args.trg_vocab_fpath, reverse=True)
-    inferencer(test_data, trg_idx2word, args.use_wordpiece)
+    inferencer(test_data, trg_idx2word)
 
 
 if __name__ == "__main__":

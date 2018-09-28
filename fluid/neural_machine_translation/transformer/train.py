@@ -80,8 +80,7 @@ def parse_args():
         type=lambda x: str(x.encode().decode("unicode-escape")),
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
-        "For EN-DE BPE data we provided, use spaces as token delimiter. "
-        "For EN-FR wordpiece data we provided, use '\x01' as token delimiter.")
+        "For EN-DE BPE data we provided, use spaces as token delimiter. ")
     parser.add_argument(
         'opts',
         help='See config.py for all options',
