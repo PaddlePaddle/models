@@ -6,17 +6,24 @@ import utils.layers as layers
 
 class Net(object):
     def __init__(self, max_turn_num, max_turn_len, vocab_size, emb_size,
-                 stack_num):
+                 stack_num, channel1_num, channel2_num):
 
         self._max_turn_num = max_turn_num
         self._max_turn_len = max_turn_len
         self._vocab_size = vocab_size
         self._emb_size = emb_size
         self._stack_num = stack_num
+        self._channel1_num = channel1_num
+        self._channel2_num = channel2_num
         self.word_emb_name = "shared_word_emb"
         self.use_stack_op = True
         self.use_mask_cache = True
         self.use_sparse_embedding = True
+
+    def set_word_embedding(self, word_emb, place):
+        word_emb_param = fluid.global_scope().find_var(
+            self.word_emb_name).get_tensor()
+        word_emb_param.set(word_emb, place)
 
     def create_network(self):
         mask_cache = dict() if self.use_mask_cache else None
@@ -136,9 +143,9 @@ class Net(object):
                 t_a_r = fluid.layers.concat(input=t_a_r_stack, axis=1)
                 r_a_t = fluid.layers.concat(input=r_a_t_stack, axis=1)
 
-            # sim shape: [batch_size, 2*(stack_num+2), max_turn_len, max_turn_len]    
-            sim = fluid.layers.matmul(x=t_a_r, y=r_a_t, transpose_y=True)
-            sim = fluid.layers.scale(x=sim, scale=1 / np.sqrt(200.0))
+            # sim shape: [batch_size, 2*(stack_num+1), max_turn_len, max_turn_len]    
+            sim = fluid.layers.matmul(
+                x=t_a_r, y=r_a_t, transpose_y=True, alpha=1 / np.sqrt(200.0))
             sim_turns.append(sim)
 
         if self.use_stack_op:
@@ -147,10 +154,9 @@ class Net(object):
             for index in xrange(len(sim_turns)):
                 sim_turns[index] = fluid.layers.unsqueeze(
                     input=sim_turns[index], axes=[2])
-            # sim shape: [batch_size, 2*(stack_num+2), max_turn_num, max_turn_len, max_turn_len]
+            # sim shape: [batch_size, 2*(stack_num+1), max_turn_num, max_turn_len, max_turn_len]
             sim = fluid.layers.concat(input=sim_turns, axis=2)
 
-        # for douban
-        final_info = layers.cnn_3d(sim, 32, 16)
+        final_info = layers.cnn_3d(sim, self._channel1_num, self._channel2_num)
         loss, logits = layers.loss(final_info, label)
         return loss, logits

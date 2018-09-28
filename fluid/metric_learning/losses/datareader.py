@@ -4,7 +4,6 @@ import random
 import cPickle
 import functools
 import numpy as np
-#import paddle.v2 as paddle
 import paddle
 from PIL import Image, ImageEnhance
 
@@ -18,15 +17,17 @@ BUF_SIZE = 1024000
 DATA_DIR = "./data/"
 TRAIN_LIST = './data/CUB200_train.txt'
 TEST_LIST = './data/CUB200_val.txt'
-#DATA_DIR = "./thirdparty/paddlemodels/metric_learning/data/"
-#TRAIN_LIST = './thirdparty/paddlemodels/metric_learning/data/CUB200_train.txt'
-#TEST_LIST = './thirdparty/paddlemodels/metric_learning/data/CUB200_val.txt'
+#DATA_DIR = "./data/CUB200/"
+#TRAIN_LIST = './data/CUB200/CUB200_train.txt'
+#TEST_LIST = './data/CUB200/CUB200_val.txt'
 train_data = {}
 test_data = {}
 train_list = open(TRAIN_LIST, "r").readlines()
+train_image_list = []
 for i, item in enumerate(train_list):
     path, label = item.strip().split()
     label = int(label) - 1
+    train_image_list.append((path, label))
     if label not in train_data:
         train_data[label] = []
     train_data[label].append(path)
@@ -51,7 +52,6 @@ random.shuffle(test_image_list)
 
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
-
 
 
 def resize_short(img, target_size):
@@ -198,25 +198,24 @@ def process_image_imagepath(sample, mode, color_jitter, rotate):
     img -= img_mean
     img /= img_std
 
-    if mode == 'train' or mode == 'test':
+    if mode in ['train', 'test']:
         return img, sample[1]
     elif mode == 'infer':
-        return img
+        return [img]
+
 
 def eml_iterator(data,
-                    mode,
-                    batch_size,
-                    samples_each_class,
-                    iter_size,
-                    shuffle=False,
-                    color_jitter=False,
-                    rotate=False):
+                 mode,
+                 batch_size,
+                 samples_each_class,
+                 iter_size,
+                 shuffle=False,
+                 color_jitter=False,
+                 rotate=False):
     def reader():
         labs = data.keys()
         lab_num = len(labs)
-        counter = np.zeros(lab_num)
         ind = range(0, lab_num)
-        batchdata = []
         assert batch_size % samples_each_class == 0, "batch_size % samples_each_class != 0"
         num_class = batch_size/samples_each_class
         for i in range(iter_size):
@@ -228,31 +227,26 @@ def eml_iterator(data,
                 random.shuffle(data_list)
                 for s in range(samples_each_class):
                     path = DATA_DIR + data_list[s]
-#                    print("path:", path)
-                    img, _ = process_image_imagepath(sample = [path, label], \
-                                                      mode = mode, \
-                                                      color_jitter = color_jitter, \
-                                                      rotate = rotate)
-                    batchdata.append([img, label])
-            #print("batch_size:", len(batchdata))
-            if len(batchdata) == batch_size:
-                yield batchdata
-                batchdata = []
-    return reader
+                    yield path, label
+
+    mapper = functools.partial(
+        process_image_imagepath, mode=mode, color_jitter=color_jitter, rotate=rotate)
+
+    return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE, order=True)
+
 
 def quadruplet_iterator(data,
-                    mode,
-                    class_num,
-                    samples_each_class,
-                    iter_size,
-                    shuffle=False,
-                    color_jitter=False,
-                    rotate=False):
+                        mode,
+                        class_num,
+                        samples_each_class,
+                        iter_size,
+                        shuffle=False,
+                        color_jitter=False,
+                        rotate=False):
     def reader():
         labs = data.keys()
         lab_num = len(labs)
         ind = range(0, lab_num)
-        batchdata = []
         for i in range(iter_size):
             random.shuffle(ind)
             ind_sample = ind[:class_num]
@@ -266,28 +260,25 @@ def quadruplet_iterator(data,
 
                 for anchor_ind_i in anchor_ind:
                     anchor_path = DATA_DIR + data_list[anchor_ind_i]
-                    anchor_img, _ = process_image_imagepath(sample = [anchor_path, lab], \
-                                              mode = mode, \
-                                              color_jitter = color_jitter, \
-                                              rotate = rotate)
-                    batchdata.append([anchor_img, lab])
-            yield batchdata
-            batchdata = []
-    return reader
+                    yield anchor_path, lab
+
+    mapper = functools.partial(
+        process_image_imagepath, mode=mode, color_jitter=color_jitter, rotate=rotate)
+
+    return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE, order=True)
+
 
 def triplet_iterator(data,
-                    mode,
-                    batch_size,
-                    iter_size,
-                    shuffle=False,
-                    color_jitter=False,
-                    rotate=False):
+                     mode,
+                     batch_size,
+                     iter_size,
+                     shuffle=False,
+                     color_jitter=False,
+                     rotate=False):
     def reader():
         labs = data.keys()
         lab_num = len(labs)
-        counter = np.zeros(lab_num)
         ind = range(0, lab_num)
-        batchdata = []
         for i in range(iter_size):
             random.shuffle(ind)
             ind_pos, ind_neg = ind[:2]
@@ -302,92 +293,63 @@ def triplet_iterator(data,
             neg_ind = random.randint(0, len(neg_data_list) - 1)
             
             anchor_path = DATA_DIR + pos_data_list[anchor_ind]
-            anchor_img, _ = process_image_imagepath(sample = [anchor_path, lab_pos], \
-                                              mode = mode, \
-                                              color_jitter = color_jitter, \
-                                              rotate = rotate)
+            yield anchor_path, lab_pos
+
             pos_path = DATA_DIR + pos_data_list[pos_ind]
-            pos_img, _ = process_image_imagepath(sample = [pos_path, lab_pos], \
-                                              mode = mode, \
-                                              color_jitter = color_jitter, \
-                                              rotate = rotate)
+            yield pos_path, lab_pos
+
             neg_path = DATA_DIR + neg_data_list[neg_ind]
-            neg_img, _ = process_image_imagepath(sample = [neg_path, lab_neg], \
-                                              mode = mode, \
-                                              color_jitter = color_jitter, \
-                                              rotate = rotate)
-            batchdata.append([anchor_img, lab_pos])
-            batchdata.append([pos_img, lab_pos])
-            batchdata.append([neg_img, lab_neg])
-            #print("batchdata:", len(batchdata))
-            if len(batchdata) == batch_size:
-                yield batchdata
-                batchdata = []
-        if batchdata:
-            yield batchdata
-    return reader
+            yield neg_path, lab_neg
+
+
+    mapper = functools.partial(
+        process_image_imagepath, mode=mode, color_jitter=color_jitter, rotate=rotate)
+
+    return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE, order=True)
+
 
 def image_iterator(data,
-                    mode,
-                    batch_size,
-                    shuffle=False,
-                    color_jitter=False,
-                    rotate=False):
-    def infer_reader():
-        batchdata = []
-        for i in range(len(data)):
-            path = data[i]
-            path = DATA_DIR + path 
-            img = process_image_imagepath(sample = [path], \
-                                          mode = "infer", \
-                                          color_jitter = color_jitter, \
-                                          rotate = rotate)
-            batchdata.append([img])
-            if len(batchdata) == batch_size:
-                yield batchdata
-                batchdata = []
-    def reader():
-        batchdata = []
-        batchlabel = []
+                   mode,
+                   shuffle=False,
+                   color_jitter=False,
+                   rotate=False):
+    def test_reader():
         for i in range(len(data)):
             path, label = data[i]
             path = DATA_DIR + path 
-            img, label = process_image_imagepath(sample = [path, label], \
-                                              mode = mode, \
-                                              color_jitter = color_jitter, \
-                                              rotate = rotate)
-            batchdata.append([img, label])
-            batchlabel.append([label])
-            if len(batchdata) == batch_size:
-                yield batchdata, batchlabel
-                batchdata = []
-                batchlabel = []
-    if mode in ["train", "test"]:
-        return reader
-    else:
-        return infer_reader
+            yield path, label
 
+    def infer_reader():
+        for i in range(len(data)):
+            path = data[i]
+            path = DATA_DIR + path 
+            yield [path]
+
+    if mode == "test":
+        mapper = functools.partial(
+            process_image_imagepath, mode=mode, color_jitter=color_jitter, rotate=rotate)
+        return paddle.reader.xmap_readers(mapper, test_reader, THREAD, BUF_SIZE)
+    elif mode == "infer":
+        mapper = functools.partial(
+            process_image_imagepath, mode=mode, color_jitter=color_jitter, rotate=rotate)
+        return paddle.reader.xmap_readers(mapper, infer_reader, THREAD, BUF_SIZE)
 
 
 def eml_train(batch_size, samples_each_class):
     return eml_iterator(train_data, 'train', batch_size, samples_each_class, iter_size = 100, \
                            shuffle=True, color_jitter=False, rotate=False)
 
-def quadruplet_train(batch_size, class_num, samples_each_class):
-    print('train batch size ', batch_size)
+def quadruplet_train(class_num, samples_each_class):
     return quadruplet_iterator(train_data, 'train', class_num, samples_each_class, iter_size=100, \
                            shuffle=True, color_jitter=False, rotate=False)
             
 def triplet_train(batch_size):
     assert(batch_size % 3 == 0)
-    print('train batch size ', batch_size)
     return triplet_iterator(train_data, 'train', batch_size, iter_size = batch_size/3 * 100, \
                            shuffle=True, color_jitter=False, rotate=False)
 
-def test(batch_size):
-    print('test batch size ', batch_size)
-    return image_iterator(test_image_list, "test", batch_size, shuffle=False)
+def test():
+    return image_iterator(test_image_list, "test", shuffle=False)
 
-def infer(batch_size):
-    print('inference batch size ', batch_size)
-    return image_iterator(infer_image_list, "infer", batch_size, shuffle=False)
+def infer():
+    return image_iterator(infer_image_list, "infer", shuffle=False)

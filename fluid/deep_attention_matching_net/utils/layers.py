@@ -72,8 +72,8 @@ def dot_product_attention(query,
                         type is dot.
     """
 
-    logits = fluid.layers.matmul(x=query, y=key, transpose_y=True)
-    logits = logits * (d_key**(-0.5))
+    logits = fluid.layers.matmul(
+        x=query, y=key, transpose_y=True, alpha=d_key**(-0.5))
 
     if (q_mask is not None) and (k_mask is not None):
         if mask_cache is not None and q_mask.name in mask_cache and k_mask.name in mask_cache[
@@ -81,9 +81,15 @@ def dot_product_attention(query,
             mask, another_mask = mask_cache[q_mask.name][k_mask.name]
         else:
             mask = fluid.layers.matmul(x=q_mask, y=k_mask, transpose_y=True)
-            another_mask = (1 - mask) * (-2**32 + 1)
+            another_mask = fluid.layers.scale(
+                mask,
+                scale=float(2**32 - 1),
+                bias=float(-1),
+                bias_after_scale=False)
             if mask_cache is not None:
-                mask_cache[q_mask.name] = dict()
+                if q_mask.name not in mask_cache:
+                    mask_cache[q_mask.name] = dict()
+
                 mask_cache[q_mask.name][k_mask.name] = [mask, another_mask]
 
         logits = mask * logits + another_mask

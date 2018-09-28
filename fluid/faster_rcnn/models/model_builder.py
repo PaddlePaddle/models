@@ -1,3 +1,17 @@
+#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
@@ -37,7 +51,8 @@ class FasterRCNN(object):
         return loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss,
 
     def eval_out(self):
-        return [self.rpn_rois, self.cls_score, self.bbox_pred]
+        cls_prob = fluid.layers.softmax(self.cls_score, use_cudnn=False)
+        return [self.rpn_rois, cls_prob, self.bbox_pred]
 
     def build_input(self, image_shape):
         if self.use_pyreader:
@@ -71,6 +86,8 @@ class FasterRCNN(object):
                 name='im_id', shape=[1], dtype='int32')
 
     def feeds(self):
+        if not self.is_train:
+            return [self.image, self.im_info, self.im_id]
         return [
             self.image, self.gt_box, self.gt_label, self.is_crowd, self.im_info,
             self.im_id
@@ -156,7 +173,7 @@ class FasterRCNN(object):
                 is_crowd=self.is_crowd,
                 gt_boxes=self.gt_box,
                 im_info=self.im_info,
-                batch_size_per_im=512,
+                batch_size_per_im=self.cfg.batch_size_per_im,
                 fg_fraction=0.25,
                 fg_thresh=0.5,
                 bg_thresh_hi=0.5,
@@ -215,8 +232,8 @@ class FasterRCNN(object):
         #        logits=cls_score,
         #        label=labels_int64
         #        )
-        softmax = fluid.layers.softmax(self.cls_score, use_cudnn=False)
-        loss_cls = fluid.layers.cross_entropy(softmax, labels_int64)
+        cls_prob = fluid.layers.softmax(self.cls_score, use_cudnn=False)
+        loss_cls = fluid.layers.cross_entropy(cls_prob, labels_int64)
         loss_cls = fluid.layers.reduce_mean(loss_cls)
         loss_bbox = fluid.layers.smooth_l1(
             x=self.bbox_pred,

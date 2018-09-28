@@ -21,21 +21,23 @@ TODO
 
 horse2zebra训练集包含1069张野马图片，1336张斑马图片。测试集包含121张野马图片和141张斑马图片。
 
-数据下载处理完毕后，并组织为以下路径：
+数据下载处理完毕后，并组织为以下路径结构：
 
 ```
-horse2zebra/
-|-- testA
-|-- testA.txt
-|-- testB
-|-- testB.txt
-|-- trainA
-|-- trainA.txt
-|-- trainB
-`-- trainB.txt
+data
+|-- horse2zebra
+|   |-- testA
+|   |-- testA.txt
+|   |-- testB
+|   |-- testB.txt
+|   |-- trainA
+|   |-- trainA.txt
+|   |-- trainB
+|   `-- trainB.txt
+
 ```
 
-以上数据文件中，‘testA’为存放野马测试图片的文件夹，‘testB’为存放斑马测试图片的文件夹，'testA.txt'和'testB.txt'分别为野马和斑马测试图片路径列表文件，格式如下：
+以上数据文件中，`data`文件夹需要放在训练脚本`train.py`同级目录下。`testA`为存放野马测试图片的文件夹，`testB`为存放斑马测试图片的文件夹，`testA.txt`和`testB.txt`分别为野马和斑马测试图片路径列表文件，格式如下：
 
 ```
 testA/n02381460_9243.jpg
@@ -53,7 +55,7 @@ testA/n02381460_9245.jpg
 在GPU单卡上训练:
 
 ```
-env CUDA_VISIABLE_DEVICES=0 python train.py
+env CUDA_VISIBLE_DEVICES=0 python train.py
 ```
 
 执行`python train.py --help`可查看更多使用方式和参数详细说明。
@@ -72,7 +74,7 @@ env CUDA_VISIABLE_DEVICES=0 python train.py
 
 ```
 env CUDA_VISIBLE_DEVICE=0 python infer.py \
-    --model_path="models/1" --input="./data/inputA/*" \
+    --init_model="models/1" --input="./data/inputA/*" \
     --output="./output"
 ```
 

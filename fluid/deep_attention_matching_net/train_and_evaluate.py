@@ -83,6 +83,16 @@ def parse_args():
         type=int,
         default=5,
         help='The number of stacked attentive modules in network.')
+    parser.add_argument(
+        '--channel1_num',
+        type=int,
+        default=32,
+        help="The channels' number of the 1st conv3d layer's output.")
+    parser.add_argument(
+        '--channel2_num',
+        type=int,
+        default=16,
+        help="The channels' number of the 2nd conv3d layer's output.")
     args = parser.parse_args()
     return args
 
@@ -100,7 +110,8 @@ def train(args):
     }
 
     dam = Net(args.max_turn_num, args.max_turn_len, args.vocab_size,
-              args.emb_size, args.stack_num)
+              args.emb_size, args.stack_num, args.channel1_num,
+              args.channel2_num)
     loss, logits = dam.create_network()
 
     loss.persistable = True
@@ -128,9 +139,12 @@ def train(args):
         dev_count = fluid.core.get_cuda_device_count()
     else:
         place = fluid.CPUPlace()
-        dev_count = multiprocessing.cpu_count()
+        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     print("device count %d" % dev_count)
+    print("theoretical memory usage: ")
+    print(fluid.contrib.memory_usage(
+        program=train_program, batch_size=args.batch_size))
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
@@ -152,7 +166,8 @@ def train(args):
         print("start loading word embedding init ...")
         word_emb = np.array(pickle.load(open(args.word_emb_init, 'rb'))).astype(
             'float32')
-        print("finish loading word embedding init  ...")
+        dam.set_word_embedding(word_emb, place)
+        print("finish init word embedding  ...")
 
     print("start loading data ...")
     train_data, val_data, test_data = pickle.load(open(args.data_path, 'rb'))
@@ -165,8 +180,6 @@ def train(args):
 
     print_step = max(1, batch_num / (dev_count * 100))
     save_step = max(1, batch_num / (dev_count * 10))
-
-    word_emb_inited = False
 
     print("begin model training ...")
     print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
@@ -182,11 +195,7 @@ def train(args):
             for dev in xrange(dev_count):
                 index = it * dev_count + dev
                 feed_dict = reader.make_one_batch_input(train_batches, index)
-                if word_emb_inited is False and args.word_emb_init is not None:
-                    feed_dict[dam.word_emb_name] = word_emb
                 feed_list.append(feed_dict)
-
-            word_emb_inited = True
 
             cost = train_exe.run(feed=feed_list, fetch_list=[loss.name])
 

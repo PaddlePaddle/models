@@ -270,6 +270,8 @@ def main(args):
         crf_decode = fluid.layers.crf_decoding(
             input=feature_out, param_attr=fluid.ParamAttr(name='crfw'))
 
+        inference_program = fluid.default_main_program().clone(for_test=True)
+
         sgd_optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
         sgd_optimizer.minimize(avg_cost)
 
@@ -281,11 +283,6 @@ def main(args):
              num_chunk_types=int(math.ceil((args.label_dict_len - 1) / 2.0)))
 
         chunk_evaluator = fluid.metrics.ChunkEvaluator()
-
-        inference_program = fluid.default_main_program().clone()
-        with fluid.program_guard(inference_program):
-            inference_program = fluid.io.get_inference_program(
-                [num_infer_chunks, num_label_chunks, num_correct_chunks])
 
         train_reader = paddle.batch(
             paddle.reader.shuffle(

@@ -1,8 +1,25 @@
+#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 import os
 import numpy as np
 import paddle.fluid as fluid
 import math
 import box_utils
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 
 
 def box_decoder(target_box, prior_box, prior_box_var):
@@ -102,3 +119,55 @@ def get_nmsed_box(args, rpn_rois, confs, locs, class_nums, im_info,
         labels = im_results_n[:, -1]
     im_results = np.vstack([im_results[k] for k in range(len(lod) - 1)])
     return new_lod, im_results
+
+
+def get_dt_res(batch_size, lod, nmsed_out, data):
+    dts_res = []
+    nmsed_out_v = np.array(nmsed_out)
+    assert (len(lod) == batch_size + 1), \
+      "Error Lod Tensor offset dimension. Lod({}) vs. batch_size({})"\
+                    .format(len(lod), batch_size)
+    k = 0
+    for i in range(batch_size):
+        dt_num_this_img = lod[i + 1] - lod[i]
+        image_id = int(data[i][-1])
+        image_width = int(data[i][1][1])
+        image_height = int(data[i][1][2])
+        for j in range(dt_num_this_img):
+            dt = nmsed_out_v[k]
+            k = k + 1
+            xmin, ymin, xmax, ymax, score, category_id = dt.tolist()
+            w = xmax - xmin + 1
+            h = ymax - ymin + 1
+            bbox = [xmin, ymin, w, h]
+            dt_res = {
+                'image_id': image_id,
+                'category_id': category_id,
+                'bbox': bbox,
+                'score': score
+            }
+            dts_res.append(dt_res)
+    return dts_res
+
+
+def draw_bounding_box_on_image(image_path, nms_out, draw_threshold, label_list):
+    image = Image.open(image_path)
+    draw = ImageDraw.Draw(image)
+    im_width, im_height = image.size
+
+    for dt in nms_out:
+        xmin, ymin, xmax, ymax, score, category_id = dt.tolist()
+        if score < draw_threshold:
+            continue
+        bbox = dt[:4]
+        xmin, ymin, xmax, ymax = bbox
+        draw.line(
+            [(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin),
+             (xmin, ymin)],
+            width=4,
+            fill='red')
+        if image.mode == 'RGB':
+            draw.text((xmin, ymin), label_list[int(category_id)], (255, 255, 0))
+    image_name = image_path.split('/')[-1]
+    print("image with bbox drawed saved as {}".format(image_name))
+    image.save(image_name)
