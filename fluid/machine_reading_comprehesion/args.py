@@ -26,16 +26,11 @@ def parse_args():
         '--prepare',
         action='store_true',
         help='create the directories, prepare the vocabulary and embeddings')
+    parser.add_argument('--train', action='store_true', help='train the model')
     parser.add_argument(
-        '--train',
-        action='store_true',
-        help='train the model')
+        '--evaluate', action='store_true', help='evaluate the model on dev set')
     parser.add_argument(
-        '--evaluate',
-        action='store_true',
-        help='evaluate the model on dev set')
-    parser.add_argument(
-        '--predict', 
+        '--predict',
         action='store_true',
         help='predict the answers for test set with trained model')
     parser.add_argument(
@@ -96,55 +91,19 @@ def parse_args():
         default=1000,
         help="cal dev loss every n batches."
         "(default: %(default)d)")
-    parser.add_argument(
-        '--optim', 
-        default='adam', 
-        help='optimizer type')
-    parser.add_argument(
-        '--trainset',
-        nargs='+', 
-        help='train dataset')
-    parser.add_argument(
-        '--devset',
-        nargs='+',
-        help='dev dataset')
-    parser.add_argument(
-        '--testset',
-        nargs='+',
-        help='test dataset')
-    parser.add_argument(
-        '--vocab_dir', 
-        help='dict')
-    parser.add_argument(
-        '--max_p_num', 
-        type=int, 
-        default=5)
-    parser.add_argument(
-        '--max_a_len', 
-        type=int,
-        default=200)
-    parser.add_argument(
-        '--max_p_len', 
-        type=int, 
-        default=500)
-    parser.add_argument(
-        '--max_q_len',
-        type=int,
-        default=9)
-    parser.add_argument(
-        '--doc_num',
-        type=int,
-        default=5)
-    parser.add_argument(
-        '--para_print',
-        action='store_true')
-    parser.add_argument(
-        '--drop_rate', 
-        type=float, default=0.0)
-    parser.add_argument(
-        '--random_seed',
-        type=int,
-        default=123)
+    parser.add_argument('--optim', default='adam', help='optimizer type')
+    parser.add_argument('--trainset', nargs='+', help='train dataset')
+    parser.add_argument('--devset', nargs='+', help='dev dataset')
+    parser.add_argument('--testset', nargs='+', help='test dataset')
+    parser.add_argument('--vocab_dir', help='dict')
+    parser.add_argument('--max_p_num', type=int, default=5)
+    parser.add_argument('--max_a_len', type=int, default=200)
+    parser.add_argument('--max_p_len', type=int, default=500)
+    parser.add_argument('--max_q_len', type=int, default=9)
+    parser.add_argument('--doc_num', type=int, default=5)
+    parser.add_argument('--para_print', action='store_true')
+    parser.add_argument('--drop_rate', type=float, default=0.0)
+    parser.add_argument('--random_seed', type=int, default=123)
     parser.add_argument(
         '--log_path',
         help='path of the log file. If not set, logs are printed to console')

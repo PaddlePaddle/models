@@ -25,6 +25,7 @@ class Vocab(object):
     """
     Implements a vocabulary to store the tokens in the data, with their corresponding embeddings.
     """
+
     def __init__(self, filename=None, initial_tokens=None, lower=False):
         self.id2token = {}
         self.token2id = {}
@@ -117,7 +118,9 @@ class Vocab(object):
         Args:
             min_cnt: tokens with frequency less than min_cnt is filtered
         """
-        filtered_tokens = [token for token in self.token2id if self.token_cnt[token] >= min_cnt]
+        filtered_tokens = [
+            token for token in self.token2id if self.token_cnt[token] >= min_cnt
+        ]
         # rebuild the token x id map
         self.token2id = {}
         self.id2token = {}
