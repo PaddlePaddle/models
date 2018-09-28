@@ -8,7 +8,7 @@ import os
 import cv2
 
 import paddle.fluid as fluid
-import paddle.v2 as paddle
+import paddle
 from icnet import icnet
 from utils import add_arguments, print_arguments, get_feeder_data
 from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
@@ -111,10 +111,10 @@ def infer(args):
     for line in open(args.images_list):
         image_file = args.images_path + "/" + line.strip()
         filename = os.path.basename(image_file)
-        image = paddle.image.load_image(
+        image = paddle.dataset.image.load_image(
             image_file, is_color=True).astype("float32")
         image -= IMG_MEAN
-        img = paddle.image.to_chw(image)[np.newaxis, :]
+        img = paddle.dataset.image.to_chw(image)[np.newaxis, :]
         image_t = fluid.core.LoDTensor()
         image_t.set(img, place)
         result = exe.run(inference_program,
