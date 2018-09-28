@@ -1,5 +1,5 @@
 # Abstract
-Dureader is an end-to-end neural network model for machine reading comprehesion style question answering, which aims to anser questions from given passages. We first match the question and passage with a bidireactional attention flow networks to obtrain the question-aware passages represenation. Then we employ the pointer networks to locate the positions of answers from passages. Our experimental evalutions show that DuReader model achieves the state-of-the-art results in DuReader Dadaset.
+Dureader is an end-to-end neural network model for machine reading comprehesion style question answering, which aims to anser questions from given passages. We first match the question and passage with a bidireactional attention flow network to obtrain the question-aware passages represenation. Then we employ a pointer network to locate the positions of answers from passages. Our experimental evalutions show that DuReader model achieves the state-of-the-art results in DuReader Dadaset.
 # Dataset
 DuReader Dataset is a new large-scale real-world and human sourced MRC dataset in Chinese. DuReader focuses on real-world open-domain question answering. The advantages of DuReader over existing datasets are concluded as follows:
  - Real question
@@ -14,9 +14,9 @@ DuReader is inspired by 3 classic reading comprehension models([BiDAF](https://a
 DuReader model is a hierarchical multi-stage process and consists of five layers
 
 - **Word Embedding Layer** maps each word to a vector using a pre-trained word embedding model.
-- **Encoding Layer** extracts context infomation for each position in question and passages with bi-directional LSTM network.
+- **Encoding Layer** extracts context infomation for each position in question and passages with a bi-directional LSTM network.
 - **Attention Flow Layer** couples the query and context vectors and produces a set of query-aware feature vectors for each word in the context. Please refer to [BiDAF](https://arxiv.org/abs/1611.01603) for more details.
-- **Fusion Layer** employs two layers of bi-directional LSTM to capture the interaction among context words independent of the query.
+- **Fusion Layer** employs a layer of bi-directional LSTM to capture the interaction among context words independent of the query.
 - **Decode Layer** employs an answer point network with attention pooling of the quesiton to locate the positions of answers from passages. Please refer to [Match-LSTM](https://arxiv.org/abs/1608.07905) and [R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf) for more details.
 
 ## How to Run
