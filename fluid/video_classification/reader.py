@@ -5,7 +5,7 @@ import functools
 import cPickle
 from cStringIO import StringIO
 import numpy as np
-import paddle.v2 as paddle
+import paddle
 from PIL import Image, ImageEnhance
 
 random.seed(0)

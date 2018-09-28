@@ -8,7 +8,7 @@ import sys
 import os
 import numpy as np
 import paddle.fluid as fluid
-import paddle.v2 as paddle
+import paddle
 
 
 def test_model(exe, test_program, fetch_list, test_reader, feeder):

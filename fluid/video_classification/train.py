@@ -2,7 +2,7 @@ import os
 import numpy as np
 import time
 import sys
-import paddle.v2 as paddle
+import paddle
 import paddle.fluid as fluid
 from resnet import TSN_ResNet
 import reader

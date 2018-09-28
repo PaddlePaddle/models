@@ -4,7 +4,6 @@ import random
 import cPickle
 import functools
 import numpy as np
-#import paddle.v2 as paddle
 import paddle
 from PIL import Image, ImageEnhance
 
