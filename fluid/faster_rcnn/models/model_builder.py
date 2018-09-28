@@ -17,11 +17,11 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
+from config import cfg
 
 
 class FasterRCNN(object):
     def __init__(self,
-                 cfg=None,
                  add_conv_body_func=None,
                  add_roi_box_head_func=None,
                  is_train=True,
@@ -29,7 +29,6 @@ class FasterRCNN(object):
                  use_random=True):
         self.add_conv_body_func = add_conv_body_func
         self.add_roi_box_head_func = add_roi_box_head_func
-        self.cfg = cfg
         self.is_train = is_train
         self.use_pyreader = use_pyreader
         self.use_random = use_random
@@ -111,10 +110,10 @@ class FasterRCNN(object):
                 name="conv_rpn_b", learning_rate=2., regularizer=L2Decay(0.)))
         self.anchor, self.var = fluid.layers.anchor_generator(
             input=rpn_conv,
-            anchor_sizes=self.cfg.anchor_sizes,
-            aspect_ratios=self.cfg.aspect_ratios,
-            variance=self.cfg.variance,
-            stride=[16.0, 16.0])
+            anchor_sizes=cfg.RPN.SIZES,
+            aspect_ratios=cfg.RPN.ASPECT_RATIOS,
+            variance=cfg.RPN.VARIANCES,
+            stride=cfg.RPN.STRIDE)
         num_anchor = self.anchor.shape[2]
         # Proposal classification scores
         self.rpn_cls_score = fluid.layers.conv2d(
@@ -152,8 +151,18 @@ class FasterRCNN(object):
         rpn_cls_score_prob = fluid.layers.sigmoid(
             self.rpn_cls_score, name='rpn_cls_score_prob')
 
-        pre_nms_top_n = 12000 if self.is_train else 6000
-        post_nms_top_n = 2000 if self.is_train else 1000
+        if self.is_train:
+            pre_nms_top_n = cfg.TRAIN.RPN_PRE_NMS_TOP_N
+            post_nms_top_n = cfg.TRAIN.RPN_POST_NMS_TOP_N
+            nms_thresh = cfg.TRAIN.RPN_NMS_THRESH
+            min_size = cfg.TRAIN.RPN_MIN_SIZE
+            eta = cfg.TRAIN.RPN_ETA
+        else:
+            pre_nms_top_n = cfg.TEST.RPN_PRE_NMS_TOP_N
+            post_nms_top_n = cfg.TEST.RPN_POST_NMS_TOP_N
+            nms_thresh = cfg.TEST.RPN_NMS_THRESH
+            min_size = cfg.TEST.RPN_MIN_SIZE
+            eta = cfg.TEST.RPN_ETA
         rpn_rois, rpn_roi_probs = fluid.layers.generate_proposals(
             scores=rpn_cls_score_prob,
             bbox_deltas=self.rpn_bbox_pred,
@@ -162,9 +171,9 @@ class FasterRCNN(object):
             variances=self.var,
             pre_nms_top_n=pre_nms_top_n,
             post_nms_top_n=post_nms_top_n,
-            nms_thresh=0.7,
-            min_size=0.0,
-            eta=1.0)
+            nms_thresh=nms_thresh,
+            min_size=min_size,
+            eta=eta)
         self.rpn_rois = rpn_rois
         if self.is_train:
             outs = fluid.layers.generate_proposal_labels(
@@ -173,13 +182,13 @@ class FasterRCNN(object):
                 is_crowd=self.is_crowd,
                 gt_boxes=self.gt_box,
                 im_info=self.im_info,
-                batch_size_per_im=self.cfg.batch_size_per_im,
-                fg_fraction=0.25,
-                fg_thresh=0.5,
-                bg_thresh_hi=0.5,
-                bg_thresh_lo=0.0,
-                bbox_reg_weights=[0.1, 0.1, 0.2, 0.2],
-                class_nums=self.cfg.class_num,
+                batch_size_per_im=cfg.TRAIN.BATCH_SIZE_PER_IM,
+                fg_fraction=cfg.TRAIN.FG_FRACTION,
+                fg_thresh=cfg.TRAIN.FG_THRESH,
+                bg_thresh_hi=cfg.TRAIN.BG_THRESH_HI,
+                bg_thresh_lo=cfg.TRAIN.BG_THRESH_LO,
+                bbox_reg_weights=cfg.MODEL.BBOX_REG_WEIGHTS,
+                class_nums=cfg.MODEL.NUM_CLASSES,
                 use_random=self.use_random)
 
             self.rois = outs[0]
@@ -201,7 +210,7 @@ class FasterRCNN(object):
             spatial_scale=0.0625)
         rcnn_out = self.add_roi_box_head_func(pool)
         self.cls_score = fluid.layers.fc(input=rcnn_out,
-                                         size=self.cfg.class_num,
+                                         size=cfg.MODEL.NUM_CLASSES,
                                          act=None,
                                          name='cls_score',
                                          param_attr=ParamAttr(
@@ -213,7 +222,7 @@ class FasterRCNN(object):
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
         self.bbox_pred = fluid.layers.fc(input=rcnn_out,
-                                         size=4 * self.cfg.class_num,
+                                         size=4 * cfg.MODEL.NUM_CLASSES,
                                          act=None,
                                          name='bbox_pred',
                                          param_attr=ParamAttr(
@@ -267,11 +276,11 @@ class FasterRCNN(object):
                 gt_boxes=self.gt_box,
                 is_crowd=self.is_crowd,
                 im_info=self.im_info,
-                rpn_batch_size_per_im=256,
-                rpn_straddle_thresh=0.0,
-                rpn_fg_fraction=0.5,
-                rpn_positive_overlap=0.7,
-                rpn_negative_overlap=0.3,
+                rpn_batch_size_per_im=cfg.TRAIN.RPN_BATCH_SIZE_PER_IM,
+                rpn_straddle_thresh=cfg.TRAIN.RPN_STRADDLE_THRESH,
+                rpn_fg_fraction=cfg.TRAIN.RPN_FG_FRACTION,
+                rpn_positive_overlap=cfg.TRAIN.RPN_POSITIVE_OVERLAP,
+                rpn_negative_overlap=cfg.TRAIN.RPN_NEGATIVE_OVERLAP,
                 use_random=self.use_random)
         score_tgt = fluid.layers.cast(x=score_tgt, dtype='float32')
         rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(

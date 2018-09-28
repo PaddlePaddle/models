@@ -26,6 +26,7 @@ from collections import deque
 
 from roidbs import JsonDataset
 import data_utils
+from config import cfg
 
 
 class Settings(object):
@@ -34,13 +35,11 @@ class Settings(object):
             setattr(self, arg, value)
 
         if 'coco2014' in args.dataset:
-            self.class_nums = 81
             self.train_file_list = 'annotations/instances_train2014.json'
             self.train_data_dir = 'train2014'
             self.val_file_list = 'annotations/instances_val2014.json'
             self.val_data_dir = 'val2014'
         elif 'coco2017' in args.dataset:
-            self.class_nums = 81
             self.train_file_list = 'annotations/instances_train2017.json'
             self.train_data_dir = 'train2017'
             self.val_file_list = 'annotations/instances_val2017.json'
@@ -48,7 +47,7 @@ class Settings(object):
         else:
             raise NotImplementedError('Dataset {} not supported'.format(
                 self.dataset))
-        self.mean_value = np.array(self.mean_value)[
+        self.mean_value = np.array(cfg.PIXEL_MEANS)[
             np.newaxis, np.newaxis, :].astype('float32')
 
 
@@ -77,7 +76,7 @@ def coco(settings,
     print("{} on {} with {} roidbs".format(mode, settings.dataset, len(roidbs)))
 
     def roidb_reader(roidb, mode):
-        im, im_scales = data_utils.get_image_blob(roidb, settings)
+        im, im_scales = data_utils.get_image_blob(roidb, mode)
         im_id = roidb['id']
         im_height = np.round(roidb['height'] * im_scales)
         im_width = np.round(roidb['width'] * im_scales)
