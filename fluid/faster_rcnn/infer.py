@@ -13,7 +13,7 @@ import models.resnet as resnet
 import json
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
-from config import cfg
+from config import *
 
 
 def infer(args):
@@ -31,8 +31,8 @@ def infer(args):
         for item in cocoGt.loadCats(category_ids)
     }
     label_list[0] = ['background']
-    image_shape = [3, cfg.TEST.MAX_SIZE, cfg.TEST.MAX_SIZE]
-    class_nums = cfg.MODEL.NUM_CLASSES
+    image_shape = [3, InferConfig.max_size, InferConfig.max_size]
+    class_nums = EnvConfig.class_num
 
     model = model_builder.FasterRCNN(
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
@@ -54,7 +54,7 @@ def infer(args):
 
     dts_res = []
     fetch_list = [rpn_rois, confs, locs]
-    data = infer_reader().next()
+    data = next(infer_reader())
     im_info = [data[0][1]]
     rpn_rois_v, confs_v, locs_v = exe.run(
         fetch_list=[v.name for v in fetch_list],

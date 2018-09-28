@@ -26,7 +26,7 @@ from collections import deque
 
 from roidbs import JsonDataset
 import data_utils
-from config import cfg
+from config import *
 
 
 class Settings(object):
@@ -47,7 +47,7 @@ class Settings(object):
         else:
             raise NotImplementedError('Dataset {} not supported'.format(
                 self.dataset))
-        self.mean_value = np.array(cfg.PIXEL_MEANS)[
+        self.mean_value = np.array(EnvConfig.pixel_means)[
             np.newaxis, np.newaxis, :].astype('float32')
 
 

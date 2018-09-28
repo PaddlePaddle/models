@@ -29,21 +29,24 @@ import models.resnet as resnet
 import json
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
-from config import cfg
+from config import *
 
 
 def eval(args):
-
+    print('====train===')
+    print(TrainConfig.rpn_nms_thresh)
+    print('====infer===')
+    print(InferConfig.rpn_nms_thresh)
     if '2014' in args.dataset:
         test_list = 'annotations/instances_val2014.json'
     elif '2017' in args.dataset:
         test_list = 'annotations/instances_val2017.json'
 
-    image_shape = [3, cfg.TEST.MAX_SIZE, cfg.TEST.MAX_SIZE]
-    class_nums = cfg.MODEL.NUM_CLASSES
+    image_shape = [3, InferConfig.max_size, InferConfig.max_size]
+    class_nums = EnvConfig.class_num
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
-    total_batch_size = devices_num * cfg.TRAIN.IMS_PER_BATCH
+    total_batch_size = devices_num * TrainConfig.im_per_batch
     cocoGt = COCO(os.path.join(args.data_dir, test_list))
     numId_to_catId_map = {i + 1: v for i, v in enumerate(cocoGt.getCatIds())}
     category_ids = cocoGt.getCatIds()
@@ -60,7 +63,7 @@ def eval(args):
         is_train=False)
     model.build_model(image_shape)
     rpn_rois, confs, locs = model.eval_out()
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    place = fluid.CUDAPlace(0) if EnvConfig.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     # yapf: disable
     if args.pretrained_model:

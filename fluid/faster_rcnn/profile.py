@@ -26,21 +26,21 @@ import paddle.fluid.profiler as profiler
 import models.model_builder as model_builder
 import models.resnet as resnet
 from learning_rate import exponential_with_warmup_decay
-from config import cfg
+from config import *
 
 
 def train(args):
-    learning_rate = cfg.SOLVER.BASE_LR
-    image_shape = [3, cfg.TRAIN.MAX_SIZE, cfg.TRAIN.MAX_SIZE]
-    num_iterations = cfg.SOLVER.MAX_ITER
+    learning_rate = SolverConfig.learning_rate
+    image_shape = [3, TrainConfig.max_size, TrainConfig.max_size]
+    num_iterations = 80
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
-    total_batch_size = devices_num * cfg.TRAIN.IMS_PER_BATCH
+    total_batch_size = devices_num * TrainConfig.im_per_batch
     model = model_builder.FasterRCNN(
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
-        use_pyreader=args.use_pyreader,
+        use_pyreader=EnvConfig.use_pyreader,
         use_random=False)
     model.build_model(image_shape)
     loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
@@ -66,7 +66,7 @@ def train(args):
 
     fluid.memory_optimize(fluid.default_main_program())
 
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    place = fluid.CUDAPlace(0) if EnvConfig.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
@@ -79,14 +79,14 @@ def train(args):
 
     if args.parallel:
         train_exe = fluid.ParallelExecutor(
-            use_cuda=bool(args.use_gpu), loss_name=loss.name)
+            use_cuda=bool(EnvConfig.use_gpu), loss_name=loss.name)
 
-    if args.use_pyreader:
+    if EnvConfig.use_pyreader:
         train_reader = reader.train(
             args,
-            batch_size=cfg.TRAIN.IMS_PER_BATCH,
+            batch_size=TrainConfig.im_per_batch,
             total_batch_size=total_batch_size,
-            padding_total=args.padding_minibatch,
+            padding_total=TrainConfig.padding_minibatch,
             shuffle=False)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
@@ -104,11 +104,11 @@ def train(args):
 
         for batch_id in range(iterations):
             start_time = time.time()
-            data = train_reader().next()
+            data = next(train_reader())
             end_time = time.time()
             reader_time.append(end_time - start_time)
             start_time = time.time()
-            if args.parallel:
+            if EnvConfig.parallel:
                 losses = train_exe.run(fetch_list=[v.name for v in fetch_list],
                                        feed=feeder.feed(data))
             else:
@@ -134,7 +134,7 @@ def train(args):
         try:
             for batch_id in range(iterations):
                 start_time = time.time()
-                if args.parallel:
+                if EnvConfig.parallel:
                     losses = train_exe.run(
                         fetch_list=[v.name for v in fetch_list])
                 else:
@@ -152,7 +152,7 @@ def train(args):
 
         return reader_time, run_time, total_images
 
-    run_func = run if not args.use_pyreader else run_pyreader
+    run_func = run if not EnvConfig.use_pyreader else run_pyreader
 
     # warm-up
     run_func(2)
