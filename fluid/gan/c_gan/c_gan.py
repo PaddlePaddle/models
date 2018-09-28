@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import sys
 import os
+import six
 import argparse
 import functools
 import matplotlib
@@ -97,7 +101,7 @@ def train(args):
             noise_data = np.random.uniform(
                 low=-1.0, high=1.0,
                 size=[args.batch_size, NOISE_SIZE]).astype('float32')
-            real_image = np.array(map(lambda x: x[0], data)).reshape(
+            real_image = np.array(list(map(lambda x: x[0], data))).reshape(
                 -1, 784).astype('float32')
             conditions_data = np.array([x[1] for x in data]).reshape(
                 [-1, 1]).astype("float32")
@@ -133,7 +137,7 @@ def train(args):
 
             d_loss_np = [d_loss_1[0][0], d_loss_2[0][0]]
 
-            for _ in xrange(NUM_TRAIN_TIMES_OF_DG):
+            for _ in six.moves.xrange(NUM_TRAIN_TIMES_OF_DG):
                 noise_data = np.random.uniform(
                     low=-1.0, high=1.0,
                     size=[args.batch_size, NOISE_SIZE]).astype('float32')
@@ -154,7 +158,7 @@ def train(args):
                 total_images = np.concatenate([real_image, generated_images])
                 fig = plot(total_images)
                 msg = "Epoch ID={0}\n Batch ID={1}\n D-Loss={2}\n DG-Loss={3}\n gen={4}".format(
-                    pass_id, batch_id, d_loss_np, dg_loss_np,
+                    pass_id, batch_id, np.mean(d_loss_np), dg_loss_np,
                     check(generated_images))
                 print(msg)
                 plt.title(msg)

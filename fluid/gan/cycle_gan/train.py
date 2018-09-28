@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import data_reader
 import os
 import random
@@ -9,7 +12,6 @@ import paddle.fluid as fluid
 import numpy as np
 from paddle.fluid import core
 from trainer import *
-from itertools import izip
 from scipy.misc import imsave
 import paddle.fluid.profiler as profiler
 from utility import add_arguments, print_arguments, ImagePool
@@ -66,7 +68,7 @@ def train(args):
         if not os.path.exists(out_path):
             os.makedirs(out_path)
         i = 0
-        for data_A, data_B in izip(A_test_reader(), B_test_reader()):
+        for data_A, data_B in zip(A_test_reader(), B_test_reader()):
             A_name = data_A[1]
             B_name = data_B[1]
             tensor_A = core.LoDTensor()
@@ -114,7 +116,7 @@ def train(args):
             exe, out_path + "/d_a", main_program=d_A_trainer.program)
         fluid.io.save_persistables(
             exe, out_path + "/d_b", main_program=d_B_trainer.program)
-        print "saved checkpoint to [%s]" % out_path
+        print("saved checkpoint to {}".format(out_path))
         sys.stdout.flush()
 
     def init_model():
@@ -128,7 +130,7 @@ def train(args):
             exe, args.init_model + "/d_a", main_program=d_A_trainer.program)
         fluid.io.load_persistables(
             exe, args.init_model + "/d_b", main_program=d_B_trainer.program)
-        print "Load model from [%s]" % args.init_model
+        print("Load model from {}".format(args.init_model))
 
     if args.init_model:
         init_model()
@@ -136,8 +138,8 @@ def train(args):
     for epoch in range(args.epoch):
         batch_id = 0
         for i in range(max_images_num):
-            data_A = A_reader.next()
-            data_B = B_reader.next()
+            data_A = next(A_reader)
+            data_B = next(B_reader)
             tensor_A = core.LoDTensor()
             tensor_B = core.LoDTensor()
             tensor_A.set(data_A, place)
@@ -174,9 +176,9 @@ def train(args):
                 feed={"input_A": tensor_A,
                       "fake_pool_A": fake_pool_A})
 
-            print "epoch[%d]; batch[%d]; g_A_loss: %s; d_B_loss: %s; g_B_loss: %s; d_A_loss: %s;" % (
+            print("epoch{}; batch{}; g_A_loss: {}; d_B_loss: {}; g_B_loss: {}; d_A_loss: {};".format(
                 epoch, batch_id, g_A_loss[0], d_B_loss[0], g_B_loss[0],
-                d_A_loss[0])
+                d_A_loss[0]))
             sys.stdout.flush()
             batch_id += 1
 
