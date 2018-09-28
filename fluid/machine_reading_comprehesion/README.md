@@ -33,17 +33,17 @@ We use Bleu and Rouge as evaluation metrics, the calculation of these metrics re
 ```
 cd utils && bash download_thirdparty.sh
 ```
-#### Environment Requirements
+### Environment Requirements
 For now we've only tested on PaddlePaddle v1.0, to install PaddlePaddle and for more details about PaddlePaddle, see [PaddlePaddle Homepage](http://paddlepaddle.org).
 
-#### Preparation
+### Preparation
 Before training the model, we have to make sure that the data is ready. For preparation, we will check the data files, make directories and extract a vocabulary for later use. You can run the following command to do this with a specified task name:
 
 ```
 sh run.sh --prepare
 ```
 You can specify the files for train/dev/test by setting the `trainset`/`devset`/`testset`.
-#### Training
+### Training
 To train the model and you can also set the hyper-parameters such as the learning rate by using `--learning_rate NUM`. For example, to train the model for 10 passes, you can run:
 
 ```
@@ -52,14 +52,14 @@ sh run.sh --train --pass_num 10
 
 The training process includes an evaluation on the dev set after each training epoch. By default, the model with the least Bleu-4 score on the dev set will be saved.
 
-#### Evaluation
+### Evaluation
 To conduct a single evaluation on the dev set with the the model already trained, you can run the following command:
 
 ```
 sh run.sh --evaluate  --load_dir models/1
 ```
 
-#### Prediction
+### Prediction
 You can also predict answers for the samples in some files using the following command:
 
 ```
