@@ -11,106 +11,25 @@ import paddle.fluid as fluid
 import reader
 from mobilenet_ssd import mobile_net
 from utility import add_arguments, print_arguments
+from train import build_program
+from train import train_parameters
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('learning_rate',    float, 0.001,     "Learning rate.")
-add_arg('batch_size',       int,   64,        "Minibatch size of all devices.")
-add_arg('epoc_num',         int,   120,       "Epoch number.")
-add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
-add_arg('parallel',         bool,  True,      "Parallel.")
-add_arg('dataset',          str,   'pascalvoc', "coco2014, coco2017, and pascalvoc.")
-add_arg('model_save_dir',   str,   'model',     "The path to save model.")
-add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
+add_arg('learning_rate',    float, 0.0001,              "Learning rate.")
+add_arg('batch_size',       int,   64,                  "Minibatch size.")
+add_arg('epoc_num',         int,   10,                  "Epoch number.")
+add_arg('use_gpu',          bool,  True,                "Whether use GPU.")
+add_arg('parallel',         bool,  True,                "Whether train in parallel training.")
+add_arg('model_save_dir',   str,   'model',             "The path to save model.")
+add_arg('pretrained_model', str,   '',                  "The init model path.")
 add_arg('ap_version',       str,   '11point',           "Integral, 11point.")
 add_arg('image_shape',      str,   '3,300,300',         "Input image shape.")
 add_arg('mean_BGR',         str,   '127.5,127.5,127.5', "Mean value for B,G,R channel which will be subtracted.")
-add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
-add_arg('enable_ce',        bool,  False, "Whether use CE to evaluate the model")
+add_arg('data_dir',         str,   'data/pascalvoc',    "Data directory")
+add_arg('act_quant_type',   str,   'abs_max',           "Quantize type of activation.")
 #yapf: enable
-
-train_parameters = {
-    "pascalvoc": {
-        "train_images": 16551,
-        "image_shape": [3, 300, 300],
-        "class_num": 21,
-        "batch_size": 64,
-        "lr": 0.001,
-        "lr_epochs": [40, 60, 80, 100],
-        "lr_decay": [1, 0.5, 0.25, 0.1, 0.01],
-        "ap_version": '11point',
-    },
-    "coco2014": {
-        "train_images": 82783,
-        "image_shape": [3, 300, 300],
-        "class_num": 91,
-        "batch_size": 64,
-        "lr": 0.001,
-        "lr_epochs": [12, 19],
-        "lr_decay": [1, 0.5, 0.25],
-        "ap_version": 'integral', # should use eval_coco_map.py to test model
-    },
-    "coco2017": {
-        "train_images": 118287,
-        "image_shape": [3, 300, 300],
-        "class_num": 91,
-        "batch_size": 64,
-        "lr": 0.001,
-        "lr_epochs": [12, 19],
-        "lr_decay": [1, 0.5, 0.25],
-        "ap_version": 'integral', # should use eval_coco_map.py to test model
-    }
-}
-
-def optimizer_setting(train_params):
-    batch_size = train_params["batch_size"]
-    iters = train_params["train_images"] / batch_size
-    lr = train_params["lr"]
-    boundaries = [i * iters  for i in train_params["lr_epochs"]]
-    values = [ i * lr for i in train_params["lr_decay"]]
-
-    optimizer = fluid.optimizer.RMSProp(
-        learning_rate=fluid.layers.piecewise_decay(boundaries, values),
-        regularization=fluid.regularizer.L2Decay(0.00005), )
-
-    return optimizer
-
-
-def build_program(main_prog, startup_prog, train_params, is_train):
-    image_shape = train_params['image_shape']
-    class_num = train_params['class_num']
-    ap_version = train_params['ap_version']
-    with fluid.program_guard(main_prog, startup_prog):
-        py_reader = fluid.layers.py_reader(
-            capacity=64,
-            shapes=[[-1] + image_shape, [-1, 4], [-1, 1], [-1, 1]],
-            lod_levels=[0, 1, 1, 1],
-            dtypes=["float32", "float32", "int32", "int32"],
-            use_double_buffer=True)
-        with fluid.unique_name.guard():
-            image, gt_box, gt_label, difficult = fluid.layers.read_file(py_reader)
-            locs, confs, box, box_var = mobile_net(class_num, image, image_shape)
-            if is_train:
-                loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
-                    box_var)
-                loss = fluid.layers.reduce_sum(loss)
-                optimizer = optimizer_setting(train_params)
-                optimizer.minimize(loss)
-            else:
-                nmsed_out = fluid.layers.detection_output(
-                    locs, confs, box, box_var, nms_threshold=0.45)
-                loss = fluid.evaluator.DetectionMAP(
-                    nmsed_out,
-                    gt_label,
-                    gt_box,
-                    difficult,
-                    class_num,
-                    overlap_threshold=0.5,
-                    evaluate_difficult=False,
-                    ap_version=ap_version)
-    return py_reader, loss
-
 
 def train(args,
           data_args,
@@ -123,28 +42,19 @@ def train(args,
     epoc_num = args.epoc_num
     use_gpu = args.use_gpu
     parallel = args.parallel
-    enable_ce = args.enable_ce
     is_shuffle = True
+    act_quant_type = args.act_quant_type
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
     batch_size = train_params['batch_size']
     batch_size_per_device = batch_size // devices_num
     iters_per_epoc = train_params["train_images"] // batch_size
-    num_workers = 8
+    num_workers = 4
 
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()
-
-    if enable_ce:
-        import random
-        random.seed(0)
-        np.random.seed(0)
-        is_shuffle = False
-        startup_prog.random_seed = 111
-        train_prog.random_seed = 111
-        test_prog.random_seed = 111
 
     train_py_reader, loss = build_program(
         main_prog=train_prog,
@@ -158,27 +68,39 @@ def train(args,
         is_train=False)
 
     test_prog = test_prog.clone(for_test=True)
+
+    transpiler = fluid.contrib.QuantizeTranspiler(weight_bits=8,
+        activation_bits=8,
+        activation_quantize_type=act_quant_type,
+        weight_quantize_type='abs_max')
+
+    transpiler.training_transpile(train_prog, startup_prog)
+    transpiler.training_transpile(test_prog, startup_prog)
+
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
     if pretrained_model:
+        print('Load init model %s.' % pretrained_model)
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
         fluid.io.load_vars(exe, pretrained_model, main_program=train_prog,
                            predicate=if_exist)
+    else:
+        print('There is no init model.')
 
     if parallel:
         train_exe = fluid.ParallelExecutor(main_program=train_prog,
             use_cuda=use_gpu, loss_name=loss.name)
+
     train_reader = reader.train(data_args,
                                 train_file_list,
                                 batch_size_per_device,
                                 shuffle=is_shuffle,
                                 use_multiprocessing=True,
                                 num_workers=num_workers,
-                                max_queue=24,
-                                enable_ce=enable_ce)
+                                max_queue=24)
     test_reader = reader.test(data_args, val_file_list, batch_size)
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
@@ -213,12 +135,15 @@ def train(args,
             save_model('best_model', test_prog)
         return best_map, mean_map
 
-
     train_py_reader.start()
     total_time = 0.0
     try:
         for epoc_id in range(epoc_num):
-            epoch_idx = epoc_id + 1
+            # test
+            best_map, mean_map = test(epoc_id, best_map)
+            print("Best test map {0}".format(best_map))
+
+            # train
             start_time = time.time()
             prev_start_time = start_time
             every_epoc_loss = []
@@ -237,24 +162,7 @@ def train(args,
             end_time = time.time()
             total_time += end_time - start_time
 
-            best_map, mean_map = test(epoc_id, best_map)
-            print("Best test map {0}".format(best_map))
-            if epoc_id % 10 == 0 or epoc_id == epoc_num - 1:
-                save_model(str(epoc_id), train_prog)
-
-            if enable_ce and epoc_id == epoc_num - 1:
-                train_avg_loss = np.mean(every_epoc_loss)
-                if devices_num == 1:
-                    print("kpis	train_cost	%s" % train_avg_loss)
-                    print("kpis	test_acc	%s" % mean_map)
-                    print("kpis	train_speed	%s" % (total_time / epoch_idx))
-                else:
-                    print("kpis	train_cost_card%s	%s" %
-                           (devices_num, train_avg_loss))
-                    print("kpis	test_acc_card%s	%s" %
-                           (devices_num, mean_map))
-                    print("kpis	train_speed_card%s	%f" %
-                           (devices_num, total_time / epoch_idx))
+            save_model(str(epoc_id), train_prog)
 
     except fluid.core.EOFException:
         train_py_reader.reset()
@@ -267,21 +175,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
 
-    data_dir = args.data_dir
-    dataset = args.dataset
-    assert dataset in ['pascalvoc', 'coco2014', 'coco2017']
-
     # for pascalvoc
     label_file = 'label_list'
     train_file_list = 'trainval.txt'
     val_file_list = 'test.txt'
-
-    if dataset == 'coco2014':
-        train_file_list = 'annotations/instances_train2014.json'
-        val_file_list = 'annotations/instances_val2014.json'
-    elif dataset == 'coco2017':
-        train_file_list = 'annotations/instances_train2017.json'
-        val_file_list = 'annotations/instances_val2017.json'
 
     mean_BGR = [float(m) for m in args.mean_BGR.split(",")]
     image_shape = [int(m) for m in args.image_shape.split(",")]
@@ -293,7 +190,7 @@ if __name__ == '__main__':
 
     data_args = reader.Settings(
         dataset=args.dataset,
-        data_dir=data_dir,
+        data_dir=args.data_dir,
         label_file=label_file,
         resize_h=image_shape[1],
         resize_w=image_shape[2],
