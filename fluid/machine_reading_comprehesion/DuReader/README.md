@@ -1,5 +1,5 @@
 # Abstract
-Dureader is an end-to-end neural networks model for machine reading comprehesion style question answering, which aims to anser questions from given passages. We first match the question and passage with a bidireactional attention flow networks to obtrain the question-aware passages represenation. Then we employ the pointer networks to locate the positions of answers from passages. Our experimental evalutions show that DuReader model achieves the state-of-the-art results in DuReader Dadaset.
+Dureader is an end-to-end neural network model for machine reading comprehesion style question answering, which aims to anser questions from given passages. We first match the question and passage with a bidireactional attention flow networks to obtrain the question-aware passages represenation. Then we employ the pointer networks to locate the positions of answers from passages. Our experimental evalutions show that DuReader model achieves the state-of-the-art results in DuReader Dadaset.
 # Dataset
 DuReader Dataset is a new large-scale real-world and human sourced MRC dataset in Chinese. DuReader focuses on real-world open-domain question answering. The advantages of DuReader over existing datasets are concluded as follows:
  - Real question
@@ -11,13 +11,13 @@ DuReader Dataset is a new large-scale real-world and human sourced MRC dataset i
 # Network
 DuReader is inspired by 3 classic reading comprehension models([BiDAF](https://arxiv.org/abs/1611.01603), [Match-LSTM](https://arxiv.org/abs/1608.07905), [R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf)).
 
-DuReader model is a hierarchical multi_stage process adn consist of five layers
+DuReader model is a hierarchical multi-stage process and consists of five layers
 
-- **Word Embedding Layer** maps each word to a vector space using a pre-trained word embedding model.
-- **Encoding Layer** extract context infomation for each position in question and passages with bi-directional LSTM network.
+- **Word Embedding Layer** maps each word to a vector using a pre-trained word embedding model.
+- **Encoding Layer** extracts context infomation for each position in question and passages with bi-directional LSTM network.
 - **Attention Flow Layer** couples the query and context vectors and produces a set of query-aware feature vectors for each word in the context. Please refer to [BiDAF](https://arxiv.org/abs/1611.01603) for more details.
 - **Fusion Layer** employs two layers of bi-directional LSTM to capture the interaction among context words independent of the query.
-- **Answer Point Network Layer with Attention Pooling** please refer to [Match-LSTM](https://arxiv.org/abs/1608.07905) and [R_NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf) for more details.
+- **Decode Layer** employs an answer point network with attention pooling of the quesiton to locate the positions of answers from passages. Please refer to [Match-LSTM](https://arxiv.org/abs/1608.07905) and [R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf) for more details.
 
 ## How to Run
 ### Download the Dataset
@@ -28,7 +28,7 @@ cd data && bash download.sh
 For more details about DuReader dataset please refer to [DuReader Dataset Homepage](https://ai.baidu.com//broad/subordinate?dataset=dureader).
 
 ### Download Thirdparty Dependencies
-We use Bleu and Rouge as evaluation metrics, the calculation of these metrics relies on the scoring scripts under "https://github.com/tylin/coco-caption", to download them, run:
+We use Bleu and Rouge as evaluation metrics, the calculation of these metrics relies on the scoring scripts under [coco-caption](https://github.com/tylin/coco-caption), to download them, run:
 
 ```
 cd utils && bash download_thirdparty.sh
@@ -67,18 +67,3 @@ sh run.sh --predict --load_dir models/1 --testset ../data/demo/devset/search.dev
 ```
 
 By default, the results are saved at `../data/results/` folder. You can change this by specifying `--result_dir DIR_PATH`.
-
-## Copyright and License
-Copyright 2017 Baidu.com, Inc. All Rights Reserved
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
