@@ -8,7 +8,7 @@ from kpi import CostKpi, DurationKpi, AccKpi
 # NOTE kpi.py should shared in models in some way!!!!
 
 train_cost_kpi = CostKpi('train_cost', 0.05, 0, actived=True)
-train_duration_kpi = DurationKpi('train_duration', 0.06, 0, actived=True)
+train_duration_kpi = DurationKpi('train_duration', 0.02, 0, actived=True)
 
 tracking_kpis = [
     train_cost_kpi,

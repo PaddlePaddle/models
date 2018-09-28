@@ -79,7 +79,7 @@ def inference(args):
     batch_times = []
     iters = 0
     for data in infer_reader():
-        feed_dict = get_feeder_data(data, place)
+        feed_dict = get_feeder_data(data, place, need_label=False)
         if args.iterations > 0 and iters == args.iterations + args.skip_batch_num:
             break
         if iters < args.skip_batch_num:

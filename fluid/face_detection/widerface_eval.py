@@ -305,7 +305,9 @@ if __name__ == '__main__':
     image_shape = [3, 1024, 1024]
     with fluid.program_guard(main_program, startup_program):
         network = PyramidBox(
-            image_shape, sub_network=args.use_pyramidbox, is_infer=True)
+            data_shape=image_shape,
+            sub_network=args.use_pyramidbox,
+            is_infer=True)
         infer_program, nmsed_out = network.infer(main_program)
         fetches = [nmsed_out]
         fluid.io.load_persistables(

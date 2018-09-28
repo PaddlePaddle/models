@@ -9,12 +9,12 @@ class TrainTaskConfig(object):
     # the hyper parameters for Adam optimizer.
     # This static learning_rate will be multiplied to the LearningRateScheduler
     # derived learning rate the to get the final learning rate.
-    learning_rate = 1
+    learning_rate = 2.0
     beta1 = 0.9
-    beta2 = 0.98
+    beta2 = 0.997
     eps = 1e-9
     # the parameters for learning rate scheduling.
-    warmup_steps = 4000
+    warmup_steps = 8000
     # the weight used to mix up the ground-truth distribution and the fixed
     # uniform distribution in label smoothing when training.
     # Set this as zero if label smoothing is not wanted.
@@ -30,6 +30,8 @@ class TrainTaskConfig(object):
     # It should be provided if use checkpoints, since the checkpoint doesn't
     # include the training step counter currently.
     start_step = 0
+    # the frequency to save trained models.
+    save_freq = 10000
 
 
 class InferTaskConfig(object):
@@ -63,7 +65,6 @@ class ModelHyperParams(object):
     # index for <unk> token
     unk_idx = 2
     # max length of sequences deciding the size of position encoding table.
-    # Start from 1 and count start and end tokens in.
     max_length = 256
     # the dimension for word embeddings, which is also the last dimension of
     # the input and output of multi-head attention, position-wise feed-forward
@@ -79,8 +80,14 @@ class ModelHyperParams(object):
     n_head = 8
     # number of sub-layers to be stacked in the encoder and decoder.
     n_layer = 6
-    # dropout rate used by all dropout layers.
-    dropout = 0.1
+    # dropout rates of different modules.
+    prepostprocess_dropout = 0.1
+    attention_dropout = 0.1
+    relu_dropout = 0.1
+    # to process before each sub-layer
+    preprocess_cmd = "n"  # layer normalization
+    # to process after each sub-layer
+    postprocess_cmd = "da"  # dropout + residual connection
     # random seed used in dropout for CE.
     dropout_seed = None
     # the flag indicating whether to share embedding and softmax weights.

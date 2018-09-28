@@ -156,7 +156,9 @@ def fast_infer(test_data, trg_idx2word, use_wordpiece):
         ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
         ModelHyperParams.n_head, ModelHyperParams.d_key,
         ModelHyperParams.d_value, ModelHyperParams.d_model,
-        ModelHyperParams.d_inner_hid, ModelHyperParams.dropout,
+        ModelHyperParams.d_inner_hid, ModelHyperParams.prepostprocess_dropout,
+        ModelHyperParams.attention_dropout, ModelHyperParams.relu_dropout,
+        ModelHyperParams.preprocess_cmd, ModelHyperParams.postprocess_cmd,
         ModelHyperParams.weight_sharing, InferTaskConfig.beam_size,
         InferTaskConfig.max_out_len, ModelHyperParams.eos_idx)
 
@@ -169,7 +171,7 @@ def fast_infer(test_data, trg_idx2word, use_wordpiece):
         ])
 
     # This is used here to set dropout to the test mode.
-    infer_program = fluid.default_main_program().inference_optimize()
+    infer_program = fluid.default_main_program().clone(for_test=True)
 
     for batch_id, data in enumerate(test_data.batch_generator()):
         data_input = prepare_batch_input(

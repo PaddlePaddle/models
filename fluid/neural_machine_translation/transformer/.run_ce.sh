@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DATA_PATH=$HOME/.cache/paddle/dataset/wmt16
-if [ ! -d $DATA_PATH/en_10000.dict ] ; then
+if [ ! -e $DATA_PATH/en_10000.dict ] ; then
     python -c 'import paddle;paddle.dataset.wmt16.train(10000, 10000, "en")().next()'
     tar -zxf $DATA_PATH/wmt16.tar.gz -C $DATA_PATH
 fi
