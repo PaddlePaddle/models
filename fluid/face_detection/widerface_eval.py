@@ -82,9 +82,6 @@ def save_widerface_bboxes(image_path, bboxes_scores, output_dir):
     image_name = image_path.split('/')[-1]
     image_class = image_path.split('/')[-2]
 
-    image_name = image_name.encode('utf-8')
-    image_class = image_class.encode('utf-8')
-
     odir = os.path.join(output_dir, image_class)
     if not os.path.exists(odir):
         os.makedirs(odir)

@@ -427,6 +427,7 @@ class PyramidBox(object):
             overlap_threshold=0.35,
             neg_overlap=0.35)
         loss = fluid.layers.reduce_sum(loss)
+        loss.persistable = True
         return loss
 
     def train(self):

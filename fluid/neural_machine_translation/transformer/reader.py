@@ -1,4 +1,5 @@
 import glob
+import six
 import os
 import tarfile
 
@@ -12,15 +13,16 @@ class SortType(object):
 
 
 class Converter(object):
-    def __init__(self, vocab, beg, end, unk, delimiter):
+    def __init__(self, vocab, beg, end, unk, delimiter, add_beg):
         self._vocab = vocab
         self._beg = beg
         self._end = end
         self._unk = unk
         self._delimiter = delimiter
+        self._add_beg = add_beg
 
     def __call__(self, sentence):
-        return [self._beg] + [
+        return ([self._beg] if self._add_beg else []) + [
             self._vocab.get(w, self._unk)
             for w in sentence.split(self._delimiter)
         ] + [self._end]
@@ -215,7 +217,8 @@ class DataReader(object):
                 beg=self._src_vocab[start_mark],
                 end=self._src_vocab[end_mark],
                 unk=self._src_vocab[unk_mark],
-                delimiter=self._token_delimiter)
+                delimiter=self._token_delimiter,
+                add_beg=False)
         ]
         if not self._only_src:
             converters.append(
@@ -224,7 +227,8 @@ class DataReader(object):
                     beg=self._trg_vocab[start_mark],
                     end=self._trg_vocab[end_mark],
                     unk=self._trg_vocab[unk_mark],
-                    delimiter=self._token_delimiter))
+                    delimiter=self._token_delimiter,
+                    add_beg=True))
 
         converters = ComposedConverter(converters)
 
@@ -259,8 +263,10 @@ class DataReader(object):
                 if not os.path.isfile(fpath):
                     raise IOError("Invalid file: %s" % fpath)
 
-                with open(fpath, "r") as f:
+                with open(fpath, "rb") as f:
                     for line in f:
+                        if six.PY3:
+                            line = line.decode()
                         fields = line.strip("\n").split(self._field_delimiter)
                         if (not self._only_src and len(fields) == 2) or (
                                 self._only_src and len(fields) == 1):
@@ -269,8 +275,10 @@ class DataReader(object):
     @staticmethod
     def load_dict(dict_path, reverse=False):
         word_dict = {}
-        with open(dict_path, "r") as fdict:
+        with open(dict_path, "rb") as fdict:
             for idx, line in enumerate(fdict):
+                if six.PY3:
+                    line = line.decode()
                 if reverse:
                     word_dict[idx] = line.strip("\n")
                 else:
@@ -280,8 +288,7 @@ class DataReader(object):
     def batch_generator(self):
         # global sort or global shuffle
         if self._sort_type == SortType.GLOBAL:
-            infos = sorted(
-                self._sample_infos, key=lambda x: x.max_len, reverse=True)
+            infos = sorted(self._sample_infos, key=lambda x: x.max_len)
         else:
             if self._shuffle:
                 infos = self._sample_infos

@@ -63,7 +63,7 @@ WMT 数据集是机器翻译领域公认的主流数据集；WMT 英德和英法
 
 #### WMT 英德翻译数据
 
-[WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)是一个中等规模的数据集。参照论文，英德数据集我们使用 BPE 编码的数据，这能够更好的解决未登录词（out-of-vocabulary，OOV）的问题[4]。用到的 BPE 数据可以参照[这里](https://github.com/google/seq2seq/blob/master/docs/data.md)进行下载（如果希望在自定义数据中使用 BPE 编码，可以参照[这里](https://github.com/rsennrich/subword-nmt)进行预处理），下载后解压，其中 `train.tok.clean.bpe.32000.en` 和 `train.tok.clean.bpe.32000.de` 为使用 BPE 的训练数据（平行语料，分别对应了英语和德语，经过了 tokenize 和 BPE 的处理），`newstest2013.tok.bpe.32000.en` 和 `newstest2013.tok.bpe.32000.de` 等为测试数据（`newstest2013.tok.en` 和 `newstest2013.tok.de` 等则为对应的未使用 BPE 的测试数据），`vocab.bpe.32000` 为相应的词典文件（源语言和目标语言共享该词典文件）。
+[WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)是一个中等规模的数据集。参照论文，英德数据集我们使用 BPE 编码的数据，这能够更好的解决未登录词（out-of-vocabulary，OOV）的问题[4]。用到的 BPE 数据可以参照[这里](https://github.com/google/seq2seq/blob/master/docs/data.md)进行下载（如果希望在自定义数据中使用 BPE 编码，可以参照[这里](https://github.com/rsennrich/subword-nmt)进行预处理），下载后解压，其中 `train.tok.clean.bpe.32000.en` 和 `train.tok.clean.bpe.32000.de` 为使用 BPE 的训练数据（平行语料，分别对应了英语和德语，经过了 tokenize 和 BPE 的处理），`newstest2016.tok.bpe.32000.en` 和 `newstest2016.tok.bpe.32000.de` 等为测试数据（`newstest2016.tok.en` 和 `newstest2016.tok.de` 等则为对应的未使用 BPE 的测试数据），`vocab.bpe.32000` 为相应的词典文件（源语言和目标语言共享该词典文件）。
 
 由于本示例中的数据读取脚本 `reader.py` 默认使用的样本数据的格式为 `\t` 分隔的的源语言和目标语言句子对（默认句子中的词之间使用空格分隔），因此需要将源语言到目标语言的平行语料库文件合并为一个文件，可以执行以下命令进行合并：
 ```sh
@@ -91,7 +91,7 @@ python -u train.py \
   --train_file_pattern data/train.tok.clean.bpe.32000.en-de \
   --token_delimiter ' ' \
   --use_token_batch True \
-  --batch_size 3200 \
+  --batch_size 4096 \
   --sort_type pool \
   --pool_size 200000
 ```
@@ -100,7 +100,7 @@ python -u train.py \
 python train.py --help
 ```
 
-更多模型训练相关的参数则在 `config.py` 中的 `ModelHyperParams` 和 `TrainTaskConfig` 内定义；`ModelHyperParams` 定义了 embedding 维度等模型超参数，`TrainTaskConfig` 定义了 warmup 步数等训练需要的参数。这些参数默认使用了 Transformer 论文中 base model 的配置，如需调整可以在该脚本中进行修改。另外这些参数同样可在执行训练脚本的命令行中设置，传入的配置会合并并覆盖 `config.py` 中的配置，如可以通过以下命令来训练 Transformer 论文中的 big model ：
+更多模型训练相关的参数则在 `config.py` 中的 `ModelHyperParams` 和 `TrainTaskConfig` 内定义；`ModelHyperParams` 定义了 embedding 维度等模型超参数，`TrainTaskConfig` 定义了 warmup 步数等训练需要的参数。这些参数默认使用了 Transformer 论文中 base model 的配置，如需调整可以在该脚本中进行修改。另外这些参数同样可在执行训练脚本的命令行中设置，传入的配置会合并并覆盖 `config.py` 中的配置，如可以通过以下命令来训练 Transformer 论文中的 big model （如显存不够可适当减小 batch size 的值）：
 
 ```sh
 python -u train.py \
@@ -117,22 +117,23 @@ python -u train.py \
   n_head 16 \
   d_model 1024 \
   d_inner_hid 4096 \
-  dropout 0.3
+  n_head 16 \
+  prepostprocess_dropout 0.3
 ```
 有关这些参数更详细信息的请参考 `config.py` 中的注释说明。对于英法翻译数据，执行训练和英德翻译训练类似，修改命令中的词典和数据文件为英法数据相应文件的路径，另外要注意的是由于英法翻译数据 token 间不是使用空格进行分隔，需要修改 `token_delimiter` 参数的设置为 `--token_delimiter '\x01'`。
 
-训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。也可以只使用 CPU 训练(通过参数 `--divice CPU` 设置)，训练速度相对较慢。在训练过程中，每个 epoch 结束后将保存模型到参数 `model_dir` 指定的目录，每个 epoch 内也会每隔1000个 iteration 进行一次保存，每个 iteration 将打印如下的日志到标准输出：
+训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。也可以只使用 CPU 训练(通过参数 `--divice CPU` 设置)，训练速度相对较慢。在训练过程中，每隔一定 iteration 后(通过参数 `save_freq` 设置，默认为10000)保存模型到参数 `model_dir` 指定的目录，每个 epoch 结束后也会保存 checkpiont 到 `ckpt_dir` 指定的目录，每个 iteration 将打印如下的日志到标准输出：
 ```txt
-epoch: 0, batch: 0, sum loss: 258793.343750, avg loss: 11.069005, ppl: 64151.644531
-epoch: 0, batch: 1, sum loss: 256140.718750, avg loss: 11.059616, ppl: 63552.148438
-epoch: 0, batch: 2, sum loss: 258931.093750, avg loss: 11.064013, ppl: 63832.167969
-epoch: 0, batch: 3, sum loss: 256837.875000, avg loss: 11.058206, ppl: 63462.574219
-epoch: 0, batch: 4, sum loss: 256461.000000, avg loss: 11.053401, ppl: 63158.390625
-epoch: 0, batch: 5, sum loss: 257064.562500, avg loss: 11.019099, ppl: 61028.683594
-epoch: 0, batch: 6, sum loss: 256180.125000, avg loss: 11.008556, ppl: 60388.644531
-epoch: 0, batch: 7, sum loss: 256619.671875, avg loss: 11.007106, ppl: 60301.113281
-epoch: 0, batch: 8, sum loss: 255716.734375, avg loss: 10.966025, ppl: 57874.105469
-epoch: 0, batch: 9, sum loss: 245157.500000, avg loss: 10.966562, ppl: 57905.187500
+step_idx: 0, epoch: 0, batch: 0, avg loss: 11.059394, normalized loss: 9.682427, ppl: 63538.027344
+step_idx: 1, epoch: 0, batch: 1, avg loss: 11.053112, normalized loss: 9.676146, ppl: 63140.144531
+step_idx: 2, epoch: 0, batch: 2, avg loss: 11.054576, normalized loss: 9.677609, ppl: 63232.640625
+step_idx: 3, epoch: 0, batch: 3, avg loss: 11.046638, normalized loss: 9.669671, ppl: 62732.664062
+step_idx: 4, epoch: 0, batch: 4, avg loss: 11.030095, normalized loss: 9.653129, ppl: 61703.449219
+step_idx: 5, epoch: 0, batch: 5, avg loss: 11.047491, normalized loss: 9.670525, ppl: 62786.230469
+step_idx: 6, epoch: 0, batch: 6, avg loss: 11.044509, normalized loss: 9.667542, ppl: 62599.273438
+step_idx: 7, epoch: 0, batch: 7, avg loss: 11.011090, normalized loss: 9.634124, ppl: 60541.859375
+step_idx: 8, epoch: 0, batch: 8, avg loss: 10.985243, normalized loss: 9.608276, ppl: 58997.058594
+step_idx: 9, epoch: 0, batch: 9, avg loss: 10.993434, normalized loss: 9.616467, ppl: 59482.292969
 ```
 
 ### 模型预测
@@ -143,19 +144,19 @@ python -u infer.py \
   --src_vocab_fpath data/vocab.bpe.32000 \
   --trg_vocab_fpath data/vocab.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
-  --test_file_pattern data/newstest2013.tok.bpe.32000.en-de \
+  --test_file_pattern data/newstest2016.tok.bpe.32000.en-de \
   --use_wordpiece False \
   --token_delimiter ' ' \
-  --batch_size 4 \
-  model_path trained_models/pass_20.infer.model \
-  beam_size 5 \
-  max_out_len 256
+  --batch_size 32 \
+  model_path trained_models/iter_199999.infer.model \
+  beam_size 4 \
+  max_out_len 255
 ```
 和模型训练时类似，预测时也需要设置数据和 reader 相关的参数，并可以执行 `python infer.py --help` 查看这些参数的说明（部分参数意义和训练时略有不同）；同样可以在预测命令中设置模型超参数，但应与模型训练时的设置一致；此外相比于模型训练，预测时还有一些额外的参数，如需要设置 `model_path` 来给出模型所在目录，可以设置 `beam_size` 和 `max_out_len` 来指定 Beam Search 算法的搜索宽度和最大深度（翻译长度），这些参数也可以在 `config.py` 中的 `InferTaskConfig` 内查阅注释说明并进行更改设置。
 
 执行以上预测命令会打印翻译结果到标准输出，每行输出是对应行输入的得分最高的翻译。对于使用 BPE 的英德数据，预测出的翻译结果也将是 BPE 表示的数据，要还原成原始的数据（这里指 tokenize 后的数据）才能进行正确的评估，可以使用以下命令来恢复 `predict.txt` 内的翻译结果到 `predict.tok.txt` 中（无需再次 tokenize 处理）：
 ```sh
-sed 's/@@ //g' predict.txt > predict.tok.txt
+sed -r 's/(@@ )|(@@ ?$)//g' predict.txt > predict.tok.txt
 ```
 
 对于英法翻译的 wordpiece 数据，执行预测和英德翻译预测类似，修改命令中的词典和数据文件为英法数据相应文件的路径，另外需要注意修改 `token_delimiter` 参数的设置为 `--token_delimiter '\x01'`；同时要修改 `use_wordpiece` 参数的设置为 `--use_wordpiece True`，这会在预测时将翻译得到的 wordpiece 数据还原为原始数据输出。为了使用 tokenize 的数据进行评估，还需要对翻译结果进行 tokenize 的处理，[Moses](https://github.com/moses-smt/mosesdecoder) 提供了一系列机器翻译相关的脚本。执行 `git clone https://github.com/moses-smt/mosesdecoder.git` 克隆 mosesdecoder 仓库后，可以使用其中的 `tokenizer.perl` 脚本对 `predict.txt` 内的翻译结果进行 tokenize 处理并输出到 `predict.tok.txt` 中，如下：
@@ -163,15 +164,21 @@ sed 's/@@ //g' predict.txt > predict.tok.txt
 perl mosesdecoder/scripts/tokenizer/tokenizer.perl -l fr < predict.txt > predict.tok.txt
 ```
 
-接下来就可以使用参考翻译对翻译结果进行 BLEU 指标的评估了。计算 BLEU 值的脚本也在 Moses 中包含，以英德翻译 `newstest2013.tok.de` 数据为例，执行如下命令：
+接下来就可以使用参考翻译对翻译结果进行 BLEU 指标的评估了。计算 BLEU 值的脚本也在 Moses 中包含，以英德翻译 `newstest2016.tok.de` 数据为例，执行如下命令：
 ```sh
-perl mosesdecoder/scripts/generic/multi-bleu.perl data/newstest2013.tok.de < predict.tok.txt
+perl mosesdecoder/scripts/generic/multi-bleu.perl data/newstest2016.tok.de < predict.tok.txt
 ```
-可以看到类似如下的结果。
+可以看到类似如下的结果（为单机两卡训练 200K 个 iteration 后模型的预测结果）。
 ```
-BLEU = 25.08, 58.3/31.5/19.6/12.6 (BP=0.966, ratio=0.967, hyp_len=61321, ref_len=63412)
+BLEU = 33.08, 64.2/39.2/26.4/18.5 (BP=0.994, ratio=0.994, hyp_len=61971, ref_len=62362)
 ```
-目前在未使用 model average 的情况下，使用默认配置单机八卡（同论文中 base model 的配置）进行训练，英德翻译在 `newstest2013` 上测试 BLEU 值为25.，在 `newstest2014` 上测试 BLEU 值为26.；英法翻译在 `newstest2014` 上测试  BLEU 值为36.。
+目前在未使用 model average 的情况下，英德翻译 base model 八卡训练 100K 个 iteration 后测试 BLEU 值如下：
+
+| 测试集 | newstest2013 | newstest2014 | newstest2015 | newstest2016 |
+|-|-|-|-|-|
+| BLEU | 25.27 | 26.05 | 28.75 | 33.27 |
+
+英法翻译 base model 八卡训练 100K 个 iteration 后在 `newstest2014` 上测试 BLEU 值为36.。
 
 ### 分布式训练
 

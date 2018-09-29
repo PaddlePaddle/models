@@ -9,7 +9,7 @@ import gym
 from gym import spaces
 from gym.envs.atari.atari_env import ACTION_MEANING
 
-from ale_python_interface import ALEInterface
+from atari_py import ALEInterface
 
 __all__ = ['AtariPlayer']
 

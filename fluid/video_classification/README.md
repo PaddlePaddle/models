@@ -111,7 +111,6 @@ According to the congfiguration of evaluation, the output log is like:
 Inference is used to get prediction score or video features based on trained models.
 ```
 python infer.py \
-    --batch_size=128 \
     --class_dim=101 \
     --image_shape=3,224,224 \
     --with_mem_opt=True \

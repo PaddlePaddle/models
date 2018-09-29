@@ -1,5 +1,4 @@
 from __future__ import print_function
-import paddle.v2 as paddle
 import paddle.fluid as fluid
 from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_for_infer
 import paddle.fluid.profiler as profiler

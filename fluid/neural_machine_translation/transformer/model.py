@@ -11,12 +11,18 @@ def position_encoding_init(n_position, d_pos_vec):
     """
     Generate the initial values for the sinusoid position encoding table.
     """
-    position_enc = np.array([[
-        pos / np.power(10000, 2. * (j // 2) / d_pos_vec)
-        for j in range(d_pos_vec)
-    ] if pos != 0 else np.zeros(d_pos_vec) for pos in range(n_position)])
-    position_enc[1:, 0::2] = np.sin(position_enc[1:, 0::2])  # dim 2i
-    position_enc[1:, 1::2] = np.cos(position_enc[1:, 1::2])  # dim 2i+1
+    channels = d_pos_vec
+    position = np.arange(n_position)
+    num_timescales = channels // 2
+    log_timescale_increment = (np.log(float(1e4) / float(1)) /
+                               (num_timescales - 1))
+    inv_timescales = np.exp(np.arange(
+        num_timescales)) * -log_timescale_increment
+    scaled_time = np.expand_dims(position, 1) * np.expand_dims(inv_timescales,
+                                                               0)
+    signal = np.concatenate([np.sin(scaled_time), np.cos(scaled_time)], axis=1)
+    signal = np.pad(signal, [[0, 0], [0, np.mod(channels, 2)]], 'constant')
+    position_enc = signal
     return position_enc.astype("float32")
 
 
@@ -35,6 +41,9 @@ def multi_head_attention(queries,
     computing softmax activiation to mask certain selected positions so that
     they will not considered in attention weights.
     """
+    keys = queries if keys is None else keys
+    values = keys if values is None else values
+
     if not (len(queries.shape) == len(keys.shape) == len(values.shape) == 3):
         raise ValueError(
             "Inputs: quries, keys and values should all be 3-D tensors.")
@@ -92,11 +101,11 @@ def multi_head_attention(queries,
         return layers.reshape(
             x=trans_x, shape=[0, 0, trans_x.shape[2] * trans_x.shape[3]])
 
-    def scaled_dot_product_attention(q, k, v, attn_bias, d_model, dropout_rate):
+    def scaled_dot_product_attention(q, k, v, attn_bias, d_key, dropout_rate):
         """
         Scaled Dot-Product Attention
         """
-        scaled_q = layers.scale(x=q, scale=d_model**-0.5)
+        scaled_q = layers.scale(x=q, scale=d_key**-0.5)
         product = layers.matmul(x=scaled_q, y=k, transpose_y=True)
         if attn_bias:
             product += attn_bias
@@ -133,7 +142,7 @@ def multi_head_attention(queries,
     return proj_out
 
 
-def positionwise_feed_forward(x, d_inner_hid, d_hid):
+def positionwise_feed_forward(x, d_inner_hid, d_hid, dropout_rate):
     """
     Position-wise Feed-Forward Networks.
     This module consists of two linear transformations with a ReLU activation
@@ -143,6 +152,12 @@ def positionwise_feed_forward(x, d_inner_hid, d_hid):
                        size=d_inner_hid,
                        num_flatten_dims=2,
                        act="relu")
+    if dropout_rate:
+        hidden = layers.dropout(
+            hidden,
+            dropout_prob=dropout_rate,
+            seed=ModelHyperParams.dropout_seed,
+            is_test=False)
     out = layers.fc(input=hidden, size=d_hid, num_flatten_dims=2)
     return out
 
@@ -177,14 +192,14 @@ pre_process_layer = partial(pre_post_process_layer, None)
 post_process_layer = pre_post_process_layer
 
 
-def prepare_encoder(src_word,
-                    src_pos,
-                    src_vocab_size,
-                    src_emb_dim,
-                    src_max_len,
-                    dropout_rate=0.,
-                    word_emb_param_name=None,
-                    pos_enc_param_name=None):
+def prepare_encoder_decoder(src_word,
+                            src_pos,
+                            src_vocab_size,
+                            src_emb_dim,
+                            src_max_len,
+                            dropout_rate=0.,
+                            word_emb_param_name=None,
+                            pos_enc_param_name=None):
     """Add word embeddings and position encodings.
     The output tensor has a shape of:
     [batch_size, max_src_length_in_batch, d_model].
@@ -193,6 +208,7 @@ def prepare_encoder(src_word,
     src_word_emb = layers.embedding(
         src_word,
         size=[src_vocab_size, src_emb_dim],
+        padding_idx=ModelHyperParams.bos_idx,  # set embedding of bos to 0
         param_attr=fluid.ParamAttr(
             name=word_emb_param_name,
             initializer=fluid.initializer.Normal(0., src_emb_dim**-0.5)))
@@ -203,6 +219,7 @@ def prepare_encoder(src_word,
         size=[src_max_len, src_emb_dim],
         param_attr=fluid.ParamAttr(
             name=pos_enc_param_name, trainable=False))
+    src_pos_enc.stop_gradient = True
     enc_input = src_word_emb + src_pos_enc
     return layers.dropout(
         enc_input,
@@ -212,9 +229,9 @@ def prepare_encoder(src_word,
 
 
 prepare_encoder = partial(
-    prepare_encoder, pos_enc_param_name=pos_enc_param_names[0])
+    prepare_encoder_decoder, pos_enc_param_name=pos_enc_param_names[0])
 prepare_decoder = partial(
-    prepare_encoder, pos_enc_param_name=pos_enc_param_names[1])
+    prepare_encoder_decoder, pos_enc_param_name=pos_enc_param_names[1])
 
 
 def encoder_layer(enc_input,
@@ -224,20 +241,28 @@ def encoder_layer(enc_input,
                   d_value,
                   d_model,
                   d_inner_hid,
-                  dropout_rate=0.):
+                  prepostprocess_dropout,
+                  attention_dropout,
+                  relu_dropout,
+                  preprocess_cmd="n",
+                  postprocess_cmd="da"):
     """The encoder layers that can be stacked to form a deep encoder.
     This module consits of a multi-head (self) attention followed by
     position-wise feed-forward networks and both the two components companied
     with the post_process_layer to add residual connection, layer normalization
     and droput.
     """
-    attn_output = multi_head_attention(enc_input, enc_input, enc_input,
-                                       attn_bias, d_key, d_value, d_model,
-                                       n_head, dropout_rate)
-    attn_output = post_process_layer(enc_input, attn_output, "dan",
-                                     dropout_rate)
-    ffd_output = positionwise_feed_forward(attn_output, d_inner_hid, d_model)
-    return post_process_layer(attn_output, ffd_output, "dan", dropout_rate)
+    attn_output = multi_head_attention(
+        pre_process_layer(enc_input, preprocess_cmd,
+                          prepostprocess_dropout), None, None, attn_bias, d_key,
+        d_value, d_model, n_head, attention_dropout)
+    attn_output = post_process_layer(enc_input, attn_output, postprocess_cmd,
+                                     prepostprocess_dropout)
+    ffd_output = positionwise_feed_forward(
+        pre_process_layer(attn_output, preprocess_cmd, prepostprocess_dropout),
+        d_inner_hid, d_model, relu_dropout)
+    return post_process_layer(attn_output, ffd_output, postprocess_cmd,
+                              prepostprocess_dropout)
 
 
 def encoder(enc_input,
@@ -248,15 +273,32 @@ def encoder(enc_input,
             d_value,
             d_model,
             d_inner_hid,
-            dropout_rate=0.):
+            prepostprocess_dropout,
+            attention_dropout,
+            relu_dropout,
+            preprocess_cmd="n",
+            postprocess_cmd="da"):
     """
     The encoder is composed of a stack of identical layers returned by calling
     encoder_layer.
     """
     for i in range(n_layer):
-        enc_output = encoder_layer(enc_input, attn_bias, n_head, d_key, d_value,
-                                   d_model, d_inner_hid, dropout_rate)
+        enc_output = encoder_layer(
+            enc_input,
+            attn_bias,
+            n_head,
+            d_key,
+            d_value,
+            d_model,
+            d_inner_hid,
+            prepostprocess_dropout,
+            attention_dropout,
+            relu_dropout,
+            preprocess_cmd,
+            postprocess_cmd, )
         enc_input = enc_output
+    enc_output = pre_process_layer(enc_output, preprocess_cmd,
+                                   prepostprocess_dropout)
     return enc_output
 
 
@@ -269,30 +311,35 @@ def decoder_layer(dec_input,
                   d_value,
                   d_model,
                   d_inner_hid,
-                  dropout_rate=0.,
+                  prepostprocess_dropout,
+                  attention_dropout,
+                  relu_dropout,
+                  preprocess_cmd,
+                  postprocess_cmd,
                   cache=None):
     """ The layer to be stacked in decoder part.
     The structure of this module is similar to that in the encoder part except
     a multi-head attention is added to implement encoder-decoder attention.
     """
     slf_attn_output = multi_head_attention(
-        dec_input,
-        dec_input,
-        dec_input,
+        pre_process_layer(dec_input, preprocess_cmd, prepostprocess_dropout),
+        None,
+        None,
         slf_attn_bias,
         d_key,
         d_value,
         d_model,
         n_head,
-        dropout_rate,
+        attention_dropout,
         cache, )
     slf_attn_output = post_process_layer(
         dec_input,
         slf_attn_output,
-        "dan",  # residual connection + dropout + layer normalization
-        dropout_rate, )
+        postprocess_cmd,
+        prepostprocess_dropout, )
     enc_attn_output = multi_head_attention(
-        slf_attn_output,
+        pre_process_layer(slf_attn_output, preprocess_cmd,
+                          prepostprocess_dropout),
         enc_output,
         enc_output,
         dec_enc_attn_bias,
@@ -300,21 +347,23 @@ def decoder_layer(dec_input,
         d_value,
         d_model,
         n_head,
-        dropout_rate, )
+        attention_dropout, )
     enc_attn_output = post_process_layer(
         slf_attn_output,
         enc_attn_output,
-        "dan",  # residual connection + dropout + layer normalization
-        dropout_rate, )
+        postprocess_cmd,
+        prepostprocess_dropout, )
     ffd_output = positionwise_feed_forward(
-        enc_attn_output,
+        pre_process_layer(enc_attn_output, preprocess_cmd,
+                          prepostprocess_dropout),
         d_inner_hid,
-        d_model, )
+        d_model,
+        relu_dropout, )
     dec_output = post_process_layer(
         enc_attn_output,
         ffd_output,
-        "dan",  # residual connection + dropout + layer normalization
-        dropout_rate, )
+        postprocess_cmd,
+        prepostprocess_dropout, )
     return dec_output
 
 
@@ -328,16 +377,16 @@ def decoder(dec_input,
             d_value,
             d_model,
             d_inner_hid,
-            dropout_rate=0.,
+            prepostprocess_dropout,
+            attention_dropout,
+            relu_dropout,
+            preprocess_cmd,
+            postprocess_cmd,
             caches=None):
     """
     The decoder is composed of a stack of identical decoder_layer layers.
     """
     for i in range(n_layer):
-        cache = None
-        if caches is not None:
-            cache = caches[i]
-
         dec_output = decoder_layer(
             dec_input,
             enc_output,
@@ -348,9 +397,15 @@ def decoder(dec_input,
             d_value,
             d_model,
             d_inner_hid,
-            dropout_rate,
-            cache=cache)
+            prepostprocess_dropout,
+            attention_dropout,
+            relu_dropout,
+            preprocess_cmd,
+            postprocess_cmd,
+            cache=None if caches is None else caches[i])
         dec_input = dec_output
+    dec_output = pre_process_layer(dec_output, preprocess_cmd,
+                                   prepostprocess_dropout)
     return dec_output
 
 
@@ -371,24 +426,58 @@ def make_all_inputs(input_fields):
     return inputs
 
 
-def transformer(
-        src_vocab_size,
-        trg_vocab_size,
-        max_length,
-        n_layer,
-        n_head,
-        d_key,
-        d_value,
-        d_model,
-        d_inner_hid,
-        dropout_rate,
-        weight_sharing,
-        label_smooth_eps, ):
+def make_all_py_reader_inputs(input_fields, is_test=False):
+    reader = layers.py_reader(
+        capacity=20,
+        name="test_reader" if is_test else "train_reader",
+        shapes=[input_descs[input_field][0] for input_field in input_fields],
+        dtypes=[input_descs[input_field][1] for input_field in input_fields],
+        lod_levels=[
+            input_descs[input_field][2]
+            if len(input_descs[input_field]) == 3 else 0
+            for input_field in input_fields
+        ])
+    return layers.read_file(reader), reader
+
+
+def transformer(src_vocab_size,
+                trg_vocab_size,
+                max_length,
+                n_layer,
+                n_head,
+                d_key,
+                d_value,
+                d_model,
+                d_inner_hid,
+                prepostprocess_dropout,
+                attention_dropout,
+                relu_dropout,
+                preprocess_cmd,
+                postprocess_cmd,
+                weight_sharing,
+                label_smooth_eps,
+                use_py_reader=False,
+                is_test=False):
     if weight_sharing:
         assert src_vocab_size == src_vocab_size, (
             "Vocabularies in source and target should be same for weight sharing."
         )
-    enc_inputs = make_all_inputs(encoder_data_input_fields)
+
+    data_input_names = encoder_data_input_fields + \
+                decoder_data_input_fields[:-1] + label_data_input_fields
+
+    if use_py_reader:
+        all_inputs, reader = make_all_py_reader_inputs(data_input_names,
+                                                       is_test)
+    else:
+        all_inputs = make_all_inputs(data_input_names)
+
+    enc_inputs_len = len(encoder_data_input_fields)
+    dec_inputs_len = len(decoder_data_input_fields[:-1])
+    enc_inputs = all_inputs[0:enc_inputs_len]
+    dec_inputs = all_inputs[enc_inputs_len:enc_inputs_len + dec_inputs_len]
+    label = all_inputs[-2]
+    weights = all_inputs[-1]
 
     enc_output = wrap_encoder(
         src_vocab_size,
@@ -399,11 +488,13 @@ def transformer(
         d_value,
         d_model,
         d_inner_hid,
-        dropout_rate,
+        prepostprocess_dropout,
+        attention_dropout,
+        relu_dropout,
+        preprocess_cmd,
+        postprocess_cmd,
         weight_sharing,
         enc_inputs, )
-
-    dec_inputs = make_all_inputs(decoder_data_input_fields[:-1])
 
     predict = wrap_decoder(
         trg_vocab_size,
@@ -414,14 +505,17 @@ def transformer(
         d_value,
         d_model,
         d_inner_hid,
-        dropout_rate,
+        prepostprocess_dropout,
+        attention_dropout,
+        relu_dropout,
+        preprocess_cmd,
+        postprocess_cmd,
         weight_sharing,
         dec_inputs,
         enc_output, )
 
     # Padding index do not contribute to the total loss. The weights is used to
     # cancel padding index in calculating the loss.
-    label, weights = make_all_inputs(label_data_input_fields)
     if label_smooth_eps:
         label = layers.label_smooth(
             label=layers.one_hot(
@@ -436,9 +530,9 @@ def transformer(
     weighted_cost = cost * weights
     sum_cost = layers.reduce_sum(weighted_cost)
     token_num = layers.reduce_sum(weights)
+    token_num.stop_gradient = True
     avg_cost = sum_cost / token_num
-    avg_cost.stop_gradient = True
-    return sum_cost, avg_cost, predict, token_num
+    return sum_cost, avg_cost, predict, token_num, reader if use_py_reader else None
 
 
 def wrap_encoder(src_vocab_size,
@@ -449,7 +543,11 @@ def wrap_encoder(src_vocab_size,
                  d_value,
                  d_model,
                  d_inner_hid,
-                 dropout_rate,
+                 prepostprocess_dropout,
+                 attention_dropout,
+                 relu_dropout,
+                 preprocess_cmd,
+                 postprocess_cmd,
                  weight_sharing,
                  enc_inputs=None):
     """
@@ -457,21 +555,32 @@ def wrap_encoder(src_vocab_size,
     """
     if enc_inputs is None:
         # This is used to implement independent encoder program in inference.
-        src_word, src_pos, src_slf_attn_bias = \
-            make_all_inputs(encoder_data_input_fields)
+        src_word, src_pos, src_slf_attn_bias = make_all_inputs(
+            encoder_data_input_fields)
     else:
-        src_word, src_pos, src_slf_attn_bias = \
-            enc_inputs
+        src_word, src_pos, src_slf_attn_bias = enc_inputs
     enc_input = prepare_encoder(
         src_word,
         src_pos,
         src_vocab_size,
         d_model,
         max_length,
-        dropout_rate,
+        prepostprocess_dropout,
         word_emb_param_name=word_emb_param_names[0])
-    enc_output = encoder(enc_input, src_slf_attn_bias, n_layer, n_head, d_key,
-                         d_value, d_model, d_inner_hid, dropout_rate)
+    enc_output = encoder(
+        enc_input,
+        src_slf_attn_bias,
+        n_layer,
+        n_head,
+        d_key,
+        d_value,
+        d_model,
+        d_inner_hid,
+        prepostprocess_dropout,
+        attention_dropout,
+        relu_dropout,
+        preprocess_cmd,
+        postprocess_cmd, )
     return enc_output
 
 
@@ -483,7 +592,11 @@ def wrap_decoder(trg_vocab_size,
                  d_value,
                  d_model,
                  d_inner_hid,
-                 dropout_rate,
+                 prepostprocess_dropout,
+                 attention_dropout,
+                 relu_dropout,
+                 preprocess_cmd,
+                 postprocess_cmd,
                  weight_sharing,
                  dec_inputs=None,
                  enc_output=None,
@@ -493,9 +606,8 @@ def wrap_decoder(trg_vocab_size,
     """
     if dec_inputs is None:
         # This is used to implement independent decoder program in inference.
-        trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, \
-        enc_output = make_all_inputs(
-            decoder_data_input_fields + decoder_util_input_fields)
+        trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, enc_output = \
+            make_all_inputs(decoder_data_input_fields)
     else:
         trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias = dec_inputs
 
@@ -505,7 +617,7 @@ def wrap_decoder(trg_vocab_size,
         trg_vocab_size,
         d_model,
         max_length,
-        dropout_rate,
+        prepostprocess_dropout,
         word_emb_param_name=word_emb_param_names[0]
         if weight_sharing else word_emb_param_names[1])
     dec_output = decoder(
@@ -519,13 +631,17 @@ def wrap_decoder(trg_vocab_size,
         d_value,
         d_model,
         d_inner_hid,
-        dropout_rate,
+        prepostprocess_dropout,
+        attention_dropout,
+        relu_dropout,
+        preprocess_cmd,
+        postprocess_cmd,
         caches=caches)
-    # Return logits for training and probs for inference.
     if weight_sharing:
         predict = layers.matmul(
             x=dec_output,
-            y=fluid.get_var(word_emb_param_names[0]),
+            y=fluid.default_main_program().global_block().var(
+                word_emb_param_names[0]),
             transpose_y=True)
     else:
         predict = layers.fc(input=dec_output,
@@ -533,6 +649,7 @@ def wrap_decoder(trg_vocab_size,
                             bias_attr=False,
                             num_flatten_dims=2)
     if dec_inputs is None:
+        # Return probs for independent decoder program.
         predict = layers.softmax(predict)
     return predict
 
@@ -547,7 +664,11 @@ def fast_decode(
         d_value,
         d_model,
         d_inner_hid,
-        dropout_rate,
+        prepostprocess_dropout,
+        attention_dropout,
+        relu_dropout,
+        preprocess_cmd,
+        postprocess_cmd,
         weight_sharing,
         beam_size,
         max_out_len,
@@ -556,11 +677,12 @@ def fast_decode(
     Use beam search to decode. Caches will be used to store states of history
     steps which can make the decoding faster.
     """
-    enc_output = wrap_encoder(src_vocab_size, max_in_len, n_layer, n_head,
-                              d_key, d_value, d_model, d_inner_hid,
-                              dropout_rate, weight_sharing)
-    start_tokens, init_scores, trg_src_attn_bias = \
-        make_all_inputs(fast_decoder_data_input_fields )
+    enc_output = wrap_encoder(
+        src_vocab_size, max_in_len, n_layer, n_head, d_key, d_value, d_model,
+        d_inner_hid, prepostprocess_dropout, attention_dropout, relu_dropout,
+        preprocess_cmd, postprocess_cmd, weight_sharing)
+    start_tokens, init_scores, trg_src_attn_bias = make_all_inputs(
+        fast_decoder_data_input_fields)
 
     def beam_search():
         max_len = layers.fill_constant(
@@ -609,8 +731,7 @@ def fast_decode(
                     value=1,
                     shape=[-1, 1, 1],
                     dtype=pre_ids.dtype),
-                y=layers.increment(
-                    x=step_idx, value=1.0, in_place=False),
+                y=step_idx,
                 axis=0)
             logits = wrap_decoder(
                 trg_vocab_size,
@@ -621,7 +742,11 @@ def fast_decode(
                 d_value,
                 d_model,
                 d_inner_hid,
-                dropout_rate,
+                prepostprocess_dropout,
+                attention_dropout,
+                relu_dropout,
+                preprocess_cmd,
+                postprocess_cmd,
                 weight_sharing,
                 dec_inputs=(pre_ids, pre_pos, None, pre_src_attn_bias),
                 enc_output=pre_enc_output,

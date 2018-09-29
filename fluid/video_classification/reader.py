@@ -5,7 +5,7 @@ import functools
 import cPickle
 from cStringIO import StringIO
 import numpy as np
-import paddle.v2 as paddle
+import paddle
 from PIL import Image, ImageEnhance
 
 random.seed(0)
@@ -16,8 +16,8 @@ THREAD = 8
 BUF_SIZE = 1024
 
 TRAIN_LIST = 'data/train.list'
-TEST_LIST = 'data/val.list'
-INFER_LIST = 'data/val.list'
+TEST_LIST = 'data/test.list'
+INFER_LIST = 'data/test.list'
 
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
