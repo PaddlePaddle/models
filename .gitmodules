@@ -1,0 +1,3 @@
+[submodule "fluid/AnyQ"]
+	path = fluid/AnyQ
+	url = https://github.com/baidu/AnyQ.git
