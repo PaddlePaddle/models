@@ -285,7 +285,8 @@ def train(settings,
         try:
             enqueuer = GeneratorEnqueuer(
                 train_generator(settings, file_list, batch_size, shuffle),
-                use_multiprocessing=use_multiprocessing)
+                use_multiprocessing=use_multiprocessing,
+                wait_time=0.5)
             enqueuer.start(max_queue_size=max_queue, workers=num_workers)
             generator_output = None
             while True:
@@ -294,7 +295,7 @@ def train(settings,
                         generator_output = enqueuer.queue.get()
                         break
                     else:
-                        time.sleep(0.02)
+                        time.sleep(0.5)
                 yield generator_output
                 generator_output = None
         finally:
