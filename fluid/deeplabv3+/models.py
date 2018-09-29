@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle
 import paddle.fluid as fluid
 
@@ -50,7 +53,7 @@ def append_op_result(result, name):
 
 def conv(*args, **kargs):
     kargs['param_attr'] = name_scope + 'weights'
-    if kargs.has_key('bias_attr') and kargs['bias_attr']:
+    if 'bias_attr' in kargs and kargs['bias_attr']:
         kargs['bias_attr'] = name_scope + 'biases'
     else:
         kargs['bias_attr'] = False
@@ -62,7 +65,7 @@ def group_norm(input, G, eps=1e-5, param_attr=None, bias_attr=None):
 
     N, C, H, W = input.shape
     if C % G != 0:
-        print "group can not divide channle:", C, G
+        print("group can not divide channle:", C, G)
         for d in range(10):
             for t in [d, -d]:
                 if G + t <= 0: continue
@@ -70,7 +73,7 @@ def group_norm(input, G, eps=1e-5, param_attr=None, bias_attr=None):
                     G = G + t
                     break
             if C % G == 0:
-                print "use group size:", G
+                print("use group size:", G)
                 break
     assert C % G == 0
     param_shape = (G, )
@@ -139,7 +142,7 @@ def seq_conv(input, channel, stride, filter, dilation=1, act=None):
             filter,
             stride,
             groups=input.shape[1],
-            padding=(filter / 2) * dilation,
+            padding=(filter // 2) * dilation,
             dilation=dilation)
         input = bn(input)
         if act: input = act(input)

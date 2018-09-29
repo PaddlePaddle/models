@@ -109,7 +109,7 @@ def train(cfg):
 
         for batch_id in range(iterations):
             start_time = time.time()
-            data = train_reader().next()
+            data = next(train_reader())
             end_time = time.time()
             reader_time.append(end_time - start_time)
             start_time = time.time()

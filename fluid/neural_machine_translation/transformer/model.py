@@ -219,6 +219,7 @@ def prepare_encoder_decoder(src_word,
         size=[src_max_len, src_emb_dim],
         param_attr=fluid.ParamAttr(
             name=pos_enc_param_name, trainable=False))
+    src_pos_enc.stop_gradient = True
     enc_input = src_word_emb + src_pos_enc
     return layers.dropout(
         enc_input,
@@ -639,7 +640,8 @@ def wrap_decoder(trg_vocab_size,
     if weight_sharing:
         predict = layers.matmul(
             x=dec_output,
-            y=fluid.get_var(word_emb_param_names[0]),
+            y=fluid.default_main_program().global_block().var(
+                word_emb_param_names[0]),
             transpose_y=True)
     else:
         predict = layers.fc(input=dec_output,

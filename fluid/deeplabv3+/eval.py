@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = '0.98'
 
@@ -91,7 +94,7 @@ exe = fluid.Executor(place)
 exe.run(sp)
 
 if args.init_weights_path:
-    print "load from:", args.init_weights_path
+    print("load from:", args.init_weights_path)
     load_model()
 
 dataset = CityscapeDataset(args.dataset_path, 'val')
@@ -118,7 +121,7 @@ for i, imgs, labels, names in batches:
     mp = (wrong + right) != 0
     miou2 = np.mean((right[mp] * 1.0 / (right[mp] + wrong[mp])))
     if args.verbose:
-        print 'step: %s, mIoU: %s' % (i + 1, miou2)
+        print('step: %s, mIoU: %s' % (i + 1, miou2))
     else:
-        print '\rstep: %s, mIoU: %s' % (i + 1, miou2),
+        print('\rstep: %s, mIoU: %s' % (i + 1, miou2))
         sys.stdout.flush()
