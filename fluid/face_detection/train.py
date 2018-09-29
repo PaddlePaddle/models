@@ -167,7 +167,7 @@ def train(args, config, train_params, train_file_list):
             shutil.rmtree(model_path)
 
         print('save models to %s' % (model_path))
-        fluid.io.save_persistables(exe, model_path)
+        fluid.io.save_persistables(exe, model_path, main_program=program)
 
     train_py_reader.start()
     try:
