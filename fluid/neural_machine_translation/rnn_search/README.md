@@ -24,7 +24,7 @@
 本目录下的该范例模型的实现，旨在展示如何用Paddle Fluid实现一个带有注意力机制（Attention）的RNN模型来解决Seq2Seq类问题，以及如何使用带有Beam Search算法的解码器。如果您需要在机器翻译方面追求较好的翻译效果，则建议您参考[Transformer的Paddle Fluid实现](https://github.com/PaddlePaddle/models/tree/develop/fluid/neural_machine_translation/transformer)。
 
 ## 模型概览
-RNN Search模型使用了经典的编码器-解码器（Encoder-Decoder）的框架结构来解决Seq2Seq类问题。这种方法模拟了人类在进行翻译类任务时的行为：先解析源语言，理解其含义；再根据其含义来写出目标语言的语句。而编码器-解码器架构则先用编码器将源序列编码成tensor，再用解码器将该tensor解码为目标序列。编码器和解码器往往都使用RNN来实现。
+RNN Search模型使用了经典的编码器-解码器（Encoder-Decoder）的框架结构来解决Seq2Seq类问题。这种方法模拟了人类在进行翻译类任务时的行为：先解析源语言，理解其含义；再根据其含义来写出目标语言的语句。而编码器-解码器架构则先用编码器将源序列编码成tensor，再用解码器将该tensor解码为目标序列。编码器和解码器往往都使用RNN来实现。关于此方法的具体原理，可以参考[深度学习101](http://www.paddlepaddle.org/documentation/docs/zh/0.15.0/beginners_guide/basics/machine_translation/index.html).
 
 本模型中，在编码器方面，我们的实现使用了双向循环神经网络（Bi-directional Recurrent Neural Network）；在解码器方面，我们使用了带注意力（Attention）机制的RNN解码器，并同时提供了一个不带注意力机制的解码器实现作为对比；而在预测方面我们使用柱搜索（beam search）算法来生成翻译好的句子。
 
@@ -82,7 +82,45 @@ $$e_{ij} = {align(z_i, h_j)}$$
 
 ## 数据介绍
 
+本教程使用[WMT-14](http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/)数据集中的[bitexts(after selection)](http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/data/bitexts.tgz)作为训练集，[dev+test data](http://www-lium.univ-lemans.fr/~schwenk/cslm_joint_paper/data/dev+test.tgz)作为测试集和生成集。
 
+### 数据预处理
+
+我们的预处理流程包括两步：
+- 将每个源语言到目标语言的平行语料库文件合并为一个文件：
+  - 合并每个`XXX.src`和`XXX.trg`文件为`XXX`。
+  - `XXX`中的第$i$行内容为`XXX.src`中的第$i$行和`XXX.trg`中的第$i$行连接，用'\t'分隔。
+- 创建训练数据的“源字典”和“目标字典”。每个字典都有**DICTSIZE**个单词，包括：语料中词频最高的（DICTSIZE - 3）个单词，和3个特殊符号`<s>`（序列的开始）、`<e>`（序列的结束）和`<unk>`（未登录词）。
+
+### 示例数据
+
+因为完整的数据集数据量较大，为了验证训练流程，PaddlePaddle接口paddle.dataset.wmt14中默认提供了一个经过预处理的[较小规模的数据集](http://paddlepaddle.bj.bcebos.com/demo/wmt_shrinked_data/wmt14.tgz)。
+
+该数据集有193319条训练数据，6003条测试数据，词典长度为30000。因为数据规模限制，使用该数据集训练出来的模型效果无法保证。
+
+## 训练模型
+
+`train.py`包含训练程序的主函数，要使用默认参数开始训练，只需要简单地执行：
+```sh
+python train.py
+```
+您可以使用命令行参数来设置模型训练时的参数。要显示所有可用的命令行参数，执行：
+```sh
+python train.py -h
+```
+这样会显示所有的命令行参数的描述，以及其默认值。默认的模型是带有注意力机制的。您也可以尝试运行无注意力机制的模型，您只需要执行：
+```sh
+python train.py --no_attention
+```
+训练好的模型默认会被保存到`./models`路径下。您可以用命令行参数`--save_dir`来指定模型的保存路径。默认每个pass结束时会保存一个模型。
+
+## 生成预测结果
+
+在模型训练好后，可以用`infer.py`来生成预测结果。同样的，使用默认参数，只需要执行：
+```sh
+python infer.py
+```
+注意，预测时的参数设置必须与训练时完全一致，否则会无法载入模型。您可以用`--pass_num`参数来选择读取哪个pass结束时保存的模型。同时您可以使用`--beam_width`参数来选择beam search宽度。
 
 ## 参考文献
 
