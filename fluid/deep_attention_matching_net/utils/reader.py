@@ -1,5 +1,9 @@
-import cPickle as pickle
 import numpy as np
+
+try:
+    import cPickle as pickle  #python 2
+except ImportError as e:
+    import pickle  #python 3
 
 
 def unison_shuffle(data, seed=None):

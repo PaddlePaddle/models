@@ -1,4 +1,5 @@
 import os
+import six
 import numpy as np
 import time
 import argparse
@@ -167,7 +168,7 @@ def test(args):
     score_path = os.path.join(args.save_path, 'score.txt')
     score_file = open(score_path, 'w')
 
-    for it in xrange(test_batch_num // dev_count):
+    for it in six.moves.xrange(test_batch_num // dev_count):
         feed_list = []
         for dev in xrange(dev_count):
             index = it * dev_count + dev

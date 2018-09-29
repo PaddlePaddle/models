@@ -1,4 +1,5 @@
 import os
+import six
 import numpy as np
 import time
 import argparse
@@ -6,8 +7,12 @@ import multiprocessing
 import paddle
 import paddle.fluid as fluid
 import utils.reader as reader
-import cPickle as pickle
 from utils.util import print_arguments
+
+try:
+    import cPickle as pickle  #python 2
+except ImportError as e:
+    import pickle  #python 3
 
 from model import Net
 
@@ -172,12 +177,12 @@ def train(args):
     print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
     step = 0
-    for epoch in xrange(args.num_scan_data):
+    for epoch in six.moves.xrange(args.num_scan_data):
         shuffle_train = reader.unison_shuffle(train_data)
         train_batches = reader.build_batches(shuffle_train, data_conf)
 
         ave_cost = 0.0
-        for it in xrange(batch_num // dev_count):
+        for it in six.moves.xrange(batch_num // dev_count):
             feed_list = []
             for dev in xrange(dev_count):
                 index = it * dev_count + dev
@@ -200,8 +205,9 @@ def train(args):
             if (args.save_path is not None) and (step % save_step == 0):
                 save_path = os.path.join(args.save_path, "step_" + str(step))
                 print("Save model at step %d ... " % step)
-                print(time.strftime('%Y-%m-%d %H:%M:%S',
-                                    time.localtime(time.time())))
+                print(
+                    time.strftime('%Y-%m-%d %H:%M:%S',
+                                  time.localtime(time.time())))
                 fluid.io.save_persistables(exe, save_path)
 
                 score_path = os.path.join(args.save_path, 'score.' + str(step))
@@ -235,8 +241,9 @@ def train(args):
                     for p_at in result:
                         out_file.write(str(p_at) + '\n')
                 print('finish evaluation')
-                print(time.strftime('%Y-%m-%d %H:%M:%S',
-                                    time.localtime(time.time())))
+                print(
+                    time.strftime('%Y-%m-%d %H:%M:%S',
+                                  time.localtime(time.time())))
 
 
 if __name__ == '__main__':
