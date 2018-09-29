@@ -40,7 +40,7 @@ def get_image_blob(roidb, mode):
         target_size = scales[scale_ind]
         max_size = TrainConfig.max_size
     else:
-        target_size = InferConfig.scales
+        target_size = InferConfig.scales[0]
         max_size = InferConfig.max_size
     im = cv2.imread(roidb['image'])
     assert im is not None, \

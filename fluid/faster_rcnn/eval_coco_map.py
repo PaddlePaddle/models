@@ -33,10 +33,6 @@ from config import *
 
 
 def eval(args):
-    print('====train===')
-    print(TrainConfig.rpn_nms_thresh)
-    print('====infer===')
-    print(InferConfig.rpn_nms_thresh)
     if '2014' in args.dataset:
         test_list = 'annotations/instances_val2014.json'
     elif '2017' in args.dataset:

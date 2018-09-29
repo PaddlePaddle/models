@@ -51,7 +51,7 @@ class Settings(object):
             np.newaxis, np.newaxis, :].astype('float32')
 
 
-def coco(settings,
+def coco(args,
          mode,
          batch_size=None,
          total_batch_size=None,
@@ -61,19 +61,15 @@ def coco(settings,
     if mode != 'infer':
         assert total_batch_size % batch_size == 0
     if mode == 'train':
-        settings.train_file_list = os.path.join(settings.data_dir,
-                                                settings.train_file_list)
-        settings.train_data_dir = os.path.join(settings.data_dir,
-                                               settings.train_data_dir)
+        args.train_file_list = os.path.join(args.data_dir, args.train_file_list)
+        args.train_data_dir = os.path.join(args.data_dir, args.train_data_dir)
     elif mode == 'test' or mode == 'infer':
-        settings.val_file_list = os.path.join(settings.data_dir,
-                                              settings.val_file_list)
-        settings.val_data_dir = os.path.join(settings.data_dir,
-                                             settings.val_data_dir)
-    json_dataset = JsonDataset(settings, train=(mode == 'train'))
+        args.val_file_list = os.path.join(args.data_dir, args.val_file_list)
+        args.val_data_dir = os.path.join(args.data_dir, args.val_data_dir)
+    json_dataset = JsonDataset(args, train=(mode == 'train'))
     roidbs = json_dataset.get_roidb()
 
-    print("{} on {} with {} roidbs".format(mode, settings.dataset, len(roidbs)))
+    print("{} on {} with {} roidbs".format(mode, args.dataset, len(roidbs)))
 
     def roidb_reader(roidb, mode):
         im, im_scales = data_utils.get_image_blob(roidb, mode)
@@ -149,7 +145,7 @@ def coco(settings,
 
         else:
             for roidb in roidbs:
-                if settings.image_name not in roidb['image']:
+                if args.image_name not in roidb['image']:
                     continue
                 im, im_info, im_id = roidb_reader(roidb, mode)
                 batch_out = [(im, im_info, im_id)]
@@ -158,13 +154,13 @@ def coco(settings,
     return reader
 
 
-def train(settings,
+def train(args,
           batch_size,
           total_batch_size=None,
           padding_total=False,
           shuffle=True):
     return coco(
-        settings,
+        args,
         'train',
         batch_size,
         total_batch_size,
@@ -172,9 +168,9 @@ def train(settings,
         shuffle=shuffle)
 
 
-def test(settings, batch_size, total_batch_size=None, padding_total=False):
-    return coco(settings, 'test', batch_size, total_batch_size, shuffle=False)
+def test(args, batch_size, total_batch_size=None, padding_total=False):
+    return coco(args, 'test', batch_size, total_batch_size, shuffle=False)
 
 
-def infer(settings):
-    return coco(settings, 'infer')
+def infer(args):
+    return coco(args, 'infer')

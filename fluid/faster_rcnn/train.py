@@ -32,10 +32,6 @@ from config import *
 
 
 def train(args):
-    print('====train===')
-    print(TrainConfig.rpn_nms_thresh)
-    print('====infer===')
-    print(InferConfig.rpn_nms_thresh)
     learning_rate = SolverConfig.learning_rate
     image_shape = [3, TrainConfig.max_size, TrainConfig.max_size]
 
@@ -137,14 +133,6 @@ def train(args):
                     iter_id, lr[0],
                     smoothed_loss.get_median_value(
                     ), start_time - prev_start_time))
-                rpn_cls_loss_v = np.mean(np.array(losses[1]))
-                rpn_reg_loss_v = np.mean(np.array(losses[2]))
-                loss_cls_v = np.mean(np.array(losses[3]))
-                loss_bbox_v = np.mean(np.array(losses[4]))
-                print(
-                    "rpn_cls_loss: {} rpn_reg_loss: {} loss_cls: {} loss_bbox: {}".
-                    format(rpn_cls_loss_v, rpn_reg_loss_v, loss_cls_v,
-                           loss_bbox_v))
                 sys.stdout.flush()
                 if (iter_id + 1) % TrainConfig.snapshot_iter == 0:
                     save_model("model_iter{}".format(iter_id))
