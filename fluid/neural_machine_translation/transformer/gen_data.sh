@@ -11,46 +11,95 @@ OUTPUT_DIR_DATA="${OUTPUT_DIR}/wmt16_ende_data"
 OUTPUT_DIR_BPE_DATA="${OUTPUT_DIR}/wmt16_ende_data_bpe"
 LANG1="en"
 LANG2="de"
-# each of TRAIN_DATA: ata_url data_tgz data_file 
+# each of TRAIN_DATA: data_url data_file_lang1 data_file_lang2
 TRAIN_DATA=(
-'http://www.statmt.org/europarl/v7/de-en.tgz' 'europarl-v7-de-en.tgz' 'europarl-v7.de-en'
-'http://www.statmt.org/wmt13/training-parallel-commoncrawl.tgz' 'common-crawl.tgz' 'commoncrawl.de-en'
-'http://data.statmt.org/wmt16/translation-task/training-parallel-nc-v11.tgz' 'nc-v11.tgz' 'training-parallel-nc-v11/news-commentary-v11.de-en'
+'http://www.statmt.org/europarl/v7/de-en.tgz'
+'europarl-v7.de-en.en' 'europarl-v7.de-en.de'
+'http://www.statmt.org/wmt13/training-parallel-commoncrawl.tgz'
+'commoncrawl.de-en.en' 'commoncrawl.de-en.de'
+'http://data.statmt.org/wmt16/translation-task/training-parallel-nc-v11.tgz'
+'news-commentary-v11.de-en.en' 'news-commentary-v11.de-en.de'
 )
-# each of DEV_TEST_DATA: data_url data_tgz data_file_lang1 data_file_lang2
+# each of DEV_TEST_DATA: data_url data_file_lang1 data_file_lang2
 DEV_TEST_DATA=(
-'http://data.statmt.org/wmt16/translation-task/dev.tgz' 'dev.tgz'
-'.*/newstest201[45]-deen-ref.en.sgm' '.*/newstest201[45]-deen-src.de.sgm'
-'http://data.statmt.org/wmt16/translation-task/test.tgz' 'test.tgz'
-'.*/newstest2016-deen-ref.en.sgm' '.*/newstest2016-deen-src.de.sgm'
+'http://data.statmt.org/wmt16/translation-task/dev.tgz'
+'newstest201[45]-deen-ref.en.sgm' 'newstest201[45]-deen-src.de.sgm'
+'http://data.statmt.org/wmt16/translation-task/test.tgz'
+'newstest2016-deen-ref.en.sgm' 'newstest2016-deen-src.de.sgm'
 )
+###############################################################################
+
+###############################################################################
+# change these variables for other WMT data
+###############################################################################
+# OUTPUT_DIR_DATA="${OUTPUT_DIR}/wmt14_enfr_data"
+# OUTPUT_DIR_BPE_DATA="${OUTPUT_DIR}/wmt14_enfr_data_bpe"
+# LANG1="en"
+# LANG2="fr"
+# # each of TRAIN_DATA: ata_url data_tgz data_file 
+# TRAIN_DATA=(
+# 'http://www.statmt.org/wmt13/training-parallel-commoncrawl.tgz'
+# 'commoncrawl.fr-en.en' 'commoncrawl.fr-en.fr'
+# 'http://www.statmt.org/wmt13/training-parallel-europarl-v7.tgz'
+# 'training/europarl-v7.fr-en.en' 'training/europarl-v7.fr-en.fr'
+# 'http://www.statmt.org/wmt14/training-parallel-nc-v9.tgz'
+# 'training/news-commentary-v9.fr-en.en' 'training/news-commentary-v9.fr-en.fr'
+# 'http://www.statmt.org/wmt10/training-giga-fren.tar'
+# 'giga-fren.release2.fixed.en.gz' 'giga-fren.release2.fixed.fr.gz'
+# 'http://www.statmt.org/wmt13/training-parallel-un.tgz'
+# 'un/undoc.2000.fr-en.en' 'un/undoc.2000.fr-en.fr'
+# )
+# # each of DEV_TEST_DATA: data_url data_tgz data_file_lang1 data_file_lang2
+# DEV_TEST_DATA=(
+# 'http://data.statmt.org/wmt16/translation-task/dev.tgz' 'dev.tgz'
+# '.*/newstest201[45]-deen-ref.en.sgm' '.*/newstest201[45]-deen-src.fr.sgm'
+# 'http://data.statmt.org/wmt16/translation-task/test.tgz' 'test.tgz'
+# '.*/newstest2016-deen-ref.en.sgm' '.*/newstest2016-deen-src.fr.sgm'
+# )
 ###############################################################################
 
 mkdir -p $OUTPUT_DIR_DATA $OUTPUT_DIR_BPE_DATA
 
 # Extract training data
 for ((i=0;i<${#TRAIN_DATA[@]};i+=3)); do
-  data=`echo ${TRAIN_DATA[i+1]} | cut -d "." -f 1`
   data_url=${TRAIN_DATA[i]}
-  data_tgz=${TRAIN_DATA[i+1]}
-  data_file=${TRAIN_DATA[i+2]}
+  data_tgz=${data_url##*/}  # training-parallel-commoncrawl.tgz
+  data=${data_tgz%.*}  # training-parallel-commoncrawl
+  data_lang1=${TRAIN_DATA[i+1]}
+  data_lang2=${TRAIN_DATA[i+2]}
   if [ ! -e ${OUTPUT_DIR_DATA}/${data_tgz} ]; then
-    echo "Download "${data}
+    echo "Download "${data_url}
     wget -O ${OUTPUT_DIR_DATA}/${data_tgz} ${data_url}
   fi
 
   if [ ! -d ${OUTPUT_DIR_DATA}/${data} ]; then
-    echo "Extract "${data}
+    echo "Extract "${data_tgz}
     mkdir -p ${OUTPUT_DIR_DATA}/${data}
-    tar -xvzf ${OUTPUT_DIR_DATA}/${data_tgz} -C ${OUTPUT_DIR_DATA}/${data}
+    tar_type=${data_tgz:0-3}
+    if [ ${tar_type} == "tar" ]; then
+      tar -xvf ${OUTPUT_DIR_DATA}/${data_tgz} -C ${OUTPUT_DIR_DATA}/${data}
+    else
+      tar -xvzf ${OUTPUT_DIR_DATA}/${data_tgz} -C ${OUTPUT_DIR_DATA}/${data}
+    fi
   fi
   # concatenate all training data
-  for l in ${LANG1} ${LANG2}; do
-    for j in ${data_file}; do
-      if [ $i -eq 0 ]; then
-        cat ${OUTPUT_DIR_DATA}/${data}/$j.$l > ${OUTPUT_DIR_DATA}/train.$l
+  for data_lang in $data_lang1 $data_lang2; do
+    for f in `find ${OUTPUT_DIR_DATA}/${data} -regex ".*/${data_lang}"`; do
+      data_dir=`dirname $f`
+      data_file=`basename $f`
+      f_base=${f%.*}
+      f_ext=${f##*.}
+      if [ $f_ext == "gz" ]; then
+        tar -xvzf $f -C ${data_dir}/
+        l=${f_base##*.}
       else
-        cat ${OUTPUT_DIR_DATA}/${data}/$j.$l >> ${OUTPUT_DIR_DATA}/train.$l
+        l=${f_ext}
+      fi
+      
+      if [ $i -eq 0 ]; then
+        cat ${f_base}.$l > ${OUTPUT_DIR_DATA}/train.$l
+      else
+        cat ${f_base}.$l >> ${OUTPUT_DIR_DATA}/train.$l
       fi
     done
   done
@@ -64,35 +113,40 @@ fi
 
 # Extract develop and test data
 dev_test_data=""
-for ((i=0;i<${#DEV_TEST_DATA[@]};i+=4)); do
-  data=`echo ${DEV_TEST_DATA[i+1]} | cut -d "." -f 1`
+for ((i=0;i<${#DEV_TEST_DATA[@]};i+=3)); do
   data_url=${DEV_TEST_DATA[i]}
-  data_tgz=${DEV_TEST_DATA[i+1]}
-  data_lang1=${DEV_TEST_DATA[i+2]}
-  data_lang2=${DEV_TEST_DATA[i+3]}
+  data_tgz=${data_url##*/}  # training-parallel-commoncrawl.tgz
+  data=${data_tgz%.*}  # training-parallel-commoncrawl
+  data_lang1=${DEV_TEST_DATA[i+1]}
+  data_lang2=${DEV_TEST_DATA[i+2]}
   if [ ! -e ${OUTPUT_DIR_DATA}/${data_tgz} ]; then
-    echo "Download "${data}
+    echo "Download "${data_url}
     wget -O ${OUTPUT_DIR_DATA}/${data_tgz} ${data_url}
   fi
 
   if [ ! -d ${OUTPUT_DIR_DATA}/${data} ]; then
-    echo "Extract "${data}
+    echo "Extract "${data_tgz}
     mkdir -p ${OUTPUT_DIR_DATA}/${data}
-    tar -xvzf ${OUTPUT_DIR_DATA}/${data_tgz} -C ${OUTPUT_DIR_DATA}/${data}
+    tar_type=${data_tgz:0-3}
+    if [ ${tar_type} == "tar" ]; then
+      tar -xvf ${OUTPUT_DIR_DATA}/${data_tgz} -C ${OUTPUT_DIR_DATA}/${data}
+    else
+      tar -xvzf ${OUTPUT_DIR_DATA}/${data_tgz} -C ${OUTPUT_DIR_DATA}/${data}
+    fi
   fi
 
   for data_lang in $data_lang1 $data_lang2; do
-    for j in `find ${OUTPUT_DIR_DATA}/${data} -regex ${data_lang}`; do
-    data_dir=`dirname $j`
-    data_file=`echo $j | awk -F '/' '{print $NF}'`
-    data_out=`echo ${data_file} | cut -d '-' -f 1`  # newstest2016
-    l=`echo ${data_file} | cut -d '.' -f 2`  # en
-    dev_test_data="${dev_test_data}\|${data_out}"  # to make regexp
-    if [ ! -e ${data_dir}/${data_out}.$l ]; then
-      ${OUTPUT_DIR}/mosesdecoder/scripts/ems/support/input-from-sgm.perl \
-        < $j > ${data_dir}/${data_out}.$l
+    for f in `find ${OUTPUT_DIR_DATA}/${data} -regex ".*/${data_lang}"`; do
+      data_dir=`dirname $f`
+      data_file=`basename $f`
+      data_out=`echo ${data_file} | cut -d '-' -f 1`  # newstest2016
+      l=`echo ${data_file} | cut -d '.' -f 2`  # en
+      dev_test_data="${dev_test_data}\|${data_out}"  # to make regexp
+      if [ ! -e ${data_dir}/${data_out}.$l ]; then
+        ${OUTPUT_DIR}/mosesdecoder/scripts/ems/support/input-from-sgm.perl \
+          < $f > ${data_dir}/${data_out}.$l
+      fi
       cp ${data_dir}/${data_out}.$l ${OUTPUT_DIR_DATA}
-    fi
     done
   done
 done
