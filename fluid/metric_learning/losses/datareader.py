@@ -1,7 +1,6 @@
 import os
 import math
 import random
-import cPickle
 import functools
 import numpy as np
 import paddle
@@ -44,9 +43,9 @@ for i, item in enumerate(test_list):
         test_data[label] = []
     test_data[label].append(path)
 
-print "train_data size:", len(train_data)
-print "test_data size:", len(test_data)
-print "test_data image number:", len(test_image_list)
+print("train_data size:", len(train_data))
+print("test_data size:", len(test_data))
+print("test_data image number:", len(test_image_list))
 random.shuffle(test_image_list)
 
 
@@ -213,11 +212,11 @@ def eml_iterator(data,
                  color_jitter=False,
                  rotate=False):
     def reader():
-        labs = data.keys()
+        labs = list(data.keys())
         lab_num = len(labs)
-        ind = range(0, lab_num)
+        ind = list(range(0, lab_num))
         assert batch_size % samples_each_class == 0, "batch_size % samples_each_class != 0"
-        num_class = batch_size/samples_each_class
+        num_class = batch_size // samples_each_class
         for i in range(iter_size):
             random.shuffle(ind)
             for n in range(num_class):
@@ -244,9 +243,9 @@ def quadruplet_iterator(data,
                         color_jitter=False,
                         rotate=False):
     def reader():
-        labs = data.keys()
+        labs = list(data.keys())
         lab_num = len(labs)
-        ind = range(0, lab_num)
+        ind = list(range(0, lab_num))
         for i in range(iter_size):
             random.shuffle(ind)
             ind_sample = ind[:class_num]
@@ -254,7 +253,7 @@ def quadruplet_iterator(data,
             for ind_i in ind_sample:
                 lab = labs[ind_i]
                 data_list = data[lab]
-                data_ind = range(0, len(data_list))
+                data_ind = list(range(0, len(data_list)))
                 random.shuffle(data_ind)
                 anchor_ind = data_ind[:samples_each_class]
 
@@ -276,15 +275,15 @@ def triplet_iterator(data,
                      color_jitter=False,
                      rotate=False):
     def reader():
-        labs = data.keys()
+        labs = list(data.keys())
         lab_num = len(labs)
-        ind = range(0, lab_num)
+        ind = list(range(0, lab_num))
         for i in range(iter_size):
             random.shuffle(ind)
             ind_pos, ind_neg = ind[:2]
             lab_pos = labs[ind_pos]
             pos_data_list = data[lab_pos]
-            data_ind = range(0, len(pos_data_list))
+            data_ind = list(range(0, len(pos_data_list)))
             random.shuffle(data_ind)
             anchor_ind, pos_ind = data_ind[:2]
 
@@ -345,7 +344,7 @@ def quadruplet_train(class_num, samples_each_class):
             
 def triplet_train(batch_size):
     assert(batch_size % 3 == 0)
-    return triplet_iterator(train_data, 'train', batch_size, iter_size = batch_size/3 * 100, \
+    return triplet_iterator(train_data, 'train', batch_size, iter_size = batch_size//3 * 100, \
                            shuffle=True, color_jitter=False, rotate=False)
 
 def test():
