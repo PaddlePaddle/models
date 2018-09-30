@@ -42,7 +42,7 @@ Faster RCNN 目标检测模型
 
     python train.py \
        --max_size=1333 \
-       --scales=800 \
+       --scales=[800] \
        --batch_size=8 \
        --model_save_dir=output/ \
        --pretrained_model=${path_to_pretrain_model}
@@ -57,6 +57,21 @@ Faster RCNN 目标检测模型
     sh ./pretrained/download.sh
 
 通过初始化`pretrained_model` 加载预训练模型。同时在参数微调时也采用该设置加载已训练模型。
+
+**安装[cocoapi](https://github.com/cocodataset/cocoapi)：**
+
+训练前需要首先下载[cocoapi](https://github.com/cocodataset/cocoapi)：
+
+    # COCOAPI=/path/to/clone/cocoapi
+    git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
+    cd $COCOAPI/PythonAPI
+    # if cython is not installed
+    pip install Cython
+    # Install into global site-packages
+    make install
+    # Alternatively, if you do not have permissions or prefer
+    # not to install the COCO API into global site-packages
+    python2 setup.py install --user
 
 **数据读取器说明：** 数据读取器定义在reader.py中。所有图像将短边等比例缩放至`scales`，若长边大于`max_size`, 则再次将长边等比例缩放至`max_iter`。在训练阶段，对图像采用水平翻转。支持将同一个batch内的图像padding为相同尺寸。
 
@@ -87,18 +102,7 @@ Faster RCNN 训练loss
 
 ## 模型评估
 
-模型评估是指对训练完毕的模型评估各类性能指标。本示例采用[COCO官方评估](http://cocodataset.org/#detections-eval)，使用前需要首先下载[cocoapi](https://github.com/cocodataset/cocoapi)：
-
-    # COCOAPI=/path/to/clone/cocoapi
-    git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
-    cd $COCOAPI/PythonAPI
-    # if cython is not installed
-    pip install Cython
-    # Install into global site-packages
-    make install
-    # Alternatively, if you do not have permissions or prefer
-    # not to install the COCO API into global site-packages
-    python2 setup.py install --user
+模型评估是指对训练完毕的模型评估各类性能指标。本示例采用[COCO官方评估](http://cocodataset.org/#detections-eval)
 
 `eval_coco_map.py`是评估模块的主要执行程序，调用示例如下：
 
@@ -120,7 +124,7 @@ Faster RCNN mAP
 | Detectron                 | 8            |    180000        | 0.315 |
 | Fluid minibatch padding | 8            |    180000        | 0.314 |
 | Fluid all padding         | 8            |    180000        | 0.308 |
-| Fluid no padding            |6            |    240000        | 0.317 |
+| Fluid no padding            |8            |    180000        | 0.316 |
 
 * Fluid all padding: 每张图像填充为1333\*1333大小。
 * Fluid minibatch padding: 同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
