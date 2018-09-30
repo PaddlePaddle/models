@@ -1,4 +1,4 @@
-import cPickle as pickle
+import six
 import numpy as np
 import paddle.fluid as fluid
 import utils.layers as layers
@@ -29,7 +29,7 @@ class Net(object):
         mask_cache = dict() if self.use_mask_cache else None
 
         turns_data = []
-        for i in xrange(self._max_turn_num):
+        for i in six.moves.xrange(self._max_turn_num):
             turn = fluid.layers.data(
                 name="turn_%d" % i,
                 shape=[self._max_turn_len, 1],
@@ -37,7 +37,7 @@ class Net(object):
             turns_data.append(turn)
 
         turns_mask = []
-        for i in xrange(self._max_turn_num):
+        for i in six.moves.xrange(self._max_turn_num):
             turn_mask = fluid.layers.data(
                 name="turn_mask_%d" % i,
                 shape=[self._max_turn_len, 1],
@@ -64,7 +64,7 @@ class Net(object):
         Hr = response_emb
         Hr_stack = [Hr]
 
-        for index in range(self._stack_num):
+        for index in six.moves.xrange(self._stack_num):
             Hr = layers.block(
                 name="response_self_stack" + str(index),
                 query=Hr,
@@ -78,7 +78,7 @@ class Net(object):
 
         # context part
         sim_turns = []
-        for t in xrange(self._max_turn_num):
+        for t in six.moves.xrange(self._max_turn_num):
             Hu = fluid.layers.embedding(
                 input=turns_data[t],
                 size=[self._vocab_size + 1, self._emb_size],
@@ -88,7 +88,7 @@ class Net(object):
                     initializer=fluid.initializer.Normal(scale=0.1)))
             Hu_stack = [Hu]
 
-            for index in range(self._stack_num):
+            for index in six.moves.xrange(self._stack_num):
                 # share parameters
                 Hu = layers.block(
                     name="turn_self_stack" + str(index),
@@ -104,7 +104,7 @@ class Net(object):
             # cross attention 
             r_a_t_stack = []
             t_a_r_stack = []
-            for index in range(self._stack_num + 1):
+            for index in six.moves.xrange(self._stack_num + 1):
                 t_a_r = layers.block(
                     name="t_attend_r_" + str(index),
                     query=Hu_stack[index],
@@ -134,7 +134,7 @@ class Net(object):
                 t_a_r = fluid.layers.stack(t_a_r_stack, axis=1)
                 r_a_t = fluid.layers.stack(r_a_t_stack, axis=1)
             else:
-                for index in xrange(len(t_a_r_stack)):
+                for index in six.moves.xrange(len(t_a_r_stack)):
                     t_a_r_stack[index] = fluid.layers.unsqueeze(
                         input=t_a_r_stack[index], axes=[1])
                     r_a_t_stack[index] = fluid.layers.unsqueeze(
@@ -151,7 +151,7 @@ class Net(object):
         if self.use_stack_op:
             sim = fluid.layers.stack(sim_turns, axis=2)
         else:
-            for index in xrange(len(sim_turns)):
+            for index in six.moves.xrange(len(sim_turns)):
                 sim_turns[index] = fluid.layers.unsqueeze(
                     input=sim_turns[index], axes=[2])
             # sim shape: [batch_size, 2*(stack_num+1), max_turn_num, max_turn_len, max_turn_len]

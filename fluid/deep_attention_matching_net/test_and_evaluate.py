@@ -1,4 +1,5 @@
 import os
+import six
 import numpy as np
 import time
 import argparse
@@ -6,8 +7,12 @@ import multiprocessing
 import paddle
 import paddle.fluid as fluid
 import utils.reader as reader
-import cPickle as pickle
-from utils.util import print_arguments
+from utils.util import print_arguments, mkdir
+
+try:
+    import cPickle as pickle  #python 2
+except ImportError as e:
+    import pickle  #python 3
 
 from model import Net
 
@@ -107,7 +112,7 @@ def parse_args():
 
 def test(args):
     if not os.path.exists(args.save_path):
-        raise ValueError("Invalid save path %s" % args.save_path)
+        mkdir(args.save_path)
     if not os.path.exists(args.model_path):
         raise ValueError("Invalid model init path %s" % args.model_path)
     # data data_config
@@ -158,7 +163,11 @@ def test(args):
         use_cuda=args.use_cuda, main_program=test_program)
 
     print("start loading data ...")
-    train_data, val_data, test_data = pickle.load(open(args.data_path, 'rb'))
+    with open(args.data_path, 'rb') as f:
+        if six.PY2:
+            train_data, val_data, test_data = pickle.load(f)
+        else:
+            train_data, val_data, test_data = pickle.load(f, encoding="bytes")
     print("finish loading data ...")
 
     if args.ext_eval:
@@ -178,9 +187,9 @@ def test(args):
     score_path = os.path.join(args.save_path, 'score.txt')
     score_file = open(score_path, 'w')
 
-    for it in xrange(test_batch_num // dev_count):
+    for it in six.moves.xrange(test_batch_num // dev_count):
         feed_list = []
-        for dev in xrange(dev_count):
+        for dev in six.moves.xrange(dev_count):
             index = it * dev_count + dev
             feed_dict = reader.make_one_batch_input(test_batches, index)
             feed_list.append(feed_dict)
@@ -190,9 +199,9 @@ def test(args):
         scores = np.array(predicts[0])
         print("step = %d" % it)
 
-        for dev in xrange(dev_count):
+        for dev in six.moves.xrange(dev_count):
             index = it * dev_count + dev
-            for i in xrange(args.batch_size):
+            for i in six.moves.xrange(args.batch_size):
                 score_file.write(
                     str(scores[args.batch_size * dev + i][0]) + '\t' + str(
                         test_batches["label"][index][i]) + '\n')

@@ -1,4 +1,5 @@
 import os
+import six
 import numpy as np
 import time
 import argparse
@@ -6,8 +7,12 @@ import multiprocessing
 import paddle
 import paddle.fluid as fluid
 import utils.reader as reader
-import cPickle as pickle
 from utils.util import print_arguments
+
+try:
+    import cPickle as pickle  #python 2
+except ImportError as e:
+    import pickle  #python 3
 
 from model import Net
 
@@ -164,35 +169,45 @@ def train(args):
 
     if args.word_emb_init is not None:
         print("start loading word embedding init ...")
-        word_emb = np.array(pickle.load(open(args.word_emb_init, 'rb'))).astype(
-            'float32')
+        if six.PY2:
+            word_emb = np.array(pickle.load(open(args.word_emb_init,
+                                                 'rb'))).astype('float32')
+        else:
+            word_emb = np.array(
+                pickle.load(
+                    open(args.word_emb_init, 'rb'), encoding="bytes")).astype(
+                        'float32')
         dam.set_word_embedding(word_emb, place)
         print("finish init word embedding  ...")
 
     print("start loading data ...")
-    train_data, val_data, test_data = pickle.load(open(args.data_path, 'rb'))
+    with open(args.data_path, 'rb') as f:
+        if six.PY2:
+            train_data, val_data, test_data = pickle.load(f)
+        else:
+            train_data, val_data, test_data = pickle.load(f, encoding="bytes")
     print("finish loading data ...")
 
     val_batches = reader.build_batches(val_data, data_conf)
 
-    batch_num = len(train_data['y']) / args.batch_size
+    batch_num = len(train_data[six.b('y')]) // args.batch_size
     val_batch_num = len(val_batches["response"])
 
-    print_step = max(1, batch_num / (dev_count * 100))
-    save_step = max(1, batch_num / (dev_count * 10))
+    print_step = max(1, batch_num // (dev_count * 100))
+    save_step = max(1, batch_num // (dev_count * 10))
 
     print("begin model training ...")
     print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
     step = 0
-    for epoch in xrange(args.num_scan_data):
+    for epoch in six.moves.xrange(args.num_scan_data):
         shuffle_train = reader.unison_shuffle(train_data)
         train_batches = reader.build_batches(shuffle_train, data_conf)
 
         ave_cost = 0.0
-        for it in xrange(batch_num // dev_count):
+        for it in six.moves.xrange(batch_num // dev_count):
             feed_list = []
-            for dev in xrange(dev_count):
+            for dev in six.moves.xrange(dev_count):
                 index = it * dev_count + dev
                 feed_dict = reader.make_one_batch_input(train_batches, index)
                 feed_list.append(feed_dict)
@@ -215,9 +230,9 @@ def train(args):
 
                 score_path = os.path.join(args.save_path, 'score.' + str(step))
                 score_file = open(score_path, 'w')
-                for it in xrange(val_batch_num // dev_count):
+                for it in six.moves.xrange(val_batch_num // dev_count):
                     feed_list = []
-                    for dev in xrange(dev_count):
+                    for dev in six.moves.xrange(dev_count):
                         val_index = it * dev_count + dev
                         feed_dict = reader.make_one_batch_input(val_batches,
                                                                 val_index)
@@ -227,9 +242,9 @@ def train(args):
                                             fetch_list=[logits.name])
 
                     scores = np.array(predicts[0])
-                    for dev in xrange(dev_count):
+                    for dev in six.moves.xrange(dev_count):
                         val_index = it * dev_count + dev
-                        for i in xrange(args.batch_size):
+                        for i in six.moves.xrange(args.batch_size):
                             score_file.write(
                                 str(scores[args.batch_size * dev + i][0]) + '\t'
                                 + str(val_batches["label"][val_index][
