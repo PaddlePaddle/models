@@ -20,6 +20,7 @@ import box_utils
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
+from config import *
 
 
 def box_decoder(target_box, prior_box, prior_box_var):
@@ -65,11 +66,11 @@ def clip_tiled_boxes(boxes, im_shape):
     return boxes
 
 
-def get_nmsed_box(args, rpn_rois, confs, locs, class_nums, im_info,
+def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info,
                   numId_to_catId_map):
     lod = rpn_rois.lod()[0]
     rpn_rois_v = np.array(rpn_rois)
-    variance_v = np.array([0.1, 0.1, 0.2, 0.2])
+    variance_v = np.array(ModelConfig.bbox_reg_weights)
     confs_v = np.array(confs)
     locs_v = np.array(locs)
     rois = box_decoder(locs_v, rpn_rois_v, variance_v)
@@ -87,12 +88,12 @@ def get_nmsed_box(args, rpn_rois, confs, locs, class_nums, im_info,
         cls_boxes = [[] for _ in range(class_nums)]
         scores_n = confs_v[start:end, :]
         for j in range(1, class_nums):
-            inds = np.where(scores_n[:, j] > args.score_threshold)[0]
+            inds = np.where(scores_n[:, j] > InferConfig.score_thresh)[0]
             scores_j = scores_n[inds, j]
             rois_j = rois_n[inds, j * 4:(j + 1) * 4]
             dets_j = np.hstack((rois_j, scores_j[:, np.newaxis])).astype(
                 np.float32, copy=False)
-            keep = box_utils.nms(dets_j, args.nms_threshold)
+            keep = box_utils.nms(dets_j, InferConfig.nms_thresh)
             nms_dets = dets_j[keep, :]
             #add labels
             cat_id = numId_to_catId_map[j]
@@ -103,8 +104,9 @@ def get_nmsed_box(args, rpn_rois, confs, locs, class_nums, im_info,
     # Limit to max_per_image detections **over all classes**
         image_scores = np.hstack(
             [cls_boxes[j][:, -2] for j in range(1, class_nums)])
-        if len(image_scores) > 100:
-            image_thresh = np.sort(image_scores)[-100]
+        if len(image_scores) > InferConfig.detectiions_per_im:
+            image_thresh = np.sort(image_scores)[
+                -InferConfig.detectiions_per_im]
             for j in range(1, class_nums):
                 keep = np.where(cls_boxes[j][:, -2] >= image_thresh)[0]
                 cls_boxes[j] = cls_boxes[j][keep, :]

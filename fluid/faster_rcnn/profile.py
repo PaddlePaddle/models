@@ -26,22 +26,21 @@ import paddle.fluid.profiler as profiler
 import models.model_builder as model_builder
 import models.resnet as resnet
 from learning_rate import exponential_with_warmup_decay
+from config import *
 
 
-def train(cfg):
-    batch_size = cfg.batch_size
-    learning_rate = cfg.learning_rate
-    image_shape = [3, cfg.max_size, cfg.max_size]
-    num_iterations = cfg.max_iter
+def train(args):
+    learning_rate = SolverConfig.learning_rate
+    image_shape = [3, TrainConfig.max_size, TrainConfig.max_size]
+    num_iterations = 80
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
-
+    total_batch_size = devices_num * TrainConfig.im_per_batch
     model = model_builder.FasterRCNN(
-        cfg=cfg,
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
-        use_pyreader=cfg.use_pyreader,
+        use_pyreader=EnvConfig.use_pyreader,
         use_random=False)
     model.build_model(image_shape)
     loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
@@ -67,37 +66,33 @@ def train(cfg):
 
     fluid.memory_optimize(fluid.default_main_program())
 
-    place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
+    place = fluid.CUDAPlace(0) if EnvConfig.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    if cfg.pretrained_model:
+    if args.pretrained_model:
 
         def if_exist(var):
-            return os.path.exists(os.path.join(cfg.pretrained_model, var.name))
+            return os.path.exists(os.path.join(args.pretrained_model, var.name))
 
-        fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
+        fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
-    if cfg.parallel:
+    if args.parallel:
         train_exe = fluid.ParallelExecutor(
-            use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
+            use_cuda=bool(EnvConfig.use_gpu), loss_name=loss.name)
 
-    assert cfg.batch_size % devices_num == 0, \
-        "batch_size = %d, devices_num = %d" %(cfg.batch_size, devices_num)
-
-    batch_size_per_dev = cfg.batch_size / devices_num
-    if cfg.use_pyreader:
+    if EnvConfig.use_pyreader:
         train_reader = reader.train(
-            cfg,
-            batch_size=batch_size_per_dev,
-            total_batch_size=cfg.batch_size,
-            padding_total=cfg.padding_minibatch,
+            args,
+            batch_size=TrainConfig.im_per_batch,
+            total_batch_size=total_batch_size,
+            padding_total=TrainConfig.padding_minibatch,
             shuffle=False)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
     else:
         train_reader = reader.train(
-            cfg, batch_size=cfg.batch_size, shuffle=False)
+            args, batch_size=total_batch_size, shuffle=False)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     fetch_list = [loss, loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss]
@@ -113,7 +108,7 @@ def train(cfg):
             end_time = time.time()
             reader_time.append(end_time - start_time)
             start_time = time.time()
-            if cfg.parallel:
+            if EnvConfig.parallel:
                 losses = train_exe.run(fetch_list=[v.name for v in fetch_list],
                                        feed=feeder.feed(data))
             else:
@@ -139,7 +134,7 @@ def train(cfg):
         try:
             for batch_id in range(iterations):
                 start_time = time.time()
-                if cfg.parallel:
+                if EnvConfig.parallel:
                     losses = train_exe.run(
                         fetch_list=[v.name for v in fetch_list])
                 else:
@@ -157,14 +152,13 @@ def train(cfg):
 
         return reader_time, run_time, total_images
 
-    run_func = run if not cfg.use_pyreader else run_pyreader
+    run_func = run if not EnvConfig.use_pyreader else run_pyreader
 
     # warm-up
     run_func(2)
     # profiling
     start = time.time()
-    use_profile = False
-    if use_profile:
+    if args.use_profile:
         with profiler.profiler('GPU', 'total', '/tmp/profile_file'):
             reader_time, run_time, total_images = run_func(num_iterations)
     else:
