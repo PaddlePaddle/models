@@ -1,16 +1,19 @@
 import os
+import sys
 import math
 import random
 import functools
-import cPickle
-from cStringIO import StringIO
+try:
+    import cPickle as pickle
+    from cStringIO import StringIO
+except ImportError:
+    import pickle
+    from io import BytesIO
 import numpy as np
 import paddle
 from PIL import Image, ImageEnhance
 
 random.seed(0)
-
-DATA_DIM = 224
 
 THREAD = 8
 BUF_SIZE = 1024
@@ -22,17 +25,13 @@ INFER_LIST = 'data/test.list'
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
 
+python_ver = sys.version_info
 
 def imageloader(buf):
     if isinstance(buf, str):
-        tempbuff = StringIO()
-        tempbuff.write(buf)
-        tempbuff.seek(0)
-        img = Image.open(tempbuff)
-    elif isinstance(buf, collections.Sequence):
-        img = Image.open(StringIO(buf[-1]))
-    else:
         img = Image.open(StringIO(buf))
+    else:
+        img = Image.open(BytesIO(buf))
 
     return img.convert('RGB')
 
@@ -98,7 +97,7 @@ def group_center_crop(img_group, target_size):
 
 def video_loader(frames, nsample, mode):
     videolen = len(frames)
-    average_dur = videolen / nsample
+    average_dur = videolen // nsample
 
     imgs = []
     for i in range(nsample):
@@ -111,12 +110,12 @@ def video_loader(frames, nsample, mode):
                 idx = i
         else:
             if average_dur >= 1:
-                idx = (average_dur - 1) / 2
+                idx = (average_dur - 1) // 2
                 idx += i * average_dur
             else:
                 idx = i
 
-        imgbuf = frames[idx % videolen]
+        imgbuf = frames[int(idx % videolen)]
         img = imageloader(imgbuf)
         imgs.append(img)
 
@@ -125,7 +124,10 @@ def video_loader(frames, nsample, mode):
 
 def decode_pickle(sample, mode, seg_num, short_size, target_size):
     pickle_path = sample[0]
-    data_loaded = cPickle.load(open(pickle_path))
+    if python_ver < (3, 0):
+        data_loaded = pickle.load(open(pickle_path, 'rb'))
+    else:
+        data_loaded = pickle.load(open(pickle_path, 'rb'), encoding='bytes')
     vid, label, frames = data_loaded
 
     imgs = video_loader(frames, seg_num, mode)
