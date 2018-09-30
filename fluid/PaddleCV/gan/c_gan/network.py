@@ -107,7 +107,7 @@ def D_cond(image, y):
     h2 = bn(fc(h1, dfc_dim), act='leaky_relu')
     h2 = fluid.layers.concat([h2, y], 1)
 
-    h3 = fc(h2, 1)
+    h3 = fc(h2, 1, act='sigmoid')
     return h3
 
 
@@ -137,7 +137,7 @@ def D(x):
     x = conv(x, df_dim, act='leaky_relu')
     x = bn(conv(x, df_dim * 2), act='leaky_relu')
     x = bn(fc(x, dfc_dim), act='leaky_relu')
-    x = fc(x, 1, act=None)
+    x = fc(x, 1, act='sigmoid')
     return x
 
 
