@@ -150,7 +150,8 @@ def train(args):
                 fig = plot(total_images)
                 msg = "Epoch ID={0} Batch ID={1} D-Loss={2} DG-Loss={3}\n gen={4}".format(
                     pass_id, batch_id,
-                    np.mean(d_loss_np), dg_loss_np, check(generated_images))
+                    np.sum(d_loss_np),
+                    np.sum(dg_loss_np), check(generated_images))
                 print(msg)
                 plt.title(msg)
                 plt.savefig(
