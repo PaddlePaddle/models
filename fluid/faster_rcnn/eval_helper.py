@@ -24,28 +24,26 @@ from PIL import ImageFont
 
 def box_decoder(target_box, prior_box, prior_box_var):
     proposals = np.zeros_like(target_box, dtype=np.float32)
-    prior_box_loc = np.zeros_like(prior_box, dtype=np.float32)
-    prior_box_loc[:, 0] = prior_box[:, 2] - prior_box[:, 0] + 1.
-    prior_box_loc[:, 1] = prior_box[:, 3] - prior_box[:, 1] + 1.
-    prior_box_loc[:, 2] = (prior_box[:, 2] + prior_box[:, 0]) / 2
-    prior_box_loc[:, 3] = (prior_box[:, 3] + prior_box[:, 1]) / 2
-    pred_bbox = np.zeros_like(target_box, dtype=np.float32)
-    for i in range(prior_box.shape[0]):
-        dw = np.minimum(prior_box_var[2] * target_box[i, 2::4],
-                        np.log(1000. / 16.))
-        dh = np.minimum(prior_box_var[3] * target_box[i, 3::4],
-                        np.log(1000. / 16.))
-        pred_bbox[i, 0::4] = prior_box_var[0] * target_box[
-            i, 0::4] * prior_box_loc[i, 0] + prior_box_loc[i, 2]
-        pred_bbox[i, 1::4] = prior_box_var[1] * target_box[
-            i, 1::4] * prior_box_loc[i, 1] + prior_box_loc[i, 3]
-        pred_bbox[i, 2::4] = np.exp(dw) * prior_box_loc[i, 0]
-        pred_bbox[i, 3::4] = np.exp(dh) * prior_box_loc[i, 1]
-    proposals[:, 0::4] = pred_bbox[:, 0::4] - pred_bbox[:, 2::4] / 2
-    proposals[:, 1::4] = pred_bbox[:, 1::4] - pred_bbox[:, 3::4] / 2
-    proposals[:, 2::4] = pred_bbox[:, 0::4] + pred_bbox[:, 2::4] / 2 - 1
-    proposals[:, 3::4] = pred_bbox[:, 1::4] + pred_bbox[:, 3::4] / 2 - 1
+    widths = prior_box[:, 2] - prior_box[:, 0] + 1.
+    heights = prior_box[:, 3] - prior_box[:, 1] + 1.
+    ctx = (prior_box[:, 2] + prior_box[:, 0]) / 2
+    cty = (prior_box[:, 3] + prior_box[:, 1]) / 2
+    dx = prior_box_var[0] * target_box[:, 0::4]
+    dy = prior_box_var[1] * target_box[:, 1::4]
+    dw = prior_box_var[2] * target_box[:, 2::4]
+    dh = prior_box_var[3] * target_box[:, 3::4]
 
+    dw = np.minimum(dw, EnvConfig.bbox_clip)
+    dh = np.minimum(dh, EnvConfig.bbox_clip)
+
+    pred_ctx = dx * widths[:, np.newaxis] + ctx[:, np.newaxis]
+    pred_cty = dy * heights[:, np.newaxis] + cty[:, np.newaxis]
+    pred_w = np.exp(dw) * widths[:, np.newaxis]
+    pred_h = np.exp(dh) * heights[:, np.newaxis]
+    proposals[:, 0::4] = pred_ctx - pred_w / 2
+    proposals[:, 1::4] = pred_cty - pred_h / 2
+    proposals[:, 2::4] = pred_ctx + pred_w / 2 - 1
+    proposals[:, 3::4] = pred_cty + pred_h / 2 - 1
     return proposals
 
 
@@ -117,6 +115,8 @@ def get_nmsed_box(args, rpn_rois, confs, locs, class_nums, im_info,
         boxes = im_results_n[:, :-2]
         scores = im_results_n[:, -2]
         labels = im_results_n[:, -1]
+        #print('boxes after nms: {}, shape:{}'.format(np.sum(boxes),boxes.shape))
+        #print('scores after nms: {}, shape:{}'.format(np.sum(scores),scores.shape))
     im_results = np.vstack([im_results[k] for k in range(len(lod) - 1)])
     return new_lod, im_results
 
