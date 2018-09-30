@@ -88,7 +88,7 @@ class Net(object):
                     initializer=fluid.initializer.Normal(scale=0.1)))
             Hu_stack = [Hu]
 
-            for index in six.moves.range(self._stack_num):
+            for index in six.moves.xrange(self._stack_num):
                 # share parameters
                 Hu = layers.block(
                     name="turn_self_stack" + str(index),
@@ -104,7 +104,7 @@ class Net(object):
             # cross attention 
             r_a_t_stack = []
             t_a_r_stack = []
-            for index in six.moves.range(self._stack_num + 1):
+            for index in six.moves.xrange(self._stack_num + 1):
                 t_a_r = layers.block(
                     name="t_attend_r_" + str(index),
                     query=Hu_stack[index],
