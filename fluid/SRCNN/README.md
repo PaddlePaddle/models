@@ -91,7 +91,9 @@ scale_factor： 进行超分辨重建的缩放比例。
 
 
 ## 实验结果
-下图为在`CityScape`训练集上的训练的Loss曲线：
+下图为在`timofte`训练集上的训练的PSNR曲线：
+
+![image.png-37.1kB](http://static.zybuluo.com/molly-ecla/2e5e5yjz2za7syz34bk3ut5s/image.png)
 
 
 在训练集上训练，在set5数据集上验证的结果为：psnr=35.82(论文32.39)
