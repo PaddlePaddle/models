@@ -100,6 +100,11 @@ scale_factor： 进行超分辨重建的缩放比例。
 
 下图是使用`infer.py`脚本预测产生的结果示例，其中，第一行是输入的原始图片，第二行是输入图片经过subsample的结果，第三行是超分辨率重构的结果。
 
+![0.png-101.2kB](http://static.zybuluo.com/molly-ecla/th1u9o27tnfrn5vmn7wakqj8/0.png)
+
+![1.png-50.4kB](http://static.zybuluo.com/molly-ecla/kqijemqxaw1m8pzj1fwol3vz/1.png)
+
+![2.png-61.4kB](http://static.zybuluo.com/molly-ecla/560qm7nrhia9bokz6k44t54p/2.png)
 
 
 ## 参考
