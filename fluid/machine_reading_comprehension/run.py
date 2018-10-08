@@ -21,7 +21,7 @@ import time
 import os
 import random
 import json
-import six 
+import six
 
 import paddle
 import paddle.fluid as fluid
