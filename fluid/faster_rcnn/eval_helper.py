@@ -45,6 +45,8 @@ def box_decoder(target_box, prior_box, prior_box_var):
     proposals[:, 1::4] = pred_cty - pred_h / 2
     proposals[:, 2::4] = pred_ctx + pred_w / 2 - 1
     proposals[:, 3::4] = pred_cty + pred_h / 2 - 1
+    print('roi after box decoder: {}, shape:{}'.format(
+        np.sum(proposals), proposals.shape))
     return proposals
 
 
@@ -63,6 +65,7 @@ def clip_tiled_boxes(boxes, im_shape):
     boxes[:, 2::4] = np.maximum(np.minimum(boxes[:, 2::4], im_shape[1] - 1), 0)
     # y2 < im_shape[0]
     boxes[:, 3::4] = np.maximum(np.minimum(boxes[:, 3::4], im_shape[0] - 1), 0)
+    print('boxes after clip: {} shape:{}'.format(np.sum(boxes), boxes.shape))
     return boxes
 
 
@@ -117,8 +120,10 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info,
         boxes = im_results_n[:, :-2]
         scores = im_results_n[:, -2]
         labels = im_results_n[:, -1]
-        #print('boxes after nms: {}, shape:{}'.format(np.sum(boxes),boxes.shape))
-        #print('scores after nms: {}, shape:{}'.format(np.sum(scores),scores.shape))
+        print('boxes after nms: {}, shape:{}'.format(
+            np.sum(boxes), boxes.shape))
+        print('scores after nms: {}, shape:{}'.format(
+            np.sum(scores), scores.shape))
     im_results = np.vstack([im_results[k] for k in range(len(lod) - 1)])
     return new_lod, im_results
 
