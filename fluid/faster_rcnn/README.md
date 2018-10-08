@@ -43,7 +43,7 @@ After data preparation, one can start the training step by:
 
     python train.py \
        --max_size=1333 \
-       --scales=800 \
+       --scales=[800] \
        --batch_size=8 \
        --model_save_dir=output/
 
@@ -57,6 +57,21 @@ After data preparation, one can start the training step by:
     sh ./pretrained/download.sh
 
 Set `pretrained_model` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
+
+**Install the [cocoapi](https://github.com/cocodataset/cocoapi):**
+
+To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed. Install the cocoapi:
+
+    # COCOAPI=/path/to/clone/cocoapi
+    git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
+    cd $COCOAPI/PythonAPI
+    # if cython is not installed
+    pip install Cython
+    # Install into global site-packages
+    make install
+    # Alternatively, if you do not have permissions or prefer
+    # not to install the COCO API into global site-packages
+    python2 setup.py install --user
 
 **data reader introduction:**
 
@@ -103,18 +118,7 @@ Finetuning is to finetune model weights in a specific task by loading pretrained
 
 ## Evaluation
 
-Evaluation is to evaluate the performance of a trained model. This sample provides `eval_coco_map.py` which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). To use `eval_coco_map.py` , [cocoapi](https://github.com/cocodataset/cocoapi) is needed. Install the cocoapi:
-
-    # COCOAPI=/path/to/clone/cocoapi
-    git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
-    cd $COCOAPI/PythonAPI
-    # if cython is not installed
-    pip install Cython
-    # Install into global site-packages
-    make install
-    # Alternatively, if you do not have permissions or prefer
-    # not to install the COCO API into global site-packages
-    python2 setup.py install --user
+Evaluation is to evaluate the performance of a trained model. This sample provides `eval_coco_map.py` which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval).
 
 `eval_coco_map.py` is the main executor for evalution, one can start evalution step by:
 
@@ -136,7 +140,7 @@ Faster RCNN mAP
 | Detectron                 | 8            |    180000        | 0.315 |
 | Fluid minibatch padding | 8            |    180000        | 0.314 |
 | Fluid all padding         | 8            |    180000        | 0.308 |
-| Fluid no padding         |6            |    240000        | 0.317 |
+| Fluid no padding         |8            |    180000        | 0.316 |
 
 * Fluid all padding: Each image padding to 1333\*1333.
 * Fluid minibatch padding: Images in one batch padding to the same size. This method is same as detectron.
