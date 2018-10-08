@@ -61,7 +61,7 @@ def parse_args():
     parser.add_argument(
         "--weight_decay",
         type=float,
-        default=0.001,
+        default=0.0001,
         help="Weight decay. (default: %(default)f)")
     parser.add_argument(
         "--use_gpu",
