@@ -70,7 +70,7 @@ def train(args,
             input=image,
             depth=50,
             anchor_sizes=args.anchor_sizes,
-            variance=[0.1,0.1,0.2,0.2],
+            variance=[10.,10.,5.,5.],
             aspect_ratios=args.aspect_ratios,
             gt_box=gt_box,
             is_crowd=is_crowd,
@@ -78,29 +78,40 @@ def train(args,
             im_info=im_info,
             class_nums=class_nums,
             )
+    cls_loss, reg_loss = RPNloss(rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box, is_crowd, im_info)
+    cls_loss.persistable=True
+    reg_loss.persistable=True
     rpn_loss = cls_loss + reg_loss
+    rpn_loss.persistable=True
+
     labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
     labels_int64.stop_gradient = True
-    loss_cls = fluid.layers.softmax_with_cross_entropy(
-            logits=cls_score,
-            label=labels_int64
-            )
+    #loss_cls = fluid.layers.softmax_with_cross_entropy(
+    #        logits=cls_score,
+    #        label=labels_int64
+    #        )
+    cls_prob = fluid.layers.softmax(cls_score, use_cudnn=False)
+    loss_cls = fluid.layers.cross_entropy(cls_prob, labels_int64)
+    loss_cls = fluid.layers.reduce_mean(loss_cls)
     loss_bbox = fluid.layers.smooth_l1(x=bbox_pred,
                                         y=bbox_targets,
                                         inside_weight=bbox_inside_weights,
                                         outside_weight=bbox_outside_weights,
                                         sigma=1.0)
-    loss_cls = fluid.layers.reduce_mean(loss_cls)
     loss_bbox = fluid.layers.reduce_mean(loss_bbox)
+
+    loss_cls.persistable=True
+    loss_bbox.persistable=True
     detection_loss = loss_cls + loss_bbox
+    detection_loss.persistable=True
+
     loss = rpn_loss + detection_loss
-    boundaries = [0,120000,160000]
-    values = [learning_rate,learning_rate*0.1,learning_rate*0.01,learning_rate*0.001]
+    loss.persistable=True
+
+    boundaries = [120000,160000]
+    values = [learning_rate,learning_rate*0.1,learning_rate*0.01]
     optimizer = fluid.optimizer.Momentum(
-        learning_rate=exponential_with_warmup_decay(boundaries=boundaries,
-      values=values,
-      warmup_iter=500,
-      warmup_factor=1.0/3.0),
+        learning_rate=fluid.layers.piecewise_decay(boundaries, values),
         regularization=fluid.regularizer.L2Decay(0.0001),
         momentum=0.9)
     optimizer.minimize(loss)
@@ -119,7 +130,7 @@ def train(args,
             use_cuda=args.use_gpu, loss_name=loss.name)
 
     train_reader = paddle.batch(
-        reader.train(data_args, train_file_list), batch_size=batch_size)
+        reader.train(data_args, train_file_list,False), batch_size=batch_size)
     test_reader = paddle.batch(
         reader.test(data_args, val_file_list), batch_size=batch_size)
     feeder = fluid.DataFeeder(
@@ -132,7 +143,6 @@ def train(args,
         fluid.io.save_persistables(exe, model_path)
     total_time = 0.0
     for pass_id in range(num_passes):
-        print('/////////////////////')
         start_time = time.time()
         prev_start_time = start_time
         every_pass_loss = []
@@ -156,7 +166,6 @@ def train(args,
             if batch_id % 20 == 0:
                 print("Pass {0}, batch {1}, loss {2}, time {3}".format(
                     pass_id, batch_id, loss_v, start_time - prev_start_time))
-                break
         if pass_id % 10 == 0 or pass_id == num_passes - 1:
             save_model(str(pass_id))
 

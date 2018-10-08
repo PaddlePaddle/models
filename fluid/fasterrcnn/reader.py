@@ -22,6 +22,7 @@ import os
 import time
 import copy
 import six
+import cv2
 
 
 class Settings(object):
@@ -30,97 +31,41 @@ class Settings(object):
             dataset=None,
             data_dir=None,
             label_file=None,
-            resize_h=300,
-            resize_w=300,
-            mean_value=[127.77, 115.95, 102.98], ):
+            resize_h=800,
+            resize_w=1333,
+            mean_value=np.array([[[102.98, 115.95, 127.77]]]), ):
         self.dataset = dataset
         self.data_dir = data_dir
         self.label_list = []
         label_fpath = os.path.join(data_dir, label_file)
         for line in open(label_fpath):
             self.label_list.append(line.strip())
-
+        self.img_mean = mean_value
         self.resize_h = resize_h
         self.resize_w = resize_w
-        self.img_mean = np.array(mean_value)[:, np.newaxis, np.newaxis].astype(
-            'float32')
 
 
 def preprocess(img, bbox_labels, mode, settings):
-    img_width, img_height = img.size
-    sampled_labels = bbox_labels
-    img = img.resize((settings.resize_w, settings.resize_h), Image.ANTIALIAS)
-    img = np.array(img)
-
-    if mode == 'train':
-        flip = int(np.random.uniform())
-        if flip == 1:
-            img = img[:, :, ::-1]
-            for i in six.moves.xrange(len(sampled_labels)):
-                tmp = sampled_labels[i][1]
-                sampled_labels[i][1] = img_height - sampled_labels[i][3]
-                sampled_labels[i][3] = img_height - tmp
-    # HWC to CHW
-    if len(img.shape) == 3:
-        img = np.swapaxes(img, 1, 2)
-        img = np.swapaxes(img, 1, 0)
-    # RBG to BGR
-    img = img.astype('float32')
+    img = img.astype(np.float32, copy=False)
     img -= settings.img_mean
-    return img, sampled_labels
-
-
-def coco(settings, file_list, mode, shuffle):
-    # cocoapi
-    from pycocotools.coco import COCO
-    from pycocotools.cocoeval import COCOeval
-    print('loading coco...')
-    coco = COCO(file_list)
-    image_ids = coco.getImgIds()
-    images = coco.loadImgs(image_ids)
-    category_ids = coco.getCatIds()
-    category_names = [item['name'] for item in coco.loadCats(category_ids)]
-
-    print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
-
-    def reader():
-        if mode == "train" and shuffle:
-            random.shuffle(images)
-        for image in images:
-            image_name = image['file_name']
-            image_path = os.path.join(settings.data_dir, image_name)
-
-            im = Image.open(image_path)
-            if im.mode == 'L':
-                im = im.convert('RGB')
-            im_width, im_height = im.size
-            im_id = image['id']
-            im_info = [float(im_width), float(im_height), 16.0]
-            # layout: category_id | xmin | ymin | xmax | ymax | im_info
-            bbox_labels = []
-            annIds = coco.getAnnIds(imgIds=image['id'])
-            anns = coco.loadAnns(annIds)
-            for ann in anns:
-                bbox_sample = []
-                # start from 1, leave 0 to background
-                bbox_sample.append(float(ann['category_id']))
-                #float(category_ids.index(ann['category_id'])) + 1)
-                bbox = ann['bbox']
-                xmin, ymin, w, h = bbox
-                xmax = xmin + w
-                ymax = ymin + h
-                bbox_sample.append(float(xmin))
-                bbox_sample.append(float(ymin))
-                bbox_sample.append(float(xmax))
-                bbox_sample.append(float(ymax))
-                bbox_labels.append(bbox_sample)
-            im, sample_labels = preprocess(im, bbox_labels, mode, settings)
-            sample_labels = np.array(sample_labels)
-            if len(sample_labels) == 0: continue
-            im = im.astype('float32')
-            boxes = sample_labels[:, 1:5]
-            lbls = sample_labels[:, 0].astype('int32')
-            yield im, boxes, lbls, im_info
+    sampled_labels = bbox_labels
+    img_shape = img.shape
+    img_size_min = np.min(img_shape[0:2])
+    img_size_max = np.max(img_shape[0:2])
+    im_scale = float(settings.resize_h) / float(img_size_min)
+    # Prevent the biggest axis from being more than max_size
+    if np.round(im_scale * img_size_max) > settings.resize_w:
+        im_scale = float(settings.resize_w) / float(img_size_max)
+    img = cv2.resize(
+        img,
+        None,
+        None,
+        fx=im_scale,
+        fy=im_scale,
+        interpolation=cv2.INTER_LINEAR)
+    channel_swap = (2, 0, 1)  #(batch, channel, height, width)
+    img = img.transpose(channel_swap)
+    return img, sampled_labels, im_scale
 
 
 def pascalvoc(settings, file_list, mode, shuffle):
@@ -134,14 +79,17 @@ def pascalvoc(settings, file_list, mode, shuffle):
         for image in images:
             image_path, label_path = image.split()
             image_path = os.path.join(settings.data_dir, image_path)
+            #if '005393.jpg' not in image_path: continue
             label_path = os.path.join(settings.data_dir, label_path)
-
-            im = Image.open(image_path)
-            if im.mode == 'L':
-                im = im.convert('RGB')
-            im_width, im_height = im.size
-            im_info = [float(im_width), float(im_height), 16.0]
+            im = cv2.imread(image_path)
+            im_width = im.shape[0]
+            im_height = im.shape[1]
+            #im = Image.open(image_path)
+            #if im.mode == 'L':
+            #    im = im.convert('RGB')
+            #im_width, im_height = im.size
             # layout: label | xmin | ymin | xmax | ymax | im_info
+            print(image_path)
             bbox_labels = []
             root = xml.etree.ElementTree.parse(label_path).getroot()
             for object in root.findall('object'):
@@ -155,10 +103,14 @@ def pascalvoc(settings, file_list, mode, shuffle):
                 bbox_sample.append(float(bbox.find('xmax').text))
                 bbox_sample.append(float(bbox.find('ymax').text))
                 bbox_labels.append(bbox_sample)
-            im, sample_labels = preprocess(im, bbox_labels, mode, settings)
+            im, sample_labels, im_scale = preprocess(im, bbox_labels, mode,
+                                                     settings)
             sample_labels = np.array(sample_labels)
+            im_info = [
+                float(im_width) * im_scale, float(im_height) * im_scale,
+                im_scale
+            ]
             if len(sample_labels) == 0: continue
-            im = im.astype('float32')
             boxes = sample_labels[:, 1:5]
             lbls = sample_labels[:, 0].astype('int32')
             is_crowd = np.zeros(len(boxes), dtype='int32')
