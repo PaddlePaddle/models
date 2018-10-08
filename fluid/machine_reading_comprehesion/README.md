@@ -63,7 +63,7 @@ sh run.sh --evaluate  --load_dir models/1
 You can also predict answers for the samples in some files using the following command:
 
 ```
-sh run.sh --predict --load_dir models/1 --testset ../data/demo/devset/search.dev.json
+sh run.sh --predict --load_dir models/1 --testset ../data/preprocessed/testset/search.dev.json
 ```
 
 By default, the results are saved at `../data/results/` folder. You can change this by specifying `--result_dir DIR_PATH`.
