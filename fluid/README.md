@@ -44,14 +44,26 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 -  [ICNet](https://github.com/PaddlePaddle/models/tree/develop/fluid/icnet)
 
+图像生成
+-----------
+
+图像生成是指根据输入向量，生成目标图像。这里的输入向量可以是随机的噪声或用户指定的条件向量。具体的应用场景有：手写体生成、人脸合成、风格迁移、图像修复等。当前的图像生成任务主要是借助生成对抗网络（GAN）来实现。
+生成对抗网络（GAN）由两种子网络组成：生成器和识别器。生成器的输入是随机噪声或条件向量，输出是目标图像。识别器是一个分类器，输入是一张图像，输出是该图像是否是真实的图像。在训练过程中，生成器和识别器通过不断的相互博弈提升自己的能力。
+
+在图像生成任务中，我们介绍了如何使用DCGAN和ConditioanlGAN来进行手写数字的生成，另外还介绍了用于风格迁移的CycleGAN.
+
+- [DCGAN & ConditionalGAN](https://github.com/PaddlePaddle/models/tree/develop/fluid/gan/c_gan)
+- [CycleGAN](https://github.com/PaddlePaddle/models/tree/develop/fluid/gan/cycle_gan)
+
 场景文字识别
 ------------
 
 许多场景图像中包含着丰富的文本信息，对理解图像信息有着重要作用，能够极大地帮助人们认知和理解场景图像的内容。场景文字识别是在图像背景复杂、分辨率低下、字体多样、分布随意等情况下，将图像信息转化为文字序列的过程，可认为是一种特别的翻译过程：将图像输入翻译为自然语言输出。场景图像文字识别技术的发展也促进了一些新型应用的产生，如通过自动识别路牌中的文字帮助街景应用获取更加准确的地址信息等。
 
-在场景文字识别任务中，我们介绍如何将基于CNN的图像特征提取和基于RNN的序列翻译技术结合，免除人工定义特征，避免字符分割，使用自动学习到的图像特征，完成端到端地无约束字符定位和识别。当前，介绍了CRNN-CTC模型，后续会引入基于注意力机制的序列到序列模型。
+在场景文字识别任务中，我们介绍如何将基于CNN的图像特征提取和基于RNN的序列翻译技术结合，免除人工定义特征，避免字符分割，使用自动学习到的图像特征，完成字符识别。当前，介绍了CRNN-CTC模型和基于注意力机制的序列到序列模型。
 
--  [CRNN-CTC模](https://github.com/PaddlePaddle/models/tree/develop/fluid/ocr_recognition)
+-  [CRNN-CTC模型](https://github.com/PaddlePaddle/models/tree/develop/fluid/ocr_recognition)
+-  [Attention模型](https://github.com/PaddlePaddle/models/tree/develop/fluid/ocr_recognition)
 
 语音识别
 --------
