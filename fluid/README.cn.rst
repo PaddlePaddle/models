@@ -58,6 +58,26 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 -  `CRNN-CTC模型 <https://github.com/PaddlePaddle/models/tree/develop/fluid/ocr_recognition>`__
 
+
+度量学习
+-------
+
+
+度量学习也称作距离度量学习、相似度学习，通过学习对象之间的距离，度量学习能够用于分析对象时间的关联、比较关系，在实际问题中应用较为广泛，可应用于辅助分类、聚类问题，也广泛用于图像检索、人脸识别等领域。以往，针对不同的任务，需要选择合适的特征并手动构建距离函数，而度量学习可根据不同的任务来自主学习出针对特定任务的度量距离函数。度量学习和深度学习的结合，在人脸识别/验证、行人再识别(human Re-ID)、图像检索等领域均取得较好的性能，在这个任务中我们主要介绍了基于Fluid的深度度量学习模型，包含了三元组、四元组等损失函数。
+
+- `Metric Learning <https://github.com/PaddlePaddle/models/tree/develop/fluid/metric_learning>`__
+
+
+视频分类
+-------
+
+视频分类是视频理解任务的基础，与图像分类不同的是，分类的对象不再是静止的图像，而是一个由多帧图像构成的、包含语音数据、包含运动信息等的视频对象，因此理解视频需要获得更多的上下文信息，不仅要理解每帧图像是什么、包含什么，还需要结合不同帧，知道上下文的关联信息。视频分类方法主要包含基于卷积神经网络、基于循环神经网络、或将这两者结合的方法。该任务中我们介绍基于Fluid的视频分类模型，目前包含Temporal Segment Network(TSN)模型，后续会持续增加更多模型。
+
+
+- `TSN <https://github.com/PaddlePaddle/models/tree/develop/fluid/video_classification>`__
+
+
+
 语音识别
 --------
 
