@@ -1,4 +1,5 @@
 import sys
+import six
 import numpy as np
 from sklearn.metrics import average_precision_score
 
@@ -7,7 +8,7 @@ def mean_average_precision(sort_data):
     #to do
     count_1 = 0
     sum_precision = 0
-    for index in range(len(sort_data)):
+    for index in six.moves.xrange(len(sort_data)):
         if sort_data[index][1] == 1:
             count_1 += 1
             sum_precision += 1.0 * count_1 / (index + 1)

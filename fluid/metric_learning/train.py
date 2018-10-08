@@ -93,7 +93,7 @@ def train(args):
     elif loss_name == "emlloss":
         metricloss = emlloss(
                 train_batch_size = args.train_batch_size, 
-                samples_each_class=2
+                samples_each_class = args.samples_each_class
         )
         cost_metric = metricloss.loss(out[0])
         avg_cost_metric = fluid.layers.mean(x=cost_metric)

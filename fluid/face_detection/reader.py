@@ -250,6 +250,10 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
                     ymin = float(temp_info_box[1])
                     w = float(temp_info_box[2])
                     h = float(temp_info_box[3])
+
+                    # Filter out wrong labels
+                    if w < 0 or h < 0:
+                        continue
                     xmax = xmin + w
                     ymax = ymin + h
 
@@ -294,7 +298,7 @@ def train(settings,
                         generator_output = enqueuer.queue.get()
                         break
                     else:
-                        time.sleep(0.02)
+                        time.sleep(0.01)
                 yield generator_output
                 generator_output = None
         finally:

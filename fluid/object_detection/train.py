@@ -38,7 +38,8 @@ train_parameters = {
         "batch_size": 64,
         "lr": 0.001,
         "lr_epochs": [40, 60, 80, 100],
-        "lr_decay": [1, 0.5, 0.25, 0.1, 0.01]
+        "lr_decay": [1, 0.5, 0.25, 0.1, 0.01],
+        "ap_version": '11point',
     },
     "coco2014": {
         "train_images": 82783,
@@ -47,7 +48,8 @@ train_parameters = {
         "batch_size": 64,
         "lr": 0.001,
         "lr_epochs": [12, 19],
-        "lr_decay": [1, 0.5, 0.25]
+        "lr_decay": [1, 0.5, 0.25],
+        "ap_version": 'integral', # should use eval_coco_map.py to test model
     },
     "coco2017": {
         "train_images": 118287,
@@ -56,7 +58,8 @@ train_parameters = {
         "batch_size": 64,
         "lr": 0.001,
         "lr_epochs": [12, 19],
-        "lr_decay": [1, 0.5, 0.25]
+        "lr_decay": [1, 0.5, 0.25],
+        "ap_version": 'integral', # should use eval_coco_map.py to test model
     }
 }
 
@@ -77,6 +80,7 @@ def optimizer_setting(train_params):
 def build_program(main_prog, startup_prog, train_params, is_train):
     image_shape = train_params['image_shape']
     class_num = train_params['class_num']
+    ap_version = train_params['ap_version']
     with fluid.program_guard(main_prog, startup_prog):
         py_reader = fluid.layers.py_reader(
             capacity=64,
@@ -97,16 +101,15 @@ def build_program(main_prog, startup_prog, train_params, is_train):
 
                 nmsed_out = fluid.layers.detection_output(
                     locs, confs, box, box_var, nms_threshold=0.45)
-                with fluid.program_guard(main_prog):
-                    loss = fluid.evaluator.DetectionMAP(
-                        nmsed_out,
-                        gt_label,
-                        gt_box,
-                        difficult,
-                        class_num,
-                        overlap_threshold=0.5,
-                        evaluate_difficult=False,
-                        ap_version=args.ap_version)
+                loss = fluid.evaluator.DetectionMAP(
+                    nmsed_out,
+                    gt_label,
+                    gt_box,
+                    difficult,
+                    class_num,
+                    overlap_threshold=0.5,
+                    evaluate_difficult=False,
+                    ap_version=ap_version)
     return py_reader, loss
 
 
@@ -230,7 +233,7 @@ def train(args,
                 loss_v = np.mean(np.array(loss_v))
                 every_epoc_loss.append(loss_v)
                 if batch_id % 20 == 0:
-                    print("Epoc {0}, batch {1}, loss {2}, time {3}".format(
+                    print("Epoc {:d}, batch {:d}, loss {:.6f}, time {:.5f}".format(
                         epoc_id, batch_id, loss_v, start_time - prev_start_time))
             end_time = time.time()
             total_time += end_time - start_time

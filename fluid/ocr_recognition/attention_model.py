@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import paddle.fluid as fluid
+import six
 
 decoder_size = 128
 word_vector_dim = 128
@@ -22,7 +23,7 @@ def conv_bn_pool(input,
                  pool=True,
                  use_cudnn=True):
     tmp = input
-    for i in xrange(group):
+    for i in six.moves.xrange(group):
         filter_size = 3
         conv_std = (2.0 / (filter_size**2 * tmp.shape[1]))**0.5
         conv_param = fluid.ParamAttr(
