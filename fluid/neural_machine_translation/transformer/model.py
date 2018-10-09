@@ -459,7 +459,7 @@ def transformer(src_vocab_size,
                 use_py_reader=False,
                 is_test=False):
     if weight_sharing:
-        assert src_vocab_size == src_vocab_size, (
+        assert src_vocab_size == trg_vocab_size, (
             "Vocabularies in source and target should be same for weight sharing."
         )
 
