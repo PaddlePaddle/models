@@ -128,6 +128,15 @@ Machine Translation, NMT)等阶段。在 NMT 成熟后，机器翻译才真正�
 
 - [Senta](https://github.com/baidu/Senta/blob/master/README.md)
 
+语义匹配
+--------
+
+在自然语言处理很多场景中，需要度量两个文本在语义上的相似度，这类任务通常被称为语义匹配。例如在搜索中根据查询与候选文档的相似度对搜索结果进行排序，文本去重中文本与文本相似度的计算，自动问答中候选答案与问题的匹配等。
+
+本例所开放的DAM (Deep Attention Matching Network)为百度自然语言处理部发表于ACL-2018的工作，用于检索式聊天机器人多轮对话中应答的选择。DAM受Transformer的启发，其网络结构完全基于注意力(attention)机制，利用栈式的self-attention结构分别学习不同粒度下应答和语境的语义表示，然后利用cross-attention获取应答与语境之间的相关性，在两个大规模多轮对话数据集上的表现均好于其它模型。
+
+- [Deep Attention Matching Network](https://github.com/PaddlePaddle/models/tree/develop/fluid/deep_attention_matching_net)
+
 AnyQ
 ----
 
