@@ -167,3 +167,12 @@ SimNet是百度自然语言处理部于2013年自主研发的语义匹配框架�
 
 -  `SimNet in PaddlePaddle
    Fluid <https://github.com/baidu/AnyQ/blob/master/tools/simnet/train/paddle/README.md>`__
+   
+机器阅读理解
+----
+
+机器阅读理解(MRC)是自然语言处理(NLP)中的核心任务之一，最终目标是让机器像人类一样阅读文本，提炼文本信息并回答相关问题。深度学习近年来在NLP中得到广泛使用，也使得机器阅读理解能力在近年有了大幅提高，但是目前研究的机器阅读理解都采用人工构造的数据集，以及回答一些相对简单的问题，和人类处理的数据还有明显差距，因此亟需大规模真实训练数据推动MRC的进一步发展。
+
+百度阅读理解数据集是由百度自然语言处理部开源的一个真实世界数据集，所有的问题、原文都来源于实际数据(百度搜索引擎数据和百度知道问答社区)，答案是由人类回答的。每个问题都对应多个答案，数据集包含200k问题、1000k原文和420k答案，是目前最大的中文MRC数据集。百度同时开源了对应的阅读理解模型，称为DuReader，采用当前通用的网络分层结构，通过双向attention机制捕捉问题和原文之间的交互关系，生成query-aware的原文表示，最终基于query-aware的原文表示通过point network预测答案范围。
+
+-  `DuReader in PaddlePaddle Fluid] <https://github.com/PaddlePaddle/models/blob/develop/fluid/machine_reading_comprehension/README.md>`__

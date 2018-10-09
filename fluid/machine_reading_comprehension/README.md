@@ -1,5 +1,5 @@
 # Abstract
-Dureader is an end-to-end neural network model for machine reading comprehesion style question answering, which aims to anser questions from given passages. We first match the question and passage with a bidireactional attention flow network to obtrain the question-aware passages represenation. Then we employ a pointer network to locate the positions of answers from passages. Our experimental evalutions show that DuReader model achieves the state-of-the-art results in DuReader Dadaset.
+Dureader is an end-to-end neural network model for machine reading comprehension style question answering, which aims to answer questions from given passages. We first match the question and passages with a bidireactional attention flow network to obtrain the question-aware passages represenation. Then we employ a pointer network to locate the positions of answers from passages. Our experimental evalutions show that DuReader model achieves the state-of-the-art results in DuReader Dadaset.
 # Dataset
 DuReader Dataset is a new large-scale real-world and human sourced MRC dataset in Chinese. DuReader focuses on real-world open-domain question answering. The advantages of DuReader over existing datasets are concluded as follows:
  - Real question
@@ -9,7 +9,7 @@ DuReader Dataset is a new large-scale real-world and human sourced MRC dataset i
  - Rich annotation
 
 # Network
-DuReader is inspired by 3 classic reading comprehension models([BiDAF](https://arxiv.org/abs/1611.01603), [Match-LSTM](https://arxiv.org/abs/1608.07905), [R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf)).
+DuReader model is inspired by 3 classic reading comprehension models([BiDAF](https://arxiv.org/abs/1611.01603), [Match-LSTM](https://arxiv.org/abs/1608.07905), [R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf)).
 
 DuReader model is a hierarchical multi-stage process and consists of five layers
 
@@ -63,7 +63,7 @@ sh run.sh --evaluate  --load_dir models/1
 You can also predict answers for the samples in some files using the following command:
 
 ```
-sh run.sh --predict --load_dir models/1 --testset ../data/demo/devset/search.dev.json
+sh run.sh --predict --load_dir models/1 --testset ../data/preprocessed/testset/search.dev.json
 ```
 
 By default, the results are saved at `../data/results/` folder. You can change this by specifying `--result_dir DIR_PATH`.
