@@ -32,7 +32,7 @@ from config import cfg
 def train():
     learning_rate = cfg.learning_rate
     image_shape = [3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
-    num_iterations = 80
+    num_iterations = cfg.max_iter
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
@@ -121,8 +121,6 @@ def train():
                           .get_tensor())
             print("Batch {:d}, lr {:.6f}, loss {:.6f} ".format(batch_id, lr[0],
                                                                losses[0][0]))
-            if (batch_id + 1) > cfg.max_iter:
-                break
         return reader_time, run_time, total_images
 
     def run_pyreader(iterations):
@@ -147,8 +145,6 @@ def train():
                               .get_tensor())
                 print("Batch {:d}, lr {:.6f}, loss {:.6f} ".format(batch_id, lr[
                     0], losses[0][0]))
-                if (batch_id + 1) > cfg.max_iter:
-                    break
         except fluid.core.EOFException:
             py_reader.reset()
 

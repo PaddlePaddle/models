@@ -101,10 +101,13 @@ def parse_args():
     add_arg('data_dir',         str,   'data/COCO17',        "The data root path.")
     add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
     add_arg('use_profile',         bool,   False,       "Whether use profiler.")
+    add_arg('padding_minibatch',bool,   False,
+        "If False, only resize image and not pad, image shape is different between"
+        " GPUs in one mini-batch. If True, image shape is the same in one mini-batch.")
     #SOLVER
     add_arg('learning_rate',    float,  0.01,     "Learning rate.")
     add_arg('max_iter',         int,    180000,   "Iter number.")
-    add_arg('log_window',       int,    1,        "Log smooth window, set 1 for debug, set 20 for train.")
+    add_arg('log_window',       int,    20,        "Log smooth window, set 1 for debug, set 20 for train.")
     # FAST RCNN
     # RPN
     add_arg('anchor_sizes',     int,    [32,64,128,256,512],  "The size of anchors.")
@@ -129,7 +132,7 @@ def parse_args():
     # yapf: enable
     args = parser.parse_args()
     file_name = sys.argv[0]
-    if 'train' in file_name:
+    if 'train' in file_name or 'profile' in file_name:
         merge_cfg_from_args(args, 'train')
     else:
         merge_cfg_from_args(args, 'test')

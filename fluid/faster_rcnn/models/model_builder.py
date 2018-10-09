@@ -17,7 +17,7 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
-from config import *
+from config import cfg
 
 
 class FasterRCNN(object):
