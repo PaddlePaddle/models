@@ -45,16 +45,16 @@ DEV_TEST_DATA=(
 # 'http://www.statmt.org/wmt14/training-parallel-nc-v9.tgz'
 # 'training/news-commentary-v9.fr-en.en' 'training/news-commentary-v9.fr-en.fr'
 # 'http://www.statmt.org/wmt10/training-giga-fren.tar'
-# 'giga-fren.release2.fixed.en.gz' 'giga-fren.release2.fixed.fr.gz'
+# 'giga-fren.release2.fixed.en.*' 'giga-fren.release2.fixed.fr.*'
 # 'http://www.statmt.org/wmt13/training-parallel-un.tgz'
 # 'un/undoc.2000.fr-en.en' 'un/undoc.2000.fr-en.fr'
 # )
 # # each of DEV_TEST_DATA: data_url data_tgz data_file_lang1 data_file_lang2
 # DEV_TEST_DATA=(
-# 'http://data.statmt.org/wmt16/translation-task/dev.tgz' 'dev.tgz'
-# '.*/newstest201[45]-deen-ref.en.sgm' '.*/newstest201[45]-deen-src.fr.sgm'
-# 'http://data.statmt.org/wmt16/translation-task/test.tgz' 'test.tgz'
-# '.*/newstest2016-deen-ref.en.sgm' '.*/newstest2016-deen-src.fr.sgm'
+# 'http://data.statmt.org/wmt16/translation-task/dev.tgz'
+# '.*/newstest201[45]-fren-ref.en.sgm' '.*/newstest201[45]-fren-src.fr.sgm'
+# 'http://data.statmt.org/wmt16/translation-task/test.tgz'
+# '.*/newstest2016-fren-ref.en.sgm' '.*/newstest2016-fren-src.fr.sgm'
 # )
 ###############################################################################
 
@@ -90,8 +90,9 @@ for ((i=0;i<${#TRAIN_DATA[@]};i+=3)); do
       f_base=${f%.*}
       f_ext=${f##*.}
       if [ $f_ext == "gz" ]; then
-        tar -xvzf $f -C ${data_dir}/
+        gunzip $f
         l=${f_base##*.}
+        f_base=${f_base%.*}
       else
         l=${f_ext}
       fi
@@ -142,11 +143,10 @@ for ((i=0;i<${#DEV_TEST_DATA[@]};i+=3)); do
       data_out=`echo ${data_file} | cut -d '-' -f 1`  # newstest2016
       l=`echo ${data_file} | cut -d '.' -f 2`  # en
       dev_test_data="${dev_test_data}\|${data_out}"  # to make regexp
-      if [ ! -e ${data_dir}/${data_out}.$l ]; then
+      if [ ! -e ${OUTPUT_DIR_DATA}/${data_out}.$l ]; then
         ${OUTPUT_DIR}/mosesdecoder/scripts/ems/support/input-from-sgm.perl \
-          < $f > ${data_dir}/${data_out}.$l
+          < $f > ${OUTPUT_DIR_DATA}/${data_out}.$l
       fi
-      cp ${data_dir}/${data_out}.$l ${OUTPUT_DIR_DATA}
     done
   done
 done
