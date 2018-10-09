@@ -16,7 +16,7 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 from paddle.fluid.regularizer import L2Decay
-from config import *
+from config import cfg
 
 
 def conv_bn_layer(input,
@@ -150,13 +150,13 @@ def add_ResNet50_conv4_body(body_input):
         pool_stride=2,
         pool_padding=1)
     res2 = layer_warp(block_func, pool1, 64, stages[0], 1, name="res2")
-    if TrainConfig.freeze_at == 2:
+    if cfg.TRAIN.freeze_at == 2:
         res2.stop_gradient = True
     res3 = layer_warp(block_func, res2, 128, stages[1], 2, name="res3")
-    if TrainConfig.freeze_at == 3:
+    if cfg.TRAIN.freeze_at == 3:
         res3.stop_gradient = True
     res4 = layer_warp(block_func, res3, 256, stages[2], 2, name="res4")
-    if TrainConfig.freeze_at == 4:
+    if cfg.TRAIN.freeze_at == 4:
         res4.stop_gradient = True
     return res4
 

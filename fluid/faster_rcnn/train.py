@@ -28,14 +28,14 @@ import reader
 import models.model_builder as model_builder
 import models.resnet as resnet
 from learning_rate import exponential_with_warmup_decay
-from config import *
+from config import cfg
 
 
-def train(args):
-    learning_rate = SolverConfig.learning_rate
-    image_shape = [3, TrainConfig.max_size, TrainConfig.max_size]
+def train():
+    learning_rate = cfg.learning_rate
+    image_shape = [3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
 
-    if args.debug:
+    if cfg.debug:
         fluid.default_startup_program().random_seed = 1000
         fluid.default_main_program().random_seed = 1000
         import random
@@ -44,12 +44,12 @@ def train(args):
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
-    total_batch_size = devices_num * TrainConfig.im_per_batch
+    total_batch_size = devices_num * cfg.TRAIN.im_per_batch
 
     model = model_builder.FasterRCNN(
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
-        use_pyreader=EnvConfig.use_pyreader,
+        use_pyreader=cfg.use_pyreader,
         use_random=True)
     model.build_model(image_shape)
     loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
@@ -59,8 +59,8 @@ def train(args):
     rpn_reg_loss.persistable = True
     loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
 
-    boundaries = SolverConfig.lr_steps
-    gamma = SolverConfig.lr_gamma
+    boundaries = cfg.lr_steps
+    gamma = cfg.lr_gamma
     values = [learning_rate, learning_rate * gamma, \
       learning_rate * gamma * gamma]
 
@@ -69,45 +69,43 @@ def train(args):
             learning_rate=learning_rate,
             boundaries=boundaries,
             values=values,
-            warmup_iter=SolverConfig.warm_up_iter,
-            warmup_factor=SolverConfig.warm_up_factor),
-        regularization=fluid.regularizer.L2Decay(SolverConfig.weight_decay),
-        momentum=SolverConfig.momentum)
+            warmup_iter=cfg.warm_up_iter,
+            warmup_factor=cfg.warm_up_factor),
+        regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
+        momentum=cfg.momentum)
     optimizer.minimize(loss)
 
     fluid.memory_optimize(fluid.default_main_program())
 
-    place = fluid.CUDAPlace(0) if EnvConfig.use_gpu else fluid.CPUPlace()
+    place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    if args.pretrained_model:
+    if cfg.pretrained_model:
 
         def if_exist(var):
-            return os.path.exists(os.path.join(args.pretrained_model, var.name))
+            return os.path.exists(os.path.join(cfg.pretrained_model, var.name))
 
-        fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
+        fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
 
-    if EnvConfig.parallel:
+    if cfg.parallel:
         train_exe = fluid.ParallelExecutor(
-            use_cuda=bool(EnvConfig.use_gpu), loss_name=loss.name)
+            use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
 
-    if EnvConfig.use_pyreader:
+    if cfg.use_pyreader:
         train_reader = reader.train(
-            args,
-            batch_size=TrainConfig.im_per_batch,
+            batch_size=cfg.TRAIN.im_per_batch,
             total_batch_size=total_batch_size,
-            padding_total=TrainConfig.padding_minibatch,
+            padding_total=cfg.TRAIN.padding_minibatch,
             shuffle=True)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
     else:
-        train_reader = reader.train(
-            args, batch_size=total_batch_size, shuffle=True)
+        train_reader = reader.train(batch_size=total_batch_size, shuffle=True)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     def save_model(postfix):
-        model_path = os.path.join(args.model_save_dir, postfix)
+        model_path = os.path.join(cfg.model_save_dir, postfix)
         if os.path.isdir(model_path):
             shutil.rmtree(model_path)
         fluid.io.save_persistables(exe, model_path)
@@ -116,12 +114,12 @@ def train(args):
 
     def train_loop_pyreader():
         py_reader.start()
-        smoothed_loss = SmoothedValue(args.log_window)
+        smoothed_loss = SmoothedValue(cfg.log_window)
         try:
             start_time = time.time()
             prev_start_time = start_time
             every_pass_loss = []
-            for iter_id in range(SolverConfig.max_iter):
+            for iter_id in range(cfg.max_iter):
                 prev_start_time = start_time
                 start_time = time.time()
                 losses = train_exe.run(fetch_list=[v.name for v in fetch_list])
@@ -134,7 +132,7 @@ def train(args):
                     smoothed_loss.get_median_value(
                     ), start_time - prev_start_time))
                 sys.stdout.flush()
-                if (iter_id + 1) % TrainConfig.snapshot_iter == 0:
+                if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
                     save_model("model_iter{}".format(iter_id))
         except fluid.core.EOFException:
             py_reader.reset()
@@ -145,7 +143,7 @@ def train(args):
         prev_start_time = start_time
         start = start_time
         every_pass_loss = []
-        smoothed_loss = SmoothedValue(args.log_window)
+        smoothed_loss = SmoothedValue(cfg.log_window)
         for iter_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
@@ -160,13 +158,13 @@ def train(args):
                 iter_id, lr[0],
                 smoothed_loss.get_median_value(), start_time - prev_start_time))
             sys.stdout.flush()
-            if (iter_id + 1) % TrainConfig.snapshot_iter == 0:
+            if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
                 save_model("model_iter{}".format(iter_id))
-            if (iter_id + 1) == SolverConfig.max_iter:
+            if (iter_id + 1) == cfg.max_iter:
                 break
         return np.mean(every_pass_loss)
 
-    if args.use_pyreader:
+    if cfg.use_pyreader:
         train_loop_pyreader()
     else:
         train_loop()
@@ -176,5 +174,4 @@ def train(args):
 if __name__ == '__main__':
     args = parse_args()
     print_arguments(args)
-    data_args = reader.Settings(args)
-    train(data_args)
+    train()

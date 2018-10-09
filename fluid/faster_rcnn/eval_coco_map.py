@@ -29,21 +29,21 @@ import models.resnet as resnet
 import json
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
-from config import *
+from config import cfg
 
 
-def eval(args):
-    if '2014' in args.dataset:
+def eval():
+    if '2014' in cfg.dataset:
         test_list = 'annotations/instances_val2014.json'
-    elif '2017' in args.dataset:
+    elif '2017' in cfg.dataset:
         test_list = 'annotations/instances_val2017.json'
 
-    image_shape = [3, InferConfig.max_size, InferConfig.max_size]
-    class_nums = EnvConfig.class_num
+    image_shape = [3, cfg.TEST.max_size, cfg.TEST.max_size]
+    class_nums = cfg.class_num
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
-    total_batch_size = devices_num * TrainConfig.im_per_batch
-    cocoGt = COCO(os.path.join(args.data_dir, test_list))
+    total_batch_size = devices_num * cfg.TRAIN.im_per_batch
+    cocoGt = COCO(os.path.join(cfg.data_dir, test_list))
     numId_to_catId_map = {i + 1: v for i, v in enumerate(cocoGt.getCatIds())}
     category_ids = cocoGt.getCatIds()
     label_list = {
@@ -59,15 +59,15 @@ def eval(args):
         is_train=False)
     model.build_model(image_shape)
     rpn_rois, confs, locs = model.eval_out()
-    place = fluid.CUDAPlace(0) if EnvConfig.use_gpu else fluid.CPUPlace()
+    place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     # yapf: disable
-    if args.pretrained_model:
+    if cfg.pretrained_model:
         def if_exist(var):
-            return os.path.exists(os.path.join(args.pretrained_model, var.name))
-        fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
+            return os.path.exists(os.path.join(cfg.pretrained_model, var.name))
+        fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
     # yapf: enable
-    test_reader = reader.test(args, total_batch_size)
+    test_reader = reader.test(total_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     dts_res = []
@@ -101,6 +101,4 @@ def eval(args):
 if __name__ == '__main__':
     args = parse_args()
     print_arguments(args)
-
-    data_args = reader.Settings(args)
-    eval(data_args)
+    eval()

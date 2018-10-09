@@ -110,10 +110,10 @@ class FasterRCNN(object):
                 name="conv_rpn_b", learning_rate=2., regularizer=L2Decay(0.)))
         self.anchor, self.var = fluid.layers.anchor_generator(
             input=rpn_conv,
-            anchor_sizes=ModelConfig.anchor_sizes,
-            aspect_ratios=ModelConfig.aspect_ratio,
-            variance=ModelConfig.variances,
-            stride=ModelConfig.rpn_stride)
+            anchor_sizes=cfg.anchor_sizes,
+            aspect_ratios=cfg.aspect_ratio,
+            variance=cfg.variances,
+            stride=cfg.rpn_stride)
         num_anchor = self.anchor.shape[2]
         # Proposal classification scores
         self.rpn_cls_score = fluid.layers.conv2d(
@@ -151,7 +151,7 @@ class FasterRCNN(object):
         rpn_cls_score_prob = fluid.layers.sigmoid(
             self.rpn_cls_score, name='rpn_cls_score_prob')
 
-        param_obj = TrainConfig if self.is_train else InferConfig
+        param_obj = cfg.TRAIN if self.is_train else cfg.TEST
         pre_nms_top_n = param_obj.rpn_pre_nms_top_n
         post_nms_top_n = param_obj.rpn_post_nms_top_n
         nms_thresh = param_obj.rpn_nms_thresh
@@ -176,13 +176,13 @@ class FasterRCNN(object):
                 is_crowd=self.is_crowd,
                 gt_boxes=self.gt_box,
                 im_info=self.im_info,
-                batch_size_per_im=TrainConfig.batch_size_per_im,
-                fg_fraction=TrainConfig.fg_fractrion,
-                fg_thresh=TrainConfig.fg_thresh,
-                bg_thresh_hi=TrainConfig.bg_thresh_hi,
-                bg_thresh_lo=TrainConfig.bg_thresh_lo,
-                bbox_reg_weights=ModelConfig.bbox_reg_weights,
-                class_nums=EnvConfig.class_num,
+                batch_size_per_im=cfg.TRAIN.batch_size_per_im,
+                fg_fraction=cfg.TRAIN.fg_fractrion,
+                fg_thresh=cfg.TRAIN.fg_thresh,
+                bg_thresh_hi=cfg.TRAIN.bg_thresh_hi,
+                bg_thresh_lo=cfg.TRAIN.bg_thresh_lo,
+                bbox_reg_weights=cfg.bbox_reg_weights,
+                class_nums=cfg.class_num,
                 use_random=self.use_random)
 
             self.rois = outs[0]
@@ -204,7 +204,7 @@ class FasterRCNN(object):
             spatial_scale=0.0625)
         rcnn_out = self.add_roi_box_head_func(pool)
         self.cls_score = fluid.layers.fc(input=rcnn_out,
-                                         size=EnvConfig.class_num,
+                                         size=cfg.class_num,
                                          act=None,
                                          name='cls_score',
                                          param_attr=ParamAttr(
@@ -216,7 +216,7 @@ class FasterRCNN(object):
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
         self.bbox_pred = fluid.layers.fc(input=rcnn_out,
-                                         size=4 * EnvConfig.class_num,
+                                         size=4 * cfg.class_num,
                                          act=None,
                                          name='bbox_pred',
                                          param_attr=ParamAttr(
@@ -269,11 +269,11 @@ class FasterRCNN(object):
                 gt_boxes=self.gt_box,
                 is_crowd=self.is_crowd,
                 im_info=self.im_info,
-                rpn_batch_size_per_im=TrainConfig.rpn_batch_size_per_im,
-                rpn_straddle_thresh=TrainConfig.rpn_straddle_thresh,
-                rpn_fg_fraction=TrainConfig.rpn_fg_fraction,
-                rpn_positive_overlap=TrainConfig.rpn_positive_overlap,
-                rpn_negative_overlap=TrainConfig.rpn_negative_overlap,
+                rpn_batch_size_per_im=cfg.TRAIN.rpn_batch_size_per_im,
+                rpn_straddle_thresh=cfg.TRAIN.rpn_straddle_thresh,
+                rpn_fg_fraction=cfg.TRAIN.rpn_fg_fraction,
+                rpn_positive_overlap=cfg.TRAIN.rpn_positive_overlap,
+                rpn_negative_overlap=cfg.TRAIN.rpn_negative_overlap,
                 use_random=self.use_random)
         score_tgt = fluid.layers.cast(x=score_tgt, dtype='float32')
         rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(

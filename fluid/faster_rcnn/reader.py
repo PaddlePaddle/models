@@ -26,50 +26,42 @@ from collections import deque
 
 from roidbs import JsonDataset
 import data_utils
-from config import *
+from config import cfg
 
 
-class Settings(object):
-    def __init__(self, args=None):
-        for arg, value in sorted(six.iteritems(vars(args))):
-            setattr(self, arg, value)
-
-        if 'coco2014' in args.dataset:
-            self.train_file_list = 'annotations/instances_train2014.json'
-            self.train_data_dir = 'train2014'
-            self.val_file_list = 'annotations/instances_val2014.json'
-            self.val_data_dir = 'val2014'
-        elif 'coco2017' in args.dataset:
-            self.train_file_list = 'annotations/instances_train2017.json'
-            self.train_data_dir = 'train2017'
-            self.val_file_list = 'annotations/instances_val2017.json'
-            self.val_data_dir = 'val2017'
-        else:
-            raise NotImplementedError('Dataset {} not supported'.format(
-                self.dataset))
-        self.mean_value = np.array(EnvConfig.pixel_means)[
-            np.newaxis, np.newaxis, :].astype('float32')
-
-
-def coco(args,
-         mode,
+def coco(mode,
          batch_size=None,
          total_batch_size=None,
          padding_total=False,
          shuffle=False):
+    if 'coco2014' in cfg.dataset:
+        cfg.train_file_list = 'annotations/instances_train2014.json'
+        cfg.train_data_dir = 'train2014'
+        cfg.val_file_list = 'annotations/instances_val2014.json'
+        cfg.val_data_dir = 'val2014'
+    elif 'coco2017' in cfg.dataset:
+        cfg.train_file_list = 'annotations/instances_train2017.json'
+        cfg.train_data_dir = 'train2017'
+        cfg.val_file_list = 'annotations/instances_val2017.json'
+        cfg.val_data_dir = 'val2017'
+    else:
+        raise NotImplementedError('Dataset {} not supported'.format(
+            cfg.dataset))
+    cfg.mean_value = np.array(cfg.pixel_means)[np.newaxis,
+                                               np.newaxis, :].astype('float32')
     total_batch_size = total_batch_size if total_batch_size else batch_size
     if mode != 'infer':
         assert total_batch_size % batch_size == 0
     if mode == 'train':
-        args.train_file_list = os.path.join(args.data_dir, args.train_file_list)
-        args.train_data_dir = os.path.join(args.data_dir, args.train_data_dir)
+        cfg.train_file_list = os.path.join(cfg.data_dir, cfg.train_file_list)
+        cfg.train_data_dir = os.path.join(cfg.data_dir, cfg.train_data_dir)
     elif mode == 'test' or mode == 'infer':
-        args.val_file_list = os.path.join(args.data_dir, args.val_file_list)
-        args.val_data_dir = os.path.join(args.data_dir, args.val_data_dir)
-    json_dataset = JsonDataset(args, train=(mode == 'train'))
+        cfg.val_file_list = os.path.join(cfg.data_dir, cfg.val_file_list)
+        cfg.val_data_dir = os.path.join(cfg.data_dir, cfg.val_data_dir)
+    json_dataset = JsonDataset(train=(mode == 'train'))
     roidbs = json_dataset.get_roidb()
 
-    print("{} on {} with {} roidbs".format(mode, args.dataset, len(roidbs)))
+    print("{} on {} with {} roidbs".format(mode, cfg.dataset, len(roidbs)))
 
     def roidb_reader(roidb, mode):
         im, im_scales = data_utils.get_image_blob(roidb, mode)
@@ -145,7 +137,7 @@ def coco(args,
 
         else:
             for roidb in roidbs:
-                if args.image_name not in roidb['image']:
+                if cfg.image_name not in roidb['image']:
                     continue
                 im, im_info, im_id = roidb_reader(roidb, mode)
                 batch_out = [(im, im_info, im_id)]
@@ -154,23 +146,14 @@ def coco(args,
     return reader
 
 
-def train(args,
-          batch_size,
-          total_batch_size=None,
-          padding_total=False,
-          shuffle=True):
+def train(batch_size, total_batch_size=None, padding_total=False, shuffle=True):
     return coco(
-        args,
-        'train',
-        batch_size,
-        total_batch_size,
-        padding_total,
-        shuffle=shuffle)
+        'train', batch_size, total_batch_size, padding_total, shuffle=shuffle)
 
 
-def test(args, batch_size, total_batch_size=None, padding_total=False):
-    return coco(args, 'test', batch_size, total_batch_size, shuffle=False)
+def test(batch_size, total_batch_size=None, padding_total=False):
+    return coco('test', batch_size, total_batch_size, shuffle=False)
 
 
-def infer(args):
-    return coco(args, 'infer')
+def infer():
+    return coco('infer')

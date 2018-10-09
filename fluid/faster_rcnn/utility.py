@@ -130,8 +130,7 @@ def parse_args():
     args = parser.parse_args()
     file_name = sys.argv[0]
     if 'train' in file_name:
-        merge_cfg_from_list(args,\
-            [EnvConfig, SolverConfig, TrainConfig, ModelConfig])
+        merge_cfg_from_args(args, 'train')
     else:
-        merge_cfg_from_list(args, [EnvConfig, InferConfig])
+        merge_cfg_from_args(args, 'test')
     return args
