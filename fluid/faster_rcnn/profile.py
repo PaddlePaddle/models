@@ -50,8 +50,10 @@ def train():
     rpn_reg_loss.persistable = True
     loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
 
-    boundaries = [120000, 160000]
-    values = [learning_rate, learning_rate * 0.1, learning_rate * 0.01]
+    boundaries = cfg.lr_steps
+    gamma = cfg.lr_gamma
+    step_num = len(lr_steps)
+    values = [learning_rate * (gamma**i) for i in range(step_num + 1)]
 
     optimizer = fluid.optimizer.Momentum(
         learning_rate=exponential_with_warmup_decay(

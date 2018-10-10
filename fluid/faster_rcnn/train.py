@@ -61,8 +61,8 @@ def train():
 
     boundaries = cfg.lr_steps
     gamma = cfg.lr_gamma
-    values = [learning_rate, learning_rate * gamma, \
-      learning_rate * gamma * gamma]
+    step_num = len(lr_steps)
+    values = [learning_rate * (gamma**i) for i in range(step_num + 1)]
 
     optimizer = fluid.optimizer.Momentum(
         learning_rate=exponential_with_warmup_decay(
