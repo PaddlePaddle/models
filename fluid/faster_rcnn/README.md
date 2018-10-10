@@ -57,7 +57,7 @@ After data preparation, one can start the training step by:
     sh ./pretrained/download.sh
 
 Set `pretrained_model` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
-Please make sure that pretrained_model is downloaded and loaded correctly, otherwise, the loss will be NAN during training.
+Please make sure that pretrained_model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
 
 **data reader introduction:**
 
