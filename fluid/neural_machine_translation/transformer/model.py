@@ -523,8 +523,7 @@ def transformer(src_vocab_size,
             epsilon=label_smooth_eps)
 
     cost = layers.softmax_with_cross_entropy(
-        logits=layers.reshape(
-            predict, shape=[-1, trg_vocab_size]),
+        logits=predict,
         label=label,
         soft_label=True if label_smooth_eps else False)
     weighted_cost = cost * weights
@@ -637,6 +636,8 @@ def wrap_decoder(trg_vocab_size,
         preprocess_cmd,
         postprocess_cmd,
         caches=caches)
+    # Reshape to 2D tensor to use GEMM instead of BatchedGEMM
+    dec_output = layers.reshape(dec_output, shape=[-1, dec_output.shape[-1]])
     if weight_sharing:
         predict = layers.matmul(
             x=dec_output,
@@ -751,7 +752,6 @@ def fast_decode(
                 dec_inputs=(pre_ids, pre_pos, None, pre_src_attn_bias),
                 enc_output=pre_enc_output,
                 caches=pre_caches)
-            logits = layers.reshape(logits, (-1, trg_vocab_size))
 
             topk_scores, topk_indices = layers.topk(
                 input=layers.softmax(logits), k=beam_size)
