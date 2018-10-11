@@ -219,7 +219,8 @@ def main():
  
     # load pretrained_word_embedding
     if global_config.use_pretrained_word_embedding:
-        word2vec = Glove840B_300D(filepath=os.path.join(DATA_DIR, "glove.840B.300d.txt"))  
+        word2vec = Glove840B_300D(filepath=os.path.join(DATA_DIR, "glove.840B.300d.txt"),
+                                  keys=set(word_dict.keys()))
         pretrained_word_embedding = utils.get_pretrained_word_embedding(
                                         word2vec=word2vec,
                                         word2id=word_dict,
