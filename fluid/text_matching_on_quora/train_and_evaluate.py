@@ -203,7 +203,6 @@ def main():
 
     print("net_name: ", args.model_name)
     net = models.__dict__[args.model_name](global_config)
-    global_config.list_config()
 
     # get word_dict
     word_dict = utils.getDict(data_type="quora_question_pairs")
@@ -231,6 +230,12 @@ def main():
 
     # define optimizer
     optimizer = utils.getOptimizer(global_config)
+   
+    # use cuda or not
+    if not global_config.has_member('use_cuda'):
+        global_config.use_cuda = 'CUDA_VISIBLE_DEVICES' in os.environ
+
+    global_config.list_config()
 
     train_and_evaluate(
                    train_reader,
