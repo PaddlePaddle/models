@@ -32,6 +32,9 @@ class config(object):
     def list_config(self):
         print("config", self.__dict__)
 
+    def has_member(self, var_name):
+        return var_name in self.__dict__
+
 if __name__ == "__main__":
     basic = config()
     basic.list_config()
