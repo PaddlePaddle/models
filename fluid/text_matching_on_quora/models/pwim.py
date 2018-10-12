@@ -47,19 +47,6 @@ class pwimNet():
             return (h_tensor, r_h_tensor) 
 
         def pairwise_word_interaction_modeling(h_f0, h_b0, h_f1, h_b1):
-            #TODO: mask
-            h_bi0 = fluid.layers.concat(input=[h_f0, h_b0], axis=2)
-            h_bi1 = fluid.layers.concat(input=[h_f1, h_b1], axis=2)
-            h_add0 = fluid.layers.elementwise_add(h_f0, h_b0)
-            h_add1 = fluid.layers.elementwise_add(h_f1, h_b1)
-            
-            # DotProduct
-            simCube1 = fluid.layers.unsqueeze(fluid.layers.matmul(h_bi0, h_bi1, transpose_y=True), axes=[1]) # dim 0 is batch size
-            simCube2 = fluid.layers.unsqueeze(fluid.layers.matmul(h_f0, h_f1, transpose_y=True), axes=[1])
-            simCube3 = fluid.layers.unsqueeze(fluid.layers.matmul(h_b0, h_b1, transpose_y=True), axes=[1])
-            simCube4 = fluid.layers.unsqueeze(fluid.layers.matmul(h_add0, h_add1, transpose_y=True), axes=[1])
-            
-            # L2-Euclid
             def l2euclid_layer(x, y):
                 xy = fluid.layers.matmul(x, y, transpose_y=True)
                 xy = fluid.layers.scale(xy, scale=2)
@@ -75,13 +62,7 @@ class pwimNet():
                 res = fluid.layers.elementwise_add(res, sum2_y, axis=0) # => broadcast
                 res = fluid.layers.transpose(res, perm=[0, 2, 1])
                 return fluid.layers.sqrt(res)
-            '''
-            simCube5 = fluid.layers.unsqueeze(l2euclid_layer(h_bi0, h_bi1), axes=[1])
-            simCube6 = fluid.layers.unsqueeze(l2euclid_layer(h_f0, h_f1), axes=[1])
-            simCube7 = fluid.layers.unsqueeze(l2euclid_layer(h_b0, h_b1), axes=[1])
-            simCube8 = fluid.layers.unsqueeze(l2euclid_layer(h_add0, h_add1), axes=[1])
-            '''
-            # cos
+            
             def cos_layer(x, y):
                 mul = fluid.layers.matmul(x, y, transpose_y=True)
                 normalize_x = fluid.layers.square(x)
@@ -93,28 +74,53 @@ class pwimNet():
                 normalize_x = fluid.layers.unsqueeze(normalize_x, axes=[2])
                 normalize_y = fluid.layers.unsqueeze(normalize_y, axes=[2])
                 normalize = fluid.layers.matmul(normalize_x, normalize_y, transpose_y=True)
+                # element in normalize can not be zero
+                normalize = fluid.layers.elementwise_add(normalize,
+                        fluid.layers.fill_constant_batch_size_like(input=x, 
+                                                                   shape=[-1, config.seq_limit_len, config.seq_limit_len],
+                                                                   value=1e-12,
+                                                                   dtype="float32"))
                 return fluid.layers.elementwise_div(mul, normalize)
-            '''
-            simCube9 = fluid.layers.unsqueeze(cos_layer(h_bi0, h_bi1), axes=[1])
-            simCube10 = fluid.layers.unsqueeze(cos_layer(h_f0, h_f1), axes=[1])
-            simCube11 = fluid.layers.unsqueeze(cos_layer(h_b0, h_b1), axes=[1])
-            simCube12 = fluid.layers.unsqueeze(cos_layer(h_add0, h_add1), axes=[1])
-            '''
-            simCube13 = fluid.layers.fill_constant_batch_size_like(input=simCube1, 
+            
+            #TODO: mask
+            h_bi0 = fluid.layers.concat(input=[h_f0, h_b0], axis=2)
+            h_bi1 = fluid.layers.concat(input=[h_f1, h_b1], axis=2)
+            h_add0 = fluid.layers.elementwise_add(h_f0, h_b0)
+            h_add1 = fluid.layers.elementwise_add(h_f1, h_b1)
+            
+            # cos
+            simCube1 = fluid.layers.unsqueeze(cos_layer(h_bi0, h_bi1), axes=[1])
+            simCube4 = fluid.layers.unsqueeze(cos_layer(h_f0, h_f1), axes=[1])
+            simCube7 = fluid.layers.unsqueeze(cos_layer(h_b0, h_b1), axes=[1])
+            simCube10 = fluid.layers.unsqueeze(cos_layer(h_add0, h_add1), axes=[1])
+            
+            # L2-Euclid
+            simCube2 = fluid.layers.unsqueeze(l2euclid_layer(h_bi0, h_bi1), axes=[1])
+            simCube5 = fluid.layers.unsqueeze(l2euclid_layer(h_f0, h_f1), axes=[1])
+            simCube8 = fluid.layers.unsqueeze(l2euclid_layer(h_b0, h_b1), axes=[1])
+            simCube11 = fluid.layers.unsqueeze(l2euclid_layer(h_add0, h_add1), axes=[1])
+            # DotProduct
+            simCube3 = fluid.layers.unsqueeze(fluid.layers.matmul(h_bi0, h_bi1, transpose_y=True), axes=[1]) # dim 0 is batch size
+            simCube6 = fluid.layers.unsqueeze(fluid.layers.matmul(h_f0, h_f1, transpose_y=True), axes=[1])
+            simCube9 = fluid.layers.unsqueeze(fluid.layers.matmul(h_b0, h_b1, transpose_y=True), axes=[1])
+            simCube12 = fluid.layers.unsqueeze(fluid.layers.matmul(h_add0, h_add1, transpose_y=True), axes=[1])
+            
+            
+            simCube13 = fluid.layers.fill_constant_batch_size_like(input=h_f0, 
                                                                    shape=[-1, 1, config.seq_limit_len, config.seq_limit_len],
                                                                    value=1,
                                                                    dtype="float32")
             
-            '''
-            simCube = fluid.layers.concat(input=[simCube1, simCube5, simCube9, 
-                                                 simCube2, simCube6, simCube10,
-                                                 simCube3, simCube7, simCube11,
-                                                 simCube4, simCube8, simCube12,
+            
+            simCube = fluid.layers.concat(input=[simCube1, simCube2, simCube3, 
+                                                 simCube4, simCube5, simCube6,
+                                                 simCube7, simCube8, simCube9,
+                                                 simCube10, simCube11, simCube12,
                                                  simCube13], axis=1)
             '''
-            simCube = fluid.layers.concat(input=[simCube1, simCube2, simCube3, 
-                                                 simCube4, simCube13], axis=1)
-            
+            simCube = fluid.layers.concat(input=[simCube1, simCube4, simCube7, 
+                                                 simCube10, simCube13], axis=1)
+            '''
             return simCube
 
         def similarity_focus_layer(simCube):
