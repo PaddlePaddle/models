@@ -28,7 +28,9 @@ class config(object):
         self.duplicate_data = False
 
         self.metric_type = ['accuracy']
-	self.seq_limit_len = None
+	
+        # limit seq length, seq=[:seq_limit_len] if seq_limit_len is not None
+        self.seq_limit_len = None
  
     def list_config(self):
         print("config", self.__dict__)
