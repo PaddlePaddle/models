@@ -117,10 +117,6 @@ class pwimNet():
                                                  simCube7, simCube8, simCube9,
                                                  simCube10, simCube11, simCube12,
                                                  simCube13], axis=1)
-            '''
-            simCube = fluid.layers.concat(input=[simCube1, simCube4, simCube7, 
-                                                 simCube10, simCube13], axis=1)
-            '''
             return simCube
 
         def similarity_focus_layer(simCube):
@@ -253,7 +249,7 @@ class pwimNet():
         focus_cube = similarity_focus_layer(sim_cube)
         prediction = similarity_classification_with_deep_convolutional_neural_networks(focus_cube)
 
-        #TODO
+        #TODO: loss function
         loss = fluid.layers.cross_entropy(input=prediction, label=label)
         avg_cost = fluid.layers.mean(x=loss)
         acc = fluid.layers.accuracy(input=prediction, label=label)
