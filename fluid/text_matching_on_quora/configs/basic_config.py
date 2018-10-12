@@ -28,6 +28,7 @@ class config(object):
         self.duplicate_data = False
 
         self.metric_type = ['accuracy']
+	self.seq_limit_len = None
  
     def list_config(self):
         print("config", self.__dict__)

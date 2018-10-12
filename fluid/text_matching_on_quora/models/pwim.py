@@ -12,22 +12,6 @@ class pwimNet():
 
     def body(self, seq1, seq2, label, config):
         """Body function"""
-        def get_shape_copy(x, scale=1):
-            # make sure all elements not equal 0
-            temp = fluid.layers.fill_constant_batch_size_like(input=x, 
-                                                              shape=[-1],
-                                                              value=1,
-                                                              dtype="float32")
-            temp = fluid.layers.elementwise_add(x, temp, axis=0)
-            ones = fluid.layers.elementwise_div(temp, fluid.layers.assign(input=temp))
-            return fluid.layers.scale(ones, scale=scale)
-        
-        def reduce_dim(x, dim=None, scale=1):
-            if dim is None:
-                return x
-            reduce = fluid.layers.reduce_sum(x, dim=dim)
-            return get_shape_copy(reduce, scale=scale)
-
         def context_modeling(seq, name):
             seq_embedding = fluid.layers.embedding(input=seq, 
                                                    size=[config.dict_dim, config.emb_dim], 
@@ -56,8 +40,8 @@ class pwimNet():
             # LoDTensor turn to tensor by padding
             pad_value = fluid.layers.assign(input=numpy.array([0], dtype=numpy.float32))
             
-            # it can be 32 or 48 in the paper, but max_seq_len=146 in datase
-            padding_len = 148 #TODO: cut the word len
+            # it can be 32 or 48 in the paper
+            padding_len = config.seq_limit_len # defalut = 48
             h_tensor, mask_f = fluid.layers.sequence_pad(x=h, pad_value=pad_value, maxlen=padding_len)
             r_h_tensor, mask_b = fluid.layers.sequence_pad(x=r_h, pad_value=pad_value, maxlen=padding_len)
             return (h_tensor, r_h_tensor) 
@@ -74,7 +58,7 @@ class pwimNet():
             simCube2 = fluid.layers.unsqueeze(fluid.layers.matmul(h_f0, h_f1, transpose_y=True), axes=[1])
             simCube3 = fluid.layers.unsqueeze(fluid.layers.matmul(h_b0, h_b1, transpose_y=True), axes=[1])
             simCube4 = fluid.layers.unsqueeze(fluid.layers.matmul(h_add0, h_add1, transpose_y=True), axes=[1])
-
+            
             # L2-Euclid
             def l2euclid_layer(x, y):
                 xy = fluid.layers.matmul(x, y, transpose_y=True)
@@ -91,11 +75,12 @@ class pwimNet():
                 res = fluid.layers.elementwise_add(res, sum2_y, axis=0) # => broadcast
                 res = fluid.layers.transpose(res, perm=[0, 2, 1])
                 return fluid.layers.sqrt(res)
+            '''
             simCube5 = fluid.layers.unsqueeze(l2euclid_layer(h_bi0, h_bi1), axes=[1])
             simCube6 = fluid.layers.unsqueeze(l2euclid_layer(h_f0, h_f1), axes=[1])
             simCube7 = fluid.layers.unsqueeze(l2euclid_layer(h_b0, h_b1), axes=[1])
             simCube8 = fluid.layers.unsqueeze(l2euclid_layer(h_add0, h_add1), axes=[1])
-
+            '''
             # cos
             def cos_layer(x, y):
                 mul = fluid.layers.matmul(x, y, transpose_y=True)
@@ -109,19 +94,27 @@ class pwimNet():
                 normalize_y = fluid.layers.unsqueeze(normalize_y, axes=[2])
                 normalize = fluid.layers.matmul(normalize_x, normalize_y, transpose_y=True)
                 return fluid.layers.elementwise_div(mul, normalize)
+            '''
             simCube9 = fluid.layers.unsqueeze(cos_layer(h_bi0, h_bi1), axes=[1])
             simCube10 = fluid.layers.unsqueeze(cos_layer(h_f0, h_f1), axes=[1])
             simCube11 = fluid.layers.unsqueeze(cos_layer(h_b0, h_b1), axes=[1])
-            simCube12 = cos_layer(h_add0, h_add1)
-
-            simCube13 = fluid.layers.unsqueeze(get_shape_copy(simCube12), axes=[1])
-            simCube12 = fluid.layers.unsqueeze(simCube12, axes=[1])
-
+            simCube12 = fluid.layers.unsqueeze(cos_layer(h_add0, h_add1), axes=[1])
+            '''
+            simCube13 = fluid.layers.fill_constant_batch_size_like(input=simCube1, 
+                                                                   shape=[-1, 1, config.seq_limit_len, config.seq_limit_len],
+                                                                   value=1,
+                                                                   dtype="float32")
+            
+            '''
             simCube = fluid.layers.concat(input=[simCube1, simCube5, simCube9, 
                                                  simCube2, simCube6, simCube10,
                                                  simCube3, simCube7, simCube11,
                                                  simCube4, simCube8, simCube12,
                                                  simCube13], axis=1)
+            '''
+            simCube = fluid.layers.concat(input=[simCube1, simCube2, simCube3, 
+                                                 simCube4, simCube13], axis=1)
+            
             return simCube
 
         def similarity_focus_layer(simCube):
@@ -241,11 +234,11 @@ class pwimNet():
                                 pool_size=3,
                                 pool_type='max',
                                 pool_stride=1,
-                                pool_padding=1)
+                                pool_padding=1) # if no padding, it can not work
 
             fc1 = fluid.layers.fc(input=t5, size=128, act='relu')
-            fc2 = fluid.layers.fc(input=fc1, size=config.class_dim, act='relu')
-            
+            fc2 = fluid.layers.fc(input=fc1, size=config.class_dim, act='softmax') #logsoftmax
+            #fc2 = fluid.layers.log(fc2) 
             return fc2
 
         h_f1, h_b1 = context_modeling(seq1, 'seq1')

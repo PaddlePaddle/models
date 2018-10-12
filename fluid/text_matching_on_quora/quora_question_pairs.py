@@ -42,13 +42,19 @@ TOKENIZE_METHOD='space'
 COLUMN_COUNT = 4
 
 
-def tokenize(s):
+def tokenize(s, seq_limit_len=None):
     s = s.decode('utf-8')
     if TOKENIZE_METHOD == "nltk":
+        if seq_limit_len is not None:
+            return nltk.tokenize.word_tokenize(s)[:seq_limit_len]
         return nltk.tokenize.word_tokenize(s)
     elif TOKENIZE_METHOD == "punctuation":
+        if seq_limit_len is not None:
+            return s.translate({ord(char): None for char in string.punctuation}).lower().split()[:seq_limit_len]
         return s.translate({ord(char): None for char in string.punctuation}).lower().split()
     elif TOKENIZE_METHOD == "space":
+        if seq_limit_len is not None:
+            return s.split()[:seq_limit_len]
         return s.split()
     else:
         raise RuntimeError("Invalid tokenize method")
@@ -70,7 +76,7 @@ def maybe_open(file_name):
     return open(file_name, 'r')
 
 
-def tokenized_question_pairs(file_name):
+def tokenized_question_pairs(file_name, seq_limit_len=None):
     """
     """
     with maybe_open(file_name) as f:
@@ -82,8 +88,8 @@ def tokenized_question_pairs(file_name):
                 # formatting error
                 continue
             (label, question1, question2, id) = info
-            question1 = tokenize(question1)
-            question2 = tokenize(question2)
+            question1 = tokenize(question1, seq_limit_len)
+            question2 = tokenize(question2, seq_limit_len)
             yield question1, question2, int(label)
 
 
@@ -122,11 +128,11 @@ def build_dict(file_name, cutoff):
     return word_idx
 
 
-def reader_creator(file_name, word_idx):
+def reader_creator(file_name, word_idx, seq_limit_len=None):
     UNK_ID = word_idx['<unk>']
 
     def reader():
-        for (q1, q2, label) in tokenized_question_pairs(file_name):
+        for (q1, q2, label) in tokenized_question_pairs(file_name, seq_limit_len):
             q1_ids = [word_idx.get(w, UNK_ID) for w in q1]
             q2_ids = [word_idx.get(w, UNK_ID) for w in q2]
             if q1_ids != [] and q2_ids != []: # [] is not allowed in fluid
@@ -136,7 +142,7 @@ def reader_creator(file_name, word_idx):
     return reader
 
 
-def train(word_idx):
+def train(word_idx, seq_limit_len=None):
     """
     Quora training set creator.
 
@@ -148,10 +154,10 @@ def train(word_idx):
     :return: Training reader creator
     :rtype: callable
     """   
-    return reader_creator(QUORA_TRAIN_FILE_NAME, word_idx)
+    return reader_creator(QUORA_TRAIN_FILE_NAME, word_idx, seq_limit_len)
 
 
-def dev(word_idx):
+def dev(word_idx, seq_limit_len=None):
     """
     Quora develop set creator.
 
@@ -164,9 +170,9 @@ def dev(word_idx):
     :rtype: callable
 
     """
-    return reader_creator(QUORA_DEV_FILE_NAME, word_idx)
+    return reader_creator(QUORA_DEV_FILE_NAME, word_idx, seq_limit_len)
 
-def test(word_idx):
+def test(word_idx, seq_limit_len=None):
     """
     Quora test set creator.
 
@@ -178,7 +184,7 @@ def test(word_idx):
     :return: Test reader creator
     :rtype: callable
     """
-    return reader_creator(QUORA_TEST_FILE_NAME, word_idx)
+    return reader_creator(QUORA_TEST_FILE_NAME, word_idx, seq_limit_len)
 
 
 def word_dict():
