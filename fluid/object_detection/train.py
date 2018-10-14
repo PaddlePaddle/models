@@ -152,6 +152,7 @@ def train(args,
     # DetectionMAP creates _generated_var_0, which happen to have the same
     # name as a totally different var in train_program. startup program
     # will init the _generated_var_0 which doesn't match the train_program.
+    # This bug is detected after a loophole in framework is fixed.
     train_py_reader, loss = build_program(
         main_prog=train_prog,
         startup_prog=startup_prog,
