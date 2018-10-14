@@ -147,6 +147,11 @@ def train(args,
         train_prog.random_seed = 111
         test_prog.random_seed = 111
 
+    # FIXME(paddle-dev): The same startup program is used in both build_program
+    # with different name guard. When building test_program,
+    # DetectionMAP creates _generated_var_0, which happen to have the same
+    # name as a totally different var in train_program. startup program
+    # will init the _generated_var_0 which doesn't match the train_program.
     train_py_reader, loss = build_program(
         main_prog=train_prog,
         startup_prog=startup_prog,
