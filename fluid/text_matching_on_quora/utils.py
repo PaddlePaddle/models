@@ -146,7 +146,8 @@ def prepare_data(data_type,
                  batch_size,
                  buf_size=50000,
                  duplicate_data=False,
-                 use_pad=False):
+                 use_pad=False,
+                 seq_limit_len=None):
     """
     prepare data
     """
@@ -170,9 +171,9 @@ def prepare_data(data_type,
                 reader = pad(reader, PAD_ID=PAD_ID)
             return reader
         
-        train_reader = prepare_reader(quora_question_pairs.train(word_dict))
-        dev_reader = prepare_reader(quora_question_pairs.dev(word_dict))
-        test_reader = prepare_reader(quora_question_pairs.test(word_dict))
+        train_reader = prepare_reader(quora_question_pairs.train(word_dict, seq_limit_len))
+        dev_reader = prepare_reader(quora_question_pairs.dev(word_dict, seq_limit_len))
+        test_reader = prepare_reader(quora_question_pairs.test(word_dict, seq_limit_len))
 
     else:
         raise RuntimeError("no such dataset")

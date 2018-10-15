@@ -214,7 +214,8 @@ def main():
          batch_size = global_config.batch_size,
          buf_size=800000,
          duplicate_data=global_config.duplicate_data,
-         use_pad=(not global_config.use_lod_tensor))
+         use_pad=(not global_config.use_lod_tensor),
+	 seq_limit_len=global_config.seq_limit_len)
  
     # load pretrained_word_embedding
     if global_config.use_pretrained_word_embedding:
