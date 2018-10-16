@@ -23,7 +23,9 @@ The kaggle competition has inspired lots of effective work. However, most of the
 
 Based on the Quora Question Pair Dataset, we will implement some classic models in the area of the NLU(Neraul Lanuage Understanding). The prediction results will be evaluated by accuracy on the test.tsv, like [Wang et al.](https://arxiv.org/abs/1702.03814).
 
-## Environment Preparation: Install fluid release 1.0
+## Environment Preparation
+
+### Install fluid release 1.0
 
 You can follow the fluid's [official document](http://www.paddlepaddle.org/documentation/docs/en/1.0/build_and_install/pip_install_en.html) to install the fluid. 
 
@@ -54,6 +56,12 @@ python -c "import paddle"
 ```
 
 Fluid is installed successfully if no error message is prompted. If you get any error, feel free to open issues under the [PaddlePaddle repository](https://github.com/PaddlePaddle/Paddle/issues). 
+
+### Install nltk module
+
+```shell
+pip install nltk
+```
 
 ## Prepare Data
 
