@@ -36,6 +36,7 @@ import matplotlib
 matplotlib.use('Agg')
 from pycocotools.coco import COCO
 import box_utils
+from config import *
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,6 @@ class JsonDataset(object):
             end_time = time.time()
             print('_add_gt_annotations took {:.3f}s'.format(end_time -
                                                             start_time))
-
             print('Appending horizontally-flipped training examples...')
             self._extend_with_flipped_entries(roidb)
         print('Loaded dataset: {:s}'.format(self.name))
@@ -129,7 +129,7 @@ class JsonDataset(object):
         width = entry['width']
         height = entry['height']
         for obj in objs:
-            if obj['area'] < -1:  #cfg.TRAIN.GT_MIN_AREA:
+            if obj['area'] < TrainConfig.gt_min_area:
                 continue
             if 'ignore' in obj and obj['ignore'] == 1:
                 continue
