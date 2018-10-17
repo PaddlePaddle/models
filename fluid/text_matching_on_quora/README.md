@@ -1,5 +1,21 @@
 # Text matching on Quora qestion-answer pair dataset
 
+## contents
+
+* [Introduction](#introduction)
+  * [a brief review of the Quora Question Pair (QQP) Task](#a-brief-review-of-the-quora-question-pair-qqp-task)
+  * [Our Work](#our-work)
+* [Environment Preparation](#environment-preparation)
+  * [Install Fluid release 1.0](#install-fluid-release-10)
+    * [cpu version](#cpu-version)
+    * [gpu version](#gpu-version)
+    * [Have I installed Fluid successfully?](#have-i-installed-fluid-successfully)
+* [Prepare Data](#prepare-data)
+* [Train and evaluate](#train-and-evaluate)
+* [Models](#models)
+* [Results](#results)
+
+
 ## Introduction
 
 ### a brief review of the Quora Question Pair (QQP) Task
@@ -25,19 +41,19 @@ Based on the Quora Question Pair Dataset, we will implement some classic models 
 
 ## Environment Preparation
 
-### Install release 1.0
+### Install Fluid release 1.0
 
 You can follow the fluid's [official document](http://www.paddlepaddle.org/documentation/docs/en/1.0/build_and_install/pip_install_en.html) to install the fluid. 
 
 [Attention] You are supposed to install python and pip before installing fluid
 
-### cpu version
+#### cpu version
 
 ```
 pip install paddlepaddle==1.0.1
 ```
 
-### gpu version
+#### gpu version
 
 Assume you have downloaded cuda(cuda9.0) and cudnn(cudnn7) lib, here is an expample:
 
@@ -56,12 +72,6 @@ python -c "import paddle"
 ```
 
 Fluid is installed successfully if no error message is prompted. If you get any error, feel free to open issues under the [PaddlePaddle repository](https://github.com/PaddlePaddle/Paddle/issues). 
-
-### Install nltk module
-
-```shell
-pip install nltk
-```
 
 ## Prepare Data
 
@@ -90,7 +100,7 @@ $HOME/.cache/paddle/dataset
 
 ## Train and evaluate
 
-We provide multiple models and configs, details are shown in models and configs directory. For quick start, you can run the cdssmNet with cdssm_base config:
+We provide multiple models and configs, details are shown in `models` and `configs` directory. For quick start, you can run the cdssmNet with cdssm_base config:
 
 ```shell
 fluid train_and_evaluate.py  \
@@ -110,13 +120,9 @@ All configs used in our experiments:
 |InferSentNet|infer_sent_v2|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v1
 |SSENet|sse_base|python train_and_evaluate.py  --model_name=SSENet  --config=sse_base
 
-If you want to know more about the configs, please go to the `configs` directory.
+## Models
 
-## Results
-
-We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semantic Models) is a convolution-based model, Infer Sent Model and SSE(Shortcut-Stacked Encoders) are RNN-based models， and DecAtt(Decompose Attention) model is a attention-based model. In our experiment, we found that LSTM-based models outperform convolution-based model in test set accuracy. DecAtt model has fewer parameters than LSTM-based models, but it is very sensitive to the hyper-parameters when training.
-
-### Models
+We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semantic Models) is a convolution-based model, Infer Sent Model and SSE(Shortcut-Stacked Encoders) are RNN-based models， and DecAtt(Decompose Attention) model is an attention-based model. 
 
 |Model|features|Context Encoder|Match Layer|Classification Layer
 |:----:|:----:|:----:|:----:|:----:|
@@ -125,7 +131,7 @@ We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semanti
 |InferSent|word|1 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
 |SSE|word|3 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
 
-#### CDSSM
+### CDSSM
 
 ```
 @inproceedings{shen2014learning,
@@ -138,7 +144,7 @@ We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semanti
 }
 ```
 
-#### InferSent
+### InferSent
 
 ```
 @article{conneau2017supervised,
@@ -149,7 +155,7 @@ We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semanti
 }
 ```
 
-#### SSE
+### SSE
 
 ```
 @article{nie2017shortcut,
@@ -160,7 +166,7 @@ We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semanti
 }
 ```
 
-#### DecAtt
+### DecAtt
 
 ```
 @article{tomar2017neural,
@@ -171,12 +177,21 @@ We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semanti
 }
 ```
 
-### Test Accuracy
+## Results
+
+In our experiment, we found that LSTM-based models outperform convolution-based model in test set accuracy. DecAtt model has fewer parameters than LSTM-based models, but it is very sensitive to the hyper-parameters when training.
 
 |Model|Config|dev accuracy| test accuracy
 |:----:|:----:|:----:|:----:|
 |cdssmNet|cdssm_base|83.56%|82.83%|
 |DecAttNet|decatt_glove|86.31%|86.22%|
-|InferSentNet|infer_sent_v1|86.91%|86.65%|
+|InferSentNet|infer_sent_v1|87.15%|86.62%|
 |InferSentNet|infer_sent_v2|88.55%|88.43%|
-|SSENet|sse_base|||
+|SSENet|sse_base|88.35%|88.25%|
+ 
+ 
+<p align="center"> 
+
+ <img src="imgs/models_test_acc.png" width = "500" alt="test_acc"/> 
+
+</p>
