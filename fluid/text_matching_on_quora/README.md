@@ -25,7 +25,7 @@ Based on the Quora Question Pair Dataset, we will implement some classic models 
 
 ## Environment Preparation
 
-### Install fluid release 1.0
+### Install release 1.0
 
 You can follow the fluid's [official document](http://www.paddlepaddle.org/documentation/docs/en/1.0/build_and_install/pip_install_en.html) to install the fluid. 
 
@@ -100,6 +100,18 @@ fluid train_and_evaluate.py  \
 
 You are supposed to get log like cdssm_base.log
 
+All configs used in our experiments:
+
+|Model|Config|command
+|:----:|:----:|:----:|
+|cdssmNet|cdssm_base|python train_and_evaluate.py  --model_name=cdssmNet  --config=cdssm_base
+|DecAttNet|decatt_glove|python train_and_evaluate.py --model_name=DecAttNet  --config=decatt_glove
+|InferSentNet|infer_sent_v1|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v1
+|InferSentNet|infer_sent_v2|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v1
+|SSENet|sse_base|python train_and_evaluate.py  --model_name=SSENet  --config=sse_base
+
+If you want to know more about the configs, please go to the `configs` directory.
+
 ## Results
 
 We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semantic Models) is a convolution-based model, Infer Sent Model and SSE(Shortcut-Stacked Encoders) are RNN-based models， and DecAtt(Decompose Attention) model is a attention-based model. In our experiment, we found that LSTM-based models outperform convolution-based model in test set accuracy. DecAtt model has fewer parameters than LSTM-based models, but it is very sensitive to the hyper-parameters when training.
@@ -161,10 +173,10 @@ We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semanti
 
 ### Test Accuracy
 
-|Model|dev accuracy| test accuracy
-|:----:|:----:|:----:|
-|CDSSM|83.56%|82.83%|
-|DecAtt|86.31%|86.22%|
-|InferSentV1|86.91%|86.65%|
-|InferSentV2|88.55%|88.43%|
-|SSE|||
+|Model|Config|dev accuracy| test accuracy
+|:----:|:----:|:----:|:----:|
+|cdssmNet|cdssm_base|83.56%|82.83%|
+|DecAttNet|decatt_glove|86.31%|86.22%|
+|InferSentNet|infer_sent_v1|86.91%|86.65%|
+|InferSentNet|infer_sent_v2|88.55%|88.43%|
+|SSENet|sse_base|||
