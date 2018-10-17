@@ -102,21 +102,69 @@ You are supposed to get log like cdssm_base.log
 
 ## Results
 
+We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semantic Models) is a convolution-based model, Infer Sent Model and SSE(Shortcut-Stacked Encoders) are RNN-based models， and DecAtt(Decompose Attention) model is a attention-based model. In our experiment, we found that LSTM-based models outperform convolution-based model in test set accuracy. DecAtt model has fewer parameters than LSTM-based models, but it is very sensitive to the hyper-parameters when training.
+
 ### Models
+
+|Model|features|Context Encoder|Match Layer|Classification Layer
+|:----:|:----:|:----:|:----:|:----:|
+|CDSSM|word|1 layer conv1d|concatenation|MLP
+|DecAtt|word|Attention|concatenation|MLP
+|InferSent|word|1 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
+|SSE|word|3 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
 
 #### CDSSM
 
+```
+@inproceedings{shen2014learning,
+  title={Learning semantic representations using convolutional neural networks for web search},
+  author={Shen, Yelong and He, Xiaodong and Gao, Jianfeng and Deng, Li and Mesnil, Gr{\'e}goire},
+  booktitle={Proceedings of the 23rd International Conference on World Wide Web},
+  pages={373--374},
+  year={2014},
+  organization={ACM}
+}
+```
+
 #### InferSent
+
+```
+@article{conneau2017supervised,
+  title={Supervised learning of universal sentence representations from natural language inference data},
+  author={Conneau, Alexis and Kiela, Douwe and Schwenk, Holger and Barrault, Loic and Bordes, Antoine},
+  journal={arXiv preprint arXiv:1705.02364},
+  year={2017}
+}
+```
 
 #### SSE
 
+```
+@article{nie2017shortcut,
+  title={Shortcut-stacked sentence encoders for multi-domain inference},
+  author={Nie, Yixin and Bansal, Mohit},
+  journal={arXiv preprint arXiv:1708.02312},
+  year={2017}
+}
+```
+
 #### DecAtt
+
+```
+@article{tomar2017neural,
+  title={Neural paraphrase identification of questions with noisy pretraining},
+  author={Tomar, Gaurav Singh and Duque, Thyago and T{\"a}ckstr{\"o}m, Oscar and Uszkoreit, Jakob and Das, Dipanjan},
+  journal={arXiv preprint arXiv:1704.04565},
+  year={2017}
+}
+```
 
 ### Test Accuracy
 
 |Model|dev accuracy| test accuracy
 |:----:|:----:|:----:|
-|CDSSM|||
-|InferSent|||
+|CDSSM|83.56%|82.83%|
+|DecAtt|86.31%|86.22%|
+|InferSentV1|86.91%|86.65%|
+|InferSentV2|88.55%|88.43%|
 |SSE|||
-|DecAtt|||
