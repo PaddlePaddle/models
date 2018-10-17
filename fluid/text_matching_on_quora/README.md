@@ -103,7 +103,7 @@ $HOME/.cache/paddle/dataset
 We provide multiple models and configs, details are shown in `models` and `configs` directory. For quick start, you can run the cdssmNet with cdssm_base config:
 
 ```shell
-fluid train_and_evaluate.py  \
+python train_and_evaluate.py  \
     --model_name=cdssmNet  \
     --config=cdssm_base
 ```
