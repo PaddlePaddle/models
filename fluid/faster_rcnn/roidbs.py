@@ -36,6 +36,7 @@ import matplotlib
 matplotlib.use('Agg')
 from pycocotools.coco import COCO
 import box_utils
+from config import cfg
 
 logger = logging.getLogger(__name__)
 
@@ -43,16 +44,16 @@ logger = logging.getLogger(__name__)
 class JsonDataset(object):
     """A class representing a COCO json dataset."""
 
-    def __init__(self, args, train=False):
-        print('Creating: {}'.format(args.dataset))
-        self.name = args.dataset
+    def __init__(self, train=False):
+        print('Creating: {}'.format(cfg.dataset))
+        self.name = cfg.dataset
         self.is_train = train
         if self.is_train:
-            data_dir = args.train_data_dir
-            file_list = args.train_file_list
+            data_dir = cfg.train_data_dir
+            file_list = cfg.train_file_list
         else:
-            data_dir = args.val_data_dir
-            file_list = args.val_file_list
+            data_dir = cfg.val_data_dir
+            file_list = cfg.val_file_list
         self.image_directory = data_dir
         self.COCO = COCO(file_list)
         # Set up dataset classes
@@ -90,7 +91,6 @@ class JsonDataset(object):
             end_time = time.time()
             print('_add_gt_annotations took {:.3f}s'.format(end_time -
                                                             start_time))
-
             print('Appending horizontally-flipped training examples...')
             self._extend_with_flipped_entries(roidb)
         print('Loaded dataset: {:s}'.format(self.name))
@@ -129,7 +129,7 @@ class JsonDataset(object):
         width = entry['width']
         height = entry['height']
         for obj in objs:
-            if obj['area'] < -1:  #cfg.TRAIN.GT_MIN_AREA:
+            if obj['area'] < cfg.TRAIN.gt_min_area:
                 continue
             if 'ignore' in obj and obj['ignore'] == 1:
                 continue
