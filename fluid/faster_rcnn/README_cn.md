@@ -57,6 +57,7 @@ Faster RCNN 目标检测模型
     sh ./pretrained/download.sh
 
 通过初始化`pretrained_model` 加载预训练模型。同时在参数微调时也采用该设置加载已训练模型。
+请在训练前确认预训练模型下载与加载正确，否则训练过程中损失可能会出现NAN。
 
 **安装[cocoapi](https://github.com/cocodataset/cocoapi)：**
 
