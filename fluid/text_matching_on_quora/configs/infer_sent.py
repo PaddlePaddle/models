@@ -10,7 +10,7 @@ def infer_sent_v1():
     config.lr_decay = 0.99
     config.optimizer_type = 'sgd'
     config.save_dirname = "model_dir"
-    config.use_pretrained_word_embedding = False
+    config.use_pretrained_word_embedding = True
     config.dict_dim = 40000 # approx_vocab_size
     config.class_dim = 2
 
