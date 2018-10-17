@@ -1,5 +1,21 @@
 # Text matching on Quora qestion-answer pair dataset
 
+## contents
+
+* [Introduction](#introduction)
+  * [a brief review of the Quora Question Pair (QQP) Task](#a-brief-review-of-the-quora-question-pair-qqp-task)
+  * [Our Work](#our-work)
+* [Environment Preparation](#environment-preparation)
+  * [Install Fluid release 1.0](#install-fluid-release-10)
+    * [cpu version](#cpu-version)
+    * [gpu version](#gpu-version)
+    * [Have I installed Fluid successfully?](#have-i-installed-fluid-successfully)
+* [Prepare Data](#prepare-data)
+* [Train and evaluate](#train-and-evaluate)
+* [Models](#models)
+* [Results](#results)
+
+
 ## Introduction
 
 ### a brief review of the Quora Question Pair (QQP) Task
@@ -25,19 +41,19 @@ Based on the Quora Question Pair Dataset, we will implement some classic models 
 
 ## Environment Preparation
 
-### Install fluid release 1.0
+### Install Fluid release 1.0
 
 You can follow the fluid's [official document](http://www.paddlepaddle.org/documentation/docs/en/1.0/build_and_install/pip_install_en.html) to install the fluid. 
 
 [Attention] You are supposed to install python and pip before installing fluid
 
-### cpu version
+#### cpu version
 
 ```
 pip install paddlepaddle==1.0.1
 ```
 
-### gpu version
+#### gpu version
 
 Assume you have downloaded cuda(cuda9.0) and cudnn(cudnn7) lib, here is an expample:
 
@@ -56,12 +72,6 @@ python -c "import paddle"
 ```
 
 Fluid is installed successfully if no error message is prompted. If you get any error, feel free to open issues under the [PaddlePaddle repository](https://github.com/PaddlePaddle/Paddle/issues). 
-
-### Install nltk module
-
-```shell
-pip install nltk
-```
 
 ## Prepare Data
 
@@ -90,7 +100,7 @@ $HOME/.cache/paddle/dataset
 
 ## Train and evaluate
 
-We provide multiple models and configs, details are shown in models and configs directory. For quick start, you can run the cdssmNet with cdssm_base config:
+We provide multiple models and configs, details are shown in `models` and `configs` directory. For quick start, you can run the cdssmNet with cdssm_base config:
 
 ```shell
 fluid train_and_evaluate.py  \
@@ -100,23 +110,88 @@ fluid train_and_evaluate.py  \
 
 You are supposed to get log like cdssm_base.log
 
+All configs used in our experiments:
+
+|Model|Config|command
+|:----:|:----:|:----:|
+|cdssmNet|cdssm_base|python train_and_evaluate.py  --model_name=cdssmNet  --config=cdssm_base
+|DecAttNet|decatt_glove|python train_and_evaluate.py --model_name=DecAttNet  --config=decatt_glove
+|InferSentNet|infer_sent_v1|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v1
+|InferSentNet|infer_sent_v2|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v1
+|SSENet|sse_base|python train_and_evaluate.py  --model_name=SSENet  --config=sse_base
+
+## Models
+
+We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semantic Models) is a convolution-based model, Infer Sent Model and SSE(Shortcut-Stacked Encoders) are RNN-based models， and DecAtt(Decompose Attention) model is an attention-based model. 
+
+|Model|features|Context Encoder|Match Layer|Classification Layer
+|:----:|:----:|:----:|:----:|:----:|
+|CDSSM|word|1 layer conv1d|concatenation|MLP
+|DecAtt|word|Attention|concatenation|MLP
+|InferSent|word|1 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
+|SSE|word|3 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
+
+### CDSSM
+
+```
+@inproceedings{shen2014learning,
+  title={Learning semantic representations using convolutional neural networks for web search},
+  author={Shen, Yelong and He, Xiaodong and Gao, Jianfeng and Deng, Li and Mesnil, Gr{\'e}goire},
+  booktitle={Proceedings of the 23rd International Conference on World Wide Web},
+  pages={373--374},
+  year={2014},
+  organization={ACM}
+}
+```
+
+### InferSent
+
+```
+@article{conneau2017supervised,
+  title={Supervised learning of universal sentence representations from natural language inference data},
+  author={Conneau, Alexis and Kiela, Douwe and Schwenk, Holger and Barrault, Loic and Bordes, Antoine},
+  journal={arXiv preprint arXiv:1705.02364},
+  year={2017}
+}
+```
+
+### SSE
+
+```
+@article{nie2017shortcut,
+  title={Shortcut-stacked sentence encoders for multi-domain inference},
+  author={Nie, Yixin and Bansal, Mohit},
+  journal={arXiv preprint arXiv:1708.02312},
+  year={2017}
+}
+```
+
+### DecAtt
+
+```
+@article{tomar2017neural,
+  title={Neural paraphrase identification of questions with noisy pretraining},
+  author={Tomar, Gaurav Singh and Duque, Thyago and T{\"a}ckstr{\"o}m, Oscar and Uszkoreit, Jakob and Das, Dipanjan},
+  journal={arXiv preprint arXiv:1704.04565},
+  year={2017}
+}
+```
+
 ## Results
 
-### Models
+In our experiment, we found that LSTM-based models outperform convolution-based model in test set accuracy. DecAtt model has fewer parameters than LSTM-based models, but it is very sensitive to the hyper-parameters when training.
 
-#### CDSSM
+|Model|Config|dev accuracy| test accuracy
+|:----:|:----:|:----:|:----:|
+|cdssmNet|cdssm_base|83.56%|82.83%|
+|DecAttNet|decatt_glove|86.31%|86.22%|
+|InferSentNet|infer_sent_v1|87.15%|86.62%|
+|InferSentNet|infer_sent_v2|88.55%|88.43%|
+|SSENet|sse_base|88.35%|88.25%|
+ 
+ 
+<p align="center"> 
 
-#### InferSent
+ <img src="imgs/models_test_acc.png" width = "500" alt="test_acc"/> 
 
-#### SSE
-
-#### DecAtt
-
-### Test Accuracy
-
-|Model|dev accuracy| test accuracy
-|:----:|:----:|:----:|
-|CDSSM|||
-|InferSent|||
-|SSE|||
-|DecAtt|||
+</p>
