@@ -20,32 +20,30 @@
 
 ### a brief review of the Quora Question Pair (QQP) Task
 
-[Quora Pair Dataset](https://data.quora.com/First-Quora-Dataset-Release-Question-Pairs) is a dataset of 400,000 question pairs from the [Quora forum](https://www.quora.com/), where people raise questions for the others to answer. Each sample in the dataset consists of two English questions and a label represent whether the two questions are duplicate. The dataset is well annotated by human. 
+The [Quora Question Pair](https://data.quora.com/First-Quora-Dataset-Release-Question-Pairs) dataset contains 400,000 question pairs from [Quora](https://www.quora.com/), where people ask and answer questions related to specific areas. Each sample in the dataset consists of two questions (both English) and a label that represents whether the questions are duplicate. The dataset is well annotated by human. 
 
-Below are two samples of the dataset. The last clolmn indicates whether the two questions are duplicate (1) or not(0).
+Below are two samples from the dataset. The last column indicates whether the two questions are duplicate (1) or not (0).
 
 |id | qid1 | qid2| question1| question2| is_duplicate
 |:---:|:---:|:---:|:---:|:---:|:---:|
 |0 |1 |2 |What is the step by step guide to invest in share market in india? |What is the step by step guide to invest in share market? |0|
 |1 |3 |4 |What is the story of Kohinoor (Koh-i-Noor) Diamond? | What would happen if the Indian government stole the Kohinoor (Koh-i-Noor) diamond back? |0|
 
- A [kaggle competition](https://www.kaggle.com/c/quora-question-pairs#description) is held base on this dataset in 2017. The kaggler is able to reach the train_data(with label) and the test_data(without label), and is requested to make predictions on the test_data. The predictions are evaluated by the log-likelihood loss on the test_data.
+ A [kaggle competition](https://www.kaggle.com/c/quora-question-pairs#description) was held based on this dataset in 2017. The kagglers were given a training dataset (with labels), and requested to make predictions on a test dataset (without labels). The predictions were evaluated by the log-likelihood loss on the test data.
 
-The kaggle competition has inspired lots of effective work. However, most of the models are rule-based, thus are hard to transfer to new tasks. Researchers keep seeking for more general models that works well on this task and the other NLP(Natual Language Processing) tasks.
+The kaggle competition has inspired much effective work. However, most of these models are rule-based and difficult to be transferred to new tasks. Researchers are seeking for more general models that work well on this task and other natual language processing (NLP) tasks.
 
-[Wang et al.](https://arxiv.org/abs/1702.03814) proposed the BIMPM(Bilateral Multi-Perspective Matching) model based on the Quora Question Pair dataset. They splited the original dataset to [3 part](https://drive.google.com/file/d/0B0PlTAo--BnaQWlsZl9FZ3l1c28/view?usp=sharing): train.tsv(384,348 samples), dev.tsv(10,000 samples) and test.tsv(10,000 samples). The class distribution in train.tsv is unbalanced(37% positive, 63% negative). But the class distribution in dev.tsv and test.tsv is balanced(50% positive and 50% negetive). We follow this split in our experiments. 
+[Wang _et al._](https://arxiv.org/abs/1702.03814) proposed a bilateral multi-perspective matching (BIMPM) model based on the Quora Question Pair dataset. They splitted the original dataset to [3 parts](https://drive.google.com/file/d/0B0PlTAo--BnaQWlsZl9FZ3l1c28/view?usp=sharing): _train.tsv_ (384,348 samples), _dev.tsv_ (10,000 samples) and _test.tsv_ (10,000 samples). The class distribution of _train.tsv_ is unbalanced (37% positive and 63% negative), while those of _dev.tsv_ and _test.tsv_ are balanced(50% positive and 50% negetive). We used the same splitting method in our experiments. 
 
 ### Our Work
 
-Based on the Quora Question Pair Dataset, we will implement some classic models in the area of the NLU(Neraul Lanuage Understanding). The prediction results will be evaluated by accuracy on the test.tsv, like [Wang et al.](https://arxiv.org/abs/1702.03814).
+Based on the Quora Question Pair Dataset, we implemented some classic models in the area of neural language understanding (NLU). The accuracy of prediction results are evaluated on the _test.tsv_ from [Wang _et al._](https://arxiv.org/abs/1702.03814).
 
 ## Environment Preparation
 
 ### Install Fluid release 1.0
 
-You can follow the fluid's [official document](http://www.paddlepaddle.org/documentation/docs/en/1.0/build_and_install/pip_install_en.html) to install the fluid. 
-
-[Attention] You are supposed to install python and pip before installing fluid
+Please follow the [official document](http://www.paddlepaddle.org/documentation/docs/en/1.0/build_and_install/pip_install_en.html) install the Fluid deep learning framework. 
 
 #### cpu version
 
@@ -65,26 +63,25 @@ pip install paddlepaddle-gpu==1.0.1.post97
 
 ### Have I installed Fluid successfully?
 
-You can run the following script in your command line:
+Run the following script from your command line:
 
 ```shell
 python -c "import paddle"
 ```
 
-Fluid is installed successfully if no error message is prompted. If you get any error, feel free to open issues under the [PaddlePaddle repository](https://github.com/PaddlePaddle/Paddle/issues). 
+If Fluid is installed successfully you should see no error message. Feel free to open issues under the [PaddlePaddle repository](https://github.com/PaddlePaddle/Paddle/issues) for support.
 
 ## Prepare Data
 
-Please download the Quora dataset firstly from [google drive](https://drive.google.com/file/d/0B0PlTAo--BnaQWlsZl9FZ3l1c28/view?usp=sharing)
- to $HOME/.cache/paddle/dataset and unzip it.
+Please download the Quora dataset from [Google drive](https://drive.google.com/file/d/0B0PlTAo--BnaQWlsZl9FZ3l1c28/view?usp=sharing) and unzip to $HOME/.cache/paddle/dataset.
 
-Then run the data/prepare_quora_data.sh to download the pretrained word2vec embedding file: glove.840B.300d.zip:
+Then run _data/prepare_quora_data.sh_ to download the pre-trained _word2vec_ embedding file -- _glove.840B.300d.zip_:
 
 ```shell
 sh data/prepare_quora_data.sh   
 ```
 
-Finally, The dataset dir($HOME/.cache/paddle/dataset) should be like
+At this point the dataset directory ($HOME/.cache/paddle/dataset) structure should be:
 
 ```shell
 
@@ -100,7 +97,7 @@ $HOME/.cache/paddle/dataset
 
 ## Train and evaluate
 
-We provide multiple models and configs, details are shown in `models` and `configs` directory. For quick start, you can run the cdssmNet with cdssm_base config:
+We provide multiple models and configurations. Details are shown in `models` and `configs` directories. For a quick start, please run the _cdssmNet_ model with the corresponding configuration:
 
 ```shell
 python train_and_evaluate.py  \
@@ -108,9 +105,9 @@ python train_and_evaluate.py  \
     --config=cdssm_base
 ```
 
-You are supposed to get log like cdssm_base.log
+Logs will be output to the console. If everything works well, the logging information will have the same formats as the content in _cdssm_base.log_.
 
-All configs used in our experiments:
+All configurations used in our experiments are as follows:
 
 |Model|Config|command
 |:----:|:----:|:----:|
@@ -122,7 +119,7 @@ All configs used in our experiments:
 
 ## Models
 
-We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semantic Models) is a convolution-based model, Infer Sent Model and SSE(Shortcut-Stacked Encoders) are RNN-based models， and DecAtt(Decompose Attention) model is an attention-based model. 
+We implemeted 4 models for now: the convolutional deep-structured semantic model (CDSSM, CNN-based), the ___Infer Sent Model___ (RNN-based), the shortcut-stacked encoder (SSE, RNN-based), and the decomposed attention model (DecAtt, attention-based).
 
 |Model|features|Context Encoder|Match Layer|Classification Layer
 |:----:|:----:|:----:|:----:|:----:|
@@ -179,7 +176,7 @@ We have implemeted 4 models for now, CDSSM(Convolutional Deep Structured Semanti
 
 ## Results
 
-In our experiment, we found that LSTM-based models outperform convolution-based model in test set accuracy. DecAtt model has fewer parameters than LSTM-based models, but it is very sensitive to the hyper-parameters when training.
+In our experiment, we found that LSTM-based models outperformed convolution-based models. The DecAtt model has fewer parameters than LSTM-based models, but is sensitive to hyper-parameters.
 
 |Model|Config|dev accuracy| test accuracy
 |:----:|:----:|:----:|:----:|
