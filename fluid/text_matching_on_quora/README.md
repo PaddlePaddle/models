@@ -43,25 +43,9 @@ Based on the Quora Question Pair Dataset, we implemented some classic models in 
 
 ### Install Fluid release 1.0
 
-Please follow the [official document](http://www.paddlepaddle.org/documentation/docs/en/1.0/build_and_install/pip_install_en.html) install the Fluid deep learning framework. 
+Please follow the [official document in English](http://www.paddlepaddle.org/documentation/docs/en/1.0/build_and_install/pip_install_en.html) or [official document in Chinese](http://www.paddlepaddle.org/documentation/docs/zh/1.0/beginners_guide/install/Start.html) to install the Fluid deep learning framework. 
 
-#### cpu version
-
-```
-pip install paddlepaddle==1.0.1
-```
-
-#### gpu version
-
-Assume you have downloaded cuda(cuda9.0) and cudnn(cudnn7) lib, here is an expample:
-
-```shell
-
-pip install paddlepaddle-gpu==1.0.1.post97
-
-```
-
-### Have I installed Fluid successfully?
+#### Have I installed Fluid successfully?
 
 Run the following script from your command line:
 
