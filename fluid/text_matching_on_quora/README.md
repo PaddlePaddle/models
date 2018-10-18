@@ -114,12 +114,12 @@ All configurations used in our experiments are as follows:
 |cdssmNet|cdssm_base|python train_and_evaluate.py  --model_name=cdssmNet  --config=cdssm_base
 |DecAttNet|decatt_glove|python train_and_evaluate.py --model_name=DecAttNet  --config=decatt_glove
 |InferSentNet|infer_sent_v1|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v1
-|InferSentNet|infer_sent_v2|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v1
+|InferSentNet|infer_sent_v2|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v2
 |SSENet|sse_base|python train_and_evaluate.py  --model_name=SSENet  --config=sse_base
 
 ## Models
 
-We implemeted 4 models for now: the convolutional deep-structured semantic model (CDSSM, CNN-based), the ___Infer Sent Model___ (RNN-based), the shortcut-stacked encoder (SSE, RNN-based), and the decomposed attention model (DecAtt, attention-based).
+We implemeted 4 models for now: the convolutional deep-structured semantic model (CDSSM, CNN-based), the InferSent model (RNN-based), the shortcut-stacked encoder (SSE, RNN-based), and the decomposed attention model (DecAtt, attention-based).
 
 |Model|features|Context Encoder|Match Layer|Classification Layer
 |:----:|:----:|:----:|:----:|:----:|
@@ -176,8 +176,6 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
 
 ## Results
 
-In our experiment, we found that LSTM-based models outperformed convolution-based models. The DecAtt model has fewer parameters than LSTM-based models, but is sensitive to hyper-parameters.
-
 |Model|Config|dev accuracy| test accuracy
 |:----:|:----:|:----:|:----:|
 |cdssmNet|cdssm_base|83.56%|82.83%|
@@ -185,8 +183,9 @@ In our experiment, we found that LSTM-based models outperformed convolution-base
 |InferSentNet|infer_sent_v1|87.15%|86.62%|
 |InferSentNet|infer_sent_v2|88.55%|88.43%|
 |SSENet|sse_base|88.35%|88.25%|
- 
- 
+
+In our experiment, we found that LSTM-based models outperformed convolution-based models. The DecAtt model has fewer parameters than LSTM-based models, but is sensitive to hyper-parameters.
+
 <p align="center"> 
 
  <img src="imgs/models_test_acc.png" width = "500" alt="test_acc"/> 
