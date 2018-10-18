@@ -200,16 +200,16 @@ class FasterRCNN(object):
             pool = fluid.layers.roi_pool(
                 input=roi_input,
                 rois=pool_rois,
-                pooled_height=14,
-                pooled_width=14,
-                spatial_scale=0.0625)
+                pooled_height=cfg.roi_resolution,
+                pooled_width=cfg.roi_resolution,
+                spatial_scale=cfg.spatial_scale)
         elif cfg.roi_func == 'RoIAlign':
             pool = fluid.layers.roi_align(
                 input=roi_input,
                 rois=pool_rois,
-                pooled_height=14,
-                pooled_width=14,
-                spatial_scale=0.0625,
+                pooled_height=cfg.roi_resolution,
+                pooled_width=cfg.roi_resolution,
+                spatial_scale=cfg.spatial_scale,
                 sampling_ratio=cfg.sampling_ratio)
         rcnn_out = self.add_roi_box_head_func(pool)
         self.cls_score = fluid.layers.fc(input=rcnn_out,

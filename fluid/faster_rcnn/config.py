@@ -150,6 +150,12 @@ _C.roi_func = 'RoIAlign'
 # sampling ratio for roi align
 _C.sampling_ratio = 0
 
+# pooled width and pooled height 
+_C.roi_resolution = 14
+
+# spatial scale 
+_C.spatial_scale = 0.0625
+
 #
 # SOLVER options
 #
