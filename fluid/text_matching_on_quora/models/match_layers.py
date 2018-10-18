@@ -3,7 +3,6 @@ This Module provide different kinds of Match layers
 """
 
 import paddle.fluid as fluid
-import paddle.v2 as paddle
 
 
 def MultiPerspectiveMatching(vec1, vec2, perspective_num):
@@ -44,18 +43,3 @@ def ElementwiseMatching(vec1, vec2):
     return fluid.layers.concat(input=[vec1, vec2, elementwise_mul, elementwise_abs_sub], axis=1)
 
 
-def MultiPerspectiveFullMatching(seq1, seq2, perspective_num):
-    """
-    seq1: Lod tensor with shape [-1, feature_dim] (lod level == 1) is a representation of a sentence.
-    seq2: Another Lod tensor with shape [-1, feature_dim] (lod level == 1) is a representation of a sentence.
-    use seq1 to match seq2
-    return match seq with same shape as seq1.
-    """
-    print seq2
-    seq2_last = fluid.layers.sequence_pool(input=seq2, pool_type="last")
-    print seq2_last
-    seq2 = fluid.layers.sequence_expand(seq2_last, seq1)
-    print seq2
-    #seq2 = fluid.layers.lod_reset(x=seq2, y=seq1)
-    seq2.set_lod(seq1)
-    print seq2

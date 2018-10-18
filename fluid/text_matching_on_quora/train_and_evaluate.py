@@ -9,7 +9,6 @@ import contextlib
 import numpy as np
 
 import paddle.fluid as fluid
-import paddle.v2 as paddle
 
 import utils, metric, configs
 import models
@@ -155,7 +154,7 @@ def train_and_evaluate(train_reader,
 
     # start training
     sys.stderr.write("[%s] Start Training\n" % time.asctime(time.localtime(time.time())))
-    for epoch_id in xrange(global_config.epoch_num):
+    for epoch_id in range(global_config.epoch_num):
         data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
         batch_id = 0
         for data in train_reader():

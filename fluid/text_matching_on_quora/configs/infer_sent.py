@@ -1,5 +1,5 @@
 
-import basic_config
+from . import basic_config
 
 def infer_sent_v1():
     """
