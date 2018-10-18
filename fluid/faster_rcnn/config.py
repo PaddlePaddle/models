@@ -144,6 +144,12 @@ _C.variances = [1., 1., 1., 1.]
 # stride of feature map
 _C.rpn_stride = [16.0, 16.0]
 
+# Use roi pool or roi align, 'RoIPool' or 'RoIAlign'
+_C.roi_func = 'RoIAlign'
+
+# sampling ratio for roi align
+_C.sampling_ratio = 0
+
 #
 # SOLVER options
 #
