@@ -154,7 +154,7 @@ _C.sampling_ratio = 0
 _C.roi_resolution = 14
 
 # spatial scale 
-_C.spatial_scale = 0.0625
+_C.spatial_scale = 1. / 16.
 
 #
 # SOLVER options
