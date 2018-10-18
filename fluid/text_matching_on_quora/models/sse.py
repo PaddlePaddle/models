@@ -1,6 +1,7 @@
+
 import paddle.fluid as fluid
-from my_layers import bi_lstm_layer
-from match_layers import ElementwiseMatching
+from .my_layers import bi_lstm_layer
+from .match_layers import ElementwiseMatching
 
 class SSENet():
     """

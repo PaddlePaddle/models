@@ -20,7 +20,7 @@ import tarfile
 import re
 import string
 import random
-import os
+import os, sys
 import nltk
 from os.path import expanduser
 
@@ -43,7 +43,8 @@ COLUMN_COUNT = 4
 
 
 def tokenize(s):
-    s = s.decode('utf-8')
+    if sys.version_info <= (3, 0): # for python2
+        s = s.decode('utf-8')
     if TOKENIZE_METHOD == "nltk":
         return nltk.tokenize.word_tokenize(s)
     elif TOKENIZE_METHOD == "punctuation":
@@ -116,7 +117,7 @@ def build_dict(file_name, cutoff):
 
     dictionary = sorted(word_freq, key=lambda x: (-x[1], x[0]))
     words, _ = list(zip(*dictionary))
-    word_idx = dict(zip(words, xrange(len(words))))
+    word_idx = dict(zip(words, range(len(words))))
     word_idx['<unk>'] = len(words)
     word_idx['<pad>'] = len(words) + 1
     return word_idx
