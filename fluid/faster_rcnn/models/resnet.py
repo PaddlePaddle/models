@@ -89,8 +89,7 @@ def conv_affine_layer(input,
         default_initializer=Constant(0.))
     bias.stop_gradient = True
 
-    elt_mul = fluid.layers.elementwise_mul(x=conv, y=scale, axis=1)
-    out = fluid.layers.elementwise_add(x=elt_mul, y=bias, axis=1)
+    out = fluid.layers.affine_channel(x=conv, scale=scale, bias=bias)
     if act == 'relu':
         out = fluid.layers.relu(x=out)
     return out
