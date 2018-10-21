@@ -1,4 +1,5 @@
 import sys
+import six
 
 
 def get_p_at_n_in_m(data, n, m, ind):
@@ -30,9 +31,9 @@ def evaluate(file_path):
     p_at_2_in_10 = 0.0
     p_at_5_in_10 = 0.0
 
-    length = len(data) / 10
+    length = len(data) // 10
 
-    for i in xrange(0, length):
+    for i in six.moves.xrange(0, length):
         ind = i * 10
         assert data[ind][1] == 1
 
