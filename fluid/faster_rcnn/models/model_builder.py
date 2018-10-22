@@ -260,7 +260,7 @@ class FasterRCNN(object):
             x=rpn_cls_score_reshape, shape=(0, -1, 1))
         rpn_bbox_pred_reshape = fluid.layers.reshape(
             x=rpn_bbox_pred_reshape, shape=(0, -1, 4))
-        score_pred, loc_pred, score_tgt, loc_tgt = \
+        score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight = \
             fluid.layers.rpn_target_assign(
                 bbox_pred=rpn_bbox_pred_reshape,
                 cls_logits=rpn_cls_score_reshape,
@@ -281,7 +281,12 @@ class FasterRCNN(object):
         rpn_cls_loss = fluid.layers.reduce_mean(
             rpn_cls_loss, name='loss_rpn_cls')
 
-        rpn_reg_loss = fluid.layers.smooth_l1(x=loc_pred, y=loc_tgt, sigma=3.0)
+        rpn_reg_loss = fluid.layers.smooth_l1(
+            x=loc_pred,
+            y=loc_tgt,
+            sigma=3.0,
+            inside_weight=bbox_weight,
+            outside_weight=bbox_weight)
         rpn_reg_loss = fluid.layers.reduce_sum(
             rpn_reg_loss, name='loss_rpn_bbox')
         score_shape = fluid.layers.shape(score_tgt)
