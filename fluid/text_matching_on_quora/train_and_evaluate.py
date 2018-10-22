@@ -31,7 +31,7 @@ from pretrained_word2vec import Glove840B_300D
 
 parser = argparse.ArgumentParser(description=__doc__)
 
-parser.add_argument('--model_name',       type=str,   default='cdssm',                  help="Which model to train")
+parser.add_argument('--model_name',       type=str,   default='cdssmNet',                  help="Which model to train")
 parser.add_argument('--config',           type=str,   default='cdssm_base',       help="The global config setting")
 
 DATA_DIR = os.path.join(os.path.expanduser('~'), '.cache/paddle/dataset')
