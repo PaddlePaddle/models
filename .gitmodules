@@ -1,0 +1,9 @@
+[submodule "fluid/SimNet"]
+	path = fluid/SimNet
+	url = https://github.com/baidu/AnyQ.git
+[submodule "fluid/LAC"]
+	path = fluid/LAC
+	url = https://github.com/baidu/lac
+[submodule "fluid/Senta"]
+	path = fluid/Senta
+	url = https://github.com/baidu/Senta

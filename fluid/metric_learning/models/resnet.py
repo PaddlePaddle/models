@@ -75,7 +75,7 @@ class ResNet():
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
-            padding=(filter_size - 1) / 2,
+            padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
             bias_attr=False)

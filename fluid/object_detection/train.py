@@ -92,23 +92,25 @@ def build_program(main_prog, startup_prog, train_params, is_train):
             image, gt_box, gt_label, difficult = fluid.layers.read_file(py_reader)
             locs, confs, box, box_var = mobile_net(class_num, image, image_shape)
             if is_train:
-                loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
-                    box_var)
-                loss = fluid.layers.reduce_sum(loss)
-                optimizer = optimizer_setting(train_params)
-                optimizer.minimize(loss)
+                with fluid.unique_name.guard("train"):
+                    loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
+                        box_var)
+                    loss = fluid.layers.reduce_sum(loss)
+                    optimizer = optimizer_setting(train_params)
+                    optimizer.minimize(loss)
             else:
-                nmsed_out = fluid.layers.detection_output(
-                    locs, confs, box, box_var, nms_threshold=0.45)
-                loss = fluid.evaluator.DetectionMAP(
-                    nmsed_out,
-                    gt_label,
-                    gt_box,
-                    difficult,
-                    class_num,
-                    overlap_threshold=0.5,
-                    evaluate_difficult=False,
-                    ap_version=ap_version)
+                with fluid.unique_name.guard("inference"):
+                    nmsed_out = fluid.layers.detection_output(
+                        locs, confs, box, box_var, nms_threshold=0.45)
+                    loss = fluid.evaluator.DetectionMAP(
+                        nmsed_out,
+                        gt_label,
+                        gt_box,
+                        difficult,
+                        class_num,
+                        overlap_threshold=0.5,
+                        evaluate_difficult=False,
+                        ap_version=ap_version)
     return py_reader, loss
 
 
@@ -232,7 +234,7 @@ def train(args,
                 loss_v = np.mean(np.array(loss_v))
                 every_epoc_loss.append(loss_v)
                 if batch_id % 20 == 0:
-                    print("Epoc {0}, batch {1}, loss {2}, time {3}".format(
+                    print("Epoc {:d}, batch {:d}, loss {:.6f}, time {:.5f}".format(
                         epoc_id, batch_id, loss_v, start_time - prev_start_time))
             end_time = time.time()
             total_time += end_time - start_time

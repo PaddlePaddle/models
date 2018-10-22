@@ -1,9 +1,9 @@
-import datareader as reader
 import math
 import numpy as np
 import paddle.fluid as fluid
-from metrics import calculate_order_dist_matrix
-from metrics import get_gpu_num
+from . import datareader as reader
+from .metrics import calculate_order_dist_matrix
+from .metrics import get_gpu_num
 
 class emlloss():
     def __init__(self, train_batch_size = 40, samples_each_class=2):
@@ -11,9 +11,9 @@ class emlloss():
         self.samples_each_class = samples_each_class
         self.train_batch_size = train_batch_size
         assert(train_batch_size % num_gpus == 0)
-        self.cal_loss_batch_size = train_batch_size / num_gpus
+        self.cal_loss_batch_size = train_batch_size // num_gpus
         assert(self.cal_loss_batch_size % samples_each_class == 0)
-        class_num = train_batch_size / samples_each_class
+        class_num = train_batch_size // samples_each_class
         self.train_reader = reader.eml_train(train_batch_size, samples_each_class)
         self.test_reader = reader.test()
 

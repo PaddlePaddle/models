@@ -52,7 +52,8 @@ def parse_args():
         "--pass_num",
         type=int,
         default=5,
-        help="The pass number to train. (default: %(default)d)")
+        help="The pass number to train. In inference mode, load the saved model"
+        " at the end of given pass.(default: %(default)d)")
     parser.add_argument(
         "--learning_rate",
         type=float,
@@ -66,17 +67,17 @@ def parse_args():
         "--beam_size",
         type=int,
         default=3,
-        help="The width for beam searching. (default: %(default)d)")
+        help="The width for beam search. (default: %(default)d)")
     parser.add_argument(
         "--use_gpu",
         type=distutils.util.strtobool,
         default=True,
-        help="Whether to use gpu. (default: %(default)d)")
+        help="Whether to use gpu or not. (default: %(default)d)")
     parser.add_argument(
         "--max_length",
         type=int,
         default=50,
-        help="The maximum length of sequence when doing generation. "
+        help="The maximum sequence length for translation result."
         "(default: %(default)d)")
     parser.add_argument(
         "--save_dir",

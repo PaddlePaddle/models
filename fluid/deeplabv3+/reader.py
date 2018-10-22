@@ -1,5 +1,10 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import cv2
 import numpy as np
+import os
+import six
 
 default_config = {
     "shuffle": True,
@@ -30,7 +35,7 @@ def slice_with_pad(a, s, value=0):
                 pr = 0
             pads.append([pl, pr])
             slices.append([l, r])
-    slices = map(lambda x: slice(x[0], x[1], 1), slices)
+    slices = list(map(lambda x: slice(x[0], x[1], 1), slices))
     a = a[slices]
     a = np.pad(a, pad_width=pads, mode='constant', constant_values=value)
     return a
@@ -38,11 +43,17 @@ def slice_with_pad(a, s, value=0):
 
 class CityscapeDataset:
     def __init__(self, dataset_dir, subset='train', config=default_config):
-        import commands
-        label_dirname = dataset_dir + 'gtFine/' + subset
-        label_files = commands.getoutput(
-            "find %s -type f | grep labelTrainIds | sort" %
-            label_dirname).splitlines()
+        label_dirname = os.path.join(dataset_dir, 'gtFine/' + subset)
+        if six.PY2:
+            import commands
+            label_files = commands.getoutput(
+                "find %s -type f | grep labelTrainIds | sort" %
+                label_dirname).splitlines()
+        else:
+            import subprocess
+            label_files = subprocess.getstatusoutput(
+                "find %s -type f | grep labelTrainIds | sort" %
+                label_dirname)[-1].splitlines()
         self.label_files = label_files
         self.label_dirname = label_dirname
         self.index = 0
@@ -50,7 +61,7 @@ class CityscapeDataset:
         self.dataset_dir = dataset_dir
         self.config = config
         self.reset()
-        print "total number", len(label_files)
+        print("total number", len(label_files))
 
     def reset(self, shuffle=False):
         self.index = 0
@@ -66,13 +77,14 @@ class CityscapeDataset:
         shape = self.config["crop_size"]
         while True:
             ln = self.label_files[self.index]
-            img_name = self.dataset_dir + 'leftImg8bit/' + self.subset + ln[len(
-                self.label_dirname):]
+            img_name = os.path.join(
+                self.dataset_dir,
+                'leftImg8bit/' + self.subset + ln[len(self.label_dirname):])
             img_name = img_name.replace('gtFine_labelTrainIds', 'leftImg8bit')
             label = cv2.imread(ln)
             img = cv2.imread(img_name)
             if img is None:
-                print "load img failed:", img_name
+                print("load img failed:", img_name)
                 self.next_img()
             else:
                 break
@@ -128,5 +140,7 @@ class CityscapeDataset:
             from prefetch_generator import BackgroundGenerator
             batches = BackgroundGenerator(batches, 100)
         except:
-            print "You can install 'prefetch_generator' for acceleration of data reading."
+            print(
+                "You can install 'prefetch_generator' for acceleration of data reading."
+            )
         return batches

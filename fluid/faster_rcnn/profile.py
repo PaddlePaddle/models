@@ -26,19 +26,18 @@ import paddle.fluid.profiler as profiler
 import models.model_builder as model_builder
 import models.resnet as resnet
 from learning_rate import exponential_with_warmup_decay
+from config import cfg
 
 
-def train(cfg):
-    batch_size = cfg.batch_size
+def train():
     learning_rate = cfg.learning_rate
-    image_shape = [3, cfg.max_size, cfg.max_size]
+    image_shape = [3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
     num_iterations = cfg.max_iter
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
-
+    total_batch_size = devices_num * cfg.TRAIN.im_per_batch
     model = model_builder.FasterRCNN(
-        cfg=cfg,
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
         use_pyreader=cfg.use_pyreader,
@@ -51,8 +50,10 @@ def train(cfg):
     rpn_reg_loss.persistable = True
     loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
 
-    boundaries = [120000, 160000]
-    values = [learning_rate, learning_rate * 0.1, learning_rate * 0.01]
+    boundaries = cfg.lr_steps
+    gamma = cfg.lr_gamma
+    step_num = len(lr_steps)
+    values = [learning_rate * (gamma**i) for i in range(step_num + 1)]
 
     optimizer = fluid.optimizer.Momentum(
         learning_rate=exponential_with_warmup_decay(
@@ -82,22 +83,16 @@ def train(cfg):
         train_exe = fluid.ParallelExecutor(
             use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
 
-    assert cfg.batch_size % devices_num == 0, \
-        "batch_size = %d, devices_num = %d" %(cfg.batch_size, devices_num)
-
-    batch_size_per_dev = cfg.batch_size / devices_num
     if cfg.use_pyreader:
         train_reader = reader.train(
-            cfg,
-            batch_size=batch_size_per_dev,
-            total_batch_size=cfg.batch_size,
-            padding_total=cfg.padding_minibatch,
+            batch_size=cfg.TRAIN.im_per_batch,
+            total_batch_size=total_batch_size,
+            padding_total=cfg.TRAIN.padding_minibatch,
             shuffle=False)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
     else:
-        train_reader = reader.train(
-            cfg, batch_size=cfg.batch_size, shuffle=False)
+        train_reader = reader.train(batch_size=total_batch_size, shuffle=False)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     fetch_list = [loss, loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss]
@@ -109,7 +104,7 @@ def train(cfg):
 
         for batch_id in range(iterations):
             start_time = time.time()
-            data = train_reader().next()
+            data = next(train_reader())
             end_time = time.time()
             reader_time.append(end_time - start_time)
             start_time = time.time()
@@ -163,8 +158,7 @@ def train(cfg):
     run_func(2)
     # profiling
     start = time.time()
-    use_profile = False
-    if use_profile:
+    if cfg.use_profile:
         with profiler.profiler('GPU', 'total', '/tmp/profile_file'):
             reader_time, run_time, total_images = run_func(num_iterations)
     else:
@@ -181,6 +175,4 @@ def train(cfg):
 if __name__ == '__main__':
     args = parse_args()
     print_arguments(args)
-
-    data_args = reader.Settings(args)
-    train(data_args)
+    train()

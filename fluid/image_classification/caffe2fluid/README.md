@@ -19,7 +19,7 @@ This tool is used to convert a Caffe model to a Fluid model
 
     - Download one from github directly
         ```
-        cd proto/ && wget https://github.com/ethereon/caffe-tensorflow/blob/master/kaffe/caffe/caffepb.py
+        cd proto/ && wget https://raw.githubusercontent.com/ethereon/caffe-tensorflow/master/kaffe/caffe/caffepb.py
         ```
 
 2. Convert the Caffe model to Fluid model

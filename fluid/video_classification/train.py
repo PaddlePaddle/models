@@ -91,7 +91,7 @@ def train(args):
         fluid.io.load_vars(exe, pretrained_model, vars=vars)
 
     # reader
-    train_reader = paddle.batch(reader.train(seg_num), batch_size=batch_size)
+    train_reader = paddle.batch(reader.train(seg_num), batch_size=batch_size, drop_last=True)
     # test in single GPU
     test_reader = paddle.batch(reader.test(seg_num), batch_size=batch_size / 16)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])

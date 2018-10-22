@@ -163,8 +163,9 @@ def train(args):
                 total_images = np.concatenate([real_image, generated_images])
                 fig = plot(total_images)
                 msg = "Epoch ID={0}\n Batch ID={1}\n D-Loss={2}\n DG-Loss={3}\n gen={4}".format(
-                    pass_id, batch_id, np.mean(d_loss_np), dg_loss_np,
-                    check(generated_images))
+                    pass_id, batch_id,
+                    np.sum(d_loss_np),
+                    np.sum(dg_loss_np), check(generated_images))
                 print(msg)
                 plt.title(msg)
                 plt.savefig(
