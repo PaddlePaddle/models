@@ -39,11 +39,17 @@ flags.DEFINE_integer("num_epochs", 200, "total epochs to train")
 flags.DEFINE_float("weight_decay", 0.0004, "weight decay")
 
 flags.DEFINE_float("momentum", 0.9, "momentum")
-flags.DEFINE_float("gd_clip", 5.0, "gradient clipping")
+flags.DEFINE_float("gd_clip", 0, "gradient clipping. 0 for disable")
 
 flags.DEFINE_boolean("shuffle_image", True, "shuffle input images on training")
 
-flags.DEFINE_boolean("use_nccl", True, "Parallel training")
+flags.DEFINE_boolean("use_nccl", False, "Parallel training")
+
+flags.DEFINE_string(
+    "save_model_path", None,
+    "Save model to 'save_model_path' (directory) after training.")
+flags.DEFINE_string("load_model_path", None,
+                    "Load pre-trained model. (skip training)")
 
 dataset_train_size = 50000
 
@@ -55,6 +61,8 @@ class Model(object):
         print("epoch: %d" % FLAGS.num_epochs)
         print("batch size: %d" % FLAGS.batch_size)
         print("L2 decay: %f" % FLAGS.weight_decay)
+        print("gd clip: %f" % FLAGS.gd_clip)
+        print("parallel training: %s" % FLAGS.use_nccl)
 
         self.max_step = dataset_train_size * FLAGS.num_epochs // FLAGS.batch_size
 
@@ -62,11 +70,33 @@ class Model(object):
         self.tokens = tokens
         print("Token is %s" % ",".join(map(str, tokens)))
 
+        self.best_acc = 0
+
     def cosine_annealing(self):
         step = _decay_step_counter()
         lr = FLAGS.lr_min + (FLAGS.lr_max - FLAGS.lr_min) / 2 \
              * (1.0 + fluid.layers.ops.cos(step / self.max_step * math.pi))
         return lr
+
+    def test(self, test_reader, prog, exe, feeder, avg_loss, accuracy):
+        test_costs = []
+        test_accs = []
+        for data in test_reader():
+            if FLAGS.use_nccl:
+                cost, acc = exe.run(feed=feeder.feed(data),
+                                    fetch_list=[avg_loss.name, accuracy.name])
+            else:
+                cost, acc = exe.run(prog,
+                                    feed=feeder.feed(data),
+                                    fetch_list=[avg_loss.name, accuracy.name])
+            test_costs.append(cost)
+            test_accs.append(acc)
+
+        print("Test done: Loss %f, Acc %f" %
+              (np.mean(test_costs), np.mean(test_accs)))
+
+        self.best_acc = max(self.best_acc, np.mean(test_accs))
+        print("Best acc %f" % self.best_acc)
 
     def run(self):
         # input data
@@ -88,6 +118,11 @@ class Model(object):
 
         # train network
         avg_loss, accuracy = self.build_fn(images, labels, self.tokens)
+
+        # gradient clipping
+        if FLAGS.gd_clip > 0:
+            fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
+                max=FLAGS.gd_clip, min=-FLAGS.gd_clip))
 
         test_program = fluid.default_main_program().clone(for_test=True)
 
@@ -116,7 +151,17 @@ class Model(object):
 
         feeder = fluid.DataFeeder(place=place, feed_list=[images, labels])
 
-        best_acc = 0.0
+        if FLAGS.load_model_path is not None:
+            print("loading pre-trainer model...")
+            fluid.io.load_params(
+                executor=train_exe if FLAGS.use_nccl else exe,
+                dirname=FLAGS.load_model_path,
+                main_program=fluid.default_main_program())
+            print("run testing...")
+            self.test(test_reader, test_program, test_exe
+                      if FLAGS.use_nccl else exe, feeder, avg_loss, accuracy)
+            return
+
         costs = []
         accs = []
         for epoch in range(FLAGS.num_epochs):
@@ -131,7 +176,7 @@ class Model(object):
                         fluid.default_main_program(),
                         feed=feeder.feed(data),
                         fetch_list=[avg_loss.name, accuracy.name],
-                        use_program_cache=True)
+                        use_program_cache=False)
                 costs.append(cost)
                 accs.append(acc)
                 if batch % 10 == 0:
@@ -143,22 +188,13 @@ class Model(object):
                   .format(time.time() - start_time))
 
             if epoch % 3 == 0 or epoch == FLAGS.num_epochs - 1:
-                test_costs = []
-                test_accs = []
-                for data in test_reader():
-                    if FLAGS.use_nccl:
-                        cost, acc = test_exe.run(  #test_program,
-                            feed=feeder.feed(data),
-                            fetch_list=[avg_loss.name, accuracy.name])
-                    else:
-                        cost, acc = exe.run(
-                            test_program,
-                            feed=feeder.feed(data),
-                            fetch_list=[avg_loss.name, accuracy.name])
-                    test_costs.append(cost)
-                    test_accs.append(acc)
+                self.test(test_reader, test_program, test_exe if FLAGS.use_nccl
+                          else exe, feeder, avg_loss, accuracy)
 
-                print("Test with epoch %d, Loss %f, Acc %f" %
-                      (epoch, np.mean(test_costs), np.mean(test_accs)))
-                best_acc = max(best_acc, np.mean(test_accs))
-                print("Best acc %f" % best_acc)
+        print("Train model done.")
+        if FLAGS.save_model_path is not None:
+            print("Model is saved to" + FLAGS.save_model_path)
+            fluid.io.save_params(
+                executor=exe,
+                dirname=FLAGS.save_model_path,
+                main_program=fluid.default_main_program())

@@ -33,8 +33,10 @@ mid = [17754, 15113, 15613]
 
 
 def main(_):
-    f = os.path.join(FLAGS.tokdir, str(mid[FLAGS.model]) + ".pkl")
-    tokens = pickle.load(open(f, "rb"))
+    with open(
+            os.path.join(FLAGS.tokdir, str(mid[FLAGS.model]) + ".pkl"),
+            "rb") as f:
+        tokens = pickle.load(f)
 
     model = nn.Model(resnet_base.net, tokens)
     model.run()

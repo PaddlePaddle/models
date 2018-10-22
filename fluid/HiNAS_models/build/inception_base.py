@@ -56,7 +56,6 @@ def net(inputs, output, tokens):
 
     # with tf.variable_scope("0.initial_conv"):
     x = layers.conv(inputs, FLAGS.width, (3, 3))
-
     pre_activation_idx = [1]
     reduction_idx = [
         i * FLAGS.num_cells + 1 for i in range(1, FLAGS.num_stages)

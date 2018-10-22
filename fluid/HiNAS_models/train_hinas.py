@@ -33,8 +33,9 @@ mid = [17925, 18089, 15383]
 
 
 def main(_):
-    f = os.path.join(FLAGS.tokdir, str(mid[FLAGS.model]) + ".pkl")
-    tokens = pickle.load(open(f, "rb"))
+    filename = os.path.join(FLAGS.tokdir, str(mid[FLAGS.model]) + ".pkl")
+    with open(filename, "rb") as f:
+        tokens = pickle.load(f)
 
     model = nn.Model(vgg_base.net, tokens)
     model.run()
