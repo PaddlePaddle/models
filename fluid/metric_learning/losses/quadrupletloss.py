@@ -1,8 +1,8 @@
 import numpy as np
-import datareader as reader
 import paddle.fluid as fluid
-from metrics import calculate_order_dist_matrix
-from metrics import get_gpu_num
+from . import datareader as reader
+from .metrics import calculate_order_dist_matrix
+from .metrics import get_gpu_num
 
 class quadrupletloss():
     def __init__(self, 
@@ -14,9 +14,9 @@ class quadrupletloss():
         self.samples_each_class = samples_each_class
         self.train_batch_size = train_batch_size
         assert(train_batch_size % num_gpus == 0)
-        self.cal_loss_batch_size = train_batch_size / num_gpus
+        self.cal_loss_batch_size = train_batch_size // num_gpus
         assert(self.cal_loss_batch_size % samples_each_class == 0)
-        class_num = train_batch_size / samples_each_class
+        class_num = train_batch_size // samples_each_class
         self.train_reader = reader.quadruplet_train(class_num, samples_each_class)
         self.test_reader = reader.test()
 

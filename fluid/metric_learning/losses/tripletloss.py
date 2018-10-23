@@ -1,4 +1,4 @@
-import datareader as reader
+from . import datareader as reader
 import paddle.fluid as fluid
 
 class tripletloss():

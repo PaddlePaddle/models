@@ -1,10 +1,25 @@
+#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
-import time
+import sys
 import numpy as np
-import argparse
-import functools
+import time
 import shutil
-import cPickle
 from utility import parse_args, print_arguments, SmoothedValue
 
 import paddle
@@ -13,11 +28,12 @@ import reader
 import models.model_builder as model_builder
 import models.resnet as resnet
 from learning_rate import exponential_with_warmup_decay
+from config import cfg
 
 
-def train(cfg):
+def train():
     learning_rate = cfg.learning_rate
-    image_shape = [3, cfg.max_size, cfg.max_size]
+    image_shape = [3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
 
     if cfg.debug:
         fluid.default_startup_program().random_seed = 1000
@@ -28,9 +44,9 @@ def train(cfg):
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
+    total_batch_size = devices_num * cfg.TRAIN.im_per_batch
 
     model = model_builder.FasterRCNN(
-        cfg=cfg,
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
         use_pyreader=cfg.use_pyreader,
@@ -43,18 +59,20 @@ def train(cfg):
     rpn_reg_loss.persistable = True
     loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
 
-    boundaries = [120000, 160000]
-    values = [learning_rate, learning_rate * 0.1, learning_rate * 0.01]
+    boundaries = cfg.lr_steps
+    gamma = cfg.lr_gamma
+    step_num = len(cfg.lr_steps)
+    values = [learning_rate * (gamma**i) for i in range(step_num + 1)]
 
     optimizer = fluid.optimizer.Momentum(
         learning_rate=exponential_with_warmup_decay(
             learning_rate=learning_rate,
             boundaries=boundaries,
             values=values,
-            warmup_iter=500,
-            warmup_factor=1.0 / 3.0),
-        regularization=fluid.regularizer.L2Decay(0.0001),
-        momentum=0.9)
+            warmup_iter=cfg.warm_up_iter,
+            warmup_factor=cfg.warm_up_factor),
+        regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
+        momentum=cfg.momentum)
     optimizer.minimize(loss)
 
     fluid.memory_optimize(fluid.default_main_program())
@@ -74,20 +92,16 @@ def train(cfg):
         train_exe = fluid.ParallelExecutor(
             use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
 
-    assert cfg.batch_size % devices_num == 0
-    batch_size_per_dev = cfg.batch_size / devices_num
     if cfg.use_pyreader:
         train_reader = reader.train(
-            cfg,
-            batch_size=batch_size_per_dev,
-            total_batch_size=cfg.batch_size,
-            padding_total=cfg.padding_minibatch,
+            batch_size=cfg.TRAIN.im_per_batch,
+            total_batch_size=total_batch_size,
+            padding_total=cfg.TRAIN.padding_minibatch,
             shuffle=True)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
     else:
-        train_reader = reader.train(
-            cfg, batch_size=cfg.batch_size, shuffle=True)
+        train_reader = reader.train(batch_size=total_batch_size, shuffle=True)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     def save_model(postfix):
@@ -117,8 +131,8 @@ def train(cfg):
                     iter_id, lr[0],
                     smoothed_loss.get_median_value(
                     ), start_time - prev_start_time))
-                #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
-                if (iter_id + 1) % cfg.snapshot_stride == 0:
+                sys.stdout.flush()
+                if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
                     save_model("model_iter{}".format(iter_id))
         except fluid.core.EOFException:
             py_reader.reset()
@@ -143,8 +157,8 @@ def train(cfg):
             print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                 iter_id, lr[0],
                 smoothed_loss.get_median_value(), start_time - prev_start_time))
-            #print('cls_loss ', losses[1][0], ' reg_loss ', losses[2][0], ' loss_cls ', losses[3][0], ' loss_bbox ', losses[4][0])
-            if (iter_id + 1) % cfg.snapshot_stride == 0:
+            sys.stdout.flush()
+            if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
                 save_model("model_iter{}".format(iter_id))
             if (iter_id + 1) == cfg.max_iter:
                 break
@@ -160,6 +174,4 @@ def train(cfg):
 if __name__ == '__main__':
     args = parse_args()
     print_arguments(args)
-
-    data_args = reader.Settings(args)
-    train(data_args)
+    train()

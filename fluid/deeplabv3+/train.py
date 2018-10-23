@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = '0.98'
 
@@ -126,13 +129,12 @@ exe = fluid.Executor(place)
 exe.run(sp)
 
 if args.init_weights_path:
-    print "load from:", args.init_weights_path
+    print("load from:", args.init_weights_path)
     load_model()
 
 dataset = CityscapeDataset(args.dataset_path, 'train')
 
 if args.parallel:
-    print "Using ParallelExecutor."
     exe_p = fluid.ParallelExecutor(
         use_cuda=True, loss_name=loss_mean.name, main_program=tp)
 
@@ -149,9 +151,9 @@ for i, imgs, labels, names in batches:
                              'label': labels},
                        fetch_list=[pred, loss_mean])
     if i % 100 == 0:
-        print "Model is saved to", args.save_weights_path
+        print("Model is saved to", args.save_weights_path)
         save_model()
-    print "step %s, loss: %s" % (i, np.mean(retv[1]))
+    print("step %s, loss: %s" % (i, np.mean(retv[1])))
 
-print "Training done. Model is saved to", args.save_weights_path
+print("Training done. Model is saved to", args.save_weights_path)
 save_model()

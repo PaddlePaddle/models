@@ -167,7 +167,7 @@ def train(args, config, train_params, train_file_list):
             shutil.rmtree(model_path)
 
         print('save models to %s' % (model_path))
-        fluid.io.save_persistables(exe, model_path)
+        fluid.io.save_persistables(exe, model_path, main_program=program)
 
     train_py_reader.start()
     try:
@@ -189,13 +189,13 @@ def train(args, config, train_params, train_file_list):
                 fetch_vars = [np.mean(np.array(v)) for v in fetch_vars]
                 if batch_id % 10 == 0:
                     if not args.use_pyramidbox:
-                        print("Pass {0}, batch {1}, loss {2}, time {3}".format(
+                        print("Pass {:d}, batch {:d}, loss {:.6f}, time {:.5f}".format(
                             pass_id, batch_id, fetch_vars[0],
                             start_time - prev_start_time))
                     else:
-                        print("Pass {0}, batch {1}, face loss {2}, " \
-                              "head loss {3}, " \
-                              "time {4}".format(pass_id,
+                        print("Pass {:d}, batch {:d}, face loss {:.6f}, " \
+                              "head loss {:.6f}, " \
+                              "time {:.5f}".format(pass_id,
                                batch_id, fetch_vars[0], fetch_vars[1],
                                start_time - prev_start_time))
             if pass_id % 1 == 0 or pass_id == epoc_num - 1:

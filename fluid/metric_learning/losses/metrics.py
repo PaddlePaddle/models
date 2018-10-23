@@ -20,12 +20,14 @@ def recall_topk(fea, lab, k = 1):
 
 import subprocess
 import os
+
 def get_gpu_num():
     visibledevice = os.getenv('CUDA_VISIBLE_DEVICES')
     if visibledevice:
         devicenum = len(visibledevice.split(','))
     else:
-        devicenum = subprocess.check_output(['nvidia-smi', '-L']).count('\n')
+        devicenum = subprocess.check_output(
+            [str.encode('nvidia-smi'), str.encode('-L')]).decode('utf-8').count('\n')
     return devicenum
 
 import paddle as paddle

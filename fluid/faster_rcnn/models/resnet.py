@@ -1,7 +1,22 @@
+#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 from paddle.fluid.regularizer import L2Decay
+from config import cfg
 
 
 def conv_bn_layer(input,
@@ -74,8 +89,7 @@ def conv_affine_layer(input,
         default_initializer=Constant(0.))
     bias.stop_gradient = True
 
-    elt_mul = fluid.layers.elementwise_mul(x=conv, y=scale, axis=1)
-    out = fluid.layers.elementwise_add(x=elt_mul, y=bias, axis=1)
+    out = fluid.layers.affine_channel(x=conv, scale=scale, bias=bias)
     if act == 'relu':
         out = fluid.layers.relu(x=out)
     return out
@@ -123,7 +137,7 @@ ResNet_cfg = {
 }
 
 
-def add_ResNet50_conv4_body(body_input, freeze_at=2):
+def add_ResNet50_conv4_body(body_input):
     stages, block_func = ResNet_cfg[50]
     stages = stages[0:3]
     conv1 = conv_affine_layer(
@@ -135,13 +149,13 @@ def add_ResNet50_conv4_body(body_input, freeze_at=2):
         pool_stride=2,
         pool_padding=1)
     res2 = layer_warp(block_func, pool1, 64, stages[0], 1, name="res2")
-    if freeze_at == 2:
+    if cfg.TRAIN.freeze_at == 2:
         res2.stop_gradient = True
     res3 = layer_warp(block_func, res2, 128, stages[1], 2, name="res3")
-    if freeze_at == 3:
+    if cfg.TRAIN.freeze_at == 3:
         res3.stop_gradient = True
     res4 = layer_warp(block_func, res3, 256, stages[2], 2, name="res4")
-    if freeze_at == 4:
+    if cfg.TRAIN.freeze_at == 4:
         res4.stop_gradient = True
     return res4
 

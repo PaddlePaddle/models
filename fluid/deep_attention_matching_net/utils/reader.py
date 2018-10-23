@@ -1,18 +1,23 @@
-import cPickle as pickle
+import six
 import numpy as np
+
+try:
+    import cPickle as pickle  #python 2
+except ImportError as e:
+    import pickle  #python 3
 
 
 def unison_shuffle(data, seed=None):
     if seed is not None:
         np.random.seed(seed)
 
-    y = np.array(data['y'])
-    c = np.array(data['c'])
-    r = np.array(data['r'])
+    y = np.array(data[six.b('y')])
+    c = np.array(data[six.b('c')])
+    r = np.array(data[six.b('r')])
 
     assert len(y) == len(c) == len(r)
     p = np.random.permutation(len(y))
-    shuffle_data = {'y': y[p], 'c': c[p], 'r': r[p]}
+    shuffle_data = {six.b('y'): y[p], six.b('c'): c[p], six.b('r'): r[p]}
     return shuffle_data
 
 
@@ -65,9 +70,9 @@ def produce_one_sample(data,
        max_turn_len=50
        return y, nor_turns_nor_c, nor_r, turn_len, term_len, r_len
     '''
-    c = data['c'][index]
-    r = data['r'][index][:]
-    y = data['y'][index]
+    c = data[six.b('c')][index]
+    r = data[six.b('r')][index][:]
+    y = data[six.b('y')][index]
 
     turns = split_c(c, split_id)
     #normalize turns_c length, nor_turns length is max_turn_num
@@ -101,7 +106,7 @@ def build_one_batch(data,
 
     _label = []
 
-    for i in range(conf['batch_size']):
+    for i in six.moves.xrange(conf['batch_size']):
         index = batch_index * conf['batch_size'] + i
         y, nor_turns_nor_c, nor_r, turn_len, term_len, r_len = produce_one_sample(
             data, index, conf['_EOS_'], conf['max_turn_num'],
@@ -145,8 +150,8 @@ def build_batches(data, conf, turn_cut_type='tail', term_cut_type='tail'):
 
     _label_batches = []
 
-    batch_len = len(data['y']) / conf['batch_size']
-    for batch_index in range(batch_len):
+    batch_len = len(data[six.b('y')]) // conf['batch_size']
+    for batch_index in six.moves.range(batch_len):
         _turns, _tt_turns_len, _every_turn_len, _response, _response_len, _label = build_one_batch(
             data, batch_index, conf, turn_cut_type='tail', term_cut_type='tail')
 
@@ -192,8 +197,10 @@ def make_one_batch_input(data_batches, index):
     max_turn_num = turns.shape[1]
     max_turn_len = turns.shape[2]
 
-    turns_list = [turns[:, i, :] for i in xrange(max_turn_num)]
-    every_turn_len_list = [every_turn_len[:, i] for i in xrange(max_turn_num)]
+    turns_list = [turns[:, i, :] for i in six.moves.xrange(max_turn_num)]
+    every_turn_len_list = [
+        every_turn_len[:, i] for i in six.moves.xrange(max_turn_num)
+    ]
 
     feed_dict = {}
     for i, turn in enumerate(turns_list):
@@ -204,7 +211,7 @@ def make_one_batch_input(data_batches, index):
     for i, turn_len in enumerate(every_turn_len_list):
         feed_dict["turn_mask_%d" % i] = np.ones(
             (batch_size, max_turn_len, 1)).astype("float32")
-        for row in xrange(batch_size):
+        for row in six.moves.xrange(batch_size):
             feed_dict["turn_mask_%d" % i][row, turn_len[row]:, 0] = 0
 
     feed_dict["response"] = response
@@ -212,7 +219,7 @@ def make_one_batch_input(data_batches, index):
 
     feed_dict["response_mask"] = np.ones(
         (batch_size, max_turn_len, 1)).astype("float32")
-    for row in xrange(batch_size):
+    for row in six.moves.xrange(batch_size):
         feed_dict["response_mask"][row, response_len[row]:, 0] = 0
 
     feed_dict["label"] = np.array([data_batches["label"][index]]).reshape(
@@ -228,14 +235,14 @@ if __name__ == '__main__':
         "max_turn_len": 50,
         "_EOS_": 28270,
     }
-    train, val, test = pickle.load(open('../data/ubuntu/data_small.pkl', 'rb'))
+    with open('../ubuntu/data/data_small.pkl', 'rb') as f:
+        if six.PY2:
+            train, val, test = pickle.load(f)
+        else:
+            train, val, test = pickle.load(f, encoding="bytes")
     print('load data success')
 
     train_batches = build_batches(train, conf)
     val_batches = build_batches(val, conf)
     test_batches = build_batches(test, conf)
     print('build batches success')
-
-    pickle.dump([train_batches, val_batches, test_batches],
-                open('../data/ubuntu/data_small_xxx.pkl', 'wb'))
-    print('dump success')
