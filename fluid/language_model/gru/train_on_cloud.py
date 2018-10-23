@@ -236,8 +236,8 @@ def do_train(train_reader,
 
         t1 = time.time()
         total_time += t1 - t0
-        print("epoch:%d num_steps:%d time_cost(s):%f" % (epoch_idx, i,
-                                                         total_time / epoch_idx))
+        print("epoch:%d num_steps:%d time_cost(s):%f" %
+              (epoch_idx, i, total_time / epoch_idx))
 
         save_dir = "%s/epoch_%d" % (model_dir, epoch_idx)
         feed_var_names = ["src_wordseq", "dst_wordseq"]
