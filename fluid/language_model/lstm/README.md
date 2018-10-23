@@ -23,7 +23,9 @@ cd data; sh download_data.sh
 
 ## 训练
 
-运行命令 `CUDA_VISIBLE_DEVICES=0 python  train.py --data_path data/simple-examples/data/  --model_type small --use_gpu True` 开始训练模型。
+运行命令
+`CUDA_VISIBLE_DEVICES=0 python  train.py --data_path data/simple-examples/data/  --model_type small --use_gpu True`
+ 开始训练模型。
 
 model_type 为模型配置的大小，目前支持 small，medium, large 三种配置形式
 
@@ -56,7 +58,7 @@ test ppl 113.939103843
 ## 与tf结果对比
 
 tf采用的版本是1.6
-
+```text
 small config
              train    valid       test
 fluid 1.0	40.962	 118.111	112.617
@@ -71,3 +73,4 @@ large config
              train    valid      test
 fluid 1.0	37.221	 82.358	    78.137
 tf 1.6	    38.342	 82.311	    78.121
+```
