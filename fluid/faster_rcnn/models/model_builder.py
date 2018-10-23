@@ -196,12 +196,21 @@ class FasterRCNN(object):
             pool_rois = self.rois
         else:
             pool_rois = self.rpn_rois
-        pool = fluid.layers.roi_pool(
-            input=roi_input,
-            rois=pool_rois,
-            pooled_height=14,
-            pooled_width=14,
-            spatial_scale=0.0625)
+        if cfg.roi_func == 'RoIPool':
+            pool = fluid.layers.roi_pool(
+                input=roi_input,
+                rois=pool_rois,
+                pooled_height=cfg.roi_resolution,
+                pooled_width=cfg.roi_resolution,
+                spatial_scale=cfg.spatial_scale)
+        elif cfg.roi_func == 'RoIAlign':
+            pool = fluid.layers.roi_align(
+                input=roi_input,
+                rois=pool_rois,
+                pooled_height=cfg.roi_resolution,
+                pooled_width=cfg.roi_resolution,
+                spatial_scale=cfg.spatial_scale,
+                sampling_ratio=cfg.sampling_ratio)
         rcnn_out = self.add_roi_box_head_func(pool)
         self.cls_score = fluid.layers.fc(input=rcnn_out,
                                          size=cfg.class_num,
@@ -260,7 +269,7 @@ class FasterRCNN(object):
             x=rpn_cls_score_reshape, shape=(0, -1, 1))
         rpn_bbox_pred_reshape = fluid.layers.reshape(
             x=rpn_bbox_pred_reshape, shape=(0, -1, 4))
-        score_pred, loc_pred, score_tgt, loc_tgt = \
+        score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight = \
             fluid.layers.rpn_target_assign(
                 bbox_pred=rpn_bbox_pred_reshape,
                 cls_logits=rpn_cls_score_reshape,
@@ -281,7 +290,12 @@ class FasterRCNN(object):
         rpn_cls_loss = fluid.layers.reduce_mean(
             rpn_cls_loss, name='loss_rpn_cls')
 
-        rpn_reg_loss = fluid.layers.smooth_l1(x=loc_pred, y=loc_tgt, sigma=3.0)
+        rpn_reg_loss = fluid.layers.smooth_l1(
+            x=loc_pred,
+            y=loc_tgt,
+            sigma=3.0,
+            inside_weight=bbox_weight,
+            outside_weight=bbox_weight)
         rpn_reg_loss = fluid.layers.reduce_sum(
             rpn_reg_loss, name='loss_rpn_bbox')
         score_shape = fluid.layers.shape(score_tgt)

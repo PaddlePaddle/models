@@ -1,0 +1,1834 @@
+net_name:  cdssmNet
+config {'save_dirname': 'model_dir', 'optimizer_type': 'adam', 'duplicate_data': False, 'train_samples_num': 384348, 'droprate_fc': 0.1, 'fc_dim': 128, 'kernel_count': 300, 'mlp_hid_dim': [128, 128], 'OOV_fill': 'uniform', 'class_dim': 2, 'epoch_num': 50, 'lr_decay': 1, 'learning_rate': 0.001, 'batch_size': 128, 'use_lod_tensor': True, 'metric_type': ['accuracy'], 'embedding_norm': False, 'emb_dim': 300, 'droprate_conv': 0.1, 'use_pretrained_word_embedding': True, 'kernel_size': 5, 'dict_dim': 40000}
+Generating word dict...
+('Vocab size: ', 36057)
+loading word2vec from  /home/dongdaxiang/.cache/paddle/dataset/glove.840B.300d.txt
+preparing pretrained word embedding ...
+pretrained_word_embedding to be load: [[-0.086864    0.19161     0.10915    ... -0.01516     0.11108
+   0.2065    ]
+ [ 0.27204    -0.06203    -0.1884     ...  0.13015    -0.18317
+   0.1323    ]
+ [-0.20628     0.36716    -0.071933   ...  0.14271     0.50059
+   0.038025  ]
+ ...
+ [ 0.03847164  0.01711482  0.01181574 ...  0.03926358 -0.04032813
+  -0.02135365]
+ [ 0.04201478 -0.02560226 -0.02281064 ...  0.00920258  0.04321
+   0.0227482 ]
+ [-0.04984529 -0.00176931  0.03022346 ...  0.0298265   0.02384543
+   0.00974313]]
+param name: emb.w; param shape: (40000L, 300L)
+param name: conv1d.w; param shape: (1500L, 300L)
+param name: fc1.w; param shape: (300L, 128L)
+param name: fc1.b; param shape: (128L,)
+param name: fc_2.w_0; param shape: (256L, 128L)
+param name: fc_2.b_0; param shape: (128L,)
+param name: fc_3.w_0; param shape: (128L, 128L)
+param name: fc_3.b_0; param shape: (128L,)
+param name: fc_4.w_0; param shape: (128L, 2L)
+param name: fc_4.b_0; param shape: (2L,)
+loading pretrained word embedding to param
+[Wed Oct 10 16:33:18 2018] epoch_id: -1, dev_cost: 0.693804, accuracy: 0.5109
+[Wed Oct 10 16:33:18 2018] epoch_id: -1, test_cost: 0.693670, accuracy: 0.5096
+
+[Wed Oct 10 16:33:18 2018] Start Training
+[Wed Oct 10 16:33:27 2018] epoch_id: 0, batch_id: 0, cost: 0.699992, acc: 0.515625
+[Wed Oct 10 16:33:30 2018] epoch_id: 0, batch_id: 100, cost: 0.557354, acc: 0.695312
+[Wed Oct 10 16:33:33 2018] epoch_id: 0, batch_id: 200, cost: 0.548301, acc: 0.742188
+[Wed Oct 10 16:33:35 2018] epoch_id: 0, batch_id: 300, cost: 0.528907, acc: 0.742188
+[Wed Oct 10 16:33:39 2018] epoch_id: 0, batch_id: 400, cost: 0.482460, acc: 0.781250
+[Wed Oct 10 16:33:41 2018] epoch_id: 0, batch_id: 500, cost: 0.494885, acc: 0.718750
+[Wed Oct 10 16:33:44 2018] epoch_id: 0, batch_id: 600, cost: 0.600175, acc: 0.695312
+[Wed Oct 10 16:33:46 2018] epoch_id: 0, batch_id: 700, cost: 0.477964, acc: 0.757812
+[Wed Oct 10 16:33:49 2018] epoch_id: 0, batch_id: 800, cost: 0.468172, acc: 0.750000
+[Wed Oct 10 16:33:51 2018] epoch_id: 0, batch_id: 900, cost: 0.394047, acc: 0.835938
+[Wed Oct 10 16:33:54 2018] epoch_id: 0, batch_id: 1000, cost: 0.520142, acc: 0.734375
+[Wed Oct 10 16:33:56 2018] epoch_id: 0, batch_id: 1100, cost: 0.471779, acc: 0.757812
+[Wed Oct 10 16:33:59 2018] epoch_id: 0, batch_id: 1200, cost: 0.407287, acc: 0.789062
+[Wed Oct 10 16:34:01 2018] epoch_id: 0, batch_id: 1300, cost: 0.430800, acc: 0.812500
+[Wed Oct 10 16:34:03 2018] epoch_id: 0, batch_id: 1400, cost: 0.421967, acc: 0.796875
+[Wed Oct 10 16:34:06 2018] epoch_id: 0, batch_id: 1500, cost: 0.388925, acc: 0.835938
+[Wed Oct 10 16:34:08 2018] epoch_id: 0, batch_id: 1600, cost: 0.445022, acc: 0.796875
+[Wed Oct 10 16:34:10 2018] epoch_id: 0, batch_id: 1700, cost: 0.439095, acc: 0.796875
+[Wed Oct 10 16:34:13 2018] epoch_id: 0, batch_id: 1800, cost: 0.448246, acc: 0.765625
+[Wed Oct 10 16:34:15 2018] epoch_id: 0, batch_id: 1900, cost: 0.377162, acc: 0.789062
+[Wed Oct 10 16:34:17 2018] epoch_id: 0, batch_id: 2000, cost: 0.460397, acc: 0.820312
+[Wed Oct 10 16:34:20 2018] epoch_id: 0, batch_id: 2100, cost: 0.416145, acc: 0.812500
+[Wed Oct 10 16:34:22 2018] epoch_id: 0, batch_id: 2200, cost: 0.509166, acc: 0.710938
+[Wed Oct 10 16:34:24 2018] epoch_id: 0, batch_id: 2300, cost: 0.450925, acc: 0.765625
+[Wed Oct 10 16:34:26 2018] epoch_id: 0, batch_id: 2400, cost: 0.457177, acc: 0.796875
+[Wed Oct 10 16:34:29 2018] epoch_id: 0, batch_id: 2500, cost: 0.454368, acc: 0.851562
+[Wed Oct 10 16:34:31 2018] epoch_id: 0, batch_id: 2600, cost: 0.478799, acc: 0.750000
+[Wed Oct 10 16:34:34 2018] epoch_id: 0, batch_id: 2700, cost: 0.521526, acc: 0.757812
+[Wed Oct 10 16:34:36 2018] epoch_id: 0, batch_id: 2800, cost: 0.476336, acc: 0.789062
+[Wed Oct 10 16:34:38 2018] epoch_id: 0, batch_id: 2900, cost: 0.407489, acc: 0.812500
+[Wed Oct 10 16:34:41 2018] epoch_id: 0, batch_id: 3000, cost: 0.404804, acc: 0.820312
+
+[Wed Oct 10 16:34:42 2018] epoch_id: 0, train_avg_cost: 0.456508, train_avg_acc: 0.779733
+[Wed Oct 10 16:34:43 2018] epoch_id: 0, dev_cost: 0.469818, accuracy: 0.7691
+[Wed Oct 10 16:34:44 2018] epoch_id: 0, test_cost: 0.462696, accuracy: 0.7734
+
+[Wed Oct 10 16:34:53 2018] epoch_id: 1, batch_id: 0, cost: 0.381106, acc: 0.820312
+[Wed Oct 10 16:34:56 2018] epoch_id: 1, batch_id: 100, cost: 0.325008, acc: 0.859375
+[Wed Oct 10 16:34:58 2018] epoch_id: 1, batch_id: 200, cost: 0.318922, acc: 0.843750
+[Wed Oct 10 16:35:00 2018] epoch_id: 1, batch_id: 300, cost: 0.359727, acc: 0.804688
+[Wed Oct 10 16:35:03 2018] epoch_id: 1, batch_id: 400, cost: 0.308632, acc: 0.875000
+[Wed Oct 10 16:35:05 2018] epoch_id: 1, batch_id: 500, cost: 0.326841, acc: 0.851562
+[Wed Oct 10 16:35:09 2018] epoch_id: 1, batch_id: 600, cost: 0.398975, acc: 0.796875
+[Wed Oct 10 16:35:12 2018] epoch_id: 1, batch_id: 700, cost: 0.296837, acc: 0.867188
+[Wed Oct 10 16:35:14 2018] epoch_id: 1, batch_id: 800, cost: 0.289739, acc: 0.867188
+[Wed Oct 10 16:35:17 2018] epoch_id: 1, batch_id: 900, cost: 0.315425, acc: 0.835938
+[Wed Oct 10 16:35:19 2018] epoch_id: 1, batch_id: 1000, cost: 0.340806, acc: 0.828125
+[Wed Oct 10 16:35:22 2018] epoch_id: 1, batch_id: 1100, cost: 0.383585, acc: 0.828125
+[Wed Oct 10 16:35:24 2018] epoch_id: 1, batch_id: 1200, cost: 0.317520, acc: 0.843750
+[Wed Oct 10 16:35:26 2018] epoch_id: 1, batch_id: 1300, cost: 0.308717, acc: 0.875000
+[Wed Oct 10 16:35:29 2018] epoch_id: 1, batch_id: 1400, cost: 0.320688, acc: 0.828125
+[Wed Oct 10 16:35:31 2018] epoch_id: 1, batch_id: 1500, cost: 0.353638, acc: 0.812500
+[Wed Oct 10 16:35:34 2018] epoch_id: 1, batch_id: 1600, cost: 0.379113, acc: 0.804688
+[Wed Oct 10 16:35:36 2018] epoch_id: 1, batch_id: 1700, cost: 0.309887, acc: 0.859375
+[Wed Oct 10 16:35:38 2018] epoch_id: 1, batch_id: 1800, cost: 0.316372, acc: 0.859375
+[Wed Oct 10 16:35:41 2018] epoch_id: 1, batch_id: 1900, cost: 0.405585, acc: 0.804688
+[Wed Oct 10 16:35:43 2018] epoch_id: 1, batch_id: 2000, cost: 0.336917, acc: 0.851562
+[Wed Oct 10 16:35:45 2018] epoch_id: 1, batch_id: 2100, cost: 0.347034, acc: 0.835938
+[Wed Oct 10 16:35:48 2018] epoch_id: 1, batch_id: 2200, cost: 0.379728, acc: 0.835938
+[Wed Oct 10 16:35:50 2018] epoch_id: 1, batch_id: 2300, cost: 0.395257, acc: 0.820312
+[Wed Oct 10 16:35:53 2018] epoch_id: 1, batch_id: 2400, cost: 0.398583, acc: 0.812500
+[Wed Oct 10 16:35:55 2018] epoch_id: 1, batch_id: 2500, cost: 0.356259, acc: 0.859375
+[Wed Oct 10 16:35:57 2018] epoch_id: 1, batch_id: 2600, cost: 0.297765, acc: 0.835938
+[Wed Oct 10 16:35:59 2018] epoch_id: 1, batch_id: 2700, cost: 0.353899, acc: 0.835938
+[Wed Oct 10 16:36:02 2018] epoch_id: 1, batch_id: 2800, cost: 0.377699, acc: 0.820312
+[Wed Oct 10 16:36:04 2018] epoch_id: 1, batch_id: 2900, cost: 0.388959, acc: 0.804688
+[Wed Oct 10 16:36:06 2018] epoch_id: 1, batch_id: 3000, cost: 0.344840, acc: 0.835938
+
+[Wed Oct 10 16:36:07 2018] epoch_id: 1, train_avg_cost: 0.346376, train_avg_acc: 0.842572
+[Wed Oct 10 16:36:08 2018] epoch_id: 1, dev_cost: 0.402576, accuracy: 0.8094
+[Wed Oct 10 16:36:09 2018] epoch_id: 1, test_cost: 0.397121, accuracy: 0.8185
+
+[Wed Oct 10 16:36:18 2018] epoch_id: 2, batch_id: 0, cost: 0.280530, acc: 0.890625
+[Wed Oct 10 16:36:20 2018] epoch_id: 2, batch_id: 100, cost: 0.233576, acc: 0.906250
+[Wed Oct 10 16:36:22 2018] epoch_id: 2, batch_id: 200, cost: 0.245128, acc: 0.898438
+[Wed Oct 10 16:36:25 2018] epoch_id: 2, batch_id: 300, cost: 0.183943, acc: 0.906250
+[Wed Oct 10 16:36:27 2018] epoch_id: 2, batch_id: 400, cost: 0.270915, acc: 0.882812
+[Wed Oct 10 16:36:30 2018] epoch_id: 2, batch_id: 500, cost: 0.248726, acc: 0.906250
+[Wed Oct 10 16:36:32 2018] epoch_id: 2, batch_id: 600, cost: 0.243351, acc: 0.921875
+[Wed Oct 10 16:36:35 2018] epoch_id: 2, batch_id: 700, cost: 0.314026, acc: 0.812500
+[Wed Oct 10 16:36:38 2018] epoch_id: 2, batch_id: 800, cost: 0.336282, acc: 0.867188
+[Wed Oct 10 16:36:41 2018] epoch_id: 2, batch_id: 900, cost: 0.290222, acc: 0.875000
+[Wed Oct 10 16:36:43 2018] epoch_id: 2, batch_id: 1000, cost: 0.287339, acc: 0.859375
+[Wed Oct 10 16:36:45 2018] epoch_id: 2, batch_id: 1100, cost: 0.225436, acc: 0.890625
+[Wed Oct 10 16:36:48 2018] epoch_id: 2, batch_id: 1200, cost: 0.346974, acc: 0.859375
+[Wed Oct 10 16:36:50 2018] epoch_id: 2, batch_id: 1300, cost: 0.283542, acc: 0.843750
+[Wed Oct 10 16:36:53 2018] epoch_id: 2, batch_id: 1400, cost: 0.203151, acc: 0.921875
+[Wed Oct 10 16:36:55 2018] epoch_id: 2, batch_id: 1500, cost: 0.255483, acc: 0.906250
+[Wed Oct 10 16:36:58 2018] epoch_id: 2, batch_id: 1600, cost: 0.275010, acc: 0.898438
+[Wed Oct 10 16:37:00 2018] epoch_id: 2, batch_id: 1700, cost: 0.264693, acc: 0.867188
+[Wed Oct 10 16:37:03 2018] epoch_id: 2, batch_id: 1800, cost: 0.257360, acc: 0.890625
+[Wed Oct 10 16:37:05 2018] epoch_id: 2, batch_id: 1900, cost: 0.150528, acc: 0.921875
+[Wed Oct 10 16:37:08 2018] epoch_id: 2, batch_id: 2000, cost: 0.229797, acc: 0.906250
+[Wed Oct 10 16:37:11 2018] epoch_id: 2, batch_id: 2100, cost: 0.261790, acc: 0.867188
+[Wed Oct 10 16:37:14 2018] epoch_id: 2, batch_id: 2200, cost: 0.201237, acc: 0.914062
+[Wed Oct 10 16:37:16 2018] epoch_id: 2, batch_id: 2300, cost: 0.296701, acc: 0.875000
+[Wed Oct 10 16:37:19 2018] epoch_id: 2, batch_id: 2400, cost: 0.315291, acc: 0.875000
+[Wed Oct 10 16:37:21 2018] epoch_id: 2, batch_id: 2500, cost: 0.282715, acc: 0.843750
+[Wed Oct 10 16:37:24 2018] epoch_id: 2, batch_id: 2600, cost: 0.296843, acc: 0.843750
+[Wed Oct 10 16:37:26 2018] epoch_id: 2, batch_id: 2700, cost: 0.363040, acc: 0.843750
+[Wed Oct 10 16:37:29 2018] epoch_id: 2, batch_id: 2800, cost: 0.262465, acc: 0.867188
+[Wed Oct 10 16:37:31 2018] epoch_id: 2, batch_id: 2900, cost: 0.208009, acc: 0.906250
+[Wed Oct 10 16:37:34 2018] epoch_id: 2, batch_id: 3000, cost: 0.247068, acc: 0.867188
+
+[Wed Oct 10 16:37:34 2018] epoch_id: 2, train_avg_cost: 0.267260, train_avg_acc: 0.884560
+[Wed Oct 10 16:37:36 2018] epoch_id: 2, dev_cost: 0.434485, accuracy: 0.8153
+[Wed Oct 10 16:37:37 2018] epoch_id: 2, test_cost: 0.425083, accuracy: 0.8243
+
+[Wed Oct 10 16:37:46 2018] epoch_id: 3, batch_id: 0, cost: 0.130899, acc: 0.945312
+[Wed Oct 10 16:37:49 2018] epoch_id: 3, batch_id: 100, cost: 0.174115, acc: 0.914062
+[Wed Oct 10 16:37:52 2018] epoch_id: 3, batch_id: 200, cost: 0.162655, acc: 0.929688
+[Wed Oct 10 16:37:54 2018] epoch_id: 3, batch_id: 300, cost: 0.156763, acc: 0.937500
+[Wed Oct 10 16:37:56 2018] epoch_id: 3, batch_id: 400, cost: 0.171531, acc: 0.929688
+[Wed Oct 10 16:37:59 2018] epoch_id: 3, batch_id: 500, cost: 0.124120, acc: 0.937500
+[Wed Oct 10 16:38:02 2018] epoch_id: 3, batch_id: 600, cost: 0.172306, acc: 0.929688
+[Wed Oct 10 16:38:04 2018] epoch_id: 3, batch_id: 700, cost: 0.352722, acc: 0.867188
+[Wed Oct 10 16:38:06 2018] epoch_id: 3, batch_id: 800, cost: 0.179998, acc: 0.929688
+[Wed Oct 10 16:38:09 2018] epoch_id: 3, batch_id: 900, cost: 0.197941, acc: 0.921875
+[Wed Oct 10 16:38:11 2018] epoch_id: 3, batch_id: 1000, cost: 0.163592, acc: 0.937500
+[Wed Oct 10 16:38:14 2018] epoch_id: 3, batch_id: 1100, cost: 0.196162, acc: 0.882812
+[Wed Oct 10 16:38:16 2018] epoch_id: 3, batch_id: 1200, cost: 0.201064, acc: 0.929688
+[Wed Oct 10 16:38:19 2018] epoch_id: 3, batch_id: 1300, cost: 0.162742, acc: 0.921875
+[Wed Oct 10 16:38:21 2018] epoch_id: 3, batch_id: 1400, cost: 0.192062, acc: 0.890625
+[Wed Oct 10 16:38:23 2018] epoch_id: 3, batch_id: 1500, cost: 0.215189, acc: 0.914062
+[Wed Oct 10 16:38:26 2018] epoch_id: 3, batch_id: 1600, cost: 0.148390, acc: 0.945312
+[Wed Oct 10 16:38:28 2018] epoch_id: 3, batch_id: 1700, cost: 0.148536, acc: 0.937500
+[Wed Oct 10 16:38:32 2018] epoch_id: 3, batch_id: 1800, cost: 0.122290, acc: 0.960938
+[Wed Oct 10 16:38:34 2018] epoch_id: 3, batch_id: 1900, cost: 0.152864, acc: 0.945312
+[Wed Oct 10 16:38:37 2018] epoch_id: 3, batch_id: 2000, cost: 0.250165, acc: 0.914062
+[Wed Oct 10 16:38:39 2018] epoch_id: 3, batch_id: 2100, cost: 0.197931, acc: 0.929688
+[Wed Oct 10 16:38:42 2018] epoch_id: 3, batch_id: 2200, cost: 0.167291, acc: 0.937500
+[Wed Oct 10 16:38:44 2018] epoch_id: 3, batch_id: 2300, cost: 0.243269, acc: 0.898438
+[Wed Oct 10 16:38:47 2018] epoch_id: 3, batch_id: 2400, cost: 0.170633, acc: 0.921875
+[Wed Oct 10 16:38:49 2018] epoch_id: 3, batch_id: 2500, cost: 0.182344, acc: 0.921875
+[Wed Oct 10 16:38:52 2018] epoch_id: 3, batch_id: 2600, cost: 0.267497, acc: 0.921875
+[Wed Oct 10 16:38:54 2018] epoch_id: 3, batch_id: 2700, cost: 0.170150, acc: 0.929688
+[Wed Oct 10 16:38:56 2018] epoch_id: 3, batch_id: 2800, cost: 0.198175, acc: 0.890625
+[Wed Oct 10 16:38:59 2018] epoch_id: 3, batch_id: 2900, cost: 0.231687, acc: 0.898438
+[Wed Oct 10 16:39:01 2018] epoch_id: 3, batch_id: 3000, cost: 0.280869, acc: 0.882812
+
+[Wed Oct 10 16:39:02 2018] epoch_id: 3, train_avg_cost: 0.203352, train_avg_acc: 0.915808
+[Wed Oct 10 16:39:03 2018] epoch_id: 3, dev_cost: 0.413912, accuracy: 0.8304
+[Wed Oct 10 16:39:04 2018] epoch_id: 3, test_cost: 0.409365, accuracy: 0.8341
+
+[Wed Oct 10 16:39:13 2018] epoch_id: 4, batch_id: 0, cost: 0.208998, acc: 0.945312
+[Wed Oct 10 16:39:16 2018] epoch_id: 4, batch_id: 100, cost: 0.148128, acc: 0.929688
+[Wed Oct 10 16:39:18 2018] epoch_id: 4, batch_id: 200, cost: 0.079264, acc: 0.976562
+[Wed Oct 10 16:39:21 2018] epoch_id: 4, batch_id: 300, cost: 0.125277, acc: 0.937500
+[Wed Oct 10 16:39:23 2018] epoch_id: 4, batch_id: 400, cost: 0.105227, acc: 0.968750
+[Wed Oct 10 16:39:25 2018] epoch_id: 4, batch_id: 500, cost: 0.063737, acc: 0.984375
+[Wed Oct 10 16:39:28 2018] epoch_id: 4, batch_id: 600, cost: 0.148419, acc: 0.937500
+[Wed Oct 10 16:39:30 2018] epoch_id: 4, batch_id: 700, cost: 0.118386, acc: 0.937500
+[Wed Oct 10 16:39:33 2018] epoch_id: 4, batch_id: 800, cost: 0.236417, acc: 0.898438
+[Wed Oct 10 16:39:35 2018] epoch_id: 4, batch_id: 900, cost: 0.131614, acc: 0.945312
+[Wed Oct 10 16:39:38 2018] epoch_id: 4, batch_id: 1000, cost: 0.134897, acc: 0.953125
+[Wed Oct 10 16:39:40 2018] epoch_id: 4, batch_id: 1100, cost: 0.152974, acc: 0.945312
+[Wed Oct 10 16:39:43 2018] epoch_id: 4, batch_id: 1200, cost: 0.173617, acc: 0.937500
+[Wed Oct 10 16:39:45 2018] epoch_id: 4, batch_id: 1300, cost: 0.128535, acc: 0.937500
+[Wed Oct 10 16:39:48 2018] epoch_id: 4, batch_id: 1400, cost: 0.156204, acc: 0.945312
+[Wed Oct 10 16:39:50 2018] epoch_id: 4, batch_id: 1500, cost: 0.130960, acc: 0.937500
+[Wed Oct 10 16:39:53 2018] epoch_id: 4, batch_id: 1600, cost: 0.185379, acc: 0.914062
+[Wed Oct 10 16:39:55 2018] epoch_id: 4, batch_id: 1700, cost: 0.092890, acc: 0.960938
+[Wed Oct 10 16:39:58 2018] epoch_id: 4, batch_id: 1800, cost: 0.147196, acc: 0.929688
+[Wed Oct 10 16:40:00 2018] epoch_id: 4, batch_id: 1900, cost: 0.153621, acc: 0.953125
+[Wed Oct 10 16:40:03 2018] epoch_id: 4, batch_id: 2000, cost: 0.153048, acc: 0.921875
+[Wed Oct 10 16:40:05 2018] epoch_id: 4, batch_id: 2100, cost: 0.205303, acc: 0.898438
+[Wed Oct 10 16:40:07 2018] epoch_id: 4, batch_id: 2200, cost: 0.139906, acc: 0.960938
+[Wed Oct 10 16:40:10 2018] epoch_id: 4, batch_id: 2300, cost: 0.254768, acc: 0.890625
+[Wed Oct 10 16:40:12 2018] epoch_id: 4, batch_id: 2400, cost: 0.076761, acc: 0.968750
+[Wed Oct 10 16:40:14 2018] epoch_id: 4, batch_id: 2500, cost: 0.199733, acc: 0.906250
+[Wed Oct 10 16:40:16 2018] epoch_id: 4, batch_id: 2600, cost: 0.310914, acc: 0.882812
+[Wed Oct 10 16:40:19 2018] epoch_id: 4, batch_id: 2700, cost: 0.148558, acc: 0.921875
+[Wed Oct 10 16:40:21 2018] epoch_id: 4, batch_id: 2800, cost: 0.164562, acc: 0.921875
+[Wed Oct 10 16:40:23 2018] epoch_id: 4, batch_id: 2900, cost: 0.177139, acc: 0.921875
+[Wed Oct 10 16:40:26 2018] epoch_id: 4, batch_id: 3000, cost: 0.112299, acc: 0.968750
+
+[Wed Oct 10 16:40:27 2018] epoch_id: 4, train_avg_cost: 0.156220, train_avg_acc: 0.937780
+[Wed Oct 10 16:40:28 2018] epoch_id: 4, dev_cost: 0.468851, accuracy: 0.8348
+[Wed Oct 10 16:40:29 2018] epoch_id: 4, test_cost: 0.468213, accuracy: 0.8368
+
+[Wed Oct 10 16:40:38 2018] epoch_id: 5, batch_id: 0, cost: 0.084071, acc: 0.976562
+[Wed Oct 10 16:40:41 2018] epoch_id: 5, batch_id: 100, cost: 0.052093, acc: 0.968750
+[Wed Oct 10 16:40:43 2018] epoch_id: 5, batch_id: 200, cost: 0.193576, acc: 0.929688
+[Wed Oct 10 16:40:46 2018] epoch_id: 5, batch_id: 300, cost: 0.075502, acc: 0.968750
+[Wed Oct 10 16:40:48 2018] epoch_id: 5, batch_id: 400, cost: 0.079619, acc: 0.976562
+[Wed Oct 10 16:40:51 2018] epoch_id: 5, batch_id: 500, cost: 0.124719, acc: 0.945312
+[Wed Oct 10 16:40:53 2018] epoch_id: 5, batch_id: 600, cost: 0.157322, acc: 0.929688
+[Wed Oct 10 16:40:56 2018] epoch_id: 5, batch_id: 700, cost: 0.100680, acc: 0.945312
+[Wed Oct 10 16:40:58 2018] epoch_id: 5, batch_id: 800, cost: 0.164627, acc: 0.937500
+[Wed Oct 10 16:41:00 2018] epoch_id: 5, batch_id: 900, cost: 0.113826, acc: 0.960938
+[Wed Oct 10 16:41:03 2018] epoch_id: 5, batch_id: 1000, cost: 0.122406, acc: 0.953125
+[Wed Oct 10 16:41:05 2018] epoch_id: 5, batch_id: 1100, cost: 0.098428, acc: 0.960938
+[Wed Oct 10 16:41:08 2018] epoch_id: 5, batch_id: 1200, cost: 0.175987, acc: 0.914062
+[Wed Oct 10 16:41:10 2018] epoch_id: 5, batch_id: 1300, cost: 0.161037, acc: 0.929688
+[Wed Oct 10 16:41:12 2018] epoch_id: 5, batch_id: 1400, cost: 0.058083, acc: 0.976562
+[Wed Oct 10 16:41:14 2018] epoch_id: 5, batch_id: 1500, cost: 0.099512, acc: 0.953125
+[Wed Oct 10 16:41:17 2018] epoch_id: 5, batch_id: 1600, cost: 0.155458, acc: 0.929688
+[Wed Oct 10 16:41:19 2018] epoch_id: 5, batch_id: 1700, cost: 0.149099, acc: 0.953125
+[Wed Oct 10 16:41:21 2018] epoch_id: 5, batch_id: 1800, cost: 0.184663, acc: 0.945312
+[Wed Oct 10 16:41:24 2018] epoch_id: 5, batch_id: 1900, cost: 0.153789, acc: 0.945312
+[Wed Oct 10 16:41:26 2018] epoch_id: 5, batch_id: 2000, cost: 0.135054, acc: 0.945312
+[Wed Oct 10 16:41:28 2018] epoch_id: 5, batch_id: 2100, cost: 0.091075, acc: 0.960938
+[Wed Oct 10 16:41:30 2018] epoch_id: 5, batch_id: 2200, cost: 0.175665, acc: 0.937500
+[Wed Oct 10 16:41:33 2018] epoch_id: 5, batch_id: 2300, cost: 0.092569, acc: 0.976562
+[Wed Oct 10 16:41:35 2018] epoch_id: 5, batch_id: 2400, cost: 0.171366, acc: 0.929688
+[Wed Oct 10 16:41:37 2018] epoch_id: 5, batch_id: 2500, cost: 0.077127, acc: 0.984375
+[Wed Oct 10 16:41:39 2018] epoch_id: 5, batch_id: 2600, cost: 0.133260, acc: 0.960938
+[Wed Oct 10 16:41:43 2018] epoch_id: 5, batch_id: 2700, cost: 0.130742, acc: 0.953125
+[Wed Oct 10 16:41:45 2018] epoch_id: 5, batch_id: 2800, cost: 0.165412, acc: 0.945312
+[Wed Oct 10 16:41:48 2018] epoch_id: 5, batch_id: 2900, cost: 0.099631, acc: 0.953125
+[Wed Oct 10 16:41:50 2018] epoch_id: 5, batch_id: 3000, cost: 0.191953, acc: 0.929688
+
+[Wed Oct 10 16:41:51 2018] epoch_id: 5, train_avg_cost: 0.122534, train_avg_acc: 0.952647
+[Wed Oct 10 16:41:52 2018] epoch_id: 5, dev_cost: 0.517809, accuracy: 0.8338
+[Wed Oct 10 16:41:53 2018] epoch_id: 5, test_cost: 0.516574, accuracy: 0.8379
+
+[Wed Oct 10 16:42:02 2018] epoch_id: 6, batch_id: 0, cost: 0.108672, acc: 0.953125
+[Wed Oct 10 16:42:04 2018] epoch_id: 6, batch_id: 100, cost: 0.055064, acc: 0.984375
+[Wed Oct 10 16:42:07 2018] epoch_id: 6, batch_id: 200, cost: 0.070521, acc: 0.976562
+[Wed Oct 10 16:42:09 2018] epoch_id: 6, batch_id: 300, cost: 0.044554, acc: 0.992188
+[Wed Oct 10 16:42:12 2018] epoch_id: 6, batch_id: 400, cost: 0.140199, acc: 0.968750
+[Wed Oct 10 16:42:14 2018] epoch_id: 6, batch_id: 500, cost: 0.074043, acc: 0.984375
+[Wed Oct 10 16:42:17 2018] epoch_id: 6, batch_id: 600, cost: 0.072380, acc: 0.960938
+[Wed Oct 10 16:42:19 2018] epoch_id: 6, batch_id: 700, cost: 0.089520, acc: 0.968750
+[Wed Oct 10 16:42:21 2018] epoch_id: 6, batch_id: 800, cost: 0.154753, acc: 0.937500
+[Wed Oct 10 16:42:24 2018] epoch_id: 6, batch_id: 900, cost: 0.137237, acc: 0.945312
+[Wed Oct 10 16:42:26 2018] epoch_id: 6, batch_id: 1000, cost: 0.155418, acc: 0.953125
+[Wed Oct 10 16:42:28 2018] epoch_id: 6, batch_id: 1100, cost: 0.102754, acc: 0.968750
+[Wed Oct 10 16:42:31 2018] epoch_id: 6, batch_id: 1200, cost: 0.171521, acc: 0.929688
+[Wed Oct 10 16:42:33 2018] epoch_id: 6, batch_id: 1300, cost: 0.089853, acc: 0.984375
+[Wed Oct 10 16:42:36 2018] epoch_id: 6, batch_id: 1400, cost: 0.117480, acc: 0.953125
+[Wed Oct 10 16:42:38 2018] epoch_id: 6, batch_id: 1500, cost: 0.144428, acc: 0.953125
+[Wed Oct 10 16:42:40 2018] epoch_id: 6, batch_id: 1600, cost: 0.100815, acc: 0.945312
+[Wed Oct 10 16:42:43 2018] epoch_id: 6, batch_id: 1700, cost: 0.096131, acc: 0.960938
+[Wed Oct 10 16:42:45 2018] epoch_id: 6, batch_id: 1800, cost: 0.083034, acc: 0.968750
+[Wed Oct 10 16:42:47 2018] epoch_id: 6, batch_id: 1900, cost: 0.144603, acc: 0.937500
+[Wed Oct 10 16:42:50 2018] epoch_id: 6, batch_id: 2000, cost: 0.125068, acc: 0.960938
+[Wed Oct 10 16:42:52 2018] epoch_id: 6, batch_id: 2100, cost: 0.096932, acc: 0.945312
+[Wed Oct 10 16:42:54 2018] epoch_id: 6, batch_id: 2200, cost: 0.187626, acc: 0.906250
+[Wed Oct 10 16:42:58 2018] epoch_id: 6, batch_id: 2300, cost: 0.086040, acc: 0.953125
+[Wed Oct 10 16:43:00 2018] epoch_id: 6, batch_id: 2400, cost: 0.112231, acc: 0.960938
+[Wed Oct 10 16:43:03 2018] epoch_id: 6, batch_id: 2500, cost: 0.086397, acc: 0.976562
+[Wed Oct 10 16:43:05 2018] epoch_id: 6, batch_id: 2600, cost: 0.093871, acc: 0.960938
+[Wed Oct 10 16:43:07 2018] epoch_id: 6, batch_id: 2700, cost: 0.143658, acc: 0.953125
+[Wed Oct 10 16:43:10 2018] epoch_id: 6, batch_id: 2800, cost: 0.144744, acc: 0.945312
+[Wed Oct 10 16:43:12 2018] epoch_id: 6, batch_id: 2900, cost: 0.127995, acc: 0.945312
+[Wed Oct 10 16:43:14 2018] epoch_id: 6, batch_id: 3000, cost: 0.201635, acc: 0.929688
+
+[Wed Oct 10 16:43:15 2018] epoch_id: 6, train_avg_cost: 0.100383, train_avg_acc: 0.961683
+[Wed Oct 10 16:43:16 2018] epoch_id: 6, dev_cost: 0.622004, accuracy: 0.833
+[Wed Oct 10 16:43:17 2018] epoch_id: 6, test_cost: 0.604546, accuracy: 0.836
+
+[Wed Oct 10 16:43:25 2018] epoch_id: 7, batch_id: 0, cost: 0.092909, acc: 0.968750
+[Wed Oct 10 16:43:28 2018] epoch_id: 7, batch_id: 100, cost: 0.048849, acc: 0.976562
+[Wed Oct 10 16:43:31 2018] epoch_id: 7, batch_id: 200, cost: 0.123149, acc: 0.960938
+[Wed Oct 10 16:43:33 2018] epoch_id: 7, batch_id: 300, cost: 0.043434, acc: 0.992188
+[Wed Oct 10 16:43:35 2018] epoch_id: 7, batch_id: 400, cost: 0.057082, acc: 0.976562
+[Wed Oct 10 16:43:38 2018] epoch_id: 7, batch_id: 500, cost: 0.043290, acc: 0.976562
+[Wed Oct 10 16:43:40 2018] epoch_id: 7, batch_id: 600, cost: 0.061600, acc: 0.976562
+[Wed Oct 10 16:43:42 2018] epoch_id: 7, batch_id: 700, cost: 0.077328, acc: 0.968750
+[Wed Oct 10 16:43:45 2018] epoch_id: 7, batch_id: 800, cost: 0.139978, acc: 0.953125
+[Wed Oct 10 16:43:48 2018] epoch_id: 7, batch_id: 900, cost: 0.099730, acc: 0.960938
+[Wed Oct 10 16:43:51 2018] epoch_id: 7, batch_id: 1000, cost: 0.072699, acc: 0.976562
+[Wed Oct 10 16:43:53 2018] epoch_id: 7, batch_id: 1100, cost: 0.031092, acc: 0.992188
+[Wed Oct 10 16:43:55 2018] epoch_id: 7, batch_id: 1200, cost: 0.118547, acc: 0.960938
+[Wed Oct 10 16:43:57 2018] epoch_id: 7, batch_id: 1300, cost: 0.061420, acc: 0.976562
+[Wed Oct 10 16:44:00 2018] epoch_id: 7, batch_id: 1400, cost: 0.096040, acc: 0.968750
+[Wed Oct 10 16:44:02 2018] epoch_id: 7, batch_id: 1500, cost: 0.052711, acc: 0.992188
+[Wed Oct 10 16:44:04 2018] epoch_id: 7, batch_id: 1600, cost: 0.150460, acc: 0.929688
+[Wed Oct 10 16:44:07 2018] epoch_id: 7, batch_id: 1700, cost: 0.097628, acc: 0.976562
+[Wed Oct 10 16:44:09 2018] epoch_id: 7, batch_id: 1800, cost: 0.081382, acc: 0.976562
+[Wed Oct 10 16:44:11 2018] epoch_id: 7, batch_id: 1900, cost: 0.089064, acc: 0.953125
+[Wed Oct 10 16:44:14 2018] epoch_id: 7, batch_id: 2000, cost: 0.084270, acc: 0.968750
+[Wed Oct 10 16:44:16 2018] epoch_id: 7, batch_id: 2100, cost: 0.097173, acc: 0.968750
+[Wed Oct 10 16:44:18 2018] epoch_id: 7, batch_id: 2200, cost: 0.112953, acc: 0.960938
+[Wed Oct 10 16:44:20 2018] epoch_id: 7, batch_id: 2300, cost: 0.116143, acc: 0.953125
+[Wed Oct 10 16:44:23 2018] epoch_id: 7, batch_id: 2400, cost: 0.098675, acc: 0.968750
+[Wed Oct 10 16:44:25 2018] epoch_id: 7, batch_id: 2500, cost: 0.150993, acc: 0.945312
+[Wed Oct 10 16:44:27 2018] epoch_id: 7, batch_id: 2600, cost: 0.076421, acc: 0.968750
+[Wed Oct 10 16:44:29 2018] epoch_id: 7, batch_id: 2700, cost: 0.088665, acc: 0.968750
+[Wed Oct 10 16:44:32 2018] epoch_id: 7, batch_id: 2800, cost: 0.142891, acc: 0.937500
+[Wed Oct 10 16:44:34 2018] epoch_id: 7, batch_id: 2900, cost: 0.088820, acc: 0.968750
+[Wed Oct 10 16:44:36 2018] epoch_id: 7, batch_id: 3000, cost: 0.100579, acc: 0.968750
+
+[Wed Oct 10 16:44:37 2018] epoch_id: 7, train_avg_cost: 0.084162, train_avg_acc: 0.968487
+[Wed Oct 10 16:44:38 2018] epoch_id: 7, dev_cost: 0.655423, accuracy: 0.8369
+[Wed Oct 10 16:44:39 2018] epoch_id: 7, test_cost: 0.663061, accuracy: 0.8352
+
+[Wed Oct 10 16:44:47 2018] epoch_id: 8, batch_id: 0, cost: 0.037309, acc: 0.992188
+[Wed Oct 10 16:44:50 2018] epoch_id: 8, batch_id: 100, cost: 0.043888, acc: 0.976562
+[Wed Oct 10 16:44:52 2018] epoch_id: 8, batch_id: 200, cost: 0.099702, acc: 0.960938
+[Wed Oct 10 16:44:54 2018] epoch_id: 8, batch_id: 300, cost: 0.080207, acc: 0.976562
+[Wed Oct 10 16:44:56 2018] epoch_id: 8, batch_id: 400, cost: 0.049319, acc: 0.976562
+[Wed Oct 10 16:44:59 2018] epoch_id: 8, batch_id: 500, cost: 0.041202, acc: 0.976562
+[Wed Oct 10 16:45:01 2018] epoch_id: 8, batch_id: 600, cost: 0.061663, acc: 0.968750
+[Wed Oct 10 16:45:03 2018] epoch_id: 8, batch_id: 700, cost: 0.065126, acc: 0.984375
+[Wed Oct 10 16:45:05 2018] epoch_id: 8, batch_id: 800, cost: 0.057770, acc: 0.976562
+[Wed Oct 10 16:45:07 2018] epoch_id: 8, batch_id: 900, cost: 0.136513, acc: 0.929688
+[Wed Oct 10 16:45:10 2018] epoch_id: 8, batch_id: 1000, cost: 0.054884, acc: 0.968750
+[Wed Oct 10 16:45:12 2018] epoch_id: 8, batch_id: 1100, cost: 0.046854, acc: 0.992188
+[Wed Oct 10 16:45:14 2018] epoch_id: 8, batch_id: 1200, cost: 0.031739, acc: 1.000000
+[Wed Oct 10 16:45:17 2018] epoch_id: 8, batch_id: 1300, cost: 0.127405, acc: 0.953125
+[Wed Oct 10 16:45:19 2018] epoch_id: 8, batch_id: 1400, cost: 0.052842, acc: 0.976562
+[Wed Oct 10 16:45:21 2018] epoch_id: 8, batch_id: 1500, cost: 0.117588, acc: 0.960938
+[Wed Oct 10 16:45:23 2018] epoch_id: 8, batch_id: 1600, cost: 0.078688, acc: 0.968750
+[Wed Oct 10 16:45:26 2018] epoch_id: 8, batch_id: 1700, cost: 0.069420, acc: 0.976562
+[Wed Oct 10 16:45:28 2018] epoch_id: 8, batch_id: 1800, cost: 0.055502, acc: 0.976562
+[Wed Oct 10 16:45:31 2018] epoch_id: 8, batch_id: 1900, cost: 0.161759, acc: 0.945312
+[Wed Oct 10 16:45:34 2018] epoch_id: 8, batch_id: 2000, cost: 0.063610, acc: 0.984375
+[Wed Oct 10 16:45:36 2018] epoch_id: 8, batch_id: 2100, cost: 0.103227, acc: 0.937500
+[Wed Oct 10 16:45:38 2018] epoch_id: 8, batch_id: 2200, cost: 0.065949, acc: 0.976562
+[Wed Oct 10 16:45:40 2018] epoch_id: 8, batch_id: 2300, cost: 0.060299, acc: 0.968750
+[Wed Oct 10 16:45:43 2018] epoch_id: 8, batch_id: 2400, cost: 0.089557, acc: 0.976562
+[Wed Oct 10 16:45:45 2018] epoch_id: 8, batch_id: 2500, cost: 0.095753, acc: 0.968750
+[Wed Oct 10 16:45:47 2018] epoch_id: 8, batch_id: 2600, cost: 0.111113, acc: 0.968750
+[Wed Oct 10 16:45:49 2018] epoch_id: 8, batch_id: 2700, cost: 0.074921, acc: 0.960938
+[Wed Oct 10 16:45:52 2018] epoch_id: 8, batch_id: 2800, cost: 0.105058, acc: 0.945312
+[Wed Oct 10 16:45:54 2018] epoch_id: 8, batch_id: 2900, cost: 0.173304, acc: 0.921875
+[Wed Oct 10 16:45:56 2018] epoch_id: 8, batch_id: 3000, cost: 0.077586, acc: 0.984375
+
+[Wed Oct 10 16:45:56 2018] epoch_id: 8, train_avg_cost: 0.072280, train_avg_acc: 0.973521
+[Wed Oct 10 16:45:57 2018] epoch_id: 8, dev_cost: 0.629243, accuracy: 0.8373
+[Wed Oct 10 16:45:58 2018] epoch_id: 8, test_cost: 0.661630, accuracy: 0.8352
+
+[Wed Oct 10 16:46:07 2018] epoch_id: 9, batch_id: 0, cost: 0.044024, acc: 0.984375
+[Wed Oct 10 16:46:09 2018] epoch_id: 9, batch_id: 100, cost: 0.033798, acc: 0.992188
+[Wed Oct 10 16:46:11 2018] epoch_id: 9, batch_id: 200, cost: 0.077856, acc: 0.976562
+[Wed Oct 10 16:46:14 2018] epoch_id: 9, batch_id: 300, cost: 0.119995, acc: 0.953125
+[Wed Oct 10 16:46:16 2018] epoch_id: 9, batch_id: 400, cost: 0.006741, acc: 1.000000
+[Wed Oct 10 16:46:18 2018] epoch_id: 9, batch_id: 500, cost: 0.097501, acc: 0.953125
+[Wed Oct 10 16:46:20 2018] epoch_id: 9, batch_id: 600, cost: 0.097540, acc: 0.960938
+[Wed Oct 10 16:46:22 2018] epoch_id: 9, batch_id: 700, cost: 0.085677, acc: 0.976562
+[Wed Oct 10 16:46:25 2018] epoch_id: 9, batch_id: 800, cost: 0.131135, acc: 0.960938
+[Wed Oct 10 16:46:27 2018] epoch_id: 9, batch_id: 900, cost: 0.058706, acc: 0.960938
+[Wed Oct 10 16:46:29 2018] epoch_id: 9, batch_id: 1000, cost: 0.081857, acc: 0.968750
+[Wed Oct 10 16:46:31 2018] epoch_id: 9, batch_id: 1100, cost: 0.035656, acc: 0.992188
+[Wed Oct 10 16:46:34 2018] epoch_id: 9, batch_id: 1200, cost: 0.023980, acc: 0.992188
+[Wed Oct 10 16:46:36 2018] epoch_id: 9, batch_id: 1300, cost: 0.104535, acc: 0.976562
+[Wed Oct 10 16:46:38 2018] epoch_id: 9, batch_id: 1400, cost: 0.052738, acc: 0.960938
+[Wed Oct 10 16:46:40 2018] epoch_id: 9, batch_id: 1500, cost: 0.049284, acc: 0.984375
+[Wed Oct 10 16:46:43 2018] epoch_id: 9, batch_id: 1600, cost: 0.040960, acc: 0.976562
+[Wed Oct 10 16:46:45 2018] epoch_id: 9, batch_id: 1700, cost: 0.054090, acc: 0.976562
+[Wed Oct 10 16:46:47 2018] epoch_id: 9, batch_id: 1800, cost: 0.030307, acc: 0.992188
+[Wed Oct 10 16:46:49 2018] epoch_id: 9, batch_id: 1900, cost: 0.152908, acc: 0.960938
+[Wed Oct 10 16:46:52 2018] epoch_id: 9, batch_id: 2000, cost: 0.133532, acc: 0.945312
+[Wed Oct 10 16:46:54 2018] epoch_id: 9, batch_id: 2100, cost: 0.162579, acc: 0.929688
+[Wed Oct 10 16:46:56 2018] epoch_id: 9, batch_id: 2200, cost: 0.037171, acc: 0.984375
+[Wed Oct 10 16:46:58 2018] epoch_id: 9, batch_id: 2300, cost: 0.036093, acc: 0.992188
+[Wed Oct 10 16:47:00 2018] epoch_id: 9, batch_id: 2400, cost: 0.066371, acc: 0.976562
+[Wed Oct 10 16:47:02 2018] epoch_id: 9, batch_id: 2500, cost: 0.047459, acc: 0.984375
+[Wed Oct 10 16:47:04 2018] epoch_id: 9, batch_id: 2600, cost: 0.031411, acc: 0.992188
+[Wed Oct 10 16:47:06 2018] epoch_id: 9, batch_id: 2700, cost: 0.107300, acc: 0.953125
+[Wed Oct 10 16:47:09 2018] epoch_id: 9, batch_id: 2800, cost: 0.041434, acc: 0.984375
+[Wed Oct 10 16:47:11 2018] epoch_id: 9, batch_id: 2900, cost: 0.081185, acc: 0.960938
+[Wed Oct 10 16:47:13 2018] epoch_id: 9, batch_id: 3000, cost: 0.096274, acc: 0.960938
+
+[Wed Oct 10 16:47:13 2018] epoch_id: 9, train_avg_cost: 0.063124, train_avg_acc: 0.976961
+[Wed Oct 10 16:47:14 2018] epoch_id: 9, dev_cost: 0.678009, accuracy: 0.8403
+[Wed Oct 10 16:47:15 2018] epoch_id: 9, test_cost: 0.707977, accuracy: 0.8359
+
+[Wed Oct 10 16:47:24 2018] epoch_id: 10, batch_id: 0, cost: 0.053481, acc: 0.968750
+[Wed Oct 10 16:47:26 2018] epoch_id: 10, batch_id: 100, cost: 0.024990, acc: 0.984375
+[Wed Oct 10 16:47:29 2018] epoch_id: 10, batch_id: 200, cost: 0.025989, acc: 0.992188
+[Wed Oct 10 16:47:31 2018] epoch_id: 10, batch_id: 300, cost: 0.016467, acc: 0.992188
+[Wed Oct 10 16:47:33 2018] epoch_id: 10, batch_id: 400, cost: 0.013582, acc: 1.000000
+[Wed Oct 10 16:47:35 2018] epoch_id: 10, batch_id: 500, cost: 0.062821, acc: 0.984375
+[Wed Oct 10 16:47:38 2018] epoch_id: 10, batch_id: 600, cost: 0.018919, acc: 0.992188
+[Wed Oct 10 16:47:40 2018] epoch_id: 10, batch_id: 700, cost: 0.113543, acc: 0.937500
+[Wed Oct 10 16:47:43 2018] epoch_id: 10, batch_id: 800, cost: 0.042273, acc: 0.984375
+[Wed Oct 10 16:47:45 2018] epoch_id: 10, batch_id: 900, cost: 0.040787, acc: 0.976562
+[Wed Oct 10 16:47:47 2018] epoch_id: 10, batch_id: 1000, cost: 0.013215, acc: 1.000000
+[Wed Oct 10 16:47:50 2018] epoch_id: 10, batch_id: 1100, cost: 0.056862, acc: 0.984375
+[Wed Oct 10 16:47:52 2018] epoch_id: 10, batch_id: 1200, cost: 0.114343, acc: 0.960938
+[Wed Oct 10 16:47:54 2018] epoch_id: 10, batch_id: 1300, cost: 0.068139, acc: 0.968750
+[Wed Oct 10 16:47:57 2018] epoch_id: 10, batch_id: 1400, cost: 0.036262, acc: 0.984375
+[Wed Oct 10 16:47:59 2018] epoch_id: 10, batch_id: 1500, cost: 0.031832, acc: 0.984375
+[Wed Oct 10 16:48:01 2018] epoch_id: 10, batch_id: 1600, cost: 0.098699, acc: 0.953125
+[Wed Oct 10 16:48:03 2018] epoch_id: 10, batch_id: 1700, cost: 0.073122, acc: 0.976562
+[Wed Oct 10 16:48:06 2018] epoch_id: 10, batch_id: 1800, cost: 0.035890, acc: 0.984375
+[Wed Oct 10 16:48:08 2018] epoch_id: 10, batch_id: 1900, cost: 0.036370, acc: 0.968750
+[Wed Oct 10 16:48:10 2018] epoch_id: 10, batch_id: 2000, cost: 0.073071, acc: 0.976562
+[Wed Oct 10 16:48:12 2018] epoch_id: 10, batch_id: 2100, cost: 0.017344, acc: 1.000000
+[Wed Oct 10 16:48:15 2018] epoch_id: 10, batch_id: 2200, cost: 0.146855, acc: 0.953125
+[Wed Oct 10 16:48:17 2018] epoch_id: 10, batch_id: 2300, cost: 0.068342, acc: 0.968750
+[Wed Oct 10 16:48:19 2018] epoch_id: 10, batch_id: 2400, cost: 0.026733, acc: 0.992188
+[Wed Oct 10 16:48:21 2018] epoch_id: 10, batch_id: 2500, cost: 0.085184, acc: 0.976562
+[Wed Oct 10 16:48:23 2018] epoch_id: 10, batch_id: 2600, cost: 0.065530, acc: 0.984375
+[Wed Oct 10 16:48:26 2018] epoch_id: 10, batch_id: 2700, cost: 0.111871, acc: 0.968750
+[Wed Oct 10 16:48:29 2018] epoch_id: 10, batch_id: 2800, cost: 0.063721, acc: 0.968750
+[Wed Oct 10 16:48:31 2018] epoch_id: 10, batch_id: 2900, cost: 0.026759, acc: 0.992188
+[Wed Oct 10 16:48:34 2018] epoch_id: 10, batch_id: 3000, cost: 0.031338, acc: 0.992188
+
+[Wed Oct 10 16:48:34 2018] epoch_id: 10, train_avg_cost: 0.055555, train_avg_acc: 0.979852
+[Wed Oct 10 16:48:35 2018] epoch_id: 10, dev_cost: 0.782007, accuracy: 0.8366
+[Wed Oct 10 16:48:36 2018] epoch_id: 10, test_cost: 0.795087, accuracy: 0.8369
+
+[Wed Oct 10 16:48:44 2018] epoch_id: 11, batch_id: 0, cost: 0.032797, acc: 0.992188
+[Wed Oct 10 16:48:47 2018] epoch_id: 11, batch_id: 100, cost: 0.011773, acc: 0.992188
+[Wed Oct 10 16:48:49 2018] epoch_id: 11, batch_id: 200, cost: 0.012297, acc: 1.000000
+[Wed Oct 10 16:48:51 2018] epoch_id: 11, batch_id: 300, cost: 0.032454, acc: 0.992188
+[Wed Oct 10 16:48:53 2018] epoch_id: 11, batch_id: 400, cost: 0.100247, acc: 0.976562
+[Wed Oct 10 16:48:55 2018] epoch_id: 11, batch_id: 500, cost: 0.035470, acc: 0.992188
+[Wed Oct 10 16:48:58 2018] epoch_id: 11, batch_id: 600, cost: 0.032553, acc: 0.984375
+[Wed Oct 10 16:49:00 2018] epoch_id: 11, batch_id: 700, cost: 0.035226, acc: 0.984375
+[Wed Oct 10 16:49:02 2018] epoch_id: 11, batch_id: 800, cost: 0.010961, acc: 1.000000
+[Wed Oct 10 16:49:04 2018] epoch_id: 11, batch_id: 900, cost: 0.033747, acc: 0.984375
+[Wed Oct 10 16:49:07 2018] epoch_id: 11, batch_id: 1000, cost: 0.052710, acc: 0.976562
+[Wed Oct 10 16:49:09 2018] epoch_id: 11, batch_id: 1100, cost: 0.021664, acc: 0.992188
+[Wed Oct 10 16:49:11 2018] epoch_id: 11, batch_id: 1200, cost: 0.056635, acc: 0.984375
+[Wed Oct 10 16:49:14 2018] epoch_id: 11, batch_id: 1300, cost: 0.007764, acc: 1.000000
+[Wed Oct 10 16:49:16 2018] epoch_id: 11, batch_id: 1400, cost: 0.042336, acc: 0.976562
+[Wed Oct 10 16:49:18 2018] epoch_id: 11, batch_id: 1500, cost: 0.077117, acc: 0.976562
+[Wed Oct 10 16:49:20 2018] epoch_id: 11, batch_id: 1600, cost: 0.082522, acc: 0.976562
+[Wed Oct 10 16:49:22 2018] epoch_id: 11, batch_id: 1700, cost: 0.022290, acc: 1.000000
+[Wed Oct 10 16:49:25 2018] epoch_id: 11, batch_id: 1800, cost: 0.033992, acc: 0.984375
+[Wed Oct 10 16:49:27 2018] epoch_id: 11, batch_id: 1900, cost: 0.027460, acc: 0.992188
+[Wed Oct 10 16:49:29 2018] epoch_id: 11, batch_id: 2000, cost: 0.032003, acc: 0.992188
+[Wed Oct 10 16:49:31 2018] epoch_id: 11, batch_id: 2100, cost: 0.070170, acc: 0.976562
+[Wed Oct 10 16:49:33 2018] epoch_id: 11, batch_id: 2200, cost: 0.017124, acc: 0.992188
+[Wed Oct 10 16:49:36 2018] epoch_id: 11, batch_id: 2300, cost: 0.037207, acc: 0.984375
+[Wed Oct 10 16:49:39 2018] epoch_id: 11, batch_id: 2400, cost: 0.018202, acc: 1.000000
+[Wed Oct 10 16:49:41 2018] epoch_id: 11, batch_id: 2500, cost: 0.059570, acc: 0.976562
+[Wed Oct 10 16:49:43 2018] epoch_id: 11, batch_id: 2600, cost: 0.009950, acc: 1.000000
+[Wed Oct 10 16:49:46 2018] epoch_id: 11, batch_id: 2700, cost: 0.015869, acc: 1.000000
+[Wed Oct 10 16:49:48 2018] epoch_id: 11, batch_id: 2800, cost: 0.049429, acc: 0.984375
+[Wed Oct 10 16:49:50 2018] epoch_id: 11, batch_id: 2900, cost: 0.061248, acc: 0.976562
+[Wed Oct 10 16:49:52 2018] epoch_id: 11, batch_id: 3000, cost: 0.007281, acc: 1.000000
+
+[Wed Oct 10 16:49:53 2018] epoch_id: 11, train_avg_cost: 0.049100, train_avg_acc: 0.982414
+[Wed Oct 10 16:49:54 2018] epoch_id: 11, dev_cost: 0.919803, accuracy: 0.8392
+[Wed Oct 10 16:49:55 2018] epoch_id: 11, test_cost: 0.963836, accuracy: 0.8354
+
+[Wed Oct 10 16:50:03 2018] epoch_id: 12, batch_id: 0, cost: 0.021594, acc: 0.992188
+[Wed Oct 10 16:50:05 2018] epoch_id: 12, batch_id: 100, cost: 0.003167, acc: 1.000000
+[Wed Oct 10 16:50:08 2018] epoch_id: 12, batch_id: 200, cost: 0.034331, acc: 0.984375
+[Wed Oct 10 16:50:10 2018] epoch_id: 12, batch_id: 300, cost: 0.044300, acc: 0.984375
+[Wed Oct 10 16:50:12 2018] epoch_id: 12, batch_id: 400, cost: 0.010300, acc: 1.000000
+[Wed Oct 10 16:50:15 2018] epoch_id: 12, batch_id: 500, cost: 0.071121, acc: 0.968750
+[Wed Oct 10 16:50:17 2018] epoch_id: 12, batch_id: 600, cost: 0.027463, acc: 0.984375
+[Wed Oct 10 16:50:19 2018] epoch_id: 12, batch_id: 700, cost: 0.023278, acc: 0.992188
+[Wed Oct 10 16:50:22 2018] epoch_id: 12, batch_id: 800, cost: 0.024731, acc: 0.992188
+[Wed Oct 10 16:50:25 2018] epoch_id: 12, batch_id: 900, cost: 0.033520, acc: 0.992188
+[Wed Oct 10 16:50:27 2018] epoch_id: 12, batch_id: 1000, cost: 0.066168, acc: 0.984375
+[Wed Oct 10 16:50:29 2018] epoch_id: 12, batch_id: 1100, cost: 0.086032, acc: 0.976562
+[Wed Oct 10 16:50:32 2018] epoch_id: 12, batch_id: 1200, cost: 0.041718, acc: 0.968750
+[Wed Oct 10 16:50:34 2018] epoch_id: 12, batch_id: 1300, cost: 0.085903, acc: 0.968750
+[Wed Oct 10 16:50:36 2018] epoch_id: 12, batch_id: 1400, cost: 0.022963, acc: 0.992188
+[Wed Oct 10 16:50:38 2018] epoch_id: 12, batch_id: 1500, cost: 0.008185, acc: 1.000000
+[Wed Oct 10 16:50:41 2018] epoch_id: 12, batch_id: 1600, cost: 0.057872, acc: 0.968750
+[Wed Oct 10 16:50:43 2018] epoch_id: 12, batch_id: 1700, cost: 0.011306, acc: 1.000000
+[Wed Oct 10 16:50:45 2018] epoch_id: 12, batch_id: 1800, cost: 0.030697, acc: 0.984375
+[Wed Oct 10 16:50:47 2018] epoch_id: 12, batch_id: 1900, cost: 0.049713, acc: 0.984375
+[Wed Oct 10 16:50:50 2018] epoch_id: 12, batch_id: 2000, cost: 0.050341, acc: 0.976562
+[Wed Oct 10 16:50:52 2018] epoch_id: 12, batch_id: 2100, cost: 0.024994, acc: 0.992188
+[Wed Oct 10 16:50:54 2018] epoch_id: 12, batch_id: 2200, cost: 0.046852, acc: 0.968750
+[Wed Oct 10 16:50:56 2018] epoch_id: 12, batch_id: 2300, cost: 0.055520, acc: 0.976562
+[Wed Oct 10 16:50:59 2018] epoch_id: 12, batch_id: 2400, cost: 0.085991, acc: 0.968750
+[Wed Oct 10 16:51:01 2018] epoch_id: 12, batch_id: 2500, cost: 0.044263, acc: 0.984375
+[Wed Oct 10 16:51:03 2018] epoch_id: 12, batch_id: 2600, cost: 0.071548, acc: 0.976562
+[Wed Oct 10 16:51:05 2018] epoch_id: 12, batch_id: 2700, cost: 0.039594, acc: 0.976562
+[Wed Oct 10 16:51:08 2018] epoch_id: 12, batch_id: 2800, cost: 0.058939, acc: 0.984375
+[Wed Oct 10 16:51:10 2018] epoch_id: 12, batch_id: 2900, cost: 0.070956, acc: 0.968750
+[Wed Oct 10 16:51:12 2018] epoch_id: 12, batch_id: 3000, cost: 0.059941, acc: 0.960938
+
+[Wed Oct 10 16:51:13 2018] epoch_id: 12, train_avg_cost: 0.044984, train_avg_acc: 0.983741
+[Wed Oct 10 16:51:14 2018] epoch_id: 12, dev_cost: 0.742705, accuracy: 0.8364
+[Wed Oct 10 16:51:14 2018] epoch_id: 12, test_cost: 0.765290, accuracy: 0.8355
+
+[Wed Oct 10 16:51:23 2018] epoch_id: 13, batch_id: 0, cost: 0.054822, acc: 0.968750
+[Wed Oct 10 16:51:25 2018] epoch_id: 13, batch_id: 100, cost: 0.066483, acc: 0.976562
+[Wed Oct 10 16:51:28 2018] epoch_id: 13, batch_id: 200, cost: 0.007064, acc: 1.000000
+[Wed Oct 10 16:51:30 2018] epoch_id: 13, batch_id: 300, cost: 0.050190, acc: 0.984375
+[Wed Oct 10 16:51:32 2018] epoch_id: 13, batch_id: 400, cost: 0.044636, acc: 0.984375
+[Wed Oct 10 16:51:34 2018] epoch_id: 13, batch_id: 500, cost: 0.040963, acc: 0.984375
+[Wed Oct 10 16:51:37 2018] epoch_id: 13, batch_id: 600, cost: 0.029529, acc: 0.992188
+[Wed Oct 10 16:51:39 2018] epoch_id: 13, batch_id: 700, cost: 0.011587, acc: 1.000000
+[Wed Oct 10 16:51:41 2018] epoch_id: 13, batch_id: 800, cost: 0.039673, acc: 0.984375
+[Wed Oct 10 16:51:43 2018] epoch_id: 13, batch_id: 900, cost: 0.028793, acc: 0.984375
+[Wed Oct 10 16:51:46 2018] epoch_id: 13, batch_id: 1000, cost: 0.055973, acc: 0.968750
+[Wed Oct 10 16:51:48 2018] epoch_id: 13, batch_id: 1100, cost: 0.016087, acc: 0.992188
+[Wed Oct 10 16:51:50 2018] epoch_id: 13, batch_id: 1200, cost: 0.096423, acc: 0.960938
+[Wed Oct 10 16:51:52 2018] epoch_id: 13, batch_id: 1300, cost: 0.019652, acc: 0.992188
+[Wed Oct 10 16:51:55 2018] epoch_id: 13, batch_id: 1400, cost: 0.018604, acc: 0.992188
+[Wed Oct 10 16:51:57 2018] epoch_id: 13, batch_id: 1500, cost: 0.060169, acc: 0.960938
+[Wed Oct 10 16:51:59 2018] epoch_id: 13, batch_id: 1600, cost: 0.014124, acc: 0.992188
+[Wed Oct 10 16:52:01 2018] epoch_id: 13, batch_id: 1700, cost: 0.029843, acc: 0.984375
+[Wed Oct 10 16:52:05 2018] epoch_id: 13, batch_id: 1800, cost: 0.063125, acc: 0.976562
+[Wed Oct 10 16:52:07 2018] epoch_id: 13, batch_id: 1900, cost: 0.070910, acc: 0.953125
+[Wed Oct 10 16:52:09 2018] epoch_id: 13, batch_id: 2000, cost: 0.042864, acc: 0.984375
+[Wed Oct 10 16:52:11 2018] epoch_id: 13, batch_id: 2100, cost: 0.014658, acc: 0.992188
+[Wed Oct 10 16:52:14 2018] epoch_id: 13, batch_id: 2200, cost: 0.075003, acc: 0.968750
+[Wed Oct 10 16:52:16 2018] epoch_id: 13, batch_id: 2300, cost: 0.034856, acc: 0.976562
+[Wed Oct 10 16:52:18 2018] epoch_id: 13, batch_id: 2400, cost: 0.040518, acc: 0.976562
+[Wed Oct 10 16:52:20 2018] epoch_id: 13, batch_id: 2500, cost: 0.040826, acc: 0.976562
+[Wed Oct 10 16:52:23 2018] epoch_id: 13, batch_id: 2600, cost: 0.043420, acc: 0.968750
+[Wed Oct 10 16:52:25 2018] epoch_id: 13, batch_id: 2700, cost: 0.027364, acc: 0.984375
+[Wed Oct 10 16:52:27 2018] epoch_id: 13, batch_id: 2800, cost: 0.030051, acc: 0.984375
+[Wed Oct 10 16:52:30 2018] epoch_id: 13, batch_id: 2900, cost: 0.040024, acc: 0.984375
+[Wed Oct 10 16:52:32 2018] epoch_id: 13, batch_id: 3000, cost: 0.054583, acc: 0.968750
+
+[Wed Oct 10 16:52:32 2018] epoch_id: 13, train_avg_cost: 0.041237, train_avg_acc: 0.985349
+[Wed Oct 10 16:52:33 2018] epoch_id: 13, dev_cost: 1.078762, accuracy: 0.8411
+[Wed Oct 10 16:52:34 2018] epoch_id: 13, test_cost: 1.111191, accuracy: 0.8358
+
+[Wed Oct 10 16:52:43 2018] epoch_id: 14, batch_id: 0, cost: 0.003011, acc: 1.000000
+[Wed Oct 10 16:52:45 2018] epoch_id: 14, batch_id: 100, cost: 0.006236, acc: 1.000000
+[Wed Oct 10 16:52:48 2018] epoch_id: 14, batch_id: 200, cost: 0.017501, acc: 0.992188
+[Wed Oct 10 16:52:50 2018] epoch_id: 14, batch_id: 300, cost: 0.062686, acc: 0.976562
+[Wed Oct 10 16:52:52 2018] epoch_id: 14, batch_id: 400, cost: 0.008696, acc: 1.000000
+[Wed Oct 10 16:52:54 2018] epoch_id: 14, batch_id: 500, cost: 0.033238, acc: 0.984375
+[Wed Oct 10 16:52:57 2018] epoch_id: 14, batch_id: 600, cost: 0.086478, acc: 0.976562
+[Wed Oct 10 16:52:59 2018] epoch_id: 14, batch_id: 700, cost: 0.009820, acc: 0.992188
+[Wed Oct 10 16:53:01 2018] epoch_id: 14, batch_id: 800, cost: 0.066287, acc: 0.992188
+[Wed Oct 10 16:53:03 2018] epoch_id: 14, batch_id: 900, cost: 0.004043, acc: 1.000000
+[Wed Oct 10 16:53:05 2018] epoch_id: 14, batch_id: 1000, cost: 0.007859, acc: 1.000000
+[Wed Oct 10 16:53:08 2018] epoch_id: 14, batch_id: 1100, cost: 0.040856, acc: 0.976562
+[Wed Oct 10 16:53:10 2018] epoch_id: 14, batch_id: 1200, cost: 0.038995, acc: 0.984375
+[Wed Oct 10 16:53:12 2018] epoch_id: 14, batch_id: 1300, cost: 0.026738, acc: 0.992188
+[Wed Oct 10 16:53:14 2018] epoch_id: 14, batch_id: 1400, cost: 0.048141, acc: 0.968750
+[Wed Oct 10 16:53:16 2018] epoch_id: 14, batch_id: 1500, cost: 0.081051, acc: 0.976562
+[Wed Oct 10 16:53:19 2018] epoch_id: 14, batch_id: 1600, cost: 0.017602, acc: 0.992188
+[Wed Oct 10 16:53:21 2018] epoch_id: 14, batch_id: 1700, cost: 0.018175, acc: 0.992188
+[Wed Oct 10 16:53:23 2018] epoch_id: 14, batch_id: 1800, cost: 0.076890, acc: 0.968750
+[Wed Oct 10 16:53:25 2018] epoch_id: 14, batch_id: 1900, cost: 0.060768, acc: 0.976562
+[Wed Oct 10 16:53:28 2018] epoch_id: 14, batch_id: 2000, cost: 0.020131, acc: 0.984375
+[Wed Oct 10 16:53:30 2018] epoch_id: 14, batch_id: 2100, cost: 0.077612, acc: 0.976562
+[Wed Oct 10 16:53:32 2018] epoch_id: 14, batch_id: 2200, cost: 0.101997, acc: 0.960938
+[Wed Oct 10 16:53:34 2018] epoch_id: 14, batch_id: 2300, cost: 0.061213, acc: 0.976562
+[Wed Oct 10 16:53:37 2018] epoch_id: 14, batch_id: 2400, cost: 0.048987, acc: 0.976562
+[Wed Oct 10 16:53:39 2018] epoch_id: 14, batch_id: 2500, cost: 0.037741, acc: 0.984375
+[Wed Oct 10 16:53:41 2018] epoch_id: 14, batch_id: 2600, cost: 0.011101, acc: 1.000000
+[Wed Oct 10 16:53:43 2018] epoch_id: 14, batch_id: 2700, cost: 0.019846, acc: 0.992188
+[Wed Oct 10 16:53:45 2018] epoch_id: 14, batch_id: 2800, cost: 0.026633, acc: 1.000000
+[Wed Oct 10 16:53:48 2018] epoch_id: 14, batch_id: 2900, cost: 0.048637, acc: 0.976562
+[Wed Oct 10 16:53:50 2018] epoch_id: 14, batch_id: 3000, cost: 0.056658, acc: 0.992188
+
+[Wed Oct 10 16:53:50 2018] epoch_id: 14, train_avg_cost: 0.037520, train_avg_acc: 0.986595
+[Wed Oct 10 16:53:51 2018] epoch_id: 14, dev_cost: 0.958707, accuracy: 0.8367
+[Wed Oct 10 16:53:52 2018] epoch_id: 14, test_cost: 0.974553, accuracy: 0.8382
+
+[Wed Oct 10 16:54:01 2018] epoch_id: 15, batch_id: 0, cost: 0.015232, acc: 1.000000
+[Wed Oct 10 16:54:04 2018] epoch_id: 15, batch_id: 100, cost: 0.007195, acc: 1.000000
+[Wed Oct 10 16:54:06 2018] epoch_id: 15, batch_id: 200, cost: 0.017140, acc: 0.992188
+[Wed Oct 10 16:54:08 2018] epoch_id: 15, batch_id: 300, cost: 0.003196, acc: 1.000000
+[Wed Oct 10 16:54:10 2018] epoch_id: 15, batch_id: 400, cost: 0.046839, acc: 0.976562
+[Wed Oct 10 16:54:13 2018] epoch_id: 15, batch_id: 500, cost: 0.038533, acc: 0.992188
+[Wed Oct 10 16:54:15 2018] epoch_id: 15, batch_id: 600, cost: 0.016502, acc: 0.992188
+[Wed Oct 10 16:54:17 2018] epoch_id: 15, batch_id: 700, cost: 0.041825, acc: 0.976562
+[Wed Oct 10 16:54:20 2018] epoch_id: 15, batch_id: 800, cost: 0.083583, acc: 0.968750
+[Wed Oct 10 16:54:22 2018] epoch_id: 15, batch_id: 900, cost: 0.013552, acc: 0.992188
+[Wed Oct 10 16:54:24 2018] epoch_id: 15, batch_id: 1000, cost: 0.015114, acc: 1.000000
+[Wed Oct 10 16:54:26 2018] epoch_id: 15, batch_id: 1100, cost: 0.020185, acc: 0.992188
+[Wed Oct 10 16:54:29 2018] epoch_id: 15, batch_id: 1200, cost: 0.023274, acc: 0.984375
+[Wed Oct 10 16:54:31 2018] epoch_id: 15, batch_id: 1300, cost: 0.013836, acc: 1.000000
+[Wed Oct 10 16:54:33 2018] epoch_id: 15, batch_id: 1400, cost: 0.091024, acc: 0.984375
+[Wed Oct 10 16:54:36 2018] epoch_id: 15, batch_id: 1500, cost: 0.047340, acc: 0.976562
+[Wed Oct 10 16:54:38 2018] epoch_id: 15, batch_id: 1600, cost: 0.030423, acc: 0.992188
+[Wed Oct 10 16:54:40 2018] epoch_id: 15, batch_id: 1700, cost: 0.014750, acc: 0.992188
+[Wed Oct 10 16:54:42 2018] epoch_id: 15, batch_id: 1800, cost: 0.090613, acc: 0.968750
+[Wed Oct 10 16:54:45 2018] epoch_id: 15, batch_id: 1900, cost: 0.030791, acc: 0.984375
+[Wed Oct 10 16:54:47 2018] epoch_id: 15, batch_id: 2000, cost: 0.046719, acc: 0.976562
+[Wed Oct 10 16:54:49 2018] epoch_id: 15, batch_id: 2100, cost: 0.043871, acc: 0.984375
+[Wed Oct 10 16:54:51 2018] epoch_id: 15, batch_id: 2200, cost: 0.078455, acc: 0.968750
+[Wed Oct 10 16:54:53 2018] epoch_id: 15, batch_id: 2300, cost: 0.029536, acc: 0.976562
+[Wed Oct 10 16:54:56 2018] epoch_id: 15, batch_id: 2400, cost: 0.028696, acc: 0.984375
+[Wed Oct 10 16:54:58 2018] epoch_id: 15, batch_id: 2500, cost: 0.007129, acc: 0.992188
+[Wed Oct 10 16:55:00 2018] epoch_id: 15, batch_id: 2600, cost: 0.049990, acc: 0.976562
+[Wed Oct 10 16:55:03 2018] epoch_id: 15, batch_id: 2700, cost: 0.040309, acc: 0.984375
+[Wed Oct 10 16:55:06 2018] epoch_id: 15, batch_id: 2800, cost: 0.098748, acc: 0.976562
+[Wed Oct 10 16:55:08 2018] epoch_id: 15, batch_id: 2900, cost: 0.005371, acc: 1.000000
+[Wed Oct 10 16:55:10 2018] epoch_id: 15, batch_id: 3000, cost: 0.060264, acc: 0.960938
+
+[Wed Oct 10 16:55:11 2018] epoch_id: 15, train_avg_cost: 0.034637, train_avg_acc: 0.987582
+[Wed Oct 10 16:55:12 2018] epoch_id: 15, dev_cost: 0.858216, accuracy: 0.8365
+[Wed Oct 10 16:55:13 2018] epoch_id: 15, test_cost: 0.874420, accuracy: 0.8411
+
+[Wed Oct 10 16:55:21 2018] epoch_id: 16, batch_id: 0, cost: 0.013283, acc: 1.000000
+[Wed Oct 10 16:55:23 2018] epoch_id: 16, batch_id: 100, cost: 0.038128, acc: 0.984375
+[Wed Oct 10 16:55:25 2018] epoch_id: 16, batch_id: 200, cost: 0.031110, acc: 0.976562
+[Wed Oct 10 16:55:28 2018] epoch_id: 16, batch_id: 300, cost: 0.005346, acc: 1.000000
+[Wed Oct 10 16:55:30 2018] epoch_id: 16, batch_id: 400, cost: 0.027634, acc: 0.984375
+[Wed Oct 10 16:55:32 2018] epoch_id: 16, batch_id: 500, cost: 0.065929, acc: 0.976562
+[Wed Oct 10 16:55:35 2018] epoch_id: 16, batch_id: 600, cost: 0.012638, acc: 0.992188
+[Wed Oct 10 16:55:37 2018] epoch_id: 16, batch_id: 700, cost: 0.057962, acc: 0.984375
+[Wed Oct 10 16:55:39 2018] epoch_id: 16, batch_id: 800, cost: 0.064390, acc: 0.976562
+[Wed Oct 10 16:55:42 2018] epoch_id: 16, batch_id: 900, cost: 0.018866, acc: 0.992188
+[Wed Oct 10 16:55:44 2018] epoch_id: 16, batch_id: 1000, cost: 0.004791, acc: 1.000000
+[Wed Oct 10 16:55:46 2018] epoch_id: 16, batch_id: 1100, cost: 0.012691, acc: 0.992188
+[Wed Oct 10 16:55:49 2018] epoch_id: 16, batch_id: 1200, cost: 0.033199, acc: 0.992188
+[Wed Oct 10 16:55:51 2018] epoch_id: 16, batch_id: 1300, cost: 0.007757, acc: 1.000000
+[Wed Oct 10 16:55:53 2018] epoch_id: 16, batch_id: 1400, cost: 0.016653, acc: 0.992188
+[Wed Oct 10 16:55:55 2018] epoch_id: 16, batch_id: 1500, cost: 0.034653, acc: 0.968750
+[Wed Oct 10 16:55:58 2018] epoch_id: 16, batch_id: 1600, cost: 0.051049, acc: 0.976562
+[Wed Oct 10 16:56:00 2018] epoch_id: 16, batch_id: 1700, cost: 0.001466, acc: 1.000000
+[Wed Oct 10 16:56:02 2018] epoch_id: 16, batch_id: 1800, cost: 0.035508, acc: 0.992188
+[Wed Oct 10 16:56:05 2018] epoch_id: 16, batch_id: 1900, cost: 0.022919, acc: 0.984375
+[Wed Oct 10 16:56:07 2018] epoch_id: 16, batch_id: 2000, cost: 0.102175, acc: 0.976562
+[Wed Oct 10 16:56:09 2018] epoch_id: 16, batch_id: 2100, cost: 0.012663, acc: 1.000000
+[Wed Oct 10 16:56:11 2018] epoch_id: 16, batch_id: 2200, cost: 0.026142, acc: 0.984375
+[Wed Oct 10 16:56:15 2018] epoch_id: 16, batch_id: 2300, cost: 0.007566, acc: 1.000000
+[Wed Oct 10 16:56:17 2018] epoch_id: 16, batch_id: 2400, cost: 0.043235, acc: 0.976562
+[Wed Oct 10 16:56:20 2018] epoch_id: 16, batch_id: 2500, cost: 0.039383, acc: 0.984375
+[Wed Oct 10 16:56:22 2018] epoch_id: 16, batch_id: 2600, cost: 0.009917, acc: 1.000000
+[Wed Oct 10 16:56:24 2018] epoch_id: 16, batch_id: 2700, cost: 0.036917, acc: 0.984375
+[Wed Oct 10 16:56:26 2018] epoch_id: 16, batch_id: 2800, cost: 0.012813, acc: 1.000000
+[Wed Oct 10 16:56:29 2018] epoch_id: 16, batch_id: 2900, cost: 0.033933, acc: 0.984375
+[Wed Oct 10 16:56:31 2018] epoch_id: 16, batch_id: 3000, cost: 0.007463, acc: 1.000000
+
+[Wed Oct 10 16:56:32 2018] epoch_id: 16, train_avg_cost: 0.031971, train_avg_acc: 0.988555
+[Wed Oct 10 16:56:33 2018] epoch_id: 16, dev_cost: 0.955907, accuracy: 0.8389
+[Wed Oct 10 16:56:34 2018] epoch_id: 16, test_cost: 0.953062, accuracy: 0.8389
+
+[Wed Oct 10 16:56:42 2018] epoch_id: 17, batch_id: 0, cost: 0.031323, acc: 0.992188
+[Wed Oct 10 16:56:44 2018] epoch_id: 17, batch_id: 100, cost: 0.010965, acc: 1.000000
+[Wed Oct 10 16:56:46 2018] epoch_id: 17, batch_id: 200, cost: 0.056771, acc: 0.976562
+[Wed Oct 10 16:56:49 2018] epoch_id: 17, batch_id: 300, cost: 0.026509, acc: 0.992188
+[Wed Oct 10 16:56:51 2018] epoch_id: 17, batch_id: 400, cost: 0.039409, acc: 0.992188
+[Wed Oct 10 16:56:53 2018] epoch_id: 17, batch_id: 500, cost: 0.063554, acc: 0.976562
+[Wed Oct 10 16:56:55 2018] epoch_id: 17, batch_id: 600, cost: 0.035896, acc: 0.976562
+[Wed Oct 10 16:56:58 2018] epoch_id: 17, batch_id: 700, cost: 0.022053, acc: 0.992188
+[Wed Oct 10 16:57:00 2018] epoch_id: 17, batch_id: 800, cost: 0.024150, acc: 0.976562
+[Wed Oct 10 16:57:03 2018] epoch_id: 17, batch_id: 900, cost: 0.009064, acc: 0.992188
+[Wed Oct 10 16:57:05 2018] epoch_id: 17, batch_id: 1000, cost: 0.037311, acc: 0.976562
+[Wed Oct 10 16:57:08 2018] epoch_id: 17, batch_id: 1100, cost: 0.036577, acc: 0.976562
+[Wed Oct 10 16:57:10 2018] epoch_id: 17, batch_id: 1200, cost: 0.020783, acc: 0.992188
+[Wed Oct 10 16:57:12 2018] epoch_id: 17, batch_id: 1300, cost: 0.017610, acc: 0.992188
+[Wed Oct 10 16:57:14 2018] epoch_id: 17, batch_id: 1400, cost: 0.027604, acc: 0.976562
+[Wed Oct 10 16:57:17 2018] epoch_id: 17, batch_id: 1500, cost: 0.040730, acc: 0.992188
+[Wed Oct 10 16:57:19 2018] epoch_id: 17, batch_id: 1600, cost: 0.077946, acc: 0.984375
+[Wed Oct 10 16:57:21 2018] epoch_id: 17, batch_id: 1700, cost: 0.021349, acc: 0.984375
+[Wed Oct 10 16:57:24 2018] epoch_id: 17, batch_id: 1800, cost: 0.016132, acc: 0.992188
+[Wed Oct 10 16:57:26 2018] epoch_id: 17, batch_id: 1900, cost: 0.018797, acc: 0.984375
+[Wed Oct 10 16:57:28 2018] epoch_id: 17, batch_id: 2000, cost: 0.009052, acc: 1.000000
+[Wed Oct 10 16:57:30 2018] epoch_id: 17, batch_id: 2100, cost: 0.028399, acc: 0.992188
+[Wed Oct 10 16:57:33 2018] epoch_id: 17, batch_id: 2200, cost: 0.009593, acc: 1.000000
+[Wed Oct 10 16:57:35 2018] epoch_id: 17, batch_id: 2300, cost: 0.018474, acc: 0.992188
+[Wed Oct 10 16:57:37 2018] epoch_id: 17, batch_id: 2400, cost: 0.007873, acc: 1.000000
+[Wed Oct 10 16:57:40 2018] epoch_id: 17, batch_id: 2500, cost: 0.054923, acc: 0.976562
+[Wed Oct 10 16:57:42 2018] epoch_id: 17, batch_id: 2600, cost: 0.019036, acc: 0.992188
+[Wed Oct 10 16:57:44 2018] epoch_id: 17, batch_id: 2700, cost: 0.017081, acc: 1.000000
+[Wed Oct 10 16:57:46 2018] epoch_id: 17, batch_id: 2800, cost: 0.045522, acc: 0.976562
+[Wed Oct 10 16:57:49 2018] epoch_id: 17, batch_id: 2900, cost: 0.034922, acc: 0.984375
+[Wed Oct 10 16:57:51 2018] epoch_id: 17, batch_id: 3000, cost: 0.039566, acc: 0.984375
+
+[Wed Oct 10 16:57:51 2018] epoch_id: 17, train_avg_cost: 0.030061, train_avg_acc: 0.989478
+[Wed Oct 10 16:57:52 2018] epoch_id: 17, dev_cost: 1.184997, accuracy: 0.8406
+[Wed Oct 10 16:57:53 2018] epoch_id: 17, test_cost: 1.175792, accuracy: 0.8372
+
+[Wed Oct 10 16:58:02 2018] epoch_id: 18, batch_id: 0, cost: 0.015059, acc: 0.992188
+[Wed Oct 10 16:58:04 2018] epoch_id: 18, batch_id: 100, cost: 0.023421, acc: 0.992188
+[Wed Oct 10 16:58:06 2018] epoch_id: 18, batch_id: 200, cost: 0.007234, acc: 1.000000
+[Wed Oct 10 16:58:08 2018] epoch_id: 18, batch_id: 300, cost: 0.007139, acc: 1.000000
+[Wed Oct 10 16:58:10 2018] epoch_id: 18, batch_id: 400, cost: 0.007934, acc: 1.000000
+[Wed Oct 10 16:58:13 2018] epoch_id: 18, batch_id: 500, cost: 0.004312, acc: 1.000000
+[Wed Oct 10 16:58:15 2018] epoch_id: 18, batch_id: 600, cost: 0.001806, acc: 1.000000
+[Wed Oct 10 16:58:17 2018] epoch_id: 18, batch_id: 700, cost: 0.004790, acc: 1.000000
+[Wed Oct 10 16:58:20 2018] epoch_id: 18, batch_id: 800, cost: 0.048477, acc: 0.992188
+[Wed Oct 10 16:58:22 2018] epoch_id: 18, batch_id: 900, cost: 0.066390, acc: 0.992188
+[Wed Oct 10 16:58:24 2018] epoch_id: 18, batch_id: 1000, cost: 0.014440, acc: 0.992188
+[Wed Oct 10 16:58:26 2018] epoch_id: 18, batch_id: 1100, cost: 0.020435, acc: 0.992188
+[Wed Oct 10 16:58:29 2018] epoch_id: 18, batch_id: 1200, cost: 0.007474, acc: 0.992188
+[Wed Oct 10 16:58:31 2018] epoch_id: 18, batch_id: 1300, cost: 0.036209, acc: 0.984375
+[Wed Oct 10 16:58:33 2018] epoch_id: 18, batch_id: 1400, cost: 0.026540, acc: 0.984375
+[Wed Oct 10 16:58:35 2018] epoch_id: 18, batch_id: 1500, cost: 0.019448, acc: 0.992188
+[Wed Oct 10 16:58:38 2018] epoch_id: 18, batch_id: 1600, cost: 0.052421, acc: 0.968750
+[Wed Oct 10 16:58:40 2018] epoch_id: 18, batch_id: 1700, cost: 0.022365, acc: 0.992188
+[Wed Oct 10 16:58:42 2018] epoch_id: 18, batch_id: 1800, cost: 0.135754, acc: 0.984375
+[Wed Oct 10 16:58:45 2018] epoch_id: 18, batch_id: 1900, cost: 0.037197, acc: 0.992188
+[Wed Oct 10 16:58:48 2018] epoch_id: 18, batch_id: 2000, cost: 0.010672, acc: 0.992188
+[Wed Oct 10 16:58:50 2018] epoch_id: 18, batch_id: 2100, cost: 0.012909, acc: 1.000000
+[Wed Oct 10 16:58:52 2018] epoch_id: 18, batch_id: 2200, cost: 0.061615, acc: 0.976562
+[Wed Oct 10 16:58:55 2018] epoch_id: 18, batch_id: 2300, cost: 0.081252, acc: 0.960938
+[Wed Oct 10 16:58:57 2018] epoch_id: 18, batch_id: 2400, cost: 0.009792, acc: 1.000000
+[Wed Oct 10 16:58:59 2018] epoch_id: 18, batch_id: 2500, cost: 0.039835, acc: 0.984375
+[Wed Oct 10 16:59:02 2018] epoch_id: 18, batch_id: 2600, cost: 0.002643, acc: 1.000000
+[Wed Oct 10 16:59:04 2018] epoch_id: 18, batch_id: 2700, cost: 0.017633, acc: 0.992188
+[Wed Oct 10 16:59:06 2018] epoch_id: 18, batch_id: 2800, cost: 0.050407, acc: 0.976562
+[Wed Oct 10 16:59:08 2018] epoch_id: 18, batch_id: 2900, cost: 0.066672, acc: 0.960938
+[Wed Oct 10 16:59:11 2018] epoch_id: 18, batch_id: 3000, cost: 0.023438, acc: 0.984375
+
+[Wed Oct 10 16:59:11 2018] epoch_id: 18, train_avg_cost: 0.028777, train_avg_acc: 0.989884
+[Wed Oct 10 16:59:12 2018] epoch_id: 18, dev_cost: 1.191979, accuracy: 0.8346
+[Wed Oct 10 16:59:13 2018] epoch_id: 18, test_cost: 1.159855, accuracy: 0.8344
+
+[Wed Oct 10 16:59:22 2018] epoch_id: 19, batch_id: 0, cost: 0.023233, acc: 0.992188
+[Wed Oct 10 16:59:24 2018] epoch_id: 19, batch_id: 100, cost: 0.006624, acc: 1.000000
+[Wed Oct 10 16:59:26 2018] epoch_id: 19, batch_id: 200, cost: 0.018784, acc: 0.992188
+[Wed Oct 10 16:59:28 2018] epoch_id: 19, batch_id: 300, cost: 0.012745, acc: 0.992188
+[Wed Oct 10 16:59:31 2018] epoch_id: 19, batch_id: 400, cost: 0.010857, acc: 1.000000
+[Wed Oct 10 16:59:33 2018] epoch_id: 19, batch_id: 500, cost: 0.006066, acc: 1.000000
+[Wed Oct 10 16:59:35 2018] epoch_id: 19, batch_id: 600, cost: 0.014349, acc: 0.992188
+[Wed Oct 10 16:59:38 2018] epoch_id: 19, batch_id: 700, cost: 0.016725, acc: 0.992188
+[Wed Oct 10 16:59:40 2018] epoch_id: 19, batch_id: 800, cost: 0.069121, acc: 0.984375
+[Wed Oct 10 16:59:42 2018] epoch_id: 19, batch_id: 900, cost: 0.018849, acc: 0.984375
+[Wed Oct 10 16:59:44 2018] epoch_id: 19, batch_id: 1000, cost: 0.031679, acc: 0.984375
+[Wed Oct 10 16:59:47 2018] epoch_id: 19, batch_id: 1100, cost: 0.010815, acc: 0.992188
+[Wed Oct 10 16:59:49 2018] epoch_id: 19, batch_id: 1200, cost: 0.015778, acc: 0.992188
+[Wed Oct 10 16:59:51 2018] epoch_id: 19, batch_id: 1300, cost: 0.055160, acc: 0.984375
+[Wed Oct 10 16:59:53 2018] epoch_id: 19, batch_id: 1400, cost: 0.009311, acc: 0.992188
+[Wed Oct 10 16:59:55 2018] epoch_id: 19, batch_id: 1500, cost: 0.014874, acc: 0.992188
+[Wed Oct 10 16:59:58 2018] epoch_id: 19, batch_id: 1600, cost: 0.038188, acc: 0.992188
+[Wed Oct 10 17:00:00 2018] epoch_id: 19, batch_id: 1700, cost: 0.001565, acc: 1.000000
+[Wed Oct 10 17:00:02 2018] epoch_id: 19, batch_id: 1800, cost: 0.013963, acc: 0.992188
+[Wed Oct 10 17:00:04 2018] epoch_id: 19, batch_id: 1900, cost: 0.028362, acc: 0.992188
+[Wed Oct 10 17:00:06 2018] epoch_id: 19, batch_id: 2000, cost: 0.006552, acc: 1.000000
+[Wed Oct 10 17:00:09 2018] epoch_id: 19, batch_id: 2100, cost: 0.045230, acc: 0.992188
+[Wed Oct 10 17:00:11 2018] epoch_id: 19, batch_id: 2200, cost: 0.029525, acc: 0.984375
+[Wed Oct 10 17:00:13 2018] epoch_id: 19, batch_id: 2300, cost: 0.009774, acc: 0.992188
+[Wed Oct 10 17:00:15 2018] epoch_id: 19, batch_id: 2400, cost: 0.003385, acc: 1.000000
+[Wed Oct 10 17:00:18 2018] epoch_id: 19, batch_id: 2500, cost: 0.030629, acc: 0.984375
+[Wed Oct 10 17:00:20 2018] epoch_id: 19, batch_id: 2600, cost: 0.039615, acc: 0.992188
+[Wed Oct 10 17:00:22 2018] epoch_id: 19, batch_id: 2700, cost: 0.016678, acc: 0.992188
+[Wed Oct 10 17:00:24 2018] epoch_id: 19, batch_id: 2800, cost: 0.004723, acc: 1.000000
+[Wed Oct 10 17:00:26 2018] epoch_id: 19, batch_id: 2900, cost: 0.018062, acc: 0.992188
+[Wed Oct 10 17:00:29 2018] epoch_id: 19, batch_id: 3000, cost: 0.032904, acc: 0.984375
+
+[Wed Oct 10 17:00:29 2018] epoch_id: 19, train_avg_cost: 0.026175, train_avg_acc: 0.991055
+[Wed Oct 10 17:00:30 2018] epoch_id: 19, dev_cost: 1.013367, accuracy: 0.8388
+[Wed Oct 10 17:00:31 2018] epoch_id: 19, test_cost: 1.016906, accuracy: 0.8335
+
+[Wed Oct 10 17:00:40 2018] epoch_id: 20, batch_id: 0, cost: 0.019038, acc: 0.992188
+[Wed Oct 10 17:00:42 2018] epoch_id: 20, batch_id: 100, cost: 0.001216, acc: 1.000000
+[Wed Oct 10 17:00:44 2018] epoch_id: 20, batch_id: 200, cost: 0.006635, acc: 1.000000
+[Wed Oct 10 17:00:47 2018] epoch_id: 20, batch_id: 300, cost: 0.051503, acc: 0.984375
+[Wed Oct 10 17:00:49 2018] epoch_id: 20, batch_id: 400, cost: 0.044815, acc: 0.992188
+[Wed Oct 10 17:00:51 2018] epoch_id: 20, batch_id: 500, cost: 0.041529, acc: 0.992188
+[Wed Oct 10 17:00:53 2018] epoch_id: 20, batch_id: 600, cost: 0.010035, acc: 1.000000
+[Wed Oct 10 17:00:56 2018] epoch_id: 20, batch_id: 700, cost: 0.019799, acc: 0.992188
+[Wed Oct 10 17:00:58 2018] epoch_id: 20, batch_id: 800, cost: 0.062296, acc: 0.984375
+[Wed Oct 10 17:01:00 2018] epoch_id: 20, batch_id: 900, cost: 0.015680, acc: 0.992188
+[Wed Oct 10 17:01:03 2018] epoch_id: 20, batch_id: 1000, cost: 0.051963, acc: 0.984375
+[Wed Oct 10 17:01:05 2018] epoch_id: 20, batch_id: 1100, cost: 0.023968, acc: 0.984375
+[Wed Oct 10 17:01:07 2018] epoch_id: 20, batch_id: 1200, cost: 0.079527, acc: 0.984375
+[Wed Oct 10 17:01:09 2018] epoch_id: 20, batch_id: 1300, cost: 0.039612, acc: 0.992188
+[Wed Oct 10 17:01:12 2018] epoch_id: 20, batch_id: 1400, cost: 0.010211, acc: 1.000000
+[Wed Oct 10 17:01:14 2018] epoch_id: 20, batch_id: 1500, cost: 0.012661, acc: 0.992188
+[Wed Oct 10 17:01:16 2018] epoch_id: 20, batch_id: 1600, cost: 0.051475, acc: 0.984375
+[Wed Oct 10 17:01:18 2018] epoch_id: 20, batch_id: 1700, cost: 0.013513, acc: 1.000000
+[Wed Oct 10 17:01:21 2018] epoch_id: 20, batch_id: 1800, cost: 0.006646, acc: 1.000000
+[Wed Oct 10 17:01:23 2018] epoch_id: 20, batch_id: 1900, cost: 0.013369, acc: 0.992188
+[Wed Oct 10 17:01:25 2018] epoch_id: 20, batch_id: 2000, cost: 0.030614, acc: 0.984375
+[Wed Oct 10 17:01:27 2018] epoch_id: 20, batch_id: 2100, cost: 0.003242, acc: 1.000000
+[Wed Oct 10 17:01:30 2018] epoch_id: 20, batch_id: 2200, cost: 0.051409, acc: 0.984375
+[Wed Oct 10 17:01:32 2018] epoch_id: 20, batch_id: 2300, cost: 0.005996, acc: 1.000000
+[Wed Oct 10 17:01:34 2018] epoch_id: 20, batch_id: 2400, cost: 0.049493, acc: 0.976562
+[Wed Oct 10 17:01:36 2018] epoch_id: 20, batch_id: 2500, cost: 0.013635, acc: 0.992188
+[Wed Oct 10 17:01:38 2018] epoch_id: 20, batch_id: 2600, cost: 0.019265, acc: 1.000000
+[Wed Oct 10 17:01:41 2018] epoch_id: 20, batch_id: 2700, cost: 0.040467, acc: 0.976562
+[Wed Oct 10 17:01:44 2018] epoch_id: 20, batch_id: 2800, cost: 0.029407, acc: 0.992188
+[Wed Oct 10 17:01:46 2018] epoch_id: 20, batch_id: 2900, cost: 0.036886, acc: 0.976562
+[Wed Oct 10 17:01:49 2018] epoch_id: 20, batch_id: 3000, cost: 0.018317, acc: 0.992188
+
+[Wed Oct 10 17:01:49 2018] epoch_id: 20, train_avg_cost: 0.025258, train_avg_acc: 0.991367
+[Wed Oct 10 17:01:50 2018] epoch_id: 20, dev_cost: 1.125290, accuracy: 0.8358
+[Wed Oct 10 17:01:51 2018] epoch_id: 20, test_cost: 1.148761, accuracy: 0.832
+
+[Wed Oct 10 17:01:59 2018] epoch_id: 21, batch_id: 0, cost: 0.020581, acc: 0.992188
+[Wed Oct 10 17:02:02 2018] epoch_id: 21, batch_id: 100, cost: 0.021132, acc: 0.992188
+[Wed Oct 10 17:02:04 2018] epoch_id: 21, batch_id: 200, cost: 0.040257, acc: 0.976562
+[Wed Oct 10 17:02:06 2018] epoch_id: 21, batch_id: 300, cost: 0.013450, acc: 1.000000
+[Wed Oct 10 17:02:08 2018] epoch_id: 21, batch_id: 400, cost: 0.027469, acc: 0.992188
+[Wed Oct 10 17:02:11 2018] epoch_id: 21, batch_id: 500, cost: 0.007088, acc: 0.992188
+[Wed Oct 10 17:02:13 2018] epoch_id: 21, batch_id: 600, cost: 0.028169, acc: 0.992188
+[Wed Oct 10 17:02:15 2018] epoch_id: 21, batch_id: 700, cost: 0.067799, acc: 0.984375
+[Wed Oct 10 17:02:17 2018] epoch_id: 21, batch_id: 800, cost: 0.003184, acc: 1.000000
+[Wed Oct 10 17:02:20 2018] epoch_id: 21, batch_id: 900, cost: 0.011056, acc: 0.992188
+[Wed Oct 10 17:02:22 2018] epoch_id: 21, batch_id: 1000, cost: 0.012187, acc: 1.000000
+[Wed Oct 10 17:02:24 2018] epoch_id: 21, batch_id: 1100, cost: 0.009409, acc: 0.992188
+[Wed Oct 10 17:02:26 2018] epoch_id: 21, batch_id: 1200, cost: 0.000739, acc: 1.000000
+[Wed Oct 10 17:02:29 2018] epoch_id: 21, batch_id: 1300, cost: 0.002971, acc: 1.000000
+[Wed Oct 10 17:02:31 2018] epoch_id: 21, batch_id: 1400, cost: 0.031287, acc: 0.984375
+[Wed Oct 10 17:02:33 2018] epoch_id: 21, batch_id: 1500, cost: 0.023455, acc: 0.992188
+[Wed Oct 10 17:02:36 2018] epoch_id: 21, batch_id: 1600, cost: 0.007438, acc: 1.000000
+[Wed Oct 10 17:02:38 2018] epoch_id: 21, batch_id: 1700, cost: 0.035499, acc: 0.968750
+[Wed Oct 10 17:02:40 2018] epoch_id: 21, batch_id: 1800, cost: 0.012515, acc: 1.000000
+[Wed Oct 10 17:02:42 2018] epoch_id: 21, batch_id: 1900, cost: 0.008550, acc: 1.000000
+[Wed Oct 10 17:02:45 2018] epoch_id: 21, batch_id: 2000, cost: 0.051551, acc: 0.992188
+[Wed Oct 10 17:02:47 2018] epoch_id: 21, batch_id: 2100, cost: 0.004980, acc: 1.000000
+[Wed Oct 10 17:02:49 2018] epoch_id: 21, batch_id: 2200, cost: 0.006854, acc: 1.000000
+[Wed Oct 10 17:02:51 2018] epoch_id: 21, batch_id: 2300, cost: 0.071025, acc: 0.968750
+[Wed Oct 10 17:02:55 2018] epoch_id: 21, batch_id: 2400, cost: 0.013599, acc: 1.000000
+[Wed Oct 10 17:02:57 2018] epoch_id: 21, batch_id: 2500, cost: 0.025085, acc: 0.992188
+[Wed Oct 10 17:02:59 2018] epoch_id: 21, batch_id: 2600, cost: 0.018276, acc: 0.984375
+[Wed Oct 10 17:03:01 2018] epoch_id: 21, batch_id: 2700, cost: 0.040565, acc: 0.984375
+[Wed Oct 10 17:03:04 2018] epoch_id: 21, batch_id: 2800, cost: 0.099454, acc: 0.968750
+[Wed Oct 10 17:03:06 2018] epoch_id: 21, batch_id: 2900, cost: 0.017812, acc: 0.992188
+[Wed Oct 10 17:03:08 2018] epoch_id: 21, batch_id: 3000, cost: 0.019825, acc: 0.992188
+
+[Wed Oct 10 17:03:09 2018] epoch_id: 21, train_avg_cost: 0.024180, train_avg_acc: 0.991505
+[Wed Oct 10 17:03:10 2018] epoch_id: 21, dev_cost: 1.413867, accuracy: 0.836
+[Wed Oct 10 17:03:11 2018] epoch_id: 21, test_cost: 1.380237, accuracy: 0.8353
+
+[Wed Oct 10 17:03:19 2018] epoch_id: 22, batch_id: 0, cost: 0.001493, acc: 1.000000
+[Wed Oct 10 17:03:21 2018] epoch_id: 22, batch_id: 100, cost: 0.017211, acc: 0.984375
+[Wed Oct 10 17:03:23 2018] epoch_id: 22, batch_id: 200, cost: 0.015626, acc: 0.992188
+[Wed Oct 10 17:03:25 2018] epoch_id: 22, batch_id: 300, cost: 0.002411, acc: 1.000000
+[Wed Oct 10 17:03:28 2018] epoch_id: 22, batch_id: 400, cost: 0.098118, acc: 0.984375
+[Wed Oct 10 17:03:30 2018] epoch_id: 22, batch_id: 500, cost: 0.031192, acc: 0.992188
+[Wed Oct 10 17:03:32 2018] epoch_id: 22, batch_id: 600, cost: 0.002122, acc: 1.000000
+[Wed Oct 10 17:03:34 2018] epoch_id: 22, batch_id: 700, cost: 0.006148, acc: 1.000000
+[Wed Oct 10 17:03:38 2018] epoch_id: 22, batch_id: 800, cost: 0.007830, acc: 1.000000
+[Wed Oct 10 17:03:40 2018] epoch_id: 22, batch_id: 900, cost: 0.009371, acc: 1.000000
+[Wed Oct 10 17:03:43 2018] epoch_id: 22, batch_id: 1000, cost: 0.024280, acc: 0.984375
+[Wed Oct 10 17:03:45 2018] epoch_id: 22, batch_id: 1100, cost: 0.067847, acc: 0.984375
+[Wed Oct 10 17:03:47 2018] epoch_id: 22, batch_id: 1200, cost: 0.024875, acc: 0.984375
+[Wed Oct 10 17:03:50 2018] epoch_id: 22, batch_id: 1300, cost: 0.004252, acc: 1.000000
+[Wed Oct 10 17:03:52 2018] epoch_id: 22, batch_id: 1400, cost: 0.014934, acc: 0.992188
+[Wed Oct 10 17:03:54 2018] epoch_id: 22, batch_id: 1500, cost: 0.008299, acc: 1.000000
+[Wed Oct 10 17:03:56 2018] epoch_id: 22, batch_id: 1600, cost: 0.007932, acc: 1.000000
+[Wed Oct 10 17:03:59 2018] epoch_id: 22, batch_id: 1700, cost: 0.007008, acc: 1.000000
+[Wed Oct 10 17:04:01 2018] epoch_id: 22, batch_id: 1800, cost: 0.028636, acc: 0.984375
+[Wed Oct 10 17:04:03 2018] epoch_id: 22, batch_id: 1900, cost: 0.012712, acc: 0.992188
+[Wed Oct 10 17:04:05 2018] epoch_id: 22, batch_id: 2000, cost: 0.027561, acc: 0.992188
+[Wed Oct 10 17:04:08 2018] epoch_id: 22, batch_id: 2100, cost: 0.017589, acc: 0.992188
+[Wed Oct 10 17:04:10 2018] epoch_id: 22, batch_id: 2200, cost: 0.016391, acc: 0.992188
+[Wed Oct 10 17:04:12 2018] epoch_id: 22, batch_id: 2300, cost: 0.042172, acc: 0.984375
+[Wed Oct 10 17:04:14 2018] epoch_id: 22, batch_id: 2400, cost: 0.024060, acc: 0.984375
+[Wed Oct 10 17:04:17 2018] epoch_id: 22, batch_id: 2500, cost: 0.014206, acc: 1.000000
+[Wed Oct 10 17:04:19 2018] epoch_id: 22, batch_id: 2600, cost: 0.028562, acc: 0.992188
+[Wed Oct 10 17:04:21 2018] epoch_id: 22, batch_id: 2700, cost: 0.013936, acc: 0.992188
+[Wed Oct 10 17:04:23 2018] epoch_id: 22, batch_id: 2800, cost: 0.023205, acc: 0.984375
+[Wed Oct 10 17:04:26 2018] epoch_id: 22, batch_id: 2900, cost: 0.031024, acc: 0.984375
+[Wed Oct 10 17:04:28 2018] epoch_id: 22, batch_id: 3000, cost: 0.004115, acc: 1.000000
+
+[Wed Oct 10 17:04:29 2018] epoch_id: 22, train_avg_cost: 0.022458, train_avg_acc: 0.992184
+[Wed Oct 10 17:04:30 2018] epoch_id: 22, dev_cost: 1.388674, accuracy: 0.8329
+[Wed Oct 10 17:04:31 2018] epoch_id: 22, test_cost: 1.366122, accuracy: 0.8359
+
+[Wed Oct 10 17:04:39 2018] epoch_id: 23, batch_id: 0, cost: 0.012273, acc: 0.992188
+[Wed Oct 10 17:04:41 2018] epoch_id: 23, batch_id: 100, cost: 0.010904, acc: 0.992188
+[Wed Oct 10 17:04:44 2018] epoch_id: 23, batch_id: 200, cost: 0.001967, acc: 1.000000
+[Wed Oct 10 17:04:46 2018] epoch_id: 23, batch_id: 300, cost: 0.006554, acc: 1.000000
+[Wed Oct 10 17:04:48 2018] epoch_id: 23, batch_id: 400, cost: 0.005179, acc: 1.000000
+[Wed Oct 10 17:04:50 2018] epoch_id: 23, batch_id: 500, cost: 0.014761, acc: 0.992188
+[Wed Oct 10 17:04:53 2018] epoch_id: 23, batch_id: 600, cost: 0.015971, acc: 0.992188
+[Wed Oct 10 17:04:55 2018] epoch_id: 23, batch_id: 700, cost: 0.058416, acc: 0.984375
+[Wed Oct 10 17:04:57 2018] epoch_id: 23, batch_id: 800, cost: 0.005064, acc: 1.000000
+[Wed Oct 10 17:04:59 2018] epoch_id: 23, batch_id: 900, cost: 0.003761, acc: 1.000000
+[Wed Oct 10 17:05:02 2018] epoch_id: 23, batch_id: 1000, cost: 0.002844, acc: 1.000000
+[Wed Oct 10 17:05:04 2018] epoch_id: 23, batch_id: 1100, cost: 0.010259, acc: 1.000000
+[Wed Oct 10 17:05:06 2018] epoch_id: 23, batch_id: 1200, cost: 0.005445, acc: 1.000000
+[Wed Oct 10 17:05:09 2018] epoch_id: 23, batch_id: 1300, cost: 0.018197, acc: 0.992188
+[Wed Oct 10 17:05:11 2018] epoch_id: 23, batch_id: 1400, cost: 0.016600, acc: 0.992188
+[Wed Oct 10 17:05:13 2018] epoch_id: 23, batch_id: 1500, cost: 0.047691, acc: 0.992188
+[Wed Oct 10 17:05:15 2018] epoch_id: 23, batch_id: 1600, cost: 0.084442, acc: 0.984375
+[Wed Oct 10 17:05:18 2018] epoch_id: 23, batch_id: 1700, cost: 0.044283, acc: 0.992188
+[Wed Oct 10 17:05:21 2018] epoch_id: 23, batch_id: 1800, cost: 0.120200, acc: 0.984375
+[Wed Oct 10 17:05:23 2018] epoch_id: 23, batch_id: 1900, cost: 0.013874, acc: 0.992188
+[Wed Oct 10 17:05:26 2018] epoch_id: 23, batch_id: 2000, cost: 0.027709, acc: 0.984375
+[Wed Oct 10 17:05:28 2018] epoch_id: 23, batch_id: 2100, cost: 0.017088, acc: 0.992188
+[Wed Oct 10 17:05:30 2018] epoch_id: 23, batch_id: 2200, cost: 0.049081, acc: 0.976562
+[Wed Oct 10 17:05:32 2018] epoch_id: 23, batch_id: 2300, cost: 0.013016, acc: 0.992188
+[Wed Oct 10 17:05:35 2018] epoch_id: 23, batch_id: 2400, cost: 0.015467, acc: 0.992188
+[Wed Oct 10 17:05:37 2018] epoch_id: 23, batch_id: 2500, cost: 0.002745, acc: 1.000000
+[Wed Oct 10 17:05:39 2018] epoch_id: 23, batch_id: 2600, cost: 0.002618, acc: 1.000000
+[Wed Oct 10 17:05:42 2018] epoch_id: 23, batch_id: 2700, cost: 0.010789, acc: 1.000000
+[Wed Oct 10 17:05:44 2018] epoch_id: 23, batch_id: 2800, cost: 0.026513, acc: 0.984375
+[Wed Oct 10 17:05:46 2018] epoch_id: 23, batch_id: 2900, cost: 0.056513, acc: 0.984375
+[Wed Oct 10 17:05:49 2018] epoch_id: 23, batch_id: 3000, cost: 0.007607, acc: 1.000000
+
+[Wed Oct 10 17:05:49 2018] epoch_id: 23, train_avg_cost: 0.021786, train_avg_acc: 0.992707
+[Wed Oct 10 17:05:50 2018] epoch_id: 23, dev_cost: 1.181561, accuracy: 0.8368
+[Wed Oct 10 17:05:51 2018] epoch_id: 23, test_cost: 1.209735, accuracy: 0.8339
+
+[Wed Oct 10 17:06:00 2018] epoch_id: 24, batch_id: 0, cost: 0.005431, acc: 1.000000
+[Wed Oct 10 17:06:02 2018] epoch_id: 24, batch_id: 100, cost: 0.017588, acc: 0.984375
+[Wed Oct 10 17:06:04 2018] epoch_id: 24, batch_id: 200, cost: 0.078571, acc: 0.976562
+[Wed Oct 10 17:06:06 2018] epoch_id: 24, batch_id: 300, cost: 0.003192, acc: 1.000000
+[Wed Oct 10 17:06:09 2018] epoch_id: 24, batch_id: 400, cost: 0.008610, acc: 1.000000
+[Wed Oct 10 17:06:11 2018] epoch_id: 24, batch_id: 500, cost: 0.010603, acc: 0.992188
+[Wed Oct 10 17:06:13 2018] epoch_id: 24, batch_id: 600, cost: 0.068159, acc: 0.984375
+[Wed Oct 10 17:06:15 2018] epoch_id: 24, batch_id: 700, cost: 0.031611, acc: 0.992188
+[Wed Oct 10 17:06:18 2018] epoch_id: 24, batch_id: 800, cost: 0.005276, acc: 1.000000
+[Wed Oct 10 17:06:20 2018] epoch_id: 24, batch_id: 900, cost: 0.019978, acc: 0.992188
+[Wed Oct 10 17:06:22 2018] epoch_id: 24, batch_id: 1000, cost: 0.061957, acc: 0.992188
+[Wed Oct 10 17:06:25 2018] epoch_id: 24, batch_id: 1100, cost: 0.015165, acc: 0.992188
+[Wed Oct 10 17:06:27 2018] epoch_id: 24, batch_id: 1200, cost: 0.052448, acc: 0.976562
+[Wed Oct 10 17:06:29 2018] epoch_id: 24, batch_id: 1300, cost: 0.003287, acc: 1.000000
+[Wed Oct 10 17:06:31 2018] epoch_id: 24, batch_id: 1400, cost: 0.027564, acc: 0.992188
+[Wed Oct 10 17:06:34 2018] epoch_id: 24, batch_id: 1500, cost: 0.002861, acc: 1.000000
+[Wed Oct 10 17:06:36 2018] epoch_id: 24, batch_id: 1600, cost: 0.022500, acc: 0.992188
+[Wed Oct 10 17:06:38 2018] epoch_id: 24, batch_id: 1700, cost: 0.041690, acc: 0.984375
+[Wed Oct 10 17:06:40 2018] epoch_id: 24, batch_id: 1800, cost: 0.016889, acc: 0.992188
+[Wed Oct 10 17:06:43 2018] epoch_id: 24, batch_id: 1900, cost: 0.026357, acc: 0.992188
+[Wed Oct 10 17:06:45 2018] epoch_id: 24, batch_id: 2000, cost: 0.035357, acc: 0.984375
+[Wed Oct 10 17:06:47 2018] epoch_id: 24, batch_id: 2100, cost: 0.070517, acc: 0.960938
+[Wed Oct 10 17:06:49 2018] epoch_id: 24, batch_id: 2200, cost: 0.021093, acc: 0.984375
+[Wed Oct 10 17:06:52 2018] epoch_id: 24, batch_id: 2300, cost: 0.003296, acc: 1.000000
+[Wed Oct 10 17:06:54 2018] epoch_id: 24, batch_id: 2400, cost: 0.002669, acc: 1.000000
+[Wed Oct 10 17:06:56 2018] epoch_id: 24, batch_id: 2500, cost: 0.047008, acc: 0.976562
+[Wed Oct 10 17:06:58 2018] epoch_id: 24, batch_id: 2600, cost: 0.015561, acc: 0.992188
+[Wed Oct 10 17:07:00 2018] epoch_id: 24, batch_id: 2700, cost: 0.074711, acc: 0.984375
+[Wed Oct 10 17:07:03 2018] epoch_id: 24, batch_id: 2800, cost: 0.021376, acc: 0.992188
+[Wed Oct 10 17:07:05 2018] epoch_id: 24, batch_id: 2900, cost: 0.013928, acc: 1.000000
+[Wed Oct 10 17:07:07 2018] epoch_id: 24, batch_id: 3000, cost: 0.019474, acc: 0.992188
+
+[Wed Oct 10 17:07:07 2018] epoch_id: 24, train_avg_cost: 0.020611, train_avg_acc: 0.992913
+[Wed Oct 10 17:07:08 2018] epoch_id: 24, dev_cost: 1.249092, accuracy: 0.8329
+[Wed Oct 10 17:07:09 2018] epoch_id: 24, test_cost: 1.206091, accuracy: 0.8348
+
+[Wed Oct 10 17:07:18 2018] epoch_id: 25, batch_id: 0, cost: 0.009832, acc: 1.000000
+[Wed Oct 10 17:07:21 2018] epoch_id: 25, batch_id: 100, cost: 0.007028, acc: 1.000000
+[Wed Oct 10 17:07:23 2018] epoch_id: 25, batch_id: 200, cost: 0.029548, acc: 0.984375
+[Wed Oct 10 17:07:25 2018] epoch_id: 25, batch_id: 300, cost: 0.001753, acc: 1.000000
+[Wed Oct 10 17:07:28 2018] epoch_id: 25, batch_id: 400, cost: 0.001457, acc: 1.000000
+[Wed Oct 10 17:07:30 2018] epoch_id: 25, batch_id: 500, cost: 0.004209, acc: 1.000000
+[Wed Oct 10 17:07:32 2018] epoch_id: 25, batch_id: 600, cost: 0.002758, acc: 1.000000
+[Wed Oct 10 17:07:35 2018] epoch_id: 25, batch_id: 700, cost: 0.039204, acc: 0.984375
+[Wed Oct 10 17:07:37 2018] epoch_id: 25, batch_id: 800, cost: 0.004454, acc: 1.000000
+[Wed Oct 10 17:07:39 2018] epoch_id: 25, batch_id: 900, cost: 0.005273, acc: 1.000000
+[Wed Oct 10 17:07:41 2018] epoch_id: 25, batch_id: 1000, cost: 0.008021, acc: 0.992188
+[Wed Oct 10 17:07:44 2018] epoch_id: 25, batch_id: 1100, cost: 0.037441, acc: 0.976562
+[Wed Oct 10 17:07:46 2018] epoch_id: 25, batch_id: 1200, cost: 0.011153, acc: 1.000000
+[Wed Oct 10 17:07:48 2018] epoch_id: 25, batch_id: 1300, cost: 0.064342, acc: 0.992188
+[Wed Oct 10 17:07:50 2018] epoch_id: 25, batch_id: 1400, cost: 0.036600, acc: 0.992188
+[Wed Oct 10 17:07:53 2018] epoch_id: 25, batch_id: 1500, cost: 0.046661, acc: 0.992188
+[Wed Oct 10 17:07:55 2018] epoch_id: 25, batch_id: 1600, cost: 0.015580, acc: 1.000000
+[Wed Oct 10 17:07:57 2018] epoch_id: 25, batch_id: 1700, cost: 0.008311, acc: 1.000000
+[Wed Oct 10 17:07:59 2018] epoch_id: 25, batch_id: 1800, cost: 0.004560, acc: 1.000000
+[Wed Oct 10 17:08:02 2018] epoch_id: 25, batch_id: 1900, cost: 0.012200, acc: 1.000000
+[Wed Oct 10 17:08:04 2018] epoch_id: 25, batch_id: 2000, cost: 0.006555, acc: 1.000000
+[Wed Oct 10 17:08:06 2018] epoch_id: 25, batch_id: 2100, cost: 0.028259, acc: 0.992188
+[Wed Oct 10 17:08:08 2018] epoch_id: 25, batch_id: 2200, cost: 0.003801, acc: 1.000000
+[Wed Oct 10 17:08:11 2018] epoch_id: 25, batch_id: 2300, cost: 0.004532, acc: 1.000000
+[Wed Oct 10 17:08:13 2018] epoch_id: 25, batch_id: 2400, cost: 0.008551, acc: 1.000000
+[Wed Oct 10 17:08:15 2018] epoch_id: 25, batch_id: 2500, cost: 0.013781, acc: 0.992188
+[Wed Oct 10 17:08:17 2018] epoch_id: 25, batch_id: 2600, cost: 0.024098, acc: 0.992188
+[Wed Oct 10 17:08:21 2018] epoch_id: 25, batch_id: 2700, cost: 0.009117, acc: 0.992188
+[Wed Oct 10 17:08:23 2018] epoch_id: 25, batch_id: 2800, cost: 0.032231, acc: 0.984375
+[Wed Oct 10 17:08:25 2018] epoch_id: 25, batch_id: 2900, cost: 0.004502, acc: 1.000000
+[Wed Oct 10 17:08:28 2018] epoch_id: 25, batch_id: 3000, cost: 0.006727, acc: 1.000000
+
+[Wed Oct 10 17:08:28 2018] epoch_id: 25, train_avg_cost: 0.020529, train_avg_acc: 0.993019
+[Wed Oct 10 17:08:29 2018] epoch_id: 25, dev_cost: 1.238637, accuracy: 0.8323
+[Wed Oct 10 17:08:30 2018] epoch_id: 25, test_cost: 1.213099, accuracy: 0.8345
+
+[Wed Oct 10 17:08:38 2018] epoch_id: 26, batch_id: 0, cost: 0.040923, acc: 0.992188
+[Wed Oct 10 17:08:40 2018] epoch_id: 26, batch_id: 100, cost: 0.003892, acc: 1.000000
+[Wed Oct 10 17:08:43 2018] epoch_id: 26, batch_id: 200, cost: 0.005719, acc: 1.000000
+[Wed Oct 10 17:08:45 2018] epoch_id: 26, batch_id: 300, cost: 0.011791, acc: 1.000000
+[Wed Oct 10 17:08:47 2018] epoch_id: 26, batch_id: 400, cost: 0.015297, acc: 0.992188
+[Wed Oct 10 17:08:49 2018] epoch_id: 26, batch_id: 500, cost: 0.067796, acc: 0.984375
+[Wed Oct 10 17:08:52 2018] epoch_id: 26, batch_id: 600, cost: 0.041215, acc: 0.992188
+[Wed Oct 10 17:08:54 2018] epoch_id: 26, batch_id: 700, cost: 0.017786, acc: 0.984375
+[Wed Oct 10 17:08:56 2018] epoch_id: 26, batch_id: 800, cost: 0.033173, acc: 0.992188
+[Wed Oct 10 17:08:59 2018] epoch_id: 26, batch_id: 900, cost: 0.007282, acc: 0.992188
+[Wed Oct 10 17:09:01 2018] epoch_id: 26, batch_id: 1000, cost: 0.028577, acc: 0.992188
+[Wed Oct 10 17:09:03 2018] epoch_id: 26, batch_id: 1100, cost: 0.017994, acc: 0.992188
+[Wed Oct 10 17:09:05 2018] epoch_id: 26, batch_id: 1200, cost: 0.005319, acc: 1.000000
+[Wed Oct 10 17:09:08 2018] epoch_id: 26, batch_id: 1300, cost: 0.030209, acc: 0.992188
+[Wed Oct 10 17:09:10 2018] epoch_id: 26, batch_id: 1400, cost: 0.012992, acc: 0.992188
+[Wed Oct 10 17:09:12 2018] epoch_id: 26, batch_id: 1500, cost: 0.014228, acc: 0.992188
+[Wed Oct 10 17:09:15 2018] epoch_id: 26, batch_id: 1600, cost: 0.008148, acc: 1.000000
+[Wed Oct 10 17:09:17 2018] epoch_id: 26, batch_id: 1700, cost: 0.003299, acc: 1.000000
+[Wed Oct 10 17:09:19 2018] epoch_id: 26, batch_id: 1800, cost: 0.026134, acc: 0.992188
+[Wed Oct 10 17:09:22 2018] epoch_id: 26, batch_id: 1900, cost: 0.016610, acc: 1.000000
+[Wed Oct 10 17:09:24 2018] epoch_id: 26, batch_id: 2000, cost: 0.019105, acc: 0.992188
+[Wed Oct 10 17:09:26 2018] epoch_id: 26, batch_id: 2100, cost: 0.004593, acc: 1.000000
+[Wed Oct 10 17:09:28 2018] epoch_id: 26, batch_id: 2200, cost: 0.036595, acc: 0.992188
+[Wed Oct 10 17:09:32 2018] epoch_id: 26, batch_id: 2300, cost: 0.003857, acc: 1.000000
+[Wed Oct 10 17:09:34 2018] epoch_id: 26, batch_id: 2400, cost: 0.002700, acc: 1.000000
+[Wed Oct 10 17:09:36 2018] epoch_id: 26, batch_id: 2500, cost: 0.002269, acc: 1.000000
+[Wed Oct 10 17:09:38 2018] epoch_id: 26, batch_id: 2600, cost: 0.022186, acc: 0.992188
+[Wed Oct 10 17:09:41 2018] epoch_id: 26, batch_id: 2700, cost: 0.035991, acc: 0.976562
+[Wed Oct 10 17:09:43 2018] epoch_id: 26, batch_id: 2800, cost: 0.005430, acc: 1.000000
+[Wed Oct 10 17:09:45 2018] epoch_id: 26, batch_id: 2900, cost: 0.017578, acc: 0.992188
+[Wed Oct 10 17:09:47 2018] epoch_id: 26, batch_id: 3000, cost: 0.030596, acc: 0.984375
+
+[Wed Oct 10 17:09:48 2018] epoch_id: 26, train_avg_cost: 0.019528, train_avg_acc: 0.993425
+[Wed Oct 10 17:09:49 2018] epoch_id: 26, dev_cost: 1.452644, accuracy: 0.8334
+[Wed Oct 10 17:09:50 2018] epoch_id: 26, test_cost: 1.449995, accuracy: 0.8329
+
+[Wed Oct 10 17:09:58 2018] epoch_id: 27, batch_id: 0, cost: 0.006640, acc: 1.000000
+[Wed Oct 10 17:10:00 2018] epoch_id: 27, batch_id: 100, cost: 0.001101, acc: 1.000000
+[Wed Oct 10 17:10:02 2018] epoch_id: 27, batch_id: 200, cost: 0.019329, acc: 0.992188
+[Wed Oct 10 17:10:05 2018] epoch_id: 27, batch_id: 300, cost: 0.002996, acc: 1.000000
+[Wed Oct 10 17:10:07 2018] epoch_id: 27, batch_id: 400, cost: 0.002077, acc: 1.000000
+[Wed Oct 10 17:10:09 2018] epoch_id: 27, batch_id: 500, cost: 0.007058, acc: 1.000000
+[Wed Oct 10 17:10:11 2018] epoch_id: 27, batch_id: 600, cost: 0.002119, acc: 1.000000
+[Wed Oct 10 17:10:14 2018] epoch_id: 27, batch_id: 700, cost: 0.039876, acc: 0.984375
+[Wed Oct 10 17:10:16 2018] epoch_id: 27, batch_id: 800, cost: 0.010680, acc: 1.000000
+[Wed Oct 10 17:10:19 2018] epoch_id: 27, batch_id: 900, cost: 0.004508, acc: 1.000000
+[Wed Oct 10 17:10:21 2018] epoch_id: 27, batch_id: 1000, cost: 0.029683, acc: 0.984375
+[Wed Oct 10 17:10:24 2018] epoch_id: 27, batch_id: 1100, cost: 0.011985, acc: 1.000000
+[Wed Oct 10 17:10:26 2018] epoch_id: 27, batch_id: 1200, cost: 0.004091, acc: 1.000000
+[Wed Oct 10 17:10:28 2018] epoch_id: 27, batch_id: 1300, cost: 0.028585, acc: 0.984375
+[Wed Oct 10 17:10:30 2018] epoch_id: 27, batch_id: 1400, cost: 0.001462, acc: 1.000000
+[Wed Oct 10 17:10:33 2018] epoch_id: 27, batch_id: 1500, cost: 0.033079, acc: 0.992188
+[Wed Oct 10 17:10:35 2018] epoch_id: 27, batch_id: 1600, cost: 0.017679, acc: 0.992188
+[Wed Oct 10 17:10:37 2018] epoch_id: 27, batch_id: 1700, cost: 0.000921, acc: 1.000000
+[Wed Oct 10 17:10:39 2018] epoch_id: 27, batch_id: 1800, cost: 0.029850, acc: 0.984375
+[Wed Oct 10 17:10:42 2018] epoch_id: 27, batch_id: 1900, cost: 0.005679, acc: 1.000000
+[Wed Oct 10 17:10:44 2018] epoch_id: 27, batch_id: 2000, cost: 0.007635, acc: 0.992188
+[Wed Oct 10 17:10:46 2018] epoch_id: 27, batch_id: 2100, cost: 0.056935, acc: 0.984375
+[Wed Oct 10 17:10:48 2018] epoch_id: 27, batch_id: 2200, cost: 0.014361, acc: 1.000000
+[Wed Oct 10 17:10:51 2018] epoch_id: 27, batch_id: 2300, cost: 0.040282, acc: 0.984375
+[Wed Oct 10 17:10:53 2018] epoch_id: 27, batch_id: 2400, cost: 0.004073, acc: 1.000000
+[Wed Oct 10 17:10:55 2018] epoch_id: 27, batch_id: 2500, cost: 0.013922, acc: 0.984375
+[Wed Oct 10 17:10:57 2018] epoch_id: 27, batch_id: 2600, cost: 0.018309, acc: 0.992188
+[Wed Oct 10 17:10:59 2018] epoch_id: 27, batch_id: 2700, cost: 0.011584, acc: 0.992188
+[Wed Oct 10 17:11:02 2018] epoch_id: 27, batch_id: 2800, cost: 0.018637, acc: 0.992188
+[Wed Oct 10 17:11:04 2018] epoch_id: 27, batch_id: 2900, cost: 0.013617, acc: 0.992188
+[Wed Oct 10 17:11:06 2018] epoch_id: 27, batch_id: 3000, cost: 0.079333, acc: 0.976562
+
+[Wed Oct 10 17:11:07 2018] epoch_id: 27, train_avg_cost: 0.018039, train_avg_acc: 0.993701
+[Wed Oct 10 17:11:08 2018] epoch_id: 27, dev_cost: 1.463991, accuracy: 0.8333
+[Wed Oct 10 17:11:09 2018] epoch_id: 27, test_cost: 1.450415, accuracy: 0.8334
+
+[Wed Oct 10 17:11:17 2018] epoch_id: 28, batch_id: 0, cost: 0.023539, acc: 0.984375
+[Wed Oct 10 17:11:20 2018] epoch_id: 28, batch_id: 100, cost: 0.005577, acc: 1.000000
+[Wed Oct 10 17:11:22 2018] epoch_id: 28, batch_id: 200, cost: 0.001478, acc: 1.000000
+[Wed Oct 10 17:11:24 2018] epoch_id: 28, batch_id: 300, cost: 0.005870, acc: 1.000000
+[Wed Oct 10 17:11:26 2018] epoch_id: 28, batch_id: 400, cost: 0.021292, acc: 0.992188
+[Wed Oct 10 17:11:29 2018] epoch_id: 28, batch_id: 500, cost: 0.032081, acc: 0.984375
+[Wed Oct 10 17:11:31 2018] epoch_id: 28, batch_id: 600, cost: 0.004568, acc: 1.000000
+[Wed Oct 10 17:11:33 2018] epoch_id: 28, batch_id: 700, cost: 0.006552, acc: 1.000000
+[Wed Oct 10 17:11:35 2018] epoch_id: 28, batch_id: 800, cost: 0.012579, acc: 0.992188
+[Wed Oct 10 17:11:38 2018] epoch_id: 28, batch_id: 900, cost: 0.004214, acc: 1.000000
+[Wed Oct 10 17:11:40 2018] epoch_id: 28, batch_id: 1000, cost: 0.023843, acc: 0.984375
+[Wed Oct 10 17:11:42 2018] epoch_id: 28, batch_id: 1100, cost: 0.017869, acc: 0.992188
+[Wed Oct 10 17:11:44 2018] epoch_id: 28, batch_id: 1200, cost: 0.045617, acc: 0.984375
+[Wed Oct 10 17:11:46 2018] epoch_id: 28, batch_id: 1300, cost: 0.012739, acc: 0.992188
+[Wed Oct 10 17:11:49 2018] epoch_id: 28, batch_id: 1400, cost: 0.020053, acc: 0.992188
+[Wed Oct 10 17:11:51 2018] epoch_id: 28, batch_id: 1500, cost: 0.006956, acc: 1.000000
+[Wed Oct 10 17:11:53 2018] epoch_id: 28, batch_id: 1600, cost: 0.022830, acc: 0.984375
+[Wed Oct 10 17:11:55 2018] epoch_id: 28, batch_id: 1700, cost: 0.008924, acc: 1.000000
+[Wed Oct 10 17:11:58 2018] epoch_id: 28, batch_id: 1800, cost: 0.013902, acc: 0.992188
+[Wed Oct 10 17:12:01 2018] epoch_id: 28, batch_id: 1900, cost: 0.026418, acc: 0.984375
+[Wed Oct 10 17:12:03 2018] epoch_id: 28, batch_id: 2000, cost: 0.006809, acc: 1.000000
+[Wed Oct 10 17:12:05 2018] epoch_id: 28, batch_id: 2100, cost: 0.041039, acc: 0.984375
+[Wed Oct 10 17:12:08 2018] epoch_id: 28, batch_id: 2200, cost: 0.023235, acc: 0.992188
+[Wed Oct 10 17:12:10 2018] epoch_id: 28, batch_id: 2300, cost: 0.057685, acc: 0.976562
+[Wed Oct 10 17:12:12 2018] epoch_id: 28, batch_id: 2400, cost: 0.012688, acc: 1.000000
+[Wed Oct 10 17:12:14 2018] epoch_id: 28, batch_id: 2500, cost: 0.010697, acc: 0.992188
+[Wed Oct 10 17:12:16 2018] epoch_id: 28, batch_id: 2600, cost: 0.025213, acc: 0.992188
+[Wed Oct 10 17:12:19 2018] epoch_id: 28, batch_id: 2700, cost: 0.011269, acc: 0.992188
+[Wed Oct 10 17:12:21 2018] epoch_id: 28, batch_id: 2800, cost: 0.001141, acc: 1.000000
+[Wed Oct 10 17:12:23 2018] epoch_id: 28, batch_id: 2900, cost: 0.049410, acc: 0.984375
+[Wed Oct 10 17:12:25 2018] epoch_id: 28, batch_id: 3000, cost: 0.019739, acc: 0.992188
+
+[Wed Oct 10 17:12:26 2018] epoch_id: 28, train_avg_cost: 0.018105, train_avg_acc: 0.993756
+[Wed Oct 10 17:12:27 2018] epoch_id: 28, dev_cost: 1.200318, accuracy: 0.8345
+[Wed Oct 10 17:12:28 2018] epoch_id: 28, test_cost: 1.228304, accuracy: 0.8308
+
+[Wed Oct 10 17:12:36 2018] epoch_id: 29, batch_id: 0, cost: 0.004694, acc: 1.000000
+[Wed Oct 10 17:12:39 2018] epoch_id: 29, batch_id: 100, cost: 0.008528, acc: 0.992188
+[Wed Oct 10 17:12:41 2018] epoch_id: 29, batch_id: 200, cost: 0.006778, acc: 0.992188
+[Wed Oct 10 17:12:43 2018] epoch_id: 29, batch_id: 300, cost: 0.026610, acc: 0.992188
+[Wed Oct 10 17:12:45 2018] epoch_id: 29, batch_id: 400, cost: 0.008479, acc: 1.000000
+[Wed Oct 10 17:12:47 2018] epoch_id: 29, batch_id: 500, cost: 0.021705, acc: 0.984375
+[Wed Oct 10 17:12:50 2018] epoch_id: 29, batch_id: 600, cost: 0.010583, acc: 0.992188
+[Wed Oct 10 17:12:52 2018] epoch_id: 29, batch_id: 700, cost: 0.056105, acc: 0.992188
+[Wed Oct 10 17:12:54 2018] epoch_id: 29, batch_id: 800, cost: 0.000675, acc: 1.000000
+[Wed Oct 10 17:12:56 2018] epoch_id: 29, batch_id: 900, cost: 0.011277, acc: 1.000000
+[Wed Oct 10 17:12:58 2018] epoch_id: 29, batch_id: 1000, cost: 0.006004, acc: 1.000000
+[Wed Oct 10 17:13:01 2018] epoch_id: 29, batch_id: 1100, cost: 0.000914, acc: 1.000000
+[Wed Oct 10 17:13:03 2018] epoch_id: 29, batch_id: 1200, cost: 0.001097, acc: 1.000000
+[Wed Oct 10 17:13:05 2018] epoch_id: 29, batch_id: 1300, cost: 0.002556, acc: 1.000000
+[Wed Oct 10 17:13:07 2018] epoch_id: 29, batch_id: 1400, cost: 0.005061, acc: 1.000000
+[Wed Oct 10 17:13:10 2018] epoch_id: 29, batch_id: 1500, cost: 0.002417, acc: 1.000000
+[Wed Oct 10 17:13:12 2018] epoch_id: 29, batch_id: 1600, cost: 0.001037, acc: 1.000000
+[Wed Oct 10 17:13:14 2018] epoch_id: 29, batch_id: 1700, cost: 0.003415, acc: 1.000000
+[Wed Oct 10 17:13:16 2018] epoch_id: 29, batch_id: 1800, cost: 0.033230, acc: 0.984375
+[Wed Oct 10 17:13:19 2018] epoch_id: 29, batch_id: 1900, cost: 0.002914, acc: 1.000000
+[Wed Oct 10 17:13:21 2018] epoch_id: 29, batch_id: 2000, cost: 0.036463, acc: 0.984375
+[Wed Oct 10 17:13:23 2018] epoch_id: 29, batch_id: 2100, cost: 0.067978, acc: 0.976562
+[Wed Oct 10 17:13:25 2018] epoch_id: 29, batch_id: 2200, cost: 0.028088, acc: 0.992188
+[Wed Oct 10 17:13:28 2018] epoch_id: 29, batch_id: 2300, cost: 0.013688, acc: 0.992188
+[Wed Oct 10 17:13:30 2018] epoch_id: 29, batch_id: 2400, cost: 0.000238, acc: 1.000000
+[Wed Oct 10 17:13:32 2018] epoch_id: 29, batch_id: 2500, cost: 0.006287, acc: 1.000000
+[Wed Oct 10 17:13:35 2018] epoch_id: 29, batch_id: 2600, cost: 0.058838, acc: 0.992188
+[Wed Oct 10 17:13:37 2018] epoch_id: 29, batch_id: 2700, cost: 0.013440, acc: 0.992188
+[Wed Oct 10 17:13:39 2018] epoch_id: 29, batch_id: 2800, cost: 0.002577, acc: 1.000000
+[Wed Oct 10 17:13:41 2018] epoch_id: 29, batch_id: 2900, cost: 0.020076, acc: 0.992188
+[Wed Oct 10 17:13:43 2018] epoch_id: 29, batch_id: 3000, cost: 0.025126, acc: 0.992188
+
+[Wed Oct 10 17:13:44 2018] epoch_id: 29, train_avg_cost: 0.017397, train_avg_acc: 0.994107
+[Wed Oct 10 17:13:45 2018] epoch_id: 29, dev_cost: 1.314838, accuracy: 0.8304
+[Wed Oct 10 17:13:46 2018] epoch_id: 29, test_cost: 1.349980, accuracy: 0.8298
+
+[Wed Oct 10 17:13:55 2018] epoch_id: 30, batch_id: 0, cost: 0.063661, acc: 0.984375
+[Wed Oct 10 17:13:57 2018] epoch_id: 30, batch_id: 100, cost: 0.005445, acc: 1.000000
+[Wed Oct 10 17:13:59 2018] epoch_id: 30, batch_id: 200, cost: 0.025451, acc: 0.984375
+[Wed Oct 10 17:14:01 2018] epoch_id: 30, batch_id: 300, cost: 0.019455, acc: 0.992188
+[Wed Oct 10 17:14:04 2018] epoch_id: 30, batch_id: 400, cost: 0.000182, acc: 1.000000
+[Wed Oct 10 17:14:06 2018] epoch_id: 30, batch_id: 500, cost: 0.036089, acc: 0.984375
+[Wed Oct 10 17:14:08 2018] epoch_id: 30, batch_id: 600, cost: 0.003895, acc: 1.000000
+[Wed Oct 10 17:14:10 2018] epoch_id: 30, batch_id: 700, cost: 0.012125, acc: 0.992188
+[Wed Oct 10 17:14:13 2018] epoch_id: 30, batch_id: 800, cost: 0.007463, acc: 1.000000
+[Wed Oct 10 17:14:15 2018] epoch_id: 30, batch_id: 900, cost: 0.043093, acc: 0.992188
+[Wed Oct 10 17:14:17 2018] epoch_id: 30, batch_id: 1000, cost: 0.023025, acc: 0.992188
+[Wed Oct 10 17:14:20 2018] epoch_id: 30, batch_id: 1100, cost: 0.008640, acc: 0.992188
+[Wed Oct 10 17:14:22 2018] epoch_id: 30, batch_id: 1200, cost: 0.023361, acc: 0.984375
+[Wed Oct 10 17:14:24 2018] epoch_id: 30, batch_id: 1300, cost: 0.003226, acc: 1.000000
+[Wed Oct 10 17:14:27 2018] epoch_id: 30, batch_id: 1400, cost: 0.010225, acc: 0.992188
+[Wed Oct 10 17:14:29 2018] epoch_id: 30, batch_id: 1500, cost: 0.009733, acc: 1.000000
+[Wed Oct 10 17:14:31 2018] epoch_id: 30, batch_id: 1600, cost: 0.014048, acc: 0.992188
+[Wed Oct 10 17:14:34 2018] epoch_id: 30, batch_id: 1700, cost: 0.008200, acc: 1.000000
+[Wed Oct 10 17:14:36 2018] epoch_id: 30, batch_id: 1800, cost: 0.035217, acc: 0.992188
+[Wed Oct 10 17:14:38 2018] epoch_id: 30, batch_id: 1900, cost: 0.002707, acc: 1.000000
+[Wed Oct 10 17:14:40 2018] epoch_id: 30, batch_id: 2000, cost: 0.028292, acc: 0.984375
+[Wed Oct 10 17:14:43 2018] epoch_id: 30, batch_id: 2100, cost: 0.003164, acc: 1.000000
+[Wed Oct 10 17:14:45 2018] epoch_id: 30, batch_id: 2200, cost: 0.014421, acc: 0.992188
+[Wed Oct 10 17:14:47 2018] epoch_id: 30, batch_id: 2300, cost: 0.001986, acc: 1.000000
+[Wed Oct 10 17:14:49 2018] epoch_id: 30, batch_id: 2400, cost: 0.038462, acc: 0.992188
+[Wed Oct 10 17:14:52 2018] epoch_id: 30, batch_id: 2500, cost: 0.003580, acc: 1.000000
+[Wed Oct 10 17:14:54 2018] epoch_id: 30, batch_id: 2600, cost: 0.061259, acc: 0.984375
+[Wed Oct 10 17:14:56 2018] epoch_id: 30, batch_id: 2700, cost: 0.042758, acc: 0.992188
+[Wed Oct 10 17:14:59 2018] epoch_id: 30, batch_id: 2800, cost: 0.012991, acc: 0.992188
+[Wed Oct 10 17:15:02 2018] epoch_id: 30, batch_id: 2900, cost: 0.021263, acc: 0.992188
+[Wed Oct 10 17:15:04 2018] epoch_id: 30, batch_id: 3000, cost: 0.046058, acc: 0.992188
+
+[Wed Oct 10 17:15:05 2018] epoch_id: 30, train_avg_cost: 0.016908, train_avg_acc: 0.994391
+[Wed Oct 10 17:15:06 2018] epoch_id: 30, dev_cost: 1.214737, accuracy: 0.8343
+[Wed Oct 10 17:15:07 2018] epoch_id: 30, test_cost: 1.247275, accuracy: 0.828
+
+[Wed Oct 10 17:15:15 2018] epoch_id: 31, batch_id: 0, cost: 0.019613, acc: 0.992188
+[Wed Oct 10 17:15:17 2018] epoch_id: 31, batch_id: 100, cost: 0.048000, acc: 0.984375
+[Wed Oct 10 17:15:19 2018] epoch_id: 31, batch_id: 200, cost: 0.038604, acc: 0.992188
+[Wed Oct 10 17:15:21 2018] epoch_id: 31, batch_id: 300, cost: 0.003548, acc: 1.000000
+[Wed Oct 10 17:15:24 2018] epoch_id: 31, batch_id: 400, cost: 0.001539, acc: 1.000000
+[Wed Oct 10 17:15:26 2018] epoch_id: 31, batch_id: 500, cost: 0.034219, acc: 0.992188
+[Wed Oct 10 17:15:28 2018] epoch_id: 31, batch_id: 600, cost: 0.005696, acc: 1.000000
+[Wed Oct 10 17:15:31 2018] epoch_id: 31, batch_id: 700, cost: 0.012590, acc: 0.992188
+[Wed Oct 10 17:15:33 2018] epoch_id: 31, batch_id: 800, cost: 0.010021, acc: 0.992188
+[Wed Oct 10 17:15:35 2018] epoch_id: 31, batch_id: 900, cost: 0.004838, acc: 1.000000
+[Wed Oct 10 17:15:38 2018] epoch_id: 31, batch_id: 1000, cost: 0.006327, acc: 1.000000
+[Wed Oct 10 17:15:40 2018] epoch_id: 31, batch_id: 1100, cost: 0.019881, acc: 0.992188
+[Wed Oct 10 17:15:42 2018] epoch_id: 31, batch_id: 1200, cost: 0.006641, acc: 1.000000
+[Wed Oct 10 17:15:44 2018] epoch_id: 31, batch_id: 1300, cost: 0.014323, acc: 0.992188
+[Wed Oct 10 17:15:47 2018] epoch_id: 31, batch_id: 1400, cost: 0.008565, acc: 1.000000
+[Wed Oct 10 17:15:49 2018] epoch_id: 31, batch_id: 1500, cost: 0.003106, acc: 1.000000
+[Wed Oct 10 17:15:51 2018] epoch_id: 31, batch_id: 1600, cost: 0.023656, acc: 0.992188
+[Wed Oct 10 17:15:53 2018] epoch_id: 31, batch_id: 1700, cost: 0.014398, acc: 1.000000
+[Wed Oct 10 17:15:56 2018] epoch_id: 31, batch_id: 1800, cost: 0.005019, acc: 1.000000
+[Wed Oct 10 17:15:58 2018] epoch_id: 31, batch_id: 1900, cost: 0.042051, acc: 0.984375
+[Wed Oct 10 17:16:00 2018] epoch_id: 31, batch_id: 2000, cost: 0.005070, acc: 1.000000
+[Wed Oct 10 17:16:03 2018] epoch_id: 31, batch_id: 2100, cost: 0.071147, acc: 0.984375
+[Wed Oct 10 17:16:05 2018] epoch_id: 31, batch_id: 2200, cost: 0.004077, acc: 1.000000
+[Wed Oct 10 17:16:07 2018] epoch_id: 31, batch_id: 2300, cost: 0.000753, acc: 1.000000
+[Wed Oct 10 17:16:11 2018] epoch_id: 31, batch_id: 2400, cost: 0.007293, acc: 1.000000
+[Wed Oct 10 17:16:13 2018] epoch_id: 31, batch_id: 2500, cost: 0.020403, acc: 0.992188
+[Wed Oct 10 17:16:15 2018] epoch_id: 31, batch_id: 2600, cost: 0.002491, acc: 1.000000
+[Wed Oct 10 17:16:17 2018] epoch_id: 31, batch_id: 2700, cost: 0.001376, acc: 1.000000
+[Wed Oct 10 17:16:20 2018] epoch_id: 31, batch_id: 2800, cost: 0.006589, acc: 1.000000
+[Wed Oct 10 17:16:22 2018] epoch_id: 31, batch_id: 2900, cost: 0.009986, acc: 1.000000
+[Wed Oct 10 17:16:24 2018] epoch_id: 31, batch_id: 3000, cost: 0.004628, acc: 1.000000
+
+[Wed Oct 10 17:16:25 2018] epoch_id: 31, train_avg_cost: 0.016863, train_avg_acc: 0.994502
+[Wed Oct 10 17:16:26 2018] epoch_id: 31, dev_cost: 1.237226, accuracy: 0.8348
+[Wed Oct 10 17:16:27 2018] epoch_id: 31, test_cost: 1.256692, accuracy: 0.8327
+
+[Wed Oct 10 17:16:35 2018] epoch_id: 32, batch_id: 0, cost: 0.001936, acc: 1.000000
+[Wed Oct 10 17:16:37 2018] epoch_id: 32, batch_id: 100, cost: 0.002628, acc: 1.000000
+[Wed Oct 10 17:16:40 2018] epoch_id: 32, batch_id: 200, cost: 0.006948, acc: 1.000000
+[Wed Oct 10 17:16:42 2018] epoch_id: 32, batch_id: 300, cost: 0.001289, acc: 1.000000
+[Wed Oct 10 17:16:44 2018] epoch_id: 32, batch_id: 400, cost: 0.016850, acc: 1.000000
+[Wed Oct 10 17:16:46 2018] epoch_id: 32, batch_id: 500, cost: 0.001709, acc: 1.000000
+[Wed Oct 10 17:16:49 2018] epoch_id: 32, batch_id: 600, cost: 0.000500, acc: 1.000000
+[Wed Oct 10 17:16:51 2018] epoch_id: 32, batch_id: 700, cost: 0.026876, acc: 0.992188
+[Wed Oct 10 17:16:54 2018] epoch_id: 32, batch_id: 800, cost: 0.032499, acc: 0.992188
+[Wed Oct 10 17:16:56 2018] epoch_id: 32, batch_id: 900, cost: 0.008563, acc: 1.000000
+[Wed Oct 10 17:16:59 2018] epoch_id: 32, batch_id: 1000, cost: 0.033638, acc: 0.992188
+[Wed Oct 10 17:17:01 2018] epoch_id: 32, batch_id: 1100, cost: 0.021626, acc: 0.992188
+[Wed Oct 10 17:17:03 2018] epoch_id: 32, batch_id: 1200, cost: 0.035490, acc: 0.984375
+[Wed Oct 10 17:17:05 2018] epoch_id: 32, batch_id: 1300, cost: 0.064303, acc: 0.992188
+[Wed Oct 10 17:17:08 2018] epoch_id: 32, batch_id: 1400, cost: 0.000839, acc: 1.000000
+[Wed Oct 10 17:17:10 2018] epoch_id: 32, batch_id: 1500, cost: 0.014770, acc: 0.992188
+[Wed Oct 10 17:17:12 2018] epoch_id: 32, batch_id: 1600, cost: 0.067803, acc: 0.992188
+[Wed Oct 10 17:17:14 2018] epoch_id: 32, batch_id: 1700, cost: 0.001507, acc: 1.000000
+[Wed Oct 10 17:17:17 2018] epoch_id: 32, batch_id: 1800, cost: 0.039594, acc: 0.984375
+[Wed Oct 10 17:17:19 2018] epoch_id: 32, batch_id: 1900, cost: 0.016198, acc: 0.992188
+[Wed Oct 10 17:17:21 2018] epoch_id: 32, batch_id: 2000, cost: 0.027783, acc: 0.984375
+[Wed Oct 10 17:17:24 2018] epoch_id: 32, batch_id: 2100, cost: 0.010040, acc: 0.992188
+[Wed Oct 10 17:17:26 2018] epoch_id: 32, batch_id: 2200, cost: 0.043833, acc: 0.992188
+[Wed Oct 10 17:17:28 2018] epoch_id: 32, batch_id: 2300, cost: 0.012850, acc: 0.992188
+[Wed Oct 10 17:17:31 2018] epoch_id: 32, batch_id: 2400, cost: 0.010643, acc: 1.000000
+[Wed Oct 10 17:17:33 2018] epoch_id: 32, batch_id: 2500, cost: 0.013513, acc: 0.992188
+[Wed Oct 10 17:17:35 2018] epoch_id: 32, batch_id: 2600, cost: 0.021498, acc: 0.984375
+[Wed Oct 10 17:17:38 2018] epoch_id: 32, batch_id: 2700, cost: 0.048091, acc: 0.984375
+[Wed Oct 10 17:17:40 2018] epoch_id: 32, batch_id: 2800, cost: 0.054710, acc: 0.984375
+[Wed Oct 10 17:17:42 2018] epoch_id: 32, batch_id: 2900, cost: 0.028200, acc: 0.992188
+[Wed Oct 10 17:17:44 2018] epoch_id: 32, batch_id: 3000, cost: 0.052160, acc: 0.992188
+
+[Wed Oct 10 17:17:45 2018] epoch_id: 32, train_avg_cost: 0.016115, train_avg_acc: 0.994599
+[Wed Oct 10 17:17:46 2018] epoch_id: 32, dev_cost: 1.182178, accuracy: 0.8359
+[Wed Oct 10 17:17:47 2018] epoch_id: 32, test_cost: 1.183695, accuracy: 0.8297
+
+[Wed Oct 10 17:17:55 2018] epoch_id: 33, batch_id: 0, cost: 0.002170, acc: 1.000000
+[Wed Oct 10 17:17:58 2018] epoch_id: 33, batch_id: 100, cost: 0.000724, acc: 1.000000
+[Wed Oct 10 17:18:00 2018] epoch_id: 33, batch_id: 200, cost: 0.102036, acc: 0.968750
+[Wed Oct 10 17:18:02 2018] epoch_id: 33, batch_id: 300, cost: 0.006967, acc: 1.000000
+[Wed Oct 10 17:18:04 2018] epoch_id: 33, batch_id: 400, cost: 0.004401, acc: 1.000000
+[Wed Oct 10 17:18:07 2018] epoch_id: 33, batch_id: 500, cost: 0.006693, acc: 1.000000
+[Wed Oct 10 17:18:09 2018] epoch_id: 33, batch_id: 600, cost: 0.002759, acc: 1.000000
+[Wed Oct 10 17:18:11 2018] epoch_id: 33, batch_id: 700, cost: 0.000587, acc: 1.000000
+[Wed Oct 10 17:18:13 2018] epoch_id: 33, batch_id: 800, cost: 0.006432, acc: 1.000000
+[Wed Oct 10 17:18:16 2018] epoch_id: 33, batch_id: 900, cost: 0.043751, acc: 0.984375
+[Wed Oct 10 17:18:18 2018] epoch_id: 33, batch_id: 1000, cost: 0.006652, acc: 1.000000
+[Wed Oct 10 17:18:20 2018] epoch_id: 33, batch_id: 1100, cost: 0.008419, acc: 1.000000
+[Wed Oct 10 17:18:23 2018] epoch_id: 33, batch_id: 1200, cost: 0.012309, acc: 0.992188
+[Wed Oct 10 17:18:25 2018] epoch_id: 33, batch_id: 1300, cost: 0.023884, acc: 0.984375
+[Wed Oct 10 17:18:27 2018] epoch_id: 33, batch_id: 1400, cost: 0.011711, acc: 0.992188
+[Wed Oct 10 17:18:29 2018] epoch_id: 33, batch_id: 1500, cost: 0.005948, acc: 1.000000
+[Wed Oct 10 17:18:32 2018] epoch_id: 33, batch_id: 1600, cost: 0.014363, acc: 0.992188
+[Wed Oct 10 17:18:34 2018] epoch_id: 33, batch_id: 1700, cost: 0.000291, acc: 1.000000
+[Wed Oct 10 17:18:37 2018] epoch_id: 33, batch_id: 1800, cost: 0.005694, acc: 1.000000
+[Wed Oct 10 17:18:40 2018] epoch_id: 33, batch_id: 1900, cost: 0.170195, acc: 0.984375
+[Wed Oct 10 17:18:42 2018] epoch_id: 33, batch_id: 2000, cost: 0.001044, acc: 1.000000
+[Wed Oct 10 17:18:44 2018] epoch_id: 33, batch_id: 2100, cost: 0.004921, acc: 1.000000
+[Wed Oct 10 17:18:46 2018] epoch_id: 33, batch_id: 2200, cost: 0.006203, acc: 1.000000
+[Wed Oct 10 17:18:48 2018] epoch_id: 33, batch_id: 2300, cost: 0.038624, acc: 0.984375
+[Wed Oct 10 17:18:51 2018] epoch_id: 33, batch_id: 2400, cost: 0.067313, acc: 0.976562
+[Wed Oct 10 17:18:53 2018] epoch_id: 33, batch_id: 2500, cost: 0.040853, acc: 0.992188
+[Wed Oct 10 17:18:55 2018] epoch_id: 33, batch_id: 2600, cost: 0.039087, acc: 0.984375
+[Wed Oct 10 17:18:57 2018] epoch_id: 33, batch_id: 2700, cost: 0.004672, acc: 1.000000
+[Wed Oct 10 17:19:00 2018] epoch_id: 33, batch_id: 2800, cost: 0.021997, acc: 0.984375
+[Wed Oct 10 17:19:02 2018] epoch_id: 33, batch_id: 2900, cost: 0.013635, acc: 1.000000
+[Wed Oct 10 17:19:04 2018] epoch_id: 33, batch_id: 3000, cost: 0.009055, acc: 0.992188
+
+[Wed Oct 10 17:19:05 2018] epoch_id: 33, train_avg_cost: 0.014972, train_avg_acc: 0.995145
+[Wed Oct 10 17:19:06 2018] epoch_id: 33, dev_cost: 1.819085, accuracy: 0.8352
+[Wed Oct 10 17:19:07 2018] epoch_id: 33, test_cost: 1.859041, accuracy: 0.8314
+
+[Wed Oct 10 17:19:15 2018] epoch_id: 34, batch_id: 0, cost: 0.026821, acc: 0.992188
+[Wed Oct 10 17:19:17 2018] epoch_id: 34, batch_id: 100, cost: 0.001463, acc: 1.000000
+[Wed Oct 10 17:19:20 2018] epoch_id: 34, batch_id: 200, cost: 0.000579, acc: 1.000000
+[Wed Oct 10 17:19:22 2018] epoch_id: 34, batch_id: 300, cost: 0.000492, acc: 1.000000
+[Wed Oct 10 17:19:24 2018] epoch_id: 34, batch_id: 400, cost: 0.000671, acc: 1.000000
+[Wed Oct 10 17:19:26 2018] epoch_id: 34, batch_id: 500, cost: 0.007763, acc: 1.000000
+[Wed Oct 10 17:19:29 2018] epoch_id: 34, batch_id: 600, cost: 0.018827, acc: 0.992188
+[Wed Oct 10 17:19:31 2018] epoch_id: 34, batch_id: 700, cost: 0.004606, acc: 1.000000
+[Wed Oct 10 17:19:33 2018] epoch_id: 34, batch_id: 800, cost: 0.004697, acc: 1.000000
+[Wed Oct 10 17:19:35 2018] epoch_id: 34, batch_id: 900, cost: 0.003752, acc: 1.000000
+[Wed Oct 10 17:19:38 2018] epoch_id: 34, batch_id: 1000, cost: 0.003546, acc: 1.000000
+[Wed Oct 10 17:19:40 2018] epoch_id: 34, batch_id: 1100, cost: 0.003848, acc: 1.000000
+[Wed Oct 10 17:19:42 2018] epoch_id: 34, batch_id: 1200, cost: 0.010363, acc: 1.000000
+[Wed Oct 10 17:19:44 2018] epoch_id: 34, batch_id: 1300, cost: 0.013875, acc: 0.992188
+[Wed Oct 10 17:19:47 2018] epoch_id: 34, batch_id: 1400, cost: 0.009212, acc: 0.992188
+[Wed Oct 10 17:19:49 2018] epoch_id: 34, batch_id: 1500, cost: 0.047909, acc: 0.992188
+[Wed Oct 10 17:19:51 2018] epoch_id: 34, batch_id: 1600, cost: 0.012809, acc: 0.992188
+[Wed Oct 10 17:19:53 2018] epoch_id: 34, batch_id: 1700, cost: 0.009717, acc: 1.000000
+[Wed Oct 10 17:19:56 2018] epoch_id: 34, batch_id: 1800, cost: 0.026330, acc: 0.984375
+[Wed Oct 10 17:19:58 2018] epoch_id: 34, batch_id: 1900, cost: 0.016982, acc: 0.992188
+[Wed Oct 10 17:20:00 2018] epoch_id: 34, batch_id: 2000, cost: 0.021416, acc: 0.992188
+[Wed Oct 10 17:20:03 2018] epoch_id: 34, batch_id: 2100, cost: 0.001120, acc: 1.000000
+[Wed Oct 10 17:20:05 2018] epoch_id: 34, batch_id: 2200, cost: 0.011436, acc: 1.000000
+[Wed Oct 10 17:20:07 2018] epoch_id: 34, batch_id: 2300, cost: 0.007605, acc: 0.992188
+[Wed Oct 10 17:20:10 2018] epoch_id: 34, batch_id: 2400, cost: 0.026308, acc: 0.992188
+[Wed Oct 10 17:20:12 2018] epoch_id: 34, batch_id: 2500, cost: 0.006798, acc: 1.000000
+[Wed Oct 10 17:20:14 2018] epoch_id: 34, batch_id: 2600, cost: 0.017334, acc: 0.992188
+[Wed Oct 10 17:20:16 2018] epoch_id: 34, batch_id: 2700, cost: 0.030094, acc: 0.992188
+[Wed Oct 10 17:20:18 2018] epoch_id: 34, batch_id: 2800, cost: 0.053259, acc: 0.992188
+[Wed Oct 10 17:20:21 2018] epoch_id: 34, batch_id: 2900, cost: 0.061547, acc: 0.968750
+[Wed Oct 10 17:20:23 2018] epoch_id: 34, batch_id: 3000, cost: 0.002864, acc: 1.000000
+
+[Wed Oct 10 17:20:24 2018] epoch_id: 34, train_avg_cost: 0.014813, train_avg_acc: 0.995064
+[Wed Oct 10 17:20:25 2018] epoch_id: 34, dev_cost: 1.697732, accuracy: 0.8346
+[Wed Oct 10 17:20:26 2018] epoch_id: 34, test_cost: 1.721137, accuracy: 0.8341
+
+[Wed Oct 10 17:20:34 2018] epoch_id: 35, batch_id: 0, cost: 0.000268, acc: 1.000000
+[Wed Oct 10 17:20:37 2018] epoch_id: 35, batch_id: 100, cost: 0.001389, acc: 1.000000
+[Wed Oct 10 17:20:39 2018] epoch_id: 35, batch_id: 200, cost: 0.003275, acc: 1.000000
+[Wed Oct 10 17:20:41 2018] epoch_id: 35, batch_id: 300, cost: 0.006535, acc: 1.000000
+[Wed Oct 10 17:20:43 2018] epoch_id: 35, batch_id: 400, cost: 0.005316, acc: 1.000000
+[Wed Oct 10 17:20:45 2018] epoch_id: 35, batch_id: 500, cost: 0.017976, acc: 0.992188
+[Wed Oct 10 17:20:48 2018] epoch_id: 35, batch_id: 600, cost: 0.060320, acc: 0.992188
+[Wed Oct 10 17:20:50 2018] epoch_id: 35, batch_id: 700, cost: 0.004358, acc: 1.000000
+[Wed Oct 10 17:20:52 2018] epoch_id: 35, batch_id: 800, cost: 0.003560, acc: 1.000000
+[Wed Oct 10 17:20:55 2018] epoch_id: 35, batch_id: 900, cost: 0.017978, acc: 0.992188
+[Wed Oct 10 17:20:57 2018] epoch_id: 35, batch_id: 1000, cost: 0.007025, acc: 1.000000
+[Wed Oct 10 17:20:59 2018] epoch_id: 35, batch_id: 1100, cost: 0.008777, acc: 0.992188
+[Wed Oct 10 17:21:01 2018] epoch_id: 35, batch_id: 1200, cost: 0.006591, acc: 1.000000
+[Wed Oct 10 17:21:04 2018] epoch_id: 35, batch_id: 1300, cost: 0.008911, acc: 0.992188
+[Wed Oct 10 17:21:06 2018] epoch_id: 35, batch_id: 1400, cost: 0.038343, acc: 0.984375
+[Wed Oct 10 17:21:08 2018] epoch_id: 35, batch_id: 1500, cost: 0.001654, acc: 1.000000
+[Wed Oct 10 17:21:10 2018] epoch_id: 35, batch_id: 1600, cost: 0.002577, acc: 1.000000
+[Wed Oct 10 17:21:13 2018] epoch_id: 35, batch_id: 1700, cost: 0.026908, acc: 0.992188
+[Wed Oct 10 17:21:15 2018] epoch_id: 35, batch_id: 1800, cost: 0.024004, acc: 0.992188
+[Wed Oct 10 17:21:17 2018] epoch_id: 35, batch_id: 1900, cost: 0.013134, acc: 0.992188
+[Wed Oct 10 17:21:19 2018] epoch_id: 35, batch_id: 2000, cost: 0.003633, acc: 1.000000
+[Wed Oct 10 17:21:21 2018] epoch_id: 35, batch_id: 2100, cost: 0.011727, acc: 0.992188
+[Wed Oct 10 17:21:24 2018] epoch_id: 35, batch_id: 2200, cost: 0.019991, acc: 0.992188
+[Wed Oct 10 17:21:26 2018] epoch_id: 35, batch_id: 2300, cost: 0.004771, acc: 1.000000
+[Wed Oct 10 17:21:28 2018] epoch_id: 35, batch_id: 2400, cost: 0.013732, acc: 0.992188
+[Wed Oct 10 17:21:30 2018] epoch_id: 35, batch_id: 2500, cost: 0.096741, acc: 0.984375
+[Wed Oct 10 17:21:33 2018] epoch_id: 35, batch_id: 2600, cost: 0.006102, acc: 1.000000
+[Wed Oct 10 17:21:36 2018] epoch_id: 35, batch_id: 2700, cost: 0.007046, acc: 0.992188
+[Wed Oct 10 17:21:38 2018] epoch_id: 35, batch_id: 2800, cost: 0.028777, acc: 0.984375
+[Wed Oct 10 17:21:41 2018] epoch_id: 35, batch_id: 2900, cost: 0.116960, acc: 0.976562
+[Wed Oct 10 17:21:43 2018] epoch_id: 35, batch_id: 3000, cost: 0.039752, acc: 0.968750
+
+[Wed Oct 10 17:21:44 2018] epoch_id: 35, train_avg_cost: 0.014921, train_avg_acc: 0.995075
+[Wed Oct 10 17:21:45 2018] epoch_id: 35, dev_cost: 1.203598, accuracy: 0.8348
+[Wed Oct 10 17:21:45 2018] epoch_id: 35, test_cost: 1.205202, accuracy: 0.8347
+
+[Wed Oct 10 17:21:54 2018] epoch_id: 36, batch_id: 0, cost: 0.009331, acc: 1.000000
+[Wed Oct 10 17:21:56 2018] epoch_id: 36, batch_id: 100, cost: 0.004473, acc: 1.000000
+[Wed Oct 10 17:21:58 2018] epoch_id: 36, batch_id: 200, cost: 0.001097, acc: 1.000000
+[Wed Oct 10 17:22:00 2018] epoch_id: 36, batch_id: 300, cost: 0.001914, acc: 1.000000
+[Wed Oct 10 17:22:03 2018] epoch_id: 36, batch_id: 400, cost: 0.003967, acc: 1.000000
+[Wed Oct 10 17:22:05 2018] epoch_id: 36, batch_id: 500, cost: 0.008101, acc: 1.000000
+[Wed Oct 10 17:22:07 2018] epoch_id: 36, batch_id: 600, cost: 0.037581, acc: 0.976562
+[Wed Oct 10 17:22:09 2018] epoch_id: 36, batch_id: 700, cost: 0.031872, acc: 0.992188
+[Wed Oct 10 17:22:11 2018] epoch_id: 36, batch_id: 800, cost: 0.002586, acc: 1.000000
+[Wed Oct 10 17:22:14 2018] epoch_id: 36, batch_id: 900, cost: 0.025838, acc: 0.984375
+[Wed Oct 10 17:22:16 2018] epoch_id: 36, batch_id: 1000, cost: 0.012382, acc: 0.992188
+[Wed Oct 10 17:22:18 2018] epoch_id: 36, batch_id: 1100, cost: 0.006482, acc: 1.000000
+[Wed Oct 10 17:22:20 2018] epoch_id: 36, batch_id: 1200, cost: 0.006437, acc: 1.000000
+[Wed Oct 10 17:22:23 2018] epoch_id: 36, batch_id: 1300, cost: 0.026039, acc: 0.992188
+[Wed Oct 10 17:22:25 2018] epoch_id: 36, batch_id: 1400, cost: 0.017908, acc: 0.992188
+[Wed Oct 10 17:22:27 2018] epoch_id: 36, batch_id: 1500, cost: 0.025722, acc: 0.984375
+[Wed Oct 10 17:22:29 2018] epoch_id: 36, batch_id: 1600, cost: 0.031398, acc: 0.992188
+[Wed Oct 10 17:22:32 2018] epoch_id: 36, batch_id: 1700, cost: 0.034194, acc: 0.984375
+[Wed Oct 10 17:22:34 2018] epoch_id: 36, batch_id: 1800, cost: 0.001353, acc: 1.000000
+[Wed Oct 10 17:22:36 2018] epoch_id: 36, batch_id: 1900, cost: 0.000942, acc: 1.000000
+[Wed Oct 10 17:22:38 2018] epoch_id: 36, batch_id: 2000, cost: 0.004051, acc: 1.000000
+[Wed Oct 10 17:22:40 2018] epoch_id: 36, batch_id: 2100, cost: 0.016359, acc: 0.992188
+[Wed Oct 10 17:22:43 2018] epoch_id: 36, batch_id: 2200, cost: 0.010324, acc: 1.000000
+[Wed Oct 10 17:22:46 2018] epoch_id: 36, batch_id: 2300, cost: 0.015250, acc: 1.000000
+[Wed Oct 10 17:22:48 2018] epoch_id: 36, batch_id: 2400, cost: 0.053711, acc: 0.976562
+[Wed Oct 10 17:22:51 2018] epoch_id: 36, batch_id: 2500, cost: 0.059409, acc: 0.984375
+[Wed Oct 10 17:22:53 2018] epoch_id: 36, batch_id: 2600, cost: 0.009707, acc: 1.000000
+[Wed Oct 10 17:22:55 2018] epoch_id: 36, batch_id: 2700, cost: 0.003367, acc: 1.000000
+[Wed Oct 10 17:22:58 2018] epoch_id: 36, batch_id: 2800, cost: 0.001207, acc: 1.000000
+[Wed Oct 10 17:23:00 2018] epoch_id: 36, batch_id: 2900, cost: 0.009538, acc: 0.992188
+[Wed Oct 10 17:23:02 2018] epoch_id: 36, batch_id: 3000, cost: 0.013745, acc: 0.992188
+
+[Wed Oct 10 17:23:03 2018] epoch_id: 36, train_avg_cost: 0.014009, train_avg_acc: 0.995522
+[Wed Oct 10 17:23:04 2018] epoch_id: 36, dev_cost: 1.647745, accuracy: 0.8324
+[Wed Oct 10 17:23:05 2018] epoch_id: 36, test_cost: 1.662931, accuracy: 0.8368
+
+[Wed Oct 10 17:23:13 2018] epoch_id: 37, batch_id: 0, cost: 0.009128, acc: 1.000000
+[Wed Oct 10 17:23:15 2018] epoch_id: 37, batch_id: 100, cost: 0.000989, acc: 1.000000
+[Wed Oct 10 17:23:17 2018] epoch_id: 37, batch_id: 200, cost: 0.031867, acc: 0.992188
+[Wed Oct 10 17:23:20 2018] epoch_id: 37, batch_id: 300, cost: 0.016197, acc: 0.984375
+[Wed Oct 10 17:23:22 2018] epoch_id: 37, batch_id: 400, cost: 0.004157, acc: 1.000000
+[Wed Oct 10 17:23:24 2018] epoch_id: 37, batch_id: 500, cost: 0.004215, acc: 1.000000
+[Wed Oct 10 17:23:26 2018] epoch_id: 37, batch_id: 600, cost: 0.000303, acc: 1.000000
+[Wed Oct 10 17:23:29 2018] epoch_id: 37, batch_id: 700, cost: 0.005056, acc: 1.000000
+[Wed Oct 10 17:23:31 2018] epoch_id: 37, batch_id: 800, cost: 0.016816, acc: 0.992188
+[Wed Oct 10 17:23:34 2018] epoch_id: 37, batch_id: 900, cost: 0.036067, acc: 0.984375
+[Wed Oct 10 17:23:37 2018] epoch_id: 37, batch_id: 1000, cost: 0.002430, acc: 1.000000
+[Wed Oct 10 17:23:39 2018] epoch_id: 37, batch_id: 1100, cost: 0.001621, acc: 1.000000
+[Wed Oct 10 17:23:41 2018] epoch_id: 37, batch_id: 1200, cost: 0.034505, acc: 0.992188
+[Wed Oct 10 17:23:43 2018] epoch_id: 37, batch_id: 1300, cost: 0.008605, acc: 0.992188
+[Wed Oct 10 17:23:45 2018] epoch_id: 37, batch_id: 1400, cost: 0.039387, acc: 0.984375
+[Wed Oct 10 17:23:48 2018] epoch_id: 37, batch_id: 1500, cost: 0.005761, acc: 1.000000
+[Wed Oct 10 17:23:50 2018] epoch_id: 37, batch_id: 1600, cost: 0.002905, acc: 1.000000
+[Wed Oct 10 17:23:52 2018] epoch_id: 37, batch_id: 1700, cost: 0.009640, acc: 1.000000
+[Wed Oct 10 17:23:55 2018] epoch_id: 37, batch_id: 1800, cost: 0.004734, acc: 1.000000
+[Wed Oct 10 17:23:57 2018] epoch_id: 37, batch_id: 1900, cost: 0.029191, acc: 0.992188
+[Wed Oct 10 17:23:59 2018] epoch_id: 37, batch_id: 2000, cost: 0.000724, acc: 1.000000
+[Wed Oct 10 17:24:01 2018] epoch_id: 37, batch_id: 2100, cost: 0.014325, acc: 0.992188
+[Wed Oct 10 17:24:04 2018] epoch_id: 37, batch_id: 2200, cost: 0.004239, acc: 1.000000
+[Wed Oct 10 17:24:06 2018] epoch_id: 37, batch_id: 2300, cost: 0.000597, acc: 1.000000
+[Wed Oct 10 17:24:08 2018] epoch_id: 37, batch_id: 2400, cost: 0.008226, acc: 1.000000
+[Wed Oct 10 17:24:10 2018] epoch_id: 37, batch_id: 2500, cost: 0.001601, acc: 1.000000
+[Wed Oct 10 17:24:12 2018] epoch_id: 37, batch_id: 2600, cost: 0.014527, acc: 0.992188
+[Wed Oct 10 17:24:15 2018] epoch_id: 37, batch_id: 2700, cost: 0.010813, acc: 0.992188
+[Wed Oct 10 17:24:17 2018] epoch_id: 37, batch_id: 2800, cost: 0.015832, acc: 0.992188
+[Wed Oct 10 17:24:19 2018] epoch_id: 37, batch_id: 2900, cost: 0.063636, acc: 0.976562
+[Wed Oct 10 17:24:22 2018] epoch_id: 37, batch_id: 3000, cost: 0.003993, acc: 1.000000
+
+[Wed Oct 10 17:24:22 2018] epoch_id: 37, train_avg_cost: 0.014056, train_avg_acc: 0.995431
+[Wed Oct 10 17:24:23 2018] epoch_id: 37, dev_cost: 1.500988, accuracy: 0.8334
+[Wed Oct 10 17:24:24 2018] epoch_id: 37, test_cost: 1.491400, accuracy: 0.8327
+
+[Wed Oct 10 17:24:33 2018] epoch_id: 38, batch_id: 0, cost: 0.016895, acc: 0.992188
+[Wed Oct 10 17:24:35 2018] epoch_id: 38, batch_id: 100, cost: 0.001690, acc: 1.000000
+[Wed Oct 10 17:24:38 2018] epoch_id: 38, batch_id: 200, cost: 0.009989, acc: 1.000000
+[Wed Oct 10 17:24:40 2018] epoch_id: 38, batch_id: 300, cost: 0.023480, acc: 0.984375
+[Wed Oct 10 17:24:42 2018] epoch_id: 38, batch_id: 400, cost: 0.004687, acc: 1.000000
+[Wed Oct 10 17:24:45 2018] epoch_id: 38, batch_id: 500, cost: 0.020183, acc: 0.992188
+[Wed Oct 10 17:24:47 2018] epoch_id: 38, batch_id: 600, cost: 0.028614, acc: 0.992188
+[Wed Oct 10 17:24:49 2018] epoch_id: 38, batch_id: 700, cost: 0.000448, acc: 1.000000
+[Wed Oct 10 17:24:51 2018] epoch_id: 38, batch_id: 800, cost: 0.000913, acc: 1.000000
+[Wed Oct 10 17:24:54 2018] epoch_id: 38, batch_id: 900, cost: 0.022090, acc: 0.992188
+[Wed Oct 10 17:24:56 2018] epoch_id: 38, batch_id: 1000, cost: 0.006918, acc: 0.992188
+[Wed Oct 10 17:24:58 2018] epoch_id: 38, batch_id: 1100, cost: 0.028611, acc: 0.984375
+[Wed Oct 10 17:25:00 2018] epoch_id: 38, batch_id: 1200, cost: 0.013097, acc: 0.992188
+[Wed Oct 10 17:25:03 2018] epoch_id: 38, batch_id: 1300, cost: 0.014227, acc: 0.992188
+[Wed Oct 10 17:25:05 2018] epoch_id: 38, batch_id: 1400, cost: 0.033064, acc: 0.992188
+[Wed Oct 10 17:25:07 2018] epoch_id: 38, batch_id: 1500, cost: 0.004276, acc: 1.000000
+[Wed Oct 10 17:25:09 2018] epoch_id: 38, batch_id: 1600, cost: 0.016516, acc: 0.992188
+[Wed Oct 10 17:25:12 2018] epoch_id: 38, batch_id: 1700, cost: 0.004443, acc: 1.000000
+[Wed Oct 10 17:25:14 2018] epoch_id: 38, batch_id: 1800, cost: 0.001648, acc: 1.000000
+[Wed Oct 10 17:25:17 2018] epoch_id: 38, batch_id: 1900, cost: 0.026780, acc: 0.992188
+[Wed Oct 10 17:25:20 2018] epoch_id: 38, batch_id: 2000, cost: 0.006375, acc: 0.992188
+[Wed Oct 10 17:25:22 2018] epoch_id: 38, batch_id: 2100, cost: 0.013131, acc: 0.992188
+[Wed Oct 10 17:25:24 2018] epoch_id: 38, batch_id: 2200, cost: 0.012666, acc: 1.000000
+[Wed Oct 10 17:25:26 2018] epoch_id: 38, batch_id: 2300, cost: 0.001973, acc: 1.000000
+[Wed Oct 10 17:25:29 2018] epoch_id: 38, batch_id: 2400, cost: 0.005966, acc: 1.000000
+[Wed Oct 10 17:25:31 2018] epoch_id: 38, batch_id: 2500, cost: 0.011249, acc: 0.992188
+[Wed Oct 10 17:25:33 2018] epoch_id: 38, batch_id: 2600, cost: 0.022209, acc: 0.992188
+[Wed Oct 10 17:25:36 2018] epoch_id: 38, batch_id: 2700, cost: 0.003999, acc: 1.000000
+[Wed Oct 10 17:25:38 2018] epoch_id: 38, batch_id: 2800, cost: 0.010264, acc: 0.992188
+[Wed Oct 10 17:25:40 2018] epoch_id: 38, batch_id: 2900, cost: 0.003841, acc: 1.000000
+[Wed Oct 10 17:25:42 2018] epoch_id: 38, batch_id: 3000, cost: 0.075514, acc: 0.992188
+
+[Wed Oct 10 17:25:43 2018] epoch_id: 38, train_avg_cost: 0.013573, train_avg_acc: 0.995548
+[Wed Oct 10 17:25:44 2018] epoch_id: 38, dev_cost: 1.577028, accuracy: 0.8317
+[Wed Oct 10 17:25:45 2018] epoch_id: 38, test_cost: 1.546861, accuracy: 0.8363
+
+[Wed Oct 10 17:25:54 2018] epoch_id: 39, batch_id: 0, cost: 0.000487, acc: 1.000000
+[Wed Oct 10 17:25:56 2018] epoch_id: 39, batch_id: 100, cost: 0.003988, acc: 1.000000
+[Wed Oct 10 17:25:58 2018] epoch_id: 39, batch_id: 200, cost: 0.069709, acc: 0.984375
+[Wed Oct 10 17:26:00 2018] epoch_id: 39, batch_id: 300, cost: 0.031796, acc: 0.992188
+[Wed Oct 10 17:26:03 2018] epoch_id: 39, batch_id: 400, cost: 0.007788, acc: 1.000000
+[Wed Oct 10 17:26:05 2018] epoch_id: 39, batch_id: 500, cost: 0.014854, acc: 0.992188
+[Wed Oct 10 17:26:07 2018] epoch_id: 39, batch_id: 600, cost: 0.017382, acc: 0.992188
+[Wed Oct 10 17:26:09 2018] epoch_id: 39, batch_id: 700, cost: 0.003342, acc: 1.000000
+[Wed Oct 10 17:26:12 2018] epoch_id: 39, batch_id: 800, cost: 0.003279, acc: 1.000000
+[Wed Oct 10 17:26:14 2018] epoch_id: 39, batch_id: 900, cost: 0.018283, acc: 0.992188
+[Wed Oct 10 17:26:16 2018] epoch_id: 39, batch_id: 1000, cost: 0.000697, acc: 1.000000
+[Wed Oct 10 17:26:18 2018] epoch_id: 39, batch_id: 1100, cost: 0.003188, acc: 1.000000
+[Wed Oct 10 17:26:21 2018] epoch_id: 39, batch_id: 1200, cost: 0.002884, acc: 1.000000
+[Wed Oct 10 17:26:23 2018] epoch_id: 39, batch_id: 1300, cost: 0.016443, acc: 0.992188
+[Wed Oct 10 17:26:25 2018] epoch_id: 39, batch_id: 1400, cost: 0.036063, acc: 0.992188
+[Wed Oct 10 17:26:28 2018] epoch_id: 39, batch_id: 1500, cost: 0.010849, acc: 0.992188
+[Wed Oct 10 17:26:30 2018] epoch_id: 39, batch_id: 1600, cost: 0.002218, acc: 1.000000
+[Wed Oct 10 17:26:32 2018] epoch_id: 39, batch_id: 1700, cost: 0.011184, acc: 1.000000
+[Wed Oct 10 17:26:34 2018] epoch_id: 39, batch_id: 1800, cost: 0.002410, acc: 1.000000
+[Wed Oct 10 17:26:37 2018] epoch_id: 39, batch_id: 1900, cost: 0.010422, acc: 0.992188
+[Wed Oct 10 17:26:39 2018] epoch_id: 39, batch_id: 2000, cost: 0.012162, acc: 0.992188
+[Wed Oct 10 17:26:41 2018] epoch_id: 39, batch_id: 2100, cost: 0.042420, acc: 0.984375
+[Wed Oct 10 17:26:43 2018] epoch_id: 39, batch_id: 2200, cost: 0.006210, acc: 1.000000
+[Wed Oct 10 17:26:46 2018] epoch_id: 39, batch_id: 2300, cost: 0.002905, acc: 1.000000
+[Wed Oct 10 17:26:48 2018] epoch_id: 39, batch_id: 2400, cost: 0.067472, acc: 0.992188
+[Wed Oct 10 17:26:50 2018] epoch_id: 39, batch_id: 2500, cost: 0.030382, acc: 0.992188
+[Wed Oct 10 17:26:52 2018] epoch_id: 39, batch_id: 2600, cost: 0.049727, acc: 0.992188
+[Wed Oct 10 17:26:54 2018] epoch_id: 39, batch_id: 2700, cost: 0.024157, acc: 0.984375
+[Wed Oct 10 17:26:57 2018] epoch_id: 39, batch_id: 2800, cost: 0.021991, acc: 0.992188
+[Wed Oct 10 17:26:59 2018] epoch_id: 39, batch_id: 2900, cost: 0.001997, acc: 1.000000
+[Wed Oct 10 17:27:01 2018] epoch_id: 39, batch_id: 3000, cost: 0.001907, acc: 1.000000
+
+[Wed Oct 10 17:27:02 2018] epoch_id: 39, train_avg_cost: 0.012756, train_avg_acc: 0.995835
+[Wed Oct 10 17:27:03 2018] epoch_id: 39, dev_cost: 1.650582, accuracy: 0.8342
+[Wed Oct 10 17:27:04 2018] epoch_id: 39, test_cost: 1.662477, accuracy: 0.8325
+
+[Wed Oct 10 17:27:12 2018] epoch_id: 40, batch_id: 0, cost: 0.000858, acc: 1.000000
+[Wed Oct 10 17:27:15 2018] epoch_id: 40, batch_id: 100, cost: 0.000849, acc: 1.000000
+[Wed Oct 10 17:27:17 2018] epoch_id: 40, batch_id: 200, cost: 0.016273, acc: 0.992188
+[Wed Oct 10 17:27:19 2018] epoch_id: 40, batch_id: 300, cost: 0.042659, acc: 0.992188
+[Wed Oct 10 17:27:21 2018] epoch_id: 40, batch_id: 400, cost: 0.010672, acc: 0.992188
+[Wed Oct 10 17:27:24 2018] epoch_id: 40, batch_id: 500, cost: 0.000544, acc: 1.000000
+[Wed Oct 10 17:27:26 2018] epoch_id: 40, batch_id: 600, cost: 0.005578, acc: 1.000000
+[Wed Oct 10 17:27:28 2018] epoch_id: 40, batch_id: 700, cost: 0.039266, acc: 0.992188
+[Wed Oct 10 17:27:31 2018] epoch_id: 40, batch_id: 800, cost: 0.013144, acc: 0.992188
+[Wed Oct 10 17:27:33 2018] epoch_id: 40, batch_id: 900, cost: 0.000740, acc: 1.000000
+[Wed Oct 10 17:27:35 2018] epoch_id: 40, batch_id: 1000, cost: 0.003259, acc: 1.000000
+[Wed Oct 10 17:27:37 2018] epoch_id: 40, batch_id: 1100, cost: 0.002126, acc: 1.000000
+[Wed Oct 10 17:27:40 2018] epoch_id: 40, batch_id: 1200, cost: 0.003089, acc: 1.000000
+[Wed Oct 10 17:27:42 2018] epoch_id: 40, batch_id: 1300, cost: 0.000690, acc: 1.000000
+[Wed Oct 10 17:27:44 2018] epoch_id: 40, batch_id: 1400, cost: 0.000283, acc: 1.000000
+[Wed Oct 10 17:27:46 2018] epoch_id: 40, batch_id: 1500, cost: 0.013878, acc: 0.984375
+[Wed Oct 10 17:27:49 2018] epoch_id: 40, batch_id: 1600, cost: 0.005389, acc: 1.000000
+[Wed Oct 10 17:27:51 2018] epoch_id: 40, batch_id: 1700, cost: 0.024631, acc: 0.992188
+[Wed Oct 10 17:27:53 2018] epoch_id: 40, batch_id: 1800, cost: 0.003978, acc: 1.000000
+[Wed Oct 10 17:27:55 2018] epoch_id: 40, batch_id: 1900, cost: 0.004993, acc: 1.000000
+[Wed Oct 10 17:27:58 2018] epoch_id: 40, batch_id: 2000, cost: 0.014580, acc: 0.984375
+[Wed Oct 10 17:28:00 2018] epoch_id: 40, batch_id: 2100, cost: 0.003148, acc: 1.000000
+[Wed Oct 10 17:28:02 2018] epoch_id: 40, batch_id: 2200, cost: 0.000848, acc: 1.000000
+[Wed Oct 10 17:28:04 2018] epoch_id: 40, batch_id: 2300, cost: 0.009250, acc: 1.000000
+[Wed Oct 10 17:28:06 2018] epoch_id: 40, batch_id: 2400, cost: 0.006138, acc: 1.000000
+[Wed Oct 10 17:28:09 2018] epoch_id: 40, batch_id: 2500, cost: 0.050052, acc: 0.984375
+[Wed Oct 10 17:28:11 2018] epoch_id: 40, batch_id: 2600, cost: 0.005259, acc: 1.000000
+[Wed Oct 10 17:28:13 2018] epoch_id: 40, batch_id: 2700, cost: 0.027375, acc: 0.984375
+[Wed Oct 10 17:28:17 2018] epoch_id: 40, batch_id: 2800, cost: 0.010132, acc: 0.992188
+[Wed Oct 10 17:28:19 2018] epoch_id: 40, batch_id: 2900, cost: 0.003442, acc: 1.000000
+[Wed Oct 10 17:28:21 2018] epoch_id: 40, batch_id: 3000, cost: 0.005328, acc: 1.000000
+
+[Wed Oct 10 17:28:22 2018] epoch_id: 40, train_avg_cost: 0.013034, train_avg_acc: 0.995832
+[Wed Oct 10 17:28:23 2018] epoch_id: 40, dev_cost: 1.424795, accuracy: 0.8311
+[Wed Oct 10 17:28:24 2018] epoch_id: 40, test_cost: 1.404285, accuracy: 0.8345
+
+[Wed Oct 10 17:28:32 2018] epoch_id: 41, batch_id: 0, cost: 0.023169, acc: 0.992188
+[Wed Oct 10 17:28:34 2018] epoch_id: 41, batch_id: 100, cost: 0.008356, acc: 0.992188
+[Wed Oct 10 17:28:36 2018] epoch_id: 41, batch_id: 200, cost: 0.034033, acc: 0.992188
+[Wed Oct 10 17:28:39 2018] epoch_id: 41, batch_id: 300, cost: 0.003154, acc: 1.000000
+[Wed Oct 10 17:28:41 2018] epoch_id: 41, batch_id: 400, cost: 0.000178, acc: 1.000000
+[Wed Oct 10 17:28:43 2018] epoch_id: 41, batch_id: 500, cost: 0.001488, acc: 1.000000
+[Wed Oct 10 17:28:45 2018] epoch_id: 41, batch_id: 600, cost: 0.034724, acc: 0.992188
+[Wed Oct 10 17:28:48 2018] epoch_id: 41, batch_id: 700, cost: 0.011531, acc: 0.992188
+[Wed Oct 10 17:28:50 2018] epoch_id: 41, batch_id: 800, cost: 0.003504, acc: 1.000000
+[Wed Oct 10 17:28:52 2018] epoch_id: 41, batch_id: 900, cost: 0.010360, acc: 0.992188
+[Wed Oct 10 17:28:54 2018] epoch_id: 41, batch_id: 1000, cost: 0.014474, acc: 0.992188
+[Wed Oct 10 17:28:57 2018] epoch_id: 41, batch_id: 1100, cost: 0.005857, acc: 1.000000
+[Wed Oct 10 17:28:59 2018] epoch_id: 41, batch_id: 1200, cost: 0.007621, acc: 0.992188
+[Wed Oct 10 17:29:01 2018] epoch_id: 41, batch_id: 1300, cost: 0.013386, acc: 0.992188
+[Wed Oct 10 17:29:03 2018] epoch_id: 41, batch_id: 1400, cost: 0.004675, acc: 1.000000
+[Wed Oct 10 17:29:05 2018] epoch_id: 41, batch_id: 1500, cost: 0.023563, acc: 0.984375
+[Wed Oct 10 17:29:07 2018] epoch_id: 41, batch_id: 1600, cost: 0.001719, acc: 1.000000
+[Wed Oct 10 17:29:10 2018] epoch_id: 41, batch_id: 1700, cost: 0.000334, acc: 1.000000
+[Wed Oct 10 17:29:12 2018] epoch_id: 41, batch_id: 1800, cost: 0.001468, acc: 1.000000
+[Wed Oct 10 17:29:14 2018] epoch_id: 41, batch_id: 1900, cost: 0.002295, acc: 1.000000
+[Wed Oct 10 17:29:16 2018] epoch_id: 41, batch_id: 2000, cost: 0.021738, acc: 0.984375
+[Wed Oct 10 17:29:19 2018] epoch_id: 41, batch_id: 2100, cost: 0.023329, acc: 0.984375
+[Wed Oct 10 17:29:21 2018] epoch_id: 41, batch_id: 2200, cost: 0.005678, acc: 1.000000
+[Wed Oct 10 17:29:23 2018] epoch_id: 41, batch_id: 2300, cost: 0.004800, acc: 1.000000
+[Wed Oct 10 17:29:27 2018] epoch_id: 41, batch_id: 2400, cost: 0.007035, acc: 1.000000
+[Wed Oct 10 17:29:29 2018] epoch_id: 41, batch_id: 2500, cost: 0.041456, acc: 0.976562
+[Wed Oct 10 17:29:31 2018] epoch_id: 41, batch_id: 2600, cost: 0.011735, acc: 0.992188
+[Wed Oct 10 17:29:33 2018] epoch_id: 41, batch_id: 2700, cost: 0.016611, acc: 0.992188
+[Wed Oct 10 17:29:36 2018] epoch_id: 41, batch_id: 2800, cost: 0.004084, acc: 1.000000
+[Wed Oct 10 17:29:38 2018] epoch_id: 41, batch_id: 2900, cost: 0.001111, acc: 1.000000
+[Wed Oct 10 17:29:40 2018] epoch_id: 41, batch_id: 3000, cost: 0.015571, acc: 0.992188
+
+[Wed Oct 10 17:29:41 2018] epoch_id: 41, train_avg_cost: 0.012473, train_avg_acc: 0.995959
+[Wed Oct 10 17:29:42 2018] epoch_id: 41, dev_cost: 1.301212, accuracy: 0.8313
+[Wed Oct 10 17:29:43 2018] epoch_id: 41, test_cost: 1.292132, accuracy: 0.8314
+
+[Wed Oct 10 17:29:51 2018] epoch_id: 42, batch_id: 0, cost: 0.006710, acc: 1.000000
+[Wed Oct 10 17:29:53 2018] epoch_id: 42, batch_id: 100, cost: 0.003760, acc: 1.000000
+[Wed Oct 10 17:29:56 2018] epoch_id: 42, batch_id: 200, cost: 0.007728, acc: 1.000000
+[Wed Oct 10 17:29:58 2018] epoch_id: 42, batch_id: 300, cost: 0.010997, acc: 1.000000
+[Wed Oct 10 17:30:00 2018] epoch_id: 42, batch_id: 400, cost: 0.015313, acc: 0.984375
+[Wed Oct 10 17:30:02 2018] epoch_id: 42, batch_id: 500, cost: 0.000985, acc: 1.000000
+[Wed Oct 10 17:30:05 2018] epoch_id: 42, batch_id: 600, cost: 0.001277, acc: 1.000000
+[Wed Oct 10 17:30:07 2018] epoch_id: 42, batch_id: 700, cost: 0.002231, acc: 1.000000
+[Wed Oct 10 17:30:10 2018] epoch_id: 42, batch_id: 800, cost: 0.002233, acc: 1.000000
+[Wed Oct 10 17:30:12 2018] epoch_id: 42, batch_id: 900, cost: 0.002083, acc: 1.000000
+[Wed Oct 10 17:30:15 2018] epoch_id: 42, batch_id: 1000, cost: 0.004574, acc: 1.000000
+[Wed Oct 10 17:30:17 2018] epoch_id: 42, batch_id: 1100, cost: 0.004339, acc: 1.000000
+[Wed Oct 10 17:30:19 2018] epoch_id: 42, batch_id: 1200, cost: 0.006596, acc: 1.000000
+[Wed Oct 10 17:30:22 2018] epoch_id: 42, batch_id: 1300, cost: 0.000877, acc: 1.000000
+[Wed Oct 10 17:30:24 2018] epoch_id: 42, batch_id: 1400, cost: 0.001873, acc: 1.000000
+[Wed Oct 10 17:30:26 2018] epoch_id: 42, batch_id: 1500, cost: 0.000632, acc: 1.000000
+[Wed Oct 10 17:30:29 2018] epoch_id: 42, batch_id: 1600, cost: 0.002006, acc: 1.000000
+[Wed Oct 10 17:30:31 2018] epoch_id: 42, batch_id: 1700, cost: 0.002035, acc: 1.000000
+[Wed Oct 10 17:30:33 2018] epoch_id: 42, batch_id: 1800, cost: 0.010094, acc: 1.000000
+[Wed Oct 10 17:30:35 2018] epoch_id: 42, batch_id: 1900, cost: 0.002634, acc: 1.000000
+[Wed Oct 10 17:30:38 2018] epoch_id: 42, batch_id: 2000, cost: 0.045660, acc: 0.984375
+[Wed Oct 10 17:30:40 2018] epoch_id: 42, batch_id: 2100, cost: 0.034275, acc: 0.984375
+[Wed Oct 10 17:30:42 2018] epoch_id: 42, batch_id: 2200, cost: 0.001633, acc: 1.000000
+[Wed Oct 10 17:30:44 2018] epoch_id: 42, batch_id: 2300, cost: 0.001030, acc: 1.000000
+[Wed Oct 10 17:30:47 2018] epoch_id: 42, batch_id: 2400, cost: 0.002235, acc: 1.000000
+[Wed Oct 10 17:30:49 2018] epoch_id: 42, batch_id: 2500, cost: 0.017729, acc: 0.992188
+[Wed Oct 10 17:30:51 2018] epoch_id: 42, batch_id: 2600, cost: 0.004357, acc: 1.000000
+[Wed Oct 10 17:30:53 2018] epoch_id: 42, batch_id: 2700, cost: 0.000981, acc: 1.000000
+[Wed Oct 10 17:30:56 2018] epoch_id: 42, batch_id: 2800, cost: 0.000964, acc: 1.000000
+[Wed Oct 10 17:30:58 2018] epoch_id: 42, batch_id: 2900, cost: 0.018888, acc: 0.992188
+[Wed Oct 10 17:31:00 2018] epoch_id: 42, batch_id: 3000, cost: 0.032965, acc: 0.984375
+
+[Wed Oct 10 17:31:01 2018] epoch_id: 42, train_avg_cost: 0.013007, train_avg_acc: 0.995946
+[Wed Oct 10 17:31:02 2018] epoch_id: 42, dev_cost: 1.701511, accuracy: 0.8335
+[Wed Oct 10 17:31:03 2018] epoch_id: 42, test_cost: 1.704458, accuracy: 0.8312
+
+[Wed Oct 10 17:31:12 2018] epoch_id: 43, batch_id: 0, cost: 0.002044, acc: 1.000000
+[Wed Oct 10 17:31:14 2018] epoch_id: 43, batch_id: 100, cost: 0.018454, acc: 0.992188
+[Wed Oct 10 17:31:16 2018] epoch_id: 43, batch_id: 200, cost: 0.002746, acc: 1.000000
+[Wed Oct 10 17:31:18 2018] epoch_id: 43, batch_id: 300, cost: 0.008316, acc: 0.992188
+[Wed Oct 10 17:31:21 2018] epoch_id: 43, batch_id: 400, cost: 0.009446, acc: 1.000000
+[Wed Oct 10 17:31:23 2018] epoch_id: 43, batch_id: 500, cost: 0.000336, acc: 1.000000
+[Wed Oct 10 17:31:25 2018] epoch_id: 43, batch_id: 600, cost: 0.000436, acc: 1.000000
+[Wed Oct 10 17:31:27 2018] epoch_id: 43, batch_id: 700, cost: 0.000142, acc: 1.000000
+[Wed Oct 10 17:31:30 2018] epoch_id: 43, batch_id: 800, cost: 0.001449, acc: 1.000000
+[Wed Oct 10 17:31:32 2018] epoch_id: 43, batch_id: 900, cost: 0.040274, acc: 0.992188
+[Wed Oct 10 17:31:34 2018] epoch_id: 43, batch_id: 1000, cost: 0.002314, acc: 1.000000
+[Wed Oct 10 17:31:36 2018] epoch_id: 43, batch_id: 1100, cost: 0.008140, acc: 0.992188
+[Wed Oct 10 17:31:39 2018] epoch_id: 43, batch_id: 1200, cost: 0.001320, acc: 1.000000
+[Wed Oct 10 17:31:41 2018] epoch_id: 43, batch_id: 1300, cost: 0.000427, acc: 1.000000
+[Wed Oct 10 17:31:43 2018] epoch_id: 43, batch_id: 1400, cost: 0.004985, acc: 1.000000
+[Wed Oct 10 17:31:46 2018] epoch_id: 43, batch_id: 1500, cost: 0.005165, acc: 1.000000
+[Wed Oct 10 17:31:48 2018] epoch_id: 43, batch_id: 1600, cost: 0.006397, acc: 1.000000
+[Wed Oct 10 17:31:50 2018] epoch_id: 43, batch_id: 1700, cost: 0.026334, acc: 0.984375
+[Wed Oct 10 17:31:54 2018] epoch_id: 43, batch_id: 1800, cost: 0.003058, acc: 1.000000
+[Wed Oct 10 17:31:56 2018] epoch_id: 43, batch_id: 1900, cost: 0.009215, acc: 1.000000
+[Wed Oct 10 17:31:58 2018] epoch_id: 43, batch_id: 2000, cost: 0.005750, acc: 1.000000
+[Wed Oct 10 17:32:01 2018] epoch_id: 43, batch_id: 2100, cost: 0.006973, acc: 1.000000
+[Wed Oct 10 17:32:03 2018] epoch_id: 43, batch_id: 2200, cost: 0.040183, acc: 0.984375
+[Wed Oct 10 17:32:05 2018] epoch_id: 43, batch_id: 2300, cost: 0.007980, acc: 0.992188
+[Wed Oct 10 17:32:07 2018] epoch_id: 43, batch_id: 2400, cost: 0.018794, acc: 0.992188
+[Wed Oct 10 17:32:10 2018] epoch_id: 43, batch_id: 2500, cost: 0.031288, acc: 0.984375
+[Wed Oct 10 17:32:12 2018] epoch_id: 43, batch_id: 2600, cost: 0.010219, acc: 0.992188
+[Wed Oct 10 17:32:14 2018] epoch_id: 43, batch_id: 2700, cost: 0.021514, acc: 0.984375
+[Wed Oct 10 17:32:17 2018] epoch_id: 43, batch_id: 2800, cost: 0.005614, acc: 1.000000
+[Wed Oct 10 17:32:19 2018] epoch_id: 43, batch_id: 2900, cost: 0.065875, acc: 0.984375
+[Wed Oct 10 17:32:21 2018] epoch_id: 43, batch_id: 3000, cost: 0.013279, acc: 0.992188
+
+[Wed Oct 10 17:32:22 2018] epoch_id: 43, train_avg_cost: 0.011822, train_avg_acc: 0.996238
+[Wed Oct 10 17:32:23 2018] epoch_id: 43, dev_cost: 1.703876, accuracy: 0.8322
+[Wed Oct 10 17:32:24 2018] epoch_id: 43, test_cost: 1.724094, accuracy: 0.8315
+
+[Wed Oct 10 17:32:32 2018] epoch_id: 44, batch_id: 0, cost: 0.003358, acc: 1.000000
+[Wed Oct 10 17:32:34 2018] epoch_id: 44, batch_id: 100, cost: 0.003024, acc: 1.000000
+[Wed Oct 10 17:32:37 2018] epoch_id: 44, batch_id: 200, cost: 0.038726, acc: 0.992188
+[Wed Oct 10 17:32:39 2018] epoch_id: 44, batch_id: 300, cost: 0.001766, acc: 1.000000
+[Wed Oct 10 17:32:41 2018] epoch_id: 44, batch_id: 400, cost: 0.005300, acc: 1.000000
+[Wed Oct 10 17:32:43 2018] epoch_id: 44, batch_id: 500, cost: 0.023175, acc: 0.992188
+[Wed Oct 10 17:32:46 2018] epoch_id: 44, batch_id: 600, cost: 0.002893, acc: 1.000000
+[Wed Oct 10 17:32:48 2018] epoch_id: 44, batch_id: 700, cost: 0.025870, acc: 0.976562
+[Wed Oct 10 17:32:50 2018] epoch_id: 44, batch_id: 800, cost: 0.019898, acc: 0.992188
+[Wed Oct 10 17:32:52 2018] epoch_id: 44, batch_id: 900, cost: 0.001718, acc: 1.000000
+[Wed Oct 10 17:32:55 2018] epoch_id: 44, batch_id: 1000, cost: 0.000221, acc: 1.000000
+[Wed Oct 10 17:32:57 2018] epoch_id: 44, batch_id: 1100, cost: 0.002172, acc: 1.000000
+[Wed Oct 10 17:32:59 2018] epoch_id: 44, batch_id: 1200, cost: 0.001158, acc: 1.000000
+[Wed Oct 10 17:33:02 2018] epoch_id: 44, batch_id: 1300, cost: 0.004667, acc: 1.000000
+[Wed Oct 10 17:33:04 2018] epoch_id: 44, batch_id: 1400, cost: 0.000685, acc: 1.000000
+[Wed Oct 10 17:33:06 2018] epoch_id: 44, batch_id: 1500, cost: 0.007730, acc: 1.000000
+[Wed Oct 10 17:33:08 2018] epoch_id: 44, batch_id: 1600, cost: 0.006694, acc: 1.000000
+[Wed Oct 10 17:33:11 2018] epoch_id: 44, batch_id: 1700, cost: 0.009508, acc: 0.992188
+[Wed Oct 10 17:33:13 2018] epoch_id: 44, batch_id: 1800, cost: 0.018037, acc: 0.992188
+[Wed Oct 10 17:33:15 2018] epoch_id: 44, batch_id: 1900, cost: 0.020902, acc: 0.976562
+[Wed Oct 10 17:33:18 2018] epoch_id: 44, batch_id: 2000, cost: 0.006977, acc: 0.992188
+[Wed Oct 10 17:33:20 2018] epoch_id: 44, batch_id: 2100, cost: 0.004821, acc: 1.000000
+[Wed Oct 10 17:33:22 2018] epoch_id: 44, batch_id: 2200, cost: 0.000209, acc: 1.000000
+[Wed Oct 10 17:33:25 2018] epoch_id: 44, batch_id: 2300, cost: 0.008764, acc: 0.992188
+[Wed Oct 10 17:33:27 2018] epoch_id: 44, batch_id: 2400, cost: 0.029171, acc: 0.992188
+[Wed Oct 10 17:33:29 2018] epoch_id: 44, batch_id: 2500, cost: 0.015028, acc: 0.992188
+[Wed Oct 10 17:33:31 2018] epoch_id: 44, batch_id: 2600, cost: 0.007096, acc: 1.000000
+[Wed Oct 10 17:33:33 2018] epoch_id: 44, batch_id: 2700, cost: 0.000547, acc: 1.000000
+[Wed Oct 10 17:33:36 2018] epoch_id: 44, batch_id: 2800, cost: 0.004024, acc: 1.000000
+[Wed Oct 10 17:33:38 2018] epoch_id: 44, batch_id: 2900, cost: 0.002191, acc: 1.000000
+[Wed Oct 10 17:33:40 2018] epoch_id: 44, batch_id: 3000, cost: 0.008875, acc: 1.000000
+
+[Wed Oct 10 17:33:41 2018] epoch_id: 44, train_avg_cost: 0.012328, train_avg_acc: 0.996076
+[Wed Oct 10 17:33:42 2018] epoch_id: 44, dev_cost: 1.575702, accuracy: 0.8331
+[Wed Oct 10 17:33:43 2018] epoch_id: 44, test_cost: 1.573283, accuracy: 0.8313
+
+[Wed Oct 10 17:33:52 2018] epoch_id: 45, batch_id: 0, cost: 0.002271, acc: 1.000000
+[Wed Oct 10 17:33:54 2018] epoch_id: 45, batch_id: 100, cost: 0.005500, acc: 1.000000
+[Wed Oct 10 17:33:56 2018] epoch_id: 45, batch_id: 200, cost: 0.001735, acc: 1.000000
+[Wed Oct 10 17:33:58 2018] epoch_id: 45, batch_id: 300, cost: 0.008910, acc: 1.000000
+[Wed Oct 10 17:34:01 2018] epoch_id: 45, batch_id: 400, cost: 0.010551, acc: 0.992188
+[Wed Oct 10 17:34:03 2018] epoch_id: 45, batch_id: 500, cost: 0.005958, acc: 1.000000
+[Wed Oct 10 17:34:05 2018] epoch_id: 45, batch_id: 600, cost: 0.012035, acc: 0.992188
+[Wed Oct 10 17:34:07 2018] epoch_id: 45, batch_id: 700, cost: 0.002110, acc: 1.000000
+[Wed Oct 10 17:34:10 2018] epoch_id: 45, batch_id: 800, cost: 0.014834, acc: 0.992188
+[Wed Oct 10 17:34:12 2018] epoch_id: 45, batch_id: 900, cost: 0.010944, acc: 0.992188
+[Wed Oct 10 17:34:14 2018] epoch_id: 45, batch_id: 1000, cost: 0.017574, acc: 0.992188
+[Wed Oct 10 17:34:16 2018] epoch_id: 45, batch_id: 1100, cost: 0.006877, acc: 1.000000
+[Wed Oct 10 17:34:19 2018] epoch_id: 45, batch_id: 1200, cost: 0.001731, acc: 1.000000
+[Wed Oct 10 17:34:21 2018] epoch_id: 45, batch_id: 1300, cost: 0.002963, acc: 1.000000
+[Wed Oct 10 17:34:23 2018] epoch_id: 45, batch_id: 1400, cost: 0.009798, acc: 1.000000
+[Wed Oct 10 17:34:25 2018] epoch_id: 45, batch_id: 1500, cost: 0.003309, acc: 1.000000
+[Wed Oct 10 17:34:28 2018] epoch_id: 45, batch_id: 1600, cost: 0.022402, acc: 0.984375
+[Wed Oct 10 17:34:30 2018] epoch_id: 45, batch_id: 1700, cost: 0.003854, acc: 1.000000
+[Wed Oct 10 17:34:32 2018] epoch_id: 45, batch_id: 1800, cost: 0.000418, acc: 1.000000
+[Wed Oct 10 17:34:35 2018] epoch_id: 45, batch_id: 1900, cost: 0.014512, acc: 0.992188
+[Wed Oct 10 17:34:37 2018] epoch_id: 45, batch_id: 2000, cost: 0.031922, acc: 0.992188
+[Wed Oct 10 17:34:39 2018] epoch_id: 45, batch_id: 2100, cost: 0.002671, acc: 1.000000
+[Wed Oct 10 17:34:42 2018] epoch_id: 45, batch_id: 2200, cost: 0.042934, acc: 0.984375
+[Wed Oct 10 17:34:44 2018] epoch_id: 45, batch_id: 2300, cost: 0.008559, acc: 1.000000
+[Wed Oct 10 17:34:46 2018] epoch_id: 45, batch_id: 2400, cost: 0.050518, acc: 0.984375
+[Wed Oct 10 17:34:48 2018] epoch_id: 45, batch_id: 2500, cost: 0.001887, acc: 1.000000
+[Wed Oct 10 17:34:50 2018] epoch_id: 45, batch_id: 2600, cost: 0.002196, acc: 1.000000
+[Wed Oct 10 17:34:54 2018] epoch_id: 45, batch_id: 2700, cost: 0.002765, acc: 1.000000
+[Wed Oct 10 17:34:56 2018] epoch_id: 45, batch_id: 2800, cost: 0.024691, acc: 0.992188
+[Wed Oct 10 17:34:59 2018] epoch_id: 45, batch_id: 2900, cost: 0.003790, acc: 1.000000
+[Wed Oct 10 17:35:01 2018] epoch_id: 45, batch_id: 3000, cost: 0.001317, acc: 1.000000
+
+[Wed Oct 10 17:35:01 2018] epoch_id: 45, train_avg_cost: 0.012084, train_avg_acc: 0.996298
+[Wed Oct 10 17:35:02 2018] epoch_id: 45, dev_cost: 1.603634, accuracy: 0.8321
+[Wed Oct 10 17:35:03 2018] epoch_id: 45, test_cost: 1.609678, accuracy: 0.8291
+
+[Wed Oct 10 17:35:12 2018] epoch_id: 46, batch_id: 0, cost: 0.002291, acc: 1.000000
+[Wed Oct 10 17:35:14 2018] epoch_id: 46, batch_id: 100, cost: 0.018703, acc: 0.992188
+[Wed Oct 10 17:35:16 2018] epoch_id: 46, batch_id: 200, cost: 0.004407, acc: 1.000000
+[Wed Oct 10 17:35:18 2018] epoch_id: 46, batch_id: 300, cost: 0.000953, acc: 1.000000
+[Wed Oct 10 17:35:21 2018] epoch_id: 46, batch_id: 400, cost: 0.000732, acc: 1.000000
+[Wed Oct 10 17:35:23 2018] epoch_id: 46, batch_id: 500, cost: 0.011275, acc: 0.992188
+[Wed Oct 10 17:35:25 2018] epoch_id: 46, batch_id: 600, cost: 0.009521, acc: 1.000000
+[Wed Oct 10 17:35:27 2018] epoch_id: 46, batch_id: 700, cost: 0.000671, acc: 1.000000
+[Wed Oct 10 17:35:30 2018] epoch_id: 46, batch_id: 800, cost: 0.000768, acc: 1.000000
+[Wed Oct 10 17:35:32 2018] epoch_id: 46, batch_id: 900, cost: 0.001357, acc: 1.000000
+[Wed Oct 10 17:35:34 2018] epoch_id: 46, batch_id: 1000, cost: 0.001384, acc: 1.000000
+[Wed Oct 10 17:35:37 2018] epoch_id: 46, batch_id: 1100, cost: 0.010220, acc: 0.992188
+[Wed Oct 10 17:35:39 2018] epoch_id: 46, batch_id: 1200, cost: 0.006540, acc: 1.000000
+[Wed Oct 10 17:35:41 2018] epoch_id: 46, batch_id: 1300, cost: 0.002771, acc: 1.000000
+[Wed Oct 10 17:35:44 2018] epoch_id: 46, batch_id: 1400, cost: 0.010623, acc: 0.992188
+[Wed Oct 10 17:35:46 2018] epoch_id: 46, batch_id: 1500, cost: 0.000798, acc: 1.000000
+[Wed Oct 10 17:35:48 2018] epoch_id: 46, batch_id: 1600, cost: 0.004519, acc: 1.000000
+[Wed Oct 10 17:35:50 2018] epoch_id: 46, batch_id: 1700, cost: 0.010096, acc: 1.000000
+[Wed Oct 10 17:35:53 2018] epoch_id: 46, batch_id: 1800, cost: 0.001868, acc: 1.000000
+[Wed Oct 10 17:35:55 2018] epoch_id: 46, batch_id: 1900, cost: 0.039460, acc: 0.984375
+[Wed Oct 10 17:35:57 2018] epoch_id: 46, batch_id: 2000, cost: 0.008906, acc: 1.000000
+[Wed Oct 10 17:35:59 2018] epoch_id: 46, batch_id: 2100, cost: 0.008440, acc: 0.992188
+[Wed Oct 10 17:36:02 2018] epoch_id: 46, batch_id: 2200, cost: 0.014774, acc: 0.992188
+[Wed Oct 10 17:36:05 2018] epoch_id: 46, batch_id: 2300, cost: 0.016775, acc: 0.992188
+[Wed Oct 10 17:36:07 2018] epoch_id: 46, batch_id: 2400, cost: 0.008999, acc: 0.992188
+[Wed Oct 10 17:36:10 2018] epoch_id: 46, batch_id: 2500, cost: 0.001394, acc: 1.000000
+[Wed Oct 10 17:36:12 2018] epoch_id: 46, batch_id: 2600, cost: 0.005627, acc: 1.000000
+[Wed Oct 10 17:36:14 2018] epoch_id: 46, batch_id: 2700, cost: 0.003667, acc: 1.000000
+[Wed Oct 10 17:36:16 2018] epoch_id: 46, batch_id: 2800, cost: 0.016338, acc: 0.992188
+[Wed Oct 10 17:36:19 2018] epoch_id: 46, batch_id: 2900, cost: 0.005622, acc: 1.000000
+[Wed Oct 10 17:36:21 2018] epoch_id: 46, batch_id: 3000, cost: 0.003068, acc: 1.000000
+
+[Wed Oct 10 17:36:21 2018] epoch_id: 46, train_avg_cost: 0.011216, train_avg_acc: 0.996266
+[Wed Oct 10 17:36:22 2018] epoch_id: 46, dev_cost: 1.772260, accuracy: 0.8309
+[Wed Oct 10 17:36:23 2018] epoch_id: 46, test_cost: 1.783967, accuracy: 0.8284
+
+[Wed Oct 10 17:36:32 2018] epoch_id: 47, batch_id: 0, cost: 0.001193, acc: 1.000000
+[Wed Oct 10 17:36:34 2018] epoch_id: 47, batch_id: 100, cost: 0.000584, acc: 1.000000
+[Wed Oct 10 17:36:36 2018] epoch_id: 47, batch_id: 200, cost: 0.001534, acc: 1.000000
+[Wed Oct 10 17:36:38 2018] epoch_id: 47, batch_id: 300, cost: 0.014105, acc: 0.992188
+[Wed Oct 10 17:36:41 2018] epoch_id: 47, batch_id: 400, cost: 0.000929, acc: 1.000000
+[Wed Oct 10 17:36:43 2018] epoch_id: 47, batch_id: 500, cost: 0.007649, acc: 0.992188
+[Wed Oct 10 17:36:45 2018] epoch_id: 47, batch_id: 600, cost: 0.009973, acc: 0.992188
+[Wed Oct 10 17:36:47 2018] epoch_id: 47, batch_id: 700, cost: 0.006471, acc: 1.000000
+[Wed Oct 10 17:36:49 2018] epoch_id: 47, batch_id: 800, cost: 0.002720, acc: 1.000000
+[Wed Oct 10 17:36:53 2018] epoch_id: 47, batch_id: 900, cost: 0.001402, acc: 1.000000
+[Wed Oct 10 17:36:55 2018] epoch_id: 47, batch_id: 1000, cost: 0.000697, acc: 1.000000
+[Wed Oct 10 17:36:57 2018] epoch_id: 47, batch_id: 1100, cost: 0.001998, acc: 1.000000
+[Wed Oct 10 17:36:59 2018] epoch_id: 47, batch_id: 1200, cost: 0.009035, acc: 0.992188
+[Wed Oct 10 17:37:02 2018] epoch_id: 47, batch_id: 1300, cost: 0.006139, acc: 1.000000
+[Wed Oct 10 17:37:04 2018] epoch_id: 47, batch_id: 1400, cost: 0.007283, acc: 1.000000
+[Wed Oct 10 17:37:06 2018] epoch_id: 47, batch_id: 1500, cost: 0.016960, acc: 0.992188
+[Wed Oct 10 17:37:08 2018] epoch_id: 47, batch_id: 1600, cost: 0.001158, acc: 1.000000
+[Wed Oct 10 17:37:11 2018] epoch_id: 47, batch_id: 1700, cost: 0.001425, acc: 1.000000
+[Wed Oct 10 17:37:13 2018] epoch_id: 47, batch_id: 1800, cost: 0.001285, acc: 1.000000
+[Wed Oct 10 17:37:15 2018] epoch_id: 47, batch_id: 1900, cost: 0.002734, acc: 1.000000
+[Wed Oct 10 17:37:17 2018] epoch_id: 47, batch_id: 2000, cost: 0.000576, acc: 1.000000
+[Wed Oct 10 17:37:20 2018] epoch_id: 47, batch_id: 2100, cost: 0.001285, acc: 1.000000
+[Wed Oct 10 17:37:22 2018] epoch_id: 47, batch_id: 2200, cost: 0.000798, acc: 1.000000
+[Wed Oct 10 17:37:24 2018] epoch_id: 47, batch_id: 2300, cost: 0.059468, acc: 0.984375
+[Wed Oct 10 17:37:26 2018] epoch_id: 47, batch_id: 2400, cost: 0.004177, acc: 1.000000
+[Wed Oct 10 17:37:29 2018] epoch_id: 47, batch_id: 2500, cost: 0.001915, acc: 1.000000
+[Wed Oct 10 17:37:31 2018] epoch_id: 47, batch_id: 2600, cost: 0.000491, acc: 1.000000
+[Wed Oct 10 17:37:33 2018] epoch_id: 47, batch_id: 2700, cost: 0.001129, acc: 1.000000
+[Wed Oct 10 17:37:35 2018] epoch_id: 47, batch_id: 2800, cost: 0.000988, acc: 1.000000
+[Wed Oct 10 17:37:38 2018] epoch_id: 47, batch_id: 2900, cost: 0.024258, acc: 0.992188
+[Wed Oct 10 17:37:40 2018] epoch_id: 47, batch_id: 3000, cost: 0.000902, acc: 1.000000
+
+[Wed Oct 10 17:37:41 2018] epoch_id: 47, train_avg_cost: 0.011536, train_avg_acc: 0.996225
+[Wed Oct 10 17:37:42 2018] epoch_id: 47, dev_cost: 2.235156, accuracy: 0.8326
+[Wed Oct 10 17:37:43 2018] epoch_id: 47, test_cost: 2.289617, accuracy: 0.8318
+
+[Wed Oct 10 17:37:51 2018] epoch_id: 48, batch_id: 0, cost: 0.007975, acc: 1.000000
+[Wed Oct 10 17:37:54 2018] epoch_id: 48, batch_id: 100, cost: 0.000491, acc: 1.000000
+[Wed Oct 10 17:37:56 2018] epoch_id: 48, batch_id: 200, cost: 0.015161, acc: 0.992188
+[Wed Oct 10 17:37:58 2018] epoch_id: 48, batch_id: 300, cost: 0.030692, acc: 0.992188
+[Wed Oct 10 17:38:00 2018] epoch_id: 48, batch_id: 400, cost: 0.016749, acc: 0.992188
+[Wed Oct 10 17:38:03 2018] epoch_id: 48, batch_id: 500, cost: 0.005637, acc: 1.000000
+[Wed Oct 10 17:38:05 2018] epoch_id: 48, batch_id: 600, cost: 0.014267, acc: 0.992188
+[Wed Oct 10 17:38:07 2018] epoch_id: 48, batch_id: 700, cost: 0.002352, acc: 1.000000
+[Wed Oct 10 17:38:10 2018] epoch_id: 48, batch_id: 800, cost: 0.002758, acc: 1.000000
+[Wed Oct 10 17:38:12 2018] epoch_id: 48, batch_id: 900, cost: 0.000367, acc: 1.000000
+[Wed Oct 10 17:38:14 2018] epoch_id: 48, batch_id: 1000, cost: 0.003479, acc: 1.000000
+[Wed Oct 10 17:38:16 2018] epoch_id: 48, batch_id: 1100, cost: 0.006107, acc: 1.000000
+[Wed Oct 10 17:38:19 2018] epoch_id: 48, batch_id: 1200, cost: 0.000989, acc: 1.000000
+[Wed Oct 10 17:38:21 2018] epoch_id: 48, batch_id: 1300, cost: 0.000442, acc: 1.000000
+[Wed Oct 10 17:38:23 2018] epoch_id: 48, batch_id: 1400, cost: 0.002006, acc: 1.000000
+[Wed Oct 10 17:38:25 2018] epoch_id: 48, batch_id: 1500, cost: 0.022174, acc: 0.992188
+[Wed Oct 10 17:38:28 2018] epoch_id: 48, batch_id: 1600, cost: 0.004670, acc: 1.000000
+[Wed Oct 10 17:38:30 2018] epoch_id: 48, batch_id: 1700, cost: 0.014862, acc: 0.992188
+[Wed Oct 10 17:38:32 2018] epoch_id: 48, batch_id: 1800, cost: 0.004648, acc: 1.000000
+[Wed Oct 10 17:38:36 2018] epoch_id: 48, batch_id: 1900, cost: 0.035342, acc: 0.992188
+[Wed Oct 10 17:38:38 2018] epoch_id: 48, batch_id: 2000, cost: 0.018578, acc: 0.992188
+[Wed Oct 10 17:38:40 2018] epoch_id: 48, batch_id: 2100, cost: 0.003790, acc: 1.000000
+[Wed Oct 10 17:38:42 2018] epoch_id: 48, batch_id: 2200, cost: 0.026731, acc: 0.984375
+[Wed Oct 10 17:38:45 2018] epoch_id: 48, batch_id: 2300, cost: 0.003608, acc: 1.000000
+[Wed Oct 10 17:38:47 2018] epoch_id: 48, batch_id: 2400, cost: 0.005601, acc: 1.000000
+[Wed Oct 10 17:38:49 2018] epoch_id: 48, batch_id: 2500, cost: 0.000833, acc: 1.000000
+[Wed Oct 10 17:38:52 2018] epoch_id: 48, batch_id: 2600, cost: 0.004157, acc: 1.000000
+[Wed Oct 10 17:38:54 2018] epoch_id: 48, batch_id: 2700, cost: 0.010146, acc: 0.992188
+[Wed Oct 10 17:38:56 2018] epoch_id: 48, batch_id: 2800, cost: 0.001127, acc: 1.000000
+[Wed Oct 10 17:38:58 2018] epoch_id: 48, batch_id: 2900, cost: 0.004332, acc: 1.000000
+[Wed Oct 10 17:39:01 2018] epoch_id: 48, batch_id: 3000, cost: 0.004895, acc: 1.000000
+
+[Wed Oct 10 17:39:01 2018] epoch_id: 48, train_avg_cost: 0.010959, train_avg_acc: 0.996475
+[Wed Oct 10 17:39:02 2018] epoch_id: 48, dev_cost: 1.764490, accuracy: 0.8343
+[Wed Oct 10 17:39:03 2018] epoch_id: 48, test_cost: 1.826369, accuracy: 0.8296
+
+[Wed Oct 10 17:39:12 2018] epoch_id: 49, batch_id: 0, cost: 0.004527, acc: 1.000000
+[Wed Oct 10 17:39:14 2018] epoch_id: 49, batch_id: 100, cost: 0.003537, acc: 1.000000
+[Wed Oct 10 17:39:16 2018] epoch_id: 49, batch_id: 200, cost: 0.034318, acc: 0.992188
+[Wed Oct 10 17:39:19 2018] epoch_id: 49, batch_id: 300, cost: 0.024897, acc: 0.992188
+[Wed Oct 10 17:39:21 2018] epoch_id: 49, batch_id: 400, cost: 0.002212, acc: 1.000000
+[Wed Oct 10 17:39:23 2018] epoch_id: 49, batch_id: 500, cost: 0.012678, acc: 0.992188
+[Wed Oct 10 17:39:25 2018] epoch_id: 49, batch_id: 600, cost: 0.006081, acc: 1.000000
+[Wed Oct 10 17:39:28 2018] epoch_id: 49, batch_id: 700, cost: 0.004294, acc: 1.000000
+[Wed Oct 10 17:39:30 2018] epoch_id: 49, batch_id: 800, cost: 0.000339, acc: 1.000000
+[Wed Oct 10 17:39:32 2018] epoch_id: 49, batch_id: 900, cost: 0.006350, acc: 0.992188
+[Wed Oct 10 17:39:35 2018] epoch_id: 49, batch_id: 1000, cost: 0.002183, acc: 1.000000
+[Wed Oct 10 17:39:37 2018] epoch_id: 49, batch_id: 1100, cost: 0.006977, acc: 1.000000
+[Wed Oct 10 17:39:39 2018] epoch_id: 49, batch_id: 1200, cost: 0.003140, acc: 1.000000
+[Wed Oct 10 17:39:41 2018] epoch_id: 49, batch_id: 1300, cost: 0.003361, acc: 1.000000
+[Wed Oct 10 17:39:44 2018] epoch_id: 49, batch_id: 1400, cost: 0.002039, acc: 1.000000
+[Wed Oct 10 17:39:46 2018] epoch_id: 49, batch_id: 1500, cost: 0.001850, acc: 1.000000
+[Wed Oct 10 17:39:48 2018] epoch_id: 49, batch_id: 1600, cost: 0.045419, acc: 0.992188
+[Wed Oct 10 17:39:50 2018] epoch_id: 49, batch_id: 1700, cost: 0.000883, acc: 1.000000
+[Wed Oct 10 17:39:53 2018] epoch_id: 49, batch_id: 1800, cost: 0.002086, acc: 1.000000
+[Wed Oct 10 17:39:55 2018] epoch_id: 49, batch_id: 1900, cost: 0.014964, acc: 0.992188
+[Wed Oct 10 17:39:57 2018] epoch_id: 49, batch_id: 2000, cost: 0.002001, acc: 1.000000
+[Wed Oct 10 17:39:59 2018] epoch_id: 49, batch_id: 2100, cost: 0.013663, acc: 0.984375
+[Wed Oct 10 17:40:02 2018] epoch_id: 49, batch_id: 2200, cost: 0.013116, acc: 0.992188
+[Wed Oct 10 17:40:04 2018] epoch_id: 49, batch_id: 2300, cost: 0.002713, acc: 1.000000
+[Wed Oct 10 17:40:06 2018] epoch_id: 49, batch_id: 2400, cost: 0.004193, acc: 1.000000
+[Wed Oct 10 17:40:08 2018] epoch_id: 49, batch_id: 2500, cost: 0.001507, acc: 1.000000
+[Wed Oct 10 17:40:11 2018] epoch_id: 49, batch_id: 2600, cost: 0.034837, acc: 0.992188
+[Wed Oct 10 17:40:13 2018] epoch_id: 49, batch_id: 2700, cost: 0.006245, acc: 1.000000
+[Wed Oct 10 17:40:15 2018] epoch_id: 49, batch_id: 2800, cost: 0.003659, acc: 1.000000
+[Wed Oct 10 17:40:17 2018] epoch_id: 49, batch_id: 2900, cost: 0.002175, acc: 1.000000
+[Wed Oct 10 17:40:19 2018] epoch_id: 49, batch_id: 3000, cost: 0.000767, acc: 1.000000
+
+[Wed Oct 10 17:40:20 2018] epoch_id: 49, train_avg_cost: 0.011233, train_avg_acc: 0.996326
+[Wed Oct 10 17:40:21 2018] epoch_id: 49, dev_cost: 1.652680, accuracy: 0.8353
+[Wed Oct 10 17:40:22 2018] epoch_id: 49, test_cost: 1.685406, accuracy: 0.8324
+
