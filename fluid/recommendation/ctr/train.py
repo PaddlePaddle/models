@@ -55,7 +55,7 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, data_list = DeepFM(args.factor_size)
+    loss, data_list, auc_var, batch_auc_var = DeepFM(args.factor_size)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
     optimize_ops, params_grads = optimizer.minimize(loss)
 
@@ -71,13 +71,14 @@ def train():
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-    for data in train_reader():
-        loss_var = exe.run(
-            fluid.default_main_program(),
-            feed=feeder.feed(data),
-            fetch_list=[loss]
-        )
-        print(loss_var)
+    for pass_id in range(args.num_passes):
+        for data in train_reader():
+            loss_val, auc_val, batch_auc_val = exe.run(
+                fluid.default_main_program(),
+                feed=feeder.feed(data),
+                fetch_list=[loss, auc_var, batch_auc_var]
+            )
+            print('loss :' + str(loss_val) + " auc : " + str(auc_val) + " batch_auc : " + str(batch_auc_val))
 
 
 if __name__ == '__main__':
