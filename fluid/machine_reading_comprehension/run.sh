@@ -18,4 +18,5 @@ python run.py   \
 --max_p_len 500 \
 --max_q_len 60 \
 --max_a_len 200 \
+--weight_decay 0.0 \
 --drop_rate 0.2 $@\
