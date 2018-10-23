@@ -120,7 +120,7 @@ def train(train_reader,
     fetch_list = [avg_cost.name]
     for pass_idx in six.moves.xrange(pass_num):
         epoch_idx = pass_idx + 1
-        print "epoch_%d start" % epoch_idx
+        print("epoch_%d start" % epoch_idx)
 
         t0 = time.time()
         i = 0
