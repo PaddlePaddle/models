@@ -6,6 +6,7 @@ This directory contains six image classification models, which are models automa
 - [Installation](#installation)
 - [Data preparation](#data-preparation)
 - [Training a model](#training-a-model)
+- [Using pre-trained model](#Using-pre-trained-model)
 - [Model performances](#model-performances)
 
 ## Installation
@@ -24,18 +25,18 @@ The dataset will be downloaded to `dataset/cifar/cifar-10-python.tar.gz` in the 
 
 ## Training a model
 
-After the environment is ready, you can train the model. There are two entrances: `train_hinas.py` and `train_hinas_res.py`. The former is used to train Model 0-2 (without skip link), and the latter is used to train Model 3-5 (contains skip link).
+After the environment is ready, you can train the model. There are two entrances: `train_vgg_like.py` and `train_resnet_like.py`. The former is used to train Model 0-2 (without skip link), and the latter is used to train Model 3-5 (contains skip link).
 
 Train Model 0~2 (without skip link)：
 ```
-python train_hinas.py --model=m_id       # m_id can be 0, 1 or 2.
+python train_vgg_like.py --model=m_id       # m_id can be 0, 1 or 2.
 ```
 Train Model 3~5 (with skip link)：
 ```
-python train_hinas_res.py --model=m_id    # m_id can be 0, 1 or 2.
+python train_resnet_like.py --model=m_id    # m_id can be 0, 1 or 2.
 ```
 
-In addition, both `train_hinas.py` and `train_hinas_res.py` support the following parameters:
+In addition, all `train_xxxx_like.py` support the following parameters:
 
 - **random_flip_left_right**: Random flip image horizontally. (Default: True)
 - **random_flip_up_down**: Randomly flip image vertically. (Default: False)
@@ -53,6 +54,17 @@ In addition, both `train_hinas.py` and `train_hinas_res.py` support the followin
 - **bn_decay**: The decay/momentum parameter (or called moving average decay) in batch norm layer (Default: 0.9)
 
 
+## Using pre-trained model
+
+We also provided some pre-trained models under the `pre-trained` directory. You can load the trained model directly to avoid waiting.
+
+All `train_xxx_like.py` entries support parameter `load_model_path`. When `load_model_path` is set to a specific path, the model will automatically load the pre-trained model and skip the training process. For example, the HiNAS-0 can load the pre-trained model by following command:
+
+```
+python train_vgg_like.py --model=0 --load_model_path=pre-trained/vgg-0/
+```
+
+
 ## Model performances
 
 Train all six models using same hyperparameters:
@@ -66,11 +78,11 @@ Train all six models using same hyperparameters:
 
 And below is the accuracy on CIFAR-10 dataset：
 
-| model    | round 1 | round 2 | round 3 | max    | avg    |
-|----------|---------|---------|---------|--------|--------|
-| HiNAS-0  | 0.9548  | 0.9520  | 0.9513  | 0.9548 | 0.9527 |
-| HiNAS-1  | 0.9452  | 0.9462  | 0.9420  | 0.9462 | 0.9445 |
-| HiNAS-2  | 0.9508  | 0.9506  | 0.9483  | 0.9508 | 0.9499 |
-| HiNAS-3  | 0.9607  | 0.9623  | 0.9601  | 0.9623 | 0.9611 |
-| HiNAS-4  | 0.9611  | 0.9584  | 0.9586  | 0.9611 | 0.9594 |
-| HiNAS-5  | 0.9578  | 0.9588  | 0.9594  | 0.9594 | 0.9586 |
+| model    | round 1 | round 2 | round 3 | max    | avg    |pre-trained|
+|----------|---------|---------|---------|--------|--------|-----------|
+| HiNAS-0 (vgg-0)  | 0.9548  | 0.9520  | 0.9513  | 0.9548 | 0.9527 | 0.952927 |
+| HiNAS-1 (vgg-1)  | 0.9452  | 0.9462  | 0.9420  | 0.9462 | 0.9445 | 0.946598 |
+| HiNAS-2 (vgg-2)  | 0.9508  | 0.9506  | 0.9483  | 0.9508 | 0.9499 | 0.949664 |
+| HiNAS-3 (res-0)  | 0.9607  | 0.9623  | 0.9601  | 0.9623 | 0.9611 | 0.961135 |
+| HiNAS-4 (res-1)  | 0.9611  | 0.9584  | 0.9586  | 0.9611 | 0.9594 | 0.957278 |
+| HiNAS-5 (res-2)  | 0.9578  | 0.9588  | 0.9594  | 0.9594 | 0.9586 | 0.959553 |

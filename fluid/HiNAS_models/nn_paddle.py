@@ -50,6 +50,8 @@ flags.DEFINE_string(
     "Save model to 'save_model_path' (directory) after training.")
 flags.DEFINE_string("load_model_path", None,
                     "Load pre-trained model. (skip training)")
+flags.DEFINE_string("model_filename", "hinas.model",
+                    "model filename to save or load.")
 
 dataset_train_size = 50000
 
@@ -92,10 +94,19 @@ class Model(object):
             test_costs.append(cost)
             test_accs.append(acc)
 
-        print("Test done: Loss %f, Acc %f" %
-              (np.mean(test_costs), np.mean(test_accs)))
+        test_acc = np.mean(test_accs)
+        print("Test done: Loss %f, Acc %f" % (np.mean(test_costs), test_acc))
 
-        self.best_acc = max(self.best_acc, np.mean(test_accs))
+        if test_acc > self.best_acc:
+            self.best_acc = test_acc
+            if FLAGS.save_model_path is not None:
+                print("Model is saved to" + FLAGS.save_model_path)
+                fluid.io.save_params(
+                    executor=exe,
+                    dirname=FLAGS.save_model_path,
+                    main_program=fluid.default_main_program(),
+                    filename=FLAGS.model_filename)
+
         print("Best acc %f" % self.best_acc)
 
     def run(self):
@@ -156,7 +167,8 @@ class Model(object):
             fluid.io.load_params(
                 executor=train_exe if FLAGS.use_nccl else exe,
                 dirname=FLAGS.load_model_path,
-                main_program=fluid.default_main_program())
+                main_program=fluid.default_main_program(),
+                filename=FLAGS.model_filename)
             print("run testing...")
             self.test(test_reader, test_program, test_exe
                       if FLAGS.use_nccl else exe, feeder, avg_loss, accuracy)
@@ -176,7 +188,7 @@ class Model(object):
                         fluid.default_main_program(),
                         feed=feeder.feed(data),
                         fetch_list=[avg_loss.name, accuracy.name],
-                        use_program_cache=False)
+                        use_program_cache=True)
                 costs.append(cost)
                 accs.append(acc)
                 if batch % 10 == 0:
@@ -192,9 +204,3 @@ class Model(object):
                           else exe, feeder, avg_loss, accuracy)
 
         print("Train model done.")
-        if FLAGS.save_model_path is not None:
-            print("Model is saved to" + FLAGS.save_model_path)
-            fluid.io.save_params(
-                executor=exe,
-                dirname=FLAGS.save_model_path,
-                main_program=fluid.default_main_program())

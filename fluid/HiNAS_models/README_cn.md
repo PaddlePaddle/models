@@ -24,18 +24,18 @@
 
 
 ## Training a model
-准备好环境后，可以训练模型，训练有2个入口，`train_hinas.py`和`train_hinas_res.py`，前者用来训练0-2号不含skip link的模型，后者用来训练3-5号包含skip link的模型。
+准备好环境后，可以训练模型，训练有2个入口，`train_vgg_like.py`和`train_resnet_like.py`，前者用来训练0-2号不含skip link的模型，后者用来训练3-5号包含skip link的模型。
 
 训练0~2号不含skip link的模型：
 ```
-python train_hinas.py --model=m_id       # m_id can be 0, 1 or 2.
+python train_vgg_like.py --model=m_id       # m_id can be 0, 1 or 2.
 ```
 训练3~5号包含skip link的模型：
 ```
-python train_hinas_res.py --model=m_id    # m_id can be 0, 1 or 2.
+python train_resnet_like.py --model=m_id    # m_id can be 0, 1 or 2.
 ```
 
-此外，`train_hinas.py`和`train_hinas_res.py` 都支持以下参数：
+此外，所有 `train_xxx_like.py` 入口都支持以下参数：
 
 初始化部分：
 
@@ -55,6 +55,15 @@ python train_hinas_res.py --model=m_id    # m_id can be 0, 1 or 2.
 - bn_decay：batch norm层的decay/momentum系数（即moving average decay）大小（Default：0.9）
 
 
+## 使用预训练模型
+
+`pre-trained` 目录下面提供了预训练的模型，您可以直接加载已经训练好的模型，从而避免等待。
+
+任何一个 `train_xxx_like.py`，加上 `load_model_path` 参数后，会自动从指定位置读取模型，并跳过训练过程。举例来说，0号网络使用预训练模型的方法如下：
+
+```
+python train_vgg_like.py --model=0 --load_model_path=pre-trained/vgg-0/
+```
 
 ## Model performances
 6个模型使用相同的参数训练：
@@ -68,11 +77,11 @@ python train_hinas_res.py --model=m_id    # m_id can be 0, 1 or 2.
 
 以下是6个模型在CIFAR-10数据集上的准确率：
 
-| model    | round 1 | round 2 | round 3 | max    | avg    |
-|----------|---------|---------|---------|--------|--------|
-| HiNAS-0  | 0.9548  | 0.9520  | 0.9513  | 0.9548 | 0.9527 |
-| HiNAS-1  | 0.9452  | 0.9462  | 0.9420  | 0.9462 | 0.9445 |
-| HiNAS-2  | 0.9508  | 0.9506  | 0.9483  | 0.9508 | 0.9499 |
-| HiNAS-3  | 0.9607  | 0.9623  | 0.9601  | 0.9623 | 0.9611 |
-| HiNAS-4  | 0.9611  | 0.9584  | 0.9586  | 0.9611 | 0.9594 |
-| HiNAS-5  | 0.9578  | 0.9588  | 0.9594  | 0.9594 | 0.9586 |
+| model    | round 1 | round 2 | round 3 | max    | avg    |pre-trained|
+|----------|---------|---------|---------|--------|--------|-----------|
+| HiNAS-0 (vgg-0)  | 0.9548  | 0.9520  | 0.9513  | 0.9548 | 0.9527 | 0.952927 |
+| HiNAS-1 (vgg-1)  | 0.9452  | 0.9462  | 0.9420  | 0.9462 | 0.9445 | 0.946598 |
+| HiNAS-2 (vgg-2)  | 0.9508  | 0.9506  | 0.9483  | 0.9508 | 0.9499 | 0.949664 |
+| HiNAS-3 (res-0)  | 0.9607  | 0.9623  | 0.9601  | 0.9623 | 0.9611 | 0.961135 |
+| HiNAS-4 (res-1)  | 0.9611  | 0.9584  | 0.9586  | 0.9611 | 0.9594 | 0.957278 |
+| HiNAS-5 (res-2)  | 0.9578  | 0.9588  | 0.9594  | 0.9594 | 0.9586 | 0.959553 |
