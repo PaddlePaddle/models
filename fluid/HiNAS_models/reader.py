@@ -39,7 +39,7 @@ flags.DEFINE_boolean("cutout", True, "cutout")
 flags.DEFINE_boolean("standardize_image", True, "standardize input images")
 flags.DEFINE_boolean("pad_and_cut_image", True, "pad and cut input images")
 
-__all__ = ['train10', 'test10', 'convert']
+__all__ = ['train10', 'test10']
 
 URL_PREFIX = 'https://www.cs.toronto.edu/~kriz/'
 CIFAR10_URL = URL_PREFIX + 'cifar-10-python.tar.gz'
@@ -52,11 +52,14 @@ image_depth = 3
 half_length = 8
 
 
-def preprocess(sample, is_training):
+def to_image(sample):
     image_array = sample.reshape(3, image_size, image_size)
     rgb_array = np.transpose(image_array, (1, 2, 0))
     img = Image.fromarray(rgb_array, 'RGB')
+    return img
 
+
+def preprocess(img, is_training):
     if is_training:
         if FLAGS.pad_and_cut_image:
             # pad and ramdom crop
@@ -92,31 +95,38 @@ def preprocess(sample, is_training):
                 img[i][j][:] = 0.0
 
     img = np.transpose(img, (2, 0, 1))
-    return img.reshape(3 * image_size * image_size)
+    return img  #.reshape(3 * image_size * image_size)
 
 
-def reader_creator(filename, sub_name, is_training):
-    def read_batch(batch):
-        data = batch['data']
-        labels = batch.get('labels', batch.get('fine_labels', None))
-        assert labels is not None
-        for sample, label in itertools.izip(data, labels):
-            yield preprocess(sample, is_training), int(label)
-
+def reader_creator(content, is_training):
     def reader():
-        with tarfile.open(filename, mode='r') as f:
-            names = [
-                each_item.name for each_item in f if sub_name in each_item.name
-            ]
-            names.sort()
-
-            for name in names:
-                print("Reading file " + name)
-                batch = cPickle.load(f.extractfile(name))
-                for item in read_batch(batch):
-                    yield item
+        print("preprocess...")
+        for (img, label) in content:
+            yield preprocess(img, is_training), label
 
     return reader
+
+
+def load_file(filename, sub_name):
+    img_list = []
+    with tarfile.open(filename, mode='r') as f:
+        names = [
+            each_item.name for each_item in f if sub_name in each_item.name
+        ]
+        names.sort()
+
+        for name in names:
+            print("Reading file " + name)
+            batch = cPickle.load(f.extractfile(name))
+
+            data = batch['data']
+            labels = batch.get('labels', batch.get('fine_labels', None))
+            assert labels is not None
+            for sample, label in itertools.izip(data, labels):
+                img_list.append((to_image(sample), int(label)))
+
+    print("total images: %d" % len(img_list))
+    return img_list
 
 
 def train10():
@@ -127,9 +137,9 @@ def train10():
     :return: Training reader creator
     :rtype: callable
     """
-    return reader_creator(
-        paddle.dataset.common.download(CIFAR10_URL, 'cifar', CIFAR10_MD5),
-        'data_batch', True)
+    filename = paddle.dataset.common.download(CIFAR10_URL, 'cifar', CIFAR10_MD5)
+    content = load_file(filename, 'data_batch')
+    return reader_creator(content, True)
 
 
 def test10():
@@ -140,18 +150,6 @@ def test10():
     :return: Test reader creator.
     :rtype: callable
     """
-    return reader_creator(
-        paddle.dataset.common.download(CIFAR10_URL, 'cifar', CIFAR10_MD5),
-        'test_batch', False)
-
-
-def fetch():
-    paddle.dataset.common.download(CIFAR10_URL, 'cifar', CIFAR10_MD5)
-
-
-def convert(path):
-    """
-    Converts dataset to recordio format
-    """
-    paddle.dataset.common.convert(path, train10(), 1000, "cifar_train10")
-    paddle.dataset.common.convert(path, test10(), 1000, "cifar_test10")
+    filename = paddle.dataset.common.download(CIFAR10_URL, 'cifar', CIFAR10_MD5)
+    content = load_file(filename, 'test_batch')
+    return reader_creator(content, False)

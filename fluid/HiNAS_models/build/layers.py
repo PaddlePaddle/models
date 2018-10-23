@@ -45,7 +45,8 @@ def conv(inputs,
          strides=(1, 1),
          dilation=(1, 1),
          num_groups=1,
-         conv_param=None):
+         conv_param=None,
+         auto_pad=True):
     """ normal conv layer """
 
     if isinstance(kernel, (tuple, list)):
@@ -54,11 +55,12 @@ def conv(inputs,
         n = kernel * kernel * inputs.shape[1]
 
     # pad input
-    padding = (0, 0, 0, 0) \
-        + calc_padding(inputs.shape[2], strides[0], dilation[0], kernel[0]) \
-        + calc_padding(inputs.shape[3], strides[1], dilation[1], kernel[1])
-    if sum(padding) > 0:
-        inputs = fluid.layers.pad(inputs, padding, 0)
+    if auto_pad:
+        padding = (0, 0, 0, 0) \
+            + calc_padding(inputs.shape[2], strides[0], dilation[0], kernel[0]) \
+            + calc_padding(inputs.shape[3], strides[1], dilation[1], kernel[1])
+        if sum(padding) > 0:
+            inputs = fluid.layers.pad(inputs, padding, 0)
 
     param_attr = fluid.param_attr.ParamAttr(
         initializer=fluid.initializer.NormalInitializer(
@@ -150,7 +152,8 @@ def avgpool(inputs, kernel, strides=(1, 1)):
             strides,
             pool_padding=(padding_pixel[4], padding_pixel[6]),
             ceil_mode=False)
-    elif padding_pixel[4] + 1 == padding_pixel[5] and padding_pixel[6] + 1 == padding_pixel[7] \
+    elif padding_pixel[4] + 1 == padding_pixel[5] \
+            and padding_pixel[6] + 1 == padding_pixel[7] \
             and strides == (1, 1):
         # different padding size: first pad then crop.
         x = fluid.layers.pool2d(
@@ -171,6 +174,11 @@ def avgpool(inputs, kernel, strides=(1, 1)):
         outputs = fluid.layers.pad(inputs, padding_pixel, 0)
         return fluid.layers.pool2d(
             outputs, kernel, 'avg', strides, pool_padding=0, ceil_mode=False)
+
+
+def avgpool_valid(inputs, kernel, strides=(1, 1)):
+    return fluid.layers.pool2d(
+        inputs, kernel, 'avg', strides, pool_padding=0, ceil_mode=False)
 
 
 def global_avgpool(inputs):
@@ -208,7 +216,10 @@ def bn_relu(inputs):
     return fluid.layers.relu(output)
 
 
-def dropout(inputs):
-    """ dropout layer """
+def dropout(inputs, dropout_rate=None):
+    """ dropout layer
+    :param rate:
+    """
 
-    return fluid.layers.dropout(inputs, dropout_prob=FLAGS.dropout_rate)
+    return fluid.layers.dropout(inputs, dropout_prob= \
+        FLAGS.dropout_rate if dropout_rate is None else dropout_rate)
