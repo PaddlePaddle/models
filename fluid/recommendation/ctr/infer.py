@@ -2,17 +2,19 @@ import os
 import gzip
 import argparse
 import itertools
+import numpy as np
 
-import paddle.v2 as paddle
-
+import paddle
+import paddle.fluid as fluid
 from network_conf import DeepFM
+
 import reader
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="PaddlePaddle DeepFM example")
     parser.add_argument(
-        '--model_gz_path',
+        '--model_path',
         type=str,
         required=True,
         help="The path of model parameters gz file")
@@ -21,11 +23,6 @@ def parse_args():
         type=str,
         required=True,
         help="The path of the dataset to infer")
-    parser.add_argument(
-        '--prediction_output_path',
-        type=str,
-        required=True,
-        help="The path to output the prediction")
     parser.add_argument(
         '--factor_size',
         type=int,
@@ -38,25 +35,43 @@ def parse_args():
 def infer():
     args = parse_args()
 
-    paddle.init(use_gpu=False, trainer_count=1)
-
-    model = DeepFM(args.factor_size, infer=True)
-
-    parameters = paddle.parameters.Parameters.from_tar(
-        gzip.open(args.model_gz_path, 'r'))
-
-    inferer = paddle.inference.Inference(
-        output_layer=model, parameters=parameters)
+    place = fluid.CPUPlace()
+    inference_scope = fluid.core.Scope()
 
     dataset = reader.Dataset()
+    test_reader = paddle.batch(dataset.train(args.data_path), batch_size=1000)
 
-    infer_reader = paddle.batch(dataset.infer(args.data_path), batch_size=1000)
+    startup_program = fluid.framework.Program()
+    test_program = fluid.framework.Program()
+    with fluid.framework.program_guard(test_program, startup_program):
+        loss, data_list, auc_var, batch_auc_var = DeepFM(args.factor_size)
 
-    with open(args.prediction_output_path, 'w') as out:
-        for id, batch in enumerate(infer_reader()):
-            res = inferer.infer(input=batch)
-            predictions = [x for x in itertools.chain.from_iterable(res)]
-            out.write('\n'.join(map(str, predictions)) + '\n')
+    exe = fluid.Executor(place)
+    #exe.run(startup_program)
+
+    feeder = fluid.DataFeeder(feed_list=data_list, place=place)
+
+    with fluid.scope_guard(inference_scope):
+        [inference_program, _, fetch_targets] = fluid.io.load_inference_model(args.model_path, exe)
+        print(fetch_targets)
+
+        def set_zero(var_name):
+            param = inference_scope.var(var_name).get_tensor()
+            param_array = np.zeros(param._get_dims()).astype("int64")
+            param.set(param_array, place)
+
+        auc_states_names = ['_generated_var_2', '_generated_var_3']
+        for name in auc_states_names:
+            set_zero(name)
+
+        batch_id = 0
+        for data in test_reader():
+            loss_val, auc_val = exe.run(inference_program,
+                feed=feeder.feed(data),
+                fetch_list=fetch_targets)
+            if batch_id % 100 == 0:
+                print("loss: " + str(loss_val) + " auc_val:" + str(auc_val))
+            batch_id += 1
 
 
 if __name__ == '__main__':

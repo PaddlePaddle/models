@@ -68,17 +68,25 @@ def train():
     place = fluid.CPUPlace()
 
     feeder = fluid.DataFeeder(feed_list=data_list, place=place)
+    data_name_list = [var.name for var in data_list]
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
     for pass_id in range(args.num_passes):
+        batch_id = 0
         for data in train_reader():
             loss_val, auc_val, batch_auc_val = exe.run(
                 fluid.default_main_program(),
                 feed=feeder.feed(data),
                 fetch_list=[loss, auc_var, batch_auc_var]
             )
-            print('loss :' + str(loss_val) + " auc : " + str(auc_val) + " batch_auc : " + str(batch_auc_val))
+            print('pass:' + str(pass_id) + ' batch:' + str(batch_id) + ' loss: ' + str(loss_val) + " auc: " + str(auc_val) + " batch_auc: " + str(batch_auc_val))
+            batch_id += 1
+            if batch_id % 100 == 0 and batch_id != 0:
+                model_dir = 'output/batch-' + str(batch_id)
+                fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
+        model_dir = 'output/pass-' + str(pass_id)
+        fluid.io.save_inference_model(model_dir, data_name_list, [loss_var, auc_var], exe)
 
 
 if __name__ == '__main__':
