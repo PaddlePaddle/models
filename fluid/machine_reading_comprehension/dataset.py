@@ -132,35 +132,33 @@ class BRCDataset(object):
             'passage_token_ids': [],
             'passage_length': [],
             'start_id': [],
-            'end_id': []
+            'end_id': [],
+            'passage_num': []
         }
         max_passage_num = max(
             [len(sample['passages']) for sample in batch_data['raw_data']])
-        #max_passage_num = min(self.max_p_num, max_passage_num)
-        max_passage_num = self.max_p_num
+        max_passage_num = min(self.max_p_num, max_passage_num)
         for sidx, sample in enumerate(batch_data['raw_data']):
+            count = 0
             for pidx in range(max_passage_num):
                 if pidx < len(sample['passages']):
+                    count += 1
                     batch_data['question_token_ids'].append(sample[
-                        'question_token_ids'])
+                        'question_token_ids'][0:self.max_q_len])
                     batch_data['question_length'].append(
-                        len(sample['question_token_ids']))
+                        min(len(sample['question_token_ids']), self.max_q_len))
                     passage_token_ids = sample['passages'][pidx][
-                        'passage_token_ids']
+                        'passage_token_ids'][0:self.max_p_len]
                     batch_data['passage_token_ids'].append(passage_token_ids)
                     batch_data['passage_length'].append(
                         min(len(passage_token_ids), self.max_p_len))
-                else:
-                    batch_data['question_token_ids'].append([])
-                    batch_data['question_length'].append(0)
-                    batch_data['passage_token_ids'].append([])
-                    batch_data['passage_length'].append(0)
-        batch_data, padded_p_len, padded_q_len = self._dynamic_padding(
-            batch_data, pad_id)
+            batch_data['passage_num'].append(count)
         for sample in batch_data['raw_data']:
+            gold_passage_offset = 0
             if 'answer_passages' in sample and len(sample['answer_passages']):
-                gold_passage_offset = padded_p_len * sample['answer_passages'][
-                    0]
+                for i in range(sample['answer_passages'][0]):
+                    gold_passage_offset += len(batch_data['passage_token_ids'][
+                        i])
                 batch_data['start_id'].append(gold_passage_offset + sample[
                     'answer_spans'][0][0])
                 batch_data['end_id'].append(gold_passage_offset + sample[
