@@ -11,7 +11,7 @@ python run.py   \
 --save_dir ./models \
 --pass_num 10 \
 --learning_rate 0.001 \
---batch_size 8 \
+--batch_size 32 \
 --embed_size 300 \
 --hidden_size 150 \
 --max_p_num 5 \
