@@ -34,15 +34,11 @@ def ctr_dnn_model(embedding_size):
 
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
 
-    data_list = [dense_input] + sparse_input_ids
-
-
+    data_list = [dense_input] + sparse_input_ids + [label]
 
     cost = fluid.layers.cross_entropy(input=predict, label=label)
     avg_cost = fluid.layers.reduce_sum(cost)
     accuracy = fluid.layers.accuracy(input=predict, label=label)
     auc_var, batch_auc_var, auc_states = fluid.layers.auc(input=predict, label=label, num_thresholds=2**12, slide_steps=20)
-
-    data_list.append(label)
 
     return avg_cost, data_list, auc_var, batch_auc_var
