@@ -71,4 +71,4 @@ python infer.py \
 1. 参考文档 [在百度云上启动Fluid分布式训练](https://github.com/PaddlePaddle/FluidDoc/blob/develop/doc/fluid/user_guides/howto/training/train_on_baidu_cloud_cn.rst) 在百度云上部署一个CPU集群。
 1. 用preprocess.py处理训练数据生成train.txt。
 1. 将train.txt切分成集群机器份，放到每台机器上。
-1. 用上面的 `集群训练` 中的命令行启动分布式训练任务.
+1. 用上面的 `分布式训练` 中的命令行启动分布式训练任务.
