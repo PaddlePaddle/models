@@ -39,7 +39,7 @@ python preprocess.py --datadir ./data/raw --outdir ./data
 ## 训练
 训练的命令行选项可以通过`python train.py -h`列出。
 
-训练模型：
+### 单机训练：
 ```bash
 python train.py \
         --train_data_path data/train.txt \
@@ -47,6 +47,50 @@ python train.py \
 ```
 
 训练到第1轮的第40000个batch后，测试的AUC为0.807178，误差（cost）为0.445196。
+
+### 本地启动一个2 trainer 2 pserver的分布式训练任务
+
+```bash
+# start pserver0
+python train.py \
+    --train_data_path /paddle/data/train.txt \
+    --is_local 0 \
+    --role pserver \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --current_endpoint 127.0.0.1:6000 \
+    --trainers 2 \
+    > pserver0.log 2>&1 &
+
+# start pserver1
+python train.py \
+    --train_data_path /paddle/data/train.txt \
+    --is_local 0 \
+    --role pserver \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --current_endpoint 127.0.0.1:6001 \
+    --trainers 2 \
+    > pserver1.log 2>&1 &
+
+# start trainer0
+python train.py \
+    --train_data_path /paddle/data/train.txt \
+    --is_local 0 \
+    --role trainer \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --trainers 2 \
+    --trainer_id 0 \
+    > trainer0.log 2>&1 &
+
+# start trainer1
+python train.py \
+    --train_data_path /paddle/data/train.txt \
+    --is_local 0 \
+    --role trainer \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --trainers 2 \
+    --trainer_id 1 \
+    > trainer1.log 2>&1 &
+```
 
 ## 预测
 预测的命令行选项可以通过`python infer.py -h`列出。

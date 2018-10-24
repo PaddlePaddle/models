@@ -38,7 +38,6 @@ cd data && ./download.sh && cd ..
 This Demo only implement the DNN part of the model described in DeepFM paper.
 DeepFM model will be provided in other model.
 
-```
 
 ## Data preparation
 To preprocess the raw dataset, the integer features are clipped then min-max
@@ -53,7 +52,7 @@ python preprocess.py --datadir ./data/raw --outdir ./data
 ## Train
 The command line options for training can be listed by `python train.py -h`.
 
-To train the model:
+### Train in local mode:
 ```bash
 python train.py \
         --train_data_path data/train.txt \
@@ -62,6 +61,49 @@ python train.py \
 
 After training pass 1 batch 40000, the testing AUC is `0.807178` and the testing
 cost is `0.445196`.
+
+### Run a 2 pserver 2 trainer distribute training on a single machine
+```bash
+# start pserver0
+python train.py \
+    --train_data_path /paddle/data/train.txt \
+    --is_local 0 \
+    --role pserver \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --current_endpoint 127.0.0.1:6000 \
+    --trainers 2 \
+    > pserver0.log 2>&1 &
+
+# start pserver1
+python train.py \
+    --train_data_path /paddle/data/train.txt \
+    --is_local 0 \
+    --role pserver \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --current_endpoint 127.0.0.1:6001 \
+    --trainers 2 \
+    > pserver1.log 2>&1 &
+
+# start trainer0
+python train.py \
+    --train_data_path /paddle/data/train.txt \
+    --is_local 0 \
+    --role trainer \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --trainers 2 \
+    --trainer_id 0 \
+    > trainer0.log 2>&1 &
+
+# start trainer1
+python train.py \
+    --train_data_path /paddle/data/train.txt \
+    --is_local 0 \
+    --role trainer \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --trainers 2 \
+    --trainer_id 1 \
+    > trainer1.log 2>&1 &
+```
 
 ## Infer
 The command line options for infering can be listed by `python infer.py -h`.
