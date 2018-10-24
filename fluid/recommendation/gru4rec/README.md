@@ -77,7 +77,7 @@ python convert_format.py
 --use_cuda 表示使用gpu --parallel 表示多卡
 
 GPU 环境
-运行命令 `CUDA_VISIBLE_DEVICES=0 python train.py train_file test_file ` 开始训练模型。
+运行命令 `CUDA_VISIBLE_DEVICES=0 python train.py train_file test_file --use_cuda` 开始训练模型。
 
 ```python
 CUDA_VISIBLE_DEVICES=0 python train.py small_train.txt small_test.txt --use_cuda
@@ -201,9 +201,9 @@ model saved in model_recall20/epoch_1
 ```
 
 ## 预测
-运行命令 `CUDA_VISIBLE_DEVICES=0 python infer.py model_dir start_epoch last_epoch(inclusive) train_file test_file` 开始预测，其中，start_epoch指定开始预测的轮次，last_epoch指定结束的轮次，例如
+运行命令 `CUDA_VISIBLE_DEVICES=0 python infer.py model_dir start_epoch last_epoch(inclusive) train_file test_file` 开始预测.其中，start_epoch指定开始预测的轮次，last_epoch指定结束的轮次，例如
 ```python
-CUDA_VISIBLE_DEVICES=0 python infer.py model 1 10 small_train.txt small_test.txt# prediction from epoch 1 to epoch 10 small_train.txt small_test.txt
+CUDA_VISIBLE_DEVICES=0 python infer.py model 1 10 small_train.txt small_test.txt
 ```
 
 ## 预测结果示例
