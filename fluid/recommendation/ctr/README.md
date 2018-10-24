@@ -52,17 +52,18 @@ python preprocess.py --datadir ./data/raw --outdir ./data
 ## Train
 The command line options for training can be listed by `python train.py -h`.
 
-### Train in local mode:
+### Local Train:
 ```bash
 python train.py \
         --train_data_path data/train.txt \
         2>&1 | tee train.log
 ```
 
-After training pass 1 batch 40000, the testing AUC is `0.807178` and the testing
+After training pass 1 batch 40000, the testing AUC is `0.801178` and the testing
 cost is `0.445196`.
 
-### Run a 2 pserver 2 trainer distribute training on a single machine
+### Distributed Train
+Run a 2 pserver 2 trainer distribute training on a single machine
 ```bash
 # start pserver0
 python train.py \
@@ -114,3 +115,10 @@ python infer.py \
         --model_path models/ \
         --data_path data/valid.txt
 ```
+Note: The AUC value in the last log info is the total AUC for all test dataset.
+
+## Train on Baidu Cloud
+1. Please prepare some CPU machines on Baidu Cloud following the steps in [train_on_baidu_cloud](https://github.com/PaddlePaddle/FluidDoc/blob/develop/doc/fluid/user_guides/howto/training/train_on_baidu_cloud_cn.rst)
+1. Prepare dataset using preprocess.py.
+1. Split the train.txt to trainer_num parts and put them on the machines.
+1. Run training with the cluster train using the command in `Distributed Train` above.

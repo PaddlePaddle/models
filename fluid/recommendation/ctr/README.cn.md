@@ -46,9 +46,11 @@ python train.py \
         2>&1 | tee train.log
 ```
 
-训练到第1轮的第40000个batch后，测试的AUC为0.807178，误差（cost）为0.445196。
+训练到第1轮的第40000个batch后，测试的AUC为0.801178，误差（cost）为0.445196。
 
-### 本地启动一个2 trainer 2 pserver的分布式训练任务
+### 分布式训练
+
+本地启动一个2 trainer 2 pserver的分布式训练任务
 
 ```bash
 # start pserver0
@@ -101,3 +103,10 @@ python infer.py \
         --model_path models/pass-0/ \
         --data_path data/valid.txt
 ```
+注意：infer.py跑完最后输出的AUC才是整个预测文件的整体AUC。
+
+## 在百度云上运行集群训练
+1. 参考文档 [在百度云上启动Fluid分布式训练](https://github.com/PaddlePaddle/FluidDoc/blob/develop/doc/fluid/user_guides/howto/training/train_on_baidu_cloud_cn.rst) 在百度云上部署一个CPU集群。
+1. 用preprocess.py处理训练数据生成train.txt。
+1. 将train.txt切分成集群机器份，放到每台机器上。
+1. 用上面的 `集群训练` 中的命令行启动分布式训练任务.
