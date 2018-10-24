@@ -105,6 +105,18 @@ def getDict(data_type="quora_question_pairs"):
     sys.stderr.write("Vocab size: %d\n" % len(word_dict))
     return word_dict
 
+def crop_sequence(reader, seq_limit_len):
+    """
+    crop sequence length since some models need to limit the length of the sequence
+    Input: reader, which yield (question1, question2, label)
+    Output: reader, which yield (question1[:len], question2[:len], label)
+    """
+    def crop_sequence_reader():
+        for data in reader():
+            (q1, q2, label) = data
+            yield (q1[:seq_limit_len], q2[:seq_limit_len], label)
+
+    return crop_sequence_reader
 
 def duplicate(reader):
     """
@@ -175,6 +187,8 @@ def prepare_data(data_type,
 	# for example: ([1, 3, 2], [7, 5, 4, 99], 1)
         
         def prepare_reader(reader):
+            if seq_limit_len is not None:
+                reader = crop_sequence(reader, seq_limit_len)
             if duplicate_data:
                 reader = duplicate(reader)
             reader = paddle.batch(
@@ -185,9 +199,9 @@ def prepare_data(data_type,
                 reader = pad(reader, PAD_ID=PAD_ID)
             return reader
         
-        train_reader = prepare_reader(quora_question_pairs.train(word_dict, seq_limit_len))
-        dev_reader = prepare_reader(quora_question_pairs.dev(word_dict, seq_limit_len))
-        test_reader = prepare_reader(quora_question_pairs.test(word_dict, seq_limit_len))
+        train_reader = prepare_reader(quora_question_pairs.train(word_dict))
+        dev_reader = prepare_reader(quora_question_pairs.dev(word_dict))
+        test_reader = prepare_reader(quora_question_pairs.test(word_dict))
 
     else:
         raise RuntimeError("no such dataset")
