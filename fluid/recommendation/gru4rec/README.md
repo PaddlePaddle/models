@@ -74,7 +74,7 @@ python convert_format.py
 ```
 
 ## 训练
-'--use_cuda 1' 表示使用gpu --parallel 1 表示多卡
+'--use_cuda 1' 表示使用gpu, 缺省表示使用cpu '--parallel 1' 表示使用多卡，缺省表示使用单卡
 
 GPU 环境
 运行命令 `CUDA_VISIBLE_DEVICES=0 python train.py train_file test_file --use_cuda 1` 开始训练模型。
