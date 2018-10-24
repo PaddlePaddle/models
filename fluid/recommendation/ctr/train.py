@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 import argparse
+import logging
 import os
-import time
 
 import paddle
 import paddle.fluid as fluid
@@ -10,10 +10,10 @@ import paddle.fluid as fluid
 import reader
 from network_conf import ctr_dnn_model
 
-
-def print_log(log_str):
-    time_stamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-    print(str(time_stamp) + " " + log_str)
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("fluid")
+logger.setLevel(logging.INFO)
 
 
 def parse_args():
@@ -105,7 +105,7 @@ def train_loop(args, train_program, data_list, loss, auc_var, batch_auc_var):
                 feed=feeder.feed(data),
                 fetch_list=[loss, auc_var, batch_auc_var]
             )
-            print_log("TRAIN --> pass: {} batch: {} loss: {} auc: {}, batch_auc: {}"
+            logger.info("TRAIN --> pass: {} batch: {} loss: {} auc: {}, batch_auc: {}"
                       .format(pass_id, batch_id, loss_val/args.batch_size, auc_val, batch_auc_val))
             if batch_id % 1000 == 0 and batch_id != 0:
                 model_dir = args.model_output_dir + '/batch-' + str(batch_id)
@@ -127,22 +127,22 @@ def train():
     optimizer.minimize(loss)
 
     if args.is_local:
-        print_log("run local training")
+        logger.info("run local training")
         main_program = fluid.default_main_program()
         train_loop(args, main_program, data_list, loss, auc_var, batch_auc_var)
     else:
-        print_log("run dist training")
+        logger.info("run dist training")
         t = fluid.DistributeTranspiler()
         t.transpile(args.trainer_id, pservers=args.endpoints, trainers=args.trainers)
         if args.role == "pserver":
-            print_log("run pserver")
+            logger.info("run pserver")
             prog = t.get_pserver_program(args.current_endpoint)
             startup = t.get_startup_program(args.current_endpoint, pserver_program=prog)
             exe = fluid.Executor(fluid.CPUPlace())
             exe.run(startup)
             exe.run(prog)
         elif args.role == "trainer":
-            print_log("run trainer")
+            logger.info("run trainer")
             train_prog = t.get_trainer_program()
             train_loop(args, train_prog, data_list, loss, auc_var, batch_auc_var)
 

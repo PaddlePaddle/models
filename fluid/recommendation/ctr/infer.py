@@ -1,5 +1,5 @@
 import argparse
-import time
+import logging
 
 import numpy as np
 import paddle
@@ -9,9 +9,10 @@ import reader
 from network_conf import ctr_dnn_model
 
 
-def print_log(log_str):
-    time_stamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-    print(str(time_stamp) + " " + log_str)
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("fluid")
+logger.setLevel(logging.INFO)
 
 
 def parse_args():
@@ -70,7 +71,7 @@ def infer():
                 feed=feeder.feed(data),
                 fetch_list=fetch_targets)
             if batch_id % 100 == 0:
-                print_log("TEST --> batch: {} loss: {} auc: {}".format(batch_id, loss_val, auc_val))
+                logger.info("TEST --> batch: {} loss: {} auc: {}".format(batch_id, loss_val, auc_val))
 
 
 if __name__ == '__main__':
