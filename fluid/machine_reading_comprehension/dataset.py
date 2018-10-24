@@ -152,17 +152,18 @@ class BRCDataset(object):
                     batch_data['passage_token_ids'].append(passage_token_ids)
                     batch_data['passage_length'].append(
                         min(len(passage_token_ids), self.max_p_len))
+            # index of passade in  batch_data increased, so need to record the start passage index of current doc
+            passade_idx_offset = sum(batch_data['passage_num'])
             batch_data['passage_num'].append(count)
-        for sample in batch_data['raw_data']:
             gold_passage_offset = 0
             if 'answer_passages' in sample and len(sample['answer_passages']):
                 for i in range(sample['answer_passages'][0]):
                     gold_passage_offset += len(batch_data['passage_token_ids'][
-                        i])
-                batch_data['start_id'].append(gold_passage_offset + sample[
-                    'answer_spans'][0][0])
-                batch_data['end_id'].append(gold_passage_offset + sample[
-                    'answer_spans'][0][1])
+                        passade_idx_offset + i])
+                start_id = min(sample['answer_spans'][0][0], self.max_p_len)
+                end_id = min(sample['answer_spans'][0][1], self.max_p_len)
+                batch_data['start_id'].append(gold_passage_offset + start_id)
+                batch_data['end_id'].append(gold_passage_offset + end_id)
             else:
                 # fake span for some samples, only valid for testing
                 batch_data['start_id'].append(0)
