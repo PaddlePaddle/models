@@ -185,6 +185,7 @@ def train_net():
     test_file = args.test_file
     use_cuda = True if args.use_cuda else False
     parallel = True if args.parallel else False
+    print("use_cuda:", use_cuda, "parallel:", parallel)
     batch_size = 50
     vocab, train_reader, test_reader = utils.prepare_data(
         train_file, test_file,batch_size=batch_size * get_cards(args),\
