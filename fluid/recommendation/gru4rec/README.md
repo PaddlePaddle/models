@@ -103,8 +103,8 @@ python train.py small_train.txt small_test.txt --use_cuda 0 --parallel 0
         base_lr=0.01,               # base learning rate
         batch_size=batch_size,
         pass_num=10,                # the number of passed for training
-        use_cuda=True,              # whether to use GPU card
-        parallel=False,             # whether to be parallel
+        use_cuda=use_cuda,          # whether to use GPU card
+        parallel=parallel,          # whether to be parallel
         model_dir="model_recall20", # directory to save model
         init_low_bound=-0.1,        # uniform parameter initialization lower bound
         init_high_bound=0.1)        # uniform parameter initialization upper bound
