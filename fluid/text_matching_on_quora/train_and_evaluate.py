@@ -53,24 +53,24 @@ def evaluate(epoch_id, exe, inference_program, dev_reader, test_reader, fetch_li
             elif metric_name == 'accuracy':
                 metric_res.append((metric_name, metric.accuracy(y_pred, y_label)))
             else:
-                print("Unknown metric type: ", metric_name)
+                sys.stderr.write("Unknown metric type: %s\n" % metric_name)
                 exit()
         return total_cost / (total_count * 1.0), metric_res
 
     dev_cost, dev_metric_res = infer(dev_reader)
-    print("[%s] epoch_id: %d, dev_cost: %f, " % (
+    sys.stderr.write("[%s] epoch_id: %d, dev_cost: %f, " % (
                  time.asctime( time.localtime(time.time()) ),
                  epoch_id,
                  dev_cost)
-               + ', '.join([str(x[0]) + ": " + str(x[1]) for x in dev_metric_res]))
+               + ', '.join([str(x[0]) + ": " + str(x[1]) for x in dev_metric_res]) + '\n')
 
     test_cost, test_metric_res = infer(test_reader)
-    print("[%s] epoch_id: %d, test_cost: %f, " % (
+    sys.stderr.write("[%s] epoch_id: %d, test_cost: %f, " % (
                 time.asctime( time.localtime(time.time()) ),
                 epoch_id,
                 test_cost)
-              + ', '.join([str(x[0]) + ": " + str(x[1]) for x in test_metric_res]))
-    print("")
+              + ', '.join([str(x[0]) + ": " + str(x[1]) for x in test_metric_res]) + '\n')
+    sys.stderr.write("\n")
 
 
 def train_and_evaluate(train_reader,
@@ -109,15 +109,15 @@ def train_and_evaluate(train_reader,
 
     if parallel:
         # TODO: Paarallel Training
-        print("Parallel Training is not supported for now.")
+        sys.stderr.write("Parallel Training is not supported for now.\n")
         sys.exit(1)
 
     #optimizer.minimize(cost)
     if use_cuda:
-        print("Using GPU")
+        sys.stderr.write("Using GPU\n")
         place = fluid.CUDAPlace(0)
     else:
-        print("Using CPU")
+        sys.stderr.write("Using CPU\n")
         place = fluid.CPUPlace()
     exe = fluid.Executor(place)
 
@@ -128,7 +128,7 @@ def train_and_evaluate(train_reader,
 
     # logging param info
     for param in fluid.default_main_program().global_block().all_parameters():
-        print("param name: %s; param shape: %s" % (param.name, param.shape))
+        sys.stderr.write("param name: %s; param shape: %s\n" % (param.name, param.shape))
     
     # define inference_program
     inference_program = fluid.default_main_program().clone(for_test=True)
@@ -139,7 +139,7 @@ def train_and_evaluate(train_reader,
     
     # load emb from a numpy erray
     if pretrained_word_embedding is not None:
-        print("loading pretrained word embedding to param")
+        sys.stderr.write("loading pretrained word embedding to param\n")
         embedding_name = "emb.w"
         embedding_param = fluid.global_scope().find_var(embedding_name).get_tensor()
         embedding_param.set(pretrained_word_embedding, place)
@@ -154,7 +154,7 @@ def train_and_evaluate(train_reader,
              metric_type=global_config.metric_type)
 
     # start training
-    print("[%s] Start Training" % time.asctime(time.localtime(time.time())))
+    sys.stderr.write("[%s] Start Training\n" % time.asctime(time.localtime(time.time())))
     for epoch_id in xrange(global_config.epoch_num):
         data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
         batch_id = 0
@@ -167,7 +167,7 @@ def train_and_evaluate(train_reader,
             total_cost += data_size * avg_cost_np
             data_count += data_size
             if batch_id % 100 == 0:
-                print("[%s] epoch_id: %d, batch_id: %d, cost: %f, acc: %f" % (
+                sys.stderr.write("[%s] epoch_id: %d, batch_id: %d, cost: %f, acc: %f\n" % (
                     time.asctime(time.localtime(time.time())),
                     epoch_id, 
                     batch_id, 
@@ -178,8 +178,8 @@ def train_and_evaluate(train_reader,
         avg_cost = total_cost / data_count
         avg_acc = total_acc / data_count
         
-        print("")
-        print("[%s] epoch_id: %d, train_avg_cost: %f, train_avg_acc: %f" % (
+        sys.stderr.write("\n")
+        sys.stderr.write("[%s] epoch_id: %d, train_avg_cost: %f, train_avg_acc: %f\n" % (
             time.asctime( time.localtime(time.time()) ), epoch_id, avg_cost, avg_acc))
 
         epoch_model = global_config.save_dirname + "/" + "epoch" + str(epoch_id)
@@ -201,8 +201,9 @@ def main():
     args = parser.parse_args()
     global_config = configs.__dict__[args.config]()
 
-    print("net_name: ", args.model_name)
+    sys.stderr.write("net_name: %s\n" % args.model_name)
     net = models.__dict__[args.model_name](global_config)
+
 
     # get word_dict
     word_dict = utils.getDict(data_type="quora_question_pairs")
@@ -225,7 +226,7 @@ def main():
                                         word2vec=word2vec,
                                         word2id=word_dict,
                                         config=global_config)
-        print("pretrained_word_embedding to be load:", pretrained_word_embedding)
+        sys.stderr.write("pretrained_word_embedding to be load:%s\n" % str(pretrained_word_embedding))
     else:
         pretrained_word_embedding = None
 
@@ -237,6 +238,7 @@ def main():
         global_config.use_cuda = 'CUDA_VISIBLE_DEVICES' in os.environ
 
     global_config.list_config()
+
 
     train_and_evaluate(
                    train_reader,

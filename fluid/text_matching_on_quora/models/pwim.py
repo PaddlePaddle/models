@@ -13,29 +13,32 @@ class pwimNet():
     def body(self, seq1, seq2, label, config):
         """Body function"""
         def context_modeling(seq, name):
+            #if config.share_weight_btw_seq == Ture:
+            #    name = 'seq'
+
             seq_embedding = fluid.layers.embedding(input=seq, 
-                                                   size=[config.dict_dim, config.emb_dim], 
-                                                   param_attr='emb.w')
+                                                   size=[config.dict_dim, config.emb_dim],
+                                                   param_attr='emb.w') 
 
             fw = fluid.layers.fc(input=seq_embedding, 
-                                 size=config.fc_dim * 4,  
-                                 param_attr=name + '.fw_fc.w', 
+                                 size=config.fc_dim * 4,
+                                 param_attr=name+'.fw_fc.w',
                                  bias_attr=False)
             h, _ = fluid.layers.dynamic_lstm(input=fw,
                                              size=config.fc_dim * 4,
                                              is_reverse=False,
-                                             param_attr=name + '.lstm_w',
-                                             bias_attr=name + '.lstm_b')
+                                             param_attr=name+'.lstm_w',
+                                             bias_attr=name+'.lstm_b')
 
             rv = fluid.layers.fc(input=seq_embedding, 
                                  size=config.fc_dim * 4,  
-                                 param_attr=name + '.rv_fc.w', 
+                                 param_attr=name+'.rv_fc.w', 
                                  bias_attr=False)
             r_h, _ = fluid.layers.dynamic_lstm(input=rv,
                                                size=config.fc_dim * 4,
                                                is_reverse=True,
-                                               param_attr=name + '.reversed_lstm_w',
-                                               bias_attr=name + '.reversed_lstm_b')
+                                               param_attr=name+'.reversed_lstm_w',
+                                               bias_attr=name+'.reversed_lstm_b')
             
             # LoDTensor turn to tensor by padding
             pad_value = fluid.layers.assign(input=numpy.array([0], dtype=numpy.float32))
@@ -100,79 +103,36 @@ class pwimNet():
             simCube8 = fluid.layers.unsqueeze(l2euclid_layer(h_b0, h_b1), axes=[1])
             simCube11 = fluid.layers.unsqueeze(l2euclid_layer(h_add0, h_add1), axes=[1])
             # DotProduct
-            simCube3 = fluid.layers.unsqueeze(fluid.layers.matmul(h_bi0, h_bi1, transpose_y=True), axes=[1]) # dim 0 is batch size
+            simCube3 = fluid.layers.unsqueeze(fluid.layers.matmul(h_bi0, h_bi1, transpose_y=True), axes=[1])
             simCube6 = fluid.layers.unsqueeze(fluid.layers.matmul(h_f0, h_f1, transpose_y=True), axes=[1])
             simCube9 = fluid.layers.unsqueeze(fluid.layers.matmul(h_b0, h_b1, transpose_y=True), axes=[1])
             simCube12 = fluid.layers.unsqueeze(fluid.layers.matmul(h_add0, h_add1, transpose_y=True), axes=[1])
             
-            
-            simCube13 = fluid.layers.fill_constant_batch_size_like(input=h_f0, 
-                                                                   shape=[-1, 1, config.seq_limit_len, config.seq_limit_len],
-                                                                   value=1,
-                                                                   dtype="float32")
-            
-            
             simCube = fluid.layers.concat(input=[simCube1, simCube2, simCube3, 
                                                  simCube4, simCube5, simCube6,
                                                  simCube7, simCube8, simCube9,
-                                                 simCube10, simCube11, simCube12,
-                                                 simCube13], axis=1)
+                                                 simCube10, simCube11, simCube12], axis=1)
             return simCube
 
         def similarity_focus_layer(simCube):
-            #TODO: couse this op is not supposed, we pass this layer at first.
-            '''
-            #TODO: rewrite
-            mask = get_shape_copy(simCube, scale=0.1)
-            # based on cosine similarity
-            s1tag = reduce_dim(simCube, dim=3, scale=0)
-            s2tag = reduce_dim(simCube, dim=2, scale=0)
-            #TODO: gather
-            cosine = fluid.layers.gather(input=simCube, 
-                    index=fluid.layers.assign(input=numpy.array([10], dtype=numpy.int32)))
-            #TODO: config.batch_size
-            sortedx, indices = fluid.layers.argsort(fluid.layers.reshape(x=cosine, shape=[config.batch_size, 1, -1]))
-            sortedx = fluid.layers.reverse(x=sortedx, axis=1) 
-            indices = fluid.layers.reverse(x=indices, axis=1)
-            #TODO: While_op ?
-            record=[]
-            for indix in indices[0]:
-                pos1 = 1.0 * indix / simCube.shape[2]
-                pos2 = indix - simCube.shape[2] * pos1
-                if s1tag[pos1] + s2tag[pos2] <= 0:
-                    s1tag[pos1] = 1
-                    s2tag[pos2] = 1
-                    record.append((pos1,pos2))
-                    for i in range(12):
-                        mask[i][pos1][pos2] = mask[i][pos1][pos2] + 0.9
-                mask[12][pos1][pos2] = mask[12][pos1][pos2] + 0.9
-            # one is based on L2-similarity
-            s1tag = reduce_dim(simCube, dim=3, scale=0)
-            s2tag = reduce_dim(simCube, dim=2, scale=0)
-            L2 = fluid.layers.gather(input=simCube,
-                    index=fluid.layers.assign(input=numpy.array([11], dtype=numpy.int32)))
-            sortedx, indices = fluid.layers.argsort(fluid.layers.reshape(x=L2, shape=[config.batch_size, 1, -1]))
-            sortedx = fluid.layers.reverse(x=sortedx, axis=1)
-            indices = fluid.layers.reverse(x=indices, axis=1)
-            counter = 0
-            for indix in indices[0]:
-                pos1 = 1.0 * indix / simCube.size(2)
-                pos2 = indix - simCube.shape[2] * pos1
-                if s1tag[pos1] + s2tag[pos2] <= 0:
-                    counter += 1
-                    if (pos1, pos2) in record:
-                        continue
-                    else:
-                        s1tag[pos1] = 1
-                        s2tag[pos2] = 1
-                        for i in range(12):
-                            mask[i][pos1][pos2] = mask[i][pos1][pos2] + 0.9 
-                if counter >= len(record):
-                    break
+            # zero padding may have some effect on the results, but it should be small
+            mask = fluid.layers.similarity_focus(simCube, 1, [9, 10])
+
+            mask = fluid.layers.elementwise_add(
+                        fluid.layers.scale(mask, scale=0.9), 
+                        fluid.layers.fill_constant_batch_size_like(input=mask,
+                                                                   shape=[-1, 12, config.seq_limit_len, config.seq_limit_len],
+                                                                   value=0.1,
+                                                                   dtype="float32"))
+            
             focusCube = fluid.layers.elementwise_mul(simCube, mask)
+            
+            simCube13 = fluid.layers.fill_constant_batch_size_like(input=focusCube, 
+                                                                   shape=[-1, 1, config.seq_limit_len, config.seq_limit_len],
+                                                                   value=1,
+                                                                   dtype="float32")
+            focusCube = fluid.layers.concat(input=[focusCube, simCube13], axis=1)
             return focusCube
-            '''
-            return simCube
 
         def conv_relu_pool(input, 
                 conv_num_filters, conv_filter_size, conv_stride, conv_padding,
@@ -245,9 +205,10 @@ class pwimNet():
 
         h_f1, h_b1 = context_modeling(seq1, 'seq1')
         h_f2, h_b2 = context_modeling(seq2, 'seq2')
-        sim_cube = pairwise_word_interaction_modeling(h_f1, h_b1, h_f2, h_b2)
-        focus_cube = similarity_focus_layer(sim_cube)
-        prediction = similarity_classification_with_deep_convolutional_neural_networks(focus_cube)
+        simCube = pairwise_word_interaction_modeling(h_f1, h_b1, h_f2, h_b2)
+        focusCube = similarity_focus_layer(simCube)
+        # focusCube = fluid.layers.batch_norm(focusCube) # 0.8543 -> 0.8395
+        prediction = similarity_classification_with_deep_convolutional_neural_networks(focusCube)
 
         #TODO: loss function
         loss = fluid.layers.cross_entropy(input=prediction, label=label)

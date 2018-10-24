@@ -3,6 +3,7 @@ This Module provide pretrained word-embeddings
 """
 
 from __future__ import print_function 
+import sys
 import numpy as np
 import time, datetime
 
@@ -13,8 +14,8 @@ def Glove840B_300D(filepath, keys=None):
     """
     if keys is not None: 
         assert(isinstance(keys, set))
-    print("loading word2vec from ", filepath)
-    print("please wait for a minute.")
+    sys.stderr.write("loading word2vec from %s\n" % filepath)
+    sys.stderr.write("please wait for a minute.\n")
     start = time.time()
     word2vec = {}
 
@@ -30,7 +31,7 @@ def Glove840B_300D(filepath, keys=None):
             word2vec[word] = np.asarray(vector, dtype='float32')
 
     end = time.time()
-    print("Spent ", str(datetime.timedelta(seconds=end-start)), " on loading word2vec.")
+    sys.stderr.write("Spent %s on loading word2vec.\n" % str(datetime.timedelta(seconds=end-start)))
     return word2vec
  
 if __name__ == '__main__':

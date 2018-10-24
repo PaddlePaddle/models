@@ -55,7 +55,7 @@ def getOptimizer(global_config):
 
 def get_pretrained_word_embedding(word2vec, word2id, config):
     """get pretrained embedding in shape [config.dict_dim, config.emb_dim]"""
-    print("preparing pretrained word embedding ...")
+    sys.stderr.write("preparing pretrained word embedding ...\n")
     assert(config.dict_dim >= len(word2id))
     word2id = sorted(word2id.items(), key = lambda x : x[1])
     words = [x[0] for x in word2id]
@@ -73,7 +73,7 @@ def get_pretrained_word_embedding(word2vec, word2id, config):
         elif config.OOV_fill == 'normal':
             pretrained_emb.append(np.random.normal(loc=0.0, scale=0.1, size=[config.emb_dim]).astype(np.float32))
         else:
-            print("Unkown OOV fill method: ", OOV_fill)
+            sys.stderr.write("Unkown OOV fill method: %s\n" % OOV_fill)
             exit()
     word_embedding = np.stack(pretrained_emb)
     return word_embedding
@@ -83,12 +83,12 @@ def getDict(data_type="quora_question_pairs"):
     """
     get word2id dict from quora dataset
     """
-    print("Generating word dict...")
+    sys.stderr.write("Generating word dict...\n")
     if data_type == "quora_question_pairs":
         word_dict = quora_question_pairs.word_dict()
     else:
         raise RuntimeError("No such dataset")
-    print("Vocab size: ", len(word_dict))
+    sys.stderr.write("Vocab size: %d\n" % len(word_dict))
     return word_dict
 
 

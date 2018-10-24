@@ -9,8 +9,12 @@ def pwim_base():
     config.batch_size = 128
     config.learning_rate = 0.001
     config.save_dirname = "pwim_model"
+    #config.use_pretrained_word_embedding = False
     config.use_pretrained_word_embedding = True
     config.dict_dim = 40000 # approx_vocab_size
+    #config.use_cuda = False
+    config.use_cuda = True
+
     
     # net config
     config.emb_dim = 300
