@@ -130,6 +130,8 @@ def parse_args():
 def main(args):
     train_prog = fluid.Program()
     startup_prog = fluid.Program()
+    train_prog.random_seed = 1000
+    startup_prog.random_seed = 1000
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             sum_cost, avg_cost, predict, token_num, pyreader = transformer(
@@ -248,7 +250,6 @@ def main(args):
                 if args.use_py_reader:
                     pyreader.reset()
                     pyreader.start()
-                break
 
         return reader_time, run_time
 
