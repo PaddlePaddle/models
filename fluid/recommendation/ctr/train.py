@@ -105,7 +105,7 @@ def train_loop(args, train_program, data_list, loss, auc_var, batch_auc_var):
                 fetch_list=[loss, auc_var, batch_auc_var]
             )
             print_log("TRAIN --> pass: {} batch: {} loss: {} auc: {}, batch_auc: {}"
-                      .format(pass_id, batch_id, loss_val, auc_val, batch_auc_val))
+                      .format(pass_id, batch_id, loss_val/args.batch_size, auc_val, batch_auc_val))
             if batch_id % 1000 == 0 and batch_id != 0:
                 model_dir = args.model_output_dir + '/batch-' + str(batch_id)
                 if args.trainer_id == 0:
