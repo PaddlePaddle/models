@@ -108,9 +108,11 @@ def train_loop(args, train_program, data_list, loss, auc_var, batch_auc_var):
                       .format(pass_id, batch_id, loss_val, auc_val, batch_auc_val))
             if batch_id % 1000 == 0 and batch_id != 0:
                 model_dir = args.model_output_dir + '/batch-' + str(batch_id)
-                fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
+                if args.trainer_id == 0:
+                    fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
         model_dir = args.model_output_dir + '/pass-' + str(pass_id)
-        fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
+        if args.trainer_id == 0:
+            fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
 
 
 def train():
