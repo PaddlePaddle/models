@@ -112,7 +112,7 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
 |DecAtt|word|Attention|concatenation|MLP
 |InferSent|word|1 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
 |SSE|word|3 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
-|PWIM|word|1 layer Bi-LSTM|cosine, Euclidean, dot product/hard alignment|CNN, MLP
+|PWIM|word|1 layer Bi-LSTM|cosine, Euclidean, dot product/hard alignment|CNN/MLP
 
 ### CDSSM
 
