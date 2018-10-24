@@ -122,9 +122,8 @@ def seq_to_seq_net(embedding_dim, encoder_size, decoder_size, source_dict_dim,
         decoder_state_expand = fluid.layers.sequence_expand(
             x=decoder_state_proj, y=encoder_proj)
         # concated lod should inherit from encoder_proj
-        concated = fluid.layers.concat(
-            input=[encoder_proj, decoder_state_expand], axis=1)
-        attention_weights = fluid.layers.fc(input=concated,
+        mixed_state = encoder_proj + decoder_state_expand
+        attention_weights = fluid.layers.fc(input=mixed_state,
                                             size=1,
                                             bias_attr=False)
         attention_weights = fluid.layers.sequence_softmax(

@@ -28,8 +28,11 @@ Fluid模型配置和参数文件的工具。
 
 开放环境中的检测人脸，尤其是小的、模糊的和部分遮挡的人脸也是一个具有挑战的任务。我们也介绍了如何基于 [WIDER FACE](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace) 数据训练百度自研的人脸检测PyramidBox模型，该算法于2018年3月份在WIDER FACE的多项评测中均获得 [第一名](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/WiderFace_Results.html)。
 
+Faster RCNN 是典型的两阶段目标检测器，相较于传统提取区域的方法，Faster RCNN中RPN网络通过共享卷积层参数大幅提高提取区域的效率，并提出高质量的候选区域。
+
 -  [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/blob/develop/fluid/object_detection/README_cn.md)
 -  [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/fluid/face_detection/README_cn.md)
+-  [Faster RCNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/faster_rcnn/README_cn.md)
 
 图像语义分割
 ------------
@@ -41,14 +44,45 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 -  [ICNet](https://github.com/PaddlePaddle/models/tree/develop/fluid/icnet)
 
+图像生成
+-----------
+
+图像生成是指根据输入向量，生成目标图像。这里的输入向量可以是随机的噪声或用户指定的条件向量。具体的应用场景有：手写体生成、人脸合成、风格迁移、图像修复等。当前的图像生成任务主要是借助生成对抗网络（GAN）来实现。
+生成对抗网络（GAN）由两种子网络组成：生成器和识别器。生成器的输入是随机噪声或条件向量，输出是目标图像。识别器是一个分类器，输入是一张图像，输出是该图像是否是真实的图像。在训练过程中，生成器和识别器通过不断的相互博弈提升自己的能力。
+
+在图像生成任务中，我们介绍了如何使用DCGAN和ConditioanlGAN来进行手写数字的生成，另外还介绍了用于风格迁移的CycleGAN.
+
+- [DCGAN & ConditionalGAN](https://github.com/PaddlePaddle/models/tree/develop/fluid/gan/c_gan)
+- [CycleGAN](https://github.com/PaddlePaddle/models/tree/develop/fluid/gan/cycle_gan)
+
 场景文字识别
 ------------
 
 许多场景图像中包含着丰富的文本信息，对理解图像信息有着重要作用，能够极大地帮助人们认知和理解场景图像的内容。场景文字识别是在图像背景复杂、分辨率低下、字体多样、分布随意等情况下，将图像信息转化为文字序列的过程，可认为是一种特别的翻译过程：将图像输入翻译为自然语言输出。场景图像文字识别技术的发展也促进了一些新型应用的产生，如通过自动识别路牌中的文字帮助街景应用获取更加准确的地址信息等。
 
-在场景文字识别任务中，我们介绍如何将基于CNN的图像特征提取和基于RNN的序列翻译技术结合，免除人工定义特征，避免字符分割，使用自动学习到的图像特征，完成端到端地无约束字符定位和识别。当前，介绍了CRNN-CTC模型，后续会引入基于注意力机制的序列到序列模型。
+在场景文字识别任务中，我们介绍如何将基于CNN的图像特征提取和基于RNN的序列翻译技术结合，免除人工定义特征，避免字符分割，使用自动学习到的图像特征，完成字符识别。当前，介绍了CRNN-CTC模型和基于注意力机制的序列到序列模型。
 
--  [CRNN-CTC模](https://github.com/PaddlePaddle/models/tree/develop/fluid/ocr_recognition)
+-  [CRNN-CTC模型](https://github.com/PaddlePaddle/models/tree/develop/fluid/ocr_recognition)
+-  [Attention模型](https://github.com/PaddlePaddle/models/tree/develop/fluid/ocr_recognition)
+
+
+度量学习
+-------
+
+
+度量学习也称作距离度量学习、相似度学习，通过学习对象之间的距离，度量学习能够用于分析对象时间的关联、比较关系，在实际问题中应用较为广泛，可应用于辅助分类、聚类问题，也广泛用于图像检索、人脸识别等领域。以往，针对不同的任务，需要选择合适的特征并手动构建距离函数，而度量学习可根据不同的任务来自主学习出针对特定任务的度量距离函数。度量学习和深度学习的结合，在人脸识别/验证、行人再识别(human Re-ID)、图像检索等领域均取得较好的性能，在这个任务中我们主要介绍了基于Fluid的深度度量学习模型，包含了三元组、四元组等损失函数。
+
+- [Metric Learning](https://github.com/PaddlePaddle/models/tree/develop/fluid/metric_learning)
+
+
+视频分类
+-------
+
+视频分类是视频理解任务的基础，与图像分类不同的是，分类的对象不再是静止的图像，而是一个由多帧图像构成的、包含语音数据、包含运动信息等的视频对象，因此理解视频需要获得更多的上下文信息，不仅要理解每帧图像是什么、包含什么，还需要结合不同帧，知道上下文的关联信息。视频分类方法主要包含基于卷积神经网络、基于循环神经网络、或将这两者结合的方法。该任务中我们介绍基于Fluid的视频分类模型，目前包含Temporal Segment Network(TSN)模型，后续会持续增加更多模型。
+
+
+- [TSN](https://github.com/PaddlePaddle/models/tree/develop/fluid/video_classification)
+
 
 语音识别
 --------
@@ -94,6 +128,15 @@ Machine Translation, NMT)等阶段。在 NMT 成熟后，机器翻译才真正�
 
 - [Senta](https://github.com/baidu/Senta/blob/master/README.md)
 
+语义匹配
+--------
+
+在自然语言处理很多场景中，需要度量两个文本在语义上的相似度，这类任务通常被称为语义匹配。例如在搜索中根据查询与候选文档的相似度对搜索结果进行排序，文本去重中文本与文本相似度的计算，自动问答中候选答案与问题的匹配等。
+
+本例所开放的DAM (Deep Attention Matching Network)为百度自然语言处理部发表于ACL-2018的工作，用于检索式聊天机器人多轮对话中应答的选择。DAM受Transformer的启发，其网络结构完全基于注意力(attention)机制，利用栈式的self-attention结构分别学习不同粒度下应答和语境的语义表示，然后利用cross-attention获取应答与语境之间的相关性，在两个大规模多轮对话数据集上的表现均好于其它模型。
+
+- [Deep Attention Matching Network](https://github.com/PaddlePaddle/models/tree/develop/fluid/deep_attention_matching_net)
+
 AnyQ
 ----
 
@@ -102,3 +145,12 @@ AnyQ
 SimNet是百度自然语言处理部于2013年自主研发的语义匹配框架，该框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MM-DNN等核心网络结构形式，同时基于该框架也集成了学术界主流的语义匹配模型，如MatchPyramid、MV-LSTM、K-NRM等模型。使用SimNet构建出的模型可以便捷的加入AnyQ系统中，增强AnyQ系统的语义匹配能力。
 
 -  [SimNet in PaddlePaddle Fluid](https://github.com/baidu/AnyQ/blob/master/tools/simnet/train/paddle/README.md)
+
+机器阅读理解
+----------
+
+机器阅读理解(MRC)是自然语言处理(NLP)中的核心任务之一，最终目标是让机器像人类一样阅读文本，提炼文本信息并回答相关问题。深度学习近年来在NLP中得到广泛使用，也使得机器阅读理解能力在近年有了大幅提高，但是目前研究的机器阅读理解都采用人工构造的数据集，以及回答一些相对简单的问题，和人类处理的数据还有明显差距，因此亟需大规模真实训练数据推动MRC的进一步发展。
+
+百度阅读理解数据集是由百度自然语言处理部开源的一个真实世界数据集，所有的问题、原文都来源于实际数据(百度搜索引擎数据和百度知道问答社区)，答案是由人类回答的。每个问题都对应多个答案，数据集包含200k问题、1000k原文和420k答案，是目前最大的中文MRC数据集。百度同时开源了对应的阅读理解模型，称为DuReader，采用当前通用的网络分层结构，通过双向attention机制捕捉问题和原文之间的交互关系，生成query-aware的原文表示，最终基于query-aware的原文表示通过point network预测答案范围。
+
+-  [DuReader in PaddlePaddle Fluid](https://github.com/PaddlePaddle/models/blob/develop/fluid/machine_reading_comprehension/README.md)

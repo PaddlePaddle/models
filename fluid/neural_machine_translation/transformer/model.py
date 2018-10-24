@@ -219,6 +219,7 @@ def prepare_encoder_decoder(src_word,
         size=[src_max_len, src_emb_dim],
         param_attr=fluid.ParamAttr(
             name=pos_enc_param_name, trainable=False))
+    src_pos_enc.stop_gradient = True
     enc_input = src_word_emb + src_pos_enc
     return layers.dropout(
         enc_input,
@@ -458,7 +459,7 @@ def transformer(src_vocab_size,
                 use_py_reader=False,
                 is_test=False):
     if weight_sharing:
-        assert src_vocab_size == src_vocab_size, (
+        assert src_vocab_size == trg_vocab_size, (
             "Vocabularies in source and target should be same for weight sharing."
         )
 

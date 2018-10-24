@@ -19,7 +19,7 @@ test_acc_top1_kpi = AccKpi(
 test_acc_top5_kpi = AccKpi(
     'test_acc_top5', 0.02, 0, actived=True, desc='TOP5 ACC')
 test_cost_kpi = CostKpi('test_cost', 0.02, 0, actived=True, desc='train cost')
-train_speed_kpi = AccKpi(
+train_speed_kpi = DurationKpi(
     'train_speed',
     0.05,
     0,
@@ -38,7 +38,7 @@ test_acc_top5_card4_kpi = AccKpi(
     'test_acc_top5_card4', 0.02, 0, actived=True, desc='TOP5 ACC')
 test_cost_card4_kpi = CostKpi(
     'test_cost_card4', 0.02, 0, actived=True, desc='train cost')
-train_speed_card4_kpi = AccKpi(
+train_speed_card4_kpi = DurationKpi(
     'train_speed_card4',
     0.05,
     0,

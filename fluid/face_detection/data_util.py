@@ -9,6 +9,7 @@ import time
 import numpy as np
 import threading
 import multiprocessing
+import traceback
 try:
     import queue
 except ImportError:
@@ -71,6 +72,7 @@ class GeneratorEnqueuer(object):
                         try:
                             task()
                         except Exception:
+                            traceback.print_exc()
                             self._stop_event.set()
                             break
             else:
@@ -78,6 +80,7 @@ class GeneratorEnqueuer(object):
                     try:
                         task()
                     except Exception:
+                        traceback.print_exc()
                         self._stop_event.set()
                         break
 
