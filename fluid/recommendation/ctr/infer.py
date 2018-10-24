@@ -1,4 +1,5 @@
 import argparse
+import time
 
 import numpy as np
 import paddle
@@ -6,6 +7,11 @@ import paddle.fluid as fluid
 
 import reader
 from network_conf import ctr_dnn_model
+
+
+def print_log(log_str):
+    time_stamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    print(str(time_stamp) + " " + log_str)
 
 
 def parse_args():
@@ -49,7 +55,6 @@ def infer():
 
     with fluid.scope_guard(inference_scope):
         [inference_program, _, fetch_targets] = fluid.io.load_inference_model(args.model_path, exe)
-        print(fetch_targets)
 
         def set_zero(var_name):
             param = inference_scope.var(var_name).get_tensor()
@@ -60,14 +65,12 @@ def infer():
         for name in auc_states_names:
             set_zero(name)
 
-        batch_id = 0
-        for data in test_reader():
+        for batch_id, data in enumerate(test_reader()):
             loss_val, auc_val = exe.run(inference_program,
                 feed=feeder.feed(data),
                 fetch_list=fetch_targets)
             if batch_id % 100 == 0:
-                print("loss: " + str(loss_val) + " auc_val:" + str(auc_val))
-            batch_id += 1
+                print_log("TEST --> batch: {} loss: {} auc: {}".format(batch_id, loss_val, auc_val))
 
 
 if __name__ == '__main__':

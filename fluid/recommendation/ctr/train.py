@@ -1,16 +1,17 @@
-import os
-import logging
 import argparse
+import os
+import time
 
+import paddle
 import paddle.fluid as fluid
 
-from network_conf import ctr_dnn_model
 import reader
-import paddle
+from network_conf import ctr_dnn_model
 
-logging.basicConfig()
-logger = logging.getLogger("paddle")
-logger.setLevel(logging.INFO)
+
+def print_log(log_str):
+    time_stamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    print(str(time_stamp) + " " + log_str)
 
 
 def parse_args():
@@ -73,17 +74,14 @@ def train():
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
     for pass_id in range(args.num_passes):
-        batch_id = 0
-        for data in train_reader():
+        for batch_id, data in enumerate(train_reader()):
             loss_val, auc_val, batch_auc_val = exe.run(
                 fluid.default_main_program(),
                 feed=feeder.feed(data),
                 fetch_list=[loss, auc_var, batch_auc_var]
             )
-            print('pass:' + str(pass_id) + ' batch:' + str(batch_id) +
-                  ' loss: ' + str(loss_val) + " auc: " + str(auc_val) +
-                  " batch_auc: " + str(batch_auc_val))
-            batch_id += 1
+            print_log("TRAIN --> pass: {} batch: {} loss: {} auc: {}, batch_auc: {}"
+                      .format(pass_id, batch_id, loss_val, auc_val, batch_auc_val))
             if batch_id % 1000 == 0 and batch_id != 0:
                 model_dir = args.model_output_dir + '/batch-' + str(batch_id)
                 fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
