@@ -4,7 +4,7 @@ import argparse
 
 import paddle.fluid as fluid
 
-from network_conf import DeepFM
+from network_conf import ctr_dnn_model
 import reader
 import paddle
 
@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="PaddlePaddle DeepFM example")
+    parser = argparse.ArgumentParser(description="PaddlePaddle CTR example")
     parser.add_argument(
         '--train_data_path',
         type=str,
@@ -23,7 +23,7 @@ def parse_args():
     parser.add_argument(
         '--test_data_path',
         type=str,
-        default='./data/test.txt',
+        default='./data/valid.txt',
         help="The path of testing dataset")
     parser.add_argument(
         '--batch_size',
@@ -31,10 +31,10 @@ def parse_args():
         default=1000,
         help="The size of mini-batch (default:1000)")
     parser.add_argument(
-        '--factor_size',
+        '--embedding_size',
         type=int,
         default=10,
-        help="The factor size for the factorization machine (default:10)")
+        help="The size for embedding layer (default:10)")
     parser.add_argument(
         '--num_passes',
         type=int,
@@ -55,14 +55,14 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, data_list, auc_var, batch_auc_var = DeepFM(args.factor_size)
+    loss, data_list, auc_var, batch_auc_var = ctr_dnn_model(args.embedding_size)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
-    optimize_ops, params_grads = optimizer.minimize(loss)
+    optimizer.minimize(loss)
 
     dataset = reader.Dataset()
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            dataset.train(args.train_data_path),
+            dataset.train([args.train_data_path]),
             buf_size=args.batch_size * 100),
         batch_size=args.batch_size)
     place = fluid.CPUPlace()
@@ -80,13 +80,15 @@ def train():
                 feed=feeder.feed(data),
                 fetch_list=[loss, auc_var, batch_auc_var]
             )
-            print('pass:' + str(pass_id) + ' batch:' + str(batch_id) + ' loss: ' + str(loss_val) + " auc: " + str(auc_val) + " batch_auc: " + str(batch_auc_val))
+            print('pass:' + str(pass_id) + ' batch:' + str(batch_id) +
+                  ' loss: ' + str(loss_val) + " auc: " + str(auc_val) +
+                  " batch_auc: " + str(batch_auc_val))
             batch_id += 1
-            if batch_id % 100 == 0 and batch_id != 0:
-                model_dir = 'output/batch-' + str(batch_id)
+            if batch_id % 1000 == 0 and batch_id != 0:
+                model_dir = args.model_output_dir + '/batch-' + str(batch_id)
                 fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
-        model_dir = 'output/pass-' + str(pass_id)
-        fluid.io.save_inference_model(model_dir, data_name_list, [loss_var, auc_var], exe)
+        model_dir = args.model_output_dir + '/pass-' + str(pass_id)
+        fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
 
 
 if __name__ == '__main__':

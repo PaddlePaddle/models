@@ -5,7 +5,7 @@ dense_feature_dim = 13
 sparse_feature_dim = 117568
 
 
-def DeepFM(factor_size, infer=False):
+def ctr_dnn_model(embedding_size):
     dense_input = fluid.layers.data(
         name="dense_input", shape=[dense_feature_dim], dtype='float32')
     sparse_input_ids = [
@@ -17,7 +17,7 @@ def DeepFM(factor_size, infer=False):
     def embedding_layer(input):
         return fluid.layers.embedding(
             input=input,
-            size=[sparse_feature_dim, factor_size],
+            size=[sparse_feature_dim, embedding_size],
             param_attr=fluid.ParamAttr(name="SparseFeatFactors", initializer=fluid.initializer.Normal(scale=1/math.sqrt(sparse_feature_dim))))
 
     sparse_embed_seq = map(embedding_layer, sparse_input_ids)
@@ -32,16 +32,17 @@ def DeepFM(factor_size, infer=False):
     predict = fluid.layers.fc(input=fc3, size=2, act='softmax',
         param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(scale=1/math.sqrt(fc3.shape[1]))))
 
+    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+
     data_list = [dense_input] + sparse_input_ids
 
-    if not infer:
-        label = fluid.layers.data(name='label', shape=[1], dtype='int64')
-        cost = fluid.layers.cross_entropy(input=predict, label=label)
-        avg_cost = fluid.layers.reduce_sum(cost)
-        accuracy = fluid.layers.accuracy(input=predict, label=label)
-        auc_var, batch_auc_var, auc_states = fluid.layers.auc(input=predict, label=label, num_thresholds=2**12, slide_steps=20)
 
-        data_list.append(label)
-        return avg_cost, data_list, auc_var, batch_auc_var
-    else:
-        return predict, data_list
+
+    cost = fluid.layers.cross_entropy(input=predict, label=label)
+    avg_cost = fluid.layers.reduce_sum(cost)
+    accuracy = fluid.layers.accuracy(input=predict, label=label)
+    auc_var, batch_auc_var, auc_states = fluid.layers.auc(input=predict, label=label, num_thresholds=2**12, slide_steps=20)
+
+    data_list.append(label)
+
+    return avg_cost, data_list, auc_var, batch_auc_var

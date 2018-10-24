@@ -1,14 +1,11 @@
-import os
-import gzip
 import argparse
-import itertools
-import numpy as np
 
+import numpy as np
 import paddle
 import paddle.fluid as fluid
-from network_conf import DeepFM
 
 import reader
+from network_conf import ctr_dnn_model
 
 
 def parse_args():
@@ -24,10 +21,10 @@ def parse_args():
         required=True,
         help="The path of the dataset to infer")
     parser.add_argument(
-        '--factor_size',
+        '--embedding_size',
         type=int,
         default=10,
-        help="The factor size for the factorization machine (default:10)")
+        help="The size for embedding layer (default:10)")
 
     return parser.parse_args()
 
@@ -39,15 +36,14 @@ def infer():
     inference_scope = fluid.core.Scope()
 
     dataset = reader.Dataset()
-    test_reader = paddle.batch(dataset.train(args.data_path), batch_size=1000)
+    test_reader = paddle.batch(dataset.train([args.data_path]), batch_size=1000)
 
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
     with fluid.framework.program_guard(test_program, startup_program):
-        loss, data_list, auc_var, batch_auc_var = DeepFM(args.factor_size)
+        loss, data_list, auc_var, batch_auc_var = ctr_dnn_model(args.embedding_size)
 
     exe = fluid.Executor(place)
-    #exe.run(startup_program)
 
     feeder = fluid.DataFeeder(feed_list=data_list, place=place)
 

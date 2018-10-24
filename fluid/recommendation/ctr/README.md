@@ -1,11 +1,8 @@
-The minimum PaddlePaddle version needed for the code sample in this directory is v0.11.0. If you are on a version of PaddlePaddle earlier than v0.11.0, [please update your installation](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html).
 
----
-
-# Deep Factorization Machine for Click-Through Rate prediction
+# DNN for Click-Through Rate prediction
 
 ## Introduction
-This model implements the DeepFM proposed in the following paper:
+This model implements the DNN part proposed in the following paper:
 
 ```text
 @inproceedings{guo2017deepfm,
@@ -38,25 +35,9 @@ cd data && ./download.sh && cd ..
 ```
 
 ## Model
-The DeepFM model is composed of the factorization machine layer (FM) and deep
-neural networks (DNN). All the input features are feeded to both FM and DNN.
-The output from FM and DNN are combined to form the final output. The embedding
-layer for sparse features in the DNN shares the parameters with the latent
-vectors (factors) of the FM layer.
+This Demo only implement the DNN part of the model described in DeepFM paper.
+DeepFM model will be provided in other model.
 
-The factorization machine layer in PaddlePaddle computes the second order
-interactions. The following code example combines the factorization machine
-layer and fully connected layer to form the full version of factorization
-machine:
-
-```python
-def fm_layer(input, factor_size):
-    first_order = paddle.layer.fc(input=input, size=1, act=paddle.activation.Linear())
-    second_order = paddle.layer.factorization_machine(input=input, factor_size=factor_size)
-    fm = paddle.layer.addto(input=[first_order, second_order],
-                            act=paddle.activation.Linear(),
-                            bias_attr=False)
-    return fm
 ```
 
 ## Data preparation
@@ -76,11 +57,10 @@ To train the model:
 ```bash
 python train.py \
         --train_data_path data/train.txt \
-        --test_data_path data/valid.txt \
         2>&1 | tee train.log
 ```
 
-After training pass 9 batch 40000, the testing AUC is `0.807178` and the testing
+After training pass 1 batch 40000, the testing AUC is `0.807178` and the testing
 cost is `0.445196`.
 
 ## Infer
@@ -89,7 +69,6 @@ The command line options for infering can be listed by `python infer.py -h`.
 To make inference for the test dataset:
 ```bash
 python infer.py \
-        --model_gz_path models/model-pass-9-batch-10000.tar.gz \
-        --data_path data/test.txt \
-        --prediction_output_path ./predict.txt
+        --model_path models/ \
+        --data_path data/valid.txt
 ```
