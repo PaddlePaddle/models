@@ -74,18 +74,18 @@ python convert_format.py
 ```
 
 ## 训练
---use_cuda 1 表示使用gpu --parallel 1 表示多卡 0 表示单卡
+--use_cuda 表示使用gpu --parallel 表示多卡
 
 GPU 环境
 运行命令 `CUDA_VISIBLE_DEVICES=0 python train.py train_file test_file ` 开始训练模型。
 
 ```python
-CUDA_VISIBLE_DEVICES=0 python train.py small_train.txt small_test.txt --use_cuda 1 --parallel 0
+CUDA_VISIBLE_DEVICES=0 python train.py small_train.txt small_test.txt --use_cuda
 ```
 CPU 环境
 运行命令 `python train.py train_file test_file` 开始训练模型。
 ```python
-python train.py small_train.txt small_test.txt --use_cuda 0 --parallel 0
+python train.py small_train.txt small_test.txt
 ```
 
 当前支持的参数可参见[train.py](./train.py) `train_net` 函数
