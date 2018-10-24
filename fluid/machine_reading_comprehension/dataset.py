@@ -152,7 +152,7 @@ class BRCDataset(object):
                     batch_data['passage_token_ids'].append(passage_token_ids)
                     batch_data['passage_length'].append(
                         min(len(passage_token_ids), self.max_p_len))
-            # index of passade in  batch_data increased, so need to record the start passage index of current doc
+            # record the start passage index of current doc
             passade_idx_offset = sum(batch_data['passage_num'])
             batch_data['passage_num'].append(count)
             gold_passage_offset = 0
@@ -169,22 +169,6 @@ class BRCDataset(object):
                 batch_data['start_id'].append(0)
                 batch_data['end_id'].append(0)
         return batch_data
-
-    def _dynamic_padding(self, batch_data, pad_id):
-        """
-        Dynamically pads the batch_data with pad_id
-        """
-        pad_p_len = min(self.max_p_len, max(batch_data['passage_length']))
-        pad_q_len = min(self.max_q_len, max(batch_data['question_length']))
-        batch_data['passage_token_ids'] = [
-            (ids + [pad_id] * (pad_p_len - len(ids)))[:pad_p_len]
-            for ids in batch_data['passage_token_ids']
-        ]
-        batch_data['question_token_ids'] = [
-            (ids + [pad_id] * (pad_q_len - len(ids)))[:pad_q_len]
-            for ids in batch_data['question_token_ids']
-        ]
-        return batch_data, pad_p_len, pad_q_len
 
     def word_iter(self, set_name=None):
         """
