@@ -100,6 +100,7 @@ All configurations used in our experiments are as follows:
 |InferSentNet|infer_sent_v1|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v1
 |InferSentNet|infer_sent_v2|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v2
 |SSENet|sse_base|python train_and_evaluate.py  --model_name=SSENet  --config=sse_base
+|pwimNet|pwim_base|python train_and_evaluate.py  --model_name=pwimNet  --config=pwim_base
 
 ## Models
 
@@ -111,6 +112,7 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
 |DecAtt|word|Attention|concatenation|MLP
 |InferSent|word|1 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
 |SSE|word|3 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
+|PWIM|word|1 layer Bi-LSTM|cosine, Euclidean, dot product/hard alignment|CNN, MLP
 
 ### CDSSM
 
@@ -158,6 +160,18 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
 }
 ```
 
+### PWIM
+
+```
+@inproceedings{he2016pairwise,
+  title={Pairwise word interaction modeling with deep neural networks for semantic similarity measurement},
+  author={He, Hua and Lin, Jimmy},
+  booktitle={Proceedings of the 2016 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies},
+  pages={937--948},
+  year={2016}
+}
+```
+
 ## Results
 
 |Model|Config|dev accuracy| test accuracy
@@ -167,6 +181,7 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
 |InferSentNet|infer_sent_v1|87.15%|86.62%|
 |InferSentNet|infer_sent_v2|88.55%|88.43%|
 |SSENet|sse_base|88.35%|88.25%|
+|pwimNet|pwim_base|84.68%|85.43%|
 
 In our experiment, we found that LSTM-based models outperformed convolution-based models. The DecAtt model has fewer parameters than LSTM-based models, but is sensitive to hyper-parameters.
 
