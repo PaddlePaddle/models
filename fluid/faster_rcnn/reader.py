@@ -102,6 +102,7 @@ def coco(mode,
                 roidb_perm.rotate(-1)
                 if roidb_cur >= len(roidbs):
                     roidb_perm = deque(np.random.permutation(roidbs))
+                    roidb_cur = 0
                 im, gt_boxes, gt_classes, is_crowd, im_info, im_id = roidb_reader(
                     roidb, mode)
                 if gt_boxes.shape[0] == 0:

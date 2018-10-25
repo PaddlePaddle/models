@@ -7,7 +7,6 @@
 - [简介](#简介)
 - [数据准备](#数据准备)
 - [模型训练](#模型训练)
-- [参数微调](#参数微调)
 - [模型评估](#模型评估)
 - [模型推断及可视化](#模型推断及可视化)
 - [附录](#附录)
@@ -26,7 +25,7 @@ Faster RCNN 目标检测模型
 
 1. 基础卷积层。作为一种卷积神经网络目标检测方法，Faster RCNN首先使用一组基础的卷积网络提取图像的特征图。特征图被后续RPN层和全连接层共享。本示例采用[ResNet-50](https://arxiv.org/abs/1512.03385)作为基础卷积层。
 2. 区域生成网络(RPN)。RPN网络用于生成候选区域(proposals)。该层通过一组固定的尺寸和比例得到一组锚点(anchors), 通过softmax判断锚点属于前景或者背景，再利用区域回归修正锚点从而获得精确的候选区域。
-3. RoI池化。该层收集输入的特征图和候选区域，将候选区域映射到特征图中并池化为统一大小的区域特征图，送入全连接层判定目标类别。
+3. RoI Align。该层收集输入的特征图和候选区域，将候选区域映射到特征图中并池化为统一大小的区域特征图，送入全连接层判定目标类别, 该层可选用RoIPool和RoIAlign两种方式，在config.py中设置roi\_func。
 4. 检测层。利用区域特征图计算候选区域的类别，同时再次通过区域回归获得检测框最终的精确位置。
 
 ## 数据准备
@@ -41,11 +40,9 @@ Faster RCNN 目标检测模型
 数据准备完毕后，可以通过如下的方式启动训练：
 
     python train.py \
-       --max_size=1333 \
-       --scales=[800] \
-       --batch_size=8 \
        --model_save_dir=output/ \
        --pretrained_model=${path_to_pretrain_model}
+       --data_dir=${path_to_data}
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
 - 可选参数见：
@@ -74,11 +71,11 @@ Faster RCNN 目标检测模型
     # not to install the COCO API into global site-packages
     python2 setup.py install --user
 
-**数据读取器说明：** 数据读取器定义在reader.py中。所有图像将短边等比例缩放至`scales`，若长边大于`max_size`, 则再次将长边等比例缩放至`max_iter`。在训练阶段，对图像采用水平翻转。支持将同一个batch内的图像padding为相同尺寸。
+**数据读取器说明：** 数据读取器定义在reader.py中。所有图像将短边等比例缩放至`scales`，若长边大于`max_size`, 则再次将长边等比例缩放至`max_size`。在训练阶段，对图像采用水平翻转。支持将同一个batch内的图像padding为相同尺寸。
 
 **模型设置：**
 
-* 使用RoIPooling。
+* 分别使用RoIAlign和RoIPool两种方法。
 * 训练过程pre\_nms=12000, post\_nms=2000，测试过程pre\_nms=6000, post\_nms=1000。nms阈值为0.7。
 * RPN网络得到labels的过程中，fg\_fraction=0.25，fg\_thresh=0.5，bg\_thresh_hi=0.5，bg\_thresh\_lo=0.0
 * RPN选择anchor时，rpn\_fg\_fraction=0.5，rpn\_positive\_overlap=0.7，rpn\_negative\_overlap=0.3
@@ -89,9 +86,10 @@ Faster RCNN 目标检测模型
 <img src="image/train_loss.jpg" height=500 width=650 hspace='10'/> <br />
 Faster RCNN 训练loss
 </p>
-* Fluid all padding: 每张图像填充为1333\*1333大小。
-* Fluid minibatch padding: 同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
-* Fluid no padding: 不对图像做填充处理。
+
+* Fluid RoIPool minibatch padding: 使用RoIPool，同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
+* Fluid RoIPool no padding: 使用RoIPool，不对图像做填充处理。
+* Fluid RoIAlign no padding: 使用RoIAlign，不对图像做填充处理。
 
 **训练策略：**
 
@@ -110,9 +108,10 @@ Faster RCNN 训练loss
     python eval_coco_map.py \
         --dataset=coco2017 \
         --pretrained_mode=${path_to_pretrain_model} \
-        --batch_size=1 \
         --nms_threshold=0.5 \
         --score_threshold=0.05
+
+- 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
 
 下图为模型评估结果：
 <p align="center">
@@ -120,16 +119,20 @@ Faster RCNN 训练loss
 Faster RCNN mAP
 </p>
 
-| 模型                    | 批量大小     | 迭代次数        | mAP  |
-| :------------------------------ | :------------:    | :------------------:    |------: |
-| Detectron                 | 8            |    180000        | 0.315 |
-| Fluid minibatch padding | 8            |    180000        | 0.314 |
-| Fluid all padding         | 8            |    180000        | 0.308 |
-| Fluid no padding            |8            |    180000        | 0.316 |
+| 模型                   |   RoI处理方式  | 批量大小   | 迭代次数   | mAP  |
+| :--------------- | :--------: | :------------:    | :------------------:    |------: |
+| Detectron RoIPool        | RoIPool | 8   |    180000        | 0.315 |
+| Fluid RoIPool minibatch padding | RoIPool | 8   |    180000        | 0.314 |
+| Fluid RoIPool no padding  | RoIPool | 8   |    180000        | 0.316 |
+| Detectron RoIAlign       | RoIAlign | 8   |    180000        | 0.346 |
+| Fluid RoIAlign no padding  | RoIAlign | 8   |    180000        | 0.344 |
 
-* Fluid all padding: 每张图像填充为1333\*1333大小。
-* Fluid minibatch padding: 同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
-* Fluid no padding: 不对图像做填充处理。
+
+
+
+* Fluid RoIPool minibatch padding: 使用RoIPool，同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
+* Fluid RoIPool no padding: 使用RoIPool，不对图像做填充处理。
+* Fluid RoIAlign no padding: 使用RoIAlign，不对图像做填充处理。
 
 ## 模型推断及可视化
 
