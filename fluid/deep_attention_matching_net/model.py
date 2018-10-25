@@ -15,10 +15,74 @@ class Net(object):
         self._stack_num = stack_num
         self._channel1_num = channel1_num
         self._channel2_num = channel2_num
+        self._feed_names = []
         self.word_emb_name = "shared_word_emb"
         self.use_stack_op = True
         self.use_mask_cache = True
         self.use_sparse_embedding = True
+
+    def create_py_reader(self, capacity, name):
+        # turns ids
+        shapes = [[-1, self._max_turn_len, 1]
+                  for i in six.moves.xrange(self._max_turn_num)]
+        dtypes = ["int32" for i in six.moves.xrange(self._max_turn_num)]
+        # turns mask
+        shapes += [[-1, self._max_turn_len, 1]
+                   for i in six.moves.xrange(self._max_turn_num)]
+        dtypes += ["float32" for i in six.moves.xrange(self._max_turn_num)]
+
+        # response ids, response mask, label
+        shapes += [[-1, self._max_turn_len, 1], [-1, self._max_turn_len, 1],
+                   [-1, 1]]
+        dtypes += ["int32", "float32", "float32"]
+
+        py_reader = fluid.layers.py_reader(
+            capacity=capacity,
+            shapes=shapes,
+            lod_levels=[0] * (2 * self._max_turn_num + 3),
+            dtypes=dtypes,
+            name=name,
+            use_double_buffer=True)
+
+        data_vars = fluid.layers.read_file(py_reader)
+
+        self.turns_data = data_vars[0:self._max_turn_num]
+        self.turns_mask = data_vars[self._max_turn_num:2 * self._max_turn_num]
+        self.response = data_vars[-3]
+        self.response_mask = data_vars[-2]
+        self.label = data_vars[-1]
+        return py_reader
+
+    def create_data_layers(self):
+        self._feed_names = []
+
+        self.turns_data = []
+        for i in six.moves.xrange(self._max_turn_num):
+            name = "turn_%d" % i
+            turn = fluid.layers.data(
+                name=name, shape=[self._max_turn_len, 1], dtype="int32")
+            self.turns_data.append(turn)
+            self._feed_names.append(name)
+
+        self.turns_mask = []
+        for i in six.moves.xrange(self._max_turn_num):
+            name = "turn_mask_%d" % i
+            turn_mask = fluid.layers.data(
+                name=name, shape=[self._max_turn_len, 1], dtype="float32")
+            self.turns_mask.append(turn_mask)
+            self._feed_names.append(name)
+
+        self.response = fluid.layers.data(
+            name="response", shape=[self._max_turn_len, 1], dtype="int32")
+        self.response_mask = fluid.layers.data(
+            name="response_mask",
+            shape=[self._max_turn_len, 1],
+            dtype="float32")
+        self.label = fluid.layers.data(name="label", shape=[1], dtype="float32")
+        self._feed_names += ["response", "response_mask", "label"]
+
+    def get_feed_names(self):
+        return self._feed_names
 
     def set_word_embedding(self, word_emb, place):
         word_emb_param = fluid.global_scope().find_var(
@@ -28,32 +92,8 @@ class Net(object):
     def create_network(self):
         mask_cache = dict() if self.use_mask_cache else None
 
-        turns_data = []
-        for i in six.moves.xrange(self._max_turn_num):
-            turn = fluid.layers.data(
-                name="turn_%d" % i,
-                shape=[self._max_turn_len, 1],
-                dtype="int32")
-            turns_data.append(turn)
-
-        turns_mask = []
-        for i in six.moves.xrange(self._max_turn_num):
-            turn_mask = fluid.layers.data(
-                name="turn_mask_%d" % i,
-                shape=[self._max_turn_len, 1],
-                dtype="float32")
-            turns_mask.append(turn_mask)
-
-        response = fluid.layers.data(
-            name="response", shape=[self._max_turn_len, 1], dtype="int32")
-        response_mask = fluid.layers.data(
-            name="response_mask",
-            shape=[self._max_turn_len, 1],
-            dtype="float32")
-        label = fluid.layers.data(name="label", shape=[1], dtype="float32")
-
         response_emb = fluid.layers.embedding(
-            input=response,
+            input=self.response,
             size=[self._vocab_size + 1, self._emb_size],
             is_sparse=self.use_sparse_embedding,
             param_attr=fluid.ParamAttr(
@@ -71,8 +111,8 @@ class Net(object):
                 key=Hr,
                 value=Hr,
                 d_key=self._emb_size,
-                q_mask=response_mask,
-                k_mask=response_mask,
+                q_mask=self.response_mask,
+                k_mask=self.response_mask,
                 mask_cache=mask_cache)
             Hr_stack.append(Hr)
 
@@ -80,7 +120,7 @@ class Net(object):
         sim_turns = []
         for t in six.moves.xrange(self._max_turn_num):
             Hu = fluid.layers.embedding(
-                input=turns_data[t],
+                input=self.turns_data[t],
                 size=[self._vocab_size + 1, self._emb_size],
                 is_sparse=self.use_sparse_embedding,
                 param_attr=fluid.ParamAttr(
@@ -96,8 +136,8 @@ class Net(object):
                     key=Hu,
                     value=Hu,
                     d_key=self._emb_size,
-                    q_mask=turns_mask[t],
-                    k_mask=turns_mask[t],
+                    q_mask=self.turns_mask[t],
+                    k_mask=self.turns_mask[t],
                     mask_cache=mask_cache)
                 Hu_stack.append(Hu)
 
@@ -111,8 +151,8 @@ class Net(object):
                     key=Hr_stack[index],
                     value=Hr_stack[index],
                     d_key=self._emb_size,
-                    q_mask=turns_mask[t],
-                    k_mask=response_mask,
+                    q_mask=self.turns_mask[t],
+                    k_mask=self.response_mask,
                     mask_cache=mask_cache)
                 r_a_t = layers.block(
                     name="r_attend_t_" + str(index),
@@ -120,8 +160,8 @@ class Net(object):
                     key=Hu_stack[index],
                     value=Hu_stack[index],
                     d_key=self._emb_size,
-                    q_mask=response_mask,
-                    k_mask=turns_mask[t],
+                    q_mask=self.response_mask,
+                    k_mask=self.turns_mask[t],
                     mask_cache=mask_cache)
 
                 t_a_r_stack.append(t_a_r)
@@ -158,5 +198,5 @@ class Net(object):
             sim = fluid.layers.concat(input=sim_turns, axis=2)
 
         final_info = layers.cnn_3d(sim, self._channel1_num, self._channel2_num)
-        loss, logits = layers.loss(final_info, label)
+        loss, logits = layers.loss(final_info, self.label)
         return loss, logits
