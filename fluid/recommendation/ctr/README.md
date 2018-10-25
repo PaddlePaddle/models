@@ -19,6 +19,13 @@ both low order and high order feature interactions. For details of the
 factorization machines, please refer to the paper [factorization
 machines](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf)
 
+## Environment
+You should install PaddlePaddle Fluid first, and run:
+
+```shell
+pip install -r requirements.txt
+```
+
 ## Dataset
 This example uses Criteo dataset which was used for the [Display Advertising
 Challenge](https://www.kaggle.com/c/criteo-display-ad-challenge/)

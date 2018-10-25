@@ -14,6 +14,13 @@
 }
 ```
 
+## 运行环境
+需要先安装PaddlePaddle Fluid，然后运行：
+
+```shell
+pip install -r requirements.txt
+```
+
 ## 数据集
 本文使用的是Kaggle公司举办的[展示广告竞赛](https://www.kaggle.com/c/criteo-display-ad-challenge/)中所使用的Criteo数据集。
 
@@ -27,7 +34,6 @@ cd data && ./download.sh && cd ..
 ## 模型
 本例子只实现了DeepFM论文中介绍的模型的DNN部分，DeepFM会在其他例子中给出。
 
-```
 
 ## 数据准备
 处理原始数据集，整型特征使用min-max归一化方法规范到[0, 1]，类别类特征使用了one-hot编码。原始数据集分割成两部分：90%用于训练，其他10%用于训练过程中的验证。

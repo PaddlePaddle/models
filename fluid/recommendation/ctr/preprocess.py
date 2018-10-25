@@ -89,8 +89,8 @@ class ContinuousFeatureGenerator:
 @click.option("--outdir", type=str, help="Path to save the processed data")
 def preprocess(datadir, outdir):
     """
-    All the 13 integer features are normalzied to continous values and these
-    continous features are combined into one vecotr with dimension 13.
+    All 13 integer features are normalized to continuous values and these continuous
+    features are combined into one vector with dimension of 13.
 
     Each of the 26 categorical features are one-hot encoded and all the one-hot
     vectors are combined into one sparse binary vector.
