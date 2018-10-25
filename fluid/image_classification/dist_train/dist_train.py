@@ -33,10 +33,12 @@ def parse_args():
     parser.add_argument(
         '--model',
         type=str,
-        default='resnet_dist',
+        default='DistResNet',
         help='The model to run.')
     parser.add_argument(
         '--batch_size', type=int, default=32, help='The minibatch size per device.')
+    parser.add_argument(
+        '--multi_batch_repeat', type=int, default=1, help='Batch merge repeats.')
     parser.add_argument(
         '--learning_rate', type=float, default=0.1, help='The learning rate.')
     parser.add_argument(
@@ -124,7 +126,7 @@ def get_model(args, is_train, main_prog, startup_prog):
                 name="train_reader" if is_train else "test_reader",
                 use_double_buffer=True)
             input, label = fluid.layers.read_file(pyreader)
-            model_def = models.__dict__[args.model](is_train)
+            model_def = models.__dict__[args.model](layers=50, is_train=is_train)
             predict = model_def.net(input, class_dim=class_dim)
 
             cost = fluid.layers.cross_entropy(input=predict, label=label)

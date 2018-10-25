@@ -5,7 +5,7 @@ import paddle
 import paddle.fluid as fluid
 import math
 
-__all__ = ["ResNet", "ResNet50", "ResNet101", "ResNet152"]
+__all__ = ["DistResNet"]
 
 train_parameters = {
     "input_size": [3, 224, 224],
@@ -20,7 +20,7 @@ train_parameters = {
 }
 
 
-class ResNet():
+class DistResNet():
     def __init__(self, layers=50, is_train=True):
         self.params = train_parameters
         self.layers = layers
@@ -119,18 +119,3 @@ class ResNet():
         short = self.shortcut(input, num_filters * 4, stride)
 
         return fluid.layers.elementwise_add(x=short, y=conv2, act='relu')
-
-
-def ResNet50():
-    model = ResNet(layers=50)
-    return model
-
-
-def ResNet101():
-    model = ResNet(layers=101)
-    return model
-
-
-def ResNet152():
-    model = ResNet(layers=152)
-    return model
