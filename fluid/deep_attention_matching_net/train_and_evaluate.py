@@ -7,7 +7,7 @@ import multiprocessing
 import paddle
 import paddle.fluid as fluid
 import utils.reader as reader
-from utils.util import print_arguments
+from utils.util import print_arguments, mkdir
 
 try:
     import cPickle as pickle  #python 2
@@ -49,6 +49,10 @@ def parse_args():
         '--use_cuda',
         action='store_true',
         help='If set, use cuda for training.')
+    parser.add_argument(
+        '--use_pyreader',
+        action='store_true',
+        help='If set, use pyreader for reading data.')
     parser.add_argument(
         '--ext_eval',
         action='store_true',
@@ -105,7 +109,75 @@ def parse_args():
 #yapf: enable
 
 
+def evaluate(score_path, result_file_path):
+    if args.ext_eval:
+        import utils.douban_evaluation as eva
+    else:
+        import utils.evaluation as eva
+    #write evaluation result
+    result = eva.evaluate(score_path)
+    with open(result_file_path, 'w') as out_file:
+        for p_at in result:
+            out_file.write(str(p_at) + '\n')
+    print('finish evaluation')
+    print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+
+
+def test_with_feed(exe, program, feed_names, fetch_list, score_path, batches,
+                   batch_num, dev_count):
+    score_file = open(score_path, 'w')
+    for it in six.moves.xrange(batch_num // dev_count):
+        feed_list = []
+        for dev in six.moves.xrange(dev_count):
+            val_index = it * dev_count + dev
+            batch_data = reader.make_one_batch_input(batches, val_index)
+            feed_dict = dict(zip(feed_names, batch_data))
+            feed_list.append(feed_dict)
+
+            predicts = exe.run(feed=feed_list, fetch_list=fetch_list)
+
+            scores = np.array(predicts[0])
+            for dev in six.moves.xrange(dev_count):
+                val_index = it * dev_count + dev
+                for i in six.moves.xrange(args.batch_size):
+                    score_file.write(
+                        str(scores[args.batch_size * dev + i][0]) + '\t' + str(
+                            batches["label"][val_index][i]) + '\n')
+    score_file.close()
+
+
+def test_with_pyreader(exe, program, pyreader, fetch_list, score_path, batches,
+                       batch_num, dev_count):
+    def data_provider():
+        for index in six.moves.xrange(batch_num):
+            yield reader.make_one_batch_input(batches, index)
+
+    score_file = open(score_path, 'w')
+    pyreader.decorate_tensor_provider(data_provider)
+    it = 0
+    pyreader.start()
+    while True:
+        try:
+            predicts = exe.run(fetch_list=fetch_list)
+
+            scores = np.array(predicts[0])
+            for dev in six.moves.xrange(dev_count):
+                val_index = it * dev_count + dev
+                for i in six.moves.xrange(args.batch_size):
+                    score_file.write(
+                        str(scores[args.batch_size * dev + i][0]) + '\t' + str(
+                            batches["label"][val_index][i]) + '\n')
+            it += 1
+        except fluid.core.EOFException:
+            pyreader.reset()
+            break
+    score_file.close()
+
+
 def train(args):
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path)
+
     # data data_config
     data_conf = {
         "batch_size": args.batch_size,
@@ -117,27 +189,47 @@ def train(args):
     dam = Net(args.max_turn_num, args.max_turn_len, args.vocab_size,
               args.emb_size, args.stack_num, args.channel1_num,
               args.channel2_num)
-    loss, logits = dam.create_network()
 
-    loss.persistable = True
-    logits.persistable = True
+    train_program = fluid.Program()
+    train_startup = fluid.Program()
+    with fluid.program_guard(train_program, train_startup):
+        with fluid.unique_name.guard():
+            if args.use_pyreader:
+                train_pyreader = dam.create_py_reader(
+                    capacity=10, name='train_reader')
+            else:
+                dam.create_data_layers()
+            loss, logits = dam.create_network()
+            loss.persistable = True
+            logits.persistable = True
+            # gradient clipping
+            fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
+                max=1.0, min=-1.0))
 
-    train_program = fluid.default_main_program()
-    test_program = fluid.default_main_program().clone(for_test=True)
+            optimizer = fluid.optimizer.Adam(
+                learning_rate=fluid.layers.exponential_decay(
+                    learning_rate=args.learning_rate,
+                    decay_steps=400,
+                    decay_rate=0.9,
+                    staircase=True))
+            optimizer.minimize(loss)
+            fluid.memory_optimize(train_program)
 
-    # gradient clipping
-    fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
-        max=1.0, min=-1.0))
+    test_program = fluid.Program()
+    test_startup = fluid.Program()
+    with fluid.program_guard(test_program, test_startup):
+        with fluid.unique_name.guard():
+            if args.use_pyreader:
+                test_pyreader = dam.create_py_reader(
+                    capacity=10, name='test_reader')
+            else:
+                dam.create_data_layers()
 
-    optimizer = fluid.optimizer.Adam(
-        learning_rate=fluid.layers.exponential_decay(
-            learning_rate=args.learning_rate,
-            decay_steps=400,
-            decay_rate=0.9,
-            staircase=True))
-    optimizer.minimize(loss)
+            loss, logits = dam.create_network()
+            loss.persistable = True
+            logits.persistable = True
 
-    fluid.memory_optimize(train_program)
+    test_program = test_program.clone(for_test=True)
 
     if args.use_cuda:
         place = fluid.CUDAPlace(0)
@@ -152,7 +244,8 @@ def train(args):
         program=train_program, batch_size=args.batch_size))
 
     exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
+    exe.run(train_startup)
+    exe.run(test_startup)
 
     train_exe = fluid.ParallelExecutor(
         use_cuda=args.use_cuda, loss_name=loss.name, main_program=train_program)
@@ -161,11 +254,6 @@ def train(args):
         use_cuda=args.use_cuda,
         main_program=test_program,
         share_vars_from=train_exe)
-
-    if args.ext_eval:
-        import utils.douban_evaluation as eva
-    else:
-        import utils.evaluation as eva
 
     if args.word_emb_init is not None:
         print("start loading word embedding init ...")
@@ -199,17 +287,15 @@ def train(args):
     print("begin model training ...")
     print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
-    step = 0
-    for epoch in six.moves.xrange(args.num_scan_data):
-        shuffle_train = reader.unison_shuffle(train_data)
-        train_batches = reader.build_batches(shuffle_train, data_conf)
-
+    # train on one epoch data by feeding
+    def train_with_feed(step):
         ave_cost = 0.0
         for it in six.moves.xrange(batch_num // dev_count):
             feed_list = []
             for dev in six.moves.xrange(dev_count):
                 index = it * dev_count + dev
-                feed_dict = reader.make_one_batch_input(train_batches, index)
+                batch_data = reader.make_one_batch_input(train_batches, index)
+                feed_dict = dict(zip(dam.get_feed_names(), batch_data))
                 feed_list.append(feed_dict)
 
             cost = train_exe.run(feed=feed_list, fetch_list=[loss.name])
@@ -226,41 +312,73 @@ def train(args):
                 print("Save model at step %d ... " % step)
                 print(time.strftime('%Y-%m-%d %H:%M:%S',
                                     time.localtime(time.time())))
-                fluid.io.save_persistables(exe, save_path)
+                fluid.io.save_persistables(exe, save_path, train_program)
 
                 score_path = os.path.join(args.save_path, 'score.' + str(step))
-                score_file = open(score_path, 'w')
-                for it in six.moves.xrange(val_batch_num // dev_count):
-                    feed_list = []
-                    for dev in six.moves.xrange(dev_count):
-                        val_index = it * dev_count + dev
-                        feed_dict = reader.make_one_batch_input(val_batches,
-                                                                val_index)
-                        feed_list.append(feed_dict)
+                test_with_feed(test_exe, test_program,
+                               dam.get_feed_names(), [logits.name], score_path,
+                               val_batches, val_batch_num, dev_count)
 
-                    predicts = test_exe.run(feed=feed_list,
-                                            fetch_list=[logits.name])
-
-                    scores = np.array(predicts[0])
-                    for dev in six.moves.xrange(dev_count):
-                        val_index = it * dev_count + dev
-                        for i in six.moves.xrange(args.batch_size):
-                            score_file.write(
-                                str(scores[args.batch_size * dev + i][0]) + '\t'
-                                + str(val_batches["label"][val_index][
-                                    i]) + '\n')
-                score_file.close()
-
-                #write evaluation result
-                result = eva.evaluate(score_path)
                 result_file_path = os.path.join(args.save_path,
                                                 'result.' + str(step))
-                with open(result_file_path, 'w') as out_file:
-                    for p_at in result:
-                        out_file.write(str(p_at) + '\n')
-                print('finish evaluation')
-                print(time.strftime('%Y-%m-%d %H:%M:%S',
-                                    time.localtime(time.time())))
+                evaluate(score_path, result_file_path)
+        return step
+
+    # train on one epoch with pyreader 
+    def train_with_pyreader(step):
+        def data_provider():
+            for index in six.moves.xrange(batch_num):
+                yield reader.make_one_batch_input(train_batches, index)
+
+        train_pyreader.decorate_tensor_provider(data_provider)
+
+        ave_cost = 0.0
+        train_pyreader.start()
+        while True:
+            try:
+                cost = train_exe.run(fetch_list=[loss.name])
+
+                ave_cost += np.array(cost[0]).mean()
+                step = step + 1
+                if step % print_step == 0:
+                    print("processed: [" + str(step * dev_count * 1.0 /
+                                               batch_num) + "] ave loss: [" +
+                          str(ave_cost / print_step) + "]")
+                    ave_cost = 0.0
+
+                if (args.save_path is not None) and (step % save_step == 0):
+                    save_path = os.path.join(args.save_path,
+                                             "step_" + str(step))
+                    print("Save model at step %d ... " % step)
+                    print(time.strftime('%Y-%m-%d %H:%M:%S',
+                                        time.localtime(time.time())))
+                    fluid.io.save_persistables(exe, save_path, train_program)
+
+                    score_path = os.path.join(args.save_path,
+                                              'score.' + str(step))
+                    test_with_pyreader(test_exe, test_program, test_pyreader,
+                                       [logits.name], score_path, val_batches,
+                                       val_batch_num, dev_count)
+
+                    result_file_path = os.path.join(args.save_path,
+                                                    'result.' + str(step))
+                    evaluate(score_path, result_file_path)
+
+            except fluid.core.EOFException:
+                train_pyreader.reset()
+                break
+        return step
+
+    # train over different epoches
+    global_step = 0
+    for epoch in six.moves.xrange(args.num_scan_data):
+        shuffle_train = reader.unison_shuffle(train_data)
+        train_batches = reader.build_batches(shuffle_train, data_conf)
+
+        if args.use_pyreader:
+            global_step = train_with_pyreader(global_step)
+        else:
+            global_step = train_with_feed(global_step)
 
 
 if __name__ == '__main__':
