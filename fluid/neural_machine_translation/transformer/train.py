@@ -643,7 +643,7 @@ def train(args):
             if args.sync:
                 lr_decay = fluid.layers.learning_rate_scheduler.noam_decay(
                     ModelHyperParams.d_model, TrainTaskConfig.warmup_steps)
-                print("before adam")
+                logging.info("before adam")
 
                 with fluid.default_main_program()._lr_schedule_guard():
                     learning_rate = lr_decay * TrainTaskConfig.learning_rate
@@ -661,7 +661,7 @@ def train(args):
         fluid.memory_optimize(train_prog)
 
     if args.local:
-        print("local start_up:")
+        logging.info("local start_up:")
         train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                    token_num, predict, pyreader)
     else:
@@ -677,9 +677,9 @@ def train(args):
             if trainer_id == 0:
                 logging.info("train_id == 0, sleep 60s")
                 time.sleep(60)
-            print("trainers_num:", trainers_num)
-            print("worker_endpoints:", worker_endpoints)
-            print("current_endpoint:", current_endpoint)
+            logging.info("trainers_num:", trainers_num)
+            logging.info("worker_endpoints:", worker_endpoints)
+            logging.info("current_endpoint:", current_endpoint)
             append_nccl2_prepare(trainer_id, worker_endpoints, current_endpoint)
             train_loop(exe,
                        fluid.default_main_program(), dev_count, sum_cost,
@@ -696,11 +696,11 @@ def train(args):
         current_endpoint = os.getenv("POD_IP") + ":" + port
         trainer_id = int(os.getenv("PADDLE_TRAINER_ID"))
 
-        print("pserver_endpoints", pserver_endpoints)
-        print("current_endpoint", current_endpoint)
-        print("trainer_id", trainer_id)
-        print("pserver_ips", pserver_ips)
-        print("port", port)
+        logging.info("pserver_endpoints:", pserver_endpoints)
+        logging.info("current_endpoint:", current_endpoint)
+        logging.info("trainer_id:", trainer_id)
+        logging.info("pserver_ips:", pserver_ips)
+        logging.info("port:", port)
 
         t = fluid.DistributeTranspiler()
         t.transpile(
@@ -715,30 +715,17 @@ def train(args):
             current_endpoint = os.getenv("POD_IP") + ":" + os.getenv(
                 "PADDLE_PORT")
             if not current_endpoint:
-                print("need env SERVER_ENDPOINT")
+                logging.critical("need env SERVER_ENDPOINT")
                 exit(1)
             pserver_prog = t.get_pserver_program(current_endpoint)
             pserver_startup = t.get_startup_program(current_endpoint,
                                                     pserver_prog)
-
-            print("pserver start:")
-            program_to_code(pserver_startup)
-            print("pserver train:")
-            program_to_code(pserver_prog)
-            #sys.exit(0)
 
             exe.run(pserver_startup)
             exe.run(pserver_prog)
         elif training_role == "TRAINER":
             logging.info("distributed: trainer started")
             trainer_prog = t.get_trainer_program()
-            '''
-            print("trainer start:")
-            program_to_code(pserver_startup)
-            print("trainer train:")
-            program_to_code(trainer_prog)
-            sys.exit(0)
-            '''
 
             train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
                        avg_cost, token_num, predict, pyreader)
