@@ -92,11 +92,12 @@ def parse_args():
     return parser.parse_args()
 
 
-def train_loop(args, train_program, data_list, loss, auc_var, batch_auc_var, trainer_id):
+def train_loop(args, train_program, data_list, loss, auc_var, batch_auc_var, 
+               trainer_num, trainer_id):
     dataset = reader.CriteoDataset(args.sparse_feature_dim)
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            dataset.train([args.train_data_path], trainer_id),
+            dataset.train([args.train_data_path], trainer_num, trainer_id),
             buf_size=args.batch_size * 100),
         batch_size=args.batch_size)
     place = fluid.CPUPlace()
@@ -137,7 +138,7 @@ def train():
     if args.is_local:
         logger.info("run local training")
         main_program = fluid.default_main_program()
-        train_loop(args, main_program, data_list, loss, auc_var, batch_auc_var, -1)
+        train_loop(args, main_program, data_list, loss, auc_var, batch_auc_var, 1, -1)
     else:
         logger.info("run dist training")
         t = fluid.DistributeTranspiler()
@@ -153,7 +154,7 @@ def train():
             logger.info("run trainer")
             train_prog = t.get_trainer_program()
             train_loop(args, train_prog, data_list, loss, auc_var, batch_auc_var, 
-                       args.trainer_id + 1)
+                       args.trainers, args.trainer_id + 1)
 
 
 if __name__ == '__main__':
