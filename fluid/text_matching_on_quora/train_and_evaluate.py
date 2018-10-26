@@ -247,11 +247,14 @@ def main():
 
     # define optimizer
     optimizer = utils.getOptimizer(global_config)
-   
+
     # use cuda or not
     if not global_config.has_member('use_cuda'):
-        global_config.use_cuda = 'CUDA_VISIBLE_DEVICES' in os.environ
-
+        if 'CUDA_VISIBLE_DEVICES' in os.environ and os.environ['CUDA_VISIBLE_DEVICES'] != '':
+            global_config.use_cuda = True
+        else:
+            global_config.use_cuda = False
+ 
     global_config.list_config()
 
     train_and_evaluate(
