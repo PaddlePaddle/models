@@ -677,9 +677,9 @@ def train(args):
             if trainer_id == 0:
                 logging.info("train_id == 0, sleep 60s")
                 time.sleep(60)
-            logging.info("trainers_num:", trainers_num)
-            logging.info("worker_endpoints:", worker_endpoints)
-            logging.info("current_endpoint:", current_endpoint)
+            logging.info("trainers_num:{}".format(trainers_num))
+            logging.info("worker_endpoints:{}".format(worker_endpoints))
+            logging.info("current_endpoint:{}".format(current_endpoint))
             append_nccl2_prepare(trainer_id, worker_endpoints, current_endpoint)
             train_loop(exe,
                        fluid.default_main_program(), dev_count, sum_cost,
@@ -696,11 +696,11 @@ def train(args):
         current_endpoint = os.getenv("POD_IP") + ":" + port
         trainer_id = int(os.getenv("PADDLE_TRAINER_ID"))
 
-        logging.info("pserver_endpoints:", pserver_endpoints)
-        logging.info("current_endpoint:", current_endpoint)
-        logging.info("trainer_id:", trainer_id)
-        logging.info("pserver_ips:", pserver_ips)
-        logging.info("port:", port)
+        logging.info("pserver_endpoints:{}".format(pserver_endpoints))
+        logging.info("current_endpoint:{}".format(current_endpoint))
+        logging.info("trainer_id:{}".format(trainer_id))
+        logging.info("pserver_ips:{}".format(pserver_ips))
+        logging.info("port:{}".format(port))
 
         t = fluid.DistributeTranspiler()
         t.transpile(

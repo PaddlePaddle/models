@@ -16,7 +16,7 @@ export PADDLE_TRAINER_ID=0
 export PADDLE_TRAINERS_NUM=1
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64/:/usr/local/lib/:/workspace/brpc
-export PYTHONPATH=$PYTHONPATH:/paddle/build/build_rpctimeflags_RelWithDebInfo_gpu/python
+export PYTHONPATH=$PYTHONPATH:/paddle/build/build_reader_RelWithDebInfo_gpu/python
 
 #GLOG_v=7 GLOG_logtostderr=1 
 CUDA_VISIBLE_DEVICES=4,5,6,7 python -u train.py \
