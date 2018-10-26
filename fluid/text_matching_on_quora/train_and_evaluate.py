@@ -69,7 +69,7 @@ def evaluate(epoch_id, exe, inference_program, dev_reader, test_reader, fetch_li
              time.asctime(time.localtime(time.time())),
              epoch_id,
              dev_cost) + reduce(lambda x, y: x + y, dev_metric_res))
-    sys.stderr.write(s % val)
+    sys.stderr.write(s % val + '\n')
 
     if test_reader is not None:
         test_cost, test_metric_res = infer(test_reader)
