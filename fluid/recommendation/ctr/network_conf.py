@@ -2,10 +2,8 @@ import paddle.fluid as fluid
 import math
 
 dense_feature_dim = 13
-sparse_feature_dim = 117568
 
-
-def ctr_dnn_model(embedding_size):
+def ctr_dnn_model(embedding_size, sparse_feature_dim):
     dense_input = fluid.layers.data(
         name="dense_input", shape=[dense_feature_dim], dtype='float32')
     sparse_input_ids = [

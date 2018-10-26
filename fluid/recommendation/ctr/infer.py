@@ -2,6 +2,9 @@ import argparse
 import logging
 
 import numpy as np
+# disable gpu training for this example 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import paddle
 import paddle.fluid as fluid
 
@@ -33,6 +36,11 @@ def parse_args():
         default=10,
         help="The size for embedding layer (default:10)")
     parser.add_argument(
+        '--sparse_feature_dim',
+        type=int,
+        default=1000001,
+        help="The size for embedding layer (default:1000001)")
+    parser.add_argument(
         '--batch_size',
         type=int,
         default=1000,
@@ -46,19 +54,19 @@ def infer():
 
     place = fluid.CPUPlace()
     inference_scope = fluid.core.Scope()
-
-    dataset = reader.Dataset()
-    test_reader = paddle.batch(dataset.train([args.data_path]), batch_size=args.batch_size)
-
+    
+    dataset = reader.CriteoDataset(args.sparse_feature_dim)
+    test_reader = paddle.batch(dataset.test([args.data_path]), batch_size=args.batch_size)
+    
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
     with fluid.framework.program_guard(test_program, startup_program):
-        loss, data_list, auc_var, batch_auc_var = ctr_dnn_model(args.embedding_size)
-
+        loss, data_list, auc_var, batch_auc_var = ctr_dnn_model(args.embedding_size, args.sparse_feature_dim)
+        
     exe = fluid.Executor(place)
-
+    
     feeder = fluid.DataFeeder(feed_list=data_list, place=place)
-
+    
     with fluid.scope_guard(inference_scope):
         [inference_program, _, fetch_targets] = fluid.io.load_inference_model(args.model_path, exe)
 
