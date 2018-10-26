@@ -297,9 +297,14 @@ class DataReader(object):
                 infos = self._sample_infos
 
             if self._sort_type == SortType.POOL:
+                reverse = True
                 for i in range(0, len(infos), self._pool_size):
+                    # to avoid placing short next to long sentences
+                    reverse = not reverse
                     infos[i:i + self._pool_size] = sorted(
-                        infos[i:i + self._pool_size], key=lambda x: x.max_len)
+                        infos[i:i + self._pool_size],
+                        key=lambda x: x.max_len,
+                        reverse=reverse)
 
         # concat batch
         batches = []

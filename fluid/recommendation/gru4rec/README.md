@@ -74,14 +74,16 @@ python convert_format.py
 ```
 
 ## 训练
-GPU 环境 默认配置
-运行命令 `CUDA_VISIBLE_DEVICES=0 python train.py train_file test_file` 开始训练模型。
-```python
-CUDA_VISIBLE_DEVICES=0 python train.py small_train.txt small_test.file
+'--use_cuda 1' 表示使用gpu, 缺省表示使用cpu '--parallel 1' 表示使用多卡，缺省表示使用单卡
+
+GPU 环境
+运行命令 `CUDA_VISIBLE_DEVICES=0 python train.py train_file test_file --use_cuda 1` 开始训练模型。
+```
+CUDA_VISIBLE_DEVICES=0 python train.py small_train.txt small_test.txt --use_cuda 1
 ```
 CPU 环境
 运行命令 `python train.py train_file test_file` 开始训练模型。
-```python
+```
 python train.py small_train.txt small_test.txt
 ```
 
@@ -100,8 +102,8 @@ python train.py small_train.txt small_test.txt
         base_lr=0.01,               # base learning rate
         batch_size=batch_size,
         pass_num=10,                # the number of passed for training
-        use_cuda=True,              # whether to use GPU card
-        parallel=False,             # whether to be parallel
+        use_cuda=use_cuda,          # whether to use GPU card
+        parallel=parallel,          # whether to be parallel
         model_dir="model_recall20", # directory to save model
         init_low_bound=-0.1,        # uniform parameter initialization lower bound
         init_high_bound=0.1)        # uniform parameter initialization upper bound
@@ -198,9 +200,9 @@ model saved in model_recall20/epoch_1
 ```
 
 ## 预测
-运行命令 `CUDA_VISIBLE_DEVICES=0 python infer.py model_dir start_epoch last_epoch(inclusive) train_file test_file` 开始预测，其中，start_epoch指定开始预测的轮次，last_epoch指定结束的轮次，例如
+运行命令 `CUDA_VISIBLE_DEVICES=0 python infer.py model_dir start_epoch last_epoch(inclusive) train_file test_file` 开始预测.其中，start_epoch指定开始预测的轮次，last_epoch指定结束的轮次，例如
 ```python
-CUDA_VISIBLE_DEVICES=0 python infer.py model 1 10 small_train.txt small_test.txt# prediction from epoch 1 to epoch 10 small_train.txt small_test.txt
+CUDA_VISIBLE_DEVICES=0 python infer.py model 1 10 small_train.txt small_test.txt
 ```
 
 ## 预测结果示例
