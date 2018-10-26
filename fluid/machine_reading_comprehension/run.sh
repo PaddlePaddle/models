@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 python run.py   \
 --trainset 'data/preprocessed/trainset/search.train.json' \
            'data/preprocessed/trainset/zhidao.train.json' \
@@ -11,11 +11,12 @@ python run.py   \
 --save_dir ./models \
 --pass_num 10 \
 --learning_rate 0.001 \
---batch_size 8 \
+--batch_size 32 \
 --embed_size 300 \
 --hidden_size 150 \
 --max_p_num 5 \
 --max_p_len 500 \
 --max_q_len 60 \
 --max_a_len 200 \
+--weight_decay 0.0 \
 --drop_rate 0.2 $@\

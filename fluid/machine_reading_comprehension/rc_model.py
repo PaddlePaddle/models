@@ -68,16 +68,23 @@ def bi_lstm_encoder(input_seq, gate_size, para_name, args):
     return encoder_out
 
 
-def encoder(input_name, para_name, shape, hidden_size, args):
+def get_data(input_name, lod_level, args):
     input_ids = layers.data(
-        name=input_name, shape=[1], dtype='int64', lod_level=1)
+        name=input_name, shape=[1], dtype='int64', lod_level=lod_level)
+    return input_ids
+
+
+def embedding(input_ids, shape, args):
     input_embedding = layers.embedding(
         input=input_ids,
         size=shape,
         dtype='float32',
         is_sparse=True,
         param_attr=fluid.ParamAttr(name='embedding_para'))
+    return input_embedding
 
+
+def encoder(input_embedding, para_name, hidden_size, args):
     encoder_out = bi_lstm_encoder(
         input_seq=input_embedding,
         gate_size=hidden_size,
@@ -259,40 +266,41 @@ def fusion(g, args):
 
 def rc_model(hidden_size, vocab, args):
     emb_shape = [vocab.size(), vocab.embed_dim]
-    # stage 1:encode 
-    p_ids_names = []
-    q_ids_names = []
-    ms = []
-    gs = []
-    qs = []
-    for i in range(args.doc_num):
-        p_ids_name = "pids_%d" % i
-        p_ids_names.append(p_ids_name)
-        p_enc_i = encoder(p_ids_name, 'p_enc', emb_shape, hidden_size, args)
-
-        q_ids_name = "qids_%d" % i
-        q_ids_names.append(q_ids_name)
-        q_enc_i = encoder(q_ids_name, 'q_enc', emb_shape, hidden_size, args)
-
-        # stage 2:match
-        g_i = attn_flow(q_enc_i, p_enc_i, p_ids_name, args)
-        # stage 3:fusion
-        m_i = fusion(g_i, args)
-        ms.append(m_i)
-        gs.append(g_i)
-        qs.append(q_enc_i)
-    m = layers.sequence_concat(input=ms)
-    g = layers.sequence_concat(input=gs)
-    q_vec = layers.sequence_concat(input=qs)
-
-    # stage 4:decode 
-    start_probs, end_probs = point_network_decoder(
-        p_vec=m, q_vec=q_vec, hidden_size=hidden_size, args=args)
-
     start_labels = layers.data(
         name="start_lables", shape=[1], dtype='float32', lod_level=1)
     end_labels = layers.data(
         name="end_lables", shape=[1], dtype='float32', lod_level=1)
+
+    # stage 1:encode 
+    q_id0 = get_data('q_id0', 1, args)
+
+    q_ids = get_data('q_ids', 2, args)
+    p_ids_name = 'p_ids'
+
+    p_ids = get_data('p_ids', 2, args)
+    p_embs = embedding(p_ids, emb_shape, args)
+    q_embs = embedding(q_ids, emb_shape, args)
+    drnn = layers.DynamicRNN()
+    with drnn.block():
+        p_emb = drnn.step_input(p_embs)
+        q_emb = drnn.step_input(q_embs)
+
+        p_enc = encoder(p_emb, 'p_enc', hidden_size, args)
+        q_enc = encoder(q_emb, 'q_enc', hidden_size, args)
+
+        # stage 2:match
+        g_i = attn_flow(q_enc, p_enc, p_ids_name, args)
+        # stage 3:fusion
+        m_i = fusion(g_i, args)
+        drnn.output(m_i, q_enc)
+
+    ms, q_encs = drnn()
+    p_vec = layers.lod_reset(x=ms, y=start_labels)
+    q_vec = layers.lod_reset(x=q_encs, y=q_id0)
+
+    # stage 4:decode 
+    start_probs, end_probs = point_network_decoder(
+        p_vec=p_vec, q_vec=q_vec, hidden_size=hidden_size, args=args)
 
     cost0 = layers.sequence_pool(
         layers.cross_entropy(
@@ -308,5 +316,5 @@ def rc_model(hidden_size, vocab, args):
     cost = cost0 + cost1
     cost.persistable = True
 
-    feeding_list = q_ids_names + ["start_lables", "end_lables"] + p_ids_names
-    return cost, start_probs, end_probs, feeding_list
+    feeding_list = ["q_ids", "start_lables", "end_lables", "p_ids", "q_id0"]
+    return cost, start_probs, end_probs, ms, feeding_list
