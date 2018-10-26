@@ -22,7 +22,7 @@ import numpy as np
 
 import paddle.fluid as fluid
 import paddle
-import quora_question_pairs
+from data import quora_question_pairs, quora_question_pairs_glue
 
 
 def to_lodtensor(data, place):
@@ -100,6 +100,8 @@ def getDict(data_type="quora_question_pairs"):
     sys.stderr.write("Generating word dict...\n")
     if data_type == "quora_question_pairs":
         word_dict = quora_question_pairs.word_dict()
+    elif data_type == "quora_question_pairs_glue":
+        word_dict = quora_question_pairs_glue.word_dict()
     else:
         raise RuntimeError("No such dataset")
     sys.stderr.write("Vocab size: %d\n" % len(word_dict))
@@ -166,7 +168,28 @@ def pad(reader, PAD_ID):
             yield padded_batch
     return padded_reader
 
-
+def prepare_test_data(
+                 data_type,
+                 word_dict,
+                 batch_size,
+                 buf_size=50000,
+                 use_pad=False):
+    """
+    generate test data for predict function
+    """
+    PAD_ID=word_dict['<pad>']
+    if data_type == "quora_question_pairs_glue":
+        # test reader are batched iters which yield a batch of (question1, question2) each time
+        # qestion1 and question2 are lists of word ID
+        # for example: ([1, 3, 2], [7, 5, 4, 99])
+        reader = paddle.batch(
+                       quora_question_pairs_glue.test(word_dict),
+                       batch_size=batch_size,
+                       drop_last=False)
+        if use_pad:
+            reader = pad(reader, PAD_ID=PAD_ID)
+        return reader
+ 
 def prepare_data(data_type,
                  word_dict,
                  batch_size,
@@ -175,7 +198,7 @@ def prepare_data(data_type,
                  use_pad=False,
                  seq_limit_len=None):
     """
-    prepare data
+    prepare data for train_and_evaluate function
     """
 
     PAD_ID=word_dict['<pad>']
@@ -203,8 +226,26 @@ def prepare_data(data_type,
         dev_reader = prepare_reader(quora_question_pairs.dev(word_dict))
         test_reader = prepare_reader(quora_question_pairs.test(word_dict))
 
+    elif data_type == "quora_question_pairs_glue":
+        # almost the same as quora_question_pairs, but have no test dataset for train_and_evaluate
+
+        def prepare_reader(reader):
+            if duplicate_data:
+                reader = duplicate(reader)
+            reader = paddle.batch(
+                       paddle.reader.shuffle(reader, buf_size=buf_size),
+                       batch_size=batch_size,
+                       drop_last=False)
+            if use_pad:
+                reader = pad(reader, PAD_ID=PAD_ID)
+            return reader
+
+        train_reader = prepare_reader(quora_question_pairs_glue.train(word_dict))
+        dev_reader = prepare_reader(quora_question_pairs_glue.dev(word_dict))
+        test_reader = None
+
     else:
         raise RuntimeError("no such dataset")
-
+    
     return train_reader, dev_reader, test_reader
 

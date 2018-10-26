@@ -34,4 +34,10 @@ def cdssm_base():
     config.droprate_fc = 0.1
     config.class_dim = 2
 
+    return config
+
+def cdssm_glue():
+    config = cdssm_base()
+    config.data_type = 'quora_question_pairs_glue'
+    config.metric_type = ['accuracy', 'precision', 'recall', 'f1']
     return config 

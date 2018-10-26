@@ -28,20 +28,17 @@ from os.path import expanduser
 
 __all__ = ['word_dict', 'train', 'dev', 'test']
 
-URL = "https://drive.google.com/file/d/0B0PlTAo--BnaQWlsZl9FZ3l1c28/view"
+URL = "default_url"
 
-DATA_HOME = os.path.expanduser('~/.cache/paddle/dataset')
-DATA_DIR = "Quora_question_pair_partition"
+DATA_HOME = os.path.expanduser('~/.cache/paddle/dataset/')
+DATA_DIR = "QQP"
 
 QUORA_TRAIN_FILE_NAME = os.path.join(DATA_HOME, DATA_DIR, 'train.tsv')
 QUORA_DEV_FILE_NAME = os.path.join(DATA_HOME, DATA_DIR, 'dev.tsv')
 QUORA_TEST_FILE_NAME = os.path.join(DATA_HOME, DATA_DIR, 'test.tsv')
 
 # punctuation or nltk or space
-TOKENIZE_METHOD='space'
-
-COLUMN_COUNT = 4
-
+TOKENIZE_METHOD='nltk'
 
 def tokenize(s):
     if sys.version_info <= (3, 0): # for python2
@@ -55,51 +52,88 @@ def tokenize(s):
     else:
         raise RuntimeError("Invalid tokenize method")
 
-
 def maybe_open(file_name):
     if not os.path.isfile(file_name):
         msg = "file not exist: %s\nPlease download the dataset firstly from: %s\n\n" % (file_name, URL) + \
                 ("# The finally dataset dir should be like\n\n"
                 "$HOME/.cache/paddle/dataset\n"
-                " |- Quora_question_pair_partition\n"
+                " |- QQP\n"
                 "     |- train.tsv\n"
                 "     |- test.tsv\n"
                 "     |- dev.tsv\n"
-                "     |- readme.txt\n"
-                "     |- wordvec.txt\n")
+                "     |- original\n"
+                "         |- quora_duplicate_questions.tsv\n")
         raise RuntimeError(msg)
 
     return open(file_name, 'r')
 
-
-def tokenized_question_pairs(file_name):
+def tokenized_question_pairs_without_label(file_name):
     """
+    This is for test question pairs which have no labels
     """
+    COLUMN_COUNT = 3 
     with maybe_open(file_name) as f:
-        questions = {}
         lines = f.readlines()
+        first_line = True
         for line in lines:
-            info = line.strip().split('\t')
+            if first_line == True:
+                first_line = False
+                continue
+            info = line.strip('\n').split('\t')
             if len(info) != COLUMN_COUNT:
                 # formatting error
                 continue
-            (label, question1, question2, id) = info
+            (id, question1, question2) = info
             question1 = tokenize(question1)
             question2 = tokenize(question2)
+            # [] is not allowed in fluid
+            if question1 == []: question1 = ['_']
+            if question2 == []: question2 = ['_']
+            yield question1, question2
+
+
+def tokenized_question_pairs_with_label(file_name):
+    """
+    This is for train and test question pairs with labels
+    """
+    COLUMN_COUNT = 6
+    with maybe_open(file_name) as f:
+        lines = f.readlines()
+        first_line = True
+        for line in lines:
+            if first_line == True:
+                first_line = False
+                continue
+            info = line.strip('\n').split('\t')
+            if len(info) != COLUMN_COUNT:
+                # formatting error
+                continue
+            (id, qid1, qid2, question1, question2, label) = info
+            question1 = tokenize(question1)
+            question2 = tokenize(question2)
+            # [] is not allowed in fluid
+            if question1 == []: question1 = ['_']
+            if question2 == []: question2 = ['_']
             yield question1, question2, int(label)
 
 
 def tokenized_questions(file_name):
     """
+    yield all questions for generating word2id dict
     """
+    COLUMN_COUNT = 6
     with maybe_open(file_name) as f:
         lines = f.readlines()
+        first_line = True
         for line in lines:
-            info = line.strip().split('\t')
+            if first_line == True:
+                first_line = False
+                continue
+            info = line.strip('\n').split('\t')
             if len(info) != COLUMN_COUNT:
                 # formatting error
                 continue
-            (label, question1, question2, id) = info
+            (id, qid1, qid2, question1, question2, label) = info
             yield tokenize(question1)
             yield tokenize(question2)
 
@@ -124,18 +158,27 @@ def build_dict(file_name, cutoff):
     return word_idx
 
 
-def reader_creator(file_name, word_idx):
+def reader_creator(file_name, word_idx, phase):
     UNK_ID = word_idx['<unk>']
 
-    def reader():
-        for (q1, q2, label) in tokenized_question_pairs(file_name):
-            q1_ids = [word_idx.get(w, UNK_ID) for w in q1]
-            q2_ids = [word_idx.get(w, UNK_ID) for w in q2]
-            if q1_ids != [] and q2_ids != []: # [] is not allowed in fluid
-                assert(label in [0, 1])
-                yield q1_ids, q2_ids, label
-    
-    return reader
+    if phase == 'train' or phase == 'dev':
+        def reader():
+            for (q1, q2, label) in tokenized_question_pairs_with_label(file_name):
+                q1_ids = [word_idx.get(w, UNK_ID) for w in q1]
+                q2_ids = [word_idx.get(w, UNK_ID) for w in q2]
+                if q1_ids != [] and q2_ids != []: # [] is not allowed in fluid
+                    assert(label in [0, 1])
+                    yield q1_ids, q2_ids, label    
+        return reader
+
+    else: # phase == test
+        def reader():
+            for (q1, q2) in tokenized_question_pairs_without_label(file_name):
+                q1_ids = [word_idx.get(w, UNK_ID) for w in q1]
+                q2_ids = [word_idx.get(w, UNK_ID) for w in q2]
+                if q1_ids != [] and q2_ids != []: # [] is not allowed in fluid
+                    yield q1_ids, q2_ids
+        return reader
 
 
 def train(word_idx):
@@ -150,7 +193,7 @@ def train(word_idx):
     :return: Training reader creator
     :rtype: callable
     """   
-    return reader_creator(QUORA_TRAIN_FILE_NAME, word_idx)
+    return reader_creator(QUORA_TRAIN_FILE_NAME, word_idx, phase='train')
 
 
 def dev(word_idx):
@@ -166,7 +209,7 @@ def dev(word_idx):
     :rtype: callable
 
     """
-    return reader_creator(QUORA_DEV_FILE_NAME, word_idx)
+    return reader_creator(QUORA_DEV_FILE_NAME, word_idx, phase='dev')
 
 def test(word_idx):
     """
@@ -180,8 +223,7 @@ def test(word_idx):
     :return: Test reader creator
     :rtype: callable
     """
-    return reader_creator(QUORA_TEST_FILE_NAME, word_idx)
-
+    return reader_creator(QUORA_TEST_FILE_NAME, word_idx, phase='test')
 
 def word_dict():
     """

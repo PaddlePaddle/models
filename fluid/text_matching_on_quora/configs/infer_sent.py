@@ -59,3 +59,9 @@ def infer_sent_v2():
     config.mlp_non_linear = True
 
     return config
+
+def infer_sent_glue():
+    config = infer_sent_v2()
+    config.data_type = 'quora_question_pairs_glue'
+    config.metric_type = ['accuracy', 'precision', 'recall', 'f1']    
+    return config

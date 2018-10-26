@@ -5,7 +5,7 @@ class config(object):
     def __init__(self):
         self.batch_size = 128
         self.epoch_num = 50
-
+        self.data_type = 'quora_question_pairs' # or quora_question_pairs_glue
         self.optimizer_type = 'adam' # sgd, adagrad
         
         # pretrained word embedding 
