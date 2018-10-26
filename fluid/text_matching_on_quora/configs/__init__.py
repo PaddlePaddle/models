@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .cdssm import cdssm_base
+from .cdssm import cdssm_base, cdssm_glue
 from .dec_att import decatt_glove
 from .sse import sse_base
 from .infer_sent import infer_sent_v1
-from .infer_sent import infer_sent_v2
+from .infer_sent import infer_sent_v2, infer_sent_glue

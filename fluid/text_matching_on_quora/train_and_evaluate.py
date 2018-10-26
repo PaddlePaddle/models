@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from __future__ import print_function
+from functools import reduce
 
 import os
 import sys
@@ -36,18 +37,18 @@ parser.add_argument('--config',           type=str,   default='cdssm_base',     
 
 DATA_DIR = os.path.join(os.path.expanduser('~'), '.cache/paddle/dataset')
 
-def evaluate(epoch_id, exe, inference_program, dev_reader, test_reader, fetch_list, feeder, metric_type):
+def evaluate(epoch_id, exe, inference_program, dev_reader, test_reader, fetch_list, feeder, config):
     """
     evaluate on test/dev dataset
     """
-    def infer(test_reader):
+    def infer(reader):
         """
         do inference function
         """
         total_cost = 0.0
         total_count = 0
         preds, labels = [], []
-        for data in test_reader():
+        for data in reader():
             avg_cost, avg_acc, batch_prediction = exe.run(inference_program,
                           feed=feeder.feed(data),
                           fetch_list=fetch_list,
@@ -58,37 +59,32 @@ def evaluate(epoch_id, exe, inference_program, dev_reader, test_reader, fetch_li
             labels.append(np.asarray([x[-1] for x in data], dtype=np.int64))
         y_pred = np.concatenate(preds)
         y_label = np.concatenate(labels)
-
-        metric_res = []
-        for metric_name in metric_type:
-            if metric_name == 'accuracy_with_threshold':
-                metric_res.append((metric_name, metric.accuracy_with_threshold(y_pred, y_label, threshold=0.3)))
-            elif metric_name == 'accuracy':
-                metric_res.append((metric_name, metric.accuracy(y_pred, y_label)))
-            else:
-                print("Unknown metric type: ", metric_name)
-                exit()
+        metric_res = metric.cal_all_metric(y_pred, y_label, config.metric_type)
         return total_cost / (total_count * 1.0), metric_res
 
     dev_cost, dev_metric_res = infer(dev_reader)
-    print("[%s] epoch_id: %d, dev_cost: %f, " % (
-                 time.asctime( time.localtime(time.time()) ),
-                 epoch_id,
-                 dev_cost)
-               + ', '.join([str(x[0]) + ": " + str(x[1]) for x in dev_metric_res]))
+    s = "[%s] epoch_id: %d, dev_cost: %f, " + "%s: %.6f; " * len(dev_metric_res)
+    val = tuple((
+             time.asctime(time.localtime(time.time())),
+             epoch_id,
+             dev_cost) + reduce(lambda x, y: x + y, dev_metric_res))
+    sys.stderr.write(s % val)
 
-    test_cost, test_metric_res = infer(test_reader)
-    print("[%s] epoch_id: %d, test_cost: %f, " % (
-                time.asctime( time.localtime(time.time()) ),
-                epoch_id,
-                test_cost)
-              + ', '.join([str(x[0]) + ": " + str(x[1]) for x in test_metric_res]))
+    if test_reader is not None:
+        test_cost, test_metric_res = infer(test_reader)
+        s = "[%s] epoch_id: %d, test_cost: %f, " + "%s: %.6f; " * len(test_metric_res)
+        val = tuple((
+             time.asctime(time.localtime(time.time())),
+             epoch_id,
+             test_cost) + reduce(lambda x, y: x + y, test_metric_res))
+        sys.stderr.write(s % val + '\n')
+
     print("")
 
 
-def train_and_evaluate(train_reader,
-          test_reader, 
+def train_and_evaluate(train_reader, 
           dev_reader,
+          test_reader,
           network,
           optimizer,
           global_config,
@@ -164,7 +160,7 @@ def train_and_evaluate(train_reader,
              test_reader,
              fetch_list=[cost, acc, prediction],
              feeder=feeder,
-             metric_type=global_config.metric_type)
+             config=global_config)
 
     # start training
     print("[%s] Start Training" % time.asctime(time.localtime(time.time())))
@@ -187,7 +183,6 @@ def train_and_evaluate(train_reader,
                     avg_cost_np,
                     avg_acc_np))
             batch_id += 1
-        
         avg_cost = total_cost / data_count
         avg_acc = total_acc / data_count
         
@@ -195,9 +190,18 @@ def train_and_evaluate(train_reader,
         print("[%s] epoch_id: %d, train_avg_cost: %f, train_avg_acc: %f" % (
             time.asctime( time.localtime(time.time()) ), epoch_id, avg_cost, avg_acc))
 
-        epoch_model = global_config.save_dirname + "/" + "epoch" + str(epoch_id)
-        fluid.io.save_inference_model(epoch_model, ["question1", "question2", "label"], acc, exe)    
-        
+
+        # save for evaluate
+        # epoch_model = global_config.save_dirname + "/" + "epoch" + str(epoch_id)
+        # fluid.io.save_inference_model(epoch_model, ["question1", "question2", "label"], acc, exe)    
+
+        # save for predict
+        epoch_model = global_config.save_dirname + '_for_predict' + "/" + "epoch" + str(epoch_id)
+        fluid.io.save_inference_model(epoch_model, 
+                                      feeded_var_names=["question1", "question2"], 
+                                      target_vars=[prediction],
+                                      executor=exe)
+
         evaluate(epoch_id, 
                  exe, 
                  inference_program,
@@ -205,7 +209,7 @@ def train_and_evaluate(train_reader,
                  test_reader, 
                  fetch_list=[cost, acc, prediction], 
                  feeder=feeder, 
-                 metric_type=global_config.metric_type)
+                 config=global_config)
 
 def main():
     """
@@ -218,17 +222,17 @@ def main():
     net = models.__dict__[args.model_name](global_config)
 
     # get word_dict
-    word_dict = utils.getDict(data_type="quora_question_pairs")
+    word_dict = utils.getDict(data_type=global_config.data_type)
 
     # get reader
     train_reader, dev_reader, test_reader = utils.prepare_data(
-        "quora_question_pairs",
+         global_config.data_type,
          word_dict=word_dict,
          batch_size = global_config.batch_size,
-         buf_size=800000,
+         buf_size=800000, # quora dataset train has 400000 samples
          duplicate_data=global_config.duplicate_data,
          use_pad=(not global_config.use_lod_tensor))
- 
+     
     # load pretrained_word_embedding
     if global_config.use_pretrained_word_embedding:
         word2vec = Glove840B_300D(filepath=os.path.join(DATA_DIR, "glove.840B.300d.txt"),
