@@ -19,8 +19,8 @@ python train.py
 The command line options for inference can be listed by `python infer.py -h`
 
 ## Future work
-# Multiple types of pairwise loss will be added in this project. For different views of features between a user and an item, multiple losses will be supported. The model will be verified in real world dataset.
-# infer will be added
-# Parallel Executor will be added in this project
-# Distributed Training will be added
+### Multiple types of pairwise loss will be added in this project. For different views of features between a user and an item, multiple losses will be supported. The model will be verified in real world dataset.
+### infer will be added
+### Parallel Executor will be added in this project
+### Distributed Training will be added
 

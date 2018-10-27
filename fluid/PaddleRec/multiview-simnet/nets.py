@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import paddle.fluid as fluid
 Embedding=fluid.layers.embedding
 FC=fluid.layers.fc
@@ -76,10 +77,13 @@ class GrnnEncoder(object):
         return fluid.layers.sequence_pool(input=gru_h,
                                           pool_type='max')
 
+'''this is a very simple Encoder factory
+most default argument values are used'''
 class SimpleEncoderFactory(object):
     def __init__(self):
         pass
 
+    ''' create an encoder through create function '''
     def create(self, enc_type, enc_hid_size):
         if enc_type == "bow":
             bow_encode = BowEncoder()
