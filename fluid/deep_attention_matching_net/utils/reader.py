@@ -202,30 +202,30 @@ def make_one_batch_input(data_batches, index):
         every_turn_len[:, i] for i in six.moves.xrange(max_turn_num)
     ]
 
-    feed_dict = {}
+    feed_list = []
     for i, turn in enumerate(turns_list):
-        feed_dict["turn_%d" % i] = turn
-        feed_dict["turn_%d" % i] = np.expand_dims(
-            feed_dict["turn_%d" % i], axis=-1)
+        turn = np.expand_dims(turn, axis=-1)
+        feed_list.append(turn)
 
     for i, turn_len in enumerate(every_turn_len_list):
-        feed_dict["turn_mask_%d" % i] = np.ones(
-            (batch_size, max_turn_len, 1)).astype("float32")
+        turn_mask = np.ones((batch_size, max_turn_len, 1)).astype("float32")
         for row in six.moves.xrange(batch_size):
-            feed_dict["turn_mask_%d" % i][row, turn_len[row]:, 0] = 0
+            turn_mask[row, turn_len[row]:, 0] = 0
+        feed_list.append(turn_mask)
 
-    feed_dict["response"] = response
-    feed_dict["response"] = np.expand_dims(feed_dict["response"], axis=-1)
+    response = np.expand_dims(response, axis=-1)
+    feed_list.append(response)
 
-    feed_dict["response_mask"] = np.ones(
-        (batch_size, max_turn_len, 1)).astype("float32")
+    response_mask = np.ones((batch_size, max_turn_len, 1)).astype("float32")
     for row in six.moves.xrange(batch_size):
-        feed_dict["response_mask"][row, response_len[row]:, 0] = 0
+        response_mask[row, response_len[row]:, 0] = 0
+    feed_list.append(response_mask)
 
-    feed_dict["label"] = np.array([data_batches["label"][index]]).reshape(
+    label = np.array([data_batches["label"][index]]).reshape(
         [-1, 1]).astype("float32")
+    feed_list.append(label)
 
-    return feed_dict
+    return feed_list
 
 
 if __name__ == '__main__':

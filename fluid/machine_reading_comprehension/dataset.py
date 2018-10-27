@@ -132,60 +132,43 @@ class BRCDataset(object):
             'passage_token_ids': [],
             'passage_length': [],
             'start_id': [],
-            'end_id': []
+            'end_id': [],
+            'passage_num': []
         }
         max_passage_num = max(
             [len(sample['passages']) for sample in batch_data['raw_data']])
-        #max_passage_num = min(self.max_p_num, max_passage_num)
-        max_passage_num = self.max_p_num
+        max_passage_num = min(self.max_p_num, max_passage_num)
         for sidx, sample in enumerate(batch_data['raw_data']):
+            count = 0
             for pidx in range(max_passage_num):
                 if pidx < len(sample['passages']):
+                    count += 1
                     batch_data['question_token_ids'].append(sample[
-                        'question_token_ids'])
+                        'question_token_ids'][0:self.max_q_len])
                     batch_data['question_length'].append(
-                        len(sample['question_token_ids']))
+                        min(len(sample['question_token_ids']), self.max_q_len))
                     passage_token_ids = sample['passages'][pidx][
-                        'passage_token_ids']
+                        'passage_token_ids'][0:self.max_p_len]
                     batch_data['passage_token_ids'].append(passage_token_ids)
                     batch_data['passage_length'].append(
                         min(len(passage_token_ids), self.max_p_len))
-                else:
-                    batch_data['question_token_ids'].append([])
-                    batch_data['question_length'].append(0)
-                    batch_data['passage_token_ids'].append([])
-                    batch_data['passage_length'].append(0)
-        batch_data, padded_p_len, padded_q_len = self._dynamic_padding(
-            batch_data, pad_id)
-        for sample in batch_data['raw_data']:
+            # record the start passage index of current doc
+            passade_idx_offset = sum(batch_data['passage_num'])
+            batch_data['passage_num'].append(count)
+            gold_passage_offset = 0
             if 'answer_passages' in sample and len(sample['answer_passages']):
-                gold_passage_offset = padded_p_len * sample['answer_passages'][
-                    0]
-                batch_data['start_id'].append(gold_passage_offset + sample[
-                    'answer_spans'][0][0])
-                batch_data['end_id'].append(gold_passage_offset + sample[
-                    'answer_spans'][0][1])
+                for i in range(sample['answer_passages'][0]):
+                    gold_passage_offset += len(batch_data['passage_token_ids'][
+                        passade_idx_offset + i])
+                start_id = min(sample['answer_spans'][0][0], self.max_p_len)
+                end_id = min(sample['answer_spans'][0][1], self.max_p_len)
+                batch_data['start_id'].append(gold_passage_offset + start_id)
+                batch_data['end_id'].append(gold_passage_offset + end_id)
             else:
                 # fake span for some samples, only valid for testing
                 batch_data['start_id'].append(0)
                 batch_data['end_id'].append(0)
         return batch_data
-
-    def _dynamic_padding(self, batch_data, pad_id):
-        """
-        Dynamically pads the batch_data with pad_id
-        """
-        pad_p_len = min(self.max_p_len, max(batch_data['passage_length']))
-        pad_q_len = min(self.max_q_len, max(batch_data['question_length']))
-        batch_data['passage_token_ids'] = [
-            (ids + [pad_id] * (pad_p_len - len(ids)))[:pad_p_len]
-            for ids in batch_data['passage_token_ids']
-        ]
-        batch_data['question_token_ids'] = [
-            (ids + [pad_id] * (pad_q_len - len(ids)))[:pad_q_len]
-            for ids in batch_data['question_token_ids']
-        ]
-        return batch_data, pad_p_len, pad_q_len
 
     def word_iter(self, set_name=None):
         """

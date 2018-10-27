@@ -5,6 +5,7 @@ python -u ../train_and_evaluate.py --use_cuda \
                 --ext_eval \
                 --word_emb_init ./data/word_embedding.pkl \
                 --save_path ./models \
+                --use_pyreader \
                 --batch_size 256 \
                 --vocab_size 172130 \
                 --channel1_num 16 \
