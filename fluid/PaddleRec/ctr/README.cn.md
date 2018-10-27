@@ -38,17 +38,13 @@ cd data && ./download.sh && cd ..
 ## 数据准备
 处理原始数据集，整型特征使用min-max归一化方法规范到[0, 1]，类别类特征使用了one-hot编码。原始数据集分割成两部分：90%用于训练，其他10%用于训练过程中的验证。
 
-```bash
-python preprocess.py --datadir ./data/raw --outdir ./data
-```
-
 ## 训练
 训练的命令行选项可以通过`python train.py -h`列出。
 
 ### 单机训练：
 ```bash
 python train.py \
-        --train_data_path data/train.txt \
+        --train_data_path data/raw/train.txt \
         2>&1 | tee train.log
 ```
 
@@ -56,7 +52,7 @@ python train.py \
 
 ### 分布式训练
 
-本地启动一个2 trainer 2 pserver的分布式训练任务
+本地启动一个2 trainer 2 pserver的分布式训练任务，分布式场景下训练数据会按照trainer的id进行切分，保证trainer之间的训练数据不会重叠，提高训练效率
 
 ```bash
 sh cluster_train.sh
@@ -69,7 +65,7 @@ sh cluster_train.sh
 ```bash
 python infer.py \
         --model_path models/pass-0/ \
-        --data_path data/valid.txt
+        --data_path data/raw/valid.txt
 ```
 注意：infer.py跑完最后输出的AUC才是整个预测文件的整体AUC。
 

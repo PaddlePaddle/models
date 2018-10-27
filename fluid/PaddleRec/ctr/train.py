@@ -4,6 +4,9 @@ import argparse
 import logging
 import os
 
+# disable gpu training for this example 
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
 import paddle
 import paddle.fluid as fluid
 
@@ -21,12 +24,12 @@ def parse_args():
     parser.add_argument(
         '--train_data_path',
         type=str,
-        default='./data/train.txt',
+        default='./data/raw/train.txt',
         help="The path of training dataset")
     parser.add_argument(
         '--test_data_path',
         type=str,
-        default='./data/valid.txt',
+        default='./data/raw/valid.txt',
         help="The path of testing dataset")
     parser.add_argument(
         '--batch_size',
@@ -48,6 +51,11 @@ def parse_args():
         type=str,
         default='models',
         help='The path for model to store (default: models)')
+    parser.add_argument(
+        '--sparse_feature_dim',
+        type=int,
+        default=1000001,
+        help='sparse feature hashing space for index processing')
 
     parser.add_argument(
         '--is_local',
@@ -84,11 +92,12 @@ def parse_args():
     return parser.parse_args()
 
 
-def train_loop(args, train_program, data_list, loss, auc_var, batch_auc_var):
-    dataset = reader.Dataset()
+def train_loop(args, train_program, data_list, loss, auc_var, batch_auc_var, 
+               trainer_num, trainer_id):
+    dataset = reader.CriteoDataset(args.sparse_feature_dim)
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            dataset.train([args.train_data_path]),
+            dataset.train([args.train_data_path], trainer_num, trainer_id),
             buf_size=args.batch_size * 100),
         batch_size=args.batch_size)
     place = fluid.CPUPlace()
@@ -122,14 +131,14 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, data_list, auc_var, batch_auc_var = ctr_dnn_model(args.embedding_size)
+    loss, data_list, auc_var, batch_auc_var = ctr_dnn_model(args.embedding_size, args.sparse_feature_dim)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
     optimizer.minimize(loss)
 
     if args.is_local:
         logger.info("run local training")
         main_program = fluid.default_main_program()
-        train_loop(args, main_program, data_list, loss, auc_var, batch_auc_var)
+        train_loop(args, main_program, data_list, loss, auc_var, batch_auc_var, 1, -1)
     else:
         logger.info("run dist training")
         t = fluid.DistributeTranspiler()
@@ -144,7 +153,8 @@ def train():
         elif args.role == "trainer":
             logger.info("run trainer")
             train_prog = t.get_trainer_program()
-            train_loop(args, train_prog, data_list, loss, auc_var, batch_auc_var)
+            train_loop(args, train_prog, data_list, loss, auc_var, batch_auc_var, 
+                       args.trainers, args.trainer_id + 1)
 
 
 if __name__ == '__main__':
