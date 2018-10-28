@@ -13,7 +13,16 @@ Sequence Semantic Retrieval(SSR) Model shares the similar idea with Multi-Rate D
 - With the representation of news items, we are able to build an vector indexing service online for news prediction and this is the retrieval part of SSR. 
 
 ## Dataset
+Dataset preprocessing follows the method of [GRU4Rec Project](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/gru4rec). Note that you should reuse scripts from GRU4Rec project for data preprocessing.
 
 ## Training
+The command line options for training can be listed by `python train.py -h`
+``` bash
+fluid train.py --train_file rsc15_train_tr_paddle.txt
+```
+
+## Build Index
+TBA
 
 ## Retrieval
+TBA
