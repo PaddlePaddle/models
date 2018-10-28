@@ -1,4 +1,4 @@
-# Sequence Semantic Retrieval Model For News Recommendation
+# Sequence Semantic Retrieval Model
 
 ## Introduction
 In news recommendation scenarios, different from traditional systems that recommend entertainment items such as movies or music, there are several new problems to solve. 
