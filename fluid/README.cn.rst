@@ -8,21 +8,21 @@ Fluid 模型库
 
 在深度学习时代，图像分类的准确率大幅度提升，在图像分类任务中，我们向大家介绍了如何在经典的数据集ImageNet上，训练常用的模型，包括AlexNet、VGG、GoogLeNet、ResNet、Inception-v4、MobileNet、DPN(Dual
 Path
-Network)、SE-ResNeXt模型，也开源了\ `训练的模型 <https://github.com/PaddlePaddle/models/blob/develop/fluid/image_classification/README_cn.md#已有模型及其性能>`__\ 方便用户下载使用。同时提供了能够将Caffe模型转换为PaddlePaddle
+Network)、SE-ResNeXt模型，也开源了\ `训练的模型 <https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleCV/image_classification/README_cn.md#已有模型及其性能>`__\ 方便用户下载使用。同时提供了能够将Caffe模型转换为PaddlePaddle
 Fluid模型配置和参数文件的工具。
 
--  `AlexNet <https://github.com/PaddlePaddle/models/tree/develop/fluid/image_classification/models>`__
--  `VGG <https://github.com/PaddlePaddle/models/tree/develop/fluid/image_classification/models>`__
--  `GoogleNet <https://github.com/PaddlePaddle/models/tree/develop/fluid/image_classification/models>`__
+-  `AlexNet <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models>`__
+-  `VGG <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models>`__
+-  `GoogleNet <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models>`__
 -  `Residual
-   Network <https://github.com/PaddlePaddle/models/tree/develop/fluid/image_classification/models>`__
--  `Inception-v4 <https://github.com/PaddlePaddle/models/tree/develop/fluid/image_classification/models>`__
--  `MobileNet <https://github.com/PaddlePaddle/models/tree/develop/fluid/image_classification/models>`__
+   Network <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models>`__
+-  `Inception-v4 <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models>`__
+-  `MobileNet <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models>`__
 -  `Dual Path
-   Network <https://github.com/PaddlePaddle/models/tree/develop/fluid/image_classification/models>`__
--  `SE-ResNeXt <https://github.com/PaddlePaddle/models/tree/develop/fluid/image_classification/models>`__
+   Network <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models>`__
+-  `SE-ResNeXt <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models>`__
 -  `Caffe模型转换为Paddle
-   Fluid配置和模型文件工具 <https://github.com/PaddlePaddle/models/tree/develop/fluid/image_classification/caffe2fluid>`__
+   Fluid配置和模型文件工具 <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/caffe2fluid>`__
 
 目标检测
 --------
@@ -36,8 +36,8 @@ COCO <http://cocodataset.org/#home>`__\ 数据训练通用物体检测模型，�
 开放环境中的检测人脸，尤其是小的、模糊的和部分遮挡的人脸也是一个具有挑战的任务。我们也介绍了如何基于 `WIDER FACE <http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/>`_ 数据训练百度自研的人脸检测PyramidBox模型，该算法于2018年3月份在WIDER FACE的多项评测中均获得 `第一名 <http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/WiderFace_Results.html>`_。
 
 -  `Single Shot MultiBox
-   Detector <https://github.com/PaddlePaddle/models/blob/develop/fluid/object_detection/README_cn.md>`__
--  `Face Detector: PyramidBox <https://github.com/PaddlePaddle/models/tree/develop/fluid/face_detection/README_cn.md>`_
+   Detector <https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleCV/object_detection/README_cn.md>`__
+-  `Face Detector: PyramidBox <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/face_detection/README_cn.md>`_
 
 图像语义分割
 ------------
@@ -47,7 +47,7 @@ COCO <http://cocodataset.org/#home>`__\ 数据训练通用物体检测模型，�
 在图像语义分割任务中，我们介绍如何基于图像级联网络(Image Cascade
 Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准确率和速度。
 
--  `ICNet <https://github.com/PaddlePaddle/models/tree/develop/fluid/icnet>`__
+-  `ICNet <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/icnet>`__
 
 图像生成
 -----------
@@ -57,8 +57,8 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 在图像生成任务中，我们介绍了如何使用DCGAN和ConditioanlGAN来进行手写数字的生成，另外还介绍了用于风格迁移的CycleGAN.
 
-- `DCGAN & ConditionalGAN <https://github.com/PaddlePaddle/models/tree/develop/fluid/gan/c_gan>`__
-- `CycleGAN <https://github.com/PaddlePaddle/models/tree/develop/fluid/gan/cycle_gan>`__
+- `DCGAN & ConditionalGAN <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/gan/c_gan>`__
+- `CycleGAN <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/gan/cycle_gan>`__
 
 场景文字识别
 ------------
@@ -67,8 +67,8 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 在场景文字识别任务中，我们介绍如何将基于CNN的图像特征提取和基于RNN的序列翻译技术结合，免除人工定义特征，避免字符分割，使用自动学习到的图像特征，完成字符识别。当前，介绍了CRNN-CTC模型和基于注意力机制的序列到序列模型。
 
--  `CRNN-CTC模型 <https://github.com/PaddlePaddle/models/tree/develop/fluid/ocr_recognition>`__
--  `Attention模型 <https://github.com/PaddlePaddle/models/tree/develop/fluid/ocr_recognition>`__
+-  `CRNN-CTC模型 <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/ocr_recognition>`__
+-  `Attention模型 <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/ocr_recognition>`__
 
 
 度量学习
@@ -77,7 +77,7 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 度量学习也称作距离度量学习、相似度学习，通过学习对象之间的距离，度量学习能够用于分析对象时间的关联、比较关系，在实际问题中应用较为广泛，可应用于辅助分类、聚类问题，也广泛用于图像检索、人脸识别等领域。以往，针对不同的任务，需要选择合适的特征并手动构建距离函数，而度量学习可根据不同的任务来自主学习出针对特定任务的度量距离函数。度量学习和深度学习的结合，在人脸识别/验证、行人再识别(human Re-ID)、图像检索等领域均取得较好的性能，在这个任务中我们主要介绍了基于Fluid的深度度量学习模型，包含了三元组、四元组等损失函数。
 
-- `Metric Learning <https://github.com/PaddlePaddle/models/tree/develop/fluid/metric_learning>`__
+- `Metric Learning <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/metric_learning>`__
 
 
 视频分类
@@ -86,7 +86,7 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 视频分类是视频理解任务的基础，与图像分类不同的是，分类的对象不再是静止的图像，而是一个由多帧图像构成的、包含语音数据、包含运动信息等的视频对象，因此理解视频需要获得更多的上下文信息，不仅要理解每帧图像是什么、包含什么，还需要结合不同帧，知道上下文的关联信息。视频分类方法主要包含基于卷积神经网络、基于循环神经网络、或将这两者结合的方法。该任务中我们介绍基于Fluid的视频分类模型，目前包含Temporal Segment Network(TSN)模型，后续会持续增加更多模型。
 
 
-- `TSN <https://github.com/PaddlePaddle/models/tree/develop/fluid/video_classification>`__
+- `TSN <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/video_classification>`__
 
 
 
