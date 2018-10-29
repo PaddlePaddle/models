@@ -107,9 +107,7 @@ Faster RCNN 训练loss
 
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_mode=${path_to_pretrain_model} \
-        --nms_threshold=0.5 \
-        --score_threshold=0.05
+        --pretrained_model=${path_to_pretrain_model} \
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
 
@@ -125,7 +123,7 @@ Faster RCNN mAP
 | Fluid RoIPool minibatch padding | RoIPool | 8   |    180000        | 0.314 |
 | Fluid RoIPool no padding  | RoIPool | 8   |    180000        | 0.316 |
 | Detectron RoIAlign       | RoIAlign | 8   |    180000        | 0.346 |
-| Fluid RoIAlign no padding  | RoIAlign | 8   |    180000        | 0.344 |
+| Fluid RoIAlign no padding  | RoIAlign | 8   |    180000        | 0.345 |
 
 
 

@@ -113,9 +113,7 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_mode=${path_to_pretrain_model} \
-        --nms_threshold=0.5 \
-        --score_threshold=0.05
+        --pretrained_model=${path_to_pretrain_model} \
 
 - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
 
@@ -131,7 +129,7 @@ Faster RCNN mAP
 | Fluid RoIPool minibatch padding | RoIPool | 8   |    180000        | 0.314 |
 | Fluid RoIPool no padding  | RoIPool | 8   |    180000        | 0.316 |
 | Detectron_RoIAlign       | RoIAlign | 8   |    180000        | 0.346 |
-| Fluid RoIAlign no padding  | RoIAlign | 8   |    180000        | 0.344 |
+| Fluid RoIAlign no padding  | RoIAlign | 8   |    180000        | 0.345 |
 
 * Fluid RoIPool minibatch padding: Use RoIPool. Images in one batch padding to the same size. This method is same as detectron.
 * Fluid RoIPool no padding: Images without padding.
