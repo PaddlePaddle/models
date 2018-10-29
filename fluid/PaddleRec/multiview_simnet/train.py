@@ -1,4 +1,4 @@
-#Copyright (c) 2016 PaddlePaddle Authors. All Rights Reserved
+# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -124,7 +124,7 @@ def start_train(args):
                         .format(pass_id, batch_id, loss_val,
                                 float(correct_val) / args.batch_size))
         fluid.io.save_inference_model(args.model_output_dir,
-                                      [var.name for val in all_slots],
+                                      [val.name for val in all_slots],
                                       [avg_cost, correct], exe)
 
 
