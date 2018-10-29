@@ -166,4 +166,3 @@ SimNet是百度自然语言处理部于2013年自主研发的语义匹配框架�
 
 基于DNN模型的点击率预估模型，使用的是Kaggle公司举办的展示广告竞赛中所使用的Criteo数据集。和论文DeepFM: A Factorization-Machine based Neural Network for CTR Prediction中的的dnn网络结构，
 经过一个pass的训练之后，测试数据集的AUC能达到0.8左右。
-能达到0.8左右。
