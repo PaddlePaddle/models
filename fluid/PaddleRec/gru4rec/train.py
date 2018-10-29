@@ -17,7 +17,8 @@ def parse_args():
     parser = argparse.ArgumentParser("gru4rec benchmark.")
     parser.add_argument('train_file')
     parser.add_argument('test_file')
-
+    parser.add_argument('--use_cuda', help='whether use gpu')
+    parser.add_argument('--parallel', help='whether parallel')
     parser.add_argument(
         '--enable_ce',
         action='store_true',
@@ -120,7 +121,7 @@ def train(train_reader,
     fetch_list = [avg_cost.name]
     for pass_idx in six.moves.xrange(pass_num):
         epoch_idx = pass_idx + 1
-        print "epoch_%d start" % epoch_idx
+        print("epoch_%d start" % epoch_idx)
 
         t0 = time.time()
         i = 0
@@ -182,6 +183,9 @@ def train_net():
     args = parse_args()
     train_file = args.train_file
     test_file = args.test_file
+    use_cuda = True if args.use_cuda else False
+    parallel = True if args.parallel else False
+    print("use_cuda:", use_cuda, "parallel:", parallel)
     batch_size = 50
     vocab, train_reader, test_reader = utils.prepare_data(
         train_file, test_file,batch_size=batch_size * get_cards(args),\
@@ -194,8 +198,8 @@ def train_net():
         base_lr=0.01,
         batch_size=batch_size,
         pass_num=10,
-        use_cuda=True,
-        parallel=False,
+        use_cuda=use_cuda,
+        parallel=parallel,
         model_dir="model_recall20",
         init_low_bound=-0.1,
         init_high_bound=0.1)

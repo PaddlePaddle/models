@@ -46,22 +46,32 @@ from vocab import Vocab
 
 
 def prepare_batch_input(insts, args):
-    doc_num = args.doc_num
-
     batch_size = len(insts['raw_data'])
+    inst_num = len(insts['passage_num'])
+    if batch_size != inst_num:
+        print("data error %d, %d" % (batch_size, inst_num))
+        return None
     new_insts = []
 
+    passage_idx = 0
     for i in range(batch_size):
+        p_len = 0
         p_id = []
-        q_id = []
         p_ids = []
         q_ids = []
-        p_len = 0
-        for j in range(i * doc_num, (i + 1) * doc_num):
-            p_ids.append(insts['passage_token_ids'][j])
-            p_id = p_id + insts['passage_token_ids'][j]
-            q_ids.append(insts['question_token_ids'][j])
-            q_id = q_id + insts['question_token_ids'][j]
+        q_id = []
+        p_id_r = []
+        p_ids_r = []
+        q_ids_r = []
+        q_id_r = []
+
+        for j in range(insts['passage_num'][i]):
+            p_ids.append(insts['passage_token_ids'][passage_idx + j])
+            p_id = p_id + insts['passage_token_ids'][passage_idx + j]
+            q_ids.append(insts['question_token_ids'][passage_idx + j])
+            q_id = q_id + insts['question_token_ids'][passage_idx + j]
+
+        passage_idx += insts['passage_num'][i]
         p_len = len(p_id)
 
         def _get_label(idx, ref_len):
@@ -72,9 +82,44 @@ def prepare_batch_input(insts, args):
 
         start_label = _get_label(insts['start_id'][i], p_len)
         end_label = _get_label(insts['end_id'][i], p_len)
-        new_inst = q_ids + [start_label, end_label] + p_ids
+        new_inst = [q_ids, start_label, end_label, p_ids, q_id]
         new_insts.append(new_inst)
     return new_insts
+
+
+def batch_reader(batch_list, args):
+    res = []
+    for batch in batch_list:
+        res.append(prepare_batch_input(batch, args))
+    return res
+
+
+def read_multiple(reader, count, clip_last=True):
+    """
+    Stack data from reader for multi-devices.
+    """
+
+    def __impl__():
+        res = []
+        for item in reader():
+            res.append(item)
+            if len(res) == count:
+                yield res
+                res = []
+        if len(res) == count:
+            yield res
+        elif not clip_last:
+            data = []
+            for item in res:
+                data += item
+            if len(data) > count:
+                inst_num_per_part = len(data) // count
+                yield [
+                    data[inst_num_per_part * i:inst_num_per_part * (i + 1)]
+                    for i in range(count)
+                ]
+
+    return __impl__
 
 
 def LodTensor_Array(lod_tensor):
@@ -103,7 +148,7 @@ def print_para(train_prog, train_exe, logger, args):
         logger.info("total param num: {0}".format(num_sum))
 
 
-def find_best_answer_for_passage(start_probs, end_probs, passage_len, args):
+def find_best_answer_for_passage(start_probs, end_probs, passage_len):
     """
     Finds the best answer with the maximum start_prob * end_prob from a single passage
     """
@@ -125,7 +170,7 @@ def find_best_answer_for_passage(start_probs, end_probs, passage_len, args):
     return (best_start, best_end), max_prob
 
 
-def find_best_answer(sample, start_prob, end_prob, padded_p_len, args):
+def find_best_answer_for_inst(sample, start_prob, end_prob, inst_lod):
     """
     Finds the best answer for a sample given start_prob and end_prob for each position.
     This will call find_best_answer_for_passage because there are multiple passages in a sample
@@ -134,11 +179,16 @@ def find_best_answer(sample, start_prob, end_prob, padded_p_len, args):
     for p_idx, passage in enumerate(sample['passages']):
         if p_idx >= args.max_p_num:
             continue
+        if len(start_prob) != len(end_prob):
+            logger.info('error: {}'.format(sample['question']))
+            continue
+        passage_start = inst_lod[p_idx] - inst_lod[0]
+        passage_end = inst_lod[p_idx + 1] - inst_lod[0]
+        passage_len = passage_end - passage_start
         passage_len = min(args.max_p_len, len(passage['passage_tokens']))
         answer_span, score = find_best_answer_for_passage(
-            start_prob[p_idx * padded_p_len:(p_idx + 1) * padded_p_len],
-            end_prob[p_idx * padded_p_len:(p_idx + 1) * padded_p_len],
-            passage_len, args)
+            start_prob[passage_start:passage_end],
+            end_prob[passage_start:passage_end], passage_len)
         if score > best_score:
             best_score = score
             best_p_idx = p_idx
@@ -148,11 +198,11 @@ def find_best_answer(sample, start_prob, end_prob, padded_p_len, args):
     else:
         best_answer = ''.join(sample['passages'][best_p_idx]['passage_tokens'][
             best_span[0]:best_span[1] + 1])
-    return best_answer
+    return best_answer, best_span
 
 
-def validation(inference_program, avg_cost, s_probs, e_probs, feed_order, place,
-               vocab, brc_data, logger, args):
+def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
+               place, dev_count, vocab, brc_data, logger, args):
     """
         
     """
@@ -165,6 +215,8 @@ def validation(inference_program, avg_cost, s_probs, e_probs, feed_order, place,
     # Use test set as validation each pass
     total_loss = 0.0
     count = 0
+    n_batch_cnt = 0
+    n_batch_loss = 0.0
     pred_answers, ref_answers = [], []
     val_feed_list = [
         inference_program.global_block().var(var_name)
@@ -172,55 +224,80 @@ def validation(inference_program, avg_cost, s_probs, e_probs, feed_order, place,
     ]
     val_feeder = fluid.DataFeeder(val_feed_list, place)
     pad_id = vocab.get_id(vocab.pad_token)
-    dev_batches = brc_data.gen_mini_batches(
-        'dev', args.batch_size, pad_id, shuffle=False)
+    dev_reader = lambda:brc_data.gen_mini_batches('dev', args.batch_size, pad_id, shuffle=False)
+    dev_reader = read_multiple(dev_reader, dev_count)
 
-    for batch_id, batch in enumerate(dev_batches, 1):
-        feed_data = prepare_batch_input(batch, args)
+    for batch_id, batch_list in enumerate(dev_reader(), 1):
+        feed_data = batch_reader(batch_list, args)
         val_fetch_outs = parallel_executor.run(
-            feed=val_feeder.feed(feed_data),
-            fetch_list=[avg_cost.name, s_probs.name, e_probs.name],
+            feed=list(val_feeder.feed_parallel(feed_data, dev_count)),
+            fetch_list=[avg_cost.name, s_probs.name, e_probs.name, match.name],
             return_numpy=False)
+        total_loss += np.array(val_fetch_outs[0]).sum()
+        start_probs_m = LodTensor_Array(val_fetch_outs[1])
+        end_probs_m = LodTensor_Array(val_fetch_outs[2])
+        match_lod = val_fetch_outs[3].lod()
+        count += len(np.array(val_fetch_outs[0]))
 
-        total_loss += np.array(val_fetch_outs[0])[0]
+        n_batch_cnt += len(np.array(val_fetch_outs[0]))
+        n_batch_loss += np.array(val_fetch_outs[0]).sum()
+        log_every_n_batch = args.log_interval
+        if log_every_n_batch > 0 and batch_id % log_every_n_batch == 0:
+            logger.info('Average dev loss from batch {} to {} is {}'.format(
+                batch_id - log_every_n_batch + 1, batch_id, "%.10f" % (
+                    n_batch_loss / n_batch_cnt)))
+            n_batch_loss = 0.0
+            n_batch_cnt = 0
 
-        start_probs = LodTensor_Array(val_fetch_outs[1])
-        end_probs = LodTensor_Array(val_fetch_outs[2])
-        count += len(batch['raw_data'])
-
-        padded_p_len = len(batch['passage_token_ids'][0])
-        for sample, start_prob, end_prob in zip(batch['raw_data'], start_probs,
-                                                end_probs):
-
-            best_answer = find_best_answer(sample, start_prob, end_prob,
-                                           padded_p_len, args)
-            pred_answers.append({
-                'question_id': sample['question_id'],
-                'question_type': sample['question_type'],
-                'answers': [best_answer],
-                'entity_answers': [[]],
-                'yesno_answers': []
-            })
-            if 'answers' in sample:
-                ref_answers.append({
+        for idx, batch in enumerate(batch_list):
+            #one batch
+            batch_size = len(batch['raw_data'])
+            batch_range = match_lod[0][idx * batch_size:(idx + 1) * batch_size +
+                                       1]
+            batch_lod = [[batch_range[x], batch_range[x + 1]]
+                         for x in range(len(batch_range[:-1]))]
+            start_prob_batch = start_probs_m[idx * batch_size:(idx + 1) *
+                                             batch_size]
+            end_prob_batch = end_probs_m[idx * batch_size:(idx + 1) *
+                                         batch_size]
+            for sample, start_prob_inst, end_prob_inst, inst_range in zip(
+                    batch['raw_data'], start_prob_batch, end_prob_batch,
+                    batch_lod):
+                #one instance
+                inst_lod = match_lod[1][inst_range[0]:inst_range[1] + 1]
+                best_answer, best_span = find_best_answer_for_inst(
+                    sample, start_prob_inst, end_prob_inst, inst_lod)
+                pred = {
                     'question_id': sample['question_id'],
                     'question_type': sample['question_type'],
-                    'answers': sample['answers'],
+                    'answers': [best_answer],
                     'entity_answers': [[]],
-                    'yesno_answers': []
-                })
-    if args.result_dir is not None and args.result_name is not None:
+                    'yesno_answers': [best_span]
+                }
+                pred_answers.append(pred)
+                if 'answers' in sample:
+                    ref = {
+                        'question_id': sample['question_id'],
+                        'question_type': sample['question_type'],
+                        'answers': sample['answers'],
+                        'entity_answers': [[]],
+                        'yesno_answers': []
+                    }
+                    ref_answers.append(ref)
+
+    result_dir = args.result_dir
+    result_prefix = args.result_name
+    if result_dir is not None and result_prefix is not None:
         if not os.path.exists(args.result_dir):
             os.makedirs(args.result_dir)
-        result_file = os.path.join(args.result_dir, args.result_name + '.json')
+        result_file = os.path.join(result_dir, result_prefix + 'json')
         with open(result_file, 'w') as fout:
             for pred_answer in pred_answers:
                 fout.write(json.dumps(pred_answer, ensure_ascii=False) + '\n')
-        logger.info('Saving {} results to {}'.format(args.result_name,
+        logger.info('Saving {} results to {}'.format(result_prefix,
                                                      result_file))
 
     ave_loss = 1.0 * total_loss / count
-
     # compute the bleu and rouge scores if reference answers is provided
     if len(ref_answers) > 0:
         pred_dict, ref_dict = {}, {}
@@ -250,6 +327,13 @@ def train(logger, args):
     brc_data.convert_to_ids(vocab)
     logger.info('Initialize the model...')
 
+    if not args.use_gpu:
+        place = fluid.CPUPlace()
+        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+    else:
+        place = fluid.CUDAPlace(0)
+        dev_count = fluid.core.get_cuda_device_count()
+
     # build model
     main_program = fluid.Program()
     startup_prog = fluid.Program()
@@ -257,7 +341,7 @@ def train(logger, args):
     startup_prog.random_seed = args.random_seed
     with fluid.program_guard(main_program, startup_prog):
         with fluid.unique_name.guard():
-            avg_cost, s_probs, e_probs, feed_order = rc_model.rc_model(
+            avg_cost, s_probs, e_probs, match, feed_order = rc_model.rc_model(
                 args.hidden_size, vocab, args)
             # clone from default main program and use it as the validation program
             inference_program = main_program.clone(for_test=True)
@@ -314,20 +398,21 @@ def train(logger, args):
             for pass_id in range(1, args.pass_num + 1):
                 pass_start_time = time.time()
                 pad_id = vocab.get_id(vocab.pad_token)
-                train_batches = brc_data.gen_mini_batches(
-                    'train', args.batch_size, pad_id, shuffle=True)
+                train_reader = lambda:brc_data.gen_mini_batches('train', args.batch_size, pad_id, shuffle=False)
+                train_reader = read_multiple(train_reader, dev_count)
                 log_every_n_batch, n_batch_loss = args.log_interval, 0
                 total_num, total_loss = 0, 0
-                for batch_id, batch in enumerate(train_batches, 1):
-                    input_data_dict = prepare_batch_input(batch, args)
+                for batch_id, batch_list in enumerate(train_reader(), 1):
+                    feed_data = batch_reader(batch_list, args)
                     fetch_outs = parallel_executor.run(
-                        feed=feeder.feed(input_data_dict),
+                        feed=list(feeder.feed_parallel(feed_data, dev_count)),
                         fetch_list=[avg_cost.name],
                         return_numpy=False)
-                    cost_train = np.array(fetch_outs[0])[0]
-                    total_num += len(batch['raw_data'])
+                    cost_train = np.array(fetch_outs[0]).mean()
+                    total_num += args.batch_size * dev_count
                     n_batch_loss += cost_train
-                    total_loss += cost_train * len(batch['raw_data'])
+                    total_loss += cost_train * args.batch_size * dev_count
+
                     if log_every_n_batch > 0 and batch_id % log_every_n_batch == 0:
                         print_para(main_program, parallel_executor, logger,
                                    args)
@@ -337,19 +422,23 @@ def train(logger, args):
                                 "%.10f" % (n_batch_loss / log_every_n_batch)))
                         n_batch_loss = 0
                     if args.dev_interval > 0 and batch_id % args.dev_interval == 0:
-                        eval_loss, bleu_rouge = validation(
-                            inference_program, avg_cost, s_probs, e_probs,
-                            feed_order, place, vocab, brc_data, logger, args)
-                        logger.info('Dev eval loss {}'.format(eval_loss))
-                        logger.info('Dev eval result: {}'.format(bleu_rouge))
+                        if brc_data.dev_set is not None:
+                            eval_loss, bleu_rouge = validation(
+                                inference_program, avg_cost, s_probs, e_probs,
+                                match, feed_order, place, dev_count, vocab,
+                                brc_data, logger, args)
+                            logger.info('Dev eval loss {}'.format(eval_loss))
+                            logger.info('Dev eval result: {}'.format(
+                                bleu_rouge))
                 pass_end_time = time.time()
 
                 logger.info('Evaluating the model after epoch {}'.format(
                     pass_id))
                 if brc_data.dev_set is not None:
                     eval_loss, bleu_rouge = validation(
-                        inference_program, avg_cost, s_probs, e_probs,
-                        feed_order, place, vocab, brc_data, logger, args)
+                        inference_program, avg_cost, s_probs, e_probs, match,
+                        feed_order, place, dev_count, vocab, brc_data, logger,
+                        args)
                     logger.info('Dev eval loss {}'.format(eval_loss))
                     logger.info('Dev eval result: {}'.format(bleu_rouge))
                 else:
@@ -389,10 +478,17 @@ def evaluate(logger, args):
     startup_prog.random_seed = args.random_seed
     with fluid.program_guard(main_program, startup_prog):
         with fluid.unique_name.guard():
-            avg_cost, s_probs, e_probs, feed_order = rc_model.rc_model(
+            avg_cost, s_probs, e_probs, match, feed_order = rc_model.rc_model(
                 args.hidden_size, vocab, args)
             # initialize parameters
-            place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
+            if not args.use_gpu:
+                place = fluid.CPUPlace()
+                dev_count = int(
+                    os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+            else:
+                place = fluid.CUDAPlace(0)
+                dev_count = fluid.core.get_cuda_device_count()
+
             exe = Executor(place)
             if args.load_dir:
                 logger.info('load from {}'.format(args.load_dir))
@@ -402,17 +498,10 @@ def evaluate(logger, args):
                 logger.error('No model file to load ...')
                 return
 
-            # prepare data
-            feed_list = [
-                main_program.global_block().var(var_name)
-                for var_name in feed_order
-            ]
-            feeder = fluid.DataFeeder(feed_list, place)
-
             inference_program = main_program.clone(for_test=True)
             eval_loss, bleu_rouge = validation(
                 inference_program, avg_cost, s_probs, e_probs, feed_order,
-                place, vocab, brc_data, logger, args)
+                place, dev_count, vocab, brc_data, logger, args)
             logger.info('Dev eval loss {}'.format(eval_loss))
             logger.info('Dev eval result: {}'.format(bleu_rouge))
             logger.info('Predicted answers are saved to {}'.format(
@@ -438,10 +527,17 @@ def predict(logger, args):
     startup_prog.random_seed = args.random_seed
     with fluid.program_guard(main_program, startup_prog):
         with fluid.unique_name.guard():
-            avg_cost, s_probs, e_probs, feed_order = rc_model.rc_model(
+            avg_cost, s_probs, e_probs, match, feed_order = rc_model.rc_model(
                 args.hidden_size, vocab, args)
             # initialize parameters
-            place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
+            if not args.use_gpu:
+                place = fluid.CPUPlace()
+                dev_count = int(
+                    os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+            else:
+                place = fluid.CUDAPlace(0)
+                dev_count = fluid.core.get_cuda_device_count()
+
             exe = Executor(place)
             if args.load_dir:
                 logger.info('load from {}'.format(args.load_dir))
@@ -451,17 +547,10 @@ def predict(logger, args):
                 logger.error('No model file to load ...')
                 return
 
-            # prepare data
-            feed_list = [
-                main_program.global_block().var(var_name)
-                for var_name in feed_order
-            ]
-            feeder = fluid.DataFeeder(feed_list, place)
-
             inference_program = main_program.clone(for_test=True)
             eval_loss, bleu_rouge = validation(
-                inference_program, avg_cost, s_probs, e_probs, feed_order,
-                place, vocab, brc_data, logger, args)
+                inference_program, avg_cost, s_probs, e_probs, match,
+                feed_order, place, dev_count, vocab, brc_data, logger, args)
 
 
 def prepare(logger, args):

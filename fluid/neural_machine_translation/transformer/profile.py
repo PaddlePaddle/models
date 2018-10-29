@@ -1,5 +1,6 @@
 import argparse
 import ast
+import contextlib
 import multiprocessing
 import os
 import six
@@ -79,8 +80,7 @@ def parse_args():
         type=lambda x: str(x.encode().decode("unicode-escape")),
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
-        "For EN-DE BPE data we provided, use spaces as token delimiter. "
-        "For EN-FR wordpiece data we provided, use '\x01' as token delimiter.")
+        "For EN-DE BPE data we provided, use spaces as token delimiter.")
     parser.add_argument(
         "--use_mem_opt",
         type=ast.literal_eval,
@@ -98,9 +98,14 @@ def parse_args():
         help="The iteration number to run in profiling.")
     parser.add_argument(
         "--use_parallel_exe",
-        type=bool,
+        type=ast.literal_eval,
         default=False,
         help="The flag indicating whether to use ParallelExecutor.")
+    parser.add_argument(
+        "--profile_ops",
+        type=ast.literal_eval,
+        default=True,
+        help="The flag indicating whether to profile operators.")
     parser.add_argument(
         'opts',
         help='See config.py for all options',
@@ -125,6 +130,8 @@ def parse_args():
 def main(args):
     train_prog = fluid.Program()
     startup_prog = fluid.Program()
+    train_prog.random_seed = 1000
+    startup_prog.random_seed = 1000
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             sum_cost, avg_cost, predict, token_num, pyreader = transformer(
@@ -243,24 +250,33 @@ def main(args):
                 if args.use_py_reader:
                     pyreader.reset()
                     pyreader.start()
-                break
 
         return reader_time, run_time
 
+    @contextlib.contextmanager
+    def profile_context(profile=True):
+        if profile:
+            with profiler.profiler('All', 'total', '/tmp/profile_file'):
+                yield
+        else:
+            yield
+
     # start-up
     init_flag = True
-    run(1)
+    run(5)
     init_flag = False
 
     # profiling
     start = time.time()
     # currently only support profiling on one device
-    with profiler.profiler('All', 'total', '/tmp/profile_file'):
+    with profile_context(args.profile_ops):
         reader_time, run_time = run(args.iter_num)
     end = time.time()
     total_time = end - start
-    print("Total time: {0}, reader time: {1} s, run time: {2} s".format(
-        total_time, np.sum(reader_time), np.sum(run_time)))
+    print(
+        "Total time: {0}, reader time: {1} s, run time: {2} s, step number: {3}".
+        format(total_time, np.sum(reader_time), np.sum(run_time),
+               args.iter_num))
 
 
 if __name__ == "__main__":

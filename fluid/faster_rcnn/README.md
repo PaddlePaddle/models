@@ -7,7 +7,6 @@
 - [Introduction](#introduction)
 - [Data preparation](#data-preparation)
 - [Training](#training)
-- [Finetuning](#finetuning)
 - [Evaluation](#evaluation)
 - [Inference and Visualization](#inference-and-visualization)
 - [Appendix](#appendix)
@@ -24,10 +23,10 @@ Running sample code in this directory requires PaddelPaddle Fluid v.1.0.0 and la
 Faster RCNN model
 </p>
 
-1. Base conv layer。As a CNN objective dection, Faster RCNN extract feature maps using a basic convolutional network. The feature maps then can be shared by RPN and fc layers. This sampel uses [ResNet-50](https://arxiv.org/abs/1512.03385) as base conv layer.
-2. Region Proposal Network (RPN)。RPN generates proposals for detection。This block generates anchors by a set of size and ratio and classifies anchors into fore-ground and back-ground by softmax. Then refine anchors to obtain more precise proposals using box regression.
-3. RoI pooling。This layer takes feature maps and proposals as input. The proposals are mapped to feature maps and pooled to the same size. The output are sent to fc layers for classification and regression.
-4. Detection layer。Using the output of roi pooling to compute the class and locatoin of each proposal in two fc layers.
+1. Base conv layer. As a CNN objective dection, Faster RCNN extract feature maps using a basic convolutional network. The feature maps then can be shared by RPN and fc layers. This sampel uses [ResNet-50](https://arxiv.org/abs/1512.03385) as base conv layer.
+2. Region Proposal Network (RPN). RPN generates proposals for detection。This block generates anchors by a set of size and ratio and classifies anchors into fore-ground and back-ground by softmax. Then refine anchors to obtain more precise proposals using box regression.
+3. RoI Align. This layer takes feature maps and proposals as input. The proposals are mapped to feature maps and pooled to the same size. The output are sent to fc layers for classification and regression. RoIPool and RoIAlign are used separately to this layer and it can be set in roi\_func in config.py.
+4. Detection layer. Using the output of roi pooling to compute the class and locatoin of each proposal in two fc layers.
 
 ## Data preparation
 
@@ -42,10 +41,9 @@ Train the model on [MS-COCO dataset](http://cocodataset.org/#download), download
 After data preparation, one can start the training step by:
 
     python train.py \
-       --max_size=1333 \
-       --scales=[800] \
-       --batch_size=8 \
-       --model_save_dir=output/
+       --model_save_dir=output/ \
+       --pretrained_model=${path_to_pretrain_model}
+       --data_dir=${path_to_data}
 
 - Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
 - For more help on arguments:
@@ -83,7 +81,7 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 
 **model configuration:**
 
-* Use RoIPooling.
+* Use RoIAlign and RoIPool separately.
 * NMS threshold=0.7. During training, pre\_nms=12000, post\_nms=2000; during test, pre\_nms=6000, post\_nms=1000.
 * In generating proposal lables, fg\_fraction=0.25, fg\_thresh=0.5, bg\_thresh_hi=0.5, bg\_thresh\_lo=0.0.
 * In rpn target assignment, rpn\_fg\_fraction=0.5, rpn\_positive\_overlap=0.7, rpn\_negative\_overlap=0.3.
@@ -102,20 +100,10 @@ Training result is shown as below：
 <img src="image/train_loss.jpg" height=500 width=650 hspace='10'/> <br />
 Faster RCNN train loss
 </p>
-* Fluid all padding: Each image padding to 1333\*1333.
-* Fluid minibatch padding: Images in one batch padding to the same size. This method is same as detectron.
-* Fluid no padding: Images without padding.
 
-## Finetuning
-
-Finetuning is to finetune model weights in a specific task by loading pretrained weights. After initializing ```pretrained_model```, one can finetune a model as:
-
-    python train.py
-        --max_size=1333 \
-        --scales=800 \
-        --pretrained_model=${path_to_pretrain_model} \
-        --batch_size= 8\
-        --model_save_dir=output/
+* Fluid RoIPool minibatch padding: Use RoIPool. Images in one batch padding to the same size. This method is same as detectron.
+* Fluid RoIpool no padding: Use RoIPool. Images without padding.
+* Fluid RoIAlign no padding: Use RoIAlign. Images without padding.
 
 ## Evaluation
 
@@ -126,9 +114,10 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
     python eval_coco_map.py \
         --dataset=coco2017 \
         --pretrained_mode=${path_to_pretrain_model} \
-        --batch_size=1 \
         --nms_threshold=0.5 \
         --score_threshold=0.05
+
+- Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
 
 Evalutaion result is shown as below:
 <p align="center">
@@ -136,16 +125,17 @@ Evalutaion result is shown as below:
 Faster RCNN mAP
 </p>
 
-| Model                    | Batch size     | Max iteration    | mAP  |
-| :------------------------------ | :------------:    | :-------------------:|------: |
-| Detectron                 | 8            |    180000        | 0.315 |
-| Fluid minibatch padding | 8            |    180000        | 0.314 |
-| Fluid all padding         | 8            |    180000        | 0.308 |
-| Fluid no padding         |8            |    180000        | 0.316 |
+| Model              | RoI function    | Batch size     | Max iteration    | mAP  |
+| :--------------- | :--------: | :------------:    | :------------------:    |------: |
+| Detectron_RoIPool        | RoIPool | 8   |    180000        | 0.315 |
+| Fluid RoIPool minibatch padding | RoIPool | 8   |    180000        | 0.314 |
+| Fluid RoIPool no padding  | RoIPool | 8   |    180000        | 0.316 |
+| Detectron_RoIAlign       | RoIAlign | 8   |    180000        | 0.346 |
+| Fluid RoIAlign no padding  | RoIAlign | 8   |    180000        | 0.344 |
 
-* Fluid all padding: Each image padding to 1333\*1333.
-* Fluid minibatch padding: Images in one batch padding to the same size. This method is same as detectron.
-* Fluid no padding: Images without padding.
+* Fluid RoIPool minibatch padding: Use RoIPool. Images in one batch padding to the same size. This method is same as detectron.
+* Fluid RoIPool no padding: Images without padding.
+* Fluid RoIAlign no padding: Images without padding.
 
 ## Inference and Visualization
 

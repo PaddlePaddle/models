@@ -17,12 +17,12 @@
 
 ## 简介，模型详解
 
-在PaddlePaddle v2版本[命名实体识别](https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/README.md)中对于命名实体识别任务有较详细的介绍，在本例中不再重复介绍。
+在PaddlePaddle v2版本[命名实体识别](https://github.com/PaddlePaddle/models/blob/develop/legacy/sequence_tagging_for_ner/README.md)中对于命名实体识别任务有较详细的介绍，在本例中不再重复介绍。
 在模型上，我们沿用了v2版本的模型结构，唯一区别是我们使用LSTM代替原始的RNN。
 
 ## 数据获取
 
-完整数据的获取请参考PaddlePaddle v2版本[命名实体识别](https://github.com/PaddlePaddle/models/blob/develop/sequence_tagging_for_ner/README.md) 一节中的方式。本例的示例数据同样可以通过运行data/download.sh来获取。
+完整数据的获取请参考PaddlePaddle v2版本[命名实体识别](https://github.com/PaddlePaddle/models/blob/develop/legacy/sequence_tagging_for_ner/README.md) 一节中的方式。本例的示例数据同样可以通过运行data/download.sh来获取。
 
 ## 训练
 

@@ -31,8 +31,8 @@ from pretrained_word2vec import Glove840B_300D
 
 parser = argparse.ArgumentParser(description=__doc__)
 
-parser.add_argument('--model_name',       type=str,   default='cdssm',                  help="Which model to train")
-parser.add_argument('--config',           type=str,   default='cdssm.cdssm_base',       help="The global config setting")
+parser.add_argument('--model_name',       type=str,   default='cdssmNet',                  help="Which model to train")
+parser.add_argument('--config',           type=str,   default='cdssm_base',       help="The global config setting")
 
 DATA_DIR = os.path.join(os.path.expanduser('~'), '.cache/paddle/dataset')
 
@@ -87,8 +87,8 @@ def evaluate(epoch_id, exe, inference_program, dev_reader, test_reader, fetch_li
 
 
 def train_and_evaluate(train_reader,
-          test_reader, 
           dev_reader,
+          test_reader, 
           network,
           optimizer,
           global_config,
@@ -246,7 +246,10 @@ def main():
    
     # use cuda or not
     if not global_config.has_member('use_cuda'):
-        global_config.use_cuda = 'CUDA_VISIBLE_DEVICES' in os.environ
+        if 'CUDA_VISIBLE_DEVICES' in os.environ and os.environ['CUDA_VISIBLE_DEVICES'] != '':
+            global_config.use_cuda = True
+        else:
+            global_config.use_cuda = False
 
     global_config.list_config()
 

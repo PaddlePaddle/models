@@ -1,12 +1,16 @@
 import argparse
 import ast
+import copy
+import logging
 import multiprocessing
 import os
 import six
+import sys
 import time
 
 import numpy as np
 import paddle.fluid as fluid
+from paddle.fluid.transpiler.details import program_to_code
 
 import reader
 from config import *
@@ -98,6 +102,11 @@ def parse_args():
         choices=['CPU', 'GPU'],
         help="The device type.")
     parser.add_argument(
+        '--update_method',
+        choices=("pserver", "nccl2"),
+        default="pserver",
+        help='Update method.')
+    parser.add_argument(
         '--sync', type=ast.literal_eval, default=True, help="sync mode.")
     parser.add_argument(
         "--enable_ce",
@@ -115,6 +124,11 @@ def parse_args():
         type=ast.literal_eval,
         default=True,
         help="The flag indicating whether to use py_reader.")
+    parser.add_argument(
+        "--fetch_steps",
+        type=int,
+        default=100,
+        help="The frequency to fetch and print output.")
 
     args = parser.parse_args()
     # Append args related to dict
@@ -129,6 +143,26 @@ def parse_args():
     merge_cfg_from_list(args.opts + dict_args,
                         [TrainTaskConfig, ModelHyperParams])
     return args
+
+
+def append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
+                         current_endpoint):
+    assert (trainer_id >= 0 and len(worker_endpoints) > 1 and
+            current_endpoint in worker_endpoints)
+    eps = copy.deepcopy(worker_endpoints)
+    eps.remove(current_endpoint)
+    nccl_id_var = startup_prog.global_block().create_var(
+        name="NCCLID", persistable=True, type=fluid.core.VarDesc.VarType.RAW)
+    startup_prog.global_block().append_op(
+        type="gen_nccl_id",
+        inputs={},
+        outputs={"NCCLID": nccl_id_var},
+        attrs={
+            "endpoint": current_endpoint,
+            "endpoint_list": eps,
+            "trainer_id": trainer_id
+        })
+    return nccl_id_var
 
 
 def pad_batch_data(insts,
@@ -370,7 +404,7 @@ def test_context(exe, train_exe, dev_count):
                 TrainTaskConfig.label_smooth_eps,
                 use_py_reader=args.use_py_reader,
                 is_test=True)
-
+    test_prog = test_prog.clone(for_test=True)
     test_data = prepare_data_generator(
         args, is_test=True, count=dev_count, pyreader=pyreader)
 
@@ -410,15 +444,25 @@ def test_context(exe, train_exe, dev_count):
     return test
 
 
-def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
-               token_num, predict, pyreader):
+def train_loop(exe,
+               train_prog,
+               startup_prog,
+               dev_count,
+               sum_cost,
+               avg_cost,
+               token_num,
+               predict,
+               pyreader,
+               nccl2_num_trainers=1,
+               nccl2_trainer_id=0):
     # Initialize the parameters.
     if TrainTaskConfig.ckpt_path:
         fluid.io.load_persistables(exe, TrainTaskConfig.ckpt_path)
     else:
-        print("init fluid.framework.default_startup_program")
+        logging.info("init fluid.framework.default_startup_program")
         exe.run(startup_prog)
 
+    logging.info("begin reader")
     train_data = prepare_data_generator(
         args, is_test=False, count=dev_count, pyreader=pyreader)
 
@@ -431,12 +475,16 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
     # use token average cost among multi-devices. and the gradient scale is
     # `1 / token_number` for average cost.
     # build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
+
+    logging.info("begin executor")
     train_exe = fluid.ParallelExecutor(
         use_cuda=TrainTaskConfig.use_gpu,
         loss_name=avg_cost.name,
         main_program=train_prog,
         build_strategy=build_strategy,
-        exec_strategy=exec_strategy)
+        exec_strategy=exec_strategy,
+        num_trainers=nccl2_num_trainers,
+        trainer_id=nccl2_trainer_id)
 
     if args.val_file_pattern is not None:
         test = test_context(exe, train_exe, dev_count)
@@ -450,6 +498,8 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
 
     step_idx = 0
     init_flag = True
+
+    logging.info("begin train")
     for pass_id in six.moves.xrange(TrainTaskConfig.pass_num):
         pass_start_time = time.time()
 
@@ -464,25 +514,38 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
             try:
                 feed_dict_list = prepare_feed_dict_list(data_generator,
                                                         init_flag, dev_count)
-
                 outs = train_exe.run(
-                    fetch_list=[sum_cost.name, token_num.name],
+                    fetch_list=[sum_cost.name, token_num.name]
+                    if step_idx % args.fetch_steps == 0 else [],
                     feed=feed_dict_list)
-                sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[
-                    1])
-                # sum the cost from multi-devices
-                total_sum_cost = sum_cost_val.sum()
-                total_token_num = token_num_val.sum()
-                total_avg_cost = total_sum_cost / total_token_num
 
-                print("step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                      "normalized loss: %f, ppl: %f" %
-                      (step_idx, pass_id, batch_id, total_avg_cost,
-                       total_avg_cost - loss_normalizer,
-                       np.exp([min(total_avg_cost, 100)])))
+                if step_idx % args.fetch_steps == 0:
+                    sum_cost_val, token_num_val = np.array(outs[0]), np.array(
+                        outs[1])
+                    # sum the cost from multi-devices
+                    total_sum_cost = sum_cost_val.sum()
+                    total_token_num = token_num_val.sum()
+                    total_avg_cost = total_sum_cost / total_token_num
 
-                if step_idx % int(TrainTaskConfig.
-                                  save_freq) == TrainTaskConfig.save_freq - 1:
+                    if step_idx == 0:
+                        logging.info(
+                            "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
+                            "normalized loss: %f, ppl: %f" %
+                            (step_idx, pass_id, batch_id, total_avg_cost,
+                             total_avg_cost - loss_normalizer,
+                             np.exp([min(total_avg_cost, 100)])))
+                        avg_batch_time = time.time()
+                    else:
+                        logging.info(
+                            "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
+                            "normalized loss: %f, ppl: %f, speed: %.2f step/s" %
+                            (step_idx, pass_id, batch_id, total_avg_cost,
+                             total_avg_cost - loss_normalizer,
+                             np.exp([min(total_avg_cost, 100)]),
+                             args.fetch_steps / (time.time() - avg_batch_time)))
+                        avg_batch_time = time.time()
+
+                if step_idx % TrainTaskConfig.save_freq == 0 and step_idx > 0:
                     fluid.io.save_persistables(
                         exe,
                         os.path.join(TrainTaskConfig.ckpt_dir,
@@ -492,6 +555,7 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                         os.path.join(TrainTaskConfig.model_dir,
                                      "iter_" + str(step_idx) + ".infer.model"),
                         train_prog)
+
                 init_flag = False
                 batch_id += 1
                 step_idx += 1
@@ -505,13 +569,13 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
         # Validate and save the persistable.
         if args.val_file_pattern is not None:
             val_avg_cost, val_ppl = test()
-            print(
+            logging.info(
                 "epoch: %d, val avg loss: %f, val normalized loss: %f, val ppl: %f,"
                 " consumed %fs" % (pass_id, val_avg_cost,
                                    val_avg_cost - loss_normalizer, val_ppl,
                                    time_consumed))
         else:
-            print("epoch: %d, consumed %fs" % (pass_id, time_consumed))
+            logging.info("epoch: %d, consumed %fs" % (pass_id, time_consumed))
         if not args.enable_ce:
             fluid.io.save_persistables(
                 exe,
@@ -531,7 +595,7 @@ def train(args):
     is_local = os.getenv("PADDLE_IS_LOCAL", "1")
     if is_local == '0':
         args.local = False
-    print(args)
+    logging.info(args)
 
     if args.device == 'CPU':
         TrainTaskConfig.use_gpu = False
@@ -576,15 +640,21 @@ def train(args):
                 use_py_reader=args.use_py_reader,
                 is_test=False)
 
-            if args.local:
+            optimizer = None
+            if args.sync:
                 lr_decay = fluid.layers.learning_rate_scheduler.noam_decay(
                     ModelHyperParams.d_model, TrainTaskConfig.warmup_steps)
+                logging.info("before adam")
+
+                with fluid.default_main_program()._lr_schedule_guard():
+                    learning_rate = lr_decay * TrainTaskConfig.learning_rate
+
                 optimizer = fluid.optimizer.Adam(
-                    learning_rate=lr_decay * TrainTaskConfig.learning_rate,
+                    learning_rate=learning_rate,
                     beta1=TrainTaskConfig.beta1,
                     beta2=TrainTaskConfig.beta2,
                     epsilon=TrainTaskConfig.eps)
-            elif args.sync == False:
+            else:
                 optimizer = fluid.optimizer.SGD(0.003)
             optimizer.minimize(avg_cost)
 
@@ -592,10 +662,32 @@ def train(args):
         fluid.memory_optimize(train_prog)
 
     if args.local:
-        print("local start_up:")
+        logging.info("local start_up:")
         train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                    token_num, predict, pyreader)
     else:
+        if args.update_method == "nccl2":
+            trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
+            port = os.getenv("PADDLE_PORT")
+            worker_ips = os.getenv("PADDLE_TRAINERS")
+            worker_endpoints = []
+            for ip in worker_ips.split(","):
+                worker_endpoints.append(':'.join([ip, port]))
+            trainers_num = len(worker_endpoints)
+            current_endpoint = os.getenv("POD_IP") + ":" + port
+            if trainer_id == 0:
+                logging.info("train_id == 0, sleep 60s")
+                time.sleep(60)
+            logging.info("trainers_num:{}".format(trainers_num))
+            logging.info("worker_endpoints:{}".format(worker_endpoints))
+            logging.info("current_endpoint:{}".format(current_endpoint))
+            append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
+                                 current_endpoint)
+            train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
+                       avg_cost, token_num, predict, pyreader, trainers_num,
+                       trainer_id)
+            return
+
         port = os.getenv("PADDLE_PORT", "6174")
         pserver_ips = os.getenv("PADDLE_PSERVERS")  # ip,ip...
         eplist = []
@@ -605,6 +697,13 @@ def train(args):
         trainers = int(os.getenv("PADDLE_TRAINERS_NUM", "0"))
         current_endpoint = os.getenv("POD_IP") + ":" + port
         trainer_id = int(os.getenv("PADDLE_TRAINER_ID"))
+
+        logging.info("pserver_endpoints:{}".format(pserver_endpoints))
+        logging.info("current_endpoint:{}".format(current_endpoint))
+        logging.info("trainer_id:{}".format(trainer_id))
+        logging.info("pserver_ips:{}".format(pserver_ips))
+        logging.info("port:{}".format(port))
+
         t = fluid.DistributeTranspiler()
         t.transpile(
             trainer_id,
@@ -614,32 +713,34 @@ def train(args):
             startup_program=startup_prog)
 
         if training_role == "PSERVER":
+            logging.info("distributed: pserver started")
             current_endpoint = os.getenv("POD_IP") + ":" + os.getenv(
                 "PADDLE_PORT")
             if not current_endpoint:
-                print("need env SERVER_ENDPOINT")
+                logging.critical("need env SERVER_ENDPOINT")
                 exit(1)
             pserver_prog = t.get_pserver_program(current_endpoint)
             pserver_startup = t.get_startup_program(current_endpoint,
                                                     pserver_prog)
 
-            print("psserver begin run")
-            with open('pserver_startup.desc', 'w') as f:
-                f.write(str(pserver_startup))
-            with open('pserver_prog.desc', 'w') as f:
-                f.write(str(pserver_prog))
             exe.run(pserver_startup)
             exe.run(pserver_prog)
         elif training_role == "TRAINER":
+            logging.info("distributed: trainer started")
             trainer_prog = t.get_trainer_program()
-            with open('trainer_prog.desc', 'w') as f:
-                f.write(str(trainer_prog))
+
             train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
                        avg_cost, token_num, predict, pyreader)
         else:
-            print("environment var TRAINER_ROLE should be TRAINER os PSERVER")
+            logging.critical(
+                "environment var TRAINER_ROLE should be TRAINER os PSERVER")
+            exit(1)
 
 
 if __name__ == "__main__":
+    LOG_FORMAT = "[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s"
+    logging.basicConfig(
+        stream=sys.stdout, level=logging.DEBUG, format=LOG_FORMAT)
+
     args = parse_args()
     train(args)
