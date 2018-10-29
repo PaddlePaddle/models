@@ -51,23 +51,27 @@ class CNNEncoder(object):
             filter_size=self.win_size,
             act=self.act,
             pool_type=self.pool_type,
-            attr=self.param_name)
+            param_attr=str(self.param_name))
 
 
 class GrnnEncoder(object):
     """ grnn-encoder """
 
     def __init__(self, param_name="grnn.w", hidden_size=128):
-        self.param_name = args
+        self.param_name = param_name
         self.hidden_size = hidden_size
 
     def forward(self, emb):
-        fc0 = nn.fc(input=emb, size=self.hidden_size * 3)
+        fc0 = nn.fc(
+            input=emb, 
+            size=self.hidden_size * 3, 
+            param_attr=str(str(self.param_name) + "_fc")
+        )
         gru_h = nn.dynamic_gru(
-            input=emb,
+            input=fc0,
             size=self.hidden_size,
             is_reverse=False,
-            attr=self.param_name)
+            param_attr=str(self.param_name))
         return nn.sequence_pool(input=gru_h, pool_type='max')
 
 
@@ -191,7 +195,7 @@ class MultiviewSimnet(object):
             loss_part2)
 
         avg_cost = nn.mean(loss_part3)
-        correct = self.get_correct(cos_pos, cos_neg)
+        correct = self.get_correct(cos_neg, cos_pos)
 
         return q_slots + pt_slots + nt_slots, avg_cost, correct
 
