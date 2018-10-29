@@ -124,8 +124,15 @@ def multi_head_attention(queries,
     q, k, v = __compute_qkv(queries, keys, values, n_head, d_key, d_value)
 
     if cache is not None:  # use cache and concat time steps
-        k = cache["k"] = layers.concat([cache["k"], k], axis=1)
-        v = cache["v"] = layers.concat([cache["v"], v], axis=1)
+        # Since the inplace reshape in __split_heads changes the shape of k and
+        # v, which is the cache input for next time step, reshape the cache
+        # input from the previous time step first.
+        k = cache["k"] = layers.concat(
+            [layers.reshape(
+                cache["k"], shape=[0, 0, d_model]), k], axis=1)
+        v = cache["v"] = layers.concat(
+            [layers.reshape(
+                cache["v"], shape=[0, 0, d_model]), v], axis=1)
 
     q = __split_heads(q, n_head)
     k = __split_heads(k, n_head)
