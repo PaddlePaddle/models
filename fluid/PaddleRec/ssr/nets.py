@@ -17,10 +17,9 @@ import paddle.fluid.layers.nn as nn
 import paddle.fluid.layers.tensor as tensor
 import paddle.fluid.layers.control_flow as cf
 import paddle.fluid.layers.io as io
-
 from PaddleRec.multiview_simnet.nets import BowEncoder
 from PaddleRec.multiview_simnet.nets import GrnnEncoder
-from PaddleRec.multiview_simnet.nets import MultiviewSimnet
+
 
 class PairwiseHingeLoss(object):
     def __init__(self, margin=0.8):
@@ -97,5 +96,6 @@ class SequenceSemanticRetrieval(object):
         hinge_loss = self.pairwise_hinge_loss.forward(cos_pos, cos_neg)
         avg_cost = nn.mean(hinge_loss)
         correct = self.get_correct(cos_neg, cos_pos)
+
         return [user_data, pos_item_data, neg_item_data], \
             pos_item_hid, neg_item_hid, avg_cost, correct
