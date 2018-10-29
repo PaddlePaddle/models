@@ -155,14 +155,16 @@ SimNet是百度自然语言处理部于2013年自主研发的语义匹配框架�
 
 -  [DuReader in PaddlePaddle Fluid](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleNLP/machine_reading_comprehension/README.md)
 
-推荐系统
+个性化推荐
 -------
 
-推荐系统在当前的互联网服务中正在发挥越来越大的作用，目前几乎所有的电子商务系统、社交网络，广告推荐，搜索引擎等等，都不同程度的使用了各种形式的推荐系统，帮助用户快速找到他们想要的信息。
+推荐系统在当前的互联网服务中正在发挥越来越大的作用，目前大部分电子商务系统、社交网络，广告推荐，搜索引擎，都不同程度的使用了各种形式的个性化推荐技术，帮助用户快速找到他们想要的信息。
 
-目前主流的推荐算法很多都是基于深度学习算法实现的，PaddlePaddle对推荐算法的训练提供了完整的支持，并提供了多种模型配置供用户选择。
+在工业可用的推荐系统中，推荐策略一般会被划分为多个模块串联执行。以新闻推荐系统为例，存在多个可以使用深度学习技术的环节，例如新闻的自动化标注，个性化新闻召回，个性化匹配与排序等。PaddlePaddle对推荐算法的训练提供了完整的支持，并提供了多种模型配置供用户选择。
 
-* [DNN for Click-Through Rate prediction](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleRec/ctr/README.cn.md)
+- [TagSpace](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/tagspace)
+- [GRU4Rec](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/gru4rec)
+- [SequenceSemanticRetrieval](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/ssr)
+- [DeepCTR](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleRec/ctr/README.cn.md)
+- [Multiview-Simnet](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/multiview_simnet)
 
-基于DNN模型的点击率预估模型，使用的是Kaggle公司举办的展示广告竞赛中所使用的Criteo数据集。和论文DeepFM: A Factorization-Machine based Neural Network for CTR Prediction中的的dnn网络结构，
-经过一个pass的训练之后，测试数据集的AUC能达到0.8左右。
