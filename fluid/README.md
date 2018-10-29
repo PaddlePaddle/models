@@ -154,3 +154,16 @@ SimNet是百度自然语言处理部于2013年自主研发的语义匹配框架�
 百度阅读理解数据集是由百度自然语言处理部开源的一个真实世界数据集，所有的问题、原文都来源于实际数据(百度搜索引擎数据和百度知道问答社区)，答案是由人类回答的。每个问题都对应多个答案，数据集包含200k问题、1000k原文和420k答案，是目前最大的中文MRC数据集。百度同时开源了对应的阅读理解模型，称为DuReader，采用当前通用的网络分层结构，通过双向attention机制捕捉问题和原文之间的交互关系，生成query-aware的原文表示，最终基于query-aware的原文表示通过point network预测答案范围。
 
 -  [DuReader in PaddlePaddle Fluid](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleNLP/machine_reading_comprehension/README.md)
+
+推荐系统
+-------
+
+推荐系统在当前的互联网服务中正在发挥越来越大的作用，目前几乎所有的电子商务系统、社交网络，广告推荐，搜索引擎等等，都不同程度的使用了各种形式的推荐系统，帮助用户快速找到他们想要的信息。
+
+目前主流的推荐算法很多都是基于深度学习算法实现的，PaddlePaddle对推荐算法的训练提供了完整的支持，并提供了多种模型配置供用户选择。
+
+* [DNN for Click-Through Rate prediction](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleRec/ctr/README.cn.md)
+
+基于DNN模型的点击率预估模型，使用的是Kaggle公司举办的展示广告竞赛中所使用的Criteo数据集。和论文DeepFM: A Factorization-Machine based Neural Network for CTR Prediction中的的dnn网络结构，
+经过一个pass的训练之后，测试数据集的AUC能达到0.8左右。
+能达到0.8左右。
