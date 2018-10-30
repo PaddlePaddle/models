@@ -102,10 +102,12 @@ Pass 0, batch 9, loss 7.43522, accucacys: [0.00390625, 0.00390625]
 
 The below figure shows top 1 train accuracy for local training with 8 GPUs and distributed training
 with 32 GPUs, and also distributed training with batch merge feature turned on. Note that the
-red curve is train with origin model configuration, which do not have warmup and some detailed modifications.
+red curve is trained with origin model configuration, which does not have the warmup and some detailed
+modifications.
 
 For distributed training with 32GPUs using `--model DistResnet` we can achieve test accuracy 75.5% after
-90 passes of training (the test accuracy is not shown in below figure).
+90 passes of training (the test accuracy is not shown in below figure). We can also achieve this result
+using "batch merge" feature by setting `--multi_batch_repeat 4` and with higher throughput.
 
 <p align="center">
 <img src="../images/resnet50_32gpus-acc1.png" height=300 width=528 > <br/>
@@ -117,9 +119,9 @@ Training top-1 accuracy curves
 The default resnet50 distributed training config is based on this paper: https://arxiv.org/pdf/1706.02677.pdf
 
 - use `--model DistResnet`
-- we use 32 P40 GPUs with 4 Nodes, each have 8 GPUs
+- we use 32 P40 GPUs with 4 Nodes, each has 8 GPUs
 - we set `batch_size=32` for each GPU, in `batch_merge=on` case, we repeat 4 times before communicating with pserver.
-- learning rate start from 0.1 and warm up to 0.4 in 5 passes(because we already have gradient merging,
+- learning rate starts from 0.1 and warm up to 0.4 in 5 passes(because we already have gradient merging,
   so we only need to linear scale up to trainer count) using 4 nodes.
 - using batch_merge (`--multi_batch_repeat 4`) can make better use of GPU computing power and increase the
   total training throughput. Because in the fine-tune configuration, we have to use `batch_size=32` per GPU,
