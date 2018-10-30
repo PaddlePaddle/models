@@ -39,7 +39,7 @@ A Python transpiler is used to rewrite Fluid training program or evaluation prog
 
   In the design, we introduce dynamic quantization and static quantization strategies for different activation quantization methods. In the expriments, when set `activation_quantize_type` to `abs_max`, it is dynamic quantization. That is to say, the quantization scale (maximum of absolute value) of activation will be calculated each mini-batch during inference. When set `activation_quantize_type` to `range_abs_max`, a quantization scale for inference period will be calculated during training. Following part will introduce how to train.
 
-### How to training
+### Quantization-aware training
 
   The training is fine-tuned on the well-trained MobileNet-SSD model. So download model at first:
 
@@ -135,6 +135,8 @@ Results of MobileNet-v1-SSD 300x300 model on PascalVOC dataset.
 
 | Model                                   | mAP                |
 |:---------------------------------------:|:------------------:|
-|Floating point: 32bit                    | 73.72%             |
+|Floating point: 32bit                    | 73.32%             |
 |Fixed point: 8bit, dynamic quantization  | 72.77%             |
 |Fixed point: 8bit, static quantization   | 72.45%             |
+
+ As mentioned above, other experiments, like how to quantization traning by considering fusing batch normalization and convolution/fully-connected layers, channel-wise quantization of weights, quantizated weights type with uint8 instead of int8 and so on.
