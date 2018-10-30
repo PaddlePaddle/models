@@ -194,7 +194,7 @@ SimNet是百度自然语言处理部于2013年自主研发的语义匹配框架�
 
 在工业可用的推荐系统中，推荐策略一般会被划分为多个模块串联执行。以新闻推荐系统为例，存在多个可以使用深度学习技术的环节，例如新闻的自动化标注，个性化新闻召回，个性化匹配与排序等。PaddlePaddle对推荐算法的训练提供了完整的支持，并提供了多种模型配置供用户选择。
 
-- `TagSpace <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/tagspace>`_
+- `TagSpace <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/TagSpace>`_
 - `GRU4Rec <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/gru4rec>`_ 
 - `SequenceSemanticRetrieval <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/ssr>`_
 - `DeepCTR <https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleRec/ctr/README.cn.md>`_
