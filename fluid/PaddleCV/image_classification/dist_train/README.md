@@ -9,7 +9,7 @@ Before getting started, please make sure you have go throught the imagenet [Data
 
 1. The entrypoint file is `dist_train.py`, some important flags are as follows:
 
-    - `model`, the model to run with, such as `ResNet50`, `ResNet101` and etc..
+    - `model`, the model to run with, default is the fine tune model `DistResnet`.
     - `batch_size`, the batch_size per device.
     - `update_method`, specify the update method, can choose from local, pserver or nccl2.
     - `device`, use CPU or GPU device.
@@ -35,14 +35,14 @@ In this example, we launched 4 parameter server instances and 4 trainer instance
 
 1. launch parameter server process
 
-    ``` python
+    ``` bash
     PADDLE_TRAINING_ROLE=PSERVER \
     PADDLE_TRAINERS=4 \
     PADDLE_PSERVER_IPS=192.168.0.100,192.168.0.101,192.168.0.102,192.168.0.103 \
     PADDLE_CURRENT_IP=192.168.0.100 \
     PADDLE_PSERVER_PORT=7164 \
     python dist_train.py \
-        --model=ResNet50 \
+        --model=DistResnet \
         --batch_size=32 \
         --update_method=pserver \
         --device=CPU \
@@ -51,34 +51,33 @@ In this example, we launched 4 parameter server instances and 4 trainer instance
 
 1. launch trainer process
 
-    ``` python
+    ``` bash
     PADDLE_TRAINING_ROLE=TRAINER \
     PADDLE_TRAINERS=4 \
     PADDLE_PSERVER_IPS=192.168.0.100,192.168.0.101,192.168.0.102,192.168.0.103 \
     PADDLE_TRAINER_ID=0 \
     PADDLE_PSERVER_PORT=7164 \
     python dist_train.py \
-        --model=ResNet50 \
+        --model=DistResnet \
         --batch_size=32 \
         --update_method=pserver \
         --device=GPU \
         --data_dir=../data/ILSVRC2012
-
     ```
 
 ### NCCL2 Collective Mode
 
 1. launch trainer process
 
-    ``` python
+    ``` bash
     PADDLE_TRAINING_ROLE=TRAINER \
     PADDLE_TRAINERS=4 \
     PADDLE_TRAINER_IPS=192.168.0.100,192.168.0.101,192.168.0.102,192.168.0.103 \
     PADDLE_TRAINER_ID=0 \
     python dist_train.py \
-        --model=ResNet50 \
+        --model=DistResnet \
         --batch_size=32 \
-        --update_method=pserver \
+        --update_method=nccl2 \
         --device=GPU \
         --data_dir=../data/ILSVRC2012
     ```
@@ -101,12 +100,34 @@ Pass 0, batch 8, loss 7.264951, accucacys: [0.0, 0.00390625]
 Pass 0, batch 9, loss 7.43522, accucacys: [0.00390625, 0.00390625]
 ```
 
-The training accucacys top1 of local training, distributed training with NCCL2 and parameter server architecture on the ResNet50 model are shown in the below figure:
+The below figure shows top 1 train accuracy for local training with 8 GPUs and distributed training
+with 32 GPUs, and also distributed training with batch merge feature turned on. Note that the
+red curve is train with origin model configuration, which do not have warmup and some detailed modifications.
+
+For distributed training with 32GPUs using `--model DistResnet` we can achieve test accuracy 75.5% after
+90 passes of training (the test accuracy is not shown in below figure).
 
 <p align="center">
 <img src="../images/resnet50_32gpus-acc1.png" height=300 width=528 > <br/>
-Training acc1 curves
+Training top-1 accuracy curves
 </p>
+
+### Finetuning for Distributed Training
+
+The default resnet50 distributed training config is based on this paper: https://arxiv.org/pdf/1706.02677.pdf
+
+- use `--model DistResnet`
+- we use 32 P40 GPUs with 4 Nodes, each have 8 GPUs
+- we set `batch_size=32` for each GPU, in `batch_merge=on` case, we repeat 4 times before communicating with pserver.
+- learning rate start from 0.1 and warm up to 0.4 in 5 passes(because we already have gradient merging,
+  so we only need to linear scale up to trainer count) using 4 nodes.
+- using batch_merge (`--multi_batch_repeat 4`) can make better use of GPU computing power and increase the
+  total training throughput. Because in the fine-tune configuration, we have to use `batch_size=32` per GPU,
+  and recent GPU is so fast that the communication between nodes may delay the total speed. In batch_merge mode
+  we run several batches forward and backward computation, then merge the gradients and send to pserver for
+  optimization, we use different batch norm mean and variance variable in each repeat so that adding repeats
+  behaves the same as adding more GPUs.
+
 
 ### Performance
 
