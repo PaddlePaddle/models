@@ -34,6 +34,7 @@ add_arg('loss_name', str, "tripletloss", "Set the loss type to use.")
 add_arg('samples_each_class', int, 2, "Samples each class.")
 add_arg('margin', float, 0.1, "margin.")
 add_arg('alpha', float, 0.0, "alpha.")
+add_arg('enable_ce', bool, False, "If set True, enable continuous evaluation job.")
 # yapf: enable
 
 model_list = [m for m in dir(models) if "__" not in m]
@@ -76,6 +77,12 @@ def train(args):
     # model definition
     model = models.__dict__[model_name]()
     out = model.net(input=image, class_dim=200)
+
+    if args.enable_ce:
+        assert model_name == "ResNet50"
+        assert loss_name == "quadrupletloss"
+        np.random.seed(10)
+        fluid.default_startup_program().random_seed = 1000
 
     if loss_name == "tripletloss":
         metricloss = tripletloss(
@@ -201,6 +208,12 @@ def train(args):
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path)
+
+        # This is for continuous evaluation only
+        if args.enable_ce and pass_id == args.num_epochs - 1:
+            # Use the mean cost/acc for training
+            print("kpis	train_cost	%s" % (train_loss_metric))
+            print("kpis	test_recall	%s" % (recall))
 
 def main():
     args = parser.parse_args()
