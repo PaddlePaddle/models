@@ -41,9 +41,10 @@ CPU 环境
 python train.py small_train.txt small_test.txt
 ```
 
-##Future work
-infer will be add
+## 未来工作
 
-Multiple types of pairwise loss will be added in this project.
+添加预测部分
+
+添加多种负例采样方式
 
 
