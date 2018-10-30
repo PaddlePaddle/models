@@ -77,12 +77,13 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
-    # yapf: disable
-    if model_dir:
-        def if_exist(var):
-            return os.path.exists(os.path.join(model_dir, var.name))
-        fluid.io.load_vars(exe, model_dir, main_program=test_prog, predicate=if_exist)
-    # yapf: enable
+
+    def if_exist(var):
+        return os.path.exists(os.path.join(model_dir, var.name))
+
+    fluid.io.load_vars(
+        exe, model_dir, main_program=test_prog, predicate=if_exist)
+
     test_reader = reader.test(data_args, test_list, batch_size=batch_size)
     test_py_reader.decorate_paddle_reader(test_reader)
 
@@ -96,7 +97,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
             if batch_id % 10 == 0:
                 print("Batch {0}, map {1}".format(batch_id, test_map))
             batch_id += 1
-    except fluid.core.EOFException:
+    except (fluid.core.EOFException, StopIteration):
         test_py_reader.reset()
     print("Test model {0}, map {1}".format(model_dir, test_map))
 
