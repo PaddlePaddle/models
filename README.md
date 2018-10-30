@@ -8,7 +8,7 @@ PaddlePaddle provides a rich set of computational units to enable users to adopt
 
 - [fluid models](fluid): use PaddlePaddle's Fluid APIs. We especially recommend users to use Fluid models.
 
-- [v2 models](v2): use PaddlePaddle's v2 APIs.
+- [legacy models](legacy): use PaddlePaddle's v2 APIs.
 
 
 ## License

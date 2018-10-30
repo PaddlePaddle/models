@@ -7,7 +7,7 @@ sys.path.append("..")
 
 import matplotlib.pyplot as plt
 import paddle.fluid as fluid
-import paddle.v2 as paddle
+import paddle
 
 from advbox.adversary import Adversary
 from advbox.attacks.gradient_method import ILCM
