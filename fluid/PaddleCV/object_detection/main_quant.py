@@ -227,8 +227,8 @@ def infer(args, data_args):
         executor=exe,
         model_filename='__model__')
 
-    print(np.array(fluid.global_scope().find_var('conv2d_20.w_0').get_tensor()))
-    print(np.max(np.array(fluid.global_scope().find_var('conv2d_20.w_0').get_tensor())))
+    #print(np.array(fluid.global_scope().find_var('conv2d_20.w_0').get_tensor()))
+    #print(np.max(np.array(fluid.global_scope().find_var('conv2d_20.w_0').get_tensor())))
     infer_reader = reader.infer(data_args, image_path)
     data = infer_reader()
     data = data.reshape((1,) + data.shape)

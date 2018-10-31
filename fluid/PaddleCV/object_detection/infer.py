@@ -85,11 +85,11 @@ def draw_bounding_box_on_image(image_path, nms_out, confs_threshold,
     im_width, im_height = image.size
 
     for dt in nms_out:
-        category_id, score, xmin, ymin, xmax, ymax = dt.tolist()
-        if score < confs_threshold:
+        if dt[1] < confs_threshold:
             continue
+        category_id = dt[0]
         bbox = dt[2:]
-        xmin, ymin, xmax, ymax = bbox
+        xmin, ymin, xmax, ymax = clip_bbox(dt[2:])
         (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
                                       ymin * im_height, ymax * im_height)
         draw.line(
@@ -102,6 +102,14 @@ def draw_bounding_box_on_image(image_path, nms_out, confs_threshold,
     image_name = image_path.split('/')[-1]
     print("image with bbox drawed saved as {}".format(image_name))
     image.save(image_name)
+
+
+def clip_bbox(bbox):
+    xmin = max(min(bbox[0], 1.), 0.)
+    ymin = max(min(bbox[1], 1.), 0.)
+    xmax = max(min(bbox[2], 1.), 0.)
+    ymax = max(min(bbox[3], 1.), 0.)
+    return xmin, ymin, xmax, ymax
 
 
 if __name__ == '__main__':
