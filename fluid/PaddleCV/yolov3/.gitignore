@@ -1,0 +1,15 @@
+*.pyc
+*.swp
+*.log
+*.json
+*.jpg
+*.png
+output/
+test/
+checkpoints/
+weights/
+!weights/*.py
+!weights/*.sh
+dataset/coco/
+log*
+output*
