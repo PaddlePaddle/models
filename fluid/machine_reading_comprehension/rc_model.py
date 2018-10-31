@@ -317,4 +317,5 @@ def rc_model(hidden_size, vocab, args):
     cost.persistable = True
 
     feeding_list = ["q_ids", "start_lables", "end_lables", "p_ids", "q_id0"]
+    layers.Print(ms, message='ms', summarize=3)
     return cost, start_probs, end_probs, ms, feeding_list

@@ -236,7 +236,11 @@ def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
         total_loss += np.array(val_fetch_outs[0]).sum()
         start_probs_m = LodTensor_Array(val_fetch_outs[1])
         end_probs_m = LodTensor_Array(val_fetch_outs[2])
+        for data in feed_data:
+            data_len = [[len(y) for y in x[3]] for x in data]
+            logger.info(str(data_len))
         match_lod = val_fetch_outs[3].lod()
+        logger.info(str(match_lod))
         count += len(np.array(val_fetch_outs[0]))
 
         n_batch_cnt += len(np.array(val_fetch_outs[0]))
@@ -413,6 +417,8 @@ def train(logger, args):
                     n_batch_loss += cost_train
                     total_loss += cost_train * args.batch_size * dev_count
 
+                    if args.enable_ce and batch_id >= 100:
+                        break
                     if log_every_n_batch > 0 and batch_id % log_every_n_batch == 0:
                         print_para(main_program, parallel_executor, logger,
                                    args)
@@ -457,6 +463,14 @@ def train(logger, args):
                         executor=exe,
                         dirname=model_path,
                         main_program=main_program)
+                if args.enable_ce:  # For CE
+                    print("kpis\ttrain_cost_card%d\t%f" %
+                          (dev_count, total_loss / total_num))
+                    if brc_data.dev_set is not None:
+                        print("kpis\ttest_cost_card%d\t%f" %
+                              (dev_count, eval_loss))
+                    print("kpis\ttrain_duration_card%d\t%f" %
+                          (dev_count, time_consumed))
 
 
 def evaluate(logger, args):

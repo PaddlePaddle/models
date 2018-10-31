@@ -152,7 +152,7 @@ class BRCDataset(object):
                     batch_data['passage_token_ids'].append(passage_token_ids)
                     batch_data['passage_length'].append(
                         min(len(passage_token_ids), self.max_p_len))
-            # record the start passage index of current doc
+            # record the start passage index of current sample
             passade_idx_offset = sum(batch_data['passage_num'])
             batch_data['passage_num'].append(count)
             gold_passage_offset = 0

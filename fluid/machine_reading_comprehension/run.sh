@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=2
 python run.py   \
 --trainset 'data/preprocessed/trainset/search.train.json' \
            'data/preprocessed/trainset/zhidao.train.json' \
