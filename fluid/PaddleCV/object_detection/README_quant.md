@@ -43,7 +43,7 @@ A Python transpiler is used to rewrite Fluid training program or evaluation prog
 
   The training is fine-tuned on the well-trained MobileNet-SSD model. So download model at first:
 
-  ```bash
+  ```
   wget http://paddlemodels.bj.bcebos.com/ssd_mobilenet_v1_pascalvoc.tar.gz
   ```
 
@@ -111,7 +111,7 @@ A Python transpiler is used to rewrite Fluid training program or evaluation prog
 
   Users can evaluate the converted model by:
 
-  ```bash
+  ```
   python main_quant.py \
       --data_dir=$PascalVOC_DIR$ \
       --mode='test' \
@@ -121,10 +121,11 @@ A Python transpiler is used to rewrite Fluid training program or evaluation prog
 
   You also can check the 8-bit model by the inference scripts
 
-  ```bash
+  ```
   python main_quant.py \
       --mode='infer' \
       --init_model=$MobileNet_SSD_8BIT_MODEL$ \
+      --confs_threshold=0.5 \
       --image_path='/data/PascalVOC/VOCdevkit/VOC2007/JPEGImages/002271.jpg'
   ```
   See 002271.jpg for the visualized image with bbouding boxes.
