@@ -219,7 +219,6 @@ def infer(args, data_args):
     model_dir = args.init_model
     image_path = args.image_path
     confs_threshold = args.confs_threshold
-    voc_labels = 'data/pascalvoc/label_list'
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -238,7 +237,8 @@ def infer(args, data_args):
                    fetch_list=fetch,
                    return_numpy=False)
     out = np.array(outs[0])
-    draw_bounding_box_on_image(image_path, out, confs_threshold, voc_labels)
+    draw_bounding_box_on_image(image_path, out, confs_threshold,
+                               data_args.label_list)
 
 
 if __name__ == '__main__':
