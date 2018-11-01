@@ -312,6 +312,15 @@ def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
     return ave_loss, bleu_rouge
 
 
+def l2_loss(train_prog):
+    param_list = train_prog.block(0).all_parameters()
+    para_sum = []
+    for para in param_list:
+        para_mul = fluid.layers.elementwise_mul(x=para, y=para, axis=0)
+        para_sum.append(fluid.layers.reduce_sum(input=para_mul, dim=None))
+    return fluid.layers.sums(para_sum) * 0.5
+
+
 def train(logger, args):
     logger.info('Load data_set and vocab...')
     with open(os.path.join(args.vocab_dir, 'vocab.data'), 'rb') as fin:
@@ -349,24 +358,20 @@ def train(logger, args):
             # build optimizer
             if args.optim == 'sgd':
                 optimizer = fluid.optimizer.SGD(
-                    learning_rate=args.learning_rate,
-                    regularization=fluid.regularizer.L2DecayRegularizer(
-                        regularization_coeff=args.weight_decay))
+                    learning_rate=args.learning_rate)
             elif args.optim == 'adam':
                 optimizer = fluid.optimizer.Adam(
-                    learning_rate=args.learning_rate,
-                    regularization=fluid.regularizer.L2DecayRegularizer(
-                        regularization_coeff=args.weight_decay))
-
+                    learning_rate=args.learning_rate)
             elif args.optim == 'rprop':
                 optimizer = fluid.optimizer.RMSPropOptimizer(
-                    learning_rate=args.learning_rate,
-                    regularization=fluid.regularizer.L2DecayRegularizer(
-                        regularization_coeff=args.weight_decay))
+                    learning_rate=args.learning_rate)
             else:
                 logger.error('Unsupported optimizer: {}'.format(args.optim))
                 exit(-1)
-            optimizer.minimize(avg_cost)
+            if args.weight_decay > 0.0:
+                avg_cost_wd = avg_cost + args.weight_decay * l2_loss(
+                    main_program)
+            optimizer.minimize(avg_cost_wd)
 
             # initialize parameters
             place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
@@ -406,7 +411,7 @@ def train(logger, args):
                     feed_data = batch_reader(batch_list, args)
                     fetch_outs = parallel_executor.run(
                         feed=list(feeder.feed_parallel(feed_data, dev_count)),
-                        fetch_list=[avg_cost.name],
+                        fetch_list=[avg_cost_wd.name],
                         return_numpy=False)
                     cost_train = np.array(fetch_outs[0]).mean()
                     total_num += args.batch_size * dev_count
