@@ -1,7 +1,3 @@
-The minimum PaddlePaddle version needed for the code sample in this directory is the latest develop branch. If you are on a version of PaddlePaddle earlier than this, [please update your installation](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html).
-
----
-
 ## SSD Object Detection
 
 ## Table of Contents

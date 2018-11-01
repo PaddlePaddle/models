@@ -27,7 +27,6 @@ TagSpace模型的介绍可以参阅论文[#TagSpace: Semantic Embeddings from Ha
 "3","Wall St. Bears Claw Back Into the Black (Reuters)","Reuters - Short-sellers, Wall Street's dwindling\band of ultra-cynics, are seeing green again."
 ```
 
-
 ## 训练
 '--use_cuda 1' 表示使用gpu, 缺省表示使用cpu 
 

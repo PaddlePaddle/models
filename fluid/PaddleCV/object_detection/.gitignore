@@ -21,3 +21,4 @@ data/pascalvoc/trainval.txt
 log*
 *.log
 ssd_mobilenet_v1_pascalvoc*
+quant_model

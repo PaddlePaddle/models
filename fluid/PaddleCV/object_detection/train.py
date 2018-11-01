@@ -5,6 +5,7 @@ import argparse
 import functools
 import shutil
 import math
+import multiprocessing
 
 import paddle
 import paddle.fluid as fluid
@@ -16,18 +17,18 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('learning_rate',    float, 0.001,     "Learning rate.")
-add_arg('batch_size',       int,   64,        "Minibatch size.")
+add_arg('batch_size',       int,   64,        "Minibatch size of all devices.")
 add_arg('epoc_num',         int,   120,       "Epoch number.")
 add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
-add_arg('parallel',         bool,  True,      "Parallel.")
-add_arg('dataset',          str,   'pascalvoc', "coco2014, coco2017, and pascalvoc.")
+add_arg('parallel',         bool,  True,      "Whether train in parallel on multi-devices.")
+add_arg('dataset',          str,   'pascalvoc', "dataset can be coco2014, coco2017, and pascalvoc.")
 add_arg('model_save_dir',   str,   'model',     "The path to save model.")
 add_arg('pretrained_model', str,   'pretrained/ssd_mobilenet_v1_coco/', "The init model path.")
-add_arg('ap_version',       str,   '11point',           "Integral, 11point.")
+add_arg('ap_version',       str,   '11point',           "mAP version can be integral or 11point.")
 add_arg('image_shape',      str,   '3,300,300',         "Input image shape.")
-add_arg('mean_BGR',   str,   '127.5,127.5,127.5', "Mean value for B,G,R channel which will be subtracted.")
-add_arg('data_dir',         str,   'data/pascalvoc', "data directory")
-add_arg('enable_ce',     bool,  False, "Whether use CE to evaluate the model")
+add_arg('mean_BGR',         str,   '127.5,127.5,127.5', "Mean value for B,G,R channel which will be subtracted.")
+add_arg('data_dir',         str,   'data/pascalvoc', "Data directory.")
+add_arg('enable_ce',        bool,  False, "Whether use CE to evaluate the model.")
 #yapf: enable
 
 train_parameters = {
@@ -81,6 +82,7 @@ def build_program(main_prog, startup_prog, train_params, is_train):
     image_shape = train_params['image_shape']
     class_num = train_params['class_num']
     ap_version = train_params['ap_version']
+    outs = []
     with fluid.program_guard(main_prog, startup_prog):
         py_reader = fluid.layers.py_reader(
             capacity=64,
@@ -98,11 +100,12 @@ def build_program(main_prog, startup_prog, train_params, is_train):
                     loss = fluid.layers.reduce_sum(loss)
                     optimizer = optimizer_setting(train_params)
                     optimizer.minimize(loss)
+                outs = [py_reader, loss]
             else:
                 with fluid.unique_name.guard("inference"):
                     nmsed_out = fluid.layers.detection_output(
                         locs, confs, box, box_var, nms_threshold=0.45)
-                    loss = fluid.evaluator.DetectionMAP(
+                    map_eval = fluid.evaluator.DetectionMAP(
                         nmsed_out,
                         gt_label,
                         gt_box,
@@ -111,7 +114,9 @@ def build_program(main_prog, startup_prog, train_params, is_train):
                         overlap_threshold=0.5,
                         evaluate_difficult=False,
                         ap_version=ap_version)
-    return py_reader, loss
+                # nmsed_out and image is used to save mode for inference
+                outs = [py_reader, map_eval, nmsed_out, image]
+    return outs
 
 
 def train(args,
@@ -127,8 +132,12 @@ def train(args,
     enable_ce = args.enable_ce
     is_shuffle = True
 
-    devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
-    devices_num = len(devices.split(","))
+    if not use_gpu:
+        devices_num = int(os.environ.get('CPU_NUM',
+                          multiprocessing.cpu_count()))
+    else:
+        devices_num = fluid.core.get_cuda_device_count()
+
     batch_size = train_params['batch_size']
     epoc_num = train_params['epoc_num']
     batch_size_per_device = batch_size // devices_num
@@ -153,7 +162,7 @@ def train(args,
         startup_prog=startup_prog,
         train_params=train_params,
         is_train=True)
-    test_py_reader, map_eval = build_program(
+    test_py_reader, map_eval, _, _ = build_program(
         main_prog=test_prog,
         startup_prog=startup_prog,
         train_params=train_params,
@@ -258,11 +267,9 @@ def train(args,
                     print("kpis	train_speed_card%s	%f" %
                            (devices_num, total_time / epoch_idx))
 
-    except fluid.core.EOFException:
+    except (fluid.core.EOFException, StopIteration):
+        train_reader().close()
         train_py_reader.reset()
-    except StopIteration:
-        train_py_reader.reset()
-    train_py_reader.reset()
 
 
 if __name__ == '__main__':
@@ -291,6 +298,7 @@ if __name__ == '__main__':
     train_parameters[dataset]['batch_size'] = args.batch_size
     train_parameters[dataset]['lr'] = args.learning_rate
     train_parameters[dataset]['epoc_num'] = args.epoc_num
+    train_parameters[dataset]['ap_version'] = args.ap_version
 
     data_args = reader.Settings(
         dataset=args.dataset,
