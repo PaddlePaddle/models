@@ -77,7 +77,7 @@ The first field is the relative path of the image file, and the second field is 
 
 
 ### To Use Pre-trained Model
-We also provide a pre-trained model using VGG-16 with good performance. To use the model, download the file http://paddlepaddle.bj.bcebos.com/model_zoo/detection/ssd_model/vgg_model.tar.gz, and place it as ```vgg/vgg_model.tar.gz```。
+We also provide a pre-trained model using VGG-16 with good performance. To use the model, download the file http://paddlemodels.bj.bcebos.com/v2/vgg_model.tar.gz, and place it as ```vgg/vgg_model.tar.gz```.
 
 ### Training
 Next, run ```python train.py``` to train the model. Note that this example only supports the CUDA GPU environment, and can not be trained using only CPU. This is mainly because the training is very slow using CPU only.
