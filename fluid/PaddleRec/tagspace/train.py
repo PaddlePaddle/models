@@ -24,7 +24,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def network(vocab_text_size, vocab_tag_size, emb_dim=10, hid_dim=1000, win_size=5, margin=0.1):
+def network(vocab_text_size, vocab_tag_size, emb_dim=10, hid_dim=1000, win_size=5, margin=0.1, neg_size=5):
     """ network definition """
     text = io.data(name="text", shape=[1], lod_level=1, dtype='int64')
     pos_tag = io.data(name="pos_tag", shape=[1], lod_level=1, dtype='int64')
@@ -44,12 +44,14 @@ def network(vocab_text_size, vocab_tag_size, emb_dim=10, hid_dim=1000, win_size=
             act="tanh",
             pool_type="max",
             param_attr="cnn")
-    
     text_hid = fluid.layers.fc(input=conv_1d, size=emb_dim, param_attr="text_hid")
-
     cos_pos = nn.cos_sim(pos_tag_emb, text_hid)
-    cos_neg = nn.cos_sim(neg_tag_emb, text_hid)
-    
+    mul_text_hid = fluid.layers.sequence_expand_as(x=text_hid, y=neg_tag_emb)
+    mul_cos_neg = nn.cos_sim(neg_tag_emb, mul_text_hid)
+    cos_neg_all = fluid.layers.sequence_reshape(input=mul_cos_neg, new_dim=neg_size)
+    #choose max negtive cosine
+    cos_neg = nn.reduce_max(cos_neg_all, dim=1, keep_dim=True)
+    #calculate hinge loss 
     loss_part1 = nn.elementwise_sub(
             tensor.fill_constant_batch_size_like(
                 input=cos_pos,
@@ -63,22 +65,20 @@ def network(vocab_text_size, vocab_tag_size, emb_dim=10, hid_dim=1000, win_size=
                 input=loss_part2, shape=[-1, 1], value=0.0, dtype='float32'),
             loss_part2)
     avg_cost = nn.mean(loss_part3)
-
     less = tensor.cast(cf.less_than(cos_neg, cos_pos), dtype='float32')
     correct = nn.reduce_sum(less)
     return text, pos_tag, neg_tag, avg_cost, correct, cos_pos
 
-def train(train_reader, vocab_text, vocab_tag, base_lr, batch_size,
+def train(train_reader, vocab_text, vocab_tag, base_lr, batch_size, neg_size,
           pass_num, use_cuda, model_dir):
     """ train network """
-
     args = parse_args()
     vocab_text_size = len(vocab_text)
     vocab_tag_size = len(vocab_tag)
 
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
     # Train program
-    text, pos_tag, neg_tag, avg_cost, correct, pos_cos = network(vocab_text_size, vocab_tag_size)
+    text, pos_tag, neg_tag, avg_cost, correct, cos_pos = network(vocab_text_size, vocab_tag_size, neg_size=neg_size)
 
     # Optimization to minimize lost
     sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=base_lr)
@@ -117,8 +117,8 @@ def train(train_reader, vocab_text, vocab_tag, base_lr, batch_size,
               (epoch_idx, batch_id, total_time / epoch_idx))
         save_dir = "%s/epoch_%d" % (model_dir, epoch_idx)
         feed_var_names = ["text", "pos_tag"]
-        fetch_vars = [pos_cos]
-        fluid.io.save_inference_model(save_dir ,feed_var_names, fetch_vars, exe)
+        fetch_vars = [cos_pos]
+        fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars, exe)
     print("finish training")
 
 def train_net():
@@ -128,17 +128,19 @@ def train_net():
     test_file = args.test_file
     use_cuda = True if args.use_cuda else False
     batch_size = 100
+    neg_size = 3
     vocab_text, vocab_tag, train_reader, test_reader = utils.prepare_data(
-        train_file, test_file, batch_size=batch_size, buffer_size=batch_size*100, word_freq_threshold=0)
+        train_file, test_file, neg_size=neg_size, batch_size=batch_size, buffer_size=batch_size*100, word_freq_threshold=0)
     train(
         train_reader=train_reader,
         vocab_text=vocab_text,
         vocab_tag=vocab_tag,
         base_lr=0.01,
         batch_size=batch_size,
+        neg_size=neg_size,
         pass_num=10,
         use_cuda=use_cuda,
-        model_dir="model_dim10_2")
+        model_dir="model")
 
 
 if __name__ == "__main__":
