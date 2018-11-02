@@ -248,18 +248,18 @@ def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
                     n_batch_loss / n_batch_cnt)))
             n_batch_loss = 0.0
             n_batch_cnt = 0
-
+        batch_offset = 0
         for idx, batch in enumerate(batch_list):
             #one batch
             batch_size = len(batch['raw_data'])
-            batch_range = match_lod[0][idx * batch_size:(idx + 1) * batch_size +
+            batch_range = match_lod[0][batch_offset:batch_offset + batch_size +
                                        1]
             batch_lod = [[batch_range[x], batch_range[x + 1]]
                          for x in range(len(batch_range[:-1]))]
-            start_prob_batch = start_probs_m[idx * batch_size:(idx + 1) *
-                                             batch_size]
-            end_prob_batch = end_probs_m[idx * batch_size:(idx + 1) *
-                                         batch_size]
+            start_prob_batch = start_probs_m[batch_offset:batch_offset +
+                                             batch_size + 1]
+            end_prob_batch = end_probs_m[batch_offset:batch_offset + batch_size
+                                         + 1]
             for sample, start_prob_inst, end_prob_inst, inst_range in zip(
                     batch['raw_data'], start_prob_batch, end_prob_batch,
                     batch_lod):
@@ -284,6 +284,7 @@ def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
                         'yesno_answers': []
                     }
                     ref_answers.append(ref)
+            batch_offset = batch_offset + batch_size
 
     result_dir = args.result_dir
     result_prefix = args.result_name
@@ -346,8 +347,9 @@ def train(logger, args):
     # build model
     main_program = fluid.Program()
     startup_prog = fluid.Program()
-    main_program.random_seed = args.random_seed
-    startup_prog.random_seed = args.random_seed
+    if args.enable_ce:
+        main_program.random_seed = args.random_seed
+        startup_prog.random_seed = args.random_seed
     with fluid.program_guard(main_program, startup_prog):
         with fluid.unique_name.guard():
             avg_cost, s_probs, e_probs, match, feed_order = rc_model.rc_model(
@@ -405,7 +407,10 @@ def train(logger, args):
             for pass_id in range(1, args.pass_num + 1):
                 pass_start_time = time.time()
                 pad_id = vocab.get_id(vocab.pad_token)
-                train_reader = lambda:brc_data.gen_mini_batches('train', args.batch_size, pad_id, shuffle=False)
+                if args.enable_ce:
+                    train_reader = lambda:brc_data.gen_mini_batches('train', args.batch_size, pad_id, shuffle=False)
+                else:
+                    train_reader = lambda:brc_data.gen_mini_batches('train', args.batch_size, pad_id, shuffle=True)
                 train_reader = read_multiple(train_reader, dev_count)
                 log_every_n_batch, n_batch_loss = args.log_interval, 0
                 total_num, total_loss = 0, 0
@@ -420,6 +425,8 @@ def train(logger, args):
                     n_batch_loss += cost_train
                     total_loss += cost_train * args.batch_size * dev_count
 
+                    if args.enable_ce and batch_id >= 100:
+                        break
                     if log_every_n_batch > 0 and batch_id % log_every_n_batch == 0:
                         print_para(main_program, parallel_executor, logger,
                                    args)
@@ -464,6 +471,14 @@ def train(logger, args):
                         executor=exe,
                         dirname=model_path,
                         main_program=main_program)
+                if args.enable_ce:  # For CE
+                    print("kpis\ttrain_cost_card%d\t%f" %
+                          (dev_count, total_loss / total_num))
+                    if brc_data.dev_set is not None:
+                        print("kpis\ttest_cost_card%d\t%f" %
+                              (dev_count, eval_loss))
+                    print("kpis\ttrain_duration_card%d\t%f" %
+                          (dev_count, time_consumed))
 
 
 def evaluate(logger, args):
@@ -481,8 +496,6 @@ def evaluate(logger, args):
     # build model
     main_program = fluid.Program()
     startup_prog = fluid.Program()
-    main_program.random_seed = args.random_seed
-    startup_prog.random_seed = args.random_seed
     with fluid.program_guard(main_program, startup_prog):
         with fluid.unique_name.guard():
             avg_cost, s_probs, e_probs, match, feed_order = rc_model.rc_model(
@@ -530,8 +543,6 @@ def predict(logger, args):
     # build model
     main_program = fluid.Program()
     startup_prog = fluid.Program()
-    main_program.random_seed = args.random_seed
-    startup_prog.random_seed = args.random_seed
     with fluid.program_guard(main_program, startup_prog):
         with fluid.unique_name.guard():
             avg_cost, s_probs, e_probs, match, feed_order = rc_model.rc_model(
@@ -599,8 +610,9 @@ def prepare(logger, args):
 if __name__ == '__main__':
     args = parse_args()
 
-    random.seed(args.random_seed)
-    np.random.seed(args.random_seed)
+    if args.enable_ce:
+        random.seed(args.random_seed)
+        np.random.seed(args.random_seed)
 
     logger = logging.getLogger("brc")
     logger.setLevel(logging.INFO)
