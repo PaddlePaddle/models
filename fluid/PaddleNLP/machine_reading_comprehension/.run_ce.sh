@@ -13,23 +13,23 @@ fi
 
 train(){
 python  -u run.py   \
-	--trainset 'data/demo/search.train.json' \
-	--devset 'data/demo/search.dev.json' \
-	--testset 'data/demo/search.test.json' \
-	--vocab_dir 'data/demo/' \
-	--use_gpu true \
-	--save_dir ./models \
-	--pass_num 1 \
-	--learning_rate 0.001 \
-	--batch_size 32 \
-	--embed_size 300 \
-	--hidden_size 150 \
-	--max_p_num 5 \
-	--max_p_len 500 \
-	--max_q_len 60 \
-	--max_a_len 200 \
-	--drop_rate 0.2 \
-	--log_interval 1 \
+        --trainset 'data/demo/search.train.json' \
+        --devset 'data/demo/search.dev.json' \
+        --testset 'data/demo/search.test.json' \
+        --vocab_dir 'data/demo/' \
+        --use_gpu true \
+        --save_dir ./models \
+        --pass_num 1 \
+        --learning_rate 0.001 \
+        --batch_size 32 \
+        --embed_size 300 \
+        --hidden_size 150 \
+        --max_p_num 5 \
+        --max_p_len 500 \
+        --max_q_len 60 \
+        --max_a_len 200 \
+        --drop_rate 0.2 \
+        --log_interval 1 \
         --enable_ce \
         --train 
 }
