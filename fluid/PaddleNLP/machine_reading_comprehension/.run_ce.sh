@@ -34,12 +34,12 @@ python  -u run.py   \
         --train 
 }
 
-cudaid=${transformer:=0} # use 0-th card as default
+cudaid=${single:=0} # use 0-th card as default
 export CUDA_VISIBLE_DEVICES=$cudaid
 
 train | python _ce.py
 
-cudaid=${transformer_m:=0,1,2,3} # use 0,1,2,3 card as default
+cudaid=${multi:=0,1,2,3} # use 0,1,2,3 card as default
 export CUDA_VISIBLE_DEVICES=$cudaid
 
 train | python _ce.py
