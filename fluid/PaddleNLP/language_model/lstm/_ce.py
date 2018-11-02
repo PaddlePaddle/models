@@ -35,9 +35,10 @@ def parse_log(log):
     for line in log.split('\n'):
         fs = line.strip().split('\t')
         print(fs)
-        kpi_name = fs[0]
-        kpi_value = float(fs[1])
-        yield kpi_name, kpi_value
+        if len(fs) == 3 and fs[0] == 'ptblm':
+            kpi_name = fs[1]
+            kpi_value = float(fs[2])
+            yield kpi_name, kpi_value
 
 
 def log_to_ce(log):
