@@ -6,6 +6,7 @@
 .
 ├── README.md            # 文档
 ├── train.py             # 训练脚本
+├── infer.py             # 预测脚本
 ├── utils                # 通用函数
 ├── small_train.txt      # 小样本训练集
 └── small_test.txt       # 小样本测试集
@@ -26,7 +27,6 @@ TagSpace模型的介绍可以参阅论文[#TagSpace: Semantic Embeddings from Ha
 "3","Wall St. Bears Claw Back Into the Black (Reuters)","Reuters - Short-sellers, Wall Street's dwindling\band of ultra-cynics, are seeing green again."
 ```
 
-
 ## 训练
 '--use_cuda 1' 表示使用gpu, 缺省表示使用cpu 
 
@@ -41,10 +41,9 @@ CPU 环境
 python train.py small_train.txt small_test.txt
 ```
 
-## 未来工作
+## 预测
 
-添加预测部分
-
-添加多种负例采样方式
-
+```
+CUDA_VISIBLE_DEVICES=0 python infer.py model/ 1 10 small_train.txt small_test.txt --use_cuda 1
+```
 

@@ -38,12 +38,13 @@ def prepare_data(train_filename,
     train_reader = sort_batch(
         paddle.reader.shuffle(
             train(
-                train_filename, vocab_text, vocab_tag, buffer_size, data_type=DataType.SEQ),
+                train_filename, vocab_text, vocab_tag, neg_size,
+                buffer_size, data_type=DataType.SEQ),
             buf_size=buffer_size),
         batch_size, batch_size * 20)
     test_reader = sort_batch(
         test(
-            test_filename, vocab_text, vocab_tag, buffer_size, data_type=DataType.SEQ),
+            test_filename, vocab_text, vocab_tag, neg_size, buffer_size, data_type=DataType.SEQ),
         batch_size, batch_size * 20)
     return vocab_text, vocab_tag, train_reader, test_reader
 
@@ -123,7 +124,7 @@ def build_dict(column_num=2, min_word_freq=50, train_filename="", test_filename=
     word_idx = dict(list(zip(words, six.moves.range(len(words)))))
     return word_idx
 
-def reader_creator(filename, text_idx, tag_idx, n, data_type):
+def train_reader_creator(filename, text_idx, tag_idx, neg_size, n, data_type):
     def reader():
         with open(filename) as input_file:
             data_file = csv.reader(input_file)
@@ -138,7 +139,7 @@ def reader_creator(filename, text_idx, tag_idx, n, data_type):
                 max_iter = 100
                 now_iter = 0
                 sum_n = 0
-                while(sum_n < 1) :
+                while(sum_n < neg_size) :
                     now_iter += 1
                     if now_iter > max_iter:
                         print("error : only one class")
@@ -152,8 +153,26 @@ def reader_creator(filename, text_idx, tag_idx, n, data_type):
                 yield text, pos_tag, neg_tag
     return reader
 
-def train(filename, text_idx, tag_idx, n, data_type=DataType.SEQ):
-    return reader_creator(filename, text_idx, tag_idx, n, data_type)
+def test_reader_creator(filename, text_idx, tag_idx, n, data_type):
+    def reader():
+        with open(filename) as input_file:
+            data_file = csv.reader(input_file)
+            for row in data_file:
+                text_raw = re.split(r'\W+', row[2].strip())
+                text = [text_idx.get(w) for w in text_raw]
+                tag_raw = re.split(r'\W+', row[0].strip())
+                pos_index = tag_idx.get(tag_raw[0])
+                pos_tag = []
+                pos_tag.append(pos_index)
+                for ii in range(len(tag_idx)):
+                    tag = []
+                    tag.append(ii)
+                    yield text, tag, pos_tag
+    return reader
 
-def test(filename, text_idx, tag_idx, n, data_type=DataType.SEQ):
-    return reader_creator(filename, text_idx, tag_idx, n, data_type)
+
+def train(filename, text_idx, tag_idx, neg_size, n, data_type=DataType.SEQ):
+    return train_reader_creator(filename, text_idx, tag_idx, neg_size, n, data_type)
+
+def test(filename, text_idx, tag_idx, neg_size, n, data_type=DataType.SEQ):
+    return test_reader_creator(filename, text_idx, tag_idx, n, data_type)
