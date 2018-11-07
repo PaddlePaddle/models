@@ -6,7 +6,7 @@
   * [a brief review of the Quora Question Pair (QQP) Task](#a-brief-review-of-the-quora-question-pair-qqp-task)
   * [Our Work](#our-work)
 * [Environment Preparation](#environment-preparation)
-  * [Install Fluid release 1.0](#install-fluid-release-10)
+  * [Install Fluid release 1.1 or later](#install-fluid-release-10-or-later)
     * [cpu version](#cpu-version)
     * [gpu version](#gpu-version)
     * [Have I installed Fluid successfully?](#have-i-installed-fluid-successfully)
@@ -41,9 +41,9 @@ Based on the Quora Question Pair Dataset, we implemented some classic models in 
 
 ## Environment Preparation
 
-### Install Fluid release 1.0
+### Install Fluid release 1.1.0 or later
 
-Please follow the [official document in English](http://www.paddlepaddle.org/documentation/docs/en/1.0/build_and_install/pip_install_en.html) or [official document in Chinese](http://www.paddlepaddle.org/documentation/docs/zh/1.0/beginners_guide/install/Start.html) to install the Fluid deep learning framework. 
+Please follow the [official document in English](http://www.paddlepaddle.org/documentation/docs/en/1.1/build_and_install/pip_install_en.html) or [official document in Chinese](http://www.paddlepaddle.org/documentation/docs/zh/1.1/beginners_guide/install/Start.html) to install the Fluid deep learning framework. 
 
 #### Have I installed Fluid successfully?
 
@@ -101,6 +101,8 @@ All configurations used in our experiments are as follows:
 |InferSentNet|infer_sent_v2|python train_and_evaluate.py --model_name=InferSentNet --config=infer_sent_v2
 |SSENet|sse_base|python train_and_evaluate.py  --model_name=SSENet  --config=sse_base
 |pwimNet|pwim_base|python train_and_evaluate.py  --model_name=pwimNet  --config=pwim_base
+|ESIMNet|esim_seq|python train_and_evaluate.py  --model_name=ESIMNet  --config=esim_seq
+
 
 ## Models
 
@@ -113,6 +115,8 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
 |InferSent|word|1 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
 |SSE|word|3 layer Bi-LSTM|concatenation/element-wise product/<br>absolute element-wise difference|MLP
 |PWIM|word|1 layer Bi-LSTM|cosine/Euclidean/dot product,<br>hard alignment, CNN|MLP
+|ESIM|word|1 layer Bi-LSTM|soft alignment + LSTM + concatenation|MLP
+
 
 ### CDSSM
 
@@ -172,6 +176,18 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
 }
 ```
 
+### ESIM
+
+
+```
+@article{chen2016enhanced,
+  title={Enhanced lstm for natural language inference},
+  author={Chen, Qian and Zhu, Xiaodan and Ling, Zhenhua and Wei, Si and Jiang, Hui and Inkpen, Diana},
+  journal={arXiv preprint arXiv:1609.06038},
+  year={2016}
+}
+```
+
 ## Results
 
 |Model|Config|dev accuracy| test accuracy
@@ -182,6 +198,7 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
 |InferSentNet|infer_sent_v2|88.55%|88.43%|
 |SSENet|sse_base|88.35%|88.25%|
 |pwimNet|pwim_base|84.68%|85.43%|
+|ESIMNet|esim_seq|86.48%|85.96%|
 
 In our experiment, we found that LSTM-based models outperformed convolution-based models. The DecAtt model has fewer parameters than LSTM-based models, but is sensitive to hyper-parameters.
 
