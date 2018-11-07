@@ -21,7 +21,6 @@ def sse_base():
     config = basic_config.config()
     config.learning_rate = 0.0002
     config.lr_decay = 0.7
-    config.save_dirname = "model_dir"
     config.use_pretrained_word_embedding = True
     config.dict_dim = 40000 # approx_vocab_size
     config.metric_type = ['accuracy']

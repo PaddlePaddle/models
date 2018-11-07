@@ -12,12 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#from dec_att import decatt_word
-#from esim import esim_seq
-from .pwim import pwim_base
-from .cdssm import cdssm_base, cdssm_glue
-from .dec_att import decatt_glove
-from .sse import sse_base
-from .infer_sent import infer_sent_v1
-from .infer_sent import infer_sent_v2, infer_sent_glue
-from .esim import esim_seq
+import basic_config
+
+def esim_seq():
+    """
+    set configs
+    """
+    config = basic_config.config()
+    config.optimizer_type = 'adam'
+    config.learning_rate = 0.0004
+    config.save_dirname = "model_dir"
+    config.use_pretrained_word_embedding = True
+    config.dict_dim = 40000 # approx_vocab_size
+    config.batch_size = 128
+    config.use_cuda = True
+
+    # net config
+    config.emb_dim = 300
+    config.lstm_hid_dim = 300
+    config.mlp_hid_dim = 300
+    config.class_dim = 2
+    config.drop_rate = 0.5
+    return config
+

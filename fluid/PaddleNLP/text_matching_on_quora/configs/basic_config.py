@@ -22,7 +22,7 @@ class config(object):
         self.lr_decay = 1
         self.learning_rate = 0.001
 
-        self.save_dirname = 'model_dir'
+        self.save_dirname = 'checkpoint'
 
         self.train_samples_num = 384348
         self.duplicate_data = False

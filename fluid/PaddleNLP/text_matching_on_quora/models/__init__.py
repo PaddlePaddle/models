@@ -18,3 +18,4 @@ from .sse import SSENet
 from .infer_sent import InferSentNet
 #from esim import ESIMNet
 from .pwim import pwimNet
+from .esim import ESIMNet
