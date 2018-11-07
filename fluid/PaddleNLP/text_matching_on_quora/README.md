@@ -6,10 +6,7 @@
   * [a brief review of the Quora Question Pair (QQP) Task](#a-brief-review-of-the-quora-question-pair-qqp-task)
   * [Our Work](#our-work)
 * [Environment Preparation](#environment-preparation)
-  * [Install Fluid release 1.1 or later](#install-fluid-release-10-or-later)
-    * [cpu version](#cpu-version)
-    * [gpu version](#gpu-version)
-    * [Have I installed Fluid successfully?](#have-i-installed-fluid-successfully)
+  * [Install Fluid release 1.1 or later](#install-fluid-release-110-or-later)
 * [Prepare Data](#prepare-data)
 * [Train and evaluate](#train-and-evaluate)
 * [Models](#models)
@@ -178,7 +175,6 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
 
 ### ESIM
 
-
 ```
 @article{chen2016enhanced,
   title={Enhanced lstm for natural language inference},
@@ -187,6 +183,12 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
   year={2016}
 }
 ```
+We have implementated the ESIM_seq model from the paper. There are small differences between our implementation and the original paper:
+
+- The paper use the Adam method for optimization, with first momentum set to be 0.9 and the second 0.999. We use the default Adam optimizer in fluid.
+- The Out-of-vocabulary (OOV) words are initialized randomly with Gaussian samples in the paper and initialized randomly with uniform distribution (from -0.05 to 0.05) in our implementation.
+- The paper didn't specify the hidden dimentional size in multilayer perceptron (MLP) classifier. We set it to 300.
+- The paper use a 1-layer feedforward neural network with ReLU activation before the second bi-lstm layer. We removed the FF layer because it decreased the training accuracy. 
 
 ## Results
 
