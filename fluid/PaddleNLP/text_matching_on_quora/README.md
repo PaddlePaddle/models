@@ -138,6 +138,7 @@ We implemeted 4 models for now: the convolutional deep-structured semantic model
   year={2017}
 }
 ```
+The original paper of InferSent use a 1-layer bi-lstm model to extract sentence feature. We implemented a InferSent model with the same design and the same hyper-parameter specified in the paper, which is referred as _infersent_v1_ below. We also implemented a InferSent with our own hyper-parameter, which is referred as _infersent_v2_ below.
 
 ### SSE
 
@@ -196,8 +197,8 @@ We have implementated the ESIM_seq model from the paper. There are small differe
 |:----:|:----:|:----:|:----:|
 |cdssmNet|cdssm_base|83.56%|82.83%|
 |DecAttNet|decatt_glove|86.31%|86.22%|
-|InferSentNet|infer_sent_v1|87.15%|86.62%|
-|InferSentNet|infer_sent_v2|88.55%|88.43%|
+|InferSentNet|infer_sent_v1(hyper-param in the paper)|87.15%|86.62%|
+|InferSentNet|infer_sent_v2(our own hyper-param)|88.55%|88.43%|
 |SSENet|sse_base|88.35%|88.25%|
 |pwimNet|pwim_base|84.68%|85.43%|
 |ESIMNet|esim_seq|86.48%|85.96%|
