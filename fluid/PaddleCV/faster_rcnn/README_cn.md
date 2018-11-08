@@ -119,11 +119,9 @@ Faster RCNN mAP
 
 | 模型                   |   RoI处理方式  | 批量大小   | 迭代次数   | mAP  |
 | :--------------- | :--------: | :------------:    | :------------------:    |------: |
-| Detectron RoIPool        | RoIPool | 8   |    180000        | 0.315 |
-| Fluid RoIPool minibatch padding | RoIPool | 8   |    180000        | 0.314 |
-| Fluid RoIPool no padding  | RoIPool | 8   |    180000        | 0.316 |
-| Detectron RoIAlign       | RoIAlign | 8   |    180000        | 0.346 |
-| Fluid RoIAlign no padding  | RoIAlign | 8   |    180000        | 0.345 |
+| [Fluid RoIPool minibatch padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) | RoIPool | 8   |    180000        | 0.314 |
+| [Fluid RoIPool no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_no_padding.tar.gz)  | RoIPool | 8   |    180000        | 0.316 |
+| [Fluid RoIAlign no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding.tar.gz)  | RoIAlign | 8   |    180000        | 0.345 |
 
 
 
