@@ -169,18 +169,15 @@ void InitializeReader(std::unique_ptr<DataReader>& reader,
   if (!reader->SetSeparator('\t')) reader->SetSeparator(' ');
 }
 
-void ReadNextBatch(PaddleTensor& input_data,
+bool ReadNextBatch(PaddleTensor& input_data,
                    PaddleTensor& input_labels,
                    std::unique_ptr<DataReader>& reader) {
-  if (!reader->NextBatch(static_cast<float*>(input_data.data.data()),
-                         FLAGS_with_labels
-                             ? static_cast<int64_t*>(input_labels.data.data())
-                             : nullptr,
-                         FLAGS_batch_size,
-                         FLAGS_debug_display_images)) {
-    std::cout << "Batch size bigger than dataset size. Stopping.";
-    throw std::exception();
-  }
+  return reader->NextBatch(static_cast<float*>(input_data.data.data()),
+                           FLAGS_with_labels
+                               ? static_cast<int64_t*>(input_labels.data.data())
+                               : nullptr,
+                           FLAGS_batch_size,
+                           FLAGS_debug_display_images);
 }
 
 void PrepareConfig(contrib::AnalysisConfig& config) {
@@ -218,10 +215,16 @@ void PrepareConfig(contrib::AnalysisConfig& config) {
 }
 
 void Main() {
-  CHECK_GE(FLAGS_iterations, 0);
-  CHECK_GE(FLAGS_skip_batch_num, 0);
-
   PrintInfo();
+
+  CHECK_GT(FLAGS_batch_size, 0);
+  CHECK_GT(FLAGS_iterations, 0);
+  CHECK_GE(FLAGS_skip_batch_num, 0);
+  struct stat sb;
+  if (stat(FLAGS_infer_model.c_str(), &sb) != 0 || !S_ISDIR(sb.st_mode)) {
+    throw std::invalid_argument(
+        "The inference model directory does not exist.");
+  }
 
   paddle::PaddleTensor input_data = DefineInputData();
   paddle::PaddleTensor input_labels = DefineInputLabels();
@@ -235,7 +238,10 @@ void Main() {
     CreateFakeData(input_data, input_labels);
   } else {
     InitializeReader(reader, convert_to_rgb);
-    ReadNextBatch(input_data, input_labels, reader);
+    if (!ReadNextBatch(input_data, input_labels, reader)) {
+      throw std::invalid_argument(
+          "Batch size cannot be bigger than dataset size.");
+    }
   }
 
   // configure predictor
@@ -268,7 +274,10 @@ void Main() {
 
     // read next batch of data
     if (i > 0 && !FLAGS_use_fake_data) {
-      ReadNextBatch(input_data, input_labels, reader);
+      if (!ReadNextBatch(input_data, input_labels, reader)) {
+        std::cout << "No more full batches. Stopping." << std::endl;
+        break;
+      }
     }
 
     // display images from batch if requested
@@ -313,7 +322,8 @@ int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   try {
     paddle::Main();
-  } catch (const std::exception&) {
+  } catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << std::endl;
     return EXIT_FAILURE;
   }
   return 0;

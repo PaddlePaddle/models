@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "data_reader.h"
+#include <sys/stat.h>
 #include <fstream>
 #include <opencv2/opencv.hpp>
 #include <string>
@@ -110,6 +111,11 @@ DataReader::DataReader(const std::string& data_list_path,
 
   if (data_dir_path.empty()) {
     throw std::invalid_argument("Data directory must be set to use imagenet.");
+  }
+
+  struct stat sb;
+  if (stat(data_dir_path.c_str(), &sb) != 0 || !S_ISDIR(sb.st_mode)) {
+    throw std::invalid_argument("Data directory does not exist.");
   }
 
   if (channels != 3) {
