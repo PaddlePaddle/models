@@ -24,8 +24,6 @@ def conv_bn(input,
         use_cudnn=use_cudnn,
         param_attr=parameter_attr,
         bias_attr=False)
-    parameter_attr = ParamAttr(learning_rate=0.1, initializer=MSRA())
-    bias_attr = ParamAttr(learning_rate=0.2)
     return fluid.layers.batch_norm(input=conv, act=act)
 
 
