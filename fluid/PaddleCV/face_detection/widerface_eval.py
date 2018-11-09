@@ -308,6 +308,9 @@ if __name__ == '__main__':
         infer_program, nmsed_out = network.infer(main_program)
         fetches = [nmsed_out]
         fluid.io.load_persistables(
-            exe, args.model_dir, main_program=main_program)
-
+            exe, args.model_dir, main_program=infer_program)
+        # save model and program
+        #fluid.io.save_inference_model('pyramidbox_model',
+        #    ['image'], [nmsed_out], exe, main_program=infer_program,
+        #    model_filename='model', params_filename='params')
     infer(args, config)
