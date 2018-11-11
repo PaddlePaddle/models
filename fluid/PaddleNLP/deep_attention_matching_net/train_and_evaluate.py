@@ -203,8 +203,8 @@ def train(args):
             loss.persistable = True
             logits.persistable = True
             # gradient clipping
-            fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
-                max=1.0, min=-1.0))
+            #fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
+            #    max=1.0, min=-1.0))
 
             optimizer = fluid.optimizer.Adam(
                 learning_rate=fluid.layers.exponential_decay(
@@ -324,7 +324,7 @@ def train(args):
                 evaluate(score_path, result_file_path)
         return step
 
-    # train on one epoch with pyreader 
+    # train on one epoch with pyreader
     def train_with_pyreader(step):
         def data_provider():
             for index in six.moves.xrange(batch_num):
