@@ -2,22 +2,7 @@
 # DNN for Click-Through Rate prediction
 
 ## Introduction
-This model implements the DNN part proposed in the following paper:
 
-```text
-@inproceedings{guo2017deepfm,
-  title={DeepFM: A Factorization-Machine based Neural Network for CTR Prediction},
-  author={Huifeng Guo, Ruiming Tang, Yunming Ye, Zhenguo Li and Xiuqiang He},
-  booktitle={the Twenty-Sixth International Joint Conference on Artificial Intelligence (IJCAI)},
-  pages={1725--1731},
-  year={2017}
-}
-```
-
-The DeepFm combines factorization machine and deep neural networks to model
-both low order and high order feature interactions. For details of the
-factorization machines, please refer to the paper [factorization
-machines](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf)
 
 ## Environment
 You should install PaddlePaddle Fluid first.
@@ -48,6 +33,10 @@ normalized to [0, 1] and the categorical features are one-hot encoded. The raw
 training dataset are splited such that 90% are used for training and the other
 10% are used for validation during training. In reader.py, training data is the first
 90% of data in train.txt, and validation data is the left.
+
+```bash
+python preprocess.py --data_path data/enwik9 --dict_path data/enwik9_dict
+```
 
 ## Train
 The command line options for training can be listed by `python train.py -h`.

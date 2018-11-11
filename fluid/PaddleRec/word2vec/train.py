@@ -23,12 +23,17 @@ def parse_args():
     parser.add_argument(
         '--train_data_path',
         type=str,
-        default='./data/raw/train.txt',
+        default='./data/enwik9',
         help="The path of training dataset")
+    parser.add_argument(
+        '--dict_path',
+        type=str,
+        default='./data/enwik9_dict',
+        help="The path of data dict")
     parser.add_argument(
         '--test_data_path',
         type=str,
-        default='./data/raw/valid.txt',
+        default='./data/text8',
         help="The path of testing dataset")
     parser.add_argument(
         '--batch_size',
@@ -86,11 +91,11 @@ def parse_args():
     return parser.parse_args()
 
 
-def train_loop(args, train_program, data_list, loss, trainer_num, trainer_id):
-    dataset = reader.get_batches(reader.train_words, 5, 5)
+def train_loop(args, train_program, reader, data_list, loss, trainer_num,
+               trainer_id):
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            dataset, buf_size=args.batch_size * 100),
+            reader.train(), buf_size=args.batch_size * 100),
         batch_size=args.batch_size)
     place = fluid.CPUPlace()
 
@@ -124,14 +129,17 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, data_list = skip_gram_word2vec(reader.dict_size, args.embedding_size)
+    word2vec_reader = reader.Word2VecReader(args.dict_path,
+                                            args.train_data_path)
+    loss, data_list = skip_gram_word2vec(word2vec_reader.dict_size,
+                                         args.embedding_size)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
     optimizer.minimize(loss)
 
     if args.is_local:
         logger.info("run local training")
         main_program = fluid.default_main_program()
-        train_loop(args, main_program, data_list, loss, 1, -1)
+        train_loop(args, main_program, word2vec_reader, data_list, loss, 1, -1)
     else:
         logger.info("run dist training")
         t = fluid.DistributeTranspiler()
@@ -148,8 +156,8 @@ def train():
         elif args.role == "trainer":
             logger.info("run trainer")
             train_prog = t.get_trainer_program()
-            train_loop(args, train_prog, data_list, loss, args.trainers,
-                       args.trainer_id + 1)
+            train_loop(args, train_prog, word2vec_reader, data_list, loss,
+                       args.trainers, args.trainer_id + 1)
 
 
 if __name__ == '__main__':
