@@ -25,7 +25,7 @@ class Net(object):
         # turns ids
         shapes = [[-1, self._max_turn_len, 1]
                   for i in six.moves.xrange(self._max_turn_num)]
-        dtypes = ["int32" for i in six.moves.xrange(self._max_turn_num)]
+        dtypes = ["int64" for i in six.moves.xrange(self._max_turn_num)]
         # turns mask
         shapes += [[-1, self._max_turn_len, 1]
                    for i in six.moves.xrange(self._max_turn_num)]
@@ -34,7 +34,7 @@ class Net(object):
         # response ids, response mask, label
         shapes += [[-1, self._max_turn_len, 1], [-1, self._max_turn_len, 1],
                    [-1, 1]]
-        dtypes += ["int32", "float32", "float32"]
+        dtypes += ["int64", "float32", "float32"]
 
         py_reader = fluid.layers.py_reader(
             capacity=capacity,
@@ -60,7 +60,7 @@ class Net(object):
         for i in six.moves.xrange(self._max_turn_num):
             name = "turn_%d" % i
             turn = fluid.layers.data(
-                name=name, shape=[self._max_turn_len, 1], dtype="int32")
+                name=name, shape=[self._max_turn_len, 1], dtype="int64")
             self.turns_data.append(turn)
             self._feed_names.append(name)
 
@@ -73,7 +73,7 @@ class Net(object):
             self._feed_names.append(name)
 
         self.response = fluid.layers.data(
-            name="response", shape=[self._max_turn_len, 1], dtype="int32")
+            name="response", shape=[self._max_turn_len, 1], dtype="int64")
         self.response_mask = fluid.layers.data(
             name="response_mask",
             shape=[self._max_turn_len, 1],
@@ -141,7 +141,7 @@ class Net(object):
                     mask_cache=mask_cache)
                 Hu_stack.append(Hu)
 
-            # cross attention 
+            # cross attention
             r_a_t_stack = []
             t_a_r_stack = []
             for index in six.moves.xrange(self._stack_num + 1):
@@ -183,7 +183,7 @@ class Net(object):
                 t_a_r = fluid.layers.concat(input=t_a_r_stack, axis=1)
                 r_a_t = fluid.layers.concat(input=r_a_t_stack, axis=1)
 
-            # sim shape: [batch_size, 2*(stack_num+1), max_turn_len, max_turn_len]    
+            # sim shape: [batch_size, 2*(stack_num+1), max_turn_len, max_turn_len]
             sim = fluid.layers.matmul(
                 x=t_a_r, y=r_a_t, transpose_y=True, alpha=1 / np.sqrt(200.0))
             sim_turns.append(sim)
