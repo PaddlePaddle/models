@@ -23,12 +23,12 @@ def parse_args():
     parser.add_argument(
         '--train_data_path',
         type=str,
-        default='./data/enwik9',
+        default='./data/enwik8',
         help="The path of training dataset")
     parser.add_argument(
         '--dict_path',
         type=str,
-        default='./data/enwik9_dict',
+        default='./data/enwik8_dict',
         help="The path of data dict")
     parser.add_argument(
         '--test_data_path',

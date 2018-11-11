@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*
 
 import numpy as np
-"""
-enwik9 dataset
-
-http://mattmahoney.net/dc/enwik9.zip
-"""
+import preprocess
 
 
 class Word2VecReader(object):
@@ -42,6 +38,7 @@ class Word2VecReader(object):
         def _reader():
             with open(self.data_path_, 'r') as f:
                 for line in f:
+                    line = preprocess.text_strip(line)
                     word_ids = [
                         self.word_to_id_[word] for word in line.split()
                         if word in self.word_to_id_

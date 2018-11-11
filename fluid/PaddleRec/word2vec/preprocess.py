@@ -26,6 +26,10 @@ def parse_args():
     return parser.parse_args()
 
 
+def text_strip(text):
+    return re.sub("[^a-z ]", "", text)
+
+
 def preprocess(data_path, dict_path, freq):
     """
     proprocess the data, generate dictionary and save into dict_path.
@@ -40,7 +44,7 @@ def preprocess(data_path, dict_path, freq):
     with open(data_path) as f:
         for line in f:
             line = line.lower()
-            line = re.sub("[^a-z ]", "", line)
+            line = text_strip(line)
             words = line.split()
             for item in words:
                 if item in word_count:
