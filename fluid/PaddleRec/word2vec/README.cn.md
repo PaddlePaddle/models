@@ -15,11 +15,7 @@
 ```
 
 ## 运行环境
-需要先安装PaddlePaddle Fluid，然后运行：
-
-```shell
-pip install -r requirements.txt
-```
+需要先安装PaddlePaddle Fluid
 
 ## 数据集
 本文使用的是Kaggle公司举办的[展示广告竞赛](https://www.kaggle.com/c/criteo-display-ad-challenge/)中所使用的Criteo数据集。

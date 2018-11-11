@@ -6,13 +6,16 @@ import random
 from collections import Counter
 """
 refs: https://github.com/NELSONZHAO/zhihu/blob/master/skip_gram/Skip-Gram-English-Corpus.ipynb
+
+text8 dataset
+
+http://mattmahoney.net/dc/textdata.html
 """
 
 with open('data/text8.txt') as f:
     text = f.read()
 
 
-# 定义函数来完成数据的预处理
 def preprocess(text, freq=5):
     '''
     对文本进行预处理
@@ -52,7 +55,6 @@ print(words[:20])
 # 构建映射表
 vocab = set(words)
 vocab_to_int = {w: c for c, w in enumerate(vocab)}
-int_to_vocab = {c: w for c, w in enumerate(vocab)}
 
 dict_size = len(set(words))
 
