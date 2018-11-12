@@ -196,23 +196,10 @@ class FasterRCNN(object):
             pool_rois = self.rois
         else:
             pool_rois = self.rpn_rois
-        if cfg.roi_func == 'RoIPool':
-            pool = fluid.layers.roi_pool(
-                input=roi_input,
-                rois=pool_rois,
-                pooled_height=cfg.roi_resolution,
-                pooled_width=cfg.roi_resolution,
-                spatial_scale=cfg.spatial_scale)
-        elif cfg.roi_func == 'RoIAlign':
-            pool = fluid.layers.roi_align(
-                input=roi_input,
-                rois=pool_rois,
-                pooled_height=cfg.roi_resolution,
-                pooled_width=cfg.roi_resolution,
-                spatial_scale=cfg.spatial_scale,
-                sampling_ratio=cfg.sampling_ratio)
-        rcnn_out = self.add_roi_box_head_func(pool)
-        self.cls_score = fluid.layers.fc(input=rcnn_out,
+        self.res5_2_sum = self.add_roi_box_head_func(roi_input, pool_rois)
+        self.rcnn_out = fluid.layers.pool2d(
+            self.res5_2_sum, pool_type='avg', pool_size=7, name='res5_pool')
+        self.cls_score = fluid.layers.fc(input=self.rcnn_out,
                                          size=cfg.class_num,
                                          act=None,
                                          name='cls_score',
@@ -224,7 +211,7 @@ class FasterRCNN(object):
                                              name='cls_score_b',
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
-        self.bbox_pred = fluid.layers.fc(input=rcnn_out,
+        self.bbox_pred = fluid.layers.fc(input=self.rcnn_out,
                                          size=4 * cfg.class_num,
                                          act=None,
                                          name='bbox_pred',
@@ -236,6 +223,61 @@ class FasterRCNN(object):
                                              name='bbox_pred_b',
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
+
+    def mask_rcnn_heads(self,
+                        mask_input,
+                        roi_has_mask_int32=None,
+                        rpn_rois=None):
+        if self.is_train:
+            dim_conv5 = 2048
+            conv5 = fluid.layers.gather(mask_input, roi_has_mask_int32)
+        else:
+            if cfg.roi_func == 'RoIPool':
+                pool = fluid.layers.roi_pool(
+                    input=mask_input,
+                    rois=rpn_rois,
+                    pooled_height=cfg.roi_resolution,
+                    pooled_width=cfg.roi_resolution,
+                    spatial_scale=cfg.spatial_scale)
+            elif cfg.roi_func == 'RoIAlign':
+                pool = fluid.layers.roi_align(
+                    input=mask_input,
+                    rois=rpn_rois,
+                    pooled_height=cfg.roi_resolution,
+                    pooled_width=cfg.roi_resolution,
+                    spatial_scale=cfg.spatial_scale,
+                    sampling_ratio=cfg.sampling_ratio)
+
+        mask_out = fluid.layers.conv2d_transpose(
+            input=conv5,
+            num_filters=cfg.DIM_REDUCED,
+            filter_size=2,
+            stride=2,
+            act='relu',
+            param_attr=ParamAttr(
+                name='mask_convT_w', initializer=MSRA()),
+            bias_attr=ParamAttr(
+                name='mask_convT_b', learning_rate=2., regularizer=L2Decay(0.)))
+        act_func = None
+        if not self.is_train:
+            act_func = 'sigmoid'
+        self.mask_fcn_logits = fluid.layers.conv2d(
+            input=mask_out,
+            num_filters=cfg.class_num,
+            filter_size=1,
+            act=act_func,
+            param_attr=ParamAttr(
+                name='mask_fcn_logits_w', initializer=MSRA()),
+            bias_attr=ParamAttr(
+                name='mask_fcn_logits_b',
+                learning_rate=2.,
+                regularizer=L2Decay(0.)))
+
+    def mask_rcnn_loss(self):
+        loss_mask = fluid.layers.sigmoid_cross_entropy_with_logits(
+            x=self.mask_fcn_logits, label=self.make_int32)
+        loss_mask = fluid.layers.reduce_mean(loss_mask, name='loss_mask')
+        return loss_mask
 
     def fast_rcnn_loss(self):
         labels_int64 = fluid.layers.cast(x=self.labels_int32, dtype='int64')
