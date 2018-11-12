@@ -90,7 +90,7 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 
 *  Use momentum optimizer with momentum=0.9.
 *  Weight decay is 0.0001.
-*  In first 500 iteration, the learning rate increases linearly from 0.00333 to 0.01. Then lr is decayed at 120000, 160000 iteration with multiplier 0.1, 0.01. The maximum iteration is 180000.
+*  In first 500 iteration, the learning rate increases linearly from 0.00333 to 0.01. Then lr is decayed at 120000, 160000 iteration with multiplier 0.1, 0.01. The maximum iteration is 180000. Also, we released a 2x model which has 360000 iterations and lr is decayed at 240000, 320000
 *  Set the learning rate of bias to two times as global lr in non basic convolutional layers.
 *  In basic convolutional layers, parameters of affine layers and res body do not update.
 *  Use Nvidia Tesla V100 8GPU, total time for training is about 40 hours.
@@ -128,10 +128,12 @@ Faster RCNN mAP
 | [Fluid RoIPool minibatch padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) | RoIPool | 8   |    180000        | 0.314 |
 | [Fluid RoIPool no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_no_padding.tar.gz)  | RoIPool | 8   |    180000        | 0.316 |
 | [Fluid RoIAlign no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding.tar.gz)  | RoIAlign | 8   |    180000        | 0.345 |
+| [Fluid RoIAlign no padding 2x](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding_2x.tar.gz)  | RoIAlign | 8   |    360000        | 0.364 |
 
 * Fluid RoIPool minibatch padding: Use RoIPool. Images in one batch padding to the same size. This method is same as detectron.
 * Fluid RoIPool no padding: Images without padding.
 * Fluid RoIAlign no padding: Images without padding.
+* Fluid RoIAlign no padding 2x: Images without padding, train for 360000 iterations.
 
 ## Inference and Visualization
 

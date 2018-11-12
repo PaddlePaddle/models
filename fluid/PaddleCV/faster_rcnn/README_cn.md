@@ -94,7 +94,7 @@ Faster RCNN 训练loss
 **训练策略：**
 
 *  采用momentum优化算法训练Faster RCNN，momentum=0.9。
-*  权重衰减系数为0.0001，前500轮学习率从0.00333线性增加至0.01。在120000，160000轮时使用0.1,0.01乘子进行学习率衰减，最大训练180000轮。
+*  权重衰减系数为0.0001，前500轮学习率从0.00333线性增加至0.01。在120000，160000轮时使用0.1,0.01乘子进行学习率衰减，最大训练180000轮。同时我们也提供了2x模型，训练360000轮，学习率在240000，320000轮衰减。
 *  非基础卷积层卷积bias学习率为整体学习率2倍。
 *  基础卷积层中，affine_layers参数不更新，res2层参数不更新。
 *  使用Nvidia Tesla V100 8卡并行，总共训练时长大约40小时。
@@ -122,13 +122,14 @@ Faster RCNN mAP
 | [Fluid RoIPool minibatch padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) | RoIPool | 8   |    180000        | 0.314 |
 | [Fluid RoIPool no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_no_padding.tar.gz)  | RoIPool | 8   |    180000        | 0.316 |
 | [Fluid RoIAlign no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding.tar.gz)  | RoIAlign | 8   |    180000        | 0.345 |
-
+| [Fluid RoIAlign no padding 2x](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding_2x.tar.gz)  | RoIAlign | 8   |    360000        | 0.364 |
 
 
 
 * Fluid RoIPool minibatch padding: 使用RoIPool，同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
 * Fluid RoIPool no padding: 使用RoIPool，不对图像做填充处理。
 * Fluid RoIAlign no padding: 使用RoIAlign，不对图像做填充处理。
+* Fluid RoIAlign no padding 2x: 使用RoIAlign，不对图像做填充处理。训练360000轮。
 
 ## 模型推断及可视化
 
