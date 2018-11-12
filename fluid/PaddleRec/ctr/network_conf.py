@@ -18,7 +18,7 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim):
             is_sparse=True,
             is_distributed=True,
             size=[sparse_feature_dim, embedding_size],
-            param_attr=fluid.ParamAttr(name="SparseFeatFactors", initializer=fluid.initializer.fluid.initializer.Uniform()))
+            param_attr=fluid.ParamAttr(name="SparseFeatFactors", initializer=fluid.initializer.Uniform()))
 
     sparse_embed_seq = map(embedding_layer, sparse_input_ids)
     concated = fluid.layers.concat(sparse_embed_seq + [dense_input], axis=1)
