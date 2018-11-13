@@ -64,9 +64,11 @@ else ()
 endif ()
 
 # add mkldnn library if it exitsts
+set(mkldnn_libs "")
 set (mkldnn_lib_path ${PADDLE_ABS_PATH}/third_party/install/mkldnn/lib)
 if (EXISTS ${mkldnn_lib_path})
     message(STATUS "MKLDNN lib found.")
+    set(mkldnn_libs ${mkldnn_lib_path}/libmkldnn.so.0)
 else ()
     message(STATUS "MKLDNN lib not found.")
 endif()
@@ -95,4 +97,4 @@ message(STATUS "OpenCV found (${OpenCV_CONFIG_PATH})")
 
 set(TARGET_NAME infer_image_classification)
 add_executable(${TARGET_NAME} infer_image_classification.cc data_reader.cc stats.cc)
-target_link_libraries(${TARGET_NAME} ${OpenCV_LIBS} gflags glog ${mkldnn_lib_path}/libmkldnn.so.0)
+target_link_libraries(${TARGET_NAME} ${OpenCV_LIBS} gflags glog ${mkldnn_libs})
