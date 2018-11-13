@@ -206,8 +206,8 @@ def train(args):
             loss.persistable = True
             logits.persistable = True
             # gradient clipping
-            #fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
-            #    max=1.0, min=-1.0))
+            fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
+                max=1.0, min=-1.0))
 
             optimizer = fluid.optimizer.Adam(
                 learning_rate=fluid.layers.exponential_decay(
