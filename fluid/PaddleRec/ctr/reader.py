@@ -21,10 +21,10 @@ class CriteoDataset(Dataset):
                     for line in f:
                         line_idx += 1
                         if is_train and line_idx > self.train_idx_:
-                            continue
+                            break
                         elif not is_train and line_idx <= self.train_idx_:
                             continue
-                        if trainer_id > 0 and line_idx % trainer_num != trainer_id:
+                        if line_idx % trainer_num != trainer_id:
                             continue
                         features = line.rstrip('\n').split('\t')
                         dense_feature = []
