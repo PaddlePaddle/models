@@ -206,8 +206,8 @@ def train(args):
             loss.persistable = True
             logits.persistable = True
             # gradient clipping
-            #fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
-            #    max=1.0, min=-1.0))
+            fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
+                max=1.0, min=-1.0))
 
             optimizer = fluid.optimizer.Adam(
                 learning_rate=fluid.layers.exponential_decay(
@@ -216,7 +216,9 @@ def train(args):
                     decay_rate=0.9,
                     staircase=True))
             optimizer.minimize(loss)
+            print("begin memory optimization ...")
             fluid.memory_optimize(train_program)
+            print("end memory optimization ...")
 
     test_program = fluid.Program()
     test_startup = fluid.Program()
