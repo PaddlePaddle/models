@@ -81,16 +81,6 @@ Faster RCNN 目标检测模型
 * RPN选择anchor时，rpn\_fg\_fraction=0.5，rpn\_positive\_overlap=0.7，rpn\_negative\_overlap=0.3
 
 
-下图为模型训练结果：
-<p align="center">
-<img src="image/train_loss.jpg" height=500 width=650 hspace='10'/> <br />
-Faster RCNN 训练loss
-</p>
-
-* Fluid RoIPool minibatch padding: 使用RoIPool，同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
-* Fluid RoIPool no padding: 使用RoIPool，不对图像做填充处理。
-* Fluid RoIAlign no padding: 使用RoIAlign，不对图像做填充处理。
-
 **训练策略：**
 
 *  采用momentum优化算法训练Faster RCNN，momentum=0.9。
@@ -111,11 +101,7 @@ Faster RCNN 训练loss
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
 
-下图为模型评估结果：
-<p align="center">
-<img src="image/mAP.jpg" height=500 width=650 hspace='10'/> <br />
-Faster RCNN mAP
-</p>
+下表为模型评估结果：
 
 | 模型                   |   RoI处理方式  | 批量大小   | 迭代次数   | mAP  |
 | :--------------- | :--------: | :------------:    | :------------------:    |------: |

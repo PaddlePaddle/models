@@ -95,16 +95,6 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 *  In basic convolutional layers, parameters of affine layers and res body do not update.
 *  Use Nvidia Tesla V100 8GPU, total time for training is about 40 hours.
 
-Training result is shown as below：
-<p align="center">
-<img src="image/train_loss.jpg" height=500 width=650 hspace='10'/> <br />
-Faster RCNN train loss
-</p>
-
-* Fluid RoIPool minibatch padding: Use RoIPool. Images in one batch padding to the same size. This method is same as detectron.
-* Fluid RoIpool no padding: Use RoIPool. Images without padding.
-* Fluid RoIAlign no padding: Use RoIAlign. Images without padding.
-
 ## Evaluation
 
 Evaluation is to evaluate the performance of a trained model. This sample provides `eval_coco_map.py` which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval).
@@ -118,10 +108,6 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
 
 Evalutaion result is shown as below:
-<p align="center">
-<img src="image/mAP.jpg" height=500 width=650 hspace='10'/> <br />
-Faster RCNN mAP
-</p>
 
 | Model              | RoI function    | Batch size     | Max iteration    | mAP  |
 | :--------------- | :--------: | :------------:    | :------------------:    |------: |

@@ -163,15 +163,15 @@ _C.spatial_scale = 1. / 16.
 # derived learning rate the to get the final learning rate.
 _C.learning_rate = 0.01
 
-# maximum number of iterations
-_C.max_iter = 180000
+# maximum number of iterations, 1x: 180000, 2x:360000
+_C.max_iter = 360000
 
 # warm up to learning rate 
 _C.warm_up_iter = 500
 _C.warm_up_factor = 1. / 3.
 
-# lr steps_with_decay
-_C.lr_steps = [120000, 160000]
+# lr steps_with_decay, 1x: [120000, 160000], 2x: [240000, 320000]
+_C.lr_steps = [240000, 320000]
 _C.lr_gamma = 0.1
 
 # L2 regularization hyperparameter
