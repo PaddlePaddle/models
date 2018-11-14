@@ -10,13 +10,21 @@ class Word2VecReader(object):
         self.data_path_ = data_path
         self.word_to_id_ = dict()
 
+        word_all_count = 0
+        word_counts = []
         word_id = 0
+
         with open(dict_path, 'r') as f:
             for line in f:
-                self.word_to_id_[line.split()[0]] = word_id
+                word, count = line.split()[0], int(line.split()[1])
+                self.word_to_id_[word] = word_id
                 word_id += 1
+                word_counts.append(count)
+                word_all_count += count
+
         self.dict_size = len(self.word_to_id_)
-        print("dict_size = " + str(self.dict_size))
+        self.word_frequencys = [ float(count)/word_all_count  for count in word_counts]
+        print("dict_size = " + str(self.dict_size)) + " word_all_count = " + str(word_all_count)
 
     def get_context_words(self, words, idx, window_size):
         """
