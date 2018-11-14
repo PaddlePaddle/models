@@ -57,7 +57,7 @@ def skip_gram_word2vec(dict_size, word_frequencys, embedding_size):
         size=[dict_size, embedding_size],
         param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(scale=1 / math.sqrt(dict_size))))
 
-    cost = nce_layer(emb, predict_word, embedding_size, dict_size, 5, "custom_dist", word_frequencys, None)
+    cost = nce_layer(emb, predict_word, embedding_size, dict_size, 5, "uniform", word_frequencys, None)
     avg_cost = fluid.layers.reduce_mean(cost)
 
     return avg_cost, data_list
