@@ -39,3 +39,4 @@ python train.py \
     --trainers 2 \
     --trainer_id 1 \
     > trainer1.log 2>&1 &
+

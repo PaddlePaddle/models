@@ -66,7 +66,7 @@ def parse_args():
         '--role',
         type=str,
         default='pserver',  # trainer or pserver
-        help='The path for model to store (default: models)')
+        help='The training role (trainer|pserver) (default: pserver)')
     parser.add_argument(
         '--endpoints',
         type=str,
@@ -76,12 +76,12 @@ def parse_args():
         '--current_endpoint',
         type=str,
         default='127.0.0.1:6000',
-        help='The path for model to store (default: 127.0.0.1:6000)')
+        help='The current pserver endpoint (default: 127.0.0.1:6000)')
     parser.add_argument(
         '--trainer_id',
         type=int,
         default=0,
-        help='The path for model to store (default: models)')
+        help='The current trainer id (default: 0)')
     parser.add_argument(
         '--trainers',
         type=int,
@@ -131,8 +131,11 @@ def train():
 
     word2vec_reader = reader.Word2VecReader(args.dict_path,
                                             args.train_data_path)
-    loss, data_list = skip_gram_word2vec(word2vec_reader.dict_size,
-                                         args.embedding_size)
+
+    logger.info("dict_size: {}".format(word2vec_reader.dict_size))
+    logger.info("word_frequencys length: {}".format(len(word2vec_reader.word_frequencys)))
+
+    loss, data_list = skip_gram_word2vec(word2vec_reader.dict_size, word2vec_reader.word_frequencys, args.embedding_size)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
     optimizer.minimize(loss)
 
