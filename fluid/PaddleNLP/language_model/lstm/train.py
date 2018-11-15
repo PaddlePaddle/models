@@ -258,7 +258,8 @@ def train():
                                  fetch_list=[
                                      loss.name, last_hidden.name,
                                      last_cell.name, 'learning_rate'
-                                 ])
+                                 ],
+                                 use_program_cache=True)
 
             cost_train = np.array(fetch_outs[0])
             init_hidden = np.array(fetch_outs[1])
@@ -282,8 +283,9 @@ def train():
         print("train ppl", ppl[0])
 
         if epoch_id == max_epoch - 1 and args.enable_ce:
-            print("lstm_language_model_duration\t%s" % (total_time / max_epoch))
-            print("lstm_language_model_loss\t%s" % ppl[0])
+            print("ptblm\tlstm_language_model_duration\t%s" %
+                  (total_time / max_epoch))
+            print("ptblm\tlstm_language_model_loss\t%s" % ppl[0])
 
         model_path = os.path.join("model_new/", str(epoch_id))
         if not os.path.isdir(model_path):

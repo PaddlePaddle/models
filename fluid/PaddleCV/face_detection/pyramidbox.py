@@ -250,7 +250,8 @@ class PyramidBox(object):
         face_loc, head_loc = fluid.layers.split(
             mbox_loc, num_or_sections=2, dim=1)
         face_loc = permute_and_reshape(face_loc, 4)
-        head_loc = permute_and_reshape(head_loc, 4)
+        if not self.is_infer:
+            head_loc = permute_and_reshape(head_loc, 4)
 
         mbox_conf = fluid.layers.conv2d(
             self.ssh_conv3_norm, 8, 3, 1, 1, bias_attr=b_attr)
@@ -259,16 +260,19 @@ class PyramidBox(object):
         face_conf3_maxin = fluid.layers.reduce_max(
             face_conf3, dim=1, keep_dim=True)
         face_conf = fluid.layers.concat([face_conf3_maxin, face_conf1], axis=1)
-        head_conf3_maxin = fluid.layers.reduce_max(
-            head_conf3, dim=1, keep_dim=True)
-        head_conf = fluid.layers.concat([head_conf3_maxin, head_conf1], axis=1)
         face_conf = permute_and_reshape(face_conf, 2)
-        head_conf = permute_and_reshape(head_conf, 2)
+        if not self.is_infer:
+            head_conf3_maxin = fluid.layers.reduce_max(
+                head_conf3, dim=1, keep_dim=True)
+            head_conf = fluid.layers.concat(
+                [head_conf3_maxin, head_conf1], axis=1)
+            head_conf = permute_and_reshape(head_conf, 2)
 
         face_locs.append(face_loc)
         face_confs.append(face_conf)
-        head_locs.append(head_loc)
-        head_confs.append(head_conf)
+        if not self.is_infer:
+            head_locs.append(head_loc)
+            head_confs.append(head_conf)
 
         box, var = fluid.layers.prior_box(
             self.ssh_conv3_norm,
@@ -293,7 +297,8 @@ class PyramidBox(object):
             face_loc, head_loc = fluid.layers.split(
                 mbox_loc, num_or_sections=2, dim=1)
             face_loc = permute_and_reshape(face_loc, 4)
-            head_loc = permute_and_reshape(head_loc, 4)
+            if not self.is_infer:
+                head_loc = permute_and_reshape(head_loc, 4)
 
             mbox_conf = fluid.layers.conv2d(input, 6, 3, 1, 1, bias_attr=b_attr)
             face_conf1, face_conf3, head_conf = fluid.layers.split(
@@ -304,13 +309,15 @@ class PyramidBox(object):
                 [face_conf1, face_conf3_maxin], axis=1)
 
             face_conf = permute_and_reshape(face_conf, 2)
-            head_conf = permute_and_reshape(head_conf, 2)
+            if not self.is_infer:
+                head_conf = permute_and_reshape(head_conf, 2)
 
             face_locs.append(face_loc)
             face_confs.append(face_conf)
 
-            head_locs.append(head_loc)
-            head_confs.append(head_conf)
+            if not self.is_infer:
+                head_locs.append(head_loc)
+                head_confs.append(head_conf)
 
             box, var = fluid.layers.prior_box(
                 input,
@@ -330,8 +337,9 @@ class PyramidBox(object):
         self.face_mbox_loc = fluid.layers.concat(face_locs, axis=1)
         self.face_mbox_conf = fluid.layers.concat(face_confs, axis=1)
 
-        self.head_mbox_loc = fluid.layers.concat(head_locs, axis=1)
-        self.head_mbox_conf = fluid.layers.concat(head_confs, axis=1)
+        if not self.is_infer:
+            self.head_mbox_loc = fluid.layers.concat(head_locs, axis=1)
+            self.head_mbox_conf = fluid.layers.concat(head_confs, axis=1)
 
         self.prior_boxes = fluid.layers.concat(boxes)
         self.box_vars = fluid.layers.concat(vars)

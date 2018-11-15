@@ -22,10 +22,7 @@ def parse_args():
         help='If set, run \
         the task with continuous evaluation logs.')
     parser.add_argument(
-        '--num_devices',
-        type=int,
-        default=1,
-        help='Number of GPU devices')
+        '--num_devices', type=int, default=1, help='Number of GPU devices')
     args = parser.parse_args()
     return args
 
@@ -129,15 +126,15 @@ def train(train_reader,
         newest_ppl = 0
         for data in train_reader():
             i += 1
-            lod_src_wordseq = utils.to_lodtensor(
-                [dat[0] for dat in data], place)
-            lod_dst_wordseq = utils.to_lodtensor(
-                [dat[1] for dat in data], place)
+            lod_src_wordseq = utils.to_lodtensor([dat[0] for dat in data],
+                                                 place)
+            lod_dst_wordseq = utils.to_lodtensor([dat[1] for dat in data],
+                                                 place)
             ret_avg_cost = train_exe.run(feed={
                 "src_wordseq": lod_src_wordseq,
                 "dst_wordseq": lod_dst_wordseq
             },
-                fetch_list=fetch_list)
+                                         fetch_list=fetch_list)
             avg_ppl = np.exp(ret_avg_cost[0])
             newest_ppl = np.mean(avg_ppl)
             if i % 100 == 0:
@@ -145,13 +142,13 @@ def train(train_reader,
 
         t1 = time.time()
         total_time += t1 - t0
-        print("epoch:%d num_steps:%d time_cost(s):%f" % (epoch_idx, i,
-                                                         total_time / epoch_idx))
+        print("epoch:%d num_steps:%d time_cost(s):%f" %
+              (epoch_idx, i, total_time / epoch_idx))
 
         if pass_idx == pass_num - 1 and args.enable_ce:
             #Note: The following logs are special for CE monitoring.
             #Other situations do not need to care about these logs.
-            gpu_num = get_cards(args.enable_ce)
+            gpu_num = get_cards(args)
             if gpu_num == 1:
                 print("kpis	imikolov_20_pass_duration	%s" %
                       (total_time / epoch_idx))

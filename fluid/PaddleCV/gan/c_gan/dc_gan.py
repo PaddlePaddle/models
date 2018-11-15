@@ -23,6 +23,7 @@ import matplotlib
 import six
 import numpy as np
 import paddle
+import time
 import paddle.fluid as fluid
 from utility import get_parent_function_name, plot, check, add_arguments, print_arguments
 from network import G, D
@@ -40,6 +41,7 @@ add_arg('batch_size',        int,   128,          "Minibatch size.")
 add_arg('epoch',             int,   20,        "The number of epoched to be trained.")
 add_arg('output',            str,   "./output_dcgan", "The directory the model and the test result to be saved to.")
 add_arg('use_gpu',           bool,  True,       "Whether to use GPU to train.")
+add_arg('run_ce',            bool,  False,       "Whether to run for model ce.")
 # yapf: enable
 
 
@@ -51,6 +53,9 @@ def loss(x, label):
 
 def train(args):
 
+    if args.run_ce:
+        np.random.seed(10)
+        fluid.default_startup_program().random_seed = 90
     d_program = fluid.Program()
     dg_program = fluid.Program()
 
@@ -86,15 +91,23 @@ def train(args):
         exe = fluid.Executor(fluid.CUDAPlace(0))
     exe.run(fluid.default_startup_program())
 
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
-            paddle.dataset.mnist.train(), buf_size=60000),
-        batch_size=args.batch_size)
+    if args.run_ce:
+        train_reader = paddle.batch(
+                paddle.dataset.mnist.train(),
+                batch_size=args.batch_size)
+    else:
+        train_reader = paddle.batch(
+            paddle.reader.shuffle(
+                paddle.dataset.mnist.train(), buf_size=60000),
+            batch_size=args.batch_size)
 
     NUM_TRAIN_TIMES_OF_DG = 2
     const_n = np.random.uniform(
         low=-1.0, high=1.0,
         size=[args.batch_size, NOISE_SIZE]).astype('float32')
+
+    t_time = 0
+    losses = [[], []]
     for pass_id in range(args.epoch):
         for batch_id, data in enumerate(train_reader()):
             if len(data) != args.batch_size:
@@ -109,7 +122,7 @@ def train(args):
             fake_labels = np.zeros(
                 shape=[real_image.shape[0], 1], dtype='float32')
             total_label = np.concatenate([real_labels, fake_labels])
-
+            s_time = time.time()
             generated_image = exe.run(g_program,
                                       feed={'noise': noise_data},
                                       fetch_list={g_img})[0]
@@ -121,25 +134,27 @@ def train(args):
                                    'img': generated_image,
                                    'label': fake_labels,
                                },
-                               fetch_list={d_loss})
+                               fetch_list={d_loss})[0][0]
 
             d_loss_2 = exe.run(d_program,
                                feed={
                                    'img': real_image,
                                    'label': real_labels,
                                },
-                               fetch_list={d_loss})
+                               fetch_list={d_loss})[0][0]
 
-            d_loss_np = [d_loss_1[0][0], d_loss_2[0][0]]
-
+            d_loss_n = d_loss_1 + d_loss_2
+            losses[0].append(d_loss_n)
             for _ in six.moves.xrange(NUM_TRAIN_TIMES_OF_DG):
                 noise_data = np.random.uniform(
                     low=-1.0, high=1.0,
                     size=[args.batch_size, NOISE_SIZE]).astype('float32')
-                dg_loss_np = exe.run(dg_program,
+                dg_loss_n = exe.run(dg_program,
                                      feed={'noise': noise_data},
-                                     fetch_list={dg_loss})[0]
-            if batch_id % 10 == 0:
+                                     fetch_list={dg_loss})[0][0]
+                losses[1].append(dg_loss_n)
+            t_time += (time.time() - s_time)
+            if batch_id % 10 == 0 and not args.run_ce:
                 if not os.path.exists(args.output):
                     os.makedirs(args.output)
                 # generate image each batch
@@ -150,8 +165,7 @@ def train(args):
                 fig = plot(total_images)
                 msg = "Epoch ID={0} Batch ID={1} D-Loss={2} DG-Loss={3}\n gen={4}".format(
                     pass_id, batch_id,
-                    np.sum(d_loss_np),
-                    np.sum(dg_loss_np), check(generated_images))
+                    d_loss_n, dg_loss_n, check(generated_images))
                 print(msg)
                 plt.title(msg)
                 plt.savefig(
@@ -159,7 +173,11 @@ def train(args):
                                                   batch_id),
                     bbox_inches='tight')
                 plt.close(fig)
-
+    if args.run_ce:
+        print("kpis,dcgan_d_train_cost,{}".format(np.mean(losses[0])))
+        print("kpis,dcgan_g_train_cost,{}".format(np.mean(losses[1])))
+        print("kpis,dcgan_duration,{}".format(t_time / args.epoch))
+ 
 
 if __name__ == "__main__":
     args = parser.parse_args()

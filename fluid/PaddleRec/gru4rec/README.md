@@ -21,7 +21,7 @@ GRU4REC模型的介绍可以参阅论文[Session-based Recommendations with Recu
 
 论文的贡献在于首次将RNN（GRU）运用于session-based推荐，相比传统的KNN和矩阵分解，效果有明显的提升。
 
-论文的核心思想史在一个session中，用户点击一系列item的行为看做一个序列，用来训练RNN模型。预测阶段，给定已知的点击序列作为输入，预测下一个可能点击的item。
+论文的核心思想是在一个session中，用户点击一系列item的行为看做一个序列，用来训练RNN模型。预测阶段，给定已知的点击序列作为输入，预测下一个可能点击的item。
 
 session-based推荐应用场景非常广泛，比如用户的商品浏览、新闻点击、地点签到等序列数据。
 

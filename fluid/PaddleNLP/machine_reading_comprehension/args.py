@@ -120,5 +120,9 @@ def parse_args():
         '--result_name',
         default='test_result',
         help='the file name of the results')
+    parser.add_argument(
+        "--enable_ce",
+        action='store_true',
+        help="If set, run the task with continuous evaluation logs.")
     args = parser.parse_args()
     return args
