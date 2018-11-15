@@ -31,6 +31,9 @@ DEFINE_int32(skip_batch_num, 0, "How many minibatches to skip in statistics.");
 DEFINE_bool(use_fake_data, false, "Use fake data (1,2,...).");
 DEFINE_bool(use_mkldnn, false, "Use MKL-DNN.");
 DEFINE_bool(skip_passes, false, "Skip running passes.");
+DEFINE_bool(enable_graphviz,
+            false,
+            "Enable graphviz to get .dot files with data flow graphs.");
 DEFINE_bool(debug_display_images, false, "Show images in windows for debug.");
 DEFINE_bool(with_labels, true, "The infer model do handle data labels.");
 DEFINE_bool(one_file_params,
@@ -93,6 +96,7 @@ void PrintInfo() {
             << "Channels: " << FLAGS_channels << std::endl
             << "Resize size: " << FLAGS_resize_size << std::endl
             << "Crop size: " << FLAGS_crop_size << std::endl
+            << "Enable graphviz: " << FLAGS_enable_graphviz << std::endl
             << "--------------------------------------" << std::endl;
 }
 
@@ -187,31 +191,35 @@ void PrepareConfig(contrib::AnalysisConfig& config) {
   } else {
     config.model_dir = FLAGS_infer_model;
   }
-  config._use_mkldnn = FLAGS_use_mkldnn;
-  config.ir_mode =
-      contrib::AnalysisConfig::IrPassMode::kInclude;  // include mode:
-                                                      // define which
-                                                      // passes to run
   config.use_gpu = false;
-  config.enable_ir_optim = true;
-  config.ir_passes.clear();
+  config.device = 0;
+  config.enable_ir_optim = !FLAGS_skip_passes;
+  config.specify_input_name = false;
+  if (FLAGS_use_mkldnn) config.EnableMKLDNN();
 
-  if (!FLAGS_skip_passes) {
-    if (FLAGS_use_mkldnn) {
-      // add passes to execute with MKL-DNN
-      config.ir_passes.push_back("depthwise_conv_mkldnn_pass");
-      config.ir_passes.push_back("conv_bn_fuse_pass");
-      config.ir_passes.push_back("conv_eltwiseadd_bn_fuse_pass");
-      config.ir_passes.push_back("conv_bias_mkldnn_fuse_pass");
-      config.ir_passes.push_back("conv_elementwise_add_mkldnn_fuse_pass");
-      config.ir_passes.push_back("conv_relu_mkldnn_fuse_pass");
-      config.ir_passes.push_back("fc_fuse_pass");
-    } else {
-      // add passes to execute keeping the order - without MKL-DNN
-      config.ir_passes.push_back("conv_bn_fuse_pass");
-      config.ir_passes.push_back("fc_fuse_pass");
-    }
+  // remove all passes so that we can add them in correct order
+  for (int i = config.pass_builder()->AllPasses().size() - 1; i >= 0; i--)
+    config.pass_builder()->DeletePass(i);
+
+  // add passes
+  config.pass_builder()->AppendPass("infer_clean_graph_pass");
+  if (FLAGS_use_mkldnn) {
+    // add passes to execute with MKL-DNN
+    config.pass_builder()->AppendPass("mkldnn_placement_pass");
+    config.pass_builder()->AppendPass("depthwise_conv_mkldnn_pass");
+    config.pass_builder()->AppendPass("conv_bn_fuse_pass");
+    config.pass_builder()->AppendPass("conv_eltwiseadd_bn_fuse_pass");
+    config.pass_builder()->AppendPass("conv_bias_mkldnn_fuse_pass");
+    config.pass_builder()->AppendPass("conv_elementwise_add_mkldnn_fuse_pass");
+    config.pass_builder()->AppendPass("conv_relu_mkldnn_fuse_pass");
+    config.pass_builder()->AppendPass("fc_fuse_pass");
+  } else {
+    // add passes to execute keeping the order - without MKL-DNN
+    config.pass_builder()->AppendPass("conv_bn_fuse_pass");
+    config.pass_builder()->AppendPass("fc_fuse_pass");
   }
+
+  if (FLAGS_enable_graphviz) config.pass_builder()->TurnOnDebug();
 }
 
 void Main() {
