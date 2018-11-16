@@ -5,6 +5,7 @@ import argparse
 import functools
 import shutil
 import math
+import multiprocessing
 
 import paddle
 import paddle.fluid as fluid
@@ -127,7 +128,7 @@ def train(args,
 
     if parallel:
         train_exe = fluid.ParallelExecutor(main_program=train_prog,
-            use_cuda=use_gpu, loss_name=loss.name)
+            use_cuda=True if use_gpu else False, loss_name=loss.name)
 
     train_reader = reader.train(data_args,
                                 train_file_list,
