@@ -19,25 +19,61 @@ from __future__ import unicode_literals
 
 import numpy as np
 import pycocotools.mask as mask_util
+import cv2
 
 
-def flip_masks(gt_masks):
-    return gt_masks[:, ::-1, :]
+def is_poly(segm):
+    """Determine if segm is a polygon. Valid segm expected (polygon or RLE)."""
+    assert isinstance(segm, (list, dict)), \
+        'Invalid segm type: {}'.format(type(segm))
+    return isinstance(segm, list)
 
 
-def segms_to_mask(segms, height, width):
-    w = width
-    h = height
+def segms_to_rle(segms, height, width):
+    rle = segms
+    if isinstance(segms, list):
+        # polygon -- a single object might consist of multiple parts
+        # we merge all parts into one mask rle code
+        rles = mask_util.frPyObjects(segms, height, width)
+        rle = mask_util.merge(rles)
+    elif isinstance(segms['counts'], list):
+        # uncompressed RLE
+        rle = mask_util.frPyObjects(segms, height, width)
+    return rle
 
-    w = np.maximum(w, 1)
-    h = np.maximum(h, 1)
 
-    if isinstance(segms, dict):
-        segms = [segms]
+def segms_to_mask(segms, iscrowd, height, width):
+    if iscrowd:
+        return [[0 for i in range(width)] for j in range(height)]
+    rle = segms_to_rle(segms, height, width)
+    mask = mask_util.decode(rle)
+    return mask
 
-    rle = mask_util.frPyObjects(segms, h, w)
-    mask = np.array(mask_util.decode(rle), dtype=np.int8)
-    # Flatten in case polygons was a list
-    mask = np.sum(mask, axis=2)
-    mask = np.array(mask > 0, dtype=np.int8)
-    return mask.tolist()
+
+def flip_segms(segms, height, width):
+    """Left/right flip each mask in a list of masks."""
+
+    def _flip_poly(poly, width):
+        flipped_poly = np.array(poly)
+        flipped_poly[0::2] = width - np.array(poly[0::2]) - 1
+        return flipped_poly.tolist()
+
+    def _flip_rle(rle, height, width):
+        if 'counts' in rle and type(rle['counts']) == list:
+            # Magic RLE format handling painfully discovered by looking at the
+            # COCO API showAnns function.
+            rle = mask_util.frPyObjects([rle], height, width)
+        mask = mask_util.decode(rle)
+        mask = mask[:, ::-1, :]
+        rle = mask_util.encode(np.array(mask, order='F', dtype=np.uint8))
+        return rle
+
+    flipped_segms = []
+    for segm in segms:
+        if is_poly(segm):
+            # Polygon format
+            flipped_segms.append([_flip_poly(poly, width) for poly in segm])
+        else:
+            # RLE format
+            flipped_segms.append(_flip_rle(segm, height, width))
+    return flipped_segms

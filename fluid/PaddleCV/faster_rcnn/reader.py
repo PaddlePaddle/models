@@ -27,6 +27,7 @@ from collections import deque
 from roidbs import JsonDataset
 import data_utils
 from config import cfg
+import segm_utils
 
 
 def coco(mode,
@@ -74,7 +75,8 @@ def coco(mode,
         gt_boxes = roidb['gt_boxes'].astype('float32')
         gt_classes = roidb['gt_classes'].astype('int32')
         is_crowd = roidb['is_crowd'].astype('int32')
-        return im, gt_boxes, gt_classes, is_crowd, im_info, im_id
+        segms = roidb['segms']
+        return im, gt_boxes, gt_classes, is_crowd, im_info, im_id, segms
 
     def padding_minibatch(batch_data):
         if len(batch_data) == 1:
@@ -103,12 +105,22 @@ def coco(mode,
                 if roidb_cur >= len(roidbs):
                     roidb_perm = deque(np.random.permutation(roidbs))
                     roidb_cur = 0
-                im, gt_boxes, gt_classes, is_crowd, im_info, im_id = roidb_reader(
+                im, gt_boxes, gt_classes, \
+                is_crowd, im_info, im_id, segms = roidb_reader(
                     roidb, mode)
                 if gt_boxes.shape[0] == 0:
                     continue
+                height = im_info[0]
+                width = im_info[1]
+                gt_masks = []
+                for segm, iscrowd in \
+                    list(zip(roidb['segms'], roidb['is_crowd'])):
+                    gt_masks.append(
+                       segm_utils.segms_to_mask(segm, iscrowd, \
+                                                int(height), int(width)))
                 batch_out.append(
-                    (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
+                    (im, gt_boxes, gt_classes, is_crowd, \
+                     im_info, im_id, np.array(gt_masks,dtype='uint8')))
                 if not padding_total:
                     if len(batch_out) == batch_size:
                         yield padding_minibatch(batch_out)
