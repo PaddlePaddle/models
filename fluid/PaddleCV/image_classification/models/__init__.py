@@ -7,4 +7,5 @@ from .resnet_dist import DistResNet
 from .inception_v4 import InceptionV4
 from .se_resnext import SE_ResNeXt50_32x4d, SE_ResNeXt101_32x4d, SE_ResNeXt152_32x4d
 from .dpn import DPN68, DPN92, DPN98, DPN107, DPN131
+from .mobilenetv2 import MobileNetV2
 import learning_rate

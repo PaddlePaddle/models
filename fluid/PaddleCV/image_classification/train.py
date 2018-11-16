@@ -33,7 +33,8 @@ add_arg('lr',               float, 0.1,                  "set learning rate.")
 add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate decay strategy.")
 add_arg('model',            str,   "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
-add_arg('data_dir',         str,   "./data/ILSVRC2012",  "The ImageNet dataset root dir.")
+#add_arg('data_dir',         str,   "./data/ILSVRC2012",  "The ImageNet dataset root dir.")
+add_arg('data_dir',          str,   "../../../../data/cv", "The small size ImageNet dataset root dir.")
 # yapf: enable
 
 model_list = [m for m in dir(models) if "__" not in m]
@@ -52,6 +53,7 @@ def optimizer_setting(params):
         step = int(total_images / batch_size + 1)
 
         bd = [step * e for e in ls["epochs"]]
+        print('=============e',e)
         base_lr = params["lr"]
         lr = []
         lr = [base_lr * (0.1**i) for i in range(len(bd) + 1)]
@@ -126,6 +128,8 @@ def train(args):
         acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
     else:
         out = model.net(input=image, class_dim=class_dim)
+
+        print("out",out,"label",label,"===========")
         cost = fluid.layers.cross_entropy(input=out, label=label)
 
         avg_cost = fluid.layers.mean(x=cost)

@@ -14,7 +14,8 @@ DATA_DIM = 224
 THREAD = 8
 BUF_SIZE = 102400
 
-DATA_DIR = 'data/ILSVRC2012'
+#DATA_DIR = 'data/ILSVRC2012'
+DATA_DIR = '/work/data/cv/'
 
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
@@ -167,16 +168,16 @@ def _reader_creator(file_list,
 
 
 def train(data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'train_list.txt')
+    file_list = os.path.join(data_dir, 'dataset_100/train.list')
     return _reader_creator(
         file_list, 'train', shuffle=True, color_jitter=False, rotate=False, data_dir=data_dir)
 
 
 def val(data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'val_list.txt')
+    file_list = os.path.join(data_dir, 'dataset_100/val.list')
     return _reader_creator(file_list, 'val', shuffle=False, data_dir=data_dir)
 
 
 def test(data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'val_list.txt')
+    file_list = os.path.join(data_dir, 'dataset_100/val.list')
     return _reader_creator(file_list, 'test', shuffle=False, data_dir=data_dir)
