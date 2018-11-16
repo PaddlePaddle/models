@@ -84,7 +84,7 @@ Faster RCNN 目标检测模型
 **训练策略：**
 
 *  采用momentum优化算法训练Faster RCNN，momentum=0.9。
-*  权重衰减系数为0.0001，前500轮学习率从0.00333线性增加至0.01。在120000，160000轮时使用0.1,0.01乘子进行学习率衰减，最大训练180000轮。同时我们也提供了2x模型，训练360000轮，学习率在240000，320000轮衰减。
+*  权重衰减系数为0.0001，前500轮学习率从0.00333线性增加至0.01。在120000，160000轮时使用0.1,0.01乘子进行学习率衰减，最大训练180000轮。同时我们也提供了2x模型，该模型采用更多的迭代轮数进行训练，训练360000轮，学习率在240000，320000轮衰减，其他参数不变，训练最大轮数和学习率策略可以在config.py中对max_iter和lr_steps进行设置。
 *  非基础卷积层卷积bias学习率为整体学习率2倍。
 *  基础卷积层中，affine_layers参数不更新，res2层参数不更新。
 *  使用Nvidia Tesla V100 8卡并行，总共训练时长大约40小时。
@@ -115,7 +115,7 @@ Faster RCNN 目标检测模型
 * Fluid RoIPool minibatch padding: 使用RoIPool，同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
 * Fluid RoIPool no padding: 使用RoIPool，不对图像做填充处理。
 * Fluid RoIAlign no padding: 使用RoIAlign，不对图像做填充处理。
-* Fluid RoIAlign no padding 2x: 使用RoIAlign，不对图像做填充处理。训练360000轮。
+* Fluid RoIAlign no padding 2x: 使用RoIAlign，不对图像做填充处理。训练360000轮，学习率在240000，320000轮衰减。
 
 ## 模型推断及可视化
 
