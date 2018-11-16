@@ -3,6 +3,7 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import time
 
 # disable gpu training for this example 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -87,6 +88,21 @@ def parse_args():
         type=int,
         default=1,
         help='The num of trianers, (default: 1)')
+    parser.add_argument(
+        '--with_hs',
+        type=int,
+        default=0,
+        help='using hierarchical sigmoid, (default: 0)')
+    parser.add_argument(
+        '--with_nce',
+        type=int,
+        default=1,
+        help='using negtive sampling, (default: 1)')
+    parser.add_argument(
+        '--max_code_length',
+        type=int,
+        default=40,
+        help='max code length used by hierarchical sigmoid, (default: 40)')
 
     return parser.parse_args()
 
@@ -95,15 +111,18 @@ def train_loop(args, train_program, reader, data_list, loss, trainer_num,
                trainer_id):
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            reader.train(), buf_size=args.batch_size * 100),
+            reader.train((args.with_hs or (not args.with_nce))),
+            buf_size=args.batch_size * 100),
         batch_size=args.batch_size)
     place = fluid.CPUPlace()
 
     feeder = fluid.DataFeeder(feed_list=data_list, place=place)
+
     data_name_list = [var.name for var in data_list]
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
+    start = time.clock()
     for pass_id in range(args.num_passes):
         for batch_id, data in enumerate(train_reader()):
             loss_val = exe.run(train_program,
@@ -112,6 +131,10 @@ def train_loop(args, train_program, reader, data_list, loss, trainer_num,
             if batch_id % 10 == 0:
                 logger.info("TRAIN --> pass: {} batch: {} loss: {}".format(
                     pass_id, batch_id, loss_val[0] / args.batch_size))
+            if batch_id % 1000 == 0 and batch_id != 0:
+                elapsed = (time.clock() - start)
+                logger.info("Time used: {}".format(elapsed))
+
             if batch_id % 1000 == 0 and batch_id != 0:
                 model_dir = args.model_output_dir + '/batch-' + str(batch_id)
                 if args.trainer_id == 0:
@@ -133,9 +156,12 @@ def train():
                                             args.train_data_path)
 
     logger.info("dict_size: {}".format(word2vec_reader.dict_size))
-    logger.info("word_frequencys length: {}".format(len(word2vec_reader.word_frequencys)))
+    logger.info("word_frequencys length: {}".format(
+        len(word2vec_reader.word_frequencys)))
 
-    loss, data_list = skip_gram_word2vec(word2vec_reader.dict_size, word2vec_reader.word_frequencys, args.embedding_size)
+    loss, data_list = skip_gram_word2vec(
+        word2vec_reader.dict_size, word2vec_reader.word_frequencys,
+        args.embedding_size, args.max_code_length, args.with_hs, args.with_nce)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
     optimizer.minimize(loss)
 
