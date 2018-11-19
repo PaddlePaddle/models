@@ -160,21 +160,22 @@ def add_ResNet50_conv4_body(body_input):
     return res4
 
 
-def add_ResNet_roi_conv5_head(head_input, pool_rois):
+def add_ResNet_roi_conv5_head(head_input, rois):
     if cfg.roi_func == 'RoIPool':
         pool = fluid.layers.roi_pool(
             input=head_input,
-            rois=pool_rois,
+            rois=rois,
             pooled_height=cfg.roi_resolution,
             pooled_width=cfg.roi_resolution,
             spatial_scale=cfg.spatial_scale)
     elif cfg.roi_func == 'RoIAlign':
         pool = fluid.layers.roi_align(
             input=head_input,
-            rois=pool_rois,
+            rois=rois,
             pooled_height=cfg.roi_resolution,
             pooled_width=cfg.roi_resolution,
             spatial_scale=cfg.spatial_scale,
             sampling_ratio=cfg.sampling_ratio)
+
     res5 = layer_warp(bottleneck, pool, 512, 3, 2, name="res5_2_sum")
     return res5

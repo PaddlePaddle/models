@@ -16,6 +16,7 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 from paddle.fluid.initializer import Normal
+from paddle.fluid.initializer import MSRA
 from paddle.fluid.regularizer import L2Decay
 from config import cfg
 
@@ -41,12 +42,18 @@ class FasterRCNN(object):
         self.rpn_heads(body_conv)
         # Fast RCNN
         self.fast_rcnn_heads(body_conv)
+        # Mask RCNN
+        if cfg.MASK_ON:
+            self.mask_rcnn_heads(body_conv, self.roi_has_mask_int32)
 
     def loss(self):
         # Fast RCNN loss
         loss_cls, loss_bbox = self.fast_rcnn_loss()
         # RPN loss
         rpn_cls_loss, rpn_reg_loss = self.rpn_loss()
+        if cfg.MASK_ON:
+            loss_mask = self.mask_rcnn_loss()
+            return loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss, loss_mask
         return loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss,
 
     def eval_out(self):
@@ -55,19 +62,34 @@ class FasterRCNN(object):
 
     def build_input(self, image_shape):
         if self.use_pyreader:
-            self.py_reader = fluid.layers.py_reader(
-                capacity=64,
-                shapes=[[-1] + image_shape, [-1, 4], [-1, 1], [-1, 1], [-1, 3],
-                        [-1, 1], [-1] + image_shape[1:]],
-                lod_levels=[0, 1, 1, 1, 0, 0, 1],
-                dtypes=[
-                    "float32", "float32", "int32", "int32",\
-                    "float32", "int32", "uint8"
-                ],
-                use_double_buffer=True)
-            self.image, self.gt_box, self.gt_label, self.is_crowd, \
-            self.im_info, self.im_id, self.gt_masks = fluid.layers.read_file(
+            if cfg.MASK_ON:
+                self.py_reader = fluid.layers.py_reader(
+                    capacity=64,
+                    shapes=[[-1] + image_shape, [-1, 4], [-1, 1], [-1, 1],
+                        [-1, 3], [-1, 1], [-1] + image_shape[1:]],
+                    lod_levels=[0, 1, 1, 1, 0, 0, 1],
+                    dtypes=[
+                        "float32", "float32", "int32", "int32",\
+                        "float32", "int32", "uint8"
+                    ],
+                    use_double_buffer=True)
+                self.image, self.gt_box, self.gt_label, self.is_crowd, \
+                self.im_info, self.im_id, self.gt_masks = fluid.layers.read_file(
                                                               self.py_reader)
+            else:
+                self.py_reader = fluid.layers.py_reader(
+                    capacity=64,
+                    shapes=[[-1] + image_shape, [-1, 4], [-1, 1], [-1, 1],
+                        [-1, 3], [-1, 1]],
+                    lod_levels=[0, 1, 1, 1, 0, 0],
+                    dtypes=[
+                        "float32", "float32", "int32", "int32",\
+                        "float32", "int32"
+                    ],
+                    use_double_buffer=True)
+                self.image, self.gt_box, self.gt_label, self.is_crowd, \
+                self.im_info, self.im_id = fluid.layers.read_file(
+                                                    self.py_reader)
         else:
             self.image = fluid.layers.data(
                 name='image', shape=image_shape, dtype='float32')
@@ -85,15 +107,21 @@ class FasterRCNN(object):
                 name='im_info', shape=[3], dtype='float32')
             self.im_id = fluid.layers.data(
                 name='im_id', shape=[1], dtype='int32')
-            self.gt_masks = fluid.layers.data(
-                name='gt_masks',
-                shape=image_shape[1:],
-                dtype='uint8',
-                lod_level=1)
+            if cfg.MASK_ON:
+                self.gt_masks = fluid.layers.data(
+                    name='gt_masks',
+                    shape=image_shape[1:],
+                    dtype='uint8',
+                    lod_level=1)
 
     def feeds(self):
         if not self.is_train:
             return [self.image, self.im_info, self.im_id]
+        if not cfg.MASK_ON:
+            return [
+                self.image, self.gt_box, self.gt_label, self.is_crowd,
+                self.im_info, self.im_id
+            ]
         return [
             self.image, self.gt_box, self.gt_label, self.is_crowd, self.im_info,
             self.im_id, self.gt_masks
@@ -198,6 +226,20 @@ class FasterRCNN(object):
             self.bbox_inside_weights = outs[3]
             self.bbox_outside_weights = outs[4]
 
+            if cfg.MASK_ON:
+                mask_out = fluid.layers.generate_mask_labels(
+                    im_info=self.im_info,
+                    gt_classes=self.gt_label,
+                    is_crowd=self.is_crowd,
+                    gt_segms=self.gt_masks,
+                    rois=self.rois,
+                    labels_int32=self.labels_int32,
+                    num_classes=cfg.class_num,
+                    resolution=cfg.resolution)
+                self.mask_rois = mask_out[0]
+                self.roi_has_mask_int32 = mask_out[1]
+                self.mask_int32 = mask_out[2]
+
     def fast_rcnn_heads(self, roi_input):
         if self.is_train:
             pool_rois = self.rois
@@ -237,24 +279,23 @@ class FasterRCNN(object):
                         rpn_rois=None):
         if self.is_train:
             dim_conv5 = 2048
-            conv5 = fluid.layers.gather(mask_input, roi_has_mask_int32)
+            conv5 = fluid.layers.gather(self.res5_2_sum, roi_has_mask_int32)
         else:
             if cfg.roi_func == 'RoIPool':
                 pool = fluid.layers.roi_pool(
-                    input=mask_input,
+                    input=res5_2_sum,
                     rois=rpn_rois,
                     pooled_height=cfg.roi_resolution,
                     pooled_width=cfg.roi_resolution,
                     spatial_scale=cfg.spatial_scale)
             elif cfg.roi_func == 'RoIAlign':
                 pool = fluid.layers.roi_align(
-                    input=mask_input,
+                    input=res5_2_sum,
                     rois=rpn_rois,
                     pooled_height=cfg.roi_resolution,
                     pooled_width=cfg.roi_resolution,
                     spatial_scale=cfg.spatial_scale,
                     sampling_ratio=cfg.sampling_ratio)
-
         mask_out = fluid.layers.conv2d_transpose(
             input=conv5,
             num_filters=cfg.DIM_REDUCED,
@@ -281,8 +322,13 @@ class FasterRCNN(object):
                 regularizer=L2Decay(0.)))
 
     def mask_rcnn_loss(self):
+        mask_label = fluid.layers.cast(x=self.mask_int32, dtype='float32')
+        mask_label.stop_gradient = True
+        reshape_dim = cfg.class_num * cfg.resolution * cfg.resolution
+        self.mask_fcn_logits_reshape = fluid.layers.reshape(
+            self.mask_fcn_logits, (-1, reshape_dim))
         loss_mask = fluid.layers.sigmoid_cross_entropy_with_logits(
-            x=self.mask_fcn_logits, label=self.make_int32)
+            x=self.mask_fcn_logits_reshape, label=mask_label)
         loss_mask = fluid.layers.reduce_mean(loss_mask, name='loss_mask')
         return loss_mask
 

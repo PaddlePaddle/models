@@ -52,11 +52,18 @@ def train():
         use_pyreader=cfg.use_pyreader,
         use_random=True)
     model.build_model(image_shape)
-    loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
+    if cfg.MASK_ON:
+        loss_cls, loss_bbox, rpn_cls_loss, \
+        rpn_reg_loss, loss_mask = model.loss()
+    else:
+        loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
     loss_cls.persistable = True
     loss_bbox.persistable = True
     rpn_cls_loss.persistable = True
     rpn_reg_loss.persistable = True
+    if cfg.MASK_ON:
+        loss_mask.persistable = True
+        loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss + loss_mask
     loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
 
     boundaries = cfg.lr_steps
@@ -110,7 +117,11 @@ def train():
             shutil.rmtree(model_path)
         fluid.io.save_persistables(exe, model_path)
 
-    fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, loss_cls, loss_bbox]
+    if cfg.MASK_ON:
+        fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, \
+                      loss_cls, loss_bbox, loss_mask]
+    else:
+        fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, loss_cls, loss_bbox]
 
     def train_loop_pyreader():
         py_reader.start()

@@ -113,14 +113,19 @@ def coco(mode,
                 height = im_info[0]
                 width = im_info[1]
                 gt_masks = []
-                for segm, iscrowd in \
-                    list(zip(roidb['segms'], roidb['is_crowd'])):
-                    gt_masks.append(
-                       segm_utils.segms_to_mask(segm, iscrowd, \
+                if cfg.MASK_ON:
+                    for segm, iscrowd in \
+                        list(zip(roidb['segms'], roidb['is_crowd'])):
+                        gt_masks.append(
+                           segm_utils.segms_to_mask(segm, iscrowd, \
                                                 int(height), int(width)))
-                batch_out.append(
-                    (im, gt_boxes, gt_classes, is_crowd, \
-                     im_info, im_id, np.array(gt_masks,dtype='uint8')))
+                    batch_out.append(
+                        (im, gt_boxes, gt_classes, is_crowd, \
+                         im_info, im_id, np.array(gt_masks,dtype='uint8')))
+                else:
+                    batch_out.append(
+                         im, gt_boxes, gt_classes, is_crowd, \
+                         im_info, im_id)
                 if not padding_total:
                     if len(batch_out) == batch_size:
                         yield padding_minibatch(batch_out)

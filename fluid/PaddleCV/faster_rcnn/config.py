@@ -129,6 +129,9 @@ _C.TEST.rpn_nms_thresh = 0.7
 # Model options
 #
 
+# Whether use mask rcnn head
+_C.MASK_ON = True
+
 # weight for bbox regression targets
 _C.bbox_reg_weights = [0.1, 0.1, 0.2, 0.2]
 
@@ -155,6 +158,12 @@ _C.roi_resolution = 14
 
 # spatial scale 
 _C.spatial_scale = 1. / 16.
+
+# resolution to represent mask labels
+_C.resolution = 14
+
+# Number of channels in the mask head
+_C.DIM_REDUCED = 256
 
 #
 # SOLVER options
