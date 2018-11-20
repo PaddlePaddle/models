@@ -1,18 +1,20 @@
 import argparse
 import ast
+import multiprocessing
 import numpy as np
+import os
 from functools import partial
 
 import paddle
 import paddle.fluid as fluid
 
 import model
+import reader
+from config import *
 from model import wrap_encoder as encoder
 from model import wrap_decoder as decoder
 from model import fast_decode as fast_decoder
-from config import *
-from train import pad_batch_data
-import reader
+from train import pad_batch_data, prepare_data_generator
 
 
 def parse_args():
@@ -54,6 +56,21 @@ def parse_args():
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter. ")
+    parser.add_argument(
+        "--use_mem_opt",
+        type=ast.literal_eval,
+        default=True,
+        help="The flag indicating whether to use memory optimization.")
+    parser.add_argument(
+        "--use_py_reader",
+        type=ast.literal_eval,
+        default=True,
+        help="The flag indicating whether to use py_reader.")
+    parser.add_argument(
+        "--use_parallel_exe",
+        type=ast.literal_eval,
+        default=False,
+        help="The flag indicating whether to use ParallelExecutor.")
     parser.add_argument(
         'opts',
         help='See config.py for all options',
@@ -129,100 +146,178 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, bos_idx, n_head,
             src_word, src_pos, src_slf_attn_bias, trg_word, init_score,
             trg_src_attn_bias
         ]))
-
-    input_dict = dict(data_input_dict.items())
-    return input_dict
+    return data_input_dict
 
 
-def fast_infer(test_data, trg_idx2word):
+def prepare_feed_dict_list(data_generator, count, place):
+    """
+    Prepare the list of feed dict for multi-devices.
+    """
+    feed_dict_list = []
+    if data_generator is not None:  # use_py_reader == False
+        data_input_names = encoder_data_input_fields + fast_decoder_data_input_fields
+        data = next(data_generator)
+        for idx, data_buffer in enumerate(data):
+            data_input_dict = prepare_batch_input(
+                data_buffer, data_input_names, ModelHyperParams.eos_idx,
+                ModelHyperParams.bos_idx, ModelHyperParams.n_head,
+                ModelHyperParams.d_model, place)
+            feed_dict_list.append(data_input_dict)
+    return feed_dict_list if len(feed_dict_list) == count else None
+
+
+def py_reader_provider_wrapper(data_reader, place):
+    """
+    Data provider needed by fluid.layers.py_reader.
+    """
+
+    def py_reader_provider():
+        data_input_names = encoder_data_input_fields + fast_decoder_data_input_fields
+        for batch_id, data in enumerate(data_reader()):
+            data_input_dict = prepare_batch_input(
+                data, data_input_names, ModelHyperParams.eos_idx,
+                ModelHyperParams.bos_idx, ModelHyperParams.n_head,
+                ModelHyperParams.d_model, place)
+            yield [data_input_dict[item] for item in data_input_names]
+
+    return py_reader_provider
+
+
+def fast_infer(args):
     """
     Inference by beam search decoder based solely on Fluid operators.
     """
-    place = fluid.CUDAPlace(0) if InferTaskConfig.use_gpu else fluid.CPUPlace()
-    exe = fluid.Executor(place)
+    out_ids, out_scores, pyreader = fast_decoder(
+        ModelHyperParams.src_vocab_size,
+        ModelHyperParams.trg_vocab_size,
+        ModelHyperParams.max_length + 1,
+        ModelHyperParams.n_layer,
+        ModelHyperParams.n_head,
+        ModelHyperParams.d_key,
+        ModelHyperParams.d_value,
+        ModelHyperParams.d_model,
+        ModelHyperParams.d_inner_hid,
+        ModelHyperParams.prepostprocess_dropout,
+        ModelHyperParams.attention_dropout,
+        ModelHyperParams.relu_dropout,
+        ModelHyperParams.preprocess_cmd,
+        ModelHyperParams.postprocess_cmd,
+        ModelHyperParams.weight_sharing,
+        InferTaskConfig.beam_size,
+        InferTaskConfig.max_out_len,
+        ModelHyperParams.eos_idx,
+        use_py_reader=args.use_py_reader)
 
-    out_ids, out_scores = fast_decoder(
-        ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size,
-        ModelHyperParams.max_length + 1, ModelHyperParams.n_layer,
-        ModelHyperParams.n_head, ModelHyperParams.d_key,
-        ModelHyperParams.d_value, ModelHyperParams.d_model,
-        ModelHyperParams.d_inner_hid, ModelHyperParams.prepostprocess_dropout,
-        ModelHyperParams.attention_dropout, ModelHyperParams.relu_dropout,
-        ModelHyperParams.preprocess_cmd, ModelHyperParams.postprocess_cmd,
-        ModelHyperParams.weight_sharing, InferTaskConfig.beam_size,
-        InferTaskConfig.max_out_len, ModelHyperParams.eos_idx)
+    # This is used here to set dropout to the test mode.
+    infer_program = fluid.default_main_program().clone(for_test=True)
+
+    if args.use_mem_opt:
+        fluid.memory_optimize(infer_program)
+
+    if InferTaskConfig.use_gpu:
+        place = fluid.CUDAPlace(0)
+        dev_count = fluid.core.get_cuda_device_count()
+    else:
+        place = fluid.CPUPlace()
+        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+    exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
 
     fluid.io.load_vars(
         exe,
         InferTaskConfig.model_path,
         vars=[
-            var for var in fluid.default_main_program().list_vars()
+            var for var in infer_program.list_vars()
             if isinstance(var, fluid.framework.Parameter)
         ])
 
-    # This is used here to set dropout to the test mode.
-    infer_program = fluid.default_main_program().clone(for_test=True)
+    exec_strategy = fluid.ExecutionStrategy()
+    # For faster executor
+    exec_strategy.use_experimental_executor = True
+    exec_strategy.num_threads = 2
+    build_strategy = fluid.BuildStrategy()
+    infer_exe = fluid.ParallelExecutor(
+        use_cuda=TrainTaskConfig.use_gpu,
+        main_program=infer_program,
+        build_strategy=build_strategy,
+        exec_strategy=exec_strategy)
 
-    for batch_id, data in enumerate(test_data.batch_generator()):
-        data_input = prepare_batch_input(
-            data, encoder_data_input_fields + fast_decoder_data_input_fields,
-            ModelHyperParams.eos_idx, ModelHyperParams.bos_idx,
-            ModelHyperParams.n_head, ModelHyperParams.d_model, place)
-        seq_ids, seq_scores = exe.run(infer_program,
-                                      feed=data_input,
-                                      fetch_list=[out_ids, out_scores],
-                                      return_numpy=False)
-        # How to parse the results:
-        #   Suppose the lod of seq_ids is:
-        #     [[0, 3, 6], [0, 12, 24, 40, 54, 67, 82]]
-        #   then from lod[0]:
-        #     there are 2 source sentences, beam width is 3.
-        #   from lod[1]:
-        #     the first source sentence has 3 hyps; the lengths are 12, 12, 16
-        #     the second source sentence has 3 hyps; the lengths are 14, 13, 15
-        hyps = [[] for i in range(len(data))]
-        scores = [[] for i in range(len(data))]
-        for i in range(len(seq_ids.lod()[0]) - 1):  # for each source sentence
-            start = seq_ids.lod()[0][i]
-            end = seq_ids.lod()[0][i + 1]
-            for j in range(end - start):  # for each candidate
-                sub_start = seq_ids.lod()[1][start + j]
-                sub_end = seq_ids.lod()[1][start + j + 1]
-                hyps[i].append(" ".join([
-                    trg_idx2word[idx]
-                    for idx in post_process_seq(
-                        np.array(seq_ids)[sub_start:sub_end])
-                ]))
-                scores[i].append(np.array(seq_scores)[sub_end - 1])
-                print(hyps[i][-1])
-                if len(hyps[i]) >= InferTaskConfig.n_best:
-                    break
-
-
-def infer(args, inferencer=fast_infer):
-    place = fluid.CUDAPlace(0) if InferTaskConfig.use_gpu else fluid.CPUPlace()
-    test_data = reader.DataReader(
-        src_vocab_fpath=args.src_vocab_fpath,
-        trg_vocab_fpath=args.trg_vocab_fpath,
-        fpattern=args.test_file_pattern,
-        token_delimiter=args.token_delimiter,
-        use_token_batch=False,
-        batch_size=args.batch_size,
-        pool_size=args.pool_size,
-        sort_type=reader.SortType.NONE,
-        shuffle=False,
-        shuffle_batch=False,
-        start_mark=args.special_token[0],
-        end_mark=args.special_token[1],
-        unk_mark=args.special_token[2],
-        # count start and end tokens out
-        max_length=ModelHyperParams.max_length - 2,
-        clip_last_batch=False)
-    trg_idx2word = test_data.load_dict(
+    # data reader settings for inference
+    args.train_file_pattern = args.test_file_pattern
+    args.use_token_batch = False
+    args.sort_type = reader.SortType.NONE
+    args.shuffle = False
+    args.shuffle_batch = False
+    test_data = prepare_data_generator(
+        args,
+        is_test=False,
+        count=dev_count,
+        pyreader=pyreader,
+        py_reader_provider_wrapper=py_reader_provider_wrapper,
+        place=place)
+    if args.use_py_reader:
+        pyreader.start()
+        data_generator = None
+    else:
+        data_generator = test_data()
+    trg_idx2word = reader.DataReader.load_dict(
         dict_path=args.trg_vocab_fpath, reverse=True)
-    inferencer(test_data, trg_idx2word)
+
+    while True:
+        try:
+            feed_dict_list = prepare_feed_dict_list(data_generator, dev_count,
+                                                    place)
+            if args.use_parallel_exe:
+                seq_ids, seq_scores = infer_exe.run(
+                    fetch_list=[out_ids.name, out_scores.name],
+                    feed=feed_dict_list,
+                    return_numpy=False)
+            else:
+                seq_ids, seq_scores = exe.run(
+                    program=infer_program,
+                    fetch_list=[out_ids.name, out_scores.name],
+                    feed=feed_dict_list[0]
+                    if feed_dict_list is not None else None,
+                    return_numpy=False,
+                    use_program_cache=True)
+            seq_ids_list, seq_scores_list = [seq_ids], [
+                seq_scores
+            ] if isinstance(
+                seq_ids, paddle.fluid.core.LoDTensor) else (seq_ids, seq_scores)
+            for seq_ids, seq_scores in zip(seq_ids_list, seq_scores_list):
+                # How to parse the results:
+                #   Suppose the lod of seq_ids is:
+                #     [[0, 3, 6], [0, 12, 24, 40, 54, 67, 82]]
+                #   then from lod[0]:
+                #     there are 2 source sentences, beam width is 3.
+                #   from lod[1]:
+                #     the first source sentence has 3 hyps; the lengths are 12, 12, 16
+                #     the second source sentence has 3 hyps; the lengths are 14, 13, 15
+                hyps = [[] for i in range(len(seq_ids.lod()[0]) - 1)]
+                scores = [[] for i in range(len(seq_scores.lod()[0]) - 1)]
+                for i in range(len(seq_ids.lod()[0]) -
+                               1):  # for each source sentence
+                    start = seq_ids.lod()[0][i]
+                    end = seq_ids.lod()[0][i + 1]
+                    for j in range(end - start):  # for each candidate
+                        sub_start = seq_ids.lod()[1][start + j]
+                        sub_end = seq_ids.lod()[1][start + j + 1]
+                        hyps[i].append(" ".join([
+                            trg_idx2word[idx]
+                            for idx in post_process_seq(
+                                np.array(seq_ids)[sub_start:sub_end])
+                        ]))
+                        scores[i].append(np.array(seq_scores)[sub_end - 1])
+                        print(hyps[i][-1])
+                        if len(hyps[i]) >= InferTaskConfig.n_best:
+                            break
+        except (StopIteration, fluid.core.EOFException):
+            # The data pass is over.
+            if args.use_py_reader:
+                pyreader.reset()
+            break
 
 
 if __name__ == "__main__":
     args = parse_args()
-    infer(args)
+    fast_infer(args)

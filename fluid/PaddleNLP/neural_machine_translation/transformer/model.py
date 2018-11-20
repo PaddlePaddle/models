@@ -666,9 +666,43 @@ def wrap_decoder(trg_vocab_size,
     return predict
 
 
-def fast_decode(
+def fast_decode(src_vocab_size,
+                trg_vocab_size,
+                max_in_len,
+                n_layer,
+                n_head,
+                d_key,
+                d_value,
+                d_model,
+                d_inner_hid,
+                prepostprocess_dropout,
+                attention_dropout,
+                relu_dropout,
+                preprocess_cmd,
+                postprocess_cmd,
+                weight_sharing,
+                beam_size,
+                max_out_len,
+                eos_idx,
+                use_py_reader=False):
+    """
+    Use beam search to decode. Caches will be used to store states of history
+    steps which can make the decoding faster.
+    """
+    data_input_names = encoder_data_input_fields + fast_decoder_data_input_fields
+
+    if use_py_reader:
+        all_inputs, reader = make_all_py_reader_inputs(data_input_names)
+    else:
+        all_inputs = make_all_inputs(data_input_names)
+
+    enc_inputs_len = len(encoder_data_input_fields)
+    dec_inputs_len = len(fast_decoder_data_input_fields)
+    enc_inputs = all_inputs[0:enc_inputs_len]
+    dec_inputs = all_inputs[enc_inputs_len:enc_inputs_len + dec_inputs_len]
+
+    enc_output = wrap_encoder(
         src_vocab_size,
-        trg_vocab_size,
         max_in_len,
         n_layer,
         n_head,
@@ -682,19 +716,8 @@ def fast_decode(
         preprocess_cmd,
         postprocess_cmd,
         weight_sharing,
-        beam_size,
-        max_out_len,
-        eos_idx, ):
-    """
-    Use beam search to decode. Caches will be used to store states of history
-    steps which can make the decoding faster.
-    """
-    enc_output = wrap_encoder(
-        src_vocab_size, max_in_len, n_layer, n_head, d_key, d_value, d_model,
-        d_inner_hid, prepostprocess_dropout, attention_dropout, relu_dropout,
-        preprocess_cmd, postprocess_cmd, weight_sharing)
-    start_tokens, init_scores, trg_src_attn_bias = make_all_inputs(
-        fast_decoder_data_input_fields)
+        enc_inputs, )
+    start_tokens, init_scores, trg_src_attn_bias = dec_inputs
 
     def beam_search():
         max_len = layers.fill_constant(
@@ -799,4 +822,4 @@ def fast_decode(
         return finished_ids, finished_scores
 
     finished_ids, finished_scores = beam_search()
-    return finished_ids, finished_scores
+    return finished_ids, finished_scores, reader if use_py_reader else None

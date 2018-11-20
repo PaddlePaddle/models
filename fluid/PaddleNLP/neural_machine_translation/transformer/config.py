@@ -164,7 +164,7 @@ input_descs = {
     # [batch_size * max_trg_len_in_batch, 1]
     "lbl_weight": [(batch_size * seq_len, 1), "float32"],
     # This input is used in beam-search decoder.
-    "init_score": [(batch_size, 1), "float32"],
+    "init_score": [(batch_size, 1), "float32", 2],
 }
 
 # Names of word embedding table which might be reused for weight sharing.
