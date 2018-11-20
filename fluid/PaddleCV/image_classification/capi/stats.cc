@@ -13,9 +13,12 @@
 // limitations under the License.
 
 #include "stats.h"
+#include <algorithm>
+#include <iomanip>
 #include <iostream>
+#include <iostream>
+#include <numeric>
 #include <sstream>
-#include "paddle/fluid/framework/ir/pass.h"
 
 namespace paddle {
 
@@ -28,13 +31,15 @@ void SkipFirstNData(std::vector<T>& v, int n) {
 
 template <typename T>
 T FindAverage(const std::vector<T>& v) {
-  CHECK_GE(v.size(), 0);
+  if (v.size() == 0)
+    throw std::invalid_argument("FindAverage: vector is empty.");
   return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
 }
 
 template <typename T>
 T FindPercentile(std::vector<T> v, int p) {
-  CHECK_GE(v.size(), 0);
+  if (v.size() == 0)
+    throw std::invalid_argument("FindPercentile: vector is empty.");
   std::sort(v.begin(), v.end());
   if (p == 100) return v.back();
   int i = v.size() * p / 100;
@@ -43,7 +48,8 @@ T FindPercentile(std::vector<T> v, int p) {
 
 template <typename T>
 T FindStandardDev(std::vector<T> v) {
-  CHECK_GE(v.size(), 0);
+  if (v.size() == 0)
+    throw std::invalid_argument("FindStandardDev: vector is empty.");
   T mean = FindAverage(v);
   T var = 0;
   for (size_t i = 0; i < v.size(); ++i) {
@@ -70,17 +76,29 @@ void Stats::Gather(const std::vector<PaddleTensor>& output_slots,
   // use standard float formatting
   ss << std::fixed << std::setw(11) << std::setprecision(6);
 
-  CHECK_GE(output_slots.size(), 1UL);  // avg_cost
-  if (output_slots.size() >= 2UL) {    // acc_top1
-    CHECK_EQ(output_slots[1].lod.size(), 0UL);
-    CHECK_EQ(output_slots[1].dtype, paddle::PaddleDType::FLOAT32);
+  // first output: avg_cost
+  if (output_slots.size() == 0)
+    throw std::invalid_argument("Gather: output_slots vector is empty.");
+  if (output_slots.size() >= 2UL) {
+    // second output: acc_top1
+    if (output_slots[1].lod.size() > 0)
+      throw std::invalid_argument(
+          "Gather: top1 accuracy output has nonempty LoD.");
+    if (output_slots[1].dtype != paddle::PaddleDType::FLOAT32)
+      throw std::invalid_argument(
+          "Gather: top1 accuracy output is of a wrong type.");
     float* acc1 = static_cast<float*>(output_slots[1].data.data());
     infer_accs1.push_back(*acc1);
     ss << ", accuracy: " << *acc1;
   }
-  if (output_slots.size() >= 3UL) {  // acc_top5
-    CHECK_EQ(output_slots[2].lod.size(), 0UL);
-    CHECK_EQ(output_slots[2].dtype, paddle::PaddleDType::FLOAT32);
+  if (output_slots.size() >= 3UL) {
+    // third output: acc_top5
+    if (output_slots[2].lod.size() > 0)
+      throw std::invalid_argument(
+          "Gather: top5 accuracy output has nonempty LoD.");
+    if (output_slots[2].dtype != paddle::PaddleDType::FLOAT32)
+      throw std::invalid_argument(
+          "Gather: top5 accuracy output is of a wrong type.");
     float* acc5 = static_cast<float*>(output_slots[2].data.data());
     infer_accs5.push_back(*acc5);
   }
