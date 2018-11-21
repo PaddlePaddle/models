@@ -23,10 +23,13 @@ def layer(op):
         else:
             layer_input = list(self.terminals)
 
+        self.layer_reverse_trace[name] = layer_input
         # Perform the operation and get the output.
         layer_output = op(self, layer_input, *args, **kwargs)
         # Add to layer LUT.
         self.layers[name] = layer_output
+        self.var2name[layer_output.name] = (name, layer_output)
+
         # This output is now the input for the next layer.
         self.feed(layer_output)
         # Return self for chained calls.
@@ -49,11 +52,30 @@ class Network(object):
         self.paddle_env = None
         self.output_names = []
         self.name_trace = None
+
+        self.layer_reverse_trace = {}
+        self.var2name = {}
         self.setup()
 
     def setup(self):
         '''Construct the network. '''
         raise NotImplementedError('Must be implemented by the subclass.')
+
+    def locate_ancestor(self, v, which=[0], ancestor_level=1):
+        """ find a ancestor for a node 'v' which is a fluid variable
+        """
+        ancestor = None
+        which = which * ancestor_level
+        name = self.var2name[v.name][0]
+
+        for i in range(ancestor_level):
+            v = self.layer_reverse_trace[name]
+            if type(v) is list:
+                ancestor = self.var2name[v[which[i]].name]
+            else:
+                ancestor = self.var2name[v.name]
+            name = ancestor[0]
+        return ancestor
 
     def load(self, data_path, exe=None, place=None, ignore_missing=False):
         '''Load network weights.
@@ -395,17 +417,35 @@ class Network(object):
         return output
 
     @layer
-    def softmax(self, input, name):
+    def softmax(self, input, axis=2, name=None):
         fluid = import_fluid()
         shape = input.shape
-        if len(shape) > 2:
-            for sz in shape[2:]:
-                assert sz == 1, "invalid input shape[%s] for softmax" % (
-                    str(shape))
-            input = fluid.layers.reshape(input, shape[0:2])
+        dims = len(shape)
+        axis = axis + dims if axis < 0 else axis
+
+        need_transpose = False
+        if axis + 1 != dims:
+            need_transpose = True
+
+        if need_transpose:
+            order = range(dims)
+            order.remove(axis).append(axis)
+            input = fluid.layers.transpose(
+                input,
+                perm=order,
+                name=self.get_unique_output_name(name, 'transpose'))
 
         output = fluid.layers.softmax(
             input, name=self.get_unique_output_name(name, 'softmax'))
+
+        if need_transpose:
+            order = range(len(shape))
+            order[axis] = dims - 1
+            order[-1] = axis
+            output = fluid.layers.transpose(
+                output,
+                perm=order,
+                name=self.get_unique_output_name(name, 'transpose'))
         return output
 
     @layer
@@ -502,6 +542,13 @@ class Network(object):
     def custom_layer(self, inputs, kind, name, *args, **kwargs):
         """ make custom layer
         """
+        #FIX ME:
+        #   there is a trick for different API between caffe and paddle
+        if kind == "DetectionOutput":
+            conf_var = inputs[1]
+            real_conf_var = self.locate_ancestor(conf_var, ancestor_level=2)
+            inputs[1] = real_conf_var[1]
+
         name = self.get_unique_output_name(name, kind)
         layer_factory = self.custom_layer_factory()
         return layer_factory(kind, inputs, name, *args, **kwargs)
