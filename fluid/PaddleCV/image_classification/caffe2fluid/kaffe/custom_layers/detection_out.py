@@ -1,6 +1,6 @@
 """ A custom layer for 'detectionout' used in 'SSD' model to produce outputs
     Note: Since Paddle's implementation of 'detectionout' applied 'flatten' and 'softmax' ops on the input of 'conf', 
-    while Caffe's implementation do not. Hence, you should ajust generated 'ssd.py' to remove 'softmax' and 'flatten' ops applied on 'conf' input.
+    while Caffe's implementation do not.
 """
 
 from .register import register
