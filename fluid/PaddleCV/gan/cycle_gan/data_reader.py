@@ -46,18 +46,18 @@ def reader_creater(list_file, cycle=True, shuffle=True, return_name=False):
     return reader
 
 
-def a_reader():
+def a_reader(shuffle=True):
     """
     Reader of images with A style for training.
     """
-    return reader_creater(A_LIST_FILE)
+    return reader_creater(A_LIST_FILE, shuffle=shuffle)
 
 
-def b_reader():
+def b_reader(shuffle=True):
     """
     Reader of images with B style for training.
     """
-    return reader_creater(B_LIST_FILE)
+    return reader_creater(B_LIST_FILE, shuffle=shuffle)
 
 
 def a_test_reader():

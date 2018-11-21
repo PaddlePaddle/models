@@ -21,6 +21,7 @@ if [[ -d preprocessed ]] && [[ -d raw ]]; then
     exit 0
 else
     wget -c --no-check-certificate http://dureader.gz.bcebos.com/dureader_preprocessed.zip 
+    wget -c --no-check-certificate http://dureader.gz.bcebos.com/demo.tgz 
 fi
 
 if md5sum --status -c md5sum.txt; then
