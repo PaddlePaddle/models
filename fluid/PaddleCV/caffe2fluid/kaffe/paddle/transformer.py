@@ -156,7 +156,7 @@ class PaddleMapper(NodeMapper):
         return MaybeActivated(node)('fc', node.parameters.num_output)
 
     def map_softmax(self, node):
-        return PaddleNode('softmax')
+        return PaddleNode('softmax', node.parameters.axis)
 
     def map_lrn(self, node):
         params = node.parameters
