@@ -78,7 +78,8 @@ def parse_args():
         help='max code length used by hierarchical sigmoid, (default: 40)')
     parser.add_argument(
         '--is_sparse',
-        type=bool,
+        action='store_true',
+        required=False,
         default=False,
         help='embedding and nce will use sparse or not, (default: False)')
 
