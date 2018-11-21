@@ -28,12 +28,10 @@ def skip_gram_word2vec(dict_size,
                        embedding_size,
                        max_code_length=None,
                        with_hsigmoid=False,
-                       with_nce=True):
+                       with_nce=True,
+                       is_sparse=False):
     def nce_layer(input, label, embedding_size, num_total_classes,
-                  num_neg_samples, sampler, custom_dist, sample_weight):
-        # convert word_frequencys to tensor
-        nid_freq_arr = np.array(word_frequencys).astype('float32')
-        nid_freq_var = fluid.layers.assign(input=nid_freq_arr)
+                  num_neg_samples, sampler, word_frequencys, sample_weight):
 
         w_param_name = "nce_w"
         b_param_name = "nce_b"
@@ -48,11 +46,11 @@ def skip_gram_word2vec(dict_size,
                                 label=label,
                                 num_total_classes=num_total_classes,
                                 sampler=sampler,
-                                custom_dist=nid_freq_var,
+                                custom_dist=word_frequencys,
                                 sample_weight=sample_weight,
                                 param_attr=fluid.ParamAttr(name=w_param_name),
                                 bias_attr=fluid.ParamAttr(name=b_param_name),
-                                num_neg_samples=num_neg_samples)
+                                num_neg_samples=num_neg_samples, is_sparse=is_sparse)
 
         return cost
 
@@ -76,8 +74,8 @@ def skip_gram_word2vec(dict_size,
             non_leaf_num = dict_size
 
         cost = fluid.layers.hsigmoid(
-            input=emb,
-            label=predict_word,
+            input=input,
+            label=label,
             non_leaf_num=non_leaf_num,
             ptable=ptable,
             pcode=pcode,
@@ -86,13 +84,13 @@ def skip_gram_word2vec(dict_size,
         return cost
 
     input_word = fluid.layers.data(name="input_word", shape=[1], dtype='int64')
-    predict_word = fluid.layers.data(
-        name='predict_word', shape=[1], dtype='int64')
+    predict_word = fluid.layers.data(name='predict_word', shape=[1], dtype='int64')
     cost = None
     data_list = [input_word, predict_word]
 
     emb = fluid.layers.embedding(
         input=input_word,
+        is_sparse=is_sparse,
         size=[dict_size, embedding_size],
         param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(
             scale=1 / math.sqrt(dict_size))))

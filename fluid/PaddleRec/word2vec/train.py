@@ -5,7 +5,7 @@ import logging
 import os
 import time
 
-# disable gpu training for this example 
+# disable gpu training for this example
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import paddle
@@ -58,6 +58,31 @@ def parse_args():
         help='sparse feature hashing space for index processing')
 
     parser.add_argument(
+        '--with_hs',
+        action='store_true',
+        required=False,
+        default=False,
+        help='using hierarchical sigmoid, (default: False)')
+
+    parser.add_argument(
+        '--with_nce',
+        action='store_true',
+        required=False,
+        default=True,
+        help='using negtive sampling, (default: True)')
+
+    parser.add_argument(
+        '--max_code_length',
+        type=int,
+        default=40,
+        help='max code length used by hierarchical sigmoid, (default: 40)')
+    parser.add_argument(
+        '--is_sparse',
+        type=bool,
+        default=False,
+        help='embedding and nce will use sparse or not, (default: False)')
+
+    parser.add_argument(
         '--is_local',
         type=int,
         default=1,
@@ -88,21 +113,6 @@ def parse_args():
         type=int,
         default=1,
         help='The num of trianers, (default: 1)')
-    parser.add_argument(
-        '--with_hs',
-        type=int,
-        default=0,
-        help='using hierarchical sigmoid, (default: 0)')
-    parser.add_argument(
-        '--with_nce',
-        type=int,
-        default=1,
-        help='using negtive sampling, (default: 1)')
-    parser.add_argument(
-        '--max_code_length',
-        type=int,
-        default=40,
-        help='max code length used by hierarchical sigmoid, (default: 40)')
 
     return parser.parse_args()
 
@@ -142,8 +152,7 @@ def train_loop(args, train_program, reader, data_list, loss, trainer_num,
                                                   [loss], exe)
         model_dir = args.model_output_dir + '/pass-' + str(pass_id)
         if args.trainer_id == 0:
-            fluid.io.save_inference_model(model_dir, data_name_list, [loss],
-                                          exe)
+            fluid.io.save_inference_model(model_dir, data_name_list, [loss], exe)
 
 
 def train():
@@ -156,12 +165,12 @@ def train():
                                             args.train_data_path)
 
     logger.info("dict_size: {}".format(word2vec_reader.dict_size))
-    logger.info("word_frequencys length: {}".format(
-        len(word2vec_reader.word_frequencys)))
 
     loss, data_list = skip_gram_word2vec(
         word2vec_reader.dict_size, word2vec_reader.word_frequencys,
-        args.embedding_size, args.max_code_length, args.with_hs, args.with_nce)
+        args.embedding_size, args.max_code_length,
+        args.with_hs, args.with_nce, is_sparse=args.is_sparse)
+
     optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
     optimizer.minimize(loss)
 
