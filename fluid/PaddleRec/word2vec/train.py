@@ -1,3 +1,20 @@
+# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+train for word2vec
+"""
+
 from __future__ import print_function
 
 import argparse
@@ -187,7 +204,7 @@ def train():
     optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
     optimizer.minimize(loss)
 
-    if os.environ["PADDLE_IS_LOCAL"] == "1":
+    if os.getenv("PADDLE_IS_LOCAL", "1") == "1":
         logger.info("run local training")
         main_program = fluid.default_main_program()
         train_loop(args, main_program, word2vec_reader, py_reader, loss, 0)

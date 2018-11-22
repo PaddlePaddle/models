@@ -54,23 +54,8 @@ def skip_gram_word2vec(dict_size,
 
         return cost
 
-    def hsigmoid_layer(input, label, non_leaf_num, max_code_length, data_list):
-        hs_cost = None
-        ptable = None
-        pcode = None
-        if max_code_length != None:
-            ptable = fluid.layers.data(
-                name='ptable', shape=[max_code_length], dtype='int64')
-            pcode = fluid.layers.data(
-                name='pcode', shape=[max_code_length], dtype='int64')
-            data_list.append(pcode)
-            data_list.append(ptable)
-        else:
-            ptable = fluid.layers.data(name='ptable', shape=[40], dtype='int64')
-            pcode = fluid.layers.data(name='pcode', shape=[40], dtype='int64')
-            data_list.append(pcode)
-            data_list.append(ptable)
-        if non_leaf_num == None:
+    def hsigmoid_layer(input, label, ptable, pcode, non_leaf_num):
+        if non_leaf_num is None:
             non_leaf_num = dict_size
 
         cost = fluid.layers.hsigmoid(
@@ -83,46 +68,47 @@ def skip_gram_word2vec(dict_size,
 
         return cost
 
-    data_shapes = []
-    data_lod_levels = []
-    data_types = []
-
-    # input_word
-    data_shapes.append((-1, 1))
-    data_lod_levels.append(1)
-    data_types.append('int64')
-    # predict_word
-    data_shapes.append((-1, 1))
-    data_lod_levels.append(1)
-    data_types.append('int64')
-
     datas = []
 
     input_word = fluid.layers.data(name="input_word", shape=[1], dtype='int64')
     predict_word = fluid.layers.data(name='predict_word', shape=[1], dtype='int64')
+    datas.append(input_word)
+    datas.append(predict_word)
 
-    datas.append(input_word, predict_word)
+    if with_hsigmoid:
+        if max_code_length:
+            ptable = fluid.layers.data(
+                name='ptable', shape=[max_code_length], dtype='int64')
+            pcode = fluid.layers.data(
+                name='pcode', shape=[max_code_length], dtype='int64')
+        else:
+            ptable = fluid.layers.data(name='ptable', shape=[40], dtype='int64')
+            pcode = fluid.layers.data(name='pcode', shape=[40], dtype='int64')
+        datas.append(ptable)
+        datas.append(pcode)
+
+    py_reader = fluid.layers.create_py_reader_by_data(capacity=64,
+                                                      feed_list=datas,
+                                                      name='py_reader',
+                                                      use_double_buffer=True)
+
+    words = fluid.layers.read_file(py_reader)
 
     cost = None
 
     emb = fluid.layers.embedding(
-        input=input_word,
+        input=words[0],
         is_sparse=is_sparse,
         size=[dict_size, embedding_size],
         param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(
             scale=1 / math.sqrt(dict_size))))
 
     if with_nce:
-        cost = nce_layer(emb, predict_word, embedding_size, dict_size, 5, "uniform",
+        cost = nce_layer(emb, words[1], embedding_size, dict_size, 5, "uniform",
                          word_frequencys, None)
     if with_hsigmoid:
-        cost = hsigmoid_layer(emb, predict_word, dict_size, max_code_length, datas)
+        cost = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size)
 
     avg_cost = fluid.layers.reduce_mean(cost)
-
-    py_reader = fluid.layers.create_py_reader_by_data(capacity=64,
-                                                      feed_list=datas,
-                                                      name='py_reader',
-                                                      use_double_buffer=True)
 
     return avg_cost, py_reader
