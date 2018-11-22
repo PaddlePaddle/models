@@ -110,8 +110,42 @@ def multi_head_attention(queries,
             size=d_value * n_head,
             bias_attr=False,
             num_flatten_dims=2)
-        # maybe we can use __split_heads k,v rather than __compute k,v as cache
-        # to be more efficient
+        return q, k, v
+
+    def __split_heads_qkv(queries, keys, values, n_head, d_key, d_value):
+        """
+        Reshape input tensors at the last dimension to split multi-heads 
+        and then transpose. Specifically, transform the input tensor with shape
+        [bs, max_sequence_length, n_head * hidden_dim] to the output tensor
+        with shape [bs, n_head, max_sequence_length, hidden_dim].
+        """
+        if n_head == 1:
+            return queries, keys, values
+
+        # The value 0 in shape attr means copying the corresponding dimension
+        # size of the input as the output dimension size.
+        reshaped_q = layers.reshape(
+            x=queries, shape=[0, 0, n_head, d_key], inplace=True)
+        # permuate the dimensions into:
+        # [batch_size, n_head, max_sequence_len, hidden_size_per_head]
+        q = layers.transpose(x=reshaped_q, perm=[0, 2, 1, 3])
+        # For encoder-decoder attention in inference, insert the ops and vars
+        # into global block to use as cache among beam search.
+        reshape_layer = wrap_layer_with_block(
+            layers.reshape,
+            fluid.default_main_program().current_block()
+            .parent_idx) if cache is not None and static_kv else layers.reshape
+        transpose_layer = wrap_layer_with_block(
+            layers.transpose,
+            fluid.default_main_program().current_block().
+            parent_idx) if cache is not None and static_kv else layers.transpose
+        reshaped_k = reshape_layer(
+            x=keys, shape=[0, 0, n_head, d_key], inplace=True)
+        k = transpose_layer(x=reshaped_k, perm=[0, 2, 1, 3])
+        reshaped_v = reshape_layer(
+            x=values, shape=[0, 0, n_head, d_key], inplace=True)
+        v = transpose_layer(x=reshaped_v, perm=[0, 2, 1, 3])
+
         if cache is not None:  # only for faster inference
             if static_kv:  # For encoder-decoder attention in inference
                 cache_k, cache_v = cache["static_k"], cache["static_v"]
@@ -127,40 +161,18 @@ def multi_head_attention(queries,
             else:  # For decoder self-attention in inference
                 cache_k, cache_v = cache["k"], cache["v"]
             # use sequence_expand to gather cell states corresponding to
-            # selected ids. maybe we can also do this in global block to 
-            # avoid extra copy(assign).
+            # selected ids.
             select_k = layers.sequence_expand(x=cache_k, y=lod_ref)
             select_v = layers.sequence_expand(x=cache_v, y=lod_ref)
             if not static_kv:
                 # For self attention in inference, use cache and concat time steps.
-                select_k = layers.concat([select_k, k], axis=1)
-                select_v = layers.concat([select_v, v], axis=1)
+                select_k = layers.concat([select_k, k], axis=2)
+                select_v = layers.concat([select_v, v], axis=2)
             # update cell states(caches) cached in global block
             layers.assign(select_k, cache_k)
             layers.assign(select_v, cache_v)
             return q, select_k, select_v
-
         return q, k, v
-
-    def __split_heads(x, n_head):
-        """
-        Reshape the last dimension of inpunt tensor x so that it becomes two
-        dimensions and then transpose. Specifically, input a tensor with shape
-        [bs, max_sequence_length, n_head * hidden_dim] then output a tensor
-        with shape [bs, n_head, max_sequence_length, hidden_dim].
-        """
-        if n_head == 1:
-            return x
-
-        hidden_size = x.shape[-1]
-        # The value 0 in shape attr means copying the corresponding dimension
-        # size of the input as the output dimension size.
-        reshaped = layers.reshape(
-            x=x, shape=[0, 0, n_head, hidden_size // n_head], inplace=True)
-
-        # permuate the dimensions into:
-        # [batch_size, n_head, max_sequence_len, hidden_size_per_head]
-        return layers.transpose(x=reshaped, perm=[0, 2, 1, 3])
 
     def __combine_heads(x):
         """
@@ -198,10 +210,7 @@ def multi_head_attention(queries,
         return out
 
     q, k, v = __compute_qkv(queries, keys, values, n_head, d_key, d_value)
-
-    q = __split_heads(q, n_head)
-    k = __split_heads(k, n_head)
-    v = __split_heads(v, n_head)
+    q, k, v = __split_heads_qkv(q, k, v, n_head, d_key, d_value)
 
     ctx_multiheads = scaled_dot_product_attention(q, k, v, attn_bias, d_model,
                                                   dropout_rate)
@@ -811,13 +820,13 @@ def fast_decode(src_vocab_size,
                 "k":  # for self attention
                 layers.fill_constant_batch_size_like(
                     input=start_tokens,
-                    shape=[-1, 0, d_model],
+                    shape=[-1, n_head, 0, d_key],
                     dtype=enc_output.dtype,
                     value=0),
                 "v":  # for self attention
                 layers.fill_constant_batch_size_like(
                     input=start_tokens,
-                    shape=[-1, 0, d_model],
+                    shape=[-1, n_head, 0, d_value],
                     dtype=enc_output.dtype,
                     value=0),
                 "static_k": layers.create_tensor(
@@ -834,16 +843,9 @@ def fast_decode(src_vocab_size,
             # used in beam search to sift states corresponding to selected ids.
             pre_src_attn_bias = layers.sequence_expand(
                 x=trg_src_attn_bias, y=pre_scores)
-            # pre_enc_output = layers.sequence_expand(x=enc_output, y=pre_scores)
-            # pre_caches = [{
-            #     "k": layers.sequence_expand(
-            #         x=cache["k"], y=pre_scores),
-            #     "v": layers.sequence_expand(
-            #         x=cache["v"], y=pre_scores),
-            # } for cache in caches]
             pre_pos = layers.elementwise_mul(
                 x=layers.fill_constant_batch_size_like(
-                    input=pre_src_attn_bias,  #pre_enc_output,  # cann't use lod tensor here
+                    input=pre_src_attn_bias,  # cann't use lod tensor here
                     value=1,
                     shape=[-1, 1, 1],
                     dtype=pre_ids.dtype),
@@ -889,10 +891,6 @@ def fast_decode(src_vocab_size,
             layers.array_write(selected_ids, i=step_idx, array=ids)
             layers.array_write(selected_scores, i=step_idx, array=scores)
             layers.assign(pre_src_attn_bias, trg_src_attn_bias)
-            # layers.assign(pre_enc_output, enc_output)
-            # for i in range(n_layer):
-            #     layers.assign(pre_caches[i]["k"], caches[i]["k"])
-            #     layers.assign(pre_caches[i]["v"], caches[i]["v"])
             length_cond = layers.less_than(x=step_idx, y=max_len)
             finish_cond = layers.logical_not(layers.is_empty(x=selected_ids))
             layers.logical_and(x=length_cond, y=finish_cond, out=cond)
