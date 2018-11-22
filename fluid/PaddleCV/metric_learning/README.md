@@ -100,5 +100,5 @@ For comparation, many metric learning models with different neural networks and 
 |- | - | -:
 |[without fine-turned]() | 77.42% | 78.11%
 |[fine-turned with triplet]() | 78.37% | 79.21%
-|[fine-turned with quadruplet loss]() | 78.10% | 79.59%
+|[fine-turned with quadruplet]() | 78.10% | 79.59%
 |[fine-turned with eml]() | 79.32% | 80.11%
