@@ -96,31 +96,33 @@ def skip_gram_word2vec(dict_size,
     data_lod_levels.append(1)
     data_types.append('int64')
 
-    py_reader = fluid.layers.py_reader(capacity=64,
-                                       shapes=data_shapes,
-                                       lod_levels=data_lod_levels,
-                                       dtypes=data_types,
-                                       name='py_reader',
-                                       use_double_buffer=True)
+    datas = []
 
-    word_and_label = fluid.layers.read_file(py_reader)
+    input_word = fluid.layers.data(name="input_word", shape=[1], dtype='int64')
+    predict_word = fluid.layers.data(name='predict_word', shape=[1], dtype='int64')
+
+    datas.append(input_word, predict_word)
 
     cost = None
 
     emb = fluid.layers.embedding(
-        input=word_and_label[0],
+        input=input_word,
         is_sparse=is_sparse,
         size=[dict_size, embedding_size],
         param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(
             scale=1 / math.sqrt(dict_size))))
 
     if with_nce:
-        cost = nce_layer(emb, word_and_label[1], embedding_size, dict_size, 5,
-                         "uniform", word_frequencys, None)
+        cost = nce_layer(emb, predict_word, embedding_size, dict_size, 5, "uniform",
+                         word_frequencys, None)
     if with_hsigmoid:
-        cost = hsigmoid_layer(emb, word_and_label[1], dict_size, max_code_length,
-                              None)
+        cost = hsigmoid_layer(emb, predict_word, dict_size, max_code_length, datas)
 
     avg_cost = fluid.layers.reduce_mean(cost)
+
+    py_reader = fluid.layers.create_py_reader_by_data(capacity=64,
+                                                      feed_list=datas,
+                                                      name='py_reader',
+                                                      use_double_buffer=True)
 
     return avg_cost, py_reader

@@ -107,7 +107,10 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
     start = time.clock()
 
     exec_strategy = fluid.ExecutionStrategy()
-    exec_strategy.num_threads = int(os.getenv("NUM_THREADS"))
+
+    if os.getenv("NUM_THREADS", ""):
+        exec_strategy.num_threads = int(os.getenv("NUM_THREADS"))
+
     build_strategy = fluid.BuildStrategy()
     build_strategy.reduce_strategy = fluid.BuildStrategy.ReduceStrategy.Reduce
 
