@@ -18,11 +18,13 @@ def crop_shape(input_shape, shape=None):
         assert len(input_shape) == 2, "the number of crop's inputs must be 2"
         return input_shape[1]
     elif not shape is None:
-        assert len(shape) == len(input_shape.shape), "input_shape is diff with output_shape"
+        assert len(shape) == len(
+            input_shape.shape), "input_shape is diff with output_shape"
         return shape
     else:
-        raise Exception,"crop_shape input error"
+        raise Exception, "crop_shape input error"
         return None
+
 
 def crop_layer(input, name, shape=None, axis=2, offset=None):
     """ build a layer of type 'Crop' using fluid
@@ -46,23 +48,28 @@ def crop_layer(input, name, shape=None, axis=2, offset=None):
         output_shape = input[1].shape
         input_tensor = input[0]
     elif not shape is None:
-        assert len(shape) == len(input.shape), "input_shape is diff with output_shape"
+        assert len(shape) == len(
+            input.shape), "input_shape is diff with output_shape"
         input_shape = input.shape
         output_shape = shape
         input_tensor = input
     else:
-        raise Exception,"crop_layer input error"
+        raise Exception, "crop_layer input error"
 
-    assert len(output_shape) == len(input_shape), "input_shape is diff with output_shape"
+    assert len(output_shape) == len(
+        input_shape), "input_shape is diff with output_shape"
 
     if axis < 0:
         axis += len(input_shape)
 
     if offset is not None:
-    	assert (len(input_shape) - axis) == len(offset), "invalid offset[%s] in crop layer" % (str(offset))
+        assert (len(input_shape) - axis
+                ) == len(offset), "invalid offset[%s] in crop layer" % (
+                    str(offset))
         offset = [0] * axis + offset
     import paddle.fluid as fluid
-    output = fluid.layers.crop(input_tensor, shape=output_shape, offsets=offset, name=name)
+    output = fluid.layers.crop(
+        input_tensor, shape=output_shape, offsets=offset, name=name)
 
     return output
 

@@ -21,6 +21,7 @@ import reduction
 
 custom_layers = get_registered_layers()
 
+
 def set_args(f, params, node=None):
     """ set args for function 'f' using the parameters in node.layer.parameters
 

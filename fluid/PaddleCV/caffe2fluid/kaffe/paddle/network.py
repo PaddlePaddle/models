@@ -338,7 +338,8 @@ class Network(object):
             s_w,
             ceil_mode,
             padding,
-            name=self.get_unique_output_name(name, 'avg_pool'))
+            name=self.get_unique_output_name(name, 'avg_pool'),
+            exclusive=False)
 
     @layer
     def sigmoid(self, input, name):
