@@ -50,11 +50,12 @@ def skip_gram_word2vec(dict_size,
                                 sample_weight=sample_weight,
                                 param_attr=fluid.ParamAttr(name=w_param_name),
                                 bias_attr=fluid.ParamAttr(name=b_param_name),
-                                num_neg_samples=num_neg_samples, is_sparse=is_sparse)
+                                num_neg_samples=num_neg_samples,
+                                is_sparse=is_sparse)
 
         return cost
 
-    def hsigmoid_layer(input, label, ptable, pcode, non_leaf_num):
+    def hsigmoid_layer(input, label, ptable, pcode, non_leaf_num, is_sparse):
         if non_leaf_num is None:
             non_leaf_num = dict_size
 
@@ -64,14 +65,16 @@ def skip_gram_word2vec(dict_size,
             non_leaf_num=non_leaf_num,
             ptable=ptable,
             pcode=pcode,
-            is_costum=True)
+            is_costum=True,
+            is_sparse=is_sparse)
 
         return cost
 
     datas = []
 
     input_word = fluid.layers.data(name="input_word", shape=[1], dtype='int64')
-    predict_word = fluid.layers.data(name='predict_word', shape=[1], dtype='int64')
+    predict_word = fluid.layers.data(
+        name='predict_word', shape=[1], dtype='int64')
     datas.append(input_word)
     datas.append(predict_word)
 
@@ -87,10 +90,8 @@ def skip_gram_word2vec(dict_size,
         datas.append(ptable)
         datas.append(pcode)
 
-    py_reader = fluid.layers.create_py_reader_by_data(capacity=64,
-                                                      feed_list=datas,
-                                                      name='py_reader',
-                                                      use_double_buffer=True)
+    py_reader = fluid.layers.create_py_reader_by_data(
+        capacity=64, feed_list=datas, name='py_reader', use_double_buffer=True)
 
     words = fluid.layers.read_file(py_reader)
 
@@ -107,7 +108,8 @@ def skip_gram_word2vec(dict_size,
         cost = nce_layer(emb, words[1], embedding_size, dict_size, 5, "uniform",
                          word_frequencys, None)
     if with_hsigmoid:
-        cost = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size)
+        cost = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size,
+                              is_sparse)
 
     avg_cost = fluid.layers.reduce_mean(cost)
 

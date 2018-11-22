@@ -39,7 +39,8 @@ logger.setLevel(logging.INFO)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="PaddlePaddle Word2vec example")
+    parser = argparse.ArgumentParser(
+        description="PaddlePaddle Word2vec example")
     parser.add_argument(
         '--train_data_path',
         type=str,
@@ -87,7 +88,7 @@ def parse_args():
         '--with_nce',
         action='store_true',
         required=False,
-        default=True,
+        default=False,
         help='using negtive sampling, (default: True)')
 
     parser.add_argument(
@@ -165,24 +166,28 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
                 if batch_id % 10 == 0:
                     logger.info("TRAIN --> pass: {} batch: {} loss: {}".format(
                         pass_id, batch_id, loss_val.mean() / args.batch_size))
-                if batch_id % 1000 == 0 and batch_id != 0:
+                if batch_id % 100 == 0 and batch_id != 0:
                     elapsed = (time.clock() - start)
                     logger.info("Time used: {}".format(elapsed))
 
                 if batch_id % 1000 == 0 and batch_id != 0:
-                    model_dir = args.model_output_dir + '/batch-' + str(batch_id)
+                    model_dir = args.model_output_dir + '/batch-' + str(
+                        batch_id)
                     if trainer_id == 0:
-                        fluid.io.save_inference_model(model_dir, data_name_list, [loss], exe)
+                        fluid.io.save_inference_model(model_dir, data_name_list,
+                                                      [loss], exe)
                 batch_id += 1
 
         except fluid.core.EOFException:
             py_reader.reset()
             epoch_end = time.time()
-            print("Epoch: {0}, Train total expend: {1} ".format(pass_id, epoch_end - epoch_start))
+            print("Epoch: {0}, Train total expend: {1} ".format(
+                pass_id, epoch_end - epoch_start))
 
             model_dir = args.model_output_dir + '/pass-' + str(pass_id)
             if trainer_id == 0:
-                fluid.io.save_inference_model(model_dir, data_name_list, [loss], exe)
+                fluid.io.save_inference_model(model_dir, data_name_list,
+                                              [loss], exe)
 
 
 def train():
@@ -197,11 +202,15 @@ def train():
     logger.info("dict_size: {}".format(word2vec_reader.dict_size))
 
     loss, py_reader = skip_gram_word2vec(
-        word2vec_reader.dict_size, word2vec_reader.word_frequencys,
-        args.embedding_size, args.max_code_length,
-        args.with_hs, args.with_nce, is_sparse=args.is_sparse)
+        word2vec_reader.dict_size,
+        word2vec_reader.word_frequencys,
+        args.embedding_size,
+        args.max_code_length,
+        args.with_hs,
+        args.with_nce,
+        is_sparse=args.is_sparse)
 
-    optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
+    optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
     optimizer.minimize(loss)
 
     if os.getenv("PADDLE_IS_LOCAL", "1") == "1":
@@ -228,14 +237,20 @@ def train():
         config = fluid.DistributeTranspilerConfig()
         config.slice_var_up = False
         t = fluid.DistributeTranspiler(config=config)
-        t.transpile(trainer_id, pservers=pserver_endpoints, trainers=trainers, sync_mode=True)
+        t.transpile(
+            trainer_id,
+            pservers=pserver_endpoints,
+            trainers=trainers,
+            sync_mode=True)
 
         if training_role == "PSERVER":
             logger.info("run pserver")
             prog = t.get_pserver_program(current_endpoint)
-            startup = t.get_startup_program(current_endpoint, pserver_program=prog)
+            startup = t.get_startup_program(
+                current_endpoint, pserver_program=prog)
 
-            with open("pserver.main.proto.{}".format(os.getenv("CUR_PORT")), "w") as f:
+            with open("pserver.main.proto.{}".format(os.getenv("CUR_PORT")),
+                      "w") as f:
                 f.write(str(prog))
 
             exe = fluid.Executor(fluid.CPUPlace())
@@ -248,7 +263,8 @@ def train():
             with open("trainer.main.proto.{}".format(trainer_id), "w") as f:
                 f.write(str(train_prog))
 
-            train_loop(args, train_prog, word2vec_reader, py_reader, loss, trainer_id)
+            train_loop(args, train_prog, word2vec_reader, py_reader, loss,
+                       trainer_id)
 
 
 if __name__ == '__main__':
