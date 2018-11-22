@@ -68,6 +68,17 @@ def skip_gram_word2vec(dict_size,
 
         return cost
 
+    def get_loss(loss1, loss2):
+        loss_op1 = fluid.layers.elementwise_sub(
+            fluid.layers.fill_constant_batch_size_like(input=loss1, shape=[-1, 1], value=margin,
+                                                       dtype='float32'), cos_q_pt)
+        loss_op2 = fluid.layers.elementwise_add(loss_op1, cos_q_nt)
+        loss_op3 = fluid.layers.elementwise_max(
+            fluid.layers.fill_constant_batch_size_like(input=loss_op2, shape=[-1, 1], value=0.0,
+                                                       dtype='float32'), loss_op2)
+        avg_cost = fluid.layers.mean(loss_op3)
+        return avg_cost
+
     datas = []
 
     input_word = fluid.layers.data(name="input_word", shape=[1], dtype='int64')
@@ -94,8 +105,6 @@ def skip_gram_word2vec(dict_size,
 
     words = fluid.layers.read_file(py_reader)
 
-    cost = None
-
     emb = fluid.layers.embedding(
         input=words[0],
         is_sparse=is_sparse,
@@ -103,11 +112,17 @@ def skip_gram_word2vec(dict_size,
         param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(
             scale=1 / math.sqrt(dict_size))))
 
+    cost, cost_nce, cost_hs = None, None, None
+
     if with_nce:
-        cost = nce_layer(emb, words[1], embedding_size, dict_size, 5, "uniform",
+        cost_nce = nce_layer(emb, words[1], embedding_size, dict_size, 5, "uniform",
                          word_frequencys, None)
+        cost = cost_nce
     if with_hsigmoid:
-        cost = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size)
+        cost_hs = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size)
+        cost = cost_hs
+    if with_nce and with_hsigmoid:
+        cost = fluid.layers.elementwise_add(cost_nce, cost)
 
     avg_cost = fluid.layers.reduce_mean(cost)
 
