@@ -91,20 +91,31 @@ def multi_head_attention(queries,
         """
         Add linear projection to queries, keys, and values.
         """
-        q = layers.fc(input=queries,
-                      size=d_key * n_head,
-                      bias_attr=False,
-                      num_flatten_dims=2)
         # For encoder-decoder attention in inference, insert the ops and vars
         # into global block to use as cache among beam search.
         fc_layer = wrap_layer_with_block(
             layers.fc, fluid.default_main_program().current_block()
             .parent_idx) if cache is not None and static_kv else layers.fc
+        if queries.name == keys.name == values.name and d_key == d_value \
+            and fc_layer == layers.fc:
+            proj_qkv = layers.fc(
+                input=queries,
+                size=d_key * n_head + d_key * n_head + d_value * n_head,
+                bias_attr=False,
+                num_flatten_dims=2)
+            q, k, v = layers.split(proj_qkv, 3, dim=-1)
+            return q, k, v
+        q = layers.fc(input=queries,
+                      size=d_key * n_head,
+                      bias_attr=False,
+                      num_flatten_dims=2)
+        # For encoder-decoder attention in inference, insert into global block
         k = fc_layer(
             input=keys,
             size=d_key * n_head,
             bias_attr=False,
             num_flatten_dims=2)
+        # For encoder-decoder attention in inference, insert into global block
         v = fc_layer(
             input=values,
             size=d_value * n_head,
@@ -195,8 +206,7 @@ def multi_head_attention(queries,
         """
         Scaled Dot-Product Attention
         """
-        scaled_q = layers.scale(x=q, scale=d_key**-0.5)
-        product = layers.matmul(x=scaled_q, y=k, transpose_y=True)
+        product = layers.matmul(x=q, y=k, transpose_y=True, alpha=d_key**-0.5)
         if attn_bias:
             product += attn_bias
         weights = layers.softmax(product)
@@ -837,7 +847,9 @@ def fast_decode(src_vocab_size,
         ]
         with while_op.block():
             pre_ids = layers.array_read(array=ids, i=step_idx)
-            pre_ids = layers.reshape(pre_ids, (-1, 1, 1))
+            # Since beam_search_op dosen't enforce pre_ids' shape, we can do
+            # inplace reshape here which actually change the shape of pre_ids.
+            pre_ids = layers.reshape(pre_ids, (-1, 1, 1), inplace=True)
             pre_scores = layers.array_read(array=scores, i=step_idx)
             # sequence_expand can gather sequences according to lod thus can be
             # used in beam search to sift states corresponding to selected ids.
@@ -867,8 +879,8 @@ def fast_decode(src_vocab_size,
                 postprocess_cmd,
                 weight_sharing,
                 dec_inputs=(pre_ids, pre_pos, None, pre_src_attn_bias),
-                enc_output=enc_output,  #pre_enc_output,
-                caches=caches,  #pre_caches)
+                enc_output=enc_output,
+                caches=caches,
                 lod_ref=pre_scores)
 
             topk_scores, topk_indices = layers.topk(
