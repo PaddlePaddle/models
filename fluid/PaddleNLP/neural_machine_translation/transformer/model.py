@@ -91,31 +91,20 @@ def multi_head_attention(queries,
         """
         Add linear projection to queries, keys, and values.
         """
+        q = layers.fc(input=queries,
+                      size=d_key * n_head,
+                      bias_attr=False,
+                      num_flatten_dims=2)
         # For encoder-decoder attention in inference, insert the ops and vars
         # into global block to use as cache among beam search.
         fc_layer = wrap_layer_with_block(
             layers.fc, fluid.default_main_program().current_block()
             .parent_idx) if cache is not None and static_kv else layers.fc
-        if queries.name == keys.name == values.name and d_key == d_value \
-            and fc_layer == layers.fc:
-            proj_qkv = layers.fc(
-                input=queries,
-                size=d_key * n_head + d_key * n_head + d_value * n_head,
-                bias_attr=False,
-                num_flatten_dims=2)
-            q, k, v = layers.split(proj_qkv, 3, dim=-1)
-            return q, k, v
-        q = layers.fc(input=queries,
-                      size=d_key * n_head,
-                      bias_attr=False,
-                      num_flatten_dims=2)
-        # For encoder-decoder attention in inference, insert into global block
         k = fc_layer(
             input=keys,
             size=d_key * n_head,
             bias_attr=False,
             num_flatten_dims=2)
-        # For encoder-decoder attention in inference, insert into global block
         v = fc_layer(
             input=values,
             size=d_value * n_head,
@@ -839,10 +828,10 @@ def fast_decode(src_vocab_size,
                     shape=[-1, n_head, 0, d_value],
                     dtype=enc_output.dtype,
                     value=0),
-                "static_k": layers.create_tensor(
-                    dtype=enc_output.dtype),  # for encoder-decoder attention
-                "static_v": layers.create_tensor(
-                    dtype=enc_output.dtype),  # for encoder-decoder attention
+                "static_k":  # for encoder-decoder attention
+                layers.create_tensor(dtype=enc_output.dtype),
+                "static_v":  # for encoder-decoder attention
+                layers.create_tensor(dtype=enc_output.dtype),
             } for i in range(n_layer)
         ]
         with while_op.block():
