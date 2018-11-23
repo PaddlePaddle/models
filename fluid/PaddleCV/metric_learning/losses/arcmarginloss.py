@@ -5,7 +5,7 @@ from __future__ import print_function
 import math
 import paddle.fluid as fluid
 
-class arcmarginloss():
+class ArcMarginLoss():
     def __init__(self, class_dim, margin=0.15, scale=80.0, easy_margin=False):
         self.class_dim = class_dim
         self.margin = margin

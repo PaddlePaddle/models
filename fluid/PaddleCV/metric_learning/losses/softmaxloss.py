@@ -5,7 +5,7 @@ from __future__ import print_function
 import math
 import paddle.fluid as fluid
 
-class softmaxloss():
+class SoftmaxLoss():
     def __init__(self, class_dim):
         self.class_dim = class_dim
 

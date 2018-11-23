@@ -6,7 +6,7 @@ import paddle.fluid as fluid
 from utility import get_gpu_num
 from .commonfunc import calculate_order_dist_matrix
 
-class quadrupletloss():
+class QuadrupletLoss():
     def __init__(self, 
                  train_batch_size = 80, 
                  samples_each_class = 2,

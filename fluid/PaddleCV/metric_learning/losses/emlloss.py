@@ -7,7 +7,7 @@ import paddle.fluid as fluid
 from utility import get_gpu_num
 from .commonfunc import calculate_order_dist_matrix
 
-class emlloss():
+class EmlLoss():
     def __init__(self, train_batch_size = 40, samples_each_class=2):
         self.samples_each_class = samples_each_class
         self.train_batch_size = train_batch_size

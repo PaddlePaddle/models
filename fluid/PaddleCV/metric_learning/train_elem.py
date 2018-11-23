@@ -16,8 +16,8 @@ import paddle
 import paddle.fluid as fluid
 import models
 import reader
-from losses import softmaxloss
-from losses import arcmarginloss
+from losses import SoftmaxLoss
+from losses import ArcMarginLoss
 from utility import add_arguments, print_arguments
 from utility import fmt_time, recall_topk, get_gpu_num
 
@@ -77,11 +77,11 @@ def net_config(image, label, model, args, is_train):
         return None, None, None, out
 
     if args.loss_name == "softmax":
-        metricloss = softmaxloss(
+        metricloss = SoftmaxLoss(
                 class_dim=args.class_dim,
         )
     elif args.loss_name == "arcmargin":
-        metricloss = arcmarginloss(
+        metricloss = ArcMarginLoss(
                 class_dim = args.class_dim,
                 margin = args.arc_margin,
                 scale = args.arc_scale,

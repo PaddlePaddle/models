@@ -25,7 +25,8 @@ sh download_sop.sh
 
 ## Training metric learning models
 
-To train a metric learning model, one need to set the neural network as backbone and the metric loss function to optimize. We train meiric learning model using softmax or arcmargin loss firstly, and then fine-turned the model using other metric learning loss, such as triplet, quadruplet and eml loss. One example of training using arcmargin loss is shown below:
+To train a metric learning model, one need to set the neural network as backbone and the metric loss function to optimize. We train meiric learning model using softmax or [arcmargin](https://arxiv.org/abs/1801.07698) loss firstly, and then fine-turned the model using other metric learning loss, such as triplet, [quadruplet](https://arxiv.org/abs/1710.00478) and [eml](https://arxiv.org/abs/1212.6094) loss. One example of training using arcmargin loss is shown below:
+
 
 ```
 python train_elem.py  \
@@ -98,7 +99,7 @@ For comparation, many metric learning models with different neural networks and 
 
 |pretrain model | softmax | arcmargin
 |- | - | -:
-|[without fine-turned]() | 77.42% | 78.11%
-|[fine-turned with triplet]() | 78.37% | 79.21%
-|[fine-turned with quadruplet]() | 78.10% | 79.59%
-|[fine-turned with eml]() | 79.32% | 80.11%
+|without fine-turned | 77.42% | 78.11%
+|fine-turned with triplet | 78.37% | 79.21%
+|fine-turned with quadruplet | 78.10% | 79.59%
+|fine-turned with eml | 79.32% | 80.11%

@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import paddle.fluid as fluid
 
-class tripletloss():
+class TripletLoss():
     def __init__(self, margin=0.1):
         self.margin = margin
 

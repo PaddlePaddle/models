@@ -16,9 +16,9 @@ import paddle
 import paddle.fluid as fluid
 import models
 import reader
-from losses import tripletloss
-from losses import quadrupletloss
-from losses import emlloss
+from losses import TripletLoss
+from losses import QuadrupletLoss
+from losses import EmlLoss
 from utility import add_arguments, print_arguments
 from utility import fmt_time, recall_topk, get_gpu_num
 
@@ -76,17 +76,17 @@ def net_config(image, label, model, args, is_train):
         return None, out
 
     if args.loss_name == "triplet":
-        metricloss = tripletloss(
+        metricloss = TripletLoss(
                 margin=args.margin,
         )
     elif args.loss_name == "quadruplet":
-        metricloss = quadrupletloss(
+        metricloss = QuadrupletLoss(
                 train_batch_size = args.train_batch_size,
                 samples_each_class = args.samples_each_class,
                 margin=args.margin,
         )
     elif args.loss_name == "eml":
-        metricloss = emlloss(
+        metricloss = EmlLoss(
                 train_batch_size = args.train_batch_size,
                 samples_each_class = args.samples_each_class,
         )
