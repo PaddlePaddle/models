@@ -64,20 +64,10 @@ def skip_gram_word2vec(dict_size,
             non_leaf_num=non_leaf_num,
             ptable=ptable,
             pcode=pcode,
-            is_costum=True)
+            is_costum=True,
+            is_sparse=is_sparse)
 
         return cost
-
-    def get_loss(loss1, loss2):
-        loss_op1 = fluid.layers.elementwise_sub(
-            fluid.layers.fill_constant_batch_size_like(input=loss1, shape=[-1, 1], value=margin,
-                                                       dtype='float32'), cos_q_pt)
-        loss_op2 = fluid.layers.elementwise_add(loss_op1, cos_q_nt)
-        loss_op3 = fluid.layers.elementwise_max(
-            fluid.layers.fill_constant_batch_size_like(input=loss_op2, shape=[-1, 1], value=0.0,
-                                                       dtype='float32'), loss_op2)
-        avg_cost = fluid.layers.mean(loss_op3)
-        return avg_cost
 
     datas = []
 
@@ -87,14 +77,12 @@ def skip_gram_word2vec(dict_size,
     datas.append(predict_word)
 
     if with_hsigmoid:
-        if max_code_length:
-            ptable = fluid.layers.data(
-                name='ptable', shape=[max_code_length], dtype='int64')
-            pcode = fluid.layers.data(
-                name='pcode', shape=[max_code_length], dtype='int64')
-        else:
-            ptable = fluid.layers.data(name='ptable', shape=[40], dtype='int64')
-            pcode = fluid.layers.data(name='pcode', shape=[40], dtype='int64')
+        ptable = fluid.layers.data(name='ptable',
+                                   shape=[max_code_length if max_code_length else 40],
+                                   dtype='int64')
+        pcode = fluid.layers.data(name='pcode',
+                                  shape=[max_code_length if max_code_length else 40],
+                                  dtype='int64')
         datas.append(ptable)
         datas.append(pcode)
 
@@ -116,13 +104,13 @@ def skip_gram_word2vec(dict_size,
 
     if with_nce:
         cost_nce = nce_layer(emb, words[1], embedding_size, dict_size, 5, "uniform",
-                         word_frequencys, None)
+                             word_frequencys, None)
         cost = cost_nce
     if with_hsigmoid:
         cost_hs = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size)
         cost = cost_hs
     if with_nce and with_hsigmoid:
-        cost = fluid.layers.elementwise_add(cost_nce, cost)
+        cost = fluid.layers.elementwise_add(cost_nce, cost_hs)
 
     avg_cost = fluid.layers.reduce_mean(cost)
 

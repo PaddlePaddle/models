@@ -87,7 +87,7 @@ def parse_args():
         '--with_nce',
         action='store_true',
         required=False,
-        default=True,
+        default=False,
         help='using negtive sampling, (default: True)')
 
     parser.add_argument(
@@ -187,6 +187,9 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
 
 def train():
     args = parse_args()
+
+    if not args.with_nce and not args.with_hs:
+        logger.error("with_nce or with_hs must choose one")
 
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
