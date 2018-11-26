@@ -99,7 +99,7 @@ For comparation, many metric learning models with different neural networks and 
 
 |pretrain model | softmax | arcmargin
 |- | - | -:
-|without fine-turned | 77.42% | 78.11%
-|fine-turned with triplet | 78.37% | 79.21%
-|fine-turned with quadruplet | 78.10% | 79.59%
-|fine-turned with eml | 79.32% | 80.11%
+|without fine-tuned | 77.42% | 78.11%
+|fine-tuned with triplet | 78.37% | 79.21%
+|fine-tuned with quadruplet | 78.10% | 79.59%
+|fine-tuned with eml | 79.32% | 80.11%
