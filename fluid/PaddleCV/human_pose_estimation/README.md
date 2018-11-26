@@ -44,16 +44,16 @@ Put them in the folder `pretrained` under the directory root of this repo, make 
 
     ```bash
 	${THIS REPO ROOT}
- 		`-- pretrained
-     		`-- resnet_50
-     		|	|-- 115
- 		`-- data
- 	 	`-- coco
- 	 		|-- annotations
- 	 		|-- images
- 	 	`-- mpii
- 	 		|-- annot
- 	 		|-- images
+ 	  `-- pretrained
+ 	    `-- resnet_50
+     	|	|-- 115
+ 	  `-- data
+ 	  `-- coco
+ 	 	|-- annotations
+ 	 	|-- images
+ 	  `-- mpii
+ 	 	|-- annot
+ 	 	|-- images
 	```
 
 ### Install [COCOAPI](https://github.com/cocodataset/cocoapi)
