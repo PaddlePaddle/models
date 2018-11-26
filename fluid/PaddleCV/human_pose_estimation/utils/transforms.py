@@ -30,9 +30,9 @@ import cv2
 
 
 def flip_back(output_flipped, matched_parts):
-    '''
+    """
     ouput_flipped: numpy.ndarray(batch_size, num_joints, height, width)
-    '''
+    """
     assert output_flipped.ndim == 4,\
         'output_flipped should be [batch_size, num_joints, height, width]'
 

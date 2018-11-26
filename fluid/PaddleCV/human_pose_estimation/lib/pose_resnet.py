@@ -108,8 +108,7 @@ class ResNet():
                 act=None,
                 param_attr=fluid.param_attr.ParamAttr(
                     initializer=fluid.initializer.Normal(0., 0.001)))
-
-
+        
         if self.test_mode:
             return out
         else:

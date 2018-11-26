@@ -68,10 +68,10 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
         **kwargs)
 
 def get_max_preds(batch_heatmaps):
-    '''
-    get predictions from score maps
+    """Get predictions from score maps
+    
     heatmaps: numpy.ndarray([batch_size, num_joints, height, width])
-    '''
+    """
     assert isinstance(batch_heatmaps, np.ndarray), \
         'batch_heatmaps should be numpy.ndarray'
     assert batch_heatmaps.ndim == 4, 'batch_images should be 4-ndim'
@@ -209,7 +209,8 @@ def calc_dists(preds, target, normalize):
     return dists
 
 def dist_acc(dists, thr=0.5):
-    ''' Return percentage below threshold while ignoring values with a -1 '''
+    """Return percentage below threshold while ignoring values with a -1
+    """
     dist_cal = np.not_equal(dists, -1)
     num_dist_cal = dist_cal.sum()
     if num_dist_cal > 0:
@@ -218,12 +219,12 @@ def dist_acc(dists, thr=0.5):
         return -1
 
 def accuracy(output, target, hm_type='gaussian', thr=0.5):
-    '''
+    """
     Calculate accuracy according to PCK,
     but uses ground truth heatmap rather than x,y locations
     First value to be returned is average accuracy across 'idxs',
     followed by individual accuracies
-    '''
+    """
     idx = list(range(output.shape[1]))
     norm = 1.0
     if hm_type == 'gaussian':
@@ -250,11 +251,11 @@ def accuracy(output, target, hm_type='gaussian', thr=0.5):
     return acc, avg_acc, cnt, pred
 
 def save_batch_heatmaps(batch_image, batch_heatmaps, file_name, normalize=True):
-    '''
+    """
     batch_image: [batch_size, channel, height, width]
     batch_heatmaps: ['batch_size, num_joints, height, width]
     file_name: saved file name
-    '''
+    """
     if normalize:
         min = np.array(batch_image.min(), dtype=np.float)
         max = np.array(batch_image.max(), dtype=np.float)
@@ -307,11 +308,11 @@ def save_batch_heatmaps(batch_image, batch_heatmaps, file_name, normalize=True):
 
 
 def save_predict_results(batch_image, batch_heatmaps, file_ids, fold_name, normalize=True):
-    '''
+    """
     batch_image: [batch_size, channel, height, width]
     batch_heatmaps: ['batch_size, num_joints, height, width]
     fold_name: saved files in this folder
-    '''
+    """
     save_dir = Path('./{}'.format(fold_name))
     try:
         save_dir.mkdir()
@@ -455,7 +456,8 @@ def print_name_value(name_value, full_arch_name):
     print('| ' + 'SIMPLEBASE RESNET50 ' + ' '.join(results) + ' |')
 
 class AverageMeter(object):
-    """Computes and stores the average and current value"""
+    """Computes and stores the average and current value
+    """
     def __init__(self):
         self.reset()
 

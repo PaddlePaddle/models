@@ -178,11 +178,11 @@ class JointsDataset(Dataset):
         return db_selected
 
     def generate_target(self, joints, joints_vis):
-        '''
+        """
         :param joints:  [num_joints, 3]
         :param joints_vis: [num_joints, 3]
         :return: target, target_weight(1: visible, 0: invisible)
-        '''
+        """
         target_weight = np.ones((self.num_joints, 1), dtype=np.float32)
         target_weight[:, 0] = joints_vis[:, 0]
 

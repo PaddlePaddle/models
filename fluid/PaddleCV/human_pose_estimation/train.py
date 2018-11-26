@@ -221,8 +221,7 @@ def save_batch_heatmaps(batch_image, batch_heatmaps, file_name, normalize=True):
     cv2.imwrite(file_name, grid_image)
 
 def get_max_preds(batch_heatmaps):
-    """
-    get predictions from score maps
+    """Get predictions from score maps
     heatmaps: numpy.ndarray([batch_size, num_joints, height, width])
     """
     assert isinstance(batch_heatmaps, np.ndarray), \

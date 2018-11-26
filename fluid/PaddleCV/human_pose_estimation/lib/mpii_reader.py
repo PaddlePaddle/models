@@ -76,11 +76,11 @@ def _visualize(filename, data_numpy, input, joints, target):
     cv2.imwrite(os.path.join(TMPDIR, 'input_kps.jpg'), input)
 
 def _generate_target(joints, joints_vis):
-    '''
+    """
     :param joints:  [num_joints, 3]
     :param joints_vis: [num_joints, 3]
     :return: target, target_weight(1: visible, 0: invisible)
-    '''
+    """
     target_weight = np.ones((NUM_JOINTS, 1), dtype=np.float32)
     target_weight[:, 0] = joints_vis[:, 0]
 

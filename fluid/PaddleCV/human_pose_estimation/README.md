@@ -26,7 +26,7 @@ The code is developed and tested under 4 Tesla K40 GPUS cards on CentOS with ins
 | Arch | Head | Shoulder | Elbow | Wrist | Hip | Knee | Ankle | Mean | Mean@0.1| Models |
 | ---- |:----:|:--------:|:-----:|:-----:|:---:|:----:|:-----:|:----:|:-------:|:------:|
 | 383x384\_pose\_resnet\_50 in PyTorch | 96.658 | 95.754 | 89.790 | 84.614 | 88.523 | 84.666 | 79.287 | 89.066 | 38.046 | - |
-| 383x384\_pose\_resnet\_50 in Fluid   | 96.248 | 95.346 | 89.807 | 84.873 | 88.298 | 83.679 | 78.649 | 88.767 | 37.374 | [`link`](tbd) |
+| 383x384\_pose\_resnet\_50 in Fluid   | 96.248 | 95.346 | 89.807 | 84.873 | 88.298 | 83.679 | 78.649 | 88.767 | 37.374 | [`link`](http://paddlemodels.bj.bcebos.com/pose/pose-resnet-50-384x384-mpii.tar.gz) |
 
 ### Notes:
 
@@ -77,7 +77,7 @@ python2 setup.py install --user
 
 ### Perform Validating
 
-Downloading the checkpoints of Pose-ResNet-50 trained on MPII dataset from [here](tbd). Extract it into the folder `checkpoints` under the directory root of this repo. Then run
+Downloading the checkpoints of Pose-ResNet-50 trained on MPII dataset from [here](http://paddlemodels.bj.bcebos.com/pose/pose-resnet-50-384x384-mpii.tar.gz). Extract it into the folder `checkpoints` under the directory root of this repo. Then run
 
 ```bash
 python2 val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet-50-384x384-mpii'
