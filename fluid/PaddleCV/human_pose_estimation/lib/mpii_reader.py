@@ -255,8 +255,6 @@ def _reader_creator(root, image_set, shuffle=False, is_train=False):
                         filename = image_name,
                         test_mode = False,
                         imagenum = 0)
-
-
         else:
             fold = 'test'
             for img_name in os.listdir(fold):
