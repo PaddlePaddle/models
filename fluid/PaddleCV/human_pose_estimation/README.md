@@ -41,23 +41,23 @@ The code is developed and tested under 4 Tesla K40 GPUS cards on CentOS with ins
   - Download the pretrained ResNet-50 model in PaddlePaddle.Fluid on ImageNet from [Model Zoo](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#supported-models-and-performances).
 
 ```bash
-wget http://paddle-imagenet-models.bj.bcebos.com/resnet_50_model.tar`.
+wget http://paddle-imagenet-models.bj.bcebos.com/resnet_50_model.tar
 ```
 
 Then, put them in the folder `pretrained` under the directory root of this repo, make them look like:
 
-```bash
+```
 ${THIS REPO ROOT}
   `-- pretrained
       `-- resnet_50
-      |  |-- 115
+          |-- 115
   `-- data
-  `-- coco
-      |-- annotations
-      |-- images
-  `-- mpii
-      |-- annot
-      |-- images
+      `-- coco
+          |-- annotations
+          |-- images
+      `-- mpii
+          |-- annot
+          |-- images
 ```
 
 ### Install [COCOAPI](https://github.com/cocodataset/cocoapi)
