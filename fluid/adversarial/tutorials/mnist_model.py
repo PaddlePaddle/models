@@ -1,7 +1,7 @@
 """
 CNN on mnist data using fluid api of paddlepaddle
 """
-import paddle.v2 as paddle
+import paddle
 import paddle.fluid as fluid
 
 

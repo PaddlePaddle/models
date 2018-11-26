@@ -145,10 +145,10 @@ class DuelingDQNModel(object):
 
     def _build_sync_target_network(self):
         vars = list(fluid.default_main_program().list_vars())
-        policy_vars = filter(
-            lambda x: 'GRAD' not in x.name and 'policy' in x.name, vars)
-        target_vars = filter(
-            lambda x: 'GRAD' not in x.name and 'target' in x.name, vars)
+        policy_vars = list(filter(
+            lambda x: 'GRAD' not in x.name and 'policy' in x.name, vars))
+        target_vars = list(filter(
+            lambda x: 'GRAD' not in x.name and 'target' in x.name, vars))
         policy_vars.sort(key=lambda x: x.name)
         target_vars.sort(key=lambda x: x.name)
 
@@ -158,7 +158,8 @@ class DuelingDQNModel(object):
             for i, var in enumerate(policy_vars):
                 sync_op = fluid.layers.assign(policy_vars[i], target_vars[i])
                 sync_ops.append(sync_op)
-        sync_program = sync_program.prune(sync_ops)
+        # The prune API is deprecated, please don't use it any more.
+        sync_program = sync_program._prune(sync_ops)
         return sync_program
 
     def act(self, state, train_or_test):

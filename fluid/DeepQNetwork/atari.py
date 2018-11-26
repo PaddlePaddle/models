@@ -9,7 +9,7 @@ import gym
 from gym import spaces
 from gym.envs.atari.atari_env import ACTION_MEANING
 
-from ale_python_interface import ALEInterface
+from atari_py import ALEInterface
 
 __all__ = ['AtariPlayer']
 
@@ -55,7 +55,7 @@ class AtariPlayer(gym.Env):
         try:
             ALEInterface.setLoggerMode(ALEInterface.Logger.Error)
         except AttributeError:
-            print "You're not using latest ALE"
+            print("You're not using latest ALE")
 
         # avoid simulator bugs: https://github.com/mgbellemare/Arcade-Learning-Environment/issues/86
         with _ALE_LOCK:

@@ -1,0 +1,5 @@
+output/
+*.swp
+*.log
+log*
+output*
