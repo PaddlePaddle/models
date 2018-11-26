@@ -105,4 +105,4 @@ If there are multiple persons in images, detectors such as [Faster R-CNN](https:
 
 ## License
 
-This code is released under the Apache License 2.0. See [LICENSE](LICENSE) for additional details.
+This code is released under the Apache License 2.0.
