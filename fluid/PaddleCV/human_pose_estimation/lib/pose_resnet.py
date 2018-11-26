@@ -27,7 +27,13 @@ BN_MOMENTUM = 0.1
 
 class ResNet():
     def __init__(self, layers=50, kps_num=16, test_mode=False):
-        
+        """
+        :layers:  int, the layers number which is used here
+        :kps_num: int, the number of keypoints in accord with the dataset
+        :test_mode: bool, if True, only return output heatmaps, no loss
+
+        :return: loss, output heatmaps
+        """
         self.k = kps_num
         self.layers = layers
         self.test_mode = test_mode
