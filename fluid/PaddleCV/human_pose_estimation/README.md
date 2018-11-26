@@ -9,10 +9,10 @@ This is a simple demonstration of re-implementation in [PaddlePaddle.Fluid](http
 
 ## Requirements
 
-- Python == 2.7
-- PaddlePaddle >= 1.0
-- opencv-python >= 3.3
-- tqdm >= 4.25
+  - Python == 2.7
+  - PaddlePaddle >= 1.0
+  - opencv-python >= 3.3
+  - tqdm >= 4.25
 
 ## Environment
 
@@ -20,7 +20,7 @@ The code is developed and tested under 4 Tesla K40 GPUS cards on CentOS with ins
 
 ## Known Issues
 
-- The model does not converge with large batch\_size (e.g. = 32) on Tesla P40 / V100 / P100 GPUS cards, because PaddlePaddle uses the batch normalization function of cuDNN. Changing batch\_size into 1 image on each card during training will ease this problem, but not sure the performance. The issue can be tracked at [here](https://github.com/PaddlePaddle/Paddle/issues/14580).
+  - The model does not converge with large batch\_size (e.g. = 32) on Tesla P40 / V100 / P100 GPUS cards, because PaddlePaddle uses the batch normalization function of cuDNN. Changing batch\_size into 1 image on each card during training will ease this problem, but not sure the performance. The issue can be tracked at [here](https://github.com/PaddlePaddle/Paddle/issues/14580).
 
 ## Results on MPII Val
 | Arch | Head | Shoulder | Elbow | Wrist | Hip | Knee | Ankle | Mean | Mean@0.1| Models |
@@ -30,36 +30,31 @@ The code is developed and tested under 4 Tesla K40 GPUS cards on CentOS with ins
 
 ### Notes:
 
-- Flip test is used.
-- We do not hardly search the best model, just use the last saved model to make validation.
+  - Flip test is used.
+  - We do not hardly search the best model, just use the last saved model to make validation.
 
 ## Getting Start
 
 ### Prepare Datasets and Pretrained Models
 
-- Following the [instruction](https://github.com/Microsoft/human-pose-estimation.pytorch#data-preparation) to prepare datasets.
-- Download the pretrained ResNet-50 model in PaddlePaddle.Fluid on ImageNet from [Model Zoo](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#supported-models-and-performances). 
+  - Following the [instruction](https://github.com/Microsoft/human-pose-estimation.pytorch#data-preparation) to prepare datasets.
+  - Download the pretrained ResNet-50 model in PaddlePaddle.Fluid on ImageNet from [Model Zoo](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#supported-models-and-performances) via `wget http://paddle-imagenet-models.bj.bcebos.com/resnet_50_model.tar`.
 
-```bash
-wget http://paddle-imagenet-models.bj.bcebos.com/resnet_50_model.tar
-```
+Put them in the folder `pretrained` under the directory root of this repo, make them look like:
 
-Put it in the folder `pretrained` under the directory root of this repo, make it like
-
-```bash
-${THIS REPO ROOT}
- `-- pretrained
-     `-- resnet_50
-     	|-- 115
- `-- data
- 	 `-- coco
- 	 	|-- annotations
- 	 	|-- images
- 	 `-- mpii
- 	 	|-- annot
- 	 	|-- images
- ...
-```
+    ```bash
+	${THIS REPO ROOT}
+ 		`-- pretrained
+     		`-- resnet_50
+     		|	|-- 115
+ 		`-- data
+ 	 	`-- coco
+ 	 		|-- annotations
+ 	 		|-- images
+ 	 	`-- mpii
+ 	 		|-- annot
+ 	 		|-- images
+	```
 
 ### Install [COCOAPI](https://github.com/cocodataset/cocoapi)
 
@@ -102,7 +97,7 @@ If there are multiple persons in images, detectors such as [Faster R-CNN](https:
 
 ## Reference
 
-- Simple Baselines for Human Pose Estimation and Tracking in PyTorch [`code`](https://github.com/Microsoft/human-pose-estimation.pytorch#data-preparation)
+  - Simple Baselines for Human Pose Estimation and Tracking in PyTorch [`code`](https://github.com/Microsoft/human-pose-estimation.pytorch#data-preparation)
 
 ## License
 
