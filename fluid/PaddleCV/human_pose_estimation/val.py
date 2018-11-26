@@ -83,9 +83,6 @@ def valid(args):
 
     # output
     loss, output = model.net(input=image, target=target, target_weight=target_weight)
-    loss.persistable = True
-    output.persistable = True
-    target.persistable = True
 
     # parameters from model and arguments
     params = {}
