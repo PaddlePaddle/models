@@ -183,20 +183,8 @@ def data_augmentation(sample, is_train):
     input -= np.array(MEAN).reshape((3, 1, 1))
     input /= np.array(STD).reshape((3, 1, 1))
 
-    # meta = {
-    #     'image': image_file,
-    #     'filename': filename,
-    #     'imgnum': imgnum,
-    #     'joints': joints,
-    #     'joints_vis': joints_vis,
-    #     'center': c,
-    #     'scale': s,
-    #     'rotation': r,
-    #     'score': score
-    # }
-
     if is_train:
-        return input, target, target_weight # , meta
+        return input, target, target_weight
     else:
         return input, target, target_weight, c, s, score
 

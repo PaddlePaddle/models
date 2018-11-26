@@ -38,7 +38,28 @@ The code is developed and tested under 4 Tesla K40 GPUS cards on CentOS with ins
 ### Prepare Datasets and Pretrained Models
 
 - Following the [instruction](https://github.com/Microsoft/human-pose-estimation.pytorch#data-preparation) to prepare datasets.
-- Download the pretrained ResNet-50 model in PaddlePaddle.Fluid on ImageNet from [Model Zoo](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#supported-models-and-performances). Put it in the folder `pretrained` under the directory root of this repo.
+- Download the pretrained ResNet-50 model in PaddlePaddle.Fluid on ImageNet from [Model Zoo](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#supported-models-and-performances). 
+
+```bash
+wget http://paddle-imagenet-models.bj.bcebos.com/resnet_50_model.tar
+```
+
+Put it in the folder `pretrained` under the directory root of this repo, make it like
+
+```bash
+${THIS REPO ROOT}
+ `-- pretrained
+     `-- resnet_50
+     	|-- 115
+ `-- data
+ 	 `-- coco
+ 	 	|-- annotations
+ 	 	|-- images
+ 	 `-- mpii
+ 	 	|-- annot
+ 	 	|-- images
+ ...
+```
 
 ### Install [COCOAPI](https://github.com/cocodataset/cocoapi)
 

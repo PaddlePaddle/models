@@ -46,7 +46,8 @@ NUM_JOINTS = 17
 FLIP_PAIRS = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16]]
 PARENT_IDS = None
 
-'''COCO Datatset
+
+""" COCO Datatset
 "keypoints": {
     0: "nose",
     1: "left_eye",
@@ -69,7 +70,7 @@ PARENT_IDS = None
     "skeleton": [
     [16,14],[14,12],[17,15],[15,13],[12,13],[6,12],[7,13], [6,7],[6,8],
     [7,9],[8,10],[9,11],[2,3],[1,2],[1,3],[2,4],[3,5],[4,6],[5,7]]
-'''
+"""
 
 # CFGS
 SCALE_FACTOR = 0.3
@@ -211,20 +212,8 @@ def data_augmentation(sample, is_train):
     input -= np.array(MEAN).reshape((3, 1, 1))
     input /= np.array(STD).reshape((3, 1, 1))
 
-    # meta = {
-    #     'image': image_file,
-    #     'filename': filename,
-    #     'imgnum': imgnum,
-    #     'joints': joints,
-    #     'joints_vis': joints_vis,
-    #     'center': c,
-    #     'scale': s,
-    #     'rotation': r,
-    #     'score': score
-    # }
-
     if is_train:
-        return input, target, target_weight #, meta
+        return input, target, target_weight
     else:
         return input, target, input_no_norm, c, s
 
@@ -379,7 +368,7 @@ def _reader_creator(root, image_set, shuffle=False, is_train=False, use_gt_bbox=
         if is_train or use_gt_bbox:
             gt_db = _load_coco_keypoint_annotation(
                     image_set_index, coco, _coco_ind_to_class_ind, image_set)
-            # gt_db = _select_data(gt_db)
+            gt_db = _select_data(gt_db)
 
         if shuffle:
             random.shuffle(gt_db)

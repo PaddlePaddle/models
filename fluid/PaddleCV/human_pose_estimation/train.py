@@ -121,7 +121,8 @@ def train(args):
     optimizer.minimize(loss)
 
     if args.with_mem_opt:
-        fluid.memory_optimize(fluid.default_main_program())
+        fluid.memory_optimize(fluid.default_main_program(),
+                              skip_opt_set=[loss.name, output.name, target.name])
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -131,7 +132,6 @@ def train(args):
     if args.pretrained_model:
         def if_exist(var):
             exist_flag = os.path.exists(os.path.join(args.pretrained_model, var.name))
-            # print(var.name, exist_flag)
             return exist_flag
         fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
@@ -169,11 +169,11 @@ def train(args):
         fluid.io.save_persistables(exe, model_path)
 
 def save_batch_heatmaps(batch_image, batch_heatmaps, file_name, normalize=True):
-    '''
+    """
     batch_image: [batch_size, channel, height, width]
     batch_heatmaps: ['batch_size, num_joints, height, width]
     file_name: saved file name
-    '''
+    """
     if normalize:
         min = np.array(batch_image.min(), dtype=np.float)
         max = np.array(batch_image.max(), dtype=np.float)
@@ -218,17 +218,16 @@ def save_batch_heatmaps(batch_image, batch_heatmaps, file_name, normalize=True):
             width_end = heatmap_width * (j+2)
             grid_image[height_begin:height_end, width_begin:width_end, :] = \
                 masked_image
-            # grid_image[height_begin:height_end, width_begin:width_end, :] = \
-            #     colored_heatmap*0.7 + resized_image*0.3
+
         grid_image[height_begin:height_end, 0:heatmap_width, :] = resized_image
 
     cv2.imwrite(file_name, grid_image)
 
 def get_max_preds(batch_heatmaps):
-    '''
+    """
     get predictions from score maps
     heatmaps: numpy.ndarray([batch_size, num_joints, height, width])
-    '''
+    """
     assert isinstance(batch_heatmaps, np.ndarray), \
         'batch_heatmaps should be numpy.ndarray'
     assert batch_heatmaps.ndim == 4, 'batch_images should be 4-ndim'

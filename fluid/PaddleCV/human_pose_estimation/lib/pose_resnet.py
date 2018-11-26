@@ -22,10 +22,12 @@ import paddle.fluid as fluid
 
 __all__ = ["ResNet", "ResNet50", "ResNet101", "ResNet152"]
 
+# global parameters
 BN_MOMENTUM = 0.1
 
 class ResNet():
     def __init__(self, layers=50, kps_num=16, test_mode=False):
+        
         self.k = kps_num
         self.layers = layers
         self.test_mode = test_mode

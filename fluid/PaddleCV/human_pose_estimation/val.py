@@ -97,7 +97,8 @@ def valid(args):
     params["learning_strategy"]["name"] = args.lr_strategy
 
     if args.with_mem_opt:
-        fluid.memory_optimize(fluid.default_main_program())
+        fluid.memory_optimize(fluid.default_main_program(),
+                              skip_opt_set=[loss.name, output.name, target.name])
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -107,7 +108,6 @@ def valid(args):
     if args.pretrained_model:
         def if_exist(var):
             exist_flag = os.path.exists(os.path.join(args.pretrained_model, var.name))
-            # print(var.name, exist_flag)
             return exist_flag
         fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
