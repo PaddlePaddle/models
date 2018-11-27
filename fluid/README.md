@@ -17,7 +17,7 @@ Fluid模型配置和参数文件的工具。
 -  [MobileNet](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models)
 -  [Dual Path Network](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models)
 -  [SE-ResNeXt](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models)
--  [Caffe模型转换为Paddle Fluid配置和模型文件工具](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/caffe2fluid)
+-  [Caffe模型转换为Paddle Fluid配置和模型文件工具](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/caffe2fluid)
 
 目标检测
 --------
@@ -167,4 +167,3 @@ SimNet是百度自然语言处理部于2013年自主研发的语义匹配框架�
 - [SequenceSemanticRetrieval](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/ssr)
 - [DeepCTR](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleRec/ctr/README.cn.md)
 - [Multiview-Simnet](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/multiview_simnet)
-
