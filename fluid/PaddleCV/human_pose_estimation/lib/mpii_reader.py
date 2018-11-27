@@ -68,7 +68,7 @@ def data_augmentation(sample, is_train):
     joints_vis = sample['joints_3d_vis']
     c = sample['center']
     s = sample['scale']
-    # score = sample['score'] if 'score' in sample else 1
+    score = sample['score'] if 'score' in sample else 1
     # imgnum = sample['imgnum'] if 'imgnum' in sample else ''
     r = 0
 
