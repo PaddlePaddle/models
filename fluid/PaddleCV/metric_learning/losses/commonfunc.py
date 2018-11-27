@@ -1,41 +1,15 @@
-import numpy as np
-def recall_topk(fea, lab, k = 1):
-    fea = np.array(fea)
-    fea = fea.reshape(fea.shape[0], -1)
-    n = np.sqrt(np.sum(fea**2, 1)).reshape(-1, 1)
-    fea = fea/n
-    a = np.sum(fea ** 2, 1).reshape(-1, 1)
-    b = a.T
-    ab = np.dot(fea, fea.T)
-    d = a + b - 2*ab
-    d = d + np.eye(len(fea)) * 1e8
-    sorted_index = np.argsort(d, 1)
-    res = 0
-    for i in range(len(fea)):
-        pred = lab[sorted_index[i][0]]
-        if lab[i] == pred:
-            res += 1.0
-    res = res/len(fea)
-    return res
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-import subprocess
 import os
-
-def get_gpu_num():
-    visibledevice = os.getenv('CUDA_VISIBLE_DEVICES')
-    if visibledevice:
-        devicenum = len(visibledevice.split(','))
-    else:
-        devicenum = subprocess.check_output(
-            [str.encode('nvidia-smi'), str.encode('-L')]).decode('utf-8').count('\n')
-    return devicenum
-
+import numpy as np
 import paddle as paddle
 import paddle.fluid as fluid
 
 def generate_index(batch_size, samples_each_class):
-    a = np.arange(0, batch_size * batch_size)
-    a = a.reshape(-1, batch_size)
+    a = np.arange(0, batch_size * batch_size) # N*N x 1
+    a = a.reshape(-1, batch_size) # N x N
     steps = batch_size // samples_each_class
     res = []
     for i in range(batch_size):
@@ -72,7 +46,3 @@ def calculate_order_dist_matrix(feature, batch_size, samples_each_class):
     d = fluid.layers.gather(d, index=index_var)
     d = fluid.layers.reshape(d, shape=[-1, batch_size])
     return d
-    
-
-
-
