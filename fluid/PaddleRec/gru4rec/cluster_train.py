@@ -29,17 +29,25 @@ def parse_args():
     parser.add_argument(
         '--batch_size', type=int, default=5, help='num of batch size')
     parser.add_argument(
-        '--print_batch', type=int, default=10, help='num of print batch')
-    parser.add_argument(
         '--pass_num', type=int, default=10, help='num of epoch')
     parser.add_argument(
-        '--use_cuda', type=int, default=0, help='whether use gpu')
+        '--print_batch', type=int, default=10, help='num of print batch')
     parser.add_argument(
-        '--parallel', type=int, default=0, help='whether parallel')
+        '--use_cuda', type=int, default=0, help='whether use gpu')
     parser.add_argument(
         '--base_lr', type=float, default=0.01, help='learning rate')
     parser.add_argument(
         '--num_devices', type=int, default=1, help='Number of GPU devices')
+    parser.add_argument(
+        '--role', type=str, default='pserver', help='trainer or pserver')
+    parser.add_argument(
+        '--endpoints', type=str, default='127.0.0.1:6000', help='The pserver endpoints, like: 127.0.0.1:6000, 127.0.0.1:6001')
+    parser.add_argument(
+        '--current_endpoint', type=str, default='127.0.0.1:6000', help='The current_endpoint')
+    parser.add_argument(
+        '--trainer_id', type=int, default=0, help='trainer id ,only trainer_id=0 save model')
+    parser.add_argument(
+        '--trainers', type=int, default=1, help='The num of trianers, (default: 1)')
     args = parser.parse_args()
     return args
 
@@ -53,8 +61,7 @@ def train():
     train_dir = args.train_dir
     vocab_path = args.vocab_path
     use_cuda = True if args.use_cuda else False
-    parallel = True if args.parallel else False
-    print("use_cuda:", use_cuda, "parallel:", parallel)
+    print("use_cuda:", use_cuda)
     batch_size = args.batch_size
     vocab_size, train_reader = utils.prepare_data(
         train_dir, vocab_path, batch_size=batch_size * get_cards(args),\
@@ -64,20 +71,9 @@ def train():
     src_wordseq, dst_wordseq, avg_cost, acc = net.network(vocab_size=vocab_size, hid_size=hid_size)
 
     # Optimization to minimize lost
-    sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.base_lr)
+    sgd_optimizer = fluid.optimizer.SGD(learning_rate=args.base_lr)
     sgd_optimizer.minimize(avg_cost)
     
-    # Initialize executor
-    place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
-    training_role = os.getenv("TRAINING_ROLE", "TRAINER")
-    if training_role == "PSERVER":
-        place = fluid.CPUPlace()
-    exe = fluid.Executor(place)
-    if parallel:
-        train_exe = fluid.ParallelExecutor(
-            use_cuda=use_cuda, loss_name=avg_cost.name)
-    else:
-        train_exe = exe
     
     def train_loop(main_program):
         """ train network """
@@ -85,6 +81,8 @@ def train():
         model_dir = args.model_dir
         fetch_list = [avg_cost.name]
 
+        place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
+        exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
         total_time = 0.0
         for pass_idx in six.moves.xrange(pass_num):
@@ -100,7 +98,7 @@ def train():
                                                      place)
                 lod_dst_wordseq = utils.to_lodtensor([dat[1] for dat in data],
                                                      place)
-                ret_avg_cost = train_exe.run(main_program,
+                ret_avg_cost = exe.run(main_program,
                                             feed={  "src_wordseq": lod_src_wordseq,
                                                     "dst_wordseq": lod_dst_wordseq},
                                             fetch_list=fetch_list)
@@ -116,9 +114,9 @@ def train():
             save_dir = "%s/epoch_%d" % (model_dir, epoch_idx)
             feed_var_names = ["src_wordseq", "dst_wordseq"]
             fetch_vars = [avg_cost, acc]
-            fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars, exe)
-            print("model saved in %s" % save_dir)
-        #exe.close()
+            if args.trainer_id == 0:
+                fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars, exe)
+                print("model saved in %s" % save_dir)
         print("finish training")
 
     if args.is_local:
@@ -127,24 +125,18 @@ def train():
 
     else:
         print("run distribute training")
-        port = os.getenv("PADDLE_PORT", "6174")
-        pserver_ips = os.getenv("PADDLE_PSERVERS")  # ip,ip...
-        eplist = []
-        for ip in pserver_ips.split(","):
-            eplist.append(':'.join([ip, port]))
-        pserver_endpoints = ",".join(eplist)  # ip:port,ip:port...
-        trainers = int(os.getenv("PADDLE_TRAINERS_NUM", "0"))
-        current_endpoint = os.getenv("POD_IP") + ":" + port
-        trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
         t = fluid.DistributeTranspiler()
-        t.transpile(trainer_id, pservers=pserver_endpoints, trainers=trainers)
-        if training_role == "PSERVER":
-            pserver_prog = t.get_pserver_program(current_endpoint)
-            pserver_startup = t.get_startup_program(current_endpoint,
+        t.transpile(args.trainer_id, pservers=args.endpoints, trainers=args.trainers)
+        if args.role == "pserver":
+            print("run psever")
+            pserver_prog = t.get_pserver_program(args.current_endpoint)
+            pserver_startup = t.get_startup_program(args.current_endpoint,
                                                     pserver_prog)
+            exe = fluid.Executor(fluid.CPUPlace())
             exe.run(pserver_startup)
             exe.run(pserver_prog)
-        elif training_role == "TRAINER":
+        elif args.role == "trainer":
+            print("run trainer")
             train_loop(t.get_trainer_program())
 if __name__ == "__main__":
     train()
