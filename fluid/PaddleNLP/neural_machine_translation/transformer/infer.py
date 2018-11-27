@@ -140,11 +140,12 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, bos_idx, n_head,
             trg_word, dtype="float32").reshape(-1, 1),
         place, [range(trg_word.shape[0] + 1)] * 2)
     trg_word = to_lodtensor(trg_word, place, [range(trg_word.shape[0] + 1)] * 2)
+    init_idx = np.asarray(range(len(insts)), dtype="int32")
 
     data_input_dict = dict(
         zip(data_input_names, [
             src_word, src_pos, src_slf_attn_bias, trg_word, init_score,
-            trg_src_attn_bias
+            init_idx, trg_src_attn_bias
         ]))
     return data_input_dict
 
@@ -234,7 +235,7 @@ def fast_infer(args):
     exec_strategy = fluid.ExecutionStrategy()
     # For faster executor
     exec_strategy.use_experimental_executor = True
-    exec_strategy.num_threads = 2
+    exec_strategy.num_threads = 1
     build_strategy = fluid.BuildStrategy()
     infer_exe = fluid.ParallelExecutor(
         use_cuda=TrainTaskConfig.use_gpu,

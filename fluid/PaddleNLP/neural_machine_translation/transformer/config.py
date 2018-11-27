@@ -165,6 +165,9 @@ input_descs = {
     "lbl_weight": [(batch_size * seq_len, 1), "float32"],
     # This input is used in beam-search decoder.
     "init_score": [(batch_size, 1), "float32", 2],
+    # This input is used in beam-search decoder for the first gather
+    # (cell states updation)
+    "init_idx": [(batch_size, ), "int32"],
 }
 
 # Names of word embedding table which might be reused for weight sharing.
@@ -194,4 +197,5 @@ label_data_input_fields = (
 fast_decoder_data_input_fields = (
     "trg_word",
     "init_score",
+    "init_idx",
     "trg_src_attn_bias", )

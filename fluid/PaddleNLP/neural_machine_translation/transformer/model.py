@@ -73,7 +73,7 @@ def multi_head_attention(queries,
                          n_head=1,
                          dropout_rate=0.,
                          cache=None,
-                         lod_ref=None,
+                         gather_idx=None,
                          static_kv=False):
     """
     Multi-Head Attention. Note that attn_bias is added to the logit before
@@ -119,9 +119,6 @@ def multi_head_attention(queries,
         [bs, max_sequence_length, n_head * hidden_dim] to the output tensor
         with shape [bs, n_head, max_sequence_length, hidden_dim].
         """
-        if n_head == 1:
-            return queries, keys, values
-
         # The value 0 in shape attr means copying the corresponding dimension
         # size of the input as the output dimension size.
         reshaped_q = layers.reshape(
@@ -143,7 +140,7 @@ def multi_head_attention(queries,
             x=keys, shape=[0, 0, n_head, d_key], inplace=True)
         k = transpose_layer(x=reshaped_k, perm=[0, 2, 1, 3])
         reshaped_v = reshape_layer(
-            x=values, shape=[0, 0, n_head, d_key], inplace=True)
+            x=values, shape=[0, 0, n_head, d_value], inplace=True)
         v = transpose_layer(x=reshaped_v, perm=[0, 2, 1, 3])
 
         if cache is not None:  # only for faster inference
@@ -160,10 +157,9 @@ def multi_head_attention(queries,
                 static_cache_init(v, cache_v)
             else:  # For decoder self-attention in inference
                 cache_k, cache_v = cache["k"], cache["v"]
-            # use sequence_expand to gather cell states corresponding to
-            # selected ids.
-            select_k = layers.sequence_expand(x=cache_k, y=lod_ref)
-            select_v = layers.sequence_expand(x=cache_v, y=lod_ref)
+            # gather cell states corresponding to selected parent
+            select_k = layers.gather(cache_k, index=gather_idx)
+            select_v = layers.gather(cache_v, index=gather_idx)
             if not static_kv:
                 # For self attention in inference, use cache and concat time steps.
                 select_k = layers.concat([select_k, k], axis=2)
@@ -179,7 +175,6 @@ def multi_head_attention(queries,
         Transpose and then reshape the last two dimensions of inpunt tensor x
         so that it becomes one dimension, which is reverse to __split_heads.
         """
-        if len(x.shape) == 3: return x
         if len(x.shape) != 4:
             raise ValueError("Input(x) should be a 4-D Tensor.")
 
@@ -399,7 +394,7 @@ def decoder_layer(dec_input,
                   preprocess_cmd,
                   postprocess_cmd,
                   cache=None,
-                  lod_ref=None):
+                  gather_idx=None):
     """ The layer to be stacked in decoder part.
     The structure of this module is similar to that in the encoder part except
     a multi-head attention is added to implement encoder-decoder attention.
@@ -415,7 +410,7 @@ def decoder_layer(dec_input,
         n_head,
         attention_dropout,
         cache=cache,
-        lod_ref=lod_ref)
+        gather_idx=gather_idx)
     slf_attn_output = post_process_layer(
         dec_input,
         slf_attn_output,
@@ -433,7 +428,7 @@ def decoder_layer(dec_input,
         n_head,
         attention_dropout,
         cache=cache,
-        lod_ref=lod_ref,
+        gather_idx=gather_idx,
         static_kv=True)
     enc_attn_output = post_process_layer(
         slf_attn_output,
@@ -470,7 +465,7 @@ def decoder(dec_input,
             preprocess_cmd,
             postprocess_cmd,
             caches=None,
-            lod_ref=None):
+            gather_idx=None):
     """
     The decoder is composed of a stack of identical decoder_layer layers.
     """
@@ -491,7 +486,7 @@ def decoder(dec_input,
             preprocess_cmd,
             postprocess_cmd,
             cache=None if caches is None else caches[i],
-            lod_ref=lod_ref)
+            gather_idx=gather_idx)
         dec_input = dec_output
     dec_output = pre_process_layer(dec_output, preprocess_cmd,
                                    prepostprocess_dropout)
@@ -689,7 +684,7 @@ def wrap_decoder(trg_vocab_size,
                  dec_inputs=None,
                  enc_output=None,
                  caches=None,
-                 lod_ref=None):
+                 gather_idx=None):
     """
     The wrapper assembles together all needed layers for the decoder.
     """
@@ -726,7 +721,7 @@ def wrap_decoder(trg_vocab_size,
         preprocess_cmd,
         postprocess_cmd,
         caches=caches,
-        lod_ref=lod_ref)
+        gather_idx=gather_idx)
     # Reshape to 2D tensor to use GEMM instead of BatchedGEMM
     dec_output = layers.reshape(
         dec_output, shape=[-1, dec_output.shape[-1]], inplace=True)
@@ -797,14 +792,17 @@ def fast_decode(src_vocab_size,
         postprocess_cmd,
         weight_sharing,
         enc_inputs, )
-    start_tokens, init_scores, trg_src_attn_bias = dec_inputs
+    start_tokens, init_scores, parent_idx, trg_src_attn_bias = dec_inputs
 
     def beam_search():
         max_len = layers.fill_constant(
-            shape=[1], dtype=start_tokens.dtype, value=max_out_len)
+            shape=[1],
+            dtype=start_tokens.dtype,
+            value=max_out_len,
+            force_cpu=True)
         step_idx = layers.fill_constant(
-            shape=[1], dtype=start_tokens.dtype, value=0)
-        cond = layers.less_than(x=step_idx, y=max_len)
+            shape=[1], dtype=start_tokens.dtype, value=0, force_cpu=True)
+        cond = layers.less_than(x=step_idx, y=max_len)  # default force_cpu=True
         while_op = layers.While(cond)
         # array states will be stored for each step.
         ids = layers.array_write(
@@ -831,19 +829,19 @@ def fast_decode(src_vocab_size,
                 "static_k":  # for encoder-decoder attention
                 layers.create_tensor(dtype=enc_output.dtype),
                 "static_v":  # for encoder-decoder attention
-                layers.create_tensor(dtype=enc_output.dtype),
+                layers.create_tensor(dtype=enc_output.dtype)
             } for i in range(n_layer)
         ]
+
         with while_op.block():
             pre_ids = layers.array_read(array=ids, i=step_idx)
             # Since beam_search_op dosen't enforce pre_ids' shape, we can do
             # inplace reshape here which actually change the shape of pre_ids.
             pre_ids = layers.reshape(pre_ids, (-1, 1, 1), inplace=True)
             pre_scores = layers.array_read(array=scores, i=step_idx)
-            # sequence_expand can gather sequences according to lod thus can be
-            # used in beam search to sift states corresponding to selected ids.
-            pre_src_attn_bias = layers.sequence_expand(
-                x=trg_src_attn_bias, y=pre_scores)
+            # gather cell states corresponding to selected parent
+            pre_src_attn_bias = layers.gather(
+                trg_src_attn_bias, index=parent_idx)
             pre_pos = layers.elementwise_mul(
                 x=layers.fill_constant_batch_size_like(
                     input=pre_src_attn_bias,  # cann't use lod tensor here
@@ -870,27 +868,30 @@ def fast_decode(src_vocab_size,
                 dec_inputs=(pre_ids, pre_pos, None, pre_src_attn_bias),
                 enc_output=enc_output,
                 caches=caches,
-                lod_ref=pre_scores)
-
+                gather_idx=parent_idx)
+            # intra-beam topK
             topk_scores, topk_indices = layers.topk(
                 input=layers.softmax(logits), k=beam_size)
             accu_scores = layers.elementwise_add(
                 x=layers.log(topk_scores), y=pre_scores, axis=0)
-            # beam_search op uses lod to distinguish branches.
+            # beam_search op uses lod to differentiate branches.
             topk_indices = layers.lod_reset(topk_indices, pre_ids)
-            selected_ids, selected_scores = layers.beam_search(
+            # topK reduction across beams, also contain special handle of
+            # end beams and end sentences(batch reduction)
+            selected_ids, selected_scores, gather_idx = layers.beam_search(
                 pre_ids=pre_ids,
                 pre_scores=pre_scores,
                 ids=topk_indices,
                 scores=accu_scores,
                 beam_size=beam_size,
-                end_id=eos_idx)
-
+                end_id=eos_idx,
+                return_parent_idx=True)
             layers.increment(x=step_idx, value=1.0, in_place=True)
             # cell states(caches) have been updated in wrap_decoder,
             # only need to update beam search states here.
             layers.array_write(selected_ids, i=step_idx, array=ids)
             layers.array_write(selected_scores, i=step_idx, array=scores)
+            layers.assign(gather_idx, parent_idx)
             layers.assign(pre_src_attn_bias, trg_src_attn_bias)
             length_cond = layers.less_than(x=step_idx, y=max_len)
             finish_cond = layers.logical_not(layers.is_empty(x=selected_ids))
