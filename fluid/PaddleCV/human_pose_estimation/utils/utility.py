@@ -18,14 +18,12 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import os
 import math
 import distutils.util
 import numpy as np
 import cv2
-from scipy.io import loadmat, savemat
 from pathlib import Path
-from collections import OrderedDict
+
 
 def print_arguments(args):
     """Print argparse's arguments.
@@ -67,9 +65,9 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
         help=help + ' Default: %(default)s.',
         **kwargs)
 
+
 def get_max_preds(batch_heatmaps):
-    """Get predictions from score maps
-    
+    """Get predictions from score maps.
     heatmaps: numpy.ndarray([batch_size, num_joints, height, width])
     """
     assert isinstance(batch_heatmaps, np.ndarray), \
@@ -97,14 +95,17 @@ def get_max_preds(batch_heatmaps):
     preds *= pred_mask
     return preds, maxvals
 
+
 def affine_transform(pt, t):
     new_pt = np.array([pt[0], pt[1], 1.]).T
     new_pt = np.dot(t, new_pt)
     return new_pt[:2]
 
+
 def get_3rd_point(a, b):
     direct = a - b
     return b + np.array([-direct[1], direct[0]], dtype=np.float32)
+
 
 def get_dir(src_point, rot_rad):
     sn, cs = np.sin(rot_rad), np.cos(rot_rad)
@@ -115,6 +116,7 @@ def get_dir(src_point, rot_rad):
 
     return src_result
 
+
 def crop(img, center, scale, output_size, rot=0):
     trans = get_affine_transform(center, scale, rot, output_size)
 
@@ -124,6 +126,7 @@ def crop(img, center, scale, output_size, rot=0):
                              flags=cv2.INTER_LINEAR)
 
     return dst_img
+
 
 def get_affine_transform(center,
                          scale,
@@ -161,6 +164,7 @@ def get_affine_transform(center,
 
     return trans
 
+
 def transform_preds(coords, center, scale, output_size):
     target_coords = np.zeros(coords.shape)
     trans = get_affine_transform(center, scale, 0, output_size, inv=1)
@@ -168,13 +172,14 @@ def transform_preds(coords, center, scale, output_size):
         target_coords[p, 0:2] = affine_transform(coords[p, 0:2], trans)
     return target_coords
 
+
 def get_final_preds(args, batch_heatmaps, center, scale):
     coords, maxvals = get_max_preds(batch_heatmaps)
 
     heatmap_height = batch_heatmaps.shape[2]
     heatmap_width = batch_heatmaps.shape[3]
 
-    # post-processing
+    # Post-processing
     if args.post_process:
         for n in range(coords.shape[0]):
             for p in range(coords.shape[1]):
@@ -194,6 +199,7 @@ def get_final_preds(args, batch_heatmaps, center, scale):
                                    [heatmap_width, heatmap_height])
     return preds, maxvals
 
+
 def calc_dists(preds, target, normalize):
     preds = preds.astype(np.float32)
     target = target.astype(np.float32)
@@ -208,8 +214,9 @@ def calc_dists(preds, target, normalize):
                 dists[c, n] = -1
     return dists
 
+
 def dist_acc(dists, thr=0.5):
-    """Return percentage below threshold while ignoring values with a -1
+    """Return percentage below threshold while ignoring values with a -1.
     """
     dist_cal = np.not_equal(dists, -1)
     num_dist_cal = dist_cal.sum()
@@ -217,6 +224,7 @@ def dist_acc(dists, thr=0.5):
         return np.less(dists[dist_cal], thr).sum() * 1.0 / num_dist_cal
     else:
         return -1
+
 
 def accuracy(output, target, hm_type='gaussian', thr=0.5):
     """
@@ -250,11 +258,12 @@ def accuracy(output, target, hm_type='gaussian', thr=0.5):
         acc[0] = avg_acc
     return acc, avg_acc, cnt, pred
 
+
 def save_batch_heatmaps(batch_image, batch_heatmaps, file_name, normalize=True):
     """
-    batch_image: [batch_size, channel, height, width]
-    batch_heatmaps: ['batch_size, num_joints, height, width]
-    file_name: saved file name
+    :param batch_image: [batch_size, channel, height, width]
+    :param batch_heatmaps: ['batch_size, num_joints, height, width]
+    :param file_name: saved file name
     """
     if normalize:
         min = np.array(batch_image.min(), dtype=np.float)
@@ -300,8 +309,6 @@ def save_batch_heatmaps(batch_image, batch_heatmaps, file_name, normalize=True):
             width_end = heatmap_width * (j+2)
             grid_image[height_begin:height_end, width_begin:width_end, :] = \
                 masked_image
-            # grid_image[height_begin:height_end, width_begin:width_end, :] = \
-            #     colored_heatmap*0.7 + resized_image*0.3
         grid_image[height_begin:height_end, 0:heatmap_width, :] = resized_image
 
     cv2.imwrite(file_name, grid_image)
@@ -309,9 +316,9 @@ def save_batch_heatmaps(batch_image, batch_heatmaps, file_name, normalize=True):
 
 def save_predict_results(batch_image, batch_heatmaps, file_ids, fold_name, normalize=True):
     """
-    batch_image: [batch_size, channel, height, width]
-    batch_heatmaps: ['batch_size, num_joints, height, width]
-    fold_name: saved files in this folder
+    :param batch_image: [batch_size, channel, height, width]
+    :param batch_heatmaps: ['batch_size, num_joints, height, width]
+    :param fold_name: saved files in this folder
     """
     save_dir = Path('./{}'.format(fold_name))
     try:
@@ -332,7 +339,7 @@ def save_predict_results(batch_image, batch_heatmaps, file_ids, fold_name, norma
     # (32, 16, 2), (32, 16, 1))
     preds, maxvals = get_max_preds(batch_heatmaps)
 
-    # blue
+    # Blue
     icolor = (255, 137, 0)
     ocolor = (138, 255, 0)
 
@@ -352,7 +359,7 @@ def save_predict_results(batch_image, batch_heatmaps, file_ids, fold_name, norma
 
         cv2.imwrite(str(imgname), image)
 
-# markdown format output
+# Clean format output
 def print_name_value(name_value, full_arch_name):
     names = name_value.keys()
     values = name_value.values()
@@ -370,8 +377,9 @@ def print_name_value(name_value, full_arch_name):
     print('|---' * (num_values+1) + '|')
     print('| ' + 'SIMPLEBASE RESNET50 ' + ' '.join(results) + ' |')
 
+
 class AverageMeter(object):
-    """Computes and stores the average and current value
+    """Computes and stores the average and current value.
     """
     def __init__(self):
         self.reset()
@@ -387,4 +395,3 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count if self.count != 0 else 0
-

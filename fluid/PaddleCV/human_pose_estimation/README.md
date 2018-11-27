@@ -89,6 +89,8 @@ python2 val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet-50-384x384
 python2 train.py --dataset 'mpii' # or coco
 ```
 
+**Note**: Configurations for training are aggregated in the `lib/mpii_reader.py` and `lib/coco_reader.py`.
+
 ### Perform Test on Images
 
 Put the images into the folder `test` under the directory root of this repo. Then run

@@ -38,7 +38,7 @@ add_arg('num_epochs',       int,   140,                 "Number of epochs.")
 add_arg('total_images',     int,   144406,              "Training image number.")
 add_arg('kp_dim',           int,   16,                  "Class number.")
 add_arg('model_save_dir',   str,   "output",            "Model save directory")
-add_arg('with_mem_opt',     bool,  False,               "Whether to use memory optimization or not.")
+add_arg('with_mem_opt',     bool,  True,               "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   None,                "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                "Whether to resume checkpoint.")
 add_arg('lr',               float, 0.001,               "Set learning rate.")
@@ -70,18 +70,17 @@ def test(args):
 
     print_arguments(args)
 
-    # image and target
+    # Image and target
     image = layers.data(name='image', shape=[3, IMAGE_SIZE[1], IMAGE_SIZE[0]], dtype='float32')
     file_id = layers.data(name='file_id', shape=[1,], dtype='int')
 
-    # build model
+    # Build model
     model = pose_resnet.ResNet(layers=50, kps_num=args.kp_dim, test_mode=True)
 
-    # output
+    # Output
     output = model.net(input=image, target=None, target_weight=None)
-    output.persistable = True
 
-    # parameters from model and arguments
+    # Parameters from model and arguments
     params = {}
     params["total_images"] = args.total_images
     params["lr"] = args.lr
@@ -92,7 +91,7 @@ def test(args):
 
     if args.with_mem_opt:
         fluid.memory_optimize(fluid.default_main_program(),
-                              skip_opt_set=[loss.name, output.name, target.name])
+                              skip_opt_set=[output.name])
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -108,13 +107,12 @@ def test(args):
     if args.checkpoint is not None:
         fluid.io.load_persistables(exe, args.checkpoint)
 
-    # dataloader
+    # Dataloader
     test_reader = paddle.batch(reader.test(), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, file_id])
 
     test_exe = fluid.ParallelExecutor(
             use_cuda=True if args.use_gpu else False,
-            # NOTE: Performances will become lower if `for_test` is True
             main_program=fluid.default_main_program().clone(for_test=False),
             loss_name=None)
 
@@ -132,32 +130,30 @@ def test(args):
                 feed=feeder.feed(data))
 
         if args.flip_test:
-            # flip all the images in a same batch
+            # Flip all the images in a same batch
             data_fliped = []
             for i in range(num_images):
                 data_fliped.append((
                             data[i][0][:, :, ::-1],
                             data[i][1]))
 
-            # inference again
+            # Inference again
             _, output_flipped = test_exe.run(
                     fetch_list=fetch_list,
                     feed=feeder.feed(data_fliped))
 
-            # flip back
+            # Flip back
             output_flipped = flip_back(output_flipped, FLIP_PAIRS)
 
-            # feature is not aligned, shift flipped heatmap for higher accuracy
+            # Feature is not aligned, shift flipped heatmap for higher accuracy
             if args.shift_heatmap:
                 output_flipped[:, :, :, 1:] = \
                         output_flipped.copy()[:, :, :, 0:-1]
-                # output_flipped[:, :, :, 0] = 0
 
-            # aggregate
+            # Aggregate
             out_heatmaps = (out_heatmaps + output_flipped) * 0.5
             save_predict_results(input_image, out_heatmaps, file_ids, fold_name='results')
 
 if __name__ == '__main__':
     args = parser.parse_args()
     test(args)
-

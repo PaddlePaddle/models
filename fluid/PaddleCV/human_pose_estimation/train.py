@@ -25,7 +25,7 @@ import argparse
 import functools
 
 from lib import pose_resnet
-from utils.utility import add_arguments, print_arguments
+from utils.utility import *
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -93,18 +93,18 @@ def train(args):
 
     print_arguments(args)
 
-    # image and target
+    # Image and target
     image = layers.data(name='image', shape=[3, IMAGE_SIZE[1], IMAGE_SIZE[0]], dtype='float32')
     target = layers.data(name='target', shape=[args.kp_dim, HEATMAP_SIZE[1], HEATMAP_SIZE[0]], dtype='float32')
     target_weight = layers.data(name='target_weight', shape=[args.kp_dim, 1], dtype='float32')
 
-    # build model
+    # Build model
     model = pose_resnet.ResNet(layers=50, kps_num=args.kp_dim)
 
-    # output
+    # Output
     loss, output = model.net(input=image, target=target, target_weight=target_weight)
 
-    # parameters from model and arguments
+    # Parameters from model and arguments
     params = {}
     params["total_images"] = args.total_images
     params["lr"] = args.lr
@@ -113,7 +113,7 @@ def train(args):
     params["learning_strategy"]["batch_size"] = args.batch_size
     params["learning_strategy"]["name"] = args.lr_strategy
 
-    # initialize optimizer
+    # Initialize optimizer
     optimizer = optimizer_setting(args, params)
     optimizer.minimize(loss)
 
@@ -135,7 +135,7 @@ def train(args):
     if args.checkpoint is not None:
         fluid.io.load_persistables(exe, args.checkpoint)
 
-    # dataloader
+    # Dataloader
     train_reader = paddle.batch(reader.train(), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, target, target_weight])
 
@@ -165,89 +165,6 @@ def train(args):
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path)
 
-def save_batch_heatmaps(batch_image, batch_heatmaps, file_name, normalize=True):
-    """
-    batch_image: [batch_size, channel, height, width]
-    batch_heatmaps: ['batch_size, num_joints, height, width]
-    file_name: saved file name
-    """
-    if normalize:
-        min = np.array(batch_image.min(), dtype=np.float)
-        max = np.array(batch_image.max(), dtype=np.float)
-
-        batch_image = np.add(batch_image, -min)
-        batch_image = np.divide(batch_image, max - min + 1e-5)
-
-    batch_size, num_joints, \
-            heatmap_height, heatmap_width = batch_heatmaps.shape
-
-    grid_image = np.zeros((batch_size*heatmap_height,
-                           (num_joints+1)*heatmap_width,
-                           3),
-                          dtype=np.uint8)
-
-    preds, maxvals = get_max_preds(batch_heatmaps)
-
-    for i in range(batch_size):
-        image = batch_image[i] * 255
-        image = image.clip(0, 255).astype(np.uint8)
-        image = image.transpose(1, 2, 0)
-
-        heatmaps = batch_heatmaps[i] * 255
-        heatmaps = heatmaps.clip(0, 255).astype(np.uint8)
-
-        resized_image = cv2.resize(image,
-                                   (int(heatmap_width), int(heatmap_height)))
-        height_begin = heatmap_height * i
-        height_end = heatmap_height * (i + 1)
-        for j in range(num_joints):
-            cv2.circle(resized_image,
-                       (int(preds[i][j][0]), int(preds[i][j][1])),
-                       1, [0, 0, 255], 1)
-            heatmap = heatmaps[j, :, :]
-            colored_heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
-            masked_image = colored_heatmap*0.7 + resized_image*0.3
-            cv2.circle(masked_image,
-                       (int(preds[i][j][0]), int(preds[i][j][1])),
-                       1, [0, 0, 255], 1)
-
-            width_begin = heatmap_width * (j+1)
-            width_end = heatmap_width * (j+2)
-            grid_image[height_begin:height_end, width_begin:width_end, :] = \
-                masked_image
-
-        grid_image[height_begin:height_end, 0:heatmap_width, :] = resized_image
-
-    cv2.imwrite(file_name, grid_image)
-
-def get_max_preds(batch_heatmaps):
-    """Get predictions from score maps
-    heatmaps: numpy.ndarray([batch_size, num_joints, height, width])
-    """
-    assert isinstance(batch_heatmaps, np.ndarray), \
-        'batch_heatmaps should be numpy.ndarray'
-    assert batch_heatmaps.ndim == 4, 'batch_images should be 4-ndim'
-
-    batch_size = batch_heatmaps.shape[0]
-    num_joints = batch_heatmaps.shape[1]
-    width = batch_heatmaps.shape[3]
-    heatmaps_reshaped = batch_heatmaps.reshape((batch_size, num_joints, -1))
-    idx = np.argmax(heatmaps_reshaped, 2)
-    maxvals = np.amax(heatmaps_reshaped, 2)
-
-    maxvals = maxvals.reshape((batch_size, num_joints, 1))
-    idx = idx.reshape((batch_size, num_joints, 1))
-
-    preds = np.tile(idx, (1, 1, 2)).astype(np.float32)
-
-    preds[:, :, 0] = (preds[:, :, 0]) % width
-    preds[:, :, 1] = np.floor((preds[:, :, 1]) / width)
-
-    pred_mask = np.tile(np.greater(maxvals, 0.0), (1, 1, 2))
-    pred_mask = pred_mask.astype(np.float32)
-
-    preds *= pred_mask
-    return preds, maxvals
 
 if __name__ == '__main__':
     args = parser.parse_args()

@@ -40,7 +40,7 @@ add_arg('num_epochs',       int,   140,                 "Number of epochs.")
 add_arg('total_images',     int,   144406,              "Training image number.")
 add_arg('kp_dim',           int,   16,                  "Class number.")
 add_arg('model_save_dir',   str,   "output",            "Model save directory")
-add_arg('with_mem_opt',     bool,  False,               "Whether to use memory optimization or not.")
+add_arg('with_mem_opt',     bool,  True,               "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   None,                "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                "Whether to resume checkpoint.")
 add_arg('lr',               float, 0.001,               "Set learning rate.")
@@ -70,7 +70,7 @@ def valid(args):
 
     print_arguments(args)
 
-    # image and target
+    # Image and target
     image = layers.data(name='image', shape=[3, IMAGE_SIZE[1], IMAGE_SIZE[0]], dtype='float32')
     target = layers.data(name='target', shape=[args.kp_dim, HEATMAP_SIZE[1], HEATMAP_SIZE[0]], dtype='float32')
     target_weight = layers.data(name='target_weight', shape=[args.kp_dim, 1], dtype='float32')
@@ -78,13 +78,13 @@ def valid(args):
     scale = layers.data(name='scale', shape=[2,], dtype='float32')
     score = layers.data(name='score', shape=[1,], dtype='float32')
 
-    # build model
+    # Build model
     model = pose_resnet.ResNet(layers=50, kps_num=args.kp_dim)
 
-    # output
+    # Output
     loss, output = model.net(input=image, target=target, target_weight=target_weight)
 
-    # parameters from model and arguments
+    # Parameters from model and arguments
     params = {}
     params["total_images"] = args.total_images
     params["lr"] = args.lr
@@ -111,7 +111,7 @@ def valid(args):
     if args.checkpoint is not None:
         fluid.io.load_persistables(exe, args.checkpoint)
 
-    # dataloader
+    # Dataloader
     valid_reader = paddle.batch(reader.valid(), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, target, target_weight, center, scale, score])
 
@@ -122,7 +122,7 @@ def valid(args):
 
     fetch_list = [image.name, loss.name, output.name, target.name]
 
-    # for validation
+    # For validation
     acc = AverageMeter()
     idx = 0
 
@@ -147,10 +147,10 @@ def valid(args):
                 feed=feeder.feed(data))
 
         if args.flip_test:
-            # flip all the images in a same batch
+            # Flip all the images in a same batch
             data_fliped = []
             for i in range(num_images):
-                # input, target, target_weight, c, s, score
+                # Input, target, target_weight, c, s, score
                 data_fliped.append((
                             # np.flip(input_image, 3)[i],
                             data[i][0][:, :, ::-1],
@@ -160,31 +160,30 @@ def valid(args):
                             data[i][4],
                             data[i][5]))
 
-            # inference again
+            # Inference again
             _, _, output_flipped, _ = valid_exe.run(
                     fetch_list=fetch_list,
                     feed=feeder.feed(data_fliped))
 
-            # flip back
+            # Flip back
             output_flipped = flip_back(output_flipped, FLIP_PAIRS)
 
-            # feature is not aligned, shift flipped heatmap for higher accuracy
+            # Feature is not aligned, shift flipped heatmap for higher accuracy
             if args.shift_heatmap:
                 output_flipped[:, :, :, 1:] = \
                         output_flipped.copy()[:, :, :, 0:-1]
-                # output_flipped[:, :, :, 0] = 0
 
-            # aggregate
+            # Aggregate
             # out_heatmaps.shape: size[b, args.kp_dim, 96, 96]
             out_heatmaps = (out_heatmaps + output_flipped) * 0.5
 
         loss = np.mean(np.array(loss))
 
-        # accuracy
+        # Accuracy
         _, avg_acc, cnt, pred = accuracy(out_heatmaps, target_heatmaps)
         acc.update(avg_acc, cnt)
 
-        # current center, scale, score
+        # Current center, scale, score
         centers = np.array(centers)
         scales = np.array(scales)
         scores = np.array(scores)
@@ -194,7 +193,7 @@ def valid(args):
 
         all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2]
         all_preds[idx:idx + num_images, :, 2:3] = maxvals
-        # double check this all_boxes parts
+        # Double check this all_boxes parts
         all_boxes[idx:idx + num_images, 0:2] = centers[:, 0:2]
         all_boxes[idx:idx + num_images, 2:4] = scales[:, 0:2]
         all_boxes[idx:idx + num_images, 4] = np.prod(scales*200, 1)
@@ -210,7 +209,7 @@ def valid(args):
         if batch_id % 10 == 0:
             save_batch_heatmaps(input_image, out_heatmaps, file_name='visualization@val.jpg', normalize=True)
 
-    # evaluate
+    # Evaluate
     args.DATAROOT = 'data/mpii'
     args.TEST_SET = 'valid'
     output_dir = ''
@@ -224,7 +223,7 @@ def valid(args):
     print_name_value(name_values, perf_indicator)
 
 def mpii_evaluate(cfg, preds, output_dir, *args, **kwargs):
-    # convert 0-based index to 1-based index
+    # Convert 0-based index to 1-based index
     preds = preds[:, :, 0:2] + 1.0
 
     if output_dir:
@@ -277,7 +276,7 @@ def mpii_evaluate(cfg, preds, output_dir, *args, **kwargs):
                                       jnt_visible)
     PCKh = np.divide(100.*np.sum(less_than_threshold, axis=1), jnt_count)
 
-    # save
+    # Save
     rng = np.arange(0, 0.5+0.01, 0.01)
     pckAll = np.zeros((len(rng), cfg.kp_dim))
 
@@ -315,4 +314,3 @@ def mpii_evaluate(cfg, preds, output_dir, *args, **kwargs):
 if __name__ == '__main__':
     args = parser.parse_args()
     valid(args)
-

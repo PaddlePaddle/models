@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##############################################################################
-# 
+#
 # Based on
 # ------------------------------------------------------------------------------
 # https://github.com/Microsoft/human-pose-estimation.pytorch
@@ -20,6 +20,8 @@
 # Licensed under the MIT License.
 # Written by Bin Xiao (Bin.Xiao@microsoft.com)
 # ------------------------------------------------------------------------------
+
+"""Transforms functions."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -31,7 +33,7 @@ import cv2
 
 def flip_back(output_flipped, matched_parts):
     """
-    ouput_flipped: numpy.ndarray(batch_size, num_joints, height, width)
+    :param ouput_flipped: numpy.ndarray(batch_size, num_joints, height, width)
     """
     assert output_flipped.ndim == 4,\
         'output_flipped should be [batch_size, num_joints, height, width]'
@@ -47,8 +49,7 @@ def flip_back(output_flipped, matched_parts):
 
 
 def fliplr_joints(joints, joints_vis, width, matched_parts):
-    """
-    flip coords
+    """Flip coords.
     """
     # Flip horizontal
     joints[:, 0] = width - joints[:, 0] - 1

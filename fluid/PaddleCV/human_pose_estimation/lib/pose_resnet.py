@@ -22,15 +22,15 @@ import paddle.fluid as fluid
 
 __all__ = ["ResNet", "ResNet50", "ResNet101", "ResNet152"]
 
-# global parameters
+# Global parameters
 BN_MOMENTUM = 0.1
 
 class ResNet():
     def __init__(self, layers=50, kps_num=16, test_mode=False):
         """
-        :layers:  int, the layers number which is used here
-        :kps_num: int, the number of keypoints in accord with the dataset
-        :test_mode: bool, if True, only return output heatmaps, no loss
+        :param layers:  int, the layers number which is used here
+        :param kps_num: int, the number of keypoints in accord with the dataset
+        :param test_mode: bool, if True, only return output heatmaps, no loss
 
         :return: loss, output heatmaps
         """
@@ -108,7 +108,7 @@ class ResNet():
                 act=None,
                 param_attr=fluid.param_attr.ParamAttr(
                     initializer=fluid.initializer.Normal(0., 0.001)))
-        
+
         if self.test_mode:
             return out
         else:
