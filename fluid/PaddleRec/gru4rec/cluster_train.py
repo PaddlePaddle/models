@@ -13,7 +13,6 @@ import net
 
 SEED = 102
 
-
 def parse_args():
     parser = argparse.ArgumentParser("gru4rec benchmark.")
     parser.add_argument(
@@ -74,7 +73,6 @@ def train():
     sgd_optimizer = fluid.optimizer.SGD(learning_rate=args.base_lr)
     sgd_optimizer.minimize(avg_cost)
     
-    
     def train_loop(main_program):
         """ train network """
         pass_num = args.pass_num
@@ -122,7 +120,6 @@ def train():
     if args.is_local:
         print("run local training")
         train_loop(fluid.default_main_program())
-
     else:
         print("run distribute training")
         t = fluid.DistributeTranspiler()
@@ -138,5 +135,6 @@ def train():
         elif args.role == "trainer":
             print("run trainer")
             train_loop(t.get_trainer_program())
+
 if __name__ == "__main__":
     train()
