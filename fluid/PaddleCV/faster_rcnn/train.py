@@ -64,7 +64,8 @@ def train():
     if cfg.MASK_ON:
         loss_mask.persistable = True
         loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss + loss_mask
-    loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
+    else:
+        loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
 
     boundaries = cfg.lr_steps
     gamma = cfg.lr_gamma
@@ -96,8 +97,12 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
 
     if cfg.parallel:
+        exec_strategy = fluid.ExecutionStrategy()
+        #exec_strategy.num_threads = 1
         train_exe = fluid.ParallelExecutor(
-            use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
+            use_cuda=bool(cfg.use_gpu),
+            loss_name=loss.name,
+            exec_strategy=exec_strategy)
 
     if cfg.use_pyreader:
         train_reader = reader.train(
@@ -133,15 +138,31 @@ def train():
             for iter_id in range(cfg.max_iter):
                 prev_start_time = start_time
                 start_time = time.time()
-                losses = train_exe.run(fetch_list=[v.name for v in fetch_list])
-                every_pass_loss.append(np.mean(np.array(losses[0])))
-                smoothed_loss.add_value(np.mean(np.array(losses[0])))
+                if cfg.MASK_ON:
+                    loss, rpn_cls_loss, rpn_reg_loss, loss_cls,\
+                    loss_bbox, loss_mask = train_exe.run(\
+                            fetch_list=[v.name for v in fetch_list])
+                else:
+                    loss, rpn_cls_loss, rpn_reg_loss, loss_cls,\
+                    loss_bbox = train_exe.run(\
+                          fetch_list=[v.name for v in fetch_list])
+                #every_pass_loss.append(np.mean(np.array(losses[0])))
+                #smoothed_loss.add_value(np.mean(np.array(losses[0])))
                 lr = np.array(fluid.global_scope().find_var('learning_rate')
                               .get_tensor())
-                print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                    iter_id, lr[0],
-                    smoothed_loss.get_median_value(
-                    ), start_time - prev_start_time))
+                """
+                print("Iter {}, lr {}, loss {}, rpn_cls_loss {},\
+                       rpn_reg_loss {}, loss_cls {}, loss_bbox {},\
+                       loss_mask {}, time {}".format(
+                    iter_id, lr[0],\
+                    np.array(loss).mean(), np.array(rpn_cls_loss).mean(),\
+                    np.array(rpn_reg_loss).mean(), np.array(loss_cls).mean(),\
+                    np.array(loss_bbox).mean(), np.array(loss_mask).mean(),\
+                    start_time - prev_start_time))
+                """
+                print("Iter {}, lr {}, loss {}, time {}".format(
+                    iter_id, lr[0],\
+                    np.array(loss).mean(), start_time - prev_start_time))
                 sys.stdout.flush()
                 if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
                     save_model("model_iter{}".format(iter_id))

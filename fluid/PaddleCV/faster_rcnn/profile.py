@@ -43,12 +43,20 @@ def train():
         use_pyreader=cfg.use_pyreader,
         use_random=False)
     model.build_model(image_shape)
-    loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
+    if cfg.MASK_ON:
+        loss_cls, loss_bbox, rpn_cls_loss, \
+        rpn_reg_loss, loss_mask = model.loss()
+    else:
+        loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
     loss_cls.persistable = True
     loss_bbox.persistable = True
     rpn_cls_loss.persistable = True
     rpn_reg_loss.persistable = True
-    loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
+    if cfg.MASK_ON:
+        loss_mask.persistable = True
+        loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss + loss_mask
+    else:
+        loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
 
     boundaries = cfg.lr_steps
     gamma = cfg.lr_gamma
@@ -95,7 +103,11 @@ def train():
         train_reader = reader.train(batch_size=total_batch_size, shuffle=False)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
-    fetch_list = [loss, loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss]
+    if cfg.MASK_ON:
+        fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, \
+                      loss_cls, loss_bbox, loss_mask]
+    else:
+        fetch_list = [loss, loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss]
 
     def run(iterations):
         reader_time = []

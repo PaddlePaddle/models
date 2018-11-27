@@ -36,13 +36,13 @@ def coco(mode,
          padding_total=False,
          shuffle=False):
     if 'coco2014' in cfg.dataset:
-        cfg.train_file_list = 'annotations/instances_train2014.json'
-        cfg.train_data_dir = 'train2014'
+        cfg.train_file_list = 'annotations/instances_val2014.json'
+        cfg.train_data_dir = 'val2014'
         cfg.val_file_list = 'annotations/instances_val2014.json'
         cfg.val_data_dir = 'val2014'
     elif 'coco2017' in cfg.dataset:
-        cfg.train_file_list = 'annotations/instances_train2017.json'
-        cfg.train_data_dir = 'train2017'
+        cfg.train_file_list = 'annotations/instances_val2017.json'
+        cfg.train_data_dir = 'val2017'
         cfg.val_file_list = 'annotations/instances_val2017.json'
         cfg.val_data_dir = 'val2017'
     else:
@@ -105,6 +105,8 @@ def coco(mode,
                 if roidb_cur >= len(roidbs):
                     roidb_perm = deque(np.random.permutation(roidbs))
                     roidb_cur = 0
+                #if '0000139.' not in roidb['image']:
+                #    continue
                 im, gt_boxes, gt_classes, \
                 is_crowd, im_info, im_id, segms = roidb_reader(
                     roidb, mode)
@@ -124,8 +126,8 @@ def coco(mode,
                          im_info, im_id, np.array(gt_masks,dtype='uint8')))
                 else:
                     batch_out.append(
-                         im, gt_boxes, gt_classes, is_crowd, \
-                         im_info, im_id)
+                         (im, gt_boxes, gt_classes, is_crowd, \
+                         im_info, im_id))
                 if not padding_total:
                     if len(batch_out) == batch_size:
                         yield padding_minibatch(batch_out)
