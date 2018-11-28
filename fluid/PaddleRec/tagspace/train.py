@@ -65,7 +65,6 @@ def train():
     """ train network """
     # Train program
     avg_cost, correct, cos_pos = net.network(vocab_text_size, vocab_tag_size, neg_size=neg_size)
-    #net = net.network(vocab_text_size, vocab_tag_size, neg_size=neg_size)
 
     # Optimization to minimize lost
     sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.base_lr)
