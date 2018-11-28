@@ -1,6 +1,7 @@
 import re
 import sys
 import collections
+import os
 import six
 import time
 import numpy as np
@@ -23,30 +24,39 @@ def to_lodtensor(data, place):
     res.set_lod([lod])
     return res
 
-def prepare_data(train_filename,
-                 test_filename,
+def get_vocab_size(vocab_path):
+    with open(vocab_path, "r") as rf:
+        line = rf.readline()
+        return int(line.strip())
+
+
+def prepare_data(file_dir,
+                 vocab_text_path,
+                 vocab_tag_path,
                  batch_size,
-                 neg_size=1,
-                 buffer_size=1000,
-                 word_freq_threshold=0,
-                 enable_ce=False):
+                 neg_size,
+                 buffer_size,
+                 is_train=True):
     """ prepare the AG's News Topic Classification data """
-    print("start constuct word dict")
-    vocab_text = build_dict(2, word_freq_threshold, train_filename, test_filename)
-    vocab_tag = build_dict(0, word_freq_threshold, train_filename, test_filename)
-    print("construct word dict done\n")
-    train_reader = sort_batch(
-        paddle.reader.shuffle(
-            train(
-                train_filename, vocab_text, vocab_tag, neg_size,
-                buffer_size, data_type=DataType.SEQ),
-            buf_size=buffer_size),
-        batch_size, batch_size * 20)
-    test_reader = sort_batch(
-        test(
-            test_filename, vocab_text, vocab_tag, neg_size, buffer_size, data_type=DataType.SEQ),
-        batch_size, batch_size * 20)
-    return vocab_text, vocab_tag, train_reader, test_reader
+    print("start read file")
+    if is_train:
+        vocab_text_size = get_vocab_size(vocab_text_path)
+        vocab_tag_size = get_vocab_size(vocab_tag_path)
+        reader = sort_batch(
+            paddle.reader.shuffle(
+                train(
+                    file_dir, vocab_tag_size, neg_size,
+                    buffer_size, data_type=DataType.SEQ),
+                buf_size=buffer_size),
+            batch_size, batch_size * 20)
+    else:
+        vocab_tag_size = get_vocab_size(vocab_tag_path)
+        vocab_text_size = 0
+        reader = sort_batch(
+            test(
+                file_dir, vocab_tag_size, buffer_size, data_type=DataType.SEQ),
+            batch_size, batch_size * 20)
+    return vocab_text_size, vocab_tag_size, reader
 
 def sort_batch(reader, batch_size, sort_group_size, drop_last=False):
     """
@@ -97,82 +107,57 @@ def sort_batch(reader, batch_size, sort_group_size, drop_last=False):
 class DataType(object):
     SEQ = 2
 
-def word_count(column_num, input_file, word_freq=None):
-    """
-    compute word count from corpus
-    """
-    if word_freq is None:
-        word_freq = collections.defaultdict(int)
-    data_file = csv.reader(input_file)
-    for row in data_file:
-        for w in re.split(r'\W+',row[column_num].strip()):
-            word_freq[w]+= 1
-    return word_freq
-
-def build_dict(column_num=2, min_word_freq=50, train_filename="", test_filename=""):
-    """
-    Build a word dictionary from the corpus,  Keys of the dictionary are words,
-    and values are zero-based IDs of these words.
-    """
-    with open(train_filename) as trainf:
-        with open(test_filename) as testf:
-            word_freq = word_count(column_num, testf, word_count(column_num, trainf))
-
-    word_freq = [x for x in six.iteritems(word_freq) if x[1] > min_word_freq]
-    word_freq_sorted = sorted(word_freq, key=lambda x: (-x[1], x[0]))
-    words, _ = list(zip(*word_freq_sorted))
-    word_idx = dict(list(zip(words, six.moves.range(len(words)))))
-    return word_idx
-
-def train_reader_creator(filename, text_idx, tag_idx, neg_size, n, data_type):
+def train_reader_creator(file_dir, tag_size, neg_size, n, data_type):
     def reader():
-        with open(filename) as input_file:
-            data_file = csv.reader(input_file)
-            for row in data_file:
-                text_raw = re.split(r'\W+', row[2].strip())
-                text = [text_idx.get(w) for w in text_raw]
-                tag_raw = re.split(r'\W+', row[0].strip())
-                pos_index = tag_idx.get(tag_raw[0])
-                pos_tag=[]
-                pos_tag.append(pos_index)
-                neg_tag=[]
-                max_iter = 100
-                now_iter = 0
-                sum_n = 0
-                while(sum_n < neg_size) :
-                    now_iter += 1
-                    if now_iter > max_iter:
-                        print("error : only one class")
-                        sys.exit(0)
-                    rand_i = np.random.randint(0, len(tag_idx))
-                    if rand_i != pos_index:
-                        neg_index=rand_i
-                        neg_tag.append(neg_index)
-                        sum_n += 1
-                if n > 0 and len(text) > n: continue
-                yield text, pos_tag, neg_tag
+        files = os.listdir(file_dir)
+        for fi in files:
+            with open(file_dir + '/' + fi, "r") as f:
+                for l in f:
+                    l = l.strip().split(",")
+                    pos_index = int(l[0])
+                    pos_tag = []
+                    pos_tag.append(pos_index)
+                    text_raw = l[1].split()
+                    text = [int(w) for w in text_raw]
+                    neg_tag = []
+                    max_iter = 100
+                    now_iter = 0
+                    sum_n = 0
+                    while(sum_n < neg_size) :
+                        now_iter += 1
+                        if now_iter > max_iter:
+                            print("error : only one class")
+                            sys.exit(0)
+                        rand_i = np.random.randint(0, tag_size)
+                        if rand_i != pos_index:
+                            neg_index = rand_i
+                            neg_tag.append(neg_index)
+                            sum_n += 1
+                    if n > 0 and len(text) > n: continue
+                    yield text, pos_tag, neg_tag
     return reader
 
-def test_reader_creator(filename, text_idx, tag_idx, n, data_type):
+def test_reader_creator(file_dir, tag_size, n, data_type):
     def reader():
-        with open(filename) as input_file:
-            data_file = csv.reader(input_file)
-            for row in data_file:
-                text_raw = re.split(r'\W+', row[2].strip())
-                text = [text_idx.get(w) for w in text_raw]
-                tag_raw = re.split(r'\W+', row[0].strip())
-                pos_index = tag_idx.get(tag_raw[0])
-                pos_tag = []
-                pos_tag.append(pos_index)
-                for ii in range(len(tag_idx)):
-                    tag = []
-                    tag.append(ii)
-                    yield text, tag, pos_tag
+        files = os.listdir(file_dir)
+        for fi in files:
+            with open(file_dir + '/' + fi, "r") as f:
+                for l in f:
+                    l = l.strip().split(",")
+                    pos_index = int(l[0])
+                    pos_tag = []
+                    pos_tag.append(pos_index)
+                    text_raw = l[1].split()
+                    text = [int(w) for w in text_raw]
+                    for ii in range(tag_size):
+                        tag = []
+                        tag.append(ii)
+                        yield text, tag, pos_tag
     return reader
 
 
-def train(filename, text_idx, tag_idx, neg_size, n, data_type=DataType.SEQ):
-    return train_reader_creator(filename, text_idx, tag_idx, neg_size, n, data_type)
+def train(train_dir, tag_size, neg_size, n, data_type=DataType.SEQ):
+    return train_reader_creator(train_dir, tag_size, neg_size, n, data_type)
 
-def test(filename, text_idx, tag_idx, neg_size, n, data_type=DataType.SEQ):
-    return test_reader_creator(filename, text_idx, tag_idx, n, data_type)
+def test(test_dir, tag_size, n, data_type=DataType.SEQ):
+    return test_reader_creator(test_dir, tag_size, n, data_type)
