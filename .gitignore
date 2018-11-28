@@ -1,4 +1,10 @@
 .DS_Store
+.vscode
+.idea
+.project
+.cproject
+.pydevproject
+.settings/
 *.pyc
 .*~
 fluid/neural_machine_translation/transformer/deps
