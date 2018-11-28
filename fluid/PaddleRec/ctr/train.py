@@ -3,6 +3,7 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import time
 
 # disable gpu training for this example 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -122,6 +123,7 @@ def train_loop(args, train_program, data_list, loss, auc_var, batch_auc_var,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
     for pass_id in range(args.num_passes):
+        pass_start = time.time()
         for batch_id, data in enumerate(train_reader()):
             loss_val, auc_val, batch_auc_val = exe.run(
                 train_program,
@@ -134,6 +136,7 @@ def train_loop(args, train_program, data_list, loss, auc_var, batch_auc_var,
                 model_dir = args.model_output_dir + '/batch-' + str(batch_id)
                 if args.trainer_id == 0:
                     fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
+        print("pass_id: %d, pass_time_cost: %f" % (pass_id, time.time() - pass_start))
         model_dir = args.model_output_dir + '/pass-' + str(pass_id)
         if args.trainer_id == 0:
             fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
