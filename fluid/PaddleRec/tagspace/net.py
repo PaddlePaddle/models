@@ -46,4 +46,4 @@ def network(vocab_text_size, vocab_tag_size, emb_dim=10, hid_dim=1000, win_size=
     avg_cost = nn.mean(loss_part3)
     less = tensor.cast(cf.less_than(cos_neg, cos_pos), dtype='float32')
     correct = nn.reduce_sum(less)
-    return text, pos_tag, neg_tag, avg_cost, correct, cos_pos
+    return avg_cost, correct, cos_pos

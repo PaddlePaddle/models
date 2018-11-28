@@ -64,7 +64,7 @@ def train():
         buffer_size=batch_size*100, is_train=True)
     """ train network """
     # Train program
-    text, pos_tag, neg_tag, avg_cost, correct, cos_pos = net.network(vocab_text_size, vocab_tag_size, neg_size=neg_size)
+    avg_cost, correct, cos_pos = net.network(vocab_text_size, vocab_tag_size, neg_size=neg_size)
 
     # Optimization to minimize lost
     sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.base_lr)
