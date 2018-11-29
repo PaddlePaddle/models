@@ -177,5 +177,5 @@ def add_ResNet_roi_conv5_head(head_input, rois):
             spatial_scale=cfg.spatial_scale,
             sampling_ratio=cfg.sampling_ratio)
 
-    res5 = layer_warp(bottleneck, pool, 512, 3, 2, name="res5_2_sum")
+    res5 = layer_warp(bottleneck, pool, 512, 3, 2, name="res5")
     return res5

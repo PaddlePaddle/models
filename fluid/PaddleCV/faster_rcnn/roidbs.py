@@ -93,7 +93,7 @@ class JsonDataset(object):
             print('_add_gt_annotations took {:.3f}s'.format(end_time -
                                                             start_time))
             print('Appending horizontally-flipped training examples...')
-            #self._extend_with_flipped_entries(roidb)
+            self._extend_with_flipped_entries(roidb)
         print('Loaded dataset: {:s}'.format(self.name))
         print('{:d} roidb entries'.format(len(roidb)))
         if self.is_train:

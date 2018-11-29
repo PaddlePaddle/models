@@ -150,10 +150,10 @@ def train():
                 #smoothed_loss.add_value(np.mean(np.array(losses[0])))
                 lr = np.array(fluid.global_scope().find_var('learning_rate')
                               .get_tensor())
-                """
                 print("Iter {}, lr {}, loss {}, rpn_cls_loss {},\
                        rpn_reg_loss {}, loss_cls {}, loss_bbox {},\
-                       loss_mask {}, time {}".format(
+                       loss_mask {}, time {}"
+                                             .format(
                     iter_id, lr[0],\
                     np.array(loss).mean(), np.array(rpn_cls_loss).mean(),\
                     np.array(rpn_reg_loss).mean(), np.array(loss_cls).mean(),\
@@ -163,6 +163,7 @@ def train():
                 print("Iter {}, lr {}, loss {}, time {}".format(
                     iter_id, lr[0],\
                     np.array(loss).mean(), start_time - prev_start_time))
+                """
                 sys.stdout.flush()
                 if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
                     save_model("model_iter{}".format(iter_id))

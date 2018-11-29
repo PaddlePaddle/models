@@ -246,6 +246,7 @@ class FasterRCNN(object):
         else:
             pool_rois = self.rpn_rois
         self.res5_2_sum = self.add_roi_box_head_func(roi_input, pool_rois)
+        #self.res5_2_sum.persistable=True
         self.rcnn_out = fluid.layers.pool2d(
             self.res5_2_sum, pool_type='avg', pool_size=7, name='res5_pool')
         self.cls_score = fluid.layers.fc(input=self.rcnn_out,
@@ -272,16 +273,19 @@ class FasterRCNN(object):
                                              name='bbox_pred_b',
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
+        #self.bbox_pred.persistable=True
 
     def mask_rcnn_heads(self,
                         mask_input,
                         roi_has_mask_int32=None,
                         rpn_rois=None):
+        #roi_has_mask_int32.persistable=True
         if self.is_train:
             dim_conv5 = 2048
             conv5 = fluid.layers.gather(self.res5_2_sum, roi_has_mask_int32)
         else:
             conv5 = self.add_roi_box_head_func(mask_input, mask_rois)
+        #conv5.persistable = True
         mask_out = fluid.layers.conv2d_transpose(
             input=conv5,
             num_filters=cfg.DIM_REDUCED,
@@ -289,11 +293,8 @@ class FasterRCNN(object):
             stride=2,
             act='relu',
             param_attr=ParamAttr(
-                name='mask_convT_w',
-                initializer=MSRA(
-                    uniform=False, fan_in=2e6)),
-            bias_attr=ParamAttr(
-                name='mask_convT_b', learning_rate=2., regularizer=L2Decay(0.)))
+                name='conv5_mask_w', initializer=MSRA(uniform=False)))
+        #mask_out.persistable=True
         act_func = None
         if not self.is_train:
             act_func = 'sigmoid'
@@ -303,15 +304,11 @@ class FasterRCNN(object):
             filter_size=1,
             act=act_func,
             param_attr=ParamAttr(
-                name='mask_fcn_logits_w',
-                initializer=MSRA(
-                    uniform=False, fan_in=2e6)),
-            bias_attr=ParamAttr(
-                name='mask_fcn_logits_b',
-                learning_rate=2.,
-                regularizer=L2Decay(0.)))
+                name='mask_fcn_logits_w', initializer=MSRA(uniform=False)))
+        #self.mask_fcn_logits.persistable=True
 
     def mask_rcnn_loss(self):
+        #self.mask_int32.persistable=True
         mask_label = fluid.layers.cast(x=self.mask_int32, dtype='float32')
         mask_label.stop_gradient = True
         reshape_dim = cfg.class_num * cfg.resolution * cfg.resolution
@@ -321,12 +318,12 @@ class FasterRCNN(object):
         loss_mask = fluid.layers.sigmoid_cross_entropy_with_logits(
             x=self.mask_fcn_logits_reshape, label=mask_label, ignore_index=-1)
         mask_label_clip = fluid.layers.clip(mask_label, -1., 0.)
-
         sums = fluid.layers.reduce_sum(mask_label_clip)
         mask_shape = fluid.layers.shape(mask_label_clip)
         mask_shape = fluid.layers.cast(x=mask_shape, dtype='float32')
         mask_num = fluid.layers.reduce_prod(mask_shape)
         norm = mask_num + sums
+        norm.stop_gradient = True
         loss_mask = fluid.layers.reduce_sum(loss_mask, name='loss_mask')
         loss_mask = loss_mask / norm
 
