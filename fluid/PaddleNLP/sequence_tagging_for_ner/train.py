@@ -135,8 +135,9 @@ def main(train_data_file,
               " pass_f1_score:" + str(test_pass_f1_score))
 
         save_dirname = os.path.join(model_save_dir, "params_pass_%d" % pass_id)
-        fluid.io.save_inference_model(save_dirname, ['word', 'mark', 'target'],
-                                      crf_decode, exe)
+        if "CE_MODE_X" not in os.environ:
+            fluid.io.save_inference_model(save_dirname, ['word', 'mark', 'target'],
+                                          crf_decode, exe)
 
     if "CE_MODE_X" in os.environ:
         print("kpis	train_precision	%f" % pass_precision)
