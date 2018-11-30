@@ -73,6 +73,7 @@ def train():
     # Initialize executor
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
     if parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=use_cuda,
@@ -83,7 +84,6 @@ def train():
     pass_num = args.pass_num
     model_dir = args.model_dir
     fetch_list = [avg_cost.name]
-    exe.run(fluid.default_startup_program())
     total_time = 0.0
     for pass_idx in range(pass_num):
         epoch_idx = pass_idx + 1
