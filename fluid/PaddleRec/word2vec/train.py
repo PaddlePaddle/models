@@ -1,20 +1,3 @@
-# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""
-train for word2vec
-"""
-
 from __future__ import print_function
 
 import argparse
@@ -122,15 +105,17 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-    start = time.clock()
 
     exec_strategy = fluid.ExecutionStrategy()
 
-    if os.getenv("NUM_THREADS", ""):
-        exec_strategy.num_threads = int(os.getenv("NUM_THREADS"))
+    #if os.getenv("NUM_THREADS", ""):
+    #    exec_strategy.num_threads = int(os.getenv("NUM_THREADS"))
+    print("CPU_NUM:" + str(os.getenv("CPU_NUM")))
+    exec_strategy.num_threads = int(os.getenv("CPU_NUM"))
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.reduce_strategy = fluid.BuildStrategy.ReduceStrategy.Reduce
+    if int(os.getenv("CPU_NUM")) > 1:
+        build_strategy.reduce_strategy = fluid.BuildStrategy.ReduceStrategy.Reduce
 
     train_exe = fluid.ParallelExecutor(
         use_cuda=False,
@@ -148,6 +133,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
         epoch_start = time.time()
         py_reader.start()
         batch_id = 0
+        start = time.clock()
 
         try:
             while True:
@@ -164,18 +150,26 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
                     profiler_step += 1
 
                 if batch_id % 10 == 0:
-                    logger.info("TRAIN --> pass: {} batch: {} loss: {}".format(
-                        pass_id, batch_id, loss_val.mean() / args.batch_size))
+                    logger.info(
+                        "TRAIN --> pass: {} batch: {} loss: {} reader queue:{}".
+                        format(pass_id, batch_id,
+                               loss_val.mean() / args.batch_size,
+                               py_reader.queue.size()))
                 if batch_id % 100 == 0 and batch_id != 0:
                     elapsed = (time.clock() - start)
-                    logger.info("Time used: {}".format(elapsed))
+                    start = time.clock()
+                    samples = 101 * args.batch_size * int(os.getenv("CPU_NUM"))
+                    logger.info("Time used: {}, Samples/Sec: {}".format(
+                        elapsed, samples / elapsed))
 
-                if batch_id % 1000 == 0 and batch_id != 0:
-                    model_dir = args.model_output_dir + '/batch-' + str(
-                        batch_id)
-                    if trainer_id == 0:
-                        fluid.io.save_inference_model(model_dir, data_name_list,
-                                                      [loss], exe)
+                # elapsed = (time.clock() - start)
+                # start = time.clock()
+                # samples = 101 * args.batch_size * int(os.getenv("CPU_NUM"))
+                # logger.info("Time used: {}, Samples/Sec: {}".format(elapsed, samples/elapsed))
+                #if batch_id % 1000 == 0 and batch_id != 0:
+                #    model_dir = args.model_output_dir + '/batch-' + str(batch_id)
+                #    if trainer_id == 0:
+                #        fluid.io.save_inference_model(model_dir, data_name_list, [loss], exe)
                 batch_id += 1
 
         except fluid.core.EOFException:
@@ -184,17 +178,13 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
             print("Epoch: {0}, Train total expend: {1} ".format(
                 pass_id, epoch_end - epoch_start))
 
-            model_dir = args.model_output_dir + '/pass-' + str(pass_id)
-            if trainer_id == 0:
-                fluid.io.save_inference_model(model_dir, data_name_list,
-                                              [loss], exe)
+            #model_dir = args.model_output_dir + '/pass-' + str(pass_id)
+            #if trainer_id == 0:
+            #    fluid.io.save_inference_model(model_dir, data_name_list, [loss], exe)
 
 
 def train():
     args = parse_args()
-
-    if not args.with_nce and not args.with_hs:
-        logger.error("with_nce or with_hs must choose one")
 
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
@@ -213,12 +203,17 @@ def train():
         args.with_nce,
         is_sparse=args.is_sparse)
 
-    optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
+    #optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
+    optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
     optimizer.minimize(loss)
 
     if os.getenv("PADDLE_IS_LOCAL", "1") == "1":
         logger.info("run local training")
         main_program = fluid.default_main_program()
+
+        with open("local.main.proto", "w") as f:
+            f.write(str(main_program))
+
         train_loop(args, main_program, word2vec_reader, py_reader, loss, 0)
     else:
         logger.info("run dist training")
@@ -227,15 +222,13 @@ def train():
         trainers = int(os.environ["PADDLE_TRAINERS"])
         training_role = os.environ["PADDLE_TRAINING_ROLE"]
 
-        ports = os.getenv("PADDLE_PSERVER_PORTS", "6174")
-        pserver_ip = os.getenv("PADDLE_IP", "")
-
+        port = os.getenv("PADDLE_PSERVER_PORT", "6174")
+        pserver_ips = os.getenv("PADDLE_PSERVER_IPS", "")
         eplist = []
-        for port in ports.split(","):
-            eplist.append(':'.join([pserver_ip, port]))
-
+        for ip in pserver_ips.split(","):
+            eplist.append(':'.join([ip, port]))
         pserver_endpoints = ",".join(eplist)
-        current_endpoint = pserver_ip + ":" + os.getenv("CUR_PORT", "2333")
+        current_endpoint = os.getenv("PADDLE_CURRENT_IP", "") + ":" + port
 
         config = fluid.DistributeTranspilerConfig()
         config.slice_var_up = False
@@ -270,5 +263,31 @@ def train():
                        trainer_id)
 
 
+def env_declar():
+    print("********  Rename Cluster Env to PaddleFluid Env ********")
+
+    print("Content-Type: text/plain\n\n")
+    for key in os.environ.keys():
+        print("%30s %s \n" % (key, os.environ[key]))
+
+    if os.environ["TRAINING_ROLE"] == "PSERVER" or os.environ[
+            "PADDLE_IS_LOCAL"] == "0":
+        os.environ["PADDLE_TRAINING_ROLE"] = os.environ["TRAINING_ROLE"]
+        os.environ["PADDLE_PSERVER_PORT"] = os.environ["PADDLE_PORT"]
+        os.environ["PADDLE_PSERVER_IPS"] = os.environ["PADDLE_PSERVERS"]
+        os.environ["PADDLE_TRAINERS"] = os.environ["PADDLE_TRAINERS_NUM"]
+        os.environ["PADDLE_CURRENT_IP"] = os.environ["POD_IP"]
+        os.environ["PADDLE_TRAINER_ID"] = os.environ["PADDLE_TRAINER_ID"]
+        os.environ["CPU_NUM"] = "12"
+        os.environ["NUM_THREADS"] = "12"
+
+    print("Content-Type: text/plain\n\n")
+    for key in os.environ.keys():
+        print("%30s %s \n" % (key, os.environ[key]))
+
+    print("******  Rename Cluster Env to PaddleFluid Env END ******")
+
+
 if __name__ == '__main__':
+    #`env_declar()
     train()

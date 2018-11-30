@@ -62,10 +62,10 @@ def skip_gram_word2vec(dict_size,
         cost = fluid.layers.hsigmoid(
             input=input,
             label=label,
-            non_leaf_num=non_leaf_num,
-            ptable=ptable,
-            pcode=pcode,
-            is_costum=True,
+            num_classes=non_leaf_num,
+            path_table=ptable,
+            path_code=pcode,
+            is_custom=True,
             is_sparse=is_sparse)
 
         return cost
@@ -109,7 +109,8 @@ def skip_gram_word2vec(dict_size,
                              "uniform", word_frequencys, None)
         cost = cost_nce
     if with_hsigmoid:
-        cost_hs = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size)
+        cost_hs = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size,
+                                 is_sparse)
         cost = cost_hs
     if with_nce and with_hsigmoid:
         cost = fluid.layers.elementwise_add(cost_nce, cost_hs)
