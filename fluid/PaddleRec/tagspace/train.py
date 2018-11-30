@@ -102,7 +102,7 @@ def train():
             if batch_id % args.print_batch == 0:
                 print("TRAIN --> pass: {} batch_num: {} avg_cost: {}, acc: {}"
                         .format(pass_idx, (batch_id+10) * batch_size, np.mean(loss_val),
-                                float(np.sum(correct_val)) / batch_size))
+                                float(np.sum(correct_val)) / (args.num_devices*batch_size)))
         t1 = time.time()
         total_time += t1 - t0
         print("epoch:%d num_steps:%d time_cost(s):%f" %
