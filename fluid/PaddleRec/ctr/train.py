@@ -121,7 +121,7 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
         batch_size=args.batch_size)
 
     py_reader.decorate_paddle_reader(train_reader)
-    data_name_list = None
+    data_name_list = []
 
     place = fluid.CPUPlace()
     exe = fluid.Executor(place)
