@@ -79,14 +79,14 @@ def skip_gram_word2vec(dict_size,
     datas.append(predict_word)
 
     if with_hsigmoid:
-        if max_code_length:
-            ptable = fluid.layers.data(
-                name='ptable', shape=[max_code_length], dtype='int64')
-            pcode = fluid.layers.data(
-                name='pcode', shape=[max_code_length], dtype='int64')
-        else:
-            ptable = fluid.layers.data(name='ptable', shape=[40], dtype='int64')
-            pcode = fluid.layers.data(name='pcode', shape=[40], dtype='int64')
+        ptable = fluid.layers.data(
+            name='ptable',
+            shape=[max_code_length if max_code_length else 40],
+            dtype='int64')
+        pcode = fluid.layers.data(
+            name='pcode',
+            shape=[max_code_length if max_code_length else 40],
+            dtype='int64')
         datas.append(ptable)
         datas.append(pcode)
 
@@ -95,8 +95,6 @@ def skip_gram_word2vec(dict_size,
 
     words = fluid.layers.read_file(py_reader)
 
-    cost = None
-
     emb = fluid.layers.embedding(
         input=words[0],
         is_sparse=is_sparse,
@@ -104,12 +102,17 @@ def skip_gram_word2vec(dict_size,
         param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(
             scale=1 / math.sqrt(dict_size))))
 
+    cost, cost_nce, cost_hs = None, None, None
+
     if with_nce:
-        cost = nce_layer(emb, words[1], embedding_size, dict_size, 5, "uniform",
-                         word_frequencys, None)
+        cost_nce = nce_layer(emb, words[1], embedding_size, dict_size, 5,
+                             "uniform", word_frequencys, None)
+        cost = cost_nce
     if with_hsigmoid:
-        cost = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size,
-                              is_sparse)
+        cost_hs = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size)
+        cost = cost_hs
+    if with_nce and with_hsigmoid:
+        cost = fluid.layers.elementwise_add(cost_nce, cost_hs)
 
     avg_cost = fluid.layers.reduce_mean(cost)
 
