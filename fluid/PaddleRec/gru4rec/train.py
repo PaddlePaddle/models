@@ -69,10 +69,8 @@ def train():
     
     # Initialize executor
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
-    training_role = os.getenv("TRAINING_ROLE", "TRAINER")
-    if training_role == "PSERVER":
-        place = fluid.CPUPlace()
     exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
     if parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=use_cuda,
@@ -84,7 +82,6 @@ def train():
     model_dir = args.model_dir
     fetch_list = [avg_cost.name]
 
-    exe.run(fluid.default_startup_program())
     total_time = 0.0
     for pass_idx in six.moves.xrange(pass_num):
         epoch_idx = pass_idx + 1
