@@ -13,8 +13,12 @@ import paddle.dataset.flowers as flowers
 import models
 import reader
 import argparse
+import functools
+import subprocess
 from models.learning_rate import cosine_decay
 from utility import add_arguments, print_arguments
+import models_noname
+import models_name
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -33,27 +37,30 @@ add_arg('lr',               float, 0.1,                  "set learning rate.")
 add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate decay strategy.")
 add_arg('model',            str,   "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
-#add_arg('data_dir',         str,   "./data/ILSVRC2012",  "The ImageNet dataset root dir.")
-add_arg('data_dir',          str,   "../../../../data/cv", "The small size ImageNet dataset root dir.")
-# yapf: enable
+add_arg('data_dir',         str,   "./data/ILSVRC2012",  "The ImageNet dataset root dir.")
+add_arg('model_category',   str,   "models_name",         "Whether to use models_name or not")
+# yapf: enabl
 
-model_list = [m for m in dir(models) if "__" not in m]
+
+def set_models(model):
+    global models
+    if model == "models_noname":
+        models = models_noname
+    else:
+        models = models_name
 
 
 def optimizer_setting(params):
     ls = params["learning_strategy"]
-
     if ls["name"] == "piecewise_decay":
         if "total_images" not in params:
             total_images = 1281167
         else:
             total_images = params["total_images"]
-
         batch_size = ls["batch_size"]
         step = int(total_images / batch_size + 1)
 
         bd = [step * e for e in ls["epochs"]]
-        print('=============e',e)
         base_lr = params["lr"]
         lr = []
         lr = [base_lr * (0.1**i) for i in range(len(bd) + 1)]
@@ -62,6 +69,7 @@ def optimizer_setting(params):
                 boundaries=bd, values=lr),
             momentum=0.9,
             regularization=fluid.regularizer.L2Decay(1e-4))
+
     elif ls["name"] == "cosine_decay":
         if "total_images" not in params:
             total_images = 1281167
@@ -78,7 +86,29 @@ def optimizer_setting(params):
             learning_rate=cosine_decay(
                 learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
             momentum=0.9,
-            regularization=fluid.regularizer.L2Decay(1e-4))
+            regularization=fluid.regularizer.L2Decay(4e-5))
+    elif ls["name"] == "exponential_decay":
+        if "total_images" not in params:
+            total_images = 1281167
+        else:
+            total_images = params["total_images"]
+        batch_size = ls["batch_size"]
+        step = int(total_images / batch_size +1)
+        lr = params["lr"]
+        num_epochs = params["num_epochs"]
+        learning_decay_rate_factor=ls["learning_decay_rate_factor"]
+        num_epochs_per_decay = ls["num_epochs_per_decay"]
+        NUM_GPUS = 1
+
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=fluid.layers.exponential_decay(
+                learning_rate = lr * NUM_GPUS,
+                decay_steps = step * num_epochs_per_decay / NUM_GPUS,
+                decay_rate = learning_decay_rate_factor),
+            momentum=0.9,
+
+            regularization = fluid.regularizer.L2Decay(4e-5))
+
     else:
         lr = params["lr"]
         optimizer = fluid.optimizer.Momentum(
@@ -88,29 +118,16 @@ def optimizer_setting(params):
 
     return optimizer
 
+def net_config(image, label, model, args):
+    model_list = [m for m in dir(models) if "__" not in m]
+    assert args.model in model_list,"{} is not lists: {}".format(
+        args.model, model_list)
 
-def train(args):
-    # parameters from arguments
     class_dim = args.class_dim
     model_name = args.model
-    checkpoint = args.checkpoint
-    pretrained_model = args.pretrained_model
-    with_memory_optimization = args.with_mem_opt
-    model_save_dir = args.model_save_dir
-    image_shape = [int(m) for m in args.image_shape.split(",")]
-
-    assert model_name in model_list, "{} is not in lists: {}".format(args.model,
-                                                                     model_list)
-
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
-
-    # model definition
-    model = models.__dict__[model_name]()
 
     if args.enable_ce:
         assert model_name == "SE_ResNeXt50_32x4d"
-        fluid.default_startup_program().random_seed = 1000
         model.params["dropout_seed"] = 100
         class_dim = 102
 
@@ -128,50 +145,107 @@ def train(args):
         acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
     else:
         out = model.net(input=image, class_dim=class_dim)
-
-        print("out",out,"label",label,"===========")
         cost = fluid.layers.cross_entropy(input=out, label=label)
 
         avg_cost = fluid.layers.mean(x=cost)
         acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
 
-    test_program = fluid.default_main_program().clone(for_test=True)
+    return avg_cost, acc_top1, acc_top5
 
-    # parameters from model and arguments
-    params = model.params
-    params["total_images"] = args.total_images
-    params["lr"] = args.lr
-    params["num_epochs"] = args.num_epochs
-    params["learning_strategy"]["batch_size"] = args.batch_size
-    params["learning_strategy"]["name"] = args.lr_strategy
 
-    # initialize optimizer
-    optimizer = optimizer_setting(params)
-    opts = optimizer.minimize(avg_cost)
+def build_program(is_train, main_prog, startup_prog, args):
+    image_shape = [int(m) for m in args.image_shape.split(",")]
+    model_name = args.model
+    model_list = [m for m in dir(models) if "__" not in m]
+    assert model_name in model_list, "{} is not in lists: {}".format(args.model,
+                                                                     model_list)
+    model = models.__dict__[model_name]()
+    with fluid.program_guard(main_prog, startup_prog):
+        py_reader = fluid.layers.py_reader(
+            capacity=16,
+            shapes=[[-1] + image_shape, [-1, 1]],
+            lod_levels=[0, 0],
+            dtypes=["float32", "int64"],
+            use_double_buffer=True)
+        with fluid.unique_name.guard():
+            image, label = fluid.layers.read_file(py_reader)
+            avg_cost, acc_top1, acc_top5 = net_config(image, label, model, args)
+            avg_cost.persistable = True
+            acc_top1.persistable = True
+            acc_top5.persistable = True
+            if is_train:
+                params = model.params
+                params["total_images"] = args.total_images
+                params["lr"] = args.lr
+                params["num_epochs"] = args.num_epochs
+                params["learning_strategy"]["batch_size"] = args.batch_size
+                params["learning_strategy"]["name"] = args.lr_strategy
+
+                optimizer = optimizer_setting(params)
+                optimizer.minimize(avg_cost)
+
+    return py_reader, avg_cost, acc_top1, acc_top5
+
+
+def train(args):
+    # parameters from arguments
+    model_name = args.model
+    checkpoint = args.checkpoint
+    pretrained_model = args.pretrained_model
+    with_memory_optimization = args.with_mem_opt
+    model_save_dir = args.model_save_dir
+
+    startup_prog = fluid.Program()
+    train_prog = fluid.Program()
+    test_prog = fluid.Program()
+
+    if args.enable_ce:
+        startup_prog.random_seed = 1000
+        train_prog.random_seed = 1000
+
+    train_py_reader, train_cost, train_acc1, train_acc5 = build_program(
+        is_train=True,
+        main_prog=train_prog,
+        startup_prog=startup_prog,
+        args=args)
+    test_py_reader, test_cost, test_acc1, test_acc5 = build_program(
+        is_train=False,
+        main_prog=test_prog,
+        startup_prog=startup_prog,
+        args=args)
+    test_prog = test_prog.clone(for_test=True)
 
     if with_memory_optimization:
-        fluid.memory_optimize(fluid.default_main_program())
+        fluid.memory_optimize(train_prog)
+        fluid.memory_optimize(test_prog)
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
+    exe.run(startup_prog)
 
     if checkpoint is not None:
-        fluid.io.load_persistables(exe, checkpoint)
+        fluid.io.load_persistables(exe, checkpoint, main_program=train_prog)
 
     if pretrained_model:
 
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
 
-        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
+        fluid.io.load_vars(
+            exe, pretrained_model, main_program=train_prog, predicate=if_exist)
 
-    train_batch_size = args.batch_size
-    test_batch_size = 16
+    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
+    if visible_device:
+        device_num = len(visible_device.split(','))
+    else:
+        device_num = subprocess.check_output(['nvidia-smi', '-L']).count('\n')
 
+    train_batch_size = args.batch_size / device_num
+    test_batch_size = 8
     if not args.enable_ce:
-        train_reader = paddle.batch(reader.train(), batch_size=train_batch_size)
+        train_reader = paddle.batch(
+            reader.train(), batch_size=train_batch_size, drop_last=True)
         test_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
     else:
         # use flowers dataset for CE and set use_xmap False to avoid disorder data
@@ -180,89 +254,105 @@ def train(args):
         random.seed(0)
         np.random.seed(0)
         train_reader = paddle.batch(
-            flowers.train(use_xmap=False), batch_size=train_batch_size)
+            flowers.train(use_xmap=False),
+            batch_size=train_batch_size,
+            drop_last=True)
         test_reader = paddle.batch(
             flowers.test(use_xmap=False), batch_size=test_batch_size)
 
-    feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
-
+    train_py_reader.decorate_paddle_reader(train_reader)
+    test_py_reader.decorate_paddle_reader(test_reader)
     train_exe = fluid.ParallelExecutor(
-        use_cuda=True if args.use_gpu else False, loss_name=avg_cost.name)
+        main_program=train_prog,
+        use_cuda=bool(args.use_gpu),
+        loss_name=train_cost.name)
 
-    fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
+    train_fetch_list = [train_cost.name, train_acc1.name, train_acc5.name]
+    test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
 
-    gpu = os.getenv("CUDA_VISIBLE_DEVICES") or ""
-    gpu_nums = len(gpu.split(","))
+    params = models.__dict__[args.model]().params
+
     for pass_id in range(params["num_epochs"]):
+
+        train_py_reader.start()
+
         train_info = [[], [], []]
         test_info = [[], [], []]
         train_time = []
-        for batch_id, data in enumerate(train_reader()):
-            t1 = time.time()
-            loss, acc1, acc5 = train_exe.run(fetch_list, feed=feeder.feed(data))
-            t2 = time.time()
-            period = t2 - t1
-            loss = np.mean(np.array(loss))
-            acc1 = np.mean(np.array(acc1))
-            acc5 = np.mean(np.array(acc5))
-            train_info[0].append(loss)
-            train_info[1].append(acc1)
-            train_info[2].append(acc5)
-            train_time.append(period)
-            if batch_id % 10 == 0:
-                print("Pass {0}, trainbatch {1}, loss {2}, \
-                       acc1 {3}, acc5 {4} time {5}"
-                                                   .format(pass_id, \
-                       batch_id, loss, acc1, acc5, \
-                       "%2.2f sec" % period))
-                sys.stdout.flush()
+        batch_id = 0
+        try:
+            while True:
+                t1 = time.time()
+                loss, acc1, acc5 = train_exe.run(fetch_list=train_fetch_list)
+                t2 = time.time()
+                period = t2 - t1
+                loss = np.mean(np.array(loss))
+                acc1 = np.mean(np.array(acc1))
+                acc5 = np.mean(np.array(acc5))
+                train_info[0].append(loss)
+                train_info[1].append(acc1)
+                train_info[2].append(acc5)
+                train_time.append(period)
+                if batch_id % 10 == 0:
+                    print("Pass {0}, trainbatch {1}, loss {2}, \
+                        acc1 {3}, acc5 {4} time {5}"
+                          .format(pass_id, batch_id, loss, acc1, acc5,
+                                  "%2.2f sec" % period))
+                    sys.stdout.flush()
+                batch_id += 1
+        except fluid.core.EOFException:
+            train_py_reader.reset()
 
         train_loss = np.array(train_info[0]).mean()
         train_acc1 = np.array(train_info[1]).mean()
         train_acc5 = np.array(train_info[2]).mean()
         train_speed = np.array(train_time).mean() / train_batch_size
-        cnt = 0
-        for test_batch_id, data in enumerate(test_reader()):
-            t1 = time.time()
-            loss, acc1, acc5 = exe.run(test_program,
-                                       fetch_list=fetch_list,
-                                       feed=feeder.feed(data))
-            t2 = time.time()
-            period = t2 - t1
-            loss = np.mean(loss)
-            acc1 = np.mean(acc1)
-            acc5 = np.mean(acc5)
-            test_info[0].append(loss * len(data))
-            test_info[1].append(acc1 * len(data))
-            test_info[2].append(acc5 * len(data))
-            cnt += len(data)
-            if test_batch_id % 10 == 0:
-                print("Pass {0},testbatch {1},loss {2}, \
-                       acc1 {3},acc5 {4},time {5}"
-                                                  .format(pass_id, \
-                       test_batch_id, loss, acc1, acc5, \
-                       "%2.2f sec" % period))
-                sys.stdout.flush()
 
-        test_loss = np.sum(test_info[0]) / cnt
-        test_acc1 = np.sum(test_info[1]) / cnt
-        test_acc5 = np.sum(test_info[2]) / cnt
+        test_py_reader.start()
+
+        test_batch_id = 0
+        try:
+            while True:
+                t1 = time.time()
+                loss, acc1, acc5 = exe.run(program=test_prog,
+                                           fetch_list=test_fetch_list)
+                t2 = time.time()
+                period = t2 - t1
+                loss = np.mean(loss)
+                acc1 = np.mean(acc1)
+                acc5 = np.mean(acc5)
+                test_info[0].append(loss)
+                test_info[1].append(acc1)
+                test_info[2].append(acc5)
+                if test_batch_id % 10 == 0:
+                    print("Pass {0},testbatch {1},loss {2}, \
+                        acc1 {3},acc5 {4},time {5}"
+                          .format(pass_id, test_batch_id, loss, acc1, acc5,
+                                  "%2.2f sec" % period))
+                    sys.stdout.flush()
+                test_batch_id += 1
+        except fluid.core.EOFException:
+            test_py_reader.reset()
+
+        test_loss = np.array(test_info[0]).mean()
+        test_acc1 = np.array(test_info[1]).mean()
+        test_acc5 = np.array(test_info[2]).mean()
 
         print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3}, "
-              "test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(pass_id, \
-              train_loss, train_acc1, train_acc5, test_loss, test_acc1, \
-              test_acc5))
+              "test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(
+                  pass_id, train_loss, train_acc1, train_acc5, test_loss,
+                  test_acc1, test_acc5))
         sys.stdout.flush()
 
         model_path = os.path.join(model_save_dir + '/' + model_name,
                                   str(pass_id))
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
-        fluid.io.save_persistables(exe, model_path)
+        fluid.io.save_persistables(exe, model_path, main_program=train_prog)
 
         # This is for continuous evaluation only
         if args.enable_ce and pass_id == args.num_epochs - 1:
-            if gpu_nums == 1:
+            if device_num == 1:
                 # Use the mean cost/acc for training
                 print("kpis	train_cost	%s" % train_loss)
                 print("kpis	train_acc_top1	%s" % train_acc1)
@@ -274,21 +364,28 @@ def train(args):
                 print("kpis	train_speed	%s" % train_speed)
             else:
                 # Use the mean cost/acc for training
-                print("kpis	train_cost_card%s	%s" % (gpu_nums, train_loss))
-                print("kpis	train_acc_top1_card%s	%s" % (gpu_nums, train_acc1))
-                print("kpis	train_acc_top5_card%s	%s" % (gpu_nums, train_acc5))
+                print("kpis	train_cost_card%s	%s" % (device_num, train_loss))
+                print("kpis	train_acc_top1_card%s	%s" %
+                      (device_num, train_acc1))
+                print("kpis	train_acc_top5_card%s	%s" %
+                      (device_num, train_acc5))
                 # Use the mean cost/acc for testing
-                print("kpis	test_cost_card%s	%s" % (gpu_nums, test_loss))
-                print("kpis	test_acc_top1_card%s	%s" % (gpu_nums, test_acc1))
-                print("kpis	test_acc_top5_card%s	%s" % (gpu_nums, test_acc5))
-                print("kpis	train_speed_card%s	%s" % (gpu_nums, train_speed))
+                print("kpis	test_cost_card%s	%s" % (device_num, test_loss))
+                print("kpis	test_acc_top1_card%s	%s" % (device_num, test_acc1))
+                print("kpis	test_acc_top5_card%s	%s" % (device_num, test_acc5))
+                print("kpis	train_speed_card%s	%s" % (device_num, train_speed))
 
 
 def main():
     args = parser.parse_args()
+    models_now = args.model_category
+    assert models_now in ["models", "models_name"], "{} is not in lists: {}".format(
+            models_now, ["models", "models_name"])
+    set_models(models_now)
     print_arguments(args)
     train(args)
 
 
 if __name__ == '__main__':
     main()
+
