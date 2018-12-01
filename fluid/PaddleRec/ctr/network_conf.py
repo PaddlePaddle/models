@@ -9,7 +9,7 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim, extend_id_range=False):
         name="dense_input", shape=[dense_feature_dim], dtype='float32')
     sparse_feature_num = 26
     if extend_id_range:
-        sparse_feature_num = 26 + 26 * 25
+        sparse_feature_num = 26 + 26 * 25 / 2
     sparse_input_ids = [
         fluid.layers.data(
             name="C" + str(i), shape=[1], lod_level=1, dtype='int64')
