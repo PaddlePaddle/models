@@ -3,13 +3,17 @@ import math
 
 dense_feature_dim = 13
 
-def ctr_dnn_model(embedding_size, sparse_feature_dim):
+
+def ctr_dnn_model(embedding_size, sparse_feature_dim, extend_id_range=False):
     dense_input = fluid.layers.data(
         name="dense_input", shape=[dense_feature_dim], dtype='float32')
+    sparse_feature_num = 26
+    if extend_id_range:
+        sparse_feature_num = 26 + 26 * 25 / 2
     sparse_input_ids = [
         fluid.layers.data(
             name="C" + str(i), shape=[1], lod_level=1, dtype='int64')
-        for i in range(1, 27)
+        for i in range(0, sparse_feature_num)
     ]
 
     def embedding_layer(input):
@@ -18,7 +22,7 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim):
             is_sparse=True,
             # you need to patch https://github.com/PaddlePaddle/Paddle/pull/14190
             # if you want to set is_distributed to True
-            is_distributed=False,
+            is_distributed=True,
             size=[sparse_feature_dim, embedding_size],
             param_attr=fluid.ParamAttr(name="SparseFeatFactors", initializer=fluid.initializer.Uniform()))
 
