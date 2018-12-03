@@ -18,10 +18,11 @@ train_parameters = {
 
 
 class ResNet():
-    def __init__(self, layers=50, is_3x3 = False):
+    def __init__(self, layers=50, is_3x3=False):
         self.params = train_parameters
         self.layers = layers
         self.is_3x3 = is_3x3
+
     def net(self, input, class_dim=1000):
         is_3x3 = self.is_3x3
         layers = self.layers
@@ -38,10 +39,18 @@ class ResNet():
         num_filters = [64, 128, 256, 512]
         if is_3x3 == False:
             conv = self.conv_bn_layer(
-                input=input, num_filters=64, filter_size=7, stride=2, act='relu')
+                input=input,
+                num_filters=64,
+                filter_size=7,
+                stride=2,
+                act='relu')
         else:
             conv = self.conv_bn_layer(
-                input=input, num_filters=32, filter_size=3, stride=2, act='relu')
+                input=input,
+                num_filters=32,
+                filter_size=3,
+                stride=2,
+                act='relu')
             conv = self.conv_bn_layer(
                 input=conv, num_filters=32, filter_size=3, stride=1, act='relu')
             conv = self.conv_bn_layer(
@@ -114,7 +123,7 @@ class ResNet():
 
 
 def ResNet50():
-    model = ResNet(layers=50, is_3x3 = True)
+    model = ResNet(layers=50, is_3x3=True)
     return model
 
 

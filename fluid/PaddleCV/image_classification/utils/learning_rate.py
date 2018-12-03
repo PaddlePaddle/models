@@ -27,8 +27,8 @@ def lr_warmup(learning_rate, warmup_steps, start_lr, end_lr):
         Argument learning_rate can be float or a Variable
         lr = lr + (warmup_rate * step / warmup_steps)
     """
-    assert(isinstance(end_lr, float))
-    assert(isinstance(start_lr, float))
+    assert (isinstance(end_lr, float))
+    assert (isinstance(start_lr, float))
     linear_step = end_lr - start_lr
     with fluid.default_main_program()._lr_schedule_guard():
         lr = fluid.layers.tensor.create_global_var(
@@ -42,7 +42,8 @@ def lr_warmup(learning_rate, warmup_steps, start_lr, end_lr):
 
         with fluid.layers.control_flow.Switch() as switch:
             with switch.case(global_step < warmup_steps):
-                decayed_lr = start_lr + linear_step * (global_step / warmup_steps)
+                decayed_lr = start_lr + linear_step * (global_step /
+                                                       warmup_steps)
                 fluid.layers.tensor.assign(decayed_lr, lr)
             with switch.default():
                 fluid.layers.tensor.assign(learning_rate, lr)

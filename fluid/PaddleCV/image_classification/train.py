@@ -15,9 +15,9 @@ import reader
 import argparse
 import functools
 import subprocess
-from models.learning_rate import cosine_decay
+from utils.learning_rate import cosine_decay
 from utility import add_arguments, print_arguments
-import models_noname
+import models
 import models_name
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -38,14 +38,14 @@ add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate 
 add_arg('model',            str,   "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
 add_arg('data_dir',         str,   "./data/ILSVRC2012",  "The ImageNet dataset root dir.")
-add_arg('model_category',   str,   "models_name",         "Whether to use models_name or not")
+add_arg('model_category',   str,   "models",             "Whether to use models_name or not")
 # yapf: enabl
 
 
 def set_models(model):
     global models
-    if model == "models_noname":
-        models = models_noname
+    if model == "models":
+        models = models
     else:
         models = models_name
 
@@ -388,4 +388,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

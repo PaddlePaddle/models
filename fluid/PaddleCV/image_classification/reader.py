@@ -54,7 +54,7 @@ def random_crop(img, size, scale=[0.08, 1.0], ratio=[3. / 4., 4. / 3.]):
     scale_min = min(scale[0], bound)
 
     target_area = img.size[0] * img.size[1] * np.random.uniform(scale_min,
-                                                             scale_max)
+                                                                scale_max)
     target_size = math.sqrt(target_area)
     w = int(target_size * w)
     h = int(target_size * h)
@@ -167,17 +167,21 @@ def _reader_creator(file_list,
 
 
 def train(data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'train.txt')
+    file_list = os.path.join(data_dir, 'train_list.txt')
     return _reader_creator(
-        file_list, 'train', shuffle=True, color_jitter=False, rotate=False, data_dir=os.path.join(data_dir, 'train'))
+        file_list,
+        'train',
+        shuffle=True,
+        color_jitter=False,
+        rotate=False,
+        data_dir=data_dir)
 
 
 def val(data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'val.txt')
-    return _reader_creator(file_list, 'val', shuffle=False, data_dir=os.path.join(data_dir,'val'))
+    file_list = os.path.join(data_dir, 'val_list.txt')
+    return _reader_creator(file_list, 'val', shuffle=False, data_dir=data_dir)
 
 
 def test(data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'val.txt')
-    return _reader_creator(file_list, 'test', shuffle=False, data_dir=os.path.join(data_dir,'val'))
-
+    file_list = os.path.join(data_dir, 'val_list.txt')
+    return _reader_creator(file_list, 'test', shuffle=False, data_dir=data_dir)

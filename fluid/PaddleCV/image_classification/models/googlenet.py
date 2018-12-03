@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import paddle
 import paddle.fluid as fluid
 
@@ -13,7 +10,7 @@ train_parameters = {
     "learning_strategy": {
         "name": "piecewise_decay",
         "batch_size": 256,
-        "epochs": [30, 60, 90],
+        "epochs": [30, 70, 100],
         "steps": [0.1, 0.01, 0.001, 0.0001]
     }
 }
@@ -39,7 +36,7 @@ class GoogleNet():
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
-            padding=(filter_size - 1) // 2,
+            padding=(filter_size - 1) / 2,
             groups=groups,
             act=act,
             param_attr=param_attr,
