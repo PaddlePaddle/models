@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle
 import paddle.fluid as fluid
 
@@ -36,7 +39,7 @@ class GoogleNet():
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
-            padding=(filter_size - 1) / 2,
+            padding=(filter_size - 1) // 2,
             groups=groups,
             act=act,
             param_attr=param_attr,

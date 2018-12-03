@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
@@ -98,7 +101,7 @@ class MobileNet():
                 num_groups=512,
                 stride=1,
                 scale=scale,
-                name="conv5"+"_"+str(i+1))
+                name="conv5" + "_" + str(i + 1))
         # 7x7
         input = self.depthwise_separable(
             input,
@@ -128,7 +131,8 @@ class MobileNet():
         output = fluid.layers.fc(input=input,
                                  size=class_dim,
                                  act='softmax',
-                                 param_attr=ParamAttr(initializer=MSRA(),name="fc7_weights"),
+                                 param_attr=ParamAttr(
+                                     initializer=MSRA(), name="fc7_weights"),
                                  bias_attr=ParamAttr(name="fc7_offset"))
         return output
 
@@ -152,17 +156,26 @@ class MobileNet():
             groups=num_groups,
             act=None,
             use_cudnn=use_cudnn,
-            param_attr=ParamAttr(initializer=MSRA(),name=name+"_weights"),
+            param_attr=ParamAttr(
+                initializer=MSRA(), name=name + "_weights"),
             bias_attr=False)
         bn_name = name + "_bn"
-        return fluid.layers.batch_norm(input=conv, act=act,
-                                      param_attr = ParamAttr(name=bn_name+"_scale"),
-                                      bias_attr=ParamAttr(name=bn_name+"_offset"),
-                                      moving_mean_name=bn_name + '_mean',
-                                      moving_variance_name=bn_name + '_variance')
+        return fluid.layers.batch_norm(
+            input=conv,
+            act=act,
+            param_attr=ParamAttr(name=bn_name + "_scale"),
+            bias_attr=ParamAttr(name=bn_name + "_offset"),
+            moving_mean_name=bn_name + '_mean',
+            moving_variance_name=bn_name + '_variance')
 
-    def depthwise_separable(self, input, num_filters1, num_filters2, num_groups,
-                            stride, scale, name=None):
+    def depthwise_separable(self,
+                            input,
+                            num_filters1,
+                            num_filters2,
+                            num_groups,
+                            stride,
+                            scale,
+                            name=None):
         depthwise_conv = self.conv_bn_layer(
             input=input,
             filter_size=3,
@@ -171,7 +184,7 @@ class MobileNet():
             padding=1,
             num_groups=int(num_groups * scale),
             use_cudnn=False,
-            name=name+"_dw")
+            name=name + "_dw")
 
         pointwise_conv = self.conv_bn_layer(
             input=depthwise_conv,
@@ -179,5 +192,5 @@ class MobileNet():
             num_filters=int(num_filters2 * scale),
             stride=1,
             padding=0,
-            name=name+"_sep")
+            name=name + "_sep")
         return pointwise_conv

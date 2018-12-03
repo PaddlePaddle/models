@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
@@ -24,15 +27,15 @@ class MobileNetV2():
     def net(self, input, class_dim=1000, scale=1.0):
 
         bottleneck_params_list = [
-            (1, 16, 1, 1),  # 32x112x112 -> 16x112x112
-            (6, 24, 2, 2),  # 16x112x112 -> 24x56x56
-            (6, 32, 3, 2),  # 24x56x56 -> 32x28x28
-            (6, 64, 4, 2),  # 32x28x28 -> 64x14x14
-            (6, 96, 3, 1),  # 64x14x14 -> 96x14x14
-            (6, 160, 3, 2),  # 96x14x14 -> 160x7x7
-            (6, 320, 1, 1),  # 160x7x7 -> 320x7x7
+            (1, 16, 1, 1),
+            (6, 24, 2, 2),
+            (6, 32, 3, 2),
+            (6, 64, 4, 2),
+            (6, 96, 3, 1),
+            (6, 160, 3, 2),
+            (6, 320, 1, 1),
         ]
-        #conv1 
+
         input = self.conv_bn_layer(
             input,
             num_filters=int(32 * scale),
@@ -40,7 +43,7 @@ class MobileNetV2():
             stride=2,
             padding=1,
             if_act=True)
-        # bottleneck sequences
+
         in_c = int(32 * scale)
         for layer_setting in bottleneck_params_list:
             t, c, n, s = layer_setting
@@ -52,7 +55,7 @@ class MobileNetV2():
                 n=n,
                 s=s, )
             in_c = int(c * scale)
-        #last_conv
+
         input = self.conv_bn_layer(
             input=input,
             num_filters=int(1280 * scale) if scale > 1.0 else 1280,

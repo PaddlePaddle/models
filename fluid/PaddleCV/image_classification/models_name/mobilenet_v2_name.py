@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
@@ -22,8 +25,8 @@ class MobileNetV2():
         self.params = train_parameters
 
     def net(self, input, class_dim=1000, scale=1.0):
-        
-        bottleneck_params_list=[
+
+        bottleneck_params_list = [
             (1, 16, 1, 1),
             (6, 24, 2, 2),
             (6, 32, 3, 2),
@@ -42,7 +45,7 @@ class MobileNetV2():
             padding=1,
             if_act=True,
             name='conv1_1')
-        
+
         # bottleneck sequences
         i = 1
         in_c = int(32 * scale)
@@ -51,8 +54,12 @@ class MobileNetV2():
             i += 1
             input = self.invresi_blocks(
                 input=input,
-                in_c=in_c, t=t, c=int(c * scale), n=n, s=s, name='conv'+ str(i)
-            )
+                in_c=in_c,
+                t=t,
+                c=int(c * scale),
+                n=n,
+                s=s,
+                name='conv' + str(i))
             in_c = int(c * scale)
         #last_conv
         input = self.conv_bn_layer(
@@ -63,8 +70,6 @@ class MobileNetV2():
             padding=0,
             if_act=True,
             name='conv9')
-
-
 
         input = fluid.layers.pool2d(
             input=input,
@@ -80,18 +85,17 @@ class MobileNetV2():
                                  bias_attr=ParamAttr(name='fc10_offset'))
         return output
 
-    
     def conv_bn_layer(self,
-                  input,
-                  filter_size,
-                  num_filters,
-                  stride,
-                  padding,
-                  channels=None,
-                  num_groups=1,
-                  if_act=True,
-                  name=None,
-                  use_cudnn=True):
+                      input,
+                      filter_size,
+                      num_filters,
+                      stride,
+                      padding,
+                      channels=None,
+                      num_groups=1,
+                      if_act=True,
+                      name=None,
+                      use_cudnn=True):
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -101,14 +105,15 @@ class MobileNetV2():
             groups=num_groups,
             act=None,
             use_cudnn=use_cudnn,
-            param_attr=ParamAttr(name=name+'_weights'),
+            param_attr=ParamAttr(name=name + '_weights'),
             bias_attr=False)
         bn_name = name + '_bn'
-        bn = fluid.layers.batch_norm(input=conv,
-                                     param_attr = ParamAttr(name=bn_name+"_scale"),
-                                     bias_attr=ParamAttr(name=bn_name+"_offset"),
-                                     moving_mean_name=bn_name + '_mean',
-                                     moving_variance_name=bn_name + '_variance')
+        bn = fluid.layers.batch_norm(
+            input=conv,
+            param_attr=ParamAttr(name=bn_name + "_scale"),
+            bias_attr=ParamAttr(name=bn_name + "_offset"),
+            moving_mean_name=bn_name + '_mean',
+            moving_variance_name=bn_name + '_variance')
         if if_act:
             return fluid.layers.relu6(bn)
         else:
@@ -116,51 +121,55 @@ class MobileNetV2():
 
     def shortcut(self, input, data_residual):
         return fluid.layers.elementwise_add(input, data_residual)
-    
 
-    
-    def inverted_residual_unit(self, input, num_in_filter, num_filters, ifshortcut, stride, 
-                               filter_size, padding, expansion_factor, name=None):
-        num_expfilter = int(round(num_in_filter*expansion_factor))
+    def inverted_residual_unit(self,
+                               input,
+                               num_in_filter,
+                               num_filters,
+                               ifshortcut,
+                               stride,
+                               filter_size,
+                               padding,
+                               expansion_factor,
+                               name=None):
+        num_expfilter = int(round(num_in_filter * expansion_factor))
 
         channel_expand = self.conv_bn_layer(
-            input=input, 
-            num_filters=num_expfilter, 
-            filter_size=1, 
+            input=input,
+            num_filters=num_expfilter,
+            filter_size=1,
             stride=1,
             padding=0,
             num_groups=1,
             if_act=True,
-            name=name+'_expand')
-        
+            name=name + '_expand')
+
         bottleneck_conv = self.conv_bn_layer(
-            input=channel_expand, 
-            num_filters=num_expfilter, 
-            filter_size=filter_size, 
-            stride=stride, 
+            input=channel_expand,
+            num_filters=num_expfilter,
+            filter_size=filter_size,
+            stride=stride,
             padding=padding,
-            num_groups=num_expfilter, 
+            num_groups=num_expfilter,
             if_act=True,
-            name=name+'_dwise',
+            name=name + '_dwise',
             use_cudnn=False)
-        
+
         linear_out = self.conv_bn_layer(
-            input=bottleneck_conv, 
-            num_filters=num_filters, 
-            filter_size=1, 
-            stride=1, 
+            input=bottleneck_conv,
+            num_filters=num_filters,
+            filter_size=1,
+            stride=1,
             padding=0,
-            num_groups=1, 
+            num_groups=1,
             if_act=False,
-            name=name+'_linear')
+            name=name + '_linear')
         if ifshortcut:
-            out = self.shortcut(
-                input=input,
-                data_residual=linear_out) 
+            out = self.shortcut(input=input, data_residual=linear_out)
             return out
         else:
             return linear_out
-        
+
     def invresi_blocks(self, input, in_c, t, c, n, s, name=None):
         first_block = self.inverted_residual_unit(
             input=input,
@@ -171,13 +180,12 @@ class MobileNetV2():
             filter_size=3,
             padding=1,
             expansion_factor=t,
-            name=name+'_1'
-        )
+            name=name + '_1')
 
         last_residual_block = first_block
         last_c = c
 
-        for i in range(1,n):
+        for i in range(1, n):
             last_residual_block = self.inverted_residual_unit(
                 input=last_residual_block,
                 num_in_filter=last_c,
@@ -187,7 +195,5 @@ class MobileNetV2():
                 filter_size=3,
                 padding=1,
                 expansion_factor=t,
-                name=name+'_'+str(i+1))
+                name=name + '_' + str(i + 1))
         return last_residual_block
-        
-
