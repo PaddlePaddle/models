@@ -185,24 +185,15 @@ Test-12-score: [15.040644], class [386]
 
 Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each pre-defined epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. Pretrained models can be downloaded by clicking related model names.
 
-|model | top-1/top-5 accuracy
+|model(name) | top-1/top-5 accuracy
 |- | -:
 |[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.zip) | 56.34%/79.02%
 |[VGG11](http://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretained.zip) | 68.86%/88.64%
-|VGG13 | -
-|VGG16 | -
-|VGG19 | -
-|GoogleNet | -
-|InceptionV4 | -
 |[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.zip) | 70.7%/89.41%
 |[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.zip) | 76.46%/93.04%
 |[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.zip) | 77.65%/93.71%
+
+|model(no name) | top-1/top-5 accuracy
+|- | -:
 |[ResNet152](http://paddle-imagenet-models.bj.bcebos.com/ResNet152_pretrained.zip) | 78.29%/94.11%
 |[SE_ResNeXt50_32x4d](http://paddle-imagenet-models.bj.bcebos.com/se_resnext_50_model.tar) | 78.33%/93.96%
-|SE_ResNeXt101_32x4d | -
-|SE_ResNeXt152_32x4d | -
-|DPN68 | -
-|DPN92 | -
-|DPN98 | -
-|DPN107 | -
-|DPN131 | -
