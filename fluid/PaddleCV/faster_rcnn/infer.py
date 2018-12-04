@@ -55,13 +55,14 @@ def infer():
     dts_res = []
     fetch_list = [rpn_rois, confs, locs]
     data = next(infer_reader())
+    im_shape = [data[0][0].shape[1:]]
     im_info = [data[0][1]]
     rpn_rois_v, confs_v, locs_v = exe.run(
         fetch_list=[v.name for v in fetch_list],
         feed=feeder.feed(data),
         return_numpy=False)
     new_lod, nmsed_out = get_nmsed_box(rpn_rois_v, confs_v, locs_v, class_nums,
-                                       im_info, numId_to_catId_map)
+                                       im_info, im_shape, numId_to_catId_map)
     path = os.path.join(cfg.image_path, cfg.image_name)
     draw_bounding_box_on_image(path, nmsed_out, cfg.draw_threshold, label_list)
 
