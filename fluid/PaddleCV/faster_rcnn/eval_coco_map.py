@@ -74,17 +74,15 @@ def eval():
     fetch_list = [rpn_rois, confs, locs]
     for batch_id, batch_data in enumerate(test_reader()):
         start = time.time()
-        im_shape = []
         im_info = []
         for data in batch_data:
-            im_shape.append(data[0].shape[1:])
             im_info.append(data[1])
         rpn_rois_v, confs_v, locs_v = exe.run(
             fetch_list=[v.name for v in fetch_list],
             feed=feeder.feed(batch_data),
             return_numpy=False)
         new_lod, nmsed_out = get_nmsed_box(rpn_rois_v, confs_v, locs_v,
-                                           class_nums, im_info, im_shape,
+                                           class_nums, im_info,
                                            numId_to_catId_map)
 
         dts_res += get_dt_res(total_batch_size, new_lod, nmsed_out, batch_data)
