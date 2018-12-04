@@ -326,7 +326,7 @@ class FasterRCNN(object):
 
     def mask_rcnn_loss(self):
         mask_label = fluid.layers.cast(x=self.mask_int32, dtype='float32')
-        mask_label.persistable = True
+        #mask_label.persistable = True
         reshape_dim = cfg.class_num * cfg.resolution * cfg.resolution
         self.mask_fcn_logits_reshape = fluid.layers.reshape(
             self.mask_fcn_logits, (-1, reshape_dim))
