@@ -5,9 +5,10 @@ import preprocess
 
 
 class Word2VecReader(object):
-    def __init__(self, dict_path, data_path, window_size=5):
+    def __init__(self, dict_path, data_path, filelist, window_size=5):
         self.window_size_ = window_size
         self.data_path_ = data_path
+        self.filelist = filelist
         self.num_non_leaf = 0
         self.word_to_id_ = dict()
         self.id_to_word = dict()
@@ -26,6 +27,10 @@ class Word2VecReader(object):
                 word_id += 1
                 word_counts.append(count)
                 word_all_count += count
+
+        with open(dict_path + "_word_to_id_", 'w+') as f6:
+            for k, v in self.word_to_id_.items():
+                f6.write(str(k) + " " + str(v) + '\n')
 
         self.dict_size = len(self.word_to_id_)
         self.word_frequencys = [
@@ -66,36 +71,40 @@ class Word2VecReader(object):
 
     def train(self, with_hs):
         def _reader():
-            with open(self.data_path_, 'r') as f:
-                for line in f:
-                    line = preprocess.text_strip(line)
-                    word_ids = [
-                        self.word_to_id_[word] for word in line.split()
-                        if word in self.word_to_id_
-                    ]
-                    for idx, target_id in enumerate(word_ids):
-                        context_word_ids = self.get_context_words(
-                            word_ids, idx, self.window_size_)
-                        for context_id in context_word_ids:
-                            yield [target_id], [context_id]
+            for file in self.filelist:
+                with open(self.data_path_ + "/" + file, 'r') as f:
+                    for line in f:
+                        line = preprocess.text_strip(line)
+                        word_ids = [
+                            self.word_to_id_[word] for word in line.split()
+                            if word in self.word_to_id_
+                        ]
+                        for idx, target_id in enumerate(word_ids):
+                            context_word_ids = self.get_context_words(
+                                word_ids, idx, self.window_size_)
+                            for context_id in context_word_ids:
+                                yield [target_id], [context_id]
 
         def _reader_hs():
-            with open(self.data_path_, 'r') as f:
-                for line in f:
-                    line = preprocess.text_strip(line)
-                    word_ids = [
-                        self.word_to_id_[word] for word in line.split()
-                        if word in self.word_to_id_
-                    ]
-                    for idx, target_id in enumerate(word_ids):
-                        context_word_ids = self.get_context_words(
-                            word_ids, idx, self.window_size_)
-                        for context_id in context_word_ids:
-                            yield [target_id], [context_id], [
-                                self.word_to_code[self.id_to_word[context_id]]
-                            ], [
-                                self.word_to_path[self.id_to_word[context_id]]
-                            ]
+            for file in self.filelist:
+                with open(self.data_path_ + "/" + file, 'r') as f:
+                    for line in f:
+                        line = preprocess.text_strip(line)
+                        word_ids = [
+                            self.word_to_id_[word] for word in line.split()
+                            if word in self.word_to_id_
+                        ]
+                        for idx, target_id in enumerate(word_ids):
+                            context_word_ids = self.get_context_words(
+                                word_ids, idx, self.window_size_)
+                            for context_id in context_word_ids:
+                                yield [target_id], [context_id], [
+                                    self.word_to_code[self.id_to_word[
+                                        context_id]]
+                                ], [
+                                    self.word_to_path[self.id_to_word[
+                                        context_id]]
+                                ]
 
         if not with_hs:
             return _reader
@@ -104,8 +113,6 @@ class Word2VecReader(object):
 
 
 if __name__ == "__main__":
-    epochs = 10
-    batch_size = 1000
     window_size = 10
 
     reader = Word2VecReader("data/enwik9_dict", "data/enwik9", window_size)

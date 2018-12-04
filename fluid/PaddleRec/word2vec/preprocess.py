@@ -22,6 +22,12 @@ def parse_args():
         type=int,
         default=5,
         help="If the word count is less then freq, it will be removed from dict")
+    parser.add_argument(
+        '--is_local',
+        action='store_true',
+        required=False,
+        default=False,
+        help='Local train or not, (default: False)')
 
     return parser.parse_args()
 
@@ -114,7 +120,7 @@ def build_Huffman(word_count, max_code_length):
     return word_point, word_code, word_code_len
 
 
-def preprocess(data_path, dict_path, freq):
+def preprocess(data_path, dict_path, freq, is_local):
     """
     proprocess the data, generate dictionary and save into dict_path.
     :param data_path: the input data path.
@@ -125,16 +131,19 @@ def preprocess(data_path, dict_path, freq):
     # word to count
     word_count = dict()
 
-    with open(data_path) as f:
-        for line in f:
-            line = line.lower()
-            line = text_strip(line)
-            words = line.split()
-            for item in words:
-                if item in word_count:
-                    word_count[item] = word_count[item] + 1
-                else:
-                    word_count[item] = 1
+    if is_local:
+        for i in range(1, 100):
+            with open(data_path + "/news.en-000{:0>2d}-of-00100".format(
+                    i)) as f:
+                for line in f:
+                    line = line.lower()
+                    line = text_strip(line)
+                    words = line.split()
+                    for item in words:
+                        if item in word_count:
+                            word_count[item] = word_count[item] + 1
+                        else:
+                            word_count[item] = 1
     item_to_remove = []
     for item in word_count:
         if word_count[item] <= freq:
@@ -159,4 +168,4 @@ def preprocess(data_path, dict_path, freq):
 
 if __name__ == "__main__":
     args = parse_args()
-    preprocess(args.data_path, args.dict_path, args.freq)
+    preprocess(args.data_path, args.dict_path, args.freq, args.is_local)

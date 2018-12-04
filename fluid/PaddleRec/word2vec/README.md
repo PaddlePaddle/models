@@ -8,8 +8,7 @@
 You should install PaddlePaddle Fluid first.
 
 ## Dataset
-The training data for the Large Text Compression Benchmark is the first 109 bytes
-of the English Wikipedia dump on Mar. 3, 2006 from Matt Mahoney(http://mattmahoney.net/dc/textdata.html).
+The training data for the 1 Billion Word Language Model Benchmark的(http://www.statmt.org/lm-benchmark).
 
 Download dataset:
 ```bash
@@ -25,7 +24,7 @@ This model implement a skip-gram model of word2vector.
 Preprocess the training data to generate a word dict.
 
 ```bash
-python preprocess.py --data_path data/enwik8 --dict_path data/enwik8_dict
+python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict
 ```
 
 ## Train

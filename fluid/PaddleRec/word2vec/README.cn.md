@@ -8,7 +8,7 @@
 需要先安装PaddlePaddle Fluid
 
 ## 数据集
-数据集使用的是来自Matt Mahoney(http://mattmahoney.net/dc/textdata.html)的维基百科文章数据集enwiki8.
+数据集使用的是来自1 Billion Word Language Model Benchmark的(http://www.statmt.org/lm-benchmark)的数据集.
 
 下载数据集：
 ```bash
@@ -23,7 +23,7 @@ cd data && ./download.sh && cd ..
 对数据进行预处理以生成一个词典。
 
 ```bash
-python preprocess.py --data_path data/enwik8 --dict_path data/enwik8_dict
+python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict
 ```
 
 ## 训练

@@ -55,7 +55,8 @@ def skip_gram_word2vec(dict_size,
 
         return cost
 
-    def hsigmoid_layer(input, label, ptable, pcode, non_leaf_num, is_sparse):
+    def hsigmoid_layer(input, label, path_table, path_code, non_leaf_num,
+                       is_sparse):
         if non_leaf_num is None:
             non_leaf_num = dict_size
 
@@ -63,8 +64,8 @@ def skip_gram_word2vec(dict_size,
             input=input,
             label=label,
             num_classes=non_leaf_num,
-            path_table=ptable,
-            path_code=pcode,
+            path_table=path_table,
+            path_code=path_code,
             is_custom=True,
             is_sparse=is_sparse)
 
@@ -79,16 +80,16 @@ def skip_gram_word2vec(dict_size,
     datas.append(predict_word)
 
     if with_hsigmoid:
-        ptable = fluid.layers.data(
-            name='ptable',
+        path_table = fluid.layers.data(
+            name='path_table',
             shape=[max_code_length if max_code_length else 40],
             dtype='int64')
-        pcode = fluid.layers.data(
-            name='pcode',
+        path_code = fluid.layers.data(
+            name='path_code',
             shape=[max_code_length if max_code_length else 40],
             dtype='int64')
-        datas.append(ptable)
-        datas.append(pcode)
+        datas.append(path_table)
+        datas.append(path_code)
 
     py_reader = fluid.layers.create_py_reader_by_data(
         capacity=64, feed_list=datas, name='py_reader', use_double_buffer=True)
@@ -99,8 +100,10 @@ def skip_gram_word2vec(dict_size,
         input=words[0],
         is_sparse=is_sparse,
         size=[dict_size, embedding_size],
-        param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(
-            scale=1 / math.sqrt(dict_size))))
+        param_attr=fluid.ParamAttr(
+            name='embeding',
+            initializer=fluid.initializer.Normal(scale=1 /
+                                                 math.sqrt(dict_size))))
 
     cost, cost_nce, cost_hs = None, None, None
 

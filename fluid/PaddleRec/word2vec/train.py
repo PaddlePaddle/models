@@ -15,6 +15,7 @@ import paddle.fluid as fluid
 
 import reader
 from network_conf import skip_gram_word2vec
+from infer import infer_with_train
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
@@ -27,12 +28,12 @@ def parse_args():
     parser.add_argument(
         '--train_data_path',
         type=str,
-        default='./data/enwik8',
+        default='./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled',
         help="The path of training dataset")
     parser.add_argument(
         '--dict_path',
         type=str,
-        default='./data/enwik8_dict',
+        default='./data/1-billion_dict',
         help="The path of data dict")
     parser.add_argument(
         '--test_data_path',
@@ -43,7 +44,7 @@ def parse_args():
         '--batch_size',
         type=int,
         default=100,
-        help="The size of mini-batch (default:1000)")
+        help="The size of mini-batch (default:100)")
     parser.add_argument(
         '--num_passes',
         type=int,
@@ -79,6 +80,7 @@ def parse_args():
         type=int,
         default=40,
         help='max code length used by hierarchical sigmoid, (default: 40)')
+
     parser.add_argument(
         '--is_sparse',
         action='store_true',
@@ -86,11 +88,44 @@ def parse_args():
         default=False,
         help='embedding and nce will use sparse or not, (default: False)')
 
+    parser.add_argument(
+        '--with_Adam',
+        action='store_true',
+        required=False,
+        default=False,
+        help='Using Adam as optimizer or not, (default: False)')
+
+    parser.add_argument(
+        '--is_local',
+        action='store_true',
+        required=False,
+        default=False,
+        help='Local train or not, (default: False)')
+
+    parser.add_argument(
+        '--with_speed',
+        action='store_true',
+        required=False,
+        default=False,
+        help='print speed or not , (default: False)')
+
+    parser.add_argument(
+        '--with_infer_test',
+        action='store_true',
+        required=False,
+        default=False,
+        help='Do inference every 100 batches , (default: False)')
+
+    parser.add_argument(
+        '--rank_num',
+        type=int,
+        default=4,
+        help="find rank_num-nearest result for test (default: 4)")
+
     return parser.parse_args()
 
 
 def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
-
     train_reader = paddle.batch(
         paddle.reader.shuffle(
             reader.train((args.with_hs or (not args.with_nce))),
@@ -101,15 +136,11 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
 
     place = fluid.CPUPlace()
 
-    data_name_list = None
-
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
     exec_strategy = fluid.ExecutionStrategy()
 
-    #if os.getenv("NUM_THREADS", ""):
-    #    exec_strategy.num_threads = int(os.getenv("NUM_THREADS"))
     print("CPU_NUM:" + str(os.getenv("CPU_NUM")))
     exec_strategy.num_threads = int(os.getenv("CPU_NUM"))
 
@@ -137,6 +168,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
 
         try:
             while True:
+
                 if profiler_step == profiler_step_start:
                     fluid.profiler.start_profiler(profile_state)
 
@@ -149,51 +181,62 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
                 else:
                     profiler_step += 1
 
-                if batch_id % 10 == 0:
+                if batch_id % 50 == 0:
                     logger.info(
                         "TRAIN --> pass: {} batch: {} loss: {} reader queue:{}".
                         format(pass_id, batch_id,
                                loss_val.mean() / args.batch_size,
                                py_reader.queue.size()))
-                if batch_id % 100 == 0 and batch_id != 0:
-                    elapsed = (time.clock() - start)
-                    start = time.clock()
-                    samples = 101 * args.batch_size * int(os.getenv("CPU_NUM"))
-                    logger.info("Time used: {}, Samples/Sec: {}".format(
-                        elapsed, samples / elapsed))
-
-                # elapsed = (time.clock() - start)
-                # start = time.clock()
-                # samples = 101 * args.batch_size * int(os.getenv("CPU_NUM"))
-                # logger.info("Time used: {}, Samples/Sec: {}".format(elapsed, samples/elapsed))
-                #if batch_id % 1000 == 0 and batch_id != 0:
-                #    model_dir = args.model_output_dir + '/batch-' + str(batch_id)
-                #    if trainer_id == 0:
-                #        fluid.io.save_inference_model(model_dir, data_name_list, [loss], exe)
+                if args.with_speed:
+                    if batch_id % 1000 == 0 and batch_id != 0:
+                        elapsed = (time.clock() - start)
+                        start = time.clock()
+                        samples = 1001 * args.batch_size * int(
+                            os.getenv("CPU_NUM"))
+                        logger.info("Time used: {}, Samples/Sec: {}".format(
+                            elapsed, samples / elapsed))
+                if batch_id == 200 or batch_id == 100:
+                    model_dir = args.model_output_dir + '/batch-' + str(
+                        batch_id)
+                    fluid.io.save_persistables(executor=exe, dirname=model_dir)
+                    with open(model_dir + "/_success", 'w+') as f:
+                        f.write(str(batch_id))
+                # calculate infer result each 100 batches
+                if args.with_infer_test:
+                    if batch_id % 1000 == 0 and batch_id != 0:
+                        model_dir = args.model_output_dir + '/batch-' + str(
+                            batch_id)
+                        infer_with_in_train(model_dir, args.rank_num,
+                                            args.dict_path)
                 batch_id += 1
 
         except fluid.core.EOFException:
             py_reader.reset()
             epoch_end = time.time()
-            print("Epoch: {0}, Train total expend: {1} ".format(
+            logger.info("Epoch: {0}, Train total expend: {1} ".format(
                 pass_id, epoch_end - epoch_start))
 
-            #model_dir = args.model_output_dir + '/pass-' + str(pass_id)
-            #if trainer_id == 0:
-            #    fluid.io.save_inference_model(model_dir, data_name_list, [loss], exe)
+            model_dir = args.model_output_dir + '/pass-' + str(pass_id)
+            if trainer_id == 0:
+                fluid.io.save_persistables(executor=exe, dirname=model_dir)
+                with open(model_dir + "/_success", 'w+') as f:
+                    f.write(str(pass_id))
 
 
-def train():
-    args = parse_args()
+def GetFileList(data_path):
+    return os.listdir(data_path)
+
+
+def train(args):
 
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
+    filelist = GetFileList(args.train_data_path)
     word2vec_reader = reader.Word2VecReader(args.dict_path,
-                                            args.train_data_path)
+                                            args.train_data_path, filelist)
 
     logger.info("dict_size: {}".format(word2vec_reader.dict_size))
-
     loss, py_reader = skip_gram_word2vec(
         word2vec_reader.dict_size,
         word2vec_reader.word_frequencys,
@@ -203,11 +246,16 @@ def train():
         args.with_nce,
         is_sparse=args.is_sparse)
 
-    #optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
-    optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
+    optimizer = None
+    if args.with_Adam:
+        optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
+    else:
+        optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
+
     optimizer.minimize(loss)
 
-    if os.getenv("PADDLE_IS_LOCAL", "1") == "1":
+    # do local training 
+    if args.is_local or os.getenv("PADDLE_IS_LOCAL", "1") == "1":
         logger.info("run local training")
         main_program = fluid.default_main_program()
 
@@ -215,6 +263,7 @@ def train():
             f.write(str(main_program))
 
         train_loop(args, main_program, word2vec_reader, py_reader, loss, 0)
+    # do distribute training
     else:
         logger.info("run dist training")
 
@@ -278,8 +327,8 @@ def env_declar():
         os.environ["PADDLE_TRAINERS"] = os.environ["PADDLE_TRAINERS_NUM"]
         os.environ["PADDLE_CURRENT_IP"] = os.environ["POD_IP"]
         os.environ["PADDLE_TRAINER_ID"] = os.environ["PADDLE_TRAINER_ID"]
+        # we set the thread number same as CPU number
         os.environ["CPU_NUM"] = "12"
-        os.environ["NUM_THREADS"] = "12"
 
     print("Content-Type: text/plain\n\n")
     for key in os.environ.keys():
@@ -289,5 +338,9 @@ def env_declar():
 
 
 if __name__ == '__main__':
-    #`env_declar()
-    train()
+    args = parse_args()
+    if args.is_local:
+        pass
+    else:
+        env_declar()
+    train(args)
