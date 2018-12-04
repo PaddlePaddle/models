@@ -15,6 +15,7 @@ train_parameters = {
     "input_size": [3, 224, 224],
     "input_mean": [0.485, 0.456, 0.406],
     "input_std": [0.229, 0.224, 0.225],
+    "dropout_seed": None,
     "learning_strategy": {
         "name": "piecewise_decay",
         "batch_size": 256,
@@ -116,7 +117,8 @@ class SE_ResNeXt():
 
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
-        drop = fluid.layers.dropout(x=pool, dropout_prob=0.5)
+        drop = fluid.layers.dropout(
+            x=pool, dropout_prob=0.5, seed=self.params['dropout_seed'])
         stdv = 1.0 / math.sqrt(drop.shape[1] * 1.0)
         out = fluid.layers.fc(
             input=drop,

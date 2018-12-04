@@ -113,20 +113,11 @@ class AlexNet():
             pool_padding=0,
             pool_type='max')
 
-        stdv = 1.0 / math.sqrt(pool5.shape[1] * pool5.shape[2] *
-                               pool5.shape[3] * 1.0)
-        fc6 = fluid.layers.fc(
-            input=pool5,
-            size=4096,
-            act='relu',
-            bias_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv)),
-            param_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv)))
-        drop6 = fluid.layers.dropout(x=fc6, dropout_prob=0.5)
+        drop6 = fluid.layers.dropout(x=pool5, dropout_prob=0.5)
 
-        stdv = 1.0 / math.sqrt(drop6.shape[1] * 1.0)
-        fc7 = fluid.layers.fc(
+        stdv = 1.0 / math.sqrt(drop6.shape[1] * drop6.shape[2] *
+                               drop6.shape[3] * 1.0)
+        fc6 = fluid.layers.fc(
             input=drop6,
             size=4096,
             act='relu',
@@ -134,11 +125,22 @@ class AlexNet():
                 initializer=fluid.initializer.Uniform(-stdv, stdv)),
             param_attr=fluid.param_attr.ParamAttr(
                 initializer=fluid.initializer.Uniform(-stdv, stdv)))
-        drop7 = fluid.layers.dropout(x=fc7, dropout_prob=0.5)
+
+        drop7 = fluid.layers.dropout(x=fc6, dropout_prob=0.5)
 
         stdv = 1.0 / math.sqrt(drop7.shape[1] * 1.0)
-        out = fluid.layers.fc(
+        fc7 = fluid.layers.fc(
             input=drop7,
+            size=4096,
+            act='relu',
+            bias_attr=fluid.param_attr.ParamAttr(
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
+            param_attr=fluid.param_attr.ParamAttr(
+                initializer=fluid.initializer.Uniform(-stdv, stdv)))
+
+        stdv = 1.0 / math.sqrt(fc7.shape[1] * 1.0)
+        out = fluid.layers.fc(
+            input=fc7,
             size=class_dim,
             act='softmax',
             bias_attr=fluid.param_attr.ParamAttr(

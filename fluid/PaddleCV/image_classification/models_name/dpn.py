@@ -5,11 +5,7 @@ import os
 import numpy as np
 import time
 import sys
-import paddle
 import paddle.fluid as fluid
-import paddle.fluid.layers.control_flow as control_flow
-import paddle.fluid.layers.nn as nn
-import paddle.fluid.layers.tensor as tensor
 import math
 from paddle.fluid.param_attr import ParamAttr
 

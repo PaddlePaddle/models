@@ -5,11 +5,7 @@ import os
 import numpy as np
 import time
 import sys
-import paddle
 import paddle.fluid as fluid
-import paddle.fluid.layers.control_flow as control_flow
-import paddle.fluid.layers.nn as nn
-import paddle.fluid.layers.tensor as tensor
 import math
 
 __all__ = ["DPN", "DPN68", "DPN92", "DPN98", "DPN107", "DPN131"]
@@ -21,8 +17,8 @@ train_parameters = {
     "learning_strategy": {
         "name": "piecewise_decay",
         "batch_size": 256,
-        "epochs": [30, 60, 90, 110],
-        "steps": [0.4, 0.04, 0.004, 0.0004, 0.0001]
+        "epochs": [30, 60, 90],
+        "steps": [0.1, 0.01, 0.001, 0.0001]
     }
 }
 

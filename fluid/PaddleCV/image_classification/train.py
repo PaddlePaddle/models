@@ -15,6 +15,7 @@ import reader
 import argparse
 import functools
 import subprocess
+import utils
 from utils.learning_rate import cosine_decay
 from utility import add_arguments, print_arguments
 import models
@@ -38,7 +39,7 @@ add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate 
 add_arg('model',            str,   "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
 add_arg('data_dir',         str,   "./data/ILSVRC2012",  "The ImageNet dataset root dir.")
-add_arg('model_category',   str,   "models",             "Whether to use models_name or not")
+add_arg('model_category',   str,   "models",             "Whether to use models_name or not, valid value:'models','models_name'" )
 # yapf: enabl
 
 
