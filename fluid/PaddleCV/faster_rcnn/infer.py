@@ -40,7 +40,9 @@ def infer():
         use_pyreader=False,
         is_train=False)
     model.build_model(image_shape)
-    rpn_rois, confs, locs = model.eval_out()
+    rpn_rois, confs, locs = model.eval_bbox_out()
+    if cfg.MASK_ON:
+        masks = model.eval_mask_out()
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     # yapf: disable
@@ -53,17 +55,28 @@ def infer():
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     dts_res = []
-    fetch_list = [rpn_rois, confs, locs]
+    if cfg.MASK_ON:
+        fetch_list = [rpn_rois, confs, locs, masks]
+    else:
+        fetch_list = [rpn_rois, confs, locs]
     data = next(infer_reader())
     im_info = [data[0][1]]
-    rpn_rois_v, confs_v, locs_v = exe.run(
-        fetch_list=[v.name for v in fetch_list],
-        feed=feeder.feed(data),
-        return_numpy=False)
+    result, = exe.run(fetch_list=[v.name for v in fetch_list],
+                      feed=feeder.feed(data),
+                      return_numpy=False)
+    rpn_rois_v = result[0]
+    confs_v = result[1]
+    locs_v = result[2]
+    if cfg.MASK_ON:
+        masks_v = result[3]
     new_lod, nmsed_out = get_nmsed_box(rpn_rois_v, confs_v, locs_v, class_nums,
-                                       im_info, numId_to_catId_map)
+                                       im_info)
     path = os.path.join(cfg.image_path, cfg.image_name)
-    draw_bounding_box_on_image(path, nmsed_out, cfg.draw_threshold, label_list)
+    draw_bounding_box_on_image(path, nmsed_out, cfg.draw_threshold, label_list,
+                               numId_to_catId_map)
+    if cfg.MASK_ON:
+        segms_out = segm_results(nmsed_out, masks_v, im_info)
+        draw_mask_on_image(path, segms_out, cfg.draw_threshold)
 
 
 if __name__ == '__main__':

@@ -58,7 +58,9 @@ def eval():
         use_pyreader=False,
         is_train=False)
     model.build_model(image_shape)
-    rpn_rois, confs, locs = model.eval_out()
+    rpn_rois, confs, locs = model.eval_bbox_out()
+    if cfg.MASK_ON:
+        masks = model.eval_mask_out()
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     # yapf: disable
@@ -71,31 +73,52 @@ def eval():
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     dts_res = []
-    fetch_list = [rpn_rois, confs, locs]
+    if cfg.MASK_ON:
+        fetch_list = [rpn_rois, confs, locs, masks]
+    else:
+        fetch_list = [rpn_rois, confs, locs]
     for batch_id, batch_data in enumerate(test_reader()):
         start = time.time()
         im_info = []
         for data in batch_data:
             im_info.append(data[1])
-        rpn_rois_v, confs_v, locs_v = exe.run(
-            fetch_list=[v.name for v in fetch_list],
-            feed=feeder.feed(batch_data),
-            return_numpy=False)
+        result, = exe.run(fetch_list=[v.name for v in fetch_list],
+                          feed=feeder.feed(batch_data),
+                          return_numpy=False)
+        rpn_rois_v = result[0]
+        confs_v = result[1]
+        locs_v = result[2]
+        if cfg.MASK_ON:
+            masks_v = result[3]
         new_lod, nmsed_out = get_nmsed_box(rpn_rois_v, confs_v, locs_v,
-                                           class_nums, im_info,
-                                           numId_to_catId_map)
+                                           class_nums, im_info)
 
-        dts_res += get_dt_res(total_batch_size, new_lod, nmsed_out, batch_data)
+        dts_res += get_dt_res(total_batch_size, new_lod, nmsed_out, batch_data,
+                              numId_to_catId_map)
+        if cfg.MASK_ON:
+            segms_out = segm_results(nmsed_out, masks_v, im_info)
+            segms_res = get_segms_res(batch_size, new_lod, segms_out,
+                                      batch_data, numId_to_catId_map)
         end = time.time()
         print('batch id: {}, time: {}'.format(batch_id, end - start))
-    with open("detection_result.json", 'w') as outfile:
+    with open("detection_bbox_result.json", 'w') as outfile:
         json.dump(dts_res, outfile)
-    print("start evaluate using coco api")
-    cocoDt = cocoGt.loadRes("detection_result.json")
+    print("start evaluate bbox using coco api")
+    cocoDt = cocoGt.loadRes("detection_segms_result.json")
     cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
     cocoEval.evaluate()
     cocoEval.accumulate()
     cocoEval.summarize()
+
+    if cfg.MASK_ON:
+        with open("detection_segms_result.json", 'w') as outfile:
+            json.dump(segms_res, outfile)
+        print("start evaluate mask using coco api")
+        cocoDt = cocoGt.loadRes("detection_segms_result.json")
+        cocoEval = COCOeval(cocoGt, cocoDt, 'segm')
+        cocoEval.evaluate()
+        cocoEval.accumulate()
+        cocoEval.summarize()
 
 
 if __name__ == '__main__':

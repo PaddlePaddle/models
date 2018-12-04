@@ -120,7 +120,7 @@ _C.TEST.rpn_post_nms_top_n = 1000
 _C.TEST.rpn_min_size = 0.0
 
 # max number of detections
-_C.TEST.detectiions_per_im = 100
+_C.TEST.detections_per_im = 100
 
 # NMS threshold used on RPN proposals
 _C.TEST.rpn_nms_thresh = 0.7
@@ -164,6 +164,9 @@ _C.resolution = 14
 
 # Number of channels in the mask head
 _C.DIM_REDUCED = 256
+
+# Threshold for converting soft masks to hard masks
+_C.MRCNN_THRESH_BINARIZE = 0.5
 
 #
 # SOLVER options

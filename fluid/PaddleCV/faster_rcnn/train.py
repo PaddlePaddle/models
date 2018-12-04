@@ -98,7 +98,7 @@ def train():
 
     if cfg.parallel:
         exec_strategy = fluid.ExecutionStrategy()
-        #exec_strategy.num_threads = 1
+        exec_strategy.num_threads = 1
         train_exe = fluid.ParallelExecutor(
             use_cuda=bool(cfg.use_gpu),
             loss_name=loss.name,
@@ -126,7 +126,7 @@ def train():
         fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, \
                       loss_cls, loss_bbox, loss_mask]
     else:
-        fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, loss_cls, loss_bbox]
+        fetch_list = [loss]
 
     def train_loop_pyreader():
         py_reader.start()
@@ -143,8 +143,7 @@ def train():
                     loss_bbox, loss_mask = train_exe.run(\
                             fetch_list=[v.name for v in fetch_list])
                 else:
-                    loss, rpn_cls_loss, rpn_reg_loss, loss_cls,\
-                    loss_bbox = train_exe.run(\
+                    loss, = train_exe.run(\
                           fetch_list=[v.name for v in fetch_list])
                 #every_pass_loss.append(np.mean(np.array(losses[0])))
                 #smoothed_loss.add_value(np.mean(np.array(losses[0])))
@@ -154,15 +153,14 @@ def train():
                        rpn_reg_loss {}, loss_cls {}, loss_bbox {},\
                        loss_mask {}, time {}"
                                              .format(
-                    iter_id, lr[0],\
-                    np.array(loss).mean(), np.array(rpn_cls_loss).mean(),\
-                    np.array(rpn_reg_loss).mean(), np.array(loss_cls).mean(),\
+                    iter_id, lr[0], \
+                    np.array(loss).mean(), np.array(rpn_cls_loss).mean(), \
+                    np.array(rpn_reg_loss).mean(), np.array(loss_cls).mean(), \
                     np.array(loss_bbox).mean(), np.array(loss_mask).mean(),\
                     start_time - prev_start_time))
                 """
                 print("Iter {}, lr {}, loss {}, time {}".format(
-                    iter_id, lr[0],\
-                    np.array(loss).mean(), start_time - prev_start_time))
+                    iter_id, lr[0], np.array(loss).mean(), start_time - prev_start_time))
                 """
                 sys.stdout.flush()
                 if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
