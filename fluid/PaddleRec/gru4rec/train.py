@@ -69,82 +69,54 @@ def train():
     
     # Initialize executor
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
-    training_role = os.getenv("TRAINING_ROLE", "TRAINER")
-    if training_role == "PSERVER":
-        place = fluid.CPUPlace()
     exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
     if parallel:
         train_exe = fluid.ParallelExecutor(
-            use_cuda=use_cuda, loss_name=avg_cost.name)
+            use_cuda=use_cuda,
+            loss_name=avg_cost.name)
     else:
         train_exe = exe
     
-    def train_loop(main_program):
-        """ train network """
-        pass_num = args.pass_num
-        model_dir = args.model_dir
-        fetch_list = [avg_cost.name]
+    pass_num = args.pass_num
+    model_dir = args.model_dir
+    fetch_list = [avg_cost.name]
 
-        exe.run(fluid.default_startup_program())
-        total_time = 0.0
-        for pass_idx in six.moves.xrange(pass_num):
-            epoch_idx = pass_idx + 1
-            print("epoch_%d start" % epoch_idx)
+    total_time = 0.0
+    for pass_idx in six.moves.xrange(pass_num):
+        epoch_idx = pass_idx + 1
+        print("epoch_%d start" % epoch_idx)
 
-            t0 = time.time()
-            i = 0
-            newest_ppl = 0
-            for data in train_reader():
-                i += 1
-                lod_src_wordseq = utils.to_lodtensor([dat[0] for dat in data],
-                                                     place)
-                lod_dst_wordseq = utils.to_lodtensor([dat[1] for dat in data],
-                                                     place)
-                ret_avg_cost = train_exe.run(main_program,
-                                            feed={  "src_wordseq": lod_src_wordseq,
-                                                    "dst_wordseq": lod_dst_wordseq},
-                                            fetch_list=fetch_list)
-                avg_ppl = np.exp(ret_avg_cost[0])
-                newest_ppl = np.mean(avg_ppl)
-                if i % args.print_batch == 0:
-                    print("step:%d ppl:%.3f" % (i, newest_ppl))
+        t0 = time.time()
+        i = 0
+        newest_ppl = 0
+        for data in train_reader():
+            i += 1
+            lod_src_wordseq = utils.to_lodtensor([dat[0] for dat in data],
+                                                 place)
+            lod_dst_wordseq = utils.to_lodtensor([dat[1] for dat in data],
+                                                 place)
+            ret_avg_cost = train_exe.run(feed={  
+                                                "src_wordseq": lod_src_wordseq,
+                                                "dst_wordseq": lod_dst_wordseq},
+                                        fetch_list=fetch_list)
+            avg_ppl = np.exp(ret_avg_cost[0])
+            newest_ppl = np.mean(avg_ppl)
+            if i % args.print_batch == 0:
+                print("step:%d ppl:%.3f" % (i, newest_ppl))
 
-            t1 = time.time()
-            total_time += t1 - t0
-            print("epoch:%d num_steps:%d time_cost(s):%f" %
-                  (epoch_idx, i, total_time / epoch_idx))
-            save_dir = "%s/epoch_%d" % (model_dir, epoch_idx)
-            feed_var_names = ["src_wordseq", "dst_wordseq"]
-            fetch_vars = [avg_cost, acc]
-            fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars, exe)
-            print("model saved in %s" % save_dir)
-        #exe.close()
-        print("finish training")
+        t1 = time.time()
+        total_time += t1 - t0
+        print("epoch:%d num_steps:%d time_cost(s):%f" %
+              (epoch_idx, i, total_time / epoch_idx))
+        save_dir = "%s/epoch_%d" % (model_dir, epoch_idx)
+        feed_var_names = ["src_wordseq", "dst_wordseq"]
+        fetch_vars = [avg_cost, acc]
+        fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars, exe)
+        print("model saved in %s" % save_dir)
+    #exe.close()
+    print("finish training")
 
-    if args.is_local:
-        print("run local training")
-        train_loop(fluid.default_main_program())
 
-    else:
-        print("run distribute training")
-        port = os.getenv("PADDLE_PORT", "6174")
-        pserver_ips = os.getenv("PADDLE_PSERVERS")  # ip,ip...
-        eplist = []
-        for ip in pserver_ips.split(","):
-            eplist.append(':'.join([ip, port]))
-        pserver_endpoints = ",".join(eplist)  # ip:port,ip:port...
-        trainers = int(os.getenv("PADDLE_TRAINERS_NUM", "0"))
-        current_endpoint = os.getenv("POD_IP") + ":" + port
-        trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
-        t = fluid.DistributeTranspiler()
-        t.transpile(trainer_id, pservers=pserver_endpoints, trainers=trainers)
-        if training_role == "PSERVER":
-            pserver_prog = t.get_pserver_program(current_endpoint)
-            pserver_startup = t.get_startup_program(current_endpoint,
-                                                    pserver_prog)
-            exe.run(pserver_startup)
-            exe.run(pserver_prog)
-        elif training_role == "TRAINER":
-            train_loop(t.get_trainer_program())
 if __name__ == "__main__":
     train()

@@ -1,4 +1,4 @@
-Fluid 模型库
+`Fluid 模型库 <https://github.com/PaddlePaddle/models/tree/develop/fluid>`__
 ============
 
 图像分类

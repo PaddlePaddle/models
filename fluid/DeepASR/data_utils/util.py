@@ -25,16 +25,6 @@ def to_lodtensor(data, place):
     return res
 
 
-def lodtensor_to_ndarray(lod_tensor):
-    """conver lodtensor to ndarray
-    """
-    dims = lod_tensor._get_dims()
-    ret = np.zeros(shape=dims).astype('float32')
-    for i in xrange(np.product(dims)):
-        ret.ravel()[i] = lod_tensor.get_float_element(i)
-    return ret, lod_tensor.lod()
-
-
 def split_infer_result(infer_seq, lod):
     infer_batch = []
     for i in xrange(0, len(lod[0]) - 1):
