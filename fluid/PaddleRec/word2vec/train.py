@@ -203,7 +203,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
                             batch_id)
                         inference_test(global_scope(), model_dir, args)
 
-                if batch_id % 100000 == 0 and batch_id != 0:
+                if batch_id % 1000000 == 0 and batch_id != 0:
                     model_dir = args.model_output_dir + '/batch-' + str(
                         batch_id)
                     fluid.io.save_persistables(executor=exe, dirname=model_dir)
