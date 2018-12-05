@@ -91,3 +91,6 @@ Note: The AUC value in the last log info is the total AUC for all test dataset. 
 1. Prepare dataset using preprocess.py.
 1. Split the train.txt to trainer_num parts and put them on the machines.
 1. Run training with the cluster train using the command in `Distributed Train` above.
+
+## Train on Paddle Cloud
+If you want to run this training on PaddleCloud, you can use the script ```cloud.py```, you can change the arguments in ```trian.py``` through environments in PaddleCloud.

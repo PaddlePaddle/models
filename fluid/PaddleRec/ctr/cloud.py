@@ -5,12 +5,13 @@
 # Copyright (c) 2017 Baidu.com, Inc. All Rights Reserved
 #
 # ======================================================================
+"""this file is only for PaddleCloud"""
 
 import os
 
 import logging
 
-import hdfs_utils
+import paddle.fluid.contrib.utils.hdfs_utils as hdfs_utils
 
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s')
