@@ -12,10 +12,11 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid.executor import global_scope
 
 import reader
 from network_conf import skip_gram_word2vec
-from infer import infer_with_train
+from infer import inference_test
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
@@ -206,8 +207,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
                     if batch_id % 1000 == 0 and batch_id != 0:
                         model_dir = args.model_output_dir + '/batch-' + str(
                             batch_id)
-                        infer_with_in_train(model_dir, args.rank_num,
-                                            args.dict_path)
+                        inference_test(global_scope(), model_dir, args)
                 batch_id += 1
 
         except fluid.core.EOFException:
