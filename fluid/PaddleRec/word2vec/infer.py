@@ -134,12 +134,12 @@ def infer_during_train(args):
     exe = fluid.Executor(fluid.CPUPlace())
     Scope = fluid.Scope()
     inference_prog()
+    solved_new = True
     while True:
         time.sleep(60)
         current_list = os.listdir(args.model_output_dir)
         # logger.info("current_list is : {}".format(current_list))
         # logger.info("model_file_list is : {}".format(model_file_list))
-        solved_new = True
         if set(model_file_list) == set(current_list):
             if solved_new:
                 solved_new = False
