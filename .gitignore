@@ -16,6 +16,8 @@ build_doc/
 .cproject
 .pydevproject
 .settings/
+
+*.pyc
 CMakeSettings.json
 Makefile
 .test_env/
