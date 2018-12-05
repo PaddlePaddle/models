@@ -112,7 +112,7 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info,
     variance_v = np.array(cfg.bbox_reg_weights)
     confs_v = np.array(confs)
     locs_v = np.array(locs)
-    rois = box_decoder(locs_v, rpn_rois_v, variance_v)
+    #rois = box_decoder(locs_v, rpn_rois_v, variance_v)
     im_results = [[] for _ in range(len(lod) - 1)]
     new_lod = [0]
     for i in range(len(lod) - 1):
@@ -120,12 +120,12 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info,
         end = lod[i + 1]
         if start == end:
             continue
-        rois_n = rois[start:end, :]
-        #locs_n = locs_v[start:end, :]
-        #rois_n = rpn_rois_v[start:end, :]
-        #rois_n = box_decoder(locs_n, rois_n, variance_v)
-        rois_n = clip_tiled_boxes(rois_n, im_info[i][:2])
+        #rois_n = rois[start:end, :]
+        locs_n = locs_v[start:end, :]
+        rois_n = rpn_rois_v[start:end, :]
         rois_n = rois_n / im_info[i][2]
+        rois_n = box_decoder(locs_n, rois_n, variance_v)
+        rois_n = clip_tiled_boxes(rois_n, im_info[i][:2] / im_info[i][2])
 
         cls_boxes = [[] for _ in range(class_nums)]
         scores_n = confs_v[start:end, :]
