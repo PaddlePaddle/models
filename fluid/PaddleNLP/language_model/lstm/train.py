@@ -77,6 +77,7 @@ def save_para_npz(train_prog, train_exe):
 def train():
     args = parse_args()
     model_type = args.model_type
+    rnn_model = args.rnn_model
     logger = logging.getLogger("lm")
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(
@@ -157,7 +158,8 @@ def train():
         num_layers=num_layers,
         num_steps=num_steps,
         init_scale=init_scale,
-        dropout=dropout)
+        dropout=dropout, 
+        rnn_model=rnn_model)
     # clone from default main program and use it as the validation program
     main_program = fluid.default_main_program()
     inference_program = fluid.default_main_program().clone(for_test=True)
@@ -206,18 +208,19 @@ def train():
 
     def eval(data):
         # when eval the batch_size set to 1
-        eval_data_iter = reader.get_data_iter(data, 1, num_steps)
+        eval_data_iter = reader.get_data_iter(data, batch_size, num_steps)
         total_loss = 0.0
         iters = 0
-        init_hidden = np.zeros((num_layers, 1, hidden_size), dtype='float32')
-        init_cell = np.zeros((num_layers, 1, hidden_size), dtype='float32')
+        init_hidden = np.zeros((num_layers, batch_size, hidden_size), dtype='float32')
+        init_cell = np.zeros((num_layers, batch_size, hidden_size), dtype='float32')
         for batch_id, batch in enumerate(eval_data_iter):
             input_data_feed = prepare_input(
                 batch, init_hidden, init_cell, epoch_id, with_lr=False)
             fetch_outs = exe.run(
                 inference_program,
                 feed=input_data_feed,
-                fetch_list=[loss.name, last_hidden.name, last_cell.name])
+                fetch_list=[loss.name, last_hidden.name, last_cell.name],
+                use_program_cache=True)
 
             cost_train = np.array(fetch_outs[0])
             init_hidden = np.array(fetch_outs[1])
@@ -284,7 +287,7 @@ def train():
 
         if epoch_id == max_epoch - 1 and args.enable_ce:
             print("ptblm\tlstm_language_model_duration\t%s" %
-                  (total_time / max_epoch))
+                        (total_time / max_epoch))
             print("ptblm\tlstm_language_model_loss\t%s" % ppl[0])
 
         model_path = os.path.join("model_new/", str(epoch_id))

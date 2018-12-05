@@ -166,7 +166,7 @@ def xception_block(input,
     filters = check(filters, repeat_number)
     strides = check(strides, repeat_number)
     data = input
-    datum = []
+    results = []
     for i in range(repeat_number):
         with scope('separable_conv' + str(i + 1)):
             if not activation_fn_in_separable_conv:
@@ -185,9 +185,9 @@ def xception_block(input,
                     filters[i],
                     dilation=dilation,
                     act=relu)
-            datum.append(data)
+            results.append(data)
     if not has_skip:
-        return append_op_result(data, 'xception_block'), datum
+        return append_op_result(data, 'xception_block'), results
     if skip_conv:
         with scope('shortcut'):
             skip = bn(
@@ -195,7 +195,7 @@ def xception_block(input,
                     input, channels[-1], 1, strides[-1], groups=1, padding=0))
     else:
         skip = input
-    return append_op_result(data + skip, 'xception_block'), datum
+    return append_op_result(data + skip, 'xception_block'), results
 
 
 def entry_flow(data):
@@ -209,10 +209,10 @@ def entry_flow(data):
         with scope("block1"):
             data, _ = xception_block(data, 128, [1, 1, 2])
         with scope("block2"):
-            data, datum = xception_block(data, 256, [1, 1, 2])
+            data, results = xception_block(data, 256, [1, 1, 2])
         with scope("block3"):
             data, _ = xception_block(data, 728, [1, 1, 2])
-        return data, datum[1]
+        return data, results[1]
 
 
 def middle_flow(data):

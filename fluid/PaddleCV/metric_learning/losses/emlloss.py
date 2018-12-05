@@ -1,21 +1,20 @@
-import math
-import numpy as np
-import paddle.fluid as fluid
-from . import datareader as reader
-from .metrics import calculate_order_dist_matrix
-from .metrics import get_gpu_num
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-class emlloss():
+import math
+import paddle.fluid as fluid
+from utility import get_gpu_num
+from .commonfunc import calculate_order_dist_matrix
+
+class EmlLoss():
     def __init__(self, train_batch_size = 40, samples_each_class=2):
-        num_gpus = get_gpu_num()
         self.samples_each_class = samples_each_class
         self.train_batch_size = train_batch_size
+        num_gpus = get_gpu_num()
         assert(train_batch_size % num_gpus == 0)
         self.cal_loss_batch_size = train_batch_size // num_gpus
         assert(self.cal_loss_batch_size % samples_each_class == 0)
-        class_num = train_batch_size // samples_each_class
-        self.train_reader = reader.eml_train(train_batch_size, samples_each_class)
-        self.test_reader = reader.test()
 
     def surrogate_function(self, beta, theta, bias):
         x = theta * fluid.layers.exp(bias) 
@@ -41,7 +40,10 @@ class emlloss():
 
     def loss(self, input):
         samples_each_class = self.samples_each_class
-        batch_size = self.cal_loss_batch_size   
+        batch_size = self.cal_loss_batch_size
+        #input = fluid.layers.l2_normalize(input, axis=1)
+        #input_norm = fluid.layers.sqrt(fluid.layers.reduce_sum(fluid.layers.square(input), dim=1))
+        #input = fluid.layers.elementwise_div(input, input_norm, axis=0)
         d = calculate_order_dist_matrix(input, self.cal_loss_batch_size, self.samples_each_class)
         ignore, pos, neg = fluid.layers.split(d, num_or_sections= [1, 
             samples_each_class-1, batch_size-samples_each_class], dim=1)

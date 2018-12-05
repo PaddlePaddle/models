@@ -11,7 +11,7 @@ import argparse
 from reader import CityscapeDataset
 import reader
 import models
-
+import time
 
 def add_argument(name, type, default, help):
     parser.add_argument('--' + name, default=default, type=type, help=help)
@@ -141,6 +141,7 @@ if args.parallel:
 batches = dataset.get_batch_generator(batch_size, total_step)
 
 for i, imgs, labels, names in batches:
+    prev_start_time = time.time()
     if args.parallel:
         retv = exe_p.run(fetch_list=[pred.name, loss_mean.name],
                          feed={'img': imgs,
@@ -150,10 +151,12 @@ for i, imgs, labels, names in batches:
                        feed={'img': imgs,
                              'label': labels},
                        fetch_list=[pred, loss_mean])
+    end_time = time.time()
     if i % 100 == 0:
         print("Model is saved to", args.save_weights_path)
         save_model()
-    print("step %s, loss: %s" % (i, np.mean(retv[1])))
+    print("step {:d}, loss: {:.6f}, step_time_cost: {:.3f}" .format(i,
+                    np.mean(retv[1]), end_time - prev_start_time))
 
 print("Training done. Model is saved to", args.save_weights_path)
 save_model()

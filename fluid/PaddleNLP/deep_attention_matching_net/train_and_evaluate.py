@@ -192,6 +192,9 @@ def train(args):
 
     train_program = fluid.Program()
     train_startup = fluid.Program()
+    if "CE_MODE_X" in os.environ:
+        train_program.random_seed = 110
+        train_startup.random_seed = 110
     with fluid.program_guard(train_program, train_startup):
         with fluid.unique_name.guard():
             if args.use_pyreader:
@@ -213,10 +216,15 @@ def train(args):
                     decay_rate=0.9,
                     staircase=True))
             optimizer.minimize(loss)
+            print("begin memory optimization ...")
             fluid.memory_optimize(train_program)
+            print("end memory optimization ...")
 
     test_program = fluid.Program()
     test_startup = fluid.Program()
+    if "CE_MODE_X" in os.environ:
+        test_program.random_seed = 110
+        test_startup.random_seed = 110
     with fluid.program_guard(test_program, test_startup):
         with fluid.unique_name.guard():
             if args.use_pyreader:
@@ -322,9 +330,9 @@ def train(args):
                 result_file_path = os.path.join(args.save_path,
                                                 'result.' + str(step))
                 evaluate(score_path, result_file_path)
-        return step
+        return step, np.array(cost[0]).mean()
 
-    # train on one epoch with pyreader 
+    # train on one epoch with pyreader
     def train_with_pyreader(step):
         def data_provider():
             for index in six.moves.xrange(batch_num):
@@ -367,18 +375,25 @@ def train(args):
             except fluid.core.EOFException:
                 train_pyreader.reset()
                 break
-        return step
+        return step, np.array(cost[0]).mean()
 
     # train over different epoches
-    global_step = 0
+    global_step, train_time = 0, 0.0
     for epoch in six.moves.xrange(args.num_scan_data):
-        shuffle_train = reader.unison_shuffle(train_data)
+        shuffle_train = reader.unison_shuffle(
+            train_data, seed=110 if ("CE_MODE_X" in os.environ) else None)
         train_batches = reader.build_batches(shuffle_train, data_conf)
 
+        begin_time = time.time()
         if args.use_pyreader:
-            global_step = train_with_pyreader(global_step)
+            global_step, last_cost = train_with_pyreader(global_step)
         else:
-            global_step = train_with_feed(global_step)
+            global_step, last_cost = train_with_feed(global_step)
+        train_time += time.time() - begin_time
+    # For internal continuous evaluation
+    if "CE_MODE_X" in os.environ:
+        print("kpis	train_cost	%f" % last_cost)
+        print("kpis	train_duration	%f" % train_time)
 
 
 if __name__ == '__main__':

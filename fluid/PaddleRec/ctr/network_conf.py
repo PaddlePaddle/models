@@ -15,8 +15,12 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim):
     def embedding_layer(input):
         return fluid.layers.embedding(
             input=input,
+            is_sparse=True,
+            # you need to patch https://github.com/PaddlePaddle/Paddle/pull/14190
+            # if you want to set is_distributed to True
+            is_distributed=False,
             size=[sparse_feature_dim, embedding_size],
-            param_attr=fluid.ParamAttr(name="SparseFeatFactors", initializer=fluid.initializer.Normal(scale=1/math.sqrt(sparse_feature_dim))))
+            param_attr=fluid.ParamAttr(name="SparseFeatFactors", initializer=fluid.initializer.Uniform()))
 
     sparse_embed_seq = map(embedding_layer, sparse_input_ids)
     concated = fluid.layers.concat(sparse_embed_seq + [dense_input], axis=1)

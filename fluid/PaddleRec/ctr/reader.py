@@ -21,10 +21,10 @@ class CriteoDataset(Dataset):
                     for line in f:
                         line_idx += 1
                         if is_train and line_idx > self.train_idx_:
-                            continue
+                            break
                         elif not is_train and line_idx <= self.train_idx_:
                             continue
-                        if trainer_id > 0 and line_idx % trainer_num != trainer_id:
+                        if line_idx % trainer_num != trainer_id:
                             continue
                         features = line.rstrip('\n').split('\t')
                         dense_feature = []
@@ -35,7 +35,7 @@ class CriteoDataset(Dataset):
                             else:
                                 dense_feature.append((float(features[idx]) - self.cont_min_[idx - 1]) / self.cont_diff_[idx - 1])
                         for idx in self.categorical_range_:
-                            sparse_feature.append([hash("%d_%s" % (idx, features[idx])) % self.hash_dim_])
+                            sparse_feature.append([hash(str(idx) + features[idx]) % self.hash_dim_])
 
                         label = [int(features[0])]
                         yield [dense_feature] + sparse_feature + [label]
