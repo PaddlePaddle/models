@@ -17,6 +17,7 @@ def unison_shuffle(data, seed=None):
 
     assert len(y) == len(c) == len(r)
     p = np.random.permutation(len(y))
+    print(p)
     shuffle_data = {six.b('y'): y[p], six.b('c'): c[p], six.b('r'): r[p]}
     return shuffle_data
 

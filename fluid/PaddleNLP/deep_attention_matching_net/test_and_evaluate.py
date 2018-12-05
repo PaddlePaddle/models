@@ -126,6 +126,7 @@ def test(args):
     dam = Net(args.max_turn_num, args.max_turn_len, args.vocab_size,
               args.emb_size, args.stack_num, args.channel1_num,
               args.channel2_num)
+    dam.create_data_layers()
     loss, logits = dam.create_network()
 
     loss.persistable = True
@@ -144,7 +145,7 @@ def test(args):
             staircase=True))
     optimizer.minimize(loss)
 
-    # The fethced loss is wrong when mem opt is enabled 
+    # The fethced loss is wrong when mem opt is enabled
     fluid.memory_optimize(fluid.default_main_program())
 
     if args.use_cuda:
@@ -191,7 +192,8 @@ def test(args):
         feed_list = []
         for dev in six.moves.xrange(dev_count):
             index = it * dev_count + dev
-            feed_dict = reader.make_one_batch_input(test_batches, index)
+            batch_data = reader.make_one_batch_input(test_batches, index)
+            feed_dict = dict(zip(dam.get_feed_names(), batch_data))
             feed_list.append(feed_dict)
 
         predicts = test_exe.run(feed=feed_list, fetch_list=[logits.name])

@@ -4,6 +4,7 @@ from __future__ import print_function
 import paddle
 import paddle.fluid as fluid
 from utility import get_parent_function_name
+import os
 
 gf_dim = 64
 df_dim = 64
@@ -16,6 +17,9 @@ y_dim = 1
 output_height = 28
 output_width = 28
 
+use_cudnn = True
+if 'ce_mode' in os.environ:
+    use_cudnn = False
 
 def bn(x, name=None, act='relu'):
     if name is None:
@@ -42,6 +46,7 @@ def conv(x, num_filters, name=None, act=None):
         pool_stride=2,
         param_attr=name + 'w',
         bias_attr=name + 'b',
+        use_cudnn=use_cudnn,
         act=act)
 
 
@@ -76,6 +81,7 @@ def deconv(x,
         stride=stride,
         dilation=dilation,
         padding=padding,
+        use_cudnn=use_cudnn,
         act=act)
 
 

@@ -1,7 +1,11 @@
 from __future__ import division
 import paddle.fluid as fluid
 import numpy as np
+import os
 
+use_cudnn = True
+if 'ce_mode' in os.environ:
+    use_cudnn = False
 
 def cal_padding(img_size, stride, filter_size, dilation=1):
     """Calculate padding size."""
@@ -82,7 +86,7 @@ def conv2d(input,
         name=name,
         stride=stride,
         padding=padding,
-        use_cudnn=False,
+        use_cudnn=use_cudnn,
         param_attr=param_attr,
         bias_attr=bias_attr)
     if need_crop:
@@ -137,6 +141,7 @@ def deconv2d(input,
         filter_size=filter_size,
         stride=stride,
         padding=padding,
+        use_cudnn=use_cudnn,
         param_attr=param_attr,
         bias_attr=bias_attr)
 
