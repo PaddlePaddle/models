@@ -95,11 +95,11 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim, sparse_
         act="softmax",
         param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(scale=1 / math.sqrt(fc3.shape[1]))))
 
-    cost = fluid.layers.cross_entropy(input=predict, label=words[-1:])
+    cost = fluid.layers.cross_entropy(input=predict, label=words[-1])
     avg_cost = fluid.layers.reduce_sum(cost)
-    accuracy = fluid.layers.accuracy(input=predict, label=words[-1:])
+    accuracy = fluid.layers.accuracy(input=predict, label=words[-1])
     auc_var, batch_auc_var, auc_states = \
-        fluid.layers.auc(input=predict, label=words[-1:], num_thresholds=2 ** 12, slide_steps=20)
+        fluid.layers.auc(input=predict, label=words[-1], num_thresholds=2 ** 12, slide_steps=20)
 
     return avg_cost, auc_var, batch_auc_var, py_reader
 
@@ -150,10 +150,10 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim):
                               param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(
                                   scale=1 / math.sqrt(fc3.shape[1]))))
 
-    cost = fluid.layers.cross_entropy(input=predict, label=words[-1:])
+    cost = fluid.layers.cross_entropy(input=predict, label=words[-1])
     avg_cost = fluid.layers.reduce_sum(cost)
-    accuracy = fluid.layers.accuracy(input=predict, label=words[-1:])
+    accuracy = fluid.layers.accuracy(input=predict, label=words[-1])
     auc_var, batch_auc_var, auc_states = \
-        fluid.layers.auc(input=predict, label=words[-1:], num_thresholds=2 ** 12, slide_steps=20)
+        fluid.layers.auc(input=predict, label=words[-1], num_thresholds=2 ** 12, slide_steps=20)
 
     return avg_cost, auc_var, batch_auc_var, py_reader
