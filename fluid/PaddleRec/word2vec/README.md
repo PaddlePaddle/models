@@ -32,9 +32,11 @@ The command line options for training can be listed by `python train.py -h`.
 
 ### Local Train:
 ```bash
+export CPU_NUM=1
 python train.py \
         --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
         --dict_path data/1-billion_dict \
+        --with_hs --with_nce --is_local \
         2>&1 | tee train.log
 ```
 

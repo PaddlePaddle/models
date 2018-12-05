@@ -32,9 +32,11 @@ python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchma
 ### 单机训练：
 
 ```bash
+export CPU_NUM=1
 python train.py \
         --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
         --dict_path data/1-billion_dict \
+        --with_hs --with_nce --is_local \
         2>&1 | tee train.log
 ```
 
