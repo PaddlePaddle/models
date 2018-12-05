@@ -196,18 +196,19 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
                             os.getenv("CPU_NUM"))
                         logger.info("Time used: {}, Samples/Sec: {}".format(
                             elapsed, samples / elapsed))
-                if batch_id == 200 or batch_id == 100:
-                    model_dir = args.model_output_dir + '/batch-' + str(
-                        batch_id)
-                    fluid.io.save_persistables(executor=exe, dirname=model_dir)
-                    with open(model_dir + "/_success", 'w+') as f:
-                        f.write(str(batch_id))
-                # calculate infer result each 100 batches
+                # calculate infer result each 100 batches when using --with_infer_test
                 if args.with_infer_test:
                     if batch_id % 1000 == 0 and batch_id != 0:
                         model_dir = args.model_output_dir + '/batch-' + str(
                             batch_id)
                         inference_test(global_scope(), model_dir, args)
+
+                if batch_id % 100000 == 0 and batch_id != 0:
+                    model_dir = args.model_output_dir + '/batch-' + str(
+                        batch_id)
+                    fluid.io.save_persistables(executor=exe, dirname=model_dir)
+                    with open(model_dir + "/_success", 'w+') as f:
+                        f.write(str(batch_id))
                 batch_id += 1
 
         except fluid.core.EOFException:

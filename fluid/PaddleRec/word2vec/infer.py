@@ -135,12 +135,12 @@ def infer_during_train(args):
     Scope = fluid.Scope()
     inference_prog()
     while True:
-        time.sleep(1)
+        time.sleep(60)
         current_list = os.listdir(args.model_output_dir)
-        logger.info("current_list is : {}".format(current_list))
-        logger.info("model_file_list is : {}".format(model_file_list))
+        # logger.info("current_list is : {}".format(current_list))
+        # logger.info("model_file_list is : {}".format(model_file_list))
         if set(model_file_list) == set(current_list):
-            logger.info("they are the same")
+            logger.info("No New models created")
             pass
         else:
             increment_models = list()

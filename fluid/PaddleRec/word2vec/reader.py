@@ -3,6 +3,12 @@
 import numpy as np
 import preprocess
 
+import logging
+
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("fluid")
+logger.setLevel(logging.INFO)
+
 
 class Word2VecReader(object):
     def __init__(self, dict_path, data_path, filelist, window_size=5):
@@ -73,6 +79,8 @@ class Word2VecReader(object):
         def _reader():
             for file in self.filelist:
                 with open(self.data_path_ + "/" + file, 'r') as f:
+                    logger.info("running data in {}".format(self.data_path_ +
+                                                            "/" + file))
                     for line in f:
                         line = preprocess.text_strip(line)
                         word_ids = [
@@ -88,6 +96,8 @@ class Word2VecReader(object):
         def _reader_hs():
             for file in self.filelist:
                 with open(self.data_path_ + "/" + file, 'r') as f:
+                    logger.info("running data in {}".format(self.data_path_ +
+                                                            "/" + file))
                     for line in f:
                         line = preprocess.text_strip(line)
                         word_ids = [
