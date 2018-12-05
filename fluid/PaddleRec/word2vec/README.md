@@ -33,8 +33,8 @@ The command line options for training can be listed by `python train.py -h`.
 ### Local Train:
 ```bash
 python train.py \
-        --train_data_path data/enwik8 \
-        --dict_path data/enwik8_dict \
+        --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
+        --dict_path data/1-billion_dict \
         2>&1 | tee train.log
 ```
 
@@ -50,6 +50,28 @@ sh cluster_train.sh
 
 ## Infer
 
+In infer.py we construct some test cases in the `build_test_case` method to evaluate the effect of word embeding:
+We enter the test case (we are currently using the analogical-reasoning task: find the structure of A - B = C - D, for which we calculate A - B + D, find the nearest C by cosine distance, the calculation accuracy is removed Candidates for A, B, and D appear in the candidate) Then calculate the cosine similarity of the candidate and all words in the entire embeding, and print out the topK (K is determined by the parameter --rank_num, the default is 4).
+
+Such as:
+For: boy - girl + aunt = uncle
+0 nearest aunt: 0.89
+1 nearest uncle: 0.70
+2 nearest grandmother: 0.67
+3 nearest father:0.64
+
+You can also add your own tests by mimicking the examples given in the `build_test_case` method.
+
+Forecast in training:
+
+```bash
+Python infer.py --infer_during_train 2>&1 | tee infer.log
+```
+Use a model for offline prediction:
+
+```bash
+Python infer.py --infer_once --model_output_dir ./models/[specific models file directory] 2>&1 | tee infer.log
+```
 
 ## Train on Baidu Cloud
 1. Please prepare some CPU machines on Baidu Cloud following the steps in [train_on_baidu_cloud](https://github.com/PaddlePaddle/FluidDoc/blob/develop/doc/fluid/user_guides/howto/training/train_on_baidu_cloud_cn.rst)

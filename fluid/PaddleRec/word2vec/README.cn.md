@@ -33,8 +33,8 @@ python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchma
 
 ```bash
 python train.py \
-        --train_data_path data/enwik8 \
-        --dict_path data/enwik8_dict \
+        --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
+        --dict_path data/1-billion_dict \
         2>&1 | tee train.log
 ```
 
@@ -47,8 +47,28 @@ sh cluster_train.sh
 ```
 
 ## 预测
+在infer.py中我们在`build_test_case`方法中构造了一些test case来评估word embeding的效果：
+我们输入test case（ 我们目前采用的是analogical-reasoning的任务：找到A - B = C - D的结构，为此我们计算A - B + D，通过cosine距离找最近的C，计算准确率要去除候选中出现A、B、D的候选 ）然后计算候选和整个embeding中所有词的余弦相似度，并且取topK（K由参数 --rank_num确定，默认为4）打印出来。
 
+如：
+对于：boy - girl + aunt = uncle  
+0 nearest aunt:0.89
+1 nearest uncle:0.70
+2 nearest grandmother:0.67
+3 nearest father:0.64
 
+您也可以在`build_test_case`方法中模仿给出的例子增加自己的测试
+
+训练中预测：
+
+```bash
+python infer.py --infer_during_train 2>&1 | tee infer.log
+```
+使用某个model进行离线预测：
+
+```bash
+python infer.py --infer_once --model_output_dir ./models/[具体的models文件目录] 2>&1 | tee infer.log
+```
 ## 在百度云上运行集群训练
 1. 参考文档 [在百度云上启动Fluid分布式训练](https://github.com/PaddlePaddle/FluidDoc/blob/develop/doc/fluid/user_guides/howto/training/train_on_baidu_cloud_cn.rst) 在百度云上部署一个CPU集群。
 1. 用preprocess.py处理训练数据生成train.txt。
