@@ -23,29 +23,43 @@ from PIL import ImageFont
 from config import cfg
 
 
-def box_decoder(target_box, prior_box, prior_box_var):
-    proposals = np.zeros_like(target_box, dtype=np.float32)
-    prior_box_loc = np.zeros_like(prior_box, dtype=np.float32)
-    prior_box_loc[:, 0] = prior_box[:, 2] - prior_box[:, 0] + 1.
-    prior_box_loc[:, 1] = prior_box[:, 3] - prior_box[:, 1] + 1.
-    prior_box_loc[:, 2] = (prior_box[:, 2] + prior_box[:, 0]) / 2
-    prior_box_loc[:, 3] = (prior_box[:, 3] + prior_box[:, 1]) / 2
-    pred_bbox = np.zeros_like(target_box, dtype=np.float32)
-    for i in range(prior_box.shape[0]):
-        dw = np.minimum(prior_box_var[2] * target_box[i, 2::4], cfg.bbox_clip)
-        dh = np.minimum(prior_box_var[3] * target_box[i, 3::4], cfg.bbox_clip)
-        pred_bbox[i, 0::4] = prior_box_var[0] * target_box[
-            i, 0::4] * prior_box_loc[i, 0] + prior_box_loc[i, 2]
-        pred_bbox[i, 1::4] = prior_box_var[1] * target_box[
-            i, 1::4] * prior_box_loc[i, 1] + prior_box_loc[i, 3]
-        pred_bbox[i, 2::4] = np.exp(dw) * prior_box_loc[i, 0]
-        pred_bbox[i, 3::4] = np.exp(dh) * prior_box_loc[i, 1]
-    proposals[:, 0::4] = pred_bbox[:, 0::4] - pred_bbox[:, 2::4] / 2
-    proposals[:, 1::4] = pred_bbox[:, 1::4] - pred_bbox[:, 3::4] / 2
-    proposals[:, 2::4] = pred_bbox[:, 0::4] + pred_bbox[:, 2::4] / 2 - 1
-    proposals[:, 3::4] = pred_bbox[:, 1::4] + pred_bbox[:, 3::4] / 2 - 1
+def box_decoder(deltas, boxes, weights):
+    if boxes.shape[0] == 0:
+        return np.zeros((0, deltas.shape[1]), dtype=deltas.dtype)
 
-    return proposals
+    boxes = boxes.astype(deltas.dtype, copy=False)
+
+    widths = boxes[:, 2] - boxes[:, 0] + 1.0
+    heights = boxes[:, 3] - boxes[:, 1] + 1.0
+    ctr_x = boxes[:, 0] + 0.5 * widths
+    ctr_y = boxes[:, 1] + 0.5 * heights
+
+    wx, wy, ww, wh = weights
+    dx = deltas[:, 0::4] * wx
+    dy = deltas[:, 1::4] * wy
+    dw = deltas[:, 2::4] * ww
+    dh = deltas[:, 3::4] * wh
+
+    # Prevent sending too large values into np.exp()
+    dw = np.minimum(dw, cfg.bbox_clip)
+    dh = np.minimum(dh, cfg.bbox_clip)
+
+    pred_ctr_x = dx * widths[:, np.newaxis] + ctr_x[:, np.newaxis]
+    pred_ctr_y = dy * heights[:, np.newaxis] + ctr_y[:, np.newaxis]
+    pred_w = np.exp(dw) * widths[:, np.newaxis]
+    pred_h = np.exp(dh) * heights[:, np.newaxis]
+
+    pred_boxes = np.zeros(deltas.shape, dtype=deltas.dtype)
+    # x1
+    pred_boxes[:, 0::4] = pred_ctr_x - 0.5 * pred_w
+    # y1
+    pred_boxes[:, 1::4] = pred_ctr_y - 0.5 * pred_h
+    # x2 (note: "- 1" is correct; don't be fooled by the asymmetry)
+    pred_boxes[:, 2::4] = pred_ctr_x + 0.5 * pred_w - 1
+    # y2 (note: "- 1" is correct; don't be fooled by the asymmetry)
+    pred_boxes[:, 3::4] = pred_ctr_y + 0.5 * pred_h - 1
+
+    return pred_boxes
 
 
 def clip_tiled_boxes(boxes, im_shape):
@@ -73,7 +87,6 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info,
     variance_v = np.array(cfg.bbox_reg_weights)
     confs_v = np.array(confs)
     locs_v = np.array(locs)
-    rois = box_decoder(locs_v, rpn_rois_v, variance_v)
     im_results = [[] for _ in range(len(lod) - 1)]
     new_lod = [0]
     for i in range(len(lod) - 1):
@@ -81,9 +94,11 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info,
         end = lod[i + 1]
         if start == end:
             continue
-        rois_n = rois[start:end, :]
+        locs_n = locs_v[start:end, :]
+        rois_n = rpn_rois_v[start:end, :]
         rois_n = rois_n / im_info[i][2]
-        rois_n = clip_tiled_boxes(rois_n, im_info[i][:2])
+        rois_n = box_decoder(locs_n, rois_n, variance_v)
+        rois_n = clip_tiled_boxes(rois_n, im_info[i][:2] / im_info[i][2])
 
         cls_boxes = [[] for _ in range(class_nums)]
         scores_n = confs_v[start:end, :]
