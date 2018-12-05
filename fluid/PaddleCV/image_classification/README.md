@@ -84,7 +84,7 @@ python train.py \
 
 Or can start the training step by running the ```run.sh```.
 
-**data reader introduction:** Data reader is defined in ```reader.py```. In [training stage](#training-a-model), random crop and flipping are used, while center crop is used in [evaluation](#inference) and [inference](#inference) stages. Supported data augmentation includes:
+**data reader introduction:** Data reader is defined in ```reader_PIL.py``` and ```reader_cv2.py```, Using CV2 reader can improve the speed of reading. In [training stage](#training-a-model), random crop and flipping are used, while center crop is used in [evaluation](#inference) and [inference](#inference) stages. Supported data augmentation includes:
 * rotation
 * color jitter
 * random crop
@@ -192,17 +192,17 @@ Models are trained by starting with learning rate ```0.1``` and decaying it by `
 
 - Released models: specify parameter names
 
-|model | top-1/top-5 accuracy
-|- | -:
-|[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.zip) | 56.34%/79.02%
-|[VGG11](http://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretained.zip) | 68.86%/88.64%
-|[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.zip) | 70.7%/89.41%
-|[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.zip) | 76.46%/93.04%
-|[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.zip) | 77.65%/93.71%
+|model | top-1/top-5 accuracy(PIL)| top-1/top-5 accuracy(CV2)
+|- | - | - :
+|[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.zip) | 56.71%/79.18% | 55.88%/78.65%
+|[VGG11](http://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretained.zip) | 68.92%/88.66% | 68.61%/88.60%
+|[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.zip) | 70.91%/89.54% | 70.51%/89.35%
+|[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.zip) | 76.35%/92.80% | 76.22%/92.92%
+|[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.zip) | 77.49%/93.57% | 77.56%/93.64%
 
 - Released models: not specify parameter names
 
-|model | top-1/top-5 accuracy
-|- | -:
-|[ResNet152](http://paddle-imagenet-models.bj.bcebos.com/ResNet152_pretrained.zip) | 78.29%/94.11%
-|[SE_ResNeXt50_32x4d](http://paddle-imagenet-models.bj.bcebos.com/se_resnext_50_model.tar) | 78.33%/93.96%
+|model | top-1/top-5 accuracy(PIL)| top-1/top-5 accuracy(CV2)
+|- | - | - :
+|[ResNet152](http://paddle-imagenet-models.bj.bcebos.com/ResNet152_pretrained.zip) | 78.18%/93.93% | 78.11%/94.04%
+|[SE_ResNeXt50_32x4d](http://paddle-imagenet-models.bj.bcebos.com/se_resnext_50_model.tar) | 78.32%/93.96% | 77.58%/93.73%
