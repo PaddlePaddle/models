@@ -203,7 +203,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
                             batch_id)
                         inference_test(global_scope(), model_dir, args)
 
-                if batch_id % 1000000 == 0 and batch_id != 0:
+                if batch_id % 500000 == 0 and batch_id != 0:
                     model_dir = args.model_output_dir + '/batch-' + str(
                         batch_id)
                     fluid.io.save_persistables(executor=exe, dirname=model_dir)
@@ -234,8 +234,16 @@ def train(args):
         os.mkdir(args.model_output_dir)
 
     filelist = GetFileList(args.train_data_path)
-    word2vec_reader = reader.Word2VecReader(args.dict_path,
-                                            args.train_data_path, filelist)
+    word2vec_reader = None
+    if args.is_local or os.getenv("PADDLE_IS_LOCAL", "1") == "1":
+        word2vec_reader = reader.Word2VecReader(
+            args.dict_path, args.train_data_path, filelist, 0, 1)
+    else:
+        trainer_id = int(os.environ["PADDLE_TRAINER_ID"])
+        trainers = int(os.environ["PADDLE_TRAINERS"])
+        word2vec_reader = reader.Word2VecReader(args.dict_path,
+                                                args.train_data_path, filelist,
+                                                trainer_id, trainer_num)
 
     logger.info("dict_size: {}".format(word2vec_reader.dict_size))
     loss, py_reader = skip_gram_word2vec(

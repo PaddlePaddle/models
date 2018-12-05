@@ -11,7 +11,13 @@ logger.setLevel(logging.INFO)
 
 
 class Word2VecReader(object):
-    def __init__(self, dict_path, data_path, filelist, window_size=5):
+    def __init__(self,
+                 dict_path,
+                 data_path,
+                 filelist,
+                 trainer_id,
+                 trainer_num,
+                 window_size=5):
         self.window_size_ = window_size
         self.data_path_ = data_path
         self.filelist = filelist
@@ -20,6 +26,8 @@ class Word2VecReader(object):
         self.id_to_word = dict()
         self.word_to_path = dict()
         self.word_to_code = dict()
+        self.trainer_id = trainer_id
+        self.trainer_num = trainer_num
 
         word_all_count = 0
         word_counts = []
@@ -81,40 +89,50 @@ class Word2VecReader(object):
                 with open(self.data_path_ + "/" + file, 'r') as f:
                     logger.info("running data in {}".format(self.data_path_ +
                                                             "/" + file))
+                    count = 1
                     for line in f:
-                        line = preprocess.text_strip(line)
-                        word_ids = [
-                            self.word_to_id_[word] for word in line.split()
-                            if word in self.word_to_id_
-                        ]
-                        for idx, target_id in enumerate(word_ids):
-                            context_word_ids = self.get_context_words(
-                                word_ids, idx, self.window_size_)
-                            for context_id in context_word_ids:
-                                yield [target_id], [context_id]
+                        if self.trainer_id == count % self.trainer_num:
+                            line = preprocess.text_strip(line)
+                            word_ids = [
+                                self.word_to_id_[word] for word in line.split()
+                                if word in self.word_to_id_
+                            ]
+                            for idx, target_id in enumerate(word_ids):
+                                context_word_ids = self.get_context_words(
+                                    word_ids, idx, self.window_size_)
+                                for context_id in context_word_ids:
+                                    yield [target_id], [context_id]
+                        else:
+                            pass
+                        count += 1
 
         def _reader_hs():
             for file in self.filelist:
                 with open(self.data_path_ + "/" + file, 'r') as f:
                     logger.info("running data in {}".format(self.data_path_ +
                                                             "/" + file))
+                    count = 1
                     for line in f:
-                        line = preprocess.text_strip(line)
-                        word_ids = [
-                            self.word_to_id_[word] for word in line.split()
-                            if word in self.word_to_id_
-                        ]
-                        for idx, target_id in enumerate(word_ids):
-                            context_word_ids = self.get_context_words(
-                                word_ids, idx, self.window_size_)
-                            for context_id in context_word_ids:
-                                yield [target_id], [context_id], [
-                                    self.word_to_code[self.id_to_word[
-                                        context_id]]
-                                ], [
-                                    self.word_to_path[self.id_to_word[
-                                        context_id]]
-                                ]
+                        if self.trainer_id == count % self.trainer_num:
+                            line = preprocess.text_strip(line)
+                            word_ids = [
+                                self.word_to_id_[word] for word in line.split()
+                                if word in self.word_to_id_
+                            ]
+                            for idx, target_id in enumerate(word_ids):
+                                context_word_ids = self.get_context_words(
+                                    word_ids, idx, self.window_size_)
+                                for context_id in context_word_ids:
+                                    yield [target_id], [context_id], [
+                                        self.word_to_code[self.id_to_word[
+                                            context_id]]
+                                    ], [
+                                        self.word_to_path[self.id_to_word[
+                                            context_id]]
+                                    ]
+                        else:
+                            pass
+                        count += 1
 
         if not with_hs:
             return _reader

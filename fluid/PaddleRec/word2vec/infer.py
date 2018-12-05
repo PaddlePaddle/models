@@ -139,10 +139,14 @@ def infer_during_train(args):
         current_list = os.listdir(args.model_output_dir)
         # logger.info("current_list is : {}".format(current_list))
         # logger.info("model_file_list is : {}".format(model_file_list))
+        solved_new = True
         if set(model_file_list) == set(current_list):
-            logger.info("No New models created")
+            if solved_new:
+                solved_new = False
+                logger.info("No New models created")
             pass
         else:
+            solved_new = True
             increment_models = list()
             for f in current_list:
                 if f not in model_file_list:
