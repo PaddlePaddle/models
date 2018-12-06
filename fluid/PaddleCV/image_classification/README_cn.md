@@ -58,7 +58,7 @@ python train.py \
        --model=SE_ResNeXt50_32x4d \
        --batch_size=32 \
        --total_images=1281167 \
-       --class_dim=1000
+       --class_dim=1000 \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
        --with_mem_opt=False \
@@ -79,8 +79,9 @@ python train.py \
 * **lr**: initialized learning rate. Default: 0.1.
 * **pretrained_model**: model path for pretraining. Default: None.
 * **checkpoint**: the checkpoint path to resume. Default: None.
+* **model_category**: the category of models, ("models"|"models_name"). Default:"models".
 
-**数据读取器说明：** 数据读取器定义在```reader.py```中。在[训练阶段](#training-a-model), 默认采用的增广方式是随机裁剪与水平翻转, 而在[评估](#inference)与[推断](#inference)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
+**数据读取器说明：** 数据读取器定义在```reader.py```和```reader_cv2.py```中, 一般, CV2 reader可以提高数据读取速度, reader(PIL)可以得到相对更高的精度, 在[训练阶段](#training-a-model), 默认采用的增广方式是随机裁剪与水平翻转, 而在[评估](#inference)与[推断](#inference)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
 * 旋转
 * 颜色抖动
 * 随机裁剪
@@ -183,27 +184,24 @@ Test-12-score: [15.040644], class [386]
 ```
 
 ## 已有模型及其性能
+Models包括两种模型：带有参数名字的模型，和不带有参数名字的模型。通过设置 ```model_category = models_name```来训练带有参数名字的模型。
 
 表格中列出了在"models"目录下支持的神经网络种类，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度；如无特征说明，训练模型的初始学习率为```0.1```，每隔预定的epochs会下降```0.1```。预训练模型可以通过点击相应模型的名称进行下载。
 
-|model | top-1/top-5 accuracy
-|- | -:
-|[AlexNet](http://paddle-imagenet-models.bj.bcebos.com/alexnet_model.tar) | 57.21%/79.72%
-|VGG11 | -
-|VGG13 | -
-|VGG16 | -
-|VGG19 | -
-|GoogleNet | -
-|InceptionV4 | -
-|MobileNet | -
-|[ResNet50](http://paddle-imagenet-models.bj.bcebos.com/resnet_50_model.tar) | 76.63%/93.10%
-|ResNet101 | -
-|ResNet152 | -
-|[SE_ResNeXt50_32x4d](http://paddle-imagenet-models.bj.bcebos.com/se_resnext_50_model.tar) | 78.33%/93.96%
-|SE_ResNeXt101_32x4d | -
-|SE_ResNeXt152_32x4d | -
-|DPN68 | -
-|DPN92 | -
-|DPN98 | -
-|DPN107 | -
-|DPN131 | -
+
+- Released models: specify parameter names
+
+|model | top-1/top-5 accuracy(PIL)| top-1/top-5 accuracy(CV2) |
+|- |:-: |:-:|
+|[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.zip) | 56.71%/79.18% | 55.88%/78.65% |
+|[VGG11](http://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretained.zip) | 68.92%/88.66% | 68.61%/88.60% |
+|[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.zip) | 70.91%/89.54% | 70.51%/89.35% |
+|[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.zip) | 76.35%/92.80% | 76.22%/92.92% |
+|[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.zip) | 77.49%/93.57% | 77.56%/93.64% |
+
+- Released models: not specify parameter names
+
+|model | top-1/top-5 accuracy(PIL)| top-1/top-5 accuracy(CV2) |
+|- |:-: |:-:|
+|[ResNet152](http://paddle-imagenet-models.bj.bcebos.com/ResNet152_pretrained.zip) | 78.18%/93.93% | 78.11%/94.04% |
+|[SE_ResNeXt50_32x4d](http://paddle-imagenet-models.bj.bcebos.com/se_resnext_50_model.tar) | 78.32%/93.96% | 77.58%/93.73% |
