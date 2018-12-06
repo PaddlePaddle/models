@@ -9,7 +9,7 @@ import paddle
 import paddle.fluid as fluid
 import models
 #import reader_cv2 as reader
-import reader_PIL as reader
+import reader as reader
 import argparse
 import functools
 from models.learning_rate import cosine_decay
