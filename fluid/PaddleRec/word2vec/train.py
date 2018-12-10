@@ -257,9 +257,9 @@ def train(args):
 
     optimizer = None
     if args.with_Adam:
-        optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
+        optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
     else:
-        optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
+        optimizer = fluid.optimizer.SGD(learning_rate=1e-4)
 
     optimizer.minimize(loss)
 

@@ -31,8 +31,9 @@ python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchma
 The command line options for training can be listed by `python train.py -h`.
 
 ### Local Train:
+we set CPU_NUM=1 as default CPU_NUM to execute
 ```bash
-export CPU_NUM=1
+export CPU_NUM=1 && \
 python train.py \
         --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
         --dict_path data/1-billion_dict \

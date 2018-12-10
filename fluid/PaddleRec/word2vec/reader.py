@@ -125,10 +125,10 @@ class Word2VecReader(object):
                                 for context_id in context_word_ids:
                                     yield [target_id], [context_id], [
                                         self.word_to_code[self.id_to_word[
-                                            context_id]]
+                                            target_id]]
                                     ], [
                                         self.word_to_path[self.id_to_word[
-                                            context_id]]
+                                            target_id]]
                                     ]
                         else:
                             pass

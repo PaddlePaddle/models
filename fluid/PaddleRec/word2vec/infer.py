@@ -113,6 +113,13 @@ class PQ_Entry(object):
 
 def topK(k, emb, test_emb):
     pq = PriorityQueue(k + 1)
+    while not pq.empty():
+        try:
+            pq.get(False)
+        except Empty:
+            continue
+        pq.task_done()
+
     if len(emb) <= k:
         for i in range(len(emb)):
             x = cosine_similarity([emb[i]], [test_emb])
@@ -181,5 +188,7 @@ if __name__ == '__main__':
     # while setting infer_once please specify the dir to models file with --model_output_dir
     if args.infer_once:
         infer_once(args)
-    if args.infer_during_train:
+    elif args.infer_during_train:
         infer_during_train(args)
+    else:
+        pass
