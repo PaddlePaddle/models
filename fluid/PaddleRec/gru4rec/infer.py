@@ -78,6 +78,6 @@ if __name__ == "__main__":
         test_dir, "", batch_size=batch_size,
         buffer_size=1000, word_freq_threshold=0, is_train=False)
 
-    for epoch in xrange(start_index, last_index + 1):
+    for epoch in range(start_index, last_index + 1):
         epoch_path = model_dir + "/epoch_" + str(epoch)
         infer(test_reader=test_reader, use_cuda=use_cuda, model_path=epoch_path)
