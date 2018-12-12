@@ -200,7 +200,6 @@ def train(args):
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()
-
     if args.enable_ce:
         startup_prog.random_seed = 1000
         train_prog.random_seed = 1000
@@ -240,7 +239,7 @@ def train(args):
     if visible_device:
         device_num = len(visible_device.split(','))
     else:
-        device_num = subprocess.check_output(['nvidia-smi', '-L']).count('\n')
+        device_num = subprocess.check_output(['nvidia-smi', '-L']).decode().count('\n')
 
     train_batch_size = args.batch_size / device_num
     test_batch_size = 8
