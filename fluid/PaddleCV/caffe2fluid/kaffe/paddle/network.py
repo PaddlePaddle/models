@@ -280,8 +280,17 @@ class Network(object):
             param_attr=fluid.ParamAttr(name=prefix + 'negslope'))
         return output
 
-    def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
-             name):
+    def pool(self,
+             pool_type,
+             input,
+             k_h,
+             k_w,
+             s_h,
+             s_w,
+             ceil_mode,
+             padding,
+             name,
+             exclusive=True):
         # Get the number of channels in the input
         in_hw = input.shape[2:]
         k_hw = [k_h, k_w]
@@ -295,7 +304,8 @@ class Network(object):
             pool_stride=s_hw,
             pool_padding=padding,
             ceil_mode=ceil_mode,
-            pool_type=pool_type)
+            pool_type=pool_type,
+            exclusive=exclusive)
         return output
 
     @layer
