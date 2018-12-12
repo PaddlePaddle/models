@@ -69,7 +69,7 @@ def maybe_open(file_name):
                 "     |- wordvec.txt\n")
         raise RuntimeError(msg)
 
-    return open(file_name, 'r')
+    return open(file_name, 'r', encoding="utf-8")
 
 
 def tokenized_question_pairs(file_name):
