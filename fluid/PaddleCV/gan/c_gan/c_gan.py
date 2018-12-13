@@ -47,6 +47,7 @@ add_arg('run_ce',            bool,  False,       "Whether to run for model ce.")
 
 
 def loss(x, label):
+    #return fluid.layers.mean(x * (label - 0.5))
     return fluid.layers.mean(
         fluid.layers.sigmoid_cross_entropy_with_logits(
             x=x, label=label))
