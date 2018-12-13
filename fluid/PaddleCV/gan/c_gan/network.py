@@ -4,7 +4,6 @@ from __future__ import print_function
 import paddle
 import paddle.fluid as fluid
 from utility import get_parent_function_name
-import os
 
 gf_dim = 64
 df_dim = 64
@@ -17,9 +16,6 @@ y_dim = 1
 output_height = 28
 output_width = 28
 
-use_cudnn = True
-if 'ce_mode' in os.environ:
-    use_cudnn = False
 
 def bn(x, name=None, act='relu'):
     if name is None:
@@ -46,7 +42,6 @@ def conv(x, num_filters, name=None, act=None):
         pool_stride=2,
         param_attr=name + 'w',
         bias_attr=name + 'b',
-        use_cudnn=use_cudnn,
         act=act)
 
 
@@ -81,7 +76,6 @@ def deconv(x,
         stride=stride,
         dilation=dilation,
         padding=padding,
-        use_cudnn=use_cudnn,
         act=act)
 
 
@@ -107,7 +101,7 @@ def D_cond(image, y):
     h2 = bn(fc(h1, dfc_dim), act='leaky_relu')
     h2 = fluid.layers.concat([h2, y], 1)
 
-    h3 = fc(h2, 1, act='sigmoid')
+    h3 = fc(h2, 1)
     return h3
 
 
@@ -137,7 +131,7 @@ def D(x):
     x = conv(x, df_dim, act='leaky_relu')
     x = bn(conv(x, df_dim * 2), act='leaky_relu')
     x = bn(fc(x, dfc_dim), act='leaky_relu')
-    x = fc(x, 1, act='sigmoid')
+    x = fc(x, 1, act=None)
     return x
 
 

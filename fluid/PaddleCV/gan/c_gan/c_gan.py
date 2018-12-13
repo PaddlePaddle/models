@@ -23,14 +23,12 @@ import functools
 import matplotlib
 import numpy as np
 import paddle
-import time
 import paddle.fluid as fluid
 from utility import get_parent_function_name, plot, check, add_arguments, print_arguments
 from network import G_cond, D_cond
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-
 
 NOISE_SIZE = 100
 LEARNING_RATE = 2e-4
@@ -42,21 +40,14 @@ add_arg('batch_size',        int,   121,          "Minibatch size.")
 add_arg('epoch',             int,   20,        "The number of epoched to be trained.")
 add_arg('output',            str,   "./output", "The directory the model and the test result to be saved to.")
 add_arg('use_gpu',           bool,  True,       "Whether to use GPU to train.")
-add_arg('run_ce',            bool,  False,       "Whether to run for model ce.")
 # yapf: enable
 
 
 def loss(x, label):
-    return fluid.layers.mean(
-        fluid.layers.sigmoid_cross_entropy_with_logits(
-            x=x, label=label))
+    return fluid.layers.mean(x * (label - 0.5))
 
 
 def train(args):
-
-    if args.run_ce:
-        np.random.seed(10)
-        fluid.default_startup_program().random_seed = 90
 
     d_program = fluid.Program()
     dg_program = fluid.Program()
@@ -80,10 +71,7 @@ def train(args):
         g_program_test = dg_program.clone(for_test=True)
 
         dg_logit = D_cond(g_img, conditions)
-        dg_loss = loss(
-            dg_logit,
-            fluid.layers.fill_constant_batch_size_like(
-                input=noise, dtype='float32', shape=[-1, 1], value=1.0))
+        dg_loss = loss(dg_logit, 1)
 
     opt = fluid.optimizer.Adam(learning_rate=LEARNING_RATE)
 
@@ -96,22 +84,16 @@ def train(args):
     if args.use_gpu:
         exe = fluid.Executor(fluid.CUDAPlace(0))
     exe.run(fluid.default_startup_program())
-    if args.run_ce:
-        train_reader = paddle.batch(
-                paddle.dataset.mnist.train(),
-                batch_size=args.batch_size)
-    else:
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
-                paddle.dataset.mnist.train(), buf_size=60000),
-            batch_size=args.batch_size)
+
+    train_reader = paddle.batch(
+        paddle.reader.shuffle(
+            paddle.dataset.mnist.train(), buf_size=60000),
+        batch_size=args.batch_size)
 
     NUM_TRAIN_TIMES_OF_DG = 2
     const_n = np.random.uniform(
         low=-1.0, high=1.0,
         size=[args.batch_size, NOISE_SIZE]).astype('float32')
-    t_time = 0
-    losses = [[],[]]
     for pass_id in range(args.epoch):
         for batch_id, data in enumerate(train_reader()):
             if len(data) != args.batch_size:
@@ -128,7 +110,7 @@ def train(args):
             fake_labels = np.zeros(
                 shape=[real_image.shape[0], 1], dtype='float32')
             total_label = np.concatenate([real_labels, fake_labels])
-            s_time = time.time()
+
             generated_image = exe.run(
                 g_program,
                 feed={'noise': noise_data,
@@ -143,7 +125,7 @@ def train(args):
                                    'label': fake_labels,
                                    'conditions': conditions_data
                                },
-                               fetch_list={d_loss})[0][0]
+                               fetch_list={d_loss})
 
             d_loss_2 = exe.run(d_program,
                                feed={
@@ -151,25 +133,20 @@ def train(args):
                                    'label': real_labels,
                                    'conditions': conditions_data
                                },
-                               fetch_list={d_loss})[0][0]
+                               fetch_list={d_loss})
 
-            d_loss_n = d_loss_1 + d_loss_2
-            losses[0].append(d_loss_n)
+            d_loss_np = [d_loss_1[0][0], d_loss_2[0][0]]
+
             for _ in six.moves.xrange(NUM_TRAIN_TIMES_OF_DG):
                 noise_data = np.random.uniform(
                     low=-1.0, high=1.0,
                     size=[args.batch_size, NOISE_SIZE]).astype('float32')
-                dg_loss_n = exe.run(
+                dg_loss_np = exe.run(
                     dg_program,
                     feed={'noise': noise_data,
                           'conditions': conditions_data},
-                    fetch_list={dg_loss})[0][0]
-                losses[1].append(dg_loss_n)
-            t_time += (time.time() - s_time)
-
-            
-
-            if batch_id % 10 == 0 and not args.run_ce:
+                    fetch_list={dg_loss})[0]
+            if batch_id % 10 == 0:
                 if not os.path.exists(args.output):
                     os.makedirs(args.output)
                 # generate image each batch
@@ -181,7 +158,8 @@ def train(args):
                 total_images = np.concatenate([real_image, generated_images])
                 fig = plot(total_images)
                 msg = "Epoch ID={0}\n Batch ID={1}\n D-Loss={2}\n DG-Loss={3}\n gen={4}".format(
-                    pass_id, batch_id, d_loss_n, dg_loss_n, check(generated_images))
+                    pass_id, batch_id, np.mean(d_loss_np), dg_loss_np,
+                    check(generated_images))
                 print(msg)
                 plt.title(msg)
                 plt.savefig(
@@ -190,11 +168,6 @@ def train(args):
                     bbox_inches='tight')
                 plt.close(fig)
 
-    if args.run_ce:
-        print("kpis,cgan_d_train_cost,{}".format(np.mean(losses[0])))
-        print("kpis,cgan_g_train_cost,{}".format(np.mean(losses[1])))
-        print("kpis,cgan_duration,{}".format(t_time / args.epoch))
-            
 
 if __name__ == "__main__":
     args = parser.parse_args()
