@@ -68,8 +68,10 @@ def maybe_open(file_name):
                 "     |- readme.txt\n"
                 "     |- wordvec.txt\n")
         raise RuntimeError(msg)
-
-    return open(file_name, 'r', encoding="utf-8")
+    if sys.version_info <= (3, 0): # for python2
+        return open(file_name, 'r')
+    else:
+        return open(file_name, 'r', encoding="utf-8")
 
 
 def tokenized_question_pairs(file_name):
