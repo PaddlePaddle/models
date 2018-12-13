@@ -40,7 +40,10 @@ add_arg('model',            str,   "SE_ResNeXt50_32x4d", "Set the network to use
 add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
 add_arg('data_dir',         str,   "./data/ILSVRC2012",  "The ImageNet dataset root dir.")
 add_arg('model_category',   str,   "models",             "Whether to use models_name or not, valid value:'models','models_name'" )
-# yapf: enabl
+add_arg('fp16',             bool,  False,                "Enable half precision training with fp16." )
+add_arg('kaiming_init',     bool,  True,                 "Use kaiming init algo for conv layers." )
+add_arg('scale_loss',       int,   1,                    "Scale loss for fp16." )
+# yapf: enable
 
 
 def set_models(model):
@@ -146,7 +149,10 @@ def net_config(image, label, model, args):
         acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
     else:
         out = model.net(input=image, class_dim=class_dim)
-        cost = fluid.layers.cross_entropy(input=out, label=label)
+        if args.scale_loss > 1:
+            cost = fluid.layers.cross_entropy(input=out, label=label) * float(args.scale_loss)
+        else:
+            cost = fluid.layers.cross_entropy(input=out, label=label)
 
         avg_cost = fluid.layers.mean(x=cost)
         acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
@@ -155,6 +161,62 @@ def net_config(image, label, model, args):
     return avg_cost, acc_top1, acc_top5
 
 
+def cast_fp16_to_fp32(i, o, prog):
+    prog.global_block().append_op(
+        type="cast",
+        inputs={"X": i},
+        outputs={"Out": o},
+        attrs={
+            "in_dtype": fluid.core.VarDesc.VarType.FP16,
+            "out_dtype": fluid.core.VarDesc.VarType.FP32
+        }
+    )
+
+def cast_fp32_to_fp16(i, o, prog):
+    prog.global_block().append_op(
+        type="cast",
+        inputs={"X": i},
+        outputs={"Out": o},
+        attrs={
+            "in_dtype": fluid.core.VarDesc.VarType.FP32,
+            "out_dtype": fluid.core.VarDesc.VarType.FP16
+        }
+    )
+
+def copy_to_master_param(p, block):
+    v = block.vars.get(p.name, None)
+    if v is None:
+        raise ValueError("no param name %s found!" % p.name)
+    new_p = fluid.framework.Parameter(
+        block=block,
+        shape=v.shape,
+        dtype=fluid.core.VarDesc.VarType.FP32,
+        type=v.type,
+        lod_level=v.lod_level,
+        stop_gradient=p.stop_gradient,
+        trainable=p.trainable,
+        optimize_attr=p.optimize_attr,
+        regularizer=p.regularizer,
+        gradient_clip_attr=p.gradient_clip_attr,
+        error_clip=p.error_clip,
+        name=v.name + ".master")
+    return new_p
+
+def update_op_role_var(params_grads, master_params_grads, main_prog):
+    orig_grad_name_set = set()
+    for _, g in params_grads:
+        orig_grad_name_set.add(g.name)
+    master_g2p_dict = dict()
+    for idx, master in enumerate(master_params_grads):
+        orig = params_grads[idx]
+        master_g2p_dict[orig[1].name] = [master[0].name, master[1].name]
+    for op in main_prog.global_block().ops:
+        for oname in op.output_arg_names:
+            if oname in orig_grad_name_set:
+                # rename
+                print("setting to ", master_g2p_dict[oname])
+                op._set_attr("op_role_var", master_g2p_dict[oname])
+
 def build_program(is_train, main_prog, startup_prog, args):
     image_shape = [int(m) for m in args.image_shape.split(",")]
     model_name = args.model
@@ -162,15 +224,21 @@ def build_program(is_train, main_prog, startup_prog, args):
     assert model_name in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
     model = models.__dict__[model_name]()
+    if args.fp16:
+        reader_dtype = "float16"
+    else:
+        reader_dtype = "float32"
     with fluid.program_guard(main_prog, startup_prog):
         py_reader = fluid.layers.py_reader(
             capacity=16,
             shapes=[[-1] + image_shape, [-1, 1]],
             lod_levels=[0, 0],
-            dtypes=["float32", "int64"],
+            dtypes=[reader_dtype, "int64"],
             use_double_buffer=True)
         with fluid.unique_name.guard():
             image, label = fluid.layers.read_file(py_reader)
+            if args.fp16:
+                image = fluid.layers.cast(image, reader_dtype)
             avg_cost, acc_top1, acc_top5 = net_config(image, label, model, args)
             avg_cost.persistable = True
             acc_top1.persistable = True
@@ -184,7 +252,36 @@ def build_program(is_train, main_prog, startup_prog, args):
                 params["learning_strategy"]["name"] = args.lr_strategy
 
                 optimizer = optimizer_setting(params)
-                optimizer.minimize(avg_cost)
+                params_grads = optimizer._backward(avg_cost)
+
+                if args.fp16:
+                    master_params_grads = []
+                    tmp_role = main_prog._current_role
+                    OpRole = fluid.core.op_proto_and_checker_maker.OpRole
+                    main_prog._current_role = OpRole.Backward
+                    for p, g in params_grads:
+                        master_param = copy_to_master_param(p, main_prog.global_block())
+                        startup_master_param = startup_prog.global_block()._clone_variable(master_param)
+                        startup_p = startup_prog.global_block().var(p.name)
+                        cast_fp16_to_fp32(startup_p, startup_master_param, startup_prog)
+
+                        master_grad = fluid.layers.cast(g, "float32")
+                        if args.scale_loss > 1:
+                            master_grad = master_grad / float(args.scale_loss)
+                        master_params_grads.append([master_param, master_grad])
+                    main_prog._current_role = tmp_role
+                    update_op_role_var(params_grads, master_params_grads, main_prog)
+
+                    optimizer.minimize(avg_cost, user_params_grads=master_params_grads)
+                    
+                    for idx, m_p_g in enumerate(master_params_grads):
+                        train_p, train_g = params_grads[idx]
+                        if train_p.name.startswith("batch_norm"):
+                            continue
+                        with main_prog._optimized_guard([m_p_g[0], m_p_g[1]]):
+                            cast_fp32_to_fp16(m_p_g[0], train_p, main_prog)
+                else:
+                    optimizer.minimize(avg_cost)
 
     return py_reader, avg_cost, acc_top1, acc_top5
 
@@ -220,9 +317,26 @@ def train(args):
         fluid.memory_optimize(train_prog)
         fluid.memory_optimize(test_prog)
 
+    with open("train_prog", "w") as fn:
+        fn.write(str(train_prog))
+    with open("startup_prog", "w") as fn:
+        fn.write(str(startup_prog))
+
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
+
+    if args.fp16 and args.kaiming_init:
+        import torch
+        conv2d_w_vars = [var for var in startup_prog.global_block().vars.values() if var.name.startswith('conv2d_')]
+        for var in conv2d_w_vars:
+            torch_w = torch.empty(var.shape)
+            kaiming_np = torch.nn.init.kaiming_normal_(torch_w, mode='fan_out', nonlinearity='relu').numpy()
+            tensor = fluid.global_scope().find_var(var.name).get_tensor()
+            if var.name.find(".master") == -1:
+                tensor.set(np.array(kaiming_np, dtype='float16').view(np.uint16), place)
+            else:
+                tensor.set(np.array(kaiming_np, dtype='float32'), place)
 
     if checkpoint is not None:
         fluid.io.load_persistables(exe, checkpoint, main_program=train_prog)
@@ -239,7 +353,8 @@ def train(args):
     if visible_device:
         device_num = len(visible_device.split(','))
     else:
-        device_num = subprocess.check_output(['nvidia-smi', '-L']).decode().count('\n')
+        device_num = 8
+        # device_num = subprocess.check_output(['nvidia-smi', '-L']).decode().count('\n')
 
     train_batch_size = args.batch_size / device_num
     test_batch_size = 8
@@ -293,7 +408,7 @@ def train(args):
                 train_info[1].append(acc1)
                 train_info[2].append(acc5)
                 train_time.append(period)
-                if batch_id % 10 == 0:
+                if batch_id % 1 == 0:
                     print("Pass {0}, trainbatch {1}, loss {2}, \
                         acc1 {3}, acc5 {4} time {5}"
                           .format(pass_id, batch_id, loss, acc1, acc5,
