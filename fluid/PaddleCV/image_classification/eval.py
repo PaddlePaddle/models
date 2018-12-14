@@ -12,7 +12,7 @@ import models
 import reader as reader
 import argparse
 import functools
-from models.learning_rate import cosine_decay
+from utils.learning_rate import cosine_decay
 from utility import add_arguments, print_arguments
 import math
 
