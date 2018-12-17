@@ -78,7 +78,7 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim, sparse_
             param_attr=sparse_fm_param_attr, is_sparse=True)
         return fluid.layers.sequence_pool(input=emb, pool_type='average')
 
-    sparse_embed_seq = map(embedding_layer, sparse_input_ids)
+    sparse_embed_seq = list(map(embedding_layer, sparse_input_ids))
     concated = fluid.layers.concat(sparse_embed_seq + [dense_input], axis=1)
     fc1 = fluid.layers.fc(input=concated, size=400, act='relu',
                           param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(
@@ -134,7 +134,7 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim):
                                                       use_double_buffer=True)
     words = fluid.layers.read_file(py_reader)
 
-    sparse_embed_seq = map(embedding_layer, words[1:-1])
+    sparse_embed_seq = list(map(embedding_layer, words[1:-1]))
     concated = fluid.layers.concat(sparse_embed_seq + words[0:1], axis=1)
 
     fc1 = fluid.layers.fc(input=concated, size=400, act='relu',
