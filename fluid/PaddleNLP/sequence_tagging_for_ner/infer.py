@@ -38,12 +38,10 @@ def infer(model_path, batch_size, test_data_file, vocab_file, target_file,
         for data in test_data():
             word = to_lodtensor([x[0] for x in data], place)
             mark = to_lodtensor([x[1] for x in data], place)
-            target = to_lodtensor([x[2] for x in data], place)
             crf_decode = exe.run(
                 inference_program,
                 feed={"word": word,
-                      "mark": mark,
-                      "target": target},
+                      "mark": mark},
                 fetch_list=fetch_targets,
                 return_numpy=False)
             lod_info = (crf_decode[0].lod())[0]
