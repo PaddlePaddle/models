@@ -64,7 +64,7 @@ def infer(model_path, batch_size, test_data_file, vocab_file, target_file,
 
 if __name__ == "__main__":
     infer(
-        model_path="models/params_pass_16",
+        model_path="models/params_pass_0",
         batch_size=6,
         test_data_file="data/test",
         vocab_file="data/vocab.txt",
