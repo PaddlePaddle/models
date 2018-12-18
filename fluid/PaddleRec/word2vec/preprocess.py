@@ -31,9 +31,9 @@ def parse_args():
 
     return parser.parse_args()
 
-
+pattern = re.compile("[^a-z] ")
 def text_strip(text):
-    return re.sub("[^a-z ]", "", text)
+    return pattern.sub("", text)
 
 
 def build_Huffman(word_count, max_code_length):

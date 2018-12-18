@@ -10,6 +10,23 @@ logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
 
+class NumpyRandomInt(object):
+    def __init__(self, a, b, buf_size=1000):
+        self.idx = 0
+        self.buffer = np.random.random_integers(a, b, buf_size)
+        self.a = a
+        self.b = b
+
+    def __call__(self):
+        if self.idx == len(self.buffer):
+            self.buffer = np.random.random_integers(self.a, self.b, len(self.buffer))
+            self.idx = 0
+
+        result = self.buffer[self.idx]
+        self.idx += 1
+        return result
+
+
 class Word2VecReader(object):
     def __init__(self,
                  dict_path,
@@ -37,7 +54,7 @@ class Word2VecReader(object):
             for line in f:
                 word, count = line.split()[0], int(line.split()[1])
                 self.word_to_id_[word] = word_id
-                self.id_to_word[word_id] = word  #build id to word dict
+                self.id_to_word[word_id] = word  # build id to word dict
                 word_id += 1
                 word_counts.append(count)
                 word_all_count += count
@@ -67,7 +84,9 @@ class Word2VecReader(object):
                     line.split(':')[1], dtype=int, sep=' ')
         print("word_pcode dict_size = " + str(len(self.word_to_code)))
 
-    def get_context_words(self, words, idx, window_size):
+        self.random_generator = NumpyRandomInt(1, self.window_size_ + 1)
+
+    def get_context_words(self, words, idx):
         """
         Get the context word list of target word.
 
@@ -75,13 +94,15 @@ class Word2VecReader(object):
         idx: input word index
         window_size: window size
         """
-        target_window = np.random.randint(1, window_size + 1)
+        target_window = self.random_generator()
         # need to keep in mind that maybe there are no enough words before the target word.
-        start_point = idx - target_window if (idx - target_window) > 0 else 0
+        start_point = idx - target_window  # if (idx - target_window) > 0 else 0
+        if start_point < 0:
+            start_point = 0
         end_point = idx + target_window
         # context words of the target word
-        targets = set(words[start_point:idx] + words[idx + 1:end_point + 1])
-        return list(targets)
+        targets = words[start_point:idx] + words[idx + 1:end_point + 1]
+        return set(targets)
 
     def train(self, with_hs):
         def _reader():
@@ -98,10 +119,10 @@ class Word2VecReader(object):
                                 if word in self.word_to_id_
                             ]
                             for idx, target_id in enumerate(word_ids):
-                                context_word_ids = self.get_context_words(
-                                    word_ids, idx, self.window_size_)
+                                context_word_ids = self.get_context_words(word_ids, idx)
                                 for context_id in context_word_ids:
                                     yield [target_id], [context_id]
+
                         else:
                             pass
                         count += 1
@@ -120,16 +141,15 @@ class Word2VecReader(object):
                                 if word in self.word_to_id_
                             ]
                             for idx, target_id in enumerate(word_ids):
-                                context_word_ids = self.get_context_words(
-                                    word_ids, idx, self.window_size_)
+                                context_word_ids = self.get_context_words(word_ids, idx)
                                 for context_id in context_word_ids:
                                     yield [target_id], [context_id], [
                                         self.word_to_code[self.id_to_word[
                                             context_id]]
                                     ], [
-                                        self.word_to_path[self.id_to_word[
-                                            context_id]]
-                                    ]
+                                              self.word_to_path[self.id_to_word[
+                                                  context_id]]
+                                          ]
                         else:
                             pass
                         count += 1
@@ -142,13 +162,10 @@ class Word2VecReader(object):
 
 if __name__ == "__main__":
     window_size = 10
-
-    reader = Word2VecReader("data/enwik9_dict", "data/enwik9", window_size)
-    i = 0
-    for x, y in reader.train()():
-        print("x: " + str(x))
-        print("y: " + str(y))
-        print("\n")
-        if i == 10:
-            exit(0)
-        i += 1
+    reader = Word2VecReader("data/1-billion_dict",
+                            "data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled/",
+                            ['news.en-00001-of-00100'],
+                            trainer_id=0, trainer_num=1, window_size=5)
+    # i = 0
+    for x, y in reader.train(False)():
+        pass

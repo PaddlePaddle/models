@@ -4,11 +4,10 @@ import argparse
 import logging
 import os
 import time
-
 import numpy as np
-
+import six
 # disable gpu training for this example
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+# os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import paddle
 import paddle.fluid as fluid
@@ -49,7 +48,7 @@ def parse_args():
     parser.add_argument(
         '--num_passes',
         type=int,
-        default=10,
+        default=1,
         help="The number of passes to train (default: 10)")
     parser.add_argument(
         '--model_output_dir',
@@ -126,14 +125,35 @@ def parse_args():
     return parser.parse_args()
 
 
-def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
-            reader.train((args.with_hs or (not args.with_nce))),
-            buf_size=args.batch_size * 100),
-        batch_size=args.batch_size)
+def convert_python_to_tensor(batch_size, sample_reader):
+    def __reader__():
+        result = [[], [], [], []]
+        for sample in sample_reader():
+            for i, fea in enumerate(sample):
+                result[i].append(fea)
 
-    py_reader.decorate_paddle_reader(train_reader)
+            if len(result[0]) == batch_size:
+                tensor_result = []
+                for tensor in result:
+                    t = fluid.Tensor()
+                    dat = np.array(tensor, dtype='int64')
+                    if len(dat.shape) > 2:
+                        dat = dat.reshape((dat.shape[0], dat.shape[2]))
+                    elif len(dat.shape) == 1:
+                        dat = dat.reshape((-1, 1))
+                    t.set(dat, fluid.CPUPlace())
+
+                    tensor_result.append(t)
+                yield tensor_result
+                result = [[], [], [], []]
+
+    return __reader__
+
+
+def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
+    py_reader.decorate_tensor_provider(convert_python_to_tensor(
+        args.batch_size, reader.train((args.with_hs or (not args.with_nce)))))
+    # py_reader.decorate_paddle_reader(train_reader)
 
     place = fluid.CPUPlace()
 
@@ -144,6 +164,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
 
     print("CPU_NUM:" + str(os.getenv("CPU_NUM")))
     exec_strategy.num_threads = int(os.getenv("CPU_NUM"))
+    exec_strategy.use_experimental_executor = True
 
     build_strategy = fluid.BuildStrategy()
     if int(os.getenv("CPU_NUM")) > 1:
@@ -156,43 +177,31 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
         build_strategy=build_strategy,
         exec_strategy=exec_strategy)
 
-    profile_state = "CPU"
-    profiler_step = 0
-    profiler_step_start = 20
-    profiler_step_end = 30
-
     for pass_id in range(args.num_passes):
-        epoch_start = time.time()
         py_reader.start()
+        time.sleep(10)  # wait reading data.
+        epoch_start = time.time()
         batch_id = 0
         start = time.clock()
-
+        
         try:
             while True:
-
-                if profiler_step == profiler_step_start:
-                    fluid.profiler.start_profiler(profile_state)
-
                 loss_val = train_exe.run(fetch_list=[loss.name])
                 loss_val = np.mean(loss_val)
-
-                if profiler_step == profiler_step_end:
-                    fluid.profiler.stop_profiler('total', 'trainer_profile.log')
-                    profiler_step += 1
-                else:
-                    profiler_step += 1
 
                 if batch_id % 50 == 0:
                     logger.info(
                         "TRAIN --> pass: {} batch: {} loss: {} reader queue:{}".
-                        format(pass_id, batch_id,
-                               loss_val.mean() / args.batch_size,
-                               py_reader.queue.size()))
+                            format(pass_id, batch_id,
+                                   loss_val,
+                                   py_reader.queue.size()))
+                if batch_id == 1000:
+                    exit(0)
                 if args.with_speed:
-                    if batch_id % 1000 == 0 and batch_id != 0:
+                    if batch_id % 100 == 0 and batch_id != 0:
                         elapsed = (time.clock() - start)
                         start = time.clock()
-                        samples = 1001 * args.batch_size * int(
+                        samples = 101 * args.batch_size * int(
                             os.getenv("CPU_NUM"))
                         logger.info("Time used: {}, Samples/Sec: {}".format(
                             elapsed, samples / elapsed))
@@ -229,11 +238,12 @@ def GetFileList(data_path):
 
 
 def train(args):
-
+    print("I am ehre")
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    filelist = GetFileList(args.train_data_path)
+    filelist = GetFileList(args.train_data_path)[:1]
+    print(filelist)
     word2vec_reader = None
     if args.is_local or os.getenv("PADDLE_IS_LOCAL", "1") == "1":
         word2vec_reader = reader.Word2VecReader(
@@ -329,7 +339,7 @@ def env_declar():
         print("%30s %s \n" % (key, os.environ[key]))
 
     if os.environ["TRAINING_ROLE"] == "PSERVER" or os.environ[
-            "PADDLE_IS_LOCAL"] == "0":
+        "PADDLE_IS_LOCAL"] == "0":
         os.environ["PADDLE_TRAINING_ROLE"] = os.environ["TRAINING_ROLE"]
         os.environ["PADDLE_PSERVER_PORT"] = os.environ["PADDLE_PORT"]
         os.environ["PADDLE_PSERVER_IPS"] = os.environ["PADDLE_PSERVERS"]

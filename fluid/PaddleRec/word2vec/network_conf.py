@@ -117,7 +117,6 @@ def skip_gram_word2vec(dict_size,
         cost = cost_hs
     if with_nce and with_hsigmoid:
         cost = fluid.layers.elementwise_add(cost_nce, cost_hs)
-
     avg_cost = fluid.layers.reduce_mean(cost)
 
     return avg_cost, py_reader
