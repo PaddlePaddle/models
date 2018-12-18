@@ -61,6 +61,11 @@ sh cluster_train.sh
 
 您也可以在`build_test_case`方法中模仿给出的例子增加自己的测试
 
+要从测试文件运行测试用例，请将测试文件下载到“test”目录中
+我们为每个案例提供以下结构的测试：
+        `word1 word2 word3 word4`
+所以我们可以将它构建成`word1  -  word2 + word3 = word4`
+
 训练中预测：
 
 ```bash

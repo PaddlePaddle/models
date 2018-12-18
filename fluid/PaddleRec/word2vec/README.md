@@ -65,6 +65,11 @@ For: boy - girl + aunt = uncle
 
 You can also add your own tests by mimicking the examples given in the `build_test_case` method.
 
+To running test case from test files, please download the test files into 'test' directory
+we provide test for each case with the following structure:
+        `word1 word2 word3 word4`
+so we can build it into `word1 - word2 + word3 = word4`
+
 Forecast in training:
 
 ```bash
