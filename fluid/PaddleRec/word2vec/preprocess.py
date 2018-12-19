@@ -210,11 +210,19 @@ def preprocess(args):
                 for line in f:
                     line = strip_lines(line)
                     words = line.split()
-                    for item in words:
-                        if item in word_count:
-                            word_count[item] = word_count[item] + 1
-                        else:
-                            word_count[native_to_unicode('<UNK>')] += 1
+                    if args.with_other_dict:
+                        for item in words:
+                            if item in word_count:
+                                word_count[item] = word_count[item] + 1
+                            else:
+                                word_count[native_to_unicode('<UNK>')] += 1
+                    else:
+                        for item in words:
+                            if item in word_count:
+                                word_count[item] = word_count[item] + 1
+                            else:
+                                word_count[item] = 1
+
     # with open(args.data_path + "/tmp.txt") as f:
     #     for line in f:
     #         print("line before strip is: {}".format(line))
