@@ -31,10 +31,13 @@ python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchma
 The command line options for training can be listed by `python train.py -h`.
 
 ### Local Train:
+we set CPU_NUM=1 as default CPU_NUM to execute
 ```bash
+export CPU_NUM=1 && \
 python train.py \
         --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
         --dict_path data/1-billion_dict \
+        --with_hs --with_nce --is_local \
         2>&1 | tee train.log
 ```
 
@@ -61,6 +64,11 @@ For: boy - girl + aunt = uncle
 3 nearest father:0.64
 
 You can also add your own tests by mimicking the examples given in the `build_test_case` method.
+
+To running test case from test files, please download the test files into 'test' directory
+we provide test for each case with the following structure:
+        `word1 word2 word3 word4`
+so we can build it into `word1 - word2 + word3 = word4`
 
 Forecast in training:
 

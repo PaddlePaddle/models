@@ -35,6 +35,7 @@ class Word2VecReader(object):
 
         with open(dict_path, 'r') as f:
             for line in f:
+                line = line.decode(encoding='UTF-8')
                 word, count = line.split()[0], int(line.split()[1])
                 self.word_to_id_[word] = word_id
                 self.id_to_word[word_id] = word  #build id to word dict
@@ -44,7 +45,8 @@ class Word2VecReader(object):
 
         with open(dict_path + "_word_to_id_", 'w+') as f6:
             for k, v in self.word_to_id_.items():
-                f6.write(str(k) + " " + str(v) + '\n')
+                f6.write(
+                    k.encode("utf-8") + " " + str(v).encode("utf-8") + '\n')
 
         self.dict_size = len(self.word_to_id_)
         self.word_frequencys = [
@@ -55,16 +57,17 @@ class Word2VecReader(object):
 
         with open(dict_path + "_ptable", 'r') as f2:
             for line in f2:
-                self.word_to_path[line.split(":")[0]] = np.fromstring(
-                    line.split(':')[1], dtype=int, sep=' ')
+                self.word_to_path[line.split("\t")[0]] = np.fromstring(
+                    line.split('\t')[1], dtype=int, sep=' ')
                 self.num_non_leaf = np.fromstring(
-                    line.split(':')[1], dtype=int, sep=' ')[0]
+                    line.split('\t')[1], dtype=int, sep=' ')[0]
         print("word_ptable dict_size = " + str(len(self.word_to_path)))
 
         with open(dict_path + "_pcode", 'r') as f3:
             for line in f3:
-                self.word_to_code[line.split(":")[0]] = np.fromstring(
-                    line.split(':')[1], dtype=int, sep=' ')
+                line = line.decode(encoding='UTF-8')
+                self.word_to_code[line.split("\t")[0]] = np.fromstring(
+                    line.split('\t')[1], dtype=int, sep=' ')
         print("word_pcode dict_size = " + str(len(self.word_to_code)))
 
     def get_context_words(self, words, idx, window_size):
@@ -92,7 +95,7 @@ class Word2VecReader(object):
                     count = 1
                     for line in f:
                         if self.trainer_id == count % self.trainer_num:
-                            line = preprocess.text_strip(line)
+                            line = preprocess.strip_lines(line)
                             word_ids = [
                                 self.word_to_id_[word] for word in line.split()
                                 if word in self.word_to_id_
@@ -114,7 +117,7 @@ class Word2VecReader(object):
                     count = 1
                     for line in f:
                         if self.trainer_id == count % self.trainer_num:
-                            line = preprocess.text_strip(line)
+                            line = preprocess.strip_lines(line)
                             word_ids = [
                                 self.word_to_id_[word] for word in line.split()
                                 if word in self.word_to_id_
@@ -125,10 +128,10 @@ class Word2VecReader(object):
                                 for context_id in context_word_ids:
                                     yield [target_id], [context_id], [
                                         self.word_to_code[self.id_to_word[
-                                            context_id]]
+                                            target_id]]
                                     ], [
                                         self.word_to_path[self.id_to_word[
-                                            context_id]]
+                                            target_id]]
                                     ]
                         else:
                             pass

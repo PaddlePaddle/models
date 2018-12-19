@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*
 
 import re
+import six
 import argparse
+
+prog = re.compile("[^a-z ]", flags=0)
+word_count = dict()
 
 
 def parse_args():
@@ -29,11 +33,75 @@ def parse_args():
         default=False,
         help='Local train or not, (default: False)')
 
+    parser.add_argument(
+        '--with_other_dict',
+        action='store_true',
+        required=False,
+        default=False,
+        help='Using third party provided dict , (default: False)')
+
+    parser.add_argument(
+        '--other_dict_path',
+        type=str,
+        default='',
+        help='The path for third party provided dict (default: '
+        ')')
+
     return parser.parse_args()
 
 
 def text_strip(text):
-    return re.sub("[^a-z ]", "", text)
+    return prog.sub("", text)
+
+
+# users can self-define their own strip rules by modifing this method
+def strip_lines(line, vocab=word_count):
+    return _replace_oov(vocab, native_to_unicode(line))
+
+
+# Shameless copy from Tensorflow https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/data_generators/text_encoder.py
+def _replace_oov(original_vocab, line):
+    """Replace out-of-vocab words with "<UNK>".
+  This maintains compatibility with published results.
+  Args:
+    original_vocab: a set of strings (The standard vocabulary for the dataset)
+    line: a unicode string - a space-delimited sequence of words.
+  Returns:
+    a unicode string - a space-delimited sequence of words.
+  """
+    return u" ".join([
+        word if word in original_vocab else u"<UNK>" for word in line.split()
+    ])
+
+
+# Shameless copy from Tensorflow https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/data_generators/text_encoder.py
+# Unicode utility functions that work with Python 2 and 3
+def native_to_unicode(s):
+    if _is_unicode(s):
+        return s
+    try:
+        return _to_unicode(s)
+    except UnicodeDecodeError:
+        res = _to_unicode(s, ignore_errors=True)
+        tf.logging.info("Ignoring Unicode error, outputting: %s" % res)
+        return res
+
+
+def _is_unicode(s):
+    if six.PY2:
+        if isinstance(s, unicode):
+            return True
+    else:
+        if isinstance(s, str):
+            return True
+    return False
+
+
+def _to_unicode(s, ignore_errors=False):
+    if _is_unicode(s):
+        return s
+    error_mode = "ignore" if ignore_errors else "strict"
+    return s.decode("utf-8", errors=error_mode)
 
 
 def build_Huffman(word_count, max_code_length):
@@ -120,7 +188,7 @@ def build_Huffman(word_count, max_code_length):
     return word_point, word_code, word_code_len
 
 
-def preprocess(data_path, dict_path, freq, is_local):
+def preprocess(args):
     """
     proprocess the data, generate dictionary and save into dict_path.
     :param data_path: the input data path.
@@ -129,43 +197,61 @@ def preprocess(data_path, dict_path, freq, is_local):
     :return:
     """
     # word to count
-    word_count = dict()
 
-    if is_local:
+    if args.with_other_dict:
+        with open(args.other_dict_path, 'r') as f:
+            for line in f:
+                word_count[native_to_unicode(line.strip())] = 1
+
+    if args.is_local:
         for i in range(1, 100):
-            with open(data_path + "/news.en-000{:0>2d}-of-00100".format(
+            with open(args.data_path + "/news.en-000{:0>2d}-of-00100".format(
                     i)) as f:
                 for line in f:
-                    line = line.lower()
-                    line = text_strip(line)
+                    line = strip_lines(line)
                     words = line.split()
                     for item in words:
                         if item in word_count:
                             word_count[item] = word_count[item] + 1
                         else:
-                            word_count[item] = 1
+                            word_count[native_to_unicode('<UNK>')] += 1
+    # with open(args.data_path + "/tmp.txt") as f:
+    #     for line in f:
+    #         print("line before strip is: {}".format(line))
+    #         line = strip_lines(line, word_count)
+    #         print("line after strip is: {}".format(line))
+    #         words = line.split()
+    #         print("words after split is: {}".format(words))
+    #         for item in words:
+    #             if item in word_count:
+    #                 word_count[item] = word_count[item] + 1
+    #             else:
+    #                 word_count[item] = 1
     item_to_remove = []
     for item in word_count:
-        if word_count[item] <= freq:
+        if word_count[item] <= args.freq:
             item_to_remove.append(item)
     for item in item_to_remove:
         del word_count[item]
 
     path_table, path_code, word_code_len = build_Huffman(word_count, 40)
 
-    with open(dict_path, 'w+') as f:
+    with open(args.dict_path, 'w+') as f:
         for k, v in word_count.items():
-            f.write(str(k) + " " + str(v) + '\n')
+            f.write(k.encode("utf-8") + " " + str(v).encode("utf-8") + '\n')
 
-    with open(dict_path + "_ptable", 'w+') as f2:
+    with open(args.dict_path + "_ptable", 'w+') as f2:
         for pk, pv in path_table.items():
-            f2.write(str(pk) + ":" + ' '.join((str(x) for x in pv)) + '\n')
+            f2.write(
+                pk.encode("utf-8") + "\t" + ' '.join((str(x).encode("utf-8")
+                                                      for x in pv)) + '\n')
 
-    with open(dict_path + "_pcode", 'w+') as f3:
-        for pck, pcv in path_table.items():
-            f3.write(str(pck) + ":" + ' '.join((str(x) for x in pcv)) + '\n')
+    with open(args.dict_path + "_pcode", 'w+') as f3:
+        for pck, pcv in path_code.items():
+            f3.write(
+                pck.encode("utf-8") + "\t" + ' '.join((str(x).encode("utf-8")
+                                                       for x in pcv)) + '\n')
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    preprocess(args.data_path, args.dict_path, args.freq, args.is_local)
+    preprocess(parse_args())

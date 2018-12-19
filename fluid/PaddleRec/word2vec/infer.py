@@ -1,4 +1,3 @@
-import paddle
 import time
 import os
 import paddle.fluid as fluid
@@ -6,6 +5,7 @@ import numpy as np
 from Queue import PriorityQueue
 import logging
 import argparse
+import preprocess
 from sklearn.metrics.pairwise import cosine_similarity
 
 word_to_id = dict()
@@ -47,6 +47,22 @@ def parse_args():
         required=False,
         default=True,
         help='if using infer_during_train, (default: True)')
+    parser.add_argument(
+        '--test_acc',
+        action='store_true',
+        required=False,
+        default=True,
+        help='if using test_files , (default: True)')
+    parser.add_argument(
+        '--test_files_dir',
+        type=str,
+        default='test',
+        help="The path for test_files) (default: test)")
+    parser.add_argument(
+        '--test_batch_size',
+        type=int,
+        default=1000,
+        help="test used batch size (default: 1000)")
 
     return parser.parse_args()
 
@@ -58,48 +74,119 @@ def BuildWord_IdMap(dict_path):
             id_to_word[int(line.split(' ')[1])] = line.split(' ')[0]
 
 
-def inference_prog():
+def inference_prog():  # just to create program for test
     fluid.layers.create_parameter(
         shape=[1, 1], dtype='float32', name="embeding")
 
 
-def build_test_case(emb):
+def build_test_case_from_file(args, emb):
+    logger.info("test files dir: {}".format(args.test_files_dir))
+    current_list = os.listdir(args.test_files_dir)
+    logger.info("test files list: {}".format(current_list))
+    test_cases = list()
+    test_labels = list()
+    exclude_lists = list()
+    for file_dir in current_list:
+        with open(args.test_files_dir + "/" + file_dir, 'r') as f:
+            count = 0
+            for line in f:
+                if count == 0:
+                    pass
+                elif ':' in line:
+                    logger.info("{}".format(line))
+                    pass
+                else:
+                    line = preprocess.strip_lines(line, word_to_id)
+                    test_case = emb[word_to_id[line.split()[0]]] - emb[
+                        word_to_id[line.split()[1]]] + emb[word_to_id[
+                            line.split()[2]]]
+                    test_case_desc = line.split()[0] + " - " + line.split()[
+                        1] + " + " + line.split()[2] + " = " + line.split()[3]
+                    test_cases.append([test_case, test_case_desc])
+                    test_labels.append(word_to_id[line.split()[3]])
+                    exclude_lists.append([
+                        word_to_id[line.split()[0]],
+                        word_to_id[line.split()[1]], word_to_id[line.split()[2]]
+                    ])
+                count += 1
+    return test_cases, test_labels, exclude_lists
+
+
+def build_small_test_case(emb):
     emb1 = emb[word_to_id['boy']] - emb[word_to_id['girl']] + emb[word_to_id[
         'aunt']]
     desc1 = "boy - girl + aunt = uncle"
+    label1 = word_to_id["uncle"]
     emb2 = emb[word_to_id['brother']] - emb[word_to_id['sister']] + emb[
         word_to_id['sisters']]
     desc2 = "brother - sister + sisters = brothers"
+    label2 = word_to_id["brothers"]
     emb3 = emb[word_to_id['king']] - emb[word_to_id['queen']] + emb[word_to_id[
         'woman']]
     desc3 = "king - queen + woman = man"
+    label3 = word_to_id["man"]
     emb4 = emb[word_to_id['reluctant']] - emb[word_to_id['reluctantly']] + emb[
         word_to_id['slowly']]
     desc4 = "reluctant - reluctantly + slowly = slow"
+    label4 = word_to_id["slow"]
     emb5 = emb[word_to_id['old']] - emb[word_to_id['older']] + emb[word_to_id[
         'deeper']]
     desc5 = "old - older + deeper = deep"
+    label5 = word_to_id["deep"]
     return [[emb1, desc1], [emb2, desc2], [emb3, desc3], [emb4, desc4],
-            [emb5, desc5]]
+            [emb5, desc5]], [label1, label2, label3, label4, label5]
+
+
+def build_test_case(args, emb):
+    if args.test_acc:
+        return build_test_case_from_file(args, emb)
+    else:
+        return build_small_test_case(emb)
 
 
 def inference_test(scope, model_dir, args):
     BuildWord_IdMap(args.dict_path)
     logger.info("model_dir is: {}".format(model_dir + "/"))
     emb = np.array(scope.find_var("embeding").get_tensor())
-    test_cases = build_test_case(emb)
     logger.info("inference result: ====================")
-    for case in test_cases:
-        pq = topK(args.rank_num, emb, case[0])
-        logger.info("Test result for {}".format(case[1]))
-        pq_tmps = list()
-        for i in range(args.rank_num):
-            pq_tmps.append(pq.get())
-        for i in range(len(pq_tmps)):
-            logger.info("{} nearest is {}, rate is {}".format(i, id_to_word[
-                pq_tmps[len(pq_tmps) - 1 - i].id], pq_tmps[len(pq_tmps) - 1 - i]
-                                                              .priority))
-        del pq_tmps[:]
+    test_cases = list()
+    test_labels = list()
+    exclude_lists = list()
+    if args.test_acc:
+        test_cases, test_labels, exclude_lists = build_test_case(args, emb)
+    else:
+        test_cases, test_labels = build_test_case(args, emb)
+        exclude_lists = [[-1]]
+    accual_rank = 1 if args.test_acc else args.rank_num
+    correct_num = 0
+    for i in range(len(test_labels)):
+        pq = None
+        if args.test_acc:
+            pq = topK(
+                accual_rank,
+                emb,
+                test_cases[i][0],
+                exclude_lists[i],
+                is_acc=True)
+        else:
+            pq = pq = topK(
+                accual_rank,
+                emb,
+                test_cases[i][0],
+                exclude_lists[0],
+                is_acc=False)
+        logger.info("Test result for {}".format(test_cases[i][1]))
+        for j in range(accual_rank):
+            pq_tmps = pq.get()
+            if (j == accual_rank - 1) and (
+                    pq_tmps.id == test_labels[i]
+            ):  # if the nearest word is what we want 
+                correct_num += 1
+            logger.info("{} nearest is {}, rate is {}".format(
+                accual_rank - j, id_to_word[pq_tmps.id], pq_tmps.priority))
+    acc = correct_num / len(test_labels)
+    logger.info("Test acc is: {}, there are {} / {}}".format(acc, correct_num,
+                                                             len(test_labels)))
 
 
 class PQ_Entry(object):
@@ -111,8 +198,15 @@ class PQ_Entry(object):
         return cmp(self.priority, other.priority)
 
 
-def topK(k, emb, test_emb):
+def topK(k, emb, test_emb, exclude_list, is_acc=False):
     pq = PriorityQueue(k + 1)
+    while not pq.empty():
+        try:
+            pq.get(False)
+        except Empty:
+            continue
+        pq.task_done()
+
     if len(emb) <= k:
         for i in range(len(emb)):
             x = cosine_similarity([emb[i]], [test_emb])
@@ -120,11 +214,14 @@ def topK(k, emb, test_emb):
         return pq
 
     for i in range(len(emb)):
-        x = cosine_similarity([emb[i]], [test_emb])
-        pq_e = PQ_Entry(x, i)
-        if pq.full():
-            pq.get()
-        pq.put(pq_e)
+        if is_acc and (i in exclude_list):
+            pass
+        else:
+            x = cosine_similarity([emb[i]], [test_emb])
+            pq_e = PQ_Entry(x, i)
+            if pq.full():
+                pq.get()
+            pq.put(pq_e)
     pq.get()
     return pq
 
@@ -181,5 +278,7 @@ if __name__ == '__main__':
     # while setting infer_once please specify the dir to models file with --model_output_dir
     if args.infer_once:
         infer_once(args)
-    if args.infer_during_train:
+    elif args.infer_during_train:
         infer_during_train(args)
+    else:
+        pass
