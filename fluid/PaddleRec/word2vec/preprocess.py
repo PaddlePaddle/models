@@ -222,19 +222,6 @@ def preprocess(args):
                                 word_count[item] = word_count[item] + 1
                             else:
                                 word_count[item] = 1
-
-    # with open(args.data_path + "/tmp.txt") as f:
-    #     for line in f:
-    #         print("line before strip is: {}".format(line))
-    #         line = strip_lines(line, word_count)
-    #         print("line after strip is: {}".format(line))
-    #         words = line.split()
-    #         print("words after split is: {}".format(words))
-    #         for item in words:
-    #             if item in word_count:
-    #                 word_count[item] = word_count[item] + 1
-    #             else:
-    #                 word_count[item] = 1
     item_to_remove = []
     for item in word_count:
         if word_count[item] <= args.freq:
