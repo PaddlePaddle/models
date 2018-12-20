@@ -78,3 +78,58 @@ python train.py \
 #	--num_epochs=120 \
 #       --lr=0.1
 
+#ResNet152:
+#python train.py \
+#       --model=ResNet152 \
+#       --batch_size=256 \
+#       --total_images=1281167 \
+#       --image_shape=3,224,224 \
+#       --lr_strategy=piecewise_decay \
+#       --lr=0.1 \
+#       --num_epochs=120 \
+#       --l2_decay=1e-4 \(TODO)
+
+
+#SE_ResNeXt50:
+#python train.py \
+#       --model=SE_ResNeXt50 \
+#       --batch_size=400 \
+#       --total_images=1281167 \
+#       --image_shape=3,224,224 \
+#       --lr_strategy=cosine_decay \
+#       --lr=0.1 \
+#       --num_epochs=200 \
+#       --l2_decay=12e-5 \(TODO)
+
+#SE_ResNeXt101:
+#python train.py \
+#        --model=SE_ResNeXt101 \
+#        --batch_size=400 \
+#        --total_images=1281167 \
+#        --image_shape=3,224,224 \
+#        --lr_strategy=cosine_decay \
+#        --lr=0.1 \
+#        --num_epochs=200 \
+#        --l2_decay=15e-5 \(TODO)
+
+#VGG11:
+#python train.py \
+#        --model=VGG11 \
+#        --batch_size=512 \
+#        --total_images=1281167 \
+#        --image_shape=3,224,224 \
+#        --lr_strategy=cosine_decay \
+#        --lr=0.1 \
+#        --num_epochs=90 \
+#        --l2_decay=2e-4 \(TODO)
+
+#VGG13:
+#python train.py
+#        --model=VGG13 \          
+#        --batch_size=256 \
+#        --total_images=1281167 \
+#        --image_shape=3,224,224 \
+#        --lr_strategy=cosine_decay \
+#        --lr=0.01 \
+#        --num_epochs=90 \
+#        --l2_decay=3e-4 \(TODO)

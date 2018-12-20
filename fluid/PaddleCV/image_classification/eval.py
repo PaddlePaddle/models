@@ -7,7 +7,8 @@ import time
 import sys
 import paddle
 import paddle.fluid as fluid
-import models
+#import models
+import models_name as models
 #import reader_cv2 as reader
 import reader as reader
 import argparse
@@ -84,7 +85,7 @@ def eval(args):
 
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    val_reader = paddle.batch(reader.val(""), batch_size=args.batch_size)
+    val_reader = paddle.batch(reader.val(), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
