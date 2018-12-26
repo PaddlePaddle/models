@@ -37,8 +37,6 @@ parser.add_argument('--enable_ce', action='store_true', help='If set, run the ta
 
 DATA_DIR = os.path.join(os.path.expanduser('~'), '.cache/paddle/dataset')
 
-SEED = 102
-
 def evaluate(epoch_id, exe, inference_program, dev_reader, test_reader, fetch_list, feeder, metric_type):
     """
     evaluate on test/dev dataset
@@ -145,6 +143,7 @@ def train_and_evaluate(train_reader,
     # only for ce
     args = parser.parse_args()
     if args.enable_ce:
+        SEED = 102
         fluid.default_startup_program().random_seed = SEED
         fluid.default_main_program().random_seed = SEED
 
