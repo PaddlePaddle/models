@@ -6,7 +6,6 @@ from Queue import PriorityQueue
 import logging
 import argparse
 import preprocess
-from sklearn.metrics.pairwise import cosine_similarity
 
 word_to_id = dict()
 id_to_word = dict()
@@ -89,11 +88,8 @@ def build_test_case_from_file(args, emb):
     exclude_lists = list()
     for file_dir in current_list:
         with open(args.test_files_dir + "/" + file_dir, 'r') as f:
-            count = 0
             for line in f:
-                if count == 0:
-                    pass
-                elif ':' in line:
+                if ':' in line:
                     logger.info("{}".format(line))
                     pass
                 else:
@@ -110,7 +106,6 @@ def build_test_case_from_file(args, emb):
                         word_to_id[line.split()[0]],
                         word_to_id[line.split()[1]], word_to_id[line.split()[2]]
                     ])
-                count += 1
             test_cases = norm(np.array(test_cases))
     return test_cases, test_case_descs, test_labels, exclude_lists
 
@@ -151,8 +146,8 @@ def build_test_case(args, emb):
 
 
 def norm(x):
-    emb = np.linalg.norm(x, axis=1, keepdims=True)
-    return x / emb
+    y = np.linalg.norm(x, axis=1, keepdims=True)
+    return x / y
 
 
 def inference_test(scope, model_dir, args):
@@ -180,9 +175,8 @@ def inference_test(scope, model_dir, args):
         logger.info("Test result for {}".format(test_case_desc[i]))
         result = results[i]
         for j in range(accual_rank):
-            if (j == accual_rank - 1) and (
-                    result[j][1] == test_labels[i]
-            ):  # if the nearest word is what we want 
+            if result[j][1] == test_labels[
+                    i]:  # if the nearest word is what we want 
                 correct_num += 1
             logger.info("{} nearest is {}, rate is {}".format(j, id_to_word[
                 result[j][1]], result[j][0]))
@@ -296,6 +290,8 @@ def infer_once(args):
             fluid.io.load_persistables(
                 executor=exe, dirname=args.model_output_dir + "/")
             inference_test(Scope, args.model_output_dir, args)
+    else:
+        logger.info("Wrong Directory or save model failed!")
 
 
 if __name__ == '__main__':

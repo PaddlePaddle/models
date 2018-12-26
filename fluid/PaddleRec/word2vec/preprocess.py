@@ -238,13 +238,13 @@ def preprocess(args):
     with open(args.dict_path + "_ptable", 'w+') as f2:
         for pk, pv in path_table.items():
             f2.write(
-                pk.encode("utf-8") + "\t" + ' '.join((str(x).encode("utf-8")
+                pk.encode("utf-8") + '\t' + ' '.join((str(x).encode("utf-8")
                                                       for x in pv)) + '\n')
 
     with open(args.dict_path + "_pcode", 'w+') as f3:
         for pck, pcv in path_code.items():
             f3.write(
-                pck.encode("utf-8") + "\t" + ' '.join((str(x).encode("utf-8")
+                pck.encode("utf-8") + '\t' + ' '.join((str(x).encode("utf-8")
                                                        for x in pcv)) + '\n')
 
 

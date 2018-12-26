@@ -10,6 +10,24 @@ logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
 
+class NumpyRandomInt(object):
+    def __init__(self, a, b, buf_size=1000):
+        self.idx = 0
+        self.buffer = np.random.random_integers(a, b, buf_size)
+        self.a = a
+        self.b = b
+
+    def __call__(self):
+        if self.idx == len(self.buffer):
+            self.buffer = np.random.random_integers(self.a, self.b,
+                                                    len(self.buffer))
+            self.idx = 0
+
+        result = self.buffer[self.idx]
+        self.idx += 1
+        return result
+
+
 class Word2VecReader(object):
     def __init__(self,
                  dict_path,
@@ -57,7 +75,7 @@ class Word2VecReader(object):
 
         with open(dict_path + "_ptable", 'r') as f2:
             for line in f2:
-                self.word_to_path[line.split("\t")[0]] = np.fromstring(
+                self.word_to_path[line.split('\t')[0]] = np.fromstring(
                     line.split('\t')[1], dtype=int, sep=' ')
                 self.num_non_leaf = np.fromstring(
                     line.split('\t')[1], dtype=int, sep=' ')[0]
@@ -66,11 +84,12 @@ class Word2VecReader(object):
         with open(dict_path + "_pcode", 'r') as f3:
             for line in f3:
                 line = line.decode(encoding='UTF-8')
-                self.word_to_code[line.split("\t")[0]] = np.fromstring(
+                self.word_to_code[line.split('\t')[0]] = np.fromstring(
                     line.split('\t')[1], dtype=int, sep=' ')
         print("word_pcode dict_size = " + str(len(self.word_to_code)))
+        self.random_generator = NumpyRandomInt(1, self.window_size_ + 1)
 
-    def get_context_words(self, words, idx, window_size):
+    def get_context_words(self, words, idx):
         """
         Get the context word list of target word.
 
@@ -78,13 +97,14 @@ class Word2VecReader(object):
         idx: input word index
         window_size: window size
         """
-        target_window = np.random.randint(1, window_size + 1)
-        # need to keep in mind that maybe there are no enough words before the target word.
-        start_point = idx - target_window if (idx - target_window) > 0 else 0
+        target_window = self.random_generator()
+        start_point = idx - target_window  # if (idx - target_window) > 0 else 0
+        if start_point < 0:
+            start_point = 0
         end_point = idx + target_window
-        # context words of the target word
-        targets = set(words[start_point:idx] + words[idx + 1:end_point + 1])
-        return list(targets)
+        targets = words[start_point:idx] + words[idx + 1:end_point + 1]
+
+        return set(targets)
 
     def train(self, with_hs):
         def _reader():
@@ -102,7 +122,7 @@ class Word2VecReader(object):
                             ]
                             for idx, target_id in enumerate(word_ids):
                                 context_word_ids = self.get_context_words(
-                                    word_ids, idx, self.window_size_)
+                                    word_ids, idx)
                                 for context_id in context_word_ids:
                                     yield [target_id], [context_id]
                         else:
@@ -124,13 +144,13 @@ class Word2VecReader(object):
                             ]
                             for idx, target_id in enumerate(word_ids):
                                 context_word_ids = self.get_context_words(
-                                    word_ids, idx, self.window_size_)
+                                    word_ids, idx)
                                 for context_id in context_word_ids:
                                     yield [target_id], [context_id], [
-                                        self.word_to_code[self.id_to_word[
+                                        self.word_to_path[self.id_to_word[
                                             target_id]]
                                     ], [
-                                        self.word_to_path[self.id_to_word[
+                                        self.word_to_code[self.id_to_word[
                                             target_id]]
                                     ]
                         else:
