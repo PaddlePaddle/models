@@ -59,6 +59,7 @@ def eval():
         is_train=False)
     model.build_model(image_shape)
     rpn_rois, confs, locs = model.eval_bbox_out()
+    pred_boxes = model.eval()
     if cfg.MASK_ON:
         masks = model.eval_mask_out()
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
@@ -73,8 +74,9 @@ def eval():
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     dts_res = []
+    segms_res = []
     if cfg.MASK_ON:
-        fetch_list = [rpn_rois, confs, locs, masks]
+        fetch_list = [rpn_rois, confs, locs, pred_boxes, masks]
     else:
         fetch_list = [rpn_rois, confs, locs]
     for batch_id, batch_data in enumerate(test_reader()):
@@ -89,16 +91,19 @@ def eval():
         confs_v = result[1]
         locs_v = result[2]
         if cfg.MASK_ON:
-            masks_v = result[3]
-        new_lod, nmsed_out = get_nmsed_box(rpn_rois_v, confs_v, locs_v,
-                                           class_nums, im_info)
+            pred_boxes_v = result[3]
+            masks_v = result[4]
+        new_lod = pred_boxes_v.lod()
+        nmsed_out = pred_boxes_v
+        #new_lod, nmsed_out = get_nmsed_box(rpn_rois_v, confs_v, locs_v,
+        #                                   class_nums, im_info)
 
-        dts_res += get_dt_res(total_batch_size, new_lod, nmsed_out, batch_data,
-                              numId_to_catId_map)
-        if cfg.MASK_ON:
+        dts_res += get_dt_res(total_batch_size, new_lod[0], nmsed_out,
+                              batch_data, numId_to_catId_map)
+        if cfg.MASK_ON and np.array(masks_v).shape != (1, 1):
             segms_out = segm_results(nmsed_out, masks_v, im_info)
-            segms_res = get_segms_res(batch_size, new_lod, segms_out,
-                                      batch_data, numId_to_catId_map)
+            segms_res += get_segms_res(total_batch_size, new_lod[0], segms_out,
+                                       batch_data, numId_to_catId_map)
         end = time.time()
         print('batch id: {}, time: {}'.format(batch_id, end - start))
     with open("detection_bbox_result.json", 'w') as outfile:
