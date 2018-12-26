@@ -109,7 +109,7 @@ def eval():
     with open("detection_bbox_result.json", 'w') as outfile:
         json.dump(dts_res, outfile)
     print("start evaluate bbox using coco api")
-    cocoDt = cocoGt.loadRes("detection_segms_result.json")
+    cocoDt = cocoGt.loadRes("detection_bbox_result.json")
     cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
     cocoEval.evaluate()
     cocoEval.accumulate()

@@ -41,6 +41,7 @@ def infer():
         is_train=False)
     model.build_model(image_shape)
     rpn_rois, confs, locs = model.eval_bbox_out()
+    pred_boxes = model.eval()
     if cfg.MASK_ON:
         masks = model.eval_mask_out()
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
@@ -55,8 +56,9 @@ def infer():
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     dts_res = []
+    segms_res = []
     if cfg.MASK_ON:
-        fetch_list = [rpn_rois, confs, locs, masks]
+        fetch_list = [rpn_rois, confs, locs, pred_boxes, masks]
     else:
         fetch_list = [rpn_rois, confs, locs]
     data = next(infer_reader())
@@ -68,9 +70,12 @@ def infer():
     confs_v = result[1]
     locs_v = result[2]
     if cfg.MASK_ON:
-        masks_v = result[3]
-    new_lod, nmsed_out = get_nmsed_box(rpn_rois_v, confs_v, locs_v, class_nums,
-                                       im_info)
+        pred_boxes_v = result[3]
+        masks_v = result[4]
+    new_lod = pred_boxes_v.lod()
+    nmsed_out = pred_boxes_v
+    #new_lod, nmsed_out = get_nmsed_box(rpn_rois_v, confs_v, locs_v, class_nums,
+    #                                   im_info)
     path = os.path.join(cfg.image_path, cfg.image_name)
     draw_bounding_box_on_image(path, nmsed_out, cfg.draw_threshold, label_list,
                                numId_to_catId_map)
