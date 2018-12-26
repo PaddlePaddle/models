@@ -26,6 +26,7 @@ def add_arguments():
     add_argument('dataset_path', str, None, "Cityscape dataset path.")
     add_argument('verbose', bool, False, "Print mIoU for each step if verbose.")
     add_argument('use_gpu', bool, True, "Whether use GPU or CPU.")
+    add_argument('num_classes', int, 19, "Number of classes.")
 
 
 def mean_iou(pred, label):
@@ -69,7 +70,7 @@ tp = fluid.Program()
 batch_size = 1
 reader.default_config['crop_size'] = -1
 reader.default_config['shuffle'] = False
-num_classes = 19
+num_classes = args.num_classes
 
 with fluid.program_guard(tp, sp):
     img = fluid.layers.data(name='img', shape=[3, 0, 0], dtype='float32')
@@ -84,7 +85,7 @@ tp = tp.clone(True)
 fluid.memory_optimize(
     tp,
     print_log=False,
-    skip_opt_set=[pred.name, miou, out_wrong, out_correct],
+    skip_opt_set=set([pred.name, miou, out_wrong, out_correct]),
     level=1)
 
 place = fluid.CPUPlace()
