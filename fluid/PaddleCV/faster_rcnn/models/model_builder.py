@@ -19,6 +19,8 @@ from paddle.fluid.initializer import Normal
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.regularizer import L2Decay
 from config import cfg
+import cPickle as cp
+import numpy as np
 
 
 class FasterRCNN(object):
@@ -61,7 +63,10 @@ class FasterRCNN(object):
         return [self.rpn_rois, cls_prob, self.bbox_pred]
 
     def eval_mask_out(self):
-        return [self.mask_fcn_logits]
+        return self.mask_fcn_logits
+
+    def eval(self):
+        return self.pred_result
 
     def build_input(self, image_shape):
         if self.use_pyreader:
@@ -242,8 +247,9 @@ class FasterRCNN(object):
                 self.roi_has_mask_int32 = mask_out[1]
                 self.mask_int32 = mask_out[2]
 
-                self.roi_has_mask_int32.persistable = True
-                self.mask_int32.persistable = True
+                #self.roi_has_mask_int32.persistable = True
+                #print(self.roi_has_mask_int32)
+                #self.mask_int32.persistable = True
 
     def fast_rcnn_heads(self, roi_input):
         if self.is_train:
@@ -251,7 +257,6 @@ class FasterRCNN(object):
         else:
             pool_rois = self.rpn_rois
         self.res5_2_sum = self.add_roi_box_head_func(roi_input, pool_rois)
-        self.res5_2_sum.persistable = True
         self.rcnn_out = fluid.layers.pool2d(
             self.res5_2_sum, pool_type='avg', pool_size=7, name='res5_pool')
         self.cls_score = fluid.layers.fc(input=self.rcnn_out,
@@ -278,33 +283,8 @@ class FasterRCNN(object):
                                              name='bbox_pred_b',
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
-        self.bbox_pred.persistable = True
 
-    def mask_rcnn_heads(self, mask_input):
-        if self.is_train:
-            dim_conv5 = 2048
-            conv5 = fluid.layers.gather(self.res5_2_sum,
-                                        self.roi_has_mask_int32)
-        else:
-            im_scale = fluid.layers.slice(self.im_info, 1, starts=2, ends=3)
-            im_scale_lod = fluid.layers.sequence_expand(im_scale, self.rpn_rois)
-            boxes = self.rpn_rois / im_scale_lod
-            cls_prob = fluid.layers.softmax(self.cls_score, use_cudnn=False)
-            pred_boxes = fluid.layers.detection_output(
-                loc=self.bbox_pred,
-                scores=cls_prob,
-                prior_box=boxes,
-                prior_box_var=cfg.bbox_reg_weights,
-                im_info=self.im_info,
-                nms_threshold=cfg.TEST.nms_thresh,
-                nms_top_k=-1,
-                keep_top_k=cfg.TEST.detections_per_im,
-                score_threshold=cfg.TEST.score_thresh,
-                shared=False)
-            im_scale_lod = fluid.layers.sequence_expand(im_scale, pre_boxes)
-            mask_rois = pred_boxes * im_scale_lod
-
-            conv5 = self.add_roi_box_head_func(mask_input, mask_rois)
+    def SuffixNet(self, conv5):
         mask_out = fluid.layers.conv2d_transpose(
             input=conv5,
             num_filters=cfg.DIM_REDUCED,
@@ -312,27 +292,93 @@ class FasterRCNN(object):
             stride=2,
             act='relu',
             param_attr=ParamAttr(
-                name='conv5_mask_w', initializer=MSRA(uniform=False)))
+                name='conv5_mask_w', initializer=MSRA(uniform=False)),
+            bias_attr=ParamAttr(
+                name='conv5_mask_b', learning_rate=2., regularizer=L2Decay(0.)))
         act_func = None
         if not self.is_train:
             act_func = 'sigmoid'
-        self.mask_fcn_logits = fluid.layers.conv2d(
+        mask_fcn_logits = fluid.layers.conv2d(
             input=mask_out,
             num_filters=cfg.class_num,
             filter_size=1,
             act=act_func,
             param_attr=ParamAttr(
-                name='mask_fcn_logits_w', initializer=MSRA(uniform=False)))
+                name='mask_fcn_logits_w', initializer=MSRA(uniform=False)),
+            bias_attr=ParamAttr(
+                name="mask_fcn_logits_b",
+                learning_rate=2.,
+                regularizer=L2Decay(0.)))
+        if self.is_train:
+            mask_fcn_logits = fluid.layers.lod_reset(mask_fcn_logits,
+                                                     self.mask_int32)
+        else:
+            mask_fcn_logits = fluid.layers.lod_reset(mask_fcn_logits,
+                                                     self.pred_result)
+        return mask_fcn_logits
+
+    def mask_rcnn_heads(self, mask_input):
+        if self.is_train:
+            conv5 = fluid.layers.gather(self.res5_2_sum,
+                                        self.roi_has_mask_int32)
+            self.mask_fcn_logits = self.SuffixNet(conv5)
+        else:
+            im_scale = fluid.layers.slice(
+                self.im_info, [1], starts=[2], ends=[3])
+            im_scale_lod = fluid.layers.sequence_expand(im_scale, self.rpn_rois)
+            boxes = self.rpn_rois / im_scale_lod
+            cls_prob = fluid.layers.softmax(self.cls_score, use_cudnn=False)
+            bbox_pred_reshape = fluid.layers.reshape(self.bbox_pred,
+                                                     (-1, cfg.class_num, 4))
+            bbox_pred_trans = fluid.layers.transpose(
+                bbox_pred_reshape, perm=[1, 0, 2])
+            bbox_var = fluid.layers.create_tensor(dtype='float32')
+            fluid.layers.assign(
+                np.array(
+                    cfg.bbox_reg_weights, dtype='float32'), bbox_var)
+            self.pred_result = fluid.layers.detection_output(
+                loc=bbox_pred_trans,
+                scores=cls_prob,
+                prior_box=boxes,
+                prior_box_var=bbox_var,
+                im_info=self.im_info,
+                nms_threshold=cfg.TEST.nms_thresh,
+                nms_top_k=-1,
+                keep_top_k=cfg.TEST.detections_per_im,
+                score_threshold=cfg.TEST.score_thresh,
+                shared=False)
+            pred_res_shape = fluid.layers.shape(self.pred_result)
+            shape = fluid.layers.reduce_prod(pred_res_shape)
+            shape = fluid.layers.reshape(shape, [1, 1])
+            ones = fluid.layers.fill_constant([1, 1], value=1, dtype='int32')
+            cond = fluid.layers.equal(x=shape, y=ones)
+            ie = fluid.layers.IfElse(cond)
+
+            with ie.true_block():
+                pred_res_null = ie.input(self.pred_result)
+                ie.output(pred_res_null)
+            with ie.false_block():
+                pred_res = ie.input(self.pred_result)
+                pred_boxes = fluid.layers.slice(
+                    pred_res, [1], starts=[2], ends=[6])
+                pred_boxes = fluid.layers.lod_reset(pred_boxes,
+                                                    self.pred_result)
+                im_scale_lod = fluid.layers.sequence_expand(im_scale,
+                                                            pred_boxes)
+                mask_rois = pred_boxes * im_scale_lod
+                conv5 = self.add_roi_box_head_func(mask_input, mask_rois)
+                mask_fcn = self.SuffixNet(conv5)
+                ie.output(mask_fcn)
+            self.mask_fcn_logits = ie()[0]
+            self.mask_fcn_logits.persistable = True
 
     def mask_rcnn_loss(self):
         mask_label = fluid.layers.cast(x=self.mask_int32, dtype='float32')
-        #mask_label.persistable = True
         reshape_dim = cfg.class_num * cfg.resolution * cfg.resolution
         self.mask_fcn_logits_reshape = fluid.layers.reshape(
             self.mask_fcn_logits, (-1, reshape_dim))
         loss_mask = fluid.layers.sigmoid_cross_entropy_with_logits(
             x=self.mask_fcn_logits_reshape, label=mask_label, ignore_index=-1)
-        loss_mask.persistable = True
 
         mask_label_clip = fluid.layers.clip(mask_label, -1., 0.)
         sums = fluid.layers.reduce_sum(mask_label_clip)
@@ -340,7 +386,6 @@ class FasterRCNN(object):
         mask_shape = fluid.layers.cast(x=mask_shape, dtype='float32')
         mask_num = fluid.layers.reduce_prod(mask_shape)
         norm = mask_num + sums
-        norm.persistable = True
         norm.stop_gradient = True
 
         loss_mask = fluid.layers.reduce_sum(loss_mask, name='loss_mask')
@@ -414,5 +459,4 @@ class FasterRCNN(object):
         norm = fluid.layers.reduce_prod(score_shape)
         norm.stop_gradient = True
         rpn_reg_loss = rpn_reg_loss / norm
-
         return rpn_cls_loss, rpn_reg_loss

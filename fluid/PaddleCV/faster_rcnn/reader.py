@@ -102,6 +102,8 @@ def coco(mode,
                 roidb = roidb_perm[0]
                 roidb_cur += 1
                 roidb_perm.rotate(-1)
+                #if '000139.jpg' not in roidb['image']:
+                #    continue
                 if roidb_cur >= len(roidbs):
                     roidb_perm = deque(np.random.permutation(roidbs))
                     roidb_cur = 0

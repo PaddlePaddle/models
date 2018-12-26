@@ -252,8 +252,8 @@ def segm_results(im_result, masks, im_info):
         masks_n = masks_v[lod[i]:lod[i + 1]]
         boxes_n = boxes[lod[i]:lod[i + 1]]
         labels_n = labels[lod[i]:lod[i + 1]]
-        im_h = im_info[i][0] / im_info[i][2]
-        im_w = im_info[i][0] / im_info[i][2]
+        im_h = round(im_info[i][0] / im_info[i][2])
+        im_w = round(im_info[i][0] / im_info[i][2])
         boxes_n = box_utils.expand_boxes(boxes_n, scale)
         boxes_n = boxes_n.astype(np.int32)
         padded_mask = np.zeros((M + 2, M + 2), dtype=np.float32)
