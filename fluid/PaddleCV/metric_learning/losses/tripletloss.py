@@ -1,18 +1,21 @@
-from . import datareader as reader
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import paddle.fluid as fluid
 
-class tripletloss():
-    def __init__(self, train_batch_size = 120, margin=0.1):
-        self.train_reader = reader.triplet_train(train_batch_size)
-        self.test_reader = reader.test()
-        self.infer_reader = reader.infer()
+class TripletLoss():
+    def __init__(self, margin=0.1):
         self.margin = margin
 
     def loss(self, input):
         margin = self.margin
         fea_dim = input.shape[1] # number of channels
+        #input = fluid.layers.l2_normalize(input, axis=1)
+        input_norm = fluid.layers.sqrt(fluid.layers.reduce_sum(fluid.layers.square(input), dim=1))
+        input = fluid.layers.elementwise_div(input, input_norm, axis=0)
         output = fluid.layers.reshape(input, shape = [-1, 3, fea_dim])
-        output = fluid.layers.l2_normalize(output, axis=2)
+
         anchor, positive, negative = fluid.layers.split(output, num_or_sections = 3, dim = 1)
  
         anchor = fluid.layers.reshape(anchor, shape = [-1, fea_dim])
@@ -23,7 +26,7 @@ class tripletloss():
         a_n = fluid.layers.square(anchor - negative)
         a_p = fluid.layers.reduce_sum(a_p, dim = 1)
         a_n = fluid.layers.reduce_sum(a_n, dim = 1)
-        a_p = fluid.layers.sqrt(a_p)
-        a_n = fluid.layers.sqrt(a_n)
+        #a_p = fluid.layers.sqrt(a_p + 1e-6)
+        #a_n = fluid.layers.sqrt(a_n + 1e-6)
         loss = fluid.layers.relu(a_p + margin - a_n)
         return loss

@@ -74,3 +74,6 @@ python infer.py \
 1. 用preprocess.py处理训练数据生成train.txt。
 1. 将train.txt切分成集群机器份，放到每台机器上。
 1. 用上面的 `分布式训练` 中的命令行启动分布式训练任务.
+
+## 在PaddleCloud上运行集群训练
+如果你正在使用PaddleCloud做集群训练，你可以使用```cloud.py```这个文件来帮助你提交任务，```trian.py```中所需要的参数可以通过PaddleCloud的环境变量来提交。

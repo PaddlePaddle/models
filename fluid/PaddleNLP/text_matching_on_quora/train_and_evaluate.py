@@ -171,6 +171,7 @@ def train_and_evaluate(train_reader,
     for epoch_id in range(global_config.epoch_num):
         data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
         batch_id = 0
+        epoch_begin_time = time.time()
         for data in train_reader():
             avg_cost_np, avg_acc_np = exe.run(fluid.default_main_program(),
                                               feed=feeder.feed(data),
@@ -192,8 +193,10 @@ def train_and_evaluate(train_reader,
         avg_acc = total_acc / data_count
         
         print("")
-        print("[%s] epoch_id: %d, train_avg_cost: %f, train_avg_acc: %f" % (
-            time.asctime( time.localtime(time.time()) ), epoch_id, avg_cost, avg_acc))
+        print("[%s] epoch_id: %d, train_avg_cost: %f, train_avg_acc: %f, epoch_time_cost: %f" % (
+            time.asctime( time.localtime(time.time())),
+            epoch_id, avg_cost, avg_acc,
+            time.time() - epoch_begin_time))
 
         epoch_model = global_config.save_dirname + "/" + "epoch" + str(epoch_id)
         fluid.io.save_inference_model(epoch_model, ["question1", "question2", "label"], acc, exe)    

@@ -1,3 +1,4 @@
+import argparse
 import sys
 import time
 import math
@@ -10,6 +11,22 @@ import paddle
 
 import utils
 
+def parse_args():
+    parser = argparse.ArgumentParser("gru4rec benchmark.")
+    parser.add_argument(
+        '--test_dir', type=str, default='test_data', help='test file address')
+    parser.add_argument(
+        '--start_index', type=int, default='1', help='start index')  
+    parser.add_argument(
+        '--last_index', type=int, default='10', help='end index')  
+    parser.add_argument(
+        '--model_dir', type=str, default='model_recall20', help='model dir')  
+    parser.add_argument(
+        '--use_cuda', type=int, default='1', help='whether use cuda')  
+    parser.add_argument(
+        '--batch_size', type=int, default='5', help='batch_size')  
+    args = parser.parse_args()
+    return args
 
 def infer(test_reader, use_cuda, model_path):
     """ inference function """
@@ -41,7 +58,7 @@ def infer(test_reader, use_cuda, model_path):
                     label_data, axis=0).astype("int64"))
             accum_num_sum += (data_length)
             accum_num_recall += (data_length * acc_)
-            if step_id % 100 == 0:
+            if step_id % 1 == 0:
                 print("step:%d  " % (step_id), accum_num_recall / accum_num_sum)
         t1 = time.time()
         print("model:%s recall@20:%.3f time_cost(s):%.2f" %
@@ -49,31 +66,18 @@ def infer(test_reader, use_cuda, model_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 6:
-        print(
-            "Usage: %s model_dir start_epoch last_epoch(inclusive) train_file test_file"
-        )
-        exit(0)
-    train_file = ""
-    test_file = ""
-    model_dir = sys.argv[1]
-    try:
-        start_index = int(sys.argv[2])
-        last_index = int(sys.argv[3])
-        train_file = sys.argv[4]
-        test_file = sys.argv[5]
-    except:
-        iprint(
-            "Usage: %s model_dir start_ipoch last_epoch(inclusive) train_file test_file"
-        )
-        exit(-1)
-    vocab, train_reader, test_reader = utils.prepare_data(
-        train_file,
-        test_file,
-        batch_size=5,
-        buffer_size=1000,
-        word_freq_threshold=0)
+    args = parse_args()
+    start_index = args.start_index
+    last_index = args.last_index
+    test_dir = args.test_dir
+    model_dir = args.model_dir
+    batch_size = args.batch_size
+    use_cuda = True if args.use_cuda else False
+    print("start index: ", start_index, " last_index:" ,last_index)
+    vocab_size, test_reader = utils.prepare_data(
+        test_dir, "", batch_size=batch_size,
+        buffer_size=1000, word_freq_threshold=0, is_train=False)
 
-    for epoch in xrange(start_index, last_index + 1):
+    for epoch in range(start_index, last_index + 1):
         epoch_path = model_dir + "/epoch_" + str(epoch)
-        infer(test_reader=test_reader, use_cuda=True, model_path=epoch_path)
+        infer(test_reader=test_reader, use_cuda=use_cuda, model_path=epoch_path)
