@@ -32,6 +32,7 @@ def add_arguments():
     add_argument('dataset_path', str, None, "Cityscape dataset path.")
     add_argument('parallel', bool, False, "using ParallelExecutor.")
     add_argument('use_gpu', bool, True, "Whether use GPU or CPU.")
+    add_argument('num_classes', int, 19, "Number of classes.")
     parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
 
