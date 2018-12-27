@@ -80,6 +80,6 @@ if __name__ == "__main__":
         test_dir, "", vocab_tag_path, batch_size=1,
         neg_size=0, buffer_size=1000, is_train=False)
 
-    for epoch in xrange(start_index, last_index + 1):
+    for epoch in range(start_index, last_index + 1):
         epoch_path = model_dir + "/epoch_" + str(epoch)
         infer(test_reader=test_reader, vocab_tag=vocab_tag, use_cuda=False, model_path=epoch_path)

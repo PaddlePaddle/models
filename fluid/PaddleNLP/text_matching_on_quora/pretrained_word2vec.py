@@ -21,7 +21,12 @@ import numpy as np
 import time, datetime
 import os, sys
 
-
+def maybe_open(filepath):
+    if sys.version_info <= (3, 0): # for python2
+        return open(filepath, 'r')
+    else:
+        return open(filepath, 'r', encoding="utf-8")
+    
 def Glove840B_300D(filepath, keys=None):
     """
     input: the "glove.840B.300d.txt" file path
@@ -33,7 +38,7 @@ def Glove840B_300D(filepath, keys=None):
     print("please wait for a minute.")
     start = time.time()
     word2vec = {}
-    with open(filepath, "r") as f:
+    with maybe_open(filepath) as f:
         for line in f:
             if sys.version_info <= (3, 0): # for python2
                 line = line.decode('utf-8')

@@ -38,7 +38,7 @@ LAYER_DESCRIPTORS = {
     'MultinomialLogisticLoss': shape_scalar,
     'MVN': shape_not_implemented,
     'Pooling': shape_pool,
-    'Power': shape_identity,
+    'Power': shape_power,
     'ReLU': shape_identity,
     'PReLU': shape_identity,
     'Scale': shape_identity,

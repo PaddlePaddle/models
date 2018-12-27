@@ -5,8 +5,8 @@ import os
 import numpy as np
 import time
 import sys
-import math
 import paddle.fluid as fluid
+import math
 
 __all__ = ["DPN", "DPN68", "DPN92", "DPN98", "DPN107", "DPN131"]
 
@@ -62,7 +62,6 @@ class DPN(object):
             pool_padding=1,
             pool_type='max')
 
-        #conv2 - conv5
         for gc in range(4):
             bw = bws[gc]
             inc = inc_sec[gc]

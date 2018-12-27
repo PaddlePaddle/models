@@ -126,6 +126,8 @@ CPU 环境
 python train.py --train_dir train_data/
 ```
 
+请注意CPU环境下运行单机多卡任务（--parallel 1)时，batch_size应大于cpu核数。
+
 ## 自定义网络结构
 
 可在[net.py](./net.py) `network` 函数中调整网络结构，当前的网络结构如下：
