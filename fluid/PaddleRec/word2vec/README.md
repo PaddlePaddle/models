@@ -31,7 +31,8 @@ Preprocess the training data to generate a word dict.
 ```bash
 python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict
 ```
-if you would like to use our supported third party vocab, please set
+if you would like to use our supported third party vocab, please set --other_dict_path as the directory of where you
+save the vocab you will use and set --with_other_dict flag on to using it.
 
 ## Train
 The command line options for training can be listed by `python train.py -h`.

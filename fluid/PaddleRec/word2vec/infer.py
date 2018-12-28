@@ -2,8 +2,6 @@ import time
 import os
 import paddle.fluid as fluid
 import numpy as np
-from Queue import PriorityQueue
-import heapq
 import logging
 import argparse
 import preprocess
