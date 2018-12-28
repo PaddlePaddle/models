@@ -16,9 +16,14 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import distutils.util
+
+import os
 import six
+import time
+import subprocess
+import distutils.util
 import numpy as np
+
 from paddle.fluid import core
 
 
@@ -61,3 +66,38 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
         type=type,
         help=help + ' Default: %(default)s.',
         **kwargs)
+
+def fmt_time():
+    """ get formatted time for now
+    """
+    now_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    return now_str
+
+def recall_topk(fea, lab, k = 1):
+    fea = np.array(fea)
+    fea = fea.reshape(fea.shape[0], -1)
+    n = np.sqrt(np.sum(fea**2, 1)).reshape(-1, 1)
+    fea = fea / n
+    a = np.sum(fea ** 2, 1).reshape(-1, 1)
+    b = a.T
+    ab = np.dot(fea, fea.T)
+    d = a + b - 2*ab
+    d = d + np.eye(len(fea)) * 1e8
+    sorted_index = np.argsort(d, 1)
+    res = 0
+    for i in range(len(fea)):
+        pred = lab[sorted_index[i][0]]
+        if lab[i] == pred:
+            res += 1.0
+    res = res / len(fea)
+    return res
+
+def get_gpu_num():
+    visibledevice = os.getenv('CUDA_VISIBLE_DEVICES')
+    if visibledevice:
+        devicenum = len(visibledevice.split(','))
+    else:
+        devicenum = subprocess.check_output(
+            [str.encode('nvidia-smi'), str.encode('-L')]).decode('utf-8').count('\n')
+    return devicenum
+

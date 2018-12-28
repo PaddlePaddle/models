@@ -28,7 +28,8 @@ def lm_model(hidden_size,
              num_layers=2,
              num_steps=20,
              init_scale=0.1,
-             dropout=None):
+             dropout=None, 
+             rnn_model='static'):
     def padding_rnn(input_embedding, len=3, init_hidden=None, init_cell=None):
         weight_1_arr = []
         weight_2_arr = []
@@ -243,7 +244,7 @@ def lm_model(hidden_size,
         input=x,
         size=[vocab_size, hidden_size],
         dtype='float32',
-        is_sparse=True,
+        is_sparse=False,
         param_attr=fluid.ParamAttr(
             name='embedding_para',
             initializer=fluid.initializer.UniformInitializer(
@@ -255,9 +256,22 @@ def lm_model(hidden_size,
             x_emb,
             dropout_prob=dropout,
             dropout_implementation='upscale_in_train')
-
-    rnn_out, last_hidden, last_cell = padding_rnn(
-        x_emb, len=num_steps, init_hidden=init_hidden, init_cell=init_cell)
+    
+    if rnn_model == "padding":
+        rnn_out, last_hidden, last_cell = padding_rnn(
+            x_emb, len=num_steps, init_hidden=init_hidden, init_cell=init_cell)
+    elif rnn_model == "static":
+        rnn_out, last_hidden, last_cell = encoder_static(
+            x_emb, len=num_steps, init_hidden=init_hidden, init_cell=init_cell)
+    elif rnn_model == "cudnn":
+        x_emb = layers.transpose( x_emb, perm=[1, 0, 2])
+        rnn_out, last_hidden, last_cell = layers.lstm( x_emb, init_hidden, init_cell,  num_steps, hidden_size, num_layers, \
+                is_bidirec=False, \
+                default_initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale) )
+        rnn_out = layers.transpose( rnn_out, perm=[1, 0, 2])
+    else:
+        print( "type not support")
+        return
     rnn_out = layers.reshape(rnn_out, shape=[-1, num_steps, hidden_size])
 
 

@@ -7,11 +7,13 @@ import time
 import sys
 import paddle
 import paddle.fluid as fluid
-import models
-import reader
+#import models
+import models_name as models
+#import reader_cv2 as reader
+import reader as reader
 import argparse
 import functools
-from models.learning_rate import cosine_decay
+from utils.learning_rate import cosine_decay
 from utility import add_arguments, print_arguments
 import math
 

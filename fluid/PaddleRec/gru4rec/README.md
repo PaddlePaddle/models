@@ -7,10 +7,15 @@
 ├── README.md            # 文档
 ├── train.py             # 训练脚本
 ├── infer.py             # 预测脚本
+├── net.py               # 网络结构
+├── text2paddle.py       # 文本数据转paddle数据
+├── cluster_train.py     # 多机训练
+├── cluster_train.sh     # 多机训练脚本
 ├── utils                # 通用函数
 ├── convert_format.py    # 转换数据格式
-├── small_train.txt      # 小样本训练集
-└── small_test.txt       # 小样本测试集
+├── vocab.txt            # 小样本字典
+├── train_data           # 小样本训练目录
+└── test_data            # 小样本测试目录
 
 ```
 
@@ -25,7 +30,9 @@ GRU4REC模型的介绍可以参阅论文[Session-based Recommendations with Recu
 
 session-based推荐应用场景非常广泛，比如用户的商品浏览、新闻点击、地点签到等序列数据。
 
+运行样例程序可跳过'RSC15 数据下载及预处理'部分
 ## RSC15 数据下载及预处理
+
 运行命令 下载RSC15官网数据集
 ```
 curl -Lo yoochoose-data.7z https://s3-eu-west-1.amazonaws.com/yc-rdata/yoochoose-data.7z
@@ -79,45 +86,51 @@ python convert_format.py
 214717867 214717867
 ```
 
+根据训练和测试文件生成字典和对应的paddle输入文件
+
+注意需要将训练文件放到一个目录下面，测试文件放到一个目录下面,同时支持多训练文件
+```
+python text2paddle.py raw_train_data/ raw_test_data/ train_data test_data vocab.txt
+```
+
+转化后生成的格式如下，可参考train_data/small_train.txt
+```
+197 196 198 236
+93 93 384 362 363 43
+336 364 407
+421 322
+314 388
+128 58
+138 138
+46 46 46
+34 34 57 57 57 342 228 321 346 357 59 376
+110 110
+```
+
 ## 训练
 '--use_cuda 1' 表示使用gpu, 缺省表示使用cpu '--parallel 1' 表示使用多卡，缺省表示使用单卡
 
-GPU 环境
-运行命令 `CUDA_VISIBLE_DEVICES=0 python train.py train_file test_file --use_cuda 1` 开始训练模型。
+具体的参数配置可运行 
 ```
-CUDA_VISIBLE_DEVICES=0 python train.py small_train.txt small_test.txt --use_cuda 1
-```
-CPU 环境
-运行命令 `python train.py train_file test_file` 开始训练模型。
-```
-python train.py small_train.txt small_test.txt
+python train.py -h
 ```
 
-当前支持的参数可参见[train.py](./train.py) `train_net` 函数
-```python
-    batch_size = 50                 # batch大小 推荐500（）
-    args = parse_args()  
-    vocab, train_reader, test_reader = utils.prepare_data(
-        train_file, test_file,batch_size=batch_size * get_cards(args),\
-        buffer_size=1000, word_freq_threshold=0)        # buffer_size 局部序列长度排序
-    train(
-        train_reader=train_reader,  
-        vocab=vocab,
-        network=network,
-        hid_size=100,               # embedding and hidden size
-        base_lr=0.01,               # base learning rate
-        batch_size=batch_size,
-        pass_num=10,                # the number of passed for training
-        use_cuda=use_cuda,          # whether to use GPU card
-        parallel=parallel,          # whether to be parallel
-        model_dir="model_recall20", # directory to save model
-        init_low_bound=-0.1,        # uniform parameter initialization lower bound
-        init_high_bound=0.1)        # uniform parameter initialization upper bound
+GPU 环境
+运行命令开始训练模型。
 ```
+CUDA_VISIBLE_DEVICES=0 python train.py --train_dir train_data/ --use_cuda 1 
+```
+CPU 环境
+运行命令开始训练模型。
+```
+python train.py --train_dir train_data/
+```
+
+请注意CPU环境下运行单机多卡任务（--parallel 1)时，batch_size应大于cpu核数。
 
 ## 自定义网络结构
 
-可在[train.py](./train.py) `network` 函数中调整网络结构，当前的网络结构如下：
+可在[net.py](./net.py) `network` 函数中调整网络结构，当前的网络结构如下：
 ```python
 emb = fluid.layers.embedding(
     input=src,
@@ -206,9 +219,10 @@ model saved in model_recall20/epoch_1
 ```
 
 ## 预测
-运行命令 `CUDA_VISIBLE_DEVICES=0 python infer.py model_dir start_epoch last_epoch(inclusive) train_file test_file` 开始预测.其中，start_epoch指定开始预测的轮次，last_epoch指定结束的轮次，例如
-```python
-CUDA_VISIBLE_DEVICES=0 python infer.py model 1 10 small_train.txt small_test.txt
+运行命令 开始预测.
+
+```
+CUDA_VISIBLE_DEVICES=0 python infer.py --test_dir test_data/ --model_dir model_recall20/ --start_index 1 --last_index 10 --use_cuda 1
 ```
 
 ## 预测结果示例
@@ -224,3 +238,16 @@ model:model_r@20/epoch_8 recall@20:0.679 time_cost(s):12.37
 model:model_r@20/epoch_9 recall@20:0.680 time_cost(s):12.22
 model:model_r@20/epoch_10 recall@20:0.681 time_cost(s):12.2
 ```
+
+
+## 多机训练
+厂内用户可以参考[wiki](http://wiki.baidu.com/pages/viewpage.action?pageId=628300529)利用paddlecloud 配置多机环境
+
+可参考cluster_train.py 配置其他多机环境
+
+运行命令本地模拟多机场景
+```
+sh cluster_train.sh
+```
+
+注意本地模拟需要关闭代理

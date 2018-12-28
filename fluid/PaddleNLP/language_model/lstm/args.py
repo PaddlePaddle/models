@@ -26,7 +26,12 @@ def parse_args():
         "--model_type",
         type=str,
         default="small",
-        help="model_type [test|small|med|big]")
+        help="model_type [test|small|medium|large]")
+    parser.add_argument(
+        "--rnn_model",
+        type=str,
+        default="static",
+        help="model_type [static|padding|cudnn]")
     parser.add_argument(
         "--data_path", type=str, help="all the data for train,valid,test")
     parser.add_argument('--para_init', action='store_true')

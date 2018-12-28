@@ -1,4 +1,4 @@
-Fluid 模型库
+`Fluid 模型库 <https://github.com/PaddlePaddle/models/tree/develop/fluid>`__
 ============
 
 图像分类
@@ -22,7 +22,7 @@ Fluid模型配置和参数文件的工具。
    Network <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models>`__
 -  `SE-ResNeXt <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models>`__
 -  `Caffe模型转换为Paddle
-   Fluid配置和模型文件工具 <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/caffe2fluid>`__
+   Fluid配置和模型文件工具 <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/caffe2fluid>`__
 
 目标检测
 --------
