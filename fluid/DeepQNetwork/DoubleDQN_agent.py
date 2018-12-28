@@ -86,7 +86,6 @@ class DoubleDQNModel(object):
         policy_vars.sort(key=lambda x: x.name)
         target_vars.sort(key=lambda x: x.name)
         
-        self._sync_program = fluid.Program()
         with fluid.program_guard(self._sync_program):
             sync_ops = []
             for i, var in enumerate(policy_vars):
