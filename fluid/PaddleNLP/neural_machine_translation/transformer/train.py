@@ -496,8 +496,7 @@ def train_loop(exe,
                         np.log(TrainTaskConfig.label_smooth_eps / (
                             ModelHyperParams.trg_vocab_size - 1) + 1e-20))
 
-    # num_iteration_per_drop_scope start from 1
-    step_idx = 1
+    step_idx = 0
     init_flag = True
 
     logging.info("begin train")
