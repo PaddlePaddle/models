@@ -29,7 +29,7 @@ The average game rewards that can be obtained for the three models as the number
 + gym
 + tqdm
 + opencv-python
-+ paddlepaddle-gpu>=0.12.0
++ paddlepaddle-gpu>=1.0.0
 + ale_python_interface
 
 ### Install Dependencies:

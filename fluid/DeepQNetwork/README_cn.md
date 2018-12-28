@@ -28,7 +28,7 @@
 + gym
 + tqdm
 + opencv-python
-+ paddlepaddle-gpu>=0.12.0
++ paddlepaddle-gpu>=1.0.0
 + ale_python_interface
 
 ### 下载依赖：
