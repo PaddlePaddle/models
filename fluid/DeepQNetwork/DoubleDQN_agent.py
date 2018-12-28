@@ -5,7 +5,6 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from tqdm import tqdm
-from utils import fluid_flatten, fluid_argmax
 
 
 class DoubleDQNModel(object):
@@ -62,7 +61,8 @@ class DoubleDQNModel(object):
             targetQ_predict_value = self.get_DQN_prediction(next_s, target=True)
 
             next_s_predcit_value = self.get_DQN_prediction(next_s)
-            greedy_action = fluid_argmax(next_s_predcit_value)
+            greedy_action = fluid.layers.argmax(next_s_predcit_value, axis=1)
+            greedy_action = fluid.layers.unsqueeze(greedy_action, axes=[1])
 
             predict_onehot = fluid.layers.one_hot(greedy_action, self.action_dim)
             best_v = fluid.layers.reduce_sum(
@@ -105,50 +105,50 @@ class DoubleDQNModel(object):
         conv1 = fluid.layers.conv2d(
             input=image,
             num_filters=32,
-            filter_size=[5, 5],
-            stride=[1, 1],
-            padding=[2, 2],
+            filter_size=5,
+            stride=1,
+            padding=2,
             act='relu',
             param_attr=ParamAttr(name='{}_conv1'.format(variable_field)),
             bias_attr=ParamAttr(name='{}_conv1_b'.format(variable_field)))
         max_pool1 = fluid.layers.pool2d(
-            input=conv1, pool_size=[2, 2], pool_stride=[2, 2], pool_type='max')
+            input=conv1, pool_size=2, pool_stride=2, pool_type='max')
 
         conv2 = fluid.layers.conv2d(
             input=max_pool1,
             num_filters=32,
-            filter_size=[5, 5],
-            stride=[1, 1],
-            padding=[2, 2],
+            filter_size=5,
+            stride=1,
+            padding=2,
             act='relu',
             param_attr=ParamAttr(name='{}_conv2'.format(variable_field)),
             bias_attr=ParamAttr(name='{}_conv2_b'.format(variable_field)))
         max_pool2 = fluid.layers.pool2d(
-            input=conv2, pool_size=[2, 2], pool_stride=[2, 2], pool_type='max')
+            input=conv2, pool_size=2, pool_stride=2, pool_type='max')
 
         conv3 = fluid.layers.conv2d(
             input=max_pool2,
             num_filters=64,
-            filter_size=[4, 4],
-            stride=[1, 1],
-            padding=[1, 1],
+            filter_size=4,
+            stride=1,
+            padding=1,
             act='relu',
             param_attr=ParamAttr(name='{}_conv3'.format(variable_field)),
             bias_attr=ParamAttr(name='{}_conv3_b'.format(variable_field)))
         max_pool3 = fluid.layers.pool2d(
-            input=conv3, pool_size=[2, 2], pool_stride=[2, 2], pool_type='max')
+            input=conv3, pool_size=2, pool_stride=2, pool_type='max')
 
         conv4 = fluid.layers.conv2d(
             input=max_pool3,
             num_filters=64,
-            filter_size=[3, 3],
-            stride=[1, 1],
-            padding=[1, 1],
+            filter_size=3,
+            stride=1,
+            padding=1,
             act='relu',
             param_attr=ParamAttr(name='{}_conv4'.format(variable_field)),
             bias_attr=ParamAttr(name='{}_conv4_b'.format(variable_field)))
 
-        flatten = fluid_flatten(conv4)
+        flatten = fluid.layers.flatten(conv4, axis=1)
 
         out = fluid.layers.fc(
             input=flatten,
