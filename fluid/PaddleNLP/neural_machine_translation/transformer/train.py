@@ -469,7 +469,7 @@ def train_loop(exe,
     # For faster executor
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.use_experimental_executor = True
-    # exec_strategy.num_iteration_per_drop_scope = 5
+    exec_strategy.num_iteration_per_drop_scope = int(args.fetch_steps)
     build_strategy = fluid.BuildStrategy()
     # Since the token number differs among devices, customize gradient scale to
     # use token average cost among multi-devices. and the gradient scale is
@@ -496,7 +496,8 @@ def train_loop(exe,
                         np.log(TrainTaskConfig.label_smooth_eps / (
                             ModelHyperParams.trg_vocab_size - 1) + 1e-20))
 
-    step_idx = 0
+    # num_iteration_per_drop_scope start from 1
+    step_idx = 1
     init_flag = True
 
     logging.info("begin train")
