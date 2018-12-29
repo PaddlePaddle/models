@@ -67,7 +67,7 @@ class BRCDataset(object):
         Args:
             data_path: the data file to load
         """
-        with open(data_path) as fin:
+        with open(data_path, 'r', encoding='utf-8') as fin:
             data_set = []
             for lidx, line in enumerate(fin):
                 sample = json.loads(line.strip())
