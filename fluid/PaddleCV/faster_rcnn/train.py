@@ -151,9 +151,9 @@ def train():
                 #smoothed_loss.add_value(np.mean(np.array(losses[0])))
                 lr = np.array(fluid.global_scope().find_var('learning_rate')
                               .get_tensor())
-                print("Iter {}, lr {}, loss {}, rpn_cls_loss {},\
-                       rpn_reg_loss {}, loss_cls {}, loss_bbox {},\
-                       loss_mask {}, time {}"
+                print("Iter {:d}, lr {:5f}, loss {:5f}, rpn_cls_loss {:5f},\
+                       rpn_reg_loss {:5f}, loss_cls {:5f}, loss_bbox {:5f},\
+                       loss_mask {:5f}, time {:5f}"
                                              .format(iter_id, lr[0], \
                     np.array(loss).mean(), np.array(rpn_cls_loss).mean(), \
                     np.array(rpn_reg_loss).mean(), np.array(loss_cls).mean(), \
