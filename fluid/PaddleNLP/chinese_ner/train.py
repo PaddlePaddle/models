@@ -65,7 +65,7 @@ def parse_args():
 
 def print_arguments(args):
     print('-----------  Configuration Arguments -----------')
-    for arg, value in sorted(vars(args).iteritems()):
+    for arg, value in sorted(vars(args).items()):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
 
@@ -220,9 +220,9 @@ def test2(exe, chunk_evaluator, inference_program, test_data, place,
           cur_fetch_list):
     chunk_evaluator.reset()
     for data in test_data():
-        word = to_lodtensor(map(lambda x: x[0], data), place)
-        mention = to_lodtensor(map(lambda x: x[1], data), place)
-        target = to_lodtensor(map(lambda x: x[2], data), place)
+        word = to_lodtensor(list(map(lambda x: x[0], data)), place)
+        mention = to_lodtensor(list(map(lambda x: x[1], data)), place)
+        target = to_lodtensor(list(map(lambda x: x[2], data)), place)
         result_list = exe.run(
             inference_program,
             feed={"word": word,
@@ -232,8 +232,9 @@ def test2(exe, chunk_evaluator, inference_program, test_data, place,
         number_infer = np.array(result_list[0])
         number_label = np.array(result_list[1])
         number_correct = np.array(result_list[2])
-        chunk_evaluator.update(number_infer[0], number_label[0],
-                               number_correct[0])
+        chunk_evaluator.update(number_infer[0].astype('int64'),
+                               number_label[0].astype('int64'),
+                               number_correct[0].astype('int64'))
     return chunk_evaluator.eval()
 
 
@@ -241,9 +242,9 @@ def test(test_exe, chunk_evaluator, inference_program, test_data, place,
          cur_fetch_list):
     chunk_evaluator.reset()
     for data in test_data():
-        word = to_lodtensor(map(lambda x: x[0], data), place)
-        mention = to_lodtensor(map(lambda x: x[1], data), place)
-        target = to_lodtensor(map(lambda x: x[2], data), place)
+        word = to_lodtensor(list(map(lambda x: x[0], data)), place)
+        mention = to_lodtensor(list(map(lambda x: x[1], data)), place)
+        target = to_lodtensor(list(map(lambda x: x[2], data)), place)
         result_list = test_exe.run(
             fetch_list=cur_fetch_list,
             feed={"word": word,
@@ -252,8 +253,9 @@ def test(test_exe, chunk_evaluator, inference_program, test_data, place,
         number_infer = np.array(result_list[0])
         number_label = np.array(result_list[1])
         number_correct = np.array(result_list[2])
-        chunk_evaluator.update(number_infer.sum(),
-                               number_label.sum(), number_correct.sum())
+        chunk_evaluator.update(number_infer.sum().astype('int64'),
+                               number_label.sum().astype('int64'),
+                               number_correct.sum().astype('int64'))
     return chunk_evaluator.eval()
 
 
@@ -270,17 +272,17 @@ def main(args):
         crf_decode = fluid.layers.crf_decoding(
             input=feature_out, param_attr=fluid.ParamAttr(name='crfw'))
 
-        inference_program = fluid.default_main_program().clone(for_test=True)
-
-        sgd_optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
-        sgd_optimizer.minimize(avg_cost)
-
         (precision, recall, f1_score, num_infer_chunks, num_label_chunks,
          num_correct_chunks) = fluid.layers.chunk_eval(
              input=crf_decode,
              label=target,
              chunk_scheme="IOB",
              num_chunk_types=int(math.ceil((args.label_dict_len - 1) / 2.0)))
+
+        inference_program = fluid.default_main_program().clone(for_test=True)
+
+        sgd_optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
+        sgd_optimizer.minimize(avg_cost)
 
         chunk_evaluator = fluid.metrics.ChunkEvaluator()
 
@@ -312,7 +314,7 @@ def main(args):
             test_exe = exe
 
         batch_id = 0
-        for pass_id in xrange(args.num_passes):
+        for pass_id in range(args.num_passes):
             chunk_evaluator.reset()
             train_reader_iter = train_reader()
             start_time = time.time()
@@ -326,9 +328,9 @@ def main(args):
                         ],
                         feed=feeder.feed(cur_batch))
                     chunk_evaluator.update(
-                        np.array(nums_infer).sum(),
-                        np.array(nums_label).sum(),
-                        np.array(nums_correct).sum())
+                        np.array(nums_infer).sum().astype("int64"),
+                        np.array(nums_label).sum().astype("int64"),
+                        np.array(nums_correct).sum().astype("int64"))
                     cost_list = np.array(cost)
                     batch_id += 1
                 except StopIteration:
