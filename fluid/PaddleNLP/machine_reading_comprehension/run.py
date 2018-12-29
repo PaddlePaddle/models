@@ -22,6 +22,7 @@ import os
 import random
 import json
 import six
+import multiprocessing
 
 import paddle
 import paddle.fluid as fluid
