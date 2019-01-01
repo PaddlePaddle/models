@@ -34,6 +34,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--model_name',       type=str,   default='cdssmNet',                  help="Which model to train")
 parser.add_argument('--config',           type=str,   default='cdssm_base',       help="The global config setting")
 parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
+parser.add_argument('--epoch_num', type=int, help='Number of epoch')
 
 DATA_DIR = os.path.join(os.path.expanduser('~'), '.cache/paddle/dataset')
 
@@ -240,6 +241,9 @@ def main():
     """
     args = parser.parse_args()
     global_config = configs.__dict__[args.config]()
+
+    if args.epoch_num != None:
+        global_config.epoch_num = args.epoch_num
 
     print("net_name: ", args.model_name)
     net = models.__dict__[args.model_name](global_config)
