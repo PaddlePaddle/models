@@ -68,6 +68,7 @@ class GeneratorEnqueuer(object):
                         try:
                             task()
                         except Exception:
+                            traceback.print_exc()
                             self._stop_event.set()
                             break
             else:
@@ -75,6 +76,7 @@ class GeneratorEnqueuer(object):
                     try:
                         task()
                     except Exception:
+                        traceback.print_exc()
                         self._stop_event.set()
                         break
 
