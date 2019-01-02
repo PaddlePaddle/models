@@ -55,7 +55,10 @@ def load_model():
     else:
         if args.num_classes == 19:
             fluid.io.load_params(
-                exe, dirname="", filename=args.init_weights_path, vars=myvars)
+                exe,
+                dirname="",
+                filename=args.init_weights_path,
+                main_program=tp)
         else:
             fluid.io.load_vars(
                 exe, dirname="", filename=args.init_weights_path, vars=myvars)
