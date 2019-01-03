@@ -390,6 +390,8 @@ def train(args):
         else:
             global_step, last_cost = train_with_feed(global_step)
         train_time += time.time() - begin_time
+        print("Pass {0}, pass_time_cost {1}"
+          .format(epoch, "%2.2f sec" % time.time() -begin_time ))
     # For internal continuous evaluation
     if "CE_MODE_X" in os.environ:
         print("kpis	train_cost	%f" % last_cost)
