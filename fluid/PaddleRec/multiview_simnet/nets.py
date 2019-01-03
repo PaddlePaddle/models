@@ -217,12 +217,12 @@ class MultiviewSimnet(object):
         # lookup embedding for each slot
         q_embs = [
             nn.embedding(
-                input=query, size=self.emb_shape, param_attr="emb.w")
+                input=query, size=self.emb_shape, param_attr="emb")
             for query in q_slots
         ]
         pt_embs = [
             nn.embedding(
-                input=title, size=self.emb_shape, param_attr="emb.w")
+                input=title, size=self.emb_shape, param_attr="emb")
             for title in pt_slots
         ]
         # encode each embedding field with encoder
@@ -236,8 +236,8 @@ class MultiviewSimnet(object):
         q_concat = nn.concat(q_encodes)
         pt_concat = nn.concat(pt_encodes)
         # projection of hidden layer
-        q_hid = nn.fc(q_concat, size=self.hidden_size, param_attr='q_fc.w')
-        pt_hid = nn.fc(pt_concat, size=self.hidden_size, param_attr='t_fc.w')
+        q_hid = nn.fc(q_concat, size=self.hidden_size, param_attr='q_fc.w', bias_attr='q_fc.b')
+        pt_hid = nn.fc(pt_concat, size=self.hidden_size, param_attr='t_fc.w', bias_attr='t_fc.b')
         # cosine of hidden layers
         cos = nn.cos_sim(q_hid, pt_hid)
         return cos
