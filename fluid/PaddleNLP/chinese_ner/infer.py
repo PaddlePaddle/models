@@ -52,7 +52,7 @@ def parse_args():
 
 def print_arguments(args):
     print('-----------  Configuration Arguments -----------')
-    for arg, value in sorted(vars(args).iteritems()):
+    for arg, value in sorted(vars(args).items()):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
 
@@ -60,6 +60,7 @@ def print_arguments(args):
 def load_reverse_dict(dict_path):
     return dict((idx, line.strip().split("\t")[0])
                 for idx, line in enumerate(open(dict_path, "r").readlines()))
+
 
 def to_lodtensor(data, place):
     seq_lens = [len(seq) for seq in data]
@@ -74,7 +75,6 @@ def to_lodtensor(data, place):
     res.set(flattened_data, place)
     res.set_lod([lod])
     return res
-
 
 
 def infer(args):
@@ -108,8 +108,8 @@ def infer(args):
                 profiler.reset_profiler()
             iters = 0
             for data in test_data():
-                word = to_lodtensor(map(lambda x: x[0], data), place)
-                mention = to_lodtensor(map(lambda x: x[1], data), place)
+                word = to_lodtensor(list(map(lambda x: x[0], data)), place)
+                mention = to_lodtensor(list(map(lambda x: x[1], data)), place)
 
                 start = time.time()
                 crf_decode = exe.run(inference_program,
@@ -122,12 +122,12 @@ def infer(args):
                 np_data = np.array(crf_decode[0])
                 word_count = 0
                 assert len(data) == len(lod_info) - 1
-                for sen_index in xrange(len(data)):
+                for sen_index in range(len(data)):
                     assert len(data[sen_index][0]) == lod_info[
                         sen_index + 1] - lod_info[sen_index]
                     word_index = 0
-                    for tag_index in xrange(lod_info[sen_index],
-                                            lod_info[sen_index + 1]):
+                    for tag_index in range(lod_info[sen_index],
+                                           lod_info[sen_index + 1]):
                         word = str(data[sen_index][0][word_index])
                         gold_tag = label_reverse_dict[data[sen_index][2][
                             word_index]]
