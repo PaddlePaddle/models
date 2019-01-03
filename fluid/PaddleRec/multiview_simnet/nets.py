@@ -51,8 +51,8 @@ class CNNEncoder(object):
             filter_size=self.win_size,
             act=self.act,
             pool_type=self.pool_type,
-            param_attr=str(str(self.param_name) + ".param"),
-            bias_attr=str(str(self.param_name) + ".bias"))
+            param_attr=self.param_name + ".param",
+            bias_attr=self.param_name + ".bias")
         
 
 
