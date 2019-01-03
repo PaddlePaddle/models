@@ -189,7 +189,6 @@ def train(args, config, train_params, train_file_list):
         head_loss = 0
         for pass_id in range(start_epoc, epoc_num):
             epoch_idx += 1
-            print("pass_id", pass_id, start_epoc, epoc_num)
             start_time = time.time()
             prev_start_time = start_time
             end_time = 0
