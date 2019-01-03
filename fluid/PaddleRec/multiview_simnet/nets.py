@@ -67,15 +67,15 @@ class GrnnEncoder(object):
         fc0 = nn.fc(
             input=emb, 
             size=self.hidden_size * 3, 
-            param_attr=str(str(self.param_name) + "_fc.w"),
-            bias_attr=str(str(self.param_name) + "_fc.b")
-        )
+            param_attr=self.param_name + "_fc.w",
+            bias_attr=False)
+        
         gru_h = nn.dynamic_gru(
             input=fc0,
             size=self.hidden_size,
             is_reverse=False,
-            param_attr=str(str(self.param_name) + ".param"),
-            bias_attr=str(str(self.param_name) + ".bias"))
+            param_attr=self.param_name + ".param",
+            bias_attr=self.param_name + ".bias")
         return nn.sequence_pool(input=gru_h, pool_type='max')
 
 
