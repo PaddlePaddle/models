@@ -15,8 +15,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 - [fluid模型](fluid): 使用 PaddlePaddle Fluid版本的 APIs，我们特别推荐您使用Fluid模型。
 
-- [legacy模型](legacy): 使用 PaddlePaddle v2版本的 APIs。
-
 
 ## License
 This tutorial is contributed by [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) and licensed under the [Apache-2.0 license](LICENSE).
