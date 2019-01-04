@@ -306,7 +306,7 @@ def train(args):
         train_loss = np.array(train_info[0]).mean()
         train_acc1 = np.array(train_info[1]).mean()
         train_acc5 = np.array(train_info[2]).mean()
-        train_speed = np.array(train_time).mean() / train_batch_size
+        train_speed = np.array(train_time).mean() / (train_batch_size * device_num)
 
         test_py_reader.start()
 
