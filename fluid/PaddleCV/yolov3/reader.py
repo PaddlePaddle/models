@@ -41,7 +41,7 @@ class DataSetReader(object):
         # cfg.data_dir = "dataset/coco"
         # cfg.train_file_list = 'annotations/instances_val2017.json'
         # cfg.train_data_dir = 'val2017'
-        cfg.dataset = "coco2017"
+        # cfg.dataset = "coco2017"
         if 'coco2014' in cfg.dataset:
             cfg.train_file_list = 'annotations/instances_train2014.json'
             cfg.train_data_dir = 'train2014'
@@ -170,16 +170,20 @@ class DataSetReader(object):
             im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
             gt_boxes = img['gt_boxes'].copy()
             gt_labels = img['gt_labels'].copy()
+            gt_scores = np.ones_like(gt_labels)
 
             if mixup_img:
                 mixup_im = cv2.imread(mixup_img['image'])
                 mixup_im = cv2.cvtColor(mixup_im, cv2.COLOR_BGR2RGB)
                 mixup_gt_boxes = mixup_img['gt_boxes'].copy()
                 mixup_gt_labels = mixup_img['gt_labels'].copy()
-                im, gt_boxes, gt_labels = image_utils.image_mixup(im, gt_boxes, gt_labels, \
-                        mixup_im, mixup_gt_boxes, mixup_gt_labels)
+                mixup_gt_scores = np.ones_like(mixup_gt_labels)
+                im, gt_boxes, gt_labels, gt_scores = image_utils.image_mixup(im, gt_boxes, \
+                        gt_labels, gt_scores, mixup_im, mixup_gt_boxes, mixup_gt_labels, \
+                        mixup_gt_scores)
 
-            im, gt_boxes, gt_labels = image_utils.image_augment(im, gt_boxes, gt_labels, size, mean)
+            im, gt_boxes, gt_labels, gt_scores = image_utils.image_augment(im, gt_boxes, gt_labels, gt_scores, size, mean)
+
             # h, w, _ = im.shape
             # im_scale_x = size / float(w)
             # im_scale_y = size / float(h)
@@ -190,7 +194,7 @@ class DataSetReader(object):
             out_img = (im / 255.0 - mean) / std
             out_img = out_img.transpose((2, 0, 1)).astype('float32')
 
-            return (out_img, gt_boxes, gt_labels)
+            return (out_img, gt_boxes, gt_labels, gt_scores)
 
         def get_img_size(size, random_sizes=[]):
             if len(random_sizes):
@@ -222,9 +226,9 @@ class DataSetReader(object):
                     total_read_cnt += 1
                     if read_cnt % len(imgs) == 0 and shuffle:
                         np.random.shuffle(imgs)
-                    im, gt_boxes, gt_labels = img_reader_with_augment(img, img_size, cfg.pixel_means, cfg.pixel_stds, mixup_img)
-                    batch_out.append((im, gt_boxes, gt_labels))
-                    # img_ids.append(img['id'])
+                    im, gt_boxes, gt_labels, gt_scores = img_reader_with_augment(img, img_size, cfg.pixel_means, cfg.pixel_stds, mixup_img)
+                    batch_out.append((im, gt_boxes, gt_labels, gt_scores))
+                    # img_ids.append((img['id'], mixup_img['id'] if mixup_img else -1))
 
                     if len(batch_out) == batch_size:
                         # print("img_ids: ", img_ids)

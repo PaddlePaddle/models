@@ -140,7 +140,7 @@ def rescale_box_in_input_image(boxes, im_shape, input_size):
     boxes[boxes<0] = 0
     return boxes
 
-def box_crop(boxes, labels, crop, img_shape):
+def box_crop(boxes, labels, scores, crop, img_shape):
     x, y, w, h = map(float, crop)
     im_w, im_h = map(float, img_shape)
 
@@ -160,10 +160,11 @@ def box_crop(boxes, labels, crop, img_shape):
     mask = np.logical_and(mask, (boxes[:, :2] < boxes[:, 2:]).all(axis=1))
     boxes = boxes * np.expand_dims(mask.astype('float32'), axis=1)
     labels = labels * mask.astype('float32')
+    scores = scores * mask.astype('float32')
     boxes[:, 0], boxes[:, 2] = (boxes[:, 0] + boxes[:, 2]) / 2 / w, (boxes[:, 2] - boxes[:, 0]) / w
     boxes[:, 1], boxes[:, 3] = (boxes[:, 1] + boxes[:, 3]) / 2 / h, (boxes[:, 3] - boxes[:, 1]) / h
 
-    return boxes, labels, mask.sum()
+    return boxes, labels, scores, mask.sum()
 
 def get_yolo_detection(preds, anchors, class_num, img_width, img_height):
     """Get yolo box, confidence score, class label from Darknet53 output"""

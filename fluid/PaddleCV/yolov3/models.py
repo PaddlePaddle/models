@@ -204,6 +204,7 @@ class YOLOv3(object):
                             x=out,
                             gtbox=self.gtbox,
                             gtlabel=self.gtlabel,
+                            gtscore=self.gtscore,
                             anchors=anchors,
                             anchor_mask=anchor_mask,
                             class_num=class_num,
@@ -232,11 +233,11 @@ class YOLOv3(object):
         if self.use_pyreader and self.is_train:
             self.py_reader = fluid.layers.py_reader(
                 capacity=64,
-                shapes = [[-1] + self.image_shape, [-1, cfg.max_box_num, 4], [-1, cfg.max_box_num]],
-                lod_levels=[0, 0, 0],
-                dtypes=['float32'] * 2 + ['int32'],
+                shapes = [[-1] + self.image_shape, [-1, cfg.max_box_num, 4], [-1, cfg.max_box_num], [-1, cfg.max_box_num]],
+                lod_levels=[0, 0, 0, 0],
+                dtypes=['float32'] * 2 + ['int32'] + ['float32'],
                 use_double_buffer=True)
-            self.image, self.gtbox, self.gtlabel = fluid.layers.read_file(self.py_reader)
+            self.image, self.gtbox, self.gtlabel, self.gtscore = fluid.layers.read_file(self.py_reader)
         else:
             self.image = fluid.layers.data(
                     name='image', shape=self.image_shape, dtype='float32'
@@ -247,6 +248,9 @@ class YOLOv3(object):
             self.gtlabel = fluid.layers.data(
                     name='gtlabel', shape=[cfg.max_box_num], dtype='int32'
                     )
+            self.gtscore = fluid.layers.data(
+                    name='gtscore', shape=[cfg.max_box_num], dtype='float32'
+                    )
             self.im_shape = fluid.layers.data(
                     name="im_shape", shape=[2], dtype='int32')
             self.im_id = fluid.layers.data(
@@ -255,7 +259,7 @@ class YOLOv3(object):
     def feeds(self):
         if not self.is_train:
             return [self.image, self.im_id, self.im_shape]
-        return [self.image, self.gtbox, self.gtlabel]
+        return [self.image, self.gtbox, self.gtlabel, self.gtscore]
 
     def get_hyperparams(self):
         return self.hyperparams
