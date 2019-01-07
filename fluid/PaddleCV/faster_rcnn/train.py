@@ -35,7 +35,7 @@ def train():
     learning_rate = cfg.learning_rate
     image_shape = [3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
 
-    if cfg.debug:
+    if cfg.debug or cfg.enable_ce:
         fluid.default_startup_program().random_seed = 1000
         fluid.default_main_program().random_seed = 1000
         import random
@@ -118,6 +118,8 @@ def train():
         try:
             start_time = time.time()
             prev_start_time = start_time
+            total_time = 0
+            last_loss = 0
             every_pass_loss = []
             for iter_id in range(cfg.max_iter):
                 prev_start_time = start_time
@@ -131,9 +133,23 @@ def train():
                     iter_id, lr[0],
                     smoothed_loss.get_median_value(
                     ), start_time - prev_start_time))
+                end_time = time.time()
+                total_time += end_time - start_time
+                last_loss = np.mean(np.array(losses[0]))
+
                 sys.stdout.flush()
                 if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
                     save_model("model_iter{}".format(iter_id))
+            # only for ce
+            if cfg.enable_ce:
+                gpu_num = get_cards(cfg)
+                epoch_idx = iter_id + 1
+                loss = last_loss
+                print("kpis\teach_pass_duration_card%s\t%s" %
+                        (gpu_num, total_time / epoch_idx))
+                print("kpis\ttrain_loss_card%s\t%s" %
+                        (gpu_num, loss))
+
         except fluid.core.EOFException:
             py_reader.reset()
         return np.mean(every_pass_loss)
@@ -142,6 +158,8 @@ def train():
         start_time = time.time()
         prev_start_time = start_time
         start = start_time
+        total_time = 0
+        last_loss = 0
         every_pass_loss = []
         smoothed_loss = SmoothedValue(cfg.log_window)
         for iter_id, data in enumerate(train_reader()):
@@ -154,6 +172,9 @@ def train():
             smoothed_loss.add_value(loss_v)
             lr = np.array(fluid.global_scope().find_var('learning_rate')
                           .get_tensor())
+            end_time = time.time()
+            total_time += end_time - start_time
+            last_loss = loss_v
             print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                 iter_id, lr[0],
                 smoothed_loss.get_median_value(), start_time - prev_start_time))
@@ -162,6 +183,16 @@ def train():
                 save_model("model_iter{}".format(iter_id))
             if (iter_id + 1) == cfg.max_iter:
                 break
+        # only for ce
+        if cfg.enable_ce:
+            gpu_num = get_cards(cfg)
+            epoch_idx = iter_id + 1
+            loss = last_loss
+            print("kpis\teach_pass_duration_card%s\t%s" %
+                    (gpu_num, total_time / epoch_idx))
+            print("kpis\ttrain_loss_card%s\t%s" %
+                    (gpu_num, loss))
+
         return np.mean(every_pass_loss)
 
     if cfg.use_pyreader:
@@ -169,6 +200,15 @@ def train():
     else:
         train_loop()
     save_model('model_final')
+
+
+def get_cards(cfg):
+    if cfg.enable_ce:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        num = len(cards.split(","))
+        return num
+    else:
+        return cfg.num_devices
 
 
 if __name__ == '__main__':
