@@ -131,9 +131,25 @@ def build_small_test_case(emb):
     desc5 = "old - older + deeper = deep"
     label5 = word_to_id["deep"]
 
-    test_cases = [emb1, emb2, emb3, emb4, emb5]
-    test_case_desc = [desc1, desc2, desc3, desc4, desc5]
-    test_labels = [label1, label2, label3, label4, label5]
+    emb6 = emb[word_to_id['boy']]
+    desc6 = "boy"
+    label6 = word_to_id["boy"]
+    emb7 = emb[word_to_id['king']]
+    desc7 = "king"
+    label7 = word_to_id["king"]
+    emb8 = emb[word_to_id['sun']]
+    desc8 = "sun"
+    label8 = word_to_id["sun"]
+    emb9 = emb[word_to_id['key']]
+    desc9 = "key"
+    label9 = word_to_id["key"]
+    test_cases = [emb1, emb2, emb3, emb4, emb5, emb6, emb7, emb8, emb9]
+    test_case_desc = [
+        desc1, desc2, desc3, desc4, desc5, desc6, desc7, desc8, desc9
+    ]
+    test_labels = [
+        label1, label2, label3, label4, label5, label6, label7, label8, label9
+    ]
     return norm(np.array(test_cases)), test_case_desc, test_labels
 
 
@@ -229,8 +245,6 @@ def infer_during_train(args):
     while True:
         time.sleep(60)
         current_list = os.listdir(args.model_output_dir)
-        # logger.info("current_list is : {}".format(current_list))
-        # logger.info("model_file_list is : {}".format(model_file_list))
         if set(model_file_list) == set(current_list):
             if solved_new:
                 solved_new = False
