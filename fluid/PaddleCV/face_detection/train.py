@@ -34,6 +34,7 @@ add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init mode
 add_arg('data_dir',         str,   'data',          "The base dir of dataset")
 parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 parser.add_argument('--batch_num', type=int, help="batch num for ce")
+parser.add_argument('--num_devices', type=int, default=1, help='Number of GPU devices')
 #yapf: enable
 
 train_parameters = {
