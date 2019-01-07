@@ -2,7 +2,6 @@
 
 import os
 import sys
-os.environ['ceroot'] = "./"
 sys.path.append(os.environ['ceroot'])
 from kpi import CostKpi
 from kpi import DurationKpi
