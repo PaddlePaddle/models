@@ -206,7 +206,6 @@ _C.bbox_clip = np.log(1000. / 16.)
 
 # ce
 _C.enable_ce = False
-_C.num_devices = 1
 
 # dataset path
 _C.train_file_list = 'annotations/instances_train2017.json'

@@ -132,8 +132,6 @@ def parse_args():
     # ce
     parser.add_argument(
             '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
-    parser.add_argument(
-            '--num_devices', type=int, default=1, help='Number of GPU devices')
     # yapf: enable
     args = parser.parse_args()
     file_name = sys.argv[0]
