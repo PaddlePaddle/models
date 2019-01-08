@@ -102,6 +102,7 @@ def parse_args():
     add_arg('class_num',        int,    80,          "Class number.")
     add_arg('data_dir',         str,    'dataset/coco',        "The data root path.")
     add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
+    add_arg('use_multiprocess', bool,   True,           "Use multiprocessing for train reader.")
     add_arg('use_profile',      bool,   False,       "Whether use profiler.")
     add_arg('start_iter',       int,    0,     "Start iteration.")
     #SOLVER
