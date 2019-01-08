@@ -14,6 +14,11 @@ Download dataset:
 ```bash
 cd data && ./download.sh && cd ..
 ```
+if you would like to use our supported third party vocab, please run:
+
+```bash
+wget http://download.tensorflow.org/models/LM_LSTM_CNN/vocab-2016-09-10.txt
+```
 
 ## Model
 This model implement a skip-gram model of word2vector.
@@ -24,8 +29,10 @@ This model implement a skip-gram model of word2vector.
 Preprocess the training data to generate a word dict.
 
 ```bash
-python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict
+python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --is_local --dict_path data/1-billion_dict
 ```
+if you would like to use our supported third party vocab, please set --other_dict_path as the directory of where you
+save the vocab you will use and set --with_other_dict flag on to using it.
 
 ## Train
 The command line options for training can be listed by `python train.py -h`.
