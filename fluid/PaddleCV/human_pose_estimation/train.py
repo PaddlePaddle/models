@@ -17,6 +17,7 @@
 
 import os
 import numpy as np
+import time
 import cv2
 import paddle
 import paddle.fluid as fluid
@@ -42,6 +43,8 @@ add_arg('pretrained_model', str,   None,                 "Whether to use pretrai
 add_arg('checkpoint',       str,   None,                 "Whether to resume checkpoint.")
 add_arg('lr',               float, 0.001,                "Set learning rate.")
 add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate decay strategy.")
+parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
+parser.add_argument('--batch_num', type=int, help="batch num for ce")
 # yapf: enable
 
 def optimizer_setting(args, params):
@@ -93,6 +96,11 @@ def train(args):
 
     print_arguments(args)
 
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_main_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
+
     # Image and target
     image = layers.data(name='image', shape=[3, IMAGE_SIZE[1], IMAGE_SIZE[0]], dtype='float32')
     target = layers.data(name='target', shape=[args.kp_dim, HEATMAP_SIZE[1], HEATMAP_SIZE[0]], dtype='float32')
@@ -137,20 +145,33 @@ def train(args):
 
     # Dataloader
     train_reader = paddle.batch(reader.train(), batch_size=args.batch_size)
+    if args.enable_ce:
+        import lib.coco_reader_ce as reader_ce
+        train_reader = paddle.batch(reader_ce.train_ce(), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, target, target_weight])
 
     train_exe = fluid.ParallelExecutor(
         use_cuda=True if args.use_gpu else False, loss_name=loss.name)
     fetch_list = [image.name, loss.name, output.name]
 
+    total_time = 0
+    last_loss = 0
     for pass_id in range(params["num_epochs"]):
         for batch_id, data in enumerate(train_reader()):
+            if args.enable_ce and args.batch_num is not None:
+                if batch_id >= args.batch_num:
+                    break
+            start_time = time.time()
             current_lr = np.array(paddle.fluid.global_scope().find_var('learning_rate').get_tensor())
 
             input_image, loss, out_heatmaps = train_exe.run(
                     fetch_list, feed=feeder.feed(data))
 
             loss = np.mean(np.array(loss))
+
+            end_time = time.time()
+            total_time += end_time - start_time
+            last_loss = loss
 
             print('Epoch [{:4d}/{:3d}] LR: {:.10f} '
                   'Loss = {:.5f}'.format(
@@ -159,11 +180,29 @@ def train(args):
             if batch_id % 10 == 0:
                 save_batch_heatmaps(input_image, out_heatmaps, file_name='visualization@train.jpg', normalize=True)
 
+
         model_path = os.path.join(args.model_save_dir + '/' + 'simplebase-{}'.format(args.dataset),
                                   str(pass_id))
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path)
+    # only for ce
+    if args.enable_ce:
+        epoch_idx = params["num_epochs"]
+        gpu_num = get_cards(args)
+        print("kpis\teach_pass_duration_card%s\t%s" %
+                    (gpu_num, total_time / epoch_idx))
+        print("kpis\ttrain_loss_card%s\t%s" %
+                    (gpu_num, last_loss))
+
+
+def get_cards(args):
+    if args.enable_ce:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        num = len(cards.split(","))
+        return num
+    else:
+        return args.num_devices
 
 
 if __name__ == '__main__':
