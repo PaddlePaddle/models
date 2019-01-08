@@ -35,6 +35,7 @@ parser.add_argument('--model_name',       type=str,   default='cdssmNet',       
 parser.add_argument('--config',           type=str,   default='cdssm_base',       help="The global config setting")
 parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 parser.add_argument('--epoch_num', type=int, help='Number of epoch')
+parser.add_argument('--num_devices', type=int, default=1, help='Number of GPU devices')
 
 DATA_DIR = os.path.join(os.path.expanduser('~'), '.cache/paddle/dataset')
 
