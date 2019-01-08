@@ -204,7 +204,6 @@ _C.pixel_means = [102.9801, 115.9465, 122.7717]
 # clip box to prevent overflowing
 _C.bbox_clip = np.log(1000. / 16.)
 
-
 # dataset path
 _C.train_file_list = 'annotations/instances_train2017.json'
 _C.train_data_dir = 'train2017'
