@@ -46,11 +46,14 @@ def train():
     devices_num = len(devices.split(","))
     total_batch_size = devices_num * cfg.TRAIN.im_per_batch
 
+    use_random = True
+    if cfg.enable_ce:
+        use_random = False
     model = model_builder.FasterRCNN(
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
         use_pyreader=cfg.use_pyreader,
-        use_random=True)
+        use_random=use_random)
     model.build_model(image_shape)
     loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
     loss_cls.persistable = True
@@ -92,16 +95,19 @@ def train():
         train_exe = fluid.ParallelExecutor(
             use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
 
+    shuffle = True
+    if cfg.enable_ce:
+        shuffle = False
     if cfg.use_pyreader:
         train_reader = reader.train(
             batch_size=cfg.TRAIN.im_per_batch,
             total_batch_size=total_batch_size,
             padding_total=cfg.TRAIN.padding_minibatch,
-            shuffle=True)
+            shuffle=shuffle)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
     else:
-        train_reader = reader.train(batch_size=total_batch_size, shuffle=True)
+        train_reader = reader.train(batch_size=total_batch_size, shuffle=shuffle)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     def save_model(postfix):
@@ -142,7 +148,7 @@ def train():
                     save_model("model_iter{}".format(iter_id))
             # only for ce
             if cfg.enable_ce:
-                gpu_num = get_cards(cfg)
+                gpu_num = devices_num
                 epoch_idx = iter_id + 1
                 loss = last_loss
                 print("kpis\teach_pass_duration_card%s\t%s" %
@@ -185,7 +191,7 @@ def train():
                 break
         # only for ce
         if cfg.enable_ce:
-            gpu_num = get_cards(cfg)
+            gpu_num = devices_num
             epoch_idx = iter_id + 1
             loss = last_loss
             print("kpis\teach_pass_duration_card%s\t%s" %
@@ -200,15 +206,6 @@ def train():
     else:
         train_loop()
     save_model('model_final')
-
-
-def get_cards(cfg):
-    if cfg.enable_ce:
-        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
-        num = len(cards.split(","))
-        return num
-    else:
-        return cfg.num_devices
 
 
 if __name__ == '__main__':
