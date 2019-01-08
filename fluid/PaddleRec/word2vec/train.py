@@ -278,7 +278,7 @@ def train(args):
 
     optimizer = None
     if args.with_Adam:
-        optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
+        optimizer = fluid.optimizer.Adam(learning_rate=1e-4, lazy_mode=True)
     else:
         optimizer = fluid.optimizer.SGD(learning_rate=1e-4)
 
