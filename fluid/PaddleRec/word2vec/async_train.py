@@ -164,7 +164,7 @@ def async_train_loop(args, train_program, dataset, loss, thread_num):
                            debug=False)
         epoch_stop = time.time()
         run_time = epoch_stop - epoch_start
-        lines = len(filelist) * 1000000.0
+        lines = 109984625
         print("run epoch%d done, lines=%s, time=%d, sample/second=%s" %
               (i + 1, lines, run_time, lines / run_time))
         epoch_model = "word2vec_model/epoch" + str(i + 1)

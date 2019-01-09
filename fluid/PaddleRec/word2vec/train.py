@@ -141,6 +141,7 @@ def convert_python_to_tensor(batch_size, sample_reader, is_hs):
             result = [[], []]
         for sample in sample_reader():
             for i, fea in enumerate(sample):
+                print(fea)
                 result[i].append(fea)
             if len(result[0]) == batch_size:
                 tensor_result = []
