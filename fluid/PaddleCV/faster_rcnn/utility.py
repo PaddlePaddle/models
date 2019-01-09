@@ -98,7 +98,7 @@ def parse_args():
     add_arg('pretrained_model', str,    'imagenet_resnet50_fusebn', "The init model path.")
     add_arg('dataset',          str,   'coco2017',  "coco2014, coco2017.")
     add_arg('class_num',        int,   81,          "Class number.")
-    add_arg('data_dir',         str,   'data/COCO17',        "The data root path.")
+    add_arg('data_dir',         str,   'dataset/coco',        "The data root path.")
     add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
     add_arg('use_profile',         bool,   False,       "Whether use profiler.")
     add_arg('padding_minibatch',bool,   False,
