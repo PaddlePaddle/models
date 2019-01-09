@@ -45,6 +45,8 @@ add_arg('lr',               float, 0.001,                "Set learning rate.")
 add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate decay strategy.")
 parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 parser.add_argument('--batch_num', type=int, help="batch num for ce")
+parser.add_argument('--num_devices', type=int, default=1, help='Number of GPU devices')
+
 # yapf: enable
 
 def optimizer_setting(args, params):
