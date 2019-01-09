@@ -117,6 +117,13 @@ def parse_args():
         help='Do inference every 100 batches , (default: False)')
 
     parser.add_argument(
+        '--with_other_dict',
+        action='store_true',
+        required=False,
+        default=False,
+        help='if use other dict , (default: False)')
+
+    parser.add_argument(
         '--rank_num',
         type=int,
         default=4,
@@ -161,8 +168,8 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
     py_reader.decorate_tensor_provider(
         convert_python_to_tensor(args.batch_size,
                                  reader.train((args.with_hs or (
-                                     not args.with_nce))), (args.with_hs or (
-                                         not args.with_nce))))
+                                     not args.with_nce)), args.with_other_dict),
+                                 (args.with_hs or (not args.with_nce))))
 
     place = fluid.CPUPlace()
 

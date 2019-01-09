@@ -105,7 +105,7 @@ class Word2VecReader(object):
 
         return set(targets)
 
-    def train(self, with_hs):
+    def train(self, with_hs, with_other_dict):
         def _reader():
             for file in self.filelist:
                 with io.open(
@@ -116,7 +116,11 @@ class Word2VecReader(object):
                     count = 1
                     for line in f:
                         if self.trainer_id == count % self.trainer_num:
-                            line = preprocess.strip_lines(line, self.word_count)
+                            if with_other_dict:
+                                line = preprocess.strip_lines(line,
+                                                              self.word_count)
+                            else:
+                                line = preprocess.text_strip(line)
                             word_ids = [
                                 self.word_to_id_[word] for word in line.split()
                                 if word in self.word_to_id_
@@ -140,7 +144,11 @@ class Word2VecReader(object):
                     count = 1
                     for line in f:
                         if self.trainer_id == count % self.trainer_num:
-                            line = preprocess.strip_lines(line, self.word_count)
+                            if with_other_dict:
+                                line = preprocess.strip_lines(line,
+                                                              self.word_count)
+                            else:
+                                line = preprocess.text_strip(line)
                             word_ids = [
                                 self.word_to_id_[word] for word in line.split()
                                 if word in self.word_to_id_

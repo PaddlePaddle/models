@@ -53,12 +53,17 @@ python train.py \
         --with_nce --is_local \
         2>&1 | tee train.log
 ```
+
 with async executor
 ```bash
 python async_train.py --train_data_path ./async_data/ \
         --dict_path data/1-billion_dict --with_nce --with_hs \
         --epochs 1 --thread_num 1 --is_sparse --batch_size 100 --is_local 2>&1 | tee async_trainer1.log
 ```
+
+if you would like to use our supported third party vocab, please set --other_dict_path as the directory of where you
+save the vocab you will use and set --with_other_dict flag on to using it.
+
 
 ### Distributed Train
 Run a 2 pserver 2 trainer distribute training on a single machine.

@@ -45,12 +45,15 @@ python train.py \
         --with_nce --is_local \
         2>&1 | tee train.log
 ```
+
 使用async executor
 ```bash
 python async_train.py --train_data_path ./async_data/ \
         --dict_path data/1-billion_dict --with_nce --with_hs \
         --epochs 1 --thread_num 1 --is_sparse --batch_size 100 --is_local 2>&1 | tee async_trainer1.log
 ```
+
+如果您想使用我们支持的第三方词汇表，请将--other_dict_path设置为您存放将使用的词汇表的目录，并设置--with_other_dict使用它
 ### 分布式训练
 
 本地启动一个2 trainer 2 pserver的分布式训练任务，分布式场景下训练数据会按照trainer的id进行切分，保证trainer之间的训练数据不会重叠，提高训练效率

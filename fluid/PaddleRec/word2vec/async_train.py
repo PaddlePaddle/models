@@ -174,7 +174,8 @@ def async_train_loop(args, train_program, dataset, loss, thread_num):
 def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
     train_reader = paddle.batch(
         paddle.reader.shuffle(
-            reader.train((args.with_hs or (not args.with_nce))),
+            reader.train((args.with_hs or (not args.with_nce)),
+                         args.with_other_dict),
             buf_size=args.batch_size * 100),
         batch_size=args.batch_size)
 
