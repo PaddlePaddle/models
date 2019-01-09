@@ -25,7 +25,14 @@ cd data && ./download.sh && cd ..
 ```bash
 python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict --is_local
 ```
-如果您想使用我们支持的第三方词汇表，请将--other_dict_path设置为您存放将使用的词汇表的目录，并设置--with_other_dict使用它
+如果您想使用自定义的词典形如：
+```bash
+<UNK>
+a
+b
+c
+```
+请将--other_dict_path设置为您存放将使用的词典的目录，并设置--with_other_dict使用它
 
 ## 训练
 训练的命令行选项可以通过`python train.py -h`列出。
@@ -40,7 +47,14 @@ python train.py \
         --with_hs --with_nce --is_local \
         2>&1 | tee train.log
 ```
-如果您想使用我们支持的第三方词汇表，请将--other_dict_path设置为您存放将使用的词汇表的目录，并设置--with_other_dict使用它
+如果您想使用自定义的词典形如：
+```bash
+<UNK>
+a
+b
+c
+```
+请将--other_dict_path设置为您存放将使用的词典的目录，并设置--with_other_dict使用它
 
 ### 分布式训练
 
