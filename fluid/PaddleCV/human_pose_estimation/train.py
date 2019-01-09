@@ -182,7 +182,6 @@ def train(args):
             if batch_id % 10 == 0:
                 save_batch_heatmaps(input_image, out_heatmaps, file_name='visualization@train.jpg', normalize=True)
 
-
         model_path = os.path.join(args.model_save_dir + '/' + 'simplebase-{}'.format(args.dataset),
                                   str(pass_id))
         if not os.path.isdir(model_path):
