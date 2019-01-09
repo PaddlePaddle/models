@@ -209,15 +209,17 @@ def preprocess(args):
                     args.data_path + "/news.en-000{:0>2d}-of-00100".format(i),
                     encoding='utf-8') as f:
                 for line in f:
-                    line = strip_lines(line)
-                    words = line.split()
                     if args.with_other_dict:
+                        line = strip_lines(line)
+                        words = line.split()
                         for item in words:
                             if item in word_count:
                                 word_count[item] = word_count[item] + 1
                             else:
                                 word_count[native_to_unicode('<UNK>')] += 1
                     else:
+                        line = text_strip(line)
+                        words = line.split()
                         for item in words:
                             if item in word_count:
                                 word_count[item] = word_count[item] + 1

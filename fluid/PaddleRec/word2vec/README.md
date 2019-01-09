@@ -47,7 +47,8 @@ python train.py \
         --with_hs --with_nce --is_local \
         2>&1 | tee train.log
 ```
-
+if you would like to use our supported third party vocab, please set --other_dict_path as the directory of where you
+save the vocab you will use and set --with_other_dict flag on to using it.
 
 ### Distributed Train
 Run a 2 pserver 2 trainer distribute training on a single machine.

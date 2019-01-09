@@ -117,6 +117,13 @@ def parse_args():
         help='Do inference every 100 batches , (default: False)')
 
     parser.add_argument(
+        '--with_other_dict',
+        action='store_true',
+        required=False,
+        default=False,
+        help='if use other dict , (default: False)')
+
+    parser.add_argument(
         '--rank_num',
         type=int,
         default=4,
@@ -161,8 +168,8 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
     py_reader.decorate_tensor_provider(
         convert_python_to_tensor(args.batch_size,
                                  reader.train((args.with_hs or (
-                                     not args.with_nce))), (args.with_hs or (
-                                         not args.with_nce))))
+                                     not args.with_nce)), args.with_other_dict),
+                                 (args.with_hs or (not args.with_nce))))
 
     place = fluid.CPUPlace()
 
@@ -261,7 +268,7 @@ def train(args):
             args.dict_path, args.train_data_path, filelist, 0, 1)
     else:
         trainer_id = int(os.environ["PADDLE_TRAINER_ID"])
-        trainers = int(os.environ["PADDLE_TRAINERS"])
+        trainer_num = int(os.environ["PADDLE_TRAINERS"])
         word2vec_reader = reader.Word2VecReader(args.dict_path,
                                                 args.train_data_path, filelist,
                                                 trainer_id, trainer_num)
