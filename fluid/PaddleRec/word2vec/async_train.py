@@ -12,7 +12,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.executor import global_scope
-import six
+
 import reader
 from network_conf import skip_gram_word2vec
 from infer import inference_test
@@ -29,7 +29,7 @@ def parse_args():
         '--train_data_path',
         type=str,
         default='./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled',
-        help="The path of taining dataset")
+        help="The path of training dataset")
     parser.add_argument(
         '--dict_path',
         type=str,
@@ -43,7 +43,7 @@ def parse_args():
     parser.add_argument(
         '--batch_size',
         type=int,
-        default=1000,
+        default=100,
         help="The size of mini-batch (default:100)")
     parser.add_argument(
         '--num_passes',
@@ -55,6 +55,9 @@ def parse_args():
         type=str,
         default='models',
         help='The path for model to store (default: models)')
+    parser.add_argument(
+        '--thread_num', type=int, default=1, help='training thread num')
+
     parser.add_argument(
         '--embedding_size',
         type=int,
@@ -122,47 +125,60 @@ def parse_args():
         default=4,
         help="find rank_num-nearest result for test (default: 4)")
 
+    parser.add_argument(
+        '--use_pyreader',
+        required=False,
+        default=False,
+        help='Whether you want to use pyreader, (default: False)')
+    parser.add_argument(
+        '--epochs',
+        type=int,
+        required=False,
+        default=False,
+        help='training epochs')
     return parser.parse_args()
 
 
-def convert_python_to_tensor(batch_size, sample_reader, is_hs):
-    def __reader__():
-        result = None
-        if is_hs:
-            result = [[], [], [], []]
-        else:
-            result = [[], []]
-        for sample in sample_reader():
-            for i, fea in enumerate(sample):
-                result[i].append(fea)
-            if len(result[0]) == batch_size:
-                tensor_result = []
-                for tensor in result:
-                    t = fluid.Tensor()
-                    dat = np.array(tensor, dtype='int64')
-                    if len(dat.shape) > 2:
-                        dat = dat.reshape((dat.shape[0], dat.shape[2]))
-                    elif len(dat.shape) == 1:
-                        dat = dat.reshape((-1, 1))
-                    t.set(dat, fluid.CPUPlace())
-
-                    tensor_result.append(t)
-                yield tensor_result
-                if is_hs:
-                    result = [[], [], [], []]
-                else:
-                    result = [[], []]
-
-    return __reader__
+def async_train_loop(args, train_program, dataset, loss, thread_num):
+    logger.info("run async_train_loop")
+    place = fluid.CPUPlace()
+    exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
+    async_executor = fluid.AsyncExecutor(place)
+    files = [
+        "%s/%s" % (args.train_data_path, filename)
+        for filename in os.listdir(args.train_data_path)
+    ]
+    logger.info("files:" + str(files))
+    filelist = files
+    print("filelist:" + str(filelist))
+    fout = open("main_program.prototxt", "w")
+    fout.write(str(fluid.default_main_program()))
+    fout.close()
+    for i in range(args.epochs):
+        epoch_start = time.time()
+        async_executor.run(train_program,
+                           dataset,
+                           filelist,
+                           thread_num, [loss],
+                           debug=False)
+        epoch_stop = time.time()
+        run_time = epoch_stop - epoch_start
+        lines = len(filelist) * 1000000.0
+        print("run epoch%d done, lines=%s, time=%d, sample/second=%s" %
+              (i + 1, lines, run_time, lines / run_time))
+        epoch_model = "word2vec_model/epoch" + str(i + 1)
+        fluid.io.save_inference_model(epoch_model, [], [loss], exe)
 
 
 def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
+    train_reader = paddle.batch(
+        paddle.reader.shuffle(
+            reader.train((args.with_hs or (not args.with_nce))),
+            buf_size=args.batch_size * 100),
+        batch_size=args.batch_size)
 
-    py_reader.decorate_tensor_provider(
-        convert_python_to_tensor(args.batch_size,
-                                 reader.train((args.with_hs or (
-                                     not args.with_nce))), (args.with_hs or (
-                                         not args.with_nce))))
+    py_reader.decorate_paddle_reader(train_reader)
 
     place = fluid.CPUPlace()
 
@@ -170,7 +186,6 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
     exe.run(fluid.default_startup_program())
 
     exec_strategy = fluid.ExecutionStrategy()
-    exec_strategy.use_experimental_executor = True
 
     print("CPU_NUM:" + str(os.getenv("CPU_NUM")))
     exec_strategy.num_threads = int(os.getenv("CPU_NUM"))
@@ -192,27 +207,36 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
     profiler_step_end = 30
 
     for pass_id in range(args.num_passes):
-        py_reader.start()
-        time.sleep(10)
         epoch_start = time.time()
+        py_reader.start()
         batch_id = 0
-        start = time.time()
+        start = time.clock()
 
         try:
             while True:
 
+                if profiler_step == profiler_step_start:
+                    fluid.profiler.start_profiler(profile_state)
+
                 loss_val = train_exe.run(fetch_list=[loss.name])
                 loss_val = np.mean(loss_val)
+
+                if profiler_step == profiler_step_end:
+                    fluid.profiler.stop_profiler('total', 'trainer_profile.log')
+                    profiler_step += 1
+                else:
+                    profiler_step += 1
 
                 if batch_id % 50 == 0:
                     logger.info(
                         "TRAIN --> pass: {} batch: {} loss: {} reader queue:{}".
                         format(pass_id, batch_id,
-                               loss_val.mean(), py_reader.queue.size()))
+                               loss_val.mean() / args.batch_size,
+                               py_reader.queue.size()))
                 if args.with_speed:
                     if batch_id % 1000 == 0 and batch_id != 0:
-                        elapsed = (time.time() - start)
-                        start = time.time()
+                        elapsed = (time.clock() - start)
+                        start = time.clock()
                         samples = 1001 * args.batch_size * int(
                             os.getenv("CPU_NUM"))
                         logger.info("Time used: {}, Samples/Sec: {}".format(
@@ -249,6 +273,88 @@ def GetFileList(data_path):
     return os.listdir(data_path)
 
 
+def async_train(args):
+    if not os.path.isdir(args.model_output_dir):
+        os.mkdir(args.model_output_dir)
+
+    if not args.is_local and os.environ["PADDLE_TRAINING_ROLE"] == "PSERVER":
+        filelist = []
+    else:
+        filelist = GetFileList(args.train_data_path)
+    word2vec_reader = reader.Word2VecReader(
+        args.dict_path, args.train_data_path, filelist, 0, 1)
+    loss, words, pyreader = skip_gram_word2vec(
+        word2vec_reader.dict_size,
+        word2vec_reader.word_frequencys,
+        args.embedding_size,
+        args.max_code_length,
+        args.with_hs,
+        args.with_nce,
+        is_sparse=args.is_sparse)
+    dataset = fluid.DataFeedDesc('word2vec_with_hs.proto')
+    dataset.set_batch_size(args.batch_size)
+    dataset.set_use_slots([w.name for w in words])
+    optimizer = fluid.optimizer.SGD(learning_rate=1e4)
+    optimizer.minimize(loss)
+    # do local training 
+    if args.is_local:
+        logger.info("run local training")
+        main_program = fluid.default_main_program()
+
+        with open("local.main.proto", "w") as f:
+            f.write(str(main_program))
+
+        async_train_loop(args,
+                         fluid.default_main_program(), dataset, loss,
+                         args.thread_num)
+    # do distribute training
+    else:
+        logger.info("run dist training")
+
+        trainer_id = int(os.environ["PADDLE_TRAINER_ID"])
+        trainers = int(os.environ["PADDLE_TRAINERS"])
+        training_role = os.environ["PADDLE_TRAINING_ROLE"]
+
+        port = os.getenv("PADDLE_PSERVER_PORT", "6174")
+        pserver_ips = os.getenv("PADDLE_PSERVER_IPS", "")
+        eplist = []
+        for ip in pserver_ips.split(","):
+            eplist.append(':'.join([ip, port]))
+        pserver_endpoints = ",".join(eplist)
+        current_endpoint = os.getenv("PADDLE_CURRENT_IP", "") + ":" + port
+
+        config = fluid.DistributeTranspilerConfig()
+        config.slice_var_up = False
+        t = fluid.DistributeTranspiler(config=config)
+        t.transpile(
+            trainer_id,
+            pservers=pserver_endpoints,
+            trainers=trainers,
+            sync_mode=False)
+
+        if training_role == "PSERVER":
+            logger.info("run pserver")
+            prog = t.get_pserver_program(current_endpoint)
+            startup = t.get_startup_program(
+                current_endpoint, pserver_program=prog)
+
+            with open("pserver.main.proto.{}".format(os.getenv("CUR_PORT")),
+                      "w") as f:
+                f.write(str(prog))
+
+            exe = fluid.Executor(fluid.CPUPlace())
+            exe.run(startup)
+            exe.run(prog)
+        elif training_role == "TRAINER":
+            logger.info("run trainer")
+            train_prog = t.get_trainer_program()
+
+            with open("trainer.main.proto.{}".format(trainer_id), "w") as f:
+                f.write(str(train_prog))
+
+            async_train_loop(args, train_prog, dataset, loss, args.thread_num)
+
+
 def train(args):
 
     if not os.path.isdir(args.model_output_dir):
@@ -267,19 +373,18 @@ def train(args):
                                                 trainer_id, trainer_num)
 
     logger.info("dict_size: {}".format(word2vec_reader.dict_size))
-    loss, words, py_reader = skip_gram_word2vec(
+    loss, py_reader = skip_gram_word2vec(
         word2vec_reader.dict_size,
         word2vec_reader.word_frequencys,
         args.embedding_size,
         args.max_code_length,
         args.with_hs,
         args.with_nce,
-        is_sparse=args.is_sparse,
-        use_pyreader=True)
+        is_sparse=args.is_sparse)
 
     optimizer = None
     if args.with_Adam:
-        optimizer = fluid.optimizer.Adam(learning_rate=1e-4, lazy_mode=True)
+        optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
     else:
         optimizer = fluid.optimizer.SGD(learning_rate=1e-4)
 
@@ -311,7 +416,7 @@ def train(args):
         current_endpoint = os.getenv("PADDLE_CURRENT_IP", "") + ":" + port
 
         config = fluid.DistributeTranspilerConfig()
-        config.slice_var_up = False
+        #config.slice_var_up = False
         t = fluid.DistributeTranspiler(config=config)
         t.transpile(
             trainer_id,
@@ -345,10 +450,11 @@ def train(args):
 
 def env_declar():
     print("********  Rename Cluster Env to PaddleFluid Env ********")
-
+    '''
     print("Content-Type: text/plain\n\n")
     for key in os.environ.keys():
         print("%30s %s \n" % (key, os.environ[key]))
+    '''
 
     if os.environ["TRAINING_ROLE"] == "PSERVER" or os.environ[
             "PADDLE_IS_LOCAL"] == "0":
@@ -360,18 +466,22 @@ def env_declar():
         os.environ["PADDLE_TRAINER_ID"] = os.environ["PADDLE_TRAINER_ID"]
         # we set the thread number same as CPU number
         os.environ["CPU_NUM"] = "12"
-
+    '''
     print("Content-Type: text/plain\n\n")
     for key in os.environ.keys():
         print("%30s %s \n" % (key, os.environ[key]))
 
     print("******  Rename Cluster Env to PaddleFluid Env END ******")
+    '''
 
 
 if __name__ == '__main__':
     args = parse_args()
+    logger.info(args)
     if args.is_local:
         pass
     else:
-        env_declar()
-    train(args)
+        #env_declar()
+        pass
+    #train(args)
+    async_train(args)

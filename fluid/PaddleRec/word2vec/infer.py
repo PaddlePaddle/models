@@ -110,29 +110,29 @@ def build_test_case_from_file(args, emb):
 
 
 def build_small_test_case(emb):
-    emb1 = emb[word_to_id['boy']] - emb[word_to_id['girl']] + emb[word_to_id[
-        'aunt']]
-    desc1 = "boy - girl + aunt = uncle"
-    label1 = word_to_id["uncle"]
-    emb2 = emb[word_to_id['brother']] - emb[word_to_id['sister']] + emb[
-        word_to_id['sisters']]
-    desc2 = "brother - sister + sisters = brothers"
-    label2 = word_to_id["brothers"]
-    emb3 = emb[word_to_id['king']] - emb[word_to_id['queen']] + emb[word_to_id[
-        'woman']]
-    desc3 = "king - queen + woman = man"
-    label3 = word_to_id["man"]
-    emb4 = emb[word_to_id['reluctant']] - emb[word_to_id['reluctantly']] + emb[
-        word_to_id['slowly']]
-    desc4 = "reluctant - reluctantly + slowly = slow"
-    label4 = word_to_id["slow"]
-    emb5 = emb[word_to_id['old']] - emb[word_to_id['older']] + emb[word_to_id[
-        'deeper']]
-    desc5 = "old - older + deeper = deep"
-    label5 = word_to_id["deep"]
+    # emb1 = emb[word_to_id['boy']] - emb[word_to_id['girl']] + emb[word_to_id[
+    #     'aunt']]
+    # desc1 = "boy - girl + aunt = uncle"
+    # label1 = word_to_id["uncle"]
+    # emb2 = emb[word_to_id['brother']] - emb[word_to_id['sister']] + emb[
+    #     word_to_id['sisters']]
+    # desc2 = "brother - sister + sisters = brothers"
+    # label2 = word_to_id["brothers"]
+    # emb3 = emb[word_to_id['king']] - emb[word_to_id['queen']] + emb[word_to_id[
+    #     'woman']]
+    # desc3 = "king - queen + woman = man"
+    # label3 = word_to_id["man"]
+    # emb4 = emb[word_to_id['reluctant']] - emb[word_to_id['reluctantly']] + emb[
+    #     word_to_id['slowly']]
+    # desc4 = "reluctant - reluctantly + slowly = slow"
+    # label4 = word_to_id["slow"]
+    # emb5 = emb[word_to_id['old']] - emb[word_to_id['older']] + emb[word_to_id[
+    #     'deeper']]
+    # desc5 = "old - older + deeper = deep"
+    # label5 = word_to_id["deep"]
 
-    emb6 = emb[word_to_id['boy']]
-    desc6 = "boy"
+    emb6 = emb[word_to_id['father']]
+    desc6 = "father"
     label6 = word_to_id["boy"]
     emb7 = emb[word_to_id['king']]
     desc7 = "king"
@@ -143,13 +143,16 @@ def build_small_test_case(emb):
     emb9 = emb[word_to_id['key']]
     desc9 = "key"
     label9 = word_to_id["key"]
-    test_cases = [emb1, emb2, emb3, emb4, emb5, emb6, emb7, emb8, emb9]
-    test_case_desc = [
-        desc1, desc2, desc3, desc4, desc5, desc6, desc7, desc8, desc9
-    ]
-    test_labels = [
-        label1, label2, label3, label4, label5, label6, label7, label8, label9
-    ]
+    # test_cases = [emb1, emb2, emb3, emb4, emb5, emb6, emb7, emb8, emb9]
+    # test_case_desc = [
+    #     desc1, desc2, desc3, desc4, desc5, desc6, desc7, desc8, desc9
+    # ]
+    # test_labels = [
+    #     label1, label2, label3, label4, label5, label6, label7, label8, label9
+    # ]
+    test_cases = [emb6, emb7, emb8, emb9]
+    test_case_desc = [desc6, desc7, desc8, desc9]
+    test_labels = [label6, label7, label8, label9]
     return norm(np.array(test_cases)), test_case_desc, test_labels
 
 

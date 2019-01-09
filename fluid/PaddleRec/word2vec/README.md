@@ -34,20 +34,31 @@ python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchma
 if you would like to use our supported third party vocab, please set --other_dict_path as the directory of where you
 save the vocab you will use and set --with_other_dict flag on to using it.
 
+If you want to use async executor to speed up training, you need to first create a directory called async_data and then use the following command:
+```bash
+python async_data_converter.py --train_data_path your_train_data_path --dict_path your_dict_path
+```
+If you want to use the hierarchical softmax you need to add --with_hs, this method will be written in the async_data directory just created in your current directory to convert the data for async_executor,
+If your data set is large, this process may takes long time to finish
 ## Train
 The command line options for training can be listed by `python train.py -h`.
 
 ### Local Train:
-we set CPU_NUM=1 as default CPU_NUM to execute
+with parallel executor
 ```bash
-export CPU_NUM=1 && \
+export CPU_NUM=1
 python train.py \
         --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
         --dict_path data/1-billion_dict \
-        --with_hs --with_nce --is_local \
+        --with_nce --is_local \
         2>&1 | tee train.log
 ```
-
+with async executor
+```bash
+python async_train.py --train_data_path ./async_data/ \
+        --dict_path data/1-billion_dict --with_nce --with_hs \
+        --epochs 1 --thread_num 1 --is_sparse --batch_size 100 --is_local 2>&1 | tee async_trainer1.log
+```
 
 ### Distributed Train
 Run a 2 pserver 2 trainer distribute training on a single machine.

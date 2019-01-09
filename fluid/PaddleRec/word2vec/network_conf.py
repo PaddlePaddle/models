@@ -29,7 +29,8 @@ def skip_gram_word2vec(dict_size,
                        max_code_length=None,
                        with_hsigmoid=False,
                        with_nce=True,
-                       is_sparse=False):
+                       is_sparse=False,
+                       use_pyreader=False):
     def nce_layer(input, label, embedding_size, num_total_classes,
                   num_neg_samples, sampler, word_frequencys, sample_weight):
 
@@ -73,9 +74,8 @@ def skip_gram_word2vec(dict_size,
 
     datas = []
 
-    input_word = fluid.layers.data(name="input_word", shape=[1], dtype='int64')
-    predict_word = fluid.layers.data(
-        name='predict_word', shape=[1], dtype='int64')
+    input_word = fluid.layers.data(name="target", shape=[1], dtype='int64')
+    predict_word = fluid.layers.data(name='context', shape=[1], dtype='int64')
     datas.append(input_word)
     datas.append(predict_word)
 
@@ -91,10 +91,19 @@ def skip_gram_word2vec(dict_size,
         datas.append(path_table)
         datas.append(path_code)
 
-    py_reader = fluid.layers.create_py_reader_by_data(
-        capacity=64, feed_list=datas, name='py_reader', use_double_buffer=True)
+    py_reader = None
+    words = None
+    if use_pyreader:
+        py_reader = fluid.layers.create_py_reader_by_data(
+            capacity=64,
+            feed_list=datas,
+            name='py_reader',
+            use_double_buffer=True)
 
-    words = fluid.layers.read_file(py_reader)
+        words = fluid.layers.read_file(py_reader)
+    else:
+        words = datas
+
     target_emb = fluid.layers.embedding(
         input=words[0],
         is_sparse=is_sparse,
@@ -126,4 +135,4 @@ def skip_gram_word2vec(dict_size,
 
     avg_cost = fluid.layers.reduce_mean(cost)
 
-    return avg_cost, py_reader
+    return avg_cost, words, py_reader

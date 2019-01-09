@@ -203,26 +203,45 @@ def preprocess(args):
             for line in f:
                 word_count[native_to_unicode(line.strip())] = 1
 
+    # if args.is_local:
+    #     for i in range(1, 100):
+    #         with io.open(
+    #                 args.data_path + "/news.en-000{:0>2d}-of-00100".format(i),
+    #                 encoding='utf-8') as f:
+    #             for line in f:
+    #                 line = strip_lines(line)
+    #                 words = line.split()
+    #                 if args.with_other_dict:
+    #                     for item in words:
+    #                         if item in word_count:
+    #                             word_count[item] = word_count[item] + 1
+    #                         else:
+    #                             word_count[native_to_unicode('<UNK>')] += 1
+    #                 else:
+    #                     for item in words:
+    #                         if item in word_count:
+    #                             word_count[item] = word_count[item] + 1
+    #                         else:
+    #                             word_count[item] = 1
     if args.is_local:
-        for i in range(1, 100):
-            with io.open(
-                    args.data_path + "/news.en-000{:0>2d}-of-00100".format(i),
-                    encoding='utf-8') as f:
-                for line in f:
+        with io.open(args.data_path + "/text8", encoding='utf-8') as f:
+            for line in f:
+                if args.with_other_dict:
                     line = strip_lines(line)
                     words = line.split()
-                    if args.with_other_dict:
-                        for item in words:
-                            if item in word_count:
-                                word_count[item] = word_count[item] + 1
-                            else:
-                                word_count[native_to_unicode('<UNK>')] += 1
-                    else:
-                        for item in words:
-                            if item in word_count:
-                                word_count[item] = word_count[item] + 1
-                            else:
-                                word_count[item] = 1
+                    for item in words:
+                        if item in word_count:
+                            word_count[item] = word_count[item] + 1
+                        else:
+                            word_count[native_to_unicode('<UNK>')] += 1
+                else:
+                    line = text_strip(line)
+                    words = line.split()
+                    for item in words:
+                        if item in word_count:
+                            word_count[item] = word_count[item] + 1
+                        else:
+                            word_count[item] = 1
     item_to_remove = []
     for item in word_count:
         if word_count[item] <= args.freq:
@@ -230,6 +249,7 @@ def preprocess(args):
     for item in item_to_remove:
         del word_count[item]
 
+    print(word_count)
     path_table, path_code, word_code_len = build_Huffman(word_count, 40)
 
     with io.open(args.dict_path, 'w+', encoding='utf-8') as f:

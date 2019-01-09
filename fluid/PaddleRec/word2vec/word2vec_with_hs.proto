@@ -1,0 +1,18 @@
+name : "MultiSlotDataFeed" batch_size : 32 multi_slot_desc {
+  slots {
+  name:
+    "target" type : "uint64" is_dense : false is_used : false
+  }
+  slots {
+  name:
+    "context" type : "uint64" is_dense : false is_used : false
+  }
+  slots {
+  name:
+    "path_table" type : "uint64" is_dense : false is_used : false
+  }
+  slots {
+  name:
+    "path_code" type : "uint64" is_dense : false is_used : false
+  }
+}

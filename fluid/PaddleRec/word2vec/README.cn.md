@@ -23,24 +23,34 @@ cd data && ./download.sh && cd ..
 对数据进行预处理以生成一个词典。
 
 ```bash
-python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict
+python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict --is_local
 ```
 如果您想使用我们支持的第三方词汇表，请将--other_dict_path设置为您存放将使用的词汇表的目录，并设置--with_other_dict使用它
-
+如果您希望使用async executor来加速训练，需要先创建一个叫async_data的目录，然后使用以下命令：
+```bash
+python async_data_converter.py --train_data_path your_train_data_path --dict_path your_dict_path
+```
+如果您希望使用层次softmax则需要加上--with_hs，这个方法将会在您当前目录下刚刚创建的async_data目录下写入转换好用于async_executor的数据，如果您的数据集很大这个过程可能持续很久
 ## 训练
 训练的命令行选项可以通过`python train.py -h`列出。
 
 ### 单机训练：
 
+使用parallel executor
 ```bash
 export CPU_NUM=1
 python train.py \
         --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
         --dict_path data/1-billion_dict \
-        --with_hs --with_nce --is_local \
+        --with_nce --is_local \
         2>&1 | tee train.log
 ```
-
+使用async executor
+```bash
+python async_train.py --train_data_path ./async_data/ \
+        --dict_path data/1-billion_dict --with_nce --with_hs \
+        --epochs 1 --thread_num 1 --is_sparse --batch_size 100 --is_local 2>&1 | tee async_trainer1.log
+```
 ### 分布式训练
 
 本地启动一个2 trainer 2 pserver的分布式训练任务，分布式场景下训练数据会按照trainer的id进行切分，保证trainer之间的训练数据不会重叠，提高训练效率

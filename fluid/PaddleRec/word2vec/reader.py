@@ -165,6 +165,101 @@ class Word2VecReader(object):
         else:
             return _reader_hs
 
+    def async_train(self, with_hs):
+        def _reader():
+            write_f = list()
+            for i in range(20):
+                write_f.append(
+                    io.open(
+                        "./async_data/async_" + str(i), 'w+', encoding='utf-8'))
+            for file in self.filelist:
+                with io.open(
+                        self.data_path_ + "/" + file, 'r',
+                        encoding='utf-8') as f:
+                    logger.info("running data in {}".format(self.data_path_ +
+                                                            "/" + file))
+                    count = 1
+                    file_spilt_count = 0
+                    for line in f:
+                        if self.trainer_id == count % self.trainer_num:
+                            line = preprocess.strip_lines(line, self.word_count)
+                            word_ids = [
+                                self.word_to_id_[word] for word in line.split()
+                                if word in self.word_to_id_
+                            ]
+                            for idx, target_id in enumerate(word_ids):
+                                context_word_ids = self.get_context_words(
+                                    word_ids, idx)
+                                for context_id in context_word_ids:
+                                    content = "1" + " " + str(
+                                        target_id) + " " + "1" + " " + str(
+                                            context_id) + '\n'
+                                    write_f[file_spilt_count %
+                                            20].write(content.decode('utf-8'))
+                                    file_spilt_count += 1
+                        else:
+                            pass
+                        count += 1
+            for i in range(20):
+                write_f[i].close()
+
+        def _reader_hs():
+            write_f = list()
+            for i in range(20):
+                write_f.append(
+                    io.open(
+                        "./async_data/async_" + str(i), 'w+', encoding='utf-8'))
+
+            for file in self.filelist:
+                with io.open(
+                        self.data_path_ + "/" + file, 'r',
+                        encoding='utf-8') as f:
+                    logger.info("running data in {}".format(self.data_path_ +
+                                                            "/" + file))
+                    count = 1
+                    file_spilt_count = 0
+                    for line in f:
+                        if self.trainer_id == count % self.trainer_num:
+                            line = preprocess.strip_lines(line, self.word_count)
+                            word_ids = [
+                                self.word_to_id_[word] for word in line.split()
+                                if word in self.word_to_id_
+                            ]
+                            for idx, target_id in enumerate(word_ids):
+                                context_word_ids = self.get_context_words(
+                                    word_ids, idx)
+                                for context_id in context_word_ids:
+                                    path = [
+                                        str(i)
+                                        for i in self.word_to_path[
+                                            self.id_to_word[target_id]]
+                                    ]
+                                    code = [
+                                        str(j)
+                                        for j in self.word_to_code[
+                                            self.id_to_word[target_id]]
+                                    ]
+                                    content = str(1) + " " + str(
+                                        target_id
+                                    ) + " " + str(1) + " " + str(
+                                        context_id
+                                    ) + " " + str(len(path)) + " " + ' '.join(
+                                        path) + " " + str(len(
+                                            code)) + " " + ' '.join(code) + '\n'
+                                    write_f[file_spilt_count %
+                                            20].write(content.decode('utf-8'))
+                                    file_spilt_count += 1
+                        else:
+                            pass
+                        count += 1
+            for i in range(20):
+                write_f[i].close()
+
+        if not with_hs:
+            _reader()
+        else:
+            _reader_hs()
+
 
 if __name__ == "__main__":
     window_size = 5
