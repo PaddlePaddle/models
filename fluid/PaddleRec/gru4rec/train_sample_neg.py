@@ -26,7 +26,8 @@ def parse_args():
         '--hid_size', type=int, default=100, help='hidden-dim size')
     parser.add_argument(
         '--neg_size', type=int, default=10, help='neg item size')
-    parser.add_argument('--loss', type=str, default="bpr", help='loss fuction')
+    parser.add_argument(
+        '--loss', type=str, default="bpr", help='loss: bpr/cross_entropy')
     parser.add_argument(
         '--model_dir', type=str, default='model_bpr_recall20', help='model dir')
     parser.add_argument(
