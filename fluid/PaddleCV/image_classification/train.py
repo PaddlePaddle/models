@@ -391,7 +391,7 @@ def train(args):
                 train_info[1].append(acc1)
                 train_info[2].append(acc5)
                 train_time.append(period)
-                if batch_id % 1 == 0:
+                if batch_id % 10 == 0:
                     print("Pass {0}, trainbatch {1}, loss {2}, \
                         acc1 {3}, acc5 {4} time {5}"
                           .format(pass_id, batch_id, loss, acc1, acc5,
