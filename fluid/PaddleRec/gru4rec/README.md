@@ -136,7 +136,6 @@ bayesian pairwise ranking loss(bpr loss) 训练
 CUDA_VISIBLE_DEVICES=0 python train_sample_neg.py --loss bpr --use_cuda 1
 ```
 
-
 请注意CPU环境下运行单机多卡任务（--parallel 1)时，batch_size应大于cpu核数。
 
 ## 自定义网络结构
