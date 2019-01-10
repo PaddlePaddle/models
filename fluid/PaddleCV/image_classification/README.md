@@ -6,6 +6,7 @@ Image classification, which is an important field of computer vision, is to clas
 - [Installation](#installation)
 - [Data preparation](#data-preparation)
 - [Training a model with flexible parameters](#training-a-model)
+- [Using Mixed-Precision Training](#using-mixed-precision-training)
 - [Finetuning](#finetuning)
 - [Evaluation](#evaluation)
 - [Inference](#inference)
@@ -111,6 +112,13 @@ The error rate curves of AlexNet, ResNet50 and SE-ResNeXt-50 are shown in the fi
 <img src="images/curve.jpg" height=480 width=640 hspace='10'/> <br />
 Training and validation Curves
 </p>
+
+
+## Using Mixed-Precision Training
+
+You may add `--fp16 1` to start train using mixed precisioin training, which the training process will use float16 and the output model ("master" parameters) is saved as float32. You also may need to pass `--scale_loss` to overcome accuracy issues, usually `--scale_loss 8.0` will do.
+
+Note that currently `--fp16` can not use together with `--with_mem_opt`, so pass `--with_mem_opt 0` to disable memory optimization pass.
 
 ## Finetuning
 
