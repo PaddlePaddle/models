@@ -23,7 +23,7 @@ cd data && ./download.sh && cd ..
 对数据进行预处理以生成一个词典。
 
 ```bash
-python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict --is_local
+python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict
 ```
 如果您想使用自定义的词典形如：
 ```bash
