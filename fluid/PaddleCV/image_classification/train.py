@@ -41,8 +41,7 @@ add_arg('enable_ce',        bool,  False,                "If set True, enable co
 add_arg('data_dir',         str,   "./data/ILSVRC2012",  "The ImageNet dataset root dir.")
 add_arg('model_category',   str,   "models",             "Whether to use models_name or not, valid value:'models','models_name'" )
 add_arg('fp16',             bool,  False,                "Enable half precision training with fp16." )
-add_arg('kaiming_init',     bool,  True,                 "Use kaiming init algo for conv layers." )
-add_arg('scale_loss',       int,   1,                    "Scale loss for fp16." )
+add_arg('scale_loss',       float, 1.0,                  "Scale loss for fp16." )
 # yapf: enable
 
 
@@ -148,15 +147,15 @@ def net_config(image, label, model, args):
         acc_top1 = fluid.layers.accuracy(input=out0, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
     else:
-        out = model.net(input=image, class_dim=class_dim)
+        out = model.net(input=image, class_dim=class_dim)    
+        cost, pred = fluid.layers.softmax_with_cross_entropy(out, label, return_softmax=True) 
         if args.scale_loss > 1:
-            cost = fluid.layers.cross_entropy(input=out, label=label) * float(args.scale_loss)
+            avg_cost = fluid.layers.mean(x=cost) * float(args.scale_loss)
         else:
-            cost = fluid.layers.cross_entropy(input=out, label=label)
+            avg_cost = fluid.layers.mean(x=cost)
 
-        avg_cost = fluid.layers.mean(x=cost)
-        acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
-        acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
+        acc_top1 = fluid.layers.accuracy(input=pred, label=label, k=1)
+        acc_top5 = fluid.layers.accuracy(input=pred, label=label, k=5)
 
     return avg_cost, acc_top1, acc_top5
 
@@ -224,21 +223,18 @@ def build_program(is_train, main_prog, startup_prog, args):
     assert model_name in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
     model = models.__dict__[model_name]()
-    if args.fp16:
-        reader_dtype = "float16"
-    else:
-        reader_dtype = "float32"
+    params_grads = []
     with fluid.program_guard(main_prog, startup_prog):
         py_reader = fluid.layers.py_reader(
             capacity=16,
             shapes=[[-1] + image_shape, [-1, 1]],
             lod_levels=[0, 0],
-            dtypes=[reader_dtype, "int64"],
+            dtypes=["float32", "int64"],
             use_double_buffer=True)
         with fluid.unique_name.guard():
             image, label = fluid.layers.read_file(py_reader)
             if args.fp16:
-                image = fluid.layers.cast(image, reader_dtype)
+                image = fluid.layers.cast(image, "float16")
             avg_cost, acc_top1, acc_top5 = net_config(image, label, model, args)
             avg_cost.persistable = True
             acc_top1.persistable = True
@@ -252,7 +248,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                 params["learning_strategy"]["name"] = args.lr_strategy
 
                 optimizer = optimizer_setting(params)
-                params_grads = optimizer._backward(avg_cost)
+                params_grads = optimizer.backward(avg_cost)
 
                 if args.fp16:
                     master_params_grads = []
@@ -265,14 +261,20 @@ def build_program(is_train, main_prog, startup_prog, args):
                         startup_p = startup_prog.global_block().var(p.name)
                         cast_fp16_to_fp32(startup_p, startup_master_param, startup_prog)
 
+                        if g.name.startswith("batch_norm"):
+                            if args.scale_loss > 1:
+                                scaled_g = g / float(args.scale_loss)
+                            else:
+                                scaled_g = g
+                            master_params_grads.append([p, scaled_g])
+                            continue
                         master_grad = fluid.layers.cast(g, "float32")
                         if args.scale_loss > 1:
                             master_grad = master_grad / float(args.scale_loss)
                         master_params_grads.append([master_param, master_grad])
                     main_prog._current_role = tmp_role
-                    update_op_role_var(params_grads, master_params_grads, main_prog)
 
-                    optimizer.minimize(avg_cost, user_params_grads=master_params_grads)
+                    optimizer.apply_gradients(master_params_grads)
                     
                     for idx, m_p_g in enumerate(master_params_grads):
                         train_p, train_g = params_grads[idx]
@@ -317,26 +319,9 @@ def train(args):
         fluid.memory_optimize(train_prog)
         fluid.memory_optimize(test_prog)
 
-    with open("train_prog", "w") as fn:
-        fn.write(str(train_prog))
-    with open("startup_prog", "w") as fn:
-        fn.write(str(startup_prog))
-
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
-
-    if args.fp16 and args.kaiming_init:
-        import torch
-        conv2d_w_vars = [var for var in startup_prog.global_block().vars.values() if var.name.startswith('conv2d_')]
-        for var in conv2d_w_vars:
-            torch_w = torch.empty(var.shape)
-            kaiming_np = torch.nn.init.kaiming_normal_(torch_w, mode='fan_out', nonlinearity='relu').numpy()
-            tensor = fluid.global_scope().find_var(var.name).get_tensor()
-            if var.name.find(".master") == -1:
-                tensor.set(np.array(kaiming_np, dtype='float16').view(np.uint16), place)
-            else:
-                tensor.set(np.array(kaiming_np, dtype='float32'), place)
 
     if checkpoint is not None:
         fluid.io.load_persistables(exe, checkpoint, main_program=train_prog)
@@ -353,8 +338,7 @@ def train(args):
     if visible_device:
         device_num = len(visible_device.split(','))
     else:
-        device_num = 8
-        # device_num = subprocess.check_output(['nvidia-smi', '-L']).decode().count('\n')
+        device_num = subprocess.check_output(['nvidia-smi', '-L']).decode().count('\n')
 
     train_batch_size = args.batch_size / device_num
     test_batch_size = 8
