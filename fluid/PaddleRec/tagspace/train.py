@@ -16,29 +16,28 @@ SEED = 102
 
 def parse_args():
     parser = argparse.ArgumentParser("TagSpace benchmark.")
-    parser.add_argument('--neg_size', type=int, default=3, help='neg/pos ratio')
     parser.add_argument(
-        '--train_dir',
-        type=str,
-        default='train_data',
-        help='train file address')
+        '--neg_size', type=int, default=3, help='number of neg item')
+    parser.add_argument(
+        '--train_dir', type=str, default='train_data', help='train file')
     parser.add_argument(
         '--vocab_text_path',
         type=str,
         default='vocab_text.txt',
-        help='vocab_text file address')
+        help='vocab_text file')
     parser.add_argument(
         '--vocab_tag_path',
         type=str,
         default='vocab_tag.txt',
-        help='vocab_text file address')
+        help='vocab_text file')
     parser.add_argument(
         '--model_dir', type=str, default='model_', help='model dir')
     parser.add_argument(
         '--batch_size', type=int, default=5, help='num of batch size')
     parser.add_argument(
         '--print_batch', type=int, default=10, help='num of print batch')
-    parser.add_argument('--pass_num', type=int, default=10, help='num of epoch')
+    parser.add_argument(
+        '--pass_num', type=int, default=10, help='number of epoch')
     parser.add_argument(
         '--use_cuda', type=int, default=0, help='whether use gpu')
     parser.add_argument(
