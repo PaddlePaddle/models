@@ -17,25 +17,22 @@ SEED = 102
 def parse_args():
     parser = argparse.ArgumentParser("gru4rec benchmark.")
     parser.add_argument(
-        '--train_dir',
-        type=str,
-        default='train_data',
-        help='train file address')
+        '--train_dir', type=str, default='train_data', help='train file')
     parser.add_argument(
-        '--vocab_path',
-        type=str,
-        default='vocab.txt',
-        help='vocab file address')
-    parser.add_argument('--is_local', type=int, default=1, help='whether local')
-    parser.add_argument('--hid_size', type=int, default=100, help='hid size')
-    parser.add_argument('--neg_size', type=int, default=10, help='neg size')
+        '--vocab_path', type=str, default='vocab.txt', help='vocab file')
+    parser.add_argument(
+        '--is_local', type=int, default=1, help='whether is local')
+    parser.add_argument('--hid_size', type=int, default=100, help='hidden size')
+    parser.add_argument(
+        '--neg_size', type=int, default=10, help='neg item size')
     parser.add_argument(
         '--model_dir', type=str, default='model_bpr_recall20', help='model dir')
     parser.add_argument(
         '--batch_size', type=int, default=5, help='num of batch size')
     parser.add_argument(
         '--print_batch', type=int, default=10, help='num of print batch')
-    parser.add_argument('--pass_num', type=int, default=10, help='num of epoch')
+    parser.add_argument(
+        '--pass_num', type=int, default=10, help='number of epoch')
     parser.add_argument(
         '--use_cuda', type=int, default=0, help='whether use gpu')
     parser.add_argument(
