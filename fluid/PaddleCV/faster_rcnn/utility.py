@@ -127,7 +127,7 @@ def parse_args():
     add_arg('debug',            bool,   False,   "Debug mode")
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
-    add_arg('image_path',       str,   'data/COCO17/val2017',  "The image path used to inference and visualize.")
+    add_arg('image_path',       str,   'dataset/coco/val2017',  "The image path used to inference and visualize.")
     add_arg('image_name',        str,    '',       "The single image used to inference and visualize.")
     # yapf: enable
     args = parser.parse_args()
