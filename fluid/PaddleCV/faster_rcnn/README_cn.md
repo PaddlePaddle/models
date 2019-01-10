@@ -124,7 +124,7 @@ Faster RCNN 目标检测模型
     python infer.py \
        --dataset=coco2017 \
         --pretrained_model=${path_to_pretrain_model}  \
-        --image_path=data/COCO17/val2017/  \
+        --image_path=dataset/coco/val2017/  \
         --image_name=000000000139.jpg \
         --draw_threshold=0.6
 
