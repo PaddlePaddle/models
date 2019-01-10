@@ -77,7 +77,6 @@ pass_id: 29 pass_time_cost 3.797759
 ```
 与fluid.Executor不同，AsyncExecutor在每个pass结束不会将accuracy打印出来。为了观察训练过程，可以将fluid.AsyncExecutor.run()方法的Debug参数设为True，这样每个pass结束会把参数指定的fetch variable打印出来：
 
-
 ```
 async_executor.run(
     main_program,
