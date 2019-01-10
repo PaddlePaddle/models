@@ -5,12 +5,11 @@
 ```text
 .
 ├── README.md            # 文档
-├── train.py             # 训练脚本 cross-entropy loss
-├── train_bpr.py         # 训练脚本 bpr loss
-├── infer.py             # 预测脚本 cross-entropy loss
-├── infer_bpr.py         # 预测脚本 bpr loss
-├── net.py               # 网络结构 cross-entropy loss
-├── net_bpr.py           # 网络结构 bpr loss
+├── train.py             # 训练脚本 全词表 cross-entropy
+├── train_sample_neg.py  # 训练脚本 sample负例 包含bpr loss 和cross-entropy
+├── infer.py             # 预测脚本 全词表
+├── infer_sample_neg.py  # 预测脚本 sample负例
+├── net.py               # 网络结构
 ├── text2paddle.py       # 文本数据转paddle数据
 ├── cluster_train.py     # 多机训练
 ├── cluster_train.sh     # 多机训练脚本
@@ -32,6 +31,9 @@ GRU4REC模型的介绍可以参阅论文[Session-based Recommendations with Recu
 论文的核心思想是在一个session中，用户点击一系列item的行为看做一个序列，用来训练RNN模型。预测阶段，给定已知的点击序列作为输入，预测下一个可能点击的item。
 
 session-based推荐应用场景非常广泛，比如用户的商品浏览、新闻点击、地点签到等序列数据。
+
+支持三种形式的损失函数, 分别是全词表的cross-entropy, 采负样本的Bayesian Pairwise Ranking和采负样本的Cross-entropy.
+
 
 运行样例程序可跳过'RSC15 数据下载及预处理'部分
 ## RSC15 数据下载及预处理
@@ -129,7 +131,10 @@ CPU 环境
 python train.py --train_dir train_data/
 ```
 
-bayesian pairwise ranking loss(bpr loss) 训练和cross-entropy的格式一样。  
+bayesian pairwise ranking loss(bpr loss) 训练
+```
+CUDA_VISIBLE_DEVICES=0 python train_sample_neg.py --loss bpr --use_cuda 1
+```
 
 
 请注意CPU环境下运行单机多卡任务（--parallel 1)时，batch_size应大于cpu核数。

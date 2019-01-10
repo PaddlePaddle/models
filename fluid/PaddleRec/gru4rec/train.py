@@ -63,7 +63,7 @@ def train():
         buffer_size=1000, word_freq_threshold=0, is_train=True)
 
     # Train program
-    src_wordseq, dst_wordseq, avg_cost, acc = net.network(
+    src_wordseq, dst_wordseq, avg_cost, acc = net.all_vocab_network(
         vocab_size=vocab_size, hid_size=hid_size)
 
     # Optimization to minimize lost
@@ -117,7 +117,6 @@ def train():
         fetch_vars = [avg_cost, acc]
         fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars, exe)
         print("model saved in %s" % save_dir)
-    #exe.close()
     print("finish training")
 
 

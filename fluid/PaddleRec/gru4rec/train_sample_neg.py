@@ -9,7 +9,7 @@ import paddle.fluid as fluid
 import paddle
 import time
 import utils
-import net_bpr as net
+import net
 
 SEED = 102
 
@@ -26,6 +26,7 @@ def parse_args():
         '--hid_size', type=int, default=100, help='hidden-dim size')
     parser.add_argument(
         '--neg_size', type=int, default=10, help='neg item size')
+    parser.add_argument('--loss', type=str, default="bpr", help='loss fuction')
     parser.add_argument(
         '--model_dir', type=str, default='model_bpr_recall20', help='model dir')
     parser.add_argument(
@@ -65,8 +66,12 @@ def train():
         buffer_size=1000, word_freq_threshold=0, is_train=True)
 
     # Train program
-    src, pos_label, label, avg_cost = net.train_network(
-        neg_size=args.neg_size, vocab_size=vocab_size, hid_size=hid_size)
+    if args.loss == 'bpr':
+        src, pos_label, label, avg_cost = net.train_bpr_network(
+            neg_size=args.neg_size, vocab_size=vocab_size, hid_size=hid_size)
+    else:
+        src, pos_label, label, avg_cost = net.train_cross_entropy_network(
+            neg_size=args.neg_size, vocab_size=vocab_size, hid_size=hid_size)
 
     # Optimization to minimize lost
     sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.base_lr)

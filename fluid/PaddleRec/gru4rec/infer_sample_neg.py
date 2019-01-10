@@ -8,7 +8,7 @@ import numpy as np
 import six
 import paddle.fluid as fluid
 import paddle
-import net_bpr as net
+import net
 
 import utils
 
