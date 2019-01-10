@@ -223,7 +223,6 @@ def build_program(is_train, main_prog, startup_prog, args):
     assert model_name in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
     model = models.__dict__[model_name]()
-    params_grads = []
     with fluid.program_guard(main_prog, startup_prog):
         py_reader = fluid.layers.py_reader(
             capacity=16,
@@ -248,10 +247,10 @@ def build_program(is_train, main_prog, startup_prog, args):
                 params["learning_strategy"]["name"] = args.lr_strategy
 
                 optimizer = optimizer_setting(params)
-                params_grads = optimizer.backward(avg_cost)
 
                 if args.fp16:
                     master_params_grads = []
+                    params_grads = optimizer.backward(avg_cost)
                     tmp_role = main_prog._current_role
                     OpRole = fluid.core.op_proto_and_checker_maker.OpRole
                     main_prog._current_role = OpRole.Backward
