@@ -19,7 +19,8 @@ def parse_args():
         '--test_dir', type=str, default='test_data', help='test file address')
     parser.add_argument(
         '--start_index', type=int, default='1', help='start index')
-    parser.add_argument('--last_index', type=int, default='3', help='end index')
+    parser.add_argument(
+        '--last_index', type=int, default='3', help='last index')
     parser.add_argument(
         '--model_dir', type=str, default='model_bpr_recall20', help='model dir')
     parser.add_argument(
@@ -29,10 +30,7 @@ def parse_args():
     parser.add_argument(
         '--hid_size', type=int, default='100', help='batch_size')
     parser.add_argument(
-        '--vocab_path',
-        type=str,
-        default='vocab.txt',
-        help='vocab file address')
+        '--vocab_path', type=str, default='vocab.txt', help='vocab file')
     args = parser.parse_args()
     return args
 
