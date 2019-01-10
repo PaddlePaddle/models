@@ -7,6 +7,7 @@ import paddle.fluid as fluid
 import paddle
 import os
 
+
 def to_lodtensor(data, place):
     """ convert to LODtensor """
     seq_lens = [len(seq) for seq in data]
@@ -22,10 +23,73 @@ def to_lodtensor(data, place):
     res.set_lod([lod])
     return res
 
+
+def to_lodtensor_bpr(raw_data, neg_size, vocab_size, place):
+    """ convert to LODtensor """
+    data = [dat[0] for dat in raw_data]
+    seq_lens = [len(seq) for seq in data]
+    cur_len = 0
+    lod = [cur_len]
+    for l in seq_lens:
+        cur_len += l
+        lod.append(cur_len)
+    flattened_data = np.concatenate(data, axis=0).astype("int64")
+    flattened_data = flattened_data.reshape([len(flattened_data), 1])
+    res = fluid.LoDTensor()
+    res.set(flattened_data, place)
+    res.set_lod([lod])
+
+    data = [dat[1] for dat in raw_data]
+    pos_data = np.concatenate(data, axis=0).astype("int64")
+    length = np.size(pos_data)
+    neg_data = np.tile(pos_data, neg_size)
+    np.random.shuffle(neg_data)
+    for ii in range(length * neg_size):
+        if neg_data[ii] == pos_data[ii / neg_size]:
+            neg_data[ii] = pos_data[length - 1 - ii / neg_size]
+
+    label_data = np.column_stack(
+        (pos_data.reshape(length, 1), neg_data.reshape(length, neg_size)))
+    res_label = fluid.LoDTensor()
+    res_label.set(label_data, place)
+    res_label.set_lod([lod])
+
+    res_pos = fluid.LoDTensor()
+    res_pos.set(np.zeros([len(flattened_data), 1]).astype("int64"), place)
+    res_pos.set_lod([lod])
+
+    return res, res_pos, res_label
+
+
+def to_lodtensor_bpr_test(raw_data, vocab_size, place):
+    """ convert to LODtensor """
+    data = [dat[0] for dat in raw_data]
+    seq_lens = [len(seq) for seq in data]
+    cur_len = 0
+    lod = [cur_len]
+    for l in seq_lens:
+        cur_len += l
+        lod.append(cur_len)
+    flattened_data = np.concatenate(data, axis=0).astype("int64")
+    flattened_data = flattened_data.reshape([len(flattened_data), 1])
+    res = fluid.LoDTensor()
+    res.set(flattened_data, place)
+    res.set_lod([lod])
+
+    data = [dat[1] for dat in raw_data]
+    flattened_data = np.concatenate(data, axis=0).astype("int64")
+    flattened_data = flattened_data.reshape([len(flattened_data), 1])
+    res_pos = fluid.LoDTensor()
+    res_pos.set(flattened_data, place)
+    res_pos.set_lod([lod])
+    return res, res_pos
+
+
 def get_vocab_size(vocab_path):
     with open(vocab_path, "r") as rf:
         line = rf.readline()
         return int(line.strip())
+
 
 def prepare_data(file_dir,
                  vocab_path,
@@ -45,12 +109,10 @@ def prepare_data(file_dir,
             batch_size,
             batch_size * 20)
     else:
-        reader = sort_batch(
+        vocab_size = get_vocab_size(vocab_path)
+        reader = paddle.batch(
             test(
-                file_dir, buffer_size, data_type=DataType.SEQ),
-                batch_size,
-                batch_size * 20)
-        vocab_size = 0
+                file_dir, buffer_size, data_type=DataType.SEQ), batch_size)
     return vocab_size, reader
 
 
@@ -103,6 +165,7 @@ def sort_batch(reader, batch_size, sort_group_size, drop_last=False):
 class DataType(object):
     SEQ = 2
 
+
 def reader_creator(file_dir, n, data_type):
     def reader():
         files = os.listdir(file_dir)
@@ -118,10 +181,13 @@ def reader_creator(file_dir, n, data_type):
                         yield src_seq, trg_seq
                     else:
                         assert False, 'error data type'
+
     return reader
+
 
 def train(train_dir, n, data_type=DataType.SEQ):
     return reader_creator(train_dir, n, data_type)
+
 
 def test(test_dir, n, data_type=DataType.SEQ):
     return reader_creator(test_dir, n, data_type)

@@ -5,9 +5,12 @@
 ```text
 .
 ├── README.md            # 文档
-├── train.py             # 训练脚本
-├── infer.py             # 预测脚本
-├── net.py               # 网络结构
+├── train.py             # 训练脚本 cross-entropy loss
+├── train_bpr.py         # 训练脚本 bpr loss
+├── infer.py             # 预测脚本 cross-entropy loss
+├── infer_bpr.py         # 预测脚本 bpr loss
+├── net.py               # 网络结构 cross-entropy loss
+├── net_bpr.py           # 网络结构 bpr loss
 ├── text2paddle.py       # 文本数据转paddle数据
 ├── cluster_train.py     # 多机训练
 ├── cluster_train.sh     # 多机训练脚本
@@ -110,7 +113,7 @@ python text2paddle.py raw_train_data/ raw_test_data/ train_data test_data vocab.
 ## 训练
 '--use_cuda 1' 表示使用gpu, 缺省表示使用cpu '--parallel 1' 表示使用多卡，缺省表示使用单卡
 
-具体的参数配置可运行 
+具体的参数配置可运行
 ```
 python train.py -h
 ```
@@ -118,13 +121,16 @@ python train.py -h
 GPU 环境
 运行命令开始训练模型。
 ```
-CUDA_VISIBLE_DEVICES=0 python train.py --train_dir train_data/ --use_cuda 1 
+CUDA_VISIBLE_DEVICES=0 python train.py --train_dir train_data/ --use_cuda 1
 ```
 CPU 环境
 运行命令开始训练模型。
 ```
 python train.py --train_dir train_data/
 ```
+
+bayesian pairwise ranking loss(bpr loss) 训练和cross-entropy的格式一样。  
+
 
 请注意CPU环境下运行单机多卡任务（--parallel 1)时，batch_size应大于cpu核数。
 
