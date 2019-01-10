@@ -22,7 +22,8 @@ def parse_args():
         '--vocab_path', type=str, default='vocab.txt', help='vocab file')
     parser.add_argument(
         '--is_local', type=int, default=1, help='whether is local')
-    parser.add_argument('--hid_size', type=int, default=100, help='hidden size')
+    parser.add_argument(
+        '--hid_size', type=int, default=100, help='hidden-dim size')
     parser.add_argument(
         '--neg_size', type=int, default=10, help='neg item size')
     parser.add_argument(

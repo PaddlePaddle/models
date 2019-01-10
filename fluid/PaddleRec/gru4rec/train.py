@@ -22,7 +22,8 @@ def parse_args():
         '--vocab_path', type=str, default='vocab.txt', help='vocab file')
     parser.add_argument(
         '--is_local', type=int, default=1, help='whether is local')
-    parser.add_argument('--hid_size', type=int, default=100, help='hidden size')
+    parser.add_argument(
+        '--hid_size', type=int, default=100, help='hidden-dim size')
     parser.add_argument(
         '--model_dir', type=str, default='model_recall20', help='model dir')
     parser.add_argument(
