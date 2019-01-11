@@ -16,15 +16,19 @@
 
 模型结构如下图所示：
 
-![image.png-49.1kB](http://static.zybuluo.com/molly-ecla/rrbpvk6euve5n738cdboh74q/image.png)
+![](readmeImg/1.png)
 
 模型输出示例如下图所示：
-![image.png-855.2kB](http://static.zybuluo.com/molly-ecla/dn7qwd12n79ttourfq26o3an/image.png)
+![](readmeImg/2.png)
 
 
 
 ## 数据准备
-模型使用timofte作为训练任务的数据，使用set5或set14作为验证任务的数据。
+模型使用timofte作为训练任务的数据，使用set5或set14作为验证任务的数据。数据集获取难度较大，可以通过下面的下载地址下载：
+
+链接：https://pan.baidu.com/s/1rynLdqzsbyPamJnKOIwNiA 
+提取码：v3hl 
+
 数据存放结构如下：
 
 ```
@@ -93,18 +97,18 @@ scale_factor： 进行超分辨重建的缩放比例。
 ## 实验结果
 下图为在`timofte`训练集上的训练的PSNR曲线：
 
-![image.png-37.1kB](http://static.zybuluo.com/molly-ecla/2e5e5yjz2za7syz34bk3ut5s/image.png)
+![](readmeImg/3.png)
 
 
 在训练集上训练，在set5数据集上验证的结果为：psnr=35.82(论文32.39)
 
 下图是使用`infer.py`脚本预测产生的结果示例，其中，第一行是输入的原始图片，第二行是输入图片经过subsample的结果，第三行是超分辨率重构的结果。
 
-![0.png-101.2kB](http://static.zybuluo.com/molly-ecla/th1u9o27tnfrn5vmn7wakqj8/0.png)
+![](readmeImg/4.png)
 
-![1.png-50.4kB](http://static.zybuluo.com/molly-ecla/kqijemqxaw1m8pzj1fwol3vz/1.png)
+![](readmeImg/5.png)
 
-![2.png-61.4kB](http://static.zybuluo.com/molly-ecla/560qm7nrhia9bokz6k44t54p/2.png)
+![](readmeImg/6.png)
 
 
 ## 参考
