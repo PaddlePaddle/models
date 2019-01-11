@@ -17,6 +17,7 @@ import functools
 import subprocess
 import utils
 from utils.learning_rate import cosine_decay
+from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
 from utility import add_arguments, print_arguments
 import models
 import models_name
@@ -40,7 +41,9 @@ add_arg('model',            str,   "SE_ResNeXt50_32x4d", "Set the network to use
 add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
 add_arg('data_dir',         str,   "./data/ILSVRC2012",  "The ImageNet dataset root dir.")
 add_arg('model_category',   str,   "models",             "Whether to use models_name or not, valid value:'models','models_name'" )
-# yapf: enabl
+add_arg('fp16',             bool,  False,                "Enable half precision training with fp16." )
+add_arg('scale_loss',       float, 1.0,                  "Scale loss for fp16." )
+# yapf: enable
 
 
 def set_models(model):
@@ -145,12 +148,15 @@ def net_config(image, label, model, args):
         acc_top1 = fluid.layers.accuracy(input=out0, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
     else:
-        out = model.net(input=image, class_dim=class_dim)
-        cost = fluid.layers.cross_entropy(input=out, label=label)
+        out = model.net(input=image, class_dim=class_dim)    
+        cost, pred = fluid.layers.softmax_with_cross_entropy(out, label, return_softmax=True) 
+        if args.scale_loss > 1:
+            avg_cost = fluid.layers.mean(x=cost) * float(args.scale_loss)
+        else:
+            avg_cost = fluid.layers.mean(x=cost)
 
-        avg_cost = fluid.layers.mean(x=cost)
-        acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
-        acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
+        acc_top1 = fluid.layers.accuracy(input=pred, label=label, k=1)
+        acc_top5 = fluid.layers.accuracy(input=pred, label=label, k=5)
 
     return avg_cost, acc_top1, acc_top5
 
@@ -171,6 +177,8 @@ def build_program(is_train, main_prog, startup_prog, args):
             use_double_buffer=True)
         with fluid.unique_name.guard():
             image, label = fluid.layers.read_file(py_reader)
+            if args.fp16:
+                image = fluid.layers.cast(image, "float16")
             avg_cost, acc_top1, acc_top5 = net_config(image, label, model, args)
             avg_cost.persistable = True
             acc_top1.persistable = True
@@ -184,7 +192,15 @@ def build_program(is_train, main_prog, startup_prog, args):
                 params["learning_strategy"]["name"] = args.lr_strategy
 
                 optimizer = optimizer_setting(params)
-                optimizer.minimize(avg_cost)
+
+                if args.fp16:
+                    params_grads = optimizer.backward(avg_cost)
+                    master_params_grads = create_master_params_grads(
+                        params_grads, main_prog, startup_prog, args.scale_loss)
+                    optimizer.apply_gradients(master_params_grads)
+                    master_param_to_train_param(master_params_grads, params_grads, main_prog)
+                else:
+                    optimizer.minimize(avg_cost)
 
     return py_reader, avg_cost, acc_top1, acc_top5
 
