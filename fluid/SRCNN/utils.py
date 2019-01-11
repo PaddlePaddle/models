@@ -50,8 +50,8 @@ def read_data(data_path, batch_size, ext, scale_factor, bia_size):
                         img_blur = cv2.GaussianBlur(img_patch, (5, 5), 0)
                         img_sumsample = cv2.resize(img_blur, (int(33/scale_factor), int(33/scale_factor)))
                         img_input = cv2.resize(img_blur, (33, 33), interpolation=cv2.INTER_CUBIC)
-                        img_inputs.append(img_input)
-                        img_gths.append(img_gth)
+                        img_inputs.append([img_input])
+                        img_gths.append([img_gth])
                         count_bt += 1
                         if count_bt % batch_size == 0:
                             yield [[np.array(img_inputs), np.array(img_gths)]]

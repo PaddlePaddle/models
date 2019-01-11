@@ -37,17 +37,17 @@ N2=32
 
 def net(X, Y, model_struct):        
     # construct net         
-    conv1 = fluid.layers.nn.conv2d(X, model_struct.n1, model_struct.f1, act='relu', name='conv1' , 
+    conv1 = fluid.layers.conv2d(X, model_struct.n1, model_struct.f1, act='relu', name='conv1' , 
                                 param_attr= fluid.ParamAttr(initializer=fluid.initializer.NormalInitializer(scale=0.001),
                                                         name='conv1_w'),
                                 bias_attr=fluid.ParamAttr(initializer=fluid.initializer.ConstantInitializer(value=0.),
                                                         name='conv1_b'))
-    conv2 = fluid.layers.nn.conv2d(conv1, model_struct.n2, model_struct.f2, act='relu', name='conv2' , 
+    conv2 = fluid.layers.conv2d(conv1, model_struct.n2, model_struct.f2, act='relu', name='conv2' , 
                                 param_attr= fluid.ParamAttr(initializer=fluid.initializer.NormalInitializer(scale=0.001),
                                                         name='conv2_w'),
                                 bias_attr=fluid.ParamAttr(initializer=fluid.initializer.ConstantInitializer(value=0.),
                                                         name='conv2_b'))
-    pred = fluid.layers.nn.conv2d(conv2, 1, model_struct.f3, name='pred', 
+    pred = fluid.layers.conv2d(conv2, 1, model_struct.f3, name='pred', 
                                 param_attr= fluid.ParamAttr(initializer=fluid.initializer.NormalInitializer(scale=0.001),
                                                         name='pred_w'),
                                 bias_attr=fluid.ParamAttr(initializer=fluid.initializer.ConstantInitializer(value=0.),
@@ -94,7 +94,7 @@ def train(args):
                     fluid.framework.default_main_program(),
                     feed=feeder.feed(data),
                     fetch_list=[y_loss])             
-                if batch_id == 0 or backprops_cnt % 100 ==0:   
+                if batch_id == 0:   
                     fluid.io.save_inference_model(args.checkpoint_path, ['image'], [y_predict], exe)  
                     val_loss, val_psnr = validation()
                     print("%i\tEpoch: %d \tCur Cost : %f\t Val Cost: %f\t PSNR :%f" % (backprops_cnt, epoch, np.array(loss[0])[0], val_loss, val_psnr))

@@ -78,7 +78,7 @@ mode： 指定模型结构。如果为“base”，使用论文baseline模型结
 ### 预测
 执行以下命令得到模型的预测结果。
 ```
-python infer.py --checkpoint_path="./chkpnt/" --use_gpu=True --image_path="data/val_dataset/set5/baby_GT.bmp"
+python infer.py --checkpoint_path="./chkpnt/" --image_path="data/val_dataset/set5/baby_GT.bmp"
 ```
 需要通过选项`--checkpoint_path`指定模型文件。并使用`--image_path`指定要进行预测的图片。
 
