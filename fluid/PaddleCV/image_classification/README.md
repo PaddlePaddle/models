@@ -186,7 +186,7 @@ Test-12-score: [15.040644], class [386]
 
 ## Supported models and performances
 
-Models consists of two categories: Models with specified parameters names in model definition and Models without specified parameters, Generate named model by indicating ```model_category = models_name```, and note that ```model``` is consistent with the ```pretrained models```.
+Models consists of two categories: Models with specified parameters names in model definition and Models without specified parameters, Generate named model by indicating ```model_category = models_name```, and note that ```model``` is consistent with the ```pretrained models```, use the specified parameters named models or do not use them at the same time.
 
 Models are trained by starting with learning rate ```0.1``` and decaying it by ```0.1``` after each pre-defined epoches, if not special introduced. Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. Pretrained models can be downloaded by clicking related model names.
 
