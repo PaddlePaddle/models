@@ -64,7 +64,6 @@ class VGGNet():
         out = fluid.layers.fc(
             input=fc2,
             size=class_dim,
-            act='softmax',
             param_attr=fluid.param_attr.ParamAttr(
                 initializer=fluid.initializer.Normal(scale=0.005)),
             bias_attr=fluid.param_attr.ParamAttr(

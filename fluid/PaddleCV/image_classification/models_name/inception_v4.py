@@ -48,7 +48,6 @@ class InceptionV4():
         out = fluid.layers.fc(
             input=drop,
             size=class_dim,
-            act='softmax',
             param_attr=ParamAttr(
                 initializer=fluid.initializer.Uniform(-stdv, stdv),
                 name="final_fc_weights"),
