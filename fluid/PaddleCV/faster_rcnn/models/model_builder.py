@@ -74,11 +74,11 @@ class FasterRCNN(object):
                 self.py_reader = fluid.layers.py_reader(
                     capacity=64,
                     shapes=[[-1] + image_shape, [-1, 4], [-1, 1], [-1, 1],
-                        [-1, 3], [-1, 1], [-1] + image_shape[1:]],
-                    lod_levels=[0, 1, 1, 1, 0, 0, 1],
+                        [-1, 3], [-1, 1], [-1, 2]],
+                    lod_levels=[0, 1, 1, 1, 0, 0, 3],
                     dtypes=[
                         "float32", "float32", "int32", "int32",\
-                        "float32", "int32", "uint8"
+                        "float32", "int32", "float32"
                     ],
                     use_double_buffer=True)
                 self.image, self.gt_box, self.gt_label, self.is_crowd, \
@@ -117,10 +117,7 @@ class FasterRCNN(object):
                 name='im_id', shape=[1], dtype='int32')
             if cfg.MASK_ON:
                 self.gt_masks = fluid.layers.data(
-                    name='gt_masks',
-                    shape=image_shape[1:],
-                    dtype='uint8',
-                    lod_level=1)
+                    name='gt_masks', shape=[2], dtype='float32', lod_level=3)
 
     def feeds(self):
         if not self.is_train:

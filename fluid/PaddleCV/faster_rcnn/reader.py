@@ -102,6 +102,9 @@ def coco(mode,
                 roidb = roidb_perm[0]
                 roidb_cur += 1
                 roidb_perm.rotate(-1)
+                print('--------------------------------')
+                print('image name: ', roidb['image'])
+                print('is_crowd: ', roidb['is_crowd'])
                 #if '000139.jpg' not in roidb['image']:
                 #    continue
                 if roidb_cur >= len(roidbs):
@@ -114,16 +117,30 @@ def coco(mode,
                     continue
                 height = im_info[0]
                 width = im_info[1]
-                gt_masks = []
                 if cfg.MASK_ON:
+                    gt_masks = []
                     for segm, iscrowd in \
                         list(zip(roidb['segms'], roidb['is_crowd'])):
-                        gt_masks.append(
-                           segm_utils.segms_to_mask(segm, iscrowd, \
-                                                int(height), int(width)))
+                        #gt_masks.append(
+                        #   segm_utils.segms_to_mask(segm, iscrowd, \
+                        #                        int(height), int(width)))
+                        gt_segm = []
+                        if iscrowd:
+                            for i in segm:
+                                gt_segm.append([[0, 0]])
+                        else:
+                            for i in range(len(segm)):
+                                poly = segm[i]
+                                gt_poly = []
+                                for j in range(len(poly) / 2):
+                                    gt_poly.append(
+                                        [poly[2 * j], poly[2 * j + 1]])
+                                gt_segm.append(gt_poly)
+                        gt_masks.append(gt_segm)
+
                     batch_out.append(
                         (im, gt_boxes, gt_classes, is_crowd, \
-                         im_info, im_id, np.array(gt_masks,dtype='uint8')))
+                         im_info, im_id, np.array(gt_masks)))
                 else:
                     batch_out.append(
                          (im, gt_boxes, gt_classes, is_crowd, \

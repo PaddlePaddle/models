@@ -43,6 +43,7 @@ def segms_to_rle(segms, height, width):
 
 
 def segms_to_mask(segms, iscrowd, height, width):
+    print('segms: ', segms)
     if iscrowd:
         return [[0 for i in range(width)] for j in range(height)]
     rle = segms_to_rle(segms, height, width)
