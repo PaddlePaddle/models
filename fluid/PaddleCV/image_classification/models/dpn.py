@@ -94,7 +94,6 @@ class DPN(object):
             initializer=fluid.initializer.Uniform(-stdv, stdv))
         fc6 = fluid.layers.fc(input=pool5,
                               size=class_dim,
-                              act='softmax',
                               param_attr=param_attr)
 
         return fc6

@@ -73,7 +73,6 @@ class MobileNetV2():
 
         output = fluid.layers.fc(input=input,
                                  size=class_dim,
-                                 act='softmax',
                                  param_attr=ParamAttr(initializer=MSRA()))
         return output
 

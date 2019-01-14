@@ -93,7 +93,6 @@ class ShuffleNetV2():
 
         output = fluid.layers.fc(input=pool_last,
                                  size=class_dim,
-                                 act='softmax',
                                  param_attr=ParamAttr(initializer=MSRA()))
         return output
 
