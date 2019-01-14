@@ -157,8 +157,19 @@ with fluid.program_guard(tp, sp):
             regularization_coeff=weight_decay), )
     retv = opt.minimize(loss_mean, startup_program=sp, no_grad_set=no_grad_set)
 
-fluid.memory_optimize(
-    tp, print_log=False, skip_opt_set=set([pred.name, loss_mean.name]), level=1)
+if "inplace_normalize" in os.environ and os.environ["inplace_normalize"] == '1':
+    fluid.memory_optimize(
+        tp,
+        print_log=False,
+        skip_opt_set=set([pred.name, loss_mean.name]),
+        level=1,
+        inplace_normalize=True)
+else:
+    fluid.memory_optimize(
+        tp,
+        print_log=False,
+        skip_opt_set=set([pred.name, loss_mean.name]),
+        level=1)
 
 place = fluid.CPUPlace()
 if args.use_gpu:

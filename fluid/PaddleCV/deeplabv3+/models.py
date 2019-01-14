@@ -5,6 +5,7 @@ import paddle
 import paddle.fluid as fluid
 
 import contextlib
+import os
 name_scope = ""
 
 decode_channel = 48
@@ -25,6 +26,11 @@ depthwise_use_cudnn = False
 bn_regularizer = fluid.regularizer.L2DecayRegularizer(regularization_coeff=0.0)
 depthwise_regularizer = fluid.regularizer.L2DecayRegularizer(
     regularization_coeff=0.0)
+
+fuse_relu_before_depthwise_conv = False
+
+if 'fuse_relu_before_depthwise_conv' in os.environ:
+    fuse_relu_before_depthwise_conv = True
 
 
 @contextlib.contextmanager
@@ -149,7 +155,7 @@ def relu(data):
     return append_op_result(fluid.layers.relu(data), 'relu')
 
 
-def seq_conv(input, channel, stride, filter, dilation=1, act=None):
+def seq_conv(input, channel, stride, filter, dilation=1, act=None, fuse=False):
     with scope('depthwise'):
         input = conv(
             input,
@@ -159,7 +165,9 @@ def seq_conv(input, channel, stride, filter, dilation=1, act=None):
             groups=input.shape[1],
             padding=(filter // 2) * dilation,
             dilation=dilation,
-            use_cudnn=depthwise_use_cudnn)
+            use_cudnn=depthwise_use_cudnn,
+            fuse_relu_before_depthwise_conv=fuse and
+            fuse_relu_before_depthwise_conv)
         input = bn(input)
         if act: input = act(input)
     with scope('pointwise'):
@@ -186,13 +194,15 @@ def xception_block(input,
     for i in range(repeat_number):
         with scope('separable_conv' + str(i + 1)):
             if not activation_fn_in_separable_conv:
-                data = relu(data)
+                if not fuse_relu_before_depthwise_conv:
+                    data = relu(data)
                 data = seq_conv(
                     data,
                     channels[i],
                     strides[i],
                     filters[i],
-                    dilation=dilation)
+                    dilation=dilation,
+                    fuse=True)
             else:
                 data = seq_conv(
                     data,
