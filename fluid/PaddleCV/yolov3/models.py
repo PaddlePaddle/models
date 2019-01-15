@@ -210,6 +210,7 @@ class YOLOv3(object):
                             class_num=class_num,
                             ignore_thresh=ignore_thresh,
                             downsample=self.downsample,
+                            use_label_smooth=cfg.label_smooth,
                             name="yolo_loss"+str(i))
                     self.losses.append(fluid.layers.reduce_mean(loss))
                     self.downsample //= 2
