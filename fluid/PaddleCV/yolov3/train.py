@@ -110,7 +110,7 @@ def train():
 
     def train_loop_pyreader():
         py_reader.start()
-        smoothed_loss = SmoothedValue(cfg.log_window)
+        smoothed_loss = SmoothedValue()
         try:
             start_time = time.time()
             prev_start_time = start_time
@@ -127,7 +127,7 @@ def train():
                               .get_tensor())
                 print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
                     iter_id, lr[0],
-                    smoothed_loss.get_median_value(), start_time - prev_start_time))
+                    smoothed_loss.get_mean_value(), start_time - prev_start_time))
                 sys.stdout.flush()
                 if (iter_id + 1) % cfg.snapshot_iter == 0:
                     save_model("model_iter{}".format(iter_id))
@@ -143,7 +143,7 @@ def train():
         start_time = time.time()
         prev_start_time = start_time
         start = start_time
-        smoothed_loss = SmoothedValue(cfg.log_window)
+        smoothed_loss = SmoothedValue()
         snapshot_loss = 0
         snapshot_time = 0
         for iter_id, data in enumerate(train_reader()):
@@ -158,7 +158,7 @@ def train():
             lr = np.array(fluid.global_scope().find_var('learning_rate')
                           .get_tensor())
             print("Iter {:d}, lr: {:.6f}, loss: {:.4f}, time {:.5f}".format(
-                iter_id, lr[0], smoothed_loss.get_median_value(), start_time - prev_start_time))
+                iter_id, lr[0], smoothed_loss.get_mean_value(), start_time - prev_start_time))
             sys.stdout.flush()
 
             if (iter_id + 1) % cfg.snapshot_iter == 0:

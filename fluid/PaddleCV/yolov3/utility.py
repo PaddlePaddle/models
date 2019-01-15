@@ -75,14 +75,16 @@ class SmoothedValue(object):
     window or the global series average.
     """
 
-    def __init__(self, window_size):
-        self.deque = deque(maxlen=window_size)
+    def __init__(self):
+        self.loss_sum = 0.0
+        self.iter_cnt = 0
 
     def add_value(self, value):
-        self.deque.append(value)
+        self.loss_sum += np.mean(value)
+        self.iter_cnt += 1
 
-    def get_median_value(self):
-        return np.median(self.deque)
+    def get_mean_value(self):
+        return self.loss_sum / self.iter_cnt
 
 
 def parse_args():
@@ -109,7 +111,7 @@ def parse_args():
     add_arg('learning_rate',    float,  0.001,     "Learning rate.")
     add_arg('max_iter',         int,    500200,   "Iter number.")
     add_arg('snapshot_iter',    int,    2000,    "Save model every snapshot stride.")
-    add_arg('log_window',       int,    20,        "Log smooth window, set 1 for debug, set 20 for train.")
+    # add_arg('log_window',       int,    20,        "Log smooth window, set 1 for debug, set 20 for train.")
     # TRAIN TEST INFER
     add_arg('input_size',       int,    608,    "Image input size of YOLOv3.")
     add_arg('random_shape',     bool,   True,     "Resize to random shape for train reader.")
