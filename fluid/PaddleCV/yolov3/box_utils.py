@@ -40,9 +40,9 @@ def coco_anno_box_to_center_relative(box, img_height, img_width):
     x, y, w, h = box
 
     x1 = max(x, 0)
-    x2 = min(x + w, img_width - 1)
+    x2 = min(x + w - 1, img_width - 1)
     y1 = max(y, 0)
-    y2 = min(y + h, img_height - 1)
+    y2 = min(y + h - 1, img_height - 1)
 
     x = (x1 + x2) / 2 / img_width
     y = (y1 + y2) / 2 / img_height
