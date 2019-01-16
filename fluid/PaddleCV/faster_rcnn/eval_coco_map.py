@@ -18,8 +18,7 @@ from __future__ import print_function
 import os
 import time
 import numpy as np
-from eval_helper import get_nmsed_box
-from eval_helper import get_dt_res
+from eval_helper import *
 import paddle
 import paddle.fluid as fluid
 import reader
@@ -64,11 +63,13 @@ def eval():
         masks = model.eval_mask_out()
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
     # yapf: disable
     if cfg.pretrained_model:
         def if_exist(var):
             return os.path.exists(os.path.join(cfg.pretrained_model, var.name))
         fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
+
     # yapf: enable
     test_reader = reader.test(total_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
@@ -84,22 +85,23 @@ def eval():
         im_info = []
         for data in batch_data:
             im_info.append(data[1])
-        result, = exe.run(fetch_list=[v.name for v in fetch_list],
-                          feed=feeder.feed(batch_data),
-                          return_numpy=False)
+        result = exe.run(fetch_list=[v.name for v in fetch_list],
+                         feed=feeder.feed(batch_data),
+                         return_numpy=False)
+
         rpn_rois_v = result[0]
         confs_v = result[1]
         locs_v = result[2]
         if cfg.MASK_ON:
             pred_boxes_v = result[3]
             masks_v = result[4]
+
         new_lod = pred_boxes_v.lod()
         nmsed_out = pred_boxes_v
-        #new_lod, nmsed_out = get_nmsed_box(rpn_rois_v, confs_v, locs_v,
-        #                                   class_nums, im_info)
 
         dts_res += get_dt_res(total_batch_size, new_lod[0], nmsed_out,
                               batch_data, numId_to_catId_map)
+
         if cfg.MASK_ON and np.array(masks_v).shape != (1, 1):
             segms_out = segm_results(nmsed_out, masks_v, im_info)
             segms_res += get_segms_res(total_batch_size, new_lod[0], segms_out,

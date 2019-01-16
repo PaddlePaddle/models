@@ -24,6 +24,7 @@ from config import cfg
 import pycocotools.mask as mask_util
 import six
 from colormap import colormap
+import cv2
 
 
 def box_decoder(deltas, boxes, weights):
@@ -108,7 +109,7 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info):
             inds = np.where(scores_n[:, j] > cfg.TEST.score_thresh)[0]
             scores_j = scores_n[inds, j]
             rois_j = rois_n[inds, j * 4:(j + 1) * 4]
-            dets_j = np.hstack((rois_j, scores_j[:, np.newaxis])).astype(
+            dets_j = np.hstack((scores_j[:, np.newaxis], rois_j)).astype(
                 np.float32, copy=False)
             keep = box_utils.nms(dets_j, cfg.TEST.nms_thresh)
             nms_dets = dets_j[keep, :]
@@ -120,19 +121,19 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info):
             cls_boxes[j] = nms_dets
     # Limit to max_per_image detections **over all classes**
         image_scores = np.hstack(
-            [cls_boxes[j][:, -2] for j in range(1, class_nums)])
+            [cls_boxes[j][:, 1] for j in range(1, class_nums)])
         if len(image_scores) > cfg.TEST.detections_per_im:
             image_thresh = np.sort(image_scores)[-cfg.TEST.detections_per_im]
             for j in range(1, class_nums):
-                keep = np.where(cls_boxes[j][:, -2] >= image_thresh)[0]
+                keep = np.where(cls_boxes[j][:, 1] >= image_thresh)[0]
                 cls_boxes[j] = cls_boxes[j][keep, :]
 
         im_results_n = np.vstack([cls_boxes[j] for j in range(1, class_nums)])
         im_results[i] = im_results_n
         new_lod.append(len(im_results_n) + new_lod[-1])
-        boxes = im_results_n[:, :-2]
-        scores = im_results_n[:, -2]
-        labels = im_results_n[:, -1]
+        boxes = im_results_n[:, 2:]
+        scores = im_results_n[:, 1]
+        labels = im_results_n[:, 0]
     im_results = np.vstack([im_results[k] for k in range(len(lod) - 1)])
     return new_lod, im_results
 
@@ -140,6 +141,10 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info):
 def get_dt_res(batch_size, lod, nmsed_out, data, numId_to_catId_map):
     dts_res = []
     nmsed_out_v = np.array(nmsed_out)
+    if nmsed_out_v.shape == (
+            1,
+            1, ):
+        return dts_res
     assert (len(lod) == batch_size + 1), \
       "Error Lod Tensor offset dimension. Lod({}) vs. batch_size({})"\
                     .format(len(lod), batch_size)
@@ -152,7 +157,7 @@ def get_dt_res(batch_size, lod, nmsed_out, data, numId_to_catId_map):
         for j in range(dt_num_this_img):
             dt = nmsed_out_v[k]
             k = k + 1
-            xmin, ymin, xmax, ymax, score, num_id = dt.tolist()
+            num_id, score, xmin, ymin, xmax, ymax = dt.tolist()
             category_id = numId_to_catId_map[num_id]
             w = xmax - xmin + 1
             h = ymax - ymin + 1
@@ -170,12 +175,14 @@ def get_dt_res(batch_size, lod, nmsed_out, data, numId_to_catId_map):
 def get_segms_res(batch_size, lod, segms_out, data, numId_to_catId_map):
     segms_res = []
     segms_out_v = np.array(segms_out)
+    k = 0
     for i in range(batch_size):
         dt_num_this_img = lod[i + 1] - lod[i]
         image_id = int(data[i][-1])
         for j in range(dt_num_this_img):
             dt = segms_out_v[k]
-            score, num_id, segm = dt.tolist()
+            k = k + 1
+            segm, num_id, score = dt.tolist()
             cat_id = numId_to_catId_map[num_id]
             if six.PY3:
                 if 'counts' in segm:
@@ -222,7 +229,7 @@ def draw_mask_on_image(image_path, segms_out, draw_threshold):
     mask_color_id = 0
     w_ratio = .4
     for dt in nms_out:
-        score, num_id, segm = dt.tolist()
+        segm, score, num_id = dt.tolist()
         if score < draw_threshold:
             continue
         mask = mask_util.decode(segm) * 255
@@ -237,29 +244,30 @@ def draw_mask_on_image(image_path, segms_out, draw_threshold):
     image.save(image_name)
 
 
-def segm_results(im_result, masks, im_info):
+def segm_results(im_results, masks, im_info):
+    im_results = np.array(im_results)
     class_num = cfg.class_num
     M = cfg.resolution
     scale = (M + 2.0) / M
     lod = masks.lod()[0]
     masks_v = np.array(masks)
-    boxes = im_results[:, :-2]
-    labels = im_results[:, -1]
+    boxes = im_results[:, 2:]
+    labels = im_results[:, 0]
     segms_results = [[] for _ in range(len(lod) - 1)]
+    sum = 0
     for i in range(len(lod) - 1):
         im_results_n = im_results[lod[i]:lod[i + 1]]
         cls_segms = []
         masks_n = masks_v[lod[i]:lod[i + 1]]
         boxes_n = boxes[lod[i]:lod[i + 1]]
         labels_n = labels[lod[i]:lod[i + 1]]
-        im_h = round(im_info[i][0] / im_info[i][2])
-        im_w = round(im_info[i][0] / im_info[i][2])
+        im_h = int(round(im_info[i][0] / im_info[i][2]))
+        im_w = int(round(im_info[i][1] / im_info[i][2]))
         boxes_n = box_utils.expand_boxes(boxes_n, scale)
         boxes_n = boxes_n.astype(np.int32)
         padded_mask = np.zeros((M + 2, M + 2), dtype=np.float32)
-
         for j in range(len(im_results_n)):
-            class_id = labels_n[j]
+            class_id = int(labels_n[j])
             padded_mask[1:-1, 1:-1] = masks_n[j, class_id, :, :]
 
             ref_box = boxes_n[j, :]
@@ -276,16 +284,14 @@ def segm_results(im_result, masks, im_info):
             x_1 = min(ref_box[2] + 1, im_w)
             y_0 = max(ref_box[1], 0)
             y_1 = min(ref_box[3] + 1, im_h)
-
             im_mask[y_0:y_1, x_0:x_1] = mask[(y_0 - ref_box[1]):(y_1 - ref_box[
                 1]), (x_0 - ref_box[0]):(x_1 - ref_box[0])]
-
+            sum += im_mask.sum()
             rle = mask_util.encode(
                 np.array(
                     im_mask[:, :, np.newaxis], order='F'))[0]
             cls_segms.append(rle)
         segms_results[i] = np.array(cls_segms)[:, np.newaxis]
-
     segms_results = np.vstack([segms_results[k] for k in range(len(lod) - 1)])
-    im_results = np.hstack([im_results, segms_results])
-    return im_results[:, -3]
+    im_results = np.hstack([segms_results, im_results])
+    return im_results[:, :3]

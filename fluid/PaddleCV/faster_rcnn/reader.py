@@ -102,9 +102,6 @@ def coco(mode,
                 roidb = roidb_perm[0]
                 roidb_cur += 1
                 roidb_perm.rotate(-1)
-                print('--------------------------------')
-                print('image name: ', roidb['image'])
-                print('is_crowd: ', roidb['is_crowd'])
                 #if '000139.jpg' not in roidb['image']:
                 #    continue
                 if roidb_cur >= len(roidbs):
