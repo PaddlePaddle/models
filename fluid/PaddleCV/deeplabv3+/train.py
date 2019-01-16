@@ -91,6 +91,41 @@ def loss(logit, label):
     return loss, label_nignore
 
 
+def _inplace_normalize(program, skip_opt_set):
+    if not skip_opt_set: skip_opt_set = set()
+    block = program.block(0)
+
+    in_use = defaultdict(list)
+    for i in range(len(block.ops) - 1, -1, -1):
+        current_op = block.ops[i]
+        # currently, only group_norm supports inplace.
+        if current_op.type in ['group_norm']:
+            x = current_op.input('X')[0]
+            y = current_op.output('Y')[0]
+            # if x is not in use after, we can inplace it.
+            if x not in in_use and x not in skip_opt_set and x != y:
+                if PRINT_LOG:
+                    print("Inplace %s: X(%s) -> Y(%s)" %
+                          (current_op.type, x, y))
+                # inplace y into x
+                rename_list = [i]
+                if y in in_use: rename_list += in_use[y]
+                for rename_idx in rename_list:
+                    _rename_arg_(
+                        block.ops,
+                        y,
+                        x,
+                        begin_idx=rename_idx,
+                        end_idx=rename_idx + 1)
+                block.var(cpt.to_text(y)).desc = block.desc.find_var(
+                    cpt.to_bytes(x))
+                block.vars[cpt.to_text(y)] = Variable(
+                    block, name=cpt.to_text(x))
+        for input_name in current_op.input_arg_names:
+            in_use[input_name].append(i)
+    program = program.clone()
+
+
 def get_cards(args):
     if args.enable_ce:
         cards = os.environ.get('CUDA_VISIBLE_DEVICES')
@@ -158,18 +193,9 @@ with fluid.program_guard(tp, sp):
     retv = opt.minimize(loss_mean, startup_program=sp, no_grad_set=no_grad_set)
 
 if "inplace_normalize" in os.environ and os.environ["inplace_normalize"] == '1':
-    fluid.memory_optimize(
-        tp,
-        print_log=False,
-        skip_opt_set=set([pred.name, loss_mean.name]),
-        level=1,
-        inplace_normalize=True)
-else:
-    fluid.memory_optimize(
-        tp,
-        print_log=False,
-        skip_opt_set=set([pred.name, loss_mean.name]),
-        level=1)
+    _inplace_normalize(tp, skip_opt_set=set([pred.name, loss_mean.name]))
+fluid.memory_optimize(
+    tp, print_log=False, skip_opt_set=set([pred.name, loss_mean.name]), level=1)
 
 place = fluid.CPUPlace()
 if args.use_gpu:
