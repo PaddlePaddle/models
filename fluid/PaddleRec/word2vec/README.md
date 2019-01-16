@@ -29,9 +29,16 @@ This model implement a skip-gram model of word2vector.
 Preprocess the training data to generate a word dict.
 
 ```bash
-python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --is_local --dict_path data/1-billion_dict
+python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict
 ```
-if you would like to use our supported third party vocab, please set --other_dict_path as the directory of where you
+if you would like to use your own vocab follow the format below:
+```bash
+<UNK>
+a
+b
+c
+```
+Then, please set --other_dict_path as the directory of where you
 save the vocab you will use and set --with_other_dict flag on to using it.
 
 ## Train
@@ -47,7 +54,8 @@ python train.py \
         --with_hs --with_nce --is_local \
         2>&1 | tee train.log
 ```
-
+if you would like to use our supported third party vocab, please set --other_dict_path as the directory of where you
+save the vocab you will use and set --with_other_dict flag on to using it.
 
 ### Distributed Train
 Run a 2 pserver 2 trainer distribute training on a single machine.
