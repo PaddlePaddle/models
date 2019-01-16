@@ -25,7 +25,7 @@ sh download_sop.sh
 
 ## Training metric learning models
 
-To train a metric learning model, one need to set the neural network as backbone and the metric loss function to optimize. We train meiric learning model using softmax or [arcmargin](https://arxiv.org/abs/1801.07698) loss firstly, and then fine-turned the model using other metric learning loss, such as triplet, [quadruplet](https://arxiv.org/abs/1710.00478) and [eml](https://arxiv.org/abs/1212.6094) loss. One example of training using arcmargin loss is shown below:
+To train a metric learning model, one need to set the neural network as backbone and the metric loss function to optimize. We train meiric learning model using softmax or [arcmargin][1] loss firstly, and then fine-turned the model using other metric learning loss, such as triplet, [quadruplet][2] and [eml][3] loss. One example of training using arcmargin loss is shown below:
 
 
 ```
@@ -104,4 +104,7 @@ For comparation, many metric learning models with different neural networks and 
 |fine-tuned with quadruplet | 78.10% | 79.59%
 |fine-tuned with eml | 79.32% | 80.11%
 
-## ccc
+## Reference
+[1]: [ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/abs/1801.07698)
+[2]: [Margin Sample Mining Loss: A Deep Learning Based Method for Person Re-identification](https://arxiv.org/abs/1710.00478)
+[3]: [Large Scale Strongly Supervised Ensemble Metric Learning, with Applications to Face Verification and Retrieval](https://arxiv.org/abs/1212.6094)
