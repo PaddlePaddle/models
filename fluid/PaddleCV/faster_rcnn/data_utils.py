@@ -44,7 +44,9 @@ def get_image_blob(roidb, mode):
         target_size = cfg.TEST.scales[0]
         max_size = cfg.TEST.max_size
     im = cv2.imread(roidb['image'])
-    if im is None:
+    try:
+        assert im is not None
+    except AssertionError as e:
         print('Failed to read image \'{}\''.format(roidb['image']))
         os._exit(0)
     if roidb['flipped']:
