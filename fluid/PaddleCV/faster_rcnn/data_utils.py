@@ -28,6 +28,7 @@ from __future__ import unicode_literals
 import cv2
 import numpy as np
 from config import cfg
+import os
 
 
 def get_image_blob(roidb, mode):
@@ -43,8 +44,9 @@ def get_image_blob(roidb, mode):
         target_size = cfg.TEST.scales[0]
         max_size = cfg.TEST.max_size
     im = cv2.imread(roidb['image'])
-    assert im is not None, \
-        'Failed to read image \'{}\''.format(roidb['image'])
+    if im is None:
+        print('Failed to read image \'{}\''.format(roidb['image']))
+        os._exit(0)
     if roidb['flipped']:
         im = im[:, ::-1, :]
     im, im_scale = prep_im_for_blob(im, cfg.pixel_means, target_size, max_size)
