@@ -90,6 +90,9 @@ _C.TRAIN.freeze_at = 2
 # min area of ground truth box
 _C.TRAIN.gt_min_area = -1
 
+# Use horizontally-flipped images during training?
+_C.TRAIN.use_flipped = True
+
 #
 # Inference options
 #

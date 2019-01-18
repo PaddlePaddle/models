@@ -20,7 +20,8 @@ import sys
 import numpy as np
 import time
 import shutil
-from utility import parse_args, print_arguments, SmoothedValue
+from utility import parse_args, print_arguments, SmoothedValue, TrainingStats, now_time
+import collections
 
 import paddle
 import paddle.fluid as fluid
@@ -52,38 +53,30 @@ def train():
         use_pyreader=cfg.use_pyreader,
         use_random=True)
     model.build_model(image_shape)
-    if cfg.MASK_ON:
-        loss_cls, loss_bbox, rpn_cls_loss, \
-        rpn_reg_loss, loss_mask = model.loss()
-    else:
-        loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
-    loss_cls.persistable = True
-    loss_bbox.persistable = True
-    rpn_cls_loss.persistable = True
-    rpn_reg_loss.persistable = True
-    if cfg.MASK_ON:
-        loss_mask.persistable = True
-        loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss + loss_mask
-    else:
-        loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
+    losses, keys = model.loss()
+    loss = losses[0]
+    fetch_list = losses
 
     boundaries = cfg.lr_steps
     gamma = cfg.lr_gamma
     step_num = len(cfg.lr_steps)
     values = [learning_rate * (gamma**i) for i in range(step_num + 1)]
 
+    lr = exponential_with_warmup_decay(
+        learning_rate=learning_rate,
+        boundaries=boundaries,
+        values=values,
+        warmup_iter=cfg.warm_up_iter,
+        warmup_factor=cfg.warm_up_factor)
     optimizer = fluid.optimizer.Momentum(
-        learning_rate=exponential_with_warmup_decay(
-            learning_rate=learning_rate,
-            boundaries=boundaries,
-            values=values,
-            warmup_iter=cfg.warm_up_iter,
-            warmup_factor=cfg.warm_up_factor),
+        learning_rate=lr,
         regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
         momentum=cfg.momentum)
     optimizer.minimize(loss)
+    fetch_list = fetch_list + [lr]
 
-    fluid.memory_optimize(fluid.default_main_program())
+    fluid.memory_optimize(
+        fluid.default_main_program(), skip_opt_set=set(fetch_list))
 
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -122,79 +115,51 @@ def train():
             shutil.rmtree(model_path)
         fluid.io.save_persistables(exe, model_path)
 
-    if cfg.MASK_ON:
-        fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, \
-                      loss_cls, loss_bbox, loss_mask]
-    else:
-        fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, \
-                      loss_cls, loss_bbox,]
-
     def train_loop_pyreader():
         py_reader.start()
-        smoothed_loss = SmoothedValue(cfg.log_window)
+        train_stats = TrainingStats(cfg.log_window, keys)
         try:
             start_time = time.time()
             prev_start_time = start_time
-            every_pass_loss = []
             for iter_id in range(cfg.max_iter):
                 prev_start_time = start_time
                 start_time = time.time()
-                if cfg.MASK_ON:
-                    loss, rpn_cls_loss, rpn_reg_loss, loss_cls,\
-                    loss_bbox, loss_mask = train_exe.run(\
-                            fetch_list=[v.name for v in fetch_list])
-                else:
-                    loss, rpn_cls_loss, rpn_reg_loss, loss_cls,\
-                    loss_bbox= train_exe.run(\
-                          fetch_list=[v.name for v in fetch_list])
-                #every_pass_loss.append(np.mean(np.array(losses[0])))
-                #smoothed_loss.add_value(np.mean(np.array(losses[0])))
-                lr = np.array(fluid.global_scope().find_var('learning_rate')
-                              .get_tensor())
-                print("Iter {:d}, lr {:5f}, loss {:5f}, rpn_cls_loss {:5f},\
-                       rpn_reg_loss {:5f}, loss_cls {:5f}, loss_bbox {:5f},\
-                       loss_mask {:5f}, time {:5f}"
-                                             .format(iter_id, lr[0], \
-                    np.array(loss).mean(), np.array(rpn_cls_loss).mean(), \
-                    np.array(rpn_reg_loss).mean(), np.array(loss_cls).mean(), \
-                    np.array(loss_bbox).mean(), np.array(loss_mask).mean(),\
-                    start_time - prev_start_time))
-                """
-                print("Iter {}, lr {}, loss {}, time {}".format(
-                    iter_id, lr[0], np.array(loss).mean(), start_time - prev_start_time))
-                """
+                outs = train_exe.run(fetch_list=[v.name for v in fetch_list])
+                stats = {k: np.array(v).mean() for k, v in zip(keys, outs[:-1])}
+                train_stats.update(stats)
+                logs = train_stats.log()
+                strs = '{}, lr: {:.5f}, {}, time: {:.3f}'.format(
+                    now_time(),
+                    np.mean(outs[-1]), logs, start_time - prev_start_time)
+                print(strs)
                 sys.stdout.flush()
                 if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
                     save_model("model_iter{}".format(iter_id))
-        except fluid.core.EOFException:
+        except (StopIteration, fluid.core.EOFException):
             py_reader.reset()
-        return np.mean(every_pass_loss)
 
     def train_loop():
         start_time = time.time()
         prev_start_time = start_time
         start = start_time
-        every_pass_loss = []
-        smoothed_loss = SmoothedValue(cfg.log_window)
+        train_stats = TrainingStats(cfg.log_window, keys)
         for iter_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
-            losses = train_exe.run(fetch_list=[v.name for v in fetch_list],
-                                   feed=feeder.feed(data))
-            loss_v = np.mean(np.array(losses[0]))
-            every_pass_loss.append(loss_v)
-            smoothed_loss.add_value(loss_v)
-            lr = np.array(fluid.global_scope().find_var('learning_rate')
-                          .get_tensor())
-            print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                iter_id, lr[0],
-                smoothed_loss.get_median_value(), start_time - prev_start_time))
+            outs = train_exe.run(fetch_list=[v.name for v in fetch_list],
+                                 feed=feeder.feed(data))
+            stats = {k: np.array(v).mean() for k, v in zip(keys, outs[:-1])}
+            train_stats.update(stats)
+            logs = train_stats.log()
+            strs = '{}, lr: {:.5f}, {}, time: {:.3f}'.format(
+                now_time(),
+                np.mean(outs[-1]), logs, start_time - prev_start_time)
+            print(strs)
             sys.stdout.flush()
             if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
                 save_model("model_iter{}".format(iter_id))
             if (iter_id + 1) == cfg.max_iter:
                 break
-        return np.mean(every_pass_loss)
 
     if cfg.use_pyreader:
         train_loop_pyreader()

@@ -22,7 +22,9 @@ import sys
 import distutils.util
 import numpy as np
 import six
+import collections
 from collections import deque
+import datetime
 from paddle.fluid import core
 import argparse
 import functools
@@ -83,6 +85,44 @@ class SmoothedValue(object):
 
     def get_median_value(self):
         return np.median(self.deque)
+
+
+def print_as_dict(d):
+    strs = '{' + ', '.join(
+        str(dict({
+            x: y
+        })).strip('{}') for x, y in d.items()) + '}'
+
+
+def now_time():
+    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+
+
+class TrainingStats(object):
+    def __init__(self, window_size, stats_keys):
+        self.smoothed_losses_and_metrics = {
+            key: SmoothedValue(window_size)
+            for key in stats_keys
+        }
+
+    def update(self, stats):
+        for k, v in self.smoothed_losses_and_metrics.items():
+            v.add_value(stats[k])
+
+    def get(self, extras=None):
+        stats = collections.OrderedDict()
+        if extras:
+            for k, v in extras.items():
+                stats[k] = v
+        for k, v in self.smoothed_losses_and_metrics.items():
+            stats[k] = round(v.get_median_value(), 3)
+
+        return stats
+
+    def log(self, extras=None):
+        d = self.get(extras)
+        strs = ', '.join(str(dict({x: y})).strip('{}') for x, y in d.items())
+        return strs
 
 
 def parse_args():

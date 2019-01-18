@@ -43,20 +43,9 @@ def train():
         use_pyreader=cfg.use_pyreader,
         use_random=False)
     model.build_model(image_shape)
-    if cfg.MASK_ON:
-        loss_cls, loss_bbox, rpn_cls_loss, \
-        rpn_reg_loss, loss_mask = model.loss()
-    else:
-        loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss = model.loss()
-    loss_cls.persistable = True
-    loss_bbox.persistable = True
-    rpn_cls_loss.persistable = True
-    rpn_reg_loss.persistable = True
-    if cfg.MASK_ON:
-        loss_mask.persistable = True
-        loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss + loss_mask
-    else:
-        loss = loss_cls + loss_bbox + rpn_cls_loss + rpn_reg_loss
+    losses, keys = model.loss()
+    loss = losses[0]
+    fetch_list = [loss]
 
     boundaries = cfg.lr_steps
     gamma = cfg.lr_gamma
@@ -103,12 +92,6 @@ def train():
         train_reader = reader.train(batch_size=total_batch_size, shuffle=False)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
-    if cfg.MASK_ON:
-        fetch_list = [loss, rpn_cls_loss, rpn_reg_loss, \
-                      loss_cls, loss_bbox, loss_mask]
-    else:
-        fetch_list = [loss, loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss]
-
     def run(iterations):
         reader_time = []
         run_time = []
@@ -121,20 +104,16 @@ def train():
             reader_time.append(end_time - start_time)
             start_time = time.time()
             if cfg.parallel:
-                losses = train_exe.run(fetch_list=[v.name for v in fetch_list],
-                                       feed=feeder.feed(data))
+                outs = train_exe.run(fetch_list=[v.name for v in fetch_list],
+                                     feed=feeder.feed(data))
             else:
-                losses = exe.run(fluid.default_main_program(),
-                                 fetch_list=[v.name for v in fetch_list],
-                                 feed=feeder.feed(data))
+                outs = exe.run(fluid.default_main_program(),
+                               fetch_list=[v.name for v in fetch_list],
+                               feed=feeder.feed(data))
             end_time = time.time()
             run_time.append(end_time - start_time)
             total_images += len(data)
-
-            lr = np.array(fluid.global_scope().find_var('learning_rate')
-                          .get_tensor())
-            print("Batch {:d}, lr {:.6f}, loss {:.6f} ".format(batch_id, lr[0],
-                                                               losses[0][0]))
+            print("Batch {:d}, loss {:.6f} ".format(batch_id, np.mean(outs[0])))
         return reader_time, run_time, total_images
 
     def run_pyreader(iterations):
@@ -147,18 +126,16 @@ def train():
             for batch_id in range(iterations):
                 start_time = time.time()
                 if cfg.parallel:
-                    losses = train_exe.run(
+                    outs = train_exe.run(
                         fetch_list=[v.name for v in fetch_list])
                 else:
-                    losses = exe.run(fluid.default_main_program(),
-                                     fetch_list=[v.name for v in fetch_list])
+                    outs = exe.run(fluid.default_main_program(),
+                                   fetch_list=[v.name for v in fetch_list])
                 end_time = time.time()
                 run_time.append(end_time - start_time)
                 total_images += devices_num
-                lr = np.array(fluid.global_scope().find_var('learning_rate')
-                              .get_tensor())
-                print("Batch {:d}, lr {:.6f}, loss {:.6f} ".format(batch_id, lr[
-                    0], losses[0][0]))
+                print("Batch {:d}, loss {:.6f} ".format(batch_id,
+                                                        np.mean(outs[0])))
         except fluid.core.EOFException:
             py_reader.reset()
 
