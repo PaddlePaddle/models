@@ -72,15 +72,15 @@ _C.pixel_stds = [0.229, 0.224, 0.225]
 _C.learning_rate = 0.001
 
 # maximum number of iterations
-_C.max_iter = 500200
+_C.max_iter = 500000
 
 # warm up to learning rate 
 _C.warm_up_iter = 4000
 _C.warm_up_factor = 0.
 
 # lr steps_with_decay
-_C.lr_steps = [400000, 450000]
-_C.lr_gamma = 0.1
+_C.lr_steps = [300000, 400000, 450000]
+_C.lr_gamma = [0.2, 0.5, 0.1]
 
 # L2 regularization hyperparameter
 _C.weight_decay = 0.0005

@@ -105,7 +105,7 @@ def random_flip(img, gtboxes, thresh=0.5):
         gtboxes[:, 0] = 1.0 - gtboxes[:, 0]
     return img, gtboxes
 
-def random_interp(img, size):
+def random_interp(img, size, interp=None):
     interp_method = [
         cv2.INTER_NEAREST,
         cv2.INTER_LINEAR,
@@ -113,7 +113,8 @@ def random_interp(img, size):
         cv2.INTER_CUBIC,
         cv2.INTER_LANCZOS4,
         ]
-    interp = interp_method[random.randint(0, len(interp_method) - 1)]
+    if not interp or interp not in interp_method:
+        interp = interp_method[random.randint(0, len(interp_method) - 1)]
     h, w, _ = img.shape
     im_scale_x = size / float(w)
     im_scale_y = size / float(h)
@@ -150,6 +151,13 @@ def random_expand(img, gtboxes, max_ratio=4., fill=None, keep_ratio=True, thresh
     gtboxes[:, 3] = gtboxes[:, 3] / ratio_y
 
     return out_img.astype('uint8'), gtboxes
+
+def shuffle_gtbox(gtbox, gtlabel, gtscore):
+    gt = np.concatenate([gtbox, gtlabel[:, np.newaxis], gtscore[:, np.newaxis]], axis=1)
+    idx = np.arange(gt.shape[1])
+    np.random.shuffle(idx)
+    gt = gt[idx, :]
+    return gt[:, :4], gt[:, 4], gt[:, 5]
 
 def image_mixup(img1, gtboxes1, gtlabels1, gtscores1, img2, gtboxes2, gtlabels2, gtscores2):
     factor = np.random.beta(1.5, 1.5)
@@ -201,8 +209,9 @@ def image_augment(img, gtboxes, gtlabels, gtscores,  size, means=None):
     img = random_distort(img)
     img, gtboxes = random_expand(img, gtboxes, fill=means)
     img, gtboxes, gtlabels, gtscores = random_crop(img, gtboxes, gtlabels, gtscores)
-    img = random_interp(img, size)
+    img = random_interp(img, size, cv2.INTER_LINEAR)
     img, gtboxes = random_flip(img, gtboxes)
+    gtboxes, gtlabels, gtscores = shuffle_gtbox(gtboxes, gtlabels, gtscores)
 
     return img.astype('float32'), gtboxes.astype('float32'), \
             gtlabels.astype('int32'), gtscores.astype('float32')

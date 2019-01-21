@@ -38,23 +38,23 @@ class DataSetReader(object):
         self.has_parsed_categpry = False
 
     def _parse_dataset_dir(self, mode):
-        # cfg.data_dir = "dataset/coco"
-        # cfg.train_file_list = 'annotations/instances_val2017.json'
-        # cfg.train_data_dir = 'val2017'
-        # cfg.dataset = "coco2017"
-        if 'coco2014' in cfg.dataset:
-            cfg.train_file_list = 'annotations/instances_train2014.json'
-            cfg.train_data_dir = 'train2014'
-            cfg.val_file_list = 'annotations/instances_val2014.json'
-            cfg.val_data_dir = 'val2014'
-        elif 'coco2017' in cfg.dataset:
-            cfg.train_file_list = 'annotations/instances_train2017.json'
-            cfg.train_data_dir = 'train2017'
-            cfg.val_file_list = 'annotations/instances_val2017.json'
-            cfg.val_data_dir = 'val2017'
-        else:
-            raise NotImplementedError('Dataset {} not supported'.format(
-                cfg.dataset))
+        cfg.data_dir = "dataset/coco"
+        cfg.train_file_list = 'annotations/instances_val2017.json'
+        cfg.train_data_dir = 'val2017'
+        cfg.dataset = "coco2017"
+        # if 'coco2014' in cfg.dataset:
+        #     cfg.train_file_list = 'annotations/instances_train2014.json'
+        #     cfg.train_data_dir = 'train2014'
+        #     cfg.val_file_list = 'annotations/instances_val2014.json'
+        #     cfg.val_data_dir = 'val2014'
+        # elif 'coco2017' in cfg.dataset:
+        #     cfg.train_file_list = 'annotations/instances_train2017.json'
+        #     cfg.train_data_dir = 'train2017'
+        #     cfg.val_file_list = 'annotations/instances_val2017.json'
+        #     cfg.val_data_dir = 'val2017'
+        # else:
+        #     raise NotImplementedError('Dataset {} not supported'.format(
+        #         cfg.dataset))
 
         if mode == 'train':
             cfg.train_file_list = os.path.join(cfg.data_dir, cfg.train_file_list)
@@ -156,7 +156,7 @@ class DataSetReader(object):
             h, w, _ = im.shape
             im_scale_x = size / float(w)
             im_scale_y = size / float(h)
-            out_img = cv2.resize(im, None, None, fx=im_scale_x, fy=im_scale_y, interpolation=cv2.INTER_CUBIC)
+            out_img = cv2.resize(im, None, None, fx=im_scale_x, fy=im_scale_y, interpolation=cv2.INTER_LINEAR)
             mean = np.array(mean).reshape((1, 1, -1))
             std = np.array(std).reshape((1, 1, -1))
             out_img = (out_img / 255.0 - mean) / std
@@ -184,11 +184,6 @@ class DataSetReader(object):
 
             im, gt_boxes, gt_labels, gt_scores = image_utils.image_augment(im, gt_boxes, gt_labels, gt_scores, size, mean)
 
-            # h, w, _ = im.shape
-            # im_scale_x = size / float(w)
-            # im_scale_y = size / float(h)
-            # im = cv2.resize(im, None, None, fx=im_scale_x, fy=im_scale_y, interpolation=cv2.INTER_CUBIC)
-            
             mean = np.array(mean).reshape((1, 1, -1))
             std = np.array(std).reshape((1, 1, -1))
             out_img = (im / 255.0 - mean) / std

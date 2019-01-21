@@ -115,9 +115,9 @@ def parse_args():
     # TRAIN TEST INFER
     add_arg('input_size',       int,    608,    "Image input size of YOLOv3.")
     add_arg('random_shape',     bool,   True,     "Resize to random shape for train reader.")
-    add_arg('label_smooth',     bool,   True,     "Use label smooth in class label.")
-    add_arg('no_mixup_iter',    int,    40000,      "Disable mixup in last N iter.")
-    add_arg('valid_thresh',     float,  0.01,    "Valid confidence score for NMS.")
+    add_arg('label_smooth',     bool,   False,     "Use label smooth in class label.")
+    add_arg('no_mixup_iter',    int,    500200,      "Disable mixup in last N iter.")
+    add_arg('valid_thresh',     float,  0.005,    "Valid confidence score for NMS.")
     add_arg('nms_thresh',       float,  0.45,    "NMS threshold.")
     add_arg('nms_topk',         int,    400,    "The number of boxes to perform NMS.")
     add_arg('nms_posk',         int,    100,    "The number of boxes of NMS output.")
