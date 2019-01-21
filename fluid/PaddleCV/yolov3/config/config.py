@@ -80,7 +80,7 @@ _C.warm_up_factor = 0.
 
 # lr steps_with_decay
 _C.lr_steps = [300000, 400000, 450000]
-_C.lr_gamma = [0.2, 0.5, 0.1]
+_C.lr_gamma = [0.2, 0.1, 0.01]
 
 # L2 regularization hyperparameter
 _C.weight_decay = 0.0005

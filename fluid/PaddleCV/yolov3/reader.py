@@ -172,15 +172,15 @@ class DataSetReader(object):
             gt_labels = img['gt_labels'].copy()
             gt_scores = np.ones_like(gt_labels)
 
-            if mixup_img:
-                mixup_im = cv2.imread(mixup_img['image'])
-                mixup_im = cv2.cvtColor(mixup_im, cv2.COLOR_BGR2RGB)
-                mixup_gt_boxes = mixup_img['gt_boxes'].copy()
-                mixup_gt_labels = mixup_img['gt_labels'].copy()
-                mixup_gt_scores = np.ones_like(mixup_gt_labels)
-                im, gt_boxes, gt_labels, gt_scores = image_utils.image_mixup(im, gt_boxes, \
-                        gt_labels, gt_scores, mixup_im, mixup_gt_boxes, mixup_gt_labels, \
-                        mixup_gt_scores)
+            # if mixup_img:
+            #     mixup_im = cv2.imread(mixup_img['image'])
+            #     mixup_im = cv2.cvtColor(mixup_im, cv2.COLOR_BGR2RGB)
+            #     mixup_gt_boxes = mixup_img['gt_boxes'].copy()
+            #     mixup_gt_labels = mixup_img['gt_labels'].copy()
+            #     mixup_gt_scores = np.ones_like(mixup_gt_labels)
+            #     im, gt_boxes, gt_labels, gt_scores = image_utils.image_mixup(im, gt_boxes, \
+            #             gt_labels, gt_scores, mixup_im, mixup_gt_boxes, mixup_gt_labels, \
+            #             mixup_gt_scores)
 
             im, gt_boxes, gt_labels, gt_scores = image_utils.image_augment(im, gt_boxes, gt_labels, gt_scores, size, mean)
 
