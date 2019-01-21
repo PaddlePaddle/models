@@ -282,8 +282,6 @@ def train_async(args):
                     (gpu_num, total_time / epoch_idx))
         print("kpis\ttrain_avg_loss_card%s\t%s" %
                     (gpu_num, avg_loss))
-        #print("kpis\ttrain_recall_card%s\t%s" %
-        #            (gpu_num, recall))
 
 
 
