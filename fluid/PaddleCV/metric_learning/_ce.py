@@ -3,18 +3,25 @@
 import os
 import sys
 sys.path.append(os.environ['ceroot'])
-from kpi import CostKpi, DurationKpi, AccKpi
+from kpi import CostKpi
+from kpi import DurationKpi
 
-# NOTE kpi.py should shared in models in some way!!!!
 
-train_cost_kpi = CostKpi('train_cost', 0.02 0, actived=True)
-test_recall_kpi = AccKpi('test_recall', 0.02, 0, actived=True)
+each_pass_duration_card1_kpi = DurationKpi('each_pass_duration_card1', 0.08, 0, actived=True)
+train_avg_loss_card1_kpi = CostKpi('train_avg_loss_card1', 0.08, 0)
+each_pass_duration_card4_kpi = DurationKpi('each_pass_duration_card4', 0.08, 0, actived=True)
+train_avg_loss_card4_kpi = CostKpi('train_avg_loss_card4', 0.08, 0)
+each_pass_duration_card8_kpi = DurationKpi('each_pass_duration_card8', 0.08, 0, actived=True)
+train_avg_loss_card8_kpi = CostKpi('train_avg_loss_card8', 0.08, 0)
 
 tracking_kpis = [
-    train_cost_kpi,
-    test_recall_kpi,
-]
-
+        each_pass_duration_card1_kpi,
+        train_avg_loss_card1_kpi,
+        each_pass_duration_card4_kpi,
+        train_avg_loss_card4_kpi,
+        each_pass_duration_card8_kpi,
+        train_avg_loss_card8_kpi,
+        ]
 
 def parse_log(log):
     '''
@@ -55,4 +62,3 @@ def log_to_ce(log):
 if __name__ == '__main__':
     log = sys.stdin.read()
     log_to_ce(log)
-

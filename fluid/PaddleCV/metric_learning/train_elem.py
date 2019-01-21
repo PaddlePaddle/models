@@ -194,6 +194,10 @@ def train_async(args):
     
     train_reader = paddle.batch(reader.train(args), batch_size=train_batch_size, drop_last=True)
     test_reader = paddle.batch(reader.test(args), batch_size=test_batch_size, drop_last=False)
+    if args.enable_ce:
+        import reader_ce
+        train_reader = paddle.batch(reader_ce.train(args), batch_size=train_batch_size, drop_last=False)
+        test_reader = paddle.batch(reader_ce.test(args), batch_size=test_batch_size, drop_last=False)
     test_feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
     train_py_reader.decorate_paddle_reader(train_reader)
 
@@ -202,6 +206,7 @@ def train_async(args):
         use_cuda=args.use_gpu,
         loss_name=train_cost.name)
 
+    total_time = 0
     totalruntime = 0
     train_py_reader.start()
     iter_no = 0
@@ -230,10 +235,16 @@ def train_async(args):
             train_info = [0, 0, 0, 0]
 
         totalruntime += period
+        total_time += 1
         
-        if iter_no % args.test_iter_step == 0 and iter_no != 0:
+        #if iter_no % args.test_iter_step == 0 and iter_no != 0:
+        if (iter_no % args.test_iter_step == 0 and iter_no != 0) or args.enable_ce:
             f, l = [], []
             for batch_id, data in enumerate(test_reader()):
+                if args.enable_ce:
+                    if batch_id > 1:
+                        break
+
                 t1 = time.time()
                 [feas] = exe.run(test_prog, fetch_list = test_fetch_list, feed=test_feeder.feed(data))
                 label = np.asarray([x[1] for x in data])
@@ -263,10 +274,17 @@ def train_async(args):
         iter_no += 1
 
     # This is for continuous evaluation only
+    # only for ce
     if args.enable_ce:
-        # Use the mean cost/acc for training
-        print("kpis train_cost      %s" % (avg_loss))
-        print("kpis test_recall     %s" % (recall))
+        gpu_num = devicenum
+        epoch_idx = args.total_iter_num 
+        print("kpis\teach_pass_duration_card%s\t%s" %
+                    (gpu_num, total_time / epoch_idx))
+        print("kpis\ttrain_avg_loss_card%s\t%s" %
+                    (gpu_num, avg_loss))
+        #print("kpis\ttrain_recall_card%s\t%s" %
+        #            (gpu_num, recall))
+
 
 
 def initlogging():
