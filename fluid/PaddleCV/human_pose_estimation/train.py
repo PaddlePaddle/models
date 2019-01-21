@@ -147,9 +147,6 @@ def train(args):
 
     # Dataloader
     train_reader = paddle.batch(reader.train(), batch_size=args.batch_size)
-    if args.enable_ce:
-        import lib.coco_reader_ce as reader_ce
-        train_reader = paddle.batch(reader_ce.train_ce(), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, target, target_weight])
 
     train_exe = fluid.ParallelExecutor(

@@ -10,6 +10,8 @@ import numpy as np
 import paddle
 from imgtool import process_image
 
+is_ce = int(os.environ.get('is_ce', 0))
+
 random.seed(0)
 
 DATA_DIR = "./data/Stanford_Online_Products/"
@@ -32,7 +34,8 @@ def init_sop(mode):
             if label not in train_data:
                 train_data[label] = []
             train_data[label].append(path)
-        random.shuffle(train_image_list)
+        if not is_ce:
+            random.shuffle(train_image_list)
         print("{} dataset size: {}".format(mode, len(train_data)))
         return train_data, train_image_list
     else:
@@ -67,13 +70,15 @@ def common_iterator(data, settings):
         lab_num = len(labs)
         ind = list(range(0, lab_num))
         while True:
-            random.shuffle(ind)
+            if not is_ce:
+                random.shuffle(ind)
             ind_sample = ind[:class_num]
             for ind_i in ind_sample:
                 lab = labs[ind_i]
                 data_list = data[lab]
                 data_ind = list(range(0, len(data_list)))
-                random.shuffle(data_ind)
+                if not is_ce:
+                    random.shuffle(data_ind)
                 anchor_ind = data_ind[:samples_each_class]
 
                 for anchor_ind_i in anchor_ind:
@@ -90,17 +95,21 @@ def triplet_iterator(data, settings):
         lab_num = len(labs)
         ind = list(range(0, lab_num))
         while True:
-            random.shuffle(ind)
+            if not is_ce:
+                random.shuffle(ind)
             ind_pos, ind_neg = ind[:2]
             lab_pos = labs[ind_pos]
             pos_data_list = data[lab_pos]
             data_ind = list(range(0, len(pos_data_list)))
-            random.shuffle(data_ind)
+            if not is_ce:
+                random.shuffle(data_ind)
             anchor_ind, pos_ind = data_ind[:2]
 
             lab_neg = labs[ind_neg]
             neg_data_list = data[lab_neg]
             neg_ind = random.randint(0, len(neg_data_list) - 1)
+            if is_ce:
+                neg_ind = 1
             
             anchor_path = DATA_DIR + pos_data_list[anchor_ind]
             yield anchor_path, lab_pos
@@ -158,6 +167,8 @@ def createreader(settings, mode):
     assert(image_shape[1] == image_shape[2])
     image_size = int(image_shape[2])
     keep_order = False if mode != 'train' or settings.loss_name in ['softmax', 'arcmargin'] else True
+    if is_ce:
+        keep_order = True
     image_mapper = functools.partial(process_image,
             mode=mode, color_jitter=False, rotate=False, crop_size=image_size)
     reader = paddle.reader.xmap_readers(
