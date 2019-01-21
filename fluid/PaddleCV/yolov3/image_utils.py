@@ -121,7 +121,7 @@ def random_interp(img, size, interp=None):
     img = cv2.resize(img, None, None, fx=im_scale_x, fy=im_scale_y, interpolation=interp)
     return img
 
-def random_expand(img, gtboxes, max_ratio=4., fill=None, keep_ratio=True, thresh=0.5):
+def random_expand(img, gtboxes, max_ratio=2., fill=None, keep_ratio=True, thresh=0.5):
     if random.random() > thresh:
         return img, gtboxes
 
