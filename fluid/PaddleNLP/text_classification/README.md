@@ -14,7 +14,7 @@
 
 ## 简介，模型详解
 
-在PaddlePaddle v2版本[文本分类](https://github.com/PaddlePaddle/models/blob/develop/text/README.md)中对于文本分类任务有较详细的介绍，在本例中不再重复介绍。
+在PaddlePaddle v2版本[文本分类](https://github.com/PaddlePaddle/models/blob/develop/legacy/text_classification/README.md)中对于文本分类任务有较详细的介绍，在本例中不再重复介绍。
 在模型上，我们采用了bow, cnn, lstm, gru四种常见的文本分类模型。
 
 ## 训练

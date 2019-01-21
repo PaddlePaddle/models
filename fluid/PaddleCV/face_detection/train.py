@@ -32,6 +32,9 @@ add_arg('mean_BGR',         str,   '104., 117., 123.', "Mean value for B,G,R cha
 add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
 add_arg('data_dir',         str,   'data',          "The base dir of dataset")
+parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
+parser.add_argument('--batch_num', type=int, help="batch num for ce")
+parser.add_argument('--num_devices', type=int, default=1, help='Number of GPU devices')
 #yapf: enable
 
 train_parameters = {
@@ -119,6 +122,16 @@ def train(args, config, train_params, train_file_list):
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
 
+    #only for ce
+    if args.enable_ce:
+        SEED = 102
+        startup_prog.random_seed = SEED
+        train_prog.random_seed = SEED
+        num_workers = 1
+        pretrained_model = ""
+        if args.batch_num != None:
+            iters_per_epoc = args.batch_num
+
     train_py_reader, fetches, loss = build_program(
         train_params = train_params,
         main_prog = train_prog,
@@ -171,7 +184,12 @@ def train(args, config, train_params, train_file_list):
 
     train_py_reader.start()
     try:
+        total_time = 0.0
+        epoch_idx = 0
+        face_loss = 0
+        head_loss = 0
         for pass_id in range(start_epoc, epoc_num):
+            epoch_idx += 1
             start_time = time.time()
             prev_start_time = start_time
             end_time = 0
@@ -198,13 +216,37 @@ def train(args, config, train_params, train_file_list):
                               "time {:.5f}".format(pass_id,
                                batch_id, fetch_vars[0], fetch_vars[1],
                                start_time - prev_start_time))
+                face_loss = fetch_vars[0]
+                head_loss = fetch_vars[1]
+            epoch_end_time = time.time()
+            total_time += epoch_end_time - start_time
             if pass_id % 1 == 0 or pass_id == epoc_num - 1:
                 save_model(str(pass_id), train_prog)
+        # only for ce
+        if args.enable_ce:
+            gpu_num = get_cards(args)
+            print("kpis\teach_pass_duration_card%s\t%s" %
+                    (gpu_num, total_time / epoch_idx))
+            print("kpis\ttrain_face_loss_card%s\t%s" %
+                    (gpu_num, face_loss))
+            print("kpis\ttrain_head_loss_card%s\t%s" %
+                    (gpu_num, head_loss))
+
     except fluid.core.EOFException:
         train_py_reader.reset()
     except StopIteration:
         train_py_reader.reset()
     train_py_reader.reset()
+
+
+def get_cards(args):
+    if args.enable_ce:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        num = len(cards.split(","))
+        return num
+    else:
+        return args.num_devices
+
 
 if __name__ == '__main__':
     args = parser.parse_args()

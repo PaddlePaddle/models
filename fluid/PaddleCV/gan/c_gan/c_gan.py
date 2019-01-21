@@ -165,7 +165,8 @@ def train(args):
                           'conditions': conditions_data},
                     fetch_list={dg_loss})[0][0]
                 losses[1].append(dg_loss_n)
-            t_time += (time.time() - s_time)
+            batch_time = time.time() - s_time
+            t_time += batch_time
 
             
 
@@ -180,8 +181,9 @@ def train(args):
                     fetch_list={g_img})[0]
                 total_images = np.concatenate([real_image, generated_images])
                 fig = plot(total_images)
-                msg = "Epoch ID={0}\n Batch ID={1}\n D-Loss={2}\n DG-Loss={3}\n gen={4}".format(
-                    pass_id, batch_id, d_loss_n, dg_loss_n, check(generated_images))
+                msg = "Epoch ID={0}\n Batch ID={1}\n D-Loss={2}\n DG-Loss={3}\n gen={4}\n " \
+                      "Batch_time_cost={5:.2f}".format(
+                    pass_id, batch_id, d_loss_n, dg_loss_n, check(generated_images), batch_time)
                 print(msg)
                 plt.title(msg)
                 plt.savefig(
