@@ -139,7 +139,7 @@ def _reader_creator(file_list,
             if mode == 'train' and os.getenv('PADDLE_TRAINING_ROLE'):
                 # distributed mode if the env var `PADDLE_TRAINING_ROLE` exits
                 trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
-                trainer_count = int(os.getenv("PADDLE_TRAINERS", "1"))
+                trainer_count = int(os.getenv("PADDLE_TRAINERS_NUM", "1"))
                 per_node_lines = len(full_lines) // trainer_count
                 lines = full_lines[trainer_id * per_node_lines:(trainer_id + 1)
                                    * per_node_lines]

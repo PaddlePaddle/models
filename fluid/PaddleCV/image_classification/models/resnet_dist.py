@@ -14,8 +14,9 @@ train_parameters = {
     "learning_strategy": {
         "name": "piecewise_decay",
         "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
+        "epochs": [30, 60, 80],
+        "steps": [0.1, 0.01, 0.001, 0.0001],
+        "warmup_passes": 5
     }
 }
 
@@ -118,3 +119,4 @@ class DistResNet():
         short = self.shortcut(input, num_filters * 4, stride)
 
         return fluid.layers.elementwise_add(x=short, y=conv2, act='relu')
+
