@@ -209,7 +209,7 @@ def image_augment(img, gtboxes, gtlabels, gtscores,  size, means=None):
     img = random_distort(img)
     img, gtboxes = random_expand(img, gtboxes, fill=means)
     img, gtboxes, gtlabels, gtscores = random_crop(img, gtboxes, gtlabels, gtscores)
-    img = random_interp(img, size, cv2.INTER_LINEAR)
+    # img = random_interp(img, size, cv2.INTER_LINEAR)
     img, gtboxes = random_flip(img, gtboxes)
     gtboxes, gtlabels, gtscores = shuffle_gtbox(gtboxes, gtlabels, gtscores)
 

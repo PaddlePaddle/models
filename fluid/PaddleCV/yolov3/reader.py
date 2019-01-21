@@ -41,7 +41,7 @@ class DataSetReader(object):
         # cfg.data_dir = "dataset/coco"
         # cfg.train_file_list = 'annotations/instances_val2017.json'
         # cfg.train_data_dir = 'val2017'
-        # cfg.dataset = "coco2017"
+        cfg.dataset = "coco2017"
         if 'coco2014' in cfg.dataset:
             cfg.train_file_list = 'annotations/instances_train2014.json'
             cfg.train_data_dir = 'train2014'
@@ -224,14 +224,15 @@ class DataSetReader(object):
                     if read_cnt % len(imgs) == 0 and shuffle:
                         np.random.shuffle(imgs)
                     im, gt_boxes, gt_labels, gt_scores = img_reader_with_augment(img, img_size, cfg.pixel_means, cfg.pixel_stds, mixup_img)
-                    batch_out.append((im, gt_boxes, gt_labels, gt_scores))
+                    batch_out.append([im, gt_boxes, gt_labels, gt_scores])
                     # img_ids.append((img['id'], mixup_img['id'] if mixup_img else -1))
 
                     if len(batch_out) == batch_size:
                         # print("img_ids: ", img_ids)
                         yield batch_out
                         batch_out = []
-                        img_size = get_img_size(size, random_sizes)
+                        if total_read_cnt % 10 == 0:
+                            img_size = get_img_size(size, random_sizes)
                         # img_ids = []
 
             elif mode == 'test':
@@ -263,6 +264,8 @@ def train(size=416,
           shuffle=True, 
           mixup_iter=0,
           random_sizes=[],
+          interval=10,
+          pyreader_num=1,
           use_multiprocessing=True,
           num_workers=8,
           max_queue=24):
@@ -280,17 +283,25 @@ def train(size=416,
         try:
             enqueuer = GeneratorEnqueuer(
                 infinite_reader(), use_multiprocessing=use_multiprocessing)
-            enqueuer.start(max_queue_size=max_queue, workers=num_workers)
+            enqueuer.start(max_queue_size=max_queue, workers=num_workers, random_sizes=random_sizes)
             generator_out = None
+            np.random.seed(1000)
+            intervals = pyreader_num * interval
+            cnt = 0
+            idx = np.random.randint(len(random_sizes))
             while True:
                 while enqueuer.is_running():
-                    if not enqueuer.queue.empty():
-                        generator_out = enqueuer.queue.get()
+                    if not enqueuer.queues[idx].empty():
+                        generator_out = enqueuer.queues[idx].get()
                         break
                     else:
+                        print(idx," empty")
                         time.sleep(0.02)
                 yield generator_out
                 generator_out = None
+                cnt += 1
+                if cnt % intervals == 0:
+                    idx = np.random.randint(len(random_sizes))
         finally:
             if enqueuer is not None:
                 enqueuer.stop()
