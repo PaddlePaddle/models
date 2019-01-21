@@ -123,7 +123,6 @@ class SE_ResNeXt():
         out = fluid.layers.fc(
             input=drop,
             size=class_dim,
-            act='softmax',
             param_attr=ParamAttr(
                 initializer=fluid.initializer.Uniform(-stdv, stdv),
                 name='fc6_weights'),

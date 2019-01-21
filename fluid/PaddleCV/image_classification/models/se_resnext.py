@@ -110,7 +110,6 @@ class SE_ResNeXt():
         stdv = 1.0 / math.sqrt(drop.shape[1] * 1.0)
         out = fluid.layers.fc(input=drop,
                               size=class_dim,
-                              act='softmax',
                               param_attr=fluid.param_attr.ParamAttr(
                                   initializer=fluid.initializer.Uniform(-stdv,
                                                                         stdv)))
