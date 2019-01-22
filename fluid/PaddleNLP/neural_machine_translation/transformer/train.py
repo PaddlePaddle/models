@@ -376,7 +376,7 @@ def py_reader_provider_wrapper(data_reader):
     return py_reader_provider
 
 
-def test_context(exe, train_exe, dev_count):
+def test_context(exe, train_prog, dev_count):
     # Context to do validation.
     test_prog = fluid.Program()
     startup_prog = fluid.Program()
@@ -409,12 +409,10 @@ def test_context(exe, train_exe, dev_count):
         args, is_test=True, count=dev_count, pyreader=pyreader)
 
     exe.run(startup_prog)
-    test_exe = fluid.ParallelExecutor(
-        use_cuda=TrainTaskConfig.use_gpu,
-        main_program=test_prog,
-        share_vars_from=train_exe)
+    compiled_prog = fluid.CompiledProgram(test_prog).with_data_parallel(
+        share_vars_from=train_prog)
 
-    def test(exe=test_exe, pyreader=pyreader):
+    def test(exe=exe, pyreader=pyreader, test_prog=compiled_prog):
         test_total_cost = 0
         test_total_token = 0
 
@@ -427,8 +425,9 @@ def test_context(exe, train_exe, dev_count):
             try:
                 feed_dict_list = prepare_feed_dict_list(data_generator, False,
                                                         dev_count)
-                outs = test_exe.run(fetch_list=[sum_cost.name, token_num.name],
-                                    feed=feed_dict_list)
+                outs = exe.run(test_prog,
+                               fetch_list=[sum_cost.name, token_num.name],
+                               feed=feed_dict_list)
             except (StopIteration, fluid.core.EOFException):
                 # The current pass is over.
                 if args.use_py_reader:
@@ -471,23 +470,21 @@ def train_loop(exe,
     exec_strategy.use_experimental_executor = True
     exec_strategy.num_iteration_per_drop_scope = int(args.fetch_steps)
     build_strategy = fluid.BuildStrategy()
+    build_strategy.num_trainers = nccl2_num_trainers
+    build_strategy.trainer_id = nccl2_trainer_id
     # Since the token number differs among devices, customize gradient scale to
     # use token average cost among multi-devices. and the gradient scale is
     # `1 / token_number` for average cost.
     # build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
 
     logging.info("begin executor")
-    train_exe = fluid.ParallelExecutor(
-        use_cuda=TrainTaskConfig.use_gpu,
+    train_prog = fluid.CompiledProgram(train_prog).with_data_parallel(
         loss_name=avg_cost.name,
-        main_program=train_prog,
         build_strategy=build_strategy,
-        exec_strategy=exec_strategy,
-        num_trainers=nccl2_num_trainers,
-        trainer_id=nccl2_trainer_id)
+        exec_strategy=exec_strategy)
 
     if args.val_file_pattern is not None:
-        test = test_context(exe, train_exe, dev_count)
+        test = test_context(exe, train_prog, dev_count)
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -((1. - TrainTaskConfig.label_smooth_eps) * np.log(
@@ -514,7 +511,8 @@ def train_loop(exe,
             try:
                 feed_dict_list = prepare_feed_dict_list(data_generator,
                                                         init_flag, dev_count)
-                outs = train_exe.run(
+                outs = exe.run(
+                    train_prog,
                     fetch_list=[sum_cost.name, token_num.name]
                     if step_idx % args.fetch_steps == 0 else [],
                     feed=feed_dict_list)

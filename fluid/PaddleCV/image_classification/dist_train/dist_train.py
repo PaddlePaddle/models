@@ -289,10 +289,10 @@ def train_parallel(train_args, test_args, args, train_prog, test_prog,
         #FIXME(wuyi): wait other trainer to start listening
         time.sleep(30)
 
-    startup_exe = fluid.Executor(place)
+    exe = fluid.Executor(place)
     if args.multi_batch_repeat > 1:
         append_bn_repeat_init_op(train_prog, startup_prog, args.multi_batch_repeat)
-    startup_exe.run(startup_prog)
+    exe.run(startup_prog)
     strategy = fluid.ExecutionStrategy()
     strategy.num_threads = args.cpus
     strategy.allow_op_delay = False
@@ -318,14 +318,12 @@ def train_parallel(train_args, test_args, args, train_prog, test_prog,
         num_trainers = 1
         trainer_id = 0
 
-    exe = fluid.ParallelExecutor(
-        True,
-        avg_loss.name,
-        main_program=train_prog,
+    build_strategy.num_trainers = num_trainers
+    build_strategy.trainer_id = trainer_id
+    train_prog = fluid.CompiledProgram(train_prog).with_data_parallel(
+        loss_name=avg_loss.name,
         exec_strategy=strategy,
-        build_strategy=build_strategy,
-        num_trainers=num_trainers,
-        trainer_id=trainer_id)
+        build_strategy=build_strategy)
 
     pyreader = train_args[4]
     for pass_id in range(args.pass_num):
@@ -339,9 +337,9 @@ def train_parallel(train_args, test_args, args, train_prog, test_prog,
             fetch_list.extend(acc_name_list)
             try:
                 if batch_id % 30 == 0:
-                    fetch_ret = exe.run(fetch_list)
+                    fetch_ret = exe.run(train_prog, fetch_list=fetch_list)
                 else:
-                    fetch_ret = exe.run([])
+                    fetch_ret = exe.run(train_prog, fetch_list=[])
             except fluid.core.EOFException as eof:
                 break
             except fluid.core.EnforceNotMet as ex:
@@ -361,11 +359,11 @@ def train_parallel(train_args, test_args, args, train_prog, test_prog,
         if not args.no_test and test_args[2]:
             if args.multi_batch_repeat > 1:
                 copyback_repeat_bn_params(train_prog)
-            test_ret = test_single(startup_exe, test_args, args, test_prog)
+            test_ret = test_single(exe, test_args, args, test_prog)
             print("Pass: %d, Test Accuracy: %s\n" %
                   (pass_id, [np.mean(np.array(v)) for v in test_ret]))
 
-    startup_exe.close()
+    exe.close()
     print("total train time: ", time.time() - over_all_start)
 
 
