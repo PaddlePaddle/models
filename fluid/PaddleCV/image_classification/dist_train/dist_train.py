@@ -318,11 +318,10 @@ def train_parallel(train_args, test_args, args, train_prog, test_prog,
         num_trainers = 1
         trainer_id = 0
 
-    build_strategy.num_trainers=num_trainers
-    build_strategy.trainer_id=trainer_id
+    build_strategy.num_trainers = num_trainers
+    build_strategy.trainer_id = trainer_id
     train_prog = fluid.CompiledProgram(train_prog).with_data_parallel(
         loss_name=avg_loss.name,
-        main_program=train_prog,
         exec_strategy=strategy,
         build_strategy=build_strategy)
 
@@ -338,9 +337,9 @@ def train_parallel(train_args, test_args, args, train_prog, test_prog,
             fetch_list.extend(acc_name_list)
             try:
                 if batch_id % 30 == 0:
-                    fetch_ret = exe.run(train_prog, fetch_list)
+                    fetch_ret = exe.run(train_prog, fetch_list=fetch_list)
                 else:
-                    fetch_ret = exe.run(train_prog, [])
+                    fetch_ret = exe.run(train_prog, fetch_list=[])
             except fluid.core.EOFException as eof:
                 break
             except fluid.core.EnforceNotMet as ex:
