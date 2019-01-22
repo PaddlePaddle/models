@@ -421,14 +421,16 @@ def start_train(train_reader,
     place = fluid.CPUPlace()
     feeder = fluid.DataFeeder(feed_list=[data, label], place=place)
 
-    start_exe = fluid.Executor(place)
-    start_exe.run(fluid.default_startup_program())
+    exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
 
-    exe = fluid.ParallelExecutor(use_cuda, loss_name=cost.name)
+    compiled_prog = fluid.CompiledProgram(fluid.default_main_program()
+        ).with_data_parallel(loss_name=cost.name)
     for pass_id in six.moves.xrange(pass_num):
         total_acc, total_cost, total_count, avg_cost, avg_acc = 0.0, 0.0, 0.0, 0.0, 0.0
         for data in train_reader():
-            cost_val, acc_val = exe.run(feed=feeder.feed(data),
+            cost_val, acc_val = exe.run(compiled_prog,
+                                        feed=feeder.feed(data),
                                         fetch_list=[cost.name, acc.name])
             cost_val_list, acc_val_list = np.array(cost_val), np.array(acc_val)
             total_cost += cost_val_list.sum() * len(data)

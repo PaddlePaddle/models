@@ -131,13 +131,13 @@ def LodTensor_Array(lod_tensor):
     return new_array
 
 
-def print_para(train_prog, train_exe, logger, args):
+def print_para(train_prog, logger, args):
     if args.para_print:
         param_list = train_prog.block(0).all_parameters()
         param_name_list = [p.name for p in param_list]
         num_sum = 0
         for p_name in param_name_list:
-            p_array = np.array(train_exe.scope.find_var(p_name).get_tensor())
+            p_array = np.array(fluid.global_scope().find_var(p_name).get_tensor())
             param_num = np.prod(p_array.shape)
             num_sum = num_sum + param_num
             logger.info(
@@ -206,11 +206,12 @@ def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
     """
         
     """
-    parallel_executor = fluid.ParallelExecutor(
-        main_program=inference_program,
-        use_cuda=bool(args.use_gpu),
-        loss_name=avg_cost.name)
-    print_para(inference_program, parallel_executor, logger, args)
+    compiled_prog = fluid.CompiledProgram(inference_program
+        ).with_data_parallel(loss_name=avg_cost.name)
+    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    exe = fluid.Executor(place)
+
+    print_para(inference_program, logger, args)
 
     # Use test set as validation each pass
     total_loss = 0.0
@@ -229,7 +230,8 @@ def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
 
     for batch_id, batch_list in enumerate(dev_reader(), 1):
         feed_data = batch_reader(batch_list, args)
-        val_fetch_outs = parallel_executor.run(
+        val_fetch_outs = exe.run(
+            compiled_prog,
             feed=list(val_feeder.feed_parallel(feed_data, dev_count)),
             fetch_list=[avg_cost.name, s_probs.name, e_probs.name, match.name],
             return_numpy=False)
@@ -398,11 +400,9 @@ def train(logger, args):
             feeder = fluid.DataFeeder(feed_list, place)
 
             logger.info('Training the model...')
-            parallel_executor = fluid.ParallelExecutor(
-                main_program=main_program,
-                use_cuda=bool(args.use_gpu),
-                loss_name=avg_cost.name)
-            print_para(main_program, parallel_executor, logger, args)
+            compiled_prog = fluid.CompiledProgram(main_program
+                ).with_data_parallel(loss_name=avg_cost.name)
+            print_para(main_program, logger, args)
 
             for pass_id in range(1, args.pass_num + 1):
                 pass_start_time = time.time()
@@ -416,7 +416,8 @@ def train(logger, args):
                 total_num, total_loss = 0, 0
                 for batch_id, batch_list in enumerate(train_reader(), 1):
                     feed_data = batch_reader(batch_list, args)
-                    fetch_outs = parallel_executor.run(
+                    fetch_outs = exe.run(
+                        compiled_prog,
                         feed=list(feeder.feed_parallel(feed_data, dev_count)),
                         fetch_list=[obj_func.name],
                         return_numpy=False)
@@ -428,8 +429,7 @@ def train(logger, args):
                     if args.enable_ce and batch_id >= 100:
                         break
                     if log_every_n_batch > 0 and batch_id % log_every_n_batch == 0:
-                        print_para(main_program, parallel_executor, logger,
-                                   args)
+                        print_para(main_program, logger, args)
                         logger.info(
                             'Average loss from batch {} to {} is {}'.format(
                                 batch_id - log_every_n_batch + 1, batch_id,
