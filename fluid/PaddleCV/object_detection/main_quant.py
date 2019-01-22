@@ -126,8 +126,8 @@ def train(args,
         print('There is no init model.')
 
     if parallel:
-        train_exe = fluid.ParallelExecutor(main_program=train_prog,
-            use_cuda=use_gpu, loss_name=loss.name)
+        train_prog = fluid.CompiledProgram(train_prog).with_data_parallel(
+            loss_name=loss.name)
 
     train_reader = reader.train(data_args,
                                 train_file_list,
@@ -150,10 +150,7 @@ def train(args,
             # train
             for batch in range(iters_per_epoc):
                 start_time = time.time()
-                if parallel:
-                    outs = train_exe.run(fetch_list=[loss.name])
-                else:
-                    outs = exe.run(train_prog, fetch_list=[loss])
+                outs = exe.run(train_prog, fetch_list=[loss])
                 end_time = time.time()
                 avg_loss = np.mean(np.array(outs[0]))
                 if batch % 20 == 0:

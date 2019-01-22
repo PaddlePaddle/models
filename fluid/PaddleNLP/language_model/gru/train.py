@@ -113,7 +113,8 @@ def train(train_reader,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    train_exe = fluid.ParallelExecutor(use_cuda=True, loss_name=avg_cost.name)
+    compiled_prog = fluid.CompiledProgram(fluid.default_main_program()
+        ).with_data_parallel(loss_name=avg_cost.name)
 
     total_time = 0.0
     fetch_list = [avg_cost.name]
@@ -130,7 +131,7 @@ def train(train_reader,
                                                  place)
             lod_dst_wordseq = utils.to_lodtensor([dat[1] for dat in data],
                                                  place)
-            ret_avg_cost = train_exe.run(feed={
+            ret_avg_cost = exe.run(compiled_prog, feed={
                 "src_wordseq": lod_src_wordseq,
                 "dst_wordseq": lod_dst_wordseq
             },
