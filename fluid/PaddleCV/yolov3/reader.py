@@ -161,7 +161,7 @@ class DataSetReader(object):
             # std = np.array(std).reshape((1, 1, -1))
             # out_img = (out_img / 255.0 - mean) / std
             # out_img = out_img.transpose((2, 0, 1))
-            out_img = im.astype('float32').transpose((2, 0, 1)) / 255.0
+            out_img = out_img.astype('float32').transpose((2, 0, 1)) / 255.0
 
             return (out_img, int(img['id']), (h, w))
 
@@ -183,7 +183,7 @@ class DataSetReader(object):
             #             gt_labels, gt_scores, mixup_im, mixup_gt_boxes, mixup_gt_labels, \
             #             mixup_gt_scores)
 
-            im, gt_boxes, gt_labels, gt_scores = image_utils.image_augment(im, gt_boxes, gt_labels, gt_scores, size, mean)
+            im, gt_boxes, gt_labels, gt_scores = image_utils.image_augment(im, gt_boxes, gt_labels, gt_scores, size, [0.5] * 3)
 
             # mean = np.array(mean).reshape((1, 1, -1))
             # std = np.array(std).reshape((1, 1, -1))
