@@ -178,7 +178,7 @@ def train_cross_entropy_network(vocab_size, neg_size, hid_size, drop_out=0.2):
     return src, pos_label, label, cost_sum
 
 
-def infer_bpr_network(vocab_size, batch_size, hid_size, dropout=0.2):
+def infer_network(vocab_size, batch_size, hid_size, dropout=0.2):
     src = fluid.layers.data(name="src", shape=[1], dtype="int64", lod_level=1)
     emb_src = fluid.layers.embedding(
         input=src, size=[vocab_size, hid_size], param_attr="emb")

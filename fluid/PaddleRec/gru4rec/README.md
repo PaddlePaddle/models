@@ -32,7 +32,15 @@ GRU4REC模型的介绍可以参阅论文[Session-based Recommendations with Recu
 
 session-based推荐应用场景非常广泛，比如用户的商品浏览、新闻点击、地点签到等序列数据。
 
-支持三种形式的损失函数, 分别是全词表的cross-entropy, 采负样本的Bayesian Pairwise Ranking和采负样本的Cross-entropy.
+支持三种形式的损失函数, 分别是全词表的cross-entropy, 负采样的Bayesian Pairwise Ranking和负采样的Cross-entropy.
+
+我们基本复现了论文效果，recall@20的效果分别为
+
+全词表 cross entropy : 0.67
+
+负采样 bpr : 0.606
+
+负采样 cross entropy : 0.605
 
 
 运行样例程序可跳过'RSC15 数据下载及预处理'部分
@@ -113,30 +121,42 @@ python text2paddle.py raw_train_data/ raw_test_data/ train_data test_data vocab.
 ```
 
 ## 训练
-'--use_cuda 1' 表示使用gpu, 缺省表示使用cpu '--parallel 1' 表示使用多卡，缺省表示使用单卡
 
 具体的参数配置可运行
 ```
 python train.py -h
 ```
+全词表cross entropy 训练代码
 
-GPU 环境
-运行命令开始训练模型。
-```
-CUDA_VISIBLE_DEVICES=0 python train.py --train_dir train_data/ --use_cuda 1
-```
-CPU 环境
-运行命令开始训练模型。
-```
-python train.py --train_dir train_data/
+gpu 单机单卡训练
+``` bash
+CUDA_VISIBLE_DEVICES=0 python train.py --train_dir train_data --use_cuda 1 --batch_size 50 --model_dir model_output
 ```
 
-bayesian pairwise ranking loss(bpr loss) 训练
+cpu 单机训练
+``` bash
+python train.py --train_dir train_data --use_cuda 0 --batch_size 50 --model_dir model_output
+```
+
+gpu 单机多卡训练
+``` bash
+CUDA_VISIBLE_DEVICES=0,1 python train.py --train_dir train_data --use_cuda 1 --parallel 1 --batch_size 50 --model_dir model_output --num_devices 2
+```
+
+cpu 单机多卡训练
+``` bash
+CPU_NUM=10 python train.py --train_dir train_data --use_cuda 0 --parallel 1 --batch_size 50 --model_dir model_output --num_devices 10
+```
+
+负采样 bayesian pairwise ranking loss(bpr loss) 训练
 ```
 CUDA_VISIBLE_DEVICES=0 python train_sample_neg.py --loss bpr --use_cuda 1
 ```
 
-请注意CPU环境下运行单机多卡任务（--parallel 1)时，batch_size应大于cpu核数。
+负采样 cross entropy  训练
+```
+CUDA_VISIBLE_DEVICES=0 python train_sample_neg.py --loss ce --use_cuda 1
+```
 
 ## 自定义网络结构
 

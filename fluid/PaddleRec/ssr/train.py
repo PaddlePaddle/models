@@ -13,87 +13,110 @@
 # limitations under the License.
 import os
 import sys
+import time
 import argparse
 import logging
 import paddle.fluid as fluid
 import paddle
-import reader as reader
+import utils
+import numpy as np
 from nets import SequenceSemanticRetrieval
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
+
 def parse_args():
     parser = argparse.ArgumentParser("sequence semantic retrieval")
-    parser.add_argument("--train_file", type=str, help="Training file")
-    parser.add_argument("--valid_file", type=str, help="Validation file")
     parser.add_argument(
-        "--epochs", type=int, default=10, help="Number of epochs for training")
+        "--train_dir", type=str, default='train_data', help="Training file")
     parser.add_argument(
-        "--model_output_dir",
+        "--base_lr", type=float, default=0.01, help="learning rate")
+    parser.add_argument(
+        '--vocab_path',
         type=str,
-        default='model_output',
-        help="Model output folder")
+        default='vocab.txt',
+        help='vocab file address')
     parser.add_argument(
-        "--sequence_encode_dim",
-        type=int,
-        default=128,
-        help="Dimension of sequence encoder output")
+        "--epochs", type=int, default=10, help="Number of epochs")
     parser.add_argument(
-        "--matching_dim",
-        type=int,
-        default=128,
-        help="Dimension of hidden layer")
+        '--parallel', type=int, default=0, help='whether parallel')
     parser.add_argument(
-        "--batch_size", type=int, default=128, help="Batch size for training")
+        '--use_cuda', type=int, default=0, help='whether use gpu')
     parser.add_argument(
-        "--embedding_dim",
-        type=int,
-        default=128,
-        help="Default Dimension of Embedding")
+        '--print_batch', type=int, default=10, help='num of print batch')
+    parser.add_argument(
+        '--model_dir', type=str, default='model_output', help='model dir')
+    parser.add_argument(
+        "--hidden_size", type=int, default=128, help="hidden size")
+    parser.add_argument("--batch_size", type=int, default=50, help="batch size")
+    parser.add_argument(
+        "--embedding_dim", type=int, default=128, help="embedding dim")
+    parser.add_argument(
+        '--num_devices', type=int, default=1, help='Number of GPU devices')
     return parser.parse_args()
 
-def start_train(args):
-    y_vocab = reader.YoochooseVocab()
-    y_vocab.load([args.train_file])
 
-    logger.info("Load yoochoose vocabulary size: {}".format(len(y_vocab.get_vocab())))
-    y_data = reader.YoochooseDataset(y_vocab)
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
-            y_data.train([args.train_file]), buf_size=args.batch_size * 100),
-        batch_size=args.batch_size)
-    place = fluid.CPUPlace()
-    ssr = SequenceSemanticRetrieval(
-        len(y_vocab.get_vocab()), args.embedding_dim, args.matching_dim
-    )
-    input_data, user_rep, item_rep, avg_cost, acc = ssr.train()
-    optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
+def get_cards(args):
+    return args.num_devices
+
+
+def train(args):
+    use_cuda = True if args.use_cuda else False
+    parallel = True if args.parallel else False
+    print("use_cuda:", use_cuda, "parallel:", parallel)
+    train_reader, vocab_size = utils.construct_train_data(
+        args.train_dir, args.vocab_path, args.batch_size * get_cards(args))
+    place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
+    ssr = SequenceSemanticRetrieval(vocab_size, args.embedding_dim,
+                                    args.hidden_size)
+    # Train program
+    train_input_data, cos_pos, avg_cost, acc = ssr.train()
+
+    # Optimization to minimize lost
+    optimizer = fluid.optimizer.Adagrad(learning_rate=args.base_lr)
     optimizer.minimize(avg_cost)
-    startup_program = fluid.default_startup_program()
-    loop_program = fluid.default_main_program()
-    data_list = [var.name for var in input_data]
+
+    data_list = [var.name for var in train_input_data]
     feeder = fluid.DataFeeder(feed_list=data_list, place=place)
     exe = fluid.Executor(place)
-    exe.run(startup_program)
+    exe.run(fluid.default_startup_program())
+    if parallel:
+        train_exe = fluid.ParallelExecutor(
+            use_cuda=use_cuda, loss_name=avg_cost.name)
+    else:
+        train_exe = exe
 
+    total_time = 0.0
     for pass_id in range(args.epochs):
+        epoch_idx = pass_id + 1
+        print("epoch_%d start" % epoch_idx)
+        t0 = time.time()
+        i = 0
         for batch_id, data in enumerate(train_reader()):
-            loss_val, correct_val = exe.run(loop_program,
-                                            feed=feeder.feed(data),
-                                            fetch_list=[avg_cost, acc])
-            logger.info("Train --> pass: {} batch_id: {} avg_cost: {}, acc: {}".
-                        format(pass_id, batch_id, loss_val, 
-                               float(correct_val) / args.batch_size))
-        fluid.io.save_inference_model(args.model_output_dir, 
-                                      [var.name for val in input_data],
-                                      [user_rep, item_rep, avg_cost, acc], exe)
+            i += 1
+            loss_val, correct_val = train_exe.run(
+                feed=feeder.feed(data), fetch_list=[avg_cost.name, acc.name])
+            if i % args.print_batch == 0:
+                logger.info(
+                    "Train --> pass: {} batch_id: {} avg_cost: {}, acc: {}".
+                    format(pass_id, batch_id,
+                           np.mean(loss_val),
+                           float(np.mean(correct_val)) / args.batch_size))
+        t1 = time.time()
+        total_time += t1 - t0
+        print("epoch:%d num_steps:%d time_cost(s):%f" %
+              (epoch_idx, i, total_time / epoch_idx))
+        save_dir = "%s/epoch_%d" % (args.model_dir, epoch_idx)
+        fluid.io.save_params(executor=exe, dirname=save_dir)
+        print("model saved in %s" % save_dir)
+
 
 def main():
     args = parse_args()
-    start_train(args)
+    train(args)
+
 
 if __name__ == "__main__":
     main()
-
