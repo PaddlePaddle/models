@@ -91,14 +91,15 @@ def train(args):
         print("Init model from: %s." % args.init_model)
 
     error_evaluator.reset(exe)
+    train_prog = fluid.default_main_program()
     if args.parallel:
-        compiled_prog = fluid.CompiledProgram(fluid.default_main_program()
+        train_prog = fluid.CompiledProgram(train_prog
             ).with_data_parallel(loss_name=sum_cost.name)
 
     fetch_vars = [sum_cost] + error_evaluator.metrics
 
-    def train_one_batch(data):
-        results = exe.run(compiled_prog,
+    def train_one_batch(data, train_prog=train_prog):
+        results = exe.run(train_prog,
                           fetch_list=fetch_vars,
                           feed=get_feeder_data(data, place))
         if args.parallel:

@@ -180,7 +180,7 @@ def train(args,
                            predicate=if_exist)
 
     if parallel:
-        train_prog = fluid.CompiledProgram(train_prog).with_data_parallel(
+        compiled_prog = fluid.CompiledProgram(train_prog).with_data_parallel(
             loss_name=loss.name)
     train_reader = reader.train(data_args,
                                 train_file_list,
@@ -236,7 +236,7 @@ def train(args,
             for batch_id in range(iters_per_epoc):
                 prev_start_time = start_time
                 start_time = time.time()
-                loss_v, = exe.run(train_prog, fetch_list=[loss])
+                loss_v, = exe.run(compiled_prog, fetch_list=[loss])
                 loss_v = np.mean(np.array(loss_v))
                 every_epoc_loss.append(loss_v)
                 if batch_id % 20 == 0:

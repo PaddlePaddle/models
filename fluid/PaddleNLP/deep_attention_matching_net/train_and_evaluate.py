@@ -343,7 +343,7 @@ def train(args):
         train_pyreader.start()
         while True:
             try:
-                cost = train_exe.run(fetch_list=[loss.name])
+                cost = exe.run(fetch_list=[loss.name])
 
                 ave_cost += np.array(cost[0]).mean()
                 step = step + 1
