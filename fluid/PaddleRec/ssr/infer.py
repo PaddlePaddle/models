@@ -30,7 +30,8 @@ def parse_args():
         '--batch_size', type=int, default='50', help='batch_size')
     parser.add_argument(
         '--hid_size', type=int, default='128', help='hidden size')
-    parser.add_argument('--emb_size', type=int, default='128', help='emb size')
+    parser.add_argument(
+        '--emb_size', type=int, default='128', help='embedding size')
     args = parser.parse_args()
     return args
 

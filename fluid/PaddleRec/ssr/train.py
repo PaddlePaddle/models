@@ -34,10 +34,7 @@ def parse_args():
     parser.add_argument(
         "--base_lr", type=float, default=0.01, help="learning rate")
     parser.add_argument(
-        '--vocab_path',
-        type=str,
-        default='vocab.txt',
-        help='vocab file address')
+        '--vocab_path', type=str, default='vocab.txt', help='vocab file')
     parser.add_argument(
         "--epochs", type=int, default=10, help="Number of epochs")
     parser.add_argument(
@@ -50,7 +47,8 @@ def parse_args():
         '--model_dir', type=str, default='model_output', help='model dir')
     parser.add_argument(
         "--hidden_size", type=int, default=128, help="hidden size")
-    parser.add_argument("--batch_size", type=int, default=50, help="batch size")
+    parser.add_argument(
+        "--batch_size", type=int, default=50, help="number of batch")
     parser.add_argument(
         "--embedding_dim", type=int, default=128, help="embedding dim")
     parser.add_argument(
