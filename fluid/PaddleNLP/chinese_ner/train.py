@@ -12,7 +12,7 @@ import reader
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("Run inference.")
+    parser = argparse.ArgumentParser("Run training.")
     parser.add_argument(
         '--batch_size',
         type=int,
