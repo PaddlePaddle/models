@@ -134,7 +134,7 @@ def test_with_feed(exe, program, feed_names, fetch_list, score_path, batches,
             feed_dict = dict(zip(feed_names, batch_data))
             feed_list.append(feed_dict)
 
-            predicts = exe.run(feed=feed_list, fetch_list=fetch_list)
+            predicts = exe.run(program, feed=feed_list, fetch_list=fetch_list)
 
             scores = np.array(predicts[0])
             for dev in six.moves.xrange(dev_count):
@@ -256,13 +256,10 @@ def train(args):
     exe.run(train_startup)
     exe.run(test_startup)
 
-    train_exe = fluid.ParallelExecutor(
-        use_cuda=args.use_cuda, loss_name=loss.name, main_program=train_program)
-
-    test_exe = fluid.ParallelExecutor(
-        use_cuda=args.use_cuda,
-        main_program=test_program,
-        share_vars_from=train_exe)
+    train_prog = fluid.CompiledProgram(train_program).with_data_parallel(
+        loss_name=loss.name)
+    test_prog = fluid.CompiledProgram(test_program).with_data_parallel(
+        share_vars_from=train_prog)
 
     if args.word_emb_init is not None:
         print("start loading word embedding init ...")
@@ -307,7 +304,7 @@ def train(args):
                 feed_dict = dict(zip(dam.get_feed_names(), batch_data))
                 feed_list.append(feed_dict)
 
-            cost = train_exe.run(feed=feed_list, fetch_list=[loss.name])
+            cost = exe.run(train_prog, feed=feed_list, fetch_list=[loss.name])
 
             ave_cost += np.array(cost[0]).mean()
             step = step + 1
@@ -325,7 +322,7 @@ def train(args):
                 fluid.io.save_persistables(exe, save_path, train_program)
 
                 score_path = os.path.join(args.save_path, 'score.' + str(step))
-                test_with_feed(test_exe, test_program,
+                test_with_feed(exe, test_prog,
                                dam.get_feed_names(), [logits.name], score_path,
                                val_batches, val_batch_num, dev_count)
 
@@ -346,7 +343,7 @@ def train(args):
         train_pyreader.start()
         while True:
             try:
-                cost = train_exe.run(fetch_list=[loss.name])
+                cost = exe.run(fetch_list=[loss.name])
 
                 ave_cost += np.array(cost[0]).mean()
                 step = step + 1

@@ -160,8 +160,7 @@ def test(args):
 
     fluid.io.load_persistables(exe, args.model_path)
 
-    test_exe = fluid.ParallelExecutor(
-        use_cuda=args.use_cuda, main_program=test_program)
+    test_prog = fluid.CompiledProgram(test_program).with_data_parallel()
 
     print("start loading data ...")
     with open(args.data_path, 'rb') as f:
@@ -196,7 +195,7 @@ def test(args):
             feed_dict = dict(zip(dam.get_feed_names(), batch_data))
             feed_list.append(feed_dict)
 
-        predicts = test_exe.run(feed=feed_list, fetch_list=[logits.name])
+        predicts = exe.run(test_prog, feed=feed_list, fetch_list=[logits.name])
 
         scores = np.array(predicts[0])
         print("step = %d" % it)

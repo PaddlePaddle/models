@@ -90,23 +90,21 @@ def train(args):
         fluid.io.load_params(exe, dirname=model_dir, filename=model_file_name)
         print("Init model from: %s." % args.init_model)
 
-    train_exe = exe
     error_evaluator.reset(exe)
+    train_prog = fluid.default_main_program()
     if args.parallel:
-        train_exe = fluid.ParallelExecutor(
-            use_cuda=True if args.use_gpu else False, loss_name=sum_cost.name)
+        train_prog = fluid.CompiledProgram(train_prog
+            ).with_data_parallel(loss_name=sum_cost.name)
 
     fetch_vars = [sum_cost] + error_evaluator.metrics
 
-    def train_one_batch(data):
-        var_names = [var.name for var in fetch_vars]
+    def train_one_batch(data, train_prog=train_prog):
+        results = exe.run(train_prog,
+                          fetch_list=fetch_vars,
+                          feed=get_feeder_data(data, place))
         if args.parallel:
-            results = train_exe.run(var_names,
-                                    feed=get_feeder_data(data, place))
             results = [np.array(result).sum() for result in results]
         else:
-            results = train_exe.run(feed=get_feeder_data(data, place),
-                                    fetch_list=fetch_vars)
             results = [result[0] for result in results]
         return results
 
