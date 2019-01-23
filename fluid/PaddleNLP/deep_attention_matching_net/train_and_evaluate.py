@@ -343,7 +343,7 @@ def train(args):
         train_pyreader.start()
         while True:
             try:
-                cost = exe.run(fetch_list=[loss.name])
+                cost = exe.run(train_prog, fetch_list=[loss.name])
 
                 ave_cost += np.array(cost[0]).mean()
                 step = step + 1
@@ -364,7 +364,7 @@ def train(args):
 
                     score_path = os.path.join(args.save_path,
                                               'score.' + str(step))
-                    test_with_pyreader(test_exe, test_program, test_pyreader,
+                    test_with_pyreader(exe, test_program, test_pyreader,
                                        [logits.name], score_path, val_batches,
                                        val_batch_num, dev_count)
 
