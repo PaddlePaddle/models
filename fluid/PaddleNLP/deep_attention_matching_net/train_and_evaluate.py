@@ -364,7 +364,8 @@ def train(args):
 
                     score_path = os.path.join(args.save_path,
                                               'score.' + str(step))
-                    test_with_pyreader(exe, test_program, test_pyreader,
+
+                    test_with_pyreader(exe, test_prog, test_pyreader,
                                        [logits.name], score_path, val_batches,
                                        val_batch_num, dev_count)
 
