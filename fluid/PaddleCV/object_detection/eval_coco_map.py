@@ -47,7 +47,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
     gt_iscrowd = fluid.layers.data(
         name='gt_iscrowd', shape=[1], dtype='int32', lod_level=1)
     gt_image_info = fluid.layers.data(
-        name='gt_image_id', shape=[3], dtype='int32', lod_level=1)
+        name='gt_image_id', shape=[3], dtype='int32')
 
     locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
     nmsed_out = fluid.layers.detection_output(
@@ -57,14 +57,14 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
     # yapf: disable
     if model_dir:
         def if_exist(var):
             return os.path.exists(os.path.join(model_dir, var.name))
         fluid.io.load_vars(exe, model_dir, predicate=if_exist)
     # yapf: enable
-    test_reader = paddle.batch(
-        reader.test(data_args, test_list), batch_size=batch_size)
+    test_reader = reader.test(data_args, test_list, batch_size)
     feeder = fluid.DataFeeder(
         place=place,
         feed_list=[image, gt_box, gt_label, gt_iscrowd, gt_image_info])
@@ -146,8 +146,7 @@ if __name__ == '__main__':
         mean_value=[args.mean_value_B, args.mean_value_G, args.mean_value_R],
         apply_distort=False,
         apply_expand=False,
-        ap_version=args.ap_version,
-        toy=0)
+        ap_version=args.ap_version)
     eval(
         args,
         data_args=data_args,
