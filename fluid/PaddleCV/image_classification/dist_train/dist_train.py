@@ -80,9 +80,9 @@ def get_device_num():
         device_num = subprocess.check_output(['nvidia-smi', '-L']).decode().count('\n')
     return device_num
 
-def prepare_reader(is_train, pyreader, args):
+def prepare_reader(is_train, pyreader, args, pass_id=0):
     if is_train:
-        reader = train(data_dir=args.data_dir)
+        reader = train(data_dir=args.data_dir, pass_id_as_seed=pass_id)
     else:
         reader = val(data_dir=args.data_dir)
     if is_train:
@@ -262,6 +262,8 @@ def train_parallel(args):
         num_samples = 0
         start_time = time.time()
         batch_id = 1
+        # use pass_id+1 as per pass global shuffle for distributed training
+        prepare_reader(True, train_pyreader, args, pass_id + 1)
         train_pyreader.start()
         while True:
             try:
