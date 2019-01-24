@@ -14,19 +14,22 @@
 
 import random
 
+
 class Dataset:
     def __init__(self):
         pass
+
 
 class Vocab:
     def __init__(self):
         pass
 
+
 class YoochooseVocab(Vocab):
     def __init__(self):
         self.vocab = {}
         self.word_array = []
-    
+
     def load(self, filelist):
         idx = 0
         for f in filelist:
@@ -47,21 +50,16 @@ class YoochooseVocab(Vocab):
     def _get_word_array(self):
         return self.word_array
 
+
 class YoochooseDataset(Dataset):
-    def __init__(self, y_vocab):
-        self.vocab_size = len(y_vocab.get_vocab())
-        self.word_array = y_vocab._get_word_array()
-        self.vocab = y_vocab.get_vocab()
+    def __init__(self, vocab_size):
+        self.vocab_size = vocab_size
 
     def sample_neg(self):
         return random.randint(0, self.vocab_size - 1)
 
     def sample_neg_from_seq(self, seq):
         return seq[random.randint(0, len(seq) - 1)]
-    
-    # TODO(guru4elephant): wait memory, should be improved
-    def sample_from_word_freq(self):
-        return self.word_array[random.randint(0, len(self.word_array) - 1)]
 
     def _reader_creator(self, filelist, is_train):
         def reader():
@@ -72,23 +70,20 @@ class YoochooseDataset(Dataset):
                         ids = line.strip().split()
                         if len(ids) <= 1:
                             continue
-                        conv_ids = [self.vocab[i] if i in self.vocab else 0 for i in ids]
-                        # random select an index as boundary
-                        # make ids before boundary as sequence
-                        # make id next to boundary right as target
-                        boundary = random.randint(1, len(ids) - 1)
+                        conv_ids = [i for i in ids]
+                        boundary = len(ids) - 1
                         src = conv_ids[:boundary]
                         pos_tgt = [conv_ids[boundary]]
                         if is_train:
-                            neg_tgt = [self.sample_from_word_freq()]
+                            neg_tgt = [self.sample_neg()]
                             yield [src, pos_tgt, neg_tgt]
                         else:
                             yield [src, pos_tgt]
+
         return reader
 
     def train(self, file_list):
         return self._reader_creator(file_list, True)
-    
+
     def test(self, file_list):
         return self._reader_creator(file_list, False)
-

@@ -25,7 +25,11 @@ def parse_args():
     parser.add_argument(
         '--hid_size', type=int, default=100, help='hidden-dim size')
     parser.add_argument(
-        '--model_dir', type=str, default='model_recall20', help='model dir')
+        '--neg_size', type=int, default=10, help='neg item size')
+    parser.add_argument(
+        '--loss', type=str, default="bpr", help='loss: bpr/cross_entropy')
+    parser.add_argument(
+        '--model_dir', type=str, default='model_bpr_recall20', help='model dir')
     parser.add_argument(
         '--batch_size', type=int, default=5, help='num of batch size')
     parser.add_argument(
@@ -63,8 +67,12 @@ def train():
         buffer_size=1000, word_freq_threshold=0, is_train=True)
 
     # Train program
-    src_wordseq, dst_wordseq, avg_cost, acc = net.all_vocab_network(
-        vocab_size=vocab_size, hid_size=hid_size)
+    if args.loss == 'bpr':
+        src, pos_label, label, avg_cost = net.train_bpr_network(
+            neg_size=args.neg_size, vocab_size=vocab_size, hid_size=hid_size)
+    else:
+        src, pos_label, label, avg_cost = net.train_cross_entropy_network(
+            neg_size=args.neg_size, vocab_size=vocab_size, hid_size=hid_size)
 
     # Optimization to minimize lost
     sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.base_lr)
@@ -94,15 +102,13 @@ def train():
         newest_ppl = 0
         for data in train_reader():
             i += 1
-            lod_src_wordseq = utils.to_lodtensor([dat[0] for dat in data],
-                                                 place)
-            lod_dst_wordseq = utils.to_lodtensor([dat[1] for dat in data],
-                                                 place)
-            ret_avg_cost = train_exe.run(feed={
-                "src_wordseq": lod_src_wordseq,
-                "dst_wordseq": lod_dst_wordseq
-            },
-                                         fetch_list=fetch_list)
+            ls, lp, ll = utils.to_lodtensor_bpr(data, args.neg_size, vocab_size,
+                                                place)
+            ret_avg_cost = train_exe.run(
+                feed={"src": ls,
+                      "label": ll,
+                      "pos_label": lp},
+                fetch_list=fetch_list)
             avg_ppl = np.exp(ret_avg_cost[0])
             newest_ppl = np.mean(avg_ppl)
             if i % args.print_batch == 0:
@@ -113,10 +119,9 @@ def train():
         print("epoch:%d num_steps:%d time_cost(s):%f" %
               (epoch_idx, i, total_time / epoch_idx))
         save_dir = "%s/epoch_%d" % (model_dir, epoch_idx)
-        feed_var_names = ["src_wordseq", "dst_wordseq"]
-        fetch_vars = [avg_cost, acc]
-        fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars, exe)
+        fluid.io.save_params(executor=exe, dirname=save_dir)
         print("model saved in %s" % save_dir)
+
     print("finish training")
 
 
