@@ -158,7 +158,7 @@ def test_with_pyreader(exe, program, pyreader, fetch_list, score_path, batches,
     pyreader.start()
     while True:
         try:
-            predicts = exe.run(fetch_list=fetch_list)
+            predicts = exe.run(program, fetch_list=fetch_list)
 
             scores = np.array(predicts[0])
             for dev in six.moves.xrange(dev_count):
