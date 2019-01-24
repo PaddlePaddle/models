@@ -97,6 +97,6 @@ each has 8 V100 GPU card, with total of 32 GPUs. All modes can reach the "state 
 the images/s while the X-axis shows the number of GPUs.
 
 <p align="center">
-<img src="../images/imagenet_dist_performance.png" width=528>
+<img src="../images/imagenet_dist_performance.png" width=528> <br />
 Performance of Fluid Distributed Training
 </p>
