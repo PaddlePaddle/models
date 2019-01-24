@@ -86,6 +86,7 @@ The default resnet50 distributed training config is based on this paper: https:/
   we run several batches forward and backward computation, then merge the gradients and send to pserver for
   optimization, we use different batch norm mean and variance variable in each repeat so that adding repeats
   behaves the same as adding more GPUs.
+- use [VisionTools DataReader](https://github.com/PaddlePaddle/VisionTools/tree/master/datareader) `--visreader` can achieve better performance to process images.
 
 
 ### Performance
