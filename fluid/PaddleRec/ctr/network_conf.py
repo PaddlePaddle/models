@@ -3,6 +3,8 @@ import math
 
 dense_feature_dim = 13
 
+
+## text cnn conf
 WORD_SIZE = 100000
 EMBED_SIZE = 64
 CNN_DIM = 128
