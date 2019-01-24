@@ -180,8 +180,8 @@ def train(args,
                            predicate=if_exist)
 
     if parallel:
-        train_exe = fluid.ParallelExecutor(main_program=train_prog,
-            use_cuda=use_gpu, loss_name=loss.name)
+        compiled_prog = fluid.CompiledProgram(train_prog).with_data_parallel(
+            loss_name=loss.name)
     train_reader = reader.train(data_args,
                                 train_file_list,
                                 batch_size_per_device,
@@ -236,10 +236,7 @@ def train(args,
             for batch_id in range(iters_per_epoc):
                 prev_start_time = start_time
                 start_time = time.time()
-                if parallel:
-                    loss_v, = train_exe.run(fetch_list=[loss.name])
-                else:
-                    loss_v, = exe.run(train_prog, fetch_list=[loss])
+                loss_v, = exe.run(compiled_prog, fetch_list=[loss])
                 loss_v = np.mean(np.array(loss_v))
                 every_epoc_loss.append(loss_v)
                 if batch_id % 20 == 0:

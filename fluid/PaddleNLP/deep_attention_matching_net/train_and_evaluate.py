@@ -217,7 +217,7 @@ def train(args):
                     staircase=True))
             optimizer.minimize(loss)
             print("begin memory optimization ...")
-            fluid.memory_optimize(train_program)
+            # fluid.memory_optimize(train_program)
             print("end memory optimization ...")
 
     test_program = fluid.Program()

@@ -182,8 +182,8 @@ def train(args):
 
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
-    train_exe = fluid.ParallelExecutor(
-        use_cuda=True if args.use_gpu else False, loss_name=avg_cost.name)
+    compiled_prog = fluid.CompiledProgram(fluid.default_main_program()
+        ).with_data_parallel(loss_name=avg_cost.name)
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
 
@@ -195,7 +195,8 @@ def train(args):
         train_time = []
         for batch_id, data in enumerate(train_reader()):
             t1 = time.time()
-            loss, acc1, acc5 = train_exe.run(fetch_list, feed=feeder.feed(data))
+            loss, acc1, acc5 = exe.run(
+                compiled_prog, fetch_list=fetch_list, feed=feeder.feed(data))
             t2 = time.time()
             period = t2 - t1
             loss = np.mean(np.array(loss))
