@@ -96,7 +96,7 @@ def distort_color(img):
     return img
 
 
-def process_image(sample, mode, color_jitter, rotate):
+def process_image(sample, mode, color_jitter, rotate, normalize):
     img_path = sample[0]
 
     img = Image.open(img_path)
@@ -114,10 +114,12 @@ def process_image(sample, mode, color_jitter, rotate):
 
     if img.mode != 'RGB':
         img = img.convert('RGB')
-
-    img = np.array(img).astype('float32').transpose((2, 0, 1)) / 255
-    img -= img_mean
-    img /= img_std
+    if normalize:
+        img = np.array(img).astype('float32').transpose((2, 0, 1)) / 255
+        img -= img_mean
+        img /= img_std
+    else:
+        img = np.array(img).astype('uint8').transpose((2, 0, 1))
 
     if mode == 'train' or mode == 'val':
         return img, sample[1]
@@ -131,7 +133,8 @@ def _reader_creator(file_list,
                     color_jitter=False,
                     rotate=False,
                     data_dir=DATA_DIR,
-                    pass_id_as_seed=0):
+                    pass_id_as_seed=0,
+                    normalize=True):
     def reader():
         with open(file_list) as flist:
             full_lines = [line.strip() for line in flist]
@@ -164,12 +167,12 @@ def _reader_creator(file_list,
                     yield [img_path]
 
     mapper = functools.partial(
-        process_image, mode=mode, color_jitter=color_jitter, rotate=rotate)
+        process_image, mode=mode, color_jitter=color_jitter, rotate=rotate, normalize=normalize)
 
     return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE)
 
 
-def train(data_dir=DATA_DIR, pass_id_as_seed=0):
+def train(data_dir=DATA_DIR, pass_id_as_seed=0, normalize=True):
     file_list = os.path.join(data_dir, 'train_list.txt')
     return _reader_creator(
         file_list,
@@ -178,14 +181,15 @@ def train(data_dir=DATA_DIR, pass_id_as_seed=0):
         color_jitter=False,
         rotate=False,
         data_dir=data_dir,
-        pass_id_as_seed=pass_id_as_seed)
+        pass_id_as_seed=pass_id_as_seed,
+        normalize=normalize)
 
 
-def val(data_dir=DATA_DIR):
+def val(data_dir=DATA_DIR, normalize=True):
     file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(file_list, 'val', shuffle=False, data_dir=data_dir)
+    return _reader_creator(file_list, 'val', shuffle=False, data_dir=data_dir, normalize=normalize)
 
 
-def test(data_dir=DATA_DIR):
+def test(data_dir=DATA_DIR, normalize=True):
     file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(file_list, 'test', shuffle=False, data_dir=data_dir)
+    return _reader_creator(file_list, 'test', shuffle=False, data_dir=data_dir, normalize=normalize)

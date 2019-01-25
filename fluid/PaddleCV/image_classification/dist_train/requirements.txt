@@ -1,0 +1,2 @@
+visiontool
+paddlepaddle-gpu
