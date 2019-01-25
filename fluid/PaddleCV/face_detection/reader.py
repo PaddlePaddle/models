@@ -200,7 +200,7 @@ def load_file_list(input_txt):
             else:
                 file_dict[num_class].append(line_txt)
 
-    return file_dict.values()
+    return list(file_dict.values())
 
 
 def expand_bboxes(bboxes,
