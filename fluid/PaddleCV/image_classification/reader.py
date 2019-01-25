@@ -130,16 +130,19 @@ def _reader_creator(file_list,
                     shuffle=False,
                     color_jitter=False,
                     rotate=False,
-                    data_dir=DATA_DIR):
+                    data_dir=DATA_DIR,
+                    pass_id_as_seed=0):
     def reader():
         with open(file_list) as flist:
             full_lines = [line.strip() for line in flist]
             if shuffle:
+                if pass_id_as_seed:
+                    np.random.seed(pass_id_as_seed)
                 np.random.shuffle(full_lines)
             if mode == 'train' and os.getenv('PADDLE_TRAINING_ROLE'):
                 # distributed mode if the env var `PADDLE_TRAINING_ROLE` exits
                 trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
-                trainer_count = int(os.getenv("PADDLE_TRAINERS", "1"))
+                trainer_count = int(os.getenv("PADDLE_TRAINERS_NUM", "1"))
                 per_node_lines = len(full_lines) // trainer_count
                 lines = full_lines[trainer_id * per_node_lines:(trainer_id + 1)
                                    * per_node_lines]
@@ -166,7 +169,7 @@ def _reader_creator(file_list,
     return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE)
 
 
-def train(data_dir=DATA_DIR):
+def train(data_dir=DATA_DIR, pass_id_as_seed=0):
     file_list = os.path.join(data_dir, 'train_list.txt')
     return _reader_creator(
         file_list,
@@ -174,7 +177,8 @@ def train(data_dir=DATA_DIR):
         shuffle=True,
         color_jitter=False,
         rotate=False,
-        data_dir=data_dir)
+        data_dir=data_dir,
+        pass_id_as_seed=pass_id_as_seed)
 
 
 def val(data_dir=DATA_DIR):

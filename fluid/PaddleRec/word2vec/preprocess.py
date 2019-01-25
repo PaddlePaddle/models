@@ -3,6 +3,7 @@
 import re
 import six
 import argparse
+import io
 
 prog = re.compile("[^a-z ]", flags=0)
 word_count = dict()
@@ -26,12 +27,6 @@ def parse_args():
         type=int,
         default=5,
         help="If the word count is less then freq, it will be removed from dict")
-    parser.add_argument(
-        '--is_local',
-        action='store_true',
-        required=False,
-        default=False,
-        help='Local train or not, (default: False)')
 
     parser.add_argument(
         '--with_other_dict',
@@ -83,7 +78,6 @@ def native_to_unicode(s):
         return _to_unicode(s)
     except UnicodeDecodeError:
         res = _to_unicode(s, ignore_errors=True)
-        tf.logging.info("Ignoring Unicode error, outputting: %s" % res)
         return res
 
 
@@ -199,15 +193,16 @@ def preprocess(args):
     # word to count
 
     if args.with_other_dict:
-        with open(args.other_dict_path, 'r') as f:
+        with io.open(args.other_dict_path, 'r', encoding='utf-8') as f:
             for line in f:
                 word_count[native_to_unicode(line.strip())] = 1
 
-    if args.is_local:
-        for i in range(1, 100):
-            with open(args.data_path + "/news.en-000{:0>2d}-of-00100".format(
-                    i)) as f:
-                for line in f:
+    for i in range(1, 100):
+        with io.open(
+                args.data_path + "/news.en-000{:0>2d}-of-00100".format(i),
+                encoding='utf-8') as f:
+            for line in f:
+                if args.with_other_dict:
                     line = strip_lines(line)
                     words = line.split()
                     for item in words:
@@ -215,18 +210,14 @@ def preprocess(args):
                             word_count[item] = word_count[item] + 1
                         else:
                             word_count[native_to_unicode('<UNK>')] += 1
-    # with open(args.data_path + "/tmp.txt") as f:
-    #     for line in f:
-    #         print("line before strip is: {}".format(line))
-    #         line = strip_lines(line, word_count)
-    #         print("line after strip is: {}".format(line))
-    #         words = line.split()
-    #         print("words after split is: {}".format(words))
-    #         for item in words:
-    #             if item in word_count:
-    #                 word_count[item] = word_count[item] + 1
-    #             else:
-    #                 word_count[item] = 1
+                else:
+                    line = text_strip(line)
+                    words = line.split()
+                    for item in words:
+                        if item in word_count:
+                            word_count[item] = word_count[item] + 1
+                        else:
+                            word_count[item] = 1
     item_to_remove = []
     for item in word_count:
         if word_count[item] <= args.freq:
@@ -236,21 +227,17 @@ def preprocess(args):
 
     path_table, path_code, word_code_len = build_Huffman(word_count, 40)
 
-    with open(args.dict_path, 'w+') as f:
+    with io.open(args.dict_path, 'w+', encoding='utf-8') as f:
         for k, v in word_count.items():
-            f.write(k.encode("utf-8") + " " + str(v).encode("utf-8") + '\n')
+            f.write(k + " " + str(v) + '\n')
 
-    with open(args.dict_path + "_ptable", 'w+') as f2:
+    with io.open(args.dict_path + "_ptable", 'w+', encoding='utf-8') as f2:
         for pk, pv in path_table.items():
-            f2.write(
-                pk.encode("utf-8") + "\t" + ' '.join((str(x).encode("utf-8")
-                                                      for x in pv)) + '\n')
+            f2.write(pk + '\t' + ' '.join((str(x) for x in pv)) + '\n')
 
-    with open(args.dict_path + "_pcode", 'w+') as f3:
+    with io.open(args.dict_path + "_pcode", 'w+', encoding='utf-8') as f3:
         for pck, pcv in path_code.items():
-            f3.write(
-                pck.encode("utf-8") + "\t" + ' '.join((str(x).encode("utf-8")
-                                                       for x in pcv)) + '\n')
+            f3.write(pck + '\t' + ' '.join((str(x) for x in pcv)) + '\n')
 
 
 if __name__ == "__main__":

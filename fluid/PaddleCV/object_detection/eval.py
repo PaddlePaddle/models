@@ -52,7 +52,7 @@ def build_program(main_prog, startup_prog, args, data_args):
             nmsed_out = fluid.layers.detection_output(
                 locs, confs, box, box_var, nms_threshold=args.nms_threshold)
             with fluid.program_guard(main_prog):
-                map = fluid.evaluator.DetectionMAP(
+                map = fluid.metrics.DetectionMAP(
                     nmsed_out,
                     gt_label,
                     gt_box,

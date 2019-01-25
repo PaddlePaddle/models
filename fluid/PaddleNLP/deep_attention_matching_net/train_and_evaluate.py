@@ -248,8 +248,9 @@ def train(args):
 
     print("device count %d" % dev_count)
     print("theoretical memory usage: ")
-    print(fluid.contrib.memory_usage(
-        program=train_program, batch_size=args.batch_size))
+    print(
+        fluid.contrib.memory_usage(
+            program=train_program, batch_size=args.batch_size))
 
     exe = fluid.Executor(place)
     exe.run(train_startup)
@@ -318,8 +319,9 @@ def train(args):
             if (args.save_path is not None) and (step % save_step == 0):
                 save_path = os.path.join(args.save_path, "step_" + str(step))
                 print("Save model at step %d ... " % step)
-                print(time.strftime('%Y-%m-%d %H:%M:%S',
-                                    time.localtime(time.time())))
+                print(
+                    time.strftime('%Y-%m-%d %H:%M:%S',
+                                  time.localtime(time.time())))
                 fluid.io.save_persistables(exe, save_path, train_program)
 
                 score_path = os.path.join(args.save_path, 'score.' + str(step))
@@ -358,8 +360,9 @@ def train(args):
                     save_path = os.path.join(args.save_path,
                                              "step_" + str(step))
                     print("Save model at step %d ... " % step)
-                    print(time.strftime('%Y-%m-%d %H:%M:%S',
-                                        time.localtime(time.time())))
+                    print(
+                        time.strftime('%Y-%m-%d %H:%M:%S',
+                                      time.localtime(time.time())))
                     fluid.io.save_persistables(exe, save_path, train_program)
 
                     score_path = os.path.join(args.save_path,
@@ -389,7 +392,11 @@ def train(args):
             global_step, last_cost = train_with_pyreader(global_step)
         else:
             global_step, last_cost = train_with_feed(global_step)
-        train_time += time.time() - begin_time
+
+        pass_time_cost = time.time() - begin_time
+        train_time += pass_time_cost
+        print("Pass {0}, pass_time_cost {1}"
+              .format(epoch, "%2.2f sec" % pass_time_cost))
     # For internal continuous evaluation
     if "CE_MODE_X" in os.environ:
         print("kpis	train_cost	%f" % last_cost)
