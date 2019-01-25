@@ -130,7 +130,6 @@ class MobileNet():
 
         output = fluid.layers.fc(input=input,
                                  size=class_dim,
-                                 act='softmax',
                                  param_attr=ParamAttr(
                                      initializer=MSRA(), name="fc7_weights"),
                                  bias_attr=ParamAttr(name="fc7_offset"))

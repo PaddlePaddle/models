@@ -30,7 +30,9 @@ def test(exe, chunk_evaluator, inference_program, test_data, test_fetch_list,
         num_infer = np.array(rets[0])
         num_label = np.array(rets[1])
         num_correct = np.array(rets[2])
-        chunk_evaluator.update(num_infer[0], num_label[0], num_correct[0])
+        chunk_evaluator.update(num_infer[0].astype('int64'),
+                               num_label[0].astype('int64'),
+                               num_correct[0].astype('int64'))
     return chunk_evaluator.eval()
 
 
@@ -65,11 +67,11 @@ def main(train_data_file,
         input=feature_out, param_attr=fluid.ParamAttr(name='crfw'))
 
     (precision, recall, f1_score, num_infer_chunks, num_label_chunks,
-    num_correct_chunks) = fluid.layers.chunk_eval(
-        input=crf_decode,
-        label=target,
-        chunk_scheme="IOB",
-        num_chunk_types=int(math.ceil((label_dict_len - 1) / 2.0)))
+     num_correct_chunks) = fluid.layers.chunk_eval(
+         input=crf_decode,
+         label=target,
+         chunk_scheme="IOB",
+         num_chunk_types=int(math.ceil((label_dict_len - 1) / 2.0)))
     chunk_evaluator = fluid.metrics.ChunkEvaluator()
 
     inference_program = fluid.default_main_program().clone(for_test=True)
