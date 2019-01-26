@@ -7,13 +7,15 @@ large-scaled distributed training with two distributed mode: parameter server mo
 
 Before getting started, please make sure you have go throught the imagenet [Data Preparation](../README.md#data-preparation).
 
-1. The entrypoint file is `dist_train.py`, some important flags are as follows:
+1. The entrypoint file is `dist_train.py`, the commandline arguments are almost the same as the original `train.py`, with the following arguments specific to distributed training.
 
-    - `model`, the model to run with, default is the fine tune model `DistResnet`.
-    - `batch_size`, the batch_size per device.
     - `update_method`, specify the update method, can choose from local, pserver or nccl2.
-    - `device`, use CPU or GPU device.
-    - `gpus`, the GPU device count that the process used.
+    - `multi_batch_repeat`, set this greater than 1 to merge batches before pushing gradients to pservers.
+    - `start_test_pass`, when to start running tests.
+    - `num_threads`, how many threads will be used for ParallelExecutor.
+    - `split_var`, in pserver mode, whether to split one parameter to several pservers, default True.
+    - `async_mode`, do async training, defalt False.
+    - `reduce_strategy`, choose from "reduce", "allreduce".
 
     you can check out more details of the flags by `python dist_train.py --help`.
 
@@ -21,66 +23,27 @@ Before getting started, please make sure you have go throught the imagenet [Data
 
     We use the environment variable to distinguish the different training role of a distributed training job.
 
-    - `PADDLE_TRAINING_ROLE`, the current training role, should be in [PSERVER, TRAINER].
-    - `PADDLE_TRAINERS`, the trainer count of a job.
-    - `PADDLE_CURRENT_IP`, the current instance IP.
-    - `PADDLE_PSERVER_IPS`, the parameter server IP list, separated by ","  only be used with update_method is pserver.
-    - `PADDLE_TRAINER_ID`, the unique trainer ID of a job, the ranging is [0, PADDLE_TRAINERS).
-    - `PADDLE_PSERVER_PORT`, the port of the parameter pserver listened on.
-    - `PADDLE_TRAINER_IPS`, the trainer IP list, separated by ",", only be used with upadte_method is nccl2.
+    - General envs:
+        - `PADDLE_TRAINER_ID`, the unique trainer ID of a job, the ranging is [0, PADDLE_TRAINERS).
+        - `PADDLE_TRAINERS_NUM`, the trainer count of a distributed job.
+        - `PADDLE_CURRENT_ENDPOINT`, current process endpoint.
+    - Pserver mode:
+        - `PADDLE_TRAINING_ROLE`, the current training role, should be in [PSERVER, TRAINER].
+        - `PADDLE_PSERVER_ENDPOINTS`, the parameter server endpoint list, separated by ",".
+    - NCCL2 mode:
+        - `PADDLE_TRAINER_ENDPOINTS`, endpoint list for each worker, separated by ",".
 
-### Parameter Server Mode
+### Try Out Different Distributed Training Modes
 
-In this example, we launched 4 parameter server instances and 4 trainer instances in the cluster:
+You can test if distributed training works on a single node before deploying to the "real" cluster.
 
-1. launch parameter server process
+***NOTE: for best performance, we recommend using multi-process mode, see No.3. And together with fp16.***
 
-    ``` bash
-    PADDLE_TRAINING_ROLE=PSERVER \
-    PADDLE_TRAINERS=4 \
-    PADDLE_PSERVER_IPS=192.168.0.100,192.168.0.101,192.168.0.102,192.168.0.103 \
-    PADDLE_CURRENT_IP=192.168.0.100 \
-    PADDLE_PSERVER_PORT=7164 \
-    python dist_train.py \
-        --model=DistResnet \
-        --batch_size=32 \
-        --update_method=pserver \
-        --device=CPU \
-        --data_dir=../data/ILSVRC2012
-    ```
-
-1. launch trainer process
-
-    ``` bash
-    PADDLE_TRAINING_ROLE=TRAINER \
-    PADDLE_TRAINERS=4 \
-    PADDLE_PSERVER_IPS=192.168.0.100,192.168.0.101,192.168.0.102,192.168.0.103 \
-    PADDLE_TRAINER_ID=0 \
-    PADDLE_PSERVER_PORT=7164 \
-    python dist_train.py \
-        --model=DistResnet \
-        --batch_size=32 \
-        --update_method=pserver \
-        --device=GPU \
-        --data_dir=../data/ILSVRC2012
-    ```
-
-### NCCL2 Collective Mode
-
-1. launch trainer process
-
-    ``` bash
-    PADDLE_TRAINING_ROLE=TRAINER \
-    PADDLE_TRAINERS=4 \
-    PADDLE_TRAINER_IPS=192.168.0.100,192.168.0.101,192.168.0.102,192.168.0.103 \
-    PADDLE_TRAINER_ID=0 \
-    python dist_train.py \
-        --model=DistResnet \
-        --batch_size=32 \
-        --update_method=nccl2 \
-        --device=GPU \
-        --data_dir=../data/ILSVRC2012
-    ```
+1. simply run `python dist_train.py` to start local training with default configuratioins.
+2. for pserver mode, run `bash run_ps_mode.sh` to start 2 pservers and 2 trainers, these 2 trainers
+   will use GPU 0 and 1 to simulate 2 workers.
+3. for nccl2 mode, run `bash run_nccl2_mode.sh` to start 2 workers.
+4. for local/distributed multi-process mode, run `run_mp_mode.sh` (this test use 4 GPUs).
 
 ### Visualize the Training Process
 
@@ -88,16 +51,10 @@ It's easy to draw the learning curve accroding to the training logs, for example
 the logs of ResNet50 is as follows:
 
 ``` text
-Pass 0, batch 0, loss 7.0336914, accucacys: [0.0, 0.00390625]
-Pass 0, batch 1, loss 7.094781, accucacys: [0.0, 0.0]
-Pass 0, batch 2, loss 7.007068, accucacys: [0.0, 0.0078125]
-Pass 0, batch 3, loss 7.1056547, accucacys: [0.00390625, 0.00390625]
-Pass 0, batch 4, loss 7.133543, accucacys: [0.0, 0.0078125]
-Pass 0, batch 5, loss 7.3055463, accucacys: [0.0078125, 0.01171875]
-Pass 0, batch 6, loss 7.341838, accucacys: [0.0078125, 0.01171875]
-Pass 0, batch 7, loss 7.290557, accucacys: [0.0, 0.0]
-Pass 0, batch 8, loss 7.264951, accucacys: [0.0, 0.00390625]
-Pass 0, batch 9, loss 7.43522, accucacys: [0.00390625, 0.00390625]
+Pass 0, batch 30, loss 7.569439, acc1: 0.0125, acc5: 0.0125, avg batch time 0.1720
+Pass 0, batch 60, loss 7.027379, acc1: 0.0, acc5: 0.0, avg batch time 0.1551
+Pass 0, batch 90, loss 6.819984, acc1: 0.0, acc5: 0.0125, avg batch time 0.1492
+Pass 0, batch 120, loss 6.9076853, acc1: 0.0, acc5: 0.0125, avg batch time 0.1464
 ```
 
 The below figure shows top 1 train accuracy for local training with 8 GPUs and distributed training

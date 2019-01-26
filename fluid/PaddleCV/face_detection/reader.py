@@ -16,8 +16,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import image_util
-from paddle.utils.image_util import *
 from PIL import Image
 from PIL import ImageDraw
 import numpy as np
@@ -28,7 +26,10 @@ import copy
 import random
 import cv2
 import six
-from data_util import GeneratorEnqueuer
+import math
+from itertools import islice
+import paddle
+import image_util
 
 
 class Settings(object):
@@ -199,7 +200,7 @@ def load_file_list(input_txt):
             else:
                 file_dict[num_class].append(line_txt)
 
-    return file_dict
+    return list(file_dict.values())
 
 
 def expand_bboxes(bboxes,
@@ -227,13 +228,12 @@ def expand_bboxes(bboxes,
 
 
 def train_generator(settings, file_list, batch_size, shuffle=True):
-    file_dict = load_file_list(file_list)
-    while True:
+    def reader():
         if shuffle:
-            np.random.shuffle(file_dict)
+            np.random.shuffle(file_list)
         batch_out = []
-        for index_image in file_dict.keys():
-            image_name = file_dict[index_image][0]
+        for item in file_list:
+            image_name = item[0]
             image_path = os.path.join(settings.data_dir, image_name)
             im = Image.open(image_path)
             if im.mode == 'L':
@@ -242,10 +242,10 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
 
             # layout: label | xmin | ymin | xmax | ymax
             bbox_labels = []
-            for index_box in range(len(file_dict[index_image])):
+            for index_box in range(len(item)):
                 if index_box >= 2:
                     bbox_sample = []
-                    temp_info_box = file_dict[index_image][index_box].split(' ')
+                    temp_info_box = item[index_box].split(' ')
                     xmin = float(temp_info_box[0])
                     ymin = float(temp_info_box[1])
                     w = float(temp_info_box[2])
@@ -277,43 +277,25 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
                 yield batch_out
                 batch_out = []
 
-
-def train(settings,
-          file_list,
-          batch_size,
-          shuffle=True,
-          use_multiprocessing=True,
-          num_workers=8,
-          max_queue=24):
-    def reader():
-        try:
-            enqueuer = GeneratorEnqueuer(
-                train_generator(settings, file_list, batch_size, shuffle),
-                use_multiprocessing=use_multiprocessing)
-            enqueuer.start(max_queue_size=max_queue, workers=num_workers)
-            generator_output = None
-            while True:
-                while enqueuer.is_running():
-                    if not enqueuer.queue.empty():
-                        generator_output = enqueuer.queue.get()
-                        break
-                    else:
-                        time.sleep(0.01)
-                yield generator_output
-                generator_output = None
-        finally:
-            if enqueuer is not None:
-                enqueuer.stop()
-
     return reader
 
 
+def train(settings, file_list, batch_size, shuffle=True, num_workers=8):
+    file_lists = load_file_list(file_list)
+    n = int(math.ceil(len(file_lists) // num_workers))
+    split_lists = [file_lists[i:i + n] for i in range(0, len(file_lists), n)]
+    readers = []
+    for iterm in split_lists:
+        readers.append(train_generator(settings, iterm, batch_size, shuffle))
+    return paddle.reader.multiprocess_reader(readers, False)
+
+
 def test(settings, file_list):
-    file_dict = load_file_list(file_list)
+    file_lists = load_file_list(file_list)
 
     def reader():
-        for index_image in file_dict.keys():
-            image_name = file_dict[index_image][0]
+        for image in file_lists:
+            image_name = image[0]
             image_path = os.path.join(settings.data_dir, image_name)
             im = Image.open(image_path)
             if im.mode == 'L':

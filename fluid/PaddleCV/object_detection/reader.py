@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import image_util
-from paddle.utils.image_util import *
-from PIL import Image
-from PIL import ImageDraw
-import numpy as np
 import xml.etree.ElementTree
 import os
 import time
 import copy
 import six
-from data_util import GeneratorEnqueuer
+import math
+import numpy as np
+from PIL import Image
+from PIL import ImageDraw
+import image_util
+import paddle
 
 
 class Settings(object):
@@ -162,26 +162,14 @@ def preprocess(img, bbox_labels, mode, settings):
     return img, sampled_labels
 
 
-def coco(settings, file_list, mode, batch_size, shuffle):
-    # cocoapi
+def coco(settings, coco_api, file_list, mode, batch_size, shuffle, data_dir):
     from pycocotools.coco import COCO
-    from pycocotools.cocoeval import COCOeval
-
-    coco = COCO(file_list)
-    image_ids = coco.getImgIds()
-    images = coco.loadImgs(image_ids)
-    print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
 
     def reader():
         if mode == 'train' and shuffle:
-            np.random.shuffle(images)
+            np.random.shuffle(file_list)
         batch_out = []
-        if '2014' in file_list:
-            sub_dir = "train2014" if model == "train" else "val2014"
-        elif '2017' in file_list:
-            sub_dir = "train2017" if mode == "train" else "val2017"
-        data_dir = os.path.join(settings.data_dir, sub_dir)
-        for image in images:
+        for image in file_list:
             image_name = image['file_name']
             image_path = os.path.join(data_dir, image_name)
             if not os.path.exists(image_path):
@@ -195,8 +183,8 @@ def coco(settings, file_list, mode, batch_size, shuffle):
 
             # layout: category_id | xmin | ymin | xmax | ymax | iscrowd
             bbox_labels = []
-            annIds = coco.getAnnIds(imgIds=image['id'])
-            anns = coco.loadAnns(annIds)
+            annIds = coco_api.getAnnIds(imgIds=image['id'])
+            anns = coco_api.loadAnns(annIds)
             for ann in anns:
                 bbox_sample = []
                 # start from 1, leave 0 to background
@@ -236,16 +224,12 @@ def coco(settings, file_list, mode, batch_size, shuffle):
 
 
 def pascalvoc(settings, file_list, mode, batch_size, shuffle):
-    flist = open(file_list)
-    images = [line.strip() for line in flist]
-    print("{} on {} with {} images".format(mode, settings.dataset, len(images)))
-
     def reader():
         if mode == 'train' and shuffle:
-            np.random.shuffle(images)
+            np.random.shuffle(file_list)
         batch_out = []
         cnt = 0
-        for image in images:
+        for image in file_list:
             image_path, label_path = image.split()
             image_path = os.path.join(settings.data_dir, image_path)
             label_path = os.path.join(settings.data_dir, label_path)
@@ -299,52 +283,55 @@ def train(settings,
           file_list,
           batch_size,
           shuffle=True,
-          use_multiprocessing=True,
           num_workers=8,
-          max_queue=24,
           enable_ce=False):
-    file_list = os.path.join(settings.data_dir, file_list)
+    file_path = os.path.join(settings.data_dir, file_list)
+    readers = []
     if 'coco' in settings.dataset:
-        generator = coco(settings, file_list, "train", batch_size, shuffle)
+        # cocoapi
+        from pycocotools.coco import COCO
+        coco_api = COCO(file_path)
+        image_ids = coco_api.getImgIds()
+        images = coco_api.loadImgs(image_ids)
+        n = int(math.ceil(len(images) // num_workers))
+        image_lists = [images[i:i + n] for i in range(0, len(images), n)]
+
+        if '2014' in file_list:
+            sub_dir = "train2014"
+        elif '2017' in file_list:
+            sub_dir = "train2017"
+        data_dir = os.path.join(settings.data_dir, sub_dir)
+        for l in image_lists:
+            readers.append(
+                coco(settings, coco_api, l, 'train', batch_size, shuffle,
+                     data_dir))
     else:
-        generator = pascalvoc(settings, file_list, "train", batch_size, shuffle)
+        images = [line.strip() for line in open(file_path)]
+        n = int(math.ceil(len(images) // num_workers))
+        image_lists = [images[i:i + n] for i in range(0, len(images), n)]
+        for l in image_lists:
+            readers.append(pascalvoc(settings, l, 'train', batch_size, shuffle))
 
-    def infinite_reader():
-        while True:
-            for data in generator():
-                yield data
-
-    def reader():
-        try:
-            enqueuer = GeneratorEnqueuer(
-                infinite_reader(), use_multiprocessing=use_multiprocessing)
-            enqueuer.start(max_queue_size=max_queue, workers=num_workers)
-            generator_output = None
-            while True:
-                while enqueuer.is_running():
-                    if not enqueuer.queue.empty():
-                        generator_output = enqueuer.queue.get()
-                        break
-                    else:
-                        time.sleep(0.02)
-                yield generator_output
-                generator_output = None
-        finally:
-            if enqueuer is not None:
-                enqueuer.stop()
-
-    if enable_ce:
-        return infinite_reader
-    else:
-        return reader
+    return paddle.reader.multiprocess_reader(readers, False)
 
 
 def test(settings, file_list, batch_size):
     file_list = os.path.join(settings.data_dir, file_list)
     if 'coco' in settings.dataset:
-        return coco(settings, file_list, 'test', batch_size, False)
+        from pycocotools.coco import COCO
+        coco_api = COCO(file_list)
+        image_ids = coco_api.getImgIds()
+        images = coco_api.loadImgs(image_ids)
+        if '2014' in file_list:
+            sub_dir = "val2014"
+        elif '2017' in file_list:
+            sub_dir = "val2017"
+        data_dir = os.path.join(settings.data_dir, sub_dir)
+        return coco(settings, coco_api, images, 'test', batch_size, False,
+                    data_dir)
     else:
-        return pascalvoc(settings, file_list, 'test', batch_size, False)
+        image_list = [line.strip() for line in open(file_list)]
+        return pascalvoc(settings, image_list, 'test', batch_size, False)
 
 
 def infer(settings, image_path):
