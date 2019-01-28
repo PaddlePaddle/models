@@ -21,9 +21,7 @@ SSD is readily pluggable into a wide variant standard convolutional network, suc
 
 ### Data Preparation
 
-You can use [PASCAL VOC dataset](http://host.robots.ox.ac.uk/pascal/VOC/) or [MS-COCO dataset](http://cocodataset.org/#download).
-
-If you want to train a model on PASCAL VOC dataset, please download dataset at first, skip this step if you already have one.
+Please download [PASCAL VOC dataset](http://host.robots.ox.ac.uk/pascal/VOC/) at first, skip this step if you already have one.
 
 ```bash
 cd data/pascalvoc
@@ -32,30 +30,18 @@ cd data/pascalvoc
 
 The command `download.sh` also will create training and testing file lists.
 
-If you want to train a model on MS-COCO dataset, please download dataset at first, skip this step if you already have one.
-
-```
-cd data/coco
-./download.sh
-```
-
 ### Train
 
 #### Download the Pre-trained Model.
 
-We provide two pre-trained models. The one is MobileNet-v1 SSD trained on COCO dataset, but removed the convolutional predictors for COCO dataset. This model can be used to initialize the models when training other datasets, like PASCAL VOC. The other pre-trained model is MobileNet-v1 trained on ImageNet 2012 dataset but removed the last weights and bias in the Fully-Connected layer.
+We provide two pre-trained models. The one is MobileNet-v1 SSD trained on COCO dataset, but removed the convolutional predictors for COCO dataset. This model can be used to initialize the models when training other datasets, like PASCAL VOC. The other pre-trained model is MobileNet-v1 trained on ImageNet 2012 dataset but removed the last weights and bias in the Fully-Connected layer. Download MobileNet-v1 SSD:
 
-Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https://github.com/tensorflow/models/blob/f87a58cd96d45de73c9a8330a06b2ab56749a7fa/research/object_detection/g3doc/detection_model_zoo.md). The MobileNet-v1 model is converted from [Caffe](https://github.com/shicai/MobileNet-Caffe).
-We will release the pre-trained models by ourself in the upcoming soon.
-
-  - Download MobileNet-v1 SSD:
     ```bash
     ./pretrained/download_coco.sh
     ```
-  - Download MobileNet-v1:
-    ```bash
-    ./pretrained/download_imagenet.sh
-    ```
+
+Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https://github.com/tensorflow/models/blob/f87a58cd96d45de73c9a8330a06b2ab56749a7fa/research/object_detection/g3doc/detection_model_zoo.md).
+
 
 #### Train on PASCAL VOC
 
@@ -64,7 +50,6 @@ We will release the pre-trained models by ourself in the upcoming soon.
   python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
   ```
    - Set ```export CUDA_VISIBLE_DEVICES=0,1``` to specifiy the number of GPU you want to use.
-   - Set ```--dataset='coco2014'``` or ```--dataset='coco2017'``` to train model on MS COCO dataset.
    - For more help on arguments:
 
   ```bash
@@ -86,19 +71,6 @@ You can evaluate your trained model in different metrics like 11point, integral 
 `eval.py` is the main caller of the evaluating module. Examples of usage are shown below.
 ```bash
 python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/best_model' --data_dir='data/pascalvoc' --test_list='test.txt' --ap_version='11point' --nms_threshold=0.45
-```
-
-You can set ```--dataset``` to ```coco2014``` or ```coco2017``` to evaluate COCO dataset. Moreover, we provide `eval_coco_map.py` which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). To use this eval_coco_map.py, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
-Install the cocoapi:
-```
-# COCOAPI=/path/to/clone/cocoapi
-git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
-cd $COCOAPI/PythonAPI
-# Install into global site-packages
-make install
-# Alternatively, if you do not have permissions or prefer
-# not to install the COCO API into global site-packages
-python2 setup.py install --user
 ```
 
 ### Infer and Visualize

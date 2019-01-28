@@ -31,12 +31,12 @@ def priorbox_shape(input_shapes, min_size, max_size=None, aspect_ratio=None):
 def priorbox_layer(inputs,
                    name,
                    min_size,
-                   step,
                    max_size=None,
                    aspect_ratio=None,
-                   flip=True,
+                   variance=[0.1, 0.1, 0.2, 0.2],
+                   flip=False,
                    clip=False,
-                   variance=[],
+                   step=0.0,
                    offset=0.5):
     """ build a layer of type 'Priorbox' using fluid
 
@@ -52,6 +52,8 @@ def priorbox_layer(inputs,
     assert len(inputs) == 2, "invalid inputs for Priorbox[%s]" % (name)
     input = inputs[0]
     image = inputs[1]
+    steps = tuple(step) if type(step) is list or type(step) is tuple else (step,
+                                                                           step)
     box, variance_ = fluid.layers.prior_box(
         input,
         image,
@@ -60,7 +62,8 @@ def priorbox_layer(inputs,
         aspect_ratio,
         variance,
         flip,
-        clip, (step, step),
+        clip,
+        steps,
         offset,
         min_max_aspect_ratios_order=True)
     """

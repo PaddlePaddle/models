@@ -187,10 +187,12 @@ def train(args):
                 fetch_list=[d_A_trainer.d_loss_A],
                 feed={"input_A": tensor_A,
                       "fake_pool_A": fake_pool_A})[0]
-            t_time += (time.time() - s_time)
-            print("epoch{}; batch{}; g_A_loss: {}; d_B_loss: {}; g_B_loss: {}; d_A_loss: {};".format(
+            batch_time = time.time() - s_time
+            t_time += batch_time
+            print("epoch{}; batch{}; g_A_loss: {}; d_B_loss: {}; g_B_loss: {}; d_A_loss: {}; "
+                  "Batch_time_cost: {:.2f}".format(
                 epoch, batch_id, g_A_loss[0], d_B_loss[0], g_B_loss[0],
-                d_A_loss[0]))
+                d_A_loss[0], batch_time))
             losses[0].append(g_A_loss[0])
             losses[1].append(d_A_loss[0])
             sys.stdout.flush()

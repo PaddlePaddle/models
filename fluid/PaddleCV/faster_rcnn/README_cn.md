@@ -37,18 +37,6 @@ Faster RCNN 目标检测模型
 
 ## 模型训练
 
-数据准备完毕后，可以通过如下的方式启动训练：
-
-    python train.py \
-       --model_save_dir=output/ \
-       --pretrained_model=${path_to_pretrain_model}
-       --data_dir=${path_to_data}
-
-- 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
-- 可选参数见：
-
-    python train.py --help
-
 **下载预训练模型：** 本示例提供Resnet-50预训练模型，该模性转换自Caffe，并对批标准化层(Batch Normalization Layer)进行参数融合。采用如下命令下载预训练模型：
 
     sh ./pretrained/download.sh
@@ -70,6 +58,18 @@ Faster RCNN 目标检测模型
     # Alternatively, if you do not have permissions or prefer
     # not to install the COCO API into global site-packages
     python2 setup.py install --user
+
+数据准备完毕后，可以通过如下的方式启动训练：
+
+    python train.py \
+       --model_save_dir=output/ \
+       --pretrained_model=${path_to_pretrain_model}
+       --data_dir=${path_to_data}
+
+- 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
+- 可选参数见：
+
+    python train.py --help
 
 **数据读取器说明：** 数据读取器定义在reader.py中。所有图像将短边等比例缩放至`scales`，若长边大于`max_size`, 则再次将长边等比例缩放至`max_size`。在训练阶段，对图像采用水平翻转。支持将同一个batch内的图像padding为相同尺寸。
 
@@ -124,7 +124,7 @@ Faster RCNN 目标检测模型
     python infer.py \
        --dataset=coco2017 \
         --pretrained_model=${path_to_pretrain_model}  \
-        --image_path=data/COCO17/val2017/  \
+        --image_path=dataset/coco/val2017/  \
         --image_name=000000000139.jpg \
         --draw_threshold=0.6
 

@@ -280,8 +280,17 @@ class Network(object):
             param_attr=fluid.ParamAttr(name=prefix + 'negslope'))
         return output
 
-    def pool(self, pool_type, input, k_h, k_w, s_h, s_w, ceil_mode, padding,
-             name):
+    def pool(self,
+             pool_type,
+             input,
+             k_h,
+             k_w,
+             s_h,
+             s_w,
+             ceil_mode,
+             padding,
+             name,
+             exclusive=True):
         # Get the number of channels in the input
         in_hw = input.shape[2:]
         k_hw = [k_h, k_w]
@@ -295,7 +304,8 @@ class Network(object):
             pool_stride=s_hw,
             pool_padding=padding,
             ceil_mode=ceil_mode,
-            pool_type=pool_type)
+            pool_type=pool_type,
+            exclusive=exclusive)
         return output
 
     @layer
@@ -430,7 +440,8 @@ class Network(object):
 
         if need_transpose:
             order = range(dims)
-            order.remove(axis).append(axis)
+            order.remove(axis)
+            order.append(axis)
             input = fluid.layers.transpose(
                 input,
                 perm=order,
@@ -515,11 +526,21 @@ class Network(object):
         scale_shape = input.shape[axis:axis + num_axes]
         param_attr = fluid.ParamAttr(name=prefix + 'scale')
         scale_param = fluid.layers.create_parameter(
-            shape=scale_shape, dtype=input.dtype, name=name, attr=param_attr)
+            shape=scale_shape,
+            dtype=input.dtype,
+            name=name,
+            attr=param_attr,
+            is_bias=True,
+            default_initializer=fluid.initializer.Constant(value=1.0))
 
         offset_attr = fluid.ParamAttr(name=prefix + 'offset')
         offset_param = fluid.layers.create_parameter(
-            shape=scale_shape, dtype=input.dtype, name=name, attr=offset_attr)
+            shape=scale_shape,
+            dtype=input.dtype,
+            name=name,
+            attr=offset_attr,
+            is_bias=True,
+            default_initializer=fluid.initializer.Constant(value=0.0))
 
         output = fluid.layers.elementwise_mul(
             input,

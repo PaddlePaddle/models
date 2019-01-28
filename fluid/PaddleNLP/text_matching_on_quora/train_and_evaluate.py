@@ -33,6 +33,8 @@ parser = argparse.ArgumentParser(description=__doc__)
 
 parser.add_argument('--model_name',       type=str,   default='cdssmNet',                  help="Which model to train")
 parser.add_argument('--config',           type=str,   default='cdssm_base',       help="The global config setting")
+parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
+parser.add_argument('--epoch_num', type=int, help='Number of epoch')
 
 DATA_DIR = os.path.join(os.path.expanduser('~'), '.cache/paddle/dataset')
 
@@ -139,6 +141,13 @@ def train_and_evaluate(train_reader,
     else:
         feeder = fluid.DataFeeder(feed_list=[q1, q2, mask1, mask2, label], place=place)
 
+    # only for ce
+    args = parser.parse_args()
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_startup_program().random_seed = SEED
+        fluid.default_main_program().random_seed = SEED
+
     # logging param info
     for param in fluid.default_main_program().global_block().all_parameters():
         print("param name: %s; param shape: %s" % (param.name, param.shape))
@@ -167,8 +176,10 @@ def train_and_evaluate(train_reader,
              metric_type=global_config.metric_type)
 
     # start training
+    total_time = 0.0
     print("[%s] Start Training" % time.asctime(time.localtime(time.time())))
     for epoch_id in range(global_config.epoch_num):
+
         data_size, data_count, total_acc, total_cost = 0, 0, 0.0, 0.0
         batch_id = 0
         epoch_begin_time = time.time()
@@ -177,8 +188,8 @@ def train_and_evaluate(train_reader,
                                               feed=feeder.feed(data),
                                               fetch_list=[cost, acc])
             data_size = len(data)
-            total_acc += data_size * avg_acc_np
-            total_cost += data_size * avg_cost_np
+            total_acc += data_size * avg_acc_np[0]
+            total_cost += data_size * avg_cost_np[0]
             data_count += data_size
             if batch_id % 100 == 0:
                 print("[%s] epoch_id: %d, batch_id: %d, cost: %f, acc: %f" % (
@@ -188,15 +199,29 @@ def train_and_evaluate(train_reader,
                     avg_cost_np,
                     avg_acc_np))
             batch_id += 1
-        
         avg_cost = total_cost / data_count
         avg_acc = total_acc / data_count
-        
+        epoch_end_time = time.time()
+        total_time += epoch_end_time - epoch_begin_time
+
         print("")
         print("[%s] epoch_id: %d, train_avg_cost: %f, train_avg_acc: %f, epoch_time_cost: %f" % (
             time.asctime( time.localtime(time.time())),
             epoch_id, avg_cost, avg_acc,
             time.time() - epoch_begin_time))
+
+        # only for ce
+        if epoch_id == global_config.epoch_num - 1 and args.enable_ce:
+            #Note: The following logs are special for CE monitoring.
+            #Other situations do not need to care about these logs.
+            gpu_num = get_cards(args)
+            print("kpis\teach_pass_duration_card%s\t%s" % \
+                  (gpu_num, total_time / (global_config.epoch_num)))
+            print("kpis\ttrain_avg_cost_card%s\t%s" %
+                  (gpu_num, avg_cost))
+            print("kpis\ttrain_avg_acc_card%s\t%s" %
+                  (gpu_num, avg_acc))
+
 
         epoch_model = global_config.save_dirname + "/" + "epoch" + str(epoch_id)
         fluid.io.save_inference_model(epoch_model, ["question1", "question2", "label"], acc, exe)    
@@ -216,6 +241,9 @@ def main():
     """
     args = parser.parse_args()
     global_config = configs.__dict__[args.config]()
+
+    if args.epoch_num != None:
+        global_config.epoch_num = args.epoch_num
 
     print("net_name: ", args.model_name)
     net = models.__dict__[args.model_name](global_config)
@@ -266,6 +294,16 @@ def main():
                    pretrained_word_embedding,
                    use_cuda=global_config.use_cuda,
                    parallel=False)
+
+
+def get_cards(args):
+    if args.enable_ce:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        num = len(cards.split(","))
+        return num
+    else:
+        return args.num_devices
+
 
 if __name__ == "__main__":
     main()

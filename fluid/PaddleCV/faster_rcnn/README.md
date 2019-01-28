@@ -38,18 +38,6 @@ Train the model on [MS-COCO dataset](http://cocodataset.org/#download), download
 
 ## Training
 
-After data preparation, one can start the training step by:
-
-    python train.py \
-       --model_save_dir=output/ \
-       --pretrained_model=${path_to_pretrain_model}
-       --data_dir=${path_to_data}
-
-- Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
-- For more help on arguments:
-
-    python train.py --help
-
 **download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer. One can download pre-trained model as:
 
     sh ./pretrained/download.sh
@@ -71,6 +59,18 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
     # Alternatively, if you do not have permissions or prefer
     # not to install the COCO API into global site-packages
     python2 setup.py install --user
+
+After data preparation, one can start the training step by:
+
+    python train.py \
+       --model_save_dir=output/ \
+       --pretrained_model=${path_to_pretrain_model}
+       --data_dir=${path_to_data}
+
+- Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
+- For more help on arguments:
+
+    python train.py --help
 
 **data reader introduction:**
 
@@ -128,7 +128,7 @@ Inference is used to get prediction score or image features based on trained mod
     python infer.py \
        --dataset=coco2017 \
         --pretrained_model=${path_to_pretrain_model}  \
-        --image_path=data/COCO17/val2017/  \
+        --image_path=dataset/coco/val2017/  \
         --image_name=000000000139.jpg \
         --draw_threshold=0.6
 

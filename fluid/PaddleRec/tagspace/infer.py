@@ -10,12 +10,16 @@ import paddle.fluid as fluid
 import paddle
 import utils
 
+
 def parse_args():
-    parser = argparse.ArgumentParser("gru4rec benchmark.")
+    parser = argparse.ArgumentParser("tagspace benchmark.")
     parser.add_argument(
         '--test_dir', type=str, default='test_data', help='test file address')
     parser.add_argument(
-        '--vocab_tag_path', type=str, default='vocab_tag.txt', help='vocab path')
+        '--vocab_tag_path',
+        type=str,
+        default='vocab_tag.txt',
+        help='vocab path')
     parser.add_argument(
         '--start_index', type=int, default='1', help='start index')
     parser.add_argument(
@@ -29,6 +33,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 def infer(test_reader, vocab_tag, use_cuda, model_path):
     """ inference function """
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
@@ -39,7 +44,7 @@ def infer(test_reader, vocab_tag, use_cuda, model_path):
             model_path, exe)
         t0 = time.time()
         step_id = 0
-        true_num = 0 
+        true_num = 0
         all_num = 0
         size = vocab_tag
         value = []
@@ -48,13 +53,11 @@ def infer(test_reader, vocab_tag, use_cuda, model_path):
             lod_text_seq = utils.to_lodtensor([dat[0] for dat in data], place)
             lod_tag = utils.to_lodtensor([dat[1] for dat in data], place)
             lod_pos_tag = utils.to_lodtensor([dat[2] for dat in data], place)
-            para = exe.run(
-                infer_program,
-                feed={
-                    "text": lod_text_seq,
-                    "pos_tag": lod_tag},
-                fetch_list=fetch_vars,
-                return_numpy=False)
+            para = exe.run(infer_program,
+                           feed={"text": lod_text_seq,
+                                 "pos_tag": lod_tag},
+                           fetch_list=fetch_vars,
+                           return_numpy=False)
             value.append(para[0]._get_float_element(0))
             if step_id % size == 0 and step_id > 1:
                 all_num += 1
@@ -66,6 +69,7 @@ def infer(test_reader, vocab_tag, use_cuda, model_path):
                 print(step_id, 1.0 * true_num / all_num)
         t1 = time.time()
 
+
 if __name__ == "__main__":
     args = parse_args()
     start_index = args.start_index
@@ -75,11 +79,20 @@ if __name__ == "__main__":
     batch_size = args.batch_size
     vocab_tag_path = args.vocab_tag_path
     use_cuda = True if args.use_cuda else False
-    print("start index: ", start_index, " last_index:" ,last_index)
+    print("start index: ", start_index, " last_index:", last_index)
     vocab_text, vocab_tag, test_reader = utils.prepare_data(
-        test_dir, "", vocab_tag_path, batch_size=1,
-        neg_size=0, buffer_size=1000, is_train=False)
+        test_dir,
+        "",
+        vocab_tag_path,
+        batch_size=1,
+        neg_size=0,
+        buffer_size=1000,
+        is_train=False)
 
-    for epoch in xrange(start_index, last_index + 1):
+    for epoch in range(start_index, last_index + 1):
         epoch_path = model_dir + "/epoch_" + str(epoch)
-        infer(test_reader=test_reader, vocab_tag=vocab_tag, use_cuda=False, model_path=epoch_path)
+        infer(
+            test_reader=test_reader,
+            vocab_tag=vocab_tag,
+            use_cuda=False,
+            model_path=epoch_path)
