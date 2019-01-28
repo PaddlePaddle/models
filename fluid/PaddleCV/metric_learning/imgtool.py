@@ -13,15 +13,14 @@ import os
 
 is_ce = int(os.environ.get('is_ce', 0))
 
-#random.seed(0)
+if is_ce:
+    random.seed(0)
 
 def rotate_image(img):
     """ rotate_image """
     (h, w) = img.shape[:2]
     center = (w // 2, h // 2)
     angle = random.randint(-10, 10)
-    if is_ce:
-        aggle = 0
     M = cv2.getRotationMatrix2D(center, angle, 1.0)
     rotated = cv2.warpAffine(img, M, (w, h))
     return rotated
@@ -32,8 +31,6 @@ def random_crop(img, size, scale=None, ratio=None):
     ratio = [3. / 4., 4. / 3.] if ratio is None else ratio
 
     aspect_ratio = math.sqrt(random.uniform(*ratio))
-    if is_ce:
-        aspect_ratio = math.sqrt(1.)
     w = 1. * aspect_ratio
     h = 1. / aspect_ratio
 
@@ -43,17 +40,12 @@ def random_crop(img, size, scale=None, ratio=None):
     scale_min = min(scale[0], bound)
 
     target_area = img.shape[0] * img.shape[1] * random.uniform(scale_min, scale_max)
-    if is_ce:
-        target_area = img.shape[0] * img.shape[1] * (scale_min + scale_max) / 2.
     target_size = math.sqrt(target_area)
     w = int(target_size * w)
     h = int(target_size * h)
 
     i = random.randint(0, img.shape[0] - h)
     j = random.randint(0, img.shape[1] - w)
-    if is_ce:
-        i = int(img.shape[0] - h) // 2
-        j = int(img.shape[1] - w) // 2
 
     img = img[i:i+h, j:j+w, :]
     resized = cv2.resize(img, (size, size), interpolation=cv2.INTER_LANCZOS4)
@@ -80,9 +72,6 @@ def crop_image(img, target_size, center):
     else:
         w_start = random.randint(0, width - size)
         h_start = random.randint(0, height - size)
-        if is_ce:
-            w_start = (width - size) // 2
-            h_start = (height - size) // 2
     w_end = w_start + size
     h_end = h_start + size
     img = img[h_start:h_end, w_start:w_end, :]
@@ -106,8 +95,6 @@ def process_image(sample, mode, color_jitter, rotate,
         if color_jitter:
             img = distort_color(img)
         if random.randint(0, 1) == 1:
-            img = img[:, ::-1, :]
-        if is_ce:
             img = img[:, ::-1, :]
     else:
         if crop_size > 0:
