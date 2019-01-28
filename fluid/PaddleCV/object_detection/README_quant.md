@@ -130,6 +130,9 @@ A Python transpiler is used to rewrite Fluid training program or evaluation prog
   ```
   See 002271.jpg for the visualized image with bbouding boxes.
 
+
+  **Note**, if you want to convert model to 8-bit, you should call `fluid.contrib.QuantizeTranspiler.convert_to_int8` to do this. But, now Paddle can't load 8-bit model to do inference.
+
 ### Results
 
 Results of MobileNet-v1-SSD 300x300 model on PascalVOC dataset.
