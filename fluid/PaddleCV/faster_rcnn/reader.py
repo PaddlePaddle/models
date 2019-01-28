@@ -30,6 +30,45 @@ from config import cfg
 import segm_utils
 
 
+def roidb_reader(roidb, mode):
+    im, im_scales = data_utils.get_image_blob(roidb, mode)
+    im_id = roidb['id']
+    im_height = np.round(roidb['height'] * im_scales)
+    im_width = np.round(roidb['width'] * im_scales)
+    im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
+    if mode == 'test' or mode == 'infer':
+        return im, im_info, im_id
+
+    gt_boxes = roidb['gt_boxes'].astype('float32')
+    gt_classes = roidb['gt_classes'].astype('int32')
+    is_crowd = roidb['is_crowd'].astype('int32')
+    segms = roidb['segms']
+
+    outs = (im, gt_boxes, gt_classes, is_crowd, im_info, im_id)
+
+    if cfg.MASK_ON:
+        gt_masks = []
+        valid = True
+        segms = roidb['segms']
+        assert len(segms) == is_crowd.shape[0]
+        for i in range(len(roidb['segms'])):
+            segm, iscrowd = segms[i], is_crowd[i]
+            gt_segm = []
+            if iscrowd:
+                gt_segm.append([[0, 0]])
+            else:
+                for poly in segm:
+                    if len(poly) == 0:
+                        valid = False
+                        break
+                    gt_segm.append(np.array(poly).reshape(-1, 2))
+            if (not valid) or len(gt_segm) == 0:
+                break
+            gt_masks.append(gt_segm)
+        outs = outs + (gt_masks, )
+    return outs
+
+
 def coco(mode,
          batch_size=None,
          total_batch_size=None,
@@ -64,20 +103,6 @@ def coco(mode,
 
     print("{} on {} with {} roidbs".format(mode, cfg.dataset, len(roidbs)))
 
-    def roidb_reader(roidb, mode):
-        im, im_scales = data_utils.get_image_blob(roidb, mode)
-        im_id = roidb['id']
-        im_height = np.round(roidb['height'] * im_scales)
-        im_width = np.round(roidb['width'] * im_scales)
-        im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
-        if mode == 'test' or mode == 'infer':
-            return im, im_info, im_id
-        gt_boxes = roidb['gt_boxes'].astype('float32')
-        gt_classes = roidb['gt_classes'].astype('int32')
-        is_crowd = roidb['is_crowd'].astype('int32')
-        segms = roidb['segms']
-        return im, gt_boxes, gt_classes, is_crowd, im_info, im_id, segms
-
     def padding_minibatch(batch_data):
         if len(batch_data) == 1:
             return batch_data
@@ -95,53 +120,30 @@ def coco(mode,
 
     def reader():
         if mode == "train":
-            roidb_perm = deque(np.random.permutation(roidbs))
+            if shuffle:
+                roidb_perm = deque(np.random.permutation(roidbs))
+            else:
+                roidb_perm = deque(roidbs)
             roidb_cur = 0
             batch_out = []
             while True:
                 roidb = roidb_perm[0]
                 roidb_cur += 1
                 roidb_perm.rotate(-1)
-                #if '000139.jpg' not in roidb['image']:
-                #    continue
                 if roidb_cur >= len(roidbs):
-                    roidb_perm = deque(np.random.permutation(roidbs))
+                    if shuffle:
+                        roidb_perm = deque(np.random.permutation(roidbs))
+                    else:
+                        roidb_perm = deque(roidbs)
                     roidb_cur = 0
-                im, gt_boxes, gt_classes, \
-                is_crowd, im_info, im_id, segms = roidb_reader(
-                    roidb, mode)
-                if gt_boxes.shape[0] == 0:
+                # im, gt_boxes, gt_classes, is_crowd, im_info, im_id, gt_masks
+                datas = roidb_reader(roidb, mode)
+                if datas[1].shape[0] == 0:
                     continue
-                height = im_info[0]
-                width = im_info[1]
                 if cfg.MASK_ON:
-                    gt_masks = []
-                    for segm, iscrowd in \
-                        list(zip(roidb['segms'], roidb['is_crowd'])):
-                        #gt_masks.append(
-                        #   segm_utils.segms_to_mask(segm, iscrowd, \
-                        #                        int(height), int(width)))
-                        gt_segm = []
-                        if iscrowd:
-                            for i in segm:
-                                gt_segm.append([[0, 0]])
-                        else:
-                            for i in range(len(segm)):
-                                poly = segm[i]
-                                gt_poly = []
-                                for j in range(len(poly) / 2):
-                                    gt_poly.append(
-                                        [poly[2 * j], poly[2 * j + 1]])
-                                gt_segm.append(gt_poly)
-                        gt_masks.append(gt_segm)
-
-                    batch_out.append(
-                        (im, gt_boxes, gt_classes, is_crowd, \
-                         im_info, im_id, np.array(gt_masks)))
-                else:
-                    batch_out.append(
-                         (im, gt_boxes, gt_classes, is_crowd, \
-                         im_info, im_id))
+                    if len(datas[-1]) != datas[1].shape[0]:
+                        continue
+                batch_out.append(datas)
                 if not padding_total:
                     if len(batch_out) == batch_size:
                         yield padding_minibatch(batch_out)
@@ -157,7 +159,6 @@ def coco(mode,
                             yield sub_batch_out
                             sub_batch_out = []
                         batch_out = []
-
         elif mode == "test":
             batch_out = []
             for roidb in roidbs:
