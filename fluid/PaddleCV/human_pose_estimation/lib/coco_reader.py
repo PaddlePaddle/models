@@ -31,6 +31,10 @@ from utils.transforms import affine_transform
 from lib.base_reader import visualize, generate_target
 from pycocotools.coco import COCO
 
+is_ce = int(os.environ.get('is_ce', 0))
+if is_ce:
+    random.seed(0)
+
 # NOTE
 # -- COCO Datatset --
 # "keypoints": 
