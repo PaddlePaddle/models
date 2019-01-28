@@ -323,23 +323,23 @@ class FasterRCNN(object):
             cls_prob = fluid.layers.softmax(self.cls_score, use_cudnn=False)
             bbox_pred_reshape = fluid.layers.reshape(self.bbox_pred,
                                                      (-1, cfg.class_num, 4))
-            bbox_pred_trans = fluid.layers.transpose(
-                bbox_pred_reshape, perm=[1, 0, 2])
-            bbox_var = fluid.layers.create_tensor(dtype='float32')
-            fluid.layers.assign(
-                np.array(
-                    cfg.bbox_reg_weights, dtype='float32'), bbox_var)
-            self.pred_result = fluid.layers.detection_output(
-                loc=bbox_pred_trans,
-                scores=cls_prob,
+            decoded_box = fluid.layers.box_coder(
                 prior_box=boxes,
-                prior_box_var=bbox_var,
-                im_info=self.im_info,
-                nms_threshold=cfg.TEST.nms_thresh,
-                nms_top_k=-1,
-                keep_top_k=cfg.TEST.detections_per_im,
+                prior_box_var=cfg.bbox_reg_weights,
+                target_box=bbox_pred_reshape,
+                code_type='decode_center_size',
+                box_normalized=False,
+                axis=1)
+            cliped_box = fluid.layers.box_clip(
+                input=decoded_box, im_info=self.im_info)
+            self.pred_result = fluid.layers.multiclass_nms(
+                bboxes=cliped_box,
+                scores=cls_prob,
                 score_threshold=cfg.TEST.score_thresh,
-                shared=False)
+                nms_top_k=-1,
+                nms_threshold=cfg.TEST.nms_thresh,
+                keep_top_k=cfg.TEST.detections_per_im,
+                normalized=False)
             pred_res_shape = fluid.layers.shape(self.pred_result)
             shape = fluid.layers.reduce_prod(pred_res_shape)
             shape = fluid.layers.reshape(shape, [1, 1])
@@ -354,8 +354,6 @@ class FasterRCNN(object):
                 pred_res = ie.input(self.pred_result)
                 pred_boxes = fluid.layers.slice(
                     pred_res, [1], starts=[2], ends=[6])
-                pred_boxes = fluid.layers.lod_reset(pred_boxes,
-                                                    self.pred_result)
                 im_scale_lod = fluid.layers.sequence_expand(im_scale,
                                                             pred_boxes)
                 mask_rois = pred_boxes * im_scale_lod

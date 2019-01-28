@@ -1,9 +1,7 @@
 import os
 import time
 import numpy as np
-from eval_helper import get_nmsed_box
-from eval_helper import get_dt_res
-from eval_helper import draw_bounding_box_on_image
+from eval_helper import *
 import paddle
 import paddle.fluid as fluid
 import reader
@@ -63,9 +61,9 @@ def infer():
         fetch_list = [rpn_rois, confs, locs]
     data = next(infer_reader())
     im_info = [data[0][1]]
-    result, = exe.run(fetch_list=[v.name for v in fetch_list],
-                      feed=feeder.feed(data),
-                      return_numpy=False)
+    result = exe.run(fetch_list=[v.name for v in fetch_list],
+                     feed=feeder.feed(data),
+                     return_numpy=False)
     rpn_rois_v = result[0]
     confs_v = result[1]
     locs_v = result[2]
@@ -74,14 +72,14 @@ def infer():
         masks_v = result[4]
     new_lod = pred_boxes_v.lod()
     nmsed_out = pred_boxes_v
-    #new_lod, nmsed_out = get_nmsed_box(rpn_rois_v, confs_v, locs_v, class_nums,
-    #                                   im_info)
     path = os.path.join(cfg.image_path, cfg.image_name)
-    draw_bounding_box_on_image(path, nmsed_out, cfg.draw_threshold, label_list,
-                               numId_to_catId_map)
+    image = None
     if cfg.MASK_ON:
         segms_out = segm_results(nmsed_out, masks_v, im_info)
-        draw_mask_on_image(path, segms_out, cfg.draw_threshold)
+        image = draw_mask_on_image(path, segms_out, cfg.draw_threshold)
+
+    draw_bounding_box_on_image(path, nmsed_out, cfg.draw_threshold, label_list,
+                               numId_to_catId_map, image)
 
 
 if __name__ == '__main__':

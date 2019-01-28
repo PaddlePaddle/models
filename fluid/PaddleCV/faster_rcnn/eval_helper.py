@@ -197,23 +197,26 @@ def get_segms_res(batch_size, lod, segms_out, data, numId_to_catId_map):
     return segms_res
 
 
-def draw_bounding_box_on_image(image_path, nms_out, draw_threshold, label_list,
-                               numId_to_catId_map):
-    image = Image.open(image_path)
+def draw_bounding_box_on_image(image_path,
+                               nms_out,
+                               draw_threshold,
+                               label_list,
+                               numId_to_catId_map,
+                               image=None):
+    if image is None:
+        image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
     im_width, im_height = image.size
 
-    for dt in nms_out:
-        xmin, ymin, xmax, ymax, score, num_id = dt.tolist()
+    for dt in np.array(nms_out):
+        num_id, score, xmin, ymin, xmax, ymax = dt.tolist()
         category_id = numId_to_catId_map[num_id]
         if score < draw_threshold:
             continue
-        bbox = dt[:4]
-        xmin, ymin, xmax, ymax = bbox
         draw.line(
             [(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin),
              (xmin, ymin)],
-            width=4,
+            width=2,
             fill='red')
         if image.mode == 'RGB':
             draw.text((xmin, ymin), label_list[int(category_id)], (255, 255, 0))
@@ -222,14 +225,15 @@ def draw_bounding_box_on_image(image_path, nms_out, draw_threshold, label_list,
     image.save(image_name)
 
 
-def draw_mask_on_image(image_path, segms_out, draw_threshold):
+def draw_mask_on_image(image_path, segms_out, draw_threshold, alpha=0.7):
     image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
     im_width, im_height = image.size
     mask_color_id = 0
     w_ratio = .4
-    for dt in nms_out:
-        segm, score, num_id = dt.tolist()
+    image = np.array(image).astype('float32')
+    for dt in np.array(segms_out):
+        segm, num_id, score = dt.tolist()
         if score < draw_threshold:
             continue
         mask = mask_util.decode(segm) * 255
@@ -238,10 +242,11 @@ def draw_mask_on_image(image_path, segms_out, draw_threshold):
         mask_color_id += 1
         for c in range(3):
             color_mask[c] = color_mask[c] * (1 - w_ratio) + w_ratio * 255
-        image.paste(color_mask, mask=Image.fromarray(mask))
-    image_name = image_path.split('/')[-1] + '_mask'
-    print("image with bbox drawed saved as {}".format(image_name))
-    image.save(image_name)
+        idx = np.nonzero(mask)
+        image[idx[0], idx[1], :] *= 1.0 - alpha
+        image[idx[0], idx[1], :] += alpha * color_mask
+    image = Image.fromarray(image.astype('uint8'))
+    return image
 
 
 def segm_results(im_results, masks, im_info):
