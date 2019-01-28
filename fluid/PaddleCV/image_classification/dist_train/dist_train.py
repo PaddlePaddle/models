@@ -65,9 +65,9 @@ def parse_args():
     add_arg('split_var',          bool, True,               "Split params on pserver.")
     add_arg('async_mode',         bool, False,              "Async distributed training, only for pserver mode.")
     add_arg('reduce_strategy',    str,  "allreduce",        "Choose from reduce or allreduce.")
-    add_arg('skip_unbalanced_data', bool,   False,          "Skip data not if data not balanced on nodes.")
     add_arg('use_visiontool',       bool,   False,          "Whether to use high performance VisTool reader.")
     add_arg('visiontool_workers',   int,    16,             "Number for visiontool reader workers.") 
+    add_arg('freq_drop_scope',      int,    30,             "Number iterations to clean-up the temp variables during execution.")
 
     # yapf: enable
     args = parser.parse_args()
@@ -285,7 +285,7 @@ def train_parallel(args):
 
     strategy = fluid.ExecutionStrategy()
     strategy.num_threads = args.num_threads
-    strategy.num_iteration_per_drop_scope = 30
+    strategy.num_iteration_per_drop_scope = args.freq_drop_scopes
     build_strategy = fluid.BuildStrategy()
     if args.multi_batch_repeat > 1:
         pass_builder = build_strategy._finalize_strategy_and_create_passes()

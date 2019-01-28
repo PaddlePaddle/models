@@ -90,7 +90,6 @@ The default resnet50 distributed training config is based on this paper: https:/
   can achieve better performance to pre-process images. You need to install visiontool on your host before enable it by:
   `pip install -r requiremenets.txt`.
 
-
 ### Performance
 
 TBD

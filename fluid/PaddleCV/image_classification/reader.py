@@ -96,7 +96,7 @@ def distort_color(img):
     return img
 
 
-def process_image(sample, mode, color_jitter, rotate, normalize):
+def process_image(sample, mode, color_jitter, rotate, normalize=True):
     img_path = sample[0]
 
     img = Image.open(img_path)
