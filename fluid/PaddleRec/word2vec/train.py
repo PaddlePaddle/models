@@ -203,7 +203,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
         time.sleep(10)
         epoch_start = time.time()
         batch_id = 0
-        start = time.clock()
+        start = time.time()
 
         try:
             while True:
@@ -218,8 +218,8 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
                                loss_val.mean(), py_reader.queue.size()))
                 if args.with_speed:
                     if batch_id % 1000 == 0 and batch_id != 0:
-                        elapsed = (time.clock() - start)
-                        start = time.clock()
+                        elapsed = (time.time() - start)
+                        start = time.time()
                         samples = 1001 * args.batch_size * int(
                             os.getenv("CPU_NUM"))
                         logger.info("Time used: {}, Samples/Sec: {}".format(
