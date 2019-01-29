@@ -1,15 +1,15 @@
 # Deep Metric Learning
-Metric learning is a kind of methods to learn discriminative features for each sample, with the purpose that intra-class samples have smaller distances while inter-class samples have larger distances in the learned space. With the develop of deep learning technique, metric learning methods are combined with deep neural networks to boost the performance of traditional tasks, such as face recognition/verification, human re-identification, image retrieval and so on. In this page, we introduce the way to implement deep metric learning using PaddlePaddle Fluid, including [data preparation](#data-preparation), [training](#training-a-model), [finetuning](#finetuning), [evaluation](#evaluation) and [inference](#inference).
+Metric learning is a kind of methods to learn discriminative features for each sample, with the purpose that intra-class samples have smaller distances while inter-class samples have larger distances in the learned space. With the develop of deep learning technique, metric learning methods are combined with deep neural networks to boost the performance of traditional tasks, such as face recognition/verification, human re-identification, image retrieval and so on. In this page, we introduce the way to implement deep metric learning using PaddlePaddle Fluid, including [data preparation](#data-preparation), [training](#training-metric-learning-models), [finetuning](#finetuning), [evaluation](#evaluation), [inference](#inference) and [Performances](#performances).
 
 ---
 ## Table of Contents
 - [Installation](#installation)
 - [Data preparation](#data-preparation)
-- [Training metric learning models](#training-a-model)
+- [Training metric learning models](#training-metric-learning-models)
 - [Finetuning](#finetuning)
 - [Evaluation](#evaluation)
 - [Inference](#inference)
-- [Performances](#supported-models)
+- [Performances](#performances)
 
 ## Installation
 
@@ -17,7 +17,7 @@ Running sample code in this directory requires PaddelPaddle Fluid v0.14.0 and la
 
 ## Data preparation
 
-Stanford Online Product(SOP) dataset contains 120,053 images of 22,634 products downloaded from eBay.com. We use it to conduct the metric learning experiments. For training, 59,5511 out of 11,318 classes are used, and 11,316 classes(60,502 images) are held out for testing. First of all, preparation of SOP data can be done as:
+Stanford Online Product(SOP) dataset contains 120,053 images of 22,634 products downloaded from eBay.com. We use it to conduct the metric learning experiments. For training, 59,551 out of 11,318 classes are used, and 11,316 classes(60,502 images) are held out for testing. First of all, preparation of SOP data can be done as:
 ```
 cd data/
 sh download_sop.sh
@@ -25,7 +25,7 @@ sh download_sop.sh
 
 ## Training metric learning models
 
-To train a metric learning model, one need to set the neural network as backbone and the metric loss function to optimize. We train meiric learning model using softmax or [arcmargin](https://arxiv.org/abs/1801.07698) loss firstly, and then fine-turned the model using other metric learning loss, such as triplet, [quadruplet](https://arxiv.org/abs/1710.00478) and [eml](https://arxiv.org/abs/1212.6094) loss. One example of training using arcmargin loss is shown below:
+To train a metric learning model, one need to set the neural network as backbone and the metric loss function to optimize. We train meiric learning model using softmax or arcmargin loss firstly, and then fine-turned the model using other metric learning loss, such as triplet, quadruplet and eml loss. One example of training using arcmargin loss is shown below:
 
 
 ```
@@ -52,7 +52,7 @@ python train_elem.py  \
 * **use_gpu**: whether to use GPU or not. Default: True.
 * **pretrained_model**: model path for pretraining. Default: None.
 * **model_save_dir**: the directory to save trained model. Default: "output".
-* **loss_name**: loss fortraining model. Default: "softmax".
+* **loss_name**: loss for training model. Default: "softmax".
 * **arc_scale**: parameter of arcmargin loss. Default: 80.0.
 * **arc_margin**: parameter of arcmargin loss. Default: 0.15.
 * **arc_easy_margin**: parameter of arcmargin loss. Default: False.
@@ -103,3 +103,9 @@ For comparation, many metric learning models with different neural networks and 
 |fine-tuned with triplet | 78.37% | 79.21%
 |fine-tuned with quadruplet | 78.10% | 79.59%
 |fine-tuned with eml | 79.32% | 80.11%
+
+## Reference
+
+- ArcFace: Additive Angular Margin Loss for Deep Face Recognition [link](https://arxiv.org/abs/1801.07698)
+- Margin Sample Mining Loss: A Deep Learning Based Method for Person Re-identification [link](https://arxiv.org/abs/1710.00478)
+- Large Scale Strongly Supervised Ensemble Metric Learning, with Applications to Face Verification and Retrieval [link](https://arxiv.org/abs/1212.6094)
