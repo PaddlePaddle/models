@@ -79,7 +79,7 @@ SessionId    ItemId    Time
 2    214757407    1396850438.247
 ```
 
-数据格式需要转换 运行脚本
+数据格式需要转换, 运行脚本如下
 ```
 python convert_format.py
 ```
@@ -101,7 +101,7 @@ python convert_format.py
 
 根据训练和测试文件生成字典和对应的paddle输入文件
 
-注意需要将训练文件放到一个目录下面，测试文件放到一个目录下面,同时支持多训练文件
+需要将训练文件放到目录raw_train_data下，测试文件放到目录raw_test_data下，并生成对应的train_data，test_data和vocab.txt文件
 ```
 python text2paddle.py raw_train_data/ raw_test_data/ train_data test_data vocab.txt
 ```
