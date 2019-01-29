@@ -155,6 +155,17 @@ class DataGenerater:
         else:
             return np.pad(image, ((0, pad_h), (0, pad_w)), 'constant')
 
+    def random_crop(self, im, out_shape, is_color=True):
+        h, w = im.shape[:2]
+        h_start = np.random.randint(0, h - out_shape[0] + 1)
+        w_start = np.random.randint(0, w - out_shape[1] + 1)
+        h_end, w_end = h_start + out_shape[0], w_start + out_shape[1]
+        if is_color:
+            im = im[h_start:h_end, w_start:w_end, :]
+        else:
+            im = im[h_start:h_end, w_start:w_end]
+        return im
+
     def resize(self, image, label, out_size):
         """
         Resize image and label by padding or cropping.
@@ -166,8 +177,7 @@ class DataGenerater:
         combined = np.concatenate((image, label), axis=2)
         combined = self.padding_as(
             combined, out_size[0], out_size[1], is_color=True)
-        combined = dataset.image.random_crop(
-            combined, out_size[0], is_color=True)
+        combined = self.random_crop(combined, out_size, is_color=True)
         image = combined[:, :, 0:3]
         label = combined[:, :, 3:4] + ignore_label
         return image, label
