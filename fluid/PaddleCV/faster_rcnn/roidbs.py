@@ -36,6 +36,7 @@ import matplotlib
 matplotlib.use('Agg')
 from pycocotools.coco import COCO
 import box_utils
+import segm_utils
 from config import cfg
 
 logger = logging.getLogger(__name__)
@@ -91,8 +92,9 @@ class JsonDataset(object):
             end_time = time.time()
             print('_add_gt_annotations took {:.3f}s'.format(end_time -
                                                             start_time))
-            print('Appending horizontally-flipped training examples...')
-            self._extend_with_flipped_entries(roidb)
+            if cfg.TRAIN.use_flipped:
+                print('Appending horizontally-flipped training examples...')
+                self._extend_with_flipped_entries(roidb)
         print('Loaded dataset: {:s}'.format(self.name))
         print('{:d} roidb entries'.format(len(roidb)))
         if self.is_train:
@@ -111,6 +113,7 @@ class JsonDataset(object):
         entry['gt_classes'] = np.empty((0), dtype=np.int32)
         entry['gt_id'] = np.empty((0), dtype=np.int32)
         entry['is_crowd'] = np.empty((0), dtype=np.bool)
+        entry['segms'] = []
         # Remove unwanted fields that come from the json file (if they exist)
         for k in ['date_captured', 'url', 'license', 'file_name']:
             if k in entry:
@@ -126,9 +129,15 @@ class JsonDataset(object):
         objs = self.COCO.loadAnns(ann_ids)
         # Sanitize bboxes -- some are invalid
         valid_objs = []
+        valid_segms = []
         width = entry['width']
         height = entry['height']
         for obj in objs:
+            if isinstance(obj['segmentation'], list):
+                # Valid polygons have >= 3 points, so require >= 6 coordinates
+                obj['segmentation'] = [
+                    p for p in obj['segmentation'] if len(p) >= 6
+                ]
             if obj['area'] < cfg.TRAIN.gt_min_area:
                 continue
             if 'ignore' in obj and obj['ignore'] == 1:
@@ -141,6 +150,8 @@ class JsonDataset(object):
             if obj['area'] > 0 and x2 > x1 and y2 > y1:
                 obj['clean_bbox'] = [x1, y1, x2, y2]
                 valid_objs.append(obj)
+                valid_segms.append(obj['segmentation'])
+
         num_valid_objs = len(valid_objs)
 
         gt_boxes = np.zeros((num_valid_objs, 4), dtype=entry['gt_boxes'].dtype)
@@ -158,6 +169,7 @@ class JsonDataset(object):
         entry['gt_classes'] = np.append(entry['gt_classes'], gt_classes)
         entry['gt_id'] = np.append(entry['gt_id'], gt_id)
         entry['is_crowd'] = np.append(entry['is_crowd'], is_crowd)
+        entry['segms'].extend(valid_segms)
 
     def _extend_with_flipped_entries(self, roidb):
         """Flip each entry in the given roidb and return a new roidb that is the
@@ -175,11 +187,13 @@ class JsonDataset(object):
             gt_boxes[:, 2] = width - oldx1 - 1
             assert (gt_boxes[:, 2] >= gt_boxes[:, 0]).all()
             flipped_entry = {}
-            dont_copy = ('gt_boxes', 'flipped')
+            dont_copy = ('gt_boxes', 'flipped', 'segms')
             for k, v in entry.items():
                 if k not in dont_copy:
                     flipped_entry[k] = v
             flipped_entry['gt_boxes'] = gt_boxes
+            flipped_entry['segms'] = segm_utils.flip_segms(
+                entry['segms'], entry['height'], entry['width'])
             flipped_entry['flipped'] = True
             flipped_roidb.append(flipped_entry)
         roidb.extend(flipped_roidb)

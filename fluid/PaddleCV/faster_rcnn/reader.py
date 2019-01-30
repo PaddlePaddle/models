@@ -27,6 +27,46 @@ from collections import deque
 from roidbs import JsonDataset
 import data_utils
 from config import cfg
+import segm_utils
+
+
+def roidb_reader(roidb, mode):
+    im, im_scales = data_utils.get_image_blob(roidb, mode)
+    im_id = roidb['id']
+    im_height = np.round(roidb['height'] * im_scales)
+    im_width = np.round(roidb['width'] * im_scales)
+    im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
+    if mode == 'test' or mode == 'infer':
+        return im, im_info, im_id
+
+    gt_boxes = roidb['gt_boxes'].astype('float32')
+    gt_classes = roidb['gt_classes'].astype('int32')
+    is_crowd = roidb['is_crowd'].astype('int32')
+    segms = roidb['segms']
+
+    outs = (im, gt_boxes, gt_classes, is_crowd, im_info, im_id)
+
+    if cfg.MASK_ON:
+        gt_masks = []
+        valid = True
+        segms = roidb['segms']
+        assert len(segms) == is_crowd.shape[0]
+        for i in range(len(roidb['segms'])):
+            segm, iscrowd = segms[i], is_crowd[i]
+            gt_segm = []
+            if iscrowd:
+                gt_segm.append([[0, 0]])
+            else:
+                for poly in segm:
+                    if len(poly) == 0:
+                        valid = False
+                        break
+                    gt_segm.append(np.array(poly).reshape(-1, 2))
+            if (not valid) or len(gt_segm) == 0:
+                break
+            gt_masks.append(gt_segm)
+        outs = outs + (gt_masks, )
+    return outs
 
 
 def coco(mode,
@@ -63,19 +103,6 @@ def coco(mode,
 
     print("{} on {} with {} roidbs".format(mode, cfg.dataset, len(roidbs)))
 
-    def roidb_reader(roidb, mode):
-        im, im_scales = data_utils.get_image_blob(roidb, mode)
-        im_id = roidb['id']
-        im_height = np.round(roidb['height'] * im_scales)
-        im_width = np.round(roidb['width'] * im_scales)
-        im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
-        if mode == 'test' or mode == 'infer':
-            return im, im_info, im_id
-        gt_boxes = roidb['gt_boxes'].astype('float32')
-        gt_classes = roidb['gt_classes'].astype('int32')
-        is_crowd = roidb['is_crowd'].astype('int32')
-        return im, gt_boxes, gt_classes, is_crowd, im_info, im_id
-
     def padding_minibatch(batch_data):
         if len(batch_data) == 1:
             return batch_data
@@ -93,22 +120,31 @@ def coco(mode,
 
     def reader():
         if mode == "train":
-            roidb_perm = deque(np.random.permutation(roidbs))
+            if shuffle:
+                roidb_perm = deque(np.random.permutation(roidbs))
+            else:
+                roidb_perm = deque(roidbs)
             roidb_cur = 0
+            count = 0
             batch_out = []
             while True:
                 roidb = roidb_perm[0]
                 roidb_cur += 1
                 roidb_perm.rotate(-1)
                 if roidb_cur >= len(roidbs):
-                    roidb_perm = deque(np.random.permutation(roidbs))
+                    if shuffle:
+                        roidb_perm = deque(np.random.permutation(roidbs))
+                    else:
+                        roidb_perm = deque(roidbs)
                     roidb_cur = 0
-                im, gt_boxes, gt_classes, is_crowd, im_info, im_id = roidb_reader(
-                    roidb, mode)
-                if gt_boxes.shape[0] == 0:
+                # im, gt_boxes, gt_classes, is_crowd, im_info, im_id, gt_masks
+                datas = roidb_reader(roidb, mode)
+                if datas[1].shape[0] == 0:
                     continue
-                batch_out.append(
-                    (im, gt_boxes, gt_classes, is_crowd, im_info, im_id))
+                if cfg.MASK_ON:
+                    if len(datas[-1]) != datas[1].shape[0]:
+                        continue
+                batch_out.append(datas)
                 if not padding_total:
                     if len(batch_out) == batch_size:
                         yield padding_minibatch(batch_out)
@@ -124,7 +160,9 @@ def coco(mode,
                             yield sub_batch_out
                             sub_batch_out = []
                         batch_out = []
-
+                count += 1
+                if count >= cfg.max_iter + 1:
+                    return
         elif mode == "test":
             batch_out = []
             for roidb in roidbs:
