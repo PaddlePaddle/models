@@ -166,10 +166,10 @@ _C.spatial_scale = 1. / 16.
 _C.resolution = 14
 
 # Number of channels in the mask head
-_C.DIM_REDUCED = 256
+_C.dim_reduced = 256
 
 # Threshold for converting soft masks to hard masks
-_C.MRCNN_THRESH_BINARIZE = 0.5
+_C.mrcnn_thresh_binarize = 0.5
 
 #
 # SOLVER options

@@ -22,7 +22,7 @@ def infer():
         test_list = 'annotations/instances_val2017.json'
 
     cocoGt = COCO(os.path.join(cfg.data_dir, test_list))
-    numId_to_catId_map = {i + 1: v for i, v in enumerate(cocoGt.getCatIds())}
+    num_id_to_cat_id_map = {i + 1: v for i, v in enumerate(cocoGt.getCatIds())}
     category_ids = cocoGt.getCatIds()
     label_list = {
         item['id']: item['name']
@@ -79,7 +79,7 @@ def infer():
         image = draw_mask_on_image(path, segms_out, cfg.draw_threshold)
 
     draw_bounding_box_on_image(path, nmsed_out, cfg.draw_threshold, label_list,
-                               numId_to_catId_map, image)
+                               num_id_to_cat_id_map, image)
 
 
 if __name__ == '__main__':

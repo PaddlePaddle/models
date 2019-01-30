@@ -94,7 +94,6 @@ def train():
 
     if cfg.parallel:
         exec_strategy = fluid.ExecutionStrategy()
-        #exec_strategy.num_threads = 64
         train_exe = fluid.ParallelExecutor(
             use_cuda=bool(cfg.use_gpu),
             loss_name=loss.name,

@@ -16,20 +16,19 @@
 在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.0.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/0.15.0/beginners_guide/install/install_doc.html#paddlepaddle)中的说明来更新PaddlePaddle。
 
 ## 简介
+区域卷积神经网络（RCNN）系列模型为两阶段目标检测器。通过对图像生成候选区域，提取特征，判别特征类别并修正候选框位置。
+RCNN系列目前包含两个代表模型：Faster RCNN，Mask RCNN
 
-RCNN系列模型为两阶段目标检测器。通过对图像生成候选区域，提取特征，判别特征类别并修正候选框位置。
-RCNN系列目前包含两个代表模型：Faster Rcnn，Mask Rcnn
-
-[Faster Rcnn](https://arxiv.org/abs/1506.01497) 整体网络可以分为4个主要内容：
+[Faster RCNN](https://arxiv.org/abs/1506.01497) 整体网络可以分为4个主要内容：
 
 1. 基础卷积层。作为一种卷积神经网络目标检测方法，Faster RCNN首先使用一组基础的卷积网络提取图像的特征图。特征图被后续RPN层和全连接层共享。本示例采用[ResNet-50](https://arxiv.org/abs/1512.03385)作为基础卷积层。
 2. 区域生成网络(RPN)。RPN网络用于生成候选区域(proposals)。该层通过一组固定的尺寸和比例得到一组锚点(anchors), 通过softmax判断锚点属于前景或者背景，再利用区域回归修正锚点从而获得精确的候选区域。
 3. RoI Align。该层收集输入的特征图和候选区域，将候选区域映射到特征图中并池化为统一大小的区域特征图，送入全连接层判定目标类别, 该层可选用RoIPool和RoIAlign两种方式，在config.py中设置roi\_func。
 4. 检测层。利用区域特征图计算候选区域的类别，同时再次通过区域回归获得检测框最终的精确位置。
 
-[Mask Rcnn](https://arxiv.org/abs/1703.06870) 扩展自Faster Rcnn，是经典的实例分割模型。
+[Mask RCNN](https://arxiv.org/abs/1703.06870) 扩展自Faster RCNN，是经典的实例分割模型。
 
-Mask Rcnn同样为两阶段框架，第一阶段扫描图像生成候选框；第二阶段根据候选框得到分类结果，边界框，同时在原有Faster Rcnn模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。
+Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；第二阶段根据候选框得到分类结果，边界框，同时在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。
 
 
 ## 数据准备
@@ -72,7 +71,7 @@ Mask Rcnn同样为两阶段框架，第一阶段扫描图像生成候选框；�
        --MASK_ON=False
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
-- 通过设置MASK\_ON选择Faster Rcnn和Mask Rcnn模型。
+- 通过设置MASK\_ON选择Faster RCNN和Mask RCNN模型。
 - 可选参数见：
 
     python train.py --help
@@ -108,7 +107,7 @@ Mask Rcnn同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
 下表为模型评估结果：
 
-Faster Rcnn
+Faster RCNN
 
 | 模型                   |   RoI处理方式  | 批量大小   | 迭代次数   | mAP  |
 | :--------------- | :--------: | :------------:    | :------------------:    |------: |
@@ -124,7 +123,7 @@ Faster Rcnn
 * Fluid RoIAlign no padding: 使用RoIAlign，不对图像做填充处理。
 * Fluid RoIAlign no padding 2x: 使用RoIAlign，不对图像做填充处理。训练360000轮，学习率在240000，320000轮衰减。
 
-Mask Rcnn
+Mask RCNN
 | 模型                   | 批量大小   | 迭代次数   | box mAP  | mask mAP |
 | :--------------- | :--------: | :------------:    | :--------:    |------: |
 | [Fluid mask no padding](https://paddlemodels.bj.bcebos.com/faster_rcnn/Fluid_mask_no_padding.tar.gz) | 8 | 180000 | 0.359 | 0.314 |  

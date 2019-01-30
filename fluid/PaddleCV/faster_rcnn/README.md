@@ -17,19 +17,19 @@ Running sample code in this directory requires PaddelPaddle Fluid v.1.0.0 and la
 
 ## Introduction
 
-RCNN models are two stages detector. According to proposals and feature extraction, obtain class and more precise proposals.
-Now RCNN models contains two typical models: Faster Rcnn and Mask Rcnn
+Region Convolutional Neural Network (RCNN) models are two stages detector. According to proposals and feature extraction, obtain class and more precise proposals.
+Now RCNN models contains two typical models: Faster RCNN and Mask RCNN.
 
-[Faster Rcnn](https://arxiv.org/abs/1506.01497), The total framework of network can be divided into four parts:
+[Faster RCNN](https://arxiv.org/abs/1506.01497), The total framework of network can be divided into four parts:
 
 1. Base conv layer. As a CNN objective dection, Faster RCNN extract feature maps using a basic convolutional network. The feature maps then can be shared by RPN and fc layers. This sampel uses [ResNet-50](https://arxiv.org/abs/1512.03385) as base conv layer.
 2. Region Proposal Network (RPN). RPN generates proposals for detection。This block generates anchors by a set of size and ratio and classifies anchors into fore-ground and back-ground by softmax. Then refine anchors to obtain more precise proposals using box regression.
 3. RoI Align. This layer takes feature maps and proposals as input. The proposals are mapped to feature maps and pooled to the same size. The output are sent to fc layers for classification and regression. RoIPool and RoIAlign are used separately to this layer and it can be set in roi\_func in config.py.
 4. Detection layer. Using the output of roi pooling to compute the class and locatoin of each proposal in two fc layers.
 
-[Mask Rcnn](https://arxiv.org/abs/1703.06870) is a classical instance segmentation model and an extension of Faster Rcnn
+[Mask RCNN](https://arxiv.org/abs/1703.06870) is a classical instance segmentation model and an extension of Faster RCNN
 
-Mask Rcnn is a two stage model as well. At the first stage, it generates proposals from input images; At the second stage, it obtains class result, bbox and mask which is the result from segmentation branch on original Faster Rcnn model. It decouples the relation between mask and classification.  
+Mask RCNN is a two stage model as well. At the first stage, it generates proposals from input images. At the second stage, it obtains class result, bbox and mask which is the result from segmentation branch on original Faster RCNN model. It decouples the relation between mask and classification.  
 
 ## Data preparation
 
@@ -67,12 +67,12 @@ After data preparation, one can start the training step by:
 
     python train.py \
        --model_save_dir=output/ \
-       --pretrained_model=${path_to_pretrain_model}
-       --data_dir=${path_to_data}
+       --pretrained_model=${path_to_pretrain_model} \
+       --data_dir=${path_to_data} \
        --MASK_ON=False
 
 - Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
-- Set ```MASK\_ON``` to choose Faster Rcnn or Mask Rcnn model.
+- Set ```MASK\_ON``` to choose Faster RCNN or Mask RCNN model.
 - For more help on arguments:
 
     python train.py --help
@@ -113,7 +113,7 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
 Evalutaion result is shown as below:
 
-Faster Rcnn:
+Faster RCNN:
 
 | Model              | RoI function    | Batch size     | Max iteration    | mAP  |
 | :--------------- | :--------: | :------------:    | :------------------:    |------: |
@@ -127,7 +127,7 @@ Faster Rcnn:
 * Fluid RoIAlign no padding: Images without padding.
 * Fluid RoIAlign no padding 2x: Images without padding, train for 360000 iterations, learning rate is decayed at 240000, 320000.
 
-Mask Rcnn:
+Mask RCNN:
 
 | Model              | Batch size     | Max iteration | box mAP | mask mAP |
 | :--------------- | :--------: | :------------:    | :--------:    |------: |

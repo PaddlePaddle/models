@@ -114,7 +114,6 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info):
             keep = box_utils.nms(dets_j, cfg.TEST.nms_thresh)
             nms_dets = dets_j[keep, :]
             #add labels
-            #cat_id = numId_to_catId_map[j]
             label = np.array([j for _ in range(len(keep))])
             nms_dets = np.hstack((nms_dets, label[:, np.newaxis])).astype(
                 np.float32, copy=False)
@@ -138,7 +137,7 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info):
     return new_lod, im_results
 
 
-def get_dt_res(batch_size, lod, nmsed_out, data, numId_to_catId_map):
+def get_dt_res(batch_size, lod, nmsed_out, data, num_id_to_cat_id_map):
     dts_res = []
     nmsed_out_v = np.array(nmsed_out)
     if nmsed_out_v.shape == (
@@ -158,7 +157,7 @@ def get_dt_res(batch_size, lod, nmsed_out, data, numId_to_catId_map):
             dt = nmsed_out_v[k]
             k = k + 1
             num_id, score, xmin, ymin, xmax, ymax = dt.tolist()
-            category_id = numId_to_catId_map[num_id]
+            category_id = num_id_to_cat_id_map[num_id]
             w = xmax - xmin + 1
             h = ymax - ymin + 1
             bbox = [xmin, ymin, w, h]
@@ -172,7 +171,7 @@ def get_dt_res(batch_size, lod, nmsed_out, data, numId_to_catId_map):
     return dts_res
 
 
-def get_segms_res(batch_size, lod, segms_out, data, numId_to_catId_map):
+def get_segms_res(batch_size, lod, segms_out, data, num_id_to_cat_id_map):
     segms_res = []
     segms_out_v = np.array(segms_out)
     k = 0
@@ -183,7 +182,7 @@ def get_segms_res(batch_size, lod, segms_out, data, numId_to_catId_map):
             dt = segms_out_v[k]
             k = k + 1
             segm, num_id, score = dt.tolist()
-            cat_id = numId_to_catId_map[num_id]
+            cat_id = num_id_to_cat_id_map[num_id]
             if six.PY3:
                 if 'counts' in segm:
                     segm['counts'] = rle['counts'].decode("utf8")
@@ -201,7 +200,7 @@ def draw_bounding_box_on_image(image_path,
                                nms_out,
                                draw_threshold,
                                label_list,
-                               numId_to_catId_map,
+                               num_id_to_cat_id_map,
                                image=None):
     if image is None:
         image = Image.open(image_path)
@@ -210,7 +209,7 @@ def draw_bounding_box_on_image(image_path,
 
     for dt in np.array(nms_out):
         num_id, score, xmin, ymin, xmax, ymax = dt.tolist()
-        category_id = numId_to_catId_map[num_id]
+        category_id = num_id_to_cat_id_map[num_id]
         if score < draw_threshold:
             continue
         draw.line(
@@ -282,7 +281,7 @@ def segm_results(im_results, masks, im_info):
             h = np.maximum(h, 1)
 
             mask = cv2.resize(padded_mask, (w, h))
-            mask = np.array(mask > cfg.MRCNN_THRESH_BINARIZE, dtype=np.uint8)
+            mask = np.array(mask > cfg.mrcnn_thresh_binarize, dtype=np.uint8)
             im_mask = np.zeros((im_h, im_w), dtype=np.uint8)
 
             x_0 = max(ref_box[0], 0)

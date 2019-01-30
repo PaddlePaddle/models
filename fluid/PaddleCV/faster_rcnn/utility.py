@@ -87,13 +87,6 @@ class SmoothedValue(object):
         return np.median(self.deque)
 
 
-def print_as_dict(d):
-    strs = '{' + ', '.join(
-        str(dict({
-            x: y
-        })).strip('{}') for x, y in d.items()) + '}'
-
-
 def now_time():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 

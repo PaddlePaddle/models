@@ -35,7 +35,6 @@ class FasterRCNN(object):
         self.is_train = is_train
         self.use_pyreader = use_pyreader
         self.use_random = use_random
-        #self.py_reader = None
 
     def build_model(self, image_shape):
         self.build_input(image_shape)
@@ -250,9 +249,9 @@ class FasterRCNN(object):
         else:
             pool_rois = self.rpn_rois
         self.res5_2_sum = self.add_roi_box_head_func(roi_input, pool_rois)
-        self.rcnn_out = fluid.layers.pool2d(
+        rcnn_out = fluid.layers.pool2d(
             self.res5_2_sum, pool_type='avg', pool_size=7, name='res5_pool')
-        self.cls_score = fluid.layers.fc(input=self.rcnn_out,
+        self.cls_score = fluid.layers.fc(input=rcnn_out,
                                          size=cfg.class_num,
                                          act=None,
                                          name='cls_score',
@@ -264,7 +263,7 @@ class FasterRCNN(object):
                                              name='cls_score_b',
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
-        self.bbox_pred = fluid.layers.fc(input=self.rcnn_out,
+        self.bbox_pred = fluid.layers.fc(input=rcnn_out,
                                          size=4 * cfg.class_num,
                                          act=None,
                                          name='bbox_pred',
@@ -280,7 +279,7 @@ class FasterRCNN(object):
     def SuffixNet(self, conv5):
         mask_out = fluid.layers.conv2d_transpose(
             input=conv5,
-            num_filters=cfg.DIM_REDUCED,
+            num_filters=cfg.dim_reduced,
             filter_size=2,
             stride=2,
             act='relu',
@@ -302,10 +301,8 @@ class FasterRCNN(object):
                 name="mask_fcn_logits_b",
                 learning_rate=2.,
                 regularizer=L2Decay(0.)))
-        if self.is_train:
-            mask_fcn_logits = fluid.layers.lod_reset(mask_fcn_logits,
-                                                     self.mask_int32)
-        else:
+
+        if not self.is_train:
             mask_fcn_logits = fluid.layers.lod_reset(mask_fcn_logits,
                                                      self.pred_result)
         return mask_fcn_logits

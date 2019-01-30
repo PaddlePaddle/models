@@ -43,7 +43,7 @@ def eval():
     devices_num = len(devices.split(","))
     total_batch_size = devices_num * cfg.TRAIN.im_per_batch
     cocoGt = COCO(os.path.join(cfg.data_dir, test_list))
-    numId_to_catId_map = {i + 1: v for i, v in enumerate(cocoGt.getCatIds())}
+    num_id_to_cat_id_map = {i + 1: v for i, v in enumerate(cocoGt.getCatIds())}
     category_ids = cocoGt.getCatIds()
     label_list = {
         item['id']: item['name']
@@ -100,12 +100,12 @@ def eval():
         nmsed_out = pred_boxes_v
 
         dts_res += get_dt_res(total_batch_size, new_lod[0], nmsed_out,
-                              batch_data, numId_to_catId_map)
+                              batch_data, num_id_to_cat_id_map)
 
         if cfg.MASK_ON and np.array(masks_v).shape != (1, 1):
             segms_out = segm_results(nmsed_out, masks_v, im_info)
             segms_res += get_segms_res(total_batch_size, new_lod[0], segms_out,
-                                       batch_data, numId_to_catId_map)
+                                       batch_data, num_id_to_cat_id_map)
         end = time.time()
         print('batch id: {}, time: {}'.format(batch_id, end - start))
     with open("detection_bbox_result.json", 'w') as outfile:
