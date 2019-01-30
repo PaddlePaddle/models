@@ -3,3 +3,4 @@ checkpoints
 output*
 *.py
 *.swp
+*_result

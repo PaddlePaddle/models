@@ -1,3 +1,17 @@
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 import cv2
 import numpy as np
 import random
@@ -45,10 +59,3 @@ def video_fast_get_frame(video_path,
     cap.release()
     return video_output
 
-
-if __name__ == '__main__':
-    video_path = '~/docker/dockermount/data/k400/Kinetics_trimmed_processed_val/dancing_gangnam_style/rC7d3L8nSB4.mp4'
-    vout = video_fast_get_frame(video_path)
-    vout2 = video_fast_get_frame(video_path, \
-                             sampling_rate = 2, length = 8, \
-                             start_frm = 3, sample_times = 10)

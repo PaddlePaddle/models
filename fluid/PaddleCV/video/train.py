@@ -1,4 +1,4 @@
-#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 import os
 import sys
 import time
-import shutil
 import argparse
 import logging
 import numpy as np
@@ -24,6 +23,7 @@ import paddle.fluid as fluid
 from tools.train_utils import train_with_pyreader, train_without_pyreader
 import models
 
+logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)
@@ -59,11 +59,6 @@ def parse_args():
     )
     parser.add_argument(
         '--use-gpu', type=bool, default=True, help='default use gpu.')
-    parser.add_argument(
-        '--no-parallel',
-        action='store_true',
-        default=False,
-        help='whether to use parallel executor')
     parser.add_argument(
         '--no-use-pyreader',
         action='store_true',
@@ -104,9 +99,9 @@ def parse_args():
 
 
 def train(train_model, valid_model, args):
+    startup = fluid.Program()
     train_prog = fluid.Program()
-    train_startup = fluid.Program()
-    with fluid.program_guard(train_prog, train_startup):
+    with fluid.program_guard(train_prog, startup):
         with fluid.unique_name.guard():
             train_model.build_input(not args.no_use_pyreader)
             train_model.build_model()
@@ -130,8 +125,7 @@ def train(train_model, valid_model, args):
         fluid.memory_optimize(train_prog)
 
     valid_prog = fluid.Program()
-    valid_startup = fluid.Program()
-    with fluid.program_guard(valid_prog, valid_startup):
+    with fluid.program_guard(valid_prog, startup):
         with fluid.unique_name.guard():
             valid_model.build_input(not args.no_use_pyreader)
             valid_model.build_model()
@@ -144,8 +138,7 @@ def train(train_model, valid_model, args):
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    exe.run(train_startup)
-    exe.run(valid_startup)
+    exe.run(startup)
 
     if args.pretrain:
         assert os.path.exists(args.pretrain), \
@@ -154,18 +147,14 @@ def train(train_model, valid_model, args):
     if pretrain:
         train_model.load_pretrain_params(exe, pretrain, train_prog)
 
-    if args.no_parallel:
-        train_exe = exe
-        valid_exe = exe
-    else:
-        train_exe = fluid.ParallelExecutor(
-            use_cuda=args.use_gpu,
-            loss_name=train_loss.name,
-            main_program=train_prog)
-        valid_exe = fluid.ParallelExecutor(
-            use_cuda=args.use_gpu,
-            share_vars_from=train_exe,
-            main_program=valid_prog)
+    train_exe = fluid.ParallelExecutor(
+        use_cuda=args.use_gpu,
+        loss_name=train_loss.name,
+        main_program=train_prog)
+    valid_exe = fluid.ParallelExecutor(
+        use_cuda=args.use_gpu,
+        share_vars_from=train_exe,
+        main_program=valid_prog)
 
     train_fetch_list = [train_loss.name] + [x.name for x in train_outputs
                                             ] + [train_feeds[-1].name]

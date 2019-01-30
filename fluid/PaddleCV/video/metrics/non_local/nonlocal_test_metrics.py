@@ -1,3 +1,17 @@
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import print_function
@@ -15,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class MetricsCalculator():
-    def __init__(self, name, split, **metrics_args):
+    def __init__(self, name, mode, **metrics_args):
         """
           dataset args:
                         num_test_clips
@@ -25,7 +39,7 @@ class MetricsCalculator():
                         num_classes
         """
         self.name = name
-        self.split = split  # 'train', 'val', 'test'
+        self.mode = mode  # 'train', 'val', 'test'
         self.metrics_args = metrics_args
 
         self.num_test_clips = metrics_args['num_test_clips']
@@ -36,7 +50,7 @@ class MetricsCalculator():
         self.reset()
 
     def reset(self):
-        logger.info('Resetting {} metrics...'.format(self.split))
+        logger.info('Resetting {} metrics...'.format(self.mode))
         self.aggr_acc1 = 0.0
         self.aggr_acc5 = 0.0
         self.aggr_loss = 0.0

@@ -1,3 +1,17 @@
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import print_function
@@ -14,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class Metrics(object):
-    def __init__(self, name, phase, **metrics_args):
+    def __init__(self, name, mode, **metrics_args):
         """Not implemented"""
         pass
 
@@ -36,9 +50,9 @@ class Metrics(object):
 
 
 class Youtube8mMetrics(Metrics):
-    def __init__(self, name, phase, **metrics_args):
+    def __init__(self, name, mode, **metrics_args):
         self.name = name
-        self.phase = phase
+        self.mode = mode
         self.metrics_args = metrics_args
         self.num_classes = metrics_args['num_classes']
         self.topk = metrics_args['topk']
@@ -68,12 +82,12 @@ class Youtube8mMetrics(Metrics):
 
 
 class Kinetics400Metrics(Metrics):
-    def __init__(self, name, phase, **metrics_args):
+    def __init__(self, name, mode, **metrics_args):
         self.name = name
-        self.phase = phase
+        self.mode = mode
         self.metrics_args = metrics_args
         self.calculator = kinetics_metrics.MetricsCalculator(name,
-                                                             phase.lower())
+                                                             mode.lower())
 
     def calculate_and_log_out(self, loss, pred, label, info=''):
         if loss is not None:
@@ -101,19 +115,19 @@ class Kinetics400Metrics(Metrics):
 
 
 class NonlocalMetrics(Metrics):
-    def __init__(self, name, phase, **metrics_args):
+    def __init__(self, name, mode, **metrics_args):
         self.name = name
-        self.phase = phase
+        self.mode = mode
         self.metrics_args = metrics_args
-        if phase == 'test':
+        if mode == 'test':
             self.calculator = nonlocal_test_metrics.MetricsCalculator(
-                name, phase.lower(), **metrics_args)
+                name, mode.lower(), **metrics_args)
         else:
             self.calculator = kinetics_metrics.MetricsCalculator(name,
-                                                                 phase.lower())
+                                                                 mode.lower())
 
     def calculate_and_log_out(self, loss, pred, label, info=''):
-        if self.phase == 'test':
+        if self.mode == 'test':
             pass
         else:
             if loss is not None:
@@ -128,7 +142,7 @@ class NonlocalMetrics(Metrics):
         self.calculator.accumulate(loss, pred, label)
 
     def finalize_and_log_out(self, info=''):
-        if self.phase == 'test':
+        if self.mode == 'test':
             self.calculator.finalize_metrics()
         else:
             self.calculator.finalize_metrics()
