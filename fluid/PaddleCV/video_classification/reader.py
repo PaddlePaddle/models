@@ -14,6 +14,7 @@ import paddle
 from PIL import Image, ImageEnhance
 
 random.seed(0)
+np.random.seed(0)
 
 THREAD = 8
 BUF_SIZE = 1024
@@ -26,6 +27,7 @@ img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
 
 python_ver = sys.version_info
+
 
 def imageloader(buf):
     if isinstance(buf, str):
@@ -149,7 +151,7 @@ def decode_pickle(sample, mode, seg_num, short_size, target_size):
     imgs -= img_mean
     imgs /= img_std
 
-    if mode == 'train' or mode == 'test':
+    if mode == 'train' or mode == 'test' or mode == 'train_ce':
         return imgs, label
     elif mode == 'infer':
         return imgs, vid
@@ -204,6 +206,16 @@ def infer(seg_num):
     return _reader_creator(
         INFER_LIST,
         'infer',
+        shuffle=False,
+        seg_num=seg_num,
+        short_size=256,
+        target_size=224)
+
+
+def train_ce(seg_num):
+    return _reader_creator(
+        TRAIN_LIST,
+        'train_ce',
         shuffle=False,
         seg_num=seg_num,
         short_size=256,
