@@ -18,7 +18,7 @@ Running sample code in this directory requires PaddelPaddle Fluid v.1.0.0 and la
 ## Introduction
 
 Region Convolutional Neural Network (RCNN) models are two stages detector. According to proposals and feature extraction, obtain class and more precise proposals.
-Now RCNN models contains two typical models: Faster RCNN and Mask RCNN.
+Now RCNN model contains two typical models: Faster RCNN and Mask RCNN.
 
 [Faster RCNN](https://arxiv.org/abs/1506.01497), The total framework of network can be divided into four parts:
 
