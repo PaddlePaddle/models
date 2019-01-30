@@ -241,14 +241,3 @@ def regist_model(name, model):
 def get_model(name, cfg, mode='train', args=None):
     return model_zoo.get(name, cfg, mode, args)
 
-
-if __name__ == "__main__":
-
-    class TestModel(ModelBase):
-        pass
-
-    model_zoo.regist('test', TestModel)
-    m = model_zoo.get('test', './config.txt')
-    print(m.get_train_config('batch_size'))
-    m.build_model()
-    m = model_zoo.get('test2', './config.txt')
