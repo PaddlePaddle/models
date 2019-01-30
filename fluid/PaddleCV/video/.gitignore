@@ -1,0 +1,5 @@
+data
+checkpoints
+output*
+*.py
+*.swp

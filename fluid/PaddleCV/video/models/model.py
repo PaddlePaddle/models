@@ -13,6 +13,7 @@
 #limitations under the License.
 
 import os
+import logging
 try:
     from configparser import ConfigParser
 except:
@@ -24,6 +25,8 @@ from metrics import get_metrics
 from .utils import download, AttrDict
 
 WEIGHT_DIR = os.path.expanduser("~/.paddle/weights")
+
+logger = logging.getLogger(__name__)
 
 
 class NotImplementError(Exception):
@@ -163,15 +166,14 @@ class ModelBase(object):
         "get model weight default path and download url"
         raise NotImplementError(self, self.weights_info)
 
-    def get_weights(self, logger=None):
+    def get_weights(self):
         "get model weight file path, download weight from Paddle if not exist"
         path, url = self.weights_info()
         path = os.path.join(WEIGHT_DIR, path)
         if os.path.exists(path):
             return path
 
-        if logger:
-            logger.info("Download weights of {} from {}".format(self.name, url))
+        logger.info("Download weights of {} from {}".format(self.name, url))
         download(url, path)
         return path
 
@@ -186,7 +188,7 @@ class ModelBase(object):
         "get pretrain base model directory"
         return (None, None)
 
-    def get_pretrain_weights(self, logger=None):
+    def get_pretrain_weights(self):
         "get model weight file path, download weight from Paddle if not exist"
         path, url = self.pretrain_info()
         if not path:
@@ -196,22 +198,15 @@ class ModelBase(object):
         if os.path.exists(path):
             return path
 
-        if logger:
-            logger.info("Download pretrain weights of {} from {}".format(
+        logger.info("Download pretrain weights of {} from {}".format(
                 self.name, url))
         utils.download(url, path)
         return path
 
-    def load_pretrained_params(self, exe, pretrained_base, prog, place):
+    def load_pretrain_params(self, exe, pretrain, prog):
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_base, var.name))
-
-        inference_program = prog.clone(for_test=True)
-        fluid.io.load_vars(
-            exe,
-            pretrained_base,
-            predicate=if_exist,
-            main_program=inference_program)
+        fluid.io.load_params(exe, pretrain, main_program=prog)
 
     def get_config_from_sec(self, sec, item, default=None):
         cfg_item = self._config.get_config_from_sec(sec.upper(),

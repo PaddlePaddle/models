@@ -152,7 +152,7 @@ def train(train_model, valid_model, args):
                 "Given pretrain weight dir {} not exist.".format(args.pretrain)
     pretrain = args.pretrain or train_model.get_pretrain_weights()
     if pretrain:
-        train_model.load_pretrained_params(exe, pretrain, train_prog, place)
+        train_model.load_pretrain_params(exe, pretrain, train_prog)
 
     if args.no_parallel:
         train_exe = exe
