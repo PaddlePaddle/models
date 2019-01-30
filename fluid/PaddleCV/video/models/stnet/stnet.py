@@ -156,8 +156,8 @@ class STNET(ModelBase):
     def load_pretrain_params(self, exe, pretrain, prog):
 	def is_parameter(var):
              if isinstance(var, fluid.framework.Parameter):
-                 return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name)) \		
-                     and (not ("batch_norm" in var.name)) and (not ("xception" in var.name)) and (not ("conv3d" in var.name))		
+                 return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name)) \
+                     and (not ("batch_norm" in var.name)) and (not ("xception" in var.name)) and (not ("conv3d" in var.name))
 
 	vars = filter(is_parameter, prog.list_vars())		
 	fluid.io.load_vars(exe, pretrain, vars=vars)

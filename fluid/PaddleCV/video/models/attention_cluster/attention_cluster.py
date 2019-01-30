@@ -23,8 +23,8 @@ __all__ = ["AttentionCluster"]
 
 
 class AttentionCluster(ModelBase):
-    def __init__(self, name, cfg, mode='train', args=None):
-        super(AttentionCluster, self).__init__(name, cfg, mode, args)
+    def __init__(self, name, cfg, mode='train'):
+        super(AttentionCluster, self).__init__(name, cfg, mode)
         self.get_config()
 
     def get_config(self):

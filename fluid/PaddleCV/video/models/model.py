@@ -105,7 +105,7 @@ class ModelConfig(object):
 
 
 class ModelBase(object):
-    def __init__(self, name, cfg, mode='train', args=None):
+    def __init__(self, name, cfg, mode='train'):
         assert mode in ['train', 'valid', 'test', 'infer'], \
                 "Unknown mode type {}".format(mode)
         self.name = name
@@ -114,13 +114,14 @@ class ModelBase(object):
         self.py_reader = None
 
         # parse config
-        assert os.path.exists(cfg), \
-                "Config file {} not exists".format(cfg)
-        self._config = ModelConfig(cfg)
-        self._config.parse()
-        if args and isinstance(args, dict):
-            self._config.merge_configs(mode, args)
-        self.cfg = self._config.get_configs()
+        # assert os.path.exists(cfg), \
+        #         "Config file {} not exists".format(cfg)
+        # self._config = ModelConfig(cfg)
+        # self._config.parse()
+        # if args and isinstance(args, dict):
+        #     self._config.merge_configs(mode, args)
+        # self.cfg = self._config.get_configs()
+        self.cfg = cfg
 
     def build_model(self):
         "build model struct"
@@ -209,9 +210,9 @@ class ModelBase(object):
         fluid.io.load_params(exe, pretrain, main_program=prog)
 
     def get_config_from_sec(self, sec, item, default=None):
-        cfg_item = self._config.get_config_from_sec(sec.upper(),
-                                                    item) or default
-        return cfg_item
+        if sec.upper() not in self.cfg:
+            return default
+        return self.cfg[sec.upper()].get(item, default)
 
 
 class ModelZoo(object):
@@ -223,10 +224,10 @@ class ModelZoo(object):
             type(model))
         self.model_zoo[name] = model
 
-    def get(self, name, cfg, mode='train', args=None):
+    def get(self, name, cfg, mode='train'):
         for k, v in self.model_zoo.items():
             if k == name:
-                return v(name, cfg, mode, args)
+                return v(name, cfg, mode)
         raise ModelNotFoundError(name, self.model_zoo.keys())
 
 
@@ -238,6 +239,6 @@ def regist_model(name, model):
     model_zoo.regist(name, model)
 
 
-def get_model(name, cfg, mode='train', args=None):
-    return model_zoo.get(name, cfg, mode, args)
+def get_model(name, cfg, mode='train'):
+    return model_zoo.get(name, cfg, mode)
 
