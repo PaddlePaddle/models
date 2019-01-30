@@ -14,6 +14,11 @@ Download dataset:
 ```bash
 cd data && ./download.sh && cd ..
 ```
+if you would like to use our supported third party vocab, please run:
+
+```bash
+wget http://download.tensorflow.org/models/LM_LSTM_CNN/vocab-2016-09-10.txt
+```
 
 ## Model
 This model implement a skip-gram model of word2vector.
@@ -26,18 +31,31 @@ Preprocess the training data to generate a word dict.
 ```bash
 python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict
 ```
+if you would like to use your own vocab follow the format below:
+```bash
+<UNK>
+a
+b
+c
+```
+Then, please set --other_dict_path as the directory of where you
+save the vocab you will use and set --with_other_dict flag on to using it.
 
 ## Train
 The command line options for training can be listed by `python train.py -h`.
 
 ### Local Train:
+we set CPU_NUM=1 as default CPU_NUM to execute
 ```bash
+export CPU_NUM=1 && \
 python train.py \
         --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
         --dict_path data/1-billion_dict \
+        --with_hs --with_nce --is_local \
         2>&1 | tee train.log
 ```
-
+if you would like to use our supported third party vocab, please set --other_dict_path as the directory of where you
+save the vocab you will use and set --with_other_dict flag on to using it.
 
 ### Distributed Train
 Run a 2 pserver 2 trainer distribute training on a single machine.
@@ -61,6 +79,11 @@ For: boy - girl + aunt = uncle
 3 nearest father:0.64
 
 You can also add your own tests by mimicking the examples given in the `build_test_case` method.
+
+To running test case from test files, please download the test files into 'test' directory
+we provide test for each case with the following structure:
+        `word1 word2 word3 word4`
+so we can build it into `word1 - word2 + word3 = word4`
 
 Forecast in training:
 

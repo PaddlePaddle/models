@@ -13,6 +13,7 @@ import reader
 import models
 import time
 
+
 def add_argument(name, type, default, help):
     parser.add_argument('--' + name, default=default, type=type, help=help)
 
@@ -32,15 +33,35 @@ def add_arguments():
     add_argument('dataset_path', str, None, "Cityscape dataset path.")
     add_argument('parallel', bool, False, "using ParallelExecutor.")
     add_argument('use_gpu', bool, True, "Whether use GPU or CPU.")
+    add_argument('num_classes', int, 19, "Number of classes.")
+    parser.add_argument(
+        '--enable_ce',
+        action='store_true',
+        help='If set, run the task with continuous evaluation logs.')
 
 
 def load_model():
+    myvars = [
+        x for x in tp.list_vars()
+        if isinstance(x, fluid.framework.Parameter) and x.name.find('logit') ==
+        -1
+    ]
     if args.init_weights_path.endswith('/'):
-        fluid.io.load_params(
-            exe, dirname=args.init_weights_path, main_program=tp)
+        if args.num_classes == 19:
+            fluid.io.load_params(
+                exe, dirname=args.init_weights_path, main_program=tp)
+        else:
+            fluid.io.load_vars(exe, dirname=args.init_weights_path, vars=myvars)
     else:
-        fluid.io.load_params(
-            exe, dirname="", filename=args.init_weights_path, main_program=tp)
+        if args.num_classes == 19:
+            fluid.io.load_params(
+                exe,
+                dirname="",
+                filename=args.init_weights_path,
+                main_program=tp)
+        else:
+            fluid.io.load_vars(
+                exe, dirname="", filename=args.init_weights_path, vars=myvars)
 
 
 def save_model():
@@ -70,6 +91,15 @@ def loss(logit, label):
     return loss, label_nignore
 
 
+def get_cards(args):
+    if args.enable_ce:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        num = len(cards.split(","))
+        return num
+    else:
+        return args.num_devices
+
+
 CityscapeDataset = reader.CityscapeDataset
 parser = argparse.ArgumentParser()
 
@@ -80,16 +110,24 @@ args = parser.parse_args()
 models.clean()
 models.bn_momentum = 0.9997
 models.dropout_keep_prop = 0.9
+models.label_number = args.num_classes
 deeplabv3p = models.deeplabv3p
 
 sp = fluid.Program()
 tp = fluid.Program()
+
+# only for ce
+if args.enable_ce:
+    SEED = 102
+    sp.random_seed = SEED
+    tp.random_seed = SEED
+
 crop_size = args.train_crop_size
 batch_size = args.batch_size
 image_shape = [crop_size, crop_size]
 reader.default_config['crop_size'] = crop_size
 reader.default_config['shuffle'] = True
-num_classes = 19
+num_classes = args.num_classes
 weight_decay = 0.00004
 
 base_lr = args.base_lr
@@ -120,7 +158,7 @@ with fluid.program_guard(tp, sp):
     retv = opt.minimize(loss_mean, startup_program=sp, no_grad_set=no_grad_set)
 
 fluid.memory_optimize(
-    tp, print_log=False, skip_opt_set=[pred.name, loss_mean.name], level=1)
+    tp, print_log=False, skip_opt_set=set([pred.name, loss_mean.name]), level=1)
 
 place = fluid.CPUPlace()
 if args.use_gpu:
@@ -140,7 +178,13 @@ if args.parallel:
 
 batches = dataset.get_batch_generator(batch_size, total_step)
 
+total_time = 0.0
+epoch_idx = 0
+train_loss = 0
+
 for i, imgs, labels, names in batches:
+    epoch_idx += 1
+    begin_time = time.time()
     prev_start_time = time.time()
     if args.parallel:
         retv = exe_p.run(fetch_list=[pred.name, loss_mean.name],
@@ -152,11 +196,21 @@ for i, imgs, labels, names in batches:
                              'label': labels},
                        fetch_list=[pred, loss_mean])
     end_time = time.time()
+    total_time += end_time - begin_time
     if i % 100 == 0:
         print("Model is saved to", args.save_weights_path)
         save_model()
-    print("step {:d}, loss: {:.6f}, step_time_cost: {:.3f}" .format(i,
-                    np.mean(retv[1]), end_time - prev_start_time))
+    print("step {:d}, loss: {:.6f}, step_time_cost: {:.3f}".format(
+        i, np.mean(retv[1]), end_time - prev_start_time))
+
+    # only for ce
+    train_loss = np.mean(retv[1])
+
+if args.enable_ce:
+    gpu_num = get_cards(args)
+    print("kpis\teach_pass_duration_card%s\t%s" %
+          (gpu_num, total_time / epoch_idx))
+    print("kpis\ttrain_loss_card%s\t%s" % (gpu_num, train_loss))
 
 print("Training done. Model is saved to", args.save_weights_path)
 save_model()

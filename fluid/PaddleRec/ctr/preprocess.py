@@ -51,7 +51,7 @@ class CategoryDictGenerator:
         return res
 
     def dicts_sizes(self):
-        return map(len, self.dicts)
+        return list(map(len, self.dicts))
 
 
 class ContinuousFeatureGenerator:
@@ -61,8 +61,8 @@ class ContinuousFeatureGenerator:
 
     def __init__(self, num_feature):
         self.num_feature = num_feature
-        self.min = [sys.maxint] * num_feature
-        self.max = [-sys.maxint] * num_feature
+        self.min = [sys.maxsize] * num_feature
+        self.max = [-sys.maxsize] * num_feature
 
     def build(self, datafile, continous_features):
         with open(datafile, 'r') as f:

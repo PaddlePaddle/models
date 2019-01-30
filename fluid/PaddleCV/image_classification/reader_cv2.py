@@ -101,8 +101,6 @@ def process_image(sample,
     std = [0.229, 0.224, 0.225] if std is None else std
 
     img_path = sample[0]
-    print('&' * 80)
-    print(img_path)
     img = cv2.imread(img_path)
 
     if mode == 'train':

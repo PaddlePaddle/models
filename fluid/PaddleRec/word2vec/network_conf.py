@@ -95,8 +95,7 @@ def skip_gram_word2vec(dict_size,
         capacity=64, feed_list=datas, name='py_reader', use_double_buffer=True)
 
     words = fluid.layers.read_file(py_reader)
-
-    emb = fluid.layers.embedding(
+    target_emb = fluid.layers.embedding(
         input=words[0],
         is_sparse=is_sparse,
         size=[dict_size, embedding_size],
@@ -104,16 +103,23 @@ def skip_gram_word2vec(dict_size,
             name='embeding',
             initializer=fluid.initializer.Normal(scale=1 /
                                                  math.sqrt(dict_size))))
-
+    context_emb = fluid.layers.embedding(
+        input=words[1],
+        is_sparse=is_sparse,
+        size=[dict_size, embedding_size],
+        param_attr=fluid.ParamAttr(
+            name='embeding',
+            initializer=fluid.initializer.Normal(scale=1 /
+                                                 math.sqrt(dict_size))))
     cost, cost_nce, cost_hs = None, None, None
 
     if with_nce:
-        cost_nce = nce_layer(emb, words[1], embedding_size, dict_size, 5,
+        cost_nce = nce_layer(target_emb, words[1], embedding_size, dict_size, 5,
                              "uniform", word_frequencys, None)
         cost = cost_nce
     if with_hsigmoid:
-        cost_hs = hsigmoid_layer(emb, words[1], words[2], words[3], dict_size,
-                                 is_sparse)
+        cost_hs = hsigmoid_layer(context_emb, words[0], words[2], words[3],
+                                 dict_size, is_sparse)
         cost = cost_hs
     if with_nce and with_hsigmoid:
         cost = fluid.layers.elementwise_add(cost_nce, cost_hs)

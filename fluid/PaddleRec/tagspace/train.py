@@ -21,15 +21,9 @@ def parse_args():
     parser.add_argument(
         '--train_dir', type=str, default='train_data', help='train file')
     parser.add_argument(
-        '--vocab_text_path',
-        type=str,
-        default='vocab_text.txt',
-        help='vocab_text file')
+        '--vocab_text_path', type=str, default='vocab_text.txt', help='text')
     parser.add_argument(
-        '--vocab_tag_path',
-        type=str,
-        default='vocab_tag.txt',
-        help='vocab_text file')
+        '--vocab_tag_path', type=str, default='vocab_tag.txt', help='tag')
     parser.add_argument(
         '--model_dir', type=str, default='model_', help='model dir')
     parser.add_argument(

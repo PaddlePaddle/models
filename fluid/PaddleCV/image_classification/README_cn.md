@@ -109,6 +109,11 @@ End pass 9, train_loss 3.3745200634, train_acc1 0.303871691227, train_acc5 0.545
 训练集合与验证集合上的错误率曲线
 </p>
 
+## 混合精度训练
+
+可以通过开启`--fp16 1`启动混合精度训练，这样训练过程会使用float16数据，并输出float32的模型参数（"master"参数）。您可能需要同时传入`--scale_loss`来解决fp16训练的精度问题，通常传入`--scale_loss 8.0`即可。
+
+注意，目前混合精度训练不能和内存优化功能同时使用，所以需要传`--with_mem_opt 0`这个参数来禁用内存优化功能。
 
 ## 参数微调
 
@@ -194,10 +199,16 @@ Models包括两种模型：带有参数名字的模型，和不带有参数名�
 |model | top-1/top-5 accuracy(PIL)| top-1/top-5 accuracy(CV2) |
 |- |:-: |:-:|
 |[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.zip) | 56.71%/79.18% | 55.88%/78.65% |
-|[VGG11](http://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretained.zip) | 68.92%/88.66% | 68.61%/88.60% |
+|[VGG11](https://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretrained.zip) | 69.22%/89.09% | 69.01%/88.90% |
+|[VGG13](https://paddle-imagenet-models-name.bj.bcebos.com/VGG13_pretrained.zip) | 70.14%/89.48% | 69.83%/89.13% |
+|[VGG16](https://paddle-imagenet-models-name.bj.bcebos.com/VGG16_pretrained.zip) | 72.08%/90.63% | 71.65%/90.57% |
+|[VGG19](https://paddle-imagenet-models-name.bj.bcebos.com/VGG19_pretrained.zip) | 72.56%/90.83% | 72.32%/90.98% |
 |[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.zip) | 70.91%/89.54% | 70.51%/89.35% |
 |[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.zip) | 76.35%/92.80% | 76.22%/92.92% |
 |[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.zip) | 77.49%/93.57% | 77.56%/93.64% |
+|[ResNet152](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_pretrained.zip) | 78.12%/93.93% | 77.92%/93.87% |
+|[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNext50_32x4d_pretrained.zip) | 78.50%/94.01% | 78.44%/93.96% |
+|[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.zip) | 79.26%/94.22% | 79.12%/94.20% |
 
 - Released models: not specify parameter names
 

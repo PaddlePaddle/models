@@ -1,5 +1,4 @@
 from __future__ import print_function
-
 import argparse
 import logging
 import os
@@ -13,7 +12,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.executor import global_scope
-
+import six
 import reader
 from network_conf import skip_gram_word2vec
 from infer import inference_test
@@ -30,7 +29,7 @@ def parse_args():
         '--train_data_path',
         type=str,
         default='./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled',
-        help="The path of training dataset")
+        help="The path of taining dataset")
     parser.add_argument(
         '--dict_path',
         type=str,
@@ -44,7 +43,7 @@ def parse_args():
     parser.add_argument(
         '--batch_size',
         type=int,
-        default=100,
+        default=1000,
         help="The size of mini-batch (default:100)")
     parser.add_argument(
         '--num_passes',
@@ -118,6 +117,13 @@ def parse_args():
         help='Do inference every 100 batches , (default: False)')
 
     parser.add_argument(
+        '--with_other_dict',
+        action='store_true',
+        required=False,
+        default=False,
+        help='if use other dict , (default: False)')
+
+    parser.add_argument(
         '--rank_num',
         type=int,
         default=4,
@@ -126,14 +132,44 @@ def parse_args():
     return parser.parse_args()
 
 
-def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
-            reader.train((args.with_hs or (not args.with_nce))),
-            buf_size=args.batch_size * 100),
-        batch_size=args.batch_size)
+def convert_python_to_tensor(batch_size, sample_reader, is_hs):
+    def __reader__():
+        result = None
+        if is_hs:
+            result = [[], [], [], []]
+        else:
+            result = [[], []]
+        for sample in sample_reader():
+            for i, fea in enumerate(sample):
+                result[i].append(fea)
+            if len(result[0]) == batch_size:
+                tensor_result = []
+                for tensor in result:
+                    t = fluid.Tensor()
+                    dat = np.array(tensor, dtype='int64')
+                    if len(dat.shape) > 2:
+                        dat = dat.reshape((dat.shape[0], dat.shape[2]))
+                    elif len(dat.shape) == 1:
+                        dat = dat.reshape((-1, 1))
+                    t.set(dat, fluid.CPUPlace())
 
-    py_reader.decorate_paddle_reader(train_reader)
+                    tensor_result.append(t)
+                yield tensor_result
+                if is_hs:
+                    result = [[], [], [], []]
+                else:
+                    result = [[], []]
+
+    return __reader__
+
+
+def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
+
+    py_reader.decorate_tensor_provider(
+        convert_python_to_tensor(args.batch_size,
+                                 reader.train((args.with_hs or (
+                                     not args.with_nce)), args.with_other_dict),
+                                 (args.with_hs or (not args.with_nce))))
 
     place = fluid.CPUPlace()
 
@@ -141,6 +177,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
     exe.run(fluid.default_startup_program())
 
     exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.use_experimental_executor = True
 
     print("CPU_NUM:" + str(os.getenv("CPU_NUM")))
     exec_strategy.num_threads = int(os.getenv("CPU_NUM"))
@@ -162,36 +199,27 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
     profiler_step_end = 30
 
     for pass_id in range(args.num_passes):
-        epoch_start = time.time()
         py_reader.start()
+        time.sleep(10)
+        epoch_start = time.time()
         batch_id = 0
-        start = time.clock()
+        start = time.time()
 
         try:
             while True:
 
-                if profiler_step == profiler_step_start:
-                    fluid.profiler.start_profiler(profile_state)
-
                 loss_val = train_exe.run(fetch_list=[loss.name])
                 loss_val = np.mean(loss_val)
-
-                if profiler_step == profiler_step_end:
-                    fluid.profiler.stop_profiler('total', 'trainer_profile.log')
-                    profiler_step += 1
-                else:
-                    profiler_step += 1
 
                 if batch_id % 50 == 0:
                     logger.info(
                         "TRAIN --> pass: {} batch: {} loss: {} reader queue:{}".
                         format(pass_id, batch_id,
-                               loss_val.mean() / args.batch_size,
-                               py_reader.queue.size()))
+                               loss_val.mean(), py_reader.queue.size()))
                 if args.with_speed:
                     if batch_id % 1000 == 0 and batch_id != 0:
-                        elapsed = (time.clock() - start)
-                        start = time.clock()
+                        elapsed = (time.time() - start)
+                        start = time.time()
                         samples = 1001 * args.batch_size * int(
                             os.getenv("CPU_NUM"))
                         logger.info("Time used: {}, Samples/Sec: {}".format(
@@ -240,7 +268,7 @@ def train(args):
             args.dict_path, args.train_data_path, filelist, 0, 1)
     else:
         trainer_id = int(os.environ["PADDLE_TRAINER_ID"])
-        trainers = int(os.environ["PADDLE_TRAINERS"])
+        trainer_num = int(os.environ["PADDLE_TRAINERS"])
         word2vec_reader = reader.Word2VecReader(args.dict_path,
                                                 args.train_data_path, filelist,
                                                 trainer_id, trainer_num)
@@ -257,9 +285,9 @@ def train(args):
 
     optimizer = None
     if args.with_Adam:
-        optimizer = fluid.optimizer.Adam(learning_rate=1e-3)
+        optimizer = fluid.optimizer.Adam(learning_rate=1e-4, lazy_mode=True)
     else:
-        optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
+        optimizer = fluid.optimizer.SGD(learning_rate=1e-4)
 
     optimizer.minimize(loss)
 

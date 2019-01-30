@@ -9,7 +9,6 @@ import six
 import paddle.fluid as fluid
 import paddle
 import net
-
 import utils
 
 

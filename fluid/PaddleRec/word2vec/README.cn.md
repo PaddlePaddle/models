@@ -25,6 +25,14 @@ cd data && ./download.sh && cd ..
 ```bash
 python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict
 ```
+如果您想使用自定义的词典形如：
+```bash
+<UNK>
+a
+b
+c
+```
+请将--other_dict_path设置为您存放将使用的词典的目录，并设置--with_other_dict使用它
 
 ## 训练
 训练的命令行选项可以通过`python train.py -h`列出。
@@ -32,11 +40,21 @@ python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchma
 ### 单机训练：
 
 ```bash
+export CPU_NUM=1
 python train.py \
         --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
         --dict_path data/1-billion_dict \
+        --with_hs --with_nce --is_local \
         2>&1 | tee train.log
 ```
+如果您想使用自定义的词典形如：
+```bash
+<UNK>
+a
+b
+c
+```
+请将--other_dict_path设置为您存放将使用的词典的目录，并设置--with_other_dict使用它
 
 ### 分布式训练
 
@@ -58,6 +76,11 @@ sh cluster_train.sh
 3 nearest father:0.64
 
 您也可以在`build_test_case`方法中模仿给出的例子增加自己的测试
+
+要从测试文件运行测试用例，请将测试文件下载到“test”目录中
+我们为每个案例提供以下结构的测试：
+        `word1 word2 word3 word4`
+所以我们可以将它构建成`word1  -  word2 + word3 = word4`
 
 训练中预测：
 

@@ -98,7 +98,7 @@ def parse_args():
     add_arg('pretrained_model', str,    'imagenet_resnet50_fusebn', "The init model path.")
     add_arg('dataset',          str,   'coco2017',  "coco2014, coco2017.")
     add_arg('class_num',        int,   81,          "Class number.")
-    add_arg('data_dir',         str,   'data/COCO17',        "The data root path.")
+    add_arg('data_dir',         str,   'dataset/coco',        "The data root path.")
     add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
     add_arg('use_profile',         bool,   False,       "Whether use profiler.")
     add_arg('padding_minibatch',bool,   False,
@@ -127,8 +127,11 @@ def parse_args():
     add_arg('debug',            bool,   False,   "Debug mode")
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
-    add_arg('image_path',       str,   'data/COCO17/val2017',  "The image path used to inference and visualize.")
+    add_arg('image_path',       str,   'dataset/coco/val2017',  "The image path used to inference and visualize.")
     add_arg('image_name',        str,    '',       "The single image used to inference and visualize.")
+    # ce
+    parser.add_argument(
+            '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
     # yapf: enable
     args = parser.parse_args()
     file_name = sys.argv[0]

@@ -142,7 +142,6 @@ class AlexNet():
         out = fluid.layers.fc(
             input=fc7,
             size=class_dim,
-            act='softmax',
             bias_attr=fluid.param_attr.ParamAttr(
                 initializer=fluid.initializer.Uniform(-stdv, stdv)),
             param_attr=fluid.param_attr.ParamAttr(
