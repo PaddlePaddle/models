@@ -18,7 +18,6 @@ class ShiftingAttentionModel(object):
         x_shape.stop_gradient = True
         flat_x = fluid.layers.reshape(x, shape=(-1, self.seg_num))
         flat_softmax = fluid.layers.softmax(flat_x)
-        # return fluid.layers.reshape(flat_softmax, shape=(x.shape[0], self.n_att, -1), actual_shape=x_shape)
         return fluid.layers.reshape(
             flat_softmax, shape=x.shape, actual_shape=x_shape)
 

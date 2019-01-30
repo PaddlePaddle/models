@@ -1,7 +1,7 @@
 [MODEL]
 name = "AttentionCluster"
 dataset = "YouTube-8M"
-bone_nework = None
+bone_network = None
 drop_rate = 0.5
 feature_num = 2
 feature_names = ['rgb', 'audio']

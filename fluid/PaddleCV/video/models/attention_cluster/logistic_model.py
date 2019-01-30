@@ -3,12 +3,10 @@ import paddle.fluid as fluid
 
 
 class LogisticModel(object):
-    """Logistic model with L2 regularization."""
-
+    """Logistic model."""
     def build_model(self,
                     model_input,
                     vocab_size,
-                    l2_penalty=None,
                     **unused_params):
         """Creates a logistic model.
 
