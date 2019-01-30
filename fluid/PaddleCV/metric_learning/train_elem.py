@@ -233,13 +233,9 @@ def train_async(args):
         totalruntime += period
         total_time += 1
         
-        #if iter_no % args.test_iter_step == 0 and iter_no != 0:
-        if (iter_no % args.test_iter_step == 0 and iter_no != 0) or args.enable_ce:
+        if iter_no % args.test_iter_step == 0 and iter_no != 0:
             f, l = [], []
             for batch_id, data in enumerate(test_reader()):
-                if args.enable_ce:
-                    if batch_id > 1:
-                        break
 
                 t1 = time.time()
                 [feas] = exe.run(test_prog, fetch_list = test_fetch_list, feed=test_feeder.feed(data))
