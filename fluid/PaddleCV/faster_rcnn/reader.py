@@ -125,6 +125,7 @@ def coco(mode,
             else:
                 roidb_perm = deque(roidbs)
             roidb_cur = 0
+            count = 0
             batch_out = []
             while True:
                 roidb = roidb_perm[0]
@@ -159,6 +160,9 @@ def coco(mode,
                             yield sub_batch_out
                             sub_batch_out = []
                         batch_out = []
+                count += 1
+                if count >= cfg.max_iter + 1:
+                    return
         elif mode == "test":
             batch_out = []
             for roidb in roidbs:
