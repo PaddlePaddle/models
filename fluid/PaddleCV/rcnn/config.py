@@ -90,6 +90,9 @@ _C.TRAIN.freeze_at = 2
 # min area of ground truth box
 _C.TRAIN.gt_min_area = -1
 
+# Use horizontally-flipped images during training?
+_C.TRAIN.use_flipped = True
+
 #
 # Inference options
 #
@@ -120,7 +123,7 @@ _C.TEST.rpn_post_nms_top_n = 1000
 _C.TEST.rpn_min_size = 0.0
 
 # max number of detections
-_C.TEST.detectiions_per_im = 100
+_C.TEST.detections_per_im = 100
 
 # NMS threshold used on RPN proposals
 _C.TEST.rpn_nms_thresh = 0.7
@@ -128,6 +131,9 @@ _C.TEST.rpn_nms_thresh = 0.7
 #
 # Model options
 #
+
+# Whether use mask rcnn head
+_C.MASK_ON = True
 
 # weight for bbox regression targets
 _C.bbox_reg_weights = [0.1, 0.1, 0.2, 0.2]
@@ -155,6 +161,15 @@ _C.roi_resolution = 14
 
 # spatial scale 
 _C.spatial_scale = 1. / 16.
+
+# resolution to represent mask labels
+_C.resolution = 14
+
+# Number of channels in the mask head
+_C.dim_reduced = 256
+
+# Threshold for converting soft masks to hard masks
+_C.mrcnn_thresh_binarize = 0.5
 
 #
 # SOLVER options

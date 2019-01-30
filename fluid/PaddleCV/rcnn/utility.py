@@ -22,7 +22,9 @@ import sys
 import distutils.util
 import numpy as np
 import six
+import collections
 from collections import deque
+import datetime
 from paddle.fluid import core
 import argparse
 import functools
@@ -85,6 +87,37 @@ class SmoothedValue(object):
         return np.median(self.deque)
 
 
+def now_time():
+    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+
+
+class TrainingStats(object):
+    def __init__(self, window_size, stats_keys):
+        self.smoothed_losses_and_metrics = {
+            key: SmoothedValue(window_size)
+            for key in stats_keys
+        }
+
+    def update(self, stats):
+        for k, v in self.smoothed_losses_and_metrics.items():
+            v.add_value(stats[k])
+
+    def get(self, extras=None):
+        stats = collections.OrderedDict()
+        if extras:
+            for k, v in extras.items():
+                stats[k] = v
+        for k, v in self.smoothed_losses_and_metrics.items():
+            stats[k] = round(v.get_median_value(), 3)
+
+        return stats
+
+    def log(self, extras=None):
+        d = self.get(extras)
+        strs = ', '.join(str(dict({x: y})).strip('{}') for x, y in d.items())
+        return strs
+
+
 def parse_args():
     """return all args
     """
@@ -108,7 +141,7 @@ def parse_args():
     add_arg('learning_rate',    float,  0.01,     "Learning rate.")
     add_arg('max_iter',         int,    180000,   "Iter number.")
     add_arg('log_window',       int,    20,        "Log smooth window, set 1 for debug, set 20 for train.")
-    # FAST RCNN
+    # RCNN
     # RPN
     add_arg('anchor_sizes',     int,    [32,64,128,256,512],  "The size of anchors.")
     add_arg('aspect_ratios',    float,  [0.5,1.0,2.0],    "The ratio of anchors.")
@@ -116,6 +149,7 @@ def parse_args():
     add_arg('rpn_stride',       float,  [16.,16.],    "Stride of the feature map that RPN is attached.")
     add_arg('rpn_nms_thresh',    float,   0.7,          "NMS threshold used on RPN proposals")
     # TRAIN TEST INFER
+    add_arg('MASK_ON', bool, False, "Option for different models. If False, choose faster_rcnn. If True, choose mask_rcnn")
     add_arg('im_per_batch',       int,   1,        "Minibatch size.")
     add_arg('max_size',         int,   1333,    "The resized image height.")
     add_arg('scales', int,  [800],    "The resized image height.")

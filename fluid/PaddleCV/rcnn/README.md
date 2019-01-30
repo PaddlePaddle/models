@@ -1,4 +1,4 @@
-# Faster RCNN Objective Detection
+# RCNN Objective Detection
 
 ---
 ## Table of Contents
@@ -17,16 +17,19 @@ Running sample code in this directory requires PaddelPaddle Fluid v.1.0.0 and la
 
 ## Introduction
 
-[Faster Rcnn](https://arxiv.org/abs/1506.01497) is a typical two stage detector. The total framework of network can be divided into four parts, as shown below:
-<p align="center">
-<img src="image/Faster_RCNN.jpg" height=400 width=400 hspace='10'/> <br />
-Faster RCNN model
-</p>
+Region Convolutional Neural Network (RCNN) models are two stages detector. According to proposals and feature extraction, obtain class and more precise proposals.
+Now RCNN model contains two typical models: Faster RCNN and Mask RCNN.
+
+[Faster RCNN](https://arxiv.org/abs/1506.01497), The total framework of network can be divided into four parts:
 
 1. Base conv layer. As a CNN objective dection, Faster RCNN extract feature maps using a basic convolutional network. The feature maps then can be shared by RPN and fc layers. This sampel uses [ResNet-50](https://arxiv.org/abs/1512.03385) as base conv layer.
 2. Region Proposal Network (RPN). RPN generates proposals for detection。This block generates anchors by a set of size and ratio and classifies anchors into fore-ground and back-ground by softmax. Then refine anchors to obtain more precise proposals using box regression.
 3. RoI Align. This layer takes feature maps and proposals as input. The proposals are mapped to feature maps and pooled to the same size. The output are sent to fc layers for classification and regression. RoIPool and RoIAlign are used separately to this layer and it can be set in roi\_func in config.py.
 4. Detection layer. Using the output of roi pooling to compute the class and locatoin of each proposal in two fc layers.
+
+[Mask RCNN](https://arxiv.org/abs/1703.06870) is a classical instance segmentation model and an extension of Faster RCNN
+
+Mask RCNN is a two stage model as well. At the first stage, it generates proposals from input images. At the second stage, it obtains class result, bbox and mask which is the result from segmentation branch on original Faster RCNN model. It decouples the relation between mask and classification.  
 
 ## Data preparation
 
@@ -64,10 +67,12 @@ After data preparation, one can start the training step by:
 
     python train.py \
        --model_save_dir=output/ \
-       --pretrained_model=${path_to_pretrain_model}
-       --data_dir=${path_to_data}
+       --pretrained_model=${path_to_pretrain_model} \
+       --data_dir=${path_to_data} \
+       --MASK_ON=False
 
 - Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
+- Set ```MASK\_ON``` to choose Faster RCNN or Mask RCNN model.
 - For more help on arguments:
 
     python train.py --help
@@ -93,7 +98,6 @@ After data preparation, one can start the training step by:
 *  In first 500 iteration, the learning rate increases linearly from 0.00333 to 0.01. Then lr is decayed at 120000, 160000 iteration with multiplier 0.1, 0.01. The maximum iteration is 180000. Also, we released a 2x model which has 360000 iterations and lr is decayed at 240000, 320000. These configuration can be set by max_iter and lr_steps in config.py.
 *  Set the learning rate of bias to two times as global lr in non basic convolutional layers.
 *  In basic convolutional layers, parameters of affine layers and res body do not update.
-*  Use Nvidia Tesla V100 8GPU, total time for training is about 40 hours.
 
 ## Evaluation
 
@@ -109,6 +113,8 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
 Evalutaion result is shown as below:
 
+Faster RCNN:
+
 | Model              | RoI function    | Batch size     | Max iteration    | mAP  |
 | :--------------- | :--------: | :------------:    | :------------------:    |------: |
 | [Fluid RoIPool minibatch padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) | RoIPool | 8   |    180000        | 0.316 |
@@ -120,6 +126,14 @@ Evalutaion result is shown as below:
 * Fluid RoIPool no padding: Images without padding.
 * Fluid RoIAlign no padding: Images without padding.
 * Fluid RoIAlign no padding 2x: Images without padding, train for 360000 iterations, learning rate is decayed at 240000, 320000.
+
+Mask RCNN:
+
+| Model              | Batch size     | Max iteration | box mAP | mask mAP |
+| :--------------- | :--------: | :------------:    | :--------:    |------: |
+| [Fluid mask no padding](https://paddlemodels.bj.bcebos.com/faster_rcnn/Fluid_mask_no_padding.tar.gz) | 8 | 180000 | 0.359 | 0.314 |
+
+* Fluid mask no padding: Use RoIAlign. Images without padding.
 
 ## Inference and Visualization
 
@@ -135,8 +149,12 @@ Inference is used to get prediction score or image features based on trained mod
 Visualization of infer result is shown as below:
 <p align="center">
 <img src="image/000000000139.jpg" height=300 width=400 hspace='10'/>
-<img src="image/000000127517.jpg" height=300 width=400 hspace='10'/>
-<img src="image/000000203864.jpg" height=300 width=400 hspace='10'/>
-<img src="image/000000515077.jpg" height=300 width=400 hspace='10'/> <br />
+<img src="image/000000127517.jpg" height=300 width=400 hspace='10'/> <br />
 Faster RCNN Visualization Examples
+</p>
+
+<p align="center">
+<img src="image/000000000139_mask.jpg" height=300 width=400 hspace='10'/>
+<img src="image/000000127517_mask.jpg" height=300 width=400 hspace='10'/> <br />
+Mask RCNN Visualization Examples
 </p>

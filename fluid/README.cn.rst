@@ -33,11 +33,14 @@ Fluid模型配置和参数文件的工具。
 VOC <http://host.robots.ox.ac.uk/pascal/VOC/>`__\ 、\ `MS
 COCO <http://cocodataset.org/#home>`__\ 数据训练通用物体检测模型，当前介绍了SSD算法，SSD全称Single Shot MultiBox Detector，是目标检测领域较新且效果较好的检测算法之一，具有检测速度快且检测精度高的特点。
 
-开放环境中的检测人脸，尤其是小的、模糊的和部分遮挡的人脸也是一个具有挑战的任务。我们也介绍了如何基于 `WIDER FACE <http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/>`_ 数据训练百度自研的人脸检测PyramidBox模型，该算法于2018年3月份在WIDER FACE的多项评测中均获得 `第一名 <http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/WiderFace_Results.html>`_。
+开放环境中的检测人脸，尤其是小的、模糊的和部分遮挡的人脸也是一个具有挑战的任务。我们也介绍了如何基于 `WIDER FACE <http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/>`_ 数据训练百度自研的人脸检测PyramidBox模型，该算法于2018年3月份在WIDER FACE的多项评测中均获得 `第一名 <http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/WiderFace_Results.html>`_ 。
+
+RCNN系列模型是典型的两阶段目标检测器，相较于传统提取区域的方法，RCNN中RPN网络通过共享卷积层参数大幅提高提取区域的效率，并提出高质量的候选区域。其中典型模型包括Faster RCNN和Mask RCNN。
 
 -  `Single Shot MultiBox
    Detector <https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleCV/object_detection/README_cn.md>`__
 -  `Face Detector: PyramidBox <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/face_detection/README_cn.md>`_
+-  `RCNN <https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn/README_cn.md>`_
 
 图像语义分割
 ------------

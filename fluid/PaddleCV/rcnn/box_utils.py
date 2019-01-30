@@ -69,6 +69,7 @@ def clip_xyxy_to_image(x1, y1, x2, y2, height, width):
     y2 = np.minimum(height - 1., np.maximum(0., y2))
     return x1, y1, x2, y2
 
+
 def nms(dets, thresh):
     """Apply classic DPM-style greedy NMS."""
     if dets.shape[0] == 0:
@@ -123,3 +124,21 @@ def nms(dets, thresh):
 
     return np.where(suppressed == 0)[0]
 
+
+def expand_boxes(boxes, scale):
+    """Expand an array of boxes by a given scale."""
+    w_half = (boxes[:, 2] - boxes[:, 0]) * .5
+    h_half = (boxes[:, 3] - boxes[:, 1]) * .5
+    x_c = (boxes[:, 2] + boxes[:, 0]) * .5
+    y_c = (boxes[:, 3] + boxes[:, 1]) * .5
+
+    w_half *= scale
+    h_half *= scale
+
+    boxes_exp = np.zeros(boxes.shape)
+    boxes_exp[:, 0] = x_c - w_half
+    boxes_exp[:, 2] = x_c + w_half
+    boxes_exp[:, 1] = y_c - h_half
+    boxes_exp[:, 3] = y_c + h_half
+
+    return boxes_exp

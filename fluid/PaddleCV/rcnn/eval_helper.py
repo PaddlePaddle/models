@@ -21,6 +21,10 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 from config import cfg
+import pycocotools.mask as mask_util
+import six
+from colormap import colormap
+import cv2
 
 
 def box_decoder(deltas, boxes, weights):
@@ -80,8 +84,7 @@ def clip_tiled_boxes(boxes, im_shape):
     return boxes
 
 
-def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info,
-                  numId_to_catId_map):
+def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info):
     lod = rpn_rois.lod()[0]
     rpn_rois_v = np.array(rpn_rois)
     variance_v = np.array(cfg.bbox_reg_weights)
@@ -106,38 +109,41 @@ def get_nmsed_box(rpn_rois, confs, locs, class_nums, im_info,
             inds = np.where(scores_n[:, j] > cfg.TEST.score_thresh)[0]
             scores_j = scores_n[inds, j]
             rois_j = rois_n[inds, j * 4:(j + 1) * 4]
-            dets_j = np.hstack((rois_j, scores_j[:, np.newaxis])).astype(
+            dets_j = np.hstack((scores_j[:, np.newaxis], rois_j)).astype(
                 np.float32, copy=False)
             keep = box_utils.nms(dets_j, cfg.TEST.nms_thresh)
             nms_dets = dets_j[keep, :]
             #add labels
-            cat_id = numId_to_catId_map[j]
-            label = np.array([cat_id for _ in range(len(keep))])
+            label = np.array([j for _ in range(len(keep))])
             nms_dets = np.hstack((nms_dets, label[:, np.newaxis])).astype(
                 np.float32, copy=False)
             cls_boxes[j] = nms_dets
     # Limit to max_per_image detections **over all classes**
         image_scores = np.hstack(
-            [cls_boxes[j][:, -2] for j in range(1, class_nums)])
-        if len(image_scores) > cfg.TEST.detectiions_per_im:
-            image_thresh = np.sort(image_scores)[-cfg.TEST.detectiions_per_im]
+            [cls_boxes[j][:, 1] for j in range(1, class_nums)])
+        if len(image_scores) > cfg.TEST.detections_per_im:
+            image_thresh = np.sort(image_scores)[-cfg.TEST.detections_per_im]
             for j in range(1, class_nums):
-                keep = np.where(cls_boxes[j][:, -2] >= image_thresh)[0]
+                keep = np.where(cls_boxes[j][:, 1] >= image_thresh)[0]
                 cls_boxes[j] = cls_boxes[j][keep, :]
 
         im_results_n = np.vstack([cls_boxes[j] for j in range(1, class_nums)])
         im_results[i] = im_results_n
         new_lod.append(len(im_results_n) + new_lod[-1])
-        boxes = im_results_n[:, :-2]
-        scores = im_results_n[:, -2]
-        labels = im_results_n[:, -1]
+        boxes = im_results_n[:, 2:]
+        scores = im_results_n[:, 1]
+        labels = im_results_n[:, 0]
     im_results = np.vstack([im_results[k] for k in range(len(lod) - 1)])
     return new_lod, im_results
 
 
-def get_dt_res(batch_size, lod, nmsed_out, data):
+def get_dt_res(batch_size, lod, nmsed_out, data, num_id_to_cat_id_map):
     dts_res = []
     nmsed_out_v = np.array(nmsed_out)
+    if nmsed_out_v.shape == (
+            1,
+            1, ):
+        return dts_res
     assert (len(lod) == batch_size + 1), \
       "Error Lod Tensor offset dimension. Lod({}) vs. batch_size({})"\
                     .format(len(lod), batch_size)
@@ -150,7 +156,8 @@ def get_dt_res(batch_size, lod, nmsed_out, data):
         for j in range(dt_num_this_img):
             dt = nmsed_out_v[k]
             k = k + 1
-            xmin, ymin, xmax, ymax, score, category_id = dt.tolist()
+            num_id, score, xmin, ymin, xmax, ymax = dt.tolist()
+            category_id = num_id_to_cat_id_map[num_id]
             w = xmax - xmin + 1
             h = ymax - ymin + 1
             bbox = [xmin, ymin, w, h]
@@ -164,24 +171,131 @@ def get_dt_res(batch_size, lod, nmsed_out, data):
     return dts_res
 
 
-def draw_bounding_box_on_image(image_path, nms_out, draw_threshold, label_list):
-    image = Image.open(image_path)
+def get_segms_res(batch_size, lod, segms_out, data, num_id_to_cat_id_map):
+    segms_res = []
+    segms_out_v = np.array(segms_out)
+    k = 0
+    for i in range(batch_size):
+        dt_num_this_img = lod[i + 1] - lod[i]
+        image_id = int(data[i][-1])
+        for j in range(dt_num_this_img):
+            dt = segms_out_v[k]
+            k = k + 1
+            segm, num_id, score = dt.tolist()
+            cat_id = num_id_to_cat_id_map[num_id]
+            if six.PY3:
+                if 'counts' in segm:
+                    segm['counts'] = rle['counts'].decode("utf8")
+            segm_res = {
+                'image_id': image_id,
+                'category_id': cat_id,
+                'segmentation': segm,
+                'score': score
+            }
+            segms_res.append(segm_res)
+    return segms_res
+
+
+def draw_bounding_box_on_image(image_path,
+                               nms_out,
+                               draw_threshold,
+                               label_list,
+                               num_id_to_cat_id_map,
+                               image=None):
+    if image is None:
+        image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
     im_width, im_height = image.size
 
-    for dt in nms_out:
-        xmin, ymin, xmax, ymax, score, category_id = dt.tolist()
+    for dt in np.array(nms_out):
+        num_id, score, xmin, ymin, xmax, ymax = dt.tolist()
+        category_id = num_id_to_cat_id_map[num_id]
         if score < draw_threshold:
             continue
-        bbox = dt[:4]
-        xmin, ymin, xmax, ymax = bbox
         draw.line(
             [(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin),
              (xmin, ymin)],
-            width=4,
+            width=2,
             fill='red')
         if image.mode == 'RGB':
             draw.text((xmin, ymin), label_list[int(category_id)], (255, 255, 0))
     image_name = image_path.split('/')[-1]
     print("image with bbox drawed saved as {}".format(image_name))
     image.save(image_name)
+
+
+def draw_mask_on_image(image_path, segms_out, draw_threshold, alpha=0.7):
+    image = Image.open(image_path)
+    draw = ImageDraw.Draw(image)
+    im_width, im_height = image.size
+    mask_color_id = 0
+    w_ratio = .4
+    image = np.array(image).astype('float32')
+    for dt in np.array(segms_out):
+        segm, num_id, score = dt.tolist()
+        if score < draw_threshold:
+            continue
+        mask = mask_util.decode(segm) * 255
+        color_list = colormap(rgb=True)
+        color_mask = color_list[mask_color_id % len(color_list), 0:3]
+        mask_color_id += 1
+        for c in range(3):
+            color_mask[c] = color_mask[c] * (1 - w_ratio) + w_ratio * 255
+        idx = np.nonzero(mask)
+        image[idx[0], idx[1], :] *= 1.0 - alpha
+        image[idx[0], idx[1], :] += alpha * color_mask
+    image = Image.fromarray(image.astype('uint8'))
+    return image
+
+
+def segm_results(im_results, masks, im_info):
+    im_results = np.array(im_results)
+    class_num = cfg.class_num
+    M = cfg.resolution
+    scale = (M + 2.0) / M
+    lod = masks.lod()[0]
+    masks_v = np.array(masks)
+    boxes = im_results[:, 2:]
+    labels = im_results[:, 0]
+    segms_results = [[] for _ in range(len(lod) - 1)]
+    sum = 0
+    for i in range(len(lod) - 1):
+        im_results_n = im_results[lod[i]:lod[i + 1]]
+        cls_segms = []
+        masks_n = masks_v[lod[i]:lod[i + 1]]
+        boxes_n = boxes[lod[i]:lod[i + 1]]
+        labels_n = labels[lod[i]:lod[i + 1]]
+        im_h = int(round(im_info[i][0] / im_info[i][2]))
+        im_w = int(round(im_info[i][1] / im_info[i][2]))
+        boxes_n = box_utils.expand_boxes(boxes_n, scale)
+        boxes_n = boxes_n.astype(np.int32)
+        padded_mask = np.zeros((M + 2, M + 2), dtype=np.float32)
+        for j in range(len(im_results_n)):
+            class_id = int(labels_n[j])
+            padded_mask[1:-1, 1:-1] = masks_n[j, class_id, :, :]
+
+            ref_box = boxes_n[j, :]
+            w = ref_box[2] - ref_box[0] + 1
+            h = ref_box[3] - ref_box[1] + 1
+            w = np.maximum(w, 1)
+            h = np.maximum(h, 1)
+
+            mask = cv2.resize(padded_mask, (w, h))
+            mask = np.array(mask > cfg.mrcnn_thresh_binarize, dtype=np.uint8)
+            im_mask = np.zeros((im_h, im_w), dtype=np.uint8)
+
+            x_0 = max(ref_box[0], 0)
+            x_1 = min(ref_box[2] + 1, im_w)
+            y_0 = max(ref_box[1], 0)
+            y_1 = min(ref_box[3] + 1, im_h)
+            im_mask[y_0:y_1, x_0:x_1] = mask[(y_0 - ref_box[1]):(y_1 - ref_box[
+                1]), (x_0 - ref_box[0]):(x_1 - ref_box[0])]
+            sum += im_mask.sum()
+            rle = mask_util.encode(
+                np.array(
+                    im_mask[:, :, np.newaxis], order='F'))[0]
+            cls_segms.append(rle)
+        segms_results[i] = np.array(cls_segms)[:, np.newaxis]
+    segms_results = np.vstack([segms_results[k] for k in range(len(lod) - 1)])
+    im_results = np.hstack([segms_results, im_results])
+    return im_results[:, :3]
