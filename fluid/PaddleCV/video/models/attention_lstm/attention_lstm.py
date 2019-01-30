@@ -22,8 +22,8 @@ __all__ = ["AttentionLSTM"]
 
 
 class AttentionLSTM(ModelBase):
-    def __init__(self, name, cfg, mode='train', args=None):
-        super(AttentionLSTM, self).__init__(name, cfg, mode, args=args)
+    def __init__(self, name, cfg, mode='train'):
+        super(AttentionLSTM, self).__init__(name, cfg, mode)
         self.get_config()
 
     def get_config(self):

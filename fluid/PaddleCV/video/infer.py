@@ -24,6 +24,7 @@ except:
     import pickle
 import paddle.fluid as fluid
 
+from config import *
 import models
 
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -76,7 +77,13 @@ def parse_args():
     return args
 
 
-def infer(infer_model, args):
+def infer(args):
+    # parse config
+    config = parse_config(args.config)
+    infer_config = merge_configs(config, 'infer', vars(args))
+    infer_model = models.get_model(
+        args.model_name, infer_config, mode='infer')
+
     infer_model.build_input(use_pyreader=False)
     infer_model.build_model()
     infer_feeds = infer_model.feeds()
@@ -146,6 +153,4 @@ if __name__ == "__main__":
     args = parse_args()
     logger.info(args)
 
-    infer_model = models.get_model(
-        args.model_name, args.config, mode='infer', args=vars(args))
-    infer(infer_model, args)
+    infer(args)

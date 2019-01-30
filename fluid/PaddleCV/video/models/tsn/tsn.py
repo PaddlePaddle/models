@@ -22,8 +22,8 @@ __all__ = ["TSN"]
 
 
 class TSN(ModelBase):
-    def __init__(self, name, cfg, mode='train', args=None):
-        super(TSN, self).__init__(name, cfg, mode=mode, args=args)
+    def __init__(self, name, cfg, mode='train'):
+        super(TSN, self).__init__(name, cfg, mode=mode)
         self.get_config()
 
     def get_config(self):

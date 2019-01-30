@@ -23,8 +23,8 @@ __all__ = ["NEXTVLAD"]
 
 
 class NEXTVLAD(ModelBase):
-    def __init__(self, name, cfg, mode='train', args=None):
-        super(NEXTVLAD, self).__init__(name, cfg, mode=mode, args=args)
+    def __init__(self, name, cfg, mode='train'):
+        super(NEXTVLAD, self).__init__(name, cfg, mode=mode)
         self.get_config()
 
     def get_config(self):

@@ -1,6 +1,6 @@
 data
 checkpoints
 output*
-*.py
+*.pyc
 *.swp
 *_result

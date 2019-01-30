@@ -19,6 +19,8 @@ import logging
 import argparse
 import numpy as np
 import paddle.fluid as fluid
+
+from config import *
 import models
 
 logging.root.handlers = []
@@ -60,13 +62,18 @@ def parse_args():
     return args
 
 
-def test(test_model, args):
+def test(args):
+    # parse config
+    config = parse_config(args.config)
+    test_config = merge_configs(config, 'test', vars(args))
+
+    # build model
+    test_model = models.get_model(
+        args.model_name, test_config, mode='test')
     test_model.build_input(use_pyreader=False)
     test_model.build_model()
     test_feeds = test_model.feeds()
     test_outputs = test_model.outputs()
-    test_reader = test_model.reader()
-    test_metrics = test_model.metrics()
     loss = test_model.loss()
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
@@ -81,6 +88,10 @@ def test(test_model, args):
         return os.path.exists(os.path.join(weights, var.name))
 
     fluid.io.load_vars(exe, weights, predicate=if_exist)
+
+    # get reader and metrics
+    test_reader = test_model.reader()
+    test_metrics = test_model.metrics()
 
     test_feeder = fluid.DataFeeder(place=place, feed_list=test_feeds)
     fetch_list = [loss.name] + [x.name
@@ -111,7 +122,6 @@ def test(test_model, args):
 
 if __name__ == "__main__":
     args = parse_args()
+    logger.info(args)
 
-    test_model = models.get_model(
-        args.model_name, args.config, mode='test', args=vars(args))
-    test(test_model, args)
+    test(args)
