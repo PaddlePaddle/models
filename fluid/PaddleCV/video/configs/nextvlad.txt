@@ -1,6 +1,7 @@
 [MODEL]
 name = "NEXTVLAD"
 num_classes = 3862
+topk = 20
 video_feature_size = 1024
 audio_feature_size = 128
 cluster_size = 128

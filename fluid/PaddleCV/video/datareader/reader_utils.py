@@ -70,6 +70,6 @@ def regist_reader(name, reader):
     reader_zoo.regist(name, reader)
 
 
-def get_reader(name, mode='train', **cfg):
+def get_reader(name, mode, cfg):
     reader_model = reader_zoo.get(name, mode, cfg)
     return reader_model.create_reader()

@@ -21,8 +21,10 @@ import numpy as np
 import paddle.fluid as fluid
 
 from tools.train_utils import train_with_pyreader, train_without_pyreader
-from config import *
 import models
+from config import *
+from datareader import get_reader
+from metrics import get_metrics
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -104,10 +106,8 @@ def train(args):
     config = parse_config(args.config)
     train_config = merge_configs(config, 'train', vars(args))
     valid_config = merge_configs(config, 'valid', vars(args))
-    train_model = models.get_model(
-        args.model_name, train_config, mode='train')
-    valid_model = models.get_model(
-        args.model_name, valid_config, mode='valid')
+    train_model = models.get_model(args.model_name, train_config, mode='train')
+    valid_model = models.get_model(args.model_name, valid_config, mode='valid')
 
     # build model
     startup = fluid.Program()
@@ -141,7 +141,7 @@ def train(args):
             valid_feeds = valid_model.feeds()
             valid_outputs = valid_model.outputs()
             valid_loss = valid_model.loss()
-            valid_metrics = valid_model.metrics()
+            #valid_metrics = valid_model.metrics()
             valid_pyreader = valid_model.pyreader()
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
@@ -165,16 +165,16 @@ def train(args):
         main_program=valid_prog)
 
     # get reader
-    # train_reader = get_reader(train_config)
-    # valid_reader = get_reader(valid_config)
-    train_reader = train_model.reader()
-    valid_reader = valid_model.reader()
+    train_reader = get_reader(args.model_name.upper(), 'train', train_config)
+    valid_reader = get_reader(args.model_name.upper(), 'valid', valid_config)
+    #train_reader = train_model.reader()
+    #valid_reader = valid_model.reader()
 
     # get metrics 
-    # train_metrics = get_metrics(train_config)
-    # valid_metrics = get_metrics(valid_config)
-    train_metrics = train_model.metrics()
-    train_metrics = train_model.metrics()
+    train_metrics = get_metrics(args.model_name.upper(), 'train', train_config)
+    valid_metrics = get_metrics(args.model_name.upper(), 'valid', valid_config)
+    #train_metrics = train_model.metrics()
+    #train_metrics = train_model.metrics()
 
     train_fetch_list = [train_loss.name] + [x.name for x in train_outputs
                                             ] + [train_feeds[-1].name]

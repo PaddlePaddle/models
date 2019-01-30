@@ -8,7 +8,8 @@ feature_names = ['rgb', 'audio']
 feature_dims = [1024, 128]
 embedding_size = 512
 lstm_size = 1024
-class_num = 3862
+num_classes = 3862
+topk = 20
 
 [TRAIN]
 epoch = 10

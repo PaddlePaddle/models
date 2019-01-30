@@ -34,7 +34,7 @@ class AttentionCluster(ModelBase):
         self.feature_dims = self.cfg.MODEL.feature_dims
         self.cluster_nums = self.cfg.MODEL.cluster_nums
         self.seg_num = self.cfg.MODEL.seg_num
-        self.class_num = self.cfg.MODEL.class_num
+        self.class_num = self.cfg.MODEL.num_classes  #self.cfg.MODEL.class_num
         self.drop_rate = self.cfg.MODEL.drop_rate
 
         # get mode configs

@@ -20,7 +20,6 @@ import numpy as np
 import cv2
 import logging
 
-from . import nonlocal_video_io
 from .reader_utils import DataReader
 
 logger = logging.getLogger(__name__)
@@ -51,41 +50,89 @@ class NonlocalReader(DataReader):
 
     def create_reader(self):
         cfg = self.cfg
-        assert cfg['num_reader_threads'] >=1, \
-                "number of reader threads({}) should be a positive integer".format(cfg['num_reader_threads'])
-        if cfg['num_reader_threads'] == 1:
+        phase = self.phase
+        num_reader_threads = cfg[phase.upper()]['num_reader_threads']
+        assert num_reader_threads >=1, \
+                "number of reader threads({}) should be a positive integer".format(num_reader_threads)
+        if num_reader_threads == 1:
             reader_func = make_reader
         else:
             reader_func = make_multi_reader
 
         dataset_args = {}
-        dataset_args['image_mean'] = cfg['image_mean']
-        dataset_args['image_std'] = cfg['image_std']
-        dataset_args['crop_size'] = cfg['crop_size']
-        dataset_args['sample_rate'] = cfg['sample_rate']
-        dataset_args['video_length'] = cfg['video_length']
-        dataset_args['min_size'] = cfg['jitter_scales'][0]
-        dataset_args['max_size'] = cfg['jitter_scales'][1]
-        dataset_args['num_reader_threads'] = cfg['num_reader_threads']
+        dataset_args['image_mean'] = cfg.MODEL.image_mean
+        dataset_args['image_std'] = cfg.MODEL.image_std
+        dataset_args['crop_size'] = cfg[phase.upper()]['crop_size']
+        dataset_args['sample_rate'] = cfg[phase.upper()]['sample_rate']
+        dataset_args['video_length'] = cfg[phase.upper()]['video_length']
+        dataset_args['min_size'] = cfg[phase.upper()]['jitter_scales'][0]
+        dataset_args['max_size'] = cfg[phase.upper()]['jitter_scales'][1]
+        dataset_args['num_reader_threads'] = num_reader_threads
+        filelist = cfg[phase.upper()]['list']
+        batch_size = cfg[phase.upper()]['batch_size']
+
         if self.phase == 'train':
             sample_times = 1
-            return reader_func(cfg['list'], cfg['batch_size'], sample_times,
-                               True, True, **dataset_args)
+            return reader_func(filelist, batch_size, sample_times, True, True,
+                               **dataset_args)
         elif self.phase == 'valid':
             sample_times = 1
-            return reader_func(cfg['list'], cfg['batch_size'], sample_times,
-                               False, False, **dataset_args)
+            return reader_func(filelist, batch_size, sample_times, False, False,
+                               **dataset_args)
         elif self.phase == 'test':
-            sample_times = cfg['num_test_clips']
-            if cfg['use_multi_crop'] == 1:
+            sample_times = cfg['TEST']['num_test_clips']
+            if cfg['TEST']['use_multi_crop'] == 1:
                 sample_times = int(sample_times / 3)
-            if cfg['use_multi_crop'] == 2:
+            if cfg['TEST']['use_multi_crop'] == 2:
                 sample_times = int(sample_times / 6)
-            return reader_func(cfg['list'], cfg['batch_size'], sample_times,
-                               False, False, **dataset_args)
+            return reader_func(filelist, batch_size, sample_times, False, False,
+                               **dataset_args)
         else:
             logger.info('Not implemented')
             raise
+
+
+def video_fast_get_frame(video_path,
+                         sampling_rate=1,
+                         length=64,
+                         start_frm=-1,
+                         sample_times=1):
+    cap = cv2.VideoCapture(video_path)
+    frame_cnt = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    sampledFrames = []
+
+    # n_frame <  sample area
+    video_output = np.ndarray(shape=[length, height, width, 3], dtype=np.uint8)
+
+    use_start_frm = start_frm
+    if start_frm < 0:
+        if (frame_cnt - length * sampling_rate > 0):
+            use_start_frm = random.randint(0,
+                                           frame_cnt - length * sampling_rate)
+        else:
+            use_start_frm = 0
+    else:
+        frame_gaps = float(frame_cnt) / float(sample_times)
+        use_start_frm = int(frame_gaps * start_frm) % frame_cnt
+
+    for i in range(frame_cnt):
+        ret, frame = cap.read()
+        # maybe first frame is empty
+        if ret == False:
+            continue
+        img = frame[:, :, ::-1]
+        sampledFrames.append(img)
+
+    for idx in range(length):
+        i = use_start_frm + idx * sampling_rate
+        i = i % len(sampledFrames)
+        video_output[idx] = sampledFrames[i]
+
+    cap.release()
+    return video_output
 
 
 def apply_resize(rgbdata, min_size, max_size):
@@ -177,7 +224,7 @@ def make_reader(filelist, batch_size, sample_times, is_training, shuffle,
             label = np.array([label]).astype(np.int64)
             # 1, get rgb data for fixed length of frames
             try:
-                rgbdata = nonlocal_video_io.video_fast_get_frame(fn, \
+                rgbdata = video_fast_get_frame(fn, \
                              sampling_rate = dataset_args['sample_rate'], length = dataset_args['video_length'], \
                              start_frm = start_frm, sample_times = in_sample_times)
             except:
@@ -244,7 +291,7 @@ def make_multi_reader(filelist, batch_size, sample_times, is_training, shuffle,
             label = np.array([label]).astype(np.int64)
             # 1, get rgb data for fixed length of frames
             try:
-                rgbdata = nonlocal_video_io.video_fast_get_frame(fn, \
+                rgbdata = video_fast_get_frame(fn, \
                              sampling_rate = dataset_args['sample_rate'], length = dataset_args['video_length'], \
                              start_frm = start_frm, sample_times = in_sample_times)
             except:

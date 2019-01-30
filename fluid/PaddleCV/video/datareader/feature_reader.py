@@ -40,15 +40,13 @@ class FeatureReader(DataReader):
     def __init__(self, name, phase, cfg):
         self.name = name
         self.phase = phase
-        self.num_classes = cfg['num_classes']
+        self.num_classes = cfg.MODEL.num_classes
 
         # set batch size and file list
-        self.batch_size = cfg['batch_size']
-        self.filelist = cfg['list']
-        if 'eigen_file' in cfg.keys():
-            self.eigen_file = cfg['eigen_file']
-        if 'seg_num' in cfg.keys():
-            self.seg_num = cfg['seg_num']
+        self.batch_size = cfg[phase.upper()]['batch_size']
+        self.filelist = cfg[phase.upper()]['filelist']
+        self.eigen_file = cfg.MODEL.get('eigen_file', None)
+        self.seg_num = cfg.MODEL.get('seg_num', None)
 
     def create_reader(self):
         fl = open(self.filelist).readlines()

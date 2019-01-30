@@ -8,7 +8,8 @@ feature_names = ['rgb', 'audio']
 feature_dims = [1024, 128]
 seg_num = 100
 cluster_nums = [32, 32]
-class_num = 3862
+num_classes = 3862
+topk = 20
 
 [TRAIN]
 epoch = 5

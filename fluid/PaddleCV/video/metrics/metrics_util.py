@@ -22,13 +22,13 @@ import logging
 import numpy as np
 from metrics.youtube8m import eval_util as youtube8m_metrics
 from metrics.kinetics import accuracy_metrics as kinetics_metrics
-from metrics.non_local import nonlocal_test_metrics as nonlocal_test_metrics
+from metrics.multicrop_test import multicrop_test_metrics as multicrop_test_metrics
 
 logger = logging.getLogger(__name__)
 
 
 class Metrics(object):
-    def __init__(self, name, mode, **metrics_args):
+    def __init__(self, name, mode, metrics_args):
         """Not implemented"""
         pass
 
@@ -50,12 +50,11 @@ class Metrics(object):
 
 
 class Youtube8mMetrics(Metrics):
-    def __init__(self, name, mode, **metrics_args):
+    def __init__(self, name, mode, metrics_args):
         self.name = name
         self.mode = mode
-        self.metrics_args = metrics_args
-        self.num_classes = metrics_args['num_classes']
-        self.topk = metrics_args['topk']
+        self.num_classes = metrics_args['MODEL']['num_classes']
+        self.topk = metrics_args['MODEL']['topk']
         self.calculator = youtube8m_metrics.EvaluationMetrics(self.num_classes,
                                                               self.topk)
 
@@ -82,12 +81,10 @@ class Youtube8mMetrics(Metrics):
 
 
 class Kinetics400Metrics(Metrics):
-    def __init__(self, name, mode, **metrics_args):
+    def __init__(self, name, mode, metrics_args):
         self.name = name
         self.mode = mode
-        self.metrics_args = metrics_args
-        self.calculator = kinetics_metrics.MetricsCalculator(name,
-                                                             mode.lower())
+        self.calculator = kinetics_metrics.MetricsCalculator(name, mode.lower())
 
     def calculate_and_log_out(self, loss, pred, label, info=''):
         if loss is not None:
@@ -114,14 +111,19 @@ class Kinetics400Metrics(Metrics):
         self.calculator.reset()
 
 
-class NonlocalMetrics(Metrics):
-    def __init__(self, name, mode, **metrics_args):
+class MulticropMetrics(Metrics):
+    def __init__(self, name, mode, metrics_args):
         self.name = name
         self.mode = mode
-        self.metrics_args = metrics_args
         if mode == 'test':
-            self.calculator = nonlocal_test_metrics.MetricsCalculator(
-                name, mode.lower(), **metrics_args)
+            args = {}
+            args['num_test_clips'] = metrics_args.TEST.num_test_clips
+            args['dataset_size'] = metrics_args.TEST.dataset_size
+            args['filename_gt'] = metrics_args.TEST.filename_gt
+            args['checkpoint_dir'] = metrics_args.TEST.checkpoint_dir
+            args['num_classes'] = metrics_args.MODEL.num_classes
+            self.calculator = multicrop_test_metrics.MetricsCalculator(
+                name, mode.lower(), **args)
         else:
             self.calculator = kinetics_metrics.MetricsCalculator(name,
                                                                  mode.lower())
@@ -166,10 +168,10 @@ class MetricsZoo(object):
             type(metrics))
         self.metrics_zoo[name] = metrics
 
-    def get(self, name, mode, **cfg):
+    def get(self, name, mode, cfg):
         for k, v in self.metrics_zoo.items():
             if k == name:
-                return v(name, mode, **cfg)
+                return v(name, mode, cfg)
         raise MetricsNotFoundError(name, self.metrics_zoo.keys())
 
 
@@ -181,8 +183,8 @@ def regist_metrics(name, metrics):
     metrics_zoo.regist(name, metrics)
 
 
-def get_metrics(name, mode='train', **cfg):
-    return metrics_zoo.get(name, mode, **cfg)
+def get_metrics(name, mode, cfg):
+    return metrics_zoo.get(name, mode, cfg)
 
 
 regist_metrics("NEXTVLAD", Youtube8mMetrics)
@@ -191,4 +193,4 @@ regist_metrics("ATTENTIONCLUSTER", Youtube8mMetrics)
 regist_metrics("TSN", Kinetics400Metrics)
 regist_metrics("TSM", Kinetics400Metrics)
 regist_metrics("STNET", Kinetics400Metrics)
-regist_metrics("NONLOCAL", NonlocalMetrics)
+regist_metrics("NONLOCAL", MulticropMetrics)

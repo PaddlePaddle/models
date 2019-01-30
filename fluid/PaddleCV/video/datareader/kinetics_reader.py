@@ -56,22 +56,22 @@ class KineticsReader(DataReader):
     def __init__(self, name, phase, cfg):
         self.name = name
         self.phase = phase
-        self.format = cfg['format']
-        self.num_classes = cfg['num_classes']
-        self.seg_num = cfg['seg_num']
-        self.seglen = cfg['seglen']
-        self.short_size = cfg['short_size']
-        self.target_size = cfg['target_size']
-        self.num_reader_threads = cfg['num_reader_threads']
-        self.buf_size = cfg['buf_size']
+        self.format = cfg.MODEL.format  #cfg['format']
+        self.num_classes = cfg.MODEL.num_classes  #cfg['num_classes']
+        self.seg_num = cfg.MODEL.segnum  #['seg_num']
+        self.seglen = cfg.MODEL.seglen  #['seglen']
+        self.short_size = cfg[phase.upper()]['short_size']  # ['short_size']
+        self.target_size = cfg[phase.upper()]['target_size']  #['target_size']
+        self.num_reader_threads = cfg[phase.upper()]['num_reader_threads']
+        self.buf_size = cfg[phase.upper()]['buf_size']
 
-        self.img_mean = np.array(cfg['image_mean']).reshape(
+        self.img_mean = np.array(cfg.MODEL.image_mean).reshape(
             [3, 1, 1]).astype(np.float32)
-        self.img_std = np.array(cfg['image_std']).reshape(
+        self.img_std = np.array(cfg.MODEL.image_std).reshape(
             [3, 1, 1]).astype(np.float32)
         # set batch size and file list
-        self.batch_size = cfg['batch_size']
-        self.filelist = cfg['list']
+        self.batch_size = cfg[phase.upper()]['batch_size']
+        self.filelist = cfg[phase.upper()]['filelist']
 
     def create_reader(self):
         _reader = _reader_creator(self.filelist, self.phase, seg_num=self.seg_num, seglen = self.seglen, \
