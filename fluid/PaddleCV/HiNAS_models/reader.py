@@ -30,6 +30,7 @@ import paddle.dataset.common
 import tarfile
 from absl import flags
 
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_boolean("random_flip_left_right", True,
@@ -81,6 +82,8 @@ def preprocess(sample, is_training):
         img = (img_float - mean) / std
 
     if is_training and FLAGS.cutout:
+        if FLAGS.enable_ce:
+            np.random.seed(0)
         center = np.random.randint(image_size, size=2)
         offset_width = max(0, center[0] - half_length)
         offset_height = max(0, center[1] - half_length)

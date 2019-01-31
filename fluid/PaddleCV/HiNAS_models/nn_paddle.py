@@ -17,6 +17,8 @@ from __future__ import division
 from __future__ import print_function
 
 import math
+import time
+import os
 
 import numpy as np
 import paddle
@@ -41,6 +43,10 @@ flags.DEFINE_float("weight_decay", 0.0004, "weight decay")
 flags.DEFINE_float("momentum", 0.9, "momentum")
 
 flags.DEFINE_boolean("shuffle_image", True, "shuffle input images on training")
+
+flags.DEFINE_integer("num_devices", 1, "total devices for ce")
+
+flags.DEFINE_boolean("enable_ce", False, "enable ce")
 
 dataset_train_size = 50000
 
@@ -104,10 +110,15 @@ class Model(object):
         costs = []
         accs = []
 
+        ce_costs = []
+        ce_accs = []
+
         def event_handler(event):
             if isinstance(event, EndStepEvent):
                 costs.append(event.metrics[0])
                 accs.append(event.metrics[1])
+                ce_costs.append(event.metrics[0])
+                ce_accs.append(event.metrics[1])
                 if event.step % 20 == 0:
                     print("Epoch %d, Step %d, Loss %f, Acc %f" % (
                         event.epoch, event.step, np.mean(costs), np.mean(accs)))
@@ -125,6 +136,7 @@ class Model(object):
                           (event.epoch, avg_cost, accuracy))
                     print("Best acc %f" % event_handler.best_acc)
 
+
         event_handler.best_acc = 0.0
         place = fluid.CUDAPlace(0)
         trainer = Trainer(
@@ -132,8 +144,33 @@ class Model(object):
             optimizer_func=self.optimizer_program,
             place=place)
 
+        total_time = 0
+        start_time = time.time()
         trainer.train(
             reader=train_reader,
             num_epochs=FLAGS.num_epochs,
             event_handler=event_handler,
             feed_order=['pixel', 'label'])
+        end_time = time.time()
+        total_time = end_time - start_time
+        # only for ce
+        if FLAGS.enable_ce:
+            epoch_idx = FLAGS.num_epochs
+            gpu_num = get_cards()
+            print("kpis\teach_pass_duration_card%s\t%s" %
+                    (gpu_num, total_time / epoch_idx))
+            print("kpis\ttrain_loss_card%s\t%s" %
+                    (gpu_num, np.mean(ce_costs)))
+            print("kpis\ttrain_acc_card%s\t%s" %
+                    (gpu_num, np.mean(ce_accs)))
+
+
+def get_cards():
+    if FLAGS.num_epochs:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        num = len(cards.split(","))
+        return num
+    else:
+        return FLAGS.num_devices
+
+
