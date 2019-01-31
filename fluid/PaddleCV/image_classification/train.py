@@ -313,10 +313,6 @@ def train(args):
         batch_id = 0
         try:
             while True:
-                if pass_id == 0 and batch_id == 5:
-                    profiler.start_profiler("GPU")
-                elif pass_id == 0 and batch_id == 10:
-                    profiler.stop_profiler("total", "profile")
                 t1 = time.time()
                 loss, acc1, acc5, lr = train_exe.run(
                     fetch_list=train_fetch_list)
