@@ -143,21 +143,3 @@ class AttentionCluster(ModelBase):
             "https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz"
         )
 
-    def create_dataset_args(self):
-        dataset_args = {}
-        dataset_args['num_classes'] = self.class_num
-        dataset_args['seg_num'] = self.seg_num
-        dataset_args['list'] = self.get_config_from_sec(self.mode, 'filelist')
-
-        if self.use_gpu and self.py_reader:
-            dataset_args['batch_size'] = int(self.batch_size / self.gpu_num)
-        else:
-            dataset_args['batch_size'] = self.batch_size
-
-        return dataset_args
-
-    def create_metrics_args(self):
-        metrics_args = {}
-        metrics_args['num_classes'] = self.class_num
-        metrics_args['topk'] = 20
-        return metrics_args

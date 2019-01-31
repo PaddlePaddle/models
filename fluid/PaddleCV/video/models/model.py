@@ -58,52 +58,6 @@ class ModelNotFoundError(Exception):
         return msg
 
 
-class ModelConfig(object):
-    def __init__(self, cfg_file):
-        self.cfg_file = cfg_file
-        self.parser = ConfigParser()
-        self.cfg = AttrDict()
-
-    def parse(self):
-        self.parser.read(self.cfg_file)
-        for sec in self.parser.sections():
-            sec_dict = AttrDict()
-            for k, v in self.parser.items(sec):
-                try:
-                    v = eval(v)
-                except:
-                    pass
-                setattr(sec_dict, k, v)
-            setattr(self.cfg, sec.upper(), sec_dict)
-
-    def merge_configs(self, sec, cfg_dict):
-        sec_dict = getattr(self.cfg, sec.upper())
-        for k, v in cfg_dict.items():
-            if v is None:
-                continue
-            try:
-                if hasattr(sec_dict, k):
-                    setattr(sec_dict, k, v)
-            except:
-                pass
-
-    def get_config_from_sec(self, sec, item):
-        try:
-            if hasattr(self.cfg, sec):
-                sec_dict = getattr(self.cfg, sec)
-        except:
-            return None
-
-        try:
-            if hasattr(sec_dict, item):
-                return getattr(sec_dict, item)
-        except:
-            return None
-
-    def get_configs(self):
-        return self.cfg
-
-
 class ModelBase(object):
     def __init__(self, name, cfg, mode='train'):
         assert mode in ['train', 'valid', 'test', 'infer'], \
@@ -146,22 +100,6 @@ class ModelBase(object):
     def feeds(self):
         "get feed inputs list"
         raise NotImplementError(self, self.feeds)
-
-    def create_dataset_args(self):
-        "get model reader"
-        raise NotImplementError(self, self.create_dataset_args)
-
-    def reader(self):
-        dataset_args = self.create_dataset_args()
-        return get_reader(self.name.upper(), self.mode, **dataset_args)
-
-    def create_metrics_args(self):
-        "get model reader"
-        raise NotImplementError(self, self.create_metrics_args)
-
-    def metrics(self):
-        metrics_args = self.create_metrics_args()
-        return get_metrics(self.name.upper(), self.mode, **metrics_args)
 
     def weights_info(self):
         "get model weight default path and download url"
