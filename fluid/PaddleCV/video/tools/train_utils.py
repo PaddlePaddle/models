@@ -80,7 +80,7 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
                     format(epoch, np.mean(epoch_periods)))
         save_model(exe, train_prog, save_dir, save_model_name,
                    "_epoch{}".format(epoch))
-        if test_exe and (epoch + 1) % valid_interval == 0:
+        if test_exe and valid_interval > 0 and (epoch + 1) % valid_interval == 0:
             test_without_pyreader(test_exe, test_reader, test_feeder,
                                   test_fetch_list, test_metrics, log_interval)
 
@@ -119,7 +119,7 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
                         format(epoch, np.mean(epoch_periods)))
             save_model(exe, train_prog, save_dir, save_model_name,
                        "_epoch{}".format(epoch))
-            if test_exe and valid_interval > 0:
+            if test_exe and valid_interval > 0 and (epoch + 1) % valid_interval == 0:
                 test_with_pyreader(test_exe, test_pyreader, test_fetch_list,
                                    test_metrics, log_interval)
         finally:

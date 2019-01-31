@@ -82,11 +82,6 @@ def parse_args():
         default=1,
         help='validation epoch interval, 0 for no validation.')
     parser.add_argument(
-        '--save-interval',
-        type=int,
-        default=1,
-        help='save checkpoints epoch interval.')
-    parser.add_argument(
         '--save-dir',
         type=str,
         default='checkpoints',
