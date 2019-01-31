@@ -97,27 +97,23 @@ def test(args):
     fetch_list = [loss.name] + [x.name
                                 for x in test_outputs] + [test_feeds[-1].name]
 
-    def _test_loop():
-        epoch_period = []
-        for test_iter, data in enumerate(test_reader()):
-            cur_time = time.time()
-            test_outs = exe.run(fetch_list=fetch_list,
-                                feed=test_feeder.feed(data))
-            period = time.time() - cur_time
-            epoch_period.append(period)
-            loss = np.array(test_outs[0])
-            pred = np.array(test_outs[1])
-            label = np.array(test_outs[-1])
-            test_metrics.accumulate(loss, pred, label)
+    epoch_period = []
+    for test_iter, data in enumerate(test_reader()):
+        cur_time = time.time()
+        test_outs = exe.run(fetch_list=fetch_list,
+                            feed=test_feeder.feed(data))
+        period = time.time() - cur_time
+        epoch_period.append(period)
+        loss = np.array(test_outs[0])
+        pred = np.array(test_outs[1])
+        label = np.array(test_outs[-1])
+        test_metrics.accumulate(loss, pred, label)
 
-            # metric here
-            if args.log_interval > 0 and test_iter % args.log_interval == 0:
-                info_str = '[EVAL] Batch {}'.format(test_iter)
-                test_metrics.calculate_and_log_out(loss, pred, label, info_str)
-        test_metrics.finalize_and_log_out("[EVAL] eval finished. ")
-
-    # start eval loop
-    _test_loop()
+        # metric here
+        if args.log_interval > 0 and test_iter % args.log_interval == 0:
+            info_str = '[EVAL] Batch {}'.format(test_iter)
+            test_metrics.calculate_and_log_out(loss, pred, label, info_str)
+    test_metrics.finalize_and_log_out("[EVAL] eval finished. ")
 
 
 if __name__ == "__main__":

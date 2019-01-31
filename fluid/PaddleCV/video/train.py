@@ -188,20 +188,20 @@ def train(args):
     if args.no_use_pyreader:
         train_feeder = fluid.DataFeeder(place=place, feed_list=train_feeds)
         valid_feeder = fluid.DataFeeder(place=place, feed_list=valid_feeds)
-        train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feeder, \
-                               train_fetch_list, train_metrics, epochs = epochs, \
-                               log_interval = args.log_interval, valid_interval = args.valid_interval, \
-                               save_dir = args.save_dir, save_model_name = args.model_name, \
-                               test_exe = valid_exe, test_reader = valid_reader, test_feeder = valid_feeder, \
+        train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feeder,
+                               train_fetch_list, train_metrics, epochs = epochs,
+                               log_interval = args.log_interval, valid_interval = args.valid_interval,
+                               save_dir = args.save_dir, save_model_name = args.model_name,
+                               test_exe = valid_exe, test_reader = valid_reader, test_feeder = valid_feeder,
                                test_fetch_list = valid_fetch_list, test_metrics = valid_metrics)
     else:
         train_pyreader.decorate_paddle_reader(train_reader)
         valid_pyreader.decorate_paddle_reader(valid_reader)
-        train_with_pyreader(exe, train_prog, train_exe, train_pyreader, train_fetch_list, train_metrics, \
-                            epochs = epochs, log_interval = args.log_interval, \
-                            valid_interval = args.valid_interval, \
-                            save_dir = args.save_dir, save_model_name = args.model_name, \
-                            test_exe = valid_exe, test_pyreader = valid_pyreader, \
+        train_with_pyreader(exe, train_prog, train_exe, train_pyreader, train_fetch_list, train_metrics,
+                            epochs = epochs, log_interval = args.log_interval,
+                            valid_interval = args.valid_interval,
+                            save_dir = args.save_dir, save_model_name = args.model_name,
+                            test_exe = valid_exe, test_pyreader = valid_pyreader,
                             test_fetch_list = valid_fetch_list, test_metrics = valid_metrics)
 
 
