@@ -18,7 +18,6 @@ import utils
 from utils.learning_rate import cosine_decay
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
 from utility import add_arguments, print_arguments
-import paddle.fluid.profiler as profiler
 
 IMAGENET1000 = 1281167
 #IMAGENET100 = 128660
@@ -112,7 +111,6 @@ def optimizer_setting(params):
         momentum_rate = params["momentum_rate"]
         end_lr = 0
         total_step = int((total_images / batch_size) * num_epochs)
-        print("linear decay total steps: ", total_step)
         lr = fluid.layers.polynomial_decay(
             start_lr, total_step, end_lr, power=1)
         optimizer = fluid.optimizer.Momentum(
@@ -316,9 +314,14 @@ def train(args):
         batch_id = 0
         try:
             while True:
+                if pass_id == 0 and batch_id == 5:
+                    profiler.start_profiler("GPU")
+                elif pass_id == 0 and batch_id == 10:
+                    profiler.stop_profiler("total", "profile")
                 t1 = time.time()
                 loss, acc1, acc5, lr = train_exe.run(
                     fetch_list=train_fetch_list)
+
                 t2 = time.time()
                 period = t2 - t1
                 loss = np.mean(np.array(loss))
@@ -329,6 +332,7 @@ def train(args):
                 train_info[2].append(acc5)
                 lr = np.mean(np.array(lr))
                 train_time.append(period)
+
                 if batch_id % 10 == 0:
                     print("Pass {0}, trainbatch {1}, loss {2}, \
                         acc1 {3}, acc5 {4}, lr{5}, time {6}"
@@ -336,6 +340,9 @@ def train(args):
                                   lr, "%2.2f sec" % period))
                     sys.stdout.flush()
                 batch_id += 1
+                if batch_id == 31:
+                    exit(0)
+
         except fluid.core.EOFException:
             train_py_reader.reset()
 
