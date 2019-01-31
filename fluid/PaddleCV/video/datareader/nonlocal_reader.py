@@ -43,15 +43,15 @@ class NonlocalReader(DataReader):
                                use_multi_crop
     """
 
-    def __init__(self, name, phase, cfg):
+    def __init__(self, name, mode, cfg):
         self.name = name
-        self.phase = phase
+        self.mode = mode
         self.cfg = cfg
 
     def create_reader(self):
         cfg = self.cfg
-        phase = self.phase
-        num_reader_threads = cfg[phase.upper()]['num_reader_threads']
+        mode = self.mode
+        num_reader_threads = cfg[mode.upper()]['num_reader_threads']
         assert num_reader_threads >=1, \
                 "number of reader threads({}) should be a positive integer".format(num_reader_threads)
         if num_reader_threads == 1:
@@ -62,24 +62,24 @@ class NonlocalReader(DataReader):
         dataset_args = {}
         dataset_args['image_mean'] = cfg.MODEL.image_mean
         dataset_args['image_std'] = cfg.MODEL.image_std
-        dataset_args['crop_size'] = cfg[phase.upper()]['crop_size']
-        dataset_args['sample_rate'] = cfg[phase.upper()]['sample_rate']
-        dataset_args['video_length'] = cfg[phase.upper()]['video_length']
-        dataset_args['min_size'] = cfg[phase.upper()]['jitter_scales'][0]
-        dataset_args['max_size'] = cfg[phase.upper()]['jitter_scales'][1]
+        dataset_args['crop_size'] = cfg[mode.upper()]['crop_size']
+        dataset_args['sample_rate'] = cfg[mode.upper()]['sample_rate']
+        dataset_args['video_length'] = cfg[mode.upper()]['video_length']
+        dataset_args['min_size'] = cfg[mode.upper()]['jitter_scales'][0]
+        dataset_args['max_size'] = cfg[mode.upper()]['jitter_scales'][1]
         dataset_args['num_reader_threads'] = num_reader_threads
-        filelist = cfg[phase.upper()]['list']
-        batch_size = cfg[phase.upper()]['batch_size']
+        filelist = cfg[mode.upper()]['list']
+        batch_size = cfg[mode.upper()]['batch_size']
 
-        if self.phase == 'train':
+        if self.mode == 'train':
             sample_times = 1
             return reader_func(filelist, batch_size, sample_times, True, True,
                                **dataset_args)
-        elif self.phase == 'valid':
+        elif self.mode == 'valid':
             sample_times = 1
             return reader_func(filelist, batch_size, sample_times, False, False,
                                **dataset_args)
-        elif self.phase == 'test':
+        elif self.mode == 'test':
             sample_times = cfg['TEST']['num_test_clips']
             if cfg['TEST']['use_multi_crop'] == 1:
                 sample_times = int(sample_times / 3)

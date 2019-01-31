@@ -37,7 +37,7 @@ class ReaderNotFoundError(Exception):
 class DataReader(object):
     """data reader for video input"""
 
-    def __init__(self, model_name, phase, cfg):
+    def __init__(self, model_name, mode, cfg):
         """Not implemented"""
         pass
 

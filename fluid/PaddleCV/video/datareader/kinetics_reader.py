@@ -53,31 +53,31 @@ class KineticsReader(DataReader):
                   list
     """
 
-    def __init__(self, name, phase, cfg):
+    def __init__(self, name, mode, cfg):
         self.name = name
-        self.phase = phase
+        self.mode = mode
         self.format = cfg.MODEL.format
         self.num_classes = cfg.MODEL.num_classes
         self.seg_num = cfg.MODEL.seg_num
         self.seglen = cfg.MODEL.seglen
-        self.short_size = cfg[phase.upper()]['short_size']
-        self.target_size = cfg[phase.upper()]['target_size']
-        self.num_reader_threads = cfg[phase.upper()]['num_reader_threads']
-        self.buf_size = cfg[phase.upper()]['buf_size']
+        self.short_size = cfg[mode.upper()]['short_size']
+        self.target_size = cfg[mode.upper()]['target_size']
+        self.num_reader_threads = cfg[mode.upper()]['num_reader_threads']
+        self.buf_size = cfg[mode.upper()]['buf_size']
 
         self.img_mean = np.array(cfg.MODEL.image_mean).reshape(
             [3, 1, 1]).astype(np.float32)
         self.img_std = np.array(cfg.MODEL.image_std).reshape(
             [3, 1, 1]).astype(np.float32)
         # set batch size and file list
-        self.batch_size = cfg[phase.upper()]['batch_size']
-        self.filelist = cfg[phase.upper()]['filelist']
+        self.batch_size = cfg[mode.upper()]['batch_size']
+        self.filelist = cfg[mode.upper()]['filelist']
 
     def create_reader(self):
-        _reader = _reader_creator(self.filelist, self.phase, seg_num=self.seg_num, seglen = self.seglen, \
+        _reader = _reader_creator(self.filelist, self.mode, seg_num=self.seg_num, seglen = self.seglen, \
                              short_size = self.short_size, target_size = self.target_size, \
                              img_mean = self.img_mean, img_std = self.img_std, \
-                             shuffle = (self.phase == 'train'), \
+                             shuffle = (self.mode == 'train'), \
                              num_threads = self.num_reader_threads, \
                              buf_size = self.buf_size, format = self.format)
 
@@ -95,7 +95,7 @@ class KineticsReader(DataReader):
 
 
 def _reader_creator(pickle_list,
-                    phase,
+                    mode,
                     seg_num,
                     seglen,
                     short_size,
@@ -124,7 +124,7 @@ def _reader_creator(pickle_list,
 
     mapper = functools.partial(
         decode_func,
-        phase=phase,
+        mode=mode,
         seg_num=seg_num,
         seglen=seglen,
         short_size=short_size,
@@ -135,16 +135,16 @@ def _reader_creator(pickle_list,
     return paddle.reader.xmap_readers(mapper, reader, num_threads, buf_size)
 
 
-def decode_mp4(sample, phase, seg_num, seglen, short_size, target_size,
+def decode_mp4(sample, mode, seg_num, seglen, short_size, target_size,
                img_mean, img_std):
     sample = sample[0].split(' ')
     mp4_path = sample[0]
     # when infer, we store vid as label
     label = int(sample[1])
-    imgs = mp4_loader(mp4_path, seg_num, seglen, phase)
+    imgs = mp4_loader(mp4_path, seg_num, seglen, mode)
     imgs = group_scale(imgs, short_size)
 
-    if phase == 'train':
+    if mode == 'train':
         imgs = group_random_crop(imgs, target_size)
         imgs = group_random_flip(imgs)
     else:
@@ -164,7 +164,7 @@ def decode_mp4(sample, phase, seg_num, seglen, short_size, target_size,
     return imgs, label
 
 
-def decode_pickle(sample, phase, seg_num, seglen, short_size, target_size,
+def decode_pickle(sample, mode, seg_num, seglen, short_size, target_size,
                   img_mean, img_std):
     pickle_path = sample[0]
     try:
@@ -182,10 +182,10 @@ def decode_pickle(sample, phase, seg_num, seglen, short_size, target_size,
         logger.info('Error when loading {}'.format(pickle_path))
         return None, None
 
-    imgs = video_loader(frames, seg_num, seglen, phase)
+    imgs = video_loader(frames, seg_num, seglen, mode)
     imgs = group_scale(imgs, short_size)
 
-    if phase == 'train':
+    if mode == 'train':
         imgs = group_random_crop(imgs, target_size)
         imgs = group_random_flip(imgs)
     else:
@@ -202,9 +202,9 @@ def decode_pickle(sample, phase, seg_num, seglen, short_size, target_size,
     imgs /= img_std
     imgs = np.reshape(imgs, (seg_num, seglen * 3, target_size, target_size))
 
-    if phase == 'train' or phase == 'valid' or phase == 'test':
+    if mode == 'train' or mode == 'valid' or mode == 'test':
         return imgs, label
-    elif phase == 'infer':
+    elif mode == 'infer':
         return imgs, vid
 
 
@@ -281,14 +281,14 @@ def imageloader(buf):
     return img.convert('RGB')
 
 
-def video_loader(frames, nsample, seglen, phase):
+def video_loader(frames, nsample, seglen, mode):
     videolen = len(frames)
     average_dur = int(videolen / nsample)
 
     imgs = []
     for i in range(nsample):
         idx = 0
-        if phase == 'train':
+        if mode == 'train':
             if average_dur >= seglen:
                 idx = random.randint(0, average_dur - seglen)
                 idx += i * average_dur
@@ -313,7 +313,7 @@ def video_loader(frames, nsample, seglen, phase):
     return imgs
 
 
-def mp4_loader(filepath, nsample, seglen, phase):
+def mp4_loader(filepath, nsample, seglen, mode):
     cap = cv2.VideoCapture(filepath)
     videolen = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     average_dur = int(videolen / nsample)
@@ -329,7 +329,7 @@ def mp4_loader(filepath, nsample, seglen, phase):
     imgs = []
     for i in range(nsample):
         idx = 0
-        if phase == 'train':
+        if mode == 'train':
             if average_dur >= seglen:
                 idx = random.randint(0, average_dur - seglen)
                 idx += i * average_dur
