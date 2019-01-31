@@ -148,6 +148,7 @@ def coco(mode,
                 if not padding_total:
                     if len(batch_out) == batch_size:
                         yield padding_minibatch(batch_out)
+                        count += 1
                         batch_out = []
                 else:
                     if len(batch_out) == total_batch_size:
@@ -158,10 +159,10 @@ def coco(mode,
                                 sub_batch_out.append(batch_out[i * batch_size +
                                                                j])
                             yield sub_batch_out
+                            count += 1
                             sub_batch_out = []
                         batch_out = []
-                count += 1
-                if count >= cfg.max_iter + 1:
+                if count >= cfg.max_iter:
                     return
         elif mode == "test":
             batch_out = []
