@@ -37,7 +37,7 @@ class AttentionLSTM(ModelBase):
 
         # get mode configs
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size', 1)
-        self.gpu_num = self.get_config_from_sec(self.mode, 'gpu_num', 1)
+        self.num_gpus = self.get_config_from_sec(self.mode, 'num_gpus', 1)
 
         if self.mode == 'train':
             self.learning_rate = self.get_config_from_sec('train',
@@ -134,7 +134,7 @@ class AttentionLSTM(ModelBase):
         cost = fluid.layers.reduce_sum(cost, dim=-1)
         sum_cost = fluid.layers.reduce_sum(cost)
         self.loss_ = fluid.layers.scale(
-            sum_cost, scale=self.gpu_num, bias_after_scale=False)
+            sum_cost, scale=self.num_gpus, bias_after_scale=False)
         return self.loss_
 
     def outputs(self):
