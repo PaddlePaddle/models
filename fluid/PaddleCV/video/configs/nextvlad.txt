@@ -10,7 +10,7 @@ groups = 8
 expansion = 2
 drop_rate = 0.5
 gating_reduction = 8
-eigen_file = "./dataset/eigenvals.npy"
+eigen_file = "./dataset/youtube8m/yt8m_pca/eigenvals.npy"
 
 [TRAIN]
 epoch = 6
