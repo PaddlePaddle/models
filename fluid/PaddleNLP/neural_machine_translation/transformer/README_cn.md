@@ -69,9 +69,9 @@ WMT 数据集是机器翻译领域公认的主流数据集，[WMT'16 EN-DE 数�
 └── subword-nmt                  # BPE 编码的代码
 ```
 
-`gen_data/wmt16_ende_data_bpe` 中是我们最终使用的英德翻译数据，其中 `train.tok.clean.bpe.32000.en-de` 为训练数据，`newstest2016.tok.bpe.32000.en-de` 等为验证和测试数据，。`vocab_all.bpe.32000` 为相应的词典文件（已加入 `<s>` 、`<e>` 和 `<unk>` 这三个特殊符号，源语言和目标语言共享该词典文件）。
+`gen_data/wmt16_ende_data_bpe` 中是我们最终使用的英德翻译数据，其中 `train.tok.clean.bpe.32000.en-de` 为训练数据，`newstest2016.tok.bpe.32000.en-de` 等为验证和测试数据，。`vocab_all.bpe.32000` 为相应的词典文件（已加入 `<s>` 、`<e>` 和 `<unk>` 这三个特殊符号，源语言和目标语言共享该词典文件）。另外我们也整理提供了一份处理好的 WMT'16 EN-DE 数据以供[下载](https://transformer-res.bj.bcebos.com/wmt16_ende_data_bpe_clean.tar.gz)使用（包含训练所需 BPE 数据和词典以及预测和评估所需的 BPE 数据和 tokenize 的数据）。
 
-对于其他自定义数据，转换为类似 `train.tok.clean.bpe.32000.en-de` 的数据格式（`\t` 分隔的源语言和目标语言句子对，句子中的 token 之间使用空格分隔）即可；如需使用 BPE 编码，可参考，亦可以使用类似 WMT，使用 `gen_data.sh` 进行处理。
+对于其他自定义数据，转换为类似 `train.tok.clean.bpe.32000.en-de` 的数据格式（`\t` 分隔的源语言和目标语言句子对，句子中的 token 之间使用空格分隔）即可；如需使用 BPE 编码，亦可以使用类似 WMT'16 EN-DE 原始数据的格式，参照 `gen_data.sh` 进行处理。
 
 ### 模型训练
 
@@ -110,11 +110,9 @@ python -u train.py \
   --batch_size 3200 \
   --sort_type pool \
   --pool_size 200000 \
-  n_layer 6 \
   n_head 16 \
   d_model 1024 \
   d_inner_hid 4096 \
-  n_head 16 \
   prepostprocess_dropout 0.3
 ```
 有关这些参数更详细信息的请参考 `config.py` 中的注释说明。
@@ -144,30 +142,49 @@ python -u infer.py \
   --token_delimiter ' ' \
   --batch_size 32 \
   model_path trained_models/iter_100000.infer.model \
-  beam_size 4 \
+  beam_size 5 \
   max_out_len 255
 ```
-和模型训练时类似，预测时也需要设置数据和 reader 相关的参数，并可以执行 `python infer.py --help` 查看这些参数的说明（部分参数意义和训练时略有不同）；同样可以在预测命令中设置模型超参数，但应与模型训练时的设置一致；此外相比于模型训练，预测时还有一些额外的参数，如需要设置 `model_path` 来给出模型所在目录，可以设置 `beam_size` 和 `max_out_len` 来指定 Beam Search 算法的搜索宽度和最大深度（翻译长度），这些参数也可以在 `config.py` 中的 `InferTaskConfig` 内查阅注释说明并进行更改设置。
+和模型训练时类似，预测时也需要设置数据和 reader 相关的参数，并可以执行 `python infer.py --help` 查看这些参数的说明（部分参数意义和训练时略有不同）；同样可以在预测命令中设置模型超参数，但应与模型训练时的设置一致，如训练时使用 big model 的参数设置，则预测时对应类似如下命令：
+```sh
+python -u infer.py \
+  --src_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
+  --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
+  --special_token '<s>' '<e>' '<unk>' \
+  --test_file_pattern gen_data/wmt16_ende_data_bpe/newstest2016.tok.bpe.32000.en-de \
+  --token_delimiter ' ' \
+  --batch_size 32 \
+  model_path trained_models/iter_100000.infer.model \
+  n_head 16 \
+  d_model 1024 \
+  d_inner_hid 4096 \
+  prepostprocess_dropout 0.3 \
+  beam_size 5 \
+  max_out_len 255
+```
+此外相比于模型训练，预测时还有一些额外的参数，如需要设置 `model_path` 来给出模型所在目录，可以设置 `beam_size` 和 `max_out_len` 来指定 Beam Search 算法的搜索宽度和最大深度（翻译长度），这些参数也可以在 `config.py` 中的 `InferTaskConfig` 内查阅注释说明并进行更改设置。
 
 执行以上预测命令会打印翻译结果到标准输出，每行输出是对应行输入的得分最高的翻译。对于使用 BPE 的英德数据，预测出的翻译结果也将是 BPE 表示的数据，要还原成原始的数据（这里指 tokenize 后的数据）才能进行正确的评估，可以使用以下命令来恢复 `predict.txt` 内的翻译结果到 `predict.tok.txt` 中（无需再次 tokenize 处理）：
 ```sh
 sed -r 's/(@@ )|(@@ ?$)//g' predict.txt > predict.tok.txt
 ```
 
-接下来就可以使用参考翻译对翻译结果进行 BLEU 指标的评估了。以英德翻译 `newstest2016.tok.de` 数据为例，执行如下命令：
+接下来就可以使用参考翻译对翻译结果进行 BLEU 指标的评估了。以英德翻译 `newstest2014.tok.de` 数据为例，执行如下命令：
 ```sh
-perl gen_data/mosesdecoder/scripts/generic/multi-bleu.perl gen_data/wmt16_ende_data/newstest2016.tok.de < predict.tok.txt
+perl gen_data/mosesdecoder/scripts/generic/multi-bleu.perl gen_data/wmt16_ende_data/newstest2014.tok.de < predict.tok.txt
 ```
-可以看到类似如下的结果（为单机两卡训练 200K 个 iteration 后模型的预测结果）。
+可以看到类似如下的结果（mosesdecoder 也可通过 `git clone https://github.com/moses-smt/mosesdecoder.git` 单独下载）：
 ```
-BLEU = 33.08, 64.2/39.2/26.4/18.5 (BP=0.994, ratio=0.994, hyp_len=61971, ref_len=62362)
+BLEU = 26.35, 57.7/32.1/20.0/13.0 (BP=1.000, ratio=1.013, hyp_len=63903, ref_len=63078)
 ```
-目前在未使用 model average 的情况下，英德翻译 base model 八卡训练 100K 个 iteration 后测试 BLEU 值如下：
+目前在未使用 model average 的情况下，英德翻译 base model 和 big model 八卡训练 100K 个 iteration 后测试 BLEU 值如下：
 
 | 测试集 | newstest2014 | newstest2015 | newstest2016 |
 |-|-|-|-|
-| BLEU | 26.25 | 29.15 | 33.64 |
+| Base | 26.35 | 29.07 | 33.30 |
+| Big | 27.07 | 30.09 | 34.38 |
 
+我们这里也提供了以上 [base model](https://transformer-res.bj.bcebos.com/base_model.tar.gz) 和 [big model](https://transformer-res.bj.bcebos.com/big_model.tar.gz) 模型的下载以供使用。
 
 ### 分布式训练
 

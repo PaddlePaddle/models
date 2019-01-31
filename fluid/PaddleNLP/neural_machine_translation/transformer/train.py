@@ -10,7 +10,6 @@ import time
 
 import numpy as np
 import paddle.fluid as fluid
-from paddle.fluid.transpiler.details import program_to_code
 
 import reader
 from config import *
