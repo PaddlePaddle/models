@@ -37,21 +37,21 @@ class FeatureReader(DataReader):
                  NextVlad only: eigen_file
     """
 
-    def __init__(self, name, phase, cfg):
+    def __init__(self, name, mode, cfg):
         self.name = name
-        self.phase = phase
+        self.mode = mode
         self.num_classes = cfg.MODEL.num_classes
 
         # set batch size and file list
-        self.batch_size = cfg[phase.upper()]['batch_size']
-        self.filelist = cfg[phase.upper()]['filelist']
+        self.batch_size = cfg[mode.upper()]['batch_size']
+        self.filelist = cfg[mode.upper()]['filelist']
         self.eigen_file = cfg.MODEL.get('eigen_file', None)
         self.seg_num = cfg.MODEL.get('seg_num', None)
 
     def create_reader(self):
         fl = open(self.filelist).readlines()
         fl = [line.strip() for line in fl if line.strip() != '']
-        if self.phase == 'train':
+        if self.mode == 'train':
             random.shuffle(fl)
 
         def reader():
@@ -62,14 +62,14 @@ class FeatureReader(DataReader):
                 else:
                     data = pickle.load(open(filepath, 'rb'), encoding='bytes')
                 indexes = list(range(len(data)))
-                if self.phase == 'train':
+                if self.mode == 'train':
                     random.shuffle(indexes)
                 for i in indexes:
                     record = data[i]
                     nframes = record[b'nframes']
                     rgb = record[b'feature'].astype(float)
                     audio = record[b'audio'].astype(float)
-                    if self.phase != 'infer':
+                    if self.mode != 'infer':
                         label = record[b'label']
                         one_hot_label = make_one_hot(label, self.num_classes)
                     video = record[b'video']
@@ -94,7 +94,7 @@ class FeatureReader(DataReader):
                                                           self.seg_num)
                         rgb = rgb[sample_inds]
                         audio = audio[sample_inds]
-                    if self.phase != 'infer':
+                    if self.mode != 'infer':
                         batch_out.append((rgb, audio, one_hot_label))
                     else:
                         batch_out.append((rgb, audio, video))
