@@ -146,6 +146,10 @@ class NEXTVLAD(ModelBase):
         return self.feature_input if self.mode == 'infer' else self.feature_input + [
             self.label_input
         ]
+    
+    def weights_info(self):
+        return ('nextvlad_youtube8m', 
+                'https://paddlemodels.bj.bcebos.com/video_classification/nextvlad_youtube8m.tar.gz')
 
 
 def get_learning_rate_decay_list(base_learning_rate, decay, max_iter,
