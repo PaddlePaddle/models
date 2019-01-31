@@ -92,12 +92,10 @@ def infer(args):
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    # get infer reader
-    if not args.filelist:
-        logger.error("[INFER] --filelist unset.")
-        return
-    assert os.path.exists(args.filelist), "{} not exist.".format(args.filelist)
+    filelist = args.filelist or infer_config.INFER.filelist
+    assert os.path.exists(filelist), "{} not exist.".format(args.filelist)
 
+    # get infer reader
     infer_reader = get_reader(args.model_name.upper(), 'infer', infer_config)
 
     if args.weights:
@@ -133,8 +131,9 @@ def infer(args):
         cur_time = time.time()
         period = cur_time - prev_time
         periods.append(period)
-        logger.info('Processed {} samples'.format((infer_iter) * len(
-            predictions)))
+        if args.log_interval > 0 and infer_iter % args.log_interval == 0:
+            logger.info('Processed {} samples'.format((infer_iter) * len(
+                predictions)))
 
     logger.info('[INFER] infer finished. average time: {}'.format(
         np.mean(periods)))
