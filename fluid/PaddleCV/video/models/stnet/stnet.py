@@ -26,7 +26,6 @@ class STNET(ModelBase):
         self.get_config()
 
     def get_config(self):
-        self.format = self.get_config_from_sec('model', 'format')
         self.num_classes = self.get_config_from_sec('model', 'num_classes')
         self.seg_num = self.get_config_from_sec('model', 'seg_num')
         self.seglen = self.get_config_from_sec('model', 'seglen')
@@ -43,16 +42,9 @@ class STNET(ModelBase):
         self.l2_weight_decay = self.get_config_from_sec('train',
                                                         'l2_weight_decay')
         self.momentum = self.get_config_from_sec('train', 'momentum')
-        self.use_gpu = self.get_config_from_sec('train', 'use_gpu')
-        self.num_gpus = self.get_config_from_sec('train', 'num_gpus')
 
-        self.short_size = self.get_config_from_sec(self.mode, 'short_size')
         self.target_size = self.get_config_from_sec(self.mode, 'target_size')
-        self.num_reader_threads = self.get_config_from_sec(self.mode,
-                                                           'num_reader_threads')
-        self.buf_size = self.get_config_from_sec(self.mode, 'buf_size')
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size')
-        self.filelist = self.get_config_from_sec(self.mode, 'filelist')
 
     def build_input(self, use_pyreader=True):
         image_shape = [3, self.target_size, self.target_size]
@@ -129,29 +121,6 @@ class STNET(ModelBase):
         return self.feature_input if self.mode == 'infer' else self.feature_input + [
             self.label_input
         ]
-
-    def create_dataset_args(self):
-        cfg = {}
-        cfg['format'] = self.format
-        cfg['num_classes'] = self.num_classes
-        cfg['seg_num'] = self.seg_num
-        cfg['seglen'] = self.seglen
-        cfg['short_size'] = self.short_size
-        cfg['target_size'] = self.target_size
-        cfg['num_reader_threads'] = self.num_reader_threads
-        cfg['buf_size'] = self.buf_size
-        cfg['image_mean'] = self.image_mean
-        cfg['image_std'] = self.image_std
-        cfg['list'] = self.filelist
-        if (self.use_gpu) and (self.py_reader is not None):
-            cfg['batch_size'] = int(self.batch_size / self.num_gpus)
-        else:
-            cfg['batch_size'] = self.batch_size
-
-        return cfg
-
-    def create_metrics_args(self):
-        return {}
 
     def load_pretrain_params(self, exe, pretrain, prog):
         def is_parameter(var):

@@ -58,7 +58,6 @@ class NEXTVLAD(ModelBase):
 
         # other params
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size')
-        self.list = self.get_config_from_sec(self.mode, 'filelist')
 
     def build_input(self, use_pyreader=True):
         rgb_shape = [self.video_feature_size]
@@ -147,23 +146,6 @@ class NEXTVLAD(ModelBase):
         return self.feature_input if self.mode == 'infer' else self.feature_input + [
             self.label_input
         ]
-
-    def create_dataset_args(self):
-        dataset_args = {}
-        dataset_args['num_classes'] = self.num_classes
-        if self.use_gpu and self.py_reader:
-            dataset_args['batch_size'] = int(self.batch_size / self.num_gpus)
-        else:
-            dataset_args['batch_size'] = self.batch_size
-        dataset_args['list'] = self.list
-        dataset_args['eigen_file'] = self.eigen_file
-        return dataset_args
-
-    def create_metrics_args(self):
-        metrics_args = {}
-        metrics_args['num_classes'] = self.num_classes
-        metrics_args['topk'] = 20
-        return metrics_args
 
 
 def get_learning_rate_decay_list(base_learning_rate, decay, max_iter,
