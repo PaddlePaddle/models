@@ -105,7 +105,7 @@ def optimizer_setting(params):
             total_images = params["total_images"]
         batch_size = ls["batch_size"]
         num_epochs = params["num_epochs"]
-        start_lr = 0.5
+        start_lr = params["lr"]
         l2_decay = params["l2_decay"]
         momentum_rate = params["momentum_rate"]
         end_lr = 0
