@@ -94,6 +94,14 @@ class Model(object):
         return [avg_cost, accuracy]
 
     def run(self):
+
+        if FLAGS.enable_ce:
+            import random
+            SEED = 102
+            random.seed(SEED)
+            np.random.seed(SEED)
+            fluid.default_main_program().random_seed = SEED
+            fluid.default_startup_program().random_seed = SEED
         train_files = reader.train10()
         test_files = reader.test10()
 
