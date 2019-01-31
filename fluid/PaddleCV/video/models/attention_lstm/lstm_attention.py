@@ -27,9 +27,7 @@ class LSTMAttentionModel(object):
                  drop_rate=0.5):
         self.lstm_size = lstm_size
         self.embedding_size = embedding_size
-        self.bias_attr = ParamAttr(
-            regularizer=fluid.regularizer.L2Decay(0.0),
-            initializer=fluid.initializer.NormalInitializer(scale=0.0))
+        self.drop_rate = drop_rate
 
     def forward(self, input, is_training):
         input_fc = fluid.layers.fc(
@@ -64,7 +62,7 @@ class LSTMAttentionModel(object):
             input=[lstm_forward, lstm_backward], axis=1)
 
         lstm_dropout = fluid.layers.dropout(
-            x=lstm_concat, dropout_prob=0.5, is_test=(not is_training))
+            x=lstm_concat, dropout_prob=self.drop_rate, is_test=(not is_training))
 
         lstm_weight = fluid.layers.fc(
             input=lstm_dropout,

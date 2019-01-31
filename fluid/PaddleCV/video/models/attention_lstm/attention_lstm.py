@@ -34,6 +34,7 @@ class AttentionLSTM(ModelBase):
         self.num_classes = self.cfg.MODEL.num_classes
         self.embedding_size = self.cfg.MODEL.embedding_size
         self.lstm_size = self.cfg.MODEL.lstm_size
+        self.drop_rate = self.cfg.MODEL.drop_rate
 
         # get mode configs
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size', 1)
@@ -87,7 +88,7 @@ class AttentionLSTM(ModelBase):
         for i, (input_dim, feature
                 ) in enumerate(zip(self.feature_dims, self.feature_input)):
             att = LSTMAttentionModel(input_dim, self.embedding_size,
-                                     self.lstm_size)
+                                     self.lstm_size, self.drop_rate)
             att_out = att.forward(feature, is_training=(self.mode == 'train'))
             att_outs.append(att_out)
         out = fluid.layers.concat(att_outs, axis=1)
