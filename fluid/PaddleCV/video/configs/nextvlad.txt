@@ -34,6 +34,6 @@ batch_size = 40
 filelist = "./dataset/youtube8m/test.list"
 
 [INFER]
-batch_size = 40
+batch_size = 1
 filelist = "./dataset/youtube8m/infer.list"
 

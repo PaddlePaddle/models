@@ -45,6 +45,6 @@ short_size = 256
 target_size = 224
 num_reader_threads = 12
 buf_size = 1024
-batch_size = 32
+batch_size = 1
 filelist = "./dataset/kinetics/infer.list"
 
