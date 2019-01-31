@@ -165,16 +165,19 @@ def train(args):
         main_program=valid_prog)
 
     # get reader
+    bs_denominator = 1
+    if (not args.no_use_pyreader) and args.use_gpu:
+        bs_denominator = train_config.TRAIN.num_gpus
+    train_config.TRAIN.batch_size = int(train_config.TRAIN.batch_size /
+                                        bs_denominator)
+    valid_config.VALID.batch_size = int(valid_config.VALID.batch_size /
+                                        bs_denominator)
     train_reader = get_reader(args.model_name.upper(), 'train', train_config)
     valid_reader = get_reader(args.model_name.upper(), 'valid', valid_config)
-    #train_reader = train_model.reader()
-    #valid_reader = valid_model.reader()
 
     # get metrics 
     train_metrics = get_metrics(args.model_name.upper(), 'train', train_config)
     valid_metrics = get_metrics(args.model_name.upper(), 'valid', valid_config)
-    #train_metrics = train_model.metrics()
-    #train_metrics = train_model.metrics()
 
     train_fetch_list = [train_loss.name] + [x.name for x in train_outputs
                                             ] + [train_feeds[-1].name]

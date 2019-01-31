@@ -26,6 +26,7 @@ import paddle.fluid as fluid
 
 from config import *
 import models
+from datareader import get_reader
 
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
 logging.basicConfig(level=logging.DEBUG, format=FORMAT, stream=sys.stdout)
@@ -81,8 +82,7 @@ def infer(args):
     # parse config
     config = parse_config(args.config)
     infer_config = merge_configs(config, 'infer', vars(args))
-    infer_model = models.get_model(
-        args.model_name, infer_config, mode='infer')
+    infer_model = models.get_model(args.model_name, infer_config, mode='infer')
 
     infer_model.build_input(use_pyreader=False)
     infer_model.build_model()
@@ -97,7 +97,8 @@ def infer(args):
         logger.error("[INFER] --filelist unset.")
         return
     assert os.path.exists(args.filelist), "{} not exist.".format(args.filelist)
-    infer_reader = infer_model.reader()
+
+    infer_reader = get_reader(args.model_name.upper(), 'infer', infer_config)
 
     if args.weights:
         assert os.path.exists(

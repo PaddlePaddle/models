@@ -22,6 +22,8 @@ import paddle.fluid as fluid
 
 from config import *
 import models
+from datareader import get_reader
+from metrics import get_metrics
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -68,8 +70,7 @@ def test(args):
     test_config = merge_configs(config, 'test', vars(args))
 
     # build model
-    test_model = models.get_model(
-        args.model_name, test_config, mode='test')
+    test_model = models.get_model(args.model_name, test_config, mode='test')
     test_model.build_input(use_pyreader=False)
     test_model.build_model()
     test_feeds = test_model.feeds()
@@ -90,8 +91,8 @@ def test(args):
     fluid.io.load_vars(exe, weights, predicate=if_exist)
 
     # get reader and metrics
-    test_reader = test_model.reader()
-    test_metrics = test_model.metrics()
+    test_reader = get_reader(args.model_name.upper(), 'test', test_config)
+    test_metrics = get_metrics(args.model_name.upper(), 'test', test_config)
 
     test_feeder = fluid.DataFeeder(place=place, feed_list=test_feeds)
     fetch_list = [loss.name] + [x.name

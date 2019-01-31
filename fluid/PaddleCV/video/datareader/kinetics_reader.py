@@ -56,12 +56,12 @@ class KineticsReader(DataReader):
     def __init__(self, name, phase, cfg):
         self.name = name
         self.phase = phase
-        self.format = cfg.MODEL.format  #cfg['format']
-        self.num_classes = cfg.MODEL.num_classes  #cfg['num_classes']
-        self.seg_num = cfg.MODEL.segnum  #['seg_num']
-        self.seglen = cfg.MODEL.seglen  #['seglen']
-        self.short_size = cfg[phase.upper()]['short_size']  # ['short_size']
-        self.target_size = cfg[phase.upper()]['target_size']  #['target_size']
+        self.format = cfg.MODEL.format
+        self.num_classes = cfg.MODEL.num_classes
+        self.seg_num = cfg.MODEL.seg_num
+        self.seglen = cfg.MODEL.seglen
+        self.short_size = cfg[phase.upper()]['short_size']
+        self.target_size = cfg[phase.upper()]['target_size']
         self.num_reader_threads = cfg[phase.upper()]['num_reader_threads']
         self.buf_size = cfg[phase.upper()]['buf_size']
 

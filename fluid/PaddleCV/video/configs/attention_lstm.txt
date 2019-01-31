@@ -21,7 +21,7 @@ num_samples = 5000000
 pretrain_base = None
 batch_size = 160
 use_gpu = True
-gpu_num = 4
+num_gpus = 4
 filelist = "data/youtube8m/train.list"
 
 [VALID]
