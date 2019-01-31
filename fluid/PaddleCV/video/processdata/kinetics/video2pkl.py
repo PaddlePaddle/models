@@ -46,11 +46,7 @@ f.close()
 def generate_pkl(entry):
     mode = entry[4]
     category = entry[0].strip('"')
-    #if ' ' in category:
-    #    category_dir = category.replace(' ', '_')
-    #else:
     category_dir = category
-    #video_path = os.path.join(entry[0], entry[1] + "_%06d"%int(entry[2]) + "_%06d"%int(entry[3]) + ".mp4")
     video_path = os.path.join(
         './',
         entry[1] + "_%06d" % int(entry[2]) + "_%06d" % int(entry[3]) + ".mp4")

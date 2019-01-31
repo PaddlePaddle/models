@@ -142,11 +142,6 @@ class YT8MFrameFeatureReader(BaseReader):
 
         num_frames = tf.minimum(tf.shape(decoded_features)[0], max_frames)
 
-        #feature_matrix = Dequantize(decoded_features,
-        #                                  max_quantized_value,
-        #                                  min_quantized_value)
-        #feature_matrix = resize_axis(feature_matrix, 0, max_frames)
-
         feature_matrix = decoded_features
 
         return feature_matrix, num_frames

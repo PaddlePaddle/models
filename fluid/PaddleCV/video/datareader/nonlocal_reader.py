@@ -89,7 +89,7 @@ class NonlocalReader(DataReader):
                                **dataset_args)
         else:
             logger.info('Not implemented')
-            raise
+            raise NotImplementedError
 
 
 def video_fast_get_frame(video_path,
@@ -104,7 +104,6 @@ def video_fast_get_frame(video_path,
 
     sampledFrames = []
 
-    # n_frame <  sample area
     video_output = np.ndarray(shape=[length, height, width, 3], dtype=np.uint8)
 
     use_start_frm = start_frm
@@ -220,7 +219,6 @@ def make_reader(filelist, batch_size, sample_times, is_training, shuffle,
                 start_frm = -1
                 spatial_pos = -1
                 in_sample_times = 1
-            # print('label = ', label)
             label = np.array([label]).astype(np.int64)
             # 1, get rgb data for fixed length of frames
             try:
@@ -246,8 +244,6 @@ def make_reader(filelist, batch_size, sample_times, is_training, shuffle,
                              spatial_pos = spatial_pos)
 
             batch_out.append((rgbdata, label))
-            #elapsed_time = time.time() - start_time
-            #print('read item time ', elapsed_time)
             if len(batch_out) == batch_size:
                 yield batch_out
                 batch_out = []
