@@ -37,7 +37,6 @@ class AttentionLSTM(ModelBase):
 
         # get mode configs
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size', 1)
-        self.use_gpu = self.get_config_from_sec(self.mode, 'use_gpu', False)
         self.gpu_num = self.get_config_from_sec(self.mode, 'gpu_num', 1)
 
         if self.mode == 'train':
@@ -148,4 +147,3 @@ class AttentionLSTM(ModelBase):
 
     def weights_info(self):
         return (None, None)
-

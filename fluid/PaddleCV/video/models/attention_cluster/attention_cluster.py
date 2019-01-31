@@ -37,11 +37,6 @@ class AttentionCluster(ModelBase):
         self.class_num = self.cfg.MODEL.num_classes  #self.cfg.MODEL.class_num
         self.drop_rate = self.cfg.MODEL.drop_rate
 
-        # get mode configs
-        self.batch_size = self.get_config_from_sec(self.mode, 'batch_size', 1)
-        self.use_gpu = self.get_config_from_sec(self.mode, 'use_gpu', True)
-        self.gpu_num = self.get_config_from_sec(self.mode, 'gpu_num', 1)
-
         if self.mode == 'train':
             self.learning_rate = self.get_config_from_sec('train',
                                                           'learning_rate', 1e-3)
@@ -142,4 +137,3 @@ class AttentionCluster(ModelBase):
             "attention_cluster_youtube8m",
             "https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz"
         )
-
