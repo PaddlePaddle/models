@@ -20,6 +20,11 @@ op_results = {}
 default_epsilon = 1e-3
 default_norm_type = 'bn'
 default_group_number = 32
+depthwise_use_cudnn = False
+
+bn_regularizer = fluid.regularizer.L2DecayRegularizer(regularization_coeff=0.0)
+depthwise_regularizer = fluid.regularizer.L2DecayRegularizer(
+    regularization_coeff=0.0)
 
 
 @contextlib.contextmanager
@@ -52,20 +57,39 @@ def append_op_result(result, name):
 
 
 def conv(*args, **kargs):
-    kargs['param_attr'] = name_scope + 'weights'
+    if "xception" in name_scope:
+        init_std = 0.09
+    elif "logit" in name_scope:
+        init_std = 0.01
+    elif name_scope.endswith('depthwise/'):
+        init_std = 0.33
+    else:
+        init_std = 0.06
+    if name_scope.endswith('depthwise/'):
+        regularizer = depthwise_regularizer
+    else:
+        regularizer = None
+
+    kargs['param_attr'] = fluid.ParamAttr(
+        name=name_scope + 'weights',
+        regularizer=regularizer,
+        initializer=fluid.initializer.TruncatedNormal(
+            loc=0.0, scale=init_std))
     if 'bias_attr' in kargs and kargs['bias_attr']:
-        kargs['bias_attr'] = name_scope + 'biases'
+        kargs['bias_attr'] = fluid.ParamAttr(
+            name=name_scope + 'biases',
+            regularizer=regularizer,
+            initializer=fluid.initializer.ConstantInitializer(value=0.0))
     else:
         kargs['bias_attr'] = False
+    kargs['name'] = name_scope + 'conv'
     return append_op_result(fluid.layers.conv2d(*args, **kargs), 'conv')
 
 
 def group_norm(input, G, eps=1e-5, param_attr=None, bias_attr=None):
-    helper = fluid.layer_helper.LayerHelper('group_norm', **locals())
-
     N, C, H, W = input.shape
     if C % G != 0:
-        print("group can not divide channle:", C, G)
+        # print "group can not divide channle:", C, G
         for d in range(10):
             for t in [d, -d]:
                 if G + t <= 0: continue
@@ -73,29 +97,16 @@ def group_norm(input, G, eps=1e-5, param_attr=None, bias_attr=None):
                     G = G + t
                     break
             if C % G == 0:
-                print("use group size:", G)
+                # print "use group size:", G
                 break
     assert C % G == 0
-    param_shape = (G, )
-    x = input
-    x = fluid.layers.reshape(x, [N, G, C // G * H * W])
-    mean = fluid.layers.reduce_mean(x, dim=2, keep_dim=True)
-    x = x - mean
-    var = fluid.layers.reduce_mean(fluid.layers.square(x), dim=2, keep_dim=True)
-    x = x / fluid.layers.sqrt(var + eps)
-
-    scale = helper.create_parameter(
-        attr=helper.param_attr,
-        shape=param_shape,
-        dtype='float32',
-        default_initializer=fluid.initializer.Constant(1.0))
-
-    bias = helper.create_parameter(
-        attr=helper.bias_attr, shape=param_shape, dtype='float32', is_bias=True)
-    x = fluid.layers.elementwise_add(
-        fluid.layers.elementwise_mul(
-            x, scale, axis=1), bias, axis=1)
-    return fluid.layers.reshape(x, input.shape)
+    x = fluid.layers.group_norm(
+        input,
+        groups=G,
+        param_attr=param_attr,
+        bias_attr=bias_attr,
+        name=name_scope + 'group_norm')
+    return x
 
 
 def bn(*args, **kargs):
@@ -106,8 +117,10 @@ def bn(*args, **kargs):
                     *args,
                     epsilon=default_epsilon,
                     momentum=bn_momentum,
-                    param_attr=name_scope + 'gamma',
-                    bias_attr=name_scope + 'beta',
+                    param_attr=fluid.ParamAttr(
+                        name=name_scope + 'gamma', regularizer=bn_regularizer),
+                    bias_attr=fluid.ParamAttr(
+                        name=name_scope + 'beta', regularizer=bn_regularizer),
                     moving_mean_name=name_scope + 'moving_mean',
                     moving_variance_name=name_scope + 'moving_variance',
                     **kargs),
@@ -119,8 +132,10 @@ def bn(*args, **kargs):
                     args[0],
                     default_group_number,
                     eps=default_epsilon,
-                    param_attr=name_scope + 'gamma',
-                    bias_attr=name_scope + 'beta'),
+                    param_attr=fluid.ParamAttr(
+                        name=name_scope + 'gamma', regularizer=bn_regularizer),
+                    bias_attr=fluid.ParamAttr(
+                        name=name_scope + 'beta', regularizer=bn_regularizer)),
                 'gn')
     else:
         raise "Unsupport norm type:" + default_norm_type
@@ -143,7 +158,8 @@ def seq_conv(input, channel, stride, filter, dilation=1, act=None):
             stride,
             groups=input.shape[1],
             padding=(filter // 2) * dilation,
-            dilation=dilation)
+            dilation=dilation,
+            use_cudnn=depthwise_use_cudnn)
         input = bn(input)
         if act: input = act(input)
     with scope('pointwise'):
@@ -166,7 +182,7 @@ def xception_block(input,
     filters = check(filters, repeat_number)
     strides = check(strides, repeat_number)
     data = input
-    datum = []
+    results = []
     for i in range(repeat_number):
         with scope('separable_conv' + str(i + 1)):
             if not activation_fn_in_separable_conv:
@@ -185,9 +201,9 @@ def xception_block(input,
                     filters[i],
                     dilation=dilation,
                     act=relu)
-            datum.append(data)
+            results.append(data)
     if not has_skip:
-        return append_op_result(data, 'xception_block'), datum
+        return append_op_result(data, 'xception_block'), results
     if skip_conv:
         with scope('shortcut'):
             skip = bn(
@@ -195,7 +211,7 @@ def xception_block(input,
                     input, channels[-1], 1, strides[-1], groups=1, padding=0))
     else:
         skip = input
-    return append_op_result(data + skip, 'xception_block'), datum
+    return append_op_result(data + skip, 'xception_block'), results
 
 
 def entry_flow(data):
@@ -209,10 +225,10 @@ def entry_flow(data):
         with scope("block1"):
             data, _ = xception_block(data, 128, [1, 1, 2])
         with scope("block2"):
-            data, datum = xception_block(data, 256, [1, 1, 2])
+            data, results = xception_block(data, 256, [1, 1, 2])
         with scope("block3"):
             data, _ = xception_block(data, 728, [1, 1, 2])
-        return data, datum[1]
+        return data, results[1]
 
 
 def middle_flow(data):

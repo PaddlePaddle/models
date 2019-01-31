@@ -5,6 +5,7 @@ import time
 import numpy as np
 import paddle.fluid as fluid
 import paddle
+import os
 
 
 def to_lodtensor(data, place):
@@ -23,35 +24,96 @@ def to_lodtensor(data, place):
     return res
 
 
-def prepare_data(train_filename,
-                 test_filename,
+def to_lodtensor_bpr(raw_data, neg_size, vocab_size, place):
+    """ convert to LODtensor """
+    data = [dat[0] for dat in raw_data]
+    seq_lens = [len(seq) for seq in data]
+    cur_len = 0
+    lod = [cur_len]
+    for l in seq_lens:
+        cur_len += l
+        lod.append(cur_len)
+    flattened_data = np.concatenate(data, axis=0).astype("int64")
+    flattened_data = flattened_data.reshape([len(flattened_data), 1])
+    res = fluid.LoDTensor()
+    res.set(flattened_data, place)
+    res.set_lod([lod])
+
+    data = [dat[1] for dat in raw_data]
+    pos_data = np.concatenate(data, axis=0).astype("int64")
+    length = np.size(pos_data)
+    neg_data = np.tile(pos_data, neg_size)
+    np.random.shuffle(neg_data)
+    for ii in range(length * neg_size):
+        if neg_data[ii] == pos_data[ii / neg_size]:
+            neg_data[ii] = pos_data[length - 1 - ii / neg_size]
+
+    label_data = np.column_stack(
+        (pos_data.reshape(length, 1), neg_data.reshape(length, neg_size)))
+    res_label = fluid.LoDTensor()
+    res_label.set(label_data, place)
+    res_label.set_lod([lod])
+
+    res_pos = fluid.LoDTensor()
+    res_pos.set(np.zeros([len(flattened_data), 1]).astype("int64"), place)
+    res_pos.set_lod([lod])
+
+    return res, res_pos, res_label
+
+
+def to_lodtensor_bpr_test(raw_data, vocab_size, place):
+    """ convert to LODtensor """
+    data = [dat[0] for dat in raw_data]
+    seq_lens = [len(seq) for seq in data]
+    cur_len = 0
+    lod = [cur_len]
+    for l in seq_lens:
+        cur_len += l
+        lod.append(cur_len)
+    flattened_data = np.concatenate(data, axis=0).astype("int64")
+    flattened_data = flattened_data.reshape([len(flattened_data), 1])
+    res = fluid.LoDTensor()
+    res.set(flattened_data, place)
+    res.set_lod([lod])
+
+    data = [dat[1] for dat in raw_data]
+    flattened_data = np.concatenate(data, axis=0).astype("int64")
+    flattened_data = flattened_data.reshape([len(flattened_data), 1])
+    res_pos = fluid.LoDTensor()
+    res_pos.set(flattened_data, place)
+    res_pos.set_lod([lod])
+    return res, res_pos
+
+
+def get_vocab_size(vocab_path):
+    with open(vocab_path, "r") as rf:
+        line = rf.readline()
+        return int(line.strip())
+
+
+def prepare_data(file_dir,
+                 vocab_path,
                  batch_size,
                  buffer_size=1000,
                  word_freq_threshold=0,
-                 enable_ce=False):
+                 is_train=True):
     """ prepare the English Pann Treebank (PTB) data """
     print("start constuct word dict")
-    vocab = build_dict(word_freq_threshold, train_filename, test_filename)
-    print("construct word dict done\n")
-    if enable_ce:
-        train_reader = paddle.batch(
-            train(
-                train_filename, vocab, buffer_size, data_type=DataType.SEQ),
-            batch_size)
-    else:
-        train_reader = sort_batch(
+    if is_train:
+        vocab_size = get_vocab_size(vocab_path)
+        reader = sort_batch(
             paddle.reader.shuffle(
                 train(
-                    train_filename, vocab, buffer_size, data_type=DataType.SEQ),
+                    file_dir, buffer_size, data_type=DataType.SEQ),
                 buf_size=buffer_size),
             batch_size,
             batch_size * 20)
-    test_reader = sort_batch(
-        test(
-            test_filename, vocab, buffer_size, data_type=DataType.SEQ),
-        batch_size,
-        batch_size * 20)
-    return vocab, train_reader, test_reader
+    else:
+        vocab_size = get_vocab_size(vocab_path)
+        reader = paddle.batch(
+            test(
+                file_dir, buffer_size, data_type=DataType.SEQ), batch_size)
+    return vocab_size, reader
 
 
 def sort_batch(reader, batch_size, sort_group_size, drop_last=False):
@@ -104,56 +166,28 @@ class DataType(object):
     SEQ = 2
 
 
-def word_count(input_file, word_freq=None):
-    """
-    compute word count from corpus
-    """
-    if word_freq is None:
-        word_freq = collections.defaultdict(int)
-
-    for l in input_file:
-        for w in l.strip().split():
-            word_freq[w] += 1
-
-    return word_freq
-
-
-def build_dict(min_word_freq=50, train_filename="", test_filename=""):
-    """
-    Build a word dictionary from the corpus,  Keys of the dictionary are words,
-    and values are zero-based IDs of these words.
-    """
-    with open(train_filename) as trainf:
-        with open(test_filename) as testf:
-            word_freq = word_count(testf, word_count(trainf))
-
-    word_freq = [x for x in six.iteritems(word_freq) if x[1] > min_word_freq]
-    word_freq_sorted = sorted(word_freq, key=lambda x: (-x[1], x[0]))
-    words, _ = list(zip(*word_freq_sorted))
-    word_idx = dict(list(zip(words, six.moves.range(len(words)))))
-    return word_idx
-
-
-def reader_creator(filename, word_idx, n, data_type):
+def reader_creator(file_dir, n, data_type):
     def reader():
-        with open(filename) as f:
-            for l in f:
-                if DataType.SEQ == data_type:
-                    l = l.strip().split()
-                    l = [word_idx.get(w) for w in l]
-                    src_seq = l[:len(l) - 1]
-                    trg_seq = l[1:]
-                    if n > 0 and len(src_seq) > n: continue
-                    yield src_seq, trg_seq
-                else:
-                    assert False, 'error data type'
+        files = os.listdir(file_dir)
+        for fi in files:
+            with open(file_dir + '/' + fi, "r") as f:
+                for l in f:
+                    if DataType.SEQ == data_type:
+                        l = l.strip().split()
+                        l = [w for w in l]
+                        src_seq = l[:len(l) - 1]
+                        trg_seq = l[1:]
+                        if n > 0 and len(src_seq) > n: continue
+                        yield src_seq, trg_seq
+                    else:
+                        assert False, 'error data type'
 
     return reader
 
 
-def train(filename, word_idx, n, data_type=DataType.SEQ):
-    return reader_creator(filename, word_idx, n, data_type)
+def train(train_dir, n, data_type=DataType.SEQ):
+    return reader_creator(train_dir, n, data_type)
 
 
-def test(filename, word_idx, n, data_type=DataType.SEQ):
-    return reader_creator(filename, word_idx, n, data_type)
+def test(test_dir, n, data_type=DataType.SEQ):
+    return reader_creator(test_dir, n, data_type)

@@ -22,6 +22,7 @@ import os
 import random
 import json
 import six
+import multiprocessing
 
 import paddle
 import paddle.fluid as fluid
@@ -445,7 +446,9 @@ def train(logger, args):
                             logger.info('Dev eval result: {}'.format(
                                 bleu_rouge))
                 pass_end_time = time.time()
-
+                time_consumed = pass_end_time - pass_start_time
+                logger.info('epoch: {0}, epoch_time_cost: {1:.2f}'.format(
+                    pass_id, time_consumed))
                 logger.info('Evaluating the model after epoch {}'.format(
                     pass_id))
                 if brc_data.dev_set is not None:
@@ -458,7 +461,7 @@ def train(logger, args):
                 else:
                     logger.warning(
                         'No dev set is loaded for evaluation in the dataset!')
-                time_consumed = pass_end_time - pass_start_time
+
                 logger.info('Average train loss for epoch {} is {}'.format(
                     pass_id, "%.10f" % (1.0 * total_loss / total_num)))
 

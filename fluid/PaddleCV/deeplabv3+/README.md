@@ -76,7 +76,7 @@ python ./train.py \
     --train_crop_size=769 \
     --total_step=90000 \
     --init_weights_path=deeplabv3plus_xception65_initialize.params \
-    --save_weights_path=output \
+    --save_weights_path=output/ \
     --dataset_path=$DATASET_PATH
 ```
 

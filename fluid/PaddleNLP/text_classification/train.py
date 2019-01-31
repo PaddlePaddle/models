@@ -73,8 +73,8 @@ def train(train_reader,
         avg_cost = total_cost / data_count
 
         avg_acc = total_acc / data_count
-        print("pass_id: %d, avg_acc: %f, avg_cost: %f" %
-              (pass_id, avg_acc, avg_cost))
+        print("pass_id: %d, avg_acc: %f, avg_cost: %f, pass_time_cost: %f" %
+              (pass_id, avg_acc, avg_cost, time.time() - pass_start))
 
         epoch_model = save_dirname + "/" + "epoch" + str(pass_id)
         fluid.io.save_inference_model(epoch_model, ["words", "label"], acc, exe)
@@ -89,7 +89,7 @@ def train(train_reader,
 
 def train_net():
     word_dict, train_reader, test_reader = utils.prepare_data(
-        "imdb", self_dict=False, batch_size=4, buf_size=50000)
+        "imdb", self_dict=False, batch_size=128, buf_size=50000)
 
     if sys.argv[1] == "bow":
         train(

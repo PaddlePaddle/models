@@ -85,7 +85,6 @@ def train(args,
 
     batch_size = train_params['batch_size']
     batch_size_per_device = batch_size // devices_num
-    iters_per_epoc = train_params["train_images"] // batch_size
     num_workers = 4
 
     startup_prog = fluid.Program()
@@ -134,22 +133,22 @@ def train(args,
                                 train_file_list,
                                 batch_size_per_device,
                                 shuffle=is_shuffle,
-                                use_multiprocessing=True,
-                                num_workers=num_workers,
-                                max_queue=24)
+                                num_workers=num_workers)
     test_reader = reader.test(data_args, val_file_list, batch_size)
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
 
     train_py_reader.start()
     best_map = 0.
-    try:
-        for epoc in range(epoc_num):
-            if epoc == 0:
-                # test quantized model without quantization-aware training.
-                test_map = test(exe, test_prog, map_eval, test_py_reader)
-            # train
-            for batch in range(iters_per_epoc):
+    for epoc in range(epoc_num):
+        if epoc == 0:
+            # test quantized model without quantization-aware training.
+            test_map = test(exe, test_prog, map_eval, test_py_reader)
+        batch = 0
+        train_py_reader.start()
+        while True:
+            try:
+                # train
                 start_time = time.time()
                 if parallel:
                     outs = train_exe.run(fetch_list=[loss.name])
@@ -157,18 +156,19 @@ def train(args,
                     outs = exe.run(train_prog, fetch_list=[loss])
                 end_time = time.time()
                 avg_loss = np.mean(np.array(outs[0]))
-                if batch % 20 == 0:
+                if batch % 10 == 0:
                     print("Epoc {:d}, batch {:d}, loss {:.6f}, time {:.5f}".format(
                         epoc , batch, avg_loss, end_time - start_time))
-            end_time = time.time()
-            test_map = test(exe, test_prog, map_eval, test_py_reader)
-            save_model(exe, train_prog, model_save_dir, str(epoc))
-            if test_map > best_map:
-                best_map = test_map
-                save_model(exe, train_prog, model_save_dir, 'best_map')
-            print("Best test map {0}".format(best_map))
-    except (fluid.core.EOFException, StopIteration):
-        train_py_reader.reset()
+            except (fluid.core.EOFException, StopIteration):
+                train_reader().close()
+                train_py_reader.reset()
+                break
+        test_map = test(exe, test_prog, map_eval, test_py_reader)
+        save_model(exe, train_prog, model_save_dir, str(epoc))
+        if test_map > best_map:
+            best_map = test_map
+            save_model(exe, train_prog, model_save_dir, 'best_map')
+        print("Best test map {0}".format(best_map))
 
 
 def eval(args, data_args, configs, val_file_list):
@@ -212,6 +212,9 @@ def eval(args, data_args, configs, val_file_list):
 
     test_map = test(exe, test_prog, map_eval, test_py_reader)
     print("Test model {0}, map {1}".format(init_model, test_map))
+    # convert model to 8-bit before saving, but now Paddle can't load
+    # the 8-bit model to do inference.
+    # transpiler.convert_to_int8(test_prog, place)
     fluid.io.save_inference_model(model_save_dir, [image.name],
                                   [nmsed_out], exe, test_prog)
 

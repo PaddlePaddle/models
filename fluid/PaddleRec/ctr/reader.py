@@ -35,7 +35,7 @@ class CriteoDataset(Dataset):
                             else:
                                 dense_feature.append((float(features[idx]) - self.cont_min_[idx - 1]) / self.cont_diff_[idx - 1])
                         for idx in self.categorical_range_:
-                            sparse_feature.append([hash("%d_%s" % (idx, features[idx])) % self.hash_dim_])
+                            sparse_feature.append([hash(str(idx) + features[idx]) % self.hash_dim_])
 
                         label = [int(features[0])]
                         yield [dense_feature] + sparse_feature + [label]

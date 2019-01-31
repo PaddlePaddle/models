@@ -17,7 +17,7 @@ Fluid模型配置和参数文件的工具。
 -  [MobileNet](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models)
 -  [Dual Path Network](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models)
 -  [SE-ResNeXt](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models)
--  [Caffe模型转换为Paddle Fluid配置和模型文件工具](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/caffe2fluid)
+-  [Caffe模型转换为Paddle Fluid配置和模型文件工具](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/caffe2fluid)
 
 目标检测
 --------
@@ -28,11 +28,11 @@ Fluid模型配置和参数文件的工具。
 
 开放环境中的检测人脸，尤其是小的、模糊的和部分遮挡的人脸也是一个具有挑战的任务。我们也介绍了如何基于 [WIDER FACE](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace) 数据训练百度自研的人脸检测PyramidBox模型，该算法于2018年3月份在WIDER FACE的多项评测中均获得 [第一名](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/WiderFace_Results.html)。
 
-Faster RCNN 是典型的两阶段目标检测器，相较于传统提取区域的方法，Faster RCNN中RPN网络通过共享卷积层参数大幅提高提取区域的效率，并提出高质量的候选区域。
+RCNN系列模型是典型的两阶段目标检测器，相较于传统提取区域的方法，RCNN中RPN网络通过共享卷积层参数大幅提高提取区域的效率，并提出高质量的候选区域。其中典型模型包括Faster RCNN和Mask RCNN。
 
 -  [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleCV/object_detection/README_cn.md)
 -  [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/face_detection/README_cn.md)
--  [Faster RCNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/faster_rcnn/README_cn.md)
+-  [RCNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn/README_cn.md)
 
 图像语义分割
 ------------
@@ -162,9 +162,8 @@ SimNet是百度自然语言处理部于2013年自主研发的语义匹配框架�
 
 在工业可用的推荐系统中，推荐策略一般会被划分为多个模块串联执行。以新闻推荐系统为例，存在多个可以使用深度学习技术的环节，例如新闻的自动化标注，个性化新闻召回，个性化匹配与排序等。PaddlePaddle对推荐算法的训练提供了完整的支持，并提供了多种模型配置供用户选择。
 
-- [TagSpace](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/TagSpace)
+- [TagSpace](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/tagspace)
 - [GRU4Rec](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/gru4rec)
 - [SequenceSemanticRetrieval](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/ssr)
 - [DeepCTR](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleRec/ctr/README.cn.md)
 - [Multiview-Simnet](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/multiview_simnet)
-

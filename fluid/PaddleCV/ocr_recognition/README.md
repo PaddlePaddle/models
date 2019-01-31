@@ -80,7 +80,7 @@
 在训练时，我们通过选项`--train_images` 和 `--train_list` 分别设置准备好的`train_images` 和`train_list`。
 
 
->**注：** 如果`--train_images` 和 `--train_list`都未设置或设置为None， ctc_reader.py会自动下载使用[示例数据](http://paddle-ocr-data.bj.bcebos.com/data.tar.gz)，并将其缓存到`$HOME/.cache/paddle/dataset/ctc_data/data/` 路径下。
+>**注：** 如果`--train_images` 和 `--train_list`都未设置或设置为None， reader.py会自动下载使用[示例数据](http://paddle-ocr-data.bj.bcebos.com/data.tar.gz)，并将其缓存到`$HOME/.cache/paddle/dataset/ctc_data/data/` 路径下。
 
 
 **B. 测试集和评估集**
@@ -119,17 +119,17 @@ data/test_images/00003.jpg
 使用默认数据在GPU单卡上训练:
 
 ```
-env CUDA_VISIBLE_DEVICES=0 python ctc_train.py
+env CUDA_VISIBLE_DEVICES=0 python train.py
 ```
 使用默认数据在CPU上训练:
 ```
-env OMP_NUM_THREADS=<num_of_physical_cores> python ctc_train.py --use_gpu False --parallel=False
+env OMP_NUM_THREADS=<num_of_physical_cores> python train.py --use_gpu False --parallel=False
 ```
 
 使用默认数据在GPU多卡上训练:
 
 ```
-env CUDA_VISIBLE_DEVICES=0,1,2,3 python ctc_train.py --parallel=True
+env CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --parallel=True
 ```
 
 默认使用的是`CTC model`, 可以通过选项`--model="attention"`切换为`attention model`。
@@ -197,3 +197,10 @@ env CUDA_VISIBLE_DEVICE=0 python infer.py \
     --model_path="models/model_00044_15000" \
     --input_images_list="data/test.list"
 ```
+
+## 预训练模型
+
+|模型| 错误率|
+|- |:-: |
+|[ocr_ctc_params](https://drive.google.com/open?id=1gsg2ODO2_F2pswXwW5MXpf8RY8-BMRyZ) | 22.3% |
+|[ocr_attention_params](https://drive.google.com/open?id=1Bx7-94mngyTaMA5kVjzYHDPAdXxOYbRm) | 15.8%|

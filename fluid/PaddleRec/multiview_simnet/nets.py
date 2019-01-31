@@ -33,7 +33,7 @@ class CNNEncoder(object):
     """ cnn-encoder"""
 
     def __init__(self,
-                 param_name="cnn.w",
+                 param_name="cnn",
                  win_size=3,
                  ksize=128,
                  act='tanh',
@@ -51,13 +51,15 @@ class CNNEncoder(object):
             filter_size=self.win_size,
             act=self.act,
             pool_type=self.pool_type,
-            param_attr=str(self.param_name))
+            param_attr=self.param_name + ".param",
+            bias_attr=self.param_name + ".bias")
+        
 
 
 class GrnnEncoder(object):
     """ grnn-encoder """
 
-    def __init__(self, param_name="grnn.w", hidden_size=128):
+    def __init__(self, param_name="grnn", hidden_size=128):
         self.param_name = param_name
         self.hidden_size = hidden_size
 
@@ -65,13 +67,15 @@ class GrnnEncoder(object):
         fc0 = nn.fc(
             input=emb, 
             size=self.hidden_size * 3, 
-            param_attr=str(str(self.param_name) + "_fc")
-        )
+            param_attr=self.param_name + "_fc.w",
+            bias_attr=False)
+        
         gru_h = nn.dynamic_gru(
             input=fc0,
             size=self.hidden_size,
             is_reverse=False,
-            param_attr=str(self.param_name))
+            param_attr=self.param_name + ".param",
+            bias_attr=self.param_name + ".bias")
         return nn.sequence_pool(input=gru_h, pool_type='max')
 
 
@@ -139,17 +143,17 @@ class MultiviewSimnet(object):
         # lookup embedding for each slot
         q_embs = [
             nn.embedding(
-                input=query, size=self.emb_shape, param_attr="emb.w")
+                input=query, size=self.emb_shape, param_attr="emb")
             for query in q_slots
         ]
         pt_embs = [
             nn.embedding(
-                input=title, size=self.emb_shape, param_attr="emb.w")
+                input=title, size=self.emb_shape, param_attr="emb")
             for title in pt_slots
         ]
         nt_embs = [
             nn.embedding(
-                input=title, size=self.emb_shape, param_attr="emb.w")
+                input=title, size=self.emb_shape, param_attr="emb")
             for title in nt_slots
         ]
 
@@ -170,9 +174,9 @@ class MultiviewSimnet(object):
         nt_concat = nn.concat(nt_encodes)
 
         # projection of hidden layer
-        q_hid = nn.fc(q_concat, size=self.hidden_size, param_attr='q_fc.w')
-        pt_hid = nn.fc(pt_concat, size=self.hidden_size, param_attr='t_fc.w')
-        nt_hid = nn.fc(nt_concat, size=self.hidden_size, param_attr='t_fc.w')
+        q_hid = nn.fc(q_concat, size=self.hidden_size, param_attr='q_fc.w', bias_attr='q_fc.b')
+        pt_hid = nn.fc(pt_concat, size=self.hidden_size, param_attr='t_fc.w', bias_attr='t_fc.b')
+        nt_hid = nn.fc(nt_concat, size=self.hidden_size, param_attr='t_fc.w', bias_attr='t_fc.b')
 
         # cosine of hidden layers
         cos_pos = nn.cos_sim(q_hid, pt_hid)
@@ -213,12 +217,12 @@ class MultiviewSimnet(object):
         # lookup embedding for each slot
         q_embs = [
             nn.embedding(
-                input=query, size=self.emb_shape, param_attr="emb.w")
+                input=query, size=self.emb_shape, param_attr="emb")
             for query in q_slots
         ]
         pt_embs = [
             nn.embedding(
-                input=title, size=self.emb_shape, param_attr="emb.w")
+                input=title, size=self.emb_shape, param_attr="emb")
             for title in pt_slots
         ]
         # encode each embedding field with encoder
@@ -232,8 +236,8 @@ class MultiviewSimnet(object):
         q_concat = nn.concat(q_encodes)
         pt_concat = nn.concat(pt_encodes)
         # projection of hidden layer
-        q_hid = nn.fc(q_concat, size=self.hidden_size, param_attr='q_fc.w')
-        pt_hid = nn.fc(pt_concat, size=self.hidden_size, param_attr='t_fc.w')
+        q_hid = nn.fc(q_concat, size=self.hidden_size, param_attr='q_fc.w', bias_attr='q_fc.b')
+        pt_hid = nn.fc(pt_concat, size=self.hidden_size, param_attr='t_fc.w', bias_attr='t_fc.b')
         # cosine of hidden layers
         cos = nn.cos_sim(q_hid, pt_hid)
         return cos
