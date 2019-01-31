@@ -72,7 +72,7 @@ def generate_pkl(entry):
     output_pkl = vid + ".pkl"
     output_pkl = os.path.join(target_dir, output_pkl)
     f = open(output_pkl, 'w')
-    cPickle.dump((vid, ims, label), f, -1)
+    cPickle.dump((vid, label, ims), f, -1)
     f.close()
 
     os.system('rm -rf %s' % vid)
