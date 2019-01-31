@@ -140,7 +140,6 @@ def train(args):
             valid_feeds = valid_model.feeds()
             valid_outputs = valid_model.outputs()
             valid_loss = valid_model.loss()
-            #valid_metrics = valid_model.metrics()
             valid_pyreader = valid_model.pyreader()
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()

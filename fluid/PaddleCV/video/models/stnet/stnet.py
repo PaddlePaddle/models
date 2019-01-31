@@ -122,7 +122,10 @@ class STNET(ModelBase):
             self.label_input
         ]
 
-    def load_pretrain_params(self, exe, pretrain, prog):
+    def pretrain_info(self):
+        return ('ResNet50_pretrained', 'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz')
+
+    def load_pretrain_params(self, exe, pretrain, prog, place):
         def is_parameter(var):
             if isinstance(var, fluid.framework.Parameter):
                 return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name)) \

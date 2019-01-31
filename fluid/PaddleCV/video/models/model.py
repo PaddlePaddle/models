@@ -139,10 +139,10 @@ class ModelBase(object):
 
         logger.info("Download pretrain weights of {} from {}".format(
                 self.name, url))
-        utils.download(url, path)
+        download(url, path)
         return path
 
-    def load_pretrain_params(self, exe, pretrain, prog):
+    def load_pretrain_params(self, exe, pretrain, prog, place):
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_base, var.name))
         fluid.io.load_params(exe, pretrain, main_program=prog)
