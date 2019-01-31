@@ -31,12 +31,12 @@ logger = logging.getLogger(__name__)
 class MetricsCalculator():
     def __init__(self, name, mode, **metrics_args):
         """
-          dataset args:
-                        num_test_clips
-                        dataset_size
-                        filename_gt
-                        checkpoint_dir
-                        num_classes
+          metrics args:
+                        num_test_clips, number of clips of each video when test
+                        dataset_size,   total number of videos in the dataset
+                        filename_gt,    a file with each line stores the groud truth of each video
+                        checkpoint_dir, dir where to store the test results
+                        num_classes,    number of classes of the dataset
         """
         self.name = name
         self.mode = mode  # 'train', 'val', 'test'
