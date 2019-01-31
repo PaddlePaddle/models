@@ -20,7 +20,6 @@ from utils.fp16_utils import create_master_params_grads, master_param_to_train_p
 from utility import add_arguments, print_arguments
 
 IMAGENET1000 = 1281167
-#IMAGENET100 = 128660
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
