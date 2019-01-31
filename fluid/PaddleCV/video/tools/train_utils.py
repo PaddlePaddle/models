@@ -24,7 +24,7 @@ def test_without_pyreader(test_exe,
         test_metrics.accumulate(loss, pred, label)
         if log_interval > 0 and test_iter % log_interval == 0:
             test_metrics.calculate_and_log_out(loss, pred, label, \
-                  info = '[Test] test_iter {} '.format(test_iter))
+                  info = '[TEST] test_iter {} '.format(test_iter))
     test_metrics.finalize_and_log_out("[TEST] Finish")
 
 
@@ -47,7 +47,7 @@ def test_with_pyreader(test_exe,
             test_metrics.accumulate(loss, pred, label)
             if log_interval > 0 and test_iter % log_interval == 0:
                 test_metrics.calculate_and_log_out(loss, pred, label, \
-                  info = '[Test] test_iter {} '.format(test_iter))
+                  info = '[TEST] test_iter {} '.format(test_iter))
             test_iter += 1
     except fluid.core.EOFException:
         test_metrics.finalize_and_log_out("[TEST] Finish")
