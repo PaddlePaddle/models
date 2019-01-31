@@ -22,16 +22,16 @@ pretrain_base = None
 batch_size = 160
 use_gpu = True
 num_gpus = 4
-filelist = "data/youtube8m/train.list"
+filelist = "dataset/youtube8m/train.list"
 
 [VALID]
 batch_size = 160
-filelist = "data/youtube8m/val.list"
+filelist = "dataset/youtube8m/val.list"
 
 [TEST]
 batch_size = 40
-filelist = "data/youtube8m/test.list"
+filelist = "dataset/youtube8m/test.list"
 
 [INFER]
 batch_size = 1
-filelist = "data/youtube8m/infer.list"
+filelist = "dataset/youtube8m/infer.list"

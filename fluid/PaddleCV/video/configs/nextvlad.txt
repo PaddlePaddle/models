@@ -10,7 +10,7 @@ groups = 8
 expansion = 2
 drop_rate = 0.5
 gating_reduction = 8
-eigen_file = "./data/eigenvals.npy"
+eigen_file = "./dataset/eigenvals.npy"
 
 [TRAIN]
 epoch = 6
@@ -23,17 +23,17 @@ gradient_clip_norm = 1.0
 use_gpu = True
 num_gpus = 4
 batch_size = 160
-filelist = "./data/youtube8m/train.list"
+filelist = "./dataset/youtube8m/train.list"
 
 [VALID]
 batch_size = 160
-filelist = "./data/youtube8m/val.list"
+filelist = "./dataset/youtube8m/val.list"
 
 [TEST]
 batch_size = 40
-filelist = "./data/youtube8m/test.list"
+filelist = "./dataset/youtube8m/test.list"
 
 [INFER]
 batch_size = 40
-filelist = "./data/youtube8m/infer.list"
+filelist = "./dataset/youtube8m/infer.list"
 
