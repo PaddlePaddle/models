@@ -15,17 +15,17 @@ topk = 20
 epoch = 5
 learning_rate = 0.001
 pretrain_base = None
-batch_size = 160
+batch_size = 2048
 use_gpu = True
-num_gpus = 4
+num_gpus = 8
 filelist = "dataset/youtube8m/train.list"
 
 [VALID]
-batch_size = 160
+batch_size = 2048
 filelist = "dataset/youtube8m/val.list"
 
 [TEST]
-batch_size = 40
+batch_size = 256
 filelist = "dataset/youtube8m/test.list"
 
 [INFER]
