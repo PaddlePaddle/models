@@ -97,7 +97,7 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --l2_decay=1e-4 \(TODO)
+#       --l2_decay=1e-4
 
 
 #SE_ResNeXt50:
@@ -109,7 +109,7 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --l2_decay=12e-5 \(TODO)
+#       --l2_decay=12e-5
 
 #SE_ResNeXt101:
 #python train.py \
@@ -120,7 +120,7 @@ python train.py \
 #        --lr_strategy=cosine_decay \
 #        --lr=0.1 \
 #        --num_epochs=200 \
-#        --l2_decay=15e-5 \(TODO)
+#        --l2_decay=15e-5
 
 #VGG11:
 #python train.py \
@@ -131,7 +131,7 @@ python train.py \
 #        --lr_strategy=cosine_decay \
 #        --lr=0.1 \
 #        --num_epochs=90 \
-#        --l2_decay=2e-4 \(TODO)
+#        --l2_decay=2e-4
 
 #VGG13:
 #python train.py
@@ -142,4 +142,4 @@ python train.py \
 #        --lr_strategy=cosine_decay \
 #        --lr=0.01 \
 #        --num_epochs=90 \
-#        --l2_decay=3e-4 \(TODO)
+#        --l2_decay=3e-4
