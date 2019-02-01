@@ -26,6 +26,8 @@ add_arg('model_save_dir',   str,    "output",       "Model save directory.")
 add_arg('pretrained_model', str,    None,           "Whether to use pretrained model.")
 add_arg('total_videos',     int,    9537,           "Training video number.")
 add_arg('lr_init',          float,  0.01,           "Set initial learning rate.")
+add_arg('enable_ce',        bool,   False,          "If set True, enable continuous evaluation job.")
+add_arg('num_devices',      int,    1,              "Training video number.")
 # yapf: enable
 
 
@@ -54,6 +56,11 @@ def train(args):
     avg_cost = fluid.layers.mean(x=cost)
     acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
+
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_main_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
 
     # for test
     inference_program = fluid.default_main_program().clone(for_test=True)
@@ -92,6 +99,9 @@ def train(args):
 
     # reader
     train_reader = paddle.batch(reader.train(seg_num), batch_size=batch_size, drop_last=True)
+    if args.enable_ce:
+        train_reader = paddle.batch(reader.train(seg_num), batch_size=batch_size, drop_last=False)
+
     # test in single GPU
     test_reader = paddle.batch(reader.test(seg_num), batch_size=batch_size / 16)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
@@ -100,6 +110,7 @@ def train(args):
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
 
+    total_time = 0
     # train
     for pass_id in range(num_epochs):
         train_info = [[], [], []]
@@ -109,6 +120,7 @@ def train(args):
             loss, acc1, acc5 = train_exe.run(fetch_list, feed=feeder.feed(data))
             t2 = time.time()
             period = t2 - t1
+            total_time += period
             loss = np.mean(np.array(loss))
             acc1 = np.mean(np.array(acc1))
             acc5 = np.mean(np.array(acc5))
@@ -168,6 +180,23 @@ def train(args):
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path)
+
+    if args.enable_ce:
+        gpu_num = get_cards(args)
+        epoch_idx = num_epochs
+        print("kpis\teach_pass_duration_card%s\t%s" %
+                (gpu_num, total_time / epoch_idx))
+        print("kpis\ttrain_loss_card%s\t%s" %
+                (gpu_num, train_loss))
+
+
+def get_cards(args):
+    if args.enable_ce:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        num = len(cards.split(","))
+        return num
+    else:
+        return args.num_devices
 
 
 def main():
