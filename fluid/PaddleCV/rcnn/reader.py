@@ -127,6 +127,7 @@ def coco(mode,
             roidb_cur = 0
             count = 0
             batch_out = []
+            device_num = total_batch_size / batch_size
             while True:
                 roidb = roidb_perm[0]
                 roidb_cur += 1
@@ -153,7 +154,7 @@ def coco(mode,
                 else:
                     if len(batch_out) == total_batch_size:
                         batch_out = padding_minibatch(batch_out)
-                        for i in range(total_batch_size / batch_size):
+                        for i in range(device_num):
                             sub_batch_out = []
                             for j in range(batch_size):
                                 sub_batch_out.append(batch_out[i * batch_size +
@@ -162,7 +163,8 @@ def coco(mode,
                             count += 1
                             sub_batch_out = []
                         batch_out = []
-                if count >= cfg.max_iter:
+                iter_id = count // device_num
+                if iter_id >= cfg.max_iter:
                     return
         elif mode == "test":
             batch_out = []
