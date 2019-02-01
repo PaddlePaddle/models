@@ -9,7 +9,6 @@
 - [Training](#training)
 - [Evaluation](#evaluation)
 - [Inference and Visualization](#inference-and-visualization)
-- [Appendix](#appendix)
 
 ## Installation
 
