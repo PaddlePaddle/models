@@ -9,7 +9,6 @@
 - [模型训练](#模型训练)
 - [模型评估](#模型评估)
 - [模型推断及可视化](#模型推断及可视化)
-- [附录](#附录)
 
 ## 安装
 
@@ -123,7 +122,8 @@ Faster RCNN
 * Fluid RoIAlign no padding: 使用RoIAlign，不对图像做填充处理。
 * Fluid RoIAlign no padding 2x: 使用RoIAlign，不对图像做填充处理。训练360000轮，学习率在240000，320000轮衰减。
 
-Mask RCNN
+Mask RCNN:
+
 | 模型                   | 批量大小   | 迭代次数   | box mAP  | mask mAP |
 | :--------------- | :--------: | :------------:    | :--------:    |------: |
 | [Fluid mask no padding](https://paddlemodels.bj.bcebos.com/faster_rcnn/Fluid_mask_no_padding.tar.gz) | 8 | 180000 | 0.359 | 0.314 |  
