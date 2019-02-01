@@ -267,8 +267,8 @@ def train(size=416,
           interval=10,
           pyreader_num=1,
           use_multiprocessing=True,
-          num_workers=8,
-          max_queue=24):
+          num_workers=12,
+          max_queue=32):
     generator = dsr.get_reader('train', size, batch_size, shuffle, mixup_iter, random_sizes)
 
     if not use_multiprocessing:
@@ -302,6 +302,7 @@ def train(size=416,
                 cnt += 1
                 if cnt % intervals == 0:
                     idx = np.random.randint(len(random_sizes))
+                    print("Resizing: ", (idx + 10) * 32)
         finally:
             if enqueuer is not None:
                 enqueuer.stop()

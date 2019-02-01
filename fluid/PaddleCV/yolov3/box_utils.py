@@ -138,6 +138,8 @@ def rescale_box_in_input_image(boxes, im_shape, input_size):
     boxes[:, 2] *= fx
     boxes[:, 3] *= fy
     boxes[boxes<0] = 0
+    boxes[:, 2][boxes[:, 2] > (w - 1)] = w - 1
+    boxes[:, 3][boxes[:, 3] > (h - 1)] = h - 1
     return boxes
 
 def box_crop(boxes, labels, scores, crop, img_shape):
@@ -149,15 +151,16 @@ def box_crop(boxes, labels, scores, crop, img_shape):
     boxes[:, 1], boxes[:, 3] = (boxes[:, 1] - boxes[:, 3] / 2) * im_h, (boxes[:, 1] + boxes[:, 3] / 2) * im_h
 
     crop_box = np.array([x, y, x + w, y + h])
-    centers = (boxes[:, :2] + boxes[:, 2:]) / 2.0
-    mask = np.logical_and(crop_box[:2] <= centers, centers <= crop_box[2:]).all(axis=1)
+    # centers = (boxes[:, :2] + boxes[:, 2:]) / 2.0
+    # mask = np.logical_and(crop_box[:2] <= centers, centers <= crop_box[2:]).all(axis=1)
 
     boxes[:, :2] = np.maximum(boxes[:, :2], crop_box[:2])
     boxes[:, 2:] = np.minimum(boxes[:, 2:], crop_box[2:])
     boxes[:, :2] -= crop_box[:2]
     boxes[:, 2:] -= crop_box[:2]
 
-    mask = np.logical_and(mask, (boxes[:, :2] < boxes[:, 2:]).all(axis=1))
+    # mask = np.logical_and(mask, (boxes[:, :2] < boxes[:, 2:]).all(axis=1))
+    mask =  (boxes[:, :2] < boxes[:, 2:]).all(axis=1)
     boxes = boxes * np.expand_dims(mask.astype('float32'), axis=1)
     labels = labels * mask.astype('float32')
     scores = scores * mask.astype('float32')
