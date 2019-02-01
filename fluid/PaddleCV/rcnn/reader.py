@@ -162,7 +162,7 @@ def coco(mode,
                             count += 1
                             sub_batch_out = []
                         batch_out = []
-                if count >= cfg.max_iter:
+                if count // (total_batch_size / batch_size) >= cfg.max_iter:
                     return
         elif mode == "test":
             batch_out = []
