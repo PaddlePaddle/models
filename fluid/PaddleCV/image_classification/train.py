@@ -335,9 +335,6 @@ def train(args):
                                   lr, "%2.2f sec" % period))
                     sys.stdout.flush()
                 batch_id += 1
-                if batch_id == 31:
-                    exit(0)
-
         except fluid.core.EOFException:
             train_py_reader.reset()
 
