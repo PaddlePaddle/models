@@ -36,7 +36,7 @@ def roidb_reader(roidb, mode):
     im_height = np.round(roidb['height'] * im_scales)
     im_width = np.round(roidb['width'] * im_scales)
     im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
-    if mode == 'test' or mode == 'infer':
+    if mode == 'val' or mode == 'infer':
         return im, im_info, im_id
 
     gt_boxes = roidb['gt_boxes'].astype('float32')
@@ -74,31 +74,12 @@ def coco(mode,
          total_batch_size=None,
          padding_total=False,
          shuffle=False):
-    if 'coco2014' in cfg.dataset:
-        cfg.train_file_list = 'annotations/instances_train2014.json'
-        cfg.train_data_dir = 'train2014'
-        cfg.val_file_list = 'annotations/instances_val2014.json'
-        cfg.val_data_dir = 'val2014'
-    elif 'coco2017' in cfg.dataset:
-        cfg.train_file_list = 'annotations/instances_train2017.json'
-        cfg.train_data_dir = 'train2017'
-        cfg.val_file_list = 'annotations/instances_val2017.json'
-        cfg.val_data_dir = 'val2017'
-    else:
-        raise NotImplementedError('Dataset {} not supported'.format(
-            cfg.dataset))
     cfg.mean_value = np.array(cfg.pixel_means)[np.newaxis,
                                                np.newaxis, :].astype('float32')
     total_batch_size = total_batch_size if total_batch_size else batch_size
     if mode != 'infer':
         assert total_batch_size % batch_size == 0
-    if mode == 'train':
-        cfg.train_file_list = os.path.join(cfg.data_dir, cfg.train_file_list)
-        cfg.train_data_dir = os.path.join(cfg.data_dir, cfg.train_data_dir)
-    elif mode == 'test' or mode == 'infer':
-        cfg.val_file_list = os.path.join(cfg.data_dir, cfg.val_file_list)
-        cfg.val_data_dir = os.path.join(cfg.data_dir, cfg.val_data_dir)
-    json_dataset = JsonDataset(train=(mode == 'train'))
+    json_dataset = JsonDataset(mode)
     roidbs = json_dataset.get_roidb()
 
     print("{} on {} with {} roidbs".format(mode, cfg.dataset, len(roidbs)))
@@ -166,7 +147,7 @@ def coco(mode,
                 iter_id = count // device_num
                 if iter_id >= cfg.max_iter:
                     return
-        elif mode == "test":
+        elif mode == "val":
             batch_out = []
             for roidb in roidbs:
                 im, im_info, im_id = roidb_reader(roidb, mode)
@@ -194,7 +175,7 @@ def train(batch_size, total_batch_size=None, padding_total=False, shuffle=True):
 
 
 def test(batch_size, total_batch_size=None, padding_total=False):
-    return coco('test', batch_size, total_batch_size, shuffle=False)
+    return coco('val', batch_size, total_batch_size, shuffle=False)
 
 
 def infer():
