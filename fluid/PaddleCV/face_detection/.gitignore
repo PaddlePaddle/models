@@ -1,0 +1,13 @@
+model/
+data/WIDER_train
+data/WIDER_val
+data/wider_face_split
+vgg_ilsvrc_16_fc_reduced*
+*.swp
+*.log
+log*
+output*
+pred
+eval_tools
+box*
+PyramidBox_WiderFace*

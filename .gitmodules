@@ -1,0 +1,9 @@
+[submodule "fluid/PaddleNLP/LAC"]
+	path = fluid/PaddleNLP/LAC
+	url = https://github.com/baidu/lac.git
+[submodule "fluid/PaddleNLP/SimNet"]
+	path = fluid/PaddleNLP/SimNet
+	url = https://github.com/baidu/AnyQ.git
+[submodule "fluid/PaddleNLP/Senta"]
+	path = fluid/PaddleNLP/Senta
+	url = https://github.com/baidu/Senta.git
