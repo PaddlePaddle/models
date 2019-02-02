@@ -18,7 +18,7 @@ from roidbs import DatasetPath
 def infer():
 
     data_path = DatasetPath('val')
-    _, test_list = data_path.get_path()
+    test_list = data_path.get_file_list()
 
     cocoGt = COCO(test_list)
     num_id_to_cat_id_map = {i + 1: v for i, v in enumerate(cocoGt.getCatIds())}

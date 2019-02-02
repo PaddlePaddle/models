@@ -35,7 +35,7 @@ from roidbs import DatasetPath
 def eval():
 
     data_path = DatasetPath('val')
-    _, test_list = data_path.get_path()
+    test_list = data_path.get_file_list()
 
     image_shape = [3, cfg.TEST.max_size, cfg.TEST.max_size]
     class_nums = cfg.class_num

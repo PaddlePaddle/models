@@ -45,17 +45,18 @@ logger = logging.getLogger(__name__)
 class DatasetPath(object):
     def __init__(self, mode):
         self.mode = mode
-        self.sub_name = 'train' if mode == 'train' else 'val'
+        mode_name = 'train' if mode == 'train' else 'val'
         if cfg.dataset != 'coco2014' and cfg.dataset != 'coco2017':
             raise NotImplementedError('Dataset {} not supported'.format(
                 cfg.dataset))
+        self.sub_name = mode_name + cfg.dataset[-4:]
 
-    def get_path(self):
-        sdata_dir = self.sub_name + cfg.dataset[-4:]
-        file_list = 'annotations/instances_' + sdata_dir + '.json'
-        data_dir = os.path.join(cfg.data_dir, sdata_dir)
-        file_list = os.path.join(cfg.data_dir, file_list)
-        return data_dir, file_list
+    def get_data_dir(self):
+        return os.path.join(cfg.data_dir, self.sub_name)
+
+    def get_file_list(self):
+        sfile_list = 'annotations/instances_' + self.sub_name + '.json'
+        return os.path.join(cfg.data_dir, sfile_list)
 
 
 class JsonDataset(object):
@@ -66,7 +67,8 @@ class JsonDataset(object):
         self.name = cfg.dataset
         self.is_train = mode == 'train'
         data_path = DatasetPath(mode)
-        data_dir, file_list = data_path.get_path()
+        data_dir = data_path.get_data_dir()
+        file_list = data_path.get_file_list()
         self.image_directory = data_dir
         self.COCO = COCO(file_list)
         # Set up dataset classes
