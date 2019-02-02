@@ -12,16 +12,15 @@ import json
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
 from config import cfg
+from roidbs import DatasetPath
 
 
 def infer():
 
-    if '2014' in cfg.dataset:
-        test_list = 'annotations/instances_val2014.json'
-    elif '2017' in cfg.dataset:
-        test_list = 'annotations/instances_val2017.json'
+    data_path = DatasetPath('val')
+    _, test_list = data_path.get_path()
 
-    cocoGt = COCO(os.path.join(cfg.data_dir, test_list))
+    cocoGt = COCO(test_list)
     num_id_to_cat_id_map = {i + 1: v for i, v in enumerate(cocoGt.getCatIds())}
     category_ids = cocoGt.getCatIds()
     label_list = {
@@ -32,14 +31,13 @@ def infer():
     image_shape = [3, cfg.TEST.max_size, cfg.TEST.max_size]
     class_nums = cfg.class_num
 
-    model = model_builder.FasterRCNN(
+    model = model_builder.RCNN(
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
         use_pyreader=False,
         is_train=False)
     model.build_model(image_shape)
-    rpn_rois, confs, locs = model.eval_bbox_out()
-    pred_boxes = model.eval()
+    pred_boxes = model.eval_bbox_out()
     if cfg.MASK_ON:
         masks = model.eval_mask_out()
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
@@ -56,20 +54,17 @@ def infer():
     dts_res = []
     segms_res = []
     if cfg.MASK_ON:
-        fetch_list = [rpn_rois, confs, locs, pred_boxes, masks]
+        fetch_list = [pred_boxes, masks]
     else:
-        fetch_list = [rpn_rois, confs, locs]
+        fetch_list = [pred_boxes]
     data = next(infer_reader())
     im_info = [data[0][1]]
     result = exe.run(fetch_list=[v.name for v in fetch_list],
                      feed=feeder.feed(data),
                      return_numpy=False)
-    rpn_rois_v = result[0]
-    confs_v = result[1]
-    locs_v = result[2]
+    pred_boxes_v = result[0]
     if cfg.MASK_ON:
-        pred_boxes_v = result[3]
-        masks_v = result[4]
+        masks_v = result[1]
     new_lod = pred_boxes_v.lod()
     nmsed_out = pred_boxes_v
     path = os.path.join(cfg.image_path, cfg.image_name)

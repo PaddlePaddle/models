@@ -148,7 +148,7 @@ def parse_args():
     add_arg('variance',         float,  [1.,1.,1.,1.],    "The variance of anchors.")
     add_arg('rpn_stride',       float,  [16.,16.],    "Stride of the feature map that RPN is attached.")
     add_arg('rpn_nms_thresh',    float,   0.7,          "NMS threshold used on RPN proposals")
-    # TRAIN TEST INFER
+    # TRAIN VAL INFER
     add_arg('MASK_ON', bool, False, "Option for different models. If False, choose faster_rcnn. If True, choose mask_rcnn")
     add_arg('im_per_batch',       int,   1,        "Minibatch size.")
     add_arg('max_size',         int,   1333,    "The resized image height.")
@@ -158,7 +158,6 @@ def parse_args():
     add_arg('nms_thresh',    float, 0.5,    "NMS threshold.")
     add_arg('score_thresh',    float, 0.05,    "score threshold for NMS.")
     add_arg('snapshot_stride',  int,    10000,    "save model every snapshot stride.")
-    add_arg('debug',            bool,   False,   "Debug mode")
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
     add_arg('image_path',       str,   'dataset/coco/val2017',  "The image path used to inference and visualize.")
@@ -172,5 +171,5 @@ def parse_args():
     if 'train' in file_name or 'profile' in file_name:
         merge_cfg_from_args(args, 'train')
     else:
-        merge_cfg_from_args(args, 'test')
+        merge_cfg_from_args(args, 'val')
     return args

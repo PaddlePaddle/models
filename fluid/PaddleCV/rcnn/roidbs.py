@@ -42,19 +42,31 @@ from config import cfg
 logger = logging.getLogger(__name__)
 
 
+class DatasetPath(object):
+    def __init__(self, mode):
+        self.mode = mode
+        self.sub_name = 'train' if mode == 'train' else 'val'
+        if cfg.dataset != 'coco2014' and cfg.dataset != 'coco2017':
+            raise NotImplementedError('Dataset {} not supported'.format(
+                cfg.dataset))
+
+    def get_path(self):
+        sdata_dir = self.sub_name + cfg.dataset[-4:]
+        file_list = 'annotations/instances_' + sdata_dir + '.json'
+        data_dir = os.path.join(cfg.data_dir, sdata_dir)
+        file_list = os.path.join(cfg.data_dir, file_list)
+        return data_dir, file_list
+
+
 class JsonDataset(object):
     """A class representing a COCO json dataset."""
 
-    def __init__(self, train=False):
+    def __init__(self, mode):
         print('Creating: {}'.format(cfg.dataset))
         self.name = cfg.dataset
-        self.is_train = train
-        if self.is_train:
-            data_dir = cfg.train_data_dir
-            file_list = cfg.train_file_list
-        else:
-            data_dir = cfg.val_data_dir
-            file_list = cfg.val_file_list
+        self.is_train = mode == 'train'
+        data_path = DatasetPath(mode)
+        data_dir, file_list = data_path.get_path()
         self.image_directory = data_dir
         self.COCO = COCO(file_list)
         # Set up dataset classes
