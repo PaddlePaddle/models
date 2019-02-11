@@ -90,17 +90,17 @@ def train():
     else:
         exe = base_exe
 
-    random_sizes = []
+    random_sizes = [cfg.input_size]
     if cfg.random_shape:
         random_sizes = [32 * i for i in range(10, 20)]
 
-    mixup_iter = cfg.max_iter - cfg.start_iter - cfg.no_mixup_iter
+    random_shape_iter = cfg.max_iter - cfg.start_iter - cfg.tune_iter
     if cfg.use_pyreader:
-        train_reader = reader.train(input_size, batch_size=int(hyperparams['batch'])/devices_num, shuffle=True, mixup_iter=mixup_iter, random_sizes=random_sizes, interval=10, pyreader_num=devices_num, use_multiprocessing=cfg.use_multiprocess)
+        train_reader = reader.train(input_size, batch_size=int(hyperparams['batch'])/devices_num, shuffle=True, random_shape_iter=random_shape_iter, random_sizes=random_sizes, interval=10, pyreader_num=devices_num)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
     else:
-        train_reader = reader.train(input_size, batch_size=int(hyperparams['batch']), shuffle=True, mixup_iter=mixup_iter, random_sizes=random_sizes, interval=10, use_multiprocessing=cfg.use_multiprocess)
+        train_reader = reader.train(input_size, batch_size=int(hyperparams['batch']), shuffle=True, random_shape_iter=random_shape_iter, random_sizes=random_sizes, interval=10)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     def save_model(postfix):
@@ -150,6 +150,7 @@ def train():
         snapshot_loss = 0
         snapshot_time = 0
         for iter_id, data in enumerate(train_reader()):
+	    print(len(data), data[0][0].shape)
             iter_id += cfg.start_iter
             prev_start_time = start_time
             start_time = time.time()

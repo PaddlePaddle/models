@@ -67,6 +67,7 @@ class GeneratorEnqueuer(object):
                     while(True):
                         if self.queues[queue_idx].full():
                             queue_idx = (queue_idx + 1) % self.size_num
+                            time.sleep(0.02)
                             continue
                         else:
                             size = self.random_sizes[queue_idx]
@@ -77,6 +78,7 @@ class GeneratorEnqueuer(object):
                             try:
                                 self.queues[queue_idx].put_nowait(generator_output)
                             except:
+                                timw.sleep(self.wait_time)
                                 continue
                             else:
                                 break

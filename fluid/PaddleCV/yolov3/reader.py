@@ -141,7 +141,7 @@ class DataSetReader(object):
         else:
             return self._parse_images(is_train=(mode=='train'))
 
-    def get_reader(self, mode, size=416, batch_size=None, shuffle=False, mixup_iter=0, random_sizes=[], image=None):
+    def get_reader(self, mode, size=416, batch_size=None, shuffle=False, random_shape_iter=0, random_sizes=[], image=None):
         assert mode in ['train', 'test', 'infer'], "Unknow mode type!"
         if mode != 'infer':
             assert batch_size is not None, "batch size connot be None in mode {}".format(mode)
@@ -157,11 +157,10 @@ class DataSetReader(object):
             im_scale_x = size / float(w)
             im_scale_y = size / float(h)
             out_img = cv2.resize(im, None, None, fx=im_scale_x, fy=im_scale_y, interpolation=cv2.INTER_LINEAR)
-            # mean = np.array(mean).reshape((1, 1, -1))
-            # std = np.array(std).reshape((1, 1, -1))
-            # out_img = (out_img / 255.0 - mean) / std
-            # out_img = out_img.transpose((2, 0, 1))
-            out_img = out_img.astype('float32').transpose((2, 0, 1)) / 255.0
+            mean = np.array(mean).reshape((1, 1, -1))
+            std = np.array(std).reshape((1, 1, -1))
+            out_img = (out_img / 255.0 - mean) / std
+            out_img = out_img.transpose((2, 0, 1))
 
             return (out_img, int(img['id']), (h, w))
 
@@ -173,23 +172,12 @@ class DataSetReader(object):
             gt_labels = img['gt_labels'].copy()
             gt_scores = np.ones_like(gt_labels)
 
-            # if mixup_img:
-            #     mixup_im = cv2.imread(mixup_img['image'])
-            #     mixup_im = cv2.cvtColor(mixup_im, cv2.COLOR_BGR2RGB)
-            #     mixup_gt_boxes = mixup_img['gt_boxes'].copy()
-            #     mixup_gt_labels = mixup_img['gt_labels'].copy()
-            #     mixup_gt_scores = np.ones_like(mixup_gt_labels)
-            #     im, gt_boxes, gt_labels, gt_scores = image_utils.image_mixup(im, gt_boxes, \
-            #             gt_labels, gt_scores, mixup_im, mixup_gt_boxes, mixup_gt_labels, \
-            #             mixup_gt_scores)
+            im, gt_boxes, gt_labels, gt_scores = image_utils.image_augment(im, gt_boxes, gt_labels, gt_scores, size, mean)
 
-            im, gt_boxes, gt_labels, gt_scores = image_utils.image_augment(im, gt_boxes, gt_labels, gt_scores, size, [0.5] * 3)
-
-            # mean = np.array(mean).reshape((1, 1, -1))
-            # std = np.array(std).reshape((1, 1, -1))
-            # out_img = (im / 255.0 - mean) / std
-            # out_img = out_img.transpose((2, 0, 1)).astype('float32')
-            out_img = im.astype('float32').transpose((2, 0, 1)) / 255.0
+            mean = np.array(mean).reshape((1, 1, -1))
+            std = np.array(std).reshape((1, 1, -1))
+            out_img = (im / 255.0 - mean) / std
+            out_img = out_img.astype('float32').transpose((2, 0, 1))
 
             return (out_img, gt_boxes, gt_labels, gt_scores)
 
@@ -198,29 +186,20 @@ class DataSetReader(object):
                 return np.random.choice(random_sizes)
             return size
 
-        def get_mixup_img(imgs, mixup_iter, total_read_cnt):
-            if total_read_cnt >= mixup_iter:
-                return None
-
-            mixup_idx = np.random.randint(1, len(imgs))
-            mixup_img = imgs[(total_read_cnt + mixup_idx) % len(imgs)]
-            return mixup_img
-
         def reader():
             if mode == 'train':
                 imgs = self._parse_images_by_mode(mode)
                 if shuffle:
                     np.random.shuffle(imgs)
                 read_cnt = 0
-                total_read_cnt = 0
+                total_iter = 0
                 batch_out = []
                 img_size = get_img_size(size, random_sizes)
                 # img_ids = []
                 while True:
                     img = imgs[read_cnt % len(imgs)]
-                    mixup_img = get_mixup_img(imgs, mixup_iter, total_read_cnt)
+		    mixup_img = None
                     read_cnt += 1
-                    total_read_cnt += 1
                     if read_cnt % len(imgs) == 0 and shuffle:
                         np.random.shuffle(imgs)
                     im, gt_boxes, gt_labels, gt_scores = img_reader_with_augment(img, img_size, cfg.pixel_means, cfg.pixel_stds, mixup_img)
@@ -231,7 +210,8 @@ class DataSetReader(object):
                         # print("img_ids: ", img_ids)
                         yield batch_out
                         batch_out = []
-                        if total_read_cnt % 10 == 0:
+                        total_iter += 1
+                        if total_iter % 10 == 0:
                             img_size = get_img_size(size, random_sizes)
                         # img_ids = []
 
@@ -262,17 +242,13 @@ dsr = DataSetReader()
 def train(size=416, 
           batch_size=64, 
           shuffle=True, 
-          mixup_iter=0,
+          random_shape_iter=0,
           random_sizes=[],
           interval=10,
           pyreader_num=1,
-          use_multiprocessing=True,
-          num_workers=12,
+          num_workers=16,
           max_queue=32):
-    generator = dsr.get_reader('train', size, batch_size, shuffle, mixup_iter, random_sizes)
-
-    if not use_multiprocessing:
-        return generator
+    generator = dsr.get_reader('train', size, batch_size, shuffle, random_shape_iter, random_sizes)
 
     def infinite_reader():
         while True:
@@ -282,27 +258,29 @@ def train(size=416,
     def reader():
         try:
             enqueuer = GeneratorEnqueuer(
-                infinite_reader(), use_multiprocessing=use_multiprocessing)
+                infinite_reader(), use_multiprocessing=True)
             enqueuer.start(max_queue_size=max_queue, workers=num_workers, random_sizes=random_sizes)
             generator_out = None
             np.random.seed(1000)
             intervals = pyreader_num * interval
+	    total_random_iter = pyreader_num * random_shape_iter
             cnt = 0
-            idx = np.random.randint(len(random_sizes))
+	    idx = len(random_sizes) - 1
             while True:
                 while enqueuer.is_running():
                     if not enqueuer.queues[idx].empty():
                         generator_out = enqueuer.queues[idx].get()
                         break
                     else:
-                        print(idx," empty")
                         time.sleep(0.02)
                 yield generator_out
                 generator_out = None
                 cnt += 1
                 if cnt % intervals == 0:
                     idx = np.random.randint(len(random_sizes))
-                    print("Resizing: ", (idx + 10) * 32)
+		    if cnt >= total_random_iter:
+			idx = -1
+		    print("Resizing: ", random_sizes[idx])
         finally:
             if enqueuer is not None:
                 enqueuer.stop()

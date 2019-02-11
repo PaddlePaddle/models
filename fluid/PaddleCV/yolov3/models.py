@@ -204,13 +204,13 @@ class YOLOv3(object):
                             x=out,
                             gtbox=self.gtbox,
                             gtlabel=self.gtlabel,
-                            gtscore=self.gtscore,
+                            # gtscore=self.gtscore,
                             anchors=anchors,
                             anchor_mask=anchor_mask,
                             class_num=class_num,
                             ignore_thresh=ignore_thresh,
-                            downsample=self.downsample,
-                            use_label_smooth=False,
+                            downsample_ratio=self.downsample,
+                            # use_label_smooth=False,
                             name="yolo_loss"+str(i))
                     self.losses.append(fluid.layers.reduce_mean(loss))
                     self.downsample //= 2
