@@ -83,7 +83,7 @@ parser.add_argument(
     help='use exponential_decay learning_rate')
 parser.add_argument('--mix_alpha', type=float, default=0.5, help='mixup alpha')
 parser.add_argument(
-    '--rcc_loss_lambda', default=0, type=float, help='rcc_loss_lambda')
+    '--lrc_loss_lambda', default=0, type=float, help='lrc_loss_lambda')
 parser.add_argument(
     '--loss_type',
     default=1,
@@ -119,7 +119,7 @@ def build_program(main_prog, startup_prog, args, is_train, model, im_shape,
             with fluid.unique_name.guard():
                 loss = model.train_model(py_reader, args.init_channels,
                                          args.auxiliary, args.auxiliary_weight,
-                                         args.batch_size, args.rcc_loss_lambda)
+                                         args.batch_size, args.lrc_loss_lambda)
                 optimizer = fluid.optimizer.Momentum(
                         learning_rate=cosine_decay(args.learning_rate, \
                             args.epochs, steps_one_epoch),

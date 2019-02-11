@@ -247,8 +247,8 @@ class NetworkCIFAR(object):
            self.non_label_reshape, self.rad_var = fluid.layers.read_file(py_reader)
         self.logits, self.logits_aux = self.forward(init_channels, True)
         self.mixup_loss = self.mixup_loss(aux, aux_w)
-        self.rcc_loss = self.rcc_loss(batch_size)
-        return self.mixup_loss + loss_lambda * self.rcc_loss
+        self.lrc_loss = self.lrc_loss(batch_size)
+        return self.mixup_loss + loss_lambda * self.lrc_loss
 
     def test_model(self, py_reader, init_channels):
         self.image, self.ya = fluid.layers.read_file(py_reader)
@@ -276,7 +276,7 @@ class NetworkCIFAR(object):
                                                      ) * loss_b_aux_mean
         return loss + auxiliary_weight * loss_aux
 
-    def rcc_loss(self, batch_size):
+    def lrc_loss(self, batch_size):
         y_diff_reshape = fluid.layers.reshape(self.logits, shape=(-1, 1))
         label_reshape = fluid.layers.squeeze(self.label_reshape, axes=[1])
         non_label_reshape = fluid.layers.squeeze(
@@ -298,9 +298,9 @@ class NetworkCIFAR(object):
         y_diff_ = fluid.layers.transpose(y_diff_, perm=[1, 2, 0])
         rad_var_trans = fluid.layers.transpose(self.rad_var, perm=[1, 2, 0])
         rad_y_diff_trans = rad_var_trans * y_diff_
-        rcc_loss_sum = fluid.layers.reduce_sum(rad_y_diff_trans, dim=[0, 1])
-        rcc_loss_ = fluid.layers.abs(rcc_loss_sum) / (batch_size *
+        lrc_loss_sum = fluid.layers.reduce_sum(rad_y_diff_trans, dim=[0, 1])
+        lrc_loss_ = fluid.layers.abs(lrc_loss_sum) / (batch_size *
                                                       (self.class_num - 1))
-        rcc_loss = fluid.layers.reduce_mean(rcc_loss_)
+        lrc_loss_mean = fluid.layers.reduce_mean(lrc_loss_)
 
-        return rcc_loss
+        return lrc_loss_mean

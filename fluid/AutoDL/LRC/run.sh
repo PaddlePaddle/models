@@ -5,6 +5,6 @@ CUDA_VISIBLE_DEVICES=0 python -u train_mixup.py \
 --auxiliary \
 --weight_decay=0.0003 \
 --learning_rate=0.025 \
---rcc_loss_lambda=0.7 \
+--lrc_loss_lambda=0.7 \
 --cutout
 
