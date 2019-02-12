@@ -1,4 +1,4 @@
-#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -107,7 +107,8 @@ def DilConv(input,
             initializer=Xavier(
                 uniform=False, fan_in=0),
             name=name + 'op.1.weight'),
-        bias_attr=False)
+        bias_attr=False,
+        use_cudnn=False)
     conv2d_b = fluid.layers.conv2d(
         conv2d_a,
         C_out,
@@ -162,7 +163,8 @@ def SepConv(input,
             initializer=Xavier(
                 uniform=False, fan_in=0),
             name=name + 'op.1.weight'),
-        bias_attr=False)
+        bias_attr=False,
+        use_cudnn=False)
     conv2d_b = fluid.layers.conv2d(
         conv2d_a,
         C_in,
@@ -207,7 +209,8 @@ def SepConv(input,
             initializer=Xavier(
                 uniform=False, fan_in=0),
             name=name + 'op.5.weight'),
-        bias_attr=False)
+        bias_attr=False,
+        use_cudnn=False)
     conv2d_e = fluid.layers.conv2d(
         conv2d_d,
         C_out,
