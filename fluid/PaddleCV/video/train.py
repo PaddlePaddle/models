@@ -64,7 +64,8 @@ def parse_args():
         '--resume',
         type=str,
         default=None,
-        help='path to resume weights. If not None, only resume weigths will be loaded.'
+        help='path to resume training based on previous checkpoints. '
+             'None for not resuming any checkpoints.'
     )
     parser.add_argument(
         '--use-gpu', type=bool, default=True, help='default use gpu.')
