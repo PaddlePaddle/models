@@ -152,7 +152,9 @@ def train(args):
         # if resume weights is given, load resume weights directly
         assert os.path.exists(args.resume), \
                 "Given resume weight dir {} not exist.".format(args.resume)
-        fluid.io.load_params(exe, args.resume, main_program=train_prog)
+        def if_exist(var):
+            return os.path.exists(os.path.join(args.resume, var.name))
+        fluid.io.load_vars(exe, args.resume, predicate=if_exist, main_program=train_prog)
     else:
         # if not in resume mode, load pretrain weights
         if args.pretrain:
