@@ -61,7 +61,7 @@ def parse_args():
         help='path to pretrain weights. None to use default weights path in  ~/.paddle/weights.'
     )
     parser.add_argument(
-        '--resume-weights',
+        '--resume',
         type=str,
         default=None,
         help='path to resume weights. If not None, only resume weigths will be loaded.'
@@ -148,11 +148,11 @@ def train(args):
     exe = fluid.Executor(place)
     exe.run(startup)
 
-    if args.resume_weights:
+    if args.resume:
         # if resume weights is given, load resume weights directly
-        assert os.path.exists(args.resume_weights), \
-                "Given resume weight dir {} not exist.".format(args.resume_weights)
-        fluid.io.load_params(exe, args.resume_weights, main_program=train_prog)
+        assert os.path.exists(args.resume), \
+                "Given resume weight dir {} not exist.".format(args.resume)
+        fluid.io.load_params(exe, args.resume, main_program=train_prog)
     else:
         # if not in resume mode, load pretrain weights
         if args.pretrain:
