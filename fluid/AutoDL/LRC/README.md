@@ -1,5 +1,8 @@
 # LRC Local Rademachar Complexity Regularization
-This directory contains image classification model based on novel regularizer rooted in Local Rademacher Complexity (LRC). The regularization by LRC and [DARTS](https://arxiv.org/abs/1806.09055) are combined in this model and it achieves 97.3% accuracy on CIFAR-10 dataset.
+This directory contains image classification model based on novel regularizer rooted in Local Rademacher Complexity (LRC). We appreciate the contribution by [DARTS](https://arxiv.org/abs/1806.09055) for our research. The regularization by LRC and DARTS are combined in this model and it achieves 97.3% accuracy on CIFAR-10 dataset. Code accompanying the paper
+> [An Empirical Study on Regularization of Deep Neural Networks by Local Rademacher Complexity](https://arxiv.org/abs/1902.00873)\
+> Yingzhen Yang, Xingjian Li, Jun Huan.\
+> _arXiv:1902.00873_.
 
 ---
 # Table of Contents
@@ -72,3 +75,8 @@ Below is the accuracy on CIFAR-10 dataset：
 | model | avg top1 | avg top5 |
 | ----- | -------- | -------- |
 | [DARTS-LRC](https://paddlemodels.bj.bcebos.com/autodl/fluid_rademacher.tar.gz) | 97.34 | 99.75 |
+
+## Reference
+
+  - DARTS: Differentiable Architecture Search [`paper`](https://arxiv.org/abs/1806.09055)
+  - Differentiable architecture search in PyTorch [`code`](https://github.com/quark0/darts)

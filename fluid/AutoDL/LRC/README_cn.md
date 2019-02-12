@@ -1,5 +1,8 @@
 # LRC 局部Rademachar复杂度正则化
-本目录包括了一种基于局部rademacher复杂度的新型正则（LRC）的图像分类模型。该模型将LRC正则和[DARTS](https://arxiv.org/abs/1806.09055)网络相结合，在CIFAR-10数据集中得到了97.3%的准确率。
+本目录包括了一种基于局部rademacher复杂度的新型正则（LRC）的图像分类模型。十分感谢[DARTS](https://arxiv.org/abs/1806.09055)模型对本研究提供的帮助。该模型将LRC正则和DARTS网络相结合，在CIFAR-10数据集中得到了97.3%的准确率。代码和文章一同发布
+> [An Empirical Study on Regularization of Deep Neural Networks by Local Rademacher Complexity](https://arxiv.org/abs/1902.00873)\
+> Yingzhen Yang, Xingjian Li, Jun Huan.\
+> _arXiv:1902.00873_.
 
 ---
 # 内容
@@ -69,3 +72,8 @@
 | 模型 | 平均top1 | 平均top5 |
 | ----- | -------- | -------- |
 | [DARTS-LRC](https://paddlemodels.bj.bcebos.com/autodl/fluid_rademacher.tar.gz) | 97.34 | 99.75 |
+
+## 引用
+
+  - DARTS: Differentiable Architecture Search [`论文`](https://arxiv.org/abs/1806.09055)
+  - Differentiable Architecture Search in PyTorch [`代码`](https://github.com/quark0/darts)
