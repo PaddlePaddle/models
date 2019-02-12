@@ -28,6 +28,7 @@ from config import *
 import models
 from datareader import get_reader
 
+logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
 logging.basicConfig(level=logging.DEBUG, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)

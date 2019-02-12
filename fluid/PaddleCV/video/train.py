@@ -26,6 +26,7 @@ from config import *
 from datareader import get_reader
 from metrics import get_metrics
 
+logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)
@@ -58,6 +59,12 @@ def parse_args():
         type=str,
         default=None,
         help='path to pretrain weights. None to use default weights path in  ~/.paddle/weights.'
+    )
+    parser.add_argument(
+        '--resume-weights',
+        type=str,
+        default=None,
+        help='path to resume weights. If not None, only resume weigths will be loaded.'
     )
     parser.add_argument(
         '--use-gpu', type=bool, default=True, help='default use gpu.')
@@ -141,12 +148,19 @@ def train(args):
     exe = fluid.Executor(place)
     exe.run(startup)
 
-    if args.pretrain:
-        assert os.path.exists(args.pretrain), \
-                "Given pretrain weight dir {} not exist.".format(args.pretrain)
-    pretrain = args.pretrain or train_model.get_pretrain_weights()
-    if pretrain:
-        train_model.load_pretrain_params(exe, pretrain, train_prog, place)
+    if args.resume_weights:
+        # if resume weights is given, load resume weights directly
+        assert os.path.exists(args.resume_weights), \
+                "Given resume weight dir {} not exist.".format(args.resume_weights)
+        fluid.io.load_params(exe, args.resume_weights, main_program=train_prog)
+    else:
+        # if not in resume mode, load pretrain weights
+        if args.pretrain:
+            assert os.path.exists(args.pretrain), \
+                    "Given pretrain weight dir {} not exist.".format(args.pretrain)
+        pretrain = args.pretrain or train_model.get_pretrain_weights()
+        if pretrain:
+            train_model.load_pretrain_params(exe, pretrain, train_prog, place)
 
     train_exe = fluid.ParallelExecutor(
         use_cuda=args.use_gpu,
