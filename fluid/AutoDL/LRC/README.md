@@ -1,5 +1,5 @@
 # LRC Local Rademachar Complexity Regularization
-This directory contains image classification model based on novel regularizer rooted in Local Rademacher Complexity (LRC). We appreciate the contribution by [DARTS](https://arxiv.org/abs/1806.09055) for our research. The regularization by LRC and DARTS are combined in this model and it achieves 97.3% accuracy on CIFAR-10 dataset. Code accompanying the paper
+Regularization of Deep Neural Networks(DNNs) for the sake of improving their generalization capability is important and chllenging. This directory contains image classification model based on a novel regularizer rooted in Local Rademacher Complexity (LRC). We appreciate the contribution by [DARTS](https://arxiv.org/abs/1806.09055) for our research. The regularization by LRC and DARTS are combined in this model on CIFAR-10 dataset. Code accompanying the paper
 > [An Empirical Study on Regularization of Deep Neural Networks by Local Rademacher Complexity](https://arxiv.org/abs/1902.00873)\
 > Yingzhen Yang, Xingjian Li, Jun Huan.\
 > _arXiv:1902.00873_.
@@ -10,7 +10,6 @@ This directory contains image classification model based on novel regularizer ro
 - [Installation](#installation)
 - [Data preparation](#data-preparation)
 - [Training](#training)
-- [Model performances](#model-performances)
 
 ## Installation
 
@@ -68,13 +67,6 @@ After data preparation, one can start the training step by:
 *  Use Xaiver initalizer to weight in conv2d, Constant initalizer to weight in batch norm and Normal initalizer to weight in fc.
 *  Initalize bias in batch norm and fc to zero constant and do not add bias to conv2d.
 
-
-## Model performances
-Below is the accuracy on CIFAR-10 dataset：
-
-| model | avg top1 | avg top5 |
-| ----- | -------- | -------- |
-| [DARTS-LRC](https://paddlemodels.bj.bcebos.com/autodl/fluid_rademacher.tar.gz) | 97.34 | 99.75 |
 
 ## Reference
 
