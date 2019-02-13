@@ -68,9 +68,11 @@ def train():
 
     # Train program
     if args.loss == 'bpr':
+        print('bpr loss')
         src, pos_label, label, avg_cost = net.train_bpr_network(
             neg_size=args.neg_size, vocab_size=vocab_size, hid_size=hid_size)
     else:
+        print('cross-entory loss')
         src, pos_label, label, avg_cost = net.train_cross_entropy_network(
             neg_size=args.neg_size, vocab_size=vocab_size, hid_size=hid_size)
 
