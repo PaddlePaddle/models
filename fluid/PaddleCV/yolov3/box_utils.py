@@ -84,11 +84,11 @@ def box_iou_xywh(box1, box2):
     inter_x1 = np.maximum(b1_x1, b2_x1)
     inter_x2 = np.minimum(b1_x2, b2_x2)
     inter_y1 = np.maximum(b1_y1, b2_y1)
-    inter_y2 = np.maximum(b1_y2, b2_y2)
+    inter_y2 = np.minimum(b1_y2, b2_y2)
     inter_w = inter_x2 - inter_x1 + 1
     inter_h = inter_y2 - inter_y1 + 1
-    inter_w[inter_w < 0] == 0
-    inter_h[inter_h < 0] == 0
+    inter_w[inter_w < 0] = 0
+    inter_h[inter_h < 0] = 0
 
     inter_area = inter_w * inter_h
     b1_area = (b1_x2 - b1_x1 + 1) * (b1_y2 - b1_y1 + 1)
@@ -106,15 +106,15 @@ def box_iou_xyxy(box1, box2):
     inter_x1 = np.maximum(b1_x1, b2_x1)
     inter_x2 = np.minimum(b1_x2, b2_x2)
     inter_y1 = np.maximum(b1_y1, b2_y1)
-    inter_y2 = np.maximum(b1_y2, b2_y2)
-    inter_w = inter_x2 - inter_x1 + 1
-    inter_h = inter_y2 - inter_y1 + 1
-    inter_w[inter_w < 0] == 0
-    inter_h[inter_h < 0] == 0
+    inter_y2 = np.minimum(b1_y2, b2_y2)
+    inter_w = inter_x2 - inter_x1
+    inter_h = inter_y2 - inter_y1
+    inter_w[inter_w < 0] = 0
+    inter_h[inter_h < 0] = 0
 
     inter_area = inter_w * inter_h
-    b1_area = (b1_x2 - b1_x1 + 1) * (b1_y2 - b1_y1 + 1)
-    b2_area = (b2_x2 - b2_x1 + 1) * (b2_y2 - b2_y1 + 1)
+    b1_area = (b1_x2 - b1_x1) * (b1_y2 - b1_y1)
+    b2_area = (b2_x2 - b2_x1) * (b2_y2 - b2_y1)
     
     return inter_area / (b1_area + b2_area - inter_area)
 

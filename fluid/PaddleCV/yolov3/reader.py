@@ -41,7 +41,7 @@ class DataSetReader(object):
         # cfg.data_dir = "dataset/coco"
         # cfg.train_file_list = 'annotations/instances_val2017.json'
         # cfg.train_data_dir = 'val2017'
-        cfg.dataset = "coco2017"
+        # cfg.dataset = "coco2017"
         if 'coco2014' in cfg.dataset:
             cfg.train_file_list = 'annotations/instances_train2014.json'
             cfg.train_data_dir = 'train2014'

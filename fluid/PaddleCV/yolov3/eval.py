@@ -61,19 +61,19 @@ def eval():
         print("Load in labels {} with ids {}".format(label_names, label_ids))
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
-    def get_pred_result(boxes, confs, labels, im_id):
+    def get_pred_result(boxes, scores, labels, im_id):
         result = []
-        for box, conf, label in zip(boxes, confs, labels):
+        for box, score, label in zip(boxes, scores, labels):
             x1, y1, x2, y2 = box
             w = x2 - x1 + 1
-            h = y2 - y1 + 2
+            h = y2 - y1 + 1
             bbox = [x1, y1, w, h]
             
             res = {
                     'image_id': im_id,
                     'category_id': label_ids[int(label)],
                     'bbox': bbox,
-                    'score': conf
+                    'score': score
             }
             result.append(res)
         return result
