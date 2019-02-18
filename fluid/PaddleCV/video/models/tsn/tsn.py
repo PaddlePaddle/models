@@ -125,3 +125,14 @@ class TSN(ModelBase):
         return self.feature_input if self.mode == 'infer' else self.feature_input + [
             self.label_input
         ]
+
+    def pretrain_info(self):
+        return ('ResNet50_pretrained', 'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz')
+
+    def load_pretrain_params(self, exe, pretrain, prog, place):
+        def is_parameter(var):
+            return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name))
+
+        vars = filter(is_parameter, prog.list_vars())
+        fluid.io.load_vars(exe, pretrain, vars=vars, main_program=prog)
+
