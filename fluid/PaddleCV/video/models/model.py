@@ -143,6 +143,7 @@ class ModelBase(object):
         return path
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
+        logger.info("Load pretrain weights from {}".format(pretrain))
         fluid.io.load_params(exe, pretrain, main_program=prog)
 
     def get_config_from_sec(self, sec, item, default=None):
