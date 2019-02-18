@@ -18,6 +18,9 @@ from paddle.fluid import ParamAttr
 from ..model import ModelBase
 from .tsn_res_model import TSN_ResNet
 
+import logging
+logger = logging.getLogger(__name__)
+
 __all__ = ["TSN"]
 
 
@@ -133,6 +136,7 @@ class TSN(ModelBase):
         def is_parameter(var):
             return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name))
 
+        logger.info("Load pretrain weights from {}, exclude fc layer.".format(pretrain))
         vars = filter(is_parameter, prog.list_vars())
         fluid.io.load_vars(exe, pretrain, vars=vars, main_program=prog)
 

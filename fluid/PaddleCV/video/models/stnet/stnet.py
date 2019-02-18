@@ -17,6 +17,9 @@ import paddle.fluid as fluid
 from ..model import ModelBase
 from .stnet_res_model import StNet_ResNet
 
+import logging
+logger = logging.getLogger(__name__)
+
 __all__ = ["STNET"]
 
 
@@ -131,6 +134,7 @@ class STNET(ModelBase):
                 return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name)) \
                     and (not ("batch_norm" in var.name)) and (not ("xception" in var.name)) and (not ("conv3d" in var.name))
 
+        logger.info("Load pretrain weights from {}, exclude fc, batch_norm, xception, conv3d layers.".format(pretrain))
         vars = filter(is_parameter, prog.list_vars())
         fluid.io.load_vars(exe, pretrain, vars=vars, main_program=prog)
 
