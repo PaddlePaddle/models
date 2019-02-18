@@ -19,8 +19,6 @@ from paddle.fluid.initializer import Normal
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.regularizer import L2Decay
 from config import cfg
-import cPickle as cp
-import numpy as np
 
 
 class RCNN(object):
@@ -43,6 +41,8 @@ class RCNN(object):
         self.rpn_heads(body_conv)
         # Fast RCNN
         self.fast_rcnn_heads(body_conv)
+        if not self.is_train:
+            self.eval_bbox()
         # Mask RCNN
         if cfg.MASK_ON:
             self.mask_rcnn_heads(body_conv)
@@ -298,8 +298,6 @@ class RCNN(object):
                                              name='bbox_pred_b',
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
-        if not self.is_train:
-            self.eval_bbox()
 
     def SuffixNet(self, conv5):
         mask_out = fluid.layers.conv2d_transpose(
