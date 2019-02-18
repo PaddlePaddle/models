@@ -185,7 +185,7 @@ def get_segms_res(batch_size, lod, segms_out, data, num_id_to_cat_id_map):
             cat_id = num_id_to_cat_id_map[num_id]
             if six.PY3:
                 if 'counts' in segm:
-                    segm['counts'] = rle['counts'].decode("utf8")
+                    segm['counts'] = segm['counts'].decode("utf8")
             segm_res = {
                 'image_id': image_id,
                 'category_id': cat_id,
