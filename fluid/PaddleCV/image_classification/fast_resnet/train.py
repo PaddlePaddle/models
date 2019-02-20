@@ -102,7 +102,6 @@ def linear_lr_decay(lr_values, epochs, bs_values, total_images):
                 start_lr, end_lr = lr_values[idx]
                 linear_lr = end_lr - start_lr
                 steps = last_steps + math.ceil(total_images * 1.0 / bs_values[idx]) * linear_epoch
-                linear_lr = end_lr = start_lr
                 with switch.case(global_step < steps):
                     decayed_lr = start_lr + linear_lr * ((global_step - last_steps) * 1.0/steps)
                     last_steps = steps
