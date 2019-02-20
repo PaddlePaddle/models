@@ -367,7 +367,7 @@ def train_parallel(args):
             test_ret = test_single(startup_exe, test_prog, args, test_pyreader,test_fetch_list)
             print("Pass: %d, Test Loss %s, test acc1: %s, test acc5: %s\n" %
                   (pass_id, test_ret[0], test_ret[1], test_ret[2]))
-    # TODO(Yancey1989): need to fix on 
+    # TODO(Yancey1989): need to fix on any update_method
     if args.update_method == "pserver":
         startup_exe.close()
     print("total train time: ", time.time() - over_all_start)
