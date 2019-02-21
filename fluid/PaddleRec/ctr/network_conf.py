@@ -3,6 +3,34 @@ import math
 
 dense_feature_dim = 13
 
+WORD_SIZE = 100000
+EMBED_SIZE = 64
+CNN_DIM = 128
+CNN_FILTER_SIZE = 5
+
+
+def text_cnn(word):
+    """
+    """
+    embed = fluid.layers.embedding(
+        input=word,
+        size=[WORD_SIZE, EMBED_SIZE],
+        dtype='float32',
+        param_attr=fluid.ParamAttr(
+                        initializer=fluid.initializer.Normal(scale=1/math.sqrt(WORD_SIZE))),
+        is_sparse=IS_SPARSE,
+        is_distributed=False)
+    cnn = fluid.nets.sequence_conv_pool(
+         input = embed,
+         num_filters = CNN_DIM,
+         filter_size = CNN_FILTER_SIZE,
+         param_attr=fluid.ParamAttr(
+                         initializer=fluid.initializer.Normal(scale=1/math.sqrt(CNN_FILTER_SIZE * embed.shape[1]))),
+         act='tanh',
+         pool_type = "max")
+    return cnn
+
+
 
 def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim, sparse_input):
     def dense_fm_layer(input, emb_dict_size, factor_size, fm_param_attr):
