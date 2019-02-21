@@ -64,7 +64,7 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 
 After data preparation, one can start the training step by:
 
-Faster RCNN
+- Faster RCNN
 
     python train.py \
        --model_save_dir=output/ \
@@ -72,7 +72,7 @@ Faster RCNN
        --data_dir=${path_to_data} \
        --MASK_ON=False
 
-Mask RCNN
+- Mask RCNN
 
     python train.py \
        --model_save_dir=output/ \
@@ -114,14 +114,14 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
 `eval_coco_map.py` is the main executor for evalution, one can start evalution step by:
 
-Faster RCNN
+- Faster RCNN
 
     python eval_coco_map.py \
         --dataset=coco2017 \
         --pretrained_model=${path_to_pretrain_model} \
         --MASK_ON=False
 
-Mask RCNN
+- Mask RCNN
 
     python eval_coco_map.py \
         --dataset=coco2017 \

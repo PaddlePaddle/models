@@ -63,7 +63,7 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
 数据准备完毕后，可以通过如下的方式启动训练：
 
-Faster RCNN
+- Faster RCNN
 
     python train.py \
        --model_save_dir=output/ \
@@ -71,7 +71,7 @@ Faster RCNN
        --data_dir=${path_to_data} \
        --MASK_ON=False
 
-Mask RCNN
+- Mask RCNN
 
     python train.py \
        --model_save_dir=output/ \
@@ -108,14 +108,14 @@ Mask RCNN
 
 `eval_coco_map.py`是评估模块的主要执行程序，调用示例如下：
 
-Faster RCNN
+- Faster RCNN
 
     python eval_coco_map.py \
         --dataset=coco2017 \
         --pretrained_model=${path_to_pretrain_model} \
         --MASK_ON=False
 
-Mask RCNN
+- Mask RCNN
 
     python eval_coco_map.py \
         --dataset=coco2017 \
