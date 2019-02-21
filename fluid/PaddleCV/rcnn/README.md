@@ -64,14 +64,24 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 
 After data preparation, one can start the training step by:
 
+Faster RCNN
+
     python train.py \
        --model_save_dir=output/ \
        --pretrained_model=${path_to_pretrain_model} \
        --data_dir=${path_to_data} \
        --MASK_ON=False
 
+Mask RCNN
+
+    python train.py \
+       --model_save_dir=output/ \
+       --pretrained_model=${path_to_pretrain_model} \
+       --data_dir=${path_to_data} \
+       --MASK_ON=True
+
 - Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
-- Set ```MASK\_ON``` to choose Faster RCNN or Mask RCNN model.
+- Set ```MASK_ON``` to choose Faster RCNN or Mask RCNN model.
 - For more help on arguments:
 
     python train.py --help
@@ -104,11 +114,22 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
 `eval_coco_map.py` is the main executor for evalution, one can start evalution step by:
 
+Faster RCNN
+
     python eval_coco_map.py \
         --dataset=coco2017 \
         --pretrained_model=${path_to_pretrain_model} \
+        --MASK_ON=False
+
+Mask RCNN
+
+    python eval_coco_map.py \
+        --dataset=coco2017 \
+        --pretrained_model=${path_to_pretrain_model} \
+        --MASK_ON=True
 
 - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
+- Set ```MASK_ON``` to choose Faster RCNN or Mask RCNN model.
 
 Evalutaion result is shown as below:
 

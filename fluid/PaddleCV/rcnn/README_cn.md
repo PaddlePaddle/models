@@ -63,14 +63,24 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
 数据准备完毕后，可以通过如下的方式启动训练：
 
+Faster RCNN
+
     python train.py \
        --model_save_dir=output/ \
        --pretrained_model=${path_to_pretrain_model} \
        --data_dir=${path_to_data} \
        --MASK_ON=False
 
+Mask RCNN
+
+    python train.py \
+       --model_save_dir=output/ \
+       --pretrained_model=${path_to_pretrain_model} \
+       --data_dir=${path_to_data} \
+       --MASK_ON=True
+
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
-- 通过设置MASK\_ON选择Faster RCNN和Mask RCNN模型。
+- 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
 - 可选参数见：
 
     python train.py --help
@@ -98,11 +108,22 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
 `eval_coco_map.py`是评估模块的主要执行程序，调用示例如下：
 
+Faster RCNN
+
     python eval_coco_map.py \
         --dataset=coco2017 \
         --pretrained_model=${path_to_pretrain_model} \
+        --MASK_ON=False
+
+Mask RCNN
+
+    python eval_coco_map.py \
+        --dataset=coco2017 \
+        --pretrained_model=${path_to_pretrain_model} \
+        --MASK_ON=True
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
+- 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
 
 下表为模型评估结果：
 
