@@ -145,7 +145,7 @@ def _reader_creator(file_list,
         with open(file_list) as flist:
             full_lines = [line.strip() for line in flist]
             if shuffle:
-                np.random.shuffle(lines)
+                np.random.shuffle(full_lines)
             if mode == 'train' and os.getenv('PADDLE_TRAINING_ROLE'):
                 # distributed mode if the env var `PADDLE_TRAINING_ROLE` exits
                 trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
