@@ -16,6 +16,12 @@ TRAINER_NUMS = int(os.getenv("PADDLE_TRAINER_NUM", "1"))
 TRAINER_ID = int(os.getenv("PADDLE_TRAINER_ID", "0"))
 epoch = 0
 
+class ImageFolder(object):
+    def __init__(self, root, transforms):
+        
+        pass
+
+
 FINISH_EVENT = "FINISH_EVENT"
 class PaddleDataLoader(object):
     def __init__(self, torch_dataset, indices=None, concurrent=16, queue_size=3072):
