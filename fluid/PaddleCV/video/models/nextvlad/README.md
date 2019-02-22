@@ -1,0 +1,66 @@
+# NeXtVLAD视频分类模型
+
+## 1 模型简介
+NeXtVLAD模型是第二届Youtube-8M视频理解竞赛中效果最好的单模型，在参数量小于80M的情况下，能得到高于0.87的GAP指标。该模型提供了一种将桢级别的视频特征转化并压缩成特征向量，以适用于大尺寸视频文件的分类的方法。其基本出发点是在NetVLAD模型的基础上，将高维度的特征先进行分组，通过引入attention机制聚合提取时间维度的信息，这样既可以获得较高的准确率，又可以使用更少的参数量。详细内容请参考原[论文](https://arxiv.org/abs/1811.05014)。
+
+## 2 参数及计算指标
+这里使用Paddle Fluid实现了论文中的单模型结构，使用2nd-Youtube-8M的train数据集作为训练集，在val数据集上做测试。
+
+模型参数列表如下：
+
+| 参数 | 取值 |
+| :---------: | :----: |
+| cluster\_size | 128 |
+| hidden\_size | 2048 |
+| groups | 8 |
+| expansion | 2 |
+| drop\_rate | 0.5 |
+| gating\_reduction | 8 |
+
+
+计算指标列表如下：
+
+| 精度指标 | 模型精度 |
+| :---------: | :----: |
+| Hit@1 | 0.8960 |
+| PERR | 0.8132 |
+| GAP | 0.8709 |
+
+
+## 3 数据准备
+NeXtVLAD模型使用2nd-Youtube-8M数据集，关于数据本分请参考[数据说明](../../dataset/README.md)
+
+## 4 模型训练
+
+### 随机初始化开始训练
+在video目录下运行如下脚本即可
+
+    bash ./scripts/train/train_nextvlad.sh
+
+### 使用我们提供的预训练模型做finetune
+
+请先将我们提供的[预训练模型](model url)下载到本地，并在上述脚本文件中添加--resume为所保存的预模型存放路径。
+这里我们是使用4卡Nvidia Tesla P40来训练的，总的batch size数是160。
+
+## 5 模型测试
+
+用户可以下载我们的预训练模型参数，或者使用自己训练好的模型参数，请在
+
+    ./scripts/test/test_nextvald.sh
+
+文件中修改--weights参数为保存模型参数的目录。运行
+
+    bash ./scripts/test/test_nextvlad.sh
+
+由于youtube-8m提供的数据中test数据集是没有ground truth标签的，所以这里我们使用validation数据集来做测试。
+
+## 6 预测输出
+
+用户可以下载我们的预训练模型参数，或者使用自己训练好的模型参数，请在
+
+    ./scripts/infer/infer_nextvald.sh
+
+文件中修改--weights参数为保存模型参数的目录，运行
+
+    bash ./scripts/infer/infer_nextvald.sh
+
