@@ -98,6 +98,11 @@ YOLOv3 的网络结构由基础特征提取网络、multi-scale特征融合层�
 *  采用momentum优化算法训练YOLOv3，momentum=0.9。
 *  学习率采用warmup算法，前1000轮学习率从0.0线性增加至0.01。在400000，450000轮时使用0.1,0.1乘子进行学习率衰减，最大训练500000轮。
 
+下图为模型训练结果：
+<p align="center">
+<img src="image/train_loss.png" height="500" width="650" hspace="10"/><br />
+Train Loss
+</p>
 
 ## 模型评估
 
@@ -111,11 +116,23 @@ YOLOv3 的网络结构由基础特征提取网络、multi-scale特征融合层�
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
 
-下图为模型评估结果：
-<p align="center">
-<img src="image/mAP.jpg" height=500 width=650 hspace='10'/> <br />
-YOLOv3
-</p>
+模型评估结果：
+
+```text
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.370
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.581
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.401
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.236
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.403
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.480
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.297
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.450
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.466
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.309
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.500
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.586
+
+```
 
 
 ## 模型推断及可视化

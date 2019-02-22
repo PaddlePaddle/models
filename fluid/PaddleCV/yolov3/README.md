@@ -99,8 +99,8 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 
 Training result is shown as below：
 <p align="center">
-<img src="image/train_loss.jpg" height=500 width=650 hspace='10'/> <br />
-YOLOv3
+<img src="image/train_loss.png" height="500" width="650" hspace="10"/><br />
+Train Loss
 </p>
 
 ## Evaluation
@@ -116,10 +116,22 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
 
 Evalutaion result is shown as below:
-<p align="center">
-<img src="image/mAP.jpg" height=500 width=650 hspace='10'/> <br />
-YOLOv3 mAP
-</p>
+
+```text
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.370
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.581
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.401
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.236
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.403
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.480
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.297
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.450
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.466
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.309
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.500
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.586
+
+```
 
 ## Inference and Visualization
 
