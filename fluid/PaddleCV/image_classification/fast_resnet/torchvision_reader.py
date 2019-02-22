@@ -12,18 +12,32 @@ from tqdm import tqdm
 import time
 import multiprocessing
 
-TRAINER_NUMS = int(os.getenv("PADDLE_TRAINER_NUM", "1"))
+TRAINER_NUMS = int(os.getenv("PADDLE_TRAINERS_NUM", "1"))
 TRAINER_ID = int(os.getenv("PADDLE_TRAINER_ID", "0"))
 epoch = 0
 
 FINISH_EVENT = "FINISH_EVENT"
 class PaddleDataLoader(object):
-    def __init__(self, torch_dataset, indices=None, concurrent=16, queue_size=3072):
+    def __init__(self, torch_dataset, indices=None, concurrent=4, queue_size=1024, shuffle_seed=None, is_train=True):
         self.torch_dataset = torch_dataset
         self.data_queue = multiprocessing.Queue(queue_size)
         self.indices = indices
         self.concurrent = concurrent
+        self.shuffle_seed = shuffle_seed
+        self.is_train = is_train
 
+    def _shuffle_worker_indices(self, indices, shuffle_seed = None):
+        import copy
+        shuffled_indices = copy.deepcopy(indices)
+        random.seed(time.time() if shuffle_seed is None else shuffle_seed)
+        random.shuffle(shuffled_indices)
+        sampels_per_worker = len(shuffled_indices) / TRAINER_NUMS
+        start = TRAINER_ID * sampels_per_worker
+        end = (TRAINER_ID + 1) * sampels_per_worker
+        ret = shuffled_indices[start:end]
+        print("shuffling worker indices trainer_id: [%d], num_trainers:[%d], len: [%d], start: [%d], end: [%d]" % (TRAINER_ID, TRAINER_NUMS, len(ret), start, end))
+        return ret
+        
     def _worker_loop(self, dataset, worker_indices, worker_id):
         cnt = 0
         for idx in worker_indices:
@@ -41,14 +55,16 @@ class PaddleDataLoader(object):
             print("total image: ", total_img)
             if self.indices is None:
                 self.indices = [i for i in xrange(total_img)]
-                random.seed(time.time())
-                random.shuffle(self.indices)
-                print("shuffle indices: %s ..." % self.indices[:10])
+                if self.is_train:
+                    print("shuffle indices by seed: ", self.shuffle_seed)
+                    self.indices = self._shuffle_worker_indices(self.indices, self.shuffle_seed)
+                print("samples: %d shuffled indices: %s ..." % (len(self.indices), self.indices[:10]))
 
-            imgs_per_worker = int(math.ceil(total_img / self.concurrent))
+            imgs_per_worker = int(math.ceil(len(self.indices) / self.concurrent))
             for i in xrange(self.concurrent):
                 start = i * imgs_per_worker
-                end = (i + 1) * imgs_per_worker if i != self.concurrent - 1 else None
+                end = (i + 1) * imgs_per_worker if i != self.concurrent - 1 else -1
+                print("loader thread: [%d] start idx: [%d], end idx: [%d]" % (i, start, end))
                 sliced_indices = self.indices[start:end]
                 w = multiprocessing.Process(
                     target=self._worker_loop,
@@ -68,13 +84,13 @@ class PaddleDataLoader(object):
 
         return _reader_creator
 
-def train(traindir, sz, min_scale=0.08):
+def train(traindir, sz, min_scale=0.08, shuffle_seed=None):
     train_tfms = [
         transforms.RandomResizedCrop(sz, scale=(min_scale, 1.0)),
         transforms.RandomHorizontalFlip()
     ]
     train_dataset = datasets.ImageFolder(traindir, transforms.Compose(train_tfms))
-    return PaddleDataLoader(train_dataset).reader()
+    return PaddleDataLoader(train_dataset, shuffle_seed=shuffle_seed)
 
 def test(valdir, bs, sz, rect_val=False):
     if rect_val:
@@ -84,12 +100,12 @@ def test(valdir, bs, sz, rect_val=False):
 
         ar_tfms = [transforms.Resize(int(sz* 1.14)), CropArTfm(idx2ar, sz)]
         val_dataset = ValDataset(valdir, transform=ar_tfms)
-        return PaddleDataLoader(val_dataset, concurrent=1, indices=idx_sorted).reader()
+        return PaddleDataLoader(val_dataset, concurrent=1, indices=idx_sorted, is_train=False)
 
     val_tfms = [transforms.Resize(int(sz* 1.14)), transforms.CenterCrop(sz)]
     val_dataset = datasets.ImageFolder(valdir, transforms.Compose(val_tfms))
 
-    return PaddleDataLoader(val_dataset).reader()
+    return PaddleDataLoader(val_dataset, is_train=False)
 
 
 class ValDataset(datasets.ImageFolder):
@@ -162,7 +178,7 @@ if __name__ == "__main__":
     import time
     test_reader = test(valdir="/data/imagenet/validation", bs=50, sz=288, rect_val=True)
     start_ts = time.time()
-    for idx, data in enumerate(test_reader()):
+    for idx, data in enumerate(test_reader.reader()):
         print(idx, data[0].shape, data[1])
         if idx == 10:
             break

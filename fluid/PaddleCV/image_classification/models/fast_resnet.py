@@ -70,7 +70,7 @@ class FastResNet():
                     stride=2 if i == 0 and block != 0 else 1)
         pool_size = int(img_size / 32)
         pool = fluid.layers.pool2d(
-            input=conv, pool_size=pool_size, pool_type='avg', global_pooling=True)
+            input=conv, pool_size=0, pool_type='avg', global_pooling=True)
         out = fluid.layers.fc(input=pool,
                               size=class_dim,
                               act=None,
