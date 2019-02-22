@@ -30,6 +30,14 @@ The bone network of YOLOv3 is darknet53, the structure of YOLOv3 is as follow:
 YOLOv3 structure
 </p>
 
+YOLOv3 networks are composed of base feature extraction network, multi-scale feature fusion layers, and output layers.
+
+1. Feature extraction network: YOLOv3 ues [DarkNet53](https://arxiv.org/abs/1612.08242) for feature extracion,Darknet53 uses a full convolution structure, replacing the pooling layer with a convolution operation of step size 2, and adding Residual-block to avoid gradient dispersion when the number of network layers is too deep.
+
+2. Feature fusion layer. In order to solve the problem that the previous YOLO version is not sensitive to small objects, YOLOv3 uses three different scale feature maps for target detection, which are 13*13, 26*26, 52*52, respectively, for detecting large, medium and small objects. The feature fusion layer selects the three scale feature maps produced by DarkNet as input, and draws on the idea of FPN (feature pyramid networks) to fuse the feature maps of each scale through a series of convolutional layers and upsampling.
+
+3. Output layer: The output layer also uses a full convolution structure. The number of convolution kernels in the last convolutional layer is 255:3*(80+4+1)=255, and 3 indicates that a grid cell contains 3 bounding boxes. 4 represents the four coordinate information of the box, 1 represents the Confidence Score, and 80 represents the probability of 80 categories in the COCO dataset.
+
 ## Data preparation
 
 Train the model on [MS-COCO dataset](http://cocodataset.org/#download), download dataset as below:
@@ -74,10 +82,20 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
     # not to install the COCO API into global site-packages
     python2 setup.py install --user
 
+**data reader introduction:**
+
+* Data reader is defined in `reader.py` .
+
+**model configuration:**
+
+* The model uses 9 anchors generated based on the COCO dataset, which are (10x13), (16x30), (33x23), (30x61), (62x45), (59x119), (116x90), (156x198), (373x326).
+
+* NMS threshold=0.7, NMS valid=0.1 nms_topk=400, nms_posk=100
+
 **training strategy:**
 
 *  Use momentum optimizer with momentum=0.9.
-*  In first 4000 iteration, the learning rate increases linearly from 0.0 to 0.01. Then lr is decayed at 450000, 500000 iteration with multiplier 0.1, 0.01. The maximum iteration is 500000.
+*  In first 1000 iteration, the learning rate increases linearly from 0.0 to 0.01. Then lr is decayed at 450000, 500000 iteration with multiplier 0.1, 0.1. The maximum iteration is 500000.
 
 Training result is shown as below：
 <p align="center">
@@ -122,3 +140,4 @@ Visualization of infer result is shown as below:
 <img src="image/000000515077.jpg" height=300 width=400 hspace='10'/> <br />
 YOLOv3 Visualization Examples
 </p>
+
