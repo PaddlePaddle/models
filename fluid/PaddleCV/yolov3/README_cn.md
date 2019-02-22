@@ -100,7 +100,7 @@ YOLOv3 的网络结构由基础特征提取网络、multi-scale特征融合层�
 
 下图为模型训练结果：
 <p align="center">
-<img src="image/train_loss.png" height="500" width="650" hspace="10"/><br />
+<img src="image/train_loss.png" height="400" width="550" hspace="10"/><br />
 Train Loss
 </p>
 
