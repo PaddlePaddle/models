@@ -98,5 +98,10 @@ the images/s while the X-axis shows the number of GPUs.
 
 <p align="center">
 <img src="../images/imagenet_dist_performance.png" width=528> <br />
-Performance of Fluid Distributed Training
+Performance of Multiple-GPU Training of Resnet50 on Imagenet
+</p>
+
+<p align="center">
+<img src="../images/imagenet_dist_speedup.png" width=528> <br />
+Speed-ups of Multiple-GPU Training of Resnet50 on Imagenet
 </p>
