@@ -6,7 +6,7 @@ python train.py \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
-       --with_mem_opt=False \
+       --with_mem_opt=True \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 #      >log_SE_ResNeXt50_32x4d.txt 2>&1 &
@@ -19,7 +19,7 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=False \
+#       --with_mem_opt=True \
 #       --lr_strategy=piecewise_decay \
 #	--num_epochs=120 \
 #       --lr=0.01
@@ -32,7 +32,7 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=False \
+#       --with_mem_opt=True \
 #       --lr_strategy=piecewise_decay \
 #       --num_epochs=120 \
 #       --lr=0.1
@@ -46,12 +46,22 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=False \
+#       --with_mem_opt=True \
 #       --lr_strategy=piecewise_decay \
 #	--num_epochs=120 \
 #       --lr=0.1
 
-
+#python train.py \
+#	--model=MobileNetV2 \
+#	--batch_size=500 \
+#	--total_images=1281167 \
+#	--class_dim=1000 \
+#	--image_shape=3,224,224 \
+#	--model_save_dir=output/ \
+#	--with_mem_opt=True \
+#	--lr_strategy=cosine_decay \
+#	--num_epochs=200 \
+#	--lr=0.1
 #ResNet50:
 #python train.py \
 #       --model=ResNet50 \
@@ -60,7 +70,7 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=False \
+#       --with_mem_opt=True \
 #       --lr_strategy=piecewise_decay \
 #	--num_epochs=120 \
 #       --lr=0.1
@@ -87,7 +97,7 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --l2_decay=1e-4 \(TODO)
+#       --l2_decay=1e-4
 
 
 #SE_ResNeXt50:
@@ -99,7 +109,7 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --l2_decay=12e-5 \(TODO)
+#       --l2_decay=12e-5
 
 #SE_ResNeXt101:
 #python train.py \
@@ -110,7 +120,7 @@ python train.py \
 #        --lr_strategy=cosine_decay \
 #        --lr=0.1 \
 #        --num_epochs=200 \
-#        --l2_decay=15e-5 \(TODO)
+#        --l2_decay=15e-5
 
 #VGG11:
 #python train.py \
@@ -121,7 +131,7 @@ python train.py \
 #        --lr_strategy=cosine_decay \
 #        --lr=0.1 \
 #        --num_epochs=90 \
-#        --l2_decay=2e-4 \(TODO)
+#        --l2_decay=2e-4
 
 #VGG13:
 #python train.py
@@ -132,4 +142,4 @@ python train.py \
 #        --lr_strategy=cosine_decay \
 #        --lr=0.01 \
 #        --num_epochs=90 \
-#        --l2_decay=3e-4 \(TODO)
+#        --l2_decay=3e-4
