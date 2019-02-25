@@ -101,7 +101,10 @@ the images/s while the X-axis shows the number of GPUs.
 Performance of Multiple-GPU Training of Resnet50 on Imagenet
 </p>
 
+The second figure shows speed-ups when using multiple GPUs according to the above figure.
+
 <p align="center">
 <img src="../images/imagenet_dist_speedup.png" width=528> <br />
 Speed-ups of Multiple-GPU Training of Resnet50 on Imagenet
 </p>
+
