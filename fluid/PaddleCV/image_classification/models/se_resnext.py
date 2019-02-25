@@ -7,7 +7,8 @@ import math
 
 __all__ = [
     "SE_ResNeXt", "SE_ResNeXt50_32x4d", "SE_ResNeXt101_32x4d",
-    "SE_ResNeXt152_32x4d"
+    "SE_ResNeXt152_32x4d", "ResNeXt50_32x4d", "ResNeXt101_32x4d",
+    "ResNeXt152_32x4d"
 ]
 
 train_parameters = {
@@ -25,9 +26,11 @@ train_parameters = {
 
 
 class SE_ResNeXt():
-    def __init__(self, layers=50):
+    def __init__(self, layers=50, SE=True, is_train=True):
         self.params = train_parameters
         self.layers = layers
+        self.SE = SE
+        self.is_train = is_train
 
     def net(self, input, class_dim=1000):
         layers = self.layers
@@ -96,19 +99,31 @@ class SE_ResNeXt():
 
         for block in range(len(depth)):
             for i in range(depth[block]):
-                conv = self.bottleneck_block(
-                    input=conv,
-                    num_filters=num_filters[block],
-                    stride=2 if i == 0 and block != 0 else 1,
-                    cardinality=cardinality,
-                    reduction_ratio=reduction_ratio)
+                if self.SE:
+                    conv = self.bottleneck_block(
+                        input=conv,
+                        num_filters=num_filters[block],
+                        stride=2 if i == 0 and block != 0 else 1,
+                        cardinality=cardinality,
+                        reduction_ratio=reduction_ratio)
+                else:
+                    conv = self.bottleneckX_block(
+                        input=conv,
+                        num_filters=num_filters[block],
+                        stride=2 if i == 0 and block != 0 else 1,
+                        cardinality=4)
 
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
-        drop = fluid.layers.dropout(
-            x=pool, dropout_prob=0.5, seed=self.params['dropout_seed'])
+        if self.SE:
+            drop = fluid.layers.dropout(
+                x=pool, dropout_prob=0.5, seed=self.params['dropout_seed'],
+                is_test=not self.is_train)
+        else:
+            drop = pool
         stdv = 1.0 / math.sqrt(drop.shape[1] * 1.0)
         out = fluid.layers.fc(input=drop,
+                              act="softmax",
                               size=class_dim,
                               param_attr=fluid.param_attr.ParamAttr(
                                   initializer=fluid.initializer.Uniform(-stdv,
@@ -145,6 +160,24 @@ class SE_ResNeXt():
 
         return fluid.layers.elementwise_add(x=short, y=scale, act='relu')
 
+    def bottleneckX_block(self, input, num_filters, stride, cardinality):
+        conv0 = self.conv_bn_layer(
+            input=input, num_filters=num_filters, filter_size=1, act='relu')
+        conv1 = self.conv_bn_layer(
+            input=conv0,
+            num_filters=num_filters,
+            filter_size=3,
+            stride=stride,
+            groups=cardinality,
+            act='relu')
+        conv2 = self.conv_bn_layer(
+            input=conv1, num_filters=num_filters * 2, filter_size=1, act=None)
+
+        short = self.shortcut(input, num_filters * 2, stride)
+
+        return fluid.layers.elementwise_add(x=short, y=conv2, act='relu')
+
+
     def conv_bn_layer(self,
                       input,
                       num_filters,
@@ -152,6 +185,9 @@ class SE_ResNeXt():
                       stride=1,
                       groups=1,
                       act=None):
+        # initializer for webvision
+        n = filter_size * filter_size * num_filters
+        std = math.sqrt(2.0 / n)
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -160,8 +196,11 @@ class SE_ResNeXt():
             padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
+            param_attr=fluid.ParamAttr(
+                initializer=fluid.initializer.Normal(0.0, std)
+            ),
             bias_attr=False)
-        return fluid.layers.batch_norm(input=conv, act=act)
+        return fluid.layers.batch_norm(input=conv, act=act, is_test=not self.is_train)
 
     def squeeze_excitation(self, input, num_channels, reduction_ratio):
         pool = fluid.layers.pool2d(
@@ -184,16 +223,28 @@ class SE_ResNeXt():
         return scale
 
 
-def SE_ResNeXt50_32x4d():
-    model = SE_ResNeXt(layers=50)
+def SE_ResNeXt50_32x4d(is_train=True):
+    model = SE_ResNeXt(layers=50, is_train=is_train)
     return model
 
 
-def SE_ResNeXt101_32x4d():
-    model = SE_ResNeXt(layers=101)
+def SE_ResNeXt101_32x4d(is_train=True):
+    model = SE_ResNeXt(layers=101, is_train=is_train)
     return model
 
 
-def SE_ResNeXt152_32x4d():
-    model = SE_ResNeXt(layers=152)
+def SE_ResNeXt152_32x4d(is_train=True):
+    model = SE_ResNeXt(layers=152, is_train=is_train)
+    return model
+
+def ResNeXt50_32x4d(is_train=True):
+    model = SE_ResNeXt(layers=50, SE=False, is_train=is_train)
+    return model
+
+def ResNeXt101_32x4d(is_train=True):
+    model = SE_ResNeXt(layers=101, SE=False, is_train=is_train)
+    return model
+
+def ResNeXt152_32x4d(is_train=True):
+    model = SE_ResNeXt(layers=152, SE=False, is_train=is_train)
     return model
