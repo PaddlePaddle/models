@@ -105,7 +105,7 @@ def build_program(main_prog, startup_prog, train_params, is_train):
                 with fluid.unique_name.guard("inference"):
                     nmsed_out = fluid.layers.detection_output(
                         locs, confs, box, box_var, nms_threshold=0.45)
-                    map_eval = fluid.evaluator.DetectionMAP(
+                    map_eval = fluid.metrics.DetectionMAP(
                         nmsed_out,
                         gt_label,
                         gt_box,
@@ -141,7 +141,6 @@ def train(args,
     batch_size = train_params['batch_size']
     epoc_num = train_params['epoc_num']
     batch_size_per_device = batch_size // devices_num
-    iters_per_epoc = train_params["train_images"] // batch_size
     num_workers = 8
 
     startup_prog = fluid.Program()
@@ -186,9 +185,7 @@ def train(args,
                                 train_file_list,
                                 batch_size_per_device,
                                 shuffle=is_shuffle,
-                                use_multiprocessing=True,
                                 num_workers=num_workers,
-                                max_queue=24,
                                 enable_ce=enable_ce)
     test_reader = reader.test(data_args, val_file_list, batch_size)
     train_py_reader.decorate_paddle_reader(train_reader)
@@ -205,7 +202,7 @@ def train(args,
     def test(epoc_id, best_map):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
-        every_epoc_map=[]
+        every_epoc_map=[] # for CE
         test_py_reader.start()
         try:
             batch_id = 0
@@ -218,22 +215,23 @@ def train(args,
         except fluid.core.EOFException:
             test_py_reader.reset()
         mean_map = np.mean(every_epoc_map)
-        print("Epoc {0}, test map {1}".format(epoc_id, test_map))
+        print("Epoc {0}, test map {1}".format(epoc_id, test_map[0]))
         if test_map[0] > best_map:
             best_map = test_map[0]
             save_model('best_model', test_prog)
         return best_map, mean_map
 
 
-    train_py_reader.start()
     total_time = 0.0
-    try:
-        for epoc_id in range(epoc_num):
-            epoch_idx = epoc_id + 1
-            start_time = time.time()
-            prev_start_time = start_time
-            every_epoc_loss = []
-            for batch_id in range(iters_per_epoc):
+    for epoc_id in range(epoc_num):
+        epoch_idx = epoc_id + 1
+        start_time = time.time()
+        prev_start_time = start_time
+        every_epoc_loss = []
+        batch_id = 0
+        train_py_reader.start()
+        while True:
+            try:
                 prev_start_time = start_time
                 start_time = time.time()
                 if parallel:
@@ -242,34 +240,35 @@ def train(args,
                     loss_v, = exe.run(train_prog, fetch_list=[loss])
                 loss_v = np.mean(np.array(loss_v))
                 every_epoc_loss.append(loss_v)
-                if batch_id % 20 == 0:
+                if batch_id % 10 == 0:
                     print("Epoc {:d}, batch {:d}, loss {:.6f}, time {:.5f}".format(
                         epoc_id, batch_id, loss_v, start_time - prev_start_time))
-            end_time = time.time()
-            total_time += end_time - start_time
+                batch_id += 1
+            except (fluid.core.EOFException, StopIteration):
+                train_reader().close()
+                train_py_reader.reset()
+                break
 
-            best_map, mean_map = test(epoc_id, best_map)
-            print("Best test map {0}".format(best_map))
-            if epoc_id % 10 == 0 or epoc_id == epoc_num - 1:
-                save_model(str(epoc_id), train_prog)
+        end_time = time.time()
+        total_time += end_time - start_time
+        best_map, mean_map = test(epoc_id, best_map)
+        print("Best test map {0}".format(best_map))
+        if epoc_id % 10 == 0 or epoc_id == epoc_num - 1:
+            save_model(str(epoc_id), train_prog)
 
-            if enable_ce and epoc_id == epoc_num - 1:
-                train_avg_loss = np.mean(every_epoc_loss)
-                if devices_num == 1:
-                    print("kpis	train_cost	%s" % train_avg_loss)
-                    print("kpis	test_acc	%s" % mean_map)
-                    print("kpis	train_speed	%s" % (total_time / epoch_idx))
-                else:
-                    print("kpis	train_cost_card%s	%s" %
-                           (devices_num, train_avg_loss))
-                    print("kpis	test_acc_card%s	%s" %
-                           (devices_num, mean_map))
-                    print("kpis	train_speed_card%s	%f" %
-                           (devices_num, total_time / epoch_idx))
-
-    except (fluid.core.EOFException, StopIteration):
-        train_reader().close()
-        train_py_reader.reset()
+    if enable_ce:
+        train_avg_loss = np.mean(every_epoc_loss)
+        if devices_num == 1:
+            print("kpis	train_cost	%s" % train_avg_loss)
+            print("kpis	test_acc	%s" % mean_map)
+            print("kpis	train_speed	%s" % (total_time / epoch_idx))
+        else:
+            print("kpis	train_cost_card%s	%s" %
+                   (devices_num, train_avg_loss))
+            print("kpis	test_acc_card%s	%s" %
+                   (devices_num, mean_map))
+            print("kpis	train_speed_card%s	%f" %
+                   (devices_num, total_time / epoch_idx))
 
 
 if __name__ == '__main__':

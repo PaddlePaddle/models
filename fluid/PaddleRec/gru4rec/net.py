@@ -171,7 +171,8 @@ def train_cross_entropy_network(vocab_size, neg_size, hid_size, drop_out=0.2):
     ele_mul = fluid.layers.elementwise_mul(emb_label_drop, gru)
     red_sum = fluid.layers.reduce_sum(input=ele_mul, dim=1, keep_dim=True)
 
-    pre = fluid.layers.sequence_reshape(input=red_sum, new_dim=(neg_size + 1))
+    pre_ = fluid.layers.sequence_reshape(input=red_sum, new_dim=(neg_size + 1))
+    pre = fluid.layers.softmax(input=pre_)
 
     cost = fluid.layers.cross_entropy(input=pre, label=pos_label)
     cost_sum = fluid.layers.reduce_sum(input=cost)

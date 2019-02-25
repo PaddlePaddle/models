@@ -70,8 +70,8 @@ class Word2VecReader(object):
         self.word_frequencys = [
             float(count) / word_all_count for count in word_counts
         ]
-        print("dict_size = " + str(
-            self.dict_size)) + " word_all_count = " + str(word_all_count)
+        print("dict_size = " + str(self.dict_size) + " word_all_count = " + str(
+            word_all_count))
 
         with io.open(dict_path + "_ptable", 'r', encoding='utf-8') as f2:
             for line in f2:

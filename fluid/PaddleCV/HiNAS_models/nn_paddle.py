@@ -21,6 +21,7 @@ import math
 import numpy as np
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid.contrib.trainer import *
 from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
 import reader
 
@@ -104,7 +105,7 @@ class Model(object):
         accs = []
 
         def event_handler(event):
-            if isinstance(event, fluid.EndStepEvent):
+            if isinstance(event, EndStepEvent):
                 costs.append(event.metrics[0])
                 accs.append(event.metrics[1])
                 if event.step % 20 == 0:
@@ -113,7 +114,7 @@ class Model(object):
                     del costs[:]
                     del accs[:]
 
-            if isinstance(event, fluid.EndEpochEvent):
+            if isinstance(event, EndEpochEvent):
                 if event.epoch % 3 == 0 or event.epoch == FLAGS.num_epochs - 1:
                     avg_cost, accuracy = trainer.test(
                         reader=test_reader, feed_order=['pixel', 'label'])
@@ -126,7 +127,7 @@ class Model(object):
 
         event_handler.best_acc = 0.0
         place = fluid.CUDAPlace(0)
-        trainer = fluid.Trainer(
+        trainer = Trainer(
             train_func=self.train_network,
             optimizer_func=self.optimizer_program,
             place=place)
