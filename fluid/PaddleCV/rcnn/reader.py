@@ -36,7 +36,9 @@ def roidb_reader(roidb, mode):
     im_height = np.round(roidb['height'] * im_scales)
     im_width = np.round(roidb['width'] * im_scales)
     im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
-    if mode == 'val' or mode == 'infer':
+    if mode == 'infer':
+        return im, im_info
+    if mode == 'val':
         return im, im_info, im_id
 
     gt_boxes = roidb['gt_boxes'].astype('float32')
@@ -162,8 +164,8 @@ def coco(mode,
             for roidb in roidbs:
                 if cfg.image_name not in roidb['image']:
                     continue
-                im, im_info, im_id = roidb_reader(roidb, mode)
-                batch_out = [(im, im_info, im_id)]
+                im, im_info = roidb_reader(roidb, mode)
+                batch_out = [(im, im_info)]
                 yield batch_out
 
     return reader
