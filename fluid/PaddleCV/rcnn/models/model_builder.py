@@ -19,6 +19,7 @@ from paddle.fluid.initializer import Normal
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.regularizer import L2Decay
 from config import cfg
+import FPN
 
 
 class RCNN(object):
@@ -33,29 +34,45 @@ class RCNN(object):
         self.is_train = is_train
         self.use_pyreader = use_pyreader
         self.use_random = use_random
+        self.spatial_scale = cfg.spatial_scale
 
     def build_model(self, image_shape):
         self.build_input(image_shape)
-        body_conv = self.add_conv_body_func(self.image)
+        # backbone
+        body_dict, body_name_list = self.add_conv_body_func(self.image)
+        if cfg.FPN_ON:
+            body_dict, self.spatial_scale, body_name_list = FPN.add_fpn_onto_conv_body(
+                body_dict)
         # RPN
-        self.rpn_heads(body_conv)
+        self.rpn_heads(body_dict, body_name_list)
         # Fast RCNN
-        self.fast_rcnn_heads(body_conv)
+        self.fast_rcnn_heads(body_dict, body_name_list)
         if not self.is_train:
             self.eval_bbox()
         # Mask RCNN
         if cfg.MASK_ON:
-            self.mask_rcnn_heads(body_conv)
+            self.mask_rcnn_heads(body_dict, body_name_list)
 
     def loss(self):
         losses = []
+        rkeys = ['loss']
         # Fast RCNN loss
         loss_cls, loss_bbox = self.fast_rcnn_loss()
+        losses = losses + [loss_cls, loss_bbox]
+        rkeys = rkeys + ['loss_cls', 'loss_bbox']
         # RPN loss
-        rpn_cls_loss, rpn_reg_loss = self.rpn_loss()
-        losses = [loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss]
-        rkeys = ['loss', 'loss_cls', 'loss_bbox', \
-                 'loss_rpn_cls', 'loss_rpn_bbox',]
+        if cfg.FPN_ON:
+            loss_rpn_cls_name, loss_rpn_bbox_name, loss_rpn_cls_list, loss_rpn_bbox_list = self.fpn_rpn_loss(
+            )
+            losses = losses + loss_rpn_cls_list + loss_rpn_bbox_list
+            rkeys = rkeys + loss_rpn_cls_name + loss_rpn_bbox_name
+        else:
+            rpn_cls_loss, rpn_reg_loss = self.single_scale_rpn_loss()
+            losses = losses + [rpn_cls_loss, rpn_reg_loss]
+            rkeys = rkeys + [
+                'loss_rpn_cls',
+                'loss_rpn_bbox',
+            ]
         if cfg.MASK_ON:
             loss_mask = self.mask_rcnn_loss()
             losses = losses + [loss_mask]
@@ -154,7 +171,35 @@ class RCNN(object):
             keep_top_k=cfg.TEST.detections_per_im,
             normalized=False)
 
-    def rpn_heads(self, rpn_input):
+    def rpn_heads(self, body_dict, body_name_list):
+        if cfg.FPN_ON:
+            self.rois = self.FPN_rpn_heads(body_dict, body_name_list)
+        else:
+            self.rois = self.single_scale_rpn_heads(body_dict, body_name_list)
+
+    def FPN_rpn_heads(self, fpn_dict, fpn_name_list):
+        fpn_outputs = FPN.add_fpn_rpn_outputs(fpn_dict, self.im_info,
+                                              fpn_name_list)
+        self.rpn_fpn_list = fpn_outputs[0]
+        self.rpn_rois_list = fpn_outputs[1]
+        self.rpn_roi_probs_list = fpn_outputs[2]
+        self.anchors_list = fpn_outputs[3]
+        self.var_list = fpn_outputs[4]
+        rois_collect = fluid.layers.collect_fpn_proposals(
+            self.rpn_rois_list, self.rpn_roi_probs_list)
+        if self.is_train:
+            rois_collect = self.generate_labels(rois_collect)
+        rois, self.restore_index = fluid.layers.distribute_fpn_proposals(
+            rois_collect)
+        return rois
+        # TODO: 
+        # collect
+        # generate_proposal_labels
+        # distribute
+
+    def single_scale_rpn_heads(self, res_dict, res_name_list):
+        rpn_input_name = res_name_list[-1]
+        rpn_input = res_dict[rpn_input_name]
         # RPN hidden representation
         dim_out = rpn_input.shape[1]
         rpn_conv = fluid.layers.conv2d(
@@ -219,7 +264,7 @@ class RCNN(object):
         nms_thresh = param_obj.rpn_nms_thresh
         min_size = param_obj.rpn_min_size
         eta = param_obj.rpn_eta
-        self.rpn_rois, self.rpn_roi_probs = fluid.layers.generate_proposals(
+        rois, self.rpn_roi_probs = fluid.layers.generate_proposals(
             scores=rpn_cls_score_prob,
             bbox_deltas=self.rpn_bbox_pred,
             im_info=self.im_info,
@@ -231,49 +276,77 @@ class RCNN(object):
             min_size=min_size,
             eta=eta)
         if self.is_train:
-            outs = fluid.layers.generate_proposal_labels(
-                rpn_rois=self.rpn_rois,
+            rois = self.generate_labels(rois)
+        return rois
+
+    def generate_labels(self, input_rois):
+        outs = fluid.layers.generate_proposal_labels(
+            rpn_rois=input_rois,
+            gt_classes=self.gt_label,
+            is_crowd=self.is_crowd,
+            gt_boxes=self.gt_box,
+            im_info=self.im_info,
+            batch_size_per_im=cfg.TRAIN.batch_size_per_im,
+            fg_fraction=cfg.TRAIN.fg_fractrion,
+            fg_thresh=cfg.TRAIN.fg_thresh,
+            bg_thresh_hi=cfg.TRAIN.bg_thresh_hi,
+            bg_thresh_lo=cfg.TRAIN.bg_thresh_lo,
+            bbox_reg_weights=cfg.bbox_reg_weights,
+            class_nums=cfg.class_num,
+            use_random=self.use_random)
+
+        rois = outs[0]
+        self.labels_int32 = outs[1]
+        self.bbox_targets = outs[2]
+        self.bbox_inside_weights = outs[3]
+        self.bbox_outside_weights = outs[4]
+
+        if cfg.MASK_ON:
+            mask_out = fluid.layers.generate_mask_labels(
+                im_info=self.im_info,
                 gt_classes=self.gt_label,
                 is_crowd=self.is_crowd,
-                gt_boxes=self.gt_box,
-                im_info=self.im_info,
-                batch_size_per_im=cfg.TRAIN.batch_size_per_im,
-                fg_fraction=cfg.TRAIN.fg_fractrion,
-                fg_thresh=cfg.TRAIN.fg_thresh,
-                bg_thresh_hi=cfg.TRAIN.bg_thresh_hi,
-                bg_thresh_lo=cfg.TRAIN.bg_thresh_lo,
-                bbox_reg_weights=cfg.bbox_reg_weights,
-                class_nums=cfg.class_num,
-                use_random=self.use_random)
+                gt_segms=self.gt_masks,
+                rois=rois,
+                labels_int32=self.labels_int32,
+                num_classes=cfg.class_num,
+                resolution=cfg.resolution)
+            self.mask_rois = mask_out[0]
+            self.roi_has_mask_int32 = mask_out[1]
+            self.mask_int32 = mask_out[2]
+        return rois
 
-            self.rois = outs[0]
-            self.labels_int32 = outs[1]
-            self.bbox_targets = outs[2]
-            self.bbox_inside_weights = outs[3]
-            self.bbox_outside_weights = outs[4]
+    def add_FPN_roi_head_output(body_dict, pool_rois, body_name_list,
+                                spatial_scale):
+        roi_out_list = FPN.add_FPN_roi_head(body_dict, pool_rois,
+                                            body_name_list, spatial_scale)
+        roi_feat_shuffle = fluid.layers.concat(roi_out_list)
+        roi_feat = fluid.layers.gather(roi_feat_shuffle, self.restore_index)
+        roi_feat = fluid.layers.lod_reset(self.roi_feat, pool_rois)
+        fc6 = fluid.layers.fc(input=roi_feat,
+                              size=cfg.MLP_HEAD_DIM,
+                              act='relu',
+                              name='fc6',
+                              param_attr=ParamAttr(name='fc6_w'),
+                              bias_attr=ParamAttr(
+                                  name='fc6_b',
+                                  learning_rate=2.,
+                                  regularizer=L2Decay(0.)))
+        fc7 = fluid.layers.fc(input=fc6,
+                              size=cfg.MLP_HEAD_DIM,
+                              act='relu',
+                              name='fc7',
+                              param_attr=ParamAttr(name='fc7_w'),
+                              bias_attr=ParamAttr(
+                                  name='fc7_b',
+                                  learning_rate=2.,
+                                  regularizer=L2Decay(0.)))
+        return roi_feat, fc7
 
-            if cfg.MASK_ON:
-                mask_out = fluid.layers.generate_mask_labels(
-                    im_info=self.im_info,
-                    gt_classes=self.gt_label,
-                    is_crowd=self.is_crowd,
-                    gt_segms=self.gt_masks,
-                    rois=self.rois,
-                    labels_int32=self.labels_int32,
-                    num_classes=cfg.class_num,
-                    resolution=cfg.resolution)
-                self.mask_rois = mask_out[0]
-                self.roi_has_mask_int32 = mask_out[1]
-                self.mask_int32 = mask_out[2]
-
-    def fast_rcnn_heads(self, roi_input):
-        if self.is_train:
-            pool_rois = self.rois
-        else:
-            pool_rois = self.rpn_rois
-        self.res5_2_sum = self.add_roi_box_head_func(roi_input, pool_rois)
-        rcnn_out = fluid.layers.pool2d(
-            self.res5_2_sum, pool_type='avg', pool_size=7, name='res5_pool')
+    def fast_rcnn_heads(self, body_dict, body_name_list):
+        pool_rois = self.rois
+        self.roi_feat, rcnn_out = self.add_roi_box_head_func(
+            body_dict, pool_rois, body_name_list, self.spatial_scale)
         self.cls_score = fluid.layers.fc(input=rcnn_out,
                                          size=cfg.class_num,
                                          act=None,
@@ -330,10 +403,9 @@ class RCNN(object):
                                                      self.pred_result)
         return mask_fcn_logits
 
-    def mask_rcnn_heads(self, mask_input):
+    def mask_rcnn_heads(self, body_dict, body_name_list):
         if self.is_train:
-            conv5 = fluid.layers.gather(self.res5_2_sum,
-                                        self.roi_has_mask_int32)
+            conv5 = fluid.layers.gather(self.roi_feat, self.roi_has_mask_int32)
             self.mask_fcn_logits = self.SuffixNet(conv5)
         else:
             self.eval_bbox()
@@ -354,7 +426,8 @@ class RCNN(object):
                 im_scale_lod = fluid.layers.sequence_expand(self.im_scale,
                                                             pred_boxes)
                 mask_rois = pred_boxes * im_scale_lod
-                conv5 = self.add_roi_box_head_func(mask_input, mask_rois)
+                conv5 = self.add_roi_box_head_func(
+                    body_dict, mask_rois, body_name_list, self.spatial_scale)
                 mask_fcn = self.SuffixNet(conv5)
                 ie.output(mask_fcn)
             self.mask_fcn_logits = ie()[0]
@@ -390,7 +463,7 @@ class RCNN(object):
         loss_bbox = fluid.layers.reduce_mean(loss_bbox)
         return loss_cls, loss_bbox
 
-    def rpn_loss(self):
+    def single_scale_rpn_loss(self):
         rpn_cls_score_reshape = fluid.layers.transpose(
             self.rpn_cls_score, perm=[0, 2, 3, 1])
         rpn_bbox_pred_reshape = fluid.layers.transpose(
@@ -421,9 +494,13 @@ class RCNN(object):
         score_tgt = fluid.layers.cast(x=score_tgt, dtype='float32')
         rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
             x=score_pred, label=score_tgt)
-        rpn_cls_loss = fluid.layers.reduce_mean(
-            rpn_cls_loss, name='loss_rpn_cls')
-
+        if cfg.FPN_ON:
+            rpn_cls_loss = fluid.layers.reduce_sum(rpn_cls_loss)
+            rpn_cls_loss = rpn_cls_loss / (cfg.im_per_batch *
+                                           cfg.TRAIN.rpn_batch_size_per_im)
+        else:
+            rpn_cls_loss = fluid.layers.reduce_mean(
+                rpn_cls_loss, name='loss_rpn_cls')
         rpn_reg_loss = fluid.layers.smooth_l1(
             x=loc_pred,
             y=loc_tgt,
@@ -438,3 +515,23 @@ class RCNN(object):
         norm.stop_gradient = True
         rpn_reg_loss = rpn_reg_loss / norm
         return rpn_cls_loss, rpn_reg_loss
+
+    def fpn_rpn_loss(self):
+        k_max = cfg.FPN_rpn_max_level
+        k_min = cfg.FPN_rpn_min_level
+        loss_rpn_cls_fpn_name = []
+        loss_rpn_bbox_fpn_name = []
+        loss_rpn_cls_fpn_list = []
+        loss_rpn_bbox_fpn_list = []
+        for lvl in range(k_min, k_max + 1):
+            slvl = str(lvl)
+            self.rpn_cls_score = self.rpn_fpn_list[lvl - k_min][0]
+            self.rpn_bbox_pred = self.rpn_fpn_list[lvl - k_min][1]
+            self.anchor = self.anchors_list[lvl - k_min]
+            self.var = self.var_list[lvl - k_min]
+            loss_rpn_cls_fpn, loss_rpn_bbox_fpn = self.single_scale_rpn_loss()
+            loss_rpn_cls_fpn_name.append('loss_rpn_cls_fpn' + slvl)
+            loss_rpn_bbox_fpn_name.append('loss_rpn_bbox_fpn' + slvl)
+            loss_rpn_cls_fpn_list.append(loss_rpn_cls_fpn)
+            loss_rpn_bbox_fpn_list.append(loss_rpn_bbox_fpn)
+        return loss_rpn_cls_fpn_name, loss_rpn_bbox_fpn_name, loss_rpn_cls_fpn_list, loss_rpn_bbox_fpn_list

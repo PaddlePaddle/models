@@ -132,6 +132,9 @@ _C.TEST.rpn_nms_thresh = 0.7
 # Model options
 #
 
+# ResNet architectures
+_C.ResNet_arch = 'ResNet50'
+
 # Whether use mask rcnn head
 _C.MASK_ON = True
 
@@ -171,6 +174,30 @@ _C.dim_reduced = 256
 # Threshold for converting soft masks to hard masks
 _C.mrcnn_thresh_binarize = 0.5
 
+# Whether use FPN
+_C.FPN_ON = False
+
+# Coarest level for roi transform in FPN
+_C.FPN_roi_max_level = 5
+
+# Finest level for roi transform in FPN
+_C.FPN_roi_min_level = 2
+
+# Channel dimension of FPN feature 
+_C.FPN_dim = 256
+
+# Coarest level for RPN in FPN
+_C.FPN_rpn_max_level = 6
+
+# Finest level for RPN in FPN
+_C.FPN_rpn_min_level = 2
+
+# FPN RPN anchor aspect ratios
+_C.FPN_rpn_aspect_ratios = (0.5, 1, 2)
+
+# RPN anchors start at the size on rpn_min_level
+_C.FPN_rpn_anchor_start_size = 32
+
 #
 # SOLVER options
 #
@@ -187,8 +214,8 @@ _C.warm_up_iter = 500
 _C.warm_up_factor = 1. / 3.
 
 # lr steps_with_decay, 1x: [120000, 160000], 2x: [240000, 320000]
-_C.lr_steps = [120000, 160000]
-#_C.lr_steps = [240000, 320000]
+#_C.lr_steps = [120000, 160000]
+_C.lr_steps = [240000, 320000]
 _C.lr_gamma = 0.1
 
 # L2 regularization hyperparameter

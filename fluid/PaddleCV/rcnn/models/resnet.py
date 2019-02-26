@@ -17,6 +17,7 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 from paddle.fluid.regularizer import L2Decay
 from config import cfg
+import collections
 
 
 def conv_bn_layer(input,
@@ -118,7 +119,7 @@ def bottleneck(input, ch_out, stride, name):
     conv3 = conv_affine_layer(
         conv2, ch_out * 4, 1, 1, 0, act=None, name=name + "_branch2c")
     return fluid.layers.elementwise_add(
-        x=short, y=conv3, act='relu', name=name + ".add.output.5")
+        x=short, y=conv3, act='relu', name=name + "_sum")
 
 
 def layer_warp(block_func, input, ch_out, count, stride, name):
@@ -129,17 +130,17 @@ def layer_warp(block_func, input, ch_out, count, stride, name):
 
 
 ResNet_cfg = {
-    18: ([2, 2, 2, 1], basicblock),
-    34: ([3, 4, 6, 3], basicblock),
-    50: ([3, 4, 6, 3], bottleneck),
-    101: ([3, 4, 23, 3], bottleneck),
-    152: ([3, 8, 36, 3], bottleneck)
+    'ResNet18': ([2, 2, 2, 1], basicblock),
+    'ResNet34': ([3, 4, 6, 3], basicblock),
+    'ResNet50': ([3, 4, 6, 3], bottleneck),
+    'ResNet101': ([3, 4, 23, 3], bottleneck),
+    'ResNet152': ([3, 8, 36, 3], bottleneck)
 }
 
 
-def add_ResNet50_conv4_body(body_input):
-    stages, block_func = ResNet_cfg[50]
-    stages = stages[0:3]
+def add_ResNet_convX_body(body_input, stages, block_func, freeze_at):
+    res_dict = {}
+    res_name_list = []
     conv1 = conv_affine_layer(
         body_input, ch_out=64, filter_size=7, stride=2, padding=3, name="conv1")
     pool1 = fluid.layers.pool2d(
@@ -149,33 +150,66 @@ def add_ResNet50_conv4_body(body_input):
         pool_stride=2,
         pool_padding=1)
     res2 = layer_warp(block_func, pool1, 64, stages[0], 1, name="res2")
-    if cfg.TRAIN.freeze_at == 2:
+    res_dict[res2.name] = res2
+    res_name_list.append(res2.name)
+    if freeze_at == 2:
         res2.stop_gradient = True
     res3 = layer_warp(block_func, res2, 128, stages[1], 2, name="res3")
-    if cfg.TRAIN.freeze_at == 3:
+    res_dict[res3.name] = res3
+    res_name_list.append(res3.name)
+    if freeze_at == 3:
         res3.stop_gradient = True
     res4 = layer_warp(block_func, res3, 256, stages[2], 2, name="res4")
-    if cfg.TRAIN.freeze_at == 4:
+    res_dict[res4.name] = res4
+    res_name_list = ['res4f_sum', 'res3d_sum', 'res2c_sum']
+    if freeze_at == 4:
         res4.stop_gradient = True
-    return res4
+    if len(stages) == 4:
+        res5 = layer_warp(block_func, res4, 512, stages[3], 2, name="res5")
+        res_dict[res5.name] = res5
+        res_name_list.insert(0, res5.name)
+        if freeze_at == 5:
+            res5.stop_gradient = True
+    return res_dict, res_name_list
 
 
-def add_ResNet_roi_conv5_head(head_input, rois):
+def add_ResNet50_conv4_body(body_input):
+    stages, block_func = ResNet_cfg[cfg.ResNet_arch]
+    stages = stages[0:3]
+    freeze_at = cfg.TRAIN.freeze_at
+    res_dict, res_name_list = add_ResNet_convX_body(body_input, stages,
+                                                    block_func, freeze_at)
+    return res_dict, res_name_list
+
+
+def add_ResNet50_conv5_body(body_input):
+    stages, block_func = ResNet_cfg[cfg.ResNet_arch]
+    freeze_at = cfg.TRAIN.freeze_at
+    res_dict, res_name_list = add_ResNet_convX_body(body_input, stages,
+                                                    block_func, freeze_at)
+    return res_dict, res_name_list
+
+
+def add_ResNet_roi_conv5_head(body_dict, rois, body_name_list, spatial_scale):
+    body_name = body_name_list[0]
+    head_input = body_dict[body_name]
     if cfg.roi_func == 'RoIPool':
         pool = fluid.layers.roi_pool(
             input=head_input,
             rois=rois,
             pooled_height=cfg.roi_resolution,
             pooled_width=cfg.roi_resolution,
-            spatial_scale=cfg.spatial_scale)
+            spatial_scale=spatial_scale)
     elif cfg.roi_func == 'RoIAlign':
         pool = fluid.layers.roi_align(
             input=head_input,
             rois=rois,
             pooled_height=cfg.roi_resolution,
             pooled_width=cfg.roi_resolution,
-            spatial_scale=cfg.spatial_scale,
+            spatial_scale=spatial_scale,
             sampling_ratio=cfg.sampling_ratio)
 
     res5 = layer_warp(bottleneck, pool, 512, 3, 2, name="res5")
-    return res5
+    rcnn_out = fluid.layers.pool2d(
+        res5, pool_type='avg', pool_size=7, name='res5_pool')
+    return res5, rcnn_out
