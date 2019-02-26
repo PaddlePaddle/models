@@ -194,7 +194,6 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
     # only for ce
     if args.enable_ce:
         cpu_num = get_cards(args)
-        print("cpu_num", cpu_num)
         epoch_idx = args.num_passes 
         print("kpis\teach_pass_duration_card%s\t%s" %
                 (cpu_num, total_time / epoch_idx))
@@ -259,11 +258,8 @@ def train():
 def get_cards(args):
     if args.enable_ce:
         cards = os.environ.get('NUM_THREADS', 1)
-        print("cards", cards)
- 
         return int(cards)
     else:
-        print("return args.num_threads")
         return args.num_threads
 
 
