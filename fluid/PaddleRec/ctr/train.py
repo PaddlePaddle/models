@@ -107,12 +107,27 @@ def parse_args():
         type=int,
         default=1,
         help='The num of trianers, (default: 1)')
+    parser.add_argument(
+        '--enable_ce',
+        action='store_true',
+        help='If set, run the task with continuous evaluation logs.')
+    parser.add_argument(
+        '--num_devices',
+        type=int,
+        default=0,
+        help='The num of devices, (default: 1)')
 
     return parser.parse_args()
 
 
 def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
                trainer_num, trainer_id):
+    
+    if args.enable_ce:
+        SEED = 102
+        train_program.random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
+
     dataset = reader.CriteoDataset(args.sparse_feature_dim)
     train_reader = paddle.batch(
         paddle.reader.shuffle(
@@ -146,6 +161,7 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
 
     exe.run(fluid.default_startup_program())
 
+    total_time = 0
     for pass_id in range(args.num_passes):
         pass_start = time.time()
         batch_id = 0
@@ -169,10 +185,25 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
             py_reader.reset()
         print("pass_id: %d, pass_time_cost: %f" % (pass_id, time.time() - pass_start))
 
+        total_time += time.time() - pass_start
+
         model_dir = args.model_output_dir + '/pass-' + str(pass_id)
         if args.trainer_id == 0:
             fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
 
+    # only for ce
+    if args.enable_ce:
+        gpu_num = get_cards(args)
+        epoch_idx = args.num_passes 
+        print("kpis\teach_pass_duration_card%s\t%s" %
+                (gpu_num, total_time / epoch_idx))
+        print("kpis\ttrain_loss_card%s\t%s" %
+                (gpu_num, loss_val/args.batch_size))
+        print("kpis\ttrain_auc_val_card%s\t%s" %
+                (gpu_num, auc_val))
+        print("kpis\ttrain_batch_auc_val_card%s\t%s" %
+                (gpu_num, batch_auc_val))
+        
 
 def train():
     args = parse_args()
@@ -222,6 +253,15 @@ def train():
             raise ValueError(
                 'PADDLE_TRAINING_ROLE environment variable must be either TRAINER or PSERVER'
             )
+
+
+def get_cards(args):
+    if args.enable_ce:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        num = len(cards.split(","))
+        return num
+    else:
+        return args.num_devices
 
 
 if __name__ == '__main__':
