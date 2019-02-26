@@ -27,11 +27,6 @@ bn_regularizer = fluid.regularizer.L2DecayRegularizer(regularization_coeff=0.0)
 depthwise_regularizer = fluid.regularizer.L2DecayRegularizer(
     regularization_coeff=0.0)
 
-fuse_relu_before_depthwise_conv = False
-
-if 'fuse_relu_before_depthwise_conv' in os.environ:
-    fuse_relu_before_depthwise_conv = True
-
 
 @contextlib.contextmanager
 def scope(name):
@@ -152,10 +147,12 @@ def bn_relu(data):
 
 
 def relu(data):
-    return append_op_result(fluid.layers.relu(data), 'relu')
+    return append_op_result(
+        fluid.layers.relu(
+            data, name=name_scope + 'relu'), 'relu')
 
 
-def seq_conv(input, channel, stride, filter, dilation=1, act=None, fuse=False):
+def seperate_conv(input, channel, stride, filter, dilation=1, act=None):
     with scope('depthwise'):
         input = conv(
             input,
@@ -165,9 +162,7 @@ def seq_conv(input, channel, stride, filter, dilation=1, act=None, fuse=False):
             groups=input.shape[1],
             padding=(filter // 2) * dilation,
             dilation=dilation,
-            use_cudnn=depthwise_use_cudnn,
-            fuse_relu_before_depthwise_conv=fuse and
-            fuse_relu_before_depthwise_conv)
+            use_cudnn=depthwise_use_cudnn)
         input = bn(input)
         if act: input = act(input)
     with scope('pointwise'):
@@ -194,17 +189,15 @@ def xception_block(input,
     for i in range(repeat_number):
         with scope('separable_conv' + str(i + 1)):
             if not activation_fn_in_separable_conv:
-                if not fuse_relu_before_depthwise_conv:
-                    data = relu(data)
-                data = seq_conv(
+                data = relu(data)
+                data = seperate_conv(
                     data,
                     channels[i],
                     strides[i],
                     filters[i],
-                    dilation=dilation,
-                    fuse=True)
+                    dilation=dilation)
             else:
-                data = seq_conv(
+                data = seperate_conv(
                     data,
                     channels[i],
                     strides[i],
@@ -283,11 +276,11 @@ def encoder(input):
         with scope("aspp0"):
             aspp0 = bn_relu(conv(input, channel, 1, 1, groups=1, padding=0))
         with scope("aspp1"):
-            aspp1 = seq_conv(input, channel, 1, 3, dilation=6, act=relu)
+            aspp1 = seperate_conv(input, channel, 1, 3, dilation=6, act=relu)
         with scope("aspp2"):
-            aspp2 = seq_conv(input, channel, 1, 3, dilation=12, act=relu)
+            aspp2 = seperate_conv(input, channel, 1, 3, dilation=12, act=relu)
         with scope("aspp3"):
-            aspp3 = seq_conv(input, channel, 1, 3, dilation=18, act=relu)
+            aspp3 = seperate_conv(input, channel, 1, 3, dilation=18, act=relu)
         with scope("concat"):
             data = append_op_result(
                 fluid.layers.concat(
@@ -310,10 +303,10 @@ def decoder(encode_data, decode_shortcut):
                 [encode_data, decode_shortcut], axis=1)
             append_op_result(encode_data, 'concat')
         with scope("separable_conv1"):
-            encode_data = seq_conv(
+            encode_data = seperate_conv(
                 encode_data, encode_channel, 1, 3, dilation=1, act=relu)
         with scope("separable_conv2"):
-            encode_data = seq_conv(
+            encode_data = seperate_conv(
                 encode_data, encode_channel, 1, 3, dilation=1, act=relu)
         return encode_data
 
