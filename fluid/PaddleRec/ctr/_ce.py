@@ -13,12 +13,20 @@ each_pass_duration_card1_kpi = DurationKpi('each_pass_duration_card1', 0.08, 0, 
 train_loss_card1_kpi = CostKpi('train_loss_card1', 0.08, 0)
 train_auc_val_card1_kpi = AccKpi('train_auc_val_card1', 0.08, 0)
 train_batch_auc_val_card1_kpi = AccKpi('train_batch_auc_val_card1', 0.08, 0)
+each_pass_duration_card4_kpi = DurationKpi('each_pass_duration_card4', 0.08, 0, actived=True)
+train_loss_card4_kpi = CostKpi('train_loss_card4', 0.08, 0)
+train_auc_val_card4_kpi = AccKpi('train_auc_val_card4', 0.08, 0)
+train_batch_auc_val_card4_kpi = AccKpi('train_batch_auc_val_card4', 0.08, 0)
 
 tracking_kpis = [
         each_pass_duration_card1_kpi,
         train_loss_card1_kpi,
         train_auc_val_card1_kpi,
-        train_batch_auc_val_card1_kpi
+        train_batch_auc_val_card1_kpi,
+        each_pass_duration_card4_kpi,
+        train_loss_card4_kpi,
+        train_auc_val_card4_kpi,
+        train_batch_auc_val_card4_kpi
         ]
 
 

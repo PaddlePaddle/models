@@ -112,10 +112,10 @@ def parse_args():
         action='store_true',
         help='If set, run the task with continuous evaluation logs.')
     parser.add_argument(
-        '--num_devices',
+        '--num_threads',
         type=int,
-        default=0,
-        help='The num of devices, (default: 1)')
+        default=1,
+        help='The num of threads, (default: 1)')
 
     return parser.parse_args()
 
@@ -193,16 +193,17 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
 
     # only for ce
     if args.enable_ce:
-        gpu_num = get_cards(args)
+        cpu_num = get_cards(args)
+        print("cpu_num", cpu_num)
         epoch_idx = args.num_passes 
         print("kpis\teach_pass_duration_card%s\t%s" %
-                (gpu_num, total_time / epoch_idx))
+                (cpu_num, total_time / epoch_idx))
         print("kpis\ttrain_loss_card%s\t%s" %
-                (gpu_num, loss_val/args.batch_size))
+                (cpu_num, loss_val/args.batch_size))
         print("kpis\ttrain_auc_val_card%s\t%s" %
-                (gpu_num, auc_val))
+                (cpu_num, auc_val))
         print("kpis\ttrain_batch_auc_val_card%s\t%s" %
-                (gpu_num, batch_auc_val))
+                (cpu_num, batch_auc_val))
         
 
 def train():
@@ -257,11 +258,13 @@ def train():
 
 def get_cards(args):
     if args.enable_ce:
-        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
-        num = len(cards.split(","))
-        return num
+        cards = os.environ.get('NUM_THREADS', 1)
+        print("cards", cards)
+ 
+        return int(cards)
     else:
-        return args.num_devices
+        print("return args.num_threads")
+        return args.num_threads
 
 
 if __name__ == '__main__':
