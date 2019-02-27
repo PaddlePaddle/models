@@ -111,16 +111,6 @@ def parse_args():
         '--enable_ce',
         action='store_true',
         help='If set, run the task with continuous evaluation logs.')
-    parser.add_argument(
-        '--num_threads',
-        type=int,
-        default=1,
-        help='The num of threads, (default: 1)')
-    parser.add_argument(
-        '--num_cpu',
-        type=int,
-        default=1,
-        help='The num of cpu, (default: 1)')
 
     return parser.parse_args()
 
@@ -266,7 +256,7 @@ def get_cards(args):
         cpu_num = os.environ.get('CPU_NUM', 1)
         return int(threads_num), int(cpu_num)
     else:
-        return args.num_threads, args.num_cpu
+        return 1, 1
 
 
 if __name__ == '__main__':
