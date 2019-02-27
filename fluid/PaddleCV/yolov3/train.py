@@ -96,11 +96,11 @@ def train():
 
     random_shape_iter = cfg.max_iter - cfg.start_iter - cfg.tune_iter
     if cfg.use_pyreader:
-        train_reader = reader.train(input_size, batch_size=int(hyperparams['batch'])/devices_num, shuffle=True, random_shape_iter=random_shape_iter, random_sizes=random_sizes, interval=10, pyreader_num=devices_num)
+        train_reader = reader.train(input_size, batch_size=int(hyperparams['batch'])/devices_num, shuffle=True, random_shape_iter=random_shape_iter, random_sizes=random_sizes, interval=10, pyreader_num=devices_num,use_multiprocessing=cfg.use_multiprocess)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
     else:
-        train_reader = reader.train(input_size, batch_size=int(hyperparams['batch']), shuffle=True, random_shape_iter=random_shape_iter, random_sizes=random_sizes, interval=10)
+        train_reader = reader.train(input_size, batch_size=int(hyperparams['batch']), shuffle=True, random_shape_iter=random_shape_iter, random_sizes=random_sizes, interval=10,use_multiprocessing=cfg.use_multiprocess)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     def save_model(postfix):

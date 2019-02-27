@@ -106,6 +106,7 @@ def parse_args():
     add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
     add_arg('use_profile',      bool,   False,       "Whether use profiler.")
     add_arg('start_iter',       int,    0,     "Start iteration.")
+    add_arg('use_multiprocess', bool,   True, "add multiprocess.")
     #SOLVER
     add_arg('learning_rate',    float,  0.001,     "Learning rate.")
     add_arg('max_iter',         int,    500200,   "Iter number.")

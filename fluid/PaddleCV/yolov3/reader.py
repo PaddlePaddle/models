@@ -115,7 +115,7 @@ class DataSetReader(object):
         image_ids = self.COCO.getImgIds()
         image_ids.sort()
         imgs = copy.deepcopy(self.COCO.loadImgs(image_ids))
-        # imgs = imgs[:8]
+        imgs = imgs[-8:]
         for img in imgs:
             img['image'] = os.path.join(self.img_dir, img['file_name'])
             assert os.path.exists(img['image']), \
@@ -247,8 +247,12 @@ def train(size=416,
           interval=10,
           pyreader_num=1,
           num_workers=16,
-          max_queue=32):
+          max_queue=32,
+          use_multiprocessing=True):
     generator = dsr.get_reader('train', size, batch_size, shuffle, random_shape_iter, random_sizes)
+
+    if not use_multiprocessing:
+        return generator
 
     def infinite_reader():
         while True:
