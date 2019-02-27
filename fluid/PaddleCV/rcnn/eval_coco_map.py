@@ -55,7 +55,7 @@ def eval():
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
         use_pyreader=False,
-        is_train=False)
+        mode='val')
     model.build_model(image_shape)
     pred_boxes = model.eval_bbox_out()
     if cfg.MASK_ON:
