@@ -251,12 +251,9 @@ def train():
 
 
 def get_cards(args):
-    if args.enable_ce:
-        threads_num = os.environ.get('NUM_THREADS', 1)
-        cpu_num = os.environ.get('CPU_NUM', 1)
-        return int(threads_num), int(cpu_num)
-    else:
-        return 1, 1
+    threads_num = os.environ.get('NUM_THREADS', 1)
+    cpu_num = os.environ.get('CPU_NUM', 1)
+    return int(threads_num), int(cpu_num)
 
 
 if __name__ == '__main__':
