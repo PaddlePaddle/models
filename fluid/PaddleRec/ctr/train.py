@@ -116,6 +116,11 @@ def parse_args():
         type=int,
         default=1,
         help='The num of threads, (default: 1)')
+    parser.add_argument(
+        '--num_cpu',
+        type=int,
+        default=1,
+        help='The num of cpu, (default: 1)')
 
     return parser.parse_args()
 
@@ -193,16 +198,16 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
 
     # only for ce
     if args.enable_ce:
-        cpu_num = get_cards(args)
+        threads_num, cpu_num = get_cards(args)
         epoch_idx = args.num_passes 
-        print("kpis\teach_pass_duration_card%s\t%s" %
-                (cpu_num, total_time / epoch_idx))
-        print("kpis\ttrain_loss_card%s\t%s" %
-                (cpu_num, loss_val/args.batch_size))
-        print("kpis\ttrain_auc_val_card%s\t%s" %
-                (cpu_num, auc_val))
-        print("kpis\ttrain_batch_auc_val_card%s\t%s" %
-                (cpu_num, batch_auc_val))
+        print("kpis\teach_pass_duration_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, total_time / epoch_idx))
+        print("kpis\ttrain_loss_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, loss_val/args.batch_size))
+        print("kpis\ttrain_auc_val_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, auc_val))
+        print("kpis\ttrain_batch_auc_val_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, batch_auc_val))
         
 
 def train():
@@ -257,10 +262,11 @@ def train():
 
 def get_cards(args):
     if args.enable_ce:
-        cards = os.environ.get('NUM_THREADS', 1)
-        return int(cards)
+        threads_num = os.environ.get('NUM_THREADS', 1)
+        cpu_num = os.environ.get('CPU_NUM', 1)
+        return int(threads_num), int(cpu_num)
     else:
-        return args.num_threads
+        return args.num_threads, args.num_cpu
 
 
 if __name__ == '__main__':
