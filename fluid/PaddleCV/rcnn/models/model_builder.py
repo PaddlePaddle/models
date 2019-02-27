@@ -198,8 +198,10 @@ class RCNN(object):
         # distribute
 
     def single_scale_rpn_heads(self, res_dict, res_name_list):
-        rpn_input_name = res_name_list[-1]
+        rpn_input_name = res_name_list[0]
         rpn_input = res_dict[rpn_input_name]
+        print(res_dict)
+        print(rpn_input_name)
         # RPN hidden representation
         dim_out = rpn_input.shape[1]
         rpn_conv = fluid.layers.conv2d(

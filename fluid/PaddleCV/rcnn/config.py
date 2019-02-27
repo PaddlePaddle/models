@@ -214,8 +214,8 @@ _C.warm_up_iter = 500
 _C.warm_up_factor = 1. / 3.
 
 # lr steps_with_decay, 1x: [120000, 160000], 2x: [240000, 320000]
-#_C.lr_steps = [120000, 160000]
-_C.lr_steps = [240000, 320000]
+_C.lr_steps = [120000, 160000]
+#_C.lr_steps = [240000, 320000]
 _C.lr_gamma = 0.1
 
 # L2 regularization hyperparameter
