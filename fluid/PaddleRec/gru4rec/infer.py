@@ -11,22 +11,26 @@ import paddle
 
 import utils
 
+
 def parse_args():
     parser = argparse.ArgumentParser("gru4rec benchmark.")
     parser.add_argument(
         '--test_dir', type=str, default='test_data', help='test file address')
     parser.add_argument(
-        '--start_index', type=int, default='1', help='start index')  
+        '--start_index', type=int, default='1', help='start index')
     parser.add_argument(
-        '--last_index', type=int, default='10', help='end index')  
+        '--last_index', type=int, default='10', help='end index')
     parser.add_argument(
-        '--model_dir', type=str, default='model_recall20', help='model dir')  
+        '--model_dir', type=str, default='model_recall20', help='model dir')
     parser.add_argument(
-        '--use_cuda', type=int, default='1', help='whether use cuda')  
+        '--use_cuda', type=int, default='0', help='whether use cuda')
     parser.add_argument(
-        '--batch_size', type=int, default='5', help='batch_size')  
+        '--batch_size', type=int, default='5', help='batch_size')
+    parser.add_argument(
+        '--vocab_path', type=str, default='vocab.txt', help='vocab file')
     args = parser.parse_args()
     return args
+
 
 def infer(test_reader, use_cuda, model_path):
     """ inference function """
@@ -72,11 +76,16 @@ if __name__ == "__main__":
     test_dir = args.test_dir
     model_dir = args.model_dir
     batch_size = args.batch_size
+    vocab_path = args.vocab_path
     use_cuda = True if args.use_cuda else False
-    print("start index: ", start_index, " last_index:" ,last_index)
+    print("start index: ", start_index, " last_index:", last_index)
     vocab_size, test_reader = utils.prepare_data(
-        test_dir, "", batch_size=batch_size,
-        buffer_size=1000, word_freq_threshold=0, is_train=False)
+        test_dir,
+        vocab_path,
+        batch_size=batch_size,
+        buffer_size=1000,
+        word_freq_threshold=0,
+        is_train=False)
 
     for epoch in range(start_index, last_index + 1):
         epoch_path = model_dir + "/epoch_" + str(epoch)
