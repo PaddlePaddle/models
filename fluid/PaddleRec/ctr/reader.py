@@ -13,7 +13,7 @@ class CriteoDataset(Dataset):
         self.continuous_range_ = range(1, 14)
         self.categorical_range_ = range(14, 40)
 
-    def _reader_creator(self, file_list, is_train, trainer_num, trainer_id):
+    def _reader_creator(self, file_list, is_train, trainer_num, trainer_id=0):
         def reader():
             for file in file_list:
                 with open(file, 'r') as f:
