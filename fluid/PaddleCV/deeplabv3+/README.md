@@ -40,13 +40,12 @@ data/cityscape/
 
 如果需要从头开始训练模型，用户需要下载我们的初始化模型
 ```
-# TODO change url to paddle cdn
-wget http://vps.randonl.me:8080/deeplabv3plus_xception65_initialize.tgz
+wget https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_xception65_initialize.tgz
 tar -xf deeplabv3plus_xception65_initialize.tgz && rm deeplabv3plus_xception65_initialize.tgz
 ```
 如果需要最终训练模型进行fine tune或者直接用于预测，请下载我们的最终模型
 ```
-wget http://vps.randonl.me:8080/deeplabv3plus.tgz
+wget https://paddle-deeplab.bj.bcebos.com/deeplabv3plus.tgz
 tar -xf deeplabv3plus.tgz && rm deeplabv3plus.tgz
 ```
 
@@ -101,11 +100,9 @@ step: 500, mIoU: 0.7873
 
 ## 其他信息
 
-*TODO*:change url
-
 |数据集 | pretrained model | trained model | mean IoU
 |---|---|---|---|
-|CityScape | [deeplabv3plus_xception65_initialize.tgz](http://vps.randonl.me:8080/deeplabv3plus_xception65_initialize.tgz) | [deeplabv3plus.tgz](http://vps.randonl.me:8080/deeplabv3plus.tgz) | 0.7873 |
+|CityScape | [deeplabv3plus_xception65_initialize.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_xception65_initialize.tgz) | [deeplabv3plus.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus.tgz) | 0.7873 |
 
 ## 参考
 
