@@ -3,14 +3,14 @@
 ---
 ## 内容
 
-- [模型简介](#简介)
+- [模型简介](#模型简介)
 - [数据准备](#数据准备)
 - [模型训练](#模型训练)
 - [模型评估](#模型评估)
 - [模型推断](#模型推断)
 
 
-## 简介
+## 模型简介
 
 Attention Cluster为百度自研模型，该模型是ActivityNet Kinetics Challenge 2017中最佳序列模型。该模型通过带Shifting Opeation的Attention Clusters处理已抽取好的RGB、Flow、Audio数据，Attention Cluster结构如下图所示。
 

@@ -51,7 +51,7 @@ Paddle提供默认配置文件位于`./configs`文件夹下，五种模型对应
 4. stnet.txt
 5. tsn.txt
 
-### 一、模型训练
+### 模型训练
 
 **预训练模型下载：** 视频模型库中StNet和TSN模型需要下载Resnet-50预训练模型，运行训练脚本会自动从[Resnet-50_pretrained](https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz)下载预训练模型，存储于 ~/.paddle/weights/ 目录下，若该目录下已有已下载好的预训练模型，模型库会直接加载该预训练模型权重。
 
@@ -83,7 +83,7 @@ Paddle提供默认配置文件位于`./configs`文件夹下，五种模型对应
             --resume=$PATH_TO_RESUME_WEIGHTS
     ```
 
-### 二、模型评估
+### 模型评估
 
 数据准备完毕后，可通过两种方式启动模型评估：
 
@@ -112,7 +112,7 @@ Paddle提供默认配置文件位于`./configs`文件夹下，五种模型对应
 | stNet | Kinetics | Hit@1 | 0.69 |
 | TSN | Kinetics | Hit@1 | 0.66 |
 
-### 三、模型推断
+### 模型推断
 
 模型推断可以通过各模型预测指定filelist中视频文件的类别，通过`infer.py`进行推断，可通过如下命令运行：
 
@@ -128,7 +128,7 @@ Paddle提供默认配置文件位于`./configs`文件夹下，五种模型对应
     python infer.py --help
     ```
 
-- 若模型推断未使用`--weights`参数，模型库会自动下载Paddle release训练权重，参考[模型评估](#二、模型评估)
+- 若模型推断未使用`--weights`参数，模型库会自动下载Paddle release训练权重，参考[模型评估](#模型评估)
 
 - 若模型推断未使用`--filelist`参数，则使用指定配置文件中配置的`filelist`。
 
