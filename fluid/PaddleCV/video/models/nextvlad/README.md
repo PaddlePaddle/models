@@ -1,12 +1,16 @@
 # NeXtVLAD视频分类模型
 
+---
 ## 目录
 
-*[算法介绍](#算法介绍)
-*[模型训练](#模型训练)
-*[服务部署](#服务部署)
-*[FAQ](#FAQ)
-*[参考论文](#参考论文)
+- [算法介绍](#模型简介)
+- [数据准备](#数据准备)
+- [模型训练](#模型训练)
+- [模型评估](#模型评估)
+- [模型推断](#模型推断)
+- [参考论文](#参考论文)
+- [版本更新](#版本更新)
+
 
 ## 算法介绍
 NeXtVLAD模型是第二届Youtube-8M视频理解竞赛中效果最好的单模型，在参数量小于80M的情况下，能得到高于0.87的GAP指标。该模型提供了一种将桢级别的视频特征转化并压缩成特征向量，以适用于大尺寸视频文件的分类的方法。其基本出发点是在NetVLAD模型的基础上，将高维度的特征先进行分组，通过引入attention机制聚合提取时间维度的信息，这样既可以获得较高的准确率，又可以使用更少的参数量。详细内容请参考[NeXtVLAD: An Efficient Neural Network to Aggregate Frame-level Features for Large-scale Video Classification](https://arxiv.org/abs/1811.05014)。
@@ -26,7 +30,7 @@ NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数�
 
 ### 使用我们提供的预训练模型做finetune
 
-请先将我们提供的[预训练模型](model url)下载到本地，并在上述脚本文件中添加--resume为所保存的预模型存放路径。
+请先将我们提供的预训练模型[PaddleNeXtVLAD](https://paddlemodels.bj.bcebos.com/video_clasification/nextvlad_youtube8m.tar.gz)下载到本地，并在上述脚本文件中添加--resume为所保存的预模型存放路径。
 
 使用4卡Nvidia Tesla P40，总的batch size数是160。
 
