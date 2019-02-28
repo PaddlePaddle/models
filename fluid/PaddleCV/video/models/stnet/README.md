@@ -32,7 +32,7 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
     python train.py --model-name=STNET
             --config=./configs/attention_stnet.txt
             --save-dir=checkpoints 
-            --epoch=20 
+            --epoch=60
             --log-interval=10 
             --valid-interval=1
 
