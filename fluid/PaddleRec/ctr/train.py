@@ -107,12 +107,22 @@ def parse_args():
         type=int,
         default=1,
         help='The num of trianers, (default: 1)')
+    parser.add_argument(
+        '--enable_ce',
+        action='store_true',
+        help='If set, run the task with continuous evaluation logs.')
 
     return parser.parse_args()
 
 
 def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
                trainer_num, trainer_id):
+    
+    if args.enable_ce:
+        SEED = 102
+        train_program.random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
+
     dataset = reader.CriteoDataset(args.sparse_feature_dim)
     train_reader = paddle.batch(
         paddle.reader.shuffle(
@@ -146,6 +156,7 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
 
     exe.run(fluid.default_startup_program())
 
+    total_time = 0
     for pass_id in range(args.num_passes):
         pass_start = time.time()
         batch_id = 0
@@ -169,10 +180,25 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
             py_reader.reset()
         print("pass_id: %d, pass_time_cost: %f" % (pass_id, time.time() - pass_start))
 
+        total_time += time.time() - pass_start
+
         model_dir = args.model_output_dir + '/pass-' + str(pass_id)
         if args.trainer_id == 0:
             fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
 
+    # only for ce
+    if args.enable_ce:
+        threads_num, cpu_num = get_cards(args)
+        epoch_idx = args.num_passes 
+        print("kpis\teach_pass_duration_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, total_time / epoch_idx))
+        print("kpis\ttrain_loss_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, loss_val/args.batch_size))
+        print("kpis\ttrain_auc_val_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, auc_val))
+        print("kpis\ttrain_batch_auc_val_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, batch_auc_val))
+        
 
 def train():
     args = parse_args()
@@ -222,6 +248,12 @@ def train():
             raise ValueError(
                 'PADDLE_TRAINING_ROLE environment variable must be either TRAINER or PSERVER'
             )
+
+
+def get_cards(args):
+    threads_num = os.environ.get('NUM_THREADS', 1)
+    cpu_num = os.environ.get('CPU_NUM', 1)
+    return int(threads_num), int(cpu_num)
 
 
 if __name__ == '__main__':
