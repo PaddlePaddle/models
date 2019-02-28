@@ -9,6 +9,8 @@
 - [模型训练](#模型训练)
 - [模型评估](#模型评估)
 - [模型推断](#模型推断)
+- [参考论文](#参考论文)
+- [版本更新](#版本更新)
 
 ## 模型简介
 
@@ -87,4 +89,14 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据本分请参考[�
 - 模型推断结果存储于`AttentionLSTM_infer_result`中，通过`pickle`格式存储。
 
 - 若未指定`--weights`参数，脚本会下载Paddle release权重[PaddleAttentionLSTM](https://paddlemodels.bj.bcebos.com/video_classification/attention_lstm_youtube8m.tar.gz)进行推断
+
+## 参考论文
+
+- [Beyond Short Snippets: Deep Networks for Video Classification](https://arxiv.org/abs/1503.08909) Joe Yue-Hei Ng, Matthew Hausknecht, Sudheendra Vijayanarasimhan, Oriol Vinyals, Rajat Monga, George Toderici
+
+- [Attention Clusters: Purely Attention Based Local Feature Integration for Video Classification](https://arxiv.org/abs/1711.09550) Xiang Long, Chuang Gan, Gerard de Melo, Jiajun Wu, Xiao Liu, Shilei Wen
+
+## 版本更新
+
+- 3/2019: 新增模型
 
