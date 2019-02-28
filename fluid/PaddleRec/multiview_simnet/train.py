@@ -81,10 +81,19 @@ def parse_args():
         "for index processing")
     parser.add_argument(
         "--hidden_size", type=int, default=128, help="Hidden dim")
+    parser.add_argument(
+        '--enable_ce',
+        action='store_true',
+        help='If set, run the task with continuous evaluation logs.')
     return parser.parse_args()
 
 
 def start_train(args):
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_startup_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
+
     dataset = reader.SyntheticDataset(args.sparse_feature_dim, args.query_slots,
                                       args.title_slots)
     train_reader = paddle.batch(
@@ -115,7 +124,10 @@ def start_train(args):
     exe = fluid.Executor(place)
     exe.run(startup_program)
 
+    total_time = 0
+    ce_info = []
     for pass_id in range(args.epochs):
+        start_time = time.time()
         for batch_id, data in enumerate(train_reader()):
             loss_val, correct_val = exe.run(loop_program,
                                             feed=feeder.feed(data),
@@ -123,9 +135,33 @@ def start_train(args):
             logger.info("TRAIN --> pass: {} batch_id: {} avg_cost: {}, acc: {}"
                         .format(pass_id, batch_id, loss_val,
                                 float(correct_val) / args.batch_size))
+            ce_info.append(loss_val[0])
+        end_time = time.time()
+        total_time += end_time - start_time
         fluid.io.save_inference_model(args.model_output_dir,
                                       [val.name for val in all_slots],
                                       [avg_cost, correct], exe)
+
+    # only for ce
+    if args.enable_ce:
+        threads_num, cpu_num = get_cards(args)
+        epoch_idx = args.epochs 
+        ce_loss = 0
+        try:
+            ce_loss = ce_info[-2]
+        except:
+            logger.error("ce info error")
+
+        print("kpis\teach_pass_duration_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, total_time / epoch_idx))
+        print("kpis\ttrain_loss_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, ce_loss))
+
+
+def get_cards(args):
+    threads_num = os.environ.get('NUM_THREADS', 1)
+    cpu_num = os.environ.get('CPU_NUM', 1)
+    return int(threads_num), int(cpu_num)
 
 
 def main():
