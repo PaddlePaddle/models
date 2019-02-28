@@ -14,7 +14,7 @@ Paddle视频模型库第一期主要包含如下模型。
 | 模型 | 类别  | 描述 |
 | :---------------: | :--------: | :------------: |
 | [Attention Cluster](./models/attention_cluster/README.md) | 视频分类| 百度自研模型，Kinetics600第一名最佳序列模型 |
-| [Attention LSTM](./models/attention_lstm/READNE.md) | 视频分类| 常用模型，速度快精度高 |
+| [Attention LSTM](./models/attention_lstm/README.md) | 视频分类| 常用模型，速度快精度高 |
 | [NeXtVLAD](./models/nextvlad/README.md) | 视频分类| 2nd-Youtube-8M最优单模型 |
 | [StNet](./models/stnet/README.md) | 视频分类| 百度自研模型，Kinetics600第一名模型之一 |
 | [TSN](./models/tsn/README.md) | 视频分类| 基于2D-CNN经典解决方案 |
