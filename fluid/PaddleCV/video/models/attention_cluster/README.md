@@ -1,13 +1,15 @@
 # Attention Cluster 视频分类模型
 
 ---
-## 内容
+## 目录
 
 - [模型简介](#模型简介)
 - [数据准备](#数据准备)
 - [模型训练](#模型训练)
 - [模型评估](#模型评估)
 - [模型推断](#模型推断)
+- [参考论文](#参考论文)
+- [版本更新](#版本更新)
 
 
 ## 模型简介
@@ -95,4 +97,13 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 - 模型推断结果存储于`AttentionCluster_infer_result`中，通过`pickle`格式存储。
 
 - 若未指定`--weights`参数，脚本会下载Paddle release权重[PaddleAttentionCluster](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)进行推断
+
+## 参考论文
+
+- [Attention Clusters: Purely Attention Based Local Feature Integration for Video Classification](https://arxiv.org/abs/1711.09550) Xiang Long, Chuang Gan, Gerard de Melo, Jiajun Wu, Xiao Liu, Shilei Wen
+
+## 版本更新
+
+- 3/2018: 新增模型
+
 
