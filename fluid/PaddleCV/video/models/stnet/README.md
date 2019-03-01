@@ -1,16 +1,18 @@
 # StNet 视频分类模型
 
 ---
-## 内容
+## 目录
 
-- [简介](#简介)
+- [模型简介](#模型简介)
 - [数据准备](#数据准备)
 - [模型训练](#模型训练)
 - [模型评估](#模型评估)
 - [模型推断](#模型推断)
+- [参考论文](#参考论文)
+- [版本更新](#版本更新)
 
 
-## 简介
+## 模型简介
 
 StNet为百度自研模型，该框架为百度在ActivityNet Kinetics Challenge 2018中夺冠的基础网络框架，本次开源的是基于ResNet50实现的StNet模型，基于其他backbone网络的框架用户可以依样配置。该模型提出“super-image"的概念，在super-image上进行2D卷积，建模视频中局部时空相关性。另外通过temporal modeling block建模视频的全局时空依赖，最后用一个temporal Xception block对抽取的特征序列进行长时序建模。StNet主体网络结构如下图所示：
 
@@ -46,6 +48,16 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 *  权重衰减系数为1e-4
 *  学习率在训练的总epoch数的1/3和2/3时分别做0.1的衰减
 
+**备注：**
+
+* 我们在训练stNet模型时使用fluid 1.3 + cudnn5.1。使用cudnn7.0以上版本时batchnorm op计算moving mean和moving average会出现异常，此问题还在修复中。建议用户安装paddlepaddle时指定cudnn版本,
+
+     pip install paddlepaddle\_gpu==1.3.0.post85
+
+或者在paddpaddle的whl包[下载页面](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/Tables.html/#ciwhls)选择下载[paddlepaddle\_gpu-1.3.0-cp27-cp27mu-linux\_x86\_64.whl](http://paddle-wheel.bj.bcebos.com/1.3.0-gpu-cuda8-cudnn5-avx-mkl/paddlepaddle_gpu-1.3.0.post85-cp27-cp27mu-linux_x86_64.whl)后安装。
+关于安装PaddlePaddle的详细操作请参考[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/install/index_cn.html)。
+
+
 ## 模型评估
 
 可通过如下两种方式进行模型评估:
@@ -72,7 +84,7 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
 | 精度指标 | 模型精度 |
 | :---------: | :----: |
-| Prec@1 | 0.69 |
+| TOP\_1 | 0.69 |
 
 
 ## 模型推断
@@ -88,4 +100,13 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 - 模型推断结果存储于`STNET_infer_result`中，通过`pickle`格式存储。
 
 - 若未指定`--weights`参数，脚本会下载Paddle release权重[PaddleStNet](https://paddlemodels.bj.bcebos.com/video_classification/attention_stnet_kinetics.tar.gz)进行推断
+
+
+## 参考论文
+
+[StNet:Local and Global Spatial-Temporal Modeling for Human Action Recognition](https://arxiv.org/abs/1811.01549), Dongliang He, Zhichao Zhou, Chuang Gan, Fu Li, Xiao Liu, Yandong Li, Limin Wang, Shilei Wen
+
+## 版本更新
+
+- 3/2019: 新增模型
 
