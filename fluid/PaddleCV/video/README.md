@@ -7,17 +7,17 @@
 在当前模型库运行样例代码需要PadddlePaddle Fluid的v.1.2.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ## 简介
-本次发布的是Paddle视频模型库，包括五个视频分类模型。后续我们将会扩展到视频理解方向的更多应用场景以及视频编辑和生成等方向，以便为开发者提供简单、便捷的使用深度学习算法处理视频的途径。
+本教程期望给开发者提供基于PaddlePaddle的便捷、高效的使用深度学习算法解决视频理解、视频编辑、视频生成等一系列模型。目前我们包含5个视频分类模型，后续我们会不断的扩展到其他更多场景。
 
-Paddle视频模型库第一期主要包含如下模型。
+目前视频分类模型包括:
 
 | 模型 | 类别  | 描述 |
 | :---------------: | :--------: | :------------: |
 | [Attention Cluster](./models/attention_cluster/README.md) [[论文](https://arxiv.org/abs/1711.09550)] | 视频分类| CVPR'18提出的视频多模态特征注意力聚簇融合方法 |
-| [Attention LSTM](./models/attention_lstm/README.md) | 视频分类| 常用模型，速度快精度高 |
-| [NeXtVLAD](./models/nextvlad/README.md) | 视频分类| 2nd-Youtube-8M最优单模型 |
-| [StNet](./models/stnet/README.md) | 视频分类| AAAI'19提出的视频联合时空建模方法 |
-| [TSN](./models/tsn/README.md) | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
+| [Attention LSTM](./models/attention_lstm/README.md) [[论文](https://arxiv.org/abs/1503.08909)] | 视频分类| 常用模型，速度快精度高 |
+| [NeXtVLAD](./models/nextvlad/README.md) [[论文](https://arxiv.org/abs/1811.05014)] | 视频分类| 2nd-Youtube-8M最优单模型 |
+| [StNet](./models/stnet/README.md) [[论文](https://arxiv.org/abs/1811.01549)] | 视频分类| AAAI'19提出的视频联合时空建模方法 |
+| [TSN](./models/tsn/README.md) [[论文](https://arxiv.org/abs/1608.00859)] | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
 
 
 ## 数据准备
@@ -28,23 +28,37 @@ Paddle视频模型库第一期主要包含如下模型。
 
 视频模型库提供通用的train/test/infer框架，通过`train.py/test.py/infer.py`指定模型名、模型配置参数等可一键式进行训练和预测。
 
-视频库目前支持的模型名如下：
+视频库目前支持的模型包括：[Attention Cluster](./models/attention_cluster/README.md), [Attention LSTM](./models/attention_lstm/README.md), [NeXtVLAD](./models/nextvlad/README.md), [StNet](./models/stnet/README.md), [TSN](./models/tsn/README.md)。
 
-1. AttentionCluster
-2. AttentionLSTM
-3. NEXTVLAD
-4. STNET
-5. TSN
+以AttentionCluster模型为例：
 
-Paddle提供默认配置文件位于`./configs`文件夹下，五种模型对应配置文件如下：
+单卡训练：
 
-1. attention\_cluster.txt
-2. attention\_lstm.txt
-3. nextvlad.txt
-4. stnet.txt
-5. tsn.txt
+``` bash
+export CUDA_VISIBLE_DEVICES=0
+python train.py --model-name=AttentionCluster
+        --config=./configs/attention_cluster.txt
+        --epoch=8
+        --batch-size=256
+        --save-dir=checkpoints
+        --log-interval=10
+        --valid-interval=1
+```
 
-详细使用步骤请参考各模型文档：[Attention Cluster](./models/attention_cluster/README.md), [Attention LSTM](./models/attention_lstm/README.md), [NeXtVLAD](./models/nextvlad/README.md), [StNet](./models/stnet/README.md), [TSN](./models/tsn/README.md)
+多卡训练：
+
+``` bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+python train.py --model-name=AttentionCluster
+        --config=./configs/attention_cluster.txt
+        --epoch=8
+        --batch-size=2048
+        --save-dir=checkpoints
+        --log-interval=10
+        --valid-interval=1
+```
+
+- 请根据`CUDA_VISIBLE_DEVICES`指定卡数修改`config`文件中`num_gpus`和`batch_size`。
 
 ## Model Zoo
 
