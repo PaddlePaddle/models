@@ -12,7 +12,7 @@
 目前视频分类模型包括:
 
 | 模型 | 类别  | 描述 |
-| :---------------: | :--------: | :------------: |
+| :--------------- | :--------: | :------------: |
 | [Attention Cluster](./models/attention_cluster/README.md) [[论文](https://arxiv.org/abs/1711.09550)] | 视频分类| CVPR'18提出的视频多模态特征注意力聚簇融合方法 |
 | [Attention LSTM](./models/attention_lstm/README.md) [[论文](https://arxiv.org/abs/1503.08909)] | 视频分类| 常用模型，速度快精度高 |
 | [NeXtVLAD](./models/nextvlad/README.md) [[论文](https://arxiv.org/abs/1811.05014)] | 视频分类| 2nd-Youtube-8M最优单模型 |
