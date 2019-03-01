@@ -107,7 +107,7 @@ step: 500, mIoU: 0.7881
 
 |数据集 | norm type | pretrained model | trained model | mean IoU
 |---|---|---|---|---|
-|CityScape | batch norm | [deeplabv3plus_xception65_initialize.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_xception65_initialize_fix.tgz) | [deeplabv3plus.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus.tgz) | 0.7873 |
+|CityScape | batch norm | [deeplabv3plus_xception65_initialize.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_xception65_initialize.tgz) | [deeplabv3plus.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus.tgz) | 0.7873 |
 |CityScape | group norm | [deeplabv3plus_gn_init.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_gn_init.tgz) | [deeplabv3plus_gn.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_gn.tgz) | 0.7881 |
 
 ## 参考
