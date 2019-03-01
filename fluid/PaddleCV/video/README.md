@@ -38,8 +38,6 @@
 export CUDA_VISIBLE_DEVICES=0
 python train.py --model-name=AttentionCluster
         --config=./configs/attention_cluster.txt
-        --epoch=8
-        --batch-size=256
         --save-dir=checkpoints
         --log-interval=10
         --valid-interval=1
@@ -51,14 +49,18 @@ python train.py --model-name=AttentionCluster
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 python train.py --model-name=AttentionCluster
         --config=./configs/attention_cluster.txt
-        --epoch=8
-        --batch-size=2048
         --save-dir=checkpoints
         --log-interval=10
         --valid-interval=1
 ```
 
-- 请根据`CUDA_VISIBLE_DEVICES`指定卡数修改`config`文件中`num_gpus`和`batch_size`。
+视频库同时提供了快速训练脚本，脚本位于`scripts/train`目录下，可通过如下命令启动训练
+
+``` bash
+sh scripts/train/train_attention_cluster.sh
+```
+
+- 请根据`CUDA_VISIBLE_DEVICES`指定卡数修改`config`文件中的`num_gpus`和`batch_size`配置。
 
 ## Model Zoo
 

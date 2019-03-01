@@ -34,7 +34,6 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
     python train.py --model-name=AttentionCluster 
             --config=./configs/attention_cluster.txt
             --save-dir=checkpoints 
-            --epoch=8 
             --log-interval=10 
             --valid-interval=1
 
@@ -58,7 +57,8 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
     python test.py --model-name=AttentionCluster 
             --config=configs/attention_cluster.txt
-            --log-interval=1 --weights=$PATH_TO_WEIGHTS
+            --log-interval=1 
+            --weights=$PATH_TO_WEIGHTS
 
     bash scripts/test/test_attention_cluster.sh
 

@@ -29,7 +29,6 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
     python train.py --model-name=TSNET
             --config=./configs/attention_tsn.txt
             --save-dir=checkpoints 
-            --epoch=45
             --log-interval=10 
             --valid-interval=1
 
@@ -49,7 +48,8 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
     python test.py --model-name=TSN
             --config=configs/attention_tsn.txt
-            --log-interval=1 --weights=$PATH_TO_WEIGHTS
+            --log-interval=1
+            --weights=$PATH_TO_WEIGHTS
 
     bash scripts/test/test_attention_tsn.sh
 

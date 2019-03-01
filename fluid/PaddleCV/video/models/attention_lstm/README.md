@@ -30,7 +30,6 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据本分请参考[�
     python train.py --model-name=AttentionLSTM
             --config=./configs/attention_lstm.txt
             --save-dir=checkpoints 
-            --epoch=10 
             --log-interval=10 
             --valid-interval=1
 
@@ -46,7 +45,8 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据本分请参考[�
 
     python test.py --model-name=AttentionLSTM
             --config=configs/attention_lstm.txt
-            --log-interval=1 --weights=$PATH_TO_WEIGHTS
+            --log-interval=1
+            --weights=$PATH_TO_WEIGHTS
 
     bash scripts/test/test_attention_lstm.sh
 
