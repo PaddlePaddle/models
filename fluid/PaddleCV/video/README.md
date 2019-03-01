@@ -28,7 +28,7 @@
 
 视频模型库提供通用的train/test/infer框架，通过`train.py/test.py/infer.py`指定模型名、模型配置参数等可一键式进行训练和预测。
 
-视频库目前支持的模型包括：[Attention Cluster](./models/attention_cluster/README.md), [Attention LSTM](./models/attention_lstm/README.md), [NeXtVLAD](./models/nextvlad/README.md), [StNet](./models/stnet/README.md), [TSN](./models/tsn/README.md)。
+视频模型库目前支持的模型包括：[Attention Cluster](./models/attention_cluster/README.md), [Attention LSTM](./models/attention_lstm/README.md), [NeXtVLAD](./models/nextvlad/README.md), [StNet](./models/stnet/README.md), [TSN](./models/tsn/README.md)。
 
 以AttentionCluster模型为例：
 
@@ -54,7 +54,7 @@ python train.py --model-name=AttentionCluster
         --valid-interval=1
 ```
 
-视频库同时提供了快速训练脚本，脚本位于`scripts/train`目录下，可通过如下命令启动训练
+视频模型库同时提供了快速训练脚本，脚本位于`scripts/train`目录下，可通过如下命令启动训练
 
 ``` bash
 sh scripts/train/train_attention_cluster.sh
