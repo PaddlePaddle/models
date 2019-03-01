@@ -60,6 +60,7 @@ python ./train.py \
     --batch_size=1 \
     --train_crop_size=769 \
     --total_step=50 \
+    --norm_type=gn \
     --init_weights_path=$INIT_WEIGHTS_PATH \
     --save_weights_path=$SAVE_WEIGHTS_PATH \
     --dataset_path=$DATASET_PATH
