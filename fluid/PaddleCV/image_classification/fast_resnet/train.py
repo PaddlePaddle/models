@@ -56,7 +56,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     add_arg = functools.partial(add_arguments, argparser=parser)
     # yapf: disable
-    add_arg('use_gpu',          bool,  True,                 "Whether to use GPU or not.")
     add_arg('total_images',     int,   1281167,              "Training image number.")
     add_arg('num_epochs',       int,   120,                  "number of epochs.")
     add_arg('image_shape',      str,   "3,224,224",          "input image size")
@@ -266,8 +265,8 @@ def build_program(args, is_train, main_prog, startup_prog, py_reader_startup_pro
 
                 optimizer = fluid.optimizer.Momentum(
                     learning_rate=linear_lr_decay_by_epoch(lrs, epochs, bs_epoch, images_per_worker),
-                    momentum=0.9,
-                    regularization=fluid.regularizer.L2Decay(1e-4))
+                    momentum=0.9)
+                    #regularization=fluid.regularizer.L2Decay(1e-4))
                 if args.fp16:
                     params_grads = optimizer.backward(avg_cost)
                     master_params_grads = utils.create_master_params_grads(
