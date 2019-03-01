@@ -77,6 +77,7 @@ python ./train.py \
     --norm_type=gn \
     --train_crop_size=769 \
     --total_step=90000 \
+    --base_lr=0.001 \
     --init_weights_path=deeplabv3plus_gn_init \
     --save_weights_path=output \
     --dataset_path=$DATASET_PATH
