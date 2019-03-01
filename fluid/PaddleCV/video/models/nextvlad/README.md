@@ -30,7 +30,7 @@ NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数�
 
 ### 使用我们提供的预训练模型做finetune
 
-请先将我们提供的预训练模型[PaddleNeXtVLAD](https://paddlemodels.bj.bcebos.com/video_clasification/nextvlad_youtube8m.tar.gz)下载到本地，并在上述脚本文件中添加--resume为所保存的预模型存放路径。
+请先将我们提供的预训练模型[PaddleNeXtVLAD](https://paddlemodels.bj.bcebos.com/video_classification/nextvlad_youtube8m.tar.gz)下载到本地，并在上述脚本文件中添加--resume为所保存的预模型存放路径。
 
 使用4卡Nvidia Tesla P40，总的batch size数是160。
 
