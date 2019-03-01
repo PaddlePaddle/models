@@ -25,13 +25,13 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 数据准备完毕后，可以通过如下两种方式启动训练：
 
-    python train.py --model-name=TSNET
-            --config=./configs/attention_tsn.txt
+    python train.py --model-name=TSN
+            --config=./configs/tsn.txt
             --save-dir=checkpoints 
             --log-interval=10 
             --valid-interval=1
 
-    bash scripts/train/train_attention_tsn.sh
+    bash scripts/train/train_tsn.sh
 
 - 可下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz)通过`--pretrain`指定权重存放路径进行finetune等开发
 
@@ -48,15 +48,15 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 可通过如下两种方式进行模型评估:
 
     python test.py --model-name=TSN
-            --config=configs/attention_tsn.txt
+            --config=configs/tsn.txt
             --log-interval=1
             --weights=$PATH_TO_WEIGHTS
 
-    bash scripts/test/test_attention_tsn.sh
+    bash scripts/test/test_tsn.sh
 
-- 使用`scripts/test/test_attention_tnsn.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
+- 使用`scripts/test/test_tsn.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_tsn_kinetics.tar.gz)进行评估
+- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz)进行评估
 
 当取如下参数时，在Kinetics400的validation数据集下评估精度如下:
 
@@ -69,15 +69,15 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 可通过如下命令进行模型推断：
 
-    python infer.py --model-name=attention_tsn
-            --config=configs/attention_tsn.txt
+    python infer.py --model-name=TSN
+            --config=configs/tsn.txt
             --log-interval=1 
             --weights=$PATH_TO_WEIGHTS 
             --filelist=$FILELIST
 
 - 模型推断结果存储于`TSN_infer_result`中，通过`pickle`格式存储。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_tsn_kinetics.tar.gz)进行推断
+- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz)进行推断
 
 ## 参考论文
 

@@ -28,36 +28,30 @@
 
 视频模型库提供通用的train/test/infer框架，通过`train.py/test.py/infer.py`指定模型名、模型配置参数等可一键式进行训练和预测。
 
-视频模型库目前支持的模型包括：[Attention Cluster](./models/attention_cluster/README.md), [Attention LSTM](./models/attention_lstm/README.md), [NeXtVLAD](./models/nextvlad/README.md), [StNet](./models/stnet/README.md), [TSN](./models/tsn/README.md)。
-
-以AttentionCluster模型为例：
+以StNet模型为例：
 
 单卡训练：
 
 ``` bash
 export CUDA_VISIBLE_DEVICES=0
-python train.py --model-name=AttentionCluster
-        --config=./configs/attention_cluster.txt
+python train.py --model-name=STNET
+        --config=./configs/stnet.txt
         --save-dir=checkpoints
-        --log-interval=10
-        --valid-interval=1
 ```
 
 多卡训练：
 
 ``` bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-python train.py --model-name=AttentionCluster
-        --config=./configs/attention_cluster.txt
+python train.py --model-name=STNET
+        --config=./configs/stnet.txt
         --save-dir=checkpoints
-        --log-interval=10
-        --valid-interval=1
 ```
 
 视频模型库同时提供了快速训练脚本，脚本位于`scripts/train`目录下，可通过如下命令启动训练:
 
 ``` bash
-sh scripts/train/train_attention_cluster.sh
+sh scripts/train/train_stnet.sh
 ```
 
 - 请根据`CUDA_VISIBLE_DEVICES`指定卡数修改`config`文件中的`num_gpus`和`batch_size`配置。
@@ -77,7 +71,7 @@ sh scripts/train/train_attention_cluster.sh
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | Top-1 | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----------: |
 | StNet | 128 | 8卡P40 | 5.1 | 0.69 | [model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz) |
-| TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kientics.tar.gz) |
+| TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz) |
 
 ## 版本更新
 
