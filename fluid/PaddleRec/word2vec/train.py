@@ -129,6 +129,11 @@ def parse_args():
         default=4,
         help="find rank_num-nearest result for test (default: 4)")
 
+    parser.add_argument(
+        '--enable_ce',
+        action='store_true',
+        help='If set, run the task with continuous evaluation logs.')
+
     return parser.parse_args()
 
 
@@ -198,6 +203,8 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
     profiler_step_start = 20
     profiler_step_end = 30
 
+    total_time = 0
+    ce_info = []
     for pass_id in range(args.num_passes):
         py_reader.start()
         time.sleep(10)
@@ -206,10 +213,13 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
         start = time.time()
 
         try:
-            while True:
+                start_time = time.time()
 
                 loss_val = train_exe.run(fetch_list=[loss.name])
                 loss_val = np.mean(loss_val)
+
+                total_time += time.time() - start_time
+                ce_info.append(loss_val.mean())
 
                 if batch_id % 50 == 0:
                     logger.info(
@@ -250,6 +260,27 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
                 fluid.io.save_persistables(executor=exe, dirname=model_dir)
                 with open(model_dir + "/_success", 'w+') as f:
                     f.write(str(pass_id))
+    # only for ce
+    if args.enable_ce:
+        threads_num, cpu_num = get_cards(args)
+        epoch_idx = args.num_passes 
+        ce_loss = 0
+        try:
+            ce_loss = ce_info[-1]
+        except:
+            logger.error("ce info error")
+
+        print("kpis\teach_pass_duration_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, total_time / epoch_idx))
+        print("kpis\ttrain_loss_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, ce_loss))
+
+
+def get_cards(args):
+    threads_num = os.environ.get('CPU_NUM', 1)
+    cpu_num = os.environ.get('CPU_NUM', 1)
+    return int(threads_num), int(cpu_num)
+
 
 
 def GetFileList(data_path):
