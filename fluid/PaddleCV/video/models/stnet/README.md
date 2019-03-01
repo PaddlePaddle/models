@@ -54,7 +54,7 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
      pip install paddlepaddle\_gpu==1.3.0.post85
 
-或者在paddpaddle的whl包[下载页面](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/Tables.html/#ciwhls)选择下载[paddlepaddle\_gpu-1.3.0-cp27-cp27mu-linux\_x86\_64.whl](http://paddle-wheel.bj.bcebos.com/1.3.0-gpu-cuda8-cudnn5-avx-mkl/paddlepaddle_gpu-1.3.0.post85-cp27-cp27mu-linux_x86_64.whl)后安装。
+或者在paddpaddle的whl包[下载页面](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/Tables.html/#permalink-4--whl-release)选择下载cuda8.0\_cudnn5\_avx\_mkl对应的whl包安装。
 关于安装PaddlePaddle的详细操作请参考[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/install/index_cn.html)。
 
 
