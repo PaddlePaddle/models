@@ -36,6 +36,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 [Attention模型](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/ocr_recognition)|场景文字识别模型|使用attention 识别图片中单行英文字符|[Recurrent Models of Visual Attention](https://arxiv.org/abs/1406.6247)
 [Metric Learning](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/metric_learning)|度量学习模型|能够用于分析对象时间的关联、比较关系，可应用于辅助分类、聚类问题，也广泛用于图像检索、人脸识别等领域|-
 [TSN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/video_classification)|视频分类模型|基于长范围时间结构建模，结合了稀疏时间采样策略和视频级监督来保证使用整段视频时学习得有效和高效|[Temporal Segment Networks: Towards Good Practices for Deep Action Recognition](https://arxiv.org/abs/1608.00859)
+[视频模型库](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/video)|视频模型库|给开发者提供基于PaddlePaddle的便捷、高效的使用深度学习算法解决视频理解、视频编辑、视频生成等一系列模型||
 [caffe2fluid](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/caffe2fluid)|将Caffe模型转换为Paddle Fluid配置和模型文件工具|-|-
 
 ## PaddleNLP

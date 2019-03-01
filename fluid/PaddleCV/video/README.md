@@ -1,10 +1,3 @@
-# Paddle视频模型库
-
----
-
-## 安装
-
-在当前模型库运行样例代码需要PadddlePaddle Fluid v.1.2.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ## 简介
 本教程期望给开发者提供基于PaddlePaddle的便捷、高效的使用深度学习算法解决视频理解、视频编辑、视频生成等一系列模型。目前包含视频分类模型，后续会不断的扩展到其他更多场景。
@@ -19,6 +12,9 @@
 | [StNet](./models/stnet/README.md) [[论文](https://arxiv.org/abs/1811.01549)] | 视频分类| AAAI'19提出的视频联合时空建模方法 |
 | [TSN](./models/tsn/README.md) [[论文](https://arxiv.org/abs/1608.00859)] | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
 
+## 安装
+
+在当前模型库运行样例代码需要PadddlePaddle Fluid v.1.2.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ## 数据准备
 
@@ -58,7 +54,7 @@ bash scripts/train/train_stnet.sh
 
 ## Model Zoo
 
-使用Youtube-8M数据集模型如下：
+- 基于Youtube-8M数据集模型：
 
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | GAP | 下载链接 |
 | :-------: | :---: | :---------: | :-----: | :----: | :----------: |
@@ -66,7 +62,7 @@ bash scripts/train/train_stnet.sh
 | Attention LSTM | 1024 | 8卡P40 | 7.1 | 0.86 | [model](https://paddlemodels.bj.bcebos.com/video_classification/attention_lstm_youtube8m.tar.gz) |
 | NeXtVLAD | 160 | 4卡P40 | 7.1 | 0.87 | [model](https://paddlemodels.bj.bcebos.com/video_classification/nextvlad_youtube8m.tar.gz) |
 
-使用Kinetics数据集模型如下：
+- 基于Kinetics数据集模型：
 
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | Top-1 | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----------: |
