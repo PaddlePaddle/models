@@ -132,6 +132,10 @@ class TSN(ModelBase):
     def pretrain_info(self):
         return ('ResNet50_pretrained', 'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz')
 
+    def weights_info(self):
+        return ('tsn_kinetics', 
+                'https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz')
+
     def load_pretrain_params(self, exe, pretrain, prog, place):
         def is_parameter(var):
             return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name))
