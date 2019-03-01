@@ -51,7 +51,7 @@ python train.py --model-name=STNET
 视频模型库同时提供了快速训练脚本，脚本位于`scripts/train`目录下，可通过如下命令启动训练:
 
 ``` bash
-sh scripts/train/train_stnet.sh
+bash scripts/train/train_stnet.sh
 ```
 
 - 请根据`CUDA_VISIBLE_DEVICES`指定卡数修改`config`文件中的`num_gpus`和`batch_size`配置。
@@ -75,5 +75,5 @@ sh scripts/train/train_stnet.sh
 
 ## 版本更新
 
-- 3/2019: 新增模型库
+- 3/2019: 新增模型库，发布Attention Cluster，Attention LSTM，NeXtVLAD，StNet，TSN五个视频分类模型。
 

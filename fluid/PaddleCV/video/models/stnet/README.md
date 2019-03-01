@@ -13,7 +13,7 @@
 
 ## 模型简介
 
-StNet为百度自研模型，该框架为百度在ActivityNet Kinetics Challenge 2018中夺冠的基础网络框架，本次开源的是基于ResNet50实现的StNet模型，基于其他backbone网络的框架用户可以依样配置。该模型提出“super-image"的概念，在super-image上进行2D卷积，建模视频中局部时空相关性。另外通过temporal modeling block建模视频的全局时空依赖，最后用一个temporal Xception block对抽取的特征序列进行长时序建模。StNet主体网络结构如下图所示：
+StNet模型框架为ActivityNet Kinetics Challenge 2018中夺冠的基础网络框架，本次开源的是基于ResNet50实现的StNet模型，基于其他backbone网络的框架用户可以依样配置。该模型提出“super-image"的概念，在super-image上进行2D卷积，建模视频中局部时空相关性。另外通过temporal modeling block建模视频的全局时空依赖，最后用一个temporal Xception block对抽取的特征序列进行长时序建模。StNet主体网络结构如下图所示：
 
 <p align="center">
 <img src="../../images/StNet.png" height=300 width=500 hspace='10'/> <br />
@@ -38,7 +38,7 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
     bash scripts/train/train_stnet.sh
 
-- 可下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz)通过`--pretrain`指定权重存放路径进行finetune等开发
+- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz)通过`--resume`指定权重存放路径进行finetune等开发
 
 **数据读取器说明：** 模型读取Kinetics-400数据集中的`mp4`数据，每条数据抽取`seg_num`段，每段抽取`seg_len`帧图像，对每帧图像做随机增强后，缩放至`target_size`。
 
@@ -71,7 +71,7 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
 - 使用`scripts/test/test_stnet.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz)进行评估
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz)进行评估
 
 当取如下参数时:
 
@@ -100,7 +100,7 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
 - 模型推断结果存储于`STNET_infer_result`中，通过`pickle`格式存储。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz)进行推断
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz)进行推断
 
 
 ## 参考论文

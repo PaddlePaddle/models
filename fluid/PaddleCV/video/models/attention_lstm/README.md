@@ -51,10 +51,7 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 
 - 使用`scripts/test/test_attention_LSTM.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_lstm_youtube8m.tar.gz)进行评估
-
-
-使用Paddle Fluid实现了论文中的单模型结构，使用2nd-Youtube-8M的train数据集作为训练集，在val数据集上做测试。
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_lstm_youtube8m.tar.gz)进行评估
 
 模型参数列表如下：
 
@@ -86,7 +83,7 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 
 - 模型推断结果存储于`AttentionLSTM_infer_result`中，通过`pickle`格式存储。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_lstm_youtube8m.tar.gz)进行推断
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_lstm_youtube8m.tar.gz)进行推断
 
 ## 参考论文
 
