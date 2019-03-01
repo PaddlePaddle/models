@@ -27,6 +27,7 @@ add_arg('verbose',              bool,   False,  "Print mIoU for each step if ver
 add_arg('use_gpu',              bool,   True,   "Whether use GPU or CPU.")
 add_arg('num_classes',          int,    19,     "Number of classes.")
 add_arg('use_py_reader',        bool,   True,   "Use py_reader.")
+add_arg('norm_type',            str,    'bn',   "Normalization type, should be 'bn' or 'gn'.")
 #yapf: enable
 
 
@@ -58,6 +59,7 @@ args = parser.parse_args()
 
 models.clean()
 models.is_train = False
+models.default_norm_type = args.norm_type
 deeplabv3p = models.deeplabv3p
 
 image_shape = [1025, 2049]
