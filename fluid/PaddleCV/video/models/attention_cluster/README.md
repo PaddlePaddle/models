@@ -9,7 +9,6 @@
 - [模型评估](#模型评估)
 - [模型推断](#模型推断)
 - [参考论文](#参考论文)
-- [版本更新](#版本更新)
 
 
 ## 模型简介
@@ -39,7 +38,7 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
     bash scripts/train/train_attention_cluster.sh
 
-- 可下载Paddle release权重[PaddleAttentionCluster](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)通过`--pretrain`指定权重存放路径进行finetune等开发
+- 可下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)通过`--pretrain`指定权重存放路径进行finetune等开发
 
 **数据读取器说明：** 模型读取Youtube-8M数据集中已抽取好的`rgb`和`audio`数据，对于每个视频的数据，均匀采样100帧，该值由配置文件中的`seg_num`参数指定。
 
@@ -64,7 +63,7 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
 - 使用`scripts/test/test_attention_cluster.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[PaddleAttentionCluster](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)进行评估
+- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)进行评估
 
 当取如下参数时:
 
@@ -96,7 +95,7 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
 - 模型推断结果存储于`AttentionCluster_infer_result`中，通过`pickle`格式存储。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[PaddleAttentionCluster](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)进行推断
+- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)进行推断
 
 ## 参考论文
 

@@ -4,10 +4,10 @@
 
 ## 安装
 
-在当前模型库运行样例代码需要PadddlePaddle Fluid v.1.2.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+在当前模型库运行样例代码需要PadddlePaddle Fluid v.1.2.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ## 简介
-本教程期望给开发者提供基于PaddlePaddle的便捷、高效的使用深度学习算法解决视频理解、视频编辑、视频生成等一系列模型。目前我们包含5个视频分类模型，后续我们会不断的扩展到其他更多场景。
+本教程期望给开发者提供基于PaddlePaddle的便捷、高效的使用深度学习算法解决视频理解、视频编辑、视频生成等一系列模型。目前我们包含视频分类模型，后续我们会不断的扩展到其他更多场景。
 
 目前视频分类模型包括:
 

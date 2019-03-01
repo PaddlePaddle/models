@@ -9,7 +9,6 @@
 - [模型评估](#模型评估)
 - [模型推断](#模型推断)
 - [参考论文](#参考论文)
-- [版本更新](#版本更新)
 
 
 ## 模型简介
@@ -39,6 +38,8 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
     bash scripts/train/train_attention_stnet.sh
 
+- 可下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz)通过`--pretrain`指定权重存放路径进行finetune等开发
+
 **数据读取器说明：** 模型读取Kinetics-400数据集中的`mp4`数据，每条数据抽取`seg_num`段，每段抽取`seg_len`帧图像，对每帧图像做随机增强后，缩放至`target_size`。
 
 **训练策略：**
@@ -54,7 +55,7 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
      pip install paddlepaddle\_gpu==1.3.0.post85
 
 或者在paddpaddle的whl包[下载页面](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/Tables.html/#permalink-4--whl-release)选择下载cuda8.0\_cudnn5\_avx\_mkl对应的whl包安装。
-关于安装PaddlePaddle的详细操作请参考[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/install/index_cn.html)。
+关于安装PaddlePaddle的详细操作请参考[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html)。
 
 
 ## 模型评估
@@ -70,7 +71,7 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
 - 使用`scripts/test/test_attention_stnet.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[PaddleStNet](https://paddlemodels.bj.bcebos.com/video_classification/attention_stnet_kinetics.tar.gz)进行评估
+- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_stnet_kinetics.tar.gz)进行评估
 
 当取如下参数时:
 
@@ -99,7 +100,7 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
 - 模型推断结果存储于`STNET_infer_result`中，通过`pickle`格式存储。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[PaddleStNet](https://paddlemodels.bj.bcebos.com/video_classification/attention_stnet_kinetics.tar.gz)进行推断
+- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_stnet_kinetics.tar.gz)进行推断
 
 
 ## 参考论文

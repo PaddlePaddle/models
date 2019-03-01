@@ -9,7 +9,6 @@
 - [模型评估](#模型评估)
 - [模型推断](#模型推断)
 - [参考论文](#参考论文)
-- [版本更新](#版本更新)
 
 
 ## 模型简介
@@ -34,6 +33,8 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
     bash scripts/train/train_attention_tsn.sh
 
+- 可下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz)通过`--pretrain`指定权重存放路径进行finetune等开发
+
 **数据读取器说明：** 模型读取Kinetics-400数据集中的`mp4`数据，每条数据抽取`seg_num`段，每段抽取1帧图像，对每帧图像做随机增强后，缩放至`target_size`。
 
 **训练策略：**
@@ -55,7 +56,7 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 - 使用`scripts/test/test_attention_tnsn.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[PaddleTSN](https://paddlemodels.bj.bcebos.com/video_classification/attention_tsn_kinetics.tar.gz)进行评估
+- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_tsn_kinetics.tar.gz)进行评估
 
 当取如下参数时，在Kinetics400的validation数据集下评估精度如下:
 
@@ -76,7 +77,7 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 - 模型推断结果存储于`TSN_infer_result`中，通过`pickle`格式存储。
 
-- 若未指定`--weights`参数，脚本会下载Paddle release权重[PaddleTSN](https://paddlemodels.bj.bcebos.com/video_classification/attention_tsn_kinetics.tar.gz)进行推断
+- 若未指定`--weights`参数，脚本会下载Paddle release权重[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_tsn_kinetics.tar.gz)进行推断
 
 ## 参考论文
 
