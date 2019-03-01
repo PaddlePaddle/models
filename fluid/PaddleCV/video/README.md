@@ -7,7 +7,7 @@
 在当前模型库运行样例代码需要PadddlePaddle Fluid的v.1.2.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ## 简介
-本次发布的是Paddle视频模型库第一期，包括五个视频分类模型。后续我们将会扩展到视频理解方向的更多应用场景以及视频编辑和生成等方向，以便为开发者提供简单、便捷的使用深度学习算法处理视频的途径。
+本次发布的是Paddle视频模型库，包括五个视频分类模型。后续我们将会扩展到视频理解方向的更多应用场景以及视频编辑和生成等方向，以便为开发者提供简单、便捷的使用深度学习算法处理视频的途径。
 
 Paddle视频模型库第一期主要包含如下模型。
 
@@ -17,7 +17,7 @@ Paddle视频模型库第一期主要包含如下模型。
 | [Attention LSTM](./models/attention_lstm/README.md) | 视频分类| 常用模型，速度快精度高 |
 | [NeXtVLAD](./models/nextvlad/README.md) | 视频分类| 2nd-Youtube-8M最优单模型 |
 | [StNet](./models/stnet/README.md) | 视频分类| AAAI'19提出的视频联合时空建模方法 |
-| [TSN](./models/tsn/README.md) | 视频分类| 基于2D-CNN经典解决方案 |
+| [TSN](./models/tsn/README.md) | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
 
 
 ## 数据准备
@@ -46,25 +46,24 @@ Paddle提供默认配置文件位于`./configs`文件夹下，五种模型对应
 
 详细使用步骤请参考各模型文档：[Attention Cluster](./models/attention_cluster/README.md), [Attention LSTM](./models/attention_lstm/README.md), [NeXtVLAD](./models/nextvlad/README.md), [StNet](./models/stnet/README.md), [TSN](./models/tsn/README.md)
 
-## 模型精度
-
-模型库各模型评估精度如下：
-
-| 模型 | 数据集 | 精度类别  | 精度 |
-| :---------------: | :-----------: | :-------: | :------: |
-| AttentionCluster | Youtube-8M | GAP | 0.84 |
-| AttentionLSTM | Youtube-8M | GAP | 0.86 |
-| NeXtVLAD | Youtube=8M | GAP | 0.87 |
-| StNet | Kinetics | Top-1 | 0.69 |
-| TSN | Kinetics | Top-1 | 0.67 |
-
 ## Model Zoo
 
-| 模型 | Batch Size | 环境配置 | CUDA版本 | CUDNN版本 | 下载链接 |
-| :-------: | :---: | :---------: | :----: | :-----: | :----------: |
-| Attention Cluster | 2048 | 8卡P40 | 8.0 | 7.1 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/attention_cluster_youtube8m.tar.gz) |
-| Attention LSTM | 1024 | 8卡P40 | 8.0 | 7.1 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/attention_lstm_youtube8m.tar.gz) |
-| NeXtVLAD | 160 | 4卡P40 | 8.0 | 7.1 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/attention_cluster_youtube8m.tar.gz) |
-| StNet | 128 | 8卡P40 | 8.0 | 5.1 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/stnet_kientics.tar.gz) |
-| TSN | 256 | 8卡P40 | 8.0 | 7.1 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/tsn_kientics.tar.gz) |
+使用Youtube-8M数据集模型如下：
+
+| 模型 | Batch Size | 环境配置 | cuDNN版本 | GAP | 下载链接 |
+| :-------: | :---: | :---------: | :-----: | :----: | :----------: |
+| Attention Cluster | 2048 | 8卡P40 | 7.1 | 0.84 | [model](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz) |
+| Attention LSTM | 1024 | 8卡P40 | 7.1 | 0.86 | [model](https://paddlemodels.bj.bcebos.com/video_classification/attention_lstm_youtube8m.tar.gz) |
+| NeXtVLAD | 160 | 4卡P40 | 7.1 | 0.87 | [model](https://paddlemodels.bj.bcebos.com/video_classification/nextvlad_youtube8m.tar.gz) |
+
+使用Kinetics数据集模型如下：
+
+| 模型 | Batch Size | 环境配置 | cuDNN版本 | Top-1 | 下载链接 |
+| :-------: | :---: | :---------: | :----: | :----: | :----------: |
+| StNet | 128 | 8卡P40 | 5.1 | 0.69 | [model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz) |
+| TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kientics.tar.gz) |
+
+## 版本更新
+
+- 3/2019: 新增模型库
 
