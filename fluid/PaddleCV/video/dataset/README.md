@@ -49,9 +49,9 @@
 
 进入dataset/youtube8m目录
 
-    ls ${Code\_Base\_Root}/dataset/youtube8m/pkl/train/* > train.list
+    ls $Code_Base_Root/dataset/youtube8m/pkl/train/* > train.list
 
-    ls ${Code\_Base\_Root}/dataset/youtube8m/pkl/val/* > val.list
+    ls $Code_Base_Root/dataset/youtube8m/pkl/val/* > val.list
 
 在dataset/youtube8m目录下将生成两个文件，train.list和val.list，每一行分别保存了一个pkl文件的绝对路径。
 
@@ -62,11 +62,11 @@ Kinetics数据集是DeepMind公开的大规模视频动作识别数据集，有K
 ### mp4视频下载
 在Code\_Base\_Root目录下创建文件夹
 
-    cd ${Code\_Base\_Root}/dataset && mkdir kinetics
+    cd $Code_Base_Root/dataset && mkdir kinetics
 
-    cd kinetics && mkdir data\_k400 && cd data\_k400
+    cd kinetics && mkdir data_k400 && cd data_k400
 
-    mkdir train\_mp4 && mkdir val\_mp4
+    mkdir train_mp4 && mkdir val_mp4
 
 ActivityNet官方提供了Kinetics的下载工具，具体参考其[官方repo ](https://github.com/activitynet/ActivityNet/tree/master/Crawler/Kinetics)即可下载Kinetics400的mp4视频集合。将kinetics400的训练与验证集合分别下载到dataset/kinetics/data\_k400/train\_mp4与dataset/kinetics/data\_k400/val\_mp4。
 
@@ -76,41 +76,41 @@ ActivityNet官方提供了Kinetics的下载工具，具体参考其[官方repo ]
 
 在 dataset/kinetics/data\_k400目录下创建目录train\_pkl和val\_pkl
 
-    cd ${Code\_Base\_Root}/dataset/kinetics/data\_k400
+    cd $Code_Base_Root/dataset/kinetics/data_k400
 
-    mkdir train\_pkl && mkdir val\_pkl
+    mkdir train_pkl && mkdir val_pkl
 
-进入${Code\_Base\_Root}/dataset/kinetics目录，使用video2pkl.py脚本进行数据转化。首先需要下载[train](https://github.com/activitynet/ActivityNet/tree/master/Crawler/Kinetics/data/kinetics-400_train.csv)和[validation](https://github.com/activitynet/ActivityNet/tree/master/Crawler/Kinetics/data/kinetics-400_val.csv)数据集的文件列表。
+进入$Code\_Base\_Root/dataset/kinetics目录，使用video2pkl.py脚本进行数据转化。首先需要下载[train](https://github.com/activitynet/ActivityNet/tree/master/Crawler/Kinetics/data/kinetics-400_train.csv)和[validation](https://github.com/activitynet/ActivityNet/tree/master/Crawler/Kinetics/data/kinetics-400_val.csv)数据集的文件列表。
 
 首先生成预处理需要的数据集标签文件
 
-    python generate\_label.py kinetics-400\_train.csv kinetics400\_label.txt
+    python generate_label.py kinetics-400_train.csv kinetics400_label.txt
 
 然后执行如下程序：
 
-    python video2pkl.py kinetics-400\_train.csv $Source\_dir $Target\_dir  8 #以8个进程为例
+    python video2pkl.py kinetics-400_train.csv $Source_dir $Target_dir  8 #以8个进程为例
 
 对于train数据，
 
-    Source\_dir = ${Code\_Base\_Root}/dataset/kinetics/data\_k400/train\_mp4
+    Source_dir = $Code_Base_Root/dataset/kinetics/data_k400/train_mp4
 
-    Target\_dir = ${Code\_Base\_Root}/dataset/kinetics/data\_k400/train\_pkl
+    Target_dir = $Code_Base_Root/dataset/kinetics/data_k400/train_pkl
 
 对于val数据，
 
-    Source\_dir = ${Code\_Base\_Root}/dataset/kinetics/data\_k400/val\_mp4
+    Source_dir = $Code_Base_Root/dataset/kinetics/data_k400/val_mp4
 
-    Target\_dir = ${Code\_Base\_Root}/dataset/kinetics/data\_k400/val\_pkl
+    Target_dir = $Code_Base_Root/dataset/kinetics/data_k400/val_pkl
 
 这样即可将mp4文件解码并保存为pkl文件。
 
 ### 生成训练和验证集list
 
-    cd ${Code\_Base\_Root}/dataset/kinetics
+    cd $Code_Base_Root/dataset/kinetics
 
-    ls ${Code\_Base\_Root}/dataset/kinetics/data\_k400/train\_pkl /* > train.list
+    ls $Code_Base_Root/dataset/kinetics/data_k400/train_pkl /* > train.list
 
-    ls ${Code\_Base\_Root}/dataset/kinetics/data\_k400/val\_pkl /* > val.list
+    ls $Code_Base_Root/dataset/kinetics/data_k400/val_pkl /* > val.list
 
 
 即可生成相应的文件列表，train.list和val.list的每一行表示一个pkl文件的绝对路径。
