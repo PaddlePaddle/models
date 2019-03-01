@@ -81,7 +81,7 @@ python train.py \
 * **lr**: initialized learning rate. Default: 0.1.
 * **pretrained_model**: model path for pretraining. Default: None.
 * **checkpoint**: the checkpoint path to resume. Default: None.
-* **model_category**: the category of models, ("models"|"models_name"). Default: "models".
+* **model_category**: the category of models, ("models"|"models_name"). Default: "models_name".
 
 Or can start the training step by running the ```run.sh```.
 
@@ -220,6 +220,8 @@ Models are trained by starting with learning rate ```0.1``` and decaying it by `
 
 
 - Released models: not specify parameter names
+
+**NOTE: These are trained by using model_category=models**
 
 |model | top-1/top-5 accuracy(PIL)| top-1/top-5 accuracy(CV2) |
 |- |:-: |:-:|

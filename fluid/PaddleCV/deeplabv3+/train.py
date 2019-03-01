@@ -4,7 +4,6 @@ from __future__ import print_function
 import os
 if 'FLAGS_fraction_of_gpu_memory_to_use' not in os.environ:
     os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = '0.98'
-os.environ['FLAGS_enable_parallel_graph'] = '1'
 
 import paddle
 import paddle.fluid as fluid
@@ -34,7 +33,7 @@ add_arg('use_gpu',              bool,   True,   "Whether use GPU or CPU.")
 add_arg('num_classes',          int,    19,     "Number of classes.")
 add_arg('load_logit_layer',     bool,   True,   "Load last logit fc layer or not. If you are training with different number of classes, you should set to False.")
 add_arg('memory_optimize',      bool,   True,   "Using memory optimizer.")
-add_arg('norm_type',            str,    'bn',   "Normalization type, should be bn or gn.")
+add_arg('norm_type',            str,    'bn',   "Normalization type, should be 'bn' or 'gn'.")
 add_arg('profile',              bool,    False, "Enable profiler.")
 add_arg('use_py_reader',        bool,    True,  "Use py reader.")
 parser.add_argument(
@@ -52,6 +51,13 @@ def profile_context(profile=True):
         yield
 
 def load_model():
+    load_vars = [
+        x for x in tp.list_vars()
+        if isinstance(x, fluid.framework.Parameter) and x.name.find('image_pool') ==
+        -1
+    ]
+    fluid.io.load_vars(exe, dirname=args.init_weights_path, vars=load_vars)
+    return
     if os.path.isdir(args.init_weights_path):
         load_vars = [
             x for x in tp.list_vars()
@@ -225,7 +231,6 @@ with profile_context(args.profile):
 
 print("Training done. Model is saved to", args.save_weights_path)
 save_model()
-py_reader.stop()
 
 if args.enable_ce:
     gpu_num = fluid.core.get_cuda_device_count()

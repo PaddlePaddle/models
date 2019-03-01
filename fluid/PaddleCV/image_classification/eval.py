@@ -7,8 +7,6 @@ import time
 import sys
 import paddle
 import paddle.fluid as fluid
-#import models
-import models_name as models
 #import reader_cv2 as reader
 import reader as reader
 import argparse
@@ -26,10 +24,21 @@ add_arg('class_dim',        int,  1000,                "Class number.")
 add_arg('image_shape',      str,  "3,224,224",         "Input image size")
 add_arg('with_mem_opt',     bool, True,                "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,  None,                "Whether to use pretrained model.")
-add_arg('model',            str, "SE_ResNeXt50_32x4d", "Set the network to use.")
+add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
+add_arg('model_category',   str,  "models_name",            "Whether to use models_name or not, valid value:'models','models_name'." )
+
 # yapf: enable
 
-model_list = [m for m in dir(models) if "__" not in m]
+
+def set_models(model_category):
+    global models
+    assert model_category in ["models", "models_name"
+                              ], "{} is not in lists: {}".format(
+                                  model_category, ["models", "models_name"])
+    if model_category == "models_name":
+        import models_name as models
+    else:
+        import models as models
 
 
 def eval(args):
@@ -40,6 +49,7 @@ def eval(args):
     with_memory_optimization = args.with_mem_opt
     image_shape = [int(m) for m in args.image_shape.split(",")]
 
+    model_list = [m for m in dir(models) if "__" not in m]
     assert model_name in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
 
@@ -63,11 +73,11 @@ def eval(args):
         acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
     else:
         out = model.net(input=image, class_dim=class_dim)
-        cost = fluid.layers.cross_entropy(input=out, label=label)
-
+        cost, pred = fluid.layers.softmax_with_cross_entropy(
+            out, label, return_softmax=True)
         avg_cost = fluid.layers.mean(x=cost)
-        acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
-        acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
+        acc_top1 = fluid.layers.accuracy(input=pred, label=label, k=1)
+        acc_top5 = fluid.layers.accuracy(input=pred, label=label, k=5)
 
     test_program = fluid.default_main_program().clone(for_test=True)
 
@@ -125,6 +135,7 @@ def eval(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    set_models(args.model_category)
     eval(args)
 
 
