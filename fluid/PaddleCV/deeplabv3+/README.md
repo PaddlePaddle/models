@@ -41,8 +41,8 @@ data/cityscape/
 我们为了节约更多的显存，在这里我们使用Group Norm作为我们的归一化手段。
 如果需要从头开始训练模型，用户需要下载我们的初始化模型
 ```
-wget https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_xception65_initialize_fix.tgz
-tar -xf deeplabv3plus_xception65_initialize_fix.tgz && rm deeplabv3plus_xception65_initialize_fix.tgz
+wget https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_gn_init.tgz
+tar -xf deeplabv3plus_gn_init.tgz && rm deeplabv3plus_gn_init.tgz
 ```
 如果需要最终训练模型进行fine tune或者直接用于预测，请下载我们的最终模型
 ```
