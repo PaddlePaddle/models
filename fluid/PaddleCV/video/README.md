@@ -44,7 +44,7 @@ Paddle提供默认配置文件位于`./configs`文件夹下，五种模型对应
 4. stnet.txt
 5. tsn.txt
 
-详细使用步骤请参考各模型文档
+详细使用步骤请参考各模型文档：[Attention Cluster](./models/attention_cluster/README.md), [Attention LSTM](./models/attention_lstm/README.md), [NeXtVLAD](./models/nextvlad/README.md), [StNet](./models/stnet/README.md), [TSN](./models/tsn/README.md)
 
 ## 模型精度
 
@@ -60,11 +60,11 @@ Paddle提供默认配置文件位于`./configs`文件夹下，五种模型对应
 
 ## Model Zoo
 
-| 模型 | Batch Size | 环境配置 | 下载链接 |
-| :-------: | :---: | :---------: | :----------: |
-| Attention Cluster | 2048 | 8卡P40 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/attention_cluster_youtube8m.tar.gz) |
-| Attention LSTM | 1024 | 8卡P40 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/attention_lstm_youtube8m.tar.gz) |
-| NeXtVLAD | 160 | 4卡P40 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/attention_cluster_youtube8m.tar.gz) |
-| StNet | 128 | 8卡P40 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/stnet_kientics.tar.gz) |
-| TSN | 256 | 8卡P40 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/tsn_kientics.tar.gz) |
+| 模型 | Batch Size | 环境配置 | CUDA版本 | CUDNN版本 | 下载链接 |
+| :-------: | :---: | :---------: | :----: | :-----: | :----------: |
+| Attention Cluster | 2048 | 8卡P40 | 8.0 | 7.1 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/attention_cluster_youtube8m.tar.gz) |
+| Attention LSTM | 1024 | 8卡P40 | 8.0 | 7.1 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/attention_lstm_youtube8m.tar.gz) |
+| NeXtVLAD | 160 | 4卡P40 | 8.0 | 7.1 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/attention_cluster_youtube8m.tar.gz) |
+| StNet | 128 | 8卡P40 | 8.0 | 5.1 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/stnet_kientics.tar.gz) |
+| TSN | 256 | 8卡P40 | 8.0 | 7.1 | [model](https://paddlemodels.bj.bcebos.com/video_clasification/tsn_kientics.tar.gz) |
 
