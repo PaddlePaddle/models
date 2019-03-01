@@ -174,7 +174,8 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
                 if batch_id % 1000 == 0 and batch_id != 0:
                     model_dir = args.model_output_dir + '/batch-' + str(batch_id)
                     if args.trainer_id == 0:
-                        fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
+                        fluid.io.save_persistables(executor=exe, dirname=model_dir,
+                                                   main_program=fluid.default_main_program())
                 batch_id += 1
         except fluid.core.EOFException:
             py_reader.reset()
@@ -184,7 +185,8 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
 
         model_dir = args.model_output_dir + '/pass-' + str(pass_id)
         if args.trainer_id == 0:
-            fluid.io.save_inference_model(model_dir, data_name_list, [loss, auc_var], exe)
+            fluid.io.save_persistables(executor=exe, dirname=model_dir,
+                                       main_program=fluid.default_main_program())
 
     # only for ce
     if args.enable_ce:
@@ -206,7 +208,7 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, auc_var, batch_auc_var, py_reader = ctr_dnn_model(args.embedding_size, args.sparse_feature_dim)
+    loss, auc_var, batch_auc_var, py_reader, _ = ctr_dnn_model(args.embedding_size, args.sparse_feature_dim)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
     optimizer.minimize(loss)
     if args.cloud_train:
