@@ -87,7 +87,3 @@ NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数�
 
 - [NeXtVLAD: An Efficient Neural Network to Aggregate Frame-level Features for Large-scale Video Classification](https://arxiv.org/abs/1811.05014), Rongcheng Lin, Jing Xiao, Jianping Fan
 
-## 版本更新
-
-- 3/2019: 新增模型
-

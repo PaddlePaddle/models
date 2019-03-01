@@ -95,7 +95,3 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据本分请参考[�
 
 - [Attention Clusters: Purely Attention Based Local Feature Integration for Video Classification](https://arxiv.org/abs/1711.09550), Xiang Long, Chuang Gan, Gerard de Melo, Jiajun Wu, Xiao Liu, Shilei Wen
 
-## 版本更新
-
-- 3/2019: 新增模型
-

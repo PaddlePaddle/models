@@ -13,7 +13,7 @@ Paddle视频模型库第一期主要包含如下模型。
 
 | 模型 | 类别  | 描述 |
 | :---------------: | :--------: | :------------: |
-| [Attention Cluster](./models/attention_cluster/README.md) | 视频分类| CVPR'18提出的视频多模态特征注意力聚簇融合方法 |
+| [Attention Cluster](./models/attention_cluster/README.md) [[论文](https://arxiv.org/abs/1711.09550)] | 视频分类| CVPR'18提出的视频多模态特征注意力聚簇融合方法 |
 | [Attention LSTM](./models/attention_lstm/README.md) | 视频分类| 常用模型，速度快精度高 |
 | [NeXtVLAD](./models/nextvlad/README.md) | 视频分类| 2nd-Youtube-8M最优单模型 |
 | [StNet](./models/stnet/README.md) | 视频分类| AAAI'19提出的视频联合时空建模方法 |
