@@ -50,11 +50,11 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
 **备注：**
 
-* 我们在训练stNet模型时使用fluid 1.3 + cudnn5.1。使用cudnn7.0以上版本时batchnorm计算moving mean和moving average会出现异常，此问题还在修复中。建议用户安装paddlepaddle时指定cudnn版本,
+* 在训练StNet模型时使用PaddlePaddle Fluid 1.3 + cudnn5.1。使用cudnn7.0以上版本时batchnorm计算moving mean和moving average会出现异常，此问题还在修复中。建议用户安装PaddlePaddle时指定cudnn版本,
 
      pip install paddlepaddle\_gpu==1.3.0.post85
 
-或者在paddpaddle的whl包[下载页面](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/Tables.html/#permalink-4--whl-release)选择下载cuda8.0\_cudnn5\_avx\_mkl对应的whl包安装。
+或者在PaddlePaddle的whl包[下载页面](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/Tables.html/#permalink-4--whl-release)选择下载cuda8.0\_cudnn5\_avx\_mkl对应的whl包安装。
 关于安装PaddlePaddle的详细操作请参考[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html)。
 
 

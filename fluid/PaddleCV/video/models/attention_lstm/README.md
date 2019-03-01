@@ -37,7 +37,7 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 - AttentionLSTM模型使用8卡Nvidia Tesla P40来训练的，总的batch size数是1024。
 
 ### 使用预训练模型做finetune
-请先将我们提供的[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_lstm_youtube8m.tar.gz)下载到本地，并在上述脚本文件中添加`--resume`为所保存的预模型存放路径。
+请先将提供的[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_lstm_youtube8m.tar.gz)下载到本地，并在上述脚本文件中添加`--resume`为所保存的预模型存放路径。
 
 ## 模型评估
 可通过如下两种方式进行模型评估:
