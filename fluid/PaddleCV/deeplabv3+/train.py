@@ -4,7 +4,6 @@ from __future__ import print_function
 import os
 if 'FLAGS_fraction_of_gpu_memory_to_use' not in os.environ:
     os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = '0.98'
-os.environ['FLAGS_enable_parallel_graph'] = '1'
 
 import paddle
 import paddle.fluid as fluid
