@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument(
         '--model_path',
         type=str,
-        default='model/params_pass_0',
+        default='output/params_pass_0',
         help='A path to the model. (default: %(default)s)')
     parser.add_argument(
         '--test_data_dir',
