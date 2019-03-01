@@ -54,7 +54,7 @@ python train.py --model-name=AttentionCluster
         --valid-interval=1
 ```
 
-视频模型库同时提供了快速训练脚本，脚本位于`scripts/train`目录下，可通过如下命令启动训练
+视频模型库同时提供了快速训练脚本，脚本位于`scripts/train`目录下，可通过如下命令启动训练:
 
 ``` bash
 sh scripts/train/train_attention_cluster.sh

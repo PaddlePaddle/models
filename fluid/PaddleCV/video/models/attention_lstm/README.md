@@ -18,7 +18,7 @@
 
 ## 数据准备
 
-AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据本分请参考[数据说明](../../dataset/README.md)
+AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[数据说明](../../dataset/README.md)
 
 ## 模型训练
 
