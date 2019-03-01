@@ -59,14 +59,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 [DeepCTR](./fluid/PaddleRec/ctr/README.cn.md)|点击率预估模型|只实现了DeepFM论文中介绍的模型的DNN部分，DeepFM会在其他例子中给出|[DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](https://arxiv.org/abs/1703.04247)
 [Multiview-Simnet](./fluid/PaddleRec/multiview_simnet)|个性化推荐模型|基于多元视图，将用户和项目的多个功能视图合并为一个统一模型|[A Multi-View Deep Learning Approach for Cross Domain User Modeling in Recommendation Systems](http://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/frp1159-songA.pdf)
 
-## Other Models
-模型|简介|模型优势|参考论文
---|:--:|:--:|:--:
-[DeepASR](./fluid/DeepASR/README_cn.md)|语音识别系统|利用Fluid框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器|-
-[DQN](./fluid/DeepQNetwork/README_cn.md)|深度Q网络|value based强化学习算法，第一个成功地将深度学习和强化学习结合起来的模型|[Human-level control through deep reinforcement learning](https://www.nature.com/articles/nature14236)
-[DoubleDQN](./fluid/DeepQNetwork/README_cn.md)|DQN的变体|将Double Q的想法应用在DQN上，解决过优化问题|[Font Size: Deep Reinforcement Learning with Double Q-Learning](https://www.aaai.org/ocs/index.php/AAAI/AAAI16/paper/viewPaper/12389)
-[DuelingDQN](./fluid/DeepQNetwork/README_cn.md)|DQN的变体|改进了DQN模型，提高了模型的性能|[Dueling Network Architectures for Deep Reinforcement Learning](http://proceedings.mlr.press/v48/wangf16.html)
-
 ## License
 This tutorial is contributed by [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) and licensed under the [Apache-2.0 license](LICENSE).
 
