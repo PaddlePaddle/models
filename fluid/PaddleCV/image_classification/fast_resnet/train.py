@@ -111,7 +111,7 @@ def linear_lr_decay(lr_values, epochs, bs_values, total_images):
                 linear_epoch = end_epoch - start_epoch
                 start_lr, end_lr = lr_values[idx]
                 linear_lr = end_lr - start_lr
-                steps = last_steps + linear_epoch * total_images / bs_values[idx]
+                steps = last_steps + linear_epoch * total_images / bs_values[idx] + 1
                 with switch.case(global_step < steps):
                     decayed_lr = start_lr + linear_lr * ((global_step - last_steps)* 1.0/(steps - last_steps))
                     last_steps = steps
@@ -167,6 +167,7 @@ def linear_lr_decay_by_epoch(lr_values, epochs, bs_values, total_images):
                 fluid.layers.tensor.assign(last_value_var, lr)
 
         return lr
+
 def test_parallel(exe, test_args, args, test_prog, feeder, bs):
     acc_evaluators = []
     for i in xrange(len(test_args[2])):
@@ -234,12 +235,9 @@ def build_program(args, is_train, main_prog, startup_prog, py_reader_startup_pro
                             name="train_reader_" + str(img_size) if is_train else "test_reader_" + str(img_size),
                             use_double_buffer=True)
                 input, label = fluid.layers.read_file(pyreader)
-                #pyreader.decorate_paddle_reader(paddle.batch(imagenet_reader.train(os.path.join(args.data_dir, trn_dir, "train")), batch_size=batch_size))
-                #pyreader.decorate_paddle_reader(paddle.batch(dataloader.reader(), batch_size=batch_size))
             else:
                 input = fluid.layers.data(name="image", shape=[3, 244, 244], dtype="uint8")
                 label = fluid.layers.data(name="label", shape=[1], dtype="int64")
-                #batched_reader = paddle.batch(dataloader.reader(), batch_size=batch_size) 
             cast_img_type = "float16" if args.fp16 else "float32"
             cast = fluid.layers.cast(input, cast_img_type)
             img_mean = fluid.layers.create_global_var([3, 1, 1], 0.0, cast_img_type, name="img_mean", persistable=True)
@@ -265,6 +263,7 @@ def build_program(args, is_train, main_prog, startup_prog, py_reader_startup_pro
                 bs_epoch = [x if is_mp_mode() else x * get_device_num() for x in [224, 224, 96, 96, 50]]
                 lrs = [(1.0, 2.0), (2.0, 0.25), (0.42857142857142855, 0.04285714285714286), (0.04285714285714286, 0.004285714285714286), (0.0022321428571428575, 0.00022321428571428573), 0.00022321428571428573]
                 images_per_worker = args.total_images / get_device_num() if is_mp_mode() else args.total_images
+
                 optimizer = fluid.optimizer.Momentum(
                     learning_rate=linear_lr_decay_by_epoch(lrs, epochs, bs_epoch, images_per_worker),
                     momentum=0.9,
@@ -330,11 +329,10 @@ def refresh_program(args, epoch, sz, trn_dir, bs, val_bs, need_update_start_prog
             else:
                 var.get_tensor().set(np_tensor, place)
 
-
     strategy = fluid.ExecutionStrategy()
     strategy.num_threads = args.num_threads
     strategy.allow_op_delay = False
-    strategy.num_iteration_per_drop_scope = 30
+    strategy.num_iteration_per_drop_scope = 1
     build_strategy = fluid.BuildStrategy()
     build_strategy.reduce_strategy = fluid.BuildStrategy().ReduceStrategy.AllReduce
     
@@ -389,6 +387,7 @@ def train_parallel(args):
         train_dataloader.shuffle_seed = pass_id + 1
         train_args[4].start() # start pyreader
         batch_time_start = time.time()
+        samples_per_step = bs if is_mp_mode() else bs * get_device_num()
         while True:
             fetch_list = [avg_loss.name]
             acc_name_list = [v.name for v in train_args[2]]
@@ -412,13 +411,12 @@ def train_parallel(args):
             except fluid.core.EnforceNotMet as ex:
                 traceback.print_exc()
                 exit(1)
-
-            num_samples += bs if is_mp_mode() else bs * get_device_num()
+            num_samples += samples_per_step
 
             if should_print:
                 fetched_data = [np.mean(np.array(d)) for d in fetch_ret]
-                print("Pass %d, batch %d, loss %s, accucacys: %s, learning_rate %s, py_reader queue_size: %d, avg batch time: %0.2f " %
-                      (pass_id, iters, fetched_data[0], fetched_data[1:-1], fetched_data[-1], train_args[4].queue.size(), (time.time() - batch_time_start) * 1.0 / bs ))
+                print("Pass %d, batch %d, loss %s, accucacys: %s, learning_rate %s, py_reader queue_size: %d, avg batch time: %0.4f secs" %
+                      (pass_id, iters, fetched_data[0], fetched_data[1:-1], fetched_data[-1], train_args[4].queue.size(), (time.time() - batch_time_start) * 1.0 / args.log_period ))
                 batch_time_start = time.time()
             iters += 1
 

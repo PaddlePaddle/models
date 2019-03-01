@@ -17,7 +17,7 @@ TRAINER_ID = int(os.getenv("PADDLE_TRAINER_ID", "0"))
 
 FINISH_EVENT = "FINISH_EVENT"
 class PaddleDataLoader(object):
-    def __init__(self, torch_dataset, indices=None, concurrent=16, queue_size=1024, shuffle=True, batch_size=224, is_distributed=True):
+    def __init__(self, torch_dataset, indices=None, concurrent=16, queue_size=3072, shuffle=True, batch_size=224, is_distributed=True):
         self.torch_dataset = torch_dataset
         self.data_queue = multiprocessing.Queue(queue_size)
         self.indices = indices
@@ -54,7 +54,7 @@ class PaddleDataLoader(object):
                 offset = TRAINER_ID * cnt_per_node
                 worker_indices = self.indices[offset: (offset + cnt_per_node)]
             if len(worker_indices) % self.batch_size != 0:
-                worker_indices += worker_indices[:(self.batch_size - (len(worker_indices) % self.batch_size))]
+                worker_indices += worker_indices[-(self.batch_size - (len(worker_indices) % self.batch_size)):]
             print("shuffle: [%d], shuffle seed: [%d], worker indices len: [%d], %s" % (self.shuffle, self.shuffle_seed, len(worker_indices), worker_indices[:10]))
 
             cnt_per_thread = int(math.ceil(len(worker_indices) / self.concurrent))
