@@ -90,6 +90,8 @@ ActivityNet官方提供了Kinetics的下载工具，具体参考其[官方repo ]
 
     python video2pkl.py kinetics-400_train.csv $Source_dir $Target_dir  8 #以8个进程为例
 
+- 该脚本依赖`ffmpeg`库，请预先安装`ffmpeg`
+
 对于train数据，
 
     Source_dir = $Code_Base_Root/dataset/kinetics/data_k400/train_mp4
