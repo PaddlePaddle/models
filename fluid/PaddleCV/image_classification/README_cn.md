@@ -79,7 +79,7 @@ python train.py \
 * **lr**: initialized learning rate. Default: 0.1.
 * **pretrained_model**: model path for pretraining. Default: None.
 * **checkpoint**: the checkpoint path to resume. Default: None.
-* **model_category**: the category of models, ("models"|"models_name"). Default:"models".
+* **model_category**: the category of models, ("models"|"models_name"). Default:"models_name".
 
 **数据读取器说明：** 数据读取器定义在```reader.py```和```reader_cv2.py```中, 一般, CV2 reader可以提高数据读取速度, reader(PIL)可以得到相对更高的精度, 在[训练阶段](#training-a-model), 默认采用的增广方式是随机裁剪与水平翻转, 而在[评估](#inference)与[推断](#inference)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
 * 旋转
@@ -212,6 +212,8 @@ Models包括两种模型：带有参数名字的模型，和不带有参数名�
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.zip) | 79.26%/94.22% | 79.12%/94.20% |
 
 - Released models: not specify parameter names
+
+**注意：这是model_category = models 的预训练模型**
 
 |model | top-1/top-5 accuracy(PIL)| top-1/top-5 accuracy(CV2) |
 |- |:-: |:-:|
