@@ -58,6 +58,52 @@ bash scripts/train/train_stnet.sh
 
 - 请根据`CUDA_VISIBLE_DEVICES`指定卡数修改`config`文件中的`num_gpus`和`batch_size`配置。
 
+## 模型库结构
+
+### 代码结构
+
+```
+configs/
+  stnet.txt
+  tsn.txt
+  ...
+dataset/
+  youtube/
+  kinetics/
+datareader/
+  feature_readeer.py
+  kinetics_reader.py
+  ...
+metrics/
+  kinetics/
+  youtube8m/
+  muticrop_test/
+  ...
+models/
+  stnet/
+  tsn/
+  ...
+scripts/
+  train/
+  test/
+train.py
+test.py
+infer.py
+```
+
+- `configs`: 各模型配置文件模板
+- `datareader`: 提供Youtube-8M，Kinetics数据集reader
+- `metrics`: Youtube-8，Kinetics数据集评估脚本
+- `models`: 各模型网络结构构建脚本
+- `scripts`: 各模型快速训练评估脚本
+- `train.py`: 一键式训练脚本，可通过指定模型名，配置文件等一键式启动训练
+- `test.py`: 一键式评估脚本，可通过指定模型名，配置文件，模型权重等一键式启动评估
+- `infer.py`: 一键式推断脚本，可通过指定模型名，配置文件，模型权重，待推断文件列表等一键式启动推断
+
+### 配置文件
+
+配置文件分为5段，`[MODEL]`段包含模型结构、数据集等整体配置，`[TRAIN]`，`[VALID]`，`[TEST]`，`[INFER]`段包含训练、验证、评估、推断过程中相关配置。
+
 ## Model Zoo
 
 - 基于Youtube-8M数据集模型：
