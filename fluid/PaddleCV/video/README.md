@@ -6,11 +6,11 @@
 
 | 模型 | 类别  | 描述 |
 | :--------------- | :--------: | :------------: |
-| [Attention Cluster](./models/attention_cluster/README.md) [[论文](https://arxiv.org/abs/1711.09550)] | 视频分类| CVPR'18提出的视频多模态特征注意力聚簇融合方法 |
-| [Attention LSTM](./models/attention_lstm/README.md) [[论文](https://arxiv.org/abs/1503.08909)] | 视频分类| 常用模型，速度快精度高 |
-| [NeXtVLAD](./models/nextvlad/README.md) [[论文](https://arxiv.org/abs/1811.05014)] | 视频分类| 2nd-Youtube-8M最优单模型 |
-| [StNet](./models/stnet/README.md) [[论文](https://arxiv.org/abs/1811.01549)] | 视频分类| AAAI'19提出的视频联合时空建模方法 |
-| [TSN](./models/tsn/README.md) [[论文](https://arxiv.org/abs/1608.00859)] | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
+| [Attention Cluster](./models/attention_cluster/README.md) | 视频分类| CVPR'18提出的视频多模态特征注意力聚簇融合方法 |
+| [Attention LSTM](./models/attention_lstm/README.md)  | 视频分类| 常用模型，速度快精度高 |
+| [NeXtVLAD](./models/nextvlad/README.md)  | 视频分类| 2nd-Youtube-8M最优单模型 |
+| [StNet](./models/stnet/README.md)  | 视频分类| AAAI'19提出的视频联合时空建模方法 |
+| [TSN](./models/tsn/README.md) | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
 
 ## 主要特点
 
@@ -74,6 +74,14 @@ bash scripts/train/train_stnet.sh
 | :-------: | :---: | :---------: | :----: | :----: | :----------: |
 | StNet | 128 | 8卡P40 | 5.1 | 0.69 | [model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz) |
 | TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz) |
+
+## 参考文献
+
+- [Attention Clusters: Purely Attention Based Local Feature Integration for Video Classification](https://arxiv.org/abs/1711.09550), Xiang Long, Chuang Gan, Gerard de Melo, Jiajun Wu, Xiao Liu, Shilei Wen
+- [Beyond Short Snippets: Deep Networks for Video Classification](https://arxiv.org/abs/1503.08909) Joe Yue-Hei Ng, Matthew Hausknecht, Sudheendra Vijayanarasimhan, Oriol Vinyals, Rajat Monga, George Toderici
+- [NeXtVLAD: An Efficient Neural Network to Aggregate Frame-level Features for Large-scale Video Classification](https://arxiv.org/abs/1811.05014), Rongcheng Lin, Jing Xiao, Jianping Fan
+- [StNet:Local and Global Spatial-Temporal Modeling for Human Action Recognition](https://arxiv.org/abs/1811.01549), Dongliang He, Zhichao Zhou, Chuang Gan, Fu Li, Xiao Liu, Yandong Li, Limin Wang, Shilei Wen
+- [Temporal Segment Networks: Towards Good Practices for Deep Action Recognition](https://arxiv.org/abs/1608.00859), Limin Wang, Yuanjun Xiong, Zhe Wang, Yu Qiao, Dahua Lin, Xiaoou Tang, Luc Van Gool
 
 ## 版本更新
 
