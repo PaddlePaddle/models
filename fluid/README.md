@@ -43,9 +43,10 @@ Mask RCNN模型是基于Faster RCNN模型的经典实例分割模型，在原有
 图像语意分割顾名思义是将图像像素按照表达的语义含义的不同进行分组/分割，图像语义是指对图像内容的理解，例如，能够描绘出什么物体在哪里做了什么事情等，分割是指对图片中的每个像素点进行标注，标注属于哪一类别。近年来用在无人车驾驶技术中分割街景来避让行人和车辆、医疗影像分析中辅助诊断等。
 
 在图像语义分割任务中，我们介绍如何基于图像级联网络(Image Cascade
-Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准确率和速度。
+Network,ICNet)和DeepLabv3+进行语义分割。
 
 -  [ICNet](https://github.com/PaddlePaddle/models/tree/release/1.3/fluid/PaddleCV/icnet)
+-  [DeepLabv3+](https://github.com/PaddlePaddle/models/tree/release/1.3/fluid/PaddleCV/deeplabv3+)
 
 图像生成
 -----------
