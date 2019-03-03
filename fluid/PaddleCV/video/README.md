@@ -12,7 +12,7 @@
 | [StNet](./models/stnet/README.md)  | 视频分类| AAAI'19提出的视频联合时空建模方法 |
 | [TSN](./models/tsn/README.md) | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
 
-## 主要特点
+### 主要特点
 
 - 包含视频分类方向的多个主流领先模型，其中Attention LSTM，Attention Cluster和NeXtVLAD是比较流行的特征序列模型，TSN和StNet是两个End-to-End的视频分类模型。Attention LSTM模型速度快精度高，NeXtVLAD是2nd-Youtube-8M比赛中最好的单模型, TSN是基于2D-CNN的经典解决方案。Attention Cluster和StNet是百度自研模型，分别发表于CVPR2018和AAAI2019，是Kinetics600比赛第一名中使用到的模型。
 
@@ -77,7 +77,6 @@ datareader/
 metrics/
   kinetics/
   youtube8m/
-  muticrop_test/
   ...
 models/
   stnet/
@@ -99,10 +98,6 @@ infer.py
 - `train.py`: 一键式训练脚本，可通过指定模型名，配置文件等一键式启动训练
 - `test.py`: 一键式评估脚本，可通过指定模型名，配置文件，模型权重等一键式启动评估
 - `infer.py`: 一键式推断脚本，可通过指定模型名，配置文件，模型权重，待推断文件列表等一键式启动推断
-
-### 配置文件
-
-配置文件分为5段，`[MODEL]`段包含模型结构、数据集等整体配置，`[TRAIN]`，`[VALID]`，`[TEST]`，`[INFER]`段包含训练、验证、评估、推断过程中相关配置。
 
 ## Model Zoo
 
