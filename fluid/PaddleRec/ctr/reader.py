@@ -46,7 +46,7 @@ class CriteoDataset(Dataset):
         return self._reader_creator(file_list, True, trainer_num, trainer_id)
 
     def test(self, file_list):
-        return self._reader_creator(file_list, False, -1)
+        return self._reader_creator(file_list, False, 1, 0)
 
     def infer(self, file_list):
-        return self._reader_creator(file_list, False, -1)
+        return self._reader_creator(file_list, False, 1, 0)
