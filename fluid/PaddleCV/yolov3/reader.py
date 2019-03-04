@@ -115,7 +115,7 @@ class DataSetReader(object):
         image_ids = self.COCO.getImgIds()
         image_ids.sort()
         imgs = copy.deepcopy(self.COCO.loadImgs(image_ids))
-        imgs = imgs[-8:]
+        # imgs = imgs[-8:]
         for img in imgs:
             img['image'] = os.path.join(self.img_dir, img['file_name'])
             assert os.path.exists(img['image']), \
