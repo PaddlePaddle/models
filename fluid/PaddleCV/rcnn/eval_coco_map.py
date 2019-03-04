@@ -85,13 +85,13 @@ def eval():
         im_info = []
         for data in batch_data:
             im_info.append(data[1])
-        result = exe.run(fetch_list=[v.name for v in fetch_list],
-                         feed=feeder.feed(batch_data),
-                         return_numpy=False)
+        results = exe.run(fetch_list=[v.name for v in fetch_list],
+                          feed=feeder.feed(batch_data),
+                          return_numpy=False)
 
-        pred_boxes_v = result[0]
+        pred_boxes_v = results[0]
         if cfg.MASK_ON:
-            masks_v = result[1]
+            masks_v = results[1]
 
         new_lod = pred_boxes_v.lod()
         nmsed_out = pred_boxes_v
@@ -108,6 +108,12 @@ def eval():
     eval_end = time.time()
     total_time = eval_end - eval_start
     print('average time of eval is: {}'.format(total_time / (batch_id + 1)))
+    assert len(dts_res) > 0, "The number of valid bbox detected is zero.\n \
+        Please use reasonable model and check input data."
+
+    assert len(segms_res) > 0, "The number of valid mask detected is zero.\n \
+        Please use reasonable model and check input data.."
+
     with open("detection_bbox_result.json", 'w') as outfile:
         json.dump(dts_res, outfile)
     print("start evaluate bbox using coco api")
