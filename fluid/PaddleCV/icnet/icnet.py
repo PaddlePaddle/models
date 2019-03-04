@@ -235,12 +235,12 @@ def proj_block(input, filter_num, padding=0, dilation=None, stride=1,
 
 
 def sub_net_4(input, input_shape):
-    tmp = interp(input, out_shape=np.ceil(input_shape // 32))
+    tmp = interp(input, out_shape=(input_shape // 32))
     tmp = dilation_convs(tmp)
     tmp = pyramis_pooling(tmp, input_shape)
     tmp = conv(tmp, 1, 1, 256, 1, 1, name="conv5_4_k1")
     tmp = bn(tmp, relu=True)
-    tmp = interp(tmp, input_shape // 16)
+    tmp = interp(tmp, out_shape=np.ceil(input_shape / 16))
     return tmp
 
 

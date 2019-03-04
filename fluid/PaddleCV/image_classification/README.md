@@ -81,7 +81,7 @@ python train.py \
 * **lr**: initialized learning rate. Default: 0.1.
 * **pretrained_model**: model path for pretraining. Default: None.
 * **checkpoint**: the checkpoint path to resume. Default: None.
-* **model_category**: the category of models, ("models"|"models_name"). Default: "models".
+* **model_category**: the category of models, ("models"|"models_name"). Default: "models_name".
 
 Or can start the training step by running the ```run.sh```.
 
@@ -209,6 +209,7 @@ Models are trained by starting with learning rate ```0.1``` and decaying it by `
 |[VGG16](https://paddle-imagenet-models-name.bj.bcebos.com/VGG16_pretrained.zip) | 72.08%/90.63% | 71.65%/90.57% |
 |[VGG19](https://paddle-imagenet-models-name.bj.bcebos.com/VGG19_pretrained.zip) | 72.56%/90.83% | 72.32%/90.98% |
 |[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.zip) | 70.91%/89.54% | 70.51%/89.35% |
+|[MobileNetV2](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_pretrained.zip) | 71.90%/90.55% | 71.53%/90.41% |
 |[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.zip) | 76.35%/92.80% | 76.22%/92.92% |
 |[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.zip) | 77.49%/93.57% | 77.56%/93.64% |
 |[ResNet152](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_pretrained.zip) | 78.12%/93.93% | 77.92%/93.87% |
@@ -219,6 +220,8 @@ Models are trained by starting with learning rate ```0.1``` and decaying it by `
 
 
 - Released models: not specify parameter names
+
+**NOTE: These are trained by using model_category=models**
 
 |model | top-1/top-5 accuracy(PIL)| top-1/top-5 accuracy(CV2) |
 |- |:-: |:-:|

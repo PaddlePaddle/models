@@ -1,4 +1,4 @@
-运行本目录下的范例模型需要安装PaddlePaddle Fluid 1.0版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新 PaddlePaddle 安装版本。
+运行本目录下的范例模型需要安装PaddlePaddle Fluid 1.0版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/install/index_cn.html)中的说明更新 PaddlePaddle 安装版本。
 
 # 机器翻译：RNN Search
 
@@ -24,7 +24,7 @@
 本目录下此范例模型的实现，旨在展示如何用Paddle Fluid实现一个带有注意力机制（Attention）的RNN模型来解决Seq2Seq类问题，以及如何使用带有Beam Search算法的解码器。如果您仅仅只是需要在机器翻译方面有着较好翻译效果的模型，则建议您参考[Transformer的Paddle Fluid实现](https://github.com/PaddlePaddle/models/tree/develop/fluid/neural_machine_translation/transformer)。
 
 ## 模型概览
-RNN Search模型使用了经典的编码器-解码器（Encoder-Decoder）的框架结构来解决Seq2Seq类问题。这种方法先用编码器将源序列编码成vector，再用解码器将该vector解码为目标序列。这其实模拟了人类在进行翻译类任务时的行为：先解析源语言，理解其含义，再根据该含义来写出目标语言的语句。编码器和解码器往往都使用RNN来实现。关于此方法的具体原理和数学表达式，可以参考[深度学习101](http://www.paddlepaddle.org/documentation/docs/zh/0.15.0/beginners_guide/basics/machine_translation/index.html).
+RNN Search模型使用了经典的编码器-解码器（Encoder-Decoder）的框架结构来解决Seq2Seq类问题。这种方法先用编码器将源序列编码成vector，再用解码器将该vector解码为目标序列。这其实模拟了人类在进行翻译类任务时的行为：先解析源语言，理解其含义，再根据该含义来写出目标语言的语句。编码器和解码器往往都使用RNN来实现。关于此方法的具体原理和数学表达式，可以参考[深度学习101](http://paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/basics/machine_translation/index.html).
 
 本模型中，在编码器方面，我们的实现使用了双向循环神经网络（Bi-directional Recurrent Neural Network）；在解码器方面，我们使用了带注意力（Attention）机制的RNN解码器，并同时提供了一个不带注意力机制的解码器实现作为对比；而在预测方面我们使用柱搜索（beam search）算法来生成翻译的目标语句。以下将分别介绍用到的这些方法。
 
@@ -45,7 +45,7 @@ RNN Search模型使用了经典的编码器-解码器（Encoder-Decoder）的框
 ### 注意力机制
 如果编码阶段的输出是一个固定维度的向量，会带来以下两个问题：1）不论源语言序列的长度是5个词还是50个词，如果都用固定维度的向量去编码其中的语义和句法结构信息，对模型来说是一个非常高的要求，特别是对长句子序列而言；2）直觉上，当人类翻译一句话时，会对与当前译文更相关的源语言片段上给予更多关注，且关注点会随着翻译的进行而改变。而固定维度的向量则相当于，任何时刻都对源语言所有信息给予了同等程度的关注，这是不合理的。因此，Bahdanau等人\[[4](#参考文献)\]引入注意力（attention）机制，可以对编码后的上下文片段进行解码，以此来解决长句子的特征学习问题。下面介绍在注意力机制下的解码器结构。
 
-与简单的解码器不同，这里$z_i$的计算公式为：
+与简单的解码器不同，这里$z_i$的计算公式为 （由于Github原生不支持LaTeX公式，请您移步[这里](http://www.paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/basics/machine_translation/index.html)查看）：
 
 $$z_{i+1}=\phi _{\theta '}\left ( c_i,u_i,z_i \right )$$
 

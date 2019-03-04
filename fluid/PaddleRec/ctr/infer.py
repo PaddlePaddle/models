@@ -61,14 +61,14 @@ def infer():
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
     with fluid.framework.program_guard(test_program, startup_program):
-        loss, data_list, auc_var, batch_auc_var = ctr_dnn_model(args.embedding_size, args.sparse_feature_dim)
+        loss, auc_var, batch_auc_var, _, data_list = ctr_dnn_model(args.embedding_size, args.sparse_feature_dim, False)
         
-    exe = fluid.Executor(place)
-    
-    feeder = fluid.DataFeeder(feed_list=data_list, place=place)
-    
-    with fluid.scope_guard(inference_scope):
-        [inference_program, _, fetch_targets] = fluid.io.load_inference_model(args.model_path, exe)
+        exe = fluid.Executor(place)
+
+        feeder = fluid.DataFeeder(feed_list=data_list, place=place)
+
+        fluid.io.load_persistables(executor=exe, dirname=args.model_path,
+                                   main_program=fluid.default_main_program())
 
         def set_zero(var_name):
             param = inference_scope.var(var_name).get_tensor()
@@ -80,9 +80,9 @@ def infer():
             set_zero(name)
 
         for batch_id, data in enumerate(test_reader()):
-            loss_val, auc_val = exe.run(inference_program,
+            loss_val, auc_val = exe.run(test_program,
                 feed=feeder.feed(data),
-                fetch_list=fetch_targets)
+                fetch_list=[loss, auc_var])
             if batch_id % 100 == 0:
                 logger.info("TEST --> batch: {} loss: {} auc: {}".format(batch_id, loss_val/args.batch_size, auc_val))
 

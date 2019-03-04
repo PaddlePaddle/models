@@ -28,11 +28,14 @@ Fluid模型配置和参数文件的工具。
 
 开放环境中的检测人脸，尤其是小的、模糊的和部分遮挡的人脸也是一个具有挑战的任务。我们也介绍了如何基于 [WIDER FACE](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace) 数据训练百度自研的人脸检测PyramidBox模型，该算法于2018年3月份在WIDER FACE的多项评测中均获得 [第一名](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/WiderFace_Results.html)。
 
-Faster RCNN 是典型的两阶段目标检测器，相较于传统提取区域的方法，Faster RCNN中RPN网络通过共享卷积层参数大幅提高提取区域的效率，并提出高质量的候选区域。
+Faster RCNN模型是典型的两阶段目标检测器，相较于传统提取区域的方法，通过RPN网络共享卷积层参数大幅提高提取区域的效率，并提出高质量的候选区域。
+
+Mask RCNN模型是基于Faster RCNN模型的经典实例分割模型，在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。
 
 -  [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleCV/object_detection/README_cn.md)
 -  [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/face_detection/README_cn.md)
--  [Faster RCNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/faster_rcnn/README_cn.md)
+-  [Faster RCNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn/README_cn.md)
+-  [Mask RCNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn/README_cn.md)
 
 图像语义分割
 ------------
