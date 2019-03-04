@@ -51,13 +51,6 @@ def profile_context(profile=True):
         yield
 
 def load_model():
-    load_vars = [
-        x for x in tp.list_vars()
-        if isinstance(x, fluid.framework.Parameter) and x.name.find('image_pool') ==
-        -1
-    ]
-    fluid.io.load_vars(exe, dirname=args.init_weights_path, vars=load_vars)
-    return
     if os.path.isdir(args.init_weights_path):
         load_vars = [
             x for x in tp.list_vars()
