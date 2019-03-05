@@ -136,7 +136,7 @@ def train():
         try:
             ce_acc = ce_info[-2]
         except:
-            logger.error("ce info error")
+            print("ce info error")
         epoch_idx = args.pass_num
         device = get_device(args)
         if args.use_cuda:
