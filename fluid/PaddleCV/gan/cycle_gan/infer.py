@@ -26,8 +26,10 @@ def infer(args):
     data_shape = [-1, 3, 256, 256]
     input = fluid.layers.data(name='input', shape=data_shape, dtype='float32')
     if args.input_style == "A":
+        model_name = 'g_a'
         fake = build_generator_resnet_9blocks(input, name="g_A")
     elif args.input_style == "B":
+        model_name = 'g_b'
         fake = build_generator_resnet_9blocks(input, name="g_B")
     else:
         raise "Input with style [%s] is not supported." % args.input_style
@@ -37,7 +39,7 @@ def infer(args):
         place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-    fluid.io.load_persistables(exe, args.init_model)
+    fluid.io.load_persistables(exe, args.init_model + "/" + model_name)
 
     if not os.path.exists(args.output):
         os.makedirs(args.output)
