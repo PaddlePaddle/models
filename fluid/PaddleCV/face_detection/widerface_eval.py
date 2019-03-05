@@ -44,11 +44,15 @@ def infer(args, config):
         shrink, max_shrink = get_shrink(image.size[1], image.size[0])
 
         det0 = detect_face(image, shrink)
-        det1 = flip_test(image, shrink)
-        [det2, det3] = multi_scale_test(image, max_shrink)
-        det4 = multi_scale_test_pyramid(image, max_shrink)
-        det = np.row_stack((det0, det1, det2, det3, det4))
-        dets = bbox_vote(det)
+        if args.use_gpu:
+            det1 = flip_test(image, shrink)
+            [det2, det3] = multi_scale_test(image, max_shrink)
+            det4 = multi_scale_test_pyramid(image, max_shrink)
+            det = np.row_stack((det0, det1, det2, det3, det4))
+            dets = bbox_vote(det)
+        else:
+            # when infer on cpu, use a simple case
+            dets = det0
 
         keep_index = np.where(dets[:, 4] >= args.confs_threshold)[0]
         dets = dets[keep_index, :]
