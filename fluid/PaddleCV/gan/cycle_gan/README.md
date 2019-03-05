@@ -74,8 +74,8 @@ env CUDA_VISIBLE_DEVICES=0 python train.py
 
 ```
 env CUDA_VISIBLE_DEVICE=0 python infer.py \
-    --init_model="models/1" --input="./data/inputA/*" \
-    --output="./output"
+    --init_model="checkpoints/1" --input="./data/inputA/*" \
+    --input_style A --output="./output"
 ```
 
 训练150轮的模型预测效果如图2和图3所示：
