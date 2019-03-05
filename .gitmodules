@@ -7,3 +7,6 @@
 [submodule "fluid/PaddleNLP/Senta"]
 	path = fluid/PaddleNLP/Senta
 	url = https://github.com/baidu/Senta.git
+[submodule "fluid/PaddleNLP/LARK"]
+	path = fluid/PaddleNLP/LARK
+	url = https://github.com/PaddlePaddle/LARK
