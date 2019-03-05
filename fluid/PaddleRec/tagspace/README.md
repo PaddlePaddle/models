@@ -29,7 +29,7 @@ Tagspace模型学习文本及标签的embedding表示，应用于工业级的标
 
 ## 数据下载及预处理
 
-[ag news dataset](https://github.com/mhjabreel/CharCNN/tree/master/data/ag_news.csv)
+[ag news dataset](https://github.com/mhjabreel/CharCNN/tree/master/train_data/ag_news.csv)
 
 数据格式如下
 
