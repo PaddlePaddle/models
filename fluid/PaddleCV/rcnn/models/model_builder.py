@@ -324,7 +324,7 @@ class RCNN(object):
                                             body_name_list, spatial_scale)
         roi_feat_shuffle = fluid.layers.concat(roi_out_list)
         roi_feat = fluid.layers.gather(roi_feat_shuffle, self.restore_index)
-        roi_feat = fluid.layers.lod_reset(self.roi_feat, pool_rois)
+        roi_feat = fluid.layers.lod_reset(roi_feat, pool_rois)
         fc6 = fluid.layers.fc(input=roi_feat,
                               size=cfg.MLP_HEAD_DIM,
                               act='relu',
