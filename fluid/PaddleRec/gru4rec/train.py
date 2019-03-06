@@ -41,6 +41,8 @@ def parse_args():
     parser.add_argument(
         '--num_devices', type=int, default=1, help='Number of GPU devices')
     parser.add_argument(
+        '--step_num', type=int, default=1000, help='Number of steps')
+    parser.add_argument(
         '--enable_ce',
         action='store_true',
         help='If set, run the task with continuous evaluation logs.')
@@ -116,7 +118,7 @@ def train():
             ce_info.append(newest_ppl)
             if i % args.print_batch == 0:
                 print("step:%d ppl:%.3f" % (i, newest_ppl))
-            if args.enable_ce and i > 1000:
+            if args.enable_ce and i > args.step_num:
                 break
 
         t1 = time.time()
