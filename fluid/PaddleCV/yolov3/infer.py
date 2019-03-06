@@ -34,7 +34,8 @@ def infer():
         fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
     # yapf: enable
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
-    fetch_list = outputs
+    fetch_list = [outputs]
+    # fetch_list = outputs
     image_names = []
     if cfg.image_name is not None:
         image_names.append(cfg.image_name)
@@ -50,13 +51,14 @@ def infer():
         outputs = exe.run(
             fetch_list=[v.name for v in fetch_list],
             feed=feeder.feed(data),
-            return_numpy=True)
+            return_numpy=False)
+        bboxes = np.array(outputs[0])
+        if bboxes.shape[1] != 6:
+            print("No object found in {}".format(image_name))
+        labels = bboxes[:, 0].astype('int32')
+        scores = bboxes[:, 1].astype('float32')
+        boxes = bboxes[:, 2:].astype('float32')
 
-        pred_boxes, pred_scores, pred_labels = box_utils.get_all_yolo_pred(outputs, yolo_anchors,
-                                                            yolo_classes, (input_size, input_size))
-        boxes, scores, labels = box_utils.calc_nms_box_new(pred_boxes, pred_scores, pred_labels, 
-                                                       cfg.valid_thresh, cfg.nms_thresh)
-        boxes = box_utils.rescale_box_in_input_image(boxes, im_shape, input_size)
         path = os.path.join(cfg.image_path, image_name)
         box_utils.draw_boxes_on_image(path, boxes, scores, labels, label_names, cfg.draw_thresh)
 

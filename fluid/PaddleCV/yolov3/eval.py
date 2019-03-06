@@ -20,7 +20,6 @@ import time
 import numpy as np
 import paddle
 import paddle.fluid as fluid
-import box_utils
 import reader
 import models
 from utility import print_arguments, parse_args
@@ -64,6 +63,8 @@ def eval():
     def get_pred_result(boxes, scores, labels, im_id):
         result = []
         for box, score, label in zip(boxes, scores, labels):
+            if score < 0.05:
+                continue
             x1, y1, x2, y2 = box
             w = x2 - x1 + 1
             h = y2 - y1 + 1
@@ -72,41 +73,41 @@ def eval():
             res = {
                     'image_id': im_id,
                     'category_id': label_ids[int(label)],
-                    'bbox': bbox,
-                    'score': score
+                    'bbox': map(float, bbox),
+                    'score': float(score)
             }
             result.append(res)
         return result
 
     dts_res = []
-    fetch_list = outputs
+    fetch_list = [outputs]
     total_time = 0
     for batch_id, batch_data in enumerate(test_reader()):
         start_time = time.time()
         batch_outputs = exe.run(
             fetch_list=[v.name for v in fetch_list],
             feed=feeder.feed(batch_data),
-            return_numpy=False)
-        for data, outputs in zip(batch_data, batch_outputs):
-            im_id = data[1]
-            im_shape = data[2]
-            pred_boxes, pred_scores, pred_labels = box_utils.get_all_yolo_pred(
-                    batch_outputs, yolo_anchors, yolo_classes, (input_size, input_size))
-            boxes, scores, labels = box_utils.calc_nms_box_new(pred_boxes, pred_scores, pred_labels,
-                                                    cfg.valid_thresh, cfg.nms_thresh)
-            boxes = box_utils.rescale_box_in_input_image(boxes, im_shape, input_size)
+            return_numpy=False,
+            use_program_cache=True)
+        lod = batch_outputs[0].lod()[0]
+        nmsed_boxes = np.array(batch_outputs[0])
+        if nmsed_boxes.shape[1] != 6:
+            continue
+        for i in range(len(lod) - 1):
+            im_id = batch_data[i][1]
+            start = lod[i]
+            end = lod[i + 1]
+            if start == end:
+                continue
+            nmsed_box = nmsed_boxes[start:end, :]
+            labels = nmsed_box[:, 0]
+            scores = nmsed_box[:, 1]
+            boxes = nmsed_box[:, 2:6]
             dts_res += get_pred_result(boxes, scores, labels, im_id)
-            end_time = time.time()
-            print("batch id: {}, time: {}".format(batch_id, end_time - start_time))
-            total_time += (end_time - start_time)
 
-            if cfg.debug:
-                if '2014' in cfg.dataset:
-                    img_name = "COCO_val2014_{:012d}.jpg".format(im_id)
-                    box_utils.draw_boxes_on_image(os.path.join("./dataset/coco/val2014", img_name), boxes, scores, labels, label_names)
-                if '2017' in cfg.dataset:
-                    img_name = "{:012d}.jpg".format(im_id)
-                    box_utils.draw_boxes_on_image(os.path.join("./dataset/coco/val2017", img_name), boxes, scores, labels, label_names)
+        end_time = time.time()
+        print("batch id: {}, time: {}".format(batch_id, end_time - start_time))
+        total_time += end_time - start_time
 
     with open("yolov3_result.json", 'w') as outfile:
         json.dump(dts_res, outfile)

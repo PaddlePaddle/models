@@ -156,7 +156,7 @@ class DataSetReader(object):
             h, w, _ = im.shape
             im_scale_x = size / float(w)
             im_scale_y = size / float(h)
-            out_img = cv2.resize(im, None, None, fx=im_scale_x, fy=im_scale_y, interpolation=cv2.INTER_LINEAR)
+            out_img = cv2.resize(im, None, None, fx=im_scale_x, fy=im_scale_y, interpolation=cv2.INTER_CUBIC)
             mean = np.array(mean).reshape((1, 1, -1))
             std = np.array(std).reshape((1, 1, -1))
             out_img = (out_img / 255.0 - mean) / std

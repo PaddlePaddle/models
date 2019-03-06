@@ -99,6 +99,8 @@ class YOLOv3(object):
         self.use_random = use_random
         self.outputs = []
         self.losses = []
+        self.boxes = []
+        self.scores = []
         self.downsample = 32
 
     def build_model(self):
@@ -213,7 +215,19 @@ class YOLOv3(object):
                             # use_label_smooth=False,
                             name="yolo_loss"+str(i))
                     self.losses.append(fluid.layers.reduce_mean(loss))
-                    self.downsample //= 2
+                else:
+                    boxes, scores = fluid.layers.yolo_box(
+                            x=out,
+                            img_size=self.im_shape,
+                            anchors=mask_anchors,
+                            class_num=class_num,
+                            conf_thresh=cfg.valid_thresh,
+                            downsample_ratio=self.downsample,
+                            name="yolo_box"+str(i))
+                    self.boxes.append(boxes)
+                    self.scores.append(fluid.layers.transpose(scores, perm=[0, 2, 1]))
+
+                self.downsample //= 2
 
             layer_outputs.append(out)
 
@@ -221,7 +235,17 @@ class YOLOv3(object):
         return sum(self.losses)
 
     def get_pred(self):
-        return self.outputs
+        yolo_boxes = fluid.layers.concat(self.boxes, axis=1)
+        yolo_scores = fluid.layers.concat(self.scores, axis=2)
+        return fluid.layers.multiclass_nms(
+                bboxes=yolo_boxes,
+                scores=yolo_scores,
+                score_threshold=cfg.valid_thresh,
+                nms_top_k=cfg.nms_topk,
+                keep_top_k=cfg.nms_posk,
+                nms_threshold=cfg.nms_thresh,
+                background_label=-1,
+                name="multiclass_nms")
     
     def get_yolo_anchors(self):
         return self.yolo_anchors
