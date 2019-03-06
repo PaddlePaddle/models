@@ -20,7 +20,7 @@ cudaid=${deeplabv3plus_m:=0,1,2,3} # use 0,1,2,3 card as default
 export CUDA_VISIBLE_DEVICES=$cudaid
 
 FLAGS_benchmark=true  python train.py \
---batch_size=2 \
+--batch_size=8 \
 --train_crop_size=769 \
 --total_step=50 \
 --save_weights_path=output4 \
