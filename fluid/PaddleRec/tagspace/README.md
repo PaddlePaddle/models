@@ -29,7 +29,9 @@ Tagspace模型学习文本及标签的embedding表示，应用于工业级的标
 
 ## 数据下载及预处理
 
-[ag news dataset](https://paddle-tagspace.bj.bcebos.com/data.tar)
+百度云数据地址：[ag news dataset](https://paddle-tagspace.bj.bcebos.com/data.tar)
+
+github原始数据地址： https://github.com/mhjabreel/CharCNN/tree/master/data/
 
 数据格式如下
 
