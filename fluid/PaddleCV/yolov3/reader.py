@@ -38,10 +38,6 @@ class DataSetReader(object):
         self.has_parsed_categpry = False
 
     def _parse_dataset_dir(self, mode):
-        # cfg.data_dir = "dataset/coco"
-        # cfg.train_file_list = 'annotations/instances_val2017.json'
-        # cfg.train_data_dir = 'val2017'
-        # cfg.dataset = "coco2017"
         if 'coco2014' in cfg.dataset:
             cfg.train_file_list = 'annotations/instances_train2014.json'
             cfg.train_data_dir = 'train2014'
@@ -115,7 +111,6 @@ class DataSetReader(object):
         image_ids = self.COCO.getImgIds()
         image_ids.sort()
         imgs = copy.deepcopy(self.COCO.loadImgs(image_ids))
-        # imgs = imgs[-8:]
         for img in imgs:
             img['image'] = os.path.join(self.img_dir, img['file_name'])
             assert os.path.exists(img['image']), \
@@ -141,7 +136,7 @@ class DataSetReader(object):
         else:
             return self._parse_images(is_train=(mode=='train'))
 
-    def get_reader(self, mode, size=416, batch_size=None, shuffle=False, random_shape_iter=0, random_sizes=[], image=None):
+    def get_reader(self, mode, size=416, batch_size=None, shuffle=False, mixup_iter=0, random_sizes=[], image=None):
         assert mode in ['train', 'test', 'infer'], "Unknow mode type!"
         if mode != 'infer':
             assert batch_size is not None, "batch size connot be None in mode {}".format(mode)
@@ -172,6 +167,16 @@ class DataSetReader(object):
             gt_labels = img['gt_labels'].copy()
             gt_scores = np.ones_like(gt_labels)
 
+            if mixup_img:
+                mixup_im = cv2.imread(mixup_img['image'])
+                mixup_im = cv2.cvtColor(mixup_im, cv2.COLOR_BGR2RGB)
+                mixup_gt_boxes = np.array(mixup_img['gt_boxes']).copy()
+                mixup_gt_labels = np.array(mixup_img['gt_labels']).copy()
+                mixup_gt_scores = np.ones_like(mixup_gt_labels)
+                im, gt_boxes, gt_labels, gt_scores = image_utils.image_mixup(im, gt_boxes, \
+                        gt_labels, gt_scores, mixup_im, mixup_gt_boxes, mixup_gt_labels, \
+                        mixup_gt_scores)
+
             im, gt_boxes, gt_labels, gt_scores = image_utils.image_augment(im, gt_boxes, gt_labels, gt_scores, size, mean)
 
             mean = np.array(mean).reshape((1, 1, -1))
@@ -186,6 +191,14 @@ class DataSetReader(object):
                 return np.random.choice(random_sizes)
             return size
 
+        def get_mixup_img(imgs, mixup_iter, total_iter, read_cnt):
+            if total_iter >= mixup_iter:
+                return None
+
+            mixup_idx = np.random.randint(1, len(imgs))
+            mixup_img = imgs[(read_cnt + mixup_idx) % len(imgs)]
+            return mixup_img
+
         def reader():
             if mode == 'train':
                 imgs = self._parse_images_by_mode(mode)
@@ -195,25 +208,21 @@ class DataSetReader(object):
                 total_iter = 0
                 batch_out = []
                 img_size = get_img_size(size, random_sizes)
-                # img_ids = []
                 while True:
                     img = imgs[read_cnt % len(imgs)]
-		    mixup_img = None
+                    mixup_img = get_mixup_img(imgs, mixup_iter, total_iter, read_cnt)
                     read_cnt += 1
                     if read_cnt % len(imgs) == 0 and shuffle:
                         np.random.shuffle(imgs)
                     im, gt_boxes, gt_labels, gt_scores = img_reader_with_augment(img, img_size, cfg.pixel_means, cfg.pixel_stds, mixup_img)
                     batch_out.append([im, gt_boxes, gt_labels, gt_scores])
-                    # img_ids.append((img['id'], mixup_img['id'] if mixup_img else -1))
 
                     if len(batch_out) == batch_size:
-                        # print("img_ids: ", img_ids)
                         yield batch_out
                         batch_out = []
                         total_iter += 1
                         if total_iter % 10 == 0:
                             img_size = get_img_size(size, random_sizes)
-                        # img_ids = []
 
             elif mode == 'test':
                 imgs = self._parse_images_by_mode(mode)
@@ -242,14 +251,14 @@ dsr = DataSetReader()
 def train(size=416, 
           batch_size=64, 
           shuffle=True, 
-          random_shape_iter=0,
+          mixup_iter=0,
           random_sizes=[],
           interval=10,
           pyreader_num=1,
           num_workers=16,
           max_queue=32,
           use_multiprocessing=True):
-    generator = dsr.get_reader('train', size, batch_size, shuffle, random_shape_iter, random_sizes)
+    generator = dsr.get_reader('train', size, batch_size, shuffle, int(mixup_iter/pyreader_num), random_sizes)
 
     if not use_multiprocessing:
         return generator
@@ -267,7 +276,6 @@ def train(size=416,
             generator_out = None
             np.random.seed(1000)
             intervals = pyreader_num * interval
-	    total_random_iter = pyreader_num * random_shape_iter
             cnt = 0
 	    idx = len(random_sizes) - 1
             while True:
@@ -282,9 +290,7 @@ def train(size=416,
                 cnt += 1
                 if cnt % intervals == 0:
                     idx = np.random.randint(len(random_sizes))
-		    if cnt >= total_random_iter:
-			idx = -1
-		    print("Resizing: ", random_sizes[idx])
+                    print("Resizing: ", random_sizes[idx])
         finally:
             if enqueuer is not None:
                 enqueuer.stop()

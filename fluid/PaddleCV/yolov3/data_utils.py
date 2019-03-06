@@ -73,12 +73,11 @@ class GeneratorEnqueuer(object):
                             size = self.random_sizes[queue_idx]
                             for g in generator_output:
                                 g[0] = g[0].transpose((1, 2, 0))
-                                g[0] = image_utils.random_interp(g[0], size, cv2.INTER_LINEAR)
+                                g[0] = image_utils.random_interp(g[0], size)
                                 g[0] = g[0].transpose((2, 0, 1))
                             try:
                                 self.queues[queue_idx].put_nowait(generator_output)
                             except:
-                                timw.sleep(self.wait_time)
                                 continue
                             else:
                                 break

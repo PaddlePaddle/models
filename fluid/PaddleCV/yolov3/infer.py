@@ -35,7 +35,6 @@ def infer():
     # yapf: enable
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
     fetch_list = [outputs]
-    # fetch_list = outputs
     image_names = []
     if cfg.image_name is not None:
         image_names.append(cfg.image_name)
@@ -55,6 +54,7 @@ def infer():
         bboxes = np.array(outputs[0])
         if bboxes.shape[1] != 6:
             print("No object found in {}".format(image_name))
+            continue
         labels = bboxes[:, 0].astype('int32')
         scores = bboxes[:, 1].astype('float32')
         boxes = bboxes[:, 2:].astype('float32')
