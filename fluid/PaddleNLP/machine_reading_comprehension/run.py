@@ -207,10 +207,14 @@ def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
     """
         
     """
+    build_strategy = fluid.BuildStrategy()
+    build_strategy.enable_inplace = False
+    build_strategy.memory_optimize = False
     parallel_executor = fluid.ParallelExecutor(
         main_program=inference_program,
         use_cuda=bool(args.use_gpu),
-        loss_name=avg_cost.name)
+        loss_name=avg_cost.name,
+        build_strategy=build_strategy)
     print_para(inference_program, parallel_executor, logger, args)
 
     # Use test set as validation each pass
@@ -523,7 +527,7 @@ def evaluate(logger, args):
 
             inference_program = main_program.clone(for_test=True)
             eval_loss, bleu_rouge = validation(
-                inference_program, avg_cost, s_probs, e_probs, match, 
+                inference_program, avg_cost, s_probs, e_probs, match,
                 feed_order, place, dev_count, vocab, brc_data, logger, args)
             logger.info('Dev eval loss {}'.format(eval_loss))
             logger.info('Dev eval result: {}'.format(bleu_rouge))
