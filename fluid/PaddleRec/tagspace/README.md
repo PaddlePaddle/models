@@ -29,9 +29,9 @@ Tagspace模型学习文本及标签的embedding表示，应用于工业级的标
 
 ## 数据下载及预处理
 
-百度云数据地址：[ag news dataset](https://paddle-tagspace.bj.bcebos.com/data.tar)
+数据地址： [ag news dataset](https://github.com/mhjabreel/CharCNN/tree/master/data/)
 
-github原始数据地址： https://github.com/mhjabreel/CharCNN/tree/master/data/
+备份数据地址：[ag news dataset](https://paddle-tagspace.bj.bcebos.com/data.tar)
 
 数据格式如下
 
@@ -39,7 +39,7 @@ github原始数据地址： https://github.com/mhjabreel/CharCNN/tree/master/dat
 "3","Wall St. Bears Claw Back Into the Black (Reuters)","Reuters - Short-sellers, Wall Street's dwindling\band of ultra-cynics, are seeing green again."
 ```
 
-解压后，将文本数据转为paddle数据，先将数据放到训练数据目录和测试数据目录
+备份数据解压后，将文本数据转为paddle数据，先将数据放到训练数据目录和测试数据目录
 ```
 mv train.csv raw_big_train_data
 mv test.csv raw_big_test_data
