@@ -53,6 +53,12 @@ def parse_args():
         "--embedding_dim", type=int, default=128, help="embedding dim")
     parser.add_argument(
         '--num_devices', type=int, default=1, help='Number of GPU devices')
+    parser.add_argument(
+        '--step_num', type=int, default=1000, help='Number of steps')
+    parser.add_argument(
+        '--enable_ce',
+        action='store_true',
+        help='If set, run the task with continuous evaluation logs.')
     return parser.parse_args()
 
 
@@ -61,6 +67,10 @@ def get_cards(args):
 
 
 def train(args):
+    if args.enable_ce:
+       SEED = 102
+       fluid.default_startup_program().random_seed = SEED 
+       fluid.default_main_program().random_seed = SEED 
     use_cuda = True if args.use_cuda else False
     parallel = True if args.parallel else False
     print("use_cuda:", use_cuda, "parallel:", parallel)
@@ -87,6 +97,7 @@ def train(args):
         train_exe = exe
 
     total_time = 0.0
+    ce_info = []
     for pass_id in range(args.epochs):
         epoch_idx = pass_id + 1
         print("epoch_%d start" % epoch_idx)
@@ -96,12 +107,15 @@ def train(args):
             i += 1
             loss_val, correct_val = train_exe.run(
                 feed=feeder.feed(data), fetch_list=[avg_cost.name, acc.name])
+            ce_info.append(float(np.mean(correct_val)) / args.batch_size)
             if i % args.print_batch == 0:
                 logger.info(
                     "Train --> pass: {} batch_id: {} avg_cost: {}, acc: {}".
                     format(pass_id, batch_id,
                            np.mean(loss_val),
                            float(np.mean(correct_val)) / args.batch_size))
+            if args.enable_ce and i > args.step_num:
+                break
         t1 = time.time()
         total_time += t1 - t0
         print("epoch:%d num_steps:%d time_cost(s):%f" %
@@ -110,6 +124,40 @@ def train(args):
         fluid.io.save_params(executor=exe, dirname=save_dir)
         print("model saved in %s" % save_dir)
 
+    # only for ce
+    if args.enable_ce:
+        ce_acc = 0
+        try:
+            ce_acc = ce_info[-2]
+        except:
+            print("ce info error")
+        epoch_idx = args.epochs
+        device = get_device(args)
+        if args.use_cuda:
+            gpu_num = device[1]
+            print("kpis\teach_pass_duration_gpu%s\t%s" %
+                (gpu_num, total_time / epoch_idx))
+            print("kpis\ttrain_acc_gpu%s\t%s" %
+                (gpu_num, ce_acc))
+        else:
+            cpu_num = device[1]
+            threads_num = device[2]
+            print("kpis\teach_pass_duration_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, total_time / epoch_idx))
+            print("kpis\ttrain_acc_cpu%s_thread%s\t%s" %
+                (cpu_num, threads_num, ce_acc))
+        
+
+def get_device(args):
+    if args.use_cuda:
+        gpus = os.environ.get("CUDA_VISIBLE_DEVICES", 1)
+        gpu_num = len(gpus.split(','))
+        return "gpu", gpu_num
+    else:
+        threads_num = os.environ.get('NUM_THREADS', 1)
+        cpu_num = os.environ.get('CPU_NUM', 1)
+        return "cpu", int(cpu_num), int(threads_num)
+        
 
 def main():
     args = parse_args()
