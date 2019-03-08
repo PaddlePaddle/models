@@ -53,11 +53,12 @@ def parse_args():
     add_arg('fp16',             bool,  False,                "Enable half precision training with fp16." )
     add_arg('scale_loss',       float, 1.0,                  "Scale loss for fp16." )
     # for distributed
-    add_arg('start_test_pass',    int,  0,                  "Start test after x passes.")
-    add_arg('num_threads',        int,  8,                  "Use num_threads to run the fluid program.")
-    add_arg('reduce_strategy',    str,  "allreduce",        "Choose from reduce or allreduce.")
-    add_arg('log_period',         int,  30,                  "Print period, defualt is 5.")
-    add_arg('memory_optimize',      bool,   True,           "Whether to enable memory optimize.")
+    add_arg('start_test_pass',  int,    0,                  "Start test after x passes.")
+    add_arg('num_threads',      int,    8,                  "Use num_threads to run the fluid program.")
+    add_arg('reduce_strategy',  str,    "allreduce",        "Choose from reduce or allreduce.")
+    add_arg('log_period',       int,    30,                 "Print period, defualt is 5.")
+    add_arg('memory_optimize',  bool,   True,               "Whether to enable memory optimize.")
+    add_arg('best_acc5',        float,  0.93,               "The best acc5, default is 93%.")
     # yapf: enable
     args = parser.parse_args()
     return args
@@ -300,8 +301,12 @@ def train_parallel(args):
         feed_list = [test_prog.global_block().var(varname) for varname in ("image", "label")]
         test_feeder = fluid.DataFeeder(feed_list=feed_list, place=fluid.CUDAPlace(0))
         test_ret = test_parallel(test_exe, test_args, args, test_prog, test_feeder, val_bs)
+        test_acc1, test_acc5 = [np.mean(np.array(v)) for v in test_ret]
         print("Epoch: %d, Test Accuracy: %s, Spend %.2f hours\n" %
-            (epoch_id, [np.mean(np.array(v)) for v in test_ret], (time.time() - over_all_start) / 3600))
+            (epoch_id, [test_acc1, test_acc5], (time.time() - over_all_start) / 3600))
+        if np.mean(np.array(test_ret[1])) > args.best_acc5:
+            print("Achieve the best top-1 acc %f, top-5 acc: %f" % (test_acc1, test_acc5))
+            break
 
     print("total train time: ", time.time() - over_all_start)
 
