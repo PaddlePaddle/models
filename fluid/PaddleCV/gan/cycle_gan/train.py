@@ -147,19 +147,22 @@ def train(args):
         init_model()
     losses = [[], []]
     t_time = 0
+    build_strategy = fluid.BuildStrategy()
+    build_strategy.enable_inplace = False
+    build_strategy.memory_optimize = False
 
     g_A_trainer_program = fluid.CompiledProgram(
         g_A_trainer.program).with_data_parallel(
-            loss_name=g_A_trainer.g_loss_A.name)
+            loss_name=g_A_trainer.g_loss_A.name, build_strategy=build_strategy)
     g_B_trainer_program = fluid.CompiledProgram(
         g_B_trainer.program).with_data_parallel(
-            loss_name=g_B_trainer.g_loss_B.name)
+            loss_name=g_B_trainer.g_loss_B.name, build_strategy=build_strategy)
     d_B_trainer_program = fluid.CompiledProgram(
         d_B_trainer.program).with_data_parallel(
-            loss_name=d_B_trainer.d_loss_B.name)
+            loss_name=d_B_trainer.d_loss_B.name, build_strategy=build_strategy)
     d_A_trainer_program = fluid.CompiledProgram(
         d_A_trainer.program).with_data_parallel(
-            loss_name=d_A_trainer.d_loss_A.name)
+            loss_name=d_A_trainer.d_loss_A.name, build_strategy=build_strategy)
     for epoch in range(args.epoch):
         batch_id = 0
         for i in range(max_images_num):
