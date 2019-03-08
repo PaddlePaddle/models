@@ -30,14 +30,12 @@ import paddle.fluid.core as core
 import paddle.fluid.profiler as profiler
 import utils
 
-## visreader for imagenet
-import torchvision_reader
-
 __all__ = ["FastResNet"]
 
 class FastResNet():
-    def __init__(self, layers=50):
+    def __init__(self, layers=50, is_train=True):
         self.layers = layers
+        self.is_train = is_train
 
     def net(self, input, class_dim=1000, img_size=224, is_train=True):
         layers = self.layers
@@ -54,7 +52,7 @@ class FastResNet():
         num_filters = [64, 128, 256, 512]
 
         conv = self.conv_bn_layer(
-            input=input, num_filters=64, filter_size=7, stride=2, act='relu', is_train=is_train)
+            input=input, num_filters=64, filter_size=7, stride=2, act='relu')
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,
@@ -73,6 +71,7 @@ class FastResNet():
             input=conv, pool_size=pool_size, pool_type='avg', global_pooling=True)
         out = fluid.layers.fc(input=pool,
                               size=class_dim,
+                              act=None,
                               param_attr=fluid.param_attr.ParamAttr(
                                   initializer=fluid.initializer.NormalInitializer(0.0, 0.01),
                                   regularizer=fluid.regularizer.L2Decay(1e-4)),
@@ -87,8 +86,7 @@ class FastResNet():
                       stride=1,
                       groups=1,
                       act=None,
-                      bn_init_value=1.0,
-                      is_train=True):
+                      bn_init_value=1.0):
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -98,10 +96,8 @@ class FastResNet():
             groups=groups,
             act=None,
             bias_attr=False,
-            param_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.MSRAInitializer(),
-                regularizer=fluid.regularizer.L2Decay(1e-4)))
-        return fluid.layers.batch_norm(input=conv, act=act, is_test=not is_train,
+            param_attr=fluid.ParamAttr(regularizer=fluid.regularizer.L2Decay(1e-4)))
+        return fluid.layers.batch_norm(input=conv, act=act, is_test=not self.is_train,
             param_attr=fluid.param_attr.ParamAttr(
                 initializer=fluid.initializer.Constant(bn_init_value),
                 regularizer=None))
@@ -129,3 +125,67 @@ class FastResNet():
         short = self.shortcut(input, num_filters * 4, stride)
 
         return fluid.layers.elementwise_add(x=short, y=conv2, act='relu')
+
+def lr_decay(lrs, epochs, bs, total_image):
+    boundaries = []
+    values = []
+    for idx, epoch in enumerate(epochs):
+        step = total_image // bs[idx]
+        if step * bs[idx] < total_image:
+            step += 1
+        ratio = (lrs[idx][1] - lrs[idx][0])*1.0 / (epoch[1] - epoch[0])
+        lr_base = lrs[idx][0]
+        for s in xrange(epoch[0], epoch[1]):
+            if boundaries:
+                boundaries.append(boundaries[-1] + step)
+            else:
+                boundaries = [step]
+            lr = lr_base + ratio * (s - epoch[0])
+            values.append(lr)
+            print("epoch: [%d], steps: [%d], lr: [%f]" % (s, boundaries[-1], values[-1])) 
+    values.append(lrs[-1])
+    print("epoch: [%d:], steps: [%d:], lr:[%f]" % (epochs[-1][-1], boundaries[-1], values[-1]))
+    return boundaries, values
+
+def linear_lr_decay_by_epoch(lr_values, epochs, bs_values, total_images):
+    from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
+    import paddle.fluid.layers.tensor as tensor
+    import math
+
+    with paddle.fluid.default_main_program()._lr_schedule_guard():
+        global_step = _decay_step_counter()
+
+        lr = tensor.create_global_var(
+            shape=[1],
+            value=0.0,
+            dtype='float32',
+            persistable=True,
+            name="learning_rate")
+        with fluid.layers.control_flow.Switch() as switch:
+            last_steps = 0
+            for idx, epoch_bound in enumerate(epochs):
+                start_epoch, end_epoch = epoch_bound
+                linear_epoch = end_epoch - start_epoch
+                start_lr, end_lr = lr_values[idx]
+                linear_lr = end_lr - start_lr
+                for epoch_step in xrange(linear_epoch):
+                    steps = last_steps + (1 + epoch_step) * total_images / bs_values[idx] + 1
+                    boundary_val = tensor.fill_constant(
+                        shape=[1],
+                        dtype='float32',
+                        value=float(steps),
+                        force_cpu=True)
+                    decayed_lr = start_lr + epoch_step * linear_lr * 1.0 / linear_epoch
+                    with switch.case(global_step < boundary_val):
+                        value_var = tensor.fill_constant(shape=[1], dtype='float32', value=float(decayed_lr))
+                        print("steps: [%d], epoch : [%d], decayed_lr: [%f]" % (steps, start_epoch + epoch_step, decayed_lr))
+                        fluid.layers.tensor.assign(value_var, lr)
+                last_steps = steps
+            last_value_var = tensor.fill_constant(
+                shape=[1],
+                dtype='float32',
+                value=float(lr_values[-1]))
+            with switch.default():
+                fluid.layers.tensor.assign(last_value_var, lr)
+
+        return lr

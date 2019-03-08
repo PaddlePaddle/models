@@ -3,33 +3,30 @@ import os
 import numpy as np
 import math
 import random
-import torchvision
+import torch
+import torch.utils.data
+from torch.utils.data.distributed import DistributedSampler
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
+from torch.utils.data.sampler import Sampler
+import torchvision
 import pickle
 from tqdm import tqdm
 import time
 import multiprocessing
 
-TRAINER_NUMS = int(os.getenv("PADDLE_TRAINERS_NUM", "1"))
-TRAINER_ID = int(os.getenv("PADDLE_TRAINER_ID", "0"))
-
 FINISH_EVENT = "FINISH_EVENT"
 class PaddleDataLoader(object):
-    def __init__(self, torch_dataset, indices=None, concurrent=16, queue_size=3072, shuffle=True, batch_size=224, is_distributed=True):
+    def __init__(self, torch_dataset, indices=None, concurrent=24, queue_size=3072, shuffle=True):
         self.torch_dataset = torch_dataset
         self.data_queue = multiprocessing.Queue(queue_size)
         self.indices = indices
         self.concurrent = concurrent
-        self.shuffle_seed = 0
         self.shuffle = shuffle
-        self.is_distributed = is_distributed
-        self.batch_size = batch_size
 
     def _worker_loop(self, dataset, worker_indices, worker_id):
         cnt = 0
-        print("worker [%d], len: [%d], indices: [%s]"%(worker_id, len(worker_indices), worker_indices[:10]))
         for idx in worker_indices:
             cnt += 1
             img, label = self.torch_dataset[idx]
@@ -43,28 +40,21 @@ class PaddleDataLoader(object):
             worker_processes = []
             total_img = len(self.torch_dataset)
             print("total image: ", total_img)
-            if self.indices is None:
-                self.indices = [i for i in xrange(total_img)]
+            #if self.indices is None:
             if self.shuffle:
-                random.seed(self.shuffle_seed)
+                self.indices = [i for i in xrange(total_img)]
+                random.seed(time.time())
                 random.shuffle(self.indices)
-            worker_indices = self.indices
-            if self.is_distributed:
-                cnt_per_node = len(self.indices) / TRAINER_NUMS
-                offset = TRAINER_ID * cnt_per_node
-                worker_indices = self.indices[offset: (offset + cnt_per_node)]
-            if len(worker_indices) % self.batch_size != 0:
-                worker_indices += worker_indices[-(self.batch_size - (len(worker_indices) % self.batch_size)):]
-            print("shuffle: [%d], shuffle seed: [%d], worker indices len: [%d], %s" % (self.shuffle, self.shuffle_seed, len(worker_indices), worker_indices[:10]))
+                print("shuffle indices: %s ..." % self.indices[:10])
 
-            cnt_per_thread = int(math.ceil(len(worker_indices) / self.concurrent))
+            imgs_per_worker = int(math.ceil(total_img / self.concurrent))
             for i in xrange(self.concurrent):
-                offset = i * cnt_per_thread
-                thread_incides = worker_indices[offset: (offset + cnt_per_thread)]
-                print("loader thread: [%d] start idx: [%d], end idx: [%d], len: [%d]" % (i, offset, (offset + cnt_per_thread), len(thread_incides)))
+                start = i * imgs_per_worker
+                end = (i + 1) * imgs_per_worker if i != self.concurrent - 1 else None
+                sliced_indices = self.indices[start:end]
                 w = multiprocessing.Process(
                     target=self._worker_loop,
-                    args=(self.torch_dataset, thread_incides, i)
+                    args=(self.torch_dataset, sliced_indices, i)
                 )
                 w.daemon = True
                 w.start()
@@ -80,13 +70,13 @@ class PaddleDataLoader(object):
 
         return _reader_creator
 
-def train(traindir, bs, sz, min_scale=0.08):
+def train(traindir, sz, min_scale=0.08):
     train_tfms = [
         transforms.RandomResizedCrop(sz, scale=(min_scale, 1.0)),
         transforms.RandomHorizontalFlip()
     ]
     train_dataset = datasets.ImageFolder(traindir, transforms.Compose(train_tfms))
-    return PaddleDataLoader(train_dataset, batch_size=bs)
+    return PaddleDataLoader(train_dataset).reader()
 
 def test(valdir, bs, sz, rect_val=False):
     if rect_val:
@@ -96,12 +86,12 @@ def test(valdir, bs, sz, rect_val=False):
 
         ar_tfms = [transforms.Resize(int(sz* 1.14)), CropArTfm(idx2ar, sz)]
         val_dataset = ValDataset(valdir, transform=ar_tfms)
-        return PaddleDataLoader(val_dataset, concurrent=1, indices=idx_sorted, shuffle=False, is_distributed=False)
+        return PaddleDataLoader(val_dataset, concurrent=1, indices=idx_sorted, shuffle=False).reader()
 
     val_tfms = [transforms.Resize(int(sz* 1.14)), transforms.CenterCrop(sz)]
     val_dataset = datasets.ImageFolder(valdir, transforms.Compose(val_tfms))
 
-    return PaddleDataLoader(val_dataset, is_distributed=False)
+    return PaddleDataLoader(val_dataset).reader()
 
 
 class ValDataset(datasets.ImageFolder):
@@ -122,6 +112,7 @@ class ValDataset(datasets.ImageFolder):
 
         return sample, target
 
+
 class CropArTfm(object):
     def __init__(self, idx2ar, target_size):
         self.idx2ar, self.target_size = idx2ar, target_size
@@ -134,7 +125,7 @@ class CropArTfm(object):
         else:
             h = int(self.target_size * target_ar)
             size = (self.target_size, h // 8 * 8)
-        return transforms.functional.center_crop(img, size)
+        return torchvision.transforms.functional.center_crop(img, size)
 
 
 def sort_ar(valdir):
@@ -166,5 +157,15 @@ def map_idx2ar(idx_ar_sorted, batch_size):
     return idx2ar
 
 if __name__ == "__main__":
-    reader = test("/work/fast_resnet_data", 64, 128).reader()
-    print(next(reader()))
+    #ds, sampler = create_validation_set("/data/imagenet/validation", 128, 288, True, True)
+    #for item in sampler:
+    #    for idx in item:
+    #        ds[idx]
+
+    import time
+    test_reader = test(valdir="/data/imagenet/validation", bs=64, sz=288, rect_val=True)
+    start_ts = time.time()
+    for idx, data in enumerate(test_reader()):
+        print(idx, data[0], data[0].shape, data[1])
+        if idx == 2:
+            break
