@@ -13,12 +13,14 @@
 
 ## 模型简介
 
-Attention Cluster模型为ActivityNet Kinetics Challenge 2017中最佳序列模型。该模型通过带Shifting Opeation的Attention Clusters处理已抽取好的RGB、Flow、Audio数据，Attention Cluster结构如下图所示。
+Attention Cluster模型为ActivityNet Kinetics Challenge 2017中最佳序列模型。该模型通过带Shifting Opeation的Attention Clusters处理已抽取好的RGB、Flow、Audio特征数据，Attention Cluster结构如下图所示。
 
 <p align="center">
 <img src="../../images/attention_cluster.png" height=300 width=400 hspace='10'/> <br />
 Multimodal Attention Cluster with Shifting Operation
 </p>
+
+Shifting Operation通过对每一个attention单元的输出添加一个独立可学习的线性变换处理后进行L2-normalization，使得各attention单元倾向于学习特征的不同成分，从而让Attention Cluster能更好地学习不同分布的数据，提高整个网络的学习表征能力。
 
 详细内容请参考[Attention Clusters: Purely Attention Based Local Feature Integration for Video Classification](https://arxiv.org/abs/1711.09550)
 
