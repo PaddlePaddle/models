@@ -48,10 +48,10 @@ def eval():
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     # yapf: disable
-    if cfg.pretrained_model:
+    if cfg.weights:
         def if_exist(var):
-            return os.path.exists(os.path.join(cfg.pretrained_model, var.name))
-        fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
+            return os.path.exists(os.path.join(cfg.weights, var.name))
+        fluid.io.load_vars(exe, cfg.weights, predicate=if_exist)
     # yapf: enable
     input_size = model.get_input_size()
     test_reader = reader.test(input_size, 1)
@@ -63,8 +63,6 @@ def eval():
     def get_pred_result(boxes, scores, labels, im_id):
         result = []
         for box, score, label in zip(boxes, scores, labels):
-            if score < 0.05:
-                continue
             x1, y1, x2, y2 = box
             w = x2 - x1 + 1
             h = y2 - y1 + 1

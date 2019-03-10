@@ -28,10 +28,10 @@ def infer():
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     # yapf: disable
-    if cfg.pretrained_model:
+    if cfg.weights:
         def if_exist(var):
-            return os.path.exists(os.path.join(cfg.pretrained_model, var.name))
-        fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
+            return os.path.exists(os.path.join(cfg.weights, var.name))
+        fluid.io.load_vars(exe, cfg.weights, predicate=if_exist)
     # yapf: enable
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
     fetch_list = [outputs]

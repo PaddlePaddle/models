@@ -52,7 +52,7 @@ After data preparation, one can start the training step by:
 
     python train.py \
        --model_save_dir=output/ \
-       --pretrained_model=${path_to_pretrain_model}
+       --pretrain=${path_to_pretrain_model}
        --data_dir=${path_to_data}
 
 - Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
@@ -62,10 +62,10 @@ After data preparation, one can start the training step by:
 
 **download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer. One can download pre-trained model as:
 
-    sh ./weights/download_pretrain_weights.sh
+    sh ./weights/download.sh
 
-Set `pretrained_model` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
-Please make sure that pretrained_model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
+Set `pretrain` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
+Please make sure that pre-trained model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
 
 **Install the [cocoapi](https://github.com/cocodataset/cocoapi):**
 
@@ -111,25 +111,25 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
     python eval.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_pretrain_model} \
+        --weights=${path_to_weights} \
 
 - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
 
 Evalutaion result is shown as below:
 
 ```text
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.370
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.581
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.401
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.236
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.403
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.480
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.297
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.450
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.466
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.309
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.500
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.586
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.377
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.598
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.408
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.244
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.408
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.489
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.308
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.481
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.504
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.351
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.534
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.632
 
 ```
 
@@ -139,7 +139,7 @@ Inference is used to get prediction score or image features based on trained mod
 
     python infer.py \
        --dataset=coco2017 \
-        --pretrained_model=${path_to_pretrain_model}  \
+        --weights=${path_to_weights}  \
         --image_path=data/COCO17/val2017/  \
         --image_name=000000000139.jpg \
         --draw_threshold=0.5

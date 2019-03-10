@@ -80,10 +80,10 @@ def train():
     base_exe = fluid.Executor(place)
     base_exe.run(fluid.default_startup_program())
 
-    if cfg.pretrain_base:
+    if cfg.pretrain:
         def if_exist(var):
-            return os.path.exists(os.path.join(cfg.pretrain_base, var.name))
-        fluid.io.load_vars(base_exe, cfg.pretrain_base, predicate=if_exist)
+            return os.path.exists(os.path.join(cfg.pretrain, var.name))
+        fluid.io.load_vars(base_exe, cfg.pretrain, predicate=if_exist)
 
     if cfg.parallel:
         exe = fluid.ParallelExecutor( use_cuda=bool(cfg.use_gpu), loss_name=loss.name)

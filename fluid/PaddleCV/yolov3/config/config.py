@@ -51,7 +51,7 @@ _C.nms_topk = 400
 _C.nms_posk = 100
 
 # score threshold for draw box in debug mode
-_C.conf_thresh = 0.5
+_C.draw_thresh = 0.5
 
 
 #
@@ -72,10 +72,10 @@ _C.pixel_stds = [0.229, 0.224, 0.225]
 _C.learning_rate = 0.001
 
 # maximum number of iterations
-_C.max_iter = 500000
+_C.max_iter = 500200
 
 # warm up to learning rate 
-_C.warm_up_iter = 1000
+_C.warm_up_iter = 4000
 _C.warm_up_factor = 0.
 
 # lr steps_with_decay
