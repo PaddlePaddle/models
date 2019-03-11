@@ -34,8 +34,6 @@ def roidb_reader(roidb, mode):
     im_height = np.round(roidb['height'] * im_scales)
     im_width = np.round(roidb['width'] * im_scales)
     im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
-    if mode == 'infer':
-        return im, im_info
     if mode == 'val':
         return im, im_info, im_id
 
@@ -75,8 +73,7 @@ def coco(mode,
          padding_total=False,
          shuffle=False):
     total_batch_size = total_batch_size if total_batch_size else batch_size
-    if mode != 'infer':
-        assert total_batch_size % batch_size == 0
+    assert total_batch_size % batch_size == 0
     json_dataset = JsonDataset(mode)
     roidbs = json_dataset.get_roidb()
 
@@ -156,14 +153,6 @@ def coco(mode,
             if len(batch_out) != 0:
                 yield batch_out
 
-        else:
-            for roidb in roidbs:
-                if cfg.image_name not in roidb['image']:
-                    continue
-                im, im_info = roidb_reader(roidb, mode)
-                batch_out = [(im, im_info)]
-                yield batch_out
-
     return reader
 
 
@@ -178,6 +167,8 @@ def test(batch_size, total_batch_size=None, padding_total=False):
 
 def infer(file_path):
     def reader():
+        if not os.path.exists(file_path):
+            raise ValueError("Image path [%s] does not exist." % (file_path))
         im = cv2.imread(file_path)
         im = im.astype(np.float32, copy=False)
         im -= cfg.pixel_means
