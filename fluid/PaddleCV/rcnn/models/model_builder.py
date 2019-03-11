@@ -26,12 +26,12 @@ class RCNN(object):
     def __init__(self,
                  add_conv_body_func=None,
                  add_roi_box_head_func=None,
-                 is_train=True,
+                 mode='train',
                  use_pyreader=True,
                  use_random=True):
         self.add_conv_body_func = add_conv_body_func
         self.add_roi_box_head_func = add_roi_box_head_func
-        self.is_train = is_train
+        self.mode = mode
         self.use_pyreader = use_pyreader
         self.use_random = use_random
         self.spatial_scale = cfg.spatial_scale
@@ -48,7 +48,7 @@ class RCNN(object):
         self.rpn_heads(body_dict, body_name_list)
         # Fast RCNN
         self.fast_rcnn_heads(body_dict, body_name_list)
-        if not self.is_train:
+        if self.mode != 'train':
             self.eval_bbox()
         # Mask RCNN
         if cfg.MASK_ON:
@@ -133,7 +133,9 @@ class RCNN(object):
                     name='gt_masks', shape=[2], dtype='float32', lod_level=3)
 
     def feeds(self):
-        if not self.is_train:
+        if self.mode == 'infer':
+            return [self.image, self.im_info]
+        if self.mode == 'val':
             return [self.image, self.im_info, self.im_id]
         if not cfg.MASK_ON:
             return [
@@ -269,7 +271,7 @@ class RCNN(object):
         rpn_cls_score_prob = fluid.layers.sigmoid(
             self.rpn_cls_score, name='rpn_cls_score_prob')
 
-        param_obj = cfg.TRAIN if self.is_train else cfg.TEST
+        param_obj = cfg.TRAIN if self.mode == 'train' else cfg.TEST
         pre_nms_top_n = param_obj.rpn_pre_nms_top_n
         post_nms_top_n = param_obj.rpn_post_nms_top_n
         nms_thresh = param_obj.rpn_nms_thresh
@@ -286,10 +288,8 @@ class RCNN(object):
             nms_thresh=nms_thresh,
             min_size=min_size,
             eta=eta)
-        if self.is_train:
+        if self.mode == 'train':
             rois = self.generate_labels(rois)
-        rois.persistable = True
-        fluid.layers.Print(rois)
         return rois
 
     def generate_labels(self, input_rois):
@@ -330,7 +330,10 @@ class RCNN(object):
         return rois
 
     def fast_rcnn_heads(self, body_dict, body_name_list):
-        pool_rois = self.rois
+        if self.mode == 'train':
+            pool_rois = self.rois
+        else:
+            pool_rois = self.rpn_rois
         self.roi_feat, rcnn_out = self.add_roi_box_head_func(
             body_dict, pool_rois, body_name_list, self.spatial_scale)
         self.cls_score = fluid.layers.fc(input=rcnn_out,
@@ -370,7 +373,7 @@ class RCNN(object):
             bias_attr=ParamAttr(
                 name='conv5_mask_b', learning_rate=2., regularizer=L2Decay(0.)))
         act_func = None
-        if not self.is_train:
+        if self.mode != 'train':
             act_func = 'sigmoid'
         mask_fcn_logits = fluid.layers.conv2d(
             input=mask_out,
@@ -384,13 +387,13 @@ class RCNN(object):
                 learning_rate=2.,
                 regularizer=L2Decay(0.)))
 
-        if not self.is_train:
+        if self.mode != 'train':
             mask_fcn_logits = fluid.layers.lod_reset(mask_fcn_logits,
                                                      self.pred_result)
         return mask_fcn_logits
 
     def mask_rcnn_heads(self, body_dict, body_name_list):
-        if self.is_train:
+        if self.mode == 'train':
             conv5 = fluid.layers.gather(self.roi_feat, self.roi_has_mask_int32)
             self.mask_fcn_logits = self.SuffixNet(conv5)
         else:

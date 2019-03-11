@@ -202,5 +202,5 @@ env CUDA_VISIBLE_DEVICE=0 python infer.py \
 
 |模型| 错误率|
 |- |:-: |
-|[ocr_ctc_params](https://drive.google.com/open?id=1gsg2ODO2_F2pswXwW5MXpf8RY8-BMRyZ) | 22.3% |
-|[ocr_attention_params](https://drive.google.com/open?id=1Bx7-94mngyTaMA5kVjzYHDPAdXxOYbRm) | 15.8%|
+|[ocr_ctc_params](https://paddle-ocr-models.bj.bcebos.com/ocr_ctc.zip) | 22.3% |
+|[ocr_attention_params](https://paddle-ocr-models.bj.bcebos.com/ocr_attention.zip) | 15.8%|

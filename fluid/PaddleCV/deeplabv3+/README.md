@@ -1,4 +1,4 @@
-DeepLab运行本目录下的程序示例需要使用PaddlePaddle Fluid v1.0.0版本或以上。如果您的PaddlePaddle安装版本低于此要求，请按照安装文档中的说明更新PaddlePaddle安装版本，如果使用GPU，该程序需要使用cuDNN v7版本。
+DeepLab运行本目录下的程序示例需要使用PaddlePaddle Fluid v1.3.0版本或以上。如果您的PaddlePaddle安装版本低于此要求，请按照安装文档中的说明更新PaddlePaddle安装版本，如果使用GPU，该程序需要使用cuDNN v7版本。
 
 
 ## 代码结构
@@ -38,15 +38,16 @@ data/cityscape/
 
 # 预训练模型准备
 
+我们为了节约更多的显存，在这里我们使用Group Norm作为我们的归一化手段。
 如果需要从头开始训练模型，用户需要下载我们的初始化模型
 ```
-wget http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus_xception65_initialize.tar.gz
-tar -xf deeplabv3plus_xception65_initialize.tar.gz && rm deeplabv3plus_xception65_initialize.tar.gz
+wget https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_gn_init.tgz
+tar -xf deeplabv3plus_gn_init.tgz && rm deeplabv3plus_gn_init.tgz
 ```
 如果需要最终训练模型进行fine tune或者直接用于预测，请下载我们的最终模型
 ```
-wget http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus.tar.gz
-tar -xf deeplabv3plus.tar.gz && rm deeplabv3plus.tar.gz
+wget https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_gn.tgz
+tar -xf deeplabv3plus_gn.tgz && rm deeplabv3plus_gn.tgz
 ```
 
 
@@ -59,6 +60,7 @@ python ./train.py \
     --batch_size=1 \
     --train_crop_size=769 \
     --total_step=50 \
+    --norm_type=gn \
     --init_weights_path=$INIT_WEIGHTS_PATH \
     --save_weights_path=$SAVE_WEIGHTS_PATH \
     --dataset_path=$DATASET_PATH
@@ -72,19 +74,25 @@ python train.py --help
 ```
 python ./train.py \
     --batch_size=8 \
-    --parallel=true \
+    --parallel=True \
+    --norm_type=gn \
     --train_crop_size=769 \
     --total_step=90000 \
-    --init_weights_path=deeplabv3plus_xception65_initialize.params \
-    --save_weights_path=output/ \
+    --base_lr=0.001 \
+    --init_weights_path=deeplabv3plus_gn_init \
+    --save_weights_path=output \
     --dataset_path=$DATASET_PATH
 ```
+如果您的显存不足，可以尝试减小`batch_size`，同时等比例放大`total_step`, 保证相乘的值不变，这得益于Group Norm的特性，改变 `batch_size` 并不会显著影响结果，而且能够节约更多显存, 比如您可以设置`--batch_size=4 --total_step=180000`。
+
+如果您希望使用多卡进行训练，可以同比增加`batch_size`，减小`total_step`, 比如原来单卡训练是`--batch_size=4 --total_step=180000`，使用4卡训练则是`--batch_size=16 --total_step=45000`
 
 ### 测试
 执行以下命令在`Cityscape`测试数据集上进行测试：
 ```
 python ./eval.py \
-    --init_weights=deeplabv3plus.params \
+    --init_weights=deeplabv3plus_gn \
+    --norm_type=gn \
     --dataset_path=$DATASET_PATH
 ```
 需要通过选项`--model_path`指定模型文件。测试脚本的输出的评估指标为mean IoU。
@@ -93,15 +101,17 @@ python ./eval.py \
 ## 实验结果
 训练完成以后，使用`eval.py`在验证集上进行测试，得到以下结果：
 ```
-load from: ../models/deeplabv3p
+load from: ../models/deeplabv3plus_gn
 total number 500
-step: 500, mIoU: 0.7873
+step: 500, mIoU: 0.7881
 ```
 
 ## 其他信息
-|数据集 | pretrained model | trained model | mean IoU
-|---|---|---|---|
-|CityScape | [deeplabv3plus_xception65_initialize.tar.gz](http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus_xception65_initialize.tar.gz) | [deeplabv3plus.tar.gz](http://paddlemodels.cdn.bcebos.com/deeplab/deeplabv3plus.tar.gz) | 0.7873 |
+
+|数据集 | norm type | pretrained model | trained model | mean IoU
+|---|---|---|---|---|
+|CityScape | batch norm | [deeplabv3plus_xception65_initialize.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_xception65_initialize.tgz) | [deeplabv3plus.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus.tgz) | 0.7873 |
+|CityScape | group norm | [deeplabv3plus_gn_init.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_gn_init.tgz) | [deeplabv3plus_gn.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_gn.tgz) | 0.7881 |
 
 ## 参考
 
