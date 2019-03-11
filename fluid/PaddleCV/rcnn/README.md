@@ -160,10 +160,8 @@ Mask RCNN:
 Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, one can start infer step by:
 
     python infer.py \
-       --dataset=coco2017 \
         --pretrained_model=${path_to_pretrain_model}  \
-        --image_path=dataset/coco/val2017/  \
-        --image_name=000000000139.jpg \
+        --image_path=dataset/coco/val2017/000000000139.jpg  \
         --draw_threshold=0.6
 
 Visualization of infer result is shown as below:

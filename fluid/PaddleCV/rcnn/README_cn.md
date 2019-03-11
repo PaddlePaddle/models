@@ -156,10 +156,8 @@ Mask RCNN:
 模型推断可以获取图像中的物体及其对应的类别，`infer.py`是主要执行程序，调用示例如下：
 
     python infer.py \
-       --dataset=coco2017 \
         --pretrained_model=${path_to_pretrain_model}  \
-        --image_path=dataset/coco/val2017/  \
-        --image_name=000000000139.jpg \
+        --image_path=dataset/coco/val2017/000000000139.jpg  \
         --draw_threshold=0.6
 
 下图为模型可视化预测结果：

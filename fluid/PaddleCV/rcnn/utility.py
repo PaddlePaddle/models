@@ -161,7 +161,6 @@ def parse_args():
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
     add_arg('image_path',       str,   'dataset/coco/val2017',  "The image path used to inference and visualize.")
-    add_arg('image_name',        str,    '',       "The single image used to inference and visualize.")
     # ce
     parser.add_argument(
             '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
