@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from paddle.utils.image_util import *
 import random
-from PIL import Image
-from PIL import ImageDraw
 import numpy as np
 import xml.etree.ElementTree
 import os
 import time
 import copy
 import six
+import cv2
 from collections import deque
 
 from roidbs import JsonDataset
@@ -76,8 +74,6 @@ def coco(mode,
          total_batch_size=None,
          padding_total=False,
          shuffle=False):
-    cfg.mean_value = np.array(cfg.pixel_means)[np.newaxis,
-                                               np.newaxis, :].astype('float32')
     total_batch_size = total_batch_size if total_batch_size else batch_size
     if mode != 'infer':
         assert total_batch_size % batch_size == 0
@@ -180,5 +176,15 @@ def test(batch_size, total_batch_size=None, padding_total=False):
     return coco('val', batch_size, total_batch_size, shuffle=False)
 
 
-def infer():
-    return coco('infer')
+def infer(file_path):
+    def reader():
+        im = cv2.imread(file_path)
+        im = im.astype(np.float32, copy=False)
+        im -= cfg.pixel_means
+        im_height, im_width, channel = im.shape
+        channel_swap = (2, 0, 1)  #(channel, height, width)
+        im = im.transpose(channel_swap)
+        im_info = np.array([im_height, im_width, 1.0], dtype=np.float32)
+        yield [(im, im_info)]
+
+    return reader
