@@ -42,7 +42,7 @@ def train():
     if not os.path.exists(cfg.model_save_dir):
         os.makedirs(cfg.model_save_dir)
 
-    model = YOLOv3(cfg.model_cfg_path, use_pyreader=cfg.use_pyreader)
+    model = YOLOv3(use_pyreader=cfg.use_pyreader)
     model.build_model()
     input_size = cfg.input_size
     loss = model.loss()

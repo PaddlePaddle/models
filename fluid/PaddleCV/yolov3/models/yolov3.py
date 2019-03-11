@@ -56,11 +56,9 @@ def upsample(input, scale=2,name=None):
 
 class YOLOv3(object):
     def __init__(self, 
-                model_cfg_path,
                 is_train=True,
                 use_pyreader=True,
                 use_random=True):
-        self.model_cfg_path = model_cfg_path
         self.is_train = is_train
         self.use_pyreader = use_pyreader
         self.use_random = use_random

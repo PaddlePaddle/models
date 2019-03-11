@@ -96,7 +96,6 @@ def parse_args():
     # ENV
     add_arg('parallel',         bool,   True,       "Whether use parallel.")
     add_arg('use_gpu',          bool,   True,      "Whether use GPU.")
-    add_arg('model_cfg_path',   str,    'config/yolov3.cfg', "YOLO model config file path.")
     add_arg('model_save_dir',   str,    'checkpoints',     "The path to save model.")
     add_arg('pretrain',         str,    'weights/darknet53', "The pretrain model path.")
     add_arg('weights',          str,    'weights/yolov3', "The weights path.")

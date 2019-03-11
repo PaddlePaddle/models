@@ -17,7 +17,7 @@ def infer():
     if not os.path.exists('output'):
         os.mkdir('output')
 
-    model = YOLOv3(cfg.model_cfg_path, is_train=False)
+    model = YOLOv3(is_train=False)
     model.build_model()
     outputs = model.get_pred()
     input_size = cfg.input_size
