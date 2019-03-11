@@ -42,8 +42,9 @@ class RCNN(object):
         body_dict, body_name_list = self.add_conv_body_func(self.image)
         if cfg.FPN_ON:
             body_dict, self.spatial_scale, body_name_list = FPN.add_fpn_onto_conv_body(
-                body_dict)
+                body_dict, body_name_list)
         # RPN
+        print(body_dict)
         self.rpn_heads(body_dict, body_name_list)
         # Fast RCNN
         self.fast_rcnn_heads(body_dict, body_name_list)
@@ -179,29 +180,37 @@ class RCNN(object):
 
     def FPN_rpn_heads(self, fpn_dict, fpn_name_list):
         fpn_outputs = FPN.add_fpn_rpn_outputs(fpn_dict, self.im_info,
-                                              fpn_name_list)
+                                              fpn_name_list, self.is_train)
         self.rpn_fpn_list = fpn_outputs[0]
         self.rpn_rois_list = fpn_outputs[1]
         self.rpn_roi_probs_list = fpn_outputs[2]
         self.anchors_list = fpn_outputs[3]
         self.var_list = fpn_outputs[4]
+        param_obj = cfg.TRAIN if self.is_train else cfg.TEST
+        post_nms_top_n = param_obj.rpn_post_nms_top_n
         rois_collect = fluid.layers.collect_fpn_proposals(
-            self.rpn_rois_list, self.rpn_roi_probs_list)
+            self.rpn_rois_list,
+            self.rpn_roi_probs_list,
+            cfg.FPN_rpn_max_level,
+            cfg.FPN_rpn_min_level,
+            post_nms_top_n,
+            name='collect')
         if self.is_train:
             rois_collect = self.generate_labels(rois_collect)
+        rois_collect.persistable = True
+        #fluid.layers.Print(rois_collect)
         rois, self.restore_index = fluid.layers.distribute_fpn_proposals(
-            rois_collect)
-        return rois
-        # TODO: 
-        # collect
-        # generate_proposal_labels
-        # distribute
+            rois_collect,
+            cfg.FPN_roi_min_level,
+            cfg.FPN_roi_max_level,
+            cfg.FPN_roi_canonical_level,
+            cfg.FPN_roi_canonical_scale,
+            name='distribute')
+        return rois_collect, rois, self.restore_index
 
     def single_scale_rpn_heads(self, res_dict, res_name_list):
         rpn_input_name = res_name_list[0]
         rpn_input = res_dict[rpn_input_name]
-        print(res_dict)
-        print(rpn_input_name)
         # RPN hidden representation
         dim_out = rpn_input.shape[1]
         rpn_conv = fluid.layers.conv2d(
@@ -279,6 +288,8 @@ class RCNN(object):
             eta=eta)
         if self.is_train:
             rois = self.generate_labels(rois)
+        rois.persistable = True
+        fluid.layers.Print(rois)
         return rois
 
     def generate_labels(self, input_rois):
@@ -317,33 +328,6 @@ class RCNN(object):
             self.roi_has_mask_int32 = mask_out[1]
             self.mask_int32 = mask_out[2]
         return rois
-
-    def add_FPN_roi_head_output(body_dict, pool_rois, body_name_list,
-                                spatial_scale):
-        roi_out_list = FPN.add_FPN_roi_head(body_dict, pool_rois,
-                                            body_name_list, spatial_scale)
-        roi_feat_shuffle = fluid.layers.concat(roi_out_list)
-        roi_feat = fluid.layers.gather(roi_feat_shuffle, self.restore_index)
-        roi_feat = fluid.layers.lod_reset(roi_feat, pool_rois)
-        fc6 = fluid.layers.fc(input=roi_feat,
-                              size=cfg.MLP_HEAD_DIM,
-                              act='relu',
-                              name='fc6',
-                              param_attr=ParamAttr(name='fc6_w'),
-                              bias_attr=ParamAttr(
-                                  name='fc6_b',
-                                  learning_rate=2.,
-                                  regularizer=L2Decay(0.)))
-        fc7 = fluid.layers.fc(input=fc6,
-                              size=cfg.MLP_HEAD_DIM,
-                              act='relu',
-                              name='fc7',
-                              param_attr=ParamAttr(name='fc7_w'),
-                              bias_attr=ParamAttr(
-                                  name='fc7_b',
-                                  learning_rate=2.,
-                                  regularizer=L2Decay(0.)))
-        return roi_feat, fc7
 
     def fast_rcnn_heads(self, body_dict, body_name_list):
         pool_rois = self.rois
@@ -498,7 +482,7 @@ class RCNN(object):
             x=score_pred, label=score_tgt)
         if cfg.FPN_ON:
             rpn_cls_loss = fluid.layers.reduce_sum(rpn_cls_loss)
-            rpn_cls_loss = rpn_cls_loss / (cfg.im_per_batch *
+            rpn_cls_loss = rpn_cls_loss / (cfg.TRAIN.im_per_batch *
                                            cfg.TRAIN.rpn_batch_size_per_im)
         else:
             rpn_cls_loss = fluid.layers.reduce_mean(

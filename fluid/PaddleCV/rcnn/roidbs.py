@@ -46,6 +46,9 @@ class DatasetPath(object):
     def __init__(self, mode):
         self.mode = mode
         mode_name = 'train' if mode == 'train' else 'val'
+        # for debug:
+        mode_name = 'val'
+        # delete when training
         if cfg.dataset != 'coco2014' and cfg.dataset != 'coco2017':
             raise NotImplementedError('Dataset {} not supported'.format(
                 cfg.dataset))

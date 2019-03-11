@@ -136,7 +136,16 @@ _C.TEST.rpn_nms_thresh = 0.7
 _C.ResNet_arch = 'ResNet50'
 
 # Whether use mask rcnn head
-_C.MASK_ON = True
+_C.MASK_ON = False
+
+# Highest backbone level
+_C.HIGHEST_BACKBONE_LVL = 5
+
+# Lowest backbone level
+_C.LOWEST_BACKBONE_LVL = 2
+
+# Hidden layer dimension for RoI box head
+_C.MLP_HEAD_DIM = 1024
 
 # weight for bbox regression targets
 _C.bbox_reg_weights = [0.1, 0.1, 0.2, 0.2]
@@ -157,10 +166,10 @@ _C.rpn_stride = [16.0, 16.0]
 _C.roi_func = 'RoIAlign'
 
 # sampling ratio for roi align
-_C.sampling_ratio = 0
+_C.sampling_ratio = 2
 
 # pooled width and pooled height 
-_C.roi_resolution = 14
+_C.roi_resolution = 7
 
 # spatial scale 
 _C.spatial_scale = 1. / 16.
@@ -198,6 +207,13 @@ _C.FPN_rpn_aspect_ratios = (0.5, 1, 2)
 # RPN anchors start at the size on rpn_min_level
 _C.FPN_rpn_anchor_start_size = 32
 
+# Parameters to map RoI level
+_C.FPN_roi_canonical_level = 224
+_C.FPN_roi_canonical_scale = 4
+
+# Stride of the coarsest FPN level
+_C.FPN_coarsest_stride = 32
+
 #
 # SOLVER options
 #
@@ -214,6 +230,7 @@ _C.warm_up_iter = 500
 _C.warm_up_factor = 1. / 3.
 
 # lr steps_with_decay, 1x: [120000, 160000], 2x: [240000, 320000]
+#_C.lr_steps = [0, 60000, 80000]
 _C.lr_steps = [120000, 160000]
 #_C.lr_steps = [240000, 320000]
 _C.lr_gamma = 0.1

@@ -150,6 +150,7 @@ def parse_args():
     add_arg('rpn_nms_thresh',    float,   0.7,          "NMS threshold used on RPN proposals")
     # TRAIN VAL INFER
     add_arg('MASK_ON', bool, False, "Option for different models. If False, choose faster_rcnn. If True, choose mask_rcnn")
+    add_arg('FPN_ON', bool, False, "Option for different models. If True, add FPN onto the model")
     add_arg('im_per_batch',       int,   1,        "Minibatch size.")
     add_arg('max_size',         int,   1333,    "The resized image height.")
     add_arg('scales', int,  [800],    "The resized image height.")
