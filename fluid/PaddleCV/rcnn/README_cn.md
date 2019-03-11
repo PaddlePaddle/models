@@ -111,17 +111,18 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_saved_model} \
+        --pretrained_model=${path_to_trained_model} \
         --MASK_ON=False
 
 - Mask RCNN
 
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_saved_model} \
+        --pretrained_model=${path_to_trained_model} \
         --MASK_ON=True
 
-    - 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
+    - 通过设置`--pretrained_model=${path_to_trained_model}`指定训练好的模型，注意不是初始化的模型。
+    - 通过设置`export CUDA\_VISIBLE\_DEVICES=0`指定单卡GPU评估。
     - 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
 
 下表为模型评估结果：
@@ -155,11 +156,11 @@ Mask RCNN:
 模型推断可以获取图像中的物体及其对应的类别，`infer.py`是主要执行程序，调用示例如下：
 
     python infer.py \
-        --pretrained_model=${path_to_saved_model}  \
+        --pretrained_model=${path_to_trained_model}  \
         --image_path=dataset/coco/val2017/000000000139.jpg  \
         --draw_threshold=0.6
 
-注意，请正确设置`${path_to_saved_model}`模型和预测图片的路径。
+注意，请正确设置`${path_to_trained_model}`模型和预测图片的路径。
 
 下图为模型可视化预测结果：
 <p align="center">

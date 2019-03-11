@@ -117,16 +117,17 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_saved_model} \
+        --pretrained_model=${path_to_trained_model} \
         --MASK_ON=False
 
 - Mask RCNN
 
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_saved_model} \
+        --pretrained_model=${path_to_trainde_model} \
         --MASK_ON=True
 
+    - Set ```--pretrained_model=${path_to_trained_model}``` to specifiy the trained model, not the initialized model.
     - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
     - Set ```MASK_ON``` to choose Faster RCNN or Mask RCNN model.
 
@@ -159,7 +160,7 @@ Mask RCNN:
 Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, one can start infer step by:
 
     python infer.py \
-        --pretrained_model=${path_to_saved_model}  \
+        --pretrained_model=${path_to_trained_model}  \
         --image_path=dataset/coco/val2017/000000000139.jpg  \
         --draw_threshold=0.6
 
