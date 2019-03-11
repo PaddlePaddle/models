@@ -6,9 +6,7 @@ import paddle.fluid as fluid
 import box_utils
 import reader
 from utility import print_arguments, parse_args
-import models.yolov3 as models
-# from coco_reader import load_label_names
-import json
+from models.yolov3 import YOLOv3
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
 from config import cfg
@@ -19,12 +17,10 @@ def infer():
     if not os.path.exists('output'):
         os.mkdir('output')
 
-    model = models.YOLOv3(cfg.model_cfg_path, is_train=False)
+    model = YOLOv3(cfg.model_cfg_path, is_train=False)
     model.build_model()
     outputs = model.get_pred()
-    input_size = model.get_input_size()
-    yolo_anchors = model.get_yolo_anchors()
-    yolo_classes = model.get_yolo_classes()
+    input_size = cfg.input_size
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     # yapf: disable

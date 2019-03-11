@@ -17,13 +17,13 @@ from __future__ import division
 from __future__ import print_function
 import os
 import time
+import json
 import numpy as np
 import paddle
 import paddle.fluid as fluid
 import reader
-import models.yolov3 as models
+from models.yolov3 import YOLOv3
 from utility import print_arguments, parse_args
-import json
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
 from config import cfg
@@ -39,11 +39,9 @@ def eval():
         if not os.path.exists('output'):
             os.mkdir('output')
 
-    model = models.YOLOv3(cfg.model_cfg_path, is_train=False)
+    model = YOLOv3(cfg.model_cfg_path, is_train=False)
     model.build_model()
     outputs = model.get_pred()
-    yolo_anchors = model.get_yolo_anchors()
-    yolo_classes = model.get_yolo_classes()
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     # yapf: disable
@@ -52,7 +50,7 @@ def eval():
             return os.path.exists(os.path.join(cfg.weights, var.name))
         fluid.io.load_vars(exe, cfg.weights, predicate=if_exist)
     # yapf: enable
-    input_size = model.get_input_size()
+    input_size = cfg.input_size
     test_reader = reader.test(input_size, 1)
     label_names, label_ids = reader.get_label_infos()
     if cfg.debug:

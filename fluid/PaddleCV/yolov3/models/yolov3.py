@@ -22,27 +22,24 @@ from paddle.fluid.initializer import Constant
 from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
 
-from config_parser import ConfigPaser
 from config import cfg
 
-from darknet import add_DarkNet53_conv_body
-from darknet import conv_bn_layer
+from .darknet import add_DarkNet53_conv_body
+from .darknet import conv_bn_layer
 
-def yolo_detection_block(input, channel,i):
+def yolo_detection_block(input, channel, is_test=True, name=None):
     assert channel % 2 == 0, "channel {} cannot be divided by 2".format(channel)
-    conv1 = input
+    conv = input
     for j in range(2):
-        conv1 = conv_bn_layer(conv1, channel, filter_size=1, stride=1, padding=0,i=i+j*2)
-        conv1 = conv_bn_layer(conv1, channel*2, filter_size=3, stride=1, padding=1,i=i+j*2+1)
-    route = conv_bn_layer(conv1, channel, filter_size=1, stride=1, padding=0,i=i+4)
-    tip = conv_bn_layer(route,channel*2, filter_size=3, stride=1, padding=1,i=i+5)
+        conv = conv_bn_layer(conv, channel, filter_size=1, stride=1, padding=0, is_test=is_test, name='{}.{}.0'.format(name, j))
+        conv = conv_bn_layer(conv, channel*2, filter_size=3, stride=1, padding=1, is_test=is_test, name='{}.{}.1'.format(name, j))
+    route = conv_bn_layer(conv, channel, filter_size=1, stride=1, padding=0, is_test=is_test, name='{}.2'.format(name))
+    tip = conv_bn_layer(route,channel*2, filter_size=3, stride=1, padding=1, is_test=is_test, name='{}.tip'.format(name))
     return route, tip
 
-def upsample(out, stride=2,name=None):
-    out = out
-    scale = stride
+def upsample(input, scale=2,name=None):
     # get dynamic upsample output shape
-    shape_nchw = fluid.layers.shape(out)
+    shape_nchw = fluid.layers.shape(input)
     shape_hw = fluid.layers.slice(shape_nchw, axes=[0], starts=[2], ends=[4])
     shape_hw.stop_gradient = True
     in_shape = fluid.layers.cast(shape_hw, dtype='int32')
@@ -51,7 +48,7 @@ def upsample(out, stride=2,name=None):
 
     # reisze by actual_shape
     out = fluid.layers.resize_nearest(
-        input=out,
+        input=input,
         scale=scale,
         actual_shape=out_shape,
         name=name)
@@ -64,7 +61,6 @@ class YOLOv3(object):
                 use_pyreader=True,
                 use_random=True):
         self.model_cfg_path = model_cfg_path
-        self.config_parser = ConfigPaser(model_cfg_path)
         self.is_train = is_train
         self.use_pyreader = use_pyreader
         self.use_random = use_random
@@ -81,98 +77,45 @@ class YOLOv3(object):
 
         self.build_input()
 
-        out = self.image
-
-        self.yolo_anchors = []
-        self.yolo_classes = []
         self.outputs = []
         self.boxes = []
         self.scores = []
 
+        blocks = add_DarkNet53_conv_body(self.image, not self.is_train)
+        for i, block in enumerate(blocks):
+            if i > 0:
+                block = fluid.layers.concat(
+                    input=[route, block],
+                    axis=1)
+            route, tip = yolo_detection_block(block, channel=512//(2**i), 
+                                        is_test=(not self.is_train),
+                                        name="yolo_block.{}".format(i))
+            block_out = fluid.layers.conv2d(
+                input=tip,
+                num_filters=255,
+                filter_size=1,
+                stride=1,
+                padding=0,
+                act=None,
+                param_attr=ParamAttr(initializer=fluid.initializer.Normal(0., 0.02),
+                     name="yolo_output.{}.conv.weights".format(i)),
+                bias_attr=ParamAttr(initializer=fluid.initializer.Constant(0.0),
+                                     regularizer=L2Decay(0.),
+                                     name="yolo_output.{}.conv.bias".format(i)))
+            self.outputs.append(block_out)
 
-        scale1,scale2,scale3 = add_DarkNet53_conv_body(out)
-         
-        # 13*13 scale output
-        route1, tip1 = yolo_detection_block(scale1, channel=512,i=75)
-        # scale1 output
-        scale1_out = fluid.layers.conv2d(
-            input=tip1,
-            num_filters=255,
-            filter_size=1,
-            stride=1,
-            padding=0,
-            act=None,
-            param_attr=ParamAttr(initializer=fluid.initializer.Normal(0., 0.02),
-                 name="conv81_weights"),
-            bias_attr=ParamAttr(initializer=fluid.initializer.Constant(0.0),
-                                 regularizer=L2Decay(0.),
-                                 name="conv81_bias"))
+            if i < len(blocks) - 1:
+                route = conv_bn_layer(
+                    input=route,
+                    ch_out=256//(2**i),
+                    filter_size=1,
+                    stride=1,
+                    padding=0,
+                    is_test=(not self.is_train),
+                    name="yolo_transition.{}".format(i))
+                # upsample
+                route = upsample(route)
 
-        self.outputs.append(scale1_out) 
-
-        route1 = conv_bn_layer(
-            input=route1,
-            ch_out=256,
-            filter_size=1,
-            stride=1,
-            padding=0,
-            i=84)
-        # upsample
-        route1 = upsample(route1)
-
-        # concat
-        route1 = fluid.layers.concat(
-            input=[route1,scale2],
-            axis=1)
-
-        # 26*26 scale output
-        route2, tip2 = yolo_detection_block(route1, channel=256,i=87)
-        
-        # scale2 output
-        scale2_out = fluid.layers.conv2d(
-            input=tip2,
-            num_filters=255,
-            filter_size=1,
-            stride=1,
-            padding=0,
-            act=None,
-            param_attr=ParamAttr(name="conv93_weights"),
-            bias_attr=ParamAttr(name="conv93_bias"))
-
-        self.outputs.append(scale2_out)
-
-        route2 = conv_bn_layer(
-            input=route2,
-            ch_out=128,
-            filter_size=1,
-            stride=1,
-            padding=0,
-            i=96)
-        # upsample
-        route2 = upsample(route2)
-
-        # concat
-        route2 = fluid.layers.concat(
-            input=[route2,scale3],
-            axis=1)
-
-        # 52*52 scale output
-        route3, tip3 = yolo_detection_block(route2, channel=128, i=99)
-
-        # scale3 output
-        scale3_out = fluid.layers.conv2d(
-            input=tip3,
-            num_filters=255,
-            filter_size=1,
-            stride=1,
-            padding=0,
-            act=None,
-            param_attr=ParamAttr(name="conv105_weights"),
-            bias_attr=ParamAttr(name="conv105_bias"))
-
-
-        self.outputs.append(scale3_out)
-        # yolo
 
         anchor_mask = [6,7,8,3,4,5,0,1,2]
         anchors = [10, 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198, 373, 326]
@@ -183,9 +126,7 @@ class YOLOv3(object):
             for m in mask:
                 mask_anchors.append(anchors[2 * m])
                 mask_anchors.append(anchors[2 * m + 1])
-            self.yolo_anchors.append(mask_anchors)
             class_num = int(self.class_num)
-            self.yolo_classes.append(class_num)
 
             if self.is_train:
                 ignore_thresh = float(self.ignore_thresh)
@@ -193,13 +134,13 @@ class YOLOv3(object):
                         x=out,
                         gtbox=self.gtbox,
                         gtlabel=self.gtlabel,
-                        # gtscore=self.gtscore,
+                        gtscore=self.gtscore,
                         anchors=anchors,
                         anchor_mask=mask,
                         class_num=class_num,
                         ignore_thresh=ignore_thresh,
                         downsample_ratio=self.downsample,
-                        # use_label_smooth=False,
+                        use_label_smooth=cfg.label_smooth,
                         name="yolo_loss"+str(i))
                 self.losses.append(fluid.layers.reduce_mean(loss))
             else:
@@ -221,7 +162,6 @@ class YOLOv3(object):
         return sum(self.losses)
 
     def get_pred(self):
-        # return self.outputs
         yolo_boxes = fluid.layers.concat(self.boxes, axis=1)
         yolo_scores = fluid.layers.concat(self.scores, axis=2)
         return fluid.layers.multiclass_nms(
@@ -233,12 +173,6 @@ class YOLOv3(object):
                 nms_threshold=cfg.nms_thresh,
                 background_label=-1,
                 name="multiclass_nms")
-    
-    def get_yolo_anchors(self):
-        return self.yolo_anchors
-
-    def get_yolo_classes(self):
-        return self.yolo_classes
 
     def build_input(self):
         self.image_shape = [3, self.img_height, self.img_width]
@@ -272,8 +206,4 @@ class YOLOv3(object):
         if not self.is_train:
             return [self.image, self.im_id, self.im_shape]
         return [self.image, self.gtbox, self.gtlabel, self.gtscore]
-
-    def get_input_size(self):
-        return cfg.input_size
-
 

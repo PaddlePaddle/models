@@ -24,10 +24,6 @@ cfg = _C
 # Training options
 #
 
-# batch
-
-_C.batch = 8
-
 # Snapshot period
 _C.snapshot_iter = 2000
 
@@ -72,6 +68,9 @@ _C.pixel_stds = [0.229, 0.224, 0.225]
 # SOLVER options
 #
 
+# batch size
+_C.batch_size = 64
+
 # derived learning rate the to get the final learning rate.
 _C.learning_rate = 0.001
 
@@ -92,9 +91,7 @@ _C.weight_decay = 0.0005
 # momentum with SGD
 _C.momentum = 0.9
 
-# decay
-_C.decay = 0.0005
-
+#
 # ENV options
 #
 

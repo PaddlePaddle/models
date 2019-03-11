@@ -255,8 +255,8 @@ def train(size=416,
           random_sizes=[],
           interval=10,
           pyreader_num=1,
-          num_workers=16,
-          max_queue=32,
+          num_workers=2,
+          max_queue=4,
           use_multiprocessing=True):
     generator = dsr.get_reader('train', size, batch_size, shuffle, int(mixup_iter/pyreader_num), random_sizes)
 

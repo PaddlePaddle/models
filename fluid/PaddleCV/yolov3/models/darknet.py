@@ -16,7 +16,6 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 from paddle.fluid.regularizer import L2Decay
-from config import cfg
 
 def conv_bn_layer(input,
                   ch_out,
@@ -24,7 +23,8 @@ def conv_bn_layer(input,
                   stride,
                   padding,
                   act='leaky',
-                  i=0):
+                  is_test=True,
+                  name=None):
     conv1 = fluid.layers.conv2d(
         input=input,
         num_filters=ch_out,
@@ -33,70 +33,67 @@ def conv_bn_layer(input,
         padding=padding,
         act=None,
         param_attr=ParamAttr(initializer=fluid.initializer.Normal(0., 0.02),
-                name="conv" + str(i)+"_weights"),
+                name=name+".conv.weights"),
         bias_attr=False)
 
-    bn_name = "bn" + str(i)
-
+    bn_name = name + ".bn"
     out = fluid.layers.batch_norm(
         input=conv1,
         act=None,
-        is_test=True,
+        is_test=is_test,
         param_attr=ParamAttr(
                 initializer=fluid.initializer.Normal(0., 0.02),
                 regularizer=L2Decay(0.),
-                name=bn_name + '_scale'),
+                name=bn_name + '.scale'),
         bias_attr=ParamAttr(
                 initializer=fluid.initializer.Constant(0.0),
                 regularizer=L2Decay(0.),
-                name=bn_name + '_offset'),
-        moving_mean_name=bn_name + '_mean',
-        moving_variance_name=bn_name + '_var')
+                name=bn_name + '.offset'),
+        moving_mean_name=bn_name + '.mean',
+        moving_variance_name=bn_name + '.var')
     if act == 'leaky':
         out = fluid.layers.leaky_relu(x=out, alpha=0.1)
     return out
 
-def basicblock(input, ch_out, stride,i):
-    """
-    channel: convolution channels for 1x1 conv
-    """
-    conv1 = conv_bn_layer(input, ch_out, 1, 1, 0, i=i)
-    conv2 = conv_bn_layer(conv1, ch_out*2, 3, 1, 1, i=i+1)
-    out = fluid.layers.elementwise_add(x=input, y=conv2, act=None,name="res"+str(i+2))
+def downsample(input, ch_out, filter_size=3, stride=2, padding=1, is_test=True, name=None):
+    return conv_bn_layer(input, 
+            ch_out=ch_out, 
+            filter_size=filter_size, 
+            stride=stride, 
+            padding=padding, 
+            is_test=is_test,
+            name=name)
+
+def basicblock(input, ch_out, is_test=True, name=None):
+    conv1 = conv_bn_layer(input, ch_out, 1, 1, 0, is_test=is_test, name=name+".0")
+    conv2 = conv_bn_layer(conv1, ch_out*2, 3, 1, 1, is_test=is_test, name=name+".1")
+    out = fluid.layers.elementwise_add(x=input, y=conv2, act=None)
     return out
 
-def layer_warp(block_func, input, ch_out, count, stride,i):
-    res_out = block_func(input, ch_out, stride, i=i)
+def layer_warp(block_func, input, ch_out, count, is_test=True, name=None):
+    res_out = block_func(input, ch_out, is_test=is_test, name='{}.0'.format(name))
     for j in range(1, count):
-        res_out = block_func(res_out, ch_out, 1 ,i=i+j*3)
+        res_out = block_func(res_out, ch_out, is_test=is_test, name='{}.{}'.format(name, j))
     return res_out
 
 DarkNet_cfg = {
         53: ([1,2,8,8,4],basicblock)
 }
 
-# num_filters = [32, 64, 128, 256, 512, 1024]
-
-def add_DarkNet53_conv_body(body_input):
-
+def add_DarkNet53_conv_body(body_input, is_test=True):
     stages, block_func = DarkNet_cfg[53]
     stages = stages[0:5]
     conv1 = conv_bn_layer(
-            body_input, ch_out=32, filter_size=3, stride=1, padding=1, act="leaky",i=0)
-    conv2 = conv_bn_layer(
-            conv1, ch_out=64, filter_size=3, stride=2, padding=1, act="leaky", i=1)
-    block3 = layer_warp(block_func, conv2, 32, stages[0], 1, i=2)
-    downsample3 = conv_bn_layer(
-            block3, ch_out=128, filter_size=3, stride=2, padding=1, i=5)
-    block4 = layer_warp(block_func, downsample3, 64, stages[1], 1, i=6)
-    downsample4 = conv_bn_layer(
-            block4, ch_out=256, filter_size=3, stride=2, padding=1, i=12)
-    block5 = layer_warp(block_func, downsample4, 128, stages[2], 1,i=13)
-    downsample5 = conv_bn_layer(
-            block5, ch_out=512, filter_size=3, stride=2, padding=1, i=37)
-    block6 = layer_warp(block_func, downsample5, 256, stages[3], 1, i=38)
-    downsample6 = conv_bn_layer(
-            block6, ch_out=1024, filter_size=3, stride=2, padding=1,  i=62)
-    block7 = layer_warp(block_func, downsample6, 512, stages[4], 1,i=63)
-    return block7,block6,block5
+            body_input, ch_out=32, filter_size=3, stride=1, padding=1, is_test=is_test, name="yolo_input")
+    downsample_ = downsample(conv1, ch_out=conv1.shape[1]*2, is_test=is_test, name="yolo_input.downsample")
+    index = 2
+    blocks = []
+    for i, stage in enumerate(stages):
+        block = layer_warp(block_func, downsample_, 32 *(2**i), stage, is_test=is_test, name="stage.{}".format(i))
+        blocks.append(block)
+        index += 3 * stage
+        if i < len(stages) - 1: # do not downsaple in the last stage
+            downsample_ = downsample(block, ch_out=block.shape[1]*2, is_test=is_test, name="stage.{}.downsample".format(i))
+        index += 1
+    return blocks[-1:-4:-1]
 

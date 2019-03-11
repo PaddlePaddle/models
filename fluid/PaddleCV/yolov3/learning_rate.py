@@ -22,7 +22,7 @@ from paddle.fluid.layers import control_flow
 
 
 def exponential_with_warmup_decay(learning_rate, boundaries, values,
-                                  warmup_iter, warmup_factor, start_step):
+                                  warmup_iter, warmup_factor):
     global_step = lr_scheduler._decay_step_counter()
 
     lr = fluid.layers.create_global_var(

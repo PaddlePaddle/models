@@ -26,7 +26,7 @@ from utility import parse_args, print_arguments, SmoothedValue
 import paddle
 import paddle.fluid as fluid
 import reader
-import models.yolov3 as models
+from models.yolov3 import YOLOv3
 from learning_rate import exponential_with_warmup_decay
 from config import cfg
 
@@ -42,27 +42,21 @@ def train():
     if not os.path.exists(cfg.model_save_dir):
         os.makedirs(cfg.model_save_dir)
 
-    model = models.YOLOv3(cfg.model_cfg_path, use_pyreader=cfg.use_pyreader)
+    model = YOLOv3(cfg.model_cfg_path, use_pyreader=cfg.use_pyreader)
     model.build_model()
-    input_size = model.get_input_size()
+    input_size = cfg.input_size
     loss = model.loss()
     loss.persistable = True
-
-    print("cfg.learning",cfg.learning_rate)
-    print("cfg.decay",cfg.decay)    
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
     print("Found {} CUDA devices.".format(devices_num))
 
-    learning_rate = float(cfg.learning_rate)
+    learning_rate = cfg.learning_rate
     boundaries = cfg.lr_steps
     gamma = cfg.lr_gamma
     step_num = len(cfg.lr_steps)
-    if isinstance(gamma, list):
-        values = [learning_rate * g for g in gamma]
-    else:
-        values = [learning_rate * (gamma**i) for i in range(step_num + 1)]
+    values = [learning_rate * (gamma**i) for i in range(step_num + 1)]
 
     optimizer = fluid.optimizer.Momentum(
         learning_rate=exponential_with_warmup_decay(
@@ -70,10 +64,9 @@ def train():
             boundaries=boundaries,
             values=values,
             warmup_iter=cfg.warm_up_iter,
-            warmup_factor=cfg.warm_up_factor,
-            start_step=cfg.start_iter),
-        regularization=fluid.regularizer.L2Decay(float(cfg.decay)),
-        momentum=float(cfg.momentum))
+            warmup_factor=cfg.warm_up_factor),
+        regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
+        momentum=cfg.momentum)
     optimizer.minimize(loss)
 
     fluid.memory_optimize(fluid.default_main_program())
@@ -98,11 +91,11 @@ def train():
 
     mixup_iter = cfg.max_iter - cfg.start_iter - cfg.no_mixup_iter
     if cfg.use_pyreader:
-        train_reader = reader.train(input_size, batch_size=int(cfg.batch)/devices_num, shuffle=True, mixup_iter=mixup_iter*devices_num, random_sizes=random_sizes, interval=10, pyreader_num=devices_num, use_multiprocessing=cfg.use_multiprocess)
+        train_reader = reader.train(input_size, batch_size=cfg.batch_size/devices_num, shuffle=True, mixup_iter=mixup_iter*devices_num, random_sizes=random_sizes, interval=10, pyreader_num=devices_num, use_multiprocessing=cfg.use_multiprocess)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
     else:
-        train_reader = reader.train(input_size, batch_size=int(cfg.batch), shuffle=True, mixup_iter=mixup_iter, random_sizes=random_sizes, use_multiprocessing=cfg.use_multiprocess)
+        train_reader = reader.train(input_size, batch_size=cfg.batch_size, shuffle=True, mixup_iter=mixup_iter, random_sizes=random_sizes, use_multiprocessing=cfg.use_multiprocess)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     def save_model(postfix):
