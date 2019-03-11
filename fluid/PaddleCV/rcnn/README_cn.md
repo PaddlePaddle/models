@@ -111,14 +111,14 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_pretrain_model} \
+        --pretrained_model=${path_to_saved_model} \
         --MASK_ON=False
 
 - Mask RCNN
 
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_pretrain_model} \
+        --pretrained_model=${path_to_saved_model} \
         --MASK_ON=True
 
     - 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
