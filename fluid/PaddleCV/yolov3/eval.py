@@ -21,12 +21,12 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 import reader
-import models
+import models.yolov3 as models
 from utility import print_arguments, parse_args
 import json
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
-from config.config import cfg
+from config import cfg
 
 
 def eval():
@@ -42,7 +42,6 @@ def eval():
     model = models.YOLOv3(cfg.model_cfg_path, is_train=False)
     model.build_model()
     outputs = model.get_pred()
-    hyperparams = model.get_hyperparams()
     yolo_anchors = model.get_yolo_anchors()
     yolo_classes = model.get_yolo_classes()
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()

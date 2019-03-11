@@ -26,7 +26,7 @@ from collections import deque
 from paddle.fluid import core
 import argparse
 import functools
-from config.config import *
+from config import *
 
 
 def print_arguments(args):

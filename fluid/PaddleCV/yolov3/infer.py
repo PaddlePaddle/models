@@ -6,12 +6,12 @@ import paddle.fluid as fluid
 import box_utils
 import reader
 from utility import print_arguments, parse_args
-import models
+import models.yolov3 as models
 # from coco_reader import load_label_names
 import json
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
-from config.config import cfg
+from config import cfg
 
 
 def infer():

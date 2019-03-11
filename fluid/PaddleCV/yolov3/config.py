@@ -13,7 +13,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from .edict import AttrDict
+from edict import AttrDict
 import six
 import numpy as np
 
@@ -23,6 +23,10 @@ cfg = _C
 #
 # Training options
 #
+
+# batch
+
+_C.batch = 8
 
 # Snapshot period
 _C.snapshot_iter = 2000
@@ -88,7 +92,9 @@ _C.weight_decay = 0.0005
 # momentum with SGD
 _C.momentum = 0.9
 
-#
+# decay
+_C.decay = 0.0005
+
 # ENV options
 #
 

@@ -28,7 +28,7 @@ import box_utils
 import image_utils
 from pycocotools.coco import COCO
 from data_utils import GeneratorEnqueuer
-from config.config import cfg
+from config import cfg
 
 
 class DataSetReader(object):

@@ -26,9 +26,9 @@ from utility import parse_args, print_arguments, SmoothedValue
 import paddle
 import paddle.fluid as fluid
 import reader
-import models
+import models.yolov3 as models
 from learning_rate import exponential_with_warmup_decay
-from config.config import cfg
+from config import cfg
 
 
 def train():
@@ -48,12 +48,14 @@ def train():
     loss = model.loss()
     loss.persistable = True
 
-    hyperparams = model.get_hyperparams()
+    print("cfg.learning",cfg.learning_rate)
+    print("cfg.decay",cfg.decay)    
+
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
     print("Found {} CUDA devices.".format(devices_num))
 
-    learning_rate = float(hyperparams['learning_rate'])
+    learning_rate = float(cfg.learning_rate)
     boundaries = cfg.lr_steps
     gamma = cfg.lr_gamma
     step_num = len(cfg.lr_steps)
@@ -70,8 +72,8 @@ def train():
             warmup_iter=cfg.warm_up_iter,
             warmup_factor=cfg.warm_up_factor,
             start_step=cfg.start_iter),
-        regularization=fluid.regularizer.L2Decay(float(hyperparams['decay'])),
-        momentum=float(hyperparams['momentum']))
+        regularization=fluid.regularizer.L2Decay(float(cfg.decay)),
+        momentum=float(cfg.momentum))
     optimizer.minimize(loss)
 
     fluid.memory_optimize(fluid.default_main_program())
@@ -96,11 +98,11 @@ def train():
 
     mixup_iter = cfg.max_iter - cfg.start_iter - cfg.no_mixup_iter
     if cfg.use_pyreader:
-        train_reader = reader.train(input_size, batch_size=int(hyperparams['batch'])/devices_num, shuffle=True, mixup_iter=mixup_iter*devices_num, random_sizes=random_sizes, interval=10, pyreader_num=devices_num, use_multiprocessing=cfg.use_multiprocess)
+        train_reader = reader.train(input_size, batch_size=int(cfg.batch)/devices_num, shuffle=True, mixup_iter=mixup_iter*devices_num, random_sizes=random_sizes, interval=10, pyreader_num=devices_num, use_multiprocessing=cfg.use_multiprocess)
         py_reader = model.py_reader
         py_reader.decorate_paddle_reader(train_reader)
     else:
-        train_reader = reader.train(input_size, batch_size=int(hyperparams['batch']), shuffle=True, mixup_iter=mixup_iter, random_sizes=random_sizes, use_multiprocessing=cfg.use_multiprocess)
+        train_reader = reader.train(input_size, batch_size=int(cfg.batch), shuffle=True, mixup_iter=mixup_iter, random_sizes=random_sizes, use_multiprocessing=cfg.use_multiprocess)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     def save_model(postfix):
