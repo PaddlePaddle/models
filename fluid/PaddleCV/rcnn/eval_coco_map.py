@@ -29,7 +29,7 @@ import json
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
 from config import cfg
-from roidbs import DatasetPath
+from data_utils import DatasetPath
 
 
 def eval():

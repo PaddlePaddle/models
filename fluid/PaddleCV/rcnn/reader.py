@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from paddle.utils.image_util import *
 import random
-from PIL import Image
-from PIL import ImageDraw
 import numpy as np
 import xml.etree.ElementTree
 import os
 import time
 import copy
 import six
+import cv2
 from collections import deque
 
 from roidbs import JsonDataset
@@ -36,8 +34,6 @@ def roidb_reader(roidb, mode):
     im_height = np.round(roidb['height'] * im_scales)
     im_width = np.round(roidb['width'] * im_scales)
     im_info = np.array([im_height, im_width, im_scales], dtype=np.float32)
-    if mode == 'infer':
-        return im, im_info
     if mode == 'val':
         return im, im_info, im_id
 
@@ -76,11 +72,8 @@ def coco(mode,
          total_batch_size=None,
          padding_total=False,
          shuffle=False):
-    cfg.mean_value = np.array(cfg.pixel_means)[np.newaxis,
-                                               np.newaxis, :].astype('float32')
     total_batch_size = total_batch_size if total_batch_size else batch_size
-    if mode != 'infer':
-        assert total_batch_size % batch_size == 0
+    assert total_batch_size % batch_size == 0
     json_dataset = JsonDataset(mode)
     roidbs = json_dataset.get_roidb()
 
@@ -160,14 +153,6 @@ def coco(mode,
             if len(batch_out) != 0:
                 yield batch_out
 
-        else:
-            for roidb in roidbs:
-                if cfg.image_name not in roidb['image']:
-                    continue
-                im, im_info = roidb_reader(roidb, mode)
-                batch_out = [(im, im_info)]
-                yield batch_out
-
     return reader
 
 
@@ -180,5 +165,17 @@ def test(batch_size, total_batch_size=None, padding_total=False):
     return coco('val', batch_size, total_batch_size, shuffle=False)
 
 
-def infer():
-    return coco('infer')
+def infer(file_path):
+    def reader():
+        if not os.path.exists(file_path):
+            raise ValueError("Image path [%s] does not exist." % (file_path))
+        im = cv2.imread(file_path)
+        im = im.astype(np.float32, copy=False)
+        im -= cfg.pixel_means
+        im_height, im_width, channel = im.shape
+        channel_swap = (2, 0, 1)  #(channel, height, width)
+        im = im.transpose(channel_swap)
+        im_info = np.array([im_height, im_width, 1.0], dtype=np.float32)
+        yield [(im, im_info)]
+
+    return reader

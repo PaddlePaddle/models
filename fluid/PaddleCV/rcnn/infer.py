@@ -8,26 +8,36 @@ import reader
 from utility import print_arguments, parse_args
 import models.model_builder as model_builder
 import models.resnet as resnet
-import json
-from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval, Params
 from config import cfg
-from roidbs import DatasetPath
+from data_utils import DatasetPath
 
 
 def infer():
 
-    data_path = DatasetPath('val')
-    test_list = data_path.get_file_list()
+    try:
+        from pycocotools.coco import COCO
+        from pycocotools.cocoeval import COCOeval, Params
 
-    cocoGt = COCO(test_list)
-    num_id_to_cat_id_map = {i + 1: v for i, v in enumerate(cocoGt.getCatIds())}
-    category_ids = cocoGt.getCatIds()
-    label_list = {
-        item['id']: item['name']
-        for item in cocoGt.loadCats(category_ids)
-    }
-    label_list[0] = ['background']
+        data_path = DatasetPath('val')
+        test_list = data_path.get_file_list()
+        coco_api = COCO(test_list)
+        cid = coco_api.getCatIds()
+        cat_id_to_num_id_map = {
+            v: i + 1
+            for i, v in enumerate(coco_api.getCatIds())
+        }
+        category_ids = coco_api.getCatIds()
+        labels_map = {
+            cat_id_to_num_id_map[item['id']]: item['name']
+            for item in coco_api.loadCats(category_ids)
+        }
+        labels_map[0] = 'background'
+    except:
+        print("The COCO dataset is not exist, use the defalut mapping of class "
+              "index and real category name on COCO17.")
+        assert cfg.dataset == 'coco2017'
+        labels_map = coco17_labels()
+
     image_shape = [3, cfg.TEST.max_size, cfg.TEST.max_size]
     class_nums = cfg.class_num
 
@@ -43,12 +53,14 @@ def infer():
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     # yapf: disable
-    if cfg.pretrained_model:
-        def if_exist(var):
-            return os.path.exists(os.path.join(cfg.pretrained_model, var.name))
-        fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
+    if not os.path.exists(cfg.pretrained_model):
+        raise ValueError("Model path [%s] does not exist." % (cfg.pretrained_model))
+
+    def if_exist(var):
+        return os.path.exists(os.path.join(cfg.pretrained_model, var.name))
+    fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
     # yapf: enable
-    infer_reader = reader.infer()
+    infer_reader = reader.infer(cfg.image_path)
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     dts_res = []
@@ -67,14 +79,14 @@ def infer():
         masks_v = result[1]
     new_lod = pred_boxes_v.lod()
     nmsed_out = pred_boxes_v
-    path = os.path.join(cfg.image_path, cfg.image_name)
     image = None
     if cfg.MASK_ON:
         segms_out = segm_results(nmsed_out, masks_v, im_info)
-        image = draw_mask_on_image(path, segms_out, cfg.draw_threshold)
+        image = draw_mask_on_image(cfg.image_path, segms_out,
+                                   cfg.draw_threshold)
 
-    draw_bounding_box_on_image(path, nmsed_out, cfg.draw_threshold, label_list,
-                               num_id_to_cat_id_map, image)
+    draw_bounding_box_on_image(cfg.image_path, nmsed_out, cfg.draw_threshold,
+                               labels_map, image)
 
 
 if __name__ == '__main__':
