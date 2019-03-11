@@ -50,9 +50,8 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
 训练前需要首先下载[cocoapi](https://github.com/cocodataset/cocoapi)：
 
-    # COCOAPI=/path/to/clone/cocoapi
-    git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
-    cd $COCOAPI/PythonAPI
+    git clone https://github.com/cocodataset/cocoapi.git
+    cd cocoapi/PythonAPI
     # if cython is not installed
     pip install Cython
     # Install into global site-packages
@@ -79,11 +78,11 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
        --data_dir=${path_to_data} \
        --MASK_ON=True
 
-- 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
-- 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
-- 可选参数见：
+    - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
+    - 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
+    - 可选参数见：
 
-    python train.py --help
+        python train.py --help
 
 **数据读取器说明：** 数据读取器定义在reader.py中。所有图像将短边等比例缩放至`scales`，若长边大于`max_size`, 则再次将长边等比例缩放至`max_size`。在训练阶段，对图像采用水平翻转。支持将同一个batch内的图像padding为相同尺寸。
 
@@ -122,8 +121,8 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
         --pretrained_model=${path_to_pretrain_model} \
         --MASK_ON=True
 
-- 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
-- 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
+    - 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
+    - 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
 
 下表为模型评估结果：
 
@@ -156,9 +155,11 @@ Mask RCNN:
 模型推断可以获取图像中的物体及其对应的类别，`infer.py`是主要执行程序，调用示例如下：
 
     python infer.py \
-        --pretrained_model=${path_to_pretrain_model}  \
+        --pretrained_model=${path_to_saved_model}  \
         --image_path=dataset/coco/val2017/000000000139.jpg  \
         --draw_threshold=0.6
+
+注意，请正确设置`${path_to_saved_model}`模型和预测图片的路径。
 
 下图为模型可视化预测结果：
 <p align="center">
