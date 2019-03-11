@@ -33,8 +33,8 @@ def infer():
         }
         labels_map[0] = 'background'
     except:
-        print("The COCO dataset is not exist, use the defalut mapping of class "
-              "index and real category name on COCO17.")
+        print("The COCO dataset or COCO API is not exist, use the default "
+              "mapping of class index and real category name on COCO17.")
         assert cfg.dataset == 'coco2017'
         labels_map = coco17_labels()
 

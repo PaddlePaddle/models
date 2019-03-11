@@ -170,7 +170,7 @@ python infer.py \
     --draw_threshold=0.6
 ```
 
-注意，请正确设置`${path_to_trained_model}`模型和预测图片的路径。
+注意，请正确设置模型路径`${path_to_trained_model}`和预测图片路径。默认使用GPU设备，也可通过设置`--use_gpu=False`使用CPU设备。可通过设置`draw_threshold`调节得分阈值控制检测框的个数。
 
 下图为模型可视化预测结果：
 <p align="center">

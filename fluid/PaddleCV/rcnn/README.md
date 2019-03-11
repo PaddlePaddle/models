@@ -174,7 +174,7 @@ python infer.py \
     --draw_threshold=0.6
 ```
 
-Please set the model path and image path correctly.
+Please set the model path and image path correctly. GPU device is used by default, you can set `--use_gpu=False` to switch to CPU device. And you can set `draw_threshold` to tune score threshold to control the number of output detection boxes.
 
 Visualization of infer result is shown as below:
 <p align="center">
