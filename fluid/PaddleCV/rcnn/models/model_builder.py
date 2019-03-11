@@ -44,7 +44,7 @@ class RCNN(object):
             body_dict, self.spatial_scale, body_name_list = FPN.add_fpn_onto_conv_body(
                 body_dict, body_name_list)
         # RPN
-        print(body_dict)
+        #print(body_dict)
         self.rpn_heads(body_dict, body_name_list)
         # Fast RCNN
         self.fast_rcnn_heads(body_dict, body_name_list)
@@ -182,13 +182,13 @@ class RCNN(object):
 
     def FPN_rpn_heads(self, fpn_dict, fpn_name_list):
         fpn_outputs = FPN.add_fpn_rpn_outputs(fpn_dict, self.im_info,
-                                              fpn_name_list, self.is_train)
+                                              fpn_name_list, self.mode)
         self.rpn_fpn_list = fpn_outputs[0]
         self.rpn_rois_list = fpn_outputs[1]
         self.rpn_roi_probs_list = fpn_outputs[2]
         self.anchors_list = fpn_outputs[3]
         self.var_list = fpn_outputs[4]
-        param_obj = cfg.TRAIN if self.is_train else cfg.TEST
+        param_obj = cfg.TRAIN if self.mode == 'train' else cfg.TEST
         post_nms_top_n = param_obj.rpn_post_nms_top_n
         rois_collect = fluid.layers.collect_fpn_proposals(
             self.rpn_rois_list,
@@ -197,9 +197,11 @@ class RCNN(object):
             cfg.FPN_rpn_min_level,
             post_nms_top_n,
             name='collect')
-        if self.is_train:
-            rois_collect = self.generate_labels(rois_collect)
         rois_collect.persistable = True
+        fluid.layers.Print(rois_collect)
+        if self.mode == 'train':
+            rois_collect = self.generate_labels(rois_collect)
+        #rois_collect.persistable = True
         #fluid.layers.Print(rois_collect)
         rois, self.restore_index = fluid.layers.distribute_fpn_proposals(
             rois_collect,
@@ -293,6 +295,8 @@ class RCNN(object):
         return rois
 
     def generate_labels(self, input_rois):
+        #input_rois.persistable=True
+        #fluid.layers.Print(input_rois)
         outs = fluid.layers.generate_proposal_labels(
             rpn_rois=input_rois,
             gt_classes=self.gt_label,

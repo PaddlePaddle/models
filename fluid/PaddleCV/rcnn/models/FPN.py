@@ -117,7 +117,7 @@ def add_topdown_lateral_module(index, res_dict, res_name_list, fpn_inner_output,
         lateral, td, name=fpn_inner_name)
 
 
-def add_fpn_rpn_outputs(fpn_dict, im_info, fpn_name_list, is_train):
+def add_fpn_rpn_outputs(fpn_dict, im_info, fpn_name_list, mode):
     num_anchors = len(cfg.FPN_rpn_aspect_ratios)
     k_max = cfg.FPN_rpn_max_level
     k_min = cfg.FPN_rpn_min_level
@@ -190,7 +190,7 @@ def add_fpn_rpn_outputs(fpn_dict, im_info, fpn_name_list, is_train):
             stride=(2.**lvl, 2.**lvl))
         rpn_cls_probs_fpn = fluid.layers.sigmoid(
             rpn_cls_logits_fpn, name='rpn_cls_probs_fpn' + slvl)
-        param_obj = cfg.TRAIN if is_train else cfg.TEST
+        param_obj = cfg.TRAIN if mode == 'train' else cfg.TEST
         pre_nms_top_n = param_obj.rpn_pre_nms_top_n
         post_nms_top_n = param_obj.rpn_post_nms_top_n
         nms_thresh = param_obj.rpn_nms_thresh

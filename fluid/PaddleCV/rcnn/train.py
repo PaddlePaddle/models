@@ -102,8 +102,13 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
 
     if cfg.parallel:
+        build_strategy = fluid.BuildStrategy()
+        build_strategy.enable_inplace = False
+        build_strategy.memory_optimize = False
         train_exe = fluid.ParallelExecutor(
-            use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
+            use_cuda=bool(cfg.use_gpu),
+            loss_name=loss.name,
+            build_strategy=build_strategy)
 
     shuffle = True
     if cfg.enable_ce:
