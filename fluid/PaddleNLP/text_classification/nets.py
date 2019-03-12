@@ -101,7 +101,7 @@ def gru_net(data,
             hid_dim=128,
             hid_dim2=96,
             class_dim=2,
-            emb_lr=400.0):
+            emb_lr=30.0):
     """
     gru net
     """
