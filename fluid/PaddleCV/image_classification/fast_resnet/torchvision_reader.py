@@ -18,12 +18,13 @@ import multiprocessing
 
 FINISH_EVENT = "FINISH_EVENT"
 class PaddleDataLoader(object):
-    def __init__(self, torch_dataset, indices=None, concurrent=24, queue_size=3072, shuffle=True):
+    def __init__(self, torch_dataset, indices=None, concurrent=24, queue_size=3072, shuffle=True, shuffle_seed=0):
         self.torch_dataset = torch_dataset
         self.data_queue = multiprocessing.Queue(queue_size)
         self.indices = indices
         self.concurrent = concurrent
         self.shuffle = shuffle
+        self.shuffle_seed=shuffle_seed
 
     def _worker_loop(self, dataset, worker_indices, worker_id):
         cnt = 0
@@ -40,10 +41,9 @@ class PaddleDataLoader(object):
             worker_processes = []
             total_img = len(self.torch_dataset)
             print("total image: ", total_img)
-            #if self.indices is None:
             if self.shuffle:
                 self.indices = [i for i in xrange(total_img)]
-                random.seed(time.time())
+                random.seed(self.shuffle_seed)
                 random.shuffle(self.indices)
                 print("shuffle indices: %s ..." % self.indices[:10])
 
@@ -70,13 +70,13 @@ class PaddleDataLoader(object):
 
         return _reader_creator
 
-def train(traindir, sz, min_scale=0.08):
+def train(traindir, sz, min_scale=0.08, shuffle_seed=0):
     train_tfms = [
         transforms.RandomResizedCrop(sz, scale=(min_scale, 1.0)),
         transforms.RandomHorizontalFlip()
     ]
     train_dataset = datasets.ImageFolder(traindir, transforms.Compose(train_tfms))
-    return PaddleDataLoader(train_dataset).reader()
+    return PaddleDataLoader(train_dataset, shuffle_seed=shuffle_seed).reader()
 
 def test(valdir, bs, sz, rect_val=False):
     if rect_val:
@@ -155,17 +155,3 @@ def map_idx2ar(idx_ar_sorted, batch_size):
         for idx in idxs:
             idx2ar[idx] = mean
     return idx2ar
-
-if __name__ == "__main__":
-    #ds, sampler = create_validation_set("/data/imagenet/validation", 128, 288, True, True)
-    #for item in sampler:
-    #    for idx in item:
-    #        ds[idx]
-
-    import time
-    test_reader = test(valdir="/data/imagenet/validation", bs=64, sz=288, rect_val=True)
-    start_ts = time.time()
-    for idx, data in enumerate(test_reader()):
-        print(idx, data[0], data[0].shape, data[1])
-        if idx == 2:
-            break

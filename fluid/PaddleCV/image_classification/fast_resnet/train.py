@@ -75,13 +75,12 @@ def get_device_num():
 
 DEVICE_NUM = get_device_num()
 
-def test_parallel(exe, test_args, args, test_prog, feeder, bs):
+def test_parallel(exe, test_args, args, test_reader, feeder, bs):
     acc_evaluators = []
     for i in xrange(len(test_args[2])):
         acc_evaluators.append(fluid.metrics.Accuracy())
 
     to_fetch = [v.name for v in test_args[2]]
-    test_reader = test_args[3]
     batch_id = 0
     start_ts = time.time()
     for batch_id, data in enumerate(test_reader()):
@@ -100,15 +99,8 @@ def test_parallel(exe, test_args, args, test_prog, feeder, bs):
 def build_program(args, is_train, main_prog, startup_prog, py_reader_startup_prog, sz, trn_dir, bs, min_scale, rect_val=False):
 
     dshape=[3, sz, sz]
-    class_dim=1000 
-    if is_train:
-        reader = torchvision_reader.train(
-                traindir="/data/imagenet/%strain" % trn_dir, sz=sz, min_scale=min_scale)
-    else:
-        reader = torchvision_reader.test(
-                valdir="/data/imagenet/%svalidation" % trn_dir, bs=bs*DEVICE_NUM, sz=sz, rect_val=rect_val)
+    class_dim=1000
     pyreader = None
-    batched_reader = None
     with fluid.program_guard(main_prog, startup_prog):
         with fluid.unique_name.guard():
             if is_train:
@@ -121,11 +113,9 @@ def build_program(args, is_train, main_prog, startup_prog, py_reader_startup_pro
                             name="train_reader_" + str(sz) if is_train else "test_reader_" + str(sz),
                             use_double_buffer=True)
                 input, label = fluid.layers.read_file(pyreader)
-                pyreader.decorate_paddle_reader(paddle.batch(reader, batch_size=bs))
             else:
                 input = fluid.layers.data(name="image", shape=[3, 244, 244], dtype="uint8")
                 label = fluid.layers.data(name="label", shape=[1], dtype="int64")
-                batched_reader = paddle.batch(reader, batch_size=bs * DEVICE_NUM)
             cast_img_type = "float16" if args.fp16 else "float32"
             cast = fluid.layers.cast(input, cast_img_type)
             img_mean = fluid.layers.create_global_var([3, 1, 1], 0.0, cast_img_type, name="img_mean", persistable=True)
@@ -173,8 +163,7 @@ def build_program(args, is_train, main_prog, startup_prog, py_reader_startup_pro
                 if args.memory_optimize:
                     fluid.memory_optimize(main_prog, skip_grads=True)
 
-    return avg_cost, optimizer, [batch_acc1,
-                                 batch_acc5], batched_reader, pyreader, py_reader_startup_prog
+    return avg_cost, optimizer, [batch_acc1, batch_acc5], pyreader
 
 
 def refresh_program(args, epoch, sz, trn_dir, bs, val_bs, need_update_start_prog=False, min_scale=0.08, rect_val=False):
@@ -233,6 +222,18 @@ def refresh_program(args, epoch, sz, trn_dir, bs, val_bs, need_update_start_prog
 
     return train_args, test_args, test_prog, train_exe, test_exe
 
+def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir, img_dim, min_scale, rect_val):
+    train_reader = torchvision_reader.train(
+                traindir="/data/imagenet/%strain" % trn_dir, sz=img_dim, min_scale=min_scale, shuffle_seed=epoch_id+1)
+    train_py_reader.decorate_paddle_reader(paddle.batch(train_reader, batch_size=train_bs))
+
+    test_reader = torchvision_reader.test(
+                valdir="/data/imagenet/%svalidation" % trn_dir, bs=val_bs*DEVICE_NUM, sz=img_dim, rect_val=rect_val)
+    test_batched_reader = paddle.batch(test_reader, batch_size=val_bs * DEVICE_NUM)
+
+    return test_batched_reader
+
+
 # NOTE: only need to benchmark using parallelexe
 def train_parallel(args):
     over_all_start = time.time()
@@ -242,19 +243,31 @@ def train_parallel(args):
     test_exe = None
     train_args = None
     test_args = None
+    ## dynamic batch size, image size...
     bs = 224
     val_bs = 64
+    trn_dir = "sz/160/"
+    img_dim=128
+    min_scale=0.08
+    rect_val=False
     for epoch_id in range(args.num_epochs):
-        # program changed
+        # refresh program
         if epoch_id == 0:
-            train_args, test_args, test_prog, exe, test_exe = refresh_program(args, epoch_id, sz=128, trn_dir="sz/160/", bs=bs, val_bs=val_bs, need_update_start_prog=True)
+            train_args, test_args, test_prog, exe, test_exe = refresh_program(args, epoch_id, sz=img_dim, trn_dir=trn_dir, bs=bs, val_bs=val_bs, need_update_start_prog=True)
         elif epoch_id == 13: #13
             bs = 96
-            train_args, test_args, test_prog, exe, test_exe = refresh_program(args, epoch_id, sz=224, trn_dir="sz/352/", bs=bs, val_bs=val_bs, min_scale=0.087)
+            trn_dir="sz/352/"
+            img_dim=224
+            min_scale=0.087
+            train_args, test_args, test_prog, exe, test_exe = refresh_program(args, epoch_id, sz=img_dim, trn_dir=trn_dir, bs=bs, val_bs=val_bs, min_scale=min_scale)
         elif epoch_id == 25: #25
             bs = 50
             val_bs=8
-            train_args, test_args, test_prog, exe, test_exe = refresh_program(args, epoch_id, sz=288, trn_dir="", bs=bs, val_bs=val_bs, min_scale=0.5, rect_val=True)
+            trn_dir=""
+            img_dim=288
+            min_scale=0.5
+            rect_val=True
+            train_args, test_args, test_prog, exe, test_exe = refresh_program(args, epoch_id, sz=img_dim, trn_dir=trn_dir, bs=bs, val_bs=val_bs, min_scale=min_scale, rect_val=rect_val)
         else:
             pass
 
@@ -262,7 +275,9 @@ def train_parallel(args):
         num_samples = 0
         iters = 0
         start_time = time.time()
-        train_args[4].start() # start pyreader
+        train_py_reader = train_args[3]
+        test_reader = prepare_reader(epoch_id, train_py_reader, bs, val_bs, trn_dir, img_dim=img_dim, min_scale=min_scale, rect_val=rect_val)
+        train_py_reader.start() # start pyreader
         batch_start_time = time.time()
         while True:
             fetch_list = [avg_loss.name]
@@ -282,7 +297,7 @@ def train_parallel(args):
                     exe.run([])
             except fluid.core.EOFException as eof:
                 print("Finish current epoch, will reset pyreader...")
-                train_args[4].reset()
+                train_py_reader.reset()
                 break
             except fluid.core.EnforceNotMet as ex:
                 traceback.print_exc()
@@ -293,14 +308,14 @@ def train_parallel(args):
             if should_print:
                 fetched_data = [np.mean(np.array(d)) for d in fetch_ret]
                 print("Epoch %d, batch %d, loss %s, accucacys: %s, learning_rate %s, py_reader queue_size: %d, avg batch time: %0.4f secs" %
-                      (epoch_id, iters, fetched_data[0], fetched_data[1:-1], fetched_data[-1], train_args[4].queue.size(), (time.time() - batch_start_time)*1.0/args.log_period))
+                      (epoch_id, iters, fetched_data[0], fetched_data[1:-1], fetched_data[-1], train_py_reader.queue.size(), (time.time() - batch_start_time)*1.0/args.log_period))
                 batch_start_time = time.time()
             iters += 1
 
         print_train_time(start_time, time.time(), num_samples)
         feed_list = [test_prog.global_block().var(varname) for varname in ("image", "label")]
         test_feeder = fluid.DataFeeder(feed_list=feed_list, place=fluid.CUDAPlace(0))
-        test_ret = test_parallel(test_exe, test_args, args, test_prog, test_feeder, val_bs)
+        test_ret = test_parallel(test_exe, test_args, args, test_reader, test_feeder, val_bs)
         test_acc1, test_acc5 = [np.mean(np.array(v)) for v in test_ret]
         print("Epoch: %d, Test Accuracy: %s, Spend %.2f hours\n" %
             (epoch_id, [test_acc1, test_acc5], (time.time() - over_all_start) / 3600))
