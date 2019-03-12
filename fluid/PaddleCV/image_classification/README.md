@@ -1,20 +1,20 @@
 # Image Classification and Model Zoo
-Image classification, which is an important field of computer vision, is to classify an image into pre-defined labels. Recently, many researchers developed different kinds of neural networks and highly improve the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid, including [data preparation](#data-preparation), [training](#training-a-model), [finetuning](#finetuning), [evaluation](#evaluation) and [inference](#inference).
+Image classification, which is an important field of computer vision, is to classify an image into pre-defined labels. Recently, many researchers developed different kinds of neural networks and highly improve the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid.
 
 ---
 ## Table of Contents
 - [Installation](#installation)
 - [Data preparation](#data-preparation)
-- [Training a model with flexible parameters](#training-a-model)
+- [Training a model with flexible parameters](#training-a-model-with-flexible-parameters)
 - [Using Mixed-Precision Training](#using-mixed-precision-training)
 - [Finetuning](#finetuning)
 - [Evaluation](#evaluation)
 - [Inference](#inference)
-- [Supported models and performances](#supported-models)
+- [Supported models and performances](#supported-models-and-performances)
 
 ## Installation
 
-Running sample code in this directory requires PaddelPaddle Fluid v0.13.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v0.13.0 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v0.13.0, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html) and make an update.
 
 ## Data preparation
 
@@ -51,6 +51,8 @@ val/ILSVRC2012_val_00000005.jpeg 516
 ...
 ```
 
+You may need to modify the path in reader.py to load data correctly.
+
 ## Training a model with flexible parameters
 
 After data preparation, one can start the training step by:
@@ -76,12 +78,17 @@ python train.py \
 * **class_dim**: the class number of the classification task. Default: 1000.
 * **image_shape**: input size of the network. Default: "3,224,224".
 * **model_save_dir**: the directory to save trained model. Default: "output".
-* **with_mem_opt**: whether to use memory optimization or not. Default: False.
+* **with_mem_opt**: whether to use memory optimization or not. Default: True.
 * **lr_strategy**: learning rate changing strategy. Default: "piecewise_decay".
 * **lr**: initialized learning rate. Default: 0.1.
 * **pretrained_model**: model path for pretraining. Default: None.
 * **checkpoint**: the checkpoint path to resume. Default: None.
+* **data_dir**: the data path. Default: "./data/ILSVRC2012".
 * **model_category**: the category of models, ("models"|"models_name"). Default: "models_name".
+* **fp16**: whether to enable half precisioin training with fp16. Default: False.
+* **scale_loss**: scale loss for fp16. Default: 1.0.
+* **l2_decay**: L2_decay parameter. Default: 1e-4.
+* **momentum_rate**: momentum_rate. Default: 0.9.
 
 Or can start the training step by running the ```run.sh```.
 
@@ -138,7 +145,7 @@ python train.py
 ```
 
 ## Evaluation
-Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
+Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
 ```
 python eval.py \
        --model=SE_ResNeXt50_32x4d \
