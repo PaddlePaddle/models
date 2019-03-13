@@ -63,7 +63,8 @@ def infer(test_reader, use_cuda, model_path):
             accum_num_sum += (data_length)
             accum_num_recall += (data_length * acc_)
             if step_id % 1 == 0:
-                print("step:%d  " % (step_id), accum_num_recall / accum_num_sum)
+                print("step:%d  recall@20:%.4f" %
+                      (step_id, accum_num_recall / accum_num_sum))
         t1 = time.time()
         print("model:%s recall@20:%.3f time_cost(s):%.2f" %
               (model_path, accum_num_recall / accum_num_sum, t1 - t0))
