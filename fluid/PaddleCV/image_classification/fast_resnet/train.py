@@ -33,7 +33,6 @@ from utility import add_arguments, print_arguments
 import functools
 from models.fast_resnet import FastResNet, lr_decay
 import utils
-from env import dist_env
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
