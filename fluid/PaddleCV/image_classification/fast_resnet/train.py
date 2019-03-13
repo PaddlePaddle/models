@@ -233,7 +233,6 @@ def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir, img_dim
     return test_batched_reader
 
 
-# NOTE: only need to benchmark using parallelexe
 def train_parallel(args):
     over_all_start = time.time()
     test_prog = fluid.Program()
