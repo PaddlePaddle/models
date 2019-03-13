@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument(
         '--loss', type=str, default="bpr", help='loss: bpr/cross_entropy')
     parser.add_argument(
-        '--model_dir', type=str, default='model_bpr_recall20', help='model dir')
+        '--model_dir', type=str, default='model_neg_recall20', help='model dir')
     parser.add_argument(
         '--batch_size', type=int, default=5, help='num of batch size')
     parser.add_argument(
