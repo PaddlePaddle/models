@@ -221,8 +221,7 @@ class DataSetReader(object):
                         yield batch_out
                         batch_out = []
                         total_iter += 1
-                        if total_iter % 10 == 0:
-                            img_size = get_img_size(size, random_sizes)
+                        img_size = get_img_size(size, random_sizes)
 
             elif mode == 'test':
                 imgs = self._parse_images_by_mode(mode)
@@ -253,12 +252,10 @@ def train(size=416,
           shuffle=True, 
           mixup_iter=0,
           random_sizes=[],
-          interval=10,
-          pyreader_num=1,
-          num_workers=2,
-          max_queue=4,
+          num_workers=12,
+          max_queue=36,
           use_multiprocessing=True):
-    generator = dsr.get_reader('train', size, batch_size, shuffle, int(mixup_iter/pyreader_num), random_sizes)
+    generator = dsr.get_reader('train', size, batch_size, shuffle, int(mixup_iter/num_workers), random_sizes)
 
     if not use_multiprocessing:
         return generator
@@ -271,26 +268,18 @@ def train(size=416,
     def reader():
         try:
             enqueuer = GeneratorEnqueuer(
-                infinite_reader(), use_multiprocessing=True)
-            enqueuer.start(max_queue_size=max_queue, workers=num_workers, random_sizes=random_sizes)
+                infinite_reader(), use_multiprocessing=use_multiprocessing)
+            enqueuer.start(max_queue_size=max_queue, workers=num_workers)
             generator_out = None
-            np.random.seed(1000)
-            intervals = pyreader_num * interval
-            cnt = 0
-	    idx = len(random_sizes) - 1
             while True:
                 while enqueuer.is_running():
-                    if not enqueuer.queues[idx].empty():
-                        generator_out = enqueuer.queues[idx].get()
+                    if not enqueuer.queue.empty():
+                        generator_out = enqueuer.queue.get()
                         break
                     else:
                         time.sleep(0.02)
                 yield generator_out
                 generator_out = None
-                cnt += 1
-                if cnt % intervals == 0:
-                    idx = np.random.randint(len(random_sizes))
-                    print("Resizing: ", random_sizes[idx])
         finally:
             if enqueuer is not None:
                 enqueuer.stop()

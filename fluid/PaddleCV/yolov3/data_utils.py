@@ -6,13 +6,10 @@ import time
 import numpy as np
 import threading
 import multiprocessing
-import cv2
 try:
     import queue
 except ImportError:
     import Queue as queue
-
-import image_utils
 
 
 class GeneratorEnqueuer(object):
@@ -38,11 +35,11 @@ class GeneratorEnqueuer(object):
         self._use_multiprocessing = use_multiprocessing
         self._threads = []
         self._stop_event = None
-        self.queues = []
+        self.queue = None
         self._manager = None
         self.seed = random_seed
 
-    def start(self, workers=1, max_queue_size=10, random_sizes=[608]):
+    def start(self, workers=1, max_queue_size=10):
         """
         Start worker threads which add data from the generator into the queue.
 
@@ -52,38 +49,16 @@ class GeneratorEnqueuer(object):
                 (when full, threads could block on `put()`)
         """
 
-        self.random_sizes = random_sizes
-        self.size_num = len(random_sizes)
-
         def data_generator_task():
             """
             Data generator task.
             """
 
             def task():
-                if len(self.queues) > 0:
+                if (self.queue is not None and
+                        self.queue.qsize() < max_queue_size):
                     generator_output = next(self._generator)
-                    queue_idx = 0
-                    while(True):
-                        if self.queues[queue_idx].full():
-                            queue_idx = (queue_idx + 1) % self.size_num
-                            time.sleep(0.02)
-                            continue
-                        else:
-                            size = self.random_sizes[queue_idx]
-                            for g in generator_output:
-                                g[0] = g[0].transpose((1, 2, 0))
-                                g[0] = image_utils.random_interp(g[0], size)
-                                g[0] = g[0].transpose((2, 0, 1))
-                            try:
-                                self.queues[queue_idx].put_nowait(generator_output)
-                            except:
-                                continue
-                            else:
-                                break
-
-
-                    # self.queue.put((generator_output))
+                    self.queue.put((generator_output))
                 else:
                     time.sleep(self.wait_time)
 
@@ -106,14 +81,11 @@ class GeneratorEnqueuer(object):
         try:
             if self._use_multiprocessing:
                 self._manager = multiprocessing.Manager()
-                for i in range(self.size_num):
-                    self.queues.append(self._manager.Queue(maxsize=max_queue_size))
+                self.queue = self._manager.Queue(maxsize=max_queue_size)
                 self._stop_event = multiprocessing.Event()
             else:
                 self.genlock = threading.Lock()
-                # self.queue = queue.Queue()
-                for i in range(self.size_num):
-                    self.queues.append(queue.Queue())
+                self.queue = queue.Queue()
                 self._stop_event = threading.Event()
             for _ in range(workers):
                 if self._use_multiprocessing:
@@ -162,7 +134,7 @@ class GeneratorEnqueuer(object):
         self._stop_event = None
         self.queue = None
 
-    def get(self, queue_idx):
+    def get(self):
         """
         Creates a generator to extract data from the queue.
         Skip the data if it is `None`.
@@ -171,8 +143,8 @@ class GeneratorEnqueuer(object):
             tuple of data in the queue.
         """
         while self.is_running():
-            if not self.queues[queue_idx].empty():
-                inputs = self.queues[queue_idx].get()
+            if not self.queue.empty():
+                inputs = self.queue.get()
                 if inputs is not None:
                     yield inputs
             else:
