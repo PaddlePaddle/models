@@ -31,7 +31,7 @@ import sys
 sys.path.append("..")
 from utility import add_arguments, print_arguments
 import functools
-from models.fast_resnet import FastResNet, lr_decay
+from models.fast_imagenet import FastImageNet, lr_decay
 import utils
 
 def parse_args():
@@ -46,7 +46,6 @@ def parse_args():
     add_arg('checkpoint',       str,   None,                 "Whether to resume checkpoint.")
     add_arg('lr',               float, 1.0,                  "set learning rate.")
     add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate decay strategy.")
-    add_arg('model',            str,   "FastResNet",         "Set the network to use.")
     add_arg('data_dir',         str,   "./data/ILSVRC2012",  "The ImageNet dataset root dir.")
     add_arg('model_category',   str,   "models",             "Whether to use models_name or not, valid value:'models','models_name'" )
     add_arg('fp16',             bool,  False,                "Enable half precision training with fp16." )
@@ -123,7 +122,7 @@ def build_program(args, is_train, main_prog, startup_prog, py_reader_startup_pro
             t1 = fluid.layers.elementwise_sub(cast, img_mean, axis=1)
             t2 = fluid.layers.elementwise_div(t1, img_std, axis=1)
 
-            model = FastResNet(is_train=is_train)
+            model = FastImageNet(is_train=is_train)
             predict = model.net(t2, class_dim=class_dim, img_size=sz)
             cost, pred = fluid.layers.softmax_with_cross_entropy(predict, label, return_softmax=True)
             if args.scale_loss > 1:

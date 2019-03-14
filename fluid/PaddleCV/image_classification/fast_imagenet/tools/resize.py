@@ -14,8 +14,7 @@ def mkdir(path):
         path.mkdir()
 
 mkdir(DEST)
-#szs = (160, 352)
-szs = (160,)
+szs = (160, 352)
 
 def resize_img(p, im, fn, sz):
     w,h = im.size
@@ -40,8 +39,6 @@ for sz in szs:
     for ds in ('validation','train'): mkdir((DEST/ssz/ds))
     for ds in ('train',): mkdir((DEST/ssz/ds))
 
-#for ds in ('val','train'): resize_imgs(PATH/ds)
-#for ds in ("validation", "train"):
-for ds in ("validation", ):
+for ds in ("validation", "train"):
     print(PATH/ds)
     resize_imgs(PATH/ds)

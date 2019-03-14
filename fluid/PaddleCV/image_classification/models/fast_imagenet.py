@@ -30,9 +30,9 @@ import paddle.fluid.core as core
 import paddle.fluid.profiler as profiler
 import utils
 
-__all__ = ["FastResNet"]
+__all__ = ["FastImageNet"]
 
-class FastResNet():
+class FastImageNet():
     def __init__(self, layers=50, is_train=True):
         self.layers = layers
         self.is_train = is_train
