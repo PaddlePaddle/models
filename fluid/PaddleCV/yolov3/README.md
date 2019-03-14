@@ -117,21 +117,11 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
 Evalutaion result is shown as below:
 
-```text
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.377
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.598
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.408
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.244
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.408
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.489
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.308
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.481
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.504
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.351
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.534
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.632
-
-```
+|   mAP  |IoU=0.50:0.95 | IoU=0.50 | IoU=0.75 |
+| :------: | :------: | :------: | :------: |
+| input size=608x608| 37.7 | 59.8 | 40.8 |
+| input size=416x416 | 36.5 | 58.2 | 39.1 |
+| input size=320x320 | 34.1 | 55.4 | 36.3 |
 
 ## Inference and Visualization
 
