@@ -38,7 +38,7 @@ class EmlLoss():
         loss = loss1 + loss2 - bias
         return loss
 
-    def loss(self, input):
+    def loss(self, input, label=None):
         samples_each_class = self.samples_each_class
         batch_size = self.cal_loss_batch_size
         #input = fluid.layers.l2_normalize(input, axis=1)

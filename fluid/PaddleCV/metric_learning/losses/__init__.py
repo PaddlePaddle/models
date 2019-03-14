@@ -6,3 +6,4 @@ from .arcmarginloss import ArcMarginLoss
 from .tripletloss import TripletLoss
 from .quadrupletloss import QuadrupletLoss
 from .emlloss import EmlLoss
+from .npairsloss import NpairsLoss

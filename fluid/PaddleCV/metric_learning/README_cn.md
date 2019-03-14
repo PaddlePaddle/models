@@ -103,9 +103,11 @@ python infer.py \
 |使用triplet微调 | 78.37% | 79.21%
 |使用quadruplet微调 | 78.10% | 79.59%
 |使用eml微调 | 79.32% | 80.11%
+|使用npairs微调 | - | 79.81%
 
 ## 引用
 
 - ArcFace: Additive Angular Margin Loss for Deep Face Recognition [链接](https://arxiv.org/abs/1801.07698)
 - Margin Sample Mining Loss: A Deep Learning Based Method for Person Re-identification [链接](https://arxiv.org/abs/1710.00478)
 - Large Scale Strongly Supervised Ensemble Metric Learning, with Applications to Face Verification and Retrieval [链接](https://arxiv.org/abs/1212.6094)
+- Improved Deep Metric Learning with Multi-class N-pair Loss Objective [链接](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf)
