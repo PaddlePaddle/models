@@ -13,8 +13,6 @@ class GATrainer():
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
             self.fake_B = build_generator_resnet_9blocks(input_A, name="g_A")
-            #FIXME set persistable explicitly to pass CE
-            self.fake_B.persistable = True
             self.fake_A = build_generator_resnet_9blocks(input_B, name="g_B")
             self.cyc_A = build_generator_resnet_9blocks(self.fake_B, "g_B")
             self.cyc_B = build_generator_resnet_9blocks(self.fake_A, "g_A")
@@ -60,8 +58,6 @@ class GBTrainer():
         with fluid.program_guard(self.program):
             self.fake_B = build_generator_resnet_9blocks(input_A, name="g_A")
             self.fake_A = build_generator_resnet_9blocks(input_B, name="g_B")
-            #FIXME set persistable explicitly to pass CE
-            self.fake_A.persistable = True
             self.cyc_A = build_generator_resnet_9blocks(self.fake_B, "g_B")
             self.cyc_B = build_generator_resnet_9blocks(self.fake_A, "g_A")
             self.infer_program = self.program.clone()

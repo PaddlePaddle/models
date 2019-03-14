@@ -12,7 +12,7 @@
 
 ## Installation
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.0.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/zh/0.15.0/beginners_guide/install/install_doc.html#paddlepaddle) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v.1.3.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/en/1.3/beginners_guide/install/index_en.html) and make an update.
 
 ## Introduction
 
@@ -37,6 +37,25 @@ Train the model on [MS-COCO dataset](http://cocodataset.org/#download), download
     cd dataset/coco
     ./download.sh
 
+The data catalog structure is as follows:
+
+  ```
+  data/coco/
+  ├── annotations
+  │   ├── instances_train2014.json
+  │   ├── instances_train2017.json
+  │   ├── instances_val2014.json
+  │   ├── instances_val2017.json
+  |   ...
+  ├── train2017
+  │   ├── 000000000009.jpg
+  │   ├── 000000580008.jpg
+  |   ...
+  ├── val2017
+  │   ├── 000000000139.jpg
+  │   ├── 000000000285.jpg
+  |   ...
+  ```
 
 ## Training
 
@@ -51,9 +70,8 @@ Please make sure that pretrained_model is downloaded and loaded correctly, other
 
 To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed. Install the cocoapi:
 
-    # COCOAPI=/path/to/clone/cocoapi
-    git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
-    cd $COCOAPI/PythonAPI
+    git clone https://github.com/cocodataset/cocoapi.git
+    cd cocoapi/PythonAPI
     # if cython is not installed
     pip install Cython
     # Install into global site-packages
@@ -66,25 +84,29 @@ After data preparation, one can start the training step by:
 
 - Faster RCNN
 
+    ```
     python train.py \
        --model_save_dir=output/ \
        --pretrained_model=${path_to_pretrain_model} \
        --data_dir=${path_to_data} \
        --MASK_ON=False
+    ```
 
 - Mask RCNN
 
+    ```
     python train.py \
        --model_save_dir=output/ \
        --pretrained_model=${path_to_pretrain_model} \
        --data_dir=${path_to_data} \
        --MASK_ON=True
+    ```
 
-- Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
-- Set ```MASK_ON``` to choose Faster RCNN or Mask RCNN model.
-- For more help on arguments:
+    - Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
+    - Set ```MASK_ON``` to choose Faster RCNN or Mask RCNN model.
+    - For more help on arguments:
 
-    python train.py --help
+        python train.py --help
 
 **data reader introduction:**
 
@@ -116,20 +138,25 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
 - Faster RCNN
 
+    ```
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_pretrain_model} \
+        --pretrained_model=${path_to_trained_model} \
         --MASK_ON=False
+    ```
 
 - Mask RCNN
 
+    ```
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_pretrain_model} \
+        --pretrained_model=${path_to_trainde_model} \
         --MASK_ON=True
+    ```
 
-- Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
-- Set ```MASK_ON``` to choose Faster RCNN or Mask RCNN model.
+    - Set ```--pretrained_model=${path_to_trained_model}``` to specifiy the trained model, not the initialized model.
+    - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
+    - Set ```MASK_ON``` to choose Faster RCNN or Mask RCNN model.
 
 Evalutaion result is shown as below:
 
@@ -159,12 +186,14 @@ Mask RCNN:
 
 Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, one can start infer step by:
 
-    python infer.py \
-       --dataset=coco2017 \
-        --pretrained_model=${path_to_pretrain_model}  \
-        --image_path=dataset/coco/val2017/  \
-        --image_name=000000000139.jpg \
-        --draw_threshold=0.6
+```
+python infer.py \
+    --pretrained_model=${path_to_trained_model}  \
+    --image_path=dataset/coco/val2017/000000000139.jpg  \
+    --draw_threshold=0.6
+```
+
+Please set the model path and image path correctly. GPU device is used by default, you can set `--use_gpu=False` to switch to CPU device. And you can set `draw_threshold` to tune score threshold to control the number of output detection boxes.
 
 Visualization of infer result is shown as below:
 <p align="center">

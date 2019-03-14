@@ -249,10 +249,10 @@ model saved in model_recall20/epoch_1
 ```
 
 ## 预测
-运行命令 开始预测.
+运行命令 全词表运行infer.py, 负采样运行infer_sample_neg.py。
 
 ```
-CUDA_VISIBLE_DEVICES=0 python infer.py --test_dir test_data/ --model_dir model_recall20/ --start_index 1 --last_index 10 --use_cuda 1
+CUDA_VISIBLE_DEVICES=0 python infer.py --test_dir test_data/ --model_dir model_output/ --start_index 1 --last_index 10 --use_cuda 1
 ```
 
 ## 预测结果示例
