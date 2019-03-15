@@ -168,7 +168,6 @@ Inference is used to get prediction score or image features based on trained mod
 ```
 python infer.py \
        --model=SE_ResNeXt50_32x4d \
-       --batch_size=32 \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --with_mem_opt=True \

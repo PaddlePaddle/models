@@ -164,7 +164,6 @@ Testbatch 80,loss 0.0969972759485, acc1 1.0,acc5 1.0,time 0.41 sec
 ```
 python infer.py \
        --model=SE_ResNeXt50_32x4d \
-       --batch_size=32 \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --with_mem_opt=True \
