@@ -23,7 +23,7 @@ Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and late
 YOLOv3 detection principle
 </p>
 
-YOLOv3 divides the input image in to S\*S grids and predict B bounding boxes in each grid, predictions of boxes include Location(x, y, w, h), Confidence Score and probabilities of C classes, therefore YOLOv3 output layer has S\*S\*B\*(5 + C) channels. YOLOv3 loss consist of three parts: location loss, IoU loss and classification loss.
+YOLOv3 divides the input image in to S\*S grids and predict B bounding boxes in each grid, predictions of boxes include Location(x, y, w, h), Confidence Score and probabilities of C classes, therefore YOLOv3 output layer has S\*S\*B\*(5 + C) channels. YOLOv3 loss consists of three parts: location loss, confidence loss and classification loss.
 The bone network of YOLOv3 is darknet53, the structure of YOLOv3 is as follow:
 <p align="center">
 <img src="image/YOLOv3_structure.jpg" height=400 width=400 hspace='10'/> <br />
@@ -95,7 +95,7 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 **training strategy:**
 
 *  Use momentum optimizer with momentum=0.9.
-*  In first 1000 iteration, the learning rate increases linearly from 0.0 to 0.01. Then lr is decayed at 450000, 500000 iteration with multiplier 0.1, 0.1. The maximum iteration is 500000.
+*  In first 1000 iteration, the learning rate increases linearly from 0.0 to 0.01. Then lr is decayed at 450000, 500000 iteration with multiplier 0.1, 0.01. The maximum iteration is 500000.
 
 Training result is shown as below：
 <p align="center">

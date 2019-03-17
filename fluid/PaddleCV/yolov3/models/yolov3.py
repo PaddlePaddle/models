@@ -1,5 +1,4 @@
-    
-#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -68,11 +67,40 @@ class YOLOv3(object):
         self.ignore_thresh = .7
         self.class_num = 80
 
+    def build_input(self):
+        self.image_shape = [3, cfg.input_size, cfg.input_size]
+        if self.use_pyreader and self.is_train:
+            self.py_reader = fluid.layers.py_reader(
+                capacity=64,
+                shapes = [[-1] + self.image_shape, [-1, cfg.max_box_num, 4], [-1, cfg.max_box_num], [-1, cfg.max_box_num]],
+                lod_levels=[0, 0, 0, 0],
+                dtypes=['float32'] * 2 + ['int32'] + ['float32'],
+                use_double_buffer=True)
+            self.image, self.gtbox, self.gtlabel, self.gtscore = fluid.layers.read_file(self.py_reader)
+        else:
+            self.image = fluid.layers.data(
+                    name='image', shape=self.image_shape, dtype='float32'
+                    )
+            self.gtbox = fluid.layers.data(
+                    name='gtbox', shape=[cfg.max_box_num, 4], dtype='float32'
+                    )
+            self.gtlabel = fluid.layers.data(
+                    name='gtlabel', shape=[cfg.max_box_num], dtype='int32'
+                    )
+            self.gtscore = fluid.layers.data(
+                    name='gtscore', shape=[cfg.max_box_num], dtype='float32'
+                    )
+            self.im_shape = fluid.layers.data(
+                    name="im_shape", shape=[2], dtype='int32')
+            self.im_id = fluid.layers.data(
+                    name="im_id", shape=[1], dtype='int32')
+    
+    def feeds(self):
+        if not self.is_train:
+            return [self.image, self.im_id, self.im_shape]
+        return [self.image, self.gtbox, self.gtlabel, self.gtscore]
+
     def build_model(self):
-
-        self.img_height = cfg.input_size
-        self.img_width = cfg.input_size
-
         self.build_input()
 
         self.outputs = []
@@ -171,37 +199,4 @@ class YOLOv3(object):
                 nms_threshold=cfg.nms_thresh,
                 background_label=-1,
                 name="multiclass_nms")
-
-    def build_input(self):
-        self.image_shape = [3, self.img_height, self.img_width]
-        if self.use_pyreader and self.is_train:
-            self.py_reader = fluid.layers.py_reader(
-                capacity=64,
-                shapes = [[-1] + self.image_shape, [-1, cfg.max_box_num, 4], [-1, cfg.max_box_num], [-1, cfg.max_box_num]],
-                lod_levels=[0, 0, 0, 0],
-                dtypes=['float32'] * 2 + ['int32'] + ['float32'],
-                use_double_buffer=True)
-            self.image, self.gtbox, self.gtlabel, self.gtscore = fluid.layers.read_file(self.py_reader)
-        else:
-            self.image = fluid.layers.data(
-                    name='image', shape=self.image_shape, dtype='float32'
-                    )
-            self.gtbox = fluid.layers.data(
-                    name='gtbox', shape=[cfg.max_box_num, 4], dtype='float32'
-                    )
-            self.gtlabel = fluid.layers.data(
-                    name='gtlabel', shape=[cfg.max_box_num], dtype='int32'
-                    )
-            self.gtscore = fluid.layers.data(
-                    name='gtscore', shape=[cfg.max_box_num], dtype='float32'
-                    )
-            self.im_shape = fluid.layers.data(
-                    name="im_shape", shape=[2], dtype='int32')
-            self.im_id = fluid.layers.data(
-                    name="im_id", shape=[1], dtype='int32')
-    
-    def feeds(self):
-        if not self.is_train:
-            return [self.image, self.im_id, self.im_shape]
-        return [self.image, self.gtbox, self.gtlabel, self.gtscore]
 
