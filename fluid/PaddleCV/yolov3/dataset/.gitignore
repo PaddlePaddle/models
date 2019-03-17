@@ -1,4 +1,0 @@
-coco2014/
-!coco2014/*.sh
-!coco2014/*.py
-!coco2014/coco.*
