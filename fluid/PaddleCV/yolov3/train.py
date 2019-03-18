@@ -110,7 +110,7 @@ def train():
             for iter_id in range(cfg.start_iter, cfg.max_iter):
                 prev_start_time = start_time
                 start_time = time.time()
-                losses = exe.run(fetch_list=[v.name for v in fetch_list])
+                losses = exe.run(compile_program, fetch_list=[v.name for v in fetch_list])
                 smoothed_loss.add_value(np.mean(np.array(losses[0])))
                 snapshot_loss += np.mean(np.array(losses[0]))
                 snapshot_time += start_time - prev_start_time
