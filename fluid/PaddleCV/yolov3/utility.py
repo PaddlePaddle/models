@@ -94,7 +94,6 @@ def parse_args():
     add_arg = functools.partial(add_arguments, argparser=parser)
     # yapf: disable
     # ENV
-    add_arg('parallel',         bool,   True,       "Whether use parallel.")
     add_arg('use_gpu',          bool,   True,      "Whether use GPU.")
     add_arg('model_save_dir',   str,    'checkpoints',     "The path to save model.")
     add_arg('pretrain',         str,    'weights/darknet53', "The pretrain model path.")
@@ -102,12 +101,10 @@ def parse_args():
     add_arg('dataset',          str,    'coco2017',  "Dataset: coco2014, coco2017.")
     add_arg('class_num',        int,    80,          "Class number.")
     add_arg('data_dir',         str,    'dataset/coco',        "The data root path.")
-    add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
-    add_arg('use_profile',      bool,   False,       "Whether use profiler.")
     add_arg('start_iter',       int,    0,     "Start iteration.")
     add_arg('use_multiprocess', bool,   True, "add multiprocess.")
     #SOLVER
-    add_arg('batch_size',       int,    64,     "Learning rate.")
+    add_arg('batch_size',       int,    8,     "Mini-batch size per device.")
     add_arg('learning_rate',    float,  0.001,     "Learning rate.")
     add_arg('max_iter',         int,    500200,   "Iter number.")
     add_arg('snapshot_iter',    int,    2000,    "Save model every snapshot stride.")
@@ -122,8 +119,8 @@ def parse_args():
     add_arg('nms_posk',         int,    100,    "The number of boxes of NMS output.")
     add_arg('debug',            bool,   False,   "Debug mode")
     # SINGLE EVAL AND DRAW
-    add_arg('image_path',       str,   'image',  "The image path used to inference and visualize.")
-    add_arg('image_name',       str,    None,       "The single image used to inference and visualize. None to inference all images in image_path")
+    add_arg('image_path',       str,   'image', "The image path used to inference and visualize.")
+    add_arg('image_name',       str,    None,   "The single image used to inference and visualize. None to inference all images in image_path")
     add_arg('draw_thresh',      float,  0.5,    "Confidence score threshold to draw prediction box in image in debug mode")
     # yapf: enable
     args = parser.parse_args()

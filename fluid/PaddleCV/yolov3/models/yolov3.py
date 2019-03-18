@@ -56,10 +56,8 @@ def upsample(input, scale=2,name=None):
 class YOLOv3(object):
     def __init__(self, 
                 is_train=True,
-                use_pyreader=True,
                 use_random=True):
         self.is_train = is_train
-        self.use_pyreader = use_pyreader
         self.use_random = use_random
         self.outputs = []
         self.losses = []
@@ -69,7 +67,7 @@ class YOLOv3(object):
 
     def build_input(self):
         self.image_shape = [3, cfg.input_size, cfg.input_size]
-        if self.use_pyreader and self.is_train:
+        if self.is_train:
             self.py_reader = fluid.layers.py_reader(
                 capacity=64,
                 shapes = [[-1] + self.image_shape, [-1, cfg.max_box_num, 4], [-1, cfg.max_box_num], [-1, cfg.max_box_num]],
@@ -80,15 +78,6 @@ class YOLOv3(object):
         else:
             self.image = fluid.layers.data(
                     name='image', shape=self.image_shape, dtype='float32'
-                    )
-            self.gtbox = fluid.layers.data(
-                    name='gtbox', shape=[cfg.max_box_num, 4], dtype='float32'
-                    )
-            self.gtlabel = fluid.layers.data(
-                    name='gtlabel', shape=[cfg.max_box_num], dtype='int32'
-                    )
-            self.gtscore = fluid.layers.data(
-                    name='gtscore', shape=[cfg.max_box_num], dtype='float32'
                     )
             self.im_shape = fluid.layers.data(
                     name="im_shape", shape=[2], dtype='int32')

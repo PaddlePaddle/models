@@ -42,7 +42,7 @@ def train():
     if not os.path.exists(cfg.model_save_dir):
         os.makedirs(cfg.model_save_dir)
 
-    model = YOLOv3(use_pyreader=cfg.use_pyreader)
+    model = YOLOv3()
     model.build_model()
     input_size = cfg.input_size
     loss = model.loss()
@@ -69,44 +69,37 @@ def train():
         momentum=cfg.momentum)
     optimizer.minimize(loss)
 
-    fluid.memory_optimize(fluid.default_main_program())
-
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
-    base_exe = fluid.Executor(place)
-    base_exe.run(fluid.default_startup_program())
+    exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
 
     if cfg.pretrain:
         def if_exist(var):
             return os.path.exists(os.path.join(cfg.pretrain, var.name))
-        fluid.io.load_vars(base_exe, cfg.pretrain, predicate=if_exist)
+        fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
-    if cfg.parallel:
-        exe = fluid.ParallelExecutor( use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
-    else:
-        exe = base_exe
+    compile_program = fluid.compiler.CompiledProgram(
+            fluid.default_main_program()).with_data_parallel(
+            loss_name=loss.name)
 
     random_sizes = [cfg.input_size]
     if cfg.random_shape:
         random_sizes = [32 * i for i in range(10, 20)]
 
     mixup_iter = cfg.max_iter - cfg.start_iter - cfg.no_mixup_iter
-    if cfg.use_pyreader:
-        train_reader = reader.train(input_size, batch_size=cfg.batch_size/devices_num, shuffle=True, mixup_iter=mixup_iter*devices_num, random_sizes=random_sizes, use_multiprocessing=cfg.use_multiprocess)
-        py_reader = model.py_reader
-        py_reader.decorate_paddle_reader(train_reader)
-    else:
-        train_reader = reader.train(input_size, batch_size=cfg.batch_size, shuffle=True, mixup_iter=mixup_iter, random_sizes=random_sizes, use_multiprocessing=cfg.use_multiprocess)
-        feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
+    train_reader = reader.train(input_size, batch_size=cfg.batch_size, shuffle=True, mixup_iter=mixup_iter*devices_num, random_sizes=random_sizes, use_multiprocessing=cfg.use_multiprocess)
+    py_reader = model.py_reader
+    py_reader.decorate_paddle_reader(train_reader)
 
     def save_model(postfix):
         model_path = os.path.join(cfg.model_save_dir, postfix)
         if os.path.isdir(model_path):
             shutil.rmtree(model_path)
-        fluid.io.save_persistables(base_exe, model_path)
+        fluid.io.save_persistables(exe, model_path)
 
     fetch_list = [loss]
 
-    def train_loop_pyreader():
+    def train_loop():
         py_reader.start()
         smoothed_loss = SmoothedValue()
         try:
@@ -137,43 +130,7 @@ def train():
         except fluid.core.EOFException:
             py_reader.reset()
 
-    def train_loop():
-        start_time = time.time()
-        prev_start_time = start_time
-        start = start_time
-        smoothed_loss = SmoothedValue()
-        snapshot_loss = 0
-        snapshot_time = 0
-        for iter_id, data in enumerate(train_reader()):
-            iter_id += cfg.start_iter
-            prev_start_time = start_time
-            start_time = time.time()
-            losses = exe.run(fetch_list=[v.name for v in fetch_list],
-                                   feed=feeder.feed(data))
-            smoothed_loss.add_value(losses[0])
-            snapshot_loss += losses[0]
-            snapshot_time += start_time - prev_start_time
-            lr = np.array(fluid.global_scope().find_var('learning_rate')
-                          .get_tensor())
-            print("Iter {:d}, lr: {:.6f}, loss: {:.4f}, time {:.5f}".format(
-                iter_id, lr[0], smoothed_loss.get_mean_value(), start_time - prev_start_time))
-            sys.stdout.flush()
-
-            if (iter_id + 1) % cfg.snapshot_iter == 0:
-                save_model("model_iter{}".format(iter_id))
-                print("Snapshot {} saved, average loss: {}, average time: {}".format(
-                    iter_id + 1, snapshot_loss / float(cfg.snapshot_iter), 
-                    snapshot_time / float(cfg.snapshot_iter)))
-                snapshot_loss = 0
-                snapshot_time = 0
-            if (iter_id + 1) == cfg.max_iter:
-                print("Finish iter {}".format(iter_id))
-                break
-
-    if cfg.use_pyreader:
-        train_loop_pyreader()
-    else:
-        train_loop()
+    train_loop()
     save_model('model_final')
 
 

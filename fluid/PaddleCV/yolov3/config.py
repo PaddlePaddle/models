@@ -39,7 +39,7 @@ _C.max_box_num = 50
 #
 
 # valid score threshold to include boxes
-_C.valid_thresh = 0.01
+_C.valid_thresh = 0.005
 
 # threshold vale for box non-max suppression
 _C.nms_thresh = 0.45
@@ -69,7 +69,7 @@ _C.pixel_stds = [0.229, 0.224, 0.225]
 #
 
 # batch size
-_C.batch_size = 64
+_C.batch_size = 8
 
 # derived learning rate the to get the final learning rate.
 _C.learning_rate = 0.001
@@ -98,14 +98,8 @@ _C.momentum = 0.9
 # support both CPU and GPU
 _C.use_gpu = True
 
-# Whether use parallel
-_C.parallel = True
-
 # Class number
 _C.class_num = 80
-
-# support pyreader
-_C.use_pyreader = True
 
 # dataset path
 _C.train_file_list = 'annotations/instances_train2017.json'

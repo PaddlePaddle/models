@@ -33,7 +33,7 @@ YOLOv3网络结构
 
 YOLOv3 的网络结构由基础特征提取网络、multi-scale特征融合层和输出层组成。
 
-1. 特征提取网络。YOLOv3使用 [DarkNet53](https://arxiv.org/abs/1612.08242)作为特征提取网络，DarkNet53 基本采用了全卷积网络，用步长为2的卷积操作替代了池化层，同时添加了 Residual 单元，避免在网络层数过深时发生梯度弥散。
+1. 特征提取网络。YOLOv3使用 [DarkNet53](https://arxiv.org/abs/1612.08242)作为特征提取网络：DarkNet53 基本采用了全卷积网络，用步长为2的卷积操作替代了池化层，同时添加了 Residual 单元，避免在网络层数过深时发生梯度弥散。
 
 2. 特征融合层。为了解决之前YOLO版本对小目标不敏感的问题，YOLOv3采用了3个不同尺度的特征图来进行目标检测，分别为13\*13,26\*26,52\*52,用来检测大、中、小三种目标。特征融合层选取 DarkNet 产出的三种尺度特征图作为输入，借鉴了FPN(feature pyramid networks)的思想，通过一系列的卷积层和上采样对各尺度的特征图进行融合。
 
@@ -73,9 +73,8 @@ YOLOv3 的网络结构由基础特征提取网络、multi-scale特征融合层�
 
 训练前需要首先下载[cocoapi](https://github.com/cocodataset/cocoapi)：
 
-    # COCOAPI=/path/to/clone/cocoapi
-    git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
-    cd $COCOAPI/PythonAPI
+    git clone https://github.com/cocodataset/cocoapi.git
+    cd PythonAPI
     # if cython is not installed
     pip install Cython
     # Install into global site-packages
