@@ -18,13 +18,15 @@ import multiprocessing
 
 FINISH_EVENT = "FINISH_EVENT"
 class PaddleDataLoader(object):
-    def __init__(self, torch_dataset, indices=None, concurrent=24, queue_size=3072, shuffle=True, shuffle_seed=0):
+    def __init__(self, torch_dataset, indices=None, concurrent=24, queue_size=3072, shuffle=True, shuffle_seed=0, num_trainers=1, trainer_id=0):
         self.torch_dataset = torch_dataset
         self.data_queue = multiprocessing.Queue(queue_size)
         self.indices = indices
         self.concurrent = concurrent
         self.shuffle = shuffle
         self.shuffle_seed=shuffle_seed
+        self.num_trainers = num_trainers
+        self.trainer_id = trainer_id
 
     def _worker_loop(self, dataset, worker_indices, worker_id):
         cnt = 0
@@ -40,14 +42,17 @@ class PaddleDataLoader(object):
         def _reader_creator():
             worker_processes = []
             total_img = len(self.torch_dataset)
-            print("total image: ", total_img)
             if self.shuffle:
                 self.indices = [i for i in xrange(total_img)]
                 random.seed(self.shuffle_seed)
                 random.shuffle(self.indices)
+                offset = len(self.indices) / self.num_trainers
+                print("offset: ", offset, self.trainer_id, self.num_trainers)
+                self.indices = self.indices[self.trainer_id * offset : (self.trainer_id+1) * offset]
                 print("shuffle indices: %s ..." % self.indices[:10])
 
-            imgs_per_worker = int(math.ceil(total_img / self.concurrent))
+            print("worker total images: %d" % len(self.indices))
+            imgs_per_worker = int(math.ceil(len(self.indices)/ self.concurrent))
             for i in xrange(self.concurrent):
                 start = i * imgs_per_worker
                 end = (i + 1) * imgs_per_worker if i != self.concurrent - 1 else None
@@ -70,13 +75,13 @@ class PaddleDataLoader(object):
 
         return _reader_creator
 
-def train(traindir, sz, min_scale=0.08, shuffle_seed=0):
+def train(traindir, sz, min_scale=0.08, shuffle_seed=0, num_trainers=1, trainer_id=0):
     train_tfms = [
         transforms.RandomResizedCrop(sz, scale=(min_scale, 1.0)),
         transforms.RandomHorizontalFlip()
     ]
     train_dataset = datasets.ImageFolder(traindir, transforms.Compose(train_tfms))
-    return PaddleDataLoader(train_dataset, shuffle_seed=shuffle_seed).reader()
+    return PaddleDataLoader(train_dataset, shuffle_seed=shuffle_seed, num_trainers=num_trainers, trainer_id=trainer_id).reader()
 
 def test(valdir, bs, sz, rect_val=False):
     if rect_val:

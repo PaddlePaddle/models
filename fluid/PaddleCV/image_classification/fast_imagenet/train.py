@@ -33,6 +33,8 @@ from utility import add_arguments, print_arguments
 import functools
 from models.fast_imagenet import FastImageNet, lr_decay
 import utils
+from dist_train.dist_utils import nccl2_prepare
+from dist_train.env import dist_env
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -70,15 +72,27 @@ def get_device_num():
         device_num = subprocess.check_output(
             ['nvidia-smi', '-L']).decode().count('\n')
     return device_num
+def is_mp_mode():
+    if os.getenv("FLAGS_selected_gpus"):
+        return True
+    return False
 
 DEVICE_NUM = get_device_num()
+GPU_ID = int(os.getenv("FLAGS_selected_gpus", "0"))
+def worker_batchsize(batch_size):
+    if os.getenv("FLAGS_selected_gpus"):
+        # MP mode
+        return batch_size
+    else:
+        return batch_size * DEVICE_NUM
 
 def test_parallel(exe, test_args, args, test_reader, feeder, bs):
     acc_evaluators = []
-    for i in xrange(len(test_args[2])):
+    acc_vars = test_args[1]
+    for i in xrange(len(acc_vars)):
         acc_evaluators.append(fluid.metrics.Accuracy())
 
-    to_fetch = [v.name for v in test_args[2]]
+    to_fetch = [v.name for v in acc_vars]
     batch_id = 0
     start_ts = time.time()
     for batch_id, data in enumerate(test_reader()):
@@ -88,32 +102,19 @@ def test_parallel(exe, test_args, args, test_reader, feeder, bs):
         for i, e in enumerate(acc_evaluators):
             e.update(
                 value=np.array(acc_rets[i]), weight=bs)
-    num_samples = batch_id * bs * DEVICE_NUM
+    num_samples = batch_id * worker_batchsize(bs)
     print_train_time(start_ts, time.time(), num_samples)
 
     return [e.eval() for e in acc_evaluators]
 
 
-def build_program(args, is_train, main_prog, startup_prog, py_reader_startup_prog, sz, trn_dir, bs, min_scale, rect_val=False):
+def build_program(args, is_train, main_prog, startup_prog, sz, bs):
 
-    dshape=[3, sz, sz]
     class_dim=1000
-    pyreader = None
     with fluid.program_guard(main_prog, startup_prog):
         with fluid.unique_name.guard():
-            if is_train:
-                with fluid.program_guard(main_prog, py_reader_startup_prog):
-                    with fluid.unique_name.guard():
-                        pyreader = fluid.layers.py_reader(
-                            capacity=bs * DEVICE_NUM,
-                            shapes=([-1] + dshape, (-1, 1)),
-                            dtypes=('uint8', 'int64'),
-                            name="train_reader_" + str(sz) if is_train else "test_reader_" + str(sz),
-                            use_double_buffer=True)
-                input, label = fluid.layers.read_file(pyreader)
-            else:
-                input = fluid.layers.data(name="image", shape=[3, 244, 244], dtype="uint8")
-                label = fluid.layers.data(name="label", shape=[1], dtype="int64")
+            input = fluid.layers.data(name="image", shape=[3, 244, 244], dtype="uint8")
+            label = fluid.layers.data(name="label", shape=[1], dtype="int64")
             cast_img_type = "float16" if args.fp16 else "float32"
             cast = fluid.layers.cast(input, cast_img_type)
             img_mean = fluid.layers.create_global_var([3, 1, 1], 0.0, cast_img_type, name="img_mean", persistable=True)
@@ -140,11 +141,11 @@ def build_program(args, is_train, main_prog, startup_prog, py_reader_startup_pro
                 lr = args.lr
 
                 epochs = [(0,7), (7,13), (13, 22), (22, 25), (25, 28)]
-                bs_epoch = [bs*DEVICE_NUM for bs in [224, 224, 96, 96, 50]]
+                bs_epoch = [worker_batchsize(bs) for bs in [224, 224, 96, 96, 50]]
                 bs_scale = [bs*1.0 / bs_epoch[0] for bs in bs_epoch]
                 lrs = [(lr, lr*2), (lr*2, lr/4), (lr*bs_scale[2], lr/10*bs_scale[2]), (lr/10*bs_scale[2], lr/100*bs_scale[2]), (lr/100*bs_scale[4], lr/1000*bs_scale[4]), lr/1000*bs_scale[4]]
 
-                boundaries, values = lr_decay(lrs, epochs, bs_epoch, total_images)
+                boundaries, values = lr_decay(lrs, epochs, bs_epoch, total_images / args.dist_env["num_trainers"])
 
                 optimizer = fluid.optimizer.Momentum(
                     learning_rate=fluid.layers.piecewise_decay(boundaries=boundaries, values=values),
@@ -161,45 +162,49 @@ def build_program(args, is_train, main_prog, startup_prog, py_reader_startup_pro
                 if args.memory_optimize:
                     fluid.memory_optimize(main_prog, skip_grads=True)
 
-    return avg_cost, optimizer, [batch_acc1, batch_acc5], pyreader
+    return avg_cost, [batch_acc1, batch_acc5]
 
 
-def refresh_program(args, epoch, sz, trn_dir, bs, val_bs, need_update_start_prog=False, min_scale=0.08, rect_val=False):
+def refresh_program(args, epoch, sz, trn_dir, bs, val_bs):
     print('refresh program: epoch: [%d], image size: [%d], trn_dir: [%s], batch_size:[%d]' % (epoch, sz, trn_dir, bs))
     train_prog = fluid.Program()
     test_prog = fluid.Program()
     startup_prog = fluid.Program()
-    py_reader_startup_prog = fluid.Program()
 
-    train_args = build_program(args, True, train_prog, startup_prog, py_reader_startup_prog, sz, trn_dir, bs, min_scale)
-    test_args = build_program(args, False, test_prog, startup_prog, py_reader_startup_prog, sz, trn_dir, val_bs, min_scale, rect_val=rect_val)
+    train_loss, [train_acc1, train_acc5]= build_program(args, True, train_prog, startup_prog, sz, bs)
+    test_loss, [test_acc1, test_acc5] = build_program(args, False, test_prog, startup_prog, sz, val_bs)
 
-    place = core.CUDAPlace(0)
+    train_args = (train_loss, [train_acc1, train_acc5], startup_prog, train_prog)
+    test_args = (test_loss, [test_acc1, test_acc5], test_prog)
+    return train_args, test_args
+
+def prepare_startup(args, train_args, startup_prog, train_prog, test_prog):
+    place = core.CUDAPlace(GPU_ID)
     startup_exe = fluid.Executor(place)
-    startup_exe.run(py_reader_startup_prog)
 
-    if need_update_start_prog:
-        startup_exe.run(startup_prog)
-        conv2d_w_vars = [var for var in startup_prog.global_block().vars.values() if var.name.startswith('conv2d_')]
-        for var in conv2d_w_vars:
-            torch_w = torch.empty(var.shape)
-            kaiming_np = torch.nn.init.kaiming_normal_(torch_w, mode='fan_out', nonlinearity='relu').numpy()
-            tensor = fluid.global_scope().find_var(var.name).get_tensor()
-            if args.fp16:
-                tensor.set(np.array(kaiming_np, dtype="float16").view(np.uint16), place)
-            else:
-                tensor.set(np.array(kaiming_np, dtype="float32"), place)
+    if is_mp_mode():
+        nccl2_prepare(args, startup_prog)
 
-        np_tensors = {}
-        np_tensors["img_mean"] = np.array([0.485 * 255.0, 0.456 * 255.0, 0.406 * 255.0]).astype("float16" if args.fp16 else "float32").reshape((3, 1, 1))
-        np_tensors["img_std"] = np.array([0.229 * 255.0, 0.224 * 255.0, 0.225 * 255.0]).astype("float16" if args.fp16 else "float32").reshape((3, 1, 1))
-        for vname, np_tensor in np_tensors.items():
-            var = fluid.global_scope().find_var(vname)
-            if args.fp16:
-                var.get_tensor().set(np_tensor.view(np.uint16), place)
-            else:
-                var.get_tensor().set(np_tensor, place)
+    startup_exe.run(startup_prog)
+    conv2d_w_vars = [var for var in startup_prog.global_block().vars.values() if var.name.startswith('conv2d_')]
+    for var in conv2d_w_vars:
+        torch_w = torch.empty(var.shape)
+        kaiming_np = torch.nn.init.kaiming_normal_(torch_w, mode='fan_out', nonlinearity='relu').numpy()
+        tensor = fluid.global_scope().find_var(var.name).get_tensor()
+        if args.fp16:
+            tensor.set(np.array(kaiming_np, dtype="float16").view(np.uint16), place)
+        else:
+            tensor.set(np.array(kaiming_np, dtype="float32"), place)
 
+    np_tensors = {}
+    np_tensors["img_mean"] = np.array([0.485 * 255.0, 0.456 * 255.0, 0.406 * 255.0]).astype("float16" if args.fp16 else "float32").reshape((3, 1, 1))
+    np_tensors["img_std"] = np.array([0.229 * 255.0, 0.224 * 255.0, 0.225 * 255.0]).astype("float16" if args.fp16 else "float32").reshape((3, 1, 1))
+    for vname, np_tensor in np_tensors.items():
+        var = fluid.global_scope().find_var(vname)
+        if args.fp16:
+            var.get_tensor().set(np_tensor.view(np.uint16), place)
+        else:
+            var.get_tensor().set(np_tensor, place)
 
     strategy = fluid.ExecutionStrategy()
     strategy.num_threads = args.num_threads
@@ -207,6 +212,8 @@ def refresh_program(args, epoch, sz, trn_dir, bs, val_bs, need_update_start_prog
     strategy.num_iteration_per_drop_scope = 1
     build_strategy = fluid.BuildStrategy()
     build_strategy.reduce_strategy = fluid.BuildStrategy().ReduceStrategy.AllReduce
+    build_strategy.num_trainers = args.dist_env["num_trainers"]
+    build_strategy.trainer_id = args.dist_env["trainer_id"]
 
     avg_loss = train_args[0]
     train_exe = fluid.ParallelExecutor(
@@ -214,29 +221,36 @@ def refresh_program(args, epoch, sz, trn_dir, bs, val_bs, need_update_start_prog
         avg_loss.name,
         main_program=train_prog,
         exec_strategy=strategy,
-        build_strategy=build_strategy)
+        build_strategy=build_strategy,
+        num_trainers=args.dist_env["num_trainers"],
+        trainer_id=args.dist_env["trainer_id"])
     test_exe = fluid.ParallelExecutor(
         True, main_program=test_prog, share_vars_from=train_exe)
 
-    return train_args, test_args, test_prog, train_exe, test_exe
+    return train_exe, test_exe
 
-def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir, img_dim, min_scale, rect_val):
+def prepare_reader(epoch_id, train_bs, val_bs, trn_dir, img_dim, min_scale, rect_val, args):
     train_reader = torchvision_reader.train(
-                traindir="/data/imagenet/%strain" % trn_dir, sz=img_dim, min_scale=min_scale, shuffle_seed=epoch_id+1)
-    train_py_reader.decorate_paddle_reader(paddle.batch(train_reader, batch_size=train_bs))
+                traindir="/data/imagenet/%strain" % trn_dir,
+                sz=img_dim,
+                min_scale=min_scale,
+                shuffle_seed=epoch_id+1,
+                num_trainers=args.dist_env["num_trainers"],
+                trainer_id=args.dist_env["trainer_id"])
+    train_batched_reader = paddle.batch(train_reader, batch_size=worker_batchsize(train_bs))
 
     test_reader = torchvision_reader.test(
-                valdir="/data/imagenet/%svalidation" % trn_dir, bs=val_bs*DEVICE_NUM, sz=img_dim, rect_val=rect_val)
-    test_batched_reader = paddle.batch(test_reader, batch_size=val_bs * DEVICE_NUM)
+                valdir="/data/imagenet/%svalidation" % trn_dir, bs=worker_batchsize(val_bs), sz=img_dim, rect_val=rect_val)
+    test_batched_reader = paddle.batch(test_reader, batch_size=worker_batchsize(val_bs))
 
-    return test_batched_reader
+    return train_batched_reader, test_batched_reader
 
 
 def train_parallel(args):
     over_all_start = time.time()
     test_prog = fluid.Program()
 
-    exe = None
+    train_exe = None
     test_exe = None
     train_args = None
     test_args = None
@@ -247,16 +261,24 @@ def train_parallel(args):
     img_dim=128
     min_scale=0.08
     rect_val=False
+    feeder=None
+
     for epoch_id in range(args.num_epochs):
         # refresh program
         if epoch_id == 0:
-            train_args, test_args, test_prog, exe, test_exe = refresh_program(args, epoch_id, sz=img_dim, trn_dir=trn_dir, bs=bs, val_bs=val_bs, need_update_start_prog=True)
+            train_args, test_args = refresh_program(args, epoch_id, sz=img_dim, trn_dir=trn_dir, bs=bs, val_bs=val_bs)
+            startup_prog = train_args[2]
+            train_prog = train_args[3]
+            test_prog = test_args[2]
+            train_exe, test_exe = prepare_startup(args, train_args, startup_prog, train_prog, test_prog)
+            feed_list = [train_prog.global_block().var(varname) for varname in ("image", "label")]
+            feeder = fluid.DataFeeder(feed_list=feed_list, place=fluid.CUDAPlace(GPU_ID))
         elif epoch_id == 13: #13
             bs = 96
             trn_dir="sz/352/"
             img_dim=224
             min_scale=0.087
-            train_args, test_args, test_prog, exe, test_exe = refresh_program(args, epoch_id, sz=img_dim, trn_dir=trn_dir, bs=bs, val_bs=val_bs, min_scale=min_scale)
+            train_args, test_args = refresh_program(args, epoch_id, sz=img_dim, trn_dir=trn_dir, bs=bs, val_bs=val_bs)
         elif epoch_id == 25: #25
             bs = 50
             val_bs=8
@@ -264,21 +286,18 @@ def train_parallel(args):
             img_dim=288
             min_scale=0.5
             rect_val=True
-            train_args, test_args, test_prog, exe, test_exe = refresh_program(args, epoch_id, sz=img_dim, trn_dir=trn_dir, bs=bs, val_bs=val_bs, min_scale=min_scale, rect_val=rect_val)
+            train_args, test_args = refresh_program(args, epoch_id, sz=img_dim, trn_dir=trn_dir, bs=bs, val_bs=val_bs)
         else:
             pass
 
         avg_loss = train_args[0]
         num_samples = 0
-        iters = 0
         start_time = time.time()
-        train_py_reader = train_args[3]
-        test_reader = prepare_reader(epoch_id, train_py_reader, bs, val_bs, trn_dir, img_dim=img_dim, min_scale=min_scale, rect_val=rect_val)
-        train_py_reader.start() # start pyreader
+        train_reader, test_reader = prepare_reader(epoch_id, bs, val_bs, trn_dir, img_dim=img_dim, min_scale=min_scale, rect_val=rect_val, args=args)
         batch_start_time = time.time()
-        while True:
+        for iters, data in enumerate(train_reader()):
             fetch_list = [avg_loss.name]
-            acc_name_list = [v.name for v in train_args[2]]
+            acc_name_list = [v.name for v in train_args[1]]
             fetch_list.extend(acc_name_list)
             fetch_list.append("learning_rate")
             if iters % args.log_period == 0:
@@ -289,12 +308,11 @@ def train_parallel(args):
             fetch_ret = []
             try:
                 if should_print:
-                    fetch_ret = exe.run(fetch_list)
+                    fetch_ret = train_exe.run(fetch_list=fetch_list, feed=feeder.feed(data))
                 else:
-                    exe.run([])
+                    train_exe.run([])
             except fluid.core.EOFException as eof:
                 print("Finish current epoch, will reset pyreader...")
-                train_py_reader.reset()
                 break
             except fluid.core.EnforceNotMet as ex:
                 traceback.print_exc()
@@ -304,15 +322,13 @@ def train_parallel(args):
 
             if should_print:
                 fetched_data = [np.mean(np.array(d)) for d in fetch_ret]
-                print("Epoch %d, batch %d, loss %s, accucacys: %s, learning_rate %s, py_reader queue_size: %d, avg batch time: %0.4f secs" %
-                      (epoch_id, iters, fetched_data[0], fetched_data[1:-1], fetched_data[-1], train_py_reader.queue.size(), (time.time() - batch_start_time)*1.0/args.log_period))
+                print("Epoch %d, batch %d, loss %s, accucacys: %s, learning_rate %s, avg batch time: %0.4f secs" %
+                      (epoch_id, iters, fetched_data[0], fetched_data[1:-1], fetched_data[-1], (time.time() - batch_start_time)*1.0/args.log_period))
                 batch_start_time = time.time()
             iters += 1
 
         print_train_time(start_time, time.time(), num_samples)
-        feed_list = [test_prog.global_block().var(varname) for varname in ("image", "label")]
-        test_feeder = fluid.DataFeeder(feed_list=feed_list, place=fluid.CUDAPlace(0))
-        test_ret = test_parallel(test_exe, test_args, args, test_reader, test_feeder, val_bs)
+        test_ret = test_parallel(test_exe, test_args, args, test_reader, feeder, val_bs)
         test_acc1, test_acc5 = [np.mean(np.array(v)) for v in test_ret]
         print("Epoch: %d, Test Accuracy: %s, Spend %.2f hours\n" %
             (epoch_id, [test_acc1, test_acc5], (time.time() - over_all_start) / 3600))
@@ -341,6 +357,7 @@ def print_paddle_envs():
 
 def main():
     args = parse_args()
+    args.dist_env = dist_env()
     print_arguments(args)
     print_paddle_envs()
     train_parallel(args)
