@@ -62,8 +62,6 @@ class YOLOv3(object):
         self.outputs = []
         self.losses = []
         self.downsample = 32
-        self.ignore_thresh = .7
-        self.class_num = 80
 
     def build_input(self):
         self.image_shape = [3, cfg.input_size, cfg.input_size]
@@ -132,16 +130,8 @@ class YOLOv3(object):
                 route = upsample(route)
 
 
-        anchor_mask = [6,7,8,3,4,5,0,1,2]
-        anchors = [10, 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198, 373, 326]
-        for i,out in enumerate(self.outputs):
-            mask = anchor_mask[i*3 : (i+1)*3]
-            mask_anchors=[]
-
-            for m in mask:
-                mask_anchors.append(anchors[2 * m])
-                mask_anchors.append(anchors[2 * m + 1])
-            class_num = int(self.class_num)
+        for i, out in enumerate(self.outputs):
+            anchor_mask = cfg.anchor_masks[i]
 
             if self.is_train:
                 ignore_thresh = float(self.ignore_thresh)
@@ -150,20 +140,24 @@ class YOLOv3(object):
                         gtbox=self.gtbox,
                         gtlabel=self.gtlabel,
                         gtscore=self.gtscore,
-                        anchors=anchors,
-                        anchor_mask=mask,
-                        class_num=class_num,
-                        ignore_thresh=ignore_thresh,
+                        anchors=cfg.anchors,
+                        anchor_mask=anchor_mask,
+                        class_num=cfg.class_num,
+                        ignore_thresh=cfg.ignore_thresh,
                         downsample_ratio=self.downsample,
                         use_label_smooth=cfg.label_smooth,
                         name="yolo_loss"+str(i))
                 self.losses.append(fluid.layers.reduce_mean(loss))
             else:
+                mask_anchors=[]
+                for m in anchor_mask:
+                    mask_anchors.append(cfg.anchors[2 * m])
+                    mask_anchors.append(cfg.anchors[2 * m + 1])
                 boxes, scores = fluid.layers.yolo_box(
                         x=out,
                         img_size=self.im_shape,
                         anchors=mask_anchors,
-                        class_num=class_num,
+                        class_num=cfg.class_num,
                         conf_thresh=cfg.valid_thresh,
                         downsample_ratio=self.downsample,
                         name="yolo_box"+str(i))

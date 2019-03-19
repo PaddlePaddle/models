@@ -64,6 +64,16 @@ _C.pixel_means = [0.485, 0.456, 0.406]
 # pixel std values
 _C.pixel_stds = [0.229, 0.224, 0.225]
 
+# anchors box weight and height
+_C.anchors = [10, 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198, 373, 326]
+
+# anchor mask of each yolo layer
+_C.anchor_masks = [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
+
+# IoU threshold to ignore objectness loss of pred box
+_C.ignore_thresh = .7
+
+
 #
 # SOLVER options
 #

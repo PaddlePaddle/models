@@ -86,14 +86,11 @@ def add_DarkNet53_conv_body(body_input, is_test=True):
     conv1 = conv_bn_layer(
             body_input, ch_out=32, filter_size=3, stride=1, padding=1, is_test=is_test, name="yolo_input")
     downsample_ = downsample(conv1, ch_out=conv1.shape[1]*2, is_test=is_test, name="yolo_input.downsample")
-    index = 2
     blocks = []
     for i, stage in enumerate(stages):
         block = layer_warp(block_func, downsample_, 32 *(2**i), stage, is_test=is_test, name="stage.{}".format(i))
         blocks.append(block)
-        index += 3 * stage
         if i < len(stages) - 1: # do not downsaple in the last stage
             downsample_ = downsample(block, ch_out=block.shape[1]*2, is_test=is_test, name="stage.{}.downsample".format(i))
-        index += 1
     return blocks[-1:-4:-1]
 
