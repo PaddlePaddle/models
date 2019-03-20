@@ -196,7 +196,7 @@ python train.py \
 #ResNet50 nGraph:
 #FLAGS_use_ngraph=true python train.py \
 #    --model=ResNet50 \
-#    --batch_size=256 \
+#    --batch_size=128 \
 #    --total_images=1281167 \
 #    --class_dim=1000 \
 #    --image_shape=3,224,224 \
