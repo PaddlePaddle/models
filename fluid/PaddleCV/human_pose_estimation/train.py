@@ -30,18 +30,18 @@ from utils.utility import *
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('batch_size',       int,   32,                   "Minibatch size.")
-add_arg('dataset',          str,   'mpii',               "Dataset")
-add_arg('use_gpu',          bool,  True,                 "Whether to use GPU or not.")
-add_arg('num_epochs',       int,   140,                  "Number of epochs.")
-add_arg('total_images',     int,   144406,               "Training image number.")
-add_arg('kp_dim',           int,   16,                   "Class number.")
-add_arg('model_save_dir',   str,   "output",             "Model save directory")
-add_arg('with_mem_opt',     bool,  True,                 "Whether to use memory optimization or not.")
-add_arg('pretrained_model', str,   None,                 "Whether to use pretrained model.")
-add_arg('checkpoint',       str,   None,                 "Whether to resume checkpoint.")
-add_arg('lr',               float, 0.001,                "Set learning rate.")
-add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate decay strategy.")
+add_arg('batch_size',       int,   128,                          "Minibatch size.")
+add_arg('dataset',          str,   'mpii',                       "Dataset")
+add_arg('use_gpu',          bool,  True,                         "Whether to use GPU or not.")
+add_arg('num_epochs',       int,   140,                          "Number of epochs.")
+add_arg('total_images',     int,   144406,                       "Training image number.")
+add_arg('kp_dim',           int,   16,                           "Class number.")
+add_arg('model_save_dir',   str,   "output",                     "Model save directory")
+add_arg('with_mem_opt',     bool,  True,                         "Whether to use memory optimization or not.")
+add_arg('pretrained_model', str,   "pretrained/resnet_50/115",   "Whether to use pretrained model.")
+add_arg('checkpoint',       str,   None,                         "Whether to resume checkpoint.")
+add_arg('lr',               float, 0.001,                        "Set learning rate.")
+add_arg('lr_strategy',      str,   "piecewise_decay",            "Set the learning rate decay strategy.")
 # yapf: enable
 
 def optimizer_setting(args, params):
@@ -54,7 +54,7 @@ def optimizer_setting(args, params):
         batch_size = ls["batch_size"]
         step = int(total_images / batch_size + 1)
 
-        ls['epochs'] = [91, 121]
+        ls['epochs'] = [90, 120]
         print('=> LR will be dropped at the epoch of {}'.format(ls['epochs']))
 
         bd = [step * e for e in ls["epochs"]]
@@ -85,7 +85,7 @@ def train(args):
     elif args.dataset == 'mpii':
         import lib.mpii_reader as reader
         IMAGE_SIZE = [384, 384]
-        HEATMAP_SIZE = [96, 96]
+        HEATMAP_SIZE = [96, 96]        
         args.kp_dim = 16
         args.total_images = 22246
     else:
@@ -125,7 +125,7 @@ def train(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    args.pretrained_model = './pretrained/resnet_50/115'
+
     if args.pretrained_model:
         def if_exist(var):
             exist_flag = os.path.exists(os.path.join(args.pretrained_model, var.name))
