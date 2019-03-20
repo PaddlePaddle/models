@@ -195,15 +195,15 @@ python train.py \
 
 #ResNet50 nGraph:
 #FLAGS_use_ngraph=true python train.py \
-#	--model=ResNet50 \
-#	--batch_size=256 \
-#	--total_images=1281167 \
-#	--class_dim=1000 \
-#	--image_shape=3,224,224 \
-#	--lr_strategy=none \
-#	--lr=0.001 \
-#	--num_epochs=120 \
+#    --model=ResNet50 \
+#    --batch_size=256 \
+#    --total_images=1281167 \
+#    --class_dim=1000 \
+#    --image_shape=3,224,224 \
+#    --lr_strategy=none \
+#    --lr=0.001 \
+#    --num_epochs=120 \
 #    --with_mem_opt=False \
 #    --model_category=models_name \
 #    --model_save_dir=output/ \
-#	--use_gpu=False 
+#    --use_gpu=False 
