@@ -157,7 +157,7 @@ def parse_args():
     add_arg('pixel_means',     float,   [102.9801, 115.9465, 122.7717], "pixel mean")
     add_arg('nms_thresh',    float, 0.5,    "NMS threshold.")
     add_arg('score_thresh',    float, 0.05,    "score threshold for NMS.")
-    add_arg('snapshot_stride',  int,    10000,    "save model every snapshot stride.")
+    add_arg('snapshot_iter',  int,    10000,    "save model every snapshot iteration.")
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
     add_arg('image_path',       str,   'dataset/coco/val2017',  "The image path used to inference and visualize.")
