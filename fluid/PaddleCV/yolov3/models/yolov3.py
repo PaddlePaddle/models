@@ -134,7 +134,6 @@ class YOLOv3(object):
             anchor_mask = cfg.anchor_masks[i]
 
             if self.is_train:
-                ignore_thresh = float(self.ignore_thresh)
                 loss = fluid.layers.yolov3_loss(
                         x=out,
                         gtbox=self.gtbox,

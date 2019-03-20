@@ -154,7 +154,7 @@ def random_expand(img, gtboxes, max_ratio=4., fill=None, keep_ratio=True, thresh
 
 def shuffle_gtbox(gtbox, gtlabel, gtscore):
     gt = np.concatenate([gtbox, gtlabel[:, np.newaxis], gtscore[:, np.newaxis]], axis=1)
-    idx = np.arange(gt.shape[1])
+    idx = np.arange(gt.shape[0])
     np.random.shuffle(idx)
     gt = gt[idx, :]
     return gt[:, :4], gt[:, 4], gt[:, 5]
