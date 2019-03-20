@@ -56,7 +56,7 @@ numactl -l python train.py \
             --num_epochs=120 \
             --with_mem_opt=False \
             --model_category=models_name \
-            --model_save_dir=output/
+            --model_save_dir=output/ \
             --use_gpu=False·
 
 ```
