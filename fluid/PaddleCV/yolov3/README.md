@@ -135,11 +135,10 @@ Inference is used to get prediction score or image features based on trained mod
 
 Inference speed:
 
-|   input size  | infer speed |
-| :------: | :------: |
-| 608x608| 50 ms/frame | 
-| 416x416 | 29 ms/frame |
-| 320x320 | 24 ms/frame | 
+
+|   input size  | 608x608 | 416x416 | 320x320 |
+|:-------------:| :-----: | :-----: | :-----: |
+| infer speed | 50 ms/frame | 29 ms/frame |24 ms/frame | 
 
 
 Visualization of infer result is shown as below:

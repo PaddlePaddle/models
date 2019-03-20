@@ -138,11 +138,10 @@ Train Loss
 
 模型预测速度：
 
-|   input size  | infer speed |
-| :------: | :------: |
-| 608x608| 50 ms/frame | 
-| 416x416 | 29 ms/frame |
-| 320x320 | 24 ms/frame | 
+
+|   input size  | 608x608 | 416x416 | 320x320 |
+|:-------------:| :-----: | :-----: | :-----: |
+| infer speed | 50 ms/frame | 29 ms/frame |24 ms/frame | 
 
 下图为模型可视化预测结果：
 <p align="center">
