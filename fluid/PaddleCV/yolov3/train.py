@@ -99,38 +99,36 @@ def train():
 
     fetch_list = [loss]
 
-    def train_loop():
-        py_reader.start()
-        smoothed_loss = SmoothedValue()
-        try:
-            start_time = time.time()
+    py_reader.start()
+    smoothed_loss = SmoothedValue()
+    try:
+        start_time = time.time()
+        prev_start_time = start_time
+        snapshot_loss = 0
+        snapshot_time = 0
+        for iter_id in range(cfg.start_iter, cfg.max_iter):
             prev_start_time = start_time
-            snapshot_loss = 0
-            snapshot_time = 0
-            for iter_id in range(cfg.start_iter, cfg.max_iter):
-                prev_start_time = start_time
-                start_time = time.time()
-                losses = exe.run(compile_program, fetch_list=[v.name for v in fetch_list])
-                smoothed_loss.add_value(np.mean(np.array(losses[0])))
-                snapshot_loss += np.mean(np.array(losses[0]))
-                snapshot_time += start_time - prev_start_time
-                lr = np.array(fluid.global_scope().find_var('learning_rate')
-                              .get_tensor())
-                print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                    iter_id, lr[0],
-                    smoothed_loss.get_mean_value(), start_time - prev_start_time))
-                sys.stdout.flush()
-                if (iter_id + 1) % cfg.snapshot_iter == 0:
-                    save_model("model_iter{}".format(iter_id))
-                    print("Snapshot {} saved, average loss: {}, average time: {}".format(
-                        iter_id + 1, snapshot_loss / float(cfg.snapshot_iter), 
-                        snapshot_time / float(cfg.snapshot_iter)))
-                    snapshot_loss = 0
-                    snapshot_time = 0
-        except fluid.core.EOFException:
-            py_reader.reset()
+            start_time = time.time()
+            losses = exe.run(compile_program, fetch_list=[v.name for v in fetch_list])
+            smoothed_loss.add_value(np.mean(np.array(losses[0])))
+            snapshot_loss += np.mean(np.array(losses[0]))
+            snapshot_time += start_time - prev_start_time
+            lr = np.array(fluid.global_scope().find_var('learning_rate')
+                          .get_tensor())
+            print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
+                iter_id, lr[0],
+                smoothed_loss.get_mean_value(), start_time - prev_start_time))
+            sys.stdout.flush()
+            if (iter_id + 1) % cfg.snapshot_iter == 0:
+                save_model("model_iter{}".format(iter_id))
+                print("Snapshot {} saved, average loss: {}, average time: {}".format(
+                    iter_id + 1, snapshot_loss / float(cfg.snapshot_iter), 
+                    snapshot_time / float(cfg.snapshot_iter)))
+                snapshot_loss = 0
+                snapshot_time = 0
+    except fluid.core.EOFException:
+        py_reader.reset()
 
-    train_loop()
     save_model('model_final')
 
 
