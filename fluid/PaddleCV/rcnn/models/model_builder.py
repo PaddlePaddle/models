@@ -43,8 +43,8 @@ class RCNN(object):
         if cfg.FPN_ON:
             body_dict, self.spatial_scale, body_name_list = FPN.add_fpn_onto_conv_body(
                 body_dict, body_name_list)
+
         # RPN
-        #print(body_dict)
         self.rpn_heads(body_dict, body_name_list)
         # Fast RCNN
         self.fast_rcnn_heads(body_dict, body_name_list)
@@ -188,21 +188,18 @@ class RCNN(object):
         self.rpn_roi_probs_list = fpn_outputs[2]
         self.anchors_list = fpn_outputs[3]
         self.var_list = fpn_outputs[4]
+        self.anchor_num_list = fpn_outputs[5]
         param_obj = cfg.TRAIN if self.mode == 'train' else cfg.TEST
         post_nms_top_n = param_obj.rpn_post_nms_top_n
         rois_collect = fluid.layers.collect_fpn_proposals(
             self.rpn_rois_list,
             self.rpn_roi_probs_list,
-            cfg.FPN_rpn_max_level,
             cfg.FPN_rpn_min_level,
+            cfg.FPN_rpn_max_level,
             post_nms_top_n,
             name='collect')
-        rois_collect.persistable = True
-        fluid.layers.Print(rois_collect)
         if self.mode == 'train':
             rois_collect = self.generate_labels(rois_collect)
-        #rois_collect.persistable = True
-        #fluid.layers.Print(rois_collect)
         rois, self.restore_index = fluid.layers.distribute_fpn_proposals(
             rois_collect,
             cfg.FPN_roi_min_level,
@@ -210,6 +207,10 @@ class RCNN(object):
             cfg.FPN_roi_canonical_level,
             cfg.FPN_roi_canonical_scale,
             name='distribute')
+
+        for roi in rois:
+            roi.persistable = True
+        self.restore_index.persistable = True
         return rois_collect, rois, self.restore_index
 
     def single_scale_rpn_heads(self, res_dict, res_name_list):
@@ -295,8 +296,6 @@ class RCNN(object):
         return rois
 
     def generate_labels(self, input_rois):
-        #input_rois.persistable=True
-        #fluid.layers.Print(input_rois)
         outs = fluid.layers.generate_proposal_labels(
             rpn_rois=input_rois,
             gt_classes=self.gt_label,
@@ -317,7 +316,7 @@ class RCNN(object):
         self.bbox_targets = outs[2]
         self.bbox_inside_weights = outs[3]
         self.bbox_outside_weights = outs[4]
-
+        rois.persistable = True
         if cfg.MASK_ON:
             mask_out = fluid.layers.generate_mask_labels(
                 im_info=self.im_info,
@@ -352,6 +351,7 @@ class RCNN(object):
                                              name='cls_score_b',
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
+        self.cls_score.persistable = True
         self.bbox_pred = fluid.layers.fc(input=rcnn_out,
                                          size=4 * cfg.class_num,
                                          act=None,
@@ -364,6 +364,7 @@ class RCNN(object):
                                              name='bbox_pred_b',
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
+        self.bbox_pred.persistable = True
 
     def SuffixNet(self, conv5):
         mask_out = fluid.layers.conv2d_transpose(
@@ -456,20 +457,99 @@ class RCNN(object):
         loss_bbox = fluid.layers.reduce_mean(loss_bbox)
         return loss_cls, loss_bbox
 
-    def single_scale_rpn_loss(self):
+    def transform_rpn_input(self, rpn_cls_score, rpn_bbox_pred, anchor, var):
         rpn_cls_score_reshape = fluid.layers.transpose(
-            self.rpn_cls_score, perm=[0, 2, 3, 1])
+            rpn_cls_score, perm=[0, 2, 3, 1])
         rpn_bbox_pred_reshape = fluid.layers.transpose(
-            self.rpn_bbox_pred, perm=[0, 2, 3, 1])
+            rpn_bbox_pred, perm=[0, 2, 3, 1])
 
-        anchor_reshape = fluid.layers.reshape(self.anchor, shape=(-1, 4))
-        var_reshape = fluid.layers.reshape(self.var, shape=(-1, 4))
+        anchor_reshape = fluid.layers.reshape(anchor, shape=(-1, 4))
+        var_reshape = fluid.layers.reshape(var, shape=(-1, 4))
 
         rpn_cls_score_reshape = fluid.layers.reshape(
             x=rpn_cls_score_reshape, shape=(0, -1, 1))
         rpn_bbox_pred_reshape = fluid.layers.reshape(
             x=rpn_bbox_pred_reshape, shape=(0, -1, 4))
-        score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight = \
+
+        return rpn_cls_score_reshape, rpn_bbox_pred_reshape, anchor_reshape, var_reshape
+
+    def fpn_rpn_input(self):
+        rpn_cls_reshape_list = []
+        rpn_bbox_reshape_list = []
+        anchors_reshape_list = []
+        var_reshape_list = []
+        for i in range(len(self.rpn_fpn_list)):
+            single_rpn_input = self.transform_rpn_input(
+                self.rpn_fpn_list[i][0], self.rpn_fpn_list[i][1],
+                self.anchors_list[i], self.var_list[i])
+            rpn_cls_reshape_list.append(single_rpn_input[0])
+            rpn_bbox_reshape_list.append(single_rpn_input[1])
+            anchors_reshape_list.append(single_rpn_input[2])
+            var_reshape_list.append(single_rpn_input[3])
+
+        rpn_cls_input = fluid.layers.concat(rpn_cls_reshape_list, axis=1)
+        rpn_bbox_input = fluid.layers.concat(rpn_bbox_reshape_list, axis=1)
+        anchors_input = fluid.layers.concat(anchors_reshape_list)
+        var_input = fluid.layers.concat(var_reshape_list)
+        return rpn_cls_input, rpn_bbox_input, anchors_input, var_input
+
+    def get_rpn_loss(self,
+                     score_pred,
+                     loc_pred,
+                     score_tgt,
+                     loc_tgt,
+                     bbox_weight,
+                     level_score_weight=None,
+                     level_bbox_weight=None,
+                     lvl=None):
+        score_tgt = fluid.layers.cast(x=score_tgt, dtype='float32')
+        score_tgt.stop_gradient = True
+        rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
+            x=score_pred, label=score_tgt)
+
+        if level_score_weight is not None:
+            level_score_weight = fluid.layers.cast(
+                x=level_score_weight, dtype='float32')
+            level_score_weight.stop_gradient = True
+            rpn_cls_loss = rpn_cls_loss * level_score_weight
+
+        rpn_cls_loss = fluid.layers.reduce_sum(rpn_cls_loss)
+        rpn_cls_loss = rpn_cls_loss / (cfg.TRAIN.im_per_batch *
+                                       cfg.TRAIN.rpn_batch_size_per_im)
+        rpn_cls_loss.persistable = True
+
+        loc_tgt = fluid.layers.cast(x=loc_tgt, dtype='float32')
+        loc_tgt.stop_gradient = True
+        rpn_bbox_loss = fluid.layers.smooth_l1(
+            x=loc_pred,
+            y=loc_tgt,
+            sigma=3.0,
+            inside_weight=bbox_weight,
+            outside_weight=bbox_weight)
+
+        if level_bbox_weight is not None:
+            level_bbox_weight = fluid.layers.cast(
+                x=level_bbox_weight, dtype='float32')
+            level_bbox_weight.stop_gradient = True
+            rpn_bbox_loss = rpn_bbox_loss * level_bbox_weight
+
+        rpn_bbox_loss = fluid.layers.reduce_sum(rpn_bbox_loss)
+        score_shape = fluid.layers.shape(score_tgt)
+        score_shape = fluid.layers.cast(x=score_shape, dtype='float32')
+        norm = fluid.layers.reduce_prod(score_shape)
+        norm.stop_gradient = True
+
+        rpn_bbox_loss = rpn_bbox_loss / norm
+        return rpn_cls_loss, rpn_bbox_loss
+
+    def single_scale_rpn_loss(self):
+        rpn_input = self.transform_rpn_input(
+            self.rpn_cls_score, self.rpn_bbox_pred, self.anchor, self.var)
+        rpn_cls_score_reshape = rpn_input[0]
+        rpn_bbox_pred_reshape = rpn_input[1]
+        anchor_reshape = rpn_input[2]
+        var_reshape = rpn_input[3]
+        score_index, loc_index, score_tgt, loc_tgt, bbox_weight = \
             fluid.layers.rpn_target_assign(
                 bbox_pred=rpn_bbox_pred_reshape,
                 cls_logits=rpn_cls_score_reshape,
@@ -484,30 +564,17 @@ class RCNN(object):
                 rpn_positive_overlap=cfg.TRAIN.rpn_positive_overlap,
                 rpn_negative_overlap=cfg.TRAIN.rpn_negative_overlap,
                 use_random=self.use_random)
-        score_tgt = fluid.layers.cast(x=score_tgt, dtype='float32')
-        rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
-            x=score_pred, label=score_tgt)
-        if cfg.FPN_ON:
-            rpn_cls_loss = fluid.layers.reduce_sum(rpn_cls_loss)
-            rpn_cls_loss = rpn_cls_loss / (cfg.TRAIN.im_per_batch *
-                                           cfg.TRAIN.rpn_batch_size_per_im)
-        else:
-            rpn_cls_loss = fluid.layers.reduce_mean(
-                rpn_cls_loss, name='loss_rpn_cls')
-        rpn_reg_loss = fluid.layers.smooth_l1(
-            x=loc_pred,
-            y=loc_tgt,
-            sigma=3.0,
-            inside_weight=bbox_weight,
-            outside_weight=bbox_weight)
-        rpn_reg_loss = fluid.layers.reduce_sum(
-            rpn_reg_loss, name='loss_rpn_bbox')
-        score_shape = fluid.layers.shape(score_tgt)
-        score_shape = fluid.layers.cast(x=score_shape, dtype='float32')
-        norm = fluid.layers.reduce_prod(score_shape)
-        norm.stop_gradient = True
-        rpn_reg_loss = rpn_reg_loss / norm
-        return rpn_cls_loss, rpn_reg_loss
+        rpn_cls_score_reshape = fluid.layers.reshape(
+            x=rpn_cls_score_reshape, shape=(-1, 1))
+        rpn_bbox_pred_reshape = fluid.layers.reshape(
+            x=rpn_bbox_pred_reshape, shape=(-1, 4))
+        score_pred = fluid.layers.gather(rpn_cls_score_reshape, score_index)
+        loc_pred = fluid.layers.gather(rpn_bbox_pred_reshape, loc_index)
+
+        rpn_cls_loss, rpn_bbox_loss = self.get_rpn_loss(
+            score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight)
+
+        return rpn_cls_loss, rpn_bbox_loss
 
     def fpn_rpn_loss(self):
         k_max = cfg.FPN_rpn_max_level
@@ -516,13 +583,63 @@ class RCNN(object):
         loss_rpn_bbox_fpn_name = []
         loss_rpn_cls_fpn_list = []
         loss_rpn_bbox_fpn_list = []
+        rpn_input = self.fpn_rpn_input()
+        rpn_cls_score_reshape = rpn_input[0]
+        rpn_bbox_pred_reshape = rpn_input[1]
+        anchor_reshape = rpn_input[2]
+        var_reshape = rpn_input[3]
+        score_index, loc_index, score_tgt, loc_tgt, bbox_weight = \
+            fluid.layers.rpn_target_assign(
+                bbox_pred=rpn_bbox_pred_reshape,
+                cls_logits=rpn_cls_score_reshape,
+                anchor_box=anchor_reshape,
+                anchor_var=var_reshape,
+                gt_boxes=self.gt_box,
+                is_crowd=self.is_crowd,
+                im_info=self.im_info,
+                rpn_batch_size_per_im=cfg.TRAIN.rpn_batch_size_per_im,
+                rpn_straddle_thresh=cfg.TRAIN.rpn_straddle_thresh,
+                rpn_fg_fraction=cfg.TRAIN.rpn_fg_fraction,
+                rpn_positive_overlap=cfg.TRAIN.rpn_positive_overlap,
+                rpn_negative_overlap=cfg.TRAIN.rpn_negative_overlap,
+                use_random=self.use_random)
+        rpn_cls_score_reshape = fluid.layers.reshape(
+            x=rpn_cls_score_reshape, shape=(-1, 1))
+        rpn_bbox_pred_reshape = fluid.layers.reshape(
+            x=rpn_bbox_pred_reshape, shape=(-1, 4))
+        score_pred = fluid.layers.gather(rpn_cls_score_reshape, score_index)
+        loc_pred = fluid.layers.gather(rpn_bbox_pred_reshape, loc_index)
+
         for lvl in range(k_min, k_max + 1):
             slvl = str(lvl)
-            self.rpn_cls_score = self.rpn_fpn_list[lvl - k_min][0]
-            self.rpn_bbox_pred = self.rpn_fpn_list[lvl - k_min][1]
-            self.anchor = self.anchors_list[lvl - k_min]
-            self.var = self.var_list[lvl - k_min]
-            loss_rpn_cls_fpn, loss_rpn_bbox_fpn = self.single_scale_rpn_loss()
+            if lvl == k_min:
+                anchor_num = self.anchor_num_list[lvl - k_min]
+                level_score_weight = fluid.layers.less_than(
+                    x=score_index, y=anchor_num)
+                level_loc_weight = fluid.layers.less_than(
+                    x=loc_index, y=anchor_num)
+            else:
+                anchor_num = self.anchor_num_list[lvl - k_min]
+                pre_anchor_num = self.anchor_num_list[lvl - k_min - 1]
+                level_score_weight_0 = fluid.layers.less_than(
+                    x=score_index, y=pre_anchor_num)
+                level_score_weight_1 = fluid.layers.less_than(
+                    x=score_index, y=anchor_num)
+                level_score_weight = fluid.layers.logical_xor(
+                    level_score_weight_0, level_score_weight_1)
+
+                level_loc_weight_0 = fluid.layers.less_than(
+                    x=loc_index, y=pre_anchor_num)
+                level_loc_weight_1 = fluid.layers.less_than(
+                    x=loc_index, y=anchor_num)
+                level_loc_weight = fluid.layers.logical_xor(level_loc_weight_0,
+                                                            level_loc_weight_1)
+
+            loss_rpn_cls_fpn, loss_rpn_bbox_fpn = self.get_rpn_loss(
+                score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight,
+                level_score_weight, level_loc_weight, lvl)
+            loss_rpn_cls_fpn.persistable = True
+            loss_rpn_bbox_fpn.persistable = True
             loss_rpn_cls_fpn_name.append('loss_rpn_cls_fpn' + slvl)
             loss_rpn_bbox_fpn_name.append('loss_rpn_bbox_fpn' + slvl)
             loss_rpn_cls_fpn_list.append(loss_rpn_cls_fpn)

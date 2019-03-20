@@ -55,7 +55,7 @@ _C.TRAIN.padding_minibatch = False
 _C.TRAIN.snapshot_iter = 10000
 
 # number of RPN proposals to keep before NMS
-_C.TRAIN.rpn_pre_nms_top_n = 12000
+_C.TRAIN.rpn_pre_nms_top_n = 2000
 
 # number of RPN proposals to keep after NMS
 _C.TRAIN.rpn_post_nms_top_n = 2000
@@ -208,8 +208,8 @@ _C.FPN_rpn_aspect_ratios = (0.5, 1, 2)
 _C.FPN_rpn_anchor_start_size = 32
 
 # Parameters to map RoI level
-_C.FPN_roi_canonical_level = 224
-_C.FPN_roi_canonical_scale = 4
+_C.FPN_roi_canonical_level = 4
+_C.FPN_roi_canonical_scale = 224
 
 # Stride of the coarsest FPN level
 _C.FPN_coarsest_stride = 32
