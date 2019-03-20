@@ -87,14 +87,14 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 
 **model configuration:**
 
-* The model uses 9 anchors generated based on the COCO dataset, which are (10x13), (16x30), (33x23), (30x61), (62x45), (59x119), (116x90), (156x198), (373x326).
+* The model uses 9 anchors generated based on the COCO dataset, which are 10x13, 16x30, 33x23, 30x61, 62x45, 59x119, 116x90, 156x198, 373x326.
 
-* NMS threshold=0.7, NMS valid=0.1 nms_topk=400, nms_posk=100
+* NMS threshold=0.45, NMS valid=0.005 nms_topk=400, nms_posk=100
 
 **training strategy:**
 
 *  Use momentum optimizer with momentum=0.9.
-*  In first 1000 iteration, the learning rate increases linearly from 0.0 to 0.01. Then lr is decayed at 450000, 500000 iteration with multiplier 0.1, 0.01. The maximum iteration is 500000.
+*  In first 4000 iteration, the learning rate increases linearly from 0.0 to 0.01. Then lr is decayed at 450000, 500000 iteration with multiplier 0.1, 0.01. The maximum iteration is 500000.
 
 Training result is shown as below：
 <p align="center">
@@ -116,11 +116,11 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
 Evalutaion result is shown as below:
 
-|   mAP  |IoU=0.50:0.95 | IoU=0.50 | IoU=0.75 |
+|   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
-| input size=608x608| 37.7 | 59.8 | 40.8 |
-| input size=416x416 | 36.5 | 58.2 | 39.1 |
-| input size=320x320 | 34.1 | 55.4 | 36.3 |
+| 608x608| 37.7 | 59.8 | 40.8 |
+| 416x416 | 36.5 | 58.2 | 39.1 |
+| 320x320 | 34.1 | 55.4 | 36.3 |
 
 ## Inference and Visualization
 
@@ -132,6 +132,15 @@ Inference is used to get prediction score or image features based on trained mod
         --image_path=data/COCO17/val2017/  \
         --image_name=000000000139.jpg \
         --draw_threshold=0.5
+
+Inference speed:
+
+|   input size  | infer speed |
+| :------: | :------: |
+| 608x608| 50 ms/frame | 
+| 416x416 | 29 ms/frame |
+| 320x320 | 24 ms/frame | 
+
 
 Visualization of infer result is shown as below:
 <p align="center">
