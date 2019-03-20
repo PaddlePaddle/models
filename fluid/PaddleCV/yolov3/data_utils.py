@@ -124,7 +124,7 @@ class GeneratorEnqueuer(object):
         for thread in self._threads:
             if self._use_multiprocessing:
                 if thread.is_alive():
-                    thread.terminate()
+                    thread.join(timeout)
             else:
                 thread.join(timeout)
         if self._manager:
