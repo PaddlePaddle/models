@@ -1,18 +1,18 @@
 #Hyperparameters config
 #Example: SE_ResNext50_32x4d
-#python train.py \
-#       --model=SE_ResNeXt50_32x4d \
-#       --batch_size=400 \
-#       --total_images=1281167 \
-#       --class_dim=1000 \
-#       --image_shape=3,224,224 \
-#       --model_save_dir=output/ \
-#       --with_mem_opt=True \
-#       --lr_strategy=cosine_decay \
-#       --lr=0.1 \
-#       --num_epochs=200 \
-#       --l2_decay=1.2e-4 \
-#       --model_category=models_name \
+python train.py \
+       --model=SE_ResNeXt50_32x4d \
+       --batch_size=400 \
+       --total_images=1281167 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --model_save_dir=output/ \
+       --with_mem_opt=True \
+       --lr_strategy=cosine_decay \
+       --lr=0.1 \
+       --num_epochs=200 \
+       --l2_decay=1.2e-4 \
+       --model_category=models_name \
 #      >log_SE_ResNeXt50_32x4d.txt 2>&1 &
 #AlexNet:
 #python train.py \
@@ -194,16 +194,16 @@
 #	--l2_decay=3e-4
 
 #ResNet50 nGraph:
-FLAGS_use_ngraph=true python train.py \
-	--model=ResNet50 \
-	--batch_size=256 \
-	--total_images=1281167 \
-	--class_dim=1000 \
-	--image_shape=3,224,224 \
-	--lr_strategy=none \
-	--lr=0.001 \
-	--num_epochs=120 \
-    --with_mem_opt=False \
-    --model_category=models_name \
-    --model_save_dir=output/ \
-	--use_gpu=False 
+#FLAGS_use_ngraph=true python train.py \
+#	--model=ResNet50 \
+#	--batch_size=256 \
+#	--total_images=1281167 \
+#	--class_dim=1000 \
+#	--image_shape=3,224,224 \
+#	--lr_strategy=none \
+#	--lr=0.001 \
+#	--num_epochs=120 \
+#    --with_mem_opt=False \
+#    --model_category=models_name \
+#    --model_save_dir=output/ \
+#	--use_gpu=False 
