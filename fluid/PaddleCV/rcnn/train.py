@@ -28,6 +28,7 @@ import paddle.fluid as fluid
 import reader
 import models.model_builder as model_builder
 import models.resnet as resnet
+import models.FPN as FPN
 from learning_rate import exponential_with_warmup_decay
 from config import cfg
 
@@ -50,9 +51,17 @@ def train():
     use_random = True
     if cfg.enable_ce:
         use_random = False
+
+    if cfg.FPN_ON:
+        roi_head_func = FPN.add_FPN_roi_head_output
+        body_func = resnet.add_ResNet50_conv5_body
+    else:
+        roi_head_func = resnet.add_ResNet_roi_conv5_head
+        body_func = resnet.add_ResNet50_conv4_body
+
     model = model_builder.RCNN(
-        add_conv_body_func=resnet.add_ResNet50_conv4_body,
-        add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
+        add_conv_body_func=body_func,
+        add_roi_box_head_func=roi_head_func,
         use_pyreader=cfg.use_pyreader,
         use_random=use_random)
     model.build_model(image_shape)
@@ -93,8 +102,13 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
 
     if cfg.parallel:
+        build_strategy = fluid.BuildStrategy()
+        build_strategy.enable_inplace = False
+        build_strategy.memory_optimize = False
         train_exe = fluid.ParallelExecutor(
-            use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
+            use_cuda=bool(cfg.use_gpu),
+            loss_name=loss.name,
+            build_strategy=build_strategy)
 
     shuffle = True
     if cfg.enable_ce:

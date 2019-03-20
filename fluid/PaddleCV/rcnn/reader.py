@@ -80,11 +80,14 @@ def coco(mode,
     print("{} on {} with {} roidbs".format(mode, cfg.dataset, len(roidbs)))
 
     def padding_minibatch(batch_data):
-        if len(batch_data) == 1:
+        if len(batch_data) == 1 and not cfg.FPN_ON:
             return batch_data
 
         max_shape = np.array([data[0].shape for data in batch_data]).max(axis=0)
-
+        if cfg.FPN_ON:
+            stride = float(cfg.FPN_coarsest_stride)
+            max_shape[1] = int(np.ceil(max_shape[1] / stride) * stride)
+            max_shape[2] = int(np.ceil(max_shape[2] / stride) * stride)
         padding_batch = []
         for data in batch_data:
             im_c, im_h, im_w = data[0].shape[:]
@@ -108,6 +111,7 @@ def coco(mode,
                 roidb = roidb_perm[0]
                 roidb_cur += 1
                 roidb_perm.rotate(-1)
+                if '0000139' not in roidb['image']: continue
                 if roidb_cur >= len(roidbs):
                     if shuffle:
                         roidb_perm = deque(np.random.permutation(roidbs))
