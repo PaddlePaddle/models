@@ -4,7 +4,7 @@ This directory contains configuration and instructions to run the PaddlePaddle +
 
 # How to build PaddlePaddle framework with NGraph engine
 In order to build the PaddlePaddle + nGraph engine and run proper scripti,  follow up a few steps:
-1. build the PaddlePaddle project
+1. Install PaddlePaddle project
 2. download pre-trained model data
 3. set env exports for nGraph and OMP
 5. run the inference/training script
@@ -14,8 +14,8 @@ Curently supported models:
 
 Short description of aforementioned steps:
 
-## 1. Build paddle
-Follow PaddlePaddle [installation instruction](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#installation) to install PaddlePaddle. Please use the following cmake arguments and ensure to set -DWITH_NGRAPH=ON.  
+## 1. Install PaddlePaddle
+Follow PaddlePaddle [installation instruction](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#installation) to install PaddlePaddle. If you build PaddlePaddle yourself, please use the following cmake arguments and ensure to set -DWITH_NGRAPH=ON.  
 ```
 cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_DOC=OFF -DWITH_GPU=OFF -DWITH_DISTRIBUTE=OFF -DWITH_MKLDNN=ON -DWITH_MKL=ON -DWITH_GOLANG=OFF -DWITH_SWIG_PY=ON -DWITH_STYLE_CHECK=OFF -DWITH_TESTING=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DWITH_PROFILER=OFF -DWITH_NGRAPH=ON
 ```
@@ -37,5 +37,5 @@ If everything built sucessfully, you can run command in ResNet50 nGraph session 
 
 Above is training job using the nGraph, to run the inference job using the nGraph:
 ```
-python infer.py --use_gpu false --model=ResNet50
+python infer.py --use_gpu=False --model=ResNet50
 ```
