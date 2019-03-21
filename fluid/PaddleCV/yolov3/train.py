@@ -86,8 +86,9 @@ def train():
     if cfg.random_shape:
         random_sizes = [32 * i for i in range(10, 20)]
 
-    mixup_iter = cfg.max_iter - cfg.start_iter - cfg.no_mixup_iter
-    train_reader = reader.train(input_size, batch_size=cfg.batch_size, shuffle=True, mixup_iter=mixup_iter*devices_num, random_sizes=random_sizes, use_multiprocessing=cfg.use_multiprocess)
+    total_iter = cfg.max_iter - cfg.start_iter
+    mixup_iter = total_iter - cfg.no_mixup_iter
+    train_reader = reader.train(input_size, batch_size=cfg.batch_size, shuffle=True, total_iter=total_iter*devices_num, mixup_iter=mixup_iter*devices_num, random_sizes=random_sizes, use_multiprocessing=cfg.use_multiprocess)
     py_reader = model.py_reader
     py_reader.decorate_paddle_reader(train_reader)
 

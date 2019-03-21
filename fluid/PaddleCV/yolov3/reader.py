@@ -250,10 +250,11 @@ dsr = DataSetReader()
 def train(size=416, 
           batch_size=64, 
           shuffle=True, 
+          total_iter=0,
           mixup_iter=0,
           random_sizes=[],
-          num_workers=12,
-          max_queue=36,
+          num_workers=8,
+          max_queue=32,
           use_multiprocessing=True):
     generator = dsr.get_reader('train', size, batch_size, shuffle, int(mixup_iter/num_workers), random_sizes)
 
@@ -266,6 +267,7 @@ def train(size=416,
                 yield data
 
     def reader():
+        cnt = 0
         try:
             enqueuer = GeneratorEnqueuer(
                 infinite_reader(), use_multiprocessing=use_multiprocessing)
@@ -279,6 +281,10 @@ def train(size=416,
                     else:
                         time.sleep(0.02)
                 yield generator_out
+                cnt += 1
+                if cnt >= total_iter:
+                    enqueuer.stop()
+                    return
                 generator_out = None
         finally:
             if enqueuer is not None:
