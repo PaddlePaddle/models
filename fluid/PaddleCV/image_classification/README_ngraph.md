@@ -37,7 +37,5 @@ If everything built sucessfully, you can run command in ResNet50 nGraph session 
 
 Above is training job using the nGraph, to run the inference job using the nGraph:
 ```
-numactl -l python infer.py --use_gpu false --model=ResNet50
+python infer.py --use_gpu false --model=ResNet50
 ```
-
-The numactl is a utility which can be used to control NUMA policy for processes or shared memory. NUMA (stands for Non-Uniform Memory Access) is a memory architecture in which a given CPU core has variable access speeds to different regions of memory.
