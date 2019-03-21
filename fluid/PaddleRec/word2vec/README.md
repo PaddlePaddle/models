@@ -1,103 +1,73 @@
+# 基于skip-gram的word2vector模型
 
-# Skip-Gram Word2Vec Model
+以下是本例的简要目录结构及说明：
 
-## Introduction
+```text
+.
+├── infer.py            # 预测脚本
+├── net.py              # 网络结构
+├── preprocess.py       # 预处理脚本，包括构建词典和预处理文本
+├── reader.py           # 训练阶段的文本读写
+├── README.md           # 使用说明
+├── train.py            # 训练函数
+└── utils.py            # 通用函数
 
-
-## Environment
-You should install PaddlePaddle Fluid first.
-
-## Dataset
-The training data for the 1 Billion Word Language Model Benchmark的(http://www.statmt.org/lm-benchmark).
-
-Download dataset:
-```bash
-cd data && ./download.sh && cd ..
-```
-if you would like to use our supported third party vocab, please run:
-
-```bash
-wget http://download.tensorflow.org/models/LM_LSTM_CNN/vocab-2016-09-10.txt
 ```
 
-## Model
-This model implement a skip-gram model of word2vector.
+## 介绍
+本例实现了skip-gram模式的word2vector模型。
 
 
-## Data Preprocessing method
-
-Preprocess the training data to generate a word dict.
-
-```bash
-python preprocess.py --data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled --dict_path data/1-billion_dict
-```
-if you would like to use your own vocab follow the format below:
-```bash
-<UNK>
-a
-b
-c
-```
-Then, please set --other_dict_path as the directory of where you
-save the vocab you will use and set --with_other_dict flag on to using it.
-
-## Train
-The command line options for training can be listed by `python train.py -h`.
-
-### Local Train:
-we set CPU_NUM=1 as default CPU_NUM to execute
-```bash
-export CPU_NUM=1 && \
-python train.py \
-        --train_data_path ./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled \
-        --dict_path data/1-billion_dict \
-        --with_hs --with_nce --is_local \
-        2>&1 | tee train.log
-```
-if you would like to use our supported third party vocab, please set --other_dict_path as the directory of where you
-save the vocab you will use and set --with_other_dict flag on to using it.
-
-### Distributed Train
-Run a 2 pserver 2 trainer distribute training on a single machine.
-In distributed training setting, training data is splited by trainer_id, so that training data
- do not overlap among trainers
+## 数据集
+大数据集使用的是来自1 Billion Word Language Model Benchmark的(http://www.statmt.org/lm-benchmark)的数据集.下载命令如下
 
 ```bash
-sh cluster_train.sh
+wget https://paddle-zwh.bj.bcebos.com/1-billion-word-language-modeling-benchmark-r13output.tar
 ```
 
-## Infer
+小数据集使用1700w个词的text8数据集，下载命令如下
 
-In infer.py we construct some test cases in the `build_test_case` method to evaluate the effect of word embeding:
-We enter the test case (we are currently using the analogical-reasoning task: find the structure of A - B = C - D, for which we calculate A - B + D, find the nearest C by cosine distance, the calculation accuracy is removed Candidates for A, B, and D appear in the candidate) Then calculate the cosine similarity of the candidate and all words in the entire embeding, and print out the topK (K is determined by the parameter --rank_num, the default is 4).
+下载数据集：
+```bash
+wget https://paddle-zwh.bj.bcebos.com/text.tar
+```
 
-Such as:
-For: boy - girl + aunt = uncle
-0 nearest aunt: 0.89
-1 nearest uncle: 0.70
-2 nearest grandmother: 0.67
-3 nearest father:0.64
 
-You can also add your own tests by mimicking the examples given in the `build_test_case` method.
+## 数据预处理
+以下以小数据为例进行预处理。
 
-To running test case from test files, please download the test files into 'test' directory
-we provide test for each case with the following structure:
-        `word1 word2 word3 word4`
-so we can build it into `word1 - word2 + word3 = word4`
+大数据集注意解压后以training-monolingual.tokenized.shuffled 目录为预处理目录，和小数据集的text目录并列。
 
-Forecast in training:
+根据英文语料生成词典, 中文语料可以通过修改text_strip
 
 ```bash
-Python infer.py --infer_during_train 2>&1 | tee infer.log
+python preprocess.py --build_dict --build_dict_corpus_dir data/text/ --dict_path data/test_build_dict
 ```
-Use a model for offline prediction:
+
+根据词典将文本转成id, 同时进行downsample，按照概率过滤常见词。
 
 ```bash
-Python infer.py --infer_once --model_output_dir ./models/[specific models file directory] 2>&1 | tee infer.log
+python preprocess.py --filter_corpus --dict_path data/test_build_dict --input_corpus_dir data/text/ --output_corpus_dir data/convert_text8 --min_count 5 --downsample 0.001
 ```
 
-## Train on Baidu Cloud
-1. Please prepare some CPU machines on Baidu Cloud following the steps in [train_on_baidu_cloud](https://github.com/PaddlePaddle/FluidDoc/blob/develop/doc/fluid/user_guides/howto/training/train_on_baidu_cloud_cn.rst)
-1. Prepare dataset using preprocess.py.
-1. Split the train.txt to trainer_num parts and put them on the machines.
-1. Run training with the cluster train using the command in `Distributed Train` above.
+## 训练
+cpu 单机多线程训练
+
+```bash
+OPENBLAS_NUM_THREADS=1 CPU_NUM=5 python train.py --train_data_dir data/convert_text8 --dict_path data/test_build_dict --num_passes 10 --batch_size 100 --model_output_dir v1_cpu5_b100_lr1dir --base_lr 1.0 --print_batch 1000 --with_speed --is_sparse
+```
+
+## 预测
+测试集下载命令如下
+
+```bash
+#大数据集测试集
+wget https://paddle-zwh.bj.bcebos.com/test_dir.tar
+#小数据集测试集
+wget https://paddle-zwh.bj.bcebos.com/test_mid_dir.tar
+```
+
+预测命令
+```bash
+python infer.py --infer_epoch --test_dir data/test_mid_dir/ --dict_path data/test_build_dict_word_to_id_ --batch_size 20000 --model_dir v1_cpu5_b100_lr1dir/  --start_index 0
+```

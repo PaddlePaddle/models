@@ -1,72 +1,55 @@
 # -*- coding: utf-8 -*
-
+import os
+import random
 import re
 import six
 import argparse
 import io
-
+import math
 prog = re.compile("[^a-z ]", flags=0)
-word_count = dict()
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Paddle Fluid word2 vector preprocess")
     parser.add_argument(
-        '--data_path',
-        type=str,
-        required=True,
-        help="The path of training dataset")
+        '--build_dict_corpus_dir', type=str, help="The dir of corpus")
+    parser.add_argument(
+        '--input_corpus_dir', type=str, help="The dir of input corpus")
+    parser.add_argument(
+        '--output_corpus_dir', type=str, help="The dir of output corpus")
     parser.add_argument(
         '--dict_path',
         type=str,
         default='./dict',
-        help="The path of generated dict")
+        help="The path of dictionary ")
     parser.add_argument(
-        '--freq',
+        '--min_count',
         type=int,
         default=5,
-        help="If the word count is less then freq, it will be removed from dict")
-
+        help="If the word count is less then min_count, it will be removed from dict"
+    )
     parser.add_argument(
-        '--with_other_dict',
+        '--downsample',
+        type=float,
+        default=0.001,
+        help="filter word by downsample")
+    parser.add_argument(
+        '--filter_corpus',
         action='store_true',
-        required=False,
         default=False,
-        help='Using third party provided dict , (default: False)')
-
+        help='Filter corpus')
     parser.add_argument(
-        '--other_dict_path',
-        type=str,
-        default='',
-        help='The path for third party provided dict (default: '
-        ')')
-
+        '--build_dict',
+        action='store_true',
+        default=False,
+        help='Build dict from corpus')
     return parser.parse_args()
 
 
 def text_strip(text):
-    return prog.sub("", text)
-
-
-# users can self-define their own strip rules by modifing this method
-def strip_lines(line, vocab=word_count):
-    return _replace_oov(vocab, native_to_unicode(line))
-
-
-# Shameless copy from Tensorflow https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/data_generators/text_encoder.py
-def _replace_oov(original_vocab, line):
-    """Replace out-of-vocab words with "<UNK>".
-  This maintains compatibility with published results.
-  Args:
-    original_vocab: a set of strings (The standard vocabulary for the dataset)
-    line: a unicode string - a space-delimited sequence of words.
-  Returns:
-    a unicode string - a space-delimited sequence of words.
-  """
-    return u" ".join([
-        word if word in original_vocab else u"<UNK>" for word in line.split()
-    ])
+    #English Preprocess Rule
+    return prog.sub("", text.lower())
 
 
 # Shameless copy from Tensorflow https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/data_generators/text_encoder.py
@@ -98,147 +81,107 @@ def _to_unicode(s, ignore_errors=False):
     return s.decode("utf-8", errors=error_mode)
 
 
-def build_Huffman(word_count, max_code_length):
-
-    MAX_CODE_LENGTH = max_code_length
-    sorted_by_freq = sorted(word_count.items(), key=lambda x: x[1])
-    count = list()
-    vocab_size = len(word_count)
-    parent = [-1] * 2 * vocab_size
-    code = [-1] * MAX_CODE_LENGTH
-    point = [-1] * MAX_CODE_LENGTH
-    binary = [-1] * 2 * vocab_size
-    word_code_len = dict()
-    word_code = dict()
-    word_point = dict()
-    i = 0
-    for a in range(vocab_size):
-        count.append(word_count[sorted_by_freq[a][0]])
-
-    for a in range(vocab_size):
-        word_point[sorted_by_freq[a][0]] = [-1] * MAX_CODE_LENGTH
-        word_code[sorted_by_freq[a][0]] = [-1] * MAX_CODE_LENGTH
-
-    for k in range(vocab_size):
-        count.append(1e15)
-
-    pos1 = vocab_size - 1
-    pos2 = vocab_size
-    min1i = 0
-    min2i = 0
-    b = 0
-
-    for r in range(vocab_size):
-        if pos1 >= 0:
-            if count[pos1] < count[pos2]:
-                min1i = pos1
-                pos1 = pos1 - 1
-            else:
-                min1i = pos2
-                pos2 = pos2 + 1
-        else:
-            min1i = pos2
-            pos2 = pos2 + 1
-        if pos1 >= 0:
-            if count[pos1] < count[pos2]:
-                min2i = pos1
-                pos1 = pos1 - 1
-            else:
-                min2i = pos2
-                pos2 = pos2 + 1
-        else:
-            min2i = pos2
-            pos2 = pos2 + 1
-
-        count[vocab_size + r] = count[min1i] + count[min2i]
-
-        #record the parent of left and right child
-        parent[min1i] = vocab_size + r
-        parent[min2i] = vocab_size + r
-        binary[min1i] = 0  #left branch has code 0
-        binary[min2i] = 1  #right branch has code 1
-
-    for a in range(vocab_size):
-        b = a
-        i = 0
-        while True:
-            code[i] = binary[b]
-            point[i] = b
-            i = i + 1
-            b = parent[b]
-            if b == vocab_size * 2 - 2:
-                break
-
-        word_code_len[sorted_by_freq[a][0]] = i
-        word_point[sorted_by_freq[a][0]][0] = vocab_size - 2
-
-        for k in range(i):
-            word_code[sorted_by_freq[a][0]][i - k - 1] = code[k]
-
-            # only non-leaf nodes will be count in
-            if point[k] - vocab_size >= 0:
-                word_point[sorted_by_freq[a][0]][i - k] = point[k] - vocab_size
-
-    return word_point, word_code, word_code_len
-
-
-def preprocess(args):
+def filter_corpus(args):
     """
-    proprocess the data, generate dictionary and save into dict_path.
-    :param data_path: the input data path.
-    :param dict_path: the generated dict path. the data in dict is "word count"
-    :param freq:
-    :return:
+    filter corpus and convert id.
     """
-    # word to count
+    word_count = dict()
+    word_to_id_ = dict()
+    word_all_count = 0
+    id_counts = []
+    word_id = 0
+    #read dict
+    with io.open(args.dict_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            word, count = line.split()[0], int(line.split()[1])
+            word_count[word] = count
+            word_to_id_[word] = word_id
+            word_id += 1
+            id_counts.append(count)
+            word_all_count += count
 
-    if args.with_other_dict:
-        with io.open(args.other_dict_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                word_count[native_to_unicode(line.strip())] = 1
-
-    for i in range(1, 100):
-        with io.open(
-                args.data_path + "/news.en-000{:0>2d}-of-00100".format(i),
-                encoding='utf-8') as f:
-            for line in f:
-                if args.with_other_dict:
-                    line = strip_lines(line)
-                    words = line.split()
-                    for item in words:
-                        if item in word_count:
-                            word_count[item] = word_count[item] + 1
-                        else:
-                            word_count[native_to_unicode('<UNK>')] += 1
-                else:
+    #filter corpus and convert id
+    if not os.path.exists(args.output_corpus_dir):
+        os.makedirs(args.output_corpus_dir)
+    for file in os.listdir(args.input_corpus_dir):
+        with io.open(args.output_corpus_dir + '/convert_' + file, "w") as wf:
+            with io.open(
+                    args.input_corpus_dir + '/' + file, encoding='utf-8') as rf:
+                print(args.input_corpus_dir + '/' + file)
+                for line in rf:
+                    signal = False
                     line = text_strip(line)
                     words = line.split()
                     for item in words:
                         if item in word_count:
-                            word_count[item] = word_count[item] + 1
+                            idx = word_to_id_[item]
                         else:
-                            word_count[item] = 1
+                            idx = word_to_id_[native_to_unicode('<UNK>')]
+                        count_w = id_counts[idx]
+                        corpus_size = word_all_count
+                        keep_prob = (
+                            math.sqrt(count_w /
+                                      (args.downsample * corpus_size)) + 1
+                        ) * (args.downsample * corpus_size) / count_w
+                        r_value = random.random()
+                        if r_value > keep_prob:
+                            continue
+                        wf.write(_to_unicode(str(idx) + " "))
+                        signal = True
+                    if signal:
+                        wf.write(_to_unicode("\n"))
+
+
+def build_dict(args):
+    """
+    proprocess the data, generate dictionary and save into dict_path.
+    :param corpus_dir: the input data dir.
+    :param dict_path: the generated dict path. the data in dict is "word count"
+    :param min_count:
+    :return:
+    """
+    # word to count
+
+    word_count = dict()
+
+    for file in os.listdir(args.build_dict_corpus_dir):
+        with io.open(
+                args.build_dict_corpus_dir + "/" + file, encoding='utf-8') as f:
+            print("build dict : ", args.build_dict_corpus_dir + "/" + file)
+            for line in f:
+                line = text_strip(line)
+                words = line.split()
+                for item in words:
+                    if item in word_count:
+                        word_count[item] = word_count[item] + 1
+                    else:
+                        word_count[item] = 1
+
     item_to_remove = []
     for item in word_count:
-        if word_count[item] <= args.freq:
+        if word_count[item] <= args.min_count:
             item_to_remove.append(item)
-    for item in item_to_remove:
-        del word_count[item]
 
-    path_table, path_code, word_code_len = build_Huffman(word_count, 40)
+    unk_sum = 0
+    for item in item_to_remove:
+        unk_sum += word_count[item]
+        del word_count[item]
+    #sort by count
+    word_count[native_to_unicode('<UNK>')] = unk_sum
+    word_count = sorted(
+        word_count.items(), key=lambda word_count: -word_count[1])
 
     with io.open(args.dict_path, 'w+', encoding='utf-8') as f:
-        for k, v in word_count.items():
+        for k, v in word_count:
             f.write(k + " " + str(v) + '\n')
-
-    with io.open(args.dict_path + "_ptable", 'w+', encoding='utf-8') as f2:
-        for pk, pv in path_table.items():
-            f2.write(pk + '\t' + ' '.join((str(x) for x in pv)) + '\n')
-
-    with io.open(args.dict_path + "_pcode", 'w+', encoding='utf-8') as f3:
-        for pck, pcv in path_code.items():
-            f3.write(pck + '\t' + ' '.join((str(x) for x in pcv)) + '\n')
 
 
 if __name__ == "__main__":
-    preprocess(parse_args())
+    args = parse_args()
+    if args.build_dict:
+        build_dict(args)
+    elif args.filter_corpus:
+        filter_corpus(args)
+    else:
+        print(
+            "error command line, please choose --build_dict or --filter_corpus")

@@ -3,19 +3,14 @@ import argparse
 import logging
 import os
 import time
-
+import math
+import random
 import numpy as np
-
-# disable gpu training for this example
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
 import paddle
 import paddle.fluid as fluid
-from paddle.fluid.executor import global_scope
 import six
 import reader
-from network_conf import skip_gram_word2vec
-from infer import inference_test
+from net import skip_gram_word2vec
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
@@ -26,25 +21,35 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="PaddlePaddle Word2vec example")
     parser.add_argument(
-        '--train_data_path',
+        '--train_data_dir',
         type=str,
-        default='./data/1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled',
+        default='./data/text',
         help="The path of taining dataset")
+    parser.add_argument(
+        '--base_lr',
+        type=float,
+        default=0.01,
+        help="The number of learing rate (default: 0.01)")
+    parser.add_argument(
+        '--save_step',
+        type=int,
+        default=500000,
+        help="The number of step to save (default: 500000)")
+    parser.add_argument(
+        '--print_batch',
+        type=int,
+        default=10,
+        help="The number of print_batch (default: 10)")
     parser.add_argument(
         '--dict_path',
         type=str,
         default='./data/1-billion_dict',
         help="The path of data dict")
     parser.add_argument(
-        '--test_data_path',
-        type=str,
-        default='./data/text8',
-        help="The path of testing dataset")
-    parser.add_argument(
         '--batch_size',
         type=int,
-        default=1000,
-        help="The size of mini-batch (default:100)")
+        default=500,
+        help="The size of mini-batch (default:500)")
     parser.add_argument(
         '--num_passes',
         type=int,
@@ -55,90 +60,31 @@ def parse_args():
         type=str,
         default='models',
         help='The path for model to store (default: models)')
+    parser.add_argument('--nce_num', type=int, default=5, help='nce_num')
     parser.add_argument(
         '--embedding_size',
         type=int,
         default=64,
         help='sparse feature hashing space for index processing')
-
-    parser.add_argument(
-        '--with_hs',
-        action='store_true',
-        required=False,
-        default=False,
-        help='using hierarchical sigmoid, (default: False)')
-
-    parser.add_argument(
-        '--with_nce',
-        action='store_true',
-        required=False,
-        default=False,
-        help='using negtive sampling, (default: True)')
-
-    parser.add_argument(
-        '--max_code_length',
-        type=int,
-        default=40,
-        help='max code length used by hierarchical sigmoid, (default: 40)')
-
     parser.add_argument(
         '--is_sparse',
         action='store_true',
         required=False,
         default=False,
         help='embedding and nce will use sparse or not, (default: False)')
-
-    parser.add_argument(
-        '--with_Adam',
-        action='store_true',
-        required=False,
-        default=False,
-        help='Using Adam as optimizer or not, (default: False)')
-
-    parser.add_argument(
-        '--is_local',
-        action='store_true',
-        required=False,
-        default=False,
-        help='Local train or not, (default: False)')
-
     parser.add_argument(
         '--with_speed',
         action='store_true',
         required=False,
         default=False,
         help='print speed or not , (default: False)')
-
-    parser.add_argument(
-        '--with_infer_test',
-        action='store_true',
-        required=False,
-        default=False,
-        help='Do inference every 100 batches , (default: False)')
-
-    parser.add_argument(
-        '--with_other_dict',
-        action='store_true',
-        required=False,
-        default=False,
-        help='if use other dict , (default: False)')
-
-    parser.add_argument(
-        '--rank_num',
-        type=int,
-        default=4,
-        help="find rank_num-nearest result for test (default: 4)")
-
     return parser.parse_args()
 
 
-def convert_python_to_tensor(batch_size, sample_reader, is_hs):
+def convert_python_to_tensor(weight, batch_size, sample_reader):
     def __reader__():
-        result = None
-        if is_hs:
-            result = [[], [], [], []]
-        else:
-            result = [[], []]
+        cs = np.array(weight).cumsum()
+        result = [[], []]
         for sample in sample_reader():
             for i, fea in enumerate(sample):
                 result[i].append(fea)
@@ -152,27 +98,27 @@ def convert_python_to_tensor(batch_size, sample_reader, is_hs):
                     elif len(dat.shape) == 1:
                         dat = dat.reshape((-1, 1))
                     t.set(dat, fluid.CPUPlace())
-
                     tensor_result.append(t)
+                tt = fluid.Tensor()
+                neg_array = cs.searchsorted(np.random.sample(args.nce_num))
+                neg_array = np.tile(neg_array, batch_size)
+                tt.set(
+                    neg_array.reshape((batch_size, args.nce_num)),
+                    fluid.CPUPlace())
+                tensor_result.append(tt)
                 yield tensor_result
-                if is_hs:
-                    result = [[], [], [], []]
-                else:
-                    result = [[], []]
+                result = [[], []]
 
     return __reader__
 
 
-def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
+def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
+               weight):
 
     py_reader.decorate_tensor_provider(
-        convert_python_to_tensor(args.batch_size,
-                                 reader.train((args.with_hs or (
-                                     not args.with_nce)), args.with_other_dict),
-                                 (args.with_hs or (not args.with_nce))))
+        convert_python_to_tensor(weight, args.batch_size, reader.train()))
 
     place = fluid.CPUPlace()
-
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
@@ -193,50 +139,38 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
         build_strategy=build_strategy,
         exec_strategy=exec_strategy)
 
-    profile_state = "CPU"
-    profiler_step = 0
-    profiler_step_start = 20
-    profiler_step_end = 30
-
     for pass_id in range(args.num_passes):
         py_reader.start()
         time.sleep(10)
         epoch_start = time.time()
         batch_id = 0
         start = time.time()
-
         try:
             while True:
 
                 loss_val = train_exe.run(fetch_list=[loss.name])
                 loss_val = np.mean(loss_val)
 
-                if batch_id % 50 == 0:
+                if batch_id % args.print_batch == 0:
                     logger.info(
                         "TRAIN --> pass: {} batch: {} loss: {} reader queue:{}".
                         format(pass_id, batch_id,
                                loss_val.mean(), py_reader.queue.size()))
                 if args.with_speed:
-                    if batch_id % 1000 == 0 and batch_id != 0:
+                    if batch_id % 500 == 0 and batch_id != 0:
                         elapsed = (time.time() - start)
                         start = time.time()
                         samples = 1001 * args.batch_size * int(
                             os.getenv("CPU_NUM"))
                         logger.info("Time used: {}, Samples/Sec: {}".format(
                             elapsed, samples / elapsed))
-                # calculate infer result each 100 batches when using --with_infer_test
-                if args.with_infer_test:
-                    if batch_id % 1000 == 0 and batch_id != 0:
-                        model_dir = args.model_output_dir + '/batch-' + str(
-                            batch_id)
-                        inference_test(global_scope(), model_dir, args)
 
-                if batch_id % 500000 == 0 and batch_id != 0:
-                    model_dir = args.model_output_dir + '/batch-' + str(
-                        batch_id)
-                    fluid.io.save_persistables(executor=exe, dirname=model_dir)
-                    with open(model_dir + "/_success", 'w+') as f:
-                        f.write(str(batch_id))
+                if batch_id % args.save_step == 0 and batch_id != 0:
+                    model_dir = args.model_output_dir + '/pass-' + str(
+                        pass_id) + ('/batch-' + str(batch_id))
+                    if trainer_id == 0:
+                        fluid.io.save_params(executor=exe, dirname=model_dir)
+                        print("model saved in %s" % model_dir)
                 batch_id += 1
 
         except fluid.core.EOFException:
@@ -244,12 +178,10 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id):
             epoch_end = time.time()
             logger.info("Epoch: {0}, Train total expend: {1} ".format(
                 pass_id, epoch_end - epoch_start))
-
             model_dir = args.model_output_dir + '/pass-' + str(pass_id)
             if trainer_id == 0:
-                fluid.io.save_persistables(executor=exe, dirname=model_dir)
-                with open(model_dir + "/_success", 'w+') as f:
-                    f.write(str(pass_id))
+                fluid.io.save_params(executor=exe, dirname=model_dir)
+                print("model saved in %s" % model_dir)
 
 
 def GetFileList(data_path):
@@ -261,123 +193,42 @@ def train(args):
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    filelist = GetFileList(args.train_data_path)
-    word2vec_reader = None
-    if args.is_local or os.getenv("PADDLE_IS_LOCAL", "1") == "1":
-        word2vec_reader = reader.Word2VecReader(
-            args.dict_path, args.train_data_path, filelist, 0, 1)
-    else:
-        trainer_id = int(os.environ["PADDLE_TRAINER_ID"])
-        trainer_num = int(os.environ["PADDLE_TRAINERS"])
-        word2vec_reader = reader.Word2VecReader(args.dict_path,
-                                                args.train_data_path, filelist,
-                                                trainer_id, trainer_num)
+    filelist = GetFileList(args.train_data_dir)
+    word2vec_reader = reader.Word2VecReader(args.dict_path, args.train_data_dir,
+                                            filelist, 0, 1)
 
     logger.info("dict_size: {}".format(word2vec_reader.dict_size))
+    #update id_frequency
+    sum_val = 0.0
+    id_frequencys_pow = []
+    for id_x in range(len(word2vec_reader.id_frequencys)):
+        id_frequencys_pow.append(
+            math.pow(word2vec_reader.id_frequencys[id_x], 0.75))
+        sum_val += id_frequencys_pow[id_x]
+    id_frequencys_pow = [val / sum_val for val in id_frequencys_pow]
+
     loss, py_reader = skip_gram_word2vec(
         word2vec_reader.dict_size,
-        word2vec_reader.word_frequencys,
+        id_frequencys_pow,
         args.embedding_size,
-        args.max_code_length,
-        args.with_hs,
-        args.with_nce,
         is_sparse=args.is_sparse)
 
-    optimizer = None
-    if args.with_Adam:
-        optimizer = fluid.optimizer.Adam(learning_rate=1e-4, lazy_mode=True)
-    else:
-        optimizer = fluid.optimizer.SGD(learning_rate=1e-4)
+    optimizer = fluid.optimizer.SGD(
+        learning_rate=fluid.layers.exponential_decay(
+            learning_rate=args.base_lr,
+            decay_steps=100000,
+            decay_rate=0.999,
+            staircase=True))
 
     optimizer.minimize(loss)
 
     # do local training 
-    if args.is_local or os.getenv("PADDLE_IS_LOCAL", "1") == "1":
-        logger.info("run local training")
-        main_program = fluid.default_main_program()
-
-        with open("local.main.proto", "w") as f:
-            f.write(str(main_program))
-
-        train_loop(args, main_program, word2vec_reader, py_reader, loss, 0)
-    # do distribute training
-    else:
-        logger.info("run dist training")
-
-        trainer_id = int(os.environ["PADDLE_TRAINER_ID"])
-        trainers = int(os.environ["PADDLE_TRAINERS"])
-        training_role = os.environ["PADDLE_TRAINING_ROLE"]
-
-        port = os.getenv("PADDLE_PSERVER_PORT", "6174")
-        pserver_ips = os.getenv("PADDLE_PSERVER_IPS", "")
-        eplist = []
-        for ip in pserver_ips.split(","):
-            eplist.append(':'.join([ip, port]))
-        pserver_endpoints = ",".join(eplist)
-        current_endpoint = os.getenv("PADDLE_CURRENT_IP", "") + ":" + port
-
-        config = fluid.DistributeTranspilerConfig()
-        config.slice_var_up = False
-        t = fluid.DistributeTranspiler(config=config)
-        t.transpile(
-            trainer_id,
-            pservers=pserver_endpoints,
-            trainers=trainers,
-            sync_mode=True)
-
-        if training_role == "PSERVER":
-            logger.info("run pserver")
-            prog = t.get_pserver_program(current_endpoint)
-            startup = t.get_startup_program(
-                current_endpoint, pserver_program=prog)
-
-            with open("pserver.main.proto.{}".format(os.getenv("CUR_PORT")),
-                      "w") as f:
-                f.write(str(prog))
-
-            exe = fluid.Executor(fluid.CPUPlace())
-            exe.run(startup)
-            exe.run(prog)
-        elif training_role == "TRAINER":
-            logger.info("run trainer")
-            train_prog = t.get_trainer_program()
-
-            with open("trainer.main.proto.{}".format(trainer_id), "w") as f:
-                f.write(str(train_prog))
-
-            train_loop(args, train_prog, word2vec_reader, py_reader, loss,
-                       trainer_id)
-
-
-def env_declar():
-    print("********  Rename Cluster Env to PaddleFluid Env ********")
-
-    print("Content-Type: text/plain\n\n")
-    for key in os.environ.keys():
-        print("%30s %s \n" % (key, os.environ[key]))
-
-    if os.environ["TRAINING_ROLE"] == "PSERVER" or os.environ[
-            "PADDLE_IS_LOCAL"] == "0":
-        os.environ["PADDLE_TRAINING_ROLE"] = os.environ["TRAINING_ROLE"]
-        os.environ["PADDLE_PSERVER_PORT"] = os.environ["PADDLE_PORT"]
-        os.environ["PADDLE_PSERVER_IPS"] = os.environ["PADDLE_PSERVERS"]
-        os.environ["PADDLE_TRAINERS"] = os.environ["PADDLE_TRAINERS_NUM"]
-        os.environ["PADDLE_CURRENT_IP"] = os.environ["POD_IP"]
-        os.environ["PADDLE_TRAINER_ID"] = os.environ["PADDLE_TRAINER_ID"]
-        # we set the thread number same as CPU number
-        os.environ["CPU_NUM"] = "12"
-
-    print("Content-Type: text/plain\n\n")
-    for key in os.environ.keys():
-        print("%30s %s \n" % (key, os.environ[key]))
-
-    print("******  Rename Cluster Env to PaddleFluid Env END ******")
+    logger.info("run local training")
+    main_program = fluid.default_main_program()
+    train_loop(args, main_program, word2vec_reader, py_reader, loss, 0,
+               word2vec_reader.id_frequencys)
 
 
 if __name__ == '__main__':
     args = parse_args()
-    if args.is_local:
-        pass
-    else:
-        env_declar()
     train(args)
