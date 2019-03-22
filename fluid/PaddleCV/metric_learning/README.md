@@ -76,7 +76,7 @@ python train_pair.py  \
 ```
 
 ## Evaluation
-Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models) and set its path to ```path_to_pretrain_model```. Then Recall@Rank-1 can be obtained by running the following command:
+Evaluation is to evaluate the performance of a trained model. You should set model path to ```path_to_pretrain_model```. Then Recall@Rank-1 can be obtained by running the following command:
 ```
 python eval.py \
        --model=ResNet50 \
