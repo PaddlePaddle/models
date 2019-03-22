@@ -116,7 +116,7 @@ def optimizer_setting(params):
             learning_rate=lr,
             momentum=momentum_rate,
             regularization=fluid.regularizer.L2Decay(l2_decay))
-    else:
+    elif ls["name"] == "piecewise_decay":
         lr = params["lr"]
         l2_decay = params["l2_decay"]
         momentum_rate = params["momentum_rate"]
@@ -124,6 +124,9 @@ def optimizer_setting(params):
             learning_rate=lr,
             momentum=momentum_rate,
             regularization=fluid.regularizer.L2Decay(l2_decay))
+    else:
+        lr = params["lr"]
+        optimizer = fluid.optimizer.Adam(learning_rate=lr)
 
     return optimizer
 
@@ -264,14 +267,18 @@ def train(args):
         fluid.io.load_vars(
             exe, pretrained_model, main_program=train_prog, predicate=if_exist)
 
-    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
-    if visible_device:
-        device_num = len(visible_device.split(','))
+    if args.use_gpu:
+        visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
+        if visible_device:
+            device_num = len(visible_device.split(','))
+        else:
+            device_num = subprocess.check_output(
+                ['nvidia-smi', '-L']).decode().count('\n')
+        train_batch_size = args.batch_size / device_num
     else:
-        device_num = subprocess.check_output(
-            ['nvidia-smi', '-L']).decode().count('\n')
+        device_num = 1
+        train_batch_size = args.batch_size / device_num
 
-    train_batch_size = args.batch_size / device_num
     test_batch_size = 16
     if not args.enable_ce:
         train_reader = paddle.batch(
@@ -292,14 +299,20 @@ def train(args):
 
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
-    train_exe = fluid.ParallelExecutor(
-        main_program=train_prog,
-        use_cuda=bool(args.use_gpu),
-        loss_name=train_cost.name)
+
+    use_ngraph = os.getenv('FLAGS_use_ngraph')
+    if not use_ngraph:
+        train_exe = fluid.ParallelExecutor(
+            main_program=train_prog,
+            use_cuda=bool(args.use_gpu),
+            loss_name=train_cost.name)
+    else:
+        train_exe = exe
 
     train_fetch_list = [
         train_cost.name, train_acc1.name, train_acc5.name, global_lr.name
     ]
+
     test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
 
     params = models.__dict__[args.model]().params
@@ -314,9 +327,13 @@ def train(args):
         try:
             while True:
                 t1 = time.time()
-                loss, acc1, acc5, lr = train_exe.run(
-                    fetch_list=train_fetch_list)
 
+                if use_ngraph:
+                    loss, acc1, acc5, lr = train_exe.run(
+                        train_prog, fetch_list=train_fetch_list)
+                else:
+                    loss, acc1, acc5, lr = train_exe.run(
+                        fetch_list=train_fetch_list)
                 t2 = time.time()
                 period = t2 - t1
                 loss = np.mean(np.array(loss))
