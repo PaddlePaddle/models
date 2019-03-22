@@ -3,12 +3,12 @@
 This directory contains configuration and instructions to run the PaddlePaddle + nGraph for a local training and inference.
 
 # How to build PaddlePaddle framework with NGraph engine
-In order to build the PaddlePaddle + nGraph engine and run proper scripti,  follow up a few steps:
+In order to build the PaddlePaddle + nGraph engine and run proper script,  follow up a few steps:
 1. Install PaddlePaddle project
-2. set env exports for nGraph and OMP
+2. set env exports for nGraph and OpenMP
 3. run the inference/training script
 
-Curently supported models:
+Currently supported models:
 * ResNet50 (inference and training).
 
 Short description of aforementioned steps:
@@ -29,7 +29,7 @@ export OMP_NUM_THREADS=<num_cpu_cores>
 ```
 
 ## 3. How the benchmark script might be run.
-If everything built sucessfully, you can run command in ResNet50 nGraph session in script [run.sh](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleCV/image_classification/run.sh) to start the benchmark job locally. You will need to uncomment the `#ResNet50 nGraph` part of script.
+If everything built successfully, you can run command in ResNet50 nGraph session in script [run.sh](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleCV/image_classification/run.sh) to start the benchmark job locally. You will need to uncomment the `#ResNet50 nGraph` part of script.
 
 Above is training job using the nGraph, to run the inference job using the nGraph:
 
