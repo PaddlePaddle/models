@@ -194,7 +194,8 @@ python train.py \
 #	--l2_decay=3e-4
 
 #ResNet50 nGraph:
-#FLAGS_use_ngraph=true python train.py \
+# Training:
+#OMP_NUM_THREADS=`nproc` FLAGS_use_ngraph=true python train.py \
 #    --model=ResNet50 \
 #    --batch_size=128 \
 #    --total_images=1281167 \
@@ -206,4 +207,11 @@ python train.py \
 #    --with_mem_opt=False \
 #    --model_category=models_name \
 #    --model_save_dir=output/ \
-#    --use_gpu=False 
+#    --lr_strategy=adam \
+#    --use_gpu=False
+# Inference:
+#OMP_NUM_THREADS=`nproc` FLAGS_use_ngraph=true python infer.py  \
+#    --use_gpu=false \
+#    --model=ResNet50 \
+#    --pretrained_model=ResNet50_pretrained
+
