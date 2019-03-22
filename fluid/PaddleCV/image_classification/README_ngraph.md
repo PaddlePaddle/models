@@ -16,7 +16,7 @@ Short description of aforementioned steps:
 ## 1. Install PaddlePaddle
 Follow PaddlePaddle [installation instruction](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#installation) to install PaddlePaddle. If you build PaddlePaddle yourself, please use the following cmake arguments and ensure to set -DWITH_NGRAPH=ON.  
 ```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_DOC=OFF -DWITH_GPU=OFF -DWITH_DISTRIBUTE=OFF -DWITH_MKLDNN=ON -DWITH_MKL=ON -DWITH_GOLANG=OFF -DWITH_SWIG_PY=ON -DWITH_STYLE_CHECK=OFF -DWITH_TESTING=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DWITH_PROFILER=OFF -DWITH_NGRAPH=ON
+cmake -DCMAKE_BUILD_TYPE=Release -DWITH_GPU=OFF -DWITH_MKLDNN=ON -DWITH_TESTING=ON -DWITH_PROFILER=ON -DWITH_STYLE_CHECK=OFF -DON_INFER=ON -DWITH_NGRAPH=ON ..
 ```
 
 ## 2. Set env exports for nGraph and OMP
@@ -36,5 +36,5 @@ Above is training job using the nGraph, to run the inference job using the nGrap
 Please download the pre-trained resnet50 model from [supported models](https://github.com/PaddlePaddle/models/tree/72dcc7c1a8d5de9d19fbd65b4143bd0d661eee2c/fluid/PaddleCV/image_classification#supported-models-and-performances). Run the inference script with use_gpu to be false.
 
 ```
-python infer.py --use_gpu=False --model=ResNet50
+FLAGS_use_ngraph=true python infer.py --use_gpu=False --model=ResNet50
 ```

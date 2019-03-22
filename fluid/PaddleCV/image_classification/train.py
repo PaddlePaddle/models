@@ -116,14 +116,6 @@ def optimizer_setting(params):
             learning_rate=lr,
             momentum=momentum_rate,
             regularization=fluid.regularizer.L2Decay(l2_decay))
-    elif ls["name"] == "piecewise_decay":
-        lr = params["lr"]
-        l2_decay = params["l2_decay"]
-        momentum_rate = params["momentum_rate"]
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=lr,
-            momentum=momentum_rate,
-            regularization=fluid.regularizer.L2Decay(l2_decay))
     else:
         lr = params["lr"]
         optimizer = fluid.optimizer.Adam(learning_rate=lr)
@@ -274,10 +266,10 @@ def train(args):
         else:
             device_num = subprocess.check_output(
                 ['nvidia-smi', '-L']).decode().count('\n')
-        train_batch_size = args.batch_size / device_num
     else:
         device_num = 1
-        train_batch_size = args.batch_size / device_num
+
+    train_batch_size = args.batch_size / device_num
 
     test_batch_size = 16
     if not args.enable_ce:
@@ -312,7 +304,6 @@ def train(args):
     train_fetch_list = [
         train_cost.name, train_acc1.name, train_acc5.name, global_lr.name
     ]
-
     test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
 
     params = models.__dict__[args.model]().params

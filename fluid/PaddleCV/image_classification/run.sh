@@ -194,7 +194,9 @@ python train.py \
 #	--l2_decay=3e-4
 
 #ResNet50 nGraph:
-#FLAGS_use_ngraph=true python train.py \
+#FLAGS_use_ngraph=true KMP_AFFINITY=granularity=fine,compact,1,0 \
+#    KMP_BLOCKTIME=1 OMP_NUM_THREADS=<num_cpu_cores> \
+#    python train.py \
 #    --model=ResNet50 \
 #    --batch_size=128 \
 #    --total_images=1281167 \
