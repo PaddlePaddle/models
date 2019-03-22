@@ -22,7 +22,6 @@ def train(train_reader,
           parallel,
           save_dirname,
           lr=0.2,
-          batch_size=128,
           pass_num=30):
     """
     train network
@@ -100,8 +99,7 @@ def train_net():
             parallel=False,
             save_dirname="bow_model",
             lr=0.002,
-            pass_num=30,
-            batch_size=4)
+            pass_num=30)
     elif sys.argv[1] == "cnn":
         train(
             train_reader,
@@ -111,8 +109,7 @@ def train_net():
             parallel=False,
             save_dirname="cnn_model",
             lr=0.01,
-            pass_num=30,
-            batch_size=4)
+            pass_num=30)
     elif sys.argv[1] == "lstm":
         train(
             train_reader,
@@ -122,19 +119,17 @@ def train_net():
             parallel=False,
             save_dirname="lstm_model",
             lr=0.05,
-            pass_num=30,
-            batch_size=4)
+            pass_num=30)
     elif sys.argv[1] == "gru":
         train(
             train_reader,
             word_dict,
-            lstm_net,
+            gru_net,
             use_cuda=True,
             parallel=False,
             save_dirname="gru_model",
             lr=0.05,
-            pass_num=30,
-            batch_size=4)
+            pass_num=30)
     else:
         print("network name cannot be found!")
         sys.exit(1)

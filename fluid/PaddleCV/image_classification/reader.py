@@ -156,11 +156,13 @@ def _reader_creator(file_list,
             for line in lines:
                 if mode == 'train' or mode == 'val':
                     img_path, label = line.split()
-                    img_path = img_path.replace("JPEG", "jpeg")
+                    #img_path = img_path.replace("JPEG", "jpeg")
                     img_path = os.path.join(data_dir, img_path)
                     yield img_path, int(label)
                 elif mode == 'test':
-                    img_path = os.path.join(data_dir, line)
+                    img_path, label = line.split()
+                    #img_path = img_path.replace("JPEG", "jpeg")
+                    img_path = os.path.join(data_dir, img_path)
                     yield [img_path]
 
     mapper = functools.partial(

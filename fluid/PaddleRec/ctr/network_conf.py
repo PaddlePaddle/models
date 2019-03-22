@@ -104,7 +104,7 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim, sparse_
     return avg_cost, auc_var, batch_auc_var, py_reader
 
 
-def ctr_dnn_model(embedding_size, sparse_feature_dim):
+def ctr_dnn_model(embedding_size, sparse_feature_dim, use_py_reader=True):
 
     def embedding_layer(input):
         return fluid.layers.embedding(
@@ -126,13 +126,15 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim):
 
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
 
-    datas = [dense_input] + sparse_input_ids + [label]
+    words = [dense_input] + sparse_input_ids + [label]
 
-    py_reader = fluid.layers.create_py_reader_by_data(capacity=64,
-                                                      feed_list=datas,
-                                                      name='py_reader',
-                                                      use_double_buffer=True)
-    words = fluid.layers.read_file(py_reader)
+    py_reader = None
+    if use_py_reader:
+        py_reader = fluid.layers.create_py_reader_by_data(capacity=64,
+                                                          feed_list=words,
+                                                          name='py_reader',
+                                                          use_double_buffer=True)
+        words = fluid.layers.read_file(py_reader)
 
     sparse_embed_seq = list(map(embedding_layer, words[1:-1]))
     concated = fluid.layers.concat(sparse_embed_seq + words[0:1], axis=1)
@@ -156,4 +158,4 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim):
     auc_var, batch_auc_var, auc_states = \
         fluid.layers.auc(input=predict, label=words[-1], num_thresholds=2 ** 12, slide_steps=20)
 
-    return avg_cost, auc_var, batch_auc_var, py_reader
+    return avg_cost, auc_var, batch_auc_var, py_reader, words

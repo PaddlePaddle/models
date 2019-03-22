@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument(
         '--loss', type=str, default="bpr", help='loss: bpr/cross_entropy')
     parser.add_argument(
-        '--model_dir', type=str, default='model_bpr_recall20', help='model dir')
+        '--model_dir', type=str, default='model_neg_recall20', help='model dir')
     parser.add_argument(
         '--batch_size', type=int, default=5, help='num of batch size')
     parser.add_argument(
@@ -68,9 +68,11 @@ def train():
 
     # Train program
     if args.loss == 'bpr':
+        print('bpr loss')
         src, pos_label, label, avg_cost = net.train_bpr_network(
             neg_size=args.neg_size, vocab_size=vocab_size, hid_size=hid_size)
     else:
+        print('cross-entory loss')
         src, pos_label, label, avg_cost = net.train_cross_entropy_network(
             neg_size=args.neg_size, vocab_size=vocab_size, hid_size=hid_size)
 

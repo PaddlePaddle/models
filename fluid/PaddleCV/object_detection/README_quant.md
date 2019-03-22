@@ -2,7 +2,7 @@
 
 ### Introduction
 
-The quantization-aware training used in this experiments is introduced in [fixed-point quantization desigin](https://gthub.com/PaddlePaddle/FluidDoc/blob/develop/doc/fluid/design/quantization/fixed_point_quantization.md). Since quantization-aware training is still an active area of research and experimentation,
+The quantization-aware training used in this experiments is introduced in [fixed-point quantization desigin](https://github.com/PaddlePaddle/FluidDoc/blob/develop/doc/fluid/design/quantization/fixed_point_quantization.md). Since quantization-aware training is still an active area of research and experimentation,
 here, we just give an simple quantization training usage in Fluid based on MobileNet-SSD model, and more other exeperiments are still needed, like how to quantization traning by considering fusing batch normalization and convolution/fully-connected layers, channel-wise quantization of weights and so on.
 
 
@@ -129,6 +129,9 @@ A Python transpiler is used to rewrite Fluid training program or evaluation prog
       --image_path='/data/PascalVOC/VOCdevkit/VOC2007/JPEGImages/002271.jpg'
   ```
   See 002271.jpg for the visualized image with bbouding boxes.
+
+
+  **Note**, if you want to convert model to 8-bit, you should call `fluid.contrib.QuantizeTranspiler.convert_to_int8` to do this. But, now Paddle can't load 8-bit model to do inference.
 
 ### Results
 

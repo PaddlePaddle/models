@@ -1,4 +1,5 @@
 import paddle.fluid as fluid
+import numpy as np
 
 def copyback_repeat_bn_params(main_prog):
     repeat_vars = set()

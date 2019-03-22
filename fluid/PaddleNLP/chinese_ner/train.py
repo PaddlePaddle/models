@@ -59,6 +59,10 @@ def parse_args():
         type=int,
         default=1000,
         help='The number of epochs. (default: %(default)d)')
+    parser.add_argument(
+        '--enable_ce',
+        action='store_true',
+        help='If set, run the task with continuous evaluation logs.')
     args = parser.parse_args()
     return args
 
@@ -265,6 +269,10 @@ def main(args):
 
     main = fluid.Program()
     startup = fluid.Program()
+    if args.enable_ce:
+        SEED = 102
+        main.random_seed = SEED
+        startup.random_seed = SEED
     with fluid.program_guard(main, startup):
         avg_cost, feature_out, word, mention, target = ner_net(
             args.word_dict_len, args.label_dict_len)
@@ -313,6 +321,8 @@ def main(args):
             train_exe = exe
             test_exe = exe
 
+        total_time = 0
+        ce_info = []
         batch_id = 0
         for pass_id in range(args.num_passes):
             chunk_evaluator.reset()
@@ -336,11 +346,13 @@ def main(args):
                 except StopIteration:
                     break
             end_time = time.time()
+            total_time += end_time - start_time
             print("pass_id:" + str(pass_id) + ", time_cost:" + str(
                 end_time - start_time) + "s")
             precision, recall, f1_score = chunk_evaluator.eval()
             print("[Train] precision:" + str(precision) + ", recall:" + str(
                 recall) + ", f1:" + str(f1_score))
+            ce_info.append(recall)
             p, r, f1 = test2(
                 exe, chunk_evaluator, inference_program, test_reader, place,
                 [num_infer_chunks, num_label_chunks, num_correct_chunks])
@@ -350,7 +362,40 @@ def main(args):
                                         "params_pass_%d" % pass_id)
             fluid.io.save_inference_model(save_dirname, ['word', 'mention'],
                                           [crf_decode], exe)
+        # only for ce
+        if args.enable_ce:
+            ce_recall = 0
+            try:
+                ce_recall = ce_info[-2]
+            except:
+                print("ce info error")
+            epoch_idx = args.num_passes
+            device = get_device(args)
+            if args.device == "GPU":
+                gpu_num = device[1]
+                print("kpis\teach_pass_duration_gpu%s\t%s" %
+                    (gpu_num, total_time / epoch_idx))
+                print("kpis\ttrain_recall_gpu%s\t%s" %
+                    (gpu_num, ce_recall))
+            else:
+                cpu_num = device[1]
+                threads_num = device[2]
+                print("kpis\teach_pass_duration_cpu%s_thread%s\t%s" %
+                    (cpu_num, threads_num, total_time / epoch_idx))
+                print("kpis\ttrain_recall_cpu%s_thread%s\t%s" %
+                    (cpu_num, threads_num, ce_recall))
+        
 
+def get_device(args):
+    if args.device == "GPU":
+        gpus = os.environ.get("CUDA_VISIBLE_DEVICES", "")
+        gpu_num = len(gpus.split(','))
+        return "gpu", gpu_num
+    else:
+        threads_num = os.environ.get('NUM_THREADS', 1)
+        cpu_num = os.environ.get('CPU_NUM', 1)
+        return "cpu", int(cpu_num), int(threads_num)
+        
 
 if __name__ == "__main__":
     args = parse_args()

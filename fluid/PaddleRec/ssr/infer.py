@@ -81,7 +81,7 @@ def infer(args, vocab_size, test_reader):
         start_up_program = fluid.Program()
         with fluid.program_guard(main_program, start_up_program):
             acc = model(vocab_size, emb_size, hid_size)
-            for epoch in xrange(start_index, last_index + 1):
+            for epoch in range(start_index, last_index + 1):
                 copy_program = main_program.clone()
                 model_path = model_dir + "/epoch_" + str(epoch)
                 fluid.io.load_params(

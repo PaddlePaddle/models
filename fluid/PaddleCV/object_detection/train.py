@@ -141,7 +141,6 @@ def train(args,
     batch_size = train_params['batch_size']
     epoc_num = train_params['epoc_num']
     batch_size_per_device = batch_size // devices_num
-    iters_per_epoc = train_params["train_images"] // batch_size
     num_workers = 8
 
     startup_prog = fluid.Program()
@@ -156,7 +155,6 @@ def train(args,
         startup_prog.random_seed = 111
         train_prog.random_seed = 111
         test_prog.random_seed = 111
-        num_workers = 1
 
     train_py_reader, loss = build_program(
         main_prog=train_prog,

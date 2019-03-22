@@ -63,6 +63,7 @@ def common_iterator(data, settings):
     assert (batch_size % samples_each_class == 0)
     class_num = batch_size // samples_each_class 
     def train_iterator():
+        count = 0
         labs = list(data.keys())
         lab_num = len(labs)
         ind = list(range(0, lab_num))
@@ -79,6 +80,9 @@ def common_iterator(data, settings):
                 for anchor_ind_i in anchor_ind:
                     anchor_path = DATA_DIR + data_list[anchor_ind_i]
                     yield anchor_path, lab
+            count += 1
+            if count >= settings.total_iter_num + 1:
+                return
 
     return train_iterator
 
@@ -86,6 +90,8 @@ def triplet_iterator(data, settings):
     batch_size = settings.train_batch_size
     assert (batch_size % 3 == 0)
     def train_iterator():
+        total_count = settings.train_batch_size * (settings.total_iter_num + 1)
+        count = 0
         labs = list(data.keys())
         lab_num = len(labs)
         ind = list(range(0, lab_num))
@@ -108,16 +114,24 @@ def triplet_iterator(data, settings):
             yield pos_path, lab_pos
             neg_path = DATA_DIR + neg_data_list[neg_ind]
             yield neg_path, lab_neg
+            count += 3
+            if count >= total_count:
+                return
 
     return train_iterator
 
 def arcmargin_iterator(data, settings):
     def train_iterator():
+        total_count = settings.train_batch_size * (settings.total_iter_num + 1)
+        count = 0
         while True:
             for items in data:
                 path, label = items
                 path = DATA_DIR + path
                 yield path, label
+                count += 1
+                if count >= total_count:
+                    return
     return train_iterator
 
 def image_iterator(data, mode):

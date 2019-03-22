@@ -17,7 +17,6 @@ import data_reader
 from utility import add_arguments, print_arguments, ImagePool
 from trainer import *
 
-
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
@@ -36,7 +35,7 @@ add_arg('run_ce',            bool,  False,       "Whether to run for model ce.")
 def train(args):
 
     max_images_num = data_reader.max_images_num()
-    shuffle=True
+    shuffle = True
     if args.run_ce:
         np.random.seed(10)
         fluid.default_startup_program().random_seed = 90
@@ -66,9 +65,11 @@ def train(args):
     exe.run(fluid.default_startup_program())
     A_pool = ImagePool()
     B_pool = ImagePool()
-    
-    A_reader = paddle.batch(data_reader.a_reader(shuffle=shuffle), args.batch_size)()
-    B_reader = paddle.batch(data_reader.b_reader(shuffle=shuffle), args.batch_size)()
+
+    A_reader = paddle.batch(
+        data_reader.a_reader(shuffle=shuffle), args.batch_size)()
+    B_reader = paddle.batch(
+        data_reader.b_reader(shuffle=shuffle), args.batch_size)()
     if not args.run_ce:
         A_test_reader = data_reader.a_test_reader()
         B_test_reader = data_reader.b_test_reader()
@@ -119,13 +120,13 @@ def train(args):
         if not os.path.exists(out_path):
             os.makedirs(out_path)
         fluid.io.save_persistables(
-            exe, out_path + "/g_a", main_program=g_A_trainer.program, filename="params")
+            exe, out_path + "/g_a", main_program=g_A_trainer.program)
         fluid.io.save_persistables(
-            exe, out_path + "/g_b", main_program=g_B_trainer.program, filename="params")
+            exe, out_path + "/g_b", main_program=g_B_trainer.program)
         fluid.io.save_persistables(
-            exe, out_path + "/d_a", main_program=d_A_trainer.program, filename="params")
+            exe, out_path + "/d_a", main_program=d_A_trainer.program)
         fluid.io.save_persistables(
-            exe, out_path + "/d_b", main_program=d_B_trainer.program, filename="params")
+            exe, out_path + "/d_b", main_program=d_B_trainer.program)
         print("saved checkpoint to {}".format(out_path))
         sys.stdout.flush()
 
@@ -144,8 +145,24 @@ def train(args):
 
     if args.init_model:
         init_model()
-    losses=[[], []]
+    losses = [[], []]
     t_time = 0
+    build_strategy = fluid.BuildStrategy()
+    build_strategy.enable_inplace = False
+    build_strategy.memory_optimize = False
+
+    g_A_trainer_program = fluid.CompiledProgram(
+        g_A_trainer.program).with_data_parallel(
+            loss_name=g_A_trainer.g_loss_A.name, build_strategy=build_strategy)
+    g_B_trainer_program = fluid.CompiledProgram(
+        g_B_trainer.program).with_data_parallel(
+            loss_name=g_B_trainer.g_loss_B.name, build_strategy=build_strategy)
+    d_B_trainer_program = fluid.CompiledProgram(
+        d_B_trainer.program).with_data_parallel(
+            loss_name=d_B_trainer.d_loss_B.name, build_strategy=build_strategy)
+    d_A_trainer_program = fluid.CompiledProgram(
+        d_A_trainer.program).with_data_parallel(
+            loss_name=d_A_trainer.d_loss_A.name, build_strategy=build_strategy)
     for epoch in range(args.epoch):
         batch_id = 0
         for i in range(max_images_num):
@@ -158,7 +175,7 @@ def train(args):
             s_time = time.time()
             # optimize the g_A network
             g_A_loss, fake_B_tmp = exe.run(
-                g_A_trainer.program,
+                g_A_trainer_program,
                 fetch_list=[g_A_trainer.g_loss_A, g_A_trainer.fake_B],
                 feed={"input_A": tensor_A,
                       "input_B": tensor_B})
@@ -167,14 +184,14 @@ def train(args):
 
             # optimize the d_B network
             d_B_loss = exe.run(
-                d_B_trainer.program,
+                d_B_trainer_program,
                 fetch_list=[d_B_trainer.d_loss_B],
                 feed={"input_B": tensor_B,
                       "fake_pool_B": fake_pool_B})[0]
 
             # optimize the g_B network
             g_B_loss, fake_A_tmp = exe.run(
-                g_B_trainer.program,
+                g_B_trainer_program,
                 fetch_list=[g_B_trainer.g_loss_B, g_B_trainer.fake_A],
                 feed={"input_A": tensor_A,
                       "input_B": tensor_B})
@@ -183,16 +200,16 @@ def train(args):
 
             # optimize the d_A network
             d_A_loss = exe.run(
-                d_A_trainer.program,
+                d_A_trainer_program,
                 fetch_list=[d_A_trainer.d_loss_A],
                 feed={"input_A": tensor_A,
                       "fake_pool_A": fake_pool_A})[0]
             batch_time = time.time() - s_time
             t_time += batch_time
-            print("epoch{}; batch{}; g_A_loss: {}; d_B_loss: {}; g_B_loss: {}; d_A_loss: {}; "
-                  "Batch_time_cost: {:.2f}".format(
-                epoch, batch_id, g_A_loss[0], d_B_loss[0], g_B_loss[0],
-                d_A_loss[0], batch_time))
+            print(
+                "epoch{}; batch{}; g_A_loss: {}; d_B_loss: {}; g_B_loss: {}; d_A_loss: {}; "
+                "Batch_time_cost: {:.2f}".format(epoch, batch_id, g_A_loss[
+                    0], d_B_loss[0], g_B_loss[0], d_A_loss[0], batch_time))
             losses[0].append(g_A_loss[0])
             losses[1].append(d_A_loss[0])
             sys.stdout.flush()

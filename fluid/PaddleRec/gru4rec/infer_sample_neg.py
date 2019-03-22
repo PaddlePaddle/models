@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument(
         '--last_index', type=int, default='3', help='last index')
     parser.add_argument(
-        '--model_dir', type=str, default='model_bpr_recall20', help='model dir')
+        '--model_dir', type=str, default='model_neg_recall20', help='model dir')
     parser.add_argument(
         '--use_cuda', type=int, default='0', help='whether use cuda')
     parser.add_argument(
@@ -76,8 +76,8 @@ def infer(args, vocab_size, test_reader, use_cuda):
                     accum_num_sum += (data_length)
                     accum_num_recall += (data_length * acc_)
                     if step_id % 1 == 0:
-                        print("step:%d  " % (step_id),
-                              accum_num_recall / accum_num_sum)
+                        print("step:%d  recall@20:%.4f" %
+                              (step_id, accum_num_recall / accum_num_sum))
                 t1 = time.time()
                 print("model:%s recall@20:%.4f time_cost(s):%.2f" %
                       (model_path, accum_num_recall / accum_num_sum, t1 - t0))
