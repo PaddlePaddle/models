@@ -20,17 +20,13 @@ import numpy as np
 import paddle.fluid as fluid
 
 
-def skip_gram_word2vec(dict_size,
-                       word_frequencys,
-                       embedding_size,
-                       is_sparse=False):
+def skip_gram_word2vec(dict_size, embedding_size, is_sparse=False, neg_num=5):
 
     datas = []
-    neg_num = 5
     input_word = fluid.layers.data(name="input_word", shape=[1], dtype='int64')
     true_word = fluid.layers.data(name='true_label', shape=[1], dtype='int64')
     neg_word = fluid.layers.data(
-        name="neg_label", shape=[neg_num, 5], dtype='int64')
+        name="neg_label", shape=[neg_num], dtype='int64')
 
     datas.append(input_word)
     datas.append(true_word)
@@ -70,8 +66,7 @@ def skip_gram_word2vec(dict_size,
         is_sparse=is_sparse,
         size=[dict_size, embedding_size],
         param_attr=fluid.ParamAttr(
-            name='emb_w', learning_rate=10.0))
-    # param_attr='emb_w')
+            name='emb_w', learning_rate=1.0))
 
     neg_emb_w_re = fluid.layers.reshape(
         neg_emb_w, shape=[-1, neg_num, embedding_size])
@@ -80,8 +75,7 @@ def skip_gram_word2vec(dict_size,
         is_sparse=is_sparse,
         size=[dict_size, 1],
         param_attr=fluid.ParamAttr(
-            name='emb_b', learning_rate=10.0))
-    #param_attr='emb_b')
+            name='emb_b', learning_rate=1.0))
 
     neg_emb_b_vec = fluid.layers.reshape(neg_emb_b, shape=[-1, neg_num])
     true_logits = fluid.layers.elementwise_add(
@@ -95,7 +89,6 @@ def skip_gram_word2vec(dict_size,
     neg_matmul = fluid.layers.matmul(
         input_emb_re, neg_emb_w_re, transpose_y=True)
     neg_matmul_re = fluid.layers.reshape(neg_matmul, shape=[-1, neg_num])
-    #neg_matmul_reshape = fluid.layers.reshape(neg_matmul, shape=[-1, ]
     neg_logits = fluid.layers.elementwise_add(neg_matmul_re, neg_emb_b_vec)
     #nce loss
 
