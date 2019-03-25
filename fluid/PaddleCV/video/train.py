@@ -99,6 +99,10 @@ def parse_args():
         type=int,
         default=10,
         help='mini-batch interval to log.')
+    parser.add_argument(
+        '--enable_ce',
+        action='store_true',
+        help='If set, run the task with continuous evaluation logs.')
     args = parser.parse_args()
     return args
 
@@ -114,6 +118,10 @@ def train(args):
     # build model
     startup = fluid.Program()
     train_prog = fluid.Program()
+    if args.enable_ce:
+        SEED = 102
+        startup.random_seed = SEED
+        train_prog.random_seed = SEED
     with fluid.program_guard(train_prog, startup):
         with fluid.unique_name.guard():
             train_model.build_input(not args.no_use_pyreader)
@@ -204,7 +212,8 @@ def train(args):
                                log_interval = args.log_interval, valid_interval = args.valid_interval,
                                save_dir = args.save_dir, save_model_name = args.model_name,
                                test_exe = valid_exe, test_reader = valid_reader, test_feeder = valid_feeder,
-                               test_fetch_list = valid_fetch_list, test_metrics = valid_metrics)
+                               test_fetch_list = valid_fetch_list, test_metrics = valid_metrics, 
+                               model_name = args.model_name, enable_ce=args.enable_ce)
     else:
         train_pyreader.decorate_paddle_reader(train_reader)
         valid_pyreader.decorate_paddle_reader(valid_reader)
@@ -213,7 +222,8 @@ def train(args):
                             valid_interval = args.valid_interval,
                             save_dir = args.save_dir, save_model_name = args.model_name,
                             test_exe = valid_exe, test_pyreader = valid_pyreader,
-                            test_fetch_list = valid_fetch_list, test_metrics = valid_metrics)
+                            test_fetch_list = valid_fetch_list, test_metrics = valid_metrics,
+                            model_name = args.model_name, enable_ce=args.enable_ce)
 
 
 if __name__ == "__main__":

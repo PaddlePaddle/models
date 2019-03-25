@@ -36,6 +36,10 @@ class Metrics(object):
         """Not implemented"""
         pass
 
+    def calculate(self, loss, pred, label, info=''):
+        """Not implemented"""
+        pass
+
     def accumulate(self, loss, pred, label, info=''):
         """Not implemented"""
         pass
@@ -67,6 +71,20 @@ class Youtube8mMetrics(Metrics):
         logger.info(info + ' , loss = {0}, Hit@1 = {1}, PERR = {2}, GAP = {3}'.format(\
                      '%.6f' % loss, '%.2f' % hit_at_one, '%.2f' % perr, '%.2f' % gap))
 
+    def calculate(self, loss, pred, label, info=''):
+        loss = np.mean(np.array(loss))
+        hit_at_one = youtube8m_metrics.calculate_hit_at_one(pred, label)
+        perr = youtube8m_metrics.calculate_precision_at_equal_recall_rate(pred,
+                                                                          label)
+        gap = youtube8m_metrics.calculate_gap(pred, label)
+        res = {'type': 'youtube8m',
+               'loss': loss,
+               'hit_at_one': hit_at_one,
+               'perr': perr,
+               'gap': gap,
+              }
+        return res
+
     def accumulate(self, loss, pred, label, info=''):
         self.calculator.accumulate(loss, pred, label)
 
@@ -94,6 +112,19 @@ class Kinetics400Metrics(Metrics):
         acc1, acc5 = self.calculator.calculate_metrics(loss, pred, label)
         logger.info(info + '\tLoss: {},\ttop1_acc: {}, \ttop5_acc: {}'.format('%.6f' % loss, \
                        '%.2f' % acc1, '%.2f' % acc5))
+
+    def calculate(self, loss, pred, label, info=''):
+        if loss is not None:
+            loss = np.mean(np.array(loss))
+        else:
+            loss = 0.
+        acc1, acc5 = self.calculator.calculate_metrics(loss, pred, label)
+        res = {'type': 'kinetics400',
+               'loss': loss,
+               'acc1': acc1,
+               'acc5': acc5,
+              }
+        return res
 
     def accumulate(self, loss, pred, label, info=''):
         self.calculator.accumulate(loss, pred, label)
@@ -139,6 +170,27 @@ class MulticropMetrics(Metrics):
             acc1, acc5 = self.calculator.calculate_metrics(loss, pred, label)
             logger.info(info + '\tLoss: {},\ttop1_acc: {}, \ttop5_acc: {}'.format('%.6f' % loss, \
                                    '%.2f' % acc1, '%.2f' % acc5))
+
+    def calculate(self, loss, pred, label, info=''):
+        res = {'type': 'multicrop',
+               'loss': 0,
+               'acc1': 0,
+               'acc5': 0,
+              }
+        if self.mode == 'test':
+            pass
+        else:
+            if loss is not None:
+                loss = np.mean(np.array(loss))
+            else:
+                loss = 0.
+            acc1, acc5 = self.calculator.calculate_metrics(loss, pred, label)
+            res = {'type': 'multicrop',
+                   'loss': loss,
+                   'acc1': acc1,
+                   'acc5': acc5,
+                  }
+        return res
 
     def accumulate(self, loss, pred, label):
         self.calculator.accumulate(loss, pred, label)
