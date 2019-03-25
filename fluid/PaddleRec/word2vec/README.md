@@ -44,7 +44,7 @@ wget https://paddlerec.bj.bcebos.com/word2vec/text.tar
 ## 数据预处理
 以样例数据集为例进行预处理。全量数据集注意解压后以training-monolingual.tokenized.shuffled 目录为预处理目录，和样例数据集的text目录并列。
 
-词典格式: 词<空格>词频。注意低频词用'<UNK>'表示
+词典格式: 词<空格>词频。注意低频词用'UNK'表示
 
 可以按格式自建词典，如果自建词典跳过第一步。
 ```
