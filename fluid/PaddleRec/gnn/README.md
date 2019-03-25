@@ -27,7 +27,7 @@ SR-GNN模型的介绍可以参阅论文[Session-based Recommendation with Graph 
 
 然后通过GNN，学习每个node（item）的隐向量表示
 
-然后通过一个attention机制得到每个session的embedding
+然后通过一个attention架构模型得到每个session的embedding
 
 最后通过一个softmax层进行全表预测
 
@@ -50,10 +50,25 @@ cd ..
 ```
 运行之后在data文件夹下会产生diginetica文件夹，里面包含config.txt、test.txt  train.txt三个文件
 
+生成的数据格式为:(session_list,
+label_list)。
+
+其中session_list是一个session的列表，其中每个元素都是一个list，代表不同的session。label_list是一个列表，每个位置的元素是session_list中对应session的label。
+
+例子：session_list=[[1,2,3], [4], [7,9]]。代表这个session_list包含3个session，第一个session包含的item序列是1,2,3，第二个session只有1个item 4，第三个session包含的item序列是7，9。
+
+label_list = [6, 9,
+1]。代表[1,2,3]这个session的预测label值应该为6，后两个以此类推。
+
+提示：
+
+* 如果您想使用自己业务场景下的数据，只要令数据满足上述格式要求即可
+* 本例中的train.txt和test.txt两个文件均为二进制文件
+
 
 ## 训练
 
-可以参考下面不同场景下的运行命令就行训练，还可以指定诸如batch_size，lr等参数，具体的配置说明可通过运行下列代码查看
+可以参考下面不同场景下的运行命令进行训练，还可以指定诸如batch_size，lr(learning rate)等参数，具体的配置说明可通过运行下列代码查看
 ```
 python train.py -h
 ```
