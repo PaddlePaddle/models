@@ -21,10 +21,10 @@ parser = argparse.ArgumentParser()
 add_arg = lambda *args: utility.add_arguments(*args, argparser=parser)
 
 # yapf: disable
-add_arg('batch_size',           int,    2,      "The number of images in each batch during training.")
+add_arg('batch_size',           int,    4,      "The number of images in each batch during training.")
 add_arg('train_crop_size',      int,    769,    "Image crop size during training.")
-add_arg('base_lr',              float,  0.0001, "The base learning rate for model training.")
-add_arg('total_step',           int,    90000,  "Number of the training step.")
+add_arg('base_lr',              float,  0.001,  "The base learning rate for model training.")
+add_arg('total_step',           int,    500000, "Number of the training step.")
 add_arg('init_weights_path',    str,    None,   "Path of the initial weights in paddlepaddle format.")
 add_arg('save_weights_path',    str,    None,   "Path of the saved weights during training.")
 add_arg('dataset_path',         str,    None,   "Cityscape dataset path.")

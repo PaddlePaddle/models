@@ -72,20 +72,21 @@ python train.py --help
 以上命令用于测试训练过程是否正常，仅仅迭代了50次并且使用了1的batch size，如果需要复现
 原论文的实验，请使用以下设置：
 ```
+CUDA_VISIBLE_DEVICES=0 \
 python ./train.py \
-    --batch_size=8 \
+    --batch_size=4 \
     --parallel=True \
     --norm_type=gn \
     --train_crop_size=769 \
-    --total_step=90000 \
+    --total_step=500000 \
     --base_lr=0.001 \
     --init_weights_path=deeplabv3plus_gn_init \
     --save_weights_path=output \
     --dataset_path=$DATASET_PATH
 ```
-如果您的显存不足，可以尝试减小`batch_size`，同时等比例放大`total_step`, 保证相乘的值不变，这得益于Group Norm的特性，改变 `batch_size` 并不会显著影响结果，而且能够节约更多显存, 比如您可以设置`--batch_size=4 --total_step=180000`。
+如果您的显存不足，可以尝试减小`batch_size`，同时等比例放大`total_step`, 缩小`base_lr`, 保证相乘的值不变，这得益于Group Norm的特性，改变 `batch_size` 并不会显著影响结果，而且能够节约更多显存, 比如您可以设置`--batch_size=2 --total_step=1000000 --base_lr=0.0005`。
 
-如果您希望使用多卡进行训练，可以同比增加`batch_size`，减小`total_step`, 比如原来单卡训练是`--batch_size=4 --total_step=180000`，使用4卡训练则是`--batch_size=16 --total_step=45000`
+如果您希望使用多卡进行训练，可以同比增加`batch_size`，减小`total_step`, 增加`base_lr`, 比如原来单卡训练是`--batch_size=4 --total_step=500000`，使用4卡训练则是`--batch_size=16 --total_step=125000 --base_lr=0.004`
 
 ### 测试
 执行以下命令在`Cityscape`测试数据集上进行测试：
