@@ -1,9 +1,10 @@
 import random
 import pickle
+from __future__ import print_function
 
 random.seed(1234)
 
-print "read and process data"
+print("read and process data")
 
 with open('./raw_data/remap.pkl', 'rb') as f:
     reviews_df = pickle.load(f)
@@ -47,7 +48,7 @@ def print_to_file(data, fout):
             fout.write(';')
 
 
-print "make train data"
+print("make train data")
 with open("paddle_train.txt", "w") as fout:
     for line in train_set:
         history = line[1]
@@ -60,7 +61,7 @@ with open("paddle_train.txt", "w") as fout:
         fout.write(str(cate_list[target]) + ";")
         fout.write(str(label) + "\n")
 
-print "make test data"
+print("make test data")
 with open("paddle_test.txt", "w") as fout:
     for line in test_set:
         history = line[1]
@@ -79,7 +80,7 @@ with open("paddle_test.txt", "w") as fout:
         fout.write(str(cate_list[target[1]]) + ";")
         fout.write("0\n")
 
-print "make config data"
+print("make config data")
 with open('config.txt', 'w') as f:
     f.write(str(user_count) + "\n")
     f.write(str(item_count) + "\n")

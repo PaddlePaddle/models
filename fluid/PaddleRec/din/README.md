@@ -29,12 +29,10 @@ DIN通过一个兴趣激活模块(Activation Unit)，用预估目标Candidate AD
 
 最后我们将这相关的用户兴趣表达、用户静态特征和上下文相关特征，以及ad相关的特征拼接起来，输入到后续的多层DNN网络，最后预测得到用户对当前目标ADs的点击概率。
 
-我们复现了论文效果，best auc可以达到0.87
-
 
 ## 数据下载及预处理
 
-* Step 1: 运行如下命令 下载Amazon Product数据集并进行预处理
+* Step 1: 运行如下命令 下载[Amazon Product数据集](http://jmcauley.ucsd.edu/data/amazon/)并进行预处理
 ```
 cd data && sh data_process.sh && cd ..
 ```
@@ -44,6 +42,18 @@ cd data && sh data_process.sh && cd ..
 python build_dataset.py
 ```
 运行之后在data文件夹下会产生config.txt、paddle_test.txt、paddle_train.txt三个文件
+
+数据格式例子如下：
+```
+3737 19450;288 196;18486;674;1
+3647 4342 6855 3805;281 463 558 674;4206;463;1
+1805 4309;87 87;21354;556;1
+18209 20753;649 241;51924;610;0
+13150;351;41455;792;1
+35120 40418;157 714;52035;724;0
+```
+
+其中每一行是一个Sample，由分号分隔的5个域组成。前两个域是历史交互的item序列和item对应的类别，第三、四个域是待预测的item和其类别，最后一个域是label，表示点击与否。
 
 
 ## 训练
@@ -67,12 +77,12 @@ python -u train.py --config_path 'data/config.txt' --train_dir 'data/paddle_trai
 
 gpu 单机多卡训练
 ``` bash
-CUDA_VISIBLE_DEVICES=0,1 python -u train.py --config_path 'data/config.txt' --train_dir 'data/paddle_train.txt' --batch_size 32 --epoch_num 100 --use_cuda 0 --parallel 0 > log.txt 2>&1 &
+CUDA_VISIBLE_DEVICES=0,1 python -u train.py --config_path 'data/config.txt' --train_dir 'data/paddle_train.txt' --batch_size 32 --epoch_num 100 --use_cuda 1 --parallel 1 --num_devices 2 > log.txt 2>&1 &
 ```
 
 cpu 单机多卡训练
 ``` bash
-CPU_NUM=10 python -u train.py --config_path 'data/config.txt' --train_dir 'data/paddle_train.txt' --batch_size 32 --epoch_num 100 --use_cuda 0 --parallel 1 > log.txt 2>&1 &
+CPU_NUM=10 python -u train.py --config_path 'data/config.txt' --train_dir 'data/paddle_train.txt' --batch_size 32 --epoch_num 100 --use_cuda 0 --parallel 1 --num_devices 10 > log.txt 2>&1 &
 ```
 
 
@@ -94,7 +104,9 @@ model saved in din_amazon/global_step_50000
 ```
 
 ## 预测
-运行命令 开始预测.
+参考如下命令，开始预测.
+
+其中model_path为模型的路径，test_path为测试数据路径。
 
 ```
 CUDA_VISIBLE_DEVICES=3 python infer.py --model_path 'din_amazon/global_step_400000' --test_path 'data/paddle_test.txt' --use_cuda 1
@@ -107,13 +119,9 @@ CUDA_VISIBLE_DEVICES=3 python infer.py --model_path 'din_amazon/global_step_4000
 
 
 ## 多机训练
-厂内用户可以参考[wiki](http://wiki.baidu.com/pages/viewpage.action?pageId=628300529)利用paddlecloud 配置多机环境
-
-可参考cluster_train.py 配置其他多机环境
+可参考cluster_train.py 配置多机环境
 
 运行命令本地模拟多机场景
 ```
 sh cluster_train.sh
 ```
-
-注意本地模拟需要关闭代理
