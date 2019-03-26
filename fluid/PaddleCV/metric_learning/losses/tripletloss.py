@@ -8,7 +8,7 @@ class TripletLoss():
     def __init__(self, margin=0.1):
         self.margin = margin
 
-    def loss(self, input):
+    def loss(self, input, label=None):
         margin = self.margin
         fea_dim = input.shape[1] # number of channels
         #input = fluid.layers.l2_normalize(input, axis=1)
