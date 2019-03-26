@@ -36,7 +36,7 @@ SR-GNN模型的介绍可以参阅论文[Session-based Recommendation with Graph 
 
 ## 数据下载及预处理
 
-使用DIGINETICA数据集，数据来自：http://cikm2016.cs.iupui.edu/cikm-cup。可以按照下述过程操作获得数据集以及进行简单的数据预处理。
+使用[DIGINETICA](http://cikm2016.cs.iupui.edu/cikm-cup)数据集。可以按照下述过程操作获得数据集以及进行简单的数据预处理。
 
 * Step 1: 运行如下命令,下载DIGINETICA数据集并进行预处理
 ```
