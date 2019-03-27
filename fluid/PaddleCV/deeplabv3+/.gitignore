@@ -1,3 +1,6 @@
-deeplabv3plus_xception65_initialize.params
-deeplabv3plus.params
-deeplabv3plus.tar.gz
+*.tgz
+deeplabv3plus_gn_init*
+deeplabv3plus_xception65_initialize*
+*.log
+*.sh
+output*

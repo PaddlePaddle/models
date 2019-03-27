@@ -1,41 +1,68 @@
 #!/bin/bash
 
-echo "WARNING: This script only for run PaddlePaddle Fluid on one node..."
-echo ""
+#export GLOG_v=30
+#export GLOG_logtostderr=1
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-export PADDLE_PSERVER_PORTS=36001,36002
-export PADDLE_PSERVER_PORT_ARRAY=(36001 36002)
-export PADDLE_PSERVERS=2
-
-export PADDLE_IP=127.0.0.1
-export PADDLE_TRAINERS=2
-
-export CPU_NUM=2
-export NUM_THREADS=2
-export PADDLE_SYNC_MODE=TRUE
-export PADDLE_IS_LOCAL=0
-
+# start pserver0
+export CPU_NUM=5 
 export FLAGS_rpc_deadline=3000000
-export GLOG_logtostderr=1
+python cluster_train.py \
+    --train_data_dir data/convert_text8 \
+    --dict_path data/test_build_dict \
+    --batch_size 100 \
+    --model_output_dir dis_model \
+    --base_lr 1.0 \
+    --print_batch 1 \
+    --is_sparse \
+    --with_speed \
+    --role pserver \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --current_endpoint 127.0.0.1:6000 \
+    --trainers 2 \
+    > pserver0.log 2>&1 &
 
+python cluster_train.py \
+    --train_data_dir data/convert_text8 \
+    --dict_path data/test_build_dict \
+    --batch_size 100 \
+    --model_output_dir dis_model \
+    --base_lr 1.0 \
+    --print_batch 1 \
+    --is_sparse \
+    --with_speed \
+    --role pserver \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --current_endpoint 127.0.0.1:6001 \
+    --trainers 2 \
+    > pserver1.log 2>&1 &
 
-export TRAIN_DATA=data/enwik8
-export DICT_PATH=data/enwik8_dict
-export IS_SPARSE="--is_sparse"
-
-
-echo "Start PSERVER ..."
-for((i=0;i<$PADDLE_PSERVERS;i++))
-do
-    cur_port=${PADDLE_PSERVER_PORT_ARRAY[$i]}
-    echo "PADDLE WILL START PSERVER "$cur_port
-    GLOG_v=0 PADDLE_TRAINING_ROLE=PSERVER CUR_PORT=$cur_port PADDLE_TRAINER_ID=$i python -u train.py $IS_SPARSE &> pserver.$i.log &
-done
-
-echo "Start TRAINER ..."
-for((i=0;i<$PADDLE_TRAINERS;i++))
-do
-    echo "PADDLE WILL START Trainer "$i
-    GLOG_v=0 PADDLE_TRAINER_ID=$i PADDLE_TRAINING_ROLE=TRAINER python -u train.py $IS_SPARSE --train_data_path $TRAIN_DATA --dict_path $DICT_PATH &> trainer.$i.log &
-done
+# start trainer0
+python cluster_train.py \
+    --train_data_dir data/convert_text8 \
+    --dict_path data/test_build_dict \
+    --batch_size 100 \
+    --model_output_dir dis_model \
+    --base_lr 1.0 \
+    --print_batch 1000 \
+    --is_sparse \
+    --with_speed \
+    --role trainer \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --trainers 2 \
+    --trainer_id 0 \
+    > trainer0.log 2>&1 &
+# start trainer1
+python cluster_train.py \
+    --train_data_dir data/convert_text8 \
+    --dict_path data/test_build_dict \
+    --batch_size 100 \
+    --model_output_dir dis_model \
+    --base_lr 1.0 \
+    --print_batch 1000 \
+    --is_sparse \
+    --with_speed \
+    --role trainer \
+    --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
+    --trainers 2 \
+    --trainer_id 1 \
+    > trainer1.log 2>&1 &

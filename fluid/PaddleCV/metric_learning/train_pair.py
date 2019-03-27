@@ -19,6 +19,7 @@ import reader
 from losses import TripletLoss
 from losses import QuadrupletLoss
 from losses import EmlLoss
+from losses import NpairsLoss
 from utility import add_arguments, print_arguments
 from utility import fmt_time, recall_topk, get_gpu_num
 
@@ -46,6 +47,7 @@ add_arg('model_save_dir', str, "output", "model save directory")
 add_arg('loss_name', str, "triplet", "Set the loss type to use.")
 add_arg('samples_each_class', int, 2, "samples_each_class.")
 add_arg('margin', float, 0.1, "margin.")
+add_arg('npairs_reg_lambda', float, 0.01, "npairs reg lambda.")
 # yapf: enable
 
 model_list = [m for m in dir(models) if "__" not in m]
@@ -90,7 +92,13 @@ def net_config(image, label, model, args, is_train):
                 train_batch_size = args.train_batch_size,
                 samples_each_class = args.samples_each_class,
         )
-    cost = metricloss.loss(out)
+    elif args.loss_name == "npairs":
+        metricloss = NpairsLoss(
+                train_batch_size = args.train_batch_size,
+                samples_each_class = args.samples_each_class,
+                reg_lambda = args.npairs_reg_lambda,
+        )
+    cost = metricloss.loss(out, label)
     avg_cost = fluid.layers.mean(x=cost)
     return avg_cost, out
 

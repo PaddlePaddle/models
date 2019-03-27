@@ -19,7 +19,7 @@ class QuadrupletLoss():
         self.cal_loss_batch_size = train_batch_size // num_gpus
         assert(self.cal_loss_batch_size % samples_each_class == 0)
 
-    def loss(self, input):
+    def loss(self, input, label=None):
         #input = fluid.layers.l2_normalize(input, axis=1)
         input_norm = fluid.layers.sqrt(fluid.layers.reduce_sum(fluid.layers.square(input), dim=1))
         input = fluid.layers.elementwise_div(input, input_norm, axis=0)

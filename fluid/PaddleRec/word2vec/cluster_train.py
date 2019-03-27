@@ -38,7 +38,7 @@ def parse_args():
     parser.add_argument(
         '--print_batch',
         type=int,
-        default=10,
+        default=100,
         help="The number of print_batch (default: 10)")
     parser.add_argument(
         '--dict_path',
@@ -78,6 +78,28 @@ def parse_args():
         required=False,
         default=False,
         help='print speed or not , (default: False)')
+    parser.add_argument(
+        '--role', type=str, default='pserver', help='trainer or pserver')
+    parser.add_argument(
+        '--endpoints',
+        type=str,
+        default='127.0.0.1:6000',
+        help='The pserver endpoints, like: 127.0.0.1:6000, 127.0.0.1:6001')
+    parser.add_argument(
+        '--current_endpoint',
+        type=str,
+        default='127.0.0.1:6000',
+        help='The current_endpoint')
+    parser.add_argument(
+        '--trainer_id',
+        type=int,
+        default=0,
+        help='trainer id ,only trainer_id=0 save model')
+    parser.add_argument(
+        '--trainers',
+        type=int,
+        default=1,
+        help='The num of trianers, (default: 1)')
     return parser.parse_args()
 
 
@@ -122,22 +144,9 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    exec_strategy = fluid.ExecutionStrategy()
-    exec_strategy.use_experimental_executor = True
-
     print("CPU_NUM:" + str(os.getenv("CPU_NUM")))
-    exec_strategy.num_threads = int(os.getenv("CPU_NUM"))
 
-    build_strategy = fluid.BuildStrategy()
-    if int(os.getenv("CPU_NUM")) > 1:
-        build_strategy.reduce_strategy = fluid.BuildStrategy.ReduceStrategy.Reduce
-
-    train_exe = fluid.ParallelExecutor(
-        use_cuda=False,
-        loss_name=loss.name,
-        main_program=train_program,
-        build_strategy=build_strategy,
-        exec_strategy=exec_strategy)
+    train_exe = exe
 
     for pass_id in range(args.num_passes):
         py_reader.start()
@@ -190,7 +199,7 @@ def GetFileList(data_path):
 
 def train(args):
 
-    if not os.path.isdir(args.model_output_dir):
+    if not os.path.isdir(args.model_output_dir) and args.train_id == 0:
         os.mkdir(args.model_output_dir)
 
     filelist = GetFileList(args.train_data_dir)
@@ -216,11 +225,24 @@ def train(args):
 
     optimizer.minimize(loss)
 
-    # do local training 
-    logger.info("run local training")
-    main_program = fluid.default_main_program()
-    train_loop(args, main_program, word2vec_reader, py_reader, loss, 0,
-               id_frequencys_pow)
+    logger.info("run dist training")
+
+    t = fluid.DistributeTranspiler()
+    t.transpile(
+        args.trainer_id, pservers=args.endpoints, trainers=args.trainers)
+    if args.role == "pserver":
+        print("run psever")
+        pserver_prog = t.get_pserver_program(args.current_endpoint)
+        pserver_startup = t.get_startup_program(args.current_endpoint,
+                                                pserver_prog)
+        exe = fluid.Executor(fluid.CPUPlace())
+        exe.run(pserver_startup)
+        exe.run(pserver_prog)
+    elif args.role == "trainer":
+        print("run trainer")
+        train_loop(args,
+                   t.get_trainer_program(), word2vec_reader, py_reader, loss,
+                   args.trainer_id, id_frequencys_pow)
 
 
 if __name__ == '__main__':
