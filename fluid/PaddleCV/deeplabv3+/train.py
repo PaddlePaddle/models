@@ -21,10 +21,10 @@ parser = argparse.ArgumentParser()
 add_arg = lambda *args: utility.add_arguments(*args, argparser=parser)
 
 # yapf: disable
-add_arg('batch_size',           int,    2,      "The number of images in each batch during training.")
+add_arg('batch_size',           int,    4,      "The number of images in each batch during training.")
 add_arg('train_crop_size',      int,    769,    "Image crop size during training.")
-add_arg('base_lr',              float,  0.0001, "The base learning rate for model training.")
-add_arg('total_step',           int,    90000,  "Number of the training step.")
+add_arg('base_lr',              float,  0.001,  "The base learning rate for model training.")
+add_arg('total_step',           int,    500000, "Number of the training step.")
 add_arg('init_weights_path',    str,    None,   "Path of the initial weights in paddlepaddle format.")
 add_arg('save_weights_path',    str,    None,   "Path of the saved weights during training.")
 add_arg('dataset_path',         str,    None,   "Cityscape dataset path.")
@@ -39,7 +39,7 @@ add_arg('use_py_reader',        bool,    True,  "Use py reader.")
 parser.add_argument(
     '--enable_ce',
     action='store_true',
-    help='If set, run the task with continuous evaluation logs.')
+    help='If set, run the task with continuous evaluation logs. Users can ignore this agument.')
 #yapf: enable
 
 @contextlib.contextmanager
@@ -87,7 +87,8 @@ def loss(logit, label):
     label = fluid.layers.reshape(label, [-1, 1])
     label = fluid.layers.cast(label, 'int64')
     label_nignore = fluid.layers.reshape(label_nignore, [-1, 1])
-    loss = fluid.layers.softmax_with_cross_entropy(logit, label, ignore_index=255, numeric_stable_mode=True)
+    logit = fluid.layers.softmax(logit, use_cudnn=False)
+    loss = fluid.layers.cross_entropy(logit, label, ignore_index=255)
     label_nignore.stop_gradient = True
     label.stop_gradient = True
     return loss, label_nignore
