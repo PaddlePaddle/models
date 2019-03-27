@@ -1,12 +1,12 @@
 
 # for distillation
 #--------------------
-#export CUDA_VISIBLE_DEVICES=0
-#python compress.py \
-#--model "MobileNet" \
-#--teacher_model "ResNet50" \
-#--teacher_pretrained_model ./data/pretrain/ResNet50_pretrained \
-#--compress_config ./configs/mobilenetv1_resnet50_distillation.yaml
+export CUDA_VISIBLE_DEVICES=0
+python compress.py \
+--model "MobileNet" \
+--teacher_model "ResNet50" \
+--teacher_pretrained_model ./data/pretrain/ResNet50_pretrained \
+--compress_config ./configs/mobilenetv1_resnet50_distillation.yaml
 
 
 # for sensitivity filter pruning
@@ -27,10 +27,10 @@
 
 # for quantization
 #---------------------------
-export CUDA_VISIBLE_DEVICES=0
-python compress.py \
---batch_size 64 \
---model "MobileNet" \
---pretrained_model ./data/pretrain/MobileNetV1_pretrained \
---compress_config ./configs/quantization.yaml
+#export CUDA_VISIBLE_DEVICES=0
+#python compress.py \
+#--batch_size 64 \
+#--model "MobileNet" \
+#--pretrained_model ./data/pretrain/MobileNetV1_pretrained \
+#--compress_config ./configs/quantization.yaml
 
