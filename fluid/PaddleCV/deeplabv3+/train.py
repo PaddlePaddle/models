@@ -39,7 +39,7 @@ add_arg('use_py_reader',        bool,    True,  "Use py reader.")
 parser.add_argument(
     '--enable_ce',
     action='store_true',
-    help='If set, run the task with continuous evaluation logs.')
+    help='If set, run the task with continuous evaluation logs. Users can ignore this agument.')
 #yapf: enable
 
 @contextlib.contextmanager
@@ -87,7 +87,8 @@ def loss(logit, label):
     label = fluid.layers.reshape(label, [-1, 1])
     label = fluid.layers.cast(label, 'int64')
     label_nignore = fluid.layers.reshape(label_nignore, [-1, 1])
-    loss = fluid.layers.softmax_with_cross_entropy(logit, label, ignore_index=255, numeric_stable_mode=True)
+    logit = fluid.layers.softmax(logit, use_cudnn=False)
+    loss = fluid.layers.cross_entropy(logit, label, ignore_index=255)
     label_nignore.stop_gradient = True
     label.stop_gradient = True
     return loss, label_nignore

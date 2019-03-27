@@ -86,8 +86,6 @@ python ./train.py \
 ```
 如果您的显存不足，可以尝试减小`batch_size`，同时等比例放大`total_step`, 缩小`base_lr`, 保证相乘的值不变，这得益于Group Norm的特性，改变 `batch_size` 并不会显著影响结果，而且能够节约更多显存, 比如您可以设置`--batch_size=2 --total_step=1000000 --base_lr=0.0005`。
 
-如果您希望使用多卡进行训练，可以同比增加`batch_size`，减小`total_step`, 增加`base_lr`, 比如原来单卡训练是`--batch_size=4 --total_step=500000`，使用4卡训练则是`--batch_size=16 --total_step=125000 --base_lr=0.004`
-
 ### 测试
 执行以下命令在`Cityscape`测试数据集上进行测试：
 ```
@@ -111,7 +109,6 @@ step: 500, mIoU: 0.7881
 
 |数据集 | norm type | pretrained model | trained model | mean IoU
 |---|---|---|---|---|
-|CityScape | batch norm | [deeplabv3plus_xception65_initialize.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_xception65_initialize.tgz) | [deeplabv3plus.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus.tgz) | 0.7873 |
 |CityScape | group norm | [deeplabv3plus_gn_init.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_gn_init.tgz) | [deeplabv3plus_gn.tgz](https://paddle-deeplab.bj.bcebos.com/deeplabv3plus_gn.tgz) | 0.7881 |
 
 ## 参考

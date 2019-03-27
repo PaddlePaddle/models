@@ -73,16 +73,6 @@ class CityscapeDataset:
         if self.index >= len(self.label_files):
             self.reset()
 
-    def color_augmentation(self, img):
-        r = np.random.rand()
-        img = img / 255.0
-        if r < 0.5:
-            img = np.power(img, 1 - r)
-        else:
-            img = np.power(img, 1 + (r - 0.5) * 2)
-        img = img * 255.0
-        return img
-
     def get_img(self):
         shape = self.config["crop_size"]
         while True:
@@ -113,7 +103,6 @@ class CityscapeDataset:
                 label.shape) == 3, "{} {}".format(img.shape, label.shape)
             img = img[:, :, ::-1]
             label = label[:, :, ::-1]
-        img = self.color_augmentation(img)
 
         random_scale = np.random.rand(1) * (range_r - range_l) + range_l
         crop_size = int(shape / random_scale)
