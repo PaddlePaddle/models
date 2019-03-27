@@ -9,7 +9,7 @@ import six
 default_config = {
     "shuffle": True,
     "min_resize": 0.5,
-    "max_resize": 2,
+    "max_resize": 4,
     "crop_size": 769,
 }
 
@@ -90,9 +90,21 @@ class CityscapeDataset:
                 break
         if shape == -1:
             return img, label, ln
-        random_scale = np.random.rand(1) * (self.config['max_resize'] -
-                                            self.config['min_resize']
-                                            ) + self.config['min_resize']
+
+        if np.random.rand() > 0.5:
+            range_l = 1
+            range_r = self.config['max_resize']
+        else:
+            range_l = self.config['min_resize']
+            range_r = 1
+
+        if np.random.rand() > 0.5:
+            assert len(img.shape) == 3 and len(
+                label.shape) == 3, "{} {}".format(img.shape, label.shape)
+            img = img[:, :, ::-1]
+            label = label[:, :, ::-1]
+
+        random_scale = np.random.rand(1) * (range_r - range_l) + range_l
         crop_size = int(shape / random_scale)
         bb = crop_size // 2
 
