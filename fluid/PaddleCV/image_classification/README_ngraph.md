@@ -32,7 +32,6 @@ export OMP_NUM_THREADS=<num_cpu_cores>
 Optional exports for better performance:
 ```
 export KMP_AFFINITY=granularity=fine,compact,1,0
-export KMP_BLOCKTIME=1
 ```
 
 ## 3. How the benchmark script might be run.
