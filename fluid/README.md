@@ -17,7 +17,7 @@ Fluid模型配置和参数文件的工具。
 -  [MobileNet](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models)
 -  [Dual Path Network](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models)
 -  [SE-ResNeXt](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification/models)
--  [Caffe模型转换为Paddle Fluid配置和模型文件工具](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/caffe2fluid)
+-  [Caffe模型转换为Paddle Fluid配置和模型文件工具](https://github.com/PaddlePaddle/X2Paddle/tree/master/caffe2fluid)
 
 目标检测
 --------
