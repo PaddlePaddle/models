@@ -15,7 +15,7 @@ train_parameters = {
     "learning_strategy": {
         "name": "piecewise_decay",
         "batch_size": 256,
-        "epochs": [30, 60, 90],
+        "epochs": [7, 60, 90],
         "steps": [0.1, 0.01, 0.001, 0.0001]
     }
 }
@@ -46,7 +46,7 @@ class ResNet():
             filter_size=7,
             stride=2,
             act='relu',
-            name="res_conv1")  #debug
+            name="conv1")
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,
