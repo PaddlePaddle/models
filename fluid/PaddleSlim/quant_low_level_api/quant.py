@@ -4,7 +4,6 @@ from __future__ import print_function
 import os
 import numpy as np
 import time
-import sys
 import functools
 import paddle
 import paddle.fluid as fluid
@@ -14,9 +13,11 @@ from paddle.fluid.contrib.slim.quantization import QuantizationFreezePass
 from paddle.fluid.contrib.slim.quantization import ConvertToInt8Pass
 from paddle.fluid.contrib.slim.quantization import TransformForMobilePass
 from paddle.fluid import core
-import reader
 import argparse
 import subprocess
+import sys
+sys.path.append('..')
+import reader
 import models
 from utility import add_arguments, print_arguments
 
@@ -181,10 +182,11 @@ def train(args):
     model_name = args.model
     pretrained_model = args.pretrained_model
     model_save_dir = args.model_save_dir
+    data_dir = args.data_dir
     activation_quant_type = args.act_quant_type
     weight_quant_type = args.wt_quant_type
-    print("Using %s as actiavtion type." % activation_quant_type)
-    print("Using %s as weight type." % weight_quant_type)
+    print("Using %s as the actiavtion quantize type." % activation_quant_type)
+    print("Using %s as the weight quantize type." % weight_quant_type)
 
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
@@ -227,8 +229,8 @@ def train(args):
     train_batch_size = args.batch_size / device_num
     test_batch_size = 1 if activation_quant_type == 'abs_max' else 8
     train_reader = paddle.batch(
-        reader.train(), batch_size=train_batch_size, drop_last=True)
-    test_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
+        reader.train(data_dir=data_dir), batch_size=train_batch_size, drop_last=True)
+    test_reader = paddle.batch(reader.val(data_dir=data_dir), batch_size=test_batch_size)
 
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
@@ -247,8 +249,7 @@ def train(args):
     build_strategy.enable_inplace = False
     binary = fluid.CompiledProgram(main_graph.graph).with_data_parallel(
         loss_name=train_cost.name, build_strategy=build_strategy)
-    test_binary = fluid.CompiledProgram(test_graph.graph).with_data_parallel(
-        build_strategy=build_strategy)
+    test_prog = test_graph.to_program()
     params = models.__dict__[args.model]().params
     for pass_id in range(params["num_epochs"]):
 
@@ -292,7 +293,7 @@ def train(args):
         try:
             while True:
                 t1 = time.time()
-                loss, acc1, acc5 = exe.run(test_binary,
+                loss, acc1, acc5 = exe.run(program=test_prog,
                                            fetch_list=test_fetch_list)
                 t2 = time.time()
                 period = t2 - t1
