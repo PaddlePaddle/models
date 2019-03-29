@@ -1,7 +1,7 @@
+from __future__ import print_function
 import random
 import pickle
 import numpy as np
-from __future__ import print_function
 
 random.seed(1234)
 
