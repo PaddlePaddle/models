@@ -36,6 +36,10 @@ DIN通过一个兴趣激活模块(Activation Unit)，用预估目标Candidate AD
 ```
 cd data && sh data_process.sh && cd ..
 ```
+如果执行过程中遇到找不到某个包（例如pandas包）的报错，使用如下命令安装对应的包即可。
+```
+pip install pandas
+```
 
 * Step 2: 产生训练集、测试集和config文件
 ```
@@ -102,6 +106,12 @@ epoch: 1    global_step: 3000    train_loss: 0.6799        time: 14.84
 model saved in din_amazon/global_step_50000
 ...
 ```
+
+提示：
+
+* 在单机条件下，使用代码中默认的超参数运行时，产生最优auc的global step大致在440000到500000之间
+
+* 训练超出一定的epoch后会稍稍出现过拟合
 
 ## 预测
 参考如下命令，开始预测.

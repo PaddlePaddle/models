@@ -121,7 +121,7 @@ def train():
                 loss_sum = 0.0
 
                 if (global_step > 400000 and global_step % PRINT_STEP == 0) or (
-                        global_step < 400000 and global_step % 50000 == 0):
+                        global_step <= 400000 and global_step % 50000 == 0):
                     save_dir = args.model_dir + "/global_step_" + str(
                         global_step)
                     feed_var_name = [
