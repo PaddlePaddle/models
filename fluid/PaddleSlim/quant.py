@@ -18,7 +18,6 @@ import reader
 import argparse
 import subprocess
 import models
-from paddle.fluid.layers import learning_rate_scheduler
 from utility import add_arguments, print_arguments
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -74,7 +73,7 @@ def optimizer_setting(params):
         num_epochs = params["num_epochs"]
 
         optimizer = fluid.optimizer.Momentum(
-            learning_rate=cosine_decay(
+            learning_rate=fluid.layers.cosine_decay(
                 learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
             momentum=0.9,
             regularization=fluid.regularizer.L2Decay(4e-5))
@@ -238,7 +237,9 @@ def train(args):
     test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
 
     transform_pass = QuantizationTransformPass(
-        scope=fluid.global_scope(), place=place, activation_quantize_type=activation_quant_type, weight_quantize_type=weight_quant_type)
+        scope=fluid.global_scope(), place=place,
+        activation_quantize_type=activation_quant_type,
+        weight_quantize_type=weight_quant_type)
     transform_pass.apply(main_graph)
     transform_pass.apply(test_graph)
     build_strategy = fluid.BuildStrategy()
@@ -273,7 +274,7 @@ def train(args):
                 if batch_id % 10 == 0:
                     print("Pass {0}, trainbatch {1}, loss {2}, \
                         acc1 {3}, acc5 {4}, lr {5}, time {6}"
-                          .format(pass_id, batch_id, loss, acc1, acc5, "%.5f" %
+                          .format(pass_id, batch_id, loss, acc1, acc5, "%.6f" %
                                   lr, "%2.2f sec" % period))
                     sys.stdout.flush()
                 batch_id += 1
@@ -326,7 +327,10 @@ def train(args):
     mobile_path = os.path.join(model_path, 'mobile')
     if not os.path.isdir(model_path):
         os.makedirs(model_path)
-    freeze_pass = QuantizationFreezePass(scope=fluid.global_scope(), place=place, weight_quantize_type=weight_quant_type)
+    freeze_pass = QuantizationFreezePass(
+        scope=fluid.global_scope(),
+        place=place,
+        weight_quantize_type=weight_quant_type)
     freeze_pass.apply(test_graph)
     server_program = test_graph.to_program()
     fluid.io.save_inference_model(

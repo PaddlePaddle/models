@@ -14,7 +14,7 @@ python quant.py \
        --model_save_dir=output/ \
        --lr_strategy=piecewise_decay \
        --num_epochs=10 \
-       --lr=0.00001 \
+       --lr=0.0001 \
        --act_quant_type=abs_max \
        --wt_quant_type=abs_max
 
@@ -31,7 +31,7 @@ python quant.py \
 #       --model_save_dir=output/ \
 #       --lr_strategy=piecewise_decay \
 #       --num_epochs=10 \
-#       --lr=0.00001 \
+#       --lr=0.0001 \
 #       --act_quant_type=abs_max \
 #       --wt_quant_type=abs_max
 
