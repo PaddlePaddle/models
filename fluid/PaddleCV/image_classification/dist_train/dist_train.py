@@ -296,11 +296,6 @@ def train_parallel(args):
     #     scope=fluid.global_scope().new_scope()
     # )
 
-    print("Run test before head")
-    test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
-    test_ret = test_single(startup_exe, test_prog, args, test_pyreader,test_fetch_list)
-    print("End run test before head")
-
     over_all_start = time.time()
     fetch_list = [train_cost.name, train_acc1.name, train_acc5.name]
     steps_per_pass = args.total_images / args.batch_size / args.dist_env["num_trainers"]
@@ -316,8 +311,8 @@ def train_parallel(args):
                 if batch_id % 30 == 0:
                     fetch_ret = exe.run(fetch_list)
                     fetched_data = [np.mean(np.array(d)) for d in fetch_ret]
-                    print("Pass %d, batch %d, loss %s, acc1: %s, acc5: %s, avg batch time %.4f" %
-                        (pass_id, batch_id, fetched_data[0], fetched_data[1],
+                    print("Pass [%d/%d], batch [%d/%d], loss %s, acc1: %s, acc5: %s, avg batch time %.4f" %
+                        (pass_id, args.num_epochs, batch_id, steps_per_pass, fetched_data[0], fetched_data[1],
                          fetched_data[2], (time.time()-start_time) / batch_id))
                 else:
                     fetch_ret = exe.run([])
@@ -333,8 +328,7 @@ def train_parallel(args):
 
         print_train_time(start_time, time.time(), num_samples)
         train_pyreader.reset()
-
-        if pass_id > args.start_test_pass:
+        if pass_id >= args.start_test_pass:
             if args.multi_batch_repeat > 1:
                 copyback_repeat_bn_params(train_prog)
             test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
@@ -349,7 +343,6 @@ def train_parallel(args):
             if not os.path.isdir(model_path):
                 os.makedirs(model_path)
             fluid.io.save_persistables(startup_exe, model_path, main_program=train_prog)
-
     startup_exe.close()
     print("total train time: ", time.time() - over_all_start)
 

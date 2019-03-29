@@ -54,7 +54,7 @@ def _update_role_var_grad(prog, params_grads):
         role = op.attr("op_role")
         if role & int(BACKWARD) and op.has_attr("op_role_var"):
             # have backward bits then remove all op_role_var
-            op.desc._remove_attr("op_role_var")
+            op.desc.remove_attr("op_role_var")
     for op in prog.global_block().ops:
         if op.type == "allreduce":
             allreduce_role_var = []
@@ -95,6 +95,7 @@ def create_master_params_grads(params_grads, main_prog, startup_prog, scale_loss
         else:
             reduced_master_grad = master_grad
         params_grads_to_apply.append([master_param, reduced_master_grad])
+    
     # update program op role var acording to master grads before allreduce.
     _update_role_var_grad(main_prog, master_params_grads)
     main_prog._current_role = tmp_role
