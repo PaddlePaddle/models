@@ -8,8 +8,6 @@
 ├── train.py             # 训练脚本
 ├── infer.py             # 预测脚本
 ├── network.py           # 网络结构
-├── cluster_train.py     # 多机训练
-├── cluster_train.sh     # 多机训练脚本
 ├── reader.py            # 和读取数据相关的函数
 ├── data/
     ├── download.sh         # 下载数据的脚本
@@ -45,7 +43,7 @@ cd data && sh download.sh
 
 * Step 2: 产生训练集、测试集和config文件
 ```
-python preprocess.py
+python preprocess.py --dataset diginetica
 cd ..
 ```
 运行之后在data文件夹下会产生diginetica文件夹，里面包含config.txt、test.txt  train.txt三个文件
