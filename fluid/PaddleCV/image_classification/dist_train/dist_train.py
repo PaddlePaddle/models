@@ -46,7 +46,7 @@ def parse_args():
     add_arg('class_dim',        int,   1000,                 "Class number.")
     add_arg('image_shape',      str,   "3,224,224",          "input image size")
     add_arg('model_save_dir',   str,   "output",             "model save directory")
-    add_arg('with_mem_opt',     bool,  False,                 "Whether to use memory optimization or not.")
+    add_arg('with_mem_opt',     bool,  False,                "Whether to use memory optimization or not.")
     add_arg('pretrained_model', str,   None,                 "Whether to use pretrained model.")
     add_arg('checkpoint',       str,   None,                 "Whether to resume checkpoint.")
     add_arg('lr',               float, 0.1,                  "set learning rate.")
@@ -57,6 +57,7 @@ def parse_args():
     add_arg('model_category',   str,   "models",             "Whether to use models_name or not, valid value:'models','models_name'" )
     add_arg('fp16',             bool,  False,                "Enable half precision training with fp16." )
     add_arg('scale_loss',       float, 1.0,                  "Scale loss for fp16." )
+    add_arg('reduce_master_grad', bool, False,               "Whether to allreduce fp32 gradients." )
     # for distributed
     add_arg('update_method',      str,  "local",            "Can be local, pserver, nccl2.")
     add_arg('multi_batch_repeat', int,  1,                  "Batch merge repeats.")
@@ -66,6 +67,7 @@ def parse_args():
     add_arg('async_mode',         bool, False,              "Async distributed training, only for pserver mode.")
     add_arg('reduce_strategy',    str,  "allreduce",        "Choose from reduce or allreduce.")
     add_arg('skip_unbalanced_data', bool, False,            "Skip data not if data not balanced on nodes.")
+    add_arg('enable_sequential_execution', bool, False,            "Skip data not if data not balanced on nodes.")
     # yapf: enable
     args = parser.parse_args()
     return args
@@ -130,7 +132,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                 if os.getenv("FLAGS_selected_gpus"):
                     # in multi process mode, "trainer_count" will be total devices
                     # in the whole cluster, and we need to scale num_of nodes.
-                    end_lr *= device_num_per_worker
+                    end_lr /= device_num_per_worker
 
                 total_images = args.total_images / trainer_count
                 step = int(total_images / (args.batch_size * args.multi_batch_repeat) + 1)
@@ -158,7 +160,8 @@ def build_program(is_train, main_prog, startup_prog, args):
                 if args.fp16:
                     params_grads = optimizer.backward(avg_cost)
                     master_params_grads = utils.create_master_params_grads(
-                        params_grads, main_prog, startup_prog, args.scale_loss)
+                        params_grads, main_prog, startup_prog, args.scale_loss,
+                        reduce_master_grad = args.reduce_master_grad)
                     optimizer.apply_gradients(master_params_grads)
                     utils.master_param_to_train_param(master_params_grads, params_grads, main_prog)
                 else:
@@ -239,11 +242,15 @@ def train_parallel(args):
         append_bn_repeat_init_op(train_prog, startup_prog, args.multi_batch_repeat)
     startup_exe.run(startup_prog)
 
+    if args.checkpoint:
+        fluid.io.load_persistables(startup_exe, args.checkpoint, main_program=train_prog)
+
     strategy = fluid.ExecutionStrategy()
     strategy.num_threads = args.num_threads
     build_strategy = fluid.BuildStrategy()
     build_strategy.enable_inplace = False
     build_strategy.memory_optimize = False
+    build_strategy.enable_sequential_execution = bool(args.enable_sequential_execution)
 
     
     if args.reduce_strategy == "reduce":
@@ -304,8 +311,8 @@ def train_parallel(args):
                 if batch_id % 30 == 0:
                     fetch_ret = exe.run(fetch_list)
                     fetched_data = [np.mean(np.array(d)) for d in fetch_ret]
-                    print("Pass %d, batch %d, loss %s, acc1: %s, acc5: %s, avg batch time %.4f" %
-                        (pass_id, batch_id, fetched_data[0], fetched_data[1],
+                    print("Pass [%d/%d], batch [%d/%d], loss %s, acc1: %s, acc5: %s, avg batch time %.4f" %
+                        (pass_id, args.num_epochs, batch_id, steps_per_pass, fetched_data[0], fetched_data[1],
                          fetched_data[2], (time.time()-start_time) / batch_id))
                 else:
                     fetch_ret = exe.run([])
@@ -321,8 +328,7 @@ def train_parallel(args):
 
         print_train_time(start_time, time.time(), num_samples)
         train_pyreader.reset()
-
-        if pass_id > args.start_test_pass:
+        if pass_id >= args.start_test_pass:
             if args.multi_batch_repeat > 1:
                 copyback_repeat_bn_params(train_prog)
             test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
@@ -331,7 +337,12 @@ def train_parallel(args):
             # test_ret = test_parallel(test_exe, test_prog, args, test_pyreader,test_fetch_list)
             print("Pass: %d, Test Loss %s, test acc1: %s, test acc5: %s\n" %
                   (pass_id, test_ret[0], test_ret[1], test_ret[2]))
-
+            model_path = os.path.join(args.model_save_dir + '/' + args.model,
+                                  str(pass_id))
+            print("saving model to ", model_path)
+            if not os.path.isdir(model_path):
+                os.makedirs(model_path)
+            fluid.io.save_persistables(startup_exe, model_path, main_program=train_prog)
     startup_exe.close()
     print("total train time: ", time.time() - over_all_start)
 

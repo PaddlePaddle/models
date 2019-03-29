@@ -1,6 +1,7 @@
 from __future__ import print_function
 import paddle
 import paddle.fluid as fluid
+import paddle.fluid.core as core
 
 def cast_fp16_to_fp32(i, o, prog):
     prog.global_block().append_op(
@@ -43,8 +44,30 @@ def copy_to_master_param(p, block):
         name=v.name + ".master")
     return new_p
 
-def create_master_params_grads(params_grads, main_prog, startup_prog, scale_loss):
-    master_params_grads = []
+
+def _update_role_var_grad(prog, params_grads):
+    BACKWARD = core.op_proto_and_checker_maker.OpRole.Backward
+    gradname_to_paramname = dict()
+    for p, g in params_grads:
+        gradname_to_paramname[g.name] = p.name
+    for op in prog.global_block().ops:
+        role = op.attr("op_role")
+        if role & int(BACKWARD) and op.has_attr("op_role_var"):
+            # have backward bits then remove all op_role_var
+            op.desc.remove_attr("op_role_var")
+    for op in prog.global_block().ops:
+        if op.type == "allreduce":
+            allreduce_role_var = []
+            for input_varname in op.input_arg_names:
+                if input_varname in gradname_to_paramname:
+                    allreduce_role_var.append(gradname_to_paramname[input_varname])
+                    allreduce_role_var.append(input_varname)
+            print("updating role var: ", allreduce_role_var)
+            op._set_attr("op_role_var", allreduce_role_var)
+
+def create_master_params_grads(params_grads, main_prog, startup_prog, scale_loss, reduce_master_grad=True):
+    master_params_grads = []      # master p, g on local device
+    params_grads_to_apply = []    # master p, g after allreduced, if reduce_master_grad is enabled
     tmp_role = main_prog._current_role
     OpRole = fluid.core.op_proto_and_checker_maker.OpRole
     main_prog._current_role = OpRole.Backward
@@ -62,12 +85,21 @@ def create_master_params_grads(params_grads, main_prog, startup_prog, scale_loss
                 scaled_g = g
             master_params_grads.append([p, scaled_g])
             continue
+
         master_grad = fluid.layers.cast(g, "float32")
         if scale_loss > 1:
             master_grad = master_grad / float(scale_loss)
-        master_params_grads.append([master_param, master_grad])
+        master_params_grads.append([p, master_grad])
+        if reduce_master_grad:
+            reduced_master_grad = fluid.layers.collective._allreduce(master_grad)
+        else:
+            reduced_master_grad = master_grad
+        params_grads_to_apply.append([master_param, reduced_master_grad])
+    
+    # update program op role var acording to master grads before allreduce.
+    _update_role_var_grad(main_prog, master_params_grads)
     main_prog._current_role = tmp_role
-    return master_params_grads
+    return params_grads_to_apply
 
 def master_param_to_train_param(master_params_grads, params_grads, main_prog):
     for idx, m_p_g in enumerate(master_params_grads):
