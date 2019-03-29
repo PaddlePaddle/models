@@ -23,7 +23,7 @@ class Data():
         data = pickle.load(open(path, 'rb'))
         self.shuffle = shuffle
         self.length = len(data[0])
-        self.input = zip(data[0], data[1])
+        self.input = list(zip(data[0], data[1]))
 
     def make_data(self, cur_batch, batch_size):
         cur_batch = [list(e) for e in cur_batch]

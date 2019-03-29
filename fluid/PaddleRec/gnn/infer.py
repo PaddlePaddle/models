@@ -50,23 +50,26 @@ def infer(epoch_num):
     exe = fluid.Executor(place)
 
     model_path = args.model_path + "epoch_" + str(epoch_num)
-    [infer_program, feed_names, fetch_targets] = fluid.io.load_inference_model(
-        model_path, exe)
-    feeder = fluid.DataFeeder(
-        feed_list=feed_names, place=place, program=infer_program)
+    try:
+        [infer_program, feed_names, fetch_targets] = fluid.io.load_inference_model(
+            model_path, exe)
+        feeder = fluid.DataFeeder(
+            feed_list=feed_names, place=place, program=infer_program)
 
-    loss_sum = 0.0
-    acc_sum = 0.0
-    count = 0
-    for data in test_data.reader(batch_size, batch_size, False):
-        res = exe.run(infer_program,
-                      feed=feeder.feed(data),
-                      fetch_list=fetch_targets)
-        loss_sum += res[0]
-        acc_sum += res[1]
-        count += 1
-    logger.info("TEST --> loss: %.4lf, Recall@20: %.4lf" %
-                (loss_sum / count, acc_sum / count))
+        loss_sum = 0.0
+        acc_sum = 0.0
+        count = 0
+        for data in test_data.reader(batch_size, batch_size, False):
+            res = exe.run(infer_program,
+                          feed=feeder.feed(data),
+                          fetch_list=fetch_targets)
+            loss_sum += res[0]
+            acc_sum += res[1]
+            count += 1
+        logger.info("TEST --> loss: %.4lf, Recall@20: %.4lf" %
+                    (loss_sum / count, acc_sum / count))
+    except ValueError as e:
+        logger.info("TEST --> error: there is no model in " + model_path)
 
 
 if __name__ == "__main__":

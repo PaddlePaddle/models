@@ -5,3 +5,4 @@
 unzip dataset-train-diginetica.zip "train-item-views.csv"
 sed -i '1d' train-item-views.csv
 sed -i '1i session_id;user_id;item_id;timeframe;eventdate' train-item-views.csv
+mkdir diginetica
