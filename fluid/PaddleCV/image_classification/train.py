@@ -15,6 +15,7 @@ import argparse
 import functools
 import subprocess
 import utils
+import models
 from utils.learning_rate import cosine_decay
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
 from utility import add_arguments, print_arguments
@@ -46,7 +47,7 @@ add_arg('l2_decay',         float, 1e-4,                 "L2_decay parameter.")
 add_arg('momentum_rate',    float, 0.9,                  "momentum_rate.")
 # yapf: enable
 
-
+"""
 def set_models(model_category):
     global models
     assert model_category in ["models", "models_name"
@@ -56,7 +57,7 @@ def set_models(model_category):
         import models_name as models
     else:
         import models as models
-
+"""
 
 def optimizer_setting(params):
     ls = params["learning_strategy"]
@@ -429,7 +430,6 @@ def train(args):
 
 def main():
     args = parser.parse_args()
-    set_models(args.model_category)
     print_arguments(args)
     train(args)
 

@@ -15,6 +15,7 @@ THREAD = 8
 BUF_SIZE = 102400
 
 DATA_DIR = 'data/ILSVRC2012'
+DATA_DIR = '/work/data/cv'
 
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
@@ -179,15 +180,20 @@ def train(data_dir=DATA_DIR, pass_id_as_seed=0):
         shuffle=True,
         color_jitter=False,
         rotate=False,
-        data_dir=data_dir,
+     #   data_dir=data_dir,
+        data_dir=os.path.join(data_dir,'train'),
         pass_id_as_seed=pass_id_as_seed)
 
 
 def val(data_dir=DATA_DIR):
     file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(file_list, 'val', shuffle=False, data_dir=data_dir)
+    return _reader_creator(file_list, 'val', shuffle=False, 
+            data_dir=os.path.join(data_dir,'val'))
+         #   data_dir=data_dir)
 
 
 def test(data_dir=DATA_DIR):
     file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(file_list, 'test', shuffle=False, data_dir=data_dir)
+    return _reader_creator(file_list, 'test', shuffle=False, 
+            data_dir=os.path.join(data_dir,'val'))
+      #      data_dir=data_dir)

@@ -52,8 +52,7 @@ class ShuffleNetV2():
             filter_size=3,
             num_filters=input_channel,
             padding=1,
-            stride=2,
-            name='stage1_conv')
+            stride=2)
         pool1 = fluid.layers.pool2d(
             input=conv1,
             pool_size=3,
@@ -71,35 +70,30 @@ class ShuffleNetV2():
                         input=conv,
                         num_filters=output_channel,
                         stride=2,
-                        benchmodel=2,
-                        name=str(idxstage + 2) + '_' + str(i + 1))
+                        benchmodel=2)
                 else:
                     conv = self.inverted_residual_unit(
                         input=conv,
                         num_filters=output_channel,
                         stride=1,
-                        benchmodel=1,
-                        name=str(idxstage + 2) + '_' + str(i + 1))
+                        benchmodel=1)
 
         conv_last = self.conv_bn_layer(
             input=conv,
             filter_size=1,
             num_filters=stage_out_channels[-1],
             padding=0,
-            stride=1,
-            name='conv5')
+            stride=1)
         pool_last = fluid.layers.pool2d(
             input=conv_last,
             pool_size=7,
-            pool_stride=1,
+            pool_stride=7,
             pool_padding=0,
             pool_type='avg')
 
         output = fluid.layers.fc(input=pool_last,
                                  size=class_dim,
-                                 param_attr=ParamAttr(
-                                     initializer=MSRA(), name='fc6_weights'),
-                                 bias_attr=ParamAttr(name='fc6_offset'))
+                                 param_attr=ParamAttr(initializer=MSRA()))
         return output
 
     def conv_bn_layer(self,
@@ -110,9 +104,7 @@ class ShuffleNetV2():
                       padding,
                       num_groups=1,
                       use_cudnn=True,
-                      if_act=True,
-                      name=None):
-        #         print(num_groups)
+                      if_act=True):
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -122,25 +114,12 @@ class ShuffleNetV2():
             groups=num_groups,
             act=None,
             use_cudnn=use_cudnn,
-            param_attr=ParamAttr(
-                initializer=MSRA(), name=name + '_weights'),
+            param_attr=ParamAttr(initializer=MSRA()),
             bias_attr=False)
-        bn_name = name + '_bn'
         if if_act:
-            return fluid.layers.batch_norm(
-                input=conv,
-                act='relu',
-                param_attr=ParamAttr(name=bn_name + "_scale"),
-                bias_attr=ParamAttr(name=bn_name + "_offset"),
-                moving_mean_name=bn_name + '_mean',
-                moving_variance_name=bn_name + '_variance')
+            return fluid.layers.batch_norm(input=conv, act='relu')
         else:
-            return fluid.layers.batch_norm(
-                input=conv,
-                param_attr=ParamAttr(name=bn_name + "_scale"),
-                bias_attr=ParamAttr(name=bn_name + "_offset"),
-                moving_mean_name=bn_name + '_mean',
-                moving_variance_name=bn_name + '_variance')
+            return fluid.layers.batch_norm(input=conv)
 
     def channel_shuffle(self, x, groups):
         batchsize, num_channels, height, width = x.shape[0], x.shape[
@@ -159,12 +138,7 @@ class ShuffleNetV2():
 
         return x
 
-    def inverted_residual_unit(self,
-                               input,
-                               num_filters,
-                               stride,
-                               benchmodel,
-                               name=None):
+    def inverted_residual_unit(self, input, num_filters, stride, benchmodel):
         assert stride in [1, 2], \
             "supported stride are {} but your stride is {}".format([1,2], stride)
 
@@ -176,8 +150,6 @@ class ShuffleNetV2():
                 input,
                 num_or_sections=[input.shape[1] // 2, input.shape[1] // 2],
                 dim=1)
-            #             x1 = input[:, :(input.shape[1]//2), :, :]
-            #             x2 = input[:, (input.shape[1]//2):, :, :]
 
             conv_pw = self.conv_bn_layer(
                 input=x2,
@@ -186,8 +158,7 @@ class ShuffleNetV2():
                 stride=1,
                 padding=0,
                 num_groups=1,
-                if_act=True,
-                name='stage_' + name + '_conv1')
+                if_act=True)
 
             conv_dw = self.conv_bn_layer(
                 input=conv_pw,
@@ -196,8 +167,7 @@ class ShuffleNetV2():
                 stride=stride,
                 padding=1,
                 num_groups=oup_inc,
-                if_act=False,
-                name='stage_' + name + '_conv2')
+                if_act=False)
 
             conv_linear = self.conv_bn_layer(
                 input=conv_dw,
@@ -206,63 +176,57 @@ class ShuffleNetV2():
                 stride=1,
                 padding=0,
                 num_groups=1,
-                if_act=True,
-                name='stage_' + name + '_conv3')
+                if_act=True)
 
             out = fluid.layers.concat([x1, conv_linear], axis=1)
 
         else:
             #branch1
-            conv_dw_1 = self.conv_bn_layer(
+            conv_dw = self.conv_bn_layer(
                 input=input,
                 num_filters=inp,
                 filter_size=3,
                 stride=stride,
                 padding=1,
                 num_groups=inp,
-                if_act=False,
-                name='stage_' + name + '_conv4')
+                if_act=False)
 
             conv_linear_1 = self.conv_bn_layer(
-                input=conv_dw_1,
+                input=conv_dw,
                 num_filters=oup_inc,
                 filter_size=1,
                 stride=1,
                 padding=0,
                 num_groups=1,
-                if_act=True,
-                name='stage_' + name + '_conv5')
+                if_act=True)
 
             #branch2
-            conv_pw_2 = self.conv_bn_layer(
+            conv_pw = self.conv_bn_layer(
                 input=input,
                 num_filters=oup_inc,
                 filter_size=1,
                 stride=1,
                 padding=0,
                 num_groups=1,
-                if_act=True,
-                name='stage_' + name + '_conv1')
+                if_act=True)
 
-            conv_dw_2 = self.conv_bn_layer(
-                input=conv_pw_2,
+            conv_dw = self.conv_bn_layer(
+                input=conv_pw,
                 num_filters=oup_inc,
                 filter_size=3,
                 stride=stride,
                 padding=1,
                 num_groups=oup_inc,
-                if_act=False,
-                name='stage_' + name + '_conv2')
+                if_act=False)
 
             conv_linear_2 = self.conv_bn_layer(
-                input=conv_dw_2,
+                input=conv_dw,
                 num_filters=oup_inc,
                 filter_size=1,
                 stride=1,
                 padding=0,
                 num_groups=1,
-                if_act=True,
-                name='stage_' + name + '_conv3')
+                if_act=True)
             out = fluid.layers.concat([conv_linear_1, conv_linear_2], axis=1)
 
         return self.channel_shuffle(out, 2)
