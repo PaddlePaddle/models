@@ -238,12 +238,16 @@ def train(args):
     train_fetch_list = [train_cost.name, train_acc1.name, train_acc5.name, global_lr.name]
     test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
 
+    # 1. Make some quantization transforms in the graph before training and testing.
+    # According to the weight and activation quantization type, the graph will be added
+    # some fake quantize operators and fake dequantize operators.
     transform_pass = QuantizationTransformPass(
         scope=fluid.global_scope(), place=place,
         activation_quantize_type=activation_quant_type,
         weight_quantize_type=weight_quant_type)
     transform_pass.apply(main_graph)
     transform_pass.apply(test_graph)
+
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
@@ -329,6 +333,9 @@ def train(args):
     mobile_path = os.path.join(model_path, 'mobile')
     if not os.path.isdir(model_path):
         os.makedirs(model_path)
+
+    # 2. Freeze the graph after training by adjusting the quantize
+    # operators' order for the inference.
     freeze_pass = QuantizationFreezePass(
         scope=fluid.global_scope(),
         place=place,
@@ -341,6 +348,8 @@ def train(args):
         target_vars=[out], executor=exe,
         main_program=server_program)
 
+    # 3. Convert the weights into int8_t type.
+    # (This step is optional.)
     convert_int8_pass = ConvertToInt8Pass(scope=fluid.global_scope(), place=place)
     convert_int8_pass.apply(test_graph)
     server_int8_program = test_graph.to_program()
@@ -350,6 +359,8 @@ def train(args):
         target_vars=[out], executor=exe,
         main_program=server_int8_program)
 
+    # 4. Convert the freezed graph for paddle-mobile execution.
+    # (This step is optional.)
     mobile_pass = TransformForMobilePass()
     mobile_pass.apply(test_graph)
     mobile_program = test_graph.to_program()
