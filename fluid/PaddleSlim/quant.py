@@ -247,7 +247,8 @@ def train(args):
     build_strategy.enable_inplace = False
     binary = fluid.CompiledProgram(main_graph.graph).with_data_parallel(
         loss_name=train_cost.name, build_strategy=build_strategy)
-    test_prog = test_graph.to_program()
+    test_binary = fluid.CompiledProgram(test_graph.graph).with_data_parallel(
+        build_strategy=build_strategy)
     params = models.__dict__[args.model]().params
     for pass_id in range(params["num_epochs"]):
 
@@ -291,7 +292,7 @@ def train(args):
         try:
             while True:
                 t1 = time.time()
-                loss, acc1, acc5 = exe.run(program=test_prog,
+                loss, acc1, acc5 = exe.run(test_binary,
                                            fetch_list=test_fetch_list)
                 t2 = time.time()
                 period = t2 - t1

@@ -40,6 +40,8 @@ class ResNet():
             depth = [3, 8, 36, 3]
         num_filters = [64, 128, 256, 512]
 
+        # TODO(wanghaoshuang@baidu.com):
+        # fix name("conv1") conflict between student and teacher in distillation.
         conv = self.conv_bn_layer(
             input=input,
             num_filters=64,
