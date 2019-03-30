@@ -4,6 +4,8 @@
 
 ## 代码结构
 ```
+├── download.py   # 下载数据。
+├── data_preprocess.py   # 对数据进行预处理。
 ├── network.py   # 定义基础生成网络和判别网络。
 ├── utility.py   # 定义通用工具方法。
 ├── dc_gan.py    # DCGAN训练脚本。
@@ -12,10 +14,15 @@
 
 ## 简介
 TODO
+当前仅支持mnist数据集
 
 ## 数据准备
 
-本教程使用 mnist 数据集来进行模型的训练测试工作，该数据集通过`paddle.dataset`模块自动下载到本地。
+下载数据
+
+```
+python download.py
+```
 
 ## 训练测试conditianalGAN
 

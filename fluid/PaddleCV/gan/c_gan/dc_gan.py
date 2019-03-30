@@ -26,7 +26,9 @@ import paddle
 import time
 import paddle.fluid as fluid
 from utility import get_parent_function_name, plot, check, add_arguments, print_arguments
+from network import G_cond, D_cond
 from network import G, D
+from data_preprocess import reader_creator
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -41,7 +43,10 @@ add_arg('batch_size',        int,   128,          "Minibatch size.")
 add_arg('epoch',             int,   20,        "The number of epoched to be trained.")
 add_arg('output',            str,   "./output_dcgan", "The directory the model and the test result to be saved to.")
 add_arg('use_gpu',           bool,  True,       "Whether to use GPU to train.")
-add_arg('run_ce',            bool,  False,       "Whether to run for model ce.")
+add_arg('run_ce',            bool,  False,       "Whether to run for model continous evaluation.")
+add_arg('data_dir',          str,   './data/mnist/',   "Where to load the dataset")
+add_arg('save_checkpoints',  bool,  True,       "Whether to save checkpoints")
+add_arg('init_model',        str,   None,      "The directory you need to load pretrianed model")
 # yapf: enable
 
 
@@ -91,15 +96,42 @@ def train(args):
         exe = fluid.Executor(fluid.CUDAPlace(0))
     exe.run(fluid.default_startup_program())
 
+    train_images = os.path.join(args.data_dir, 'train-images-idx3-ubyte.gz')
+    train_labels = os.path.join(args.data_dir, 'train-labels-idx1-ubyte.gz')
+
     if args.run_ce:
         train_reader = paddle.batch(
-                paddle.dataset.mnist.train(),
-                batch_size=args.batch_size)
+            reader_creator(train_images, train_labels, 100),
+            batch_size=args.batch_size)
     else:
         train_reader = paddle.batch(
             paddle.reader.shuffle(
-                paddle.dataset.mnist.train(), buf_size=60000),
+                reader_creator(train_images, train_labels, 100),
+                buf_size=60000),
             batch_size=args.batch_size)
+
+    def checkpoints(epoch):
+        out_path = args.output + "/checkpoints/" + str(epoch)
+        if not os.path.exists(out_path):
+            os.makedirs(out_path)
+        fluid.io.save_persistables(
+            exe, out_path + "/net_G", main_program=g_program)
+        fluid.io.save_persistables(
+            exe, out_path + "/net_D", main_program=d_program)
+        print("save checkpoint to {}".format(out_path))
+        sys.stdout.flush()
+
+    def init_checkpoints():
+        assert os.path.exists(
+            args.init_model), "[%s] cannot be found." % args.init_model
+        fluid.io.load_persistables(
+            exe, args.init_model + "/net_G", main_program=g_program)
+        fluid.io.load_persistables(
+            exe, args.init_model + "/net_D", main_program=d_program)
+        print("Load model from {}".format(args.init_model))
+
+    if args.init_model:
+        init_checkpoints()
 
     NUM_TRAIN_TIMES_OF_DG = 2
     const_n = np.random.uniform(
@@ -150,13 +182,14 @@ def train(args):
                     low=-1.0, high=1.0,
                     size=[args.batch_size, NOISE_SIZE]).astype('float32')
                 dg_loss_n = exe.run(dg_program,
-                                     feed={'noise': noise_data},
-                                     fetch_list={dg_loss})[0][0]
+                                    feed={'noise': noise_data},
+                                    fetch_list={dg_loss})[0][0]
                 losses[1].append(dg_loss_n)
             t_time += (time.time() - s_time)
             if batch_id % 10 == 0 and not args.run_ce:
-                if not os.path.exists(args.output):
-                    os.makedirs(args.output)
+                image_path = os.path.join(args.output, "images/")
+                if not os.path.exists(image_path):
+                    os.makedirs(image_path)
                 # generate image each batch
                 generated_images = exe.run(g_program_test,
                                            feed={'noise': const_n},
@@ -164,20 +197,23 @@ def train(args):
                 total_images = np.concatenate([real_image, generated_images])
                 fig = plot(total_images)
                 msg = "Epoch ID={0} Batch ID={1} D-Loss={2} DG-Loss={3}\n gen={4}".format(
-                    pass_id, batch_id,
-                    d_loss_n, dg_loss_n, check(generated_images))
+                    pass_id, batch_id, d_loss_n, dg_loss_n,
+                    check(generated_images))
                 print(msg)
                 plt.title(msg)
                 plt.savefig(
-                    '{}/{:04d}_{:04d}.png'.format(args.output, pass_id,
+                    '{}/{:04d}_{:04d}.png'.format(image_path, pass_id,
                                                   batch_id),
                     bbox_inches='tight')
                 plt.close(fig)
+        if args.save_checkpoints:
+            checkpoints(pass_id)
+
     if args.run_ce:
         print("kpis,dcgan_d_train_cost,{}".format(np.mean(losses[0])))
         print("kpis,dcgan_g_train_cost,{}".format(np.mean(losses[1])))
         print("kpis,dcgan_duration,{}".format(t_time / args.epoch))
- 
+
 
 if __name__ == "__main__":
     args = parser.parse_args()
