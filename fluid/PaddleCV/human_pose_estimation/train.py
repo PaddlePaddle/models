@@ -30,8 +30,8 @@ from utils.utility import *
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('batch_size',       int,   128,                          "Minibatch size.")
-add_arg('dataset',          str,   'mpii',                       "Dataset")
+add_arg('batch_size',       int,   128,                          "Minibatch size totally.")
+add_arg('dataset',          str,   'mpii',                       "Dataset, valid value: mpii, coco")
 add_arg('use_gpu',          bool,  True,                         "Whether to use GPU or not.")
 add_arg('num_epochs',       int,   140,                          "Number of epochs.")
 add_arg('total_images',     int,   144406,                       "Training image number.")
