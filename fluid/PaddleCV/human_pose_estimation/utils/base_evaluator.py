@@ -27,6 +27,6 @@ class BaseEvaluator(object):
 
     def evaluate(self, *args, **kwargs):
         """
-        TODO: Implementation for specific task / dataset
+        Need Implementation for specific task / dataset
         """
         raise NotImplementedError
