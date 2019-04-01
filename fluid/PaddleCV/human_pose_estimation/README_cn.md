@@ -29,7 +29,7 @@
 | 256x192\_pose\_resnet\_50 in PyTorch | 0.704 | 0.886 | 0.783 | 0.671 | 0.772 | 0.763 | 0.929 | 0.834 | 0.721 | 0.824 | - |
 | 256x192\_pose\_resnet\_50 in Fluid   | 0.712 | 0.897 | 0.786 | 0.683 | 0.756 | 0.741 | 0.906 | 0.806 | 0.709 | 0.790 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-coco-256x192.tar.gz) |
 | 384x288\_pose\_resnet\_50 in PyTorch | 0.722 | 0.893 | 0.789 | 0.681 | 0.797 | 0.776 | 0.932 | 0.838 | 0.728 | 0.846 | - |
-| 384x288\_pose\_resnet\_50 in Fluid   | 0.727 | 0.897 | 0.796 | 0.690 | 0.783 | 0.754 | 0.907 | 0.813 | 0.714 | 0.814 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-coco-384x288.tar.gz |
+| 384x288\_pose\_resnet\_50 in Fluid   | 0.727 | 0.897 | 0.796 | 0.690 | 0.783 | 0.754 | 0.907 | 0.813 | 0.714 | 0.814 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-coco-384x288.tar.gz) |
 
 ### 说明
 
