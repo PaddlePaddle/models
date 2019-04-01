@@ -49,94 +49,6 @@ add_arg('momentum_rate',    float, 0.9,                  "momentum_rate.")
 
 # yapf: enable
 
-"""
-def set_models(model_category):
-    global models
-    assert model_category in ["models", "models_name"
-                              ], "{} is not in lists: {}".format(
-                                  model_category, ["models", "models_name"])
-    if model_category == "models_name":
-        import models_name as models
-    else:
-        import models as models
-"""
-
-def optimizer_setting(params):
-    ls = params["learning_strategy"]
-    l2_decay = params["l2_decay"]
-    momentum_rate = params["momentum_rate"]
-    if ls["name"] == "piecewise_decay":
-        if "total_images" not in params:
-            total_images = IMAGENET1000
-        else:
-            total_images = params["total_images"]
-        batch_size = ls["batch_size"]
-        step = int(total_images / batch_size + 1)
-        print("int+1",step)
-        print("==================")
-        step = int(math.ceil(float(total_images) / batch_size))
-        print("ceil",step)
-        bd = [step * e for e in ls["epochs"]]
-        base_lr = params["lr"]
-        lr = []
-        lr = [base_lr * (0.1**i) for i in range(len(bd) + 1)]
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=fluid.layers.piecewise_decay(
-                boundaries=bd, values=lr),
-            momentum=momentum_rate,
-            regularization=fluid.regularizer.L2Decay(l2_decay))
-
-    elif ls["name"] == "cosine_decay":
-        if "total_images" not in params:
-            total_images = IMAGENET1000
-        else:
-            total_images = params["total_images"]
-        batch_size = ls["batch_size"]
-        l2_decay = params["l2_decay"]
-        momentum_rate = params["momentum_rate"]
-     #   step = int(total_images / batch_size + 1)
-        step = math.ceil(total_images / batch_size)
-        lr = params["lr"]
-        num_epochs = params["num_epochs"]
-
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=cosine_decay(
-                learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
-            momentum=momentum_rate,
-            regularization=fluid.regularizer.L2Decay(l2_decay))
-    elif ls["name"] == "linear_decay":
-        if "total_images" not in params:
-            total_images = IMAGENET1000
-        else:
-            total_images = params["total_images"]
-        batch_size = ls["batch_size"]
-        num_epochs = params["num_epochs"]
-        start_lr = params["lr"]
-        l2_decay = params["l2_decay"]
-        momentum_rate = params["momentum_rate"]
-        end_lr = 0
-        total_step = int((total_images / batch_size) * num_epochs)
-        lr = fluid.layers.polynomial_decay(
-            start_lr, total_step, end_lr, power=1)
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=lr,
-            momentum=momentum_rate,
-            regularization=fluid.regularizer.L2Decay(l2_decay))
-    elif ls["name"] == "adam":
-        lr = params["lr"]
-        optimizer = fluid.optimizer.Adam(learning_rate=lr)
-    else:
-        lr = params["lr"]
-        l2_decay = params["l2_decay"]
-        momentum_rate = params["momentum_rate"]
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=lr,
-            momentum=momentum_rate,
-            regularization=fluid.regularizer.L2Decay(l2_decay))
-
-    return optimizer
-
-
 def net_config(image, label, model, args):
     model_list = [m for m in dir(models) if "__" not in m]
     assert args.model in model_list, "{} is not lists: {}".format(args.model,
@@ -281,14 +193,6 @@ def train(args):
             exe, pretrained_model, main_program=train_prog, predicate=if_exist)
 
     if args.use_gpu:
-        """
-        visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
-        if visible_device:
-            device_num = len(visible_device.split(','))
-        else:
-            device_num = subprocess.check_output(
-                ['nvidia-smi', '-L']).decode().count('\n')
-        """
         device_num = get_device_num()
     else:
         device_num = 1
@@ -394,7 +298,7 @@ def train(args):
                 if test_batch_id % 10 == 0:
                     print("Pass {0},testbatch {1},loss {2}, \
                         acc1 {3},acc5 {4},time {5}"
-                          .format(pass_id, test_batch_id, loss, acc1, acc5,
+                          .format(pass_id, test_batch_id, "%.5f"%loss,"%.5f"acc1, "%.5f"%acc5,
                                   "%2.2f sec" % period))
                     sys.stdout.flush()
                 test_batch_id += 1
@@ -407,8 +311,8 @@ def train(args):
 
         print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3}, "
               "test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(
-                  pass_id, train_loss, train_acc1, train_acc5, test_loss,
-                  test_acc1, test_acc5))
+                  pass_id, "%.5f"%train_loss, "%.5f"%train_acc1, "%.5f"%train_acc5, "%.5f"%test_loss,
+                  "%.5f"%test_acc1, "%.5f"%test_acc5))
         sys.stdout.flush()
 
         model_path = os.path.join(model_save_dir + '/' + model_name,

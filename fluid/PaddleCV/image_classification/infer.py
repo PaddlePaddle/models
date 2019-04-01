@@ -10,7 +10,9 @@ import paddle.fluid as fluid
 import reader
 import argparse
 import functools
-from utility import add_arguments, print_arguments
+import models
+import utils
+from utils.utility import add_arguments,print_arguments
 import math
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -22,20 +24,7 @@ add_arg('image_shape',      str,  "3,224,224",          "Input image size")
 add_arg('with_mem_opt',     bool, True,                 "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,  None,                 "Whether to use pretrained model.")
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
-add_arg('model_category',   str,  "models_name",        "Whether to use models_name or not, valid value:'models','models_name'." )
 # yapf: enable
-
-
-def set_models(model_category):
-    global models
-    assert model_category in ["models", "models_name"
-                              ], "{} is not in lists: {}".format(
-                                  model_category, ["models", "models_name"])
-    if model_category == "models_name":
-        import models_name as models
-    else:
-        import models as models
-
 
 def infer(args):
     # parameters from arguments
@@ -52,7 +41,7 @@ def infer(args):
 
     # model definition
     model = models.__dict__[model_name]()
-    if model_name is "GoogleNet":
+    if model_name == "GoogleNet":
         out, _, _ = model.net(input=image, class_dim=class_dim)
     else:
         out = model.net(input=image, class_dim=class_dim)
@@ -94,7 +83,6 @@ def infer(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
-    set_models(args.model_category)
     infer(args)
 
 

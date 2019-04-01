@@ -11,8 +11,9 @@ import paddle.fluid as fluid
 import reader as reader
 import argparse
 import functools
+import models
 from utils.learning_rate import cosine_decay
-from utility import add_arguments, print_arguments
+from utils.utility import add_arguments, print_arguments
 import math
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -25,21 +26,8 @@ add_arg('image_shape',      str,  "3,224,224",         "Input image size")
 add_arg('with_mem_opt',     bool, True,                "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,  None,                "Whether to use pretrained model.")
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
-add_arg('model_category',   str,  "models_name",            "Whether to use models_name or not, valid value:'models','models_name'." )
 
 # yapf: enable
-
-
-def set_models(model_category):
-    global models
-    assert model_category in ["models", "models_name"
-                              ], "{} is not in lists: {}".format(
-                                  model_category, ["models", "models_name"])
-    if model_category == "models_name":
-        import models_name as models
-    else:
-        import models as models
-
 
 def eval(args):
     # parameters from arguments
@@ -119,7 +107,7 @@ def eval(args):
         if batch_id % 10 == 0:
             print("Testbatch {0},loss {1}, "
                   "acc1 {2},acc5 {3},time {4}".format(batch_id, \
-                  loss, acc1, acc5, \
+                  "%.5f"%loss,"%.5f"%acc1, "%.5f"%acc5, \
                   "%2.2f sec" % period))
             sys.stdout.flush()
 
@@ -128,14 +116,13 @@ def eval(args):
     test_acc5 = np.sum(test_info[2]) / cnt
 
     print("Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
-        test_loss, test_acc1, test_acc5))
+        "%.5f"%test_loss, "%.5f"%test_acc1, "%.5f"%test_acc5))
     sys.stdout.flush()
 
 
 def main():
     args = parser.parse_args()
     print_arguments(args)
-    set_models(args.model_category)
     eval(args)
 
 
