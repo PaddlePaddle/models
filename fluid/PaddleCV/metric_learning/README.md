@@ -95,7 +95,7 @@ python infer.py \
 
 ## Performances
 
-For comparation, many metric learning models with different neural networks and loss functions are trained using corresponding experiential parameters. Recall@Rank-1 is used as evaluation metric and the performance is listed in the table. Pretrained models can be downloaded by clicking related model names.
+For comparation, many metric learning models with different neural networks and loss functions are trained using corresponding experiential parameters. Recall@Rank-1 is used as evaluation metric and the performance is listed in the table.
 
 |pretrain model | softmax | arcmargin
 |- | - | -:
