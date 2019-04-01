@@ -216,7 +216,7 @@ def data_augmentation(sample, is_train):
     joints_vis = sample['joints_3d_vis']
     c = sample['center']
     s = sample['scale']
-    # score = sample['score'] if 'score' in sample else 1
+    score = sample['score'] if 'score' in sample else 1
     # imgnum = sample['imgnum'] if 'imgnum' in sample else ''
     r = 0
 
@@ -261,7 +261,7 @@ def data_augmentation(sample, is_train):
     if is_train:
         return input, target, target_weight
     else:
-        return input, target, target_weight, c, s
+        return input, target, target_weight, c, s, score, image_file
 
 # Create a reader
 def _reader_creator(root, image_set, shuffle=False, is_train=False, use_gt_bbox=False):
@@ -316,7 +316,14 @@ def train():
     return pop
 
 def valid():
-    reader, mapper = _reader_creator(cfg.DATAROOT, 'val', shuffle=False, is_train=False)
+    reader, mapper = _reader_creator(cfg.DATAROOT, 'val', shuffle=False, is_train=False, use_gt_bbox=True)
+    def pop():
+        for i, x in enumerate(reader()):
+            yield mapper(x)
+    return pop
+
+def test():
+    reader, mapper = _reader_creator(cfg.DATAROOT, 'test', shuffle=False, is_train=False, use_gt_bbox=True)
     def pop():
         for i, x in enumerate(reader()):
             yield mapper(x)
