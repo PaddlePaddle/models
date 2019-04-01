@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import 
 from __future__ import division
 from __future__ import print_function
 import os
@@ -18,7 +18,8 @@ import utils
 import models
 from utils.learning_rate import cosine_decay
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
-from utility import add_arguments, print_arguments
+from utils.utility import add_arguments, print_arguments
+#from utility import add_arguments, print_arguments
 
 IMAGENET1000 = 1281167
 
@@ -45,6 +46,7 @@ add_arg('fp16',             bool,  False,                "Enable half precision 
 add_arg('scale_loss',       float, 1.0,                  "Scale loss for fp16." )
 add_arg('l2_decay',         float, 1e-4,                 "L2_decay parameter.")
 add_arg('momentum_rate',    float, 0.9,                  "momentum_rate.")
+
 # yapf: enable
 
 """
@@ -70,7 +72,10 @@ def optimizer_setting(params):
             total_images = params["total_images"]
         batch_size = ls["batch_size"]
         step = int(total_images / batch_size + 1)
-
+        print("int+1",step)
+        print("==================")
+        step = int(math.ceil(float(total_images) / batch_size))
+        print("ceil",step)
         bd = [step * e for e in ls["epochs"]]
         base_lr = params["lr"]
         lr = []
@@ -89,8 +94,8 @@ def optimizer_setting(params):
         batch_size = ls["batch_size"]
         l2_decay = params["l2_decay"]
         momentum_rate = params["momentum_rate"]
-        step = int(total_images / batch_size + 1)
-
+     #   step = int(total_images / batch_size + 1)
+        step = math.ceil(total_images / batch_size)
         lr = params["lr"]
         num_epochs = params["num_epochs"]
 
@@ -221,6 +226,13 @@ def build_program(is_train, main_prog, startup_prog, args):
     else:
         return py_reader, avg_cost, acc_top1, acc_top5
 
+def get_device_num():
+    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
+    if visible_device:
+        device_num = len(visible_device.split(','))
+    else:
+        device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
+    return device_num
 
 def train(args):
     # parameters from arguments
@@ -269,12 +281,15 @@ def train(args):
             exe, pretrained_model, main_program=train_prog, predicate=if_exist)
 
     if args.use_gpu:
+        """
         visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
         if visible_device:
             device_num = len(visible_device.split(','))
         else:
             device_num = subprocess.check_output(
                 ['nvidia-smi', '-L']).decode().count('\n')
+        """
+        device_num = get_device_num()
     else:
         device_num = 1
     train_batch_size = args.batch_size / device_num
@@ -347,7 +362,7 @@ def train(args):
                 if batch_id % 10 == 0:
                     print("Pass {0}, trainbatch {1}, loss {2}, \
                         acc1 {3}, acc5 {4}, lr{5}, time {6}"
-                          .format(pass_id, batch_id, loss, acc1, acc5, "%.5f" %
+                          .format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%.5f" %
                                   lr, "%2.2f sec" % period))
                     sys.stdout.flush()
                 batch_id += 1

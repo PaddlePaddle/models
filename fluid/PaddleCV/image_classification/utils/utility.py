@@ -37,10 +37,10 @@ def print_arguments(args):
     :param args: Input argparse.Namespace for printing.
     :type args: argparse.Namespace
     """
-    print("-----------  Configuration Arguments -----------")
+    print("-------------  Configuration Arguments -------------")
     for arg, value in sorted(six.iteritems(vars(args))):
-        print("%s: %s" % (arg, value))
-    print("------------------------------------------------")
+        print("%25s : %s" % (arg, value))
+    print("----------------------------------------------------")
 
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
