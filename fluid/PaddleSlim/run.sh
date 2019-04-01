@@ -19,7 +19,7 @@ python compress.py \
 
 # for uniform filter pruning
 #---------------------------
-#export CUDA_VISIBLE_DEVICES=2
+#export CUDA_VISIBLE_DEVICES=0
 #python compress.py \
 #--model "MobileNet" \
 #--pretrained_model ./data/pretrain/MobileNetV1_pretrained \
@@ -27,7 +27,7 @@ python compress.py \
 
 # for quantization
 #-----------------
-#export CUDA_VISIBLE_DEVICES=2
+#export CUDA_VISIBLE_DEVICES=0
 #python compress.py \
 #--batch_size 64 \
 #--model "MobileNet" \
