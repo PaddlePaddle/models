@@ -168,7 +168,7 @@ def network(batch_size, items_num, hidden_size, step):
     global_attention = layers.reduce_sum(weight_mask, dim=1)
 
     final_attention = layers.concat(
-        [global_attention, last_fc], axis=1)  #[batch_size, 2*h]
+        [global_attention, last], axis=1)  #[batch_size, 2*h]
     final_attention_fc = layers.fc(
         input=final_attention,
         name="fina_attention_fc",
