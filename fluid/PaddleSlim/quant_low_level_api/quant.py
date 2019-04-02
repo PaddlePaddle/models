@@ -20,6 +20,7 @@ sys.path.append('..')
 import reader
 import models
 from utility import add_arguments, print_arguments
+from utility import save_persistable_nodes, load_persistable_nodes
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -31,7 +32,8 @@ add_arg('num_epochs',       int,   120,                  "number of epochs.")
 add_arg('class_dim',        int,   1000,                 "Class number.")
 add_arg('image_shape',      str,   "3,224,224",          "input image size")
 add_arg('model_save_dir',   str,   "output",             "model save directory")
-add_arg('pretrained_model', str,   None,                 "Whether to use pretrained model.")
+add_arg('pretrained_fp32_model', str,   None,            "Whether to use the pretrained float32 model to initialize the weights.")
+add_arg('checkpoint',       str,   None,                 "Whether to resume the training process from the checkpoint.")
 add_arg('lr',               float, 0.1,                  "set learning rate.")
 add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate decay strategy.")
 add_arg('model',            str,   "SE_ResNeXt50_32x4d", "Set the network to use.")
@@ -180,7 +182,8 @@ def build_program(is_train, main_prog, startup_prog, args):
 def train(args):
     # parameters from arguments
     model_name = args.model
-    pretrained_model = args.pretrained_model
+    pretrained_fp32_model = args.pretrained_fp32_model
+    checkpoint = args.checkpoint
     model_save_dir = args.model_save_dir
     data_dir = args.data_dir
     activation_quant_type = args.act_quant_type
@@ -210,11 +213,11 @@ def train(args):
     main_graph = IrGraph(core.Graph(train_prog.desc), for_test=False)
     test_graph = IrGraph(core.Graph(test_prog.desc), for_test=True)
 
-    if pretrained_model:
+    if pretrained_fp32_model:
         def if_exist(var):
-            return os.path.exists(os.path.join(pretrained_model, var.name))
+            return os.path.exists(os.path.join(pretrained_fp32_model, var.name))
         fluid.io.load_vars(
-            exe, pretrained_model, main_program=train_prog, predicate=if_exist)
+            exe, pretrained_fp32_model, main_program=train_prog, predicate=if_exist)
 
     if args.use_gpu:
         visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
@@ -247,6 +250,9 @@ def train(args):
         weight_quantize_type=weight_quant_type)
     transform_pass.apply(main_graph)
     transform_pass.apply(test_graph)
+
+    if checkpoint:
+        load_persistable_nodes(exe, checkpoint, main_graph)
 
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
@@ -326,6 +332,11 @@ def train(args):
                   pass_id, train_loss, train_acc1, train_acc5, test_loss,
                   test_acc1, test_acc5))
         sys.stdout.flush()
+
+        save_checkpoint_path = os.path.join(model_save_dir,  model_name, str(pass_id))
+        if not os.path.isdir(save_checkpoint_path):
+            os.makedirs(save_checkpoint_path)
+        save_persistable_nodes(exe, save_checkpoint_path, main_graph)
 
     model_path = os.path.join(model_save_dir, model_name, args.act_quant_type)
     float_path = os.path.join(model_path, 'float')
