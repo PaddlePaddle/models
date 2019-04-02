@@ -7,7 +7,6 @@ import time
 import sys
 import paddle
 import paddle.fluid as fluid
-#import reader_cv2 as reader
 import reader as reader
 import argparse
 import functools

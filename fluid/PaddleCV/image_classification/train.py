@@ -26,7 +26,7 @@ IMAGENET1000 = 1281167
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('batch_size',       int,   256,                  "Minibatch size.")
+add_arg('batch_size',       int,   64,                  "Minibatch size.")
 add_arg('use_gpu',          bool,  True,                 "Whether to use GPU or not.")
 add_arg('total_images',     int,   1281167,              "Training image number.")
 add_arg('num_epochs',       int,   120,                  "number of epochs.")
@@ -48,6 +48,75 @@ add_arg('l2_decay',         float, 1e-4,                 "L2_decay parameter.")
 add_arg('momentum_rate',    float, 0.9,                  "momentum_rate.")
 
 # yapf: enable
+def optimizer_setting(params):
+    ls = params["learning_strategy"]
+    l2_decay = params["l2_decay"]
+    momentum_rate = params["momentum_rate"]
+    if ls["name"] == "piecewise_decay":
+        if "total_images" not in params:
+            total_images = IMAGENET1000
+        else:
+            total_images = params["total_images"]
+        batch_size = ls["batch_size"]
+        step = int(math.ceil(float(total_images) / batch_size))
+        bd = [step * e for e in ls["epochs"]]
+        base_lr = params["lr"]
+        lr = []
+        lr = [base_lr * (0.1**i) for i in range(len(bd) + 1)]
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=fluid.layers.piecewise_decay(
+                boundaries=bd, values=lr),
+            momentum=momentum_rate,
+            regularization=fluid.regularizer.L2Decay(l2_decay))
+
+    elif ls["name"] == "cosine_decay":
+        if "total_images" not in params:
+            total_images = IMAGENET1000
+        else:
+            total_images = params["total_images"]
+        batch_size = ls["batch_size"]
+        l2_decay = params["l2_decay"]
+        momentum_rate = params["momentum_rate"]
+	step = int(math.ceil(float(total_images) / batch_size))
+        lr = params["lr"]
+        num_epochs = params["num_epochs"]
+
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=cosine_decay(
+                learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
+            momentum=momentum_rate,
+            regularization=fluid.regularizer.L2Decay(l2_decay))
+    elif ls["name"] == "linear_decay":
+        if "total_images" not in params:
+            total_images = IMAGENET1000
+        else:
+            total_images = params["total_images"]
+        batch_size = ls["batch_size"]
+        num_epochs = params["num_epochs"]
+        start_lr = params["lr"]
+        l2_decay = params["l2_decay"]
+        momentum_rate = params["momentum_rate"]
+        end_lr = 0
+        total_step = int((total_images / batch_size) * num_epochs)
+        lr = fluid.layers.polynomial_decay(
+            start_lr, total_step, end_lr, power=1)
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=lr,
+            momentum=momentum_rate,
+            regularization=fluid.regularizer.L2Decay(l2_decay))
+    elif ls["name"] == "adam":
+        lr = params["lr"]
+        optimizer = fluid.optimizer.Adam(learning_rate=lr)
+    else:
+        lr = params["lr"]
+        l2_decay = params["l2_decay"]
+        momentum_rate = params["momentum_rate"]
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=lr,
+            momentum=momentum_rate,
+            regularization=fluid.regularizer.L2Decay(l2_decay))
+
+    return optimizer
 
 def net_config(image, label, model, args):
     model_list = [m for m in dir(models) if "__" not in m]
@@ -298,7 +367,7 @@ def train(args):
                 if test_batch_id % 10 == 0:
                     print("Pass {0},testbatch {1},loss {2}, \
                         acc1 {3},acc5 {4},time {5}"
-                          .format(pass_id, test_batch_id, "%.5f"%loss,"%.5f"acc1, "%.5f"%acc5,
+                          .format(pass_id, test_batch_id, "%.5f"%loss,"%.5f"%acc1, "%.5f"%acc5,
                                   "%2.2f sec" % period))
                     sys.stdout.flush()
                 test_batch_id += 1
