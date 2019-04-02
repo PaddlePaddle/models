@@ -25,11 +25,11 @@
       使用文档
     </a>
     <span> | </span>
-    <a href="">
+    <a href="docs/demo.md">
       示例文档
     </a>
     <span> | </span>
-    <a href="">
+    <a href="docs/model_zoo.md">
       Model Zoo
     </a>
   </h3>

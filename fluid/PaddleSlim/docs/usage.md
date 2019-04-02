@@ -20,11 +20,11 @@
       算法原理介绍
     </a>
     <span> | </span>
-    <a href="">
+    <a href="demo.md">
       示例文档
     </a>
     <span> | </span>
-    <a href="">
+    <a href="model_zoo.md">
       Model Zoo
     </a>
   </h3>
