@@ -1,17 +1,5 @@
 ﻿<div align="center">
   <h3>
-    <a href="#1-quantization-aware-training量化介绍">
-      量化原理介绍
-    </a>
-    <span> | </span>
-    <a href="#2-卷积核剪切原理">
-      剪切原理介绍
-    </a>
-    <span> | </span>
-    <a href="#3-蒸馏">
-      蒸馏原理介绍
-    </a>
-    <span> | </span>
     <a href="usage.md">
       使用文档
     </a>
@@ -26,6 +14,14 @@
   </h3>
 </div>
 
+---
+# 模型压缩算法原理介绍
+
+## 目录
+
+- [量化原理介绍](#1-quantization-aware-training量化介绍)
+- [剪切原理介绍](#2-卷积核剪切原理)
+- [蒸馏原理介绍](#3-蒸馏)
 
 ## 1. Quantization Aware Training量化介绍
 
@@ -99,7 +95,7 @@ $$
 由图3可知，权重更新所需的梯度值可以由量化后的权重和量化后的激活求得。反向传播过程中的所有输入和输出均为32-bit浮点型数据。注意，梯度更新操作需要在原始权重上进行，即计算出的梯度将被加到原始权重上而非量化后或反量化后的权重上。
 
 <p align="center">
-<img src="images/tutorial/quan_bwd.png" height=500 width=155 hspace='10'/> <br />
+<img src="images/tutorial/quan_bwd.png" height=650 width=300 hspace='10'/> <br />
 <strong>图3：基于模拟量化训练的反向传播和权重更新过程</strong>
 </p>
 
@@ -136,7 +132,7 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 
 
 <p align="center">
-<img src="images/tutorial/pruning_0.png" height=270 width=912 hspace='10'/> <br />
+<img src="images/tutorial/pruning_0.png" height=200 width=600 hspace='10'/> <br />
 <strong>图4</strong>
 </p>
 
@@ -148,7 +144,7 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 减去被删除的一行：greedy pruning
 
 <p align="center">
-<img src="images/tutorial/pruning_1.png" height=235 width=515 hspace='10'/> <br />
+<img src="images/tutorial/pruning_1.png" height=200 width=450 hspace='10'/> <br />
 <strong>图5</strong>
 </p>
 
@@ -158,7 +154,7 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 
 
 <p align="center">
-<img src="images/tutorial/pruning_2.png" height=336 width=910 hspace='10'/> <br />
+<img src="images/tutorial/pruning_2.png" height=240 width=600 hspace='10'/> <br />
 <strong>图6</strong>
 </p>
 

@@ -1,22 +1,6 @@
 
 <div align="center">
   <h3>
-    <a href="#简介">
-      简介
-    </a>
-    <span> | </span>
-    <a href="#架构介绍">
-      架构介绍
-    </a>
-    <span> | </span>
-    <a href="#功能列表">
-      功能列表
-    </a>
-    <span> | </span>
-    <a href="#简要实验结果">
-      简要实验结果
-    </a>
-    <span> | </span>
     <a href="docs/tutorial.md">
       算法原理介绍
     </a>
@@ -36,9 +20,18 @@
 </div>
 
 
-## 简介
+---
+# PaddleSlim模型压缩工具库
 
 PaddleSlim是PaddlePaddle框架的一个子模块。PaddleSlim首次在PaddlePaddle 1.4版本中发布。在PaddleSlim中，实现了目前主流的网络剪枝、参数量化、模型蒸馏三种压缩策略，主要用于压缩图像领域模型。在后续版本中，会添加更多的压缩策略，以及完善对NLP领域模型的支持。
+
+## 目录
+- [特色](#特色)
+- [架构介绍](#架构介绍)
+- [功能列表](#功能列表)
+- [实验结果](#简要实验结果)
+
+## 特色
 
 Paddle-Slim工具库有以下特色：
 

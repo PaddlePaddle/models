@@ -15,18 +15,28 @@
 </div>
 
 
-[toc]
-
-
+---
 # 模型压缩示例
 
+## 目录
+
+- [概述](#0-概述)
+- [数据准备](#1-数据准备)
+- [压缩脚本准备](#2-压缩脚本介绍)
+- [蒸馏示例](#31-蒸馏)
+- [剪切示例](#32-uniform剪切)
+- [量化示例](#34-int8量化训练)
+- [蒸馏后量化示例](#35-蒸馏后int8量化)
+- [剪切后量化示例](#36-剪切后int8量化)
+
+## 0. 概述
 该示例参考[PaddlePaddle/models/fluid/PaddleCV/image_classification](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification)下代码，分别实现了以下策略：
 
-1. 蒸馏：用ResNet50对MobileNetV1的在ImageNet 1000数据上的蒸馏训练。
-2. 剪切：对预训练好的MobileNetV1进行剪切
-3. 量化：对预训练好的MobileNetV1进行int8量化训练
-4. 蒸馏量化组合：先用ResNet50对MobileNetV1进行蒸馏，再对蒸馏后得到的模型进行int8量化训练。
-5. 剪切量化组合：先用Uniform剪切策略对MobileNetV1进行剪切，再对剪切后的模型进行int8量化训练
+1. <a href="#31-蒸馏">蒸馏</a>：用ResNet50对MobileNetV1的在ImageNet 1000数据上的蒸馏训练。
+2. <a href="#32-uniform剪切">剪切</a>：对预训练好的MobileNetV1进行剪切
+3. <a href="#34-int8量化训练">量化</a>：对预训练好的MobileNetV1进行int8量化训练
+4. <a href="#35-蒸馏后int8量化">蒸馏量化组合</a>：先用ResNet50对MobileNetV1进行蒸馏，再对蒸馏后得到的模型进行int8量化训练。
+5. <a href="#36-剪切后int8量化">剪切量化组合</a>：先用Uniform剪切策略对MobileNetV1进行剪切，再对剪切后的模型进行int8量化训练
 
 本示例完整代码链接：https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleSlim
 
@@ -50,6 +60,8 @@
 本示例中的五个压缩策略使用相同的训练数据和压缩python脚本`compress.py`，每种策略对应独立的配置文件。
 
 第1章介绍数据准备，第2章介绍脚本compress.py中几个关键步骤。第3章分别介绍了如何执行各种压缩策略的示例。
+
+
 
 
 ## 1. 数据准备
@@ -141,15 +153,15 @@ python compress.py \
 ```
 该示例在评估数据集上的准确率结果如下：
 
+|- |精度(top5/top1) |
+|---|---|
+| resnet50蒸馏训| 90.92% / 71.97%|
 
 <p align="center">
 <img src="images/demo/distillation_result.png" height=300 width=400 hspace='10'/> <br />
 <strong>图1</strong>
 </p>
 
-|- |精度(top5/top1) |
-|---|---|
-| resnet50蒸馏训| 90.92% / 71.97%|
 
 ### 3.2 Uniform剪切
 
@@ -167,17 +179,15 @@ python compress.py \
 ```
 该示例在评估数据集上的准确率结果如下：
 
-![图片](http://agroup-bos.cdn.bcebos.com/b226fd6c0610ce9d51a10ae9987f63c1d3f5d1ed)
-
+| flops |模型大小|精度（top5/top1） |
+|---|---|---|
+| -50%|-47.0%(9.0M) |89.13% / 69.83%|
 
 <p align="center">
 <img src="images/demo/pruning_uni_result.png" height=300 width=400 hspace='10'/> <br />
 <strong>图2</strong>
 </p>
 
-| flops |模型大小|精度（top5/top1） |
-|---|---|---|
-| -50%|-47.0%(9.0M) |89.13% / 69.83%|
 
 ### 3.3 敏感度剪切
 
@@ -195,14 +205,14 @@ python compress.py \
 ```
 该示例在评估数据集上的准确率结果如下：
 
+| flops |模型大小| 精度（top5/top1） |
+|---|---|---|
+| -50%|-61.2%(6.6M) |88.47% / 68.68%|
+
 <p align="center">
 <img src="images/demo/pruning_sen_result.png" height=300 width=400 hspace='10'/> <br />
 <strong>图3</strong>
 </p>
-
-| flops |模型大小| 精度（top5/top1） |
-|---|---|---|
-| -50%|-61.2%(6.6M) |88.47% / 68.68%|
 
 ### 3.4 int8量化训练
 
@@ -220,12 +230,13 @@ python compress.py \
 ```
 
 该示例结果如下：
-| Model | int8量化（top1_acc） |
+
+| Model | int8量化(top1_acc)|
 |---|---|
 |MobileNetV1|71.00%|
 
 
-### 3.4 蒸馏后int8量化
+### 3.5 蒸馏后int8量化
 
 本示例先用ResNet50模型对MobileNetV1蒸馏训练120个epochs，然后再对MobileNetV1模型进行动态int8量化训练。
 修改run.sh, 执行以下命令，执行蒸馏与int8量化训练结合的模型压缩示例：
@@ -247,7 +258,7 @@ python compress.py \
 |---|---|
 | resnet50蒸馏训+量化|90.94% / 72.08%|
 
-### 3.5 剪切后int8量化
+### 3.6 剪切后int8量化
 
 本示例先将预训练好的MobileNetV1模型剪掉50%flops, 让后再对其进行动态int8量化训练。
 修改run.sh, 执行以下命令，执行剪切与int8量化训练结合的模型压缩示例：
