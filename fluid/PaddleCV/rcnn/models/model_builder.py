@@ -19,20 +19,18 @@ from paddle.fluid.initializer import Normal
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.regularizer import L2Decay
 from config import cfg
-import cPickle as cp
-import numpy as np
 
 
-class FasterRCNN(object):
+class RCNN(object):
     def __init__(self,
                  add_conv_body_func=None,
                  add_roi_box_head_func=None,
-                 is_train=True,
+                 mode='train',
                  use_pyreader=True,
                  use_random=True):
         self.add_conv_body_func = add_conv_body_func
         self.add_roi_box_head_func = add_roi_box_head_func
-        self.is_train = is_train
+        self.mode = mode
         self.use_pyreader = use_pyreader
         self.use_random = use_random
 
@@ -43,6 +41,8 @@ class FasterRCNN(object):
         self.rpn_heads(body_conv)
         # Fast RCNN
         self.fast_rcnn_heads(body_conv)
+        if self.mode != 'train':
+            self.eval_bbox()
         # Mask RCNN
         if cfg.MASK_ON:
             self.mask_rcnn_heads(body_conv)
@@ -64,14 +64,10 @@ class FasterRCNN(object):
         rloss = [loss] + losses
         return rloss, rkeys
 
-    def eval_bbox_out(self):
-        cls_prob = fluid.layers.softmax(self.cls_score, use_cudnn=False)
-        return [self.rpn_rois, cls_prob, self.bbox_pred]
-
     def eval_mask_out(self):
         return self.mask_fcn_logits
 
-    def eval(self):
+    def eval_bbox_out(self):
         return self.pred_result
 
     def build_input(self, image_shape):
@@ -119,7 +115,9 @@ class FasterRCNN(object):
                     name='gt_masks', shape=[2], dtype='float32', lod_level=3)
 
     def feeds(self):
-        if not self.is_train:
+        if self.mode == 'infer':
+            return [self.image, self.im_info]
+        if self.mode == 'val':
             return [self.image, self.im_info, self.im_id]
         if not cfg.MASK_ON:
             return [
@@ -130,6 +128,33 @@ class FasterRCNN(object):
             self.image, self.gt_box, self.gt_label, self.is_crowd, self.im_info,
             self.im_id, self.gt_masks
         ]
+
+    def eval_bbox(self):
+        self.im_scale = fluid.layers.slice(
+            self.im_info, [1], starts=[2], ends=[3])
+        im_scale_lod = fluid.layers.sequence_expand(self.im_scale,
+                                                    self.rpn_rois)
+        boxes = self.rpn_rois / im_scale_lod
+        cls_prob = fluid.layers.softmax(self.cls_score, use_cudnn=False)
+        bbox_pred_reshape = fluid.layers.reshape(self.bbox_pred,
+                                                 (-1, cfg.class_num, 4))
+        decoded_box = fluid.layers.box_coder(
+            prior_box=boxes,
+            prior_box_var=cfg.bbox_reg_weights,
+            target_box=bbox_pred_reshape,
+            code_type='decode_center_size',
+            box_normalized=False,
+            axis=1)
+        cliped_box = fluid.layers.box_clip(
+            input=decoded_box, im_info=self.im_info)
+        self.pred_result = fluid.layers.multiclass_nms(
+            bboxes=cliped_box,
+            scores=cls_prob,
+            score_threshold=cfg.TEST.score_thresh,
+            nms_top_k=-1,
+            nms_threshold=cfg.TEST.nms_thresh,
+            keep_top_k=cfg.TEST.detections_per_im,
+            normalized=False)
 
     def rpn_heads(self, rpn_input):
         # RPN hidden representation
@@ -190,7 +215,7 @@ class FasterRCNN(object):
         rpn_cls_score_prob = fluid.layers.sigmoid(
             self.rpn_cls_score, name='rpn_cls_score_prob')
 
-        param_obj = cfg.TRAIN if self.is_train else cfg.TEST
+        param_obj = cfg.TRAIN if self.mode == 'train' else cfg.TEST
         pre_nms_top_n = param_obj.rpn_pre_nms_top_n
         post_nms_top_n = param_obj.rpn_post_nms_top_n
         nms_thresh = param_obj.rpn_nms_thresh
@@ -207,7 +232,7 @@ class FasterRCNN(object):
             nms_thresh=nms_thresh,
             min_size=min_size,
             eta=eta)
-        if self.is_train:
+        if self.mode == 'train':
             outs = fluid.layers.generate_proposal_labels(
                 rpn_rois=self.rpn_rois,
                 gt_classes=self.gt_label,
@@ -244,7 +269,7 @@ class FasterRCNN(object):
                 self.mask_int32 = mask_out[2]
 
     def fast_rcnn_heads(self, roi_input):
-        if self.is_train:
+        if self.mode == 'train':
             pool_rois = self.rois
         else:
             pool_rois = self.rpn_rois
@@ -288,7 +313,7 @@ class FasterRCNN(object):
             bias_attr=ParamAttr(
                 name='conv5_mask_b', learning_rate=2., regularizer=L2Decay(0.)))
         act_func = None
-        if not self.is_train:
+        if self.mode != 'train':
             act_func = 'sigmoid'
         mask_fcn_logits = fluid.layers.conv2d(
             input=mask_out,
@@ -302,41 +327,18 @@ class FasterRCNN(object):
                 learning_rate=2.,
                 regularizer=L2Decay(0.)))
 
-        if not self.is_train:
+        if self.mode != 'train':
             mask_fcn_logits = fluid.layers.lod_reset(mask_fcn_logits,
                                                      self.pred_result)
         return mask_fcn_logits
 
     def mask_rcnn_heads(self, mask_input):
-        if self.is_train:
+        if self.mode == 'train':
             conv5 = fluid.layers.gather(self.res5_2_sum,
                                         self.roi_has_mask_int32)
             self.mask_fcn_logits = self.SuffixNet(conv5)
         else:
-            im_scale = fluid.layers.slice(
-                self.im_info, [1], starts=[2], ends=[3])
-            im_scale_lod = fluid.layers.sequence_expand(im_scale, self.rpn_rois)
-            boxes = self.rpn_rois / im_scale_lod
-            cls_prob = fluid.layers.softmax(self.cls_score, use_cudnn=False)
-            bbox_pred_reshape = fluid.layers.reshape(self.bbox_pred,
-                                                     (-1, cfg.class_num, 4))
-            decoded_box = fluid.layers.box_coder(
-                prior_box=boxes,
-                prior_box_var=cfg.bbox_reg_weights,
-                target_box=bbox_pred_reshape,
-                code_type='decode_center_size',
-                box_normalized=False,
-                axis=1)
-            cliped_box = fluid.layers.box_clip(
-                input=decoded_box, im_info=self.im_info)
-            self.pred_result = fluid.layers.multiclass_nms(
-                bboxes=cliped_box,
-                scores=cls_prob,
-                score_threshold=cfg.TEST.score_thresh,
-                nms_top_k=-1,
-                nms_threshold=cfg.TEST.nms_thresh,
-                keep_top_k=cfg.TEST.detections_per_im,
-                normalized=False)
+            self.eval_bbox()
             pred_res_shape = fluid.layers.shape(self.pred_result)
             shape = fluid.layers.reduce_prod(pred_res_shape)
             shape = fluid.layers.reshape(shape, [1, 1])
@@ -351,7 +353,7 @@ class FasterRCNN(object):
                 pred_res = ie.input(self.pred_result)
                 pred_boxes = fluid.layers.slice(
                     pred_res, [1], starts=[2], ends=[6])
-                im_scale_lod = fluid.layers.sequence_expand(im_scale,
+                im_scale_lod = fluid.layers.sequence_expand(self.im_scale,
                                                             pred_boxes)
                 mask_rois = pred_boxes * im_scale_lod
                 conv5 = self.add_roi_box_head_func(mask_input, mask_rois)

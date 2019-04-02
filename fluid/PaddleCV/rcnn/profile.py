@@ -37,7 +37,7 @@ def train():
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
     total_batch_size = devices_num * cfg.TRAIN.im_per_batch
-    model = model_builder.FasterRCNN(
+    model = model_builder.RCNN(
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
         use_pyreader=cfg.use_pyreader,

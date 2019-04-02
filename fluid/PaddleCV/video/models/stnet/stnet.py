@@ -17,6 +17,9 @@ import paddle.fluid as fluid
 from ..model import ModelBase
 from .stnet_res_model import StNet_ResNet
 
+import logging
+logger = logging.getLogger(__name__)
+
 __all__ = ["STNET"]
 
 
@@ -125,14 +128,19 @@ class STNET(ModelBase):
     def pretrain_info(self):
         return ('ResNet50_pretrained', 'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz')
 
+    def weights_info(self):
+        return ('stnet_kinetics', 
+                'https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz')
+
     def load_pretrain_params(self, exe, pretrain, prog, place):
         def is_parameter(var):
             if isinstance(var, fluid.framework.Parameter):
                 return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name)) \
                     and (not ("batch_norm" in var.name)) and (not ("xception" in var.name)) and (not ("conv3d" in var.name))
 
+        logger.info("Load pretrain weights from {}, exclude fc, batch_norm, xception, conv3d layers.".format(pretrain))
         vars = filter(is_parameter, prog.list_vars())
-        fluid.io.load_vars(exe, pretrain, vars=vars)
+        fluid.io.load_vars(exe, pretrain, vars=vars, main_program=prog)
 
         param_tensor = fluid.global_scope().find_var(
             "conv1_weights").get_tensor()

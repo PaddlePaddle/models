@@ -38,6 +38,7 @@ from pycocotools.coco import COCO
 import box_utils
 import segm_utils
 from config import cfg
+from data_utils import DatasetPath
 
 logger = logging.getLogger(__name__)
 
@@ -45,16 +46,13 @@ logger = logging.getLogger(__name__)
 class JsonDataset(object):
     """A class representing a COCO json dataset."""
 
-    def __init__(self, train=False):
+    def __init__(self, mode):
         print('Creating: {}'.format(cfg.dataset))
         self.name = cfg.dataset
-        self.is_train = train
-        if self.is_train:
-            data_dir = cfg.train_data_dir
-            file_list = cfg.train_file_list
-        else:
-            data_dir = cfg.val_data_dir
-            file_list = cfg.val_file_list
+        self.is_train = mode == 'train'
+        data_path = DatasetPath(mode)
+        data_dir = data_path.get_data_dir()
+        file_list = data_path.get_file_list()
         self.image_directory = data_dir
         self.COCO = COCO(file_list)
         # Set up dataset classes

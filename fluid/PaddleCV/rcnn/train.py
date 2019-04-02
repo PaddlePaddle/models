@@ -36,7 +36,7 @@ def train():
     learning_rate = cfg.learning_rate
     image_shape = [3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
 
-    if cfg.debug or cfg.enable_ce:
+    if cfg.enable_ce:
         fluid.default_startup_program().random_seed = 1000
         fluid.default_main_program().random_seed = 1000
         import random
@@ -50,7 +50,7 @@ def train():
     use_random = True
     if cfg.enable_ce:
         use_random = False
-    model = model_builder.FasterRCNN(
+    model = model_builder.RCNN(
         add_conv_body_func=resnet.add_ResNet50_conv4_body,
         add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
         use_pyreader=cfg.use_pyreader,
@@ -131,8 +131,8 @@ def train():
                 stats = {k: np.array(v).mean() for k, v in zip(keys, outs[:-1])}
                 train_stats.update(stats)
                 logs = train_stats.log()
-                strs = '{}, lr: {:.5f}, {}, time: {:.3f}'.format(
-                    now_time(),
+                strs = '{}, iter: {}, lr: {:.5f}, {}, time: {:.3f}'.format(
+                    now_time(), iter_id,
                     np.mean(outs[-1]), logs, start_time - prev_start_time)
                 print(strs)
                 sys.stdout.flush()
@@ -164,8 +164,8 @@ def train():
             stats = {k: np.array(v).mean() for k, v in zip(keys, outs[:-1])}
             train_stats.update(stats)
             logs = train_stats.log()
-            strs = '{}, lr: {:.5f}, {}, time: {:.3f}'.format(
-                now_time(),
+            strs = '{}, iter: {}, lr: {:.5f}, {}, time: {:.3f}'.format(
+                now_time(), iter_id,
                 np.mean(outs[-1]), logs, start_time - prev_start_time)
             print(strs)
             sys.stdout.flush()

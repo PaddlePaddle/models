@@ -79,7 +79,7 @@ python train.py \
 * **lr**: initialized learning rate. Default: 0.1.
 * **pretrained_model**: model path for pretraining. Default: None.
 * **checkpoint**: the checkpoint path to resume. Default: None.
-* **model_category**: the category of models, ("models"|"models_name"). Default:"models".
+* **model_category**: the category of models, ("models"|"models_name"). Default:"models_name".
 
 **数据读取器说明：** 数据读取器定义在```reader.py```和```reader_cv2.py```中, 一般, CV2 reader可以提高数据读取速度, reader(PIL)可以得到相对更高的精度, 在[训练阶段](#training-a-model), 默认采用的增广方式是随机裁剪与水平翻转, 而在[评估](#inference)与[推断](#inference)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
 * 旋转
@@ -164,7 +164,6 @@ Testbatch 80,loss 0.0969972759485, acc1 1.0,acc5 1.0,time 0.41 sec
 ```
 python infer.py \
        --model=SE_ResNeXt50_32x4d \
-       --batch_size=32 \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --with_mem_opt=True \
@@ -204,6 +203,7 @@ Models包括两种模型：带有参数名字的模型，和不带有参数名�
 |[VGG16](https://paddle-imagenet-models-name.bj.bcebos.com/VGG16_pretrained.zip) | 72.08%/90.63% | 71.65%/90.57% |
 |[VGG19](https://paddle-imagenet-models-name.bj.bcebos.com/VGG19_pretrained.zip) | 72.56%/90.83% | 72.32%/90.98% |
 |[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.zip) | 70.91%/89.54% | 70.51%/89.35% |
+|[MobileNetV2](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_pretrained.zip) | 71.90%/90.55% | 71.53%/90.41% |
 |[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.zip) | 76.35%/92.80% | 76.22%/92.92% |
 |[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.zip) | 77.49%/93.57% | 77.56%/93.64% |
 |[ResNet152](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_pretrained.zip) | 78.12%/93.93% | 77.92%/93.87% |
@@ -211,6 +211,8 @@ Models包括两种模型：带有参数名字的模型，和不带有参数名�
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.zip) | 79.26%/94.22% | 79.12%/94.20% |
 
 - Released models: not specify parameter names
+
+**注意：这是model_category = models 的预训练模型**
 
 |model | top-1/top-5 accuracy(PIL)| top-1/top-5 accuracy(CV2) |
 |- |:-: |:-:|

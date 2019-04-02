@@ -28,11 +28,14 @@ Fluid模型配置和参数文件的工具。
 
 开放环境中的检测人脸，尤其是小的、模糊的和部分遮挡的人脸也是一个具有挑战的任务。我们也介绍了如何基于 [WIDER FACE](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace) 数据训练百度自研的人脸检测PyramidBox模型，该算法于2018年3月份在WIDER FACE的多项评测中均获得 [第一名](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/WiderFace_Results.html)。
 
-RCNN系列模型是典型的两阶段目标检测器，相较于传统提取区域的方法，RCNN中RPN网络通过共享卷积层参数大幅提高提取区域的效率，并提出高质量的候选区域。其中典型模型包括Faster RCNN和Mask RCNN。
+Faster RCNN模型是典型的两阶段目标检测器，相较于传统提取区域的方法，通过RPN网络共享卷积层参数大幅提高提取区域的效率，并提出高质量的候选区域。
+
+Mask RCNN模型是基于Faster RCNN模型的经典实例分割模型，在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。
 
 -  [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/blob/develop/fluid/PaddleCV/object_detection/README_cn.md)
 -  [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/face_detection/README_cn.md)
--  [RCNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn/README_cn.md)
+-  [Faster RCNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn/README_cn.md)
+-  [Mask RCNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn/README_cn.md)
 
 图像语义分割
 ------------
@@ -96,7 +99,7 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 机器翻译
 --------
 
-机器翻译（Machine Translation）将一种自然语言(源语言)转换成一种自然语言（目标语音），是自然语言处理中非常基础和重要的研究方向。在全球化的浪潮中，机器翻译在促进跨语言文明的交流中所起的重要作用是不言而喻的。其发展经历了统计机器翻译和基于神经网络的神经机器翻译(Nueural
+机器翻译（Machine Translation）将一种自然语言(源语言)转换成一种自然语言（目标语言），是自然语言处理中非常基础和重要的研究方向。在全球化的浪潮中，机器翻译在促进跨语言文明的交流中所起的重要作用是不言而喻的。其发展经历了统计机器翻译和基于神经网络的神经机器翻译(Nueural
 Machine Translation, NMT)等阶段。在 NMT 成熟后，机器翻译才真正得以大规模应用。而早阶段的 NMT 主要是基于循环神经网络 RNN 的，其训练过程中当前时间步依赖于前一个时间步的计算，时间步之间难以并行化以提高训练速度。因此，非 RNN 结构的 NMT 得以应运而生，例如基 卷积神经网络 CNN 的结构和基于自注意力机制（Self-Attention）的结构。
 
 本实例所实现的 Transformer 就是一个基于自注意力机制的机器翻译模型，其中不再有RNN或CNN结构，而是完全利用 Attention 学习语言中的上下文依赖。相较于RNN/CNN, 这种结构在单层内计算复杂度更低、易于并行化、对长程依赖更易建模，最终在多种语言之间取得了最好的翻译效果。

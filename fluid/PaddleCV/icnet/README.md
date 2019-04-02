@@ -103,7 +103,7 @@ python infer.py \
 ## 其他信息
 |数据集 | pretrained model |
 |---|---|
-|CityScape | [Model]()[md: ] |
+|CityScape | [pretrained_model](https://paddle-icnet-models.bj.bcebos.com/model_1000.tar.gz) |
 
 ## 参考
 

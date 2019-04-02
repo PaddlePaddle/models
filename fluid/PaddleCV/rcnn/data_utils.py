@@ -31,6 +31,23 @@ from config import cfg
 import os
 
 
+class DatasetPath(object):
+    def __init__(self, mode):
+        self.mode = mode
+        mode_name = 'train' if mode == 'train' else 'val'
+        if cfg.dataset != 'coco2014' and cfg.dataset != 'coco2017':
+            raise NotImplementedError('Dataset {} not supported'.format(
+                cfg.dataset))
+        self.sub_name = mode_name + cfg.dataset[-4:]
+
+    def get_data_dir(self):
+        return os.path.join(cfg.data_dir, self.sub_name)
+
+    def get_file_list(self):
+        sfile_list = 'annotations/instances_' + self.sub_name + '.json'
+        return os.path.join(cfg.data_dir, sfile_list)
+
+
 def get_image_blob(roidb, mode):
     """Builds an input blob from the images in the roidb at the specified
     scales.

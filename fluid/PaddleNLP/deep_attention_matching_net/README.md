@@ -4,10 +4,6 @@ This is the source code of Deep Attention Matching network (DAM), that is propos
 
 DAM is a neural matching network that entirely based on attention mechanism. The motivation of DAM is to capture those semantic dependencies, among dialogue elements at different level of granularities, in multi-turn conversation as matching evidences, in order to better match response candidate with its multi-turn context. DAM appears on ACL-2018, please find our paper at [http://aclweb.org/anthology/P18-1103](http://aclweb.org/anthology/P18-1103).
 
-## __TensorFlow Version__
-
-DAM is originally implemented with Tensorflow, which can be found at: [https://github.com/baidu/Dialogue/DAM](https://github.com/baidu/Dialogue/DAM) (in progress). We highly recommend using the PaddlePaddle Fluid version here as it supports parallely training with very large corpus.
-
 
 ## __Network__
 

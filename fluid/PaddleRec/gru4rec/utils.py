@@ -45,8 +45,8 @@ def to_lodtensor_bpr(raw_data, neg_size, vocab_size, place):
     neg_data = np.tile(pos_data, neg_size)
     np.random.shuffle(neg_data)
     for ii in range(length * neg_size):
-        if neg_data[ii] == pos_data[ii / neg_size]:
-            neg_data[ii] = pos_data[length - 1 - ii / neg_size]
+        if neg_data[ii] == pos_data[ii // neg_size]:
+            neg_data[ii] = pos_data[length - 1 - ii // neg_size]
 
     label_data = np.column_stack(
         (pos_data.reshape(length, 1), neg_data.reshape(length, neg_size)))

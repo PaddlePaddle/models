@@ -119,7 +119,7 @@ def test_data_augmentation(sample):
     image_file = sample['image']
     filename = sample['filename'] if 'filename' in sample else ''
 
-    file_id = int(filename.split('.')[0].split('_')[1])
+    file_id = int(filename.split('.')[0])
 
     input = cv2.imread(
             image_file, cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION)
@@ -174,19 +174,19 @@ def _reader_creator(root, image_set, shuffle=False, is_train=False):
                 joints_3d_vis[:, 1] = joints_vis[:]
 
                 yield dict(
-                        image = os.path.join(cfg.DATAROOT, cfg.IMAGEDIR, image_name),
-                        center = c,
-                        scale = s,
-                        joints_3d = joints_3d,
-                        joints_3d_vis = joints_3d_vis,
-                        filename = image_name,
-                        test_mode = False,
-                        imagenum = 0)
+                        image=os.path.join(cfg.DATAROOT, cfg.IMAGEDIR, image_name),
+                        center=c,
+                        scale=s,
+                        joints_3d=joints_3d,
+                        joints_3d_vis=joints_3d_vis,
+                        filename=image_name,
+                        test_mode=False,
+                        imagenum=0)
         else:
             fold = 'test'
             for img_name in os.listdir(fold):
-                yield dict(image = os.path.join(fold, img_name),
-                           filename = img_name)
+                yield dict(image=os.path.join(fold, img_name),
+                           filename=img_name)
 
     if not image_set == 'test':
         mapper = functools.partial(data_augmentation, is_train=is_train)

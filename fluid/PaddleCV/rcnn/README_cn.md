@@ -9,11 +9,10 @@
 - [模型训练](#模型训练)
 - [模型评估](#模型评估)
 - [模型推断及可视化](#模型推断及可视化)
-- [附录](#附录)
 
 ## 安装
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.0.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/0.15.0/beginners_guide/install/install_doc.html#paddlepaddle)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.3.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/)中的说明来更新PaddlePaddle。
 
 ## 简介
 区域卷积神经网络（RCNN）系列模型为两阶段目标检测器。通过对图像生成候选区域，提取特征，判别特征类别并修正候选框位置。
@@ -38,6 +37,27 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
     cd dataset/coco
     ./download.sh
 
+数据目录结构如下：
+
+```
+data/coco/
+├── annotations
+│   ├── instances_train2014.json
+│   ├── instances_train2017.json
+│   ├── instances_val2014.json
+│   ├── instances_val2017.json
+|   ...
+├── train2017
+│   ├── 000000000009.jpg
+│   ├── 000000580008.jpg
+|   ...
+├── val2017
+│   ├── 000000000139.jpg
+│   ├── 000000000285.jpg
+|   ...
+
+```
+
 ## 模型训练
 
 **下载预训练模型：** 本示例提供Resnet-50预训练模型，该模性转换自Caffe，并对批标准化层(Batch Normalization Layer)进行参数融合。采用如下命令下载预训练模型：
@@ -51,9 +71,8 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
 训练前需要首先下载[cocoapi](https://github.com/cocodataset/cocoapi)：
 
-    # COCOAPI=/path/to/clone/cocoapi
-    git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
-    cd $COCOAPI/PythonAPI
+    git clone https://github.com/cocodataset/cocoapi.git
+    cd cocoapi/PythonAPI
     # if cython is not installed
     pip install Cython
     # Install into global site-packages
@@ -64,17 +83,31 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
 数据准备完毕后，可以通过如下的方式启动训练：
 
+- Faster RCNN
+
+    ```
     python train.py \
        --model_save_dir=output/ \
        --pretrained_model=${path_to_pretrain_model} \
        --data_dir=${path_to_data} \
        --MASK_ON=False
+    ```
 
-- 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
-- 通过设置MASK\_ON选择Faster RCNN和Mask RCNN模型。
-- 可选参数见：
+- Mask RCNN
 
-    python train.py --help
+    ```
+    python train.py \
+       --model_save_dir=output/ \
+       --pretrained_model=${path_to_pretrain_model} \
+       --data_dir=${path_to_data} \
+       --MASK_ON=True
+    ```
+
+    - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
+    - 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
+    - 可选参数见：
+
+        python train.py --help
 
 **数据读取器说明：** 数据读取器定义在reader.py中。所有图像将短边等比例缩放至`scales`，若长边大于`max_size`, 则再次将长边等比例缩放至`max_size`。在训练阶段，对图像采用水平翻转。支持将同一个batch内的图像padding为相同尺寸。
 
@@ -99,11 +132,27 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
 `eval_coco_map.py`是评估模块的主要执行程序，调用示例如下：
 
+- Faster RCNN
+
+    ```
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_pretrain_model} \
+        --pretrained_model=${path_to_trained_model} \
+        --MASK_ON=False
+    ```
 
-- 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
+- Mask RCNN
+
+    ```
+    python eval_coco_map.py \
+        --dataset=coco2017 \
+        --pretrained_model=${path_to_trained_model} \
+        --MASK_ON=True
+    ```
+
+    - 通过设置`--pretrained_model=${path_to_trained_model}`指定训练好的模型，注意不是初始化的模型。
+    - 通过设置`export CUDA\_VISIBLE\_DEVICES=0`指定单卡GPU评估。
+    - 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
 
 下表为模型评估结果：
 
@@ -123,7 +172,8 @@ Faster RCNN
 * Fluid RoIAlign no padding: 使用RoIAlign，不对图像做填充处理。
 * Fluid RoIAlign no padding 2x: 使用RoIAlign，不对图像做填充处理。训练360000轮，学习率在240000，320000轮衰减。
 
-Mask RCNN
+Mask RCNN:
+
 | 模型                   | 批量大小   | 迭代次数   | box mAP  | mask mAP |
 | :--------------- | :--------: | :------------:    | :--------:    |------: |
 | [Fluid mask no padding](https://paddlemodels.bj.bcebos.com/faster_rcnn/Fluid_mask_no_padding.tar.gz) | 8 | 180000 | 0.359 | 0.314 |  
@@ -134,12 +184,14 @@ Mask RCNN
 
 模型推断可以获取图像中的物体及其对应的类别，`infer.py`是主要执行程序，调用示例如下：
 
-    python infer.py \
-       --dataset=coco2017 \
-        --pretrained_model=${path_to_pretrain_model}  \
-        --image_path=dataset/coco/val2017/  \
-        --image_name=000000000139.jpg \
-        --draw_threshold=0.6
+```
+python infer.py \
+    --pretrained_model=${path_to_trained_model}  \
+    --image_path=dataset/coco/val2017/000000000139.jpg  \
+    --draw_threshold=0.6
+```
+
+注意，请正确设置模型路径`${path_to_trained_model}`和预测图片路径。默认使用GPU设备，也可通过设置`--use_gpu=False`使用CPU设备。可通过设置`draw_threshold`调节得分阈值控制检测框的个数。
 
 下图为模型可视化预测结果：
 <p align="center">

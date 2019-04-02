@@ -130,13 +130,13 @@ def test(args):
     loss, logits = dam.create_network()
 
     loss.persistable = True
+    logits.persistable = True
 
     # gradient clipping
     fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
         max=1.0, min=-1.0))
 
     test_program = fluid.default_main_program().clone(for_test=True)
-
     optimizer = fluid.optimizer.Adam(
         learning_rate=fluid.layers.exponential_decay(
             learning_rate=args.learning_rate,
@@ -145,7 +145,6 @@ def test(args):
             staircase=True))
     optimizer.minimize(loss)
 
-    # The fethced loss is wrong when mem opt is enabled
     fluid.memory_optimize(fluid.default_main_program())
 
     if args.use_cuda:
@@ -173,8 +172,10 @@ def test(args):
 
     if args.ext_eval:
         import utils.douban_evaluation as eva
+        eval_metrics = ["MAP", "MRR", "P@1", "R_{10}@1", "R_{10}@2", "R_{10}@5"]
     else:
         import utils.evaluation as eva
+        eval_metrics = ["R_2@1", "R_{10}@1", "R_{10}@2", "R_{10}@5"]
 
     test_batches = reader.build_batches(test_data, data_conf)
 
@@ -214,8 +215,8 @@ def test(args):
     result = eva.evaluate(score_path)
     result_file_path = os.path.join(args.save_path, 'result.txt')
     with open(result_file_path, 'w') as out_file:
-        for p_at in result:
-            out_file.write(str(p_at) + '\n')
+        for metric, p_at in zip(eval_metrics, result):
+            out_file.write(metric + ": " + str(p_at) + '\n')
     print('finish test')
     print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 

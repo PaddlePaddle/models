@@ -3,9 +3,11 @@ import paddle.fluid as fluid
 import numpy as np
 import os
 
-use_cudnn = True
+# cudnn is not better when batch size is 1.
+use_cudnn = False
 if 'ce_mode' in os.environ:
     use_cudnn = False
+
 
 def cal_padding(img_size, stride, filter_size, dilation=1):
     """Calculate padding size."""
@@ -18,6 +20,8 @@ def cal_padding(img_size, stride, filter_size, dilation=1):
 
 
 def instance_norm(input, name=None):
+    # TODO(lvmengsi@baidu.com): Check the accuracy when using fluid.layers.layer_norm.
+    # return fluid.layers.layer_norm(input, begin_norm_axis=2) 
     helper = fluid.layer_helper.LayerHelper("instance_norm", **locals())
     dtype = helper.input_dtype()
     epsilon = 1e-5

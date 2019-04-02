@@ -7,6 +7,43 @@ import paddle.fluid.layers as layers
 from config import *
 
 
+def wrap_layer_with_block(layer, block_idx):
+    """
+    Make layer define support indicating block, by which we can add layers
+    to other blocks within current block. This will make it easy to define
+    cache among while loop.
+    """
+
+    class BlockGuard(object):
+        """
+        BlockGuard class.
+
+        BlockGuard class is used to switch to the given block in a program by
+        using the Python `with` keyword.
+        """
+
+        def __init__(self, block_idx=None, main_program=None):
+            self.main_program = fluid.default_main_program(
+            ) if main_program is None else main_program
+            self.old_block_idx = self.main_program.current_block().idx
+            self.new_block_idx = block_idx
+
+        def __enter__(self):
+            self.main_program.current_block_idx = self.new_block_idx
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.main_program.current_block_idx = self.old_block_idx
+            if exc_type is not None:
+                return False  # re-raise exception
+            return True
+
+    def layer_wrapper(*args, **kwargs):
+        with BlockGuard(block_idx):
+            return layer(*args, **kwargs)
+
+    return layer_wrapper
+
+
 def position_encoding_init(n_position, d_pos_vec):
     """
     Generate the initial values for the sinusoid position encoding table.
@@ -35,7 +72,9 @@ def multi_head_attention(queries,
                          d_model,
                          n_head=1,
                          dropout_rate=0.,
-                         cache=None):
+                         cache=None,
+                         gather_idx=None,
+                         static_kv=False):
     """
     Multi-Head Attention. Note that attn_bias is added to the logit before
     computing softmax activiation to mask certain selected positions so that
@@ -56,42 +95,86 @@ def multi_head_attention(queries,
                       size=d_key * n_head,
                       bias_attr=False,
                       num_flatten_dims=2)
-        k = layers.fc(input=keys,
-                      size=d_key * n_head,
-                      bias_attr=False,
-                      num_flatten_dims=2)
-        v = layers.fc(input=values,
-                      size=d_value * n_head,
-                      bias_attr=False,
-                      num_flatten_dims=2)
+        # For encoder-decoder attention in inference, insert the ops and vars
+        # into global block to use as cache among beam search.
+        fc_layer = wrap_layer_with_block(
+            layers.fc, fluid.default_main_program().current_block()
+            .parent_idx) if cache is not None and static_kv else layers.fc
+        k = fc_layer(
+            input=keys,
+            size=d_key * n_head,
+            bias_attr=False,
+            num_flatten_dims=2)
+        v = fc_layer(
+            input=values,
+            size=d_value * n_head,
+            bias_attr=False,
+            num_flatten_dims=2)
         return q, k, v
 
-    def __split_heads(x, n_head):
+    def __split_heads_qkv(queries, keys, values, n_head, d_key, d_value):
         """
-        Reshape the last dimension of inpunt tensor x so that it becomes two
-        dimensions and then transpose. Specifically, input a tensor with shape
-        [bs, max_sequence_length, n_head * hidden_dim] then output a tensor
+        Reshape input tensors at the last dimension to split multi-heads 
+        and then transpose. Specifically, transform the input tensor with shape
+        [bs, max_sequence_length, n_head * hidden_dim] to the output tensor
         with shape [bs, n_head, max_sequence_length, hidden_dim].
         """
-        if n_head == 1:
-            return x
-
-        hidden_size = x.shape[-1]
         # The value 0 in shape attr means copying the corresponding dimension
         # size of the input as the output dimension size.
-        reshaped = layers.reshape(
-            x=x, shape=[0, 0, n_head, hidden_size // n_head], inplace=True)
-
+        reshaped_q = layers.reshape(
+            x=queries, shape=[0, 0, n_head, d_key], inplace=True)
         # permuate the dimensions into:
         # [batch_size, n_head, max_sequence_len, hidden_size_per_head]
-        return layers.transpose(x=reshaped, perm=[0, 2, 1, 3])
+        q = layers.transpose(x=reshaped_q, perm=[0, 2, 1, 3])
+        # For encoder-decoder attention in inference, insert the ops and vars
+        # into global block to use as cache among beam search.
+        reshape_layer = wrap_layer_with_block(
+            layers.reshape,
+            fluid.default_main_program().current_block()
+            .parent_idx) if cache is not None and static_kv else layers.reshape
+        transpose_layer = wrap_layer_with_block(
+            layers.transpose,
+            fluid.default_main_program().current_block().
+            parent_idx) if cache is not None and static_kv else layers.transpose
+        reshaped_k = reshape_layer(
+            x=keys, shape=[0, 0, n_head, d_key], inplace=True)
+        k = transpose_layer(x=reshaped_k, perm=[0, 2, 1, 3])
+        reshaped_v = reshape_layer(
+            x=values, shape=[0, 0, n_head, d_value], inplace=True)
+        v = transpose_layer(x=reshaped_v, perm=[0, 2, 1, 3])
+
+        if cache is not None:  # only for faster inference
+            if static_kv:  # For encoder-decoder attention in inference
+                cache_k, cache_v = cache["static_k"], cache["static_v"]
+                # To init the static_k and static_v in cache.
+                # Maybe we can use condition_op(if_else) to do these at the first
+                # step in while loop to replace these, however it might be less
+                # efficient.
+                static_cache_init = wrap_layer_with_block(
+                    layers.assign,
+                    fluid.default_main_program().current_block().parent_idx)
+                static_cache_init(k, cache_k)
+                static_cache_init(v, cache_v)
+            else:  # For decoder self-attention in inference
+                cache_k, cache_v = cache["k"], cache["v"]
+            # gather cell states corresponding to selected parent
+            select_k = layers.gather(cache_k, index=gather_idx)
+            select_v = layers.gather(cache_v, index=gather_idx)
+            if not static_kv:
+                # For self attention in inference, use cache and concat time steps.
+                select_k = layers.concat([select_k, k], axis=2)
+                select_v = layers.concat([select_v, v], axis=2)
+            # update cell states(caches) cached in global block
+            layers.assign(select_k, cache_k)
+            layers.assign(select_v, cache_v)
+            return q, select_k, select_v
+        return q, k, v
 
     def __combine_heads(x):
         """
         Transpose and then reshape the last two dimensions of inpunt tensor x
         so that it becomes one dimension, which is reverse to __split_heads.
         """
-        if len(x.shape) == 3: return x
         if len(x.shape) != 4:
             raise ValueError("Input(x) should be a 4-D Tensor.")
 
@@ -107,8 +190,7 @@ def multi_head_attention(queries,
         """
         Scaled Dot-Product Attention
         """
-        scaled_q = layers.scale(x=q, scale=d_key**-0.5)
-        product = layers.matmul(x=scaled_q, y=k, transpose_y=True)
+        product = layers.matmul(x=q, y=k, transpose_y=True, alpha=d_key**-0.5)
         if attn_bias:
             product += attn_bias
         weights = layers.softmax(product)
@@ -122,23 +204,7 @@ def multi_head_attention(queries,
         return out
 
     q, k, v = __compute_qkv(queries, keys, values, n_head, d_key, d_value)
-
-    if cache is not None:  # use cache and concat time steps
-        # Since the inplace reshape in __split_heads changes the shape of k and
-        # v, which is the cache input for next time step, reshape the cache
-        # input from the previous time step first.
-        k = cache["k"] = layers.concat(
-            [layers.reshape(
-                cache["k"], shape=[0, 0, d_key * n_head]), k],
-            axis=1)
-        v = cache["v"] = layers.concat(
-            [layers.reshape(
-                cache["v"], shape=[0, 0, d_value * n_head]), v],
-            axis=1)
-
-    q = __split_heads(q, n_head)
-    k = __split_heads(k, n_head)
-    v = __split_heads(v, n_head)
+    q, k, v = __split_heads_qkv(q, k, v, n_head, d_key, d_value)
 
     ctx_multiheads = scaled_dot_product_attention(q, k, v, attn_bias, d_model,
                                                   dropout_rate)
@@ -327,7 +393,8 @@ def decoder_layer(dec_input,
                   relu_dropout,
                   preprocess_cmd,
                   postprocess_cmd,
-                  cache=None):
+                  cache=None,
+                  gather_idx=None):
     """ The layer to be stacked in decoder part.
     The structure of this module is similar to that in the encoder part except
     a multi-head attention is added to implement encoder-decoder attention.
@@ -342,7 +409,8 @@ def decoder_layer(dec_input,
         d_model,
         n_head,
         attention_dropout,
-        cache, )
+        cache=cache,
+        gather_idx=gather_idx)
     slf_attn_output = post_process_layer(
         dec_input,
         slf_attn_output,
@@ -358,7 +426,10 @@ def decoder_layer(dec_input,
         d_value,
         d_model,
         n_head,
-        attention_dropout, )
+        attention_dropout,
+        cache=cache,
+        gather_idx=gather_idx,
+        static_kv=True)
     enc_attn_output = post_process_layer(
         slf_attn_output,
         enc_attn_output,
@@ -393,7 +464,8 @@ def decoder(dec_input,
             relu_dropout,
             preprocess_cmd,
             postprocess_cmd,
-            caches=None):
+            caches=None,
+            gather_idx=None):
     """
     The decoder is composed of a stack of identical decoder_layer layers.
     """
@@ -413,7 +485,8 @@ def decoder(dec_input,
             relu_dropout,
             preprocess_cmd,
             postprocess_cmd,
-            cache=None if caches is None else caches[i])
+            cache=None if caches is None else caches[i],
+            gather_idx=gather_idx)
         dec_input = dec_output
     dec_output = pre_process_layer(dec_output, preprocess_cmd,
                                    prepostprocess_dropout)
@@ -610,7 +683,8 @@ def wrap_decoder(trg_vocab_size,
                  weight_sharing,
                  dec_inputs=None,
                  enc_output=None,
-                 caches=None):
+                 caches=None,
+                 gather_idx=None):
     """
     The wrapper assembles together all needed layers for the decoder.
     """
@@ -646,7 +720,8 @@ def wrap_decoder(trg_vocab_size,
         relu_dropout,
         preprocess_cmd,
         postprocess_cmd,
-        caches=caches)
+        caches=caches,
+        gather_idx=gather_idx)
     # Reshape to 2D tensor to use GEMM instead of BatchedGEMM
     dec_output = layers.reshape(
         dec_output, shape=[-1, dec_output.shape[-1]], inplace=True)
@@ -666,9 +741,43 @@ def wrap_decoder(trg_vocab_size,
     return predict
 
 
-def fast_decode(
+def fast_decode(src_vocab_size,
+                trg_vocab_size,
+                max_in_len,
+                n_layer,
+                n_head,
+                d_key,
+                d_value,
+                d_model,
+                d_inner_hid,
+                prepostprocess_dropout,
+                attention_dropout,
+                relu_dropout,
+                preprocess_cmd,
+                postprocess_cmd,
+                weight_sharing,
+                beam_size,
+                max_out_len,
+                eos_idx,
+                use_py_reader=False):
+    """
+    Use beam search to decode. Caches will be used to store states of history
+    steps which can make the decoding faster.
+    """
+    data_input_names = encoder_data_input_fields + fast_decoder_data_input_fields
+
+    if use_py_reader:
+        all_inputs, reader = make_all_py_reader_inputs(data_input_names)
+    else:
+        all_inputs = make_all_inputs(data_input_names)
+
+    enc_inputs_len = len(encoder_data_input_fields)
+    dec_inputs_len = len(fast_decoder_data_input_fields)
+    enc_inputs = all_inputs[0:enc_inputs_len]
+    dec_inputs = all_inputs[enc_inputs_len:enc_inputs_len + dec_inputs_len]
+
+    enc_output = wrap_encoder(
         src_vocab_size,
-        trg_vocab_size,
         max_in_len,
         n_layer,
         n_head,
@@ -682,64 +791,60 @@ def fast_decode(
         preprocess_cmd,
         postprocess_cmd,
         weight_sharing,
-        beam_size,
-        max_out_len,
-        eos_idx, ):
-    """
-    Use beam search to decode. Caches will be used to store states of history
-    steps which can make the decoding faster.
-    """
-    enc_output = wrap_encoder(
-        src_vocab_size, max_in_len, n_layer, n_head, d_key, d_value, d_model,
-        d_inner_hid, prepostprocess_dropout, attention_dropout, relu_dropout,
-        preprocess_cmd, postprocess_cmd, weight_sharing)
-    start_tokens, init_scores, trg_src_attn_bias = make_all_inputs(
-        fast_decoder_data_input_fields)
+        enc_inputs, )
+    start_tokens, init_scores, parent_idx, trg_src_attn_bias = dec_inputs
 
     def beam_search():
         max_len = layers.fill_constant(
-            shape=[1], dtype=start_tokens.dtype, value=max_out_len)
+            shape=[1],
+            dtype=start_tokens.dtype,
+            value=max_out_len,
+            force_cpu=True)
         step_idx = layers.fill_constant(
-            shape=[1], dtype=start_tokens.dtype, value=0)
-        cond = layers.less_than(x=step_idx, y=max_len)
+            shape=[1], dtype=start_tokens.dtype, value=0, force_cpu=True)
+        cond = layers.less_than(x=step_idx, y=max_len)  # default force_cpu=True
         while_op = layers.While(cond)
         # array states will be stored for each step.
         ids = layers.array_write(
             layers.reshape(start_tokens, (-1, 1)), step_idx)
         scores = layers.array_write(init_scores, step_idx)
         # cell states will be overwrited at each step.
-        # caches contains states of history steps to reduce redundant
-        # computation in decoder.
-        caches = [{
-            "k": layers.fill_constant_batch_size_like(
-                input=start_tokens,
-                shape=[-1, 0, d_model],
-                dtype=enc_output.dtype,
-                value=0),
-            "v": layers.fill_constant_batch_size_like(
-                input=start_tokens,
-                shape=[-1, 0, d_model],
-                dtype=enc_output.dtype,
-                value=0)
-        } for i in range(n_layer)]
+        # caches contains states of history steps in decoder self-attention
+        # and static encoder output projections in encoder-decoder attention
+        # to reduce redundant computation.
+        caches = [
+            {
+                "k":  # for self attention
+                layers.fill_constant_batch_size_like(
+                    input=start_tokens,
+                    shape=[-1, n_head, 0, d_key],
+                    dtype=enc_output.dtype,
+                    value=0),
+                "v":  # for self attention
+                layers.fill_constant_batch_size_like(
+                    input=start_tokens,
+                    shape=[-1, n_head, 0, d_value],
+                    dtype=enc_output.dtype,
+                    value=0),
+                "static_k":  # for encoder-decoder attention
+                layers.create_tensor(dtype=enc_output.dtype),
+                "static_v":  # for encoder-decoder attention
+                layers.create_tensor(dtype=enc_output.dtype)
+            } for i in range(n_layer)
+        ]
+
         with while_op.block():
             pre_ids = layers.array_read(array=ids, i=step_idx)
-            pre_ids = layers.reshape(pre_ids, (-1, 1, 1))
+            # Since beam_search_op dosen't enforce pre_ids' shape, we can do
+            # inplace reshape here which actually change the shape of pre_ids.
+            pre_ids = layers.reshape(pre_ids, (-1, 1, 1), inplace=True)
             pre_scores = layers.array_read(array=scores, i=step_idx)
-            # sequence_expand can gather sequences according to lod thus can be
-            # used in beam search to sift states corresponding to selected ids.
-            pre_src_attn_bias = layers.sequence_expand(
-                x=trg_src_attn_bias, y=pre_scores)
-            pre_enc_output = layers.sequence_expand(x=enc_output, y=pre_scores)
-            pre_caches = [{
-                "k": layers.sequence_expand(
-                    x=cache["k"], y=pre_scores),
-                "v": layers.sequence_expand(
-                    x=cache["v"], y=pre_scores),
-            } for cache in caches]
+            # gather cell states corresponding to selected parent
+            pre_src_attn_bias = layers.gather(
+                trg_src_attn_bias, index=parent_idx)
             pre_pos = layers.elementwise_mul(
                 x=layers.fill_constant_batch_size_like(
-                    input=pre_enc_output,  # cann't use pre_ids here since it has lod
+                    input=pre_src_attn_bias,  # cann't use lod tensor here
                     value=1,
                     shape=[-1, 1, 1],
                     dtype=pre_ids.dtype),
@@ -761,35 +866,33 @@ def fast_decode(
                 postprocess_cmd,
                 weight_sharing,
                 dec_inputs=(pre_ids, pre_pos, None, pre_src_attn_bias),
-                enc_output=pre_enc_output,
-                caches=pre_caches)
-
+                enc_output=enc_output,
+                caches=caches,
+                gather_idx=parent_idx)
+            # intra-beam topK
             topk_scores, topk_indices = layers.topk(
                 input=layers.softmax(logits), k=beam_size)
             accu_scores = layers.elementwise_add(
-                x=layers.log(topk_scores),
-                y=layers.reshape(
-                    pre_scores, shape=[-1]),
-                axis=0)
-            # beam_search op uses lod to distinguish branches.
+                x=layers.log(topk_scores), y=pre_scores, axis=0)
+            # beam_search op uses lod to differentiate branches.
             topk_indices = layers.lod_reset(topk_indices, pre_ids)
-            selected_ids, selected_scores = layers.beam_search(
+            # topK reduction across beams, also contain special handle of
+            # end beams and end sentences(batch reduction)
+            selected_ids, selected_scores, gather_idx = layers.beam_search(
                 pre_ids=pre_ids,
                 pre_scores=pre_scores,
                 ids=topk_indices,
                 scores=accu_scores,
                 beam_size=beam_size,
-                end_id=eos_idx)
-
+                end_id=eos_idx,
+                return_parent_idx=True)
             layers.increment(x=step_idx, value=1.0, in_place=True)
-            # update states
+            # cell states(caches) have been updated in wrap_decoder,
+            # only need to update beam search states here.
             layers.array_write(selected_ids, i=step_idx, array=ids)
             layers.array_write(selected_scores, i=step_idx, array=scores)
+            layers.assign(gather_idx, parent_idx)
             layers.assign(pre_src_attn_bias, trg_src_attn_bias)
-            layers.assign(pre_enc_output, enc_output)
-            for i in range(n_layer):
-                layers.assign(pre_caches[i]["k"], caches[i]["k"])
-                layers.assign(pre_caches[i]["v"], caches[i]["v"])
             length_cond = layers.less_than(x=step_idx, y=max_len)
             finish_cond = layers.logical_not(layers.is_empty(x=selected_ids))
             layers.logical_and(x=length_cond, y=finish_cond, out=cond)
@@ -799,4 +902,4 @@ def fast_decode(
         return finished_ids, finished_scores
 
     finished_ids, finished_scores = beam_search()
-    return finished_ids, finished_scores
+    return finished_ids, finished_scores, reader if use_py_reader else None

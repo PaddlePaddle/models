@@ -10,23 +10,28 @@ This is a simple demonstration of re-implementation in [PaddlePaddle.Fluid](http
 ## Requirements
 
   - Python == 2.7
-  - PaddlePaddle >= 1.0
+  - PaddlePaddle >= 1.1.0
   - opencv-python >= 3.3
-  - tqdm >= 4.25
 
 ## Environment
 
-The code is developed and tested under 4 Tesla K40 GPUS cards on CentOS with installed CUDA-9.2/8.0 and cuDNN-7.1.
-
-## Known Issues
-
-  - The model does not converge with large batch\_size (e.g. = 32) on Tesla P40 / V100 / P100 GPUS cards, because PaddlePaddle uses the batch normalization function of cuDNN. Changing batch\_size into 1 image on each card during training will ease this problem, but not sure the performance. The issue can be tracked at [here](https://github.com/PaddlePaddle/Paddle/issues/14580).
+The code is developed and tested under 4 Tesla K40/P40 GPUS cards on CentOS with installed CUDA-9.2/8.0 and cuDNN-7.1.
 
 ## Results on MPII Val
 | Arch | Head | Shoulder | Elbow | Wrist | Hip | Knee | Ankle | Mean | Mean@0.1| Models |
 | ---- |:----:|:--------:|:-----:|:-----:|:---:|:----:|:-----:|:----:|:-------:|:------:|
-| 383x384\_pose\_resnet\_50 in PyTorch | 96.658 | 95.754 | 89.790 | 84.614 | 88.523 | 84.666 | 79.287 | 89.066 | 38.046 | - |
-| 383x384\_pose\_resnet\_50 in Fluid   | 96.248 | 95.346 | 89.807 | 84.873 | 88.298 | 83.679 | 78.649 | 88.767 | 37.374 | [`link`](http://paddlemodels.bj.bcebos.com/pose/pose-resnet-50-384x384-mpii.tar.gz) |
+| 256x256\_pose\_resnet\_50 in PyTorch | 96.351	| 95.329 | 88.989 | 83.176 | 88.420	| 83.960 | 79.594 | 88.532 | 33.911 | - |
+| 256x256\_pose\_resnet\_50 in Fluid   | 96.385 | 95.363 | 89.211 | 84.084 | 88.454 | 84.182 | 79.546 | 88.748 | 33.750 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-mpii-256x256.tar.gz) |
+| 384x384\_pose\_resnet\_50 in PyTorch | 96.658 | 95.754 | 89.790 | 84.614 | 88.523 | 84.666 | 79.287 | 89.066 | 38.046 | - |
+| 384x384\_pose\_resnet\_50 in Fluid   | 96.862 | 95.635 | 90.046 | 85.557 | 88.818 | 84.948 | 78.484 | 89.235 | 38.093 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-mpii-384x384.tar.gz) |
+
+## Results on COCO val2017 with detector having human AP of 56.4 on COCO val2017 dataset
+| Arch | AP | Ap .5 | AP .75 | AP (M) | AP (L) | AR | AR .5 | AR .75 | AR (M) | AR (L) | Models |
+| ---- |:--:|:-----:|:------:|:------:|:------:|:--:|:-----:|:------:|:------:|:------:|:------:|
+| 256x192\_pose\_resnet\_50 in PyTorch | 0.704 | 0.886 | 0.783 | 0.671 | 0.772 | 0.763 | 0.929 | 0.834 | 0.721 | 0.824 | - |
+| 256x192\_pose\_resnet\_50 in Fluid   | 0.712 | 0.897 | 0.786 | 0.683 | 0.756 | 0.741 | 0.906 | 0.806 | 0.709 | 0.790 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-coco-256x192.tar.gz) |
+| 384x288\_pose\_resnet\_50 in PyTorch | 0.722 | 0.893 | 0.789 | 0.681 | 0.797 | 0.776 | 0.932 | 0.838 | 0.728 | 0.846 | - |
+| 384x288\_pose\_resnet\_50 in Fluid   | 0.727 | 0.897 | 0.796 | 0.690 | 0.783 | 0.754 | 0.907 | 0.813 | 0.714 | 0.814 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-coco-384x288.tar.gz) |
 
 ### Notes:
 
@@ -77,16 +82,16 @@ python2 setup.py install --user
 
 ### Perform Validating
 
-Downloading the checkpoints of Pose-ResNet-50 trained on MPII dataset from [here](http://paddlemodels.bj.bcebos.com/pose/pose-resnet-50-384x384-mpii.tar.gz). Extract it into the folder `checkpoints` under the directory root of this repo. Then run
+Downloading the checkpoints of Pose-ResNet-50 trained on MPII dataset from [here](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-mpii-384x384.tar.gz). Extract it into the folder `checkpoints` under the directory root of this repo. Then run
 
 ```bash
-python2 val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet-50-384x384-mpii'
+python val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet50-mpii-384x384'
 ```
 
 ### Perform Training
 
 ```bash
-python2 train.py --dataset 'mpii' # or coco
+python train.py --dataset 'mpii' # or coco
 ```
 
 **Note**: Configurations for training are aggregated in the `lib/mpii_reader.py` and `lib/coco_reader.py`.
@@ -96,10 +101,10 @@ python2 train.py --dataset 'mpii' # or coco
 Put the images into the folder `test` under the directory root of this repo. Then run
 
 ```bash
-python2 test.py --checkpoint 'checkpoints/pose-resnet-50-384x384-mpii'
+python test.py --checkpoint 'checkpoints/pose-resnet-50-384x384-mpii'
 ```
 
-If there are multiple persons in images, detectors such as [Faster R-CNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/faster_rcnn), [SSD](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/object_detection) or others should be used first to crop them out. Because the simple baseline for human pose estimation is a top-down method.
+If there are multiple persons in images, detectors such as [Faster R-CNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn), [SSD](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/object_detection) or others should be used first to crop them out. Because the simple baseline for human pose estimation is a top-down method.
 
 ## Reference
 

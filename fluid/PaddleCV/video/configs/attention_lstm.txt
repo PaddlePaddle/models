@@ -19,17 +19,17 @@ decay_gamma = 0.1
 weight_decay = 0.0008
 num_samples = 5000000
 pretrain_base = None
-batch_size = 160
+batch_size = 1024
 use_gpu = True
-num_gpus = 4
+num_gpus = 8
 filelist = "dataset/youtube8m/train.list"
 
 [VALID]
-batch_size = 160
+batch_size = 1024
 filelist = "dataset/youtube8m/val.list"
 
 [TEST]
-batch_size = 40
+batch_size = 128
 filelist = "dataset/youtube8m/test.list"
 
 [INFER]

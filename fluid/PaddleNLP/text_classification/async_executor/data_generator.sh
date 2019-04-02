@@ -19,7 +19,7 @@ cd ./data_generator
 
 # wget "http://ai.stanford.edu/%7Eamaas/data/sentiment/aclImdb_v1.tar.gz"
 if [ ! -f aclImdb_v1.tar.gz ]; then
-    wget "http://10.64.74.104:8080/paddle/dataset/imdb/aclImdb_v1.tar.gz"
+    wget "http://ai.stanford.edu/%7Eamaas/data/sentiment/aclImdb_v1.tar.gz"
 fi
 tar zxvf aclImdb_v1.tar.gz
 

@@ -76,7 +76,7 @@ python train_pair.py  \
 ```
 
 ## Evaluation
-Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models) and set its path to ```path_to_pretrain_model```. Then Recall@Rank-1 can be obtained by running the following command:
+Evaluation is to evaluate the performance of a trained model. You should set model path to ```path_to_pretrain_model```. Then Recall@Rank-1 can be obtained by running the following command:
 ```
 python eval.py \
        --model=ResNet50 \
@@ -95,7 +95,7 @@ python infer.py \
 
 ## Performances
 
-For comparation, many metric learning models with different neural networks and loss functions are trained using corresponding experiential parameters. Recall@Rank-1 is used as evaluation metric and the performance is listed in the table. Pretrained models can be downloaded by clicking related model names.
+For comparation, many metric learning models with different neural networks and loss functions are trained using corresponding experiential parameters. Recall@Rank-1 is used as evaluation metric and the performance is listed in the table.
 
 |pretrain model | softmax | arcmargin
 |- | - | -:
@@ -103,9 +103,11 @@ For comparation, many metric learning models with different neural networks and 
 |fine-tuned with triplet | 78.37% | 79.21%
 |fine-tuned with quadruplet | 78.10% | 79.59%
 |fine-tuned with eml | 79.32% | 80.11%
+|fine-tuned with npairs | - | 79.81%
 
 ## Reference
 
 - ArcFace: Additive Angular Margin Loss for Deep Face Recognition [link](https://arxiv.org/abs/1801.07698)
 - Margin Sample Mining Loss: A Deep Learning Based Method for Person Re-identification [link](https://arxiv.org/abs/1710.00478)
 - Large Scale Strongly Supervised Ensemble Metric Learning, with Applications to Face Verification and Retrieval [link](https://arxiv.org/abs/1212.6094)
+- Improved Deep Metric Learning with Multi-class N-pair Loss Objective [link](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf)
