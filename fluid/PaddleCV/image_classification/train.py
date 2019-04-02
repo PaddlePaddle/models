@@ -105,6 +105,25 @@ def optimizer_setting(params):
     elif ls["name"] == "adam":
         lr = params["lr"]
         optimizer = fluid.optimizer.Adam(learning_rate=lr)
+    elif ls["name"] == "RMSProp_cosine":
+        if "total_images" not in params:
+            total_images = IMAGENET1000
+        else:
+            total_images = params["total_images"]
+        batch_size = ls["batch_size"]
+        l2_decay = params["l2_decay"]
+        momentum_rate = params["momentum_rate"]
+        step = int(math.ceil(float(total_images) / batch_size))
+        lr = params["lr"]
+        num_epochs = params["num_epochs"]
+        optimizer = fluid.optimizer.RMSProp(
+            learning_rate=fluid.layers.cosine_decay(
+                learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
+            momentum=momentum_rate,
+            regularization=fluid.regularizer.L2Decay(l2_decay),
+            # RMSProp Optimizer: Apply epsilon=1 on ImageNet.
+            epsilon=1
+        )
     else:
         lr = params["lr"]
         l2_decay = params["l2_decay"]

@@ -24,7 +24,7 @@ add_arg('image_shape',      str,  "3,224,224",          "Input image size")
 add_arg('with_mem_opt',     bool, True,                 "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,  None,                 "Whether to use pretrained model.")
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
-add_arg('save_inference',   str,  True,                 "Whether to save inference model or not")
+add_arg('save_inference',   bool, False,                 "Whether to save inference model or not")
 # yapf: enable
 
 def infer(args):
@@ -74,6 +74,8 @@ def infer(args):
                 executor=exe,
                 model_filename='model',
                 params_filename='params')
+        print("model: ",model_name," is already saved")
+        exit(0)
     test_batch_size = 1
     test_reader = paddle.batch(reader.test(), batch_size=test_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
