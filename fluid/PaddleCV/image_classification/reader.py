@@ -40,8 +40,9 @@ def random_crop(img, size, scale=None, ratio=None):
     w = 1. * aspect_ratio
     h = 1. / aspect_ratio
 
-    bound = min((float(img.shape[1]) / img.shape[0]) / (w**2),
-                (float(img.shape[0]) / img.shape[1]) / (h**2))
+
+    bound = min((float(img.shape[0]) / img.shape[1]) / (w**2),
+                (float(img.shape[1]) / img.shape[0]) / (h**2))
     scale_max = min(scale[1], bound)
     scale_min = min(scale[0], bound)
 
@@ -50,14 +51,13 @@ def random_crop(img, size, scale=None, ratio=None):
     target_size = math.sqrt(target_area)
     w = int(target_size * w)
     h = int(target_size * h)
+    i = np.random.randint(0, img.shape[0] - w + 1)
+    j = np.random.randint(0, img.shape[1] - h + 1)
 
-    i = np.random.randint(0, img.size[0] - w + 1)
-    j = np.random.randint(0, img.size[1] - h + 1)
+    img = img[i:i + w, j:j + h, :]
 
-    img = img[i:i + h, j:j + w, :]
-    resized = cv2.resize(img, (size, size))
+    resized = cv2.resize(img, (size, size), interpolation=cv2.INTER_LANCZOS4)
     return resized
-
 
 def distort_color(img):
     return img
@@ -188,23 +188,31 @@ def _reader_creator(file_list,
 
 
 def train(data_dir=DATA_DIR, pass_id_as_seed=0):
-    file_list = os.path.join(data_dir, 'train_list.txt')
+
+    #file_list = os.path.join(data_dir, 'dataset_100/train_list.txt')
+    #1000
+    file_list = os.path.join(data_dir, 'dataset_100/train_list.txt')
+    print(file_list)
+    print(os.path.join(data_dir,'dataset_100/train_images'))
+    print("===================")
     return _reader_creator(
         file_list,
         'train',
         shuffle=True,
         color_jitter=False,
         rotate=False,
-        #data_dir=data_dir,
+      #  data_dir=data_dir,
         data_dir=os.path.join(data_dir,'train'),
         pass_id_as_seed=pass_id_as_seed)
 
 
-def val(data_dir=DATA_DIR):
+def val(data_dir=DATA_DIR): 
+    #file_list = os.path.join(data_dir, 'dataset_100/val_list.txt')
+    #1000
     file_list = os.path.join(data_dir, 'val_list.txt')
     return _reader_creator(file_list, 'val', shuffle=False, 
-           # data_dir=data_dir)
-           data_dir=os.path.join(data_dir,'val'))
+        #    data_dir=data_dir)
+            data_dir=os.path.join(data_dir,'val'))
 
 
 def test(data_dir=DATA_DIR):

@@ -16,7 +16,7 @@ import functools
 import subprocess
 import utils
 import models
-from utils.learning_rate import cosine_decay
+#from utils.learning_rate import cosine_decay
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
 from utils.utility import add_arguments, print_arguments
 
@@ -80,7 +80,7 @@ def optimizer_setting(params):
         num_epochs = params["num_epochs"]
 
         optimizer = fluid.optimizer.Momentum(
-            learning_rate=cosine_decay(
+            learning_rate=fluid.layers.cosine_decay(
                 learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
             momentum=momentum_rate,
             regularization=fluid.regularizer.L2Decay(l2_decay))
