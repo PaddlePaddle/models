@@ -1,4 +1,4 @@
-from __future__ import absolute_import 
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import os
@@ -10,7 +10,7 @@ import math
 import paddle
 import paddle.fluid as fluid
 import paddle.dataset.flowers as flowers
-import reader
+import reader_old as reader
 import argparse
 import functools
 import subprocess
@@ -19,7 +19,6 @@ import models
 from utils.learning_rate import cosine_decay
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
 from utils.utility import add_arguments, print_arguments
-#from utility import add_arguments, print_arguments
 
 IMAGENET1000 = 1281167
 
@@ -47,7 +46,6 @@ add_arg('scale_loss',       float, 1.0,                  "Scale loss for fp16." 
 add_arg('l2_decay',         float, 1e-4,                 "L2_decay parameter.")
 add_arg('momentum_rate',    float, 0.9,                  "momentum_rate.")
 
-# yapf: enable
 def optimizer_setting(params):
     ls = params["learning_strategy"]
     l2_decay = params["l2_decay"]
@@ -334,7 +332,7 @@ def train(args):
 
                 if batch_id % 10 == 0:
                     print("Pass {0}, trainbatch {1}, loss {2}, \
-                        acc1 {3}, acc5 {4}, lr{5}, time {6}"
+                        acc1 {3}, acc5 {4}, lr {5}, time {6}"
                           .format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%.5f" %
                                   lr, "%2.2f sec" % period))
                     sys.stdout.flush()
