@@ -12,7 +12,6 @@ python train.py \
        --lr=0.1 \
        --num_epochs=200 \
        --l2_decay=1.2e-4 \
-       --model_category=models_name \
 #      >log_SE_ResNeXt50_32x4d.txt 2>&1 &
 #AlexNet:
 #python train.py \
@@ -23,7 +22,6 @@ python train.py \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
 #       --with_mem_opt=True \
-#       --model_category=models_name \
 #       --lr_strategy=piecewise_decay \
 #	--num_epochs=120 \
 #       --lr=0.01 \
@@ -38,7 +36,6 @@ python train.py \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
 #       --with_mem_opt=True \
-#       --model_category=models_name \
 #       --lr_strategy=piecewise_decay \
 #	--num_epochs=120 \
 #       --lr=0.1 \
@@ -51,12 +48,63 @@ python train.py \
 #	--class_dim=1000 \
 #	--image_shape=3,224,224 \
 #	--model_save_dir=output/ \
-#       --model_category=models_name \
 #	--with_mem_opt=True \
 #	--lr_strategy=cosine_decay \
 #	--num_epochs=240 \
 #	--lr=0.1 \
 #       --l2_decay=4e-5
+#ResNet18:
+#python train.py \
+#	--model=ResNet18 \
+#	--batch_size=256 \
+#	--total_images=1281167 \
+#	--class_dim=1000 \
+#	--image_shape=3,224,224 \
+#	--model_save_dir=output/ \
+#	--with_mem_opt=True \
+#	--lr_strategy=cosine_decay \
+#	--lr=0.1 \
+#	--num_epochs=120 \
+#	--l2_decay=1e-4
+#ResNet34:
+#python train.py \
+#	--model=ResNet34 \
+#	--batch_size=256 \
+#	--total_images=1281167 \
+#	--class_dim=1000 \
+#	--image_shape=3,224,224 \
+#	--model_save_dir=output/ \
+#	--with_mem_opt=True \
+#	--lr_strategy=cosine_decay \
+#	--lr=0.1 \
+#	--num_epochs=120 \
+#	--l2_decay=1e-4
+#ShuffleNetv2:
+#python train.py \
+#	--model=ShuffleNetV2 \
+#	--batch_size=1024 \
+#	--total_images=1281167 \
+#	--class_dim=1000 \
+#	--image_shape=3,224,224 \
+#	--model_save_dir=output/ \
+#	--with_mem_opt=True \
+#	--lr_strategy=cosine_decay_with_warmup \
+#	--lr=0.5 \
+#	--num_epochs=240 \
+#	--l2_decay=4e-5 
+#GoogleNet:
+#python train.py \
+#	--model=GoogleNet \
+#	--batch_size=256 \
+#	--total_images=1281167 \
+#	--class_dim=1000 \
+#	--image_shape=3,224,224 \
+#	--model_save_dir=output/ \
+#	--with_mem_opt=True \
+#	--lr_strategy=cosine_decay \
+#	--lr=0.01 \
+#	--num_epochs=200 \
+#	--l2_decay=1e-4
 #ResNet50:
 #python train.py \
 #       --model=ResNet50 \
@@ -66,7 +114,6 @@ python train.py \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
 #       --with_mem_opt=True \
-#       --model_category=models_name \
 #       --lr_strategy=piecewise_decay \
 #	--num_epochs=120 \
 #       --lr=0.1 \
@@ -80,7 +127,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --model_category=models_name \
 #       --with_mem_opt=True \
 #       --lr_strategy=piecewise_decay \
 #	--num_epochs=120 \
@@ -96,7 +142,6 @@ python train.py \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
 #       --lr_strategy=piecewise_decay \
-#       --model_category=models_name \
 #       --with_mem_opt=True \
 #       --lr=0.1 \
 #       --num_epochs=120 \
@@ -111,7 +156,6 @@ python train.py \
 #	--class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --lr_strategy=cosine_decay \
-#	--model_category=models_name \
 #       --model_save_dir=output/ \
 #       --lr=0.1 \
 #       --num_epochs=200 \
@@ -126,7 +170,6 @@ python train.py \
 #        --class_dim=1000 \
 #        --image_shape=3,224,224 \
 #        --lr_strategy=cosine_decay \
-#        --model_category=models_name \
 #        --model_save_dir=output/ \
 #        --lr=0.1 \
 #        --num_epochs=200 \
@@ -141,7 +184,6 @@ python train.py \
 #        --image_shape=3,224,224 \
 #        --lr_strategy=cosine_decay \
 #        --class_dim=1000 \
-#        --model_category=models_name \
 #        --model_save_dir=output/ \
 #        --lr=0.1 \
 #        --num_epochs=90 \
@@ -158,7 +200,6 @@ python train.py \
 #        --lr_strategy=cosine_decay \
 #        --lr=0.01 \
 #        --num_epochs=90 \
-#        --model_category=models_name \
 #        --model_save_dir=output/ \
 #        --with_mem_opt=True \
 #        --l2_decay=3e-4
@@ -171,7 +212,6 @@ python train.py \
 #       --class_dim=1000 \
 #	--lr_strategy=cosine_decay \
 #	--image_shape=3,224,224 \
-#	--model_category=models_name \
 #       --model_save_dir=output/ \
 #	--lr=0.01 \
 #	--num_epochs=90 \
@@ -189,7 +229,6 @@ python train.py \
 #	--lr=0.01 \
 #	--num_epochs=90 \
 #       --with_mem_opt=True \
-#	--model_category=models_name \
 #       --model_save_dir=output/ \
 #	--l2_decay=3e-4
 
@@ -205,7 +244,6 @@ python train.py \
 #    --lr=0.001 \
 #    --num_epochs=120 \
 #    --with_mem_opt=False \
-#    --model_category=models_name \
 #    --model_save_dir=output/ \
 #    --lr_strategy=adam \
 #    --use_gpu=False

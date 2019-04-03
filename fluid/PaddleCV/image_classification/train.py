@@ -18,6 +18,7 @@ import utils
 import models
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
 from utils.utility import add_arguments, print_arguments
+from utils.learning_rate import cosine_decay_with_warmup
 
 IMAGENET1000 = 1281167
 
@@ -83,6 +84,25 @@ def optimizer_setting(params):
                 learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
             momentum=momentum_rate,
             regularization=fluid.regularizer.L2Decay(l2_decay))
+
+    elif ls["name"] == "cosine_warmup_decay":
+        if "total_images" not in params:
+            total_images = IMAGENET1000
+        else:
+            total_images = params["total_images"]
+        batch_size = ls["batch_size"]
+        l2_decay = params["l2_decay"]
+        momentum_rate = params["momentum_rate"]
+	step = int(math.ceil(float(total_images) / batch_size))
+        lr = params["lr"]
+        num_epochs = params["num_epochs"]
+
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=cosine_decay_with_warmup(
+                learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
+            momentum=momentum_rate,
+            regularization=fluid.regularizer.L2Decay(l2_decay))
+
     elif ls["name"] == "linear_decay":
         if "total_images" not in params:
             total_images = IMAGENET1000
@@ -104,7 +124,7 @@ def optimizer_setting(params):
     elif ls["name"] == "adam":
         lr = params["lr"]
         optimizer = fluid.optimizer.Adam(learning_rate=lr)
-    elif ls["name"] == "RMSProp_cosine":
+    elif ls["name"] == "rmsprop_cosine":
         if "total_images" not in params:
             total_images = IMAGENET1000
         else:

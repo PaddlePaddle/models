@@ -84,23 +84,13 @@ python train.py \
 
 在```run.sh```中有用于训练的脚本.
 
-**数据读取器说明：** 数据读取器定义在```reader.py```中。一般, CV2可以提高数据读取速度, PIL reader可以得到相对更高的精度, 我们现在提供基于CV2的数据读取器, 在[训练阶段](#模型训练), 默认采用的增广方式是随机裁剪与水平翻转, 而在[模型评估](#模型评估)与[模型预测](#模型预测)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
+**数据读取器说明：** 数据读取器定义在```reader.py```和```reader_cv2.py```中。一般, CV2可以提高数据读取速度, PIL reader可以得到相对更高的精度, 我们现在默认基于PIL的数据读取器, 在[训练阶段](#模型训练), 默认采用的增广方式是随机裁剪与水平翻转, 而在[模型评估](#模型评估)与[模型预测](#模型预测)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
 * 旋转
 * 颜色抖动
 * 随机裁剪
 * 中心裁剪
 * 长宽调整
 * 水平翻转
-
-**训练结果：** AlexNet的训练日志如下所示：
-```
-End pass 1, train_loss 6.23153877258, train_acc1 0.0150696625933, train_acc5 0.0552518665791, test_loss 5.41981744766, test_acc1 0.0519132651389, test_acc5 0.156150355935
-End pass 2, train_loss 5.15442800522, train_acc1 0.0784279331565, train_acc5 0.211050540209, test_loss 4.45795249939, test_acc1 0.140469551086, test_acc5 0.333163291216
-End pass 3, train_loss 4.51505613327, train_acc1 0.145300447941, train_acc5 0.331567406654, test_loss 3.86548018456, test_acc1 0.219443559647, test_acc5 0.446448504925
-End pass 4, train_loss 4.12735557556, train_acc1 0.19437250495, train_acc5 0.405713528395, test_loss 3.56990146637, test_acc1 0.264536827803, test_acc5 0.507190704346
-End pass 5, train_loss 3.87505435944, train_acc1 0.229518383741, train_acc5 0.453582793474, test_loss 3.35345435143, test_acc1 0.297349333763, test_acc5 0.54753267765
-...
-```
 
 ## 混合精度训练
 
@@ -137,17 +127,6 @@ python eval.py \
        --pretrained_model=${path_to_pretrain_model}
 ```
 
-根据这个评估程序的配置，输出日志形式如下：
-```
-Testbatch 0,loss 2.1786134243, acc1 0.625,acc5 0.8125,time 0.48 sec
-Testbatch 10,loss 0.898496925831, acc1 0.75,acc5 0.9375,time 0.51 sec
-Testbatch 20,loss 1.32524681091, acc1 0.6875,acc5 0.9375,time 0.37 sec
-Testbatch 30,loss 1.46830511093, acc1 0.5,acc5 0.9375,time 0.51 sec
-Testbatch 40,loss 1.12802267075, acc1 0.625,acc5 0.9375,time 0.35 sec
-Testbatch 50,loss 0.881597697735, acc1 0.8125,acc5 1.0,time 0.32 sec
-...
-```
-
 ## 模型预测
 模型预测可以获取一个模型的预测分数或者图像的特征：
 ```
@@ -157,16 +136,6 @@ python infer.py \
        --image_shape=3,224,224 \
        --with_mem_opt=True \
        --pretrained_model=${path_to_pretrain_model}
-```
-输出的预测结果包括最高分数(未经过softmax处理)以及相应的预测标签。
-```
-Test-0-score: [13.168352], class [491]
-Test-1-score: [7.913302], class [975]
-Test-2-score: [16.959702], class [21]
-Test-3-score: [14.197695], class [383]
-Test-4-score: [12.607652], class [878]
-Test-5-score: [17.725458], class [15]
-...
 ```
 
 ## 已有模型及其性能
