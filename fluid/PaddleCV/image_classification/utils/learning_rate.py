@@ -20,6 +20,7 @@ def cosine_decay(learning_rate, step_each_epoch, epochs=120):
         decayed_lr = learning_rate * \
                      (ops.cos(epoch * (math.pi / epochs)) + 1)/2
     return decayed_lr
+
 def cosine_decay_with_warmup(learning_rate, step_each_epoch, epochs=120):
     """Applies cosine decay to the learning rate.
     lr = 0.05 * (math.cos(epoch * (math.pi / 120)) + 1)
