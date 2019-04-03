@@ -96,8 +96,11 @@ def train(args):
 
     if args.init_model is not None:
         print("load model from: %s" % args.init_model)
-        sys.stdout.flush()
-        fluid.io.load_params(exe, args.init_model)
+
+        def if_exist(var):
+            return os.path.exists(os.path.join(args.init_model, var.name))
+
+        fluid.io.load_vars(exe, args.init_model, predicate=if_exist)
 
     iter_id = 0
     t_loss = 0.
