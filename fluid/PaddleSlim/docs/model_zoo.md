@@ -76,9 +76,9 @@ optimizer = fluid.optimizer.Momentum(
 
 | flops |model size| 精度（top5/top1） |下载模型|
 |---|---|---|---|
-| -50%|-59.4%(6.9M) |88.22% / 68.41%   |[点击下载]()|
-| -60%|-70.6%(5.0M)|87.01% / 66.31% |[点击下载]()|
-| -70%|-78.8%(3.6M)|85.30% / 63.41%  |[点击下载]()|
+| -50%|-59.4%(6.9M) |88.22% / 68.41%   |[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_0.5_model.tar.gz)|
+| -60%|-70.6%(5.0M)|87.01% / 66.31% |[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_0.6_model.tar.gz)|
+| -70%|-78.8%(3.6M)|85.30% / 63.41%  |[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_0.7_model.tar.gz)|
 
 ### 2.2 基于敏感度一次性剪切
 
@@ -102,7 +102,7 @@ optimizer = fluid.optimizer.Momentum(
 
 | flops |model size|精度（top5/top1） |模型下载|
 |---|---|---|---|
-| -50%|-61.2%(6.6M)|  88.47% / 68.68% |[点击下载]()|
+| -50%|-61.2%(6.6M)|  88.47% / 68.68% |[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_0.5-1step.tar.gz)|
 
 ### 2.3 基于敏感度分步剪切
 
@@ -128,9 +128,9 @@ optimizer = fluid.optimizer.Momentum(
 
 | flops |精度（top5/top1）|模型下载 |
 |---|---|---|
-| -20%|90.08% / 71.48% |[点击下载]()|
-| -36%|89.62% / 70.83%|[点击下载]()|
-| -50%|88.77% / 69.31%|[点击下载]()|
+| -20%|90.08% / 71.48% |[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_3step_0.2_model.tar.gz)|
+| -36%|89.62% / 70.83%|[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_3step_0.36_model.tar.gz)|
+| -50%|88.77% / 69.31%|[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_3step_0.5_model.tar.gz)|
 
 
 ### 2.4 Uniform剪切
@@ -155,9 +155,9 @@ optimizer = fluid.optimizer.Momentum(
 
 | flops |model size|精度（top5/top1） |模型下载 |
 |---|---|---|---|
-| -50%|-47.0%(9.0M) | 89.13% / 69.83%|[点击下载]()|
-| -60%|-55.9%(7.5M)|88.22% / 68.24%| [点击下载]()|
-| -70%|-65.3%(5.9M)|86.99% / 66.57%| [点击下载]()|
+| -50%|-47.0%(9.0M) | 89.13% / 69.83%|[点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.5_model.tar.gz)|
+| -60%|-55.9%(7.5M)|88.22% / 68.24%| [点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.6_model.tar.gz)|
+| -70%|-65.3%(5.9M)|86.99% / 66.57%| [点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.7_model.tar.gz)|
 
 
 ## 3. 蒸馏
@@ -187,7 +187,7 @@ optimizer = fluid.optimizer.Momentum(
 
 |- |精度(top5/top1) |收益(top5/top1)|模型下载 |
 |---|---|---|---|
-| resnet50蒸馏训| 90.92% / 71.97%| +1.28% / +1.06%| [点击下载]()|
+| resnet50蒸馏训| 90.92% / 71.97%| +1.28% / +1.06%| [点击下载](https://paddle-slim-models.bj.bcebos.com/mobilenetv1_resnet50_distillation_model.tar.gz)|
 
 
 ## 4. 组合实验

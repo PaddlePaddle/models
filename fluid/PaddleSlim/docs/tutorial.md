@@ -95,7 +95,7 @@ $$
 由图3可知，权重更新所需的梯度值可以由量化后的权重和量化后的激活求得。反向传播过程中的所有输入和输出均为32-bit浮点型数据。注意，梯度更新操作需要在原始权重上进行，即计算出的梯度将被加到原始权重上而非量化后或反量化后的权重上。
 
 <p align="center">
-<img src="images/tutorial/quan_bwd.png" height=650 width=300 hspace='10'/> <br />
+<img src="images/tutorial/quan_bwd.png" height=300 width=650 hspace='10'/> <br />
 <strong>图3：基于模拟量化训练的反向传播和权重更新过程</strong>
 </p>
 

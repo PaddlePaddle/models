@@ -28,7 +28,7 @@
 - [通用功能使用说明](#1-paddleslim通用功能使用介绍)
 - [量化使用说明](#21-量化训练)
 - [剪切使用说明](#22-卷积核剪切)
-- [蒸馏使用介绍](#23-蒸馏)
+- [蒸馏使用说明](#23-蒸馏)
 
 
 ## 1. PaddleSlim通用功能使用介绍
@@ -54,19 +54,20 @@
 
 #### 1.1.2.1 网络结构的定义
 首先参考以下文档，配置网络：
-[Paddle使用指南：配置简单的网络](http://paddlepaddle.org/documentation/docs/zh/1.3/user_guides/howto/configure_simple_model/index.html)
+[《Paddle使用指南：配置简单的网络》](http://paddlepaddle.org/documentation/docs/zh/1.3/user_guides/howto/configure_simple_model/index.html)
 
 这一步的产出应该是两个[Program](http://paddlepaddle.org/documentation/docs/zh/1.3/api_cn/fluid_cn.html#program)实例：
 
-**train_program:** 用于在压缩过程中迭代训练模型，该program必须包含loss。一般改program不要有backward op和weights update op，否则不能使用蒸馏策略。
-**eval_program:** 用于在压缩过程中评估模型的精度，一般会包含accuracy、IoU等评估指标的计算layer。
+- **train_program:** 用于在压缩过程中迭代训练模型，该program必须包含loss。一般改program不要有backward op和weights update op，否则不能使用蒸馏策略。
+
+- **eval_program:** 用于在压缩过程中评估模型的精度，一般会包含accuracy、IoU等评估指标的计算layer。
 
 >在量化训练策略中，会根据eval_program进行网络结构剪枝并保存一个用于inference的量化模型。这时候，就要求inference网络是eval_program的一个子网络。
 
 #### 1.1.2.2. data_reader
 
 按照以下文档准备数据：
-[Paddle使用指南：准备数据](http://paddlepaddle.org/documentation/docs/zh/1.3/user_guides/howto/prepare_data/index.html)
+[《Paddle使用指南：准备数据》](http://paddlepaddle.org/documentation/docs/zh/1.3/user_guides/howto/prepare_data/index.html)
 
 这一步需要产出两个DataReader:
 
@@ -203,16 +204,14 @@ compress_pass:
         - pruning_strategy_1
 ```
 
-一个完整的配置文件示例: [compress.yaml]()
-
 
 ## 2. 模型压缩策略使用介绍
 
-本章依次介绍量化训练、卷积核剪切和蒸馏三种策略的使用方式，在词之前建议先浏览相应策略的原理介绍：
+本章依次介绍量化训练、卷积核剪切和蒸馏三种策略的使用方式，在此之前建议先浏览相应策略的原理介绍：
 
-- [量化训练原理]()
-- [卷积核剪切原理]()
-- [蒸馏原理]()
+- [量化训练原理](tutorial.md#1-quantization-aware-training量化介绍)
+- [卷积核剪切原理](tutorial.md#2-卷积核剪切原理)
+- [蒸馏原理](tutorial.md#3-蒸馏)
 
 ### 2.1 量化训练
 
