@@ -45,7 +45,7 @@ def cosine_decay_with_warmup(learning_rate, step_each_epoch, epochs=120):
             with switch.default():
                 decayed_lr = learning_rate * \
                     (ops.cos((global_step - warmup_epoch * step_each_epoch) * (math.pi / (epochs * step_each_epoch))) + 1)/2
-               fluid.layers.tensor.assign(input=decayed_lr, output=lr)
+                fluid.layers.tensor.assign(input=decayed_lr, output=lr)
     return lr
 
 def lr_warmup(learning_rate, warmup_steps, start_lr, end_lr):
