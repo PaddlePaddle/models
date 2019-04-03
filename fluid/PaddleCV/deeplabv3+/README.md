@@ -94,7 +94,7 @@ python ./eval.py \
     --norm_type=gn \
     --dataset_path=$DATASET_PATH
 ```
-需要通过选项`--model_path`指定模型文件。测试脚本的输出的评估指标为mean IoU。
+需要通过选项`--init_weights_path`指定模型文件。测试脚本的输出的评估指标为mean IoU。
 
 
 ## 实验结果
