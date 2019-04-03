@@ -10,13 +10,12 @@ import math
 import paddle
 import paddle.fluid as fluid
 import paddle.dataset.flowers as flowers
-import reader_old as reader
+import reader as reader
 import argparse
 import functools
 import subprocess
 import utils
 import models
-#from utils.learning_rate import cosine_decay
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
 from utils.utility import add_arguments, print_arguments
 
@@ -25,7 +24,7 @@ IMAGENET1000 = 1281167
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('batch_size',       int,   64,                  "Minibatch size.")
+add_arg('batch_size',       int,   256,                  "Minibatch size.")
 add_arg('use_gpu',          bool,  True,                 "Whether to use GPU or not.")
 add_arg('total_images',     int,   1281167,              "Training image number.")
 add_arg('num_epochs',       int,   120,                  "number of epochs.")
