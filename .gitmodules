@@ -10,3 +10,6 @@
 [submodule "fluid/PaddleNLP/LARK"]
 	path = fluid/PaddleNLP/LARK
 	url = https://github.com/PaddlePaddle/LARK
+[submodule "fluid/PaddleNLP/knowledge-driven-dialogue"]
+	path = fluid/PaddleNLP/knowledge-driven-dialogue
+	url = https://github.com/baidu/knowledge-driven-dialogue
