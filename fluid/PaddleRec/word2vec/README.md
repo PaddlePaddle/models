@@ -26,18 +26,24 @@
 
 ```bash
 wget http://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz
+tar xzvf 1-billion-word-language-modeling-benchmark-r13output.tar
+mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled/ data/
 ```
 
 备用数据地址下载命令如下
 
 ```bash
 wget https://paddlerec.bj.bcebos.com/word2vec/1-billion-word-language-modeling-benchmark-r13output.tar
+tar xvf 1-billion-word-language-modeling-benchmark-r13output.tar
+mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled/ data/
 ```
 
 为了方便快速验证，我们也提供了经典的text8样例数据集，包含1700w个词。 下载命令如下
 
 ```bash
 wget https://paddlerec.bj.bcebos.com/word2vec/text.tar
+tar xvf text.tar
+mv text data/
 ```
 
 
