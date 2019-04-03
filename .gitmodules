@@ -9,7 +9,7 @@
 	url = https://github.com/baidu/Senta.git
 [submodule "PaddleNLP/LARK"]
 	path = PaddleNLP/LARK
-	url = https://github.com/PaddlePaddle/LARK
+	url = https://github.com/PaddlePaddle/LARK.git
 [submodule "PaddleNLP/knowledge-driven-dialogue"]
 	path = PaddleNLP/knowledge-driven-dialogue
 	url = https://github.com/baidu/knowledge-driven-dialogue
