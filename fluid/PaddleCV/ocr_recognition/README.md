@@ -156,10 +156,10 @@ env CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --parallel=True
 通过以下命令调用评估脚本用指定数据集对模型进行评估：
 
 ```
-env CUDA_VISIBLE_DEVICE=0 python eval.py \
+env CUDA_VISIBLE_DEVICES=0 python eval.py \
     --model_path="./models/model_0" \
     --input_images_dir="./eval_data/images/" \
-    --input_images_list="./eval_data/eval_list\" \
+    --input_images_list="./eval_data/eval_list"
 ```
 
 执行`python train.py --help`可查看参数详细说明。
@@ -170,7 +170,7 @@ env CUDA_VISIBLE_DEVICE=0 python eval.py \
 从标准输入读取一张图片的路径，并对齐进行预测：
 
 ```
-env CUDA_VISIBLE_DEVICE=0 python infer.py \
+env CUDA_VISIBLE_DEVICES=0 python infer.py \
     --model_path="models/model_00044_15000"
 ```
 
