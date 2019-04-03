@@ -26,9 +26,6 @@ class AlexNet():
 
     def net(self, input, class_dim=1000):
         stdv = 1.0 / math.sqrt(input.shape[1] * 11 * 11)
-        layer_name = [
-            "conv1", "conv2", "conv3", "conv4", "conv5", "fc6", "fc7", "fc8"
-        ]
         conv1 = fluid.layers.conv2d(
             input=input,
             num_filters=64,
@@ -38,11 +35,9 @@ class AlexNet():
             groups=1,
             act='relu',
             bias_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[0] + "_offset"),
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
             param_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[0] + "_weights"))
+                initializer=fluid.initializer.Uniform(-stdv, stdv)))
         pool1 = fluid.layers.pool2d(
             input=conv1,
             pool_size=3,
@@ -60,11 +55,9 @@ class AlexNet():
             groups=1,
             act='relu',
             bias_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[1] + "_offset"),
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
             param_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[1] + "_weights"))
+                initializer=fluid.initializer.Uniform(-stdv, stdv)))
         pool2 = fluid.layers.pool2d(
             input=conv2,
             pool_size=3,
@@ -82,11 +75,9 @@ class AlexNet():
             groups=1,
             act='relu',
             bias_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[2] + "_offset"),
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
             param_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[2] + "_weights"))
+                initializer=fluid.initializer.Uniform(-stdv, stdv)))
 
         stdv = 1.0 / math.sqrt(conv3.shape[1] * 3 * 3)
         conv4 = fluid.layers.conv2d(
@@ -98,11 +89,9 @@ class AlexNet():
             groups=1,
             act='relu',
             bias_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[3] + "_offset"),
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
             param_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[3] + "_weights"))
+                initializer=fluid.initializer.Uniform(-stdv, stdv)))
 
         stdv = 1.0 / math.sqrt(conv4.shape[1] * 3 * 3)
         conv5 = fluid.layers.conv2d(
@@ -114,11 +103,9 @@ class AlexNet():
             groups=1,
             act='relu',
             bias_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[4] + "_offset"),
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
             param_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[4] + "_weights"))
+                initializer=fluid.initializer.Uniform(-stdv, stdv)))
         pool5 = fluid.layers.pool2d(
             input=conv5,
             pool_size=3,
@@ -127,42 +114,36 @@ class AlexNet():
             pool_type='max')
 
         drop6 = fluid.layers.dropout(x=pool5, dropout_prob=0.5)
+
         stdv = 1.0 / math.sqrt(drop6.shape[1] * drop6.shape[2] *
                                drop6.shape[3] * 1.0)
-
         fc6 = fluid.layers.fc(
             input=drop6,
             size=4096,
             act='relu',
             bias_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[5] + "_offset"),
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
             param_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[5] + "_weights"))
+                initializer=fluid.initializer.Uniform(-stdv, stdv)))
 
         drop7 = fluid.layers.dropout(x=fc6, dropout_prob=0.5)
-        stdv = 1.0 / math.sqrt(drop7.shape[1] * 1.0)
 
+        stdv = 1.0 / math.sqrt(drop7.shape[1] * 1.0)
         fc7 = fluid.layers.fc(
             input=drop7,
             size=4096,
             act='relu',
             bias_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[6] + "_offset"),
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
             param_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[6] + "_weights"))
+                initializer=fluid.initializer.Uniform(-stdv, stdv)))
 
         stdv = 1.0 / math.sqrt(fc7.shape[1] * 1.0)
         out = fluid.layers.fc(
             input=fc7,
             size=class_dim,
             bias_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[7] + "_offset"),
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
             param_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv),
-                name=layer_name[7] + "_weights"))
+                initializer=fluid.initializer.Uniform(-stdv, stdv)))
         return out

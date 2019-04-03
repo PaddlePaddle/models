@@ -156,13 +156,12 @@ def _reader_creator(file_list,
             for line in lines:
                 if mode == 'train' or mode == 'val':
                     img_path, label = line.split()
-                    #img_path = img_path.replace("JPEG", "jpeg")
                     img_path = os.path.join(data_dir, img_path)
                     yield img_path, int(label)
                 elif mode == 'test':
                     img_path, label = line.split()
-                    #img_path = img_path.replace("JPEG", "jpeg")
                     img_path = os.path.join(data_dir, img_path)
+
                     yield [img_path]
 
     mapper = functools.partial(
@@ -185,9 +184,11 @@ def train(data_dir=DATA_DIR, pass_id_as_seed=0):
 
 def val(data_dir=DATA_DIR):
     file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(file_list, 'val', shuffle=False, data_dir=data_dir)
+    return _reader_creator(file_list, 'val', shuffle=False, 
+            data_dir=data_dir)
 
 
 def test(data_dir=DATA_DIR):
     file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(file_list, 'test', shuffle=False, data_dir=data_dir)
+    return _reader_creator(file_list, 'test', shuffle=False, 
+            data_dir=data_dir)

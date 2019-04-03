@@ -10,14 +10,15 @@ import math
 import paddle
 import paddle.fluid as fluid
 import paddle.dataset.flowers as flowers
-import reader
+import reader as reader
 import argparse
 import functools
 import subprocess
 import utils
-from utils.learning_rate import cosine_decay
+import models
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
-from utility import add_arguments, print_arguments
+from utils.utility import add_arguments, print_arguments
+from utils.learning_rate import cosine_decay_with_warmup
 
 IMAGENET1000 = 1281167
 
@@ -44,19 +45,6 @@ add_arg('fp16',             bool,  False,                "Enable half precision 
 add_arg('scale_loss',       float, 1.0,                  "Scale loss for fp16." )
 add_arg('l2_decay',         float, 1e-4,                 "L2_decay parameter.")
 add_arg('momentum_rate',    float, 0.9,                  "momentum_rate.")
-# yapf: enable
-
-
-def set_models(model_category):
-    global models
-    assert model_category in ["models", "models_name"
-                              ], "{} is not in lists: {}".format(
-                                  model_category, ["models", "models_name"])
-    if model_category == "models_name":
-        import models_name as models
-    else:
-        import models as models
-
 
 def optimizer_setting(params):
     ls = params["learning_strategy"]
@@ -68,8 +56,7 @@ def optimizer_setting(params):
         else:
             total_images = params["total_images"]
         batch_size = ls["batch_size"]
-        step = int(total_images / batch_size + 1)
-
+        step = int(math.ceil(float(total_images) / batch_size))
         bd = [step * e for e in ls["epochs"]]
         base_lr = params["lr"]
         lr = []
@@ -88,16 +75,34 @@ def optimizer_setting(params):
         batch_size = ls["batch_size"]
         l2_decay = params["l2_decay"]
         momentum_rate = params["momentum_rate"]
-        step = int(total_images / batch_size + 1)
-
+	step = int(math.ceil(float(total_images) / batch_size))
         lr = params["lr"]
         num_epochs = params["num_epochs"]
 
         optimizer = fluid.optimizer.Momentum(
-            learning_rate=cosine_decay(
+            learning_rate=fluid.layers.cosine_decay(
                 learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
             momentum=momentum_rate,
             regularization=fluid.regularizer.L2Decay(l2_decay))
+
+    elif ls["name"] == "cosine_warmup_decay":
+        if "total_images" not in params:
+            total_images = IMAGENET1000
+        else:
+            total_images = params["total_images"]
+        batch_size = ls["batch_size"]
+        l2_decay = params["l2_decay"]
+        momentum_rate = params["momentum_rate"]
+	step = int(math.ceil(float(total_images) / batch_size))
+        lr = params["lr"]
+        num_epochs = params["num_epochs"]
+
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=cosine_decay_with_warmup(
+                learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
+            momentum=momentum_rate,
+            regularization=fluid.regularizer.L2Decay(l2_decay))
+
     elif ls["name"] == "linear_decay":
         if "total_images" not in params:
             total_images = IMAGENET1000
@@ -119,6 +124,25 @@ def optimizer_setting(params):
     elif ls["name"] == "adam":
         lr = params["lr"]
         optimizer = fluid.optimizer.Adam(learning_rate=lr)
+    elif ls["name"] == "rmsprop_cosine":
+        if "total_images" not in params:
+            total_images = IMAGENET1000
+        else:
+            total_images = params["total_images"]
+        batch_size = ls["batch_size"]
+        l2_decay = params["l2_decay"]
+        momentum_rate = params["momentum_rate"]
+        step = int(math.ceil(float(total_images) / batch_size))
+        lr = params["lr"]
+        num_epochs = params["num_epochs"]
+        optimizer = fluid.optimizer.RMSProp(
+            learning_rate=fluid.layers.cosine_decay(
+                learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
+            momentum=momentum_rate,
+            regularization=fluid.regularizer.L2Decay(l2_decay),
+            # RMSProp Optimizer: Apply epsilon=1 on ImageNet.
+            epsilon=1
+        )
     else:
         lr = params["lr"]
         l2_decay = params["l2_decay"]
@@ -129,7 +153,6 @@ def optimizer_setting(params):
             regularization=fluid.regularizer.L2Decay(l2_decay))
 
     return optimizer
-
 
 def net_config(image, label, model, args):
     model_list = [m for m in dir(models) if "__" not in m]
@@ -220,6 +243,13 @@ def build_program(is_train, main_prog, startup_prog, args):
     else:
         return py_reader, avg_cost, acc_top1, acc_top5
 
+def get_device_num():
+    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
+    if visible_device:
+        device_num = len(visible_device.split(','))
+    else:
+        device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
+    return device_num
 
 def train(args):
     # parameters from arguments
@@ -268,12 +298,7 @@ def train(args):
             exe, pretrained_model, main_program=train_prog, predicate=if_exist)
 
     if args.use_gpu:
-        visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
-        if visible_device:
-            device_num = len(visible_device.split(','))
-        else:
-            device_num = subprocess.check_output(
-                ['nvidia-smi', '-L']).decode().count('\n')
+        device_num = get_device_num()
     else:
         device_num = 1
     train_batch_size = args.batch_size / device_num
@@ -345,8 +370,8 @@ def train(args):
 
                 if batch_id % 10 == 0:
                     print("Pass {0}, trainbatch {1}, loss {2}, \
-                        acc1 {3}, acc5 {4}, lr{5}, time {6}"
-                          .format(pass_id, batch_id, loss, acc1, acc5, "%.5f" %
+                        acc1 {3}, acc5 {4}, lr {5}, time {6}"
+                          .format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%.5f" %
                                   lr, "%2.2f sec" % period))
                     sys.stdout.flush()
                 batch_id += 1
@@ -378,7 +403,7 @@ def train(args):
                 if test_batch_id % 10 == 0:
                     print("Pass {0},testbatch {1},loss {2}, \
                         acc1 {3},acc5 {4},time {5}"
-                          .format(pass_id, test_batch_id, loss, acc1, acc5,
+                          .format(pass_id, test_batch_id, "%.5f"%loss,"%.5f"%acc1, "%.5f"%acc5,
                                   "%2.2f sec" % period))
                     sys.stdout.flush()
                 test_batch_id += 1
@@ -391,8 +416,8 @@ def train(args):
 
         print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3}, "
               "test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(
-                  pass_id, train_loss, train_acc1, train_acc5, test_loss,
-                  test_acc1, test_acc5))
+                  pass_id, "%.5f"%train_loss, "%.5f"%train_acc1, "%.5f"%train_acc5, "%.5f"%test_loss,
+                  "%.5f"%test_acc1, "%.5f"%test_acc5))
         sys.stdout.flush()
 
         model_path = os.path.join(model_save_dir + '/' + model_name,
@@ -429,7 +454,6 @@ def train(args):
 
 def main():
     args = parser.parse_args()
-    set_models(args.model_category)
     print_arguments(args)
     train(args)
 

@@ -7,7 +7,6 @@ import time
 import sys
 import paddle.fluid as fluid
 import math
-from paddle.fluid.param_attr import ParamAttr
 
 __all__ = ["DPN", "DPN68", "DPN92", "DPN98", "DPN107", "DPN131"]
 
@@ -53,30 +52,16 @@ class DPN(object):
             padding=init_padding,
             groups=1,
             act=None,
-            bias_attr=False,
-            name="conv1",
-            param_attr=ParamAttr(name="conv1_weights"), )
-
+            bias_attr=False)
         conv1_x_1 = fluid.layers.batch_norm(
-            input=conv1_x_1,
-            act='relu',
-            is_test=False,
-            name="conv1_bn",
-            param_attr=ParamAttr(name='conv1_bn_scale'),
-            bias_attr=ParamAttr('conv1_bn_offset'),
-            moving_mean_name='conv1_bn_mean',
-            moving_variance_name='conv1_bn_variance', )
-
+            input=conv1_x_1, act='relu', is_test=False)
         convX_x_x = fluid.layers.pool2d(
             input=conv1_x_1,
             pool_size=3,
             pool_stride=2,
             pool_padding=1,
-            pool_type='max',
-            name="pool1")
+            pool_type='max')
 
-        #conv2 - conv5
-        match_list, num = [], 0
         for gc in range(4):
             bw = bws[gc]
             inc = inc_sec[gc]
@@ -84,46 +69,32 @@ class DPN(object):
             if gc == 0:
                 _type1 = 'proj'
                 _type2 = 'normal'
-                match = 1
             else:
                 _type1 = 'down'
                 _type2 = 'normal'
-                match = match + k_sec[gc - 1]
-            match_list.append(match)
-
-            convX_x_x = self.dual_path_factory(
-                convX_x_x, R, R, bw, inc, G, _type1, name="dpn" + str(match))
+            convX_x_x = self.dual_path_factory(convX_x_x, R, R, bw, inc, G,
+                                               _type1)
             for i_ly in range(2, k_sec[gc] + 1):
-                num += 1
-                if num in match_list:
-                    num += 1
-                convX_x_x = self.dual_path_factory(
-                    convX_x_x, R, R, bw, inc, G, _type2, name="dpn" + str(num))
+                convX_x_x = self.dual_path_factory(convX_x_x, R, R, bw, inc, G,
+                                                   _type2)
 
         conv5_x_x = fluid.layers.concat(convX_x_x, axis=1)
         conv5_x_x = fluid.layers.batch_norm(
-            input=conv5_x_x,
-            act='relu',
-            is_test=False,
-            name="final_concat_bn",
-            param_attr=ParamAttr(name='final_concat_bn_scale'),
-            bias_attr=ParamAttr('final_concat_bn_offset'),
-            moving_mean_name='final_concat_bn_mean',
-            moving_variance_name='final_concat_bn_variance', )
+            input=conv5_x_x, act='relu', is_test=False)
         pool5 = fluid.layers.pool2d(
             input=conv5_x_x,
             pool_size=7,
             pool_stride=1,
             pool_padding=0,
-            pool_type='avg', )
+            pool_type='avg')
 
+        #stdv = 1.0 / math.sqrt(pool5.shape[1] * 1.0)
         stdv = 0.01
         param_attr = fluid.param_attr.ParamAttr(
             initializer=fluid.initializer.Uniform(-stdv, stdv))
         fc6 = fluid.layers.fc(input=pool5,
                               size=class_dim,
-                              param_attr=param_attr,
-                              name="fc6")
+                              param_attr=param_attr)
 
         return fc6
 
@@ -201,8 +172,7 @@ class DPN(object):
                           num_1x1_c,
                           inc,
                           G,
-                          _type='normal',
-                          name=None):
+                          _type='normal'):
         kw = 3
         kh = 3
         pw = (kw - 1) // 2
@@ -231,50 +201,35 @@ class DPN(object):
                 num_filter=(num_1x1_c + 2 * inc),
                 kernel=(1, 1),
                 pad=(0, 0),
-                stride=(key_stride, key_stride),
-                name=name + "_match")
+                stride=(key_stride, key_stride))
             data_o1, data_o2 = fluid.layers.split(
-                c1x1_w,
-                num_or_sections=[num_1x1_c, 2 * inc],
-                dim=1,
-                name=name + "_match_conv_Slice")
+                c1x1_w, num_or_sections=[num_1x1_c, 2 * inc], dim=1)
         else:
             data_o1 = data[0]
             data_o2 = data[1]
 
         # MAIN
         c1x1_a = self.bn_ac_conv(
-            data=data_in,
-            num_filter=num_1x1_a,
-            kernel=(1, 1),
-            pad=(0, 0),
-            name=name + "_conv1")
+            data=data_in, num_filter=num_1x1_a, kernel=(1, 1), pad=(0, 0))
         c3x3_b = self.bn_ac_conv(
             data=c1x1_a,
             num_filter=num_3x3_b,
             kernel=(kw, kh),
             pad=(pw, ph),
             stride=(key_stride, key_stride),
-            num_group=G,
-            name=name + "_conv2")
+            num_group=G)
         c1x1_c = self.bn_ac_conv(
             data=c3x3_b,
             num_filter=(num_1x1_c + inc),
             kernel=(1, 1),
-            pad=(0, 0),
-            name=name + "_conv3")
+            pad=(0, 0))
 
         c1x1_c1, c1x1_c2 = fluid.layers.split(
-            c1x1_c,
-            num_or_sections=[num_1x1_c, inc],
-            dim=1,
-            name=name + "_conv3_Slice")
+            c1x1_c, num_or_sections=[num_1x1_c, inc], dim=1)
 
         # OUTPUTS
-        summ = fluid.layers.elementwise_add(
-            x=data_o1, y=c1x1_c1, name=name + "_elewise")
-        dense = fluid.layers.concat(
-            [data_o2, c1x1_c2], axis=1, name=name + "_concat")
+        summ = fluid.layers.elementwise_add(x=data_o1, y=c1x1_c1)
+        dense = fluid.layers.concat([data_o2, c1x1_c2], axis=1)
 
         return [summ, dense]
 
@@ -284,17 +239,8 @@ class DPN(object):
                    kernel,
                    pad,
                    stride=(1, 1),
-                   num_group=1,
-                   name=None):
-        bn_ac = fluid.layers.batch_norm(
-            input=data,
-            act='relu',
-            is_test=False,
-            name=name + '.output.1',
-            param_attr=ParamAttr(name=name + '_bn_scale'),
-            bias_attr=ParamAttr(name + '_bn_offset'),
-            moving_mean_name=name + '_bn_mean',
-            moving_variance_name=name + '_bn_variance', )
+                   num_group=1):
+        bn_ac = fluid.layers.batch_norm(input=data, act='relu', is_test=False)
         bn_ac_conv = fluid.layers.conv2d(
             input=bn_ac,
             num_filters=num_filter,
@@ -303,8 +249,7 @@ class DPN(object):
             padding=pad,
             groups=num_group,
             act=None,
-            bias_attr=False,
-            param_attr=ParamAttr(name=name + "_weights"))
+            bias_attr=False)
         return bn_ac_conv
 
 
@@ -314,7 +259,7 @@ def DPN68():
 
 
 def DPN92():
-    onvodel = DPN(layers=92)
+    model = DPN(layers=92)
     return model
 
 
