@@ -16,7 +16,6 @@ THREAD = 8
 BUF_SIZE = 102400
 
 DATA_DIR = 'data/ILSVRC2012'
-DATA_DIR = '/work/data/cv'
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
 
@@ -166,12 +165,12 @@ def _reader_creator(file_list,
             for line in lines:
                 if mode == 'train' or mode == 'val':
                     img_path, label = line.split()
-                    #img_path = img_path.replace("JPEG", "jpeg")
+                    img_path = img_path.replace("JPEG", "jpeg")
                     img_path = os.path.join(data_dir, img_path)
                     yield img_path, int(label)
                 elif mode == 'test':
                     img_path, label = line.split()
-                    #img_path = img_path.replace("JPEG", "jpeg")
+                    img_path = img_path.replace("JPEG", "jpeg")
                     img_path = os.path.join(data_dir, img_path)
  
                     yield [img_path]
@@ -189,34 +188,24 @@ def _reader_creator(file_list,
 
 def train(data_dir=DATA_DIR, pass_id_as_seed=0):
 
-    #file_list = os.path.join(data_dir, 'dataset_100/train_list.txt')
-    #1000
     file_list = os.path.join(data_dir, 'dataset_100/train_list.txt')
-    print(file_list)
-    print(os.path.join(data_dir,'dataset_100/train_images'))
-    print("===================")
     return _reader_creator(
         file_list,
         'train',
         shuffle=True,
         color_jitter=False,
         rotate=False,
-      #  data_dir=data_dir,
-        data_dir=os.path.join(data_dir,'train'),
+        data_dir=data_dir,
         pass_id_as_seed=pass_id_as_seed)
 
 
 def val(data_dir=DATA_DIR): 
-    #file_list = os.path.join(data_dir, 'dataset_100/val_list.txt')
-    #1000
     file_list = os.path.join(data_dir, 'val_list.txt')
     return _reader_creator(file_list, 'val', shuffle=False, 
-        #    data_dir=data_dir)
-            data_dir=os.path.join(data_dir,'val'))
+            data_dir=data_dir)
 
 
 def test(data_dir=DATA_DIR):
     file_list = os.path.join(data_dir, 'val_list.txt')
     return _reader_creator(file_list, 'test', shuffle=False,
-           # data_dir=data_dir
-            data_dir=os.path.join(data_dir,'val'))
+            data_dir=data_dir)
