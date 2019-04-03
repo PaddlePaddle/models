@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pickle
 import pandas as pd
 
@@ -13,10 +14,12 @@ def to_df(file_path):
         return df
 
 
+print("start to analyse reviews_Electronics_5.json")
 reviews_df = to_df('./raw_data/reviews_Electronics_5.json')
 with open('./raw_data/reviews.pkl', 'wb') as f:
     pickle.dump(reviews_df, f, pickle.HIGHEST_PROTOCOL)
 
+print("start to analyse meta_Electronics.json")
 meta_df = to_df('./raw_data/meta_Electronics.json')
 meta_df = meta_df[meta_df['asin'].isin(reviews_df['asin'].unique())]
 meta_df = meta_df.reset_index(drop=True)

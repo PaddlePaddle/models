@@ -23,7 +23,7 @@ class Data():
         data = pickle.load(open(path, 'rb'))
         self.shuffle = shuffle
         self.length = len(data[0])
-        self.input = zip(data[0], data[1])
+        self.input = list(zip(data[0], data[1]))
 
     def make_data(self, cur_batch, batch_size):
         cur_batch = [list(e) for e in cur_batch]
@@ -57,13 +57,11 @@ class Data():
 
             u_deg_in = np.sum(adj, 0)
             u_deg_in[np.where(u_deg_in == 0)] = 1
-            adj_in.append(
-                np.divide(adj, u_deg_in)
-            )  #maybe should add a transpose, but the result shows no difference
+            adj_in.append(np.divide(adj, u_deg_in).transpose())
 
             u_deg_out = np.sum(adj, 1)
             u_deg_out[np.where(u_deg_out == 0)] = 1
-            adj_out.append(np.divide(adj.transpose(), u_deg_out))
+            adj_out.append(np.divide(adj.transpose(), u_deg_out).transpose())
 
             seq_index.append(
                 [np.where(node == i)[0][0] + id * max_uniq_len for i in e[0]])

@@ -1,23 +1,21 @@
-# Simple Baselines for Human Pose Estimation in Fluid
+# 关键点检测（Simple Baselines for Human Pose Estimation）
 
-## Introduction
-This is a simple demonstration of re-implementation in [PaddlePaddle.Fluid](http://www.paddlepaddle.org/en) for the paper [Simple Baselines for Human Pose Estimation and Tracking](https://arxiv.org/abs/1804.06208) (ECCV'18) from MSRA. 
+## 介绍
+本目录包含了对论文[Simple Baselines for Human Pose Estimation and Tracking](https://arxiv.org/abs/1804.06208) (ECCV'18)的复现.
 
 ![demo](demo.gif)
 
-> **Video in Demo**: *Bruno Mars - That’s What I Like [Official Video]*.
+> **演示视频**: *Bruno Mars - That’s What I Like [官方视频]*.
 
-## Requirements
+## 环境依赖
+
+本目录下的代码均在4卡Tesla K40/P40 GPU，CentOS系统，CUDA-9.2/8.0，cuDNN-7.1环境下测试运行无误
 
   - Python == 2.7
   - PaddlePaddle >= 1.1.0
   - opencv-python >= 3.3
 
-## Environment
-
-The code is developed and tested under 4 Tesla K40/P40 GPUS cards on CentOS with installed CUDA-9.2/8.0 and cuDNN-7.1.
-
-## Results on MPII Val
+## MPII Val结果
 | Arch | Head | Shoulder | Elbow | Wrist | Hip | Knee | Ankle | Mean | Mean@0.1| Models |
 | ---- |:----:|:--------:|:-----:|:-----:|:---:|:----:|:-----:|:----:|:-------:|:------:|
 | 256x256\_pose\_resnet\_50 in PyTorch | 96.351	| 95.329 | 88.989 | 83.176 | 88.420	| 83.960 | 79.594 | 88.532 | 33.911 | - |
@@ -25,7 +23,7 @@ The code is developed and tested under 4 Tesla K40/P40 GPUS cards on CentOS with
 | 384x384\_pose\_resnet\_50 in PyTorch | 96.658 | 95.754 | 89.790 | 84.614 | 88.523 | 84.666 | 79.287 | 89.066 | 38.046 | - |
 | 384x384\_pose\_resnet\_50 in Fluid   | 96.862 | 95.635 | 90.046 | 85.557 | 88.818 | 84.948 | 78.484 | 89.235 | 38.093 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-mpii-384x384.tar.gz) |
 
-## Results on COCO val2017 with detector having human AP of 56.4 on COCO val2017 dataset
+## COCO val2017结果（使用的检测器在COCO val2017数据集上AP为56.4）
 | Arch | AP | Ap .5 | AP .75 | AP (M) | AP (L) | AR | AR .5 | AR .75 | AR (M) | AR (L) | Models |
 | ---- |:--:|:-----:|:------:|:------:|:------:|:--:|:-----:|:------:|:------:|:------:|:------:|
 | 256x192\_pose\_resnet\_50 in PyTorch | 0.704 | 0.886 | 0.783 | 0.671 | 0.772 | 0.763 | 0.929 | 0.834 | 0.721 | 0.824 | - |
@@ -33,26 +31,26 @@ The code is developed and tested under 4 Tesla K40/P40 GPUS cards on CentOS with
 | 384x288\_pose\_resnet\_50 in PyTorch | 0.722 | 0.893 | 0.789 | 0.681 | 0.797 | 0.776 | 0.932 | 0.838 | 0.728 | 0.846 | - |
 | 384x288\_pose\_resnet\_50 in Fluid   | 0.727 | 0.897 | 0.796 | 0.690 | 0.783 | 0.754 | 0.907 | 0.813 | 0.714 | 0.814 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-coco-384x288.tar.gz) |
 
-### Notes:
+### 说明
 
-  - Flip test is used.
-  - We do not hardly search the best model, just use the last saved model to make validation.
+ - 使用Flip test
+ - 对当前模型结果并没有进行调参选择，使用下面相关实验配置训练后，取最后一个epoch后的模型作为最终模型，即可得到上述实验结果
 
-## Getting Start
+## 开始
 
-### Prepare Datasets and Pretrained Models
+### 数据准备和预训练模型
 
-  - Following the [instruction](https://github.com/Microsoft/human-pose-estimation.pytorch#data-preparation) to prepare datasets.
-  - Download the pretrained ResNet-50 model in PaddlePaddle.Fluid on ImageNet from [Model Zoo](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#supported-models-and-performances).
+ - 安照[提示](https://github.com/Microsoft/human-pose-estimation.pytorch#data-preparation)进行数据准备
+ - 下载预训练好的ResNet-50
 
 ```bash
 wget http://paddle-imagenet-models.bj.bcebos.com/resnet_50_model.tar
 ```
 
-Then, put them in the folder `pretrained` under the directory root of this repo, make them look like:
+下载完成后，将模型解压、放入到根目录下的'pretrained'文件夹中，默认文件路径树为：
 
 ```
-${THIS REPO ROOT}
+${根目录}
   `-- pretrained
       `-- resnet_50
           |-- 115
@@ -65,7 +63,7 @@ ${THIS REPO ROOT}
           |-- images
 ```
 
-### Install [COCOAPI](https://github.com/cocodataset/cocoapi)
+### 安装 [COCOAPI](https://github.com/cocodataset/cocoapi)
 
 ```bash
 # COCOAPI=/path/to/clone/cocoapi
@@ -80,36 +78,30 @@ make install
 python2 setup.py install --user
 ```
 
-### Perform Validating
+### 模型验证（COCO或MPII）
 
-Downloading the checkpoints of Pose-ResNet-50 trained on MPII dataset from [here](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-mpii-384x384.tar.gz). Extract it into the folder `checkpoints` under the directory root of this repo. Then run
+下载COCO/MPII预训练模型（见上表最后一列所附链接），保存到根目录下的'checkpoints'文件夹中，运行：
 
 ```bash
 python val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet50-mpii-384x384'
 ```
 
-### Perform Training
+### 模型训练
 
 ```bash
 python train.py --dataset 'mpii' # or coco
 ```
 
-**Note**: Configurations for training are aggregated in the `lib/mpii_reader.py` and `lib/coco_reader.py`.
+**说明** 详细参数配置已保存到`lib/mpii_reader.py` 和 `lib/coco_reader.py`文件中，通过设置dataset来选择使用具体的参数配置
 
-### Perform Test on Images
+### 模型测试（任意图片，使用上述COCO或MPII预训练好的模型）
 
-Put the images into the folder `test` under the directory root of this repo. Then run
+将测试图片放入根目录下的'test'文件夹中，执行
 
 ```bash
 python test.py --checkpoint 'checkpoints/pose-resnet-50-384x384-mpii'
 ```
 
-If there are multiple persons in images, detectors such as [Faster R-CNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn), [SSD](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/object_detection) or others should be used first to crop them out. Because the simple baseline for human pose estimation is a top-down method.
+## 引用
 
-## Reference
-
-  - Simple Baselines for Human Pose Estimation and Tracking in PyTorch [`code`](https://github.com/Microsoft/human-pose-estimation.pytorch#data-preparation)
-
-## License
-
-This code is released under the Apache License 2.0.
+- Simple Baselines for Human Pose Estimation and Tracking in PyTorch [`code`](https://github.com/Microsoft/human-pose-estimation.pytorch#data-preparation)

@@ -22,7 +22,6 @@ import paddle
 import paddle.fluid as fluid
 import paddle.fluid.layers as layers
 
-from tqdm import tqdm
 from lib import pose_resnet
 from utils.transforms import flip_back
 from utils.utility import *
@@ -34,37 +33,24 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size',       int,   32,                  "Minibatch size.")
 add_arg('dataset',          str,   'mpii',              "Dataset")
 add_arg('use_gpu',          bool,  True,                "Whether to use GPU or not.")
-add_arg('num_epochs',       int,   140,                 "Number of epochs.")
-add_arg('total_images',     int,   144406,              "Training image number.")
 add_arg('kp_dim',           int,   16,                  "Class number.")
 add_arg('model_save_dir',   str,   "output",            "Model save directory")
 add_arg('with_mem_opt',     bool,  True,               "Whether to use memory optimization or not.")
-add_arg('pretrained_model', str,   None,                "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                "Whether to resume checkpoint.")
-add_arg('lr',               float, 0.001,               "Set learning rate.")
-add_arg('lr_strategy',      str,   "piecewise_decay",   "Set the learning rate decay strategy.")
 add_arg('flip_test',        bool,  True,                "Flip test")
 add_arg('shift_heatmap',    bool,  True,                "Shift heatmap")
-add_arg('post_process',     bool,  False,               "post process")
 # yapf: enable
 
-FLIP_PAIRS = [[0, 5], [1, 4], [2, 3], [10, 15], [11, 14], [12, 13]]
-
 def test(args):
+    import lib.mpii_reader as reader
     if args.dataset == 'coco':
-        import lib.coco_reader as reader
         IMAGE_SIZE = [288, 384]
-        # HEATMAP_SIZE = [72, 96]
         FLIP_PAIRS = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16]]
         args.kp_dim = 17
-        args.total_images = 144406 # 149813
     elif args.dataset == 'mpii':
-        import lib.mpii_reader as reader
         IMAGE_SIZE = [384, 384]
-        # HEATMAP_SIZE = [96, 96]
         FLIP_PAIRS = [[0, 5], [1, 4], [2, 3], [10, 15], [11, 14], [12, 13]]
         args.kp_dim = 16
-        args.total_images = 2958 # validation
     else:
         raise ValueError('The dataset {} is not supported yet.'.format(args.dataset))
 
@@ -80,15 +66,6 @@ def test(args):
     # Output
     output = model.net(input=image, target=None, target_weight=None)
 
-    # Parameters from model and arguments
-    params = {}
-    params["total_images"] = args.total_images
-    params["lr"] = args.lr
-    params["num_epochs"] = args.num_epochs
-    params["learning_strategy"] = {}
-    params["learning_strategy"]["batch_size"] = args.batch_size
-    params["learning_strategy"]["name"] = args.lr_strategy
-
     if args.with_mem_opt:
         fluid.memory_optimize(fluid.default_main_program(),
                               skip_opt_set=[output.name])
@@ -96,13 +73,6 @@ def test(args):
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-
-    args.pretrained_model = './pretrained/resnet_50/115'
-    if args.pretrained_model:
-        def if_exist(var):
-            exist_flag = os.path.exists(os.path.join(args.pretrained_model, var.name))
-            return exist_flag
-        fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
     if args.checkpoint is not None:
         fluid.io.load_persistables(exe, args.checkpoint)
@@ -113,12 +83,12 @@ def test(args):
 
     test_exe = fluid.ParallelExecutor(
             use_cuda=True if args.use_gpu else False,
-            main_program=fluid.default_main_program().clone(for_test=False),
+            main_program=fluid.default_main_program().clone(for_test=True),
             loss_name=None)
 
     fetch_list = [image.name, output.name]
 
-    for batch_id, data in tqdm(enumerate(test_reader())):
+    for batch_id, data in enumerate(test_reader()):
         num_images = len(data)
 
         file_ids = []

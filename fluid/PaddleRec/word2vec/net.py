@@ -102,7 +102,9 @@ def skip_gram_word2vec(dict_size, embedding_size, is_sparse=False, neg_num=5):
     neg_xent = fluid.layers.sigmoid_cross_entropy_with_logits(neg_logits,
                                                               label_zeros)
     cost = fluid.layers.elementwise_add(
-        true_xent, fluid.layers.reduce_sum(
+        fluid.layers.reduce_sum(
+            true_xent, dim=1),
+        fluid.layers.reduce_sum(
             neg_xent, dim=1))
     avg_cost = fluid.layers.reduce_mean(cost)
     return avg_cost, py_reader

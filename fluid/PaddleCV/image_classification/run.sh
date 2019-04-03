@@ -201,7 +201,6 @@ python train.py \
 #    --total_images=1281167 \
 #    --class_dim=1000 \
 #    --image_shape=3,224,224 \
-#    --lr_strategy=none \
 #    --lr=0.001 \
 #    --num_epochs=120 \
 #    --with_mem_opt=False \

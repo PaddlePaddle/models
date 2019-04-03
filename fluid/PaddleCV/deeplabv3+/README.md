@@ -90,11 +90,11 @@ python ./train.py \
 执行以下命令在`Cityscape`测试数据集上进行测试：
 ```
 python ./eval.py \
-    --init_weights=deeplabv3plus_gn \
+    --init_weights_path=deeplabv3plus_gn \
     --norm_type=gn \
     --dataset_path=$DATASET_PATH
 ```
-需要通过选项`--model_path`指定模型文件。测试脚本的输出的评估指标为mean IoU。
+需要通过选项`--init_weights_path`指定模型文件。测试脚本的输出的评估指标为mean IoU。
 
 
 ## 实验结果

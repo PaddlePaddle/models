@@ -16,7 +16,7 @@ Only support Adam optimizer yet.
 Short description of aforementioned steps:
 
 ## 1. Install PaddlePaddle
-Follow PaddlePaddle [installation instruction](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#installation) to install PaddlePaddle. If you build PaddlePaddle yourself, please use the following cmake arguments and ensure to set `-DWITH_NGRAPH=ON`.  
+Follow PaddlePaddle [installation instruction](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#installation) to install PaddlePaddle. If you [build from source](https://github.com/PaddlePaddle/FluidDoc/blob/develop/doc/fluid/beginners_guide/install/compile/compile_Ubuntu_en.md), please use the following cmake arguments and ensure to set `-DWITH_NGRAPH=ON`. 
 ```
 cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_GPU=OFF -DWITH_MKL=ON -DWITH_MKLDNN=ON  -DWITH_NGRAPH=ON
 ```
@@ -29,10 +29,9 @@ export FLAGS_use_ngraph=true
 export OMP_NUM_THREADS=<num_cpu_cores>
 ```
 
-Optional exports for better performance:
+If multiple threads are used, you may export the following for better performance:
 ```
 export KMP_AFFINITY=granularity=fine,compact,1,0
-export KMP_BLOCKTIME=1
 ```
 
 ## 3. How the benchmark script might be run.

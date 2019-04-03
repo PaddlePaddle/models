@@ -40,13 +40,15 @@ class ResNet():
             depth = [3, 8, 36, 3]
         num_filters = [64, 128, 256, 512]
 
+        # TODO(wanghaoshuang@baidu.com):
+        # fix name("conv1") conflict between student and teacher in distillation.
         conv = self.conv_bn_layer(
             input=input,
             num_filters=64,
             filter_size=7,
             stride=2,
             act='relu',
-            name="res_conv1")  #debug
+            name="conv1")
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,
