@@ -199,7 +199,7 @@ def GetFileList(data_path):
 
 def train(args):
 
-    if not os.path.isdir(args.model_output_dir) and args.train_id == 0:
+    if not os.path.isdir(args.model_output_dir) and args.trainer_id == 0:
         os.mkdir(args.model_output_dir)
 
     filelist = GetFileList(args.train_data_dir)
