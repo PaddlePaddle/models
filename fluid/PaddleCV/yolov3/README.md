@@ -94,7 +94,7 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
 **training strategy:**
 
 *  Use momentum optimizer with momentum=0.9.
-*  In first 4000 iteration, the learning rate increases linearly from 0.0 to 0.01. Then lr is decayed at 450000, 500000 iteration with multiplier 0.1, 0.01. The maximum iteration is 500000.
+*  In first 4000 iteration, the learning rate increases linearly from 0.0 to 0.001. Then lr is decayed at 400000, 450000 iteration with multiplier 0.1, 0.01. The maximum iteration is 500000.
 
 Training result is shown as below：
 <p align="center">
