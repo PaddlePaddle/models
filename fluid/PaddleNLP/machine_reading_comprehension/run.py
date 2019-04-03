@@ -133,6 +133,7 @@ def LodTensor_Array(lod_tensor):
 
 
 def print_para(train_prog, train_exe, logger, args):
+    """Print para info for debug purpose"""
     if args.para_print:
         param_list = train_prog.block(0).all_parameters()
         param_name_list = [p.name for p in param_list]
@@ -171,7 +172,8 @@ def find_best_answer_for_passage(start_probs, end_probs, passage_len):
     return (best_start, best_end), max_prob
 
 
-def find_best_answer_for_inst(sample, start_prob, end_prob, inst_lod):
+def find_best_answer_for_inst(sample, start_prob, end_prob, inst_lod,
+                              para_prior_scores=(0.44, 0.23, 0.15, 0.09, 0.07)):
     """
     Finds the best answer for a sample given start_prob and end_prob for each position.
     This will call find_best_answer_for_passage because there are multiple passages in a sample
@@ -190,6 +192,10 @@ def find_best_answer_for_inst(sample, start_prob, end_prob, inst_lod):
         answer_span, score = find_best_answer_for_passage(
             start_prob[passage_start:passage_end],
             end_prob[passage_start:passage_end], passage_len)
+        if para_prior_scores is not None:
+            # the Nth prior score = the Number of training samples whose gold answer comes
+            #  from the Nth paragraph / the number of the training samples
+            score *= para_prior_scores[p_idx]
         if score > best_score:
             best_score = score
             best_p_idx = p_idx
@@ -205,16 +211,12 @@ def find_best_answer_for_inst(sample, start_prob, end_prob, inst_lod):
 def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
                place, dev_count, vocab, brc_data, logger, args):
     """
-        
+    do inference with given inference_program
     """
-    build_strategy = fluid.BuildStrategy()
-    build_strategy.enable_inplace = False
-    build_strategy.memory_optimize = False
     parallel_executor = fluid.ParallelExecutor(
         main_program=inference_program,
         use_cuda=bool(args.use_gpu),
-        loss_name=avg_cost.name,
-        build_strategy=build_strategy)
+        loss_name=avg_cost.name)
     print_para(inference_program, parallel_executor, logger, args)
 
     # Use test set as validation each pass
@@ -277,7 +279,7 @@ def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
                     'question_type': sample['question_type'],
                     'answers': [best_answer],
                     'entity_answers': [[]],
-                    'yesno_answers': [best_span]
+                    'yesno_answers': []
                 }
                 pred_answers.append(pred)
                 if 'answers' in sample:
@@ -296,7 +298,7 @@ def validation(inference_program, avg_cost, s_probs, e_probs, match, feed_order,
     if result_dir is not None and result_prefix is not None:
         if not os.path.exists(args.result_dir):
             os.makedirs(args.result_dir)
-        result_file = os.path.join(result_dir, result_prefix + 'json')
+        result_file = os.path.join(result_dir, result_prefix + '.json')
         with open(result_file, 'w') as fout:
             for pred_answer in pred_answers:
                 fout.write(json.dumps(pred_answer, ensure_ascii=False) + '\n')
@@ -328,6 +330,7 @@ def l2_loss(train_prog):
 
 
 def train(logger, args):
+    """train a model"""
     logger.info('Load data_set and vocab...')
     with open(os.path.join(args.vocab_dir, 'vocab.data'), 'rb') as fin:
         if six.PY2:
@@ -489,6 +492,7 @@ def train(logger, args):
 
 
 def evaluate(logger, args):
+    """evaluate a specific model using devset"""
     logger.info('Load data_set and vocab...')
     with open(os.path.join(args.vocab_dir, 'vocab.data'), 'rb') as fin:
         vocab = pickle.load(fin)
@@ -527,8 +531,8 @@ def evaluate(logger, args):
 
             inference_program = main_program.clone(for_test=True)
             eval_loss, bleu_rouge = validation(
-                inference_program, avg_cost, s_probs, e_probs, match,
-                feed_order, place, dev_count, vocab, brc_data, logger, args)
+                inference_program, avg_cost, s_probs, e_probs, match, feed_order,
+                place, dev_count, vocab, brc_data, logger, args)
             logger.info('Dev eval loss {}'.format(eval_loss))
             logger.info('Dev eval result: {}'.format(bleu_rouge))
             logger.info('Predicted answers are saved to {}'.format(
@@ -536,6 +540,7 @@ def evaluate(logger, args):
 
 
 def predict(logger, args):
+    """do inference on the test dataset """
     logger.info('Load data_set and vocab...')
     with open(os.path.join(args.vocab_dir, 'vocab.data'), 'rb') as fin:
         vocab = pickle.load(fin)
