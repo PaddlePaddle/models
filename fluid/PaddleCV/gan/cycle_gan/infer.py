@@ -44,7 +44,6 @@ def infer(args):
     if not os.path.exists(args.output):
         os.makedirs(args.output)
     for file in glob.glob(args.input):
-        print "read %s" % file
         image_name = os.path.basename(file)
         image = Image.open(file)
         image = image.resize((256, 256))

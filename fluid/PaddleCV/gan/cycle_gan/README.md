@@ -73,8 +73,8 @@ env CUDA_VISIBLE_DEVICES=0 python train.py
 执行以下命令读取多张图片进行预测：
 
 ```
-env CUDA_VISIBLE_DEVICE=0 python infer.py \
-    --init_model="checkpoints/1" --input="./data/inputA/*" \
+env CUDA_VISIBLE_DEVICES=0 python infer.py \
+    --init_model="output/checkpoints/1" --input="./data/horse2zebra/trainA/*" \
     --input_style A --output="./output"
 ```
 

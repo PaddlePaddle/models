@@ -22,7 +22,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('batch_size',        int,   1,          "Minibatch size.")
 add_arg('epoch',             int,   2,        "The number of epoched to be trained.")
-add_arg('output',            str,   "./output_0", "The directory the model and the test result to be saved to.")
+add_arg('output',            str,   "./output", "The directory the model and the test result to be saved to.")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
 add_arg('save_checkpoints',  bool,  True,       "Whether to save checkpoints.")
 add_arg('run_test',          bool,  True,       "Whether to run test.")
