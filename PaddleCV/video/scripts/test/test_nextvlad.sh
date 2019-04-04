@@ -1,2 +1,2 @@
-python test.py --model-name="NEXTVLAD" --config=./configs/nextvlad.txt \
-                --log-interval=10 --weights=./checkpoints/NEXTVLAD_epoch0
+python test.py --model_name="NEXTVLAD" --config=./configs/nextvlad.txt \
+                --log_interval=10 --weights=./checkpoints/NEXTVLAD_epoch0

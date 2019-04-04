@@ -137,14 +137,20 @@ class ModelBase(object):
         if os.path.exists(path):
             return path
 
-        logger.info("Download pretrain weights of {} from {}".format(
-                self.name, url))
+        logger.info("Download pretrain weights of {} from {}".format(self.name,
+                                                                     url))
         download(url, path)
         return path
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
         logger.info("Load pretrain weights from {}".format(pretrain))
         fluid.io.load_params(exe, pretrain, main_program=prog)
+
+    def load_test_weights(self, exe, weights, prog, place):
+        def if_exist(var):
+            return os.path.exists(os.path.join(weights, var.name))
+
+        fluid.io.load_vars(exe, weights, predicate=if_exist)
 
     def get_config_from_sec(self, sec, item, default=None):
         if sec.upper() not in self.cfg:
@@ -178,4 +184,3 @@ def regist_model(name, model):
 
 def get_model(name, cfg, mode='train'):
     return model_zoo.get(name, cfg, mode)
-

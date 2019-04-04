@@ -19,12 +19,15 @@ except:
 
 from utils import AttrDict
 
+import logging
+logger = logging.getLogger(__name__)
+
 CONFIG_SECS = [
-        'train',
-        'valid',
-        'test',
-        'infer',
-        ]
+    'train',
+    'valid',
+    'test',
+    'infer',
+]
 
 
 def parse_config(cfg_file):
@@ -43,6 +46,7 @@ def parse_config(cfg_file):
 
     return cfg
 
+
 def merge_configs(cfg, sec, args_dict):
     assert sec in CONFIG_SECS, "invalid config section {}".format(sec)
     sec_dict = getattr(cfg, sec.upper())
@@ -56,3 +60,8 @@ def merge_configs(cfg, sec, args_dict):
             pass
     return cfg
 
+
+def print_configs(cfg):
+    import pprint
+    logger.info('Training with config:')
+    logger.info(pprint.pformat(cfg))

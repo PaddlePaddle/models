@@ -14,6 +14,7 @@
 
 __all__ = ['AttrDict']
 
+
 class AttrDict(dict):
     def __getattr__(self, key):
         return self[key]

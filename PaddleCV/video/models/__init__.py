@@ -4,6 +4,7 @@ from .nextvlad import NEXTVLAD
 from .tsn import TSN
 from .stnet import STNET
 from .attention_lstm import AttentionLSTM
+from .nonlocal_model import NonLocal
 
 # regist models
 regist_model("AttentionCluster", AttentionCluster)
@@ -11,3 +12,4 @@ regist_model("NEXTVLAD", NEXTVLAD)
 regist_model("TSN", TSN)
 regist_model("STNET", STNET)
 regist_model("AttentionLSTM", AttentionLSTM)
+regist_model('NONLOCAL', NonLocal)

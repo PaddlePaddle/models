@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--model-name',
+        '--model_name',
         type=str,
         default='AttentionCluster',
         help='name of model to train.')
@@ -47,14 +47,14 @@ def parse_args():
         default='configs/attention_cluster.txt',
         help='path to config file of model')
     parser.add_argument(
-        '--use-gpu', type=bool, default=True, help='default use gpu.')
+        '--use_gpu', type=bool, default=True, help='default use gpu.')
     parser.add_argument(
         '--weights',
         type=str,
         default=None,
         help='weight path, None to use weights from Paddle.')
     parser.add_argument(
-        '--batch-size',
+        '--batch_size',
         type=int,
         default=1,
         help='sample number in a batch for inference.')
@@ -64,17 +64,17 @@ def parse_args():
         default=None,
         help='path to inferenece data file lists file.')
     parser.add_argument(
-        '--log-interval',
+        '--log_interval',
         type=int,
         default=1,
         help='mini-batch interval to log.')
     parser.add_argument(
-        '--infer-topk',
+        '--infer_topk',
         type=int,
         default=20,
         help='topk predictions to restore.')
     parser.add_argument(
-        '--save-dir', type=str, default='./', help='directory to store results')
+        '--save_dir', type=str, default='./', help='directory to store results')
     args = parser.parse_args()
     return args
 
@@ -126,8 +126,7 @@ def infer(args):
             topk_inds = predictions[i].argsort()[0 - args.infer_topk:]
             topk_inds = topk_inds[::-1]
             preds = predictions[i][topk_inds]
-            results.append(
-                (video_id[i], preds.tolist(), topk_inds.tolist()))
+            results.append((video_id[i], preds.tolist(), topk_inds.tolist()))
         prev_time = cur_time
         cur_time = time.time()
         period = cur_time - prev_time
@@ -144,6 +143,7 @@ def infer(args):
     result_file_name = os.path.join(args.save_dir,
                                     "{}_infer_result".format(args.model_name))
     pickle.dump(results, open(result_file_name, 'wb'))
+
 
 if __name__ == "__main__":
     args = parse_args()
