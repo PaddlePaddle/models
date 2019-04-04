@@ -29,12 +29,12 @@ cd utils && bash download_thirdparty.sh
 当前模型是在paddlepaddle 1.2版本上测试, 因此建议在1.2版本上使用本模型。关于PaddlePaddle的安装可以参考[PaddlePaddle Homepage](http://paddlepaddle.org)。
 
 ## 模型训练
-###段落抽取
+### 段落抽取
 在段落抽取阶段，主要是使用文档相关性score对文档内容进行优化, 抽取的结果将会放到`data/extracted/`目录下。如果你用demo数据测试，可以跳过这一步。 
 ```
 sh run.sh --para_extraction
 ```
-###词典准备
+### 词典准备
 在训练模型之前，我们应该确保数据已经准备好。在准备阶段，通过全部数据文件生成一个词典，这个词典会在后续的训练和预测中用到。你可以通过如下命令生成词典：
 ```
 run.sh --prepare
@@ -68,7 +68,7 @@ sh run.sh --predict --load_dir models/1 --testset data/extracted/testset/search.
 
 ### 实验结果
 验证集 ROUGE-L:47.65，测试集 ROUGE-L:54.58
-这是在P40GPU上，使用4卡，batch size=4*32的结果，如果使用单卡，指标可能会略有降低，但在验证集上的ROUGE-L也不小于47。
+这是在P40GPU上，使用4卡，batch size=4*32的训练结果，如果使用单卡，指标可能会略有降低，但在验证集上的ROUGE-L也不小于47。
 
 ## 参考文献
 [Machine Comprehension Using Match-LSTM and Answer Pointer](https://arxiv.org/abs/1608.07905)
