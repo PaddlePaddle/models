@@ -20,8 +20,6 @@ glob
 
 ## 预训练模型
 
-预训练模型要点：
-
 1. 把文档文件切分成句子。并基于词表（参考vocabulary_min5k.txt）对句子进行切词。把文件切分成训练集trainset和测试集testset。
 
 ```
