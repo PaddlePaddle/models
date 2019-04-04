@@ -13,3 +13,6 @@ PaddleRec
 - [SequenceSemanticRetrieval](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ssr)
 - [DeepCTR](https://github.com/PaddlePaddle/models/blob/develop/PaddleRec/ctr/README.cn.md)
 - [Multiview-Simnet](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/multiview_simnet)
+- [Word2Vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/word2vec)
+- [GraphNeuralNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gnn)
+- [DeepInterestNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/din)
