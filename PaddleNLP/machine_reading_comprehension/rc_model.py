@@ -22,6 +22,7 @@ import numpy as np
 
 
 def dropout(input, args):
+    """Dropout function"""
     if args.drop_rate:
         return layers.dropout(
             input,
@@ -33,10 +34,12 @@ def dropout(input, args):
 
 
 def bi_lstm_encoder(input_seq, gate_size, para_name, args):
-    # A bi-directional lstm encoder implementation.
-    # Linear transformation part for input gate, output gate, forget gate
-    # and cell activation vectors need be done outside of dynamic_lstm.
-    # So the output size is 4 times of gate_size.
+    """
+    A bi-directional lstm encoder implementation.
+    Linear transformation part for input gate, output gate, forget gate
+    and cell activation vectors need be done outside of dynamic_lstm.
+    So the output size is 4 times of gate_size.
+    """
 
     input_forward_proj = layers.fc(
         input=input_seq,
@@ -75,6 +78,7 @@ def get_data(input_name, lod_level, args):
 
 
 def embedding(input_ids, shape, args):
+    """Embedding layer"""
     input_embedding = layers.embedding(
         input=input_ids,
         size=shape,
@@ -85,6 +89,7 @@ def embedding(input_ids, shape, args):
 
 
 def encoder(input_embedding, para_name, hidden_size, args):
+    """Encoding layer"""
     encoder_out = bi_lstm_encoder(
         input_seq=input_embedding,
         gate_size=hidden_size,
@@ -94,6 +99,7 @@ def encoder(input_embedding, para_name, hidden_size, args):
 
 
 def attn_flow(q_enc, p_enc, p_ids_name, args):
+    """Bidirectional Attention layer"""
     tag = p_ids_name + "::"
     drnn = layers.DynamicRNN()
     with drnn.block():
@@ -123,7 +129,15 @@ def attn_flow(q_enc, p_enc, p_ids_name, args):
     return dropout(g, args)
 
 
+def fusion(g, args):
+    """Fusion layer"""
+    m = bi_lstm_encoder(
+        input_seq=g, gate_size=args.hidden_size, para_name='fusion', args=args)
+    return dropout(m, args)
+
+
 def lstm_step(x_t, hidden_t_prev, cell_t_prev, size, para_name, args):
+    """Util function for pointer network"""
     def linear(inputs, para_name, args):
         return layers.fc(input=inputs,
                          size=size,
@@ -150,8 +164,8 @@ def lstm_step(x_t, hidden_t_prev, cell_t_prev, size, para_name, args):
     return hidden_t, cell_t
 
 
-#point network
 def point_network_decoder(p_vec, q_vec, hidden_size, args):
+    """Output layer - pointer network"""
     tag = 'pn_decoder:'
     init_random = fluid.initializer.Normal(loc=0.0, scale=1.0)
 
@@ -258,20 +272,15 @@ def point_network_decoder(p_vec, q_vec, hidden_size, args):
     return start_prob, end_prob
 
 
-def fusion(g, args):
-    m = bi_lstm_encoder(
-        input_seq=g, gate_size=args.hidden_size, para_name='fusion', args=args)
-    return dropout(m, args)
-
-
 def rc_model(hidden_size, vocab, args):
+    """This function build the whole BiDAF network"""
     emb_shape = [vocab.size(), vocab.embed_dim]
     start_labels = layers.data(
         name="start_lables", shape=[1], dtype='float32', lod_level=1)
     end_labels = layers.data(
         name="end_lables", shape=[1], dtype='float32', lod_level=1)
 
-    # stage 1:encode 
+    # stage 1:setup input data, embedding table & encode
     q_id0 = get_data('q_id0', 1, args)
 
     q_ids = get_data('q_ids', 2, args)
@@ -302,6 +311,7 @@ def rc_model(hidden_size, vocab, args):
     start_probs, end_probs = point_network_decoder(
         p_vec=p_vec, q_vec=q_vec, hidden_size=hidden_size, args=args)
 
+    # calculate model loss
     cost0 = layers.sequence_pool(
         layers.cross_entropy(
             input=start_probs, label=start_labels, soft_label=True),
