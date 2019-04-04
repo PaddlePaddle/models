@@ -93,7 +93,7 @@ class DataSetReader(object):
         for target in anno:
             if target['area'] < cfg.gt_min_area:
                 continue
-            if target.has_key('ignore') and target['ignore']:
+            if 'ignore' in target and target['ignore']:
                 continue
 
             box = box_utils.coco_anno_box_to_center_relative(target['bbox'], img_height, img_width)
@@ -120,7 +120,7 @@ class DataSetReader(object):
             img['gt_boxes'] = np.zeros((cfg.max_box_num, 4), dtype=np.float32)
             img['gt_labels'] = np.zeros((cfg.max_box_num), dtype=np.int32)
             for k in ['date_captured', 'url', 'license', 'file_name']:
-                if img.has_key(k):
+                if k in img:
                     del img[k]
 
             if is_train:
