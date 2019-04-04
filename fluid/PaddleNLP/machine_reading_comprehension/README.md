@@ -68,7 +68,7 @@ sh run.sh --predict --load_dir models/1 --testset data/extracted/testset/search.
 
 ### 实验结果
 验证集 ROUGE-L:47.65，测试集 ROUGE-L:54.58
-这是在P40GPU上，使用4卡，batch size=4*32的训练结果，如果使用单卡，指标可能会略有降低，但在验证集上的ROUGE-L也不小于47。
+这是在P40上，使用4卡GPU，batch size=4*32的训练结果，如果使用单卡，指标可能会略有降低，但在验证集上的ROUGE-L也不小于47。
 
 ## 参考文献
 [Machine Comprehension Using Match-LSTM and Answer Pointer](https://arxiv.org/abs/1608.07905)
