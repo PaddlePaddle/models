@@ -42,7 +42,7 @@ def lstmp_encoder(input_seq, gate_size, h_0, c_0, para_name, proj_size, test_mod
     input_seq = dropout(input_seq, test_mode, args)
     input_proj = layers.fc(input=input_seq,
                            param_attr=fluid.ParamAttr(
-                               name=para_name + '_gate_w', initializer=init),
+                               name=para_name + '_gate_w', initializer=None),
                            size=gate_size * 4,
                            act=None,
                            bias_attr=False)

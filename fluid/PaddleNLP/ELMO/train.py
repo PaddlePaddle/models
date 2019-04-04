@@ -27,6 +27,11 @@ import paddle.fluid.core as core
 import paddle.fluid.framework as framework
 from paddle.fluid.executor import Executor
 import data
+from args import *
+import lm_model
+import logging
+logging.basicConfig()
+import pickle
 
 def prepare_batch_input(batch, args):
     x = batch['token_ids']
@@ -467,8 +472,6 @@ def train_loop(args,
         exec_strategy=exe_strategy,
         num_trainers=nccl2_num_trainers,
         trainer_id=nccl2_trainer_id)
-    load_params(train_prog, parallel_executor, place, logger, args)
-    print_para(train_prog, parallel_executor, logger, optimizer, args)
 
     logger.info("begin to load data")
     train_data = data.BidirectionalLMDataset(
@@ -549,8 +552,6 @@ def train_loop(args,
             n_batch_cnt += len(np.array(fetch_outs[0]))
 
             if batch_id > 0 and batch_id % log_interval == 0:
-                print_para(train_prog, parallel_executor, logger, optimizer,
-                           args)
                 smoothed_ppl = np.exp(n_batch_loss / n_batch_cnt)
                 ppl = np.exp(
                     np.array(fetch_outs[0]).sum() /
