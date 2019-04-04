@@ -51,7 +51,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
 1. 下载ELMO Paddle官方发布Checkout文件
 
-PaddlePaddle官方发布Checkout文件下载地址[https://dureader.gz.bcebos.com/elmo/elmo_chinese_checkpoint.tar.gz]
+[PaddlePaddle官方发布Checkout文件下载地址](https://dureader.gz.bcebos.com/elmo/elmo_chinese_checkpoint.tar.gz)
 
 2. 在train部分中加载ELMO checkpoint文件
 
@@ -89,4 +89,4 @@ word_embedding=layers.concat(input=[elmo_enc, word_embedding], axis=1)
 
 
 ## 参考论文
-《Deep contextualized word representations》[https://arxiv.org/abs/1802.05365]
+[Deep contextualized word representations](https://arxiv.org/abs/1802.05365)
