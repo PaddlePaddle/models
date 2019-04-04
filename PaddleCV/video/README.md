@@ -130,5 +130,5 @@ infer.py
 ## 版本更新
 
 - 3/2019: 新增模型库，发布Attention Cluster，Attention LSTM，NeXtVLAD，StNet，TSN五个视频分类模型。
-- 4/2019: 发布Non-local, TSM两个个视频分类模型。
+- 4/2019: 发布Non-local, TSM两个视频分类模型。
 
