@@ -16,7 +16,6 @@ THREAD = 8
 BUF_SIZE = 102400
 
 DATA_DIR = 'data/ILSVRC2012'
-
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
 
@@ -40,8 +39,9 @@ def random_crop(img, size, scale=None, ratio=None):
     w = 1. * aspect_ratio
     h = 1. / aspect_ratio
 
-    bound = min((float(img.shape[1]) / img.shape[0]) / (w**2),
-                (float(img.shape[0]) / img.shape[1]) / (h**2))
+
+    bound = min((float(img.shape[0]) / img.shape[1]) / (w**2),
+                (float(img.shape[1]) / img.shape[0]) / (h**2))
     scale_max = min(scale[1], bound)
     scale_min = min(scale[0], bound)
 
@@ -50,14 +50,13 @@ def random_crop(img, size, scale=None, ratio=None):
     target_size = math.sqrt(target_area)
     w = int(target_size * w)
     h = int(target_size * h)
+    i = np.random.randint(0, img.shape[0] - w + 1)
+    j = np.random.randint(0, img.shape[1] - h + 1)
 
-    i = np.random.randint(0, img.size[0] - w + 1)
-    j = np.random.randint(0, img.size[1] - h + 1)
+    img = img[i:i + w, j:j + h, :]
 
-    img = img[i:i + h, j:j + w, :]
-    resized = cv2.resize(img, (size, size))
+    resized = cv2.resize(img, (size, size), interpolation=cv2.INTER_LANCZOS4)
     return resized
-
 
 def distort_color(img):
     return img
@@ -68,7 +67,7 @@ def resize_short(img, target_size):
     percent = float(target_size) / min(img.shape[0], img.shape[1])
     resized_width = int(round(img.shape[1] * percent))
     resized_height = int(round(img.shape[0] * percent))
-    resized = cv2.resize(img, (resized_width, resized_height))
+    resized = cv2.resize(img, (resized_width, resized_height), interpolation=cv2.INTER_LANCZOS4)
     return resized
 
 
@@ -140,16 +139,19 @@ def _reader_creator(file_list,
                     shuffle=False,
                     color_jitter=False,
                     rotate=False,
-                    data_dir=DATA_DIR):
+                    data_dir=DATA_DIR,
+                    pass_id_as_seed=0):
     def reader():
         with open(file_list) as flist:
             full_lines = [line.strip() for line in flist]
             if shuffle:
-                np.random.shuffle(lines)
+                if pass_id_as_seed:
+                    np.random.seed(pass_id_as_seed)
+                np.random.shuffle(full_lines)
             if mode == 'train' and os.getenv('PADDLE_TRAINING_ROLE'):
                 # distributed mode if the env var `PADDLE_TRAINING_ROLE` exits
                 trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
-                trainer_count = int(os.getenv("PADDLE_TRAINERS", "1"))
+                trainer_count = int(os.getenv("PADDLE_TRAINERS_NUM", "1"))
                 per_node_lines = len(full_lines) // trainer_count
                 lines = full_lines[trainer_id * per_node_lines:(trainer_id + 1)
                                    * per_node_lines]
@@ -159,6 +161,7 @@ def _reader_creator(file_list,
                        len(full_lines)))
             else:
                 lines = full_lines
+
             for line in lines:
                 if mode == 'train' or mode == 'val':
                     img_path, label = line.split()
@@ -166,21 +169,25 @@ def _reader_creator(file_list,
                     img_path = os.path.join(data_dir, img_path)
                     yield img_path, int(label)
                 elif mode == 'test':
-                    img_path = os.path.join(DATA_DIR, line)
+                    img_path, label = line.split()
+                    img_path = img_path.replace("JPEG", "jpeg")
+                    img_path = os.path.join(data_dir, img_path)
+ 
                     yield [img_path]
 
     image_mapper = functools.partial(
         process_image,
         mode=mode,
         color_jitter=color_jitter,
-        rotate=color_jitter,
+        rotate=rotate,
         crop_size=224)
     reader = paddle.reader.xmap_readers(
         image_mapper, reader, THREAD, BUF_SIZE, order=False)
     return reader
 
 
-def train(data_dir=DATA_DIR):
+def train(data_dir=DATA_DIR, pass_id_as_seed=0):
+
     file_list = os.path.join(data_dir, 'train_list.txt')
     return _reader_creator(
         file_list,
@@ -188,14 +195,17 @@ def train(data_dir=DATA_DIR):
         shuffle=True,
         color_jitter=False,
         rotate=False,
-        data_dir=data_dir)
+        data_dir=data_dir,
+        pass_id_as_seed=pass_id_as_seed)
 
 
 def val(data_dir=DATA_DIR):
     file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(file_list, 'val', shuffle=False, data_dir=data_dir)
+    return _reader_creator(file_list, 'val', shuffle=False, 
+            data_dir=data_dir)
 
 
 def test(data_dir=DATA_DIR):
     file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(file_list, 'test', shuffle=False, data_dir=data_dir)
+    return _reader_creator(file_list, 'test', shuffle=False,
+            data_dir=data_dir)
