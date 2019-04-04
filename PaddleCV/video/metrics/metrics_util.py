@@ -187,10 +187,11 @@ def get_metrics(name, mode, cfg):
     return metrics_zoo.get(name, mode, cfg)
 
 
-regist_metrics("NEXTVLAD", Youtube8mMetrics)
-regist_metrics("ATTENTIONLSTM", Youtube8mMetrics)
+# sort by alphabet
 regist_metrics("ATTENTIONCLUSTER", Youtube8mMetrics)
-regist_metrics("TSN", Kinetics400Metrics)
-regist_metrics("TSM", Kinetics400Metrics)
-regist_metrics("STNET", Kinetics400Metrics)
+regist_metrics("ATTENTIONLSTM", Youtube8mMetrics)
+regist_metrics("NEXTVLAD", Youtube8mMetrics)
 regist_metrics("NONLOCAL", MulticropMetrics)
+regist_metrics("TSM", Kinetics400Metrics)
+regist_metrics("TSN", Kinetics400Metrics)
+regist_metrics("STNET", Kinetics400Metrics)
