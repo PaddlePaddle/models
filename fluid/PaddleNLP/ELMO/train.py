@@ -448,10 +448,10 @@ def train_loop(args,
     if args.load_dir:
         logger.info('load pretrained checkpoints from {}'.format(args.load_dir))
         fluid.io.load_persistables(exe, args.load_dir, main_program=train_prog)
-    elif args.load_pretraning_params:
-        logger.info('load pretrained params from {}'.format(args.load_pretraning_params))
+    elif args.load_pretraining_params:
+        logger.info('load pretrained params from {}'.format(args.load_pretraining_params))
         exe.run(train_startup_prog)
-        init_pretraining_params(exe, args.load_pretraning_params, main_program=train_prog)
+        init_pretraining_params(exe, args.load_pretraining_params, main_program=train_prog)
     else:
         exe.run(train_startup_prog)
 

@@ -133,7 +133,6 @@ def emb(x):
 
 
 def elmo_encoder(x_emb):
-    lstm_outputs = []
     x_emb_r = fluid.layers.sequence_reverse(x_emb, name=None)
     fw_hiddens, fw_hiddens_ori = encoder(
         x_emb,
