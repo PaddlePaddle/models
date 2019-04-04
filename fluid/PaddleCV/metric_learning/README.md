@@ -13,7 +13,7 @@ Metric learning is a kind of methods to learn discriminative features for each s
 
 ## Installation
 
-Running sample code in this directory requires PaddelPaddle Fluid v0.14.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v0.14.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html) and make an update.
 
 ## Data preparation
 
@@ -25,7 +25,7 @@ sh download_sop.sh
 
 ## Training metric learning models
 
-To train a metric learning model, one need to set the neural network as backbone and the metric loss function to optimize. We train meiric learning model using softmax or arcmargin loss firstly, and then fine-turned the model using other metric learning loss, such as triplet, quadruplet and eml loss. One example of training using arcmargin loss is shown below:
+To train a metric learning model, one need to set the neural network as backbone and the metric loss function to optimize. You can download [ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.zip) pretrained on imagenet dataset as backbone. We train meiric learning model using softmax or arcmargin loss firstly, and then fine-turned the model using other metric learning loss, such as triplet, quadruplet and eml loss. One example of training using arcmargin loss is shown below:
 
 
 ```
