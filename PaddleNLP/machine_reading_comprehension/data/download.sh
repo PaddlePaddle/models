@@ -20,11 +20,14 @@ if [[ -d preprocessed ]] && [[ -d raw ]]; then
     echo "data exist"
     exit 0
 else
-    wget -c --no-check-certificate http://dureader.gz.bcebos.com/dureader_preprocessed.zip 
-    wget -c --no-check-certificate http://dureader.gz.bcebos.com/demo.tgz 
+    wget -c http://dureader.gz.bcebos.com/demo.zip
+    wget -c https://aipedataset.cdn.bcebos.com/dureader/dureader_raw.zip
+    wget -c https://aipedataset.cdn.bcebos.com/dureader/dureader_preprocessed.zip
 fi
 
 if md5sum --status -c md5sum.txt; then
+    unzip demo.zip
+    unzip dureader_raw.zip
     unzip dureader_preprocessed.zip
 else
     echo "download data error!" >> /dev/stderr

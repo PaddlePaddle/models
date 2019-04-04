@@ -1,69 +1,78 @@
-# Abstract
-Dureader is an end-to-end neural network model for machine reading comprehension style question answering, which aims to answer questions from given passages. We first match the question and passages with a bidireactional attention flow network to obtrain the question-aware passages represenation. Then we employ a pointer network to locate the positions of answers from passages. Our experimental evalutions show that DuReader model achieves the state-of-the-art results in DuReader Dadaset.
-# Dataset
-DuReader Dataset is a new large-scale real-world and human sourced MRC dataset in Chinese. DuReader focuses on real-world open-domain question answering. The advantages of DuReader over existing datasets are concluded as follows:
- - Real question
- - Real article
- - Real answer
- - Real application scenario
- - Rich annotation
+DuReader是一个端到端的机器阅读理解神经网络模型，能够在给定文档和问题的情况，定位文档中问题的答案。我们首先利用双向注意力网络获得文档和问题的相同向量空间的表示，然后使用`point network` 定位文档中答案的位置。实验显示，我们的模型能够获得在Dureader数据集上SOTA的结果。
 
-# Network
-DuReader model is inspired by 3 classic reading comprehension models([BiDAF](https://arxiv.org/abs/1611.01603), [Match-LSTM](https://arxiv.org/abs/1608.07905), [R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf)).
+# 算法介绍
+DuReader模型主要实现了论文[BiDAF](https://arxiv.org/abs/1611.01603)， [Match-LSTM](https://arxiv.org/abs/1608.07905)中的模型结构。
 
-DuReader model is a hierarchical multi-stage process and consists of five layers
+模型在层次上可以分为5层：
 
-- **Word Embedding Layer** maps each word to a vector using a pre-trained word embedding model.
-- **Encoding Layer** extracts context infomation for each position in question and passages with a bi-directional LSTM network.
-- **Attention Flow Layer** couples the query and context vectors and produces a set of query-aware feature vectors for each word in the context. Please refer to [BiDAF](https://arxiv.org/abs/1611.01603) for more details.
-- **Fusion Layer** employs a layer of bi-directional LSTM to capture the interaction among context words independent of the query.
-- **Decode Layer** employs an answer point network with attention pooling of the quesiton to locate the positions of answers from passages. Please refer to [Match-LSTM](https://arxiv.org/abs/1608.07905) and [R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf) for more details.
+- **词嵌入层** 将每一个词映射到一个向量(这个向量可以是预训练好的)。
+- **编码层** 使用双向LSMT网络获得问题和文档的每一个词的上下文信息。
+- **注意力层** 通过双向注意力网络获得文档的问题向量空间表示。更多参考[BiDAF](https://arxiv.org/abs/1611.01603)。
+- **融合层** 通过双向LSTM网络获得文档向量表示中上下文的关联性信息。
+- **输出层** 通过`point network`预测答案在问题中的位置。更多参考 [Match-LSTM](https://arxiv.org/abs/1608.07905)。
 
-## How to Run
-### Download the Dataset
-To Download DuReader dataset:
+## 数据准备
+### 下载数据集
+通过如下脚本下载数据集:
 ```
 cd data && bash download.sh
 ```
-For more details about DuReader dataset please refer to [DuReader Dataset Homepage](https://ai.baidu.com//broad/subordinate?dataset=dureader).
+模型默认使用DuReader数据集，是百度开源的真实阅读理解数据，更多参考[DuReader Dataset Homepage](https://ai.baidu.com//broad/subordinate?dataset=dureader)
 
-### Download Thirdparty Dependencies
-We use Bleu and Rouge as evaluation metrics, the calculation of these metrics relies on the scoring scripts under [coco-caption](https://github.com/tylin/coco-caption), to download them, run:
+### 下载第三方依赖
+我们使用Bleu和Rouge作为度量指标， 这些度量指标的源码位于[coco-caption](https://github.com/tylin/coco-caption)， 可以使用如下命令下载源码:
 
 ```
 cd utils && bash download_thirdparty.sh
 ```
-### Environment Requirements
-For now we've only tested on PaddlePaddle v1.0, to install PaddlePaddle and for more details about PaddlePaddle, see [PaddlePaddle Homepage](http://paddlepaddle.org).
+### 环境依赖
+当前模型是在paddlepaddle 1.2版本上测试， 因此建议在1.2版本上使用本模型。关于PaddlePaddle的安装可以参考[PaddlePaddle Homepage](http://paddlepaddle.org)。
 
-### Preparation
-Before training the model, we have to make sure that the data is ready. For preparation, we will check the data files, make directories and extract a vocabulary for later use. You can run the following command to do this with a specified task name:
-
+## 模型训练
+### 段落抽取
+在段落抽取阶段，主要是使用文档相关性score对文档内容进行优化， 抽取的结果将会放到`data/extracted/`目录下。如果你用demo数据测试，可以跳过这一步。如果你用dureader数据，需要指定抽取的数据目录，命令如下： 
 ```
-sh run.sh --prepare
+sh run.sh --para_extraction --trainset data/preprocessed/trainset/zhidao.train.json data/preprocessed/trainset/search.train.json --devset data/preprocessed/devset/zhidao.dev.json data/preprocessed/devset/search.dev.json --testset data/preprocessed/testset/zhidao.test.json data/preprocessed/testset/search.test.json
 ```
-You can specify the files for train/dev/test by setting the `trainset`/`devset`/`testset`.
-### Training
-To train the model and you can also set the hyper-parameters such as the learning rate by using `--learning_rate NUM`. For example, to train the model for 10 passes, you can run:
-
+其中参数 `trainset`/`devset`/`testset`分别对应训练、验证和测试数据集(下同)。
+### 词典准备
+在训练模型之前，我们应该确保数据已经准备好。在准备阶段，通过全部数据文件生成一个词典，这个词典会在后续的训练和预测中用到。你可以通过如下命令生成词典：
 ```
-sh run.sh --train --pass_num 10
+run.sh --prepare
 ```
-
-The training process includes an evaluation on the dev set after each training epoch. By default, the model with the least Bleu-4 score on the dev set will be saved.
-
-### Evaluation
-To conduct a single evaluation on the dev set with the the model already trained, you can run the following command:
-
+上面的命令默认使用demo数据，如果想使用dureader数据集，应该按照如下方式指定：
 ```
-sh run.sh --evaluate  --load_dir models/1
+run.sh --prepare --trainset data/extracted/trainset/zhidao.train.json data/extracted/trainset/search.train.json --devset data/extracted/devset/zhidao.dev.json data/extracted/devset/search.dev.json --testset data/extracted/testset/zhidao.test.json data/extracted/testset/search.test.json
 ```
-
-### Prediction
-You can also predict answers for the samples in some files using the following command:
-
+其中参数 `trainset`/`devset`/`testset`分别对应训练、验证和测试数据集。
+### 模型训练
+训练模型的启动命令如下：
 ```
-sh run.sh --predict --load_dir models/1 --testset ../data/preprocessed/testset/search.dev.json
+sh run.sh --train
 ```
+可以通过设置超参数更改训练的配置，比如通过`--learning_rate NUM`更改学习率，通过`--pass_num NUM`更改训练的轮数
+训练的过程中，每隔一定迭代周期，会测试在验证集上的性能指标， 通过`--dev_interval NUM`设置周期大小
 
-By default, the results are saved at `../data/results/` folder. You can change this by specifying `--result_dir DIR_PATH`.
+### 模型评测
+在模型训练结束后，如果想使用训练好的模型进行评测，获得度量指标，可以使用如下命令:
+```
+sh run.sh --evaluate  --load_dir data/models/1
+```
+其中，`--load_dir data/models/1`是模型的checkpoint目录
+
+### 预测
+使用训练好的模型，对问答文档数据直接预测结果，获得答案，可以使用如下命令:
+```
+sh run.sh --predict --load_dir data/models/1 --testset data/extracted/testset/search.dev.json
+```
+其中`--testset`指定了预测用的数据集，生成的问题答案默认会放到`data/results/` 目录，你可以通过参数`--result_dir DIR_PATH`更改配置
+
+### 实验结果
+验证集 ROUGE-L:47.65，测试集 ROUGE-L:54.58。
+
+这是在P40上，使用4卡GPU，batch size=4*32的训练结果，如果使用单卡，指标可能会略有降低，但在验证集上的ROUGE-L也不小于47。
+
+## 参考文献
+[Machine Comprehension Using Match-LSTM and Answer Pointer](https://arxiv.org/abs/1608.07905)
+
+[Bidirectional Attention Flow for Machine Comprehension](https://arxiv.org/abs/1611.01603)

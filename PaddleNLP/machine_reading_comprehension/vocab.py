@@ -37,9 +37,10 @@ class Vocab(object):
 
         self.pad_token = '<blank>'
         self.unk_token = '<unk>'
+        self.split_token = '<splitter>'
 
         self.initial_tokens = initial_tokens if initial_tokens is not None else []
-        self.initial_tokens.extend([self.pad_token, self.unk_token])
+        self.initial_tokens.extend([self.pad_token, self.unk_token, self.split_token])
         for token in self.initial_tokens:
             self.add(token)
 
@@ -137,7 +138,7 @@ class Vocab(object):
         """
         self.embed_dim = embed_dim
         self.embeddings = np.random.rand(self.size(), embed_dim)
-        for token in [self.pad_token, self.unk_token]:
+        for token in [self.pad_token, self.unk_token, self.split_token]:
             self.embeddings[self.get_id(token)] = np.zeros([self.embed_dim])
 
     def load_pretrained_embeddings(self, embedding_path):
