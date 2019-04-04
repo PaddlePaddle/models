@@ -30,20 +30,21 @@ cd utils && bash download_thirdparty.sh
 
 ## 模型训练
 ### 段落抽取
-在段落抽取阶段，主要是使用文档相关性score对文档内容进行优化, 抽取的结果将会放到`data/extracted/`目录下。如果你用demo数据测试，可以跳过这一步。 
+在段落抽取阶段，主要是使用文档相关性score对文档内容进行优化, 抽取的结果将会放到`data/extracted/`目录下。如果你用demo数据测试，可以跳过这一步。如果你用dureader数据，需要指定抽取的数据目录，命令如下： 
 ```
-sh run.sh --para_extraction
+sh run.sh --para_extraction --trainset data/preprocessed/trainset/zhidao.train.json data/preprocessed/trainset/search.train.json --devset data/preprocessed/devset/zhidao.dev.json data/preprocessed/devset/search.dev.json --testset data/preprocessed/testset/zhidao.test.json data/preprocessed/testset/search.test.json
+其中参数 `trainset`/`devset`/`testset`分别对应训练、验证和测试数据集(下同)。
 ```
 ### 词典准备
 在训练模型之前，我们应该确保数据已经准备好。在准备阶段，通过全部数据文件生成一个词典，这个词典会在后续的训练和预测中用到。你可以通过如下命令生成词典：
 ```
 run.sh --prepare
 ```
-上面的命令默认使用demo数据，如果想使用dureader数据集，应该按照如下方式指定(下同)：
+上面的命令默认使用demo数据，如果想使用dureader数据集，应该按照如下方式指定：
 ```
 run.sh --prepare --trainset data/extracted/trainset/zhidao.train.json data/extracted/trainset/search.train.json --devset data/extracted/devset/zhidao.dev.json data/extracted/devset/search.dev.json --testset data/extracted/testset/zhidao.test.json data/extracted/testset/search.test.json
 ```
-可以通过参数 `trainset`/`devset`/`testset`更改生成词典的数据目录
+其中参数 `trainset`/`devset`/`testset`分别对应训练、验证和测试数据集。
 ### 模型训练
 训练模型的启动命令如下：
 ```
@@ -55,19 +56,20 @@ sh run.sh --train
 ### 模型评测
 在模型训练结束后，如果想使用训练好的模型进行评测，获得度量指标，可以使用如下命令:
 ```
-sh run.sh --evaluate  --load_dir models/1
+sh run.sh --evaluate  --load_dir data/models/1
 ```
 其中，`--load_dir models/1`是模型的checkpoint目录
 
 ### 预测
 使用训练好的模型，对问答数据直接预测结果，获得答案，可以使用如下命令:
 ```
-sh run.sh --predict --load_dir models/1 --testset data/extracted/testset/search.dev.json
+sh run.sh --predict --load_dir data/models/1 --testset data/extracted/testset/search.dev.json
 ```
 其中`--testset`指定了预测用的数据集, 生成的问题答案默认会放到`data/results/` 目录，你可以通过参数`--result_dir DIR_PATH`更改配置
 
 ### 实验结果
 验证集 ROUGE-L:47.65，测试集 ROUGE-L:54.58
+
 这是在P40上，使用4卡GPU，batch size=4*32的训练结果，如果使用单卡，指标可能会略有降低，但在验证集上的ROUGE-L也不小于47。
 
 ## 参考文献
