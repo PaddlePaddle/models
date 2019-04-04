@@ -1,7 +1,7 @@
 <h1 align="center">ELMO</h1>
 
 ## 介绍
-ELMO(Embeddings from Language Models)是一种新型深度语境化词表征，可对词进行复杂特征(如句法和语义)和词在语言语境中的变化进行建模(即对多义词进行建模)。该模型支持多卡训练，训练速度比主流实现快约1倍,  验证在中文词法分析任务上f1值提升0.68%。
+ELMO(Embeddings from Language Models)是一种新型深度语境化词表征，可对词进行复杂特征(如句法和语义)和词在语言语境中的变化进行建模(即对多义词进行建模)。PaddlePaddle版本该模型支持多卡训练，训练速度比主流实现快约1倍,  验证在中文词法分析任务上f1值提升0.68%。
 
 ELMO在大语料上以language model为训练目标，训练出bidirectional LSTM模型，利用LSTM产生词语的表征, 对下游NLP任务(如问答、分类、命名实体识别等）进行微调。
 
