@@ -35,7 +35,7 @@ def parse_args():
         "--batch_size",
         type=int,
         default=128,
-        help="The sequence number of a mini-batch data. (default: %(default)d)")
+        help="The number of sequences contained in a mini-batch")
     parser.add_argument(
         "--embed_size",
         type=int,
