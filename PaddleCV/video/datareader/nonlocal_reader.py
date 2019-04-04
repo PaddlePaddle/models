@@ -79,7 +79,7 @@ class NonlocalReader(DataReader):
             sample_times = 1
             return reader_func(filelist, batch_size, sample_times, False, False,
                                **dataset_args)
-        elif self.mode == 'test':
+        elif self.mode == 'test' or self.mode == 'infer':
             sample_times = cfg['TEST']['num_test_clips']
             if cfg['TEST']['use_multi_crop'] == 1:
                 sample_times = int(sample_times / 3)

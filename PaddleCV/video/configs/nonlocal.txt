@@ -82,7 +82,7 @@ use_multi_crop = 1
 [INFER]
 num_reader_threads = 8
 batch_size = 1
-filelist = 'dataset/nonlocal/inferencelist.txt'
+filelist = 'dataset/nonlocal/inferlist.txt'
 crop_size = 256
 sample_rate = 8
 video_length = 8

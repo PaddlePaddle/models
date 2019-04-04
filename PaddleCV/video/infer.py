@@ -83,8 +83,9 @@ def infer(args):
     # parse config
     config = parse_config(args.config)
     infer_config = merge_configs(config, 'infer', vars(args))
+    logger.info("############### infer config ###############")
+    print_configs(infer_config)
     infer_model = models.get_model(args.model_name, infer_config, mode='infer')
-
     infer_model.build_input(use_pyreader=False)
     infer_model.build_model()
     infer_feeds = infer_model.feeds()
@@ -105,10 +106,8 @@ def infer(args):
     # if no weight files specified, download weights from paddle
     weights = args.weights or infer_model.get_weights()
 
-    def if_exist(var):
-        return os.path.exists(os.path.join(weights, var.name))
-
-    fluid.io.load_vars(exe, weights, predicate=if_exist)
+    infer_model.load_test_weights(exe, weights,
+                                  fluid.default_main_program(), place)
 
     infer_feeder = fluid.DataFeeder(place=place, feed_list=infer_feeds)
     fetch_list = [x.name for x in infer_outputs]

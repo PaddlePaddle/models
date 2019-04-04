@@ -123,7 +123,7 @@ def obtain_arc(arc_type, video_length):
 def create_model(data, label, cfg, is_training=True, mode='train'):
     group = cfg.RESNETS.num_groups
     width_per_group = cfg.RESNETS.width_per_group
-    batch_size = int(cfg.TRAIN.batch_size / cfg.NUM_GPUS)
+    batch_size = int(cfg.TRAIN.batch_size / cfg.TRAIN.num_gpus)
 
     logger.info('--------------- ResNet-{} {}x{}d-{}, {} ---------------'.
                 format(cfg.MODEL.depth, group, width_per_group,
