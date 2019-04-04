@@ -3,7 +3,7 @@
 PaddlePaddle Fast ImageNet can train ImageNet dataset with fewer epochs. We implemented the it according to the blog 
 [Now anyone can train Imagenet in 18 minutes](https://www.fast.ai/2018/08/10/fastai-diu-imagenet/) which published on the [fast.ai] website.
 PaddlePaddle Fast ImageNet using the dynmiac batch size, dynamic image size, rectangular images validation and etc... so that the Fast ImageNet can achieve the baseline
-(acc1: 75%, acc5: 93%) by 27 epochs on 8 * V100 GPUs.
+(acc1: 75.9%, acc5: 93.0%) at 26 epochs on 8 * V100 GPUs.
 
 ## Experiment
 
