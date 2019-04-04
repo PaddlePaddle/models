@@ -50,6 +50,8 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 [SimNet](https://github.com/baidu/AnyQ/blob/master/tools/simnet/train/paddle/README.md)|语义匹配框架|使用SimNet构建出的模型可以便捷的加入AnyQ系统中，增强AnyQ系统的语义匹配能力|-
 [DuReader](./PaddleNLP/machine_reading_comprehension/README.md)|阅读理解模型|百度MRC数据集上的机器阅读理解模型|-
 [Bi-GRU-CRF](./PaddleNLP/sequence_tagging_for_ner/README.md)|命名实体识别|结合了CRF和双向GRU的命名实体识别模型|-
+[dialogue model](https://github.com/baidu/knowledge-driven-dialogue/tree/master/generative_paddle/README.md)|知识驱动的对话模型|基于双向RNN和attention实现的生成式对话系统|-
+
 
 ## PaddleRec
 模型|简介|模型优势|参考论文
