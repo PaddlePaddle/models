@@ -78,10 +78,10 @@ CUDA_VISIBLE_DEVICES=1 python -u train.py --use_cuda 1 > log.txt 2>&1 &
 
 cpu 单机训练
 ``` bash
-python -u train.py --use_cuda 0 > log.txt 2>&1 &
+CPU_NUM=1 python -u train.py --use_cuda 0 > log.txt 2>&1 &
 ```
 
-值得注意的是上述单卡训练可以通过加--parallel 1参数使用Parallel Executor来进行加速
+值得注意的是上述单卡训练可以通过加--use_parallel 1参数使用Parallel Executor来进行加速。
 
 
 ## 训练结果示例
