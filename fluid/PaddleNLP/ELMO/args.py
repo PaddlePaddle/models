@@ -28,7 +28,7 @@ def parse_args():
         default="",
         help="Specify the path to load trained models.")
     parser.add_argument(
-        "--load_pretraning_params",
+        "--load_pretraining_params",
         type=str,
         default="",
         help="Specify the path to load pretrained model parameters, NOT including moment and learning_rate")
@@ -60,17 +60,11 @@ def parse_args():
     parser.add_argument(
         "--data_path", type=str, help="all the data for train,valid,test")
     parser.add_argument("--vocab_path", type=str, help="vocab file path")
-    parser.add_argument('--para_init', action='store_true')
-    parser.add_argument('--init1', type=float, default=0.1)
     parser.add_argument(
         '--use_gpu', type=bool, default=False, help='whether using gpu')
-    parser.add_argument(
-        '--log_path',
-        help='path of the log file. If not set, logs are printed to console')
     parser.add_argument('--enable_ce', action='store_true')
     parser.add_argument('--test_nccl', action='store_true')
     parser.add_argument('--optim', default='adagrad', help='optimizer type')
-    parser.add_argument('--para_print', action='store_true')
     parser.add_argument('--sample_softmax', action='store_true')
     parser.add_argument(
         "--learning_rate",
@@ -86,7 +80,7 @@ def parse_args():
     parser.add_argument(
         "--save_interval",
         type=int,
-        default=2000,
+        default=10000,
         help="log the train loss every n batches."
         "(default: %(default)d)")
     parser.add_argument(
@@ -107,8 +101,7 @@ def parse_args():
     parser.add_argument('--train_path', type=str, default='')
     parser.add_argument('--test_path', type=str, default='')
     parser.add_argument('--update_method', type=str, default='nccl2')
-    parser.add_argument('--detail', action='store_true')
-    parser.add_argument('--random_seed', type=int, default=123)
+    parser.add_argument('--random_seed', type=int, default=0)
     parser.add_argument('--n_negative_samples_batch', type=int, default=8000)
     args = parser.parse_args()
 

@@ -158,10 +158,6 @@ def eval(vocab, infer_progs, dev_count, logger, args):
         place = fluid.CUDAPlace(0)
         dev_count = fluid.core.get_cuda_device_count()
 
-    if args.para_print:
-        with open("infer_program.desc", 'w') as f:
-            print(str(infer_prog), file=f)
-
     total_loss = 0.0
     total_cnt = 0
     n_batch_cnt = 0
@@ -464,12 +460,6 @@ def train_loop(args,
 
     logger.info('Training the model...')
     exe_strategy = fluid.parallel_executor.ExecutionStrategy()
-    if args.para_print:
-        exe_strategy.num_threads = 1
-        debug_init(train_prog, train_model.grad_vars,
-                   train_model.grad_vars_name)
-        with open("program.desc", 'w') as f:
-            print(str(train_prog), file=f)
     parallel_executor = fluid.ParallelExecutor(
         loss_name=train_model.loss.name,
         main_program=train_prog,
@@ -584,8 +574,6 @@ def train_loop(args,
                     os.makedirs(model_path)
                 fluid.io.save_persistables(
                     executor=exe, dirname=model_path, main_program=train_prog)
-            if args.detail and batch_id > 100:
-                exit()
 
         end_time = time.time()
         total_time += end_time - start_time

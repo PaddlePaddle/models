@@ -39,12 +39,6 @@ def lstmp_encoder(input_seq, gate_size, h_0, c_0, para_name, proj_size, test_mod
     # and cell activation vectors need be done outside of dynamic_lstm.
     # So the output size is 4 times of gate_size.
 
-    if args.para_init:
-        init = fluid.initializer.Constant(args.init1)
-        init_b = fluid.initializer.Constant(0.0)
-    else:
-        init = None
-        init_b = None
     input_seq = dropout(input_seq, test_mode, args)
     input_proj = layers.fc(input=input_seq,
                            param_attr=fluid.ParamAttr(
@@ -62,8 +56,8 @@ def lstmp_encoder(input_seq, gate_size, h_0, c_0, para_name, proj_size, test_mod
         proj_clip=args.proj_clip,
         cell_clip=args.cell_clip,
         proj_activation="identity",
-        param_attr=fluid.ParamAttr(initializer=init),
-        bias_attr=fluid.ParamAttr(initializer=init_b))
+        param_attr=fluid.ParamAttr(initializer=None),
+        bias_attr=fluid.ParamAttr(initializer=None))
 
     return hidden, cell, input_proj
 

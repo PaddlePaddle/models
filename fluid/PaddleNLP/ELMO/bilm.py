@@ -23,10 +23,8 @@ import paddle.fluid as fluid
 import numpy as np
 
 # if you use our release weight layers,do not use the args.
-para_init = False
 cell_clip = 3.0
 proj_clip = 3.0
-init1 = 0.1
 hidden_size = 4096
 vocab_size = 52445
 embed_size = 512
@@ -34,7 +32,7 @@ embed_size = 512
 modify_dropout = 1
 proj_size = 512
 num_layers = 2
-random_seed = 123
+random_seed = 0
 dropout_rate = 0.5
 
 
@@ -46,18 +44,12 @@ def dropout(input):
         seed=random_seed,
         is_test=False)
 
-
 def lstmp_encoder(input_seq, gate_size, h_0, c_0, para_name):
     # A lstm encoder implementation with projection.
     # Linear transformation part for input gate, output gate, forget gate
     # and cell activation vectors need be done outside of dynamic_lstm.
     # So the output size is 4 times of gate_size.
-    if para_init:
-        init = fluid.initializer.Constant(init1)
-        init_b = fluid.initializer.Constant(0.0)
-    else:
-        init = None
-        init_b = None
+
     input_proj = layers.fc(input=input_seq,
                            param_attr=fluid.ParamAttr(
                                name=para_name + '_gate_w', initializer=init),
@@ -74,8 +66,8 @@ def lstmp_encoder(input_seq, gate_size, h_0, c_0, para_name):
         proj_clip=proj_clip,
         cell_clip=cell_clip,
         proj_activation="identity",
-        param_attr=fluid.ParamAttr(initializer=init),
-        bias_attr=fluid.ParamAttr(initializer=init_b))
+        param_attr=fluid.ParamAttr(initializer=None),
+        bias_attr=fluid.ParamAttr(initializer=None))
     return hidden, cell, input_proj
 
 
