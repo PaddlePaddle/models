@@ -70,7 +70,7 @@ def infer(args):
     for batch_id, data in enumerate(infer_reader()):
         result = exe.run(test_program, fetch_list=fetch_list, feed=feeder.feed(data))
         result = result[0][0].reshape(-1)
-        print("Test-{0}-feature: {1}".format(batch_id, result))
+        print("Test-{0}-feature: {1}".format(batch_id, result[:5]))
         sys.stdout.flush()
 
 
