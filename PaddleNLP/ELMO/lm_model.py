@@ -224,7 +224,6 @@ class LanguageModel(object):
 
         losses = layers.concat([forward[-1], backward[-1]])
         self.loss = layers.reduce_mean(losses)
-        self.loss.permissions = True
         self.loss.persistable = True
         self.grad_vars = [x_f, y_f, x_b, y_b, self.loss]
         self.grad_vars_name = ['x', 'y', 'x_r', 'y_r', 'final_loss']
