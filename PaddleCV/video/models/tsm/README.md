@@ -31,7 +31,7 @@ TSM的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
             --log-interval=10 
             --valid-interval=1
 
-    bash scripts/train/train_tsm,.sh
+    bash scripts/train/train_tsm.sh
 
 - 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/tsm_kinetics.tar.gz)通过`--resume`指定权重存放路径进行finetune等开发
 
