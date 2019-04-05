@@ -5,4 +5,5 @@ python  train.py \
 --vocab_path baike/vocabulary_min5k.txt \
 --learning_rate 0.2 \
 --use_gpu True \
+--shuffle True \
 --local True $@

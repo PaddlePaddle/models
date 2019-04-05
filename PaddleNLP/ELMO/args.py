@@ -94,7 +94,7 @@ def parse_args():
     parser.add_argument('--cell_clip', type=float, default=3.0)
     parser.add_argument('--max_epoch', type=float, default=10)
     parser.add_argument('--local', type=bool, default=False)
-    parser.add_argument('--shuffle', type=bool, default=False)
+    parser.add_argument('--shuffle', type=bool, default=True)
     parser.add_argument('--use_custom_samples', type=bool, default=False)
     parser.add_argument('--para_save_dir', type=str, default='model_new')
     parser.add_argument('--train_path', type=str, default='')
