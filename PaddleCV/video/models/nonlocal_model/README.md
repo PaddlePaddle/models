@@ -30,7 +30,7 @@ Nonlocal 关联函数的定义如下
 #### 高斯式
 
 <p align="center">
-<a href="https://www.codecogs.com/eqnedit.php?latex=f(x_i,&space;x_j)&space;=&space;exp^{x_i^Tx_j},&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?f(x_i,&space;x_j)&space;=&space;exp^{x_i^Tx_j},&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" title="f(x_i, x_j) = exp^{x_i^Tx_j}, C(x) = \sum_{j}f(x_i, x_j)" /></a>
+<a href="https://www.codecogs.com/eqnedit.php?latex=f(x_i,&space;x_j)&space;=&space;exp^{x_i^Tx_j},&space;\qquad&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?f(x_i,&space;x_j)&space;=&space;exp^{x_i^Tx_j},&space;\qquad&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" title="f(x_i, x_j) = exp^{x_i^Tx_j}, \qquad C(x) = \sum_{j}f(x_i, x_j)" /></a>
 </p>
 
 #### 内嵌高斯式
