@@ -1,5 +1,4 @@
 # Non-local Neural Networks视频分类模型
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 
 ---
 ## 目录
@@ -22,6 +21,7 @@ Non-local Neural Networks是由Xiaolong Wang等研究者在2017年提出的模�
 
 Nonlocal 关联函数的定义如下
 
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 $$y_i=\frac{1}{C(x)}\sum{f(x_i, x_j)g(x_j)}$$
 
 在上面的公式中，x表示输入feature map， y表示输出feature map，i是输出feature map的位置，j是输入feature map的位置，f(yi, xj)是输出点和输入点之间的关联性的函数，C是根据f(yi, xj)选取的归一化函数。g(xj)是对输入feature map做一个变换操作，通常可以选取比较简单的线性变换形式；f(yi, xj)可以选取不同的形式，通常可以选择
