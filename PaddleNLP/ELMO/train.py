@@ -578,7 +578,6 @@ def train_loop(args,
 
         end_time = time.time()
         total_time += end_time - start_time
-        logger.info("train ppl {}".format(ppl))
 
         if epoch_id == args.max_epoch - 1 and args.enable_ce:
             logger.info("lstm_language_model_duration\t%s" %
