@@ -21,7 +21,9 @@ Non-local Neural Networks是由Xiaolong Wang等研究者在2017年提出的模�
 
 Nonlocal 关联函数的定义如下
 
+<p align="center">
 <a href="https://www.codecogs.com/eqnedit.php?latex=y_{i}=\frac{1}{C(x)}&space;\sum_{j}f(x_i,&space;y_j)g(y_j)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?y_{i}=\frac{1}{C(x)}&space;\sum_{j}f(x_i,&space;y_j)g(y_j)" title="y_{i}=\frac{1}{C(x)} \sum_{j}f(x_i, y_j)g(y_j)" /></a>
+</p>
 
 在上面的公式中，x表示输入feature map， y表示输出feature map，i是输出feature map的位置，j是输入feature map的位置，f(yi, xj)是输出点和输入点之间的关联性的函数，C是根据f(yi, xj)选取的归一化函数。g(xj)是对输入feature map做一个变换操作，通常可以选取比较简单的线性变换形式；f(yi, xj)可以选取不同的形式，通常可以选择
 
