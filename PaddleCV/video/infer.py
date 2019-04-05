@@ -83,8 +83,7 @@ def infer(args):
     # parse config
     config = parse_config(args.config)
     infer_config = merge_configs(config, 'infer', vars(args))
-    logger.info("############### infer config ###############")
-    print_configs(infer_config)
+    print_configs(infer_config, "Infer")
     infer_model = models.get_model(args.model_name, infer_config, mode='infer')
     infer_model.build_input(use_pyreader=False)
     infer_model.build_model()

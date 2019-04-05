@@ -61,7 +61,10 @@ def merge_configs(cfg, sec, args_dict):
     return cfg
 
 
-def print_configs(cfg):
-    import pprint
-    logger.info('Training with config:')
-    logger.info(pprint.pformat(cfg))
+def print_configs(cfg, mode):
+    logger.info("---------------- {:>5} Arguments ----------------".format(mode))
+    for sec, sec_items in cfg.items():
+        logger.info("{}:".format(sec))
+        for k, v in sec_items.items():
+            logger.info("    {}:{}".format(k, v))
+    logger.info("-------------------------------------------------")

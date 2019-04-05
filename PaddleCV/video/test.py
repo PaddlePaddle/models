@@ -68,8 +68,7 @@ def test(args):
     # parse config
     config = parse_config(args.config)
     test_config = merge_configs(config, 'test', vars(args))
-    logger.info("############### test config ###############")
-    print_configs(test_config)
+    print_configs(test_config, "Test")
 
     # build model
     test_model = models.get_model(args.model_name, test_config, mode='test')

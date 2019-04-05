@@ -107,8 +107,7 @@ def train(args):
     config = parse_config(args.config)
     train_config = merge_configs(config, 'train', vars(args))
     valid_config = merge_configs(config, 'valid', vars(args))
-    logger.info("############### train config ###############")
-    print_configs(train_config)
+    print_configs(train_config, 'Train')
     train_model = models.get_model(args.model_name, train_config, mode='train')
     valid_model = models.get_model(args.model_name, valid_config, mode='valid')
 
