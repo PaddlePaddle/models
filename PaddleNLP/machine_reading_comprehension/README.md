@@ -38,17 +38,21 @@ sh run.sh --para_extraction --trainset data/preprocessed/trainset/zhidao.train.j
 ### 词典准备
 在训练模型之前，我们应该确保数据已经准备好。在准备阶段，通过全部数据文件生成一个词典，这个词典会在后续的训练和预测中用到。你可以通过如下命令生成词典：
 ```
-run.sh --prepare
+bash run.sh --prepare
 ```
 上面的命令默认使用demo数据，如果想使用dureader数据集，应该按照如下方式指定：
 ```
-run.sh --prepare --trainset data/extracted/trainset/zhidao.train.json data/extracted/trainset/search.train.json --devset data/extracted/devset/zhidao.dev.json data/extracted/devset/search.dev.json --testset data/extracted/testset/zhidao.test.json data/extracted/testset/search.test.json
+bash run.sh --prepare --trainset data/extracted/trainset/zhidao.train.json data/extracted/trainset/search.train.json --devset data/extracted/devset/zhidao.dev.json data/extracted/devset/search.dev.json --testset data/extracted/testset/zhidao.test.json data/extracted/testset/search.test.json
 ```
 其中参数 `trainset`/`devset`/`testset`分别对应训练、验证和测试数据集。
 ### 模型训练
 训练模型的启动命令如下：
 ```
-sh run.sh --train
+bash run.sh --train
+```
+上面的命令默认使用demo数据，如果想使用dureader数据集，应该按照如下方式指定：
+```
+bash run.sh --train --trainset data/extracted/trainset/zhidao.train.json data/extracted/trainset/search.train.json --devset data/extracted/devset/zhidao.dev.json data/extracted/devset/search.dev.json --testset data/extracted/testset/zhidao.test.json data/extracted/testset/search.test.json
 ```
 可以通过设置超参数更改训练的配置，比如通过`--learning_rate NUM`更改学习率，通过`--pass_num NUM`更改训练的轮数
 训练的过程中，每隔一定迭代周期，会测试在验证集上的性能指标， 通过`--dev_interval NUM`设置周期大小
@@ -56,14 +60,19 @@ sh run.sh --train
 ### 模型评测
 在模型训练结束后，如果想使用训练好的模型进行评测，获得度量指标，可以使用如下命令:
 ```
-sh run.sh --evaluate  --load_dir data/models/1
+bash run.sh --evaluate  --load_dir data/models/1
 ```
 其中，`--load_dir data/models/1`是模型的checkpoint目录
+
+上面的命令默认使用demo数据，如果想使用dureader数据集，应该按照如下方式指定：
+```
+bash run.sh --evaluate  --load_dir data/models/1  --devset data/extracted/devset/zhidao.dev.json data/extracted/devset/search.dev.json --testset data/extracted/testset/zhidao.test.json data/extracted/testset/search.test.json
+```
 
 ### 预测
 使用训练好的模型，对问答文档数据直接预测结果，获得答案，可以使用如下命令:
 ```
-sh run.sh --predict --load_dir data/models/1 --testset data/extracted/testset/search.dev.json
+bash run.sh --predict --load_dir data/models/1 --testset data/extracted/testset/search.dev.json
 ```
 其中`--testset`指定了预测用的数据集，生成的问题答案默认会放到`data/results/` 目录，你可以通过参数`--result_dir DIR_PATH`更改配置
 
