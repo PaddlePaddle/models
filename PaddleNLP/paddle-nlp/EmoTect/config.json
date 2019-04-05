@@ -1,0 +1,4 @@
+{
+    "model_type": "textcnn_net",
+    "vocab_size": 240465 
+}
