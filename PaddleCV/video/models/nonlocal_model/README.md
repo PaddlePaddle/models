@@ -60,15 +60,21 @@ Nonlocal 关联函数的定义如下
 ### Nonlocal Block
 
 采用类似Resnet的结构，定义如下的Nonlocal block
+<p align="center">
+<a href="https://www.codecogs.com/eqnedit.php?latex=Z_i&space;=&space;W_zy_i&plus;x_i" target="_blank"><img src="https://latex.codecogs.com/gif.latex?Z_i&space;=&space;W_zy_i&plus;x_i" title="Z_i = W_zy_i+x_i" /></a>
+</p>
 
-Nonlocal操作引入的部分与Resnet中的残差项类似，通过使用Nonlocal block，可以方便的在网络中的任何地方添加Nonlocal操作，而其他地方照样可以使用原始的预训练模型做初始化。如果将Wz初始化为0，则跟不使用Nonlocal block的初始情形等价。
+Nonlocal操作引入的部分与Resnet中的残差项类似，通过使用Nonlocal block，可以方便的在网络中的任何地方添加Nonlocal操作，而其他地方照样可以使用原始的预训练模型进行初始化。如果将Wz初始化为0，则跟不使用Nonlocal block的初始情形等价。
 
 ### 具体实现
 
-下图描述了使用内嵌高斯形式关联函数的具体实现过程，
+下图描述了Non-local Block使用内嵌高斯形式关联函数的具体实现过程，
+<p align="center">
+<img src="../../images/nonlocal_instantiation.png" height=488 width=585 hspace='10'/> <br />
+使用内嵌高斯形式关联函数的Non-local Block
+</p>
 
-其中XXXXXXX，g(Xj)是对输入feature map做一个线性变换，使用1x1x1的卷积；theta和phi也是线性变化，同样使用1x1x1的卷积来实现。二者的内积是
-从上图中可以看到，Nonlocal操作只需用到通常的卷积、内积、加法、softmax等比较常用的算子，不需要额外添加新的算子，用户可以非常方便的实现组网构建模型。
+g(Xj)是对输入feature map做一个线性变换，使用1x1x1的卷积；theta和phi也是线性变化，同样使用1x1x1的卷积来实现。从上图中可以看到，Nonlocal操作只需用到通常的卷积、内积、加法、softmax等比较常用的算子，不需要额外添加新的算子，用户可以非常方便的实现组网构建模型。
 
 ### 模型效果
 
