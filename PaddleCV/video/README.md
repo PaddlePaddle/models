@@ -12,6 +12,7 @@
 | [StNet](./models/stnet/README.md)  | 视频分类| AAAI'19提出的视频联合时空建模方法 |
 | [TSM](./models/tsm/README.md) | 视频分类| |
 | [TSN](./models/tsn/README.md) | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
+| [NONLOCAL](./models/nonlocal_model/README.md) | 视频分类|  |
 
 ### 主要特点
 
@@ -131,4 +132,3 @@ infer.py
 
 - 3/2019: 新增模型库，发布Attention Cluster，Attention LSTM，NeXtVLAD，StNet，TSN五个视频分类模型。
 - 4/2019: 发布Non-local, TSM两个视频分类模型。
-

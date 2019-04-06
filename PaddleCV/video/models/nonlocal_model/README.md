@@ -25,18 +25,18 @@ Nonlocal 关联函数的定义如下
 <a href="https://www.codecogs.com/eqnedit.php?latex=y_{i}=\frac{1}{C(x)}&space;\sum_{j}f(x_i,&space;x_j)g(x_j)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?y_{i}=\frac{1}{C(x)}&space;\sum_{j}f(x_i,&space;x_j)g(x_j)" title="y_{i}=\frac{1}{C(x)} \sum_{j}f(x_i, x_j)g(x_j)" /></a>
 </p>
 
-在上面的公式中，x表示输入feature map， y表示输出feature map，i是输出feature map的位置，j是输入feature map的位置，f(xi, xj)描述了输出点i跟所有输入点j之间的关联，C是根据f(xi, xj)选取的归一化函数。g(xj)是对输入feature map做一个变换操作，通常可以选取比较简单的线性变换形式；f(xi, xj)可以选取不同的形式，通常可以如下几种形式
+在上面的公式中，x表示输入feature map， y表示输出feature map，i是输出feature map的位置，j是输入feature map的位置，f(xi, xj)描述了输出点i跟所有输入点j之间的关联，C是根据f(xi, xj)选取的归一化函数。g(xj)是对输入feature map做一个变换操作，通常可以选取比较简单的线性变换形式；f(xi, xj)可以选取不同的形式，通常可以使用如下几种形式
 
 #### 高斯式
 
 <p align="center">
-<a href="https://www.codecogs.com/eqnedit.php?latex=f(x_i,&space;x_j)&space;=&space;exp^{x_i^Tx_j},&space;\qquad&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?f(x_i,&space;x_j)&space;=&space;exp^{x_i^Tx_j},&space;\qquad&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" title="f(x_i, x_j) = exp^{x_i^Tx_j}, \qquad C(x) = \sum_{j}f(x_i, x_j)" /></a>
+<a href="https://www.codecogs.com/eqnedit.php?latex=f(x_i,&space;x_j)&space;=&space;e^{x_i^Tx_j},&space;\qquad&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?f(x_i,&space;x_j)&space;=&space;e^{x_i^Tx_j},&space;\qquad&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" title="f(x_i, x_j) = e^{x_i^Tx_j}, \qquad C(x) = \sum_{j}f(x_i, x_j)" /></a>
 </p>
 
 #### 内嵌高斯式
 
 <p align="center">
-<a href="https://www.codecogs.com/eqnedit.php?latex=f(x_i,&space;x_j)&space;=&space;exp^{{\theta(x_i)}^T\phi(x_j)},&space;\qquad&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?f(x_i,&space;x_j)&space;=&space;exp^{{\theta(x_i)}^T\phi(x_j)},&space;\qquad&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" title="f(x_i, x_j) = exp^{{\theta(x_i)}^T\phi(x_j)}, \qquad C(x) = \sum_{j}f(x_i, x_j)" /></a>
+<a href="https://www.codecogs.com/eqnedit.php?latex=f(x_i,&space;x_j)&space;=&space;e^{{\theta(x_i)}^T\phi(x_j)},&space;\qquad&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?f(x_i,&space;x_j)&space;=&space;e^{{\theta(x_i)}^T\phi(x_j)},&space;\qquad&space;C(x)&space;=&space;\sum_{j}f(x_i,&space;x_j)" title="f(x_i, x_j) = e^{{\theta(x_i)}^T\phi(x_j)}, \qquad C(x) = \sum_{j}f(x_i, x_j)" /></a>
 </p>
 
 #### 内积式
@@ -74,11 +74,11 @@ Nonlocal操作引入的部分与Resnet中的残差项类似，通过使用Nonloc
 使用内嵌高斯形式关联函数的Non-local Block
 </p>
 
-g(Xj)是对输入feature map做一个线性变换，使用1x1x1的卷积；theta和phi也是线性变化，同样使用1x1x1的卷积来实现。从上图中可以看到，Nonlocal操作只需用到通常的卷积、内积、加法、softmax等比较常用的算子，不需要额外添加新的算子，用户可以非常方便的实现组网构建模型。
+g(Xj)是对输入feature map做一个线性变换，使用1x1x1的卷积；theta和phi也是线性变化，同样使用1x1x1的卷积来实现。从上图中可以看到，Nonlocal操作只需用到通常的卷积、矩阵相乘、加法、softmax等比较常用的算子，不需要额外添加新的算子，用户可以非常方便的实现组网构建模型。
 
 ### 模型效果
 
-原作者的论文中指出，Nonlocal模型在视频分类问题上取得了较好的效果，在Resnet-50基础网络上添加Non-local block，能取得比Resnet-101更好的分类效果，TOP-1准确率要高出1～2个点。在图像分类和目标检测问题上，也有比较明显的提升效果。
+原作者的论文中指出，Nonlocal模型在视频分类问题上取得了较好的效果，在Resnet-50基础网络上添加Non-local block，能取得比Resnet-101更好的分类效果，TOP-1准确率要高出1～2个百分点。在图像分类和目标检测问题上，也有比较明显的提升效果。
 
 ## 数据准备
 
@@ -98,18 +98,18 @@ Non-local模型的训练数据采用由DeepMind公布的Kinetics-400动作识别
 
 - 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/nonlocal_kinetics.tar.gz)通过`--resume`指定权重存放路径进行finetune等开发
 
-**数据读取器说明：** 模型读取Kinetics-400数据集中的`mp4`数据，根据视频长度和采样频率随机选取起始帧的位置，每条数据抽取`sample_times`帧图像，对每帧图像做随机增强，短边缩放至[256, 320]之间的某个随机数，然后再crop出224x224的区域作为训练数据输入网络。
+**数据读取器说明：** 模型读取Kinetics-400数据集中的`mp4`数据，根据视频长度和采样频率随机选取起始帧的位置，每个视频抽取`video_length`帧图像，对每帧图像做随机增强，短边缩放至[256, 320]之间的某个随机数，长边根据长宽比计算出来，然后再截取出224x224的区域作为训练数据输入网络。
 
 **训练策略：**
 
 *  采用Momentum优化算法训练，momentum=0.9
 *  采用L2正则化，卷积和fc层weight decay系数为1e-4；bn层则设置weight decay系数为0
-*  base\_learning\_rate=0.01，在150,000和300,000的时候分别降一次学习率，衰减系数为0.1
+*  初始学习率base\_learning\_rate=0.01，在150,000和300,000次迭代的时候分别降一次学习率，衰减系数为0.1
 
 
 ## 模型评估
 
-测试时数据预处理的方式跟训练时不一样，crop区域的大小为256x256，不同于训练时的224x224，所以需要将训练中预测输出时使用的全连接操作改为1x1x1的卷积。每个视频抽取图像帧数据的时候，会选取10个不同的位置作为时间起始点，做crop的时候会选取三个不同的空间起始点。在每个视频上会进行30次采样，将这30个样本的预测结果进行求和，选取概率最大的类别作为最终的预测结果。
+测试时数据预处理的方式跟训练时不一样，crop区域的大小为256x256，不同于训练时的224x224，所以需要将训练中预测输出时使用的全连接操作改为1x1x1的卷积。每个视频抽取图像帧数据的时候，会选取10个不同的位置作为时间起始点，做crop的时候会选取三个不同的空间起始点。在每个视频上会进行10x3次采样，将这30个样本的预测结果进行求和，选取概率最大的类别作为最终的预测结果。
 
 可通过如下两种方式进行模型评估:
 
@@ -161,5 +161,5 @@ Non-local模型的训练数据采用由DeepMind公布的Kinetics-400动作识别
 
 ## 参考论文
 
-- [Nonlocal Neural Networks](https://arxiv.org/abs/1811.01549), Dongliang He, Zhichao Zhou, Chuang Gan, Fu Li, Xiao Liu, Yandong Li, Limin Wang, Shilei Wen
+- [Nonlocal Neural Networks](https://arxiv.org/abs/1711.07971v1), Xiaolong Wang, Ross Girshick, Abhinav Gupta, Kaiming He
 
