@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--model-name',
+        '--model_name',
         type=str,
         default='AttentionCluster',
         help='name of model to train.')
@@ -44,19 +44,19 @@ def parse_args():
         default='configs/attention_cluster.txt',
         help='path to config file of model')
     parser.add_argument(
-        '--batch-size',
+        '--batch_size',
         type=int,
         default=None,
-        help='traing batch size per GPU. None to use config file setting.')
+        help='test batch size. None to use config file setting.')
     parser.add_argument(
-        '--use-gpu', type=bool, default=True, help='default use gpu.')
+        '--use_gpu', type=bool, default=True, help='default use gpu.')
     parser.add_argument(
         '--weights',
         type=str,
         default=None,
         help='weight path, None to use weights from Paddle.')
     parser.add_argument(
-        '--log-interval',
+        '--log_interval',
         type=int,
         default=1,
         help='mini-batch interval to log.')
@@ -68,6 +68,7 @@ def test(args):
     # parse config
     config = parse_config(args.config)
     test_config = merge_configs(config, 'test', vars(args))
+    print_configs(test_config, "Test")
 
     # build model
     test_model = models.get_model(args.model_name, test_config, mode='test')
@@ -75,7 +76,7 @@ def test(args):
     test_model.build_model()
     test_feeds = test_model.feeds()
     test_outputs = test_model.outputs()
-    loss = test_model.loss()
+    test_loss = test_model.loss()
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -85,29 +86,34 @@ def test(args):
             args.weights), "Given weight dir {} not exist.".format(args.weights)
     weights = args.weights or test_model.get_weights()
 
-    def if_exist(var):
-        return os.path.exists(os.path.join(weights, var.name))
-
-    fluid.io.load_vars(exe, weights, predicate=if_exist)
+    test_model.load_test_weights(exe, weights,
+                                 fluid.default_main_program(), place)
 
     # get reader and metrics
     test_reader = get_reader(args.model_name.upper(), 'test', test_config)
     test_metrics = get_metrics(args.model_name.upper(), 'test', test_config)
 
     test_feeder = fluid.DataFeeder(place=place, feed_list=test_feeds)
-    fetch_list = [loss.name] + [x.name
-                                for x in test_outputs] + [test_feeds[-1].name]
+    if test_loss is None:
+        fetch_list = [x.name for x in test_outputs] + [test_feeds[-1].name]
+    else:
+        fetch_list = [test_loss.name] + [x.name for x in test_outputs
+                                         ] + [test_feeds[-1].name]
 
     epoch_period = []
     for test_iter, data in enumerate(test_reader()):
         cur_time = time.time()
-        test_outs = exe.run(fetch_list=fetch_list,
-                            feed=test_feeder.feed(data))
+        test_outs = exe.run(fetch_list=fetch_list, feed=test_feeder.feed(data))
         period = time.time() - cur_time
         epoch_period.append(period)
-        loss = np.array(test_outs[0])
-        pred = np.array(test_outs[1])
-        label = np.array(test_outs[-1])
+        if test_loss is None:
+            loss = np.zeros(1, ).astype('float32')
+            pred = np.array(test_outs[0])
+            label = np.array(test_outs[-1])
+        else:
+            loss = np.array(test_outs[0])
+            pred = np.array(test_outs[1])
+            label = np.array(test_outs[-1])
         test_metrics.accumulate(loss, pred, label)
 
         # metric here

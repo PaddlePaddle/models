@@ -33,11 +33,12 @@ batch_size = 256
 filelist = "./dataset/kinetics/val.list"
 
 [TEST]
+seg_num = 7
 short_size = 256
 target_size = 224
 num_reader_threads = 12
 buf_size = 1024
-batch_size = 32
+batch_size = 16
 filelist = "./dataset/kinetics/test.list"
 
 [INFER]

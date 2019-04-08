@@ -38,12 +38,19 @@ class DataReader(object):
     """data reader for video input"""
 
     def __init__(self, model_name, mode, cfg):
-        """Not implemented"""
-        pass
+        self.name = model_name
+        self.mode = mode
+        self.cfg = cfg
 
     def create_reader(self):
         """Not implemented"""
         pass
+
+    def get_config_from_sec(self, sec, item, default=None):
+        if sec.upper() not in self.cfg:
+            return default
+        return self.cfg[sec.upper()].get(item, default)
+
 
 
 class ReaderZoo(object):

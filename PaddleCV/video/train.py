@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 def parse_args():
     parser = argparse.ArgumentParser("Paddle Video train script")
     parser.add_argument(
-        '--model-name',
+        '--model_name',
         type=str,
         default='AttentionCluster',
         help='name of model to train.')
@@ -45,12 +45,12 @@ def parse_args():
         default='configs/attention_cluster.txt',
         help='path to config file of model')
     parser.add_argument(
-        '--batch-size',
+        '--batch_size',
         type=int,
         default=None,
         help='training batch size. None to use config file setting.')
     parser.add_argument(
-        '--learning-rate',
+        '--learning_rate',
         type=float,
         default=None,
         help='learning rate use for training. None to use config file setting.')
@@ -65,37 +65,36 @@ def parse_args():
         type=str,
         default=None,
         help='path to resume training based on previous checkpoints. '
-             'None for not resuming any checkpoints.'
-    )
+        'None for not resuming any checkpoints.')
     parser.add_argument(
-        '--use-gpu', type=bool, default=True, help='default use gpu.')
+        '--use_gpu', type=bool, default=True, help='default use gpu.')
     parser.add_argument(
-        '--no-use-pyreader',
+        '--no_use_pyreader',
         action='store_true',
         default=False,
         help='whether to use pyreader')
     parser.add_argument(
-        '--no-memory-optimize',
+        '--no_memory_optimize',
         action='store_true',
         default=False,
         help='whether to use memory optimize in train')
     parser.add_argument(
-        '--epoch-num',
+        '--epoch_num',
         type=int,
         default=0,
         help='epoch number, 0 for read from config file')
     parser.add_argument(
-        '--valid-interval',
+        '--valid_interval',
         type=int,
         default=1,
         help='validation epoch interval, 0 for no validation.')
     parser.add_argument(
-        '--save-dir',
+        '--save_dir',
         type=str,
         default='checkpoints',
         help='directory name to save train snapshoot')
     parser.add_argument(
-        '--log-interval',
+        '--log_interval',
         type=int,
         default=10,
         help='mini-batch interval to log.')
@@ -108,6 +107,7 @@ def train(args):
     config = parse_config(args.config)
     train_config = merge_configs(config, 'train', vars(args))
     valid_config = merge_configs(config, 'valid', vars(args))
+    print_configs(train_config, 'Train')
     train_model = models.get_model(args.model_name, train_config, mode='train')
     valid_model = models.get_model(args.model_name, valid_config, mode='valid')
 
@@ -153,9 +153,12 @@ def train(args):
         # if resume weights is given, load resume weights directly
         assert os.path.exists(args.resume), \
                 "Given resume weight dir {} not exist.".format(args.resume)
+
         def if_exist(var):
             return os.path.exists(os.path.join(args.resume, var.name))
-        fluid.io.load_vars(exe, args.resume, predicate=if_exist, main_program=train_prog)
+
+        fluid.io.load_vars(
+            exe, args.resume, predicate=if_exist, main_program=train_prog)
     else:
         # if not in resume mode, load pretrain weights
         if args.pretrain:
@@ -199,21 +202,43 @@ def train(args):
     if args.no_use_pyreader:
         train_feeder = fluid.DataFeeder(place=place, feed_list=train_feeds)
         valid_feeder = fluid.DataFeeder(place=place, feed_list=valid_feeds)
-        train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feeder,
-                               train_fetch_list, train_metrics, epochs = epochs,
-                               log_interval = args.log_interval, valid_interval = args.valid_interval,
-                               save_dir = args.save_dir, save_model_name = args.model_name,
-                               test_exe = valid_exe, test_reader = valid_reader, test_feeder = valid_feeder,
-                               test_fetch_list = valid_fetch_list, test_metrics = valid_metrics)
+        train_without_pyreader(
+            exe,
+            train_prog,
+            train_exe,
+            train_reader,
+            train_feeder,
+            train_fetch_list,
+            train_metrics,
+            epochs=epochs,
+            log_interval=args.log_interval,
+            valid_interval=args.valid_interval,
+            save_dir=args.save_dir,
+            save_model_name=args.model_name,
+            test_exe=valid_exe,
+            test_reader=valid_reader,
+            test_feeder=valid_feeder,
+            test_fetch_list=valid_fetch_list,
+            test_metrics=valid_metrics)
     else:
         train_pyreader.decorate_paddle_reader(train_reader)
         valid_pyreader.decorate_paddle_reader(valid_reader)
-        train_with_pyreader(exe, train_prog, train_exe, train_pyreader, train_fetch_list, train_metrics,
-                            epochs = epochs, log_interval = args.log_interval,
-                            valid_interval = args.valid_interval,
-                            save_dir = args.save_dir, save_model_name = args.model_name,
-                            test_exe = valid_exe, test_pyreader = valid_pyreader,
-                            test_fetch_list = valid_fetch_list, test_metrics = valid_metrics)
+        train_with_pyreader(
+            exe,
+            train_prog,
+            train_exe,
+            train_pyreader,
+            train_fetch_list,
+            train_metrics,
+            epochs=epochs,
+            log_interval=args.log_interval,
+            valid_interval=args.valid_interval,
+            save_dir=args.save_dir,
+            save_model_name=args.model_name,
+            test_exe=valid_exe,
+            test_pyreader=valid_pyreader,
+            test_fetch_list=valid_fetch_list,
+            test_metrics=valid_metrics)
 
 
 if __name__ == "__main__":

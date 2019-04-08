@@ -65,17 +65,9 @@ class ModelBase(object):
         self.name = name
         self.is_training = (mode == 'train')
         self.mode = mode
+        self.cfg = cfg
         self.py_reader = None
 
-        # parse config
-        # assert os.path.exists(cfg), \
-        #         "Config file {} not exists".format(cfg)
-        # self._config = ModelConfig(cfg)
-        # self._config.parse()
-        # if args and isinstance(args, dict):
-        #     self._config.merge_configs(mode, args)
-        # self.cfg = self._config.get_configs()
-        self.cfg = cfg
 
     def build_model(self):
         "build model struct"
@@ -137,14 +129,20 @@ class ModelBase(object):
         if os.path.exists(path):
             return path
 
-        logger.info("Download pretrain weights of {} from {}".format(
-                self.name, url))
+        logger.info("Download pretrain weights of {} from {}".format(self.name,
+                                                                     url))
         download(url, path)
         return path
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
         logger.info("Load pretrain weights from {}".format(pretrain))
         fluid.io.load_params(exe, pretrain, main_program=prog)
+
+    def load_test_weights(self, exe, weights, prog, place):
+        def if_exist(var):
+            return os.path.exists(os.path.join(weights, var.name))
+
+        fluid.io.load_vars(exe, weights, predicate=if_exist)
 
     def get_config_from_sec(self, sec, item, default=None):
         if sec.upper() not in self.cfg:
@@ -163,7 +161,7 @@ class ModelZoo(object):
 
     def get(self, name, cfg, mode='train'):
         for k, v in self.model_zoo.items():
-            if k == name:
+            if k.upper() == name.upper():
                 return v(name, cfg, mode)
         raise ModelNotFoundError(name, self.model_zoo.keys())
 
@@ -178,4 +176,3 @@ def regist_model(name, model):
 
 def get_model(name, cfg, mode='train'):
     return model_zoo.get(name, cfg, mode)
-
