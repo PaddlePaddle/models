@@ -43,7 +43,7 @@ data_g.add_arg("word_rep_dict_path", str, "./conf/q2b.dic", "The path of the wor
 data_g.add_arg("traindata_dir", str, "./data/train_data", "The folder where the training data is located.")
 data_g.add_arg("testdata_dir", str, "./data/test_data", "The folder where the training data is located.")
 data_g.add_arg("model_save_dir", str, "./models", "The model will be saved in this path.")
-data_g.add_arg("model_path", str, "./conf/model", "Path to load the model for inference")
+data_g.add_arg("model_path", str, "./model/", "Path to load the model for inference")
 
 data_g.add_arg("corpus_type_list", str, ["human", "feed", "query", "title", "news"],
         "The pattern list of different types of corpus used in training.", nargs='+')

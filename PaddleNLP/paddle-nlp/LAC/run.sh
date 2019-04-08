@@ -35,12 +35,32 @@ function run_infer() {
         --do_test False \
         --do_infer True \
         --batch_size 80 \
-        --model_path ./conf/model \
+        --model_path ./model/ \
         --testdata_dir ./data/test_data \
         --word_dict_path ./conf/word.dic \
         --label_dict_path ./conf/tag.dic \
         --word_rep_dict_path ./conf/q2b.dic
 }
 
-run_train
-#run_infer
+function main() {
+    local cmd=${1:-help}
+    case "${cmd}" in
+        train)
+            run_train "$@";
+            ;;
+        infer)
+            run_infer "$@";
+            ;;
+        help)
+            echo "Usage: ${BASH_SOURCE} {train|infer}";
+            return 0;
+            ;;
+        *)
+            echo "unsupport command [${cmd}]";
+            echo "Usage: ${BASH_SOURCE} {train|infer}";
+            return 1;
+            ;;
+    esac
+}
+
+main "$@"
