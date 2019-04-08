@@ -16,6 +16,7 @@ import numpy as np
 import os
 from functools import partial
 import logging
+import time
 import paddle
 import paddle.fluid as fluid
 import argparse
@@ -55,11 +56,19 @@ def parse_args():
         '--use_cuda', type=int, default=0, help='whether to use gpu')
     parser.add_argument(
         '--use_parallel', type=int, default=1, help='whether to use parallel executor')
+    parser.add_argument(
+        '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
     return parser.parse_args()
 
 
 def train():
     args = parse_args()
+
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_main_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
+
     batch_size = args.batch_size
     items_num = reader.read_config(args.config_path)
     loss, acc = network.network(batch_size, items_num, args.hidden_size,
@@ -102,6 +111,9 @@ def train():
 
     logger.info("begin train")
 
+    total_time = []
+    ce_info = []
+    start_time = time.time()
     loss_sum = 0.0
     acc_sum = 0.0
     global_step = 0
@@ -116,15 +128,44 @@ def train():
             epoch_sum.append(res[0])
             global_step += 1
             if global_step % PRINT_STEP == 0:
+                ce_info.append([loss_sum / PRINT_STEP, acc_sum / PRINT_STEP])
+                total_time.append(time.time() - start_time)
                 logger.info("global_step: %d, loss: %.4lf, train_acc: %.4lf" % (
                     global_step, loss_sum / PRINT_STEP, acc_sum / PRINT_STEP))
                 loss_sum = 0.0
                 acc_sum = 0.0
+                start_time = time.time()
         logger.info("epoch loss: %.4lf" % (np.mean(epoch_sum)))
         save_dir = args.model_path + "/epoch_" + str(i)
         fetch_vars = [loss, acc]
         fluid.io.save_inference_model(save_dir, feed_list, fetch_vars, exe)
         logger.info("model saved in " + save_dir)
+
+    # only for ce
+    if args.enable_ce:
+        gpu_num = get_cards(args)
+        ce_loss = 0
+        ce_acc = 0
+        ce_time = 0
+        try:
+            ce_loss = ce_info[-1][0]
+            ce_acc = ce_info[-1][1]
+            ce_time = total_time[-1]
+        except:
+            print("ce info error")
+        print("kpis\teach_pass_duration_card%s\t%s" %
+                    (gpu_num, ce_time))
+        print("kpis\ttrain_loss_card%s\t%f" %
+                    (gpu_num, ce_loss))
+        print("kpis\ttrain_acc_card%s\t%f" %
+                    (gpu_num, ce_acc))
+
+
+def get_cards(args):
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+    num = len(cards.split(","))
+    return num
 
 
 if __name__ == "__main__":
