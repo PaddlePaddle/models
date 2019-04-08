@@ -1,4 +1,4 @@
-DuReader是一个端到端的机器阅读理解神经网络模型，能够在给定文档和问题的情况，定位文档中问题的答案。我们首先利用双向注意力网络获得文档和问题的相同向量空间的表示，然后使用`point network` 定位文档中答案的位置。实验显示，我们的模型能够获得在Dureader数据集上SOTA的结果。
+DuReader是一个端到端的机器阅读理解神经网络模型，能够在给定文档和问题的情况下，定位文档中问题的答案。我们首先利用双向注意力网络获得文档和问题的相同向量空间的表示，然后使用`point network` 定位文档中答案的位置。实验显示，我们的模型能够获得在Dureader数据集上SOTA的结果。
 
 # 算法介绍
 DuReader模型主要实现了论文[BiDAF](https://arxiv.org/abs/1611.01603)， [Match-LSTM](https://arxiv.org/abs/1608.07905)中的模型结构。
@@ -32,7 +32,7 @@ cd utils && bash download_thirdparty.sh
 ### 段落抽取
 在段落抽取阶段，主要是使用文档相关性score对文档内容进行优化， 抽取的结果将会放到`data/extracted/`目录下。如果你用demo数据测试，可以跳过这一步。如果你用dureader数据，需要指定抽取的数据目录，命令如下： 
 ```
-sh run.sh --para_extraction --trainset data/preprocessed/trainset/zhidao.train.json data/preprocessed/trainset/search.train.json --devset data/preprocessed/devset/zhidao.dev.json data/preprocessed/devset/search.dev.json --testset data/preprocessed/testset/zhidao.test.json data/preprocessed/testset/search.test.json
+bash run.sh --para_extraction --trainset data/preprocessed/trainset/zhidao.train.json data/preprocessed/trainset/search.train.json --devset data/preprocessed/devset/zhidao.dev.json data/preprocessed/devset/search.dev.json --testset data/preprocessed/testset/zhidao.test.json data/preprocessed/testset/search.test.json
 ```
 其中参数 `trainset`/`devset`/`testset`分别对应训练、验证和测试数据集(下同)。
 ### 词典准备
@@ -77,9 +77,9 @@ bash run.sh --predict --load_dir data/models/1 --testset data/extracted/testset/
 其中`--testset`指定了预测用的数据集，生成的问题答案默认会放到`data/results/` 目录，你可以通过参数`--result_dir DIR_PATH`更改配置
 
 ### 实验结果
-验证集 ROUGE-L:47.65，测试集 ROUGE-L:54.58。
+验证集 ROUGE-L:47.65。
 
-这是在P40上，使用4卡GPU，batch size=4*32的训练结果，如果使用单卡，指标可能会略有降低，但在验证集上的ROUGE-L也不小于47。
+这是在P40上，使用4卡GPU，batch size=4*32的训练5个epoch(约30个小时)的结果，如果使用单卡，指标可能会略有降低，但在验证集上的ROUGE-L也不小于47。
 
 ## 参考文献
 [Machine Comprehension Using Match-LSTM and Answer Pointer](https://arxiv.org/abs/1608.07905)
