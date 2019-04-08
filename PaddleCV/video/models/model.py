@@ -65,17 +65,9 @@ class ModelBase(object):
         self.name = name
         self.is_training = (mode == 'train')
         self.mode = mode
+        self.cfg = cfg
         self.py_reader = None
 
-        # parse config
-        # assert os.path.exists(cfg), \
-        #         "Config file {} not exists".format(cfg)
-        # self._config = ModelConfig(cfg)
-        # self._config.parse()
-        # if args and isinstance(args, dict):
-        #     self._config.merge_configs(mode, args)
-        # self.cfg = self._config.get_configs()
-        self.cfg = cfg
 
     def build_model(self):
         "build model struct"

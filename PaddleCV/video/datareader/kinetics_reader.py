@@ -54,16 +54,17 @@ class KineticsReader(DataReader):
     """
 
     def __init__(self, name, mode, cfg):
-        self.name = name
-        self.mode = mode
+        super(KineticsReader, self).__init__(name, mode, cfg)
         self.format = cfg.MODEL.format
-        self.num_classes = cfg.MODEL.num_classes
-        self.seg_num = cfg.MODEL.seg_num
-        self.seglen = cfg.MODEL.seglen
-        self.short_size = cfg[mode.upper()]['short_size']
-        self.target_size = cfg[mode.upper()]['target_size']
-        self.num_reader_threads = cfg[mode.upper()]['num_reader_threads']
-        self.buf_size = cfg[mode.upper()]['buf_size']
+        self.num_classes = self.get_config_from_sec('model', 'num_classes')
+        self.seg_num = self.get_config_from_sec('model', 'seg_num')
+        self.seglen = self.get_config_from_sec('model', 'seglen')
+
+        self.seg_num = self.get_config_from_sec(mode, 'seg_num', self.seg_num)
+        self.short_size = self.get_config_from_sec(mode, 'short_size')
+        self.target_size = self.get_config_from_sec(mode, 'target_size')
+        self.num_reader_threads = self.get_config_from_sec(mode, 'num_reader_threads')
+        self.buf_size = self.get_config_from_sec(mode, 'buf_size')
 
         self.img_mean = np.array(cfg.MODEL.image_mean).reshape(
             [3, 1, 1]).astype(np.float32)
