@@ -72,7 +72,11 @@ bash run.sh --evaluate  --load_dir data/models/1  --devset data/extracted/devset
 ### 预测
 使用训练好的模型，对问答文档数据直接预测结果，获得答案，可以使用如下命令:
 ```
-bash run.sh --predict --load_dir data/models/1 --testset data/extracted/testset/search.dev.json
+bash run.sh --predict --load_dir data/models/1
+```
+上面的命令默认使用demo数据，如果想使用dureader数据集，应该按照如下方式指定：
+```
+bash run.sh --predict --load_dir data/models/1 --testset data/extracted/testset/search.test.json data/extracted/testset/zhidao.test.json
 ```
 其中`--testset`指定了预测用的数据集，生成的问题答案默认会放到`data/results/` 目录，你可以通过参数`--result_dir DIR_PATH`更改配置
 
