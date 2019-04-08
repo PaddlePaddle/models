@@ -13,18 +13,18 @@
 
 ## 模型简介
 
-Temporal Shift Module是由MIT和IBM Watson的Ji Lin，Chuang Gan等人提出的基于通过时间位移来挺高网络视频理解能力的模块，其位移操作原理如下图所示。
+Temporal Shift Module是由MIT和IBM Watson AI Lab的Ji Lin，Chuang Gan等人提出的通过时间位移来提高网络视频理解能力的模块，其位移操作原理如下图所示。
 
 <p align="center">
-<img src="../../images/temporal_shift.png" height=300 width=400 hspace='10'/> <br />
+<img src="../../images/temporal_shift.png" height=250 width=800 hspace='10'/> <br />
 Temporal shift module
 </p>
 
 上图中矩阵表示特征图中的temporal和channel维度，通过将一部分的channel在temporal维度上向前位移一步，一部分的channel在temporal维度上向后位移一步，位移后的空缺补零。通过这种方式在特征图中引入temporal维度上的上下文交互，提高在时间维度上的视频理解能力。
 
-TSM模型是讲Temporal Shift Module插入到ResNet网络中构建的视频分类模型，本模型库实现版本为以ResNet-50作为主干网络，在每个残差单元中插入Temporal Shift Module模型进行时空建模构建的TSM模型。
+TSM模型是将Temporal Shift Module插入到ResNet网络中构建的视频分类模型，本模型库实现版本为以ResNet-50作为主干网络的TSM模型。
 
-详细内容请参考论文[Temporal Shift Module for Efficient Video Understanding](https://arxiv.org/abs/1811.08383)
+详细内容请参考论文[Temporal Shift Module for Efficient Video Understanding](https://arxiv.org/abs/1811.08383v1)
 
 ## 数据准备
 
@@ -88,5 +88,5 @@ TSM的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 ## 参考论文
 
-- [Temporal Shift Module for Efficient Video Understanding](https://arxiv.org/abs/1811.08383), Ji Lin, Chuang Gan, Song Han
+- [Temporal Shift Module for Efficient Video Understanding](https://arxiv.org/abs/1811.08383v1), Ji Lin, Chuang Gan, Song Han
 
