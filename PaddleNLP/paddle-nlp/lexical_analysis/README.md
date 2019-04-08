@@ -1,14 +1,14 @@
 # 中文词法分析（LAC）
 
 ## 1. 简介
-LAC 是一个联合的词法分析模型，整体性地完成中文分词、词性标注、专名识别任务。LAC 既可以认为是 Lexical Analysis of Chinese 的首字母缩写，也可以认为是 LAC Analyzes Chinese 的递归缩写。
+Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型，整体性地完成中文分词、词性标注、专名识别任务。
 
 LAC 基于一个堆叠的双向 GRU 结构，在长文本上准确复刻了百度 AI 开放平台上的词法分析算法。效果方面，分词、词性标注、专名识别的整体准确率 95.5%；单独评估专名识别任务，F值 87.8%（准确 90.3%，召回 85.4%），总体略优于开放平台版本。在效果优化的基础上，LAC 的模型简洁高效，内存开销不到 100M，而速度则比百度AI开放平台提高了 57%。
 
 ## 2. 快速开始
 本项目依赖 Paddle 1.3.1，安装请参考官网[快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
 
-运行下载数据和模型的脚本，会生成 ./data 和 ./conf 两个子目录。
+运行下载数据和模型的脚本，会生成 ./data 和 ./model 两个子目录。
 ```bash
 sh downloads.sh
 ```
@@ -16,11 +16,6 @@ sh downloads.sh
 我们基于百度的海量数据训练了一个词法分析的模型，可以直接用这个模型进行预测任务。
 ```bash
 sh run.sh infer
-```
-
-我们提供了一个简单的脚本，用于评测 LAC 在自建数据集的分词效果。
-```bash
-sh run.sh eval
 ```
 
 用户也可以选择在自己的数据集上训练自己的词法分析模型，这里我们提供用于训练的脚本和代码
@@ -83,12 +78,13 @@ sh run_ernie.sh
 ### 代码结构说明
 ```text
 .
-├── conf                                # 词典目录
-├── data                                # 存放数据集的目录
-├── downloads.sh                        # 用于下载数据、模型和词典的脚本
-├── evaluate.py                         # 用于评估词法分析效果的脚本
-├── reader.py                           # 文件读取相关函数
 ├── README.md                           # 本文档
+├── conf/                               # 词典目录
+├── data/                               # 存放数据集的目录
+├── downloads.sh                        # 用于下载数据、模型和词典的脚本
+├── gru-crf-model.png                   # REAEME 用到的模型图片
+├── model/                              # 模型文件夹
+├── reader.py                           # 文件读取相关函数
 ├── run_ernie_sequence_labeling.py      # 用于 finetune ERNIE 的代码
 ├── run_ernie.sh                        # 启用上面代码的脚本
 ├── run_sequence_labeling.py            # 词法分析任务代码
