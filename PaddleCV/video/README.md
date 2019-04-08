@@ -12,7 +12,7 @@
 | [StNet](./models/stnet/README.md)  | 视频分类| AAAI'19提出的视频联合时空建模方法 |
 | [TSM](./models/tsm/README.md) | 视频分类| 基于时序移位的简单高效视频时空建模方法 |
 | [TSN](./models/tsn/README.md) | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
-| [Non-local](./models/nonlocal_model/README.md) | 视频分类|  |
+| [Non-local](./models/nonlocal_model/README.md) | 视频分类| 视频非局部关联建模模型 |
 
 ### 主要特点
 
@@ -118,7 +118,7 @@ infer.py
 | StNet | 128 | 8卡P40 | 7.1 | 0.69 | [model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz) |
 | TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz) |
 | TSM | 128 | 8卡P40 | 7.1 | 0.70 | [model](https://paddlemodels.bj.bcebos.com/video_classification/tsm_kinetics.tar.gz) |
-
+| Non-local | 64 | 8卡P40 | 7.1 | 0.74 | [model](https://paddlemodels.bj.bcebos.com/video_classification/nonlocal_kinetics.tar.gz) |
 ## 参考文献
 
 - [Attention Clusters: Purely Attention Based Local Feature Integration for Video Classification](https://arxiv.org/abs/1711.09550), Xiang Long, Chuang Gan, Gerard de Melo, Jiajun Wu, Xiao Liu, Shilei Wen
