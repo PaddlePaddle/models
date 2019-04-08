@@ -38,7 +38,7 @@ def cosine_decay_with_warmup(learning_rate, step_each_epoch, epochs=120):
         shape=[1], dtype='float32', value=float(5), force_cpu=True)
 
     with init_on_cpu():
-	epoch = ops.floor(global_step / step_each_epoch)
+        epoch = ops.floor(global_step / step_each_epoch)
         with control_flow.Switch() as switch:
             with switch.case(epoch < warmup_epoch):
                 decayed_lr = learning_rate * (global_step / (step_each_epoch * warmup_epoch))
