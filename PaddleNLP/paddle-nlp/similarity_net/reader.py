@@ -1,9 +1,8 @@
-'''
+"""
 SimNet reader
-'''
+"""
 
 import logging
-from utils import load_vocab
 import numpy as np
 
 
@@ -11,7 +10,6 @@ class SimNetProcessor(object):
     def __init__(self, args, vocab):
         self.args = args
         # load vocab
-        self.vocab = load_vocab(args.vocab_path)
         self.vocab = vocab
         self.valid_label = np.array([])
         self.test_label = np.array([])
@@ -20,6 +18,7 @@ class SimNetProcessor(object):
         """
         Get Reader
         """
+
         def reader_with_pairwise():
             """
                 Reader with Pairwise
@@ -122,15 +121,16 @@ class SimNetProcessor(object):
                         if len(title) == 0:
                             title = [0]
                         yield [query, title, label]
+
         if self.args.task_mode == "pairwise":
             return reader_with_pairwise
         else:
             return reader_with_pointwise
 
     def get_infer_reader(self):
-        '''
+        """
         get infer reader
-        '''
+        """
         with open(self.args.infer_data_dir, "r") as file:
             for line in file:
                 query, title = line.strip().split("\t")
@@ -146,10 +146,9 @@ class SimNetProcessor(object):
                 yield [query, title]
 
     def get_infer_data(self):
-        '''
+        """
         get infer data
-        :return:
-        '''
+        """
         with open(self.args.infer_data_dir, "r") as file:
             for line in file:
                 query, title = line.strip().split("\t")
@@ -159,9 +158,9 @@ class SimNetProcessor(object):
                 yield line.strip()
 
     def get_valid_label(self):
-        '''
+        """
         get valid data label
-        '''
+        """
         if self.valid_label.size == 0:
             labels = []
             with open(self.args.valid_data_dir, "r") as f:
@@ -171,9 +170,9 @@ class SimNetProcessor(object):
         return self.valid_label
 
     def get_test_label(self):
-        '''
+        """
         get test data label
-        '''
+        """
         if self.test_label.size == 0:
             labels = []
             with open(self.args.test_data_dir, "r") as f:

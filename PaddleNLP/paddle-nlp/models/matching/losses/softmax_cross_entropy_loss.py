@@ -1,11 +1,11 @@
-'''
+"""
 softmax loss
-'''
+"""
 
 import sys
 
-sys.path.append("..")
-import paddle_layers as layers
+sys.path.append("../../../")
+import models.matching.paddle_layers as layers
 
 
 class SoftmaxCrossEntropyLoss(object):

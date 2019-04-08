@@ -1,6 +1,6 @@
-'''
+"""
 optimizer calss
-'''
+"""
 
 import paddle.fluid as fluid
 
