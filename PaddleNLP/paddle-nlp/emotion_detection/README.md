@@ -1,8 +1,10 @@
 ## 简介
 
-对话情绪识别（Emotion Detection），专注于识别智能对话场景中用户的情绪，针对智能对话场景中的用户文本，自动判断该文本的情绪类别并给出相应的置信度，情绪类型分为积极、消极、中性。对话情绪识别适用于聊天、客服等多个场景，能够帮助企业更好地把握对话质量、改善产品的用户交互体验，也能分析客服服务质量、降低人工质检成本。
+对话情绪识别（Emotion Detection，简称EmoTect），专注于识别智能对话场景中用户的情绪，针对智能对话场景中的用户文本，自动判断该文本的情绪类别并给出相应的置信度，情绪类型分为积极、消极、中性。
 
-效果上，我们基于百度自建测试集（包含聊天、客服）和nlpcc2014微博情绪数据集，进行评测，效果如下表所示：
+对话情绪识别适用于聊天、客服等多个场景，能够帮助企业更好地把握对话质量、改善产品的用户交互体验，也能分析客服服务质量、降低人工质检成本。
+
+效果上，我们基于百度自建测试集（包含闲聊、客服）和nlpcc2014微博情绪数据集，进行评测，效果如下表所示：
  
 | 模型 | 闲聊 | 客服 | 微博 |
 | :------| :------ | :------ | :------ |
@@ -16,7 +18,7 @@
 
 ## 快速开始
 
-本项目依赖于 Paddlepaddle Fluid 1.3.1，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+本项目依赖于 Paddlepaddle Fluid 1.3.2，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 #### 数据准备
 
@@ -104,10 +106,10 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 
 1. 下载 ERNIE 预训练模型
 ```
-wget xxx
+wget --no-check-certificate https://ernie.bj.bcebos.com/ERNIE_stable.tgz
 ```
 2. 配置 ERNIE 模型及数据
-通过 ```run_ernie.sh``` 配置ERNIE模型路径及数据路径
+通过 ```run_ernie.sh``` 配置ERNIE模型路径及数据路径，例如
 ```
 MODEL_PATH=./models/ernie
 TASK_DATA_PATH=./data
