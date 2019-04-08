@@ -74,6 +74,8 @@ def train():
     exe.run(fluid.default_startup_program())
 
     if cfg.pretrain:
+        if not os.path.exists(cfg.pretrain):
+            print("Pretrain weights not found: {}".format(cfg.pretrain))
         def if_exist(var):
             return os.path.exists(os.path.join(cfg.pretrain, var.name))
         fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
