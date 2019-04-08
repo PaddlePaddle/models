@@ -88,3 +88,5 @@ env CUDA_VISIBLE_DEVICES=0 python infer.py \
 <img src="images/B2A.jpg" width="620" hspace='10'/> <br/>
 <strong>图 3</strong>
 </p>
+
+>在本文示例中，均可通过修改`CUDA_VISIBLE_DEVICES`改变使用的显卡号。
