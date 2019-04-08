@@ -149,7 +149,7 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 </p>
 
 **剪切注意事项3**
-在对resnet等复杂网络剪切的时候，还要考虑到后当前卷积层的修改对上一层卷积层的影响。
+在对ResNet等复杂网络剪切的时候，还要考虑到后当前卷积层的修改对上一层卷积层的影响。
 如**图6**所示，在对residual block剪切时，$X_{i+1}$层如何剪切取决于project shortcut的剪切结果，因为我们要保证project shortcut的output和$X_{i+1}$的output能被正确的concat.
 
 
@@ -202,7 +202,7 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 考虑到多个卷积层间的相关性，一个卷积层的修改可能会影响其它卷积层的敏感度，我们采取了多次剪切的策略，步骤如下：
 
 - step1: 统计各卷积层的敏感度信息
-- step2: 根据当前统计的敏感度信息，对每个卷积层剪掉少量filter, 并统计flops，如果flops已满足要求，进入step4，否则进行step3。
+- step2: 根据当前统计的敏感度信息，对每个卷积层剪掉少量filter, 并统计FLOPS，如果FLOPS已满足要求，进入step4，否则进行step3。
 - step3: 对网络进行简单的fine-tune，进入step1
 - step4: fine-tune训练至收敛
 

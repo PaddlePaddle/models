@@ -57,7 +57,7 @@
  |-utility.py # 定义了常用的工具方法
 ```
 
-本示例中的五个压缩策略使用相同的训练数据和压缩python脚本`compress.py`，每种策略对应独立的配置文件。
+本示例中的五个压缩策略使用相同的训练数据和压缩Python脚本`compress.py`，每种策略对应独立的配置文件。
 
 第1章介绍数据准备，第2章介绍脚本compress.py中几个关键步骤。第3章分别介绍了如何执行各种压缩策略的示例。
 
@@ -72,8 +72,6 @@
 ### 1.2 预训练模型准备
 
 脚本run.sh会自动从[models/fluid/PaddleCV/image_classification](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification#supported-models-and-performances)下载ResNet50和MobileNetV1的预训练模型，并放入PaddleSlim/pretrain路径下。
-
->注意：下载的预训练模型是‘specify parameter names’的，也就是模型中变量都是指定的名称，而不是随机生成的名称。
 
 
 ## 2. 压缩脚本介绍
@@ -155,7 +153,7 @@ python compress.py \
 
 |- |精度(top5/top1) |
 |---|---|
-| resnet50蒸馏训| 90.92% / 71.97%|
+| ResNet50蒸馏训| 90.92% / 71.97%|
 
 <p align="center">
 <img src="images/demo/distillation_result.png" height=300 width=400 hspace='10'/> <br />
@@ -165,7 +163,7 @@ python compress.py \
 
 ### 3.2 Uniform剪切
 
-在该示例中，将MobileNetV1模型剪掉50%的flops.
+在该示例中，将MobileNetV1模型剪掉50%的FLOPS.
 修改run.sh, 执行以下命令，执行Uniform卷积核剪切模型压缩示例：
 
 ```
@@ -179,7 +177,7 @@ python compress.py \
 ```
 该示例在评估数据集上的准确率结果如下：
 
-| flops |模型大小|精度（top5/top1） |
+| FLOPS |模型大小|精度（top5/top1） |
 |---|---|---|
 | -50%|-47.0%(9.0M) |89.13% / 69.83%|
 
@@ -191,7 +189,7 @@ python compress.py \
 
 ### 3.3 敏感度剪切
 
-在该示例中，将MobileNetV1模型剪掉50%的flops.
+在该示例中，将MobileNetV1模型剪掉50%的FLOPS.
 修改run.sh, 执行以下命令，执行敏感度卷积核剪切压缩示例：
 
 ```
@@ -205,7 +203,7 @@ python compress.py \
 ```
 该示例在评估数据集上的准确率结果如下：
 
-| flops |模型大小| 精度（top5/top1） |
+| FLOPS |模型大小| 精度（top5/top1） |
 |---|---|---|
 | -50%|-61.2%(6.6M) |88.47% / 68.68%|
 
@@ -256,11 +254,11 @@ python compress.py \
 
 |- |精度(top5/top1) |
 |---|---|
-| resnet50蒸馏训+量化|90.94% / 72.08%|
+| ResNet50蒸馏训+量化|90.94% / 72.08%|
 
 ### 3.6 剪切后int8量化
 
-本示例先将预训练好的MobileNetV1模型剪掉50%flops, 让后再对其进行动态int8量化训练。
+本示例先将预训练好的MobileNetV1模型剪掉50% FLOPS, 让后再对其进行动态int8量化训练。
 修改run.sh, 执行以下命令，执行剪切与int8量化训练结合的模型压缩示例：
 
 ```
@@ -275,6 +273,6 @@ python compress.py \
 
 该示例结果如下：
 
-| 剪切flops |剪切+量化（dynamic）
+| 剪切FLOPS |剪切+量化（dynamic）
 |---|---|
 | -50%|89.11% / 69.70%|

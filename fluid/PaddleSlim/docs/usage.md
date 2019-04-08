@@ -172,7 +172,7 @@ pruners:
 ```
 
 第二步：注册剪切策略
-如下所示，我们注册两个uniform剪切策略，分别在第0个epoch和第10个epoch将模型的flops剪掉10%.
+如下所示，我们注册两个uniform剪切策略，分别在第0个epoch和第10个epoch将模型的FLOPS剪掉10%.
 ```python
 strategies:
     pruning_strategy_0:
@@ -327,7 +327,7 @@ UniformPruneStrategy的可配置参数有：
 - **class:** 如果使用Uniform剪切策略，请设置为`UniformPruneStrategy`
 - **pruner:** StructurePruner实例的名称，需要在配置文件中注册。在pruner中指定了对单个parameter的剪切方式。
 - **start_epoch:** 开始剪切策略的epoch. 在start_epoch开始之前，该策略会对网络中的filter数量进行剪切，从start_epoch开始对被剪切的网络进行fine-tune训练，直到整个压缩任务结束。
-- **target_ratio:** 将目标网络的flops剪掉的比例。
+- **target_ratio:** 将目标网络的FLOPS剪掉的比例。
 - **pruned_params:** 被剪切的parameter的名称，支持通配符。如，‘*’为对所有parameter进行剪切，‘conv*’意为对所有名义以‘conv’开头的parameter进行剪切。
 
 
@@ -360,7 +360,7 @@ SensitivePruneStrategy可配置的参数有：
 - **pruner:** StructurePruner实例的名称，需要在配置文件中注册。在pruner中指定了对单个parameter的剪切方式。
 - **start_epoch:** 开始剪切策略的epoch。 在start_epoch开始之前，该策略会对网络中的filter数量进行第一次剪切。
 - **delta_rate:** 统计敏感度信息时，剪切率从0到1，依次递增delta_rate. 具体细节可参考[原理介绍文档]()
-- **target_ratio:** 将目标网络的flops剪掉的比例。
+- **target_ratio:** 将目标网络的FLOPS剪掉的比例。
 - **num_steps:** 整个剪切过程的步数。每次迭代剪掉的比例为：$step = 1 - (1-target\_ratio)^{\frac{1}{num\_steps}}$
 - **eval_rate:** 计算敏感度时，随机抽取使用的验证数据的比例。在迭代剪切中，为了快速重新计算每一步的每个parameter的敏感度，建议随机选取部分验证数据进行计算。当`num_steps`等于1时，建议使用全量数据进行计算。
 

@@ -56,14 +56,14 @@
 
 #### 实验说明
 
-分步剪切，每步剪掉模型7%的flops.
+分步剪切，每步剪掉模型7%的FLOPS.
 optimizer配置如下：
 
 ```
 epoch_size=5000
-boundaries = [30, 60, 90, 120] * epoch_size # for -50% flops
-#boundaries = [35, 65, 95, 125] * epoch_size # for -60% flops
-#boundaries = [50, 80, 110, 140] * epoch_size # for -70% flops
+boundaries = [30, 60, 90, 120] * epoch_size # for -50% FLOPS
+#boundaries = [35, 65, 95, 125] * epoch_size # for -60% FLOPS
+#boundaries = [50, 80, 110, 140] * epoch_size # for -70% FLOPS
 values = [0.01, 0.1, 0.01, 0.001, 0.0001]
 optimizer = fluid.optimizer.Momentum(
         momentum=0.9,
@@ -74,7 +74,7 @@ optimizer = fluid.optimizer.Momentum(
 #### 实验结果
 
 
-| flops |model size| 精度（top5/top1） |下载模型|
+| FLOPS |model size| 精度（top5/top1） |下载模型|
 |---|---|---|---|
 | -50%|-59.4%(6.9M) |88.22% / 68.41%   |[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_0.5_model.tar.gz)|
 | -60%|-70.6%(5.0M)|87.01% / 66.31% |[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_0.6_model.tar.gz)|
@@ -84,7 +84,7 @@ optimizer = fluid.optimizer.Momentum(
 
 #### 实验说明
 
-一步剪切掉50%flops, 然后fine-tune 120个epoch.
+一步剪切掉50%FLOPS, 然后fine-tune 120个epoch.
 
 optimizer配置如下：
 
@@ -100,7 +100,7 @@ optimizer = fluid.optimizer.Momentum(
 
 #### 实验结果
 
-| flops |model size|精度（top5/top1） |模型下载|
+| FLOPS |model size|精度（top5/top1） |模型下载|
 |---|---|---|---|
 | -50%|-61.2%(6.6M)|  88.47% / 68.68% |[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_0.5-1step.tar.gz)|
 
@@ -108,9 +108,9 @@ optimizer = fluid.optimizer.Momentum(
 
 #### 实验说明
 
-1. 一次剪掉20%flops, fine-tune 120个epoch
-2. 在上一步基础上，一次剪掉20%flops, fine-tune 120个epoch
-3. 在上一步基础上，一次剪掉20%flops, fine-tune 120个epoch
+1. 一次剪掉20%FLOPS, fine-tune 120个epoch
+2. 在上一步基础上，一次剪掉20%FLOPS, fine-tune 120个epoch
+3. 在上一步基础上，一次剪掉20%FLOPS, fine-tune 120个epoch
 
 optimizer配置如下：
 
@@ -126,7 +126,7 @@ optimizer = fluid.optimizer.Momentum(
 
 #### 实验结果
 
-| flops |精度（top5/top1）|模型下载 |
+| FLOPS |精度（top5/top1）|模型下载 |
 |---|---|---|
 | -20%|90.08% / 71.48% |[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_3step_0.2_model.tar.gz)|
 | -36%|89.62% / 70.83%|[点击下载](https://paddle-slim-models.bj.bcebos.com/sensitive_filter_pruning_3step_0.36_model.tar.gz)|
@@ -137,7 +137,7 @@ optimizer = fluid.optimizer.Momentum(
 
 #### 实验说明
 
-一次剪掉指定比例的flops，然后fine-tune 120个epoch.
+一次剪掉指定比例的FLOPS，然后fine-tune 120个epoch.
 
 optimizer配置如下：
 
@@ -153,7 +153,7 @@ optimizer = fluid.optimizer.Momentum(
 
 #### 实验结果
 
-| flops |model size|精度（top5/top1） |模型下载 |
+| FLOPS |model size|精度（top5/top1） |模型下载 |
 |---|---|---|---|
 | -50%|-47.0%(9.0M) | 89.13% / 69.83%|[点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.5_model.tar.gz)|
 | -60%|-55.9%(7.5M)|88.22% / 68.24%| [点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.6_model.tar.gz)|
@@ -187,7 +187,7 @@ optimizer = fluid.optimizer.Momentum(
 
 |- |精度(top5/top1) |收益(top5/top1)|模型下载 |
 |---|---|---|---|
-| resnet50蒸馏训| 90.92% / 71.97%| +1.28% / +1.06%| [点击下载](https://paddle-slim-models.bj.bcebos.com/mobilenetv1_resnet50_distillation_model.tar.gz)|
+| ResNet50蒸馏训| 90.92% / 71.97%| +1.28% / +1.06%| [点击下载](https://paddle-slim-models.bj.bcebos.com/mobilenetv1_resnet50_distillation_model.tar.gz)|
 
 
 ## 4. 组合实验
@@ -200,7 +200,7 @@ optimizer = fluid.optimizer.Momentum(
 
 |- |精度(top5/top1) |模型下载 |
 |---|---|---|
-| resnet50蒸馏训+量化|90.94% / 72.08%| [点击下载]()|
+| ResNet50蒸馏训+量化|90.94% / 72.08%| [点击下载]()|
 
 
 ### 4.2 剪切后量化
@@ -210,6 +210,6 @@ optimizer = fluid.optimizer.Momentum(
 
 #### 实验结果
 
-| 剪切flops |剪切+量化（dynamic）|模型下载 |
+| 剪切FLOPS |剪切+量化（dynamic）|模型下载 |
 |---|---|---|
 | -50%|89.11% / 69.70%| [点击下载]()|
