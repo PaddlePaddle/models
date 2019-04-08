@@ -169,7 +169,7 @@ class ModelZoo(object):
 
     def get(self, name, cfg, mode='train'):
         for k, v in self.model_zoo.items():
-            if k == name:
+            if k.upper() == name.upper():
                 return v(name, cfg, mode)
         raise ModelNotFoundError(name, self.model_zoo.keys())
 
