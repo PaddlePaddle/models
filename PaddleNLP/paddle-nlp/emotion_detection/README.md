@@ -80,14 +80,14 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 
 ```text
 .
-├── config.json				# 模型配置文件
-├── config.py    				# 定义了该项目模型的相关配置，包括具体模型类别、以及模型的超参数
-├── reader.py					# 定义了读入数据，加载词典的功能
-├── run_classifier.py			# 该项目的主函数，封装包括训练、预测、评估的部分
-├── run_ernie_classifier.py	# 基于ERNIE表示的项目的主函数
-├── run_ernie.sh				# 基于ERNIE的训练、预测、评估运行脚本
-├── run.sh					# 训练、预测、评估运行脚本
-├── utils.py					# 定义了其他常用的功能函数
+├── config.json             # 模型配置文件
+├── config.py               # 定义了该项目模型的相关配置，包括具体模型类别、以及模型的超参数
+├── reader.py               # 定义了读入数据，加载词典的功能
+├── run_classifier.py       # 该项目的主函数，封装包括训练、预测、评估的部分
+├── run_ernie_classifier.py # 基于ERNIE表示的项目的主函数
+├── run_ernie.sh            # 基于ERNIE的训练、预测、评估运行脚本
+├── run.sh                  # 训练、预测、评估运行脚本
+├── utils.py                # 定义了其他常用的功能函数
 ```
 
 #### 如何组建自己的模型
