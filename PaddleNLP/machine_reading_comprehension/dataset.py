@@ -157,7 +157,8 @@ class BRCDataset(object):
             passade_idx_offset = sum(batch_data['passage_num'])
             batch_data['passage_num'].append(count)
             gold_passage_offset = 0
-            if 'answer_passages' in sample and len(sample['answer_passages']):
+            if 'answer_passages' in sample and len(sample['answer_passages']) and \
+                    sample['answer_passages'][0] < len(sample['documents']):
                 for i in range(sample['answer_passages'][0]):
                     gold_passage_offset += len(batch_data['passage_token_ids'][
                         passade_idx_offset + i])
