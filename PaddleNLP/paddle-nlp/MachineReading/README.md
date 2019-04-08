@@ -21,7 +21,7 @@ DuReader基线系统利用[PaddlePaddle](http://paddlepaddle.org)深度学习框
 |      Model     | Dev ROUGE-L | Test ROUGE-L |
 | :------------- | :---------: | :----------: |
 | BiDAF (原始[论文](https://arxiv.org/abs/1711.05073)基线) |    39.29    |     45.90    |
-| 本基线系统  |    47.65    |     54.58    |
+| 本基线系统  |    47.68    |     54.66    |
 
 
 # 快速开始

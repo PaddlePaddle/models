@@ -27,7 +27,7 @@ def compute_paragraph_score(sample):
             if len(question) > 0:
                 related_score = metric_max_over_ground_truths(f1_score,
                         para_tokens,
-                        question)
+                        [question])
             else:
                 related_score = 0.0
             doc['segmented_paragraphs_scores'].append(related_score)
