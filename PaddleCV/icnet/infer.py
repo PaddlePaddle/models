@@ -122,6 +122,7 @@ def infer(args):
                          fetch_list=[predict])
         cv2.imwrite(args.out_path + "/" + filename + "_result.png",
                     color(result[0]))
+    print("Saved images into: %s" % args.out_path)
 
 
 def main():
