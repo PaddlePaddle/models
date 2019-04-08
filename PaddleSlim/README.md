@@ -29,12 +29,12 @@ PaddleSlim是PaddlePaddle框架的一个子模块。PaddleSlim首次在PaddlePad
 - [特色](#特色)
 - [架构介绍](#架构介绍)
 - [功能列表](#功能列表)
-- [实验结果](#简要实验结果)
+- [实验结果与ModelZoo](#简要实验结果)
 - [模型导出格式](#模型导出格式)
 
-## 特色
+## 主要特点
 
-Paddle-Slim工具库有以下特色：
+Paddle-Slim工具库有以下特点：
 
 ###  接口简单
 
@@ -49,7 +49,7 @@ Paddle-Slim工具库有以下特色：
 - 蒸馏压缩策略可明显提升原始模型的精度。
 - 量化训练与蒸馏的组合使用，可同时做到缩减模型大小和提升模型精度。
 
-详见：[效果数据](docs/model_zoo.md)
+详见：[效果数据与ModelZoo](docs/model_zoo.md)
 
 ### 功能更强更灵活
 
@@ -91,9 +91,10 @@ Paddle-Slim工具库有以下特色：
 ### 量化训练
 
 - 支持动态和静态两种量化训练方式
-- 支持以float类型模拟int8保存模型
-- 支持以int8类型保存模型
-- 支持以兼容paddle mobile的格式保存模型
+  - 动态策略: 在每次迭代过程中动态统计并使用量化参数。
+  - 静态策略: 对不同的输入，采用相同的从训练数据中统计得到的量化参数。
+- 支持对权重全局量化和Channel-Wise量化
+- 支持以兼容Paddle Mobile的格式保存模型
 
 ### 蒸馏
 
@@ -109,6 +110,8 @@ Paddle-Slim工具库有以下特色：
 - 蒸馏和剪切压缩过程支持checkpoints功能
 
 ## 简要实验结果
+
+本节列出了PaddleSlim模型压缩工具库的一些实验结果，更多实验数据和预训练模型的下载，请参考：[详细实验结果与ModelZoo](docs/model_zoo.md)
 
 ### 量化训练
 
@@ -170,6 +173,4 @@ Paddle-Slim工具库有以下特色：
 压缩框架支持导出以下格式的模型：
 
 - **普通Paddle格式：** 普通Paddle模型格式，可通过Paddle框架加载使用。
-- **模拟int8的float数据格式模型：** 仅在量化训练策略时使用，用普通的Paddle模型格式（即float数据类型）模拟保存int8量化后的int8模型。可通过Paddle框架直接加载使用，一般用于验证int8量化后模型的精度。
-- **int8数据格式模型：** 仅在量化训练策略时使用，直接用int8数据类型保存模型权重。
 - **Paddle Mobile数据格式模型：** 仅在量化训练策略时使用，兼容[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)的模型格式。
