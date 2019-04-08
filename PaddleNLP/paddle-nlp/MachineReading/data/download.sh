@@ -16,20 +16,15 @@
 # ==============================================================================
 
 
-if [[ -d preprocessed ]]; then
-    echo "data exist"
-    exit 0
-else
-    # download preprocessed data
-    wget -c https://aipedataset.cdn.bcebos.com/dureader/dureader_preprocessed.zip
-    # download trained model parameters
-    wget -c TBD
-    # download vocabularies
-    wget -c TBD
+# download preprocessed data
+wget -c --no-check-certificate https://baidu-nlp.bj.bcebos.com/dureader_machine_reading-dataset-2.0.0.tar.gz
+# download trained model parameters and vocabulary
+wget -c --no-check-certificate https://baidu-nlp.bj.bcebos.com/dureader_machine_reading-bidaf-1.0.0.tar.gz 
 
-    # decompression
-    unzip dureader_preprocessed.zip
-    unzip saved_model.zip
-    unzip vocab.zip
-fi
+# decompression
+tar -zxvf dureader_machine_reading-dataset-2.0.0.tar.gz
+tar -zxvf dureader_machine_reading-bidaf-1.0.0.tar.gz 
+
+ln -s trained_model_para/vocab ./
+ln -s trained_model_para/saved_model ./
 

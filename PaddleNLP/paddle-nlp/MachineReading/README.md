@@ -30,11 +30,7 @@ DuReader基线系统利用[PaddlePaddle](http://paddlepaddle.org)深度学习框
 
 ### 安装PaddlePaddle
 DuReader基线系统基于python 2.7.13以及PaddlePaddle 1.3.1，关于PaddlePaddle框架的安装教程，详见[PaddlePaddle官方网站](http://www.paddlepaddle.org/#quick-start)。
-### 下载基线系统代码
 
-```
-git clone https://github.com/TBD && cd TBD
-```
 
 ### 下载第三方依赖
 在本基线系统中，我们采用了Bleu以及Rouge-L指标作为模型的评估标准。这些指标的计算脚本位于"https://github.com/tylin/coco-caption"，可以通过运行以下命令进行下载
