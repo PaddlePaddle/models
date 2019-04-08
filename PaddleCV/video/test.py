@@ -47,7 +47,7 @@ def parse_args():
         '--batch_size',
         type=int,
         default=None,
-        help='traing batch size per GPU. None to use config file setting.')
+        help='test batch size. None to use config file setting.')
     parser.add_argument(
         '--use_gpu', type=bool, default=True, help='default use gpu.')
     parser.add_argument(
