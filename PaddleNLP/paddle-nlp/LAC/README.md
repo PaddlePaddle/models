@@ -55,7 +55,9 @@ sh run_ernie.sh
 | PER  | 人名     | LOC  | 地名     | ORG  | 机构名   | TIME | 时间     |
 
 ### 模型原理介绍
-上面介绍的模型原理如下图所示：
+上面介绍的模型原理如下图所示：<br />
+
+
 ![GRU-CRF-MODEL](./gru-crf-model.png)
 
 ### 数据格式
