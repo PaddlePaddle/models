@@ -1,6 +1,6 @@
-'''
+"""
 gru class
-'''
+"""
 
 import paddle_layers as layers
 

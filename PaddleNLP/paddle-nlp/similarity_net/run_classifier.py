@@ -12,38 +12,37 @@ import argparse
 import multiprocessing
 import sys
 
-sys.path.append("../models/matching/")
-sys.path.append("../models/matching/optimizers")
+sys.path.append("..")
+
 import paddle
 import paddle.fluid as fluid
 import numpy as np
 import config
-from utils import ArgumentGroup, print_arguments, load_vocab, import_class, \
-    get_result_file, get_accuracy, deal_preds_of_mmdnn, init_log
-from reader import SimNetProcessor
-import paddle_layers as layers
+import utils
+import reader
+import models.matching.paddle_layers as layers
+
 import logging
-from config import SimNetConfig
 
 parser = argparse.ArgumentParser(__doc__)
-model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
+model_g = utils.ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("config_path", str, None, "Path to the json file for EmoTect model config.")
 model_g.add_arg("init_checkpoint", str, "examples/cnn_pointwise.json", "Init checkpoint to resume training from.")
 model_g.add_arg("output_dir", str, None, "Directory path to save checkpoints")
 model_g.add_arg("task_mode", str, None, "task mode: pairwise or pointwise")
 
-train_g = ArgumentGroup(parser, "training", "training options.")
-train_g.add_arg("epoch", int, 64, "Number of epoches for training.")
+train_g = utils.ArgumentGroup(parser, "training", "training options.")
+train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
 train_g.add_arg("save_steps", int, 200, "The steps interval to save checkpoints.")
 train_g.add_arg("validation_steps", int, 100, "The steps interval to evaluate model performance.")
 
-log_g = ArgumentGroup(parser, "logging", "logging related")
+log_g = utils.ArgumentGroup(parser, "logging", "logging related")
 log_g.add_arg("skip_steps", int, 10, "The steps interval to print loss.")
 log_g.add_arg("verbose_result", bool, True, "Whether to output verbose result.")
 log_g.add_arg("test_result_path", str, "test_result", "Directory path to test result.")
 log_g.add_arg("infer_result_path", str, "infer_result", "Directory path to infer result.")
 
-data_g = ArgumentGroup(parser, "data", "Data paths, vocab paths and data processing options")
+data_g = utils.ArgumentGroup(parser, "data", "Data paths, vocab paths and data processing options")
 data_g.add_arg("train_data_dir", str, None, "Directory path to training data.")
 data_g.add_arg("valid_data_dir", str, None, "Directory path to valid data.")
 data_g.add_arg("test_data_dir", str, None, "Directory path to testing data.")
@@ -51,13 +50,16 @@ data_g.add_arg("infer_data_dir", str, None, "Directory path to infer data.")
 data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
 data_g.add_arg("batch_size", int, 32, "Total examples' number in batch for training.")
 
-run_type_g = ArgumentGroup(parser, "run_type", "running type options.")
+run_type_g = utils.ArgumentGroup(parser, "run_type", "running type options.")
 run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
 run_type_g.add_arg("task_name", str, None, "The name of task to perform sentiment classification.")
 run_type_g.add_arg("do_train", bool, False, "Whether to perform training.")
 run_type_g.add_arg("do_valid", bool, False, "Whether to perform dev.")
 run_type_g.add_arg("do_test", bool, False, "Whether to perform testing.")
 run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
+run_type_g.add_arg("compute_accuracy", bool, False, "Whether to compute accuracy.")
+run_type_g.add_arg("lamda", float, 0.91,
+                   "When task_mode is pairwise, lamda is the threshold for calculating the accuracy.")
 
 args = parser.parse_args()
 
@@ -67,20 +69,20 @@ def train(conf_dict, args):
     train processic
     """
     # loading vocabulary
-    vocab = load_vocab(args.vocab_path)
+    vocab = utils.load_vocab(args.vocab_path)
     # get vocab size
     conf_dict['dict_size'] = len(vocab)
     # Get data layer
     data = layers.DataLayer()
     # Load network structure dynamically
-    net = import_class(
-        "nets", conf_dict["net"]["module_name"], conf_dict["net"]["class_name"])(conf_dict)
+    net = utils.import_class(
+        "../models/matching", conf_dict["net"]["module_name"], conf_dict["net"]["class_name"])(conf_dict)
     # Load loss function dynamically
-    loss = import_class(
-        "losses", conf_dict["loss"]["module_name"], conf_dict["loss"]["class_name"])(conf_dict)
+    loss = utils.import_class(
+        "../models/matching/losses", conf_dict["loss"]["module_name"], conf_dict["loss"]["class_name"])(conf_dict)
     # Load Optimization method
-    optimizer = import_class(
-        "optimizers", "paddle_optimizers", conf_dict["optimizer"]["class_name"])(conf_dict)
+    optimizer = utils.import_class(
+        "../models/matching/optimizers", "paddle_optimizers", conf_dict["optimizer"]["class_name"])(conf_dict)
     # load auc method
     metric = fluid.metrics.Auc(name="auc")
     # Get device
@@ -89,7 +91,7 @@ def train(conf_dict, args):
     else:
         place = fluid.core.CPUPlace()
 
-    simnet_process = SimNetProcessor(args, vocab)
+    simnet_process = reader.SimNetProcessor(args, vocab)
     if args.task_mode == "pairwise":
         # Build network
         left = data.ops(name="left", shape=[1], dtype="int64", lod_level=1)
@@ -139,9 +141,9 @@ def train(conf_dict, args):
     logging.info("device count: %d" % device_count)
 
     def valid_and_test(program, feeder, reader, process, mode="test"):
-        '''
+        """
         return auc and acc
-        '''
+        """
         # Get Batch Data
         batch_data = paddle.batch(reader, args.batch_size, drop_last=False)
         pred_list = []
@@ -154,14 +156,17 @@ def train(conf_dict, args):
         elif mode == "valid":
             label_list = process.get_valid_label()
         if conf_dict['net']['class_name'] == 'MMDNN':
-            pred_list = deal_preds_of_mmdnn(conf_dict, pred_list)
+            pred_list = utils.deal_preds_of_mmdnn(conf_dict, pred_list)
         if args.task_mode == "pairwise":
             pred_list = np.hstack((np.ones_like(pred_list) - pred_list, pred_list))
         metric.reset()
         metric.update(pred_list, label_list)
         auc = metric.eval()
-        acc = get_accuracy(pred_list, label_list, args.task_mode)
-        return auc, acc
+        if args.compute_accuracy:
+            acc = utils.get_accuracy(pred_list, label_list, args.task_mode, args.lamda)
+            return auc, acc
+        else:
+            return auc
 
     # run train
     logging.info("start train process ...")
@@ -180,9 +185,15 @@ def train(conf_dict, args):
             global_step += 1
             avg_loss = parallel_executor.run([avg_cost.name], feed=train_feeder.feed(data))
             if args.do_valid and global_step % args.validation_steps == 0:
-                valid_auc, valid_acc = valid_and_test(program=infer_program, feeder=valid_feeder, reader=valid_reader,
-                                                      process=simnet_process, mode="valid")
-                logging.info("global_steps: %d, valid_auc: %f, valid_acc: %f" % (global_step, valid_auc, valid_acc))
+
+                valid_result = valid_and_test(program=infer_program, feeder=valid_feeder, reader=valid_reader,
+                                              process=simnet_process, mode="valid")
+                if args.compute_accuracy:
+                    valid_auc, valid_acc = valid_result
+                    logging.info("global_steps: %d, valid_auc: %f, valid_acc: %f" % (global_step, valid_auc, valid_acc))
+                else:
+                    valid_auc = valid_result
+                    logging.info("global_steps: %d, valid_auc: %f" % (global_step, valid_auc))
             if global_step % args.save_steps == 0:
                 model_save_dir = os.path.join(args.output_dir, conf_dict["model_path"])
                 model_path = os.path.join(model_save_dir, str(global_step))
@@ -197,7 +208,7 @@ def train(conf_dict, args):
                     target_vars = [left_feat, pred]
                 fluid.io.save_inference_model(
                     model_path, feed_var_names, target_vars, executor, infer_program)
-                logging.info("saving infer model in %d step" % global_step)
+                logging.info("saving infer model in %s" % model_path)
             losses.append(np.mean(avg_loss[0]))
         end_time = time.time()
         logging.info("epoch: %d, loss: %f, used time: %d sec" % (epoch_id, np.mean(losses), end_time - start_time))
@@ -210,17 +221,22 @@ def train(conf_dict, args):
             # Get Feeder and Reader
             test_feeder = fluid.DataFeeder(place=place, feed_list=[left.name, right.name])
             test_reader = simnet_process.get_reader("test")
-        test_auc, test_acc = valid_and_test(program=infer_program, feeder=test_feeder, reader=test_reader,
-                                            process=simnet_process, mode="test")
-        logging.info("AUC of test is %f, Accuracy of test is %f" % (test_auc, test_acc))
+        test_result = valid_and_test(program=infer_program, feeder=test_feeder, reader=test_reader,
+                                     process=simnet_process, mode="test")
+        if args.compute_accuracy:
+            test_auc, test_acc = test_result
+            logging.info("AUC of test is %f, Accuracy of test is %f" % (test_auc, test_acc))
+        else:
+            test_auc = test_result
+            logging.info("AUC of test is %f" % test_auc)
 
 
 def test(conf_dict, args):
     """
     run predict
     """
-    vocab = load_vocab(args.vocab_path)
-    simnet_process = SimNetProcessor(args, vocab)
+    vocab = utils.load_vocab(args.vocab_path)
+    simnet_process = reader.SimNetProcessor(args, vocab)
     # load auc method
     metric = fluid.metrics.Auc(name="auc")
     with open("predictions.txt", "w") as predictions_file:
@@ -256,7 +272,7 @@ def test(conf_dict, args):
                 pred_list += map(lambda item: item, output[1])
                 predictions_file.write("\n".join(map(lambda item: str(np.argmax(item)), output[1])) + "\n")
         if conf_dict['net']['class_name'] == 'MMDNN':
-            pred_list = deal_preds_of_mmdnn(conf_dict, pred_list)
+            pred_list = utils.deal_preds_of_mmdnn(conf_dict, pred_list)
         if args.task_mode == "pairwise":
             pred_list = np.array(pred_list).reshape((-1, 1))
             pred_list = np.hstack((np.ones_like(pred_list) - pred_list, pred_list))
@@ -265,18 +281,23 @@ def test(conf_dict, args):
         labels = simnet_process.get_test_label()
 
         metric.update(pred_list, labels)
-        acc = get_accuracy(pred_list, labels, args.task_mode)
-        logging.info("AUC of test is %f, Accuracy of test is %f" % (metric.eval(), acc))
+        if args.compute_accuracy:
+            acc = utils.get_accuracy(pred_list, labels, args.task_mode, args.lamda)
+            logging.info("AUC of test is %f, Accuracy of test is %f" % (metric.eval(), acc))
+        else:
+            logging.info("AUC of test is %f" % metric.eval())
+
     if args.verbose_result:
-        get_result_file(args)
+        utils.get_result_file(args)
+        logging.info("test result saved in %s" % os.path.join(os.getcwd(), args.test_result_path))
 
 
 def infer(args):
     """
     run predict
     """
-    vocab = load_vocab(args.vocab_path)
-    simnet_process = SimNetProcessor(args, vocab)
+    vocab = utils.load_vocab(args.vocab_path)
+    simnet_process = reader.SimNetProcessor(args, vocab)
     # Get model path
     model_path = args.init_checkpoint
     # Get device
@@ -309,13 +330,13 @@ def infer(args):
     with open(args.infer_result_path, "w") as infer_file:
         for _data, _pred in zip(simnet_process.get_infer_data(), preds_list):
             infer_file.write(_data + "\t" + _pred + "\n")
-
+    logging.info("infer result saved in %s" % os.path.join(os.getcwd(), args.infer_result_path))
 
 
 def main(conf_dict, args):
-    '''
+    """
     main
-    '''
+    """
     if args.do_train:
         train(conf_dict, args)
     elif args.do_test:
@@ -327,7 +348,7 @@ def main(conf_dict, args):
 
 
 if __name__ == "__main__":
-    print_arguments(args)
-    init_log("./log/SimNet")
-    conf_dict = SimNetConfig(args)
+    utils.print_arguments(args)
+    utils.init_log("./log/TextSimilarityNet")
+    conf_dict = config.SimNetConfig(args)
     main(conf_dict, args)

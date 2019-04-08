@@ -4,17 +4,17 @@ export FLAGS_sync_nccl_allreduce=1
 export CUDA_VISIBLE_DEVICES=3
 export FLAGS_fraction_of_gpu_memory_to_use=0.95
 TASK_NAME='simnet'
-TRAIN_DATA_PATH=./data/lcqmc.train.pair
-VALID_DATA_PATH=./data/lcqmc.dev
-TEST_DATA_PATH=./data/lcqmc.test
+TRAIN_DATA_PATH=./data/train_pairwise_data
+VALID_DATA_PATH=./data/test_pairwise_data
+TEST_DATA_PATH=./data/test_pairwise_data
 INFER_DATA_PATH=./data/infer_data
-VOCAB_PATH=./term2id.dict
-CKPT_PATH=./save_models
+VOCAB_PATH=./data/term2id.dict
+CKPT_PATH=./model_files
 TEST_RESULT_PATH=./test_result
 INFER_RESULT_PATH=./infer_result
 TASK_MODE='pairwise'
 CONFIG_PATH=./config/bow_pairwise.json
-INIT_CHECKPOINT=./save_models/model
+INIT_CHECKPOINT=./model_files/simnet_bow_pairwise_pretrained_model/
 
 
 # run_train
@@ -37,10 +37,12 @@ train() {
 		--epoch 10 \
 		--save_steps 1000 \
 		--validation_steps 100 \
+		--compute_accuracy False \
+		--lamda 0.91 \
 		--task_mode ${TASK_MODE}
 }
-#run_test
-test() {
+#run_evaluate
+evaluate() {
 	python run_classifier.py \
 		--task_name ${TASK_NAME} \
 		--use_cuda false \
@@ -52,9 +54,11 @@ test() {
 		--config_path ${CONFIG_PATH} \
 		--vocab_path ${VOCAB_PATH} \
 		--task_mode ${TASK_MODE} \
+		--compute_accuracy False \
+		--lamda 0.91 \
 		--init_checkpoint ${INIT_CHECKPOINT}
 }
-# run_eval
+# run_infer
 infer() {
 	python run_classifier.py \
 		--task_name ${TASK_NAME} \

@@ -1,6 +1,6 @@
-'''
+"""
 network layers
-'''
+"""
 
 import paddle.fluid as fluid
 import paddle.fluid.param_attr as attr

@@ -1,6 +1,6 @@
-'''
+"""
 cnn class
-'''
+"""
 
 import paddle_layers as layers
 

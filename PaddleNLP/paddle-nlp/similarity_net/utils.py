@@ -1,20 +1,16 @@
-'''
+# --coding=utf-8
+"""
 SimNet utilities.
-'''
+"""
 
 import time
 import sys
 import re
 import os
-import io
 import six
-import random
-import paddle.fluid as fluid
 import numpy as np
 import logging
 import logging.handlers
-
-sys.path.append("../models/matching/losses")
 
 """
 ******functions for file processing******
@@ -240,9 +236,12 @@ def get_level():
     return logger.level
 
 
-def get_accuracy(preds, labels, mode, a=0.91):
+def get_accuracy(preds, labels, mode, lamda=0.91):
+    """
+    compute accuracy
+    """
     if mode == "pairwise":
-        preds = np.array(list(map(lambda x: 1 if x[1] > a else 0, preds)))
+        preds = np.array(list(map(lambda x: 1 if x[1] >= lamda else 0, preds)))
     else:
         preds = np.array(list(map(lambda x: np.argmax(x), preds)))
     labels = np.squeeze(labels)
@@ -250,24 +249,24 @@ def get_accuracy(preds, labels, mode, a=0.91):
 
 
 def get_softmax(preds):
-    '''
+    """
     compute sotfmax
-    '''
+    """
     _exp = np.exp(preds)
     return _exp / np.sum(_exp, axis=1, keepdims=True)
 
 
 def get_sigmoid(preds):
-    '''
+    """
     compute sigmoid
-    '''
+    """
     return 1 / (1 + np.exp(-preds))
 
 
 def deal_preds_of_mmdnn(conf_dict, preds):
-    '''
+    """
     deal preds of mmdnn
-    '''
+    """
     if conf_dict['task_mode'] == 'pairwise':
         return get_sigmoid(preds)
     else:
