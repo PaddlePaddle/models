@@ -22,8 +22,6 @@ import time
 import os
 import math
 
-import cProfile, pstats, StringIO
-
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.core as core
@@ -135,7 +133,7 @@ def lr_decay(lrs, epochs, bs, total_image):
             step += 1
         ratio = (lrs[idx][1] - lrs[idx][0])*1.0 / (epoch[1] - epoch[0])
         lr_base = lrs[idx][0]
-        for s in xrange(epoch[0], epoch[1]):
+        for s in range(epoch[0], epoch[1]):
             if boundaries:
                 boundaries.append(boundaries[-1] + step + 1)
             else:
