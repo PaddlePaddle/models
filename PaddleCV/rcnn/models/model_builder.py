@@ -338,7 +338,6 @@ class RCNN(object):
                                         self.roi_has_mask_int32)
             self.mask_fcn_logits = self.SuffixNet(conv5)
         else:
-            self.eval_bbox()
             pred_res_shape = fluid.layers.shape(self.pred_result)
             shape = fluid.layers.reduce_prod(pred_res_shape)
             shape = fluid.layers.reshape(shape, [1, 1])
