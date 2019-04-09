@@ -6,11 +6,11 @@
 
 ## 一、简介
 
-###任务说明
+### 任务说明
 
 &ensp;&ensp;&ensp;&ensp;对话相关的任务中，Dialogue System常常需要根据场景的变化去解决多种多样的任务。任务的多样性（意图识别、槽位解析、DA识别、DST等等），以及领域训练数据的稀少，给Dialogue System的研究和应用带来了巨大的困难和挑战，要使得dialogue system得到更好的发展，需要开发一个通用的对话理解模型。为此，我们给出了基于BERT的对话模型工具箱(DMTK：DialogueModelToolKit)，通过实验表明，使用base-model(BERT)并结合常见的学习范式，就可以在几乎全部对话理解任务上取得比肩甚至超越各个领域业内最好的模型的效果，展现了学习一个通用对话理解模型的巨大潜力。
 
-###效果说明
+### 效果说明
 
 &ensp;&ensp;&ensp;&ensp;a、效果上，我们基于对话相关的业内公开数据集进行评测，效果如下表所示：
 
@@ -33,21 +33,21 @@ MRDA: Meeting Recorder Dialogue Act;
 SWDA：Switchboard Dialogue Act Corpus;
 ```
 
-##二、快速开始
+## 二、快速开始
 
-###1、安装说明
+### 1、安装说明
 
-####&ensp;&ensp;a、paddle安装
+#### &ensp;&ensp;a、paddle安装
 
 &ensp;&ensp;&ensp;&ensp;本项目依赖于Paddle Fluid 1.3，请参考安装指南进行安装
 
-####&ensp;&ensp;b、安装代码
+#### &ensp;&ensp;b、安装代码
 
-####&ensp;&ensp;c、环境依赖
+#### &ensp;&ensp;c、环境依赖
 
-###2、开始第一次模型调用
+### 2、开始第一次模型调用
 
-####&ensp;&ensp;a、数据准备（数据、模型下载，预处理）
+#### &ensp;&ensp;a、数据准备（数据、模型下载，预处理）
 
 &ensp;&ensp;&ensp;&ensp;i、数据下载
 
@@ -63,7 +63,7 @@ parameters：
 task_name: udc, swda, mrda, atis, dstc2
 ```
 
-####&ensp;&ensp;b、模型下载
+#### &ensp;&ensp;b、模型下载
 
 &ensp;&ensp;&ensp;&ensp;该项目中，我们基于BERT开发了相关的对话模型，对话模型训练时需要依赖BERT的模型做fine-tuning, 且提供了目前公开数据集上训练好的多个对话模型。
 
@@ -79,7 +79,7 @@ sh download_pretrain_model.sh
 sh download_models.sh
 ```
 
-####&ensp;&ensp;c、训练 
+#### &ensp;&ensp;c、训练 
 
 &ensp;&ensp;&ensp;&ensp;方式一(推荐)：
 
@@ -115,7 +115,7 @@ python -u train.py --task_name mrda \ # name model to use. [udc|swda|mrda|atis_i
        --use_fp16 false         # If set, use fp16 for training.
 ```
 
-####&ensp;&ensp;d、预测 （推荐e的方式来进行预测评估）
+#### &ensp;&ensp;d、预测 （推荐e的方式来进行预测评估）
 
 &ensp;&ensp;&ensp;&ensp;方式一(推荐)：
 
@@ -138,7 +138,7 @@ python -u predict.py --task_name mrda \      # name model to use. [udc|swda|mrda
 --bert_config_path ./uncased_L-12_H-768_A-12/bert_config.json        # Path to the json file for bert model config.
 ```
 
-####&ensp;&ensp;e、预测+评估（推荐）
+#### &ensp;&ensp;e、预测+评估（推荐）
 
 &ensp;&ensp;&ensp;&ensp;dialogue_model_toolkit模块内提供已训练好的对话模型，可通过sh download_models.sh下载，用户如果不训练模型的时候，可使用提供模型进行预测评估：
 
@@ -148,17 +148,17 @@ parameters：
 task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2
 ```
 
-##三、进阶使用
+## 三、进阶使用
 
-###1、任务定义与建模
+### 1、任务定义与建模
 
 &ensp;&ensp;&ensp;&ensp;dialogue_model_toolkit模块，针对数据集开发了相关的模型训练过程，支持分类，多标签分类，序列标注等任务，用户可针对自己的数据集，进行相关的模型定制；
 
-###2、模型原理介绍
+### 2、模型原理介绍
 
 &ensp;&ensp;&ensp;&ensp;本项目针对对话理解相关的问题，底层基于BERT，上层定义范式(分类，多标签分类，序列标注), 开源了一系列公开数据集相关的模型，供用户可配置地使用：
 
-###3、数据格式说明
+### 3、数据格式说明
 
 &ensp;&ensp;&ensp;&ensp;训练、预测、评估使用的数据可以由用户根据实际的对话应用场景，自己组织数据。输入网络的数据格式统一为，示例如下：
 
@@ -169,7 +169,7 @@ task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2
 &ensp;&ensp;&ensp;&ensp;输入数据以[CLS]开始，[SEP]分割内容为对话内容相关三部分，如上文，当前句，下文等，如[SEP]分割的每部分内部由多轮组成的话，使用[INNER_SEP]进行分割；第二部分和第三部分部分皆可缺省；
 
 &ensp;&ensp;&ensp;&ensp;目前dialogue_model_toolkit模块内已将数据准备部分集成到代码内，用户可根据上面输入数据格式，组装自己的数据；
-###4、代码结构说明
+### 4、代码结构说明
 
 ```
 .
@@ -205,7 +205,7 @@ task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2
 └── create_model.py					# 创建底层bert模型+上层网络范式网络结构
 ```
 
-###5、如何组建自己的模型
+### 5、如何组建自己的模型
 
 &ensp;&ensp;&ensp;&ensp;用户可以根据自己的需求，组建自定义的模型，具体方法如下所示：
 
@@ -221,7 +221,7 @@ task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2
 
 &ensp;&ensp;&ensp;&ensp;&ensp;&ensp;用户可在define_predict_pack.py内定义task_name和自定义封装预测接口的对应关系；
 
-###6、如何训练
+### 6、如何训练
 
 &ensp;&ensp;&ensp;&ensp;i、按照上文所述的数据组织形式，组织自己的训练、评估、预测数据
 
@@ -233,8 +233,8 @@ parameters：
 task_name: 用户自定义名称
 ```
 
-##四、其他
+## 四、其他
 
-###如何贡献代码
+### 如何贡献代码
 
 &ensp;&ensp;&ensp;&ensp;如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
