@@ -9,10 +9,10 @@
 
 ## 环境依赖
 
-本目录下的代码均在4卡Tesla K40/P40 GPU，CentOS系统，CUDA-9.2/8.0，cuDNN-7.1环境下测试运行无误
+本目录下的代码均在4卡Tesla K40/P40 GPU，CentOS系统，CUDA-9.0/8.0，cuDNN-7.0环境下测试运行无误
 
-  - Python == 2.7
-  - PaddlePaddle >= 1.1.0
+  - Python == 2.7 / 3.6
+  - PaddlePaddle >= 1.1.0 (<= 1.3.0)
   - opencv-python >= 3.3
 
 ## MPII Val结果
@@ -83,18 +83,20 @@ python2 setup.py install --user
 下载COCO/MPII预训练模型（见上表最后一列所附链接），保存到根目录下的'checkpoints'文件夹中，运行：
 
 ```bash
-python val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet50-mpii-384x384'
+python val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet50-mpii-384x384' --data_root 'data/mpii'
 ```
 
 ### 模型训练
 
 ```bash
-python train.py --dataset 'mpii' # or coco
+python train.py --dataset 'mpii' --data_root 'data/mpii'
 ```
 
 **说明** 详细参数配置已保存到`lib/mpii_reader.py` 和 `lib/coco_reader.py`文件中，通过设置dataset来选择使用具体的参数配置
 
 ### 模型测试（任意图片，使用上述COCO或MPII预训练好的模型）
+
+同时，我们支持使用预训练好的关键点检测模型预测任意图片
 
 将测试图片放入根目录下的'test'文件夹中，执行
 
