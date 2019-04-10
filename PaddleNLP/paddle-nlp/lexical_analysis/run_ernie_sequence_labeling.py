@@ -244,6 +244,7 @@ def main(args):
                 train_ret = create_model(args, embeddings, labels=labels, is_prediction=False)
 
                 optimizer = fluid.optimizer.Adam(learning_rate=args.lr)
+                fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=1.0))
                 optimizer.minimize(train_ret["loss"])
 
         lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
