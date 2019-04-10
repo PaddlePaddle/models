@@ -35,7 +35,7 @@ if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding("utf-8")
 sys.path.append('..')
-sys.path.append('../../models/dureader/')
+sys.path.append('../../models/reading_comprehension/')
 
 
 from args import *
