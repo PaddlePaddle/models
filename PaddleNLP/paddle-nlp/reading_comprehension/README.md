@@ -27,9 +27,15 @@ DuReader基线系统利用[PaddlePaddle](http://paddlepaddle.org)深度学习框
 # 快速开始
 
 ## 安装
+### 环境依赖
+经测试，基线系统可在以下环境正常运行
 
+ * 系统：CentOS 6.3, cuda 9.0, CuDNN 7.0
+ * python 2.7.13
+ * PaddlePaddle 1.3.1
+ 
 ### 安装PaddlePaddle
-DuReader基线系统基于python 2.7.13以及PaddlePaddle 1.3.1，关于PaddlePaddle框架的安装教程，详见[PaddlePaddle官方网站](http://www.paddlepaddle.org/#quick-start)。
+关于PaddlePaddle框架的安装教程，详见[PaddlePaddle官方网站](http://www.paddlepaddle.org/#quick-start)。
 
 
 ### 下载第三方依赖
