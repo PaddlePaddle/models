@@ -9,13 +9,13 @@ This is a simple demonstration of re-implementation in [PaddlePaddle.Fluid](http
 
 ## Requirements
 
-  - Python == 2.7
-  - PaddlePaddle >= 1.1.0
+  - Python == 2.7 or 3.6
+  - PaddlePaddle >= 1.1.0 (<= 1.3.0)
   - opencv-python >= 3.3
 
 ## Environment
 
-The code is developed and tested under 4 Tesla K40/P40 GPUS cards on CentOS with installed CUDA-9.2/8.0 and cuDNN-7.1.
+The code is developed and tested under 4 Tesla K40/P40 GPUS cards on CentOS with installed CUDA-9.0/8.0 and cuDNN-7.0.
 
 ## Results on MPII Val
 | Arch | Head | Shoulder | Elbow | Wrist | Hip | Knee | Ankle | Mean | Mean@0.1| Models |
@@ -85,18 +85,20 @@ python2 setup.py install --user
 Downloading the checkpoints of Pose-ResNet-50 trained on MPII dataset from [here](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-mpii-384x384.tar.gz). Extract it into the folder `checkpoints` under the directory root of this repo. Then run
 
 ```bash
-python val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet50-mpii-384x384'
+python val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet50-mpii-384x384' --data_root 'data/mpii'
 ```
 
 ### Perform Training
 
 ```bash
-python train.py --dataset 'mpii' # or coco
+python train.py --dataset 'mpii' --data_root 'data/mpii'
 ```
 
 **Note**: Configurations for training are aggregated in the `lib/mpii_reader.py` and `lib/coco_reader.py`.
 
 ### Perform Test on Images
+
+We also support to apply pre-trained models on customized images.
 
 Put the images into the folder `test` under the directory root of this repo. Then run
 

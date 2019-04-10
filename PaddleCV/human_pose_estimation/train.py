@@ -16,6 +16,7 @@
 """Functions for training."""
 
 import os
+import sys
 import numpy as np
 import cv2
 import paddle
@@ -74,6 +75,12 @@ def optimizer_setting(args, params):
             regularization=fluid.regularizer.L2Decay(0.0005))
 
     return optimizer
+
+
+def print_immediately(s):
+    print(s)
+    sys.stdout.flush()
+
 
 def train(args):
     if args.dataset == 'coco':
@@ -152,7 +159,7 @@ def train(args):
 
             loss = np.mean(np.array(loss))
 
-            print('Epoch [{:4d}/{:3d}] LR: {:.10f} '
+            print_immediately('Epoch [{:4d}/{:3d}] LR: {:.10f} '
                   'Loss = {:.5f}'.format(
                   batch_id, pass_id, current_lr[0], loss))
 
