@@ -63,11 +63,9 @@ Overview of Deep Attention Matching Network
 格分开的上文id，第二列是以空格分开的回复id，第三列是标签
 注：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如
 下：
-
     ```
     python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.utf8.seg
     ```
-
 ### 代码结构说明
 	main.py：该项目的主函数，封装包括训练、预测的部分
 	config.py：定义了该项目模型的相关配置，包括具体模型类别、以及模型的超参数
