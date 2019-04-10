@@ -59,13 +59,15 @@ Overview of Deep Attention Matching Network
 ### 模型原理介绍
 可以参考论文:[http://aclweb.org/anthology/P18-1103](http://aclweb.org/anthology/P18-1103).
 ### 数据格式说明
-    训练、预测、评估使用的数据示例如下，数据由三列组成，以制表符（'\t'）分隔，第一列是以空
+训练、预测、评估使用的数据示例如下，数据由三列组成，以制表符（'\t'）分隔，第一列是以空
 格分开的上文id，第二列是以空格分开的回复id，第三列是标签
-    注：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如
+注：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如
 下：
+
     ```
     python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.utf8.seg
     ```
+
 ### 代码结构说明
 	main.py：该项目的主函数，封装包括训练、预测的部分
 	config.py：定义了该项目模型的相关配置，包括具体模型类别、以及模型的超参数
