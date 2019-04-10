@@ -19,7 +19,7 @@ try:
 except ImportError as e:
     import pickle  #python 3
 
-sys.path.append('../models/deep_attention_matching_net/')
+sys.path.append('../models/deep_attention_matching/')
 
 from net import Net
 
