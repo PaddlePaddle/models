@@ -24,9 +24,9 @@ from collections import OrderedDict
 import pickle
 
 from utils.base_evaluator import BaseEvaluator
+from utils.nms_utils import oks_nms
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
-from nms.nms import oks_nms
 
 
 class COCOEvaluator(BaseEvaluator):

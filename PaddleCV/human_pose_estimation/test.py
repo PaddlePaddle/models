@@ -15,7 +15,7 @@
 
 """Functions for inference."""
 
-import os
+import sys
 import argparse
 import functools
 import paddle
@@ -34,12 +34,17 @@ add_arg('batch_size',       int,   32,                  "Minibatch size.")
 add_arg('dataset',          str,   'mpii',              "Dataset")
 add_arg('use_gpu',          bool,  True,                "Whether to use GPU or not.")
 add_arg('kp_dim',           int,   16,                  "Class number.")
-add_arg('model_save_dir',   str,   "output",            "Model save directory")
 add_arg('with_mem_opt',     bool,  True,               "Whether to use memory optimization or not.")
 add_arg('checkpoint',       str,   None,                "Whether to resume checkpoint.")
 add_arg('flip_test',        bool,  True,                "Flip test")
 add_arg('shift_heatmap',    bool,  True,                "Shift heatmap")
 # yapf: enable
+
+
+def print_immediately(s):
+    print(s)
+    sys.stdout.flush()
+
 
 def test(args):
     import lib.mpii_reader as reader
@@ -89,6 +94,7 @@ def test(args):
     fetch_list = [image.name, output.name]
 
     for batch_id, data in enumerate(test_reader()):
+        print_immediately("Processing batch #%d" % batch_id)
         num_images = len(data)
 
         file_ids = []
@@ -123,6 +129,7 @@ def test(args):
             # Aggregate
             out_heatmaps = (out_heatmaps + output_flipped) * 0.5
             save_predict_results(input_image, out_heatmaps, file_ids, fold_name='results')
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
