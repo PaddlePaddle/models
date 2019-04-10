@@ -26,9 +26,9 @@ Overview of Deep Attention Matching Network
 1. 数据准备
 	下载经过预处理的数据，运行该脚本之后，data目录下会存在unlabel和douban两个文件夹。
 	```
-  cd model_files
-  sh download_model.sh
-  ```
+  	cd model_files
+  	sh download_model.sh
+  	```
 2. 模型训练
 	```
 	python -u main.py \
