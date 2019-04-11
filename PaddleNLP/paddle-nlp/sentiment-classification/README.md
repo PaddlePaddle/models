@@ -76,8 +76,7 @@ sh run_ernie.sh infer
 本项目针对情感倾向性分类问题，开源了一系列模型，供用户可配置地使用：
 
 + BOW（Bag Of Words）模型，是一个非序列模型，使用基本的全连接结构；
-+ CNN（Convolutional Neural Networks），是一个基础的序列模型，能够处理变长的序列输入，提取一个局部区域之内的特征；
-+ CNN（Convolutional Neural Networks），是一个基础的序列模型，能够处理变长的序列输入，提取一个局部区域之内的特征；
++ CNN（Convolutional Neural Networks），是一个基础的序列模型，能处理变长序列输入，提取局部区域之内的特征；
 + GRU（Gated Recurrent Unit），序列模型，能够较好地解决序列文本中长距离依赖的问题；
 + LSTM（Long Short Term Memory），序列模型，能够较好地解决序列文本中长距离依赖的问题；
 + BI-LSTM（Bidirectional Long Short Term Memory），序列模型，采用双向LSTM结构，更好地捕获句子中的语义特征；
@@ -91,7 +90,7 @@ sh run_ernie.sh infer
 ```text
 特 喜欢 这种 好看的 狗狗	              1
 这 真是 惊艳 世界 的 中国 黑科技	      1
-环境 特别 差 ，脏兮兮 的，再也 不去 了	 0
+环境 特别 差 ，脏兮兮 的，再也 不去 了	0
 ```
 注：本项目额外提供了分词预处理脚本（在本项目的preprocess目录下），可供用户使用，具体使用方法如下：
 ```shell
