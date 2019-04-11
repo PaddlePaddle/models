@@ -68,6 +68,9 @@ def parse_args():
     add_arg('reduce_strategy',    str,  "allreduce",        "Choose from reduce or allreduce.")
     add_arg('skip_unbalanced_data', bool, False,            "Skip data not if data not balanced on nodes.")
     add_arg('enable_sequential_execution', bool, False,            "Skip data not if data not balanced on nodes.")
+    #for dgc
+    add_arg('enable_dgc', bool, False,            "Skip data not if data not balanced on nodes.")
+    add_arg('rampup_begin_step', int, 5008,            "Skip data not if data not balanced on nodes.")
     # yapf: enable
     args = parser.parse_args()
     return args
@@ -157,6 +160,17 @@ def build_program(is_train, main_prog, startup_prog, args):
                             boundaries=bd, values=lr),
                         warmup_steps, start_lr, end_lr),
                     momentum=0.9)
+
+                if args.enable_dgc:
+                    optimizer = fluid.optimizer.DGCMomentumOptimizer(
+                        learning_rate=utils.learning_rate.lr_warmup(
+                            fluid.layers.piecewise_decay(
+                                boundaries=bd, values=lr),
+                            warmup_steps, start_lr, end_lr),
+                        momentum=0.9,
+                        sparsity=[0.999, 0.999],
+                        rampup_begin_step=args.rampup_begin_step)
+
                 if args.fp16:
                     params_grads = optimizer.backward(avg_cost)
                     master_params_grads = utils.create_master_params_grads(
