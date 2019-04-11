@@ -238,7 +238,7 @@ def train_parallel(args):
     if args.update_method == "pserver":
         train_prog, startup_prog = pserver_prepare(args, train_prog, startup_prog)
     elif args.update_method == "nccl2":
-        nccl2_prepare(args, startup_prog)
+        nccl2_prepare(args, startup_prog, main_prog=train_prog)
 
     if args.dist_env["training_role"] == "PSERVER":
         run_pserver(train_prog, startup_prog)
@@ -261,11 +261,12 @@ def train_parallel(args):
 
     strategy = fluid.ExecutionStrategy()
     strategy.num_threads = args.num_threads
+    strategy.num_iteration_per_drop_scope = 30
+
     build_strategy = fluid.BuildStrategy()
     build_strategy.enable_inplace = False
     build_strategy.memory_optimize = False
     build_strategy.enable_sequential_execution = bool(args.enable_sequential_execution)
-
     
     if args.reduce_strategy == "reduce":
         build_strategy.reduce_strategy = fluid.BuildStrategy(
