@@ -27,7 +27,6 @@ python -u main.py \
 python -u main.py \
   --do_train True \
   --use_cuda \
-  --ext_eval \
   --data_path ./data/douban/data_small.pkl \
   --save_path ./model_files/douban \
   --use_pyreader \
@@ -35,4 +34,16 @@ python -u main.py \
   --_EOS_ 1 \
   --channel1_num 16 \
   --batch_size 32
-                
+
+#test on douban
+python -u main.py \
+  --do_test True \
+  --use_cuda \
+  --ext_eval \
+  --data_path ./data/douban/data_small.pkl \
+  --save_path ./model_files/douban/step_31 \
+  --model_path ./model_files/douban/step_31 \
+  --vocab_size 172130 \
+  --_EOS_ 1 \
+  --channel1_num 16 \
+  --batch_size 32
