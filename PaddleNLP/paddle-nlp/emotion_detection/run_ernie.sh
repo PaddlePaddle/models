@@ -18,7 +18,7 @@ train() {
         --dev_set ${TASK_DATA_PATH}/dev.tsv \
         --vocab_path ${MODEL_PATH}/vocab.txt \
         --output_dir ${CKPT_PATH} \
-        --save_steps 200 \
+        --save_steps 500 \
         --validation_steps 50 \
         --epoch 3 \
         --max_seq_len 64 \

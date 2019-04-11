@@ -46,6 +46,14 @@ sh run.sh eval
 ```shell
 sh run.sh train
 ```
+训练完成后，可修改```run.sh```中init_checkpoint参数，进行模型评估和预测
+
+##### 模型预测
+
+基于预训练模型，可在新的数据集（infer.tsv）上进行预测，得到模型预测结果及概率
+```shell
+sh run.sh infer
+```
 
 ## 进阶使用
 
