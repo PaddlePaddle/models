@@ -50,7 +50,7 @@ def parse_args():
     parser.add_argument(
         '--model_path',
         type=str,
-        default="saved_models/step_1000",
+        default=None,
         help='Path to load well-trained models. (default: %(default)s)')
     parser.add_argument(
         '--use_cuda',

@@ -63,7 +63,6 @@ Overview of Deep Attention Matching Network
 格分开的上文id，第二列是以空格分开的回复id，第三列是标签
 注：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如
 下：
-
 	```
 	python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.utf8.seg
 	```
