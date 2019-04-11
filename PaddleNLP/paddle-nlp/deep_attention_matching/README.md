@@ -65,8 +65,8 @@ Overview of Deep Attention Matching Network
 下：
 	```
 	python tokenizer.py \
-	--test_data_dir ./test.txt.utf8 \
-	--batch_size 1 > test.txt.utf8.seg
+	  --test_data_dir ./test.txt.utf8 \
+	  --batch_size 1 > test.txt.utf8.seg
 	```
 ### 代码结构说明
 	main.py：该项目的主函数，封装包括训练、预测的部分
