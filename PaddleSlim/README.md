@@ -23,7 +23,7 @@
 ---
 # PaddleSlim模型压缩工具库
 
-PaddleSlim是PaddlePaddle框架的一个子模块。PaddleSlim首次在PaddlePaddle 1.4版本中发布。在PaddleSlim中，实现了目前主流的网络剪枝、参数量化、模型蒸馏三种压缩策略，主要用于压缩图像领域模型。在后续版本中，会添加更多的压缩策略，以及完善对NLP领域模型的支持。
+PaddleSlim是PaddlePaddle框架的一个子模块。PaddleSlim首次在PaddlePaddle 1.4版本中发布。在PaddleSlim中，实现了目前主流的网络剪枝、量化、蒸馏三种压缩策略，主要用于压缩图像领域模型。在后续版本中，会添加更多的压缩策略，以及完善对NLP领域模型的支持。
 
 ## 目录
 - [特色](#特色)
@@ -63,7 +63,7 @@ Paddle-Slim工具库有以下特点：
 ## 架构介绍
 
 这里简要介绍模型压缩工具实现的整体原理，便于理解使用流程。
-**图 1**为模型压缩工具的架构图，从上到下为API依赖关系。蒸馏模块、量化模块和剪切模块都间接依赖底层的paddle框架。考虑到这种依赖关系和版本的管理，我们将模型压缩工具作为了paddle框架的一部分，所以已经安装普通版本paddle的用户需要重新下载安装支持模型压缩功能的paddle，才能使用压缩功能。
+**图 1**为模型压缩工具的架构图，从上到下为API依赖关系。蒸馏模块、量化模块和剪切模块都间接依赖底层的paddle框架。目前，模型压缩工具作为了PaddlePaddle框架的一部分，所以已经安装普通版本paddle的用户需要重新下载安装支持模型压缩功能的paddle，才能使用压缩功能。
 
 <p align="center">
 <img src="docs/images/framework_0.png" height=452 width=706 hspace='10'/> <br />
@@ -91,8 +91,8 @@ Paddle-Slim工具库有以下特点：
 ### 量化训练
 
 - 支持动态和静态两种量化训练方式
-  - 动态策略: 在每次迭代过程中动态统计并使用量化参数。
-  - 静态策略: 对不同的输入，采用相同的从训练数据中统计得到的量化参数。
+  - 动态策略: 在推理过程中，动态统计激活的量化参数。
+  - 静态策略: 在推理过程中，对不同的输入，采用相同的从训练数据中统计得到的量化参数。
 - 支持对权重全局量化和Channel-Wise量化
 - 支持以兼容Paddle Mobile的格式保存模型
 
@@ -117,10 +117,10 @@ Paddle-Slim工具库有以下特点：
 
 评估实验所使用数据集为ImageNet1000类数据，且以top-1准确率为衡量指标：
 
-| Model | FP32| int8(A:abs_max, W:abs_max) | int8, (A:moving_average_abs_max, W:abs_max) |int8, (A:abs_max, W:channel_wise_abs_max) |
+| Model | FP32| int8(X:abs_max, W:abs_max) | int8, (X:moving_average_abs_max, W:abs_max) |int8, (X:abs_max, W:channel_wise_abs_max) |
 |:---|:---:|:---:|:---:|:---:|
-|MobileNetV1|70.916%|71.008%|70.84%|71.00%|
-|ResNet50|76.352%|76.612%|76.456%|76.73%|
+|MobileNetV1|89.54%/70.91%|89.64%/71.01%|89.58%/70.86%|89.75%/71.13%|
+|ResNet50|92.80%/76.35%|93.12%/76.77%|93.07%/76.65%|93.15%/76.80%|
 
 ### 卷积核剪切
 
@@ -139,11 +139,12 @@ Paddle-Slim工具库有以下特点：
 
 #### 基于敏感度迭代剪切
 
-| FLOPS |model size| 精度损失（top5/top1）|精度（top5/top1） |
-|---|---|---|---|
-| -50%|-59.4%(6.9M)|-1.39% / -2.71%|88.15% / 68.20%|
-| -60%|-70.6%(5.0M)|-2.53% / -4.60%|87.01% / 66.31%|
-| -70%|-78.8%(3.6M)|-4.24% / -7.50%|85.30% / 63.41%|
+| FLOPS |精度（top5/top1）|
+|---|---|
+| -0%  |89.54% / 70.91% |
+| -20% |90.08% / 71.48% |
+| -36% |89.62% / 70.83%|
+| -50% |88.77% / 69.31%|
 
 ### 蒸馏
 
@@ -172,5 +173,5 @@ Paddle-Slim工具库有以下特点：
 
 压缩框架支持导出以下格式的模型：
 
-- **普通Paddle格式：** 普通Paddle模型格式，可通过Paddle框架加载使用。
-- **Paddle Mobile数据格式模型：** 仅在量化训练策略时使用，兼容[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)的模型格式。
+- **Paddle Fluid模型格式：** Paddle Fluid模型格式，可通过Paddle框架加载使用。
+- **Paddle Mobile模型格式：** 仅在量化训练策略时使用，兼容[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)的模型格式。
