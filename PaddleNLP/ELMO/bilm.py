@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This file is used to finetune
+# This file is used to finetune.
 
 from __future__ import absolute_import
 from __future__ import division
