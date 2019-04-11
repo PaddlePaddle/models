@@ -3,6 +3,8 @@ export FLAGS_eager_delete_tensor_gb=0.0
 #pretrain
 python -u main.py \
   --do_train True \
+  --sample_pro 0.9 \
+  --batch_size 64 \
   --save_path model_files_tmp/matching_pretrained \
   --train_path data/unlabel_data/train.ids \
   --val_path data/unlabel_data/val.ids
