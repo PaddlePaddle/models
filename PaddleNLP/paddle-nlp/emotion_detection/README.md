@@ -106,7 +106,11 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 
 1. 下载 ERNIE 预训练模型
 ```
-wget --no-check-certificate https://ernie.bj.bcebos.com/ERNIE_stable.tgz
+mkdir -p models/ernie
+cd models/ernie
+wget --no-check-certificate https://ernie.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz
+tar xvf ERNIE_stable-1.0.1.tar.gz
+rm ERNIE_stable-1.0.1.tar.gz
 ```
 2. 配置 ERNIE 模型及数据
 通过 ```run_ernie.sh``` 配置ERNIE模型路径及数据路径，例如

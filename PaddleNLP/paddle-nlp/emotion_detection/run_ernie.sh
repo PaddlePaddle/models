@@ -1,8 +1,9 @@
 #!/bin/bash
 export FLAGS_sync_nccl_allreduce=1
 export CUDA_VISIBLE_DEVICES=2
-MODEL_PATH=./pretrain
+MODEL_PATH=./models/ernie
 TASK_DATA_PATH=./data
+CKPT_PATH=./save_models/ernie
 
 # run_train
 train() {
@@ -15,15 +16,15 @@ train() {
         --init_checkpoint ${MODEL_PATH}/params \
         --train_set ${TASK_DATA_PATH}/train.tsv \
         --dev_set ${TASK_DATA_PATH}/dev.tsv \
-        --vocab_path "../LARK/ERNIE/config/vocab.txt" \
-        --output_dir ./checkpoints/talk \
-        --save_steps 1000 \
-        --validation_steps 1000 \
+        --vocab_path ${MODEL_PATH}/vocab.txt \
+        --output_dir ${CKPT_PATH} \
+        --save_steps 200 \
+        --validation_steps 50 \
         --epoch 3 \
         --max_seq_len 64 \
-        --ernie_config_path "../LARK/ERNIE/config/ernie_config.json" \
+        --ernie_config_path ${MODEL_PATH}/ernie_config.json \
         --lr 2e-5 \
-        --skip_steps 500 \
+        --skip_steps 50 \
         --num_labels 3 \
         --random_seed 1
 }
@@ -37,9 +38,9 @@ evaluate() {
         --batch_size 32 \
         --init_checkpoint ${MODEL_PATH}/params \
         --test_set ${TASK_DATA_PATH}/test.tsv \
-        --vocab_path "../LARK/ERNIE/config/vocab.txt" \
+        --vocab_path ${MODEL_PATH}/vocab.txt \
         --max_seq_len 64 \
-        --ernie_config_path "../LARK/ERNIE/config/ernie_config.json" \
+        --ernie_config_path ${MODEL_PATH}/ernie_config.json \
         --num_labels 3
 }
 
@@ -52,9 +53,9 @@ infer() {
         --batch_size 32 \
         --init_checkpoint ${MODEL_PATH}/params \
         --infer_set ${TASK_DATA_PATH}/infer.tsv \
-        --vocab_path "../LARK/ERNIE/config/vocab.txt" \
+        --vocab_path ${MODEL_PATH}/vocab.txt \
         --max_seq_len 64 \
-        --ernie_config_path "../LARK/ERNIE/config/ernie_config.json" \
+        --ernie_config_path ${MODEL_PATH}/ernie_config.json \
         --num_labels 3
 }
 
