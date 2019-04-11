@@ -2,7 +2,7 @@
 
 对话情绪识别（Emotion Detection，简称EmoTect），专注于识别智能对话场景中用户的情绪，针对智能对话场景中的用户文本，自动判断该文本的情绪类别并给出相应的置信度，情绪类型分为积极、消极、中性。
 
-对话情绪识别适用于聊天、客服等多个场景，能够帮助企业更好地把握对话质量、改善产品的用户交互体验，也能分析客服服务质量、降低人工质检成本。
+对话情绪识别适用于聊天、客服等多个场景，能够帮助企业更好地把握对话质量、改善产品的用户交互体验，也能分析客服服务质量、降低人工质检成本。可通过[AI开放平台-对话情绪识别](http://ai.baidu.com/tech/nlp_apply/emotion_detection) 线上体验。
 
 效果上，我们基于百度自建测试集（包含闲聊、客服）和nlpcc2014微博情绪数据集，进行评测，效果如下表所示：
  
@@ -14,7 +14,8 @@
 | CNN | 90.8% |  90.7% | 76.3%  |
 | TextCNN |  91.1% | 91.0% | 76.8% |
 | BERT | 93.6% | 92.3%  | 78.6%  |
-| ERNIE | 94.4% | 94.0% | 80.6% | 
+| ERNIE | 94.4% | 94.0% | 80.6% |
+
 
 ## 快速开始
 
@@ -45,6 +46,14 @@ sh run.sh eval
 基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
 ```shell
 sh run.sh train
+```
+训练完成后，可修改```run.sh```中init_checkpoint参数，进行模型评估和预测
+
+#### 模型预测
+
+基于预训练模型，可在新的数据集（infer.tsv）上进行预测，得到模型预测结果及概率
+```shell
+sh run.sh infer
 ```
 
 ## 进阶使用
@@ -106,7 +115,11 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 
 1. 下载 ERNIE 预训练模型
 ```
-wget --no-check-certificate https://ernie.bj.bcebos.com/ERNIE_stable.tgz
+mkdir -p models/ernie
+cd models/ernie
+wget --no-check-certificate https://ernie.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz
+tar xvf ERNIE_stable-1.0.1.tar.gz
+rm ERNIE_stable-1.0.1.tar.gz
 ```
 2. 配置 ERNIE 模型及数据
 通过 ```run_ernie.sh``` 配置ERNIE模型路径及数据路径，例如
