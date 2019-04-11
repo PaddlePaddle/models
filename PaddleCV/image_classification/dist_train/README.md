@@ -111,5 +111,4 @@ Speed-ups of Multiple-GPU Training of Resnet50 on Imagenet
 The third figure shows performance when using DGC of resnet-fp32 under different bandwidth.
 <p align="center">
 <img src="../images/resnet_dgc.png" width=528> <br />
-Speed-ups of Multiple-GPU Training of Resnet50 on Imagenet
 </p>
