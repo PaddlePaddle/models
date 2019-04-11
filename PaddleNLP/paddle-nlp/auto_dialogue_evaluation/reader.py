@@ -67,7 +67,8 @@ def batch_reader(data_path,
             if len(batch) < batch_size:
                 batch.append(instance)
             else:
-                yield reshape_batch(batch, place)
+                if len(batch) > 0:
+                    yield reshape_batch(batch, place)
                 batch = [instance]
 
         if len(batch) > 0:
