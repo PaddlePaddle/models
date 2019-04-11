@@ -75,14 +75,14 @@ sh run_ernie.sh infer
 
 本项目针对情感倾向性分类问题，开源了一系列模型，供用户可配置地使用：
 
-+ BOW：BOW（Bag Of Words）模型，是一个非序列模型，使用基本的全连接结构；
-+ CNN：CNN（Convolutional Neural Networks），是一个基础的序列模型，能够处理变长的序列输入，提取一个局部区域之内的特征；
-+ CNN：CNN（Convolutional Neural Networks），是一个基础的序列模型，能够处理变长的序列输入，提取一个局部区域之内的特征；
-+ GRU：GRU（Gated Recurrent Unit），序列模型，能够较好地解决序列文本中长距离依赖的问题；
-+ LSTM：LSTM（Long Short Term Memory），序列模型，能够较好地解决序列文本中长距离依赖的问题；
-+ BI-LSTM：BI-LSTM（Bidirectional Long Short Term Memory），序列模型，采用双向LSTM结构，更好地捕获句子中的语义特征；
-+ ERNIE：ERNIE（Enhanced Representation through kNowledge IntEgration），百度自研基于海量数据和先验知识训练的通用文本语义表示模型，并基于此在情感倾向分类数据集上进行fine-tune获得。
-+ CNN：ERNIE+BI-LSTM，基于ERNIE语义表示对接上层BI-LSTM模型，并基于此在情感倾向分类数据集上进行Fine-tune获得；
++ BOW（Bag Of Words）模型，是一个非序列模型，使用基本的全连接结构；
++ CNN（Convolutional Neural Networks），是一个基础的序列模型，能够处理变长的序列输入，提取一个局部区域之内的特征；
++ CNN（Convolutional Neural Networks），是一个基础的序列模型，能够处理变长的序列输入，提取一个局部区域之内的特征；
++ GRU（Gated Recurrent Unit），序列模型，能够较好地解决序列文本中长距离依赖的问题；
++ LSTM（Long Short Term Memory），序列模型，能够较好地解决序列文本中长距离依赖的问题；
++ BI-LSTM（Bidirectional Long Short Term Memory），序列模型，采用双向LSTM结构，更好地捕获句子中的语义特征；
++ ERNIE（Enhanced Representation through kNowledge IntEgration），百度自研基于海量数据和先验知识训练的通用文本语义表示模型，并基于此在情感倾向分类数据集上进行fine-tune获得。
++ ERNIE+BI-LSTM，基于ERNIE语义表示对接上层BI-LSTM模型，并基于此在情感倾向分类数据集上进行Fine-tune获得；
 
 #### 数据格式说明
 
