@@ -314,6 +314,7 @@ class SequenceLabelReader(BaseReader):
         position_ids = list(range(len(token_ids)))
         text_type_ids = [0] * len(token_ids)
         no_entity_id = len(self.label_map) - 1
+        labels = [label if label in self.label_map else u"O" for label in labels]
         label_ids = [no_entity_id] + [
             self.label_map[label] for label in labels
         ] + [no_entity_id]

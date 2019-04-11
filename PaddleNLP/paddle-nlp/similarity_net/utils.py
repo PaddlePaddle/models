@@ -200,6 +200,11 @@ def init_log(log_path, level=logging.INFO, when="D", backup=7,
     logger = logging.getLogger()
     logger.setLevel(level)
 
+    # console Handler
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setLevel(logging.DEBUG)
+    logger.addHandler(consoleHandler)
+
     dir = os.path.dirname(log_path)
     if not os.path.isdir(dir):
         os.makedirs(dir)
