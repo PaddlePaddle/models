@@ -179,6 +179,7 @@ def train(args,
                            predicate=if_exist)
 
     if parallel:
+        loss.persistable = True
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = True
         build_strategy.memory_optimize = True
