@@ -22,75 +22,89 @@
 
 #### 数据准备
 
-下载经过预处理的数据，运行该脚本之后，会生成data目录，data目录下有训练集数据（train.tsv）、开发集数据（dev.tsv）、测试集数据（test.tsv）、 待预测数据（infer.tsv）以及对应词典（vocab.txt）
+下载经过预处理的数据，运行该脚本之后，data目录下会存在训练数据（train.tsv）、开发集数据（dev.tsv）、测试集数据（test.tsv）以及对应的词典（word_dict.txt）
 ```shell
+cd data
 sh download_data.sh
 ```
 
 #### 模型下载
 
-我们开源了基于海量数据训练好的对话情绪识别模型（基于TextCNN模型训练），可供用户直接使用，运行脚本后，会生成models目录，models目录下会有预训练的模型文件
+我们开源了基于ChnSentiCorp数据训练的情感倾向性分类模型（基于BOW、CNN、LSTM、ERNIE多种模型训练），可供用户直接使用
 ```shell
+cd model
 sh download_model.sh
 ```
 #### 模型评估
 
-基于已有的预训练模型和数据，可以运行下面的命令进行测试，查看预训练的模型在测试集（test.tsv）上的评测结果
+基于上面的预训练模型和数据，可以运行下面的命令进行测试，查看预训练模型在开发集（dev.tsv）上的评测效果
 ```shell
+# BOW、CNN、LSTM、BI-LSTM、GRU模型
 sh run.sh eval
+# ERNIE、ERNIE+BI-LSTM模型
+sh run_ernie.sh eval
 ```
 
 #### 模型训练
 
 基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
 ```shell
+# BOW、CNN、LSTM、BI-LSTM、GRU模型
 sh run.sh train
+# ERNIE、ERNIE+BI-LSTM模型
+sh run_ernie.sh train
 ```
 训练完成后，可修改```run.sh```中init_checkpoint参数，进行模型评估和预测
 
 #### 模型预测
 
-基于预训练模型，可在新的数据集（infer.tsv）上进行预测，得到模型预测结果及概率
+利用已有模型，可以运行下面命令，对未知label的数据（test.tsv）进行预测
 ```shell
+# BOW、CNN、LSTM、BI-LSTM、GRU模型
 sh run.sh infer
+#ERNIE+BI-LSTM模型
+sh run_ernie.sh infer
 ```
 
 ## 进阶使用
 
 #### 任务定义
 
-对话情绪识别任务输入是一段用户文本，输出是检测到的情绪类别，包括消极、积极、中性，这是一个经典的短文本三分类任务。
-
+传统的情感分类主要基于词典或者特征工程的方式进行分类，这种方法需要繁琐的人工特征设计和先验知识，理解停留于浅层并且扩展泛化能力差。为了避免传统方法的局限，我们采用近年来飞速发展的深度学习技术。基于深度学习的情感分类不依赖于人工特征，它能够端到端的对输入文本进行语义理解，并基于语义表示进行情感倾向的判断。
 #### 模型原理介绍
 
-本项目针对对话情绪识别问题，开源了一系列分类模型，供用户可配置地使用：
+本项目针对情感倾向性分类问题，开源了一系列模型，供用户可配置地使用：
 
-+ BOW：Bag Of Words，是一个非序列模型，使用基本的全连接结构；
-+ CNN：浅层CNN模型，能够处理变长的序列输入，提取一个局部区域之内的特征；；
-+ TextCNN：多卷积核CNN模型，能够更好地捕捉句子局部相关性；
-+ LSTM：单层LSTM模型，能够较好地解决序列文本中长距离依赖的问题；
-+ BI-LSTM：双向单层LSTM模型，采用双向LSTM结构，更好地捕获句子中的语义特征；
-+ ERNIE：百度自研基于海量数据和先验知识训练的通用文本语义表示模型，并基于此在对话情绪分类数据集上进行fine-tune获得。
++ BOW：BOW（Bag Of Words）模型，是一个非序列模型，使用基本的全连接结构；
++ CNN：CNN（Convolutional Neural Networks），是一个基础的序列模型，能够处理变长的序列输入，提取一个局部区域之内的特征；
++ CNN：CNN（Convolutional Neural Networks），是一个基础的序列模型，能够处理变长的序列输入，提取一个局部区域之内的特征；
++ GRU：GRU（Gated Recurrent Unit），序列模型，能够较好地解决序列文本中长距离依赖的问题；
++ LSTM：LSTM（Long Short Term Memory），序列模型，能够较好地解决序列文本中长距离依赖的问题；
++ BI-LSTM：BI-LSTM（Bidirectional Long Short Term Memory），序列模型，采用双向LSTM结构，更好地捕获句子中的语义特征；
++ ERNIE：ERNIE（Enhanced Representation through kNowledge IntEgration），百度自研基于海量数据和先验知识训练的通用文本语义表示模型，并基于此在情感倾向分类数据集上进行fine-tune获得。
++ CNN：ERNIE+BI-LSTM，基于ERNIE语义表示对接上层BI-LSTM模型，并基于此在情感倾向分类数据集上进行Fine-tune获得；
 
 #### 数据格式说明
 
-训练、预测、评估使用的数据示例如下，数据由两列组成，以制表符（'\t'）分隔，第一列是情绪分类的类别（0表示消极；1表示中性；2表示积极），第二列是以空格分词的中文文本，文件为utf8编码。
+训练、预测、评估使用的数据可以由用户根据实际的应用场景，自己组织数据。数据由两列组成，以制表符分隔，第一列是以空格分词的中文文本（分词预处理方法将在下文具体说明），文件为utf8编码；第二列是情感倾向分类的类别（0表示消极；1表示积极），注意数据文件第一行固定表示为"text_a\tlabel"
 
 ```text
-0   谁 骂人 了 ？ 我 从来 不 骂人 ， 我 骂 的 都 不是 人 ， 你 是 人 吗 ？
-1   我 有事 等会儿 就 回来 和 你 聊
-2   我 见到 你 很高兴 谢谢 你 帮 我
+特 喜欢 这种 好看的 狗狗	1
+这 真是 惊艳 世界 的 中国 黑科技	1
+环境 特别 差 ，脏兮兮 的，再也 不去 了	0
 ```
-注：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如下：
+注：本项目额外提供了分词预处理脚本（在本项目的preprocess目录下），可供用户使用，具体使用方法如下：
 ```shell
 python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.utf8.seg
+
+#其中test.txt.utf8为待分词的文件，一条文本数据一行，utf8编码，分词结果存放在test.txt.utf8.seg文件中。
 ```
 
 #### 代码结构说明
 
 ```text
 .
-├── config.json             # 模型配置文件
+├── senta_config.json       # 模型配置文件
 ├── config.py               # 定义了该项目模型的相关配置，包括具体模型类别、以及模型的超参数
 ├── reader.py               # 定义了读入数据，加载词典的功能
 ├── run_classifier.py       # 该项目的主函数，封装包括训练、预测、评估的部分
@@ -107,30 +121,8 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 1. 定义自己的网络结构 
 用户可以在 ```models/classify/nets.py``` 中，定义自己的模型，只需要增加新的函数即可。假设用户自定义的函数名为```user_net```
 2. 更改模型配置
-在 ```config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```
+在 ```senta_config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```
 3. 模型训练，运行训练、评估、预测脚本即可（具体方法同上）
-
-#### 使用ERNIE进行finetune
-
-1. 下载 ERNIE 预训练模型
-```
-mkdir -p models/ernie
-cd models/ernie
-wget --no-check-certificate https://ernie.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz
-tar xvf ERNIE_stable-1.0.1.tar.gz
-rm ERNIE_stable-1.0.1.tar.gz
-```
-2. 配置 ERNIE 模型及数据
-通过 ```run_ernie.sh``` 配置ERNIE模型路径及数据路径，例如
-```
-MODEL_PATH=./models/ernie
-TASK_DATA_PATH=./data
-```
-3. 模型训练
-```
-sh run_ernie.sh train
-```
-训练、评估、预测详细配置，请查看 ```run_ernie.sh```
 
 ## 如何贡献代码
 
