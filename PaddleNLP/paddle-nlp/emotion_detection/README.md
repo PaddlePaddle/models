@@ -117,7 +117,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 ```
 mkdir -p models/ernie
 cd models/ernie
-wget --no-check-certificate https://ernie.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz
+wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz
 tar xvf ERNIE_stable-1.0.1.tar.gz
 rm ERNIE_stable-1.0.1.tar.gz
 ```
