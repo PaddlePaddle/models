@@ -33,6 +33,7 @@ add_arg('class_dim',        int,   1000,                 "Class number.")
 add_arg('image_shape',      str,   "3,224,224",          "input image size")
 add_arg('model_save_dir',   str,   "output",             "model save directory")
 add_arg('with_mem_opt',     bool,  True,                 "Whether to use memory optimization or not.")
+add_arg('with_inplace',     bool,  True,                 "Whether to use inplace memory optimization.")
 add_arg('pretrained_model', str,   None,                 "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                 "Whether to resume checkpoint.")
 add_arg('lr',               float, 0.1,                  "set learning rate.")
@@ -257,6 +258,7 @@ def train(args):
     pretrained_model = args.pretrained_model
     with_memory_optimization = args.with_mem_opt
     model_save_dir = args.model_save_dir
+    use_ngraph = os.getenv('FLAGS_use_ngraph')
 
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
@@ -277,7 +279,7 @@ def train(args):
         args=args)
     test_prog = test_prog.clone(for_test=True)
 
-    if with_memory_optimization:
+    if with_memory_optimization and use_ngraph:
         fluid.memory_optimize(train_prog)
         fluid.memory_optimize(test_prog)
 
@@ -323,12 +325,16 @@ def train(args):
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
 
-    use_ngraph = os.getenv('FLAGS_use_ngraph')
     if not use_ngraph:
+        build_strategy = fluid.BuildStrategy()
+        build_strategy.memory_optimize = args.with_mem_opt
+        build_strategy.enable_inplace = args.with_inplace
+
         train_exe = fluid.ParallelExecutor(
             main_program=train_prog,
             use_cuda=bool(args.use_gpu),
-            loss_name=train_cost.name)
+            loss_name=train_cost.name,
+            build_strategy=build_strategy)
     else:
         train_exe = exe
 
