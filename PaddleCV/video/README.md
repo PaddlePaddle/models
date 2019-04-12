@@ -38,18 +38,18 @@
 
 ``` bash
 export CUDA_VISIBLE_DEVICES=0
-python train.py --model-name=STNET
+python train.py --model_name=STNET
         --config=./configs/stnet.txt
-        --save-dir=checkpoints
+        --save_dir=checkpoints
 ```
 
 多卡训练：
 
 ``` bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-python train.py --model-name=STNET
+python train.py --model_name=STNET
         --config=./configs/stnet.txt
-        --save-dir=checkpoints
+        --save_dir=checkpoints
 ```
 
 视频模型库同时提供了快速训练脚本，脚本位于`scripts/train`目录下，可通过如下命令启动训练:

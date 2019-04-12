@@ -32,11 +32,11 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
 数据准备完毕后，可以通过如下两种方式启动训练：
 
-    python train.py --model-name=AttentionCluster 
+    python train.py --model_name=AttentionCluster
             --config=./configs/attention_cluster.txt
-            --save-dir=checkpoints 
-            --log-interval=10 
-            --valid-interval=1
+            --save_dir=checkpoints
+            --log_interval=10
+            --valid_interval=1
 
     bash scripts/train/train_attention_cluster.sh
 
@@ -56,9 +56,9 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
 可通过如下两种方式进行模型评估:
 
-    python test.py --model-name=AttentionCluster 
+    python test.py --model_name=AttentionCluster
             --config=configs/attention_cluster.txt
-            --log-interval=1 
+            --log_interval=1
             --weights=$PATH_TO_WEIGHTS
 
     bash scripts/test/test_attention_cluster.sh
@@ -89,10 +89,10 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
 可通过如下命令进行模型推断：
 
-    python infer.py --model-name=attention_cluster 
+    python infer.py --model_name=attention_cluster
             --config=configs/attention_cluster.txt
-            --log-interval=1 
-            --weights=$PATH_TO_WEIGHTS 
+            --log_interval=1
+            --weights=$PATH_TO_WEIGHTS
             --filelist=$FILELIST
 
 - 模型推断结果存储于`AttentionCluster_infer_result`中，通过`pickle`格式存储。
@@ -102,4 +102,3 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 ## 参考论文
 
 - [Attention Clusters: Purely Attention Based Local Feature Integration for Video Classification](https://arxiv.org/abs/1711.09550), Xiang Long, Chuang Gan, Gerard de Melo, Jiajun Wu, Xiao Liu, Shilei Wen
-
