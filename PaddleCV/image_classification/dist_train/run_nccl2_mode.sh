@@ -31,8 +31,9 @@ mkdir -p logs
 
 # NOTE: set NCCL_P2P_DISABLE so that can run nccl2 distribute train on one node.
 
-export GLOG_v=1
-export GLOG_logtostderr=1
+# You can set vlog to see more details' log.
+# export GLOG_v=1
+# export GLOG_logtostderr=1
 
 PADDLE_TRAINING_ROLE="TRAINER" \
 PADDLE_CURRENT_ENDPOINT="127.0.0.1:7160" \
