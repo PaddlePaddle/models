@@ -103,9 +103,12 @@ class YOLOv3(object):
             route, tip = yolo_detection_block(block, channel=512//(2**i), 
                                         is_test=(not self.is_train),
                                         name="yolo_block.{}".format(i))
+
+            # out channel number = mask_num * (5 + class_num)
+            num_filters = len(cfg.anchor_masks[i]) * (cfg.class_num + 5)
             block_out = fluid.layers.conv2d(
                 input=tip,
-                num_filters=255,
+                num_filters=num_filters,
                 filter_size=1,
                 stride=1,
                 padding=0,
