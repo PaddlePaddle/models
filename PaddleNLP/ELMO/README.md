@@ -64,11 +64,16 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
    在原论文中推荐的使用方式是，NLP下游任务输入的embedding层与ELMO的输出向量直接做concat。其中，ELMO部分是直接加载预训练出来的模型参数（PaddlePaddle中通过fluid.io.load_vars接口来加载参数），模型参数输入到NLP下游任务是fix的（在PaddlePaddle中通过stop_gradient = True来实现）。
 
 ELMO微调任务的要点如下：
-1.下载预训练模型的参数文件。
-2.加载elmo网络定义部分bilm.py。
-3.在网络启动时加载预训练模型。
-4.基于elmo字典对输入做切词并转化为id。
-5.elmo词向量与网络embedding层做concat。
+
+1)下载预训练模型的参数文件。
+
+2)加载elmo网络定义部分bilm.py。
+
+3)在网络启动时加载预训练模型。
+
+4)基于elmo字典对输入做切词并转化为id。
+
+5)elmo词向量与网络embedding层做concat。
 
 具体步骤如下：
 1. 下载ELMO Paddle官方发布Checkpoint文件，Checkpoint文件为预训练好的约3.8G中文百科数据。
