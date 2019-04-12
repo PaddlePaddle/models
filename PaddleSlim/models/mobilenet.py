@@ -14,7 +14,7 @@ train_parameters = {
     "learning_strategy": {
         "name": "piecewise_decay",
         "batch_size": 256,
-        "epochs": [30, 60, 90],
+        "epochs": [10, 16, 30],
         "steps": [0.1, 0.01, 0.001, 0.0001]
     }
 }
