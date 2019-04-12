@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=4 
+export CUDA_VISIBLE_DEVICES=0 
 python  train.py \
 --train_path='data/train/sentence_file_*'  \
 --test_path='data/dev/sentence_file_*'  \
