@@ -5,7 +5,7 @@ TASK_NAME=$1
 BERT_BASE_PATH="./uncased_L-12_H-768_A-12"
 INPUT_PATH="./data/${TASK_NAME}"
 OUTPUT_PATH="./output/${TASK_NAME}"
-PYTHON_PATH="/home/ld/zhangxiyuan01/paddle_install/paddle/paddle-env/python27-gcc482/bin/python"
+PYTHON_PATH="python"
 
 if [ "$TASK_NAME" = "udc" ]
 then
