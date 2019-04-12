@@ -26,11 +26,11 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 
 数据准备完毕后，可以通过如下两种方式启动训练：
 
-    python train.py --model-name=AttentionLSTM
+    python train.py --model_name=AttentionLSTM
             --config=./configs/attention_lstm.txt
-            --save-dir=checkpoints 
-            --log-interval=10 
-            --valid-interval=1
+            --save_dir=checkpoints
+            --log_interval=10
+            --valid_interval=1
 
     bash scripts/train/train_attention_lstm.sh
 
@@ -42,9 +42,9 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 ## 模型评估
 可通过如下两种方式进行模型评估:
 
-    python test.py --model-name=AttentionLSTM
+    python test.py --model_name=AttentionLSTM
             --config=configs/attention_lstm.txt
-            --log-interval=1
+            --log_interval=1
             --weights=$PATH_TO_WEIGHTS
 
     bash scripts/test/test_attention_lstm.sh
@@ -75,10 +75,10 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 
 可通过如下命令进行模型推断：
 
-    python infer.py --model-name=attention_lstm
+    python infer.py --model_name=attention_lstm
             --config=configs/attention_lstm.txt
-            --log-interval=1 
-            --weights=$PATH_TO_WEIGHTS 
+            --log_interval=1
+            --weights=$PATH_TO_WEIGHTS
             --filelist=$FILELIST
 
 - 模型推断结果存储于`AttentionLSTM_infer_result`中，通过`pickle`格式存储。
@@ -90,4 +90,3 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 - [Beyond Short Snippets: Deep Networks for Video Classification](https://arxiv.org/abs/1503.08909) Joe Yue-Hei Ng, Matthew Hausknecht, Sudheendra Vijayanarasimhan, Oriol Vinyals, Rajat Monga, George Toderici
 
 - [Attention Clusters: Purely Attention Based Local Feature Integration for Video Classification](https://arxiv.org/abs/1711.09550), Xiang Long, Chuang Gan, Gerard de Melo, Jiajun Wu, Xiao Liu, Shilei Wen
-

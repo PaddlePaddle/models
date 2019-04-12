@@ -30,11 +30,11 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
 数据准备完毕后，可以通过如下两种方式启动训练：
 
-    python train.py --model-name=STNET
+    python train.py --model_name=STNET
             --config=./configs/stnet.txt
-            --save-dir=checkpoints 
-            --log-interval=10 
-            --valid-interval=1
+            --save_dir=checkpoints
+            --log_interval=10
+            --valid_interval=1
 
     bash scripts/train/train_stnet.sh
 
@@ -62,9 +62,9 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
 可通过如下两种方式进行模型评估:
 
-    python test.py --model-name=STNET
+    python test.py --model_name=STNET
             --config=configs/stnet.txt
-            --log-interval=1 
+            --log_interval=1
             --weights=$PATH_TO_WEIGHTS
 
     bash scripts/test/test__stnet.sh
@@ -92,10 +92,10 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
 可通过如下命令进行模型推断：
 
-    python infer.py --model-name=stnet
+    python infer.py --model_name=stnet
             --config=configs/stnet.txt
-            --log-interval=1 
-            --weights=$PATH_TO_WEIGHTS 
+            --log_interval=1
+            --weights=$PATH_TO_WEIGHTS
             --filelist=$FILELIST
 
 - 模型推断结果存储于`STNET_infer_result`中，通过`pickle`格式存储。

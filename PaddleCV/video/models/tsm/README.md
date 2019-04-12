@@ -34,11 +34,11 @@ TSM的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 数据准备完毕后，可以通过如下两种方式启动训练：
 
-    python train.py --model-name=TSM
+    python train.py --model_name=TSM
             --config=./configs/tsm.txt
-            --save-dir=checkpoints 
-            --log-interval=10 
-            --valid-interval=1
+            --save_dir=checkpoints
+            --log_interval=10
+            --valid_interval=1
 
     bash scripts/train/train_tsm.sh
 
@@ -55,9 +55,9 @@ TSM的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 可通过如下两种方式进行模型评估:
 
-    python test.py --model-name=TSM
+    python test.py --model_name=TSM
             --config=configs/tsm.txt
-            --log-interval=1
+            --log_interval=1
             --weights=$PATH_TO_WEIGHTS
 
     bash scripts/test/test_tsm.sh
@@ -76,10 +76,10 @@ TSM的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 可通过如下命令进行模型推断：
 
-    python infer.py --model-name=TSM
+    python infer.py --model_name=TSM
             --config=configs/tsm.txt
-            --log-interval=1 
-            --weights=$PATH_TO_WEIGHTS 
+            --log_interval=1
+            --weights=$PATH_TO_WEIGHTS
             --filelist=$FILELIST
 
 - 模型推断结果存储于`TSM_infer_result`中，通过`pickle`格式存储。
@@ -89,4 +89,3 @@ TSM的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 ## 参考论文
 
 - [Temporal Shift Module for Efficient Video Understanding](https://arxiv.org/abs/1811.08383v1), Ji Lin, Chuang Gan, Song Han
-

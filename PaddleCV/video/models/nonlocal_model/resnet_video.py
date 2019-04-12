@@ -19,7 +19,7 @@ from __future__ import division
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 
-import resnet_helper
+from . import resnet_helper
 import logging
 
 logger = logging.getLogger(__name__)
