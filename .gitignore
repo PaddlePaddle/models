@@ -1,9 +1,6 @@
-.DS_Store
+*.DS_Store
+*.vs
+*.user
 *.pyc
-.*~
-fluid/neural_machine_translation/transformer/deps
-fluid/neural_machine_translation/transformer/train.data
-fluid/neural_machine_translation/transformer/train.pkl
-fluid/neural_machine_translation/transformer/train.sh
-fluid/neural_machine_translation/transformer/train.tok.clean.bpe.32000.en-de
-fluid/neural_machine_translation/transformer/vocab.bpe.32000.refined
+*~
+*.vscode

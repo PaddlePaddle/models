@@ -1,3 +1,6 @@
+
+# 该目录的模型已经不再维护，不推荐使用。建议使用Fluid目录下的模型。
+
 # Introduction to models
 
 [![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](https://github.com/PaddlePaddle/models)
