@@ -49,11 +49,7 @@ class Word2VecReader(object):
         word_id = 0
 
         with io.open(dict_path, 'r', encoding='utf-8') as f:
-            ll = 0
             for line in f:
-                ll += 1
-                if ll % 100000 == 1:
-                    print(ll)
                 word, count = line.split()[0], int(line.split()[1])
                 word_id += 1
                 id_counts.append(count)
