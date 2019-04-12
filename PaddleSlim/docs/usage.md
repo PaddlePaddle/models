@@ -215,6 +215,10 @@ compress_pass:
 
 ### 2.1 量化训练
 
+**用户须知:** 现阶段的量化训练主要针对卷积层（包括二维卷积和Depthwise卷积）以及全连接层进行量化。卷积层和全连接层在PaddlePaddle框架中对应算子包括`conv2d`、`depthwise_conv2d`和`mul`等。量化训练会对所有的`conv2d`、`depthwise_conv2d`和`mul`进行量化操作，且要求它们的输入中必须包括激活和参数两部分。
+
+#### 2.1.1 基于High-Level API的量化训练
+
 >注意：多个压缩策略组合使用时，量化训练策略必须放在最后。
 
 ```
@@ -278,6 +282,11 @@ strategies:
 - **activation_quantize_type:** 对activation的量化方法，目前可选`abs_max`或`range_abs_max`。`abs_max`意为在训练的每个step和inference阶段动态的计算量化范围。`range_abs_max`意为在训练阶段计算出一个静态的范围，并将其用于inference阶段。
 - **save_in_nodes:** variable名称列表。在保存量化后模型的时候，需要根据save_in_nodes对eval programg 网络进行前向遍历剪枝。默认为eval_feed_list内指定的variable的名称列表。
 - **save_out_nodes:** varibale名称列表。在保存量化后模型的时候，需要根据save_out_nodes对eval programg 网络进行回溯剪枝。默认为eval_fetch_list内指定的variable的名称列表。
+
+
+#### 2.1.2 基于Low-Level API的量化训练
+
+量化训练High-Level API是对Low-Level API的高层次封装，这使得用户仅需编写少量的代码和配置文件即可进行量化训练。然而，封装必然会带来使用灵活性的降低。因此，若用户在进行量化训练时需要更多的灵活性，可参考 [量化训练Low-Level API使用示例](../quant_low_level_api/README.md) 。
 
 ### 2.2 卷积核剪切
 该策略通过减少指定卷积层中卷积核的数量，达到缩减模型大小和计算复杂度的目的。根据选取剪切比例的策略的不同，又细分为以下两个方式：

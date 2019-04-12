@@ -4,6 +4,8 @@
 root_url="http://paddle-imagenet-models-name.bj.bcebos.com"
 MobileNetV1="MobileNetV1_pretrained.zip"
 ResNet50="ResNet50_pretrained.zip"
+GoogleNet="GoogleNet_pretrained.tar"
+data_dir='Your image dataset path, e.g. ILSVRC2012'
 pretrain_dir='../pretrain'
 
 if [ ! -d ${pretrain_dir} ]; then
@@ -22,6 +24,11 @@ if [ ! -f ${ResNet50} ]; then
     unzip ${ResNet50}
 fi
 
+if [ ! -f ${GoogleNet} ]; then
+    wget ${root_url}/${GoogleNet}
+    tar xf ${GoogleNet}
+fi
+
 cd -
 
 
@@ -32,7 +39,7 @@ python quant.py \
        --model=MobileNet \
        --pretrained_fp32_model=${pretrain_dir}/MobileNetV1_pretrained \
        --use_gpu=True \
-       --data_dir=../data/ILSVRC2012 \
+       --data_dir=${data_dir} \
        --batch_size=256 \
        --total_images=1281167 \
        --class_dim=1000 \
@@ -50,7 +57,7 @@ python quant.py \
 #       --model=ResNet50 \
 #       --pretrained_fp32_model=${pretrain_dir}/ResNet50_pretrained \
 #       --use_gpu=True \
-#       --data_dir=../data/ILSVRC2012 \
+#       --data_dir=${data_dir} \
 #       --batch_size=128 \
 #       --total_images=1281167 \
 #       --class_dim=1000 \
