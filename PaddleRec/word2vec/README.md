@@ -72,7 +72,7 @@ nine 250430
 python preprocess.py --build_dict --build_dict_corpus_dir data/text/ --dict_path data/test_build_dict
 ```
 
-第二步根据词典将文本转成id, 同时进行downsample，按照概率过滤常见词。
+第二步根据词典将文本转成id, 同时进行downsample，按照概率过滤常见词, 同时生成word和id映射的文件，文件名为词典+"_word_to_id_"。
 
 ```bash
 python preprocess.py --filter_corpus --dict_path data/test_build_dict --input_corpus_dir data/text/ --output_corpus_dir data/convert_text8 --min_count 5 --downsample 0.001
@@ -107,7 +107,7 @@ wget https://paddlerec.bj.bcebos.com/word2vec/test_dir.tar
 wget https://paddlerec.bj.bcebos.com/word2vec/test_mid_dir.tar
 ```
 
-预测命令，注意词典名称需要加后缀"_word_to_id_", 此文件是训练阶段生成的。
+预测命令，注意词典名称需要加后缀"_word_to_id_", 此文件是预处理阶段生成的。
 ```bash
 python infer.py --infer_epoch --test_dir data/test_mid_dir/ --dict_path data/test_build_dict_word_to_id_ --batch_size 20000 --model_dir v1_cpu5_b100_lr1dir/  --start_index 0
 ```
