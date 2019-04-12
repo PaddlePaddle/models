@@ -14,11 +14,10 @@
 
 import os
 import numpy as np
-import cPickle
 import paddle.fluid as fluid
 
 from ..model import ModelBase
-import resnet_video
+from . import resnet_video
 from .nonlocal_utils import load_params_from_file
 
 import logging

@@ -88,11 +88,11 @@ Non-local模型的训练数据采用由DeepMind公布的Kinetics-400动作识别
 
 数据准备完毕后，可以通过如下两种方式启动训练：
 
-    python train.py --model-name=NONLOCAL
+    python train.py --model_name=NONLOCAL
             --config=./configs/nonlocal.txt
-            --save-dir=checkpoints
-            --log-interval=10
-            --valid-interval=1
+            --save_dir=checkpoints
+            --log_interval=10
+            --valid_interval=1
 
     bash scripts/train/train_nonlocal.sh
 
@@ -113,9 +113,9 @@ Non-local模型的训练数据采用由DeepMind公布的Kinetics-400动作识别
 
 可通过如下两种方式进行模型评估:
 
-    python test.py --model-name=NONLOCAL
+    python test.py --model_name=NONLOCAL
             --config=configs/nonlocal.txt
-            --log-interval=1
+            --log_interval=1
             --weights=$PATH_TO_WEIGHTS
 
     bash scripts/test/test_nonlocal.sh
