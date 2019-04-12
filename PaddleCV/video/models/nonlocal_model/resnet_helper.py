@@ -21,7 +21,7 @@ import paddle.fluid as fluid
 from paddle.fluid import ParamAttr
 
 import numpy as np
-import nonlocal_helper
+from . import nonlocal_helper
 
 
 def Conv3dAffine(blob_in,
