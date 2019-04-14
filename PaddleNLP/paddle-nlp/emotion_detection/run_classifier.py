@@ -182,7 +182,7 @@ def main(args):
             epoch=args.epoch)
 
         num_train_examples = processor.get_num_examples(phase="train")
-        max_train_steps = args.epoch * num_train_examples // args.batch_size
+        max_train_steps = args.epoch * num_train_examples // args.batch_size + 1
 
         print("Num train examples: %d" % num_train_examples)
         print("Max train steps: %d" % max_train_steps)

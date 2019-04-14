@@ -51,7 +51,7 @@ infer() {
         --verbose true \
         --do_infer true \
         --batch_size 32 \
-        --init_checkpoint ${MODEL_PATH}/params \
+        --init_checkpoint ${CKPT_PATH}/step_943 \
         --infer_set ${TASK_DATA_PATH}/infer.tsv \
         --vocab_path ${MODEL_PATH}/vocab.txt \
         --max_seq_len 64 \

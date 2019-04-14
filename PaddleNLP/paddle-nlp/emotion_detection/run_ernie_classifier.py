@@ -185,7 +185,7 @@ def main(args):
 
         num_train_examples = reader.get_num_examples(args.train_set)
 
-        max_train_steps = args.epoch * num_train_examples // args.batch_size // dev_count
+        max_train_steps = args.epoch * num_train_examples // args.batch_size // dev_count + 1
 
         print("Device count: %d" % dev_count)
         print("Num train examples: %d" % num_train_examples)
