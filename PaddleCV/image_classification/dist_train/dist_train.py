@@ -261,6 +261,10 @@ def train_parallel(args):
 
     strategy = fluid.ExecutionStrategy()
     strategy.num_threads = args.num_threads
+    # num_iteration_per_drop_scope indicates how
+    #  many iterations to clean up the temp variables which
+    #  is generated during execution. It may make the execution faster,
+    #  because the temp variable's shape maybe the same between two iterations
     strategy.num_iteration_per_drop_scope = 30
 
     build_strategy = fluid.BuildStrategy()
