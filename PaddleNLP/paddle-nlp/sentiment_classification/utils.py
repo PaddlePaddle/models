@@ -86,53 +86,32 @@ def data_reader(file_path, word_dict, num_examples, phrase, epoch):
     """
     unk_id = len(word_dict)
     all_data = []
-    if phrase == "train" or phrase == "dev":
-        with io.open(file_path, "r", encoding='utf8') as fin:
-            for line in fin:
-                if line.startswith('text_a'):
-                    continue
-                cols = line.strip().split("\t")
-                if len(cols) != 2:
-                    sys.stderr.write("[NOTICE] Error Format Line!")
-                    continue
-                label = int(cols[1])
-                wids = [word_dict[x] if x in word_dict else unk_id
-                        for x in cols[0].split(" ")]
-                all_data.append((wids, label))
+    with io.open(file_path, "r", encoding='utf8') as fin:
+        for line in fin:
+            if line.startswith('text_a'):
+                continue
+            cols = line.strip().split("\t")
+            if len(cols) != 2:
+                sys.stderr.write("[NOTICE] Error Format Line!")
+                continue
+            label = int(cols[1])
+            wids = [word_dict[x] if x in word_dict else unk_id
+                    for x in cols[0].split(" ")]
+            all_data.append((wids, label))
 
-        if phrase == "train":
-            random.shuffle(all_data)
+    if phrase == "train":
+        random.shuffle(all_data)
 
-        num_examples[phrase] = len(all_data)
+    num_examples[phrase] = len(all_data)
         
-        def reader():
-            """
-            Reader Function
-            """
-            for epoch_index in range(epoch):
-                for doc, label in all_data:
-                    yield doc, label
-        return reader
-
-    else:
-        with io.open(file_path, "r", encoding='utf8') as fin:
-            for line in fin:
-                if line.startswith('text_a'):
-                    continue
-                line = line.strip()
-                wids = [word_dict[x] if x in word_dict else unk_id
-                        for x in line.split(" ")]
-                all_data.append((wids,))
-        num_examples[phrase] = len(all_data)
-        
-        def infer_reader():
-            """
-            Infer Reader Function
-            """
-            for doc in all_data:
-                yield doc
-        
-        return infer_reader
+    def reader():
+        """
+        Reader Function
+        """
+        for epoch_index in range(epoch):
+            for doc, label in all_data:
+                yield doc, label
+    return reader
 
 def load_vocab(file_path):
     """
