@@ -139,9 +139,9 @@ class YOLOv3(object):
             if self.is_train:
                 loss = fluid.layers.yolov3_loss(
                         x=out,
-                        gtbox=self.gtbox,
-                        gtlabel=self.gtlabel,
-                        gtscore=self.gtscore,
+                        gt_box=self.gtbox,
+                        gt_label=self.gtlabel,
+                        gt_score=self.gtscore,
                         anchors=cfg.anchors,
                         anchor_mask=anchor_mask,
                         class_num=cfg.class_num,
