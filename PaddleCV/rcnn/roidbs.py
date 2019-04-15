@@ -60,6 +60,7 @@ class JsonDataset(object):
         categories = [c['name'] for c in self.COCO.loadCats(category_ids)]
         self.category_to_id_map = dict(zip(categories, category_ids))
         self.classes = ['__background__'] + categories
+        assert len(self.classes) == cfg.class_num, "The class_num in config is wrong!"
         self.num_classes = len(self.classes)
         self.json_category_id_to_contiguous_id = {
             v: i + 1
