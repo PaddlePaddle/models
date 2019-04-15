@@ -213,12 +213,12 @@ def ctc_train_net(args, data_shape, num_classes):
     return sum_cost, error_evaluator, inference_program, model_average
 
 
-def ctc_infer(images, num_classes, use_cudnn):
+def ctc_infer(images, num_classes, use_cudnn=True):
     fc_out = encoder_net(images, num_classes, is_test=True, use_cudnn=use_cudnn)
     return fluid.layers.ctc_greedy_decoder(input=fc_out, blank=num_classes)
 
 
-def ctc_eval(data_shape, num_classes, use_cudnn):
+def ctc_eval(data_shape, num_classes, use_cudnn=True):
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
     label = fluid.layers.data(
         name='label', shape=[1], dtype='int32', lod_level=1)
