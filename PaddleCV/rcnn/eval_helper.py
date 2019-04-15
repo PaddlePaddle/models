@@ -230,6 +230,9 @@ def draw_mask_on_image(image_path, segms_out, draw_threshold, alpha=0.7):
     w_ratio = .4
     image = np.array(image).astype('float32')
     for dt in np.array(segms_out):
+        if dt.shape[0]!=6:
+            print("image {} has not bbox!".format(image_name))
+            continue
         segm, num_id, score = dt.tolist()
         if score < draw_threshold:
             continue
