@@ -34,6 +34,9 @@ TSM的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 数据准备完毕后，可以通过如下两种方式启动训练：
 
+    export FLAGS_fast_eager_deletion_mode=1
+    export FLAGS_eager_delete_tensor_gb=0.0
+    export FLAGS_fraction_of_gpu_memory_to_use=0.98
     python train.py --model_name=TSM
             --config=./configs/tsm.txt
             --save_dir=checkpoints
