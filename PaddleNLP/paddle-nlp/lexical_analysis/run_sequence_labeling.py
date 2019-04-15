@@ -44,7 +44,7 @@ data_g.add_arg("train_data", str, "./data/train_data", "The folder where the tra
 data_g.add_arg("test_data", str, "./data/test_data", "The folder where the training data is located.")
 data_g.add_arg("infer_data", str, "./data/test.tsv", "The folder where the training data is located.")
 data_g.add_arg("model_save_dir", str, "./models", "The model will be saved in this path.")
-data_g.add_arg("model_path", str, "./model", "Path to load the model for inference")
+data_g.add_arg("init_checkpoint", str, "", "Path to init model")
 
 data_g.add_arg("corpus_type_list", str, ["human", "feed", "query", "title", "news"],
         "The pattern list of different types of corpus used in training.", nargs='+')
@@ -164,7 +164,7 @@ def main(args):
     if args.random_seed is not None:
         startup_program.random_seed = args.random_seed
 
-    # STEP 1. prepare dataset
+    # prepare dataset
     dataset = reader.Dataset(args)
 
     if args.do_train:
@@ -215,7 +215,7 @@ def main(args):
         infer_program = infer_program.clone(for_test=True)
 
 
-    # STEP 2, run model
+    # init executor
     if args.use_gpu >= 0:
         place = fluid.CUDAPlace(args.use_gpu)
         dev_count = fluid.core.get_cuda_device_count()
@@ -225,8 +225,18 @@ def main(args):
     exe = fluid.Executor(place)
     exe.run(startup_program)
 
-    #TODO need codes for continuing training from checkpoint
+    # load checkpoints
+    if args.do_train:
+        if args.init_checkpoint:
+            utils.init_checkpoint(exe, args.init_checkpoint, train_program)
+    elif args.do_test:
+        if not args.init_checkpoint:
+            raise ValueError("args 'init_checkpoint' should be set if only doing validation or testing!")
+        utils.init_checkpoint(exe, args.init_checkpoint, test_program)
+    if args.do_infer:
+        utils.init_checkpoint(exe, args.init_checkpoint, infer_program)
 
+    # do start to train
     if args.do_train:
         num_train_examples = dataset.get_num_examples(args.train_data)
         max_train_steps = args.epoch * num_train_examples // args.batch_size
@@ -272,11 +282,11 @@ def main(args):
 
     # only test
     if args.do_test:
-        utils.init_checkpoint(exe, args.model_path, main_program=test_program)
         evaluate(exe, test_program, test_ret)
 
+    import ipdb
+    #ipdb.set_trace()
     if args.do_infer:
-        utils.init_checkpoint(exe, args.model_path, main_program=infer_program)
         while True:
             try:
                 infer_ret["pyreader"].start()
@@ -292,27 +302,6 @@ def main(args):
             except fluid.core.EOFException:
                 infer_ret["pyreader"].reset()
                 break
-
-        """
-        old code
-        # prepare data
-        infer_data = paddle.batch(
-            dataset.file_reader(args.infer_data, max_seq_len=100000, mode="infer"),
-            batch_size=args.batch_size
-        )
-
-        # load checkpoints
-        [infer_program, feed_target_names, fetch_targets] = \
-                fluid.io.load_inference_model(args.model_path, exe)
-
-        # do infer
-        for word_list in infer_data():
-            word_idx = utils.to_lodtensor(word_list, place)
-            (crf_decode, ) = exe.run(infer_program,
-                    feed={"word":word_idx}, fetch_list=fetch_targets, return_numpy=False)
-            result = utils.parse_result(crf_decode, word_list, dataset)
-            print(utils.to_str("\n".join(result)))
-        """
 
 
 if __name__ == "__main__":

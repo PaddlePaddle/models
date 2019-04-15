@@ -68,43 +68,25 @@ def to_lodtensor(data, place):
     return res
 
 
-def parse_result(crf_decode, word_list, dataset):
+def parse_result(words, crf_decode, dataset):
     """ parse result """
     offset_list = (crf_decode.lod())[0]
-    np_data = np.array(crf_decode)
-
-    batch_size = len(word_list)
-    assert len(offset_list) == batch_size + 1  # assert batch_size
-
-    full_out_str = []
+    words = np.array(words)
+    crf_decode = np.array(crf_decode)
+    batch_size = len(offset_list) - 1
+    batch_out_str = []
     for sent_index in range(batch_size):
-        # assert sentence length
-        assert len(word_list[sent_index]) == offset_list[sent_index + 1] - offset_list[sent_index]
-        word_index = 0
-        outstr = ""
-        cur_full_word = ""
-        cur_full_tag = ""
-        word_index = 0
-        for tag_index in range(len(word_list[sent_index])): # iterate every word in sent
-            cur_word_id = str(word_list[sent_index][tag_index])
+        sent_out_str = ""
+        sent_len = offset_list[sent_index + 1] - offset_list[sent_index]
+        for tag_index in range(sent_len): # iterate every word in sent
+            index = tag_index + offset_list[sent_index]
+            cur_word_id = str(words[index][0])
+            cur_tag_id = str(crf_decode[index][0])
             cur_word = dataset.id2word_dict[cur_word_id]
-            cur_label_id = str(np_data[tag_index + offset_list[sent_index]][0])
-            cur_tag = dataset.id2label_dict[cur_label_id]
-            if cur_tag.endswith("-B") or cur_tag.endswith("O"):
-                if len(cur_full_word) != 0:
-                    outstr += cur_full_word + u"/" + cur_full_tag + u" "
-                cur_full_word = cur_word
-                if cur_tag == "O":
-                    cur_full_tag = cur_tag
-                else:
-                    cur_full_tag = cur_tag[0:-2]
-            else:
-                cur_full_word += cur_word
-            word_index += 1
-        outstr += cur_full_word + u"/" + cur_full_tag + u" "
-        outstr = outstr.strip()
-        full_out_str.append(outstr)
-    return full_out_str
+            cur_tag = dataset.id2label_dict[cur_tag_id]
+            sent_out_str += cur_word + u"/" + cur_tag + u" "
+        batch_out_str.append(sent_out_str.encode("utf-8").strip())
+    return batch_out_str
 
 
 def init_checkpoint(exe, init_checkpoint_path, main_program):
