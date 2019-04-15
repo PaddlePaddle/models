@@ -1,5 +1,10 @@
 #!/bin/bash
-export CUDA_VISIBLE_DEVICES=3
+export FLAGS_fraction_of_gpu_memory_to_use=0.5
+export FLAGS_eager_delete_tensor_gb=0.0
+export FLAGS_fast_eager_deletion_mode=1
+#export CUDA_VISIBLE_DEVICES=0,1,2,3
+
+#alias python='./anaconda2/bin/python'
 
 function run_train() {
     echo "training"
@@ -7,26 +12,44 @@ function run_train() {
         --do_train True \
         --do_test True \
         --do_infer False \
-        --batch_size 100 \
-        --traindata_dir ./data/train_data \
-        --testdata_dir ./data/test_data \
+        --traindata_dir ./data/train.tsv \
+        --testdata_dir ./data/test.tsv \
         --model_save_dir ./models \
+        --valid_model_per_batches 1000 \
         --save_model_per_batches 10000 \
-        --eval_window 20 \
         --batch_size 100 \
-        --use_gpu 0 \
+        --epoch 10 \
+        --use_gpu -1 \
         --traindata_shuffle_buffer 200000 \
-        --word_emb_dim 128 \
-        --grnn_hidden_dim 256 \
+        --word_emb_dim 768 \
+        --grnn_hidden_dim 768 \
         --bigru_num 2 \
         --base_learning_rate 1e-3 \
         --emb_learning_rate 5 \
         --crf_learning_rate 0.2 \
         --word_dict_path ./conf/word.dic \
         --label_dict_path ./conf/tag.dic \
-        --word_rep_dict_path ./conf/q2b.dic \
-        --num_iterations 0
+        --word_rep_dict_path ./conf/q2b.dic
 }
+
+function run_test() {
+    echo "testing"
+    python run_sequence_labeling.py \
+        --do_train False \
+        --do_test True \
+        --do_infer False \
+        --batch_size 80 \
+        --word_emb_dim 768 \
+        --grnn_hidden_dim 768 \
+        --bigru_num 2 \
+        --use_gpu -1 \
+        --model_path ./model \
+        --test_data ./data/test.tsv \
+        --word_dict_path ./conf/word.dic \
+        --label_dict_path ./conf/tag.dic \
+        --word_rep_dict_path ./conf/q2b.dic
+}
+
 
 function run_infer() {
     echo "infering"
@@ -35,12 +58,17 @@ function run_infer() {
         --do_test False \
         --do_infer True \
         --batch_size 80 \
+        --word_emb_dim 768 \
+        --grnn_hidden_dim 768 \
+        --bigru_num 2 \
+        --use_gpu -1 \
         --model_path ./model/ \
-        --testdata_dir ./data/test_data \
+        --infer_data ./data/test.tsv \
         --word_dict_path ./conf/word.dic \
         --label_dict_path ./conf/tag.dic \
         --word_rep_dict_path ./conf/q2b.dic
 }
+
 
 function main() {
     local cmd=${1:-help}
@@ -48,16 +76,19 @@ function main() {
         train)
             run_train "$@";
             ;;
+        test)
+            run_test "$@";
+            ;;
         infer)
             run_infer "$@";
             ;;
         help)
-            echo "Usage: ${BASH_SOURCE} {train|infer}";
+            echo "Usage: ${BASH_SOURCE} {train|test|infer}";
             return 0;
             ;;
         *)
             echo "unsupport command [${cmd}]";
-            echo "Usage: ${BASH_SOURCE} {train|infer}";
+            echo "Usage: ${BASH_SOURCE} {train|test|infer}";
             return 1;
             ;;
     esac

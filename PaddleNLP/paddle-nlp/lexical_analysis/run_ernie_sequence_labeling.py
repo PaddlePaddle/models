@@ -27,7 +27,7 @@ from models.representation.ernie import ernie_encoder
 from models.seq_lab import nets
 from utils import ArgumentGroup
 from utils import print_arguments
-from utils import init_pretraining_params
+from utils import init_pretraining_params, init_checkpoint
 
 
 # yapf: disable

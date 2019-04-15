@@ -40,10 +40,11 @@ data_g = utils.ArgumentGroup(parser, "data", "data paths")
 data_g.add_arg("word_dict_path", str, "./conf/word.dic", "The path of the word dictionary.")
 data_g.add_arg("label_dict_path", str, "./conf/tag.dic", "The path of the label dictionary.")
 data_g.add_arg("word_rep_dict_path", str, "./conf/q2b.dic", "The path of the word replacement Dictionary.")
-data_g.add_arg("traindata_dir", str, "./data/train_data", "The folder where the training data is located.")
-data_g.add_arg("testdata_dir", str, "./data/test_data", "The folder where the training data is located.")
+data_g.add_arg("train_data", str, "./data/train_data", "The folder where the training data is located.")
+data_g.add_arg("test_data", str, "./data/test_data", "The folder where the training data is located.")
+data_g.add_arg("infer_data", str, "./data/test.tsv", "The folder where the training data is located.")
 data_g.add_arg("model_save_dir", str, "./models", "The model will be saved in this path.")
-data_g.add_arg("model_path", str, "./model/", "Path to load the model for inference")
+data_g.add_arg("model_path", str, "./model", "Path to load the model for inference")
 
 data_g.add_arg("corpus_type_list", str, ["human", "feed", "query", "title", "news"],
         "The pattern list of different types of corpus used in training.", nargs='+')
@@ -54,19 +55,15 @@ data_g.add_arg("corpus_proportion_list", float, [0.2, 0.2, 0.2, 0.2, 0.2],
 train_g = utils.ArgumentGroup(parser, "training", "training options")
 
 train_g.add_arg("do_train", bool, True, "whether to perform training")
-train_g.add_arg("do_valid", bool, True, "whether to perform validation")
+train_g.add_arg("do_valid", bool, False, "whether to perform validation")
 train_g.add_arg("do_test", bool, True, "whether to perform validation")
-train_g.add_arg("do_infer", bool, True, "whether to perform inference")
+train_g.add_arg("do_infer", bool, False, "whether to perform inference")
 train_g.add_arg("random_seed", int, 0, "random seed for training")
-train_g.add_arg("num_iterations", int, 0,
-        "The maximum number of iterations. If set to 0 (default), do not limit the number.")
-train_g.add_arg("save_model_per_batches", int, 10, "Save the model once per xxxx batch of training")
-train_g.add_arg("valid_model_per_batches", int, 10, "Do the validation once per xxxx batch of training")
-train_g.add_arg("eval_window", int, 20, "abandoned, Training will be suspended when the evaluation indicators " \
-        "on the validation set no longer increase. The eval_window specifies the scope of the evaluation.")
+train_g.add_arg("save_model_per_batches", int, 10000, "Save the model once per xxxx batch of training")
+train_g.add_arg("valid_model_per_batches", int, 1000, "Do the validation once per xxxx batch of training")
 train_g.add_arg("batch_size", int, 80, "The number of sequences contained in a mini-batch, "
         "or the maximum number of tokens (include paddings) contained in a mini-batch.")
-train_g.add_arg("corpus_num", int, 10, "corpus iteration num")
+train_g.add_arg("epoch", int, 10, "corpus iteration num")
 train_g.add_arg("use_gpu", int, -1, "Whether or not to use GPU. -1 means CPU, else GPU id")
 train_g.add_arg("traindata_shuffle_buffer", int, 200, "The buffer size used in shuffle the training data.")
 train_g.add_arg("base_learning_rate", float, 1e-3, "The basic learning rate that affects the entire network.")
@@ -91,20 +88,20 @@ print(args)
 def create_model(args, pyreader_name, vocab_size, num_labels):
     """create lac model"""
     pyreader = fluid.layers.py_reader(
-            capacity=16,
+            capacity=50,
             shapes=([-1, 1], [-1, 1]),
             dtypes=('int64', 'int64'),
             lod_levels=(1, 1),
             name=pyreader_name,
             use_double_buffer=False)
 
-    word, target = fluid.layers.read_file(pyreader)
-    avg_cost, crf_decode = nets.lex_net(word, target, args, vocab_size, num_labels)
+    words, targets = fluid.layers.read_file(pyreader)
+    avg_cost, crf_decode = nets.lex_net(words, targets, args, vocab_size, num_labels)
 
     (precision, recall, f1_score, num_infer_chunks, num_label_chunks,
      num_correct_chunks) = fluid.layers.chunk_eval(
          input=crf_decode,
-         label=target,
+         label=targets,
          chunk_scheme="IOB",
          num_chunk_types=int(math.ceil((num_labels - 1) / 2.0)))
     chunk_evaluator = fluid.metrics.ChunkEvaluator()
@@ -112,6 +109,8 @@ def create_model(args, pyreader_name, vocab_size, num_labels):
 
     ret = {
         "pyreader":pyreader,
+        "words":words,
+        "targets":targets,
         "avg_cost":avg_cost,
         "crf_decode":crf_decode,
         "chunk_evaluator":chunk_evaluator,
@@ -177,15 +176,15 @@ def main(args):
                 train_ret["pyreader"].decorate_paddle_reader(
                         paddle.batch(
                             paddle.reader.shuffle(
-                                dataset.file_reader(args.traindata_dir),
+                                dataset.file_reader(args.train_data),
                                 buf_size=args.traindata_shuffle_buffer
                             ),
                             batch_size=args.batch_size
                         )
                 )
 
-                sgd_optimizer = fluid.optimizer.SGD(learning_rate=args.base_learning_rate)
-                sgd_optimizer.minimize(train_ret["avg_cost"])
+                optimizer = fluid.optimizer.Adam(learning_rate=args.base_learning_rate)
+                optimizer.minimize(train_ret["avg_cost"])
 
     if args.do_test:
         test_program = fluid.Program()
@@ -195,11 +194,25 @@ def main(args):
                        args, "test_reader", dataset.vocab_size, dataset.num_labels)
                 test_ret["pyreader"].decorate_paddle_reader(
                     paddle.batch(
-                        dataset.file_reader(args.testdata_dir),
+                        dataset.file_reader(args.test_data),
                         batch_size=args.batch_size
                     )
                 )
         test_program = test_program.clone(for_test=True)  # to share parameters with train model
+
+    if args.do_infer:
+        infer_program = fluid.Program()
+        with fluid.program_guard(infer_program, startup_program):
+            with fluid.unique_name.guard():
+                infer_ret = create_model(
+                       args, "infer_reader", dataset.vocab_size, dataset.num_labels)
+                infer_ret["pyreader"].decorate_paddle_reader(
+                    paddle.batch(
+                        dataset.file_reader(args.infer_data),
+                        batch_size=1000
+                    )
+                )
+        infer_program = infer_program.clone(for_test=True)
 
 
     # STEP 2, run model
@@ -215,11 +228,17 @@ def main(args):
     #TODO need codes for continuing training from checkpoint
 
     if args.do_train:
+        num_train_examples = dataset.get_num_examples(args.train_data)
+        max_train_steps = args.epoch * num_train_examples // args.batch_size
+        print("Num train examples: %d" % num_train_examples)
+        print("Max train steps: %d" % max_train_steps)
+
         batch_id = 0
-        for epoch_id in range(args.corpus_num):
+        for epoch_id in range(args.epoch):
             train_ret["pyreader"].start()
             try:
                 while True:
+                    start_time = time.time()
                     avg_cost, nums_infer, nums_label, nums_correct = exe.run(
                         train_program,
                         fetch_list=[
@@ -229,11 +248,12 @@ def main(args):
                             train_ret["num_correct_chunks"],
                         ],
                     )
+                    end_time = time.time()
                     train_ret["chunk_evaluator"].update(nums_infer, nums_label, nums_correct)
                     precision, recall, f1_score = train_ret["chunk_evaluator"].eval()
                     batch_id += 1
-                    print("[train] batch_id = %d, loss = %.5f, P: %.5f, R: %.5f, F1: %.5f" % (
-                        batch_id, avg_cost, precision, recall, f1_score))
+                    print("[train] batch_id = %d, loss = %.5f, P: %.5f, R: %.5f, F1: %.5f, elapsed time %.5f " % (
+                        batch_id, avg_cost, precision, recall, f1_score, end_time - start_time))
 
                     # save checkpoints
                     if (batch_id % args.save_model_per_batches == 0):
@@ -252,12 +272,32 @@ def main(args):
 
     # only test
     if args.do_test:
+        utils.init_checkpoint(exe, args.model_path, main_program=test_program)
         evaluate(exe, test_program, test_ret)
 
     if args.do_infer:
+        utils.init_checkpoint(exe, args.model_path, main_program=infer_program)
+        while True:
+            try:
+                infer_ret["pyreader"].start()
+                (words, crf_decode, ) = exe.run(infer_program,
+                        fetch_list=[
+                            infer_ret["words"],
+                            infer_ret["crf_decode"],
+                        ],
+                        return_numpy=False)
+                results = utils.parse_result(words, crf_decode, dataset)
+                for result in results:
+                    print(result)
+            except fluid.core.EOFException:
+                infer_ret["pyreader"].reset()
+                break
+
+        """
+        old code
         # prepare data
         infer_data = paddle.batch(
-            dataset.file_reader(args.testdata_dir),
+            dataset.file_reader(args.infer_data, max_seq_len=100000, mode="infer"),
             batch_size=args.batch_size
         )
 
@@ -266,13 +306,13 @@ def main(args):
                 fluid.io.load_inference_model(args.model_path, exe)
 
         # do infer
-        for data in infer_data():
-            word_list = [x[0] for x in data]
+        for word_list in infer_data():
             word_idx = utils.to_lodtensor(word_list, place)
             (crf_decode, ) = exe.run(infer_program,
                     feed={"word":word_idx}, fetch_list=fetch_targets, return_numpy=False)
             result = utils.parse_result(crf_decode, word_list, dataset)
             print(utils.to_str("\n".join(result)))
+        """
 
 
 if __name__ == "__main__":
