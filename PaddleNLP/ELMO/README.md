@@ -11,7 +11,7 @@ ELMO在大语料上以language model为训练目标，训练出bidirectional LST
 2. 支持多卡训练，训练速度比主流实现快约1倍。
 3. 发布[ELMO中文预训练模型](https://dureader.gz.bcebos.com/elmo/baike_elmo_checkpoint.tar.gz),
 训练约38G中文百科数据。
-4. 发布基于ELMO微调步骤和[LAC微调示例代码](finetune)，验证在中文词法分析任务LAC上f1值提升了0.7%。
+4. 发布基于ELMO微调步骤和[LAC微调示例代码](finetune)，验证在中文词法分析任务LAC上f1值提升了1.1%。
 
 
 ## 基本配置及第三方安装包
