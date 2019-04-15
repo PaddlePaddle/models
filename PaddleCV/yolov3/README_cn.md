@@ -49,7 +49,7 @@ YOLOv3 的网络结构由基础特征提取网络、multi-scale特征融合层�
 数据目录结构如下：
 
 ```
-data/coco/
+dataset/coco/
 ├── annotations
 │   ├── instances_train2014.json
 │   ├── instances_train2017.json
@@ -101,8 +101,6 @@ data/coco/
 - 可选参数见：
 
     python train.py --help
-
-
 
 **数据读取器说明：**
 
