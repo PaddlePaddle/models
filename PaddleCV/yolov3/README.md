@@ -9,7 +9,6 @@
 - [Training](#training)
 - [Evaluation](#evaluation)
 - [Inference and Visualization](#inference-and-visualization)
-- [Appendix](#appendix)
 
 ## Installation
 
@@ -45,10 +44,52 @@ Train the model on [MS-COCO dataset](http://cocodataset.org/#download), download
     cd dataset/coco
     ./download.sh
 
+The data catalog structure is as follows:
+
+```
+  dataset/coco/
+  ├── annotations
+  │   ├── instances_train2014.json
+  │   ├── instances_train2017.json
+  │   ├── instances_val2014.json
+  │   ├── instances_val2017.json
+  |   ...
+  ├── train2017
+  │   ├── 000000000009.jpg
+  │   ├── 000000580008.jpg
+  |   ...
+  ├── val2017
+  │   ├── 000000000139.jpg
+  │   ├── 000000000285.jpg
+  |   ...
+  
+```
 
 ## Training
 
-After data preparation, one can start the training step by:
+**Install the [cocoapi](https://github.com/cocodataset/cocoapi):**
+
+To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed. Install the cocoapi:
+
+    git clone https://github.com/cocodataset/cocoapi.git
+    cd cocoapi/PythonAPI
+    # if cython is not installed
+    pip install Cython
+    # Install into global site-packages
+    make install
+    # Alternatively, if you do not have permissions or prefer
+    # not to install the COCO API into global site-packages
+    python2 setup.py install --user
+
+**download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer. One can download pre-trained model as:
+
+    sh ./weights/download.sh
+
+Set `pretrain` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
+Please make sure that pre-trained model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
+
+
+**training:** After data preparation, one can start the training step by:
 
     python train.py \
        --model_save_dir=output/ \
@@ -59,27 +100,6 @@ After data preparation, one can start the training step by:
 - For more help on arguments:
 
     python train.py --help
-
-**download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer. One can download pre-trained model as:
-
-    sh ./weights/download.sh
-
-Set `pretrain` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
-Please make sure that pre-trained model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
-
-**Install the [cocoapi](https://github.com/cocodataset/cocoapi):**
-
-To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed. Install the cocoapi:
-
-    git clone https://github.com/cocodataset/cocoapi.git
-    cd PythonAPI
-    # if cython is not installed
-    pip install Cython
-    # Install into global site-packages
-    make install
-    # Alternatively, if you do not have permissions or prefer
-    # not to install the COCO API into global site-packages
-    python2 setup.py install --user
 
 **data reader introduction:**
 
