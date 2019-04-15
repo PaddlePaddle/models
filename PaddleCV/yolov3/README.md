@@ -47,7 +47,7 @@ Train the model on [MS-COCO dataset](http://cocodataset.org/#download), download
 The data catalog structure is as follows:
 
 ```
-  data/coco/
+  dataset/coco/
   ├── annotations
   │   ├── instances_train2014.json
   │   ├── instances_train2017.json
@@ -100,8 +100,6 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
 - For more help on arguments:
 
     python train.py --help
-
-
 
 **data reader introduction:**
 
