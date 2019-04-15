@@ -3,30 +3,52 @@
 ## 1. 简介
 Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型，整体性地完成中文分词、词性标注、专名识别任务。
 
-LAC 基于一个堆叠的双向 GRU 结构，在长文本上准确复刻了百度 AI 开放平台上的词法分析算法。效果方面，分词、词性标注、专名识别的整体准确率 95.5%；单独评估专名识别任务，F值 87.8%（准确 90.3%，召回 85.4%），总体略优于开放平台版本。在效果优化的基础上，LAC 的模型简洁高效，内存开销不到 100M，而速度则比百度AI开放平台提高了 57%。
+LAC 基于一个堆叠的双向 GRU 结构，在长文本上准确复刻了百度 AI 开放平台上的词法分析算法。效果方面，分词、词性标注、专名识别的整体准确率 88.0%，召回率 88.7%，F1 值 88.3%。此外，我们在百度开放的 ERNIE 模型上 finetune，效果可以提升到准确率 92.0%，召回率 92.0%，F1 值 92.0%；
 
 ## 2. 快速开始
-本项目依赖 Paddle 1.3.1，安装请参考官网[快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
+本项目依赖 Paddle 1.3.2，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
 
-运行下载数据和模型的脚本，会生成 ./data 和 ./model 两个子目录。
+### 基础模型
+运行下载数据和模型的脚本，
 ```bash
 sh downloads.sh
 ```
+会生成下面几个文件夹，
+```test
+./data/			# 数据文件夹
+./model_baseline/ 	# lexical analysis 模型文件
+./model_finetuned/	# lexical analysis 在 ERNIE 上 finetune 的模型文件
+./pretrained/		# ERNIE 发布的 pretrained 模型
+```
 
-我们基于百度的海量数据训练了一个词法分析的模型，可以直接用这个模型进行预测任务。
+我们基于百度的海量数据训练了一个词法分析的模型，可以直接用这个模型对开放的测试集 ./data/test.tsv 进行验证，
+```bash
+sh run.sh test
+```
+
+也可以用该模型预测新的数据，
 ```bash
 sh run.sh infer
 ```
 
-用户也可以选择在自己的数据集上训练自己的词法分析模型，这里我们提供用于训练的脚本和代码
+用户也可以选择在自己的数据集上训练自己的词法分析模型，这里我们提供用于训练的脚本和代码，
 ```
 sh run.sh train
 ```
 
-此外，我们提供在百度开放的预训模型 ERNIE 的基础上 finetune 的脚本
+### 使用 ERNIE 进行 finetune
+原 ERNIE 开放的模型参考 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)，这里我们为了方便，把下载的命令也放到 `download.sh` 中了。下载的预训练的 ERNIE 模型文件会放在 `./pretrained/` 目录中。
+
+词法分析的模型在 `ERNIE` 上 finetune 之后取得了不错的提升效果，这里我们也开放此模型，模型放在了 `./model_finetuned` 中。运行下面的脚本在测试集上验证效果，
+```bash
+sh run_ernie.sh test
 ```
-sh run_ernie.sh
+
+当然，您也可以用自己的数据去 finetune 在 ERNIE 上的效果，
+```bash
+sh run_ernie.sh train
 ```
+
 
 ## 3. 进阶使用
 
@@ -56,10 +78,10 @@ sh run_ernie.sh
 ![GRU-CRF-MODEL](./gru-crf-model.png)
 
 ### 数据格式
-训练使用的数据可以由用户根据实际的应用场景，自己组织数据。数据由两列组成，以制表符分隔，第一列是 utf-8 编码的中文文本，第二列是对应每个字的标注，以空格分隔。我们采用 IOB2 标注体系，即以 X-B 作为类型为 X 的词的开始，以 X-I 作为类型为 X 的词的持续，以 O 表示不关注的字（实际上，在词性、专名联合标注中，不存在 O ）。示例如下：
+训练使用的数据可以由用户根据实际的应用场景，自己组织数据。除了第一行是 `text_a\tlabel` 固定的开头，后面的每行数据都是由两列组成，以制表符分隔，第一列是 utf-8 编码的中文文本，以 `\002` 分割，第二列是对应每个字的标注，以 `\002` 分隔。我们采用 IOB2 标注体系，即以 X-B 作为类型为 X 的词的开始，以 X-I 作为类型为 X 的词的持续，以 O 表示不关注的字（实际上，在词性、专名联合标注中，不存在 O ）。示例如下：
 
 ```text
-在抗日战争时期,朝鲜族人民先后有十几万人参加抗日战斗  p-B vn-B vn-I n-B n-I n-B n-I w-B nz-B nz-I nz-I n-B n-I d-B d-I v-B m-B m-I m-I n-B v-B v-I vn-B vn-I vn-B vn-I
+除\002了\002他\002续\002任\002十\002二\002届\002政\002协\002委\002员\002,\002马\002化\002腾\002,\002雷\002军\002,\002李\002彦\002宏\002也\002被\002推\002选\002为\002新\002一\002届\002全\002国\002人\002大\002代\002表\002或\002全\002国\002政\002协\002委\002员	p-B\002p-I\002r-B\002v-B\002v-I\002m-B\002m-I\002m-I\002ORG-B\002ORG-I\002n-B\002n-I\002w-B\002PER-B\002PER-I\002PER-I\002w-B\002PER-B\002PER-I\002w-B\002PER-B\002PER-I\002PER-I\002d-B\002p-B\002v-B\002v-I\002v-B\002a-B\002m-B\002m-I\002ORG-B\002ORG-I\002ORG-I\002ORG-I\002n-B\002n-I\002c-B\002n-B\002n-I\002ORG-B\002ORG-I\002n-B\002n-I
 ```
 
 + 我们随同代码一并发布了完全版的模型和相关的依赖数据。但是，由于模型的训练数据过于庞大，我们没有发布训练数据，仅在`data`目录下的`train_data`和`test_data`文件中放置少数样本用以示例输入数据格式。
@@ -83,7 +105,6 @@ sh run_ernie.sh
 ├── data/                               # 存放数据集的目录
 ├── downloads.sh                        # 用于下载数据、模型和词典的脚本
 ├── gru-crf-model.png                   # REAEME 用到的模型图片
-├── model/                              # 模型文件夹
 ├── reader.py                           # 文件读取相关函数
 ├── run_ernie_sequence_labeling.py      # 用于 finetune ERNIE 的代码
 ├── run_ernie.sh                        # 启用上面代码的脚本
