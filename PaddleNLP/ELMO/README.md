@@ -11,7 +11,7 @@ ELMO在大语料上以language model为训练目标，训练出bidirectional LST
 2. 支持多卡训练，训练速度比主流实现快约1倍。
 3. 发布[ELMO中文预训练模型](https://dureader.gz.bcebos.com/elmo/baike_elmo_checkpoint.tar.gz),
 训练约38G中文百科数据。
-4. 发布基于ELMO微调步骤和[LAC微调示例代码](/finetune)，验证在中文词法分析任务LAC上f1值提升了0.7%。
+4. 发布基于ELMO微调步骤和[LAC微调示例代码](finetune)，验证在中文词法分析任务LAC上f1值提升了0.7%。
 
 
 ## 基本配置及第三方安装包
@@ -63,7 +63,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
    
    在原论文中推荐的使用方式是，NLP下游任务输入的embedding层与ELMO的输出向量直接做concat。其中，ELMO部分是直接加载预训练出来的模型参数（PaddlePaddle中通过fluid.io.load_vars接口来加载参数），模型参数输入到NLP下游任务是fix的（在PaddlePaddle中通过stop_gradient = True来实现）。
    
-   ELMO微调部分可参考[LAC微调示例代码](/finetune)，[LAC微调示例代码](/finetune)是基于百度词法分析工具LAC做的代码,[LAC官方发布代码地址](https://github.com/baidu/lac/tree/a4eb73b2fb64d8aab8499a1184edf4fc386f8268)
+   ELMO微调部分可参考[LAC微调示例代码](finetune)，[LAC微调示例代码](/finetune)是基于百度词法分析工具LAC做的代码[LAC官方发布代码地址](https://github.com/baidu/lac/tree/a4eb73b2fb64d8aab8499a1184edf4fc386f8268)
 
 ELMO微调任务的要点如下：
 
