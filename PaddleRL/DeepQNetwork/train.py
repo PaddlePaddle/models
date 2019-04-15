@@ -112,7 +112,7 @@ def train_agent():
         while len(exp) < MEMORY_WARMUP_SIZE:
             total_reward, step = run_train_episode(agent, env, exp)
             pbar.update(step)
-    
+
     # train
     test_flag = 0
     save_flag = 0
