@@ -105,7 +105,7 @@ def if_exist(var):
 fluid.io.load_vars(executor=exe, dirname=src_pretrain_model_path, predicate=if_exist, main_program=main_program) 
 ```
 
-3. 在下游NLP任务代码中加入[`bilm.py`](bilm.py) 文件，[`bilm.py`](bilm.py) 是ELMO网络定义部分。
+3. 在下游NLP任务代码中加入[`bilm.py`](bilm.py) 文件，[`bilm.py`](finetune/bilm.py) 是ELMO网络定义部分。
 
 4. 基于elmo词表（参考[`data/vocabulary_min5k.txt`](data/vocabulary_min5k.txt) ）对输入的句子或段落进行切词，并把切词的词转化为id,放入feed_dict中。
 
