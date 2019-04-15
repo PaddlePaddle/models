@@ -19,7 +19,6 @@ from collections import deque
 
 UPDATE_FREQ = 4
 
-#MEMORY_WARMUP_SIZE = 2000
 MEMORY_SIZE = 1e6
 MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20
 IMAGE_SIZE = (84, 84)
@@ -109,11 +108,11 @@ def train_agent():
         print('Input algorithm name error!')
         return
 
-    with tqdm(total=MEMORY_WARMUP_SIZE) as pbar:
+    with tqdm(total=MEMORY_WARMUP_SIZE, desc='Memory warmup') as pbar:
         while len(exp) < MEMORY_WARMUP_SIZE:
             total_reward, step = run_train_episode(agent, env, exp)
             pbar.update(step)
-
+    
     # train
     test_flag = 0
     save_flag = 0

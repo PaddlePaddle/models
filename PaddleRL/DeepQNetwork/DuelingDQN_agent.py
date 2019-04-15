@@ -71,10 +71,14 @@ class DuelingDQNModel(object):
             optimizer.minimize(cost)
 
         vars = list(self.train_program.list_vars())
-        policy_vars = list(filter(
-            lambda x: 'GRAD' not in x.name and 'policy' in x.name, vars))
         target_vars = list(filter(
             lambda x: 'GRAD' not in x.name and 'target' in x.name, vars))
+
+        policy_vars_name = [
+                x.name.replace('target', 'policy') for x in target_vars]
+        policy_vars = list(filter(
+            lambda x: x.name in policy_vars_name, vars))
+
         policy_vars.sort(key=lambda x: x.name)
         target_vars.sort(key=lambda x: x.name)
         
