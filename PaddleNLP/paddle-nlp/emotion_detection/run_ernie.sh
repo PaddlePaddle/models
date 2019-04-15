@@ -1,7 +1,7 @@
 #!/bin/bash
 export FLAGS_sync_nccl_allreduce=1
 export CUDA_VISIBLE_DEVICES=2
-MODEL_PATH=./models/ernie
+MODEL_PATH=./models/ernie_finetune
 TASK_DATA_PATH=./data
 CKPT_PATH=./save_models/ernie
 

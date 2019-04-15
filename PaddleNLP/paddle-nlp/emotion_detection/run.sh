@@ -47,7 +47,7 @@ infer() {
         --batch_size 32 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${VOCAB_PATH} \
-        --init_checkpoint ${CKPT_PATH}/step_785/ \
+        --init_checkpoint ${CKPT_PATH}/step_756/ \
         --config_path ./config.json
 }
 
