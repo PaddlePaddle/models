@@ -79,7 +79,7 @@ ELMO微调任务的要点如下：
 
 具体步骤如下：
 1. 下载ELMO Paddle官方发布Checkpoint文件，Checkpoint文件为预训练好的约3.8G中文百科数据。
-[PaddlePaddle官方发布Checkpoint文件下载地址](https://dureader.gz.bcebos.com/elmo/baike_elmo_checkpoint.tar.gz)
+[ELMO中文预训练模型](https://dureader.gz.bcebos.com/elmo/baike_elmo_checkpoint.tar.gz)
 
 2. 在网络初始化启动中加载ELMO Checkpoint文件。加载参数接口（fluid.io.load_vars）,可加在网络参数（exe.run(fluid.default_startup_program())）初始化之后。
 
