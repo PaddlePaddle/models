@@ -27,13 +27,22 @@ from .darknet import add_DarkNet53_conv_body
 from .darknet import conv_bn_layer
 
 def yolo_detection_block(input, channel, is_test=True, name=None):
-    assert channel % 2 == 0, "channel {} cannot be divided by 2".format(channel)
+    assert channel % 2 == 0, \
+            "channel {} cannot be divided by 2".format(channel)
     conv = input
     for j in range(2):
-        conv = conv_bn_layer(conv, channel, filter_size=1, stride=1, padding=0, is_test=is_test, name='{}.{}.0'.format(name, j))
-        conv = conv_bn_layer(conv, channel*2, filter_size=3, stride=1, padding=1, is_test=is_test, name='{}.{}.1'.format(name, j))
-    route = conv_bn_layer(conv, channel, filter_size=1, stride=1, padding=0, is_test=is_test, name='{}.2'.format(name))
-    tip = conv_bn_layer(route,channel*2, filter_size=3, stride=1, padding=1, is_test=is_test, name='{}.tip'.format(name))
+        conv = conv_bn_layer(conv, channel, filter_size=1, 
+                             stride=1, padding=0, is_test=is_test, 
+                             name='{}.{}.0'.format(name, j))
+        conv = conv_bn_layer(conv, channel*2, filter_size=3, 
+                             stride=1, padding=1, is_test=is_test, 
+                             name='{}.{}.1'.format(name, j))
+    route = conv_bn_layer(conv, channel, filter_size=1, stride=1, 
+                          padding=0, is_test=is_test, 
+                          name='{}.2'.format(name))
+    tip = conv_bn_layer(route,channel*2, filter_size=3, stride=1, 
+                        padding=1, is_test=is_test, 
+                        name='{}.tip'.format(name))
     return route, tip
 
 def upsample(input, scale=2,name=None):
@@ -68,11 +77,15 @@ class YOLOv3(object):
         if self.is_train:
             self.py_reader = fluid.layers.py_reader(
                 capacity=64,
-                shapes = [[-1] + self.image_shape, [-1, cfg.max_box_num, 4], [-1, cfg.max_box_num], [-1, cfg.max_box_num]],
+                shapes = [[-1] + self.image_shape, 
+                          [-1, cfg.max_box_num, 4], 
+                          [-1, cfg.max_box_num], 
+                          [-1, cfg.max_box_num]],
                 lod_levels=[0, 0, 0, 0],
                 dtypes=['float32'] * 2 + ['int32'] + ['float32'],
                 use_double_buffer=True)
-            self.image, self.gtbox, self.gtlabel, self.gtscore = fluid.layers.read_file(self.py_reader)
+            self.image, self.gtbox, self.gtlabel, self.gtscore = \
+                    fluid.layers.read_file(self.py_reader)
         else:
             self.image = fluid.layers.data(
                     name='image', shape=self.image_shape, dtype='float32'
