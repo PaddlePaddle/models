@@ -57,6 +57,11 @@ def parse_args():
         default=20,
         help="The size of sequence len. (default: %(default)d)")
     parser.add_argument(
+        "--all_train_tokens",
+        type=int,
+        default=35479,
+        help="The size of all training tokens")
+    parser.add_argument(
         "--data_path", type=str, help="all the data for train,valid,test")
     parser.add_argument("--vocab_path", type=str, help="vocab file path")
     parser.add_argument(
