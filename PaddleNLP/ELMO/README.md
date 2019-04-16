@@ -9,9 +9,9 @@ ELMO在大语料上以language model为训练目标，训练出bidirectional LST
 此版本发布要点：
 1. 发布预训练模型完整代码。
 2. 支持多卡训练，训练速度比主流实现快约1倍。
-3. 发布[ELMO中文预训练模型](https://dureader.gz.bcebos.com/elmo/elmo_chinese_checkpoint.tar.gz),
-训练约3.8G中文百科数据。
-4. 发布基于ELMO微调步骤和示例代码，验证在中文词法分析任务LAC上f1值提升了0.68%。
+3. 发布[ELMO中文预训练模型](https://dureader.gz.bcebos.com/elmo/baike_elmo_checkpoint.tar.gz),
+训练约38G中文百科数据。
+4. 发布基于ELMO微调步骤和[LAC微调示例代码](finetune)，验证在中文词法分析任务LAC上f1值提升了1.1%。
 
 
 ## 基本配置及第三方安装包
@@ -62,6 +62,8 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
    利用ELMO做微调，与Bert方式不同，ELMO微调是把ELMO部分作为已预训练好的词向量，接入到NLP下游任务中。
    
    在原论文中推荐的使用方式是，NLP下游任务输入的embedding层与ELMO的输出向量直接做concat。其中，ELMO部分是直接加载预训练出来的模型参数（PaddlePaddle中通过fluid.io.load_vars接口来加载参数），模型参数输入到NLP下游任务是fix的（在PaddlePaddle中通过stop_gradient = True来实现）。
+   
+   ELMO微调部分可参考[LAC微调示例代码](finetune)，百度词法分析工具[LAC官方发布代码地址](https://github.com/baidu/lac/tree/a4eb73b2fb64d8aab8499a1184edf4fc386f8268)。
 
 ELMO微调任务的要点如下：
 
@@ -76,8 +78,9 @@ ELMO微调任务的要点如下：
 5)elmo词向量与网络embedding层做concat。
 
 具体步骤如下：
-1. 下载ELMO Paddle官方发布Checkpoint文件，Checkpoint文件为预训练好的约3.8G中文百科数据。
-[PaddlePaddle官方发布Checkpoint文件下载地址](https://dureader.gz.bcebos.com/elmo/elmo_chinese_checkpoint.tar.gz)
+1. 下载ELMO Paddle官方发布预训练模型文件，预训练模型文件训练约38G中文百科数据。
+
+[ELMO中文预训练模型](https://dureader.gz.bcebos.com/elmo/baike_elmo_checkpoint.tar.gz)
 
 2. 在网络初始化启动中加载ELMO Checkpoint文件。加载参数接口（fluid.io.load_vars）,可加在网络参数（exe.run(fluid.default_startup_program())）初始化之后。
 
@@ -103,7 +106,7 @@ def if_exist(var):
 fluid.io.load_vars(executor=exe, dirname=src_pretrain_model_path, predicate=if_exist, main_program=main_program) 
 ```
 
-3. 在下游NLP任务代码中加入[`bilm.py`](bilm.py) 文件，[`bilm.py`](bilm.py) 是ELMO网络定义部分。
+3. 在下游NLP任务代码中加入[`bilm.py`](bilm.py) 文件，[`bilm.py`](finetune/bilm.py) 是ELMO网络定义部分。
 
 4. 基于elmo词表（参考[`data/vocabulary_min5k.txt`](data/vocabulary_min5k.txt) ）对输入的句子或段落进行切词，并把切词的词转化为id,放入feed_dict中。
 
@@ -122,7 +125,6 @@ elmo_enc= elmo_encoder(elmo_embedding)
 word_embedding=layers.concat(input=[elmo_enc, word_embedding], axis=1)
 
 ```
-
 
 ## 参考论文
 [Deep contextualized word representations](https://arxiv.org/abs/1802.05365)
