@@ -89,7 +89,7 @@ python val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet50-mpii-384x
 ### 模型训练
 
 ```bash
-python train.py --dataset 'mpii' --data_root 'data/mpii'
+python train.py --dataset 'mpii'
 ```
 
 **说明** 详细参数配置已保存到`lib/mpii_reader.py` 和 `lib/coco_reader.py`文件中，通过设置dataset来选择使用具体的参数配置
