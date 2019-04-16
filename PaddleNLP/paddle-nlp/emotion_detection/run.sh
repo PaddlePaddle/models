@@ -7,6 +7,7 @@ TASK_NAME='emotion_detection'
 DATA_PATH=./data/
 VOCAB_PATH=./data/vocab.txt
 CKPT_PATH=./save_models/textcnn
+MODEL_PATH=./models/textcnn
 
 # run_train on train.tsv and do_val on dev.tsv
 train() {
@@ -35,7 +36,7 @@ evaluate() {
         --batch_size 128 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${VOCAB_PATH} \
-        --init_checkpoint ./models/textcnn/ \
+        --init_checkpoint ${MODEL_PATH} \
         --config_path ./config.json
 }
 # run_infer on infer.tsv
@@ -47,7 +48,7 @@ infer() {
         --batch_size 32 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${VOCAB_PATH} \
-        --init_checkpoint ${CKPT_PATH}/step_756/ \
+        --init_checkpoint ${MODEL_PATH} \
         --config_path ./config.json
 }
 
