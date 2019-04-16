@@ -41,7 +41,7 @@ def print_arguments(args):
     :type args: argparse.Namespace
     """
     print("-----------  Configuration Arguments -----------")
-    for arg, value in sorted(vars(args).iteritems()):
+    for arg, value in sorted(vars(args).items()):
         print("%s: %s" % (arg, value))
     print("------------------------------------------------")
 

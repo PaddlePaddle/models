@@ -91,7 +91,7 @@ python val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet50-mpii-384x
 ### Perform Training
 
 ```bash
-python train.py --dataset 'mpii' --data_root 'data/mpii'
+python train.py --dataset 'mpii' # or coco
 ```
 
 **Note**: Configurations for training are aggregated in the `lib/mpii_reader.py` and `lib/coco_reader.py`.
