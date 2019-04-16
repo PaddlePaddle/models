@@ -258,6 +258,8 @@ def train(args):
     pretrained_model = args.pretrained_model
     with_memory_optimization = args.with_mem_opt
     model_save_dir = args.model_save_dir
+    
+    # use_ngraph is for CPU only, please refer to README_ngraph.md for details
     use_ngraph = os.getenv('FLAGS_use_ngraph')
 
     startup_prog = fluid.Program()

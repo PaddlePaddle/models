@@ -1,4 +1,3 @@
-﻿
 
 运行本目录下的程序示例需要使用PaddlePaddle develop最新版本。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
 
@@ -73,8 +72,8 @@ env CUDA_VISIBLE_DEVICES=0 python train.py
 执行以下命令读取多张图片进行预测：
 
 ```
-env CUDA_VISIBLE_DEVICE=0 python infer.py \
-    --init_model="checkpoints/1" --input="./data/inputA/*" \
+env CUDA_VISIBLE_DEVICES=0 python infer.py \
+    --init_model="output/checkpoints/1" --input="./data/horse2zebra/trainA/*" \
     --input_style A --output="./output"
 ```
 
@@ -89,3 +88,5 @@ env CUDA_VISIBLE_DEVICE=0 python infer.py \
 <img src="images/B2A.jpg" width="620" hspace='10'/> <br/>
 <strong>图 3</strong>
 </p>
+
+>在本文示例中，均可通过修改`CUDA_VISIBLE_DEVICES`改变使用的显卡号。

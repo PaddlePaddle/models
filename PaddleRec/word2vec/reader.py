@@ -41,9 +41,6 @@ class Word2VecReader(object):
         self.window_size_ = window_size
         self.data_path_ = data_path
         self.filelist = filelist
-        self.word_to_id_ = dict()
-        self.id_to_word = dict()
-        self.word_count = dict()
         self.trainer_id = trainer_id
         self.trainer_num = trainer_num
 
@@ -54,22 +51,14 @@ class Word2VecReader(object):
         with io.open(dict_path, 'r', encoding='utf-8') as f:
             for line in f:
                 word, count = line.split()[0], int(line.split()[1])
-                self.word_count[word] = count
-                self.word_to_id_[word] = word_id
-                self.id_to_word[word_id] = word  #build id to word dict
                 word_id += 1
                 id_counts.append(count)
                 word_all_count += count
 
         self.word_all_count = word_all_count
         self.corpus_size_ = word_all_count
-        self.dict_size = len(self.word_to_id_)
+        self.dict_size = len(id_counts)
         self.id_counts_ = id_counts
-        #write word2id file
-        print("write word2id file to : " + dict_path + "_word_to_id_")
-        with io.open(dict_path + "_word_to_id_", 'w+', encoding='utf-8') as f6:
-            for k, v in self.word_to_id_.items():
-                f6.write(k + " " + str(v) + '\n')
 
         print("corpus_size:", self.corpus_size_)
         self.id_frequencys = [

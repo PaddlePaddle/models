@@ -131,7 +131,7 @@ def net_config(image, label, model, args):
         avg_cost = avg_cost0 + 0.3 * avg_cost1 + 0.3 * avg_cost2
         acc_top1 = fluid.layers.accuracy(input=out0, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
-        out = out2
+        out = out0
     else:
         out = model.net(input=image, class_dim=class_dim)
         cost = fluid.layers.cross_entropy(input=out, label=label)
