@@ -389,7 +389,8 @@ def test(args):
         dev_count = fluid.core.get_cuda_device_count()
     else:
         place = fluid.CPUPlace()
-        dev_count = multiprocessing.cpu_count()
+        #dev_count = multiprocessing.cpu_count()
+        dev_count = 1
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
