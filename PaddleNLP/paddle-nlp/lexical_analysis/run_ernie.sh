@@ -35,7 +35,8 @@ function run_train() {
         --do_lower_case true \
         --use_cuda false \
         --do_train true \
-        --do_test true
+        --do_test true \
+        --do_infer false
 }
 
 
@@ -56,8 +57,32 @@ function run_test() {
         --do_lower_case true \
         --use_cuda true \
         --do_train false \
-        --do_test true
+        --do_test true \
+        --do_infer false
 }
+
+
+function run_infer() {
+    echo "infering"
+    python run_ernie_sequence_labeling.py \
+        --ernie_config_path "${ERNIE_PRETRAINED_MODEL_PATH}/ernie_config.json" \
+        --init_pretraining_params "${ERNIE_PRETRAINED_MODEL_PATH}/params/" \
+        --init_checkpoint "${ERNIE_FINETUNED_MODEL_PATH}" \
+        --init_bound 0.1 \
+        --vocab_path "${ERNIE_PRETRAINED_MODEL_PATH}/vocab.txt" \
+        --batch_size 64 \
+        --random_seed 0 \
+        --num_labels 57 \
+        --max_seq_len 128 \
+        --infer_set "${DATA_PATH}/test.tsv" \
+        --label_map_config "./conf/label_map.json" \
+        --do_lower_case true \
+        --use_cuda true \
+        --do_train false \
+        --do_test false \
+        --do_infer true
+}
+
 
 function main() {
     local cmd=${1:-help}
@@ -67,6 +92,9 @@ function main() {
             ;;
         test)
             run_test "$@";
+            ;;
+        infer)
+            run_infer "$@";
             ;;
         help)
             echo "Usage: ${BASH_SOURCE} {train|test|infer}";

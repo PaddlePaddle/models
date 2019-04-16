@@ -285,9 +285,9 @@ def main(args):
         evaluate(exe, test_program, test_ret)
 
     if args.do_infer:
+        infer_ret["pyreader"].start()
         while True:
             try:
-                infer_ret["pyreader"].start()
                 (words, crf_decode, ) = exe.run(infer_program,
                         fetch_list=[
                             infer_ret["words"],

@@ -16,6 +16,7 @@ import sys
 
 import paddle
 import paddle.fluid as fluid
+from collections import namedtuple
 
 sys.path.append("..")
 print(sys.path)
@@ -25,14 +26,12 @@ from models.representation.ernie import ErnieConfig
 from models.representation.ernie import ernie_encoder
 #from models.representation.ernie import ernie_pyreader
 from models.seq_lab import nets
-from utils import ArgumentGroup
-from utils import print_arguments
-from utils import init_pretraining_params, init_checkpoint
+import utils
 
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
-model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
+model_g = utils.ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("ernie_config_path", str, "../LARK/ERNIE/config/ernie_config.json",
         "Path to the json file for ernie model config.")
 model_g.add_arg("lac_config_path", str, None, "Path to the json file for LAC model config.")
@@ -42,7 +41,7 @@ model_g.add_arg("init_pretraining_params", str, "pretrained/params/",
                 "Init pre-training params which preforms fine-tuning from. If the "
                  "arg 'init_checkpoint' has been set, this argument wouldn't be valid.")
 
-train_g = ArgumentGroup(parser, "training", "training options.")
+train_g = utils.ArgumentGroup(parser, "training", "training options.")
 train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
 train_g.add_arg("save_steps", int, 10000, "The steps interval to save checkpoints.")
 train_g.add_arg("validation_steps", int, 1000, "The steps interval to evaluate model performance.")
@@ -51,27 +50,27 @@ train_g.add_arg("crf_learning_rate", float, 0.2,
     "The real learning rate of the embedding layer will be (crf_learning_rate * base_learning_rate).")
 train_g.add_arg("init_bound", float, 0.1, "init bound for initialization.")
 
-log_g = ArgumentGroup(parser, "logging", "logging related")
+log_g = utils.ArgumentGroup(parser, "logging", "logging related")
 log_g.add_arg("skip_steps", int, 1, "The steps interval to print loss.")
 
-data_g = ArgumentGroup(parser, "data", "Data paths, vocab paths and data processing options")
+data_g = utils.ArgumentGroup(parser, "data", "Data paths, vocab paths and data processing options")
 data_g.add_arg("vocab_path", str, "../LARK/ERNIE/config/vocab.txt", "Vocabulary path.")
 data_g.add_arg("batch_size", int, 3, "Total examples' number in batch for training.")
 data_g.add_arg("random_seed", int, 0, "Random seed.")
 data_g.add_arg("num_labels", int, 57, "label number")
 data_g.add_arg("max_seq_len", int, 512, "Number of words of the longest seqence.")
-data_g.add_arg("train_set", str, "./data/train_data/train.tsv", "Path to training data.")
-data_g.add_arg("test_set", str, "./data/test_data/test.tsv", "Path to test data.")
-data_g.add_arg("dev_set", str, "./data/test_data/valid.tsv", "Path to validation data.")
+data_g.add_arg("train_set", str, "./data/train.tsv", "Path to train data.")
+data_g.add_arg("test_set", str, "./data/test.tsv", "Path to test data.")
+data_g.add_arg("infer_set", str, "./data/test.tsv", "Path to infer data.")
 data_g.add_arg("label_map_config", str, "./conf/label_map.json", "label_map_path.")
 data_g.add_arg("do_lower_case", bool, True,
         "Whether to lower case the input text. Should be True for uncased models and False for cased models.")
 
-run_type_g = ArgumentGroup(parser, "run_type", "running type options.")
+run_type_g = utils.ArgumentGroup(parser, "run_type", "running type options.")
 run_type_g.add_arg("use_cuda", bool, True, "If set, use GPU for training.")
 run_type_g.add_arg("do_train", bool, True, "Whether to perform training.")
-run_type_g.add_arg("do_val", bool, True, "Whether to perform evaluation.")
-run_type_g.add_arg("do_test", bool, True, "Whether to perform inference.")
+run_type_g.add_arg("do_test", bool, True, "Whether to perform testing.")
+run_type_g.add_arg("do_infer", bool, True, "Whether to perform inference.")
 
 args = parser.parse_args()
 # yapf: enable.
@@ -90,6 +89,7 @@ def ernie_pyreader(args, pyreader_name):
 
     (src_ids, sent_ids, pos_ids, input_mask, padded_labels, seq_lens) = fluid.layers.read_file(pyreader)
 
+    words = fluid.layers.sequence_unpad(src_ids, seq_lens)
     labels = fluid.layers.sequence_unpad(padded_labels, seq_lens)
 
     ernie_inputs = {
@@ -99,7 +99,7 @@ def ernie_pyreader(args, pyreader_name):
         "input_mask": input_mask,
         "seq_lens": seq_lens
     }
-    return pyreader, ernie_inputs, labels
+    return pyreader, ernie_inputs, words, labels
 
 
 def create_model(args,
@@ -212,7 +212,7 @@ def main(args):
         in_tokens=False,
         random_seed=args.random_seed)
 
-    if not (args.do_train or args.do_val or args.do_test):
+    if not (args.do_train or args.do_test or args.do_infer):
         raise ValueError("For args `do_train`, `do_val` and `do_test`, at "
                          "least one of them must be True.")
 
@@ -232,7 +232,7 @@ def main(args):
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
                 # create ernie_pyreader
-                train_pyreader, ernie_inputs, labels = ernie_pyreader(args, pyreader_name='train_reader')
+                train_pyreader, ernie_inputs, words, labels = ernie_pyreader(args, pyreader_name='train_reader')
                 train_pyreader.decorate_tensor_provider(
                     reader.data_generator(
                         args.train_set, args.batch_size, args.epoch, shuffle=True, phase="train"
@@ -257,7 +257,7 @@ def main(args):
         with fluid.program_guard(test_program, startup_prog):
             with fluid.unique_name.guard():
                 # create ernie_pyreader
-                test_pyreader, ernie_inputs, labels = ernie_pyreader(args, pyreader_name='test_reader')
+                test_pyreader, ernie_inputs, words, labels = ernie_pyreader(args, pyreader_name='test_reader')
                 test_pyreader.decorate_tensor_provider(
                     reader.data_generator(
                         args.test_set, args.batch_size, phase='test', epoch=1, shuffle=False
@@ -270,6 +270,25 @@ def main(args):
 
         test_program = test_program.clone(for_test=True)
 
+    if args.do_infer:
+        infer_program = fluid.Program()
+        with fluid.program_guard(infer_program, startup_prog):
+            with fluid.unique_name.guard():
+                # create ernie_pyreader
+                infer_pyreader, ernie_inputs, words, labels = ernie_pyreader(args, pyreader_name='infer_reader')
+                infer_pyreader.decorate_tensor_provider(
+                    reader.data_generator(
+                        args.infer_set, args.batch_size, phase='infer', epoch=1, shuffle=False
+                    )
+                )
+                # get ernie_embeddings
+                embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                # user defined model based on ernie embeddings
+                infer_ret = create_model(args, embeddings, labels=labels, is_prediction=True)
+                infer_ret["words"] = words
+
+        infer_program = infer_program.clone(for_test=True)
+
     exe.run(startup_prog)
 
     # load checkpoints
@@ -278,13 +297,13 @@ def main(args):
             print("WARNING: args 'init_checkpoint' and 'init_pretraining_params' "
                     "both are set! Only arg 'init_checkpoint' is made valid.")
         if args.init_checkpoint:
-            init_checkpoint(exe, args.init_checkpoint, startup_prog)
+            utils.init_checkpoint(exe, args.init_checkpoint, startup_prog)
         elif args.init_pretraining_params:
-            init_pretraining_params(exe, args.init_pretraining_params, startup_prog)
-    elif args.do_test:
+            utils.init_pretraining_params(exe, args.init_pretraining_params, startup_prog)
+    elif args.do_test or args.do_infer:
         if not args.init_checkpoint:
-            raise ValueError("args 'init_checkpoint' should be set if only doing validation or testing!")
-        init_checkpoint(exe, args.init_checkpoint, startup_prog)
+            raise ValueError("args 'init_checkpoint' should be set if only doing test or infer!")
+        utils.init_checkpoint(exe, args.init_checkpoint, startup_prog)
 
     if args.do_train:
         train_pyreader.start()
@@ -335,6 +354,28 @@ def main(args):
     if args.do_test:
         evaluate(exe, test_program, test_pyreader, test_ret)
 
+    if args.do_infer:
+        # create dict
+        id2word_dict = dict([(str(word_id), word) for word, word_id in reader.vocab.iteritems()])
+        id2label_dict = dict([(str(label_id), label) for label, label_id in reader.label_map.iteritems()])
+        Dataset = namedtuple("Dataset", ["id2word_dict", "id2label_dict"])
+        dataset = Dataset(id2word_dict, id2label_dict)
+
+        infer_pyreader.start()
+        while True:
+            try:
+                (words, crf_decode) = exe.run(infer_program,
+                        fetch_list=[infer_ret["words"], infer_ret["crf_decode"]],
+                        return_numpy=False)
+                # User should notice that words had been clipped if long than args.max_seq_len
+                results = utils.parse_result(words, crf_decode, dataset)
+                for result in results:
+                    print(result)
+            except fluid.core.EOFException:
+                infer_pyreader.reset()
+                break
+
+
 if __name__ == "__main__":
-    print_arguments(args)
+    utils.print_arguments(args)
     main(args)
