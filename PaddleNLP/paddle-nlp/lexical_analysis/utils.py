@@ -42,12 +42,15 @@ def print_arguments(args):
     print('------------------------------------------------')
 
 
-def to_str(string):
-    """none"""
-    if isinstance(string, unicode):
-        return string.encode("utf-8")
-    else:
-        return string
+def to_str(string, encoding="utf-8"):
+    """convert to str for print"""
+    if sys.version_info.major == 3:
+        if isinstance(string, bytes):
+            return string.decode(encoding)
+    elif sys.version_info.major == 2:
+        if isinstance(string, unicode):
+            return string.encode(encoding)
+    return string
 
 
 def to_lodtensor(data, place):
@@ -85,7 +88,8 @@ def parse_result(words, crf_decode, dataset):
             cur_word = dataset.id2word_dict[cur_word_id]
             cur_tag = dataset.id2label_dict[cur_tag_id]
             sent_out_str += cur_word + u"/" + cur_tag + u" "
-        batch_out_str.append(sent_out_str.encode("utf-8").strip())
+        sent_out_str = to_str(sent_out_str.strip())
+        batch_out_str.append(sent_out_str)
     return batch_out_str
 
 

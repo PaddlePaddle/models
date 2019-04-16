@@ -284,8 +284,6 @@ def main(args):
     if args.do_test:
         evaluate(exe, test_program, test_ret)
 
-    import ipdb
-    #ipdb.set_trace()
     if args.do_infer:
         while True:
             try:
