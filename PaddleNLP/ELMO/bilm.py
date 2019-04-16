@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This file is used to finetone
+# This file is used to finetune.
 
 from __future__ import absolute_import
 from __future__ import division
@@ -28,7 +28,7 @@ proj_clip = 3.0
 hidden_size = 4096
 vocab_size = 52445
 embed_size = 512
-# according to orginal paper, dropout need to be modifyed on finetone
+# according to orginal paper, dropout need to be modifyed on finetune
 modify_dropout = 1
 proj_size = 512
 num_layers = 2
@@ -133,7 +133,7 @@ def elmo_encoder(x_emb):
         x_emb_r,
         para_name='bw_')
     embedding = layers.concat(input=[fw_hiddens, bw_hiddens], axis=1)
-    # add dropout on finetone
+    # add dropout on finetune
     embedding = dropout(embedding)
     a = layers.create_parameter(
         [1], dtype="float32", name="gamma")
