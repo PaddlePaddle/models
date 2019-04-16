@@ -24,16 +24,16 @@
 
 下载经过预处理的数据，运行该脚本之后，data目录下会存在训练数据（train.tsv）、开发集数据（dev.tsv）、测试集数据（test.tsv）以及对应的词典（word_dict.txt）
 ```shell
-cd data
-sh download_data.sh
+wget https://baidu-nlp.bj.bcebos.com/Senta_data.tar
+tar -xvf Senta_data.tar 
 ```
 
 #### 模型下载
 
 我们开源了基于ChnSentiCorp数据训练的情感倾向性分类模型（基于BOW、CNN、LSTM、ERNIE多种模型训练），可供用户直接使用
 ```shell
-cd model
-sh download_model.sh
+wget https://baidu-nlp.bj.bcebos.com/Senta_models.tar
+tar -xvf Senta_models.tar 
 ```
 #### 模型评估
 
