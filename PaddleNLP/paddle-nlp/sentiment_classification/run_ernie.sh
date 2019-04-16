@@ -49,6 +49,21 @@ evaluate() {
         --ernie_config_path $ERNIE_PRETRAIN/ernie_config.json \
         --model_type "ernie_base" \
         --num_labels 2
+    
+    python -u run_ernie_classifier.py \
+        --use_cuda true \
+        --verbose true \
+        --do_train false \
+        --do_val true \
+        --do_infer false \
+        --batch_size 16 \
+        --init_checkpoint ./save_models/step_1800/ \
+        --dev_set $DATA_PATH/test.tsv \
+        --vocab_path $ERNIE_PRETRAIN/vocab.txt \
+        --max_seq_len 128 \
+        --ernie_config_path $ERNIE_PRETRAIN/ernie_config.json \
+        --model_type "ernie_base" \
+        --num_labels 2
 }
 
 # run_infer

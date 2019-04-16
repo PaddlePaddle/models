@@ -72,23 +72,13 @@ def create_model(args,
     Create Model for sentiment classification
     """
     
-    if is_inference:
-        pyreader = fluid.layers.py_reader(
-            capacity=16,
-            shapes=[[-1, 1]],
-            dtypes=['int64'],
-            lod_levels=[1],
-            name=pyreader_name,
-            use_double_buffer=False)
-
-    else:
-        pyreader = fluid.layers.py_reader(
-            capacity=16,
-            shapes=([-1, 1], [-1, 1]),
-            dtypes=('int64', 'int64'),
-            lod_levels=(1, 0),
-            name=pyreader_name,
-            use_double_buffer=False)
+    pyreader = fluid.layers.py_reader(
+        capacity=16,
+        shapes=([-1, 1], [-1, 1]),
+        dtypes=('int64', 'int64'),
+        lod_levels=(1, 0),
+        name=pyreader_name,
+        use_double_buffer=False)
     
     if senta_config['model_type'] == "bilstm_net":
         network = bilstm_net
@@ -104,7 +94,7 @@ def create_model(args,
         raise ValueError("Unknown network type!")
     
     if is_inference:
-        data = fluid.layers.read_file(pyreader)
+        data, label = fluid.layers.read_file(pyreader)
         probs = network(data, None, senta_config["vocab_size"], is_infer=is_inference)
         print("create inference model...")
         return pyreader, probs
@@ -353,6 +343,14 @@ def main(args):
         print("Final validation result:")
         evaluate(exe, test_prog, test_pyreader,
             [loss.name, accuracy.name, num_seqs.name], "dev")
+
+        test_pyreader.decorate_paddle_reader(
+            processor.data_generator(
+                batch_size=args.batch_size, phase='infer', epoch=1,
+                shuffle=False))
+        evaluate(exe, test_prog, test_pyreader,
+            [loss.name, accuracy.name, num_seqs.name], "infer")
+
 
     # final eval on test set
     if args.do_infer:

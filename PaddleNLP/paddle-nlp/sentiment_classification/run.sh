@@ -17,7 +17,7 @@ train() {
         --do_train true \
         --do_val true \
         --do_infer false \
-        --batch_size 256 \
+        --batch_size 16 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${DATA_PATH}/word_dict.txt \
         --checkpoints ${CKPT_PATH} \

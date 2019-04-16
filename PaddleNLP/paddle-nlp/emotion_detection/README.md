@@ -30,7 +30,7 @@ sh download_data.sh
 
 #### 模型下载
 
-我们开源了基于海量数据训练好的对话情绪识别模型（基于TextCNN模型训练），可供用户直接使用，运行脚本后，会生成models目录，models目录下会有预训练的模型文件
+我们开源了基于海量数据训练好的对话情绪识别模型，可供用户直接使用，运行脚本后，会生成models目录，models目录下会有预训练的TextCNN模型，和基于ERNIE finetune后的模型
 ```shell
 sh download_model.sh
 ```
@@ -38,22 +38,31 @@ sh download_model.sh
 
 基于已有的预训练模型和数据，可以运行下面的命令进行测试，查看预训练的模型在测试集（test.tsv）上的评测结果
 ```shell
+# TextCNN 模型
 sh run.sh eval
+# ERNIE 模型
+sh run_ernie.sh eval
 ```
 
 #### 模型训练
 
 基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
 ```shell
+# TextCNN 模型
 sh run.sh train
+# ERNIE 模型
+sh run_ernie.sh train
 ```
 训练完成后，可修改```run.sh```中init_checkpoint参数，选择最优step的模型进行评估和预测
 
 #### 模型预测
 
-在新的数据集（infer.tsv）上进行预测，得到模型预测结果及各label的概率
+利用已有模型，可在未知label的数据集（infer.tsv）上进行预测，得到模型预测结果及各label的概率
 ```shell
+# TextCNN 模型
 sh run.sh infer
+# ERNIE 模型
+sh run_ernie.sh infer
 ```
 
 ## 进阶使用
@@ -111,29 +120,6 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 2. 更改模型配置
 在 ```config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```
 3. 模型训练，运行训练、评估、预测脚本即可（具体方法同上）
-
-#### 使用ERNIE进行finetune
-
-1. 下载 ERNIE 预训练模型
-```
-mkdir -p models/ernie
-cd models/ernie
-wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz
-tar xvf ERNIE_stable-1.0.1.tar.gz
-rm ERNIE_stable-1.0.1.tar.gz
-```
-2. 配置 ERNIE 模型及数据
-通过 ```run_ernie.sh``` 配置ERNIE模型路径及数据路径，例如
-```
-MODEL_PATH=./models/ernie
-TASK_DATA_PATH=./data
-```
-3. 模型训练
-```
-sh run_ernie.sh train
-```
-训练完成后，可修改```run_ernie.sh```中init_checkpoint参数，选择最优step的模型进行评估和预测
-训练、评估、预测详细配置，请查看 ```run_ernie.sh```
 
 ## 如何贡献代码
 
