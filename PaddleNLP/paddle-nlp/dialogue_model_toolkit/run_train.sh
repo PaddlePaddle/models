@@ -1,5 +1,6 @@
 #!/bin/bash
 export CUDA_VISIBLE_DEVICES=3
+export CPU_NUM=1
 
 TASK_NAME=$1
 typeset -l TASK_NAME

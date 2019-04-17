@@ -1,5 +1,6 @@
 #!/bin/bash
 export CUDA_VISIBLE_DEVICES=4
+export CPU_NUM=1
 
 TASK_NAME=$1
 BERT_BASE_PATH="./uncased_L-12_H-768_A-12"
