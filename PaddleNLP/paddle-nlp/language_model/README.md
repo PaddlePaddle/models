@@ -84,7 +84,6 @@ mr. <unk> is chairman of <unk> n.v. the dutch publishing group
 ├── README.md            # 文档
 ├── run.sh               # 启动脚本
 ├── train.py             # 训练代码
-├── test.py              # 测试代码
 ├── reader.py            # 数据读取
 ├── args.py              # 参数读取
 └── data                 # 数据下载
