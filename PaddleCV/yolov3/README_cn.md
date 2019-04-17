@@ -162,7 +162,7 @@ Train Loss
 
 |   input size  | 608x608 | 416x416 | 320x320 |
 |:-------------:| :-----: | :-----: | :-----: |
-| infer speed | 50 ms/frame | 29 ms/frame |24 ms/frame | 
+| infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame | 
 
 下图为模型可视化预测结果：
 <p align="center">
