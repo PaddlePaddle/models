@@ -79,7 +79,25 @@ sh download_pretrain_model.sh
 sh download_models.sh
 ```
 
-#### &ensp;&ensp;c、训练 
+#### &ensp;&ensp;c、CPU、GPU训练设置
+
+&ensp;&ensp;&ensp;&ensp;CPU训练和预测: 
+
+```
+请将run_train.sh和run_predict.sh内如下两行参数设置为: 
+1、export CUDA_VISIBLE_DEVICES=
+2、--use_cuda false
+```
+
+&ensp;&ensp;&ensp;&ensp;GPU训练和预测:  
+
+```
+请修改run_train.sh和run_predict.sh内如下两行参数设置为:
+1、export CUDA_VISIBLE_DEVICES=4 (用户可自行指定空闲的卡)
+2、--use_cuda true
+```
+
+#### &ensp;&ensp;d、训练 
 
 &ensp;&ensp;&ensp;&ensp;方式一(推荐)：
 
@@ -115,7 +133,7 @@ python -u train.py --task_name mrda \ # name model to use. [udc|swda|mrda|atis_i
        --use_fp16 false         # If set, use fp16 for training.
 ```
 
-#### &ensp;&ensp;d、预测 （推荐e的方式来进行预测评估）
+#### &ensp;&ensp;e、预测 （推荐f的方式来进行预测评估）
 
 &ensp;&ensp;&ensp;&ensp;方式一(推荐)：
 
@@ -138,7 +156,7 @@ python -u predict.py --task_name mrda \      # name model to use. [udc|swda|mrda
 --bert_config_path ./uncased_L-12_H-768_A-12/bert_config.json        # Path to the json file for bert model config.
 ```
 
-#### &ensp;&ensp;e、预测+评估（推荐）
+#### &ensp;&ensp;f、预测+评估（推荐）
 
 &ensp;&ensp;&ensp;&ensp;dialogue_model_toolkit模块内提供已训练好的对话模型，可通过sh download_models.sh下载，用户如果不训练模型的时候，可使用提供模型进行预测评估：
 
