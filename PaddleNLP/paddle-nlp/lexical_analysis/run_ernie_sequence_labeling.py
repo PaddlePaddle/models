@@ -356,8 +356,8 @@ def main(args):
 
     if args.do_infer:
         # create dict
-        id2word_dict = dict([(str(word_id), word) for word, word_id in reader.vocab.iteritems()])
-        id2label_dict = dict([(str(label_id), label) for label, label_id in reader.label_map.iteritems()])
+        id2word_dict = dict([(str(word_id), word) for word, word_id in reader.vocab.items()])
+        id2label_dict = dict([(str(label_id), label) for label, label_id in reader.label_map.items()])
         Dataset = namedtuple("Dataset", ["id2word_dict", "id2label_dict"])
         dataset = Dataset(id2word_dict, id2label_dict)
 
