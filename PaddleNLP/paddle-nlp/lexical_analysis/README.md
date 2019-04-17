@@ -44,6 +44,11 @@ sh run.sh train
 sh run_ernie.sh test
 ```
 
+也可以用该模型预测新的数据，
+```bash
+sh run_ernie.sh infer
+```
+
 当然，您也可以用自己的数据去 finetune 在 ERNIE 上的效果，
 ```bash
 sh run_ernie.sh train
