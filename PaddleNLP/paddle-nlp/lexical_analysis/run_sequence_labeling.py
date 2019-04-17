@@ -209,7 +209,7 @@ def main(args):
                 infer_ret["pyreader"].decorate_paddle_reader(
                     paddle.batch(
                         dataset.file_reader(args.infer_data),
-                        batch_size=1000
+                        batch_size=args.batch_size
                     )
                 )
         infer_program = infer_program.clone(for_test=True)
