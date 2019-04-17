@@ -2,7 +2,7 @@ import os
 import paddle.fluid as fluid
 
 
-def nccl2_prepare(args, startup_prog):
+def nccl2_prepare(args, startup_prog, main_prog):
     config = fluid.DistributeTranspilerConfig()
     config.mode = "nccl2"
     t = fluid.DistributeTranspiler(config=config)
@@ -12,7 +12,8 @@ def nccl2_prepare(args, startup_prog):
     t.transpile(envs["trainer_id"],
         trainers=','.join(envs["trainer_endpoints"]),
         current_endpoint=envs["current_endpoint"],
-        startup_program=startup_prog)
+        startup_program=startup_prog,
+        program=main_prog)
 
 
 def pserver_prepare(args, train_prog, startup_prog):

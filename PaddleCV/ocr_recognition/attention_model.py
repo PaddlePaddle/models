@@ -339,7 +339,7 @@ def attention_infer(images, num_classes, use_cudnn=True):
     return ids
 
 
-def attention_eval(data_shape, num_classes):
+def attention_eval(data_shape, num_classes, use_cudnn=True):
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
     label_in = fluid.layers.data(
         name='label_in', shape=[1], dtype='int32', lod_level=1)
@@ -349,7 +349,7 @@ def attention_eval(data_shape, num_classes):
     label_in = fluid.layers.cast(x=label_in, dtype='int64')
 
     gru_backward, encoded_vector, encoded_proj = encoder_net(
-        images, is_test=True)
+        images, is_test=True, use_cudnn=use_cudnn)
 
     backward_first = fluid.layers.sequence_pool(
         input=gru_backward, pool_type='first')

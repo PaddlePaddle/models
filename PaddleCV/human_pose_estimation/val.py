@@ -16,6 +16,7 @@
 """Functions for validation."""
 
 import os
+import sys
 import argparse
 import functools
 import paddle
@@ -37,7 +38,6 @@ add_arg('use_gpu',          bool,  True,                "Whether to use GPU or n
 add_arg('num_epochs',       int,   140,                 "Number of epochs.")
 add_arg('total_images',     int,   144406,              "Training image number.")
 add_arg('kp_dim',           int,   16,                  "Class number.")
-add_arg('model_save_dir',   str,   "output",            "Model save directory")
 add_arg('with_mem_opt',     bool,  True,                "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   None,                "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                "Whether to resume checkpoint.")
@@ -48,6 +48,12 @@ add_arg('shift_heatmap',    bool,  True,                "Shift heatmap")
 add_arg('post_process',     bool,  True,                "Post process")
 add_arg('data_root',        str,   "data/coco",         "Root directory of dataset")
 # yapf: enable
+
+
+def print_immediately(s):
+    print(s)
+    sys.stdout.flush()
+
 
 def valid(args):
     if args.dataset == 'coco':
@@ -208,7 +214,7 @@ def valid(args):
 
         idx += num_images
 
-        print('Epoch [{:4d}] '
+        print_immediately('Epoch [{:4d}] '
               'Loss = {:.5f} '
               'Acc = {:.5f}'.format(batch_id, loss, acc.avg))
 

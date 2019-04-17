@@ -51,7 +51,14 @@ def random_distort(img):
     return img
 
 
-def random_crop(img, boxes, labels, scores, scales=[0.3, 1.0], max_ratio=2.0, constraints=None, max_trial=50):
+def random_crop(img, 
+                boxes, 
+                labels, 
+                scores, 
+                scales=[0.3, 1.0], 
+                max_ratio=2.0, 
+                constraints=None, 
+                max_trial=50):
     if len(boxes) == 0:
         return img, boxes
 
@@ -90,10 +97,12 @@ def random_crop(img, boxes, labels, scores, scales=[0.3, 1.0], max_ratio=2.0, co
 
     while crops:
         crop = crops.pop(np.random.randint(0, len(crops)))
-        crop_boxes, crop_labels, crop_scores, box_num = box_utils.box_crop(boxes, labels, scores, crop, (w, h))
+        crop_boxes, crop_labels, crop_scores, box_num = \
+            box_utils.box_crop(boxes, labels, scores, crop, (w, h))
         if box_num < 1:
             continue
-        img = img.crop((crop[0], crop[1], crop[0] + crop[2], crop[1] + crop[3])).resize(img.size, Image.LANCZOS)
+        img = img.crop((crop[0], crop[1], crop[0] + crop[2], 
+                        crop[1] + crop[3])).resize(img.size, Image.LANCZOS)
         img = np.asarray(img)
         return img, crop_boxes, crop_labels, crop_scores
     img = np.asarray(img)
@@ -118,10 +127,16 @@ def random_interp(img, size, interp=None):
     h, w, _ = img.shape
     im_scale_x = size / float(w)
     im_scale_y = size / float(h)
-    img = cv2.resize(img, None, None, fx=im_scale_x, fy=im_scale_y, interpolation=interp)
+    img = cv2.resize(img, None, None, fx=im_scale_x, fy=im_scale_y, 
+                     interpolation=interp)
     return img
 
-def random_expand(img, gtboxes, max_ratio=4., fill=None, keep_ratio=True, thresh=0.5):
+def random_expand(img, 
+                  gtboxes, 
+                  max_ratio=4., 
+                  fill=None, 
+                  keep_ratio=True, 
+                  thresh=0.5):
     if random.random() > thresh:
         return img, gtboxes
 
@@ -153,13 +168,21 @@ def random_expand(img, gtboxes, max_ratio=4., fill=None, keep_ratio=True, thresh
     return out_img.astype('uint8'), gtboxes
 
 def shuffle_gtbox(gtbox, gtlabel, gtscore):
-    gt = np.concatenate([gtbox, gtlabel[:, np.newaxis], gtscore[:, np.newaxis]], axis=1)
+    gt = np.concatenate([gtbox, gtlabel[:, np.newaxis], 
+                         gtscore[:, np.newaxis]], axis=1)
     idx = np.arange(gt.shape[0])
     np.random.shuffle(idx)
     gt = gt[idx, :]
     return gt[:, :4], gt[:, 4], gt[:, 5]
 
-def image_mixup(img1, gtboxes1, gtlabels1, gtscores1, img2, gtboxes2, gtlabels2, gtscores2):
+def image_mixup(img1, 
+                gtboxes1, 
+                gtlabels1, 
+                gtscores1, 
+                img2, 
+                gtboxes2, 
+                gtlabels2, 
+                gtscores2):
     factor = np.random.beta(1.5, 1.5)
     factor = max(0.0, min(1.0, factor))
     if factor >= 1.0:
@@ -173,7 +196,8 @@ def image_mixup(img1, gtboxes1, gtlabels1, gtscores1, img2, gtboxes2, gtlabels2,
     w = max(img1.shape[1], img2.shape[1])
     img = np.zeros((h, w, img1.shape[2]), 'float32')
     img[:img1.shape[0], :img1.shape[1], :] = img1.astype('float32') * factor
-    img[:img2.shape[0], :img2.shape[1], :] += img2.astype('float32') * (1.0 - factor)
+    img[:img2.shape[0], :img2.shape[1], :] += \
+            img2.astype('float32') * (1.0 - factor)
     gtboxes = np.zeros_like(gtboxes1)
     gtlabels = np.zeros_like(gtlabels1)
     gtscores = np.zeros_like(gtscores1)
@@ -208,7 +232,8 @@ def image_mixup(img1, gtboxes1, gtlabels1, gtscores1, img2, gtboxes2, gtlabels2,
 def image_augment(img, gtboxes, gtlabels, gtscores,  size, means=None):
     img = random_distort(img)
     img, gtboxes = random_expand(img, gtboxes, fill=means)
-    img, gtboxes, gtlabels, gtscores = random_crop(img, gtboxes, gtlabels, gtscores)
+    img, gtboxes, gtlabels, gtscores = \
+            random_crop(img, gtboxes, gtlabels, gtscores)
     img = random_interp(img, size)
     img, gtboxes = random_flip(img, gtboxes)
     gtboxes, gtlabels, gtscores = shuffle_gtbox(gtboxes, gtlabels, gtscores)

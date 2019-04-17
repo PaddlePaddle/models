@@ -108,3 +108,24 @@ The second figure shows speed-ups when using multiple GPUs according to the abov
 Speed-ups of Multiple-GPU Training of Resnet50 on Imagenet
 </p>
 
+## Deep Gradient Compression([arXiv:1712.01887](https://arxiv.org/abs/1712.01887)) for resnet
+
+#### Environment
+
+  - GPU: NVIDIA® Tesla® V100 
+  - Machine number * Card number: 4 * 4
+  - System: Centos 6u3
+  - Cuda/Cudnn: 9.0/7.1
+  - Dataset: ImageNet
+  - Date: 2017.04
+  - PaddleVersion: 1.4
+  - Batch size: 32
+
+#### Performance
+
+<p align="center">
+<img src="../images/resnet_dgc.png" width=528> <br />
+Performance using DGC for resnet-fp32 under different bandwidth
+</p>
+
+
