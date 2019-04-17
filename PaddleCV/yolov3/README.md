@@ -142,6 +142,8 @@ Evalutaion result is shown as below:
 | 416x416 | 36.5 | 58.2 | 39.1 |
 | 320x320 | 34.1 | 55.4 | 36.3 |
 
+- **NOTE:** evaluations based on `pycocotools` evaluator, predict bounding boxes with `score < 0.05` were not filtered out. Some frameworks which filtered out predict bounding boxes with `score < 0.05` will cause a drop in accuracy.
+
 ## Inference and Visualization
 
 Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, one can start infer step by:
