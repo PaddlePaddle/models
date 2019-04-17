@@ -51,7 +51,7 @@ cd data; sh download_data.sh
 ```
 sh run.sh
 ```
-需要指定数据的目录，模型的大小(默认为smll，用户可以选择medium， 或者large)。
+需要指定数据的目录，模型的大小(默认为small，用户可以选择medium， 或者large)。
 
 # 进阶使用
 ## 1. 任务定义与建模
