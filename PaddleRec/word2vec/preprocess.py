@@ -101,7 +101,7 @@ def filter_corpus(args):
             word_all_count += count
 
     #write word2id file
-    print("write word2id file to : " + dict_path + "_word_to_id_")
+    print("write word2id file to : " + args.dict_path + "_word_to_id_")
     with io.open(
             args.dict_path + "_word_to_id_", 'w+', encoding='utf-8') as fid:
         for k, v in word_to_id_.items():
