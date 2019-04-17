@@ -104,7 +104,6 @@ sh cluster_train.sh
 测试集下载命令如下
 
 ```bash
-cd data
 #全量数据集测试集
 wget https://paddlerec.bj.bcebos.com/word2vec/test_dir.tar
 #样本数据集测试集
