@@ -20,7 +20,7 @@
 #### 环境依赖
 ### 开始第一次模型调用
 #### 数据准备
-下载经过预处理的数据和预训练好的pairwise模型（基于bow模型训练），运行该脚本之后，data目录下会存在训练集数据示例、验证集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。模型会保存在/model_files/simnet_bow_pairwise_pretrained_model/下。
+下载经过预处理的数据和预训练好的pairwise模型（基于bow模型训练），运行该脚本之后，data目录下会存在训练集数据示例、集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。模型会保存在/model_files/simnet_bow_pairwise_pretrained_model/下。
 > sh download.sh
 #### 评估
 我们公开了自建的测试集，包括百度知道、ECOM、QQSIM、UNICOM四个数据集，基于上面的预训练模型，用户可以进入evaluate目录下依次执行下列命令获取测试集评估结果。
@@ -55,7 +55,7 @@ query、pos_query和neg_query是以空格分词的中文文本，中间使用制
 > 土豆 一亩地 能 收 多少 斤      一亩 地土豆 产 多少 斤        一亩 地 用 多少 斤 土豆 种子</br>
 
 
-验证集和测试集格式：query1 \t query2 \t label。</br>
+开发集和测试集格式：query1 \t query2 \t label。</br>
 
 query1和query2表示以空格分词的中文文本，label为0或1，0表示query1与query2相似，1表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。</br>
 
@@ -67,7 +67,7 @@ query1和query2表示以空格分词的中文文本，label为0或1，0表示que
 
 #### pointwise模式：
 
-训练集、验证集和测试集数据格式相同：query1和query2表示以空格分词的中文文本，label为0或1，0表示query1与query2相似，1表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。
+训练集、开发集和测试集数据格式相同：query1和query2表示以空格分词的中文文本，label为0或1，0表示query1与query2相似，1表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。
 
 > 现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1</br>
 > 为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1</br>
@@ -102,13 +102,13 @@ python run_classifier.py \ </br>
    --task_name ${TASK_NAME} \ </br>
    --use_cuda false \ #是否使用GPU </br>
    --do_train True \  #是否训练 </br>
-   --do_valid True \  #是否在训练中测试验证集 </br>
-   --do_test True \   #是否在评估模型效果 </br>
+   --do_valid True \  #是否在训练中测试开发集 </br>
+   --do_test True \   #是否验证测试集 </br>
    --do_infer False \ #是否预测</br>
    --batch_size 128 \ #batch_size的值</br>
    --train_data_dir ${TRAIN_DATA_kPATH} \ #训练集的路径</br>
-   --valid_data_dir ${VALID_DATA_PATH} \ #验证集的路径</br>
-   --test_data_dir ${TEST_DATA_PATH} \   #开发集的路径</br>
+   --valid_data_dir ${VALID_DATA_PATH} \ #开发集的路径</br>
+   --test_data_dir ${TEST_DATA_PATH} \   #测试集的路径</br>
    --infer_data_dir ${INFER_DATA_PATH} \ #待推测数据的路径</br>
    --output_dir ${CKPT_PATH} \           #模型存放的路径</br>
    --config_path ${CONFIG_PATH} \        #配置文件路径</br>
