@@ -57,7 +57,7 @@ query、pos_query和neg_query是以空格分词的中文文本，中间使用制
 
 开发集和测试集格式：query1 \t query2 \t label。</br>
 
-query1和query2表示以空格分词的中文文本，label为0或1，0表示query1与query2相似，1表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。</br>
+query1和query2表示以空格分词的中文文本，label为0或1，1表示query1与query2相似，0表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。</br>
 
 > 现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1</br>
 > 为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1</br>
@@ -67,7 +67,7 @@ query1和query2表示以空格分词的中文文本，label为0或1，0表示que
 
 #### pointwise模式：
 
-训练集、开发集和测试集数据格式相同：query1和query2表示以空格分词的中文文本，label为0或1，0表示query1与query2相似，1表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。
+训练集、开发集和测试集数据格式相同：query1和query2表示以空格分词的中文文本，label为0或1，1表示query1与query2相似，0表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。
 
 > 现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1</br>
 > 为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1</br>
