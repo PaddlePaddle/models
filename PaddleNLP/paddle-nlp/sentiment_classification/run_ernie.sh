@@ -3,6 +3,7 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.95
 export FLAGS_enable_parallel_graph=1
 export FLAGS_sync_nccl_allreduce=1
 export CUDA_VISIBLE_DEVICES=3
+export CPU_NUM=1
 ERNIE_PRETRAIN=./Senta_models/ernie_pretrain_model/
 DATA_PATH=./Senta_data
 MODEL_SAVE_PATH=./save_models
