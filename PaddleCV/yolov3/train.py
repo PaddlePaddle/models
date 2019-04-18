@@ -80,9 +80,11 @@ def train():
             return os.path.exists(os.path.join(cfg.pretrain, var.name))
         fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
+    build_strategy= fluid.BuildStrategy()
+    build_strategy.memory_optimize = True
     compile_program = fluid.compiler.CompiledProgram(
             fluid.default_main_program()).with_data_parallel(
-            loss_name=loss.name)
+            loss_name=loss.name, build_strategy=build_strategy)
 
     random_sizes = [cfg.input_size]
     if cfg.random_shape:
