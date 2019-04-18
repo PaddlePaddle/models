@@ -25,7 +25,7 @@ import numpy as np
 import paddle.fluid as fluid
 
 _WORK_DIR = os.path.split(os.path.realpath(__file__))[0]
-sys.path.append(os.path.join(_WORK_DIR, "../"))
+sys.path.append(os.path.join(_WORK_DIR, "../../"))
 from transformer_encoder import encoder, pre_process_layer
 
 

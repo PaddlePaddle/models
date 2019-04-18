@@ -1,4 +1,4 @@
-# 对话模型工具箱DMTK
+# 对话通用理解模块DGU
  - [一、简介](#一、简介)
  - [二、快速开始](#二、快速开始)
  - [三、进阶使用](#三、进阶使用)
@@ -8,7 +8,7 @@
 
 ### 任务说明
 
-&ensp;&ensp;&ensp;&ensp;对话相关的任务中，Dialogue System常常需要根据场景的变化去解决多种多样的任务。任务的多样性（意图识别、槽位解析、DA识别、DST等等），以及领域训练数据的稀少，给Dialogue System的研究和应用带来了巨大的困难和挑战，要使得dialogue system得到更好的发展，需要开发一个通用的对话理解模型。为此，我们给出了基于BERT的对话模型工具箱(DMTK：DialogueModelToolKit)，通过实验表明，使用base-model(BERT)并结合常见的学习范式，就可以在几乎全部对话理解任务上取得比肩甚至超越各个领域业内最好的模型的效果，展现了学习一个通用对话理解模型的巨大潜力。
+&ensp;&ensp;&ensp;&ensp;对话相关的任务中，Dialogue System常常需要根据场景的变化去解决多种多样的任务。任务的多样性（意图识别、槽位解析、DA识别、DST等等），以及领域训练数据的稀少，给Dialogue System的研究和应用带来了巨大的困难和挑战，要使得dialogue system得到更好的发展，需要开发一个通用的对话理解模型。为此，我们给出了基于BERT的对话通用理解模块(DGU: DialogueGeneralUnderstanding)，通过实验表明，使用base-model(BERT)并结合常见的学习范式，就可以在几乎全部对话理解任务上取得比肩甚至超越各个领域业内最好的模型的效果，展现了学习一个通用对话理解模型的巨大潜力。
 
 ### 效果说明
 
@@ -21,7 +21,7 @@
 | 任务名称 | udc | udc | udc| atis_slot | dstc2 | atis_intent | swda | mrda |
 | 评估指标 | R1@10 | R2@10 | R5@10 | F1 | JOINT ACC | ACC | ACC | ACC |
 | SOTA | 76.70% | 87.40% | 96.90% | 96.89% | 74.50% | 98.32% | 81.30% | 91.70% |
-| DMTK | 82.02% | 90.43% | 97.75% | 97.10% | 89.57% | 97.65% | 80.19% | 91.43% |
+| DGU | 82.02% | 90.43% | 97.75% | 97.10% | 89.57% | 97.65% | 80.19% | 91.43% |
 
 &ensp;&ensp;&ensp;&ensp;b、数据集说明：
 
@@ -58,7 +58,7 @@ sh download_data.sh
 &ensp;&ensp;&ensp;&ensp;ii、(非必需)下载的数据集中已提供了训练集，测试集和验证集，用户如果需要重新生成某数据集的训练数据，可执行：
 
 ```
-cd dialogue_model_toolkit/scripts && sh run_build_data.sh task_name
+cd dialogue_general_understanding/scripts && sh run_build_data.sh task_name
 parameters：
 task_name: udc, swda, mrda, atis, dstc2
 ```
@@ -73,7 +73,7 @@ task_name: udc, swda, mrda, atis, dstc2
 sh download_pretrain_model.sh
 ```
 
-&ensp;&ensp;&ensp;&ensp;ii、dialogue_model_toolkit模块内对话相关模型下载：
+&ensp;&ensp;&ensp;&ensp;ii、dialogue_general_understanding模块内对话相关模型下载：
 
 ```
 sh download_models.sh
@@ -158,7 +158,7 @@ python -u predict.py --task_name mrda \      # name model to use. [udc|swda|mrda
 
 #### &ensp;&ensp;f、预测+评估（推荐）
 
-&ensp;&ensp;&ensp;&ensp;dialogue_model_toolkit模块内提供已训练好的对话模型，可通过sh download_models.sh下载，用户如果不训练模型的时候，可使用提供模型进行预测评估：
+&ensp;&ensp;&ensp;&ensp;dialogue_general_understanding模块内提供已训练好的对话模型，可通过sh download_models.sh下载，用户如果不训练模型的时候，可使用提供模型进行预测评估：
 
 ```
 sh run_eval_metrics.sh task_name
@@ -170,7 +170,7 @@ task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2
 
 ### 1、任务定义与建模
 
-&ensp;&ensp;&ensp;&ensp;dialogue_model_toolkit模块，针对数据集开发了相关的模型训练过程，支持分类，多标签分类，序列标注等任务，用户可针对自己的数据集，进行相关的模型定制；
+&ensp;&ensp;&ensp;&ensp;dialogue_general_understanding模块，针对数据集开发了相关的模型训练过程，支持分类，多标签分类，序列标注等任务，用户可针对自己的数据集，进行相关的模型定制；
 
 ### 2、模型原理介绍
 
@@ -186,7 +186,7 @@ task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2
 
 &ensp;&ensp;&ensp;&ensp;输入数据以[CLS]开始，[SEP]分割内容为对话内容相关三部分，如上文，当前句，下文等，如[SEP]分割的每部分内部由多轮组成的话，使用[INNER_SEP]进行分割；第二部分和第三部分部分皆可缺省；
 
-&ensp;&ensp;&ensp;&ensp;目前dialogue_model_toolkit模块内已将数据准备部分集成到代码内，用户可根据上面输入数据格式，组装自己的数据；
+&ensp;&ensp;&ensp;&ensp;目前dialogue_general_understanding模块内已将数据准备部分集成到代码内，用户可根据上面输入数据格式，组装自己的数据；
 ### 4、代码结构说明
 
 ```
@@ -217,7 +217,7 @@ task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2
        ├── commonlib.py				    # 数据处理通用方法
        └── conf				            # 公开数据集中训练集、验证集、测试集划分
        
-../models/dialogue_model_toolkit
+../../models/dialogue_model_toolkit/dialogue_general_understanding
 ├── bert.py 					        # 底层bert模型
 ├── define_paradigm.py				# 上层网络范式
 └── create_model.py					# 创建底层bert模型+上层网络范式网络结构
@@ -233,7 +233,7 @@ task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2
 
 &ensp;&ensp;&ensp;&ensp;ii、 自定义上层网络范式
 
-&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;如果用户自定义模型属于分类、多分类和序列标注这3种类型其中一个，则只需要在**paddle-nlp/models/dialogue_model_toolkit/define_paradigm.py** 内指明**task_name**和相应上层范式函数的对应关系即可，如用户自定义模型属于其他模型，则需要自定义上层范式函数并指明其与**task_name**之间的关系；
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;如果用户自定义模型属于分类、多分类和序列标注这3种类型其中一个，则只需要在**paddle-nlp/models/dialogue_model_toolkit/dialogue_general_understanding/define_paradigm.py** 内指明**task_name**和相应上层范式函数的对应关系即可，如用户自定义模型属于其他模型，则需要自定义上层范式函数并指明其与**task_name**之间的关系；
 
 &ensp;&ensp;&ensp;&ensp;iii、自定义预测封装接口
 

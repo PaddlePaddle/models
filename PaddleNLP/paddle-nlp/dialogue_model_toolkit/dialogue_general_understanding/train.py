@@ -33,7 +33,7 @@ from utils.args import print_arguments
 from utils.init import init_checkpoint, init_pretraining_params
 
 _WORK_DIR = os.path.split(os.path.realpath(__file__))[0]
-sys.path.append('../models/dialogue_model_toolkit')
+sys.path.append('../../models/dialogue_model_toolkit/dialogue_general_understanding')
 
 from bert import BertConfig, BertModel
 from create_model import create_model

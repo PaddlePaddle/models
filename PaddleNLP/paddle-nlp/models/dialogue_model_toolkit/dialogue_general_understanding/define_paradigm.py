@@ -19,6 +19,7 @@ import re
 import paddle
 import paddle.fluid as fluid
 
+
 class Paradigm(object): 
     """
     define network paradigm

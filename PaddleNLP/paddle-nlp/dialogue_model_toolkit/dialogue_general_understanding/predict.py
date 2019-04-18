@@ -34,7 +34,7 @@ import define_predict_pack
 import reader.data_reader as reader
 
 _WORK_DIR = os.path.split(os.path.realpath(__file__))[0]
-sys.path.append('../models/dialogue_model_toolkit')
+sys.path.append('../../models/dialogue_model_toolkit/dialogue_general_understanding')
 
 from bert import BertConfig, BertModel 
 from create_model import create_model
