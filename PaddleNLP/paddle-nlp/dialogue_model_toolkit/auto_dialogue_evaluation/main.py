@@ -19,7 +19,7 @@ try:
 except ImportError as e:
     import pickle  #python 3
 
-sys.path.append('../models/dialogue_model_toolkit/auto_dialogue_evaluation/')
+sys.path.append('../../models/dialogue_model_toolkit/auto_dialogue_evaluation/')
 from net import Network
 import config
 
