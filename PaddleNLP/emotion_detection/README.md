@@ -32,12 +32,13 @@ sh download_data.sh
 
 我们开源了基于海量数据训练好的对话情绪识别模型（基于TextCNN、ERNIE等模型训练），可供用户直接使用，我们提供两种下载方式。
 
-**方式一**：基于PaddleHub命令行工具（PaddleHub[安装方式](https://github.com/PaddlePaddle/PaddleHub)
+**方式一**：基于PaddleHub命令行工具（PaddleHub[安装方式](https://github.com/PaddlePaddle/PaddleHub)）
 ```shell
 mkdir models && cd models
 hub download emotion_detection_textcnn --output_path ./
 hub download emotion_detection_ernie_finetune --output_path ./
-tar xvf *.tar.gz
+tar xvf emotion_detection_textcnn-1.0.0.tar.gz
+tar xvf emotion_detection_ernie_finetune-1.0.0.tar.gz
 ```
 
 **方式二**：直接下载脚本
