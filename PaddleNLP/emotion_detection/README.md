@@ -116,7 +116,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 可以根据自己的需求，组建自定义的模型，具体方法如下所示：
 
 1. 定义自己的网络结构 
-用户可以在 ```models/classify/nets.py``` 中，定义自己的模型，只需要增加新的函数即可。假设用户自定义的函数名为```user_net```
+用户可以在 ```models/classification/nets.py``` 中，定义自己的模型，只需要增加新的函数即可。假设用户自定义的函数名为```user_net```
 2. 更改模型配置
 在 ```config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```
 3. 模型训练，运行训练、评估、预测脚本即可（具体方法同上）
