@@ -25,7 +25,7 @@ from preprocess.ernie import task_reader
 from models.representation.ernie import ErnieConfig
 from models.representation.ernie import ernie_encoder
 #from models.representation.ernie import ernie_pyreader
-from models.seq_lab import nets
+from models.sequence_labeling import nets
 import utils
 
 

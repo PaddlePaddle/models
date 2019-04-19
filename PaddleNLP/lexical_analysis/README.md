@@ -119,7 +119,7 @@ sh run_ernie.sh train
 ```
 
 ### 如何组建自己的模型
-如果您需要定制自己的词法分析模型，可以在 `../models/seq_lab/nets.py` 中添加自己的网络结构，具体接口要求可以参考默认的 `lex_net` 函数。 
+如果您需要定制自己的词法分析模型，可以在 `../models/sequence_labeling/nets.py` 中添加自己的网络结构，具体接口要求可以参考默认的 `lex_net` 函数。 
 
 ## 4. 其他
 ### 在论文中引用 LAC

@@ -23,7 +23,7 @@ import reader
 import utils
 
 sys.path.append("../")
-from models.seq_lab import nets
+from models.sequence_labeling import nets
 
 
 # yapf: disable
