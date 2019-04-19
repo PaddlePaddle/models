@@ -16,7 +16,7 @@ import sys
 import paddle
 import paddle.fluid as fluid
 
-sys.path.append("../models/classify/")
+sys.path.append("../models/classification/")
 sys.path.append("..")
 print(sys.path)
 
@@ -81,13 +81,13 @@ def create_model(args,
                  embeddings,
                  labels,
                  is_prediction=False):
-    
+
     """
     Create Model for sentiment classification based on ERNIE encoder
     """
     sentence_embeddings = embeddings["sentence_embeddings"]
     token_embeddings = embeddings["token_embeddings"]
-    
+
     if args.model_type == "ernie_base":
         ce_loss, probs = ernie_base_net(sentence_embeddings, labels,
             args.num_labels)
@@ -98,14 +98,14 @@ def create_model(args,
 
     else:
         raise ValueError("Unknown network type!")
-    
+
     if is_prediction:
         return probs
     loss = fluid.layers.mean(x=ce_loss)
 
     num_seqs = fluid.layers.create_tensor(dtype='int64')
     accuracy = fluid.layers.accuracy(input=probs, label=labels, total=num_seqs)
-    
+
     return loss, accuracy, num_seqs
 
 
@@ -177,7 +177,7 @@ def main(args):
         max_seq_len=args.max_seq_len,
         do_lower_case=args.do_lower_case,
         random_seed=args.random_seed)
-    
+
     if not (args.do_train or args.do_val or args.do_infer):
         raise ValueError("For args `do_train`, `do_val` and `do_infer`, at "
                          "least one of them must be True.")
@@ -252,9 +252,9 @@ def main(args):
                 embeddings,
                 labels=labels,
                 is_prediction=False)
-    
+
         test_prog = test_prog.clone(for_test=True)
-    
+
     if args.do_infer:
         infer_prog = fluid.Program()
         with fluid.program_guard(infer_prog, startup_prog):
@@ -265,7 +265,7 @@ def main(args):
 
                 # get ernie_embeddings
                 embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
-                
+
                 probs = create_model(args,
                                     embeddings,
                                     labels=labels,
@@ -310,7 +310,7 @@ def main(args):
                     fetch_list = [loss.name, accuracy.name, num_seqs.name]
                 else:
                     fetch_list = []
-                
+
                 outputs = train_exe.run(program=train_program, fetch_list=fetch_list, return_numpy=False)
                 if steps % args.skip_steps == 0:
                     np_loss, np_acc, np_num_seqs = outputs

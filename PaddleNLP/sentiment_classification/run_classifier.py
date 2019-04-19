@@ -12,7 +12,7 @@ import argparse
 import numpy as np
 import multiprocessing
 import sys
-sys.path.append("../models/classify/")
+sys.path.append("../models/classification/")
 
 from nets import bow_net
 from nets import lstm_net
@@ -67,11 +67,11 @@ def create_model(args,
                  senta_config,
                  num_labels,
                  is_inference=False):
-    
+
     """
     Create Model for sentiment classification
     """
-    
+
     pyreader = fluid.layers.py_reader(
         capacity=16,
         shapes=([-1, 1], [-1, 1]),
@@ -79,7 +79,7 @@ def create_model(args,
         lod_levels=(1, 0),
         name=pyreader_name,
         use_double_buffer=False)
-    
+
     if senta_config['model_type'] == "bilstm_net":
         network = bilstm_net
     elif senta_config['model_type'] == "bow_net":
@@ -92,13 +92,13 @@ def create_model(args,
         network = gru_net
     else:
         raise ValueError("Unknown network type!")
-    
+
     if is_inference:
         data, label = fluid.layers.read_file(pyreader)
         probs = network(data, None, senta_config["vocab_size"], is_infer=is_inference)
         print("create inference model...")
         return pyreader, probs
-    
+
     data, label = fluid.layers.read_file(pyreader)
     ce_loss, probs = network(data, label, senta_config["vocab_size"], is_infer=is_inference)
     loss = fluid.layers.mean(x=ce_loss)
@@ -173,8 +173,8 @@ def main(args):
                                       vocab_path=args.vocab_path,
                                       random_seed=args.random_seed)
     num_labels = len(processor.get_labels())
-    
-    
+
+
     if not (args.do_train or args.do_val or args.do_infer):
         raise ValueError("For args `do_train`, `do_val` and `do_infer`, at "
                          "least one of them must be True.")
@@ -228,7 +228,7 @@ def main(args):
                     senta_config=senta_config,
                     num_labels=num_labels,
                     is_inference=False)
-    
+
         test_prog = test_prog.clone(for_test=True)
 
     if args.do_infer:
@@ -282,7 +282,7 @@ def main(args):
                     fetch_list = [loss.name, accuracy.name, num_seqs.name]
                 else:
                     fetch_list = []
-                
+
                 outputs = train_exe.run(program=train_program, fetch_list=fetch_list, return_numpy=False)
                 #print("finished one step")
                 if steps % args.skip_steps == 0:
