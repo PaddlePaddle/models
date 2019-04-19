@@ -2,6 +2,7 @@
 
 - [Youtube-8M](#Youtube-8M数据集)
 - [Kinetics](#Kinetics数据集)
+- [Non-local](#Non-local)
 
 ## Youtube-8M数据集
 这里用到的是YouTube-8M 2018年更新之后的数据集。使用官方数据集，并将TFRecord文件转化为pickle文件以便PaddlePaddle使用。Youtube-8M数据集官方提供了frame-level和video-level的特征，这里只需使用到frame-level的特征。
@@ -117,3 +118,6 @@ ActivityNet官方提供了Kinetics的下载工具，具体参考其[官方repo ]
 
 即可生成相应的文件列表，train.list和val.list的每一行表示一个pkl文件的绝对路径。
 
+## Non-local
+
+Non-local模型也使用kinetics数据集，不过其数据处理方式和其他模型不一样，详细内容见[Non-local数据说明](./nonlocal/README.md)

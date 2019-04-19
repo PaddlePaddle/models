@@ -100,6 +100,12 @@ def filter_corpus(args):
             id_counts.append(count)
             word_all_count += count
 
+    #write word2id file
+    print("write word2id file to : " + args.dict_path + "_word_to_id_")
+    with io.open(
+            args.dict_path + "_word_to_id_", 'w+', encoding='utf-8') as fid:
+        for k, v in word_to_id_.items():
+            fid.write(k + " " + str(v) + '\n')
     #filter corpus and convert id
     if not os.path.exists(args.output_corpus_dir):
         os.makedirs(args.output_corpus_dir)

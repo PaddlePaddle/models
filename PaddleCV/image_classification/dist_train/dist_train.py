@@ -68,6 +68,9 @@ def parse_args():
     add_arg('reduce_strategy',    str,  "allreduce",        "Choose from reduce or allreduce.")
     add_arg('skip_unbalanced_data', bool, False,            "Skip data not if data not balanced on nodes.")
     add_arg('enable_sequential_execution', bool, False,            "Skip data not if data not balanced on nodes.")
+    #for dgc
+    add_arg('enable_dgc', bool, False,            "Skip data not if data not balanced on nodes.")
+    add_arg('rampup_begin_step', int, 5008,            "Skip data not if data not balanced on nodes.")
     # yapf: enable
     args = parser.parse_args()
     return args
@@ -157,6 +160,17 @@ def build_program(is_train, main_prog, startup_prog, args):
                             boundaries=bd, values=lr),
                         warmup_steps, start_lr, end_lr),
                     momentum=0.9)
+
+                if args.enable_dgc:
+                    optimizer = fluid.optimizer.DGCMomentumOptimizer(
+                        learning_rate=utils.learning_rate.lr_warmup(
+                            fluid.layers.piecewise_decay(
+                                boundaries=bd, values=lr),
+                            warmup_steps, start_lr, end_lr),
+                        momentum=0.9,
+                        sparsity=[0.999, 0.999],
+                        rampup_begin_step=args.rampup_begin_step)
+
                 if args.fp16:
                     params_grads = optimizer.backward(avg_cost)
                     master_params_grads = utils.create_master_params_grads(
@@ -224,7 +238,7 @@ def train_parallel(args):
     if args.update_method == "pserver":
         train_prog, startup_prog = pserver_prepare(args, train_prog, startup_prog)
     elif args.update_method == "nccl2":
-        nccl2_prepare(args, startup_prog)
+        nccl2_prepare(args, startup_prog, main_prog=train_prog)
 
     if args.dist_env["training_role"] == "PSERVER":
         run_pserver(train_prog, startup_prog)
@@ -247,11 +261,16 @@ def train_parallel(args):
 
     strategy = fluid.ExecutionStrategy()
     strategy.num_threads = args.num_threads
+    # num_iteration_per_drop_scope indicates how
+    #  many iterations to clean up the temp variables which
+    #  is generated during execution. It may make the execution faster,
+    #  because the temp variable's shape maybe the same between two iterations
+    strategy.num_iteration_per_drop_scope = 30
+
     build_strategy = fluid.BuildStrategy()
     build_strategy.enable_inplace = False
     build_strategy.memory_optimize = False
     build_strategy.enable_sequential_execution = bool(args.enable_sequential_execution)
-
     
     if args.reduce_strategy == "reduce":
         build_strategy.reduce_strategy = fluid.BuildStrategy(

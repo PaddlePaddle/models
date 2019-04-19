@@ -74,7 +74,7 @@ def optimizer_setting(params):
         batch_size = ls["batch_size"]
         l2_decay = params["l2_decay"]
         momentum_rate = params["momentum_rate"]
-	step = int(math.ceil(float(total_images) / batch_size))
+        step = int(math.ceil(float(total_images) / batch_size))
         lr = params["lr"]
         num_epochs = params["num_epochs"]
 
@@ -92,7 +92,7 @@ def optimizer_setting(params):
         batch_size = ls["batch_size"]
         l2_decay = params["l2_decay"]
         momentum_rate = params["momentum_rate"]
-	step = int(math.ceil(float(total_images) / batch_size))
+        step = int(math.ceil(float(total_images) / batch_size))
         lr = params["lr"]
         num_epochs = params["num_epochs"]
 
@@ -323,6 +323,7 @@ def train(args):
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
 
+    # use_ngraph is for CPU only, please refer to README_ngraph.md for details
     use_ngraph = os.getenv('FLAGS_use_ngraph')
     if not use_ngraph:
         train_exe = fluid.ParallelExecutor(

@@ -1,4 +1,3 @@
-﻿
 
 运行本目录下的程序示例需要使用PaddlePaddle develop最新版本。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
 
@@ -156,11 +155,12 @@ env CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --parallel=True
 通过以下命令调用评估脚本用指定数据集对模型进行评估：
 
 ```
-env CUDA_VISIBLE_DEVICE=0 python eval.py \
+env CUDA_VISIBLE_DEVICES=0 python eval.py \
     --model_path="./models/model_0" \
     --input_images_dir="./eval_data/images/" \
-    --input_images_list="./eval_data/eval_list\" \
+    --input_images_list="./eval_data/eval_list"
 ```
+
 
 执行`python train.py --help`可查看参数详细说明。
 
@@ -170,7 +170,7 @@ env CUDA_VISIBLE_DEVICE=0 python eval.py \
 从标准输入读取一张图片的路径，并对齐进行预测：
 
 ```
-env CUDA_VISIBLE_DEVICE=0 python infer.py \
+env CUDA_VISIBLE_DEVICES=0 python infer.py \
     --model_path="models/model_00044_15000"
 ```
 
@@ -193,7 +193,7 @@ result: [2067 2067 8187 8477 5027 7191 2431 1462]
 从文件中批量读取图片路径，并对其进行预测：
 
 ```
-env CUDA_VISIBLE_DEVICE=0 python infer.py \
+env CUDA_VISIBLE_DEVICES=0 python infer.py \
     --model_path="models/model_00044_15000" \
     --input_images_list="data/test.list"
 ```
@@ -204,3 +204,5 @@ env CUDA_VISIBLE_DEVICE=0 python infer.py \
 |- |:-: |
 |[ocr_ctc_params](https://paddle-ocr-models.bj.bcebos.com/ocr_ctc.zip) | 22.3% |
 |[ocr_attention_params](https://paddle-ocr-models.bj.bcebos.com/ocr_attention.zip) | 15.8%|
+
+>在本文示例中，均可通过修改`CUDA_VISIBLE_DEVICES`改变当前任务使用的显卡号。

@@ -1,5 +1,5 @@
 # 深度度量学习
-度量学习是一种为样本对学习具有区分性特征的方法，目的是在特征空间中，让同一个类别的样本具有较小的特征距离，不同类的样本具有较大的特征距离。随着深度学习技术的发展，基于深度神经网络的度量学习方法已经在许多视觉任务上提升了很大的性能，例如：人脸识别、人脸校验、行人重识别和图像检索等等。在本章节，介绍在PaddlePaddle Fluid里实现的几种度量学习方法和使用方法，具体包括[数据准备](#数据准备)，[模型训练](#模型训练)，[模型微调](#模型微调)，[模型评估](#模型评估)，[模型预测](#模型预测)。
+度量学习是一种对样本对学习区分性特征的方法，目的是在特征空间中，让同一个类别的样本具有较小的特征距离，不同类的样本具有较大的特征距离。随着深度学习技术的发展，基于深度神经网络的度量学习方法已经在许多视觉任务上提升了很大的性能，例如：人脸识别、人脸校验、行人重识别和图像检索等等。在本章节，介绍在PaddlePaddle Fluid里实现的几种度量学习方法和使用方法，具体包括[数据准备](#数据准备)，[模型训练](#模型训练)，[模型微调](#模型微调)，[模型评估](#模型评估)，[模型预测](#模型预测)。
 
 ---
 ## 简介
@@ -13,7 +13,7 @@
 
 ## 安装
 
-运行本章节代码需要在PaddlePaddle Fluid v0.14.0 或更高的版本环境。如果你的设备上的PaddlePaddle版本低于v0.14.0，请按照此[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)进行安装和跟新。
+运行本章节代码需要在PaddlePaddle Fluid v0.14.0 或更高的版本环境。如果你的设备上的PaddlePaddle版本低于v0.14.0，请按照此[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html)进行安装和跟新。
 
 ## 数据准备
 
@@ -25,7 +25,7 @@ sh download_sop.sh
 
 ## 模型训练 
 
-为了训练度量学习模型，我们需要一个神经网络模型作为骨架模型（如ResNet50）和度量学习代价函数来进行优化。我们首先使用 softmax 或者 arcmargin 来进行训练，然后使用其它的代价函数来进行微调，例如：triplet，quadruplet和eml。下面是一个使用arcmargin训练的例子：
+为了训练度量学习模型，我们需要一个神经网络模型作为骨架模型（如[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.zip)）和度量学习代价函数来进行优化。我们首先使用 softmax 或者 arcmargin 来进行训练，然后使用其它的代价函数来进行微调，例如：triplet，quadruplet和eml。下面是一个使用arcmargin训练的例子：
 
 
 ```

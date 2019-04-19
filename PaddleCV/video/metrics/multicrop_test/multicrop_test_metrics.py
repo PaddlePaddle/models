@@ -63,6 +63,7 @@ class MetricsCalculator():
 
     def accumulate(self, loss, pred, labels):
         labels = labels.astype(int)
+        labels = labels[:, 0]
         for i in range(pred.shape[0]):
             probs = pred[i, :].tolist()
             vid = labels[i]
@@ -81,6 +82,8 @@ class MetricsCalculator():
             evaluate_results(self.results, self.filename_gt, self.dataset_size, \
                              self.num_classes, self.num_test_clips)
         # save temporary file
+        if not os.path.isdir(self.checkpoint_dir):
+            os.makedirs(self.checkpoint_dir)
         pkl_path = os.path.join(self.checkpoint_dir, "results_probs.pkl")
 
         with open(pkl_path, 'w') as f:
@@ -166,28 +169,6 @@ def evaluate_results(results, filename_gt, test_dataset_size, num_classes,
     # compute accuracy
     accuracy = 0
     accuracy_top5 = 0
-    for i in range(sample_num):
-        prob = probs[i]
-
-        # top-1
-        idx = prob.argmax()
-        if idx == gt_labels[i] and counts[i] > 0:
-            accuracy = accuracy + 1
-
-        ids = np.argsort(prob)[::-1]
-        for j in range(5):
-            if ids[j] == gt_labels[i] and counts[i] > 0:
-                accuracy_top5 = accuracy_top5 + 1
-                break
-
-    accuracy = float(accuracy) / float(sample_num)
-    accuracy_top5 = float(accuracy_top5) / float(sample_num)
-
-    logger.info('-' * 80)
-    logger.info('top-1 accuracy: {:.2f} percent'.format(accuracy * 100))
-    logger.info('top-5 accuracy: {:.2f} percent'.format(accuracy_top5 * 100))
-    logger.info('-' * 80)
-
     for i in range(sample_num):
         prob = probs[i]
 

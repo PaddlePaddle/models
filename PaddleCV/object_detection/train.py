@@ -179,8 +179,12 @@ def train(args,
                            predicate=if_exist)
 
     if parallel:
+        loss.persistable = True
+        build_strategy = fluid.BuildStrategy()
+        build_strategy.enable_inplace = True
+        build_strategy.memory_optimize = True
         train_exe = fluid.ParallelExecutor(main_program=train_prog,
-            use_cuda=use_gpu, loss_name=loss.name)
+            use_cuda=use_gpu, loss_name=loss.name, build_strategy=build_strategy)
     train_reader = reader.train(data_args,
                                 train_file_list,
                                 batch_size_per_device,
