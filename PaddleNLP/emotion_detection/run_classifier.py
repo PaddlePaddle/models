@@ -17,7 +17,7 @@ import paddle
 import paddle.fluid as fluid
 import numpy as np
 
-from models.classify import nets
+from models.classification import nets
 import reader
 import config
 import utils
