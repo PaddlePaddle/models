@@ -1,0 +1,3 @@
+--index-url http://pip.baidu.com/root/baidu/+simple/
+--trusted-host pip.baidu.com
+-e .

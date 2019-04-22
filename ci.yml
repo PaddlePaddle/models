@@ -1,0 +1,18 @@
+Global:
+    tool : build_submitter
+
+Default:
+    profile : [publish]
+
+Profiles:
+    - profile:
+      name : dev
+      env: cmc_standard
+      command : python setup.py bdist_wheel
+      release : true
+
+    - profile:
+      name :  publish
+      env: cmc_standard
+      command : python setup.py bdist_wheel
+      release : true
