@@ -1,9 +1,21 @@
-[submodule "fluid/PaddleNLP/LAC"]
-	path = fluid/PaddleNLP/LAC
+[submodule "PaddleNLP/LAC"]
+	path = PaddleNLP/LAC
 	url = https://github.com/baidu/lac.git
-[submodule "fluid/PaddleNLP/SimNet"]
-	path = fluid/PaddleNLP/SimNet
+[submodule "PaddleNLP/SimNet"]
+	path = PaddleNLP/SimNet
 	url = https://github.com/baidu/AnyQ.git
-[submodule "fluid/PaddleNLP/Senta"]
-	path = fluid/PaddleNLP/Senta
+[submodule "PaddleNLP/Senta"]
+	path = PaddleNLP/Senta
 	url = https://github.com/baidu/Senta.git
+[submodule "PaddleNLP/LARK"]
+	path = PaddleNLP/LARK
+	url = https://github.com/PaddlePaddle/LARK.git
+[submodule "PaddleNLP/knowledge-driven-dialogue"]
+	path = PaddleNLP/knowledge-driven-dialogue
+	url = https://github.com/baidu/knowledge-driven-dialogue
+[submodule "PaddleNLP/language_representations_kit"]
+	path = PaddleNLP/language_representations_kit
+	url = https://github.com/PaddlePaddle/LARK
+[submodule "PaddleNLP/knowledge_driven_dialogue"]
+	path = PaddleNLP/knowledge_driven_dialogue
+	url = https://github.com/baidu/knowledge-driven-dialogue/

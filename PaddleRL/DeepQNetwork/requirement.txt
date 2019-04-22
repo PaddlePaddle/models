@@ -1,0 +1,5 @@
+numpy
+gym
+tqdm
+opencv-python
+paddlepaddle-gpu>=1.0.0
