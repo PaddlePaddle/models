@@ -1,0 +1,18 @@
+{
+    "net": {
+        "module_name": "bow",
+        "class_name": "BOW",
+        "emb_dim": 128, 
+        "bow_dim": 128
+    },
+    "loss": {
+        "module_name": "softmax_cross_entropy_loss",
+        "class_name": "SoftmaxCrossEntropyLoss"
+    },
+    "optimizer": {
+        "class_name": "SGDOptimizer",
+        "learning_rate" : 0.001
+    },
+    "task_mode": "pointwise",
+    "model_path": "bow_pointwise"
+}
