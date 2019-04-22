@@ -155,7 +155,7 @@ Inference is used to get prediction score or image features based on trained mod
         --image_name=000000000139.jpg \
         --draw_threshold=0.5
 
-Inference speed:
+Inference speed（Tesla P40）:
 
 
 |   input size  | 608x608 | 416x416 | 320x320 |
