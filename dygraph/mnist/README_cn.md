@@ -15,7 +15,7 @@
 ## 训练
 教程中使用`paddle.dataset.mnist`数据集作为训练数据，可以通过如下的方式启动训练：
 ```
-env CUDA_VISIBLE_DEVICES=0 python train.py
+env CUDA_VISIBLE_DEVICES=0 python mnist_dygraph.py
 ```
 
 ## 输出
