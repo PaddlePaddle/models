@@ -62,6 +62,17 @@ sh run.sh eval
 # ERNIE、ERNIE+BI-LSTM模型
 sh run_ernie.sh eval
 ```
+注：如果用户需要使用预训练的BI-LSTM模型，需要修改run.sh和senta_config.json中的配置。
+run.sh脚本中需要修改如下：
+```shell
+MODEL_PATH=senta_model/bilstm_model/
+--vocab_path $MODEL_PATH/word_dict.txt
+--init_checkpoint $MODEL_PATH/params
+```
+senta_config.json中需要修改如下：
+```shell
+"vocab_size": 1256606
+```
 
 #### 模型训练
 
