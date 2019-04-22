@@ -157,7 +157,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 用户可以在 ```models/classification/nets.py``` 中，定义自己的模型，只需要增加新的函数即可。假设用户自定义的函数名为```user_net```
 2. 更改模型配置
 在 ```senta_config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```
-3. 模型训练，运行训练、评估、预测脚本即可（具体方法同上）
+3. 模型训练、评估、预测需要在 run.sh 、run_ernie.sh 中需要将模型、数据、词典路径等配置进行修改
 
 #### 如何基于百度开源模型进行Finetune
 用户可基于百度开源模型在自有数据上实现Finetune训练，以期获得更好的效果提升；如『简介』部分中，我们基于百度开源模型在ChnSentiCorp数据集上Finetune后可以得到更好的效果，具体模型Finetuen方法如下所示，如果用户基于开源BI-LSTM模型进行Finetune，需要修改run.sh和senta_config.json文件；
