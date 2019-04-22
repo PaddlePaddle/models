@@ -2,7 +2,7 @@
 
 情感倾向分析（Sentiment Classification，简称Senta）针对带有主观描述的中文文本，可自动判断该文本的情感极性类别并给出相应的置信度。情感类型分为积极、消极。情感倾向分析能够帮助企业理解用户消费习惯、分析热点话题和危机舆情监控，为企业提供有利的决策支持。可通过[AI开放平台-情感倾向分析](http://ai.baidu.com/tech/nlp_apply/sentiment_classify) 线上体验。
 
-情感是人类的一种高级智能行为，为了识别文本的情感倾向，需要深入的语义建模。另外，不同领域（如餐饮、体育）在情感的表达各不相同，因而需要有大规模覆盖各个领域的数据进行模型训练。为此，我们通过基于深度学习的语义模型和大规模数据挖掘解决上述两个问题。效果上，我们基于开源情感倾向分类数据集ChnSentiCorp进行评测；此外，我们还开源了百度基于海量数据训练好的模型，该模型在ChnSentiCorp数据集上fine-tune之后，可以得到更好的效果。具体数据如下所示：
+情感是人类的一种高级智能行为，为了识别文本的情感倾向，需要深入的语义建模。另外，不同领域（如餐饮、体育）在情感的表达各不相同，因而需要有大规模覆盖各个领域的数据进行模型训练。为此，我们通过基于深度学习的语义模型和大规模数据挖掘解决上述两个问题。效果上，我们基于开源情感倾向分类数据集ChnSentiCorp进行评测；此外，我们还开源了百度基于海量数据训练好的模型，该模型在ChnSentiCorp数据集上fine-tune之后（基于开源模型进行Finetune的方法请见下面章节），可以得到更好的效果。具体数据如下所示：
  
 | 模型 | dev | test | 模型（finetune） |dev | test | 
 | :------| :------ | :------ | :------ |:------ | :------
@@ -11,7 +11,7 @@
 | LSTM | 90.0% | 91.0% | LSTM |93.3% | 92.2% |
 | GRU | 90.0% | 89.8% | GRU |93.3% | 93.2% |
 | BI-LSTM | 88.5% | 88.3% | BI-LSTM |92.8% | 91.4% |
-| ERNIE | 95.1% | 95.6% | ERNIE |95.4% | 95.5% |
+| ERNIE | 95.1% | 95.4% | ERNIE |95.4% | 95.5% |
 | ERNIE+BI-LSTM | 95.3% | 95.2% | ERNIE+BI-LSTM |95.7% | 95.6% |
 
 
@@ -26,7 +26,7 @@ python版本依赖python 2.7
 克隆数据集代码库到本地
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
-cd sentiment_classification
+cd models/PaddleNLP/sentiment_classification 
 ```
 
 #### 数据准备
@@ -61,6 +61,24 @@ tar -zxvf sentiment_classification-1.0.0.tar.gz
 sh run.sh eval
 # ERNIE、ERNIE+BI-LSTM模型
 sh run_ernie.sh eval
+```
+注：如果用户需要使用预训练的BI-LSTM模型，需要修改run.sh和senta_config.json中的配置。run.sh脚本修改如下：
+```shell
+MODEL_PATH=senta_model/bilstm_model/
+# 在eval()函数中，修改如下参数：
+--vocab_path $MODEL_PATH/word_dict.txt
+--init_checkpoint $MODEL_PATH/params
+```
+senta_config.json中需要修改如下：
+```shell
+# vob_size大小对应为上面senta_model/bilstm_model//word_dict.txt，词典大小
+"vocab_size": 1256606
+```
+如果用户需要使用预训练的ERNIE+BI-LSTM模型，需要修改run_ernie.sh中的配置如下：
+```shell
+# 在eval()函数中，修改如下参数：
+--init_checkpoint=senta_model/ernie_bilstm_model/
+--model_type "ernie_bilstm"
 ```
 
 #### 模型训练
@@ -139,7 +157,27 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 用户可以在 ```models/classification/nets.py``` 中，定义自己的模型，只需要增加新的函数即可。假设用户自定义的函数名为```user_net```
 2. 更改模型配置
 在 ```senta_config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```
-3. 模型训练，运行训练、评估、预测脚本即可（具体方法同上）
+3. 模型训练、评估、预测需要在 run.sh 、run_ernie.sh 中将模型、数据、词典路径等配置进行修改
+
+#### 如何基于百度开源模型进行Finetune
+用户可基于百度开源模型在自有数据上实现Finetune训练，以期获得更好的效果提升；如『简介』部分中，我们基于百度开源模型在ChnSentiCorp数据集上Finetune后可以得到更好的效果，具体模型Finetuen方法如下所示，如果用户基于开源BI-LSTM模型进行Finetune，需要修改run.sh和senta_config.json文件；
+run.sh脚本修改如下：
+```shell
+# 在train()函数中，增加--init_checkpoint选项；修改--vocab_path
+--init_checkpoint=senta_model/bilstm_model/params
+--vocab_path=senta_model/bilstm_model/word_dict.txt
+```
+senta_config.json中需要修改如下：
+```shell
+# vob_size大小对应为上面senta_model/bilstm_model//word_dict.txt，词典大小
+"vocab_size": 1256606
+```
+如果用户基于开源ERNIE+BI-LSTM模型进行Finetune，需要更新run_ernie.sh脚本，具体修改如下：
+```shell
+# 在train()函数中，修改--init_checkpoint选项；修改--model_type
+--init_checkpoint=senta_model/ernie_bilstm_model
+--model_type="ernie_bilstm"
+```
 
 ## 如何贡献代码
 

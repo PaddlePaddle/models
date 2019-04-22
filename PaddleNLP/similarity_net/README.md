@@ -19,7 +19,7 @@ python版本依赖python 2.7
 克隆工具集代码库到本地
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
-cd similarity_net
+cd models/PaddleNLP/similarity_net
 ```
 #### 数据准备
 下载经过预处理的数据，运行命令后，data目录下会存在训练集数据示例、集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。
@@ -52,7 +52,7 @@ sh evaluate_unicom.sh
 ```
 用户也可以指定./run.sh中的TEST_DATA_PATH的值，通过下列命令评估自己指定的测试集。
 ```shell
-sh run.sh evaluate  
+sh run.sh eval
 ```
 
 #### 推测
@@ -161,6 +161,7 @@ ii. 更改模型配置
 用户仿照config中的文件生成自定义模型的配置文件。
 
 用户需要保留配置文件中的net、loss、optimizer、task_mode和model_path字段。net为用户自定义的模型参数，task_mode表示训练模式，为pairwise或pointwise，要与训练命令中的--task_mode命令保持一致，model_path为模型保存路径，loss和optimizer依据自定义模型的需要仿照config下的其他文件填写。
+
 iii.模型训练，运行训练、评估、预测脚本即可（具体方法同上）。
 
 ## 其他

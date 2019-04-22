@@ -1,9 +1,7 @@
-# 中文词法分析（LAC）
+# 中文词法分析
 
 ## 1. 简介
-Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型，整体性地完成中文分词、词性标注、专名识别任务。
-
-LAC 基于一个堆叠的双向 GRU 结构，在长文本上准确复刻了百度 AI 开放平台上的词法分析算法。效果方面，分词、词性标注、专名识别的整体准确率 88.0%，召回率 88.7%，F1 值 88.3%。此外，我们在百度开放的 ERNIE 模型上 finetune，效果可以提升到准确率 92.0%，召回率 92.0%，F1 值 92.0%；
+Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型，能整体性地完成中文分词、词性标注、专名识别任务。效果方面，分词、词性标注、专名识别的整体准确率 88.0%，召回率 88.7%，F1 值 88.4%。此外，我们在百度开放的 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE) 模型上 finetune，效果可以提升到准确率 92.0%，召回率 92.0%，F1 值 92.0%。可通过 [AI开放平台-词法分析](http://ai.baidu.com/tech/nlp/lexical) 线上体验。
 
 ## 2. 快速开始
 本项目依赖 Paddle 1.3.2，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
@@ -19,6 +17,18 @@ sh downloads.sh
 ./model_baseline/ 	# lexical analysis 模型文件
 ./model_finetuned/	# lexical analysis 在 ERNIE 上 finetune 的模型文件
 ./pretrained/		# ERNIE 发布的 pretrained 模型
+```
+
+模型文件也可以很方便地通过 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub) 的方式来获取，参考下面的命令示例：
+```bash
+# install paddlehub
+pip install paddlehub
+
+# download baseline model
+hub download lexical_analysis
+
+# download ERNIE finetuned model
+hub download lexical_analysis_finetuned
 ```
 
 我们基于百度的海量数据训练了一个词法分析的模型，可以直接用这个模型对开放的测试集 ./data/test.tsv 进行验证，
@@ -108,8 +118,8 @@ sh run_ernie.sh train
 ├── README.md                           # 本文档
 ├── conf/                               # 词典目录
 ├── data/                               # 存放数据集的目录
-├── downloads.sh                        # 用于下载数据、模型和词典的脚本
-├── gru-crf-model.png                   # REAEME 用到的模型图片
+├── downloads.sh                        # 用于下载数据和模型的脚本
+├── gru-crf-model.png                   # README 用到的模型图片
 ├── reader.py                           # 文件读取相关函数
 ├── run_ernie_sequence_labeling.py      # 用于 finetune ERNIE 的代码
 ├── run_ernie.sh                        # 启用上面代码的脚本

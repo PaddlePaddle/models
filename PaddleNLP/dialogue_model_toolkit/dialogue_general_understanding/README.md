@@ -43,7 +43,16 @@ SWDA：Switchboard Dialogue Act Corpus;
 
 #### &ensp;&ensp;b、安装代码
 
+&ensp;&ensp;&ensp;&ensp;克隆数据集代码库到本地
+
+```
+git clone https://github.com/PaddlePaddle/models.git
+cd models/PaddleNLP/dialogue_model_toolkit/dialogue_general_understanding
+```
+
 #### &ensp;&ensp;c、环境依赖
+
+&ensp;&ensp;&ensp;&ensp;python版本依赖python 2.7
 
 ### 2、开始第一次模型调用
 
@@ -74,6 +83,15 @@ sh download_pretrain_model.sh
 ```
 
 &ensp;&ensp;&ensp;&ensp;ii、dialogue_general_understanding模块内对话相关模型下载：
+
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;方式一：基于PaddleHub命令行工具（PaddleHub安装方式 https://github.com/PaddlePaddle/PaddleHub)
+
+```
+hub download dmtk_models --output_path ./
+tar -xvf dmtk_models_1.0.0.tar.gz
+```
+
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;方式一：直接下载
 
 ```
 sh download_models.sh
