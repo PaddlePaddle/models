@@ -20,8 +20,22 @@
 #### 环境依赖
 ### 开始第一次模型调用
 #### 数据准备
-下载经过预处理的数据和预训练好的pairwise模型（基于bow模型训练），运行该脚本之后，data目录下会存在训练集数据示例、集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。模型会保存在/model_files/simnet_bow_pairwise_pretrained_model/下。
-> sh download.sh
+下载经过预处理的数据，运行命令后，data目录下会存在训练集数据示例、集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。
+> wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_dataset-1.0.0.tar.gz
+> tar xzf simnet_dataset-1.0.0.tar.gz
+#### 模型准备
+我们开源了基于大规模数据训练好的pairwise模型（基于bow模型训练），我们提供两种下载方式，模型保在./model_files/simnet_bow_pairwise_pretrained_model/下。
+
+#### 方式一：基于PaddleHub命令行工具（PaddleHub[安装方式](https://github.com/PaddlePaddle/PaddleHub)）
+> mkdir model_files
+> hub download simnet_bow_pairwise --output_path ./
+> tar xzf simnet_bow-pairwise-1.0.0.tar.gz -C ./model_files
+
+#### 方式二：直接下载
+> mkdir model_files
+> wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_bow-pairwise-1.0.0.tar.gz
+> tar xzf simnet_bow-pairwise-1.0.0.tar.gz -C ./model_files
+
 #### 评估
 我们公开了自建的测试集，包括百度知道、ECOM、QQSIM、UNICOM四个数据集，基于上面的预训练模型，用户可以进入evaluate目录下依次执行下列命令获取测试集评估结果。
 > sh evaluate_ecom.sh  
