@@ -40,8 +40,8 @@ function run_train() {
 }
 
 
-function run_test() {
-    echo "testing"
+function run_eval() {
+    echo "evaluating"
     python run_ernie_sequence_labeling.py \
         --ernie_config_path "${ERNIE_PRETRAINED_MODEL_PATH}/ernie_config.json" \
         --init_pretraining_params "${ERNIE_PRETRAINED_MODEL_PATH}/params/" \
@@ -90,8 +90,8 @@ function main() {
         train)
             run_train "$@";
             ;;
-        test)
-            run_test "$@";
+        eval)
+            run_eval "$@";
             ;;
         infer)
             run_infer "$@";

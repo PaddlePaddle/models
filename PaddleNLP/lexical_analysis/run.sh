@@ -32,8 +32,8 @@ function run_train() {
         --word_rep_dict_path ./conf/q2b.dic
 }
 
-function run_test() {
-    echo "testing"
+function run_eval() {
+    echo "evaluating"
     echo "this may cost about 5 minutes if run on you CPU machine"
     python run_sequence_labeling.py \
         --do_train False \
@@ -77,8 +77,8 @@ function main() {
         train)
             run_train "$@";
             ;;
-        test)
-            run_test "$@";
+        eval)
+            run_eval "$@";
             ;;
         infer)
             run_infer "$@";
