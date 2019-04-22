@@ -102,7 +102,7 @@ function main() {
             ;;
         *)
             echo "unsupport command [${cmd}]";
-            echo "Usage: ${BASH_SOURCE} {train|test|infer}";
+            echo "Usage: ${BASH_SOURCE} {train|eval|infer}";
             return 1;
             ;;
     esac
