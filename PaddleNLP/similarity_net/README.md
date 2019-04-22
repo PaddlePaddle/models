@@ -52,7 +52,7 @@ sh evaluate_unicom.sh
 ```
 用户也可以指定./run.sh中的TEST_DATA_PATH的值，通过下列命令评估自己指定的测试集。
 ```shell
-sh run.sh evaluate  
+sh run.sh eval
 ```
 
 #### 推测
