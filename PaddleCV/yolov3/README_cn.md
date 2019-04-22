@@ -165,7 +165,9 @@ Train Loss
         --image_name=000000000139.jpg \
         --draw_threshold=0.5
 
-模型预测速度：
+- 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU预测。
+
+模型预测速度（Tesla P40）：
 
 
 |   input size  | 608x608 | 416x416 | 320x320 |
