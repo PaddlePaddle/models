@@ -156,6 +156,25 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 在 ```senta_config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```
 3. 模型训练，运行训练、评估、预测脚本即可（具体方法同上）
 
+#### 如何基于百度开源模型进行Finetune
+用户可基于百度开源模型在自有数据上实现Finetune训练，以期获得更好的效果提升；如『简介』部分中，我们基于百度开源模型在ChnSentiCorp数据集上Finetune后可以得到更好的效果，具体模型Finetuen方法如下所示，如果用户基于开源BI-LSTM模型进行Finetune，需要修改run.sh和senta_config.json文件；
+run.sh脚本修改如下：
+```shell
+# 在train()函数中，增加--init_checkpoint选项；修改--vocab_path
+--init_checkpoint=senta_model/bilstm_model/params
+--vocab_path=senta_model/bilstm_model/word_dict.txt
+```
+senta_config.json中需要修改如下：
+```shell
+"vocab_size": 1256606
+```
+如果用户基于开源ERNIE+BI-LSTM模型进行Finetune，需要更新run_ernie.sh脚本，具体修改如下：
+```shell
+# 在train()函数中，修改--init_checkpoint选项；修改--model_type
+--init_checkpoint=senta_model/ernie_bilstm_model
+--model_type="ernie_bilstm"
+```
+
 ## 如何贡献代码
 
 如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
