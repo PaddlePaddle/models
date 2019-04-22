@@ -19,7 +19,7 @@ python版本依赖python 2.7
 克隆工具集代码库到本地
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
-cd similarity_net
+cd models/PaddleNLP/similarity_net
 ```
 #### 数据准备
 下载经过预处理的数据，运行命令后，data目录下会存在训练集数据示例、集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。
