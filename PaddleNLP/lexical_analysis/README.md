@@ -1,9 +1,9 @@
 # 中文词法分析
 
 ## 1. 简介
-Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型，整体性地完成中文分词、词性标注、专名识别任务。
+Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型，能整体性地完成中文分词、词性标注、专名识别任务。
 
-LAC 基于一个堆叠的双向 GRU 结构，在长文本上准确复刻了百度 AI 开放平台上的词法分析算法。效果方面，分词、词性标注、专名识别的整体准确率 88.0%，召回率 88.7%，F1 值 88.4%。此外，我们在百度开放的 ERNIE 模型上 finetune，效果可以提升到准确率 92.0%，召回率 92.0%，F1 值 92.0%；
+效果方面，分词、词性标注、专名识别的整体准确率 88.0%，召回率 88.7%，F1 值 88.4%。此外，我们在百度开放的 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE) 模型上 finetune，效果可以提升到准确率 92.0%，召回率 92.0%，F1 值 92.0%。可通过 [AI开放平台-词法分析](http://ai.baidu.com/tech/nlp/lexical) 线上体验。
 
 ## 2. 快速开始
 本项目依赖 Paddle 1.3.2，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
