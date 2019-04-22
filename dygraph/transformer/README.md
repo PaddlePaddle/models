@@ -15,7 +15,7 @@
 
 1. paddle安装
 
-   本项目依赖于 Paddlepaddle Fluid 1.3，请参考安装指南进行安装。
+   本项目依赖于 Paddlepaddle Fluid 1.4.1，请参考安装指南进行安装。
 
 2. 安装代码
 3. 环境依赖
