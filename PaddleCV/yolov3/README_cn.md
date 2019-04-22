@@ -134,7 +134,7 @@ Train Loss
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
 
-若训练时指定'--syncbn=False', 模型评估精度如下:
+若训练时指定`--syncbn=False`, 模型评估精度如下:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
@@ -142,7 +142,7 @@ Train Loss
 | 416x416 | 36.5 | 58.2 | 39.1 |
 | 320x320 | 34.1 | 55.4 | 36.3 |
 
-若训练时指定'--syncbn=True', 模型评估精度如下:
+若训练时指定`--syncbn=True`, 模型评估精度如下:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
