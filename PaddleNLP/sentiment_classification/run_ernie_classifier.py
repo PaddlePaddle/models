@@ -354,6 +354,18 @@ def main(args):
                         evaluate(exe, test_prog, test_pyreader,
                                 [loss.name, accuracy.name, num_seqs.name],
                                 "dev")
+                        
+                        test_pyreader.decorate_tensor_provider(
+                            reader.data_generator(
+                                input_file=args.test_set,
+                                batch_size=args.batch_size,
+                                phase='infer',
+                                epoch=1,
+                                shuffle=False))
+                        
+                        evaluate(exe, test_prog, test_pyreader,
+                                 [loss.name, accuracy.name, num_seqs.name],
+                                 "infer")
 
             except fluid.core.EOFException:
                 save_path = os.path.join(args.checkpoints, "step_" + str(steps))
