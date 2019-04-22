@@ -139,8 +139,31 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 用户可以在 ```models/classification/nets.py``` 中，定义自己的模型，只需要增加新的函数即可。假设用户自定义的函数名为```user_net```
 2. 更改模型配置
 在 ```config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```
-3. 模型训练，运行训练、评估、预测脚本即可（具体方法同上）
+3. 模型训练，运行训练、评估、预测需要在 ```run.sh``` 、```run_ernie.sh``` 中将模型、数据、词典路径等配置进行修改
 
+#### 如何基于百度开源模型进行Finetune
+
+用户可基于百度开源模型在自有数据上实现Finetune训练，以期获得更好的效果提升，具体模型Finetuen方法如下所示，如果用户基于开源TextCNN模型进行Finetune，需要修改```run.sh```和```config.json```文件
+
+```run.sh``` 脚本修改如下：
+```shell
+# 在train()函数中，增加--init_checkpoint选项；修改--vocab_path
+--init_checkpoint ./models/textcnn
+--vocab_path ./data/vocab.txt
+```
+
+```config.json``` 配置修改如下:
+```shell
+# vocab_size为词典大小，对应上面./data/vocab.txt
+"vocab_size": 240465
+```
+
+如果用户基于开源ERNIE模型进行Finetune，需要更新```run_ernie.sh```脚本，具体修改如下：
+```shell
+# 在train()函数中，修改--init_checkpoint选项
+```
+--init_checkpoint ./models/ernie_finetune/params
+```
 ## 如何贡献代码
 
 如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
