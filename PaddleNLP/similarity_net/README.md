@@ -11,7 +11,6 @@
 |   | AUC  | AUC | AUC|正逆序比|Accuracy|
 |BOW_Pairwise|0.6766|0.7308|0.7643|1.5630|0.7517|
 ## 快速开始
-### 安装说明
 #### 版本依赖
 本项目依赖于 Paddlepaddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
 python版本依赖python 2.7
@@ -21,7 +20,6 @@ python版本依赖python 2.7
 git clone https://github.com/PaddlePaddle/models.git
 cd similarity_net
 ```
-### 开始第一次模型调用
 #### 数据准备
 下载经过预处理的数据，运行命令后，data目录下会存在训练集数据示例、集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。
 ```shell
