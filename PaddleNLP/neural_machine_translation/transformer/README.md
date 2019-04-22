@@ -19,10 +19,19 @@
 
 1. paddle安装
 
-   本项目依赖于 Paddlepaddle Fluid 1.3，请参考安装指南进行安装。
+   本项目依赖于 PaddlePaddle Fluid 1.3.1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 2. 安装代码
+
+    克隆数据集代码库到本地
+    ```shell
+    git clone https://github.com/PaddlePaddle/models.git
+    cd models/PaddleNLP/neural_machine_translation/transformer
+    ```
+
 3. 环境依赖
+
+   请参考PaddlePaddle[安装说明](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html)部分的内容
 
 ### 开始第一次模型调用
 

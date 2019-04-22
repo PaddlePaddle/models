@@ -28,7 +28,7 @@ wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_dataset-1.0.0
 tar xzf simnet_dataset-1.0.0.tar.gz
 ```
 #### 模型准备
-我们开源了基于大规模数据训练好的pairwise模型（基于bow模型训练），我们提供两种下载方式，模型保在./model_files/simnet_bow_pairwise_pretrained_model/下。
+我们开源了基于大规模数据训练好的```pairwise```模型（基于bow模型训练），我们提供两种下载方式，模型保在```./model_files/simnet_bow_pairwise_pretrained_model/```下。
 
 ##### 方式一：基于PaddleHub命令行工具（PaddleHub[安装方式](https://github.com/PaddlePaddle/PaddleHub)）
 ```shell
@@ -66,14 +66,20 @@ sh run.sh infer
 sh run.sh train  
 ```
 ## 进阶使用
+
 ### 任务定义与建模
-传统的文本匹配技术如信息检索中的向量空间模型 VSM、BM25 等算法，主要解决词汇层面的相似度问题，这种方法的效果在实际应用中受到语言的多义词和语言结构等问题影响。SimNet 在语义表示上沿袭了隐式连续向量表示的方式，但对语义匹配问题在深度学习框架下进行了 End-to-End 的建模，将point-wise与 pair-wise 两种有监督学习方式全部统一在一个整体框架内。在实际应用场景下，将海量的用户点击行为数据转化为大规模的弱标记数据，在网页搜索任务上的初次使用即展现出极大威力，带来了相关性的明显提升。
+
+传统的文本匹配技术如信息检索中的向量空间模型 VSM、BM25 等算法，主要解决词汇层面的相似度问题，这种方法的效果在实际应用中受到语言的多义词和语言结构等问题影响。SimNet 在语义表示上沿袭了隐式连续向量表示的方式，但对语义匹配问题在深度学习框架下进行了 End-to-End 的建模，将```point-wise```与 ```pair-wise```两种有监督学习方式全部统一在一个整体框架内。在实际应用场景下，将海量的用户点击行为数据转化为大规模的弱标记数据，在网页搜索任务上的初次使用即展现出极大威力，带来了相关性的明显提升。
+
 ### 模型原理介绍
+
 SimNet如下图所示：
 ![struct](https://github.com/PaddlePaddle/models/blob/paddle-nlp/PaddleNLP/similarity_net/struct.jpg)
 
 ### 数据格式说明
-训练模式一共分为pairwise和pointwise两种模式。
+
+训练模式一共分为```pairwise```和```pointwise```两种模式。
+
 #### pairwise模式：
 训练集格式如下： query \t pos_query \t neg_query。
 query、pos_query和neg_query是以空格分词的中文文本，中间使用制表符'\t'隔开，pos_query表示与query相似的正例，neg_query表示与query不相似的随机负例，文本编码为utf-8。</br>
@@ -104,7 +110,7 @@ query1和query2表示以空格分词的中文文本，label为0或1，1表示que
 
 #### infer数据集：
 
-pairwise和pointwise的infer数据集格式相同：query1 \t query2。</br>
+```pairwise```和```pointwise```的infer数据集格式相同：query1 \t query2。</br>
 
 query1和query2为以空格分词的中文文本。
 ```
@@ -120,11 +126,15 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 其中test.txt.utf8为待分词的文件，一条文本数据一行，utf8编码，分词结果存放在test.txt.utf8.seg文件中
 
 ### 代码结构说明
-- run_classifier.py：该项目的主函数，封装包括训练、预测、评估的部分</br>
-- config.py：定义该项目模型的配置类，读取具体模型类别、以及模型的超参数等</br>
-- reader.py：定义了读入数据的相关函数</br>
-- utils.py：定义了其他常用的功能函数</br>
-- Config: 定义多种模型的配置文件</br>
+```text
+.
+├── run_classifier.py：该项目的主函数，封装包括训练、预测、评估的部分
+├── config.py：定义该项目模型的配置类，读取具体模型类别、以及模型的超参数等
+├── reader.py：定义了读入数据的相关函数
+├── utils.py：定义了其他常用的功能函数
+├── Config: 定义多种模型的配置文件
+```
+
 ### 如何训练
 ```shell
 python run_classifier.py \
@@ -154,13 +164,14 @@ python run_classifier.py \
 
 i. 定义自己的网络结构
 
-用户可以在nlp_tools/models/matching下定义自己的模型；
+用户可以在```../models/matching```下定义自己的模型；
 
 ii. 更改模型配置
 
-用户仿照config中的文件生成自定义模型的配置文件。
+用户仿照```config```中的文件生成自定义模型的配置文件。
 
-用户需要保留配置文件中的net、loss、optimizer、task_mode和model_path字段。net为用户自定义的模型参数，task_mode表示训练模式，为pairwise或pointwise，要与训练命令中的--task_mode命令保持一致，model_path为模型保存路径，loss和optimizer依据自定义模型的需要仿照config下的其他文件填写。
+用户需要保留配置文件中的```net```、```loss```、```optimizer```、```task_mode```和```model_path```字段。```net```为用户自定义的模型参数，```task_mode```表示训练模式，为```pairwise```或```pointwise```，要与训练命令中的```--task_mode```命令保持一致，```model_path```为模型保存路径，```loss```和```optimizer```依据自定义模型的需要仿照```config```下的其他文件填写。
+
 
 iii.模型训练，运行训练、评估、预测脚本即可（具体方法同上）。
 
