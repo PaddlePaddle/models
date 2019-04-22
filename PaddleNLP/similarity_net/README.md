@@ -28,7 +28,7 @@ wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_dataset-1.0.0
 tar xzf simnet_dataset-1.0.0.tar.gz
 ```
 #### 模型准备
-我们开源了基于大规模数据训练好的pairwise模型（基于bow模型训练），我们提供两种下载方式，模型保在./model_files/simnet_bow_pairwise_pretrained_model/下。
+我们开源了基于大规模数据训练好的```pairwise```模型（基于bow模型训练），我们提供两种下载方式，模型保在```./model_files/simnet_bow_pairwise_pretrained_model/```下。
 
 ##### 方式一：基于PaddleHub命令行工具（PaddleHub[安装方式](https://github.com/PaddlePaddle/PaddleHub)）
 ```shell
