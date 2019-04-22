@@ -64,12 +64,14 @@ sh run_ernie.sh eval
 ```
 注：如果用户需要使用预训练的BI-LSTM模型，需要修改run.sh和senta_config.json中的配置。run.sh脚本修改如下：
 ```shell
+#在eval()函数中，修改如下参数
 MODEL_PATH=senta_model/bilstm_model/
 --vocab_path $MODEL_PATH/word_dict.txt
 --init_checkpoint $MODEL_PATH/params
 ```
 senta_config.json中需要修改如下：
 ```shell
+# vob_size大小对应为上面senta_model/bilstm_model//word_dict.txt，词典大小
 "vocab_size": 1256606
 ```
 如果用户需要使用预训练的ERNIE+BI-LSTM模型，需要修改run_ernie.sh中的配置如下：
@@ -166,6 +168,7 @@ run.sh脚本修改如下：
 ```
 senta_config.json中需要修改如下：
 ```shell
+# vob_size大小对应为上面senta_model/bilstm_model//word_dict.txt，词典大小
 "vocab_size": 1256606
 ```
 如果用户基于开源ERNIE+BI-LSTM模型进行Finetune，需要更新run_ernie.sh脚本，具体修改如下：
