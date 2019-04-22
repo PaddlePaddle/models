@@ -1,69 +1,88 @@
 # 中文词法分析
 
 ## 1. 简介
-Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型，能整体性地完成中文分词、词性标注、专名识别任务。效果方面，分词、词性标注、专名识别的整体准确率 88.0%，召回率 88.7%，F1 值 88.4%。此外，我们在百度开放的 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE) 模型上 finetune，效果可以提升到准确率 92.0%，召回率 92.0%，F1 值 92.0%。可通过 [AI开放平台-词法分析](http://ai.baidu.com/tech/nlp/lexical) 线上体验。
+Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型，能整体性地完成中文分词、词性标注、专名识别任务。我们在自建的数据集上对分词、词性标注、专名识别进行整体的评估效果，具体数值见下表；此外，我们在百度开放的 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE) 模型上 finetune，并对比基线模型、BERT finetuned 和 ERNIE finetuned 的效果，可以看出会有显著的提升。可通过 [AI开放平台-词法分析](http://ai.baidu.com/tech/nlp/lexical) 线上体验百度的词法分析服务。
+
+|模型|Precision|Recall|F1-score|
+|:-:|:-:|:-:|:-:|
+|Lexical Analysis|88.0%|88.7%|88.4%|
+|BERT finetuned|90.2%|90.4%|90.3%|
+|ERNIE finetuned|92.0%|92.0%|92.0%|
 
 ## 2. 快速开始
-本项目依赖 Paddle 1.3.2，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
+### 安装说明
+#### 1.PaddlePaddle 安装
+本项目依赖 PaddlePaddle 1.3.2，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
 
-### 基础模型
-运行下载数据和模型的脚本，
+#### 2. 克隆代码
+克隆工具集代码库到本地
 ```bash
-sh downloads.sh
+ git clone https://github.com/PaddlePaddle/models.git
+ cd models/PaddleNLP/lexical_analysis
 ```
-会生成下面几个文件夹，
-```test
-./data/			# 数据文件夹
-./model_baseline/ 	# lexical analysis 模型文件
-./model_finetuned/	# lexical analysis 在 ERNIE 上 finetune 的模型文件
-./pretrained/		# ERNIE 发布的 pretrained 模型
-```
-
-模型文件也可以很方便地通过 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub) 的方式来获取，参考下面的命令示例：
+### 数据准备
+下载数据集文件，解压后会生成 `./data/` 文件夹
 ```bash
-# install paddlehub
-pip install paddlehub
+wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-dataset-1.0.0.tar.gz
+tar xvf lexical_analysis-dataset-1.0.0.tar.gz
+```
 
+### 模型下载
+我们开源了在自建数据集上训练的词法分析模型，可供用户直接使用，这里提供两种下载方式：
+
+方式一：基于 PaddleHub 命令行工具，PaddleHub 的安装参考 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub)
+```bash
 # download baseline model
 hub download lexical_analysis
+tar xvf lexical_analysis-1.0.0.tar.gz
 
 # download ERNIE finetuned model
 hub download lexical_analysis_finetuned
+tar xvf lexical_analysis_finetuned-1.0.0.tar.gz
 ```
 
-我们基于百度的海量数据训练了一个词法分析的模型，可以直接用这个模型对开放的测试集 ./data/test.tsv 进行验证，
+方式二：直接下载
 ```bash
-sh run.sh test
+# download baseline model
+wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-1.0.0.tar.gz
+tar xvf lexical_analysis-1.0.0.tar.gz
+
+# download ERNIE finetuned model
+wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis_finetuned-1.0.0.tar.gz
+tar xvf lexical_analysis_finetuned-1.0.0.tar.gz
 ```
 
-也可以用该模型预测新的数据，
+注：下载 ERNIE 开放的模型请参考 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)，下载后可放在 `./pretrained/` 目录下。
+
+### 模型评估
+我们基于自建的数据集训练了一个词法分析的模型，可以直接用这个模型对测试集 `./data/test.tsv` 进行验证，
 ```bash
-sh run.sh infer
+# baseline model
+sh run.sh eval
+
+# ERNIE finetuned model
+sh run_ernie.sh eval
 ```
 
-用户也可以选择在自己的数据集上训练自己的词法分析模型，这里我们提供用于训练的脚本和代码，
-```
+### 模型训练
+基于示例的数据集，可以运行下面的命令，在训练集 `./data/train.tsv` 上进行训练
+```bash
+# baseline model
 sh run.sh train
-```
 
-### 使用 ERNIE 进行 finetune
-原 ERNIE 开放的模型参考 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)，这里我们为了方便，把下载的命令也放到 `download.sh` 中了。下载的预训练的 ERNIE 模型文件会放在 `./pretrained/` 目录中。
-
-词法分析的模型在 `ERNIE` 上 finetune 之后取得了不错的提升效果，这里我们也开放此模型，模型放在了 `./model_finetuned` 中。运行下面的脚本在测试集上验证效果，
-```bash
-sh run_ernie.sh test
-```
-
-也可以用该模型预测新的数据，
-```bash
-sh run_ernie.sh infer
-```
-
-当然，您也可以用自己的数据去 finetune 在 ERNIE 上的效果，
-```bash
+# ERNIE finetuned model
 sh run_ernie.sh train
 ```
 
+### 模型预测
+加载已有的模型，对未知的数据进行预测
+```bash
+# baseline model
+sh run.sh infer
+
+# ERNIE finetuned model
+sh run_ernie.sh infer
+```
 
 ## 3. 进阶使用
 
@@ -129,7 +148,9 @@ sh run_ernie.sh train
 ```
 
 ### 如何组建自己的模型
-如果您需要定制自己的词法分析模型，可以在 `../models/sequence_labeling/nets.py` 中添加自己的网络结构，具体接口要求可以参考默认的 `lex_net` 函数。 
+可以根据自己的需求，组建自定义的模型，具体方法如下所示：
+1. 定义自己的词法分析模型，可以在 `../models/sequence_labeling/nets.py` 中添加自己的网络结构，具体接口要求可以参考默认的 `lex_net` 函数。
+2. 模型训练、评估、预测的逻辑，需要在 `run.sh` 和 `run_ernie.sh` 中修改对应的模型路径、数据路径和词典路径等参数。
 
 ## 4. 其他
 ### 在论文中引用 LAC
