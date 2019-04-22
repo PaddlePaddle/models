@@ -120,7 +120,7 @@ sh run_ernie.sh train
 ├── README.md                           # 本文档
 ├── conf/                               # 词典目录
 ├── data/                               # 存放数据集的目录
-├── downloads.sh                        # 用于下载数据、模型和词典的脚本
+├── downloads.sh                        # 用于下载数据和模型的脚本
 ├── gru-crf-model.png                   # REAEME 用到的模型图片
 ├── reader.py                           # 文件读取相关函数
 ├── run_ernie_sequence_labeling.py      # 用于 finetune ERNIE 的代码
