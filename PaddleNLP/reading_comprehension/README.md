@@ -53,6 +53,11 @@ cd utils && bash download_thirdparty.sh
 ```
 cd data && bash download.sh
 ```
+此外，用户还可以利用paddlehub的方式下载模型参数，例如
+
+```
+hub download dureader_machine_reading-bidaf
+```
 
 ### 段落抽取
 我们采用了一种新的段落抽取策略以提升模型在DuReader 2.0数据集上的表现(策略内容详见src/UPDATES.md)。该段落抽取策略可通过运行以下命令执行:
