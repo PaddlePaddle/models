@@ -51,6 +51,10 @@ def train(args):
         train_net = attention_train_net
         get_feeder_data = get_attention_feeder_data
 
+    print("train net")
+    import sys
+    sys.stdout.flush()
+
     num_classes = None
     num_classes = data_reader.num_classes(
     ) if num_classes is None else num_classes
