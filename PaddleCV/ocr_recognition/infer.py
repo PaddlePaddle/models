@@ -31,7 +31,7 @@ def inference(args):
     """OCR inference"""
     if args.model == "crnn_ctc":
         infer = ctc_infer
-        get_feeder_data = get_ctc_feeder_data
+        get_feeder_data = get_ctc_feeder_for_infer
     else:
         infer = attention_infer
         get_feeder_data = get_attention_feeder_for_infer
@@ -78,7 +78,7 @@ def inference(args):
     batch_times = []
     iters = 0
     for data in infer_reader():
-        feed_dict = get_feeder_data(data, place, need_label=False)
+        feed_dict = get_feeder_data(data, place)
         if args.iterations > 0 and iters == args.iterations + args.skip_batch_num:
             break
         if iters < args.skip_batch_num:
