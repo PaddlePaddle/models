@@ -37,6 +37,14 @@ DuReader基线系统利用[PaddlePaddle](http://paddlepaddle.org)深度学习框
 ### 安装PaddlePaddle
 关于PaddlePaddle框架的安装教程，详见[PaddlePaddle官方网站](http://www.paddlepaddle.org/#quick-start)。
 
+### 安装代码
+克隆工具集代码库到本地
+
+```shell
+git clone https://github.com/PaddlePaddle/models.git
+cd reading_comprehension
+```
+
 
 ### 下载第三方依赖
 在本基线系统中，我们采用了Bleu以及Rouge-L指标作为模型的评估标准。这些指标的计算脚本位于"https://github.com/tylin/coco-caption"，可以通过运行以下命令进行下载
@@ -53,7 +61,7 @@ cd utils && bash download_thirdparty.sh
 ```
 cd data && bash download.sh
 ```
-此外，用户还可以利用paddlehub的方式下载模型参数，例如
+此外，用户还可以利用[paddlehub](https://github.com/PaddlePaddle/PaddleHub)的方式下载模型参数，例如
 
 ```
 hub download dureader_machine_reading-bidaf
