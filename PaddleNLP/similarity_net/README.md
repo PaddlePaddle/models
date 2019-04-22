@@ -122,11 +122,11 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 ### 代码结构说明
 ```text
 .
-├── run_classifier.py：该项目的主函数，封装包括训练、预测、评估的部分</br>
-├── config.py：定义该项目模型的配置类，读取具体模型类别、以及模型的超参数等</br>
-├── reader.py：定义了读入数据的相关函数</br>
-├── utils.py：定义了其他常用的功能函数</br>
-├── Config: 定义多种模型的配置文件</br>
+├── run_classifier.py：该项目的主函数，封装包括训练、预测、评估的部分
+├── config.py：定义该项目模型的配置类，读取具体模型类别、以及模型的超参数等
+├── reader.py：定义了读入数据的相关函数
+├── utils.py：定义了其他常用的功能函数
+├── Config: 定义多种模型的配置文件
 ```
 ### 如何训练
 ```shell
