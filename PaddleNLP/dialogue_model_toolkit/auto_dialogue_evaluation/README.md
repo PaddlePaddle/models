@@ -61,7 +61,7 @@
 
 	我们提供了两种下载方式,以下载auto_dialogue_evaluation_matching_pretrained_model为例
 
-	方式一：基于PaddleHub命令行工具（PaddleHub安装,请参考[安装指南](https://github.com/PaddlePaddle/PaddleHub)进行安装
+	方式一：基于PaddleHub命令行工具（PaddleHub可参考[安装指南](https://github.com/PaddlePaddle/PaddleHub)进行安装)
 	```
 	hub download auto_dialogue_evaluation_matching_pretrained_model --output_path ./
 	```
