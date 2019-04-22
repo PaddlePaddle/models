@@ -23,39 +23,9 @@ from paddle.fluid.dygraph.base import to_variable
 batch_size = 8
 epoch = 10
 
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": batch_size,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    },
-    "batch_size": batch_size,
-    "lr": 0.1,
-    "total_images": 1281164,
-}
 
-
-def optimizer_setting(params):
-    ls = params["learning_strategy"]
-    if ls["name"] == "piecewise_decay":
-        if "total_images" not in params:
-            total_images = 1281167
-        else:
-            total_images = params["total_images"]
-        batch_size = ls["batch_size"]
-        step = int(total_images / batch_size + 1)
-
-        bd = [step * e for e in ls["epochs"]]
-        base_lr = params["lr"]
-        lr = []
-        lr = [base_lr * (0.1**i) for i in range(len(bd) + 1)]
-        optimizer = fluid.optimizer.SGD(learning_rate=0.01)
-
-    return optimizer
+def optimizer_setting():
+    return fluid.optimizer.SGD(learning_rate=0.01)
 
 
 class ConvBNLayer(fluid.dygraph.Layer):
@@ -216,54 +186,39 @@ class ResNet(fluid.dygraph.Layer):
         return y
 
 
-class DygraphResnet():
-    def train(self):
-        batch_size = train_parameters["batch_size"]
-        batch_num = 10000
-        with fluid.dygraph.guard():
+def train_resnet():
+    with fluid.dygraph.guard():
+        resnet = ResNet("resnet")
+        optimizer = optimizer_setting()
+        train_reader = paddle.batch(
+            paddle.dataset.flowers.train(),
+            batch_size=batch_size)
 
-            resnet = ResNet("resnet")
-            optimizer = optimizer_setting(train_parameters)
-            train_reader = paddle.batch(
-                paddle.dataset.flowers.train(use_xmap=False),
-                batch_size=batch_size)
+        for eop in range(epoch):
+            for batch_id, data in enumerate(train_reader()):
+                dy_x_data = np.array(
+                    [x[0].reshape(3, 224, 224) for x in data]).astype('float32')
+                if len(np.array([x[1] for x in data]).astype('int64')) != batch_size:
+                    continue
+                y_data = np.array([x[1] for x in data]).astype('int64').reshape(
+                    batch_size, 1)
 
-            dy_param_init_value = {}
-            for param in resnet.parameters():
-                dy_param_init_value[param.name] = param.numpy()
+                img = to_variable(dy_x_data)
+                label = to_variable(y_data)
+                label._stop_gradient = True
 
-            for eop in range(epoch):
-                for batch_id, data in enumerate(train_reader()):
-                    if batch_id >= batch_num:
-                        break
+                out = resnet(img)
+                loss = fluid.layers.cross_entropy(input=out, label=label)
+                avg_loss = fluid.layers.mean(x=loss)
 
-                    dy_x_data = np.array(
-                        [x[0].reshape(3, 224, 224)
-                         for x in data]).astype('float32')
-                    if len(np.array([x[1] for x in data]).astype(
-                            'int64')) != batch_size:
-                        continue
-                    y_data = np.array(
-                        [x[1] for x in data]).astype('int64').reshape(
-                            batch_size, 1)
+                dy_out = avg_loss.numpy()
+                avg_loss.backward()
 
-                    img = to_variable(dy_x_data)
-                    label = to_variable(y_data)
-                    label._stop_gradient = True
+                optimizer.minimize(avg_loss)
+                resnet.clear_gradients()
 
-                    out = resnet(img)
-                    loss = fluid.layers.cross_entropy(input=out, label=label)
-                    avg_loss = fluid.layers.mean(x=loss)
-
-                    dy_out = avg_loss.numpy()
-                    avg_loss.backward()
-
-                    optimizer.minimize(avg_loss)
-                    resnet.clear_gradients()
-
-                    print(eop, batch_id, dy_out)
+                print("epoch id: %d, batch step: %d, loss: %f" % (eop, batch_id, dy_out))
 
 
 if __name__ == '__main__':
-    resnet = DygraphResnet()
-    resnet.train()
+    train_resnet()

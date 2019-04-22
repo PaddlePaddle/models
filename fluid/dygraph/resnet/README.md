@@ -29,7 +29,7 @@ env CUDA_VISIBLE_DEVICES=0 python train.py
 ## 输出
 执行训练开始后，将得到类似如下的输出。每一轮`batch`训练将会打印当前epoch、step以及loss值。当前默认执行`epoch=10`, `batch_size=8`。您可以调整参数以得到更好的训练效果，同时也意味着消耗更多的内存（显存）以及需要花费更长的时间。
 ```text
-0 0 [5.0672207]
-0 1 [5.5643945]
-0 2 [4.6319003]
+epoch id: 0, batch step: 0, loss: 4.951202
+epoch id: 0, batch step: 1, loss: 5.268410
+epoch id: 0, batch step: 2, loss: 5.123999
 ```
