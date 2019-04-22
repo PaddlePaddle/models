@@ -4,3 +4,6 @@
 [submodule "PaddleNLP/language_representations_kit"]
 	path = PaddleNLP/language_representations_kit
 	url = https://github.com/PaddlePaddle/LARK
+[submodule "knowledge-driven-dialogue"]
+	path = knowledge-driven-dialogue
+	url = https://github.com/baidu/knowledge-driven-dialogue
