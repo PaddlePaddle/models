@@ -82,6 +82,7 @@ def train():
 
     build_strategy= fluid.BuildStrategy()
     build_strategy.memory_optimize = True
+    build_strategy.sync_batch_norm = cfg.syncbn 
     compile_program = fluid.compiler.CompiledProgram(
             fluid.default_main_program()).with_data_parallel(
             loss_name=loss.name, build_strategy=build_strategy)
