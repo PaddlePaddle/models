@@ -155,7 +155,9 @@ Inference is used to get prediction score or image features based on trained mod
         --image_name=000000000139.jpg \
         --draw_threshold=0.5
 
-Inference speed:
+- Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to infer.
+
+Inference speed（Tesla P40）:
 
 
 |   input size  | 608x608 | 416x416 | 320x320 |
