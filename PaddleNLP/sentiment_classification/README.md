@@ -24,17 +24,24 @@
 
 下载经过预处理的数据，运行该脚本之后，data目录下会存在训练数据（train.tsv）、开发集数据（dev.tsv）、测试集数据（test.tsv）以及对应的词典（word_dict.txt）
 ```shell
-wget https://baidu-nlp.bj.bcebos.com/Senta_data.tar
-tar -xvf Senta_data.tar 
+wget https://baidu-nlp.bj.bcebos.com/sentiment_classification-dataset-1.0.0.tar.gz
+tar -zxvf sentiment_classification-dataset-1.0.0.tar.gz
 ```
 
 #### 模型下载
 
-我们开源了基于ChnSentiCorp数据训练的情感倾向性分类模型（基于BOW、CNN、LSTM、ERNIE多种模型训练），可供用户直接使用
+我们开源了基于ChnSentiCorp数据训练的情感倾向性分类模型（基于BOW、CNN、LSTM、ERNIE多种模型训练），可供用户直接使用。我们提供了两种下载方式：
+
+方式一：基于PaddleHub命令行工具（PaddleHub安装方式 https://github.com/PaddlePaddle/PaddleHub）
+hub download sentiment_classification --output_path ./
+tar -zxvf sentiment_classification-1.0.0.tar.gz
+
+方式二：直接下载
 ```shell
-wget https://baidu-nlp.bj.bcebos.com/Senta_models.tar
-tar -xvf Senta_models.tar 
+wget https://baidu-nlp.bj.bcebos.com/sentiment_classification-1.0.0.tar.gz
+tar -zxvf sentiment_classification-1.0.0.tar.gz
 ```
+
 #### 模型评估
 
 基于上面的预训练模型和数据，可以运行下面的命令进行测试，查看预训练模型在开发集（dev.tsv）上的评测效果
