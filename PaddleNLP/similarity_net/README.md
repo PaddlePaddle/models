@@ -66,14 +66,20 @@ sh run.sh infer
 sh run.sh train  
 ```
 ## 进阶使用
+
 ### 任务定义与建模
+
 传统的文本匹配技术如信息检索中的向量空间模型 VSM、BM25 等算法，主要解决词汇层面的相似度问题，这种方法的效果在实际应用中受到语言的多义词和语言结构等问题影响。SimNet 在语义表示上沿袭了隐式连续向量表示的方式，但对语义匹配问题在深度学习框架下进行了 End-to-End 的建模，将```point-wise```与 ```pair-wise```两种有监督学习方式全部统一在一个整体框架内。在实际应用场景下，将海量的用户点击行为数据转化为大规模的弱标记数据，在网页搜索任务上的初次使用即展现出极大威力，带来了相关性的明显提升。
+
 ### 模型原理介绍
+
 SimNet如下图所示：
 ![struct](https://github.com/PaddlePaddle/models/blob/paddle-nlp/PaddleNLP/similarity_net/struct.jpg)
 
 ### 数据格式说明
+
 训练模式一共分为```pairwise```和```pointwise```两种模式。
+
 #### pairwise模式：
 训练集格式如下： query \t pos_query \t neg_query。
 query、pos_query和neg_query是以空格分词的中文文本，中间使用制表符'\t'隔开，pos_query表示与query相似的正例，neg_query表示与query不相似的随机负例，文本编码为utf-8。</br>
@@ -128,6 +134,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 ├── utils.py：定义了其他常用的功能函数
 ├── Config: 定义多种模型的配置文件
 ```
+
 ### 如何训练
 ```shell
 python run_classifier.py \
@@ -164,6 +171,7 @@ ii. 更改模型配置
 用户仿照```config```中的文件生成自定义模型的配置文件。
 
 用户需要保留配置文件中的```net```、```loss```、```optimizer```、```task_mode```和```model_path```字段。```net```为用户自定义的模型参数，```task_mode```表示训练模式，为```pairwise```或```pointwise```，要与训练命令中的```--task_mode```命令保持一致，```model_path```为模型保存路径，```loss```和```optimizer```依据自定义模型的需要仿照```config```下的其他文件填写。
+
 
 iii.模型训练，运行训练、评估、预测脚本即可（具体方法同上）。
 

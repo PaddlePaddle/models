@@ -1,6 +1,7 @@
 # 中文词法分析
 
 ## 1. 简介
+
 Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型，能整体性地完成中文分词、词性标注、专名识别任务。我们在自建的数据集上对分词、词性标注、专名识别进行整体的评估效果，具体数值见下表；此外，我们在百度开放的 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE) 模型上 finetune，并对比基线模型、BERT finetuned 和 ERNIE finetuned 的效果，可以看出会有显著的提升。可通过 [AI开放平台-词法分析](http://ai.baidu.com/tech/nlp/lexical) 线上体验百度的词法分析服务。
 
 |模型|Precision|Recall|F1-score|
@@ -10,9 +11,12 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 |ERNIE finetuned|92.0%|92.0%|92.0%|
 
 ## 2. 快速开始
+
 ### 安装说明
+
 #### 1.PaddlePaddle 安装
-本项目依赖 PaddlePaddle 1.3.2，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
+
+本项目依赖 PaddlePaddle 1.3.2 及以上版本，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
 
 #### 2. 克隆代码
 克隆工具集代码库到本地
@@ -148,7 +152,9 @@ sh run_ernie.sh infer
 ```
 
 ### 如何组建自己的模型
+
 可以根据自己的需求，组建自定义的模型，具体方法如下所示：
+
 1. 定义自己的词法分析模型，可以在 `../models/sequence_labeling/nets.py` 中添加自己的网络结构，具体接口要求可以参考默认的 `lex_net` 函数。
 2. 模型训练、评估、预测的逻辑，需要在 `run.sh` 和 `run_ernie.sh` 中修改对应的模型路径、数据路径和词典路径等参数。
 

@@ -20,7 +20,7 @@ Overview of Deep Attention Matching Network
 ### 安装说明
 1. paddle安装
 
-	本项目依赖于Paddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
+	本项目依赖于Paddle Fluid 1.3.1 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
 
 2. 安装代码
 
@@ -33,6 +33,7 @@ Overview of Deep Attention Matching Network
 3. 环境依赖
 
     python版本依赖python 2.7
+
 ### 开始第一次模型调用
 1. 数据准备
 
