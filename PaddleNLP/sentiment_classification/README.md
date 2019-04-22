@@ -26,7 +26,7 @@ python版本依赖python 2.7
 克隆数据集代码库到本地
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
-cd sentiment_classification
+cd models/PaddleNLP/sentiment_classification 
 ```
 
 #### 数据准备
@@ -65,7 +65,7 @@ sh run_ernie.sh eval
 注：如果用户需要使用预训练的BI-LSTM模型，需要修改run.sh和senta_config.json中的配置。run.sh脚本修改如下：
 ```shell
 MODEL_PATH=senta_model/bilstm_model/
-#在eval()函数中，修改如下参数：
+# 在eval()函数中，修改如下参数：
 --vocab_path $MODEL_PATH/word_dict.txt
 --init_checkpoint $MODEL_PATH/params
 ```
@@ -76,6 +76,7 @@ senta_config.json中需要修改如下：
 ```
 如果用户需要使用预训练的ERNIE+BI-LSTM模型，需要修改run_ernie.sh中的配置如下：
 ```shell
+# 在eval()函数中，修改如下参数：
 --init_checkpoint=senta_model/ernie_bilstm_model/
 --model_type "ernie_bilstm"
 ```
