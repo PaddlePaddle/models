@@ -21,38 +21,48 @@
 ### 开始第一次模型调用
 #### 数据准备
 下载经过预处理的数据，运行命令后，data目录下会存在训练集数据示例、集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。
-> wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_dataset-1.0.0.tar.gz
-> tar xzf simnet_dataset-1.0.0.tar.gz
+```shell
+wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_dataset-1.0.0.tar.gz
+tar xzf simnet_dataset-1.0.0.tar.gz
+```
 #### 模型准备
 我们开源了基于大规模数据训练好的pairwise模型（基于bow模型训练），我们提供两种下载方式，模型保在./model_files/simnet_bow_pairwise_pretrained_model/下。
 
 #### 方式一：基于PaddleHub命令行工具（PaddleHub[安装方式](https://github.com/PaddlePaddle/PaddleHub)）
-> mkdir model_files
-> hub download simnet_bow_pairwise --output_path ./
-> tar xzf simnet_bow-pairwise-1.0.0.tar.gz -C ./model_files
-
+```shell
+mkdir model_files
+hub download simnet_bow_pairwise --output_path ./
+tar xzf simnet_bow-pairwise-1.0.0.tar.gz -C ./model_files
+```
 #### 方式二：直接下载
-> mkdir model_files
-> wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_bow-pairwise-1.0.0.tar.gz
-> tar xzf simnet_bow-pairwise-1.0.0.tar.gz -C ./model_files
-
+```shell
+mkdir model_files
+wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_bow-pairwise-1.0.0.tar.gz
+tar xzf simnet_bow-pairwise-1.0.0.tar.gz -C ./model_files
+```
 #### 评估
 我们公开了自建的测试集，包括百度知道、ECOM、QQSIM、UNICOM四个数据集，基于上面的预训练模型，用户可以进入evaluate目录下依次执行下列命令获取测试集评估结果。
-> sh evaluate_ecom.sh  
-> sh evaluate_qqsim.sh   
-> sh evaluate_zhidao.sh  
-> sh evaluate_unicom.sh  
-
+```shell
+sh evaluate_ecom.sh  
+sh evaluate_qqsim.sh   
+sh evaluate_zhidao.sh  
+sh evaluate_unicom.sh  
+```
 用户也可以指定./run.sh中的TEST_DATA_PATH的值，通过下列命令评估自己指定的测试集。
-
-> sh run.sh evaluate  
+```shell
+sh run.sh evaluate  
+```
 
 #### 推测
 基于上面的预训练模型，可以运行下面的命令进行推测，并保存推测结果到本地。
-> sh run.sh infer  
+```shell
+sh run.sh infer  
+```
 #### 训练与验证
 用户可以基于示例数据构建训练集和开发集，可以运行下面的命令，进行模型训练和开发集验证。
-> sh run.sh train  
+```shell
+sh run.sh train  
+```
 ## 进阶使用
 ### 任务定义与建模
 传统的文本匹配技术如信息检索中的向量空间模型 VSM、BM25 等算法，主要解决词汇层面的相似度问题，这种方法的效果在实际应用中受到语言的多义词和语言结构等问题影响。SimNet 在语义表示上沿袭了隐式连续向量表示的方式，但对语义匹配问题在深度学习框架下进行了 End-to-End 的建模，将point-wise与 pair-wise 两种有监督学习方式全部统一在一个整体框架内。在实际应用场景下，将海量的用户点击行为数据转化为大规模的弱标记数据，在网页搜索任务上的初次使用即展现出极大威力，带来了相关性的明显提升。
@@ -100,8 +110,9 @@ query1和query2为以空格分词的中文文本。
 
 __注__：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如下：
 
-> python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.utf8.seg
-
+```shell
+python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.utf8.seg
+```
 其中test.txt.utf8为待分词的文件，一条文本数据一行，utf8编码，分词结果存放在test.txt.utf8.seg文件中
 
 ### 代码结构说明
