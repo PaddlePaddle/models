@@ -161,6 +161,7 @@ ii. 更改模型配置
 用户仿照config中的文件生成自定义模型的配置文件。
 
 用户需要保留配置文件中的net、loss、optimizer、task_mode和model_path字段。net为用户自定义的模型参数，task_mode表示训练模式，为pairwise或pointwise，要与训练命令中的--task_mode命令保持一致，model_path为模型保存路径，loss和optimizer依据自定义模型的需要仿照config下的其他文件填写。
+
 iii.模型训练，运行训练、评估、预测脚本即可（具体方法同上）。
 
 ## 其他
