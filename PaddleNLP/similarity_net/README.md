@@ -103,7 +103,7 @@ query1和query2表示以空格分词的中文文本，label为0或1，1表示que
 长 的 清新 是 什么 意思     小 清新 的 意思 是 什么 0
 ```
 
-infer数据集：
+#### infer数据集：
 
 pairwise和pointwise的infer数据集格式相同：query1 \t query2。</br>
 
