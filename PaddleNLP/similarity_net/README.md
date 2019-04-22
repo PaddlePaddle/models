@@ -1,6 +1,4 @@
-# SimNet 
-语义匹配
-文档目录
+# 短文本语义匹配
 ## 简介
 ### 任务说明
 短文本语义匹配(SimilarityNet, SimNet)是一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MMDNN等核心网络结构形式，提供语义相似度计算训练和预测框架，适用于信息检索、新闻推荐、智能客服等多个应用场景，帮助企业解决语义匹配问题。
@@ -16,7 +14,13 @@
 ### 安装说明
 #### paddle安装
 本项目依赖于 Paddlepaddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
+python版本依赖python 2.7
 #### 安装代码
+克隆工具集代码库到本地
+```shell
+git clone https://github.com/PaddlePaddle/models.git
+cd similarity_net
+```
 #### 环境依赖
 ### 开始第一次模型调用
 #### 数据准备
