@@ -5,16 +5,16 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 
 |模型|Precision|Recall|F1-score|
 |:-:|:-:|:-:|:-:|
-|LAC|88.0%|88.7%|88.4%|
+|Lexical Analysis|88.0%|88.7%|88.4%|
 |BERT finetuned|90.2%|90.4%|90.3%|
 |ERNIE finetuned|92.0%|92.0%|92.0%|
 
 ## 2. 快速开始
 ### 安装说明
-1.Paddle 安装
-本项目依赖 Paddle 1.3.2，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
+#### 1.PaddlePaddle 安装
+本项目依赖 PaddlePaddle 1.3.2，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
 
-2. 安装代码
+#### 2. 克隆代码
 克隆工具集代码库到本地
 ```bash
  git clone https://github.com/PaddlePaddle/models.git
@@ -28,7 +28,7 @@ tar xvf lexical_analysis-dataset-1.0.0.tar.gz
 ```
 
 ### 模型下载
-我们开源了自建的词法分析模型，可供用户直接使用，这里提供两种下载方式：
+我们开源了在自建数据集上训练的词法分析模型，可供用户直接使用，这里提供两种下载方式：
 
 方式一：基于 PaddleHub 命令行工具，PaddleHub 的安装参考 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub)
 ```bash
@@ -52,7 +52,7 @@ wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis_fin
 tar xvf lexical_analysis_finetuned-1.0.0.tar.gz
 ```
 
-注：下载 ERNIE 开放的模型参考 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)，下载后可放在 `./pretrained/` 目录下。
+注：下载 ERNIE 开放的模型请参考 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)，下载后可放在 `./pretrained/` 目录下。
 
 ### 模型评估
 我们基于自建的数据集训练了一个词法分析的模型，可以直接用这个模型对测试集 `./data/test.tsv` 进行验证，
@@ -78,10 +78,10 @@ sh run_ernie.sh train
 加载已有的模型，对未知的数据进行预测
 ```bash
 # baseline model
-sh run.sh train
+sh run.sh infer
 
 # ERNIE finetuned model
-sh run_ernie.sh train
+sh run_ernie.sh infer
 ```
 
 ## 3. 进阶使用
