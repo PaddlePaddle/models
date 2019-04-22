@@ -120,11 +120,14 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 其中test.txt.utf8为待分词的文件，一条文本数据一行，utf8编码，分词结果存放在test.txt.utf8.seg文件中
 
 ### 代码结构说明
-- run_classifier.py：该项目的主函数，封装包括训练、预测、评估的部分</br>
-- config.py：定义该项目模型的配置类，读取具体模型类别、以及模型的超参数等</br>
-- reader.py：定义了读入数据的相关函数</br>
-- utils.py：定义了其他常用的功能函数</br>
-- Config: 定义多种模型的配置文件</br>
+```text
+.
+├── run_classifier.py：该项目的主函数，封装包括训练、预测、评估的部分</br>
+├── config.py：定义该项目模型的配置类，读取具体模型类别、以及模型的超参数等</br>
+├── reader.py：定义了读入数据的相关函数</br>
+├── utils.py：定义了其他常用的功能函数</br>
+├── Config: 定义多种模型的配置文件</br>
+```
 ### 如何训练
 ```shell
 python run_classifier.py \
