@@ -134,7 +134,7 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
 - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
 
-If train with '--syncbn=False', Evalutaion result is shown as below:
+If train with `--syncbn=False`, Evalutaion result is shown as below:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
@@ -142,7 +142,7 @@ If train with '--syncbn=False', Evalutaion result is shown as below:
 | 416x416 | 36.5 | 58.2 | 39.1 |
 | 320x320 | 34.1 | 55.4 | 36.3 |
 
-If train with '--syncbn=True', Evalutaion result is shown as below:
+If train with `--syncbn=True`, Evalutaion result is shown as below:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
