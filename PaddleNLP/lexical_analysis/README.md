@@ -5,16 +5,16 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 
 |模型|Precision|Recall|F1-score|
 |:-:|:-:|:-:|:-:|
-|LAC|88.0%|88.7%|88.4%|
+|Lexical Analysis|88.0%|88.7%|88.4%|
 |BERT finetuned|90.2%|90.4%|90.3%|
 |ERNIE finetuned|92.0%|92.0%|92.0%|
 
 ## 2. 快速开始
 ### 安装说明
-#### 1.Paddle 安装
-本项目依赖 Paddle 1.3.2，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
+#### 1.PaddlePaddle 安装
+本项目依赖 PaddlePaddle 1.3.2，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
 
-#### 2. 安装代码
+#### 2. 克隆代码
 克隆工具集代码库到本地
 ```bash
  git clone https://github.com/PaddlePaddle/models.git
@@ -78,10 +78,10 @@ sh run_ernie.sh train
 加载已有的模型，对未知的数据进行预测
 ```bash
 # baseline model
-sh run.sh train
+sh run.sh infer
 
 # ERNIE finetuned model
-sh run_ernie.sh train
+sh run_ernie.sh infer
 ```
 
 ## 3. 进阶使用
