@@ -29,9 +29,19 @@
 ## 快速开始
 ### 安装说明
 1. paddle安装
-	本项目依赖于 Paddlepaddle Fluid 1.3.1，请参考安装指南进行安装。
+
+	本项目依赖于Paddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
 2. 安装代码
+
+	克隆数据集代码库到本地
+	```
+	git clone https://github.com/PaddlePaddle/models.git
+	cd models/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation
+	```
+
 3. 环境依赖
+
+	python版本依赖python 2.7
 ### 开始第一次模型调用
 1. 数据准备
 
@@ -48,6 +58,18 @@
 	cd model_files
 	sh download_model.sh
 	```
+
+	我们提供了两种下载方式,以下载auto_dialogue_evaluation_matching_pretrained_model为例
+	方式一：基于PaddleHub命令行工具（PaddleHub安装,请参考[安装指南](https://github.com/PaddlePaddle/PaddleHub)进行安装
+	```
+	hub download auto_dialogue_evaluation_matching_pretrained_model --output_path ./
+	```
+
+	方式二：直接下载
+	```
+	wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/auto_dialogue_evaluation_matching_pretrained-1.0.0.tar.gz
+	```
+
 3. 模型预测
 
 	基于上面的模型和数据，可以运行下面的命令直接对对话数据进行打分。
