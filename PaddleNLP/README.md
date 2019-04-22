@@ -9,7 +9,7 @@ Machine Translation, NMT)等阶段。在 NMT 成熟后，机器翻译才真正�
 
 本实例所实现的 Transformer 就是一个基于自注意力机制的机器翻译模型，其中不再有RNN或CNN结构，而是完全利用 Attention 学习语言中的上下文依赖。相较于RNN/CNN, 这种结构在单层内计算复杂度更低、易于并行化、对长程依赖更易建模，最终在多种语言之间取得了最好的翻译效果。
 
--  [Transformer](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/neural_machine_translation/transformer/README_cn.md)
+-  [Transformer](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/neural_machine_translation/transformer/README.md)
 
 
 中文词法分析
@@ -35,7 +35,7 @@ Machine Translation, NMT)等阶段。在 NMT 成熟后，机器翻译才真正�
 
 本例所开放的DAM (Deep Attention Matching Network)为百度自然语言处理部发表于ACL-2018的工作，用于检索式聊天机器人多轮对话中应答的选择。DAM受Transformer的启发，其网络结构完全基于注意力(attention)机制，利用栈式的self-attention结构分别学习不同粒度下应答和语境的语义表示，然后利用cross-attention获取应答与语境之间的相关性，在两个大规模多轮对话数据集上的表现均好于其它模型。
 
-- [Deep Attention Matching Network](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/deep_attention_matching_net)
+- [Deep Attention Matching Network](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit/deep_attention_matching)
 
 AnyQ
 ----
@@ -53,4 +53,4 @@ SimNet是百度自然语言处理部于2013年自主研发的语义匹配框架�
 
 百度阅读理解数据集是由百度自然语言处理部开源的一个真实世界数据集，所有的问题、原文都来源于实际数据(百度搜索引擎数据和百度知道问答社区)，答案是由人类回答的。每个问题都对应多个答案，数据集包含200k问题、1000k原文和420k答案，是目前最大的中文MRC数据集。百度同时开源了对应的阅读理解模型，称为DuReader，采用当前通用的网络分层结构，通过双向attention机制捕捉问题和原文之间的交互关系，生成query-aware的原文表示，最终基于query-aware的原文表示通过point network预测答案范围。
 
--  [DuReader in PaddlePaddle Fluid](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/machine_reading_comprehension/README.md)
+-  [DuReader in PaddlePaddle Fluid](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/reading_comprehension)
