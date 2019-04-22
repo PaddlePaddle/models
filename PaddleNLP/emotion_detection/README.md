@@ -73,7 +73,7 @@ sh run.sh train
 # ERNIE 模型
 sh run_ernie.sh train
 ```
-训练完成后，可修改```run.sh```中init_checkpoint参数，选择最优step的模型进行评估和预测
+训练完成后，可修改```run.sh```和```run_ernie.sh```中的init_checkpoint 参数，选择最优step的模型进行评估和预测
 
 #### 模型预测
 
@@ -143,7 +143,9 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 
 #### 如何基于百度开源模型进行 Finetune
 
-用户可基于百度开源模型在自有数据上实现 Finetune 训练，以期获得更好的效果提升，具体模型 Finetune 方法如下所示，如果用户基于开源 TextCNN模型进行 Finetune，需要修改```run.sh```和```config.json```文件
+用户可基于百度开源的对话情绪识别模型在自有数据上实现 Finetune 训练，以期获得更好的效果提升，具体模型 Finetune 方法如下所示
+
+如果用户基于开源的 TextCNN模型进行 Finetune，需要修改```run.sh```和```config.json```文件
 
 ```run.sh``` 脚本修改如下：
 ```shell
@@ -158,7 +160,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 "vocab_size": 240465
 ```
 
-如果用户基于开源ERNIE模型进行Finetune，需要更新```run_ernie.sh```脚本，具体修改如下：
+如果用户基于开源的 ERNIE模型进行Finetune，需要更新```run_ernie.sh```脚本，具体修改如下：
 ```shell
 # 在train()函数中，修改--init_checkpoint选项
 --init_checkpoint ./models/ernie_finetune/params
