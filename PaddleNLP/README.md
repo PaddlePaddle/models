@@ -48,6 +48,13 @@ PaddleNLP的特点与优势：
 
 python版本依赖python 2.7
 
+#### 安装代码
+克隆工具集代码库到本地
+```shell
+git clone https://github.com/PaddlePaddle/models.git
+cd sentiment_classification
+```
+
 #### 数据准备
 
 下载经过预处理的数据，运行该脚本之后，data目录下会存在训练数据（train.tsv）、开发集数据（dev.tsv）、测试集数据（test.tsv）以及对应的词典（word_dict.txt）
