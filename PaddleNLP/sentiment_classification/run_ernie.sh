@@ -20,6 +20,7 @@ train() {
         --init_checkpoint $ERNIE_PRETRAIN/params \
         --train_set $DATA_PATH/train.tsv \
         --dev_set $DATA_PATH/dev.tsv \
+        --test_set $DATA_PATH/test.tsv \
         --vocab_path $ERNIE_PRETRAIN/vocab.txt \
         --checkpoints $MODEL_SAVE_PATH \
         --save_steps 5000 \
