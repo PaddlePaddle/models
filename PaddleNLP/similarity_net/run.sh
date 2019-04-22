@@ -73,4 +73,27 @@ infer() {
 		--init_checkpoint ${INIT_CHECKPOINT}
 }
 
-$1
+main() {
+    local cmd=${1:-help}
+    case "${cmd}" in
+        train)
+            train "$@";
+            ;;
+        eval)
+            evaluate "$@";
+            ;;
+        infer)
+            infer "$@";
+            ;;
+        help)
+            echo "Usage: ${BASH_SOURCE} {train|eval|infer}";
+            return 0;
+            ;;
+        *)
+            echo "Unsupport commend [${cmd}]";
+            echo "Usage: ${BASH_SOURCE} {train|eval|infer}";
+            return 1;
+            ;;
+    esac
+}
+main "$@"
