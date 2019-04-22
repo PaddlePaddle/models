@@ -74,39 +74,40 @@ SimNet如下图所示：
 #### pairwise模式：
 训练集格式如下： query \t pos_query \t neg_query。
 query、pos_query和neg_query是以空格分词的中文文本，中间使用制表符'\t'隔开，pos_query表示与query相似的正例，neg_query表示与query不相似的随机负例，文本编码为utf-8。</br>
-
-> 现在 安卓模拟器 哪个 好 用     电脑 安卓模拟器 哪个 更好      电信 手机 可以 用 腾讯 大王 卡 吗 ?</br>
-> 土豆 一亩地 能 收 多少 斤      一亩 地土豆 产 多少 斤        一亩 地 用 多少 斤 土豆 种子</br>
-
+```
+现在 安卓模拟器 哪个 好 用     电脑 安卓模拟器 哪个 更好      电信 手机 可以 用 腾讯 大王 卡 吗 ?</br>
+土豆 一亩地 能 收 多少 斤      一亩 地土豆 产 多少 斤        一亩 地 用 多少 斤 土豆 种子</br>
+```
 
 开发集和测试集格式：query1 \t query2 \t label。</br>
 
 query1和query2表示以空格分词的中文文本，label为0或1，1表示query1与query2相似，0表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。</br>
-
-> 现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1</br>
-> 为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1</br>
-> 常喝 薏米 水 有 副 作用 吗    女生 可以 长期 喝 薏米 水养生 么    0</br>
-> 长 的 清新 是 什么 意思      小 清新 的 意思 是 什么 0</br>
-
+```
+现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1</br>
+为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1</br>
+常喝 薏米 水 有 副 作用 吗    女生 可以 长期 喝 薏米 水养生 么    0</br>
+长 的 清新 是 什么 意思      小 清新 的 意思 是 什么 0</br>
+```
 
 #### pointwise模式：
 
 训练集、开发集和测试集数据格式相同：query1和query2表示以空格分词的中文文本，label为0或1，1表示query1与query2相似，0表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。
-
-> 现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1</br>
-> 为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1</br>
-> 常喝 薏米 水 有 副 作用 吗    女生 可以 长期 喝 薏米 水养生 么    0</br>
-> 长 的 清新 是 什么 意思     小 清新 的 意思 是 什么 0</br>
+```
+现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1</br>
+为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1</br>
+常喝 薏米 水 有 副 作用 吗    女生 可以 长期 喝 薏米 水养生 么    0</br>
+长 的 清新 是 什么 意思     小 清新 的 意思 是 什么 0</br>
+```
 
 infer数据集：
 
 pairwise和pointwise的infer数据集格式相同：query1 \t query2。</br>
 
 query1和query2为以空格分词的中文文本。
-
-> 怎么 调理 湿热 体质 ？   湿热 体质 怎样 调理 啊 </br>
-> 搞笑 电影 美国   搞笑 的 美国 电影</br>
-
+```
+怎么 调理 湿热 体质 ？   湿热 体质 怎样 调理 啊 </br>
+搞笑 电影 美国   搞笑 的 美国 电影</br>
+```
 
 __注__：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如下：
 
@@ -122,7 +123,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 - utils.py：定义了其他常用的功能函数</br>
 - Config: 定义多种模型的配置文件</br>
 ### 如何训练
-
+```shell
 python run_classifier.py \ </br>
    --task_name ${TASK_NAME} \ </br>
    --use_cuda false \ #是否使用GPU </br>
@@ -144,7 +145,7 @@ python run_classifier.py \ </br>
    --task_mode ${TASK_MODE} #训练模式，pairwise或pointwise，与相应的配置文件匹配。</br>
    --compute_accuracy False \   #是否计算accuracy</br>
    --lamda 0.91 \    #pairwise模式计算accuracy时的阈值</br>
-
+```
 ### 如何组建自己的模型
 用户可以根据自己的需求，组建自定义的模型，具体方法如下所示：
 
