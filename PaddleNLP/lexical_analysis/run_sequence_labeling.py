@@ -125,6 +125,7 @@ def create_model(args, pyreader_name, vocab_size, num_labels):
 def evaluate(exe, test_program, test_ret):
     """evaluate for test data"""
     test_ret["pyreader"].start()
+    test_ret["chunk_evaluator"].reset()
     loss = []
     precision = []
     recall = []
@@ -259,6 +260,7 @@ def main(args):
                         ],
                     )
                     end_time = time.time()
+                    train_ret["chunk_evaluator"].reset()
                     train_ret["chunk_evaluator"].update(nums_infer, nums_label, nums_correct)
                     precision, recall, f1_score = train_ret["chunk_evaluator"].eval()
                     batch_id += 1
