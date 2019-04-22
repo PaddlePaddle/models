@@ -159,6 +159,7 @@ def evaluate(exe, test_program, test_pyreader, test_ret):
     Evaluation Function
     """
     test_pyreader.start()
+    test_ret["chunk_evaluator"].reset()
     total_loss, precision, recall, f1 = [], [], [], []
     start_time = time.time()
     while True:
@@ -327,7 +328,7 @@ def main(args):
                 end_time = time.time()
                 if steps % args.skip_steps == 0:
                     loss, nums_infer, nums_label, nums_correct = outputs
-
+                    train_ret["chunk_evaluator"].reset()
                     train_ret["chunk_evaluator"].update(nums_infer, nums_label, nums_correct)
                     precision, recall, f1_score = train_ret["chunk_evaluator"].eval()
                     print("[train] batch_id = %d, loss = %.5f, P: %.5f, R: %.5f, F1: %.5f, elapsed time %.5f, "

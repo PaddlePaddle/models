@@ -291,7 +291,15 @@ def main(args):
             main_program=startup_prog)
 
     if args.do_train:
-        train_exe = exe
+        exec_strategy = fluid.ExecutionStrategy()
+        exec_strategy.num_iteration_per_drop_scope = 1
+        
+        train_exe = fluid.ParallelExecutor(
+            use_cuda=args.use_cuda,
+            loss_name=loss.name,
+            exec_strategy=exec_strategy,
+            main_program=train_program)
+        
         train_pyreader.decorate_tensor_provider(train_data_generator)
     else:
         train_exe = None
@@ -311,7 +319,7 @@ def main(args):
                 else:
                     fetch_list = []
 
-                outputs = train_exe.run(program=train_program, fetch_list=fetch_list, return_numpy=False)
+                outputs = train_exe.run(fetch_list=fetch_list, return_numpy=False)
                 if steps % args.skip_steps == 0:
                     np_loss, np_acc, np_num_seqs = outputs
                     np_loss = np.array(np_loss)

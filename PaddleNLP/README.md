@@ -1,163 +1,56 @@
-## 简介
+PaddleNLP
+=========
 
-PaddleNLP是百度开源的工业级NLP工具与预训练模型集，能够适应全面丰富的NLP任务，方便开发者灵活插拔尝试多种网络结构，并且让应用最快速达到工业级效果。
+机器翻译
+--------
 
-PaddleNLP完全基于[Paddle Fluid](http://www.paddlepaddle.org/)开发，并提供依托于百度百亿级大数据的预训练模型，能够极大地方便NLP研究者和工程师快速应用。使用者可以用Paddle NLP快速实现文本分类、文本匹配、序列标注、阅读理解、智能对话等NLP任务的组网、建模和部署，而且可以直接使用百度开源工业级预训练模型进行快速应用。用户在极大地减少研究和开发成本的同时，也可以获得更好的基于工业实践的应用效果。
+机器翻译（Machine Translation）将一种自然语言(源语言)转换成一种自然语言（目标语言），是自然语言处理中非常基础和重要的研究方向。在全球化的浪潮中，机器翻译在促进跨语言文明的交流中所起的重要作用是不言而喻的。其发展经历了统计机器翻译和基于神经网络的神经机器翻译(Nueural
+Machine Translation, NMT)等阶段。在 NMT 成熟后，机器翻译才真正得以大规模应用。而早阶段的 NMT 主要是基于循环神经网络 RNN 的，其训练过程中当前时间步依赖于前一个时间步的计算，时间步之间难以并行化以提高训练速度。因此，非 RNN 结构的 NMT 得以应运而生，例如基 卷积神经网络 CNN 的结构和基于自注意力机制（Self-Attention）的结构。
 
-PaddleNLP的特点与优势：
-1. 全面丰富的中文NLP应用任务。
-2. 任务与网络解耦，网络灵活可插拔。
-3. 强大的工业化预训练模型，打造优异应用效果。
+本实例所实现的 Transformer 就是一个基于自注意力机制的机器翻译模型，其中不再有RNN或CNN结构，而是完全利用 Attention 学习语言中的上下文依赖。相较于RNN/CNN, 这种结构在单层内计算复杂度更低、易于并行化、对长程依赖更易建模，最终在多种语言之间取得了最好的翻译效果。
 
-#### 目录结构
-```text
-.
-├── dialogue_model_toolkit            # 对话模型工具箱
-├── emotion_detection                 # 对话情绪识别
-├── knowledge_driven_dialogue         # 知识驱动对话
-├── language_model                    # 语言模型
-├── language_representations_kit      # 语言表示工具箱
-├── lexical_analysis                  # 词法分析
-├── models                            # 共享网络
-│   ├── __init__.py
-│   ├── classification
-│   ├── dialogue_model_toolkit
-│   ├── language_model
-│   ├── matching
-│   ├── neural_machine_translation
-│   ├── reading_comprehension
-│   ├── representation
-│   ├── sequence_labeling
-│   └── transformer_encoder.py
-├── neural_machine_translation        # 机器翻译
-├── preprocess                        # 共享文本预处理工具
-│   ├── __init__.py
-│   ├── ernie
-│   ├── padding.py
-│   └── tokenizer
-├── reading_comprehension             # 阅读理解
-├── sentiment_classification          # 文本情感分析
-├── similarity_net                    # 短文本语义匹配
-```
-除了models和preprocess分别是共享组网集与共享预处理流程，其他路径都是相互独立的任务。可以直接进入各任务路径中运行任务。
+-  [Transformer](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/neural_machine_translation/transformer/README.md)
 
-以下以情感分析任务为例。
-## 快速开始
-#### 版本依赖
-本项目依赖于 Paddle Fluid 1.3.2，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
-python版本依赖python 2.7
+中文词法分析
+------------
 
-#### 数据准备
+中文分词(Word Segmentation)是将连续的自然语言文本，切分出具有语义合理性和完整性的词汇序列的过程。因为在汉语中，词是承担语义的最基本单位，切词是文本分类、情感分析、信息检索等众多自然语言处理任务的基础。 词性标注（Part-of-speech Tagging）是为自然语言文本中的每一个词汇赋予一个词性的过程，这里的词性包括名词、动词、形容词、副词等等。 命名实体识别（Named Entity Recognition，NER）又称作“专名识别”，是指识别自然语言文本中具有特定意义的实体，主要包括人名、地名、机构名、专有名词等。 我们将这三个任务统一成一个联合任务，称为词法分析任务，基于深度神经网络，利用海量标注语料进行训练，提供了一个端到端的解决方案。
 
-下载经过预处理的数据，运行该脚本之后，data目录下会存在训练数据（train.tsv）、开发集数据（dev.tsv）、测试集数据（test.tsv）以及对应的词典（word_dict.txt）
-```shell
-wget https://baidu-nlp.bj.bcebos.com/Senta_data.tar
-tar -xvf Senta_data.tar 
-```
+我们把这个联合的中文词法分析解决方案命名为LAC。LAC既可以认为是Lexical Analysis of Chinese的首字母缩写，也可以认为是LAC Analyzes Chinese的递归缩写。
 
-#### 模型下载
-我们开源了基于ChnSentiCorp数据训练的情感倾向性分类模型（基于BOW、CNN、LSTM、ERNIE多种模型训练），可供用户直接使用。我们提供两种下载方式。
+- [LAC](https://github.com/baidu/lac/blob/master/README.md)
 
-**方式一**：基于PaddleHub命令行工具（PaddleHub[安装方式](https://github.com/PaddlePaddle/PaddleHub)）
-```shell
-hub download sentiment_classification --output_path ./
-tar -xvf sentiment_classification-1.0.0.tar.gz
-```
+情感倾向分析
+------------
 
-**方式二**：直接下载
-```shell
-wget https://baidu-nlp.bj.bcebos.com/sentiment_classification-1.0.0.tar.gz
-tar -xvf sentiment_classification-1.0.0.tar.gz
-```
-#### 模型评估
+情感倾向分析针对带有主观描述的中文文本，可自动判断该文本的情感极性类别并给出相应的置信度。情感类型分为积极、消极、中性。情感倾向分析能够帮助企业理解用户消费习惯、分析热点话题和危机舆情监控，为企业提供有力的决策支持。本次我们开放 AI 开放平台中情感倾向分析采用的[模型](http://ai.baidu.com/tech/nlp/sentiment_classify)，提供给用户使用。
 
-基于上面的预训练模型和数据，可以运行下面的命令进行测试，查看预训练模型在开发集（dev.tsv）上的评测效果
-```shell
-# BOW、CNN、LSTM、BI-LSTM、GRU模型
-sh run.sh eval
-# ERNIE、ERNIE+BI-LSTM模型
-sh run_ernie.sh eval
-```
+- [Senta](https://github.com/baidu/Senta/blob/master/README.md)
 
-#### 模型训练
+语义匹配
+--------
 
-基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
-```shell
-# BOW、CNN、LSTM、BI-LSTM、GRU模型
-sh run.sh train
-# ERNIE、ERNIE+BI-LSTM模型
-sh run_ernie.sh train
-```
-训练完成后，可修改```run.sh```中init_checkpoint参数，进行模型评估和预测
+在自然语言处理很多场景中，需要度量两个文本在语义上的相似度，这类任务通常被称为语义匹配。例如在搜索中根据查询与候选文档的相似度对搜索结果进行排序，文本去重中文本与文本相似度的计算，自动问答中候选答案与问题的匹配等。
 
-#### 模型预测
+本例所开放的DAM (Deep Attention Matching Network)为百度自然语言处理部发表于ACL-2018的工作，用于检索式聊天机器人多轮对话中应答的选择。DAM受Transformer的启发，其网络结构完全基于注意力(attention)机制，利用栈式的self-attention结构分别学习不同粒度下应答和语境的语义表示，然后利用cross-attention获取应答与语境之间的相关性，在两个大规模多轮对话数据集上的表现均好于其它模型。
 
-利用已有模型，可以运行下面命令，对未知label的数据（test.tsv）进行预测
-```shell
-# BOW、CNN、LSTM、BI-LSTM、GRU模型
-sh run.sh infer
-#ERNIE+BI-LSTM模型
-sh run_ernie.sh infer
-```
+- [Deep Attention Matching Network](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit/deep_attention_matching)
 
-## 进阶使用
+AnyQ
+----
 
-#### 任务定义
+[AnyQ](https://github.com/baidu/AnyQ)(ANswer Your Questions) 开源项目主要包含面向FAQ集合的问答系统框架、文本语义匹配工具SimNet。 问答系统框架采用了配置化、插件化的设计，各功能均通过插件形式加入，当前共开放了20+种插件。开发者可以使用AnyQ系统快速构建和定制适用于特定业务场景的FAQ问答系统，并加速迭代和升级。
 
-传统的情感分类主要基于词典或者特征工程的方式进行分类，这种方法需要繁琐的人工特征设计和先验知识，理解停留于浅层并且扩展泛化能力差。为了避免传统方法的局限，我们采用近年来飞速发展的深度学习技术。基于深度学习的情感分类不依赖于人工特征，它能够端到端的对输入文本进行语义理解，并基于语义表示进行情感倾向的判断。
-#### 模型原理介绍
+SimNet是百度自然语言处理部于2013年自主研发的语义匹配框架，该框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MM-DNN等核心网络结构形式，同时基于该框架也集成了学术界主流的语义匹配模型，如MatchPyramid、MV-LSTM、K-NRM等模型。使用SimNet构建出的模型可以便捷的加入AnyQ系统中，增强AnyQ系统的语义匹配能力。
 
-本项目针对情感倾向性分类问题，开源了一系列模型，供用户可配置地使用：
+-  [SimNet in PaddlePaddle Fluid](https://github.com/baidu/AnyQ/blob/master/tools/simnet/train/paddle/README.md)
 
-+ BOW（Bag Of Words）模型，是一个非序列模型，使用基本的全连接结构；
-+ CNN（Convolutional Neural Networks），是一个基础的序列模型，能处理变长序列输入，提取局部区域之内的特征；
-+ GRU（Gated Recurrent Unit），序列模型，能够较好地解决序列文本中长距离依赖的问题；
-+ LSTM（Long Short Term Memory），序列模型，能够较好地解决序列文本中长距离依赖的问题；
-+ BI-LSTM（Bidirectional Long Short Term Memory），序列模型，采用双向LSTM结构，更好地捕获句子中的语义特征；
-+ ERNIE（Enhanced Representation through kNowledge IntEgration），百度自研基于海量数据和先验知识训练的通用文本语义表示模型，并基于此在情感倾向分类数据集上进行fine-tune获得。
-+ ERNIE+BI-LSTM，基于ERNIE语义表示对接上层BI-LSTM模型，并基于此在情感倾向分类数据集上进行Fine-tune获得；
+机器阅读理解
+----------
 
-#### 数据格式说明
+机器阅读理解(MRC)是自然语言处理(NLP)中的核心任务之一，最终目标是让机器像人类一样阅读文本，提炼文本信息并回答相关问题。深度学习近年来在NLP中得到广泛使用，也使得机器阅读理解能力在近年有了大幅提高，但是目前研究的机器阅读理解都采用人工构造的数据集，以及回答一些相对简单的问题，和人类处理的数据还有明显差距，因此亟需大规模真实训练数据推动MRC的进一步发展。
 
-训练、预测、评估使用的数据可以由用户根据实际的应用场景，自己组织数据。数据由两列组成，以制表符分隔，第一列是以空格分词的中文文本（分词预处理方法将在下文具体说明），文件为utf8编码；第二列是情感倾向分类的类别（0表示消极；1表示积极），注意数据文件第一行固定表示为"text_a\tlabel"
+百度阅读理解数据集是由百度自然语言处理部开源的一个真实世界数据集，所有的问题、原文都来源于实际数据(百度搜索引擎数据和百度知道问答社区)，答案是由人类回答的。每个问题都对应多个答案，数据集包含200k问题、1000k原文和420k答案，是目前最大的中文MRC数据集。百度同时开源了对应的阅读理解模型，称为DuReader，采用当前通用的网络分层结构，通过双向attention机制捕捉问题和原文之间的交互关系，生成query-aware的原文表示，最终基于query-aware的原文表示通过point network预测答案范围。
 
-```text
-特 喜欢 这种 好看的 狗狗	              1
-这 真是 惊艳 世界 的 中国 黑科技	      1
-环境 特别 差 ，脏兮兮 的，再也 不去 了     0
-```
-注：本项目额外提供了分词预处理脚本（在本项目的preprocess目录下），可供用户使用，具体使用方法如下：
-```shell
-python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.utf8.seg
-
-#其中test.txt.utf8为待分词的文件，一条文本数据一行，utf8编码，分词结果存放在test.txt.utf8.seg文件中。
-```
-
-#### 代码结构说明
-
-```text
-.
-├── senta_config.json       # 模型配置文件
-├── config.py               # 定义了该项目模型的相关配置，包括具体模型类别、以及模型的超参数
-├── reader.py               # 定义了读入数据，加载词典的功能
-├── run_classifier.py       # 该项目的主函数，封装包括训练、预测、评估的部分
-├── run_ernie_classifier.py # 基于ERNIE表示的项目的主函数
-├── run_ernie.sh            # 基于ERNIE的训练、预测、评估运行脚本
-├── run.sh                  # 训练、预测、评估运行脚本
-├── utils.py                # 定义了其他常用的功能函数
-```
-
-#### 如何组建自己的模型
-
-可以根据自己的需求，组建自定义的模型，具体方法如下所示：
-
-1. 定义自己的网络结构 
-用户可以在 ```models/classification/nets.py```中，定义自己的模型，只需要增加新的函数即可。假设用户自定义的函数名为```user_net```
-2. 更改模型配置
-在 ```senta_config.json```中需要将 ```model_type```改为用户自定义的 ```user_net```
-3. 模型训练，运行训练、评估、预测脚本即可（具体方法同上）
-
-## 如何贡献代码
-
-如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
+-  [DuReader in PaddlePaddle Fluid](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/reading_comprehension)

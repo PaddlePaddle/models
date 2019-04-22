@@ -6,7 +6,7 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.95
 export CPU_NUM=1
 
 TASK_NAME='senta'
-DATA_PATH=./Senta_data/
+DATA_PATH=./senta_data/
 CKPT_PATH=./save_models
 MODEL_PATH=./save_models/step_1800/
 
