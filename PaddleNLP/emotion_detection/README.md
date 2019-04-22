@@ -19,7 +19,15 @@
 
 ## 快速开始
 
-本项目依赖于 Paddlepaddle Fluid 1.3.2，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+本项目依赖于 Python2.7 和 Paddlepaddle Fluid 1.3.2，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+
+#### 安装代码
+
+克隆代码库到本地
+```shell
+git clone https://github.com/PaddlePaddle/models.git
+cd models/PaddleNLP/emotion_detection
+```
 
 #### 数据准备
 
