@@ -2,7 +2,7 @@
 
 PaddleNLP是百度开源的工业级NLP工具与预训练模型集，能够适应全面丰富的NLP任务，方便开发者灵活插拔尝试多种网络结构，并且让应用最快速达到工业级效果。
 
-PaddleNLP完全基于[Paddle Fluid](http://www.paddlepaddle.org/)开发，并提供依托于百度百亿级大数据的预训练模型，能够极大地方便NLP研究者和工程师快速应用。使用者可以用Paddle NLP快速实现文本分类、文本匹配、序列标注、阅读理解、智能对话等NLP任务的组网、建模和部署，而且可以直接使用百度开源工业级预训练模型进行快速应用。用户在极大地减少研究和开发成本的同时，也可以获得更好的基于工业实践的应用效果。
+PaddleNLP完全基于[PaddleFluid](http://www.paddlepaddle.org/)开发，并提供依托于百度百亿级大数据的预训练模型，能够极大地方便NLP研究者和工程师快速应用。使用者可以用Paddle NLP快速实现文本分类、文本匹配、序列标注、阅读理解、智能对话等NLP任务的组网、建模和部署，而且可以直接使用百度开源工业级预训练模型进行快速应用。用户在极大地减少研究和开发成本的同时，也可以获得更好的基于工业实践的应用效果。
 
 PaddleNLP的特点与优势：
 1. 全面丰富的中文NLP应用任务。
@@ -44,7 +44,7 @@ PaddleNLP的特点与优势：
 以下以情感分析任务为例。
 ## 快速开始
 #### 版本依赖
-本项目依赖于 Paddle Fluid 1.3.2，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+本项目依赖于 PaddleFluid 1.3.2，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 python版本依赖python 2.7
 
