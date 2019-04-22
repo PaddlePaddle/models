@@ -319,7 +319,7 @@ def main(args):
                 else:
                     fetch_list = []
 
-                outputs = train_exe.run(program=train_program, fetch_list=fetch_list, return_numpy=False)
+                outputs = train_exe.run(fetch_list=fetch_list, return_numpy=False)
                 if steps % args.skip_steps == 0:
                     np_loss, np_acc, np_num_seqs = outputs
                     np_loss = np.array(np_loss)
