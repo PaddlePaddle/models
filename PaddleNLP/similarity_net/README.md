@@ -1,7 +1,7 @@
 # 短文本语义匹配
 ## 简介
 ### 任务说明
-短文本语义匹配(SimilarityNet, SimNet)是一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MMDNN等核心网络结构形式，提供语义相似度计算训练和预测框架，适用于信息检索、新闻推荐、智能客服等多个应用场景，帮助企业解决语义匹配问题。
+短文本语义匹配(SimilarityNet, SimNet)是一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MMDNN等核心网络结构形式，提供语义相似度计算训练和预测框架，适用于信息检索、新闻推荐、智能客服等多个应用场景，帮助企业解决语义匹配问题。可通过[AI开放平台-短文本相似度](https://ai.baidu.com/tech/nlp_basic/simnet)线上体验。
 ### 效果说明
 基于百度海量搜索数据，我们训练了一个SimNet-BOW-Pairwise语义匹配模型，在一些真实的FAQ问答场景中，该模型效果比基于字面的相似度方法AUC提升5%以上，我们基于百度自建测试集（包含聊天、客服等数据集）和语义匹配数据集(LCQMC)进行评测，效果如下表所示。LCQMC数据集以Accuracy为评测指标，而pairwise模型的输出为相似度，因此我们采用0.91作为分类阈值，相比于基线模型中网络结构同等复杂的CBOW模型（准确率为0.737），我们模型的准确率为0.7517。
 
@@ -12,7 +12,7 @@
 |BOW_Pairwise|0.6766|0.7308|0.7643|1.5630|0.7517|
 ## 快速开始
 ### 安装说明
-#### paddle安装
+#### 版本依赖
 本项目依赖于 Paddlepaddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
 python版本依赖python 2.7
 #### 安装代码
@@ -21,7 +21,6 @@ python版本依赖python 2.7
 git clone https://github.com/PaddlePaddle/models.git
 cd similarity_net
 ```
-#### 环境依赖
 ### 开始第一次模型调用
 #### 数据准备
 下载经过预处理的数据，运行命令后，data目录下会存在训练集数据示例、集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。
@@ -32,13 +31,13 @@ tar xzf simnet_dataset-1.0.0.tar.gz
 #### 模型准备
 我们开源了基于大规模数据训练好的pairwise模型（基于bow模型训练），我们提供两种下载方式，模型保在./model_files/simnet_bow_pairwise_pretrained_model/下。
 
-#### 方式一：基于PaddleHub命令行工具（PaddleHub[安装方式](https://github.com/PaddlePaddle/PaddleHub)）
+##### 方式一：基于PaddleHub命令行工具（PaddleHub[安装方式](https://github.com/PaddlePaddle/PaddleHub)）
 ```shell
 mkdir model_files
 hub download simnet_bow_pairwise --output_path ./
 tar xzf simnet_bow-pairwise-1.0.0.tar.gz -C ./model_files
 ```
-#### 方式二：直接下载
+##### 方式二：直接下载
 ```shell
 mkdir model_files
 wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_bow-pairwise-1.0.0.tar.gz
