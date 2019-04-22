@@ -91,7 +91,7 @@ hub download dmtk_models --output_path ./
 tar -xvf dmtk_models_1.0.0.tar.gz
 ```
 
-&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;方式一：直接下载
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;方式二：直接下载
 
 ```
 sh download_models.sh
