@@ -68,35 +68,36 @@ sh run.sh train
 传统的文本匹配技术如信息检索中的向量空间模型 VSM、BM25 等算法，主要解决词汇层面的相似度问题，这种方法的效果在实际应用中受到语言的多义词和语言结构等问题影响。SimNet 在语义表示上沿袭了隐式连续向量表示的方式，但对语义匹配问题在深度学习框架下进行了 End-to-End 的建模，将point-wise与 pair-wise 两种有监督学习方式全部统一在一个整体框架内。在实际应用场景下，将海量的用户点击行为数据转化为大规模的弱标记数据，在网页搜索任务上的初次使用即展现出极大威力，带来了相关性的明显提升。
 ### 模型原理介绍
 SimNet如下图所示：
-![struct](https://github.com/PaddlePaddle/models/blob/paddle-nlp/PaddleNLP/paddle-nlp/similarity_net/struct.jpg)
+![struct](https://github.com/PaddlePaddle/models/blob/paddle-nlp/PaddleNLP/similarity_net/struct.jpg)
+
 ### 数据格式说明
 训练模式一共分为pairwise和pointwise两种模式。
 #### pairwise模式：
 训练集格式如下： query \t pos_query \t neg_query。
 query、pos_query和neg_query是以空格分词的中文文本，中间使用制表符'\t'隔开，pos_query表示与query相似的正例，neg_query表示与query不相似的随机负例，文本编码为utf-8。</br>
 ```
-现在 安卓模拟器 哪个 好 用     电脑 安卓模拟器 哪个 更好      电信 手机 可以 用 腾讯 大王 卡 吗 ?</br>
-土豆 一亩地 能 收 多少 斤      一亩 地土豆 产 多少 斤        一亩 地 用 多少 斤 土豆 种子</br>
+现在 安卓模拟器 哪个 好 用     电脑 安卓模拟器 哪个 更好      电信 手机 可以 用 腾讯 大王 卡 吗 ?
+土豆 一亩地 能 收 多少 斤      一亩 地土豆 产 多少 斤        一亩 地 用 多少 斤 土豆 种子
 ```
 
 开发集和测试集格式：query1 \t query2 \t label。</br>
 
 query1和query2表示以空格分词的中文文本，label为0或1，1表示query1与query2相似，0表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。</br>
 ```
-现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1</br>
-为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1</br>
-常喝 薏米 水 有 副 作用 吗    女生 可以 长期 喝 薏米 水养生 么    0</br>
-长 的 清新 是 什么 意思      小 清新 的 意思 是 什么 0</br>
+现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1
+为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1
+常喝 薏米 水 有 副 作用 吗    女生 可以 长期 喝 薏米 水养生 么    0
+长 的 清新 是 什么 意思      小 清新 的 意思 是 什么 0
 ```
 
 #### pointwise模式：
 
 训练集、开发集和测试集数据格式相同：query1和query2表示以空格分词的中文文本，label为0或1，1表示query1与query2相似，0表示query1与query2不相似，query1、query2和label中间以制表符'\t'隔开，文本编码为utf-8。
 ```
-现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1</br>
-为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1</br>
-常喝 薏米 水 有 副 作用 吗    女生 可以 长期 喝 薏米 水养生 么    0</br>
-长 的 清新 是 什么 意思     小 清新 的 意思 是 什么 0</br>
+现在 安卓模拟器 哪个 好 用    电脑 安卓模拟器 哪个 更好      1
+为什么 头发 掉 得 很厉害      我 头发 为什么 掉 得 厉害    1
+常喝 薏米 水 有 副 作用 吗    女生 可以 长期 喝 薏米 水养生 么    0
+长 的 清新 是 什么 意思     小 清新 的 意思 是 什么 0
 ```
 
 infer数据集：
@@ -105,8 +106,8 @@ pairwise和pointwise的infer数据集格式相同：query1 \t query2。</br>
 
 query1和query2为以空格分词的中文文本。
 ```
-怎么 调理 湿热 体质 ？   湿热 体质 怎样 调理 啊 </br>
-搞笑 电影 美国   搞笑 的 美国 电影</br>
+怎么 调理 湿热 体质 ？   湿热 体质 怎样 调理 啊
+搞笑 电影 美国   搞笑 的 美国 电影
 ```
 
 __注__：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如下：
@@ -124,27 +125,27 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 - Config: 定义多种模型的配置文件</br>
 ### 如何训练
 ```shell
-python run_classifier.py \ </br>
-   --task_name ${TASK_NAME} \ </br>
-   --use_cuda false \ #是否使用GPU </br>
-   --do_train True \  #是否训练 </br>
-   --do_valid True \  #是否在训练中测试开发集 </br>
-   --do_test True \   #是否验证测试集 </br>
-   --do_infer False \ #是否预测</br>
-   --batch_size 128 \ #batch_size的值</br>
-   --train_data_dir ${TRAIN_DATA_kPATH} \ #训练集的路径</br>
-   --valid_data_dir ${VALID_DATA_PATH} \ #开发集的路径</br>
-   --test_data_dir ${TEST_DATA_PATH} \   #测试集的路径</br>
-   --infer_data_dir ${INFER_DATA_PATH} \ #待推测数据的路径</br>
-   --output_dir ${CKPT_PATH} \           #模型存放的路径</br>
-   --config_path ${CONFIG_PATH} \        #配置文件路径</br>
-   --vocab_path ${VOCAB_PATH} \          #字典路径</br>
-   --epoch 10 \    #epoch值</br>
-   --save_steps 1000 \  #每save_steps保存一次模型</br>
-   --validation_steps 100 \ #每validation_steps验证一次开发集结果</br>
-   --task_mode ${TASK_MODE} #训练模式，pairwise或pointwise，与相应的配置文件匹配。</br>
-   --compute_accuracy False \   #是否计算accuracy</br>
-   --lamda 0.91 \    #pairwise模式计算accuracy时的阈值</br>
+python run_classifier.py \
+   --task_name ${TASK_NAME} \ 
+   --use_cuda false \ #是否使用GPU
+   --do_train True \  #是否训练
+   --do_valid True \  #是否在训练中测试开发集
+   --do_test True \   #是否验证测试集
+   --do_infer False \ #是否预测
+   --batch_size 128 \ #batch_size的值
+   --train_data_dir ${TRAIN_DATA_kPATH} \ #训练集的路径
+   --valid_data_dir ${VALID_DATA_PATH} \ #开发集的路径
+   --test_data_dir ${TEST_DATA_PATH} \   #测试集的路径
+   --infer_data_dir ${INFER_DATA_PATH} \ #待推测数据的路径
+   --output_dir ${CKPT_PATH} \           #模型存放的路径
+   --config_path ${CONFIG_PATH} \        #配置文件路径
+   --vocab_path ${VOCAB_PATH} \          #字典路径
+   --epoch 10 \    #epoch值
+   --save_steps 1000 \  #每save_steps保存一次模型
+   --validation_steps 100 \ #每validation_steps验证一次开发集结果
+   --task_mode ${TASK_MODE} #训练模式，pairwise或pointwise，与相应的配置文件匹配。
+   --compute_accuracy False \   #是否计算accuracy
+   --lamda 0.91 \    #pairwise模式计算accuracy时的阈值
 ```
 ### 如何组建自己的模型
 用户可以根据自己的需求，组建自定义的模型，具体方法如下所示：
