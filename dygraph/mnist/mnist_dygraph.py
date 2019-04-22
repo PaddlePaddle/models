@@ -1,17 +1,14 @@
 from __future__ import print_function
 
 import contextlib
-import unittest
 import numpy as np
 import six
 
 import paddle
 import paddle.fluid as fluid
-from paddle.fluid import core
 from paddle.fluid.optimizer import SGDOptimizer
 from paddle.fluid.dygraph.nn import Conv2D, Pool2D, FC
 from paddle.fluid.dygraph.base import to_variable
-import time
 
 
 class SimpleImgConvPool(fluid.dygraph.Layer):
