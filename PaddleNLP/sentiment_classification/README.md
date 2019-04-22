@@ -77,7 +77,7 @@ senta_config.json中需要修改如下：
 如果用户需要使用预训练的ERNIE+BI-LSTM模型，需要修改run_ernie.sh中的配置如下：
 ```shell
 # 在eval()函数中，修改如下参数：
---init_checkpoint=senta_model/ernie_bilstm_model/
+--init_checkpoint senta_model/ernie_bilstm_model/
 --model_type "ernie_bilstm"
 ```
 
@@ -160,12 +160,12 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 3. 模型训练、评估、预测需要在 run.sh 、run_ernie.sh 中将模型、数据、词典路径等配置进行修改
 
 #### 如何基于百度开源模型进行Finetune
-用户可基于百度开源模型在自有数据上实现Finetune训练，以期获得更好的效果提升；如『简介』部分中，我们基于百度开源模型在ChnSentiCorp数据集上Finetune后可以得到更好的效果，具体模型Finetuen方法如下所示，如果用户基于开源BI-LSTM模型进行Finetune，需要修改run.sh和senta_config.json文件；
+用户可基于百度开源模型在自有数据上实现Finetune训练，以期获得更好的效果提升；如『简介』部分中，我们基于百度开源模型在ChnSentiCorp数据集上Finetune后可以得到更好的效果，具体模型Finetune方法如下所示，如果用户基于开源BI-LSTM模型进行Finetune，需要修改run.sh和senta_config.json文件；
 run.sh脚本修改如下：
 ```shell
 # 在train()函数中，增加--init_checkpoint选项；修改--vocab_path
---init_checkpoint=senta_model/bilstm_model/params
---vocab_path=senta_model/bilstm_model/word_dict.txt
+--init_checkpoint senta_model/bilstm_model/params
+--vocab_path senta_model/bilstm_model/word_dict.txt
 ```
 senta_config.json中需要修改如下：
 ```shell
@@ -175,8 +175,8 @@ senta_config.json中需要修改如下：
 如果用户基于开源ERNIE+BI-LSTM模型进行Finetune，需要更新run_ernie.sh脚本，具体修改如下：
 ```shell
 # 在train()函数中，修改--init_checkpoint选项；修改--model_type
---init_checkpoint=senta_model/ernie_bilstm_model
---model_type="ernie_bilstm"
+--init_checkpoint senta_model/ernie_bilstm_model
+--model_type "ernie_bilstm"
 ```
 
 ## 如何贡献代码
