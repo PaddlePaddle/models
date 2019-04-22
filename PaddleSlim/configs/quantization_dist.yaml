@@ -1,0 +1,38 @@
+# Step1: distillation training from epoch-0 to epoch-120
+# Step2: quantization training from epoch-121 to epoch-141
+version: 1.0
+distillers:
+    fsp_distiller:
+        class: 'FSPDistiller'
+        teacher_pairs: [['res2a_branch2a.conv2d.output.1.tmp_0', 'res3a_branch2a.conv2d.output.1.tmp_0']]
+        student_pairs: [['depthwise_conv2d_1.tmp_0', 'conv2d_3.tmp_0']]
+        distillation_loss_weight: 1
+    l2_distiller:
+        class: 'L2Distiller'
+        teacher_feature_map: 'res_fc.tmp_0'
+        student_feature_map: 'fc_0.tmp_0'
+        distillation_loss_weight: 1
+strategies:
+    distillation_strategy:
+        class: 'DistillationStrategy'
+        distillers: ['fsp_distiller', 'l2_distiller']
+        start_epoch: 0
+        end_epoch: 120
+    quantization_strategy:
+        class: 'QuantizationStrategy'
+        start_epoch: 121
+        end_epoch: 141
+        float_model_save_path: './output/float'
+        mobile_model_save_path: './output/mobile'
+        int8_model_save_path: './output/int8'
+        weight_bits: 8
+        activation_bits: 8
+        weight_quantize_type: 'abs_max'
+        activation_quantize_type: 'abs_max'
+
+compressor:
+    epoch: 142
+    checkpoint_path: './checkpoints/'
+    strategies:
+        - distillation_strategy
+        - quantization_strategy
