@@ -112,6 +112,7 @@ def parse_args():
     add_arg('no_mixup_iter',    int,    40000,  "Disable mixup in last N iter.")
     # TRAIN TEST INFER
     add_arg('input_size',       int,    608,    "Image input size of YOLOv3.")
+    add_arg('syncbn',           bool,   True,   "Whether to use synchronized batch normalization.")
     add_arg('random_shape',     bool,   True,   "Resize to random shape for train reader.")
     add_arg('valid_thresh',     float,  0.005,  "Valid confidence score for NMS.")
     add_arg('nms_thresh',       float,  0.45,   "NMS threshold.")
