@@ -145,9 +145,6 @@ def gru_decoder_with_attention(target_embedding, encoder_vec, encoder_proj,
         decoder_inputs = fc_1 + fc_2
         h, _, _ = fluid.layers.gru_unit(
             input=decoder_inputs, hidden=hidden_mem, size=decoder_size * 3)
-        print(decoder_inputs.shape)
-        print(hidden_mem.shape)
-        print(decoder_size)
         rnn.update_memory(hidden_mem, h)
         out = fluid.layers.fc(input=h,
                               size=num_classes + 2,
@@ -158,8 +155,6 @@ def gru_decoder_with_attention(target_embedding, encoder_vec, encoder_proj,
 
 
 def attention_train_net(args, data_shape, num_classes):
-
-    print("xxx")
 
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
     label_in = fluid.layers.data(
@@ -298,10 +293,6 @@ def attention_infer(images, num_classes, use_cudnn=True):
             input=decoder_inputs,
             hidden=pre_state_expanded,
             size=decoder_size * 3)
-        print(decoder_inputs.shape)
-        print(pre_state_expanded.shape)
-        import sys
-        sys.stdout.flush()
 
         current_state_with_lod = fluid.layers.lod_reset(
             x=current_state, y=pre_score)
