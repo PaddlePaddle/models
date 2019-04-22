@@ -20,14 +20,23 @@ Overview of Deep Attention Matching Network
 ### 安装说明
 1. paddle安装
 
-	本项目依赖于 Paddlepaddle Fluid 1.3.1，请参考安装指南进行安装。
+	本项目依赖于Paddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
 
 2. 安装代码
+
+    克隆数据集代码库到本地
+    ```
+    git clone https://github.com/PaddlePaddle/models.git
+    cd models/PaddleNLP/dialogue_model_toolkit/deep_attention_matching
+    ```
+
 3. 环境依赖
+
+    python版本依赖python 2.7
 ### 开始第一次模型调用
 1. 数据准备
 
-	下载经过预处理的数据，运行该脚本之后，data目录下会存在unlabel和douban两个文件夹。
+	下载经过预处理的数据，运行该脚本之后，data目录下会存在ubuntu和douban两个文件夹。
 	```
   	cd data
   	sh download_data.sh
