@@ -47,7 +47,7 @@ cd models/PaddleNLP/reading_comprehension/
 
 
 ### 下载第三方依赖
-在本基线系统中，我们采用了Bleu以及Rouge-L指标作为模型的评估标准。这些指标的计算脚本位于"https://github.com/tylin/coco-caption"，可以通过运行以下命令进行下载
+在本基线系统中，我们采用了Bleu以及Rouge-L指标作为模型的评估标准。这些指标的计算脚本位于[coco-caption](https://github.com/tylin/coco-caption), 可以通过运行以下命令进行下载
 
 ```
 cd utils && bash download_thirdparty.sh
