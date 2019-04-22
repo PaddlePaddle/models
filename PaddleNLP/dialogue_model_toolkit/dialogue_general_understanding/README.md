@@ -39,7 +39,7 @@ SWDA：Switchboard Dialogue Act Corpus;
 
 #### &ensp;&ensp;a、paddle安装
 
-&ensp;&ensp;&ensp;&ensp;本项目依赖于Paddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
+&ensp;&ensp;&ensp;&ensp;本项目依赖于PaddlePaddle 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
 
 #### &ensp;&ensp;b、安装代码
 
