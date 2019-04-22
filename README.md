@@ -39,15 +39,14 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 ## PaddleNLP
 模型|简介|模型优势|参考论文
 --|:--:|:--:|:--:
-[Transformer](./PaddleNLP/neural_machine_translation/transformer/README_cn.md)|机器翻译模型|基于self-attention，计算复杂度小，并行度高，容易学习长程依赖，翻译效果更好|[Attention Is All You Need](https://arxiv.org/abs/1706.03762)
+[Transformer](./PaddleNLP/neural_machine_translation/transformer/README.md)|机器翻译模型|基于self-attention，计算复杂度小，并行度高，容易学习长程依赖，翻译效果更好|[Attention Is All You Need](https://arxiv.org/abs/1706.03762)
 [BERT](https://github.com/PaddlePaddle/LARK/tree/develop/BERT)|语义表示模型|在多个 NLP 任务上取得 SOTA 效果，支持多卡多机训练，支持混合精度训练|[BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding](https://arxiv.org/abs/1810.04805)
 [ELMo](https://github.com/PaddlePaddle/LARK/tree/develop/ELMo)|语义表示模型|支持多卡训练，训练速度比主流实现快1倍，提供在中文词法分析任务上迁移学习的示例。|[ELMo: Embeddings from Language Models](https://arxiv.org/abs/1802.05365)
 [LAC](https://github.com/baidu/lac/blob/master/README.md)|联合的词法分析模型|能够整体性地完成中文分词、词性标注、专名识别任务|[Chinese Lexical Analysis with Deep Bi-GRU-CRF Network](https://arxiv.org/abs/1807.01882)
 [Senta](https://github.com/baidu/Senta/blob/master/README.md)|情感倾向分析模型集|百度AI开放平台中情感倾向分析模型|-
-[DAM](./PaddleNLP/deep_attention_matching_net)|语义匹配模型|百度自然语言处理部发表于ACL-2018的工作,用于检索式聊天机器人多轮对话中应答的选择|[Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network](http://aclweb.org/anthology/P18-1103)
+[DAM](./PaddleNLP/dialogue_model_toolkit/deep_attention_matching)|语义匹配模型|百度自然语言处理部发表于ACL-2018的工作,用于检索式聊天机器人多轮对话中应答的选择|[Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network](http://aclweb.org/anthology/P18-1103)
 [SimNet](https://github.com/baidu/AnyQ/blob/master/tools/simnet/train/paddle/README.md)|语义匹配框架|使用SimNet构建出的模型可以便捷的加入AnyQ系统中，增强AnyQ系统的语义匹配能力|-
-[DuReader](./PaddleNLP/machine_reading_comprehension/README.md)|阅读理解模型|百度MRC数据集上的机器阅读理解模型|-
-[Bi-GRU-CRF](./PaddleNLP/sequence_tagging_for_ner/README.md)|命名实体识别|结合了CRF和双向GRU的命名实体识别模型|-
+[DuReader](./PaddleNLP/reading_comprehension/README.md)|阅读理解模型|百度MRC数据集上的机器阅读理解模型|-
 [dialogue model](https://github.com/baidu/knowledge-driven-dialogue/tree/master/generative_paddle/README.md)|知识驱动的对话模型|基于双向RNN和attention实现的生成式对话系统|-
 
 
