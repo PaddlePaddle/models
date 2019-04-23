@@ -1,0 +1,94 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+MODEL:
+  TYPE: Faster-RCNN
+  BACKBONE: ResNet50
+  FPN: ON
+
+FPN:
+  MULTILEVEL_ROIS: True
+
+RPN_HEAD:
+  HEAD_FUNC: ResNet.addRpnHead
+
+  PREPOSAL:
+    PRE_NMS_TOPN: 12000 
+    POST_NMS_TOPN: 2000
+    NMS_THRESH: 0.7
+
+  ROI:
+    BATCH_SIZE_PER_IM: 512
+    FG_FRACTION: 0.25
+    FG_THRESH: 0.5
+    BG_THRESH_HIGH: 0.5
+    BG_THRESH_LOW: 0.0
+
+BBOX_HEAD:
+  HEAD_FUNC: ResNet.addBboxHead
+
+MASK_HEAD:
+  HEAD_FUNC: ResNet.addMaskHead
+  STRIDES: [32, 16, 8, 4]
+
+ROI_EXTRACTOR:
+  EXTRACT_METHOD: RoIAlign
+  STRIDE: 16
+
+ENV:
+  GPU: ON
+  GPU_NUM: 8
+  MULTIPROCESS_READER: OFF
+
+DATA:
+  DATASET: coco2017
+  CLASS_NUM: 81
+
+TRANSFORM:
+  PIPELINE: RCNN
+
+OPTIMIZER:
+  TYPE: Momentum
+  MOMENTUM: 0.9
+
+  LR_DECAY:
+    POLICY: piecewise_decay 
+    BOUNDARIES: [120000, 160000]
+    VALUES: [0.01, 0.001, 0.0001]
+
+  LR_WARMUP:
+    WARMUP: ON
+    WARMUP_ITERS: 500
+    WARMUP_INIT_FACTOR: 1. / 3.
+
+  WEIGHT_DECAY:
+    TYPE: L2
+    FACTOR: 0.0001
+    BN_FACTOR: 0
+
+TRAIN:
+  MAX_ITERS: 180000
+  BATCH_SIZE_PER_DEVICE: 1
+  FREEZE_AT: 0
+  SCALES: [800]
+  MAX_SIZE: 1333
+  PRETRAIN_WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  BATCH_NORM_TYPE: BN
+
+TEST:
+  SCALE: 800
+  MAX_SIZE: 1333
+  SCORE_THRESH: 0.05
+  WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
