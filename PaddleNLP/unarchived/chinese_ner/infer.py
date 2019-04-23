@@ -92,7 +92,7 @@ def infer(args):
     feeder = fluid.DataFeeder(feed_list=[word, mention, target], place=place)
     exe = fluid.Executor(place)
 
-    inference_scope = fluid.core.Scope()
+    inference_scope = fluid.Scope()
     with fluid.scope_guard(inference_scope):
         [inference_program, feed_target_names,
          fetch_targets] = fluid.io.load_inference_model(args.model_path, exe)

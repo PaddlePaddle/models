@@ -26,7 +26,6 @@ import multiprocessing
 
 import paddle
 import paddle.fluid as fluid
-import paddle.fluid.core as core
 import paddle.fluid.framework as framework
 from paddle.fluid.executor import Executor
 
@@ -389,7 +388,7 @@ def train(logger, args):
                 optimizer.minimize(obj_func)
 
             # initialize parameters
-            place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
+            place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
             exe = Executor(place)
             if args.load_dir:
                 logger.info('load from {}'.format(args.load_dir))

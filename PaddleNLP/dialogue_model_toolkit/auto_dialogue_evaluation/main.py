@@ -352,7 +352,7 @@ def evaluate(args):
 
     t0 = time.time()
 
-    with fluid.scope_guard(fluid.core.Scope()):
+    with fluid.scope_guard(fluid.Scope()):
         infer_program, feed_target_names, fetch_vars = fluid.io.load_inference_model(
             args.init_model, exe)
 
@@ -402,7 +402,7 @@ def infer(args):
 
     t0 = time.time()
 
-    with fluid.scope_guard(fluid.core.Scope()):
+    with fluid.scope_guard(fluid.Scope()):
         infer_program, feed_target_names, fetch_vars = fluid.io.load_inference_model(
             args.init_model, exe)
 

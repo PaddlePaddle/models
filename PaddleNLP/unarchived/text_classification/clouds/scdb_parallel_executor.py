@@ -348,7 +348,7 @@ def infer(test_reader, use_cuda, model_path=None):
     place = fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    inference_scope = fluid.core.Scope()
+    inference_scope = fluid.Scope()
     with fluid.scope_guard(inference_scope):
         [inference_program, feed_target_names,
          fetch_targets] = fluid.io.load_inference_model(model_path, exe)
