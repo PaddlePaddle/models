@@ -73,13 +73,12 @@ class OptimizerBuilder():
 
 if __name__ == "__main__":
     from config import load_cfg
-    
-    cfg = load_cfg('./config/faster-rcnn_ResNet-50.yml')
-    ob = OptimizerBuilder(cfg.OPTIMIZER)
-    assert ob.get_optimizer() is not None
-    assert ob.get_bn_regularizer() is not None
 
-    cfg = load_cfg('./config/yolov3_darknet53_syncbn.yml')
-    ob = OptimizerBuilder(cfg.OPTIMIZER)
-    assert ob.get_optimizer() is not None
-    assert ob.get_bn_regularizer() is not None
+    def test_opt_with_cfg(cfg_file):
+        cfg = load_cfg(cfg_file)
+        ob = OptimizerBuilder(cfg.OPTIMIZER)
+        assert ob.get_optimizer() is not None
+        assert ob.get_bn_regularizer() is not None
+
+    test_opt_with_cfg('./config/faster-rcnn_ResNet-50.yml')
+    test_opt_with_cfg('./config/yolov3_darknet53_syncbn.yml')
