@@ -34,18 +34,22 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 
 # Fixing name conflicts in distillation
-mv ResNet50_pretrained/conv1_weights ResNet50_pretrained/res_conv1_weights
-mv ResNet50_pretrained/fc_0.w_0 ResNet50_pretrained/res_fc.w_0
-mv ResNet50_pretrained/fc_0.b_0 ResNet50_pretrained/res_fc.b_0
+cd ${pretrain_dir}/ResNet50_pretrained
+mv conv1_weights res_conv1_weights
+mv fc_0.w_0 res_fc.w_0
+mv fc_0.b_0 res_fc.b_0
+cd -
 python compress.py \
 --model "MobileNet" \
 --teacher_model "ResNet50" \
 --teacher_pretrained_model ./pretrain/ResNet50_pretrained \
 --compress_config ./configs/mobilenetv1_resnet50_distillation.yaml
 
-mv ResNet50_pretrained/res_conv1_weights ResNet50_pretrained/conv1_weights
-mv ResNet50_pretrained/res_fc.w_0 ResNet50_pretrained/fc_0.w_0
-mv ResNet50_pretrained/res_fc.b_0 ResNet50_pretrained/fc_0.b_0
+cd ${pretrain_dir}/ResNet50_pretrained
+mv res_conv1_weights conv1_weights
+mv res_fc.w_0 fc_0.w_0
+mv res_fc.b_0 fc_0.b_0
+cd -
 
 # for sensitivity filter pruning
 #-------------------------------
@@ -74,28 +78,32 @@ mv ResNet50_pretrained/res_fc.b_0 ResNet50_pretrained/fc_0.b_0
 
 # for distillation with quantization
 #-----------------------------------
-#export CUDA_VISIBLE_DEVICES=0
+#export CUDA_VISIBLE_DEVICES=4,5,6,7
 #
 ## Fixing name conflicts in distillation
-#mv ResNet50_pretrained/conv1_weights ResNet50_pretrained/res_conv1_weights
-#mv ResNet50_pretrained/fc_0.w_0 ResNet50_pretrained/res_fc.w_0
-#mv ResNet50_pretrained/fc_0.b_0 ResNet50_pretrained/res_fc.b_0
+#cd ${pretrain_dir}/ResNet50_pretrained
+#mv conv1_weights res_conv1_weights
+#mv fc_0.w_0 res_fc.w_0
+#mv fc_0.b_0 res_fc.b_0
+#cd -
 #
 #python compress.py \
 #--model "MobileNet" \
 #--teacher_model "ResNet50" \
-#--teacher_pretrained_model ./data/pretrain/ResNet50_pretrained \
+#--teacher_pretrained_model ./pretrain/ResNet50_pretrained \
 #--compress_config ./configs/quantization_dist.yaml
 #
-#mv ResNet50_pretrained/res_conv1_weights ResNet50_pretrained/conv1_weights
-#mv ResNet50_pretrained/res_fc.w_0 ResNet50_pretrained/fc_0.w_0
-#mv ResNet50_pretrained/res_fc.b_0 ResNet50_pretrained/fc_0.b_0
+#cd ${pretrain_dir}/ResNet50_pretrained
+#mv res_conv1_weights conv1_weights
+#mv res_fc.w_0 fc_0.w_0
+#mv res_fc.b_0 fc_0.b_0
+#cd -
 
 # for uniform filter pruning with quantization
 #---------------------------------------------
 #export CUDA_VISIBLE_DEVICES=0
 #python compress.py \
 #--model "MobileNet" \
-#--pretrained_model ./data/pretrain/MobileNetV1_pretrained \
+#--pretrained_model ./pretrain/MobileNetV1_pretrained \
 #--compress_config ./configs/quantization_pruning.yaml
 

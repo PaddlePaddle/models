@@ -12,7 +12,7 @@
 
 ## 安装
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.4或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/install_doc.html#paddlepaddle)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.4或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ## 简介
 
@@ -134,15 +134,23 @@ Train Loss
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU评估。
 
-模型评估结果：
+若训练时指定`--syncbn=False`, 模型评估精度如下:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
-| 608x608| 37.7 | 59.8 | 40.8 |
+| 608x608 | 37.7 | 59.8 | 40.8 |
 | 416x416 | 36.5 | 58.2 | 39.1 |
 | 320x320 | 34.1 | 55.4 | 36.3 |
 
-- **注意: **评估结果基于`pycocotools`评估器，没有滤除`score < 0.05`的预测框，其他框架有此滤除操作会导致精度下降。
+若训练时指定`--syncbn=True`, 模型评估精度如下:
+
+|   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
+| :------: | :------: | :------: | :------: |
+| 608x608 | 38.9 | 61.1 | 42.0 |
+| 416x416 | 37.5 | 59.6 | 40.2 |
+| 320x320 | 34.8 | 56.4 | 36.9 |
+
+- **注意：** 评估结果基于`pycocotools`评估器，没有滤除`score < 0.05`的预测框，其他框架有此滤除操作会导致精度下降。
 
 
 
@@ -157,7 +165,9 @@ Train Loss
         --image_name=000000000139.jpg \
         --draw_threshold=0.5
 
-模型预测速度：
+- 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU预测。
+
+模型预测速度（Tesla P40）：
 
 
 |   input size  | 608x608 | 416x416 | 320x320 |
