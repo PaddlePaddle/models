@@ -31,7 +31,7 @@ def infer(model_path, batch_size, test_data_file, vocab_file, target_file,
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    inference_scope = fluid.core.Scope()
+    inference_scope = fluid.Scope()
     with fluid.scope_guard(inference_scope):
         [inference_program, feed_target_names,
          fetch_targets] = fluid.io.load_inference_model(model_path, exe)

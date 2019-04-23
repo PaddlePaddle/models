@@ -22,7 +22,6 @@ import os
 
 import paddle
 import paddle.fluid as fluid
-import paddle.fluid.core as core
 import paddle.fluid.framework as framework
 from paddle.fluid.executor import Executor
 from paddle.fluid.contrib.decoder.beam_search_decoder import *
@@ -95,7 +94,7 @@ def train():
             batch_size=args.batch_size,
             drop_last=False)
 
-    place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
+    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = Executor(place)
     exe.run(framework.default_startup_program())
 

@@ -285,7 +285,7 @@ def fast_infer(args):
             seq_ids_list, seq_scores_list = [seq_ids], [
                 seq_scores
             ] if isinstance(
-                seq_ids, paddle.fluid.core.LoDTensor) else (seq_ids, seq_scores)
+                seq_ids, paddle.fluid.LoDTensor) else (seq_ids, seq_scores)
             for seq_ids, seq_scores in zip(seq_ids_list, seq_scores_list):
                 # How to parse the results:
                 #   Suppose the lod of seq_ids is:
