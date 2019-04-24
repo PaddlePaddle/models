@@ -115,7 +115,7 @@ def infer(args):
             image_file, is_color=True).astype("float32")
         image -= IMG_MEAN
         img = paddle.dataset.image.to_chw(image)[np.newaxis, :]
-        image_t = fluid.core.LoDTensor()
+        image_t = fluid.LoDTensor()
         image_t.set(img, place)
         result = exe.run(inference_program,
                          feed={"image": image_t},
