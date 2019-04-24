@@ -293,6 +293,7 @@ def train(settings,
         coco_api = COCO(file_path)
         image_ids = coco_api.getImgIds()
         images = coco_api.loadImgs(image_ids)
+        np.random.shuffle(images)
         n = int(math.ceil(len(images) // num_workers))
         image_lists = [images[i:i + n] for i in range(0, len(images), n)]
 
@@ -307,11 +308,11 @@ def train(settings,
                      data_dir))
     else:
         images = [line.strip() for line in open(file_path)]
+        np.random.shuffle(images)
         n = int(math.ceil(len(images) // num_workers))
         image_lists = [images[i:i + n] for i in range(0, len(images), n)]
         for l in image_lists:
             readers.append(pascalvoc(settings, l, 'train', batch_size, shuffle))
-
     return paddle.reader.multiprocess_reader(readers, False)
 
 
@@ -341,7 +342,7 @@ def infer(settings, image_path):
                              "data path correctly." % image_path)
         img = Image.open(image_path)
         if img.mode == 'L':
-            img = im.convert('RGB')
+            img = img.convert('RGB')
         im_width, im_height = img.size
         img = img.resize((settings.resize_w, settings.resize_h),
                          Image.ANTIALIAS)
