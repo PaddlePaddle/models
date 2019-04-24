@@ -12,7 +12,6 @@ import numpy as np
 from scipy.misc import imsave
 import paddle.fluid as fluid
 import paddle.fluid.profiler as profiler
-from paddle.fluid import core
 import data_reader
 from utility import add_arguments, print_arguments, ImagePool
 from trainer import *
@@ -82,8 +81,8 @@ def train(args):
         for data_A, data_B in zip(A_test_reader(), B_test_reader()):
             A_name = data_A[1]
             B_name = data_B[1]
-            tensor_A = core.LoDTensor()
-            tensor_B = core.LoDTensor()
+            tensor_A = fluid.LoDTensor()
+            tensor_B = fluid.LoDTensor()
             tensor_A.set(data_A[0], place)
             tensor_B.set(data_B[0], place)
             fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = exe.run(
@@ -168,8 +167,8 @@ def train(args):
         for i in range(max_images_num):
             data_A = next(A_reader)
             data_B = next(B_reader)
-            tensor_A = core.LoDTensor()
-            tensor_B = core.LoDTensor()
+            tensor_A = fluid.LoDTensor()
+            tensor_B = fluid.LoDTensor()
             tensor_A.set(data_A, place)
             tensor_B.set(data_B, place)
             s_time = time.time()
