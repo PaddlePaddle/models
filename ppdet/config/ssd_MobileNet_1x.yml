@@ -1,0 +1,60 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MODEL:
+  TYPE: SSD
+  BACKBONE: MobileNet
+
+ENV:
+  USE_GPU: True
+  GPU_NUM: 8
+  MULTIPROCESS_READER: ON
+  MULTIPROCESS_WORKER: 8
+  MULTIPROCESS_QUEUE_LEN: 32
+
+DATA:
+  DATASET: coco2017
+  CLASS_NUM: 81
+
+TRANSFORM:
+  PIPELINE: SSD
+
+OPTIMIZER:
+  TYPE: RMSProp
+
+  LR_DECAY:
+    POLICY: piecewise_decay
+    BOUNDARIES: [75000, 110000, 145000, 180000]
+    VALUES: [0.001, 0.0005, 0.00025, 0.0001, 0.00001]
+
+  LR_WARMUP:
+    WARMUP: OFF
+
+  WEIGHT_DECAY:
+    TYPE: L2
+    FACTOR: 0.00005
+    BN_FACTOR: 0.00005
+
+TRAIN:
+  MAX_STEPS: 220000
+  BATCH_SIZE_PER_DEVICE: 8
+  PRETRAIN_WEIGTS: http://paddlemodels.bj.bcebos.com/ssd_mobilenet_v1_coco.tar.gz
+  INPUT_SIZE: 300
+
+TEST:
+  INPUT_SIZE: 300
+  NMS_THRESH: 0.45
+  NMS_TOPK: 1000
+  NMS_POSK: 100
+  WEIGHTS: 
