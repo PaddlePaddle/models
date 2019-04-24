@@ -18,11 +18,26 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 
+__all__ =['AttrDict']
+
+
+def safety_eval(s):
+    try:
+        s = eval(s)
+    except:
+        pass
+    return s
+
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
-        for k, v in args[0].items():
-            if isinstance(v, dict):
-                kwargs[k] = AttrDict(v)
+        # convert to AttrDict recurrently
+        for arg in args:
+            for k, v in arg.items():
+                if isinstance(v, dict):
+                    arg[k] = AttrDict(v)
+                else:
+                    arg[k] = safety_eval(v)
+
         super(AttrDict, self).__init__(*args, **kwargs)
 
     def __getattr__(self, name):

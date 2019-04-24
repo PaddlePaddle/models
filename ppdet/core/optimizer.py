@@ -37,7 +37,7 @@ class OptimizerBuilder():
     
     def _build_optimizer(self):
         self._build_regularizer()
-        self._build_lr_decay()
+        self._build_learning_rate()
 
         opt_params = dict()
         for k, v in self.cfg.items():
@@ -46,8 +46,21 @@ class OptimizerBuilder():
             elif not isinstance(v, dict):
                 opt_params.update({k.lower(): v})
 
+        # parse warmup
+        warmup_cfg = self.cfg.LR_WARMUP
+        if self.cfg.LR_WARMUP.WARMUP:
+            warmup_steps = warmup_cfg.WARMUP_STEPS
+            end_lr = warmup_cfg.WARMUP_END_LR
+            start_lr = (warmup_cfg.WARMUP_INIT_FACTOR) * \
+                       warmup_cfg.WARMUP_END_LR
+            self.learning_rate = layers.linear_lr_warmup(
+                                    learning_rate=self.learning_rate,
+                                    warmup_steps=warmup_steps,
+                                    start_lr=start_lr,
+                                    end_lr=end_lr)
+
         self.optimizer = opt_func(regularization=self.regularizer,
-                                  learning_rate=self.lr_decay,
+                                  learning_rate=self.learning_rate,
                                   **opt_params)
 
     def _build_regularizer(self):
@@ -56,10 +69,10 @@ class OptimizerBuilder():
         self.regularizer = reg_func(reg_cfg.FACTOR)
         self.bn_regularizer = reg_func(reg_cfg.BN_FACTOR)
 
-    def _build_lr_decay(self):
+    def _build_learning_rate(self):
         policy, params = self._parse_lr_decay_cfg()
         decay_func = getattr(layers, policy)
-        self.lr_decay = decay_func(**params)
+        self.learning_rate = decay_func(**params)
     
     def _parse_lr_decay_cfg(self):
         lr_cfg = self.cfg.LR_DECAY
