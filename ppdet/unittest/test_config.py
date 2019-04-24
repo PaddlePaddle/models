@@ -1,0 +1,47 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+
+import unittest
+from core.config import *
+
+
+YAML_LIST = [
+        'faster-rcnn_ResNet50-C4_1x.yml',
+        'faster-rcnn_ResNet50-C4_2x.yml',
+        'mask-rcnn_ResNet50-C4_1x.yml',
+        'mask-rcnn_ResNet50-C4_2x.yml',
+        'yolov3_DarkNet53_1x_syncbn.yml',
+        'ssd_MobileNet_1x.yml',
+        ]
+
+class TestConfig(unittest.TestCase):
+
+    def test_load_cfg(self):
+        for yml_file in YAML_LIST:
+            cfg = load_cfg('../configs/' + yml_file)
+            assert cfg is not None
+            assert cfg.MODEL.TYPE is not None
+            assert cfg.MODEL.BACKBONE is not None
+            assert cfg.OPTIMIZER.TYPE is not None
+            assert cfg.TRAIN.MAX_ITERS is not None
+
+
+if __name__ == "__main__":
+    unittest.main()

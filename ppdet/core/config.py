@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 
 import os
 import yaml
-from edict import AttrDict
+from .edict import AttrDict
 
 
 __all__ = ['load_cfg', 'merge_cfg']
@@ -38,8 +38,7 @@ def load_cfg(cfg_file, fmt='yaml'):
     with open(cfg_file) as f:
         try:
             cfg = yaml.load(f)
-        except Exception, e:
-            print(e)
+        except:
             return None
 
     return AttrDict(cfg)
@@ -80,15 +79,3 @@ def merge_cfg(cfg_from, cfg_to):
 
     _merge_cfg_a_to_b(cfg_from, cfg_to)
 
-
-if __name__ == "__main__":
-    def test_merge_cfg():
-        cfga = {"a": {"aa": 1, "ac": 4}, "b": 2, "c": 3}
-        cfgb = {"a": {"aa": 2, "ab": 3}, "b": 1}
-        merge_cfg(cfga, cfgb)
-        assert cfgb['a']['aa'] == 1
-        assert cfgb['a']['ac'] == 4
-        assert cfgb['b'] == 2
-        assert cfgb['c'] == 3
-
-    test_merge_cfg()

@@ -16,10 +16,8 @@
 MODEL:
   TYPE: Faster-RCNN
   BACKBONE: ResNet50
-  FPN: ON
-
-FPN:
-  MULTILEVEL_ROIS: True
+  FREEZE_AT: 0
+  FPN: OFF
 
 RPN_HEAD:
   HEAD_FUNC: ResNet.addRpnHead
@@ -51,6 +49,9 @@ ENV:
 DATA:
   DATASET: coco2017
   CLASS_NUM: 81
+  MAX_SIZE: 1333
+  TRAIN_SCALES: [800]
+  TEST_SCALE: 800
 
 TRANSFORM:
   PIPELINE: RCNN
@@ -61,7 +62,7 @@ OPTIMIZER:
 
   LR_DECAY:
     POLICY: piecewise_decay 
-    BOUNDARIES: [120000, 160000]
+    BOUNDARIES: [240000, 320000]
     VALUES: [0.01, 0.001, 0.0001]
 
   LR_WARMUP:
@@ -76,16 +77,11 @@ OPTIMIZER:
     BN_FACTOR: 0
 
 TRAIN:
-  MAX_ITERS: 180000
+  MAX_ITERS: 360000
   BATCH_SIZE_PER_DEVICE: 1
-  FREEZE_AT: 0
-  SCALES: [800]
-  MAX_SIZE: 1333
-  PRETRAIN_WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  PRETRAIN_WEIGHTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
   BATCH_NORM_TYPE: BN
 
 TEST:
-  SCALE: 800
-  MAX_SIZE: 1333
   SCORE_THRESH: 0.05
-  WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  WEIGHTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz

@@ -17,7 +17,7 @@ MODEL:
   BACKBONE: darknet53
 
 ENV:
-  USE_GPU: True
+  GPU: ON
   GPU_NUM: 8
   MULTIPROCESS_READER: ON
   MULTIPROCESS_WORKER: 8
@@ -55,7 +55,7 @@ OPTIMIZER:
     BN_FACTOR: 0
 
 TRAIN:
-  MAX_STEPS: 500000
+  MAX_ITERS: 500000
   BATCH_SIZE_PER_DEVICE: 8
   PRETRAIN_WEIGTS: https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz
   INPUT_SIZE: 608
