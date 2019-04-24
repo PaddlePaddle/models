@@ -6,7 +6,8 @@ import numpy as np
 import warnings
 
 __all__ = [
-    "Compose", "Resize", "Scale", "RandomHorizontalFlip", "RandomResizedCrop"
+    "Compose", "Resize", "Scale", "RandomHorizontalFlip", "RandomResizedCrop",
+    "CenterCrop"
 ]
 
 
@@ -125,6 +126,16 @@ def resize(img, size, interpolation=Image.BILINEAR):
         return img.resize(size[::-1], interpolation)
 
 
+def center_crop(img, output_size):
+    if isinstance(output_size, int):
+        output_size = (output_size, output_size)
+    w, h = img.size
+    th, tw = output_size
+    i = int(round((h - th) / 2.))
+    j = int(round((w - tw) / 2.))
+    return crop(img, i, j, th, tw)
+
+
 class RandomResizedCrop(object):
     """Crop the input PIL Image to random size and aspect ratio, and then
        resize the PIL Image to target size.
@@ -208,3 +219,21 @@ class RandomResizedCrop(object):
         img = crop(img, i, j, h, w)
         img = resize(img, self._size, self._interpolation)
         return img
+
+
+class CenterCrop(object):
+    """Crops the given PIL Image at the center.
+
+    Args:
+        size (tuple|int): Output size. If size is an int instead of a tuple
+            like (h, w), a square crop (size, size) is made.
+    """
+
+    def __init__(self, size):
+        if isinstance(size, int):
+            self.size = (size, size)
+        else:
+            self.size = size
+
+    def __call__(self, img):
+        return center_crop(img, self.size)

@@ -4,31 +4,27 @@ import os
 import numpy as np
 import math
 import random
-import torch
-import torch.utils.data
-from torch.utils.data.distributed import DistributedSampler
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
 
-from torch.utils.data.sampler import Sampler
-import torchvision
 import pickle
 from tqdm import tqdm
 import time
 import multiprocessing
+
+import transforms
+import datasets
 
 FINISH_EVENT = "FINISH_EVENT"
 
 
 class PaddleDataLoader(object):
     def __init__(self,
-                 torch_dataset,
+                 dataset,
                  indices=None,
                  concurrent=24,
                  queue_size=3072,
                  shuffle=True,
                  shuffle_seed=0):
-        self.torch_dataset = torch_dataset
+        self.dataset = dataset
         self.indices = indices
         self.concurrent = concurrent
         self.shuffle = shuffle
@@ -39,7 +35,7 @@ class PaddleDataLoader(object):
         cnt = 0
         for idx in worker_indices:
             cnt += 1
-            img, label = self.torch_dataset[idx]
+            img, label = self.dataset[idx]
             img = np.array(img).astype('uint8').transpose((2, 0, 1))
             queue.put((img, label))
         print("worker: [%d] read [%d] samples. " % (worker_id, cnt))
@@ -146,7 +142,7 @@ class CropArTfm(object):
         else:
             h = int(self.target_size * target_ar)
             size = (self.target_size, h // 8 * 8)
-        return torchvision.transforms.functional.center_crop(img, size)
+        return transforms.center_crop(img, size)
 
 
 def sort_ar(valdir):
