@@ -93,5 +93,9 @@ if __name__ == "__main__":
         assert ob.get_optimizer() is not None
         assert ob.get_bn_regularizer() is not None
 
-    test_opt_with_cfg('./config/faster-rcnn_ResNet-50.yml')
-    test_opt_with_cfg('./config/yolov3_darknet53_syncbn.yml')
+    test_opt_with_cfg('./config/faster-rcnn_ResNet50-C4_1x.yml')
+    test_opt_with_cfg('./config/faster-rcnn_ResNet50-C4_2x.yml')
+    test_opt_with_cfg('./config/mask-rcnn_ResNet50-C4_1x.yml')
+    test_opt_with_cfg('./config/mask-rcnn_ResNet50-C4_2x.yml')
+    test_opt_with_cfg('./config/yolov3_DarkNet53_1x_syncbn.yml')
+    test_opt_with_cfg('./config/ssd_MobileNet_1x.yml')
