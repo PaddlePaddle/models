@@ -12,7 +12,7 @@ np.random.seed(0)
 DATA_DIM = 224
 
 THREAD = 8
-BUF_SIZE = 102400
+BUF_SIZE = 1024
 
 DATA_DIR = 'data/ILSVRC2012'
 
@@ -131,7 +131,7 @@ def _reader_creator(file_list,
                     color_jitter=False,
                     rotate=False,
                     data_dir=DATA_DIR,
-                    pass_id_as_seed=0,
+                    pass_id_as_seed=1,
                     infinite=False):
     def reader():
         with open(file_list) as flist:
@@ -176,7 +176,7 @@ def _reader_creator(file_list,
     return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE)
 
 
-def train(data_dir=DATA_DIR, pass_id_as_seed=0, infinite=False):
+def train(data_dir=DATA_DIR, pass_id_as_seed=1, infinite=False):
     file_list = os.path.join(data_dir, 'train_list.txt')
     return _reader_creator(
         file_list,
@@ -185,7 +185,8 @@ def train(data_dir=DATA_DIR, pass_id_as_seed=0, infinite=False):
         color_jitter=False,
         rotate=False,
         data_dir=data_dir,
-        pass_id_as_seed=pass_id_as_seed)
+        pass_id_as_seed=pass_id_as_seed,
+        infinite=infinite)
 
 
 def val(data_dir=DATA_DIR):

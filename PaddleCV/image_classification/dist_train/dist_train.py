@@ -66,7 +66,6 @@ def parse_args():
     add_arg('split_var',          bool, True,               "Split params on pserver.")
     add_arg('async_mode',         bool, False,              "Async distributed training, only for pserver mode.")
     add_arg('reduce_strategy',    str,  "allreduce",        "Choose from reduce or allreduce.")
-    add_arg('skip_unbalanced_data', bool, False,            "Skip data not if data not balanced on nodes.")
     add_arg('enable_sequential_execution', bool, False,            "Skip data not if data not balanced on nodes.")
     #for dgc
     add_arg('enable_dgc', bool, False,            "Skip data not if data not balanced on nodes.")
@@ -85,13 +84,11 @@ def get_device_num():
         device_num = subprocess.check_output(['nvidia-smi', '-L']).decode().count('\n')
     return device_num
 
-def prepare_reader(is_train, pyreader, args, pass_id=0):
-    # NOTE: allways set reader infinite when nccl2 mode to balance data
-    # between ranks
-    is_infinite = (args.update_method == "nccl2")
+def prepare_reader(is_train, pyreader, args, pass_id=1):
+    # NOTE: always use infinite reader for dist training
     if is_train:
         reader = train(data_dir=args.data_dir, pass_id_as_seed=pass_id,
-                       infinite=is_infinite)
+                       infinite=True)
     else:
         reader = val(data_dir=args.data_dir)
     if is_train:
@@ -335,9 +332,8 @@ def train_parallel(args):
         num_samples = 0
         start_time = time.time()
         batch_id = 1
-        # use pass_id+1 as per pass global shuffle for distributed training
-        prepare_reader(True, train_pyreader, args, pass_id + 1)
-        train_pyreader.start()
+        if pass_id == 0:
+            train_pyreader.start()
         while True:
             try:
                 if batch_id % 30 == 0:
@@ -355,11 +351,10 @@ def train_parallel(args):
                 break
             num_samples += args.batch_size
             batch_id += 1
-            if (args.skip_unbalanced_data or args.update_method == "nccl2") and batch_id >= steps_per_pass:
+            if batch_id >= steps_per_pass:
                 break
 
         print_train_time(start_time, time.time(), num_samples)
-        train_pyreader.reset()
         if pass_id >= args.start_test_pass:
             if args.multi_batch_repeat > 1:
                 copyback_repeat_bn_params(train_prog)
@@ -375,6 +370,7 @@ def train_parallel(args):
             if not os.path.isdir(model_path):
                 os.makedirs(model_path)
             fluid.io.save_persistables(startup_exe, model_path, main_program=train_prog)
+    train_pyreader.reset()
     startup_exe.close()
     print("total train time: ", time.time() - over_all_start)
 
