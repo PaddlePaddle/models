@@ -19,6 +19,7 @@ import os
 import traceback
 
 import numpy as np
+import math
 import reader
 import paddle
 import paddle.fluid as fluid

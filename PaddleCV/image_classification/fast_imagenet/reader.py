@@ -45,7 +45,7 @@ class PaddleDataLoader(object):
         def _reader_creator():
             worker_processes = []
             index_queues = []
-            total_img = len(self.torch_dataset)
+            total_img = len(self.dataset)
             print("total image: ", total_img)
             if self.shuffle:
                 self.indices = [i for i in xrange(total_img)]

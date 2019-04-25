@@ -50,7 +50,7 @@ def make_dataset(dir, class_to_idx, extensions):
     return images
 
 
-class DatasetFolder():
+class DatasetFolder(object):
     """A generic data loader where the samples are arranged in this way: ::
 
         root/class_x/xxx.ext

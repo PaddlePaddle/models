@@ -15,6 +15,46 @@ def _is_pil_image(img):
     return isinstance(img, Image.Image)
 
 
+def crop(img, i, j, h, w):
+    if not _is_pil_image(img):
+        raise TypeError('img should be a PIL Image, but be {}'.format(
+            type(img)))
+    return img.crop((j, i, j + w, i + h))
+
+
+def resize(img, size, interpolation=Image.BILINEAR):
+    if not _is_pil_image(img):
+        raise TypeError('img should be a PIL Image, but be {}'.format(
+            type(img)))
+    if not (isinstance(size, int) or
+            (isinstance(size, tuple) and len(size) == 2)):
+        raise TypeError('Wrong size arg: {}'.format(size))
+    if isinstance(size, int):
+        w, h = img.size
+        if (w <= h and w == size) or (h <= w and h == size):
+            return img
+        if w < h:
+            ow = size
+            oh = int(size * h / w)
+            return img.resize((ow, oh), interpolation)
+        else:
+            oh = size
+            ow = int(size * w / h)
+            return img.resize((ow, oh), interpolation)
+    else:
+        return img.resize(size[::-1], interpolation)
+
+
+def center_crop(img, output_size):
+    if isinstance(output_size, int):
+        output_size = (output_size, output_size)
+    w, h = img.size
+    th, tw = output_size
+    i = int(round((h - th) / 2.))
+    j = int(round((w - tw) / 2.))
+    return crop(img, i, j, th, tw)
+
+
 class Compose(object):
     """Make some transforms in a chain.
 
@@ -55,7 +95,7 @@ class Resize(object):
         Returns:
             PIL Image: Resized image.
         """
-        return F.resize(img, self._size, self._interpolation)
+        return resize(img, self._size, self._interpolation)
 
 
 class Scale(Resize):
@@ -94,46 +134,6 @@ class RandomHorizontalFlip(object):
                     type(img)))
             return img.transpose(Image.FLIP_LEFT_RIGHT)
         return img
-
-
-def crop(img, i, j, h, w):
-    if not _is_pil_image(img):
-        raise TypeError('img should be a PIL Image, but be {}'.format(
-            type(img)))
-    return img.crop((j, i, j + w, i + h))
-
-
-def resize(img, size, interpolation=Image.BILINEAR):
-    if not _is_pil_image(img):
-        raise TypeError('img should be a PIL Image, but be {}'.format(
-            type(img)))
-    if not (isinstance(size, int) or
-            (isinstance(size, tuple) and len(size) == 2)):
-        raise TypeError('Wrong size arg: {}'.format(size))
-    if isinstance(size, int):
-        w, h = img.size
-        if (w <= h and w == size) or (h <= w and h == size):
-            return img
-        if w < h:
-            ow = size
-            oh = int(size * h / w)
-            return img.resize((ow, oh), interpolation)
-        else:
-            oh = size
-            ow = int(size * w / h)
-            return img.resize((ow, oh), interpolation)
-    else:
-        return img.resize(size[::-1], interpolation)
-
-
-def center_crop(img, output_size):
-    if isinstance(output_size, int):
-        output_size = (output_size, output_size)
-    w, h = img.size
-    th, tw = output_size
-    i = int(round((h - th) / 2.))
-    j = int(round((w - tw) / 2.))
-    return crop(img, i, j, th, tw)
 
 
 class RandomResizedCrop(object):
