@@ -27,17 +27,18 @@ __all__ = ['OptimizerBuilder']
 class OptimizerBuilder():
     def __init__(self, cfg):
         self.cfg = cfg
-        self._build_optimizer()
 
     def get_optimizer(self):
-        return self.optimizer
+        return self._build_optimizer()
 
     def get_bn_regularizer(self):
-        return self.bn_regularizer
+        reg_cfg = self.cfg.WEIGHT_DECAY
+        reg_func = getattr(regularizer, reg_cfg.TYPE+"Decay")
+        return reg_func(reg_cfg.BN_FACTOR)
     
     def _build_optimizer(self):
         self._build_regularizer()
-        self._build_learning_rate()
+        learning_rate = self._build_learning_rate()
 
         opt_params = dict()
         for k, v in self.cfg.items():
@@ -51,28 +52,28 @@ class OptimizerBuilder():
         if self.cfg.LR_WARMUP.WARMUP:
             warmup_steps = warmup_cfg.WARMUP_STEPS
             end_lr = warmup_cfg.WARMUP_END_LR
-            start_lr = (warmup_cfg.WARMUP_INIT_FACTOR) * \
+            start_lr = warmup_cfg.WARMUP_INIT_FACTOR * \
                        warmup_cfg.WARMUP_END_LR
-            self.learning_rate = layers.linear_lr_warmup(
-                                    learning_rate=self.learning_rate,
+            learning_rate = layers.linear_lr_warmup(
+                                    learning_rate=learning_rate,
                                     warmup_steps=warmup_steps,
                                     start_lr=start_lr,
                                     end_lr=end_lr)
 
-        self.optimizer = opt_func(regularization=self.regularizer,
-                                  learning_rate=self.learning_rate,
-                                  **opt_params)
+        return opt_func(regularization=regularizer,
+                        learning_rate=learning_rate,
+                        **opt_params)
 
     def _build_regularizer(self):
         reg_cfg = self.cfg.WEIGHT_DECAY
         reg_func = getattr(regularizer, reg_cfg.TYPE+"Decay")
-        self.regularizer = reg_func(reg_cfg.FACTOR)
-        self.bn_regularizer = reg_func(reg_cfg.BN_FACTOR)
+        return reg_func(reg_cfg.FACTOR)
+        
 
     def _build_learning_rate(self):
         policy, params = self._parse_lr_decay_cfg()
         decay_func = getattr(layers, policy)
-        self.learning_rate = decay_func(**params)
+        return decay_func(**params)
     
     def _parse_lr_decay_cfg(self):
         lr_cfg = self.cfg.LR_DECAY
