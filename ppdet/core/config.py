@@ -26,9 +26,10 @@ __all__ = ['load_cfg', 'merge_cfg']
 
 
 def load_cfg(cfg_file, fmt='yaml'):
-    """
-    Load config from given config filename, configs will be loaded as
-    AttrDict. Currently supported format: ['yaml']
+    """ Load config from given config filename, configs will be 
+    loaded as AttrDict. 
+
+    Currently supported format: ['yaml']
     """
     assert os.path.exists(cfg_file), \
         "Config file {} not exist.".format(cfg_file)
@@ -68,8 +69,7 @@ def _merge_cfg_a_to_b(a, b):
             b[k] = v
 
 def merge_cfg(cfg_from, cfg_to):
-    """
-    Merge config cfg_from to cfg_to, cfg_to has a higher priority.
+    """Merge config cfg_from to cfg_to, cfg_to has a higher priority.
     """
 
     assert isinstance(cfg_from, dict), \

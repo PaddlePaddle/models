@@ -32,6 +32,11 @@ DATASET_DIR = os.path.expanduser("~/.paddle/dataset")
 
 
 def download_weights(url):
+    """ Download weights from given url. 
+
+    weights saveed in WEIGHTS_DIR.
+    if weights specified by url is exists, return weights path
+    """
     weights_file = url.split('/')[-1]
     weights_name = weights_file.split('.')[0]
     weights_path = os.path.join(WEIGHTS_DIR, weights_name)

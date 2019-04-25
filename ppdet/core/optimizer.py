@@ -25,6 +25,12 @@ __all__ = ['OptimizerBuilder']
 
 
 class OptimizerBuilder():
+    """ Optimizer Builder
+    Build optimizer handle base on given config AttrDict
+    
+    Args:
+        cfg (AttrDict): config dict.
+    """
     def __init__(self, cfg):
         self.cfg = cfg
 
