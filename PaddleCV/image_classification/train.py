@@ -306,7 +306,7 @@ def train(args):
     if not args.enable_ce:
         train_reader = paddle.batch(
             reader.train(), batch_size=train_batch_size, drop_last=True)
-        test_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
+        test_reader = paddle.batch(reader.val(args.image_shape), batch_size=test_batch_size)
     else:
         # use flowers dataset for CE and set use_xmap False to avoid disorder data
         # but it is time consuming. For faster speed, need another dataset.
