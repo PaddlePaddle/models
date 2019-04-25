@@ -136,10 +136,11 @@ def _reader_creator(file_list,
     def reader():
         with open(file_list) as flist:
             full_lines = [line.strip() for line in flist]
+            pass_id_as_seed_counter = pass_id_as_seed
             while True:
                 if shuffle:
-                    if pass_id_as_seed:
-                        np.random.seed(pass_id_as_seed)
+                    if pass_id_as_seed_counter:
+                        np.random.seed(pass_id_as_seed_counter)
                     np.random.shuffle(full_lines)
                 if mode == 'train' and os.getenv('PADDLE_TRAINING_ROLE'):
                     # distributed mode if the env var `PADDLE_TRAINING_ROLE` exits
@@ -166,8 +167,8 @@ def _reader_creator(file_list,
                         yield [img_path]
                 if not infinite:
                     break
-                pass_id_as_seed += 1
-                print("passid ++, current: ", pass_id_as_seed)
+                pass_id_as_seed_counter += 1
+                print("passid ++, current: ", pass_id_as_seed_counter)
 
     mapper = functools.partial(
         process_image, mode=mode, color_jitter=color_jitter, rotate=rotate)
