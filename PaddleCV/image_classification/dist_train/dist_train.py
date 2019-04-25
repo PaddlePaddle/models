@@ -86,8 +86,12 @@ def get_device_num():
     return device_num
 
 def prepare_reader(is_train, pyreader, args, pass_id=0):
+    # NOTE: allways set reader infinite when nccl2 mode to balance data
+    # between ranks
+    is_infinite = (args.update_method == "nccl2")
     if is_train:
-        reader = train(data_dir=args.data_dir, pass_id_as_seed=pass_id)
+        reader = train(data_dir=args.data_dir, pass_id_as_seed=pass_id,
+                       infinite=is_infinite)
     else:
         reader = val(data_dir=args.data_dir)
     if is_train:
@@ -138,7 +142,10 @@ def build_program(is_train, main_prog, startup_prog, args):
                     end_lr /= device_num_per_worker
 
                 total_images = args.total_images / trainer_count
-                step = int(total_images / (args.batch_size * args.multi_batch_repeat) + 1)
+                if os.getenv("FLAGS_selected_gpus"):
+                    step = int(total_images / (args.batch_size / device_num_per_worker * args.multi_batch_repeat) + 1)
+                else:
+                    step = int(total_images / (args.batch_size * args.multi_batch_repeat) + 1)
                 warmup_steps = step * 5  # warmup 5 passes
                 epochs = [30, 60, 80]
                 bd = [step * e for e in epochs]
@@ -262,9 +269,9 @@ def train_parallel(args):
     strategy = fluid.ExecutionStrategy()
     strategy.num_threads = args.num_threads
     # num_iteration_per_drop_scope indicates how
-    #  many iterations to clean up the temp variables which
-    #  is generated during execution. It may make the execution faster,
-    #  because the temp variable's shape maybe the same between two iterations
+    # many iterations to clean up the temp variables which
+    # is generated during execution. It may make the execution faster,
+    # because the temp variable's shape are the same between two iterations.
     strategy.num_iteration_per_drop_scope = 30
 
     build_strategy = fluid.BuildStrategy()
@@ -317,7 +324,13 @@ def train_parallel(args):
 
     over_all_start = time.time()
     fetch_list = [train_cost.name, train_acc1.name, train_acc5.name]
-    steps_per_pass = args.total_images / args.batch_size / args.dist_env["num_trainers"]
+    # 1. MP mode, batch size for current process should be args.batch_size / GPUs
+    # 2. SP/PG mode, batch size for each process should be original args.batch_size
+    if os.getenv("FLAGS_selected_gpus"):
+        steps_per_pass = args.total_images / (args.batch_size / get_device_num()) / args.dist_env["num_trainers"]
+    else:
+        steps_per_pass = args.total_images / args.batch_size / args.dist_env["num_trainers"]
+
     for pass_id in range(args.num_epochs):
         num_samples = 0
         start_time = time.time()
@@ -342,7 +355,7 @@ def train_parallel(args):
                 break
             num_samples += args.batch_size
             batch_id += 1
-            if args.skip_unbalanced_data and batch_id >= steps_per_pass:
+            if (args.skip_unbalanced_data or args.update_method == "nccl2") and batch_id >= steps_per_pass:
                 break
 
         print_train_time(start_time, time.time(), num_samples)
