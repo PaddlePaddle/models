@@ -1,5 +1,3 @@
-运行本目录下的程序示例需要使用PaddlePaddle develop最新版本。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
-
 
 ## 代码结构
 ```
@@ -68,7 +66,7 @@ Iter[0]; train loss: 2.338; sub4_loss: 3.367; sub24_loss: 4.120; sub124_loss: 0.
 ### 测试
 执行以下命令在`Cityscape`测试数据集上进行测试：
 ```
-python eval.py --model_path="./model/" --use_gpu=True
+python eval.py --model_path="./cnkpnt/100" --use_gpu=True
 ```
 需要通过选项`--model_path`指定模型文件。
 测试脚本的输出的评估指标为[mean IoU]()。
@@ -77,7 +75,7 @@ python eval.py --model_path="./model/" --use_gpu=True
 执行以下命令对指定的数据进行预测：
 ```
 python infer.py \
---model_path="./model" \
+--model_path="./cnkpnt/100" \
 --images_path="./data/cityscape/" \
 --images_list="./data/cityscape/infer.list"
 ```

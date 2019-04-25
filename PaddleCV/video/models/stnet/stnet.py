@@ -46,6 +46,7 @@ class STNET(ModelBase):
                                                         'l2_weight_decay')
         self.momentum = self.get_config_from_sec('train', 'momentum')
 
+        self.seg_num = self.get_config_from_sec(self.mode, 'seg_num', self.seg_num)
         self.target_size = self.get_config_from_sec(self.mode, 'target_size')
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size')
 

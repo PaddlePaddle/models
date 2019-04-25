@@ -61,6 +61,11 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
                            save_model_name = 'model', test_exe = None, test_reader = None, \
                            test_feeder = None, test_fetch_list = None, test_metrics = None):
     for epoch in range(epochs):
+        lr = fluid.global_scope().find_var("learning_rate").get_tensor()
+        lr_count = fluid.global_scope().find_var(
+            "@LR_DECAY_COUNTER@").get_tensor()
+        logger.info("------- learning rate {}, learning rate counter {} -----"
+                    .format(np.array(lr), np.array(lr_count)))
         epoch_periods = []
         for train_iter, data in enumerate(train_reader()):
             cur_time = time.time()
@@ -80,7 +85,8 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
                     format(epoch, np.mean(epoch_periods)))
         save_model(exe, train_prog, save_dir, save_model_name,
                    "_epoch{}".format(epoch))
-        if test_exe and valid_interval > 0 and (epoch + 1) % valid_interval == 0:
+        if test_exe and valid_interval > 0 and (epoch + 1
+                                                ) % valid_interval == 0:
             test_without_pyreader(test_exe, test_reader, test_feeder,
                                   test_fetch_list, test_metrics, log_interval)
 
@@ -95,6 +101,11 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
     if not train_pyreader:
         logger.error("[TRAIN] get pyreader failed.")
     for epoch in range(epochs):
+        lr = fluid.global_scope().find_var("learning_rate").get_tensor()
+        lr_count = fluid.global_scope().find_var(
+            "@LR_DECAY_COUNTER@").get_tensor()
+        logger.info("------- learning rate {}, learning rate counter {} -----"
+                    .format(np.array(lr), np.array(lr_count)))
         train_pyreader.start()
         train_metrics.reset()
         try:
@@ -119,7 +130,8 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
                         format(epoch, np.mean(epoch_periods)))
             save_model(exe, train_prog, save_dir, save_model_name,
                        "_epoch{}".format(epoch))
-            if test_exe and valid_interval > 0 and (epoch + 1) % valid_interval == 0:
+            if test_exe and valid_interval > 0 and (epoch + 1
+                                                    ) % valid_interval == 0:
                 test_with_pyreader(test_exe, test_pyreader, test_fetch_list,
                                    test_metrics, log_interval)
         finally:

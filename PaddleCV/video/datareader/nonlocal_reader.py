@@ -34,7 +34,7 @@ class NonlocalReader(DataReader):
                 image_mean
                 image_std
                 batch_size
-                list
+                filelist
                 crop_size
                 sample_rate
                 video_length
@@ -68,7 +68,7 @@ class NonlocalReader(DataReader):
         dataset_args['min_size'] = cfg[mode.upper()]['jitter_scales'][0]
         dataset_args['max_size'] = cfg[mode.upper()]['jitter_scales'][1]
         dataset_args['num_reader_threads'] = num_reader_threads
-        filelist = cfg[mode.upper()]['list']
+        filelist = cfg[mode.upper()]['filelist']
         batch_size = cfg[mode.upper()]['batch_size']
 
         if self.mode == 'train':
@@ -79,7 +79,7 @@ class NonlocalReader(DataReader):
             sample_times = 1
             return reader_func(filelist, batch_size, sample_times, False, False,
                                **dataset_args)
-        elif self.mode == 'test':
+        elif self.mode == 'test' or self.mode == 'infer':
             sample_times = cfg['TEST']['num_test_clips']
             if cfg['TEST']['use_multi_crop'] == 1:
                 sample_times = int(sample_times / 3)
@@ -146,8 +146,8 @@ def apply_resize(rgbdata, min_size, max_size):
         ratio = float(side_length) / float(width)
     else:
         ratio = float(side_length) / float(height)
-    out_height = int(height * ratio)
-    out_width = int(width * ratio)
+    out_height = int(round(height * ratio))
+    out_width = int(round(width * ratio))
     outdata = np.zeros(
         (length, out_height, out_width, channel), dtype=rgbdata.dtype)
     for i in range(length):
@@ -197,14 +197,13 @@ def crop_mirror_transform(rgbdata,
 
 def make_reader(filelist, batch_size, sample_times, is_training, shuffle,
                 **dataset_args):
-    # should add smaple_times param
-    fl = open(filelist).readlines()
-    fl = [line.strip() for line in fl if line.strip() != '']
-
-    if shuffle:
-        random.shuffle(fl)
-
     def reader():
+        fl = open(filelist).readlines()
+        fl = [line.strip() for line in fl if line.strip() != '']
+
+        if shuffle:
+            random.shuffle(fl)
+
         batch_out = []
         for line in fl:
             # start_time = time.time()
@@ -253,23 +252,6 @@ def make_reader(filelist, batch_size, sample_times, is_training, shuffle,
 
 def make_multi_reader(filelist, batch_size, sample_times, is_training, shuffle,
                       **dataset_args):
-    fl = open(filelist).readlines()
-    fl = [line.strip() for line in fl if line.strip() != '']
-
-    if shuffle:
-        random.shuffle(fl)
-
-    n = dataset_args['num_reader_threads']
-    queue_size = 20
-    reader_lists = [None] * n
-    file_num = int(len(fl) // n)
-    for i in range(n):
-        if i < len(reader_lists) - 1:
-            tmp_list = fl[i * file_num:(i + 1) * file_num]
-        else:
-            tmp_list = fl[i * file_num:]
-        reader_lists[i] = tmp_list
-
     def read_into_queue(flq, queue):
         batch_out = []
         for line in flq:
@@ -315,6 +297,24 @@ def make_multi_reader(filelist, batch_size, sample_times, is_training, shuffle,
         queue.put(None)
 
     def queue_reader():
+        # split file list and shuffle
+        fl = open(filelist).readlines()
+        fl = [line.strip() for line in fl if line.strip() != '']
+
+        if shuffle:
+            random.shuffle(fl)
+
+        n = dataset_args['num_reader_threads']
+        queue_size = 20
+        reader_lists = [None] * n
+        file_num = int(len(fl) // n)
+        for i in range(n):
+            if i < len(reader_lists) - 1:
+                tmp_list = fl[i * file_num:(i + 1) * file_num]
+            else:
+                tmp_list = fl[i * file_num:]
+            reader_lists[i] = tmp_list
+
         queue = multiprocessing.Queue(queue_size)
         p_list = [None] * len(reader_lists)
         # for reader_list in reader_lists:
@@ -332,7 +332,7 @@ def make_multi_reader(filelist, batch_size, sample_times, is_training, shuffle,
             else:
                 yield sample
         for i in range(len(p_list)):
-            p_list[i].terminate()
-            p_list[i].join()
+            if p_list[i].is_alive():
+                p_list[i].join()
 
     return queue_reader

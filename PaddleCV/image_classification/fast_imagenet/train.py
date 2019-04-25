@@ -335,7 +335,7 @@ def print_paddle_envs():
     print("DEVICE_NUM: %d" % DEVICE_NUM)
     for k in os.environ:
         if "PADDLE_" in k:
-            print "ENV %s:%s" % (k, os.environ[k])
+            print("ENV %s:%s" % (k, os.environ[k]))
     print('------------------------------------------------')
 
 

@@ -9,11 +9,10 @@
 - [Training](#training)
 - [Evaluation](#evaluation)
 - [Inference and Visualization](#inference-and-visualization)
-- [Appendix](#appendix)
 
 ## Installation
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/install_doc.html#paddlepaddle) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html) and make an update.
 
 ## Introduction
 
@@ -45,10 +44,52 @@ Train the model on [MS-COCO dataset](http://cocodataset.org/#download), download
     cd dataset/coco
     ./download.sh
 
+The data catalog structure is as follows:
+
+```
+  dataset/coco/
+  ├── annotations
+  │   ├── instances_train2014.json
+  │   ├── instances_train2017.json
+  │   ├── instances_val2014.json
+  │   ├── instances_val2017.json
+  |   ...
+  ├── train2017
+  │   ├── 000000000009.jpg
+  │   ├── 000000580008.jpg
+  |   ...
+  ├── val2017
+  │   ├── 000000000139.jpg
+  │   ├── 000000000285.jpg
+  |   ...
+  
+```
 
 ## Training
 
-After data preparation, one can start the training step by:
+**Install the [cocoapi](https://github.com/cocodataset/cocoapi):**
+
+To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed. Install the cocoapi:
+
+    git clone https://github.com/cocodataset/cocoapi.git
+    cd cocoapi/PythonAPI
+    # if cython is not installed
+    pip install Cython
+    # Install into global site-packages
+    make install
+    # Alternatively, if you do not have permissions or prefer
+    # not to install the COCO API into global site-packages
+    python2 setup.py install --user
+
+**download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer. One can download pre-trained model as:
+
+    sh ./weights/download.sh
+
+Set `pretrain` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
+Please make sure that pre-trained model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
+
+
+**training:** After data preparation, one can start the training step by:
 
     python train.py \
        --model_save_dir=output/ \
@@ -59,27 +100,6 @@ After data preparation, one can start the training step by:
 - For more help on arguments:
 
     python train.py --help
-
-**download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer. One can download pre-trained model as:
-
-    sh ./weights/download.sh
-
-Set `pretrain` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
-Please make sure that pre-trained model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
-
-**Install the [cocoapi](https://github.com/cocodataset/cocoapi):**
-
-To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed. Install the cocoapi:
-
-    git clone https://github.com/cocodataset/cocoapi.git
-    cd PythonAPI
-    # if cython is not installed
-    pip install Cython
-    # Install into global site-packages
-    make install
-    # Alternatively, if you do not have permissions or prefer
-    # not to install the COCO API into global site-packages
-    python2 setup.py install --user
 
 **data reader introduction:**
 
@@ -114,13 +134,23 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
 - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
 
-Evalutaion result is shown as below:
+If train with `--syncbn=False`, Evalutaion result is shown as below:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
-| 608x608| 37.7 | 59.8 | 40.8 |
+| 608x608 | 37.7 | 59.8 | 40.8 |
 | 416x416 | 36.5 | 58.2 | 39.1 |
 | 320x320 | 34.1 | 55.4 | 36.3 |
+
+If train with `--syncbn=True`, Evalutaion result is shown as below:
+
+|   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
+| :------: | :------: | :------: | :------: |
+| 608x608 | 38.9 | 61.1 | 42.0 |
+| 416x416 | 37.5 | 59.6 | 40.2 |
+| 320x320 | 34.8 | 56.4 | 36.9 |
+
+- **NOTE:** evaluations based on `pycocotools` evaluator, predict bounding boxes with `score < 0.05` were not filtered out. Some frameworks which filtered out predict bounding boxes with `score < 0.05` will cause a drop in accuracy.
 
 ## Inference and Visualization
 
@@ -133,12 +163,14 @@ Inference is used to get prediction score or image features based on trained mod
         --image_name=000000000139.jpg \
         --draw_threshold=0.5
 
-Inference speed:
+- Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to infer.
+
+Inference speed（Tesla P40）:
 
 
 |   input size  | 608x608 | 416x416 | 320x320 |
 |:-------------:| :-----: | :-----: | :-----: |
-| infer speed | 50 ms/frame | 29 ms/frame |24 ms/frame | 
+| infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame | 
 
 
 Visualization of infer result is shown as below:

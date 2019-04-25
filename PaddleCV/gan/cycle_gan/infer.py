@@ -2,7 +2,6 @@ import argparse
 import functools
 import os
 from PIL import Image
-from paddle.fluid import core
 import paddle.fluid as fluid
 import paddle
 import numpy as np
@@ -44,7 +43,6 @@ def infer(args):
     if not os.path.exists(args.output):
         os.makedirs(args.output)
     for file in glob.glob(args.input):
-        print "read %s" % file
         image_name = os.path.basename(file)
         image = Image.open(file)
         image = image.resize((256, 256))
@@ -52,7 +50,7 @@ def infer(args):
         if len(image.shape) != 3:
             continue
         data = image.transpose([2, 0, 1])[np.newaxis, :].astype("float32")
-        tensor = core.LoDTensor()
+        tensor = fluid.LoDTensor()
         tensor.set(data, place)
 
         fake_temp = exe.run(fetch_list=[fake.name], feed={"input": tensor})

@@ -55,7 +55,13 @@ def conv_bn_layer(input,
         out = fluid.layers.leaky_relu(x=out, alpha=0.1)
     return out
 
-def downsample(input, ch_out, filter_size=3, stride=2, padding=1, is_test=True, name=None):
+def downsample(input, 
+               ch_out, 
+               filter_size=3, 
+               stride=2, 
+               padding=1, 
+               is_test=True, 
+               name=None):
     return conv_bn_layer(input, 
             ch_out=ch_out, 
             filter_size=filter_size, 
@@ -65,15 +71,19 @@ def downsample(input, ch_out, filter_size=3, stride=2, padding=1, is_test=True, 
             name=name)
 
 def basicblock(input, ch_out, is_test=True, name=None):
-    conv1 = conv_bn_layer(input, ch_out, 1, 1, 0, is_test=is_test, name=name+".0")
-    conv2 = conv_bn_layer(conv1, ch_out*2, 3, 1, 1, is_test=is_test, name=name+".1")
+    conv1 = conv_bn_layer(input, ch_out, 1, 1, 0, 
+                          is_test=is_test, name=name+".0")
+    conv2 = conv_bn_layer(conv1, ch_out*2, 3, 1, 1, 
+                          is_test=is_test, name=name+".1")
     out = fluid.layers.elementwise_add(x=input, y=conv2, act=None)
     return out
 
 def layer_warp(block_func, input, ch_out, count, is_test=True, name=None):
-    res_out = block_func(input, ch_out, is_test=is_test, name='{}.0'.format(name))
+    res_out = block_func(input, ch_out, is_test=is_test, 
+                         name='{}.0'.format(name))
     for j in range(1, count):
-        res_out = block_func(res_out, ch_out, is_test=is_test, name='{}.{}'.format(name, j))
+        res_out = block_func(res_out, ch_out, is_test=is_test, 
+                             name='{}.{}'.format(name, j))
     return res_out
 
 DarkNet_cfg = {
@@ -83,14 +93,21 @@ DarkNet_cfg = {
 def add_DarkNet53_conv_body(body_input, is_test=True):
     stages, block_func = DarkNet_cfg[53]
     stages = stages[0:5]
-    conv1 = conv_bn_layer(
-            body_input, ch_out=32, filter_size=3, stride=1, padding=1, is_test=is_test, name="yolo_input")
-    downsample_ = downsample(conv1, ch_out=conv1.shape[1]*2, is_test=is_test, name="yolo_input.downsample")
+    conv1 = conv_bn_layer(body_input, ch_out=32, filter_size=3, 
+                          stride=1, padding=1, is_test=is_test, 
+                          name="yolo_input")
+    downsample_ = downsample(conv1, ch_out=conv1.shape[1]*2, 
+                             is_test=is_test, 
+                             name="yolo_input.downsample")
     blocks = []
     for i, stage in enumerate(stages):
-        block = layer_warp(block_func, downsample_, 32 *(2**i), stage, is_test=is_test, name="stage.{}".format(i))
+        block = layer_warp(block_func, downsample_, 32 *(2**i), 
+                           stage, is_test=is_test, 
+                           name="stage.{}".format(i))
         blocks.append(block)
         if i < len(stages) - 1: # do not downsaple in the last stage
-            downsample_ = downsample(block, ch_out=block.shape[1]*2, is_test=is_test, name="stage.{}.downsample".format(i))
+            downsample_ = downsample(block, ch_out=block.shape[1]*2, 
+                                     is_test=is_test, 
+                                     name="stage.{}.downsample".format(i))
     return blocks[-1:-4:-1]
 

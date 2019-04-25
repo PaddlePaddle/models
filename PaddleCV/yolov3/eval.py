@@ -68,7 +68,7 @@ def eval():
             res = {
                     'image_id': im_id,
                     'category_id': label_ids[int(label)],
-                    'bbox': map(float, bbox),
+                    'bbox': list(map(float, bbox)),
                     'score': float(score)
             }
             result.append(res)

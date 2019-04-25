@@ -3,16 +3,16 @@ import ast
 import multiprocessing
 import numpy as np
 import os
+import sys
+sys.path.append("../../models/neural_machine_translation/transformer/")
 from functools import partial
 
 import paddle
 import paddle.fluid as fluid
 
-import model
 import reader
 from config import *
-from model import wrap_encoder as encoder
-from model import wrap_decoder as decoder
+from desc import *
 from model import fast_decode as fast_decoder
 from train import pad_batch_data, prepare_data_generator
 
@@ -206,6 +206,7 @@ def fast_infer(args):
         ModelHyperParams.weight_sharing,
         InferTaskConfig.beam_size,
         InferTaskConfig.max_out_len,
+        ModelHyperParams.bos_idx,
         ModelHyperParams.eos_idx,
         use_py_reader=args.use_py_reader)
 
@@ -284,7 +285,7 @@ def fast_infer(args):
             seq_ids_list, seq_scores_list = [seq_ids], [
                 seq_scores
             ] if isinstance(
-                seq_ids, paddle.fluid.core.LoDTensor) else (seq_ids, seq_scores)
+                seq_ids, paddle.fluid.LoDTensor) else (seq_ids, seq_scores)
             for seq_ids, seq_scores in zip(seq_ids_list, seq_scores_list):
                 # How to parse the results:
                 #   Suppose the lod of seq_ids is:

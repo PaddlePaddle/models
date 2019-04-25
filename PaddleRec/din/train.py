@@ -12,6 +12,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+import os
 import sys
 import logging
 import time
@@ -49,12 +50,21 @@ def parse_args():
         '--base_lr', type=float, default=0.85, help='based learning rate')
     parser.add_argument(
         '--num_devices', type=int, default=1, help='Number of GPU devices')
+    parser.add_argument(
+        '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
+    parser.add_argument(
+        '--batch_num', type=int, help="batch num for ce")
     args = parser.parse_args()
     return args
 
 
 def train():
     args = parse_args()
+
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_main_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
 
     config_path = args.config_path
     train_path = args.train_dir
@@ -101,6 +111,8 @@ def train():
     global_step = 0
     PRINT_STEP = 1000
 
+    total_time = []
+    ce_info = []
     start_time = time.time()
     loss_sum = 0.0
     for id in range(epoch_num):
@@ -113,6 +125,8 @@ def train():
             loss_sum += results[0].mean()
 
             if global_step % PRINT_STEP == 0:
+                ce_info.append(loss_sum / PRINT_STEP)
+                total_time.append(time.time() - start_time)
                 logger.info(
                     "epoch: %d\tglobal_step: %d\ttrain_loss: %.4f\t\ttime: %.2f"
                     % (epoch, global_step, loss_sum / PRINT_STEP,
@@ -133,6 +147,31 @@ def train():
                     fluid.io.save_inference_model(save_dir, feed_var_name,
                                                   fetch_vars, exe)
                     logger.info("model saved in " + save_dir)
+            if args.enable_ce and global_step >= args.batch_num:
+                break
+    # only for ce
+    if args.enable_ce:
+        gpu_num = get_cards(args)
+        ce_loss = 0
+        ce_time = 0
+        try:
+            ce_loss = ce_info[-1]
+            ce_time = total_time[-1]
+        except:
+            print("ce info error")
+        print("kpis\teach_pass_duration_card%s\t%s" %
+                    (gpu_num, ce_time))
+        print("kpis\ttrain_loss_card%s\t%s" %
+                    (gpu_num, ce_loss))
+
+
+def get_cards(args):
+    if args.enable_ce:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        num = len(cards.split(","))
+        return num
+    else:
+        return args.num_devices
 
 
 if __name__ == "__main__":

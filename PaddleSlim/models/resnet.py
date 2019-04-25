@@ -15,7 +15,7 @@ train_parameters = {
     "learning_strategy": {
         "name": "piecewise_decay",
         "batch_size": 256,
-        "epochs": [30, 60, 90],
+        "epochs": [10, 16, 30],
         "steps": [0.1, 0.01, 0.001, 0.0001]
     }
 }
@@ -26,7 +26,7 @@ class ResNet():
         self.params = train_parameters
         self.layers = layers
 
-    def net(self, input, class_dim=1000):
+    def net(self, input, class_dim=1000, conv1_name='conv1', fc_name=None):
         layers = self.layers
         supported_layers = [50, 101, 152]
         assert layers in supported_layers, \
@@ -48,7 +48,7 @@ class ResNet():
             filter_size=7,
             stride=2,
             act='relu',
-            name="conv1")
+            name=conv1_name)
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,
@@ -77,6 +77,7 @@ class ResNet():
         out = fluid.layers.fc(input=pool,
                               size=class_dim,
                               act='softmax',
+                              name=fc_name,
                               param_attr=fluid.param_attr.ParamAttr(
                                   initializer=fluid.initializer.Uniform(-stdv,
                                                                         stdv)))
