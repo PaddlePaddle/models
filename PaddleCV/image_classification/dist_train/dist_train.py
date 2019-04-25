@@ -66,7 +66,6 @@ def parse_args():
     add_arg('split_var',          bool, True,               "Split params on pserver.")
     add_arg('async_mode',         bool, False,              "Async distributed training, only for pserver mode.")
     add_arg('reduce_strategy',    str,  "allreduce",        "Choose from reduce or allreduce.")
-    add_arg('skip_unbalanced_data', bool, False,            "Skip data not if data not balanced on nodes.")
     add_arg('enable_sequential_execution', bool, False,            "Skip data not if data not balanced on nodes.")
     #for dgc
     add_arg('enable_dgc', bool, False,            "Skip data not if data not balanced on nodes.")
@@ -85,9 +84,11 @@ def get_device_num():
         device_num = subprocess.check_output(['nvidia-smi', '-L']).decode().count('\n')
     return device_num
 
-def prepare_reader(is_train, pyreader, args, pass_id=0):
+def prepare_reader(is_train, pyreader, args, pass_id=1):
+    # NOTE: always use infinite reader for dist training
     if is_train:
-        reader = train(data_dir=args.data_dir, pass_id_as_seed=pass_id)
+        reader = train(data_dir=args.data_dir, pass_id_as_seed=pass_id,
+                       infinite=True)
     else:
         reader = val(data_dir=args.data_dir)
     if is_train:
@@ -138,7 +139,10 @@ def build_program(is_train, main_prog, startup_prog, args):
                     end_lr /= device_num_per_worker
 
                 total_images = args.total_images / trainer_count
-                step = int(total_images / (args.batch_size * args.multi_batch_repeat) + 1)
+                if os.getenv("FLAGS_selected_gpus"):
+                    step = int(total_images / (args.batch_size / device_num_per_worker * args.multi_batch_repeat) + 1)
+                else:
+                    step = int(total_images / (args.batch_size * args.multi_batch_repeat) + 1)
                 warmup_steps = step * 5  # warmup 5 passes
                 epochs = [30, 60, 80]
                 bd = [step * e for e in epochs]
@@ -262,9 +266,9 @@ def train_parallel(args):
     strategy = fluid.ExecutionStrategy()
     strategy.num_threads = args.num_threads
     # num_iteration_per_drop_scope indicates how
-    #  many iterations to clean up the temp variables which
-    #  is generated during execution. It may make the execution faster,
-    #  because the temp variable's shape maybe the same between two iterations
+    # many iterations to clean up the temp variables which
+    # is generated during execution. It may make the execution faster,
+    # because the temp variable's shape are the same between two iterations.
     strategy.num_iteration_per_drop_scope = 30
 
     build_strategy = fluid.BuildStrategy()
@@ -317,14 +321,19 @@ def train_parallel(args):
 
     over_all_start = time.time()
     fetch_list = [train_cost.name, train_acc1.name, train_acc5.name]
-    steps_per_pass = args.total_images / args.batch_size / args.dist_env["num_trainers"]
+    # 1. MP mode, batch size for current process should be args.batch_size / GPUs
+    # 2. SP/PG mode, batch size for each process should be original args.batch_size
+    if os.getenv("FLAGS_selected_gpus"):
+        steps_per_pass = args.total_images / (args.batch_size / get_device_num()) / args.dist_env["num_trainers"]
+    else:
+        steps_per_pass = args.total_images / args.batch_size / args.dist_env["num_trainers"]
+
     for pass_id in range(args.num_epochs):
         num_samples = 0
         start_time = time.time()
         batch_id = 1
-        # use pass_id+1 as per pass global shuffle for distributed training
-        prepare_reader(True, train_pyreader, args, pass_id + 1)
-        train_pyreader.start()
+        if pass_id == 0:
+            train_pyreader.start()
         while True:
             try:
                 if batch_id % 30 == 0:
@@ -342,11 +351,10 @@ def train_parallel(args):
                 break
             num_samples += args.batch_size
             batch_id += 1
-            if args.skip_unbalanced_data and batch_id >= steps_per_pass:
+            if batch_id >= steps_per_pass:
                 break
 
         print_train_time(start_time, time.time(), num_samples)
-        train_pyreader.reset()
         if pass_id >= args.start_test_pass:
             if args.multi_batch_repeat > 1:
                 copyback_repeat_bn_params(train_prog)
@@ -362,6 +370,7 @@ def train_parallel(args):
             if not os.path.isdir(model_path):
                 os.makedirs(model_path)
             fluid.io.save_persistables(startup_exe, model_path, main_program=train_prog)
+    train_pyreader.reset()
     startup_exe.close()
     print("total train time: ", time.time() - over_all_start)
 
