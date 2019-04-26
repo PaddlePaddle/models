@@ -28,6 +28,7 @@ def bottleneck_names(name, bn_affine, short_conv=True):
     The naming rules are same as them in
     https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/image_classification/models/resnet.py
     """
+
     def conv_norm(name):
         pnames = [name + '_weights']
         pnames += ['bn' + name[3:] + '_scale']
@@ -36,13 +37,14 @@ def bottleneck_names(name, bn_affine, short_conv=True):
             pnames += ['bn' + name[3:] + '_mean']
             pnames += ['bn' + name[3:] + '_variance']
         return pnames
+
     names = conv_norm(name + "_branch2a")
     names.extend(conv_norm(name + "_branch2b"))
     names.extend(conv_norm(name + "_branch2c"))
     if short_conv:
         names.extend(conv_norm(name + "_branch1"))
     return names
-    
+
 
 class TestResNet(unittest.TestCase):
     def setUp(self):
@@ -56,6 +58,7 @@ class TestResNet(unittest.TestCase):
         }
         self.layers = 50
         self.depth = cfg[self.layers]
+        self.fixbn = True
 
     def get_C1ToC4_params(self, bn_affine):
         """
@@ -71,16 +74,16 @@ class TestResNet(unittest.TestCase):
         param_names = ['conv1_weights', 'bn_conv1_scale', 'bn_conv1_offset']
         if not bn_affine:
             param_names += ['bn_conv1_mean', 'bn_conv1_variance']
-         
+
         for b in range(len(self.depth) - 1):
             for i in range(self.depth[b]):
                 if self.layers in [101, 152] and b == 2:
                     if i == 0:
-                        name="res" + str(b + 2) + "a"
+                        name = "res" + str(b + 2) + "a"
                     else:
-                        name="res" + str(b + 2) + "b" + str(i)
+                        name = "res" + str(b + 2) + "b" + str(i)
                 else:
-                    name="res" + str(b + 2) + chr(97 + i)
+                    name = "res" + str(b + 2) + chr(97 + i)
                 param_names.extend(bottleneck_names(name, bn_affine, i == 0))
         return param_names
 
@@ -96,23 +99,22 @@ class TestResNet(unittest.TestCase):
             list[string]: all parameter names
         """
         param_names = []
-         
+
         for i in range(self.depth[-1]):
-            name="res" + str(5) + chr(97 + i)
+            name = "res" + str(5) + chr(97 + i)
             param_names.extend(bottleneck_names(name, bn_affine, i == 0))
         return param_names
-
 
     def compare_C1ToC4(self, bn_affine):
         prog = fluid.Program()
         startup_prog = fluid.Program()
         with fluid.program_guard(prog, startup_prog):
-            data = fluid.layers.data(name='input',
-                                         shape=self.dshape,
-                                         dtype='float32')
+            data = fluid.layers.data(
+                name='input', shape=self.dshape, dtype='float32')
             feat = ResNet50Backbone(data, 2, True, bn_affine)
             # actual names
-            actual_pnames = [cpt.to_bytes(p.name) for p in prog.global_block().all_parameters()]
+            parameters = prog.global_block().all_parameters()
+            actual_pnames = [cpt.to_bytes(p.name) for p in parameters]
         # expected names
         expect_pnames = self.get_C1ToC4_params(bn_affine)
 
@@ -120,11 +122,15 @@ class TestResNet(unittest.TestCase):
         expect_pnames.sort()
 
         self.assertEqual(len(actual_pnames), len(expect_pnames))
+        # check parameter names
         for a, e in zip(actual_pnames, expect_pnames):
-            self.assertTrue(
-                a == e,
-                "Parameter names have diff: \n" + " Actual: " + str(a) +
-                "\n Expect: " + str(e))
+            self.assertTrue(a == e, "Parameter names have diff: \n" +
+                            " Actual: " + str(a) + "\n Expect: " + str(e))
+        # check learning rate of batch_norm
+        for p in parameters:
+            if 'bn' in p.name and ('scale' in p.name or 'offset' in p.name):
+                self.assertTrue(p.optimize_attr['learning_rate'] == 0.)
+                self.assertTrue(p.stop_gradient)
 
     def test_C1ToC4_bn(self):
         self.compare_C1ToC4(False)
@@ -132,17 +138,16 @@ class TestResNet(unittest.TestCase):
     def test_C1ToC4_affine(self):
         self.compare_C1ToC4(True)
 
-
     def compare_C5(self, bn_affine):
         prog = fluid.Program()
         startup_prog = fluid.Program()
         with fluid.program_guard(prog, startup_prog):
-            data = fluid.layers.data(name='input',
-                                     shape=[1024, 14, 14],
-                                     dtype='float32')
+            data = fluid.layers.data(
+                name='input', shape=[1024, 14, 14], dtype='float32')
             feat = ResNet50C5(data, True, bn_affine)
             # actual names
-            actual_pnames = [cpt.to_bytes(p.name) for p in prog.global_block().all_parameters()]
+            parameters = prog.global_block().all_parameters()
+            actual_pnames = [cpt.to_bytes(p.name) for p in parameters]
         # expected names
         expect_pnames = self.get_C5_params(bn_affine)
 
@@ -151,10 +156,14 @@ class TestResNet(unittest.TestCase):
 
         self.assertEqual(len(actual_pnames), len(expect_pnames))
         for a, e in zip(actual_pnames, expect_pnames):
-            self.assertTrue(
-                a == e,
-                "Parameter names have diff: \n" + " Actual: " + str(a) +
-                "\n Expect: " + str(e))
+            self.assertTrue(a == e, "Parameter names have diff: \n" +
+                            " Actual: " + str(a) + "\n Expect: " + str(e))
+
+        # check learning rate of batch_norm
+        for p in parameters:
+            if 'bn' in p.name and ('scale' in p.name or 'offset' in p.name):
+                self.assertTrue(p.optimize_attr['learning_rate'] == 0.)
+                self.assertTrue(p.stop_gradient)
 
     def test_C5_bn(self):
         self.compare_C5(False)

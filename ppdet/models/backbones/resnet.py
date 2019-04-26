@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -28,13 +27,17 @@ __all__ = ['ResNet50Backbone', 'ResNet50C5']
 
 
 class ResNet(object):
-
     def __init__(self, depth, fixbn, bn_affine):
         """
-        depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
+        Args:
+            depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
+            fixbn (bool): whether to fix batch norm
+                (meaning the scale and bias does not update).
+            bn_affine (bool): Use batch_norm or affine_channel.
         """
         if depth not in [18, 34, 50, 101, 152]:
-            raise ValueError("depth [%d] not in [18, 34, 50, 101, 152].".format(depth))
+            raise ValueError("depth [%d] not in [18, 34, 50, 101, 152].".format(
+                depth))
         self.depth = depth
         self.fixbn = fixbn
         self.bn_affine = bn_affine
@@ -66,24 +69,27 @@ class ResNet(object):
             param_attr=ParamAttr(name=name + "_weights"),
             bias_attr=False,
             name=name + '.conv2d.output.1')
-        
+
         if name == "conv1":
             bn_name = "bn_" + name
         else:
-            bn_name = "bn" + name[3:] 
+            bn_name = "bn" + name[3:]
 
         lr = 0. if self.fixbn else 1.
         pattr = ParamAttr(name=bn_name + '_scale', learning_rate=lr)
         battr = ParamAttr(name=bn_name + '_offset', learning_rate=lr)
 
         if not self.bn_affine:
-            out = fluid.layers.batch_norm(input=conv, 
-                                          act=act,
-                                          name=bn_name+'.output.1',
-                                          param_attr=pattr,
-                                          bias_attr=battr,
-                                          moving_mean_name=bn_name + '_mean',
-                                          moving_variance_name=bn_name + '_variance',)
+            out = fluid.layers.batch_norm(
+                input=conv,
+                act=act,
+                name=bn_name + '.output.1',
+                param_attr=pattr,
+                bias_attr=battr,
+                moving_mean_name=bn_name + '_mean',
+                moving_variance_name=bn_name + '_variance', )
+            scale = fluid.framework._get_var(pattr.name)
+            bias = fluid.framework._get_var(battr.name)
         else:
             scale = fluid.layers.create_parameter(
                 shape=[conv.shape[1]],
@@ -95,13 +101,13 @@ class ResNet(object):
                 dtype=conv.dtype,
                 attr=battr,
                 default_initializer=fluid.initializer.Constant(0.))
-            if self.fixbn:
-                scale.stop_gradient = True
-                bias.stop_gradient = True
-            out = fluid.layers.affine_channel(x=conv, scale=scale, bias=bias, act=act)
+            out = fluid.layers.affine_channel(
+                x=conv, scale=scale, bias=bias, act=act)
+        if self.fixbn:
+            scale.stop_gradient = True
+            bias.stop_gradient = True
         return out
 
-     
     def shortcut(self, input, ch_out, stride, is_first, name):
         ch_in = input.shape[1]
         if ch_in != ch_out or stride != 1 or is_first == True:
@@ -111,27 +117,50 @@ class ResNet(object):
 
     def bottleneck(self, input, num_filters, stride, is_first, name):
         conv0 = self.conv_norm(
-            input=input, num_filters=num_filters, filter_size=1, act='relu',name=name+"_branch2a")
+            input=input,
+            num_filters=num_filters,
+            filter_size=1,
+            act='relu',
+            name=name + "_branch2a")
         conv1 = self.conv_norm(
             input=conv0,
             num_filters=num_filters,
             filter_size=3,
             stride=stride,
             act='relu',
-        name=name+"_branch2b")
+            name=name + "_branch2b")
         conv2 = self.conv_norm(
-            input=conv1, num_filters=num_filters * 4, filter_size=1, act=None, name=name+"_branch2c")
-        short = self.shortcut(input, num_filters * 4, stride, is_first=False, name=name + "_branch1")
-        return fluid.layers.elementwise_add(x=short, y=conv2, act='relu',name=name+".add.output.5")
-    
-    def basicblock(self, input, num_filters, stride, is_first, name):
-        conv0 = self.conv_norm(input=input, num_filters=num_filters, filter_size=3, act='relu', stride=stride,
-                              name=name+"_branch2a")
-        conv1 = self.conv_norm(input=conv0, num_filters=num_filters, filter_size=3, act=None, 
-                              name=name+"_branch2b")
-        short = self.shortcut(input, num_filters, stride, is_first, name=name + "_branch1")
-        return fluid.layers.elementwise_add(x=short, y=conv1, act='relu')
+            input=conv1,
+            num_filters=num_filters * 4,
+            filter_size=1,
+            act=None,
+            name=name + "_branch2c")
+        short = self.shortcut(
+            input,
+            num_filters * 4,
+            stride,
+            is_first=False,
+            name=name + "_branch1")
+        return fluid.layers.elementwise_add(
+            x=short, y=conv2, act='relu', name=name + ".add.output.5")
 
+    def basicblock(self, input, num_filters, stride, is_first, name):
+        conv0 = self.conv_norm(
+            input=input,
+            num_filters=num_filters,
+            filter_size=3,
+            act='relu',
+            stride=stride,
+            name=name + "_branch2a")
+        conv1 = self.conv_norm(
+            input=conv0,
+            num_filters=num_filters,
+            filter_size=3,
+            act=None,
+            name=name + "_branch2b")
+        short = self.shortcut(
+            input, num_filters, stride, is_first, name=name + "_branch1")
+        return fluid.layers.elementwise_add(x=short, y=conv1, act='relu')
 
     def layer_warp(self, input, ci):
         """
@@ -153,15 +182,23 @@ class ResNet(object):
         # with ImageNet pre-trained model
         name = 'res' + str(ci)
 
-        res_out = block_func(input, ch_out, stride, is_first=True, name=name + "a")
+        res_out = block_func(
+            input, ch_out, stride, is_first=True, name=name + "a")
         for i in range(1, count):
-            conv_name =  name + "b" + str(i) if count > 10 else name + chr(ord("a") + i)
-            res_out = block_func(res_out, ch_out, 1, is_first=False, name=conv_name)
+            conv_name = name + "b" + str(i) if count > 10 else name + chr(
+                ord("a") + i)
+            res_out = block_func(
+                res_out, ch_out, 1, is_first=False, name=conv_name)
         return res_out
 
     def c1_stage(self, input):
         conv = self.conv_norm(
-            input=input, num_filters=64, filter_size=7, stride=2, act='relu',name="conv1")
+            input=input,
+            num_filters=64,
+            filter_size=7,
+            stride=2,
+            act='relu',
+            name="conv1")
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,
@@ -169,7 +206,6 @@ class ResNet(object):
             pool_padding=1,
             pool_type='max')
         return conv
-
 
     def get_backone(self, input, endpoint, freeze_at=0):
         """
@@ -179,6 +215,8 @@ class ResNet(object):
         Args:
             input (Variable): input variable.
             endpoint (int): the endpoint stage number, should be 2, 3, 4, or 5.
+            freeze_at (int): freeze the backbone at which stage. This number
+                should be not large than 4. 0 means that no layers are fixed.
 
         Returns:
             The last variable in endpoint-th stage.
@@ -186,7 +224,8 @@ class ResNet(object):
         if not isinstance(input, Variable):
             raise TypeError(str(input) + " should be Variable")
         if endpoint not in [2, 3, 4, 5]:
-            raise ValueError("endpoint [%d] not in [2, 3, 4, 5].".format(endpoint))
+            raise ValueError("endpoint [%d] not in [2, 3, 4, 5].".format(
+                endpoint))
 
         res_endpoints = []
 
