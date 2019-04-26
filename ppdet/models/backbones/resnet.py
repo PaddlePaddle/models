@@ -36,7 +36,7 @@ class ResNet(object):
             bn_affine (bool): Use batch_norm or affine_channel.
         """
         if depth not in [18, 34, 50, 101, 152]:
-            raise ValueError("depth [%d] not in [18, 34, 50, 101, 152].".format(
+            raise ValueError("depth {} not in [18, 34, 50, 101, 152].".format(
                 depth))
         self.depth = depth
         self.fixbn = fixbn
@@ -224,7 +224,7 @@ class ResNet(object):
         if not isinstance(input, Variable):
             raise TypeError(str(input) + " should be Variable")
         if endpoint not in [2, 3, 4, 5]:
-            raise ValueError("endpoint [%d] not in [2, 3, 4, 5].".format(
+            raise ValueError("endpoint {} not in [2, 3, 4, 5].".format(
                 endpoint))
 
         res_endpoints = []
