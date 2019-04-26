@@ -3,6 +3,7 @@ softmax loss
 """
 
 import sys
+import paddle.fluid as fluid
 
 sys.path.append("../../../")
 import models.matching.paddle_layers as layers
@@ -23,8 +24,7 @@ class SoftmaxCrossEntropyLoss(object):
         """
         compute loss
         """
-        softmax_with_cross_entropy = layers.SoftmaxWithCrossEntropyLayer()
         reduce_mean = layers.ReduceMeanLayer()
-        cost = softmax_with_cross_entropy.ops(input, label)
+        cost = fluid.layers.cross_entropy(input=input, label=label)
         avg_cost = reduce_mean.ops(cost)
         return avg_cost
