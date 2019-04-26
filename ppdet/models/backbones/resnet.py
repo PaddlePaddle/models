@@ -255,7 +255,6 @@ def ResNet50Backbone(input, freeze_at, fixbn, bn_affine=False, bn_type='bn'):
         The last variable in endpoint-th stage.
     """
     assert freeze_at in [0, 1, 2, 3, 4], "The freeze_at should be 1, 2, 3 or 4"
-    print(bn_affine)
     model = ResNet(50, fixbn, bn_affine)
     return model.get_backone(input, 4, freeze_at)
 
