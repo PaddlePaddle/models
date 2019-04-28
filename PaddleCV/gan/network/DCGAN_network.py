@@ -10,7 +10,7 @@ import os
 
 
 class DCGAN_model(object):
-    def __init__(self, cfg, batch_size=1):
+    def __init__(self, batch_size=1):
         self.batch_size = batch_size
         self.img_dim = 28
         self.gfc_dim = 2048

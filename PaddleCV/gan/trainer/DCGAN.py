@@ -15,12 +15,12 @@ import matplotlib.pyplot as plt
 import paddle.fluid as fluid
 
 
-class DCGAN_GTrainer():
+class GTrainer():
     def __init__(self, input, label, cfg):
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
             model = DCGAN_model()
-            self.fake = model.network_G(input, name='G', cfg)
+            self.fake = model.network_G(input, name='G')
             self.infer_program = self.program.clone()
             d_fake = model.network_D(self.fake, name="D")
             fake_labels = fluid.layers.fill_constant_batch_size_like(
@@ -38,7 +38,7 @@ class DCGAN_GTrainer():
             optimizer.minimize(self.g_loss, parameter_list=vars)
 
 
-class DCGAN_DTrainer():
+class DTrainer():
     def __init__(self, input, labels, cfg):
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
@@ -58,6 +58,12 @@ class DCGAN_DTrainer():
 
 
 class DCGAN(object):
+    def add_special_args(self, parser):
+        parser.add_argument(
+            '--noise_size', type=int, default=100, help="the noise dimension")
+
+        return parser
+
     def __init__(self, cfg, train_reader):
         self.cfg = cfg
         self.train_reader = train_reader
@@ -68,8 +74,8 @@ class DCGAN(object):
             name='noise', shape=[self.cfg.noise_size], dtype='float32')
         label = fluid.layers.data(name='label', shape=[1], dtype='float32')
 
-        g_trainer = DCGAN_GTrainer(noise, label, self.cfg)
-        d_trainer = DCGAN_DTrainer(img, label, self.cfg)
+        g_trainer = GTrainer(noise, label, self.cfg)
+        d_trainer = DTrainer(img, label, self.cfg)
 
         # prepare enviorment
         place = fluid.CUDAPlace(0)
@@ -168,11 +174,6 @@ class DCGAN(object):
                         bbox_inches='tight')
                     plt.close(fig)
 
-            if self.cfg.save_checkpoints and not self.cfg.run_ce:
+            if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, g_trainer, "net_G")
                 utility.checkpoints(epoch_id, self.cfg, exe, d_trainer, "net_D")
-
-        if self.cfg.run_ce:
-            print("kpis,g_train_cost,{}".format(np.mean(losses[0])))
-            print("kpis,d_train_cost,{}".format(np.mean(losses[1])))
-            print("kpis,duration,{}".format(t_time / self.cfg.epoch))

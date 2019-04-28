@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import paddle.fluid as fluid
 
 
-class CGAN_GTrainer():
+class GTrainer():
     def __init__(self, input, conditions, cfg):
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
@@ -39,7 +39,7 @@ class CGAN_GTrainer():
             optimizer.minimize(self.g_loss, parameter_list=vars)
 
 
-class CGAN_DTrainer():
+class DTrainer():
     def __init__(self, input, conditions, labels, cfg):
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
@@ -60,7 +60,13 @@ class CGAN_DTrainer():
 
 
 class CGAN(object):
-    def __init__(self, cfg, train_reader):
+    def add_special_args(self, parser):
+        parser.add_argument(
+            '--noise_size', type=int, default=100, help="the noise dimension")
+
+        return parser
+
+    def __init__(self, cfg=None, train_reader=None):
         self.cfg = cfg
         self.train_reader = train_reader
 
@@ -73,8 +79,8 @@ class CGAN(object):
             name='noise', shape=[self.cfg.noise_size], dtype='float32')
         label = fluid.layers.data(name='label', shape=[1], dtype='float32')
 
-        g_trainer = CGAN_GTrainer(noise, condition, self.cfg)
-        d_trainer = CGAN_DTrainer(img, condition, label, self.cfg)
+        g_trainer = GTrainer(noise, condition, self.cfg)
+        d_trainer = DTrainer(img, condition, label, self.cfg)
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
@@ -185,11 +191,6 @@ class CGAN(object):
                         bbox_inches='tight')
                     plt.close(fig)
 
-            if self.cfg.save_checkpoints and not self.cfg.run_ce:
+            if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, g_trainer, "net_G")
                 utility.checkpoints(epoch_id, self.cfg, exe, d_trainer, "net_D")
-
-        if self.cfg.run_ce:
-            print("kpis,g_train_cost,{}".format(np.mean(losses[0])))
-            print("kpis,d_train_cost,{}".format(np.mean(losses[1])))
-            print("kpis,duration,{}".format(t_time / self.cfg.epoch))

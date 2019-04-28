@@ -6,70 +6,73 @@ from .base_network import conv2d, deconv2d, norm_layer
 import paddle.fluid as fluid
 
 
-def network_G(input, name, cfg):
-    if cfg.net_G == 'resnet_9block':
-        net = build_generator_resnet_blocks(
-            input,
-            name=name + "_resnet9block",
-            n_gen_res=9,
-            g_base_dims=cfg.g_base_dims,
-            use_dropout=cfg.dropout,
-            norm_type=cfg.norm_type)
-    elif cfg.net_G == 'resnet_6block':
-        net = build_generator_resnet_blocks(
-            input,
-            name=name + "_resnet6block",
-            n_gen_res=6,
-            g_base_dims=cfg.g_base_dims,
-            use_dropout=cfg.dropout,
-            norm_type=cfg.norm_type)
-    elif cfg.net_G == 'unet_128':
-        net = build_generator_Unet(
-            input,
-            name=name + "_unet128",
-            num_downsample=7,
-            g_base_dims=cfg.g_base_dims,
-            use_dropout=cfg.dropout,
-            norm_type=cfg.norm_type)
-    elif cfg.net_G == 'unet_256':
-        net = build_generator_Unet(
-            input,
-            name=name + "_unet256",
-            num_downsample=8,
-            g_base_dims=cfg.g_base_dims,
-            use_dropout=cfg.dropout,
-            norm_type=cfg.norm_type)
-    else:
-        raise NotImplementedError(
-            'network G: [%s] is wrong format, please check it' % cfg.net_G)
-    return net
+class CycleGAN_model(object):
+    def __init__(self):
+        pass
 
+    def network_G(self, input, name, cfg):
+        if cfg.net_G == 'resnet_9block':
+            net = build_generator_resnet_blocks(
+                input,
+                name=name + "_resnet9block",
+                n_gen_res=9,
+                g_base_dims=cfg.g_base_dims,
+                use_dropout=cfg.dropout,
+                norm_type=cfg.norm_type)
+        elif cfg.net_G == 'resnet_6block':
+            net = build_generator_resnet_blocks(
+                input,
+                name=name + "_resnet6block",
+                n_gen_res=6,
+                g_base_dims=cfg.g_base_dims,
+                use_dropout=cfg.dropout,
+                norm_type=cfg.norm_type)
+        elif cfg.net_G == 'unet_128':
+            net = build_generator_Unet(
+                input,
+                name=name + "_unet128",
+                num_downsample=7,
+                g_base_dims=cfg.g_base_dims,
+                use_dropout=cfg.dropout,
+                norm_type=cfg.norm_type)
+        elif cfg.net_G == 'unet_256':
+            net = build_generator_Unet(
+                input,
+                name=name + "_unet256",
+                num_downsample=8,
+                g_base_dims=cfg.g_base_dims,
+                use_dropout=cfg.dropout,
+                norm_type=cfg.norm_type)
+        else:
+            raise NotImplementedError(
+                'network G: [%s] is wrong format, please check it' % cfg.net_G)
+        return net
 
-def network_D(input, name, cfg):
-    if cfg.net_D == 'basic':
-        net = build_discriminator_Nlayers(
-            input,
-            name=name + '_basic',
-            d_nlayers=3,
-            d_base_dims=cfg.d_base_dims,
-            norm_type=cfg.norm_type)
-    elif cfg.net_D == 'nlayers':
-        net = build_discriminator_Nlayers(
-            input,
-            name=name + '_nlayers',
-            d_nlayers=cfg.d_nlayers,
-            d_base_dims=cfg.d_base_dims,
-            norm_type=cfg.norm_type)
-    elif cfg.net_D == 'pixel':
-        net = build_discriminator_Pixel(
-            input,
-            name=name + '_pixel',
-            d_base_dims=cfg.d_base_dims,
-            norm_type=cfg.norm_type)
-    else:
-        raise NotImplementedError(
-            'network D: [%s] is wrong format, please check it' % cfg.net_D)
-    return net
+    def network_D(self, input, name, cfg):
+        if cfg.net_D == 'basic':
+            net = build_discriminator_Nlayers(
+                input,
+                name=name + '_basic',
+                d_nlayers=3,
+                d_base_dims=cfg.d_base_dims,
+                norm_type=cfg.norm_type)
+        elif cfg.net_D == 'nlayers':
+            net = build_discriminator_Nlayers(
+                input,
+                name=name + '_nlayers',
+                d_nlayers=cfg.d_nlayers,
+                d_base_dims=cfg.d_base_dims,
+                norm_type=cfg.norm_type)
+        elif cfg.net_D == 'pixel':
+            net = build_discriminator_Pixel(
+                input,
+                name=name + '_pixel',
+                d_base_dims=cfg.d_base_dims,
+                norm_type=cfg.norm_type)
+        else:
+            raise NotImplementedError(
+                'network D: [%s] is wrong format, please check it' % cfg.net_D)
+        return net
 
 
 def build_resnet_block(inputres,

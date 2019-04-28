@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from network.CycleGAN_network import network_G, network_D
+from network.CycleGAN_network import CycleGAN_model
 from util import utility
 import paddle.fluid as fluid
 import sys
@@ -16,12 +16,13 @@ class GTrainer():
     def __init__(self, input_A, input_B, cfg, step_per_epoch):
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
-            self.fake_B = network_G(input_A, name="GA", cfg=cfg)
+            model = CycleGAN_model()
+            self.fake_B = model.network_G(input_A, name="GA", cfg=cfg)
             self.fake_B.persistable = True
-            self.fake_A = network_G(input_B, name="GB", cfg=cfg)
+            self.fake_A = model.network_G(input_B, name="GB", cfg=cfg)
             self.fake_A.persistable = True
-            self.cyc_A = network_G(self.fake_B, name="GB", cfg=cfg)
-            self.cyc_B = network_G(self.fake_A, name="GA", cfg=cfg)
+            self.cyc_A = model.network_G(self.fake_B, name="GB", cfg=cfg)
+            self.cyc_B = model.network_G(self.fake_A, name="GA", cfg=cfg)
 
             self.infer_program = self.program.clone()
             # Cycle Loss
@@ -35,22 +36,22 @@ class GTrainer():
             self.cyc_B_loss = fluid.layers.reduce_mean(diff_B) * lambda_B
             self.cyc_loss = self.cyc_A_loss + self.cyc_B_loss
             # GAN Loss D_A(G_A(A))
-            self.fake_rec_A = network_D(self.fake_B, name="DA", cfg=cfg)
+            self.fake_rec_A = model.network_D(self.fake_B, name="DA", cfg=cfg)
             self.G_A = fluid.layers.reduce_mean(
                 fluid.layers.square(self.fake_rec_A - 1))
             # GAN Loss D_B(G_B(B))
-            self.fake_rec_B = network_D(self.fake_A, name="DB", cfg=cfg)
+            self.fake_rec_B = model.network_D(self.fake_A, name="DB", cfg=cfg)
             self.G_B = fluid.layers.reduce_mean(
                 fluid.layers.square(self.fake_rec_B - 1))
             self.G = self.G_A + self.G_B
             # Identity Loss G_A
-            self.idt_A = network_G(input_B, name="GA", cfg=cfg)
+            self.idt_A = model.network_G(input_B, name="GA", cfg=cfg)
             self.idt_loss_A = fluid.layers.reduce_mean(
                 fluid.layers.abs(
                     fluid.layers.elementwise_sub(
                         x=input_B, y=self.idt_A))) * lambda_B * lambda_identity
             # Identity Loss G_B
-            self.idt_B = network_G(input_A, name="GB", cfg=cfg)
+            self.idt_B = model.network_G(input_A, name="GB", cfg=cfg)
             self.idt_loss_B = fluid.layers.reduce_mean(
                 fluid.layers.abs(
                     fluid.layers.elementwise_sub(
@@ -85,8 +86,10 @@ class DATrainer():
     def __init__(self, input_B, fake_pool_B, cfg, step_per_epoch):
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
-            self.rec_B = network_D(input_B, name="DA", cfg=cfg)
-            self.fake_pool_rec_B = network_D(fake_pool_B, name="DA", cfg=cfg)
+            model = CycleGAN_model()
+            self.rec_B = model.network_D(input_B, name="DA", cfg=cfg)
+            self.fake_pool_rec_B = model.network_D(
+                fake_pool_B, name="DA", cfg=cfg)
             self.d_loss_A = (fluid.layers.square(self.fake_pool_rec_B) +
                              fluid.layers.square(self.rec_B - 1)) / 2.0
             self.d_loss_A = fluid.layers.reduce_mean(self.d_loss_A)
@@ -118,8 +121,10 @@ class DBTrainer():
     def __init__(self, input_A, fake_pool_A, cfg, step_per_epoch):
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
-            self.rec_A = network_D(input_A, name="DB", cfg=cfg)
-            self.fake_pool_rec_A = network_D(fake_pool_A, name="DB", cfg=cfg)
+            model = CycleGAN_model()
+            self.rec_A = model.network_D(input_A, name="DB", cfg=cfg)
+            self.fake_pool_rec_A = model.network_D(
+                fake_pool_A, name="DB", cfg=cfg)
             self.d_loss_B = (fluid.layers.square(self.fake_pool_rec_A) +
                              fluid.layers.square(self.rec_A - 1)) / 2.0
             self.d_loss_B = fluid.layers.reduce_mean(self.d_loss_B)
@@ -145,22 +150,42 @@ class DBTrainer():
 
 
 class CycleGAN(object):
-    def __init__(self, cfg, A_reader, B_reader, A_test_reader, B_test_reader,
-                 batch_num):
+    def add_special_args(self, parser):
+        parser.add_argument(
+            '--net_G',
+            type=str,
+            default="resnet_9block",
+            help="Choose the CycleGAN generator's network, choose in [resnet_9block|resnet_6block|unet_128|unet_256]"
+        )
+        parser.add_argument(
+            '--net_D',
+            type=str,
+            default="basic",
+            help="Choose the CycleGAN discriminator's network, choose in [basic|nlayers|pixel]"
+        )
+        parser.add_argument(
+            '--d_nlayers',
+            type=int,
+            default=3,
+            help="only used when CycleGAN discriminator is nlayers")
+
+        return parser
+
+    def __init__(self,
+                 cfg=None,
+                 A_reader=None,
+                 B_reader=None,
+                 A_test_reader=None,
+                 B_test_reader=None,
+                 batch_num=1):
         self.cfg = cfg
-        self.A_reader = A_reader()
-        self.B_reader = B_reader()
+        self.A_reader = A_reader
+        self.B_reader = B_reader
         self.A_test_reader = A_test_reader
         self.B_test_reader = B_test_reader
         self.batch_num = batch_num
 
     def build_model(self):
-        if self.cfg.run_ce:
-            np.random.seed(10)
-            fluid.default_startup_program().random_seed = 90
-            max_images_num = 1
-            shuffle = False
-
         data_shape = [-1, 3, self.cfg.crop_size, self.cfg.crop_size]
 
         input_A = fluid.layers.data(
@@ -196,13 +221,16 @@ class CycleGAN(object):
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
-                loss_name=gen_trainer.g_loss.name)
+                loss_name=gen_trainer.g_loss.name,
+                build_strategy=build_strategy)
         d_A_trainer_program = fluid.CompiledProgram(
             d_A_trainer.program).with_data_parallel(
-                loss_name=d_A_trainer.d_loss_A.name)
+                loss_name=d_A_trainer.d_loss_A.name,
+                build_strategy=build_strategy)
         d_B_trainer_program = fluid.CompiledProgram(
             d_B_trainer.program).with_data_parallel(
-                loss_name=d_B_trainer.d_loss_B.name)
+                loss_name=d_B_trainer.d_loss_B.name,
+                build_strategy=build_strategy)
 
         losses = [[], []]
         t_time = 0
@@ -210,15 +238,16 @@ class CycleGAN(object):
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
             for i in range(self.batch_num):
-                data_A = next(self.A_reader)
-                data_B = next(self.B_reader)
+                data_A = next(self.A_reader())
+                data_B = next(self.B_reader())
                 tensor_A = fluid.LoDTensor()
                 tensor_B = fluid.LoDTensor()
                 tensor_A.set(data_A, place)
                 tensor_B.set(data_B, place)
                 s_time = time.time()
                 # optimize the g_A network
-                g_A_loss, g_A_cyc_loss, g_A_idt_loss, g_B_loss, g_B_cyc_loss, g_B_idt_loss, fake_A_tmp, fake_B_tmp = exe.run(
+                g_A_loss, g_A_cyc_loss, g_A_idt_loss, g_B_loss, g_B_cyc_loss,\
+                g_B_idt_loss, fake_A_tmp, fake_B_tmp = exe.run(
                     gen_trainer_program,
                     fetch_list=[
                         gen_trainer.G_A, gen_trainer.cyc_A_loss,
@@ -249,33 +278,29 @@ class CycleGAN(object):
                 batch_time = time.time() - s_time
                 t_time += batch_time
                 if batch_id % self.cfg.print_freq == 0:
-                    print(
-                        "epoch{}; batch{}; d_A_loss: {}; g_A_loss: {}; g_A_cyc_loss: {}; g_A_idt_loss: {}; d_B_loss: {}; g_B_loss: {}; g_B_cyc_loss: {}; g_B_idt_loss: {}; Batch_time_cost: {:.2f}".
-                        format(epoch_id, batch_id, d_A_loss[0], g_A_loss[
-                            0], g_A_cyc_loss[0], g_A_idt_loss[0], d_B_loss[0],
-                               g_B_loss[0], g_B_cyc_loss[0], g_B_idt_loss[
-                                   0], batch_time))
+                    print("epoch{}: batch{}: \n\
+                         d_A_loss: {}; g_A_loss: {}; g_A_cyc_loss: {}; g_A_idt_loss: {}; \n\
+                         d_B_loss: {}; g_B_loss: {}; g_B_cyc_loss: {}; g_B_idt_loss: {}; \n\
+                         Batch_time_cost: {:.2f}".format(
+                        epoch_id, batch_id, d_A_loss[0], g_A_loss[0],
+                        g_A_cyc_loss[0], g_A_idt_loss[0], d_B_loss[0], g_B_loss[
+                            0], g_B_cyc_loss[0], g_B_idt_loss[0], batch_time))
 
                 losses[0].append(g_A_loss[0])
                 losses[1].append(d_A_loss[0])
                 sys.stdout.flush()
                 batch_id += 1
 
-            if self.cfg.run_test and not self.cfg.run_ce:
+            if self.cfg.run_test:
                 test_program = gen_trainer.infer_program
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
                                         test_program, gen_trainer,
                                         self.A_test_reader, self.B_test_reader)
 
-            if self.cfg.save_checkpoints and not self.cfg.run_ce:
+            if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,
                                     "net_G")
                 utility.checkpoints(epoch_id, self.cfg, exe, d_A_trainer,
                                     "net_DA")
                 utility.checkpoints(epoch_id, self.cfg, exe, d_B_trainer,
                                     "net_DB")
-
-        if self.cfg.run_ce:
-            print("kpis,g_train_cost,{}".format(np.mean(losses[0])))
-            print("kpis,d_train_cost,{}".format(np.mean(losses[1])))
-            print("kpis,duration,{}".format(t_time / self.cfg.epoch))

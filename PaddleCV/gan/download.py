@@ -94,23 +94,43 @@ def download_cycle_pix(dir_path, dataname):
     URL_PREFIX = 'https://people.eecs.berkeley.edu/~taesung_park/CycleGAN/datasets/'
     IMAGE_URL = '{}.zip'.format(dataname)
     url = URL_PREFIX + IMAGE_URL
-    data_dir = dir_path + '{}'.format(dataname)
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
     r = requests.get(url, stream=True)
     total_length = float(r.headers.get('content-length'))
-    filename = os.path.join(data_dir, IMAGE_URL)
-    dl = 0
-    with open(filename, "wb") as f:
-        for data in r.iter_content(chunk_size=4096):
-            if six.PY2:
-                data = six.b(data)
-            dl += len(data)
-            f.write(data)
-            done = int(100 * dl / total_length)
-            sys.stderr.write("\r[{}{}] {}% ".format('=' * done, ' ' * (
-                100 - done), done))
-            sys.stdout.flush()
+    filename = os.path.join(dir_path, IMAGE_URL)
+    print(filename)
+    if not os.path.exists(filename):
+        dl = 0
+        with open(filename, "wb") as f:
+            for data in r.iter_content(chunk_size=4096):
+                if six.PY2:
+                    data = six.b(data)
+                dl += len(data)
+                f.write(data)
+                done = int(100 * dl / total_length)
+                sys.stderr.write("\r[{}{}] {}% ".format('=' * done, ' ' * (
+                    100 - done), done))
+                sys.stdout.flush()
+    else:
+        sys.stderr.write('{}.zip is EXIST, DO NOT NEED to download it again.'.
+                         format(dataname))
+    ### unzip .zip file
+    if not os.path.exists(os.path.join(dir_path, '{}'.format(dataname))):
+        zip_f = zipfile.ZipFile(filename, 'r')
+        for zip_file in zip_f.namelist():
+            zip_f.extract(zip_file, dir_path)
+
+    ### generator .txt file according to dirs
+    dirs = os.listdir(os.path.join(dir_path, '{}'.format(dataname)))
+    for d in dirs:
+        txt_file = d + '.txt'
+        txt_dir = os.path.join(dir_path, dataname)
+        f = open(os.path.join(txt_dir, txt_file), 'w')
+        for fil in os.listdir(os.path.join(txt_dir, d)):
+            wl = d + '/' + fil + '\n'
+            f.write(wl)
+        f.close()
     sys.stderr.write("\n")
 
 
