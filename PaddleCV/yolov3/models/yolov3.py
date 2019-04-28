@@ -27,29 +27,28 @@ from .darknet import add_DarkNet53_conv_body
 from .darknet import conv_bn_layer
 
 def yolo_detection_block(input, channel, is_test=True, name=None):
-    assert channel % 2 == 0, "channel {} cannot be divided by 2".format(channel)
+    assert channel % 2 == 0, \
+            "channel {} cannot be divided by 2".format(channel)
     conv = input
     for j in range(2):
-        conv = conv_bn_layer(conv, channel, filter_size=1, stride=1, padding=0, is_test=is_test, name='{}.{}.0'.format(name, j))
-        conv = conv_bn_layer(conv, channel*2, filter_size=3, stride=1, padding=1, is_test=is_test, name='{}.{}.1'.format(name, j))
-    route = conv_bn_layer(conv, channel, filter_size=1, stride=1, padding=0, is_test=is_test, name='{}.2'.format(name))
-    tip = conv_bn_layer(route,channel*2, filter_size=3, stride=1, padding=1, is_test=is_test, name='{}.tip'.format(name))
+        conv = conv_bn_layer(conv, channel, filter_size=1, 
+                             stride=1, padding=0, is_test=is_test, 
+                             name='{}.{}.0'.format(name, j))
+        conv = conv_bn_layer(conv, channel*2, filter_size=3, 
+                             stride=1, padding=1, is_test=is_test, 
+                             name='{}.{}.1'.format(name, j))
+    route = conv_bn_layer(conv, channel, filter_size=1, stride=1, 
+                          padding=0, is_test=is_test, 
+                          name='{}.2'.format(name))
+    tip = conv_bn_layer(route,channel*2, filter_size=3, stride=1, 
+                        padding=1, is_test=is_test, 
+                        name='{}.tip'.format(name))
     return route, tip
 
 def upsample(input, scale=2,name=None):
-    # get dynamic upsample output shape
-    shape_nchw = fluid.layers.shape(input)
-    shape_hw = fluid.layers.slice(shape_nchw, axes=[0], starts=[2], ends=[4])
-    shape_hw.stop_gradient = True
-    in_shape = fluid.layers.cast(shape_hw, dtype='int32')
-    out_shape = in_shape * scale
-    out_shape.stop_gradient = True
-
-    # reisze by actual_shape
     out = fluid.layers.resize_nearest(
         input=input,
-        scale=scale,
-        actual_shape=out_shape,
+        scale=float(scale),
         name=name)
     return out
 
@@ -68,11 +67,15 @@ class YOLOv3(object):
         if self.is_train:
             self.py_reader = fluid.layers.py_reader(
                 capacity=64,
-                shapes = [[-1] + self.image_shape, [-1, cfg.max_box_num, 4], [-1, cfg.max_box_num], [-1, cfg.max_box_num]],
+                shapes = [[-1] + self.image_shape, 
+                          [-1, cfg.max_box_num, 4], 
+                          [-1, cfg.max_box_num], 
+                          [-1, cfg.max_box_num]],
                 lod_levels=[0, 0, 0, 0],
                 dtypes=['float32'] * 2 + ['int32'] + ['float32'],
                 use_double_buffer=True)
-            self.image, self.gtbox, self.gtlabel, self.gtscore = fluid.layers.read_file(self.py_reader)
+            self.image, self.gtbox, self.gtlabel, self.gtscore = \
+                    fluid.layers.read_file(self.py_reader)
         else:
             self.image = fluid.layers.data(
                     name='image', shape=self.image_shape, dtype='float32'
@@ -139,9 +142,9 @@ class YOLOv3(object):
             if self.is_train:
                 loss = fluid.layers.yolov3_loss(
                         x=out,
-                        gtbox=self.gtbox,
-                        gtlabel=self.gtlabel,
-                        gtscore=self.gtscore,
+                        gt_box=self.gtbox,
+                        gt_label=self.gtlabel,
+                        gt_score=self.gtscore,
                         anchors=cfg.anchors,
                         anchor_mask=anchor_mask,
                         class_num=cfg.class_num,

@@ -21,7 +21,6 @@ import six
 import random
 import glob
 import numpy as np
-from paddle.fluid import core
 
 
 def print_arguments(args):

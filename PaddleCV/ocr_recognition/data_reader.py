@@ -10,6 +10,11 @@ from os import path
 from paddle.dataset.image import load_image
 import paddle
 
+try:
+    input = raw_input
+except NameError:
+    pass
+
 SOS = 0
 EOS = 1
 NUM_CLASSES = 95
@@ -175,7 +180,7 @@ class DataGenerator(object):
                         yield img, label
             else:
                 while True:
-                    img_path = raw_input("Please input the path of image: ")
+                    img_path = input("Please input the path of image: ")
                     img = Image.open(img_path).convert('L')
                     img = np.array(img) - 127.5
                     img = img[np.newaxis, ...]

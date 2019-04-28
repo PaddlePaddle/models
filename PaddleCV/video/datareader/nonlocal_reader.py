@@ -332,7 +332,7 @@ def make_multi_reader(filelist, batch_size, sample_times, is_training, shuffle,
             else:
                 yield sample
         for i in range(len(p_list)):
-            p_list[i].terminate()
-            p_list[i].join()
+            if p_list[i].is_alive():
+                p_list[i].join()
 
     return queue_reader

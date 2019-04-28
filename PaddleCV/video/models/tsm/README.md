@@ -13,7 +13,7 @@
 
 ## 模型简介
 
-Temporal Shift Module是由MIT和IBM Watson AI Lab的Ji Lin，Chuang Gan等人提出的通过时间位移来提高网络视频理解能力的模块，其位移操作原理如下图所示。
+Temporal Shift Module是由MIT和IBM Watson AI Lab的Ji Lin，Chuang Gan和Song Han等人提出的通过时间位移来提高网络视频理解能力的模块，其位移操作原理如下图所示。
 
 <p align="center">
 <img src="../../images/temporal_shift.png" height=250 width=800 hspace='10'/> <br />
@@ -34,6 +34,9 @@ TSM的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 数据准备完毕后，可以通过如下两种方式启动训练：
 
+    export FLAGS_fast_eager_deletion_mode=1
+    export FLAGS_eager_delete_tensor_gb=0.0
+    export FLAGS_fraction_of_gpu_memory_to_use=0.98
     python train.py --model_name=TSM
             --config=./configs/tsm.txt
             --save_dir=checkpoints

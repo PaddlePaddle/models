@@ -12,17 +12,16 @@ import numpy as np
 from scipy.misc import imsave
 import paddle.fluid as fluid
 import paddle.fluid.profiler as profiler
-from paddle.fluid import core
 import data_reader
 from utility import add_arguments, print_arguments, ImagePool
-from trainer import *
+from trainer import GATrainer, GBTrainer, DATrainer, DBTrainer
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('batch_size',        int,   1,          "Minibatch size.")
 add_arg('epoch',             int,   2,        "The number of epoched to be trained.")
-add_arg('output',            str,   "./output_0", "The directory the model and the test result to be saved to.")
+add_arg('output',            str,   "./output", "The directory the model and the test result to be saved to.")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
 add_arg('save_checkpoints',  bool,  True,       "Whether to save checkpoints.")
 add_arg('run_test',          bool,  True,       "Whether to run test.")
@@ -82,8 +81,8 @@ def train(args):
         for data_A, data_B in zip(A_test_reader(), B_test_reader()):
             A_name = data_A[1]
             B_name = data_B[1]
-            tensor_A = core.LoDTensor()
-            tensor_B = core.LoDTensor()
+            tensor_A = fluid.LoDTensor()
+            tensor_B = fluid.LoDTensor()
             tensor_A.set(data_A[0], place)
             tensor_B.set(data_B[0], place)
             fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = exe.run(
@@ -168,8 +167,8 @@ def train(args):
         for i in range(max_images_num):
             data_A = next(A_reader)
             data_B = next(B_reader)
-            tensor_A = core.LoDTensor()
-            tensor_B = core.LoDTensor()
+            tensor_A = fluid.LoDTensor()
+            tensor_B = fluid.LoDTensor()
             tensor_A.set(data_A, place)
             tensor_B.set(data_B, place)
             s_time = time.time()
