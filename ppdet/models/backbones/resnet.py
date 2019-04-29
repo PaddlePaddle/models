@@ -27,11 +27,11 @@ __all__ = ['ResNet50Backbone', 'ResNet50C5']
 
 
 class ResNet(object):
-    def __init__(self, depth, fix_bn, affine_channel):
+    def __init__(self, depth, freeze_bn, affine_channel):
         """
         Args:
             depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
-            fix_bn (bool): whether to fix batch norm
+            freeze_bn (bool): whether to fix batch norm
                 (meaning the scale and bias does not update).
             affine_channel (bool): Use batch_norm or affine_channel.
         """
@@ -39,7 +39,7 @@ class ResNet(object):
             raise ValueError("depth {} not in [18, 34, 50, 101, 152].".format(
                 depth))
         self.depth = depth
-        self.fix_bn = fix_bn
+        self.freeze_bn = freeze_bn
         self.affine_channel = affine_channel
         self.depth_cfg = {
             18: ([2, 2, 2, 1], self.basicblock),
@@ -75,7 +75,7 @@ class ResNet(object):
         else:
             bn_name = "bn" + name[3:]
 
-        lr = 0. if self.fix_bn else 1.
+        lr = 0. if self.freeze_bn else 1.
         pattr = ParamAttr(name=bn_name + '_scale', learning_rate=lr)
         battr = ParamAttr(name=bn_name + '_offset', learning_rate=lr)
 
@@ -103,7 +103,7 @@ class ResNet(object):
                 default_initializer=fluid.initializer.Constant(0.))
             out = fluid.layers.affine_channel(
                 x=conv, scale=scale, bias=bias, act=act)
-        if self.fix_bn:
+        if self.freeze_bn:
             scale.stop_gradient = True
             bias.stop_gradient = True
         return out
@@ -242,7 +242,7 @@ class ResNet(object):
 
 def ResNet50Backbone(input,
                      freeze_at,
-                     fix_bn=False,
+                     freeze_bn=False,
                      affine_channel=False,
                      bn_type='bn'):
     """
@@ -251,7 +251,7 @@ def ResNet50Backbone(input,
     Args:
         freeze_at (int): freeze the backbone at which stage. This number
             should be not large than 4. 0 means that no layers are fixed.
-        fix_bn (bool): whether to fix batch norm
+        freeze_bn (bool): whether to fix batch norm
             (meaning the scale and bias does not update). Defalut False.
         affine_channel (bool): Use batch_norm or affine_channel.
 
@@ -260,18 +260,18 @@ def ResNet50Backbone(input,
     """
     assert freeze_at in [0, 1, 2, 3, 4
                          ], "The freeze_at should be 0, 1, 2, 3 or 4"
-    model = ResNet(50, fix_bn, affine_channel)
+    model = ResNet(50, freeze_bn, affine_channel)
     return model.get_backone(input, 4, freeze_at)
 
 
-def ResNet50C5(input, fix_bn=False, affine_channel=False):
+def ResNet50C5(input, freeze_bn=False, affine_channel=False):
     """
     Args:
-        fix_bn (bool): whether to fix batch norm
+        freeze_bn (bool): whether to fix batch norm
             (meaning the scale and bias does not update). Defalut False.
     Returns:
         The last variable in C5 stage.
     """
-    model = ResNet(50, fix_bn, affine_channel)
+    model = ResNet(50, freeze_bn, affine_channel)
     out = model.layer_warp(input, 5)
     return out
