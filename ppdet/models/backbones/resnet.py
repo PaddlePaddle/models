@@ -27,20 +27,20 @@ __all__ = ['ResNet50Backbone', 'ResNet50C5']
 
 
 class ResNet(object):
-    def __init__(self, depth, fixbn, bn_affine):
+    def __init__(self, depth, fix_bn, affine_channel):
         """
         Args:
             depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
-            fixbn (bool): whether to fix batch norm
+            fix_bn (bool): whether to fix batch norm
                 (meaning the scale and bias does not update).
-            bn_affine (bool): Use batch_norm or affine_channel.
+            affine_channel (bool): Use batch_norm or affine_channel.
         """
         if depth not in [18, 34, 50, 101, 152]:
             raise ValueError("depth {} not in [18, 34, 50, 101, 152].".format(
                 depth))
         self.depth = depth
-        self.fixbn = fixbn
-        self.bn_affine = bn_affine
+        self.fix_bn = fix_bn
+        self.affine_channel = affine_channel
         self.depth_cfg = {
             18: ([2, 2, 2, 1], self.basicblock),
             34: ([3, 4, 6, 3], self.basicblock),
@@ -50,14 +50,14 @@ class ResNet(object):
         }
         self.stage_filters = [64, 128, 256, 512]
 
-    def conv_norm(self,
-                  input,
-                  num_filters,
-                  filter_size,
-                  stride=1,
-                  groups=1,
-                  act=None,
-                  name=None):
+    def _conv_norm(self,
+                   input,
+                   num_filters,
+                   filter_size,
+                   stride=1,
+                   groups=1,
+                   act=None,
+                   name=None):
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -75,11 +75,11 @@ class ResNet(object):
         else:
             bn_name = "bn" + name[3:]
 
-        lr = 0. if self.fixbn else 1.
+        lr = 0. if self.fix_bn else 1.
         pattr = ParamAttr(name=bn_name + '_scale', learning_rate=lr)
         battr = ParamAttr(name=bn_name + '_offset', learning_rate=lr)
 
-        if not self.bn_affine:
+        if not self.affine_channel:
             out = fluid.layers.batch_norm(
                 input=conv,
                 act=act,
@@ -103,39 +103,39 @@ class ResNet(object):
                 default_initializer=fluid.initializer.Constant(0.))
             out = fluid.layers.affine_channel(
                 x=conv, scale=scale, bias=bias, act=act)
-        if self.fixbn:
+        if self.fix_bn:
             scale.stop_gradient = True
             bias.stop_gradient = True
         return out
 
-    def shortcut(self, input, ch_out, stride, is_first, name):
+    def _shortcut(self, input, ch_out, stride, is_first, name):
         ch_in = input.shape[1]
         if ch_in != ch_out or stride != 1 or is_first == True:
-            return self.conv_norm(input, ch_out, 1, stride, name=name)
+            return self._conv_norm(input, ch_out, 1, stride, name=name)
         else:
             return input
 
     def bottleneck(self, input, num_filters, stride, is_first, name):
-        conv0 = self.conv_norm(
+        conv0 = self._conv_norm(
             input=input,
             num_filters=num_filters,
             filter_size=1,
             act='relu',
             name=name + "_branch2a")
-        conv1 = self.conv_norm(
+        conv1 = self._conv_norm(
             input=conv0,
             num_filters=num_filters,
             filter_size=3,
             stride=stride,
             act='relu',
             name=name + "_branch2b")
-        conv2 = self.conv_norm(
+        conv2 = self._conv_norm(
             input=conv1,
             num_filters=num_filters * 4,
             filter_size=1,
             act=None,
             name=name + "_branch2c")
-        short = self.shortcut(
+        short = self._shortcut(
             input,
             num_filters * 4,
             stride,
@@ -145,42 +145,42 @@ class ResNet(object):
             x=short, y=conv2, act='relu', name=name + ".add.output.5")
 
     def basicblock(self, input, num_filters, stride, is_first, name):
-        conv0 = self.conv_norm(
+        conv0 = self._conv_norm(
             input=input,
             num_filters=num_filters,
             filter_size=3,
             act='relu',
             stride=stride,
             name=name + "_branch2a")
-        conv1 = self.conv_norm(
+        conv1 = self._conv_norm(
             input=conv0,
             num_filters=num_filters,
             filter_size=3,
             act=None,
             name=name + "_branch2b")
-        short = self.shortcut(
+        short = self._shortcut(
             input, num_filters, stride, is_first, name=name + "_branch1")
         return fluid.layers.elementwise_add(x=short, y=conv1, act='relu')
 
-    def layer_warp(self, input, ci):
+    def layer_warp(self, input, stage_num):
         """
         Args:
             input (Variable): input variable.
-            ci (int): the stage number, should be 0, 1, 2, 3
+            stage_num (int): the stage number, should be 0, 1, 2, 3
 
         Returns:
             The last variable in endpoint-th stage.
         """
-        assert ci in [2, 3, 4, 5]
+        assert stage_num in [2, 3, 4, 5]
 
         stages, block_func = self.depth_cfg[self.depth]
-        count = stages[ci - 2]
+        count = stages[stage_num - 2]
 
-        stride = 1 if ci == 2 else 2
-        ch_out = self.stage_filters[ci - 2]
+        stride = 1 if stage_num == 2 else 2
+        ch_out = self.stage_filters[stage_num - 2]
         # Make the layer name and parameter name consistent
         # with ImageNet pre-trained model
-        name = 'res' + str(ci)
+        name = 'res' + str(stage_num)
 
         res_out = block_func(
             input, ch_out, stride, is_first=True, name=name + "a")
@@ -192,7 +192,7 @@ class ResNet(object):
         return res_out
 
     def c1_stage(self, input):
-        conv = self.conv_norm(
+        conv = self._conv_norm(
             input=input,
             num_filters=64,
             filter_size=7,
@@ -240,33 +240,38 @@ class ResNet(object):
         return res
 
 
-def ResNet50Backbone(input, freeze_at, fixbn, bn_affine=False, bn_type='bn'):
+def ResNet50Backbone(input,
+                     freeze_at,
+                     fix_bn=False,
+                     affine_channel=False,
+                     bn_type='bn'):
     """
     Get the backbone of ResNet50. We define ResNet50 has 5 stages, from 1 to 5.
 
     Args:
         freeze_at (int): freeze the backbone at which stage. This number
             should be not large than 4. 0 means that no layers are fixed.
-        fixbn (bool): whether to fix batch norm
+        fix_bn (bool): whether to fix batch norm
             (meaning the scale and bias does not update).
-        bn_affine (bool): Use batch_norm or affine_channel.
+        affine_channel (bool): Use batch_norm or affine_channel.
 
     Returns:
         The last variable in endpoint-th stage.
     """
-    assert freeze_at in [0, 1, 2, 3, 4], "The freeze_at should be 1, 2, 3 or 4"
-    model = ResNet(50, fixbn, bn_affine)
+    assert freeze_at in [0, 1, 2, 3, 4
+                         ], "The freeze_at should be 0, 1, 2, 3 or 4"
+    model = ResNet(50, fix_bn, affine_channel)
     return model.get_backone(input, 4, freeze_at)
 
 
-def ResNet50C5(input, fixbn, bn_affine=False):
+def ResNet50C5(input, fix_bn, affine_channel=False):
     """
     Args:
-        fixbn (bool): whether to fix batch norm
+        fix_bn (bool): whether to fix batch norm
             (meaning the scale and bias does not update).
     Returns:
         The last variable in C5 stage.
     """
-    model = ResNet(50, fixbn, bn_affine)
+    model = ResNet(50, fix_bn, affine_channel)
     out = model.layer_warp(input, 5)
     return out
