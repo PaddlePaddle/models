@@ -252,7 +252,7 @@ def ResNet50Backbone(input,
         freeze_at (int): freeze the backbone at which stage. This number
             should be not large than 4. 0 means that no layers are fixed.
         fix_bn (bool): whether to fix batch norm
-            (meaning the scale and bias does not update).
+            (meaning the scale and bias does not update). Defalut False.
         affine_channel (bool): Use batch_norm or affine_channel.
 
     Returns:
@@ -264,11 +264,11 @@ def ResNet50Backbone(input,
     return model.get_backone(input, 4, freeze_at)
 
 
-def ResNet50C5(input, fix_bn, affine_channel=False):
+def ResNet50C5(input, fix_bn=False, affine_channel=False):
     """
     Args:
         fix_bn (bool): whether to fix batch norm
-            (meaning the scale and bias does not update).
+            (meaning the scale and bias does not update). Defalut False.
     Returns:
         The last variable in C5 stage.
     """
