@@ -7,8 +7,8 @@ fi
 
 if [ $? -eq 0  ];then
     unzip assignment2.zip
-    cp assignment2_release/data/ner/wordVectors.txt ./data
-    cp assignment2_release/data/ner/vocab.txt ./data
+    cp assignment2_release/data/ner/wordVectors.txt .
+    cp assignment2_release/data/ner/vocab.txt .
     rm -rf assignment2_release
 else
   echo "download data error!" >> /dev/stderr
