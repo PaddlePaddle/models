@@ -9,6 +9,26 @@ import shutil
 logger = logging.getLogger(__name__)
 
 
+def log_lr_and_step():
+    try:
+        # In optimizer like Adam, lr_var name is 'learning_rate_0',
+        # in decay lr from learning_rate_scheduler, lr_var name is
+        # 'learning_rate', better impliment is required here
+        lr_var = fluid.global_scope().find_var("learning_rate")
+        if not lr_var:
+            lr_var = fluid.global_scope().find_var("learning_rate_0")
+        lr = np.array(lr_var.get_tensor())
+
+        lr_count = '[-]'
+        lr_count_var = fluid.global_scope().find_var("@LR_DECAY_COUNTER@")
+        if lr_count_var:
+            lr_count = np.array(lr_count_var.get_tensor())
+        logger.info("------- learning rate {}, learning rate counter {} -----"
+                    .format(np.array(lr), np.array(lr_count)))
+    except:
+        logger.warn("Unable to get learning_rate and LR_DECAY_COUNTER.")
+
+
 def test_without_pyreader(test_exe,
                           test_reader,
                           test_feeder,
@@ -61,11 +81,7 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
                            save_model_name = 'model', test_exe = None, test_reader = None, \
                            test_feeder = None, test_fetch_list = None, test_metrics = None):
     for epoch in range(epochs):
-        lr = fluid.global_scope().find_var("learning_rate").get_tensor()
-        lr_count = fluid.global_scope().find_var(
-            "@LR_DECAY_COUNTER@").get_tensor()
-        logger.info("------- learning rate {}, learning rate counter {} -----"
-                    .format(np.array(lr), np.array(lr_count)))
+        log_lr_and_step()
         epoch_periods = []
         for train_iter, data in enumerate(train_reader()):
             cur_time = time.time()
@@ -101,11 +117,7 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
     if not train_pyreader:
         logger.error("[TRAIN] get pyreader failed.")
     for epoch in range(epochs):
-        lr = fluid.global_scope().find_var("learning_rate").get_tensor()
-        lr_count = fluid.global_scope().find_var(
-            "@LR_DECAY_COUNTER@").get_tensor()
-        logger.info("------- learning rate {}, learning rate counter {} -----"
-                    .format(np.array(lr), np.array(lr_count)))
+        log_lr_and_step()
         train_pyreader.start()
         train_metrics.reset()
         try:
