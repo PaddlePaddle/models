@@ -206,3 +206,6 @@ env CUDA_VISIBLE_DEVICES=0 python infer.py \
 |[ocr_attention_params](https://paddle-ocr-models.bj.bcebos.com/ocr_attention.zip) | 15.8%|
 
 >在本文示例中，均可通过修改`CUDA_VISIBLE_DEVICES`改变当前任务使用的显卡号。
+
+## 依赖
+> * libwarpctc.so
