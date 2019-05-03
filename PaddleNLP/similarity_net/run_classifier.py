@@ -87,9 +87,9 @@ def train(conf_dict, args):
     metric = fluid.metrics.Auc(name="auc")
     # Get device
     if args.use_cuda:
-        place = fluid.core.CUDAPlace(0)
+        place = fluid.CUDAPlace(0)
     else:
-        place = fluid.core.CPUPlace()
+        place = fluid.CPUPlace()
 
     simnet_process = reader.SimNetProcessor(args, vocab)
     if args.task_mode == "pairwise":
@@ -244,9 +244,9 @@ def test(conf_dict, args):
         model_path = args.init_checkpoint
         # Get device
         if args.use_cuda:
-            place = fluid.core.CUDAPlace(0)
+            place = fluid.CUDAPlace(0)
         else:
-            place = fluid.core.CPUPlace()
+            place = fluid.CPUPlace()
         # Get executor
         executor = fluid.Executor(place=place)
         # Load model
@@ -302,9 +302,9 @@ def infer(args):
     model_path = args.init_checkpoint
     # Get device
     if args.use_cuda:
-        place = fluid.core.CUDAPlace(0)
+        place = fluid.CUDAPlace(0)
     else:
-        place = fluid.core.CPUPlace()
+        place = fluid.CPUPlace()
     # Get executor
     executor = fluid.Executor(place=place)
     # Load model
