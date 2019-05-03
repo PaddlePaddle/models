@@ -40,7 +40,7 @@ def infer(args, vocab_size, test_reader, use_cuda):
     exe = fluid.Executor(place)
     hid_size = args.hid_size
     batch_size = args.batch_size
-    with fluid.scope_guard(fluid.core.Scope()):
+    with fluid.scope_guard(fluid.Scope()):
         main_program = fluid.Program()
         with fluid.program_guard(main_program):
             acc = net.infer_network(vocab_size, batch_size, hid_size)
