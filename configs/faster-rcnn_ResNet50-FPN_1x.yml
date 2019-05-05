@@ -14,17 +14,17 @@
 
 
 MODEL:
-  TYPE: Mask-RCNN
+  TYPE: Faster-RCNN
   BACKBONE: ResNet50
   FREEZE_AT: 0
-  FPN: OFF
+  FPN: ON
 
-FPNRPN_HEAD:
+RPN_HEAD:
   HEAD_FUNC: ResNet.addRpnHead
 
   PREPOSAL:
-    PRE_NMS_TOPN: 12000 
-    POST_NMS_TOPN: 2000
+    PRE_NMS_TOPN: 1000 
+    POST_NMS_TOPN: 1000
     NMS_THRESH: 0.7
 
   ROI:
@@ -37,15 +37,16 @@ FPNRPN_HEAD:
 BBOX_HEAD:
   HEAD_FUNC: ResNet.addBboxHead
 
-MASK_HEAD:
-  HEAD_FUNC: ResNet.addMaskHead
-  STRIDES: [32, 16, 8, 4]
-
 ROI_EXTRACTOR:
-  EXTRACT_METHOD: RoIAlign
-  ROI_RESOLUTION: 14
+  EXTRACT_METHOD: FPNRoIAlign
+  ROI_RESOLUTION: 7
   SPATIAL_SCALE: 1. / 16.
-  SAMPLING_RATIO: 0
+  SAMPLING_RATIO: 2
+  FPN_ROI_MIN_LEVEL: 2
+  FPN_ROI_MAX_LEVEL: 5
+  FPN_ROI_CANCONICAL_LEVEL: 4
+  FPN_ROI_CANONICAL_SCALE: 224
+  SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8., 1. / 4.]  
 
 ENV:
   GPU: ON
@@ -68,14 +69,14 @@ OPTIMIZER:
 
   LR_DECAY:
     POLICY: piecewise_decay 
-    BOUNDARIES: [240000, 320000]
+    BOUNDARIES: [60000, 80000]
     VALUES: [0.01, 0.001, 0.0001]
 
   LR_WARMUP:
     WARMUP: ON
     WARMUP_STEPS: 500
     WARMUP_INIT_FACTOR: 1. / 3.
-    WARMUP_END_LR: 0.01
+    WARMUP_END_LR: 0.02
 
   WEIGHT_DECAY:
     TYPE: L2
@@ -83,11 +84,11 @@ OPTIMIZER:
     BN_FACTOR: 0
 
 TRAIN:
-  MAX_ITERS: 360000
-  BATCH_SIZE_PER_DEVICE: 1
-  PRETRAIN_WEIGHTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  MAX_ITERS: 90000
+  BATCH_SIZE_PER_DEVICE: 2
+  PRETRAIN_WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
   BATCH_NORM_TYPE: BN
 
 TEST:
   SCORE_THRESH: 0.05
-  WEIGHTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
