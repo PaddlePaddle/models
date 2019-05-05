@@ -11,9 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from .resnet import ResNet
-from .resnet import ResNet50Backbone
-from .resnet import ResNet50C5
-
-__all__ = ['ResNet', 'ResNet50Backbone', 'ResNet50C5']
