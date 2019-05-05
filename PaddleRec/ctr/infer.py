@@ -11,9 +11,7 @@ import paddle.fluid as fluid
 import reader
 from network_conf import ctr_dnn_model
 
-
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
@@ -53,22 +51,26 @@ def infer():
     args = parse_args()
 
     place = fluid.CPUPlace()
-    inference_scope = fluid.core.Scope()
-    
+    inference_scope = fluid.Scope()
+
     dataset = reader.CriteoDataset(args.sparse_feature_dim)
-    test_reader = paddle.batch(dataset.test([args.data_path]), batch_size=args.batch_size)
-    
+    test_reader = paddle.batch(
+        dataset.test([args.data_path]), batch_size=args.batch_size)
+
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
     with fluid.framework.program_guard(test_program, startup_program):
-        loss, auc_var, batch_auc_var, _, data_list = ctr_dnn_model(args.embedding_size, args.sparse_feature_dim, False)
-        
+        loss, auc_var, batch_auc_var, _, data_list = ctr_dnn_model(
+            args.embedding_size, args.sparse_feature_dim, False)
+
         exe = fluid.Executor(place)
 
         feeder = fluid.DataFeeder(feed_list=data_list, place=place)
 
-        fluid.io.load_persistables(executor=exe, dirname=args.model_path,
-                                   main_program=fluid.default_main_program())
+        fluid.io.load_persistables(
+            executor=exe,
+            dirname=args.model_path,
+            main_program=fluid.default_main_program())
 
         def set_zero(var_name):
             param = inference_scope.var(var_name).get_tensor()
@@ -81,10 +83,11 @@ def infer():
 
         for batch_id, data in enumerate(test_reader()):
             loss_val, auc_val = exe.run(test_program,
-                feed=feeder.feed(data),
-                fetch_list=[loss, auc_var])
+                                        feed=feeder.feed(data),
+                                        fetch_list=[loss, auc_var])
             if batch_id % 100 == 0:
-                logger.info("TEST --> batch: {} loss: {} auc: {}".format(batch_id, loss_val/args.batch_size, auc_val))
+                logger.info("TEST --> batch: {} loss: {} auc: {}".format(
+                    batch_id, loss_val / args.batch_size, auc_val))
 
 
 if __name__ == '__main__':

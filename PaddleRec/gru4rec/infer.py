@@ -37,7 +37,7 @@ def infer(test_reader, use_cuda, model_path):
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    with fluid.scope_guard(fluid.core.Scope()):
+    with fluid.scope_guard(fluid.Scope()):
         infer_program, feed_target_names, fetch_vars = fluid.io.load_inference_model(
             model_path, exe)
         accum_num_recall = 0.0
