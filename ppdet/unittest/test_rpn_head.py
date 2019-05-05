@@ -60,8 +60,8 @@ def test_rpn_head(cfg_file, mask_on):
         rpn_input = fluid.layers.data(
             name='rpn_input', shape=[1024, 84, 84], dtype='float32')
         anchor, var, rpn_cls_score, rpn_bbox_pred = ob.get_output(rpn_input)
-        rpn_rois, rpn_roi_probs = ob.get_poposals(rpn_cls_score, rpn_bbox_pred,
-                                                  anchor, var)
+        rpn_rois, rpn_roi_probs = ob.get_proposals(rpn_cls_score, rpn_bbox_pred,
+                                                   anchor, var)
         rois, labels_int32, bbox_targets, bbox_inside_weights, bbox_outside_weights = ob.get_proposal_targets(
             rpn_rois)
         rpn_cls_loss, rpn_bbox_loss = ob.get_loss(rpn_cls_score, rpn_bbox_pred,

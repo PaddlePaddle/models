@@ -100,7 +100,7 @@ class RPNHead(object):
                 regularizer=L2Decay(0.)))
         return anchor, var, rpn_cls_score, rpn_bbox_pred
 
-    def get_poposals(self, rpn_cls_score, rpn_bbox_pred, anchor, var):
+    def get_proposals(self, rpn_cls_score, rpn_bbox_pred, anchor, var):
         rpn_cls_score_prob = fluid.layers.sigmoid(
             rpn_cls_score, name='rpn_cls_score_prob')
 
