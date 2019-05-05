@@ -18,7 +18,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import unittest
 import models.roi_extractors as roi_extractors
-#from models.roi_extractors import RoIExtractor
 from core.config import load_cfg
 import paddle.fluid as fluid
 from paddle.fluid.framework import Program, program_guard
@@ -40,19 +39,22 @@ def init_head_input(cfg):
                 name='head_inputs_0',
                 shape=[256, 21, 21],
                 dtype='float32',
-                lod_level=1), fluid.layers.data(
-                    name='head_inputs_1',
-                    shape=[256, 42, 42],
-                    dtype='float32',
-                    lod_level=1), fluid.layers.data(
-                        name='head_inputs_2',
-                        shape=[256, 84, 84],
-                        dtype='float32',
-                        lod_level=1), fluid.layers.data(
-                            name='head_inputs_3',
-                            shape=[256, 334, 334],
-                            dtype='float32',
-                            lod_level=1)
+                lod_level=1),
+            fluid.layers.data(
+                name='head_inputs_1',
+                shape=[256, 42, 42],
+                dtype='float32',
+                lod_level=1),
+            fluid.layers.data(
+                name='head_inputs_2',
+                shape=[256, 84, 84],
+                dtype='float32',
+                lod_level=1),
+            fluid.layers.data(
+                name='head_inputs_3',
+                shape=[256, 334, 334],
+                dtype='float32',
+                lod_level=1),
         ]
 
     else:
@@ -68,8 +70,6 @@ def test_roi_extractor(cfg_file):
     cfg = load_cfg(cfg_file)
     program = Program()
     with program_guard(program):
-        #out = init_input(cfg)
-        #method = cfg.ROI_EXTRACTOR.EXTRACT_METHOD
         method = getattr(roi_extractors, cfg.ROI_EXTRACTOR.EXTRACT_METHOD)
         ob = method(cfg)
         head_inputs = init_head_input(cfg)
