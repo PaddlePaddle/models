@@ -18,10 +18,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import unittest
-from models.anchor_heads.rpn_heads import RPNHead
-from core.config import load_cfg
+from ppdet.models.anchor_heads.rpn_heads import RPNHead
+from ppdet.core.config import load_cfg
+import configs
 import paddle.fluid as fluid
 from paddle.fluid.framework import Program, program_guard
+import os
 
 YAML_LIST = [
     'faster-rcnn_ResNet50-C4_1x.yml',
@@ -88,9 +90,10 @@ def test_rpn_head(cfg_file, mask_on):
 
 class TestRPNHead(unittest.TestCase):
     def test_rpn_head(self):
+        path = os.path.dirname(configs.__file__)
         for yml_file in YAML_LIST:
             mask_on = 'mask' in yml_file
-            test_rpn_head('../configs/' + yml_file, mask_on)
+            test_rpn_head(os.path.join(path, yml_file), mask_on)
 
 
 if __name__ == "__main__":

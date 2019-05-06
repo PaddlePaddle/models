@@ -26,6 +26,10 @@ __all__ = ['RPNHead']
 
 
 class RPNHead(object):
+    """
+        RPNHead class
+    """
+
     def __init__(self,
                  cfg,
                  gt_box,
@@ -41,10 +45,27 @@ class RPNHead(object):
         self.is_crowd = is_crowd
         self.im_info = im_info
         self.gt_masks = gt_masks
-        self.use_random = use_random
         self.mode = mode
+        self.use_random = use_random
 
     def get_output(self, rpn_input):
+        """
+        Get anchor and RPN head output.
+
+        Args:
+            rpn_input: feature map from backbone with shape of [N, C, H, W]
+        
+        Returns:
+            anchor: The output anchors with shape of [H, W, num_anchors, 4].
+                    Each anchor is in (xmin, ymin, xmax, ymax) format.
+            var: The expanded variances of anchors with shape of 
+                 [H, W, num_anchors, 4]. Each variance is in 
+                 (xcenter, ycenter, w, h) format.
+            rpn_cls_score: Output of rpn head with shape of 
+                           [N, num_anchors, H, W].
+            rpn_bbox_pred: Output of rpn head with shape of
+                           [N, num_anchors * 4, H, W].
+        """
         dim_out = rpn_input.shape[1]
         rpn_conv = fluid.layers.conv2d(
             input=rpn_input,
@@ -59,6 +80,7 @@ class RPNHead(object):
                     loc=0., scale=0.01)),
             bias_attr=ParamAttr(
                 name="conv_rpn_b", learning_rate=2., regularizer=L2Decay(0.)))
+        # Generate anchors
         anchor, var = fluid.layers.anchor_generator(
             input=rpn_conv,
             anchor_sizes=self.cfg.RPN_HEAD.ANCHOR.ANCHOR_SIZES,
@@ -101,6 +123,17 @@ class RPNHead(object):
         return anchor, var, rpn_cls_score, rpn_bbox_pred
 
     def get_proposals(self, rpn_cls_score, rpn_bbox_pred, anchor, var):
+        """
+        Get proposals according to the output of rpn head
+
+        Args:
+            rpn_cls_score, rpn_bbox_pred, anchor, var are outputs of 
+            get_output.
+
+        Returns:
+            rpn_rois: Output proposals with shape of (rois_num, 4).
+            rpn_roi_probs: Scores of proposals with shape of (rois_num, 1).
+        """
         rpn_cls_score_prob = fluid.layers.sigmoid(
             rpn_cls_score, name='rpn_cls_score_prob')
 
@@ -124,7 +157,25 @@ class RPNHead(object):
         return rpn_rois, rpn_roi_probs
 
     def get_proposal_targets(self, rpn_rois):
-        # rois, labels_int32, bbox_targets, bbox_inside_weights, bbox_outside_weights
+        """
+        Sample RoIs and get bounding box target for loss.
+        
+        Args:
+            rpn_rois: output of get_proposals.
+  
+        Returns:
+            rois: Selected rois with shape of [P, 4]. P is usually equal
+                  to BATCH_SIZE_PER_IM * batch_size. Each roi is in 
+                  (xmin, ymin, xmax, ymax) format.
+            labels_int32: Class label of each roi. Shape is [P, 1].
+            bbox_targets: Box label of each roi. Shape is [P, 4 * CLASS_NUM]
+            BboxInsideWeights: Mask to indicate whether a box should 
+                               contribute to loss. Same shape as bbox_targets.
+            BboxOutsideWeights: Mask to indicate whether a box should
+                                contribute to loss. Same shape as bbox_targets.
+        """
+        # rois, labels_int32, bbox_targets, 
+        # bbox_inside_weights, bbox_outside_weights
         target_outs = fluid.layers.generate_proposal_labels(
             rpn_rois=rpn_rois,
             gt_classes=self.gt_label,
@@ -148,6 +199,21 @@ class RPNHead(object):
         return rois, labels_int32, bbox_targets, bbox_inside_weights, bbox_outside_weights
 
     def get_mask_targets(self, rois, labels_int32):
+        """
+        Sample foreground RoIs and encode them to binary masks as target.
+
+        Args:
+            rois, labels_int32 are output of get_proposal_targets.
+ 
+        Return:
+            mask_rois: Sampled RoIs with shape of [P, 4]. P is the total
+                       number of sampled RoIs. Each roi is in
+                       (xmin, ymin, xmax, ymax) format.
+            rois_has_mask_int32: Each element repersents the output mask_rois 
+                                 index with regard to to input rois.
+            mask_int32: Binary mask targets with shape os [P, CLASS_NUM * M * M].
+                        M is resolution of mask predictions. 
+        """
         mask_target_outs = fluid.layers.generate_mask_labels(
             im_info=self.im_info,
             gt_classes=self.gt_label,
@@ -158,11 +224,26 @@ class RPNHead(object):
             num_classes=self.cfg.DATA.CLASS_NUM,
             resolution=self.cfg.RPN_HEAD.RESOLUTION)
         mask_rois = mask_target_outs[0]
-        roi_has_mask_int32 = mask_target_outs[1]
+        rois_has_mask_int32 = mask_target_outs[1]
         mask_int32 = mask_target_outs[2]
-        return mask_rois, roi_has_mask_int32, mask_int32
+        return mask_rois, rois_has_mask_int32, mask_int32
 
     def _get_rpn_loss_input(self, rpn_cls_score, rpn_bbox_pred, anchor, var):
+        """
+        Sample RPN head output and get rpn targets for rpn loss.
+        
+        Args:
+            rpn_cls_score, rpn_bbox_pred, anchor, var are output of get_output.
+
+        Returns:
+            score_pred: Predicted scores of RPN with shape of [F + B, 1]. F is 
+                        the number of foreground anchors. B is the number of 
+                        background anchors.
+            loc_pred: Predicted locations of RPN with shape of [F, 4].
+            score_tgt: Score ground truth regard to score_pred.
+            loc_tgt: Location ground truth regard to loc_pred.
+            bbox_weight: Whether the predicted location is fake_fg or not. 
+        """
         rpn_cls_score_reshape = fluid.layers.transpose(
             rpn_cls_score, perm=[0, 2, 3, 1])
         rpn_bbox_pred_reshape = fluid.layers.transpose(
@@ -193,6 +274,17 @@ class RPNHead(object):
         return score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight
 
     def get_loss(self, rpn_cls_score, rpn_bbox_pred, anchor, var):
+        """
+        Calculate rpn loss.
+
+        Args:
+            rpn_cls_score, rpn_bbox_pred, anchor, var are output of get_output.
+
+        Returns: 
+            rpn_cls_loss: RPN classification loss.
+            rpn_bbox_loss: RPN bounding box regression loss. 
+            
+        """
         score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight = self._get_rpn_loss_input(
             rpn_cls_score, rpn_bbox_pred, anchor, var)
         score_tgt = fluid.layers.cast(x=score_tgt, dtype='float32')
