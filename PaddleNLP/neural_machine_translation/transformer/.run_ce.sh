@@ -15,8 +15,7 @@ train(){
         --pool_size 10000 \
         --enable_ce True \
         weight_sharing False \
-        pass_num 20 \
-        dropout_seed 10
+        pass_num 20
 }
 
 cudaid=${transformer:=0} # use 0-th card as default
