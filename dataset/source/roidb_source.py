@@ -1,7 +1,25 @@
-"""
-interface to load data from local files and parse it for samples, 
-eg: roidb data in pickled files
-"""
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#function:
+#    interface to load data from local files and parse it for samples, 
+#    eg: roidb data in pickled files
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import random
@@ -11,7 +29,8 @@ from ..dataset import Dataset
 class RoiDbSource(Dataset):
     """ interface to load roidb data from files
     """
-    def __init__(self, fnames, image_dir=None):
+    def __init__(self, fnames,
+        image_dir=None, samples=-1):
         super(RoiDbSource, self).__init__()
         self._epoch = -1
         self._fnames = [fnames] if type(fnames) is str else fnames
@@ -24,6 +43,7 @@ class RoiDbSource(Dataset):
         self._roidb = None
         self._pos = -1
         self._drained = False
+        self._samples = samples
 
     def __str__(self):
         return 'RoiDbSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
@@ -48,6 +68,10 @@ class RoiDbSource(Dataset):
     def _load(self, fnames):
         """ load data from file
         """
+        from .roidb_loader import load
+        return load(fnames, self._samples)
+
+        """
         result = []
         for fname in fnames:
             with open(fname, 'rb') as f:
@@ -57,6 +81,7 @@ class RoiDbSource(Dataset):
                 result += roi
         assert len(result) > 0, 'failed to load any roi data from local file'
         return result
+        """
 
     def _load_image(self, where):
         fn = os.path.join(self._image_dir, where)

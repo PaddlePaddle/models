@@ -7,18 +7,20 @@ import logging
 import set_env
 from dataset import build_source
 
-class TestDataSource(unittest.TestCase):
-    """Test cases for dataset.source.datasource
+class TestRoiDbSource(unittest.TestCase):
+    """Test cases for dataset.source.roidb_source
     """
     @classmethod
     def setUpClass(cls):
         """ setup
         """
         prefix = os.path.dirname(os.path.abspath(__file__))
-        cls.roi_fname = os.path.join(prefix, \
-            'coco_data/COCO17_val2017.roidb')
-        cls.image_dir = os.path.join(prefix, 'COCO17')
-        cls.config = {'fnames': [cls.roi_fname], 'image_dir': cls.image_dir}
+        # json data
+        anno_path = os.path.join(prefix,
+            'COCO17/annotations/instances_val2017.json')
+        image_dir = os.path.join(prefix, 'COCO17/val2017')
+        cls.config = {'fnames': [anno_path],
+            'image_dir': image_dir, 'samples': 100}
 
     @classmethod
     def tearDownClass(cls):
