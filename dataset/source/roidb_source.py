@@ -71,18 +71,6 @@ class RoiDbSource(Dataset):
         from .roidb_loader import load
         return load(fnames, self._samples)
 
-        """
-        result = []
-        for fname in fnames:
-            with open(fname, 'rb') as f:
-                roi = f.read()
-                roi = pkl.loads(roi)
-                assert type(roi) is list, 'invalid data type in roidb'
-                result += roi
-        assert len(result) > 0, 'failed to load any roi data from local file'
-        return result
-        """
-
     def _load_image(self, where):
         fn = os.path.join(self._image_dir, where)
         with open(fn, 'rb') as f:
