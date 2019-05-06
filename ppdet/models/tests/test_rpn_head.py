@@ -33,57 +33,41 @@ YAML_LIST = [
 ]
 
 
-def init_input(cfg, mask_on):
+def init_input(cfg):
     out = [cfg]
-    gt_box = fluid.layers.data(
-        name='gt_box', shape=[4], dtype='float32', lod_level=1)
-    gt_label = fluid.layers.data(
-        name='gt_label', shape=[1], dtype='int32', lod_level=1)
-    is_crowd = fluid.layers.data(
-        name='is_crowd', shape=[1], dtype='int32', lod_level=1)
     im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
-    out.append(gt_box)
-    out.append(gt_label)
-    out.append(is_crowd)
     out.append(im_info)
-    if mask_on:
-        gt_masks = fluid.layers.data(
-            name='gt_masks', shape=[2], dtype='float32', lod_level=3)
-        out.append(gt_masks)
     return out
 
 
-def test_rpn_head(cfg_file, mask_on):
+def test_rpn_head(cfg_file):
     cfg = load_cfg(cfg_file)
     program = Program()
     with program_guard(program):
-        out = init_input(cfg, mask_on)
+        out = init_input(cfg)
         ob = RPNHead(*out)
+        gt_box = fluid.layers.data(
+            name='gt_box', shape=[4], dtype='float32', lod_level=1)
+        is_crowd = fluid.layers.data(
+            name='is_crowd', shape=[1], dtype='int32', lod_level=1)
         rpn_input = fluid.layers.data(
             name='rpn_input', shape=[1024, 84, 84], dtype='float32')
         anchor, var, rpn_cls_score, rpn_bbox_pred = ob.get_output(rpn_input)
         rpn_rois, rpn_roi_probs = ob.get_proposals(rpn_cls_score, rpn_bbox_pred,
                                                    anchor, var)
-        rois, labels_int32, bbox_targets, bbox_inside_weights, bbox_outside_weights = ob.get_proposal_targets(
-            rpn_rois)
-        rpn_cls_loss, rpn_bbox_loss = ob.get_loss(rpn_cls_score, rpn_bbox_pred,
-                                                  anchor, var)
-        if mask_on:
-            mask_rois, roi_has_mask_int32, mask_int32 = ob.get_mask_targets(
-                rois, labels_int32)
-            assert mask_rois is not None
-            assert roi_has_mask_int32 is not None
-            assert mask_int32 is not None
+        score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight = ob.get_rpn_loss_input(
+            rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box, is_crowd)
+        rpn_cls_loss, rpn_bbox_loss = ob.get_loss(
+            score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight)
 
         assert anchor is not None
         assert var is not None
         assert rpn_cls_score is not None
         assert rpn_bbox_pred is not None
-        assert rois is not None
-        assert labels_int32 is not None
-        assert bbox_targets is not None
-        assert bbox_inside_weights is not None
-        assert bbox_inside_weights is not None
+        assert score_pred is not None
+        assert loc_pred is not None
+        assert score_tgt is not None
+        assert loc_tgt is not None
         assert rpn_cls_loss is not None
         assert rpn_bbox_loss is not None
 
@@ -92,8 +76,7 @@ class TestRPNHead(unittest.TestCase):
     def test_rpn_head(self):
         path = os.path.dirname(configs.__file__)
         for yml_file in YAML_LIST:
-            mask_on = 'mask' in yml_file
-            test_rpn_head(os.path.join(path, yml_file), mask_on)
+            test_rpn_head(os.path.join(path, yml_file))
 
 
 if __name__ == "__main__":

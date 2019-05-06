@@ -30,23 +30,9 @@ class RPNHead(object):
         RPNHead class
     """
 
-    def __init__(self,
-                 cfg,
-                 gt_box,
-                 gt_label,
-                 is_crowd,
-                 im_info,
-                 gt_masks=None,
-                 mode='train',
-                 use_random=True):
+    def __init__(self, cfg, im_info):
         self.cfg = cfg
-        self.gt_label = gt_label
-        self.gt_box = gt_box
-        self.is_crowd = is_crowd
         self.im_info = im_info
-        self.gt_masks = gt_masks
-        self.mode = mode
-        self.use_random = use_random
 
     def get_output(self, rpn_input):
         """
@@ -122,13 +108,19 @@ class RPNHead(object):
                 regularizer=L2Decay(0.)))
         return anchor, var, rpn_cls_score, rpn_bbox_pred
 
-    def get_proposals(self, rpn_cls_score, rpn_bbox_pred, anchor, var):
+    def get_proposals(self,
+                      rpn_cls_score,
+                      rpn_bbox_pred,
+                      anchor,
+                      var,
+                      mode='train'):
         """
         Get proposals according to the output of rpn head
 
         Args:
             rpn_cls_score, rpn_bbox_pred, anchor, var are outputs of 
             get_output.
+            mode: Train or test mode.
 
         Returns:
             rpn_rois: Output proposals with shape of (rois_num, 4).
@@ -137,7 +129,7 @@ class RPNHead(object):
         rpn_cls_score_prob = fluid.layers.sigmoid(
             rpn_cls_score, name='rpn_cls_score_prob')
 
-        param_obj = self.cfg.TRAIN if self.mode == 'train' else self.cfg.TEST
+        param_obj = self.cfg.RPN_HEAD.TRAIN if mode == 'train' else self.cfg.RPN_HEAD.TEST
         pre_nms_top_n = param_obj.RPN_PRE_NMS_TOP_N
         post_nms_top_n = param_obj.RPN_POST_NMS_TOP_N
         nms_thresh = param_obj.RPN_NMS_THRESH
@@ -156,84 +148,23 @@ class RPNHead(object):
             eta=eta)
         return rpn_rois, rpn_roi_probs
 
-    def get_proposal_targets(self, rpn_rois):
-        """
-        Sample RoIs and get bounding box target for loss.
-        
-        Args:
-            rpn_rois: output of get_proposals.
-  
-        Returns:
-            rois: Selected rois with shape of [P, 4]. P is usually equal
-                  to BATCH_SIZE_PER_IM * batch_size. Each roi is in 
-                  (xmin, ymin, xmax, ymax) format.
-            labels_int32: Class label of each roi. Shape is [P, 1].
-            bbox_targets: Box label of each roi. Shape is [P, 4 * CLASS_NUM]
-            BboxInsideWeights: Mask to indicate whether a box should 
-                               contribute to loss. Same shape as bbox_targets.
-            BboxOutsideWeights: Mask to indicate whether a box should
-                                contribute to loss. Same shape as bbox_targets.
-        """
-        # rois, labels_int32, bbox_targets, 
-        # bbox_inside_weights, bbox_outside_weights
-        target_outs = fluid.layers.generate_proposal_labels(
-            rpn_rois=rpn_rois,
-            gt_classes=self.gt_label,
-            is_crowd=self.is_crowd,
-            gt_boxes=self.gt_box,
-            im_info=self.im_info,
-            batch_size_per_im=self.cfg.RPN_HEAD.PROPOSAL.BATCH_SIZE_PER_IM,
-            fg_fraction=self.cfg.RPN_HEAD.PROPOSAL.FG_FRACTION,
-            fg_thresh=self.cfg.RPN_HEAD.PROPOSAL.FG_THRESH,
-            bg_thresh_hi=self.cfg.RPN_HEAD.PROPOSAL.BG_THRESH_HI,
-            bg_thresh_lo=self.cfg.RPN_HEAD.PROPOSAL.BG_THRESH_LO,
-            bbox_reg_weights=self.cfg.RPN_HEAD.PROPOSAL.BBOX_REG_WEIGHTS,
-            class_nums=self.cfg.DATA.CLASS_NUM,
-            use_random=self.use_random)
-
-        rois = target_outs[0]
-        labels_int32 = target_outs[1]
-        bbox_targets = target_outs[2]
-        bbox_inside_weights = target_outs[3]
-        bbox_outside_weights = target_outs[4]
-        return rois, labels_int32, bbox_targets, bbox_inside_weights, bbox_outside_weights
-
-    def get_mask_targets(self, rois, labels_int32):
-        """
-        Sample foreground RoIs and encode them to binary masks as target.
-
-        Args:
-            rois, labels_int32 are output of get_proposal_targets.
- 
-        Return:
-            mask_rois: Sampled RoIs with shape of [P, 4]. P is the total
-                       number of sampled RoIs. Each roi is in
-                       (xmin, ymin, xmax, ymax) format.
-            rois_has_mask_int32: Each element repersents the output mask_rois 
-                                 index with regard to to input rois.
-            mask_int32: Binary mask targets with shape os [P, CLASS_NUM * M * M].
-                        M is resolution of mask predictions. 
-        """
-        mask_target_outs = fluid.layers.generate_mask_labels(
-            im_info=self.im_info,
-            gt_classes=self.gt_label,
-            is_crowd=self.is_crowd,
-            gt_segms=self.gt_masks,
-            rois=rois,
-            labels_int32=labels_int32,
-            num_classes=self.cfg.DATA.CLASS_NUM,
-            resolution=self.cfg.RPN_HEAD.RESOLUTION)
-        mask_rois = mask_target_outs[0]
-        rois_has_mask_int32 = mask_target_outs[1]
-        mask_int32 = mask_target_outs[2]
-        return mask_rois, rois_has_mask_int32, mask_int32
-
-    def _get_rpn_loss_input(self, rpn_cls_score, rpn_bbox_pred, anchor, var):
+    def get_rpn_loss_input(self,
+                           rpn_cls_score,
+                           rpn_bbox_pred,
+                           anchor,
+                           var,
+                           gt_box,
+                           is_crowd,
+                           use_random=True):
         """
         Sample RPN head output and get rpn targets for rpn loss.
         
         Args:
             rpn_cls_score, rpn_bbox_pred, anchor, var are output of get_output.
+            gt_box: The ground-truth bounding boxes. 
+            is_crowd: Whether ground-truth is crowd.
+            use_random: Whether to use random sampling to choose foreground and 
+                        background boxes.
 
         Returns:
             score_pred: Predicted scores of RPN with shape of [F + B, 1]. F is 
@@ -262,31 +193,29 @@ class RPNHead(object):
                 cls_logits=rpn_cls_score_reshape,
                 anchor_box=anchor_reshape,
                 anchor_var=var_reshape,
-                gt_boxes=self.gt_box,
-                is_crowd=self.is_crowd,
+                gt_boxes=gt_box,
+                is_crowd=is_crowd,
                 im_info=self.im_info,
                 rpn_batch_size_per_im=self.cfg.RPN_HEAD.RPN_BATCH_SIZE_PER_IM,
                 rpn_straddle_thresh=self.cfg.RPN_HEAD.RPN_STRADDLE_THRESH,
                 rpn_fg_fraction=self.cfg.RPN_HEAD.RPN_FG_FRACTION,
                 rpn_positive_overlap=self.cfg.RPN_HEAD.RPN_POSITIVE_OVERLAP,
                 rpn_negative_overlap=self.cfg.RPN_HEAD.RPN_NEGATIVE_OVERLAP,
-                use_random=self.use_random)
+                use_random=use_random)
         return score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight
 
-    def get_loss(self, rpn_cls_score, rpn_bbox_pred, anchor, var):
+    def get_loss(self, score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight):
         """
         Calculate rpn loss.
 
         Args:
-            rpn_cls_score, rpn_bbox_pred, anchor, var are output of get_output.
+            rpn_cls_score, rpn_bbox_pred, anchor, var are output of get_rpn_loss_input.
 
         Returns: 
             rpn_cls_loss: RPN classification loss.
             rpn_bbox_loss: RPN bounding box regression loss. 
             
         """
-        score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight = self._get_rpn_loss_input(
-            rpn_cls_score, rpn_bbox_pred, anchor, var)
         score_tgt = fluid.layers.cast(x=score_tgt, dtype='float32')
         score_tgt.stop_gradient = True
         rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
