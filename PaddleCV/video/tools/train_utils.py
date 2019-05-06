@@ -11,9 +11,12 @@ logger = logging.getLogger(__name__)
 
 def log_lr_and_step():
     try:
-        # In optimizer like Adam, lr_var name is 'learning_rate_0',
-        # in decay lr from learning_rate_scheduler, lr_var name is
-        # 'learning_rate', better impliment is required here
+        # In optimizers, if learning_rate is set as constant, lr_var
+        # name is 'learning_rate_0', and iteration counter is not 
+        # recorded. If learning_rate is set as decayed values from 
+        # learning_rate_scheduler, lr_var name is 'learning_rate', 
+        # and iteration counter is recorded with name '@LR_DECAY_COUNTER@', 
+        # better impliment is required here
         lr_var = fluid.global_scope().find_var("learning_rate")
         if not lr_var:
             lr_var = fluid.global_scope().find_var("learning_rate_0")
