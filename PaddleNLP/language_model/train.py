@@ -286,9 +286,10 @@ def train():
         print("train ppl", ppl[0])
 
         if epoch_id == max_epoch - 1 and args.enable_ce:
-            print("ptblm\tlstm_language_model_duration\t%s" %
-                        (total_time / max_epoch))
-            print("ptblm\tlstm_language_model_loss\t%s" % ppl[0])
+            card_num = get_cards()
+            print("ptblm\tlstm_language_model_duration_card%d\t%s" %
+                        (card_num, total_time / max_epoch))
+            print("ptblm\tlstm_language_model_loss_card%d\t%s" % (card_num, ppl[0]))
 
         model_path = os.path.join("model_new/", str(epoch_id))
         if not os.path.isdir(model_path):
@@ -299,6 +300,14 @@ def train():
         print("valid ppl", valid_ppl[0])
     test_ppl = eval(test_data)
     print("test ppl", test_ppl[0])
+
+
+def get_cards():
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    if cards != '':
+        num = len(cards.split(","))
+    return num
 
 
 if __name__ == '__main__':
