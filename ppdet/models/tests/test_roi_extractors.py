@@ -16,11 +16,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import unittest
-import models.roi_extractors as roi_extractors
-from core.config import load_cfg
+import ppdet.models.roi_extractors as roi_extractors
+from ppdet.core.config import load_cfg
+import configs
 import paddle.fluid as fluid
 from paddle.fluid.framework import Program, program_guard
+import os
 
 YAML_LIST = [
     'faster-rcnn_ResNet50-C4_1x.yml',
@@ -80,10 +83,11 @@ def test_roi_extractor(cfg_file):
         assert roi_feat is not None
 
 
-class TestRPNHead(unittest.TestCase):
-    def test_rpn_head(self):
+class TestRoIExtractor(unittest.TestCase):
+    def test_roi_extractors(self):
+        path = os.path.dirname(configs.__file__)
         for yml_file in YAML_LIST:
-            test_roi_extractor('../configs/' + yml_file)
+            test_roi_extractor(os.path.join(path, yml_file))
 
 
 if __name__ == "__main__":

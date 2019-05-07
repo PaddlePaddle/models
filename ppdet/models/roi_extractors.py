@@ -20,6 +20,10 @@ import paddle.fluid as fluid
 
 
 class RoIExtractor(object):
+    """
+        RoIExtractor class
+    """
+
     def __init__(self, cfg):
         self.cfg = cfg
 
@@ -28,10 +32,27 @@ class RoIExtractor(object):
 
 
 class RoIAlign(RoIExtractor):
+    """
+        RoIAlign class
+    """
+
     def __init__(self, cfg):
         super(RoIAlign, self).__init__(cfg)
 
     def get_roi_feat(self, head_input, rois):
+        """
+        Adopt roi align to get roi features
+
+        Args:    
+            head_input: feature map from backbone with shape of [N, C, H, W]
+            rois: selected rois from RPNHead with shape of [M, 4], where M is 
+                  the number of rois
+
+        Returns:
+            roi_feat: roi features with shape of [M, C, R, R], where M is the
+                      number of rois and R is roi resolution
+                
+        """
         roi_feat = fluid.layers.roi_align(
             input=head_input,
             rois=rois,
@@ -44,10 +65,27 @@ class RoIAlign(RoIExtractor):
 
 
 class RoIPool(RoIExtractor):
+    """
+        RoIPool class
+    """
+
     def __init__(self, cfg):
         super(RoIPool, self).__init__(cfg)
 
     def get_roi_feat(self, head_input, rois):
+        """
+        Adopt roi pooling to get roi features
+
+        Args:
+            head_input: feature map from backbone with shape of [N, C, H, W]
+            rois: selected rois from RPNHead with shape of [M, 4], where M is
+                  the number of rois
+
+        Returns:
+            roi_feat: roi features with shape of [M, C, R, R], where M is the
+                      number of rois and R is roi resolution
+
+        """
         roi_feat = fluid.layers.roi_pool(
             input=head_input,
             rois=rois,
@@ -59,10 +97,30 @@ class RoIPool(RoIExtractor):
 
 
 class FPNRoIAlign(RoIExtractor):
+    """
+        FPNRoIAlign class
+    """
+
     def __init__(self, cfg):
         super(FPNRoIAlign, self).__init__(cfg)
 
     def get_roi_feat(self, head_inputs, rois):
+        """
+        Adopt roi align onto several level of feature maps to get roi features.
+        Distribute rois to different levels by area and get a list of roi 
+        features by distributed rois and their corresponding feature maps.
+
+        Args:
+            head_inputs: A list of feature maps from backbone with shape 
+                         of [N, C, H, W]
+            rois: selected rois from RPNHead with shape of [M, 4], where M is
+                  the number of rois
+
+        Returns:
+            roi_feat: A list of roi features with shape of [M, C, R, R], 
+                      where M is the number of rois and R is roi resolution
+
+        """
         k_min = self.cfg.ROI_EXTRACTOR.FPN_ROI_MIN_LEVEL
         k_max = self.cfg.ROI_EXTRACTOR.FPN_ROI_MAX_LEVEL
         num_roi_lvls = k_max - k_min + 1
