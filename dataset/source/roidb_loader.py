@@ -38,6 +38,8 @@ def load_from_json(json_path, samples=-1):
     matplotlib.use('Agg')
     from pycocotools.coco import COCO
 
+    assert json_path.endswith('.json'), 'invalid json file[%s]' % (json_path)
+
     dataset = COCO(json_path)
     img_ids = dataset.getImgIds()
     roidb = []
@@ -77,7 +79,7 @@ def load_from_json(json_path, samples=-1):
             gt_poly[i] = inst['segmentation']
 
         roi_rec = {
-            'image_url': '%s' % (im_filename),
+            'image_url': im_filename,
             'im_id': img_id,
             'h': im_h,
             'w': im_w,
