@@ -164,4 +164,4 @@ Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. 
 |[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNext50_32x4d_pretrained.zip) | 78.50%/94.01% | 78.44%/93.96% |
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.zip) | 79.26%/94.22% | 79.12%/94.20% |
 |[GoogleNet](https://paddle-imagenet-models-name.bj.bcebos.com/GoogleNet_pretrained.tar) | 70.50%/89.59% | 70.27%/89.58% |
-|[ShuffleNetV2](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNet_pretrained.tar) |  | 69.48%/88.99% |
+|[ShuffleNetV2](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNet_pretrained.zip) |  | 69.48%/88.99% |

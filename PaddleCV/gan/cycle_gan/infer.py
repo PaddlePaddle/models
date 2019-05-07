@@ -6,7 +6,7 @@ import paddle.fluid as fluid
 import paddle
 import numpy as np
 from scipy.misc import imsave
-from model import *
+from model import build_generator_resnet_9blocks, build_gen_discriminator
 import glob
 from utility import add_arguments, print_arguments
 

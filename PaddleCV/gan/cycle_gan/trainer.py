@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from model import *
+from model import build_generator_resnet_9blocks, build_gen_discriminator
 import paddle.fluid as fluid
 
 step_per_epoch = 1335

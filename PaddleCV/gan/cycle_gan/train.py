@@ -14,7 +14,7 @@ import paddle.fluid as fluid
 import paddle.fluid.profiler as profiler
 import data_reader
 from utility import add_arguments, print_arguments, ImagePool
-from trainer import *
+from trainer import GATrainer, GBTrainer, DATrainer, DBTrainer
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
