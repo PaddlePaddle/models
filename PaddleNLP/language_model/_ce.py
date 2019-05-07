@@ -9,15 +9,10 @@ from kpi import DurationKpi
 imikolov_20_avg_ppl_kpi_card1 = CostKpi('lstm_language_model_loss_card1', 0.01, 0)
 imikolov_20_pass_duration_kpi_card1 = DurationKpi(
     'lstm_language_model_duration_card1', 0.03, 0, actived=True)
-imikolov_20_avg_ppl_kpi_card4 = CostKpi('lstm_language_model_loss_card4', 0.03, 0)
-imikolov_20_pass_duration_kpi_card4 = DurationKpi(
-    'lstm_language_model_duration_card4', 0.01, 0, actived=True)
 
 tracking_kpis = [
     imikolov_20_avg_ppl_kpi_card1,
     imikolov_20_pass_duration_kpi_card1,
-    imikolov_20_avg_ppl_kpi_card4,
-    imikolov_20_pass_duration_kpi_card4,
 ]
 
 
