@@ -271,9 +271,7 @@ model:model_r@20/epoch_10 recall@20:0.681 time_cost(s):12.2
 
 
 ## 多机训练
-厂内用户可以参考[wiki](http://wiki.baidu.com/pages/viewpage.action?pageId=628300529)利用paddlecloud 配置多机环境
-
-可参考cluster_train.py 配置其他多机环境
+可参考cluster_train.py 配置多机环境
 
 运行命令本地模拟多机场景
 ```
