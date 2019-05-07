@@ -36,7 +36,7 @@ class BaseOperator(object):
 
         Args:
             sample (dict): a dict of sample, eg: {'image':xx, 'label': xxx}
-            context (dict): info about this sample processing
+            context (dict): context info about this sample processing
 
         Returns:
             result (dict): a processed sample

@@ -29,8 +29,8 @@
 #    * each op must obey basic rules defined in transform.operator.base
 #
 # - Transformer
-#    * accept a 'xxxSource' and a list of 'xxxOperator' to provide a transformed 'Dataset'
-#    * naive implementation just pull sample from source and then transform it
+#    * accept a 'xxxSource' and a list of 'xxxOperator' to build a transformed 'Dataset'
+#    * naive implementation just pull sample from source and transform it
 
 from __future__ import absolute_import
 from __future__ import division

@@ -24,7 +24,6 @@ from ..dataset import Dataset
 
 class Transformer(Dataset):
     """ simple transformer without any workers to accelerate the processing
-elerate                                                           
     """
     def __init__(self, source, mapper, worker_args=None):
         self._source = source
@@ -43,3 +42,8 @@ elerate
     def epoch_id(self):
         return self._source.epoch_id()
 
+
+class FastTrasformer(Dataset):
+    """ a fast transformer using multiple workers (threads or processes)
+    """
+    pass

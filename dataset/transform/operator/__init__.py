@@ -29,8 +29,8 @@ def build(ops_conf):
     op_repr = []
     for op in ops_conf:
         op_func = getattr(base, op['name'])
-        params = None if 'params' not in op else op['params']
-        o = op_func(params)
+        params = {} if 'params' not in op else op['params']
+        o = op_func(**params)
         mappers.append(o)
         op_repr.append('{%s}' % str(o))
     op_repr = '[%s]' % ','.join(op_repr)
