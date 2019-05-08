@@ -28,21 +28,23 @@
 
 ## 1. int8量化训练
 
-评估实验所使用数据集为ImageNet 1000类，且以top-1准确率为衡量指标：
+评估实验所使用数据集为ImageNet 1000类数据, 量化训练前后模型top-5/top-1准确率对比如下：
 
-| Model | FP32| int8(A:abs_max, W:abs_max) | int8, (A:moving_average_abs_max, W:abs_max) |int8, (A:abs_max, W:channel_wise_abs_max) |
+| Model | FP32| int8(X:abs_max, W:abs_max) | int8, (X:moving_average_abs_max, W:abs_max) |int8, (X:abs_max, W:channel_wise_abs_max) |
 |:---|:---:|:---:|:---:|:---:|
-|MobileNetV1|[70.916%]()|[71.008%]()|[70.84%]()|[71.00%]()|
-|ResNet50|[76.352%]()|[76.612%]()|[76.456%]()|[76.73%]()|
+|MobileNetV1|[89.54% / 70.91%]()|[89.64% / 71.01%]()|[89.58% / 70.86%]()|[89.75% / 71.13%]()|
+|ResNet50|[92.80% / 76.35%]()|[93.12% / 76.77%]()|[93.07% / 76.65%]()|[93.15% / 76.80%]()|
 
 点击表中超链接即可下载预训练模型。
 
-模型大小变化：
+量化训练前后，模型大小的变化对比如下：
 
-| Model | FP32| int8(A:abs_max, W:abs_max) | int8, (A:moving_average_abs_max, W:abs_max) |int8, (A:abs_max, W:channel_wise_abs_max) |
-|:---|:---:|:---:|:---:|:---:|
-|MobileNetV1|17M|4.8M(1/3.54)|5.1M(1/3.33)|4.9M(1/3.47)|
-|ResNet50|99M|26M(1/3.81)|27M(1/3.67)|27M(1/3.67)|
+| Model       | FP32  | int8(A:abs_max, W:abs_max) | int8, (A:moving_average_abs_max, W:abs_max) | int8, (A:abs_max, W:channel_wise_abs_max) |
+| :---        | :---: | :---:                      | :---:                                       | :---:                                     |
+| MobileNetV1 | 17M   | 4.8M(-71.76%)               | 4.9M(-71.18%)                                | 4.9M(-71.18%)                              |
+| ResNet50    | 99M   | 26M(-73.74%)                | 27M(-72.73%)                                 | 27M(-72.73%)                               |
+
+注：abs_max为动态量化，moving_average_abs_max为静态量化, channel_wise_abs_max是对卷积权重进行分channel量化。
 
 
 ## 2. 剪切实验
@@ -198,9 +200,9 @@ optimizer = fluid.optimizer.Momentum(
 
 #### 实验结果
 
-|- |精度(top5/top1) |模型下载 |
+|- |精度(top1) |模型下载 |
 |---|---|---|
-| ResNet50蒸馏训+量化|90.94% / 72.08%| [点击下载]()|
+| ResNet50蒸馏训练+量化| 72.01%| [点击下载]()|
 
 
 ### 4.2 剪切后量化
@@ -212,4 +214,4 @@ optimizer = fluid.optimizer.Momentum(
 
 | 剪切FLOPS |剪切+量化（dynamic）|模型下载 |
 |---|---|---|
-| -50%|89.11% / 69.70%| [点击下载]()|
+| -50%| 69.20%| [点击下载]()|
