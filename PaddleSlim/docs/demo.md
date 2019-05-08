@@ -38,7 +38,7 @@
 4. <a href="#35-蒸馏后int8量化">蒸馏量化组合</a>：先用ResNet50对MobileNetV1进行蒸馏，再对蒸馏后得到的模型进行int8量化训练。
 5. <a href="#36-剪切后int8量化">剪切量化组合</a>：先用Uniform剪切策略对MobileNetV1进行剪切，再对剪切后的模型进行int8量化训练
 
-本示例完整代码链接：https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleSlim
+本示例完整代码链接：https://github.com/PaddlePaddle/models/tree/develop/PaddleSlim
 
 使用方式：
 克隆[PaddlePaddle/models](https://github.com/PaddlePaddle/models)到本地，并进入models/fluid/PaddleSlim路径。
