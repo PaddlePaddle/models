@@ -52,22 +52,15 @@ def test_rpn_head(cfg_file):
             name='is_crowd', shape=[1], dtype='int32', lod_level=1)
         rpn_input = fluid.layers.data(
             name='rpn_input', shape=[1024, 84, 84], dtype='float32')
-        anchor, var, rpn_cls_score, rpn_bbox_pred = ob.get_output(rpn_input)
-        rpn_rois, rpn_roi_probs = ob.get_proposals(rpn_cls_score, rpn_bbox_pred,
-                                                   anchor, var)
-        score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight = ob.get_rpn_loss_input(
-            rpn_cls_score, rpn_bbox_pred, anchor, var, gt_box, is_crowd)
-        rpn_cls_loss, rpn_bbox_loss = ob.get_loss(
-            score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight)
+        rpn_cls_score, rpn_bbox_pred = ob.get_output(rpn_input)
+        rpn_rois, rpn_roi_probs = ob.get_proposals(rpn_cls_score, rpn_bbox_pred)
+        rpn_cls_loss, rpn_bbox_loss = ob.get_loss(rpn_cls_score, rpn_bbox_pred,
+                                                  gt_box, is_crowd)
 
-        assert anchor is not None
-        assert var is not None
         assert rpn_cls_score is not None
         assert rpn_bbox_pred is not None
-        assert score_pred is not None
-        assert loc_pred is not None
-        assert score_tgt is not None
-        assert loc_tgt is not None
+        assert rpn_rois is not None
+        assert rpn_roi_probs is not None
         assert rpn_cls_loss is not None
         assert rpn_bbox_loss is not None
 
