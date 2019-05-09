@@ -25,9 +25,14 @@ class TestTransformer(unittest.TestCase):
         image_dir = os.path.join(prefix, 'COCO17/val2017')
         cls.sc_config = {'fnames': [anno_path],
             'image_dir': image_dir, 'samples': 200}
-
-        cls.ops_conf = [{'name': 'DecodeImage', \
-            'params': {'to_rgb': True}}]
+        
+        
+        cls.ops_conf = [{'name': 'DecodeImage', 'params': {'to_rgb': True}}, 
+                       {'name': 'RandomFlipImageWithBbox', 'params': {'prob': 0.0}},
+                       {'name': 'ResizeImage', 'params': {'target_size': 300, 'max_size': 1333}},
+                       {'name': 'NormalizeImage', 'params': {'mean': [108,108,108]}},
+                       {'name': 'Bgr2Rgb'},
+                       {'name': 'ArrangeSample', 'params': {'is_mask': False}}]
 
     @classmethod
     def tearDownClass(cls):
@@ -53,7 +58,7 @@ class TestTransformer(unittest.TestCase):
         result_data = transform(sc, self.ops_conf)
 
         for sample in result_data:
-            self.assertTrue(type(sample['image']) is np.ndarray)
+            self.assertTrue(type(sample[0]) is np.ndarray)
 
     def test_fast_transform(self):
         """ test fast transformer
@@ -66,7 +71,7 @@ class TestTransformer(unittest.TestCase):
 
         ct = 0
         for sample in result_data:
-            self.assertTrue(type(sample['image']) is np.ndarray)
+            self.assertTrue(type(sample[0]) is np.ndarray)
             ct += 1
 
         self.assertTrue(result_data.drained())
@@ -75,7 +80,7 @@ class TestTransformer(unittest.TestCase):
 
         ct = 0
         for sample in result_data:
-            self.assertTrue(type(sample['image']) is np.ndarray)
+            self.assertTrue(type(sample[0]) is np.ndarray)
             ct += 1
 
         self.assertEqual(ct, result_data.size())
