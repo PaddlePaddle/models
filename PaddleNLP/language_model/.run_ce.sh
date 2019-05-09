@@ -7,3 +7,9 @@ python  train.py \
     --rnn_model static \
     --enable_ce | python _ce.py
 
+python  train.py \
+    --data_path data/simple-examples/data/ \
+    --model_type test \
+    --use_gpu True \
+    --rnn_model padding \
+    --enable_ce | python _ce.py
