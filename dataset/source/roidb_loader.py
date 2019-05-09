@@ -20,16 +20,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import argparse
 import os
 import numpy as np
+import xml.etree.ElementTree as ET
+
 
 def load_from_json(json_path, samples=-1):
     """ load roidb from json file
-    
-    
-    
-    
     Args:
         @json_path (str): json file path
         @samples (int): samples to load, -1 means all
@@ -54,8 +51,10 @@ def load_from_json(json_path, samples=-1):
         im_h = img_anno['height']
 
         ins_anno_ids = dataset.getAnnIds(imgIds=img_id, iscrowd=False)
-        trainid_to_datasetid = dict({i + 1: cid for i, cid in enumerate(dataset.getCatIds())}) # 0 for bg
-        datasetid_to_trainid = dict({cid: tid for tid, cid in trainid_to_datasetid.items()})
+        trainid_to_datasetid = dict({i + 1: cid for i,
+                                     cid in enumerate(dataset.getCatIds())})
+        datasetid_to_trainid = dict({cid: tid for tid,
+                                     cid in trainid_to_datasetid.items()})
         instances = dataset.loadAnns(ins_anno_ids)
 
         # sanitize bboxes
@@ -73,12 +72,14 @@ def load_from_json(json_path, samples=-1):
 
         gt_bbox = np.zeros((num_instance, 4), dtype=np.float32)
         gt_class = np.zeros((num_instance, ), dtype=np.int32)
+        is_crowd = np.zeros((num_instance, ), dtype=np.int32)
         gt_poly = [None] * num_instance
 
         for i, inst in enumerate(valid_instances):
             cls = datasetid_to_trainid[inst['category_id']]
             gt_bbox[i, :] = inst['clean_bbox']
             gt_class[i] = cls
+            is_crowd[i] = inst['iscrowd']
             gt_poly[i] = inst['segmentation']
 
         roi_rec = {
@@ -86,6 +87,7 @@ def load_from_json(json_path, samples=-1):
             'im_id': img_id,
             'h': im_h,
             'w': im_w,
+            'is_crowd': is_crowd,
             'gt_class': gt_class,
             'gt_bbox': gt_bbox,
             'gt_poly': gt_poly,
@@ -116,6 +118,70 @@ def load_from_pickle(pickle_path, samples=-1):
     return roidb
 
 
+def load_from_xml(xml_path, samples=-1):
+    roidb = []
+    count = 1
+    ct = 0
+    category_list = []
+    train_txt_path = os.path.join(xml_path, 'ImageSets',
+                                  'Main', 'train.txt')
+    annot_path = os.path.join(xml_path, 'Annotations')
+    with open(os.path.join(xml_path, 'label_list.txt'), 'r') as fr:
+        lines = fr.readlines()
+        for line in lines:
+            category_list.append(line.strip())
+
+    cat2label = {cat: i + 1 for i, cat in enumerate(category_list)}
+    with open(train_txt_path, 'r') as fr:
+        lines = fr.readlines()
+        for line in lines:
+            file_name = line.strip()+'.xml'
+            xml_file_path = os.path.join(annot_path, file_name)
+            if not os.path.isfile(xml_file_path):
+                continue
+            tree = ET.parse(xml_file_path)
+            im_filename = tree.find('filename').text
+            if tree.find('id') is None:
+                img_id = count
+            else:
+                img_id = int(tree.find('id').text)
+            count = count+1
+            objs = tree.findall('object')
+            im_w = float(tree.find('size').find('width').text)
+            im_h = float(tree.find('size').find('height').text)
+            gt_bbox = np.zeros((len(objs), 4), dtype=np.float32)
+            gt_class = np.zeros((len(objs), ), dtype=np.int32)
+            is_crowd = np.zeros((len(objs), ), dtype=np.int32)
+            for i, obj in enumerate(objs):
+                x1 = float(obj.find('bndbox').find('xmin').text)
+                y1 = float(obj.find('bndbox').find('ymin').text)
+                x2 = float(obj.find('bndbox').find('xmax').text)
+                y2 = float(obj.find('bndbox').find('ymax').text)
+                x1 = max(0, x1)
+                y1 = max(0, y1)
+                x2 = min(im_w-1, x2)
+                y2 = min(im_h-1, y2)
+                gt_bbox[i] = [x1, y1, x2, y2]
+                gt_class[i] = cat2label[obj.find('name').text]
+                is_crowd[i] = 0
+            roi_rec = {
+                'image_url': '%s' % (im_filename),
+                'im_id': img_id,
+                'h': im_h,
+                'w': im_w,
+                'is_crowd': is_crowd,
+                'gt_class': gt_class,
+                'gt_bbox': gt_bbox,
+                'gt_poly': [],
+                'flipped': False}
+            roidb.append(roi_rec)
+            ct += 1
+            if samples > 0 and ct >= samples:
+                break
+    assert type(roidb) is list, 'invalid data type from roidb'
+    return roidb
+
+
 def load(fnames, samples=-1):
     """ load coco data from list of files in 'fnames',
     Args:
@@ -133,6 +199,8 @@ def load(fnames, samples=-1):
             roidb += load_from_json(fn, samples)
         elif fn.endswith('.roidb'):
             roidb += load_from_pickle(fn, samples)
+        elif os.path.isdir(fn):
+            roidb += load_from_xml(fn, samples)
         else:
             raise ValueError('invalid file type when load roidb data from file[%s]' % (fn))
 
