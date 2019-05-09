@@ -68,8 +68,7 @@ def save_label_list(args):
 
 
 if __name__ == "__main__":
-    """ make sure your data is stored in 'data/${args.dataset}'
-
+    """ Use to get the VOC data's label list.
     usage:
         python generate_voc_label.py -list 'voc2014' -list 'voc2017'
     """
