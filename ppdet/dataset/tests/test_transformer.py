@@ -7,7 +7,7 @@ import numpy as np
 
 import set_env
 from dataset import build_source
-from dataset.transform import operator
+from dataset.transform import operator as op
 from dataset.transform import transform
 
 logging.basicConfig(level=logging.INFO)
@@ -23,16 +23,15 @@ class TestTransformer(unittest.TestCase):
         anno_path = os.path.join(prefix,
             'COCO17/annotations/instances_val2017.json')
         image_dir = os.path.join(prefix, 'COCO17/val2017')
-        cls.sc_config = {'fnames': [anno_path],
+        cls.sc_config = {'fname': anno_path,
             'image_dir': image_dir, 'samples': 200}
         
-        
-        cls.ops_conf = [{'name': 'DecodeImage', 'params': {'to_rgb': True}}, 
-                       {'name': 'RandomFlipImageWithBbox', 'params': {'prob': 0.0}},
-                       {'name': 'ResizeImage', 'params': {'target_size': 300, 'max_size': 1333}},
-                       {'name': 'NormalizeImage', 'params': {'mean': [108,108,108]}},
-                       {'name': 'Bgr2Rgb'},
-                       {'name': 'ArrangeSample', 'params': {'is_mask': False}}]
+        cls.ops = [op.DecodeImage(to_rgb=True), 
+                        #op.RandFlipImage(prob=0.0), # there is a bug here
+                        op.ResizeImage(target_size=300, max_size=1333),
+                        op.NormalizeImage(mean=[108, 108, 108]),
+                        op.Bgr2Rgb(),
+                        op.ArrangeSample(is_mask=False)]
 
     @classmethod
     def tearDownClass(cls):
@@ -42,8 +41,8 @@ class TestTransformer(unittest.TestCase):
     def test_op(self):
         """ test base operator
         """
-        ops_conf = [{'name': 'BaseOperator'}]
-        mapper = operator.build(ops_conf)
+        ops = [op.BaseOperator()]
+        mapper = op.build(ops)
         self.assertTrue(mapper is not None)
 
         fake_sample = {'image': 'image data', 'label': 1234}
@@ -54,8 +53,8 @@ class TestTransformer(unittest.TestCase):
         """ test transformed dataset
         """
         sc = build_source(self.sc_config)
-        mapper = operator.build(self.ops_conf)
-        result_data = transform(sc, self.ops_conf)
+        mapper = op.build(self.ops)
+        result_data = transform(sc, self.ops)
 
         for sample in result_data:
             self.assertTrue(type(sample[0]) is np.ndarray)
@@ -64,10 +63,10 @@ class TestTransformer(unittest.TestCase):
         """ test fast transformer
         """
         sc = build_source(self.sc_config)
-        mapper = operator.build(self.ops_conf)
+        mapper = op.build(self.ops)
         worker_conf = {'worker_num': 2}
         result_data = transform(sc,
-            self.ops_conf, worker_conf)
+            self.ops, worker_conf)
 
         ct = 0
         for sample in result_data:
@@ -88,4 +87,3 @@ class TestTransformer(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

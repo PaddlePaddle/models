@@ -27,8 +27,12 @@ import numpy as np
 import cv2
 from functools import reduce
 
-
 logger = logging.getLogger(__name__)
+
+registered_ops = []
+def register_op(cls):
+    registered_ops.append(cls.__name__)
+    return cls
 
 
 class BboxError(ValueError):
@@ -39,6 +43,7 @@ class ImageError(ValueError):
     pass
 
 
+@register_op
 class BaseOperator(object):
     def __init__(self, name=None):
         if name is None:
@@ -59,6 +64,7 @@ class BaseOperator(object):
         return '%s' % (self._id)
 
 
+@register_op
 class DecodeImage(BaseOperator):
     def __init__(self, to_rgb=True):
         """ Transform the image data to numpy format.
@@ -82,6 +88,7 @@ class DecodeImage(BaseOperator):
         return sample
 
 
+@register_op
 class ResizeImage(BaseOperator):
     def __init__(self, target_size=0, max_size=0,
                  interp=cv2.INTER_LINEAR):
@@ -142,6 +149,7 @@ class ResizeImage(BaseOperator):
         return sample
 
 
+@register_op
 class RandFlipImage(BaseOperator):
     def __init__(self, prob=0.5, is_normalized=False,
                  is_mask_flip=False):
@@ -235,6 +243,7 @@ class RandFlipImage(BaseOperator):
         return sample
 
 
+@register_op
 class NormalizeImage(BaseOperator):
     def __init__(self, mean=[0.485, 0.456, 0.406],
                  std=[1, 1, 1],
@@ -273,6 +282,7 @@ class NormalizeImage(BaseOperator):
         return sample
 
 
+@register_op
 class NormalizeBox(BaseOperator):
     """Transform the bounding box's coornidates to [0,1]."""
     def __init__(self):
@@ -291,6 +301,7 @@ class NormalizeBox(BaseOperator):
         return sample
 
 
+@register_op
 class Bgr2Rgb(BaseOperator):
     def __init__(self, to_bgr=True,
                  channel_first=True):
@@ -318,6 +329,7 @@ class Bgr2Rgb(BaseOperator):
         return sample
 
 
+@register_op
 class ArrangeSample(BaseOperator):
     """Transform the sample dict to the sample tuple
        which the model need when training.

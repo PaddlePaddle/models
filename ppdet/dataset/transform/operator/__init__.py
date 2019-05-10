@@ -51,8 +51,8 @@ def build(ops):
     return _mapper
 
 
-op_names = ['DecodeImage', 'ResizeImage']
-for nm in op_names:
+for nm in base.registered_ops:
     op = getattr(base, nm)
     locals()[nm] = op
-    __all__.append(nm)
+
+__all__ += base.registered_ops
