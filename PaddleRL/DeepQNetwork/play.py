@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     place = fluid.CUDAPlace(0) if args.use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    inference_scope = fluid.core.Scope()
+    inference_scope = fluid.Scope()
     with fluid.scope_guard(inference_scope):
         [predict_program, feed_names,
          fetch_targets] = fluid.io.load_inference_model(args.model_path, exe)

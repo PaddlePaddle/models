@@ -12,7 +12,7 @@
 
 ## 安装
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.4或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ## 简介
 
@@ -163,7 +163,7 @@ Train Loss
         --weights=${path_to_weights}  \
         --image_path=data/COCO17/val2017/  \
         --image_name=000000000139.jpg \
-        --draw_threshold=0.5
+        --draw_thresh=0.5
 
 - 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU预测。
 

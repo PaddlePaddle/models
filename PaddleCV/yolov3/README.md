@@ -12,7 +12,7 @@
 
 ## Installation
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v.1.5 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html) and make an update.
 
 ## Introduction
 
@@ -161,7 +161,7 @@ Inference is used to get prediction score or image features based on trained mod
         --weights=${path_to_weights}  \
         --image_path=data/COCO17/val2017/  \
         --image_name=000000000139.jpg \
-        --draw_threshold=0.5
+        --draw_thresh=0.5
 
 - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to infer.
 

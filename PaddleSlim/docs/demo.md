@@ -38,7 +38,7 @@
 4. <a href="#35-蒸馏后int8量化">蒸馏量化组合</a>：先用ResNet50对MobileNetV1进行蒸馏，再对蒸馏后得到的模型进行int8量化训练。
 5. <a href="#36-剪切后int8量化">剪切量化组合</a>：先用Uniform剪切策略对MobileNetV1进行剪切，再对剪切后的模型进行int8量化训练
 
-本示例完整代码链接：https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleSlim
+本示例完整代码链接：https://github.com/PaddlePaddle/models/tree/develop/PaddleSlim
 
 使用方式：
 克隆[PaddlePaddle/models](https://github.com/PaddlePaddle/models)到本地，并进入models/fluid/PaddleSlim路径。
@@ -229,9 +229,9 @@ python compress.py \
 
 该示例结果如下：
 
-| Model | int8量化(top1_acc)|
-|---|---|
-|MobileNetV1|71.00%|
+| 模型(int8动态量化) | 模型大小 | 精度(top5/top1)|
+|---|---|---|
+|MobileNetV1|-71.76%(4.8M)|89.64% / 71.01%|
 
 
 ### 3.5 蒸馏后int8量化
@@ -252,9 +252,9 @@ python compress.py \
 
 该示例结果如下：
 
-|- |精度(top5/top1) |
-|---|---|
-| ResNet50蒸馏训+量化|90.94% / 72.08%|
+| 模型（ResNet50蒸馏训练+int8量化） | 模型大小 | 精度(top1)     |
+| ---                               | ---      | ---            |
+| MobileNet v1                      | -71.76%（4.8M）| 72.01% |
 
 ### 3.6 剪切后int8量化
 
@@ -273,6 +273,6 @@ python compress.py \
 
 该示例结果如下：
 
-| 剪切FLOPS |剪切+量化（dynamic）
-|---|---|
-| -50%|89.11% / 69.70%|
+| 模型（剪切FLOPS+动态int8量化） | 模型大小        | 精度(top1) |
+| ---                            | ---             | ---        |
+| MobileNet v1（剪切FLOPS -50%） | -86.47%（2.3M） | 69.20%     |

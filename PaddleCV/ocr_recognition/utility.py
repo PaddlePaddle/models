@@ -18,7 +18,6 @@ from __future__ import division
 from __future__ import print_function
 import distutils.util
 import numpy as np
-from paddle.fluid import core
 import paddle.fluid as fluid
 import six
 
@@ -73,14 +72,14 @@ def to_lodtensor(data, place):
         lod.append(cur_len)
     flattened_data = np.concatenate(data, axis=0).astype("int32")
     flattened_data = flattened_data.reshape([len(flattened_data), 1])
-    res = core.LoDTensor()
+    res = fluid.LoDTensor()
     res.set(flattened_data, place)
     res.set_lod([lod])
     return res
 
 
 def get_ctc_feeder_data(data, place, need_label=True):
-    pixel_tensor = core.LoDTensor()
+    pixel_tensor = fluid.LoDTensor()
     pixel_data = None
     pixel_data = np.concatenate(
         list(map(lambda x: x[0][np.newaxis, :], data)),
@@ -98,7 +97,7 @@ def get_ctc_feeder_for_infer(data, place):
 
 
 def get_attention_feeder_data(data, place, need_label=True):
-    pixel_tensor = core.LoDTensor()
+    pixel_tensor = fluid.LoDTensor()
     pixel_data = None
     pixel_data = np.concatenate(
         list(map(lambda x: x[0][np.newaxis, :], data)),
@@ -130,7 +129,7 @@ def get_attention_feeder_for_infer(data, place):
     init_scores = fluid.create_lod_tensor(init_scores_data,
                                           init_recursive_seq_lens, place)
 
-    pixel_tensor = core.LoDTensor()
+    pixel_tensor = fluid.LoDTensor()
     pixel_data = None
     pixel_data = np.concatenate(
         list(map(lambda x: x[0][np.newaxis, :], data)),

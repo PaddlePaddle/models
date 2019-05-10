@@ -13,7 +13,7 @@
 
 ## 模型简介
 
-Temporal Shift Module是由MIT和IBM Watson AI Lab的Ji Lin，Chuang Gan等人提出的通过时间位移来提高网络视频理解能力的模块，其位移操作原理如下图所示。
+Temporal Shift Module是由MIT和IBM Watson AI Lab的Ji Lin，Chuang Gan和Song Han等人提出的通过时间位移来提高网络视频理解能力的模块，其位移操作原理如下图所示。
 
 <p align="center">
 <img src="../../images/temporal_shift.png" height=250 width=800 hspace='10'/> <br />
