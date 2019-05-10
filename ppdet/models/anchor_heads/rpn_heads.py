@@ -30,15 +30,17 @@ class RPNHead(object):
         RPNHead class
     """
 
-    def __init__(self, cfg, im_info):
+    def __init__(self, cfg, im_info, mode='train'):
         """
         Args:
             cfg(dict): All parameters in dictionary
             im_info(Variable): Information for image with shape (N, 3),
                                 in format (height, width, scale).
+            mode(String): Train or Test mode.
         """
         self.cfg = cfg
         self.im_info = im_info
+        self.mode = mode
 
     def get_output(self, input):
         """
@@ -109,14 +111,13 @@ class RPNHead(object):
                 regularizer=L2Decay(0.)))
         return self.rpn_cls_score, self.rpn_bbox_pred
 
-    def get_proposals(self, rpn_cls_score, rpn_bbox_pred, mode='train'):
+    def get_proposals(self, rpn_cls_score, rpn_bbox_pred):
         """
         Get proposals according to the output of rpn head
 
         Args:
             rpn_cls_score(Variable): Outputs of get_output. 
             rpn_bbox_pred(Variable): Outputs of get_output.
-            mode(string): Train or test mode.
 
         Returns:
             rpn_rois: Output proposals with shape of (rois_num, 4).
@@ -125,7 +126,7 @@ class RPNHead(object):
         rpn_cls_score_prob = fluid.layers.sigmoid(
             rpn_cls_score, name='rpn_cls_score_prob')
 
-        param_obj = self.cfg.RPN_HEAD.TRAIN if mode == 'train' else self.cfg.RPN_HEAD.TEST
+        param_obj = self.cfg.RPN_HEAD.TRAIN if self.mode == 'train' else self.cfg.RPN_HEAD.TEST
         pre_nms_top_n = param_obj.RPN_PRE_NMS_TOP_N
         post_nms_top_n = param_obj.RPN_POST_NMS_TOP_N
         nms_thresh = param_obj.RPN_NMS_THRESH
