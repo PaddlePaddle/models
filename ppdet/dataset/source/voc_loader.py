@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import numpy as np
 import xml.etree.ElementTree as ET
 
@@ -46,7 +47,7 @@ def load(anno_path, sample_num=-1):
 
     txt_file = os.path.join(anno_path, 'ImageSets',
                                   'Main', 'train.txt')
-    xml_path = os.path.join(xml_path, 'Annotations')
+    xml_path = os.path.join(anno_path, 'Annotations')
     assert os.path.isfile(txt_file) and \
            os.path.isdir(xml_path), 'invalid xml path'
 
@@ -62,7 +63,7 @@ def load(anno_path, sample_num=-1):
             if not line:
                 break
             fname = line.strip() + '.xml'
-            xml_file = os.path.join(annot_path, fname)
+            xml_file = os.path.join(xml_path, fname)
             if not os.path.isfile(xml_file):
                 continue
 
