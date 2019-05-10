@@ -55,6 +55,8 @@ def load_from_json(json_path, samples=-1):
                                      cid in enumerate(dataset.getCatIds())})
         datasetid_to_trainid = dict({cid: tid for tid,
                                      cid in trainid_to_datasetid.items()})
+        cat2id = dict({dataset.loadCats(cid)[0]['name']: tid for tid,
+                                     cid in trainid_to_datasetid.items()})
         instances = dataset.loadAnns(ins_anno_ids)
 
         # sanitize bboxes
@@ -99,7 +101,8 @@ def load_from_json(json_path, samples=-1):
             break
 
     assert type(roidb) is list, 'invalid data type from roidb'
-    return roidb
+    print(cat2id)
+    return [roidb, cat2id]
 
 
 def load_from_pickle(pickle_path, samples=-1):
@@ -126,15 +129,14 @@ def load_from_xml(xml_path, samples=-1):
     train_txt_path = os.path.join(xml_path, 'ImageSets',
                                   'Main', 'train.txt')
     annot_path = os.path.join(xml_path, 'Annotations')
-    with open(os.path.join(xml_path, 'label_list.txt'), 'r') as fr:
-        lines = fr.readlines()
-        for line in lines:
-            category_list.append(line.strip())
-
-    cat2label = {cat: i + 1 for i, cat in enumerate(category_list)}
+    assert os.path.isfile(train_txt_path) and \
+           os.path.isdir(annot_path), 'invalid xml path'
+    cat2label = {}
     with open(train_txt_path, 'r') as fr:
-        lines = fr.readlines()
-        for line in lines:
+        while True:
+            line = fr.readline()
+            if not line:
+                break
             file_name = line.strip()+'.xml'
             xml_file_path = os.path.join(annot_path, file_name)
             if not os.path.isfile(xml_file_path):
@@ -153,6 +155,10 @@ def load_from_xml(xml_path, samples=-1):
             gt_class = np.zeros((len(objs), ), dtype=np.int32)
             is_crowd = np.zeros((len(objs), ), dtype=np.int32)
             for i, obj in enumerate(objs):
+                cat = obj.find('name').text
+                if cat not in cat2label:
+                    cat2label[cat] = len(cat2label)+1
+                gt_class[i] = cat2label[cat]
                 x1 = float(obj.find('bndbox').find('xmin').text)
                 y1 = float(obj.find('bndbox').find('ymin').text)
                 x2 = float(obj.find('bndbox').find('xmax').text)
@@ -162,7 +168,6 @@ def load_from_xml(xml_path, samples=-1):
                 x2 = min(im_w-1, x2)
                 y2 = min(im_h-1, y2)
                 gt_bbox[i] = [x1, y1, x2, y2]
-                gt_class[i] = cat2label[obj.find('name').text]
                 is_crowd[i] = 0
             roi_rec = {
                 'image_url': '%s' % (im_filename),
@@ -179,8 +184,7 @@ def load_from_xml(xml_path, samples=-1):
             if samples > 0 and ct >= samples:
                 break
     assert type(roidb) is list, 'invalid data type from roidb'
-    return roidb
-
+    return [roidb, cat2label]
 
 def load(fnames, samples=-1):
     """ load coco data from list of files in 'fnames',
@@ -194,14 +198,19 @@ def load(fnames, samples=-1):
     """
     fnames = [fnames] if type(fnames) is str else fnames
     roidb = []
+    cat2id = {}
     for fn in fnames:
         if fn.endswith('.json'):
-            roidb += load_from_json(fn, samples)
+            outs = load_from_json(fn, samples)
+            roidb += outs[0]
+            cat2id.update(outs[1])
         elif fn.endswith('.roidb'):
             roidb += load_from_pickle(fn, samples)
         elif os.path.isdir(fn):
-            roidb += load_from_xml(fn, samples)
+            outs = load_from_xml(fn, samples)
+            roidb += outs[0]
+            cat2id.update(outs[1])
         else:
             raise ValueError('invalid file type when load roidb data from file[%s]' % (fn))
+    return roidb, cat2id
 
-    return roidb

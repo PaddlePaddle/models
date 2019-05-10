@@ -25,6 +25,8 @@ import uuid
 import logging
 import numpy as np
 import cv2
+from functools import reduce
+
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +85,7 @@ class DecodeImage(BaseOperator):
 class ResizeImage(BaseOperator):
     def __init__(self, target_size=0, max_size=0,
                  interp=cv2.INTER_LINEAR):
-        """ Resise the image numpy.
+        """ 
         Args:
             target_size (int): the taregt size of image's short side
             max_size (int): the max size of image
@@ -100,6 +102,8 @@ class ResizeImage(BaseOperator):
                             .format(self.__str__))
 
     def __call__(self, sample, context=None):
+        """ Resise the image numpy.
+        """
         im = sample['image']
         if not isinstance(im, np.ndarray):
             raise TypeError('{}: the image type is not numpy.'
@@ -138,16 +142,16 @@ class ResizeImage(BaseOperator):
         return sample
 
 
-class RandomFlipImageWithBbox(BaseOperator):
+class RandFlipImage(BaseOperator):
     def __init__(self, prob=0.5, is_normalized=False,
                  is_mask_flip=False):
-        """ Filp the image and bounding box.
+        """ 
         Args:
             prob (float): the probability of flipping image
             is_normalized (bool): whether the bbox scale to [0,1]
             is_mask_flip (bool): whether flip the segmentation
         """
-        super(RandomFlipImageWithBbox, self).__init__()
+        super(RandFlipImage, self).__init__()
         self.prob = prob
         self.is_normalized = is_normalized
         self.is_mask_flip = is_mask_flip
@@ -189,7 +193,7 @@ class RandomFlipImageWithBbox(BaseOperator):
         return flipped_segms
 
     def __call__(self, sample, context=None):
-        """
+        """Filp the image and bounding box.
         Operators:
             1. Flip the image numpy.
             2. Transform the bboxes' x coordinates.
@@ -224,7 +228,7 @@ class RandomFlipImageWithBbox(BaseOperator):
                                 the x2 isn\'t more than the x1!'
                                 .format(self.__str__))
             sample['gt_bbox'] = gt_bbox
-            if len(sample['gt_poly']) != 0 and self.is_mask_flip:
+            if self.is_mask_flip and len(sample['gt_poly']) != 0:
                 sample['gt_poly'] = self.flip_segms(sample['gt_poly'],
                                                     height, width)
             sample['flipped'] = True
@@ -233,7 +237,7 @@ class RandomFlipImageWithBbox(BaseOperator):
 
 class NormalizeImage(BaseOperator):
     def __init__(self, mean=[0.485, 0.456, 0.406],
-                 std=[0, 0, 0],
+                 std=[1, 1, 1],
                  is_scale=True):
         """ Normalize the image.
         Args:
@@ -249,19 +253,22 @@ class NormalizeImage(BaseOperator):
                 and isinstance(self.is_scale, bool)):
             raise TypeError('{}: the input type is error.'
                             .format(self.__str__))
+        from functools import reduce
+        if reduce(lambda x,y: x*y, self.std) == 0:
+            raise ValueError('{}: the std is wrong!'.format(self.__str__))
 
     def __call__(self, sample, context=None):
+        """
+        Operators:
+            1.(optional) Scale the image to [0,1]
+            2. Each pixel minus mean and is divided by std
+        """
         im = sample['image']
         im = im.astype(np.float32, copy=False)
         if self.is_scale:
             im = im / 255.0
-        if self.std == [0, 0, 0]:
-            im -= self.mean
-        else:
-            if self.std[0] == 0 or self.std[1] == 1 \
-                    or self.std[2] == 0:
-                raise ValueError('{}: the std is wrong!'.format(self.__str__))
-            im = (im - self.mean) / self.std
+        im -= self.mean
+        im /= self.std
         sample['image'] = im
         return sample
 
@@ -335,6 +342,7 @@ class ArrangeSample(BaseOperator):
         Output:
             sample: a tuple which contains the
                     info which training model need.
+                    tupe is (image, gt_bbox, gt_class, is_crowd, im_info, gt_masks)
         """
         im = sample['image']
         gt_bbox = sample['gt_bbox']

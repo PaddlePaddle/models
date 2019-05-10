@@ -35,7 +35,7 @@ class RoiDbSource(Dataset):
         self._epoch = -1
         self._fnames = [fnames] if type(fnames) is str else fnames
         for f in self._fnames:
-            assert os.path.isfile(f), 'invalid file[%s] for RoiDbSource' % (f)
+            assert os.path.isfile(f) or os.path.isdir(f), 'invalid file[%s] for RoiDbSource' % (f)
         self._image_dir = image_dir
         if image_dir is not None:
             assert os.path.isdir(image_dir), 'invalid image directory[%s]' % (image_dir)
@@ -69,7 +69,7 @@ class RoiDbSource(Dataset):
         """ load data from file
         """
         from .roidb_loader import load
-        return load(fnames, self._samples)
+        return load(fnames, self._samples)[0]
 
     def _load_image(self, where):
         fn = os.path.join(self._image_dir, where)
