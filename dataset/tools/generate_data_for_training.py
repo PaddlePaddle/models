@@ -29,7 +29,7 @@ path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../')
 if path not in sys.path:
     sys.path.insert(0, path)
 
-from dataset.source.roidb_loader import load
+from dataset.source import loader
 
 def parse_args():
     """ parse arguments
@@ -48,47 +48,44 @@ def parse_args():
     return args
 
 
-def dump_json_as_pickle(args):
-    """ tool used to load json data, and then save it as pickled file
-
+def dump_coco_as_pickle(args):
+    """ tool to load COCO data, and then save it as pickled file
     """
     samples = args.samples 
     save_dir = args.save_dir
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    annotation_path = args.annotation
-    roidb, cat2id = load(annotation_path, samples, True)
+    anno_path = args.annotation
+    roidb, cat2id = loader.load(anno_path, samples, True)
     samples = len(roidb)
-    dsname = os.path.basename(annotation_path).rstrip('.json')
+    dsname = os.path.basename(anno_path).rstrip('.json')
     roidb_fname = save_dir + "/%s.roidb" % (dsname)
     with open(roidb_fname, "wb") as fout:
-        pkl.dump(roidb, fout)
-    cat2id_fname = save_dir + "/%s.roidb" % (dsname+'_cat2id')
-    with open(cat2id_fname, "wb") as fout:
-        pkl.dump(cat2id, fout)
+        pkl.dump((roidb, cat2id), fout)
+
     print('dumped %d samples to file[%s]' % (samples, roidb_fname))
 
-def dump_xml_as_pickle(args):
+
+def dump_voc_as_pickle(args):
+    """ tool to load VOC data, and then save it as pickled file
+    """
     samples = args.samples 
     save_dir = args.save_dir
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     save_dir = args.save_dir
-    annotation_path = args.annotation
-    roidb, cat2id = load(annotation_path, samples, True)
+    anno_path = args.annotation
+    roidb, cat2id = loader.load(anno_path, samples, True)
     samples = len(roidb)
-    part = annotation_path.split('/')
+    part = anno_path.split('/')
     if part[-1] == '':
         dsname = part[-2]
     else:
         dsname = part[-1]
     roidb_fname = save_dir + "/%s.roidb" % (dsname)
     with open(roidb_fname, "wb") as fout:
-        pkl.dump(roidb, fout)
-    cat2id_fname = save_dir + "/%s.roidb" % (dsname+'_cat2id')
-    with open(cat2id_fname, "wb") as fout:
-        pkl.dump(cat2id, fout)
-    print(cat2id)
+        pkl.dump((roidb, cat2id), fout)
+
     print('dumped %d samples to file[%s]' % (samples, roidb_fname))
 
 if __name__ == "__main__":
@@ -99,10 +96,14 @@ if __name__ == "__main__":
             --save-dir=./test/data --sample=100
     """
     args = parse_args()
+    # VOC data are organized in xml files
+    # COCO data are organized in json file
     if args.type == 'xml':
-        dump_xml_as_pickle(args)
+        dump_voc_as_pickle(args)
     elif args.type == 'json':
-        dump_json_as_pickle(args)
+        dump_coco_as_pickle(args)
     else:
         TypeError('Can\'t deal with {} type. (Use xml or json)'
                             .format(self.__str__))
+
+

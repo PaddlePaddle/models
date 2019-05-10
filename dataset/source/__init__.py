@@ -20,6 +20,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import copy
+from .loader import load
 from .roidb_source import RoiDbSource
 
 def build(config):

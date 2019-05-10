@@ -23,19 +23,19 @@ from __future__ import unicode_literals
 
 import os
 import random
+import copy
 import pickle as pkl
 from ..dataset import Dataset
 
 class RoiDbSource(Dataset):
     """ interface to load roidb data from files
     """
-    def __init__(self, fnames,
+    def __init__(self, fname,
         image_dir=None, samples=-1):
         super(RoiDbSource, self).__init__()
         self._epoch = -1
-        self._fnames = [fnames] if type(fnames) is str else fnames
-        for f in self._fnames:
-            assert os.path.isfile(f) or os.path.isdir(f), 'invalid file[%s] for RoiDbSource' % (f)
+        self._fname = fname
+        assert os.path.isfile(fname) or os.path.isdir(fname), 'invalid file[%s] for RoiDbSource' % (fname)
         self._image_dir = image_dir
         if image_dir is not None:
             assert os.path.isdir(image_dir), 'invalid image directory[%s]' % (image_dir)
@@ -47,7 +47,7 @@ class RoiDbSource(Dataset):
 
     def __str__(self):
         return 'RoiDbSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
-            % (str(self._fnames), self._epoch, self.size(), self._pos)
+            % (self._fname, self._epoch, self.size(), self._pos)
 
     def next(self):
         """ load next sample
@@ -59,17 +59,17 @@ class RoiDbSource(Dataset):
             self._drained = True
             raise StopIteration('%s no more data' % (str(self)))
         else:
-            sample = self._roidb[self._pos]
+            sample = copy.deepcopy(self._roidb[self._pos])
             if self._image_dir is not None:
-                sample['image'] = self._load_image(sample['image_url'])
+                sample['image'] = self._load_image(sample['im_file'])
             self._pos += 1
             return sample
 
-    def _load(self, fnames):
+    def _load(self):
         """ load data from file
         """
-        from .roidb_loader import load
-        return load(fnames, self._samples)
+        from . import loader
+        return loader.load(self._fname, self._samples)
 
     def _load_image(self, where):
         fn = os.path.join(self._image_dir, where)
@@ -80,7 +80,7 @@ class RoiDbSource(Dataset):
         """ implementation of Dataset.reset
         """
         if self._roidb is None:
-            self._roidb = self._load(self._fnames)
+            self._roidb = self._load()
         random.shuffle(self._roidb)
 
         if self._epoch < 0:

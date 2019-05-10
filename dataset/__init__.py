@@ -40,6 +40,7 @@ from __future__ import unicode_literals
 from .dataset import Dataset
 from . import source
 from . import transform
+from .coco import CocoReader
 
 build_source = source.build
 
@@ -59,4 +60,6 @@ def build_dataset(config):
 
 
 __all__ = ['Dataset', 'source', \
-    'build_source', 'build_dataset']
+    'build_source', 'build_dataset', \
+    'CocoReader']
+

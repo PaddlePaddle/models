@@ -183,7 +183,7 @@ class FastTransformer(Dataset):
             self._producer.start()
         else:
             if not self.drained():
-                logger.warn('reset before epoch[%d] has been finished!' % self._epoch)
+                logger.warn('donnot reset before epoch[%d] has been finished!' % self._epoch)
                 self._produced = self._produced - self._consumed
             else:
                 self._produced = 0

@@ -14,11 +14,13 @@
 
 from . import base
 
-def build(ops_conf):
-    """ build a mapper for operator config in 'ops_conf'
+__all__ = ['build']
+
+def build(ops):
+    """ Build a mapper for operators in 'ops'
 
     Args:
-        @ops_conf (list of dict): configs for oprators, eg:
+        ops (list of base.BaseOperator): configs for oprators, eg:
             [{'name': 'DecodeImage', 'params': {'to_rgb': True}}, {xxx}]
 
     Returns:
@@ -27,10 +29,13 @@ def build(ops_conf):
     """
     mappers = []
     op_repr = []
-    for op in ops_conf:
-        op_func = getattr(base, op['name'])
-        params = {} if 'params' not in op else op['params']
-        o = op_func(**params)
+    for op in ops:
+        if not isinstance(op, base.BaseOperator):
+            op_func = getattr(base, op['name'])
+            params = {} if 'params' not in op else op['params']
+            o = op_func(**params)
+        else:
+            o = op
         mappers.append(o)
         op_repr.append('{%s}' % str(o))
     op_repr = '[%s]' % ','.join(op_repr)
@@ -44,3 +49,10 @@ def build(ops_conf):
 
     _mapper.ops = op_repr
     return _mapper
+
+
+op_names = ['DecodeImage', 'ResizeImage']
+for nm in op_names:
+    op = getattr(base, nm)
+    locals()[nm] = op
+    __all__.append(nm)

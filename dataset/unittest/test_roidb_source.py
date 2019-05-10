@@ -19,7 +19,7 @@ class TestRoiDbSource(unittest.TestCase):
         anno_path = os.path.join(prefix,
             'COCO17/annotations/instances_val2017.json')
         image_dir = os.path.join(prefix, 'COCO17/val2017')
-        cls.config = {'fnames': [anno_path],
+        cls.config = {'fname': anno_path,
             'image_dir': image_dir, 'samples': 100}
 
     @classmethod
