@@ -36,7 +36,7 @@ class RPNHead(object):
             cfg(dict): All parameters in dictionary
             im_info(Variable): Information for image with shape (N, 3),
                                 in format (height, width, scale).
-            mode(String): Train or Test mode.
+            mode(String): Train or Test mode: 'train' or 'test'.
         """
         self.cfg = cfg
         self.im_info = im_info
@@ -120,8 +120,8 @@ class RPNHead(object):
             rpn_bbox_pred(Variable): Outputs of get_output.
 
         Returns:
-            rpn_rois: Output proposals with shape of (rois_num, 4).
-            rpn_roi_probs: Scores of proposals with shape of (rois_num, 1).
+            rpn_rois(Variable): Output proposals with shape of (rois_num, 4).
+            rpn_roi_probs(Variable): Scores of proposals with shape of (rois_num, 1).
         """
         rpn_cls_score_prob = fluid.layers.sigmoid(
             rpn_cls_score, name='rpn_cls_score_prob')
