@@ -57,7 +57,7 @@ def dump_json_as_pickle(args):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     annotation_path = args.annotation
-    roidb, cat2id = load(annotation_path, samples)
+    roidb, cat2id = load(annotation_path, samples, True)
     samples = len(roidb)
     dsname = os.path.basename(annotation_path).rstrip('.json')
     roidb_fname = save_dir + "/%s.roidb" % (dsname)
@@ -75,7 +75,7 @@ def dump_xml_as_pickle(args):
         os.makedirs(save_dir)
     save_dir = args.save_dir
     annotation_path = args.annotation
-    roidb, cat2id = load(annotation_path, samples)
+    roidb, cat2id = load(annotation_path, samples, True)
     samples = len(roidb)
     part = annotation_path.split('/')
     if part[-1] == '':

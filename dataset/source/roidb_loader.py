@@ -101,7 +101,6 @@ def load_from_json(json_path, samples=-1):
             break
 
     assert type(roidb) is list, 'invalid data type from roidb'
-    print(cat2id)
     return [roidb, cat2id]
 
 
@@ -186,7 +185,7 @@ def load_from_xml(xml_path, samples=-1):
     assert type(roidb) is list, 'invalid data type from roidb'
     return [roidb, cat2label]
 
-def load(fnames, samples=-1):
+def load(fnames, samples=-1, with_cat2id=False):
     """ load coco data from list of files in 'fnames',
     Args:
         @fnames (list of str): file names for data, eg:
@@ -212,5 +211,7 @@ def load(fnames, samples=-1):
             cat2id.update(outs[1])
         else:
             raise ValueError('invalid file type when load roidb data from file[%s]' % (fn))
-    return roidb, cat2id
-
+    if with_cat2id:
+        return roidb, cat2id
+    else:
+        return roidb

@@ -69,7 +69,7 @@ class RoiDbSource(Dataset):
         """ load data from file
         """
         from .roidb_loader import load
-        return load(fnames, self._samples)[0]
+        return load(fnames, self._samples)
 
     def _load_image(self, where):
         fn = os.path.join(self._image_dir, where)
