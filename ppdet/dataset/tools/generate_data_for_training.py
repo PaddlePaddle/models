@@ -92,7 +92,7 @@ if __name__ == "__main__":
     """ make sure your data is stored in 'data/${args.dataset}'
 
     usage:
-        python generate_data_for_training.py --type xml --annotation=./annotations/instances_val2017.json
+        python generate_data_for_training.py --type=json --annotation=./annotations/instances_val2017.json
             --save-dir=./test/data --sample=100
     """
     args = parse_args()

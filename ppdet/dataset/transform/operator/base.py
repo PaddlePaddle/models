@@ -231,7 +231,7 @@ class RandFlipImage(BaseOperator):
             else:
                 gt_bbox[:, 0] = width - oldx2 - 1
                 gt_bbox[:, 2] = width - oldx1 - 1
-            if (gt_bbox[:, 2] < gt_bbox[:, 0]).all():
+            if gt_bbox.shape[0] != 0 and (gt_bbox[:, 2] < gt_bbox[:, 0]).all():
                 raise BboxError('{}: invalid coordinate for bounding box for \
                                 the x2 isn\'t more than the x1!'
                                 .format(self.__str__))

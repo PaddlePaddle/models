@@ -27,7 +27,7 @@ class TestTransformer(unittest.TestCase):
             'image_dir': image_dir, 'samples': 200}
         
         cls.ops = [op.DecodeImage(to_rgb=True), 
-                        #op.RandFlipImage(prob=0.0), # there is a bug here
+                        op.RandFlipImage(prob=0.0),
                         op.ResizeImage(target_size=300, max_size=1333),
                         op.NormalizeImage(mean=[108, 108, 108]),
                         op.Bgr2Rgb(),
