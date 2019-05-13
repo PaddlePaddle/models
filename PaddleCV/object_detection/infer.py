@@ -10,7 +10,7 @@ from PIL import ImageFont
 import paddle
 import paddle.fluid as fluid
 import reader
-from mobilenet_ssd import mobile_net
+from mobilenet_ssd import build_mobilenet_ssd
 from utility import add_arguments, print_arguments
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -50,7 +50,8 @@ def infer(args, data_args, image_path, model_dir):
         label_list = data_args.label_list
 
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
+    locs, confs, box, box_var = build_mobilenet_ssd(image, num_classes,
+                                                    image_shape)
     nmsed_out = fluid.layers.detection_output(
         locs, confs, box, box_var, nms_threshold=args.nms_threshold)
 

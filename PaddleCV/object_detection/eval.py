@@ -8,7 +8,7 @@ import math
 import paddle
 import paddle.fluid as fluid
 import reader
-from mobilenet_ssd import mobile_net
+from mobilenet_ssd import build_mobilenet_ssd
 from utility import add_arguments, print_arguments
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -47,8 +47,8 @@ def build_program(main_prog, startup_prog, args, data_args):
         with fluid.unique_name.guard():
             image, gt_box, gt_label, difficult = fluid.layers.read_file(
                 py_reader)
-            locs, confs, box, box_var = mobile_net(num_classes, image,
-                                                   image_shape)
+            locs, confs, box, box_var = build_mobilenet_ssd(image, num_classes,
+                                                            image_shape)
             nmsed_out = fluid.layers.detection_output(
                 locs, confs, box, box_var, nms_threshold=args.nms_threshold)
             with fluid.program_guard(main_prog):
@@ -67,7 +67,6 @@ def build_program(main_prog, startup_prog, args, data_args):
 def eval(args, data_args, test_list, batch_size, model_dir=None):
     startup_prog = fluid.Program()
     test_prog = fluid.Program()
-
     test_py_reader, map_eval = build_program(
         main_prog=test_prog,
         startup_prog=startup_prog,
