@@ -18,12 +18,12 @@ import signal
 __all__ = ['AttrDict']
 
 
-def term(sig_num, addition):
+def _term(sig_num, addition):
     print('current pid is %s, group id is %s' % (os.getpid(), os.getpgrp()))
     os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
 
 
-signal.signal(signal.SIGTERM, term)
+signal.signal(signal.SIGTERM, _term)
 
 
 class AttrDict(dict):
