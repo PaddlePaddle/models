@@ -40,23 +40,17 @@ data_g = utils.ArgumentGroup(parser, "data", "data paths")
 data_g.add_arg("word_dict_path", str, "./conf/word.dic", "The path of the word dictionary.")
 data_g.add_arg("label_dict_path", str, "./conf/tag.dic", "The path of the label dictionary.")
 data_g.add_arg("word_rep_dict_path", str, "./conf/q2b.dic", "The path of the word replacement Dictionary.")
-data_g.add_arg("train_data", str, "./data/train_data", "The folder where the training data is located.")
-data_g.add_arg("test_data", str, "./data/test_data", "The folder where the training data is located.")
+data_g.add_arg("train_data", str, "./data/train.tsv", "The folder where the training data is located.")
+data_g.add_arg("test_data", str, "./data/test.tsv", "The folder where the training data is located.")
 data_g.add_arg("infer_data", str, "./data/test.tsv", "The folder where the training data is located.")
 data_g.add_arg("model_save_dir", str, "./models", "The model will be saved in this path.")
 data_g.add_arg("init_checkpoint", str, "", "Path to init model")
-
-data_g.add_arg("corpus_type_list", str, ["human", "feed", "query", "title", "news"],
-        "The pattern list of different types of corpus used in training.", nargs='+')
-data_g.add_arg("corpus_proportion_list", float, [0.2, 0.2, 0.2, 0.2, 0.2],
-        "The proportion list of different types of corpus used in training.", nargs='+')
 
 # 3. train parameters
 train_g = utils.ArgumentGroup(parser, "training", "training options")
 
 train_g.add_arg("do_train", bool, True, "whether to perform training")
-train_g.add_arg("do_valid", bool, False, "whether to perform validation")
-train_g.add_arg("do_test", bool, True, "whether to perform validation")
+train_g.add_arg("do_test", bool, True, "whether to perform testing")
 train_g.add_arg("do_infer", bool, False, "whether to perform inference")
 train_g.add_arg("random_seed", int, 0, "random seed for training")
 train_g.add_arg("save_model_per_batches", int, 10000, "Save the model once per xxxx batch of training")
@@ -64,7 +58,7 @@ train_g.add_arg("valid_model_per_batches", int, 1000, "Do the validation once pe
 train_g.add_arg("batch_size", int, 80, "The number of sequences contained in a mini-batch, "
         "or the maximum number of tokens (include paddings) contained in a mini-batch.")
 train_g.add_arg("epoch", int, 10, "corpus iteration num")
-train_g.add_arg("use_gpu", int, -1, "Whether or not to use GPU. -1 means CPU, else GPU id")
+train_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
 train_g.add_arg("traindata_shuffle_buffer", int, 200, "The buffer size used in shuffle the training data.")
 train_g.add_arg("base_learning_rate", float, 1e-3, "The basic learning rate that affects the entire network.")
 train_g.add_arg("emb_learning_rate", float, 5,
@@ -75,12 +69,6 @@ train_g.add_arg("crf_learning_rate", float, 0.2,
 
 args = parser.parse_args()
 # yapf: enable.
-
-if len(args.corpus_proportion_list) != len(args.corpus_type_list):
-    sys.stderr.write(
-        "The length of corpus_proportion_list should be equal to the length of corpus_type_list.\n"
-    )
-    exit(-1)
 
 print(args)
 
@@ -217,8 +205,8 @@ def main(args):
 
 
     # init executor
-    if args.use_gpu >= 0:
-        place = fluid.CUDAPlace(args.use_gpu)
+    if args.use_cuda:
+        place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
         dev_count = fluid.core.get_cuda_device_count()
     else:
         place = fluid.CPUPlace()
