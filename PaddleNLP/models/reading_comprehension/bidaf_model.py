@@ -100,7 +100,7 @@ def encoder(input_embedding, para_name, hidden_size, args):
 
 def attn_flow(q_enc, p_enc, p_ids_name, args):
     """Bidirectional Attention layer"""
-    tag = p_ids_name + "::"
+    tag = p_ids_name + "__"
     drnn = layers.DynamicRNN()
     with drnn.block():
         h_cur = drnn.step_input(p_enc)
@@ -138,6 +138,7 @@ def fusion(g, args):
 
 def lstm_step(x_t, hidden_t_prev, cell_t_prev, size, para_name, args):
     """Util function for pointer network"""
+
     def linear(inputs, para_name, args):
         return layers.fc(input=inputs,
                          size=size,
@@ -166,7 +167,7 @@ def lstm_step(x_t, hidden_t_prev, cell_t_prev, size, para_name, args):
 
 def point_network_decoder(p_vec, q_vec, hidden_size, args):
     """Output layer - pointer network"""
-    tag = 'pn_decoder:'
+    tag = 'pn_decoder_'
     init_random = fluid.initializer.Normal(loc=0.0, scale=1.0)
 
     random_attn = layers.create_parameter(
@@ -204,14 +205,14 @@ def point_network_decoder(p_vec, q_vec, hidden_size, args):
         act=None)
 
     def custom_dynamic_rnn(p_vec, init_state, hidden_size, para_name, args):
-        tag = para_name + "custom_dynamic_rnn:"
+        tag = para_name + "custom_dynamic_rnn_"
 
         def static_rnn(step,
                        p_vec=p_vec,
                        init_state=None,
                        para_name='',
                        args=args):
-            tag = para_name + "static_rnn:"
+            tag = para_name + "static_rnn_"
             ctx = layers.fc(
                 input=p_vec,
                 param_attr=fluid.ParamAttr(name=tag + 'context_fc_w'),
@@ -259,9 +260,9 @@ def point_network_decoder(p_vec, q_vec, hidden_size, args):
         return static_rnn(
             2, p_vec=p_vec, init_state=init_state, para_name=para_name)
 
-    fw_outputs = custom_dynamic_rnn(p_vec, init_state, hidden_size, tag + "fw:",
+    fw_outputs = custom_dynamic_rnn(p_vec, init_state, hidden_size, tag + "fw_",
                                     args)
-    bw_outputs = custom_dynamic_rnn(p_vec, init_state, hidden_size, tag + "bw:",
+    bw_outputs = custom_dynamic_rnn(p_vec, init_state, hidden_size, tag + "bw_",
                                     args)
 
     start_prob = layers.elementwise_add(
