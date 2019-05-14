@@ -28,9 +28,10 @@
 #    * each op can transform a sample, eg: decode/resize/crop image
 #    * each op must obey basic rules defined in transform.operator.base
 #
-# - Transformer
-#    * accept a 'xxxSource' and a list of 'xxxOperator' to build a transformed 'Dataset'
-#    * naive implementation just pull sample from source and transform it
+# - transformer
+#    * subclass of 'Dataset'
+#    * 'MappedDataset' accept a 'xxxSource' and a list of 'xxxOperator' 
+#       to build a transformed 'Dataset'
 
 from __future__ import absolute_import
 from __future__ import division
@@ -38,7 +39,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from .dataset import Dataset
-from .detection_reader import DetectionReader
+from .reader import Reader
 from . import source
 from . import transform
 
@@ -60,5 +61,5 @@ def build_dataset(config):
 
 
 __all__ = ['Dataset', 'source', \
-    'build_source', 'build_dataset', 'DetectionReader']
+    'build_source', 'build_dataset', 'Reader']
 

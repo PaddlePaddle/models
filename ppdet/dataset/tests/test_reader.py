@@ -7,11 +7,11 @@ import numpy as np
 import yaml
 
 import set_env
-from dataset import DetectionReader as DetReader
+from dataset import Reader
 
 logging.basicConfig(level=logging.INFO)
-class TestDetectionReader(unittest.TestCase):
-    """Test cases for dataset.detection_reader
+class TestReader(unittest.TestCase):
+    """Test cases for dataset.reader
     """
     @classmethod
     def setUpClass(cls):
@@ -30,7 +30,7 @@ class TestDetectionReader(unittest.TestCase):
     def test_train(self):
         """ Test reader for training
         """
-        coco = DetReader(self.coco_conf['DATA'],
+        coco = Reader(self.coco_conf['DATA'],
             self.coco_conf['TRANSFORM'])
         train_rd = coco.train()
         self.assertTrue(train_rd is not None)
@@ -44,7 +44,7 @@ class TestDetectionReader(unittest.TestCase):
     def test_val(self):
         """ Test reader for validation
         """
-        coco = DetReader(self.coco_conf['DATA'],
+        coco = Reader(self.coco_conf['DATA'],
             self.coco_conf['TRANSFORM'])
         val_rd = coco.val()
         self.assertTrue(val_rd is not None)

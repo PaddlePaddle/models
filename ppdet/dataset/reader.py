@@ -25,7 +25,7 @@ from . import source
 from . import transform
 from .transform import operator as op
 
-class DetectionReader(object):
+class Reader(object):
     """ Interface to make readers for training or evaluation
     """
     def __init__(self, data_cf, trans_conf):
