@@ -25,9 +25,27 @@ class RoIExtractor(object):
     """
 
     def __init__(self, cfg):
+        """
+        Args:
+            cfg(Dict): All parameters in dictionary.
+        """
         self.cfg = cfg
 
     def get_roi_feat(self, head_input, rois):
+        """
+        Get feature after RoIExtractor.
+ 
+        Args:
+            head_input(Variable): The input of RoIExtractor.
+                                  The format of input tensor is NCHW.
+                                  N is batch size, C is the number of input 
+                                  channels, H is the height of the feature, 
+                                  and W is the width of the feature.
+            rois(Variable): RoIs to pool over. Should be a 2-D LoDTensor of 
+                          shape (num_rois, 4) given as [[x1, y1, x2, y2], ...].
+                          (x1, y1) is the top left coordinates, and
+                          (x2, y2) is the bottom right coordinates.
+        """
         raise NotImplementedError
 
 
@@ -43,14 +61,9 @@ class RoIAlign(RoIExtractor):
         """
         Adopt roi align to get roi features
 
-        Args:    
-            head_input: feature map from backbone with shape of [N, C, H, W]
-            rois: selected rois from RPNHead with shape of [M, 4], where M is 
-                  the number of rois
-
         Returns:
-            roi_feat: roi features with shape of [M, C, R, R], where M is the
-                      number of rois and R is roi resolution
+            roi_feat(Variable): roi features with shape of [M, C, R, R], where 
+                                M is the number of rois and R is roi resolution
                 
         """
         roi_feat = fluid.layers.roi_align(
@@ -76,14 +89,9 @@ class RoIPool(RoIExtractor):
         """
         Adopt roi pooling to get roi features
 
-        Args:
-            head_input: feature map from backbone with shape of [N, C, H, W]
-            rois: selected rois from RPNHead with shape of [M, 4], where M is
-                  the number of rois
-
         Returns:
-            roi_feat: roi features with shape of [M, C, R, R], where M is the
-                      number of rois and R is roi resolution
+            roi_feat(Variable): roi features with shape of [M, C, R, R], where 
+                                M is the number of rois and R is roi resolution
 
         """
         roi_feat = fluid.layers.roi_pool(
@@ -110,14 +118,8 @@ class FPNRoIAlign(RoIExtractor):
         Distribute rois to different levels by area and get a list of roi 
         features by distributed rois and their corresponding feature maps.
 
-        Args:
-            head_inputs: A list of feature maps from backbone with shape 
-                         of [N, C, H, W]
-            rois: selected rois from RPNHead with shape of [M, 4], where M is
-                  the number of rois
-
         Returns:
-            roi_feat: A list of roi features with shape of [M, C, R, R], 
+            roi_feat(List): A list of roi features with shape of [M, C, R, R], 
                       where M is the number of rois and R is roi resolution
 
         """
