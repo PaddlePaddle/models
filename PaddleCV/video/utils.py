@@ -12,7 +12,18 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+import os
+import signal
+
 __all__ = ['AttrDict']
+
+
+def term(sig_num, addition):
+    print('current pid is %s, group id is %s' % (os.getpid(), os.getpgrp()))
+    os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
+
+
+signal.signal(signal.SIGTERM, term)
 
 
 class AttrDict(dict):
