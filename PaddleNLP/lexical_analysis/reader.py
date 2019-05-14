@@ -54,7 +54,7 @@ class Dataset(object):
 
     def get_num_examples(self, filename):
         """num of line of file"""
-        return sum(1 for line in open(filename, "r"))
+        return sum(1 for line in io.open(filename, "r", encoding='utf-8'))
 
     def word_to_ids(self, words):
         """convert word to word index"""
