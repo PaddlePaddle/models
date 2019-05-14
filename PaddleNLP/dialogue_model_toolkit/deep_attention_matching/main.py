@@ -336,8 +336,9 @@ def train(args):
               .format(epoch, "%2.2f sec" % pass_time_cost))
     # For internal continuous evaluation
     if "CE_MODE_X" in os.environ:
-        print("kpis	train_cost	%f" % last_cost)
-        print("kpis	train_duration	%f" % train_time)
+        card_num = get_cards()
+        print("kpis\ttrain_cost_card%d\t%f" % (card_num, last_cost))
+        print("kpis\ttrain_duration_card%d\t%f" % (card_num, train_time))
 
 
 def test(args):
@@ -453,6 +454,14 @@ def test(args):
             out_file.write(metric + '\t' + str(result[metric]) + '\n')
     print('finish test')
     print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+
+
+def get_cards():
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    if cards != '':
+        num = len(cards.split(","))
+    return num
 
 
 if __name__ == '__main__':
