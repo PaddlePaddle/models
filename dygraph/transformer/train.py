@@ -1,30 +1,10 @@
 from __future__ import print_function
 
-import contextlib
 import paddle.fluid as fluid
 from paddle.fluid.dygraph import Embedding, LayerNorm, FC, to_variable, Layer, guard
 import numpy as np
 import paddle
 import paddle.dataset.wmt16 as wmt16
-np.set_printoptions(suppress=True)
-
-
-@contextlib.contextmanager
-def new_program_scope(main=None, startup=None, scope=None):
-    """
-    base program
-    :param main:
-    :param startup:
-    :param scope:
-    :return:
-    """
-    prog = main if main else fluid.Program()
-    startup_prog = startup if startup else fluid.Program()
-    scope = scope if scope else fluid.core.Scope()
-    with fluid.scope_guard(scope):
-        with fluid.program_guard(prog, startup_prog):
-            with fluid.unique_name.guard():
-                yield
 
 
 # Copy from models
