@@ -38,6 +38,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from .dataset import Dataset
+from .detection_reader import DetectionReader
 from . import source
 from . import transform
 
@@ -59,5 +60,5 @@ def build_dataset(config):
 
 
 __all__ = ['Dataset', 'source', \
-    'build_source', 'build_dataset']
+    'build_source', 'build_dataset', 'DetectionReader']
 

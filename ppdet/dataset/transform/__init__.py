@@ -34,12 +34,8 @@ def transform(source, ops_conf, worker_args=None):
         instance of 'Dataset'
     """
     mapper = operator.build(ops_conf)
-    if worker_args is None:
-        return transformer.Transformer(
-            source, mapper)
-    else:
-        return transformer.FastTransformer(
-            source, mapper, worker_args)
+    return transformer.map(source, mapper, worker_args)
 
 
-__all__ = ['transformer']
+__all__ = ['transformer', 'operator']
+

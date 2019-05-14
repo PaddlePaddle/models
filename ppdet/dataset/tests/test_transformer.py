@@ -8,7 +8,7 @@ import numpy as np
 import set_env
 from dataset import build_source
 from dataset.transform import operator as op
-from dataset.transform import transform
+from dataset.transform import transformer
 
 logging.basicConfig(level=logging.INFO)
 class TestTransformer(unittest.TestCase):
@@ -26,63 +26,67 @@ class TestTransformer(unittest.TestCase):
         cls.sc_config = {'fname': anno_path,
             'image_dir': image_dir, 'samples': 200}
         
-        cls.ops = [op.DecodeImage(to_rgb=True), 
-                        op.RandFlipImage(prob=0.0),
-                        op.ResizeImage(target_size=300, max_size=1333),
-                        op.NormalizeImage(mean=[108, 108, 108]),
-                        op.Bgr2Rgb(),
-                        op.ArrangeSample(is_mask=False)]
+        cls.ops = [op.DecodeImage(to_rgb=True),
+            op.RandFlipImage(prob=0.0),
+            op.ResizeImage(target_size=300, max_size=1333),
+            op.NormalizeImage(mean=[108, 108, 108]),
+            op.Bgr2Rgb(),
+            op.ArrangeSample(is_mask=False)]
 
     @classmethod
     def tearDownClass(cls):
         """ tearDownClass """
         pass
 
-    def test_op(self):
-        """ test base operator
+    def test_map(self):
+        """ test transformer.map
         """
-        ops = [op.BaseOperator()]
-        mapper = op.build(ops)
-        self.assertTrue(mapper is not None)
-
-        fake_sample = {'image': 'image data', 'label': 1234}
-        result = mapper(fake_sample)
-        self.assertTrue(result is not None)
-
-    def test_transform(self):
-        """ test transformed dataset
-        """
-        sc = build_source(self.sc_config)
         mapper = op.build(self.ops)
-        result_data = transform(sc, self.ops)
-
-        for sample in result_data:
+        ds = build_source(self.sc_config)
+        mapped_ds = transformer.map(ds, mapper)
+        ct = 0
+        for sample in mapped_ds:
             self.assertTrue(type(sample[0]) is np.ndarray)
+            ct += 1
 
-    def test_fast_transform(self):
-        """ test fast transformer
+        self.assertEqual(ct, mapped_ds.size())
+
+    def test_thread_map(self):
+        """ test transformer.map with concurrent workers
         """
-        sc = build_source(self.sc_config)
         mapper = op.build(self.ops)
+        ds = build_source(self.sc_config)
         worker_conf = {'worker_num': 2}
-        result_data = transform(sc,
-            self.ops, worker_conf)
+        mapped_ds = transformer.map(
+            ds, mapper, worker_conf)
 
         ct = 0
-        for sample in result_data:
+        for sample in mapped_ds:
             self.assertTrue(type(sample[0]) is np.ndarray)
             ct += 1
 
-        self.assertTrue(result_data.drained())
-        self.assertEqual(ct, result_data.size())
-        result_data.reset()
+        self.assertTrue(mapped_ds.drained())
+        self.assertEqual(ct, mapped_ds.size())
+        mapped_ds.reset()
 
         ct = 0
-        for sample in result_data:
+        for sample in mapped_ds:
             self.assertTrue(type(sample[0]) is np.ndarray)
             ct += 1
 
-        self.assertEqual(ct, result_data.size())
+        self.assertEqual(ct, mapped_ds.size())
+
+    def test_batch(self):
+        """ test batched dataset
+        """
+        batchsize = 2
+        ds = build_source(self.sc_config)
+        batched_ds = transformer.batch(ds, batchsize)
+
+        for sample in batched_ds:
+            self.assertEqual(len(sample), batchsize)
+
+        batched_ds.reset()
 
 
 if __name__ == '__main__':
