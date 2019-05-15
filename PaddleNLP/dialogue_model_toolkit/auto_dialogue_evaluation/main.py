@@ -167,6 +167,7 @@ def train(args):
 
         begin_time = time.time()
         sum_cost = 0
+        ce_cost = 0
         for batch in train_batches:
             if (args.save_path is not None) and (global_step % args.save_step == 0):
                 best_recall = save_exe(global_step, best_recall)
@@ -174,6 +175,7 @@ def train(args):
             cost = train_with_feed(batch)
             global_step += 1
             sum_cost += cost.mean()
+            ce_cost = cost.mean()
 
             if global_step % args.print_step == 0:
                 print('training step %s avg loss %s' % (global_step, sum_cost / args.print_step))
@@ -183,6 +185,10 @@ def train(args):
         train_time += pass_time_cost
         print("Pass {0}, pass_time_cost {1}"
               .format(epoch, "%2.2f sec" % pass_time_cost))
+        if "CE_MODE_X" in os.environ and epoch == args.num_scan_data - 1:
+            card_num = get_cards()
+            print("kpis\ttrain_duration_card%s\t%s" % (card_num, pass_time_cost))
+            print("kpis\ttrain_loss_card%s\t%s" % (card_num, ce_cost))
 
 
 def finetune(args):
@@ -434,6 +440,14 @@ def infer(args):
         t1 = time.time()
         print("finish infer model:%s out file: %s time_cost(s):%.2f" %
               (args.init_model, out_path, t1 - t0))
+
+
+def get_cards():
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    if cards != '':
+        num = len(cards.split(","))
+    return num
 
 
 def main():
