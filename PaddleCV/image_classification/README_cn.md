@@ -16,6 +16,8 @@
 
 在当前目录下运行样例代码需要PadddlePaddle Fluid的v0.13.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [installation document](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
 
+注意：由于windows不支持nccl，当使用Windows GPU环境时候，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
+
 ## 数据准备
 
 下面给出了ImageNet分类任务的样例，首先，通过如下的方式进行数据的准备：

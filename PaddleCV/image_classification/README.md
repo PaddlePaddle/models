@@ -16,6 +16,8 @@ Image classification, which is an important field of computer vision, is to clas
 
 Running sample code in this directory requires PaddelPaddle Fluid v0.13.0 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v0.13.0, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html) and make an update.
 
+Note: Please replace [fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor) to [fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor) when running the program in the windows & GPU environment.
+
 ## Data preparation
 
 An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
