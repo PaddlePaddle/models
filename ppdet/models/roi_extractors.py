@@ -59,11 +59,11 @@ class RoIAlign(RoIExtractor):
 
     def get_roi_feat(self, head_input, rois):
         """
-        Adopt roi align to get roi features
+        Adopt RoI align to get RoI features
 
         Returns:
-            roi_feat(Variable): roi features with shape of [M, C, R, R], where 
-                                M is the number of rois and R is roi resolution
+            roi_feat(Variable): RoI features with shape of [M, C, R, R], where 
+                                M is the number of RoIs and R is RoI resolution
                 
         """
         roi_feat = fluid.layers.roi_align(
@@ -87,11 +87,11 @@ class RoIPool(RoIExtractor):
 
     def get_roi_feat(self, head_input, rois):
         """
-        Adopt roi pooling to get roi features
+        Adopt RoI pooling to get RoI features
 
         Returns:
-            roi_feat(Variable): roi features with shape of [M, C, R, R], where 
-                                M is the number of rois and R is roi resolution
+            roi_feat(Variable): RoI features with shape of [M, C, R, R], where 
+                                M is the number of RoIs and R is RoI resolution
 
         """
         roi_feat = fluid.layers.roi_pool(
@@ -114,13 +114,13 @@ class FPNRoIAlign(RoIExtractor):
 
     def get_roi_feat(self, head_inputs, rois):
         """
-        Adopt roi align onto several level of feature maps to get roi features.
-        Distribute rois to different levels by area and get a list of roi 
-        features by distributed rois and their corresponding feature maps.
+        Adopt RoI align onto several level of feature maps to get RoI features.
+        Distribute RoIs to different levels by area and get a list of RoI 
+        features by distributed RoIs and their corresponding feature maps.
 
         Returns:
-            roi_feat(List): A list of roi features with shape of [M, C, R, R], 
-                      where M is the number of rois and R is roi resolution
+            roi_feat(Variable): RoI features with shape of [M, C, R, R], 
+                      where M is the number of RoIs and R is RoI resolution
 
         """
         k_min = self.cfg.ROI_EXTRACTOR.FPN_ROI_MIN_LEVEL
