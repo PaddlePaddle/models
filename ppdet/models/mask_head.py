@@ -26,19 +26,24 @@ class MaskHead(object):
     MaskHead class
     """
 
-    def __init__(self,
-                 cfg,
-                 gt_label,
-                 is_crowd,
-                 gt_box,
-                 im_info,
-                 gt_segms,
-                 head_func,
-                 mode='train',
-                 use_random=True):
+    def __init__(
+            self,
+            cfg, ):
         """
         Args:
             cfg(Dict): All parameters in dictionary.
+       """
+        self.cfg = cfg
+        self.roi_has_mask_int32 = None
+
+    def get_target(self, rois, labels_int32, gt_label, is_crowd, gt_box,
+                   im_info, gt_segms):
+        """
+        Get mask target for mask head loss.
+
+        Args:
+            rois(Variable), labels_int32(Variable): Output of 
+                                generate_proposal_labels in bbox head.
             gt_label(Variable): Class label of groundtruth with shape [M, 1].
                                 M is the number of groundtruth.
             is_crowd(Variable): A flag indicates whether a groundtruth is crowd
@@ -57,28 +62,7 @@ class MaskHead(object):
                                 of each segmentation. S the total number of 
                                 polygons coordinate points. Each element is 
                                 (x, y) coordinate points."
-            head_func(Function): A function to extract mask_head feature.
-            mode(String): Train or Test mode: 'train' or 'test'.
-            use_random(bool): Use random sampling to choose foreground and 
-                              background boxes.
-        """
-        self.cfg = cfg
-        self.gt_label = gt_label
-        self.is_crowd = is_crowd
-        self.gt_box = gt_box
-        self.im_info = im_info
-        self.gt_segms = gt_segms
-        self.head_func = head_func
-        self.mode = mode
-        self.use_random = use_random
-
-    def get_target(self, rois, labels_int32):
-        """
-        Get mask target for mask head loss.
-
-        Args:
-            rois(Variable): Output of generate_proposal_labels in bbox head.
-
+ 
         Returns:
             mask_rois(Variable): RoI with shape [P, 4], P is the number of mask.
                                  each element is a bounding box with 
@@ -92,10 +76,10 @@ class MaskHead(object):
         cfg = self.cfg
         mask_out = fluid.layers.generate_mask_labels(
             rois=rois,
-            gt_classes=self.gt_label,
-            is_crowd=self.is_crowd,
-            gt_segms=self.gt_segms,
-            im_info=self.im_info,
+            gt_classes=gt_label,
+            is_crowd=is_crowd,
+            gt_segms=gt_segms,
+            im_info=im_info,
             labels_int32=labels_int32,
             num_classes=cfg.DATA.CLASS_NUM,
             resolution=cfg.MASK_HEAD.RESOLUTION)
@@ -104,20 +88,22 @@ class MaskHead(object):
         self.mask_int32 = mask_out[2]
         return self.mask_rois, self.roi_has_mask_int32, self.mask_int32
 
-    def get_output(self, roi_feat):
+    def get_output(self, roi_feat, head_func, mode):
         """
         Get bbox head output.
 
         Args:
             roi_feat(Variable): RoI feature from RoIExtractor.
+            head_func(Function): A function to extract mask_head feature.
+            mode(String): Train or Test mode: 'train' or 'test'.
 
         Returns:
             mask_fcn_logits(Variable): Output of mask_head.
         """
         class_num = self.cfg.DATA.CLASS_NUM
-        head_feat = self.head_func(self.cfg, roi_feat, self.roi_has_mask_int32)
+        head_feat = head_func(self.cfg, roi_feat, self.roi_has_mask_int32)
         act_func = None
-        if self.mode != 'train':
+        if mode != 'train':
             act_func = 'sigmoid'
         mask_fcn_logits = fluid.layers.conv2d(
             input=head_feat,
@@ -158,7 +144,7 @@ class MaskHead(object):
         loss_mask = fluid.layers.reduce_sum(loss_mask, name='loss_mask')
         return loss_mask
 
-    def get_prediction(self, bbox_det, roi_feat):
+    def get_prediction(self, bbox_det, roi_feat, head_func):
         """
         Get prediction mask in test stage.
         
@@ -166,12 +152,13 @@ class MaskHead(object):
             bbox_det(Variable): Prediction bbox from bbox_head.get_prediction
                                 with shape [N, 6]
             roi_feat(Variable): RoI feature from RoIExtractor.
-     
+            head_func(Function): A function to extract mask_head feature.
+    
         Returns:
             mask_det(Variable): Prediction mask with shape 
                                 [N, class_num, resolution, resolution]. 
         """
-        mask_fcn_logits = self.get_output(roi_feat)
+        mask_fcn_logits = self.get_output(roi_feat, head_func, 'test')
         mask_det = fluid.layers.lod_reset(mask_fcn_logits, bbox_det)
         return mask_det
 
