@@ -27,51 +27,26 @@ class BBoxHead(object):
     BBoxHead class
     """
 
-    def __init__(self,
-                 cfg,
-                 gt_label,
-                 is_crowd,
-                 gt_box,
-                 im_info,
-                 head_func,
-                 use_random=True):
+    def __init__(self, cfg):
         """
         Args:
             cfg(Dict): All parameters in dictionary.
-            gt_label(Variable): Class label of groundtruth with shape [M, 1].
-                                M is the number of groundtruth.
-            is_crowd(Variable): A flag indicates whether a groundtruth is crowd
-                                with shape [M, 1]. M is the number of 
-                                groundtruth.
-            gt_box(Variable): Bounding box in [xmin, ymin, xmax, ymax] format 
-                              with shape [M, 4]. M is the number of groundtruth.
-            im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
-                               number of input images, each element consists 
-                               of im_height, im_width, im_scale.
-            head_func(Function): A function to extract bbox_head feature.
-            use_random(bool): Use random sampling to choose foreground and 
-                              background boxes.
         """
         self.cfg = cfg
-        self.gt_label = gt_label
-        self.is_crowd = is_crowd
-        self.gt_box = gt_box
-        self.im_info = im_info
-        self.head_func = head_func
-        self.use_random = use_random
 
-    def get_output(self, roi_feat):
+    def get_output(self, roi_feat, head_func):
         """
         Get bbox head output.
 
         Args:
             roi_feat(Variable): RoI feature from RoIExtractor.
+            head_func(Function): A function to extract bbox_head feature.
 
         Returns:
             cls_score(Variable), bbox_pred(Variable) are output of bbox_head.
         """
         class_num = self.cfg.DATA.CLASS_NUM
-        head_feat = self.head_func(self.cfg, roi_feat)
+        head_feat = head_func(self.cfg, roi_feat)
         cls_score = fluid.layers.fc(input=head_feat,
                                     size=class_num,
                                     act=None,
@@ -98,12 +73,30 @@ class BBoxHead(object):
                                         regularizer=L2Decay(0.)))
         return cls_score, bbox_pred
 
-    def get_target(self, rpn_rois):
+    def get_target(self,
+                   rpn_rois,
+                   gt_label,
+                   is_crowd,
+                   gt_box,
+                   im_info,
+                   use_random=True):
         """
         Get bbox target for bbox head loss
 
         Args:
             rpn_rois(Variable): Output of generate_proposals in rpn head.
+            gt_label(Variable): Class label of groundtruth with shape [M, 1].
+                                M is the number of groundtruth.
+            is_crowd(Variable): A flag indicates whether a groundtruth is crowd
+                                with shape [M, 1]. M is the number of 
+                                groundtruth.
+            gt_box(Variable): Bounding box in [xmin, ymin, xmax, ymax] format 
+                              with shape [M, 4]. M is the number of groundtruth.
+            im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
+                               number of input images, each element consists 
+                               of im_height, im_width, im_scale.
+            use_random(bool): Use random sampling to choose foreground and 
+                              background boxes.
 
         Returns:
             rois(Variable): RoI with shape [P, 4]. P is usually equal to  
@@ -123,10 +116,10 @@ class BBoxHead(object):
         cfg = self.cfg
         outs = fluid.layers.generate_proposal_labels(
             rpn_rois=rpn_rois,
-            gt_classes=self.gt_label,
-            is_crowd=self.is_crowd,
-            gt_boxes=self.gt_box,
-            im_info=self.im_info,
+            gt_classes=gt_label,
+            is_crowd=is_crowd,
+            gt_boxes=gt_box,
+            im_info=im_info,
             batch_size_per_im=cfg.BBOX_HEAD.ROI.BATCH_SIZE_PER_IM,
             fg_fraction=cfg.BBOX_HEAD.ROI.FG_FRACTION,
             fg_thresh=cfg.BBOX_HEAD.ROI.FG_THRESH,
@@ -134,7 +127,7 @@ class BBoxHead(object):
             bg_thresh_lo=cfg.BBOX_HEAD.ROI.BG_THRESH_LOW,
             bbox_reg_weights=cfg.BBOX_HEAD.ROI.BBOX_REG_WEIGHTS,
             class_nums=cfg.DATA.CLASS_NUM,
-            use_random=self.use_random)
+            use_random=use_random)
 
         rois = outs[0]
         labels_int32 = outs[1]
@@ -174,6 +167,7 @@ class BBoxHead(object):
     def get_prediction(
             self,
             rpn_rois,
+            im_info,
             cls_score,
             bbox_pred, ):
         """
@@ -181,6 +175,9 @@ class BBoxHead(object):
         
         Args:
             rpn_rois(Variable): Output of generate_proposals in rpn head.
+            im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
+                               number of input images, each element consists 
+                               of im_height, im_width, im_scale.
             cls_score(Variable), bbox_pred(Variable): Output of get_output.
      
         Returns:
@@ -189,7 +186,7 @@ class BBoxHead(object):
                N is the total number of prediction.
         """
         class_num = self.cfg.DATA.CLASS_NUM
-        im_scale = fluid.layers.slice(self.im_info, [1], starts=[2], ends=[3])
+        im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
         im_scale_lod = fluid.layers.sequence_expand(im_scale, rpn_rois)
         boxes = rpn_rois / im_scale_lod
         cls_prob = fluid.layers.softmax(cls_score, use_cudnn=False)
@@ -201,8 +198,7 @@ class BBoxHead(object):
             code_type='decode_center_size',
             box_normalized=False,
             axis=1)
-        cliped_box = fluid.layers.box_clip(
-            input=decoded_box, im_info=self.im_info)
+        cliped_box = fluid.layers.box_clip(input=decoded_box, im_info=im_info)
         pred_result = fluid.layers.multiclass_nms(
             bboxes=cliped_box,
             scores=cls_prob,
