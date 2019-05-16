@@ -145,6 +145,7 @@ with fluid.program_guard(tp, sp):
         fluid.layers.assign(np.array(
             [0.1], dtype=np.float32)))
     loss_mean = fluid.layers.reduce_mean(loss) / area
+    loss_mean.persistable = True
 
     opt = fluid.optimizer.Momentum(
         lr,
