@@ -75,7 +75,9 @@ sh run.sh train
 
 SimNet如下图所示：
 
-![struct](./struct.jpg)
+<p align="center">
+<img src="./struct.jpg"/> <br />
+</p>
 
 ### 数据格式说明
 
