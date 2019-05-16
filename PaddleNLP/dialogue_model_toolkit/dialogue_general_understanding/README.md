@@ -54,6 +54,8 @@ cd models/PaddleNLP/dialogue_model_toolkit/dialogue_general_understanding
 
 &ensp;&ensp;&ensp;&ensp;python版本依赖python 2.7
 
+&ensp;&ensp; 注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
+
 ### 2、开始第一次模型调用
 
 #### &ensp;&ensp;a、数据准备（数据、模型下载，预处理）
