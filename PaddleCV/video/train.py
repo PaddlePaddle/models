@@ -79,7 +79,7 @@ def parse_args():
         default=False,
         help='whether to use memory optimize in train')
     parser.add_argument(
-        '--epoch_num',
+        '--epoch',
         type=int,
         default=0,
         help='epoch number, 0 for read from config file')
@@ -197,7 +197,7 @@ def train(args):
     valid_fetch_list = [valid_loss.name] + [x.name for x in valid_outputs
                                             ] + [valid_feeds[-1].name]
 
-    epochs = args.epoch_num or train_model.epoch_num()
+    epochs = args.epoch or train_model.epoch_num()
 
     if args.no_use_pyreader:
         train_feeder = fluid.DataFeeder(place=place, feed_list=train_feeds)
