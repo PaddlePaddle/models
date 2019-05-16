@@ -74,6 +74,7 @@ sh run.sh train
 ### 模型原理介绍
 
 SimNet如下图所示：
+
 ![struct](./struct.jpg)
 
 ### 数据格式说明
