@@ -12,7 +12,7 @@
 
 ## 安装
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.4或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/install_doc.html#paddlepaddle)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.4或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ## 简介
 
@@ -142,6 +142,8 @@ Train Loss
 | 416x416 | 36.5 | 58.2 | 39.1 |
 | 320x320 | 34.1 | 55.4 | 36.3 |
 
+- **注意: **评估结果基于`pycocotools`评估器，没有滤除`score < 0.05`的预测框，其他框架有此滤除操作会导致精度下降。
+
 
 
 ## 模型推断及可视化
@@ -153,14 +155,16 @@ Train Loss
         --weights=${path_to_weights}  \
         --image_path=data/COCO17/val2017/  \
         --image_name=000000000139.jpg \
-        --draw_threshold=0.5
+        --draw_thresh=0.5
 
-模型预测速度：
+- 通过设置export CUDA\_VISIBLE\_DEVICES=0指定单卡GPU预测。
+
+模型预测速度（Tesla P40）：
 
 
 |   input size  | 608x608 | 416x416 | 320x320 |
 |:-------------:| :-----: | :-----: | :-----: |
-| infer speed | 50 ms/frame | 29 ms/frame |24 ms/frame | 
+| infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame | 
 
 下图为模型可视化预测结果：
 <p align="center">

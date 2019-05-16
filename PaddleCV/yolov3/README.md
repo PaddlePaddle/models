@@ -12,7 +12,7 @@
 
 ## Installation
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/install_doc.html#paddlepaddle) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html) and make an update.
 
 ## Introduction
 
@@ -142,6 +142,8 @@ Evalutaion result is shown as below:
 | 416x416 | 36.5 | 58.2 | 39.1 |
 | 320x320 | 34.1 | 55.4 | 36.3 |
 
+- **NOTE:** evaluations based on `pycocotools` evaluator, predict bounding boxes with `score < 0.05` were not filtered out. Some frameworks which filtered out predict bounding boxes with `score < 0.05` will cause a drop in accuracy.
+
 ## Inference and Visualization
 
 Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, one can start infer step by:
@@ -151,14 +153,16 @@ Inference is used to get prediction score or image features based on trained mod
         --weights=${path_to_weights}  \
         --image_path=data/COCO17/val2017/  \
         --image_name=000000000139.jpg \
-        --draw_threshold=0.5
+        --draw_thresh=0.5
 
-Inference speed:
+- Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to infer.
+
+Inference speed（Tesla P40）:
 
 
 |   input size  | 608x608 | 416x416 | 320x320 |
 |:-------------:| :-----: | :-----: | :-----: |
-| infer speed | 50 ms/frame | 29 ms/frame |24 ms/frame | 
+| infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame | 
 
 
 Visualization of infer result is shown as below:

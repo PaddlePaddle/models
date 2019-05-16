@@ -83,7 +83,8 @@ def get_ctc_feeder_data(data, place, need_label=True):
     pixel_tensor = core.LoDTensor()
     pixel_data = None
     pixel_data = np.concatenate(
-        list(map(lambda x: x[0][np.newaxis, :], data)), axis=0).astype("float32")
+        list(map(lambda x: x[0][np.newaxis, :], data)),
+        axis=0).astype("float32")
     pixel_tensor.set(pixel_data, place)
     label_tensor = to_lodtensor(list(map(lambda x: x[1], data)), place)
     if need_label:
@@ -92,11 +93,16 @@ def get_ctc_feeder_data(data, place, need_label=True):
         return {"pixel": pixel_tensor}
 
 
+def get_ctc_feeder_for_infer(data, place):
+    return get_ctc_feeder_data(data, place, need_label=False)
+
+
 def get_attention_feeder_data(data, place, need_label=True):
     pixel_tensor = core.LoDTensor()
     pixel_data = None
     pixel_data = np.concatenate(
-        list(map(lambda x: x[0][np.newaxis, :], data)), axis=0).astype("float32")
+        list(map(lambda x: x[0][np.newaxis, :], data)),
+        axis=0).astype("float32")
     pixel_tensor.set(pixel_data, place)
     label_in_tensor = to_lodtensor(list(map(lambda x: x[1], data)), place)
     label_out_tensor = to_lodtensor(list(map(lambda x: x[2], data)), place)
@@ -127,7 +133,8 @@ def get_attention_feeder_for_infer(data, place):
     pixel_tensor = core.LoDTensor()
     pixel_data = None
     pixel_data = np.concatenate(
-        list(map(lambda x: x[0][np.newaxis, :], data)), axis=0).astype("float32")
+        list(map(lambda x: x[0][np.newaxis, :], data)),
+        axis=0).astype("float32")
     pixel_tensor.set(pixel_data, place)
     return {
         "pixel": pixel_tensor,

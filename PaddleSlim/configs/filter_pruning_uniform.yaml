@@ -16,6 +16,7 @@ strategies:
         metric_name: 'acc_top1'
 compressor:
     epoch: 200
+    #init_model: './checkpoints/0' # Please enable this option for loading checkpoint.
     checkpoint_path: './checkpoints/'
     strategies:
         - uniform_pruning_strategy

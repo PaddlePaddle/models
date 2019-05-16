@@ -6,12 +6,8 @@
 PaddlePaddle provides a rich set of computational units to enable users to adopt a modular approach to solving various learning problems. In this repo, we demonstrate how to use PaddlePaddle to solve common machine learning tasks, providing several different neural network model that anyone can easily learn and use.
 
 
-- [fluid models](fluid): use PaddlePaddle's Fluid APIs. We especially recommend users to use Fluid models.
-
-
 PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化的方法解决各种学习问题。在此repo中，我们展示了如何用 PaddlePaddle 来解决常见的机器学习任务，提供若干种不同的易学易用的神经网络模型。
 
-- [fluid模型](fluid): 使用 PaddlePaddle Fluid版本的 APIs，我们特别推荐您使用Fluid模型。
 
 ## PaddleCV
 模型|简介|模型优势|参考论文
@@ -43,14 +39,15 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 ## PaddleNLP
 模型|简介|模型优势|参考论文
 --|:--:|:--:|:--:
-[Transformer](./PaddleNLP/neural_machine_translation/transformer/README_cn.md)|机器翻译模型|基于self-attention，计算复杂度小，并行度高，容易学习长程依赖，翻译效果更好|[Attention Is All You Need](https://arxiv.org/abs/1706.03762)
+[Transformer](./PaddleNLP/neural_machine_translation/transformer/README.md)|机器翻译模型|基于self-attention，计算复杂度小，并行度高，容易学习长程依赖，翻译效果更好|[Attention Is All You Need](https://arxiv.org/abs/1706.03762)
 [BERT](https://github.com/PaddlePaddle/LARK/tree/develop/BERT)|语义表示模型|在多个 NLP 任务上取得 SOTA 效果，支持多卡多机训练，支持混合精度训练|[BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding](https://arxiv.org/abs/1810.04805)
+[ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)|语义表示模型|基于知识增强的中文语义表示模型，在多个任务上的效果超越 BERT 中文模型|-
+[ELMo](https://github.com/PaddlePaddle/LARK/tree/develop/ELMo)|语义表示模型|支持多卡训练，训练速度比主流实现快1倍，提供在中文词法分析任务上迁移学习的示例。|[ELMo: Embeddings from Language Models](https://arxiv.org/abs/1802.05365)
 [LAC](https://github.com/baidu/lac/blob/master/README.md)|联合的词法分析模型|能够整体性地完成中文分词、词性标注、专名识别任务|[Chinese Lexical Analysis with Deep Bi-GRU-CRF Network](https://arxiv.org/abs/1807.01882)
 [Senta](https://github.com/baidu/Senta/blob/master/README.md)|情感倾向分析模型集|百度AI开放平台中情感倾向分析模型|-
-[DAM](./PaddleNLP/deep_attention_matching_net)|语义匹配模型|百度自然语言处理部发表于ACL-2018的工作,用于检索式聊天机器人多轮对话中应答的选择|[Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network](http://aclweb.org/anthology/P18-1103)
+[DAM](./PaddleNLP/dialogue_model_toolkit/deep_attention_matching)|语义匹配模型|百度自然语言处理部发表于ACL-2018的工作,用于检索式聊天机器人多轮对话中应答的选择|[Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network](http://aclweb.org/anthology/P18-1103)
 [SimNet](https://github.com/baidu/AnyQ/blob/master/tools/simnet/train/paddle/README.md)|语义匹配框架|使用SimNet构建出的模型可以便捷的加入AnyQ系统中，增强AnyQ系统的语义匹配能力|-
-[DuReader](./PaddleNLP/machine_reading_comprehension/README.md)|阅读理解模型|百度MRC数据集上的机器阅读理解模型|-
-[Bi-GRU-CRF](./PaddleNLP/sequence_tagging_for_ner/README.md)|命名实体识别|结合了CRF和双向GRU的命名实体识别模型|-
+[DuReader](./PaddleNLP/reading_comprehension/README.md)|阅读理解模型|百度MRC数据集上的机器阅读理解模型|-
 [dialogue model](https://github.com/baidu/knowledge-driven-dialogue/tree/master/generative_paddle/README.md)|知识驱动的对话模型|基于双向RNN和attention实现的生成式对话系统|-
 
 
@@ -62,14 +59,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 [SSR](./PaddleRec/ssr)|序列语义检索推荐模型|使用参考论文中的思想，使用多种时间粒度进行用户行为预测|[Multi-Rate Deep Learning for Temporal Recommendation](https://dl.acm.org/citation.cfm?id=2914726)
 [DeepCTR](./PaddleRec/ctr/README.cn.md)|点击率预估模型|只实现了DeepFM论文中介绍的模型的DNN部分，DeepFM会在其他例子中给出|[DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](https://arxiv.org/abs/1703.04247)
 [Multiview-Simnet](./PaddleRec/multiview_simnet)|个性化推荐模型|基于多元视图，将用户和项目的多个功能视图合并为一个统一模型|[A Multi-View Deep Learning Approach for Cross Domain User Modeling in Recommendation Systems](http://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/frp1159-songA.pdf)
-
-## Other Models
-模型|简介|模型优势|参考论文
---|:--:|:--:|:--:
-[DeepASR](./PaddleSpeech/DeepASR/README_cn.md)|语音识别系统|利用Fluid框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器|-
-[DQN](./PaddleRL/DeepQNetwork/README_cn.md)|深度Q网络|value based强化学习算法，第一个成功地将深度学习和强化学习结合起来的模型|[Human-level control through deep reinforcement learning](https://www.nature.com/articles/nature14236)
-[DoubleDQN](./PaddleRL/DeepQNetwork/README_cn.md)|DQN的变体|将Double Q的想法应用在DQN上，解决过优化问题|[Font Size: Deep Reinforcement Learning with Double Q-Learning](https://www.aaai.org/ocs/index.php/AAAI/AAAI16/paper/viewPaper/12389)
-[DuelingDQN](./PaddleRL/DeepQNetwork/README_cn.md)|DQN的变体|改进了DQN模型，提高了模型的性能|[Dueling Network Architectures for Deep Reinforcement Learning](http://proceedings.mlr.press/v48/wangf16.html)
 
 ## License
 This tutorial is contributed by [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) and licensed under the [Apache-2.0 license](LICENSE).
