@@ -74,7 +74,10 @@ sh run.sh train
 ### 模型原理介绍
 
 SimNet如下图所示：
-![struct](https://github.com/PaddlePaddle/models/blob/paddle-nlp/PaddleNLP/similarity_net/struct.jpg)
+
+<p align="center">
+<img src="./struct.jpg"/> <br />
+</p>
 
 ### 数据格式说明
 
