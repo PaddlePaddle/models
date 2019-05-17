@@ -60,7 +60,16 @@ RPN_HEAD:
   RESOLUTION: 14
 
 BBOX_HEAD:
-  HEAD_FUNC: ResNet.addBboxHead
+  HEAD_FUNC: bbox2mlp_head
+  MLP_HEAD_DIM: 1024
+
+  ROI:
+    BATCH_SIZE_PER_IM: 512
+    FG_FRACTION: 0.25
+    FG_THRESH: 0.5
+    BG_THRESH_HIGH: 0.5
+    BG_THRESH_LOW: 0.0
+    BBOX_REG_WEIGHTS: [0.1, 0.1, 0.2, 0.2] 
 
 MASK_HEAD:
   HEAD_FUNC: ResNet.addMaskHead
@@ -68,7 +77,9 @@ MASK_HEAD:
 
 ROI_EXTRACTOR:
   EXTRACT_METHOD: RoIAlign
-  STRIDE: 16
+  ROI_RESOLUTION: 14
+  SPATIAL_SCALE: 1. / 16.
+  SAMPLING_RATIO: 0
 
 ENV:
   GPU: ON
@@ -113,5 +124,7 @@ TRAIN:
 
 TEST:
   SCORE_THRESH: 0.05
+  NMS_THRESH: 0.5
+  DETECTIONS_PER_IM: 100
   WEIGHTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
 
