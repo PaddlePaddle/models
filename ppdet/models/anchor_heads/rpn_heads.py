@@ -22,15 +22,18 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
 
+from ..registry import RPNHeads
+
 __all__ = ['RPNHead']
 
 
+@RPNHeads.register
 class RPNHead(object):
     """
         RPNHead class
     """
 
-    def __init__(self, cfg, im_info, mode='train'):
+    def __init__(self, cfg):
         """
         Args:
             cfg(dict): All parameters in dictionary
@@ -39,15 +42,20 @@ class RPNHead(object):
             mode(String): Train or Test mode: 'train' or 'test'.
         """
         self.cfg = cfg
-        self.im_info = im_info
-        self.mode = mode
+        self.is_train = cfg.IS_TRAIN
+        # whether to use random to sample proposals.
+        self.use_random = getattr(cfg.RPN_HEAD.TRAIN, False)
+        self.anchor = None
+        self.anchor_var = None
+        self.rpn_cls_score = None
+        self.rpn_bbox_pred = None
 
-    def get_output(self, input):
+    def _get_output(self, input):
         """
         Get anchor and RPN head output.
 
         Args:
-            rpn_input(Variable): feature map from backbone with shape of [N, C, H, W]
+            input(Variable): feature map from backbone with shape of [N, C, H, W]
         
         Returns:
             rpn_cls_score(Variable): Output of rpn head with shape of 
@@ -70,7 +78,7 @@ class RPNHead(object):
             bias_attr=ParamAttr(
                 name="conv_rpn_b", learning_rate=2., regularizer=L2Decay(0.)))
         # Generate anchors
-        self.anchor, self.var = fluid.layers.anchor_generator(
+        self.anchor, self.anchor_var = fluid.layers.anchor_generator(
             input=rpn_conv,
             anchor_sizes=self.cfg.RPN_HEAD.ANCHOR.ANCHOR_SIZES,
             aspect_ratios=self.cfg.RPN_HEAD.ANCHOR.ASPECT_RATIOS,
@@ -109,35 +117,38 @@ class RPNHead(object):
                 name="rpn_bbox_pred_b",
                 learning_rate=2.,
                 regularizer=L2Decay(0.)))
-        return self.rpn_cls_score, self.rpn_bbox_pred
+        return rpn_cls_score, rpn_bbox_pred
 
-    def get_proposals(self, rpn_cls_score, rpn_bbox_pred):
+    def get_proposals(self, body_feat, im_info):
         """
         Get proposals according to the output of rpn head
 
         Args:
-            rpn_cls_score(Variable): Outputs of get_output. 
-            rpn_bbox_pred(Variable): Outputs of get_output.
+            body_feat (Variable): the feature map from backone.
+            body_feat (Variable): feature map from backbone with shape of [N, C, H, W]
 
         Returns:
             rpn_rois(Variable): Output proposals with shape of (rois_num, 4).
             rpn_roi_probs(Variable): Scores of proposals with shape of (rois_num, 1).
         """
+
+        rpn_cls_score, rpn_bbox_pred = self._get_output(body_feat)
+
         rpn_cls_score_prob = fluid.layers.sigmoid(
             rpn_cls_score, name='rpn_cls_score_prob')
 
-        param_obj = self.cfg.RPN_HEAD.TRAIN if self.mode == 'train' else self.cfg.RPN_HEAD.TEST
-        pre_nms_top_n = param_obj.RPN_PRE_NMS_TOP_N
-        post_nms_top_n = param_obj.RPN_POST_NMS_TOP_N
-        nms_thresh = param_obj.RPN_NMS_THRESH
-        min_size = param_obj.RPN_MIN_SIZE
-        eta = param_obj.RPN_ETA
+        rpn_cfg = self.cfg.RPN_HEAD.TRAIN if self.is_train else self.cfg.RPN_HEAD.TEST
+        pre_nms_top_n = rpn_cfg.RPN_PRE_NMS_TOP_N
+        post_nms_top_n = rpn_cfg.RPN_POST_NMS_TOP_N
+        nms_thresh = rpn_cfg.RPN_NMS_THRESH
+        min_size = rpn_cfg.RPN_MIN_SIZE
+        eta = rpn_cfg.RPN_ETA
         rpn_rois, rpn_roi_probs = fluid.layers.generate_proposals(
             scores=rpn_cls_score_prob,
             bbox_deltas=rpn_bbox_pred,
-            im_info=self.im_info,
+            im_info=im_info,
             anchors=self.anchor,
-            variances=self.var,
+            variances=self.anchor_var,
             pre_nms_top_n=pre_nms_top_n,
             post_nms_top_n=post_nms_top_n,
             nms_thresh=nms_thresh,
@@ -145,34 +156,61 @@ class RPNHead(object):
             eta=eta)
         return rpn_rois, rpn_roi_probs
 
-    def get_loss(self,
-                 rpn_cls_score,
-                 rpn_bbox_pred,
-                 gt_box,
-                 is_crowd,
-                 use_random=True):
+    def get_sampled_proposals(self, input_rois, feed_vars):
+        outs = fluid.layers.generate_proposal_labels(
+            rpn_rois=self.rpn_rois,
+            gt_classes=self.gt_label,
+            is_crowd=self.is_crowd,
+            gt_boxes=self.gt_box,
+            im_info=self.im_info,
+            batch_size_per_im=cfg.TRAIN.batch_size_per_im,
+            fg_fraction=cfg.TRAIN.fg_fractrion,
+            fg_thresh=cfg.TRAIN.fg_thresh,
+            bg_thresh_hi=cfg.TRAIN.bg_thresh_hi,
+            bg_thresh_lo=cfg.TRAIN.bg_thresh_lo,
+            bbox_reg_weights=cfg.bbox_reg_weights,
+            class_nums=cfg.class_num,
+            use_random=self.use_random)
+
+        self.rois = outs[0]
+        self.labels_int32 = outs[1]
+        self.bbox_targets = outs[2]
+        self.bbox_inside_weights = outs[3]
+        self.bbox_outside_weights = outs[4]
+
+    def get_loss(self, im_info, gt_box, is_crowd):
         """
         Sample proposals and Calculate rpn loss.
 
         Args:
-            rpn_cls_score(Variable): Output of get_rpn_loss_input. 
-            rpn_bbox_pred(Variable): Output of get_rpn_loss_input.
             gt_box(Variable): The ground-truth boudding boxes.
             is_crowd(Variable): Indicates groud-truth is crowd or not.
-            use_random(Bool): Whether to use random to sample proposals.
 
         Returns: 
             rpn_cls_loss(Variable): RPN classification loss.
             rpn_bbox_loss(Variable): RPN bounding box regression loss. 
             
         """
+        if self.rpn_cls_score is None:
+            raise ValueError("self.rpn_cls_score should be not None, "
+                             "should call RPNHead.get_proposals at first")
+        if self.rpn_bbox_pred is None:
+            raise ValueError("self.rpn_bbox_pred should be not None, "
+                             "should call RPNHead.get_proposals at first")
+        if self.anchor is None:
+            raise ValueError("self.anchor should be not None, "
+                             "should call RPNHead.get_proposals at first")
+        if self.anchor_var is None:
+            raise ValueError("self.anchor_var should be not None, "
+                             "should call RPNHead.get_proposals at first")
+
         rpn_cls_score_reshape = fluid.layers.transpose(
-            rpn_cls_score, perm=[0, 2, 3, 1])
+            self.rpn_cls_score, perm=[0, 2, 3, 1])
         rpn_bbox_pred_reshape = fluid.layers.transpose(
-            rpn_bbox_pred, perm=[0, 2, 3, 1])
+            self.rpn_bbox_pred, perm=[0, 2, 3, 1])
 
         anchor_reshape = fluid.layers.reshape(self.anchor, shape=(-1, 4))
-        var_reshape = fluid.layers.reshape(self.var, shape=(-1, 4))
+        var_reshape = fluid.layers.reshape(self.anchor_var, shape=(-1, 4))
 
         rpn_cls_score_reshape = fluid.layers.reshape(
             x=rpn_cls_score_reshape, shape=(0, -1, 1))
@@ -186,7 +224,7 @@ class RPNHead(object):
                 anchor_var=var_reshape,
                 gt_boxes=gt_box,
                 is_crowd=is_crowd,
-                im_info=self.im_info,
+                im_info=im_info,
                 rpn_batch_size_per_im=self.cfg.RPN_HEAD.RPN_BATCH_SIZE_PER_IM,
                 rpn_straddle_thresh=self.cfg.RPN_HEAD.RPN_STRADDLE_THRESH,
                 rpn_fg_fraction=self.cfg.RPN_HEAD.RPN_FG_FRACTION,

@@ -21,7 +21,6 @@ import os
 import yaml
 from .edict import AttrDict
 
-
 __all__ = ['load_cfg', 'merge_cfg']
 
 
@@ -44,6 +43,7 @@ def load_cfg(cfg_file, fmt='yaml'):
 
     return AttrDict(cfg)
 
+
 def _merge_cfg_a_to_b(a, b):
     if a is None or b is None:
         return
@@ -62,11 +62,12 @@ def _merge_cfg_a_to_b(a, b):
                     b[k] = v
             elif type(v) in [list, tuple] and \
                     type(b[k]) in [list, tuple]:
-                        b[k] = tuple(v)
+                b[k] = tuple(v)
             else:
                 TypeError("Type mismatch for key {}".format(k))
         else:
             b[k] = v
+
 
 def merge_cfg(cfg_from, cfg_to):
     """Merge config cfg_from to cfg_to, cfg_to has a higher priority.
@@ -78,4 +79,3 @@ def merge_cfg(cfg_from, cfg_to):
             "cfg_to should be a dict"
 
     _merge_cfg_a_to_b(cfg_from, cfg_to)
-
