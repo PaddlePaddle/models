@@ -29,14 +29,14 @@ class BBoxAssigner(object):
             cfg(dict): All parameters in dictionary
         """
         self.cfg = cfg
-        self.use_random = getattr(cfg.TRAIN.USE_RANDOM, False)
+        self.use_random = getattr(cfg.TRAIN, 'USE_RANDOM', False)
         self.class_num = cfg.DATA.CLASS_NUM
 
         local_cfg = cfg.RPN_HEAD.PROPOSAL
 
         self.batch_size_per_im = local_cfg.BATCH_SIZE_PER_IM
         self.fg_fractrion = local_cfg.FG_FRACTION
-        self.bg_fractrion = local_cfg.BG_FRACTION
+        self.fg_thresh = local_cfg.FG_THRESH
         self.bg_thresh_hi = local_cfg.BG_THRESH_HI
         self.bg_thresh_lo = local_cfg.BG_THRESH_LO
         self.bbox_reg_weights = local_cfg.BBOX_REG_WEIGHTS

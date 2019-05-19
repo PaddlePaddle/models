@@ -12,4 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import backbones
 from .backbones import *
+
+from . import anchor_heads
+#from .anchor_heads import *
+
+from . import detectors
+from .detectors import *
+
+from . import roi_extractors
+from .roi_extractors import *
+
+from . import bbox_heads
+from .bbox_heads import *
+
+__all__ = backbones.__all__
+__all__ += anchor_heads.__all__
+__all__ += roi_extractors.__all__
+__all__ += bbox_heads.__all__
+__all__ += detectors.__all__

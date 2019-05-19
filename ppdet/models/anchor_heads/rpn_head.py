@@ -44,7 +44,7 @@ class RPNHead(object):
         self.cfg = cfg
         self.is_train = cfg.IS_TRAIN
         # whether to use random to sample proposals.
-        self.use_random = getattr(cfg.RPN_HEAD.TRAIN, False)
+        self.use_random = getattr(cfg.TRAIN, 'USE_RANDOM', False)
         self.anchor = None
         self.anchor_var = None
         self.rpn_cls_score = None
@@ -117,7 +117,7 @@ class RPNHead(object):
                 name="rpn_bbox_pred_b",
                 learning_rate=2.,
                 regularizer=L2Decay(0.)))
-        return rpn_cls_score, rpn_bbox_pred
+        return self.rpn_cls_score, self.rpn_bbox_pred
 
     def get_proposals(self, body_feat, im_info):
         """
@@ -230,7 +230,7 @@ class RPNHead(object):
                 rpn_fg_fraction=self.cfg.RPN_HEAD.RPN_FG_FRACTION,
                 rpn_positive_overlap=self.cfg.RPN_HEAD.RPN_POSITIVE_OVERLAP,
                 rpn_negative_overlap=self.cfg.RPN_HEAD.RPN_NEGATIVE_OVERLAP,
-                use_random=use_random)
+                use_random=self.use_random)
 
         score_tgt = fluid.layers.cast(x=score_tgt, dtype='float32')
         score_tgt.stop_gradient = True

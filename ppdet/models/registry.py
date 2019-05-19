@@ -12,19 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-class NotFoundError(Exception):
-    def __init__(self, _name, avail_models):
-        super(ModelNotFoundError, self).__init__()
-        self.model_name = model_name
-        self.avail_models = avail_models
-
-    def __str__(self):
-        msg = "Model {} Not Found.\nAvailiable models:\n".format(
-            self.model_name)
-        for model in self.avail_models:
-            msg += "  {}\n".format(model)
-        return msg
+__all__ = [
+    'Detectors', 'Detectors', 'RPNHeads', 'RoIExtractors', 'BBoxHeadConvs',
+    'BBoxHeads'
+]
 
 
 class Registry(object):
@@ -59,4 +50,5 @@ Backbones = Registry('Backbones')
 Detectors = Registry('Detectors')
 RPNHeads = Registry('RPNHead')
 RoIExtractors = Registry('RoIExtractor')
+BBoxHeadConvs = Registry('BBoxHeadConv')
 BBoxHeads = Registry('BBoxHead')

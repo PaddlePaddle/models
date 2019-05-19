@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import resnet
-from .resnet import *
+from . import roi_extractor
+from .roi_extractor import *
 
-__all__ = resnet.__all__
+__all__ = roi_extractor.__all__

@@ -18,6 +18,10 @@ from __future__ import print_function
 
 import paddle.fluid as fluid
 
+from ..registry import RoIExtractors
+
+__all__ = ['RoIPool', 'RoIAlign', 'FPNRoIAlign']
+
 
 class RoIExtractor(object):
     """
@@ -49,6 +53,7 @@ class RoIExtractor(object):
         raise NotImplementedError
 
 
+@RoIExtractors.register
 class RoIAlign(RoIExtractor):
     """
         RoIAlign class
@@ -77,6 +82,7 @@ class RoIAlign(RoIExtractor):
         return roi_feat
 
 
+@RoIExtractors.register
 class RoIPool(RoIExtractor):
     """
         RoIPool class
@@ -104,6 +110,7 @@ class RoIPool(RoIExtractor):
         return roi_feat
 
 
+@RoIExtractors.register
 class FPNRoIAlign(RoIExtractor):
     """
         FPNRoIAlign class

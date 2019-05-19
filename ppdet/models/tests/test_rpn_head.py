@@ -17,13 +17,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import unittest
-from ppdet.models.anchor_heads.rpn_heads import RPNHead
-from ppdet.core.config import load_cfg
+
 import configs
+from ppdet.core.config import load_cfg
+from ppdet.models.anchor_heads.rpn_heads import RPNHead
+
 import paddle.fluid as fluid
 from paddle.fluid.framework import Program, program_guard
-import os
 
 YAML_LIST = [
     'faster-rcnn_ResNet50-C4_1x.yml',
@@ -31,6 +33,8 @@ YAML_LIST = [
     'mask-rcnn_ResNet50-C4_1x.yml',
     'mask-rcnn_ResNet50-C4_2x.yml',
 ]
+
+#TODO(wangguanzhong): fix the unit testing after refining rpn_head.py
 
 
 def init_input(cfg):

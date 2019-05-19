@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import paddle.fluid as fluid
+
 
 class DetectorBase(object):
     def __init__(self, cfg):
@@ -19,7 +21,7 @@ class DetectorBase(object):
         # variable of data layers
         self.feed_vars = {}
         # PyReader object
-        self.reader = None
+        self.pyreader = None
 
     def train(self):
         raise NotImplementedError('%s.train not available.' %
@@ -29,7 +31,7 @@ class DetectorBase(object):
         raise NotImplementedError('%s.test not available.' %
                                   (self.__class__.__name__))
 
-    def build_feeds(self, feed_info):
+    def build_feeds(self, feed_info, use_pyreader=True):
         var = []
         for info in feed_info:
             d = fluid.layers.data(
@@ -39,6 +41,17 @@ class DetectorBase(object):
                 lod_level=info['lod_level'])
             var.append(d)
             self.feed_vars[info['name']] = d
-        self.reader = fluid.io.PyReader(
-            feed_list=var, capacity=64, use_double_buffer=True, iterable=True)
+        if use_pyreader:
+            self.pyreader = fluid.io.PyReader(
+                feed_list=var,
+                capacity=64,
+                use_double_buffer=True,
+                iterable=True)
         return self.feed_vars
+
+    def get_pyreader(self):
+        """
+        """
+        if self.reader is None:
+            raise ValueError("{}.pyreader is not initialized.".format(
+                self.__class__.__name__))

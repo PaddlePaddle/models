@@ -16,39 +16,44 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import paddle.fluid as fluid
-import ppdet.models.backbones as backbones
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Xavier
 from paddle.fluid.regularizer import L2Decay
 
+from ..registry import BBoxHeads
+from ..registry import BBoxHeadConvs
 
+__all__ = ['BBoxHead']
+
+
+@BBoxHeads.register
 class BBoxHead(object):
     """
     BBoxHead class
+    Args:
+        cfg (Dict): All parameters in dictionary.
     """
 
     def __init__(self, cfg):
-        """
-        Args:
-            cfg(Dict): All parameters in dictionary.
-        """
         self.cfg = cfg
+        self.class_num = self.cfg.DATA.CLASS_NUM
+        self.head_func = BBoxHeadConvs.get(cfg.BBOX_HEAD.HEAD_CONV)(cfg)
 
-    def get_output(self, roi_feat, head_func):
+    def _get_output(self, roi_feat):
         """
         Get bbox head output.
 
         Args:
-            roi_feat(Variable): RoI feature from RoIExtractor.
-            head_func(Function): A function to extract bbox_head feature.
+            roi_feat (Variable): RoI feature from RoIExtractor.
+            head_func (Function): A function to extract bbox_head feature.
 
         Returns:
-            cls_score(Variable), bbox_pred(Variable) are output of bbox_head.
+            cls_score(Variable): TODO(guanzhong) add comments
+            bbox_pred(Variable): are output of bbox_head.
         """
-        class_num = self.cfg.DATA.CLASS_NUM
-        head_feat = head_func(self.cfg, roi_feat)
+        head_feat = self.head_func(roi_feat)
         cls_score = fluid.layers.fc(input=head_feat,
-                                    size=class_num,
+                                    size=self.class_num,
                                     act=None,
                                     name='cls_score',
                                     param_attr=ParamAttr(
@@ -60,7 +65,7 @@ class BBoxHead(object):
                                         learning_rate=2.,
                                         regularizer=L2Decay(0.)))
         bbox_pred = fluid.layers.fc(input=head_feat,
-                                    size=4 * class_num,
+                                    size=4 * self.class_num,
                                     act=None,
                                     name='bbox_pred',
                                     param_attr=ParamAttr(
@@ -73,76 +78,12 @@ class BBoxHead(object):
                                         regularizer=L2Decay(0.)))
         return cls_score, bbox_pred
 
-    def get_target(self,
-                   rpn_rois,
-                   gt_label,
-                   is_crowd,
-                   gt_box,
-                   im_info,
-                   use_random=True):
-        """
-        Get bbox target for bbox head loss
-
-        Args:
-            rpn_rois(Variable): Output of generate_proposals in rpn head.
-            gt_label(Variable): Class label of groundtruth with shape [M, 1].
-                                M is the number of groundtruth.
-            is_crowd(Variable): A flag indicates whether a groundtruth is crowd
-                                with shape [M, 1]. M is the number of 
-                                groundtruth.
-            gt_box(Variable): Bounding box in [xmin, ymin, xmax, ymax] format 
-                              with shape [M, 4]. M is the number of groundtruth.
-            im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
-                               number of input images, each element consists 
-                               of im_height, im_width, im_scale.
-            use_random(bool): Use random sampling to choose foreground and 
-                              background boxes.
-
-        Returns:
-            rois(Variable): RoI with shape [P, 4]. P is usually equal to  
-                            batch_size_per_im * batch_size, each element 
-                            is a bounding box with [xmin, ymin, xmax, ymax] 
-                            format.
-            labels_int32(Variable): Class label of a RoI with shape [P, 1]. 
-            bbox_targets(Variable): Box label of a RoI with shape 
-                                    [P, 4 * class_nums].
-            bbox_inside_weights(Variable): Indicates whether a box should 
-                                           contribute to loss. Same shape as
-                                           bbox_targets.
-            bbox_outside_weights(Variable): Indicates whether a box should 
-                                            contribute to loss. Same shape as 
-                                            bbox_targets.
-        """
-        cfg = self.cfg
-        outs = fluid.layers.generate_proposal_labels(
-            rpn_rois=rpn_rois,
-            gt_classes=gt_label,
-            is_crowd=is_crowd,
-            gt_boxes=gt_box,
-            im_info=im_info,
-            batch_size_per_im=cfg.BBOX_HEAD.ROI.BATCH_SIZE_PER_IM,
-            fg_fraction=cfg.BBOX_HEAD.ROI.FG_FRACTION,
-            fg_thresh=cfg.BBOX_HEAD.ROI.FG_THRESH,
-            bg_thresh_hi=cfg.BBOX_HEAD.ROI.BG_THRESH_HIGH,
-            bg_thresh_lo=cfg.BBOX_HEAD.ROI.BG_THRESH_LOW,
-            bbox_reg_weights=cfg.BBOX_HEAD.ROI.BBOX_REG_WEIGHTS,
-            class_nums=cfg.DATA.CLASS_NUM,
-            use_random=use_random)
-
-        rois = outs[0]
-        labels_int32 = outs[1]
-        bbox_targets = outs[2]
-        bbox_inside_weights = outs[3]
-        bbox_outside_weights = outs[4]
-        return rois, labels_int32, bbox_targets, bbox_inside_weights, bbox_outside_weights
-
-    def get_loss(self, cls_score, bbox_pred, labels_int32, bbox_targets,
+    def get_loss(self, roi_feat, labels_int32, bbox_targets,
                  bbox_inside_weights, bbox_outside_weights):
         """
         Get bbox_head loss.
         
         Args:
-            cls_score(Variable), bbox_pred(Variable), labels_int32(Variable),
             bbox_targets(Variable), bbox_inside_weights(Variable), 
             bbox_outside_weights(Variable) are outputs of get_target.
 
@@ -150,6 +91,9 @@ class BBoxHead(object):
             loss_cls(Variable): bbox_head loss.
             loss_bbox(Variable): bbox_head loss.
         """
+
+        cls_score, bbox_pred = self._get_output(roi_feat)
+
         labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
         labels_int64.stop_gradient = True
         loss_cls = fluid.layers.softmax_with_cross_entropy(
@@ -162,39 +106,35 @@ class BBoxHead(object):
             outside_weight=bbox_outside_weights,
             sigma=1.0)
         loss_bbox = fluid.layers.reduce_mean(loss_bbox)
-        return loss_cls, loss_bbox
+        return {'loss_cls': loss_cls, 'loss_cls': loss_bbox}
 
-    def get_prediction(
-            self,
-            rpn_rois,
-            im_info,
-            cls_score,
-            bbox_pred, ):
+    def get_prediction(self, roi_feat, rois, im_info):
         """
         Get prediction bounding box in test stage.
         
         Args:
-            rpn_rois(Variable): Output of generate_proposals in rpn head.
-            im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
+            rois (Variable): Output of generate_proposals in rpn head.
+            im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
                                number of input images, each element consists 
                                of im_height, im_width, im_scale.
-            cls_score(Variable), bbox_pred(Variable): Output of get_output.
+            cls_score (Variable), bbox_pred(Variable): Output of get_output.
      
         Returns:
             pred_result(Variable): Prediction result with shape [N, 6]. Each 
                row has 6 values: [label, confidence, xmin, ymin, xmax, ymax]. 
                N is the total number of prediction.
         """
-        class_num = self.cfg.DATA.CLASS_NUM
+        cls_score, bbox_pred = self._get_output(roi_feat)
+
         im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
-        im_scale_lod = fluid.layers.sequence_expand(im_scale, rpn_rois)
-        boxes = rpn_rois / im_scale_lod
+        im_scale_lod = fluid.layers.sequence_expand(im_scale, rois)
+        boxes = rois / im_scale_lod
         cls_prob = fluid.layers.softmax(cls_score, use_cudnn=False)
-        bbox_pred_reshape = fluid.layers.reshape(bbox_pred, (-1, class_num, 4))
+        bbox_pred = fluid.layers.reshape(bbox_pred, (-1, self.class_num, 4))
         decoded_box = fluid.layers.box_coder(
             prior_box=boxes,
             prior_box_var=self.cfg.BBOX_HEAD.ROI.BBOX_REG_WEIGHTS,
-            target_box=bbox_pred_reshape,
+            target_box=bbox_pred,
             code_type='decode_center_size',
             box_normalized=False,
             axis=1)
@@ -208,13 +148,6 @@ class BBoxHead(object):
             keep_top_k=self.cfg.TEST.DETECTIONS_PER_IM,
             normalized=False)
         return pred_result
-
-
-def bboxC5_head(cfg, roi_feat):
-    res5_2_sum = backbones.resnet.ResNet50C5(roi_feat)
-    head_feat = fluid.layers.pool2d(
-        res5_2_sum, pool_type='avg', pool_size=7, name='res5_pool')
-    return head_feat
 
 
 def bbox2mlp_head(cfg, roi_feat):
