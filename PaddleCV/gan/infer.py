@@ -38,7 +38,7 @@ add_arg('output',            str,   "./infer_result",  "The directory the infer 
 add_arg('input_style',       str,   "A",               "The style of the input, A or B")
 add_arg('norm_type',         str,   "batch_norm",      "Which normalization to used")
 add_arg('use_gpu',           bool,  True,              "Whether to use GPU to train.")
-add_arg('dropout',           bool,  False,             "Whether to use dropout")
+add_arg('dropout',           bool,  True,             "Whether to use dropout")
 add_arg('data_shape',        int,   256,               "The shape of load image")
 add_arg('g_base_dims',       int,   64,                "Base channels in CycleGAN generator")
 # yapf: enable
@@ -57,6 +57,11 @@ def infer(args):
             fake = network_G(input, name="GB", cfg=args)
         else:
             raise "Input with style [%s] is not supported." % args.input_style
+    elif args.model_net == 'Pix2pix':
+        from network.Pix2pix_network import Pix2pix_model
+        model = Pix2pix_model()
+        fake = model.network_G(input, "generator", cfg=args)
+
     elif args.model_net == 'cgan':
         pass
     else:
