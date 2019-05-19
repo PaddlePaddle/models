@@ -100,48 +100,18 @@ class FasterRCNN(DetectorBase):
         h = getattr(self.cfg.DATA, 'IM_HEIGHT', 224)
         w = getattr(self.cfg.DATA, 'IM_WIDTH', 224)
 
-        #yapf: disable
+        # yapf: disable
         feed_info = [
-            {
-                'name': 'image',
-                'shape': [c, h, w],
-                'dtype': 'float32',
-                'lod_level': 0
-            },
-            {
-                'name': 'im_info',
-                'shape': [1],
-                'dtype': 'float32',
-                'lod_level': 0
-            },
+            {'name': 'image',  'shape': [c, h, w], 'dtype': 'float32', 'lod_level': 0},
+            {'name': 'im_info','shape': [1],       'dtype': 'float32', 'lod_level': 0},
         ]
         if self.is_train:
             anno_info = [
-                {
-                    'name': 'gt_box',
-                    'shape': [1],
-                    'dtype': 'float32',
-                    'lod_level': 1
-                },
-                {
-                    'name': 'gt_label',
-                    'shape': [1],
-                    'dtype': 'int32',
-                    'lod_level': 1
-                },
-                {
-                    'name': 'is_crowd',
-                    'shape': [1],
-                    'dtype': 'int32',
-                    'lod_level': 1
-                },
-                {
-                    'name': 'im_id',
-                    'shape': [1],
-                    'dtype': 'int32',
-                    'lod_level': 0
-                },
+                {'name': 'gt_box',  'shape': [1], 'dtype': 'float32', 'lod_level': 1},
+                {'name': 'gt_label','shape': [1], 'dtype': 'int32', 'lod_level': 1},
+                {'name': 'is_crowd', 'shape': [1],'dtype': 'int32', 'lod_level': 1},
+                {'name': 'im_id',    'shape': [1], 'dtype': 'int32', 'lod_level': 0},
             ]
             feed_info += anno_info
-        #yapf: enable
+        # yapf: enable
         return feed_info

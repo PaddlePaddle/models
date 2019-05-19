@@ -39,7 +39,8 @@ class TestDetectorFasterRCNN(unittest.TestCase):
         assert self.cfg.IS_TRAIN
         self.detector = Detectors.get(self.detector_type)(self.cfg)
         self.detector.train()
-        print(fluid.default_main_program())
+        #print(fluid.default_main_program())
+        #TODO(dangqingqing): add more check
 
     @prog_scope()
     def test_test(self):
@@ -47,6 +48,7 @@ class TestDetectorFasterRCNN(unittest.TestCase):
         assert not self.cfg.IS_TRAIN
         self.detector = Detectors.get(self.detector_type)(self.cfg)
         self.detector.test()
+        #TODO(dangqingqing): add more check
 
 
 if __name__ == '__main__':
