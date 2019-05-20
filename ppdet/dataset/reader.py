@@ -21,6 +21,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
+import numpy as np
 from . import source
 from . import transform
 from .transform import operator as op
@@ -54,15 +56,30 @@ class Reader(object):
         worker_args = None
         if 'worker_args' in self._trans_conf:
             worker_args = self._trans_conf['worker_args']
+        drop_last = True
+        if 'drop_last' in self._trans_conf:
+            drop_last = self._trans_conf['drop_last']
+        batchsize = self._trans_conf['batch_size']
+        is_padding = self._trans_conf['is_padding']
+        is_padding_total = self._trans_conf['is_padding_total']
         dataset = transform.transform(sc,
-            ops, worker_args=worker_args)
+            ops, batchsize, drop_last, is_padding, is_padding_total, worker_args=worker_args)
 
         # 3, Build a reader
         def _reader():
             dataset.reset()
+            devices = os.getenv('CUDA_VISIBLE_DEVICES')
+            devices_num = len(devices.split(","))
             for sample in dataset:
-                yield sample
-
+                if not is_padding_total:
+                    yield sample
+                else:
+                    for i in range(devices_num):
+                        sub_batch_out = []
+                        for j in range(batchsize):
+                            sub_batch_out.append(sample[i * batchsize + j])
+                        yield sub_batch_out
+                        sub_batch_out = []
         return _reader
 
     def train(self):

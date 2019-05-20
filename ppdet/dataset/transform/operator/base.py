@@ -23,8 +23,11 @@ from __future__ import unicode_literals
 
 import uuid
 import logging
+import random
+import math
 import numpy as np
 import cv2
+from PIL import Image, ImageEnhance, ImageDraw
 from functools import reduce
 
 logger = logging.getLogger(__name__)
@@ -49,6 +52,102 @@ class BaseOperator(object):
         if name is None:
             name = self.__class__.__name__
         self._id = name + '_' + str(uuid.uuid4())[-6:]
+        
+    def meet_emit_constraint(self, src_bbox, sample_bbox):        
+        center_x = (src_bbox[2] + src_bbox[0]) / 2
+        center_y = (src_bbox[3] + src_bbox[1]) / 2
+        if center_x >= sample_bbox[0] and \
+                center_x <= sample_bbox[2] and \
+                center_y >= sample_bbox[1] and \
+                center_y <= sample_bbox[3]:
+            return True
+        return False
+    
+    def clip_bbox(self, src_bbox):
+        src_bbox[0] = max(min(src_bbox[0], 1.0), 0.0)
+        src_bbox[1] = max(min(src_bbox[1], 1.0), 0.0)
+        src_bbox[2] = max(min(src_bbox[2], 1.0), 0.0)
+        src_bbox[3] = max(min(src_bbox[3], 1.0), 0.0)
+        return src_bbox
+    
+    def bbox_area(self, src_bbox):
+        width = src_bbox[2] - src_bbox[0]
+        height = src_bbox[3] - src_bbox[1]
+        return width * height
+    
+    def deal_bbox_label(self, bboxes, labels, sample_bbox):
+        new_bboxes = []
+        new_labels = []
+        for i in range(len(labels)):
+            new_bbox = [0, 0, 0, 0]
+            obj_bbox = [bboxes[i][0], bboxes[i][1],
+                        bboxes[i][2], bboxes[i][3]]
+            if not self.meet_emit_constraint(obj_bbox, sample_bbox):
+                continue
+            sample_width = sample_bbox[2] - sample_bbox[0]
+            sample_height = sample_bbox[3] - sample_bbox[1]
+            new_bbox[0] = (obj_bbox[0] - sample_bbox[0]) / sample_width
+            new_bbox[1] = (obj_bbox[1] - sample_bbox[1]) / sample_height
+            new_bbox[2] = (obj_bbox[2] - sample_bbox[0]) / sample_width
+            new_bbox[3] = (obj_bbox[3] - sample_bbox[1]) / sample_height
+            new_bbox = self.clip_bbox(new_bbox)
+            if self.bbox_area(new_bbox) > 0:
+                new_bboxes.append(new_bbox)
+                new_labels.append([labels[i][0]])
+        bboxes = np.array(new_bboxes)
+        labels = np.array(new_labels)
+        return bboxes, labels       
+            
+    def generate_sample_bbox(self, sampler):
+        scale = np.random.uniform(sampler[2], sampler[3])
+        aspect_ratio = np.random.uniform(sampler[4], sampler[5])
+        aspect_ratio = max(aspect_ratio, (scale**2.0))
+        aspect_ratio = min(aspect_ratio, 1 / (scale**2.0))
+
+        bbox_width = scale * (aspect_ratio**0.5)
+        bbox_height = scale / (aspect_ratio**0.5)
+        xmin_bound = 1 - bbox_width
+        ymin_bound = 1 - bbox_height
+        xmin = np.random.uniform(0, xmin_bound)
+        ymin = np.random.uniform(0, ymin_bound)
+        xmax = xmin + bbox_width
+        ymax = ymin + bbox_height
+        sampled_bbox = [xmin, ymin, xmax, ymax]
+        return sampled_bbox
+    
+    def jaccard_overlap(self, sample_bbox, object_bbox):
+        if sample_bbox[0] >= object_bbox[2] or \
+            sample_bbox[2] <= object_bbox[0] or \
+            sample_bbox[1] >= object_bbox[3] or \
+            sample_bbox[3] <= object_bbox[1]:
+            return 0
+        intersect_xmin = max(sample_bbox[0], object_bbox[0])
+        intersect_ymin = max(sample_bbox[1], object_bbox[1])
+        intersect_xmax = min(sample_bbox[2], object_bbox[2])
+        intersect_ymax = min(sample_bbox[3], object_bbox[3])
+        intersect_size = (intersect_xmax - intersect_xmin) * (
+            intersect_ymax - intersect_ymin)
+        sample_bbox_size = self.bbox_area(sample_bbox)
+        object_bbox_size = self.bbox_area(object_bbox)
+        overlap = intersect_size / (
+            sample_bbox_size + object_bbox_size - intersect_size)
+        return overlap
+
+    def satisfy_sample_constraint(self, sampler, sample_bbox, gt_bboxes):
+        if sampler[6] == 0 and sampler[7] == 0:
+            return True
+        for i in range(len(gt_bboxes)):
+            object_bbox = [gt_bboxes[i][0], gt_bboxes[i][1],
+                            gt_bboxes[i][2], gt_bboxes[i][3]]
+            overlap = self.jaccard_overlap(sample_bbox, object_bbox)
+            if sampler[6] != 0 and \
+                    overlap < sampler[6]:
+                continue
+            if sampler[7] != 0 and \
+                    overlap > sampler[7]:
+                continue
+            return True
+        return False
 
     def __call__(self, sample, context=None):
         """ Process a sample.
@@ -223,6 +322,8 @@ class RandFlipImage(BaseOperator):
         height, width, _ = im.shape
         if np.random.uniform(0, 1) > self.prob:
             im = im[:, ::-1, :]
+            if gt_bbox.shape[0] == 0:
+                return sample
             oldx1 = gt_bbox[:, 0].copy()
             oldx2 = gt_bbox[:, 2].copy()
             if self.is_normalized:
@@ -240,6 +341,7 @@ class RandFlipImage(BaseOperator):
                 sample['gt_poly'] = self.flip_segms(sample['gt_poly'],
                                                     height, width)
             sample['flipped'] = True
+            sample['image'] = im
         return sample
 
 
@@ -247,7 +349,8 @@ class RandFlipImage(BaseOperator):
 class NormalizeImage(BaseOperator):
     def __init__(self, mean=[0.485, 0.456, 0.406],
                  std=[1, 1, 1],
-                 is_scale=True):
+                 is_scale=True,
+                 is_first_channel=True):
         """ Normalize the image.
         Args:
             mean (list): the pixel mean
@@ -257,6 +360,7 @@ class NormalizeImage(BaseOperator):
         self.mean = mean
         self.std = std
         self.is_scale = is_scale
+        self.is_first_channel = is_first_channel
         if not (isinstance(self.mean, list)
                 and isinstance(self.std, list)
                 and isinstance(self.is_scale, bool)):
@@ -274,14 +378,164 @@ class NormalizeImage(BaseOperator):
         """
         im = sample['image']
         im = im.astype(np.float32, copy=False)
+        if self.is_first_channel:
+            mean = np.array(self.mean)[:, np.newaxis, np.newaxis].astype('float32')
+            std = np.array(self.std)[:, np.newaxis, np.newaxis].astype('float32')
+        else:
+            mean = np.array(self.mean)[np.newaxis, np.newaxis, :].astype('float32')
+            std = np.array(self.std)[np.newaxis, np.newaxis, :].astype('float32')
         if self.is_scale:
             im = im / 255.0
-        im -= self.mean
-        im /= self.std
+        im -= mean
+        im /= std
         sample['image'] = im
         return sample
 
+    
+@register_op    
+class RandomDistort(BaseOperator):
+    def __init__(self, brightness_lower=0.5, brightness_upper=1.5, 
+                 contrast_lower=0.5, contrast_upper=1.5, 
+                 saturation_lower=0.5, saturation_upper=1.5, 
+                 hue_lower=0.5, hue_upper=1.5,
+                 brightness_prob=1, contrast_prob=1, 
+                 saturation_prob=1, hue_prob=1,
+                 count=4):
+        super(RandomDistort, self).__init__()
+        self.brightness_delta = np.random.uniform(brightness_lower, brightness_upper)
+        self.contrast_delta = np.random.uniform(contrast_lower, contrast_upper)
+        self.saturation_delta = np.random.uniform(saturation_lower, saturation_upper)
+        self.hue_delta = np.random.uniform(hue_lower, hue_upper)
+        self.brightness_prob = brightness_prob
+        self.contrast_prob = contrast_prob
+        self.saturation_prob = saturation_prob
+        self.hue_prob = hue_prob
+        self.count = count
+    
+    def random_brightness(self, img):
+        prob = np.random.uniform(0, 1)
+        if prob < self.brightness_prob:
+            img = ImageEnhance.Brightness(img).enhance(self.brightness_delta)
+        return img
 
+    def random_contrast(self, img):
+        prob = np.random.uniform(0, 1)
+        if prob < self.contrast_prob:
+            img = ImageEnhance.Contrast(img).enhance(self.contrast_delta)
+        return img
+
+    def random_saturation(self, img):
+        prob = np.random.uniform(0, 1)
+        if prob < self.saturation_prob:
+            img = ImageEnhance.Color(img).enhance(self.saturation_delta)
+        return img
+
+    def random_hue(self, img):
+        prob = np.random.uniform(0, 1)
+        if prob < self.hue_prob:
+            img_hsv = np.array(img.convert('HSV'))
+            img_hsv[:, :, 0] = img_hsv[:, :, 0] + self.hue_delta
+        img = Image.fromarray(img_hsv, mode='HSV').convert('RGB')
+        return img
+    
+    def __call__(self, sample, context):
+        gt_bbox = sample['gt_bbox']
+        ops = [self.random_brightness, self.random_contrast, self.random_saturation, self.random_hue]
+        ops = random.sample(ops, self.count)
+        assert 'image' in sample, 'not found image data'
+        im = sample['image']
+        im = Image.fromarray(im)
+        for id in range(self.count):
+            im = ops[id](im)
+        im = np.asarray(im)
+        sample['image'] = im
+        return sample
+    
+@register_op
+class Expand(BaseOperator):
+    def __init__(self, expand_max_ratio,
+                 expand_prob,
+                 mean=[127.5, 127.5, 127.5]):
+        super(Expand, self).__init__()
+        self.expand_max_ratio = expand_max_ratio
+        self.mean = mean
+        self.expand_prob = expand_prob
+
+    def __call__(self, sample, context):
+        prob = np.random.uniform(0, 1)
+        assert 'image' in sample, 'not found image data'
+        im = sample['image']
+        gt_bbox = sample['gt_bbox']
+        gt_class = sample['gt_class']
+        im_width = sample['w']
+        im_height = sample['h']
+        if prob < self.expand_prob:
+            if self.expand_max_ratio - 1 >= 0.01:
+                expand_ratio = np.random.uniform(1, self.expand_max_ratio)
+                height = int(im_height * expand_ratio)
+                width = int(im_width * expand_ratio)
+                h_off = math.floor(np.random.uniform(0, height - im_height))
+                w_off = math.floor(np.random.uniform(0, width - im_width))
+                expand_bbox = [-w_off / im_width, -h_off / im_height,
+                               (width - w_off) / im_width,
+                               (height - h_off) / im_height]
+                expand_im = np.ones((height, width, 3))
+                expand_im = np.uint8(expand_im * np.squeeze(self.mean))
+                expand_im = Image.fromarray(expand_im)
+                im = Image.fromarray(im)
+                expand_im.paste(im, (int(w_off), int(h_off)))
+                expand_im = np.asarray(expand_im)
+                gt_bbox, gt_class = self.deal_bbox_label(gt_bbox, gt_class, expand_bbox)
+                sample['image'] = expand_im
+                sample['gt_bbox'] = gt_bbox
+                sample['gt_class'] = gt_class
+                sample['w'] = width
+                sample['h'] = height
+                
+        return sample
+        
+
+@register_op
+class Crop(BaseOperator):
+    def __init__(self, batch_sampler):
+        super(Crop, self).__init__()
+        self. batch_sampler = batch_sampler
+   
+    def __call__(self, sample, context):
+        assert 'image' in sample, 'not found image data'
+        im = sample['image']
+        gt_bbox = sample['gt_bbox']
+        gt_class = sample['gt_class']
+        im_width = sample['w']
+        im_height = sample['h']
+        sampled_bbox = []
+        gt_bbox = gt_bbox.tolist()
+        for sampler in self.batch_sampler:
+            found = 0
+            for i in range(sampler[1]):
+                if found >= sampler[0]:
+                    break
+                sample_bbox = self.generate_sample_bbox(sampler)
+                if self.satisfy_sample_constraint(sampler, sample_bbox, gt_bbox):
+                    sampled_bbox.append(sample_bbox)
+                    found = found + 1
+        im = np.array(im)
+        if len(sampled_bbox) > 0:
+            idx = int(np.random.uniform(0, len(sampled_bbox)))
+            sample_bbox = sampled_bbox[idx]
+            sample_bbox = self.clip_bbox(sample_bbox)
+            xmin = int(sample_bbox[0] * im_width)
+            xmax = int(sample_bbox[2] * im_width)
+            ymin = int(sample_bbox[1] * im_height)
+            ymax = int(sample_bbox[3] * im_height)
+            im = im[ymin:ymax, xmin:xmax]
+            gt_bbox, gt_class = self.deal_bbox_label(gt_bbox, gt_class, sample_bbox)
+            sample['image'] = im
+            sample['gt_bbox'] = gt_bbox
+            sample['gt_class'] = gt_class
+        return sample
+        
+        
 @register_op
 class NormalizeBox(BaseOperator):
     """Transform the bounding box's coornidates to [0,1]."""
@@ -302,7 +556,7 @@ class NormalizeBox(BaseOperator):
 
 
 @register_op
-class Bgr2Rgb(BaseOperator):
+class Rgb2Bgr(BaseOperator):
     def __init__(self, to_bgr=True,
                  channel_first=True):
         """ Change the channel and color space.
@@ -310,7 +564,7 @@ class Bgr2Rgb(BaseOperator):
             to_bgr (bool): confirm whether to convert RGB to BGR
             channel_first (bool): confirm whether to change channel
         """
-        super(Bgr2Rgb, self).__init__()
+        super(Rgb2Bgr, self).__init__()
         self.to_bgr = to_bgr
         self.channel_first = channel_first
         if not (isinstance(self.to_bgr, bool)
@@ -328,66 +582,3 @@ class Bgr2Rgb(BaseOperator):
         sample['image'] = im
         return sample
 
-
-@register_op
-class ArrangeSample(BaseOperator):
-    """Transform the sample dict to the sample tuple
-       which the model need when training.
-    """
-    def __init__(self, is_mask=False):
-        """ Get the standard output.
-        Args:
-            is_mask (bool): confirm whether to use mask rcnn
-        """
-        super(ArrangeSample, self).__init__()
-        self.is_mask = is_mask
-        if not (isinstance(self.is_mask, bool)):
-            raise TypeError('{}: the input type is error.'
-                            .format(self.__str__))
-
-    def __call__(self, sample, context=None):
-        """
-        Input:
-            sample: a dict which contains image
-                    info and annotation info.
-            context: a dict which contains additional info.
-        Output:
-            sample: a tuple which contains the
-                    info which training model need.
-                    tupe is (image, gt_bbox, gt_class, is_crowd, im_info, gt_masks)
-        """
-        im = sample['image']
-        gt_bbox = sample['gt_bbox']
-        gt_class = sample['gt_class']
-        outs = (im, gt_bbox, gt_class)
-        keys = list(sample.keys())
-        if 'is_crowd' in keys:
-            is_crowd = sample['is_crowd']
-            outs = outs + (is_crowd,)
-        if 'im_info' in keys:
-            im_info = sample['im_info']
-            outs = outs + (im_info,)
-        im_id = sample['im_id']
-        outs = outs + (im_id,)
-        gt_masks = []
-        if self.is_mask and len(sample['gt_poly']) != 0 \
-                and 'is_crowd' in keys:
-            valid = True
-            segms = sample['gt_poly']
-            assert len(segms) == is_crowd.shape[0]
-            for i in range(len(sample['gt_poly'])):
-                segm, iscrowd = segms[i], is_crowd[i]
-                gt_segm = []
-                if iscrowd:
-                    gt_segm.append([[0, 0]])
-                else:
-                    for poly in segm:
-                        if len(poly) == 0:
-                            valid = False
-                            break
-                        gt_segm.append(np.array(poly).reshape(-1, 2))
-                if (not valid) or len(gt_segm) == 0:
-                    break
-                gt_masks.append(gt_segm)
-            outs = outs + (gt_masks, )
-        return outs

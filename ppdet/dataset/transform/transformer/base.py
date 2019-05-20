@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import functools
 from ...dataset import Dataset
 
@@ -58,7 +59,7 @@ class MappedDataset(ProxiedDataset):
 class BatchedDataset(ProxiedDataset):
     """ transform samples to batches
     """
-    def __init__(self, ds, batchsize, drop_last=True):
+    def __init__(self, ds, batchsize, drop_last=True, is_padding=False, is_padding_total=False):
         """
         Args:
             ds (instance of Dataset): dataset to be batched
@@ -69,18 +70,47 @@ class BatchedDataset(ProxiedDataset):
         super(BatchedDataset, self).__init__(ds)
         self._batchsz = batchsize
         self._drop_last = drop_last
+        self.is_padding = is_padding
+        self.is_padding_total = is_padding_total
+        
+    def padding_minibatch(self, batch_data):
+        if len(batch_data) == 1:
+            return batch_data
+        max_shape = np.array([data[0].shape for data in batch_data]).max(axis=0)
+        padding_batch = []
+        for data in batch_data:
+            im_c, im_h, im_w = data[0].shape[:]
+            padding_im = np.zeros(
+                (im_c, max_shape[1], max_shape[2]), dtype=np.float32)
+            padding_im[:, :im_h, :im_w] = data[0]
+            padding_batch.append((padding_im, ) + data[1:])
+        return padding_batch
+        
 
     def next(self):
         """ proxy to self._ds.next
         """
+        devices = os.getenv('CUDA_VISIBLE_DEVICES')
+        devices_num = len(devices.split(","))
+        if self.is_padding_total:
+            self._batchsz = self._batchsz * devices_num
+            
         batch = []
         for _ in range(self._batchsz):
             try:
-                batch.append(self._ds.next())
+                out = self._ds.next()
+                while out[1].shape[0] == 0:
+                    out = self._ds.next()
+                batch.append(out)
             except StopIteration as e:
                 if not self._drop_last and len(batch) > 0:
-                    return batch
+                    if self.is_padding:
+                        return self.padding_minibatch(batch)
+                    else:
+                        return batch
                 else:
                     raise StopIteration
-
-        return batch
+        if self.is_padding:
+            return self.padding_minibatch(batch)
+        else:
+            return batch
