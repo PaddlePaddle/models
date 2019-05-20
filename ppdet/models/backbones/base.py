@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import resnet
-from .resnet import *
 
-__all__ = resnet.__all__
+class BackboneBase(object):
+    def __init__(self, cfg):
+        self.cfg = cfg
+
+    def __call__(self, param, block):
+        """Add backbone to network
+        """
+        raise NotImplementedError()

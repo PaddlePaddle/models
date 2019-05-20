@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import resnet
-from .resnet import *
+from .bbox_assigner import BBoxAssigner
 
-__all__ = resnet.__all__
+__all__ = ['BBoxAssigner']

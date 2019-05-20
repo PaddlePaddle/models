@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import resnet
-from .resnet import *
+from . import faster_rcnn
+from .faster_rcnn import *
 
-__all__ = resnet.__all__
+__all__ = faster_rcnn.__all__

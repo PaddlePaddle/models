@@ -12,5 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .rpn_heads import RPNHead
-__all__ = ['RPNHead']
+from . import rpn_head
+from .rpn_head import *
+
+__all__ = rpn_head.__all__

@@ -23,7 +23,11 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.framework import Variable
 
-__all__ = ['ResNet50Backbone', 'ResNet50C5']
+from ..registry import Backbones
+from ..registry import BBoxHeadConvs
+from .base import BackboneBase
+
+__all__ = ['ResNet50C4Backbone', 'ResNet101C4Backbone', 'ResNet50C5']
 
 
 class ResNet(object):
@@ -42,7 +46,7 @@ class ResNet(object):
         self.freeze_bn = freeze_bn
         self.affine_channel = affine_channel
         self.depth_cfg = {
-            18: ([2, 2, 2, 1], self.basicblock),
+            18: ([2, 2, 2, 2], self.basicblock),
             34: ([3, 4, 6, 3], self.basicblock),
             50: ([3, 4, 6, 3], self.bottleneck),
             101: ([3, 4, 23, 3], self.bottleneck),
@@ -240,31 +244,61 @@ class ResNet(object):
         return res
 
 
-def ResNet50Backbone(input,
-                     freeze_at,
-                     freeze_bn=False,
-                     affine_channel=False,
-                     bn_type='bn'):
-    """
-    Get the backbone of ResNet50. We define ResNet50 has 5 stages, from 1 to 5.
+@Backbones.register
+class ResNet50C4Backbone(BackboneBase):
+    def __init__(self, cfg):
+        """
+        Get the ResNet50 C4 backbone. We define ResNet50 has 5 stages,
+        from 1 to 5.
 
-    Args:
-        freeze_at (int): freeze the backbone at which stage. This number
-            should be not large than 4. 0 means that no layers are fixed.
-        freeze_bn (bool): whether to fix batch norm
-            (meaning the scale and bias does not update). Defalut False.
-        affine_channel (bool): Use batch_norm or affine_channel.
+        Args:
+            cfg (AttrDict): the config from given config filename.
+        """
+        super(ResNet50C4Backbone, self).__init__(cfg)
+        # freeze the backbone at which stage.
+        # This number should be not large than 4. 0 means that
+        # no layers are fixed.
+        self.freeze_at = getattr(cfg.MODEL, 'FREEZE_AT', 2)
+        assert self.freeze_at in [0, 1, 2, 3, 4
+                                  ], "The freeze_at should be 0, 1, 2, 3 or 4"
+        # whether to fix batch norm
+        # (meaning the scale and bias does not update). Defalut False.
+        self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
+        # use batch_norm or affine_channel.
+        self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
+        self.number = 50
 
-    Returns:
-        The last variable in endpoint-th stage.
-    """
-    assert freeze_at in [0, 1, 2, 3, 4
-                         ], "The freeze_at should be 0, 1, 2, 3 or 4"
-    model = ResNet(50, freeze_bn, affine_channel)
-    return model.get_backone(input, 4, freeze_at)
+    def __call__(self, input):
+        """
+        Args:
+            input (Variable): input variable.
+
+        Returns:
+            The last variable in endpoint-th stage.
+        """
+        if not isinstance(input, Variable):
+            raise TypeError(str(input) + " should be Variable")
+
+        model = ResNet(self.number, self.freeze_bn, self.affine_channel)
+        return model.get_backone(input, 4, self.freeze_at)
 
 
-def ResNet50C5(input, freeze_bn=False, affine_channel=False):
+@Backbones.register
+class ResNet101C4Backbone(ResNet50C4Backbone):
+    def __init__(self, cfg):
+        """
+        Get the ResNet101 C4 backbone. We define ResNet50 has 5 stages,
+        from 1 to 5.
+
+        Args:
+            cfg (AttrDict): the config from given config filename.
+        """
+        super(ResNet101C4Backbone, self).__init__(cfg)
+        self.number = 101
+
+
+@BBoxHeadConvs.register
+class ResNet50C5(object):
     """
     Args:
         freeze_bn (bool): whether to fix batch norm
@@ -272,6 +306,19 @@ def ResNet50C5(input, freeze_bn=False, affine_channel=False):
     Returns:
         The last variable in C5 stage.
     """
-    model = ResNet(50, freeze_bn, affine_channel)
-    out = model.layer_warp(input, 5)
-    return out
+
+    def __init__(self, cfg):
+        # whether to fix batch norm
+        # (meaning the scale and bias does not update). Defalut False.
+        self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
+        # use batch_norm or affine_channel.
+        self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
+        self.number = 50
+        self.stage_number = 5
+
+    def __call__(self, input):
+        model = ResNet(self.number, self.freeze_bn, self.affine_channel)
+        res5 = model.layer_warp(input, self.stage_number)
+        feat = fluid.layers.pool2d(
+            res5, pool_type='avg', pool_size=7, name='res5_pool')
+        return feat

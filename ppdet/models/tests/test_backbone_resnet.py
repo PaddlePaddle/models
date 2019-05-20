@@ -18,9 +18,12 @@ from __future__ import print_function
 
 import numpy as np
 import unittest
+
 import paddle.fluid as fluid
 import paddle.compat as cpt
-from ppdet.models.backbones.resnet import ResNet, ResNet50Backbone, ResNet50C5
+
+from ppdet.core.config import load_cfg, merge_cfg
+from ppdet.models.backbones.resnet import ResNet, ResNet50C4Backbone, ResNet50C5
 
 
 def bottleneck_names(name, bn_affine, short_conv=True):
@@ -49,16 +52,18 @@ def bottleneck_names(name, bn_affine, short_conv=True):
 class TestResNet(unittest.TestCase):
     def setUp(self):
         self.dshape = [3, 224, 224]
-        cfg = {
-            18: [2, 2, 2, 1],
+        res_cfg = {
+            18: [2, 2, 2, 2],
             34: [3, 4, 6, 3],
             50: [3, 4, 6, 3],
             101: [3, 4, 23, 3],
             152: [3, 8, 36, 3]
         }
         self.layers = 50
-        self.depth = cfg[self.layers]
+        self.depth = res_cfg[self.layers]
         self.fixbn = True
+        cfg_file = 'configs/faster-rcnn_ResNet50-C4_1x.yml'
+        self.cfg = load_cfg(cfg_file)
 
     def get_C1ToC4_params(self, bn_affine):
         """
@@ -111,7 +116,8 @@ class TestResNet(unittest.TestCase):
         with fluid.program_guard(prog, startup_prog):
             data = fluid.layers.data(
                 name='input', shape=self.dshape, dtype='float32')
-            feat = ResNet50Backbone(data, 2, True, bn_affine)
+            backbone = ResNet50C4Backbone(self.cfg)
+            feat = backbone(data)
             # actual names
             parameters = prog.global_block().all_parameters()
             actual_pnames = [cpt.to_bytes(p.name) for p in parameters]
@@ -133,9 +139,21 @@ class TestResNet(unittest.TestCase):
                 self.assertTrue(p.stop_gradient)
 
     def test_C1ToC4_bn(self):
+        merge_cfg({
+            'AFFINE_CHANNEL': False,
+            'FREEZE_BN': True,
+            'FREEZE_AT': 2
+        }, self.cfg.MODEL)
+        assert not self.cfg.MODEL.AFFINE_CHANNEL
         self.compare_C1ToC4(False)
 
     def test_C1ToC4_affine(self):
+        merge_cfg({
+            'AFFINE_CHANNEL': True,
+            'FREEZE_BN': True,
+            'FREEZE_AT': 2
+        }, self.cfg.MODEL)
+        assert self.cfg.MODEL.AFFINE_CHANNEL
         self.compare_C1ToC4(True)
 
     def compare_C5(self, bn_affine):
@@ -144,7 +162,9 @@ class TestResNet(unittest.TestCase):
         with fluid.program_guard(prog, startup_prog):
             data = fluid.layers.data(
                 name='input', shape=[1024, 14, 14], dtype='float32')
-            feat = ResNet50C5(data, True, bn_affine)
+            #feat = ResNet50C5(data, True, bn_affine)
+            c5_stage = ResNet50C5(self.cfg)
+            feat = c5_stage(data)
             # actual names
             parameters = prog.global_block().all_parameters()
             actual_pnames = [cpt.to_bytes(p.name) for p in parameters]
@@ -166,9 +186,13 @@ class TestResNet(unittest.TestCase):
                 self.assertTrue(p.stop_gradient)
 
     def test_C5_bn(self):
+        merge_cfg({'AFFINE_CHANNEL': False, 'FREEZE_BN': True}, self.cfg.MODEL)
+        assert not self.cfg.MODEL.AFFINE_CHANNEL
         self.compare_C5(False)
 
     def test_C5_affine(self):
+        merge_cfg({'AFFINE_CHANNEL': True, 'FREEZE_BN': True}, self.cfg.MODEL)
+        assert self.cfg.MODEL.AFFINE_CHANNEL
         self.compare_C5(True)
 
 

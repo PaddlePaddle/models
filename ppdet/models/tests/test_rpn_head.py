@@ -17,13 +17,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import unittest
-from ppdet.models.anchor_heads.rpn_heads import RPNHead
-from ppdet.core.config import load_cfg
+
 import configs
+from ppdet.core.config import load_cfg
+from ppdet.models.anchor_heads.rpn_heads import RPNHead
+
 import paddle.fluid as fluid
 from paddle.fluid.framework import Program, program_guard
-import os
 
 YAML_LIST = [
     'faster-rcnn_ResNet50-C4_1x.yml',
@@ -31,6 +33,8 @@ YAML_LIST = [
     'mask-rcnn_ResNet50-C4_1x.yml',
     'mask-rcnn_ResNet50-C4_2x.yml',
 ]
+
+#TODO(wangguanzhong): fix the unit testing after refining rpn_head.py
 
 
 def init_input(cfg):
@@ -52,10 +56,9 @@ def test_rpn_head(cfg_file):
             name='is_crowd', shape=[1], dtype='int32', lod_level=1)
         rpn_input = fluid.layers.data(
             name='rpn_input', shape=[1024, 84, 84], dtype='float32')
-        rpn_cls_score, rpn_bbox_pred = ob.get_output(rpn_input)
-        rpn_rois, rpn_roi_probs = ob.get_proposals(rpn_cls_score, rpn_bbox_pred)
-        rpn_cls_loss, rpn_bbox_loss = ob.get_loss(rpn_cls_score, rpn_bbox_pred,
-                                                  gt_box, is_crowd)
+        rois, roi_probs, cls_score, bbox_pred = ob.get_proposals(rpn_input)
+        cls_loss, bbox_loss = ob.get_loss(cls_score, bbox_pred, gt_box,
+                                          is_crowd)
 
         assert rpn_cls_score is not None
         assert rpn_bbox_pred is not None
