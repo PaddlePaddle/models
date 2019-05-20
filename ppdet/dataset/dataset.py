@@ -35,26 +35,25 @@ class Dataset(object):
     def next(self):
         """ get next sample
         """
-        raise NotImplementedError()
+        raise NotImplementedError('%s.next not available' % (self.__class__.__name__))
 
     def reset(self):
         """ reset to initial status and begins a new epoch
         """
-        raise NotImplementedError()
+        raise NotImplementedError('%s.reset not available' % (self.__class__.__name__))
 
     def size(self):
         """ get number of samples in this dataset
         """
-        raise NotImplementedError()
+        raise NotImplementedError('%s.size not available' % (self.__class__.__name__))
 
     def drained(self):
         """ whether all sampled has been readed out for this epoch
         """
-        raise NotImplementedError()
+        raise NotImplementedError('%s.drained not available' % (self.__class__.__name__))
 
     def epoch_id(self):
         """ return epoch id for latest sample
         """
-        assert self._epoch >= 0, 'The first epoch has not begin!'
-        return self._epoch
+        raise NotImplementedError('%s.epoch_id not available' % (self.__class__.__name__))
 
