@@ -103,7 +103,7 @@ class FasterRCNN(DetectorBase):
         # yapf: disable
         feed_info = [
             {'name': 'image',  'shape': [c, h, w], 'dtype': 'float32', 'lod_level': 0},
-            {'name': 'im_info','shape': [1],       'dtype': 'float32', 'lod_level': 0},
+            {'name': 'im_info','shape': [3],       'dtype': 'float32', 'lod_level': 0},
         ]
         if self.is_train:
             anno_info = [

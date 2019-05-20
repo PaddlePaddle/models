@@ -30,21 +30,19 @@ __all__ = ['RPNHead']
 @RPNHeads.register
 class RPNHead(object):
     """
-        RPNHead class
+    RPNHead class
+    TODO(wangguanzhong): refine the code comments
     """
 
     def __init__(self, cfg):
         """
         Args:
             cfg(dict): All parameters in dictionary
-            im_info(Variable): Information for image with shape (N, 3),
-                                in format (height, width, scale).
-            mode(String): Train or Test mode: 'train' or 'test'.
         """
         self.cfg = cfg
         self.is_train = cfg.IS_TRAIN
         # whether to use random to sample proposals.
-        self.use_random = getattr(cfg.TRAIN, 'USE_RANDOM', False)
+        self.use_random = getattr(cfg.TRAIN, 'RANDOM', False)
         self.anchor = None
         self.anchor_var = None
         self.rpn_cls_score = None
@@ -125,7 +123,6 @@ class RPNHead(object):
 
         Args:
             body_feat (Variable): the feature map from backone.
-            body_feat (Variable): feature map from backbone with shape of [N, C, H, W]
 
         Returns:
             rpn_rois(Variable): Output proposals with shape of (rois_num, 4).
@@ -155,28 +152,6 @@ class RPNHead(object):
             min_size=min_size,
             eta=eta)
         return rpn_rois, rpn_roi_probs
-
-    def get_sampled_proposals(self, input_rois, feed_vars):
-        outs = fluid.layers.generate_proposal_labels(
-            rpn_rois=self.rpn_rois,
-            gt_classes=self.gt_label,
-            is_crowd=self.is_crowd,
-            gt_boxes=self.gt_box,
-            im_info=self.im_info,
-            batch_size_per_im=cfg.TRAIN.batch_size_per_im,
-            fg_fraction=cfg.TRAIN.fg_fractrion,
-            fg_thresh=cfg.TRAIN.fg_thresh,
-            bg_thresh_hi=cfg.TRAIN.bg_thresh_hi,
-            bg_thresh_lo=cfg.TRAIN.bg_thresh_lo,
-            bbox_reg_weights=cfg.bbox_reg_weights,
-            class_nums=cfg.class_num,
-            use_random=self.use_random)
-
-        self.rois = outs[0]
-        self.labels_int32 = outs[1]
-        self.bbox_targets = outs[2]
-        self.bbox_inside_weights = outs[3]
-        self.bbox_outside_weights = outs[4]
 
     def get_loss(self, im_info, gt_box, is_crowd):
         """

@@ -29,7 +29,7 @@ class BBoxAssigner(object):
             cfg(dict): All parameters in dictionary
         """
         self.cfg = cfg
-        self.use_random = getattr(cfg.TRAIN, 'USE_RANDOM', False)
+        self.use_random = getattr(cfg.TRAIN, 'RANDOM', False)
         self.class_num = cfg.DATA.CLASS_NUM
 
         local_cfg = cfg.RPN_HEAD.PROPOSAL

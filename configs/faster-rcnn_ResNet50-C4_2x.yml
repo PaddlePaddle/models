@@ -113,6 +113,7 @@ TRAIN:
   IM_PER_BATCH: 1
   PRETRAIN_WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
   BATCH_NORM_TYPE: BN
+  RANDOM: OFF
 
 TEST:
   SCORE_THRESH: 0.05
