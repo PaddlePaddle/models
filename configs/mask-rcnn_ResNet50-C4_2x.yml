@@ -60,7 +60,8 @@ RPN_HEAD:
   RESOLUTION: 14
 
 BBOX_HEAD:
-  HEAD_FUNC: bbox2mlp_head
+  TYPE: BBoxHead
+  HEAD_CONV: ResNet50C5
   MLP_HEAD_DIM: 1024
 
   ROI:
@@ -128,3 +129,4 @@ TEST:
   DETECTIONS_PER_IM: 100
   WEIGHTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
 
+IS_TRAIN: True

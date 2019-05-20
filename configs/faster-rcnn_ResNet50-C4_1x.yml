@@ -121,3 +121,4 @@ TEST:
   DETECTIONS_PER_IM: 100
   WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
 
+IS_TRAIN: True

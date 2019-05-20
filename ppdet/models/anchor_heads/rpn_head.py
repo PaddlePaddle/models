@@ -31,7 +31,6 @@ __all__ = ['RPNHead']
 class RPNHead(object):
     """
     RPNHead class
-    TODO(wangguanzhong): refine the code comments
     """
 
     def __init__(self, cfg):
@@ -119,10 +118,12 @@ class RPNHead(object):
 
     def get_proposals(self, body_feat, im_info):
         """
-        Get proposals according to the output of rpn head
+        Get proposals according to the output of backbone.
 
         Args:
             body_feat (Variable): the feature map from backone.
+            im_info(Variable): The information of image with shape [N, 3] with 
+                               shape (height, width, scale). 
 
         Returns:
             rpn_rois(Variable): Output proposals with shape of (rois_num, 4).
@@ -158,12 +159,17 @@ class RPNHead(object):
         Sample proposals and Calculate rpn loss.
 
         Args:
-            gt_box(Variable): The ground-truth boudding boxes.
-            is_crowd(Variable): Indicates groud-truth is crowd or not.
+            im_info(Variable): The information of image with shape [N, 3] with
+                               shape (height, width, scale). 
+            gt_box(Variable): The ground-truth bounding boxes with shape [M, 4].
+                              M is the number of groundtruth.
+            is_crowd(Variable): Indicates groud-truth is crowd or not with
+                                shape [M, 1]. M is the number of groundtruth.
 
-        Returns: 
-            rpn_cls_loss(Variable): RPN classification loss.
-            rpn_bbox_loss(Variable): RPN bounding box regression loss. 
+        Returns:
+            Type: Dict 
+                rpn_cls_loss(Variable): RPN classification loss.
+                rpn_bbox_loss(Variable): RPN bounding box regression loss. 
             
         """
         if self.rpn_cls_score is None:
@@ -230,4 +236,4 @@ class RPNHead(object):
             self.cfg.TRAIN.IM_PER_BATCH *
             self.cfg.RPN_HEAD.RPN_BATCH_SIZE_PER_IM)
 
-        return rpn_cls_loss, rpn_bbox_loss
+        return {'rpn_cls_loss': rpn_cls_loss, 'rpn_bbox_loss': rpn_bbox_loss}

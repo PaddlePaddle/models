@@ -22,8 +22,7 @@ import unittest
 
 import configs
 from ppdet.core.config import load_cfg
-from ppdet.models.anchor_heads.rpn_heads import RPNHead
-
+from ppdet.models.anchor_heads.rpn_head import RPNHead
 import paddle.fluid as fluid
 from paddle.fluid.framework import Program, program_guard
 
@@ -34,34 +33,24 @@ YAML_LIST = [
     'mask-rcnn_ResNet50-C4_2x.yml',
 ]
 
-#TODO(wangguanzhong): fix the unit testing after refining rpn_head.py
-
-
-def init_input(cfg):
-    out = [cfg]
-    im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
-    out.append(im_info)
-    return out
-
 
 def test_rpn_head(cfg_file):
     cfg = load_cfg(cfg_file)
     program = Program()
     with program_guard(program):
-        out = init_input(cfg)
-        ob = RPNHead(*out)
+        ob = RPNHead(cfg)
         gt_box = fluid.layers.data(
             name='gt_box', shape=[4], dtype='float32', lod_level=1)
         is_crowd = fluid.layers.data(
             name='is_crowd', shape=[1], dtype='int32', lod_level=1)
         rpn_input = fluid.layers.data(
             name='rpn_input', shape=[1024, 84, 84], dtype='float32')
-        rois, roi_probs, cls_score, bbox_pred = ob.get_proposals(rpn_input)
-        cls_loss, bbox_loss = ob.get_loss(cls_score, bbox_pred, gt_box,
-                                          is_crowd)
+        im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
+        rpn_rois, rpn_roi_probs = ob.get_proposals(rpn_input, im_info)
+        rpn_loss = ob.get_loss(im_info, gt_box, is_crowd)
+        rpn_cls_loss = rpn_loss['rpn_cls_loss']
+        rpn_bbox_loss = rpn_loss['rpn_bbox_loss']
 
-        assert rpn_cls_score is not None
-        assert rpn_bbox_pred is not None
         assert rpn_rois is not None
         assert rpn_roi_probs is not None
         assert rpn_cls_loss is not None
