@@ -21,7 +21,7 @@ import numpy as np
 
 import paddle.fluid as fluid
 
-from ppdet.models.tests.test_helper import prog_scope
+from ppdet.models.tests.decorator_helper import prog_scope
 from ppdet.core.config import load_cfg, merge_cfg
 from ppdet.models.registry import Detectors
 
