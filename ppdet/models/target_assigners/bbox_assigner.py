@@ -23,11 +23,18 @@ __all__ = ['BBoxAssigner']
 
 
 class BBoxAssigner(object):
+    """
+    Get the sampled proposal RoIs and the target bounding-boxes (target
+    bounding-box regression deltas given proposal RoIs and ground-truth
+    boxes). And for sampled target bbox, assign the classification
+    (class label) and the inside weights and outside weights for regression
+    loss.
+
+    Args:
+        cfg (AttrDict): All configuration.
+    """
+
     def __init__(self, cfg):
-        """
-        Args:
-            cfg(dict): All parameters in dictionary
-        """
         self.cfg = cfg
         self.use_random = getattr(cfg.TRAIN, 'RANDOM', False)
         self.class_num = cfg.DATA.CLASS_NUM
@@ -42,6 +49,29 @@ class BBoxAssigner(object):
         self.bbox_reg_weights = local_cfg.BBOX_REG_WEIGHTS
 
     def get_sampled_rois_and_targets(self, input_rois, feed_vars):
+        """
+        Get the sampled proposal RoIs and the target bounding-boxes (target
+        bounding-box regression deltas given proposal RoIs and ground-truth
+        boxes). And for sampled target bbox, assign the classification
+        (class label) and the inside weights and outside weights for regression
+        loss.
+
+        Args:
+            input_rois (Variable): input RoI bboxes.
+            feed_vars (dict): the
+
+        Returns:
+            The last variable in endpoint-th stage.
+        """
+        if not feed_vars['gt_label']:
+            raise ValueError("{} has no gt_label".format(feed_vars))
+        if not feed_vars['is_crowd']:
+            raise ValueError("{} has no gt_label".format(feed_vars))
+        if not feed_vars['gt_box']:
+            raise ValueError("{} has no gt_box".format(feed_vars))
+        if not feed_vars['im_info']:
+            raise ValueError("{} has no im_info".format(feed_vars))
+
         outs = fluid.layers.generate_proposal_labels(
             rpn_rois=input_rois,
             gt_classes=feed_vars['gt_label'],

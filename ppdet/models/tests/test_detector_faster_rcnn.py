@@ -23,7 +23,6 @@ import paddle.fluid as fluid
 
 from ppdet.models.tests.test_helper import prog_scope
 from ppdet.core.config import load_cfg, merge_cfg
-#from ppdet.models.detectors.faster_rcnn import FasterRCNN
 from ppdet.models.registry import Detectors
 
 
