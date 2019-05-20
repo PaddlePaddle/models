@@ -21,7 +21,11 @@ import six
 
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
+from paddle.fluid.framework import Variable
 from paddle.fluid.regularizer import L2Decay
+
+from ..registry import Backbones
+from .base import BackboneBase
 
 __all__ = ['DarkNet53Backbone']
 
@@ -171,18 +175,36 @@ class DarkNet(object):
         return blocks
 
 
-def DarkNet53Backbone(input, is_train=True, bn_decay=False):
-    """
-    Get the backbone of DarkNet53. We define DarkNet53 has 5 stages, from 1 to 5.
 
-    Args:
-        is_train (bool): whether in train or test mode
-        bn_decay (bool): whether perform L2Decay in batch_norm
+@Backbones.register
+class DarkNet53Backbone(BackboneBase):
+    def __init__(self, cfg, is_train=True):
+        """
+        Get the DarkNet53 backbone. We define DarkNet53 has 5 stages,
+        from 1 to 5.
 
-    Returns:
-        The last variables of each stage.
-    """
-    model = DarkNet(53, is_train, bn_decay)
-    return model.get_backbone(input)
+        Args:
+            cfg (AttrDict): the config from given config filename.
+        """
+        super(DarkNet53Backbone, self).__init__(cfg)
+        self.is_train = is_train
+        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 
+                                'BN_DECAY', False)
+        self.depth = 53
 
+    def __call__(self, input):
+        """
+        Args:
+            input (Variable): input variable.
+
+        Returns:
+            The last variables of each stage.
+        """
+        if not isinstance(input, Variable):
+            raise TypeError(str(input) + " should be Variable")
+
+        model = DarkNet(depth=self.depth, 
+                        is_train=self.is_train, 
+                        bn_decay=self.bn_decay)
+        return model.get_backbone(input)
 

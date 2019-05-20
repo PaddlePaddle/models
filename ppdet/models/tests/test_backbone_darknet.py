@@ -21,6 +21,7 @@ import numpy as np
 import unittest
 import paddle.fluid as fluid
 import paddle.compat as cpt
+from ppdet.core.config import load_cfg, merge_cfg
 from ppdet.models.backbones.darknet import DarkNet53Backbone
 
 
@@ -50,6 +51,8 @@ class TestDarkNet(unittest.TestCase):
                 53: ([1,2,8,8,4], DarkNet53Backbone)
         }
         self.depth= 53
+        cfg_file = 'configs/yolov3_DarkNet53_1x_syncbn.yml'
+        self.cfg = load_cfg(cfg_file)
 
     def get_darknet_params(self, depth):
         """
@@ -71,19 +74,19 @@ class TestDarkNet(unittest.TestCase):
 
         return params_names
 
-    def compare_darknet(self, depth, bn_decay):
+    def compare_darknet(self, bn_decay=False):
         prog = fluid.Program()
         startup_prog = fluid.Program()
-        _, backbone_func = self.depth_cfg[depth]
+        _, backbone = self.depth_cfg[self.depth]
         with fluid.program_guard(prog, startup_prog):
             image = fluid.layers.data(
                 name='image', shape=self.image_shape, dtype='float32')
-            feat = backbone_func(image, bn_decay=bn_decay)
+            out = backbone(self.cfg)(image)
             # actual names
             parameters = prog.global_block().all_parameters()
             actual_pnames = [cpt.to_bytes(p.name) for p in parameters]
         # expected names
-        expect_pnames = self.get_darknet_params(depth=depth)
+        expect_pnames = self.get_darknet_params(depth=self.depth)
 
         actual_pnames.sort()
         expect_pnames.sort()
@@ -99,10 +102,16 @@ class TestDarkNet(unittest.TestCase):
                 self.assertTrue(p.regularizer._regularization_coeff == float(bn_decay))
 
     def test_darknet53_without_bndecay(self):
-        self.compare_darknet(depth=53, bn_decay=False)
+        merge_cfg({
+            'WEIGHT_DECAY': {'BN_DECAY': False}
+        }, self.cfg.OPTIMIZER)
+        self.compare_darknet(bn_decay=False)
 
     def test_darknet53_with_bndecay(self):
-        self.compare_darknet(depth=53, bn_decay=True)
+        merge_cfg({
+            'WEIGHT_DECAY': {'BN_DECAY': True}
+        }, self.cfg.OPTIMIZER)
+        self.compare_darknet(bn_decay=True)
 
 
 
