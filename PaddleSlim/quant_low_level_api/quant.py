@@ -12,6 +12,9 @@ from paddle.fluid.contrib.slim.quantization import QuantizationTransformPass
 from paddle.fluid.contrib.slim.quantization import QuantizationFreezePass
 from paddle.fluid.contrib.slim.quantization import ConvertToInt8Pass
 from paddle.fluid.contrib.slim.quantization import TransformForMobilePass
+from paddle.fluid.contrib.slim.quantization import ScaleForTrainingPass
+from paddle.fluid.contrib.slim.quantization import ScaleForInferencePass
+from paddle.fluid.transpiler.inference_transpiler import InferenceTranspiler
 from paddle.fluid import core
 import argparse
 import subprocess
@@ -142,46 +145,48 @@ def net_config(image, label, model, args):
 
     return out, avg_cost, acc_top1, acc_top5
 
-
-def build_program(is_train, main_prog, startup_prog, args):
+def build_forward(is_train, main_prog, startup_prog, args, model):
     image_shape = [int(m) for m in args.image_shape.split(",")]
-    model_name = args.model
-    model_list = [m for m in dir(models) if "__" not in m]
-    assert model_name in model_list, "{} is not in lists: {}".format(args.model,
-                                                                     model_list)
-    model = models.__dict__[model_name]()
     with fluid.program_guard(main_prog, startup_prog):
-        py_reader = fluid.layers.py_reader(
-            capacity=16,
-            shapes=[[-1] + image_shape, [-1, 1]],
-            lod_levels=[0, 0],
-            dtypes=["float32", "int64"],
-            use_double_buffer=True)
         with fluid.unique_name.guard():
+            py_reader = fluid.layers.py_reader(
+                capacity=16,
+                shapes=[[-1] + image_shape, [-1, 1]],
+                lod_levels=[0, 0],
+                dtypes=["float32", "int64"],
+                name='train_reader' if is_train else 'test_reader',
+                use_double_buffer=True)
             image, label = fluid.layers.read_file(py_reader)
             out, avg_cost, acc_top1, acc_top5 = net_config(image, label, model, args)
             avg_cost.persistable = True
             acc_top1.persistable = True
             acc_top5.persistable = True
-            if is_train:
-                params = model.params
-                params["total_images"] = args.total_images
-                params["lr"] = args.lr
-                params["num_epochs"] = args.num_epochs
-                params["learning_strategy"]["batch_size"] = args.batch_size
-                params["learning_strategy"]["name"] = args.lr_strategy
 
-                optimizer = optimizer_setting(params)
-                optimizer.minimize(avg_cost)
-                global_lr = optimizer._global_learning_rate()
-    if is_train:
-        return image, out, py_reader, avg_cost, acc_top1, acc_top5, global_lr
-    else:
-        return image, out, py_reader, avg_cost, acc_top1, acc_top5
+    return image, out, py_reader, avg_cost, acc_top1, acc_top5
+
+def build_backward(main_prog, startup_prog, args, avg_cost, model):
+    with fluid.program_guard(main_prog, startup_prog):
+        with fluid.unique_name.guard():
+            params = model.params
+            params["total_images"] = args.total_images
+            params["lr"] = args.lr
+            params["num_epochs"] = args.num_epochs
+            params["learning_strategy"]["batch_size"] = args.batch_size
+            params["learning_strategy"]["name"] = args.lr_strategy
+            optimizer = optimizer_setting(params)
+            optimizer.minimize(avg_cost)
+            global_lr = optimizer._global_learning_rate()
+    return global_lr
+
 
 def train(args):
     # parameters from arguments
     model_name = args.model
+    model_list = [m for m in dir(models) if "__" not in m]
+    assert model_name in model_list, "{} is not in lists: {}".format(args.model,
+                                                                     model_list)
+    model = models.__dict__[model_name]()
+
     pretrained_fp32_model = args.pretrained_fp32_model
     checkpoint = args.checkpoint
     model_save_dir = args.model_save_dir
@@ -195,29 +200,52 @@ def train(args):
     train_prog = fluid.Program()
     test_prog = fluid.Program()
 
-    _, _, train_py_reader, train_cost, train_acc1, train_acc5, global_lr = build_program(
-        is_train=True,
-        main_prog=train_prog,
-        startup_prog=startup_prog,
-        args=args)
-    image, out, test_py_reader, test_cost, test_acc1, test_acc5 = build_program(
+    image, out, test_py_reader, test_cost, test_acc1, test_acc5 = build_forward(
         is_train=False,
         main_prog=test_prog,
         startup_prog=startup_prog,
-        args=args)
-    test_prog = test_prog.clone(for_test=True)
+        args=args,
+        model=model)
+    _, _, train_py_reader, train_cost, train_acc1, train_acc5 = build_forward(
+        is_train=True,
+        main_prog=train_prog,
+        startup_prog=startup_prog,
+        args=args,
+        model=model)
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
-    main_graph = IrGraph(core.Graph(train_prog.desc), for_test=False)
-    test_graph = IrGraph(core.Graph(test_prog.desc), for_test=True)
+    # Begin to fuse batch_norm and conv2d
+    def load_pretrained(executor, path, program):
+        def _if_exist(var):
+            return os.path.exists(os.path.join(path, var.name))
+        fluid.io.load_vars(
+            executor, path, main_program=program, predicate=_if_exist)
 
     if pretrained_fp32_model:
-        def if_exist(var):
-            return os.path.exists(os.path.join(pretrained_fp32_model, var.name))
-        fluid.io.load_vars(
-            exe, pretrained_fp32_model, main_program=train_prog, predicate=if_exist)
+        load_pretrained(exe, pretrained_fp32_model, test_prog)
+    bn_transpiler = InferenceTranspiler()
+    bn_transpiler._fuse_batch_norm(test_prog, place, fluid.global_scope())
+    if pretrained_fp32_model:
+        bn_path = './.bn_fuse_weight'
+        fluid.io.save_params(executor=exe, dirname=bn_path, main_program=test_prog)
+    bn_transpiler._fuse_batch_norm(train_prog, place, fluid.global_scope())
+    global_lr = build_backward(main_prog=train_prog,
+                   startup_prog=startup_prog,
+                   args=args,
+                   avg_cost=train_cost,
+                   model=model)
+    exe.run(startup_prog)
+    if pretrained_fp32_model:
+        load_pretrained(exe, pretrained_fp32_model, train_prog)
+        fluid.io.load_params(exe, bn_path, main_program=test_prog)
+        os.system("rm -rf {}".format(bn_path))
+    # End to fuse batch_norm and conv2d
+
+    test_prog = test_prog.clone(for_test=True)
+    main_graph = IrGraph(core.Graph(train_prog.desc), for_test=False)
+    test_graph = IrGraph(core.Graph(test_prog.desc), for_test=True)
 
     if args.use_gpu:
         visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
@@ -251,6 +279,9 @@ def train(args):
     transform_pass.apply(main_graph)
     transform_pass.apply(test_graph)
 
+    scale_training_pass = ScaleForTrainingPass(scope=fluid.global_scope(), place=place)
+    scale_training_pass.apply(main_graph)
+
     if checkpoint:
         load_persistable_nodes(exe, checkpoint, main_graph)
 
@@ -271,6 +302,8 @@ def train(args):
         batch_id = 0
         try:
             while True:
+                #if batch_id >= 51:
+                #    break
                 t1 = time.time()
                 loss, acc1, acc5, lr = exe.run(binary, fetch_list=train_fetch_list)
                 t2 = time.time()
@@ -302,6 +335,8 @@ def train(args):
         test_batch_id = 0
         try:
             while True:
+                #if test_batch_id >= 21:
+                #    break
                 t1 = time.time()
                 loss, acc1, acc5 = exe.run(program=test_prog,
                                            fetch_list=test_fetch_list)
@@ -345,6 +380,8 @@ def train(args):
     if not os.path.isdir(model_path):
         os.makedirs(model_path)
 
+    scale_inference_pass = ScaleForInferencePass(scope=fluid.global_scope())
+    scale_inference_pass.apply(test_graph)
     # 2. Freeze the graph after training by adjusting the quantize
     # operators' order for the inference.
     freeze_pass = QuantizationFreezePass(
