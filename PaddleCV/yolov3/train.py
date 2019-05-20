@@ -100,7 +100,7 @@ def train():
 
     build_strategy = fluid.BuildStrategy()
    
-    if cfg.ues_gpu:
+    if cfg.use_gpu:
         dist_utils.prepare_for_multi_process(exe, 
                build_strategy, 
                fluid.default_main_program(), 
