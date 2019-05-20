@@ -43,7 +43,7 @@ class OptimizerBuilder():
         return reg_func(reg_cfg.BN_FACTOR)
     
     def _build_optimizer(self):
-        self._build_regularizer()
+        regularizer = self._build_regularizer()
         learning_rate = self._build_learning_rate()
 
         opt_params = dict()

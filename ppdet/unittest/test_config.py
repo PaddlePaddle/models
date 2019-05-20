@@ -18,24 +18,21 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 
+import os
+import glob
+
 import unittest
-from core.config import *
+from ppdet.core.config import *
 
 
-YAML_LIST = [
-        'faster-rcnn_ResNet50-C4_1x.yml',
-        'faster-rcnn_ResNet50-C4_2x.yml',
-        'mask-rcnn_ResNet50-C4_1x.yml',
-        'mask-rcnn_ResNet50-C4_2x.yml',
-        'yolov3_DarkNet53_1x_syncbn.yml',
-        'ssd_MobileNet_1x.yml',
-        ]
+CFG_PATH = './configs'
 
 class TestConfig(unittest.TestCase):
 
     def test_load_cfg(self):
-        for yml_file in YAML_LIST:
-            cfg = load_cfg('../configs/' + yml_file)
+        ymls = glob.glob(os.path.join(CFG_PATH, '*.yml'))
+        for yml in ymls:
+            cfg = load_cfg(yml)
             assert cfg is not None
             assert cfg.MODEL.TYPE is not None
             assert cfg.MODEL.BACKBONE is not None
