@@ -21,7 +21,7 @@ import os
 import unittest
 
 import configs
-from ppdet.core.config import load_cfg
+from ppdet.core.config import load_cfg, merge_cfg
 from ppdet.models.anchor_heads.rpn_head import RPNHead
 import paddle.fluid as fluid
 from paddle.fluid.framework import Program, program_guard
@@ -34,8 +34,9 @@ YAML_LIST = [
 ]
 
 
-def test_rpn_head(cfg_file):
+def test_rpn_head(cfg_file, is_train):
     cfg = load_cfg(cfg_file)
+    merge_cfg({'IS_TRAIN': is_train}, cfg)
     program = Program()
     with program_guard(program):
         ob = RPNHead(cfg)
@@ -58,10 +59,15 @@ def test_rpn_head(cfg_file):
 
 
 class TestRPNHead(unittest.TestCase):
-    def test_rpn_head(self):
+    def test_rpn_head_train(self):
         path = os.path.dirname(configs.__file__)
         for yml_file in YAML_LIST:
-            test_rpn_head(os.path.join(path, yml_file))
+            test_rpn_head(os.path.join(path, yml_file), True)
+
+    def test_rpn_head_test(self):
+        path = os.path.dirname(configs.__file__)
+        for yml_file in YAML_LIST:
+            test_rpn_head(os.path.join(path, yml_file), False)
 
 
 if __name__ == "__main__":
