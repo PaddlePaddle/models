@@ -37,11 +37,6 @@ class OptimizerBuilder():
     def get_optimizer(self):
         return self._build_optimizer()
 
-    def get_bn_regularizer(self):
-        reg_cfg = self.cfg.WEIGHT_DECAY
-        reg_func = getattr(regularizer, reg_cfg.TYPE+"Decay")
-        return reg_func(reg_cfg.BN_FACTOR)
-    
     def _build_optimizer(self):
         regularizer = self._build_regularizer()
         learning_rate = self._build_learning_rate()
