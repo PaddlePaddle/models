@@ -32,7 +32,7 @@ class TestBase(unittest.TestCase):
         """ tearDownClass """
         pass
 
-    def test_ops(self):
+    def test_ops_all(self):
         """ test operators
         """
         # ResizeImage
@@ -41,7 +41,8 @@ class TestBase(unittest.TestCase):
                      'target_size': 300, 'max_size': 1333}]
         mapper = operator.build(ops_conf)
         self.assertTrue(mapper is not None)
-        result0 = mapper(self.sample)
+        data = self.sample.copy()
+        result0 = mapper(data)
         self.assertIsNotNone(result0['image'])
         self.assertEqual(len(result0['image'].shape), 3)
         # RandFlipImage
@@ -66,7 +67,42 @@ class TestBase(unittest.TestCase):
         self.assertTrue(mapper is not None)
         result3 = mapper(result2)
         self.assertEqual(type(result3), tuple)
-
+   
+    def test_ops_part1(self):
+        """test Crop and Resize
+        """
+        ops_conf = [{'op': 'DecodeImage'},
+                    {'op':'NormalizeBox'},
+                    {'op': 'Crop', 
+                     'batch_sampler': 
+                          [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]}
+                   ]
+        mapper = operator.build(ops_conf)
+        self.assertTrue(mapper is not None)
+        data = self.sample.copy()
+        result = mapper(data)
+        self.assertEqual(len(result['image'].shape), 3)
+        
+    def test_ops_part2(self):
+        """test Expand and RandomDistort
+        """
+        ops_conf = [{'op': 'DecodeImage'},
+                    {'op':'NormalizeBox'},
+                    {'op': 'Expand', 
+                     'expand_max_ratio': 1.5,
+                     'expand_prob': 1}]
+        mapper = operator.build(ops_conf)
+        self.assertTrue(mapper is not None)
+        data = self.sample.copy()
+        result = mapper(data)
+        self.assertEqual(len(result['image'].shape), 3)
+        self.assertGreater(result['gt_bbox'].shape[0], 0)
 
 if __name__ == '__main__':
     unittest.main()

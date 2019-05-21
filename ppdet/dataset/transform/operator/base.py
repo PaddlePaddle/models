@@ -395,6 +395,7 @@ class Expand(BaseOperator):
                 im = Image.fromarray(im)
                 expand_im.paste(im, (int(w_off), int(h_off)))
                 expand_im = np.asarray(expand_im)
+                print(gt_class)
                 gt_bbox, gt_class = deal_bbox_label(gt_bbox, gt_class, expand_bbox)
                 sample['image'] = expand_im
                 sample['gt_bbox'] = gt_bbox
