@@ -31,13 +31,12 @@ __all__ = ['RPNHead']
 class RPNHead(object):
     """
     RPNHead class
+    
+    Args:
+        cfg(dict): All parameters in dictionary
     """
 
     def __init__(self, cfg):
-        """
-        Args:
-            cfg(dict): All parameters in dictionary
-        """
         self.cfg = cfg
         self.is_train = cfg.IS_TRAIN
         # whether to use random to sample proposals.

@@ -30,13 +30,13 @@ __all__ = ['BBoxHead']
 class BBoxHead(object):
     """
     BBoxHead class
+
+    Args:
+        cfg (Dict): All parameters in dictionary.
+
     """
 
     def __init__(self, cfg):
-        """
-        Args:
-            cfg (Dict): All parameters in dictionary.
-        """
         self.cfg = cfg
         self.class_num = self.cfg.DATA.CLASS_NUM
         self.head_func = BBoxHeadConvs.get(cfg.BBOX_HEAD.HEAD_CONV)(cfg)
