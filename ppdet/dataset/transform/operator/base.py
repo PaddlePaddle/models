@@ -21,24 +21,32 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
 import uuid
 import logging
 import random
 import math
 import numpy as np
 import cv2
-from PIL import Image, ImageEnhance, ImageDraw
-from functools import reduce
+from PIL import Image, ImageEnhance
 
-from .op_helper import *
+from .op_helper import satisfy_sample_constraint, \
+                       deal_bbox_label, \
+                       generate_sample_bbox, \
+                       clip_bbox
+
 
 logger = logging.getLogger(__name__)
 
 registered_ops = []
+
+
 def register_op(cls):
-    if hasattr(cls.__base__, cls.__name__) == False:
-        setattr(cls.__base__, cls.__name__, cls)
+    registered_ops.append(cls.__name__)
+    if not hasattr(BaseOperator, cls.__name__):
+        setattr(BaseOperator, cls.__name__, cls)
+    else:
+        raise KeyError("The {} class has been registered."
+                       .format(cls.__name__))
     return cls
 
 
@@ -55,7 +63,6 @@ class BaseOperator(object):
         if name is None:
             name = self.__class__.__name__
         self._id = name + '_' + str(uuid.uuid4())[-6:]
-        
 
     def __call__(self, sample, context=None):
         """ Process a sample.
@@ -69,9 +76,7 @@ class BaseOperator(object):
 
     def __str__(self):
         return '%s' % (self._id)
-    
-    
-    
+
 
 @register_op
 class DecodeImage(BaseOperator):
@@ -101,7 +106,7 @@ class DecodeImage(BaseOperator):
 class ResizeImage(BaseOperator):
     def __init__(self, target_size=0, max_size=0,
                  interp=cv2.INTER_LINEAR):
-        """ 
+        """
         Args:
             target_size (int): the taregt size of image's short side
             max_size (int): the max size of image
@@ -162,7 +167,7 @@ class ResizeImage(BaseOperator):
 class RandFlipImage(BaseOperator):
     def __init__(self, prob=0.5, is_normalized=False,
                  is_mask_flip=False):
-        """ 
+        """
         Args:
             prob (float): the probability of flipping image
             is_normalized (bool): whether the bbox scale to [0,1]
@@ -261,7 +266,7 @@ class NormalizeImage(BaseOperator):
                  std=[1, 1, 1],
                  is_scale=True,
                  is_channel_first=True):
-        """ Normalize the image.
+        """
         Args:
             mean (list): the pixel mean
             std (list): the pixel variance
@@ -277,11 +282,11 @@ class NormalizeImage(BaseOperator):
             raise TypeError('{}: the input type is error.'
                             .format(self.__str__))
         from functools import reduce
-        if reduce(lambda x,y: x*y, self.std) == 0:
+        if reduce(lambda x, y: x*y, self.std) == 0:
             raise ValueError('{}: the std is wrong!'.format(self.__str__))
 
     def __call__(self, sample, context=None):
-        """
+        """Normalize the image.
         Operators:
             1.(optional) Scale the image to [0,1]
             2. Each pixel minus mean and is divided by std
@@ -289,11 +294,15 @@ class NormalizeImage(BaseOperator):
         im = sample['image']
         im = im.astype(np.float32, copy=False)
         if self.is_channel_first:
-            mean = np.array(self.mean)[:, np.newaxis, np.newaxis].astype('float32')
-            std = np.array(self.std)[:, np.newaxis, np.newaxis].astype('float32')
+            mean = np.array(self.mean)[:, np.newaxis, np.newaxis]\
+                .astype('float32')
+            std = np.array(self.std)[:, np.newaxis, np.newaxis]\
+                .astype('float32')
         else:
-            mean = np.array(self.mean)[np.newaxis, np.newaxis, :].astype('float32')
-            std = np.array(self.std)[np.newaxis, np.newaxis, :].astype('float32')
+            mean = np.array(self.mean)[np.newaxis, np.newaxis, :]\
+                .astype('float32')
+            std = np.array(self.std)[np.newaxis, np.newaxis, :]\
+                .astype('float32')
         if self.is_scale:
             im = im / 255.0
         im -= mean
@@ -301,27 +310,46 @@ class NormalizeImage(BaseOperator):
         sample['image'] = im
         return sample
 
-    
-@register_op    
+
+@register_op
 class RandomDistort(BaseOperator):
-    def __init__(self, brightness_lower=0.5, brightness_upper=1.5, 
-                 contrast_lower=0.5, contrast_upper=1.5, 
-                 saturation_lower=0.5, saturation_upper=1.5, 
+    def __init__(self, brightness_lower=0.5, brightness_upper=1.5,
+                 contrast_lower=0.5, contrast_upper=1.5,
+                 saturation_lower=0.5, saturation_upper=1.5,
                  hue_lower=0.5, hue_upper=1.5,
-                 brightness_prob=1, contrast_prob=1, 
+                 brightness_prob=1, contrast_prob=1,
                  saturation_prob=1, hue_prob=1,
                  count=4):
+        """
+        Args:
+            brightness_lower/ brightness_upper (float): the brightness
+                between brightness_lower and brightness_upper
+            contrast_lower/ contrast_upper (float): the contrast between
+                contrast_lower and contrast_lower
+            saturation_lower/ saturation_upper (float): the saturation
+                between saturation_lower and saturation_upper
+            hue_lower/ hue_upper (float): the hue between
+                hue_lower and hue_upper
+            brightness_prob (float): the probability of changing brightness
+            contrast_prob (float): the probability of changing contrast
+            saturation_prob (float): the probability of changing saturation
+            hue_prob (float): the probability of changing hue
+            count (int): the kinds of doing distrot
+        """
         super(RandomDistort, self).__init__()
-        self.brightness_delta = np.random.uniform(brightness_lower, brightness_upper)
-        self.contrast_delta = np.random.uniform(contrast_lower, contrast_upper)
-        self.saturation_delta = np.random.uniform(saturation_lower, saturation_upper)
+        self.brightness_delta = np.random.uniform(brightness_lower,
+                                                  brightness_upper)
+        self.contrast_delta = np.random.uniform(contrast_lower,
+                                                contrast_upper)
+        self.saturation_delta = np.random.uniform(saturation_lower,
+                                                  saturation_upper)
         self.hue_delta = np.random.uniform(hue_lower, hue_upper)
         self.brightness_prob = brightness_prob
         self.contrast_prob = contrast_prob
         self.saturation_prob = saturation_prob
         self.hue_prob = hue_prob
         self.count = count
-    
+
     def random_brightness(self, img):
         prob = np.random.uniform(0, 1)
         if prob < self.brightness_prob:
@@ -347,10 +375,12 @@ class RandomDistort(BaseOperator):
             img_hsv[:, :, 0] = img_hsv[:, :, 0] + self.hue_delta
         img = Image.fromarray(img_hsv, mode='HSV').convert('RGB')
         return img
-    
+
     def __call__(self, sample, context):
-        gt_bbox = sample['gt_bbox']
-        ops = [self.random_brightness, self.random_contrast, self.random_saturation, self.random_hue]
+        """random distort the image
+        """
+        ops = [self.random_brightness, self.random_contrast,
+               self.random_saturation, self.random_hue]
         ops = random.sample(ops, self.count)
         assert 'image' in sample, 'not found image data'
         im = sample['image']
@@ -360,18 +390,36 @@ class RandomDistort(BaseOperator):
         im = np.asarray(im)
         sample['image'] = im
         return sample
-    
+
+
 @register_op
 class Expand(BaseOperator):
     def __init__(self, expand_max_ratio,
                  expand_prob,
                  mean=[127.5, 127.5, 127.5]):
+        """
+        Args:
+            expand_max_ratio (float): the ratio of expanding
+            expand_prob (float): the probability of expanding image
+            mean (list): the pixel mean
+        """
         super(Expand, self).__init__()
         self.expand_max_ratio = expand_max_ratio
         self.mean = mean
         self.expand_prob = expand_prob
 
     def __call__(self, sample, context):
+        """Expand the image and modify bounding box.
+        Operators:
+            1. Scale the image weight and height.
+            2. Construct new images with new height and width.
+            3. Fill the new image with the mean.
+            4. Put original imge into new image.
+            5. Rescale the bounding box.
+            6. Determine if the new bbox is satisfied in the new image.
+        Output:
+            sample: the image, bounding box are replaced.
+        """
         prob = np.random.uniform(0, 1)
         assert 'image' in sample, 'not found image data'
         im = sample['image']
@@ -396,23 +444,48 @@ class Expand(BaseOperator):
                 expand_im.paste(im, (int(w_off), int(h_off)))
                 expand_im = np.asarray(expand_im)
                 print(gt_class)
-                gt_bbox, gt_class = deal_bbox_label(gt_bbox, gt_class, expand_bbox)
+                gt_bbox, gt_class = deal_bbox_label(gt_bbox,
+                                                    gt_class, expand_bbox)
                 sample['image'] = expand_im
                 sample['gt_bbox'] = gt_bbox
                 sample['gt_class'] = gt_class
                 sample['w'] = width
                 sample['h'] = height
-                
+
         return sample
-        
+
 
 @register_op
 class Crop(BaseOperator):
     def __init__(self, batch_sampler):
+        """
+        Args:
+            batch_sampler (list): Multiple sets of different
+                                  parameters for cropping.
+            e.g.[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
+           [max sample, max trial, min scale, max scale,
+            min aspect ratio, max aspect ratio,
+            min overlap, max overlap]
+        """
         super(Crop, self).__init__()
         self. batch_sampler = batch_sampler
-   
+
     def __call__(self, sample, context):
+        """Crop the image and modify bounding box.
+        Operators:
+            1. Scale the image weight and height.
+            2. Crop the image according to a radom sample.
+            3. Rescale the bounding box.
+            4. Determine if the new bbox is satisfied in the new image.
+        Output:
+            sample: the image, bounding box are replaced.
+        """
         assert 'image' in sample, 'not found image data'
         im = sample['image']
         gt_bbox = sample['gt_bbox']
@@ -445,8 +518,8 @@ class Crop(BaseOperator):
             sample['gt_bbox'] = gt_bbox
             sample['gt_class'] = gt_class
         return sample
-        
-        
+
+
 @register_op
 class NormalizeBox(BaseOperator):
     """Transform the bounding box's coornidates to [0,1]."""
@@ -492,4 +565,3 @@ class Rgb2Bgr(BaseOperator):
             im = im.transpose((2, 0, 1))
         sample['image'] = im
         return sample
-

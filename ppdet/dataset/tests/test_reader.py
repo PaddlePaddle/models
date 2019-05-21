@@ -84,9 +84,16 @@ class TestReader(unittest.TestCase):
         self.assertTrue(rcnn_rd is not None)
 
         ct = 0
+        out = None
         for sample in rcnn_rd():
+            out = sample
             ct += 1
             self.assertTrue(sample is not None)
+        self.assertEqual(out[0][1].shape[1], 4)
+        self.assertEqual(out[0][2].shape[1], 1)
+        self.assertEqual(out[0][3].shape[1], 1)
+        self.assertEqual(out[0][4].shape[0], 3)
+        self.assertEqual(out[0][5].shape[0], 1)
         batch_size = self.rcnn_conf['TRANSFORM']['batch_size'] * self.devices_num
         if self.rcnn_conf['DATA']['samples']%batch_size == 0 \
                 or 'drop_last' not in self.rcnn_conf['TRANSFORM'] \

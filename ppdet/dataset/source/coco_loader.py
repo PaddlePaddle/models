@@ -90,7 +90,7 @@ def load(anno_path, sample_num=-1):
 
         coco_rec = {
             'im_file': im_fname,
-            'im_id': img_id,
+            'im_id': np.array([img_id]),
             'h': im_h,
             'w': im_w,
             'is_crowd': is_crowd,

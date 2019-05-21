@@ -70,9 +70,9 @@ def load(anno_path, sample_num=-1):
             tree = ET.parse(xml_file)
             im_fname = tree.find('filename').text
             if tree.find('id') is None:
-                im_id = ct
+                im_id =  np.array([ct])
             else:
-                im_id = int(tree.find('id').text)
+                im_id = np.array([int(tree.find('id').text)])
 
             objs = tree.findall('object')
             im_w = float(tree.find('size').find('width').text)

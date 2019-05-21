@@ -53,17 +53,13 @@ class Reader(object):
 
         # 2, Buid a transformed dataset
         ops = self._trans_conf[which]
-        worker_args = None
-        if 'worker_args' in self._trans_conf:
-            worker_args = self._trans_conf['worker_args']
-        drop_last = True
-        if 'drop_last' in self._trans_conf:
-            drop_last = self._trans_conf['drop_last']
         batchsize = self._trans_conf['batch_size']
-        try:
-            is_padding = self._trans_conf['is_padding']
-        except (KeyError):
-            is_padding = False
+        worker_args = None if 'worker_args' not in \
+            self._trans_conf else self._trans_conf['worker_args']
+        drop_last = False if 'drop_last' not in \
+            self._trans_conf else self._trans_conf['drop_last']
+        is_padding = False if 'is_padding' not in \
+            self._trans_conf else self._trans_conf['is_padding']
         mapper = op.build(ops)
         mapped_ds = tf.map(sc, mapper, worker_args)
         batched_ds = tf.batch(mapped_ds, batchsize, drop_last,

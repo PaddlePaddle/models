@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# function:
-#    operators to process sample,
-#    eg: decode/resize/crop image
+# this file contains helper methods for BBOX processing
 
 from __future__ import absolute_import
 from __future__ import division

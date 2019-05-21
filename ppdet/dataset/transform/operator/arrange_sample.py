@@ -68,9 +68,13 @@ class ArrangeRCNN(BaseOperator):
         if 'is_crowd' in keys:
             is_crowd = sample['is_crowd']
             outs = outs + (is_crowd,)
+        else:
+            raise KeyError("The dataset doesn't have 'is_crowd' key.")
         if 'im_info' in keys:
             im_info = sample['im_info']
             outs = outs + (im_info,)
+        else:
+            raise KeyError("The dataset doesn't have 'im_info' key.")
         im_id = sample['im_id']
         outs = outs + (im_id,)
         gt_masks = []
