@@ -38,14 +38,16 @@ class YOLOv3(DetectorBase):
         super(YOLOv3, self).__init__(cfg)
         self.backbone = Backbones.get(cfg.MODEL.BACKBONE)(cfg)
         self.yolo_head = YOLOHeads.get(cfg.YOLO_HEAD.TYPE)(cfg)
-        # self.use_pyreader = True if self.is_train else False
 
     def _forward(self, is_train=True):
-        # inputs
-        feed_vars = self.build_feeds(self.feed_info(), use_pyreader=is_train)
-        im = feed_vars['image']
+        self.is_train = is_train
+        self.use_pyreader = True if self.is_train else False
+
+        # build inputs
+        feed_vars = self.build_feeds(self.feed_info(), use_pyreader=self.use_pyreader)
 
         # backbone
+        im = feed_vars['image']
         body_feats = self.backbone(im)
 
         if is_train:

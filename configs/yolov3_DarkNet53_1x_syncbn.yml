@@ -14,7 +14,7 @@
 
 MODEL:
   TYPE: YOLOv3
-  BACKBONE: DarkNet53
+  BACKBONE: DarkNet53Backbone
 
 ENV:
   GPU: ON
