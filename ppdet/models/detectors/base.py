@@ -46,7 +46,7 @@ class DetectorBase(object):
                 feed_list=var,
                 capacity=64,
                 use_double_buffer=True,
-                iterable=True)
+                iterable=False)
         return self.feed_vars
 
     def get_pyreader(self):

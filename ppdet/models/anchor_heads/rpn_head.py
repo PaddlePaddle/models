@@ -230,4 +230,4 @@ class RPNHead(object):
             self.cfg.TRAIN.IM_PER_BATCH *
             self.cfg.RPN_HEAD.RPN_BATCH_SIZE_PER_IM)
 
-        return rpn_cls_loss, rpn_bbox_loss
+        return {'rpn_cls_loss': rpn_cls_loss, 'rpn_bbox_loss': rpn_bbox_loss}

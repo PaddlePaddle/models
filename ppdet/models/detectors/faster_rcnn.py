@@ -64,7 +64,7 @@ class FasterRCNN(DetectorBase):
         # rpn proposals
         rois, rpn_roi_probs = self.rpn_head.get_proposals(body_feat, im_info)
         if self.is_train:
-            self.rpn_head.get_loss(im_info, gt_box, is_crowd)
+            rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
 
         if self.is_train:
             # sampled rpn proposals
@@ -84,6 +84,9 @@ class FasterRCNN(DetectorBase):
             loss = self.bbox_head.get_loss(roi_feat, labels_int32, bbox_targets,
                                            bbox_inside_weights,
                                            bbox_outside_weights)
+            loss.update(rpn_loss)
+            total_loss = fluid.layers.sum(list(loss.values()))
+            loss.update({'total_loss': total_loss})
             return loss
         else:
             pred = self.bbox_head.get_prediction(roi_feat, rois, im_info)
