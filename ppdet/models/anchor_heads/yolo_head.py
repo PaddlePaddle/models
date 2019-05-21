@@ -32,7 +32,10 @@ __all__ = ['YOLOv3Head']
 @YOLOHeads.register
 class YOLOv3Head(object):
     """
-    YOLOv3Head class for YOLO head block for YOLOv3 network
+    YOLOv3Head class of YOLO head block for YOLOv3 network
+
+    The naming rules are same as them in
+    https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/yolov3/models/yolov3.py
 
     Args:
         cfg (AttrDict): All parameters in dictionary.
