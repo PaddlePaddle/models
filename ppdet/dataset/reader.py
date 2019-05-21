@@ -53,6 +53,7 @@ class Reader(object):
 
         # 2, Buid a transformed dataset
         ops = self._trans_conf[which]
+        gpu_counts = self._trans_conf['gpu_counts']
         batchsize = self._trans_conf['batch_size']
         worker_args = None if 'worker_args' not in \
             self._trans_conf else self._trans_conf['worker_args']
@@ -62,7 +63,7 @@ class Reader(object):
             self._trans_conf else self._trans_conf['is_padding']
         mapper = op.build(ops)
         mapped_ds = tf.map(sc, mapper, worker_args)
-        batched_ds = tf.batch(mapped_ds, batchsize, drop_last,
+        batched_ds = tf.batch(mapped_ds, gpu_counts, batchsize, drop_last,
                              is_padding)
 
         # 3, Build a reader

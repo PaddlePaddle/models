@@ -21,6 +21,7 @@ TRANSFORM:
           target_size: 224
         - op: ArrangeSSD
     batch_size: 1
+    gpu_counts: 1
     worker_conf:
         bufsize: 100
         worker_num: 8

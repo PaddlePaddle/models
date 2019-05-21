@@ -60,7 +60,7 @@ class MappedDataset(ProxiedDataset):
 class BatchedDataset(ProxiedDataset):
     """ transform samples to batches
     """
-    def __init__(self, ds, batchsize, drop_last=True, is_padding=False):
+    def __init__(self, ds, gpu_counts, batchsize, drop_last=True, is_padding=False):
         """
         Args:
             ds (instance of Dataset): dataset to be batched
@@ -69,6 +69,7 @@ class BatchedDataset(ProxiedDataset):
                 enough for one batch
         """
         super(BatchedDataset, self).__init__(ds)
+        self._gpu_counts = gpu_counts
         self._batchsz = batchsize
         self._drop_last = drop_last
         self.is_padding = is_padding
@@ -90,8 +91,7 @@ class BatchedDataset(ProxiedDataset):
     def next(self):
         """ proxy to self._ds.next
         """
-        devices = os.getenv('CUDA_VISIBLE_DEVICES')
-        devices_num = len(devices.split(","))
+        devices_num = self._gpu_counts
         total_batchsz = self._batchsz * devices_num
             
         batch = []

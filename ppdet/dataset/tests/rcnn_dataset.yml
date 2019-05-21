@@ -21,6 +21,7 @@ TRANSFORM:
           to_bgr: False
         - op: ArrangeRCNN
     batch_size: 1
+    gpu_counts: 1
     is_padding: True
     is_padding_total: True
     worker_conf:
