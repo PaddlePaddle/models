@@ -12,8 +12,12 @@
 本目录下的代码均在4卡Tesla K40/P40 GPU，CentOS系统，CUDA-9.0/8.0，cuDNN-7.0环境下测试运行无误
 
   - Python == 2.7 / 3.6
-  - PaddlePaddle >= 1.1.0 (<= 1.3.0)
+  - PaddlePaddle >= 1.1.0
   - opencv-python >= 3.3
+
+### 说明
+
+目前已发现在PaddlePaddle 1.3.0 / cuDNN-7.0环境下，存在问题会导致模型训练loss不收敛。推荐使用最新版本PaddlePaddle (>= 1.4).
 
 ## MPII Val结果
 | Arch | Head | Shoulder | Elbow | Wrist | Hip | Knee | Ankle | Mean | Mean@0.1| Models |

@@ -2,7 +2,7 @@
 export FLAGS_fraction_of_gpu_memory_to_use=0.5
 export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fast_eager_deletion_mode=1
-#export CUDA_VISIBLE_DEVICES=0,1,2,3
+export CUDA_VISIBLE_DEVICES=2       #   which GPU to use
 
 #alias python='./anaconda2/bin/python'
 
@@ -19,7 +19,7 @@ function run_train() {
         --save_model_per_batches 10000 \
         --batch_size 100 \
         --epoch 10 \
-        --use_gpu 0 \
+        --use_cuda true \
         --traindata_shuffle_buffer 200000 \
         --word_emb_dim 768 \
         --grnn_hidden_dim 768 \
@@ -43,7 +43,7 @@ function run_eval() {
         --word_emb_dim 768 \
         --grnn_hidden_dim 768 \
         --bigru_num 2 \
-        --use_gpu 0 \
+        --use_cuda True \
         --init_checkpoint ./model_baseline \
         --test_data ./data/test.tsv \
         --word_dict_path ./conf/word.dic \
@@ -62,7 +62,7 @@ function run_infer() {
         --word_emb_dim 768 \
         --grnn_hidden_dim 768 \
         --bigru_num 2 \
-        --use_gpu 0 \
+        --use_cuda True \
         --init_checkpoint ./model_baseline/ \
         --infer_data ./data/test.tsv \
         --word_dict_path ./conf/word.dic \
