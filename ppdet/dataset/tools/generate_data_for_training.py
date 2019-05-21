@@ -101,6 +101,6 @@ if __name__ == "__main__":
         dump_coco_as_pickle(args)
     else:
         TypeError('Can\'t deal with {} type. (Use xml or json)'
-                            .format(self.__str__))
+                            .format(args.type))
 
 
