@@ -36,18 +36,12 @@ def build(ops):
     op_repr = []
     for op in ops:
         if type(op) is dict and 'op' in op:
-            try:
-                op_func = getattr(base, op['op'])
-            except (AttributeError):
-                op_func = getattr(arrange_sample, op['op'])
+            op_func = getattr(base.BaseOperator, op['op'])
             params = copy.deepcopy(op)
             del params['op']
             o = op_func(**params)
         elif not isinstance(op, base.BaseOperator):
-            try:
-                op_func = getattr(base, op['name'])
-            except (AttributeError):
-                op_func = getattr(arrange_sample, op['name'])
+            op_func = getattr(base.BaseOperator, op['name'])
             params = {} if 'params' not in op else op['params']
             o = op_func(**params)
         else:
@@ -73,10 +67,7 @@ def build(ops):
 
 
 for nm in base.registered_ops:
-    try:
-        op = getattr(base, nm)
-    except (AttributeError):
-        op = getattr(arrange_sample, nm)
+    op = getattr(base.BaseOperator, nm)
     locals()[nm] = op
 
 __all__ += base.registered_ops

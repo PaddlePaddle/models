@@ -29,14 +29,9 @@ import numpy as np
 import cv2
 from PIL import Image, ImageEnhance, ImageDraw
 from functools import reduce
-from .base import BaseOperator
+from .base import BaseOperator, registered_ops, register_op
 
 logger = logging.getLogger(__name__)
-
-registered_ops = []
-def register_op(cls):
-    registered_ops.append(cls.__name__)
-    return cls
 
 @register_op
 class ArrangeRCNN(BaseOperator):
@@ -101,8 +96,7 @@ class ArrangeRCNN(BaseOperator):
             outs = outs + (gt_masks, )
         return outs
 
-    
-@register_op
+@register_op   
 class ArrangeSSD(BaseOperator):
     """Transform the sample dict to the sample tuple
        which the model need when training.

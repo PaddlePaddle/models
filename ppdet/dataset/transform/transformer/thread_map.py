@@ -54,7 +54,10 @@ class ThreadMappedDataset(ProxiedDataset):
     def _setup(self):
         """ setup input/output queues and workers
         """
-        from Queue import Queue
+        try:
+            from Queue import Queue
+        except ImportError:
+            from queue import Queue
         from threading import Thread
         from threading import Event
 

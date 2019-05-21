@@ -24,8 +24,7 @@ from . import transformer
 from . import operator
 
 
-def transform(source, ops_conf, batchsize, drop_last, is_padding,
-              is_padding_total, worker_args=None):
+def transform(source, ops_conf, worker_args=None):
     """ transform data in 'source' using a mapper defined by 'ops_conf'
 
     Args:
@@ -37,9 +36,7 @@ def transform(source, ops_conf, batchsize, drop_last, is_padding,
         instance of 'Dataset'
     """
     mapper = operator.build(ops_conf)
-    return transformer.batch(transformer.map(source, mapper, worker_args),
-                             batchsize, drop_last,
-                             is_padding, is_padding_total)
+    return transformer.map(source, mapper, worker_args)
 
 
 __all__ = ['transformer', 'operator']

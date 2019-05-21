@@ -5,7 +5,7 @@ DATA:
     val: 
         anno_file: coco/annotations/instances_val2017.json
         image_dir: coco/val2017
-    samples: 100
+    samples: 10
 
 TRANSFORM:
     train:
@@ -13,12 +13,14 @@ TRANSFORM:
           to_rgb: True
         - op: ResizeImage
           target_size: 224
+        - op: ArrangeSSD
     val:
         - op: DecodeImage
           to_rgb: True
         - op: ResizeImage
           target_size: 224
-
+        - op: ArrangeSSD
+    batch_size: 1
     worker_conf:
         bufsize: 100
         worker_num: 8

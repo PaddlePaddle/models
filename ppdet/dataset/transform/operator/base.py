@@ -21,6 +21,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import uuid
 import logging
 import random
@@ -30,11 +31,14 @@ import cv2
 from PIL import Image, ImageEnhance, ImageDraw
 from functools import reduce
 
+from .op_helper import *
+
 logger = logging.getLogger(__name__)
 
 registered_ops = []
 def register_op(cls):
-    registered_ops.append(cls.__name__)
+    if hasattr(cls.__base__, cls.__name__) == False:
+        setattr(cls.__base__, cls.__name__, cls)
     return cls
 
 
@@ -46,108 +50,12 @@ class ImageError(ValueError):
     pass
 
 
-@register_op
 class BaseOperator(object):
     def __init__(self, name=None):
         if name is None:
             name = self.__class__.__name__
         self._id = name + '_' + str(uuid.uuid4())[-6:]
         
-    def meet_emit_constraint(self, src_bbox, sample_bbox):        
-        center_x = (src_bbox[2] + src_bbox[0]) / 2
-        center_y = (src_bbox[3] + src_bbox[1]) / 2
-        if center_x >= sample_bbox[0] and \
-                center_x <= sample_bbox[2] and \
-                center_y >= sample_bbox[1] and \
-                center_y <= sample_bbox[3]:
-            return True
-        return False
-    
-    def clip_bbox(self, src_bbox):
-        src_bbox[0] = max(min(src_bbox[0], 1.0), 0.0)
-        src_bbox[1] = max(min(src_bbox[1], 1.0), 0.0)
-        src_bbox[2] = max(min(src_bbox[2], 1.0), 0.0)
-        src_bbox[3] = max(min(src_bbox[3], 1.0), 0.0)
-        return src_bbox
-    
-    def bbox_area(self, src_bbox):
-        width = src_bbox[2] - src_bbox[0]
-        height = src_bbox[3] - src_bbox[1]
-        return width * height
-    
-    def deal_bbox_label(self, bboxes, labels, sample_bbox):
-        new_bboxes = []
-        new_labels = []
-        for i in range(len(labels)):
-            new_bbox = [0, 0, 0, 0]
-            obj_bbox = [bboxes[i][0], bboxes[i][1],
-                        bboxes[i][2], bboxes[i][3]]
-            if not self.meet_emit_constraint(obj_bbox, sample_bbox):
-                continue
-            sample_width = sample_bbox[2] - sample_bbox[0]
-            sample_height = sample_bbox[3] - sample_bbox[1]
-            new_bbox[0] = (obj_bbox[0] - sample_bbox[0]) / sample_width
-            new_bbox[1] = (obj_bbox[1] - sample_bbox[1]) / sample_height
-            new_bbox[2] = (obj_bbox[2] - sample_bbox[0]) / sample_width
-            new_bbox[3] = (obj_bbox[3] - sample_bbox[1]) / sample_height
-            new_bbox = self.clip_bbox(new_bbox)
-            if self.bbox_area(new_bbox) > 0:
-                new_bboxes.append(new_bbox)
-                new_labels.append([labels[i][0]])
-        bboxes = np.array(new_bboxes)
-        labels = np.array(new_labels)
-        return bboxes, labels       
-            
-    def generate_sample_bbox(self, sampler):
-        scale = np.random.uniform(sampler[2], sampler[3])
-        aspect_ratio = np.random.uniform(sampler[4], sampler[5])
-        aspect_ratio = max(aspect_ratio, (scale**2.0))
-        aspect_ratio = min(aspect_ratio, 1 / (scale**2.0))
-
-        bbox_width = scale * (aspect_ratio**0.5)
-        bbox_height = scale / (aspect_ratio**0.5)
-        xmin_bound = 1 - bbox_width
-        ymin_bound = 1 - bbox_height
-        xmin = np.random.uniform(0, xmin_bound)
-        ymin = np.random.uniform(0, ymin_bound)
-        xmax = xmin + bbox_width
-        ymax = ymin + bbox_height
-        sampled_bbox = [xmin, ymin, xmax, ymax]
-        return sampled_bbox
-    
-    def jaccard_overlap(self, sample_bbox, object_bbox):
-        if sample_bbox[0] >= object_bbox[2] or \
-            sample_bbox[2] <= object_bbox[0] or \
-            sample_bbox[1] >= object_bbox[3] or \
-            sample_bbox[3] <= object_bbox[1]:
-            return 0
-        intersect_xmin = max(sample_bbox[0], object_bbox[0])
-        intersect_ymin = max(sample_bbox[1], object_bbox[1])
-        intersect_xmax = min(sample_bbox[2], object_bbox[2])
-        intersect_ymax = min(sample_bbox[3], object_bbox[3])
-        intersect_size = (intersect_xmax - intersect_xmin) * (
-            intersect_ymax - intersect_ymin)
-        sample_bbox_size = self.bbox_area(sample_bbox)
-        object_bbox_size = self.bbox_area(object_bbox)
-        overlap = intersect_size / (
-            sample_bbox_size + object_bbox_size - intersect_size)
-        return overlap
-
-    def satisfy_sample_constraint(self, sampler, sample_bbox, gt_bboxes):
-        if sampler[6] == 0 and sampler[7] == 0:
-            return True
-        for i in range(len(gt_bboxes)):
-            object_bbox = [gt_bboxes[i][0], gt_bboxes[i][1],
-                            gt_bboxes[i][2], gt_bboxes[i][3]]
-            overlap = self.jaccard_overlap(sample_bbox, object_bbox)
-            if sampler[6] != 0 and \
-                    overlap < sampler[6]:
-                continue
-            if sampler[7] != 0 and \
-                    overlap > sampler[7]:
-                continue
-            return True
-        return False
 
     def __call__(self, sample, context=None):
         """ Process a sample.
@@ -161,7 +69,9 @@ class BaseOperator(object):
 
     def __str__(self):
         return '%s' % (self._id)
-
+    
+    
+    
 
 @register_op
 class DecodeImage(BaseOperator):
@@ -350,7 +260,7 @@ class NormalizeImage(BaseOperator):
     def __init__(self, mean=[0.485, 0.456, 0.406],
                  std=[1, 1, 1],
                  is_scale=True,
-                 is_first_channel=True):
+                 is_channel_first=True):
         """ Normalize the image.
         Args:
             mean (list): the pixel mean
@@ -360,7 +270,7 @@ class NormalizeImage(BaseOperator):
         self.mean = mean
         self.std = std
         self.is_scale = is_scale
-        self.is_first_channel = is_first_channel
+        self.is_channel_first = is_channel_first
         if not (isinstance(self.mean, list)
                 and isinstance(self.std, list)
                 and isinstance(self.is_scale, bool)):
@@ -378,7 +288,7 @@ class NormalizeImage(BaseOperator):
         """
         im = sample['image']
         im = im.astype(np.float32, copy=False)
-        if self.is_first_channel:
+        if self.is_channel_first:
             mean = np.array(self.mean)[:, np.newaxis, np.newaxis].astype('float32')
             std = np.array(self.std)[:, np.newaxis, np.newaxis].astype('float32')
         else:
@@ -485,7 +395,7 @@ class Expand(BaseOperator):
                 im = Image.fromarray(im)
                 expand_im.paste(im, (int(w_off), int(h_off)))
                 expand_im = np.asarray(expand_im)
-                gt_bbox, gt_class = self.deal_bbox_label(gt_bbox, gt_class, expand_bbox)
+                gt_bbox, gt_class = deal_bbox_label(gt_bbox, gt_class, expand_bbox)
                 sample['image'] = expand_im
                 sample['gt_bbox'] = gt_bbox
                 sample['gt_class'] = gt_class
@@ -515,21 +425,21 @@ class Crop(BaseOperator):
             for i in range(sampler[1]):
                 if found >= sampler[0]:
                     break
-                sample_bbox = self.generate_sample_bbox(sampler)
-                if self.satisfy_sample_constraint(sampler, sample_bbox, gt_bbox):
+                sample_bbox = generate_sample_bbox(sampler)
+                if satisfy_sample_constraint(sampler, sample_bbox, gt_bbox):
                     sampled_bbox.append(sample_bbox)
                     found = found + 1
         im = np.array(im)
         if len(sampled_bbox) > 0:
             idx = int(np.random.uniform(0, len(sampled_bbox)))
             sample_bbox = sampled_bbox[idx]
-            sample_bbox = self.clip_bbox(sample_bbox)
+            sample_bbox = clip_bbox(sample_bbox)
             xmin = int(sample_bbox[0] * im_width)
             xmax = int(sample_bbox[2] * im_width)
             ymin = int(sample_bbox[1] * im_height)
             ymax = int(sample_bbox[3] * im_height)
             im = im[ymin:ymax, xmin:xmax]
-            gt_bbox, gt_class = self.deal_bbox_label(gt_bbox, gt_class, sample_bbox)
+            gt_bbox, gt_class = deal_bbox_label(gt_bbox, gt_class, sample_bbox)
             sample['image'] = im
             sample['gt_bbox'] = gt_bbox
             sample['gt_class'] = gt_class
