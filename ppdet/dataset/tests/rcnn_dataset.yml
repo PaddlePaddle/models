@@ -1,7 +1,7 @@
 DATA:
     train:
-        anno_file: /home/sunyanfang01/paddlepaddle/models/fluid/PaddleCV/rcnn/dataset/VOC1/ImageSets/Main/train.txt
-        image_dir:  /home/sunyanfang01/paddlepaddle/models/fluid/PaddleCV/rcnn/dataset/VOC1/JPEGImages
+        anno_file: VOC/ImageSets/Main/train.txt
+        image_dir:  VOC/JPEGImages
     samples: 3
     
 TRANSFORM:
