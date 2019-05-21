@@ -224,7 +224,7 @@ def refresh_program(args,
         min_scale,
         rect_val=rect_val)
 
-    place = core.CUDAPlace(0)
+    place = fluid.CUDAPlace(0)
     startup_exe = fluid.Executor(place)
     startup_exe.run(py_reader_startup_prog)
 
