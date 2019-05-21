@@ -18,19 +18,15 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 
+import os
+import glob
+
 import unittest
-from core.optimizer import OptimizerBuilder
-from core.config import load_cfg
+from ppdet.core.optimizer import OptimizerBuilder
+from ppdet.core.config import load_cfg
 
 
-YAML_LIST = [
-        'faster-rcnn_ResNet50-C4_1x.yml',
-        'faster-rcnn_ResNet50-C4_2x.yml',
-        'mask-rcnn_ResNet50-C4_1x.yml',
-        'mask-rcnn_ResNet50-C4_2x.yml',
-        'yolov3_DarkNet53_1x_syncbn.yml',
-        'ssd_MobileNet_1x.yml',
-        ]
+CFG_PATH = './configs'
 
 def test_opt_with_cfg(cfg_file):
     cfg = load_cfg(cfg_file)
@@ -42,8 +38,9 @@ def test_opt_with_cfg(cfg_file):
 class TestOptimizer(unittest.TestCase):
 
     def test_optimizer(self):
-        for yml_file in YAML_LIST:
-            test_opt_with_cfg('../configs/' + yml_file)
+        ymls = glob.glob(os.path.join(CFG_PATH, '*.yml'))
+        for yml in ymls:
+            test_opt_with_cfg(yml)
 
 
 if __name__ == "__main__":
