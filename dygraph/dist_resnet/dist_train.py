@@ -1,4 +1,4 @@
- Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,8 +28,9 @@ epoch = 1
 
 total_images = 1281167
 
+
 def optimizer_setting():
-    optimizer = fluid.optimizer.Momentum(learning_rate=0.1,momentum=0.9)
+    optimizer = fluid.optimizer.Momentum(learning_rate=0.1, momentum=0.9)
     return optimizer
 
 
@@ -175,12 +176,12 @@ class ResNet(fluid.dygraph.Layer):
         import math
         stdv = 1.0 / math.sqrt(2048 * 1.0)
 
-        self.fc= FC(self.full_name(),
-                      size=class_dim,
-                      act='softmax',
-                      param_attr=fluid.param_attr.ParamAttr(
-                          initializer=fluid.initializer.Uniform(-stdv, stdv)))
- 
+        self.fc = FC(self.full_name(),
+                     size=class_dim,
+                     act='softmax',
+                     param_attr=fluid.param_attr.ParamAttr(
+                         initializer=fluid.initializer.Uniform(-stdv, stdv)))
+
     def forward(self, inputs, label):
         y = self.conv(inputs)
         y = self.pool2d_max(y)
@@ -192,6 +193,7 @@ class ResNet(fluid.dygraph.Layer):
         acc5 = fluid.layers.accuracy(input=y, label=label, k=5)
 
         return y, acc1, acc5
+
 
 def train_resnet():
     seed = 90
@@ -208,23 +210,27 @@ def train_resnet():
         strategy.nranks = dygraph.parallel.Env().nranks
         strategy.local_rank = dygraph.parallel.Env().local_rank
         strategy.trainer_endpoints = dygraph.parallel.Env().trainer_endpoints
-        strategy.current_endpoint = dygraph.parallel.Env().current_endpoint 
+        strategy.current_endpoint = dygraph.parallel.Env().current_endpoint
         resnet = dygraph.parallel.DataParallel(resnet, strategy)
-        if strategy.nranks > 1:
-            dygraph.parallel.prepare_context(strategy)
-        
+        #if strategy.nranks > 1:
+        #    dygraph.parallel.prepare_context(strategy)
+
         optimizer = optimizer_setting()
         train_reader = paddle.batch(
-            train(data_dir="/imagenet/ImageNet_resize/",
-                  pass_id_as_seed=0, infinite=True),
-            batch_size=batch_size, drop_last=True)
+            train(
+                data_dir="/imagenet/ImageNet_resize/",
+                pass_id_as_seed=0,
+                infinite=True),
+            batch_size=batch_size,
+            drop_last=True)
         steps_per_epoch = int(total_images / strategy.nranks / batch_size)
         print("steps per eoch: %d" % steps_per_epoch)
         for eop in range(epoch):
             for step_id, data in enumerate(train_reader()):
                 if step_id == steps_per_epoch:
                     break
-                if len(np.array([x[1] for x in data]).astype('int64')) != batch_size:
+                if len(np.array([x[1]
+                                 for x in data]).astype('int64')) != batch_size:
                     continue
 
                 s_time = time.time()
@@ -236,7 +242,7 @@ def train_resnet():
                 img = to_variable(dy_x_data)
                 label = to_variable(y_data)
                 label._stop_gradient = True
-   
+
                 out, acc1, acc5 = resnet(img, label)
 
                 loss = fluid.layers.cross_entropy(input=out, label=label)
@@ -247,9 +253,12 @@ def train_resnet():
                 resnet.apply_collective_grads()
                 optimizer.minimize(avg_loss)
                 throughtput = batch_size / (time.time() - s_time)
-                print("epoch id: %d, step: %d, loss: %f, acc1: %f, acc5: %f, throughtput: %f imgs/s " %
-                        (eop, step_id, dy_out, float(acc1.numpy()), float(acc5.numpy()), throughtput))
+                print(
+                    "epoch id: %d, step: %d, loss: %f, acc1: %f, acc5: %f, throughtput: %f imgs/s "
+                    % (eop, step_id, dy_out, float(acc1.numpy()),
+                       float(acc5.numpy()), throughtput))
                 resnet.clear_gradients()
+
 
 if __name__ == '__main__':
     train_resnet()
