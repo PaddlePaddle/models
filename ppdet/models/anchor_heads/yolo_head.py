@@ -130,6 +130,10 @@ class YOLOv3Head(object):
         return out
 
     def _get_and_check_anchors(self):
+        """
+        Check ANCHORS/ANCHOR_MASKS in config and parse mask_anchors
+
+        """
         self.anchor_masks = getattr(self.cfg.YOLO_HEAD, 'ANCHOR_MASKS', [])
         anchors = getattr(self.cfg.YOLO_HEAD, 'ANCHORS', [])
 
@@ -170,7 +174,7 @@ class YOLOv3Head(object):
         blocks = inputs[-1: -out_layer_num-1: -1]
 
         for i, block in enumerate(blocks):
-            if i > 0:
+            if i > 0: # perform concat in first 2 detection_block
                 block = fluid.layers.concat(
                     input=[route, block],
                     axis=1)
@@ -193,7 +197,8 @@ class YOLOv3Head(object):
                                     name="yolo_output.{}.conv.bias".format(i)))
             outputs.append(block_out)
 
-            if i < len(blocks) - 1:
+            if i < len(blocks) - 1: 
+                # do not perform upsample in the last detection_block
                 route = self._conv_bn(input=route,
                                       ch_out=256//(2**i),
                                       filter_size=1,
