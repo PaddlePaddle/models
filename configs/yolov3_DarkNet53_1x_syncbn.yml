@@ -16,6 +16,15 @@ MODEL:
   TYPE: YOLOv3
   BACKBONE: darknet53
 
+YOLO_HEAD:
+  TYPE: YOLOv3Head
+  ANCHORS: [[10, 13], [16, 30], [33, 23], 
+            [30, 61], [62, 45], [59, 119], 
+            [116, 90], [156, 198], [373, 326]]
+  ANCHOR_MASKS: [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
+  IGNORE_THRESH: 0.7
+  LABEL_SMOOTH: True
+
 ENV:
   GPU: ON
   GPU_NUM: 8
@@ -26,10 +35,9 @@ ENV:
 DATA:
   DATASET: coco2017
   CLASS_NUM: 80
-  ANCHORS: [[10, 13], [16, 30], [33, 23], 
-            [30, 61], [62, 45], [59, 119], 
-            [116, 90], [156, 198], [373, 326]]
-  ANCHOR_MASKS: [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
+  INPUT_SIZE: 608
+  RANDOM_SHAPE: True
+  NO_MIXUP_STEPS: 40000
 
 TRANSFORM:
   PIPELINE: YOLO
@@ -58,15 +66,9 @@ TRAIN:
   MAX_ITERS: 500000
   BATCH_SIZE_PER_DEVICE: 8
   PRETRAIN_WEIGTS: https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz
-  INPUT_SIZE: 608
-  RANDOM_SHAPE: True
-  NO_MIXUP_STEPS: 40000
-  IGNORE_THRESH: 0.7
-  LABEL_SMOOTH: True
   BATCH_NORM_TYPE: SYNCBN
 
 TEST:
-  INPUT_SIZE: 608
   SCORE_THRESH: 0.01
   NMS_THRESH: 0.45
   NMS_TOPK: 1000
