@@ -48,7 +48,23 @@ class OptimizerBuilder():
             elif not isinstance(v, dict):
                 opt_params.update({k.lower(): v})
 
-        # parse warmup
+        return opt_func(regularization=regularizer,
+                        learning_rate=learning_rate,
+                        **opt_params)
+
+    def _build_regularizer(self):
+        reg_cfg = self.cfg.WEIGHT_DECAY
+        reg_func = getattr(regularizer, reg_cfg.TYPE+"Decay")
+        return reg_func(reg_cfg.FACTOR)
+        
+
+    def _build_learning_rate(self):
+        # parse and perform learning rate decay
+        policy, params = self._parse_lr_decay_cfg()
+        decay_func = getattr(layers, policy)
+        learning_rate = decay_func(**params)
+
+        # parse and perform warmup
         warmup_cfg = self.cfg.LR_WARMUP
         if self.cfg.LR_WARMUP.WARMUP:
             warmup_steps = warmup_cfg.WARMUP_STEPS
@@ -61,20 +77,7 @@ class OptimizerBuilder():
                                     start_lr=start_lr,
                                     end_lr=end_lr)
 
-        return opt_func(regularization=regularizer,
-                        learning_rate=learning_rate,
-                        **opt_params)
-
-    def _build_regularizer(self):
-        reg_cfg = self.cfg.WEIGHT_DECAY
-        reg_func = getattr(regularizer, reg_cfg.TYPE+"Decay")
-        return reg_func(reg_cfg.FACTOR)
-        
-
-    def _build_learning_rate(self):
-        policy, params = self._parse_lr_decay_cfg()
-        decay_func = getattr(layers, policy)
-        return decay_func(**params)
+        return learning_rate
     
     def _parse_lr_decay_cfg(self):
         lr_cfg = self.cfg.LR_DECAY

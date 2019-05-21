@@ -32,7 +32,6 @@ def test_opt_with_cfg(cfg_file):
     cfg = load_cfg(cfg_file)
     ob = OptimizerBuilder(cfg.OPTIMIZER)
     assert ob.get_optimizer() is not None
-    assert ob.get_bn_regularizer() is not None
 
 
 class TestOptimizer(unittest.TestCase):

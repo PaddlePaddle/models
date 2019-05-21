@@ -15,4 +15,8 @@
 from . import faster_rcnn
 from .faster_rcnn import *
 
+from . import yolov3
+from .yolov3 import *
+
 __all__ = faster_rcnn.__all__
+__all__ += yolov3.__all__
