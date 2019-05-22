@@ -125,7 +125,7 @@ def train(args):
 
                 # optimize the d_B network
 
-                rec_A, fake_pool_rec_A = cycle_gan(data_A,fake_pool_A,False,True,False)
+                rec_A, fake_pool_rec_A = cycle_gan(data_A,fake_pool_A,False,False,True)
                 d_loss_B = (fluid.layers.square(fake_pool_rec_A) +
                     fluid.layers.square(rec_A - 1)) / 2.0
                 d_loss_B = fluid.layers.reduce_mean(d_loss_B)
