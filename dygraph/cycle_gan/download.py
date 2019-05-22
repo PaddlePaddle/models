@@ -19,6 +19,7 @@ import numpy as np
 import os
 import sys
 import gzip
+import zipfile
 import argparse
 import requests
 import six

@@ -6,8 +6,6 @@ import os
 
 # cudnn is not better when batch size is 1.
 use_cudnn = False
-if 'ce_mode' in os.environ:
-    use_cudnn = False
 
 
 class conv2d(fluid.dygraph.Layer):
@@ -64,10 +62,8 @@ class conv2d(fluid.dygraph.Layer):
         conv = self.conv(inputs)
         if self.norm:
             conv = self.bn(conv)
-        #print("test relu:")
         if self.relu:
             conv = fluid.layers.leaky_relu(conv,alpha=self.relufactor)
-        #print(conv.numpy()[0][0][0][:10])
         return conv
 
 
@@ -88,9 +84,9 @@ class DeConv2D(fluid.dygraph.Layer):
         super(DeConv2D,self).__init__(name_scope)
 
         if use_bias == False:
-            bias_attr = False
+            de_bias_attr = False
         else:
-            bias_attr = fluid.ParamAttr(name="de_bias",initializer=fluid.initializer.Constant(0.0))
+            de_bias_attr = fluid.ParamAttr(name="de_bias",initializer=fluid.initializer.Constant(0.0))
 
         self._deconv = Conv2DTranspose(self.full_name(),
                                         num_filters,
@@ -99,18 +95,18 @@ class DeConv2D(fluid.dygraph.Layer):
                                         padding=padding,
                                         param_attr=fluid.ParamAttr(
                                             name="this_is_deconv_weights",
-                                            initializer=fluid.initializer.NormalInitializer(loc=0.0, scale=0.02)),
-                                        bias_attr=bias_attr)
+                                            initializer=fluid.initializer.NormalInitializer(loc=0.0, scale=stddev)),
+                                        bias_attr=de_bias_attr)
 
 
 
-
-        self.bn = BatchNorm(self.full_name(),
-            num_channels=num_filters,
-            param_attr=fluid.ParamAttr(
-                name="de_wights",
-                initializer=fluid.initializer.NormalInitializer(1.0, 0.02)),
-            bias_attr=fluid.ParamAttr(name="de_bn_bias",initializer=fluid.initializer.Constant(0.0)))        
+        if norm:
+            self.bn = BatchNorm(self.full_name(),
+                num_channels=num_filters,
+                param_attr=fluid.ParamAttr(
+                    name="de_wights",
+                    initializer=fluid.initializer.NormalInitializer(1.0, 0.02)),
+                bias_attr=fluid.ParamAttr(name="de_bn_bias",initializer=fluid.initializer.Constant(0.0)))        
         self.outpadding = outpadding
         self.relufactor = relufactor
         self.use_bias = use_bias

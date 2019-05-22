@@ -52,11 +52,6 @@ def train(args):
     with fluid.dygraph.guard():
         max_images_num = data_reader.max_images_num()
         shuffle = True
-        if args.run_ce:
-            np.random.seed(10)
-            fluid.default_startup_program().random_seed = 90
-            max_images_num = 1
-            shuffle = False
         data_shape = [-1] + data_reader.image_shape()
         print(data_shape)
 
@@ -104,10 +99,6 @@ def train(args):
 
                 optimizer1.minimize(g_loss,parameter_list=vars_G)                
                 cycle_gan.clear_gradients()
-
-
-                print("epoch id: %d, batch step: %d, g_loss: %f" % (epoch, batch_id, g_loss_out))
-
 
 
                 fake_pool_B = B_pool.pool_image(fake_B).numpy()
@@ -167,9 +158,7 @@ def train(args):
                 sys.stdout.flush()
                 batch_id += 1
 
-            #if args.run_test and not args.run_ce:
-            #    test(epoch)
-            if args.save_checkpoints and not args.run_ce:
+            if args.save_checkpoints:
                 fluid.dygraph.save_persistables(cycle_gan.state_dict(),args.output+"/checkpoints/{}".format(epoch))
 
 if __name__ == "__main__":
