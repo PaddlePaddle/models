@@ -287,9 +287,9 @@ def train():
 
         if epoch_id == max_epoch - 1 and args.enable_ce:
             card_num = get_cards()
-            print("ptblm\tlstm_language_model_duration_card%d\t%s" %
-                        (card_num, total_time / max_epoch))
-            print("ptblm\tlstm_language_model_loss_card%d\t%s" % (card_num, ppl[0]))
+            print("ptblm\tlstm_language_model_%s_duration_card%d\t%s" %
+                        (args.rnn_model, card_num, total_time / max_epoch))
+            print("ptblm\tlstm_language_model_%s_loss_card%d\t%s" % (args.rnn_model, card_num, ppl[0]))
 
         model_path = os.path.join("model_new/", str(epoch_id))
         if not os.path.isdir(model_path):
