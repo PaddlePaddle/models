@@ -103,6 +103,8 @@ class FasterRCNN(DetectorBase):
         h = getattr(self.cfg.DATA, 'IM_HEIGHT', 224)
         w = getattr(self.cfg.DATA, 'IM_WIDTH', 224)
 
+        # the order of data layers shoule be the same as
+        # them ppdet/dataset/transform/operator/arrange_sample.py
         # yapf: disable
         feed_info = [
             {'name': 'image',  'shape': [c, h, w], 'dtype': 'float32', 'lod_level': 0},

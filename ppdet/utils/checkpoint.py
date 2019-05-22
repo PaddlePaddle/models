@@ -17,10 +17,14 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
+import shutil
 import logging
 logger = logging.getLogger(__name__)
 
 import paddle.fluid as fluid
+
+from .download import download_weights
 
 __all__ = ['load', 'save']
 
@@ -43,6 +47,8 @@ def load(exe, path):
     if is_url(path):
         path = download_weights(path)
 
+    logger.info('Load model from {}.'.format(path))
+
     def if_exist(var):
         return os.path.exists(os.path.join(path, var.name))
 
@@ -57,4 +63,5 @@ def save(exe, path):
     """
     if os.path.isdir(path):
         shutil.rmtree(path)
+    logger.info('Save model to {}.'.format(path))
     fluid.io.save_persistables(exe, path)

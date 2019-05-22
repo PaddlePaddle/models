@@ -33,11 +33,13 @@ from .base import BaseOperator, registered_ops, register_op
 
 logger = logging.getLogger(__name__)
 
+
 @register_op
 class ArrangeRCNN(BaseOperator):
     """Transform the sample dict to the sample tuple
        which the model need when training.
     """
+
     def __init__(self, is_mask=False):
         """ Get the standard output.
         Args:
@@ -46,8 +48,7 @@ class ArrangeRCNN(BaseOperator):
         super(ArrangeRCNN, self).__init__()
         self.is_mask = is_mask
         if not (isinstance(self.is_mask, bool)):
-            raise TypeError('{}: the input type is error.'
-                            .format(self.__str__))
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def __call__(self, sample, context=None):
         """
@@ -63,20 +64,18 @@ class ArrangeRCNN(BaseOperator):
         im = sample['image']
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
-        outs = (im, gt_bbox, gt_class)
         keys = list(sample.keys())
         if 'is_crowd' in keys:
             is_crowd = sample['is_crowd']
-            outs = outs + (is_crowd,)
         else:
             raise KeyError("The dataset doesn't have 'is_crowd' key.")
         if 'im_info' in keys:
             im_info = sample['im_info']
-            outs = outs + (im_info,)
         else:
             raise KeyError("The dataset doesn't have 'im_info' key.")
         im_id = sample['im_id']
-        outs = outs + (im_id,)
+
+        outs = (im, im_info, gt_bbox, gt_class, is_crowd, im_id)
         gt_masks = []
         if self.is_mask and len(sample['gt_poly']) != 0 \
                 and 'is_crowd' in keys:
@@ -100,11 +99,13 @@ class ArrangeRCNN(BaseOperator):
             outs = outs + (gt_masks, )
         return outs
 
-@register_op   
+
+@register_op
 class ArrangeSSD(BaseOperator):
     """Transform the sample dict to the sample tuple
        which the model need when training.
     """
+
     def __init__(self, is_mask=False):
         """ Get the standard output.
         Args:
@@ -113,8 +114,7 @@ class ArrangeSSD(BaseOperator):
         super(ArrangeSSD, self).__init__()
         self.is_mask = is_mask
         if not (isinstance(self.is_mask, bool)):
-            raise TypeError('{}: the input type is error.'
-                            .format(self.__str__))
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def __call__(self, sample, context=None):
         """

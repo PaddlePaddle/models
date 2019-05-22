@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import deque
+import collections
 import numpy as np
+import datetime
+
+__all__ = ['TrainingStats', 'Time']
 
 
 class SmoothedValue(object):
@@ -22,7 +25,7 @@ class SmoothedValue(object):
     """
 
     def __init__(self, window_size):
-        self.deque = deque(maxlen=window_size)
+        self.deque = collections.deque(maxlen=window_size)
 
     def add_value(self, value):
         self.deque.append(value)
@@ -31,7 +34,7 @@ class SmoothedValue(object):
         return np.median(self.deque)
 
 
-def now_time():
+def Time():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 
 
@@ -58,5 +61,8 @@ class TrainingStats(object):
 
     def log(self, extras=None):
         d = self.get(extras)
-        strs = ', '.join(str(dict({x: y})).strip('{}') for x, y in d.items())
+        strs = ', '.join(
+            str(dict({
+                x.encode('utf-8'): y
+            })).strip('{}') for x, y in d.items())
         return strs

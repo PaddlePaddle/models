@@ -34,7 +34,6 @@ from .op_helper import satisfy_sample_constraint, \
                        generate_sample_bbox, \
                        clip_bbox
 
-
 logger = logging.getLogger(__name__)
 
 registered_ops = []
@@ -45,8 +44,7 @@ def register_op(cls):
     if not hasattr(BaseOperator, cls.__name__):
         setattr(BaseOperator, cls.__name__, cls)
     else:
-        raise KeyError("The {} class has been registered."
-                       .format(cls.__name__))
+        raise KeyError("The {} class has been registered.".format(cls.__name__))
     return cls
 
 
@@ -88,8 +86,7 @@ class DecodeImage(BaseOperator):
         super(DecodeImage, self).__init__()
         self.to_rgb = to_rgb
         if not isinstance(self.to_rgb, bool):
-            raise TypeError('{}: the input type is error.'
-                            .format(self.__str__))
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def __call__(self, sample, context=None):
         assert 'image' in sample, 'not found image data'
@@ -104,8 +101,7 @@ class DecodeImage(BaseOperator):
 
 @register_op
 class ResizeImage(BaseOperator):
-    def __init__(self, target_size=0, max_size=0,
-                 interp=cv2.INTER_LINEAR):
+    def __init__(self, target_size=0, max_size=0, interp=cv2.INTER_LINEAR):
         """
         Args:
             target_size (int): the taregt size of image's short side
@@ -113,14 +109,12 @@ class ResizeImage(BaseOperator):
             interp: the interpolation method
         """
         super(ResizeImage, self).__init__()
-        self.target_size = target_size
-        self.max_size = max_size
-        self.interp = interp
-        if not (isinstance(self.target_size, int)
-                and isinstance(self.max_size, int)
-                and isinstance(self.interp, int)):
-            raise TypeError('{}: the input type is error.'
-                            .format(self.__str__))
+        self.target_size = int(target_size)
+        self.max_size = int(max_size)
+        self.interp = int(interp)
+        if not (isinstance(self.target_size, int) and isinstance(
+                self.max_size, int) and isinstance(self.interp, int)):
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def __call__(self, sample, context=None):
         """ Resise the image numpy.
@@ -145,10 +139,12 @@ class ResizeImage(BaseOperator):
                 im_scale = float(self.max_size) / float(im_size_max)
             im_scale_x = im_scale
             im_scale_y = im_scale
-            sample['im_info'] = np.array([np.round(im_shape[0] * im_scale),
-                                          np.round(im_shape[1] * im_scale),
-                                          im_scale],
-                                         dtype=np.float32)
+            sample['im_info'] = np.array(
+                [
+                    np.round(im_shape[0] * im_scale),
+                    np.round(im_shape[1] * im_scale), im_scale
+                ],
+                dtype=np.float32)
         else:
             im_scale_x = float(self.target_size) / float(im_shape[1])
             im_scale_y = float(self.target_size) / float(im_shape[0])
@@ -165,8 +161,7 @@ class ResizeImage(BaseOperator):
 
 @register_op
 class RandFlipImage(BaseOperator):
-    def __init__(self, prob=0.5, is_normalized=False,
-                 is_mask_flip=False):
+    def __init__(self, prob=0.5, is_normalized=False, is_mask_flip=False):
         """
         Args:
             prob (float): the probability of flipping image
@@ -177,11 +172,10 @@ class RandFlipImage(BaseOperator):
         self.prob = prob
         self.is_normalized = is_normalized
         self.is_mask_flip = is_mask_flip
-        if not (isinstance(self.prob, float)
-                and isinstance(self.is_normalized, bool)
-                and isinstance(self.is_mask_flip, bool)):
-            raise TypeError('{}: the input type is error.'
-                            .format(self.__str__))
+        if not (isinstance(self.prob, float) and
+                isinstance(self.is_normalized, bool) and
+                isinstance(self.is_mask_flip, bool)):
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def flip_segms(self, segms, height, width):
         def _flip_poly(poly, width):
@@ -206,8 +200,7 @@ class RandFlipImage(BaseOperator):
         for segm in segms:
             if is_poly(segm):
                 # Polygon format
-                flipped_segms.append([_flip_poly(poly, width)
-                                      for poly in segm])
+                flipped_segms.append([_flip_poly(poly, width) for poly in segm])
             else:
                 # RLE format
                 import pycocotools.mask as mask_util
@@ -253,8 +246,8 @@ class RandFlipImage(BaseOperator):
                                 .format(self.__str__))
             sample['gt_bbox'] = gt_bbox
             if self.is_mask_flip and len(sample['gt_poly']) != 0:
-                sample['gt_poly'] = self.flip_segms(sample['gt_poly'],
-                                                    height, width)
+                sample['gt_poly'] = self.flip_segms(sample['gt_poly'], height,
+                                                    width)
             sample['flipped'] = True
             sample['image'] = im
         return sample
@@ -262,7 +255,8 @@ class RandFlipImage(BaseOperator):
 
 @register_op
 class NormalizeImage(BaseOperator):
-    def __init__(self, mean=[0.485, 0.456, 0.406],
+    def __init__(self,
+                 mean=[0.485, 0.456, 0.406],
                  std=[1, 1, 1],
                  is_scale=True,
                  is_channel_first=True):
@@ -276,13 +270,11 @@ class NormalizeImage(BaseOperator):
         self.std = std
         self.is_scale = is_scale
         self.is_channel_first = is_channel_first
-        if not (isinstance(self.mean, list)
-                and isinstance(self.std, list)
-                and isinstance(self.is_scale, bool)):
-            raise TypeError('{}: the input type is error.'
-                            .format(self.__str__))
+        if not (isinstance(self.mean, list) and isinstance(self.std, list) and
+                isinstance(self.is_scale, bool)):
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
         from functools import reduce
-        if reduce(lambda x, y: x*y, self.std) == 0:
+        if reduce(lambda x, y: x * y, self.std) == 0:
             raise ValueError('{}: the std is wrong!'.format(self.__str__))
 
     def __call__(self, sample, context=None):
@@ -313,12 +305,19 @@ class NormalizeImage(BaseOperator):
 
 @register_op
 class RandomDistort(BaseOperator):
-    def __init__(self, brightness_lower=0.5, brightness_upper=1.5,
-                 contrast_lower=0.5, contrast_upper=1.5,
-                 saturation_lower=0.5, saturation_upper=1.5,
-                 hue_lower=0.5, hue_upper=1.5,
-                 brightness_prob=1, contrast_prob=1,
-                 saturation_prob=1, hue_prob=1,
+    def __init__(self,
+                 brightness_lower=0.5,
+                 brightness_upper=1.5,
+                 contrast_lower=0.5,
+                 contrast_upper=1.5,
+                 saturation_lower=0.5,
+                 saturation_upper=1.5,
+                 hue_lower=0.5,
+                 hue_upper=1.5,
+                 brightness_prob=1,
+                 contrast_prob=1,
+                 saturation_prob=1,
+                 hue_prob=1,
                  count=4):
         """
         Args:
@@ -339,8 +338,7 @@ class RandomDistort(BaseOperator):
         super(RandomDistort, self).__init__()
         self.brightness_delta = np.random.uniform(brightness_lower,
                                                   brightness_upper)
-        self.contrast_delta = np.random.uniform(contrast_lower,
-                                                contrast_upper)
+        self.contrast_delta = np.random.uniform(contrast_lower, contrast_upper)
         self.saturation_delta = np.random.uniform(saturation_lower,
                                                   saturation_upper)
         self.hue_delta = np.random.uniform(hue_lower, hue_upper)
@@ -379,8 +377,10 @@ class RandomDistort(BaseOperator):
     def __call__(self, sample, context):
         """random distort the image
         """
-        ops = [self.random_brightness, self.random_contrast,
-               self.random_saturation, self.random_hue]
+        ops = [
+            self.random_brightness, self.random_contrast,
+            self.random_saturation, self.random_hue
+        ]
         ops = random.sample(ops, self.count)
         assert 'image' in sample, 'not found image data'
         im = sample['image']
@@ -394,7 +394,8 @@ class RandomDistort(BaseOperator):
 
 @register_op
 class Expand(BaseOperator):
-    def __init__(self, expand_max_ratio,
+    def __init__(self,
+                 expand_max_ratio,
                  expand_prob,
                  mean=[127.5, 127.5, 127.5]):
         """
@@ -434,9 +435,10 @@ class Expand(BaseOperator):
                 width = int(im_width * expand_ratio)
                 h_off = math.floor(np.random.uniform(0, height - im_height))
                 w_off = math.floor(np.random.uniform(0, width - im_width))
-                expand_bbox = [-w_off / im_width, -h_off / im_height,
-                               (width - w_off) / im_width,
-                               (height - h_off) / im_height]
+                expand_bbox = [
+                    -w_off / im_width, -h_off / im_height,
+                    (width - w_off) / im_width, (height - h_off) / im_height
+                ]
                 expand_im = np.ones((height, width, 3))
                 expand_im = np.uint8(expand_im * np.squeeze(self.mean))
                 expand_im = Image.fromarray(expand_im)
@@ -444,8 +446,8 @@ class Expand(BaseOperator):
                 expand_im.paste(im, (int(w_off), int(h_off)))
                 expand_im = np.asarray(expand_im)
                 print(gt_class)
-                gt_bbox, gt_class = deal_bbox_label(gt_bbox,
-                                                    gt_class, expand_bbox)
+                gt_bbox, gt_class = deal_bbox_label(gt_bbox, gt_class,
+                                                    expand_bbox)
                 sample['image'] = expand_im
                 sample['gt_bbox'] = gt_bbox
                 sample['gt_class'] = gt_class
@@ -474,7 +476,7 @@ class Crop(BaseOperator):
             min overlap, max overlap]
         """
         super(Crop, self).__init__()
-        self. batch_sampler = batch_sampler
+        self.batch_sampler = batch_sampler
 
     def __call__(self, sample, context):
         """Crop the image and modify bounding box.
@@ -523,6 +525,7 @@ class Crop(BaseOperator):
 @register_op
 class NormalizeBox(BaseOperator):
     """Transform the bounding box's coornidates to [0,1]."""
+
     def __init__(self):
         super(NormalizeBox, self).__init__()
 
@@ -541,8 +544,7 @@ class NormalizeBox(BaseOperator):
 
 @register_op
 class Rgb2Bgr(BaseOperator):
-    def __init__(self, to_bgr=True,
-                 channel_first=True):
+    def __init__(self, to_bgr=True, channel_first=True):
         """ Change the channel and color space.
         Args:
             to_bgr (bool): confirm whether to convert RGB to BGR
@@ -551,10 +553,9 @@ class Rgb2Bgr(BaseOperator):
         super(Rgb2Bgr, self).__init__()
         self.to_bgr = to_bgr
         self.channel_first = channel_first
-        if not (isinstance(self.to_bgr, bool)
-                and isinstance(self.channel_first, bool)):
-            raise TypeError('{}: the input type is error.'
-                            .format(self.__str__))
+        if not (isinstance(self.to_bgr, bool) and
+                isinstance(self.channel_first, bool)):
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def __call__(self, sample, context=None):
         assert 'image' in sample, 'not found image data'

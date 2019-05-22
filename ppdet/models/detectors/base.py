@@ -51,7 +51,9 @@ class DetectorBase(object):
 
     def get_pyreader(self):
         """
+        Get the PyReader object.
         """
-        if self.reader is None:
+        if self.pyreader is None:
             raise ValueError("{}.pyreader is not initialized.".format(
                 self.__class__.__name__))
+        return self.pyreader

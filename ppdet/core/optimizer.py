@@ -39,8 +39,16 @@ class OptimizerBuilder():
     def get_optimizer(self):
         return self._build_optimizer()
 
+    def get_lr(self):
+        """
+        Get learning variable.
+        """
+        if self.lr is None:
+            raise ValueError("self.lr is not initialized.")
+        return self.lr
+
     def _build_optimizer(self):
-        regularizer = self._build_regularizer()
+        regularization = self._build_regularizer()
         learning_rate = self._build_learning_rate()
 
         opt_params = dict()

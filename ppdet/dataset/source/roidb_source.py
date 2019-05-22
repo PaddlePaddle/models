@@ -27,18 +27,21 @@ import copy
 import pickle as pkl
 from ..dataset import Dataset
 
+
 class RoiDbSource(Dataset):
     """ interface to load roidb data from files
     """
-    def __init__(self, fname,
-        image_dir=None, samples=-1):
+
+    def __init__(self, fname, image_dir=None, samples=-1):
         super(RoiDbSource, self).__init__()
         self._epoch = -1
         self._fname = fname
-        assert os.path.isfile(fname) or os.path.isdir(fname), 'invalid file[%s] for RoiDbSource' % (fname)
+        assert os.path.isfile(fname) or os.path.isdir(
+            fname), 'invalid file[%s] for RoiDbSource' % (fname)
         self._image_dir = image_dir
         if image_dir is not None:
-            assert os.path.isdir(image_dir), 'invalid image directory[%s]' % (image_dir)
+            assert os.path.isdir(image_dir), 'invalid image directory[%s]' % (
+                image_dir)
 
         self._roidb = None
         self._pos = -1
@@ -101,4 +104,3 @@ class RoiDbSource(Dataset):
         """
         assert self._epoch >= 0, 'The first epoch has not begin!'
         return self._pos >= self.size()
-

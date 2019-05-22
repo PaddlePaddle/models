@@ -70,7 +70,7 @@ def parse_args():
     add_arg = functools.partial(add_arguments, argparser=parser)
     # yapf: disable
     add_arg('cfg_file',         str,   None,      "configure file path.")
-    add_arg('use_gpu',          bool,  True,      "Whether to use GPU.")
+    add_arg('gpu',          bool,  True,      "Whether to use GPU.")
     # yapf: enable
     args = parser.parse_args()
     return args
