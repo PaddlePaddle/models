@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import sys
+sys.path.append("/home/sunyanfang01/fork_code/baidu/paddle/ppdetection/")
 from ppdet.core.config import load_cfg
 import unittest
 import configs
@@ -50,16 +51,17 @@ def test_ssd_head(cfg_file):
         gt_label = head_inputs[3]
         gt_box = head_inputs[4]
         nmsed_out = ob.get_prediction(img, fm1, fm2)
-        loss= ob.get_loss(img, fm1, fm2, gt_box, gt_label)
+        loss = ob.get_loss(img, fm1, fm2, gt_box, gt_label)
         map_eval = ob.get_map(gt_box, gt_label)
 
         assert nmsed_out is not None
         assert loss is not None
         assert map_eval is not None
 
+
 class TestBBoxHead(unittest.TestCase):
     def test_bbox_heads(self):
-        path = "configs/ssd_MobileNet_1x.yml"
+        path = "/home/sunyanfang01/fork_code/baidu/paddle/ppdetection/configs/ssd_MobileNet_1x.yml"
         test_ssd_head(path)
 
 

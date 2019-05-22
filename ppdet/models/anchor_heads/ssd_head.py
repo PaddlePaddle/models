@@ -30,22 +30,21 @@ __all__ = ['SSDHead']
 class SSDHead(object):
     """
         SSDHead class
-    """
-    def __init__(self, cfg):
-        """
         Args:
             cfg(dict): All parameters in dictionary
-        """
+    """
+
+    def __init__(self, cfg):
         self.cfg = cfg
 
     def _get_output(self, input1, input2):
         """
         Get the SSD output.
         Args:
-            input1 (Variable): feature map from backbone with
-                                shape of [N, C, H, W]
-            input2 (Variable): feature map from backbone with
-                                shape of [N, C, H, W]
+            input1 (Variable): the middle feature map of backbone
+                                with shape of [N, C, H, W]    
+            input2 (Variable): output of backbone
+                                with shape of [N, C, H, W]
 
         Returns:
             mbox_locs (Variable): The predicted boxes’ location of the inputs.
@@ -62,6 +61,7 @@ class SSDHead(object):
               each position of each input
               and C is the number of Classes.
         """
+
         def _conv_norm(input,
                        filter_size,
                        num_filters,
@@ -85,7 +85,7 @@ class SSDHead(object):
                 bias_attr=False)
             return fluid.layers.batch_norm(input=conv, act=act)
 
-        def extra_block(input, num_filters1, num_filters2, num_groups, scale):
+        def _extra_block(input, num_filters1, num_filters2, num_groups, scale):
             '''
             Get the feature map which is used to get bbox and label.
             Contain two convolution process, so there are two filters.
@@ -110,13 +110,18 @@ class SSDHead(object):
 
         # 10x10
         scale = self.cfg.MODEL.CONV_GROUP_SCALE
-        module14 = extra_block(input2, 256, 512, 1, scale)
+        filter_num_list = self.cfg.SSD_HEAD.FILTER_NUM_LIST
+        module14 = _extra_block(input2, filter_num_list[0][0],
+                                filter_num_list[0][1], 1, scale)
         # 5x5
-        module15 = extra_block(module14, 128, 256, 1, scale)
+        module15 = _extra_block(module14, filter_num_list[1][0],
+                                filter_num_list[1][1], 1, scale)
         # 3x3
-        module16 = extra_block(module15, 128, 256, 1, scale)
+        module16 = _extra_block(module15, filter_num_list[2][0],
+                                filter_num_list[2][1], 1, scale)
         # 2x2
-        module17 = extra_block(module16, 64, 128, 1, scale)
+        module17 = _extra_block(module16, filter_num_list[3][0],
+                                filter_num_list[3][1], 1, scale)
         mbox_locs, mbox_confs, box, box_var = fluid.layers.multi_box_head(
             inputs=[input1, input2, module14, module15, module16, module17],
             image=self.img,
@@ -135,10 +140,10 @@ class SSDHead(object):
         """
         Get prediction bbox and label according to the output of ssd head.
         Args:
-            body_feat1 (Variable): feature map from backbone
-                                   with shape of [N, C, H, W]
-            body_feat2 (Variable): feature map from backbone
-                                   with shape of [N, C, H, W]
+            body_feat1 (Variable): the middle feature map of backbone
+                                with shape of [N, C, H, W] 
+            body_feat2 (Variable): output of backbone
+                                with shape of [N, C, H, W]
         Returns:
             nmsed_out (Variable): The detection outputs is a LoDTensor with shape [count, 6].
                         Each row has six values: [label, confidence, xmin, ymin, xmax, ymax].
@@ -149,11 +154,16 @@ class SSDHead(object):
         self.nmsed_out = fluid.layers.detection_output(
             locs, confs, box, box_var, nms_threshold=nms_thresh)
         return self.nmsed_out
-        
+
     def get_loss(self, input, body_feat1, body_feat2, gt_bbox, gt_label):
         """
         Calculate the loss of prediction result and real result.
         Args:
+            input (Variable): 
+            body_feat1 (Variable): the middle feature map of backbone
+                                with shape of [N, C, H, W] 
+            body_feat2 (Variable): output of backbone
+                                with shape of [N, C, H, W]
             gt_box (Variable): The ground-truth bounding boxes.
             gt_label (Variable): The ground-truth labels.
         Returns:
@@ -162,18 +172,15 @@ class SSDHead(object):
         """
         self.img = input
         locs, confs, box, box_var = self._get_output(body_feat1, body_feat2)
-        loss = fluid.layers.ssd_loss(locs, confs,
-                                gt_bbox, gt_label,
-                                box, box_var)
+        loss = fluid.layers.ssd_loss(locs, confs, gt_bbox, gt_label, box,
+                                     box_var)
         loss = fluid.layers.reduce_sum(loss)
         return loss
-    
+
     def get_map(self, gt_bbox, gt_label):
         """
         Calculate the map of prediction result and real result.
         Args:
-            body_feat1 (Variable): feature map from backbone with shape of [N, C, H, W]
-            body_feat2 (Variable): feature map from backbone with shape of [N, C, H, W]
             gt_box (Variable): The ground-truth bounding boxes.
             gt_label (Variable): The ground-truth labels.
         Returns:
@@ -189,4 +196,3 @@ class SSDHead(object):
             evaluate_difficult=False,
             ap_version=self.cfg.METRIC.AP_VERSION)
         return map_eval
-        
