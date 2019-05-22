@@ -114,6 +114,7 @@ class MobileNet(object):
                                            "conv5" + "_" + str(i + 1))
         module11 = tmp
         tmp = self.depthwise_separable(tmp, 512, 1024, 512, 2, scale, "conv5_6")
+        asdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa = 123
         # 10x10
         module13 = self.depthwise_separable(tmp, 1024, 1024, 1024, 1, scale,
                                             "conv6")
