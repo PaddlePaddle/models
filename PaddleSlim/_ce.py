@@ -36,18 +36,9 @@ def log_to_ce(log):
     for kpi in tracking_kpis:
         kpi_tracker[kpi.name] = kpi
 
-    count = 10
-    ignore_fist = True
     for(kpi_name, kpi_value) in parse_log(log):
-        if ignore_fist:
-            ignore_fist = False
-            continue
         kpi_tracker[kpi_name].add_record(kpi_value)
         kpi_tracker[kpi_name].persist()
-
-        count -= 1
-        if not count:
-            return
 
 
 if __name__ == '__main__':
