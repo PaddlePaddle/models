@@ -29,7 +29,7 @@ __all__ = ['MobileNetV1Backbone']
 class MobileNet(object):
     def __init__(self):
         pass
-    
+
     def _conv_norm(self,
                    input,
                    filter_size,
@@ -41,7 +41,10 @@ class MobileNet(object):
                    act='relu',
                    use_cudnn=True,
                    name=None):
-        parameter_attr = ParamAttr(learning_rate=0.1, initializer=fluid.initializer.MSRA(), name=name + "_weights")
+        parameter_attr = ParamAttr(
+            learning_rate=0.1,
+            initializer=fluid.initializer.MSRA(),
+            name=name + "_weights")
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -54,16 +57,22 @@ class MobileNet(object):
             param_attr=parameter_attr,
             bias_attr=False)
         bn_name = name + "_bn"
-        return fluid.layers.batch_norm(input=conv, 
-                                       act=act,
-                                       param_attr=ParamAttr(name=bn_name + "_scale"),
-                                       bias_attr=ParamAttr(name=bn_name + "_offset"),
-                                       moving_mean_name=bn_name + '_mean',
-                                       moving_variance_name=bn_name + '_variance')
+        return fluid.layers.batch_norm(
+            input=conv,
+            act=act,
+            param_attr=ParamAttr(name=bn_name + "_scale"),
+            bias_attr=ParamAttr(name=bn_name + "_offset"),
+            moving_mean_name=bn_name + '_mean',
+            moving_variance_name=bn_name + '_variance')
 
-
-    def depthwise_separable(self, input, num_filters1, num_filters2, num_groups, stride,
-                            scale, name=None):
+    def depthwise_separable(self,
+                            input,
+                            num_filters1,
+                            num_filters2,
+                            num_groups,
+                            stride,
+                            scale,
+                            name=None):
         depthwise_conv = self._conv_norm(
             input=input,
             filter_size=3,
@@ -72,7 +81,7 @@ class MobileNet(object):
             padding=1,
             num_groups=int(num_groups * scale),
             use_cudnn=False,
-            name=name+"_dw")
+            name=name + "_dw")
 
         pointwise_conv = self._conv_norm(
             input=depthwise_conv,
@@ -80,9 +89,9 @@ class MobileNet(object):
             num_filters=int(num_filters2 * scale),
             stride=1,
             padding=0,
-            name=name+"_seq")
+            name=name + "_seq")
         return pointwise_conv
-    
+
     def get_backone(self, input, scale=1.0):
         """
         Args:
@@ -101,20 +110,22 @@ class MobileNet(object):
         tmp = self.depthwise_separable(tmp, 256, 512, 256, 2, scale, "conv4_2")
         # 19x19
         for i in range(5):
-            tmp = self.depthwise_separable(tmp, 512, 512, 512, 1, scale, "conv5" + "_" + str(i + 1))
+            tmp = self.depthwise_separable(tmp, 512, 512, 512, 1, scale,
+                                           "conv5" + "_" + str(i + 1))
         module11 = tmp
         tmp = self.depthwise_separable(tmp, 512, 1024, 512, 2, scale, "conv5_6")
         # 10x10
-        module13 = self.depthwise_separable(tmp, 1024, 1024, 1024, 1, scale, "conv6")
+        module13 = self.depthwise_separable(tmp, 1024, 1024, 1024, 1, scale,
+                                            "conv6")
         return module11, module13
 
-    
+
 @Backbones.register
 class MobileNetV1Backbone(BackboneBase):
     def __init__(self, cfg):
         super(MobileNetV1Backbone, self).__init__(cfg)
         self.scale = cfg.MODEL.CONV_GROUP_SCALE
-        
+
     def __call__(self, input):
         """
         Get the backbone of MobileNetV1.
@@ -125,6 +136,3 @@ class MobileNetV1Backbone(BackboneBase):
         """
         model = MobileNet()
         return model.get_backone(input, self.scale)
-    
-
-    

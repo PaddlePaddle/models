@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-sys.path.append("/home/sunyanfang01/fork_code/baidu/paddle/ppdetection/")
 from ppdet.core.config import load_cfg
 import unittest
 import configs
@@ -61,7 +59,7 @@ def test_ssd_head(cfg_file):
 
 class TestBBoxHead(unittest.TestCase):
     def test_bbox_heads(self):
-        path = "/home/sunyanfang01/fork_code/baidu/paddle/ppdetection/configs/ssd_MobileNet_1x.yml"
+        path = "configs/ssd_MobileNet_1x.yml"
         test_ssd_head(path)
 
 
