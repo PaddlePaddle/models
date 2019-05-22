@@ -12,7 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import rpn_head
-from .rpn_head import *
+from . import resnet
+from .resnet import *
 
-__all__ = rpn_head.__all__
+from . import darknet
+from .darknet import *
+
+from . import mobilenet
+from .mobilenet import *
+
+__all__ = resnet.__all__
+__all__ += darknet.__all__
+__all__ += mobilenet.__all__

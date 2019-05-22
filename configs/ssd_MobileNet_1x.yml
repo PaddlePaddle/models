@@ -15,6 +15,157 @@
 MODEL:
   TYPE: SSD
   BACKBONE: MobileNet
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+DATA:
+    train:
+        anno_file: pascalvoc/VOCdevkit/VOC2012/ImageSets/Main/train.txt
+        image_dir:  pascalvoc/VOCdevkit/VOC2012/JPEGImages
+    CLASS_NUM: 21
+    
+    val:
+        anno_file: pascalvoc/VOCdevkit/VOC2012/ImageSets/Main/train.txt
+        image_dir:  pascalvoc/VOCdevkit/VOC2012/JPEGImages
+        CLASS_NUM: 21
+
+TRANSFORM:
+    train:
+        - op: DecodeImage
+          to_rgb: True
+        - op: NormalizeBox
+        - op: RandomDistort
+        - op: Expand
+          expand_max_ratio: 4
+          expand_prob: 1
+        - op: Crop
+          batch_sampler: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
+        - op: ResizeImage
+          target_size: 300
+        - op: RandFlipImage
+          is_normalized: True
+        - op: Rgb2Bgr
+        - op: NormalizeImage
+          mean: [127.5,127.5,127.5]
+          std: [127.5,127.5,127.5]
+          is_scale: False
+        - op: ArrangeSSD
+        
+        
+    val:
+        - op: DecodeImage
+          to_rgb: True
+        - op: NormalizeBox
+        - op: RandomDistort
+        - op: Expand
+          expand_max_ratio: 4
+          expand_prob: 1
+        - op: Crop
+          batch_sampler: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
+        - op: ResizeImage
+          target_size: 300
+        - op: RandFlipImage
+          is_normalized: True
+        - op: Rgb2Bgr
+        - op: NormalizeImage
+          mean: [127.5,127.5,127.5]
+          std: [127.5,127.5,127.5]
+          is_scale: False
+        - op: ArrangeSSD
+
+    batch_size: 32
+    is_padding: False
+    is_padding_total: False
+    worker_conf:
+        bufsize: 100
+        worker_num: 8
+      
+MODEL:
+  TYPE: SSD
+  BACKBONE: MobileNetV1Backbone
+  CONV_GROUP_SCALE: 1
+
+ENV:
+  GPU: ON
+  GPU_NUM: 2
+  MULTIPROCESS_READER: ON
+  MULTIPROCESS_WORKER: 8
+  MULTIPROCESS_QUEUE_LEN: 32
+
+SSD_HEAD:
+  TYPE: SSDHead
+  MIN_RATIO: 20
+  MAX_RATIO: 90
+  MIN_SIZES: [60.0, 105.0, 150.0, 195.0, 240.0, 285.0]
+  MAX_SIZES: [[], 150.0, 195.0, 240.0, 285.0, 300.0]
+  ASPECT_RATIOS: [[2.], [2., 3.], [2., 3.], [2., 3.], [2., 3.], [2., 3.]]
+  CENTER_OFFSET: 0.5
+  FLIP_ASPECT: ON
+  NMS_THRESH: 0.45
+  
+
+OPTIMIZER:
+  TYPE: RMSProp
+
+  LR_DECAY:
+    POLICY: piecewise_decay
+    BOUNDARIES: [7500, 11000, 14500, 18000]
+    VALUES: [0.001, 0.0005, 0.00025, 0.0001, 0.00001]
+
+  LR_WARMUP:
+    WARMUP: OFF
+
+  WEIGHT_DECAY:
+    TYPE: L2
+    FACTOR: 0.00005
+    BN_FACTOR: 0.00005
+
+TRAIN:
+  MAX_ITERS: 220000
+  BATCH_SIZE_PER_DEVICE: 8
+  PRETRAIN_WEIGTS: models/fluid/PaddleCV/object_detection/pretrained/ssd_mobilenet_v1_coco/
+  INPUT_SIZE: 300
+  BATCH_NORM_TYPE: BN
+  USE_VAL: On
+  EPOCH_NUM: 100000
+  ENABLE_CE: ON
+  USE_PARALLEL: OFF
+  SHAPE: 300
+  AP_VERSION: integral
+  MODEL_SAVE_DIR: ./results/
+  
+
+TEST:
+  INPUT_SIZE: 300
+  NMS_TOPK: 1000
+  NMS_POSK: 100
+  
+METRIC:
+  AP_VERSION: integral
+  AP_OVERLAP_THRESH: 0.5
 
 ENV:
   GPU: ON
@@ -44,17 +195,3 @@ OPTIMIZER:
   WEIGHT_DECAY:
     TYPE: L2
     FACTOR: 0.00005
-
-TRAIN:
-  MAX_ITERS: 220000
-  BATCH_SIZE_PER_DEVICE: 8
-  PRETRAIN_WEIGTS: http://paddlemodels.bj.bcebos.com/ssd_mobilenet_v1_coco.tar.gz
-  INPUT_SIZE: 300
-  BATCH_NORM_TYPE: BN
-
-TEST:
-  INPUT_SIZE: 300
-  NMS_THRESH: 0.45
-  NMS_TOPK: 1000
-  NMS_POSK: 100
-  WEIGHTS: 
