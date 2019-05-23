@@ -241,7 +241,6 @@ class ResNet(object):
 
         if freeze_at > 0:
             res_endpoints[freeze_at - 1].stop_gradient = True
-            print("========= freeze ar var name ====  ", res_endpoints[freeze_at - 1].name)
         return res
 
 

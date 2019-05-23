@@ -60,7 +60,7 @@ def main():
 
             ob = OptimizerBuilder(cfg.OPTIMIZER)
             opt = ob.get_optimizer()
-            loss = fetches['total_loss']
+            loss = fetches['loss']
             opt.minimize(loss)
 
     # define executor
@@ -104,38 +104,40 @@ def main():
     start_time = time.time()
     end_time = time.time()
 
-    checks = ['image', 'im_info', 'gt_box', 'gt_label', 'is_crowd',
-              'conv1.conv2d.output.1.tmp_0',
-              'conv1_weights',
-              'res2c.add.output.5.tmp_0',
-              'res3a_branch1_weights',
-              'res3a_branch1_weights@GRAD',
-              'bbox_pred_w',
-              'bbox_pred_w@GRAD',
-              'cls_score_w',
-              'cls_score_w@GRAD',
-              'res4f.add.output.5.tmp_0']
+    checks = [
+        'image', 'im_info', 'gt_box', 'gt_label', 'is_crowd',
+        'conv1.conv2d.output.1.tmp_0', 'conv1_weights',
+        'res2c.add.output.5.tmp_0', 'res3a_branch1_weights',
+        'res3a_branch1_weights@GRAD', 'bbox_pred_w', 'bbox_pred_w@GRAD',
+        'cls_score_w', 'cls_score_w@GRAD', 'res4f.add.output.5.tmp_0'
+    ]
 
     for it in range(cfg.TRAIN.MAX_ITERS):
         start_time = end_time
         end_time = time.time()
 
-        for w in all_w:
-            t = fluid.global_scope().find_var(w).get_tensor()
-            print(w, np.sum(np.abs(t)))
+        #for w in all_w:
+        #    t = fluid.global_scope().find_var(w).get_tensor()
+        #    print(w, np.sum(np.abs(t)))
 
-        outs = exe.run(compile_program, fetch_list=[v.name for v in values] + checks, return_numpy=False)
-        stats = {k: np.array(v).mean() for k, v in zip(keys, outs[:len(values)])}
+        outs = exe.run(compile_program,
+                       fetch_list=[v.name for v in values] + checks,
+                       return_numpy=False)
+        stats = {
+            k: np.array(v).mean()
+            for k, v in zip(keys, outs[:len(values)])
+        }
         train_stats.update(stats)
         logs = train_stats.log()
         strs = '{}, iter: {}, lr: {:.5f}, {}, time: {:.3f}'.format(
-            Time(), it, np.mean(outs[len(values) - 1]), logs, end_time - start_time)
+            Time(), it,
+            np.mean(outs[len(values) - 1]), logs, end_time - start_time)
         print(strs)
         sys.stdout.flush()
 
-        for i, t in enumerate(outs[len(values):]):
-            print(checks[i], np.sum(np.abs(np.array(t))), t.lod())
-        
+        #for i, t in enumerate(outs[len(values):]):
+        #    print(checks[i], np.sum(np.abs(np.array(t))), t.lod())
+
     pyreader.reset()
 
 

@@ -86,7 +86,7 @@ class FasterRCNN(DetectorBase):
                                            bbox_outside_weights)
             loss.update(rpn_loss)
             total_loss = fluid.layers.sum(list(loss.values()))
-            loss.update({'total_loss': total_loss})
+            loss.update({'loss': total_loss})
             return loss
         else:
             pred = self.bbox_head.get_prediction(roi_feat, rois, im_info)

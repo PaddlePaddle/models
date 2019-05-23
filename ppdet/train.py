@@ -54,7 +54,7 @@ def main():
             # get optimizer and apply minimizing
             ob = OptimizerBuilder(cfg.OPTIMIZER)
             opt = ob.get_optimizer()
-            loss = fetches['total_loss']
+            loss = fetches['loss']
             opt.minimize(loss)
 
     # define executor
@@ -110,9 +110,8 @@ def main():
         # save model
         if it % cfg.TRAIN.SNAPSHOT_ITER == 0:
             checkpoint.save(exe, train_prog,
-                os.path.join(save_dir, "{}".format(it)))
-    checkpoint.save(exe, train_prog,
-        os.path.join(save_dir, "{model_final"))
+                            os.path.join(save_dir, "{}".format(it)))
+    checkpoint.save(exe, train_prog, os.path.join(save_dir, "{model_final"))
     pyreader.reset()
 
 

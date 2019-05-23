@@ -112,7 +112,6 @@ class ResizeImage(BaseOperator):
         self.target_size = target_size
         self.max_size = max_size
         self.interp = interp
-        #self.interp = cv2.INTER_LINEAR
         if not (isinstance(self.target_size, int) and isinstance(
                 self.max_size, int) and isinstance(self.interp, int)):
             raise TypeError('{}: the input type is error.'.format(self.__str__))
