@@ -43,15 +43,9 @@ class YOLOv3Head(object):
     """
 
     def __init__(self, cfg):
-        """
-        Args:
-            cfg(AttrDict): All parameters in dictionary
-
-        """
-
         self.cfg = cfg
         self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', False)
-        self.class_num = getattr(cfg.DATA, 'CLASS_NUM', 80)
+        self.class_num = getattr(cfg.DATA, 'CLASS_NUM')
         self._get_and_check_anchors()
 
     def _conv_bn(self,
