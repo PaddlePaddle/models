@@ -1,0 +1,29 @@
+DATA:
+    train:
+        anno_file: VOC/ImageSets/Main/train.txt
+        image_dir:  VOC/JPEGImages
+    samples: 3
+    
+TRANSFORM:
+    train:
+        - op: DecodeImage
+          to_rgb: False
+        - op: RandFlipImage
+          prob: 0.5
+        - op: NormalizeImage
+          mean: [102.9801, 115.9465, 122.7717]
+          is_scale: False
+          is_channel_first: False
+        - op: ResizeImage
+          target_size: 800
+          max_size: 1333
+        - op: Rgb2Bgr
+          to_bgr: False
+        - op: ArrangeRCNN
+    batch_size: 1
+    gpu_counts: 1
+    is_padding: True
+    is_padding_total: True
+    worker_conf:
+        bufsize: 10
+        worker_num: 2

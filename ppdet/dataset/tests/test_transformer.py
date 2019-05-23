@@ -21,17 +21,13 @@ class TestTransformer(unittest.TestCase):
         prefix = os.path.dirname(os.path.abspath(__file__))
         # json data
         anno_path = os.path.join(prefix,
-            'COCO17/annotations/instances_val2017.json')
-        image_dir = os.path.join(prefix, 'COCO17/val2017')
+            'coco/annotations/instances_val2017.json')
+        image_dir = os.path.join(prefix, 'coco/val2017')
         cls.sc_config = {'fname': anno_path,
             'image_dir': image_dir, 'samples': 200}
         
-        cls.ops = [op.DecodeImage(to_rgb=True),
-            op.RandFlipImage(prob=0.0),
-            op.ResizeImage(target_size=300, max_size=1333),
-            op.NormalizeImage(mean=[108, 108, 108]),
-            op.Bgr2Rgb(),
-            op.ArrangeSample(is_mask=False)]
+        cls.ops = [{'op': 'DecodeImage', 'to_rgb': True},
+                   {'op': 'ArrangeRCNN', 'is_mask': False}]
 
     @classmethod
     def tearDownClass(cls):
@@ -80,11 +76,13 @@ class TestTransformer(unittest.TestCase):
         """ test batched dataset
         """
         batchsize = 2
+        mapper = op.build(self.ops)
         ds = build_source(self.sc_config)
-        batched_ds = transformer.batch(ds, batchsize)
+        mapped_ds = transformer.map(ds, mapper)
+        batched_ds = transformer.batch(mapped_ds, batchsize, True)
 
         for sample in batched_ds:
-            self.assertEqual(len(sample), batchsize)
+            self.assertEqual(len(sample[0]), batchsize)
 
         batched_ds.reset()
 

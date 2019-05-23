@@ -64,7 +64,7 @@ class FasterRCNN(DetectorBase):
         # rpn proposals
         rois, rpn_roi_probs = self.rpn_head.get_proposals(body_feat, im_info)
         if self.is_train:
-            self.rpn_head.get_loss(im_info, gt_box, is_crowd)
+            rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
 
         if self.is_train:
             # sampled rpn proposals
@@ -84,6 +84,9 @@ class FasterRCNN(DetectorBase):
             loss = self.bbox_head.get_loss(roi_feat, labels_int32, bbox_targets,
                                            bbox_inside_weights,
                                            bbox_outside_weights)
+            loss.update(rpn_loss)
+            total_loss = fluid.layers.sum(list(loss.values()))
+            loss.update({'loss': total_loss})
             return loss
         else:
             pred = self.bbox_head.get_prediction(roi_feat, rois, im_info)
@@ -100,6 +103,8 @@ class FasterRCNN(DetectorBase):
         h = getattr(self.cfg.DATA, 'IM_HEIGHT', 224)
         w = getattr(self.cfg.DATA, 'IM_WIDTH', 224)
 
+        # the order of data layers shoule be the same as
+        # them ppdet/dataset/transform/operator/arrange_sample.py
         # yapf: disable
         feed_info = [
             {'name': 'image',  'shape': [c, h, w], 'dtype': 'float32', 'lod_level': 0},
@@ -107,7 +112,7 @@ class FasterRCNN(DetectorBase):
         ]
         if self.is_train:
             anno_info = [
-                {'name': 'gt_box',  'shape': [1], 'dtype': 'float32', 'lod_level': 1},
+                {'name': 'gt_box',  'shape': [4], 'dtype': 'float32', 'lod_level': 1},
                 {'name': 'gt_label','shape': [1], 'dtype': 'int32', 'lod_level': 1},
                 {'name': 'is_crowd', 'shape': [1],'dtype': 'int32', 'lod_level': 1},
                 {'name': 'im_id',    'shape': [1], 'dtype': 'int32', 'lod_level': 0},

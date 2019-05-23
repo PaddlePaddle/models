@@ -30,8 +30,10 @@ __all__ = ['BBoxHead']
 class BBoxHead(object):
     """
     BBoxHead class
+
     Args:
         cfg (Dict): All parameters in dictionary.
+
     """
 
     def __init__(self, cfg):
@@ -45,11 +47,12 @@ class BBoxHead(object):
 
         Args:
             roi_feat (Variable): RoI feature from RoIExtractor.
-            head_func (Function): A function to extract bbox_head feature.
 
         Returns:
-            cls_score(Variable): TODO(guanzhong) add comments
-            bbox_pred(Variable): are output of bbox_head.
+            cls_score(Variable): Output of rpn head with shape of 
+                                 [N, num_anchors, H, W].
+            bbox_pred(Variable): Output of rpn head with shape of
+                                 [N, num_anchors * 4, H, W].
         """
         head_feat = self.head_func(roi_feat)
         cls_score = fluid.layers.fc(input=head_feat,
@@ -84,12 +87,22 @@ class BBoxHead(object):
         Get bbox_head loss.
         
         Args:
-            bbox_targets(Variable), bbox_inside_weights(Variable), 
-            bbox_outside_weights(Variable) are outputs of get_target.
+            roi_feat (Variable): RoI feature from RoIExtractor.
+            labels_int32(Variable): Class label of a RoI with shape [P, 1].
+                                    P is the number of RoI.
+            bbox_targets(Variable): Box label of a RoI with shape 
+                                    [P, 4 * class_nums].
+            bbox_inside_weights(Variable): Indicates whether a box should 
+                                           contribute to loss. Same shape as
+                                           bbox_targets.
+            bbox_outside_weights(Variable): Indicates whether a box should 
+                                            contribute to loss. Same shape as 
+                                            bbox_targets.
 
         Return:
-            loss_cls(Variable): bbox_head loss.
-            loss_bbox(Variable): bbox_head loss.
+            Type: Dict
+                loss_cls(Variable): bbox_head loss.
+                loss_bbox(Variable): bbox_head loss.
         """
 
         cls_score, bbox_pred = self._get_output(roi_feat)
@@ -106,7 +119,7 @@ class BBoxHead(object):
             outside_weight=bbox_outside_weights,
             sigma=1.0)
         loss_bbox = fluid.layers.reduce_mean(loss_bbox)
-        return {'loss_cls': loss_cls, 'loss_cls': loss_bbox}
+        return {'loss_cls': loss_cls, 'loss_bbox': loss_bbox}
 
     def get_prediction(self, roi_feat, rois, im_info):
         """

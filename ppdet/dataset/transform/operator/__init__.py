@@ -14,6 +14,9 @@
 
 import copy
 from . import base
+from . import arrange_sample
+import logging
+logger = logging.getLogger(__name__)
 
 __all__ = ['build']
 
@@ -33,12 +36,12 @@ def build(ops):
     op_repr = []
     for op in ops:
         if type(op) is dict and 'op' in op:
-            op_func = getattr(base, op['op'])
+            op_func = getattr(base.BaseOperator, op['op'])
             params = copy.deepcopy(op)
             del params['op']
             o = op_func(**params)
         elif not isinstance(op, base.BaseOperator):
-            op_func = getattr(base, op['name'])
+            op_func = getattr(base.BaseOperator, op['name'])
             params = {} if 'params' not in op else op['params']
             o = op_func(**params)
         else:
@@ -64,7 +67,7 @@ def build(ops):
 
 
 for nm in base.registered_ops:
-    op = getattr(base, nm)
+    op = getattr(base.BaseOperator, nm)
     locals()[nm] = op
 
 __all__ += base.registered_ops

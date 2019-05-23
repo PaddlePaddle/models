@@ -25,14 +25,13 @@ __all__ = ['RoIPool', 'RoIAlign', 'FPNRoIAlign']
 
 class RoIExtractor(object):
     """
-        RoIExtractor class
+    RoIExtractor class
+
+    Args:
+        cfg(Dict): All parameters in dictionary.
     """
 
     def __init__(self, cfg):
-        """
-        Args:
-            cfg(Dict): All parameters in dictionary.
-        """
         self.cfg = cfg
 
     def get_roi_feat(self, head_input, rois):

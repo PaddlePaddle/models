@@ -31,14 +31,12 @@ __all__ = ['RPNHead']
 class RPNHead(object):
     """
     RPNHead class
-    TODO(wangguanzhong): refine the code comments
+    
+    Args:
+        cfg(dict): All parameters in dictionary
     """
 
     def __init__(self, cfg):
-        """
-        Args:
-            cfg(dict): All parameters in dictionary
-        """
         self.cfg = cfg
         self.is_train = cfg.IS_TRAIN
         # whether to use random to sample proposals.
@@ -119,10 +117,12 @@ class RPNHead(object):
 
     def get_proposals(self, body_feat, im_info):
         """
-        Get proposals according to the output of rpn head
+        Get proposals according to the output of backbone.
 
         Args:
             body_feat (Variable): the feature map from backone.
+            im_info(Variable): The information of image with shape [N, 3] with 
+                               shape (height, width, scale). 
 
         Returns:
             rpn_rois(Variable): Output proposals with shape of (rois_num, 4).
@@ -158,12 +158,17 @@ class RPNHead(object):
         Sample proposals and Calculate rpn loss.
 
         Args:
-            gt_box(Variable): The ground-truth boudding boxes.
-            is_crowd(Variable): Indicates groud-truth is crowd or not.
+            im_info(Variable): The information of image with shape [N, 3] with
+                               shape (height, width, scale). 
+            gt_box(Variable): The ground-truth bounding boxes with shape [M, 4].
+                              M is the number of groundtruth.
+            is_crowd(Variable): Indicates groud-truth is crowd or not with
+                                shape [M, 1]. M is the number of groundtruth.
 
-        Returns: 
-            rpn_cls_loss(Variable): RPN classification loss.
-            rpn_bbox_loss(Variable): RPN bounding box regression loss. 
+        Returns:
+            Type: Dict 
+                rpn_cls_loss(Variable): RPN classification loss.
+                rpn_bbox_loss(Variable): RPN bounding box regression loss. 
             
         """
         if self.rpn_cls_score is None:
@@ -211,23 +216,23 @@ class RPNHead(object):
         score_tgt.stop_gradient = True
         rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
             x=score_pred, label=score_tgt)
-
-        rpn_cls_loss = fluid.layers.reduce_sum(rpn_cls_loss)
-        rpn_cls_loss = rpn_cls_loss / (self.cfg.TRAIN.IM_PER_BATCH *
-                                       self.cfg.RPN_HEAD.RPN_BATCH_SIZE_PER_IM)
+        rpn_cls_loss = fluid.layers.reduce_mean(
+            rpn_cls_loss, name='loss_rpn_cls')
 
         loc_tgt = fluid.layers.cast(x=loc_tgt, dtype='float32')
         loc_tgt.stop_gradient = True
-        rpn_bbox_loss = fluid.layers.smooth_l1(
+        rpn_reg_loss = fluid.layers.smooth_l1(
             x=loc_pred,
             y=loc_tgt,
             sigma=3.0,
             inside_weight=bbox_weight,
             outside_weight=bbox_weight)
+        rpn_reg_loss = fluid.layers.reduce_sum(
+            rpn_reg_loss, name='loss_rpn_bbox')
+        score_shape = fluid.layers.shape(score_tgt)
+        score_shape = fluid.layers.cast(x=score_shape, dtype='float32')
+        norm = fluid.layers.reduce_prod(score_shape)
+        norm.stop_gradient = True
+        rpn_reg_loss = rpn_reg_loss / norm
 
-        rpn_bbox_loss = fluid.layers.reduce_sum(rpn_bbox_loss)
-        rpn_bbox_loss = rpn_bbox_loss / (
-            self.cfg.TRAIN.IM_PER_BATCH *
-            self.cfg.RPN_HEAD.RPN_BATCH_SIZE_PER_IM)
-
-        return rpn_cls_loss, rpn_bbox_loss
+        return {'loss_rpn_cls': rpn_cls_loss, 'loss_rpn_bbox': rpn_reg_loss}

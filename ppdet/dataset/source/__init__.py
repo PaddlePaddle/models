@@ -20,8 +20,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import copy
-from .loader import load
 from .roidb_source import RoiDbSource
+
 
 def build(config):
     """ build dataset from source data, 
@@ -38,4 +38,3 @@ def build(config):
         return RoiDbSource(**args)
     else:
         raise ValueError('not supported source type[%s]' % (source_type))
-

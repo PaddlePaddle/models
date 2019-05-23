@@ -37,18 +37,19 @@ def map(ds, mapper, worker_args=None):
         return base.MappedDataset(ds, mapper)
 
 
-def batch(ds, batchsize, drop_last=True):
+def batch(ds, gpu_counts, batchsize, drop_last=True, is_padding=False):
     """ Batch data samples to batches
 
     Args:
         batchsize (int): number of samples for a batch
         drop_last (bool): drop last few samples if not enough for a batch
+        is_padding (bool): whether padding the image in one batch
 
     Returns:
         a batched dataset
     """
-    return base.BatchedDataset(ds,
-        batchsize, drop_last=drop_last)
+    return base.BatchedDataset(ds, gpu_counts,
+        batchsize, drop_last=drop_last, is_padding=is_padding)
 
 
 

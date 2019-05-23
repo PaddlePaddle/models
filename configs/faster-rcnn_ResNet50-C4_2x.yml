@@ -14,17 +14,17 @@
 
 
 MODEL:
-  TYPE: Faster-RCNN
+  TYPE: FasterRCNN
   BACKBONE: ResNet50C4Backbone
-  FREEZE_AT: 0
-  MASK: OFF
-  FPN: OFF
+  FREEZE_AT: 2
+  FREEZE_BN: ON
+  AFFINE_CHANNEL: ON
 
 RPN_HEAD:
   TYPE: RPNHead
   ANCHOR:
     ANCHOR_SIZES: [32, 64, 128, 256, 512]
-    ASPECT_RATIOS: [32, 64, 128, 256, 512]
+    ASPECT_RATIOS: [0.5, 1.0, 2.0]
     VARIANCE: [1., 1., 1., 1.]
     RPN_STRIDE: [16.0, 16.0]
 
@@ -52,19 +52,13 @@ RPN_HEAD:
   RPN_STRADDLE_THRESH: 0.
   RPN_FG_FRACTION: 0.5
   RPN_POSITIVE_OVERLAP: 0.7
-  RPN_NEGATIVE_OVERLAP: 0.3 
+  RPN_NEGATIVE_OVERLAP: 0.3
 
 BBOX_HEAD:
   TYPE: BBoxHead
   HEAD_CONV: ResNet50C5
-  MLP_HEAD_DIM: 1024
 
   ROI:
-    BATCH_SIZE_PER_IM: 512
-    FG_FRACTION: 0.25
-    FG_THRESH: 0.5
-    BG_THRESH_HIGH: 0.5
-    BG_THRESH_LOW: 0.0
     BBOX_REG_WEIGHTS: [0.1, 0.1, 0.2, 0.2]
 
 ROI_EXTRACTOR:
@@ -75,18 +69,7 @@ ROI_EXTRACTOR:
 
 ENV:
   GPU: ON
-  GPU_NUM: 8
-  MULTIPROCESS_READER: OFF
 
-DATA:
-  DATASET: coco2017
-  CLASS_NUM: 81
-  MAX_SIZE: 1333
-  TRAIN_SCALES: [800]
-  TEST_SCALE: 800
-
-TRANSFORM:
-  PIPELINE: RCNN
 
 OPTIMIZER:
   TYPE: Momentum
@@ -106,17 +89,50 @@ OPTIMIZER:
   WEIGHT_DECAY:
     TYPE: L2
     FACTOR: 0.0001
-    BN_FACTOR: 0
 
 TRAIN:
   MAX_ITERS: 360000
-  IM_PER_BATCH: 1
-  PRETRAIN_WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  LOG_SMOOTH_WINDOW: 20
+  SNAPSHOT_ITER: 10000
+  PRETRAIN_WEIGTS: ResNet50_pretrained
   BATCH_NORM_TYPE: BN
   RANDOM: OFF
+  SAVE_DIR: output
 
 TEST:
   SCORE_THRESH: 0.05
   NMS_THRESH: 0.5
   DETECTIONS_PER_IM: 100
-  WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  WEIGTS: ResNet50_pretrained
+
+DATA:
+  train:
+      anno_file: COCO17/annotations/instances_val2017.json
+      image_dir: COCO17/val2017
+  max_iter: 180000
+  CLASS_NUM: 81
+
+TRANSFORM:
+    train:
+        - op: DecodeImage
+          to_rgb: True
+        - op: RandFlipImage
+          prob: 0.5
+        - op: NormalizeImage
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+          is_scale: True
+          is_channel_first: False
+        - op: ResizeImage
+          target_size: 800
+          max_size: 1333
+          interp: 1
+        - op: Rgb2Bgr
+          to_bgr: False
+        - op: ArrangeRCNN
+    batch_size: 1
+    gpu_counts: 8
+    is_padding: True
+    worker_conf:
+        bufsize: 10
+        worker_num: 2

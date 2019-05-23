@@ -21,13 +21,17 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
+import numpy as np
 from . import source
-from . import transform
+from .transform import transformer as tf
 from .transform import operator as op
+
 
 class Reader(object):
     """ Interface to make readers for training or evaluation
     """
+
     def __init__(self, data_cf, trans_conf):
         """ Init
         """
@@ -41,7 +45,8 @@ class Reader(object):
         file_conf = self._data_cf[which]
 
         # 1, Build data source
-        samples = -1 if 'samples' not in self._data_cf else self._data_cf['samples']
+        samples = -1 if 'samples' not in self._data_cf else self._data_cf[
+            'samples']
         sc_conf = {
             'fname': file_conf['anno_file'],
             'image_dir': file_conf['image_dir'],
@@ -51,17 +56,31 @@ class Reader(object):
 
         # 2, Buid a transformed dataset
         ops = self._trans_conf[which]
-        worker_args = None
-        if 'worker_args' in self._trans_conf:
-            worker_args = self._trans_conf['worker_args']
-        dataset = transform.transform(sc,
-            ops, worker_args=worker_args)
+        gpu_counts = self._trans_conf['gpu_counts']
+        batchsize = self._trans_conf['batch_size']
+        worker_args = None if 'worker_args' not in \
+            self._trans_conf else self._trans_conf['worker_args']
+        drop_last = False if 'drop_last' not in \
+            self._trans_conf else self._trans_conf['drop_last']
+        is_padding = False if 'is_padding' not in \
+            self._trans_conf else self._trans_conf['is_padding']
+        mapper = op.build(ops)
+        mapped_ds = tf.map(sc, mapper, worker_args)
+        batched_ds = tf.batch(mapped_ds, gpu_counts, batchsize, drop_last,
+                              is_padding)
 
         # 3, Build a reader
         def _reader():
-            dataset.reset()
-            for sample in dataset:
-                yield sample
+            # TODO: need more elegant code
+            n = 0
+            while n < self._data_cf['max_iter']:
+                batched_ds.reset()
+                for sample in batched_ds:
+                    for sub_batch_out in sample:
+                        yield sub_batch_out
+                        n += 1
+                        if n == self._data_cf['max_iter']:
+                            return
 
         return _reader
 
@@ -74,4 +93,3 @@ class Reader(object):
         """ Build reader for validation
         """
         return self._make_reader(False)
-
