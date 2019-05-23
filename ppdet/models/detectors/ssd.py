@@ -27,7 +27,6 @@ from ..registry import Detectors
 from ..registry import Backbones
 from ..registry import SSDHeads
 
-
 from .base import DetectorBase
 
 __all__ = ['SSD']
@@ -40,7 +39,7 @@ class SSD(DetectorBase):
         self.mode = cfg.MODE
         self.backbone = Backbones.get(cfg.MODEL.BACKBONE)(cfg)
         self.ssd_head = SSDHeads.get(cfg.SSD_HEAD.TYPE)(cfg)
-        self.use_pyreader = True if self.mode=='train' else False
+        self.use_pyreader = True if self.mode == 'train' else False
 
     def _forward(self):
         # inputs
@@ -52,12 +51,12 @@ class SSD(DetectorBase):
             is_difficult = feed_vars['is_difficult']
 
         # backbone
-        body_feat1, body_feat2 = self.backbone(im)
+        body_feat1, body_feat2, _ = self.backbone(im)
 
         # ssd head
         if self.mode == 'train':
-            loss = self.ssd_head.get_loss(im, body_feat1, body_feat2,
-                                          gt_box, gt_label)
+            loss = self.ssd_head.get_loss(im, body_feat1, body_feat2, gt_box,
+                                          gt_label)
             return loss
         else:
             pred = self.ssd_head.get_prediction(im, body_feat1, body_feat2)

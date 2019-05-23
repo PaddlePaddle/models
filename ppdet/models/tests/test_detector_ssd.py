@@ -37,13 +37,14 @@ class TestDetectorFasterRCNN(unittest.TestCase):
         merge_cfg({'MODE': 'train'}, self.cfg)
         self.detector = Detectors.get(self.detector_type)(self.cfg)
         self.detector.train()
-
+        #TODO(sunyanfang): add more check
 
     @prog_scope()
     def test_val(self):
         merge_cfg({'MODE': 'val'}, self.cfg)
         self.detector = Detectors.get(self.detector_type)(self.cfg)
         self.detector.test()
+        #TODO(sunyanfang): add more check
 
 
 if __name__ == '__main__':

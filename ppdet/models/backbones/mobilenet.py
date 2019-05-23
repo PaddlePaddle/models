@@ -108,17 +108,18 @@ class MobileNet(object):
         # 38x38
         tmp = self.depthwise_separable(tmp, 256, 256, 256, 1, scale, "conv4_1")
         tmp = self.depthwise_separable(tmp, 256, 512, 256, 2, scale, "conv4_2")
+        module6 = tmp
         # 19x19
         for i in range(5):
             tmp = self.depthwise_separable(tmp, 512, 512, 512, 1, scale,
                                            "conv5" + "_" + str(i + 1))
         module11 = tmp
+
         tmp = self.depthwise_separable(tmp, 512, 1024, 512, 2, scale, "conv5_6")
-        asdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa = 123
         # 10x10
         module13 = self.depthwise_separable(tmp, 1024, 1024, 1024, 1, scale,
                                             "conv6")
-        return module11, module13
+        return module6, module11, module13
 
 
 @Backbones.register
