@@ -38,7 +38,7 @@ train() {
 		--save_steps 1000 \
 		--validation_steps 100 \
 		--compute_accuracy False \
-		--lamda 0.91 \
+		--lamda 0.958 \
 		--task_mode ${TASK_MODE}
 }
 #run_evaluate
@@ -55,7 +55,7 @@ evaluate() {
 		--vocab_path ${VOCAB_PATH} \
 		--task_mode ${TASK_MODE} \
 		--compute_accuracy False \
-		--lamda 0.91 \
+		--lamda 0.958 \
 		--init_checkpoint ${INIT_CHECKPOINT}
 }
 # run_infer
