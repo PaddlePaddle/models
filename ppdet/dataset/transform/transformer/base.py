@@ -22,13 +22,16 @@ import numpy as np
 import functools
 from ...dataset import Dataset
 
+
 class ProxiedDataset(Dataset):
     """ proxy the method calling to this class to 'self._ds' when itself not avaialbe
     """
+
     def __init__(self, ds):
         super(ProxiedDataset, self).__init__()
         self._ds = ds
-        methods = filter(lambda k: not k.startswith('_'), Dataset.__dict__.keys())
+        methods = filter(lambda k: not k.startswith('_'),
+                         Dataset.__dict__.keys())
 
         for m in methods:
             func = functools.partial(self._proxy_method, getattr(self, m))
@@ -60,7 +63,13 @@ class MappedDataset(ProxiedDataset):
 class BatchedDataset(ProxiedDataset):
     """ transform samples to batches
     """
-    def __init__(self, ds, gpu_counts, batchsize, drop_last=True, is_padding=False):
+
+    def __init__(self,
+                 ds,
+                 gpu_counts,
+                 batchsize,
+                 drop_last=True,
+                 is_padding=False):
         """
         Args:
             ds (instance of Dataset): dataset to be batched
@@ -73,7 +82,7 @@ class BatchedDataset(ProxiedDataset):
         self._batchsz = batchsize
         self._drop_last = drop_last
         self.is_padding = is_padding
-        
+
     def padding_minibatch(self, batch_data):
         if len(batch_data) == 1:
             return batch_data
@@ -86,19 +95,25 @@ class BatchedDataset(ProxiedDataset):
             padding_im[:, :im_h, :im_w] = data[0]
             padding_batch.append((padding_im, ) + data[1:])
         return padding_batch
-        
 
     def next(self):
         """ proxy to self._ds.next
         """
         devices_num = self._gpu_counts
         total_batchsz = self._batchsz * devices_num
-            
+
+        def has_empty(items):
+            if any(x is None for x in items):
+                return True
+            if any(x.size == 0 for x in items):
+                return True
+            return False
+
         batch = []
         for _ in range(total_batchsz):
             try:
                 out = self._ds.next()
-                while out[1].shape[0] == 0:
+                while has_empty(out):
                     out = self._ds.next()
                 batch.append(out)
             except StopIteration as e:
