@@ -2,6 +2,7 @@ import argparse
 import gym
 import numpy as np
 from itertools import count
+from collections import namedtuple
 import math
 import paddle
 import paddle.fluid as fluid
@@ -23,7 +24,7 @@ parser.add_argument(
     help='random seed (default: 543)')
 parser.add_argument(
     '--render', action='store_true', help='render the environment')
-parser.add_argument('--save_dir', type=str, default="./saved_models")
+parser.add_argument('--save_dir', type=str, default="./saved_models_ac")
 parser.add_argument(
     '--log-interval',
     type=int,
@@ -35,39 +36,39 @@ args = parser.parse_args()
 env = gym.make('CartPole-v0')
 env.seed(args.seed)
 
+SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
+
 
 class Policy(fluid.dygraph.Layer):
     def __init__(self, name_scope):
         super(Policy, self).__init__(name_scope)
 
         self.affine1 = nn.FC(self.full_name(), size=128)
-        self.affine2 = nn.FC(self.full_name(), size=2)
-        self.dropout_ratio = 0.6
+        self.action_head = nn.FC(self.full_name(), size=2)
+        self.value_head = nn.FC(self.full_name(), size=1)
 
-        self.saved_log_probs = []
+        self.saved_actions = []
         self.rewards = []
 
     def forward(self, x):
         x = fluid.layers.reshape(x, shape=[1, 4])
         x = self.affine1(x)
-        x = fluid.layers.dropout(x, self.dropout_ratio)
         x = fluid.layers.relu(x)
-        action_scores = self.affine2(x)
 
-        self._x_for_debug = x
+        action_scores = self.action_head(x)
+        state_values = self.value_head(x)
 
-        return fluid.layers.softmax(action_scores, axis=1)
+        return fluid.layers.softmax(action_scores, axis=-1), state_values
 
 
 with fluid.dygraph.guard():
     fluid.default_startup_program().random_seed = args.seed
     fluid.default_main_program().random_seed = args.seed
     np.random.seed(args.seed)
-
     policy = Policy("PolicyModel")
 
     eps = np.finfo(np.float32).eps.item()
-    optimizer = fluid.optimizer.AdamOptimizer(learning_rate=1e-2)
+    optimizer = fluid.optimizer.AdamOptimizer(learning_rate=3e-2)
 
     def get_mean_and_std(values=[]):
         n = 0.
@@ -106,85 +107,88 @@ with fluid.dygraph.guard():
     def select_action(state):
         state = fluid.dygraph.base.to_variable(state)
         state.stop_gradient = True
-        loss_probs = policy(state)
-        probs = loss_probs.numpy()
+        probs, state_value = policy(state)
+        np_probs = probs.numpy()
 
-        action, _mask = sample_action(probs[0])
+        action, _mask = sample_action(np_probs[0])
 
         mask = fluid.dygraph.base.to_variable(_mask)
         mask.stop_gradient = True
 
-        loss_probs = fluid.layers.log(loss_probs)
+        loss_probs = fluid.layers.log(probs)
         loss_probs = fluid.layers.elementwise_mul(loss_probs, mask)
         loss_probs = fluid.layers.reduce_sum(loss_probs, dim=-1)
 
-        policy.saved_log_probs.append(loss_probs)
+        policy.saved_actions.append(SavedAction(loss_probs, state_value))
 
         return action
 
     def finish_episode():
         R = 0
-        policy_loss = []
+        saved_actions = policy.saved_actions
+        policy_losses = []
+        value_losses = []
         returns = []
         for r in policy.rewards[::-1]:
             R = r + args.gamma * R
             returns.insert(0, R)
 
         mean, std = get_mean_and_std(returns)
-
         returns = np.array(returns).astype("float32")
         returns = (returns - mean) / (std + eps)
 
-        for log_prob, R in zip(policy.saved_log_probs, returns):
-            log_prob_numpy = log_prob.numpy()
+        for (log_prob, value), R in zip(saved_actions, returns):
+            advantage = R - value[0][0]
 
+            log_prob_numpy = log_prob.numpy()
             R_numpy = np.ones_like(log_prob_numpy).astype("float32")
-            _R = -1 * R * R_numpy
+            _R = -1 * advantage * R_numpy
             _R = fluid.dygraph.base.to_variable(_R)
             _R.stop_gradient = True
-            curr_loss = fluid.layers.elementwise_mul(_R, log_prob)
-            policy_loss.append(curr_loss)
 
-        policy_loss = fluid.layers.concat(policy_loss)
-        policy_loss = fluid.layers.reduce_sum(policy_loss)
+            policy_loss = fluid.layers.elementwise_mul(_R, log_prob)
+            policy_losses.append(policy_loss)
 
-        policy_loss.backward()
-        optimizer.minimize(policy_loss)
+            _R2 = np.ones_like(value.numpy()).astype("float32") * R
+            _R2 = fluid.dygraph.base.to_variable(_R2)
+            _R2.stop_gradient = True
 
-        dy_grad = policy._x_for_debug.gradient()
+            value_loss = fluid.layers.smooth_l1(value, _R2, sigma=1.0)
+            value_losses.append(value_loss)
+
+        all_policy_loss = fluid.layers.concat(policy_losses)
+        all_policy_loss = fluid.layers.reduce_sum(all_policy_loss)
+
+        all_value_loss = fluid.layers.concat(value_losses)
+        all_value_loss = fluid.layers.reduce_sum(all_value_loss)
+
+        loss = all_policy_loss + all_value_loss
+
+        loss.backward()
+        optimizer.minimize(loss)
 
         policy.clear_gradients()
         del policy.rewards[:]
-        del policy.saved_log_probs[:]
+        del policy.saved_actions[:]
 
         return returns
 
     running_reward = 10
-    for i_episode in count(1):
-        state, ep_reward = env.reset(), 0
-        for t in range(1, 10000):  # Don't infinite loop while learning
-            state = np.array(state).astype("float32")
-            action = select_action(state)
-            state, reward, done, _ = env.step(action)
+    policy.load_dict(fluid.dygraph.load_persistables(args.save_dir))
 
-            if args.render:
-                env.render()
+    state, ep_reward = env.reset(), 0
+    for t in range(1, 10000):  # Don't infinite loop while learning
+        state = np.array(state).astype("float32")
+        action = select_action(state)
+        state, reward, done, _ = env.step(action)
 
-            policy.rewards.append(reward)
-            ep_reward += reward
+        if args.render:
+            env.render()
 
-            if done:
-                break
+        policy.rewards.append(reward)
+        ep_reward += reward
 
-        running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
-        returns = finish_episode()
-        if i_episode % args.log_interval == 0:
-            print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.
-                  format(i_episode, ep_reward, running_reward))
-
-        if running_reward > env.spec.reward_threshold:
-            print("Solved! Running reward is now {} and "
-                  "the last episode runs to {} time steps!".format(
-                      running_reward, t))
-            fluid.dygraph.save_persistables(policy.state_dict(), args.save_dir)
+        if done:
             break
+
+    print('Last reward: {:.2f}'.format(ep_reward))

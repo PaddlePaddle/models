@@ -24,6 +24,7 @@ parser.add_argument(
     help='random seed (default: 543)')
 parser.add_argument(
     '--render', action='store_true', help='render the environment')
+parser.add_argument('--save_dir', type=str, default="./saved_models_ac")
 parser.add_argument(
     '--log-interval',
     type=int,
@@ -61,6 +62,9 @@ class Policy(fluid.dygraph.Layer):
 
 
 with fluid.dygraph.guard():
+    fluid.default_startup_program().random_seed = args.seed
+    fluid.default_main_program().random_seed = args.seed
+    np.random.seed(args.seed)
     policy = Policy("PolicyModel")
 
     eps = np.finfo(np.float32).eps.item()
@@ -196,4 +200,5 @@ with fluid.dygraph.guard():
             print("Solved! Running reward is now {} and "
                   "the last episode runs to {} time steps!".format(
                       running_reward, t))
+            fluid.dygraph.save_persistables(policy.state_dict(), args.save_dir)
             break
