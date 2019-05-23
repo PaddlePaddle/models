@@ -28,7 +28,7 @@ import paddle.fluid as fluid
 from paddle.fluid.framework import Program, program_guard
 
 YAML_LIST = [
-        'yolov3_DarkNet53_1x_syncbn.yml'
+    'yolov3_DarkNet53_1x_syncbn.yml'
 ]
 
 
