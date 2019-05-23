@@ -23,12 +23,14 @@ from __future__ import unicode_literals
 from . import transformer
 from . import operator
 
+
 def transform(source, ops_conf, worker_args=None):
     """ transform data in 'source' using a mapper defined by 'ops_conf'
 
     Args:
         @source (instance of Dataset): input data sample
-        @ops_conf (list of op configs): used to build a mapper which accept a sample and return a transformed sample
+        @ops_conf (list of op configs): used to build a mapper
+                which accept a sample and return a transformed sample
 
     Returns:
         instance of 'Dataset'
@@ -38,4 +40,3 @@ def transform(source, ops_conf, worker_args=None):
 
 
 __all__ = ['transformer', 'operator']
-

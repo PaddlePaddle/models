@@ -65,7 +65,7 @@ ROI_EXTRACTOR:
   EXTRACT_METHOD: RoIAlign
   ROI_RESOLUTION: 14
   SPATIAL_SCALE: 1. / 16.
-  SAMPLING_RATIO: 0
+  SAMPLING_RATIO: 0 
 
 ENV:
   GPU: ON
@@ -90,25 +90,26 @@ OPTIMIZER:
     FACTOR: 0.0001
 
 TRAIN:
-  MAX_ITERS: 180000
-  LOG_SMOOTH_WINDOW: 20
+  MAX_ITERS: 10
+  LOG_SMOOTH_WINDOW: 1
   SNAPSHOT_ITER: 10000
-  PRETRAIN_WEIGTS: ResNet50_pretrained
+  PRETRAIN_WEIGTS: model_final
   BATCH_NORM_TYPE: BN
-  RANDOM: ON
+  RANDOM: OFF
   SAVE_DIR: output
 
 TEST:
   SCORE_THRESH: 0.05
   NMS_THRESH: 0.5
   DETECTIONS_PER_IM: 100
-  WEIGTS: ResNet50_pretrained
+  WEIGTS: model_final
 
 DATA:
   train:
       anno_file: COCO17/annotations/instances_val2017.json
       image_dir: COCO17/val2017
-  max_iter: 180000
+  samples: 1
+  max_iter: 10
   CLASS_NUM: 81
 
 TRANSFORM:
@@ -116,7 +117,7 @@ TRANSFORM:
         - op: DecodeImage
           to_rgb: True
         - op: RandFlipImage
-          prob: 0.5
+          prob: 1.0
         - op: NormalizeImage
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
@@ -130,7 +131,7 @@ TRANSFORM:
           to_bgr: False
         - op: ArrangeRCNN
     batch_size: 1
-    gpu_counts: 8
+    gpu_counts: 1
     is_padding: True
     worker_conf:
         bufsize: 10

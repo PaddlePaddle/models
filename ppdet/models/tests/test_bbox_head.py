@@ -17,7 +17,8 @@ import unittest
 import configs
 import paddle.fluid as fluid
 from paddle.fluid.framework import Program, program_guard
-import ppdet.models.bbox_head as bbox_head
+import ppdet.models.bbox_heads as bbox_head
+import ppdet.models.target_assigners as bbox_assigner
 import os
 
 YAML_LIST = [
@@ -27,23 +28,55 @@ YAML_LIST = [
     'mask-rcnn_ResNet50-C4_2x.yml',
 ]
 
-#TODO(wangguanzhong): fix unit testing after refing bbox_head.py
 
-
-def init_head_input(cfg):
-    roi_feat = fluid.layers.data(
-        name='roi_feat', shape=[1024, 14, 14], dtype='float32', lod_level=1)
-    rpn_rois = fluid.layers.data(
-        name='rpn_rois', shape=[4], dtype='float32', lod_level=1)
-    gt_label = fluid.layers.data(
-        name='gt_label', shape=[1], dtype='int32', lod_level=1)
-    is_crowd = fluid.layers.data(
-        name='is_crowd', shape=[1], dtype='int32', lod_level=1)
-    gt_box = fluid.layers.data(
-        name='gt_box', shape=[4], dtype='float32', lod_level=1)
-    im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
-    head_func = getattr(bbox_head, cfg.BBOX_HEAD.HEAD_FUNC)
-    return roi_feat, rpn_rois, gt_label, is_crowd, gt_box, im_info, head_func
+def build_feed_vars():
+    feed_info = [
+        {
+            'name': 'roi_feat',
+            'shape': [1024, 14, 14],
+            'dtype': 'float32',
+            'lod_level': 1
+        },
+        {
+            'name': 'rpn_rois',
+            'shape': [4],
+            'dtype': 'float32',
+            'lod_level': 1
+        },
+        {
+            'name': 'im_info',
+            'shape': [3],
+            'dtype': 'float32',
+            'lod_level': 0
+        },
+        {
+            'name': 'gt_box',
+            'shape': [1],
+            'dtype': 'float32',
+            'lod_level': 1
+        },
+        {
+            'name': 'gt_label',
+            'shape': [1],
+            'dtype': 'int32',
+            'lod_level': 1
+        },
+        {
+            'name': 'is_crowd',
+            'shape': [1],
+            'dtype': 'int32',
+            'lod_level': 1
+        },
+    ]
+    feed_vars = {}
+    for info in feed_info:
+        d = fluid.layers.data(
+            name=info['name'],
+            shape=info['shape'],
+            dtype=info['dtype'],
+            lod_level=info['lod_level'])
+        feed_vars[info['name']] = d
+    return feed_vars
 
 
 def test_bbox_head(cfg_file):
@@ -52,23 +85,23 @@ def test_bbox_head(cfg_file):
     start_program = Program()
     with program_guard(main_program, start_program):
         ob = bbox_head.BBoxHead(cfg)
-        head_inputs = init_head_input(cfg)
-        roi_feat = head_inputs[0]
-        rpn_rois = head_inputs[1]
-        gt_label = head_inputs[2]
-        is_crowd = head_inputs[3]
-        gt_box = head_inputs[4]
-        im_info = head_inputs[5]
-        head_func = head_inputs[6]
-        cls_score, bbox_pred = ob.get_output(roi_feat, head_func)
-        loss_cls, loss_bbox = ob.get_loss(cls_score, bbox_pred, labels_int32,
-                                          bbox_targets, bbox_inside_weights,
-                                          bbox_outside_weights)
-        pred_result = ob.get_prediction(rpn_rois, im_info, cls_score, bbox_pred)
+        assigner = bbox_assigner.BBoxAssigner(cfg)
+        feed_vars = build_feed_vars()
+        rpn_rois = feed_vars['rpn_rois']
+        roi_feat = feed_vars['roi_feat']
+        im_info = feed_vars['im_info']
+        assign_output = assigner.get_sampled_rois_and_targets(rpn_rois,
+                                                              feed_vars)
+        labels_int32 = assign_output[1]
+        bbox_targets = assign_output[2]
+        bbox_inside_weights = assign_output[3]
+        bbox_outside_weights = assign_output[4]
+        loss_dict = ob.get_loss(roi_feat, labels_int32, bbox_targets,
+                                bbox_inside_weights, bbox_outside_weights)
+        loss_cls = loss_dict['loss_cls']
+        loss_bbox = loss_dict['loss_cls']
+        pred_result = ob.get_prediction(roi_feat, rpn_rois, im_info)
 
-        assert cls_score is not None
-        assert bbox_pred is not None
-        assert rois is not None
         assert labels_int32 is not None
         assert bbox_targets is not None
         assert bbox_inside_weights is not None

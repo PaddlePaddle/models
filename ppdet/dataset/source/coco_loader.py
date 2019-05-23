@@ -17,6 +17,9 @@ import matplotlib
 matplotlib.use('Agg')
 from pycocotools.coco import COCO
 
+import logging
+logger = logging.getLogger(__name__)
+
 def load(anno_path, sample_num=-1):
     """ Load COCO records with annotations in json file 'anno_path'
 
@@ -76,28 +79,32 @@ def load(anno_path, sample_num=-1):
         num_instance = len(valid_instances)
 
         gt_bbox = np.zeros((num_instance, 4), dtype=np.float32)
-        gt_class = np.zeros((num_instance, ), dtype=np.int32)
-        is_crowd = np.zeros((num_instance, ), dtype=np.int32)
+        gt_class = np.zeros((num_instance, 1), dtype=np.int32)
+        is_crowd = np.zeros((num_instance, 1), dtype=np.int32)
+        difficult = np.zeros((num_instance, 1), dtype=np.int32)
         gt_poly = [None] * num_instance
 
         for i, inst in enumerate(valid_instances):
             catid = inst['category_id']
-            gt_class[i] = catid2clsid[catid]
+            gt_class[i][0] = catid2clsid[catid]
             gt_bbox[i, :] = inst['clean_bbox']
-            is_crowd[i] = inst['iscrowd']
+            is_crowd[i][0] = inst['iscrowd']
             gt_poly[i] = inst['segmentation']
 
         coco_rec = {
             'im_file': im_fname,
-            'im_id': img_id,
+            'im_id': np.array([img_id]),
             'h': im_h,
             'w': im_w,
             'is_crowd': is_crowd,
             'gt_class': gt_class,
             'gt_bbox': gt_bbox,
             'gt_poly': gt_poly,
+            'difficult': difficult
             }
 
+        logger.debug('Load file: {}, im_id: {}, h: {}, w: {}.'.format(
+            im_fname, img_id, im_h, im_w))
         records.append(coco_rec)
         ct += 1
         if sample_num > 0 and ct >= sample_num:

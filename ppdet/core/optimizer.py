@@ -31,14 +31,24 @@ class OptimizerBuilder():
     Args:
         cfg (AttrDict): config dict.
     """
+
     def __init__(self, cfg):
         self.cfg = cfg
+        self.lr = None
 
     def get_optimizer(self):
         return self._build_optimizer()
 
+    def get_lr(self):
+        """
+        Get learning variable.
+        """
+        if self.lr is None:
+            raise ValueError("self.lr is not initialized.")
+        return self.lr
+
     def _build_optimizer(self):
-        regularizer = self._build_regularizer()
+        regularization = self._build_regularizer()
         learning_rate = self._build_learning_rate()
 
         opt_params = dict()
@@ -48,15 +58,14 @@ class OptimizerBuilder():
             elif not isinstance(v, dict):
                 opt_params.update({k.lower(): v})
 
-        return opt_func(regularization=regularizer,
+        return opt_func(regularization=regularization,
                         learning_rate=learning_rate,
                         **opt_params)
 
     def _build_regularizer(self):
         reg_cfg = self.cfg.WEIGHT_DECAY
-        reg_func = getattr(regularizer, reg_cfg.TYPE+"Decay")
+        reg_func = getattr(regularizer, reg_cfg.TYPE + "Decay")
         return reg_func(reg_cfg.FACTOR)
-        
 
     def _build_learning_rate(self):
         # parse and perform learning rate decay
@@ -88,4 +97,3 @@ class OptimizerBuilder():
             if k != 'POLICY':
                 params.update({k.lower(): v})
         return policy, params
-

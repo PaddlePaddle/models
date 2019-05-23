@@ -1,0 +1,108 @@
+import os
+import unittest
+import logging
+import numpy as np
+
+import set_env
+from dataset.transform import operator
+from dataset.transform import transformer
+
+logging.basicConfig(level=logging.INFO)
+
+
+class TestBase(unittest.TestCase):
+    """Test cases for dataset.transform.operator
+    """
+    @classmethod
+    def setUpClass(cls):
+        """ setup
+        """
+        roidb_root = './VOC2007.roidb'
+        import pickle as pkl
+        with open(roidb_root, 'rb') as f:
+            roidb = f.read()
+            roidb = pkl.loads(roidb)
+        fn = os.path.join('./', roidb[0][0]['im_file'])
+        with open(fn, 'rb') as f:
+            roidb[0][0]['image'] = f.read()
+        cls.sample = roidb[0][0]
+
+    @classmethod
+    def tearDownClass(cls):
+        """ tearDownClass """
+        pass
+
+    def test_ops_all(self):
+        """ test operators
+        """
+        # ResizeImage
+        ops_conf = [{'op': 'DecodeImage'},
+                    {'op': 'ResizeImage',
+                     'target_size': 300, 'max_size': 1333}]
+        mapper = operator.build(ops_conf)
+        self.assertTrue(mapper is not None)
+        data = self.sample.copy()
+        result0 = mapper(data)
+        self.assertIsNotNone(result0['image'])
+        self.assertEqual(len(result0['image'].shape), 3)
+        # RandFlipImage
+        ops_conf = [{'op': 'RandFlipImage'}]
+        mapper = operator.build(ops_conf)
+        self.assertTrue(mapper is not None)
+        result1 = mapper(result0)
+        self.assertEqual(result1['image'].shape, result0['image'].shape)
+        self.assertEqual(result1['gt_bbox'].shape, result0['gt_bbox'].shape)
+        # NormalizeImage
+        ops_conf = [{'op': 'NormalizeImage', 'is_channel_first':False}]
+        mapper = operator.build(ops_conf)
+        self.assertTrue(mapper is not None)
+        result2 = mapper(result1)
+        im1 = result1['image']
+        count = np.where(im1 <= 1)[0]
+        if im1.dtype == 'float64':
+            self.assertEqual(count, im1.shape[0]*im1.shape[1], im1.shape[2])
+        # ArrangeSample
+        ops_conf = [{'op': 'ArrangeRCNN'}]
+        mapper = operator.build(ops_conf)
+        self.assertTrue(mapper is not None)
+        result3 = mapper(result2)
+        self.assertEqual(type(result3), tuple)
+   
+    def test_ops_part1(self):
+        """test Crop and Resize
+        """
+        ops_conf = [{'op': 'DecodeImage'},
+                    {'op':'NormalizeBox'},
+                    {'op': 'Crop', 
+                     'batch_sampler': 
+                          [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]}
+                   ]
+        mapper = operator.build(ops_conf)
+        self.assertTrue(mapper is not None)
+        data = self.sample.copy()
+        result = mapper(data)
+        self.assertEqual(len(result['image'].shape), 3)
+        
+    def test_ops_part2(self):
+        """test Expand and RandomDistort
+        """
+        ops_conf = [{'op': 'DecodeImage'},
+                    {'op':'NormalizeBox'},
+                    {'op': 'Expand', 
+                     'expand_max_ratio': 1.5,
+                     'expand_prob': 1}]
+        mapper = operator.build(ops_conf)
+        self.assertTrue(mapper is not None)
+        data = self.sample.copy()
+        result = mapper(data)
+        self.assertEqual(len(result['image'].shape), 3)
+        self.assertGreater(result['gt_bbox'].shape[0], 0)
+
+if __name__ == '__main__':
+    unittest.main()

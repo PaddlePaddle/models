@@ -57,7 +57,7 @@ def _merge_cfg_a_to_b(a, b):
         except:
             pass
 
-        if b.has_key(k):
+        if k in b:
             if type(v) == type(b[k]):
                 if isinstance(v, dict):
                     _merge_cfg_a_to_b(v, b[k])

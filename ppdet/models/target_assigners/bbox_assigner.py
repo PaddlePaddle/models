@@ -57,11 +57,25 @@ class BBoxAssigner(object):
         loss.
 
         Args:
-            input_rois (Variable): input RoI bboxes.
-            feed_vars (dict): the
+            input_rois (Variable): Input RoI bboxes with shape [P, 4]. P is 
+                                   the number of RoIs.
+            feed_vars (dict): The input dictionary consist of ground truth.
 
         Returns:
-            The last variable in endpoint-th stage.
+            Type: Tuple
+                rois(Variable): RoI with shape [P, 4]. P is usually equal to  
+                            batch_size_per_im * batch_size, each element 
+                            is a bounding box with [xmin, ymin, xmax, ymax] 
+                            format.
+                labels_int32(Variable): Class label of a RoI with shape [P, 1]. 
+                bbox_targets(Variable): Box label of a RoI with shape 
+                                    [P, 4 * class_nums].
+                bbox_inside_weights(Variable): Indicates whether a box should 
+                                           contribute to loss. Same shape as
+                                           bbox_targets.
+                bbox_outside_weights(Variable): Indicates whether a box should 
+                                            contribute to loss. Same shape as 
+                                            bbox_targets.
         """
         if not feed_vars['gt_label']:
             raise ValueError("{} has no gt_label".format(feed_vars))

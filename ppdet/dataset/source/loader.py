@@ -102,11 +102,11 @@ def load(fname, samples=-1, with_cat2id=False):
     elif fname.endswith('.json'):
         from . import coco_loader
         records, cname2cid = coco_loader.load(fname, samples)
-    elif os.path.isdir(fname):
+    elif os.path.isfile(fname):
         from . import voc_loader
         records, cname2cid = voc_loader.load(fname, samples)
     else:
-        raise ValueError('invalid file type when load roidb data from file[%s]' % (fname))
+        raise ValueError('invalid file type when load data from file[%s]' % (fname))
 
     check_records(records)
 

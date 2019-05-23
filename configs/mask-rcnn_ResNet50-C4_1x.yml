@@ -59,7 +59,8 @@ RPN_HEAD:
   RESOLUTION: 14
 
 BBOX_HEAD:
-  HEAD_FUNC: bbox2mlp_head
+  TYPE: BBoxHead
+  HEAD_CONV: ResNet50C5
   MLP_HEAD_DIM: 1024
 
   ROI:
@@ -71,8 +72,13 @@ BBOX_HEAD:
     BBOX_REG_WEIGHTS: [0.1, 0.1, 0.2, 0.2] 
 
 MASK_HEAD:
-  HEAD_FUNC: ResNet.addMaskHead
-  STRIDES: [32, 16, 8, 4]
+  TRAIN:
+    HEAD_FUNC: mask_v0upshare_train_head
+  TEST:
+    HEAD_FUNC: mask_v0upshare_test_head
+  RESOLUTION: 28
+  DIM_REDUCED: 256 
+  DILATION: 1
 
 ROI_EXTRACTOR:
   EXTRACT_METHOD: RoIAlign
