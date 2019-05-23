@@ -14,9 +14,9 @@
 
 
 MODEL:
-  TYPE: Faster-RCNN
+  TYPE: FasterRCNN
   BACKBONE: ResNet50C4Backbone
-  FREEZE_AT: 0
+  FREEZE_AT: 2
   MASK: OFF
   FPN: OFF
 
@@ -78,15 +78,6 @@ ENV:
   GPU_NUM: 8
   MULTIPROCESS_READER: OFF
 
-DATA:
-  DATASET: coco2017
-  CLASS_NUM: 81
-  MAX_SIZE: 1333
-  TRAIN_SCALES: [800]
-  TEST_SCALE: 800
-
-TRANSFORM:
-  PIPELINE: RCNN
 
 OPTIMIZER:
   TYPE: Momentum
@@ -109,8 +100,9 @@ OPTIMIZER:
 
 TRAIN:
   MAX_ITERS: 360000
-  IM_PER_BATCH: 1
-  PRETRAIN_WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  LOG_SMOOTH_WINDOW: 20
+  SNAPSHOT_ITER: 10000
+  PRETRAIN_WEIGTS: ResNet50_pretrained
   BATCH_NORM_TYPE: BN
   RANDOM: OFF
 
@@ -118,4 +110,37 @@ TEST:
   SCORE_THRESH: 0.05
   NMS_THRESH: 0.5
   DETECTIONS_PER_IM: 100
-  WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  WEIGTS: ResNet50_pretrained
+
+DATA:
+  train:
+      anno_file: COCO17/annotations/instances_val2017.json
+      image_dir: COCO17/val2017
+  DATASET: coco2017
+  CLASS_NUM: 81
+  MAX_SIZE: 1333
+  TRAIN_SCALES: [800]
+  TEST_SCALE: 800
+
+TRANSFORM:
+    train:
+        - op: DecodeImage
+          to_rgb: False
+        - op: RandFlipImage
+          prob: 0.5
+        - op: NormalizeImage
+          mean: [102.9801, 115.9465, 122.7717]
+          is_scale: False
+          is_channel_first: False
+        - op: ResizeImage
+          target_size: 800
+          max_size: 1333
+        - op: Rgb2Bgr
+          to_bgr: False
+        - op: ArrangeRCNN
+    batch_size: 1
+    gpu_counts: 2
+    is_padding: True
+    worker_conf:
+        bufsize: 10
+        worker_num: 2

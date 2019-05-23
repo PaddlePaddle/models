@@ -211,7 +211,7 @@ class ResNet(object):
             pool_type='max')
         return conv
 
-    def get_backone(self, input, endpoint, freeze_at=0):
+    def get_backbone(self, input, endpoint, freeze_at=0):
         """
         Get the backbone of ResNet50. We define ResNet50 has 5 stages, from 1 to 5.
         So please carefully to set endpoint and freeze_at number.
@@ -240,7 +240,7 @@ class ResNet(object):
             res_endpoints.append(res)
 
         if freeze_at > 0:
-            res[freeze_at - 1].stop_gradient = True
+            res_endpoints[freeze_at - 1].stop_gradient = True
         return res
 
 
@@ -280,7 +280,7 @@ class ResNet50C4Backbone(BackboneBase):
             raise TypeError(str(input) + " should be Variable")
 
         model = ResNet(self.number, self.freeze_bn, self.affine_channel)
-        return model.get_backone(input, 4, self.freeze_at)
+        return model.get_backbone(input, 4, self.freeze_at)
 
 
 @Backbones.register
