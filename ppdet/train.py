@@ -24,11 +24,11 @@ import numpy as np
 import logging
 logger = logging.getLogger(__name__)
 
-from args import parse_args, print_arguments
 from ppdet.core.config import load_cfg, merge_cfg
 from ppdet.models import Detectors
 from core.optimizer import OptimizerBuilder
 from ppdet.utils.stats import TrainingStats, Time
+from args import parse_args, print_arguments
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.dataset.reader import Reader
 
@@ -54,7 +54,6 @@ def main():
             # get optimizer and apply minimizing
             ob = OptimizerBuilder(cfg.OPTIMIZER)
             opt = ob.get_optimizer()
-            #fetches.update({'lr': ob.lr})
             loss = fetches['total_loss']
             opt.minimize(loss)
 
@@ -68,7 +67,7 @@ def main():
         keys.append(k)
         v.persistable = True
         values.append(v)
-    values += [ob.lr]
+    values += [ob.get_lr()]
 
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = True

@@ -37,7 +37,6 @@ def load_cfg(cfg_file, fmt='yaml'):
 
     with open(cfg_file) as f:
         try:
-            #cfg = yaml.load(f, loader=yaml.FullLoader)
             cfg = yaml.load(f)
         except:
             return None
