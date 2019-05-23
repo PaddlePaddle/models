@@ -38,30 +38,37 @@ def is_url(path):
     return path.startswith('http://')
 
 
-def load(exe, path):
+def load(exe, prog, path):
     """
     Load model from the given path.
     Args:
+        exe (fluid.Executor): The fluid.Executor object.
+        prog (fluid.Program): load weight to which Program object.
         path (string): URL string or loca model path.
     """
     if is_url(path):
         path = download_weights(path)
 
-    logger.info('Load model from {}.'.format(path))
+    logger.info('Load model from {}'.format(path))
 
     def if_exist(var):
-        return os.path.exists(os.path.join(path, var.name))
+        b = os.path.exists(os.path.join(path, var.name))
+        if b:
+            logger.debug('load weight {}'.format(var.name))
+        return b
 
-    fluid.io.load_vars(exe, path, predicate=if_exist)
+    fluid.io.load_vars(exe, path, prog, predicate=if_exist)
 
 
-def save(exe, path):
+def save(exe, prog, path):
     """
     Load model from the given path.
     Args:
-        path (string): URL string or loca model path.
+        exe (fluid.Executor): The fluid.Executor object.
+        prog (fluid.Program): save weight from which Program object.
+        path (string): the path to save model.
     """
     if os.path.isdir(path):
         shutil.rmtree(path)
     logger.info('Save model to {}.'.format(path))
-    fluid.io.save_persistables(exe, path)
+    fluid.io.save_persistables(exe, path, prog)

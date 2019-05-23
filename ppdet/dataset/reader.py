@@ -68,10 +68,15 @@ class Reader(object):
 
         # 3, Build a reader
         def _reader():
-            batched_ds.reset()
-            for sample in batched_ds:
-                for sub_batch_out in sample:
-                    yield sub_batch_out
+            cnt = 0
+            while cnt < self._data_cf['max_iter']:
+                batched_ds.reset()
+                for sample in batched_ds:
+                    for sub_batch_out in sample:
+                        yield sub_batch_out
+                        cnt += 1
+                        if cnt == self._data_cf['max_iter']:
+                            return
         return _reader
 
     def train(self):

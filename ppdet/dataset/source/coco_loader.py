@@ -17,6 +17,9 @@ import matplotlib
 matplotlib.use('Agg')
 from pycocotools.coco import COCO
 
+import logging
+logger = logging.getLogger(__name__)
+
 def load(anno_path, sample_num=-1):
     """ Load COCO records with annotations in json file 'anno_path'
 
@@ -100,6 +103,8 @@ def load(anno_path, sample_num=-1):
             'difficult': difficult
             }
 
+        logger.debug('Load file: {}, im_id: {}, h: {}, w: {}.'.format(
+            im_fname, img_id, im_h, im_w))
         records.append(coco_rec)
         ct += 1
         if sample_num > 0 and ct >= sample_num:
