@@ -3,13 +3,13 @@
 ### 任务说明
 短文本语义匹配(SimilarityNet, SimNet)是一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MMDNN等核心网络结构形式，提供语义相似度计算训练和预测框架，适用于信息检索、新闻推荐、智能客服等多个应用场景，帮助企业解决语义匹配问题。可通过[AI开放平台-短文本相似度](https://ai.baidu.com/tech/nlp_basic/simnet)线上体验。
 ### 效果说明
-基于百度海量搜索数据，我们训练了一个SimNet-BOW-Pairwise语义匹配模型，在一些真实的FAQ问答场景中，该模型效果比基于字面的相似度方法AUC提升5%以上，我们基于百度自建测试集（包含聊天、客服等数据集）和语义匹配数据集(LCQMC)进行评测，效果如下表所示。LCQMC数据集以Accuracy为评测指标，而pairwise模型的输出为相似度，因此我们采用0.91作为分类阈值，相比于基线模型中网络结构同等复杂的CBOW模型（准确率为0.737），我们模型的准确率为0.7517。
+基于百度海量搜索数据，我们训练了一个SimNet-BOW-Pairwise语义匹配模型，在一些真实的FAQ问答场景中，该模型效果比基于字面的相似度方法AUC提升5%以上，我们基于百度自建测试集（包含聊天、客服等数据集）和语义匹配数据集(LCQMC)进行评测，效果如下表所示。LCQMC数据集以Accuracy为评测指标，而pairwise模型的输出为相似度，因此我们采用0.958作为分类阈值，相比于基线模型中网络结构同等复杂的CBOW模型（准确率为0.737），我们模型的准确率为0.7532。
 
 
 | 模型       | 百度知道         | ECOM        |QQSIM | UNICOM | LCQMC |
 |:-----------:|:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
 |   | AUC  | AUC | AUC|正逆序比|Accuracy|
-|BOW_Pairwise|0.6766|0.7308|0.7643|1.5630|0.7517|
+|BOW_Pairwise|0.6767|0.7329|0.7650|1.5630|0.7532|
 ## 快速开始
 #### 版本依赖
 本项目依赖于 Paddlepaddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
@@ -46,7 +46,7 @@ tar xzf simnet_bow-pairwise-1.0.0.tar.gz -C ./model_files
 我们公开了自建的测试集，包括百度知道、ECOM、QQSIM、UNICOM四个数据集，基于上面的预训练模型，用户可以进入evaluate目录下依次执行下列命令获取测试集评估结果。
 ```shell
 sh evaluate_ecom.sh  
-sh evaluate_qqsim.sh   
+sh evaluate_qqsim.sh  
 sh evaluate_zhidao.sh  
 sh evaluate_unicom.sh  
 ```
@@ -141,7 +141,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 ### 如何训练
 ```shell
 python run_classifier.py \
-   --task_name ${TASK_NAME} \ 
+   --task_name ${TASK_NAME} \
    --use_cuda false \ #是否使用GPU
    --do_train True \  #是否训练
    --do_valid True \  #是否在训练中测试开发集
