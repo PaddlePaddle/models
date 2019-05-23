@@ -15,4 +15,8 @@
 from . import faster_rcnn
 from .faster_rcnn import *
 
+from . import ssd
+from .ssd import *
+
 __all__ = faster_rcnn.__all__
+__all__ += ssd.__all__

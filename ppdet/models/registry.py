@@ -14,7 +14,7 @@
 
 __all__ = [
     'Detectors', 'Detectors', 'RPNHeads', 'RoIExtractors', 'BBoxHeadConvs',
-    'BBoxHeads'
+    'BBoxHeads', 'SSDHeads'
 ]
 
 
@@ -52,3 +52,4 @@ RPNHeads = Registry('RPNHead')
 RoIExtractors = Registry('RoIExtractor')
 BBoxHeadConvs = Registry('BBoxHeadConv')
 BBoxHeads = Registry('BBoxHead')
+SSDHeads = Registry('SSDHead')
