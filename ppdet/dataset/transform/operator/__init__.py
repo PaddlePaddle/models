@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 from . import base
+from . import arrange_sample
+import logging
+logger = logging.getLogger(__name__)
 
 __all__ = ['build']
 
@@ -20,31 +24,42 @@ def build(ops):
     """ Build a mapper for operators in 'ops'
 
     Args:
-        ops (list of base.BaseOperator): configs for oprators, eg:
+        ops (list of base.BaseOperator or list of op dict): 
+            configs for oprators, eg:
             [{'name': 'DecodeImage', 'params': {'to_rgb': True}}, {xxx}]
 
     Returns:
         a mapper function which accept one argument 'sample' and
         return the processed result
     """
-    mappers = []
+    op_funcs = []
     op_repr = []
     for op in ops:
-        if not isinstance(op, base.BaseOperator):
-            op_func = getattr(base, op['name'])
+        if type(op) is dict and 'op' in op:
+            op_func = getattr(base.BaseOperator, op['op'])
+            params = copy.deepcopy(op)
+            del params['op']
+            o = op_func(**params)
+        elif not isinstance(op, base.BaseOperator):
+            op_func = getattr(base.BaseOperator, op['name'])
             params = {} if 'params' not in op else op['params']
             o = op_func(**params)
         else:
+            assert isinstance(op, base.BaseOperator), 'invalid operator when build ops'
             o = op
-        mappers.append(o)
+        op_funcs.append(o)
         op_repr.append('{%s}' % str(o))
     op_repr = '[%s]' % ','.join(op_repr)
 
     def _mapper(sample):
         context = {}
-        for f in mappers:
-            out = f(sample, context)
-            sample = out
+        for f in op_funcs:
+            try:
+                out = f(sample, context)
+                sample = out
+            except Exception as e:
+                logger.warn('failed to map operator[%s] with exception[%s]' \
+                    % (f, str(e)))
         return out
 
     _mapper.ops = op_repr
@@ -52,7 +67,7 @@ def build(ops):
 
 
 for nm in base.registered_ops:
-    op = getattr(base, nm)
+    op = getattr(base.BaseOperator, nm)
     locals()[nm] = op
 
 __all__ += base.registered_ops

@@ -216,23 +216,23 @@ class RPNHead(object):
         score_tgt.stop_gradient = True
         rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
             x=score_pred, label=score_tgt)
-
-        rpn_cls_loss = fluid.layers.reduce_sum(rpn_cls_loss)
-        rpn_cls_loss = rpn_cls_loss / (self.cfg.TRAIN.IM_PER_BATCH *
-                                       self.cfg.RPN_HEAD.RPN_BATCH_SIZE_PER_IM)
+        rpn_cls_loss = fluid.layers.reduce_mean(
+            rpn_cls_loss, name='loss_rpn_cls')
 
         loc_tgt = fluid.layers.cast(x=loc_tgt, dtype='float32')
         loc_tgt.stop_gradient = True
-        rpn_bbox_loss = fluid.layers.smooth_l1(
+        rpn_reg_loss = fluid.layers.smooth_l1(
             x=loc_pred,
             y=loc_tgt,
             sigma=3.0,
             inside_weight=bbox_weight,
             outside_weight=bbox_weight)
+        rpn_reg_loss = fluid.layers.reduce_sum(
+            rpn_reg_loss, name='loss_rpn_bbox')
+        score_shape = fluid.layers.shape(score_tgt)
+        score_shape = fluid.layers.cast(x=score_shape, dtype='float32')
+        norm = fluid.layers.reduce_prod(score_shape)
+        norm.stop_gradient = True
+        rpn_reg_loss = rpn_reg_loss / norm
 
-        rpn_bbox_loss = fluid.layers.reduce_sum(rpn_bbox_loss)
-        rpn_bbox_loss = rpn_bbox_loss / (
-            self.cfg.TRAIN.IM_PER_BATCH *
-            self.cfg.RPN_HEAD.RPN_BATCH_SIZE_PER_IM)
-
-        return {'rpn_cls_loss': rpn_cls_loss, 'rpn_bbox_loss': rpn_bbox_loss}
+        return {'rpn_cls_loss': rpn_cls_loss, 'rpn_bbox_loss': rpn_reg_loss}

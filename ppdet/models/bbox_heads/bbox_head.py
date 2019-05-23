@@ -119,7 +119,7 @@ class BBoxHead(object):
             outside_weight=bbox_outside_weights,
             sigma=1.0)
         loss_bbox = fluid.layers.reduce_mean(loss_bbox)
-        return {'loss_cls': loss_cls, 'loss_cls': loss_bbox}
+        return {'loss_cls': loss_cls, 'loss_bbox': loss_bbox}
 
     def get_prediction(self, roi_feat, rois, im_info):
         """

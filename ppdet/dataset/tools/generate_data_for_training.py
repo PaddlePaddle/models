@@ -38,7 +38,7 @@ def parse_args():
         description='Generate SimpleDet GroundTruth Database')
 
     parser.add_argument('--type', help='type of datset', type=str, default='json')
-    parser.add_argument('--annotation', help='json file name for annotation', type=str)
+    parser.add_argument('--annotation', help='json file name or voc\'s train.txt file for annotation', type=str)
     parser.add_argument('--save-dir', type=str,
         help='directory to save roidb files', default='data/tests')
     parser.add_argument('--samples', default=-1, type=int,
@@ -78,10 +78,7 @@ def dump_voc_as_pickle(args):
     roidb, cat2id = loader.load(anno_path, samples, True)
     samples = len(roidb)
     part = anno_path.split('/')
-    if part[-1] == '':
-        dsname = part[-2]
-    else:
-        dsname = part[-1]
+    dsname = part[-4]
     roidb_fname = save_dir + "/%s.roidb" % (dsname)
     with open(roidb_fname, "wb") as fout:
         pkl.dump((roidb, cat2id), fout)
@@ -104,6 +101,6 @@ if __name__ == "__main__":
         dump_coco_as_pickle(args)
     else:
         TypeError('Can\'t deal with {} type. (Use xml or json)'
-                            .format(self.__str__))
+                            .format(args.type))
 
 

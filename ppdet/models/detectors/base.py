@@ -46,12 +46,14 @@ class DetectorBase(object):
                 feed_list=var,
                 capacity=64,
                 use_double_buffer=True,
-                iterable=True)
+                iterable=False)
         return self.feed_vars
 
     def get_pyreader(self):
         """
+        Get the PyReader object.
         """
-        if self.reader is None:
+        if self.pyreader is None:
             raise ValueError("{}.pyreader is not initialized.".format(
                 self.__class__.__name__))
+        return self.pyreader

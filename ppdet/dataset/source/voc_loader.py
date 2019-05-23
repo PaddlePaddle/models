@@ -44,10 +44,10 @@ def load(anno_path, sample_num=-1):
         'catname2clsid' is a dict to map category name to class id
 
     """
-
-    txt_file = os.path.join(anno_path, 'ImageSets',
-                                  'Main', 'train.txt')
-    xml_path = os.path.join(anno_path, 'Annotations')
+    txt_file = anno_path
+    part = txt_file.split('ImageSets')
+    xml_path = os.path.join(part[0], 'Annotations')
+    print(xml_path)
     assert os.path.isfile(txt_file) and \
            os.path.isdir(xml_path), 'invalid xml path'
 
@@ -70,21 +70,23 @@ def load(anno_path, sample_num=-1):
             tree = ET.parse(xml_file)
             im_fname = tree.find('filename').text
             if tree.find('id') is None:
-                im_id = ct
+                im_id =  np.array([ct])
             else:
-                im_id = int(tree.find('id').text)
+                im_id = np.array([int(tree.find('id').text)])
 
             objs = tree.findall('object')
             im_w = float(tree.find('size').find('width').text)
             im_h = float(tree.find('size').find('height').text)
             gt_bbox = np.zeros((len(objs), 4), dtype=np.float32)
-            gt_class = np.zeros((len(objs), ), dtype=np.int32)
-            is_crowd = np.zeros((len(objs), ), dtype=np.int32)
+            gt_class = np.zeros((len(objs), 1), dtype=np.int32)
+            is_crowd = np.zeros((len(objs), 1), dtype=np.int32)
+            difficult = np.zeros((len(objs), 1), dtype=np.int32)
             for i, obj in enumerate(objs):
                 cname = obj.find('name').text
                 if cname not in cname2cid:
                     cname2cid[cname] = len(cname2cid)+1
-                gt_class[i] = cname2cid[cname]
+                gt_class[i][0] = cname2cid[cname]
+                _difficult = int(obj.find('difficult').text)
                 x1 = float(obj.find('bndbox').find('xmin').text)
                 y1 = float(obj.find('bndbox').find('ymin').text)
                 x2 = float(obj.find('bndbox').find('xmax').text)
@@ -94,7 +96,8 @@ def load(anno_path, sample_num=-1):
                 x2 = min(im_w - 1, x2)
                 y2 = min(im_h - 1, y2)
                 gt_bbox[i] = [x1, y1, x2, y2]
-                is_crowd[i] = 0
+                is_crowd[i][0] = 0
+                difficult[i][0] = _difficult
 
             voc_rec = {
                 'im_file': im_fname,
@@ -105,8 +108,10 @@ def load(anno_path, sample_num=-1):
                 'gt_class': gt_class,
                 'gt_bbox': gt_bbox,
                 'gt_poly': [],
+                'difficult': difficult
                 }
-            records.append(voc_rec)
+            if len(objs) != 0:
+                records.append(voc_rec)
 
             ct += 1
             if sample_num > 0 and ct >= sample_num:

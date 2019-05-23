@@ -15,4 +15,9 @@
 from . import resnet
 from .resnet import *
 
+from . import darknet
+from .darknet import *
+
 __all__ = resnet.__all__
+__all__ += darknet.__all__
+

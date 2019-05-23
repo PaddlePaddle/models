@@ -22,30 +22,9 @@ from __future__ import unicode_literals
 
 import uuid
 import logging
-from ..dataset import Dataset
+from .base import ProxiedDataset
 
 logger = logging.getLogger(__name__)
-
-class Transformer(Dataset):
-    """ simple transformer without any workers to accelerate the processing
-    """
-    def __init__(self, source, mapper):
-        self._source = source
-        self._mapper = mapper
-
-    def next(self):
-        sample = self._source.next()
-        return self._mapper(sample)
-
-    def reset(self):
-        self._source.reset()
-
-    def drained(self):
-        return self._source.drained()
-
-    def epoch_id(self):
-        return self._source.epoch_id()
-
 
 class EndSignal(object):
     def __init__(self, errno=0, errmsg=''):
@@ -53,13 +32,17 @@ class EndSignal(object):
         self.errmsg = errmsg
 
 
-class FastTransformer(Dataset):
-    """ a fast transformer using multiple workers (threads or processes),
-        note that this class is not thread-safe
+class ThreadMappedDataset(ProxiedDataset):
+    """ Transform samples to mapped samples which is similar to 'basic.MappedDataset',
+        but multiple workers (threads or processes) will be used
+
+        Notes:
+            this class is not thread-safe
     """
     def __init__(self, source, mapper, worker_args):
         """ init
         """
+        super(ThreadMappedDataset, self).__init__(source)
         args = {'bufsize': 100, 'worker_num': 8}
         args.update(worker_args)
         self._worker_args = args
@@ -196,11 +179,3 @@ class FastTransformer(Dataset):
         self._source.reset()
         self._consumed = 0
         self._feeding_ev.set()
-
-    def size(self):
-        """ get number of samples
-        """
-        return self._source.size()
-
-    def epoch_id(self):
-        return self._source.epoch_id()
