@@ -235,4 +235,4 @@ class RPNHead(object):
         norm.stop_gradient = True
         rpn_reg_loss = rpn_reg_loss / norm
 
-        return {'rpn_cls_loss': rpn_cls_loss, 'rpn_bbox_loss': rpn_reg_loss}
+        return {'loss_rpn_cls': rpn_cls_loss, 'loss_rpn_bbox': rpn_reg_loss}

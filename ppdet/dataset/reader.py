@@ -27,9 +27,11 @@ from . import source
 from .transform import transformer as tf
 from .transform import operator as op
 
+
 class Reader(object):
     """ Interface to make readers for training or evaluation
     """
+
     def __init__(self, data_cf, trans_conf):
         """ Init
         """
@@ -43,7 +45,8 @@ class Reader(object):
         file_conf = self._data_cf[which]
 
         # 1, Build data source
-        samples = -1 if 'samples' not in self._data_cf else self._data_cf['samples']
+        samples = -1 if 'samples' not in self._data_cf else self._data_cf[
+            'samples']
         sc_conf = {
             'fname': file_conf['anno_file'],
             'image_dir': file_conf['image_dir'],
@@ -64,14 +67,21 @@ class Reader(object):
         mapper = op.build(ops)
         mapped_ds = tf.map(sc, mapper, worker_args)
         batched_ds = tf.batch(mapped_ds, gpu_counts, batchsize, drop_last,
-                             is_padding)
+                              is_padding)
 
         # 3, Build a reader
         def _reader():
-            batched_ds.reset()
-            for sample in batched_ds:
-                for sub_batch_out in sample:
-                    yield sub_batch_out
+            # TODO: need more elegant code
+            n = 0
+            while n < self._data_cf['max_iter']:
+                batched_ds.reset()
+                for sample in batched_ds:
+                    for sub_batch_out in sample:
+                        yield sub_batch_out
+                        n += 1
+                        if n == self._data_cf['max_iter']:
+                            return
+
         return _reader
 
     def train(self):
@@ -83,4 +93,3 @@ class Reader(object):
         """ Build reader for validation
         """
         return self._make_reader(False)
-

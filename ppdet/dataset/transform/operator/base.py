@@ -109,9 +109,9 @@ class ResizeImage(BaseOperator):
             interp: the interpolation method
         """
         super(ResizeImage, self).__init__()
-        self.target_size = int(target_size)
-        self.max_size = int(max_size)
-        self.interp = int(interp)
+        self.target_size = target_size
+        self.max_size = max_size
+        self.interp = interp
         if not (isinstance(self.target_size, int) and isinstance(
                 self.max_size, int) and isinstance(self.interp, int)):
             raise TypeError('{}: the input type is error.'.format(self.__str__))
@@ -445,7 +445,6 @@ class Expand(BaseOperator):
                 im = Image.fromarray(im)
                 expand_im.paste(im, (int(w_off), int(h_off)))
                 expand_im = np.asarray(expand_im)
-                print(gt_class)
                 gt_bbox, gt_class = deal_bbox_label(gt_bbox, gt_class,
                                                     expand_bbox)
                 sample['image'] = expand_im
