@@ -15,8 +15,12 @@
 from . import rpn_head
 from .rpn_head import *
 
+from . import yolo_head
+from .yolo_head import *
+
 from . import ssd_head
 from .ssd_head import *
 
 __all__ = rpn_head.__all__
+__all__ += yolo_head.__all__
 __all__ += ssd_head.__all__
