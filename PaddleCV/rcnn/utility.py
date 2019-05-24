@@ -160,7 +160,7 @@ def parse_args():
     add_arg('snapshot_stride',  int,    10000,    "save model every snapshot stride.")
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
-    add_arg('image_path',       str,   'dataset/coco/val2017',  "The image path used to inference and visualize.")
+    add_arg('image_path',       str,   'dataset/coco/val2017/000000000139.jpg',  "The image path used to inference and visualize.")
     # ce
     parser.add_argument(
             '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
