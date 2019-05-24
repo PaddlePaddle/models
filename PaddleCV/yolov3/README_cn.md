@@ -172,7 +172,7 @@ Train Loss
 
 |   input size  | 608x608 | 416x416 | 320x320 |
 |:-------------:| :-----: | :-----: | :-----: |
-| infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame | 
+| infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame |
 
 下图为模型可视化预测结果：
 <p align="center">
@@ -182,4 +182,3 @@ Train Loss
 <img src="image/000000515077.png" height=300 width=400 hspace='10'/> <br />
 YOLOv3 预测可视化
 </p>
-

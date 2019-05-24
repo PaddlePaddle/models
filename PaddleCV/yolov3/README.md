@@ -62,7 +62,7 @@ The data catalog structure is as follows:
   │   ├── 000000000139.jpg
   │   ├── 000000000285.jpg
   |   ...
-  
+
 ```
 
 ## Training
@@ -170,7 +170,7 @@ Inference speed（Tesla P40）:
 
 |   input size  | 608x608 | 416x416 | 320x320 |
 |:-------------:| :-----: | :-----: | :-----: |
-| infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame | 
+| infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame |
 
 
 Visualization of infer result is shown as below:
@@ -181,4 +181,3 @@ Visualization of infer result is shown as below:
 <img src="image/000000515077.png" height=300 width=400 hspace='10'/> <br />
 YOLOv3 Visualization Examples
 </p>
-
