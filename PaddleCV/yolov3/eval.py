@@ -64,12 +64,12 @@ def eval():
             w = x2 - x1 + 1
             h = y2 - y1 + 1
             bbox = [x1, y1, w, h]
-            
+
             res = {
-                    'image_id': im_id,
-                    'category_id': label_ids[int(label)],
-                    'bbox': list(map(float, bbox)),
-                    'score': float(score)
+                'image_id': im_id,
+                'category_id': label_ids[int(label)],
+                'bbox': list(map(float, bbox)),
+                'score': float(score)
             }
             result.append(res)
         return result
@@ -79,11 +79,10 @@ def eval():
     total_time = 0
     for batch_id, batch_data in enumerate(test_reader()):
         start_time = time.time()
-        batch_outputs = exe.run(
-            fetch_list=[v.name for v in fetch_list],
-            feed=feeder.feed(batch_data),
-            return_numpy=False,
-            use_program_cache=True)
+        batch_outputs = exe.run(fetch_list=[v.name for v in fetch_list],
+                                feed=feeder.feed(batch_data),
+                                return_numpy=False,
+                                use_program_cache=True)
         lod = batch_outputs[0].lod()[0]
         nmsed_boxes = np.array(batch_outputs[0])
         if nmsed_boxes.shape[1] != 6:

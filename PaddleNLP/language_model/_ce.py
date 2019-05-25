@@ -6,18 +6,18 @@ sys.path.append(os.environ['ceroot'])
 from kpi import CostKpi
 from kpi import DurationKpi
 
-imikolov_20_avg_ppl_kpi_card1 = CostKpi('lstm_language_model_static_loss_card1', 0.01, 0)
-imikolov_20_pass_duration_kpi_card1 = DurationKpi(
+lstm_language_model_static_loss_card1 = CostKpi('lstm_language_model_static_loss_card1', 0.01, 0)
+lstm_language_model_static_duration_card1 = DurationKpi(
     'lstm_language_model_static_duration_card1', 0.03, 0, actived=True)
-imikolov_20_avg_ppl_kpi_card1_padding = CostKpi('lstm_language_model_padding_loss_card1', 0.01, 0)
-imikolov_20_pass_duration_kpi_card1_padding = DurationKpi(
+lstm_language_model_padding_loss_card1 = CostKpi('lstm_language_model_padding_loss_card1', 0.01, 0)
+lstm_language_model_padding_duration_card1 = DurationKpi(
     'lstm_language_model_padding_duration_card1', 0.03, 0, actived=True)
 
 tracking_kpis = [
-    imikolov_20_avg_ppl_kpi_card1,
-    imikolov_20_pass_duration_kpi_card1,
-    imikolov_20_avg_ppl_kpi_card1_padding,
-    imikolov_20_pass_duration_kpi_card1_padding,
+    lstm_language_model_static_loss_card1,
+    lstm_language_model_static_duration_card1,
+    lstm_language_model_padding_loss_card1,
+    lstm_language_model_padding_duration_card1,
 ]
 
 

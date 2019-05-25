@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -53,20 +52,16 @@ class DataSetReader(object):
                 cfg.dataset))
 
         if mode == 'train':
-            cfg.train_file_list = os.path.join(cfg.data_dir, 
+            cfg.train_file_list = os.path.join(cfg.data_dir,
                                                cfg.train_file_list)
-            cfg.train_data_dir = os.path.join(cfg.data_dir, 
-                                              cfg.train_data_dir)
+            cfg.train_data_dir = os.path.join(cfg.data_dir, cfg.train_data_dir)
             self.COCO = COCO(cfg.train_file_list)
             self.img_dir = cfg.train_data_dir
         elif mode == 'test' or mode == 'infer':
-            cfg.val_file_list = os.path.join(cfg.data_dir, 
-                                             cfg.val_file_list)
-            cfg.val_data_dir = os.path.join(cfg.data_dir, 
-                                            cfg.val_data_dir)
+            cfg.val_file_list = os.path.join(cfg.data_dir, cfg.val_file_list)
+            cfg.val_data_dir = os.path.join(cfg.data_dir, cfg.val_data_dir)
             self.COCO = COCO(cfg.val_file_list)
             self.img_dir = cfg.val_data_dir
-
 
     def _parse_dataset_catagory(self):
         self.categories = self.COCO.loadCats(self.COCO.getCatIds())
@@ -76,10 +71,7 @@ class DataSetReader(object):
         for category in self.categories:
             self.label_names.append(category['name'])
             self.label_ids.append(int(category['id']))
-        self.category_to_id_map = {
-            v: i
-            for i, v in enumerate(self.label_ids)
-        }
+        self.category_to_id_map = {v: i for i, v in enumerate(self.label_ids)}
         print("Load in {} categories.".format(self.num_category))
         self.has_parsed_categpry = True
 
@@ -93,7 +85,8 @@ class DataSetReader(object):
         img_height = img['height']
         img_width = img['width']
         anno = self.COCO.loadAnns(
-                self.COCO.getAnnIds(imgIds=img['id'], iscrowd=None))
+            self.COCO.getAnnIds(
+                imgIds=img['id'], iscrowd=None))
         gt_index = 0
         for target in anno:
             if target['area'] < cfg.gt_min_area:
@@ -102,7 +95,7 @@ class DataSetReader(object):
                 continue
 
             box = box_utils.coco_anno_box_to_center_relative(
-                            target['bbox'], img_height, img_width)
+                target['bbox'], img_height, img_width)
             if box[2] <= 0 and box[3] <= 0:
                 continue
 
@@ -141,15 +134,15 @@ class DataSetReader(object):
         if mode == 'infer':
             return []
         else:
-            return self._parse_images(is_train=(mode=='train'))
+            return self._parse_images(is_train=(mode == 'train'))
 
-    def get_reader(self, 
-                   mode, 
-                   size=416, 
-                   batch_size=None, 
-                   shuffle=False, 
-                   mixup_iter=0, 
-                   random_sizes=[], 
+    def get_reader(self,
+                   mode,
+                   size=416,
+                   batch_size=None,
+                   shuffle=False,
+                   mixup_iter=0,
+                   random_sizes=[],
                    image=None):
         assert mode in ['train', 'test', 'infer'], "Unknow mode type!"
         if mode != 'infer':
@@ -166,9 +159,13 @@ class DataSetReader(object):
             h, w, _ = im.shape
             im_scale_x = size / float(w)
             im_scale_y = size / float(h)
-            out_img = cv2.resize(im, None, None, 
-                                 fx=im_scale_x, fy=im_scale_y, 
-                                 interpolation=cv2.INTER_CUBIC)
+            out_img = cv2.resize(
+                im,
+                None,
+                None,
+                fx=im_scale_x,
+                fy=im_scale_y,
+                interpolation=cv2.INTER_CUBIC)
             mean = np.array(mean).reshape((1, 1, -1))
             std = np.array(std).reshape((1, 1, -1))
             out_img = (out_img / 255.0 - mean) / std
@@ -191,12 +188,12 @@ class DataSetReader(object):
                 mixup_gt_labels = np.array(mixup_img['gt_labels']).copy()
                 mixup_gt_scores = np.ones_like(mixup_gt_labels)
                 im, gt_boxes, gt_labels, gt_scores = \
-                    image_utils.image_mixup(im, gt_boxes, gt_labels, 
-                                            gt_scores, mixup_im, mixup_gt_boxes, 
+                    image_utils.image_mixup(im, gt_boxes, gt_labels,
+                                            gt_scores, mixup_im, mixup_gt_boxes,
                                             mixup_gt_labels, mixup_gt_scores)
 
             im, gt_boxes, gt_labels, gt_scores = \
-                image_utils.image_augment(im, gt_boxes, gt_labels, 
+                image_utils.image_augment(im, gt_boxes, gt_labels,
                                           gt_scores, size, mean)
 
             mean = np.array(mean).reshape((1, 1, -1))
@@ -230,12 +227,13 @@ class DataSetReader(object):
                 img_size = get_img_size(size, random_sizes)
                 while True:
                     img = imgs[read_cnt % len(imgs)]
-                    mixup_img = get_mixup_img(imgs, mixup_iter, total_iter, read_cnt)
+                    mixup_img = get_mixup_img(imgs, mixup_iter, total_iter,
+                                              read_cnt)
                     read_cnt += 1
                     if read_cnt % len(imgs) == 0 and shuffle:
                         np.random.shuffle(imgs)
                     im, gt_boxes, gt_labels, gt_scores = \
-                        img_reader_with_augment(img, img_size, cfg.pixel_means, 
+                        img_reader_with_augment(img, img_size, cfg.pixel_means,
                                                 cfg.pixel_stds, mixup_img)
                     batch_out.append([im, gt_boxes, gt_labels, gt_scores])
 
@@ -249,8 +247,7 @@ class DataSetReader(object):
                 imgs = self._parse_images_by_mode(mode)
                 batch_out = []
                 for img in imgs:
-                    im, im_id, im_shape = img_reader(img, size, 
-                                                     cfg.pixel_means, 
+                    im, im_id, im_shape = img_reader(img, size, cfg.pixel_means,
                                                      cfg.pixel_stds)
                     batch_out.append((im, im_id, im_shape))
                     if len(batch_out) == batch_size:
@@ -262,8 +259,7 @@ class DataSetReader(object):
                 img = {}
                 img['image'] = image
                 img['id'] = 0
-                im, im_id, im_shape = img_reader(img, size, 
-                                                 cfg.pixel_means, 
+                im, im_id, im_shape = img_reader(img, size, cfg.pixel_means,
                                                  cfg.pixel_stds)
                 batch_out = [(im, im_id, im_shape)]
                 yield batch_out
@@ -273,17 +269,18 @@ class DataSetReader(object):
 
 dsr = DataSetReader()
 
-def train(size=416, 
-          batch_size=64, 
-          shuffle=True, 
+
+def train(size=416,
+          batch_size=64,
+          shuffle=True,
           total_iter=0,
           mixup_iter=0,
           random_sizes=[],
           num_workers=8,
           max_queue=32,
           use_multiprocessing=True):
-    generator = dsr.get_reader('train', size, batch_size, shuffle, 
-                               int(mixup_iter/num_workers), random_sizes)
+    generator = dsr.get_reader('train', size, batch_size, shuffle,
+                               int(mixup_iter / num_workers), random_sizes)
 
     if not use_multiprocessing:
         return generator
@@ -316,15 +313,17 @@ def train(size=416,
         finally:
             if enqueuer is not None:
                 enqueuer.stop()
-    
+
     return reader
+
 
 def test(size=416, batch_size=1):
     return dsr.get_reader('test', size, batch_size)
 
+
 def infer(size=416, image=None):
     return dsr.get_reader('infer', size, image=image)
 
+
 def get_label_infos():
     return dsr.get_label_infos()
-
