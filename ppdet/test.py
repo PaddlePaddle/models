@@ -66,7 +66,6 @@ def main():
         values += ['im_info', 'im_id']
 
     for v in values:
-        print(v)
         fluid.framework._get_var(str(v), test_prog).persistable = True
 
     build_strategy = fluid.BuildStrategy()

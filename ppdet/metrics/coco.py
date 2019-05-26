@@ -55,14 +55,14 @@ def bbox2out(results, clsid2catid):
     for t in results:
         bboxes = t['bbox'][0]
         lengths = t['bbox'][1][0]
-        im_ids = np.array(t['im_id'])
+        im_ids = np.array(t['im_id'][0])
         if bboxes.shape == (1, 1) or bboxes is None:
             continue
 
         k = 0
         for i in range(len(lengths)):
             num = lengths[i]
-            im_id = int(im_ids[i])
+            im_id = int(im_ids[i][0])
             for j in range(num):
                 dt = bboxes[k]
                 clsid, score, xmin, ymin, xmax, ymax = dt.tolist()
