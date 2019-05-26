@@ -47,7 +47,7 @@ class FasterRCNN(DetectorBase):
         self.roi_extractor = RoIExtractors.get(
             cfg.ROI_EXTRACTOR.EXTRACT_METHOD)(cfg)
         self.bbox_head = BBoxHeads.get(cfg.BBOX_HEAD.TYPE)(cfg)
-        self.use_pyreader = True if self.is_train else False
+        self.use_pyreader = True
 
     def _forward(self):
         # inputs
@@ -109,13 +109,13 @@ class FasterRCNN(DetectorBase):
         feed_info = [
             {'name': 'image',  'shape': [c, h, w], 'dtype': 'float32', 'lod_level': 0},
             {'name': 'im_info','shape': [3],       'dtype': 'float32', 'lod_level': 0},
+            {'name': 'im_id',    'shape': [1], 'dtype': 'int32', 'lod_level': 0},
         ]
         if self.is_train:
             anno_info = [
                 {'name': 'gt_box',  'shape': [4], 'dtype': 'float32', 'lod_level': 1},
                 {'name': 'gt_label','shape': [1], 'dtype': 'int32', 'lod_level': 1},
                 {'name': 'is_crowd', 'shape': [1],'dtype': 'int32', 'lod_level': 1},
-                {'name': 'im_id',    'shape': [1], 'dtype': 'int32', 'lod_level': 0},
             ]
             feed_info += anno_info
         # yapf: enable

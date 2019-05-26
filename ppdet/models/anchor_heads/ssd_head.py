@@ -29,9 +29,9 @@ __all__ = ['SSDHead']
 @SSDHeads.register
 class SSDHead(object):
     """
-        SSDHead class
-        Args:
-            cfg(dict): All parameters in dictionary
+    SSDHead class
+    Args:
+        cfg(dict): All parameters in dictionary
     """
 
     def __init__(self, cfg):
@@ -47,9 +47,9 @@ class SSDHead(object):
                                 with shape of [N, C, H, W]
 
         Returns:
-            mbox_locs (Variable): The predicted boxes’ location of the inputs.
+            mbox_locs (Variable): The predicted boxes' location of the inputs.
                                   The layout is [N, H*W*num_priors, 4].
-            mbox_confs (Variable): The predicted boxes’ confidence
+            mbox_confs (Variable): The predicted boxes' confidence
                                    of the inputs.
                                    The layout is [N, H*W*num_priors, C].
             box (Variable): The output prior boxes of PriorBox.
@@ -57,7 +57,7 @@ class SSDHead(object):
             box_var (Variable): The expanded variances of PriorBox.
                                 The layout is [num_priors, 4].
 
-        tips：The num_priors is the number of predicted boxes
+        Tips: The num_priors is the number of predicted boxes
               each position of each input
               and C is the number of Classes.
         """
@@ -86,10 +86,10 @@ class SSDHead(object):
             return fluid.layers.batch_norm(input=conv, act=act)
 
         def _extra_block(input, num_filters1, num_filters2, num_groups, scale):
-            '''
+            """
             Get the feature map which is used to get bbox and label.
             Contain two convolution process, so there are two filters.
-            '''
+            """
             # 1x1 conv
             pointwise_conv = _conv_norm(
                 input=input,

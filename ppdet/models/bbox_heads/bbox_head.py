@@ -160,7 +160,7 @@ class BBoxHead(object):
             nms_threshold=self.cfg.TEST.NMS_THRESH,
             keep_top_k=self.cfg.TEST.DETECTIONS_PER_IM,
             normalized=False)
-        return pred_result
+        return {'bbox': pred_result}
 
 
 def bbox2mlp_head(cfg, roi_feat):
