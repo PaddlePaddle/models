@@ -86,6 +86,7 @@ class OptimizerBuilder():
                                     start_lr=start_lr,
                                     end_lr=end_lr)
 
+        self.lr = learning_rate
         return learning_rate
     
     def _parse_lr_decay_cfg(self):
