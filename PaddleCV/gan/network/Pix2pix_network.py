@@ -471,7 +471,7 @@ def build_generator_Unet(input,
         g_base_dims,
         outermost=True,
         norm=norm_type,
-        name=name + '_u%d' % i)  # add the outermost layer
+        name=name + '_u%d' % i)
 
     return output
 
