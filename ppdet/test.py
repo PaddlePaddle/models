@@ -86,7 +86,7 @@ def main():
         checkpoint.load(exe, test_prog, cfg.TEST.WEIGHTS)
 
     # 6. Run
-    i = 0
+    iter_id = 0
     results = []
     try:
         pyreader.start()
@@ -99,12 +99,12 @@ def main():
                 for k, v in zip(keys, outs)
             }
             results.append(res)
-            if i % 100 == 0:
-                logger.info('Test iter {}'.format(i))
-            i += 1
+            if iter_id % 100 == 0:
+                logger.info('Test iter {}'.format(iter_id))
+            iter_id += 1
     except (StopIteration, fluid.core.EOFException):
         pyreader.reset()
-    logger.info('Test iter {}'.format(i))
+    logger.info('Test iter {}'.format(iter_id))
 
     if cfg.TEST.METRIC_TYPE == 'COCO':
         from ppdet.metrics.coco import coco_eval
