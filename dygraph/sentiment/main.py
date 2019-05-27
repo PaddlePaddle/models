@@ -29,7 +29,7 @@ model_g.add_arg("checkpoints", str, "checkpoints", "Path to save checkpoints")
 
 train_g = ArgumentGroup(parser, "training", "training options.")
 train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
-train_g.add_arg("save_steps", int, 5000,
+train_g.add_arg("save_steps", int, 1000,
                 "The steps interval to save checkpoints.")
 train_g.add_arg("validation_steps", int, 200,
                 "The steps interval to evaluate model performance.")
@@ -82,7 +82,7 @@ def profile_context(profile=True):
 
 
 def train():
-    with fluid.dygraph.guard():
+    with fluid.dygraph.guard(place):
         processor = reader.SentaProcessor(
             data_dir=args.data_dir,
             vocab_path=args.vocab_path,
@@ -213,7 +213,7 @@ def train():
 
 
 def infer():
-    with fluid.dygraph.guard():
+    with fluid.dygraph.guard(place):
         loaded = False
         processor = reader.SentaProcessor(
             data_dir=args.data_dir,
