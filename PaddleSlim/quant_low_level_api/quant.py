@@ -14,6 +14,7 @@ from paddle.fluid.contrib.slim.quantization import ConvertToInt8Pass
 from paddle.fluid.contrib.slim.quantization import TransformForMobilePass
 from paddle.fluid.contrib.slim.quantization import ScaleForTrainingPass
 from paddle.fluid.contrib.slim.quantization import ScaleForInferencePass
+from paddle.fluid.contrib.slim.quantization import AddQuantDequantPass
 from paddle.fluid.transpiler.inference_transpiler import InferenceTranspiler
 from paddle.fluid import core
 import argparse
@@ -278,6 +279,10 @@ def train(args):
         weight_quantize_type=weight_quant_type)
     transform_pass.apply(main_graph)
     transform_pass.apply(test_graph)
+
+    add_quant_dequant_pass = AddQuantDequantPass(scope=fluid.global_scope(), place=place)
+    add_quant_dequant_pass.apply(main_graph)
+    add_quant_dequant_pass.apply(test_graph)
 
     scale_training_pass = ScaleForTrainingPass(scope=fluid.global_scope(), place=place)
     scale_training_pass.apply(main_graph)

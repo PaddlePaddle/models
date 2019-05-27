@@ -32,7 +32,7 @@ fi
 cd -
 
 
-export CUDA_VISIBLE_DEVICES=5,6
+export CUDA_VISIBLE_DEVICES=4,5,6
 
 #MobileNet v1:
 #python quant.py \
@@ -58,11 +58,11 @@ python quant.py \
        --pretrained_fp32_model=${pretrain_dir}/ResNet50_pretrained \
        --use_gpu=True \
        --data_dir=${data_dir} \
-       --batch_size=64 \
+       --batch_size=81 \
        --total_images=1281167 \
        --class_dim=1000 \
        --image_shape=3,224,224 \
-       --model_save_dir=output_trt/ \
+       --model_save_dir=output_trt_0521/ \
        --lr_strategy=piecewise_decay \
        --num_epochs=20 \
        --lr=0.0001 \
