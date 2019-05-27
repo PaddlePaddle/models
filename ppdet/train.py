@@ -79,7 +79,7 @@ def main():
             loss_name=loss.name, build_strategy=build_strategy)
 
     # 4. Define reader
-    reader = Reader(cfg.DATA, cfg.TRANSFORM)
+    reader = Reader(cfg.DATA, cfg.TRANSFORM, cfg.TRAIN.MAX_ITERS)
     train_reader = reader.train()
     pyreader = detector.get_pyreader()
     pyreader.decorate_sample_list_generator(train_reader, place)
