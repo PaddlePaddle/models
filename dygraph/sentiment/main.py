@@ -56,7 +56,7 @@ run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
 run_type_g.add_arg("do_train", bool, True, "Whether to perform training.")
 run_type_g.add_arg("do_val", bool, True, "Whether to perform evaluation.")
 run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
-run_type_g.add_arg("profile_steps", int, 5000,
+run_type_g.add_arg("profile_steps", int, 15000,
                    "The steps interval to record the performance.")
 
 args = parser.parse_args()
