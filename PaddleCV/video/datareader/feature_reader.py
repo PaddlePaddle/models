@@ -37,7 +37,7 @@ class FeatureReader(DataReader):
                  NextVlad only: eigen_file
     """
 
-    def __init__(self, name, mode, cfg):
+    def __init__(self, name, mode, cfg, enable_ce):
         self.name = name
         self.mode = mode
         self.num_classes = cfg.MODEL.num_classes
