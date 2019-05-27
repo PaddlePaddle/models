@@ -202,7 +202,7 @@ def train():
                         time_begin = time.time()
 
                     if steps % args.save_steps == 0:
-                        save_path = CKPT_PATH + "save_dir_" + str(steps)
+                        save_path = "save_dir_" + str(steps)
                         print('save model to: ' + save_path)
                         fluid.dygraph.save_persistables(cnn_net.state_dict(),
                                                         save_path)
@@ -227,14 +227,15 @@ def infer():
             shuffle=False)
 
         cnn_net_infer = nets.CNN("cnn_net", args.vocab_size, batch_size,
-                                 padding_size)
+                                 args.padding_size)
 
         print('infer result:')
         for batch_id, data in enumerate(infer_data_generator()):
             doc = to_variable(
                 np.array([
-                    np.pad(x[0][0:padding_size], (0, padding_size - len(x[0][
-                        0:padding_size])), 'constant') for x in data
+                    np.pad(x[0][0:args.padding_size], (
+                        0, args.padding_size - len(x[0][0:args.padding_size])),
+                           'constant') for x in data
                 ]).astype('int64').reshape(-1, 1))
             label = data[0][1]
 
