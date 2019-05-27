@@ -53,8 +53,8 @@ class KineticsReader(DataReader):
                   list
     """
 
-    def __init__(self, name, mode, cfg):
-        super(KineticsReader, self).__init__(name, mode, cfg)
+    def __init__(self, name, mode, cfg, enable_ce):
+        super(KineticsReader, self).__init__(name, mode, cfg, enable_ce)
         self.format = cfg.MODEL.format
         self.num_classes = self.get_config_from_sec('model', 'num_classes')
         self.seg_num = self.get_config_from_sec('model', 'seg_num')
@@ -73,6 +73,9 @@ class KineticsReader(DataReader):
         # set batch size and file list
         self.batch_size = cfg[mode.upper()]['batch_size']
         self.filelist = cfg[mode.upper()]['filelist']
+        if enable_ce:
+            random.seed(0)
+            np.random.seed(0)
 
     def create_reader(self):
         _reader = self._reader_creator(self.filelist, self.mode, seg_num=self.seg_num, seglen = self.seglen, \

@@ -98,6 +98,11 @@ def parse_args():
         type=int,
         default=10,
         help='mini-batch interval to log.')
+    parser.add_argument(
+        '--enable_ce',
+        type=bool,
+        default=False,
+        help='If set True, enable continuous evaluation job.')
     args = parser.parse_args()
     return args
 
@@ -114,6 +119,9 @@ def train(args):
     # build model
     startup = fluid.Program()
     train_prog = fluid.Program()
+    if args.enable_ce:
+        startup.random_seed = 1000
+        train_prog.random_seed = 1000
     with fluid.program_guard(train_prog, startup):
         with fluid.unique_name.guard():
             train_model.build_input(not args.no_use_pyreader)
@@ -185,8 +193,8 @@ def train(args):
                                         bs_denominator)
     valid_config.VALID.batch_size = int(valid_config.VALID.batch_size /
                                         bs_denominator)
-    train_reader = get_reader(args.model_name.upper(), 'train', train_config)
-    valid_reader = get_reader(args.model_name.upper(), 'valid', valid_config)
+    train_reader = get_reader(args.model_name.upper(), 'train', train_config, args.enable_ce)
+    valid_reader = get_reader(args.model_name.upper(), 'valid', valid_config, args.enable_ce)
 
     # get metrics 
     train_metrics = get_metrics(args.model_name.upper(), 'train', train_config)
@@ -235,6 +243,7 @@ def train(args):
             valid_interval=args.valid_interval,
             save_dir=args.save_dir,
             save_model_name=args.model_name,
+            enable_ce=args.enable_ce,
             test_exe=valid_exe,
             test_pyreader=valid_pyreader,
             test_fetch_list=valid_fetch_list,

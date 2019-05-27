@@ -37,10 +37,11 @@ class ReaderNotFoundError(Exception):
 class DataReader(object):
     """data reader for video input"""
 
-    def __init__(self, model_name, mode, cfg):
+    def __init__(self, model_name, mode, cfg, enable_ce):
         self.name = model_name
         self.mode = mode
         self.cfg = cfg
+        self.enable_ce = enable_ce
 
     def create_reader(self):
         """Not implemented"""
@@ -62,10 +63,10 @@ class ReaderZoo(object):
             type(reader))
         self.reader_zoo[name] = reader
 
-    def get(self, name, mode, cfg):
+    def get(self, name, mode, cfg, enable_ce):
         for k, v in self.reader_zoo.items():
             if k == name:
-                return v(name, mode, cfg)
+                return v(name, mode, cfg, enable_ce)
         raise ReaderNotFoundError(name, self.reader_zoo.keys())
 
 
@@ -77,6 +78,6 @@ def regist_reader(name, reader):
     reader_zoo.regist(name, reader)
 
 
-def get_reader(name, mode, cfg):
-    reader_model = reader_zoo.get(name, mode, cfg)
+def get_reader(name, mode, cfg, enable_ce):
+    reader_model = reader_zoo.get(name, mode, cfg, enable_ce)
     return reader_model.create_reader()
