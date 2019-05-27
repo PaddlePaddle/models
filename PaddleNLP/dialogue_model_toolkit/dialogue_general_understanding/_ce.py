@@ -8,10 +8,10 @@ from kpi import DurationKpi
 from kpi import AccKpi
 
 each_step_duration_atis_slot_card1 = DurationKpi('each_step_duration_atis_slot_card1', 0.01, 0, actived=True)
-train_loss_atis_slot_card1 = CostKpi('train_loss_atis_slot_card1', 0.01, 0, actived=True)
+train_loss_atis_slot_card1 = CostKpi('train_loss_atis_slot_card1', 0.08, 0, actived=True)
 train_acc_atis_slot_card1 = CostKpi('train_acc_atis_slot_card1', 0.01, 0, actived=True)
-each_step_duration_atis_slot_card4 = DurationKpi('each_step_duration_atis_slot_card4', 0.01, 0, actived=True)
-train_loss_atis_slot_card4 = CostKpi('train_loss_atis_slot_card4', 0.01, 0, actived=True)
+each_step_duration_atis_slot_card4 = DurationKpi('each_step_duration_atis_slot_card4', 0.06, 0, actived=True)
+train_loss_atis_slot_card4 = CostKpi('train_loss_atis_slot_card4', 0.03, 0, actived=True)
 train_acc_atis_slot_card4 = CostKpi('train_acc_atis_slot_card4', 0.01, 0, actived=True)
 
 tracking_kpis = [
