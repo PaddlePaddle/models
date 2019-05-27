@@ -23,10 +23,6 @@ import nets
 import reader
 from utils import ArgumentGroup
 
-DATA_PATH = "./senta_data/"
-CKPT_PATH = "./save_models/"
-VOCAB_PATH = DATA_PATH + "word_dict.txt"
-
 parser = argparse.ArgumentParser(__doc__)
 model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("checkpoints", str, "checkpoints", "Path to save checkpoints")
@@ -38,6 +34,8 @@ train_g.add_arg("save_steps", int, 5000,
 train_g.add_arg("validation_steps", int, 200,
                 "The steps interval to evaluate model performance.")
 train_g.add_arg("lr", float, 0.002, "The Learning rate value for training.")
+train_g.add_arg("padding_size", int, 150,
+                "The padding size for input sequences.")
 
 log_g = ArgumentGroup(parser, "logging", "logging related")
 log_g.add_arg("skip_steps", int, 10, "The steps interval to print loss.")
@@ -45,8 +43,9 @@ log_g.add_arg("verbose", bool, False, "Whether to output verbose log")
 
 data_g = ArgumentGroup(parser, "data",
                        "Data paths, vocab paths and data processing options")
-data_g.add_arg("data_dir", str, DATA_PATH, "Path to training data.")
-data_g.add_arg("vocab_path", str, VOCAB_PATH, "Vocabulary path.")
+data_g.add_arg("data_dir", str, "./senta_data/", "Path to training data.")
+data_g.add_arg("vocab_path", str, "./senta_data/word_dict.txt",
+               "Vocabulary path.")
 data_g.add_arg("vocab_size", int, 33256, "Vocabulary path.")
 data_g.add_arg("batch_size", int, 16,
                "Total examples' number in batch for training.")
@@ -57,11 +56,10 @@ run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
 run_type_g.add_arg("do_train", bool, True, "Whether to perform training.")
 run_type_g.add_arg("do_val", bool, True, "Whether to perform evaluation.")
 run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
-run_type_g.add_arg("profile_steps", int, 5000, "Whether to perform inference.")
+run_type_g.add_arg("profile_steps", int, 5000,
+                   "The steps interval to record the performance.")
 
 args = parser.parse_args()
-
-padding_size = 150
 
 if args.use_cuda:
     place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
@@ -108,7 +106,7 @@ def train():
             shuffle=False)
 
         cnn_net = nets.CNN("cnn_net", args.vocab_size, args.batch_size,
-                           padding_size)
+                           args.padding_size)
 
         sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.lr)
         steps = 0
@@ -124,8 +122,9 @@ def train():
                     steps += 1
                     doc = to_variable(
                         np.array([
-                            np.pad(x[0][0:padding_size], (0, padding_size - len(
-                                x[0][0:padding_size])),
+                            np.pad(x[0][0:args.padding_size], (
+                                0, args.padding_size - len(x[0][
+                                    0:args.padding_size])),
                                    'constant',
                                    constant_values=(args.vocab_size))
                             for x in data
@@ -166,9 +165,9 @@ def train():
                         for eval_batch_id, eval_data in enumerate(
                                 eval_data_generator()):
                             eval_np_doc = np.array([
-                                np.pad(x[0][0:padding_size], (
-                                    0,
-                                    padding_size - len(x[0][0:padding_size])),
+                                np.pad(x[0][0:args.padding_size],
+                                       (0, args.padding_size -
+                                        len(x[0][0:args.padding_size])),
                                        'constant',
                                        constant_values=(args.vocab_size))
                                 for x in eval_data

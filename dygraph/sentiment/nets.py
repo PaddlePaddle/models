@@ -48,7 +48,7 @@ class CNN(fluid.dygraph.Layer):
         self.dict_dim = dict_dim
         self.emb_dim = 128
         self.hid_dim = 128
-        self.hid_dim2 = 96
+        self.fc_hid_dim = 96
         self.class_dim = 2
         self.win_size = [3, self.hid_dim]
         self.batch_size = batch_size
@@ -65,7 +65,7 @@ class CNN(fluid.dygraph.Layer):
             self.hid_dim,
             self.win_size,
             batch_size=self.batch_size)
-        self._fc1 = FC(self.full_name(), size=self.hid_dim2, act="softmax")
+        self._fc1 = FC(self.full_name(), size=self.fc_hid_dim, act="softmax")
         self._fc_prediction = FC(self.full_name(),
                                  size=self.class_dim,
                                  act="softmax")
