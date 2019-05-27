@@ -52,13 +52,19 @@ class SentaProcessor(object):
     def data_generator(self, batch_size, phase='train', epoch=1, shuffle=True):
         if phase == "train":
             return paddle.batch(
-                self.get_train_examples(self.data_dir, epoch), batch_size)
+                self.get_train_examples(self.data_dir, epoch),
+                batch_size,
+                drop_last=True)
         elif phase == "dev":
             return paddle.batch(
-                self.get_dev_examples(self.data_dir, epoch), batch_size)
+                self.get_dev_examples(self.data_dir, epoch),
+                batch_size,
+                drop_last=True)
         elif phase == "infer":
             return paddle.batch(
-                self.get_test_examples(self.data_dir, epoch), batch_size)
+                self.get_test_examples(self.data_dir, epoch),
+                batch_size,
+                drop_last=True)
         else:
             raise ValueError(
                 "Unknown phase, which should be in ['train', 'dev', 'infer'].")
