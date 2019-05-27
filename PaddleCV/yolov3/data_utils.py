@@ -2,6 +2,8 @@
 This code is based on https://github.com/fchollet/keras/blob/master/keras/utils/data_utils.py
 """
 
+import sys
+import signal
 import time
 import numpy as np
 import threading
@@ -10,6 +12,14 @@ try:
     import queue
 except ImportError:
     import Queue as queue
+
+
+# handle terminate reader process, do not print stack frame
+def _reader_quit(signum, frame):
+    print("Reader process exit.")
+    sys.exit()
+
+signal.signal(signal.SIGTERM, _reader_quit)
 
 
 class GeneratorEnqueuer(object):

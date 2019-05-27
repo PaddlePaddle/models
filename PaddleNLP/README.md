@@ -51,7 +51,7 @@ PaddleNLP 完全基于[PaddlePaddle Fluid](http://www.paddlepaddle.org/)开发�
 
 ### 依赖
 
-本项目依赖于 Python 2.7 和 Paddle Fluid 1.3.1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 安装 PaddlePaddle。
+本项目依赖于 Python 2.7 和 Paddle Fluid 1.3.1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 安装 PaddlePaddle。 注意，暂不支持 Windows GPU 环境，如需在 Windows GPU 环境使用，请将示例代码中的  [fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor) 替换为 [fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor) 。
 
 ### 流程
 
@@ -64,7 +64,7 @@ git clone https://github.com/PaddlePaddle/models.git
 - 进入到特定的子目录中查看代码和运行任务（如情感分析）
 
 ```shell
-cd models/PaddleNLP/sentiment_classification 
+cd models/PaddleNLP/sentiment_classification
 ```
 
 支持的 NLP 任务
@@ -73,7 +73,7 @@ cd models/PaddleNLP/sentiment_classification
 ### 文本分类
  - [文本情感分析](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/sentiment_classification)
  - [对话情绪识别](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/emotion_detection)
- 
+
 ### 文本匹配
  - [短文本语义匹配](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/similarity_net)
 
@@ -91,4 +91,3 @@ cd models/PaddleNLP/sentiment_classification
  - [对话模型工具箱](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit)
  - [知识驱动对话](https://github.com/baidu/knowledge-driven-dialogue/tree/master)
  - [阅读理解](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/reading_comprehension)
-
