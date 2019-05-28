@@ -20,10 +20,11 @@ import paddle.fluid as fluid
 from paddle.fluid.framework import Variable
 
 from ..registry import Backbones
+from ..registry import BBoxHeadConvs
 from .base import BackboneBase
 from .resnet import ResNet
 
-__all__ = ['ResNeXt101C4Backbone']
+__all__ = ['ResNeXt101C4Backbone', 'ResNeXt101C5']
 
 
 class ResNeXt(ResNet):
@@ -100,3 +101,21 @@ class ResNeXt101C4Backbone(BackboneBase):
         model = ResNeXt(self.number, self.freeze_bn, self.affine_channel,
                         self.groups)
         return model.get_backbone(input, 4, self.freeze_at)
+
+
+@BBoxHeadConvs.register
+class ResNeXt101C5(object):
+    def __init__(self, cfg):
+        self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
+        self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
+        self.groups = getattr(cfg.MODEL, 'GROUPS', 64)
+        self.number = 101
+        self.stage_number = 5
+
+    def __call__(self, input):
+        model = ResNeXt(self.number, self.freeze_bn, self.affine_channel,
+                        self.groups)
+        res5 = model.layer_warp(input, self.stage_number)
+        feat = fluid.layers.pool2d(
+            input=res5, pool_type='avg', pool_size=7, name='res5_pool')
+        return feat

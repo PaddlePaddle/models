@@ -23,7 +23,7 @@ import paddle.fluid as fluid
 import paddle.compat as cpt
 
 from ppdet.core.config import load_cfg, merge_cfg
-from ppdet.models.backbones.resnext import ResNeXt, ResNeXt101C4Backbone
+from ppdet.models.backbones.resnext import ResNeXt, ResNeXt101C4Backbone, ResNeXt101C5
 
 
 def bottleneck_names(name, bn_affine, short_conv=True):
@@ -87,6 +87,24 @@ class TestResNeXt(unittest.TestCase):
                 param_names.extend(bottleneck_names(name, bn_affine, i == 0))
         return param_names
 
+    def get_C5_params(self, bn_affine):
+        """
+        The naming rules are same as them in
+        https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/image_classification/models/resnet.py
+
+        Args:
+            bn_affine (bool): meaning use affine_channel
+
+        Return:
+            list[string]: all parameter names
+        """
+        param_names = []
+
+        for i in range(self.depth[-1]):
+            name = "res" + str(5) + chr(97 + i)
+            param_names.extend(bottleneck_names(name, bn_affine, i == 0))
+        return param_names
+
     def compare_C1ToC4(self, bn_affine):
         prog = fluid.Program()
         startup_prog = fluid.Program()
@@ -107,6 +125,10 @@ class TestResNeXt(unittest.TestCase):
         self.assertEqual(len(actual_pnames), len(expect_pnames))
         # check parameter names
         for a, e in zip(actual_pnames, expect_pnames):
+            if isinstance(a, bytes):
+                a = a.decode()
+            if isinstance(e, bytes):
+                e = e.decode()
             self.assertTrue(a == e, "Parameter names have diff: \n" +
                             " Actual: " + str(a) + "\n Expect: " + str(e))
         # check learning rate of batch_norm
@@ -119,7 +141,8 @@ class TestResNeXt(unittest.TestCase):
         merge_cfg({
             'AFFINE_CHANNEL': False,
             'FREEZE_BN': True,
-            'FREEZE_AT': 2
+            'FREEZE_AT': 2,
+            'GROUPS': 64
         }, self.cfg.MODEL)
         assert not self.cfg.MODEL.AFFINE_CHANNEL
         self.compare_C1ToC4(False)
@@ -128,10 +151,62 @@ class TestResNeXt(unittest.TestCase):
         merge_cfg({
             'AFFINE_CHANNEL': True,
             'FREEZE_BN': True,
-            'FREEZE_AT': 2
+            'FREEZE_AT': 2,
+            'GROUPS': 64
         }, self.cfg.MODEL)
         assert self.cfg.MODEL.AFFINE_CHANNEL
         self.compare_C1ToC4(True)
+
+    def compare_C5(self, bn_affine):
+        prog = fluid.Program()
+        startup_prog = fluid.Program()
+        with fluid.program_guard(prog, startup_prog):
+            data = fluid.layers.data(
+                name='input', shape=[1024, 14, 14], dtype='float32')
+            #feat = ResNet50C5(data, True, bn_affine)
+            c5_stage = ResNeXt101C5(self.cfg)
+            feat = c5_stage(data)
+            # actual names
+            parameters = prog.global_block().all_parameters()
+            actual_pnames = [cpt.to_bytes(p.name) for p in parameters]
+        # expected names
+        expect_pnames = self.get_C5_params(bn_affine)
+
+        actual_pnames.sort()
+        expect_pnames.sort()
+
+        self.assertEqual(len(actual_pnames), len(expect_pnames))
+        for a, e in zip(actual_pnames, expect_pnames):
+            if isinstance(a, bytes):
+                a = a.decode()
+            if isinstance(e, bytes):
+                e = e.decode()
+            self.assertTrue(a == e, "Parameter names have diff: \n" +
+                            " Actual: " + str(a) + "\n Expect: " + str(e))
+
+        # check learning rate of batch_norm
+        for p in parameters:
+            if 'bn' in p.name and ('scale' in p.name or 'offset' in p.name):
+                self.assertTrue(p.optimize_attr['learning_rate'] == 0.)
+                self.assertTrue(p.stop_gradient)
+
+    def test_C5_bn(self):
+        merge_cfg({
+            'AFFINE_CHANNEL': False,
+            'FREEZE_BN': True,
+            'GROUPS': 64
+        }, self.cfg.MODEL)
+        assert not self.cfg.MODEL.AFFINE_CHANNEL
+        self.compare_C5(False)
+
+    def test_C5_affine(self):
+        merge_cfg({
+            'AFFINE_CHANNEL': True,
+            'FREEZE_BN': True,
+            'GROUPS': 64
+        }, self.cfg.MODEL)
+        assert self.cfg.MODEL.AFFINE_CHANNEL
+        self.compare_C5(True)
 
 
 if __name__ == '__main__':

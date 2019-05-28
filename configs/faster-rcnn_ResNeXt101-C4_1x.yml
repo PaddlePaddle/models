@@ -45,7 +45,7 @@ RPN_HEAD:
   TEST:
     RPN_PRE_NMS_TOP_N: 6000
     RPN_POST_NMS_TOP_N: 1000
-    RPN_NMS_THRESH: 0.5
+    RPN_NMS_THRESH: 0.7
     RPN_MIN_SIZE: 0.0
     RPN_ETA: 1.0
 
@@ -57,7 +57,7 @@ RPN_HEAD:
 
 BBOX_HEAD:
   TYPE: BBoxHead
-  HEAD_CONV: ResNet50C5
+  HEAD_CONV: ResNeXt101C5
   
   ROI:
     BBOX_REG_WEIGHTS: [0.1, 0.1, 0.2, 0.2]
@@ -103,13 +103,16 @@ TEST:
   SCORE_THRESH: 0.05
   NMS_THRESH: 0.5
   DETECTIONS_PER_IM: 100
-  WEIGTS: ResNet50_pretrained
+  WEIGHTS: output/FasterRCNN/model_final
+  METRIC_TYPE: COCO
 
 DATA:
   train:
+      anno_file: COCO17/annotations/instances_train2017.json
+      image_dir: COCO17/train2017
+  val:
       anno_file: COCO17/annotations/instances_val2017.json
       image_dir: COCO17/val2017
-  max_iter: 180000
   CLASS_NUM: 81
 
 TRANSFORM:
@@ -130,7 +133,25 @@ TRANSFORM:
         - op: Rgb2Bgr
           to_bgr: False
         - op: ArrangeRCNN
-    batch_size: 1
+          is_train: True
+    val:
+        - op: DecodeImage
+          to_rgb: True
+        - op: NormalizeImage
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+          is_scale: True
+          is_channel_first: False
+        - op: ResizeImage
+          target_size: 800
+          max_size: 1333
+          interp: 1
+        - op: Rgb2Bgr
+          to_bgr: False
+        - op: ArrangeRCNN
+          is_train: False
+
+    batch_size: 1 # batch size per device
     gpu_counts: 8
     is_padding: True
     worker_conf:
