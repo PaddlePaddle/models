@@ -33,7 +33,6 @@ num_reader_threads = 12
 buf_size = 1024
 batch_size = 128
 filelist = "./dataset/kinetics/val.list"
-enable_ce = False
 
 [TEST]
 short_size = 256
