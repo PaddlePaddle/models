@@ -32,7 +32,7 @@ class RoiDbSource(Dataset):
     """ interface to load roidb data from files
     """
 
-    def __init__(self, fname, image_dir=None, samples=-1):
+    def __init__(self, fname, image_dir=None, samples=-1, is_shuffle=True):
         super(RoiDbSource, self).__init__()
         self._epoch = -1
         self._fname = fname
@@ -47,6 +47,7 @@ class RoiDbSource(Dataset):
         self._pos = -1
         self._drained = False
         self._samples = samples
+        self._is_shuffle = is_shuffle
 
     def __str__(self):
         return 'RoiDbSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
@@ -84,7 +85,8 @@ class RoiDbSource(Dataset):
         """
         if self._roidb is None:
             self._roidb = self._load()
-        random.shuffle(self._roidb)
+        if self._is_shuffle:
+            random.shuffle(self._roidb)
 
         if self._epoch < 0:
             self._epoch = 0
@@ -104,3 +106,8 @@ class RoiDbSource(Dataset):
         """
         assert self._epoch >= 0, 'The first epoch has not begin!'
         return self._pos >= self.size()
+
+    def epoch_id(self):
+        """ return epoch id for latest sample
+        """
+        return self._epoch

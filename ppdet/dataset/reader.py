@@ -21,8 +21,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
-import numpy as np
 from . import source
 from .transform import transformer as tf
 from .transform import operator as op
@@ -32,64 +30,70 @@ class Reader(object):
     """ Interface to make readers for training or evaluation
     """
 
-    def __init__(self, data_cf, trans_conf, maxiter=None):
+    def __init__(self, data_cf, trans_conf):
         """ Init
         """
         self._data_cf = data_cf
         self._trans_conf = trans_conf
-        self._maxiter = maxiter
 
-    def _make_reader(self, is_train):
+    def _make_reader(self, which):
         """ Build reader for training or validation
         """
-        which = 'train' if is_train else 'val'
         file_conf = self._data_cf[which]
 
         # 1, Build data source
-        samples = -1 if 'samples' not in self._data_cf else self._data_cf[
-            'samples']
+        samples = -1 if 'SAMPLES' not in file_conf else file_conf['SAMPLES']
+        is_shuffle = True if 'IS_SHUFFLE' not in file_conf \
+            else file_conf['IS_SHUFFLE']
         sc_conf = {
-            'fname': file_conf['anno_file'],
-            'image_dir': file_conf['image_dir'],
-            'samples': samples
+            'fname': file_conf['ANNO_FILE'],
+            'image_dir': file_conf['IMAGE_DIR'],
+            'samples': samples,
+            'is_shuffle': is_shuffle
         }
         sc = source.build(sc_conf)
 
         # 2, Buid a transformed dataset
-        ops = self._trans_conf[which]
-        gpu_counts = self._trans_conf['gpu_counts']
-        batchsize = self._trans_conf['batch_size']
-        worker_args = None if 'worker_args' not in \
-            self._trans_conf else self._trans_conf['worker_args']
-        drop_last = False if 'drop_last' not in \
-            self._trans_conf else self._trans_conf['drop_last']
-        is_padding = False if 'is_padding' not in \
-            self._trans_conf else self._trans_conf['is_padding']
+        ops = self._trans_conf[which]['OPS']
+        devices_num = self._trans_conf[which]['DEVICES_NUM']
+        batchsize = self._trans_conf[which]['BATCH_SIZE']
+        worker_args = None if 'WORKER_CONF' not in \
+            self._trans_conf[which] else self._trans_conf[which]['WORKER_CONF']
+        drop_last = False if 'DROP_LAST' not in \
+            self._trans_conf[which] else self._trans_conf[which]['DROP_LAST']
+        is_padding = False if 'IS_PADDING' not in \
+            self._trans_conf[which] else self._trans_conf[which]['IS_PADDING']
         mapper = op.build(ops)
         mapped_ds = tf.map(sc, mapper, worker_args)
-        batched_ds = tf.batch(mapped_ds, batchsize, drop_last, is_padding)
+        batched_ds = tf.batch(mapped_ds, devices_num, batchsize, drop_last,
+                              is_padding)
 
         # 3, Build a reader
         def _reader():
             # TODO: need more elegant code
-            maxit = self._maxiter * gpu_counts if self._maxiter else 1
             n = 0
-            while n < maxit:
+            while n < self._trans_conf[which]['MAX_ITER']:
                 batched_ds.reset()
-                for batch in batched_ds:
-                    yield batch
-                    n += 1
-                    if self._maxiter and n == maxit:
-                        return
+                for sample in batched_ds:
+                    for sub_batch_out in sample:
+                        yield sub_batch_out
+                        n += 1
+                        if n == self._trans_conf[which]['MAX_ITER']:
+                            return
 
         return _reader
 
     def train(self):
         """ Build reader for training
         """
-        return self._make_reader(True)
+        return self._make_reader('TRAIN')
 
     def val(self):
         """ Build reader for validation
         """
-        return self._make_reader(False)
+        return self._make_reader('VAL')
+
+    def infer(self):
+        """ Build reader for inference
+        """
+        return self._make_reader('TEST')

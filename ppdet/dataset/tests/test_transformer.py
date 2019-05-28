@@ -11,23 +11,38 @@ from dataset.transform import operator as op
 from dataset.transform import transformer
 
 logging.basicConfig(level=logging.INFO)
+
+
 class TestTransformer(unittest.TestCase):
     """Test cases for dataset.transform.transformer
     """
+
     @classmethod
     def setUpClass(cls):
         """ setup
         """
+
         prefix = os.path.dirname(os.path.abspath(__file__))
         # json data
-        anno_path = os.path.join(prefix,
-            'coco/annotations/instances_val2017.json')
-        image_dir = os.path.join(prefix, 'coco/val2017')
-        cls.sc_config = {'fname': anno_path,
-            'image_dir': image_dir, 'samples': 200}
-        
-        cls.ops = [{'op': 'DecodeImage', 'to_rgb': True},
-                   {'op': 'ArrangeRCNN', 'is_mask': False}]
+        anno_path = os.path.join(prefix, 'data/coco/instances_val2017.json')
+        image_dir = os.path.join(prefix, 'data/coco/val2017')
+        cls.sc_config = {
+            'fname': anno_path,
+            'image_dir': image_dir,
+            'samples': 200
+        }
+
+        cls.ops = [{
+            'op': 'DecodeImage',
+            'to_rgb': True
+        }, {
+            'op': 'ResizeImage',
+            'target_size': 800,
+            'max_size': 1333
+        }, {
+            'op': 'ArrangeRCNN',
+            'is_mask': False
+        }]
 
     @classmethod
     def tearDownClass(cls):
@@ -52,9 +67,8 @@ class TestTransformer(unittest.TestCase):
         """
         mapper = op.build(self.ops)
         ds = build_source(self.sc_config)
-        worker_conf = {'worker_num': 2}
-        mapped_ds = transformer.map(
-            ds, mapper, worker_conf)
+        worker_conf = {'WORKER_NUM': 2}
+        mapped_ds = transformer.map(ds, mapper, worker_conf)
 
         ct = 0
         for sample in mapped_ds:
@@ -80,11 +94,9 @@ class TestTransformer(unittest.TestCase):
         ds = build_source(self.sc_config)
         mapped_ds = transformer.map(ds, mapper)
         batched_ds = transformer.batch(mapped_ds, batchsize, True)
-
         for sample in batched_ds:
-            self.assertEqual(len(sample[0]), batchsize)
-
-        batched_ds.reset()
+            out = sample
+        self.assertEqual(len(out), batchsize)
 
 
 if __name__ == '__main__':

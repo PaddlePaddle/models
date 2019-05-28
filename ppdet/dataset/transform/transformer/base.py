@@ -64,7 +64,12 @@ class BatchedDataset(ProxiedDataset):
     """ transform samples to batches
     """
 
-    def __init__(self, ds, batchsize, drop_last=True, is_padding=False):
+    def __init__(self,
+                 ds,
+                 devices_num,
+                 batchsize,
+                 drop_last=True,
+                 is_padding=False):
         """
         Args:
             ds (instance of Dataset): dataset to be batched
@@ -73,6 +78,7 @@ class BatchedDataset(ProxiedDataset):
                 enough for one batch
         """
         super(BatchedDataset, self).__init__(ds)
+        self._devices_num = devices_num
         self._batchsz = batchsize
         self._drop_last = drop_last
         self.is_padding = is_padding
@@ -93,7 +99,8 @@ class BatchedDataset(ProxiedDataset):
     def next(self):
         """ proxy to self._ds.next
         """
-        bs_per_dev = self._batchsz
+        devices_num = self._devices_num
+        total_batchsz = self._batchsz * devices_num
 
         def has_empty(items):
             if any(x is None for x in items):
@@ -103,7 +110,7 @@ class BatchedDataset(ProxiedDataset):
             return False
 
         batch = []
-        for _ in range(bs_per_dev):
+        for _ in range(total_batchsz):
             try:
                 out = self._ds.next()
                 while has_empty(out):
@@ -113,9 +120,26 @@ class BatchedDataset(ProxiedDataset):
                 if not self._drop_last and len(batch) > 0:
                     if self.is_padding:
                         batch = self.padding_minibatch(batch)
-                    return batch
+                    batch_list = []
+                    for i in range(devices_num):
+                        sub_batch_out = []
+                        for j in range(self._batchsz):
+                            index = i * self._batchsz + j
+                            if index >= len(batch):
+                                continue
+                            sub_batch_out.append(batch[index])
+                        batch_list.append(sub_batch_out)
+                        sub_batch_out = []
+                    return batch_list
                 else:
                     raise StopIteration
         if self.is_padding:
             batch = self.padding_minibatch(batch)
-        return batch
+        batch_list = []
+        for i in range(devices_num):
+            sub_batch_out = []
+            for j in range(self._batchsz):
+                sub_batch_out.append(batch[i * self._batchsz + j])
+            batch_list.append(sub_batch_out)
+            sub_batch_out = []
+        return batch_list

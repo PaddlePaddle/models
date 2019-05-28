@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = ['build']
 
+
 def build(ops):
     """ Build a mapper for operators in 'ops'
 
@@ -32,6 +33,13 @@ def build(ops):
         a mapper function which accept one argument 'sample' and
         return the processed result
     """
+    new_ops = []
+    for _dict in ops:
+        new_dict = {}
+        for i, j in _dict.items():
+            new_dict[i.lower()] = j
+        new_ops.append(new_dict)
+    ops = new_ops
     op_funcs = []
     op_repr = []
     for op in ops:
@@ -45,7 +53,8 @@ def build(ops):
             params = {} if 'params' not in op else op['params']
             o = op_func(**params)
         else:
-            assert isinstance(op, base.BaseOperator), 'invalid operator when build ops'
+            assert isinstance(
+                op, base.BaseOperator), 'invalid operator when build ops'
             o = op
         op_funcs.append(o)
         op_repr.append('{%s}' % str(o))

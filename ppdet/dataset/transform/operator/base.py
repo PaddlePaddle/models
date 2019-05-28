@@ -228,7 +228,7 @@ class RandFlipImage(BaseOperator):
             raise ImageError('{}: the image type is not \
                     three-dimensional.'.format(self.__str__))
         height, width, _ = im.shape
-        if np.random.uniform(0, 1) > self.prob:
+        if np.random.uniform(0, 1) < self.prob:
             im = im[:, ::-1, :]
             if gt_bbox.shape[0] == 0:
                 return sample

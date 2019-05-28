@@ -20,6 +20,7 @@ from pycocotools.coco import COCO
 import logging
 logger = logging.getLogger(__name__)
 
+
 def load(anno_path, sample_num=-1):
     """ Load COCO records with annotations in json file 'anno_path'
 
@@ -43,7 +44,8 @@ def load(anno_path, sample_num=-1):
         'cname2cid' is a dict to map category name to class id
     """
 
-    assert anno_path.endswith('.json'), 'invalid coco annotation file[%s]' % (anno_path)
+    assert anno_path.endswith('.json'), 'invalid coco annotation file[%s]' % (
+        anno_path)
     coco = COCO(anno_path)
     img_ids = coco.getImgIds()
     records = []
@@ -51,10 +53,14 @@ def load(anno_path, sample_num=-1):
 
     # mapping category to classid, like:
     #   background:0, first_class:1, second_class:2, ...
-    catid2clsid = dict({catid: i + 1 for i, catid in enumerate(coco.getCatIds())})
+    catid2clsid = dict(
+        {catid: i + 1
+         for i, catid in enumerate(coco.getCatIds())})
 
-    cname2cid = dict({coco.loadCats(catid)[0]['name']: clsid for catid,
-                                 clsid in catid2clsid.items()})
+    cname2cid = dict({
+        coco.loadCats(catid)[0]['name']: clsid
+        for catid, clsid in catid2clsid.items()
+    })
 
     for img_id in img_ids:
         img_anno = coco.loadImgs(img_id)[0]
@@ -101,7 +107,7 @@ def load(anno_path, sample_num=-1):
             'gt_bbox': gt_bbox,
             'gt_poly': gt_poly,
             'difficult': difficult
-            }
+        }
 
         logger.debug('Load file: {}, im_id: {}, h: {}, w: {}.'.format(
             im_fname, img_id, im_h, im_w))
@@ -109,7 +115,5 @@ def load(anno_path, sample_num=-1):
         ct += 1
         if sample_num > 0 and ct >= sample_num:
             break
-
     assert len(records) > 0, 'not found any coco record in %s' % (anno_path)
     return [records, cname2cid]
-
