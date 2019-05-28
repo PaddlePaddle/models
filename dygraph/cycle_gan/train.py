@@ -107,7 +107,7 @@ def train(args):
 
                 fake_pool_A = A_pool.pool_image(fake_A).numpy()
                 fake_pool_A = np.array([fake_pool_A[0].reshape(3,256,256)]).astype("float32")
-                fake_pool_A = to_variable(fake_pool_B)
+                fake_pool_A = to_variable(fake_pool_A)
 
                 # optimize the d_A network
                 rec_B, fake_pool_rec_B = cycle_gan(data_B,fake_pool_B,False,True,False)
