@@ -23,7 +23,8 @@ learning_rate_decay = 0.1
 decay_epochs = [40, 60]
 l2_weight_decay = 1e-4
 momentum = 0.9
-total_videos = 239781 
+total_videos = 239781
+enable_ce = False 
 
 [VALID]
 short_size = 256
@@ -32,6 +33,7 @@ num_reader_threads = 12
 buf_size = 1024
 batch_size = 128
 filelist = "./dataset/kinetics/val.list"
+enable_ce = False
 
 [TEST]
 short_size = 256

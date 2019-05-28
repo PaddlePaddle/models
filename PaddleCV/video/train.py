@@ -193,8 +193,8 @@ def train(args):
                                         bs_denominator)
     valid_config.VALID.batch_size = int(valid_config.VALID.batch_size /
                                         bs_denominator)
-    train_reader = get_reader(args.model_name.upper(), 'train', train_config, args.enable_ce)
-    valid_reader = get_reader(args.model_name.upper(), 'valid', valid_config, args.enable_ce)
+    train_reader = get_reader(args.model_name.upper(), 'train', train_config)
+    valid_reader = get_reader(args.model_name.upper(), 'valid', valid_config)
 
     # get metrics 
     train_metrics = get_metrics(args.model_name.upper(), 'train', train_config)

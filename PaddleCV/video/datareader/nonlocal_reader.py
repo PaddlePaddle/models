@@ -43,7 +43,7 @@ class NonlocalReader(DataReader):
                                use_multi_crop
     """
 
-    def __init__(self, name, mode, cfg, enable_ce):
+    def __init__(self, name, mode, cfg):
         self.name = name
         self.mode = mode
         self.cfg = cfg
