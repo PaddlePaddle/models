@@ -143,7 +143,9 @@ def test_mnist(reader, model, batch_size):
 
 
 def inference_mnist():
-    with fluid.dygraph.guard():
+    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
+        if args.use_data_parallel else fluid.CUDAPlace(0)
+    with fluid.dygraph.guard(place):
         mnist_infer = MNIST("mnist")
         # load checkpoint
         mnist_infer.load_dict(fluid.dygraph.load_persistables("save_dir"))
