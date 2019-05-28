@@ -19,7 +19,7 @@ python版本依赖python 2.7或python 3.5及以上版本
 克隆数据集代码库到本地
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
-cd models/PaddleNLP/sentiment_classification
+cd models/dygraph/sentiment
 ```
 
 #### 数据准备
