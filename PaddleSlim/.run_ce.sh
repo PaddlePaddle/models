@@ -16,7 +16,7 @@ if [ -d 'checkpoints' ]; then
     rm -rf checkpoints
 fi
 
-sed -i "s/epoch: 200/epoch: 5/g" configs/filter_pruning_uniform.yaml
+sed -i "s/epoch: 200/epoch: 1/g" configs/filter_pruning_uniform.yaml
 
 python compress.py \
     --model "MobileNet" \
