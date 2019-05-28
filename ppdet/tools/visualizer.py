@@ -29,7 +29,7 @@ from tqdm import tqdm
 path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../')
 if path not in sys.path:
     sys.path.insert(0, path)
-from args import parse_args, print_arguments, add_arguments
+from args import print_arguments, add_arguments
 
 __all__ = ['visual_single_img']
 
@@ -154,9 +154,11 @@ def visual_single_img(img, bbox_per_img, segm_per_img, img_name, output_folder,
             img[idx[0], idx[1], :] += alpha * np.array(color)
 
             if show_border:
+                white = (255, 255, 255)
+                border_thick = 1
                 contours = cv2.findContours(mask.copy(), cv2.RETR_CCOMP,
                                             cv2.CHAIN_APPROX_NONE)[-2]
-                cv2.drawContours(img, contours, -1, _WHITE, border_thick,
+                cv2.drawContours(img, contours, -1, white, border_thick,
                                  cv2.LINE_AA)
             img = img.astype(np.uint8)
 
