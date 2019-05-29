@@ -24,8 +24,6 @@ import logging
 import numpy as np
 
 import set_env
-import sys
-sys.path.append("../source")
 
 
 class TestLoader(unittest.TestCase):
@@ -53,7 +51,7 @@ class TestLoader(unittest.TestCase):
     def test_load_coco_in_json(self):
         """ test loading COCO data in json file
         """
-        from coco_loader import load
+        from dataset.source.coco_loader import load
         if not os.path.exists(self.anno_path):
             print('warning: not found %s, so skip this test' % (self.anno_path))
             return
@@ -73,7 +71,7 @@ class TestLoader(unittest.TestCase):
             return
 
         samples = 10
-        from loader import load_roidb
+        from dataset.source.loader import load_roidb
         records, cname2cid = load_roidb(anno_path, samples)
         self.assertEqual(len(records), samples)
         self.assertGreater(len(cname2cid), 0)
@@ -81,7 +79,7 @@ class TestLoader(unittest.TestCase):
     def test_load_voc_in_xml(self):
         """ test loading VOC data in xml files
         """
-        from voc_loader import load
+        from dataset.source.voc_loader import load
         if not os.path.exists(self.anno_path1):
             print('warning: not found %s, so skip this test' %
                   (self.anno_path1))

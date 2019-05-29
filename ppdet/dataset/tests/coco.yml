@@ -15,7 +15,6 @@ TRANSFORM:
             - OP: ResizeImage
               TARGET_SIZE: 224
             - OP: ArrangeSSD
-        MAX_ITER: 10
         BATCH_SIZE: 1
         DEVICES_NUM: 1
         WORK_CONF:
@@ -28,7 +27,6 @@ TRANSFORM:
             - OP: ResizeImage
               TARGET_SIZE: 224
             - OP: ArrangeSSD
-        MAX_ITER: 10
         BATCH_SIZE: 1
         DEVICES_NUM: 1
         WORK_CONF:

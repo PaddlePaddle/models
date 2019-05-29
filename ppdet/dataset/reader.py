@@ -30,11 +30,12 @@ class Reader(object):
     """ Interface to make readers for training or evaluation
     """
 
-    def __init__(self, data_cf, trans_conf):
+    def __init__(self, data_cf, trans_conf, maxiter=None):
         """ Init
         """
         self._data_cf = data_cf
         self._trans_conf = trans_conf
+        self._maxiter = maxiter
 
     def _make_reader(self, which):
         """ Build reader for training or validation
@@ -65,21 +66,20 @@ class Reader(object):
             self._trans_conf[which] else self._trans_conf[which]['IS_PADDING']
         mapper = op.build(ops)
         mapped_ds = tf.map(sc, mapper, worker_args)
-        batched_ds = tf.batch(mapped_ds, devices_num, batchsize, drop_last,
-                              is_padding)
+        batched_ds = tf.batch(mapped_ds, batchsize, drop_last, is_padding)
 
         # 3, Build a reader
         def _reader():
             # TODO: need more elegant code
+            maxit = self._maxiter * devices_num if self._maxiter else 1
             n = 0
-            while n < self._trans_conf[which]['MAX_ITER']:
+            while n < maxit:
                 batched_ds.reset()
-                for sample in batched_ds:
-                    for sub_batch_out in sample:
-                        yield sub_batch_out
-                        n += 1
-                        if n == self._trans_conf[which]['MAX_ITER']:
-                            return
+                for batch in batched_ds:
+                    yield batch
+                    n += 1
+                    if self._maxiter and n == maxit:
+                        return
 
         return _reader
 

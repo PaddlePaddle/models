@@ -36,7 +36,7 @@ class TestReader(unittest.TestCase):
     def test_train(self):
         """ Test reader for training
         """
-        coco = Reader(self.coco_conf['DATA'], self.coco_conf['TRANSFORM'])
+        coco = Reader(self.coco_conf['DATA'], self.coco_conf['TRANSFORM'], 10)
         self.devices_num = self.coco_conf['TRANSFORM']['TRAIN']['DEVICES_NUM']
         train_rd = coco.train()
         self.assertTrue(train_rd is not None)
@@ -45,13 +45,12 @@ class TestReader(unittest.TestCase):
         for sample in train_rd():
             ct += 1
             self.assertTrue(sample is not None)
-        self.assertGreaterEqual(ct, self.coco_conf\
-                                ['TRANSFORM']['TRAIN']['MAX_ITER'])
+        self.assertGreaterEqual(ct, coco._maxiter)
 
     def test_val(self):
         """ Test reader for validation
         """
-        coco = Reader(self.coco_conf['DATA'], self.coco_conf['TRANSFORM'])
+        coco = Reader(self.coco_conf['DATA'], self.coco_conf['TRANSFORM'], 10)
         self.devices_num = self.coco_conf['TRANSFORM']['TRAIN']['DEVICES_NUM']
         val_rd = coco.val()
         self.assertTrue(val_rd is not None)
@@ -62,13 +61,12 @@ class TestReader(unittest.TestCase):
             for sample in val_rd():
                 ct += 1
                 self.assertTrue(sample is not None)
-            self.assertGreaterEqual(ct, self.coco_conf\
-                                    ['TRANSFORM']['TRAIN']['MAX_ITER'])
+            self.assertGreaterEqual(ct, coco._maxiter)
 
     def test_rcnn(self):
         """ Test reader for training
         """
-        rcnn = Reader(self.rcnn_conf['DATA'], self.rcnn_conf['TRANSFORM'])
+        rcnn = Reader(self.rcnn_conf['DATA'], self.rcnn_conf['TRANSFORM'], 10)
         rcnn_rd = rcnn.train()
         self.assertTrue(rcnn_rd is not None)
 
@@ -83,8 +81,7 @@ class TestReader(unittest.TestCase):
         self.assertEqual(out[0][3].shape[1], 1)
         self.assertEqual(out[0][4].shape[1], 1)
         self.assertEqual(out[0][5].shape[0], 1)
-        self.assertGreaterEqual(ct, \
-                                self.rcnn_conf['TRANSFORM']['TRAIN']['MAX_ITER'])
+        self.assertGreaterEqual(ct, rcnn._maxiter)
 
 
 if __name__ == '__main__':

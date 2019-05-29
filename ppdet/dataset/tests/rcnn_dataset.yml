@@ -21,7 +21,6 @@ TRANSFORM:
             - OP: Rgb2Bgr
               TO_BGR: False
             - OP: ArrangeRCNN
-        MAX_ITER: 10
         BATCH_SIZE: 1
         DEVICES_NUM: 2
         IS_PADDING: True
