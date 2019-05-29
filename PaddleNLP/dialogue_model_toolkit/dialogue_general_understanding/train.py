@@ -361,7 +361,6 @@ def main(args):
                 break
     if args.do_train and args.enable_ce:
         card_num = get_cards()
-        print("zytest_card_num", card_num)
         ce_loss = 0
         ce_acc = 0
         ce_time = 0
@@ -402,7 +401,6 @@ def main(args):
 def get_cards():
     num = 0
     cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
-    print("zytest_cards", cards)
     if cards != '':
         num = len(cards.split(","))
     return num
