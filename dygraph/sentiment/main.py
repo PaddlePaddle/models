@@ -214,7 +214,6 @@ def train():
 
 def infer():
     with fluid.dygraph.guard(place):
-        loaded = False
         processor = reader.SentaProcessor(
             data_dir=args.data_dir,
             vocab_path=args.vocab_path,
@@ -231,6 +230,11 @@ def infer():
 
         print('Do inferring ...... ')
         total_acc, total_num_seqs = [], []
+
+        restore = fluid.dygraph.load_persistables(args.checkpoints)
+        cnn_net_infer.load_dict(restore)
+        cnn_net_infer.eval()
+
         steps = 0
         time_begin = time.time()
         for batch_id, data in enumerate(infer_data_generator()):
@@ -238,21 +242,14 @@ def infer():
             np_doc = np.array([
                 np.pad(x[0][0:args.padding_size],
                        (0, args.padding_size - len(x[0][0:args.padding_size])),
-                       'constant') for x in data
+                       'constant',
+                       constant_values=(args.vocab_size)) for x in data
             ]).astype('int64').reshape(-1, 1)
             doc = to_variable(np_doc)
             label = to_variable(
                 np.array([x[1] for x in data]).astype('int64').reshape(
                     args.batch_size, 1))
 
-            if not loaded:
-                cnn_net_infer.eval()
-                cnn_net_infer(doc, label)
-                restore = fluid.dygraph.load_persistables(args.checkpoints)
-                cnn_net_infer.load_dict(restore)
-                loaded = True
-
-            cnn_net_infer.eval()
             _, _, acc = cnn_net_infer(doc, label)
 
             mask = (np_doc != args.vocab_size).astype('int32')
