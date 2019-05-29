@@ -1,29 +1,30 @@
 DATA:
-    train:
-        anno_file: VOC/ImageSets/Main/train.txt
-        image_dir:  VOC/JPEGImages
-    samples: 3
-    
+    TRAIN:
+        ANNO_FILE: data/voc/ImageSets/Main/train.txt
+        IMAGE_DIR:  data/voc/JPEGImages
+        SAMPLES: 3
+        IS_SHUFFLE: True
 TRANSFORM:
-    train:
-        - op: DecodeImage
-          to_rgb: False
-        - op: RandFlipImage
-          prob: 0.5
-        - op: NormalizeImage
-          mean: [102.9801, 115.9465, 122.7717]
-          is_scale: False
-          is_channel_first: False
-        - op: ResizeImage
-          target_size: 800
-          max_size: 1333
-        - op: Rgb2Bgr
-          to_bgr: False
-        - op: ArrangeRCNN
-    batch_size: 1
-    gpu_counts: 1
-    is_padding: True
-    is_padding_total: True
-    worker_conf:
-        bufsize: 10
-        worker_num: 2
+    TRAIN:
+        OPS:
+            - OP: DecodeImage
+              TO_RGB: False
+            - OP: RandFlipImage
+              PROB: 0.5
+            - OP: NormalizeImage
+              MEAN: [102.9801, 115.9465, 122.7717]
+              IS_SCALE: False
+              IS_CHANNEL_FIRST: False
+            - OP: ResizeImage
+              TARGET_SIZE: 800
+              MAX_SIZE: 1333
+            - OP: Rgb2Bgr
+              TO_BGR: False
+            - OP: ArrangeRCNN
+        BATCH_SIZE: 1
+        DEVICES_NUM: 2
+        IS_PADDING: True
+        DROP_LAST: False
+        WORKER_CONF:
+            BUFSIZE: 10
+            WORKER_NUM: 2

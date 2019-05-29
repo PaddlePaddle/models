@@ -26,6 +26,7 @@ from .base import ProxiedDataset
 
 logger = logging.getLogger(__name__)
 
+
 class EndSignal(object):
     def __init__(self, errno=0, errmsg=''):
         self.errno = errno
@@ -39,11 +40,12 @@ class ThreadMappedDataset(ProxiedDataset):
         Notes:
             this class is not thread-safe
     """
+
     def __init__(self, source, mapper, worker_args):
         """ init
         """
         super(ThreadMappedDataset, self).__init__(source)
-        args = {'bufsize': 100, 'worker_num': 8}
+        args = {'BUFSIZE': 100, 'WORKER_NUM': 8}
         args.update(worker_args)
         self._worker_args = args
         self._started = False
@@ -61,8 +63,8 @@ class ThreadMappedDataset(ProxiedDataset):
         from threading import Thread
         from threading import Event
 
-        bufsize = self._worker_args['bufsize']
-        consumer_num = self._worker_args['worker_num']
+        bufsize = self._worker_args['BUFSIZE']
+        consumer_num = self._worker_args['WORKER_NUM']
         self._inq = Queue(bufsize)
         self._outq = Queue(bufsize)
 
@@ -76,15 +78,15 @@ class ThreadMappedDataset(ProxiedDataset):
         for i in range(consumer_num):
             p = Thread(
                 target=self._consume,
-                args=('consumer-' + id + '_%d' % (i),
-                    self._inq, self._outq, self._mapper))
+                args=('consumer-' + id + '_%d' % (i), self._inq, self._outq,
+                      self._mapper))
             self._consumers.append(p)
             p.daemon = True
 
         self._epoch = -1
         self._feeding_ev = Event()
-        self._produced = 0 # produced sample in self._produce
-        self._consumed = 0 # consumed sample in self.next
+        self._produced = 0  # produced sample in self._produce
+        self._consumed = 0  # consumed sample in self.next
         self._stopped_consumers = 0
 
     def _produce(self, id, source, inq):
@@ -97,11 +99,16 @@ class ThreadMappedDataset(ProxiedDataset):
                 self._produced += 1
             except StopIteration as e:
                 self._feeding_ev.clear()
-                self._feeding_ev.wait() # wait other guy to wake up me
-                logger.debug('producer[%s] begin another epoch to produce samples' % (id))
+                self._feeding_ev.wait()  # wait other guy to wake up me
+                logger.debug(
+                    'producer[%s] begin another epoch to produce samples' %
+                    (id))
             except Exception as e:
-                inq.put(EndSignal(-1,
-                    'failed to produce with exception[%s] in producer[%s]' % (str(e), id)))
+                inq.put(
+                    EndSignal(
+                        -1,
+                        'failed to produce with exception[%s] in producer[%s]' %
+                        (str(e), id)))
                 break
 
         logger.debug('producer[%s] go to eixt' % (id))
@@ -122,8 +129,9 @@ class ThreadMappedDataset(ProxiedDataset):
                 result = mapper(sample)
                 outq.put(result)
             except Exception as e:
-                outq.put(EndSignal(-1, 'failed to do mapper with '
-                    'exception[%s] in consumer[%s]' % (str(e), id)))
+                outq.put(
+                    EndSignal(-1, 'failed to do mapper with '
+                              'exception[%s] in consumer[%s]' % (str(e), id)))
                 break
 
     def drained(self):
@@ -145,13 +153,14 @@ class ThreadMappedDataset(ProxiedDataset):
             if isinstance(sample, EndSignal):
                 self._stopped_consumers += 1
                 if sample.errno != 0:
-                    logger.warn('error happened in consumer with errmsg[%s]' 
-                        % (sample.errmsg))
+                    logger.warn('error happened in consumer with errmsg[%s]' %
+                                (sample.errmsg))
 
                 if self._stopped_consumers < len(self._consumers):
                     self._inq.put(sample)
                 else:
-                    raise ValueError('all consumers has exited, no more samples')
+                    raise ValueError(
+                        'all consumers has exited, no more samples')
             else:
                 self._consumed += 1
                 return sample
@@ -166,7 +175,8 @@ class ThreadMappedDataset(ProxiedDataset):
             self._producer.start()
         else:
             if not self.drained():
-                logger.warn('donnot reset before epoch[%d] has been finished!' % self._epoch)
+                logger.warn('donnot reset before epoch[%d] has been finished!' %
+                            self._epoch)
                 self._produced = self._produced - self._consumed
             else:
                 self._produced = 0

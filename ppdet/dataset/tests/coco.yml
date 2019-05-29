@@ -1,28 +1,35 @@
 DATA:
-    train:
-        anno_file: coco/annotations/instances_train2017.json
-        image_dir: coco/train2017
-    val: 
-        anno_file: coco/annotations/instances_val2017.json
-        image_dir: coco/val2017
-    samples: 10
-
+    TRAIN:
+        ANNO_FILE: data/coco/instances_val2017.json
+        IMAGE_DIR: data/coco/val2017
+        SAMPLES: 10
+    VAL: 
+        ANNO_FILE: data/coco/instances_val2017.json
+        IMAGE_DIR: data/coco/val2017
+        SAMPLES: 10
 TRANSFORM:
-    train:
-        - op: DecodeImage
-          to_rgb: True
-        - op: ResizeImage
-          target_size: 224
-        - op: ArrangeSSD
-    val:
-        - op: DecodeImage
-          to_rgb: True
-        - op: ResizeImage
-          target_size: 224
-        - op: ArrangeSSD
-    batch_size: 1
-    gpu_counts: 1
-    worker_conf:
-        bufsize: 100
-        worker_num: 8
-
+    TRAIN:
+        OPS:
+            - OP: DecodeImage
+              TO_RGB: True
+            - OP: ResizeImage
+              TARGET_SIZE: 224
+            - OP: ArrangeSSD
+        BATCH_SIZE: 1
+        DEVICES_NUM: 1
+        WORK_CONF:
+            BUFSIZE: 100
+            WORKER_NUM: 8
+    VAL:
+        OPS:
+            - OP: DecodeImage
+              TO_RGB: True
+            - OP: ResizeImage
+              TARGET_SIZE: 224
+            - OP: ArrangeSSD
+        BATCH_SIZE: 1
+        DEVICES_NUM: 1
+        WORK_CONF:
+            BUFSIZE: 100
+            WORKER_NUM: 8
+    

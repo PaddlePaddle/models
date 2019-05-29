@@ -93,7 +93,6 @@ class BatchedDataset(ProxiedDataset):
     def next(self):
         """ proxy to self._ds.next
         """
-        bs_per_dev = self._batchsz
 
         def has_empty(items):
             if any(x is None for x in items):
@@ -103,7 +102,7 @@ class BatchedDataset(ProxiedDataset):
             return False
 
         batch = []
-        for _ in range(bs_per_dev):
+        for _ in range(self._batchsz):
             try:
                 out = self._ds.next()
                 while has_empty(out):

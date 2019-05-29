@@ -40,15 +40,13 @@ class ArrangeRCNN(BaseOperator):
        which the model need when training.
     """
 
-    def __init__(self, is_mask=False, is_train=True):
+    def __init__(self, is_mask=False):
         """ Get the standard output.
         Args:
             is_mask (bool): confirm whether to use mask rcnn
-            is_train (bool): whether to return anno info.
         """
         super(ArrangeRCNN, self).__init__()
         self.is_mask = is_mask
-        self.is_train = is_train
         if not (isinstance(self.is_mask, bool)):
             raise TypeError('{}: the input type is error.'.format(self.__str__))
 
@@ -76,10 +74,8 @@ class ArrangeRCNN(BaseOperator):
         else:
             raise KeyError("The dataset doesn't have 'im_info' key.")
         im_id = sample['im_id']
-        if not self.is_train:
-            return (im, im_info, im_id)
 
-        outs = (im, im_info, im_id, gt_bbox, gt_class, is_crowd)
+        outs = (im, im_info, gt_bbox, gt_class, is_crowd, im_id)
         gt_masks = []
         if self.is_mask and len(sample['gt_poly']) != 0 \
                 and 'is_crowd' in keys:
