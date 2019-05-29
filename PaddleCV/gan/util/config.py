@@ -68,16 +68,15 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
 def base_parse_args(parser):
     add_arg = functools.partial(add_arguments, argparser=parser)
     # yapf: disable
-    add_arg('model_net', str, "cgan", "The model used.")
+    add_arg('model_net', str, "CGAN", "The model used.")
     add_arg('dataset', str, "mnist", "The dataset used.")
     add_arg('data_dir', str, "./data", "The dataset root directory")
-    add_arg('data_list', str, "data/cityscapes/pix2pix_train_list", "The data list file name")
-    add_arg('train_list', str, "data/cityscapes/pix2pix_train_list", "The train list file name")
-    add_arg('test_list', str, "data/cityscapes/pix2pix_test_list10", "The test list file name")
+    add_arg('train_list', str, None, "The train list file name")
+    add_arg('test_list', str, None, "The test list file name")
     add_arg('batch_size', int, 1, "Minibatch size.")
     add_arg('epoch', int, 200, "The number of epoch to be trained.")
-    add_arg('g_base_dims', int, 64, "Base channels in CycleGAN generator")
-    add_arg('d_base_dims', int, 64, "Base channels in CycleGAN discriminator")
+    add_arg('g_base_dims', int, 64, "Base channels in generator")
+    add_arg('d_base_dims', int, 64, "Base channels in discriminator")
     add_arg('load_size', int, 286, "the image size when load the image")
     add_arg('crop_type', str, 'Centor',
             "the crop type, choose = ['Centor', 'Random']")
@@ -96,7 +95,7 @@ def base_parse_args(parser):
     add_arg('gan_mode', str, "vanilla", "The init model file of directory.")
     add_arg('norm_type', str, "batch_norm", "Which normalization to used")
     add_arg('learning_rate', float, 0.0002, "the initialize learning rate")
-    add_arg('lambda_L1', float, 100.0, "the initialize learning rate")
+    add_arg('lambda_L1', float, 100.0, "the initialize lambda parameter for L1 loss")
     add_arg('num_generator_time', int, 1,
             "the generator run times in training each epoch")
     add_arg('print_freq', int, 10, "the frequency of print loss")
