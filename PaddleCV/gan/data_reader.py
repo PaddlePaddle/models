@@ -26,7 +26,7 @@ import random
 
 
 def RandomCrop(img, crop_w, crop_h):
-    w, h = img.shape[0], img.shape[1]
+    w, h = img.size[0], img.size[1]
     i = np.random.randint(0, w - crop_w)
     j = np.random.randint(0, h - crop_h)
     return img.crop((i, j, i + crop_w, j + crop_h))
@@ -346,7 +346,7 @@ class data_reader(object):
 
                 return a_reader, b_reader, a_reader_test, b_reader_test, batch_num
 
-            elif self.cfg.model_net == 'Pix2pix':
+            else:
                 dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
                 train_list = os.path.join(dataset_dir, 'train.txt')
                 if self.cfg.train_list is not None:
@@ -372,22 +372,3 @@ class data_reader(object):
                 reader = train_reader.get_train_reader(
                     self.cfg, shuffle=self.shuffle)
                 return reader, reader_test, batch_num
-            else:
-                dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
-                train_list = os.path.join(dataset_dir, 'train.txt')
-                if self.cfg.data_list is not None:
-                    train_list = self.cfg.data_list
-                train_reader = reader_creator(
-                    image_dir=dataset_dir, list_filename=train_list)
-                reader_test = None
-                if self.cfg.run_test:
-                    test_list = os.path.join(dataset_dir, "test.txt")
-                    test_reader = reader_creator(
-                        image_dir=dataset_dir,
-                        list_filename=test_list,
-                        batch_size=1,
-                        drop_last=self.cfg.drop_last)
-                    reader_test = test_reader.get_test_reader(
-                        self.cfg, shuffle=False, return_name=True)
-                batch_num = train_reader.len()
-                return train_reader, reader_test, batch_num
