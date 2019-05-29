@@ -34,6 +34,7 @@ use_bn = True
 use_affine = False
 
 [TRAIN]
+epoch = 120
 num_reader_threads = 8
 batch_size = 64
 num_gpus = 8

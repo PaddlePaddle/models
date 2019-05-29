@@ -35,6 +35,7 @@ class GTrainer():
         with fluid.program_guard(self.program):
             model = DCGAN_model()
             self.fake = model.network_G(input, name='G')
+            self.fake.persistable = True
             self.infer_program = self.program.clone()
             d_fake = model.network_D(self.fake, name="D")
             fake_labels = fluid.layers.fill_constant_batch_size_like(
@@ -42,6 +43,7 @@ class GTrainer():
             self.g_loss = fluid.layers.reduce_mean(
                 fluid.layers.sigmoid_cross_entropy_with_logits(
                     x=d_fake, label=fake_labels))
+            self.g_loss.persistable = True
 
             vars = []
             for var in self.program.list_vars():
@@ -61,6 +63,7 @@ class DTrainer():
             self.d_loss = fluid.layers.reduce_mean(
                 fluid.layers.sigmoid_cross_entropy_with_logits(
                     x=d_logit, label=labels))
+            self.d_loss.persistable = True
             vars = []
             for var in self.program.list_vars():
                 if fluid.io.is_parameter(var) and (var.name.startswith("D")):
@@ -78,7 +81,7 @@ class DCGAN(object):
 
         return parser
 
-    def __init__(self, cfg, train_reader):
+    def __init__(self, cfg=None, train_reader=None):
         self.cfg = cfg
         self.train_reader = train_reader
 
@@ -107,7 +110,7 @@ class DCGAN(object):
 ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = True
-        build_strategy.memory_optimize = False
+        build_strategy.memory_optimize = True
 
         g_trainer_program = fluid.CompiledProgram(
             g_trainer.program).with_data_parallel(

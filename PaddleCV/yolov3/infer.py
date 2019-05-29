@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import os
 import time
 import numpy as np
@@ -54,14 +53,14 @@ def infer():
             if image_name.split('.')[-1] in ['jpg', 'png']:
                 image_names.append(image_name)
     for image_name in image_names:
-        infer_reader = reader.infer(input_size, os.path.join(cfg.image_path, image_name))
+        infer_reader = reader.infer(input_size,
+                                    os.path.join(cfg.image_path, image_name))
         label_names, _ = reader.get_label_infos()
         data = next(infer_reader())
         im_shape = data[0][2]
-        outputs = exe.run(
-            fetch_list=[v.name for v in fetch_list],
-            feed=feeder.feed(data),
-            return_numpy=False)
+        outputs = exe.run(fetch_list=[v.name for v in fetch_list],
+                          feed=feeder.feed(data),
+                          return_numpy=False)
         bboxes = np.array(outputs[0])
         if bboxes.shape[1] != 6:
             print("No object found in {}".format(image_name))
@@ -71,7 +70,8 @@ def infer():
         boxes = bboxes[:, 2:].astype('float32')
 
         path = os.path.join(cfg.image_path, image_name)
-        box_utils.draw_boxes_on_image(path, boxes, scores, labels, label_names, cfg.draw_thresh)
+        box_utils.draw_boxes_on_image(path, boxes, scores, labels, label_names,
+                                      cfg.draw_thresh)
 
 
 if __name__ == '__main__':
