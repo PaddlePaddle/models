@@ -23,7 +23,8 @@ learning_rate_decay = 0.1
 decay_epochs = [40, 60]
 l2_weight_decay = 1e-4
 momentum = 0.9
-total_videos = 239781 
+total_videos = 239781
+enable_ce = False 
 
 [VALID]
 short_size = 256

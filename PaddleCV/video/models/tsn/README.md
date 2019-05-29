@@ -30,8 +30,11 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
             --save_dir=checkpoints
             --log_interval=10
             --valid_interval=1
+            --pretrain=${path_to_pretrain_model}
 
     bash scripts/train/train_tsn.sh
+
+- 从头开始训练，需要加载在ImageNet上训练的ResNet50权重作为初始化参数，请下载此[模型参数](https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz)并解压，将上面启动脚本中的path\_to\_pretrain\_model设置为解压之后的模型参数存放路径。如果没有手动下载并设置path\_to\_pretrain\_model，则程序会自动下载并将参数保存在~/.paddle/weights/ResNet50\_pretrained目录下面
 
 - 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz)通过`--resume`指定权重存放路径进行finetune等开发
 

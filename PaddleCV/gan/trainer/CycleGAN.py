@@ -47,16 +47,20 @@ class GTrainer():
                 fluid.layers.elementwise_sub(
                     x=input_B, y=self.cyc_B))
             self.cyc_A_loss = fluid.layers.reduce_mean(diff_A) * lambda_A
+            self.cyc_A_loss.persistable = True
             self.cyc_B_loss = fluid.layers.reduce_mean(diff_B) * lambda_B
+            self.cyc_B_loss.persistable = True
             self.cyc_loss = self.cyc_A_loss + self.cyc_B_loss
             # GAN Loss D_A(G_A(A))
             self.fake_rec_A = model.network_D(self.fake_B, name="DA", cfg=cfg)
             self.G_A = fluid.layers.reduce_mean(
                 fluid.layers.square(self.fake_rec_A - 1))
+            self.G_A.persistable = True
             # GAN Loss D_B(G_B(B))
             self.fake_rec_B = model.network_D(self.fake_A, name="DB", cfg=cfg)
             self.G_B = fluid.layers.reduce_mean(
                 fluid.layers.square(self.fake_rec_B - 1))
+            self.G_B.persistable = True
             self.G = self.G_A + self.G_B
             # Identity Loss G_A
             self.idt_A = model.network_G(input_B, name="GA", cfg=cfg)
@@ -64,12 +68,14 @@ class GTrainer():
                 fluid.layers.abs(
                     fluid.layers.elementwise_sub(
                         x=input_B, y=self.idt_A))) * lambda_B * lambda_identity
+            self.idt_loss_A.persistable = True
             # Identity Loss G_B
             self.idt_B = model.network_G(input_A, name="GB", cfg=cfg)
             self.idt_loss_B = fluid.layers.reduce_mean(
                 fluid.layers.abs(
                     fluid.layers.elementwise_sub(
                         x=input_A, y=self.idt_B))) * lambda_A * lambda_identity
+            self.idt_loss_B.persistable = True
 
             self.idt_loss = fluid.layers.elementwise_add(self.idt_loss_A,
                                                          self.idt_loss_B)
@@ -107,8 +113,8 @@ class DATrainer():
             self.d_loss_A = (fluid.layers.square(self.fake_pool_rec_B) +
                              fluid.layers.square(self.rec_B - 1)) / 2.0
             self.d_loss_A = fluid.layers.reduce_mean(self.d_loss_A)
+            self.d_loss_A.persistable = True
 
-            optimizer = fluid.optimizer.Adam(learning_rate=0.0002, beta1=0.5)
             vars = []
             for var in self.program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith("DA"):
@@ -142,7 +148,7 @@ class DBTrainer():
             self.d_loss_B = (fluid.layers.square(self.fake_pool_rec_A) +
                              fluid.layers.square(self.rec_A - 1)) / 2.0
             self.d_loss_B = fluid.layers.reduce_mean(self.d_loss_B)
-            optimizer = fluid.optimizer.Adam(learning_rate=0.0002, beta1=0.5)
+            self.d_loss_B.persistable = True
             vars = []
             for var in self.program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith("DB"):
@@ -230,8 +236,8 @@ class CycleGAN(object):
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = False
-        build_strategy.memory_optimize = False
+        build_strategy.enable_inplace = True
+        build_strategy.memory_optimize = True
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(

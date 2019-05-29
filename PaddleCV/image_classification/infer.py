@@ -47,6 +47,7 @@ def infer(args):
         out, _, _ = model.net(input=image, class_dim=class_dim)
     else:
         out = model.net(input=image, class_dim=class_dim)
+        out = fluid.layers.softmax(out)
 
     test_program = fluid.default_main_program().clone(for_test=True)
 
