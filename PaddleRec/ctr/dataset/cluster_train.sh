@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # start pserver0
-python train.py \
+python train_dataset.py \
     --train_data_path /paddle/data/train.txt \
     --is_local 0 \
     --role pserver \
@@ -11,7 +11,7 @@ python train.py \
     > pserver0.log 2>&1 &
 
 # start pserver1
-python train.py \
+python train_dataset.py \
     --train_data_path /paddle/data/train.txt \
     --is_local 0 \
     --role pserver \
@@ -21,7 +21,7 @@ python train.py \
     > pserver1.log 2>&1 &
 
 # start trainer0
-python train.py \
+python train_dataset.py \
     --train_data_path /paddle/data/train.txt \
     --is_local 0 \
     --role trainer \
@@ -31,7 +31,7 @@ python train.py \
     > trainer0.log 2>&1 &
 
 # start trainer1
-python train.py \
+python train_dataset.py \
     --train_data_path /paddle/data/train.txt \
     --is_local 0 \
     --role trainer \

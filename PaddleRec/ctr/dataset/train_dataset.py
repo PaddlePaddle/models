@@ -213,7 +213,7 @@ def train(args):
         dataset.set_batch_size(128)
         dataset.set_use_var(words)
         pipe_command = 'python ctr_dataset_reader.py %d %d %d %d' \
-                       % args.sparse_feature_dim, args.trainer_id, 1, args.trainer_num
+                       % (args.sparse_feature_dim, args.trainer_id, 1, args.trainers)
         dataset.set_pipe_command(pipe_command)
 
         dataset.set_filelist(filelist)

@@ -60,7 +60,7 @@ class CriteoDataset(data_generator.MultiSlotDataGenerator):
                     dense_feature.append((float(features[idx]) - self.cont_min_[idx - 1]) / self.cont_diff_[idx - 1])
             ret_result.append(("dense_feature", dense_feature))
             for idx in self.categorical_range_:
-                ret_result.append((str(idx - 13), [hash(str(idx) + features[idx]) % self.hash_dim_]))
+                ret_result.append(("C" + str(idx - 13), [hash(str(idx) + features[idx]) % self.hash_dim_]))
             ret_result.append(("label", [int(features[0])]))
 
             yield tuple(ret_result)
