@@ -57,6 +57,11 @@ def infer(args):
             fake = network_G(input, name="GB", cfg=args)
         else:
             raise "Input with style [%s] is not supported." % args.input_style
+    elif args.model_net == 'Pix2pix':
+        from network.Pix2pix_network import Pix2pix_model
+        model = Pix2pix_model()
+        fake = model.network_G(input, "generator", cfg=args)
+
     elif args.model_net == 'cgan':
         pass
     else:

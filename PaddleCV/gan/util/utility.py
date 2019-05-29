@@ -66,45 +66,75 @@ def init_checkpoints(cfg, exe, trainer, name):
     sys.stdout.flush()
 
 
-def save_test_image(epoch, cfg, exe, place, test_program, g_trainer,
-                    A_test_reader, B_test_reader):
+def save_test_image(epoch,
+                    cfg,
+                    exe,
+                    place,
+                    test_program,
+                    g_trainer,
+                    A_test_reader,
+                    B_test_reader=None):
     out_path = cfg.output + '/test'
     if not os.path.exists(out_path):
         os.makedirs(out_path)
-    for data_A, data_B in zip(A_test_reader(), B_test_reader()):
-        A_name = data_A[0][1]
-        B_name = data_B[0][1]
-        tensor_A = fluid.LoDTensor()
-        tensor_B = fluid.LoDTensor()
-        tensor_A.set(data_A[0][0], place)
-        tensor_B.set(data_B[0][0], place)
-        fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = exe.run(
-            test_program,
-            fetch_list=[
-                g_trainer.fake_A, g_trainer.fake_B, g_trainer.cyc_A,
-                g_trainer.cyc_B
-            ],
-            feed={"input_A": tensor_A,
-                  "input_B": tensor_B})
-        fake_A_temp = np.squeeze(fake_A_temp[0]).transpose([1, 2, 0])
-        fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
-        cyc_A_temp = np.squeeze(cyc_A_temp[0]).transpose([1, 2, 0])
-        cyc_B_temp = np.squeeze(cyc_B_temp[0]).transpose([1, 2, 0])
-        input_A_temp = np.squeeze(data_A[0][0]).transpose([1, 2, 0])
-        input_B_temp = np.squeeze(data_B[0][0]).transpose([1, 2, 0])
+    if B_test_reader is None:
+        for data in zip(A_test_reader()):
+            data_A, data_B, name = data[0]
+            name = name[0]
+            tensor_A = fluid.LoDTensor()
+            tensor_B = fluid.LoDTensor()
+            tensor_A.set(data_A, place)
+            tensor_B.set(data_B, place)
+            fake_B_temp = exe.run(
+                test_program,
+                fetch_list=[g_trainer.fake_B],
+                feed={"input_A": tensor_A,
+                      "input_B": tensor_B})
+            fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
+            input_A_temp = np.squeeze(data_A[0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(data_A[0]).transpose([1, 2, 0])
 
-        imsave(out_path + "/fakeB_" + str(epoch) + "_" + A_name, (
-            (fake_B_temp + 1) * 127.5).astype(np.uint8))
-        imsave(out_path + "/fakeA_" + str(epoch) + "_" + B_name, (
-            (fake_A_temp + 1) * 127.5).astype(np.uint8))
-        imsave(out_path + "/cycA_" + str(epoch) + "_" + A_name, (
-            (cyc_A_temp + 1) * 127.5).astype(np.uint8))
-        imsave(out_path + "/cycB_" + str(epoch) + "_" + B_name, (
-            (cyc_B_temp + 1) * 127.5).astype(np.uint8))
-        imsave(out_path + "/inputA_" + str(epoch) + "_" + A_name, (
-            (input_A_temp + 1) * 127.5).astype(np.uint8))
-        imsave(out_path + "/inputB_" + str(epoch) + "_" + B_name, (
-            (input_B_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/fakeB_" + str(epoch) + "_" + name, (
+                (fake_B_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/inputA_" + str(epoch) + "_" + name, (
+                (input_A_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/inputB_" + str(epoch) + "_" + name, (
+                (input_B_temp + 1) * 127.5).astype(np.uint8))
+    else:
+        for data_A, data_B in zip(A_test_reader(), B_test_reader()):
+            A_name = data_A[0][1]
+            B_name = data_B[0][1]
+            tensor_A = fluid.LoDTensor()
+            tensor_B = fluid.LoDTensor()
+            tensor_A.set(data_A[0][0], place)
+            tensor_B.set(data_B[0][0], place)
+            fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = exe.run(
+                test_program,
+                fetch_list=[
+                    g_trainer.fake_A, g_trainer.fake_B, g_trainer.cyc_A,
+                    g_trainer.cyc_B
+                ],
+                feed={"input_A": tensor_A,
+                      "input_B": tensor_B})
+            fake_A_temp = np.squeeze(fake_A_temp[0]).transpose([1, 2, 0])
+            fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
+            cyc_A_temp = np.squeeze(cyc_A_temp[0]).transpose([1, 2, 0])
+            cyc_B_temp = np.squeeze(cyc_B_temp[0]).transpose([1, 2, 0])
+            input_A_temp = np.squeeze(data_A[0][0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(data_B[0][0]).transpose([1, 2, 0])
+
+            imsave(out_path + "/fakeB_" + str(epoch) + "_" + A_name, (
+                (fake_B_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/fakeA_" + str(epoch) + "_" + B_name, (
+                (fake_A_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/cycA_" + str(epoch) + "_" + A_name, (
+                (cyc_A_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/cycB_" + str(epoch) + "_" + B_name, (
+                (cyc_B_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/inputA_" + str(epoch) + "_" + A_name, (
+                (input_A_temp + 1) * 127.5).astype(np.uint8))
+            imsave(out_path + "/inputB_" + str(epoch) + "_" + B_name, (
+                (input_B_temp + 1) * 127.5).astype(np.uint8))
 
 
 class ImagePool(object):
