@@ -90,6 +90,7 @@ def train(args):
             out_path = args.output + "/test"
             if not os.path.exists(out_path):
 		os.makedirs(out_path)
+            cycle_gan.eval()
 	    for data_A , data_B in zip(A_test_reader(), B_test_reader()): 
                 A_name = data_A[1]
                 B_name = data_B[1]
@@ -148,6 +149,7 @@ def train(args):
 ##                print (param.name)
 ##                vars1.append(var.name)
 ##
+        cycle_gan.train()
         for epoch in range(args.epoch):
             batch_id = 0
             for i in range(max_images_num):
