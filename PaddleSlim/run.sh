@@ -67,6 +67,14 @@ cd -
 #--pretrained_model ./pretrain/MobileNetV1_pretrained \
 #--compress_config ./configs/filter_pruning_uniform.yaml
 
+# for auto filter pruning
+#---------------------------
+#export CUDA_VISIBLE_DEVICES=0
+#python compress.py \
+#--model "MobileNet" \
+#--pretrained_model ./pretrain/MobileNetV1_pretrained \
+#--compress_config ./configs/auto_prune.yaml
+
 # for quantization
 #-----------------
 #export CUDA_VISIBLE_DEVICES=0
