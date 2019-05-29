@@ -18,13 +18,13 @@ class TestBase(unittest.TestCase):
     def setUpClass(cls):
         """ setup
         """
-
-        roidb_root = 'data/roidbs/instances_val2017.roidb'
+        roidb_fname = set_env.coco_data['ANNO_FILE']
+        image_dir = set_env.coco_data['IMAGE_DIR']
         import pickle as pkl
-        with open(roidb_root, 'rb') as f:
+        with open(roidb_fname, 'rb') as f:
             roidb = f.read()
             roidb = pkl.loads(roidb)
-        fn = os.path.join('data/coco/val2017', roidb[0][0]['im_file'])
+        fn = os.path.join(image_dir, roidb[0][0]['im_file'])
         with open(fn, 'rb') as f:
             roidb[0][0]['image'] = f.read()
         cls.sample = roidb[0][0]

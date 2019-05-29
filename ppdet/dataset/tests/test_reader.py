@@ -24,6 +24,7 @@ class TestReader(unittest.TestCase):
         coco_yml = os.path.join(prefix, 'coco.yml')
         with open(coco_yml, 'rb') as f:
             cls.coco_conf = yaml.load(f.read())
+
         rcnn_yml = os.path.join(prefix, 'rcnn_dataset.yml')
         with open(rcnn_yml, 'rb') as f:
             cls.rcnn_conf = yaml.load(f.read())
@@ -37,7 +38,6 @@ class TestReader(unittest.TestCase):
         """ Test reader for training
         """
         coco = Reader(self.coco_conf['DATA'], self.coco_conf['TRANSFORM'], 10)
-        self.devices_num = self.coco_conf['TRANSFORM']['TRAIN']['DEVICES_NUM']
         train_rd = coco.train()
         self.assertTrue(train_rd is not None)
 
@@ -51,7 +51,6 @@ class TestReader(unittest.TestCase):
         """ Test reader for validation
         """
         coco = Reader(self.coco_conf['DATA'], self.coco_conf['TRANSFORM'], 10)
-        self.devices_num = self.coco_conf['TRANSFORM']['TRAIN']['DEVICES_NUM']
         val_rd = coco.val()
         self.assertTrue(val_rd is not None)
 
@@ -66,6 +65,11 @@ class TestReader(unittest.TestCase):
     def test_rcnn(self):
         """ Test reader for training
         """
+        anno = self.rcnn_conf['DATA']['TRAIN']['ANNO_FILE']
+        if not os.path.exists(anno):
+            print('exit test_rcnn for not found file[%s]' % (anno))
+            return
+
         rcnn = Reader(self.rcnn_conf['DATA'], self.rcnn_conf['TRANSFORM'], 10)
         rcnn_rd = rcnn.train()
         self.assertTrue(rcnn_rd is not None)

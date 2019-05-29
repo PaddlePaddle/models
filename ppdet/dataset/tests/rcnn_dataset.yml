@@ -1,7 +1,7 @@
 DATA:
     TRAIN:
         ANNO_FILE: data/voc/ImageSets/Main/train.txt
-        IMAGE_DIR:  data/voc/JPEGImages
+        IMAGE_DIR: data/voc/JPEGImages
         SAMPLES: 3
         IS_SHUFFLE: True
 TRANSFORM:
@@ -22,7 +22,6 @@ TRANSFORM:
               TO_BGR: False
             - OP: ArrangeRCNN
         BATCH_SIZE: 1
-        DEVICES_NUM: 2
         IS_PADDING: True
         DROP_LAST: False
         WORKER_CONF:

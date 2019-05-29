@@ -16,11 +16,8 @@ class TestRoiDbSource(unittest.TestCase):
     def setUpClass(cls):
         """ setup
         """
-
-        prefix = os.path.dirname(os.path.abspath(__file__))
-        # json data
-        anno_path = os.path.join(prefix, 'data/coco/instances_val2017.json')
-        image_dir = os.path.join(prefix, 'data/coco/val2017')
+        anno_path = set_env.coco_data['ANNO_FILE']
+        image_dir = set_env.coco_data['IMAGE_DIR']
         cls.config = {
             'fname': anno_path,
             'image_dir': image_dir,

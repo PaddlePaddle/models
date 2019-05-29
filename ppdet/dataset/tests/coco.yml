@@ -1,11 +1,11 @@
 DATA:
     TRAIN:
-        ANNO_FILE: data/coco/instances_val2017.json
-        IMAGE_DIR: data/coco/val2017
+        ANNO_FILE: data/coco.test/train2017.roidb
+        IMAGE_DIR: data/coco.test/train2017
         SAMPLES: 10
     VAL: 
-        ANNO_FILE: data/coco/instances_val2017.json
-        IMAGE_DIR: data/coco/val2017
+        ANNO_FILE: data/coco.test/val2017.roidb
+        IMAGE_DIR: data/coco.test/val2017
         SAMPLES: 10
 TRANSFORM:
     TRAIN:
@@ -16,7 +16,6 @@ TRANSFORM:
               TARGET_SIZE: 224
             - OP: ArrangeSSD
         BATCH_SIZE: 1
-        DEVICES_NUM: 1
         WORK_CONF:
             BUFSIZE: 100
             WORKER_NUM: 8
@@ -28,7 +27,6 @@ TRANSFORM:
               TARGET_SIZE: 224
             - OP: ArrangeSSD
         BATCH_SIZE: 1
-        DEVICES_NUM: 1
         WORK_CONF:
             BUFSIZE: 100
             WORKER_NUM: 8

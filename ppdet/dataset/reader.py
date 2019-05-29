@@ -56,7 +56,6 @@ class Reader(object):
 
         # 2, Buid a transformed dataset
         ops = self._trans_conf[which]['OPS']
-        devices_num = self._trans_conf[which]['DEVICES_NUM']
         batchsize = self._trans_conf[which]['BATCH_SIZE']
         worker_args = None if 'WORKER_CONF' not in \
             self._trans_conf[which] else self._trans_conf[which]['WORKER_CONF']
@@ -71,7 +70,7 @@ class Reader(object):
         # 3, Build a reader
         def _reader():
             # TODO: need more elegant code
-            maxit = self._maxiter * devices_num if self._maxiter else 1
+            maxit = self._maxiter if self._maxiter else 1
             n = 0
             while n < maxit:
                 batched_ds.reset()
@@ -93,7 +92,7 @@ class Reader(object):
         """
         return self._make_reader('VAL')
 
-    def infer(self):
+    def test(self):
         """ Build reader for inference
         """
         return self._make_reader('TEST')
