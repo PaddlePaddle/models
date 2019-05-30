@@ -693,6 +693,33 @@ def train(args):
         train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                    token_num, predict, pyreader)
     else:
+        if args.enable_ce:
+            print os.environ
+            training_role = os.getenv("TRAINING_ROLE")
+            t = fluid.DistributeTranspiler()
+            t.transpile(
+                int(os.getenv("PADDLE_TRAINER_ID", "0")),
+                program=train_prog,
+                pservers=os.getenv("PADDLE_PSERVERS"),
+                trainers=int(os.getenv("PADDLE_TRAINERS_NUM")),
+                sync_mode=args.sync,
+                startup_program=startup_prog)
+            if training_role == "PSERVER":
+                pserver_prog = t.get_pserver_program(os.getenv("PADDLE_CURRENT_ENDPOINT"))
+                pserver_startup = t.get_startup_program(os.getenv("PADDLE_CURRENT_ENDPOINT"),
+                                                        pserver_prog)
+                exe.run(pserver_startup)
+                exe.run(pserver_prog)
+            elif training_role == "TRAINER":
+                train_prog = t.get_trainer_program()
+                train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
+                           avg_cost, token_num, predict, pyreader)
+            else:
+                raise ValueError(
+                    'PADDLE_TRAINING_ROLE environment variable must be either TRAINER or PSERVER'
+                )
+            return
+
         if args.update_method == "nccl2":
             trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
             port = os.getenv("PADDLE_PORT")
@@ -772,3 +799,4 @@ if __name__ == "__main__":
 
     args = parse_args()
     train(args)
+
