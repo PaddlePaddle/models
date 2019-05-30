@@ -11,14 +11,26 @@ TRANSFORM:
     TRAIN:
         OPS:
             - OP: DecodeImage
-              TO_RGB: True
+              TO_RGB: False
+            - OP: RandFlipImage
+              PROB: 0.5
+            - OP: NormalizeImage
+              MEAN: [102.9801, 115.9465, 122.7717]
+              IS_SCALE: False
+              IS_CHANNEL_FIRST: False
             - OP: ResizeImage
-              TARGET_SIZE: 224
-            - OP: ArrangeSSD
+              TARGET_SIZE: 800
+              MAX_SIZE: 1333
+            - OP: Rgb2Bgr
+              TO_BGR: False
+            - OP: ArrangeRCNN
         BATCH_SIZE: 1
-        WORK_CONF:
-            BUFSIZE: 100
+        IS_PADDING: True
+        DROP_LAST: False
+        WORKER_CONF:
+            BUFSIZE: 200
             WORKER_NUM: 8
+            USE_PROCESS: False
     VAL:
         OPS:
             - OP: DecodeImage
@@ -27,7 +39,6 @@ TRANSFORM:
               TARGET_SIZE: 224
             - OP: ArrangeSSD
         BATCH_SIZE: 1
-        WORK_CONF:
+        WORKER_CONF:
             BUFSIZE: 100
             WORKER_NUM: 8
-    

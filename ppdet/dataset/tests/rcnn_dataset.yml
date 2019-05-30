@@ -1,8 +1,8 @@
 DATA:
     TRAIN:
-        ANNO_FILE: data/voc/ImageSets/Main/train.txt
-        IMAGE_DIR: data/voc/JPEGImages
-        SAMPLES: 3
+        ANNO_FILE: data/coco.test/train2017.roidb
+        IMAGE_DIR: data/coco.test/train2017
+        SAMPLES: 10
         IS_SHUFFLE: True
 TRANSFORM:
     TRAIN:

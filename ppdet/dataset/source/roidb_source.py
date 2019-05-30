@@ -32,7 +32,17 @@ class RoiDbSource(Dataset):
     """ interface to load roidb data from files
     """
 
-    def __init__(self, fname, image_dir=None, samples=-1, is_shuffle=True):
+    def __init__(self, fname, image_dir=None,
+        samples=-1, is_shuffle=True, load_img=False):
+        """ Init
+
+        Args:
+            fname (str): label file path
+            image_dir (str): root dir for images
+            samples (int): samples to load, -1 means all
+            is_shuffle (bool): whether to shuffle samples
+            load_img (bool): whether load data in this class
+        """
         super(RoiDbSource, self).__init__()
         self._epoch = -1
         self._fname = fname
@@ -48,6 +58,7 @@ class RoiDbSource(Dataset):
         self._drained = False
         self._samples = samples
         self._is_shuffle = is_shuffle
+        self._load_img = load_img
 
     def __str__(self):
         return 'RoiDbSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
@@ -64,8 +75,10 @@ class RoiDbSource(Dataset):
             raise StopIteration('%s no more data' % (str(self)))
         else:
             sample = copy.deepcopy(self._roidb[self._pos])
-            if self._image_dir is not None:
+            if self._load_img:
                 sample['image'] = self._load_image(sample['im_file'])
+            else:
+                sample['im_file'] = os.path.join(self._image_dir, sample['im_file'])
             self._pos += 1
             return sample
 

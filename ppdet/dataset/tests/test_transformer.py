@@ -10,8 +10,9 @@ from dataset import build_source
 from dataset.transform import operator as op
 from dataset.transform import transformer
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
 
 class TestTransformer(unittest.TestCase):
     """Test cases for dataset.transform.transformer
@@ -67,7 +68,7 @@ class TestTransformer(unittest.TestCase):
         """
         mapper = op.build(self.ops)
         ds = build_source(self.sc_config)
-        worker_conf = {'WORKER_NUM': 2}
+        worker_conf = {'WORKER_NUM': 1, 'use_process': True}
         mapped_ds = transformer.map(ds, mapper, worker_conf)
 
         ct = 0

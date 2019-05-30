@@ -89,7 +89,12 @@ class DecodeImage(BaseOperator):
             raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def __call__(self, sample, context=None):
-        assert 'image' in sample, 'not found image data'
+        """ load image from disk if 'image' field not exist and 'im_file' field is exist
+        """
+        if 'image' not in sample:
+            with open(sample['im_file'], 'rb') as f:
+                sample['image'] = f.read()
+
         im = sample['image']
         data = np.frombuffer(im, dtype='uint8')
         im = cv2.imdecode(data, 1)  # BGR mode, but need RGB mode

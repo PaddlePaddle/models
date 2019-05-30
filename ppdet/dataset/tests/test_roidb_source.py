@@ -21,7 +21,8 @@ class TestRoiDbSource(unittest.TestCase):
         cls.config = {
             'fname': anno_path,
             'image_dir': image_dir,
-            'samples': 100
+            'samples': 100,
+            'load_img': True
         }
 
     @classmethod

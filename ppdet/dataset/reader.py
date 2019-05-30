@@ -21,10 +21,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import logging
+
 from . import source
 from .transform import transformer as tf
 from .transform import operator as op
 
+logger = logging.getLogger(__name__)
 
 class Reader(object):
     """ Interface to make readers for training or evaluation
@@ -59,17 +62,19 @@ class Reader(object):
         batchsize = self._trans_conf[which]['BATCH_SIZE']
         worker_args = None if 'WORKER_CONF' not in \
             self._trans_conf[which] else self._trans_conf[which]['WORKER_CONF']
+
         drop_last = False if 'DROP_LAST' not in \
             self._trans_conf[which] else self._trans_conf[which]['DROP_LAST']
         is_padding = False if 'IS_PADDING' not in \
             self._trans_conf[which] else self._trans_conf[which]['IS_PADDING']
         mapper = op.build(ops)
+
+        worker_args = {k.lower(): v for k, v in worker_args.items()}
         mapped_ds = tf.map(sc, mapper, worker_args)
         batched_ds = tf.batch(mapped_ds, batchsize, drop_last, is_padding)
 
         # 3, Build a reader
         def _reader():
-            # TODO: need more elegant code
             maxit = self._maxiter if self._maxiter else 1
             n = 0
             while n < maxit:
