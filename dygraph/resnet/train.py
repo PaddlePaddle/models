@@ -326,19 +326,6 @@ def train_resnet():
             resnet.eval()
             eval(resnet, test_reader)
 
-            dict_state = resnet.state_dict()
-
-            dict_1 = {}
-            for (k, v) in dict_state.items():
-                dict_1[k] = v
-
-            file_name = "./model/epoch_" + str(eop)
-            np.savez(file_name, **dict_1)
-
-            #sys.exit()
-
-            #resnet.train()
-
 
 if __name__ == '__main__':
     train_resnet()
