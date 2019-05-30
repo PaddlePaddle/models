@@ -510,5 +510,5 @@ class SharedMemoryMgr(object):
                         (self))
 
         if self._id in SharedMemoryMgr.s_memory_mgrs:
-            del SharedMemoryMgr.s_memory_mgrs[mgr._id]
+            del SharedMemoryMgr.s_memory_mgrs[self._id]
             SharedMemoryMgr.s_mgr_num -= 1
