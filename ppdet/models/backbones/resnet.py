@@ -328,6 +328,4 @@ class ResNet50C5(object):
     def __call__(self, input):
         model = ResNet(self.number, self.freeze_bn, self.affine_channel)
         res5 = model.layer_warp(input, self.stage_number)
-        feat = fluid.layers.pool2d(
-            res5, pool_type='avg', pool_size=7, name='res5_pool')
-        return feat
+        return res5

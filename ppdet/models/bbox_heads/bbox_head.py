@@ -40,6 +40,17 @@ class BBoxHead(object):
         self.cfg = cfg
         self.class_num = self.cfg.DATA.CLASS_NUM
         self.head_func = BBoxHeadConvs.get(cfg.BBOX_HEAD.HEAD_CONV)(cfg)
+        self.head_feat = None
+
+    def get_head_feat(self, input=None):
+        """
+        Get the bbox head feature map.
+        """
+        if input is not None:
+            self.head_feat = self.head_func(input)
+            return self.head_feat
+        else:
+            return self.head_feat
 
     def _get_output(self, roi_feat):
         """
@@ -54,7 +65,9 @@ class BBoxHead(object):
             bbox_pred(Variable): Output of rpn head with shape of
                 [N, num_anchors * 4, H, W].
         """
-        head_feat = self.head_func(roi_feat)
+        head_feat = self.get_head_feat(roi_feat)
+        head_feat = fluid.layers.pool2d(
+            head_feat, pool_type='avg', global_pooling=True)
         cls_score = fluid.layers.fc(input=head_feat,
                                     size=self.class_num,
                                     act=None,

@@ -15,4 +15,8 @@
 from . import bbox_head
 from .bbox_head import *
 
+from . import mask_head
+from .mask_head import *
+
 __all__ = bbox_head.__all__
+__all__ = mask_head.__all__

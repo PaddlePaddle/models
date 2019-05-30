@@ -54,10 +54,13 @@ class Registry(object):
 
 Backbones = Registry('Backbones')
 Detectors = Registry('Detectors')
+
 RPNHeads = Registry('RPNHead')
 RoIExtractors = Registry('RoIExtractor')
 BBoxHeadConvs = Registry('BBoxHeadConv')
 BBoxHeads = Registry('BBoxHead')
+MaskHeads = Registry('MaskHead')
+
 YOLOHeads = Registry('YOLOHeads')
 SSDHeads = Registry('SSDHead')
 Necks = Registry('Necks')

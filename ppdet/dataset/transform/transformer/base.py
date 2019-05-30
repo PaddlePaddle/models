@@ -21,6 +21,8 @@ import os
 import cv2
 import numpy as np
 import functools
+import collections
+
 from ...dataset import Dataset
 
 
@@ -159,10 +161,18 @@ class BatchedDataset(ProxiedDataset):
         """ proxy to self._ds.next
         """
 
+        def empty(x):
+            if isinstance(x, np.ndarray) and x.size == 0:
+                return True
+            elif isinstance(x, collections.Sequence) and len(x) == 0:
+                return True
+            else:
+                return False
+
         def has_empty(items):
             if any(x is None for x in items):
                 return True
-            if any(x.size == 0 for x in items):
+            if any(empty(x) for x in items):
                 return True
             return False
 
