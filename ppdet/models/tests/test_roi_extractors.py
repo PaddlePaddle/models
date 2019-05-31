@@ -22,7 +22,7 @@ import ppdet.models.roi_extractors as roi_extractors
 from ppdet.core.config import load_cfg
 import configs
 import paddle.fluid as fluid
-from paddle.fluid.framework import Program, program_guard
+from ppdet.models.tests.decorator_helper import prog_scope
 import os
 
 YAML_LIST = [
@@ -35,52 +35,52 @@ YAML_LIST = [
 ]
 
 
-def init_head_input(cfg):
-    if cfg.MODEL.FPN:
-        head_inputs = [
-            fluid.layers.data(
-                name='head_inputs_0',
-                shape=[256, 21, 21],
-                dtype='float32',
-                lod_level=1),
-            fluid.layers.data(
-                name='head_inputs_1',
-                shape=[256, 42, 42],
-                dtype='float32',
-                lod_level=1),
-            fluid.layers.data(
-                name='head_inputs_2',
-                shape=[256, 84, 84],
-                dtype='float32',
-                lod_level=1),
-            fluid.layers.data(
-                name='head_inputs_3',
-                shape=[256, 334, 334],
-                dtype='float32',
-                lod_level=1),
-        ]
-
-    else:
-        head_inputs = fluid.layers.data(
-            name='head_inputs',
-            shape=[1024, 84, 84],
+def init_head_input(cfg, FPN_ON):
+    head_inputs = [
+        fluid.layers.data(
+            name='head_inputs_0',
+            shape=[256, 21, 21],
             dtype='float32',
-            lod_level=1)
-    return head_inputs
+            lod_level=1),
+        fluid.layers.data(
+            name='head_inputs_1',
+            shape=[256, 42, 42],
+            dtype='float32',
+            lod_level=1),
+        fluid.layers.data(
+            name='head_inputs_2',
+            shape=[256, 84, 84],
+            dtype='float32',
+            lod_level=1),
+        fluid.layers.data(
+            name='head_inputs_3',
+            shape=[256, 334, 334],
+            dtype='float32',
+            lod_level=1),
+    ]
+    if not FPN_ON:
+        return head_inputs[-1]
+    name_list = ['res' + str(lvl) + '_sum' for lvl in range(2, 6)]
+    head_dict = {k: v for k, v in zip(name_list, head_inputs)}
+    return head_dict, name_list
 
 
+@prog_scope()
 def test_roi_extractor(cfg_file):
     cfg = load_cfg(cfg_file)
-    program = Program()
-    with program_guard(program):
-        method = getattr(roi_extractors, cfg.ROI_EXTRACTOR.EXTRACT_METHOD)
-        ob = method(cfg)
-        head_inputs = init_head_input(cfg)
-        rois = fluid.layers.data(
-            name='rois', shape=[4], dtype='int32', lod_level=1)
-        roi_feat = ob.get_roi_feat(head_inputs, rois)
+    method = getattr(roi_extractors, cfg.ROI_EXTRACTOR.EXTRACT_METHOD)
+    FPN_ON = getattr(cfg.MODEL, 'NECK', False)
+    ob = method(cfg)
+    rois = fluid.layers.data(name='rois', shape=[4], dtype='int32', lod_level=1)
+    if FPN_ON:
+        head_dict, name_list = init_head_input(cfg, True)
+        spatial_scale = [1. / 32., 1. / 16., 1. / 8., 1. / 4.]
+        roi_feat = ob.get_roi_feat(head_dict, rois, name_list, spatial_scale)
+    else:
+        head_input = init_head_input(cfg, False)
+        roi_feat = ob.get_roi_feat(head_input, rois)
 
-        assert roi_feat is not None
+    assert roi_feat is not None
 
 
 class TestRoIExtractor(unittest.TestCase):

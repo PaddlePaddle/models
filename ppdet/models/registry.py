@@ -13,8 +13,14 @@
 # limitations under the License.
 
 __all__ = [
-    'Detectors', 'Detectors', 'RPNHeads', 'RoIExtractors', 'BBoxHeadConvs',
-    'BBoxHeads', 'SSDHeads'
+    'Detectors',
+    'Detectors',
+    'RPNHeads',
+    'RoIExtractors',
+    'BBoxHeadConvs',
+    'BBoxHeads',
+    'SSDHeads',
+    'Necks',
 ]
 
 
@@ -54,3 +60,4 @@ BBoxHeadConvs = Registry('BBoxHeadConv')
 BBoxHeads = Registry('BBoxHead')
 YOLOHeads = Registry('YOLOHeads')
 SSDHeads = Registry('SSDHead')
+Necks = Registry('Necks')

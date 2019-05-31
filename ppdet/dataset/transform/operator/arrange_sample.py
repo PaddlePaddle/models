@@ -75,7 +75,7 @@ class ArrangeRCNN(BaseOperator):
             raise KeyError("The dataset doesn't have 'im_info' key.")
         im_id = sample['im_id']
 
-        outs = (im, im_info, gt_bbox, gt_class, is_crowd, im_id)
+        outs = (im, im_info, im_id, gt_bbox, gt_class, is_crowd)
         gt_masks = []
         if self.is_mask and len(sample['gt_poly']) != 0 \
                 and 'is_crowd' in keys:

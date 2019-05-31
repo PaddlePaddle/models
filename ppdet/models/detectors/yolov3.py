@@ -44,7 +44,8 @@ class YOLOv3(DetectorBase):
         self.use_pyreader = True if self.is_train else False
 
         # build inputs
-        feed_vars = self.build_feeds(self.feed_info(), use_pyreader=self.use_pyreader)
+        feed_vars = self.build_feeds(
+            self.feed_info(), use_pyreader=self.use_pyreader)
 
         # backbone
         im = feed_vars['image']
@@ -55,8 +56,9 @@ class YOLOv3(DetectorBase):
             gt_box = feed_vars['gt_box']
             gt_label = feed_vars['gt_label']
             gt_score = feed_vars['gt_score']
-            
-            loss = self.yolo_head.get_loss(body_feats, gt_box, gt_label, gt_score)
+
+            loss = self.yolo_head.get_loss(body_feats, gt_box, gt_label,
+                                           gt_score)
             return loss
         else:
             # get prediction in test mode
@@ -64,7 +66,6 @@ class YOLOv3(DetectorBase):
 
             pred = self.yolo_head.get_prediction(body_feats, im_shape)
             return pred
-
 
     def train(self):
         return self._forward(is_train=True)

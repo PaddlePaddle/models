@@ -64,29 +64,42 @@ class BatchedDataset(ProxiedDataset):
     """ transform samples to batches
     """
 
-    def __init__(self, ds, batchsize, drop_last=True, is_padding=False):
+    def __init__(self,
+                 ds,
+                 batchsize,
+                 coarsest_stride,
+                 drop_last=True,
+                 is_padding=False):
         """
         Args:
             ds (instance of Dataset): dataset to be batched
             batchsize (int): sample number for each batch
+            coarsest_stride (int): stride of the coarsest FPN level
             drop_last (bool): whether to drop last samples when not
                 enough for one batch
         """
         super(BatchedDataset, self).__init__(ds)
         self._batchsz = batchsize
+        self._stride = coarsest_stride
         self._drop_last = drop_last
         self.is_padding = is_padding
 
     def padding_minibatch(self, batch_data):
-        if len(batch_data) == 1:
+        if len(batch_data) == 1 and self._stride == 1:
             return batch_data
         max_shape = np.array([data[0].shape for data in batch_data]).max(axis=0)
+        if self._stride > 1:
+            max_shape[1] = int(
+                np.ceil(max_shape[1] / self._stride) * self._stride)
+            max_shape[2] = int(
+                np.ceil(max_shape[2] / self._stride) * self._stride)
         padding_batch = []
         for data in batch_data:
             im_c, im_h, im_w = data[0].shape[:]
             padding_im = np.zeros(
                 (im_c, max_shape[1], max_shape[2]), dtype=np.float32)
             padding_im[:, :im_h, :im_w] = data[0]
+            data[1][:2] = max_shape[1:3]
             padding_batch.append((padding_im, ) + data[1:])
         return padding_batch
 

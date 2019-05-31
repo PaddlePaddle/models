@@ -27,6 +27,9 @@ from .roi_extractors import *
 from . import bbox_heads
 from .bbox_heads import *
 
+from . import necks
+from .necks import *
+
 from . import registry
 from .registry import *
 
@@ -35,4 +38,5 @@ __all__ += anchor_heads.__all__
 __all__ += roi_extractors.__all__
 __all__ += bbox_heads.__all__
 __all__ += detectors.__all__
+__all__ += necks.__all__
 __all__ += registry.__all__

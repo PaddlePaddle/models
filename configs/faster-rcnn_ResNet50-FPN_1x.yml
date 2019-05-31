@@ -14,21 +14,54 @@
 
 
 MODEL:
-  TYPE: Faster-RCNN
-  BACKBONE: ResNet50
-  FREEZE_AT: 0
-  FPN: ON
+  TYPE: FasterRCNN
+  BACKBONE: ResNet50Backbone
+  ENDPOINT: 5
+  NECK: FPN
+  FREEZE_AT: 2
+  FREEZE_BN: ON
+  AFFINE_CHANNEL: ON
+  HIGHEST_BACKBONE_LVL: 5
+  LOWEST_BACKBONE_LVL: 2
 
 RPN_HEAD:
-  HEAD_FUNC: ResNet.addRpnHead
+  TYPE: FPNRPNHead
+  ANCHOR:
+    VARIANCE: [1., 1., 1., 1.]
 
-  PREPOSAL:
+  PROPOSAL:
+    BATCH_SIZE_PER_IM: 512
+    FG_FRACTION: 0.25
+    FG_THRESH: 0.5
+    BG_THRESH_HI: 0.5
+    BG_THRESH_LO: 0.0
+    BBOX_REG_WEIGHTS: [0.1, 0.1, 0.2, 0.2]
     PRE_NMS_TOPN: 1000 
     POST_NMS_TOPN: 1000
-    NMS_THRESH: 0.7
+
+  TRAIN:
+    RPN_PRE_NMS_TOP_N: 2000
+    RPN_POST_NMS_TOP_N: 2000
+    RPN_NMS_THRESH: 0.7
+    RPN_MIN_SIZE: 0.0
+    RPN_ETA: 1.0
+  TEST:
+    RPN_PRE_NMS_TOP_N: 1000
+    RPN_POST_NMS_TOP_N: 1000
+    RPN_NMS_THRESH: 0.7
+    RPN_MIN_SIZE: 0.0
+    RPN_ETA: 1.0
+
+  RPN_BATCH_SIZE_PER_IM: 256
+  RPN_STRADDLE_THRESH: 0.
+  RPN_FG_FRACTION: 0.5
+  RPN_POSITIVE_OVERLAP: 0.7
+  RPN_NEGATIVE_OVERLAP: 0.3
 
 BBOX_HEAD:
-  HEAD_FUNC: ResNet.addBboxHead
+  TYPE: BBoxHead
+  HEAD_CONV: BBox2MLP
+  MLP_HEAD_DIM: 1024
 
 ROI_EXTRACTOR:
   EXTRACT_METHOD: FPNRoIAlign
@@ -41,20 +74,18 @@ ROI_EXTRACTOR:
   FPN_ROI_CANONICAL_SCALE: 224
   SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8., 1. / 4.]  
 
+FPN:
+  DIM: 256
+  SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8., 1. / 4.]
+  RPN_MAX_LEVEL: 6
+  RPN_MIN_LEVEL: 2
+  RPN_ASPECT_RATIOS: [0.5, 1, 2]
+  RPN_ANCHOR_START_SIZE: 32
+
 ENV:
   GPU: ON
   GPU_NUM: 8
   MULTIPROCESS_READER: OFF
-
-DATA:
-  DATASET: coco2017
-  CLASS_NUM: 81
-  MAX_SIZE: 1333
-  TRAIN_SCALES: [800]
-  TEST_SCALE: 800
-
-TRANSFORM:
-  PIPELINE: RCNN
 
 OPTIMIZER:
   TYPE: Momentum
@@ -63,7 +94,7 @@ OPTIMIZER:
   LR_DECAY:
     POLICY: piecewise_decay 
     BOUNDARIES: [60000, 80000]
-    VALUES: [0.01, 0.001, 0.0001]
+    VALUES: [0.02, 0.002, 0.0002]
 
   LR_WARMUP:
     WARMUP: ON
@@ -77,10 +108,78 @@ OPTIMIZER:
 
 TRAIN:
   MAX_ITERS: 90000
-  BATCH_SIZE_PER_DEVICE: 2
-  PRETRAIN_WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  LOG_SMOOTH_WINDOW: 20
+  SNAPSHOT_ITER: 10000
+  PRETRAIN_WEIGHTS: gry_resnet50_fusebn/ 
   BATCH_NORM_TYPE: BN
+  RANDOM: ON
+  SAVE_DIR: output
 
 TEST:
   SCORE_THRESH: 0.05
-  WEIGTS: http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+  NMS_THRESH: 0.5
+  DETECTIONS_PER_IM: 100
+  WEIGHTS: output/FasterRCNN/model_final
+  METRIC_TYPE: COCO
+
+DATA:
+  TRAIN:
+      ANNO_FILE: /paddle/models/fluid/faster_rcnn/data/COCO17/annotations/instances_train2017.json
+      IMAGE_DIR: /paddle/models/fluid/faster_rcnn/data/COCO17/train2017
+      IS_SHUFFLE: True
+  VAL:
+      ANNO_FILE: /paddle/models/fluid/faster_rcnn/data/COCO17/annotations/instances_val2017.json
+      IMAGE_DIR: /paddle/models/fluid/faster_rcnn/data/COCO17/val2017
+  CLASS_NUM: 81
+
+TRANSFORM:
+  TRAIN:
+    OPS:
+      - OP: DecodeImage
+        TO_RGB: True
+      - OP: RandFlipImage
+        PROB: 0.5
+      - OP: NormalizeImage
+        MEAN: [0.485, 0.456, 0.406]
+        STD: [0.229, 0.224, 0.225]
+        IS_SCALE: True
+        IS_CHANNEL_FIRST: False
+      - OP: ResizeImage
+        TARGET_SIZE: 800
+        MAX_SIZE: 1333
+      - OP: Rgb2Bgr
+        TO_BGR: False
+      - OP: ArrangeRCNN
+    BATCH_SIZE: 2
+    DEVICES_NUM: 8
+    IS_PADDING: True
+    # TODO(guanzhong): use a better name for coarsest_stride
+    COAREST_STRIDE: 32
+    WORK_CONF:
+        BUFSIZE: 100
+        WORKER_NUM: 8
+
+  VAL:
+    OPS:
+      - OP: DecodeImage
+        TO_RGB: True
+      - OP: NormalizeImage
+        MEAN: [0.485, 0.456, 0.406]
+        STD: [0.229, 0.224, 0.225]
+        IS_SCALE: True
+        IS_CHANNEL_FIRST: False
+      - OP: ResizeImage
+        TARGET_SIZE: 800
+        MAX_SIZE: 1333
+      - OP: Rgb2Bgr
+        TO_BGR: False
+      - OP: ArrangeRCNN
+    BATCH_SIZE: 1
+    DEVICES_NUM: 1
+    IS_PADDING: True
+    # TODO(guanzhong): use a better name for coarsest_stride
+    COAREST_STRIDE: 32
+    WORK_CONF:
+        BUFSIZE: 100
+        WORKER_NUM: 8
+

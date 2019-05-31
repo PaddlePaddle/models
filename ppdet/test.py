@@ -106,9 +106,10 @@ def main():
         pyreader.reset()
     logger.info('Test iter {}'.format(iter_id))
 
+    # Evaluation
     if cfg.TEST.METRIC_TYPE == 'COCO':
         from ppdet.metrics.coco import coco_eval
-        coco_eval(results, cfg.DATA.val.anno_file, 'bbox.json')
+        coco_eval(results, cfg.DATA.VAL.ANNO_FILE, 'bbox.json')
     else:
         logger.info('Test mAP: {}'.format(results[-1]))
 

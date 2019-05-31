@@ -25,7 +25,7 @@ RPN_HEAD:
 
   ANCHOR:
     ANCHOR_SIZES: [32, 64, 128, 256, 512]
-    ASPECT_RATIOS: [32, 64, 128, 256, 512]
+    ASPECT_RATIOS: [0.5, 1.0, 2.0]
     VARIANCE: [1., 1., 1., 1.]
     RPN_STRIDE: [16.0, 16.0]
 

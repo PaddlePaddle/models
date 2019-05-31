@@ -22,7 +22,6 @@ import unittest
 import paddle.fluid as fluid
 import paddle.compat as cpt
 
-
 from ppdet.core.config import load_cfg, merge_cfg
 from ppdet.models.backbones.mobilenet import MobileNetV1Backbone
 
@@ -38,6 +37,7 @@ def conv_norm_pnames(name):
     pnames += [name + "_bn" + '_mean']
     pnames += [name + "_bn" + '_variance']
     return pnames
+
 
 def depthwise_separable_names(name):
     """
@@ -65,7 +65,8 @@ class TestMobileNet(unittest.TestCase):
         params_names.extend(depthwise_separable_names('conv4_1'))
         params_names.extend(depthwise_separable_names('conv4_2'))
         for i in range(5):
-            params_names.extend(depthwise_separable_names("conv5" + "_" + str(i + 1)))
+            params_names.extend(
+                depthwise_separable_names("conv5" + "_" + str(i + 1)))
         params_names.extend(depthwise_separable_names('conv5_6'))
         params_names.extend(depthwise_separable_names('conv6'))
         return params_names
@@ -98,7 +99,7 @@ class TestMobileNet(unittest.TestCase):
 
     def test_mobilenetv1(self):
         self.compare_mobilenet()
-        
-        
+
+
 if __name__ == '__main__':
     unittest.main()

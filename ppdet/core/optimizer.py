@@ -58,9 +58,10 @@ class OptimizerBuilder():
             elif not isinstance(v, dict):
                 opt_params.update({k.lower(): v})
 
-        return opt_func(regularization=regularization,
-                        learning_rate=learning_rate,
-                        **opt_params)
+        return opt_func(
+            regularization=regularization,
+            learning_rate=learning_rate,
+            **opt_params)
 
     def _build_regularizer(self):
         reg_cfg = self.cfg.WEIGHT_DECAY
@@ -81,14 +82,17 @@ class OptimizerBuilder():
             start_lr = warmup_cfg.WARMUP_INIT_FACTOR * \
                        warmup_cfg.WARMUP_END_LR
             learning_rate = layers.linear_lr_warmup(
-                                    learning_rate=learning_rate,
-                                    warmup_steps=warmup_steps,
-                                    start_lr=start_lr,
-                                    end_lr=end_lr)
+                learning_rate=learning_rate,
+                warmup_steps=warmup_steps,
+                start_lr=start_lr,
+                end_lr=end_lr)
 
         self.lr = learning_rate
         return learning_rate
-    
+
+        self.lr = learning_rate
+        return learning_rate
+
     def _parse_lr_decay_cfg(self):
         lr_cfg = self.cfg.LR_DECAY
         policy = lr_cfg.POLICY

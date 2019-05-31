@@ -38,11 +38,12 @@ def map(ds, mapper, worker_args=None):
         return base.MappedDataset(ds, mapper)
 
 
-def batch(ds, batchsize, drop_last=True, is_padding=False):
+def batch(ds, batchsize, coarsest_stride, drop_last=True, is_padding=False):
     """ Batch data samples to batches
 
     Args:
         batchsize (int): number of samples for a batch
+        coarsest_stride(int): stride of the coarsest FPN level
         drop_last (bool): drop last few samples if not enough for a batch
         is_padding (bool): whether padding the image in one batch
 
@@ -50,7 +51,11 @@ def batch(ds, batchsize, drop_last=True, is_padding=False):
         a batched dataset
     """
     return base.BatchedDataset(
-        ds, batchsize, drop_last=drop_last, is_padding=is_padding)
+        ds,
+        batchsize,
+        coarsest_stride,
+        drop_last=drop_last,
+        is_padding=is_padding)
 
 
 __all__ = ['map', 'batch']

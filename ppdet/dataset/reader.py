@@ -64,9 +64,12 @@ class Reader(object):
             self._trans_conf[which] else self._trans_conf[which]['DROP_LAST']
         is_padding = False if 'IS_PADDING' not in \
             self._trans_conf[which] else self._trans_conf[which]['IS_PADDING']
+        coarsest_stride = 1 if 'COAREST_STRIDE' not in \
+            self._trans_conf[which] else self._trans_conf[which]['COAREST_STRIDE']
         mapper = op.build(ops)
         mapped_ds = tf.map(sc, mapper, worker_args)
-        batched_ds = tf.batch(mapped_ds, batchsize, drop_last, is_padding)
+        batched_ds = tf.batch(mapped_ds, batchsize, coarsest_stride, drop_last,
+                              is_padding)
 
         # 3, Build a reader
         def _reader():

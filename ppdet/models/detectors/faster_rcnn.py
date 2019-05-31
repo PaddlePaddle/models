@@ -28,6 +28,7 @@ from ..registry import Backbones
 from ..registry import RPNHeads
 from ..registry import RoIExtractors
 from ..registry import BBoxHeads
+from ..registry import Necks
 
 from ..target_assigners.bbox_assigner import BBoxAssigner
 
@@ -41,12 +42,15 @@ class FasterRCNN(DetectorBase):
     def __init__(self, cfg):
         super(FasterRCNN, self).__init__(cfg)
         self.is_train = cfg.IS_TRAIN
+        self.NECK_ON = getattr(cfg.MODEL, 'NECK', None)
         self.backbone = Backbones.get(cfg.MODEL.BACKBONE)(cfg)
         self.rpn_head = RPNHeads.get(cfg.RPN_HEAD.TYPE)(cfg)
         self.bbox_assigner = BBoxAssigner(cfg)
         self.roi_extractor = RoIExtractors.get(
             cfg.ROI_EXTRACTOR.EXTRACT_METHOD)(cfg)
         self.bbox_head = BBoxHeads.get(cfg.BBOX_HEAD.TYPE)(cfg)
+        if self.NECK_ON:
+            self.neck = Necks.get(cfg.MODEL.NECK)(cfg)
         self.use_pyreader = True
 
     def _forward(self):
@@ -59,10 +63,17 @@ class FasterRCNN(DetectorBase):
             is_crowd = feed_vars['is_crowd']
 
         # backbone
-        body_feat = self.backbone(im)
+        body_feats = self.backbone(im)
+        body_feat_names = self.backbone.get_body_feat_names()
+
+        # neck
+        if self.NECK_ON:
+            body_feats, spatial_scale, body_feat_names = self.neck.get_output(
+                body_feats, body_feat_names)
 
         # rpn proposals
-        rois, rpn_roi_probs = self.rpn_head.get_proposals(body_feat, im_info)
+        rois = self.rpn_head.get_proposals(body_feats, im_info, body_feat_names)
+
         if self.is_train:
             rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
 
@@ -76,8 +87,16 @@ class FasterRCNN(DetectorBase):
             bbox_inside_weights = outs[3]
             bbox_outside_weights = outs[4]
 
-        # RoI Extractor
-        roi_feat = self.roi_extractor.get_roi_feat(body_feat, rois)
+        # RoI Extractor        
+        if self.NECK_ON:
+            roi_feat = self.roi_extractor.get_roi_feat(
+                body_feats, rois, body_feat_names, spatial_scale)
+        else:
+            # In models without NECK, roi extractor only uses the last level of 
+            # feature maps. And body_feat_names[-1] represents the name of 
+            # last feature map.
+            body_feat = body_feats[body_feat_names[-1]]
+            roi_feat = self.roi_extractor.get_roi_feat(body_feat, rois)
 
         # fast-rcnn head
         if self.is_train:

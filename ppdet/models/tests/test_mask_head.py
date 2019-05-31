@@ -62,6 +62,7 @@ def init_head_input(cfg, mode):
     head_inputs.append(head_func)
     return head_inputs
 
+
 def test_mask_train_head(cfg_file):
     cfg = load_cfg(cfg_file)
     main_program = Program()

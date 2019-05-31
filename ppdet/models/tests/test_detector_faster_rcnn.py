@@ -50,5 +50,26 @@ class TestDetectorFasterRCNN(unittest.TestCase):
         #TODO(dangqingqing): add more check
 
 
+class TestDetectorFasterRCNNFPN(unittest.TestCase):
+    def setUp(self):
+        cfg_file = 'configs/faster-rcnn_ResNet50-FPN_1x.yml'
+        self.cfg = load_cfg(cfg_file)
+        self.detector_type = 'FasterRCNN'
+
+    @prog_scope()
+    def test_train(self):
+        merge_cfg({'IS_TRAIN': True}, self.cfg)
+        assert self.cfg.IS_TRAIN
+        self.detector = Detectors.get(self.detector_type)(self.cfg)
+        self.detector.train()
+
+    @prog_scope()
+    def test_test(self):
+        merge_cfg({'IS_TRAIN': False}, self.cfg)
+        assert not self.cfg.IS_TRAIN
+        self.detector = Detectors.get(self.detector_type)(self.cfg)
+        self.detector.test()
+
+
 if __name__ == '__main__':
     unittest.main()

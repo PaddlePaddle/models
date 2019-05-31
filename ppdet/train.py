@@ -70,8 +70,8 @@ def main():
     values += [ob.get_lr()]
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = True
-    build_strategy.enable_inplace = True
+    build_strategy.memory_optimize = False
+    build_strategy.enable_inplace = False
     sync_bn = getattr(cfg.TRAIN, 'BATCH_NORM_TYPE', 'BN') == 'SYNC_BN'
     build_strategy.sync_batch_norm = sync_bn
     compile_program = fluid.compiler.CompiledProgram(
@@ -86,8 +86,8 @@ def main():
 
     # 5. Load pre-trained model
     exe.run(startup_prog)
-    if cfg.TRAIN.PRETRAIN_WEIGTS:
-        checkpoint.load(exe, train_prog, cfg.TRAIN.PRETRAIN_WEIGTS)
+    if cfg.TRAIN.PRETRAIN_WEIGHTS:
+        checkpoint.load(exe, train_prog, cfg.TRAIN.PRETRAIN_WEIGHTS)
 
     # 6. Run
     train_stats = TrainingStats(cfg.TRAIN.LOG_SMOOTH_WINDOW, keys)

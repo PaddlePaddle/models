@@ -50,9 +50,9 @@ class BBoxHead(object):
 
         Returns:
             cls_score(Variable): Output of rpn head with shape of 
-                                 [N, num_anchors, H, W].
+                [N, num_anchors, H, W].
             bbox_pred(Variable): Output of rpn head with shape of
-                                 [N, num_anchors * 4, H, W].
+                [N, num_anchors * 4, H, W].
         """
         head_feat = self.head_func(roi_feat)
         cls_score = fluid.layers.fc(input=head_feat,
@@ -89,15 +89,13 @@ class BBoxHead(object):
         Args:
             roi_feat (Variable): RoI feature from RoIExtractor.
             labels_int32(Variable): Class label of a RoI with shape [P, 1].
-                                    P is the number of RoI.
+                P is the number of RoI.
             bbox_targets(Variable): Box label of a RoI with shape 
-                                    [P, 4 * class_nums].
+                [P, 4 * class_nums].
             bbox_inside_weights(Variable): Indicates whether a box should 
-                                           contribute to loss. Same shape as
-                                           bbox_targets.
+                contribute to loss. Same shape as bbox_targets.
             bbox_outside_weights(Variable): Indicates whether a box should 
-                                            contribute to loss. Same shape as 
-                                            bbox_targets.
+                contribute to loss. Same shape as bbox_targets.
 
         Return:
             Type: Dict
@@ -128,14 +126,14 @@ class BBoxHead(object):
         Args:
             rois (Variable): Output of generate_proposals in rpn head.
             im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
-                               number of input images, each element consists 
-                               of im_height, im_width, im_scale.
+                number of input images, each element consists of im_height, 
+                im_width, im_scale.
             cls_score (Variable), bbox_pred(Variable): Output of get_output.
      
         Returns:
             pred_result(Variable): Prediction result with shape [N, 6]. Each 
-               row has 6 values: [label, confidence, xmin, ymin, xmax, ymax]. 
-               N is the total number of prediction.
+                row has 6 values: [label, confidence, xmin, ymin, xmax, ymax]. 
+                N is the total number of prediction.
         """
         cls_score, bbox_pred = self._get_output(roi_feat)
 
@@ -146,7 +144,7 @@ class BBoxHead(object):
         bbox_pred = fluid.layers.reshape(bbox_pred, (-1, self.class_num, 4))
         decoded_box = fluid.layers.box_coder(
             prior_box=boxes,
-            prior_box_var=self.cfg.BBOX_HEAD.ROI.BBOX_REG_WEIGHTS,
+            prior_box_var=self.cfg.RPN_HEAD.PROPOSAL.BBOX_REG_WEIGHTS,
             target_box=bbox_pred,
             code_type='decode_center_size',
             box_normalized=False,
@@ -163,25 +161,30 @@ class BBoxHead(object):
         return {'bbox': pred_result}
 
 
-def bbox2mlp_head(cfg, roi_feat):
-    fc6 = fluid.layers.fc(input=roi_feat,
-                          size=cfg.BBOX_HEAD.MLP_HEAD_DIM,
-                          act='relu',
-                          name='fc6',
-                          param_attr=ParamAttr(
-                              name='fc6_w', initializer=Xavier()),
-                          bias_attr=ParamAttr(
-                              name='fc6_b',
-                              learning_rate=2.,
-                              regularizer=L2Decay(0.)))
-    head_feat = fluid.layers.fc(input=fc6,
-                                size=cfg.BBOX_HEAD.MLP_HEAD_DIM,
-                                act='relu',
-                                name='fc7',
-                                param_attr=ParamAttr(
-                                    name='fc7_w', initializer=Xavier()),
-                                bias_attr=ParamAttr(
-                                    name='fc7_b',
-                                    learning_rate=2.,
-                                    regularizer=L2Decay(0.)))
-    return head_feat
+@BBoxHeadConvs.register
+class BBox2MLP(object):
+    def __init__(self, cfg):
+        self.mlp_head_dim = cfg.BBOX_HEAD.MLP_HEAD_DIM
+
+    def __call__(self, roi_feat):
+        fc6 = fluid.layers.fc(input=roi_feat,
+                              size=self.mlp_head_dim,
+                              act='relu',
+                              name='fc6',
+                              param_attr=ParamAttr(
+                                  name='fc6_w', initializer=Xavier()),
+                              bias_attr=ParamAttr(
+                                  name='fc6_b',
+                                  learning_rate=2.,
+                                  regularizer=L2Decay(0.)))
+        head_feat = fluid.layers.fc(input=fc6,
+                                    size=self.mlp_head_dim,
+                                    act='relu',
+                                    name='fc7',
+                                    param_attr=ParamAttr(
+                                        name='fc7_w', initializer=Xavier()),
+                                    bias_attr=ParamAttr(
+                                        name='fc7_b',
+                                        learning_rate=2.,
+                                        regularizer=L2Decay(0.)))
+        return head_feat

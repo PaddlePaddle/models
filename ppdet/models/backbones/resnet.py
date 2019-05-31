@@ -27,7 +27,7 @@ from ..registry import Backbones
 from ..registry import BBoxHeadConvs
 from .base import BackboneBase
 
-__all__ = ['ResNet50C4Backbone', 'ResNet101C4Backbone', 'ResNet50C5']
+__all__ = ['ResNet50Backbone', 'ResNet101Backbone', 'ResNet50C5']
 
 
 class ResNet(object):
@@ -234,18 +234,16 @@ class ResNet(object):
         res_endpoints = []
 
         res = self.c1_stage(input)
-        res_endpoints.append(res)
         for i in six.moves.xrange(2, endpoint + 1):
             res = self.layer_warp(res, i)
             res_endpoints.append(res)
-
         if freeze_at > 0:
-            res_endpoints[freeze_at - 1].stop_gradient = True
-        return res
+            res_endpoints[freeze_at - 2].stop_gradient = True
+        return res_endpoints
 
 
 @Backbones.register
-class ResNet50C4Backbone(BackboneBase):
+class ResNet50Backbone(BackboneBase):
     def __init__(self, cfg):
         """
         Get the ResNet50 C4 backbone. We define ResNet50 has 5 stages,
@@ -254,7 +252,7 @@ class ResNet50C4Backbone(BackboneBase):
         Args:
             cfg (AttrDict): the config from given config filename.
         """
-        super(ResNet50C4Backbone, self).__init__(cfg)
+        super(ResNet50Backbone, self).__init__(cfg)
         # freeze the backbone at which stage.
         # This number should be not large than 4. 0 means that
         # no layers are fixed.
@@ -267,6 +265,12 @@ class ResNet50C4Backbone(BackboneBase):
         # use batch_norm or affine_channel.
         self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
         self.number = 50
+        self.endpoint = getattr(cfg.MODEL, 'ENDPOINT', 4)
+        # This list contains names of each Res Block output.
+        # The name is the key of body_dict as well. 
+        self.body_feat_names = [
+            'res' + str(lvl) + '_sum' for lvl in range(2, self.endpoint + 1)
+        ]
 
     def __call__(self, input):
         """
@@ -280,11 +284,16 @@ class ResNet50C4Backbone(BackboneBase):
             raise TypeError(str(input) + " should be Variable")
 
         model = ResNet(self.number, self.freeze_bn, self.affine_channel)
-        return model.get_backbone(input, 4, self.freeze_at)
+        res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
+        return {k: v for k, v in zip(self.body_feat_names, res_list)}
+
+    # TODO(guanzhong): add more comments.
+    def get_body_feat_names(self):
+        return self.body_feat_names
 
 
 @Backbones.register
-class ResNet101C4Backbone(ResNet50C4Backbone):
+class ResNet101Backbone(ResNet50Backbone):
     def __init__(self, cfg):
         """
         Get the ResNet101 C4 backbone. We define ResNet50 has 5 stages,
@@ -293,7 +302,7 @@ class ResNet101C4Backbone(ResNet50C4Backbone):
         Args:
             cfg (AttrDict): the config from given config filename.
         """
-        super(ResNet101C4Backbone, self).__init__(cfg)
+        super(ResNet101Backbone, self).__init__(cfg)
         self.number = 101
 
 

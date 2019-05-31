@@ -17,7 +17,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-
 import os
 import glob
 
@@ -25,8 +24,8 @@ import unittest
 from ppdet.core.optimizer import OptimizerBuilder
 from ppdet.core.config import load_cfg
 
-
 CFG_PATH = './configs'
+
 
 def test_opt_with_cfg(cfg_file):
     cfg = load_cfg(cfg_file)
@@ -35,7 +34,6 @@ def test_opt_with_cfg(cfg_file):
 
 
 class TestOptimizer(unittest.TestCase):
-
     def test_optimizer(self):
         ymls = glob.glob(os.path.join(CFG_PATH, '*.yml'))
         for yml in ymls:

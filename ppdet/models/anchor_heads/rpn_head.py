@@ -55,9 +55,9 @@ class RPNHead(object):
         
         Returns:
             rpn_cls_score(Variable): Output of rpn head with shape of 
-                           [N, num_anchors, H, W].
+                [N, num_anchors, H, W].
             rpn_bbox_pred(Variable): Output of rpn head with shape of
-                           [N, num_anchors * 4, H, W].
+                [N, num_anchors * 4, H, W].
         """
         dim_out = input.shape[1]
         rpn_conv = fluid.layers.conv2d(
@@ -115,20 +115,24 @@ class RPNHead(object):
                 regularizer=L2Decay(0.)))
         return self.rpn_cls_score, self.rpn_bbox_pred
 
-    def get_proposals(self, body_feat, im_info):
+    def get_proposals(self, body_feats, im_info, body_feat_names):
         """
         Get proposals according to the output of backbone.
 
         Args:
-            body_feat (Variable): the feature map from backone.
+            body_feats (Dict): The dictionary of feature maps from backbone.
             im_info(Variable): The information of image with shape [N, 3] with 
-                               shape (height, width, scale). 
+                shape (height, width, scale). 
+            body_feat_names(List): A list of names of feature maps from 
+                backbone.
 
         Returns:
             rpn_rois(Variable): Output proposals with shape of (rois_num, 4).
-            rpn_roi_probs(Variable): Scores of proposals with shape of (rois_num, 1).
         """
 
+        # In RPN Heads, only the last feature map of backbone is used.
+        # And body_feat_names[-1] represents the last level name of backbone.
+        body_feat = body_feats[body_feat_names[-1]]
         rpn_cls_score, rpn_bbox_pred = self._get_output(body_feat)
 
         rpn_cls_score_prob = fluid.layers.sigmoid(
@@ -151,26 +155,23 @@ class RPNHead(object):
             nms_thresh=nms_thresh,
             min_size=min_size,
             eta=eta)
-        return rpn_rois, rpn_roi_probs
+        return rpn_rois
 
-    def get_loss(self, im_info, gt_box, is_crowd):
-        """
-        Sample proposals and Calculate rpn loss.
+    def _transform_input(self, rpn_cls_score, rpn_bbox_pred, anchor,
+                         anchor_var):
+        rpn_cls_score_reshape = fluid.layers.transpose(
+            rpn_cls_score, perm=[0, 2, 3, 1])
+        rpn_bbox_pred_reshape = fluid.layers.transpose(
+            rpn_bbox_pred, perm=[0, 2, 3, 1])
+        anchor_reshape = fluid.layers.reshape(anchor, shape=(-1, 4))
+        var_reshape = fluid.layers.reshape(anchor_var, shape=(-1, 4))
+        rpn_cls_score_reshape = fluid.layers.reshape(
+            x=rpn_cls_score_reshape, shape=(0, -1, 1))
+        rpn_bbox_pred_reshape = fluid.layers.reshape(
+            x=rpn_bbox_pred_reshape, shape=(0, -1, 4))
+        return rpn_cls_score_reshape, rpn_bbox_pred_reshape, anchor_reshape, var_reshape
 
-        Args:
-            im_info(Variable): The information of image with shape [N, 3] with
-                               shape (height, width, scale). 
-            gt_box(Variable): The ground-truth bounding boxes with shape [M, 4].
-                              M is the number of groundtruth.
-            is_crowd(Variable): Indicates groud-truth is crowd or not with
-                                shape [M, 1]. M is the number of groundtruth.
-
-        Returns:
-            Type: Dict 
-                rpn_cls_loss(Variable): RPN classification loss.
-                rpn_bbox_loss(Variable): RPN bounding box regression loss. 
-            
-        """
+    def _get_loss_input(self):
         if self.rpn_cls_score is None:
             raise ValueError("self.rpn_cls_score should be not None, "
                              "should call RPNHead.get_proposals at first")
@@ -184,24 +185,36 @@ class RPNHead(object):
             raise ValueError("self.anchor_var should be not None, "
                              "should call RPNHead.get_proposals at first")
 
-        rpn_cls_score_reshape = fluid.layers.transpose(
-            self.rpn_cls_score, perm=[0, 2, 3, 1])
-        rpn_bbox_pred_reshape = fluid.layers.transpose(
-            self.rpn_bbox_pred, perm=[0, 2, 3, 1])
+        loss_input = self._transform_input(self.rpn_cls_score,
+                                           self.rpn_bbox_pred, self.anchor,
+                                           self.anchor_var)
+        return loss_input
 
-        anchor_reshape = fluid.layers.reshape(self.anchor, shape=(-1, 4))
-        var_reshape = fluid.layers.reshape(self.anchor_var, shape=(-1, 4))
+    def get_loss(self, im_info, gt_box, is_crowd):
+        """
+        Sample proposals and Calculate rpn loss.
 
-        rpn_cls_score_reshape = fluid.layers.reshape(
-            x=rpn_cls_score_reshape, shape=(0, -1, 1))
-        rpn_bbox_pred_reshape = fluid.layers.reshape(
-            x=rpn_bbox_pred_reshape, shape=(0, -1, 4))
+        Args:
+            im_info(Variable): The information of image with shape [N, 3] with
+                shape (height, width, scale). 
+            gt_box(Variable): The ground-truth bounding boxes with shape [M, 4].
+                M is the number of groundtruth.
+            is_crowd(Variable): Indicates groud-truth is crowd or not with
+                shape [M, 1]. M is the number of groundtruth.
+
+        Returns:
+            Type: Dict 
+                rpn_cls_loss(Variable): RPN classification loss.
+                rpn_bbox_loss(Variable): RPN bounding box regression loss. 
+            
+        """
+        rpn_cls, rpn_bbox, anchor, anchor_var = self._get_loss_input()
         score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight = \
             fluid.layers.rpn_target_assign(
-                bbox_pred=rpn_bbox_pred_reshape,
-                cls_logits=rpn_cls_score_reshape,
-                anchor_box=anchor_reshape,
-                anchor_var=var_reshape,
+                bbox_pred=rpn_bbox,
+                cls_logits=rpn_cls,
+                anchor_box=anchor,
+                anchor_var=anchor_var,
                 gt_boxes=gt_box,
                 is_crowd=is_crowd,
                 im_info=im_info,

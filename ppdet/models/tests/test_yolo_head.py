@@ -27,9 +27,7 @@ from ppdet.models.registry import YOLOHeads
 import paddle.fluid as fluid
 from paddle.fluid.framework import Program, program_guard
 
-YAML_LIST = [
-    'yolov3_DarkNet53_1x_syncbn.yml'
-]
+YAML_LIST = ['yolov3_DarkNet53_1x_syncbn.yml']
 
 
 def build_input():
@@ -47,13 +45,17 @@ def build_input():
     channel = 64
     shape = 304
     for i in range(5):
-        inputs.append(fluid.layers.data(name='input{}'.format(i), 
-                      shape=[channel, shape, shape], 
-                      dtype='float32', lod_level=0))
+        inputs.append(
+            fluid.layers.data(
+                name='input{}'.format(i),
+                shape=[channel, shape, shape],
+                dtype='float32',
+                lod_level=0))
         channel *= 2
         shape //= 2
-    
+
     return gt_box, gt_label, gt_score, im_shape, inputs
+
 
 def test_yolo_head(cfg_file):
     cfg = load_cfg(cfg_file)
@@ -66,7 +68,7 @@ def test_yolo_head(cfg_file):
 
         assert loss is not None
         assert pred is not None
-        
+
 
 class TestYOLOHeads(unittest.TestCase):
     def test_yolo_head(self):

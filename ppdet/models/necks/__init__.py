@@ -12,19 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import rpn_head
-from .rpn_head import *
+from . import fpn
+from .fpn import *
 
-from . import fpn_rpn_head
-from .fpn_rpn_head import *
-
-from . import yolo_head
-from .yolo_head import *
-
-from . import ssd_head
-from .ssd_head import *
-
-__all__ = rpn_head.__all__
-__all__ += fpn_rpn_head.__all__
-__all__ += yolo_head.__all__
-__all__ += ssd_head.__all__
+__all__ = fpn.__all__

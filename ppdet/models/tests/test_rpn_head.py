@@ -46,14 +46,15 @@ def test_rpn_head(cfg_file, is_train):
             name='is_crowd', shape=[1], dtype='int32', lod_level=1)
         rpn_input = fluid.layers.data(
             name='rpn_input', shape=[1024, 84, 84], dtype='float32')
+        name_list = ['res4_sum']
+        body_dict = {name_list[0]: rpn_input}
         im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
-        rpn_rois, rpn_roi_probs = ob.get_proposals(rpn_input, im_info)
+        rpn_rois = ob.get_proposals(body_dict, im_info, name_list)
         rpn_loss = ob.get_loss(im_info, gt_box, is_crowd)
-        rpn_cls_loss = rpn_loss['rpn_cls_loss']
-        rpn_bbox_loss = rpn_loss['rpn_bbox_loss']
+        rpn_cls_loss = rpn_loss['loss_rpn_cls']
+        rpn_bbox_loss = rpn_loss['loss_rpn_bbox']
 
         assert rpn_rois is not None
-        assert rpn_roi_probs is not None
         assert rpn_cls_loss is not None
         assert rpn_bbox_loss is not None
 
