@@ -35,7 +35,6 @@ class DataGenerator(object):
                      img_label_list,
                      batchsize,
                      cycle,
-                     max_length,
                      shuffle=True):
         '''
         Reader interface for training.
@@ -89,11 +88,6 @@ class DataGenerator(object):
                         label = [int(c) for c in items[-1].split(',')]
                         max_len = max(max_len, len(label))
 
-                    #print( "max len", max_len, i)
-                    max_length = max_len
-
-                    #mask = np.zeros( (batchsize, max_length)).astype('float32')
-
                     for j in range(batchsize):
                         line = img_label_lines[i * batchsize + j]
                         items = line.split(' ')
@@ -102,11 +96,11 @@ class DataGenerator(object):
                         mask = np.zeros((max_len)).astype('float32')
                         mask[:len(label) + 1] = 1.0
                         #mask[ j, :len(label) + 1] = 1.0
-                        if max_length > len(label) + 1:
-                            extend_label = [EOS] * (max_length - len(label) - 1)
+                        if max_len > len(label) + 1:
+                            extend_label = [EOS] * (max_len - len(label) - 1)
                             label.extend(extend_label)
                         else:
-                            label = label[0:max_length - 1]
+                            label = label[0:max_len - 1]
                         img = Image.open(os.path.join(img_root_dir, items[
                             2])).convert('L')
                         if j == 0:
@@ -213,26 +207,32 @@ def data_shape():
     return DATA_SHAPE
 
 
-def train(batch_size,
-          max_length,
-          train_images_dir=None,
-          train_list_file=None,
-          cycle=False,
-          shuffle=False,
-          model="crnn_ctc"):
+def data_reader(batch_size,
+                images_dir=None,
+                list_file=None,
+                cycle=False,
+                shuffle=False,
+                model="crnn_ctc",
+                data_type="train"):
     generator = DataGenerator(model)
-    if train_images_dir is None:
-        data_dir = download_data()
-        train_images_dir = path.join(data_dir, TRAIN_DATA_DIR_NAME)
-    if train_list_file is None:
-        train_list_file = path.join(data_dir, TRAIN_LIST_FILE_NAME)
+
+    if data_type == "train":
+        if images_dir is None:
+            data_dir = download_data()
+            images_dir = path.join(data_dir, TRAIN_DATA_DIR_NAME)
+        if list_file is None:
+            list_file = path.join(data_dir, TRAIN_LIST_FILE_NAME)
+    elif data_type == "test":
+        if images_dir is None:
+            data_dir = download_data()
+            images_dir = path.join(data_dir, TEST_DATA_DIR_NAME)
+        if list_file is None:
+            list_file = path.join(data_dir, TEST_LIST_FILE_NAME)
+    else:
+        print("data type only support train | test")
+        raise Exception("data type only support train | test")
     return generator.train_reader(
-        train_images_dir,
-        train_list_file,
-        batch_size,
-        cycle,
-        max_length,
-        shuffle=shuffle)
+        images_dir, list_file, batch_size, cycle, shuffle=shuffle)
 
 
 def test(batch_size=1,

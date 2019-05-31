@@ -478,24 +478,20 @@ def train(args):
 
         grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(5.0 )
 
-        train_reader = data_reader.train(
+        train_reader = data_reader.data_reader(
             Config.batch_size,
-            max_length=Config.max_length,
-            train_images_dir=args.train_images,
-            train_list_file=args.train_list,
             cycle=args.total_step > 0,
             shuffle=True,
-            model=args.model)
+            model=args.model,
+            data_type='train')
 
         infer_image= './data/data/test_images/'
         infer_files = './data/data/test.list'
-        test_reader = data_reader.train(
+        test_reader = data_reader.data_reader(
                 Config.batch_size,
-                1000,
-                train_images_dir= infer_image,
-                train_list_file= infer_files,
                 cycle=False,
-                model=args.model)
+                model=args.model,
+                data_type="test")
         def eval():
             ocr_attention.eval()
             total_loss = 0.0
@@ -578,10 +574,6 @@ def train(args):
                     total_loss = 0.0
 
                 if total_step > 0 and total_step % 2000 == 0:
-
-                    model_value = ocr_attention.state_dict()
-                    np.savez( "model/" + str(total_step), **model_value )
-
                     ocr_attention.eval()
                     eval()
                     ocr_attention.train()
