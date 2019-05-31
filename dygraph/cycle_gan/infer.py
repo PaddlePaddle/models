@@ -17,10 +17,6 @@ import data_reader
 from utility import add_arguments, print_arguments, ImagePool
 from trainer import *
 from paddle.fluid.dygraph.base import to_variable
-import scipy.misc
-from PIL import Image
-from util import *
-from cityscapes import cityscapes
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 
