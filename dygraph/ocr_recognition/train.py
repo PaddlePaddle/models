@@ -42,7 +42,6 @@ add_arg('train_images',      str,   None,       "The directory of images to be u
 add_arg('train_list',        str,   None,       "The list file of images to be used for training.")
 add_arg('test_images',       str,   None,       "The directory of images to be used for test.")
 add_arg('test_list',         str,   None,       "The list file of images to be used for training.")
-add_arg('model',    str,   "attention",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
 add_arg('use_gpu',           bool,  True,      "Whether use GPU to train.")
 add_arg('min_average_window',int,   10000,     "Min average window.")
@@ -78,10 +77,6 @@ class Config(object):
     # special label for start and end
     SOS = 0
     EOS = 1
-    # settings for ctc data, not use in unittest
-    DATA_DIR_NAME = "./dataset/ctc_data/data"
-    TRAIN_DATA_DIR_NAME = "train_images"
-    TRAIN_LIST_FILE_NAME = "train.list"
 
     # data shape for input image
     DATA_SHAPE = [1, 48, 512]
@@ -482,7 +477,6 @@ def train(args):
             Config.batch_size,
             cycle=args.total_step > 0,
             shuffle=True,
-            model=args.model,
             data_type='train')
 
         infer_image= './data/data/test_images/'
@@ -490,7 +484,6 @@ def train(args):
         test_reader = data_reader.data_reader(
                 Config.batch_size,
                 cycle=False,
-                model=args.model,
                 data_type="test")
         def eval():
             ocr_attention.eval()
