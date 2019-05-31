@@ -13,7 +13,14 @@
 # limitations under the License.
 
 # function:
-#   tool used to convert roidb data in json to pickled file
+#   tool used convert COCO or VOC data to a pickled file whose
+#   schema for each sample is the same.
+#
+# notes:  
+#   Original data format of COCO or VOC can also be directly
+#   used by 'PPdetection' to train.
+#   This tool just convert data to a unified schema,
+#   and it's useful when debuging with small dataset.
 
 from __future__ import absolute_import
 from __future__ import division
@@ -35,21 +42,28 @@ def parse_args():
     """ parse arguments
     """
     parser = argparse.ArgumentParser(
-        description='Generate SimpleDet GroundTruth Database')
+        description='Generate Standard Dataset for PPdetection')
 
-    parser.add_argument('--type', help='type of datset', type=str, default='json')
-    parser.add_argument('--annotation', help='json file name or voc\'s train.txt file for annotation', type=str)
-    parser.add_argument('--save-dir', type=str,
-        help='directory to save roidb files', default='data/tests')
-    parser.add_argument('--samples', default=-1, type=int,
-        help='number of samples to dump,default to all')
+    parser.add_argument('--type', type=str, default='json',
+        help='file format of label file, eg: json for COCO and xml for VOC')
+    parser.add_argument('--annotation', type=str,
+        help='label file name for COCO or VOC dataset, '
+        'eg: instances_val2017.json or train.txt')
+    parser.add_argument('--save-dir', type=str, default='roidb',
+        help='directory to save roidb file which contains pickled samples')
+    parser.add_argument('--samples', type=int, default=-1,
+        help='number of samples to dump, default to all')
 
     args = parser.parse_args()
     return args
 
 
 def dump_coco_as_pickle(args):
-    """ tool to load COCO data, and then save it as pickled file
+    """ Load COCO data, and then save it as pickled file.
+
+        Notes:
+            label file of COCO contains a json which consists
+            of label info for each sample
     """
     samples = args.samples 
     save_dir = args.save_dir
@@ -63,11 +77,18 @@ def dump_coco_as_pickle(args):
     with open(roidb_fname, "wb") as fout:
         pkl.dump((roidb, cat2id), fout)
 
+    #for rec in roidb:
+    #    sys.stderr.write('%s\n' % (rec['im_file']))
     print('dumped %d samples to file[%s]' % (samples, roidb_fname))
 
 
 def dump_voc_as_pickle(args):
-    """ tool to load VOC data, and then save it as pickled file
+    """ Load VOC data, and then save it as pickled file.
+
+        Notes:
+            we assume label file of VOC contains lines
+            each of which corresponds to a xml file 
+            that contains it's label info
     """
     samples = args.samples 
     save_dir = args.save_dir
@@ -86,21 +107,23 @@ def dump_voc_as_pickle(args):
     print('dumped %d samples to file[%s]' % (samples, roidb_fname))
 
 if __name__ == "__main__":
-    """ make sure your data is stored in 'data/${args.dataset}'
+    """ Make sure you have already downloaded original COCO or VOC data,
+        then you can convert it using this tool.
 
-    usage:
-        python generate_data_for_training.py --type=json --annotation=./annotations/instances_val2017.json
-            --save-dir=./test/data --sample=100
+    Usage:
+        python generate_data_for_training.py --type=json 
+            --annotation=./annotations/instances_val2017.json
+            --save-dir=./roidb --samples=100
     """
     args = parse_args()
+
     # VOC data are organized in xml files
-    # COCO data are organized in json file
     if args.type == 'xml':
         dump_voc_as_pickle(args)
+    # COCO data are organized in json file
     elif args.type == 'json':
         dump_coco_as_pickle(args)
     else:
-        TypeError('Can\'t deal with {} type. (Use xml or json)'
-                            .format(args.type))
-
+        TypeError('Can\'t deal with {} type. '\
+            'Only xml or json file format supported'.format(args.type))
 

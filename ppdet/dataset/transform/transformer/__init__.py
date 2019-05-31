@@ -18,7 +18,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from . import base
-from .thread_map import ThreadMappedDataset
+from .parallel_map import ParallelMappedDataset
 
 
 def map(ds, mapper, worker_args=None):
@@ -33,7 +33,7 @@ def map(ds, mapper, worker_args=None):
         a mapped dataset
     """
     if worker_args is not None:
-        return ThreadMappedDataset(ds, mapper, worker_args)
+        return ParallelMappedDataset(ds, mapper, worker_args)
     else:
         return base.MappedDataset(ds, mapper)
 

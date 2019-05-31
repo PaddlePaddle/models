@@ -41,9 +41,8 @@ def load(anno_path, sample_num=-1):
             'gt_bbox': gt_bbox,
             'gt_poly': gt_poly,
         }
-        'cname2cid' is a dict to map category name to class id
+        'cname2cid' is a dict used to map category name to class id
     """
-
     assert anno_path.endswith('.json'), 'invalid coco annotation file[%s]' % (
         anno_path)
     coco = COCO(anno_path)
@@ -71,8 +70,7 @@ def load(anno_path, sample_num=-1):
         ins_anno_ids = coco.getAnnIds(imgIds=img_id, iscrowd=False)
         instances = coco.loadAnns(ins_anno_ids)
 
-        # sanitize bboxes
-        valid_instances = []
+        bboxes = []
         for inst in instances:
             x, y, box_w, box_h = inst['bbox']
             x1 = max(0, x)
@@ -81,21 +79,21 @@ def load(anno_path, sample_num=-1):
             y2 = min(im_h - 1, y1 + max(0, box_h - 1))
             if inst['area'] > 0 and x2 >= x1 and y2 >= y1:
                 inst['clean_bbox'] = [x1, y1, x2, y2]
-                valid_instances.append(inst)
-        num_instance = len(valid_instances)
+                bboxes.append(inst)
+        num_bbox = len(bboxes)
 
-        gt_bbox = np.zeros((num_instance, 4), dtype=np.float32)
-        gt_class = np.zeros((num_instance, 1), dtype=np.int32)
-        is_crowd = np.zeros((num_instance, 1), dtype=np.int32)
-        difficult = np.zeros((num_instance, 1), dtype=np.int32)
-        gt_poly = [None] * num_instance
+        gt_bbox = np.zeros((num_bbox, 4), dtype=np.float32)
+        gt_class = np.zeros((num_bbox, 1), dtype=np.int32)
+        is_crowd = np.zeros((num_bbox, 1), dtype=np.int32)
+        difficult = np.zeros((num_bbox, 1), dtype=np.int32)
+        gt_poly = [None] * num_bbox
 
-        for i, inst in enumerate(valid_instances):
-            catid = inst['category_id']
+        for i, box in enumerate(bboxes):
+            catid = box['category_id']
             gt_class[i][0] = catid2clsid[catid]
-            gt_bbox[i, :] = inst['clean_bbox']
-            is_crowd[i][0] = inst['iscrowd']
-            gt_poly[i] = inst['segmentation']
+            gt_bbox[i, :] = box['clean_bbox']
+            is_crowd[i][0] = box['iscrowd']
+            gt_poly[i] = box['segmentation']
 
         coco_rec = {
             'im_file': im_fname,
