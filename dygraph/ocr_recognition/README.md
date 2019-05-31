@@ -16,7 +16,7 @@ ocr任务是识别图片单行的字母信息，在动态图下使用了带atten
 
 ## 使用的数据
 
-教程中使用`ctc_data`数据集作为训练数据，该数据集通过`paddle.dataset`模块自动下载到本地。
+教程中使用`ocr attention`数据集作为训练数据，该数据集通过`paddle.dataset`模块自动下载到本地。
 
 ## 训练测试ocr recognition
 
