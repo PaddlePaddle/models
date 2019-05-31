@@ -42,7 +42,6 @@ add_arg('train_images',      str,   None,       "The directory of images to be u
 add_arg('train_list',        str,   None,       "The list file of images to be used for training.")
 add_arg('test_images',       str,   None,       "The directory of images to be used for test.")
 add_arg('test_list',         str,   None,       "The list file of images to be used for training.")
-add_arg('model',    str,   "attention",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
 add_arg('use_gpu',           bool,  True,      "Whether use GPU to train.")
 add_arg('min_average_window',int,   10000,     "Min average window.")
@@ -78,10 +77,6 @@ class Config(object):
     # special label for start and end
     SOS = 0
     EOS = 1
-    # settings for ctc data, not use in unittest
-    DATA_DIR_NAME = "./dataset/ctc_data/data"
-    TRAIN_DATA_DIR_NAME = "train_images"
-    TRAIN_LIST_FILE_NAME = "train.list"
 
     # data shape for input image
     DATA_SHAPE = [1, 48, 512]
@@ -478,24 +473,18 @@ def train(args):
 
         grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(5.0 )
 
-        train_reader = data_reader.train(
+        train_reader = data_reader.data_reader(
             Config.batch_size,
-            max_length=Config.max_length,
-            train_images_dir=args.train_images,
-            train_list_file=args.train_list,
             cycle=args.total_step > 0,
             shuffle=True,
-            model=args.model)
+            data_type='train')
 
         infer_image= './data/data/test_images/'
         infer_files = './data/data/test.list'
-        test_reader = data_reader.train(
+        test_reader = data_reader.data_reader(
                 Config.batch_size,
-                1000,
-                train_images_dir= infer_image,
-                train_list_file= infer_files,
                 cycle=False,
-                model=args.model)
+                data_type="test")
         def eval():
             ocr_attention.eval()
             total_loss = 0.0
@@ -578,10 +567,6 @@ def train(args):
                     total_loss = 0.0
 
                 if total_step > 0 and total_step % 2000 == 0:
-
-                    model_value = ocr_attention.state_dict()
-                    np.savez( "model/" + str(total_step), **model_value )
-
                     ocr_attention.eval()
                     eval()
                     ocr_attention.train()
