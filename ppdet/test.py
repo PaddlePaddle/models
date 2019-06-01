@@ -102,16 +102,20 @@ def main():
             if iter_id % 100 == 0:
                 logger.info('Test iter {}'.format(iter_id))
             iter_id += 1
+            break
     except (StopIteration, fluid.core.EOFException):
-        pyreader.reset()
+        pass
+        #pyreader.reset()
     logger.info('Test iter {}'.format(iter_id))
 
     # Evaluation
     if cfg.TEST.METRIC_TYPE == 'COCO':
-        from ppdet.metrics.coco import coco_eval
+        from ppdet.metrics.coco import bbox_eval, mask_eval
         with_background = getattr(cfg.DATA, 'WITH_BACKGROUND', True)
-        coco_eval(results, cfg.DATA.VAL.ANNO_FILE, 'bbox.json', 
-                  with_background)
+        bbox_eval(results, cfg.DATA.VAL.ANNO_FILE, 'bbox.json', with_background)
+        if 'mask' in results[0]:
+            mask_eval(results, cfg.DATA.VAL.ANNO_FILE, 'mask.json',
+                      cfg.MASK_HEAD.RESOLUTION)
     else:
         logger.info('Test mAP: {}'.format(results[-1]))
 

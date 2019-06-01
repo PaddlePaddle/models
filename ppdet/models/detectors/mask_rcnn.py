@@ -28,6 +28,7 @@ from ..registry import Backbones
 from ..registry import RPNHeads
 from ..registry import RoIExtractors
 from ..registry import BBoxHeads
+from ..registry import BBoxHeadConvs
 from ..registry import MaskHeads
 
 from ..target_assigners.bbox_assigner import BBoxAssigner
@@ -54,10 +55,11 @@ class MaskRCNN(FasterRCNN):
         is_crowd = feed_vars['is_crowd']
 
         # backbone
-        body_feat = self.backbone(im)
+        body_feats = self.backbone(im)
+        body_feat_names = self.backbone.get_body_feat_names()
 
         # rpn proposals
-        rois, rpn_roi_probs = self.rpn_head.get_proposals(body_feat, im_info)
+        rois = self.rpn_head.get_proposals(body_feats, im_info, body_feat_names)
 
         rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
 
@@ -70,6 +72,7 @@ class MaskRCNN(FasterRCNN):
         bbox_outside_weights = outs[4]
 
         # RoI Extractor
+        body_feat = body_feats[body_feat_names[-1]]
         roi_feat = self.roi_extractor.get_roi_feat(body_feat, rois)
 
         # fast-rcnn head and rcnn loss
@@ -99,42 +102,53 @@ class MaskRCNN(FasterRCNN):
         im_info = feed_vars['im_info']
 
         # backbone
-        body_feat = self.backbone(im)
+        body_feats = self.backbone(im)
+        body_feat_names = self.backbone.get_body_feat_names()
+
         # rpn proposals
-        rois, rpn_roi_probs = self.rpn_head.get_proposals(body_feat, im_info)
+        rois = self.rpn_head.get_proposals(body_feats, im_info, body_feat_names)
         # RoI Extractor
+        body_feat = body_feats[body_feat_names[-1]]
         roi_feat = self.roi_extractor.get_roi_feat(body_feat, rois)
 
         # bbox prediction
         bbox_pred = self.bbox_head.get_prediction(roi_feat, rois, im_info)
+        bbox_pred = bbox_pred['bbox']
 
         # mask prediction
-        head_func = BBoxHeadConvs.get(cfg.BBOX_HEAD.HEAD_CONV)(cfg)
+        head_func = BBoxHeadConvs.get(self.cfg.BBOX_HEAD.HEAD_CONV)(self.cfg)
         bbox_shape = fluid.layers.shape(bbox_pred)
         bbox_size = fluid.layers.reduce_prod(bbox_shape)
-        shape = fluid.layers.reshape(bbox_size, [1, 1])
-        ones = fluid.layers.fill_constant([1, 1], value=1, dtype='int32')
-        cond = fluid.layers.equal(x=shape, y=ones)
-        ie = fluid.layers.IfElse(cond)
-        with ie.true_block():
-            pred_null = ie.input(bbox_pred)
-            ie.output(pred_null)
-        with ie.false_block():
-            bbox = ie.input(bbox_pred)
-            bbox = fluid.layers.slice(bbox, [1], starts=[2], ends=[6])
+        bbox_size = fluid.layers.reshape(bbox_size, [1, 1])
+        #fluid.layers.Print(bbox_size)
+        #shape = fluid.layers.reshape(bbox_size, [1, 1])
+        #ones = fluid.layers.fill_constant([1, 1], value=1, dtype='int32')
+        #cond = fluid.layers.equal(x=shape, y=ones)
+        zero = fluid.layers.fill_constant([1, 1], value=0, dtype='int32')
+        cond = fluid.layers.equal(x=bbox_size, y=zero)
 
-            im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
-            im_scale = fluid.layers.sequence_expand(im_scale, bbox)
+        mask_pred = fluid.layers.create_global_var(
+            shape=[1], value=0.0, dtype='float32', persistable=True)
 
-            mask_rois = bbox * im_scale
-            mask_feat = self.roi_extractor.get_roi_feat(body_feat, mask_rois)
+        with fluid.layers.control_flow.Switch() as switch:
+            with switch.case(cond):
+                fluid.layers.assign(input=bbox_pred, output=mask_pred)
+            with switch.default():
+                bbox = fluid.layers.slice(bbox_pred, [1], starts=[2], ends=[6])
 
-            mask_feat = head_func(mask_feat)
+                im_scale = fluid.layers.slice(
+                    im_info, [1], starts=[2], ends=[3])
+                im_scale = fluid.layers.sequence_expand(im_scale, bbox)
 
-            mask_out = self.mask_head.get_prediction(mask_feat)
-            ie.output(mask_out)
+                mask_rois = bbox * im_scale
+                mask_feat = self.roi_extractor.get_roi_feat(body_feat,
+                                                            mask_rois)
 
-        mask_pred = ie()[0]
+                mask_feat = head_func(mask_feat)
+
+                mask_out = self.mask_head.get_prediction(mask_feat, bbox)
+                fluid.layers.assign(input=mask_out, output=mask_pred)
+
         return {'bbox': bbox_pred, 'mask': mask_pred}
 
     def feed_info(self):
