@@ -14,6 +14,7 @@
 
 import os
 import sys
+import cv2
 import math
 import random
 import functools
