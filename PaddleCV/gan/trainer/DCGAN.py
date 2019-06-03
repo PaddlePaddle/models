@@ -110,7 +110,7 @@ class DCGAN(object):
 ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = True
-        build_strategy.memory_optimize = True
+        build_strategy.memory_optimize = False
 
         g_trainer_program = fluid.CompiledProgram(
             g_trainer.program).with_data_parallel(
