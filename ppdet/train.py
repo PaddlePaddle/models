@@ -34,6 +34,7 @@ from ppdet.utils.stats import TrainingStats, Time
 from args import parse_args, print_arguments
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.dataset.reader import Reader
+import multiprocessing
 
 
 def main():
@@ -45,6 +46,11 @@ def main():
     cfg = load_cfg(args.cfg_file)
     merge_cfg(vars(args), cfg)
     merge_cfg({'IS_TRAIN': True}, cfg)
+    if cfg.ENV.GPU:
+        devices_num = fluid.core.get_cuda_device_count()
+    else:
+        devices_num = int(
+            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     # 2. build program
     # get detector and losses
@@ -82,7 +88,7 @@ def main():
             loss_name=loss.name, build_strategy=build_strategy)
 
     # 4. Define reader
-    reader = Reader(cfg.DATA, cfg.TRANSFORM, cfg.TRAIN.MAX_ITERS)
+    reader = Reader(cfg.DATA, cfg.TRANSFORM, cfg.TRAIN.MAX_ITERS * devices_num)
     train_reader = reader.train()
     pyreader = detector.get_pyreader()
     pyreader.decorate_sample_list_generator(train_reader, place)
@@ -114,7 +120,7 @@ def main():
         if it % cfg.TRAIN.SNAPSHOT_ITER == 0:
             checkpoint.save(exe, train_prog,
                             os.path.join(save_dir, "{}".format(it)))
-    checkpoint.save(exe, train_prog, os.path.join(save_dir, "{model_final"))
+    checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     pyreader.reset()
 
 
