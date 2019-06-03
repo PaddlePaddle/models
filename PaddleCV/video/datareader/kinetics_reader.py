@@ -417,7 +417,7 @@ def mp4_loader(filepath, nsample, seglen, mode):
                 idx = i
 
         for jj in range(idx, idx + seglen):
-            imgbuf = sampledFrames[int(jj % sampledFrames)]
+            imgbuf = sampledFrames[int(jj % len(sampledFrames))]
             img = Image.fromarray(imgbuf, mode='RGB')
             imgs.append(img)
 
