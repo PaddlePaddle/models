@@ -110,7 +110,7 @@ TRAIN:
   MAX_ITERS: 90000
   LOG_SMOOTH_WINDOW: 20
   SNAPSHOT_ITER: 10000
-  PRETRAIN_WEIGHTS: ResNet50_pretrained 
+  PRETRAIN_WEIGHTS: ResNet50_pretrained_fusebn
   BATCH_NORM_TYPE: BN
   RANDOM: ON
   SAVE_DIR: output
@@ -124,8 +124,8 @@ TEST:
 
 DATA:
   TRAIN:
-      ANNO_FILE: COCO17/annotations/instances_train2017.json
-      IMAGE_DIR: COCO17/train2017
+      ANNO_FILE: COCO17/annotations/instances_val2017.json
+      IMAGE_DIR: COCO17/val2017
       IS_SHUFFLE: True
   VAL:
       ANNO_FILE: COCO17/annotations/instances_val2017.json
@@ -138,7 +138,7 @@ TRANSFORM:
     OPS:
       - op: DecodeImage
         to_rgb: True
-      - op: RandFlipImage
+      - op: RandomFlipImage
         prob: 0.5
       - op: NormalizeImage
         mean: [0.485, 0.456, 0.406]
@@ -148,6 +148,7 @@ TRANSFORM:
       - op: ResizeImage
         target_size: 800
         max_size: 1333
+        interp: 1
       - op: Rgb2Bgr
         to_bgr: False
       - op: ArrangeRCNN
@@ -171,6 +172,7 @@ TRANSFORM:
       - op: ResizeImage
         target_size: 800
         max_size: 1333
+        interp: 1
       - op: Rgb2Bgr
         to_bgr: False
       - op: ArrangeRCNN
