@@ -40,13 +40,14 @@ class ArrangeRCNN(BaseOperator):
        which the model need when training.
     """
 
-    def __init__(self, is_mask=False):
+    def __init__(self, is_mask=False, is_train=True):
         """ Get the standard output.
         Args:
             is_mask (bool): confirm whether to use mask rcnn
         """
         super(ArrangeRCNN, self).__init__()
         self.is_mask = is_mask
+        self.is_train = is_train
         if not (isinstance(self.is_mask, bool)):
             raise TypeError('{}: the input type is error.'.format(self.__str__))
 
@@ -74,6 +75,8 @@ class ArrangeRCNN(BaseOperator):
         else:
             raise KeyError("The dataset doesn't have 'im_info' key.")
         im_id = sample['im_id']
+        if not self.is_train:
+            return (im, im_info, im_id)
 
         outs = (im, im_info, im_id, gt_bbox, gt_class, is_crowd)
         gt_masks = []
@@ -172,8 +175,8 @@ class ArrangeYOLO(BaseOperator):
                 raise ValueError("gt num mismatch: bbox and score.")
 
             gt_bbox = np.zeros((50, 4), dtype=im.dtype)
-            gt_class = np.zeros((50,), dtype=np.int32)
-            gt_score = np.zeros((50,), dtype=im.dtype)
+            gt_class = np.zeros((50, ), dtype=np.int32)
+            gt_score = np.zeros((50, ), dtype=im.dtype)
             gt_num = min(50, len(sample['gt_bbox']))
             if gt_num > 0:
                 gt_bbox[:gt_num, :] = sample['gt_bbox'][:gt_num, :]

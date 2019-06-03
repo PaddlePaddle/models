@@ -152,6 +152,7 @@ TRANSFORM:
       - op: Rgb2Bgr
         to_bgr: False
       - op: ArrangeRCNN
+        is_train: True
     BATCH_SIZE: 2
     IS_PADDING: True
     # TODO(guanzhong): use a better name for coarsest_stride
@@ -176,6 +177,7 @@ TRANSFORM:
       - op: Rgb2Bgr
         to_bgr: False
       - op: ArrangeRCNN
+        is_train: False
     BATCH_SIZE: 1
     IS_PADDING: True
     # TODO(guanzhong): use a better name for coarsest_stride

@@ -134,6 +134,7 @@ TRANSFORM:
         - op: Rgb2Bgr
           to_bgr: False
         - op: ArrangeRCNN
+          is_train: True
       BATCH_SIZE: 1 # batch size per device
       IS_PADDING: True
       WORKER_CONF:
@@ -156,6 +157,7 @@ TRANSFORM:
         - op: Rgb2Bgr
           to_bgr: False
         - op: ArrangeRCNN
+          is_train: False
 
       BATCH_SIZE: 1 # batch size per device
       IS_PADDING: True
