@@ -110,7 +110,7 @@ TEST:
   SCORE_THRESH: 0.05
   NMS_THRESH: 0.5
   DETECTIONS_PER_IM: 100
-  WEIGHTS: mask/170000
+  WEIGHTS: output/MaskRCNN/model_final
   METRIC_TYPE: COCO
 
 DATA:
@@ -129,6 +129,7 @@ TRANSFORM:
         to_rgb: True
       - op: RandFlipImage
         prob: 0.5
+        is_mask_flip: True
       - op: NormalizeImage
         mean: [0.485, 0.456, 0.406]
         std: [0.229, 0.224, 0.225]

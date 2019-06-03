@@ -71,7 +71,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     add_arg = functools.partial(add_arguments, argparser=parser)
     # yapf: disable
-    add_arg('cfg_file',         str,   None,      "configure file path.")
+    add_arg('cfg_file',       str,   None,      "Configure file path, users must specify it.")
+    add_arg('out_file',       str,   None,      "Output file for evaluation, if not set, default files are bbox.json and mask.json.")
     # yapf: enable
     args = parser.parse_args()
     return args

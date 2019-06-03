@@ -40,7 +40,7 @@ class RPNHead(object):
         self.cfg = cfg
         self.is_train = cfg.IS_TRAIN
         # whether to use random to sample proposals.
-        self.use_random = getattr(cfg.TRAIN, 'RANDOM', False)
+        self.use_random = getattr(cfg.TRAIN, 'RANDOM', True)
         self.anchor = None
         self.anchor_var = None
         self.rpn_cls_score = None
