@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('model_net',         str,   'cgan',            "The model used")
-add_arg('net_G',             str,   "resnet_9block",   "Choose the CycleGAN generator's network, choose in [resnet_9block|resnet_6block|unet_128|unet_256]")
+add_arg('net_G',             str,   "resnet_9block",   "Choose the CycleGAN and Pix2pix generator's network, choose in [resnet_9block|resnet_6block|unet_128|unet_256]")
 add_arg('input',             str,   None,              "The images to be infered.")
 add_arg('init_model',        str,   None,              "The init model file of directory.")
 add_arg('output',            str,   "./infer_result",  "The directory the infer result to be saved to.")
@@ -57,6 +57,11 @@ def infer(args):
             fake = network_G(input, name="GB", cfg=args)
         else:
             raise "Input with style [%s] is not supported." % args.input_style
+    elif args.model_net == 'Pix2pix':
+        from network.Pix2pix_network import Pix2pix_model
+        model = Pix2pix_model()
+        fake = model.network_G(input, "generator", cfg=args)
+
     elif args.model_net == 'cgan':
         pass
     else:

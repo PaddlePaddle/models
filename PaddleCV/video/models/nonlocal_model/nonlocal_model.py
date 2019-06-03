@@ -120,7 +120,10 @@ class NonLocal(ModelBase):
                      self.feature_input + [self.label_input]
 
     def pretrain_info(self):
-        return None, None
+        return (
+            'Nonlocal_ResNet50_pretrained',
+            'https://paddlemodels.bj.bcebos.com/video_classification/Nonlocal_ResNet50_pretrained.tar.gz'
+        )
 
     def weights_info(self):
         pass
