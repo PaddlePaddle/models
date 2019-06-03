@@ -46,7 +46,6 @@ class MobileNet(object):
                    channels=None,
                    num_groups=1,
                    act='relu',
-                   is_test=True,
                    use_cudnn=True,
                    name=None):
         parameter_attr = ParamAttr(
@@ -74,7 +73,6 @@ class MobileNet(object):
         return fluid.layers.batch_norm(
             input=conv,
             act=act,
-            is_test=is_test,
             param_attr=bn_param_attr,
             bias_attr=bn_bias_attr,
             moving_mean_name=bn_name + '_mean',
@@ -87,7 +85,6 @@ class MobileNet(object):
                             num_groups,
                             stride,
                             scale,
-                            is_test=True,
                             name=None):
         depthwise_conv = self._conv_norm(
             input=input,
@@ -96,7 +93,6 @@ class MobileNet(object):
             stride=stride,
             padding=1,
             num_groups=int(num_groups * scale),
-            is_test=is_test,
             use_cudnn=False,
             name=name + "_dw")
 
@@ -106,48 +102,46 @@ class MobileNet(object):
             num_filters=int(num_filters2 * scale),
             stride=1,
             padding=0,
-            is_test=is_test,
             name=name + "_sep")
         return pointwise_conv
 
-    def get_backone(self, input, is_train=False):
+    def get_backone(self, input):
         """
         Args:
-            is_train (bool): whether in train or test mode
+            input (Variable): input variable.
         """
-        is_test = not is_train
         blocks = []
         # input 1/1
         out = self._conv_norm(input, 3, int(32 * self.scale), 2, 1, 3,
-                              is_test=is_test, name="conv1")
+                              name="conv1")
         # 1/2
         out = self.depthwise_separable(out, 32, 64, 32, 1, self.scale, 
-                                       is_test=is_test, name="conv2_1")
+                                       name="conv2_1")
         out = self.depthwise_separable(out, 64, 128, 64, 2, self.scale, 
-                                       is_test=is_test, name="conv2_2")
+                                       name="conv2_2")
         # 1/4
         out = self.depthwise_separable(out, 128, 128, 128, 1, self.scale, 
-                                       is_test=is_test, name="conv3_1")
+                                       name="conv3_1")
         out = self.depthwise_separable(out, 128, 256, 128, 2, self.scale, 
-                                       is_test=is_test, name="conv3_2")
+                                       name="conv3_2")
         # 1/8
         out = self.depthwise_separable(out, 256, 256, 256, 1, self.scale, 
-                                       is_test=is_test, name="conv4_1")
+                                       name="conv4_1")
         blocks.append(out)
         out = self.depthwise_separable(out, 256, 512, 256, 2, self.scale, 
-                                       is_test=is_test, name="conv4_2")
+                                       name="conv4_2")
         # 1/16
         for i in range(5):
             out = self.depthwise_separable(out, 512, 512, 512, 1,
-                                           self.scale, is_test=is_test,
+                                           self.scale, 
                                            name="conv5_" + str(i + 1))
         blocks.append(out)
 
         out = self.depthwise_separable(out, 512, 1024, 512, 2, self.scale, 
-                                       is_test=is_test, name="conv5_6")
+                                       name="conv5_6")
         # 1/32
         out = self.depthwise_separable(out, 1024, 1024, 1024, 1, self.scale,
-                                       is_test=is_test, name="conv6")
+                                       name="conv6")
         blocks.append(out)
         return blocks
 
@@ -160,15 +154,14 @@ class MobileNetV1Backbone(BackboneBase):
         self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 
                                 'BN_DECAY', True)
 
-    def __call__(self, input, is_train=False):
+    def __call__(self, input):
         """
         Get the backbone of MobileNetV1.
         Args:
             input (Variable): input variable.
             scale (float): the scale of groups number/ filter number
-            is_train (bool): whether in train or test mode
         Returns:
             The three feature maps of MobileNet.
         """
         model = MobileNet(scale=self.scale, bn_decay=self.bn_decay)
-        return model.get_backone(input, is_train=is_train)
+        return model.get_backone(input)

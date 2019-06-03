@@ -53,7 +53,6 @@ class DarkNet(object):
                    stride,
                    padding,
                    act='leaky',
-                   is_test=True,
                    name=None):
         conv = fluid.layers.conv2d(
             input=input,
@@ -74,7 +73,6 @@ class DarkNet(object):
         out = fluid.layers.batch_norm(
             input=conv,
             act=None,
-            is_test=is_test,
             param_attr=bn_param_attr,
             bias_attr=bn_bias_attr,
             moving_mean_name=bn_name + '.mean',
@@ -93,53 +91,46 @@ class DarkNet(object):
                     filter_size=3, 
                     stride=2, 
                     padding=1, 
-                    is_test=True, 
                     name=None):
         return self._conv_norm(input, 
                                ch_out=ch_out, 
                                filter_size=filter_size, 
                                stride=stride, 
                                padding=padding, 
-                               is_test=is_test,
                                name=name)
 
-    def basicblock(self, input, ch_out, is_test=True, name=None):
+    def basicblock(self, input, ch_out, name=None):
         conv1 = self._conv_norm(input, 
                                 ch_out=ch_out, 
                                 filter_size=1, 
                                 stride=1, 
                                 padding=0, 
-                                is_test=is_test, 
                                 name=name+".0")
         conv2 = self._conv_norm(conv1, 
                                 ch_out=ch_out*2, 
                                 filter_size=3, 
                                 stride=1, 
                                 padding=1, 
-                                is_test=is_test, 
                                 name=name+".1")
         out = fluid.layers.elementwise_add(x=input, y=conv2, act=None)
         return out
 
-    def layer_warp(self, block_func, input, ch_out, count, is_test=True, name=None):
+    def layer_warp(self, block_func, input, ch_out, count, name=None):
         out = block_func(input, 
                          ch_out=ch_out, 
-                         is_test=is_test, 
                          name='{}.0'.format(name))
         for j in six.moves.xrange(1, count):
             out = block_func(out, 
                              ch_out=ch_out, 
-                             is_test=is_test, 
                              name='{}.{}'.format(name, j))
         return out
 
-    def get_backbone(self, body_input, is_train=False):
+    def get_backbone(self, body_input):
         """
         Get the backbone of DarkNet. We define DarkNet has 5 stages output.
 
         Args:
             body_input (Variable): input variable.
-            is_train (bool): train or test mode, defaul False
 
         Returns:
             The last variables of each stage.
@@ -151,11 +142,9 @@ class DarkNet(object):
                                filter_size=3, 
                                stride=1, 
                                padding=1, 
-                               is_test=(not is_train), 
                                name="yolo_input")
         downsample_ = self._downsample(input=conv, 
                                        ch_out=conv.shape[1]*2, 
-                                       is_test=(not is_train), 
                                        name="yolo_input.downsample")
         blocks = []
         for i, stage in enumerate(stages):
@@ -163,13 +152,11 @@ class DarkNet(object):
                                     input=downsample_, 
                                     ch_out=32 *(2**i), 
                                     count=stage, 
-                                    is_test=(not is_train), 
                                     name="stage.{}".format(i))
             blocks.append(block)
             if i < len(stages) - 1: # do not downsaple in the last stage
                 downsample_ = self._downsample(input=block, 
                                                ch_out=block.shape[1]*2, 
-                                               is_test=(not is_train), 
                                                name="stage.{}.downsample".format(i))
         return blocks
 
@@ -190,11 +177,10 @@ class DarkNet53Backbone(BackboneBase):
                                 'BN_DECAY', True)
         self.depth = 53
 
-    def __call__(self, input, is_train=False):
+    def __call__(self, input):
         """
         Args:
             input (Variable): input variable.
-            is_train (bool): train or test mode, defaul False
 
         Returns:
             The last variables of each stage.
@@ -204,5 +190,5 @@ class DarkNet53Backbone(BackboneBase):
 
         model = DarkNet(depth=self.depth, 
                         bn_decay=self.bn_decay)
-        return model.get_backbone(input, is_train)
+        return model.get_backbone(input)
 
