@@ -17,6 +17,7 @@ DATA_SHAPE = [1, 48, 512]
 
 DATA_MD5 = "7256b1d5420d8c3e74815196e58cdad5"
 DATA_URL = "http://paddle-ocr-data.bj.bcebos.com/data.tar.gz"
+CACHE_DIR_NAME = "attention_data"
 SAVED_FILE_NAME = "data.tar.gz"
 DATA_DIR_NAME = "data"
 TRAIN_DATA_DIR_NAME = "train_images"
