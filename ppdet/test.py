@@ -69,8 +69,8 @@ def main():
         fluid.framework._get_var(str(v), test_prog).persistable = True
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = True
-    build_strategy.enable_inplace = True
+    build_strategy.memory_optimize = False
+    build_strategy.enable_inplace = False
     compile_program = fluid.compiler.CompiledProgram(
         test_prog).with_data_parallel(build_strategy=build_strategy)
 
@@ -110,7 +110,8 @@ def main():
     if cfg.TEST.METRIC_TYPE == 'COCO':
         from ppdet.metrics.coco import coco_eval
         with_background = getattr(cfg.DATA, 'WITH_BACKGROUND', True)
-        coco_eval(results, cfg.DATA.VAL.ANNO_FILE, 'bbox.json', with_background)
+        coco_eval(results, cfg.DATA.VAL.ANNO_FILE, 'bbox.json', 
+                  with_background)
     else:
         logger.info('Test mAP: {}'.format(results[-1]))
 

@@ -104,16 +104,19 @@ TEST:
   METRIC_TYPE: COCO
 
 DATA:
-  train:
-      anno_file: COCO17/annotations/instances_train2017.json
-      image_dir: COCO17/train2017
-  val:
-      anno_file: COCO17/annotations/instances_val2017.json
-      image_dir: COCO17/val2017
+  TRAIN:
+      ANNO_FILE: COCO17/annotations/instances_train2017.json
+      IMAGE_DIR: COCO17/train2017
+      IS_SHUFFLE: True
+  VAL:
+      ANNO_FILE: COCO17/annotations/instances_val2017.json
+      IMAGE_DIR: COCO17/val2017
+      IS_SHUFFLE: False
   CLASS_NUM: 81
 
 TRANSFORM:
-    train:
+  TRAIN:
+      OPS:
         - op: DecodeImage
           to_rgb: True 
         - op: RandomFlipImage
@@ -130,8 +133,14 @@ TRANSFORM:
         - op: Rgb2Bgr
           to_bgr: False
         - op: ArrangeRCNN
-          is_train: True
-    val:
+      BATCH_SIZE: 1 # batch size per device
+      IS_PADDING: True
+      WORKER_CONF:
+          bufsize: 10
+          worker_num: 2      
+
+  VAL:
+      OPS:
         - op: DecodeImage
           to_rgb: True
         - op: NormalizeImage
@@ -146,11 +155,9 @@ TRANSFORM:
         - op: Rgb2Bgr
           to_bgr: False
         - op: ArrangeRCNN
-          is_train: False
 
-    batch_size: 1 # batch size per device
-    gpu_counts: 8
-    is_padding: True
-    worker_conf:
-        bufsize: 10
-        worker_num: 2
+      BATCH_SIZE: 1 # batch size per device
+      IS_PADDING: True
+      WORKER_CONF:
+          bufsize: 10
+          worker_num: 2

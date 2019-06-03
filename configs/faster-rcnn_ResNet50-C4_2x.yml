@@ -45,7 +45,7 @@ RPN_HEAD:
   TEST:
     RPN_PRE_NMS_TOP_N: 6000
     RPN_POST_NMS_TOP_N: 1000
-    RPN_NMS_THRESH: 0.5
+    RPN_NMS_THRESH: 0.7
     RPN_MIN_SIZE: 0.0
     RPN_ETA: 1.0
 
@@ -58,9 +58,6 @@ RPN_HEAD:
 BBOX_HEAD:
   TYPE: BBoxHead
   HEAD_CONV: ResNet50C5
-
-  ROI:
-    BBOX_REG_WEIGHTS: [0.1, 0.1, 0.2, 0.2]
 
 ROI_EXTRACTOR:
   EXTRACT_METHOD: RoIAlign
@@ -95,26 +92,32 @@ TRAIN:
   MAX_ITERS: 360000
   LOG_SMOOTH_WINDOW: 20
   SNAPSHOT_ITER: 10000
-  PRETRAIN_WEIGTS: ResNet50_pretrained
+  PRETRAIN_WEIGHTS: ResNet50_pretrained
   BATCH_NORM_TYPE: BN
-  RANDOM: OFF
+  RANDOM: ON
   SAVE_DIR: output
 
 TEST:
   SCORE_THRESH: 0.05
   NMS_THRESH: 0.5
   DETECTIONS_PER_IM: 100
-  WEIGTS: ResNet50_pretrained
+  WEIGHTS: output/FasterRCNN/model_final
+  METRIC_TYPE: COCO
 
 DATA:
-  train:
-      anno_file: COCO17/annotations/instances_val2017.json
-      image_dir: COCO17/val2017
-  max_iter: 180000
+  TRAIN:
+      ANNO_FILE: COCO17/annotations/instances_train2017.json
+      IMAGE_DIR: COCO17/train2017
+      IS_SHUFFLE: True
+  VAL:
+      ANNO_FILE: COCO17/annotations/instances_val2017.json
+      IMAGE_DIR: COCO17/val2017
+      IS_SHUFFLE: False
   CLASS_NUM: 81
 
 TRANSFORM:
-    train:
+  TRAIN:
+      OPS:
         - op: DecodeImage
           to_rgb: True
         - op: RandomFlipImage
@@ -131,9 +134,31 @@ TRANSFORM:
         - op: Rgb2Bgr
           to_bgr: False
         - op: ArrangeRCNN
-    batch_size: 1
-    gpu_counts: 8
-    is_padding: True
-    worker_conf:
+      BATCH_SIZE: 1 # batch size per device
+      IS_PADDING: True
+      WORKER_CONF:
         bufsize: 10
         worker_num: 2
+
+  VAL:
+      OPS:
+        - op: DecodeImage
+          to_rgb: True
+        - op: NormalizeImage
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+          is_scale: True
+          is_channel_first: False
+        - op: ResizeImage
+          target_size: 800
+          max_size: 1333
+          interp: 1
+        - op: Rgb2Bgr
+          to_bgr: False
+        - op: ArrangeRCNN
+
+      BATCH_SIZE: 1 # batch size per device
+      IS_PADDING: True
+      WORKER_CONF:
+          bufsize: 10
+          worker_num: 2
