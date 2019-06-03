@@ -28,8 +28,8 @@ def load(anno_path, sample_num=-1, with_background=True):
         anno_path (str): json file path
         sample_num (int): number of samples to load, -1 means all
         with_background (bool): whether load background as a class.
-                                if True, total class num will be 
-                                81. default True
+                                if True, total class number will 
+                                be 81. default True
 
     Returns:
         (records, cname2cid)
