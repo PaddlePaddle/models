@@ -28,12 +28,17 @@ YOLO_HEAD:
 ENV:
   GPU: ON
   GPU_NUM: 8
-  MULTIPROCESS_READER: ON
-  MULTIPROCESS_WORKER: 8
-  MULTIPROCESS_QUEUE_LEN: 32
 
 DATA:
+  TRAIN:
+      ANNO_FILE: COCO17/annotations/instances_train2017.json
+      IMAGE_DIR: COCO17/train2017
+      MIXUP_EPOCHS: 260 
+  VAL:
+      ANNO_FILE: COCO17/annotations/instances_val2017.json
+      IMAGE_DIR: COCO17/val2017
   DATASET: coco2017
+  max_iter: 500200
   CLASS_NUM: 80
   ANCHORS: [[10, 13], [16, 30], [33, 23], 
             [30, 61], [62, 45], [59, 119], 
@@ -41,11 +46,69 @@ DATA:
   ANCHOR_MASKS: [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
   MAX_BOX_NUM: 50
   INPUT_SIZE: 608
-  RANDOM_SHAPE: True
-  NO_MIXUP_STEPS: 40000
 
 TRANSFORM:
-  PIPELINE: YOLO
+  TRAIN:
+    DEVICES_NUM: 8
+    BATCH_SIZE: 8
+    WORKER_CONF:
+      BUFSIZE: 128
+      WORKER_NUM: 8
+      use_process: True
+    RANDOM_SHAPES: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+        with_mixup: True
+      - op: MixupImage
+        alpha: 1.5
+        beta: 1.5
+      - op: NormalizeBox
+      - op: RandomDistort
+      - op: RandomExpand
+        expand_max_ratio: 4.0
+        expand_prob: 0.5
+        mean: [123.675, 116.28, 103.53]
+      - op: Crop
+        batch_sampler: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
+        satisfy_all: True
+      - op: RandomInterpImage 
+        target_size: 608
+      - op: RandomFlipImage
+        is_normalized: True
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True 
+        is_channel_first: False
+      - op: Rgb2Bgr
+        to_bgr: False
+      - op: ArrangeYOLO
+        is_train: True
+  VAL:
+    DEVICES_NUM: 8
+    BATCH_SIZE: 8
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+      - op: ResizeImage
+        target_size: 608
+        interp: 2
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True 
+        is_channel_first: False
+      - op: Rgb2Bgr
+        to_bgr: False
+      - op: ArrangeYOLO
+        is_train: False
 
 OPTIMIZER:
   TYPE: Momentum
@@ -68,10 +131,12 @@ OPTIMIZER:
     BN_DECAY: False
 
 TRAIN:
-  MAX_ITERS: 500000
-  BATCH_SIZE_PER_DEVICE: 8
-  PRETRAIN_WEIGTS: https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz
-  BATCH_NORM_TYPE: SYNCBN
+  MAX_ITERS: 500200
+  PRETRAIN_WEIGHTS: https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz
+  BATCH_NORM_TYPE: SYNC_BN
+  LOG_SMOOTH_WINDOW: 20
+  SAVE_DIR: checkpoints
+  SNAPSHOT_ITER: 2000
 
 TEST:
   SCORE_THRESH: 0.01
@@ -79,3 +144,4 @@ TEST:
   NMS_TOPK: 1000
   NMS_POSK: 100
   WEIGHTS: https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz
+  METRIC_TYPE: COCO

@@ -62,8 +62,8 @@ def main():
         values.append(v.name)
 
     if cfg.TEST.METRIC_TYPE == 'COCO':
-        keys += ['im_info', 'im_id']
-        values += ['im_info', 'im_id']
+        keys += ['im_id']
+        values += ['im_id']
 
     for v in values:
         fluid.framework._get_var(str(v), test_prog).persistable = True
@@ -109,7 +109,7 @@ def main():
     # Evaluation
     if cfg.TEST.METRIC_TYPE == 'COCO':
         from ppdet.metrics.coco import coco_eval
-        coco_eval(results, cfg.DATA.VAL.ANNO_FILE, 'bbox.json')
+        coco_eval(results, cfg.DATA.VAL.ANNO_FILE, 'bbox.json', cfg.DATA.CLASS_NUM)
     else:
         logger.info('Test mAP: {}'.format(results[-1]))
 

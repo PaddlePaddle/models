@@ -38,10 +38,10 @@ class YOLOv3(DetectorBase):
         super(YOLOv3, self).__init__(cfg)
         self.backbone = Backbones.get(cfg.MODEL.BACKBONE)(cfg)
         self.yolo_head = YOLOHeads.get(cfg.YOLO_HEAD.TYPE)(cfg)
+        self.use_pyreader = True
 
-    def _forward(self, is_train=True):
+    def _forward(self, is_train=False):
         self.is_train = is_train
-        self.use_pyreader = True if self.is_train else False
 
         # build inputs
         feed_vars = self.build_feeds(
@@ -49,16 +49,16 @@ class YOLOv3(DetectorBase):
 
         # backbone
         im = feed_vars['image']
-        body_feats = self.backbone(im)
+        body_feats = self.backbone(im, is_train=is_train)
 
         if is_train:
             # get loss in train mode
             gt_box = feed_vars['gt_box']
             gt_label = feed_vars['gt_label']
             gt_score = feed_vars['gt_score']
-
-            loss = self.yolo_head.get_loss(body_feats, gt_box, gt_label,
-                                           gt_score)
+            
+            loss = {'loss': \
+                    self.yolo_head.get_loss(body_feats, gt_box, gt_label, gt_score)}
             return loss
         else:
             # get prediction in test mode
@@ -86,12 +86,12 @@ class YOLOv3(DetectorBase):
                 {'name': 'gt_box',  'shape': [box_num, 4], 'dtype': 'float32', 'lod_level': 0},
                 {'name': 'gt_label','shape': [box_num], 'dtype': 'int32', 'lod_level': 0},
                 {'name': 'gt_score','shape': [box_num], 'dtype': 'float32', 'lod_level': 0},
-                {'name': 'im_id',   'shape': [1], 'dtype': 'int32', 'lod_level': 0},
             ]
             feed_info += train_info
         else:
             test_info = [
                 {'name': 'im_shape', 'shape': [2], 'dtype': 'int32', 'lod_level': 0},
+                {'name': 'im_id', 'shape': [1], 'dtype': 'int32', 'lod_level': 0},
             ]
             feed_info += test_info
         # yapf: enable

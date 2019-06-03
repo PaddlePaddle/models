@@ -49,18 +49,24 @@ class Reader(object):
         samples = -1 if 'SAMPLES' not in file_conf else file_conf['SAMPLES']
         is_shuffle = True if 'IS_SHUFFLE' not in file_conf \
             else file_conf['IS_SHUFFLE']
+        mixup_epoch = -1 if 'MIXUP_EPOCHS' not in file_conf \
+            else file_conf['MIXUP_EPOCHS']
+        class_num = 81 if 'CLASS_NUM' not in self._data_cf \
+            else self._data_cf['CLASS_NUM']
         sc_conf = {
             'fname': file_conf['ANNO_FILE'],
             'image_dir': file_conf['IMAGE_DIR'],
             'samples': samples,
-            'is_shuffle': is_shuffle
+            'is_shuffle': is_shuffle,
+            'mixup_epoch': mixup_epoch,
+            'class_num': class_num,
         }
         sc = source.build(sc_conf)
 
         # 2, Buid a transformed dataset
         ops = self._trans_conf[which]['OPS']
         batchsize = self._trans_conf[which]['BATCH_SIZE']
-        worker_args = None if 'WORKER_CONF' not in \
+        worker_args = {} if 'WORKER_CONF' not in \
             self._trans_conf[which] else self._trans_conf[which]['WORKER_CONF']
 
         drop_last = False if 'DROP_LAST' not in \
@@ -69,12 +75,16 @@ class Reader(object):
             self._trans_conf[which] else self._trans_conf[which]['IS_PADDING']
         coarsest_stride = 1 if 'COAREST_STRIDE' not in \
             self._trans_conf[which] else self._trans_conf[which]['COAREST_STRIDE']
+        random_shapes = [] if 'RANDOM_SHAPES' not in \
+            self._trans_conf[which] else self._trans_conf[which]['RANDOM_SHAPES']
+        multi_scales = [] if 'MULTI_SCALES' not in \
+            self._trans_conf[which] else self._trans_conf[which]['MULTI_SCALES']
         mapper = op.build(ops)
 
         worker_args = {k.lower(): v for k, v in worker_args.items()}
         mapped_ds = tf.map(sc, mapper, worker_args)
-        batched_ds = tf.batch(mapped_ds, batchsize, coarsest_stride, drop_last,
-                              is_padding)
+        batched_ds = tf.batch(mapped_ds, batchsize, coarsest_stride, drop_last, 
+                              is_padding, random_shapes, multi_scales)
 
         # 3, Build a reader
         def _reader():

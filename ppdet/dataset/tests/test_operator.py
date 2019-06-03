@@ -15,7 +15,7 @@ class TestBase(unittest.TestCase):
     """
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls, with_mixup=False):
         """ setup
         """
         roidb_fname = set_env.coco_data['ANNO_FILE']
@@ -27,6 +27,14 @@ class TestBase(unittest.TestCase):
         fn = os.path.join(image_dir, roidb[0][0]['im_file'])
         with open(fn, 'rb') as f:
             roidb[0][0]['image'] = f.read()
+
+        if with_mixup:
+            mixup_fn = os.path.join('data/coco/val2017', 
+                                    roidb[0][1]['im_file'])
+            roidb[0][0]['mixup'] = roidb[0][1]
+            with open(fn, 'rb') as f:
+                roidb[0][0]['mixup']['image'] = f.read()
+
         cls.sample = roidb[0][0]
 
     @classmethod
@@ -115,6 +123,27 @@ class TestBase(unittest.TestCase):
         result = mapper(data)
         self.assertEqual(len(result['image'].shape), 3)
         self.assertGreater(result['gt_bbox'].shape[0], 0)
+
+    def test_ops_part3(self):
+        """test Mixup and RandomInterp
+        """
+
+        ops_conf = [{
+            'op': 'DecodeImage',
+            'with_mixup': True,
+        }, {
+            'op': 'MixupImage',
+        }, {
+            'op': 'RandomInterpImage',
+            'target_size': 608
+        }]
+        mapper = operator.build(ops_conf)
+        self.assertTrue(mapper is not None)
+        data = self.sample.copy()
+        result = mapper(data)
+        self.assertEqual(len(result['image'].shape), 3)
+        self.assertGreater(result['gt_bbox'].shape[0], 0)
+        self.assertGreater(result['gt_score'].shape[0], 0)
 
 
 if __name__ == '__main__':

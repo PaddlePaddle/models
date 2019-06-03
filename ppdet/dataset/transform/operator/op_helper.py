@@ -43,9 +43,10 @@ def bbox_area(src_bbox):
     height = src_bbox[3] - src_bbox[1]
     return width * height
     
-def deal_bbox_label(bboxes, labels, sample_bbox):
+def deal_bbox_label(sample_bbox, bboxes, labels, scores=None):
     new_bboxes = []
     new_labels = []
+    new_scores = []
     for i in range(len(labels)):
         new_bbox = [0, 0, 0, 0]
         obj_bbox = [bboxes[i][0], bboxes[i][1],
@@ -62,9 +63,12 @@ def deal_bbox_label(bboxes, labels, sample_bbox):
         if bbox_area(new_bbox) > 0:
             new_bboxes.append(new_bbox)
             new_labels.append([labels[i][0]])
+            if scores is not None:
+                new_scores.append([scores[i][0]])
     bboxes = np.array(new_bboxes)
     labels = np.array(new_labels)
-    return bboxes, labels       
+    scores = np.array(new_scores)
+    return bboxes, labels, scores
             
 def generate_sample_bbox(sampler):
     scale = np.random.uniform(sampler[2], sampler[3])
@@ -101,7 +105,10 @@ def jaccard_overlap(sample_bbox, object_bbox):
         sample_bbox_size + object_bbox_size - intersect_size)
     return overlap
 
-def satisfy_sample_constraint(sampler, sample_bbox, gt_bboxes):
+def satisfy_sample_constraint(sampler, 
+                              sample_bbox, 
+                              gt_bboxes, 
+                              satisfy_all=False):
     if sampler[6] == 0 and sampler[7] == 0:
         return True
     for i in range(len(gt_bboxes)):
@@ -110,9 +117,15 @@ def satisfy_sample_constraint(sampler, sample_bbox, gt_bboxes):
         overlap = jaccard_overlap(sample_bbox, object_bbox)
         if sampler[6] != 0 and \
                 overlap < sampler[6]:
-            continue
+            if satisfy_all:
+                break
+            else:
+                continue
         if sampler[7] != 0 and \
                 overlap > sampler[7]:
-            continue
+            if satisfy_all:
+                break
+            else:
+                continue
         return True
     return False

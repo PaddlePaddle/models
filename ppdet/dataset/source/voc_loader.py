@@ -38,6 +38,7 @@ def load(anno_path, sample_num=-1):
             'w': im_w, # width
             'is_crowd': is_crowd,
             'gt_class': gt_class,
+            'gt_score': gt_score,
             'gt_bbox': gt_bbox,
             'gt_poly': gt_poly,
         }
@@ -79,6 +80,7 @@ def load(anno_path, sample_num=-1):
             im_h = float(tree.find('size').find('height').text)
             gt_bbox = np.zeros((len(objs), 4), dtype=np.float32)
             gt_class = np.zeros((len(objs), 1), dtype=np.int32)
+            gt_score = np.ones((len(objs), 1), dtype=np.float32)
             is_crowd = np.zeros((len(objs), 1), dtype=np.int32)
             difficult = np.zeros((len(objs), 1), dtype=np.int32)
             for i, obj in enumerate(objs):
@@ -106,6 +108,7 @@ def load(anno_path, sample_num=-1):
                 'w': im_w,
                 'is_crowd': is_crowd,
                 'gt_class': gt_class,
+                'gt_score': gt_score
                 'gt_bbox': gt_bbox,
                 'gt_poly': [],
                 'difficult': difficult

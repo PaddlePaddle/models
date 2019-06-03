@@ -115,8 +115,8 @@ DATA:
 TRANSFORM:
     train:
         - op: DecodeImage
-          to_rgb: True
-        - op: RandFlipImage
+          to_rgb: True 
+        - op: RandomFlipImage
           prob: 0.5
         - op: NormalizeImage
           mean: [0.485, 0.456, 0.406]

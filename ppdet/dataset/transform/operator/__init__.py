@@ -16,6 +16,7 @@ import copy
 from . import base
 from . import arrange_sample
 import logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 __all__ = ['build']

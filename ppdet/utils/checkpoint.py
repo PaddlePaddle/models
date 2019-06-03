@@ -35,7 +35,7 @@ def is_url(path):
     Args:
         path (string): URL string or not.
     """
-    return path.startswith('http://')
+    return path.startswith('http://') or path.startswith('https://')
 
 
 def load(exe, prog, path):

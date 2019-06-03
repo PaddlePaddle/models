@@ -78,14 +78,17 @@ class BaseOperator(object):
 
 @register_op
 class DecodeImage(BaseOperator):
-    def __init__(self, to_rgb=True):
+    def __init__(self, to_rgb=True, with_mixup=False):
         """ Transform the image data to numpy format.
         Args:
             to_rgb (bool): confirm whether to convert BGR to RGB
         """
         super(DecodeImage, self).__init__()
         self.to_rgb = to_rgb
+        self.with_mixup = with_mixup
         if not isinstance(self.to_rgb, bool):
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
+        if not isinstance(self.with_mixup, bool):
             raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def __call__(self, sample, context=None):
@@ -101,6 +104,77 @@ class DecodeImage(BaseOperator):
         if self.to_rgb:
             im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         sample['image'] = im
+        
+        # decode mixup image
+        if self.with_mixup and 'mixup' in sample:
+            self.__call__(sample['mixup'], context)
+        return sample
+
+
+@register_op
+class MixupImage(BaseOperator):
+    def __init__(self, alpha=1.5, beta=1.5):
+        """ Mixup image and gt_bbbox/gt_score
+        Args:
+            alpha (float): alpha parameter of beta distribute
+            beta (float): beta parameter of beta distribute
+        """
+        super(MixupImage, self).__init__()
+        self.alpha = alpha
+        self.beta = beta
+        if self.alpha <= 0.0:
+            raise ValueError("alpha shold be positive in {}".format(self.__str__))
+        if self.beta <= 0.0:
+            raise ValueError("beta shold be positive in {}".format(self.__str__))
+
+    def _mixup_img(self, img1, img2, factor):
+        h = max(img1.shape[0], img2.shape[0])
+        w = max(img1.shape[1], img2.shape[1])
+        img = np.zeros((h, w, img1.shape[2]), 'float32')
+        img[:img1.shape[0], :img1.shape[1], :] = \
+                img1.astype('float32') * factor
+        img[:img2.shape[0], :img2.shape[1], :] += \
+                img2.astype('float32') * (1.0 - factor)
+        return img.astype('uint8')
+
+    def __call__(self, sample, context=None):
+        if 'mixup' not in sample:
+            return sample
+
+        factor = np.random.beta(self.alpha, self.beta)
+        factor = max(0.0, min(1.0, factor))
+        if factor >= 1.0:
+            sample.pop('mixup')
+            return sample
+        if factor <= 0.0:
+            return sample['mixup']
+
+        im = self._mixup_img(sample['image'], 
+                             sample['mixup']['image'],
+                             factor)
+
+        gt_bbox1 = sample['gt_bbox']
+        gt_bbox2 = sample['mixup']['gt_bbox']
+        gt_bbox = np.concatenate((gt_bbox1, gt_bbox2), axis=0)
+
+        gt_class1 = sample['gt_class']
+        gt_class2 = sample['mixup']['gt_class']
+        gt_class = np.concatenate((gt_class1, gt_class2), axis=0)
+        
+        gt_score1 = sample['gt_score']
+        gt_score2 = sample['mixup']['gt_score']
+        gt_score = np.concatenate((gt_score1 * factor, 
+                                  gt_score2 * (1. - factor)),
+                                  axis=0)
+
+        sample['image'] = im
+        sample['gt_bbox'] = gt_bbox
+        sample['gt_score'] = gt_score
+        sample['gt_class'] = gt_class
+        sample['h'] = im.shape[0]
+        sample['w'] = im.shape[1]
+        sample.pop('mixup')
+
         return sample
 
 
@@ -165,7 +239,43 @@ class ResizeImage(BaseOperator):
 
 
 @register_op
-class RandFlipImage(BaseOperator):
+class RandomInterpImage(BaseOperator):
+    def __init__(self, target_size=0, max_size=0):
+        """
+        Random reisze image by multiply interpolate method.
+
+        Args:
+            target_size (int): the taregt size of image's short side
+            max_size (int): the max size of image
+        """
+        super(RandomInterpImage, self).__init__()
+        self.target_size = target_size
+        self.max_size = max_size
+        if not (isinstance(self.target_size, int)
+                and isinstance(self.max_size, int)):
+            raise TypeError('{}: the input type is error.'
+                            .format(self.__str__))
+
+        interps = [
+                cv2.INTER_NEAREST,
+                cv2.INTER_LINEAR,
+                cv2.INTER_AREA,
+                cv2.INTER_CUBIC,
+                cv2.INTER_LANCZOS4,
+            ]
+        self.resizers = []
+        for interp in interps:
+            self.resizers.append(ResizeImage(target_size, max_size, interp))
+
+    def __call__(self, sample, context=None):
+        """ Resise the image numpy by random resizer.
+        """
+        resizer = random.choice(self.resizers)
+        return resizer(sample, context)
+
+
+@register_op
+class RandomFlipImage(BaseOperator):
     def __init__(self, prob=0.5, is_normalized=False, is_mask_flip=False):
         """
         Args:
@@ -173,7 +283,7 @@ class RandFlipImage(BaseOperator):
             is_normalized (bool): whether the bbox scale to [0,1]
             is_mask_flip (bool): whether flip the segmentation
         """
-        super(RandFlipImage, self).__init__()
+        super(RandomFlipImage, self).__init__()
         self.prob = prob
         self.is_normalized = is_normalized
         self.is_mask_flip = is_mask_flip
@@ -394,8 +504,8 @@ class RandomDistort(BaseOperator):
 
 
 @register_op
-class Expand(BaseOperator):
-    def __init__(self,
+class RandomExpand(BaseOperator):
+    def __init__(self, 
                  expand_max_ratio,
                  expand_prob,
                  mean=[127.5, 127.5, 127.5]):
@@ -405,7 +515,7 @@ class Expand(BaseOperator):
             expand_prob (float): the probability of expanding image
             mean (list): the pixel mean
         """
-        super(Expand, self).__init__()
+        super(RandomExpand, self).__init__()
         self.expand_max_ratio = expand_max_ratio
         self.mean = mean
         self.expand_prob = expand_prob
@@ -446,8 +556,9 @@ class Expand(BaseOperator):
                 im = Image.fromarray(im)
                 expand_im.paste(im, (int(w_off), int(h_off)))
                 expand_im = np.asarray(expand_im)
-                gt_bbox, gt_class = deal_bbox_label(gt_bbox, gt_class,
-                                                    expand_bbox)
+                gt_bbox, gt_class, _ = deal_bbox_label(expand_bbox, 
+                                                       gt_bbox, 
+                                                       gt_class)
                 sample['image'] = expand_im
                 sample['gt_bbox'] = gt_bbox
                 sample['gt_class'] = gt_class
@@ -459,24 +570,27 @@ class Expand(BaseOperator):
 
 @register_op
 class Crop(BaseOperator):
-    def __init__(self, batch_sampler):
+    def __init__(self, batch_sampler, satisfy_all=False):
         """
         Args:
             batch_sampler (list): Multiple sets of different
                                   parameters for cropping.
-            e.g.[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
-                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
-                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
-                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
-                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
-                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+            e.g.[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 1.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 1.0],
+                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 1.0],
                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
            [max sample, max trial, min scale, max scale,
             min aspect ratio, max aspect ratio,
             min overlap, max overlap]
+            satisfy_all (bool): whether should all bbox iou
+                                satisfied iou theshold.
         """
         super(Crop, self).__init__()
         self.batch_sampler = batch_sampler
+        self.satisfy_all = satisfy_all
 
     def __call__(self, sample, context):
         """Crop the image and modify bounding box.
@@ -492,6 +606,7 @@ class Crop(BaseOperator):
         im = sample['image']
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
+        gt_score = sample['gt_score']
         im_width = sample['w']
         im_height = sample['h']
         sampled_bbox = []
@@ -502,7 +617,8 @@ class Crop(BaseOperator):
                 if found >= sampler[0]:
                     break
                 sample_bbox = generate_sample_bbox(sampler)
-                if satisfy_sample_constraint(sampler, sample_bbox, gt_bbox):
+                if satisfy_sample_constraint(sampler, sample_bbox, 
+                                             gt_bbox, self.satisfy_all):
                     sampled_bbox.append(sample_bbox)
                     found = found + 1
         im = np.array(im)
@@ -515,16 +631,19 @@ class Crop(BaseOperator):
             ymin = int(sample_bbox[1] * im_height)
             ymax = int(sample_bbox[3] * im_height)
             im = im[ymin:ymax, xmin:xmax]
-            gt_bbox, gt_class = deal_bbox_label(gt_bbox, gt_class, sample_bbox)
+            gt_bbox, gt_class, gt_score = \
+                deal_bbox_label(sample_bbox, gt_bbox, gt_class, gt_score)
             sample['image'] = im
             sample['gt_bbox'] = gt_bbox
             sample['gt_class'] = gt_class
+            sample['gt_score'] = gt_score
         return sample
 
 
 @register_op
 class NormalizeBox(BaseOperator):
-    """Transform the bounding box's coornidates to [0,1]."""
+    """Transform the bounding box's coornidates to [0,1].
+    """
 
     def __init__(self):
         super(NormalizeBox, self).__init__()
@@ -538,6 +657,7 @@ class NormalizeBox(BaseOperator):
             gt_bbox[i][1] = gt_bbox[i][1] / height
             gt_bbox[i][2] = gt_bbox[i][2] / width
             gt_bbox[i][3] = gt_bbox[i][3] / height
+
         sample['gt_bbox'] = gt_bbox
         return sample
 

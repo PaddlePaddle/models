@@ -1,0 +1,4 @@
+*.log
+checkpoints/
+output/
+bbox.json

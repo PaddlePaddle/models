@@ -45,7 +45,7 @@ class YOLOv3Head(object):
     def __init__(self, cfg):
         self.cfg = cfg
         self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', False)
-        self.class_num = getattr(cfg.DATA, 'CLASS_NUM')
+        self.class_num = cfg.DATA.CLASS_NUM
         self._get_and_check_anchors()
 
     def _conv_bn(self,
@@ -305,12 +305,13 @@ class YOLOv3Head(object):
         yolo_boxes = fluid.layers.concat(boxes, axis=1)
         yolo_scores = fluid.layers.concat(scores, axis=2)
         pred = fluid.layers.multiclass_nms(
-            bboxes=yolo_boxes,
-            scores=yolo_scores,
-            score_threshold=valid_thresh,
-            nms_top_k=nms_topk,
-            keep_top_k=nms_posk,
-            nms_threshold=nms_thresh,
-            background_label=-1,
-            name="multiclass_nms")
-        return pred
+                bboxes=yolo_boxes,
+                scores=yolo_scores,
+                score_threshold=valid_thresh,
+                nms_top_k=nms_topk,
+                keep_top_k=nms_posk,
+                nms_threshold=nms_thresh,
+                background_label=-1,
+                name="multiclass_nms")
+        return {'bbox': pred}
+

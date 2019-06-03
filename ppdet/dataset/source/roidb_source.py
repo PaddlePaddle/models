@@ -32,8 +32,14 @@ class RoiDbSource(Dataset):
     """ interface to load roidb data from files
     """
 
-    def __init__(self, fname, image_dir=None,
-        samples=-1, is_shuffle=True, load_img=False):
+    def __init__(self, 
+                 fname, 
+                 image_dir=None, 
+                 samples=-1, 
+                 is_shuffle=True, 
+                 load_img=False,
+                 mixup_epoch=-1,
+                 class_num=81):
         """ Init
 
         Args:
@@ -59,6 +65,8 @@ class RoiDbSource(Dataset):
         self._samples = samples
         self._is_shuffle = is_shuffle
         self._load_img = load_img
+        self._mixup_epoch = mixup_epoch
+        self._class_num = class_num
 
     def __str__(self):
         return 'RoiDbSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
@@ -70,23 +78,33 @@ class RoiDbSource(Dataset):
         if self._epoch < 0:
             self.reset()
 
-        if self._pos >= self.size():
+        if self._pos >= self._samples:
             self._drained = True
             raise StopIteration('%s no more data' % (str(self)))
+
+        sample = copy.deepcopy(self._roidb[self._pos])
+        if self._load_img:
+            sample['image'] = self._load_image(sample['im_file'])
         else:
-            sample = copy.deepcopy(self._roidb[self._pos])
-            if self._load_img:
-                sample['image'] = self._load_image(sample['im_file'])
+            sample['im_file'] = os.path.join(self._image_dir, sample['im_file'])
+        if self._epoch < self._mixup_epoch:
+            mix_idx = random.randint(1, self._samples - 1)
+            mix_pos = (mix_idx + self._pos) % self._samples
+            sample['mixup'] = copy.deepcopy(self._roidb[mix_pos])
+            if self._load_image:
+                sample['mixup']['image'] = \
+                        self._load_image(sample['mixup']['im_file'])
             else:
-                sample['im_file'] = os.path.join(self._image_dir, sample['im_file'])
-            self._pos += 1
-            return sample
+                sample['mixup']['im_file'] = \
+                        os.path.join(self._image_dir, sample['mixup']['im_file'])
+        self._pos += 1
+        return sample
 
     def _load(self):
         """ load data from file
         """
         from . import loader
-        return loader.load(self._fname, self._samples)
+        return loader.load(self._fname, self._class_num, self._samples)
 
     def _load_image(self, where):
         fn = os.path.join(self._image_dir, where)
@@ -98,6 +116,10 @@ class RoiDbSource(Dataset):
         """
         if self._roidb is None:
             self._roidb = self._load()
+
+        if self._samples == -1:
+            self._samples = len(self._roidb)
+
         if self._is_shuffle:
             random.shuffle(self._roidb)
 

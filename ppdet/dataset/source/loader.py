@@ -73,12 +73,14 @@ def load_roidb(anno_file, sample_num=-1):
     return records, cname2cid
 
 
-def load(fname, samples=-1, with_cat2id=False):
+def load(fname, class_num, samples=-1, with_cat2id=False):
     """ Load data records from 'fnames'
 
     Args:
         fnames (str): file name for data record, eg:
             instances_val2017.json or COCO17_val2017.roidb
+        class_num (int): classification number in dataset based
+                         on model, should be set in config file.
         samples (int): number of samples to load, default to all
         with_cat2id (bool): whether return cname2cid info out
 
@@ -101,7 +103,7 @@ def load(fname, samples=-1, with_cat2id=False):
         records, cname2cid = load_roidb(fname, samples)
     elif fname.endswith('.json'):
         from . import coco_loader
-        records, cname2cid = coco_loader.load(fname, samples)
+        records, cname2cid = coco_loader.load(fname, samples, class_num)
     elif os.path.isfile(fname):
         from . import voc_loader
         records, cname2cid = voc_loader.load(fname, samples)

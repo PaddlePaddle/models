@@ -16,17 +16,20 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import paddle.fluid as fluid
-
+import os
+import sys
 import time
-import os, sys
 import numpy as np
+
 import logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+import paddle.fluid as fluid
 
 from ppdet.core.config import load_cfg, merge_cfg
 from ppdet.models import Detectors
-from core.optimizer import OptimizerBuilder
+from ppdet.core.optimizer import OptimizerBuilder
 from ppdet.utils.stats import TrainingStats, Time
 from args import parse_args, print_arguments
 import ppdet.utils.checkpoint as checkpoint
@@ -102,7 +105,7 @@ def main():
         stats = {k: np.array(v).mean() for k, v in zip(keys, outs[:-1])}
         train_stats.update(stats)
         logs = train_stats.log()
-        strs = '{}, iter: {}, lr: {:.5f}, {}, time: {:.3f}'.format(
+        strs = '{}, iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
             Time(), it, np.mean(outs[-1]), logs, end_time - start_time)
         print(strs)
         sys.stdout.flush()

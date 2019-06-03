@@ -17,11 +17,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import logging
+
 import paddle.fluid.optimizer as optimizer
 import paddle.fluid.layers as layers
 import paddle.fluid.regularizer as regularizer
 
 __all__ = ['OptimizerBuilder']
+
+logger = logging.getLogger(__name__)
 
 
 class OptimizerBuilder():
@@ -34,22 +38,23 @@ class OptimizerBuilder():
 
     def __init__(self, cfg):
         self.cfg = cfg
-        self.lr = None
+        self.learning_rate = None
+        self.optimizer = None
 
     def get_optimizer(self):
-        return self._build_optimizer()
+        return self.optimizer or self._build_optimizer()
 
     def get_lr(self):
         """
         Get learning variable.
         """
-        if self.lr is None:
-            raise ValueError("self.lr is not initialized.")
-        return self.lr
+        if self.learning_rate is None:
+            raise ValueError("learning_rate is not initialized.")
+        return self.learning_rate
 
     def _build_optimizer(self):
-        regularization = self._build_regularizer()
-        learning_rate = self._build_learning_rate()
+        self.regularization = self._build_regularization()
+        self.learning_rate = self._build_learning_rate()
 
         opt_params = dict()
         for k, v in self.cfg.items():
@@ -58,12 +63,12 @@ class OptimizerBuilder():
             elif not isinstance(v, dict):
                 opt_params.update({k.lower(): v})
 
-        return opt_func(
-            regularization=regularization,
-            learning_rate=learning_rate,
-            **opt_params)
+        self.optimizer =  opt_func(regularization=self.regularization,
+                                   learning_rate=self.learning_rate,
+                                   **opt_params)
+        return self.optimizer
 
-    def _build_regularizer(self):
+    def _build_regularization(self):
         reg_cfg = self.cfg.WEIGHT_DECAY
         reg_func = getattr(regularizer, reg_cfg.TYPE + "Decay")
         return reg_func(reg_cfg.FACTOR)
@@ -81,6 +86,9 @@ class OptimizerBuilder():
             end_lr = warmup_cfg.WARMUP_END_LR
             start_lr = warmup_cfg.WARMUP_INIT_FACTOR * \
                        warmup_cfg.WARMUP_END_LR
+            logger.info("Learning rate warm up from {:4f} to {:4f} "
+                        "in {} steps.".format(start_lr, end_lr, 
+                                             warmup_steps))
             learning_rate = layers.linear_lr_warmup(
                 learning_rate=learning_rate,
                 warmup_steps=warmup_steps,

@@ -28,10 +28,19 @@ logger = logging.getLogger(__name__)
 __all__ = ['coco_eval']
 
 
-def coco_eval(results, anno_file, outfile):
+def coco_eval(results, anno_file, outfile, class_num=81):
     coco_gt = COCO(anno_file)
+    cat_ids = coco_gt.getCatIds()
+    cat_num = len(cat_ids)
 
-    clsid2catid = {i + 1: v for i, v in enumerate(coco_gt.getCatIds())}
+    assert class_num in [cat_num, cat_num + 1], \
+        "class_num should be [{}, {}] while category number is {}".format(
+                cat_num, cat_num + 1, cat_num)
+    # when class_num = cat_num + 1, mapping category to classid, like:
+    #   background:0, first_class:1, second_class:2, ...
+    clsid2catid = dict(
+            {i + (class_num - cat_num): catid
+                for i, catid in enumerate(cat_ids)})
 
     if 'bbox' in results[0]:
         xywh_results = bbox2out(results, clsid2catid)

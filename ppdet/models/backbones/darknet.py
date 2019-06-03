@@ -31,17 +31,15 @@ __all__ = ['DarkNet53Backbone']
 
 
 class DarkNet(object):
-    def __init__(self, depth, is_train=True, bn_decay=False):
+    def __init__(self, depth, bn_decay=True):
         """
         Args:
             depth (int): DarkNet depth, should be 53.
-            is_train (bool): train or test mode, defaul True
             bn_decay (bool): whether perform L2Decay in batch_norm
         """
         if depth not in [53]:
             raise ValueError("depth {} not in [53].".format(depth))
         self.depth = depth
-        self.is_test = (not is_train)
         self.bn_decay = bn_decay
         self.depth_cfg = {
                 53: ([1,2,8,8,4], self.basicblock)
@@ -135,12 +133,13 @@ class DarkNet(object):
                              name='{}.{}'.format(name, j))
         return out
 
-    def get_backbone(self, body_input):
+    def get_backbone(self, body_input, is_train=False):
         """
         Get the backbone of DarkNet. We define DarkNet has 5 stages output.
 
         Args:
             body_input (Variable): input variable.
+            is_train (bool): train or test mode, defaul False
 
         Returns:
             The last variables of each stage.
@@ -152,11 +151,11 @@ class DarkNet(object):
                                filter_size=3, 
                                stride=1, 
                                padding=1, 
-                               is_test=self.is_test, 
+                               is_test=(not is_train), 
                                name="yolo_input")
         downsample_ = self._downsample(input=conv, 
                                        ch_out=conv.shape[1]*2, 
-                                       is_test=self.is_test, 
+                                       is_test=(not is_train), 
                                        name="yolo_input.downsample")
         blocks = []
         for i, stage in enumerate(stages):
@@ -164,13 +163,13 @@ class DarkNet(object):
                                     input=downsample_, 
                                     ch_out=32 *(2**i), 
                                     count=stage, 
-                                    is_test=self.is_test, 
+                                    is_test=(not is_train), 
                                     name="stage.{}".format(i))
             blocks.append(block)
             if i < len(stages) - 1: # do not downsaple in the last stage
                 downsample_ = self._downsample(input=block, 
                                                ch_out=block.shape[1]*2, 
-                                               is_test=self.is_test, 
+                                               is_test=(not is_train), 
                                                name="stage.{}.downsample".format(i))
         return blocks
 
@@ -178,7 +177,7 @@ class DarkNet(object):
 
 @Backbones.register
 class DarkNet53Backbone(BackboneBase):
-    def __init__(self, cfg, is_train=True):
+    def __init__(self, cfg):
         """
         Get the DarkNet53 backbone. We define DarkNet53 has 5 stages,
         from 1 to 5.
@@ -187,15 +186,15 @@ class DarkNet53Backbone(BackboneBase):
             cfg (AttrDict): the config from given config filename.
         """
         super(DarkNet53Backbone, self).__init__(cfg)
-        self.is_train = is_train
         self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 
-                                'BN_DECAY', False)
+                                'BN_DECAY', True)
         self.depth = 53
 
-    def __call__(self, input):
+    def __call__(self, input, is_train=False):
         """
         Args:
             input (Variable): input variable.
+            is_train (bool): train or test mode, defaul False
 
         Returns:
             The last variables of each stage.
@@ -204,7 +203,6 @@ class DarkNet53Backbone(BackboneBase):
             raise TypeError(str(input) + " should be Variable")
 
         model = DarkNet(depth=self.depth, 
-                        is_train=self.is_train, 
                         bn_decay=self.bn_decay)
-        return model.get_backbone(input)
+        return model.get_backbone(input, is_train)
 

@@ -21,12 +21,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def load(anno_path, sample_num=-1):
+def load(anno_path, sample_num=-1, class_num=81):
     """ Load COCO records with annotations in json file 'anno_path'
 
     Args:
-        @anno_path (str): json file path
-        @sample_num (int): number of samples to load, -1 means all
+        anno_path (str): json file path
+        sample_num (int): number of samples to load, -1 means all
+        class_num (int): 81 for add background as class 0, 80 for
+                         only load non background class
 
     Returns:
         (records, cname2cid)
@@ -39,6 +41,7 @@ def load(anno_path, sample_num=-1):
             'is_crowd': is_crowd,
             'gt_class': gt_class,
             'gt_bbox': gt_bbox,
+            'gt_score': gt_score
             'gt_poly': gt_poly,
         }
         'cname2cid' is a dict used to map category name to class id
@@ -47,14 +50,19 @@ def load(anno_path, sample_num=-1):
         anno_path)
     coco = COCO(anno_path)
     img_ids = coco.getImgIds()
+    cat_ids = coco.getCatIds()
+    cat_num = len(cat_ids)
     records = []
     ct = 0
 
-    # mapping category to classid, like:
+    assert class_num in [cat_num, cat_num + 1], \
+        "class_num should be [{}, {}] while category number is {}".format(
+                cat_num, cat_num + 1, cat_num)
+    # when class_num = cat_num + 1, mapping category to classid, like:
     #   background:0, first_class:1, second_class:2, ...
     catid2clsid = dict(
-        {catid: i + 1
-         for i, catid in enumerate(coco.getCatIds())})
+        {catid: i + (class_num - cat_num) 
+            for i, catid in enumerate(cat_ids)})
 
     cname2cid = dict({
         coco.loadCats(catid)[0]['name']: clsid
@@ -84,6 +92,7 @@ def load(anno_path, sample_num=-1):
 
         gt_bbox = np.zeros((num_bbox, 4), dtype=np.float32)
         gt_class = np.zeros((num_bbox, 1), dtype=np.int32)
+        gt_score = np.ones((num_bbox, 1), dtype=np.float32)
         is_crowd = np.zeros((num_bbox, 1), dtype=np.int32)
         difficult = np.zeros((num_bbox, 1), dtype=np.int32)
         gt_poly = [None] * num_bbox
@@ -103,6 +112,7 @@ def load(anno_path, sample_num=-1):
             'is_crowd': is_crowd,
             'gt_class': gt_class,
             'gt_bbox': gt_bbox,
+            'gt_score': gt_score,
             'gt_poly': gt_poly,
             'difficult': difficult
         }
