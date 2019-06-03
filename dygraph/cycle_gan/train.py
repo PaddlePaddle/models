@@ -275,7 +275,7 @@ def train(args):
             #    test(epoch)
             if args.save_checkpoints and not args.run_ce:
                 fluid.dygraph.save_persistables(cycle_gan.state_dict(),"./G/{}".format(epoch))
-            test(epoch)
+            #test(epoch)
 
 if __name__ == "__main__":
     args = parser.parse_args()
