@@ -117,38 +117,38 @@ class MobileNet(object):
         """
         is_test = not is_train
         blocks = []
-        # 300x300
-        tmp = self._conv_norm(input, 3, int(32 * self.scale), 2, 1, 3,
+        # input 1/1
+        out = self._conv_norm(input, 3, int(32 * self.scale), 2, 1, 3,
                               is_test=is_test, name="conv1")
-        # 150x150
-        tmp = self.depthwise_separable(tmp, 32, 64, 32, 1, self.scale, 
+        # 1/2
+        out = self.depthwise_separable(out, 32, 64, 32, 1, self.scale, 
                                        is_test=is_test, name="conv2_1")
-        tmp = self.depthwise_separable(tmp, 64, 128, 64, 2, self.scale, 
+        out = self.depthwise_separable(out, 64, 128, 64, 2, self.scale, 
                                        is_test=is_test, name="conv2_2")
-        # 75x75
-        tmp = self.depthwise_separable(tmp, 128, 128, 128, 1, self.scale, 
+        # 1/4
+        out = self.depthwise_separable(out, 128, 128, 128, 1, self.scale, 
                                        is_test=is_test, name="conv3_1")
-        tmp = self.depthwise_separable(tmp, 128, 256, 128, 2, self.scale, 
+        out = self.depthwise_separable(out, 128, 256, 128, 2, self.scale, 
                                        is_test=is_test, name="conv3_2")
-        # 38x38
-        tmp = self.depthwise_separable(tmp, 256, 256, 256, 1, self.scale, 
+        # 1/8
+        out = self.depthwise_separable(out, 256, 256, 256, 1, self.scale, 
                                        is_test=is_test, name="conv4_1")
-        blocks.append(tmp)
-        tmp = self.depthwise_separable(tmp, 256, 512, 256, 2, self.scale, 
+        blocks.append(out)
+        out = self.depthwise_separable(out, 256, 512, 256, 2, self.scale, 
                                        is_test=is_test, name="conv4_2")
-        # 19x19
+        # 1/16
         for i in range(5):
-            tmp = self.depthwise_separable(tmp, 512, 512, 512, 1,
+            out = self.depthwise_separable(out, 512, 512, 512, 1,
                                            self.scale, is_test=is_test,
                                            name="conv5_" + str(i + 1))
-        blocks.append(tmp)
+        blocks.append(out)
 
-        tmp = self.depthwise_separable(tmp, 512, 1024, 512, 2, self.scale, 
+        out = self.depthwise_separable(out, 512, 1024, 512, 2, self.scale, 
                                        is_test=is_test, name="conv5_6")
-        # 10x10
-        tmp = self.depthwise_separable(tmp, 1024, 1024, 1024, 1, self.scale,
+        # 1/32
+        out = self.depthwise_separable(out, 1024, 1024, 1024, 1, self.scale,
                                        is_test=is_test, name="conv6")
-        blocks.append(tmp)
+        blocks.append(out)
         return blocks
 
 
