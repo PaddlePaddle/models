@@ -149,9 +149,14 @@ def train(args):
 ##                print (param.name)
 ##                vars1.append(var.name)
 ##
-        cycle_gan.train()
+        #cycle_gan.train()
+        if args.init_model is not None:
+            init_model = args.init_model
+            restore = fluid.dygraph.load_persistables(init_model)
+            cycle_gan.load_dict(restore)
         for epoch in range(args.epoch):
             batch_id = 0
+            cycle_gan.train()
             for i in range(max_images_num):
                 #if epoch == 0 and batch_id ==1:
                 #    for param in G.parameters():
