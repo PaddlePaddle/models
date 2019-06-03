@@ -62,8 +62,10 @@ def main():
         values.append(v.name)
 
     if cfg.TEST.METRIC_TYPE == 'COCO':
-        keys += ['im_id']
-        values += ['im_id']
+        for v in ['im_info', 'im_id']:
+            if fluid.framework._get_var(v, test_prog):
+                keys += [v]
+                values += [v]
 
     for v in values:
         fluid.framework._get_var(str(v), test_prog).persistable = True
@@ -112,12 +114,12 @@ def main():
         with_background = getattr(cfg.DATA, 'WITH_BACKGROUND', True)
         outfile = 'bbox.json'
         if args.out_file:
-            outfile = '_bbox.json'.format(args.out_file)
+            outfile = '{}_bbox.json'.format(args.out_file)
         bbox_eval(results, cfg.DATA.VAL.ANNO_FILE, outfile, with_background)
         if 'mask' in results[0]:
             outfile = 'mask.json'
             if args.out_file:
-                outfile = '_mask.json'.format(args.out_file)
+                outfile = '{}_mask.json'.format(args.out_file)
             mask_eval(results, cfg.DATA.VAL.ANNO_FILE, outfile,
                       cfg.MASK_HEAD.RESOLUTION)
     else:

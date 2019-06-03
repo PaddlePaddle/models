@@ -30,7 +30,10 @@ logger = logging.getLogger(__name__)
 __all__ = ['bbox_eval', 'mask_eval']
 
 
-def coco_eval(results, anno_file, outfile, with_background=True):
+def bbox_eval(results, anno_file, outfile, with_background=True):
+    assert 'bbox' in results[0]
+    assert outfile.endswith('.json')
+
     coco_gt = COCO(anno_file)
     cat_ids = coco_gt.getCatIds()
 
@@ -40,33 +43,31 @@ def coco_eval(results, anno_file, outfile, with_background=True):
             {i + int(with_background): catid
                 for i, catid in enumerate(cat_ids)})
 
-    if 'bbox' in results[0]:
-        xywh_results = bbox2out(results, clsid2catid)
+    xywh_results = bbox2out(results, clsid2catid)
+    with open(outfile, 'w') as f:
+        json.dump(xywh_results, f)
 
-        assert outfile.endswith('.json')
-        with open(outfile, 'w') as f:
-            json.dump(xywh_results, f)
-
-        logger.info("Start evaluate...")
-        coco_dt = coco_gt.loadRes(outfile)
-        coco_ev = COCOeval(coco_gt, coco_dt, 'bbox')
-        coco_ev.evaluate()
-        coco_ev.accumulate()
-        coco_ev.summarize()
+    logger.info("Start evaluate...")
+    coco_dt = coco_gt.loadRes(outfile)
+    coco_ev = COCOeval(coco_gt, coco_dt, 'bbox')
+    coco_ev.evaluate()
+    coco_ev.accumulate()
+    coco_ev.summarize()
 
 
 def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
     assert 'mask' in results[0]
+    assert outfile.endswith('.json')
 
     coco_gt = COCO(anno_file)
     clsid2catid = {i + 1: v for i, v in enumerate(coco_gt.getCatIds())}
 
     segm_results = mask2out(results, clsid2catid, resolution, thresh_binarize)
-    with open("segms.json", 'w') as f:
+    with open(outfile, 'w') as f:
         json.dump(segm_results, f)
 
     logger.info("Start evaluate...")
-    coco_dt = coco_gt.loadRes("segms.json")
+    coco_dt = coco_gt.loadRes(outfile)
     coco_ev = COCOeval(coco_gt, coco_dt, 'segm')
     coco_ev.evaluate()
     coco_ev.accumulate()
