@@ -27,7 +27,10 @@ from ..registry import Backbones
 from ..registry import BBoxHeadConvs
 from .base import BackboneBase
 
-__all__ = ['ResNet50Backbone', 'ResNet101Backbone', 'ResNet50C5']
+__all__ = ['ResNet50Backbone', 
+           'ResNet101Backbone', 
+           'ResNet34Backbone',
+           'ResNet50C5']
 
 
 class ResNet(object):
@@ -304,6 +307,20 @@ class ResNet101Backbone(ResNet50Backbone):
         """
         super(ResNet101Backbone, self).__init__(cfg)
         self.number = 101
+
+
+@Backbones.register
+class ResNet34Backbone(ResNet50Backbone):
+    def __init__(self, cfg):
+        """
+        Get the ResNet34 backbone. We define ResNet34 has 5 stages,
+        from 1 to 5.
+
+        Args:
+            cfg (AttrDict): the config from given config filename.
+        """
+        super(ResNet34Backbone, self).__init__(cfg)
+        self.number = 34
 
 
 @BBoxHeadConvs.register
