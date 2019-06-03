@@ -49,7 +49,7 @@ class YOLOv3(DetectorBase):
 
         # backbone
         im = feed_vars['image']
-        body_feats = self.backbone(im, is_train=is_train)
+        body_feats = self.backbone(im)
 
         if is_train:
             # get loss in train mode

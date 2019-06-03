@@ -38,7 +38,10 @@ def download_weights(url):
     if weights specified by url is exists, return weights path
     """
     weights_file = url.split('/')[-1]
-    weights_name = weights_file.split('.')[0]
+    zip_formats = ['.zip', '.tar', '.gz']
+    weights_name = weights_file
+    for zip_format in zip_formats:
+        weights_name = weights_name.replace(zip_format, '')
     weights_path = os.path.join(WEIGHTS_DIR, weights_name)
 
     if os.path.exists(weights_path):
