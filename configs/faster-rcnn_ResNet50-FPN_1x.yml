@@ -110,7 +110,7 @@ TRAIN:
   MAX_ITERS: 90000
   LOG_SMOOTH_WINDOW: 20
   SNAPSHOT_ITER: 10000
-  PRETRAIN_WEIGHTS: gry_resnet50_fusebn/ 
+  PRETRAIN_WEIGHTS: ResNet50_pretrained 
   BATCH_NORM_TYPE: BN
   RANDOM: ON
   SAVE_DIR: output
@@ -124,62 +124,61 @@ TEST:
 
 DATA:
   TRAIN:
-      ANNO_FILE: /paddle/models/fluid/faster_rcnn/data/COCO17/annotations/instances_train2017.json
-      IMAGE_DIR: /paddle/models/fluid/faster_rcnn/data/COCO17/train2017
+      ANNO_FILE: COCO17/annotations/instances_train2017.json
+      IMAGE_DIR: COCO17/train2017
       IS_SHUFFLE: True
   VAL:
-      ANNO_FILE: /paddle/models/fluid/faster_rcnn/data/COCO17/annotations/instances_val2017.json
-      IMAGE_DIR: /paddle/models/fluid/faster_rcnn/data/COCO17/val2017
+      ANNO_FILE: COCO17/annotations/instances_val2017.json
+      IMAGE_DIR: COCO17/val2017
+      IS_SHUFFLE: False
   CLASS_NUM: 81
 
 TRANSFORM:
   TRAIN:
     OPS:
-      - OP: DecodeImage
-        TO_RGB: True
-      - OP: RandFlipImage
-        PROB: 0.5
-      - OP: NormalizeImage
-        MEAN: [0.485, 0.456, 0.406]
-        STD: [0.229, 0.224, 0.225]
-        IS_SCALE: True
-        IS_CHANNEL_FIRST: False
-      - OP: ResizeImage
-        TARGET_SIZE: 800
-        MAX_SIZE: 1333
-      - OP: Rgb2Bgr
-        TO_BGR: False
-      - OP: ArrangeRCNN
+      - op: DecodeImage
+        to_rgb: True
+      - op: RandFlipImage
+        prob: 0.5
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True
+        is_channel_first: False
+      - op: ResizeImage
+        target_size: 800
+        max_size: 1333
+      - op: Rgb2Bgr
+        to_bgr: False
+      - op: ArrangeRCNN
     BATCH_SIZE: 2
-    DEVICES_NUM: 8
     IS_PADDING: True
     # TODO(guanzhong): use a better name for coarsest_stride
     COAREST_STRIDE: 32
-    WORK_CONF:
-        BUFSIZE: 100
-        WORKER_NUM: 8
+    WORKER_CONF:
+        bufsize: 100
+        worder_num: 8
 
   VAL:
     OPS:
-      - OP: DecodeImage
-        TO_RGB: True
-      - OP: NormalizeImage
-        MEAN: [0.485, 0.456, 0.406]
-        STD: [0.229, 0.224, 0.225]
-        IS_SCALE: True
-        IS_CHANNEL_FIRST: False
-      - OP: ResizeImage
-        TARGET_SIZE: 800
-        MAX_SIZE: 1333
-      - OP: Rgb2Bgr
-        TO_BGR: False
-      - OP: ArrangeRCNN
+      - op: DecodeImage
+        to_rgb: True
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True
+        is_channel_first: False
+      - op: ResizeImage
+        target_size: 800
+        max_size: 1333
+      - op: Rgb2Bgr
+        to_bgr: False
+      - op: ArrangeRCNN
     BATCH_SIZE: 1
-    DEVICES_NUM: 1
     IS_PADDING: True
     # TODO(guanzhong): use a better name for coarsest_stride
     COAREST_STRIDE: 32
-    WORK_CONF:
-        BUFSIZE: 100
-        WORKER_NUM: 8
+    WORKER_CONF:
+        bufsize: 100
+        worker_num: 8
 

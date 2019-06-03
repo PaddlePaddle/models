@@ -39,6 +39,7 @@ DATA:
       IMAGE_DIR: COCO17/val2017
   DATASET: coco2017
   CLASS_NUM: 80
+  WITH_BACKGROUND: False
   ANCHORS: [[10, 13], [16, 30], [33, 23], 
             [30, 61], [62, 45], [59, 119], 
             [116, 90], [156, 198], [373, 326]]

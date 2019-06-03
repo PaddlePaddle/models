@@ -29,7 +29,7 @@ RPN_HEAD:
   ANCHOR:
     VARIANCE: [1., 1., 1., 1.]
 
-  PREPOSAL:
+  PROPOSAL:
     BATCH_SIZE_PER_IM: 512
     FG_FRACTION: 0.25
     FG_THRESH: 0.5
@@ -46,9 +46,9 @@ RPN_HEAD:
     RPN_MIN_SIZE: 0.0
     RPN_ETA: 1.0
   TEST:
-    RPN_PRE_NMS_TOP_N: 6000
+    RPN_PRE_NMS_TOP_N: 1000
     RPN_POST_NMS_TOP_N: 1000
-    RPN_NMS_THRESH: 0.5
+    RPN_NMS_THRESH: 0.7
     RPN_MIN_SIZE: 0.0
     RPN_ETA: 1.0
 
@@ -58,9 +58,8 @@ RPN_HEAD:
   RPN_POSITIVE_OVERLAP: 0.7
   RPN_NEGATIVE_OVERLAP: 0.3
 
-
 BBOX_HEAD:
-  TYPE: BboxHead
+  TYPE: BBoxHead
   HEAD_CONV: BBox2MLP
   MLP_HEAD_DIM: 1024
 
@@ -73,7 +72,7 @@ ROI_EXTRACTOR:
   FPN_ROI_MAX_LEVEL: 5
   FPN_ROI_CANCONICAL_LEVEL: 4
   FPN_ROI_CANONICAL_SCALE: 224
-  SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8., 1. / 4.]
+  SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8., 1. / 4.]  
 
 FPN:
   DIM: 256
@@ -109,8 +108,9 @@ OPTIMIZER:
 
 TRAIN:
   MAX_ITERS: 180000
-  IM_PER_BATCH: 2
-  PRETRAIN_WEIGTS: ResNet50_pretrained
+  LOG_SMOOTH_WINDOW: 20
+  SNAPSHOT_ITER: 10000
+  PRETRAIN_WEIGHTS: ResNet50_pretrained 
   BATCH_NORM_TYPE: BN
   RANDOM: ON
   SAVE_DIR: output
@@ -119,60 +119,66 @@ TEST:
   SCORE_THRESH: 0.05
   NMS_THRESH: 0.5
   DETECTIONS_PER_IM: 100
-  WEIGTS: output/FasterRCNN/model_final
+  WEIGHTS: output/FasterRCNN/model_final
   METRIC_TYPE: COCO
 
 DATA:
-  train:
-      anno_file: /paddle/models/fluid/faster_rcnn/data/COCO17/annotations/instances_train2017.json
-      image_dir: /paddle/models/fluid/faster_rcnn/data/COCO17/train2017
-  val:
-      anno_file: COCO17/annotations/instances_val2017.json
-      image_dir: COCO17/val2017
+  TRAIN:
+      ANNO_FILE: COCO17/annotations/instances_train2017.json
+      IMAGE_DIR: COCO17/train2017
+      IS_SHUFFLE: True
+  VAL:
+      ANNO_FILE: COCO17/annotations/instances_val2017.json
+      IMAGE_DIR: COCO17/val2017
+      IS_SHUFFLE: False
   CLASS_NUM: 81
 
 TRANSFORM:
-    train:
-        - op: DecodeImage
-          to_rgb: True
-        - op: RandFlipImage
-          prob: 0.5
-        - op: NormalizeImage
-          mean: [0.485, 0.456, 0.406]
-          std: [0.229, 0.224, 0.225]
-          is_scale: True
-          is_channel_first: False
-        - op: ResizeImage
-          target_size: 800
-          max_size: 1333
-          interp: 1
-        - op: Rgb2Bgr
-          to_bgr: False
-        - op: ArrangeRCNN
-          is_train: True
-    val:
-        - op: DecodeImage
-          to_rgb: True
-        - op: NormalizeImage
-          mean: [0.485, 0.456, 0.406]
-          std: [0.229, 0.224, 0.225]
-          is_scale: True
-          is_channel_first: False
-        - op: ResizeImage
-          target_size: 800
-          max_size: 1333
-          interp: 1
-        - op: Rgb2Bgr
-          to_bgr: False
-        - op: ArrangeRCNN
-          is_train: False 
- 
+  TRAIN:
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+      - op: RandFlipImage
+        prob: 0.5
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True
+        is_channel_first: False
+      - op: ResizeImage
+        target_size: 800
+        max_size: 1333
+      - op: Rgb2Bgr
+        to_bgr: False
+      - op: ArrangeRCNN
+    BATCH_SIZE: 2
+    IS_PADDING: True
+    # TODO(guanzhong): use a better name for coarsest_stride
+    COAREST_STRIDE: 32
+    WORKER_CONF:
+        bufsize: 100
+        worder_num: 8
 
-    batch_size: 2 # batch size per device
-    gpu_counts: 8
-    is_padding: True
-    coarsest_stride: 32
-    worker_conf:
-        bufsize: 10
-        worker_num: 2
+  VAL:
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True
+        is_channel_first: False
+      - op: ResizeImage
+        target_size: 800
+        max_size: 1333
+      - op: Rgb2Bgr
+        to_bgr: False
+      - op: ArrangeRCNN
+    BATCH_SIZE: 1
+    IS_PADDING: True
+    # TODO(guanzhong): use a better name for coarsest_stride
+    COAREST_STRIDE: 32
+    WORKER_CONF:
+        bufsize: 100
+        worker_num: 8
 
