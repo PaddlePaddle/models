@@ -39,7 +39,7 @@ class RoiDbSource(Dataset):
                  is_shuffle=True, 
                  load_img=False,
                  mixup_epoch=-1,
-                 class_num=81):
+                 with_background=True):
         """ Init
 
         Args:
@@ -48,6 +48,9 @@ class RoiDbSource(Dataset):
             samples (int): samples to load, -1 means all
             is_shuffle (bool): whether to shuffle samples
             load_img (bool): whether load data in this class
+            mixup_epoch (int): parse mixup in first n epoch.
+            with_background (bool): whether load background 
+                                    as a class
         """
         super(RoiDbSource, self).__init__()
         self._epoch = -1
@@ -66,7 +69,7 @@ class RoiDbSource(Dataset):
         self._is_shuffle = is_shuffle
         self._load_img = load_img
         self._mixup_epoch = mixup_epoch
-        self._class_num = class_num
+        self._with_background = with_background 
 
     def __str__(self):
         return 'RoiDbSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
@@ -104,7 +107,7 @@ class RoiDbSource(Dataset):
         """ load data from file
         """
         from . import loader
-        return loader.load(self._fname, self._class_num, self._samples)
+        return loader.load(self._fname, self._samples, self._with_background)
 
     def _load_image(self, where):
         fn = os.path.join(self._image_dir, where)

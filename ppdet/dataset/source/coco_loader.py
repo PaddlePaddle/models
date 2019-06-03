@@ -21,14 +21,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def load(anno_path, sample_num=-1, class_num=81):
+def load(anno_path, sample_num=-1, with_background=True):
     """ Load COCO records with annotations in json file 'anno_path'
 
     Args:
         anno_path (str): json file path
         sample_num (int): number of samples to load, -1 means all
-        class_num (int): 81 for add background as class 0, 80 for
-                         only load non background class
+        with_background (bool): whether load background as a class.
+                                if True, total class num will be 
+                                81. default True
 
     Returns:
         (records, cname2cid)
@@ -51,17 +52,13 @@ def load(anno_path, sample_num=-1, class_num=81):
     coco = COCO(anno_path)
     img_ids = coco.getImgIds()
     cat_ids = coco.getCatIds()
-    cat_num = len(cat_ids)
     records = []
     ct = 0
 
-    assert class_num in [cat_num, cat_num + 1], \
-        "class_num should be [{}, {}] while category number is {}".format(
-                cat_num, cat_num + 1, cat_num)
-    # when class_num = cat_num + 1, mapping category to classid, like:
+    # when with_background = True, mapping category to classid, like:
     #   background:0, first_class:1, second_class:2, ...
     catid2clsid = dict(
-        {catid: i + (class_num - cat_num) 
+        {catid: i + int(with_background) 
             for i, catid in enumerate(cat_ids)})
 
     cname2cid = dict({

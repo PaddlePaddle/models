@@ -51,15 +51,15 @@ class Reader(object):
             else file_conf['IS_SHUFFLE']
         mixup_epoch = -1 if 'MIXUP_EPOCHS' not in file_conf \
             else file_conf['MIXUP_EPOCHS']
-        class_num = 81 if 'CLASS_NUM' not in self._data_cf \
-            else self._data_cf['CLASS_NUM']
+        with_background = True if 'WITH_BACKGROUND' not in self._data_cf \
+            else self._data_cf['WITH_BACKGROUND']
         sc_conf = {
             'fname': file_conf['ANNO_FILE'],
             'image_dir': file_conf['IMAGE_DIR'],
             'samples': samples,
             'is_shuffle': is_shuffle,
             'mixup_epoch': mixup_epoch,
-            'class_num': class_num,
+            'with_background': with_background,
         }
         sc = source.build(sc_conf)
 
