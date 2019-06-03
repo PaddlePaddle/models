@@ -66,7 +66,6 @@ class BBoxHead(object):
                 [N, num_anchors * 4, H, W].
         """
         head_feat = self.get_head_feat(roi_feat)
-        #        fluid.layers.Print(head_feat, summarize=1)
         head_feat = fluid.layers.pool2d(
             head_feat, pool_type='avg', global_pooling=True)
         cls_score = fluid.layers.fc(input=head_feat,

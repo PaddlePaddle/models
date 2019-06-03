@@ -29,7 +29,7 @@ __all__ = ['MaskHead']
 @MaskHeads.register
 class MaskHead(object):
     """
-    MaskHead class
+    TODO(qingiqng): add more comments
     Args:
         cfg(Dict): All parameters in dictionary.
     """
@@ -41,8 +41,6 @@ class MaskHead(object):
         self.is_train = cfg.IS_TRAIN
 
     def _mask_conv_head(self, roi_feat, conv_num):
-        """
-        """
         for i in range(conv_num):
             layer_name = "mask_inter_feat_" + str(i + 1)
             print(i, layer_name)
@@ -74,13 +72,6 @@ class MaskHead(object):
         return feat
 
     def _get_output(self, roi_feat):
-        """
-        Args:
-            roi_feat(Variable): RoI feature from RoIExtractor.
-
-        Returns:
-            mask_fcn_logits(Variable): Output of mask_head.
-        """
         class_num = self.cfg.DATA.CLASS_NUM
         # configure the conv number for FPN if necessary
         conv_num = 4 if getattr(self.cfg.MODEL, 'FPN', False) else 0
@@ -100,13 +91,8 @@ class MaskHead(object):
 
     def get_loss(self, roi_feat, mask_int32):
         """
-        Args:
-            mask_int32(Variable): 
-
-        Return:
-            loss_mask(Variable): mask_head loss.
+        TODO(qingqing): add more comments
         """
-
         mask_logits = self._get_output(roi_feat)
         class_num = self.cfg.DATA.CLASS_NUM
         resolution = self.cfg.MASK_HEAD.RESOLUTION
@@ -125,8 +111,8 @@ class MaskHead(object):
         Get prediction mask in test stage.
         
         Args:
-            bbox_pred (Variable): predicted bbox.
             roi_feat (Variable): RoI feature from RoIExtractor.
+            bbox_pred (Variable): predicted bbox.
     
         Returns:
             mask_pred (Variable): Prediction mask with shape
