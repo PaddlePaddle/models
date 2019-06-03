@@ -41,6 +41,10 @@ __all__ = ['MaskRCNN']
 
 @Detectors.register
 class MaskRCNN(FasterRCNN):
+    """
+    TODO(qingqing): add more comments
+    """
+
     def __init__(self, cfg):
         super(MaskRCNN, self).__init__(cfg)
         self.mask_head = MaskHeads.get(cfg.MASK_HEAD.TYPE)(cfg)
@@ -120,12 +124,8 @@ class MaskRCNN(FasterRCNN):
         bbox_shape = fluid.layers.shape(bbox_pred)
         bbox_size = fluid.layers.reduce_prod(bbox_shape)
         bbox_size = fluid.layers.reshape(bbox_size, [1, 1])
-        #fluid.layers.Print(bbox_size)
-        #shape = fluid.layers.reshape(bbox_size, [1, 1])
-        #ones = fluid.layers.fill_constant([1, 1], value=1, dtype='int32')
-        #cond = fluid.layers.equal(x=shape, y=ones)
-        zero = fluid.layers.fill_constant([1, 1], value=0, dtype='int32')
-        cond = fluid.layers.equal(x=bbox_size, y=zero)
+        size = fluid.layers.fill_constant([1, 1], value=6, dtype='int32')
+        cond = fluid.layers.less_than(x=bbox_size, y=size)
 
         mask_pred = fluid.layers.create_global_var(
             shape=[1], value=0.0, dtype='float32', persistable=True)

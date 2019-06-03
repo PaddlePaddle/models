@@ -34,11 +34,9 @@ class MaskHead(object):
         cfg(Dict): All parameters in dictionary.
     """
 
-    def __init__(
-            self,
-            cfg, ):
+    def __init__(self, cfg):
         self.cfg = cfg
-        self.is_train = cfg.IS_TRAIN
+        self.is_train = getattr(cfg, 'IS_TRAIN', True)
 
     def _mask_conv_head(self, roi_feat, conv_num):
         for i in range(conv_num):
