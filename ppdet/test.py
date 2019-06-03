@@ -109,8 +109,9 @@ def main():
     # Evaluation
     if cfg.TEST.METRIC_TYPE == 'COCO':
         from ppdet.metrics.coco import coco_eval
-        coco_eval(results, cfg.DATA.VAL.ANNO_FILE, 'bbox.json',
-                  cfg.DATA.CLASS_NUM)
+        with_background = getattr(cfg.DATA, 'WITH_BACKGROUND', True)
+        coco_eval(results, cfg.DATA.VAL.ANNO_FILE, 'bbox.json', 
+                  with_background)
     else:
         logger.info('Test mAP: {}'.format(results[-1]))
 
