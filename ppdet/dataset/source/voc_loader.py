@@ -53,7 +53,7 @@ def load(anno_path, sample_num=-1, cname2cid=None):
 
     records = []
     ct = 0
-    flag = False if cname2cid is None else True
+    existence = False if cname2cid is None else True
     if cname2cid is None:
         cname2cid = {}
 
@@ -85,10 +85,12 @@ def load(anno_path, sample_num=-1, cname2cid=None):
             difficult = np.zeros((len(objs), 1), dtype=np.int32)
             for i, obj in enumerate(objs):
                 cname = obj.find('name').text
-                if not flag and cname not in cname2cid:
+                if not existence and cname not in cname2cid:
                     cname2cid[cname] = len(cname2cid) + 1
-                elif flag and cname not in cname2cid:
-                    raise KeyError('The key {} isn\'t in list.'.format(cname))
+                elif existence and cname not in cname2cid:
+                    raise KeyError(
+                        'Not found cname[%s] in cname2cid when map it to cid.' %
+                        (cname))
                 gt_class[i][0] = cname2cid[cname]
                 _difficult = int(obj.find('difficult').text)
                 x1 = float(obj.find('bndbox').find('xmin').text)
