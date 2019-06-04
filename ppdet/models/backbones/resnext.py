@@ -101,7 +101,7 @@ class ResNeXt101Backbone(BackboneBase):
 
         model = ResNeXt(self.number, self.freeze_bn, self.affine_channel,
                         self.groups)
-        return model.get_backbone(input, 4, self.freeze_at)
+        return model.get_backbone(input, self.endpoint, self.freeze_at)
 
 
 @BBoxHeadConvs.register
