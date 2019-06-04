@@ -120,6 +120,7 @@ DATA:
   VAL:
       ANNO_FILE: COCO17/annotations/instances_val2017.json
       IMAGE_DIR: COCO17/val2017
+      IS_SHUFFLE: False
   CLASS_NUM: 81
 
 TRANSFORM:
@@ -145,7 +146,6 @@ TRANSFORM:
         is_mask: True
         is_train: True
     BATCH_SIZE: 1 # batch size per device
-    DEVICES_NUM: 8
     IS_PADDING: True
     WORKER_CONF:
       BUFSIZE: 10
@@ -169,7 +169,6 @@ TRANSFORM:
         is_mask: True
         is_train: False
     BATCH_SIZE: 1 # batch size per device
-    DEVICES_NUM: 1
     IS_PADDING: True
     WORKER_CONF:
       BUFSIZE: 10

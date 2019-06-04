@@ -38,7 +38,6 @@ class TestDetectorFasterRCNN(unittest.TestCase):
         assert self.cfg.IS_TRAIN
         self.detector = Detectors.get(self.detector_type)(self.cfg)
         self.detector.train()
-        #print(fluid.default_main_program())
         #TODO(dangqingqing): add more check
 
     @prog_scope()
