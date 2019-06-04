@@ -30,6 +30,42 @@ ENV:
   GPU: ON
   GPU_NUM: 8
 
+OPTIMIZER:
+  TYPE: Momentum
+  MOMENTUM: 0.9
+
+  LR_DECAY:
+    POLICY: piecewise_decay
+    BOUNDARIES: [400000, 450000]
+    VALUES: [0.001, 0.0001, 0.00001]
+
+  LR_WARMUP:
+    WARMUP: ON
+    WARMUP_STEPS: 4000
+    WARMUP_INIT_FACTOR: 0.
+    WARMUP_END_LR: 0.001
+
+  WEIGHT_DECAY:
+    TYPE: L2
+    FACTOR: 0.0005
+    BN_DECAY: False
+
+TRAIN:
+  MAX_ITERS: 500200
+  PRETRAIN_WEIGHTS: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet34_pretrained.tar
+  BATCH_NORM_TYPE: SYNC_BN
+  LOG_SMOOTH_WINDOW: 20
+  SAVE_DIR: checkpoints
+  SNAPSHOT_ITER: 2000
+
+TEST:
+  SCORE_THRESH: 0.01
+  NMS_THRESH: 0.45
+  NMS_TOPK: 1000
+  NMS_POSK: 100
+  WEIGHTS: https://paddlemodels.bj.bcebos.com/yolo/yolo_resnet34.tar.gz
+  METRIC_TYPE: COCO
+
 DATA:
   TRAIN:
       ANNO_FILE: COCO17/annotations/instances_train2017.json
@@ -110,39 +146,3 @@ TRANSFORM:
         to_bgr: False
       - op: ArrangeYOLO
         is_train: False
-
-OPTIMIZER:
-  TYPE: Momentum
-  MOMENTUM: 0.9
-
-  LR_DECAY:
-    POLICY: piecewise_decay
-    BOUNDARIES: [400000, 450000]
-    VALUES: [0.001, 0.0001, 0.00001]
-
-  LR_WARMUP:
-    WARMUP: ON
-    WARMUP_STEPS: 4000
-    WARMUP_INIT_FACTOR: 0.
-    WARMUP_END_LR: 0.001
-
-  WEIGHT_DECAY:
-    TYPE: L2
-    FACTOR: 0.0005
-    BN_DECAY: False
-
-TRAIN:
-  MAX_ITERS: 500200
-  PRETRAIN_WEIGHTS: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet34_pretrained.tar
-  BATCH_NORM_TYPE: SYNC_BN
-  LOG_SMOOTH_WINDOW: 20
-  SAVE_DIR: checkpoints
-  SNAPSHOT_ITER: 2000
-
-TEST:
-  SCORE_THRESH: 0.01
-  NMS_THRESH: 0.45
-  NMS_TOPK: 1000
-  NMS_POSK: 100
-  WEIGHTS: https://paddlemodels.bj.bcebos.com/yolo/yolo_resnet34.tar.gz
-  METRIC_TYPE: COCO
