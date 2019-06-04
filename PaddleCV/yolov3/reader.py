@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 
 import numpy as np
 import os
+import warnings
 import random
 import time
 import copy
@@ -73,6 +74,11 @@ class DataSetReader(object):
             self.label_ids.append(int(category['id']))
         self.category_to_id_map = {v: i for i, v in enumerate(self.label_ids)}
         print("Load in {} categories.".format(self.num_category))
+        if self.num_category != cfg.class_num:
+            warnings.warn("category number({}) in your dataset is not equal "
+                    "to --class_num={} settting, which may incur errors in "
+                    "eval/infer or cause precision loss.".format(
+                        self.num_category, cfg.class_num))
         self.has_parsed_categpry = True
 
     def get_label_infos(self):
