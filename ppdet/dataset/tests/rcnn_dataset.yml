@@ -4,12 +4,13 @@ DATA:
         IMAGE_DIR: data/coco.test/train2017
         SAMPLES: 10
         IS_SHUFFLE: True
+        TYPE: RoiDbSource
 TRANSFORM:
     TRAIN:
         OPS:
             - OP: DecodeImage
               TO_RGB: False
-            - OP: RandFlipImage
+            - OP: RandomFlipImage
               PROB: 0.5
             - OP: NormalizeImage
               MEAN: [102.9801, 115.9465, 122.7717]
@@ -24,6 +25,6 @@ TRANSFORM:
         BATCH_SIZE: 1
         IS_PADDING: True
         DROP_LAST: False
-        WORKER_CONF:
-            BUFSIZE: 10
-            WORKER_NUM: 2
+    WORKER_CONF:
+        BUFSIZE: 10
+        WORKER_NUM: 2

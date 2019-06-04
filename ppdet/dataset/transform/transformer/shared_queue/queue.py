@@ -17,7 +17,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import cPickle
+import sys
+s = sys.version
+if s.startswith('2'):
+    import cPickle as pickle
+else:
+    import pickle
 import logging
 import traceback
 from cStringIO import StringIO
@@ -54,7 +59,7 @@ class SharedQueue(Queue):
     def put(self, obj, **kwargs):
         """ put an object to this queue
         """
-        obj = cPickle.dumps(obj, -1)
+        obj = pickle.dumps(obj, -1)
         buff = None
         try:
             buff = self._shared_mem.malloc(len(obj))
@@ -77,7 +82,7 @@ class SharedQueue(Queue):
         try:
             buff = super(SharedQueue, self).get(**kwargs)
             data = buff.get()
-            return cPickle.load(StringIO(data))
+            return pickle.load(StringIO(data))
         except Exception as e:
             stack_info = traceback.format_exc()
             err_msg = 'failed to get element from SharedQueue '\

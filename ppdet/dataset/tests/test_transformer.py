@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
 
+
 class TestTransformer(unittest.TestCase):
     """Test cases for dataset.transform.transformer
     """
@@ -28,6 +29,7 @@ class TestTransformer(unittest.TestCase):
         anno_path = set_env.coco_data['ANNO_FILE']
         image_dir = set_env.coco_data['IMAGE_DIR']
         cls.sc_config = {
+            'type': 'RoiDbSource',
             'fname': anno_path,
             'image_dir': image_dir,
             'samples': 200

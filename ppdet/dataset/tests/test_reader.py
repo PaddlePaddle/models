@@ -11,6 +11,7 @@ from dataset import Reader
 
 logging.basicConfig(level=logging.INFO)
 
+
 class TestReader(unittest.TestCase):
     """Test cases for dataset.reader
     """
@@ -36,9 +37,8 @@ class TestReader(unittest.TestCase):
     def test_train(self):
         """ Test reader for training
         """
-        coco = Reader(self.coco_conf['DATA'],
-            self.coco_conf['TRANSFORM'], 
-            maxiter=1000)
+        coco = Reader(
+            self.coco_conf['DATA'], self.coco_conf['TRANSFORM'], maxiter=1000)
         train_rd = coco.train()
         self.assertTrue(train_rd is not None)
 
@@ -53,8 +53,8 @@ class TestReader(unittest.TestCase):
             if cost >= 1.0:
                 total += ct
                 qps = total / (time.time() - start_ts)
-                print('got %d/%d samples in %.3fsec with qps:%d' % 
-                    (ct, total, cost, qps))
+                print('got %d/%d samples in %.3fsec with qps:%d' %
+                      (ct, total, cost, qps))
                 ct = 0
                 prev_ts = time.time()
 
@@ -76,7 +76,7 @@ class TestReader(unittest.TestCase):
                 self.assertTrue(sample is not None)
             self.assertGreaterEqual(ct, coco._maxiter)
 
-    def test_rcnn(self):
+    def test_rcnn_train(self):
         """ Test reader for training
         """
         anno = self.rcnn_conf['DATA']['TRAIN']['ANNO_FILE']
@@ -94,11 +94,11 @@ class TestReader(unittest.TestCase):
             out = sample
             ct += 1
             self.assertTrue(sample is not None)
+        self.assertEqual(out[0][0].shape[0], 3)
         self.assertEqual(out[0][1].shape[0], 3)
-        self.assertEqual(out[0][2].shape[1], 4)
-        self.assertEqual(out[0][3].shape[1], 1)
+        self.assertEqual(out[0][3].shape[1], 4)
         self.assertEqual(out[0][4].shape[1], 1)
-        self.assertEqual(out[0][5].shape[0], 1)
+        self.assertEqual(out[0][5].shape[1], 1)
         self.assertGreaterEqual(ct, rcnn._maxiter)
 
 

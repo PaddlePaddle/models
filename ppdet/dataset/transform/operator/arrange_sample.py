@@ -40,14 +40,13 @@ class ArrangeRCNN(BaseOperator):
        which the model need when training.
     """
 
-    def __init__(self, is_mask=False, is_train=True):
+    def __init__(self, is_mask=False):
         """ Get the standard output.
         Args:
             is_mask (bool): confirm whether to use mask rcnn
         """
         super(ArrangeRCNN, self).__init__()
         self.is_mask = is_mask
-        self.is_train = is_train
         if not (isinstance(self.is_mask, bool)):
             raise TypeError('{}: the input type is error.'.format(self.__str__))
 
@@ -60,7 +59,7 @@ class ArrangeRCNN(BaseOperator):
         Output:
             sample: a tuple which contains the
                     info which training model need.
-                    tupe is (image, gt_bbox, gt_class, is_crowd, im_info, gt_masks)
+                    tupe is (image, im_info, im_id, gt_bbox, gt_class, is_crowd, gt_masks)
         """
         im = sample['image']
         gt_bbox = sample['gt_bbox']
@@ -75,8 +74,6 @@ class ArrangeRCNN(BaseOperator):
         else:
             raise KeyError("The dataset doesn't have 'im_info' key.")
         im_id = sample['im_id']
-        if not self.is_train:
-            return (im, im_info, im_id)
 
         outs = (im, im_info, im_id, gt_bbox, gt_class, is_crowd)
         gt_masks = []
@@ -100,6 +97,40 @@ class ArrangeRCNN(BaseOperator):
                     break
                 gt_masks.append(gt_segm)
             outs = outs + (gt_masks, )
+        return outs
+
+
+@register_op
+class ArrangeTestRCNN(BaseOperator):
+    """Transform the sample dict to the sample tuple
+       which the model need when training.
+    """
+
+    def __init__(self):
+        """ Get the standard output when do detection.
+        """
+        super(ArrangeTestRCNN, self).__init__()
+
+    def __call__(self, sample, context=None):
+        """
+        Input:
+            sample: a dict which contains image
+                    info and annotation info.
+            context: a dict which contains additional info.
+        Output:
+            sample: a tuple which contains the
+                    info which training model need.
+                    tupe is (image, im_info, im_id)
+        """
+        im = sample['image']
+        keys = list(sample.keys())
+        if 'im_info' in keys:
+            im_info = sample['im_info']
+        else:
+            raise KeyError("The dataset doesn't have 'im_info' key.")
+        im_id = sample['im_id']
+
+        outs = (im, im_info, im_id)
         return outs
 
 
@@ -128,13 +159,45 @@ class ArrangeSSD(BaseOperator):
         Output:
             sample: a tuple which contains the
                     info which training model need.
-                    tupe is (image, gt_bbox, gt_class, is_crowd, im_info, gt_masks)
+                    tupe is (image, gt_bbox, gt_class, difficult)
         """
         im = sample['image']
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
         difficult = sample['difficult']
         outs = (im, gt_bbox, gt_class, difficult)
+        return outs
+
+
+@register_op
+class ArrangeTestSSD(BaseOperator):
+    """Transform the sample dict to the sample tuple
+       which the model need when training.
+    """
+
+    def __init__(self, is_mask=False):
+        """ Get the standard output.
+        Args:
+            is_mask (bool): confirm whether to use mask rcnn
+        """
+        super(ArrangeTestSSD, self).__init__()
+        self.is_mask = is_mask
+        if not (isinstance(self.is_mask, bool)):
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
+
+    def __call__(self, sample, context=None):
+        """
+        Input:
+            sample: a dict which contains image
+                    info and annotation info.
+            context: a dict which contains additional info.
+        Output:
+            sample: a tuple which contains the
+                    info which training model need.
+                    tupe is (image)
+        """
+        im = sample['image']
+        outs = (im)
         return outs
 
 
@@ -155,8 +218,7 @@ class ArrangeYOLO(BaseOperator):
             raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def __call__(self, sample, context=None):
-        """
-        Input:
+        """Input:
             sample: a dict which contains image
                     info and annotation info.
             context: a dict which contains additional info.
@@ -167,13 +229,11 @@ class ArrangeYOLO(BaseOperator):
                              is_crowd, im_info, gt_masks)
         """
         im = sample['image']
-
         if self.is_train:
             if len(sample['gt_bbox']) != len(sample['gt_class']):
                 raise ValueError("gt num mismatch: bbox and class.")
             if len(sample['gt_bbox']) != len(sample['gt_score']):
                 raise ValueError("gt num mismatch: bbox and score.")
-
             gt_bbox = np.zeros((50, 4), dtype=im.dtype)
             gt_class = np.zeros((50, ), dtype=np.int32)
             gt_score = np.zeros((50, ), dtype=im.dtype)
@@ -182,11 +242,9 @@ class ArrangeYOLO(BaseOperator):
                 gt_bbox[:gt_num, :] = sample['gt_bbox'][:gt_num, :]
                 gt_class[:gt_num] = sample['gt_class'][:gt_num, 0]
                 gt_score[:gt_num] = sample['gt_score'][:gt_num, 0]
-
             # parse [x1, y1, x2, y2] to [x, y, w, h]
             gt_bbox[:, 2:4] = gt_bbox[:, 2:4] - gt_bbox[:, :2]
             gt_bbox[:, :2] = gt_bbox[:, :2] + gt_bbox[:, 2:4] / 2.
-
             outs = (im, gt_bbox, gt_class, gt_score)
         else:
             im_id = sample['im_id']
@@ -194,5 +252,4 @@ class ArrangeYOLO(BaseOperator):
             w = sample['w']
             im_shape = np.array((h, w))
             outs = (im, im_shape, im_id)
-
         return outs

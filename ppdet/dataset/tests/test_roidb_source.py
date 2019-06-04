@@ -19,10 +19,14 @@ class TestRoiDbSource(unittest.TestCase):
         anno_path = set_env.coco_data['ANNO_FILE']
         image_dir = set_env.coco_data['IMAGE_DIR']
         cls.config = {
-            'fname': anno_path,
-            'image_dir': image_dir,
-            'samples': 100,
-            'load_img': True
+            'data_cf': {
+                'type': 'RoiDbSource',
+                'anno_file': anno_path,
+                'image_dir': image_dir,
+                'samples': 100,
+                'load_img': True
+            },
+            'cname2cid': None
         }
 
     @classmethod

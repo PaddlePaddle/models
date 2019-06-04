@@ -13,8 +13,7 @@
 # limitations under the License.
 
 #function:
-#    interface to load data from local files and parse it for samples, 
-#    eg: roidb data in pickled files
+#    interface to load data from txt file.
 
 from __future__ import absolute_import
 from __future__ import division
@@ -23,58 +22,54 @@ from __future__ import unicode_literals
 
 import os
 import random
+import numpy as np
 import copy
-import pickle as pkl
 from ..dataset import Dataset
 
 
-class RoiDbSource(Dataset):
-    """ interface to load roidb data from files
+class SimpleSource(Dataset):
+    """ a simple Dataset interface used to provide testing data which are image files stored in local files.
     """
 
     def __init__(self,
                  anno_file,
                  image_dir=None,
                  samples=-1,
-                 is_shuffle=True,
-                 load_img=False,
+                 is_shuffle=False,
+                 load_img=True,
                  cname2cid=None,
                  mixup_epoch=-1,
                  with_background=True):
         """ Init
 
         Args:
-            fname (str): label file path
+            fname (str): file names for each image which is located in 'image_dir'
             image_dir (str): root dir for images
             samples (int): samples to load, -1 means all
             is_shuffle (bool): whether to shuffle samples
             load_img (bool): whether load data in this class
-            cname2cid (dict): the label name to id dictionary
-            mixup_epoch (int): parse mixup in first n epoch
-            with_background (bool): whether load background 
-                                    as a class
+            mixup_epoch (int): parse mixup in first n epoch (no use)
+            with_background (bool): whether load background
+                                    as a class (no use)
         """
-        super(RoiDbSource, self).__init__()
+        super(SimpleSource, self).__init__()
         self._epoch = -1
-        assert os.path.isfile(anno_file) or os.path.isdir(
-            anno_file), 'invalid file[%s] for RoiDbSource' % (anno_file)
+        assert os.path.isfile(
+            anno_file), 'invalid file[%s] for SimpleSource' % (anno_file)
         self._fname = anno_file
         self._image_dir = image_dir
         if image_dir is not None:
             assert os.path.isdir(image_dir), 'invalid image directory[%s]' % (
                 image_dir)
-        self._roidb = None
+        self._simple = None
         self._pos = -1
         self._drained = False
         self._samples = samples
-        self._is_shuffle = is_shuffle
         self._load_img = load_img
         self.cname2cid = cname2cid
-        self._mixup_epoch = mixup_epoch
-        self._with_background = with_background
 
     def __str__(self):
-        return 'RoiDbSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
+        return 'SimpleSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
             % (self._fname, self._epoch, self.size(), self._pos)
 
     def next(self):
@@ -82,35 +77,37 @@ class RoiDbSource(Dataset):
         """
         if self._epoch < 0:
             self.reset()
-        if self._pos >= self._samples:
+
+        if self._pos >= self.size():
             self._drained = True
             raise StopIteration('%s no more data' % (str(self)))
-        sample = copy.deepcopy(self._roidb[self._pos])
-        if self._load_img:
-            sample['image'] = self._load_image(sample['im_file'])
         else:
-            sample['im_file'] = os.path.join(self._image_dir, sample['im_file'])
-        if self._epoch < self._mixup_epoch:
-            mix_idx = random.randint(1, self._samples - 1)
-            mix_pos = (mix_idx + self._pos) % self._samples
-            sample['mixup'] = copy.deepcopy(self._roidb[mix_pos])
-            if self._load_image:
-                sample['mixup']['image'] = \
-                        self._load_image(sample['mixup']['im_file'])
+            sample = copy.deepcopy(self._simple[self._pos])
+            if self._load_img:
+                sample['image'] = self._load_image(sample['im_file'])
             else:
-                sample['mixup']['im_file'] = \
-                        os.path.join(self._image_dir, sample['mixup']['im_file'])
-        self._pos += 1
-        return sample
+                sample['im_file'] = os.path.join(self._image_dir,
+                                                 sample['im_file'])
+            self._pos += 1
+            return sample
 
     def _load(self):
         """ load data from file
         """
-        from . import loader
-        records, cname2cid = loader.load(self._fname, self._samples,
-                                         self._with_background, True,
-                                         self.cname2cid)
-        self.cname2cid = cname2cid
+        assert os.path.isfile(self._fname) and self._fname.endswith(
+            '.txt'), 'invalid test file path'
+        ct = 0
+        records = []
+        with open(self._fname, 'r') as fr:
+            while True:
+                line = fr.readline().strip()
+                if not line or ct >= self._samples:
+                    break
+                voc_rec = {'im_id': np.array([ct]), 'im_file': line}
+                ct += 1
+                records.append(voc_rec)
+        assert len(records) > 0, 'not found any test image in %s' % (
+            self._fname)
         return records
 
     def _load_image(self, where):
@@ -121,13 +118,8 @@ class RoiDbSource(Dataset):
     def reset(self):
         """ implementation of Dataset.reset
         """
-        if self._roidb is None:
-            self._roidb = self._load()
-
-        if self._samples == -1:
-            self._samples = len(self._roidb)
-        if self._is_shuffle:
-            random.shuffle(self._roidb)
+        if self._simple is None:
+            self._simple = self._load()
 
         if self._epoch < 0:
             self._epoch = 0
@@ -140,7 +132,7 @@ class RoiDbSource(Dataset):
     def size(self):
         """ implementation of Dataset.size
         """
-        return len(self._roidb)
+        return len(self._simple)
 
     def drained(self):
         """ implementation of Dataset.drained

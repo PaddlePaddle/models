@@ -16,7 +16,8 @@ import os
 import numpy as np
 import xml.etree.ElementTree as ET
 
-def load(anno_path, sample_num=-1):
+
+def load(anno_path, sample_num=-1, cname2cid=None):
     """ Load VOC records with annotations in 
         xml directory 'anno_path'
 
@@ -38,26 +39,26 @@ def load(anno_path, sample_num=-1):
             'w': im_w, # width
             'is_crowd': is_crowd,
             'gt_class': gt_class,
-            'gt_score': gt_score,
             'gt_bbox': gt_bbox,
             'gt_poly': gt_poly,
         }
-        'catname2clsid' is a dict to map category name to class id
+        'cname2id' is a dict to map category name to class id
 
     """
     txt_file = anno_path
     part = txt_file.split('ImageSets')
     xml_path = os.path.join(part[0], 'Annotations')
-    print(xml_path)
     assert os.path.isfile(txt_file) and \
            os.path.isdir(xml_path), 'invalid xml path'
 
     records = []
     ct = 0
+    flag = False if cname2cid is None else True
+    if cname2cid is None:
+        cname2cid = {}
 
     # mapping category name to class id
     # background:0, first_class:1, second_class:2, ...
-    cname2cid = {}
     with open(txt_file, 'r') as fr:
         while True:
             line = fr.readline()
@@ -67,11 +68,10 @@ def load(anno_path, sample_num=-1):
             xml_file = os.path.join(xml_path, fname)
             if not os.path.isfile(xml_file):
                 continue
-
             tree = ET.parse(xml_file)
             im_fname = tree.find('filename').text
             if tree.find('id') is None:
-                im_id =  np.array([ct])
+                im_id = np.array([ct])
             else:
                 im_id = np.array([int(tree.find('id').text)])
 
@@ -85,8 +85,10 @@ def load(anno_path, sample_num=-1):
             difficult = np.zeros((len(objs), 1), dtype=np.int32)
             for i, obj in enumerate(objs):
                 cname = obj.find('name').text
-                if cname not in cname2cid:
-                    cname2cid[cname] = len(cname2cid)+1
+                if not flag and cname not in cname2cid:
+                    cname2cid[cname] = len(cname2cid) + 1
+                elif flag and cname not in cname2cid:
+                    raise KeyError('The key {} isn\'t in list.'.format(cname))
                 gt_class[i][0] = cname2cid[cname]
                 _difficult = int(obj.find('difficult').text)
                 x1 = float(obj.find('bndbox').find('xmin').text)
@@ -100,7 +102,6 @@ def load(anno_path, sample_num=-1):
                 gt_bbox[i] = [x1, y1, x2, y2]
                 is_crowd[i][0] = 0
                 difficult[i][0] = _difficult
-
             voc_rec = {
                 'im_file': im_fname,
                 'im_id': im_id,
@@ -108,18 +109,16 @@ def load(anno_path, sample_num=-1):
                 'w': im_w,
                 'is_crowd': is_crowd,
                 'gt_class': gt_class,
-                'gt_score': gt_score
+                'gt_score': gt_score,
                 'gt_bbox': gt_bbox,
                 'gt_poly': [],
                 'difficult': difficult
-                }
+            }
             if len(objs) != 0:
                 records.append(voc_rec)
 
             ct += 1
             if sample_num > 0 and ct >= sample_num:
                 break
-
     assert len(records) > 0, 'not found any voc record in %s' % (anno_path)
     return [records, cname2cid]
-

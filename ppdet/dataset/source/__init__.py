@@ -21,20 +21,24 @@ from __future__ import unicode_literals
 
 import copy
 from .roidb_source import RoiDbSource
+from .simple_source import SimpleSource
 
 
 def build(config):
     """ build dataset from source data, 
         default source type is 'RoiDbSource'
     """
-    args = copy.deepcopy(config)
-    if 'type' in config:
-        source_type = config['type']
-        del args['type']
-    else:
+    data_cf = {k.lower(): v for k, v in config['data_cf'].items()}
+    data_cf['cname2cid'] = config['cname2cid']
+    args = copy.deepcopy(data_cf)
+    if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource']:
         source_type = 'RoiDbSource'
-
+    else:
+        source_type = data_cf['type']
+    del args['type']
     if source_type == 'RoiDbSource':
         return RoiDbSource(**args)
+    elif source_type == 'SimpleSource':
+        return SimpleSource(**args)
     else:
         raise ValueError('not supported source type[%s]' % (source_type))

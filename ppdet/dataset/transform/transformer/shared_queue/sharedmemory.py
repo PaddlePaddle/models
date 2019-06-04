@@ -15,7 +15,6 @@
 # utils for memory management which is allocated on sharedmemory,
 #    note that these structures may not be thread-safe
 
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -25,7 +24,12 @@ import os
 import time
 import math
 import struct
-import cPickle
+import sys
+s = sys.version
+if s.startswith('2'):
+    import cPickle as pickle
+else:
+    import pickle
 import json
 import uuid
 import random
@@ -188,8 +192,8 @@ class PageAllocator(object):
         self._total_pages = total_pages
         self._page_size = page_size
 
-        header_pages = int(math.ceil((total_pages +
-            self.s_allocator_header) / page_size))
+        header_pages = int(
+            math.ceil((total_pages + self.s_allocator_header) / page_size))
 
         self._header_pages = header_pages
         self._free_pages = total_pages - header_pages
@@ -212,14 +216,14 @@ class PageAllocator(object):
         info['alloc_flags'] = alloc_flags
         fname = fname + '.' + str(uuid.uuid4())[:6]
         with open(fname, 'wb') as f:
-            f.write(cPickle.dumps(info, -1))
+            f.write(pickle.dumps(info, -1))
         logger.warn('dump alloc info to file[%s]' % (fname))
 
     def _reset(self):
         alloc_page_pos = self._header_pages
         used_pages = self._header_pages
-        header_info = struct.pack(str('III'),
-            self._magic_num, alloc_page_pos, used_pages)
+        header_info = struct.pack(
+            str('III'), self._magic_num, alloc_page_pos, used_pages)
         assert len(header_info) == self.s_allocator_header, \
             'invalid size of header_info'
 
@@ -230,8 +234,8 @@ class PageAllocator(object):
     def header(self):
         """ get header info of this allocator
         """
-        magic, pos, used = struct.unpack(str('III'),
-                                         self._base[0:self.s_allocator_header])
+        magic, pos, used = struct.unpack(
+            str('III'), self._base[0:self.s_allocator_header])
         assert magic == self._magic_num, \
             'invalid header magic[%d] in shared memory' % (magic)
         return self._header_pages, self._total_pages, pos, used
@@ -403,11 +407,12 @@ class SharedMemoryMgr(object):
 
     def _setup(self):
         self._shared_mem = RawArray('c', self._cap)
-        self._base = np.frombuffer(self._shared_mem, dtype='uint8', count=self._cap)
+        self._base = np.frombuffer(
+            self._shared_mem, dtype='uint8', count=self._cap)
         self._locker.acquire()
         try:
-            self._allocator = PageAllocator(self._shared_mem,
-                                            self._total_pages, self._page_size)
+            self._allocator = PageAllocator(self._shared_mem, self._total_pages,
+                                            self._page_size)
         finally:
             self._locker.release()
 
@@ -488,7 +493,7 @@ class SharedMemoryMgr(object):
         end = start + len(data)
         assert start >= 0 and end <= self._cap, "invalid start "\
             "position[%d] when put data to buff:%s" % (start, str(shared_buf))
-        self._base[start: end] = np.frombuffer(data, 'uint8', len(data))
+        self._base[start:end] = np.frombuffer(data, 'uint8', len(data))
 
     def get_data(self, shared_buf, offset, size, no_copy=True):
         """ extract 'data' from 'shared_buf' in range [offset, offset + size)

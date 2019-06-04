@@ -11,24 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-
 from . import base
 from .parallel_map import ParallelMappedDataset
 
 
 def map(ds, mapper, worker_args=None):
     """ apply 'mapper' to 'ds'
-
     Args:
         ds (instance of Dataset): dataset to be mapped
         mapper (function): action to be executed for every data sample
         worker_args (dict): configs for concurrent mapper
-
     Returns:
         a mapped dataset
     """
@@ -38,31 +34,36 @@ def map(ds, mapper, worker_args=None):
         return base.MappedDataset(ds, mapper)
 
 
-def batch(ds, batchsize, coarsest_stride, drop_last=True, is_padding=False, 
-          random_shapes=[], multi_scales=[]):
+def batch(ds, batchsize, drop_last=True):
     """ Batch data samples to batches
-
     Args:
         batchsize (int): number of samples for a batch
-        coarsest_stride(int): stride of the coarsest FPN level
         drop_last (bool): drop last few samples if not enough for a batch
-        is_padding (bool): whether padding the image in one batch
-        random_shapes: (list of int): resize to image to random 
-                                      shapes, [] for not resize.
-        random_shapes: (list of int): resize image by random 
-                                      scales, [] for not resize.
-
+        
     Returns:
         a batched dataset
     """
-    return base.BatchedDataset(
-        ds,
-        batchsize,
-        coarsest_stride,
-        drop_last=drop_last,
-        is_padding=is_padding,
-        random_shapes=random_shapes,
-        multi_scales=multi_scales)
+    return base.BatchedDataset(ds, batchsize, drop_last=drop_last)
 
 
-__all__ = ['map', 'batch']
+def process(ds,
+            coarsest_stride,
+            is_padding=False,
+            random_shapes=[],
+            multi_scales=[]):
+    """ Post process the batches.
+    Args:
+        coarsest_stride(int): stride of the coarsest FPN level
+        is_padding (bool): whether padding the image in one batch
+        random_shapes: (list of int): resize to image to random 
+                                      shapes, [] for not resize.
+        multi_scales: (list of int): resize image by random 
+                                      scales, [] for not resize.
+    Returns:
+        a batched dataset which is processed
+    """
+    return base.PostProcessing(ds, coarsest_stride, is_padding, random_shapes,
+                               multi_scales)
+
+
+__all__ = ['map', 'batch', 'process']
