@@ -31,11 +31,11 @@ class SimpleSource(Dataset):
     """ a simple Dataset interface used to provide testing data which are image files stored in local files.
     """
 
-    def __init__(self, anno_file, image_dir=None, samples=-1, load_img=True):
+    def __init__(self, test_file, image_dir=None, samples=-1, load_img=True):
         """ Init
 
         Args:
-            anno_file (str): file names for each image which is located in 'image_dir'
+            test_file (str): file names for each image which is located in 'image_dir'
             image_dir (str): root dir for images
             samples (int): samples to load, -1 means all
             load_img (bool): whether load data in this class
@@ -43,8 +43,8 @@ class SimpleSource(Dataset):
         super(SimpleSource, self).__init__()
         self._epoch = -1
         assert os.path.isfile(
-            anno_file), 'invalid file[%s] for SimpleSource' % (anno_file)
-        self._fname = anno_file
+            test_file), 'invalid file[%s] for SimpleSource' % (test_file)
+        self._fname = test_file
         self._image_dir = image_dir
         if image_dir is not None:
             assert os.path.isdir(image_dir), 'invalid image directory[%s]' % (
@@ -54,7 +54,6 @@ class SimpleSource(Dataset):
         self._drained = False
         self._samples = samples
         self._load_img = load_img
-        self.cname2cid = cname2cid
 
     def __str__(self):
         return 'SimpleSource(fname:%s,epoch:%d,size:%d,pos:%d)' \

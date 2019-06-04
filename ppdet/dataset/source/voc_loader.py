@@ -87,6 +87,7 @@ def load(anno_path, sample_num=-1, cname2cid=None):
             for i, obj in enumerate(objs):
                 cname = obj.find('name').text
                 if not existence and cname not in cname2cid:
+                    # the background's id is 0, so need to add 1.
                     cname2cid[cname] = len(cname2cid) + 1
                 elif existence and cname not in cname2cid:
                     raise KeyError(

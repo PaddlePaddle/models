@@ -105,7 +105,7 @@ DATA:
         SAMPLES: -1
         
     TEST:
-        ANNO_FILE: ./test.txt
+        TEST_FILE: ./test.txt
         IMAGE_DIR:  PascalVOC/VOCdevkit/VOC2012/JPEGImages
         TYPE: SimpleSource
         SAMPLES: 1

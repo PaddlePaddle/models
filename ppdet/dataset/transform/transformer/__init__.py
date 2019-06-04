@@ -35,7 +35,7 @@ def map(ds, mapper, worker_args=None):
         return base.MappedDataset(ds, mapper)
 
 
-def batch(ds, batchsize, drop_last=True):
+def batch(ds, batchsize, drop_last=False):
     """ Batch data samples to batches
     Args:
         batchsize (int): number of samples for a batch

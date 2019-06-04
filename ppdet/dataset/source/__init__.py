@@ -52,6 +52,7 @@ def build(config):
     if source_type == 'RoiDbSource':
         return RoiDbSource(**args)
     elif source_type == 'SimpleSource':
+        del args['cname2cid']
         return SimpleSource(**args)
     else:
         raise ValueError('not supported source type[%s]' % (source_type))

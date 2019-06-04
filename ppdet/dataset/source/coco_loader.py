@@ -40,7 +40,7 @@ def load(anno_path, sample_num=-1, with_background=True):
             'h': im_h, # height of image
             'w': im_w, # width
             'is_crowd': is_crowd,
-            'gt_score': gt_score
+            'gt_score': gt_score,
             'gt_class': gt_class,
             'gt_bbox': gt_bbox,
             'gt_poly': gt_poly,
@@ -120,4 +120,5 @@ def load(anno_path, sample_num=-1, with_background=True):
         if sample_num > 0 and ct >= sample_num:
             break
     assert len(records) > 0, 'not found any coco record in %s' % (anno_path)
+    logger.info('{} samples in file {}'.format(ct, anno_path))
     return [records, cname2cid]
