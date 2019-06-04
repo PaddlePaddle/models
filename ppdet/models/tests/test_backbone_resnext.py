@@ -23,7 +23,7 @@ import paddle.fluid as fluid
 import paddle.compat as cpt
 
 from ppdet.core.config import load_cfg, merge_cfg
-from ppdet.models.backbones.resnext import ResNeXt, ResNeXt101C4Backbone, ResNeXt101C5
+from ppdet.models.backbones.resnext import ResNeXt, ResNeXt101Backbone, ResNeXt101C5
 
 
 def bottleneck_names(name, bn_affine, short_conv=True):
@@ -111,7 +111,7 @@ class TestResNeXt(unittest.TestCase):
         with fluid.program_guard(prog, startup_prog):
             data = fluid.layers.data(
                 name='input', shape=self.dshape, dtype='float32')
-            backbone = ResNeXt101C4Backbone(self.cfg)
+            backbone = ResNeXt101Backbone(self.cfg)
             feat = backbone(data)
             # actual names
             parameters = prog.global_block().all_parameters()

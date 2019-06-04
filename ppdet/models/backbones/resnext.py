@@ -24,7 +24,7 @@ from ..registry import BBoxHeadConvs
 from .base import BackboneBase
 from .resnet import ResNet
 
-__all__ = ['ResNeXt101C4Backbone', 'ResNeXt101C5']
+__all__ = ['ResNeXt101Backbone', 'ResNeXt101C5']
 
 
 class ResNeXt(ResNet):
@@ -83,15 +83,16 @@ class ResNeXt(ResNet):
 
 
 @Backbones.register
-class ResNeXt101C4Backbone(BackboneBase):
+class ResNeXt101Backbone(BackboneBase):
     def __init__(self, cfg):
-        super(ResNeXt101C4Backbone, self).__init__(cfg)
+        super(ResNeXt101Backbone, self).__init__(cfg)
         self.freeze_at = getattr(cfg.MODEL, 'FREEZE_AT', 2)
         assert self.freeze_at in [0, 1, 2, 3, 4
                                   ], "The freeze_at should be 0, 1, 2, 3, or 4"
         self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
         self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
         self.groups = getattr(cfg.MODEL, "GROUPS", 64)
+        self.endpoint = getattr(cfg.MODEL, 'ENDPOINT', 4)
         self.number = 101
 
     def __call__(self, input):
