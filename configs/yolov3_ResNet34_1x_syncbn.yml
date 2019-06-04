@@ -28,7 +28,6 @@ YOLO_HEAD:
 
 ENV:
   GPU: ON
-  GPU_NUM: 8
 
 OPTIMIZER:
   TYPE: Momentum
