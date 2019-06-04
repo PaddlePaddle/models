@@ -22,6 +22,7 @@ import six
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.framework import Variable
+from paddle.fluid.regularizer import L2Decay
 
 from ..registry import Backbones
 from ..registry import BBoxHeadConvs
@@ -34,13 +35,19 @@ __all__ = ['ResNet50Backbone',
 
 
 class ResNet(object):
-    def __init__(self, depth, freeze_bn, affine_channel):
+    def __init__(self, 
+                 depth, 
+                 freeze_bn, 
+                 affine_channel, 
+                 bn_decay=True):
         """
         Args:
             depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
             freeze_bn (bool): whether to fix batch norm
                 (meaning the scale and bias does not update).
             affine_channel (bool): Use batch_norm or affine_channel.
+            bn_decay (bool): Wether perform L2Decay in batch_norm offset
+                             and scale, default True.
         """
         if depth not in [18, 34, 50, 101, 152]:
             raise ValueError("depth {} not in [18, 34, 50, 101, 152].".format(
@@ -48,6 +55,7 @@ class ResNet(object):
         self.depth = depth
         self.freeze_bn = freeze_bn
         self.affine_channel = affine_channel
+        self.bn_decay = bn_decay
         self.depth_cfg = {
             18: ([2, 2, 2, 2], self.basicblock),
             34: ([3, 4, 6, 3], self.basicblock),
@@ -83,8 +91,13 @@ class ResNet(object):
             bn_name = "bn" + name[3:]
 
         lr = 0. if self.freeze_bn else 1.
-        pattr = ParamAttr(name=bn_name + '_scale', learning_rate=lr)
-        battr = ParamAttr(name=bn_name + '_offset', learning_rate=lr)
+        bn_decay = float(self.bn_decay)
+        pattr = ParamAttr(name=bn_name + '_scale', 
+                          learning_rate=lr,
+                          regularizer=L2Decay(bn_decay))
+        battr = ParamAttr(name=bn_name + '_offset', 
+                          learning_rate=lr,
+                          regularizer=L2Decay(bn_decay))
 
         if not self.affine_channel:
             out = fluid.layers.batch_norm(
@@ -267,6 +280,9 @@ class ResNet50Backbone(BackboneBase):
         self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
         # use batch_norm or affine_channel.
         self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
+        # whether ignore batch_norm offset and scale L2Decay
+        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 
+                                'BN_DECAY', True)
         self.number = 50
         self.endpoint = getattr(cfg.MODEL, 'ENDPOINT', 4)
         # This list contains names of each Res Block output.
@@ -286,7 +302,7 @@ class ResNet50Backbone(BackboneBase):
         if not isinstance(input, Variable):
             raise TypeError(str(input) + " should be Variable")
 
-        model = ResNet(self.number, self.freeze_bn, self.affine_channel)
+        model = ResNet(self.number, self.freeze_bn, self.affine_channel, self.bn_decay)
         res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
         return {k: v for k, v in zip(self.body_feat_names, res_list)}
 
