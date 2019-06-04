@@ -31,26 +31,14 @@ class SimpleSource(Dataset):
     """ a simple Dataset interface used to provide testing data which are image files stored in local files.
     """
 
-    def __init__(self,
-                 anno_file,
-                 image_dir=None,
-                 samples=-1,
-                 is_shuffle=False,
-                 load_img=True,
-                 cname2cid=None,
-                 mixup_epoch=-1,
-                 with_background=True):
+    def __init__(self, anno_file, image_dir=None, samples=-1, load_img=True):
         """ Init
 
         Args:
-            fname (str): file names for each image which is located in 'image_dir'
+            anno_file (str): file names for each image which is located in 'image_dir'
             image_dir (str): root dir for images
             samples (int): samples to load, -1 means all
-            is_shuffle (bool): whether to shuffle samples
             load_img (bool): whether load data in this class
-            mixup_epoch (int): parse mixup in first n epoch (no use)
-            with_background (bool): whether load background
-                                    as a class (no use)
         """
         super(SimpleSource, self).__init__()
         self._epoch = -1

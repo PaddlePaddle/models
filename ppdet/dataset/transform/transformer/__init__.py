@@ -16,6 +16,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from . import base
+from . import post_map
 from .parallel_map import ParallelMappedDataset
 
 
@@ -46,24 +47,16 @@ def batch(ds, batchsize, drop_last=True):
     return base.BatchedDataset(ds, batchsize, drop_last=drop_last)
 
 
-def process(ds,
-            coarsest_stride,
-            is_padding=False,
-            random_shapes=[],
-            multi_scales=[]):
+def batch_map(ds, config):
     """ Post process the batches.
     Args:
-        coarsest_stride(int): stride of the coarsest FPN level
-        is_padding (bool): whether padding the image in one batch
-        random_shapes: (list of int): resize to image to random 
-                                      shapes, [] for not resize.
-        multi_scales: (list of int): resize image by random 
-                                      scales, [] for not resize.
+        ds (instance of Dataset): dataset to be mapped
+        mapper (function): action to be executed for every batch
     Returns:
         a batched dataset which is processed
     """
-    return base.PostProcessing(ds, coarsest_stride, is_padding, random_shapes,
-                               multi_scales)
+    mapper = post_map.build(config)
+    return base.MappedDataset(ds, mapper)
 
 
-__all__ = ['map', 'batch', 'process']
+__all__ = ['map', 'batch', 'batch_mapper']

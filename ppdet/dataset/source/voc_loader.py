@@ -28,6 +28,7 @@ def load(anno_path, sample_num=-1, cname2cid=None):
     Args:
         @anno_path (str): root directory for voc annotation data
         @sample_num (int): number of samples to load, -1 means all
+        @cname2cid (dict): the label name to id dictionary
 
     Returns:
         (records, catname2clsid)

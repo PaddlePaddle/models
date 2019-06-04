@@ -42,7 +42,7 @@ OPTIMIZER:
 
   LR_DECAY:
     POLICY: piecewise_decay
-    BOUNDARIES: [7500, 11000, 14500, 18000]
+    BOUNDARIES: [9200, 13800, 18400, 23000]
     VALUES: [0.001, 0.0005, 0.00025, 0.0001, 0.00001]
 
   LR_WARMUP:
@@ -51,22 +51,23 @@ OPTIMIZER:
   WEIGHT_DECAY:
     TYPE: L2
     FACTOR: 0.00005
-    BN_FACTOR: 0.00005
 
 TRAIN:
-  MAX_ITERS: 220000
-  BATCH_SIZE_PER_DEVICE: 8
-  PRETRAIN_WEIGTS: models/fluid/PaddleCV/object_detection/pretrained/ssd_mobilenet_v1_coco/
+  MAX_ITERS: 32000
+  LOG_SMOOTH_WINDOW: 1
+  SNAPSHOT_ITER: 200
+  PRETRAIN_WEIGHTS: object_detection/pretrained/ssd_mobilenet_v1_coco/
   INPUT_SIZE: 300
   BATCH_NORM_TYPE: BN
-  USE_VAL: On
-  EPOCH_NUM: 100000
   ENABLE_CE: ON
   USE_PARALLEL: OFF
   SHAPE: 300
-  AP_VERSION: integral
-  MODEL_SAVE_DIR: ./results/
+  SAVE_DIR: ./results2/
+  DO_VAL: ON
   
+VAL:
+  MAX_ITERS: 100
+
 
 TEST:
   INPUT_SIZE: 300
@@ -84,99 +85,104 @@ ENV:
   MULTIPROCESS_WORKER: 8
   MULTIPROCESS_QUEUE_LEN: 32
 
-DATA:
-  DATASET: coco2017
-  CLASS_NUM: 81
 
 TRANSFORM:
   PIPELINE: SSD
 
-OPTIMIZER:
-  TYPE: RMSProp
-
-  LR_DECAY:
-    POLICY: piecewise_decay
-    BOUNDARIES: [75000, 110000, 145000, 180000]
-    VALUES: [0.001, 0.0005, 0.00025, 0.0001, 0.00001]
-
-  LR_WARMUP:
-    WARMUP: OFF
-
-  WEIGHT_DECAY:
-    TYPE: L2
-    FACTOR: 0.00005
 
 
 DATA:
-    train:
-        anno_file: pascalvoc/VOCdevkit/VOC2012/ImageSets/Main/train.txt
-        image_dir:  pascalvoc/VOCdevkit/VOC2012/JPEGImages
+    TRAIN:
+        ANNO_FILE: PascalVOC/VOCdevkit/VOC2012/ImageSets/Main/train.txt
+        IMAGE_DIR:  PascalVOC/VOCdevkit/VOC2012/JPEGImages
+        SAMPLES: -1
+        IS_SHUFFLE: True 
+        TYPE: VOCSource
+    VAL:
+        ANNO_FILE: PascalVOC/VOCdevkit/VOC2012/ImageSets/Main/val.txt
+        IMAGE_DIR:  PascalVOC/VOCdevkit/VOC2012/JPEGImages
+        TYPE: VOCSource
+        SAMPLES: -1
+        
+    TEST:
+        ANNO_FILE: ./test.txt
+        IMAGE_DIR:  PascalVOC/VOCdevkit/VOC2012/JPEGImages
+        TYPE: SimpleSource
+        SAMPLES: 1
     CLASS_NUM: 21
-    
-    val:
-        anno_file: pascalvoc/VOCdevkit/VOC2012/ImageSets/Main/train.txt
-        image_dir:  pascalvoc/VOCdevkit/VOC2012/JPEGImages
-        CLASS_NUM: 21
 
 TRANSFORM:
-    train:
-        - op: DecodeImage
-          to_rgb: True
-        - op: NormalizeBox
-        - op: RandomDistort
-        - op: Expand
-          expand_max_ratio: 4
-          expand_prob: 1
-        - op: Crop
-          batch_sampler: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
-        - op: ResizeImage
-          target_size: 300
-        - op: RandFlipImage
-          is_normalized: True
-        - op: Rgb2Bgr
-        - op: NormalizeImage
-          mean: [127.5,127.5,127.5]
-          std: [127.5,127.5,127.5]
-          is_scale: False
-        - op: ArrangeSSD
-        
-        
-    val:
-        - op: DecodeImage
-          to_rgb: True
-        - op: NormalizeBox
-        - op: RandomDistort
-        - op: Expand
-          expand_max_ratio: 4
-          expand_prob: 1
-        - op: Crop
-          batch_sampler: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
-                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
-        - op: ResizeImage
-          target_size: 300
-        - op: RandFlipImage
-          is_normalized: True
-        - op: Rgb2Bgr
-        - op: NormalizeImage
-          mean: [127.5,127.5,127.5]
-          std: [127.5,127.5,127.5]
-          is_scale: False
-        - op: ArrangeSSD
+    TRAIN:
+        OPS:
+            - OP: DecodeImage
+              TO_RGB: True
+            - OP: NormalizeBox
+            - OP: RandomDistort
+            - OP: ExpandImage
+              MAX_RATIO: 4
+              PROB: 0.5
+            - OP: CropImage
+              BATCH_SAMPLER: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                              [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                              [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                              [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                              [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                              [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                              [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
+            - OP: ResizeImage
+              TARGET_SIZE: 300
+              USE_CV2: False
+              Interp: 1
+            - OP: RandomFlipImage
+              IS_NORMALIZED: True
+            - OP: Rgb2Bgr
+            - OP: NormalizeImage
+              MEAN: [127.5,127.5,127.5]
+              STD: [127.502231,127.502231,127.502231]
+              IS_SCALE: False
+            - OP: ArrangeSSD
+        BATCH_SIZE: 32
+        DEVICES_NUM: 2
+        IS_PADDING: False
+        DROP_LAST: False
 
-    batch_size: 32
-    is_padding: False
-    is_padding_total: False
-    worker_conf:
-        bufsize: 100
-        worker_num: 8
+            
+    VAL:
+        OPS:
+            - OP: DecodeImage
+              TO_RGB: True
+            - OP: NormalizeBox
+            - OP: ResizeImage
+              TARGET_SIZE: 300
+              USE_CV2: False
+              Interp: 1
+            - OP: Rgb2Bgr
+            - OP: NormalizeImage
+              MEAN: [127.5,127.5,127.5]
+              STD: [127.502231,127.502231,127.502231]
+              IS_SCALE: False
+            - OP: ArrangeSSD
+        BATCH_SIZE: 64
+        DEVICES_NUM: 1
+        IS_PADDING: False
+        DROP_LAST: False
+
+            
+            
+    TEST:
+        OPS:
+            - OP: DecodeImage
+              TO_RGB: True
+            - OP: ResizeImage
+              TARGET_SIZE: 300
+              USE_CV2: False
+              Interp: 1
+            - OP: ArrangeTestSSD
+        BATCH_SIZE: 1
+        DEVICES_NUM: 1
+        IS_PADDING: False
+        DROP_LAST: False
+    WORKER_CONF:
+        BUFSIZE: 10
+        WORKER_NUM: 2
+  

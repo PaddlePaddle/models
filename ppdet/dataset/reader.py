@@ -40,6 +40,7 @@ class Reader(object):
         self._data_cf = data_cf
         self._trans_conf = trans_conf
         self._maxiter = maxiter
+        assert type(self._maxiter) is int, 'The type of maxiter is not int.'
         self._cname2cid = None
 
     def _make_reader(self, which):
@@ -49,7 +50,6 @@ class Reader(object):
 
         # 1, Build data source
 
-        self._cname2cid = None if self._cname2cid is None else self._cname2cid
         sc_conf = {'data_cf': file_conf, 'cname2cid': self._cname2cid}
         sc = source.build(sc_conf)
 
@@ -74,20 +74,26 @@ class Reader(object):
         worker_args = {k.lower(): v for k, v in worker_args.items()}
         mapped_ds = tf.map(sc, mapper, worker_args)
         batched_ds = tf.batch(mapped_ds, batchsize, drop_last)
-        batched_ds = tf.process(batched_ds, coarsest_stride, is_padding,
-                                random_shapes, multi_scales)
+        batch_config = {
+            'coarsest_stride': coarsest_stride,
+            'is_padding': is_padding,
+            'random_shapes': random_shapes,
+            'multi_scales': multi_scales
+        }
+
+        batched_ds = tf.batch_map(batched_ds, batch_config)
 
         batched_ds.reset()
         if which.lower() == 'train':
             if self._cname2cid is not None:
-                logging.warning(
-                    'The mapping of category label to catagory id has been existed!'
+                logger.warn(
+                    'The cname2cid field has been setted, and it will be overrided by a new one.'
                 )
             self._cname2cid = sc.cname2cid
 
         # 3, Build a reader
         def _reader():
-            assert type(self._maxiter) is int, 'The type of maxiter is not int.'
+
             maxit = -1 if self._maxiter <= 0 else self._maxiter
             n = 0
             while True:

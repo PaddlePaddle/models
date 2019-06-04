@@ -207,15 +207,10 @@ class ArrangeYOLO(BaseOperator):
        which the model need when training.
     """
 
-    def __init__(self, is_train=True):
+    def __init__(self):
         """ Get the standard output.
-        Args:
-            is_mask (bool): confirm whether to use mask rcnn
         """
         super(ArrangeYOLO, self).__init__()
-        self.is_train = is_train
-        if not (isinstance(self.is_train, bool)):
-            raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def __call__(self, sample, context=None):
         """Input:
@@ -229,27 +224,51 @@ class ArrangeYOLO(BaseOperator):
                              is_crowd, im_info, gt_masks)
         """
         im = sample['image']
-        if self.is_train:
-            if len(sample['gt_bbox']) != len(sample['gt_class']):
-                raise ValueError("gt num mismatch: bbox and class.")
-            if len(sample['gt_bbox']) != len(sample['gt_score']):
-                raise ValueError("gt num mismatch: bbox and score.")
-            gt_bbox = np.zeros((50, 4), dtype=im.dtype)
-            gt_class = np.zeros((50, ), dtype=np.int32)
-            gt_score = np.zeros((50, ), dtype=im.dtype)
-            gt_num = min(50, len(sample['gt_bbox']))
-            if gt_num > 0:
-                gt_bbox[:gt_num, :] = sample['gt_bbox'][:gt_num, :]
-                gt_class[:gt_num] = sample['gt_class'][:gt_num, 0]
-                gt_score[:gt_num] = sample['gt_score'][:gt_num, 0]
-            # parse [x1, y1, x2, y2] to [x, y, w, h]
-            gt_bbox[:, 2:4] = gt_bbox[:, 2:4] - gt_bbox[:, :2]
-            gt_bbox[:, :2] = gt_bbox[:, :2] + gt_bbox[:, 2:4] / 2.
-            outs = (im, gt_bbox, gt_class, gt_score)
-        else:
-            im_id = sample['im_id']
-            h = sample['h']
-            w = sample['w']
-            im_shape = np.array((h, w))
-            outs = (im, im_shape, im_id)
+        if len(sample['gt_bbox']) != len(sample['gt_class']):
+            raise ValueError("gt num mismatch: bbox and class.")
+        if len(sample['gt_bbox']) != len(sample['gt_score']):
+            raise ValueError("gt num mismatch: bbox and score.")
+        gt_bbox = np.zeros((50, 4), dtype=im.dtype)
+        gt_class = np.zeros((50, ), dtype=np.int32)
+        gt_score = np.zeros((50, ), dtype=im.dtype)
+        gt_num = min(50, len(sample['gt_bbox']))
+        if gt_num > 0:
+            gt_bbox[:gt_num, :] = sample['gt_bbox'][:gt_num, :]
+            gt_class[:gt_num] = sample['gt_class'][:gt_num, 0]
+            gt_score[:gt_num] = sample['gt_score'][:gt_num, 0]
+        # parse [x1, y1, x2, y2] to [x, y, w, h]
+        gt_bbox[:, 2:4] = gt_bbox[:, 2:4] - gt_bbox[:, :2]
+        gt_bbox[:, :2] = gt_bbox[:, :2] + gt_bbox[:, 2:4] / 2.
+        outs = (im, gt_bbox, gt_class, gt_score)
+        return outs
+
+
+@register_op
+class ArrangeTestYOLO(BaseOperator):
+    """Transform the sample dict to the sample tuple
+       which the model need when training.
+    """
+
+    def __init__(self):
+        """ Get the standard output.
+        """
+        super(ArrangeTestYOLO, self).__init__()
+
+    def __call__(self, sample, context=None):
+        """Input:
+            sample: a dict which contains image
+                    info and annotation info.
+            context: a dict which contains additional info.
+        Output:
+            sample: a tuple which contains the
+                    info which training model need.
+                    tupe is (image, gt_bbox, gt_class, gt_score, 
+                             is_crowd, im_info, gt_masks)
+        """
+        im = sample['image']
+        im_id = sample['im_id']
+        h = sample['h']
+        w = sample['w']
+        im_shape = np.array((h, w))
+        outs = (im, im_shape, im_id)
         return outs

@@ -90,6 +90,7 @@ def load(fname,
         with_background (bool): whether load background as a class.
                                 default True.
         with_cat2id (bool): whether return cname2cid info out
+        cname2cid (dict): the mapping of category name to id
 
     Returns:
         list of loaded records whose structure is:
