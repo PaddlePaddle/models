@@ -31,7 +31,7 @@ class ResNeXt(ResNet):
     def __init__(self, depth, freeze_bn, affine_channel, groups):
         """
         Args:
-            depth (int): ResNet depth, should be 50, 101, 152.
+            depth (int): ResNeXt depth, should be 50, 101, 152.
             freeze_bn (bool): whether to fix batch norm
                 (meaning the scale and bias does not update).
             affine_channel (bool): Use batch_norm or affine_channel.

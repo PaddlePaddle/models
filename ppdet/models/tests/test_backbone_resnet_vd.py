@@ -27,11 +27,6 @@ from ppdet.models.backbones.resnet_vd import ResNetVd, ResNetVd50Backbone, ResNe
 
 
 def bottleneck_names(name, bn_affine, short_conv=True):
-    """
-    The naming rules are same as them in
-    https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/image_classification/models/resnet.py
-    """
-
     def conv_norm(name):
         pnames = [name + '_weights']
         pnames += ['bn' + name[3:] + '_scale']
@@ -68,9 +63,6 @@ class TestResNetVd(unittest.TestCase):
 
     def get_C1ToC4_params(self, bn_affine):
         """
-        The naming rules are same as them in
-        https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/image_classification/models/resnet.py
-
         Args:
             bn_affine (bool): meaning use affine_channel
 
@@ -102,9 +94,6 @@ class TestResNetVd(unittest.TestCase):
 
     def get_C5_params(self, bn_affine):
         """
-        The naming rules are same as them in
-        https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/image_classification/models/resnet.py
-
         Args:
             bn_affine (bool): meaning use affine_channel
 

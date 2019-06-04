@@ -32,7 +32,7 @@ class ResNetVd(ResNet):
     def __init__(self, depth, freeze_bn, affine_channel):
         """
         Args:
-            depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
+            depth (int): ResNet_Vd depth, should be 18, 34, 50, 101, 152.
             freeze_bn (bool): whether to fix batch norm
                 (meaning the scale and bias does not update).
             affine_channel (bool): Use batch_norm or affine_channel.
