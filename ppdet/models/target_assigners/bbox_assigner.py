@@ -82,6 +82,8 @@ class BBoxAssigner(object):
         if not feed_vars['im_info']:
             raise ValueError("{} has no im_info".format(feed_vars))
 
+        # outs = (rois, labels_int32, bbox_targets,
+        #         bbox_inside_weights, bbox_outside_weights)
         outs = fluid.layers.generate_proposal_labels(
             rpn_rois=input_rois,
             gt_classes=feed_vars['gt_label'],
@@ -96,9 +98,4 @@ class BBoxAssigner(object):
             bbox_reg_weights=self.bbox_reg_weights,
             class_nums=self.class_num,
             use_random=self.use_random)
-        # rois = outs[0]
-        # labels_int32 = outs[1]
-        # bbox_targets = outs[2]
-        # bbox_inside_weights = outs[3]
-        # bbox_outside_weights = outs[4]
         return outs

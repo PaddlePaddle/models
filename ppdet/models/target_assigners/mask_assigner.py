@@ -54,6 +54,7 @@ class MaskAssigner(object):
         check('gt_mask')
         check('im_info')
 
+        # outs = (mask_rois, roi_has_mask_int32, mask_int32)
         outs = fluid.layers.generate_mask_labels(
             rois=input_rois,
             gt_classes=feed_vars['gt_label'],
@@ -63,7 +64,4 @@ class MaskAssigner(object):
             labels_int32=sampled_label,
             num_classes=self.cfg.DATA.CLASS_NUM,
             resolution=self.cfg.MASK_HEAD.RESOLUTION)
-        # mask_rois = outs[0]
-        # roi_has_mask_int32 = outs[1]
-        # mask_int32 = outs[2]
         return outs
