@@ -162,7 +162,7 @@ def build_generator_resnet_blocks(inputgen,
         name=name + "_c3",
         norm=norm_type,
         activation_fn='relu')
-    for i in xrange(n_gen_res):
+    for i in range(n_gen_res):
         conv_name = name + "_r{}".format(i + 1)
         res_output = build_resnet_block(
             res_input,
@@ -494,7 +494,7 @@ def build_discriminator_Nlayers(inputdisc,
         relufactor=0.2,
         use_bias=True)
     d_dims = d_base_dims
-    for i in xrange(d_nlayers - 1):
+    for i in range(d_nlayers - 1):
         conv_name = name + "_c{}".format(i + 2)
         d_dims *= 2
         dis_output = conv2d(
