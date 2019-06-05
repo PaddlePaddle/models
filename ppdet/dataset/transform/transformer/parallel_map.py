@@ -61,7 +61,6 @@ class ParallelMappedDataset(ProxiedDataset):
         use_process = False
         if 'use_process' in self._worker_args:
             use_process = self._worker_args['use_process']
-        logger.info('build thread map with worker_args[%s]' % (self._worker_args))
 
         bufsize = self._worker_args['bufsize']
         if use_process:

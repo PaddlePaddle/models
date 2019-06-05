@@ -90,6 +90,7 @@ class RoiDbSource(Dataset):
             sample['image'] = self._load_image(sample['im_file'])
         else:
             sample['im_file'] = os.path.join(self._image_dir, sample['im_file'])
+
         if self._epoch < self._mixup_epoch:
             mix_idx = random.randint(1, self._samples - 1)
             mix_pos = (mix_idx + self._pos) % self._samples
@@ -124,8 +125,7 @@ class RoiDbSource(Dataset):
         if self._roidb is None:
             self._roidb = self._load()
 
-        if self._samples == -1:
-            self._samples = len(self._roidb)
+        self._samples = len(self._roidb)
         if self._is_shuffle:
             random.shuffle(self._roidb)
 

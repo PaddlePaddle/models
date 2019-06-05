@@ -41,14 +41,20 @@ def build(config):
               cname2cid (dict): the label name to id dictionary
           }
     """
-    data_cf = {k.lower(): v for k, v in config['data_cf'].items()}
-    data_cf['cname2cid'] = config['cname2cid']
-    args = copy.deepcopy(data_cf)
-    if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource']:
-        source_type = 'RoiDbSource'
+    if 'data_cf' in config:
+        data_cf = {k.lower(): v for k, v in config['data_cf'].items()}
+        data_cf['cname2cid'] = config['cname2cid']
     else:
+        data_cf = config
+
+    args = copy.deepcopy(data_cf)
+
+    # defaut type is 'RoiDbSource'
+    source_type = 'RoiDbSource'
+    if 'type' in data_cf:
         source_type = data_cf['type']
-    del args['type']
+        del args['type']
+
     if source_type == 'RoiDbSource':
         return RoiDbSource(**args)
     elif source_type == 'SimpleSource':

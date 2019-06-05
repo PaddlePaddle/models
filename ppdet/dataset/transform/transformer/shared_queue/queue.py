@@ -18,18 +18,17 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
-s = sys.version
-if s.startswith('2'):
+if sys.version.startswith('2'):
     import cPickle as pickle
+    from cStringIO import StringIO
 else:
     import pickle
+    from io import BytesIO as StringIO
+
 import logging
 import traceback
-from cStringIO import StringIO
-
+import multiprocessing as mp
 from multiprocessing.queues import Queue
-from multiprocessing.queues import SimpleQueue
-
 from .sharedmemory import SharedMemoryMgr
 
 logger = logging.getLogger(__name__)
@@ -49,7 +48,11 @@ class SharedQueue(Queue):
     def __init__(self, maxsize=0, mem_mgr=None, memsize=None, pagesize=None):
         """ init
         """
-        super(SharedQueue, self).__init__(maxsize)
+        if sys.version.startswith('2'):
+            super(SharedQueue, self).__init__(maxsize)
+        else:
+            super(SharedQueue, self).__init__(maxsize, ctx=mp.get_context())
+
         if mem_mgr is not None:
             self._shared_mem = mem_mgr
         else:
