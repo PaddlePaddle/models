@@ -2,11 +2,9 @@ import os
 import unittest
 import logging
 import numpy as np
-
 import set_env
 from dataset.transform import operator
 from dataset.transform import transformer
-
 logging.basicConfig(level=logging.INFO)
 
 
@@ -27,14 +25,11 @@ class TestBase(unittest.TestCase):
         fn = os.path.join(image_dir, roidb[0][0]['im_file'])
         with open(fn, 'rb') as f:
             roidb[0][0]['image'] = f.read()
-
         if with_mixup:
-            mixup_fn = os.path.join('data/coco/val2017', 
-                                    roidb[0][1]['im_file'])
+            mixup_fn = os.path.join('data/coco/val2017', roidb[0][1]['im_file'])
             roidb[0][0]['mixup'] = roidb[0][1]
             with open(fn, 'rb') as f:
                 roidb[0][0]['mixup']['image'] = f.read()
-
         cls.sample = roidb[0][0]
 
     @classmethod
@@ -127,7 +122,6 @@ class TestBase(unittest.TestCase):
     def test_ops_part3(self):
         """test Mixup and RandomInterp
         """
-
         ops_conf = [{
             'op': 'DecodeImage',
             'with_mixup': True,

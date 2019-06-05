@@ -40,9 +40,9 @@ def load(anno_path, sample_num=-1, with_background=True):
             'h': im_h, # height of image
             'w': im_w, # width
             'is_crowd': is_crowd,
+            'gt_score': gt_score,
             'gt_class': gt_class,
             'gt_bbox': gt_bbox,
-            'gt_score': gt_score
             'gt_poly': gt_poly,
         }
         'cname2cid' is a dict used to map category name to class id
@@ -58,9 +58,8 @@ def load(anno_path, sample_num=-1, with_background=True):
     # when with_background = True, mapping category to classid, like:
     #   background:0, first_class:1, second_class:2, ...
     catid2clsid = dict(
-        {catid: i + int(with_background) 
-            for i, catid in enumerate(cat_ids)})
-
+        {catid: i + int(with_background)
+         for i, catid in enumerate(cat_ids)})
     cname2cid = dict({
         coco.loadCats(catid)[0]['name']: clsid
         for catid, clsid in catid2clsid.items()

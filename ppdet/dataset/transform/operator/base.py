@@ -104,7 +104,7 @@ class DecodeImage(BaseOperator):
         if self.to_rgb:
             im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         sample['image'] = im
-        
+
         # decode mixup image
         if self.with_mixup and 'mixup' in sample:
             self.__call__(sample['mixup'], context)
@@ -112,85 +112,24 @@ class DecodeImage(BaseOperator):
 
 
 @register_op
-class MixupImage(BaseOperator):
-    def __init__(self, alpha=1.5, beta=1.5):
-        """ Mixup image and gt_bbbox/gt_score
-        Args:
-            alpha (float): alpha parameter of beta distribute
-            beta (float): beta parameter of beta distribute
-        """
-        super(MixupImage, self).__init__()
-        self.alpha = alpha
-        self.beta = beta
-        if self.alpha <= 0.0:
-            raise ValueError("alpha shold be positive in {}".format(self.__str__))
-        if self.beta <= 0.0:
-            raise ValueError("beta shold be positive in {}".format(self.__str__))
-
-    def _mixup_img(self, img1, img2, factor):
-        h = max(img1.shape[0], img2.shape[0])
-        w = max(img1.shape[1], img2.shape[1])
-        img = np.zeros((h, w, img1.shape[2]), 'float32')
-        img[:img1.shape[0], :img1.shape[1], :] = \
-                img1.astype('float32') * factor
-        img[:img2.shape[0], :img2.shape[1], :] += \
-                img2.astype('float32') * (1.0 - factor)
-        return img.astype('uint8')
-
-    def __call__(self, sample, context=None):
-        if 'mixup' not in sample:
-            return sample
-
-        factor = np.random.beta(self.alpha, self.beta)
-        factor = max(0.0, min(1.0, factor))
-        if factor >= 1.0:
-            sample.pop('mixup')
-            return sample
-        if factor <= 0.0:
-            return sample['mixup']
-
-        im = self._mixup_img(sample['image'], 
-                             sample['mixup']['image'],
-                             factor)
-
-        gt_bbox1 = sample['gt_bbox']
-        gt_bbox2 = sample['mixup']['gt_bbox']
-        gt_bbox = np.concatenate((gt_bbox1, gt_bbox2), axis=0)
-
-        gt_class1 = sample['gt_class']
-        gt_class2 = sample['mixup']['gt_class']
-        gt_class = np.concatenate((gt_class1, gt_class2), axis=0)
-        
-        gt_score1 = sample['gt_score']
-        gt_score2 = sample['mixup']['gt_score']
-        gt_score = np.concatenate((gt_score1 * factor, 
-                                  gt_score2 * (1. - factor)),
-                                  axis=0)
-
-        sample['image'] = im
-        sample['gt_bbox'] = gt_bbox
-        sample['gt_score'] = gt_score
-        sample['gt_class'] = gt_class
-        sample['h'] = im.shape[0]
-        sample['w'] = im.shape[1]
-        sample.pop('mixup')
-
-        return sample
-
-
-@register_op
 class ResizeImage(BaseOperator):
-    def __init__(self, target_size=0, max_size=0, interp=cv2.INTER_LINEAR):
+    def __init__(self,
+                 target_size=0,
+                 max_size=0,
+                 interp=cv2.INTER_LINEAR,
+                 use_cv2=True):
         """
         Args:
             target_size (int): the taregt size of image's short side
             max_size (int): the max size of image
-            interp: the interpolation method
+            interp (int): the interpolation method
+            use_cv2 (bool): use the cv2 interpolation method or use PIL interpolation method
         """
         super(ResizeImage, self).__init__()
         self.target_size = target_size
         self.max_size = max_size
         self.interp = interp
+        self.use_cv2 = use_cv2
         if not (isinstance(self.target_size, int) and isinstance(
                 self.max_size, int) and isinstance(self.interp, int)):
             raise TypeError('{}: the input type is error.'.format(self.__str__))
@@ -227,51 +166,21 @@ class ResizeImage(BaseOperator):
         else:
             im_scale_x = float(self.target_size) / float(im_shape[1])
             im_scale_y = float(self.target_size) / float(im_shape[0])
-        im = cv2.resize(
-            im,
-            None,
-            None,
-            fx=im_scale_x,
-            fy=im_scale_y,
-            interpolation=self.interp)
+        if self.use_cv2:
+            im = cv2.resize(
+                im,
+                None,
+                None,
+                fx=im_scale_x,
+                fy=im_scale_y,
+                interpolation=self.interp)
+        else:
+            im = Image.fromarray(im)
+            im = im.resize((self.target_size, self.target_size), self.interp)
+            im = np.array(im)
+
         sample['image'] = im
         return sample
-
-
-@register_op
-class RandomInterpImage(BaseOperator):
-    def __init__(self, target_size=0, max_size=0):
-        """
-        Random reisze image by multiply interpolate method.
-
-        Args:
-            target_size (int): the taregt size of image's short side
-            max_size (int): the max size of image
-        """
-        super(RandomInterpImage, self).__init__()
-        self.target_size = target_size
-        self.max_size = max_size
-        if not (isinstance(self.target_size, int)
-                and isinstance(self.max_size, int)):
-            raise TypeError('{}: the input type is error.'
-                            .format(self.__str__))
-
-        interps = [
-                cv2.INTER_NEAREST,
-                cv2.INTER_LINEAR,
-                cv2.INTER_AREA,
-                cv2.INTER_CUBIC,
-                cv2.INTER_LANCZOS4,
-            ]
-        self.resizers = []
-        for interp in interps:
-            self.resizers.append(ResizeImage(target_size, max_size, interp))
-
-    def __call__(self, sample, context=None):
-        """ Resise the image numpy by random resizer.
-        """
-        resizer = random.choice(self.resizers)
-        return resizer(sample, context)
 
 
 @register_op
@@ -504,21 +413,18 @@ class RandomDistort(BaseOperator):
 
 
 @register_op
-class RandomExpand(BaseOperator):
-    def __init__(self, 
-                 expand_max_ratio,
-                 expand_prob,
-                 mean=[127.5, 127.5, 127.5]):
+class ExpandImage(BaseOperator):
+    def __init__(self, max_ratio, prob, mean=[127.5, 127.5, 127.5]):
         """
         Args:
-            expand_max_ratio (float): the ratio of expanding
-            expand_prob (float): the probability of expanding image
+            ratio (float): the ratio of expanding
+            prob (float): the probability of expanding image
             mean (list): the pixel mean
         """
-        super(RandomExpand, self).__init__()
-        self.expand_max_ratio = expand_max_ratio
+        super(ExpandImage, self).__init__()
+        self.max_ratio = max_ratio
         self.mean = mean
-        self.expand_prob = expand_prob
+        self.prob = prob
 
     def __call__(self, sample, context):
         """Expand the image and modify bounding box.
@@ -539,9 +445,9 @@ class RandomExpand(BaseOperator):
         gt_class = sample['gt_class']
         im_width = sample['w']
         im_height = sample['h']
-        if prob < self.expand_prob:
-            if self.expand_max_ratio - 1 >= 0.01:
-                expand_ratio = np.random.uniform(1, self.expand_max_ratio)
+        if prob < self.prob:
+            if self.max_ratio - 1 >= 0.01:
+                expand_ratio = np.random.uniform(1, self.max_ratio)
                 height = int(im_height * expand_ratio)
                 width = int(im_width * expand_ratio)
                 h_off = math.floor(np.random.uniform(0, height - im_height))
@@ -556,8 +462,7 @@ class RandomExpand(BaseOperator):
                 im = Image.fromarray(im)
                 expand_im.paste(im, (int(w_off), int(h_off)))
                 expand_im = np.asarray(expand_im)
-                gt_bbox, gt_class, _ = deal_bbox_label(expand_bbox, 
-                                                       gt_bbox, 
+                gt_bbox, gt_class, _ = deal_bbox_label(expand_bbox, gt_bbox,
                                                        gt_class)
                 sample['image'] = expand_im
                 sample['gt_bbox'] = gt_bbox
@@ -569,7 +474,7 @@ class RandomExpand(BaseOperator):
 
 
 @register_op
-class Crop(BaseOperator):
+class CropImage(BaseOperator):
     def __init__(self, batch_sampler, satisfy_all=False):
         """
         Args:
@@ -585,10 +490,8 @@ class Crop(BaseOperator):
            [max sample, max trial, min scale, max scale,
             min aspect ratio, max aspect ratio,
             min overlap, max overlap]
-            satisfy_all (bool): whether should all bbox iou
-                                satisfied iou theshold.
         """
-        super(Crop, self).__init__()
+        super(CropImage, self).__init__()
         self.batch_sampler = batch_sampler
         self.satisfy_all = satisfy_all
 
@@ -606,9 +509,9 @@ class Crop(BaseOperator):
         im = sample['image']
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
-        gt_score = sample['gt_score']
         im_width = sample['w']
         im_height = sample['h']
+        gt_score = sample['gt_score']
         sampled_bbox = []
         gt_bbox = gt_bbox.tolist()
         for sampler in self.batch_sampler:
@@ -617,8 +520,8 @@ class Crop(BaseOperator):
                 if found >= sampler[0]:
                     break
                 sample_bbox = generate_sample_bbox(sampler)
-                if satisfy_sample_constraint(sampler, sample_bbox, 
-                                             gt_bbox, self.satisfy_all):
+                if satisfy_sample_constraint(sampler, sample_bbox, gt_bbox,
+                                             self.satisfy_all):
                     sampled_bbox.append(sample_bbox)
                     found = found + 1
         im = np.array(im)
@@ -642,8 +545,7 @@ class Crop(BaseOperator):
 
 @register_op
 class NormalizeBox(BaseOperator):
-    """Transform the bounding box's coornidates to [0,1].
-    """
+    """Transform the bounding box's coornidates to [0,1]."""
 
     def __init__(self):
         super(NormalizeBox, self).__init__()
@@ -657,7 +559,6 @@ class NormalizeBox(BaseOperator):
             gt_bbox[i][1] = gt_bbox[i][1] / height
             gt_bbox[i][2] = gt_bbox[i][2] / width
             gt_bbox[i][3] = gt_bbox[i][3] / height
-
         sample['gt_bbox'] = gt_bbox
         return sample
 
@@ -686,3 +587,96 @@ class Rgb2Bgr(BaseOperator):
             im = im.transpose((2, 0, 1))
         sample['image'] = im
         return sample
+
+
+@register_op
+class MixupImage(BaseOperator):
+    def __init__(self, alpha=1.5, beta=1.5):
+        """ Mixup image and gt_bbbox/gt_score
+        Args:
+            alpha (float): alpha parameter of beta distribute
+            beta (float): beta parameter of beta distribute
+        """
+        super(MixupImage, self).__init__()
+        self.alpha = alpha
+        self.beta = beta
+        if self.alpha <= 0.0:
+            raise ValueError("alpha shold be positive in {}".format(
+                self.__str__))
+        if self.beta <= 0.0:
+            raise ValueError("beta shold be positive in {}".format(
+                self.__str__))
+
+    def _mixup_img(self, img1, img2, factor):
+        h = max(img1.shape[0], img2.shape[0])
+        w = max(img1.shape[1], img2.shape[1])
+        img = np.zeros((h, w, img1.shape[2]), 'float32')
+        img[:img1.shape[0], :img1.shape[1], :] = \
+                img1.astype('float32') * factor
+        img[:img2.shape[0], :img2.shape[1], :] += \
+                img2.astype('float32') * (1.0 - factor)
+        return img.astype('uint8')
+
+    def __call__(self, sample, context=None):
+        if 'mixup' not in sample:
+            return sample
+        factor = np.random.beta(self.alpha, self.beta)
+        factor = max(0.0, min(1.0, factor))
+        if factor >= 1.0:
+            sample.pop('mixup')
+            return sample
+        if factor <= 0.0:
+            return sample['mixup']
+        im = self._mixup_img(sample['image'], sample['mixup']['image'], factor)
+        gt_bbox1 = sample['gt_bbox']
+        gt_bbox2 = sample['mixup']['gt_bbox']
+        gt_bbox = np.concatenate((gt_bbox1, gt_bbox2), axis=0)
+        gt_class1 = sample['gt_class']
+        gt_class2 = sample['mixup']['gt_class']
+        gt_class = np.concatenate((gt_class1, gt_class2), axis=0)
+
+        gt_score1 = sample['gt_score']
+        gt_score2 = sample['mixup']['gt_score']
+        gt_score = np.concatenate(
+            (gt_score1 * factor, gt_score2 * (1. - factor)), axis=0)
+        sample['image'] = im
+        sample['gt_bbox'] = gt_bbox
+        sample['gt_score'] = gt_score
+        sample['gt_class'] = gt_class
+        sample['h'] = im.shape[0]
+        sample['w'] = im.shape[1]
+        sample.pop('mixup')
+        return sample
+
+
+@register_op
+class RandomInterpImage(BaseOperator):
+    def __init__(self, target_size=0, max_size=0):
+        """
+        Random reisze image by multiply interpolate method.
+        Args:
+            target_size (int): the taregt size of image's short side
+            max_size (int): the max size of image
+        """
+        super(RandomInterpImage, self).__init__()
+        self.target_size = target_size
+        self.max_size = max_size
+        if not (isinstance(self.target_size, int) and
+                isinstance(self.max_size, int)):
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
+        interps = [
+            cv2.INTER_NEAREST,
+            cv2.INTER_LINEAR,
+            cv2.INTER_AREA,
+            cv2.INTER_CUBIC,
+            cv2.INTER_LANCZOS4,
+        ]
+        self.resizers = []
+        for interp in interps:
+            self.resizers.append(ResizeImage(target_size, max_size, interp))
+
+    def __call__(self, sample, context=None):
+        """ Resise the image numpy by random resizer.
+        """
+        resizer = random.choice(self.resizers)
+        return resizer(sample, context)

@@ -32,12 +32,13 @@ class RoiDbSource(Dataset):
     """ interface to load roidb data from files
     """
 
-    def __init__(self, 
-                 fname, 
-                 image_dir=None, 
-                 samples=-1, 
-                 is_shuffle=True, 
+    def __init__(self,
+                 anno_file,
+                 image_dir=None,
+                 samples=-1,
+                 is_shuffle=True,
                  load_img=False,
+                 cname2cid=None,
                  mixup_epoch=-1,
                  with_background=True):
         """ Init
@@ -48,28 +49,29 @@ class RoiDbSource(Dataset):
             samples (int): samples to load, -1 means all
             is_shuffle (bool): whether to shuffle samples
             load_img (bool): whether load data in this class
-            mixup_epoch (int): parse mixup in first n epoch.
+            cname2cid (dict): the label name to id dictionary
+            mixup_epoch (int): parse mixup in first n epoch
             with_background (bool): whether load background 
                                     as a class
         """
         super(RoiDbSource, self).__init__()
         self._epoch = -1
-        self._fname = fname
-        assert os.path.isfile(fname) or os.path.isdir(
-            fname), 'invalid file[%s] for RoiDbSource' % (fname)
+        assert os.path.isfile(anno_file) or os.path.isdir(
+            anno_file), 'invalid file[%s] for RoiDbSource' % (anno_file)
+        self._fname = anno_file
         self._image_dir = image_dir
         if image_dir is not None:
             assert os.path.isdir(image_dir), 'invalid image directory[%s]' % (
                 image_dir)
-
         self._roidb = None
         self._pos = -1
         self._drained = False
         self._samples = samples
         self._is_shuffle = is_shuffle
         self._load_img = load_img
+        self.cname2cid = cname2cid
         self._mixup_epoch = mixup_epoch
-        self._with_background = with_background 
+        self._with_background = with_background
 
     def __str__(self):
         return 'RoiDbSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
@@ -80,11 +82,9 @@ class RoiDbSource(Dataset):
         """
         if self._epoch < 0:
             self.reset()
-
         if self._pos >= self._samples:
             self._drained = True
             raise StopIteration('%s no more data' % (str(self)))
-
         sample = copy.deepcopy(self._roidb[self._pos])
         if self._load_img:
             sample['image'] = self._load_image(sample['im_file'])
@@ -107,7 +107,11 @@ class RoiDbSource(Dataset):
         """ load data from file
         """
         from . import loader
-        return loader.load(self._fname, self._samples, self._with_background)
+        records, cname2cid = loader.load(self._fname, self._samples,
+                                         self._with_background, True,
+                                         self.cname2cid)
+        self.cname2cid = cname2cid
+        return records
 
     def _load_image(self, where):
         fn = os.path.join(self._image_dir, where)
@@ -122,7 +126,6 @@ class RoiDbSource(Dataset):
 
         if self._samples == -1:
             self._samples = len(self._roidb)
-
         if self._is_shuffle:
             random.shuffle(self._roidb)
 

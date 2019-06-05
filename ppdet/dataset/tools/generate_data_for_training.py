@@ -38,20 +38,32 @@ if path not in sys.path:
 
 from dataset.source import loader
 
+
 def parse_args():
     """ parse arguments
     """
     parser = argparse.ArgumentParser(
         description='Generate Standard Dataset for PPdetection')
 
-    parser.add_argument('--type', type=str, default='json',
+    parser.add_argument(
+        '--type',
+        type=str,
+        default='json',
         help='file format of label file, eg: json for COCO and xml for VOC')
-    parser.add_argument('--annotation', type=str,
+    parser.add_argument(
+        '--annotation',
+        type=str,
         help='label file name for COCO or VOC dataset, '
         'eg: instances_val2017.json or train.txt')
-    parser.add_argument('--save-dir', type=str, default='roidb',
+    parser.add_argument(
+        '--save-dir',
+        type=str,
+        default='roidb',
         help='directory to save roidb file which contains pickled samples')
-    parser.add_argument('--samples', type=int, default=-1,
+    parser.add_argument(
+        '--samples',
+        type=int,
+        default=-1,
         help='number of samples to dump, default to all')
 
     args = parser.parse_args()
@@ -65,12 +77,12 @@ def dump_coco_as_pickle(args):
             label file of COCO contains a json which consists
             of label info for each sample
     """
-    samples = args.samples 
+    samples = args.samples
     save_dir = args.save_dir
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     anno_path = args.annotation
-    roidb, cat2id = loader.load(anno_path, samples, True)
+    roidb, cat2id = loader.load('train', anno_path, samples, True, {})
     samples = len(roidb)
     dsname = os.path.basename(anno_path).rstrip('.json')
     roidb_fname = save_dir + "/%s.roidb" % (dsname)
@@ -90,13 +102,13 @@ def dump_voc_as_pickle(args):
             each of which corresponds to a xml file 
             that contains it's label info
     """
-    samples = args.samples 
+    samples = args.samples
     save_dir = args.save_dir
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     save_dir = args.save_dir
     anno_path = args.annotation
-    roidb, cat2id = loader.load(anno_path, samples, True)
+    roidb, cat2id = loader.load('train', anno_path, samples, True, {})
     samples = len(roidb)
     part = anno_path.split('/')
     dsname = part[-4]
@@ -105,6 +117,7 @@ def dump_voc_as_pickle(args):
         pkl.dump((roidb, cat2id), fout)
 
     print('dumped %d samples to file[%s]' % (samples, roidb_fname))
+
 
 if __name__ == "__main__":
     """ Make sure you have already downloaded original COCO or VOC data,
@@ -126,4 +139,3 @@ if __name__ == "__main__":
     else:
         TypeError('Can\'t deal with {} type. '\
             'Only xml or json file format supported'.format(args.type))
-

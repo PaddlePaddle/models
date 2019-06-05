@@ -23,14 +23,18 @@ from __future__ import unicode_literals
 import os
 import numpy as np
 import logging
+import pickle as pkl
 
 logger = logging.getLogger(__name__)
+
 
 def check_records(records):
     """ check the fields of 'records' must contains some keys
     """
-    needed_fields = ['im_file', 'im_id', 'h', 'w',
-        'is_crowd', 'gt_class', 'gt_bbox', 'gt_poly']
+    needed_fields = [
+        'im_file', 'im_id', 'h', 'w', 'is_crowd', 'gt_class', 'gt_bbox',
+        'gt_poly'
+    ]
 
     for i, rec in enumerate(records):
         for k in needed_fields:
@@ -59,7 +63,6 @@ def load_roidb(anno_file, sample_num=-1):
     Returns:
         list of records for detection model training
     """
-    import pickle as pkl
 
     assert anno_file.endswith('.roidb'), 'invalid roidb file[%s]' % (anno_file)
     with open(anno_file, 'rb') as f:
@@ -73,7 +76,11 @@ def load_roidb(anno_file, sample_num=-1):
     return records, cname2cid
 
 
-def load(fname, samples=-1, with_background=True, with_cat2id=False):
+def load(fname,
+         samples=-1,
+         with_background=True,
+         with_cat2id=False,
+         cname2cid=None):
     """ Load data records from 'fnames'
 
     Args:
@@ -83,6 +90,7 @@ def load(fname, samples=-1, with_background=True, with_cat2id=False):
         with_background (bool): whether load background as a class.
                                 default True.
         with_cat2id (bool): whether return cname2cid info out
+        cname2cid (dict): the mapping of category name to id
 
     Returns:
         list of loaded records whose structure is:
@@ -106,14 +114,12 @@ def load(fname, samples=-1, with_background=True, with_cat2id=False):
         records, cname2cid = coco_loader.load(fname, samples, with_background)
     elif os.path.isfile(fname):
         from . import voc_loader
-        records, cname2cid = voc_loader.load(fname, samples)
+        records, cname2cid = voc_loader.load(fname, samples, cname2cid)
     else:
-        raise ValueError('invalid file type when load data from file[%s]' % (fname))
-
+        raise ValueError('invalid file type when load data from file[%s]' %
+                         (fname))
     check_records(records)
-
     if with_cat2id:
         return records, cname2cid
     else:
         return records
-

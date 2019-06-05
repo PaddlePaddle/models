@@ -29,16 +29,19 @@ from .transform import operator as op
 
 logger = logging.getLogger(__name__)
 
+
 class Reader(object):
     """ Interface to make readers for training or evaluation
     """
 
-    def __init__(self, data_cf, trans_conf, maxiter=None):
+    def __init__(self, data_cf, trans_conf, maxiter=-1):
         """ Init
         """
         self._data_cf = data_cf
         self._trans_conf = trans_conf
         self._maxiter = maxiter
+        assert type(self._maxiter) is int, 'The type of maxiter is not int.'
+        self._cname2cid = None
 
     def _make_reader(self, which):
         """ Build reader for training or validation
@@ -46,57 +49,58 @@ class Reader(object):
         file_conf = self._data_cf[which]
 
         # 1, Build data source
-        samples = -1 if 'SAMPLES' not in file_conf else file_conf['SAMPLES']
-        is_shuffle = True if 'IS_SHUFFLE' not in file_conf \
-            else file_conf['IS_SHUFFLE']
-        mixup_epoch = -1 if 'MIXUP_EPOCHS' not in file_conf \
-            else file_conf['MIXUP_EPOCHS']
-        with_background = True if 'WITH_BACKGROUND' not in self._data_cf \
-            else self._data_cf['WITH_BACKGROUND']
-        sc_conf = {
-            'fname': file_conf['ANNO_FILE'],
-            'image_dir': file_conf['IMAGE_DIR'],
-            'samples': samples,
-            'is_shuffle': is_shuffle,
-            'mixup_epoch': mixup_epoch,
-            'with_background': with_background,
-        }
+
+        sc_conf = {'data_cf': file_conf, 'cname2cid': self._cname2cid}
         sc = source.build(sc_conf)
 
         # 2, Buid a transformed dataset
         ops = self._trans_conf[which]['OPS']
         batchsize = self._trans_conf[which]['BATCH_SIZE']
-        worker_args = {} if 'WORKER_CONF' not in \
-            self._trans_conf[which] else self._trans_conf[which]['WORKER_CONF']
+        worker_args = None if 'WORKER_CONF' not in \
+            self._trans_conf else self._trans_conf['WORKER_CONF']
 
         drop_last = False if 'DROP_LAST' not in \
             self._trans_conf[which] else self._trans_conf[which]['DROP_LAST']
-        is_padding = False if 'IS_PADDING' not in \
-            self._trans_conf[which] else self._trans_conf[which]['IS_PADDING']
-        coarsest_stride = 1 if 'COAREST_STRIDE' not in \
-            self._trans_conf[which] else self._trans_conf[which]['COAREST_STRIDE']
-        random_shapes = [] if 'RANDOM_SHAPES' not in \
-            self._trans_conf[which] else self._trans_conf[which]['RANDOM_SHAPES']
-        multi_scales = [] if 'MULTI_SCALES' not in \
-            self._trans_conf[which] else self._trans_conf[which]['MULTI_SCALES']
+
         mapper = op.build(ops)
 
         worker_args = {k.lower(): v for k, v in worker_args.items()}
         mapped_ds = tf.map(sc, mapper, worker_args)
-        batched_ds = tf.batch(mapped_ds, batchsize, coarsest_stride, drop_last, 
-                              is_padding, random_shapes, multi_scales)
+
+        batched_ds = tf.batch(mapped_ds, batchsize, drop_last)
+
+        trans_conf = {k.lower(): v for k, v in self._trans_conf[which].items()}
+        need_keys = {
+            'is_padding', 'coarsest_stride', 'random_shapes', 'multi_scales'
+        }
+        bm_config = {
+            key: value
+            for key, value in trans_conf.items() if key in need_keys
+        }
+        batched_ds = tf.batch_map(batched_ds, bm_config)
+
+        batched_ds.reset()
+        if which.lower() == 'train':
+            if self._cname2cid is not None:
+                logger.warn(
+                    'The cname2cid field has been setted, and it will be overrided by a new one.'
+                )
+            self._cname2cid = sc.cname2cid
 
         # 3, Build a reader
         def _reader():
-            maxit = self._maxiter if self._maxiter else 1
+
+            maxit = -1 if self._maxiter <= 0 else self._maxiter
             n = 0
-            while n < maxit:
-                batched_ds.reset()
+            while True:
                 for batch in batched_ds:
                     yield batch
                     n += 1
-                    if self._maxiter and n == maxit:
+                    if maxit > 0 and n == maxit:
                         return
+                if maxit <= 0:
+                    return
+                batched_ds.reset()
 
         return _reader
 

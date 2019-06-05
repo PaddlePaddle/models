@@ -11,24 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-
 from . import base
+from . import post_map
 from .parallel_map import ParallelMappedDataset
 
 
 def map(ds, mapper, worker_args=None):
     """ apply 'mapper' to 'ds'
-
     Args:
         ds (instance of Dataset): dataset to be mapped
         mapper (function): action to be executed for every data sample
         worker_args (dict): configs for concurrent mapper
-
     Returns:
         a mapped dataset
     """
@@ -38,31 +35,28 @@ def map(ds, mapper, worker_args=None):
         return base.MappedDataset(ds, mapper)
 
 
-def batch(ds, batchsize, coarsest_stride, drop_last=True, is_padding=False, 
-          random_shapes=[], multi_scales=[]):
+def batch(ds, batchsize, drop_last=False):
     """ Batch data samples to batches
-
     Args:
         batchsize (int): number of samples for a batch
-        coarsest_stride(int): stride of the coarsest FPN level
         drop_last (bool): drop last few samples if not enough for a batch
-        is_padding (bool): whether padding the image in one batch
-        random_shapes: (list of int): resize to image to random 
-                                      shapes, [] for not resize.
-        random_shapes: (list of int): resize image by random 
-                                      scales, [] for not resize.
-
+        
     Returns:
         a batched dataset
     """
-    return base.BatchedDataset(
-        ds,
-        batchsize,
-        coarsest_stride,
-        drop_last=drop_last,
-        is_padding=is_padding,
-        random_shapes=random_shapes,
-        multi_scales=multi_scales)
+    return base.BatchedDataset(ds, batchsize, drop_last=drop_last)
 
 
-__all__ = ['map', 'batch']
+def batch_map(ds, config):
+    """ Post process the batches.
+    Args:
+        ds (instance of Dataset): dataset to be mapped
+        mapper (function): action to be executed for every batch
+    Returns:
+        a batched dataset which is processed
+    """
+    mapper = post_map.build(**config)
+    return base.MappedDataset(ds, mapper)
+
+
+__all__ = ['map', 'batch', 'batch_mapper']
