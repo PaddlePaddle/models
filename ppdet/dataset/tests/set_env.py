@@ -34,6 +34,6 @@ if not os.path.exists(data_root):
     ret = os.system('bash %s %s' % (script, version))
     if ret != 0:
         print('not found file[%s], you should manually prepare '
-            'your data using "data/prepare_data.sh"' % (anno_file))
+            'your data using "data/prepare_data.sh"' % (data_root))
         sys.exit(1)
 
