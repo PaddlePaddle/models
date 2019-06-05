@@ -2,9 +2,7 @@
 export FLAGS_fraction_of_gpu_memory_to_use=0.5
 export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fast_eager_deletion_mode=1
-export CUDA_VISIBLE_DEVICES=2       #   which GPU to use
 
-#alias python='./anaconda2/bin/python'
 
 function train() {
     python run_sequence_labeling.py \
