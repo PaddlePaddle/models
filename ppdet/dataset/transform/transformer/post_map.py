@@ -16,8 +16,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import os
+import logging
 import cv2
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def build(coarsest_stride=1,
