@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('batch_size',        int,   1,          "Minibatch size.")
-add_arg('epoch',             int,   150,        "The number of epoched to be trained.")
+add_arg('epoch',             int,   200,        "The number of epoched to be trained.")
 add_arg('output',            str,   "./output_0", "The directory the model and the test result to be saved to.")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
 add_arg('save_checkpoints',  bool,  True,       "Whether to save checkpoints.")
@@ -140,7 +140,7 @@ def train(args):
                 t_time += batch_time
                 print(
                     "epoch{}; batch{}; g_loss:{}; d_A_loss: {}; d_B_loss:{} ; \n g_A_loss: {}; g_A_cyc_loss: {}; g_A_idt_loss: {}; g_B_loss: {}; g_B_cyc_loss:  {}; g_B_idt_loss: {};Batch_time_cost: {:.2f}".format(epoch, batch_id,g_loss_out[0],d_loss_A.numpy()[0], d_loss_B.numpy()[0],g_A_loss.numpy()[0],cyc_A_loss.numpy()[0], idt_loss_A.numpy()[0],  g_B_loss.numpy()[0],cyc_B_loss.numpy()[0],idt_loss_B.numpy()[0], batch_time))
-                with open('logging_{}.txt'.format(args.changes), 'a') as log_file:
+                with open('logging_train.txt', 'a') as log_file:
                     now = time.strftime("%c")
                     log_file.write(
                     "time: {}; epoch{}; batch{}; d_A_loss: {}; g_A_loss: {}; \

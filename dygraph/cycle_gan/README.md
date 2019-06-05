@@ -61,15 +61,35 @@ env CUDA_VISIBLE_DEVICES=0 python train.py
 
 图1为训练152轮的训练损失示意图，其中横坐标轴为训练轮数，纵轴为在训练集上的损失。其中，'g_loss','d_A_loss'和'd_B_loss'分别为生成器、判别器A和判别器B的训练损失。
 
+todo：loss曲线
+
+### 测试
+
+执行以下命令可以选择已保存的训练权重，对测试集进行测试，通过 `--epoch` 制定权重轮次：
+
+```
+env CUDA_VISIBLE_DEVICES=0 python test.py --epoch=200
+```
+
 
 ### 预测
 
 执行以下命令读取单张或多张图片进行预测：
 
+真实街景生成分割图像：
+
 ```
 env CUDA_VISIBLE_DEVICES=0 python infer.py \
-    --init_model="output/checkpoints/150" --input="./data/horse2zebra/testA/*" \
-    --input_style A --output="./output"
+    --init_model="./G/199" --input="./image/testA/123_A.jpg" \
+    --input_style=A 
+```
+
+分割图像生成真实街景：
+
+```
+env CUDA_VISIBLE_DEVICES=0 python infer.py \
+    --init_model="./G/199" --input="./image/testB/78_B.jpg" \
+    --input_style=B 
 ```
 
 训练180轮的模型预测效果如图2和图3所示：

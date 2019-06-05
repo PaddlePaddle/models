@@ -51,9 +51,6 @@ def test():
             data_A_tmp = to_variable(tensor_A)
             data_B_tmp = to_variable(tensor_B)
             fake_A_temp,fake_B_temp,cyc_A_temp,cyc_B_temp,g_A_loss,g_B_loss,idt_loss_A,idt_loss_B,cyc_A_loss,cyc_B_loss,g_loss = cycle_gan(data_A_tmp,data_B_tmp,True,False,False)
-            for param in cycle_gan.parameters():
-                if param.name == "cycle_gan/Cycle_Gan_0/build_generator_resnet_9blocks_0/conv2d_0/Conv2D_0.conv2d_weights":
-                    print("eval",param.numpy()[0][0][0][:10])
         
             fake_A_temp = np.squeeze(fake_A_temp.numpy()[0]).transpose([1, 2, 0])
             fake_B_temp = np.squeeze(fake_B_temp.numpy()[0]).transpose([1, 2, 0])
