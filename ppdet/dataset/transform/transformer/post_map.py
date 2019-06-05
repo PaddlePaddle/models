@@ -20,8 +20,11 @@ import cv2
 import numpy as np
 
 
-def build(config):
-    """ Build a mapper for processing the batch
+def build(coarsest_stride=1,
+          is_padding=False,
+          random_shapes=[],
+          multi_scales=[]):
+    """ Build a mapper for post-processing batches
 
     Args:
         config (dict of parameters): 
@@ -37,18 +40,16 @@ def build(config):
         a mapper function which accept one argument 'batch' and
         return the processed result
     """
-    stride = config['coarsest_stride']
-    is_padding = config['is_padding']
-    random_shapes = config['random_shapes']
-    multi_scales = config['multi_scales']
 
     def padding_minibatch(batch_data):
-        if len(batch_data) == 1 and stride == 1:
+        if len(batch_data) == 1 and coarsest_stride == 1:
             return batch_data
         max_shape = np.array([data[0].shape for data in batch_data]).max(axis=0)
-        if stride > 1:
-            max_shape[1] = int(np.ceil(max_shape[1] / stride) * stride)
-            max_shape[2] = int(np.ceil(max_shape[2] / stride) * stride)
+        if coarsest_stride > 1:
+            max_shape[1] = int(
+                np.ceil(max_shape[1] / coarsest_stride) * coarsest_stride)
+            max_shape[2] = int(
+                np.ceil(max_shape[2] / coarsest_stride) * coarsest_stride)
         padding_batch = []
         for data in batch_data:
             im_c, im_h, im_w = data[0].shape[:]
@@ -95,12 +96,19 @@ def build(config):
         return scaled_batch
 
     def _mapper(batch_data):
-        if is_padding:
-            batch_data = padding_minibatch(batch_data)
-        if len(random_shapes) > 0:
-            batch_data = random_shape(batch_data)
-        if len(multi_scales) > 0:
-            batch_data = multi_scale_resize(batch_data)
+        try:
+            if is_padding:
+                batch_data = padding_minibatch(batch_data)
+            if len(random_shapes) > 0:
+                batch_data = random_shape(batch_data)
+            if len(multi_scales) > 0:
+                batch_data = multi_scale_resize(batch_data)
+        except Exception as e:
+            errmsg = 'failed to postprocess the batch for reason:[%s]' % (
+                str(e))
+            logger.warn(errmsg)
+            raise e
+
         return batch_data
 
     return _mapper

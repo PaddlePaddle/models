@@ -61,27 +61,23 @@ class Reader(object):
 
         drop_last = False if 'DROP_LAST' not in \
             self._trans_conf[which] else self._trans_conf[which]['DROP_LAST']
-        is_padding = False if 'IS_PADDING' not in \
-            self._trans_conf[which] else self._trans_conf[which]['IS_PADDING']
-        coarsest_stride = 1 if 'COAREST_STRIDE' not in \
-            self._trans_conf[which] else self._trans_conf[which]['COAREST_STRIDE']
-        random_shapes = [] if 'RANDOM_SHAPE' not in \
-            self._trans_conf[which] else self._trans_conf[which]['RANDOM_SHAPE']
-        multi_scales = [] if 'MULTI_SCALES' not in \
-            self._trans_conf[which] else self._trans_conf[which]['MULTI_SCALES']
+
         mapper = op.build(ops)
 
         worker_args = {k.lower(): v for k, v in worker_args.items()}
         mapped_ds = tf.map(sc, mapper, worker_args)
-        batched_ds = tf.batch(mapped_ds, batchsize, drop_last)
-        batch_config = {
-            'coarsest_stride': coarsest_stride,
-            'is_padding': is_padding,
-            'random_shapes': random_shapes,
-            'multi_scales': multi_scales
-        }
 
-        batched_ds = tf.batch_map(batched_ds, batch_config)
+        batched_ds = tf.batch(mapped_ds, batchsize, drop_last)
+
+        trans_conf = {k.lower(): v for k, v in self._trans_conf[which].items()}
+        need_keys = {
+            'is_padding', 'coarsest_stride', 'random_shapes', 'multi_scales'
+        }
+        bm_config = {
+            key: value
+            for key, value in trans_conf.items() if key in need_keys
+        }
+        batched_ds = tf.batch_map(batched_ds, bm_config)
 
         batched_ds.reset()
         if which.lower() == 'train':

@@ -55,7 +55,7 @@ def batch_map(ds, config):
     Returns:
         a batched dataset which is processed
     """
-    mapper = post_map.build(config)
+    mapper = post_map.build(**config)
     return base.MappedDataset(ds, mapper)
 
 
