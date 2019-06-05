@@ -73,6 +73,11 @@ class DataSetReader(object):
             self.label_ids.append(int(category['id']))
         self.category_to_id_map = {v: i for i, v in enumerate(self.label_ids)}
         print("Load in {} categories.".format(self.num_category))
+        if self.num_category != cfg.class_num:
+            raise ValueError("category number({}) in your dataset is not equal "
+                    "to --class_num={} settting, which may incur errors in "
+                    "eval/infer or cause precision loss.".format(
+                        self.num_category, cfg.class_num))
         self.has_parsed_categpry = True
 
     def get_label_infos(self):
