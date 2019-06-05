@@ -158,6 +158,13 @@ def parse_args():
     add_arg('nms_thresh',    float, 0.5,    "NMS threshold.")
     add_arg('score_thresh',    float, 0.05,    "score threshold for NMS.")
     add_arg('snapshot_stride',  int,    10000,    "save model every snapshot stride.")
+    add_arg('use_fp16', bool, False, "Option for using mixed precision training.")
+    add_arg('use_dynamic_loss_scaling', bool, False, "Option for using auto loss scaling in mixed precision training. If True, loss scaling will change during training. If False, loss scaling is fixed.")
+    add_arg('loss_scaling', float, 128.0, "Loss scaling for mixed precision training.")
+    add_arg('incr_every_n_steps', int, 10000, "The number of steps to increase loss scaling.")
+    add_arg('decr_every_n_nan_or_inf', int, 2, "The number of steps to decrease loss scaling.")
+    add_arg('incr_ratio', float, 2.0, "The multiplier to use when increasing the loss scaling.")
+    add_arg('decr_ratio', float, 0.8, "The less-than-one-multiplier to use when decreasing the loss scaling.")
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
     add_arg('image_path',       str,   'dataset/coco/val2017',  "The image path used to inference and visualize.")

@@ -171,6 +171,27 @@ _C.dim_reduced = 256
 # Threshold for converting soft masks to hard masks
 _C.mrcnn_thresh_binarize = 0.5
 
+# Whether to use mixed precision training
+_C.use_fp16 = False
+
+# Loss scaling for mixed precision training
+_C.loss_scaling = 128.0
+
+# Increases loss scaling every n consecutive steps with finite gradients
+_C.incr_every_n_steps = 10000
+
+# Decreases loss scaling every n accumulated steps with nan or inf gradients
+_C.decr_every_n_nan_or_inf = 2
+
+# The multiplier to use when increasing the loss scaling
+_C.incr_ratio = 2.0
+
+# The less-than-one-multiplier to use when decreasing the loss scaling
+_C.decr_ratio = 0.8
+
+# Whether to use dynamic loss scaling
+_C.use_dynamic_loss_scaling = False
+
 #
 # SOLVER options
 #

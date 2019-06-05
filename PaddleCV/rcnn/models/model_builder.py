@@ -36,7 +36,10 @@ class RCNN(object):
 
     def build_model(self, image_shape):
         self.build_input(image_shape)
-        body_conv = self.add_conv_body_func(self.image)
+        if cfg.use_fp16:
+            body_conv = self.add_conv_body_func(self.casted_image)
+        else:
+            body_conv = self.add_conv_body_func(self.image)
         # RPN
         self.rpn_heads(body_conv)
         # Fast RCNN
@@ -97,6 +100,8 @@ class RCNN(object):
             self.im_id = ins[5]
             if cfg.MASK_ON:
                 self.gt_masks = ins[6]
+            if cfg.use_fp16:
+                self.casted_image = fluid.layers.cast(x=self.image, dtype='float16')
         else:
             self.image = fluid.layers.data(
                 name='image', shape=image_shape, dtype='float32')
@@ -113,6 +118,8 @@ class RCNN(object):
             if cfg.MASK_ON:
                 self.gt_masks = fluid.layers.data(
                     name='gt_masks', shape=[2], dtype='float32', lod_level=3)
+            if cfg.use_fp16:
+                self.casted_image = fluid.layers.cast(x=self.image, dtype='float16')
 
     def feeds(self):
         if self.mode == 'infer':

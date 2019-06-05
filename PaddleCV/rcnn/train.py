@@ -25,8 +25,10 @@ import collections
 
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid.contrib.mixed_precision import decorator
 import reader
 import models.model_builder as model_builder
+import models.load_model as load_model
 import models.resnet as resnet
 from learning_rate import exponential_with_warmup_decay
 from config import cfg
@@ -75,11 +77,19 @@ def train():
         learning_rate=lr,
         regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
         momentum=cfg.momentum)
-    optimizer.minimize(loss)
+    if cfg.use_fp16:
+        mp_optimizer = decorator.decorate(
+            optimizer=optimizer,
+            init_loss_scaling=cfg.loss_scaling,
+            use_dynamic_loss_scaling=cfg.use_dynamic_loss_scaling,
+            incr_every_n_steps=cfg.incr_every_n_steps,
+            decr_every_n_nan_or_inf=cfg.decr_every_n_nan_or_inf,
+            incr_ratio=cfg.incr_ratio,
+            decr_ratio=cfg.decr_ratio)
+        mp_optimizer.minimize(loss)
+    else:
+        optimizer.minimize(loss)
     fetch_list = fetch_list + [lr]
-
-    fluid.memory_optimize(
-        fluid.default_main_program(), skip_opt_set=set(fetch_list))
 
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -90,7 +100,7 @@ def train():
         def if_exist(var):
             return os.path.exists(os.path.join(cfg.pretrained_model, var.name))
 
-        fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
+        load_model.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
 
     if cfg.parallel:
         train_exe = fluid.ParallelExecutor(
