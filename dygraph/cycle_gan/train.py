@@ -24,9 +24,6 @@ add_arg('epoch',             int,   150,        "The number of epoched to be tra
 add_arg('output',            str,   "./output_0", "The directory the model and the test result to be saved to.")
 add_arg('init_model',        str,   None,       "The init model file of directory.")
 add_arg('save_checkpoints',  bool,  True,       "Whether to save checkpoints.")
-add_arg('run_test',          bool,  True,       "Whether to run test.")
-add_arg('use_gpu',           bool,  True,       "Whether to use GPU to train.")
-add_arg('changes',           str,   "None",    "The change this time takes.")
 # yapf: enable
 
 lambda_A = 10.0

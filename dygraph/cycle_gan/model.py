@@ -120,6 +120,7 @@ class build_gen_discriminator(fluid.dygraph.Layer):
             stddev=0.02,
             padding=1,
             norm=False,
+            use_bias=True,
             relufactor=0.2)
         self.conv1 = conv2d(self.full_name(),
             num_channels=64,
@@ -153,7 +154,8 @@ class build_gen_discriminator(fluid.dygraph.Layer):
             stddev=0.02,
             padding=1,
             norm=False,
-            relu=False)
+            relu=False,
+            use_bias=True)
     def forward(self,inputs):
         y = self.conv0(inputs)
         y = self.conv1(y)
