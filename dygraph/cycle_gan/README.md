@@ -1,5 +1,26 @@
+# Cycle GAN
+
+---
+## 内容
+
+- [安装](#安装)
+- [简介](#简介)
+- [代码结构](#代码结构)
+- [数据准备](#数据准备)
+- [模型训练与预测](#模型训练与预测)
+
+## 安装
 
 运行本目录下的程序示例需要使用PaddlePaddle develop最新版本。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
+
+## 简介
+Cycle GAN 是一种image to image 的图像生成网络，实现了非对称图像数据集的生成和风格迁移。模型结构如下图所示，我们的模型包含两个生成网络 G: X → Y 和 F: Y → X，以及相关的判别器 DY 和 DX 。通过训练DY,使G将X图尽量转换为Y图，反之亦然。同时引入两个“周期一致性损失”，它们保证:如果我们从一个领域转换到另一个领域，它还可以被转换回去:(b)正向循环一致性损失:x→G(x)→F(G(x))≈x， (c)反向循环一致性损失:y→F(y)→G(F(y))≈y
+
+<p align="center">
+<img src="image/net.jpg" height=400 width=600 hspace='10'/> <br />
+图1.网络结构
+</p>
+
 
 ## 代码结构
 ```
@@ -11,8 +32,6 @@
 └── infer.py    # 预测脚本。
 ```
 
-## 简介
-TODO
 
 ## 数据准备
 
@@ -39,9 +58,9 @@ data
 以上数据文件中，`data`文件夹需要放在训练脚本`train.py`同级目录下。`testA`为存放真实街景图片的文件夹，`testB`为存放语义分割图片的文件夹，`testA.txt`和`testB.txt`分别为测试图片路径列表文件，格式如下：
 
 ```
-testA/234_A.jpg
-testA/292_A.jpg
-testA/412_A.jpg
+data/cityscapes/testA/234_A.jpg
+data/cityscapes/testA/292_A.jpg
+data/cityscapes/testA/412_A.jpg
 ```
 
 训练数据组织方式与测试数据相同。
