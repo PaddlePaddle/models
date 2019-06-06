@@ -19,6 +19,8 @@ Given a dialogue goal g and a set of topic-related background knowledge M = f<su
 ![image](https://github.com/PaddlePaddle/models/blob/wwqydy-patch-1/PaddleNLP/Research/ACL2019-DuConv/images/proactive_conversation_case.png)
 *Figure1.Proactive Conversation Case. Each utterance of "BOT" could be predicted by system, e.g., utterances with black words represent history H,and utterance with green words represent the response u<sub>t</sub> predicted by system.*
 
+# DuConv
+We collected around 30k conversations containing 270k utterances named DuConv. Each conversation was created by two random selected crowdsourced workers. One worker was provided with dialogue goal and the associated knowledge to play the role of leader who proactively leads the conversation by sequentially change the discussion topics following the given goal, meanwhile keeping the conversation as natural and engaging as possible. Another worker was provided with nothing but conversation history and only has to respond to the leader. The dataset is available at https://ai.baidu.com/broad/subordinate?dataset=duconv. 
 # about the baseline
 We provide retrieval-based and generation-based baseline systems. Both systems were implemented by [PaddlePaddle](http://paddlepaddle.org/) (the Baidu deeplearning framework) and [Pytorch](https://pytorch.org/) (the Facebook deeplearning framework). The performance of the two systems is as follows:
 
