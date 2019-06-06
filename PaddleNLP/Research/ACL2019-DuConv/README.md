@@ -1,9 +1,8 @@
 Proactive Conversation
-Paper:
-[Proactive Human-Machine Conversation with Explicit Conversation Goals](), accepted by ACL 2019
 =============================
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
+#Paper
+* [Proactive Human-Machine Conversation with Explicit Conversation Goals](), accepted by ACL 2019
 # Motivation
 Human-machine conversation is one of the most important topics in artificial intelligence (AI) and has received much attention across academia and industry in recent years. Currently dialogue system is still in its infancy, which usually converses passively and utters their words more as a matter of response rather than on their own initiatives, which is different from human-human conversation. We believe that the ability of proactive conversation of machine is the breakthrough of human-like conversation.
 # What we do ?
