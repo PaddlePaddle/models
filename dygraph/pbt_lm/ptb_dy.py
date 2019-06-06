@@ -56,7 +56,6 @@ class SimpleLSTMRNN(fluid.Layer):
         self.cell_array = []
         self.hidden_array = []
 
-        #build_once()
         self.weight_1_arr = []
         self.weight_2_arr = []
         self.bias_arr = []
@@ -80,35 +79,6 @@ class SimpleLSTMRNN(fluid.Layer):
                 dtype="float32",
                 default_initializer=fluid.initializer.Constant(0.0))
             self.bias_arr.append(self.add_parameter('b_%d' % i, bias_1))
-
-    def build_once(self, input_embedding, init_hidden=None, init_cell=None):
-
-        pass
-        '''
-        self.weight_1_arr = []
-        self.weight_2_arr = []
-        self.bias_arr = []
-        self.mask_array = []
-
-        for i in range(self._num_layers):
-            weight_1 = self.create_parameter(
-                attr=fluid.ParamAttr(
-                    initializer=fluid.initializer.UniformInitializer(
-                        low=-self._init_scale, high=self._init_scale)),
-                shape=[self._hidden_size * 2, self._hidden_size * 4],
-                dtype="float32",
-                default_initializer=fluid.initializer.UniformInitializer(
-                    low=-self._init_scale, high=self._init_scale))
-            self.weight_1_arr.append(self.add_parameter('w_%d' % i, weight_1))
-            bias_1 = self.create_parameter(
-                attr=fluid.ParamAttr(
-                    initializer=fluid.initializer.UniformInitializer(
-                        low=-self._init_scale, high=self._init_scale)),
-                shape=[self._hidden_size * 4],
-                dtype="float32",
-                default_initializer=fluid.initializer.Constant(0.0))
-            self.bias_arr.append(self.add_parameter('b_%d' % i, bias_1))
-        '''
 
     def forward(self, input_embedding, init_hidden=None, init_cell=None):
         self.cell_array = []
