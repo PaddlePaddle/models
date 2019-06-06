@@ -32,7 +32,7 @@ We provide retrieval-based and generation-based baseline systems. Both systems w
 | generation-based | 32.65/0.300/0.168 | 0.062/0.128 |
 
 # Competions
-* [Knowledge-driven Dialogue task](http://lic2019.ccf.org.cn/talk) in [2019 Language and Intelligence Challenge](http://lic2019.ccf.org.cn/), has closed.
+* [Knowledge-driven Dialogue task](http://lic2019.ccf.org.cn/talk) in [2019 Language and Intelligence Challenge](http://lic2019.ccf.org.cn/), has been closed.
   * Teams number of registration：1536
   * Teams number of submission result: 178
   * The Top 3 results:
@@ -43,5 +43,5 @@ We provide retrieval-based and generation-based baseline systems. Both systems w
 | 2 | 47.76/0.430/0.296	| 0.110/0.275 |
 | 3 | 46.40/0.422/0.289	| 0.118/0.303 |
 
-* [Leader Board](https://ai.baidu.com/broad/leaderboard?dataset=duconv) forever <br>
-  We maintain a leader board forever which provide the official automatic evaluation. You can submit your result to https://ai.baidu.com/broad/submission?dataset=duconv to get the official result. Please make sure submit the result of test2 part. 
+* [Leader Board](https://ai.baidu.com/broad/leaderboard?dataset=duconv), is opened forever <br>
+  We maintain a leader board which provides the official automatic evaluation. You can submit your result to https://ai.baidu.com/broad/submission?dataset=duconv to get the official result. Please make sure submit the result of test2 part. 
