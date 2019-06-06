@@ -21,8 +21,9 @@ Given a dialogue goal g and a set of topic-related background knowledge M = f<su
 
 # DuConv
 We collected around 30k conversations containing 270k utterances named DuConv. Each conversation was created by two random selected crowdsourced workers. One worker was provided with dialogue goal and the associated knowledge to play the role of leader who proactively leads the conversation by sequentially change the discussion topics following the given goal, meanwhile keeping the conversation as natural and engaging as possible. Another worker was provided with nothing but conversation history and only has to respond to the leader. The dataset is available at https://ai.baidu.com/broad/subordinate?dataset=duconv. 
-# about the baseline
-We provide retrieval-based and generation-based baseline systems. Both systems were implemented by [PaddlePaddle](http://paddlepaddle.org/) (the Baidu deeplearning framework) and [Pytorch](https://pytorch.org/) (the Facebook deeplearning framework). The performance of the two systems is as follows:
+
+# Baseline Performance
+We provide retrieval-based and generation-based baseline systems. Both systems were implemented by [PaddlePaddle](http://paddlepaddle.org/) (the Baidu deeplearning framework). The performance of the two systems is as follows:
 
 | baseline system | F1/BLEU1/BLEU2 | DISTINCT1/DISTINCT2 |
 | ------------- | ------------ | ------------ |
