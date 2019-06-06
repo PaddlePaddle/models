@@ -1,4 +1,4 @@
-knowledge-driven-dialogue
+Proactive Human-Machine Conversation with Explicit Conversation Goals
 =============================
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
