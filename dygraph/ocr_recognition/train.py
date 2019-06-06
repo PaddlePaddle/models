@@ -331,9 +331,6 @@ class SimpleAttention(fluid.dygraph.Layer):
                        act=None,
                        bias_attr=False)
 
-    def _build_once(self, encoder_vec, encoder_proj, decoder_state):
-        pass
-
     def forward(self, encoder_vec, encoder_proj, decoder_state):
 
         decoder_state_fc = self.fc_1(decoder_state)
@@ -381,9 +378,6 @@ class GRUDecoderWithAttention(fluid.dygraph.Layer):
 
         self.decoder_size = decoder_size
 
-    def _build_once(self, target_embedding, encoder_vec, encoder_proj,
-                    decoder_boot):
-        pass
 
     def forward(self, target_embedding, encoder_vec, encoder_proj,
                 decoder_boot):
@@ -431,8 +425,6 @@ class OCRAttention(fluid.dygraph.Layer):
         self.gru_decoder_with_attention = GRUDecoderWithAttention(
             self.full_name(), Config.decoder_size, Config.num_classes)
 
-    def _build_once(self, inputs, label_in):
-        pass
 
     def forward(self, inputs, label_in):
         gru_backward, encoded_vector, encoded_proj = self.encoder_net(inputs)
