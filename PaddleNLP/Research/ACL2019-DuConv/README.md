@@ -32,4 +32,4 @@ We provide retrieval-based and generation-based baseline systems. Both systems w
 | generation-based | 32.65/0.300/0.168 | 0.062/0.128 |
 
 # Competion
-## [Knowledge-driven Dialogue task](http://lic2019.ccf.org.cn/talk) in [2019 Language and Intelligence Challenge](http://lic2019.ccf.org.cn/)
+* [Knowledge-driven Dialogue task](http://lic2019.ccf.org.cn/talk) in [2019 Language and Intelligence Challenge](http://lic2019.ccf.org.cn/)
