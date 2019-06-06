@@ -1,9 +1,14 @@
-[Proactive Human-Machine Conversation with Explicit Conversation Goals](http://lic2019.ccf.org.cn/talk)
+Proactive Conversation
 =============================
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-# about the competition
-Human-machine conversation is one of the most important topics in artificial intelligence (AI) and has received much attention across academia and industry in recent years. Currently dialogue system is still in its infancy, which usually converses passively and utters their words more as a matter of response rather than on their own initiatives, which is different from human-human conversation. Therefore, we set up this competition on a new conversation task, named knowledge driven dialogue, where machines converse with humans based on a built knowledge graph. It aims at testing machines’ ability to conduct human-like conversations.<br>
+# Motivation
+Human-machine conversation is one of the most important topics in artificial intelligence (AI) and has received much attention across academia and industry in recent years. Currently dialogue system is still in its infancy, which usually converses passively and utters their words more as a matter of response rather than on their own initiatives, which is different from human-human conversation. We believe that the ability of proactive conversation of machine is the breakthrough of human-like conversation.
+# What we do ?
+1.We set up a new conversation task, named Proactive Converstion, where machine proactively lead the conversation following a given goal. For more details of the task, We refer readers to the paper of [Proactive Human-Machine Conversation with Explicit Conversation Goals] which was accepted by ACL 2019 2.We also create a new conversation dataset named [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv) , to facilitate the development of proactive conversation systems.
+3.In addition, we held a competition to encourage more researchers to work in this direction.
+
+3.It aims at testing machines’ ability to conduct human-like conversations.<br>
 Please refer to [competition website](http://lic2019.ccf.org.cn/talk) for details of the competition.
 # about the task
 Given a dialogue goal g and a set of topic-related background knowledge M = f<sub>1</sub> ,f<sub>2</sub> ,..., f<sub>n</sub> , a participating system is expected to output an utterance "u<sub>t</sub>" for the current conversation H = u<sub>1</sub>, u<sub>2</sub>, ..., u<sub>t-1</sub>, which keeps the conversation coherent and informative under the guidance of the given goal. During the dialogue, a participating system is required to proactively lead the conversation from one topic to another. The dialog goal g is given like this: "Start->Topic_A->TOPIC_B", which means the machine should lead the conversation from any start state to topic A and then to topic B. The given background knowledge includes knowledge related to topic A and topic B, and the relations between these two topics.<br>
