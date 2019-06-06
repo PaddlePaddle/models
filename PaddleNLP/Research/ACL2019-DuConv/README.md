@@ -36,6 +36,7 @@ We provide retrieval-based and generation-based baseline systems. Both systems w
   * Teams number of registration：1536
   * Teams number of submission result: 178
   * The Top 3 results:
+  
 | Rank | F1/BLEU1/BLEU2 | DISTINCT1/DISTINCT2 |
 | ------------- | ------------ | ------------ |
 | 1 | 49.22/0.449/0.318 |	0.118/0.299 |
