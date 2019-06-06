@@ -33,4 +33,12 @@ We provide retrieval-based and generation-based baseline systems. Both systems w
 
 # Competions
 * [Knowledge-driven Dialogue task](http://lic2019.ccf.org.cn/talk) in [2019 Language and Intelligence Challenge](http://lic2019.ccf.org.cn/), has closed.
-  * a
+  * Teams number of registration：1536
+  * Teams number of submission result: 178
+  * The Top 3 results:
+| Rank | F1/BLEU1/BLEU2 | DISTINCT1/DISTINCT2 |
+| ------------- | ------------ | ------------ |
+| 1 | 49.22/0.449/0.318 |	0.118/0.299 |
+| 2 | 47.76/0.430/0.296	| 0.110/0.275 |
+| 3 | 46.40/0.422/0.289	| 0.118/0.303 |
+  
