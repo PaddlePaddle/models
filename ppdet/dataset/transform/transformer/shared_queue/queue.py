@@ -49,10 +49,10 @@ class SharedQueue(Queue):
     def __init__(self, maxsize=0, mem_mgr=None, memsize=None, pagesize=None):
         """ init
         """
-        if sys.version.startswith('2'):
-            super(SharedQueue, self).__init__(maxsize)
-        else:
+        if six.PY3:
             super(SharedQueue, self).__init__(maxsize, ctx=mp.get_context())
+        else:
+            super(SharedQueue, self).__init__(maxsize)
 
         if mem_mgr is not None:
             self._shared_mem = mem_mgr
