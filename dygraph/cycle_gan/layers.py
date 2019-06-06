@@ -50,6 +50,7 @@ class conv2d(fluid.dygraph.Layer):
                 bias_attr=fluid.ParamAttr(
                     name="bias",
                     initializer=fluid.initializer.Constant(0.0)),
+                trainable_statistics=True
                 )
     
         self.relufactor = relufactor
@@ -106,7 +107,8 @@ class DeConv2D(fluid.dygraph.Layer):
                 param_attr=fluid.ParamAttr(
                     name="de_wights",
                     initializer=fluid.initializer.NormalInitializer(1.0, 0.02)),
-                bias_attr=fluid.ParamAttr(name="de_bn_bias",initializer=fluid.initializer.Constant(0.0)))        
+                bias_attr=fluid.ParamAttr(name="de_bn_bias",initializer=fluid.initializer.Constant(0.0))，
+                trainable_statistics=True)        
         self.outpadding = outpadding
         self.relufactor = relufactor
         self.use_bias = use_bias
