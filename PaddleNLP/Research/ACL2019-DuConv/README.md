@@ -8,8 +8,8 @@ Human-machine conversation is one of the most important topics in artificial int
 # What we do ?
 * We set up a new conversation task, named ___Proactive Converstion___, where machine proactively leads the conversation following a given goal.
 * We also created a new conversation dataset named [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv) , and made it publicly available to facilitate the development of proactive conversation systems.
-* We established retrival-based and generation-based baseline systems for DuConv, which are available in this repo.
-* In addition, we hold competitions to encourage more researchers to work in this direction.
+* We established retrival-based and generation-based ___baseline systems___ for DuConv, which are available in this repo.
+* In addition, we hold ___competitions___ to encourage more researchers to work in this direction.
 
 # Paper
 * [Proactive Human-Machine Conversation with Explicit Conversation Goals](), accepted by ACL 2019
