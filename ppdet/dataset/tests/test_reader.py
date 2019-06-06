@@ -59,7 +59,7 @@ class TestReader(unittest.TestCase):
                 prev_ts = start_ts
 
             ct += 1
-            bytes += sample[0][0].size
+            bytes += 4 * sample[0][0].size * len(sample[0])
             self.assertTrue(sample is not None)
             cost = time.time() - prev_ts
             if cost >= 1.0:

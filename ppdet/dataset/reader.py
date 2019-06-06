@@ -22,13 +22,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import logging
-
+import weakref
 from . import source
 from .transform import transformer as tf
 from .transform import operator as op
 
 logger = logging.getLogger(__name__)
-
 
 class Reader(object):
     """ Interface to make readers for training or evaluation
@@ -56,17 +55,17 @@ class Reader(object):
         # 2, Buid a transformed dataset
         ops = self._trans_conf[which]['OPS']
         batchsize = self._trans_conf[which]['BATCH_SIZE']
-        worker_args = None if 'WORKER_CONF' not in \
-            self._trans_conf else self._trans_conf['WORKER_CONF']
-
         drop_last = False if 'DROP_LAST' not in \
             self._trans_conf[which] else self._trans_conf[which]['DROP_LAST']
 
-        mapper = op.build(ops)
+        mapper = op.build(ops, {'is_train': which == 'TRAIN'})
 
-        worker_args = {k.lower(): v for k, v in worker_args.items()}
+        worker_args = None
+        if 'WORKER_CONF' in self._trans_conf:
+            worker_args = self._trans_conf['WORKER_CONF']
+            worker_args = {k.lower(): v for k, v in worker_args.items()}
+
         mapped_ds = tf.map(sc, mapper, worker_args)
-
         batched_ds = tf.batch(mapped_ds, batchsize, drop_last)
 
         trans_conf = {k.lower(): v for k, v in self._trans_conf[which].items()}
@@ -88,9 +87,8 @@ class Reader(object):
             self._cname2cid = sc.cname2cid
 
         # 3, Build a reader
+        maxit = -1 if self._maxiter <= 0 else self._maxiter
         def _reader():
-
-            maxit = -1 if self._maxiter <= 0 else self._maxiter
             n = 0
             while True:
                 for batch in batched_ds:

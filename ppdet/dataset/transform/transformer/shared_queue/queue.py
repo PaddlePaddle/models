@@ -18,12 +18,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
-if sys.version.startswith('2'):
-    import cPickle as pickle
-    from cStringIO import StringIO
-else:
+import six
+if six.PY3:
     import pickle
     from io import BytesIO as StringIO
+else:
+    import cPickle as pickle
+    from cStringIO import StringIO
 
 import logging
 import traceback

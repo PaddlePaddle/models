@@ -25,12 +25,12 @@ import time
 import math
 import struct
 import sys
+import six
 
-is_python2 = sys.version.startswith('2')
-if is_python2:
-    import cPickle as pickle
-else:
+if six.PY3:
     import pickle
+else:
+    import cPickle as pickle
 
 import json
 import uuid
@@ -71,7 +71,7 @@ def memcopy(dst, src, offset=0, length=None):
     length = length if length is not None else len(src)
     assert type(dst) == np.ndarray, 'invalid type for "dst" in memcopy'
     if type(src) is not np.ndarray:
-        if type(src) is str and not is_python2:
+        if type(src) is str and six.PY3:
             src = src.encode()
         src = np.frombuffer(src, dtype='uint8', count=len(src))
 

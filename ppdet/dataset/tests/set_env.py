@@ -1,5 +1,6 @@
 import sys
 import os
+import six
 
 path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../')
 if path not in sys.path:
@@ -9,10 +10,10 @@ if path not in sys.path:
 prefix = os.path.dirname(os.path.abspath(__file__))
 
 #coco data for testing
-if sys.version.startswith('2'):
-    version = 'python2'
-else:
+if six.PY3:
     version = 'python3'
+else:
+    version = 'python2'
 
 data_root = os.path.join(prefix, 'data/coco.test.%s' % (version))
 
