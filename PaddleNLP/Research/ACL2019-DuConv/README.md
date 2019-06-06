@@ -37,9 +37,11 @@ We provide retrieval-based and generation-based baseline systems. Both systems w
   * Teams number of submission result: 178
   * The Top 3 results:
   
-sdfsdfsd  | Rank | F1/BLEU1/BLEU2 | DISTINCT1/DISTINCT2 |
+| Rank | F1/BLEU1/BLEU2 | DISTINCT1/DISTINCT2 |
 | ------------- | ------------ | ------------ |
 | 1 | 49.22/0.449/0.318 |	0.118/0.299 |
 | 2 | 47.76/0.430/0.296	| 0.110/0.275 |
 | 3 | 46.40/0.422/0.289	| 0.118/0.303 |
-  
+
+* [Leader Board](https://ai.baidu.com/broad/leaderboard?dataset=duconv) forever
+  We maintain a leader board forever which provide the official automatic evaluation. You can submit your result to https://ai.baidu.com/broad/submission?dataset=duconv to get the official result. Please make sure submit the result of test2 part. 
