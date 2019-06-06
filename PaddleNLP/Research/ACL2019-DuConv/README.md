@@ -37,7 +37,7 @@ We provide retrieval-based and generation-based baseline systems. Both systems w
   * Teams number of submission result: 178
   * The Top 3 results:
   
-sdfsdfsd| Rank | F1/BLEU1/BLEU2 | DISTINCT1/DISTINCT2 |
+sdfsdfsd  | Rank | F1/BLEU1/BLEU2 | DISTINCT1/DISTINCT2 |
 | ------------- | ------------ | ------------ |
 | 1 | 49.22/0.449/0.318 |	0.118/0.299 |
 | 2 | 47.76/0.430/0.296	| 0.110/0.275 |
