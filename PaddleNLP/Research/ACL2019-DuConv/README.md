@@ -5,7 +5,8 @@ Proactive Conversation
 # Motivation
 Human-machine conversation is one of the most important topics in artificial intelligence (AI) and has received much attention across academia and industry in recent years. Currently dialogue system is still in its infancy, which usually converses passively and utters their words more as a matter of response rather than on their own initiatives, which is different from human-human conversation. We believe that the ability of proactive conversation of machine is the breakthrough of human-like conversation.
 # What we do ?
-1.We set up a new conversation task, named Proactive Converstion, where machine proactively lead the conversation following a given goal. For more details of the task, We refer readers to the paper of [Proactive Human-Machine Conversation with Explicit Conversation Goals] which was accepted by ACL 2019 2.We also create a new conversation dataset named [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv) , to facilitate the development of proactive conversation systems.
+1.We set up a new conversation task, named Proactive Converstion, where machine proactively lead the conversation following a given goal. For more details of the task, We refer readers to the paper of [Proactive Human-Machine Conversation with Explicit Conversation Goals]() which was accepted by ACL 2019 
+2.We also create a new conversation dataset named [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv) , to facilitate the development of proactive conversation systems.
 3.In addition, we held a competition to encourage more researchers to work in this direction.
 
 3.It aims at testing machines’ ability to conduct human-like conversations.<br>
