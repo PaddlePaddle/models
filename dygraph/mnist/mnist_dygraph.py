@@ -148,7 +148,8 @@ def inference_mnist():
     with fluid.dygraph.guard(place):
         mnist_infer = MNIST("mnist")
         # load checkpoint
-        mnist_infer.load_dict(fluid.dygraph.load_persistables("save_dir"))
+        model_dict, _ = fluid.dygraph.load_persistables("save_dir")
+        mnist_infer.load_dict(model_dict)
         print("checkpoint loaded")
 
         # start evaluate mode
