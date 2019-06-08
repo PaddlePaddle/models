@@ -9,12 +9,13 @@
 - [FAQ](#faq)
 - [参考文献](#参考文献)
 - [版本更新](#版本更新)
+- [作者](#作者)
 
 ## 简介
 
 [YOLOv3](https://arxiv.org/abs/1804.02767) 是由 [Joseph Redmon](https://arxiv.org/search/cs?searchtype=author&query=Redmon%2C+J) 和 [Ali Farhadi](https://arxiv.org/search/cs?searchtype=author&query=Farhadi%2C+A) 提出的单阶段检测器, 该检测器与达到同样精度的传统目标检测方法相比，推断速度能达到接近两倍.
 
-在我们的实现版本中使用了 [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) 中提到的图像增强和label smooth等优化方法，精度由于darknet框架的实现版本，在COCO-2017数据集上，我们达到`mAP(0.50:0.95)= 38.9`的精度，比darknet实现版本的精度(33.0)要高5.9.
+在我们的实现版本中使用了 [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) 中提出的图像增强和label smooth等优化方法，精度优于darknet框架的实现版本，在COCO-2017数据集上，我们达到`mAP(0.50:0.95)= 38.9`的精度，比darknet实现版本的精度(33.0)要高5.9.
 
 同时，在推断速度方面，基于Paddle预测库的加速方法，推断速度比darknet高30%.
 
@@ -22,9 +23,9 @@
 
 ### 安装
 
-**安装[cocoapi](https://github.com/cocodataset/cocoapi)：**
+**安装[COCO-API](https://github.com/cocodataset/cocoapi)：**
 
-训练前需要首先下载[cocoapi](https://github.com/cocodataset/cocoapi)：
+训练前需要首先下载[COCO-API](https://github.com/cocodataset/cocoapi)：
 
     git clone https://github.com/cocodataset/cocoapi.git
     cd cocoapi/PythonAPI
@@ -80,15 +81,15 @@ dataset/coco/
 
     sh ./weights/download.sh
 
-通过初始化`pretrain` 加载预训练模型。同时在参数微调时也采用该设置加载已训练模型。
+通过设置`--pretrain` 加载预训练模型。同时在fine-tune时也采用该设置加载已训练模型。
 请在训练前确认预训练模型下载与加载正确，否则训练过程中损失可能会出现NAN。
 
 **开始训练：** 数据准备完毕后，可以通过如下的方式启动训练：
 
     python train.py \
        --model_save_dir=output/ \
-       --pretrain=${path_to_pretrain_model}
-       --data_dir=${path_to_data}
+       --pretrain=${path_to_pretrain_model} \
+       --data_dir=${path_to_data} \
        --class_num=${category_num}
 
 - 通过设置`export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`指定8卡GPU训练。
@@ -155,6 +156,7 @@ Train Loss
     python infer.py \
        --dataset=coco2017 \
         --weights=${path_to_weights}  \
+        --class_num=${category_num} \
         --image_path=data/COCO17/val2017/  \
         --image_name=000000000139.jpg \
         --draw_thresh=0.5
@@ -201,7 +203,7 @@ YOLOv3 预测可视化
 
 ### 背景介绍
 
-传统目标检测方法通过两阶段检测，第一阶段生成预选框，第二阶段对预选框进行分类得到类别，而YOLO讲目标检测看做是对框位置和类别概率的一个单阶段回归问题，使得YOLO能达到近两倍的检测速度。而YOLOv3在YOLO的基础上引入的多尺度预测，使得YOLOv3网络对于小物体的预测精度大幅提高。
+传统目标检测方法通过两阶段检测，第一阶段生成预选框，第二阶段对预选框进行分类得到类别，而YOLO将目标检测看做是对框位置和类别概率的一个单阶段回归问题，使得YOLO能达到近两倍的检测速度。而YOLOv3在YOLO的基础上引入的多尺度预测，使得YOLOv3网络对于小物体的检测精度大幅提高。
 
 ### 模型概览
 
@@ -231,7 +233,7 @@ YOLOv3 的网络结构由基础特征提取网络、multi-scale特征融合层�
 
 ### 模型fine-tune
 
-对YOLOv3进行fine-tune，用户可用`--pretrain`指定下载好的Paddle发布的YOLOv3[模型](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz)，并把`--class_num`设置为用户数据集的类别数
+对YOLOv3进行fine-tune，用户可用`--pretrain`指定下载好的Paddle发布的YOLOv3[模型](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz)，并把`--class_num`设置为用户数据集的类别数。
 
 在fine-tune时，若用户自定义数据集的类别数不等于COCO数据集的80类，则加载权重时不应加载`yolo_output`层的权重，可通过在[train.py](https://github.com/heavengate/models/blob/3fa6035550ebd4a425a2e354489967a829174155/PaddleCV/yolov3/train.py#L76)使用如下方式加载非`yolo_output`层的权重：
 
@@ -248,7 +250,7 @@ if cfg.pretrain:
 
 ```
 
-若用户自定义数据集的类别是COCO数据集类别的子集，`yolo_output`层的权重可以进行裁剪后导入。若用户数据集有6类分别对应COCO数据集80类中的第`[3, 19, 25, 41, 58, 73]`类，可通过如下方式裁剪`yolo_output`层权重：
+若用户自定义数据集的类别是COCO数据集类别的子集，`yolo_output`层的权重可以进行裁剪后导入。例如用户数据集有6类分别对应COCO数据集80类中的第`[3, 19, 25, 41, 58, 73]`类，可通过如下方式裁剪`yolo_output`层权重：
 
 ```python
 if cfg.pretrain:
@@ -291,21 +293,22 @@ if cfg.pretrain:
 **Q:** 我使用单GPU训练，训练过程中`loss=nan`，这是为什么？  
 **A:** YOLOv3中`learning_rate=0.001`的设置是针对总batch size为64的情况，若用户的batch size小于该值，建议调小学习率。
 
-**Q:** 我训练YOLOv3熟读比较慢，要怎么提速？
+**Q:** 我训练YOLOv3速度比较慢，要怎么提速？  
 **A:** YOLOv3的数据增强比较复杂，速度比较慢，可通过在[reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284)中增加数据读取的进程数来提速。若用户是进行fine-tune，也可将`--no_mixup_iter`设置大于`--max_iter`的值来禁用mixup提升速度。
 
-## Reference
+## 参考文献
 
 - [You Only Look Once: Unified, Real-Time Object Detection](https://arxiv.org/abs/1506.02640v5), Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi.
 - [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767v1), Joseph Redmon, Ali Farhadi.
 - [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3), Zhi Zhang, Tong He, Hang Zhang, Zhongyue Zhang, Junyuan Xie, Mu Li.
 
-## Update
+## 版本更新
 
-- 1/2019, Add YOLOv3 model.
-- 4/2019, Add synchronized batch normalization for YOLOv3.
+- 1/2019, 新增YOLOv3模型。
+- 4/2019, 新增YOLOv3模型Synchronized batch normalization模式。
 
-## Author
+## 作者
 
 - [heavengate](https://github.com/heavengate)
 - [tink2123](https://github.com/tink2123)
+

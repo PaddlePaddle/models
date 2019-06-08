@@ -157,6 +157,7 @@ Inference is used to get prediction score or image features based on trained mod
     python infer.py \
        --dataset=coco2017 \
         --weights=${path_to_weights}  \
+        --class_num=${category_num} \
         --image_path=data/COCO17/val2017/  \
         --image_name=000000000139.jpg \
         --draw_thresh=0.5
@@ -310,3 +311,4 @@ if cfg.pretrain:
 
 - [heavengate](https://github.com/heavengate)
 - [tink2123](https://github.com/tink2123)
+
