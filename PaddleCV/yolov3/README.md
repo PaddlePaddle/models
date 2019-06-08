@@ -12,9 +12,9 @@
 
 ## Introduction
 
-[YOLOv3](https://arxiv.org/abs/1804.02767) is an one-stage object detector proposed by [Joseph Redmon](https://arxiv.org/search/cs?searchtype=author&query=Redmon%2C+J) and [Ali Farhadi](https://arxiv.org/search/cs?searchtype=author&query=Farhadi%2C+A) in [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767v1), which can be nearly twice faster in inference than the SOTA detector with same performance.
+[YOLOv3](https://arxiv.org/abs/1804.02767) is an one-stage object detector proposed by [Joseph Redmon](https://arxiv.org/search/cs?searchtype=author&query=Redmon%2C+J) and [Ali Farhadi](https://arxiv.org/search/cs?searchtype=author&query=Farhadi%2C+A), which can be nearly twice faster in inference than the SOTA detector with same performance.
 
-We use many image augment and label smooth tricks from [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) in our implement and product a higher performance than darknet framework. We got mAP(0.50:0.95) as 38.9 in COCO2017 dataset, which is 5.9 higher than darknet(33.0) implements.
+We use many image augment and label smooth tricks from [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) in our implement and produce a higher performance than darknet framework. We got mAP(0.50:0.95) as 38.9 in COCO2017 dataset, which is 5.9 higher than darknet(33.0) implement.
 
 With execution acceleration method in Paddle framework prediction library, inference speed of YOLOv3 in our impliment can be 30% faster than darknet framework.
 
@@ -76,7 +76,7 @@ You can defined datasets by yourself, we recommend using annotations in COCO for
 
 ### Training
 
-**download the pre-trained model:** This sample provides DarkNet-53 pre-trained [model](https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz) which is converted from [pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74). You can download pre-trained model as:
+**download the pre-trained model:** This sample provides DarkNet-53 pre-trained [model](https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz), which is converted from [pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74). You can download pre-trained model as:
 
     sh ./weights/download.sh
 
@@ -92,7 +92,7 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
        --data_dir=${path_to_data} \
        --class_num=${category_num}
 
-- Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPU to train. 
+- Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPUs to train. 
 - For more help on arguments:
 
     python train.py --help
@@ -108,7 +108,7 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
 
 *  Use momentum optimizer with momentum=0.9.
 *  In first 4000 iteration, the learning rate increases linearly from 0.0 to 0.001. Then lr is decayed at 400000, 450000 iteration with multiplier 0.1, 0.01. The maximum iteration is 500200.
-*  Synchronized batch norm can be set by `--syncbn=True`, which can produce a higher precision.
+*  Synchronized batch normalization can be set by `--syncbn=True`, which can produce a higher performance.
 
 Training losses is shown as below：
 <p align="center">
@@ -118,11 +118,11 @@ Train Loss
 
 ## Evaluation
 
-Evaluation is to evaluate the performance of a trained model. This sample provides `eval.py` which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). You can also download Paddle released [YOLOv3 model](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz) as:
+Evaluation is to evaluate the performance of a trained model. This sample provides `eval.py` which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). You can also download Paddle released YOLOv3 [model](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz) as:
 
     sh ./weights/download.sh
 
-`eval.py` is the main executor for evalution, one can start evalution step by:
+`eval.py` is the main executor for evalution, you can start evalution step by:
 
     python eval.py \
         --dataset=coco2017 \
@@ -147,11 +147,11 @@ If train with `--syncbn=True`, Evalutaion result is shown as below:
 | 416x416 | 37.5 | 59.6 | 40.2 |
 | 320x320 | 34.8 | 56.4 | 36.9 |
 
-- **NOTE:** Evaluations based on `pycocotools` evaluator with score threshold as 0.01, which is same as darknet. Some frameworks evaluates with score threshold as 0.05 will cause a drop in accuracy.
+- **NOTE:** Evaluations based on `pycocotools` evaluator with score threshold as 0.01, which is same as darknet. Some frameworks evaluates with score threshold as 0.05 will cause a decrease in performance.
 
 ### Inference and Visualization
 
-Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, one can start infer step by:
+Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, you can start infer step by:
 
     python infer.py \
        --dataset=coco2017 \
@@ -196,13 +196,13 @@ Inference speed（Tesla P40）:
 
 ### Inference deployment
 
-For YOLOv3 inference deployment, you can save YOLOv3 inference model in `eval.py` [save_inference_model](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/eval.py#L58), inference model can be loaded and deployed by Paddle prediction library, see [Paddle Inference Lib](http://paddlepaddle.org/documentation/docs/zh/1.4/advanced_usage/deploy/index_cn.html).
+For YOLOv3 inference deployment, you can save YOLOv3 inference model in [eval.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/eval.py#L58), inference model can be loaded and deployed by Paddle prediction library, see [Paddle Inference Lib](http://paddlepaddle.org/documentation/docs/zh/1.4/advanced_usage/deploy/index_cn.html).
 
 ## Advanced Usage
 
 ### Background introduction
 
-Traditional object detection method works with two stages, it generates potential bounding boxes in the first stage and then run classifier on these proposed boxes in the second stage. YOLO reframes object detection as a single regression problem, detect bounding box coordinates and class probabilities in one stage, which can make YOLO networks inference faster than two-stage networks. YOLOv3 uses multi-scale prediction layers, which improves small target detection accuracy.
+Traditional object detection method works with two stages, it generates potential bounding boxes in the first stage and then run classifier on these proposed boxes in the second stage. YOLO reframes object detection as a single regression problem, detect bounding box coordinates and class probabilities in one stage, which can make YOLO networks inference faster than two-stage networks. YOLOv3 uses multi-scale prediction layers, which improves small target detection performance.
 
 ### Model overview
 
@@ -231,68 +231,82 @@ YOLOv3 networks are composed of base feature extraction network, multi-scale fea
 
 ### Model fine-tune
 
-For YOLOv3 fine-tuning, you should set `--pretrain` as [YOLOv3 model](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz) you download, `--class_num` as category number in your dataset.
+For YOLOv3 fine-tuning, you should set `--pretrain` as YOLOv3 [model](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz) you download, set `--class_num` as category number in your dataset.
 
 In fine-tuning, weights of `yolo_output` layers should not be loaded when your `--class_num` is not equal to 80 as in COCO dataset, you can load pretrain weights without `yolo_output` layers as:
 
 ```python
-    if cfg.pretrain:
-        if not os.path.exists(cfg.pretrain):
-            print("Pretrain weights not found: {}".format(cfg.pretrain))
+if cfg.pretrain:
+    if not os.path.exists(cfg.pretrain):
+        print("Pretrain weights not found: {}".format(cfg.pretrain))
 
-        def if_exist(var):
-            return os.path.exists(os.path.join(cfg.pretrain, var.name)) \
-                   and var.name.find('yolo_output') < 0;
+    def if_exist(var):
+        return os.path.exists(os.path.join(cfg.pretrain, var.name)) \
+               and var.name.find('yolo_output') < 0;
 
-        fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
+    fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
 ```
 
-If categories in your dataset is the subset of COCO categories, weights of `yolo_output` layers can be cropped for fine-tuning. Suppose you has 6 categories which is `[3, 19, 25, 41, 58, 73]`th in COCO 80 categories, weights can be cropped as:
+If categories in your dataset is a subset of COCO categories, weights of `yolo_output` layers can be cropped for fine-tuning. Suppose you has 6 categories which is `[3, 19, 25, 41, 58, 73]`th in COCO 80 categories, weights can be cropped as:
 
 ```python
-    if cfg.pretrain:
-        if not os.path.exists(cfg.pretrain):
-            print("Pretrain weights not found: {}".format(cfg.pretrain))
+if cfg.pretrain:
+    if not os.path.exists(cfg.pretrain):
+        print("Pretrain weights not found: {}".format(cfg.pretrain))
 
-        def if_exist(var):
-            return os.path.exists(os.path.join(cfg.pretrain, var.name))
+    def if_exist(var):
+        return os.path.exists(os.path.join(cfg.pretrain, var.name))
 
-        fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
+    fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
-        cat_idxs = [3, 19, 25, 41, 58, 73]
-        # the first 5 channels is x, y, w, h, objectness, the following 80 channel is for 80 categories
-        channel_idxs = [:5] + (cat_idxs + 5)
-        for i in range(3): # we have 3 output layers
-            # crop conv weights
-            weights_tensor = fluid.global_scope().find_var("yolo_output.{}.conv.weights".format(i)).get_tensor()
-            weights = np.array(weights_tensor)
-            weights = np.concatenate(weights[*channel_idxs], weights[*(85 + channel_idxs)], weights[*(170 + channel_idxs)])
-            weights_tensor.set(weights.astype('float32'), place)
-            # crop conv bias
-            bias_tensor = fluid.global_scope().find_var("yolo_output.{}.conv.bias".format(i)).get_tensor()
-            bias = np.array(bias_tensor)
-            bias = np.concatenate(bias[*channel_idxs], bias[*(85 + channel_idxs)], bias[*(150 + channel_idxs)])
-            bias_tensor.set(bias.astype('float32'), place)
+    cat_idxs = [3, 19, 25, 41, 58, 73]
+    # the first 5 channels is x, y, w, h, objectness, 
+    # the following 80 channel is for 80 categories
+    channel_idxs = np.array(range(5) + [idx + 5 for idx in cat_idxs])
+    # we have 3 yolo_output layers
+    for i in range(3): 
+        # crop conv weights
+        weights_tensor = fluid.global_scope().find_var(
+                          "yolo_output.{}.conv.weights".format(i)).get_tensor()
+        weights = np.array(weights_tensor)
+        # each yolo_output layer has 3 anchors, 85 channels of each anchor
+        weights = np.concatenate(weights[channel_idxs], 
+                                 weights[85 + channel_idxs], 
+                                 weights[170 + channel_idxs])
+        weights_tensor.set(weights.astype('float32'), place)
+        # crop conv bias
+        bias_tensor = fluid.global_scope().find_var(
+                        "yolo_output.{}.conv.bias".format(i)).get_tensor()
+        bias = np.array(bias_tensor)
+        bias = np.concatenate(bias[channel_idxs], 
+                              bias[85 + channel_idxs], 
+                              bias[150 + channel_idxs])
+        bias_tensor.set(bias.astype('float32'), place)
+
 ```
 
 ## FAQ
 
-Q: I train YOLOv3 in single GPU and got `loss=nan`, why?
-A: `learning_rate=0.001` configuration is for training in 8 GPUs while total batch size is 64, if you train with smaller batch size, please decrease the learning rate.
+**Q:** I train YOLOv3 in single GPU and got `loss=nan`, why?
 
-Q: YOLOv3 training in my machine is very slow, how can I speed it up?
-A: Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284). If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
+**A:** `learning_rate=0.001` configuration is for training in 8 GPUs while total batch size is 64, if you train with smaller batch size, please decrease the learning rate.
+
+
+**Q:** YOLOv3 training in my machine is very slow, how can I speed it up?
+
+**A:** Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284). If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
 
 ## Reference
 
 - [You Only Look Once: Unified, Real-Time Object Detection](https://arxiv.org/abs/1506.02640v5), Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi.
 - [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767v1), Joseph Redmon, Ali Farhadi.
-- [https://arxiv.org/abs/1902.04103v3](https://arxiv.org/abs/1902.04103v3), Zhi Zhang, Tong He, Hang Zhang, Zhongyue Zhang, Junyuan Xie, Mu Li.
+- [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3), Zhi Zhang, Tong He, Hang Zhang, Zhongyue Zhang, Junyuan Xie, Mu Li.
 
 ## Update
+
 - 1/2019, Add YOLOv3 model.
-- 4/2019, Add synchronized batch norm for YOLOv3.
+- 4/2019, Add synchronized batch normalization for YOLOv3.
 
 ## Author
 
