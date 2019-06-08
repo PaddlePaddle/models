@@ -1,4 +1,4 @@
-# YOLO V3 Objective Detection
+# YOLOv3 Objective Detection
 
 ---
 ## Table of Contents
@@ -9,12 +9,13 @@
 - [FAQ](#faq)
 - [Reference](#reference)
 - [Update](#update)
+- [Author](#author)
 
 ## Introduction
 
 [YOLOv3](https://arxiv.org/abs/1804.02767) is an one-stage object detector proposed by [Joseph Redmon](https://arxiv.org/search/cs?searchtype=author&query=Redmon%2C+J) and [Ali Farhadi](https://arxiv.org/search/cs?searchtype=author&query=Farhadi%2C+A), which can be nearly twice faster in inference than the SOTA detector with same performance.
 
-We use many image augment and label smooth tricks from [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) in our implement and produce a higher performance than darknet framework. We got mAP(0.50:0.95) as 38.9 in COCO2017 dataset, which is 5.9 higher than darknet(33.0) implement.
+We use many image augment and label smooth tricks from [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) in our implement and produce a higher performance than darknet framework. We got `mAP(0.50:0.95)= 38.9` in COCO-2017 dataset, which is 5.9 higher than darknet(33.0) implement.
 
 With execution acceleration method in Paddle framework prediction library, inference speed of YOLOv3 in our impliment can be 30% faster than darknet framework.
 
@@ -186,7 +187,7 @@ Training benchmark:
 
 | dataset | GPU | CUDA | cuDNN | batch size | train speed (1 GPU) | train speed (8 GPU) | memory (1 GPU) | memory (8 GPU) |
 | :-----: | :-: | :--: | :---: | :--------: | :-----------------: | :-----------------: | :------------: | :------------: |
-| COCO | Tesla P40 | 8.0 | 7.1 | 8 (per device) | 30.2 images/s | 59.3 images/s | 10716 MB | 1080 MB |
+| COCO | Tesla P40 | 8.0 | 7.1 | 8 (per GPU) | 30.2 images/s | 59.3 images/s | 10642 MB/GPU | 10782 MB/GPU |
 
 Inference speed（Tesla P40）:
 
@@ -223,7 +224,7 @@ YOLOv3 structure
 
 YOLOv3 networks are composed of base feature extraction network, multi-scale feature fusion layers, and output layers.
 
-1. Feature extraction network: YOLOv3 uses [DarkNet53](https://arxiv.org/abs/1612.08242) for feature extracion. Darknet53 uses a full convolution structure, replacing the pooling layer with a convolution operation of step size 2, and adding Residual-block to avoid gradient dispersion when the number of network layers is too deep.
+1. Feature extraction network: YOLOv3 uses [DarkNet53](https://arxiv.org/abs/1612.08242) for feature extracion. Darknet53 uses a full convolution structure, replacing the pooling layer with a convolution operation with step size as 2, and adding residual block to avoid gradient dispersion when the number of network layers is too deep.
 
 2. Feature fusion layer. In order to solve the problem that the previous YOLO version is not sensitive to small objects, YOLOv3 uses three different scale feature maps for target detection, which are 13\*13, 26\*26, 52\*52, respectively, for detecting large, medium and small objects. The feature fusion layer selects the three scale feature maps produced by DarkNet as input, and draws on the idea of FPN (feature pyramid networks) to fuse the feature maps of each scale through a series of convolutional layers and upsampling.
 
@@ -233,7 +234,7 @@ YOLOv3 networks are composed of base feature extraction network, multi-scale fea
 
 For YOLOv3 fine-tuning, you should set `--pretrain` as YOLOv3 [model](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz) you download, set `--class_num` as category number in your dataset.
 
-In fine-tuning, weights of `yolo_output` layers should not be loaded when your `--class_num` is not equal to 80 as in COCO dataset, you can load pretrain weights without `yolo_output` layers as:
+In fine-tuning, weights of `yolo_output` layers should not be loaded when your `--class_num` is not equal to 80 as in COCO dataset, you can load pre-trained weights in [train.py](https://github.com/heavengate/models/blob/3fa6035550ebd4a425a2e354489967a829174155/PaddleCV/yolov3/train.py#L76) without `yolo_output` layers as:
 
 ```python
 if cfg.pretrain:
@@ -242,7 +243,7 @@ if cfg.pretrain:
 
     def if_exist(var):
         return os.path.exists(os.path.join(cfg.pretrain, var.name)) \
-               and var.name.find('yolo_output') < 0;
+               and var.name.find('yolo_output') < 0
 
     fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
@@ -292,7 +293,7 @@ if cfg.pretrain:
 **A:** `learning_rate=0.001` configuration is for training in 8 GPUs while total batch size is 64, if you train with smaller batch size, please decrease the learning rate.
 
 **Q:** YOLOv3 training in my machine is very slow, how can I speed it up?  
-**A:** Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284). If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
+**A:** Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284) for speeding up. If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
 
 ## Reference
 
