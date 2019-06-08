@@ -23,7 +23,7 @@ With execution acceleration method in Paddle framework prediction library, infer
 
 ### Installation
 
-**Install [Paddle](https://github.com/PaddlePaddle/Paddle):**
+**Install [PaddlePaddle](https://github.com/PaddlePaddle/Paddle):**
 
 Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html) and make an update.
 
@@ -197,7 +197,7 @@ Inference speed（Tesla P40）:
 
 ### Inference deployment
 
-For YOLOv3 inference deployment, you can save YOLOv3 inference model in [eval.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/eval.py#L58), inference model can be loaded and deployed by Paddle prediction library, see [Paddle Inference Lib](http://paddlepaddle.org/documentation/docs/zh/1.4/advanced_usage/deploy/index_cn.html).
+For YOLOv3 inference deployment, you can save YOLOv3 inference model in [eval.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/eval.py#L58), inference model can be loaded and deployed by Paddle prediction library, see [Paddle Inference Lib](http://www.paddlepaddle.org/documentation/docs/en/1.4/advanced_usage/deploy/index_en.html).
 
 ## Advanced Usage
 
