@@ -116,7 +116,7 @@ Training losses is shown as below：
 Train Loss
 </p>
 
-## Evaluation
+### Evaluation
 
 Evaluation is to evaluate the performance of a trained model. This sample provides `eval.py` which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). You can also download Paddle released YOLOv3 [model](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz) as:
 
@@ -151,7 +151,7 @@ If train with `--syncbn=True`, Evalutaion result is shown as below:
 
 ### Inference and Visualization
 
-Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, you can start infer step by:
+Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, you can start inference step by:
 
     python infer.py \
        --dataset=coco2017 \
@@ -288,13 +288,10 @@ if cfg.pretrain:
 
 ## FAQ
 
-**Q:** I train YOLOv3 in single GPU and got `loss=nan`, why?
-
+**Q:** I train YOLOv3 in single GPU and got `loss=nan`, why?  
 **A:** `learning_rate=0.001` configuration is for training in 8 GPUs while total batch size is 64, if you train with smaller batch size, please decrease the learning rate.
 
-
-**Q:** YOLOv3 training in my machine is very slow, how can I speed it up?
-
+**Q:** YOLOv3 training in my machine is very slow, how can I speed it up?  
 **A:** Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284). If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
 
 ## Reference
