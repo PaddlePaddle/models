@@ -1,35 +1,32 @@
-# YOLOv3 Objective Detection
+# YOLOv3 目标检测
 
 ---
-## Table of Contents
+## 内容
 
-- [Introduction](#introduction)
-- [Quick Start](#quick-start)
-- [Advanced Usage](#advanced-usage)
+- [简介](#简介)
+- [快速开始](#快速开始)
+- [进阶使用](#进阶使用)
 - [FAQ](#faq)
-- [Reference](#reference)
-- [Update](#update)
-- [Author](#author)
+- [参考文献](#参考文献)
+- [版本更新](#版本更新)
+- [如何贡献代码](#如何贡献代码)
+- [作者](#作者)
 
-## Introduction
+## 简介
 
-[YOLOv3](https://arxiv.org/abs/1804.02767) is an one-stage object detector proposed by [Joseph Redmon](https://arxiv.org/search/cs?searchtype=author&query=Redmon%2C+J) and [Ali Farhadi](https://arxiv.org/search/cs?searchtype=author&query=Farhadi%2C+A), which can be nearly twice faster in inference than the SOTA detector with same performance.
+[YOLOv3](https://arxiv.org/abs/1804.02767) 是由 [Joseph Redmon](https://arxiv.org/search/cs?searchtype=author&query=Redmon%2C+J) 和 [Ali Farhadi](https://arxiv.org/search/cs?searchtype=author&query=Farhadi%2C+A) 提出的单阶段检测器, 该检测器与达到同样精度的传统目标检测方法相比，推断速度能达到接近两倍.
 
-We use many image augment and label smooth tricks from [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) in our implement and produce a higher performance than darknet framework. We got `mAP(0.50:0.95)= 38.9` in COCO-2017 dataset, which is 5.9 higher than darknet(33.0) implement.
+在我们的实现版本中使用了 [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) 中提出的图像增强和label smooth等优化方法，精度优于darknet框架的实现版本，在COCO-2017数据集上，我们达到`mAP(0.50:0.95)= 38.9`的精度，比darknet实现版本的精度(33.0)要高5.9.
 
-With execution acceleration method in Paddle framework prediction library, inference speed of YOLOv3 in our impliment can be 30% faster than darknet framework.
+同时，在推断速度方面，基于Paddle预测库的加速方法，推断速度比darknet高30%.
 
-## Quick Start
+## 快速开始
 
-### Installation
+### 安装
 
-**Install [PaddlePaddle](https://github.com/PaddlePaddle/Paddle):**
+**安装[COCO-API](https://github.com/cocodataset/cocoapi)：**
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html) and make an update.
-
-**Install the [COCO-API](https://github.com/cocodataset/cocoapi):**
-
-To train the model, COCO-API is needed. Installation is as follows:
+训练前需要首先下载[COCO-API](https://github.com/cocodataset/cocoapi)：
 
     git clone https://github.com/cocodataset/cocoapi.git
     cd cocoapi/PythonAPI
@@ -41,51 +38,54 @@ To train the model, COCO-API is needed. Installation is as follows:
     # not to install the COCO API into global site-packages
     python2 setup.py install --user
 
-### Data preparation
+**安装[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)：**
 
-**COCO dataset:**
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.4或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
-Train the model on [MS-COCO dataset](http://cocodataset.org/#download), we also provide download script as follows:
+### 数据准备
+
+**COCO数据集：**
+
+在[MS-COCO数据集](http://cocodataset.org/#download)上进行训练，通过如下方式下载数据集。
 
     cd dataset/coco
     ./download.sh
 
-The data catalog structure is as follows:
+数据目录结构如下：
 
 ```
-  dataset/coco/
-  ├── annotations
-  │   ├── instances_train2014.json
-  │   ├── instances_train2017.json
-  │   ├── instances_val2014.json
-  │   ├── instances_val2017.json
-  |   ...
-  ├── train2017
-  │   ├── 000000000009.jpg
-  │   ├── 000000580008.jpg
-  |   ...
-  ├── val2017
-  │   ├── 000000000139.jpg
-  │   ├── 000000000285.jpg
-  |   ...
+dataset/coco/
+├── annotations
+│   ├── instances_train2014.json
+│   ├── instances_train2017.json
+│   ├── instances_val2014.json
+│   ├── instances_val2017.json
+|   ...
+├── train2017
+│   ├── 000000000009.jpg
+│   ├── 000000580008.jpg
+|   ...
+├── val2017
+│   ├── 000000000139.jpg
+│   ├── 000000000285.jpg
+|   ...
 
 ```
 
-**User defined dataset:**
+**自定义数据集：**
 
-You can defined datasets by yourself, we recommend using annotations in COCO format, and you can set dataset directory by `--data_dir` or in [reader.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/reader.py#L39). 
+用户可使用自定义的数据集，我们推荐自定义数据集使用COCO数据集格式的标注，并可通过设置`--data_dir`或修改[reader.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/reader.py#L39)指定数据集路径。
 
-### Training
+### 模型训练
 
-**download the pre-trained model:** This sample provides DarkNet-53 pre-trained [model](https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz), which is converted from [pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74). You can download pre-trained model as:
+**下载预训练模型：** 本示例提供DarkNet-53预训练[模型](https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz)，该模型转换自作者提供的预训练权重[pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74)，采用如下命令下载预训练模型：
 
     sh ./weights/download.sh
 
-Set `--pretrain` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
-Please make sure that pre-trained model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
+通过设置`--pretrain` 加载预训练模型。同时在fine-tune时也采用该设置加载已训练模型。
+请在训练前确认预训练模型下载与加载正确，否则训练过程中损失可能会出现NAN。
 
-
-**training:** After data preparation, one can start the training step by:
+**开始训练：** 数据准备完毕后，可以通过如下的方式启动训练：
 
     python train.py \
        --model_save_dir=output/ \
@@ -93,46 +93,46 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
        --data_dir=${path_to_data} \
        --class_num=${category_num}
 
-- Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPUs to train. 
-- For more help on arguments:
+- 通过设置`export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`指定8卡GPU训练。
+- 可选参数见：
 
     python train.py --help
 
-**NOTE:** The total batch size for YOLOv3 is 64, we use 8 GPUs with batch size as 8 in each GPU for training.
+**注意：** YOLOv3模型总batch size为64，这里使用8 GPUs每GPU上batch size为8来训练
 
-**model configuration:**
+**模型设置：**
 
-* The model uses 9 anchors generated based on the COCO dataset, which are `10x13`, `16x30`, `33x23`, `30x61`, `62x45`, `59x119`, `116x90`, `156x198`, `373x326`.
-* In YOLOv3, prediction anchor boxes which is not the best but overlap a ground truth boxes over `ignore_thresh=0.7`, objectness loss will be ignored.
+*  模型使用了基于COCO数据集生成的9个先验框：10x13，16x30，33x23，30x61，62x45，59x119，116x90，156x198，373x326
+*  YOLOv3模型中，若预测框不是该点最佳匹配框但是和任一ground truth框的重叠大于`ignore_thresh=0.7`，则忽略该预测框的目标性损失
 
-**training strategy:**
+**训练策略：**
 
-*  Use momentum optimizer with momentum=0.9.
-*  In first 4000 iteration, the learning rate increases linearly from 0.0 to 0.001. Then lr is decayed at 400000, 450000 iteration with multiplier 0.1, 0.01. The maximum iteration is 500200.
-*  Synchronized batch normalization can be set by `--syncbn=True`, which can produce a higher performance.
+*  采用momentum优化算法训练YOLOv3，momentum=0.9。
+*  学习率采用warmup算法，前4000轮学习率从0.0线性增加至0.001。在400000，450000轮时使用0.1,0.01乘子进行学习率衰减，最大训练500000轮。
+*  通过设置`--syncbn=True`可以开启Synchronized batch normalization，该模式下精度会提高
 
-Training losses is shown as below：
+下图为模型训练结果：
 <p align="center">
-<img src="image/train_loss.png" height="500" width="650" hspace="10"/><br />
+<img src="image/train_loss.png" height="400" width="550" hspace="10"/><br />
 Train Loss
 </p>
 
-### Evaluation
+### 模型评估
 
-Evaluation is to evaluate the performance of a trained model. This sample provides `eval.py` which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval). You can also download Paddle released YOLOv3 [model](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz) as:
+模型评估是指对训练完毕的模型评估各类性能指标。本示例采用[COCO官方评估](http://cocodataset.org/#detections-eval), 用户可通过如下方式下载Paddle发布的YOLOv3[模型](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz)
 
     sh ./weights/download.sh
 
-`eval.py` is the main executor for evalution, you can start evalution step by:
+`eval.py`是评估模块的主要执行程序，调用示例如下：
 
     python eval.py \
         --dataset=coco2017 \
         --weights=${path_to_weights} \
         --class_num=${category_num}
 
-- Set `export CUDA_VISIBLE_DEVICES=0` to specifiy one GPU to eval.
+- 通过设置`export CUDA_VISIBLE_DEVICES=0`指定单卡GPU评估。
 
-If train with `--syncbn=False`, Evalutaion result is shown as below:
+若训练时指定`--syncbn=False`, 模型评估精度如下:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
@@ -140,7 +140,7 @@ If train with `--syncbn=False`, Evalutaion result is shown as below:
 | 416x416 | 36.5 | 58.2 | 39.1 |
 | 320x320 | 34.1 | 55.4 | 36.3 |
 
-If train with `--syncbn=True`, Evalutaion result is shown as below:
+若训练时指定`--syncbn=True`, 模型评估精度如下:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
@@ -148,11 +148,11 @@ If train with `--syncbn=True`, Evalutaion result is shown as below:
 | 416x416 | 37.5 | 59.6 | 40.2 |
 | 320x320 | 34.8 | 56.4 | 36.9 |
 
-- **NOTE:** Evaluations based on `pycocotools` evaluator with score threshold as 0.01, which is same as darknet. Some frameworks evaluates with score threshold as 0.05 will cause a decrease in performance.
+- **注意：** 评估结果基于`pycocotools`评估器，没有滤除`score < 0.05`的预测框，其他框架有此滤除操作会导致精度下降。
 
-### Inference and Visualization
+### 模型推断及可视化
 
-Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, you can start inference step by:
+模型推断可以获取图像中的物体及其对应的类别，`infer.py`是主要执行程序，调用示例如下：
 
     python infer.py \
        --dataset=coco2017 \
@@ -162,8 +162,8 @@ Inference is used to get prediction score or image features based on trained mod
         --image_name=000000000139.jpg \
         --draw_thresh=0.5
 
-- Set `export CUDA_VISIBLE_DEVICES=0` to specifiy one GPU to infer.
-- Inference results will be shown as follows, and images with detection boxes will be saved under `./output`.
+- 通过设置`export CUDA_VISIBLE_DEVICES=0`指定单卡GPU预测。
+- 推断结果显示如下，并会在`./output`目录下保存带预测框的图像
 
 ```
 Image person.jpg detect:
@@ -173,69 +173,70 @@ Image person.jpg detect:
 Detect result save at ./output/person.png
 ```
 
-Visualization of inference result examples are shown as below:
+下图为模型可视化预测结果：
 <p align="center">
 <img src="image/000000000139.png" height=300 width=400 hspace='10'/>
 <img src="image/000000127517.png" height=300 width=400 hspace='10'/>
 <img src="image/000000203864.png" height=300 width=400 hspace='10'/>
 <img src="image/000000515077.png" height=300 width=400 hspace='10'/> <br />
-YOLOv3 Visualization Examples
+YOLOv3 预测可视化
 </p>
 
 ### Benchmark
 
-Training benchmark:
+模型训练benchmark:
 
-| dataset | GPU | CUDA | cuDNN | batch size | train speed (1 GPU) | train speed (8 GPU) | memory (1 GPU) | memory (8 GPU) |
+| 数据集 | GPU | CUDA | cuDNN | batch size | 训练速度(1 GPU) | 训练速度(8 GPU) | 显存占用(1 GPU) | 显存占用(8 GPU) |
 | :-----: | :-: | :--: | :---: | :--------: | :-----------------: | :-----------------: | :------------: | :------------: |
 | COCO | Tesla P40 | 8.0 | 7.1 | 8 (per GPU) | 30.2 images/s | 59.3 images/s | 10642 MB/GPU | 10782 MB/GPU |
 
-Inference speed（Tesla P40）:
+模型推断速度（Tesla P40）：
 
 |   input size  | 608x608 | 416x416 | 320x320 |
 |:-------------:| :-----: | :-----: | :-----: |
 | infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame |
 
-### Inference deployment
+### 服务部署
 
-For YOLOv3 inference deployment, you can save YOLOv3 inference model in [eval.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/eval.py#L58), inference model can be loaded and deployed by Paddle prediction library, see [Paddle Inference Lib](http://www.paddlepaddle.org/documentation/docs/en/1.4/advanced_usage/deploy/index_en.html).
+进行YOLOv3的服务部署，用户可以在[eval.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/eval.py#L58)中保存可部署的推断模型，该模型可以用Paddle预测库加载和部署，参考[Paddle预测库](http://paddlepaddle.org/documentation/docs/zh/1.4/advanced_usage/deploy/index_cn.html)
 
-## Advanced Usage
+## 进阶使用
 
-### Background introduction
+### 背景介绍
 
-Traditional object detection method works with two stages, it generates potential bounding boxes in the first stage and then run classifier on these proposed boxes in the second stage. YOLO reframes object detection as a single regression problem, detect bounding box coordinates and class probabilities in one stage, which can make YOLO networks inference faster than two-stage networks. YOLOv3 uses multi-scale prediction layers, which improves small target detection performance.
+传统目标检测方法通过两阶段检测，第一阶段生成预选框，第二阶段对预选框进行分类得到类别，而YOLO将目标检测看做是对框位置和类别概率的一个单阶段回归问题，使得YOLO能达到近两倍的检测速度。而YOLOv3在YOLO的基础上引入的多尺度预测，使得YOLOv3网络对于小物体的检测精度大幅提高。
 
-### Model overview
+### 模型概览
 
-[YOLOv3](https://arxiv.org/abs/1804.02767) is a one stage end to end detector。The detection principle of YOLOv3 is as follow:
+[YOLOv3](https://arxiv.org/abs/1804.02767) 是一阶段End2End的目标检测器。其目标检测原理如下图所示:
 <p align="center">
 <img src="image/YOLOv3.jpg" height=400 width=600 hspace='10'/> <br />
-YOLOv3 detection principle
+YOLOv3检测原理
 </p>
 
-### Model structure
+### 模型结构
 
-YOLOv3 divides the input image in to S\*S grids and predict B bounding boxes in each grid, predictions of boxes include Location(x, y, w, h), Confidence Score and probabilities of C classes, therefore YOLOv3 output layer has S\*S\*B\*(5 + C) channels. YOLOv3 loss consists of three parts: location loss, confidence loss and classification loss.
-The bone network of YOLOv3 is darknet53, the structure of YOLOv3 is as follow:
+YOLOv3将输入图像分成S\*S个格子，每个格子预测B个bounding box，每个bounding box预测内容包括: Location(x, y, w, h)、Confidence Score和C个类别的概率，因此YOLOv3输出层的channel数为S\*S\*B\*(5 + C)。YOLOv3的loss函数也有三部分组成：Location误差，Confidence误差和分类误差。
+
+YOLOv3的网络结构如下图所示:
 <p align="center">
 <img src="image/YOLOv3_structure.jpg" height=400 width=400 hspace='10'/> <br />
-YOLOv3 structure
+YOLOv3网络结构
 </p>
 
-YOLOv3 networks are composed of base feature extraction network, multi-scale feature fusion layers, and output layers.
+YOLOv3 的网络结构由基础特征提取网络、multi-scale特征融合层和输出层组成。
 
-1. Feature extraction network: YOLOv3 uses [DarkNet53](https://arxiv.org/abs/1612.08242) for feature extracion. Darknet53 uses a full convolution structure, replacing the pooling layer with a convolution operation with step size as 2, and adding residual block to avoid gradient dispersion when the number of network layers is too deep.
+1. 特征提取网络。YOLOv3使用 [DarkNet53](https://arxiv.org/abs/1612.08242)作为特征提取网络：DarkNet53 基本采用了全卷积网络，用步长为2的卷积操作替代了池化层，同时添加了 Residual 单元，避免在网络层数过深时发生梯度弥散。
 
-2. Feature fusion layer. In order to solve the problem that the previous YOLO version is not sensitive to small objects, YOLOv3 uses three different scale feature maps for target detection, which are 13\*13, 26\*26, 52\*52, respectively, for detecting large, medium and small objects. The feature fusion layer selects the three scale feature maps produced by DarkNet as input, and draws on the idea of FPN (feature pyramid networks) to fuse the feature maps of each scale through a series of convolutional layers and upsampling.
+2. 特征融合层。为了解决之前YOLO版本对小目标不敏感的问题，YOLOv3采用了3个不同尺度的特征图来进行目标检测，分别为13\*13,26\*26,52\*52,用来检测大、中、小三种目标。特征融合层选取 DarkNet 产出的三种尺度特征图作为输入，借鉴了FPN(feature pyramid networks)的思想，通过一系列的卷积层和上采样对各尺度的特征图进行融合。
 
-3. Output layer: The output layer also uses a full convolution structure. The number of convolution kernels in the last convolutional layer is 255:3\*(80+4+1)=255, and 3 indicates that a grid cell contains 3 bounding boxes. 4 represents the four coordinate information of the box, 1 represents the Confidence Score, and 80 represents the probability of 80 categories in the COCO dataset.
+3. 输出层。同样使用了全卷积结构，其中最后一个卷积层的卷积核个数是255：3\*(80+4+1)=255，3表示一个grid cell包含3个bounding box，4表示框的4个坐标信息，1表示Confidence Score，80表示COCO数据集中80个类别的概率。
 
-### Model fine-tune
+### 模型fine-tune
 
-For YOLOv3 fine-tuning, you should set `--pretrain` as YOLOv3 [model](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz) you download, set `--class_num` as category number in your dataset.
+对YOLOv3进行fine-tune，用户可用`--pretrain`指定下载好的Paddle发布的YOLOv3[模型](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz)，并把`--class_num`设置为用户数据集的类别数。
 
-In fine-tuning, weights of `yolo_output` layers should not be loaded when your `--class_num` is not equal to 80 as in COCO dataset, you can load pre-trained weights in [train.py](https://github.com/heavengate/models/blob/3fa6035550ebd4a425a2e354489967a829174155/PaddleCV/yolov3/train.py#L76) without `yolo_output` layers as:
+在fine-tune时，若用户自定义数据集的类别数不等于COCO数据集的80类，则加载权重时不应加载`yolo_output`层的权重，可通过在[train.py](https://github.com/heavengate/models/blob/3fa6035550ebd4a425a2e354489967a829174155/PaddleCV/yolov3/train.py#L76)使用如下方式加载非`yolo_output`层的权重：
 
 ```python
 if cfg.pretrain:
@@ -250,7 +251,7 @@ if cfg.pretrain:
 
 ```
 
-If categories in your dataset is a subset of COCO categories, weights of `yolo_output` layers can be cropped for fine-tuning. Suppose you has 6 categories which is `[3, 19, 25, 41, 58, 73]`th in COCO 80 categories, weights can be cropped as:
+若用户自定义数据集的类别是COCO数据集类别的子集，`yolo_output`层的权重可以进行裁剪后导入。例如用户数据集有6类分别对应COCO数据集80类中的第`[3, 19, 25, 41, 58, 73]`类，可通过如下方式裁剪`yolo_output`层权重：
 
 ```python
 if cfg.pretrain:
@@ -290,24 +291,28 @@ if cfg.pretrain:
 
 ## FAQ
 
-**Q:** I train YOLOv3 in single GPU and got `loss=nan`, why?  
-**A:** `learning_rate=0.001` configuration is for training in 8 GPUs while total batch size is 64, if you train with smaller batch size, please decrease the learning rate.
+**Q:** 我使用单GPU训练，训练过程中`loss=nan`，这是为什么？  
+**A:** YOLOv3中`learning_rate=0.001`的设置是针对总batch size为64的情况，若用户的batch size小于该值，建议调小学习率。
 
-**Q:** YOLOv3 training in my machine is very slow, how can I speed it up?  
-**A:** Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284) for speeding up. If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
+**Q:** 我训练YOLOv3速度比较慢，要怎么提速？  
+**A:** YOLOv3的数据增强比较复杂，速度比较慢，可通过在[reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284)中增加数据读取的进程数来提速。若用户是进行fine-tune，也可将`--no_mixup_iter`设置大于`--max_iter`的值来禁用mixup提升速度。
 
-## Reference
+## 参考文献
 
 - [You Only Look Once: Unified, Real-Time Object Detection](https://arxiv.org/abs/1506.02640v5), Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi.
 - [YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767v1), Joseph Redmon, Ali Farhadi.
 - [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3), Zhi Zhang, Tong He, Hang Zhang, Zhongyue Zhang, Junyuan Xie, Mu Li.
 
-## Update
+## 版本更新
 
-- 1/2019, Add YOLOv3 model.
-- 4/2019, Add synchronized batch normalization for YOLOv3.
+- 1/2019, 新增YOLOv3模型。
+- 4/2019, 新增YOLOv3模型Synchronized batch normalization模式。
 
-## Author
+## 如何贡献代码
+
+如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
+
+## 作者
 
 - [heavengate](https://github.com/heavengate)
 - [tink2123](https://github.com/tink2123)
