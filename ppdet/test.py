@@ -63,9 +63,12 @@ def main():
 
     if cfg.TEST.METRIC_TYPE == 'COCO':
         for v in ['im_info', 'im_id']:
-            if fluid.framework._get_var(v, test_prog):
-                keys += [v]
-                values += [v]
+            try:
+                if fluid.framework._get_var(v, test_prog):
+                    keys += [v]
+                    values += [v]
+            except:
+                pass
 
     for v in values:
         fluid.framework._get_var(str(v), test_prog).persistable = True

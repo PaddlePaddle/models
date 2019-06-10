@@ -69,10 +69,12 @@ DATA:
   TRAIN:
       ANNO_FILE: COCO17/annotations/instances_train2017.json
       IMAGE_DIR: COCO17/train2017
-      MIXUP_EPOCHS: 250 
+      MIXUP_EPOCH: 250 
+      TYPE: COCOSource
   VAL:
       ANNO_FILE: COCO17/annotations/instances_val2017.json
       IMAGE_DIR: COCO17/val2017
+      TYPE: COCOSource
   DATASET: coco2017
   CLASS_NUM: 80
   WITH_BACKGROUND: False
@@ -84,13 +86,13 @@ DATA:
   INPUT_SIZE: 608
 
 TRANSFORM:
+  WORKER_CONF:
+    BUFSIZE: 128
+    WORKER_NUM: 8
+    use_process: True
   TRAIN:
     DEVICES_NUM: 8
-    BATCH_SIZE: 6
-    WORKER_CONF:
-      BUFSIZE: 128
-      WORKER_NUM: 8
-      use_process: True
+    BATCH_SIZE: 8
     RANDOM_SHAPES: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
     OPS:
       - op: DecodeImage
@@ -101,12 +103,12 @@ TRANSFORM:
         beta: 1.5
       - op: NormalizeBox
       - op: RandomDistort
-      - op: RandomExpand
-        expand_max_ratio: 4.0
-        expand_prob: 0.5
+      - op: ExpandImage
+        max_ratio: 4.0
+        prob: 0.5
         mean: [123.675, 116.28, 103.53]
-      - op: Crop
-        batch_sampler: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
+      - op: CropImage
+        batch_sampler: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 1.0],
@@ -126,7 +128,6 @@ TRANSFORM:
       - op: Rgb2Bgr
         to_bgr: False
       - op: ArrangeYOLO
-        is_train: True
   VAL:
     DEVICES_NUM: 8
     BATCH_SIZE: 8
@@ -143,5 +144,4 @@ TRANSFORM:
         is_channel_first: False
       - op: Rgb2Bgr
         to_bgr: False
-      - op: ArrangeYOLO
-        is_train: False
+      - op: ArrangeTestYOLO
