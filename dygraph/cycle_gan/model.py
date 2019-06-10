@@ -11,14 +11,12 @@ class build_resnet_block(fluid.dygraph.Layer):
 
         self.conv0 = conv2d(self.full_name(),
             num_filters=dim,
-            num_channels=dim,
             filter_size=3,
             stride=1,
             stddev=0.02,
             use_bias=False)
         self.conv1 = conv2d(self.full_name(),
             num_filters=dim,
-            num_channels=dim,
             filter_size=3,
             stride=1,
             stddev=0.02,
@@ -42,21 +40,18 @@ class build_generator_resnet_9blocks(fluid.dygraph.Layer):
 
         self.conv0 = conv2d(self.full_name(),
             num_filters=32,
-            num_channels=3,
             filter_size=7,
             stride=1,
             padding=0,
             stddev=0.02)
         self.conv1 = conv2d(self.full_name(),
             num_filters=64,
-            num_channels=32,
             filter_size=3,
             stride=2,
             padding=1,
             stddev=0.02)
         self.conv2 = conv2d(self.full_name(),
             num_filters=128,
-            num_channels=64,
             filter_size=3,
             stride=2,
             padding=1,
@@ -86,7 +81,6 @@ class build_generator_resnet_9blocks(fluid.dygraph.Layer):
             outpadding=[0, 1, 0, 1])
         self.conv3 = conv2d(self.full_name(),
             num_filters=3,
-            num_channels=32,
             filter_size=7,
             stride=1,
             stddev=0.02,
@@ -113,7 +107,6 @@ class build_gen_discriminator(fluid.dygraph.Layer):
         super(build_gen_discriminator,self).__init__(name_scope)
         
         self.conv0 = conv2d(self.full_name(),
-            num_channels=3,
             num_filters=64,
             filter_size=4,
             stride=2,
@@ -123,7 +116,6 @@ class build_gen_discriminator(fluid.dygraph.Layer):
             use_bias=True,
             relufactor=0.2)
         self.conv1 = conv2d(self.full_name(),
-            num_channels=64,
             num_filters=128,
             filter_size=4,
             stride=2,
@@ -131,7 +123,6 @@ class build_gen_discriminator(fluid.dygraph.Layer):
             padding=1,
             relufactor=0.2)
         self.conv2 = conv2d(self.full_name(),
-            num_channels=128,
             num_filters=256,
             filter_size=4,
             stride=2,
@@ -139,7 +130,6 @@ class build_gen_discriminator(fluid.dygraph.Layer):
             padding=1,
             relufactor=0.2)
         self.conv3 = conv2d(self.full_name(),
-            num_channels=256,
             num_filters=512,
             filter_size=4,
             stride=1,
@@ -147,7 +137,6 @@ class build_gen_discriminator(fluid.dygraph.Layer):
             padding=1,
             relufactor=0.2)
         self.conv4 = conv2d(self.full_name(),
-            num_channels=512,
             num_filters=1,
             filter_size=4,
             stride=1,

@@ -12,7 +12,6 @@ class conv2d(fluid.dygraph.Layer):
     """docstring for Conv2D"""
     def __init__(self, 
                 name_scope,
-                num_channels=3,
                 num_filters=64,
                 filter_size=7,
                 stride=1,
@@ -31,7 +30,6 @@ class conv2d(fluid.dygraph.Layer):
 
         self.conv = Conv2D(
             self.full_name(),
-            num_channels=num_channels,
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
