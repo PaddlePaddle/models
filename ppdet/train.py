@@ -47,7 +47,7 @@ def main():
     merge_cfg(vars(args), cfg)
     merge_cfg({'IS_TRAIN': True}, cfg)
     if cfg.ENV.GPU:
-        devices_num = fluid.core.get_cuda_device_count()
+        devices_num = int(fluid.core.get_cuda_device_count())
     else:
         devices_num = int(
             os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
