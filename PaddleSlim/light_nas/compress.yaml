@@ -1,0 +1,23 @@
+version: 1.0
+controllers:
+    sa_controller:
+        class: 'SAController'
+        reduce_rate: 0.85
+        init_temperature: 10.24
+        max_iter_number: 300
+strategies:
+    light_nas_strategy:
+        class: 'LightNASStrategy'
+        controller: 'sa_controller'
+        target_flops: 592948064
+        end_epoch: 500
+        retrain_epoch: 5
+        metric_name: 'acc_top1'
+        server_ip: ''
+        server_port: 8871
+        is_server: True
+        search_steps: 100
+compressor:
+    epoch: 500
+    strategies:
+        - light_nas_strategy
