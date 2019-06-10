@@ -1,5 +1,4 @@
 # Cycle GAN
-
 ---
 ## 内容
 
@@ -17,7 +16,7 @@
 Cycle GAN 是一种image to image 的图像生成网络，实现了非对称图像数据集的生成和风格迁移。模型结构如下图所示，我们的模型包含两个生成网络 G: X → Y 和 F: Y → X，以及相关的判别器 DY 和 DX 。通过训练DY,使G将X图尽量转换为Y图，反之亦然。同时引入两个“周期一致性损失”，它们保证:如果我们从一个领域转换到另一个领域，它还可以被转换回去:(b)正向循环一致性损失:x→G(x)→F(G(x))≈x， (c)反向循环一致性损失:y→F(y)→G(F(y))≈y
 
 <p align="center">
-<img src="image/net.jpg" height=400 width=600 hspace='10'/> <br />
+<img src="image/net.png" height=400 width=600 hspace='10'/> <br />
 图1.网络结构
 </p>
 
@@ -111,16 +110,26 @@ env CUDA_VISIBLE_DEVICES=0 python infer.py \
     --input_style=B 
 ```
 
-训练180轮的模型预测效果如图2和图3所示：
+训练180轮的模型预测效果如fakeA和fakeB所示：
 
 <p align="center">
-<img src="images/A2B.jpg" width="620" hspace='10'/> <br/>
-<strong>图 2</strong>
+<img src="image/A.jpg" width="620" hspace='10'/> <br/>
+<strong>inputA</strong>
 </p>
 
 <p align="center">
-<img src="images/B2A.jpg" width="620" hspace='10'/> <br/>
-<strong>图 3</strong>
+<img src="image/A2B.jpg" width="620" hspace='10'/> <br/>
+<strong>fakeB</strong>
+</p>
+
+<p align="center">
+<img src="image/B.jpg" width="620" hspace='10'/> <br/>
+<strong>inputB</strong>
+</p>
+
+<p align="center">
+<img src="image/B2A.jpg" width="620" hspace='10'/> <br/>
+<strong>fakeA</strong>
 </p>
 
 >在本文示例中，均可通过修改`CUDA_VISIBLE_DEVICES`改变使用的显卡号。
