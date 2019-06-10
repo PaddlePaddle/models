@@ -28,6 +28,7 @@ from .transform import operator as op
 
 logger = logging.getLogger(__name__)
 
+
 class Reader(object):
     """ Interface to make readers for training or evaluation
     """
@@ -38,7 +39,8 @@ class Reader(object):
         self._data_cf = data_cf
         self._trans_conf = trans_conf
         self._maxiter = maxiter
-        assert type(self._maxiter) is int, 'The type of maxiter is not int.'
+        assert type(self._maxiter
+                    ) is int or long, 'The type of maxiter is not int or long.'
         self._cname2cid = None
 
     def _make_reader(self, which):
@@ -87,6 +89,7 @@ class Reader(object):
 
         # 3, Build a reader
         maxit = -1 if self._maxiter <= 0 else self._maxiter
+
         def _reader():
             n = 0
             while True:

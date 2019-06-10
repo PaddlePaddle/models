@@ -144,12 +144,8 @@ TRANSFORM:
         to_bgr: False
       - op: ArrangeRCNN
         is_mask: True
-        is_train: True
     BATCH_SIZE: 1 # batch size per device
     IS_PADDING: True
-    WORKER_CONF:
-      BUFSIZE: 10
-      WORKER_NUM: 2
   VAL:
     OPS:
       - op: DecodeImage
@@ -165,11 +161,10 @@ TRANSFORM:
         interp: 1
       - op: Rgb2Bgr
         to_bgr: False
-      - op: ArrangeRCNN
+      - op: ArrangeTestRCNN
         is_mask: True
-        is_train: False
     BATCH_SIZE: 1 # batch size per device
     IS_PADDING: True
-    WORKER_CONF:
-      BUFSIZE: 10
-      WORKER_NUM: 2
+  WORKER_CONF:
+    BUFSIZE: 10
+    WORKER_NUM: 2

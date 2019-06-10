@@ -39,15 +39,15 @@ class SSDHead(object):
         Args:
             body_feats (list): the list of feature map, which contains:
                 input1 (Variable): the middle feature map of backbone
-                                    with shape of [N, C, H, W]    
+                                    with shape of [N, C, H, W]
                 input2 (Variable): output of backbone
                                     with shape of [N, C, H, W]
                 input3~input6 (Variable): output of extra_layers
                                     with shape of [N, C, H, W]
         Returns:
-            mbox_locs (Variable): The predicted boxes’ location of the inputs.
+            mbox_locs (Variable): The predicted boxes' location of the inputs.
                                   The layout is [N, H*W*num_priors, 4].
-            mbox_confs (Variable): The predicted boxes’ confidence
+            mbox_confs (Variable): The predicted boxes' confidence
                                    of the inputs.
                                    The layout is [N, H*W*num_priors, C].
             box (Variable): The output prior boxes of PriorBox.
@@ -79,7 +79,7 @@ class SSDHead(object):
             input (Variable): the input image
             body_feats (list): the list of feature map, which contains:
                 input1 (Variable): the middle feature map of backbone
-                                    with shape of [N, C, H, W]    
+                                    with shape of [N, C, H, W]
                 input2 (Variable): output of backbone
                                     with shape of [N, C, H, W]
                 input3~input6 (Variable): output of extra_layers
@@ -102,7 +102,7 @@ class SSDHead(object):
             input (Variable): the input image
             body_feats (list): the list of feature map, which contains:
                 input1 (Variable): the middle feature map of backbone
-                                    with shape of [N, C, H, W]    
+                                    with shape of [N, C, H, W]
                 input2 (Variable): output of backbone
                                     with shape of [N, C, H, W]
                 input3~input6 (Variable): output of extra_layers
