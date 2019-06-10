@@ -22,7 +22,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import logging
-import weakref
 from . import source
 from .transform import transformer as tf
 from .transform import operator as op
