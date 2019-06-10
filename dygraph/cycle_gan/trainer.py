@@ -45,7 +45,7 @@ class Cycle_Gan(fluid.dygraph.Layer):
             g_B_loss = fluid.layers.reduce_mean(fluid.layers.square(fake_rec_B-1))
             G = g_A_loss + g_B_loss
             idt_A = self.build_generator_resnet_9blocks_a(input_B)
-	    idt_loss_A = fluid.layers.reduce_mean(fluid.layers.abs(fluid.layers.elementwise_sub(x = input_B , y = idt_A))) * lambda_B * lambda_identity
+            idt_loss_A = fluid.layers.reduce_mean(fluid.layers.abs(fluid.layers.elementwise_sub(x = input_B , y = idt_A))) * lambda_B * lambda_identity
 
             idt_B = self.build_generator_resnet_9blocks_b(input_A)
             idt_loss_B = fluid.layers.reduce_mean(fluid.layers.abs(fluid.layers.elementwise_sub(x = input_A , y = idt_B))) * lambda_A * lambda_identity
