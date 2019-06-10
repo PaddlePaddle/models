@@ -50,6 +50,10 @@ class YOLOv3(DetectorBase):
         # backbone
         im = feed_vars['image']
         body_feats = self.backbone(im)
+        if isinstance(body_feats, dict):
+            # if body_feats in a dict, get the feats list in stage order
+            body_feat_names = self.backbone.get_body_feat_names()
+            body_feats = [body_feats[name] for name in body_feat_names]
 
         if is_train:
             # get loss in train mode

@@ -14,7 +14,8 @@
 
 MODEL:
   TYPE: YOLOv3
-  BACKBONE: DarkNet53Backbone
+  BACKBONE: ResNet34Backbone
+  ENDPOINT: 5
 
 YOLO_HEAD:
   TYPE: YOLOv3Head
@@ -50,7 +51,7 @@ OPTIMIZER:
 
 TRAIN:
   MAX_ITERS: 500200
-  PRETRAIN_WEIGHTS: https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz
+  PRETRAIN_WEIGHTS: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet34_pretrained.tar
   BATCH_NORM_TYPE: SYNC_BN
   LOG_SMOOTH_WINDOW: 20
   SAVE_DIR: checkpoints
@@ -61,7 +62,7 @@ TEST:
   NMS_THRESH: 0.45
   NMS_TOPK: 1000
   NMS_POSK: 100
-  WEIGHTS: https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz
+  WEIGHTS: https://paddlemodels.bj.bcebos.com/yolo/yolo_resnet34.tar.gz
   METRIC_TYPE: COCO
 
 DATA:
@@ -85,7 +86,7 @@ DATA:
 TRANSFORM:
   TRAIN:
     DEVICES_NUM: 8
-    BATCH_SIZE: 8
+    BATCH_SIZE: 6
     WORKER_CONF:
       BUFSIZE: 128
       WORKER_NUM: 8
