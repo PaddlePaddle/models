@@ -16,7 +16,7 @@
 Cycle GAN 是一种image to image 的图像生成网络，实现了非对称图像数据集的生成和风格迁移。模型结构如下图所示，我们的模型包含两个生成网络 G: X → Y 和 F: Y → X，以及相关的判别器 DY 和 DX 。通过训练DY,使G将X图尽量转换为Y图，反之亦然。同时引入两个“周期一致性损失”，它们保证:如果我们从一个领域转换到另一个领域，它还可以被转换回去:(b)正向循环一致性损失:x→G(x)→F(G(x))≈x， (c)反向循环一致性损失:y→F(y)→G(F(y))≈y
 
 <p align="center">
-<img src="image/net.png" height=400 width=600 hspace='10'/> <br />
+<img src="image/net.png" hspace='10'/> <br />
 图1.网络结构
 </p>
 
@@ -114,13 +114,13 @@ env CUDA_VISIBLE_DEVICES=0 python infer.py \
 
 
 <p align="center">
-<img src="image/A2B.jpg" width="620" hspace='10'/> <br/>
+<img src="image/A2B.png" width="620" hspace='10'/> <br/>
 <strong>A2B</strong>
 </p>
 
 
 <p align="center">
-<img src="image/B2A.jpg" width="620" hspace='10'/> <br/>
+<img src="image/B2A.png" width="620" hspace='10'/> <br/>
 <strong>B2A</strong>
 </p>
 
