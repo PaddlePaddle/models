@@ -51,10 +51,10 @@ OPTIMIZER:
     
 
 TRAIN:
-  MAX_ITERS: 30000
+  MAX_ITERS: 26000
   LOG_SMOOTH_WINDOW: 1
   SNAPSHOT_ITER: 200
-  PRETRAIN_WEIGHTS: object_detection/pretrained/ssd_mobilenet_v1_coco/
+  PRETRAIN_WEIGHTS: ./ssd3/
   INPUT_SIZE: 300
   BATCH_NORM_TYPE: BN
   USE_VAL: On

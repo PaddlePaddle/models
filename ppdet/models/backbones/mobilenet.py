@@ -104,7 +104,7 @@ class MobileNet(object):
             num_filters=int(num_filters2 * scale),
             stride=1,
             padding=0,
-            name=name + "_seq")
+            name=name + "_sep")
         return pointwise_conv
 
     def get_backone(self, input, scale=1.0):
