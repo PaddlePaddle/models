@@ -54,7 +54,7 @@ class SSDHead(object):
                             The layout is [num_priors, 4].
             box_var (Variable): The expanded variances of PriorBox.
                                 The layout is [num_priors, 4].
-        tips：The num_priors is the number of predicted boxes
+        tips: The num_priors is the number of predicted boxes
               each position of each input
               and C is the number of Classes.
         """
