@@ -25,9 +25,16 @@ class TestReader(unittest.TestCase):
         with open(coco_yml, 'rb') as f:
             cls.coco_conf = yaml.load(f.read())
 
+        cls.coco_conf['DATA']['TRAIN'] = set_env.coco_data['TRAIN']
+        cls.coco_conf['DATA']['VAL'] = set_env.coco_data['VAL']
+
         rcnn_yml = os.path.join(prefix, 'rcnn_dataset.yml')
+
         with open(rcnn_yml, 'rb') as f:
             cls.rcnn_conf = yaml.load(f.read())
+
+        cls.rcnn_conf['DATA']['TRAIN'] = set_env.coco_data['TRAIN']
+        cls.rcnn_conf['DATA']['VAL'] = set_env.coco_data['VAL']
 
     @classmethod
     def tearDownClass(cls):
@@ -44,22 +51,30 @@ class TestReader(unittest.TestCase):
 
         ct = 0
         total = 0
-        start_ts = time.time()
-        prev_ts = start_ts
+        bytes = 0
+        prev_ts = None
         for sample in train_rd():
+            if prev_ts is None:
+                start_ts = time.time()
+                prev_ts = start_ts
+
             ct += 1
+            bytes += 4 * sample[0][0].size * len(sample[0])
             self.assertTrue(sample is not None)
             cost = time.time() - prev_ts
             if cost >= 1.0:
                 total += ct
                 qps = total / (time.time() - start_ts)
-                print('got %d/%d samples in %.3fsec with qps:%d' %
-                      (ct, total, cost, qps))
+                bps = bytes / (time.time() - start_ts)
+
+                print('got %d/%d samples in %.3fsec with qps:%d bps:%d' % 
+                    (ct, total, cost, qps, bps))
+                bytes = 0
                 ct = 0
                 prev_ts = time.time()
 
         total += ct
-        self.assertGreaterEqual(total, coco._maxiter)
+        self.assertEqual(total, coco._maxiter)
 
     def test_val(self):
         """ Test reader for validation

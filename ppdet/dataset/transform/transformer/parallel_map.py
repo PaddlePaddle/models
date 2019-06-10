@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import six
 import uuid
 import logging
 import threading
@@ -53,6 +54,7 @@ class ParallelMappedDataset(ProxiedDataset):
         self._started = False
         self._source = source
         self._mapper = mapper
+        self._exit = False
         self._setup()
 
     def _setup(self):
@@ -61,18 +63,18 @@ class ParallelMappedDataset(ProxiedDataset):
         use_process = False
         if 'use_process' in self._worker_args:
             use_process = self._worker_args['use_process']
-        logger.info('build thread map with worker_args[%s]' % (self._worker_args))
 
         bufsize = self._worker_args['bufsize']
         if use_process:
+            #from multiprocessing import Queue
             from .shared_queue import SharedQueue as Queue
             from multiprocessing import Process as Worker
             from multiprocessing import Event
         else:
-            try:
-                from Queue import Queue
-            except ImportError:
+            if six.PY3:
                 from queue import Queue
+            else:
+                from Queue import Queue
             from threading import Thread as Worker
             from threading import Event
 
@@ -106,6 +108,8 @@ class ParallelMappedDataset(ProxiedDataset):
         """
         while True:
             self._feeding_ev.wait()
+            if self._exit:
+                break
             try:
                 inq.put(source.next())
                 self._produced += 1
@@ -148,6 +152,14 @@ class ParallelMappedDataset(ProxiedDataset):
         assert self._epoch >= 0, 'The first epoch has not begin!'
         return self._source.drained() and \
             self._produced == self._consumed
+
+    def stop(self):
+        """ notify to exit
+        """
+        self._exit = True
+        self._feeding_ev.set()
+        for _ in range(len(self._consumers)):
+            self._inq.put(EndSignal(0, 'notify consumers to exit'))
 
     def next(self):
         """ get next transformed sample

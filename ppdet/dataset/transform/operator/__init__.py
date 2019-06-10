@@ -22,13 +22,14 @@ logger = logging.getLogger(__name__)
 __all__ = ['build']
 
 
-def build(ops):
+def build(ops, context=None):
     """ Build a mapper for operators in 'ops'
 
     Args:
         ops (list of base.BaseOperator or list of op dict): 
             configs for oprators, eg:
             [{'name': 'DecodeImage', 'params': {'to_rgb': True}}, {xxx}]
+        context (dict): a context object for mapper
 
     Returns:
         a mapper function which accept one argument 'sample' and
@@ -62,10 +63,10 @@ def build(ops):
     op_repr = '[%s]' % ','.join(op_repr)
 
     def _mapper(sample):
-        context = {}
+        ctx = {} if context is None else copy.deepcopy(context)
         for f in op_funcs:
             try:
-                out = f(sample, context)
+                out = f(sample, ctx)
                 sample = out
             except Exception as e:
                 logger.warn('failed to map operator[%s] with exception[%s]' \
