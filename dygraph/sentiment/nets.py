@@ -19,7 +19,6 @@ from paddle.fluid.dygraph.base import to_variable
 class SimpleConvPool(fluid.dygraph.Layer):
     def __init__(self,
                  name_scope,
-                 num_channels,
                  num_filters,
                  filter_size,
                  use_cudnn=False,
@@ -28,7 +27,6 @@ class SimpleConvPool(fluid.dygraph.Layer):
         self.batch_size = batch_size
         self._conv2d = Conv2D(
             self.full_name(),
-            num_channels=num_channels,
             num_filters=num_filters,
             filter_size=filter_size,
             padding=[1, 1],
@@ -61,7 +59,6 @@ class CNN(fluid.dygraph.Layer):
 
         self._simple_conv_pool_1 = SimpleConvPool(
             self.full_name(),
-            1,
             self.hid_dim,
             self.win_size,
             batch_size=self.batch_size)
