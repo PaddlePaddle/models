@@ -190,11 +190,11 @@ YOLOv3 预测可视化
 | :-----: | :-: | :--: | :---: | :--------: | :-----------------: | :-----------------: | :------------: | :------------: |
 | COCO | Tesla P40 | 8.0 | 7.1 | 8 (per GPU) | 30.2 images/s | 59.3 images/s | 10642 MB/GPU | 10782 MB/GPU |
 
-模型推断速度（Tesla P40）：
+模型单卡推断速度：
 
-|   input size  | 608x608 | 416x416 | 320x320 |
-|:-------------:| :-----: | :-----: | :-----: |
-| infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame |
+| GPU | CUDA | cuDNN | batch size | infer speed(608x608) | infer speed(416x416) | infer speed(320x320) |
+| :-: | :--: | :---: | :--------: | :-----: | :-----: | :-----: |
+| Tesla P40 | 8.0 | 7.1 | 1 | 48 ms/frame | 29 ms/frame |24 ms/frame |
 
 ### 服务部署
 
