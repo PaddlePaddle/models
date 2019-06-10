@@ -18,13 +18,15 @@ strategies:
         pruner: 'pruner_1'
         controller: 'sa_controller'
         start_epoch: 0
-        end_epoch: 2000
+        end_epoch: 500
+        retrain_epoch: 0
         max_ratio: 0.50
         min_ratio: 0.48
+        uniform_range: 0.4
         pruned_params: '.*_sep_weights'
-        metric_name: 'acc_top5'
+        metric_name: 'acc_top1'
 compressor:
-    epoch: 2000
+    epoch: 500
     checkpoint_path: './checkpoints_auto_pruning/'
     strategies:
         - auto_pruning_strategy
