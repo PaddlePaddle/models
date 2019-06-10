@@ -1141,8 +1141,6 @@ def train():
                 dy_sum_cost, dy_avg_cost, dy_predict, dy_token_num = transformer(
                     enc_inputs, dec_inputs, label, weights)
 
-                dy_avg_cost.backward()
-
                 if args.use_data_parallel:
                     dy_avg_cost = transformer.scale_loss(dy_avg_cost)
                     dy_avg_cost.backward()
