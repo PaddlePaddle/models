@@ -50,6 +50,12 @@ def depthwise_separable_names(name):
     return pnames
 
 
+def extra_names(name):
+    pnames = conv_norm_pnames(name + "_extra1")
+    pnames.extend(conv_norm_pnames(name + "_extra2"))
+    return pnames
+
+
 class TestMobileNet(unittest.TestCase):
     def setUp(self):
         self.image_shape = [3, 300, 300]
@@ -69,6 +75,10 @@ class TestMobileNet(unittest.TestCase):
                 depthwise_separable_names("conv5" + "_" + str(i + 1)))
         params_names.extend(depthwise_separable_names('conv5_6'))
         params_names.extend(depthwise_separable_names('conv6'))
+        params_names.extend(extra_names('conv7_1'))
+        params_names.extend(extra_names('conv7_2'))
+        params_names.extend(extra_names('conv7_3'))
+        params_names.extend(extra_names('conv7_4'))
         return params_names
 
     def compare_mobilenet(self):
@@ -77,7 +87,7 @@ class TestMobileNet(unittest.TestCase):
         with fluid.program_guard(prog, startup_prog):
             image = fluid.layers.data(
                 name='image', shape=self.image_shape, dtype='float32')
-            out = MobileNetV1Backbone(self.cfg)(image)
+            out = MobileNetV1Backbone(self.cfg, True)(image)
             # actual names
             parameters = prog.global_block().all_parameters()
             actual_pnames = [p.name for p in parameters]
@@ -95,7 +105,7 @@ class TestMobileNet(unittest.TestCase):
         # check decay of batch_norm
         for p in parameters:
             if 'bn' in p.name and ('scale' in p.name or 'offset' in p.name):
-                self.assertTrue(p.regularizer is None)
+                self.assertTrue(p.regularizer is not None)
 
     def test_mobilenetv1(self):
         self.compare_mobilenet()

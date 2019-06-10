@@ -17,12 +17,7 @@ MODEL:
   BACKBONE: MobileNetV1Backbone
   CONV_GROUP_SCALE: 1
 
-ENV:
-  GPU: ON
-  GPU_NUM: 2
-  MULTIPROCESS_READER: ON
-  MULTIPROCESS_WORKER: 8
-  MULTIPROCESS_QUEUE_LEN: 32
+
 
 SSD_HEAD:
   TYPE: SSDHead
@@ -33,7 +28,7 @@ SSD_HEAD:
   MAX_SIZES: [[], 150.0, 195.0, 240.0, 285.0, 300.0]
   ASPECT_RATIOS: [[2.], [2., 3.], [2., 3.], [2., 3.], [2., 3.], [2., 3.]]
   CENTER_OFFSET: 0.5
-  FLIP_ASPECT: ON
+  FLIP_ASPECT: True
   NMS_THRESH: 0.45
   
 
@@ -42,8 +37,9 @@ OPTIMIZER:
 
   LR_DECAY:
     POLICY: piecewise_decay
-    BOUNDARIES: [9200, 13800, 18400, 23000]
-    VALUES: [0.001, 0.0005, 0.00025, 0.0001, 0.00001]
+
+    BOUNDARIES: [1700, 6000, 10000, 18400, 23000, 25000]
+    VALUES: [0.002, 0.001, 0.0005, 0.00025, 0.0001, 0.00005, 0.00001]
 
   LR_WARMUP:
     WARMUP: OFF
@@ -51,18 +47,22 @@ OPTIMIZER:
   WEIGHT_DECAY:
     TYPE: L2
     FACTOR: 0.00005
+    BN_DECAY: False
+    
 
 TRAIN:
-  MAX_ITERS: 32000
+  MAX_ITERS: 30000
   LOG_SMOOTH_WINDOW: 1
   SNAPSHOT_ITER: 200
   PRETRAIN_WEIGHTS: object_detection/pretrained/ssd_mobilenet_v1_coco/
   INPUT_SIZE: 300
   BATCH_NORM_TYPE: BN
+  USE_VAL: On
   ENABLE_CE: ON
   USE_PARALLEL: OFF
   SHAPE: 300
-  SAVE_DIR: ./results2/
+  SAVE_DIR: ./results/
+  MAP_ITER: 2
   DO_VAL: ON
   
 VAL:
@@ -80,33 +80,24 @@ METRIC:
 
 ENV:
   GPU: ON
-  GPU_NUM: 8
-  MULTIPROCESS_READER: ON
-  MULTIPROCESS_WORKER: 8
-  MULTIPROCESS_QUEUE_LEN: 32
-
-
-TRANSFORM:
-  PIPELINE: SSD
-
-
 
 DATA:
     TRAIN:
-        ANNO_FILE: PascalVOC/VOCdevkit/VOC2012/ImageSets/Main/train.txt
-        IMAGE_DIR:  PascalVOC/VOCdevkit/VOC2012/JPEGImages
+        ANNO_FILE: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/train.txt
+        IMAGE_DIR: pascalvoc/VOCdevkit/VOC_all/JPEGImages
         SAMPLES: -1
-        IS_SHUFFLE: True 
+        IS_SHUFFLE: True
         TYPE: VOCSource
     VAL:
-        ANNO_FILE: PascalVOC/VOCdevkit/VOC2012/ImageSets/Main/val.txt
-        IMAGE_DIR:  PascalVOC/VOCdevkit/VOC2012/JPEGImages
+        ANNO_FILE: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/val.txt
+        IMAGE_DIR: pascalvoc/VOCdevkit/VOC_all/JPEGImages
         TYPE: VOCSource
+        IS_SHUFFLE: False
         SAMPLES: -1
         
     TEST:
-        TEST_FILE: ./test.txt
-        IMAGE_DIR:  PascalVOC/VOCdevkit/VOC2012/JPEGImages
+        ANNO_FILE: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/test.txt
+        IMAGE_DIR: pascalvoc/VOCdevkit/VOC_all/JPEGImages
         TYPE: SimpleSource
         SAMPLES: 1
     CLASS_NUM: 21
@@ -119,7 +110,7 @@ TRANSFORM:
             - OP: NormalizeBox
             - OP: RandomDistort
             - OP: ExpandImage
-              MAX_RATIO: 4
+              MAX_RATIO: 3
               PROB: 0.5
             - OP: CropImage
               BATCH_SAMPLER: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
@@ -144,7 +135,7 @@ TRANSFORM:
         BATCH_SIZE: 32
         DEVICES_NUM: 2
         IS_PADDING: False
-        DROP_LAST: False
+        DROP_LAST: True
 
             
     VAL:
@@ -163,9 +154,9 @@ TRANSFORM:
               IS_SCALE: False
             - OP: ArrangeSSD
         BATCH_SIZE: 64
-        DEVICES_NUM: 1
+        DEVICES_NUM: 2
         IS_PADDING: False
-        DROP_LAST: False
+        DROP_LAST: True
 
             
             
@@ -184,5 +175,6 @@ TRANSFORM:
         DROP_LAST: False
     WORKER_CONF:
         BUFSIZE: 10
-        WORKER_NUM: 2
+        WORKER_NUM: 8
+        USE_PROCESS: False
   
