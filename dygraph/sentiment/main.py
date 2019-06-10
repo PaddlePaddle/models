@@ -231,7 +231,7 @@ def infer():
         print('Do inferring ...... ')
         total_acc, total_num_seqs = [], []
 
-        restore = fluid.dygraph.load_persistables(args.checkpoints)
+        restore, _ = fluid.dygraph.load_persistables(args.checkpoints)
         cnn_net_infer.load_dict(restore)
         cnn_net_infer.eval()
 
