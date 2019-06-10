@@ -69,7 +69,7 @@ DATA:
   TRAIN:
       ANNO_FILE: COCO17/annotations/instances_train2017.json
       IMAGE_DIR: COCO17/train2017
-      MIXUP_EPOCHS: 260 
+      MIXUP_EPOCHS: 250 
   VAL:
       ANNO_FILE: COCO17/annotations/instances_val2017.json
       IMAGE_DIR: COCO17/val2017
