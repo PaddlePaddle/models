@@ -16,11 +16,10 @@ class TestRoiDbSource(unittest.TestCase):
     def setUpClass(cls):
         """ setup
         """
-        anno_path = set_env.coco_data['ANNO_FILE']
-        image_dir = set_env.coco_data['IMAGE_DIR']
+        anno_path = set_env.coco_data['TRAIN']['ANNO_FILE']
+        image_dir = set_env.coco_data['TRAIN']['IMAGE_DIR']
         cls.config = {
             'data_cf': {
-                'type': 'RoiDbSource',
                 'anno_file': anno_path,
                 'image_dir': image_dir,
                 'samples': 100,

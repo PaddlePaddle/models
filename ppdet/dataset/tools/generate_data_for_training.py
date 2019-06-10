@@ -82,7 +82,7 @@ def dump_coco_as_pickle(args):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     anno_path = args.annotation
-    roidb, cat2id = loader.load('train', anno_path, samples, True, {})
+    roidb, cat2id = loader.load(anno_path, samples, with_cat2id=True)
     samples = len(roidb)
     dsname = os.path.basename(anno_path).rstrip('.json')
     roidb_fname = save_dir + "/%s.roidb" % (dsname)
@@ -108,7 +108,7 @@ def dump_voc_as_pickle(args):
         os.makedirs(save_dir)
     save_dir = args.save_dir
     anno_path = args.annotation
-    roidb, cat2id = loader.load('train', anno_path, samples, True, {})
+    roidb, cat2id = loader.load(anno_path, samples, with_cat2id=True)
     samples = len(roidb)
     part = anno_path.split('/')
     dsname = part[-4]

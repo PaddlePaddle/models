@@ -26,11 +26,10 @@ class TestTransformer(unittest.TestCase):
 
         prefix = os.path.dirname(os.path.abspath(__file__))
         # json data
-        anno_path = set_env.coco_data['ANNO_FILE']
-        image_dir = set_env.coco_data['IMAGE_DIR']
+        anno_path = set_env.coco_data['TRAIN']['ANNO_FILE']
+        image_dir = set_env.coco_data['TRAIN']['IMAGE_DIR']
         cls.sc_config = {
-            'type': 'RoiDbSource',
-            'fname': anno_path,
+            'anno_file': anno_path,
             'image_dir': image_dir,
             'samples': 200
         }
@@ -65,12 +64,12 @@ class TestTransformer(unittest.TestCase):
 
         self.assertEqual(ct, mapped_ds.size())
 
-    def test_thread_map(self):
+    def test_parallel_map(self):
         """ test transformer.map with concurrent workers
         """
         mapper = op.build(self.ops)
         ds = build_source(self.sc_config)
-        worker_conf = {'WORKER_NUM': 1, 'use_process': True}
+        worker_conf = {'WORKER_NUM': 2, 'use_process': True}
         mapped_ds = transformer.map(ds, mapper, worker_conf)
 
         ct = 0

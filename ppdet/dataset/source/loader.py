@@ -67,7 +67,12 @@ def load_roidb(anno_file, sample_num=-1):
     assert anno_file.endswith('.roidb'), 'invalid roidb file[%s]' % (anno_file)
     with open(anno_file, 'rb') as f:
         roidb = f.read()
-        records, cname2cid = pkl.loads(roidb)
+        # for support python3 and python2
+        try:
+            records, cname2cid = pkl.loads(roidb, encoding='bytes')
+        except:
+            records, cname2cid = pkl.loads(roidb)
+
         assert type(records) is list, 'invalid data type from roidb'
 
     if sample_num > 0 and sample_num < len(records):

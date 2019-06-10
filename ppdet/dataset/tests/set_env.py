@@ -1,5 +1,6 @@
 import sys
 import os
+import six
 
 path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../')
 if path not in sys.path:
@@ -9,15 +10,31 @@ if path not in sys.path:
 prefix = os.path.dirname(os.path.abspath(__file__))
 
 #coco data for testing
-coco_data = {
-    'ANNO_FILE': os.path.join(prefix, \
-        'data/coco.test/val2017.roidb'),
-    'IMAGE_DIR': os.path.join(prefix, \
-        'data/coco.test/val2017')
-    }
+if six.PY3:
+    version = 'python3'
+else:
+    version = 'python2'
 
-anno_file = coco_data['ANNO_FILE']
-if not os.path.exists(anno_file):
-    print('not found file[%s], you should prepare '
-        'your data using "data/prepare_data.sh"' % (anno_file))
-    sys.exit(1)
+data_root = os.path.join(prefix, 'data/coco.test.%s' % (version))
+
+# coco data for testing
+coco_data = {
+    'TRAIN': {
+        'ANNO_FILE': os.path.join(data_root, 'train2017.roidb'),
+        'IMAGE_DIR': os.path.join(data_root, 'train2017')
+    },
+    'VAL': {
+        'ANNO_FILE': os.path.join(data_root, 'val2017.roidb'),
+        'IMAGE_DIR': os.path.join(data_root, 'val2017')
+    }
+}
+
+script = os.path.join(os.path.dirname(__file__), 'data/prepare_data.sh')
+
+if not os.path.exists(data_root):
+    ret = os.system('bash %s %s' % (script, version))
+    if ret != 0:
+        print('not found file[%s], you should manually prepare '
+            'your data using "data/prepare_data.sh"' % (data_root))
+        sys.exit(1)
+
