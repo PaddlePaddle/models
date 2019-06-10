@@ -112,24 +112,16 @@ env CUDA_VISIBLE_DEVICES=0 python infer.py \
 
 训练180轮的模型预测效果如fakeA和fakeB所示：
 
-<p align="center">
-<img src="image/A.jpg" width="620" hspace='10'/> <br/>
-<strong>inputA</strong>
-</p>
 
 <p align="center">
 <img src="image/A2B.jpg" width="620" hspace='10'/> <br/>
-<strong>fakeB</strong>
+<strong>A2B</strong>
 </p>
 
-<p align="center">
-<img src="image/B.jpg" width="620" hspace='10'/> <br/>
-<strong>inputB</strong>
-</p>
 
 <p align="center">
 <img src="image/B2A.jpg" width="620" hspace='10'/> <br/>
-<strong>fakeA</strong>
+<strong>B2A</strong>
 </p>
 
 >在本文示例中，均可通过修改`CUDA_VISIBLE_DEVICES`改变使用的显卡号。
