@@ -26,6 +26,22 @@ env CUDA_VISIBLE_DEVICES=0 python train.py
 
 这里`CUDA_VISIBLE_DEVICES=0`表示是执行在0号设备卡上，请根据自身情况修改这个参数。
 
+Paddle动态图支持多进程多卡进行模型训练，启动训练的方式：
+```
+python -m paddle.distributed.launch --selected_gpus=0,1,2,3  --log_dir ./mylog train.py   --use_data_parallel 1
+```
+此时，程序会将每个进程的输出log导入到`./mylog`路径下：
+```
+.
+├── mylog
+│   ├── workerlog.0
+│   ├── workerlog.1
+│   ├── workerlog.2
+│   └── workerlog.3
+├── README.md
+└── train.py
+```
+
 ## 输出
 执行训练开始后，将得到类似如下的输出。每一轮`batch`训练将会打印当前epoch、step以及loss值。当前默认执行`epoch=10`, `batch_size=8`。您可以调整参数以得到更好的训练效果，同时也意味着消耗更多的内存（显存）以及需要花费更长的时间。
 ```text

@@ -13,7 +13,8 @@
 # limitations under the License.
 
 import numpy as np
-
+import argparse
+import ast
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.layer_helper import LayerHelper
@@ -31,6 +32,20 @@ IMAGENET1000 = 1281167
 base_lr = 0.1
 momentum_rate = 0.9
 l2_decay = 1e-4
+
+
+def parse_args():
+    parser = argparse.ArgumentParser("Training for Mnist.")
+    parser.add_argument(
+        "--use_data_parallel",
+        type=ast.literal_eval,
+        default=False,
+        help="The flag indicating whether to shuffle instances in each pass.")
+    args = parser.parse_args()
+    return args
+
+
+args = parse_args()
 
 
 def optimizer_setting():
@@ -255,11 +270,27 @@ def eval(model, data):
 
 
 def train_resnet():
-    with fluid.dygraph.guard():
+    trainer_count = fluid.dygraph.parallel.Env().nranks
+    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
+        if args.use_data_parallel else fluid.CUDAPlace(0)
+    with fluid.dygraph.guard(place):
+        if args.use_data_parallel:
+            strategy = fluid.dygraph.parallel.prepare_context()
+
         resnet = ResNet("resnet")
         optimizer = optimizer_setting()
-        train_reader = paddle.batch(
-            paddle.dataset.flowers.train(use_xmap=False), batch_size=batch_size)
+
+        if args.use_data_parallel:
+            resnet = fluid.dygraph.parallel.DataParallel(resnet, strategy)
+
+        if args.use_data_parallel:
+            train_reader = fluid.contrib.reader.distributed_sampler(
+                paddle.dataset.flowers.train(use_xmap=False),
+                batch_size=batch_size * trainer_count)
+        else:
+            train_reader = paddle.batch(
+                paddle.dataset.flowers.train(use_xmap=False),
+                batch_size=batch_size)
 
         test_reader = paddle.batch(
             paddle.dataset.flowers.test(use_xmap=False), batch_size=batch_size)
@@ -288,7 +319,7 @@ def train_resnet():
                                  for x in data]).astype('int64')) != batch_size:
                     continue
                 y_data = np.array([x[1] for x in data]).astype('int64').reshape(
-                    batch_size, 1)
+                    -1, 1)
 
                 img = to_variable(dy_x_data)
                 label = to_variable(y_data)
@@ -302,7 +333,13 @@ def train_resnet():
                 acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
 
                 dy_out = avg_loss.numpy()
-                avg_loss.backward()
+
+                if args.use_data_parallel:
+                    avg_loss = resnet.scale_loss(avg_loss)
+                    avg_loss.backward()
+                    resnet.apply_collective_grads()
+                else:
+                    avg_loss.backward()
 
                 optimizer.minimize(avg_loss)
                 resnet.clear_gradients()
@@ -328,4 +365,5 @@ def train_resnet():
 
 
 if __name__ == '__main__':
+
     train_resnet()
