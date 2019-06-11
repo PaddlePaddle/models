@@ -113,6 +113,7 @@ def satisfy_sample_constraint(sampler,
                               satisfy_all=False):
     if sampler[6] == 0 and sampler[7] == 0:
         return True
+    satisfied = []
     for i in range(len(gt_bboxes)):
         object_bbox = [
             gt_bboxes[i][0], gt_bboxes[i][1], gt_bboxes[i][2], gt_bboxes[i][3]
@@ -120,15 +121,15 @@ def satisfy_sample_constraint(sampler,
         overlap = jaccard_overlap(sample_bbox, object_bbox)
         if sampler[6] != 0 and \
                 overlap < sampler[6]:
-            if satisfy_all:
-                return False
-            else:
-                continue
+            satisfied.append(False)
         if sampler[7] != 0 and \
                 overlap > sampler[7]:
-            if satisfy_all:
-                return False
-            else:
-                continue
-        return True
-    return False
+            satisfied.append(False)
+        satisfied.append(True)
+        if not satisfy_all:
+            return True
+
+    if satisfy_all:
+        return np.all(satisfied)
+    else:
+        return False
