@@ -356,12 +356,14 @@ class RandomDistort(BaseOperator):
             count (int): the kinds of doing distrot
         """
         super(RandomDistort, self).__init__()
-        self.brightness_delta = np.random.uniform(brightness_lower,
-                                                  brightness_upper)
-        self.contrast_delta = np.random.uniform(contrast_lower, contrast_upper)
-        self.saturation_delta = np.random.uniform(saturation_lower,
-                                                  saturation_upper)
-        self.hue_delta = np.random.uniform(hue_lower, hue_upper)
+        self.brightness_lower = brightness_lower
+        self.brightness_upper = brightness_upper
+        self.contrast_lower = contrast_lower
+        self.contrast_upper = contrast_upper
+        self.saturation_lower = saturation_lower
+        self.saturation_upper = saturation_upper
+        self.hue_lower = hue_lower
+        self.hue_upper = hue_upper
         self.brightness_prob = brightness_prob
         self.contrast_prob = contrast_prob
         self.saturation_prob = saturation_prob
@@ -369,28 +371,36 @@ class RandomDistort(BaseOperator):
         self.count = count
 
     def random_brightness(self, img):
+        brightness_delta = np.random.uniform(self.brightness_lower,
+                                             self.brightness_upper)
         prob = np.random.uniform(0, 1)
         if prob < self.brightness_prob:
-            img = ImageEnhance.Brightness(img).enhance(self.brightness_delta)
+            img = ImageEnhance.Brightness(img).enhance(brightness_delta)
         return img
 
     def random_contrast(self, img):
+        contrast_delta = np.random.uniform(self.contrast_lower, 
+                                           self.contrast_upper)
         prob = np.random.uniform(0, 1)
         if prob < self.contrast_prob:
-            img = ImageEnhance.Contrast(img).enhance(self.contrast_delta)
+            img = ImageEnhance.Contrast(img).enhance(contrast_delta)
         return img
 
     def random_saturation(self, img):
+        saturation_delta = np.random.uniform(self.saturation_lower,
+                                             self.saturation_upper)
         prob = np.random.uniform(0, 1)
         if prob < self.saturation_prob:
-            img = ImageEnhance.Color(img).enhance(self.saturation_delta)
+            img = ImageEnhance.Color(img).enhance(saturation_delta)
         return img
 
     def random_hue(self, img):
+        hue_delta = np.random.uniform(self.hue_lower, 
+                                      self.hue_upper)
         prob = np.random.uniform(0, 1)
         if prob < self.hue_prob:
             img_hsv = np.array(img.convert('HSV'))
-            img_hsv[:, :, 0] = img_hsv[:, :, 0] + self.hue_delta
+            img_hsv[:, :, 0] = img_hsv[:, :, 0] + hue_delta
         img = Image.fromarray(img_hsv, mode='HSV').convert('RGB')
         return img
 
