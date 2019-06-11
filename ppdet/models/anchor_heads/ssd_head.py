@@ -138,4 +138,5 @@ class SSDHead(object):
             overlap_threshold=self.cfg.METRIC.AP_OVERLAP_THRESH,
             evaluate_difficult=False,
             ap_version=self.cfg.METRIC.AP_VERSION)
-        return {'map': map_eval}
+        cur_map, accum_map = map_eval.get_map_var()
+        return {'map': accum_map}

@@ -41,6 +41,9 @@ def main():
     merge_cfg(vars(args), cfg)
     merge_cfg({'IS_TRAIN': False}, cfg)
 
+    if cfg.TEST.METRIC_TYPE == 'VOC':
+        merge_cfg({'MODE': 'val'}, cfg)
+
     # 2. build program
     # get detector and losses
     detector = Detectors.get(cfg.MODEL.TYPE)(cfg)
@@ -48,7 +51,10 @@ def main():
     test_prog = fluid.Program()
     with fluid.program_guard(test_prog, startup_prog):
         with fluid.unique_name.guard():
-            fetches = detector.test()
+            if cfg.TEST.METRIC_TYPE == 'COCO':
+                fetches = detector.test()
+            else:
+                fetches = detector.val()
     test_prog = test_prog.clone(True)
 
     # define executor
@@ -57,8 +63,9 @@ def main():
 
     # 3. Compile program for multi-devices
     keys, values = [], []
-    for k, v in fetches.iteritems():
+    for k, v in fetches.items():
         keys.append(k)
+        print(type(v))
         values.append(v.name)
 
     if cfg.TEST.METRIC_TYPE == 'COCO':
@@ -81,6 +88,7 @@ def main():
 
     # 4. Define reader
     reader = Reader(cfg.DATA, cfg.TRANSFORM)
+    train_reader = reader.train()
     test_reader = reader.val()
     pyreader = detector.get_pyreader()
     pyreader.decorate_sample_list_generator(test_reader, place)
@@ -126,7 +134,8 @@ def main():
             mask_eval(results, cfg.DATA.VAL.ANNO_FILE, outfile,
                       cfg.MASK_HEAD.RESOLUTION)
     else:
-        logger.info('Test mAP: {}'.format(results[-1]))
+        res = np.mean(results[-1]['map'][0])
+        logger.info('Test mAP: {}'.format(res))
 
 
 if __name__ == '__main__':
