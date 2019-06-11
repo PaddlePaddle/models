@@ -73,6 +73,8 @@ run_type_g.add_arg(
     "When task_mode is pairwise, lamda is the threshold for calculating the accuracy."
 )
 
+parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
+
 args = parser.parse_args()
 
 
@@ -80,6 +82,11 @@ def train(conf_dict, args):
     """
     train processic
     """
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_startup_program().random_seed = SEED
+        fluid.default_main_program().random_seed = SEED
+
     # loading vocabulary
     vocab = utils.load_vocab(args.vocab_path)
     # get vocab size
@@ -202,6 +209,7 @@ def train(conf_dict, args):
     logging.info("start train process ...")
     # set global step
     global_step = 0
+    ce_info = []
     for epoch_id in range(args.epoch):
         losses = []
         # Get batch data iterator
@@ -261,6 +269,21 @@ def train(conf_dict, args):
         end_time = time.time()
         logging.info("epoch: %d, loss: %f, used time: %d sec" %
                      (epoch_id, np.mean(losses), end_time - start_time))
+        ce_info.append([np.mean(losses), end_time - start_time])
+    if args.enable_ce:
+        card_num = get_cards()
+        ce_loss = 0
+        ce_time = 0
+        try:
+            ce_loss = ce_info[-2][0]
+            ce_time = ce_info[-2][1]
+        except:
+            logging.info("ce info err!")
+        print("kpis\teach_step_duration_%s_card%s\t%s" %
+                (args.task_name, card_num, ce_time))
+        print("kpis\ttrain_loss_%s_card%s\t%f" %
+            (args.task_name, card_num, ce_loss))
+
     if args.do_test:
         if args.task_mode == "pairwise":
             # Get Feeder and Reader
@@ -404,6 +427,14 @@ def infer(args):
             infer_file.write(_data + "\t" + _pred + "\n")
     logging.info("infer result saved in %s" %
                  os.path.join(os.getcwd(), args.infer_result_path))
+
+
+def get_cards():
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    if cards != '':
+        num = len(cards.split(","))
+    return num
 
 
 def main(conf_dict, args):

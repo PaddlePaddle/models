@@ -23,6 +23,7 @@ import argparse
 import requests
 import six
 import hashlib
+import zipfile
 
 parser = argparse.ArgumentParser(description='Download dataset.')
 #TODO  add celeA dataset

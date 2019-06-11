@@ -1,6 +1,6 @@
 from __future__ import print_function
 import paddle.fluid as fluid
-from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_for_infer
+from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_for_infer, get_ctc_feeder_for_infer
 import paddle.fluid.profiler as profiler
 from crnn_ctc_model import ctc_infer
 from attention_model import attention_infer
