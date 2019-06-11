@@ -22,8 +22,8 @@ import reader
 
 total_images = 1281167
 lr = 0.1
-num_epochs = 1
-batch_size = 128
+num_epochs = 240
+batch_size = 512
 lr_strategy = "cosine_decay"
 l2_decay = 4e-5
 momentum_rate = 0.9
@@ -75,14 +75,42 @@ class LightNASSpace(SearchSpace):
         """Get init tokens in search space.
         """
         return [
-            0, 1, 2, 0, 1, 0, 0, 2, 1, 1, 1, 0, 3, 2, 0, 1, 1, 0, 3, 1, 0, 0, 1,
-            0, 3, 2, 2, 1, 1, 0
+            3,
+            1,
+            1,
+            0,
+            1,
+            0,
+            3,
+            1,
+            1,
+            0,
+            1,
+            0,
+            3,
+            1,
+            1,
+            0,
+            1,
+            0,
+            3,
+            1,
+            1,
+            0,
+            1,
+            0,
+            3,
+            1,
+            1,
+            0,
+            1,
+            0,
         ]
 
     def range_table(self):
         """Get range table of current search space.
         """
-        # [NAS_FILTER_SIZE, NAS_LAYERS_NUMBER, NAS_KERNEL_SIZE, NAS_FILTERS_MULTIPLIER, NAS_SHORTCUT, NAS_SE]
+        # [NAS_FILTER_SIZE, NAS_LAYERS_NUMBER, NAS_KERNEL_SIZE, NAS_FILTERS_MULTIPLIER, NAS_SHORTCUT, NAS_SE] * 5
         return [
             4, 3, 3, 2, 2, 2, 4, 3, 3, 2, 2, 2, 4, 3, 3, 2, 2, 2, 4, 3, 3, 2, 2,
             2, 4, 3, 3, 2, 2, 2
@@ -110,7 +138,7 @@ class LightNASSpace(SearchSpace):
             startup_prog=startup_prog,
             bottleneck_params_list=bottleneck_params_list)
         test_prog = test_prog.clone(for_test=True)
-        train_batch_size = batch_size
+        train_batch_size = batch_size / 4
         test_batch_size = batch_size
         train_reader = paddle.batch(
             reader.train(), batch_size=train_batch_size, drop_last=True)
@@ -137,7 +165,7 @@ def build_program(is_train,
             shapes=[[-1] + image_shape, [-1, 1]],
             lod_levels=[0, 0],
             dtypes=["float32", "int64"],
-            use_double_buffer=False)
+            use_double_buffer=True)
         with fluid.unique_name.guard():
             image, label = fluid.layers.read_file(py_reader)
             model = LightNASNet()
