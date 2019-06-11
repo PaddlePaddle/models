@@ -201,7 +201,7 @@ def main(args):
                     pyreader_name='train_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
 
                 # user defined model based on ernie embeddings
                 loss, accuracy, num_seqs = create_model(
@@ -233,7 +233,7 @@ def main(args):
                     pyreader_name='eval_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
 
                 # user defined model based on ernie embeddings
                 loss, accuracy, num_seqs = create_model(
@@ -253,7 +253,7 @@ def main(args):
                     pyreader_name='infer_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
 
                 probs = create_model(args,
                                     embeddings,
@@ -268,7 +268,7 @@ def main(args):
             utils.init_checkpoint(
                 exe,
                 args.init_checkpoint,
-                main_program=startup_prog)
+                main_program=train_program)
     elif args.do_val or args.do_infer:
         if not args.init_checkpoint:
             raise ValueError("args 'init_checkpoint' should be set if"
