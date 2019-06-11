@@ -3,8 +3,8 @@
 情感倾向分析（Sentiment Classification，简称Senta）针对带有主观描述的中文文本，可自动判断该文本的情感极性类别并给出相应的置信度。情感类型分为积极、消极。情感倾向分析能够帮助企业理解用户消费习惯、分析热点话题和危机舆情监控，为企业提供有利的决策支持。可通过[AI开放平台-情感倾向分析](http://ai.baidu.com/tech/nlp_apply/sentiment_classify) 线上体验。
 
 情感是人类的一种高级智能行为，为了识别文本的情感倾向，需要深入的语义建模。另外，不同领域（如餐饮、体育）在情感的表达各不相同，因而需要有大规模覆盖各个领域的数据进行模型训练。为此，我们通过基于深度学习的语义模型和大规模数据挖掘解决上述两个问题。效果上，我们基于开源情感倾向分类数据集ChnSentiCorp进行评测；此外，我们还开源了百度基于海量数据训练好的模型，该模型在ChnSentiCorp数据集上fine-tune之后（基于开源模型进行Finetune的方法请见下面章节），可以得到更好的效果。具体数据如下所示：
- 
-| 模型 | dev | test | 模型（finetune） |dev | test | 
+
+| 模型 | dev | test | 模型（finetune） |dev | test |
 | :------| :------ | :------ | :------ |:------ | :------
 | BOW | 89.8% | 90.0% | BOW |91.3% | 90.6% |
 | CNN | 90.6% | 89.9% | CNN |92.4% | 91.8% |
@@ -18,16 +18,17 @@
 
 ## 快速开始
 
-本项目依赖于 Paddlepaddle 1.3.2 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+本项目依赖于 Python2.7、Paddlepaddle Fluid 1.4.0以及PaddleHub 0.5.0，请确保相关依赖都已安装正确
 
-python版本依赖python 2.7
+[PaddlePaddle安装指南](http://www.paddlepaddle.org/#quick-start)
+[PaddleHub安装指南](https://github.com/PaddlePaddle/PaddleHub)
 
 #### 安装代码
 
 克隆数据集代码库到本地
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
-cd models/PaddleNLP/sentiment_classification 
+cd models/PaddleNLP/sentiment_classification
 ```
 
 #### 数据准备
@@ -154,7 +155,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 
 可以根据自己的需求，组建自定义的模型，具体方法如下所示：
 
-1. 定义自己的网络结构 
+1. 定义自己的网络结构
 用户可以在 ```models/classification/nets.py``` 中，定义自己的模型，只需要增加新的函数即可。假设用户自定义的函数名为```user_net```
 2. 更改模型配置
 在 ```senta_config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```
