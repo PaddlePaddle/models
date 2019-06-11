@@ -6,6 +6,7 @@ import multiprocessing
 import os
 import six
 import sys
+sys.path.append("../../models/neural_machine_translation/transformer/")
 import time
 
 import numpy as np
@@ -13,6 +14,7 @@ import paddle.fluid as fluid
 
 import reader
 from config import *
+from desc import *
 from model import transformer, position_encoding_init
 
 
@@ -661,6 +663,7 @@ def train(args):
                 ModelHyperParams.postprocess_cmd,
                 ModelHyperParams.weight_sharing,
                 TrainTaskConfig.label_smooth_eps,
+                ModelHyperParams.bos_idx,
                 use_py_reader=args.use_py_reader,
                 is_test=False)
 

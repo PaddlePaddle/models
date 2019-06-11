@@ -13,7 +13,7 @@
 
 ## 模型简介
 
-Temporal Shift Module是由MIT和IBM Watson AI Lab的Ji Lin，Chuang Gan等人提出的通过时间位移来提高网络视频理解能力的模块，其位移操作原理如下图所示。
+Temporal Shift Module是由MIT和IBM Watson AI Lab的Ji Lin，Chuang Gan和Song Han等人提出的通过时间位移来提高网络视频理解能力的模块，其位移操作原理如下图所示。
 
 <p align="center">
 <img src="../../images/temporal_shift.png" height=250 width=800 hspace='10'/> <br />
@@ -42,8 +42,11 @@ TSM的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
             --save_dir=checkpoints
             --log_interval=10
             --valid_interval=1
+            --pretrain=${path_to_pretrain_model}
 
     bash scripts/train/train_tsm.sh
+
+- 从头开始训练，需要加载在ImageNet上训练的ResNet50权重作为初始化参数，请下载此[模型参数](https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz)并解压，将上面启动脚本中的path\_to\_pretrain\_model设置为解压之后的模型参数存放路径。如果没有手动下载并设置path\_to\_pretrain\_model，则程序会自动下载并将参数保存在~/.paddle/weights/ResNet50\_pretrained目录下面
 
 - 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/tsm_kinetics.tar.gz)通过`--resume`指定权重存放路径进行finetune等开发
 

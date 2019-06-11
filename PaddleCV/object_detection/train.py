@@ -10,7 +10,7 @@ import multiprocessing
 import paddle
 import paddle.fluid as fluid
 import reader
-from mobilenet_ssd import mobile_net
+from mobilenet_ssd import build_mobilenet_ssd
 from utility import add_arguments, print_arguments
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -92,7 +92,7 @@ def build_program(main_prog, startup_prog, train_params, is_train):
             use_double_buffer=True)
         with fluid.unique_name.guard():
             image, gt_box, gt_label, difficult = fluid.layers.read_file(py_reader)
-            locs, confs, box, box_var = mobile_net(class_num, image, image_shape)
+            locs, confs, box, box_var = build_mobilenet_ssd(image, class_num, image_shape)
             if is_train:
                 with fluid.unique_name.guard("train"):
                     loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
@@ -228,6 +228,13 @@ def train(args,
 
     total_time = 0.0
     for epoc_id in range(epoc_num):
+        train_reader = reader.train(data_args,
+                                train_file_list,
+                                batch_size_per_device,
+                                shuffle=is_shuffle,
+                                num_workers=num_workers,
+                                enable_ce=enable_ce)
+        train_py_reader.decorate_paddle_reader(train_reader)
         epoch_idx = epoc_id + 1
         start_time = time.time()
         prev_start_time = start_time
@@ -255,9 +262,10 @@ def train(args,
 
         end_time = time.time()
         total_time += end_time - start_time
-        best_map, mean_map = test(epoc_id, best_map)
-        print("Best test map {0}".format(best_map))
         if epoc_id % 10 == 0 or epoc_id == epoc_num - 1:
+            best_map, mean_map = test(epoc_id, best_map)
+            print("Best test map {0}".format(best_map))
+            # save model
             save_model(str(epoc_id), train_prog)
 
     if enable_ce:
@@ -275,7 +283,7 @@ def train(args,
                    (devices_num, total_time / epoch_idx))
 
 
-if __name__ == '__main__':
+def main():
     args = parser.parse_args()
     print_arguments(args)
 
@@ -318,3 +326,7 @@ if __name__ == '__main__':
           train_parameters[dataset],
           train_file_list=train_file_list,
           val_file_list=val_file_list)
+
+
+if __name__ == '__main__':
+    main()

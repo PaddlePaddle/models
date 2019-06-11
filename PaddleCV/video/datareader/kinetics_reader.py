@@ -14,6 +14,7 @@
 
 import os
 import sys
+import cv2
 import math
 import random
 import functools
@@ -65,6 +66,7 @@ class KineticsReader(DataReader):
         self.target_size = self.get_config_from_sec(mode, 'target_size')
         self.num_reader_threads = self.get_config_from_sec(mode, 'num_reader_threads')
         self.buf_size = self.get_config_from_sec(mode, 'buf_size')
+        self.enable_ce = self.get_config_from_sec(mode, 'enable_ce')
 
         self.img_mean = np.array(cfg.MODEL.image_mean).reshape(
             [3, 1, 1]).astype(np.float32)
@@ -73,6 +75,9 @@ class KineticsReader(DataReader):
         # set batch size and file list
         self.batch_size = cfg[mode.upper()]['batch_size']
         self.filelist = cfg[mode.upper()]['filelist']
+        if self.enable_ce:
+            random.seed(0)
+            np.random.seed(0)
 
     def create_reader(self):
         _reader = self._reader_creator(self.filelist, self.mode, seg_num=self.seg_num, seglen = self.seglen, \
@@ -382,7 +387,6 @@ def video_loader(frames, nsample, seglen, mode):
 def mp4_loader(filepath, nsample, seglen, mode):
     cap = cv2.VideoCapture(filepath)
     videolen = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    average_dur = int(videolen / nsample)
     sampledFrames = []
     for i in range(videolen):
         ret, frame = cap.read()
@@ -391,7 +395,7 @@ def mp4_loader(filepath, nsample, seglen, mode):
             continue
         img = frame[:, :, ::-1]
         sampledFrames.append(img)
-
+    average_dur = int(len(sampledFrames) / nsample)
     imgs = []
     for i in range(nsample):
         idx = 0
@@ -413,7 +417,7 @@ def mp4_loader(filepath, nsample, seglen, mode):
                 idx = i
 
         for jj in range(idx, idx + seglen):
-            imgbuf = sampledFrames[int(jj % videolen)]
+            imgbuf = sampledFrames[int(jj % len(sampledFrames))]
             img = Image.fromarray(imgbuf, mode='RGB')
             imgs.append(img)
 

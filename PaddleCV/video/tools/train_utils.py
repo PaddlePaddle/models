@@ -9,6 +9,29 @@ import shutil
 logger = logging.getLogger(__name__)
 
 
+def log_lr_and_step():
+    try:
+        # In optimizers, if learning_rate is set as constant, lr_var
+        # name is 'learning_rate_0', and iteration counter is not 
+        # recorded. If learning_rate is set as decayed values from 
+        # learning_rate_scheduler, lr_var name is 'learning_rate', 
+        # and iteration counter is recorded with name '@LR_DECAY_COUNTER@', 
+        # better impliment is required here
+        lr_var = fluid.global_scope().find_var("learning_rate")
+        if not lr_var:
+            lr_var = fluid.global_scope().find_var("learning_rate_0")
+        lr = np.array(lr_var.get_tensor())
+
+        lr_count = '[-]'
+        lr_count_var = fluid.global_scope().find_var("@LR_DECAY_COUNTER@")
+        if lr_count_var:
+            lr_count = np.array(lr_count_var.get_tensor())
+        logger.info("------- learning rate {}, learning rate counter {} -----"
+                    .format(np.array(lr), np.array(lr_count)))
+    except:
+        logger.warn("Unable to get learning_rate and LR_DECAY_COUNTER.")
+
+
 def test_without_pyreader(test_exe,
                           test_reader,
                           test_feeder,
@@ -61,11 +84,7 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
                            save_model_name = 'model', test_exe = None, test_reader = None, \
                            test_feeder = None, test_fetch_list = None, test_metrics = None):
     for epoch in range(epochs):
-        lr = fluid.global_scope().find_var("learning_rate").get_tensor()
-        lr_count = fluid.global_scope().find_var(
-            "@LR_DECAY_COUNTER@").get_tensor()
-        logger.info("------- learning rate {}, learning rate counter {} -----"
-                    .format(np.array(lr), np.array(lr_count)))
+        log_lr_and_step()
         epoch_periods = []
         for train_iter, data in enumerate(train_reader()):
             cur_time = time.time()
@@ -94,18 +113,16 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
 
 def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
                         train_fetch_list, train_metrics, epochs = 10, \
-                        log_interval = 0, valid_interval = 0, \
-                        save_dir = './', save_model_name = 'model', \
+                        log_interval = 0, valid_interval = 0, save_dir = './', \
+                        save_model_name = 'model', enable_ce = False, \
                         test_exe = None, test_pyreader = None, \
                         test_fetch_list = None, test_metrics = None):
     if not train_pyreader:
         logger.error("[TRAIN] get pyreader failed.")
+    epoch_periods = []
+    train_loss = 0
     for epoch in range(epochs):
-        lr = fluid.global_scope().find_var("learning_rate").get_tensor()
-        lr_count = fluid.global_scope().find_var(
-            "@LR_DECAY_COUNTER@").get_tensor()
-        logger.info("------- learning rate {}, learning rate counter {} -----"
-                    .format(np.array(lr), np.array(lr_count)))
+        log_lr_and_step()
         train_pyreader.start()
         train_metrics.reset()
         try:
@@ -121,7 +138,7 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
                 label = np.array(train_outs[-1])
                 if log_interval > 0 and (train_iter % log_interval == 0):
                     # eval here
-                    train_metrics.calculate_and_log_out(loss, pred, label, \
+                    train_loss = train_metrics.calculate_and_log_out(loss, pred, label, \
                                 info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
                 train_iter += 1
         except fluid.core.EOFException:
@@ -137,7 +154,12 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
         finally:
             epoch_period = []
             train_pyreader.reset()
-
+    #only for ce
+    if enable_ce:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        gpu_num = len(cards.split(","))
+        print("kpis\ttrain_cost_card{}\t{}".format(gpu_num, train_loss))
+        print("kpis\ttrain_speed_card{}\t{}".format(gpu_num, np.mean(epoch_periods)))
 
 def save_model(exe, program, save_dir, model_name, postfix=None):
     model_path = os.path.join(save_dir, model_name + postfix)

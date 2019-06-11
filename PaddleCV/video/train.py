@@ -79,7 +79,7 @@ def parse_args():
         default=False,
         help='whether to use memory optimize in train')
     parser.add_argument(
-        '--epoch_num',
+        '--epoch',
         type=int,
         default=0,
         help='epoch number, 0 for read from config file')
@@ -98,6 +98,11 @@ def parse_args():
         type=int,
         default=10,
         help='mini-batch interval to log.')
+    parser.add_argument(
+        '--enable_ce',
+        type=bool,
+        default=False,
+        help='If set True, enable continuous evaluation job.')
     args = parser.parse_args()
     return args
 
@@ -114,6 +119,9 @@ def train(args):
     # build model
     startup = fluid.Program()
     train_prog = fluid.Program()
+    if args.enable_ce:
+        startup.random_seed = 1000
+        train_prog.random_seed = 1000
     with fluid.program_guard(train_prog, startup):
         with fluid.unique_name.guard():
             train_model.build_input(not args.no_use_pyreader)
@@ -197,7 +205,7 @@ def train(args):
     valid_fetch_list = [valid_loss.name] + [x.name for x in valid_outputs
                                             ] + [valid_feeds[-1].name]
 
-    epochs = args.epoch_num or train_model.epoch_num()
+    epochs = args.epoch or train_model.epoch_num()
 
     if args.no_use_pyreader:
         train_feeder = fluid.DataFeeder(place=place, feed_list=train_feeds)
@@ -235,6 +243,7 @@ def train(args):
             valid_interval=args.valid_interval,
             save_dir=args.save_dir,
             save_model_name=args.model_name,
+            enable_ce=args.enable_ce,
             test_exe=valid_exe,
             test_pyreader=valid_pyreader,
             test_fetch_list=valid_fetch_list,

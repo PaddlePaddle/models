@@ -112,6 +112,7 @@ def parse_args():
     add_arg('no_mixup_iter',    int,    40000,  "Disable mixup in last N iter.")
     # TRAIN TEST INFER
     add_arg('input_size',       int,    608,    "Image input size of YOLOv3.")
+    add_arg('syncbn',           bool,   True,   "Whether to use synchronized batch normalization.")
     add_arg('random_shape',     bool,   True,   "Resize to random shape for train reader.")
     add_arg('valid_thresh',     float,  0.005,  "Valid confidence score for NMS.")
     add_arg('nms_thresh',       float,  0.45,   "NMS threshold.")
@@ -119,12 +120,13 @@ def parse_args():
     add_arg('nms_posk',         int,    100,    "The number of boxes of NMS output.")
     add_arg('debug',            bool,   False,  "Debug mode")
     # SINGLE EVAL AND DRAW
-    add_arg('image_path',       str,   'image', 
+    add_arg('image_path',       str,   'image',
             "The image path used to inference and visualize.")
-    add_arg('image_name',       str,    None,   
+    add_arg('image_name',       str,    None,
             "The single image used to inference and visualize. None to inference all images in image_path")
-    add_arg('draw_thresh',      float,  0.5,    
+    add_arg('draw_thresh',      float,  0.5,
             "Confidence score threshold to draw prediction box in image in debug mode")
+    add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
     # yapf: enable
     args = parser.parse_args()
     file_name = sys.argv[0]

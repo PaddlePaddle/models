@@ -1,4 +1,4 @@
-from layers import *
+from layers import conv2d, deconv2d
 import paddle.fluid as fluid
 
 

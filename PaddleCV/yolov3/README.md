@@ -12,7 +12,7 @@
 
 ## Installation
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/install_doc.html#paddlepaddle) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html) and make an update.
 
 ## Introduction
 
@@ -62,7 +62,7 @@ The data catalog structure is as follows:
   │   ├── 000000000139.jpg
   │   ├── 000000000285.jpg
   |   ...
-  
+
 ```
 
 ## Training
@@ -134,13 +134,23 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
 
 - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
 
-Evalutaion result is shown as below:
+If train with `--syncbn=False`, Evalutaion result is shown as below:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
-| 608x608| 37.7 | 59.8 | 40.8 |
+| 608x608 | 37.7 | 59.8 | 40.8 |
 | 416x416 | 36.5 | 58.2 | 39.1 |
 | 320x320 | 34.1 | 55.4 | 36.3 |
+
+If train with `--syncbn=True`, Evalutaion result is shown as below:
+
+|   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
+| :------: | :------: | :------: | :------: |
+| 608x608 | 38.9 | 61.1 | 42.0 |
+| 416x416 | 37.5 | 59.6 | 40.2 |
+| 320x320 | 34.8 | 56.4 | 36.9 |
+
+- **NOTE:** evaluations based on `pycocotools` evaluator, predict bounding boxes with `score < 0.05` were not filtered out. Some frameworks which filtered out predict bounding boxes with `score < 0.05` will cause a drop in accuracy.
 
 ## Inference and Visualization
 
@@ -151,14 +161,16 @@ Inference is used to get prediction score or image features based on trained mod
         --weights=${path_to_weights}  \
         --image_path=data/COCO17/val2017/  \
         --image_name=000000000139.jpg \
-        --draw_threshold=0.5
+        --draw_thresh=0.5
 
-Inference speed:
+- Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to infer.
+
+Inference speed（Tesla P40）:
 
 
 |   input size  | 608x608 | 416x416 | 320x320 |
 |:-------------:| :-----: | :-----: | :-----: |
-| infer speed | 50 ms/frame | 29 ms/frame |24 ms/frame | 
+| infer speed | 48 ms/frame | 29 ms/frame |24 ms/frame |
 
 
 Visualization of infer result is shown as below:
@@ -169,4 +181,3 @@ Visualization of infer result is shown as below:
 <img src="image/000000515077.png" height=300 width=400 hspace='10'/> <br />
 YOLOv3 Visualization Examples
 </p>
-

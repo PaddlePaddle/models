@@ -82,7 +82,6 @@ class ShuffleNetV2():
                   use_cudnn=True,
                   if_act=True,
                   name=None):
-#         print(num_groups)
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -95,8 +94,6 @@ class ShuffleNetV2():
             param_attr=ParamAttr(initializer=MSRA(),name=name+'_weights'),
             bias_attr=False)
         out = int((input.shape[2] - 1)/float(stride) + 1)
-       # print(input.shape[1],(out, out), num_filters, (filter_size, filter_size), stride, 
-       #       (filter_size - 1) / 2, num_groups, name)
         bn_name = name + '_bn'
         if if_act:
             return fluid.layers.batch_norm(input=conv, act='swish',
@@ -137,8 +134,6 @@ class ShuffleNetV2():
         if benchmodel == 1:
             x1, x2 = fluid.layers.split(
                 input, num_or_sections=[input.shape[1]//2, input.shape[1]//2], dim=1)            
-#             x1 = input[:, :(input.shape[1]//2), :, :]
-#             x2 = input[:, (input.shape[1]//2):, :, :]
             
             conv_pw = self.conv_bn_layer(
                 input=x2, 

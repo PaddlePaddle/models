@@ -7,7 +7,7 @@ distillers:
         distillation_loss_weight: 1
     l2_distiller:
         class: 'L2Distiller'
-        teacher_feature_map: 'fc_1.tmp_0'
+        teacher_feature_map: 'res_fc.tmp_0'
         student_feature_map: 'fc_0.tmp_0'
         distillation_loss_weight: 1
 strategies:

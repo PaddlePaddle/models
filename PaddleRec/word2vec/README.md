@@ -25,6 +25,7 @@
 全量数据集使用的是来自1 Billion Word Language Model Benchmark的(http://www.statmt.org/lm-benchmark) 的数据集.
 
 ```bash
+mkdir data
 wget http://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz
 tar xzvf 1-billion-word-language-modeling-benchmark-r13output.tar
 mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled/ data/
@@ -33,6 +34,7 @@ mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tok
 备用数据地址下载命令如下
 
 ```bash
+mkdir data
 wget https://paddlerec.bj.bcebos.com/word2vec/1-billion-word-language-modeling-benchmark-r13output.tar
 tar xvf 1-billion-word-language-modeling-benchmark-r13output.tar
 mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled/ data/
@@ -41,6 +43,7 @@ mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tok
 为了方便快速验证，我们也提供了经典的text8样例数据集，包含1700w个词。 下载命令如下
 
 ```bash
+mkdir data
 wget https://paddlerec.bj.bcebos.com/word2vec/text.tar
 tar xvf text.tar
 mv text data/
@@ -75,7 +78,7 @@ python preprocess.py --build_dict --build_dict_corpus_dir data/text/ --dict_path
 第二步根据词典将文本转成id, 同时进行downsample，按照概率过滤常见词, 同时生成word和id映射的文件，文件名为词典+"_word_to_id_"。
 
 ```bash
-python preprocess.py --filter_corpus --dict_path data/test_build_dict --input_corpus_dir data/text/ --output_corpus_dir data/convert_text8 --min_count 5 --downsample 0.001
+python preprocess.py --filter_corpus --dict_path data/test_build_dict --input_corpus_dir data/text --output_corpus_dir data/convert_text8 --min_count 5 --downsample 0.001
 ```
 
 ## 训练
@@ -109,5 +112,5 @@ wget https://paddlerec.bj.bcebos.com/word2vec/test_mid_dir.tar
 
 预测命令，注意词典名称需要加后缀"_word_to_id_", 此文件是预处理阶段生成的。
 ```bash
-python infer.py --infer_epoch --test_dir data/test_mid_dir/ --dict_path data/test_build_dict_word_to_id_ --batch_size 20000 --model_dir v1_cpu5_b100_lr1dir/  --start_index 0
+python infer.py --infer_epoch --test_dir data/test_mid_dir --dict_path data/test_build_dict_word_to_id_ --batch_size 20000 --model_dir v1_cpu5_b100_lr1dir/  --start_index 0 --last_index 10
 ```
