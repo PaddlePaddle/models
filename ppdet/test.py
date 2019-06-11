@@ -114,7 +114,7 @@ def main():
     # Evaluation
     if cfg.TEST.METRIC_TYPE == 'COCO':
         from ppdet.metrics.coco import bbox_eval, mask_eval
-        with_background = getattr(cfg.DATA, 'WITH_BACKGROUND', True)
+        with_background = getattr(cfg.DATA.VAL, 'WITH_BACKGROUND', True)
         outfile = 'bbox.json'
         if args.out_file:
             outfile = '{}_bbox.json'.format(args.out_file)
