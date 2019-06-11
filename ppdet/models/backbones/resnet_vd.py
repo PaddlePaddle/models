@@ -229,6 +229,11 @@ class ResNetVd50Backbone(BackboneBase):
         self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
         self.endpoint = getattr(cfg.MODEL, 'ENDPOINT', 4)
         self.number = 50
+        # This list contains names of each Res Block output.
+        # The name is the key of body_dict as well.
+        self.body_feat_names = [
+            'res' + str(lvl) + '_sum' for lvl in range(2, self.endpoint + 1)
+        ]
 
     def __call__(self, input):
         """
@@ -242,7 +247,12 @@ class ResNetVd50Backbone(BackboneBase):
             raise TypeError(str(input) + " should be Variable")
 
         model = ResNetVd(self.number, self.freeze_bn, self.affine_channel)
-        return model.get_backbone(input, self.endpoint, self.freeze_at)
+        res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
+        return {k: v for k, v in zip(self.body_feat_names, res_list)}
+
+    # TODO(guanzhong): add more comments.
+    def get_body_feat_names(self):
+        return self.body_feat_names
 
 
 @BBoxHeadConvs.register

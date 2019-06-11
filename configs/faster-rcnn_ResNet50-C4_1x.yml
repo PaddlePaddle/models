@@ -133,12 +133,8 @@ TRANSFORM:
         - op: Rgb2Bgr
           to_bgr: False
         - op: ArrangeRCNN
-          is_train: True
       BATCH_SIZE: 1 # batch size per device
       IS_PADDING: True
-      WORKER_CONF:
-          bufsize: 10
-          worker_num: 2      
 
   VAL:
       OPS:
@@ -155,11 +151,10 @@ TRANSFORM:
           interp: 1
         - op: Rgb2Bgr
           to_bgr: False
-        - op: ArrangeRCNN
-          is_train: False
+        - op: ArrangeTestRCNN
 
       BATCH_SIZE: 1 # batch size per device
       IS_PADDING: True
-      WORKER_CONF:
-          bufsize: 10
-          worker_num: 2
+  WORKER_CONF:
+      bufsize: 10
+      worker_num: 2

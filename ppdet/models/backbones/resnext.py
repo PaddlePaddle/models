@@ -28,7 +28,7 @@ __all__ = ['ResNeXt101Backbone', 'ResNeXt101C5']
 
 
 class ResNeXt(ResNet):
-    def __init__(self, depth, freeze_bn, affine_channel, groups):
+    def __init__(self, depth, freeze_bn, affine_channel, groups, bn_decay=True):
         """
         Args:
             depth (int): ResNeXt depth, should be 50, 101, 152.
@@ -36,6 +36,8 @@ class ResNeXt(ResNet):
                 (meaning the scale and bias does not update).
             affine_channel (bool): Use batch_norm or affine_channel.
             groups (int): define group parammeter for bottleneck
+            bn_decay (bool): Wether perform L2Decay in batch_norm offset
+                            and scale, default True.
         """
         if depth not in [50, 101, 152]:
             raise ValueError("depth {} not in [50, 101, 152].".format(depth))
@@ -50,6 +52,7 @@ class ResNeXt(ResNet):
         }
         self.stage_filters = [256, 512, 1024, 2048]
         self.groups = groups
+        self.bn_decay = bn_decay
 
     def bottleneck(self, input, num_filters, stride, is_first, name):
         conv0 = self._conv_norm(
@@ -92,16 +95,27 @@ class ResNeXt101Backbone(BackboneBase):
         self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
         self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
         self.groups = getattr(cfg.MODEL, "GROUPS", 64)
+        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', True)
         self.endpoint = getattr(cfg.MODEL, 'ENDPOINT', 4)
         self.number = 101
+        # This list contains names of each Res Block output.
+        # The name is the key of body_dict as well.
+        self.body_feat_names = [
+            'res' + str(lvl) + '_sum' for lvl in range(2, self.endpoint + 1)
+        ]
 
     def __call__(self, input):
         if not isinstance(input, Variable):
             raise TypeError(str(input) + " shouble be Variable")
 
         model = ResNeXt(self.number, self.freeze_bn, self.affine_channel,
-                        self.groups)
-        return model.get_backbone(input, self.endpoint, self.freeze_at)
+                        self.groups, self.bn_decay)
+        res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
+        return {k: v for k, v in zip(self.body_feat_names, res_list)}
+
+    # TODO(guanzhong): add more comments.
+    def get_body_feat_names(self):
+        return self.body_feat_names
 
 
 @BBoxHeadConvs.register

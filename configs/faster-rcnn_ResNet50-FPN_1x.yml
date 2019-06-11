@@ -152,14 +152,10 @@ TRANSFORM:
       - op: Rgb2Bgr
         to_bgr: False
       - op: ArrangeRCNN
-        is_train: True
     BATCH_SIZE: 2
     IS_PADDING: True
     # TODO(guanzhong): use a better name for coarsest_stride
     COAREST_STRIDE: 32
-    WORKER_CONF:
-        bufsize: 100
-        worder_num: 8
 
   VAL:
     OPS:
@@ -176,13 +172,12 @@ TRANSFORM:
         interp: 1
       - op: Rgb2Bgr
         to_bgr: False
-      - op: ArrangeRCNN
-        is_train: False
+      - op: ArrangeTestRCNN
     BATCH_SIZE: 1
     IS_PADDING: True
     # TODO(guanzhong): use a better name for coarsest_stride
     COAREST_STRIDE: 32
-    WORKER_CONF:
-        bufsize: 100
-        worker_num: 8
+  WORKER_CONF:
+    bufsize: 100
+    worker_num: 8
 
