@@ -128,7 +128,7 @@ TRANSFORM:
     OPS:
       - op: DecodeImage
         to_rgb: True
-      - op: RandFlipImage
+      - op: RandomFlipImage
         prob: 0.5
         is_mask_flip: True
       - op: NormalizeImage
@@ -162,7 +162,6 @@ TRANSFORM:
       - op: Rgb2Bgr
         to_bgr: False
       - op: ArrangeTestRCNN
-        is_mask: True
     BATCH_SIZE: 1 # batch size per device
     IS_PADDING: True
   WORKER_CONF:
