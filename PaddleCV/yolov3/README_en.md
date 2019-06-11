@@ -74,7 +74,7 @@ The data catalog structure is as follows:
 
 **User defined dataset:**
 
-You can defined datasets by yourself, we recommend using annotations in COCO format, and you can set dataset directory by `--data_dir` or in [reader.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/reader.py#L39). 
+You can defined datasets by yourself, we recommend using annotations in COCO format, and you can set dataset directory by `--data_dir` or in [reader.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/reader.py#L39). When using annotations in COCO format, you can reference the directory structure in COCO dataset above.
 
 ### Training
 

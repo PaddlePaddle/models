@@ -74,7 +74,7 @@ dataset/coco/
 
 **自定义数据集：**
 
-用户可使用自定义的数据集，我们推荐自定义数据集使用COCO数据集格式的标注，并可通过设置`--data_dir`或修改[reader.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/reader.py#L39)指定数据集路径。
+用户可使用自定义的数据集，我们推荐自定义数据集使用COCO数据集格式的标注，并可通过设置`--data_dir`或修改[reader.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/reader.py#L39)指定数据集路径。使用COCO数据集格式标注时，目录结构可参考上述COCO数据集目录结构。
 
 ### 模型训练
 
