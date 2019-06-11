@@ -122,9 +122,11 @@ def satisfy_sample_constraint(sampler,
         if sampler[6] != 0 and \
                 overlap < sampler[6]:
             satisfied.append(False)
+            continue
         if sampler[7] != 0 and \
                 overlap > sampler[7]:
             satisfied.append(False)
+            continue
         satisfied.append(True)
         if not satisfy_all:
             return True
