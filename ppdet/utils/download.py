@@ -48,6 +48,8 @@ def download_weights(url):
         logger.info("Found weights in {}".format(weights_path))
     else:
         logger.info("Download weights from {}".format(url))
+        if not os.path.exists(WEIGHTS_DIR):
+            os.makedirs(WEIGHTS_DIR)
         download_file = os.path.join(WEIGHTS_DIR, weights_file)
         wget.download(url, download_file)
         _decompress(download_file)
