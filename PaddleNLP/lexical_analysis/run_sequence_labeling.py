@@ -66,6 +66,7 @@ train_g.add_arg("emb_learning_rate", float, 5,
 train_g.add_arg("crf_learning_rate", float, 0.2,
     "The real learning rate of the embedding layer will be (crf_learning_rate * base_learning_rate).")
 
+parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
 args = parser.parse_args()
 # yapf: enable.
@@ -158,6 +159,8 @@ def main(args):
 
     if args.do_train:
         train_program = fluid.Program()
+        if args.random_seed is not None:
+            train_program.random_seed = args.random_seed
         with fluid.program_guard(train_program, startup_program):
             with fluid.unique_name.guard():
                 train_ret = create_model(
@@ -232,9 +235,11 @@ def main(args):
         print("Num train examples: %d" % num_train_examples)
         print("Max train steps: %d" % max_train_steps)
 
+        ce_info = []
         batch_id = 0
         for epoch_id in range(args.epoch):
             train_ret["pyreader"].start()
+            ce_time = 0
             try:
                 while True:
                     start_time = time.time()
@@ -254,6 +259,8 @@ def main(args):
                     batch_id += 1
                     print("[train] batch_id = %d, loss = %.5f, P: %.5f, R: %.5f, F1: %.5f, elapsed time %.5f " % (
                         batch_id, avg_cost, precision, recall, f1_score, end_time - start_time))
+                    ce_time += end_time - start_time
+                    ce_info.append([ce_time, avg_cost, precision, recall, f1_score])
 
                     # save checkpoints
                     if (batch_id % args.save_model_per_batches == 0):
@@ -269,6 +276,32 @@ def main(args):
                 fluid.io.save_persistables(exe, save_path, train_program)
                 train_ret["pyreader"].reset()
                 # break?
+    if args.do_train and args.enable_ce:
+        card_num = get_cards()
+        ce_cost = 0
+        ce_f1 = 0
+        ce_p = 0
+        ce_r = 0
+        ce_time = 0
+        try:
+            ce_time = ce_info[-2][0]
+            ce_cost = ce_info[-2][1]
+            ce_p = ce_info[-2][2]
+            ce_r = ce_info[-2][3]
+            ce_f1 = ce_info[-2][4]
+        except:
+            print("ce info error")
+        print("kpis\teach_step_duration_card%s\t%s" %
+                (card_num, ce_time))
+        print("kpis\ttrain_cost_card%s\t%f" %
+            (card_num, ce_cost))
+        print("kpis\ttrain_precision_card%s\t%f" %
+            (card_num, ce_p))
+        print("kpis\ttrain_recall_card%s\t%f" %
+            (card_num, ce_r))
+        print("kpis\ttrain_f1_card%s\t%f" %
+            (card_num, ce_f1))
+
 
     # only test
     if args.do_test:
@@ -290,6 +323,14 @@ def main(args):
             except fluid.core.EOFException:
                 infer_ret["pyreader"].reset()
                 break
+
+
+def get_cards():
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    if cards != '':
+        num = len(cards.split(","))
+    return num
 
 
 if __name__ == "__main__":
