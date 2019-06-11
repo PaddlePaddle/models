@@ -121,13 +121,13 @@ def satisfy_sample_constraint(sampler,
         if sampler[6] != 0 and \
                 overlap < sampler[6]:
             if satisfy_all:
-                break
+                return False
             else:
                 continue
         if sampler[7] != 0 and \
                 overlap > sampler[7]:
             if satisfy_all:
-                break
+                return False
             else:
                 continue
         return True
