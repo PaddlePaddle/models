@@ -65,7 +65,6 @@ def main():
     keys, values = [], []
     for k, v in fetches.items():
         keys.append(k)
-        print(type(v))
         values.append(v.name)
 
     if cfg.TEST.METRIC_TYPE == 'COCO':
@@ -88,7 +87,7 @@ def main():
 
     # 4. Define reader
     reader = Reader(cfg.DATA, cfg.TRANSFORM)
-    train_reader = reader.train()
+    reader.train()
     test_reader = reader.val()
     pyreader = detector.get_pyreader()
     pyreader.decorate_sample_list_generator(test_reader, place)
