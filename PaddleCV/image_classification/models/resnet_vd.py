@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
@@ -13,7 +12,6 @@ train_parameters = {
     "input_size": [3, 224, 224],
     "input_mean": [0.485, 0.456, 0.406],
     "input_std": [0.229, 0.224, 0.225],
-    "is_embedding": False,
     "learning_strategy": {
         "name": "piecewise_decay",
         "batch_size": 256,
@@ -31,7 +29,6 @@ class ResNet():
     def net(self, input, class_dim=1000):
         is_3x3 = self.is_3x3
         layers = self.layers
-        is_embedding =  self.params["is_embedding"]
         supported_layers = [50, 101, 152, 200]
         assert layers in supported_layers, \
             "supported layers are {} but input layer is {}".format(supported_layers, layers)
@@ -82,27 +79,11 @@ class ResNet():
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
-        if is_embedding:
-            
-            embedding = fluid.layers.fc(input=pool, 
-                                        size=512, 
-                                        param_attr=ParamAttr(
-                    initializer=fluid.initializer.Uniform(-stdv, stdv),name="embedding_weights"),
-                                        bias_attr=ParamAttr(
-                    initializer=fluid.initializer.Uniform(-stdv, stdv),name="embedding_offset"))
-            out = fluid.layers.fc(input=embedding,
-                                  size=class_dim,
-                                  act='softmax',
-                                  param_attr=fluid.param_attr.ParamAttr(
-                                      initializer=fluid.initializer.Uniform(-stdv,
-                                                                            stdv)))
-        else:
-            out = fluid.layers.fc(input=pool,
-                                  size=class_dim,
-                      #            act='softmax',
-                                  param_attr=fluid.param_attr.ParamAttr(
-                                      initializer=fluid.initializer.Uniform(-stdv,
-                                                                            stdv)))
+
+        out = fluid.layers.fc(input=pool,
+                              size=class_dim,
+                              param_attr=fluid.param_attr.ParamAttr(
+                                  initializer=fluid.initializer.Uniform(-stdv, stdv)))
             
         
         return out
@@ -128,14 +109,10 @@ class ResNet():
             act=None,
             param_attr=ParamAttr(name=name + "_weights"),
             bias_attr=False)
-#         out = int((input.shape[2] - 1)/float(stride) + 1)
-#         print(input.shape[1],(input.shape[2],input.shape[3]),(out, out), num_filters, (filter_size, filter_size), stride, 
-#               (filter_size - 1) / 2, name)
         if name == "conv1":
             bn_name = "bn_" + name
         else:
             bn_name = "bn" + name[3:] 
-#         print "'" + bn_name + "',"
         return fluid.layers.batch_norm(input=conv, 
                                        act=act,
                                        param_attr=ParamAttr(name=bn_name + '_scale'),
@@ -168,14 +145,10 @@ class ResNet():
             act=None,
             param_attr=ParamAttr(name=name + "_weights"),
             bias_attr=False)
-#         out = int((input.shape[2] - 1)/float(stride) + 1)
-#         print(input.shape[1],(input.shape[2],input.shape[3]),(out, out), num_filters, (filter_size, filter_size), stride, 
-#               (filter_size - 1) / 2, name)
         if name == "conv1":
             bn_name = "bn_" + name
         else:
             bn_name = "bn" + name[3:]
-#         print "'" + bn_name + "',"
         return fluid.layers.batch_norm(input=conv, 
                                        act=act,
                                        param_attr=ParamAttr(name=bn_name + '_scale'),
@@ -219,7 +192,7 @@ def ResNet50_vd():
     model = ResNet(layers=50, is_3x3 = True)
     return model
 
-def ResNet101_vd():
+def ResNet101_vd):
     model = ResNet(layers=101, is_3x3 = True)
     return model
 

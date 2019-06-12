@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
@@ -83,7 +79,6 @@ class ResNeXt():
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
         out = fluid.layers.fc(input=pool,
                               size=class_dim,
-                              act='softmax',
                               param_attr=fluid.param_attr.ParamAttr(
                                   initializer=fluid.initializer.Uniform(-stdv, stdv),name='fc_weights'),
                               bias_attr=fluid.param_attr.ParamAttr(name='fc_offset'))

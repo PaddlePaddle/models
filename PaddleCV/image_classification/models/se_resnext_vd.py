@@ -116,7 +116,6 @@ class SE_ResNeXt():
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
         out = fluid.layers.fc(input=pool,
                               size=class_dim,
-                              act='softmax',
                               param_attr=ParamAttr(
                               initializer=fluid.initializer.Uniform(-stdv, stdv),name='fc6_weights'),
                               bias_attr=ParamAttr(name='fc6_offset'))
