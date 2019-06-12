@@ -72,7 +72,7 @@ def main():
 
     # 3. Compile program for multi-devices
     keys, values = [], []
-    for k, v in fetches.iteritems():
+    for k, v in fetches.items():
         keys.append(k)
         v.persistable = True
         values.append(v)
