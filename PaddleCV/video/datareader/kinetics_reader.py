@@ -315,8 +315,8 @@ def group_center_crop(img_group, target_size):
         th, tw = target_size, target_size
         assert (w >= target_size) and (h >= target_size), \
              "image width({}) and height({}) should be larger than crop size".format(w, h, target_size)
-        x1 = int(round((w - tw) / 2.))
-        y1 = int(round((h - th) / 2.))
+        x1 = int(math.ceil((w - tw) / 2.))
+        y1 = int(math.ceil((h - th) / 2.))
         img_crop.append(img.crop((x1, y1, x1 + tw, y1 + th)))
 
     return img_crop
