@@ -96,16 +96,16 @@ def distort_color(img):
     return img
 
 
-def process_image(sample, mode, color_jitter, rotate):
+def process_image(sample,data_dim, mode, color_jitter, rotate):
     img_path = sample[0]
 
     img = Image.open(img_path)
     if mode == 'train':
         if rotate: img = rotate_image(img)
-        img = random_crop(img, DATA_DIM)
+        img = random_crop(img, data_dim)
     else:
         img = resize_short(img, target_size=256)
-        img = crop_image(img, target_size=DATA_DIM, center=True)
+        img = crop_image(img, target_size=data_dim, center=True)
     if mode == 'train':
         if color_jitter:
             img = distort_color(img)
@@ -131,6 +131,7 @@ def _reader_creator(file_list,
                     color_jitter=False,
                     rotate=False,
                     data_dir=DATA_DIR,
+                    data_dim=224,
                     pass_id_as_seed=1,
                     infinite=False):
     def reader():
@@ -171,7 +172,7 @@ def _reader_creator(file_list,
                 print("passid ++, current: ", pass_id_as_seed_counter)
 
     mapper = functools.partial(
-        process_image, mode=mode, color_jitter=color_jitter, rotate=rotate)
+        process_image, data_dim=data_dim, mode=mode, color_jitter=color_jitter, rotate=rotate)
 
     return paddle.reader.xmap_readers(mapper, reader, THREAD, BUF_SIZE)
 
@@ -189,10 +190,10 @@ def train(data_dir=DATA_DIR, pass_id_as_seed=1, infinite=False):
         infinite=infinite)
 
 
-def val(data_dir=DATA_DIR):
+def val(data_dir=DATA_DIR,image_shape="3,224,224"):
     file_list = os.path.join(data_dir, 'val_list.txt')
     return _reader_creator(file_list, 'val', shuffle=False, 
-            data_dir=data_dir)
+            data_dir=data_dir,data_dim=int(image_shape.split(",")[2]))
 
 
 def test(data_dir=DATA_DIR):
