@@ -33,12 +33,12 @@ from config import cfg
 
 def train():
 
-    if cfg.debug:
+    if cfg.debug or args.enable_ce:
         fluid.default_startup_program().random_seed = 1000
         fluid.default_main_program().random_seed = 1000
         random.seed(0)
         np.random.seed(0)
-        
+
     if not os.path.exists(cfg.model_save_dir):
         os.makedirs(cfg.model_save_dir)
 
@@ -76,16 +76,18 @@ def train():
     if cfg.pretrain:
         if not os.path.exists(cfg.pretrain):
             print("Pretrain weights not found: {}".format(cfg.pretrain))
+
         def if_exist(var):
             return os.path.exists(os.path.join(cfg.pretrain, var.name))
+
         fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
-    build_strategy= fluid.BuildStrategy()
+    build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = True
-    build_strategy.sync_batch_norm = cfg.syncbn 
-    compile_program = fluid.compiler.CompiledProgram(
-            fluid.default_main_program()).with_data_parallel(
-            loss_name=loss.name, build_strategy=build_strategy)
+    build_strategy.sync_batch_norm = cfg.syncbn
+    compile_program = fluid.compiler.CompiledProgram(fluid.default_main_program(
+    )).with_data_parallel(
+        loss_name=loss.name, build_strategy=build_strategy)
 
     random_sizes = [cfg.input_size]
     if cfg.random_shape:
@@ -93,13 +95,17 @@ def train():
 
     total_iter = cfg.max_iter - cfg.start_iter
     mixup_iter = total_iter - cfg.no_mixup_iter
-    train_reader = reader.train(input_size, 
-                                batch_size=cfg.batch_size, 
-                                shuffle=True, 
-                                total_iter=total_iter*devices_num, 
-                                mixup_iter=mixup_iter*devices_num, 
-                                random_sizes=random_sizes, 
-                                use_multiprocessing=cfg.use_multiprocess)
+    shuffle = True
+    if args.enable_ce:
+        shuffle = False
+    train_reader = reader.train(
+        input_size,
+        batch_size=cfg.batch_size,
+        shuffle=shuffle,
+        total_iter=total_iter * devices_num,
+        mixup_iter=mixup_iter * devices_num,
+        random_sizes=random_sizes,
+        use_multiprocessing=cfg.use_multiprocess)
     py_reader = model.py_reader
     py_reader.decorate_paddle_reader(train_reader)
 
@@ -121,7 +127,7 @@ def train():
         for iter_id in range(cfg.start_iter, cfg.max_iter):
             prev_start_time = start_time
             start_time = time.time()
-            losses = exe.run(compile_program, 
+            losses = exe.run(compile_program,
                              fetch_list=[v.name for v in fetch_list])
             smoothed_loss.add_value(np.mean(np.array(losses[0])))
             snapshot_loss += np.mean(np.array(losses[0]))
@@ -129,17 +135,27 @@ def train():
             lr = np.array(fluid.global_scope().find_var('learning_rate')
                           .get_tensor())
             print("Iter {:d}, lr {:.6f}, loss {:.6f}, time {:.5f}".format(
-                  iter_id, lr[0],
-                  smoothed_loss.get_mean_value(), 
-                  start_time - prev_start_time))
+                iter_id, lr[0],
+                smoothed_loss.get_mean_value(), start_time - prev_start_time))
             sys.stdout.flush()
             if (iter_id + 1) % cfg.snapshot_iter == 0:
                 save_model("model_iter{}".format(iter_id))
                 print("Snapshot {} saved, average loss: {}, \
                       average time: {}".format(
-                      iter_id + 1, 
-                      snapshot_loss / float(cfg.snapshot_iter), 
-                      snapshot_time / float(cfg.snapshot_iter)))
+                    iter_id + 1, snapshot_loss / float(cfg.snapshot_iter),
+                    snapshot_time / float(cfg.snapshot_iter)))
+                if args.enable_ce and iter_id == cfg.max_iter - 1:
+                    if devices_num == 1:
+                        print("kpis\ttrain_cost_1card\t%f" %
+                              (snapshot_loss / float(cfg.snapshot_iter)))
+                        print("kpis\ttrain_duration_1card\t%f" %
+                              (snapshot_time / float(cfg.snapshot_iter)))
+                    else:
+                        print("kpis\ttrain_cost_8card\t%f" %
+                              (snapshot_loss / float(cfg.snapshot_iter)))
+                        print("kpis\ttrain_duration_8card\t%f" %
+                              (snapshot_time / float(cfg.snapshot_iter)))
+
                 snapshot_loss = 0
                 snapshot_time = 0
     except fluid.core.EOFException:

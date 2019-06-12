@@ -94,6 +94,7 @@ class Kinetics400Metrics(Metrics):
         acc1, acc5 = self.calculator.calculate_metrics(loss, pred, label)
         logger.info(info + '\tLoss: {},\ttop1_acc: {}, \ttop5_acc: {}'.format('%.6f' % loss, \
                        '%.2f' % acc1, '%.2f' % acc5))
+        return loss
 
     def accumulate(self, loss, pred, label, info=''):
         self.calculator.accumulate(loss, pred, label)

@@ -5,7 +5,7 @@
 对话情绪识别适用于聊天、客服等多个场景，能够帮助企业更好地把握对话质量、改善产品的用户交互体验，也能分析客服服务质量、降低人工质检成本。可通过 [AI开放平台-对话情绪识别](http://ai.baidu.com/tech/nlp_apply/emotion_detection) 线上体验。
 
 效果上，我们基于百度自建测试集（包含闲聊、客服）和nlpcc2014微博情绪数据集，进行评测，效果如下表所示，此外我们还开源了百度基于海量数据训练好的模型，该模型在聊天对话语料上fine-tune之后，可以得到更好的效果。
- 
+
 | 模型 | 闲聊 | 客服 | 微博 |
 | :------| :------ | :------ | :------ |
 | BOW | 90.2% | 87.6% | 74.2% |
@@ -19,7 +19,10 @@
 
 ## 快速开始
 
-本项目依赖于 Python2.7 和 Paddlepaddle Fluid 1.3.2，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+本项目依赖于 Python2.7、Paddlepaddle Fluid 1.4.0以及PaddleHub 0.5.0，请确保相关依赖都已安装正确
+
+[PaddlePaddle安装指南](http://www.paddlepaddle.org/#quick-start)
+[PaddleHub安装指南](https://github.com/PaddlePaddle/PaddleHub)
 
 #### 安装代码
 
@@ -135,7 +138,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 
 可以根据自己的需求，组建自定义的模型，具体方法如下所示：
 
-1. 定义自己的网络结构 
+1. 定义自己的网络结构
 用户可以在 ```models/classification/nets.py``` 中，定义自己的模型，只需要增加新的函数即可。假设用户自定义的函数名为```user_net```
 2. 更改模型配置
 在 ```config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```
@@ -169,4 +172,3 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 ## 如何贡献代码
 
 如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
-

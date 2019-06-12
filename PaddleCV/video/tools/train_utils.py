@@ -101,7 +101,7 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
                        info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
             train_iter += 1
         logger.info('[TRAIN] Epoch {} training finished, average time: {}'.
-                    format(epoch, np.mean(epoch_periods)))
+                    format(epoch, np.mean(epoch_periods[1:])))
         save_model(exe, train_prog, save_dir, save_model_name,
                    "_epoch{}".format(epoch))
         if test_exe and valid_interval > 0 and (epoch + 1
@@ -113,12 +113,14 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
 
 def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
                         train_fetch_list, train_metrics, epochs = 10, \
-                        log_interval = 0, valid_interval = 0, \
-                        save_dir = './', save_model_name = 'model', \
+                        log_interval = 0, valid_interval = 0, save_dir = './', \
+                        save_model_name = 'model', enable_ce = False, \
                         test_exe = None, test_pyreader = None, \
                         test_fetch_list = None, test_metrics = None):
     if not train_pyreader:
         logger.error("[TRAIN] get pyreader failed.")
+    epoch_periods = []
+    train_loss = 0
     for epoch in range(epochs):
         log_lr_and_step()
         train_pyreader.start()
@@ -136,13 +138,13 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
                 label = np.array(train_outs[-1])
                 if log_interval > 0 and (train_iter % log_interval == 0):
                     # eval here
-                    train_metrics.calculate_and_log_out(loss, pred, label, \
+                    train_loss = train_metrics.calculate_and_log_out(loss, pred, label, \
                                 info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
                 train_iter += 1
         except fluid.core.EOFException:
             # eval here
             logger.info('[TRAIN] Epoch {} training finished, average time: {}'.
-                        format(epoch, np.mean(epoch_periods)))
+                        format(epoch, np.mean(epoch_periods[1:])))
             save_model(exe, train_prog, save_dir, save_model_name,
                        "_epoch{}".format(epoch))
             if test_exe and valid_interval > 0 and (epoch + 1
@@ -152,6 +154,13 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
         finally:
             epoch_period = []
             train_pyreader.reset()
+    #only for ce
+    if enable_ce:
+        cards = os.environ.get('CUDA_VISIBLE_DEVICES')
+        gpu_num = len(cards.split(","))
+        print("kpis\ttrain_cost_card{}\t{}".format(gpu_num, train_loss))
+        print("kpis\ttrain_speed_card{}\t{}".format(gpu_num,
+                                                    np.mean(epoch_periods)))
 
 
 def save_model(exe, program, save_dir, model_name, postfix=None):
