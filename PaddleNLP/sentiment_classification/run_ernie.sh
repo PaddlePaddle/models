@@ -16,6 +16,7 @@ train() {
         --do_train true \
         --do_val true \
         --do_infer false \
+        --use_paddle_hub false \
         --batch_size 24 \
         --init_checkpoint $ERNIE_PRETRAIN/params \
         --train_set $DATA_PATH/train.tsv \
@@ -43,6 +44,7 @@ evaluate() {
         --do_train false \
         --do_val true \
         --do_infer false \
+        --use_paddle_hub false \
         --batch_size 24 \
         --init_checkpoint ./save_models/step_5000/ \
         --dev_set $DATA_PATH/dev.tsv \
@@ -58,6 +60,7 @@ evaluate() {
         --do_train false \
         --do_val true \
         --do_infer false \
+        --use_paddle_hub false \
         --batch_size 24 \
         --init_checkpoint ./save_models/step_5000/ \
         --dev_set $DATA_PATH/test.tsv \
@@ -76,6 +79,7 @@ infer() {
         --do_train false \
         --do_val false \
         --do_infer true \
+        --use_paddle_hub false \
         --batch_size 24 \
         --init_checkpoint ./save_models/step_5000 \
         --test_set $DATA_PATH/test.tsv \
