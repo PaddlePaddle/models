@@ -35,13 +35,15 @@ DATASET_DIR = os.path.expanduser("~/.paddle/dataset")
 
 def get_weights_path(url):
     """Get weights path from WEIGHT_DIR, if not exists,
-    download it.
+    download it from url.
     """
     return get_path(url, WEIGHTS_DIR)
 
 
 def get_dataset_path(path):
-    """Get dataset path from DATASET_DIR, if not exists,
+    """
+    If path exists, return path.
+    Otherwise, get dataset path from DATASET_DIR, if not exists,
     download it.
     """
     if os.path.exists(path):
@@ -70,10 +72,10 @@ def get_dataset_path(path):
 
 
 def get_path(url, root_dir):
-    """ Download weights from given url to root_dir. 
+    """ Download from given url to root_dir. 
     if file or directory specified by url is exists under 
-    root_dir is exists, return the path directly, otherwise
-    download from url and decompress it, return the path.
+    root_dir, return the path directly, otherwise download 
+    from url and decompress it, return the path.
 
     url (str): download url
     root_dir (str): root dir for downloading, it should be 
