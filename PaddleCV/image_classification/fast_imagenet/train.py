@@ -292,9 +292,9 @@ def refresh_program(args,
 
 
 def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
-                   img_dim, min_scale, rect_val):
+                   img_dim, min_scale, rect_val, args):
     train_reader = reader.train(
-        traindir="/data/imagenet/%strain" % trn_dir,
+        traindir="%s/%strain" % (args.data_dir, trn_dir),
         sz=img_dim,
         min_scale=min_scale,
         shuffle_seed=epoch_id + 1)
@@ -303,7 +303,7 @@ def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
             train_reader, batch_size=train_bs))
 
     test_reader = reader.test(
-        valdir="/data/imagenet/%svalidation" % trn_dir,
+        valdir="%s/%svalidation" % (args.data_dir, trn_dir),
         bs=val_bs * DEVICE_NUM,
         sz=img_dim,
         rect_val=rect_val)
@@ -384,7 +384,8 @@ def train_parallel(args):
             trn_dir,
             img_dim=img_dim,
             min_scale=min_scale,
-            rect_val=rect_val)
+            rect_val=rect_val,
+            args=args)
         train_py_reader.start()  # start pyreader
         batch_start_time = time.time()
         while True:
