@@ -19,7 +19,7 @@ __all__ = [
     'RoIExtractors',
     'BBoxHeadConvs',
     'BBoxHeads',
-    'CascadeHeads'
+    'CascadeHeads',
     'SSDHeads',
     'Necks',
 ]

@@ -114,7 +114,7 @@ class CascadeBBoxAssigner(BBoxAssigner):
     """
 
     def __init__(self, cfg):
-        super(BBoxAssigner, self).__init__(cfg)
+        super(CascadeBBoxAssigner, self).__init__(cfg)
 
     def get_sampled_rois_and_targets(self,
                                      input_rois,

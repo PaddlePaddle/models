@@ -29,7 +29,7 @@ from ..registry import RPNHeads
 from ..registry import RoIExtractors
 from ..registry import CascadeHeads
 from ..registry import Necks
-from ..target_assigners.bbox_assigner import CascadeBBoxAssigner as BBoxAssigner
+from ..target_assigners.bbox_assigner import CascadeBBoxAssigner
 
 #from .base import DetectorBase
 from .faster_rcnn import FasterRCNN
@@ -47,6 +47,7 @@ class CascadeRCNN(FasterRCNN):
 
     def __init__(self, cfg):
         super(CascadeRCNN, self).__init__(cfg)
+        self.bbox_assigner = CascadeBBoxAssigner(cfg)
         brw = self.cfg.RPN_HEAD.PROPOSAL.BBOX_REG_WEIGHTS[cascade_curr_stage]
         brw0, brw1, brw2 = brw[0], brw[1], brw[2]
         self.cascade_bbox_reg_weights = [
