@@ -40,7 +40,7 @@ add_arg('lr',               float, 0.1,                  "set learning rate.")
 add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate decay strategy.")
 add_arg('model',            str,   "ResNet50",          "Set the network to use.")
 add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
-add_arg('data_dir',         str,   "/home/vis/cuicheng/database/ILSVRC2012/",  "The ImageNet dataset root dir.")
+add_arg('data_dir',         str,   "data/ILSVRC2012/",  "The ImageNet dataset root dir.")
 add_arg('fp16',             bool,  False,                "Enable half precision training with fp16." )
 add_arg('scale_loss',       float, 1.0,                  "Scale loss for fp16." )
 add_arg('l2_decay',         float, 1e-4,                 "L2_decay parameter.")
@@ -265,13 +265,21 @@ def build_program(is_train, main_prog, startup_prog, args):
     model = models.__dict__[model_name]()
     with fluid.program_guard(main_prog, startup_prog):
         use_mixup = args.use_mixup
-        if use_mixup:
-            py_reader = fluid.layers.py_reader(
-                capacity=16,
-                shapes=[[-1] + image_shape, [-1, 1], [-1, 1], [-1, 1]],
-                lod_levels=[0, 0, 0, 0],
-                dtypes=["float32", "int64", "int64", "float32"],
-                use_double_buffer=True)
+        if is_train:
+            if use_mixup:
+                py_reader = fluid.layers.py_reader(
+                    capacity=16,
+                    shapes=[[-1] + image_shape, [-1, 1], [-1, 1], [-1, 1]],
+                    lod_levels=[0, 0, 0, 0],
+                    dtypes=["float32", "int64", "int64", "float32"],
+                    use_double_buffer=True)
+            else:
+                py_reader = fluid.layers.py_reader(
+                    capacity=16,
+                    shapes=[[-1] + image_shape, [-1, 1]],
+                    lod_levels=[0, 0],
+                    dtypes=["float32", "int64"],
+                    use_double_buffer=True)
         else:
             py_reader = fluid.layers.py_reader(
                 capacity=16,
@@ -279,23 +287,38 @@ def build_program(is_train, main_prog, startup_prog, args):
                 lod_levels=[0, 0],
                 dtypes=["float32", "int64"],
                 use_double_buffer=True)
-            
         with fluid.unique_name.guard():
-            if use_mixup:
-                image, y_a, y_b, lam = fluid.layers.read_file(py_reader)
+            if is_train:
+
+                if use_mixup:
+                    image, y_a, y_b, lam = fluid.layers.read_file(py_reader)
+                    if args.fp16:
+                        image = fluid.layers.cast(image, "float16")
+                    avg_cost = net_config(image=image, y_a=y_a, y_b=y_b, lam=lam, model=model, args=args, label=0, is_train=True)
+                else:
+                    image, label = fluid.layers.read_file(py_reader)
+                    if args.fp16:
+                        image = fluid.layers.cast(image, "float16")
+                    avg_cost, acc_top1, acc_top5 = net_config(image, model, args, label=label, is_train=True)
+
             else:
                 image, label = fluid.layers.read_file(py_reader)
-            if args.fp16:
-                image = fluid.layers.cast(image, "float16")
+                if args.fp16:
+                    image = fluid.layers.cast(image, "float16")
+                avg_cost, acc_top1, acc_top5 = net_config(image, model, args, label=label, is_train=False)
+
+            #if args.fp16:
+            #    image = fluid.layers.cast(image, "float16")
             
-            
-            
-            if use_mixup:
-                avg_cost = net_config(image=image, y_a=y_a, y_b=y_b, lam=lam, model=model, args=args, 
-                                          label=0, is_train=True)
+            """
+            if is_train:
+                if use_mixup:
+                    avg_cost = net_config(image=image, y_a=y_a, y_b=y_b, lam=lam, model=model, args=args, label=0, is_train=True)
+                else:
+                    avg_cost, acc_top1, acc_top5 = net_config(image, model, args, label=label, is_train=True)
             else:
-                avg_cost, acc_top1, acc_top5 = net_config(image, model, args, label=label, is_train=True)
-            
+                avg_cost, acc_top1, acc_top5 = net_config(image, model, args, is_train=false, label)
+            """
             
             avg_cost.persistable = True
             if not use_mixup:
@@ -407,8 +430,8 @@ def train(args):
     test_batch_size = 16
     if not args.enable_ce:
         train_reader = paddle.batch(
-            reader.train(args), batch_size=train_batch_size, drop_last=True)
-        test_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
+            reader.train(settings=args), batch_size=train_batch_size, drop_last=True)
+        test_reader = paddle.batch(reader.val(settings=args), batch_size=test_batch_size)
     else:
         # use flowers dataset for CE and set use_xmap False to avoid disorder data
         # but it is time consuming. For faster speed, need another dataset.
@@ -571,6 +594,8 @@ def train(args):
 
 def main():
     args = parser.parse_args()
+    if args.use_mixup and args.is_distill == True:
+        exit('Error: args.use_mixup and args.is_distill cannot be True at the same time')
     print_arguments(args)
     train(args)
 

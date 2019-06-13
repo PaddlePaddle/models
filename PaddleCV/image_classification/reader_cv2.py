@@ -248,7 +248,7 @@ def train(settings, data_dir=DATA_DIR, pass_id_as_seed=0):
     #print(type(settings))
     #print(settings.class_dim)
     #print("============")
-    file_list = os.path.join(data_dir, 'train_list.txt')
+    file_list = os.path.join(data_dir, 'val_list.txt')
     reader =  _reader_creator(
         settings,
         file_list,
@@ -256,7 +256,7 @@ def train(settings, data_dir=DATA_DIR, pass_id_as_seed=0):
         shuffle=True,
         color_jitter=False,
         rotate=False,
-        data_dir=os.path.join(data_dir,'train'),
+        data_dir=os.path.join(data_dir,'val'),
         pass_id_as_seed=pass_id_as_seed,
         )
     if settings.use_mixup == True:
