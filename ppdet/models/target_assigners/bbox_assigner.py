@@ -159,7 +159,7 @@ class CascadeBBoxAssigner(BBoxAssigner):
             batch_size_per_im=self.batch_size_per_im,
             fg_thresh=self.fg_thresh[cascade_curr_stage],
             bg_thresh_hi=self.bg_thresh_hi[cascade_curr_stage],
-            bg_thresh_lo=bg_thresh_lo[cascade_curr_stage],
+            bg_thresh_lo=self.bg_thresh_lo[cascade_curr_stage],
             bbox_reg_weights=curr_bbox_reg_w,
             use_random=False,
             class_nums=self.class_num if not is_cls_agnostic else 2,

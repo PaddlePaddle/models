@@ -34,7 +34,12 @@ __all__ = [
 
 
 class ResNet(object):
-    def __init__(self, depth, freeze_bn, affine_channel, bn_decay=True):
+    def __init__(self,
+                 depth,
+                 freeze_bn,
+                 affine_channel,
+                 bn_decay=True,
+                 cfg=None):
         """
         Args:
             depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
@@ -59,6 +64,7 @@ class ResNet(object):
             152: ([3, 8, 36, 3], self.bottleneck)
         }
         self.stage_filters = [64, 128, 256, 512]
+        self.cfg = cfg
 
     def _conv_norm(self,
                    input,
@@ -302,7 +308,7 @@ class ResNet50Backbone(BackboneBase):
             raise TypeError(str(input) + " should be Variable")
 
         model = ResNet(self.number, self.freeze_bn, self.affine_channel,
-                       self.bn_decay)
+                       self.bn_decay, self.cfg)
         res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
         return {k: v for k, v in zip(self.body_feat_names, res_list)}
 

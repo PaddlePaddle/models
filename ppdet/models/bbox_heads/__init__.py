@@ -22,5 +22,5 @@ from . import cascade_head
 from .cascade_head import *
 
 __all__ = bbox_head.__all__
-__all__ = mask_head.__all__
-__all__ = cascade_head.__all__
+__all__ += mask_head.__all__
+__all__ += cascade_head.__all__

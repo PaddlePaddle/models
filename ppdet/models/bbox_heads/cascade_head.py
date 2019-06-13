@@ -20,13 +20,13 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Xavier
 from paddle.fluid.regularizer import L2Decay
 
-from ..registry import CascadeHeads
+from ..registry import BBoxHeads
 from ..registry import BBoxHeadConvs
 
 __all__ = ['CascadeHead']
 
 
-@CascadeHeads.register
+@BBoxHeads.register
 class CascadeHead(object):
     """
     CascadeHead class
