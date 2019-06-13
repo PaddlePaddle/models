@@ -49,10 +49,10 @@ class MMDNN(object):
             input=input,
             size=[self.vocab_size, self.emb_size],
             padding_idx=(0 if zero_pad else None),
-            param_attr=fluid.ParamAttr(name="word_embedding",
-                                       initializer=fluid.initializer.Xavier()))
+            param_attr=fluid.ParamAttr(
+                name="word_embedding", initializer=fluid.initializer.Xavier()))
         if scale:
-            emb = emb * (self.emb_size ** 0.5)
+            emb = emb * (self.emb_size**0.5)
         return emb
 
     def bi_dynamic_lstm(self, input, hidden_size):
@@ -64,7 +64,9 @@ class MMDNN(object):
                                      param_attr=fluid.ParamAttr(name="fw_fc.w"),
                                      bias_attr=False)
         forward, _ = fluid.layers.dynamic_lstm(
-            input=fw_in_proj, size=4 * hidden_size, is_reverse=False,
+            input=fw_in_proj,
+            size=4 * hidden_size,
+            is_reverse=False,
             param_attr=fluid.ParamAttr(name="forward_lstm.w"),
             bias_attr=fluid.ParamAttr(name="forward_lstm.b"))
 
@@ -73,7 +75,9 @@ class MMDNN(object):
                                      param_attr=fluid.ParamAttr(name="rv_fc.w"),
                                      bias_attr=False)
         reverse, _ = fluid.layers.dynamic_lstm(
-            input=rv_in_proj, size=4 * hidden_size, is_reverse=True,
+            input=rv_in_proj,
+            size=4 * hidden_size,
+            is_reverse=True,
             param_attr=fluid.ParamAttr(name="reverse_lstm.w"),
             bias_attr=fluid.ParamAttr(name="reverse_lstm.b"))
         return [forward, reverse]
@@ -96,7 +100,7 @@ class MMDNN(object):
 
         if mask is not None:
             cross_mask = fluid.layers.stack(x=[mask] * self.kernel_size, axis=1)
-            conv = cross_mask * conv + (1 - cross_mask) * (-2 ** 32 + 1)
+            conv = cross_mask * conv + (1 - cross_mask) * (-2**32 + 1)
         # valid padding
         pool = fluid.layers.pool2d(
             input=conv,
@@ -157,6 +161,8 @@ class MMDNN(object):
                                     act="tanh",
                                     size=self.hidden_size)
 
-        pred = fluid.layers.fc(input=relu_hid1, size=self.out_size)
+        pred = fluid.layers.fc(input=relu_hid1,
+                               size=self.out_size,
+                               act="softmax")
 
         return left_seq_encoder, pred

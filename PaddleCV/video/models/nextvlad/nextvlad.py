@@ -12,6 +12,8 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+import numpy as np
+
 import paddle.fluid as fluid
 from paddle.fluid import ParamAttr
 
@@ -71,7 +73,7 @@ class NEXTVLAD(ModelBase):
                 shapes=[[-1] + rgb_shape, [-1] + audio_shape,
                         [-1] + label_shape],
                 lod_levels=[1, 1, 0],
-                dtypes=['float32', 'float32', 'float32'],
+                dtypes=['uint8', 'uint8', 'float32'],
                 name='train_py_reader'
                 if self.is_training else 'test_py_reader',
                 use_double_buffer=True)
@@ -81,12 +83,12 @@ class NEXTVLAD(ModelBase):
             rgb = fluid.layers.data(
                 name='train_rgb' if self.is_training else 'test_rgb',
                 shape=rgb_shape,
-                dtype='float32',
+                dtype='uint8',
                 lod_level=1)
             audio = fluid.layers.data(
                 name='train_audio' if self.is_training else 'test_audio',
                 shape=audio_shape,
-                dtype='float32',
+                dtype='uint8',
                 lod_level=1)
             if self.mode == 'infer':
                 label = None
@@ -115,6 +117,31 @@ class NEXTVLAD(ModelBase):
         videomodel = nextvlad_model.NeXtVLADModel()
         rgb = self.feature_input[0]
         audio = self.feature_input[1]
+
+        # move data processing from data reader to fluid to process on gpu
+        rgb = fluid.layers.cast(rgb, 'float32')
+        audio = fluid.layers.cast(audio, 'float32')
+        bias = -2.
+        scale = 4. / 255
+        offset = 4. / 512
+
+        rgb = fluid.layers.scale(rgb, scale=scale, bias=bias)
+        audio = fluid.layers.scale(audio, scale=scale, bias=bias + offset)
+
+        eigen_value = np.sqrt(np.load(self.eigen_file)[:1024, 0])
+        eigen_value = (eigen_value + 1e-4).astype(np.float32)
+        eigen_param = fluid.layers.create_parameter(
+            shape=eigen_value.shape,
+            dtype='float32',
+            attr=fluid.ParamAttr(
+                name='eigen_param', trainable=False),
+            default_initializer=fluid.initializer.NumpyArrayInitializer(
+                eigen_value))
+
+        rgb = fluid.layers.elementwise_mul(rgb, eigen_param)
+        rgb.stop_gradient = True
+        audio.stop_gradient = True
+
         out = videomodel.create_model(
             rgb, audio, is_training=(self.mode == 'train'), **model_args)
         self.logits = out['logits']
@@ -146,10 +173,12 @@ class NEXTVLAD(ModelBase):
         return self.feature_input if self.mode == 'infer' else self.feature_input + [
             self.label_input
         ]
-    
+
     def weights_info(self):
-        return ('nextvlad_youtube8m', 
-                'https://paddlemodels.bj.bcebos.com/video_classification/nextvlad_youtube8m.tar.gz')
+        return (
+            'nextvlad_youtube8m',
+            'https://paddlemodels.bj.bcebos.com/video_classification/nextvlad_youtube8m.tar.gz'
+        )
 
 
 def get_learning_rate_decay_list(base_learning_rate, decay, max_iter,

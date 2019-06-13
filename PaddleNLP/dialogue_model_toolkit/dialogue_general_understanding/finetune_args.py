@@ -70,5 +70,6 @@ run_type_g.add_arg("task_name", str, None,
 run_type_g.add_arg("do_train", bool, True, "Whether to perform training.")
 run_type_g.add_arg("do_val", bool, True, "Whether to perform evaluation on dev data set.")
 run_type_g.add_arg("do_test", bool, True, "Whether to perform evaluation on test data set.")
+parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
 
