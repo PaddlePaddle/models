@@ -20,7 +20,6 @@ DATA_DIR = './data/ILSVRC2012'
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
 
-
 def rotate_image(img):
     """ rotate_image """
     (h, w) = img.shape[:2]
@@ -29,7 +28,6 @@ def rotate_image(img):
     M = cv2.getRotationMatrix2D(center, angle, 1.0)
     rotated = cv2.warpAffine(img, M, (w, h))
     return rotated
-
 
 def random_crop(img, size, settings, scale=None, ratio=None):
     """ random_crop """
@@ -43,7 +41,6 @@ def random_crop(img, size, settings, scale=None, ratio=None):
     aspect_ratio = math.sqrt(np.random.uniform(*ratio))
     w = 1. * aspect_ratio
     h = 1. / aspect_ratio
-
 
     bound = min((float(img.shape[0]) / img.shape[1]) / (h**2),
                 (float(img.shape[1]) / img.shape[0]) / (w**2))
@@ -69,7 +66,6 @@ def random_crop(img, size, settings, scale=None, ratio=None):
 def distort_color(img):
     return img
 
-
 def resize_short(img, target_size):
     """ resize_short """
     percent = float(target_size) / min(img.shape[0], img.shape[1])
@@ -79,7 +75,6 @@ def resize_short(img, target_size):
             #interpolation=cv2.INTER_LANCZOS4
             )
     return resized
-
 
 def crop_image(img, target_size, center):
     """ crop_image """
@@ -113,8 +108,7 @@ def create_mixup_reader(settings, rd):
             if i % batch_size == batch_size - 1:         
                 yield data_list
                 data_list =[]
-                
-    
+                   
     def mixup_data():
         
         for data_list in fetch_data():
@@ -154,7 +148,6 @@ def process_image(
     std = [0.229, 0.224, 0.225] if std is None else std
 
     img_path = sample[0]
-    #print("=========",img_path)
     img = cv2.imread(img_path)
 
     if mode == 'train':
@@ -222,12 +215,10 @@ def _reader_creator(settings,
             for line in lines:
                 if mode == 'train' or mode == 'val':
                     img_path, label = line.split()
-                    #img_path = img_path.replace("JPEG", "jpeg")
                     img_path = os.path.join(data_dir, img_path)
                     yield img_path, int(label)
                 elif mode == 'test':
                     img_path, label = line.split()
-                    #img_path = img_path.replace("JPEG", "jpeg")
                     img_path = os.path.join(data_dir, img_path)
  
                     yield [img_path]
@@ -243,12 +234,8 @@ def _reader_creator(settings,
         image_mapper, reader, THREAD, BUF_SIZE, order=False)
     return reader
 
-
 def train(settings, data_dir=DATA_DIR, pass_id_as_seed=0):
-    #print(type(settings))
-    #print(settings.class_dim)
-    #print("============")
-    file_list = os.path.join(data_dir, 'val_list.txt')
+    file_list = os.path.join(data_dir, 'train_list.txt')
     reader =  _reader_creator(
         settings,
         file_list,
@@ -256,18 +243,17 @@ def train(settings, data_dir=DATA_DIR, pass_id_as_seed=0):
         shuffle=True,
         color_jitter=False,
         rotate=False,
-        data_dir=os.path.join(data_dir,'val'),
+        data_dir=data_dir,
         pass_id_as_seed=pass_id_as_seed,
         )
     if settings.use_mixup == True:
-        print("$$$$$$$$")
         reader = create_mixup_reader(settings, reader)
     return reader
 
 def val(settings,data_dir=DATA_DIR):
     file_list = os.path.join(data_dir, 'val_list.txt')
     return _reader_creator(settings ,file_list, 'val', shuffle=False, 
-            data_dir=os.path.join(data_dir,'val'))
+            data_dir=data_dir)
 
 
 def test(data_dir=DATA_DIR):
