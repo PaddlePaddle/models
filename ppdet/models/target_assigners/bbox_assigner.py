@@ -99,3 +99,71 @@ class BBoxAssigner(object):
             class_nums=self.class_num,
             use_random=self.use_random)
         return outs
+
+
+class CascadeBBoxAssigner(BBoxAssigner):
+    """
+    Get the sampled proposal RoIs and the target bounding-boxes (target
+    bounding-box regression deltas given proposal RoIs and ground-truth
+    boxes). And for sampled target bbox, assign the classification
+    (class label) and the inside weights and outside weights for regression
+    loss.
+
+    Args:
+        cfg (AttrDict): All configuration.
+    """
+
+    def __init__(self, cfg):
+        super(BBoxAssigner, self).__init__(cfg)
+
+    def get_sampled_rois_and_targets(self,
+                                     input_rois,
+                                     feed_vars,
+                                     is_cls_agnostic=False,
+                                     is_cascade_rcnn=False,
+                                     cascade_curr_stage=0):
+        """
+        Get the sampled proposal RoIs and the target bounding-boxes (target
+        bounding-box regression deltas given proposal RoIs and ground-truth
+        boxes). And for sampled target bbox, assign the classification
+        (class label) and the inside weights and outside weights for regression
+        loss.
+
+        Args:
+            input_rois (Variable): input RoI bboxes.
+            feed_vars (dict): the
+
+        Returns:
+            The last variable in endpoint-th stage.
+        """
+        if not feed_vars['gt_label']:
+            raise ValueError("{} has no gt_label".format(feed_vars))
+        if not feed_vars['is_crowd']:
+            raise ValueError("{} has no gt_label".format(feed_vars))
+        if not feed_vars['gt_box']:
+            raise ValueError("{} has no gt_box".format(feed_vars))
+        if not feed_vars['im_info']:
+            raise ValueError("{} has no im_info".format(feed_vars))
+        curr_bbox_reg_w = [
+            1. / self.bbox_reg_weights[cascade_curr_stage],
+            1. / self.bbox_reg_weights[cascade_curr_stage],
+            2. / self.bbox_reg_weights[cascade_curr_stage],
+            2. / self.bbox_reg_weights[cascade_curr_stage],
+        ]
+        outs = fluid.layers.generate_proposal_labels(
+            rpn_rois=input_rois,
+            gt_classes=feed_vars['gt_label'],
+            is_crowd=feed_vars['is_crowd'],
+            gt_boxes=feed_vars['gt_box'],
+            im_info=feed_vars['im_info'],
+            batch_size_per_im=self.batch_size_per_im,
+            fg_thresh=self.fg_thresh[cascade_curr_stage],
+            bg_thresh_hi=self.bg_thresh_hi[cascade_curr_stage],
+            bg_thresh_lo=bg_thresh_lo[cascade_curr_stage],
+            bbox_reg_weights=curr_bbox_reg_w,
+            use_random=False,
+            class_nums=self.class_num if not is_cls_agnostic else 2,
+            is_cls_agnostic=is_cls_agnostic,
+            is_cascade_rcnn=is_cascade_rcnn, )
+
+        return outs
