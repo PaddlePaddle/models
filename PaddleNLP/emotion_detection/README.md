@@ -19,10 +19,9 @@
 
 ## 快速开始
 
-本项目依赖于 Python2.7、Paddlepaddle Fluid 1.4.0以及PaddleHub 0.5.0，请确保相关依赖都已安装正确
+本项目依赖于 Paddlepaddle 1.3.2 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
-[PaddlePaddle安装指南](http://www.paddlepaddle.org/#quick-start)
-[PaddleHub安装指南](https://github.com/PaddlePaddle/PaddleHub)
+python版本依赖python 2.7
 
 #### 安装代码
 
@@ -65,6 +64,18 @@ sh download_model.sh
 sh run.sh eval
 # ERNIE 模型
 sh run_ernie.sh eval
+```
+
+我们也提供了使用PaddleHub加载ERNIE模型的选项，PaddleHub是PaddlePaddle的预训练模型管理工具，可以一行代码完成预训练模型的加载，简化预训练模型的使用和迁移学习。更多相关的介绍，可以查看[PaddleHub](https://github.com/PaddlePaddle/PaddleHub)
+
+如果想使用该功能，需要修改run_ernie.sh中的配置如下：
+```shell
+# 在eval()函数中，修改如下参数：
+--use_paddle_hub true
+```
+注意：使用该选项需要先安装PaddleHub，安装命令如下
+```shell
+$ pip install paddlehub
 ```
 
 #### 模型训练
