@@ -40,11 +40,33 @@ def get_weights_path(url):
     return get_path(url, WEIGHTS_DIR)
 
 
-def get_dataset_path(url):
+def get_dataset_path(path):
     """Get dataset path from DATASET_DIR, if not exists,
     download it.
     """
-    return get_path(url, DATASET_DIR)
+    if os.path.exists(path):
+        return path
+
+    urls_map = {
+        'coco': ('http://images.cocodataset.org/zips/train2017.zip',
+                 'http://images.cocodataset.org/zips/val2017.zip',
+                 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip',),
+        'pascal': ('http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',)
+        }
+
+    logger.info("DATASET_DIR {} not exitst, try searching {} or "
+                "downloading dataset...".format(os.path.realpath(path),
+                                                DATASET_DIR))
+    for dataset, urls in urls_map.items():
+        if path.lower().find(dataset) >= 0:
+            logger.info("Parse DATASET_DIR {} as dataset "
+                        "{}".format(path, dataset))
+            data_dir = os.path.join(DATASET_DIR, dataset)
+            for url in urls:
+                get_path(url, data_dir)
+            return data_dir
+    
+    raise ValueError("{} not exists and unknow dataset type".format(path))
 
 
 def get_path(url, root_dir):
@@ -65,8 +87,15 @@ def get_path(url, root_dir):
         fpath = fpath.replace(zip_format, '')
     fpath = os.path.join(root_dir, fpath)
 
+    # for decompressed directory name differenct from zip file name
+    decompress_name_map = {"VOCtrainval": "VOCdevkit",
+                           "annotations_trainval": "annotations"}
+    for k, v in decompress_name_map.items():
+        if fpath.find(k) >= 0:
+            fpath = '/'.join(fpath.split('/')[:-1] + [v])
+
     if os.path.exists(fpath):
-        logger.info("Found weights in {}".format(fpath))
+        logger.info("Found {}".format(fpath))
     else:
         _download(url, root_dir)
     
@@ -104,7 +133,7 @@ def _download(url, path):
                 if chunk:
                     f.write(chunk)
 
-    logger.info("Download finish, decompressing...")
+    logger.info("Download finish, decompressing {}...".format(fname))
     _decompress(full_fname)
 
 

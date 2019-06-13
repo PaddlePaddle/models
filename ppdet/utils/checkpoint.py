@@ -49,7 +49,7 @@ def load(exe, prog, path):
     if is_url(path):
         path = get_weights_path(path)
 
-    logger.info('Load model from {}'.format(path))
+    logger.info('Loading model from {}...'.format(path))
 
     def if_exist(var):
         b = os.path.exists(os.path.join(path, var.name))
