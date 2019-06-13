@@ -68,6 +68,7 @@ def get_dataset_path(path):
                 get_path(url, data_dir)
             return data_dir
     
+    # not match any dataset in urls_map
     raise ValueError("{} not exists and unknow dataset type".format(path))
 
 
@@ -135,7 +136,6 @@ def _download(url, path):
                 if chunk:
                     f.write(chunk)
 
-    logger.info("Download finish, decompressing {}...".format(fname))
     _decompress(full_fname)
 
 
@@ -143,6 +143,7 @@ def _decompress(fname):
     """
     Decompress for zip and tar file
     """
+    logger.info("Download finish, decompressing {}...".format(fname))
     fpath='/'.join(fname.split('/')[:-1])
     if fname.find('tar') >= 0:
         with tarfile.open(fname) as tf:
