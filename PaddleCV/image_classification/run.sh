@@ -38,7 +38,7 @@ python train.py \
 	--model=ResNeXt101_64x4d \
             --batch_size=256 \
             --total_images=1281167 \
-            --image_shape=3224224 \
+            --image_shape=3,224,224 \
             --input_dtype=float32 \
             --class_dim=1000 \
             --lr_strategy=piecewise_decay \
