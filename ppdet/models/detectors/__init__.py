@@ -18,6 +18,9 @@ from .faster_rcnn import *
 from . import mask_rcnn
 from .mask_rcnn import *
 
+from . import cascade_rcnn
+from .cascade_rcnn import *
+
 from . import yolov3
 from .yolov3 import *
 
@@ -26,5 +29,6 @@ from .ssd import *
 
 __all__ = faster_rcnn.__all__
 __all__ = mask_rcnn.__all__
+__all__ = cascade_rcnn.__all__
 __all__ += yolov3.__all__
 __all__ += ssd.__all__

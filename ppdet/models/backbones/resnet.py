@@ -28,18 +28,13 @@ from ..registry import Backbones
 from ..registry import BBoxHeadConvs
 from .base import BackboneBase
 
-__all__ = ['ResNet50Backbone', 
-           'ResNet101Backbone', 
-           'ResNet34Backbone',
-           'ResNet50C5']
+__all__ = [
+    'ResNet50Backbone', 'ResNet101Backbone', 'ResNet34Backbone', 'ResNet50C5'
+]
 
 
 class ResNet(object):
-    def __init__(self, 
-                 depth, 
-                 freeze_bn, 
-                 affine_channel, 
-                 bn_decay=True):
+    def __init__(self, depth, freeze_bn, affine_channel, bn_decay=True):
         """
         Args:
             depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
@@ -92,12 +87,14 @@ class ResNet(object):
 
         lr = 0. if self.freeze_bn else 1.
         bn_decay = float(self.bn_decay)
-        pattr = ParamAttr(name=bn_name + '_scale', 
-                          learning_rate=lr,
-                          regularizer=L2Decay(bn_decay))
-        battr = ParamAttr(name=bn_name + '_offset', 
-                          learning_rate=lr,
-                          regularizer=L2Decay(bn_decay))
+        pattr = ParamAttr(
+            name=bn_name + '_scale',
+            learning_rate=lr,
+            regularizer=L2Decay(bn_decay))
+        battr = ParamAttr(
+            name=bn_name + '_offset',
+            learning_rate=lr,
+            regularizer=L2Decay(bn_decay))
 
         if not self.affine_channel:
             out = fluid.layers.batch_norm(
@@ -136,17 +133,20 @@ class ResNet(object):
             return input
 
     def bottleneck(self, input, num_filters, stride, is_first, name):
+        (stride1, stride3) = (
+            stride, 1) if self.cfg.MODEL.RESNET_TYPE == 'A' else (1, stride)
         conv0 = self._conv_norm(
             input=input,
             num_filters=num_filters,
             filter_size=1,
+            stride=stride1,
             act='relu',
             name=name + "_branch2a")
         conv1 = self._conv_norm(
             input=conv0,
             num_filters=num_filters,
             filter_size=3,
-            stride=stride,
+            stride=stride3,
             act='relu',
             name=name + "_branch2b")
         conv2 = self._conv_norm(
@@ -281,8 +281,7 @@ class ResNet50Backbone(BackboneBase):
         # use batch_norm or affine_channel.
         self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
         # whether ignore batch_norm offset and scale L2Decay
-        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 
-                                'BN_DECAY', True)
+        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', True)
         self.number = 50
         self.endpoint = getattr(cfg.MODEL, 'ENDPOINT', 4)
         # This list contains names of each Res Block output.
@@ -302,7 +301,8 @@ class ResNet50Backbone(BackboneBase):
         if not isinstance(input, Variable):
             raise TypeError(str(input) + " should be Variable")
 
-        model = ResNet(self.number, self.freeze_bn, self.affine_channel, self.bn_decay)
+        model = ResNet(self.number, self.freeze_bn, self.affine_channel,
+                       self.bn_decay)
         res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
         return {k: v for k, v in zip(self.body_feat_names, res_list)}
 
