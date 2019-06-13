@@ -192,7 +192,7 @@ def ResNet50_vd():
     model = ResNet(layers=50, is_3x3 = True)
     return model
 
-def ResNet101_vd):
+def ResNet101_vd():
     model = ResNet(layers=101, is_3x3 = True)
     return model
 
