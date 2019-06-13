@@ -200,7 +200,7 @@ def main(args):
         print("Max train steps: %d" % max_train_steps)
 
         train_program = fluid.Program()
-        if args.random_seed is not None:
+        if args.enable_ce and args.random_seed is not None:
             train_program.random_seed = args.random_seed
 
         with fluid.program_guard(train_program, startup_prog):
@@ -366,6 +366,7 @@ def main(args):
         print("Final test result:")
         inference(exe, infer_prog, infer_pyreader,
             [prop.name], "infer")
+
 
 if __name__ == "__main__":
     print_arguments(args)
