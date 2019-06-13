@@ -29,6 +29,8 @@ import numpy as np
 import cv2
 from PIL import Image, ImageEnhance
 
+from ppdet.core.workspace import serializable
+
 from .op_helper import satisfy_sample_constraint, \
                        deal_bbox_label, \
                        generate_sample_bbox, \
@@ -45,7 +47,7 @@ def register_op(cls):
         setattr(BaseOperator, cls.__name__, cls)
     else:
         raise KeyError("The {} class has been registered.".format(cls.__name__))
-    return cls
+    return serializable(cls)
 
 
 class BboxError(ValueError):
@@ -385,7 +387,6 @@ class RandomDistort(BaseOperator):
         if prob < self.brightness_prob:
             img = ImageEnhance.Brightness(img).enhance(brightness_delta)
         return img
-
     def random_contrast(self, img):
         contrast_delta = np.random.uniform(self.contrast_lower,
                                            self.contrast_upper)
@@ -393,7 +394,6 @@ class RandomDistort(BaseOperator):
         if prob < self.contrast_prob:
             img = ImageEnhance.Contrast(img).enhance(contrast_delta)
         return img
-
     def random_saturation(self, img):
         saturation_delta = np.random.uniform(self.saturation_lower,
                                              self.saturation_upper)
@@ -401,7 +401,6 @@ class RandomDistort(BaseOperator):
         if prob < self.saturation_prob:
             img = ImageEnhance.Color(img).enhance(saturation_delta)
         return img
-
     def random_hue(self, img):
         hue_delta = np.random.uniform(self.hue_lower, self.hue_upper)
         prob = np.random.uniform(0, 1)
@@ -410,7 +409,6 @@ class RandomDistort(BaseOperator):
             img[:, :, 0] = img[:, :, 0] + hue_delta
             img = Image.fromarray(img, mode='HSV').convert('RGB')
         return img
-
     def __call__(self, sample, context):
         """random distort the image
         """
@@ -594,7 +592,7 @@ class NormalizeBox(BaseOperator):
 @register_op
 class Permute(BaseOperator):
     def __init__(self, to_bgr=True, channel_first=True):
-        """ 
+        """
         Change the channel.
         Args:
             to_bgr (bool): confirm whether to convert RGB to BGR

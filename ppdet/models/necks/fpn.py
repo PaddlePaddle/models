@@ -15,39 +15,47 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+from collections import OrderedDict
+
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Xavier, Constant
 from paddle.fluid.regularizer import L2Decay
 
-from ..registry import Necks
+from ppdet.core.workspace import register
 
 __all__ = ['FPN']
 
 
-@Necks.register
+@register
 class FPN(object):
     """
-    FPN class
+    Feature Pyramid Network, see https://arxiv.org/abs/1612.03144
+
     Args:
-        cfg (Dict): All parameters in dictionary.
-    
-    TODO(guanzhong): add more comments here.
+        num_chan (int): number of feature channels
+        min_level (int): lowest level of the backbone feature map to use
+        max_level (int): highest level of the backbone feature map to use
+        spatial_scale (list): feature map scaling factor
     """
 
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.fpn_dim = cfg.FPN.DIM
-        self.spatial_scale = list(map(eval, cfg.FPN.SPATIAL_SCALE))
-        self.fpn_inner_output = None
+    def __init__(self,
+                 num_chan=256,
+                 min_level=2,
+                 max_level=6,
+                 spatial_scale=[1. / 32., 1. / 16., 1. / 8., 1. / 4.]):
+        self.num_chan = num_chan
+        self.min_level = min_level
+        self.max_level = max_level
+        self.spatial_scale = spatial_scale
 
     def _add_topdown_lateral(self, body_name, body_input, upper_output):
         lateral_name = 'fpn_inner_' + body_name + '_lateral'
         topdown_name = 'fpn_topdown_' + body_name
-        fpn_inner_name = 'fpn_inner_' + body_name
         lateral = fluid.layers.conv2d(
             body_input,
-            self.fpn_dim,
+            self.num_chan,
             1,
             param_attr=ParamAttr(
                 name=lateral_name + "_w", initializer=Xavier()),
@@ -66,21 +74,18 @@ class FPN(object):
 
         return lateral + topdown
 
-    def get_output(self, body_dict, body_name_list):
+    def get_output(self, body_dict):
         """
         Add FPN neck onto backbone.
 
         Args:
-            body_dict(Dict): Dictionary of variables and each element is the 
+            body_dict(OrderedDict): Dictionary of variables and each element is the
                 output of backbone.
-            body_name_list(List): List of names and each element represents 
-                the name of each output of backbone.
 
         Return:
-            fpn_dict(Dict): A dictionary represents the output of FPN neck with 
+            fpn_dict(OrderedDict): A dictionary represents the output of FPN neck with
                 their name.
             spatial_scale(List): A list of multiplicative spatial scale factor.
-            fpn_name_list(List): A list of names regarding to output of FPN neck.
         """
         body_name_list = body_name_list[::-1]
         if self.cfg.FPN.HAS_EXTRA_CONVS:
@@ -99,7 +104,7 @@ class FPN(object):
         fpn_inner_name = 'fpn_inner_' + body_name_list[0]
         self.fpn_inner_output[0] = fluid.layers.conv2d(
             body_dict[body_name_list[0]],
-            self.fpn_dim,
+            self.num_chan,
             1,
             param_attr=ParamAttr(
                 name=fpn_inner_name + "_w", initializer=Xavier()),
@@ -121,7 +126,7 @@ class FPN(object):
             fpn_name = 'fpn_' + body_name_list[i]
             fpn_output = fluid.layers.conv2d(
                 self.fpn_inner_output[i],
-                self.fpn_dim,
+                self.num_chan,
                 filter_size=3,
                 padding=1,
                 param_attr=ParamAttr(

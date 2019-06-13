@@ -11,3 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import ppdet.models
+from ppdet.optimizer import *
+from ppdet.data_feed import *
+from ppdet.models.nms import *

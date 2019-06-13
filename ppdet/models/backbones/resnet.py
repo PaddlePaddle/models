@@ -1,4 +1,3 @@
-"""
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+from collections import OrderedDict
 
 import math
 import six
@@ -26,44 +26,48 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.framework import Variable
 from paddle.fluid.regularizer import L2Decay
 
-from ..registry import Backbones
-from ..registry import BBoxHeadConvs
-from .base import BackboneBase
+from ppdet.core.workspace import register, serializable
 
-__all__ = [
-    'ResNet50Backbone', 'ResNet101Backbone', 'ResNet34Backbone', 'ResNet50C5',
-    'ResNetA50Backbone', 'ResNetA101Backbone', 'ResNetA34Backbone',
-    'ResNetA50C5'
-]
+__all__ = ['ResNet', 'ResNetC5']
 
 
+@register
+@serializable
 class ResNet(object):
     """
-    ResNet model.
+    Residual Network, see https://arxiv.org/abs/1512.03385
+    Args:
+        depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
+        freeze_at (int): freeze the backbone at which stage
+        freeze_bn (bool): fix batch norm weights
+        affine_channel (bool): use batch_norm or affine_channel.
+        bn_decay (bool): apply weight decay to in batch norm weights
+        variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
+        feature_maps (list): index of the stages whose feature maps are returned
     """
-
     def __init__(self,
-                 depth,
-                 freeze_bn,
-                 affine_channel,
+                 depth=50,
+                 freeze_at=2,
+                 freeze_bn=True,
+                 affine_channel=False,
                  bn_decay=True,
-                 resnet_type='B'):
-        """
-        Args:
-            depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
-            freeze_bn (bool): whether to fix batch norm
-                (meaning the scale and bias does not update).
-            affine_channel (bool): Use batch_norm or affine_channel.
-            bn_decay (bool): Wether perform L2Decay in batch_norm offset
-                             and scale, default True.
-        """
-        if depth not in [18, 34, 50, 101, 152]:
-            raise ValueError("depth {} not in [18, 34, 50, 101, 152].".format(
-                depth))
+                 variant='a',
+                 feature_maps=[2, 3, 4, 5]):
+        super(ResNet, self).__init__()
+
+        assert depth in [18, 34, 50, 101, 152], \
+            "depth {} not in [18, 34, 50, 101, 152]"
+        assert variant in ['a', 'b', 'c', 'd'], "invalid ResNet variant"
+        assert 0 <= freeze_at <= 4, "freeze_at should be 0, 1, 2, 3 or 4"
+        assert len(feature_maps) > 0, "need one or more feature maps"
+
         self.depth = depth
+        self.freeze_at = freeze_at
         self.freeze_bn = freeze_bn
         self.affine_channel = affine_channel
         self.bn_decay = bn_decay
+        self.variant = variant
+        self.feature_maps = feature_maps
         self.depth_cfg = {
             18: ([2, 2, 2, 2], self.basicblock),
             34: ([3, 4, 6, 3], self.basicblock),
@@ -72,7 +76,6 @@ class ResNet(object):
             152: ([3, 8, 36, 3], self.bottleneck)
         }
         self.stage_filters = [64, 128, 256, 512]
-        self.resnet_type = resnet_type
 
     def _conv_norm(self,
                    input,
@@ -101,14 +104,12 @@ class ResNet(object):
 
         lr = 0. if self.freeze_bn else 1.
         bn_decay = float(self.bn_decay)
-        pattr = ParamAttr(
-            name=bn_name + '_scale',
-            learning_rate=lr,
-            regularizer=L2Decay(bn_decay))
-        battr = ParamAttr(
-            name=bn_name + '_offset',
-            learning_rate=lr,
-            regularizer=L2Decay(bn_decay))
+        pattr = ParamAttr(name=bn_name + '_scale',
+                          learning_rate=lr,
+                          regularizer=L2Decay(bn_decay))
+        battr = ParamAttr(name=bn_name + '_offset',
+                          learning_rate=lr,
+                          regularizer=L2Decay(bn_decay))
 
         if not self.affine_channel:
             out = fluid.layers.batch_norm(
@@ -140,53 +141,67 @@ class ResNet(object):
         return out
 
     def _shortcut(self, input, ch_out, stride, is_first, name):
+        max_pooling_in_short_cut = self.variant == 'd'
         ch_in = input.shape[1]
-        if ch_in != ch_out or stride != 1 or is_first == True:
+        if ch_in != ch_out or stride != 1 or is_first:
+            if max_pooling_in_short_cut:
+                input = fluid.layers.pool2d(
+                    input=input,
+                    pool_size=2,
+                    pool_stride=2,
+                    pool_padding=0,
+                    ceil_mode=True,
+                    pool_type='avg')
+                return self._conv_norm(input, ch_out, 1, 1, name=name)
             return self._conv_norm(input, ch_out, 1, stride, name=name)
         else:
             return input
 
     def bottleneck(self, input, num_filters, stride, is_first, name):
-        """
-        resnet's bottleneck structure
+        if self.variant == 'a':
+            stride1, stride2 = stride, 1
+        else:
+            stride1, stride2 = 1, stride
 
-        Args:
-            input(Variable): input tensor
-            num_filters(int): kernel num
-            stride(int): operator's stride
-            is_first(boolean): whether shortcut use self._conv_norm
-            name(string): operator's name 
-        """
-        (stride1, stride3) = (stride,
-                              1) if self.resnet_type == 'A' else (1, stride)
-        conv0 = self._conv_norm(
-            input=input,
-            num_filters=num_filters,
-            filter_size=1,
-            stride=stride1,
-            act='relu',
-            name=name + "_branch2a")
-        conv1 = self._conv_norm(
-            input=conv0,
-            num_filters=num_filters,
-            filter_size=3,
-            stride=stride3,
-            act='relu',
-            name=name + "_branch2b")
-        conv2 = self._conv_norm(
-            input=conv1,
-            num_filters=num_filters * 4,
-            filter_size=1,
-            act=None,
-            name=name + "_branch2c")
+        # ResNeXt
+        groups = getattr(self, 'groups', 1)
+        if groups == 1:
+            expand = 4
+        else:
+            expand = groups == 64 and 1 or 2
+
+        conv_def = [
+            [num_filters, 1, stride1, 'relu', 1, name + "_branch2a"],
+            [num_filters, 3, stride2, 'relu', groups, name + "_branch2b"],
+            [num_filters * expand, 1, 1, None, 1, name + "_branch2c"]
+        ]
+
+        residual = input
+        for (c, k, s, act, g, _name) in conv_def:
+            print("[01;32m{} c: {}, k: {}, s: {}, g: {}, act: {}[0m".format(
+                _name, str(c).ljust(4), k, s, g, act))
+            residual = self._conv_norm(
+                input=residual,
+                num_filters=c,
+                filter_size=k,
+                stride=s,
+                act=act,
+                groups=g,
+                name=_name)
         short = self._shortcut(
             input,
             num_filters * 4,
             stride,
             is_first=False,
             name=name + "_branch1")
+        # Squeeze-and-Excitation
+        if callable(getattr(self, '_squeeze_excitation', None)):
+            residual = self._squeeze_excitation(
+                input=residual,
+                num_channels=num_filters * 2,
+                name='fc' + name)
         return fluid.layers.elementwise_add(
-            x=short, y=conv2, act='relu', name=name + ".add.output.5")
+            x=short, y=residual, act='relu', name=name + ".add.output.5")
 
     def basicblock(self, input, num_filters, stride, is_first, name):
         conv0 = self._conv_norm(
@@ -236,279 +251,71 @@ class ResNet(object):
         return res_out
 
     def c1_stage(self, input):
-        conv = self._conv_norm(
+        # TODO verify SE154 out chan, 128 or 256?
+        num_out_chan = self.stage_filters[0]
+        if self.variant in ['c', 'd']:
+            conv_def = [
+                [num_out_chan / 2, 3, 2, "conv1_1"],
+                [num_out_chan / 2, 3, 1, "conv1_2"],
+                [num_out_chan, 3, 1, "conv1_3"],
+            ]
+        else:
+            conv_def = [[num_out_chan, 7, 2, "conv1"]]
+
+        for (c, k, s, _name) in conv_def:
+            input = self._conv_norm(
+                input=input,
+                num_filters=c,
+                filter_size=k,
+                stride=s,
+                act='relu',
+                name=_name)
+
+        output = fluid.layers.pool2d(
             input=input,
-            num_filters=64,
-            filter_size=7,
-            stride=2,
-            act='relu',
-            name="conv1")
-        conv = fluid.layers.pool2d(
-            input=conv,
             pool_size=3,
             pool_stride=2,
             pool_padding=1,
             pool_type='max')
-        return conv
+        return output
 
-    def get_backbone(self, input, endpoint, freeze_at=0):
-        """
-        Get the backbone of ResNet50. We define ResNet50 has 5 stages, from 1 to 5.
-        So please carefully to set endpoint and freeze_at number.
-
-        Args:
-            input (Variable): input variable.
-            endpoint (int): the endpoint stage number, should be 2, 3, 4, or 5.
-            freeze_at (int): freeze the backbone at which stage. This number
-                should be not large than 4. 0 means that no layers are fixed.
-
-        Returns:
-            The last variable in endpoint-th stage.
-        """
-        if not isinstance(input, Variable):
-            raise TypeError(str(input) + " should be Variable")
-        if endpoint not in [2, 3, 4, 5]:
-            raise ValueError("endpoint {} not in [2, 3, 4, 5].".format(
-                endpoint))
+    def __call__(self, input):
+        assert isinstance(input, Variable)
+        assert not (set(self.feature_maps) - set([2, 3, 4, 5])), \
+            "feature maps {} not in [2, 3, 4, 5]".format(self.feature_maps)
 
         res_endpoints = []
 
-        res = self.c1_stage(input)
-        for i in six.moves.xrange(2, endpoint + 1):
+        res = input
+        # XXX this may not cover all use case, but enough for now
+        if len(self.feature_maps) > 1 and 2 in self.feature_maps:
+            res = self.c1_stage(res)
+        for i in self.feature_maps:
             res = self.layer_warp(res, i)
             res_endpoints.append(res)
-        if freeze_at > 0:
-            res_endpoints[freeze_at - 2].stop_gradient = True
-        return res_endpoints
+            if self.freeze_at > i:
+                res.stop_gradient = True
+
+        if len(res_endpoints) == 1:
+            return res_endpoints[0]
+
+        return OrderedDict({'res{}_sum'.format(idx): feat for idx, feat in
+                            enumerate(res_endpoints)})
 
 
-@Backbones.register
-class ResNet50Backbone(BackboneBase):
-    """
-    Get the ResNet50 C4 backbone.
-    """
+@register
+@serializable
+class ResNetC5(ResNet):
+    __doc__ = ResNet.__doc__
 
-    def __init__(self, cfg):
-        """
-        Get the ResNet50 C4 backbone. We define ResNet50 has 5 stages,
-        from 1 to 5.
-
-        Args:
-            cfg (AttrDict): the config from given config filename.
-        """
-        super(ResNet50Backbone, self).__init__(cfg)
-        # freeze the backbone at which stage.
-        # This number should be not large than 4. 0 means that
-        # no layers are fixed.
-        self.freeze_at = getattr(cfg.MODEL, 'FREEZE_AT', 2)
-        assert self.freeze_at in [0, 1, 2, 3, 4
-                                  ], "The freeze_at should be 0, 1, 2, 3 or 4"
-        # whether to fix batch norm
-        # (meaning the scale and bias does not update). Defalut False.
-        self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
-        # use batch_norm or affine_channel.
-        self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
-        # whether ignore batch_norm offset and scale L2Decay
-        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', True)
-        self.number = 50
-        self.endpoint = getattr(cfg.MODEL, 'ENDPOINT', 4)
-        # This list contains names of each Res Block output.
-        # The name is the key of body_dict as well. 
-        self.body_feat_names = [
-            'res' + str(lvl) + '_sum' for lvl in range(2, self.endpoint + 1)
-        ]
-
-    def __call__(self, input):
-        """
-        Args:
-            input (Variable): input variable.
-
-        Returns:
-            The last variable in endpoint-th stage.
-        """
-        if not isinstance(input, Variable):
-            raise TypeError(str(input) + " should be Variable")
-
-        model = ResNet(self.number, self.freeze_bn, self.affine_channel,
-                       self.bn_decay)
-        res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
-        return {k: v for k, v in zip(self.body_feat_names, res_list)}
-
-    def get_body_feat_names(self):
-        """
-        Retures:
-            get the names of body's features 
-        """
-        return self.body_feat_names
-
-
-@Backbones.register
-class ResNet101Backbone(ResNet50Backbone):
-    def __init__(self, cfg):
-        """
-        Get the ResNet101 C4 backbone. We define ResNet50 has 5 stages,
-        from 1 to 5.
-        Args:
-            cfg (AttrDict): the config from given config filename.
-        """
-        super(ResNet101Backbone, self).__init__(cfg)
-        self.number = 101
-
-
-@Backbones.register
-class ResNet34Backbone(ResNet50Backbone):
-    def __init__(self, cfg):
-        """
-        Get the ResNet34 backbone. We define ResNet34 has 5 stages,
-        from 1 to 5.
-        Args:
-            cfg (AttrDict): the config from given config filename.
-        """
-        super(ResNet34Backbone, self).__init__(cfg)
-        self.number = 34
-
-
-@BBoxHeadConvs.register
-class ResNet50C5(object):
-    """
-    Args:
-        freeze_bn (bool): whether to fix batch norm
-            (meaning the scale and bias does not update). Defalut False.
-    Returns:
-        The last variable in C5 stage.
-    """
-
-    def __init__(self, cfg):
-        # whether to fix batch norm
-        # (meaning the scale and bias does not update). Defalut False.
-        self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
-        # use batch_norm or affine_channel.
-        self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
-        self.number = 50
-        self.stage_number = 5
-
-    def __call__(self, input):
-        model = ResNet(self.number, self.freeze_bn, self.affine_channel)
-        res5 = model.layer_warp(input, self.stage_number)
-        return res5
-
-
-@Backbones.register
-class ResNetA50Backbone(BackboneBase):
-    """
-    Get the ResNet50 C4 backbone.
-    """
-
-    def __init__(self, cfg):
-        """
-        Get the ResNet50 C4 backbone. We define ResNet50 has 5 stages,
-        from 1 to 5.
-
-        Args:
-            cfg (AttrDict): the config from given config filename.
-        """
-        super(ResNetA50Backbone, self).__init__(cfg)
-        # freeze the backbone at which stage.
-        # This number should be not large than 4. 0 means that
-        # no layers are fixed.
-        self.freeze_at = getattr(cfg.MODEL, 'FREEZE_AT', 2)
-        assert self.freeze_at in [0, 1, 2, 3, 4
-                                  ], "The freeze_at should be 0, 1, 2, 3 or 4"
-        # whether to fix batch norm
-        # (meaning the scale and bias does not update). Defalut False.
-        self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
-        # use batch_norm or affine_channel.
-        self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
-        # whether ignore batch_norm offset and scale L2Decay
-        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', True)
-        self.number = 50
-        self.endpoint = getattr(cfg.MODEL, 'ENDPOINT', 4)
-        # This list contains names of each Res Block output.
-        # The name is the key of body_dict as well.
-        self.body_feat_names = [
-            'res' + str(lvl) + '_sum' for lvl in range(2, self.endpoint + 1)
-        ]
-
-    def __call__(self, input):
-        """
-        Args:
-            input (Variable): input variable.
-
-        Returns:
-            The last variable in endpoint-th stage.
-        """
-        if not isinstance(input, Variable):
-            raise TypeError(str(input) + " should be Variable")
-
-        model = ResNet(self.number, self.freeze_bn, self.affine_channel,
-                       self.bn_decay, 'A')
-        res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
-        return {k: v for k, v in zip(self.body_feat_names, res_list)}
-
-    def get_body_feat_names(self):
-        """
-        Returns:
-            get the names of body's features
-        """
-        return self.body_feat_names
-
-
-@Backbones.register
-class ResNetA101Backbone(ResNetA50Backbone):
-    """
-    Get the ResNet101 C4 backbone.
-    """
-
-    def __init__(self, cfg):
-        """
-        Get the ResNet101 C4 backbone. We define ResNet50 has 5 stages,
-        from 1 to 5.
-
-        Args:
-            cfg (AttrDict): the config from given config filename.
-        """
-        super(ResNetA101Backbone, self).__init__(cfg)
-        self.number = 101
-
-
-@Backbones.register
-class ResNetA34Backbone(ResNetA50Backbone):
-    """
-    Get the ResNet34 backbone.
-    """
-
-    def __init__(self, cfg):
-        """
-        Get the ResNet34 backbone. We define ResNet34 has 5 stages,
-        from 1 to 5.
-
-        Args:
-            cfg (AttrDict): the config from given config filename.
-        """
-        super(ResNetA34Backbone, self).__init__(cfg)
-        self.number = 34
-
-
-@BBoxHeadConvs.register
-class ResNetA50C5(object):
-    """
-    Args:
-        freeze_bn (bool): whether to fix batch norm
-            (meaning the scale and bias does not update). Defalut False.
-    Returns:
-        The last variable in C5 stage.
-    """
-
-    def __init__(self, cfg):
-        # whether to fix batch norm
-        # (meaning the scale and bias does not update). Defalut False.
-        self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
-        # use batch_norm or affine_channel.
-        self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
-        self.number = 50
-        self.stage_number = 5
-
-    def __call__(self, input):
-        model = ResNet(self.number, self.freeze_bn, self.affine_channel, 'A')
-        res5 = model.layer_warp(input, self.stage_number)
-        return res5
+    def __init__(self,
+                 depth=50,
+                 freeze_at=2,
+                 freeze_bn=True,
+                 affine_channel=False,
+                 bn_decay=True,
+                 variant='a',
+                 feature_maps=[5]):
+        super(ResNetC5, self).__init__(
+            depth, freeze_at, freeze_bn, affine_channel, bn_decay,
+            variant, feature_maps)

@@ -16,90 +16,95 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import math
-import six
-
 import paddle.fluid as fluid
-from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.framework import Variable
 
-from ..registry import Detectors
-from ..registry import Backbones
-from ..registry import RPNHeads
-from ..registry import RoIExtractors
-from ..registry import BBoxHeads
-from ..registry import Necks
+from ppdet.core.workspace import register
 
-from ..target_assigners.bbox_assigner import BBoxAssigner
-
-from .base import DetectorBase
+from ppdet.models.necks import FPN
 
 __all__ = ['FasterRCNN']
 
 
-@Detectors.register
-class FasterRCNN(DetectorBase):
-    def __init__(self, cfg):
-        super(FasterRCNN, self).__init__(cfg)
-        self.is_train = cfg.IS_TRAIN
-        self.NECK_ON = getattr(cfg.MODEL, 'NECK', None)
-        self.backbone = Backbones.get(cfg.MODEL.BACKBONE)(cfg)
-        self.rpn_head = RPNHeads.get(cfg.RPN_HEAD.TYPE)(cfg)
-        self.bbox_assigner = BBoxAssigner(cfg)
-        self.roi_extractor = RoIExtractors.get(
-            cfg.ROI_EXTRACTOR.EXTRACT_METHOD)(cfg)
-        self.bbox_head = BBoxHeads.get(cfg.BBOX_HEAD.TYPE)(cfg)
-        if self.NECK_ON:
-            self.neck = Necks.get(cfg.MODEL.NECK)(cfg)
-        self.use_pyreader = True
+@register
+class FasterRCNN(object):
+    r"""
+    Faster R-CNN architecture, see https://arxiv.org/abs/1506.01497
+    Args:
+        backbone (object): backbone instance
+        rpn_head (object): `RPNhead` instance
+        bbox_assigner (object): `BBoxAssigner` instance
+        roi_extractor (object): ROI extractor instance
+        bbox_head (object): `BBoxHead` instance
+        neck (object): feature enricher instance, e.g., FPN
+    """
 
-    def _forward(self):
-        # inputs
-        feed_vars = self.build_feeds(self.feed_info(), self.use_pyreader)
+    __category__ = 'architecture'
+    __inject__ = ['backbone', 'rpn_head', 'bbox_assigner',
+                  'roi_extractor', 'bbox_head', 'neck']
+
+    def __init__(self,
+                 backbone,
+                 rpn_head,
+                 roi_extractor,
+                 bbox_head='BBoxHead',
+                 bbox_assigner='BBoxAssigner',
+                 neck=None):
+        super(FasterRCNN, self).__init__()
+        self.backbone = backbone
+        self.rpn_head = rpn_head
+        self.bbox_assigner = bbox_assigner
+        self.roi_extractor = roi_extractor
+        self.bbox_head = bbox_head
+        self.neck = neck
+
+    def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
         im_info = feed_vars['im_info']
-        if self.is_train:
+        if mode == 'train':
             gt_box = feed_vars['gt_box']
             is_crowd = feed_vars['is_crowd']
 
         # backbone
         body_feats = self.backbone(im)
-        body_feat_names = self.backbone.get_body_feat_names()
+        body_feat_names = list(body_feats.keys())
 
         # neck
-        if self.NECK_ON:
-            body_feats, spatial_scale, body_feat_names = self.neck.get_output(
-                body_feats, body_feat_names)
+        if self.neck is not None:
+            body_feats, spatial_scale = self.neck.get_output(body_feats)
 
         # rpn proposals
-        rois = self.rpn_head.get_proposals(body_feats, im_info, body_feat_names)
+        rois = self.rpn_head.get_proposals(body_feats, im_info, mode=mode)
 
-        if self.is_train:
+        if mode == 'train':
             rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
-
-        if self.is_train:
             # sampled rpn proposals
-            outs = self.bbox_assigner.get_sampled_rois_and_targets(rois,
-                                                                   feed_vars)
+            for var in ['gt_label', 'is_crowd', 'gt_box', 'im_info']:
+                assert var in feed_vars, "{} has no {}".format(feed_vars, var)
+            outs = self.bbox_assigner(rpn_rois=rois,
+                                      gt_classes=feed_vars['gt_label'],
+                                      is_crowd=feed_vars['is_crowd'],
+                                      gt_boxes=feed_vars['gt_box'],
+                                      im_info=feed_vars['im_info'])
+
             rois = outs[0]
             labels_int32 = outs[1]
             bbox_targets = outs[2]
             bbox_inside_weights = outs[3]
             bbox_outside_weights = outs[4]
 
-        # RoI Extractor        
-        if self.NECK_ON:
-            roi_feat = self.roi_extractor.get_roi_feat(
-                body_feats, rois, body_feat_names, spatial_scale)
-        else:
-            # In models without NECK, roi extractor only uses the last level of 
-            # feature maps. And body_feat_names[-1] represents the name of 
+        if self.neck is None:
+            # in models without FPN, roi extractor only uses the last level of
+            # feature maps. And body_feat_names[-1] represents the name of
             # last feature map.
             body_feat = body_feats[body_feat_names[-1]]
-            roi_feat = self.roi_extractor.get_roi_feat(body_feat, rois)
+            roi_feat = self.roi_extractor(body_feat, rois)
+        elif isinstance(self.neck, FPN):
+            roi_feat = self.roi_extractor(
+                body_feats, rois, spatial_scale)
+        else:
+            raise ValueError("only supports FPN as enricher for now")
 
-        # fast-rcnn head
-        if self.is_train:
+        if mode == 'train':
             loss = self.bbox_head.get_loss(roi_feat, labels_int32, bbox_targets,
                                            bbox_inside_weights,
                                            bbox_outside_weights)
@@ -111,31 +116,8 @@ class FasterRCNN(DetectorBase):
             pred = self.bbox_head.get_prediction(roi_feat, rois, im_info)
             return pred
 
-    def train(self):
-        return self._forward()
+    def train(self, feed_vars):
+        return self.build(feed_vars, 'train')
 
-    def test(self):
-        return self._forward()
-
-    def feed_info(self):
-        c = getattr(self.cfg.DATA, 'IM_CHANNEL', 3)
-        h = getattr(self.cfg.DATA, 'IM_HEIGHT', 224)
-        w = getattr(self.cfg.DATA, 'IM_WIDTH', 224)
-
-        # the order of data layers shoule be the same as
-        # them ppdet/dataset/transform/operator/arrange_sample.py
-        # yapf: disable
-        feed_info = [
-            {'name': 'image',  'shape': [c, h, w], 'dtype': 'float32', 'lod_level': 0},
-            {'name': 'im_info','shape': [3],       'dtype': 'float32', 'lod_level': 0},
-            {'name': 'im_id',    'shape': [1], 'dtype': 'int32', 'lod_level': 0},
-        ]
-        if self.is_train:
-            anno_info = [
-                {'name': 'gt_box',  'shape': [4], 'dtype': 'float32', 'lod_level': 1},
-                {'name': 'gt_label','shape': [1], 'dtype': 'int32', 'lod_level': 1},
-                {'name': 'is_crowd', 'shape': [1],'dtype': 'int32', 'lod_level': 1},
-            ]
-            feed_info += anno_info
-        # yapf: enable
-        return feed_info
+    def test(self, feed_vars):
+        return self.build(feed_vars, 'test')

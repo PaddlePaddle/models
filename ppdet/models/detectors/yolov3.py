@@ -23,30 +23,30 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.framework import Variable
 
-from ..registry import Detectors
-from ..registry import Backbones
-from ..registry import YOLOHeads
-
-from .base import DetectorBase
+from ppdet.core.workspace import register
 
 __all__ = ['YOLOv3']
 
 
-@Detectors.register
-class YOLOv3(DetectorBase):
-    def __init__(self, cfg):
-        super(YOLOv3, self).__init__(cfg)
-        self.backbone = Backbones.get(cfg.MODEL.BACKBONE)(cfg)
-        self.yolo_head = YOLOHeads.get(cfg.YOLO_HEAD.TYPE)(cfg)
-        self.use_pyreader = True
+@register
+class YOLOv3(object):
+    """
+    YOLOv3 network, see https://arxiv.org/abs/1804.02767
 
-    def _forward(self, is_train=False):
-        self.is_train = is_train
+    Args:
+        backbone (object): an backbone instance
+        yolo_head (object): an `YOLOv3Head` instance
+    """
 
-        # build inputs
-        feed_vars = self.build_feeds(
-            self.feed_info(), use_pyreader=self.use_pyreader)
+    __category__ = 'architecture'
+    __inject__ = ['backbone', 'yolo_head']
 
+    def __init__(self, backbone, yolo_head='YOLOv3Head'):
+        super(YOLOv3, self).__init__()
+        self.backbone = backbone
+        self.yolo_head = yolo_head
+
+    def _forward(self, feed_vars, mode='train'):
         # backbone
         im = feed_vars['image']
         body_feats = self.backbone(im)
@@ -55,48 +55,21 @@ class YOLOv3(DetectorBase):
             body_feat_names = self.backbone.get_body_feat_names()
             body_feats = [body_feats[name] for name in body_feat_names]
 
-        if is_train:
+        if mode == 'train':
             # get loss in train mode
             gt_box = feed_vars['gt_box']
             gt_label = feed_vars['gt_label']
             gt_score = feed_vars['gt_score']
-            
-            loss = {'loss': \
-                    self.yolo_head.get_loss(body_feats, gt_box, gt_label, gt_score)}
-            return loss
+
+            return {'loss': self.yolo_head.get_loss(
+                body_feats, gt_box, gt_label, gt_score)}
         else:
             # get prediction in test mode
             im_shape = feed_vars['im_shape']
+            return self.yolo_head.get_prediction(body_feats, im_shape)
 
-            pred = self.yolo_head.get_prediction(body_feats, im_shape)
-            return pred
+    def train(self, feed_vars):
+        return self._forward(feed_vars, mode='train')
 
-    def train(self):
-        return self._forward(is_train=True)
-
-    def test(self):
-        return self._forward(is_train=False)
-
-    def feed_info(self):
-        size = getattr(self.cfg.DATA, 'INPUT_SIZE', 608)
-        box_num = getattr(self.cfg.DATA, 'MAX_BOX_NUM', 50)
-
-        # yapf: disable
-        feed_info = [
-            {'name': 'image',  'shape': [3, size, size], 'dtype': 'float32', 'lod_level': 0},
-        ]
-        if self.is_train:
-            train_info = [
-                {'name': 'gt_box',  'shape': [box_num, 4], 'dtype': 'float32', 'lod_level': 0},
-                {'name': 'gt_label','shape': [box_num], 'dtype': 'int32', 'lod_level': 0},
-                {'name': 'gt_score','shape': [box_num], 'dtype': 'float32', 'lod_level': 0},
-            ]
-            feed_info += train_info
-        else:
-            test_info = [
-                {'name': 'im_shape', 'shape': [2], 'dtype': 'int32', 'lod_level': 0},
-                {'name': 'im_id', 'shape': [1], 'dtype': 'int32', 'lod_level': 0},
-            ]
-            feed_info += test_info
-        # yapf: enable
-        return feed_info
+    def test(self, feed_vars):
+        return self._forward(feed_vars, mode='test')

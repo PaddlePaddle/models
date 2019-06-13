@@ -16,6 +16,8 @@ import paddle.fluid as fluid
 
 
 class DetectorBase(object):
+    __category__ = 'architecture'
+
     def __init__(self, cfg):
         self.cfg = cfg
         # variable of data layers

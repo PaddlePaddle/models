@@ -15,7 +15,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
 
 import six
 
@@ -24,29 +23,51 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
 
-from ..registry import YOLOHeads
+from ppdet.models.nms import MultiClassNMS
+from ppdet.core.workspace import register, serializable
 
 __all__ = ['YOLOv3Head']
 
 
-@YOLOHeads.register
+@register
 class YOLOv3Head(object):
     """
-    YOLOv3Head class of YOLO head block for YOLOv3 network
-
-    The naming rules are same as them in
-    https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/yolov3/models/yolov3.py
+    Head block for YOLOv3 network
 
     Args:
-        cfg (AttrDict): All parameters in dictionary.
-
+        bn_decay (bool): apply weight decay to batch norm weights
+        num_classes (int): number of output classes
+        ignore_thresh (float): threshold to ignore confidence loss
+        label_smooth (bool): whether to use label smoothing
+        anchors (list): anchors
+        anchor_masks (list): anchor masks
+        nms (object): an instance of `MultiClassNMS`
     """
+    __inject__ = ['nms']
 
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', False)
-        self.class_num = cfg.DATA.CLASS_NUM
-        self._get_and_check_anchors()
+    def __init__(self,
+                 bn_decay=False,
+                 num_classes=80,
+                 ignore_thresh=0.7,
+                 label_smooth=True,
+                 anchors=[[10, 13], [16, 30], [33, 23],
+                          [30, 61], [62, 45], [59, 119],
+                          [116, 90], [156, 198], [373, 326]],
+                 anchor_masks=[[6, 7, 8], [3, 4, 5], [0, 1, 2]],
+                 nms=MultiClassNMS(score_threshold=0.01,
+                                   nms_top_k=1000,
+                                   keep_top_k=100,
+                                   nms_threshold=0.45,
+                                   background_label=-1).__dict__):
+        self.bn_decay = bn_decay
+        self.num_classes = num_classes
+        self.ignore_thresh = ignore_thresh,
+        self.label_smooth = label_smooth,
+        self.anchor_masks = anchor_masks
+        self._get_and_check_anchors(anchors)
+        self.nms = nms
+        if isinstance(nms, dict):
+            self.nms = MultiClassNMS(**nms)
 
     def _conv_bn(self,
                  input,
@@ -141,14 +162,11 @@ class YOLOv3Head(object):
             input=input, scale=scale, actual_shape=out_shape, name=name)
         return out
 
-    def _get_and_check_anchors(self):
+    def _get_and_check_anchors(self, anchors):
         """
         Check ANCHORS/ANCHOR_MASKS in config and parse mask_anchors
 
         """
-        self.anchor_masks = getattr(self.cfg.YOLO_HEAD, 'ANCHOR_MASKS', [])
-        anchors = getattr(self.cfg.YOLO_HEAD, 'ANCHORS', [])
-
         self.anchors = []
         self.mask_anchors = []
 
@@ -185,6 +203,7 @@ class YOLOv3Head(object):
         out_layer_num = len(self.anchor_masks)
         blocks = inputs[-1:-out_layer_num - 1:-1]
 
+        route = None
         for i, block in enumerate(blocks):
             if i > 0:  # perform concat in first 2 detection_block
                 block = fluid.layers.concat(input=[route, block], axis=1)
@@ -235,14 +254,11 @@ class YOLOv3Head(object):
             gt_label (Variable): The ground-truth class labels.
             gt_score (Variable): The ground-truth boudding boxes mixup scores.
 
-        Returns: 
+        Returns:
             loss (Variable): The loss Variable of YOLOv3 network.
-            
+
         """
         outputs = self._get_outputs(inputs, is_train=True)
-
-        ignore_thresh = getattr(self.cfg.YOLO_HEAD, 'IGNORE_THRESH', 0.7)
-        label_smooth = getattr(self.cfg.YOLO_HEAD, 'LABEL_SMOOTH', True)
 
         losses = []
         downsample = 32
@@ -256,9 +272,9 @@ class YOLOv3Head(object):
                 anchors=self.anchors,
                 anchor_mask=anchor_mask,
                 class_num=self.class_num,
-                ignore_thresh=ignore_thresh,
+                ignore_thresh=self.ignore_thresh,
                 downsample_ratio=downsample,
-                use_label_smooth=label_smooth,
+                use_label_smooth=self.label_smooth,
                 name="yolo_loss" + str(i))
             losses.append(fluid.layers.reduce_mean(loss))
             downsample //= 2
@@ -280,11 +296,6 @@ class YOLOv3Head(object):
 
         outputs = self._get_outputs(inputs, is_train=False)
 
-        valid_thresh = getattr(self.cfg.TEST, 'VALID_THRESH', 0.01)
-        nms_topk = getattr(self.cfg.TEST, 'NMS_TOPK', 400)
-        nms_posk = getattr(self.cfg.TEST, 'NMS_POSK', 100)
-        nms_thresh = getattr(self.cfg.TEST, 'NMS_THRESH', 0.45)
-
         boxes = []
         scores = []
         downsample = 32
@@ -294,7 +305,7 @@ class YOLOv3Head(object):
                 img_size=im_shape,
                 anchors=self.mask_anchors[i],
                 class_num=self.class_num,
-                conf_thresh=valid_thresh,
+                conf_thresh=self.nms.score_threshold,
                 downsample_ratio=downsample,
                 name="yolo_box" + str(i))
             boxes.append(box)
@@ -304,14 +315,5 @@ class YOLOv3Head(object):
 
         yolo_boxes = fluid.layers.concat(boxes, axis=1)
         yolo_scores = fluid.layers.concat(scores, axis=2)
-        pred = fluid.layers.multiclass_nms(
-                bboxes=yolo_boxes,
-                scores=yolo_scores,
-                score_threshold=valid_thresh,
-                nms_top_k=nms_topk,
-                keep_top_k=nms_posk,
-                nms_threshold=nms_thresh,
-                background_label=-1,
-                name="multiclass_nms")
+        pred = self.nms(bboxes=yolo_boxes, scores=yolo_scores)
         return {'bbox': pred}
-

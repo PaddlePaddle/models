@@ -1,0 +1,228 @@
+architecture: FasterRCNN
+train_feed: FasterRCNNTrainFeed
+eval_feed: FasterRCNNTestFeed
+use_gpu: yes
+train_iters: 1000
+
+FasterRCNN:
+  backbone: ResNet
+  bbox_assigner: BBoxAssigner
+  bbox_head: BBoxHead
+  roi_extractor: FPNROIAlign
+  rpn_head: FPNRPNHead
+  neck: FPN
+
+ResNet:
+  affine_channel: false
+  bn_decay: no
+  feature_maps:
+  - 2
+  - 3
+  - 4
+  - 5
+  freeze_at: 2
+  freeze_bn: true
+
+FPN:
+  max_level: 6
+  min_level: 2
+  num_chan: 256
+  spatial_scale:
+  - 0.03125
+  - 0.0625
+  - 0.125
+  - 0.25
+
+FPNRPNHead:
+  anchor_generator:
+    anchor_sizes:
+    - 32
+    - 64
+    - 128
+    - 256
+    - 512
+    aspect_ratios:
+    - 0.5
+    - 1.0
+    - 2.0
+    stride:
+    - 16.0
+    - 16.0
+    variance:
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+  anchor_start_size: 32
+  max_level: 6
+  min_level: 2
+  num_chan: 256
+  rpn_target_assign:
+    rpn_batch_size_per_im: 256
+    rpn_fg_fraction: 0.5
+    rpn_negative_overlap: 0.3
+    rpn_positive_overlap: 0.7
+    rpn_straddle_thresh: 0.0
+    use_random: true
+  test_prop:
+    eta: 1.0
+    min_size: 0.1
+    nms_thresh: 0.5
+    post_nms_top_n: 1000
+    pre_nms_top_n: 6000
+  train_prop:
+    eta: 1.0
+    min_size: 0.1
+    nms_thresh: 0.5
+    post_nms_top_n: 2000
+    pre_nms_top_n: 12000
+
+FPNROIAlign:
+  canconical_level: 4
+  canonical_size: 224
+  max_level: 5
+  min_level: 2
+  pooled_height: 14
+  pooled_width: 14
+  sampling_ratio: 0
+
+BBoxHead:
+  box_coder:
+    axis: 1
+    box_normalized: false
+    code_type: decode_center_size
+    prior_box_var:
+    - 0.1
+    - 0.1
+    - 0.2
+    - 0.2
+  head: TwoFCHead
+  nms:
+    background_label: 0
+    keep_top_k: 100
+    nms_eta: 1.0
+    nms_threshold: 0.5
+    nms_top_k: -1
+    normalized: false
+    score_threshold: 0.05
+  num_classes: 81
+
+BBoxAssigner:
+  batch_size_per_im: 512
+  bbox_reg_weights:
+  - 0.1
+  - 0.1
+  - 0.2
+  - 0.2
+  bg_thresh_hi: 0.5
+  bg_thresh_lo: 0.0
+  fg_fraction: 0.25
+  fg_thresh: 0.5
+  num_classes: 81
+  shuffle_before_sample: true
+
+TwoFCHead:
+  num_chan: 1024
+
+LearningRate:
+  base_lr: 0.01
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1
+    milestones:
+    - 6000
+    - 8000
+  - !LinearWarmup
+    start_factor: 0.3333333333333333
+    steps: 500
+
+OptimizerBuilder:
+  optimizer:
+    momentum: 0.9
+    type: Momentum
+  regularizer:
+    factor: 0.0001
+    type: L2
+
+FasterRCNNTrainFeed:
+  shuffle: true
+  dataset:
+    annotation: coco/annotations/instances_train2017.json
+    image_dir: coco/train2017
+  fields:
+  - image
+  - im_info
+  - im_id
+  - gt_box
+  - gt_label
+  - is_crowd
+  image_shape:
+  - 3
+  - 1333
+  - 800
+  sample_transforms:
+  - !DecodeImage
+    to_rgb: true
+    with_mixup: false
+  - !RandomFlipImage
+    is_mask_flip: false
+    is_normalized: false
+    prob: 0.5
+  - !NormalizeImage
+    is_channel_first: false
+    is_scale: true
+    mean:
+    - 0.485
+    - 0.456
+    - 0.406
+    std:
+    - 0.229
+    - 0.224
+    - 0.225
+  - !ResizeImage
+    interp: 1
+    max_size: 1333
+    target_size: 800
+    use_cv2: true
+  - !TransposeImage {}
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 32
+
+FasterRCNNTestFeed:
+  shuffle: false
+  dataset:
+    annotation: coco/annotations/instances_val2017.json
+    image_dir: coco/val2017
+  fields:
+  - image
+  - im_info
+  - im_id
+  image_shape:
+  - 3
+  - 1333
+  - 800
+  sample_transforms:
+  - !DecodeImage
+    to_rgb: true
+    with_mixup: false
+  - !NormalizeImage
+    is_channel_first: false
+    is_scale: true
+    mean:
+    - 0.485
+    - 0.456
+    - 0.406
+    std:
+    - 0.229
+    - 0.224
+    - 0.225
+  - !ResizeImage
+    interp: 1
+    max_size: 1333
+    target_size: 800
+    use_cv2: true
+  - !TransposeImage {}
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 32

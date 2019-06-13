@@ -16,7 +16,7 @@ from . import backbones
 from .backbones import *
 
 from . import anchor_heads
-#from .anchor_heads import *
+from .anchor_heads import *
 
 from . import detectors
 from .detectors import *
@@ -32,6 +32,8 @@ from .necks import *
 
 from . import registry
 from .registry import *
+
+from .target_assigners import *
 
 __all__ = backbones.__all__
 __all__ += anchor_heads.__all__

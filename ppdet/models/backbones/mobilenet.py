@@ -24,20 +24,35 @@ from __future__ import print_function
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.framework import Variable
-from ..registry import Backbones
-from .base import BackboneBase
 from paddle.fluid.regularizer import L2Decay
 
-__all__ = ['MobileNetV1Backbone']
+from ppdet.core.workspace import register
+
+__all__ = ['MobileNet']
 
 
+@register
 class MobileNet(object):
-    def __init__(self, bn_decay=True):
-        """
-        Args:
-]            bn_decay (bool): whether perform L2Decay in batch_norm
-        """
+    r"""
+    MobileNet v1, see https://arxiv.org/abs/1704.04861
+
+    Args:
+        bn_decay (bool): perform weight decay on batch norm weights
+        conv_group_scale (int): scaling factor for convolution groups
+        with_extra_blocks (bool): if extra blocks should be added
+        extra_block_filters (list): number of filter for each extra block
+    """
+
+    def __init__(self,
+                 bn_decay=False,
+                 conv_group_scale=1,
+                 with_extra_blocks=True,
+                 extra_block_filters=[
+                     [256, 512], [128, 256], [128, 256], [64, 128]]):
         self.bn_decay = bn_decay
+        self.conv_group_scale = conv_group_scale
+        self.with_extra_blocks = with_extra_blocks
+        self.extra_block_filters = extra_block_filters
 
     def _conv_norm(self,
                    input,
@@ -107,96 +122,6 @@ class MobileNet(object):
             name=name + "_sep")
         return pointwise_conv
 
-    def get_backone(self, input, scale=1.0):
-        """
-        Args:
-            scale (float): the scale of groups number/ filter number
-        """
-        blocks = []
-        # input 1/1
-        out = self._conv_norm(input, 3, int(32 * scale), 2, 1, 3, name="conv1")
-        # 1/2
-        out = self.depthwise_separable(
-            out, 32, 64, 32, 1, scale, name="conv2_1")
-        out = self.depthwise_separable(
-            out, 64, 128, 64, 2, scale, name="conv2_2")
-        # 1/4
-        out = self.depthwise_separable(
-            out, 128, 128, 128, 1, scale, name="conv3_1")
-        out = self.depthwise_separable(
-            out, 128, 256, 128, 2, scale, name="conv3_2")
-        # 1/8
-        out = self.depthwise_separable(
-            out, 256, 256, 256, 1, scale, name="conv4_1")
-        blocks.append(out)
-        out = self.depthwise_separable(
-            out, 256, 512, 256, 2, scale, name="conv4_2")
-        # 1/16
-        for i in range(5):
-            out = self.depthwise_separable(
-                out, 512, 512, 512, 1, scale, name="conv5_" + str(i + 1))
-        blocks.append(out)
-
-        out = self.depthwise_separable(
-            out, 512, 1024, 512, 2, scale, name="conv5_6")
-        # 1/32
-        out = self.depthwise_separable(
-            out, 1024, 1024, 1024, 1, scale, name="conv6")
-        blocks.append(out)
-        return blocks
-
-
-@Backbones.register
-class MobileNetV1Backbone(BackboneBase):
-    def __init__(self, cfg, do_extra=False):
-        super(MobileNetV1Backbone, self).__init__(cfg)
-        self.scale = cfg.MODEL.CONV_GROUP_SCALE
-        self.do_extra = do_extra
-        if self.do_extra:
-            self.filter_num_list = cfg.SSD_HEAD.FILTER_NUM_LIST
-        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', True)
-
-    def _conv_norm(self,
-                   input,
-                   filter_size,
-                   num_filters,
-                   stride,
-                   padding,
-                   channels=None,
-                   num_groups=1,
-                   act='relu',
-                   use_cudnn=True,
-                   name=None):
-        parameter_attr = ParamAttr(
-            learning_rate=0.1,
-            initializer=fluid.initializer.MSRA(),
-            name=name + "_weights")
-        conv = fluid.layers.conv2d(
-            input=input,
-            num_filters=num_filters,
-            filter_size=filter_size,
-            stride=stride,
-            padding=padding,
-            groups=num_groups,
-            act=None,
-            use_cudnn=use_cudnn,
-            param_attr=parameter_attr,
-            bias_attr=False)
-
-        bn_name = name + "_bn"
-        bn_decay = float(self.bn_decay)
-        bn_param_attr = ParamAttr(
-            regularizer=L2Decay(bn_decay), name=bn_name + '_scale')
-        bn_bias_attr = ParamAttr(
-            regularizer=L2Decay(bn_decay), name=bn_name + '_offset')
-        return fluid.layers.batch_norm(
-            input=conv,
-            act=act,
-            param_attr=bn_param_attr,
-            bias_attr=bn_bias_attr,
-            moving_mean_name=bn_name + '_mean',
-            moving_variance_name=bn_name + '_variance')
-
     def _extra_block(self,
                      input,
                      num_filters1,
@@ -235,25 +160,57 @@ class MobileNetV1Backbone(BackboneBase):
         Args:
             input (Variable): input variable.
         Returns:
-            The two feature map of MobileNet.
+            feature maps
         """
-        model = MobileNet(self.bn_decay)
-        if self.do_extra:
-            outs = model.get_backone(input, self.scale)
-            module11 = outs[1]
-            module13 = outs[2]
-            module14 = self._extra_block(module13, self.filter_num_list[0][0],
-                                         self.filter_num_list[0][1], 1, 2,
-                                         self.scale, "conv7_1")
-            module15 = self._extra_block(module14, self.filter_num_list[1][0],
-                                         self.filter_num_list[1][1], 1, 2,
-                                         self.scale, "conv7_2")
-            module16 = self._extra_block(module15, self.filter_num_list[2][0],
-                                         self.filter_num_list[2][1], 1, 2,
-                                         self.scale, "conv7_3")
-            module17 = self._extra_block(module16, self.filter_num_list[3][0],
-                                         self.filter_num_list[3][1], 1, 2,
-                                         self.scale, "conv7_4")
-            return module11, module13, module14, module15, module16, module17
-        else:
-            return model.get_backone(input, self.scale)
+        scale = self.conv_group_scale
+
+        blocks = []
+        # input 1/1
+        out = self._conv_norm(input, 3, int(32 * scale), 2, 1, 3, name="conv1")
+        # 1/2
+        out = self.depthwise_separable(
+            out, 32, 64, 32, 1, scale, name="conv2_1")
+        out = self.depthwise_separable(
+            out, 64, 128, 64, 2, scale, name="conv2_2")
+        # 1/4
+        out = self.depthwise_separable(
+            out, 128, 128, 128, 1, scale, name="conv3_1")
+        out = self.depthwise_separable(
+            out, 128, 256, 128, 2, scale, name="conv3_2")
+        # 1/8
+        out = self.depthwise_separable(
+            out, 256, 256, 256, 1, scale, name="conv4_1")
+        blocks.append(out)
+        out = self.depthwise_separable(
+            out, 256, 512, 256, 2, scale, name="conv4_2")
+        # 1/16
+        for i in range(5):
+            out = self.depthwise_separable(
+                out, 512, 512, 512, 1, scale, name="conv5_" + str(i + 1))
+        blocks.append(out)
+
+        out = self.depthwise_separable(
+            out, 512, 1024, 512, 2, scale, name="conv5_6")
+        # 1/32
+        out = self.depthwise_separable(
+            out, 1024, 1024, 1024, 1, scale, name="conv6")
+        blocks.append(out)
+        if not self.with_extra_blocks:
+            return blocks
+
+        num_filters = self.extra_block_filters
+        module11 = blocks[1]
+        module13 = blocks[2]
+        module14 = self._extra_block(module13, num_filters[0][0],
+                                     num_filters[0][1], 1, 2,
+                                     scale, "conv7_1")
+        module15 = self._extra_block(module14, num_filters[1][0],
+                                     num_filters[1][1], 1, 2,
+                                     scale, "conv7_2")
+        module16 = self._extra_block(module15, num_filters[2][0],
+                                     num_filters[2][1], 1, 2,
+                                     scale, "conv7_3")
+        module17 = self._extra_block(module16, num_filters[3][0],
+                                     num_filters[3][1], 1, 2,
+                                     scale, "conv7_4")
+        return module11, module13, module14, module15, module16, module17

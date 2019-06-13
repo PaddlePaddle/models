@@ -21,34 +21,47 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.regularizer import L2Decay
 
-from ..registry import MaskHeads
+from ppdet.core.workspace import register
 
 __all__ = ['MaskHead']
 
 
-@MaskHeads.register
+@register
 class MaskHead(object):
-    """
-    TODO(qingiqng): add more comments
+    r"""
+    RCNN bbox head
     Args:
-        cfg(Dict): All parameters in dictionary.
+        num_convs (int): num of convolutions, 4 for FPN, 1 otherwise
+        num_chan_reduced (int): num of channels after first convolution
+        resolution (int): size of the output mask
+        dilation (int): dilation rate
+        num_classes (int): number of output classes
     """
 
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.is_train = getattr(cfg, 'IS_TRAIN', True)
+    def __init__(self,
+                 num_convs=4,
+                 num_chan_reduced=256,
+                 resolution=14,
+                 dilation=1,
+                 num_classes=81):
+        super(MaskHead, self).__init__()
+        self.num_convs = num_convs
+        self.num_chan_reduced = num_chan_reduced
+        self.resolution = resolution
+        self.dilation = dilation
+        self.num_classes = num_classes
 
-    def _mask_conv_head(self, roi_feat, conv_num):
-        for i in range(conv_num):
+    def _mask_conv_head(self, roi_feat, num_convs):
+        for i in range(num_convs):
             layer_name = "mask_inter_feat_" + str(i + 1)
             roi_feat = fluid.layers.conv2d(
                 input=roi_feat,
-                num_filters=self.cfg.MASK_HEAD.DIM_REDUCED,
+                num_filters=self.num_chan_reduced,
                 filter_size=3,
-                padding=1 * self.cfg.MASK_HEAD.DILATION,
+                padding=1 * self.dilation,
                 act='relu',
                 stride=1,
-                dilation=self.cfg.MASK_HEAD.DILATION,
+                dilation=self.dilation,
                 name=layer_name,
                 param_attr=ParamAttr(
                     name=layer_name + '_w', initializer=MSRA(uniform=True)),
@@ -58,7 +71,7 @@ class MaskHead(object):
                     regularizer=L2Decay(0.)))
         feat = fluid.layers.conv2d_transpose(
             input=roi_feat,
-            num_filters=self.cfg.MASK_HEAD.DIM_REDUCED,
+            num_filters=self.num_chan_reduced,
             filter_size=2,
             stride=2,
             act='relu',
@@ -69,10 +82,9 @@ class MaskHead(object):
         return feat
 
     def _get_output(self, roi_feat):
-        class_num = self.cfg.DATA.CLASS_NUM
+        class_num = self.num_classes
         # configure the conv number for FPN if necessary
-        conv_num = 4 if getattr(self.cfg.MODEL, 'FPN', False) else 0
-        head_feat = self._mask_conv_head(roi_feat, conv_num)
+        head_feat = self._mask_conv_head(roi_feat, self.num_convs)
         mask_logits = fluid.layers.conv2d(
             input=head_feat,
             num_filters=class_num,
@@ -91,9 +103,9 @@ class MaskHead(object):
         TODO(qingqing): add more comments
         """
         mask_logits = self._get_output(roi_feat)
-        class_num = self.cfg.DATA.CLASS_NUM
-        resolution = self.cfg.MASK_HEAD.RESOLUTION
-        dim = class_num * resolution * resolution
+        num_classes = self.num_classes
+        resolution = self.resolution
+        dim = num_classes * resolution * resolution
         mask_logits = fluid.layers.reshape(mask_logits, (-1, dim))
 
         mask_label = fluid.layers.cast(x=mask_int32, dtype='float32')
@@ -106,14 +118,14 @@ class MaskHead(object):
     def get_prediction(self, roi_feat, bbox_pred):
         """
         Get prediction mask in test stage.
-        
+
         Args:
             roi_feat (Variable): RoI feature from RoIExtractor.
             bbox_pred (Variable): predicted bbox.
-    
+
         Returns:
             mask_pred (Variable): Prediction mask with shape
-                [N, class_num, resolution, resolution].
+                [N, num_classes, resolution, resolution].
         """
         mask_logits = self._get_output(roi_feat)
         mask_prob = fluid.layers.sigmoid(mask_logits)

@@ -19,72 +19,113 @@ import six
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.framework import Variable
-from ..registry import Detectors
-from ..registry import Backbones
-from ..registry import SSDHeads
-from .base import DetectorBase
-__all__ = ['SSD']
+
+from ppdet.core.workspace import register, serializable
+
+__all__ = ['OutputDecoder', 'SSDMetric', 'SSD']
 
 
-@Detectors.register
-class SSD(DetectorBase):
-    def __init__(self, cfg):
-        super(SSD, self).__init__(cfg)
-        self.mode = cfg.MODE
-        self.backbone = Backbones.get(cfg.MODEL.BACKBONE)(cfg, True)
-        self.ssd_head = SSDHeads.get(cfg.SSD_HEAD.TYPE)(cfg)
-        self.use_pyreader = True if self.mode == 'train' or self.mode == 'val' else False
+@register
+@serializable
+class OutputDecoder(object):
+    __op__ = fluid.layers.detection_output
+    __append_doc__ = True
 
-    def _forward(self):
-        # inputs
-        feed_vars = self.build_feeds(self.feed_info(), self.use_pyreader)
+    def __init__(self,
+                 nms_threshold=0.45,
+                 nms_top_k=400,
+                 keep_top_k=200,
+                 score_threshold=0.01,
+                 nms_eta=1.0,
+                 background_label=0):
+        super(OutputDecoder, self).__init__()
+        self.nms_threshold = nms_threshold
+        self.background_label = background_label
+        self.nms_top_k = nms_top_k
+        self.keep_top_k = keep_top_k
+        self.score_threshold = score_threshold
+        self.nms_eta = nms_eta
+
+
+@register
+@serializable
+class SSDMetric(object):
+    __op__ = fluid.metrics.DetectionMAP
+    __append_doc__ = True
+
+    def __init__(self,
+                 overlap_threshold=0.5,
+                 evaluate_difficult=False,
+                 ap_version='integral'):
+        super(SSDMetric, self).__init__()
+        self.overlap_threshold = overlap_threshold
+        self.evaluate_difficult = evaluate_difficult
+        self.ap_version = ap_version
+
+
+@register
+class SSD(object):
+    r"""
+    Single Shot MultiBox Detector, see https://arxiv.org/abs/1512.02325
+
+    Args:
+        backbone (object): backbone instance
+        multi_box_head (object): `MultiBoxHead` instance
+        output_decoder (object): `OutputDecoder` instance
+        metric (object): `SSDMetric` instance for training
+        num_classes (int): number of output classes
+    """
+
+    __category__ = 'architecture'
+    __inject__ = ['backbone', 'multi_box_head', 'output_decoder', 'metric']
+
+    def __init__(self,
+                 backbone,
+                 multi_box_head='MultiBoxHead',
+                 output_decoder=OutputDecoder().__dict__,
+                 metric=SSDMetric().__dict__,
+                 num_classes=21):
+        super(SSD, self).__init__()
+        self.backbone = backbone
+        self.multi_box_head = multi_box_head
+        self.num_classes = num_classes
+        self.output_decoder = output_decoder
+        self.metric = metric
+        if isinstance(output_decoder, dict):
+            self.output_decoder = OutputDecoder(**output_decoder)
+        if isinstance(metric, dict):
+            self.metric = SSDMetric(**metric)
+
+    def _forward(self, feed_vars, mode='train'):
         im = feed_vars['image']
-        if self.mode == 'train' or self.mode == 'val':
+        if mode == 'train' or mode == 'eval':
             gt_box = feed_vars['gt_box']
             gt_label = feed_vars['gt_label']
-            is_difficult = feed_vars['is_difficult']
-        # backbone
-        body_feat1, body_feat2, body_feat3, body_feat4, body_feat5, body_feat6 = self.backbone(
-            im)
-        body_feats = [
-            body_feat1, body_feat2, body_feat3, body_feat4, body_feat5,
-            body_feat6
-        ]
-        # ssd head
-        if self.mode == 'train':
-            loss = self.ssd_head.get_loss(im, body_feats, gt_box, gt_label)
-            return loss
+            difficult = feed_vars['is_difficult']
+
+        body_feats = self.backbone(im)
+        locs, confs, box, box_var = self.multi_box_head(
+            inputs=body_feats, image=im, num_classes=self.num_classes)
+
+        if mode == 'train':
+            loss = fluid.layers.ssd_loss(
+                locs, confs, gt_box, gt_label, box, box_var)
+            loss = fluid.layers.reduce_sum(loss)
+            return {'loss': loss}
         else:
-            pred = self.ssd_head.get_prediction(im, body_feats)
-            if self.mode == 'val':
-                map_eval = self.ssd_head.get_map(gt_box, gt_label, is_difficult)
-                return map_eval
+            pred = self.output_decoder(locs, confs, box, box_var)
+            if mode == 'eval':
+                map_eval = self.metric(pred, gt_box, gt_label, difficult,
+                                       class_num=self.num_classes)
+                return {'map': map_eval}
             else:
-                return pred
+                return {'bbox': pred}
 
-    def train(self):
-        return self._forward()
+    def train(self, feed_vars):
+        return self._forward(feed_vars, 'train')
 
-    def val(self):
-        return self._forward()
+    def eval(self, feed_vars):
+        return self._forward(feed_vars, 'eval')
 
-    def test(self):
-        return self._forward()
-
-    def feed_info(self):
-        c = getattr(self.cfg.DATA, 'IM_CHANNEL', 3)
-        h = getattr(self.cfg.DATA, 'TARGET_SIZE', 300)
-        w = getattr(self.cfg.DATA, 'TARGET_SIZE', 300)
-        # yapf: disable
-        feed_info = [
-            {'name': 'image',  'shape': [c, h, w], 'dtype': 'float32', 'lod_level': 0},
-        ]
-        if self.mode == 'train' or self.mode == 'val':
-            anno_info = [
-                {'name': 'gt_box',  'shape': [4], 'dtype': 'float32', 'lod_level': 1},
-                {'name': 'gt_label','shape': [1], 'dtype': 'int32', 'lod_level': 1},
-                {'name': 'is_difficult', 'shape': [1],'dtype': 'int32', 'lod_level': 1},
-            ]
-            feed_info += anno_info
-        # yapf: enable
-        return feed_info
+    def test(self, feed_vars):
+        return self._forward('test')
