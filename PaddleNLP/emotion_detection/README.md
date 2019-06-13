@@ -66,18 +66,6 @@ sh run.sh eval
 sh run_ernie.sh eval
 ```
 
-我们也提供了使用PaddleHub加载ERNIE模型的选项，PaddleHub是PaddlePaddle的预训练模型管理工具，可以一行代码完成预训练模型的加载，简化预训练模型的使用和迁移学习。更多相关的介绍，可以查看[PaddleHub](https://github.com/PaddlePaddle/PaddleHub)
-
-如果想使用该功能，需要修改run_ernie.sh中的配置如下：
-```shell
-# 在eval()函数中，修改如下参数：
---use_paddle_hub true
-```
-注意：使用该选项需要先安装PaddleHub，安装命令如下
-```shell
-$ pip install paddlehub
-```
-
 #### 模型训练
 
 基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
@@ -178,6 +166,19 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 ```shell
 # 在train()函数中，修改--init_checkpoint选项
 --init_checkpoint ./models/ernie_finetune/params
+```
+
+我们也提供了使用PaddleHub加载ERNIE模型的选项，PaddleHub是PaddlePaddle的预训练模型管理工具，可以一行代码完成预训练模型的加载，简化预训练模型的使用和迁移学习。更多相关的介绍，可以查看[PaddleHub](https://github.com/PaddlePaddle/PaddleHub)
+
+如果想使用该功能，需要修改run_ernie.sh中的配置如下：
+```shell
+# 在train()函数中，修改--use_paddle_hub选项
+--use_paddle_hub true
+```
+
+注意：使用该选项需要先安装PaddleHub，安装命令如下
+```shell
+$ pip install paddlehub
 ```
 
 ## 如何贡献代码
