@@ -91,10 +91,10 @@ class GTrainer():
             optimizer = fluid.optimizer.Adam(
                 learning_rate=fluid.layers.piecewise_decay(
                     boundaries=[99 * step_per_epoch] +
-                    [x * step_per_epoch for x in xrange(100, cfg.epoch - 1)],
+                    [x * step_per_epoch for x in range(100, cfg.epoch - 1)],
                     values=[lr] + [
                         lr * (1.0 - (x - 99.0) / 101.0)
-                        for x in xrange(100, cfg.epoch)
+                        for x in range(100, cfg.epoch)
                     ]),
                 beta1=0.5,
                 beta2=0.999,
@@ -125,10 +125,10 @@ class DATrainer():
             optimizer = fluid.optimizer.Adam(
                 learning_rate=fluid.layers.piecewise_decay(
                     boundaries=[99 * step_per_epoch] +
-                    [x * step_per_epoch for x in xrange(100, cfg.epoch - 1)],
+                    [x * step_per_epoch for x in range(100, cfg.epoch - 1)],
                     values=[lr] + [
                         lr * (1.0 - (x - 99.0) / 101.0)
-                        for x in xrange(100, cfg.epoch)
+                        for x in range(100, cfg.epoch)
                     ]),
                 beta1=0.5,
                 beta2=0.999,
@@ -158,10 +158,10 @@ class DBTrainer():
             optimizer = fluid.optimizer.Adam(
                 learning_rate=fluid.layers.piecewise_decay(
                     boundaries=[99 * step_per_epoch] +
-                    [x * step_per_epoch for x in xrange(100, cfg.epoch - 1)],
+                    [x * step_per_epoch for x in range(100, cfg.epoch - 1)],
                     values=[lr] + [
                         lr * (1.0 - (x - 99.0) / 101.0)
-                        for x in xrange(100, cfg.epoch)
+                        for x in range(100, cfg.epoch)
                     ]),
                 beta1=0.5,
                 beta2=0.999,
@@ -237,7 +237,7 @@ class CycleGAN(object):
         ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = True
-        build_strategy.memory_optimize = True
+        build_strategy.memory_optimize = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(

@@ -161,7 +161,8 @@ with fluid.dygraph.guard():
 
     running_reward = 10
     state, ep_reward = env.reset(), 0
-    policy.load_dict(fluid.dygraph.load_persistables(args.save_dir))
+    model_dict, _ = fluid.dygraph.load_persistables(args.save_dir)
+    policy.load_dict(model_dict)
 
     for t in range(1, 10000):  # Don't infinite loop while learning
         state = np.array(state).astype("float32")
