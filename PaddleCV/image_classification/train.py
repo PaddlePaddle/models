@@ -194,9 +194,9 @@ def net_config(image, model, args, is_train, label=0, y_a=0, y_b=0, lam=0.0):
         return avg_cost, acc_top1, acc_top5
     
     else:
-        out = model.net(input=image, class_dim=class_dim)
-        softmax_out = fluid.layers.softmax(out, use_cudnn=False)
         if not args.is_distill:
+            out = model.net(input=image, class_dim=class_dim)
+            softmax_out = fluid.layers.softmax(out, use_cudnn=False)
             if is_train == True:
                 if use_mixup == True:
                     if use_label_smoothing == True:
@@ -242,8 +242,8 @@ def net_config(image, model, args, is_train, label=0, y_a=0, y_b=0, lam=0.0):
 
                 return avg_cost, acc_top1, acc_top5
         else:
-            out1, out2 = model.net(input=inputdata, class_dim=args.class_dim)
-            softmax_out1,softmax_ou2 = fluid.layers.softmax(out1), fluid.layers.softmax(out2)
+            out1, out2 = model.net(input=image, class_dim=args.class_dim)
+            softmax_out1, softmax_out2 = fluid.layers.softmax(out1), fluid.layers.softmax(out2)
             
             smooth_out1 = fluid.layers.label_smooth(label=softmax_out1, epsilon=0.0, dtype="float32") 
             cost = fluid.layers.cross_entropy(input=softmax_out2, label=smooth_out1, soft_label=True) 
