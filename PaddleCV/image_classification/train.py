@@ -40,7 +40,7 @@ add_arg('lr',               float, 0.1,                  "set learning rate.")
 add_arg('lr_strategy',      str,   "piecewise_decay",    "Set the learning rate decay strategy.")
 add_arg('model',            str,   "ResNet50",          "Set the network to use.")
 add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
-add_arg('data_dir',         str,   "data/ILSVRC2012/",  "The ImageNet dataset root dir.")
+add_arg('data_dir',         str,   "/home/vis/cuicheng/database/ILSVRC2012/",  "The ImageNet dataset root dir.")
 add_arg('fp16',             bool,  False,                "Enable half precision training with fp16." )
 add_arg('scale_loss',       float, 1.0,                  "Scale loss for fp16." )
 add_arg('l2_decay',         float, 1e-4,                 "L2_decay parameter.")
@@ -594,8 +594,6 @@ def train(args):
 
 def main():
     args = parser.parse_args()
-    if args.use_mixup and args.is_distill == True:
-        exit('Error: args.use_mixup and args.is_distill cannot be True at the same time')
     print_arguments(args)
     train(args)
 
