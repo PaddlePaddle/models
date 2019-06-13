@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 import paddle.fluid as fluid
 
-from .download import download_weights
+from .download import get_weights_path
 
 __all__ = ['load', 'save']
 
@@ -47,7 +47,7 @@ def load(exe, prog, path):
         path (string): URL string or loca model path.
     """
     if is_url(path):
-        path = download_weights(path)
+        path = get_weights_path(path)
 
     logger.info('Load model from {}'.format(path))
 

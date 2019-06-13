@@ -18,53 +18,109 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
-import wget
+import requests
+import tqdm
 import tarfile
+import zipfile
 
 import logging
 logger = logging.getLogger(__name__)
 
 
-__all__ = ['download_weights', 'download_dataset']
+__all__ = ['get_weights_path', 'get_dataset_path']
 
 WEIGHTS_DIR = os.path.expanduser("~/.paddle/weights")
 DATASET_DIR = os.path.expanduser("~/.paddle/dataset")
 
 
-def download_weights(url):
-    """ Download weights from given url. 
-
-    weights saveed in WEIGHTS_DIR.
-    if weights specified by url is exists, return weights path
+def get_weights_path(url):
+    """Get weights path from WEIGHT_DIR, if not exists,
+    download it.
     """
-    weights_file = url.split('/')[-1]
+    return get_path(url, WEIGHTS_DIR)
+
+
+def get_dataset_path(url):
+    """Get dataset path from DATASET_DIR, if not exists,
+    download it.
+    """
+    return get_path(url, DATASET_DIR)
+
+
+def get_path(url, root_dir):
+    """ Download weights from given url to root_dir. 
+    if file or directory specified by url is exists under 
+    root_dir is exists, return the path directly, otherwise
+    download from url and decompress it, return the path.
+
+    url (str): download url
+    root_dir (str): root dir for downloading, it should be 
+                    WEIGHTS_DIR or DATASET_DIR
+    """
+    # parse path after download as decompress under root_dir
+    fname = url.split('/')[-1]
     zip_formats = ['.zip', '.tar', '.gz']
-    weights_name = weights_file
+    fpath = fname
     for zip_format in zip_formats:
-        weights_name = weights_name.replace(zip_format, '')
-    weights_path = os.path.join(WEIGHTS_DIR, weights_name)
+        fpath = fpath.replace(zip_format, '')
+    fpath = os.path.join(root_dir, fpath)
 
-    if os.path.exists(weights_path):
-        logger.info("Found weights in {}".format(weights_path))
+    if os.path.exists(fpath):
+        logger.info("Found weights in {}".format(fpath))
     else:
-        logger.info("Download weights from {}".format(url))
-        if not os.path.exists(WEIGHTS_DIR):
-            os.makedirs(WEIGHTS_DIR)
-        download_file = os.path.join(WEIGHTS_DIR, weights_file)
-        wget.download(url, download_file)
-        _decompress(download_file)
-        os.remove(download_file)
+        _download(url, root_dir)
     
-    return weights_path
+    return fpath
 
-def download_dataset(url):
-    pass
 
-def _decompress(path):
+def _download(url, path):
     """
-    decompress currently only support tar file
+    Download from url, save to path. 
+
+    url (str): download url
+    path (str): download to given path
     """
-    t = tarfile.open(path)
-    t.extractall(path='/'.join(path.split('/')[:-1]))
-    t.close()
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    fname = url.split('/')[-1]
+    logger.info("Downloading {} from {}".format(fname, url))
+
+    req = requests.get(url, stream=True)
+    if req.status_code != 200:
+        raise RuntimeError("Downloading from {} failed with code "
+                           "{}!".format(url, req.status_code))
+
+    full_fname = os.path.join(path, fname)
+    total_size = req.headers.get('content-length')
+    with open(full_fname, 'wb') as f:
+        if total_size:
+            for chunk in tqdm.tqdm(req.iter_content(chunk_size=1024),
+                              total=(int(total_size) + 1023) // 1024,
+                              unit='KB'):
+                f.write(chunk)
+        else:
+            for chunk in req.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+
+    logger.info("Download finish, decompressing...")
+    _decompress(full_fname)
+
+
+def _decompress(fname):
+    """
+    Decompress for zip and tar file
+    """
+    fpath='/'.join(fname.split('/')[:-1])
+    if fname.find('tar') >= 0:
+        with tarfile.open(fname) as tf:
+            tf.extractall(path=fpath)
+    elif fname.find('zip') >= 0:
+        with zipfile.ZipFile(fname) as zf:
+            zf.extractall(path=fpath)
+    else:
+        raise TypeError("Unsupport compress file type {}".format(fname))
+
+    os.remove(fname)
 
