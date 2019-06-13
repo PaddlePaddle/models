@@ -74,7 +74,7 @@ The data catalog structure is as follows:
 
 **User defined dataset:**
 
-You can defined datasets by yourself, we recommend using annotations in COCO format, and you can set dataset directory by `--data_dir` or in [reader.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/reader.py#L39). When using annotations in COCO format, you can reference the directory structure in COCO dataset above.
+You can defined datasets by yourself, we recommend using annotations in COCO format, and you can set dataset directory by `--data_dir` or in [reader.py](./reader.py#L39). When using annotations in COCO format, you can reference the directory structure in COCO dataset above.
 
 ### Training
 
@@ -199,7 +199,7 @@ Inference speed on single GPU:
 
 ### Inference deployment
 
-For YOLOv3 inference deployment, you can save YOLOv3 inference model in [eval.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/eval.py#L58), inference model can be loaded and deployed by Paddle prediction library, see [Paddle Inference Lib](http://www.paddlepaddle.org/documentation/docs/en/1.4/advanced_usage/deploy/index_en.html).
+For YOLOv3 inference deployment, you can save YOLOv3 inference model in [eval.py](./eval.py#L54) or [infer.py](./infer.py#L47), inference model can be loaded and deployed by Paddle prediction library, see [Paddle Inference Lib](http://www.paddlepaddle.org/documentation/docs/en/1.4/advanced_usage/deploy/index_en.html).
 
 ## Advanced Usage
 
@@ -236,7 +236,7 @@ YOLOv3 networks are composed of base feature extraction network, multi-scale fea
 
 For YOLOv3 fine-tuning, you should set `--pretrain` as YOLOv3 [model](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz) you download, set `--class_num` as category number in your dataset.
 
-In fine-tuning, weights of `yolo_output` layers should not be loaded when your `--class_num` is not equal to 80 as in COCO dataset, you can load pre-trained weights in [train.py](https://github.com/heavengate/models/blob/3fa6035550ebd4a425a2e354489967a829174155/PaddleCV/yolov3/train.py#L76) without `yolo_output` layers as:
+In fine-tuning, weights of `yolo_output` layers should not be loaded when your `--class_num` is not equal to 80 as in COCO dataset, you can load pre-trained weights in [train.py](./train.py#L76) without `yolo_output` layers as:
 
 ```python
 if cfg.pretrain:
@@ -295,7 +295,7 @@ if cfg.pretrain:
 **A:** `learning_rate=0.001` configuration is for training in 8 GPUs while total batch size is 64, if you train with smaller batch size, please decrease the learning rate.
 
 **Q:** YOLOv3 training in my machine is very slow, how can I speed it up?  
-**A:** Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284) for speeding up. If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
+**A:** Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](./reader.py#L284) for speeding up. If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
 
 ## Reference
 
