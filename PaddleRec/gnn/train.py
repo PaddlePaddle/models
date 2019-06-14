@@ -118,17 +118,14 @@ def train():
     py_reader.decorate_paddle_reader(data_reader.reader(batch_size, batch_size * 20, True))
     for i in range(args.epoch_num):
         epoch_sum = []
-        #for data in data_reader.reader(get_cards(args) * batch_size, batch_size * 20, True):
         py_reader.start()
         try:
             while True:
-                res = train_exe.run(#feed=feeder.feed(data),
-                                    fetch_list=[loss.name, acc.name])
+                res = train_exe.run(fetch_list=[loss.name, acc.name])
                 loss_sum += res[0].mean()
                 acc_sum += res[1].mean()
                 epoch_sum.append(res[0].mean())
                 global_step += 1
-        	fetch_vars = [loss, acc]
                 if global_step % PRINT_STEP == 0:
                     ce_info.append([loss_sum / PRINT_STEP, acc_sum / PRINT_STEP])
                     total_time.append(time.time() - start_time)

@@ -86,30 +86,30 @@ class Data():
         return zip(items, seq_index, last_index, adj_in, adj_out, mask, label)
 
     def reader(self, batch_size, batch_group_size, train=True):
-	def _reader():
-	    if self.shuffle:
-		random.shuffle(self.input)
-	    group_remain = self.length % batch_group_size
-	    for bg_id in range(0, self.length - group_remain, batch_group_size):
-		cur_bg = copy.deepcopy(self.input[bg_id:bg_id + batch_group_size])
-		if train:
-		    cur_bg = sorted(cur_bg, key=lambda x: len(x[0]), reverse=True)
-		for i in range(0, batch_group_size, batch_size):
-		    cur_batch = cur_bg[i:i + batch_size]
-		    yield self.make_data(cur_batch, batch_size)
+        def _reader():
+            if self.shuffle:
+                random.shuffle(self.input)
+            group_remain = self.length % batch_group_size
+            for bg_id in range(0, self.length - group_remain, batch_group_size):
+                cur_bg = copy.deepcopy(self.input[bg_id:bg_id + batch_group_size])
+                if train:
+                    cur_bg = sorted(cur_bg, key=lambda x: len(x[0]), reverse=True)
+                for i in range(0, batch_group_size, batch_size):
+                    cur_batch = cur_bg[i:i + batch_size]
+                    yield self.make_data(cur_batch, batch_size)
 
-	    #deal with the remaining, discard at most batch_size data
-	    if group_remain < batch_size:
-		return
-	    remain_data = copy.deepcopy(self.input[-group_remain:])
-	    if train:
-		remain_data = sorted(
-		    remain_data, key=lambda x: len(x[0]), reverse=True)
-	    for i in range(0, batch_group_size, batch_size):
-		if i + batch_size <= len(remain_data):
-		    cur_batch = remain_data[i:i + batch_size]
-		    yield self.make_data(cur_batch, batch_size)
-	return _reader
+            #deal with the remaining, discard at most batch_size data
+            if group_remain < batch_size:
+                return
+            remain_data = copy.deepcopy(self.input[-group_remain:])
+            if train:
+                remain_data = sorted(
+                    remain_data, key=lambda x: len(x[0]), reverse=True)
+            for i in range(0, batch_group_size, batch_size):
+                if i + batch_size <= len(remain_data):
+                    cur_batch = remain_data[i:i + batch_size]
+                    yield self.make_data(cur_batch, batch_size)
+        return _reader
 
 
 def read_config(path):
