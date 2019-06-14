@@ -208,7 +208,7 @@ def net_config(image, model, args, is_train, label=0, y_a=0, y_b=0, lam=0.0):
             if is_train:
                 if use_mixup:
                     loss_a = calc_loss(epsilon,y_a,class_dim,softmax_out,use_label_smoothing)
-                    loss_b = clac_loss(epsilon,y_b,class_dim,softmax_out,use_label_smoothing)
+                    loss_b = calc_loss(epsilon,y_b,class_dim,softmax_out,use_label_smoothing)
                     loss_a_mean = fluid.layers.mean(x = loss_a)
                     loss_b_mean = fluid.layers.mean(x = loss_b)
                     cost = lam * loss_a_mean + (1 - lam) * loss_b_mean
