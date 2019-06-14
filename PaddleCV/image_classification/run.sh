@@ -13,6 +13,146 @@ python train.py \
        --num_epochs=200 \
        --l2_decay=1.2e-4 \
 #      >log_SE_ResNeXt50_32x4d.txt 2>&1 &
+
+#SE_154
+"""
+python train.py \
+            --model=SE_154_vd \
+            --batch_size=256 \
+            --total_images=1281167 \
+            --image_shape=3,224,224 \
+            --input_dtype=float32 \
+            --class_dim=1000 \
+            --lr_strategy=cosine_decay \
+            --lr=0.1 \
+            --num_epochs=200 \
+            --with_mem_opt=True \
+            --model_save_dir=output/ \
+            --l2_decay=1e-4 \
+            --use_mixup=True \
+            --use_label_smoothing=True \
+            --label_smoothing_epsilon=0.1 \
+
+#ResNeXt101_64x4d
+python train.py \
+	--model=ResNeXt101_64x4d \
+            --batch_size=256 \
+            --total_images=1281167 \
+            --image_shape=3,224,224 \
+            --input_dtype=float32 \
+            --class_dim=1000 \
+            --lr_strategy=piecewise_decay \
+            --lr=0.1 \
+            --num_epochs=120 \
+            --with_mem_opt=True \
+            --model_save_dir=output/ \
+            --l2_decay=15e-5
+
+python train.py \
+#ResNeXt101_vd_64x4d
+	--model=ResNeXt101_vd_64x4d \
+            --batch_size=256 \
+            --total_images=1281167 \
+            --image_shape=3,224,224 \
+            --input_dtype=float32 \
+            --class_dim=1000 \
+            --lr_strategy=cosine_decay \
+            --lr=0.1 \
+            --num_epochs=200 \
+            --with_mem_opt=True \
+            --model_save_dir=output/ \
+            --l2_decay=1e-4 \
+            --use_mixup=True \
+            --use_label_smoothing=True \
+            --label_smoothing_epsilon=0.1
+
+#InceptionV4
+python train.py
+	    --model=InceptionV4 \
+            --batch_size=256 \
+            --total_images=1281167 \
+            --image_shape=3,299,299 \
+            --input_dtype=float32 \
+            --class_dim=1000 \
+            --lr_strategy=cosine_decay \
+            --lr=0.045 \
+            --num_epochs=200 \
+            --with_mem_opt=True \
+            --model_save_dir=output/ \
+            --l2_decay=1e-4 \
+            --use_mixup=True \
+            --resize_short_size=320 \
+            --use_label_smoothing=True \
+            --label_smoothing_epsilon=0.1 \
+#ResNet152_vd
+python train.py
+            --model=ResNet152_vd \
+            --batch_size=256 \
+            --total_images=1281167 \
+            --image_shape=3,224,224 \
+            --input_dtype=float32 \
+            --class_dim=1000 \
+            --lr_strategy=cosine_decay \
+            --lr=0.1 \
+            --num_epochs=200 \
+            --with_mem_opt=True \
+            --model_save_dir=output/ \
+            --l2_decay=1e-4 \
+            --use_mixup=True \
+            --use_label_smoothing=True \
+            --label_smoothing_epsilon=0.1
+
+#ResNet200_vd
+python train.py
+            --model=ResNet200_vd \
+            --batch_size=256 \
+            --total_images=1281167 \
+            --image_shape=3,224,224 \
+            --input_dtype=float32 \
+            --class_dim=1000 \
+            --lr_strategy=cosine_decay \
+            --lr=0.1 \
+            --num_epochs=200 \
+            --with_mem_opt=True \
+            --model_save_dir=output/ \
+            --l2_decay=1e-4 \
+            --use_mixup=True \
+            --use_label_smoothing=True \
+            --label_smoothing_epsilon=0.1
+
+#ResNet50_vd
+python train.py
+            --model=ResNet50_vd \
+            --batch_size=256 \
+            --total_images=1281167 \
+            --image_shape=3,224,224 \
+            --input_dtype=float32 \
+            --class_dim=1000 \
+            --lr_strategy=cosine_decay \
+            --lr=0.1 \
+            --num_epochs=200 \
+            --with_mem_opt=True \
+            --model_save_dir=output/ \
+            --l2_decay=7e-5 \
+            --use_mixup=True \
+            --use_label_smoothing=True \
+            --label_smoothing_epsilon=0.1
+#ResNet50_vc
+python train.py
+  	    --model=ResNet50_vc \
+	    --batch_size=256 \
+            --total_images=1281167 \
+            --image_shape=3,224,224 \
+            --input_dtype=float32 \
+            --class_dim=1000 \
+            --lr_strategy=cosine_decay \
+            --lr=0.1 \
+            --num_epochs=200 \
+            --with_mem_opt=True \
+            --model_save_dir=output/ \
+            --l2_decay=1e-4 \
+"""
+
 #AlexNet:
 #python train.py \
 #       --model=AlexNet \
