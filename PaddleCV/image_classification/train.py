@@ -213,6 +213,8 @@ def net_config(image, model, args, is_train, label=0, y_a=0, y_b=0, lam=0.0):
                     loss_b_mean = fluid.layers.mean(x = loss_b)
                     cost = lam * loss_a_mean + (1 - lam) * loss_b_mean
                     avg_cost = fluid.layers.mean(x=cost)
+                    if args.scale_loss > 1:
+                        avg_cost = fluid.layers.mean(x=cost) * float(args.scale_loss)
                     return avg_cost
                 else:
                     cost = calc_loss(epsilon,label,class_dim,softmax_out,use_label_smoothing)
@@ -224,8 +226,10 @@ def net_config(image, model, args, is_train, label=0, y_a=0, y_b=0, lam=0.0):
             softmax_out1, softmax_out = fluid.layers.softmax(out1), fluid.layers.softmax(out2)
             smooth_out1 = fluid.layers.label_smooth(label=softmax_out1, epsilon=0.0, dtype="float32")
             cost = fluid.layers.cross_entropy(input=softmax_out, label=smooth_out1, soft_label=True)
-
+        
         avg_cost = fluid.layers.mean(cost)
+        if args.scale_loss > 1:
+            avg_cost = fluid.layers.mean(x=cost) * float(args.scale_loss)
         acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=softmax_out, label=label, k=5)
 
