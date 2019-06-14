@@ -16,7 +16,7 @@ This is a paddlepaddle implementation of generative-based model for knowledge-dr
 
 ### Step 1: Preprocess the data
 
-Put the data provided by the organizer under the data folder and rename them  train/dev/test.txt: 
+Put the data of [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv) under the data folder and rename them  train/dev/test.txt: 
 
 ```
 ./data/resource/train.txt

@@ -16,7 +16,7 @@ This is a paddlepaddle implementation of retrieval-based model for knowledge-dri
 
 ### Step 1: Preprocess the data
 
-Put the data provided by the organizer under the data folder and rename them  train/dev/test.txt: 
+Put the data of [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv) under the data folder and rename them  train/dev/test.txt: 
 
 ```
 ./data/resource/train.txt
@@ -48,5 +48,4 @@ sh run_test.sh model_name
 ## Note !!!
 
 * The script run_train.sh/run_test.sh shows all the processes including data processing and model training/testing. Be sure to read it carefully and follow it.
-* The most important step in run_train.sh/run_test.sh is to build candidates by ./tools/construct_candidate.py. You have to reimplement the core function yourself: get_candidate_for_conversation
 * The files in ./data and ./model is just empty file to show the structure of the document.

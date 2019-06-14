@@ -45,7 +45,7 @@ OUTPUT_PATH="./models"
 PYTHON_PATH="python"
 
 # in train stage, use "train.txt" to train model, and use "dev.txt" to eval model
-# the "train.txt" and "dev.txt" are the original data provided by the organizer and
+# the "train.txt" and "dev.txt" are the original data of DuConv and
 # need to be placed in this folder: INPUT_PATH/resource/
 # the following preprocessing will generate the actual data needed for model training
 # DATA_TYPE = "train" or "dev"
@@ -58,7 +58,7 @@ candidate_set_file=${INPUT_PATH}/candidate_set.txt
 for ((i=0; i<${#DATA_TYPE[*]}; i++))
 do
     # ensure that each file is in the correct path
-    #     1. put the data provided by the organizers under this folder: INPUT_PATH/resource/
+    #     1. put the data of DuConv under this folder: INPUT_PATH/resource/
     #            - the data provided consists of three parts: train.txt dev.txt test.txt
     #            - the train.txt and dev.txt are session data, the test.txt is sample data
     #            - in train stage, we just use the train.txt and dev.txt

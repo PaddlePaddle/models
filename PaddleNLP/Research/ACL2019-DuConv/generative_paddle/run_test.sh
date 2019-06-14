@@ -22,17 +22,15 @@ prefix=demo
 datapath=./data
 
 # in test stage, you can eval dev.txt or test.txt
-# the "dev.txt" and "test.txt" are the original data provided by the organizer and
-# need to be placed in this folder: datapath/resource/
+# the "dev.txt" and "test.txt" are the original data of DuConv and
+# need to be placed in this folder: INPUT_PATH/resource/
 # the following preprocessing will generate the actual data needed for model testing
-# after testing dev.txt, you can run eval.py to get the final eval score,
-# because dev.txt is session data, you have all the utterances both of bot and user
-# after testing test.txt, you can upload the predict to the competition website to get result
+# after testing, you can run eval.py to get the final eval score if the original data have answer
 # DATA_TYPE = "dev" or "test"
 datapart=dev
 
 # ensure that each file is in the correct path
-#     1. put the data provided by the organizers under this folder: datapath/resource/
+#     1. put the data of DuConv under this folder: datapath/resource/
 #            - the data provided consists of three parts: train.txt dev.txt test.txt
 #            - the train.txt and dev.txt are session data, the test.txt is sample data
 #            - in test stage, we just use the dev.txt or test.txt
@@ -45,7 +43,7 @@ text_file=${datapath}/${prefix}.test
 topic_file=${datapath}/${prefix}.test.topic
 
 # step 1: if eval dev.txt, firstly have to convert session data to sample data
-# if eval test.txt, we can use test.txt provided by the organizer directly.
+# if eval test.txt, we can use original test.txt of DuConv directly.
 if [ "${datapart}"x = "test"x ]; then
     sample_file=${corpus_file}
 else
@@ -66,10 +64,7 @@ ${pythonpath} -u network.py --run_type test \
 # step 4: replace slot mark generated during topic generalization with real text
 ${pythonpath} ./tools/topic_materialization.py ./output/test.result ./output/test.result.final ${topic_file}
 
-# step 5: if you eval dev.txt, you can run the following command to get result
-# if you eval test.txt, you can upload the ./output/test.result.final to the competition website to get result
-if [ "${datapart}"x != "test"x ]; then
-    ${pythonpath} ./tools/convert_result_for_eval.py ${sample_file} ./output/test.result.final ./output/test.result.eval
-    ${pythonpath} ./tools/eval.py ./output/test.result.eval
-fi
+# step 5: if the original file has answers, you can run the following command to get result
+${pythonpath} ./tools/convert_result_for_eval.py ${sample_file} ./output/test.result.final ./output/test.result.eval
+${pythonpath} ./tools/eval.py ./output/test.result.eval
 

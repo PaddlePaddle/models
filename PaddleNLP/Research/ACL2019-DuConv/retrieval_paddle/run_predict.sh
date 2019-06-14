@@ -45,12 +45,10 @@ OUTPUT_PATH="./models"
 PYTHON_PATH="python"
 
 # in test stage, you can eval dev.txt or test.txt
-# the "dev.txt" and "test.txt" are the original data provided by the organizer and
+# the "dev.txt" and "test.txt" are the original data of DuConv and
 # need to be placed in this folder: INPUT_PATH/resource/
 # the following preprocessing will generate the actual data needed for model testing
-# after testing dev.txt, you can run eval.py to get the final eval score,
-# because dev.txt is session data, you have all the utterances both of bot and user
-# after testing test.txt, you can upload the predict to the competition website to get result
+# after testing, you can run eval.py to get the final eval score if the original data have answer
 # DATA_TYPE = "dev" or "test"
 DATA_TYPE="dev"
 
@@ -58,7 +56,7 @@ DATA_TYPE="dev"
 candidate_set_file=${INPUT_PATH}/candidate_set.txt
 
 # ensure that each file is in the correct path
-#     1. put the data provided by the organizers under this folder: INPUT_PATH/resource/
+#     1. put the data of DuConv under this folder: INPUT_PATH/resource/
 #            - the data provided consists of three parts: train.txt dev.txt test.txt
 #            - the train.txt and dev.txt are session data, the test.txt is sample data
 #            - in test stage, we just use the dev.txt or test.txt
@@ -73,7 +71,7 @@ score_file=./output/score.txt
 predict_file=./output/predict.txt
 
 # step 1: if eval dev.txt, firstly have to convert session data to sample data
-# if eval test.txt, we can use test.txt provided by the organizer directly.
+# if eval test.txt, we can use original test.txt of DuConv directly.
 if [ "${DATA_TYPE}"x = "test"x ]; then
     sample_file=${corpus_file}
 else
@@ -101,12 +99,9 @@ $PYTHON_PATH -u predict.py --task_name ${TASK_NAME} \
                    --output ${score_file}
 
 # step 5: extract predict utterance by candidate_file and score_file
-# if you eval dev.txt, the predict_file format is "predict \t gold \n predict \t gold \n ......"
-# if you eval test.txt, the predict_file format is "predict \n predict \n predict \n predict \n ......"
+# if the original file has answers, the predict_file format is "predict \t gold \n predict \t gold \n ......"
+# if the original file not has answers, the predict_file format is "predict \n predict \n predict \n predict \n ......"
 ${PYTHON_PATH} ./tools/extract_predict_utterance.py ${candidate_file} ${score_file} ${predict_file}
 
-# step 6: if you eval dev.txt, you can run the following command to get result
-# if you eval test.txt, you can upload the predict_file to the competition website to get result
-if [ "${DATA_TYPE}"x != "test"x ]; then
-    ${PYTHON_PATH} ./tools/eval.py ${predict_file}
-fi
+# step 6: if the original file has answers, you can run the following command to get result
+${PYTHON_PATH} ./tools/eval.py ${predict_file}
