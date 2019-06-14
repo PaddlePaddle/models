@@ -114,7 +114,8 @@ def get_path(url, root_dir, md5sum=None):
     if os.path.exists(fullpath):
         logger.info("Found {}".format(fullpath))
     else:
-        _download(url, root_dir, md5sum)
+        fullname = _download(url, root_dir, md5sum)
+        _decompress(fullname)
     
     return fullpath
 
@@ -157,7 +158,7 @@ def _download(url, path, md5sum=None):
                     if chunk:
                         f.write(chunk)
 
-    _decompress(fullname)
+    return fullname
 
 
 def _md5check(fullname, md5sum=None):
