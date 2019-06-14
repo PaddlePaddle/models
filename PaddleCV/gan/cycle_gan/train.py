@@ -2,6 +2,21 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import os
+
+# NOTE(paddle-dev): All of these flags should be
+# set before `import paddle`. Otherwise, it would
+# not take any effect. 
+os.environ['FLAGS_cudnn_exhaustive_search'] = str(1)
+os.environ['FLAGS_conv_workspace_size_limit'] = str(256)
+
+os.environ['FLAGS_eager_delete_tensor_gb'] = str(0)
+
+# You can omit the following settings, because the default
+# value of FLAGS_memory_fraction_of_eager_deletion is 1,
+# and default value of FLAGS_fast_eager_deletion_mode is True 
+os.environ['FLAGS_memory_fraction_of_eager_deletion'] = str(1)
+os.environ['FLAGS_fast_eager_deletion_mode'] = str(True)
+
 import random
 import sys
 import paddle
@@ -150,18 +165,30 @@ def train(args):
     build_strategy.enable_inplace = False
     build_strategy.memory_optimize = False
 
+    exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.num_threads = 1
+    exec_strategy.use_experimental_executor = True
+
     g_A_trainer_program = fluid.CompiledProgram(
         g_A_trainer.program).with_data_parallel(
-            loss_name=g_A_trainer.g_loss_A.name, build_strategy=build_strategy)
+            loss_name=g_A_trainer.g_loss_A.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     g_B_trainer_program = fluid.CompiledProgram(
         g_B_trainer.program).with_data_parallel(
-            loss_name=g_B_trainer.g_loss_B.name, build_strategy=build_strategy)
+            loss_name=g_B_trainer.g_loss_B.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     d_B_trainer_program = fluid.CompiledProgram(
         d_B_trainer.program).with_data_parallel(
-            loss_name=d_B_trainer.d_loss_B.name, build_strategy=build_strategy)
+            loss_name=d_B_trainer.d_loss_B.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     d_A_trainer_program = fluid.CompiledProgram(
         d_A_trainer.program).with_data_parallel(
-            loss_name=d_A_trainer.d_loss_A.name, build_strategy=build_strategy)
+            loss_name=d_A_trainer.d_loss_A.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     for epoch in range(args.epoch):
         batch_id = 0
         for i in range(max_images_num):

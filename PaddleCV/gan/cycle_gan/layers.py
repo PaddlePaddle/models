@@ -4,10 +4,9 @@ import numpy as np
 import os
 
 # cudnn is not better when batch size is 1.
-use_cudnn = False
-if 'ce_mode' in os.environ:
-    use_cudnn = False
-
+use_cudnn_conv2d_transpose = False
+use_cudnn_conv2d = True
+use_layer_norm = True
 
 def cal_padding(img_size, stride, filter_size, dilation=1):
     """Calculate padding size."""
@@ -21,7 +20,9 @@ def cal_padding(img_size, stride, filter_size, dilation=1):
 
 def instance_norm(input, name=None):
     # TODO(lvmengsi@baidu.com): Check the accuracy when using fluid.layers.layer_norm.
-    # return fluid.layers.layer_norm(input, begin_norm_axis=2) 
+    if use_layer_norm:
+        return fluid.layers.layer_norm(input, begin_norm_axis=2) 
+
     helper = fluid.layer_helper.LayerHelper("instance_norm", **locals())
     dtype = helper.input_dtype()
     epsilon = 1e-5
@@ -90,7 +91,7 @@ def conv2d(input,
         name=name,
         stride=stride,
         padding=padding,
-        use_cudnn=use_cudnn,
+        use_cudnn=use_cudnn_conv2d,
         param_attr=param_attr,
         bias_attr=bias_attr)
     if need_crop:
@@ -145,7 +146,7 @@ def deconv2d(input,
         filter_size=filter_size,
         stride=stride,
         padding=padding,
-        use_cudnn=use_cudnn,
+        use_cudnn=use_cudnn_conv2d_transpose,
         param_attr=param_attr,
         bias_attr=bias_attr)
 
