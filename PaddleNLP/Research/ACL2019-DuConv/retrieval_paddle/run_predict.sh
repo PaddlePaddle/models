@@ -31,7 +31,7 @@ else
   echo "task name error, should be match|match_kn|match_kn_gene"
 fi
 
-# in train stage, FOR_PREDICT=1
+# in predict stage, FOR_PREDICT=1
 FOR_PREDICT=1
 
 # put all data set that used and generated for testing under this folder: INPUT_PATH
@@ -53,6 +53,9 @@ PYTHON_PATH="python"
 # after testing test.txt, you can upload the predict to the competition website to get result
 # DATA_TYPE = "dev" or "test"
 DATA_TYPE="dev"
+
+# candidate set, construct in train stage
+candidate_set_file=${INPUT_PATH}/candidate_set.txt
 
 # ensure that each file is in the correct path
 #     1. put the data provided by the organizers under this folder: INPUT_PATH/resource/
@@ -78,8 +81,7 @@ else
 fi
 
 # step 2: construct candidate for sample data
-# here do not construct real candidate, you have to do it by yourself !!!
-${PYTHON_PATH} ./tools/construct_candidate.py ${sample_file} ${candidate_file} 9
+${PYTHON_PATH} ./tools/construct_candidate.py ${sample_file} ${candidate_set_file} ${candidate_file} 10
 
 # step 3: convert sample data with candidates to text data required by the model
 ${PYTHON_PATH} ./tools/convert_conversation_corpus_to_model_text.py ${candidate_file} ${text_file} ${USE_KNOWLEDGE} ${TOPIC_GENERALIZATION} ${FOR_PREDICT}

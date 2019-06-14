@@ -25,6 +25,7 @@ import sys
 sys.path.append("../")
 import interact
 from tools.convert_conversation_corpus_to_model_text import preprocessing_for_one_conversation
+from tools.construct_candidate import load_candidate_set
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -34,15 +35,17 @@ def load():
     """
     load
     """
-    return interact.load_model()
+    return interact.load_model(), load_candidate_set("../data/candidate_set.txt")
 
 
 def predict(model, text):
     """
     predict
     """
+    model, candidate_set = model
     model_text, candidates = \
         preprocessing_for_one_conversation(text.strip(),
+                                           candidate_set=candidate_set,
                                            candidate_num=50,
                                            use_knowledge=True,
                                            topic_generalization=True,

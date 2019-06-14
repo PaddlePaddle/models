@@ -75,6 +75,7 @@ def topic_generalization_for_list(text_list, topic_list):
 
 
 def preprocessing_for_one_conversation(text, \
+                                       candidate_set=None, \
                                        candidate_num=10, \
                                        use_knowledge=True, \
                                        topic_generalization=False, \
@@ -116,8 +117,9 @@ def preprocessing_for_one_conversation(text, \
     if "candidate" in conversation:
         candidates = conversation["candidate"]
     else:
-        assert candidate_num > 0
+        assert candidate_num > 0 and candidate_set is not None
         candidates = get_candidate_for_conversation(conversation,
+                                                    candidate_set,
                                                     candidate_num=candidate_num)
 
     if topic_generalization:
@@ -170,7 +172,8 @@ def preprocessing_for_one_conversation(text, \
     return model_text, candidates
 
 
-def convert_conversation_corpus_to_model_text(corpus_file, text_file,
+def convert_conversation_corpus_to_model_text(corpus_file, 
+                                              text_file,
                                               use_knowledge=True,
                                               topic_generalization=False,
                                               for_predict=True):
@@ -181,7 +184,9 @@ def convert_conversation_corpus_to_model_text(corpus_file, text_file,
     with open(corpus_file, 'r') as f:
         for i, line in enumerate(f):
             model_text, _ = preprocessing_for_one_conversation(
-                line.strip(), candidate_num=0,
+                line.strip(), 
+                candidate_set=None,
+                candidate_num=0,
                 use_knowledge=use_knowledge,
                 topic_generalization=topic_generalization,
                 for_predict=for_predict)

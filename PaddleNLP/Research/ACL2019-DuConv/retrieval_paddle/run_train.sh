@@ -51,6 +51,9 @@ PYTHON_PATH="python"
 # DATA_TYPE = "train" or "dev"
 DATA_TYPE=("train" "dev")
 
+# candidate set
+candidate_set_file=${INPUT_PATH}/candidate_set.txt
+
 # data preprocessing
 for ((i=0; i<${#DATA_TYPE[*]}; i++))
 do
@@ -67,17 +70,21 @@ do
     candidate_file=${INPUT_PATH}/resource/candidate.${DATA_TYPE[$i]}.txt
     text_file=${INPUT_PATH}/${DATA_TYPE[$i]}.txt
 
-    # step 1: firstly have to convert session data to sample data
+    # step 1: build candidate set from session data for negative training cases and predicting candidates
+    if [ "${DATA_TYPE[$i]}"x = "train"x ]; then
+        ${PYTHON_PATH} ./tools/build_candidate_set_from_corpus.py ${corpus_file} ${candidate_set_file}
+    fi
+
+    # step 2: firstly have to convert session data to sample data
     ${PYTHON_PATH} ./tools/convert_session_to_sample.py ${corpus_file} ${sample_file}
 
-    # step 2: construct candidate for sample data
-    # here do not construct real candidate, you have to do it by yourself !!!
-    ${PYTHON_PATH} ./tools/construct_candidate.py ${sample_file} ${candidate_file} 9
+    # step 3: construct candidate for sample data
+    ${PYTHON_PATH} ./tools/construct_candidate.py ${sample_file} ${candidate_set_file} ${candidate_file} 9
 
-    # step 3: convert sample data with candidates to text data required by the model
+    # step 4: convert sample data with candidates to text data required by the model
     ${PYTHON_PATH} ./tools/convert_conversation_corpus_to_model_text.py ${candidate_file} ${text_file} ${USE_KNOWLEDGE} ${TOPIC_GENERALIZATION} ${FOR_PREDICT}
 
-    # step 4: build dict from the training data, here we build character dict for model
+    # step 5: build dict from the training data, here we build character dict for model
     if [ "${DATA_TYPE[$i]}"x = "train"x ]; then
         ${PYTHON_PATH} ./tools/build_dict.py ${text_file} ${DICT_NAME}
     fi
@@ -98,5 +105,5 @@ $PYTHON_PATH -u train.py --task_name ${TASK_NAME} \
                    --skip_steps 100 \
                    --learning_rate 0.1 \
                    --epoch 30 \
-                   --max_seq_len 256 
+                   --max_seq_len 256
 
