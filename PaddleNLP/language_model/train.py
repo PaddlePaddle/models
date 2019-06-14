@@ -191,6 +191,15 @@ def main():
             dtype='float32')
         return init_hidden, init_cell
 
+    def generate_new_lr(epoch_id=0, device_count=1):
+        new_lr = config.base_learning_rate * (config.lr_decay**max(
+            epoch_id + 1 - config.epoch_start_decay, 0.0))
+        if device_count > 1 and args.parallel:
+            lr = np.ones((device_count), dtype='float32') * new_lr
+        else:
+            lr = np.ones((1), dtype='float32') * new_lr
+        return lr
+
     def prepare_input(batch,
                       init_hidden=None,
                       init_cell=None,
@@ -201,13 +210,6 @@ def main():
         x = x.reshape((-1, config.num_steps, 1))
         y = y.reshape((-1, 1))
 
-        new_lr = config.base_learning_rate * (config.lr_decay**max(
-            epoch_id + 1 - config.epoch_start_decay, 0.0))
-        if device_count > 1 and args.parallel:
-            lr = np.ones((device_count), dtype='float32') * new_lr
-        else:
-            lr = np.ones((1), dtype='float32') * new_lr
-
         res = {}
         res['x'] = x
         res['y'] = y
@@ -216,7 +218,7 @@ def main():
         if init_cell is not None:
             res['init_cell'] = init_cell
         if with_lr:
-            res['learning_rate'] = lr
+            res['learning_rate'] = generate_new_lr(epoch_id, device_count)
 
         return res
 
@@ -241,7 +243,7 @@ def main():
             init_cell = np.array(fetch_outs[2])
 
             total_loss += cost_train
-            iters += num_steps
+            iters += config.num_steps
 
         ppl = np.exp(total_loss / iters)
         return ppl
@@ -271,6 +273,7 @@ def main():
                 init_hidden=init_hidden,
                 init_cell=init_cell,
                 epoch_id=epoch_id,
+                with_lr=True,
                 device_count=device_count)
 
             batch_start_time = time.time()
@@ -300,9 +303,6 @@ def main():
         log_interval = get_log_interval(len(train_data))
 
         init_hidden, init_cell = generate_init_data()
-        first_data_feeds = {}
-        first_data_feeds["init_hidden"] = init_hidden
-        first_data_feeds["init_cell"] = init_cell
 
         total_loss = 0
         iters = 0
@@ -311,15 +311,19 @@ def main():
         batch_id = 0
         try:
             while True:
+                data_feeds = {}
                 if batch_id == 0:
-                    data_feeds = first_data_feeds
                     batch_time = 0
                     batch_start_time = time.time()
+                    data_feeds["init_hidden"] = init_hidden
+                    data_feeds["init_cell"] = init_cell
                 else:
-                    data_feeds = None
                     batch_time = time.time() - batch_start_time
                     batch_times.append(batch_time)
                     batch_start_time = time.time()
+
+                new_lr = generate_new_lr(epoch_id, device_count)
+                data_feeds['learning_rate'] = new_lr
 
                 fetch_outs = exe.run(train_program,
                                      feed=data_feeds,
@@ -391,7 +395,8 @@ def main():
             if epoch_id == config.max_epoch - 1 and args.enable_ce:
                 # kpis
                 print("ptblm\tlstm_language_model_%s_duration_card%d\t%s" %
-                      (args.rnn_model, device_count, total_time / max_epoch))
+                      (args.rnn_model, device_count,
+                       total_time / config.max_epoch))
                 print("ptblm\tlstm_language_model_%s_loss_card%d\t%s" %
                       (args.rnn_model, device_count, train_ppl[0]))
 
