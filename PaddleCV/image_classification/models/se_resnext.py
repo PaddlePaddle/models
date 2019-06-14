@@ -53,7 +53,8 @@ class SE_ResNeXt():
                 pool_size=3,
                 pool_stride=2,
                 pool_padding=1,
-                pool_type='max')
+                pool_type='max',
+                use_cudnn=False)
         elif layers == 101:
             cardinality = 32
             reduction_ratio = 16
@@ -72,7 +73,8 @@ class SE_ResNeXt():
                 pool_size=3,
                 pool_stride=2,
                 pool_padding=1,
-                pool_type='max')
+                pool_type='max',
+                use_cudnn=False)
         elif layers == 152:
             cardinality = 64
             reduction_ratio = 16
@@ -102,7 +104,7 @@ class SE_ResNeXt():
                 name='conv3')
             conv = fluid.layers.pool2d(
                 input=conv, pool_size=3, pool_stride=2, pool_padding=1, \
-                pool_type='max')
+                pool_type='max', use_cudnn=False)
         n = 1 if layers == 50 or layers == 101 else 3
         for block in range(len(depth)):
             n += 1
@@ -116,7 +118,11 @@ class SE_ResNeXt():
                     name=str(n) + '_' + str(i + 1))
 
         pool = fluid.layers.pool2d(
-            input=conv, pool_size=7, pool_type='avg', global_pooling=True)
+            input=conv,
+            pool_size=7,
+            pool_type='avg',
+            global_pooling=True,
+            use_cudnn=False)
         drop = fluid.layers.dropout(
             x=pool, dropout_prob=0.5, seed=self.params['dropout_seed'])
         stdv = 1.0 / math.sqrt(drop.shape[1] * 1.0)
@@ -208,7 +214,11 @@ class SE_ResNeXt():
                            reduction_ratio,
                            name=None):
         pool = fluid.layers.pool2d(
-            input=input, pool_size=0, pool_type='avg', global_pooling=True)
+            input=input,
+            pool_size=0,
+            pool_type='avg',
+            global_pooling=True,
+            use_cudnn=False)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
         squeeze = fluid.layers.fc(
             input=pool,
