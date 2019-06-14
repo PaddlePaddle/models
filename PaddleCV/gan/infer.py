@@ -50,11 +50,11 @@ def infer(args):
     model_name = 'net_G'
     if args.model_net == 'cyclegan':
         from network.CycleGAN_network import CycleGAN_model
-
+        model = CycleGAN_model()
         if args.input_style == "A":
-            fake = network_G(input, name="GA", cfg=args)
+            fake = model.network_G(input, name="GA", cfg=args)
         elif args.input_style == "B":
-            fake = network_G(input, name="GB", cfg=args)
+            fake = model.network_G(input, name="GB", cfg=args)
         else:
             raise "Input with style [%s] is not supported." % args.input_style
     elif args.model_net == 'Pix2pix':
