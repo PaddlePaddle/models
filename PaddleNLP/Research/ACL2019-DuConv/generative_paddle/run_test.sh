@@ -65,6 +65,8 @@ ${pythonpath} -u network.py --run_type test \
 ${pythonpath} ./tools/topic_materialization.py ./output/test.result ./output/test.result.final ${topic_file}
 
 # step 5: if the original file has answers, you can run the following command to get result
+# if the original file not has answers, you can upload the ./output/test.result.final 
+# to the website(https://ai.baidu.com/broad/submission?dataset=duconv) to get the official automatic evaluation
 ${pythonpath} ./tools/convert_result_for_eval.py ${sample_file} ./output/test.result.final ./output/test.result.eval
 ${pythonpath} ./tools/eval.py ./output/test.result.eval
 

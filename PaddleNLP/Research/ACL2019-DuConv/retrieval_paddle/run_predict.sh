@@ -104,4 +104,6 @@ $PYTHON_PATH -u predict.py --task_name ${TASK_NAME} \
 ${PYTHON_PATH} ./tools/extract_predict_utterance.py ${candidate_file} ${score_file} ${predict_file}
 
 # step 6: if the original file has answers, you can run the following command to get result
+# if the original file not has answers, you can upload the ./output/test.result.final 
+# to the website(https://ai.baidu.com/broad/submission?dataset=duconv) to get the official automatic evaluation
 ${PYTHON_PATH} ./tools/eval.py ${predict_file}
