@@ -58,6 +58,12 @@ def network(batch_size, items_num, hidden_size, step):
         dtype="int64",
         append_batch_size=False)
 
+    datas = [items, seq_index, last_index, adj_in, adj_out, mask, label]
+    py_reader = fluid.layers.create_py_reader_by_data(
+                    capacity=256, feed_list=datas, name='py_reader', use_double_buffer=True)
+    feed_datas = fluid.layers.read_file(py_reader)
+    items, seq_index, last_index, adj_in, adj_out, mask, label = feed_datas
+
     items_emb = layers.embedding(
         input=items,
         param_attr=fluid.ParamAttr(
@@ -171,7 +177,7 @@ def network(batch_size, items_num, hidden_size, step):
         [global_attention, last], axis=1)  #[batch_size, 2*h]
     final_attention_fc = layers.fc(
         input=final_attention,
-        name="fina_attention_fc",
+        name="final_attention_fc",
         size=hidden_size,
         bias_attr=False,
         act=None,
@@ -200,4 +206,4 @@ def network(batch_size, items_num, hidden_size, step):
         logits=logits, label=label)  #[batch_size, 1]
     loss = layers.reduce_mean(softmax)  # [1]
     acc = layers.accuracy(input=logits, label=label, k=20)
-    return loss, acc
+    return loss, acc, py_reader, feed_datas

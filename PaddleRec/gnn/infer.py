@@ -59,7 +59,7 @@ def infer(epoch_num):
         loss_sum = 0.0
         acc_sum = 0.0
         count = 0
-        for data in test_data.reader(batch_size, batch_size, False):
+        for data in test_data.reader(batch_size, batch_size, False)():
             res = exe.run(infer_program,
                           feed=feeder.feed(data),
                           fetch_list=fetch_targets)
