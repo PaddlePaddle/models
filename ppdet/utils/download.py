@@ -96,7 +96,7 @@ def get_path(url, root_dir, md5sum=None):
                     WEIGHTS_HOME or DATASET_HOME
     md5sum (str): md5 sum of download package
     """
-    # parse path after download as decompress under root_dir
+    # parse path after download to decompress under root_dir
     fname = url.split('/')[-1]
     zip_formats = ['.zip', '.tar', '.gz']
     fpath = fname
@@ -104,7 +104,8 @@ def get_path(url, root_dir, md5sum=None):
         fpath = fpath.replace(zip_format, '')
     fullpath = os.path.join(root_dir, fpath)
 
-    # for decompressed directory name differenct from zip file name
+    # For same zip file, decompressed directory name different 
+    # from zip file name, rename by following map
     decompress_name_map = {"VOCtrainval": "VOCdevkit",
                            "annotations_trainval": "annotations"}
     for k, v in decompress_name_map.items():
@@ -137,7 +138,8 @@ def _download(url, path, md5sum=None):
         if retry_cnt < DOWNLOAD_RETRY_LIMIT:
             retry_cnt += 1
         else:
-            raise RuntimeError("Download from {} failed.".format(url))
+            raise RuntimeError("Download from {} failed. "
+                               "Retry limit reached".format(url))
 
         logger.info("Downloading {} from {}".format(fname, url))
 
