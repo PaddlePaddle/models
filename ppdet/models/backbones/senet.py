@@ -30,6 +30,10 @@ __all__ = ['SENet154Backbone', 'SENet154C5']
 
 
 class SENet(ResNetVd):
+    """
+    SENet(SE_ResNeXt_vd) backbone
+    """
+
     def __init__(self, depth, freeze_bn, affine_channel, groups, bn_decay=True):
         """
         Args:
@@ -315,6 +319,14 @@ class SENet(ResNetVd):
 
 @Backbones.register
 class SENet154Backbone(BackboneBase):
+    """
+    Get the SENet154 backbone. We define SENet154 has 5 stages,
+    from 1 to 5.
+                
+    Args:
+        cfg (AttrDict): the config from given config filename.
+    """
+
     def __init__(self, cfg):
         super(SENet154Backbone, self).__init__(cfg)
         self.freeze_at = getattr(cfg.MODEL, 'FREEZE_AT', 2)
@@ -341,13 +353,23 @@ class SENet154Backbone(BackboneBase):
         res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
         return {k: v for k, v in zip(self.body_feat_names, res_list)}
 
-    # TODO(guanzhong): add more comments.
     def get_body_feat_names(self):
+        """
+        TODO(guanzhong): add more comments
+        """
         return self.body_feat_names
 
 
 @BBoxHeadConvs.register
 class SENet154C5(object):
+    """
+    Args:
+        freeze_bn (bool): whether to fix batch norm
+            (meaning the scale and bias does not update).Defalut False.
+    Returns:
+        The last variable in C5 stage.
+    """
+
     def __init__(self, cfg):
         self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
         self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)

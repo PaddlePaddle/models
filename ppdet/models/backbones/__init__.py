@@ -28,7 +28,7 @@ from . import mobilenet
 from .mobilenet import *
 
 from . import senet
-from .senet import *
+from .senet import SENet154Backbone, SENet154C5
 
 __all__ = resnet.__all__
 __all__ += resnext.__all__

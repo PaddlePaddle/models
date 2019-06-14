@@ -23,7 +23,14 @@ from ppdet.models.backbones.senet import SENet, SENet154Backbone, SENet154C5
 
 
 def bottleneck_names(name, bn_affine, short_conv=True):
+    """
+    SE_ResNeXt152_vd_64x4d bottleneck
+    """
+
     def conv_norm(name):
+        """
+        conv_norm layer names
+        """
         pnames = [name + '_weights']
         bn_name = name + "_bn"
         pnames += [bn_name + '_scale']
@@ -34,6 +41,9 @@ def bottleneck_names(name, bn_affine, short_conv=True):
         return pnames
 
     def sename(name):
+        """
+        SE-block names
+        """
         pnames = [name + '_sqz_weights']
         pnames += [name + '_sqz_offset']
         pnames += [name + '_exc_weights']
@@ -50,7 +60,15 @@ def bottleneck_names(name, bn_affine, short_conv=True):
 
 
 class TestSENet(unittest.TestCase):
+    """
+    Test SENet module
+    """
+
     def setUp(self):
+        """
+        Args:
+            configs
+        """
         self.dshape = [3, 224, 224]
         res_cfg = {50: [3, 4, 6, 3], 101: [3, 4, 23, 3], 152: [3, 8, 36, 3]}
         self.layers = 152
@@ -103,6 +121,10 @@ class TestSENet(unittest.TestCase):
         return param_names
 
     def compare_C1ToC4(self, bn_affine):
+        """
+        Args:
+            bn_affine (bool): meaning use affine_channel
+        """
         prog = fluid.Program()
         startup_prog = fluid.Program()
         with fluid.program_guard(prog, startup_prog):
@@ -133,6 +155,9 @@ class TestSENet(unittest.TestCase):
                 self.assertTrue(p.stop_gradient)
 
     def test_C1ToC4_bn(self):
+        """
+        bn test module: C1ToC4
+        """
         merge_cfg({
             'AFFINE_CHANNEL': False,
             'FREEZE_BN': True,
@@ -143,6 +168,9 @@ class TestSENet(unittest.TestCase):
         self.compare_C1ToC4(False)
 
     def test_C1ToC4_affine(self):
+        """
+        affine channel test module: C1ToC4
+        """
         merge_cfg({
             'AFFINE_CHANNEL': True,
             'FREEZE_BN': True,
@@ -153,6 +181,10 @@ class TestSENet(unittest.TestCase):
         self.compare_C1ToC4(True)
 
     def compare_C5(self, bn_affine):
+        """
+        Args:
+            bn_affine (bool): meaning use affine_channel
+        """
         prog = fluid.Program()
         startup_prog = fluid.Program()
         with fluid.program_guard(prog, startup_prog):
@@ -183,6 +215,9 @@ class TestSENet(unittest.TestCase):
                 self.assertTrue(p.stop_gradient)
 
     def test_C5_bn(self):
+        """
+        bn test module: C5
+        """
         merge_cfg({
             'AFFINE_CHANNEL': False,
             'FREEZE_BN': True,
@@ -192,6 +227,9 @@ class TestSENet(unittest.TestCase):
         self.compare_C5(False)
 
     def test_C5_affine(self):
+        """
+        affine channel test module: C5
+        """
         merge_cfg({
             'AFFINE_CHANNEL': True,
             'FREEZE_BN': True,
