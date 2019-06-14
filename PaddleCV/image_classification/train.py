@@ -10,7 +10,7 @@ import math
 import paddle
 import paddle.fluid as fluid
 import paddle.dataset.flowers as flowers
-import r as reader
+import reader_cv2 as reader
 import argparse
 import functools
 import subprocess
