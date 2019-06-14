@@ -155,7 +155,7 @@ TRANSFORM:
     BATCH_SIZE: 1
     IS_PADDING: True
     # TODO(guanzhong): use a better name for coarsest_stride
-    COAREST_STRIDE: 32
+    COARSEST_STRIDE: 32
 
   VAL:
     OPS:
@@ -176,7 +176,7 @@ TRANSFORM:
     BATCH_SIZE: 1
     IS_PADDING: True
     # TODO(guanzhong): use a better name for coarsest_stride
-    COAREST_STRIDE: 32
+    COARSEST_STRIDE: 32
   WORKER_CONF:
     bufsize: 100
     worker_num: 8
