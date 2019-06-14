@@ -324,7 +324,7 @@ def train_parallel(args):
     ## dynamic batch size, image size...
     bs = 224
     val_bs = 64
-    trn_dir = "sz/160/"
+    trn_dir = "160/"
     img_dim = 128
     min_scale = 0.08
     rect_val = False
@@ -341,7 +341,7 @@ def train_parallel(args):
                 need_update_start_prog=True)
         elif epoch_id == 13:  #13
             bs = 96
-            trn_dir = "sz/352/"
+            trn_dir = "352/"
             img_dim = 224
             min_scale = 0.087
             train_args, test_args, test_prog, exe, test_exe = refresh_program(
