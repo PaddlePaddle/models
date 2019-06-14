@@ -88,6 +88,7 @@ todo：loss曲线
 ```
 env CUDA_VISIBLE_DEVICES=0 python test.py --epoch=200
 ```
+生成的图像文件在output_0/eval/中
 
 
 ### 预测
