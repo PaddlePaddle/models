@@ -339,7 +339,12 @@ def train(args):
         train_py_reader, train_cost, train_acc1, train_acc5, global_lr = b_out[0],b_out[1],b_out[2],b_out[3],b_out[4]
         train_fetch_list = [train_cost.name, train_acc1.name, train_acc5.name, global_lr.name]
 
-    test_py_reader, test_cost, test_acc1, test_acc5 = b_out[0],b_out[1],b_out[2],b_out[3]
+    b_out_test = build_program(
+                     is_train=False,
+                     main_prog=train_prog,
+                     startup_prog=startup_prog,
+                     args=args)
+    test_py_reader, test_cost, test_acc1, test_acc5 = b_out_test[0],b_out_test[1],b_out_test[2],b_out_test[3]
     test_prog = test_prog.clone(for_test=True)
 
     if with_memory_optimization:
