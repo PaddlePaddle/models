@@ -341,7 +341,7 @@ def train(args):
 
     b_out_test = build_program(
                      is_train=False,
-                     main_prog=train_prog,
+                     main_prog=test_prog,
                      startup_prog=startup_prog,
                      args=args)
     test_py_reader, test_cost, test_acc1, test_acc5 = b_out_test[0],b_out_test[1],b_out_test[2],b_out_test[3]
