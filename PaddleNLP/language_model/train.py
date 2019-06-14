@@ -419,7 +419,7 @@ def main():
                     format(
                         len(valid_data), config.batch_size, config.num_steps))
 
-            save_model_dir = os.path.join("model_new/", str(epoch_id))
+            save_model_dir = os.path.join(args.save_model_dir, str(epoch_id))
             fluid.io.save_persistables(
                 executor=exe, dirname=save_model_dir, main_program=main_program)
             print("Saved model to: %s.\n" % save_model_dir)

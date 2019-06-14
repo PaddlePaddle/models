@@ -62,6 +62,11 @@ def parse_args():
     parser.add_argument(
         '--log_path',
         help='path of the log file. If not set, logs are printed to console')
+    parser.add_argument(
+        '--save_model_dir',
+        type=str,
+        default="models",
+        help='dir of the saved model.')
     parser.add_argument('--enable_ce', action='store_true')
     parser.add_argument('--batch_size', type=int, default=0, help='batch size')
     parser.add_argument('--max_epoch', type=int, default=0, help='max epoch')
