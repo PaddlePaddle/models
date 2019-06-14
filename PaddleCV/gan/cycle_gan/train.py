@@ -3,19 +3,26 @@ from __future__ import division
 from __future__ import print_function
 import os
 
+
+def set_paddle_flags(flags):
+    for key, value in flags.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
 # NOTE(paddle-dev): All of these flags should be
 # set before `import paddle`. Otherwise, it would
 # not take any effect. 
-os.environ['FLAGS_cudnn_exhaustive_search'] = str(1)
-os.environ['FLAGS_conv_workspace_size_limit'] = str(256)
-
-os.environ['FLAGS_eager_delete_tensor_gb'] = str(0)
-
-# You can omit the following settings, because the default
-# value of FLAGS_memory_fraction_of_eager_deletion is 1,
-# and default value of FLAGS_fast_eager_deletion_mode is True 
-os.environ['FLAGS_memory_fraction_of_eager_deletion'] = str(1)
-os.environ['FLAGS_fast_eager_deletion_mode'] = str(True)
+set_paddle_flags({
+    'FLAGS_cudnn_exhaustive_search': 1,
+    'FLAGS_conv_workspace_size_limit': 256,
+    'FLAGS_eager_delete_tensor_gb': 0, # enable gc 
+    # You can omit the following settings, because the default
+    # value of FLAGS_memory_fraction_of_eager_deletion is 1,
+    # and default value of FLAGS_fast_eager_deletion_mode is 1 
+    'FLAGS_memory_fraction_of_eager_deletion': 1,
+    'FLAGS_fast_eager_deletion_mode': 1
+})
 
 import random
 import sys
