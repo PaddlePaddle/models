@@ -107,7 +107,6 @@ class ConvBNPool(fluid.dygraph.Layer):
 
         self.conv_0_layer = Conv2D(
             self.full_name(),
-            channels[0],
             out_ch[0],
             3,
             padding=1,
@@ -119,7 +118,6 @@ class ConvBNPool(fluid.dygraph.Layer):
             self.full_name(), out_ch[0], act=act, is_test=is_test)
         self.conv_1_layer = Conv2D(
             self.full_name(),
-            num_channels=channels[1],
             num_filters=out_ch[1],
             filter_size=3,
             padding=1,
@@ -331,9 +329,6 @@ class SimpleAttention(fluid.dygraph.Layer):
                        act=None,
                        bias_attr=False)
 
-    def _build_once(self, encoder_vec, encoder_proj, decoder_state):
-        pass
-
     def forward(self, encoder_vec, encoder_proj, decoder_state):
 
         decoder_state_fc = self.fc_1(decoder_state)
@@ -381,9 +376,6 @@ class GRUDecoderWithAttention(fluid.dygraph.Layer):
 
         self.decoder_size = decoder_size
 
-    def _build_once(self, target_embedding, encoder_vec, encoder_proj,
-                    decoder_boot):
-        pass
 
     def forward(self, target_embedding, encoder_vec, encoder_proj,
                 decoder_boot):
@@ -431,8 +423,6 @@ class OCRAttention(fluid.dygraph.Layer):
         self.gru_decoder_with_attention = GRUDecoderWithAttention(
             self.full_name(), Config.decoder_size, Config.num_classes)
 
-    def _build_once(self, inputs, label_in):
-        pass
 
     def forward(self, inputs, label_in):
         gru_backward, encoded_vector, encoded_proj = self.encoder_net(inputs)

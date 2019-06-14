@@ -71,7 +71,7 @@ def train():
 
     batch_size = args.batch_size
     items_num = reader.read_config(args.config_path)
-    loss, acc = network.network(batch_size, items_num, args.hidden_size,
+    loss, acc, py_reader, feed_datas = network.network(batch_size, items_num, args.hidden_size,
                                 args.step)
 
     data_reader = reader.Data(args.train_path, True)
@@ -98,10 +98,7 @@ def train():
     all_vocab.set(
         np.arange(1, items_num).astype("int64").reshape((-1, 1)), place)
 
-    feed_list = [
-        "items", "seq_index", "last_index", "adj_in", "adj_out", "mask", "label"
-    ]
-    feeder = fluid.DataFeeder(feed_list=feed_list, place=place)
+    feed_list = [e.name for e in feed_datas]
 
     if use_parallel:
         train_exe = fluid.ParallelExecutor(
@@ -118,23 +115,27 @@ def train():
     acc_sum = 0.0
     global_step = 0
     PRINT_STEP = 500
+    py_reader.decorate_paddle_reader(data_reader.reader(batch_size, batch_size * 20, True))
     for i in range(args.epoch_num):
         epoch_sum = []
-        for data in data_reader.reader(batch_size, batch_size * 20, True):
-            res = train_exe.run(feed=feeder.feed(data),
-                                fetch_list=[loss.name, acc.name])
-            loss_sum += res[0]
-            acc_sum += res[1]
-            epoch_sum.append(res[0])
-            global_step += 1
-            if global_step % PRINT_STEP == 0:
-                ce_info.append([loss_sum / PRINT_STEP, acc_sum / PRINT_STEP])
-                total_time.append(time.time() - start_time)
-                logger.info("global_step: %d, loss: %.4lf, train_acc: %.4lf" % (
-                    global_step, loss_sum / PRINT_STEP, acc_sum / PRINT_STEP))
-                loss_sum = 0.0
-                acc_sum = 0.0
-                start_time = time.time()
+        py_reader.start()
+        try:
+            while True:
+                res = train_exe.run(fetch_list=[loss.name, acc.name])
+                loss_sum += res[0].mean()
+                acc_sum += res[1].mean()
+                epoch_sum.append(res[0].mean())
+                global_step += 1
+                if global_step % PRINT_STEP == 0:
+                    ce_info.append([loss_sum / PRINT_STEP, acc_sum / PRINT_STEP])
+                    total_time.append(time.time() - start_time)
+                    logger.info("global_step: %d, loss: %.4lf, train_acc: %.4lf" % (
+                        global_step, loss_sum / PRINT_STEP, acc_sum / PRINT_STEP))
+                    loss_sum = 0.0
+                    acc_sum = 0.0
+                    start_time = time.time()
+        except fluid.core.EOFException:
+            py_reader.reset()
         logger.info("epoch loss: %.4lf" % (np.mean(epoch_sum)))
         save_dir = args.model_path + "/epoch_" + str(i)
         fetch_vars = [loss, acc]

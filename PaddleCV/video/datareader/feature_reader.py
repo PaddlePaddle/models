@@ -77,18 +77,16 @@ class FeatureReader(DataReader):
                     rgb = rgb[0:nframes, :]
                     audio = audio[0:nframes, :]
 
-                    rgb = dequantize(
-                        rgb, max_quantized_value=2., min_quantized_value=-2.)
-                    audio = dequantize(
-                        audio, max_quantized_value=2, min_quantized_value=-2)
+                    if self.name != 'NEXTVLAD':
+                        rgb = dequantize(
+                            rgb,
+                            max_quantized_value=2.,
+                            min_quantized_value=-2.)
+                        audio = dequantize(
+                            audio,
+                            max_quantized_value=2,
+                            min_quantized_value=-2)
 
-                    if self.name == 'NEXTVLAD':
-                        # add the effect of eigen values
-                        eigen_file = self.eigen_file
-                        eigen_val = np.sqrt(np.load(eigen_file)
-                                            [:1024, 0]).astype(np.float32)
-                        eigen_val = eigen_val + 1e-4
-                        rgb = (rgb - 4. / 512) * eigen_val
                     if self.name == 'ATTENTIONCLUSTER':
                         sample_inds = generate_random_idx(rgb.shape[0],
                                                           self.seg_num)
