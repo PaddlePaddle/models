@@ -282,14 +282,11 @@ def train_resnet():
         if args.use_data_parallel:
             resnet = fluid.dygraph.parallel.DataParallel(resnet, strategy)
 
+        train_reader = paddle.batch(
+            paddle.dataset.flowers.train(use_xmap=False), batch_size=batch_size)
         if args.use_data_parallel:
-            train_reader = fluid.contrib.reader.distributed_sampler(
-                paddle.dataset.flowers.train(use_xmap=False),
-                batch_size=batch_size * trainer_count)
-        else:
-            train_reader = paddle.batch(
-                paddle.dataset.flowers.train(use_xmap=False),
-                batch_size=batch_size)
+            train_reader = fluid.contrib.reader.multi_process_reader(
+                train_reader)
 
         test_reader = paddle.batch(
             paddle.dataset.flowers.test(use_xmap=False), batch_size=batch_size)

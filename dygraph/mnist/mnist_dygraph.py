@@ -184,15 +184,11 @@ def train_mnist(args):
         if args.use_data_parallel:
             mnist = fluid.dygraph.parallel.DataParallel(mnist, strategy)
 
+        train_reader = paddle.batch(
+            paddle.dataset.mnist.train(), batch_size=BATCH_SIZE, drop_last=True)
         if args.use_data_parallel:
-            train_reader = fluid.contrib.reader.distributed_sampler(
-                paddle.dataset.mnist.train(),
-                batch_size=BATCH_SIZE * trainer_count)
-        else:
-            train_reader = paddle.batch(
-                paddle.dataset.mnist.train(),
-                batch_size=BATCH_SIZE,
-                drop_last=True)
+            train_reader = fluid.contrib.reader.multi_process_reader(
+                train_reader)
 
         test_reader = paddle.batch(
             paddle.dataset.mnist.test(), batch_size=BATCH_SIZE, drop_last=True)
