@@ -12,31 +12,115 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# function:
-#   transform a dataset to another one
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
-from . import transformer
+import copy
 from . import operator
+from . import arrange_sample
+from . import transformer
+from . import post_map
+from .parallel_map import ParallelMappedDataset
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+__all__ = ['build', 'map', 'batch', 'batch_mapper']
 
 
-def transform(source, ops_conf, worker_args=None):
-    """ transform data in 'source' using a mapper defined by 'ops_conf'
+def build(ops, context=None):
+    """ Build a mapper for operators in 'ops'
 
     Args:
-        @source (instance of Dataset): input data sample
-        @ops_conf (list of op configs): used to build a mapper
-                which accept a sample and return a transformed sample
+        ops (list of operator.BaseOperator or list of op dict): 
+            configs for oprators, eg:
+            [{'name': 'DecodeImage', 'params': {'to_rgb': True}}, {xxx}]
+        context (dict): a context object for mapper
 
     Returns:
-        instance of 'Dataset'
+        a mapper function which accept one argument 'sample' and
+        return the processed result
     """
-    mapper = operator.build(ops_conf)
-    return transformer.map(source, mapper, worker_args)
+    new_ops = []
+    for _dict in ops:
+        new_dict = {}
+        for i, j in _dict.items():
+            new_dict[i.lower()] = j
+        new_ops.append(new_dict)
+    ops = new_ops
+    op_funcs = []
+    op_repr = []
+    for op in ops:
+        if type(op) is dict and 'op' in op:
+            op_func = getattr(operator.BaseOperator, op['op'])
+            params = copy.deepcopy(op)
+            del params['op']
+            o = op_func(**params)
+        elif not isinstance(op, operator.BaseOperator):
+            op_func = getattr(operator.BaseOperator, op['name'])
+            params = {} if 'params' not in op else op['params']
+            o = op_func(**params)
+        else:
+            assert isinstance(
+                op, operator.BaseOperator), 'invalid operator when build ops'
+            o = op
+        op_funcs.append(o)
+        op_repr.append('{%s}' % str(o))
+    op_repr = '[%s]' % ','.join(op_repr)
+
+    def _mapper(sample):
+        ctx = {} if context is None else copy.deepcopy(context)
+        for f in op_funcs:
+            try:
+                out = f(sample, ctx)
+                sample = out
+            except Exception as e:
+                logger.warn('failed to map operator[%s] with exception[%s]' \
+                    % (f, str(e)))
+        return out
+
+    _mapper.ops = op_repr
+    return _mapper
 
 
-__all__ = ['transformer', 'operator']
+def map(ds, mapper, worker_args=None):
+    """ apply 'mapper' to 'ds'
+    Args:
+        ds (instance of Dataset): dataset to be mapped
+        mapper (function): action to be executed for every data sample
+        worker_args (dict): configs for concurrent mapper
+    Returns:
+        a mapped dataset
+    """
+    if worker_args is not None:
+        return ParallelMappedDataset(ds, mapper, worker_args)
+    else:
+        return transformer.MappedDataset(ds, mapper)
+
+
+def batch(ds, batchsize, drop_last=False):
+    """ Batch data samples to batches
+    Args:
+        batchsize (int): number of samples for a batch
+        drop_last (bool): drop last few samples if not enough for a batch
+        
+    Returns:
+        a batched dataset
+    """
+    return transformer.BatchedDataset(ds, batchsize, drop_last=drop_last)
+
+
+def batch_map(ds, config):
+    """ Post process the batches.
+    Args:
+        ds (instance of Dataset): dataset to be mapped
+        mapper (function): action to be executed for every batch
+    Returns:
+        a batched dataset which is processed
+    """
+    mapper = post_map.build(**config)
+    return transformer.MappedDataset(ds, mapper)
+
+
+for nm in operator.registered_ops:
+    op = getattr(operator.BaseOperator, nm)
+    locals()[nm] = op
+
+__all__ += operator.registered_ops

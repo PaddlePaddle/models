@@ -7,8 +7,7 @@ import numpy as np
 
 import set_env
 from dataset import build_source
-from dataset.transform import operator as op
-from dataset.transform import transformer
+from dataset import transform as tf
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +53,9 @@ class TestTransformer(unittest.TestCase):
     def test_map(self):
         """ test transformer.map
         """
-        mapper = op.build(self.ops)
+        mapper = tf.build(self.ops)
         ds = build_source(self.sc_config)
-        mapped_ds = transformer.map(ds, mapper)
+        mapped_ds = tf.map(ds, mapper)
         ct = 0
         for sample in mapped_ds:
             self.assertTrue(type(sample[0]) is np.ndarray)
@@ -67,10 +66,10 @@ class TestTransformer(unittest.TestCase):
     def test_parallel_map(self):
         """ test transformer.map with concurrent workers
         """
-        mapper = op.build(self.ops)
+        mapper = tf.build(self.ops)
         ds = build_source(self.sc_config)
         worker_conf = {'WORKER_NUM': 2, 'use_process': True}
-        mapped_ds = transformer.map(ds, mapper, worker_conf)
+        mapped_ds = tf.map(ds, mapper, worker_conf)
 
         ct = 0
         for sample in mapped_ds:
@@ -92,10 +91,10 @@ class TestTransformer(unittest.TestCase):
         """ test batched dataset
         """
         batchsize = 2
-        mapper = op.build(self.ops)
+        mapper = tf.build(self.ops)
         ds = build_source(self.sc_config)
-        mapped_ds = transformer.map(ds, mapper)
-        batched_ds = transformer.batch(mapped_ds, batchsize, True)
+        mapped_ds = tf.map(ds, mapper)
+        batched_ds = tf.batch(mapped_ds, batchsize, True)
         for sample in batched_ds:
             out = sample
         self.assertEqual(len(out), batchsize)

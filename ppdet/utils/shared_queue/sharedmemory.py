@@ -278,8 +278,7 @@ class PageAllocator(object):
     def set_alloc_info(self, alloc_pos, used_pages):
         """ set allocating position to new value
         """
-        memcopy(self._base[4:12],
-                struct.pack(str('II'), alloc_pos, used_pages))
+        memcopy(self._base[4:12], struct.pack(str('II'), alloc_pos, used_pages))
 
     def set_page_status(self, start, page_num, status):
         """ set pages from 'start' to 'end' with new same status 'status'
@@ -429,8 +428,8 @@ class SharedMemoryMgr(object):
             self._shared_mem, dtype='uint8', count=self._cap)
         self._locker.acquire()
         try:
-            self._allocator = PageAllocator(self._base,
-                                            self._total_pages, self._page_size)
+            self._allocator = PageAllocator(self._base, self._total_pages,
+                                            self._page_size)
         finally:
             self._locker.release()
 
