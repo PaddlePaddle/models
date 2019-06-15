@@ -33,6 +33,7 @@ from ppdet.core.optimizer import OptimizerBuilder
 from ppdet.utils.stats import TrainingStats, Time
 from args import parse_args, print_arguments
 import ppdet.utils.checkpoint as checkpoint
+from ppdet.utils.run_utils import parse_fetches, eval_run, eval_results
 from ppdet.dataset.reader import Reader
 import multiprocessing
 
@@ -54,44 +55,68 @@ def main():
 
     # 2. build program
     # get detector and losses
-    detector = Detectors.get(cfg.MODEL.TYPE)(cfg)
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
-            fetches = detector.train()
+            train_detector = Detectors.get(cfg.MODEL.TYPE)(cfg)
+            train_fetches = train_detector.train()
             # get optimizer and apply minimizing
             ob = OptimizerBuilder(cfg.OPTIMIZER)
             opt = ob.get_optimizer()
-            loss = fetches['loss']
+            loss = train_fetches['loss']
             opt.minimize(loss)
+
+    # parse train fetches
+    train_keys, train_values = parse_fetches(train_fetches)
+    train_values.append(ob.get_lr())
+
+    # 2.1. build test program if do validation
+    if args.valid_interval > 0:
+        valid_prog = fluid.Program()
+        with fluid.program_guard(valid_prog, startup_prog):
+            with fluid.unique_name.guard():
+                valid_detector = Detectors.get(cfg.MODEL.TYPE)(cfg)
+                if cfg.TEST.METRIC_TYPE == 'COCO':
+                    valid_fetches = valid_detector.test()
+                else:
+                    valid_fetches = valid_detector.val()
+        valid_prog = valid_prog.clone(True)
+
+        # parse valid fetches
+        extra_keys = ['im_info', 'im_id'] if cfg.TEST.METRIC_TYPE == 'COCO' \
+                     else []
+        valid_keys, valid_values = parse_fetches(valid_fetches, valid_prog, 
+                                                 extra_keys)
 
     # define executor
     place = fluid.CUDAPlace(0) if cfg.ENV.GPU else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
     # 3. Compile program for multi-devices
-    keys, values = [], []
-    for k, v in fetches.items():
-        keys.append(k)
-        v.persistable = True
-        values.append(v)
-    values += [ob.get_lr()]
-
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
     sync_bn = getattr(cfg.TRAIN, 'BATCH_NORM_TYPE', 'BN') == 'SYNC_BN'
     build_strategy.sync_batch_norm = sync_bn
-    compile_program = fluid.compiler.CompiledProgram(
+    train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
             loss_name=loss.name, build_strategy=build_strategy)
+    if args.valid_interval > 0:
+        build_strategy.sync_batch_norm = False
+        valid_compile_program = fluid.compiler.CompiledProgram(
+            valid_prog).with_data_parallel(build_strategy=build_strategy)
 
     # 4. Define reader
     reader = Reader(cfg.DATA, cfg.TRANSFORM, cfg.TRAIN.MAX_ITERS * devices_num)
     train_reader = reader.train()
-    pyreader = detector.get_pyreader()
-    pyreader.decorate_sample_list_generator(train_reader, place)
+    train_pyreader = train_detector.get_pyreader()
+    train_pyreader.decorate_sample_list_generator(train_reader, place)
+    if args.valid_interval > 0:
+        reader = Reader(cfg.DATA, cfg.TRANSFORM)
+        valid_reader = reader.val()
+        valid_pyreader = valid_detector.get_pyreader()
+        valid_pyreader.decorate_sample_list_generator(valid_reader, place)
 
     # 5. Load pre-trained model
     exe.run(startup_prog)
@@ -99,16 +124,16 @@ def main():
         checkpoint.load(exe, train_prog, cfg.TRAIN.PRETRAIN_WEIGHTS)
 
     # 6. Run
-    train_stats = TrainingStats(cfg.TRAIN.LOG_SMOOTH_WINDOW, keys)
-    pyreader.start()
+    train_stats = TrainingStats(cfg.TRAIN.LOG_SMOOTH_WINDOW, train_keys)
+    train_pyreader.start()
     start_time = time.time()
     end_time = time.time()
     save_dir = os.path.join(cfg.TRAIN.SAVE_DIR, cfg.MODEL.TYPE)
     for it in range(cfg.TRAIN.MAX_ITERS):
         start_time = end_time
         end_time = time.time()
-        outs = exe.run(compile_program, fetch_list=values)
-        stats = {k: np.array(v).mean() for k, v in zip(keys, outs[:-1])}
+        outs = exe.run(train_compile_program, fetch_list=train_values)
+        stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
         train_stats.update(stats)
         logs = train_stats.log()
         strs = '{}, iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
@@ -117,11 +142,20 @@ def main():
         sys.stdout.flush()
 
         # save model
-        if it % cfg.TRAIN.SNAPSHOT_ITER == 0:
+        if it > 0 and it % cfg.TRAIN.SNAPSHOT_ITER == 0:
             checkpoint.save(exe, train_prog,
                             os.path.join(save_dir, "{}".format(it)))
+
+            if args.valid_interval > 0 and \
+                (it / cfg.TRAIN.SNAPSHOT_ITER) % args.valid_interval == 0:
+                # validation performance by test reader
+                results = eval_run(exe, valid_compile_program, valid_pyreader,
+                                   valid_keys, valid_values)
+                # Evaluation
+                eval_results(results, cfg, args)
+
     checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
-    pyreader.reset()
+    train_pyreader.reset()
 
 
 if __name__ == '__main__':

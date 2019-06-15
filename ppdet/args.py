@@ -73,6 +73,7 @@ def parse_args():
     # yapf: disable
     add_arg('cfg_file',       str,   None,      "Configure file path, users must specify it.")
     add_arg('out_file',       str,   None,      "Output file for evaluation, if not set, default files are bbox.json and mask.json.")
+    add_arg('valid_interval', int,   0,         "Validate train performance every N snapshots, 0 for no validation.")
     # yapf: enable
     args = parser.parse_args()
     return args
