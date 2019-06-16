@@ -151,13 +151,13 @@ class CascadeRCNN(FasterRCNN):
         return refined_bbox
 
     def train(self):
-        '''
+        """
 	Run train process
-	'''
+	"""
         return self._forward()
 
     def test(self):
-        '''
+        """
 	Run infer process
-	'''
+	"""
         return self._forward()

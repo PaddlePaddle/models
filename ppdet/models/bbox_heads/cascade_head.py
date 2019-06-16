@@ -268,6 +268,10 @@ class CascadeHead(object):
 
 @BBoxHeadConvs.register
 class FC6FC7(object):
+    """
+    add fc6, fc7 after roi feature
+    """
+
     def __init__(self, cfg):
         self.mlp_head_dim = cfg.BBOX_HEAD.MLP_HEAD_DIM
 
