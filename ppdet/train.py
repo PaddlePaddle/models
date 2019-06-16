@@ -71,22 +71,22 @@ def main():
     train_keys, train_values = parse_fetches(train_fetches)
     train_values.append(ob.get_lr())
 
-    # 2.1. build test program if do validation
-    if args.valid_interval > 0:
-        valid_prog = fluid.Program()
-        with fluid.program_guard(valid_prog, startup_prog):
+    # 2.1. build test program if do evaluation
+    if args.eval_interval > 0:
+        eval_prog = fluid.Program()
+        with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
-                valid_detector = Detectors.get(cfg.MODEL.TYPE)(cfg)
+                eval_detector = Detectors.get(cfg.MODEL.TYPE)(cfg)
                 if cfg.TEST.METRIC_TYPE == 'COCO':
-                    valid_fetches = valid_detector.test()
+                    eval_fetches = eval_detector.test()
                 else:
-                    valid_fetches = valid_detector.val()
-        valid_prog = valid_prog.clone(True)
+                    eval_fetches = eval_detector.val()
+        eval_prog = eval_prog.clone(True)
 
-        # parse valid fetches
+        # parse eval fetches
         extra_keys = ['im_info', 'im_id'] if cfg.TEST.METRIC_TYPE == 'COCO' \
                      else []
-        valid_keys, valid_values = parse_fetches(valid_fetches, valid_prog, 
+        eval_keys, eval_values = parse_fetches(eval_fetches, eval_prog, 
                                                  extra_keys)
 
     # define executor
@@ -102,21 +102,21 @@ def main():
     train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
             loss_name=loss.name, build_strategy=build_strategy)
-    if args.valid_interval > 0:
+    if args.eval_interval > 0:
         build_strategy.sync_batch_norm = False
-        valid_compile_program = fluid.compiler.CompiledProgram(
-            valid_prog).with_data_parallel(build_strategy=build_strategy)
+        eval_compile_program = fluid.compiler.CompiledProgram(
+            eval_prog).with_data_parallel(build_strategy=build_strategy)
 
     # 4. Define reader
     reader = Reader(cfg.DATA, cfg.TRANSFORM, cfg.TRAIN.MAX_ITERS * devices_num)
     train_reader = reader.train()
     train_pyreader = train_detector.get_pyreader()
     train_pyreader.decorate_sample_list_generator(train_reader, place)
-    if args.valid_interval > 0:
+    if args.eval_interval > 0:
         reader = Reader(cfg.DATA, cfg.TRANSFORM)
-        valid_reader = reader.val()
-        valid_pyreader = valid_detector.get_pyreader()
-        valid_pyreader.decorate_sample_list_generator(valid_reader, place)
+        eval_reader = reader.val()
+        eval_pyreader = eval_detector.get_pyreader()
+        eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
     # 5. Load pre-trained model
     exe.run(startup_prog)
@@ -146,12 +146,12 @@ def main():
             checkpoint.save(exe, train_prog,
                             os.path.join(save_dir, "{}".format(it)))
 
-            if args.valid_interval > 0 and \
-                (it / cfg.TRAIN.SNAPSHOT_ITER) % args.valid_interval == 0:
-                # validation performance by test reader
-                results = eval_run(exe, valid_compile_program, valid_pyreader,
-                                   valid_keys, valid_values)
-                # Evaluation
+            if args.eval_interval > 0 and \
+                (it / cfg.TRAIN.SNAPSHOT_ITER) % args.eval_interval == 0:
+                # Run evaluation performance by test reader
+                results = eval_run(exe, eval_compile_program, eval_pyreader,
+                                   eval_keys, eval_values)
+                # Evaluate results
                 eval_results(results, cfg, args)
 
     checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))

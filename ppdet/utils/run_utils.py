@@ -52,7 +52,7 @@ def parse_fetches(fetches, prog=None, extra_keys=None):
 
 def eval_run(exe, compile_program, pyreader, keys, values):
     """
-    Runing evaluation program, return program outputs.
+    Run evaluation program, return program outputs.
     """
     iter_id = 0
     results = []
