@@ -146,6 +146,16 @@ class ResNet(object):
             return input
 
     def bottleneck(self, input, num_filters, stride, is_first, name):
+        """
+	resnet's bottleneck structure
+
+	Args:
+	    input(Variable): input tensor
+	    num_filters(int): kernel num
+	    stride(int): operator's stride
+	    is_first(boolean): whether shortcut use self._conv_norm
+	    name(string): operator's name 
+	"""
         (stride1, stride3) = (
             stride, 1) if self.cfg.MODEL.RESNET_TYPE == 'A' else (1, stride)
         conv0 = self._conv_norm(
@@ -273,6 +283,10 @@ class ResNet(object):
 
 @Backbones.register
 class ResNetA50Backbone(BackboneBase):
+    """
+    Get the ResNet50 C4 backbone.
+    """
+
     def __init__(self, cfg):
         """
         Get the ResNet50 C4 backbone. We define ResNet50 has 5 stages,
@@ -326,6 +340,10 @@ class ResNetA50Backbone(BackboneBase):
 
 @Backbones.register
 class ResNetA101Backbone(ResNetA50Backbone):
+    """
+    Get the ResNet101 C4 backbone.
+    """
+
     def __init__(self, cfg):
         """
         Get the ResNet101 C4 backbone. We define ResNet50 has 5 stages,
@@ -340,6 +358,10 @@ class ResNetA101Backbone(ResNetA50Backbone):
 
 @Backbones.register
 class ResNetA34Backbone(ResNetA50Backbone):
+    """
+    Get the ResNet34 backbone.
+    """
+
     def __init__(self, cfg):
         """
         Get the ResNet34 backbone. We define ResNet34 has 5 stages,
