@@ -35,7 +35,7 @@ script = os.path.join(os.path.dirname(__file__), 'data/prepare_data.sh')
 if not os.path.exists(data_root):
     ret = os.system('bash %s %s' % (script, version))
     if ret != 0:
-        logging.info('not found file[%s], you should manually prepare '
+        logging.error('not found file[%s], you should manually prepare '
             'your data using "data/prepare_data.sh"' % (data_root))
         sys.exit(1)
 
