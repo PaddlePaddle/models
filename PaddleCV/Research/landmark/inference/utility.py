@@ -1,14 +1,3 @@
-######################################################################
-#
-# Copyright (c) 2019 Baidu.com, Inc. All Rights Reserved.
-#
-######################################################################
-"""
-author: duyuning@baidu.com
-date: 2019-03-28
-brief: Contains common utility functions.
-"""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

@@ -1,13 +1,3 @@
-######################################################################
-#
-# Copyright (c) 2019 Baidu.com, Inc. All Rights Reserved.
-#
-######################################################################
-"""
-author: duyuning@baidu.com
-date: 2019-03-28
-brief: resnet vd models.
-"""
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
