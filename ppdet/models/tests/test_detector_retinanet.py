@@ -1,3 +1,4 @@
+"""
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+# TODO(luoqianhui): change comment stype above in github
 
 from __future__ import absolute_import
 from __future__ import division
@@ -26,7 +29,11 @@ from ppdet.core.config import load_cfg, merge_cfg
 from ppdet.models.registry import Detectors
 
 
-class TestDetectorFasterRCNN(unittest.TestCase):
+class TestDetectorRetinanet(unittest.TestCase):
+    """
+    Test the detector: retinanet
+    """
+
     def setUp(self):
         cfg_file = 'configs/retinanet_ResNet50-FPN_1x.yml'
         self.cfg = load_cfg(cfg_file)
@@ -34,6 +41,9 @@ class TestDetectorFasterRCNN(unittest.TestCase):
 
     @prog_scope()
     def test_train(self):
+        """
+        Test the training stage of retinanet
+        """
         merge_cfg({'IS_TRAIN': True}, self.cfg)
         self.detector = Detectors.get(self.detector_type)(self.cfg)
         self.detector.train()
@@ -41,6 +51,9 @@ class TestDetectorFasterRCNN(unittest.TestCase):
 
     @prog_scope()
     def test_test(self):
+        """
+        Test the testing stage of retinanet
+        """
         merge_cfg({'IS_TRAIN': False}, self.cfg)
         self.detector = Detectors.get(self.detector_type)(self.cfg)
         self.detector.test()

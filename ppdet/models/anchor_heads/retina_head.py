@@ -1,3 +1,4 @@
+"""
 #  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+# TODO(luoqianhui): change comment stype above in github
 
 from __future__ import absolute_import
 from __future__ import division
@@ -43,9 +46,9 @@ class RETINAHead(object):
         self.k_min = cfg.FPN.RPN_MIN_LEVEL
         self.fpn_dim = cfg.FPN.DIM
 
-    def _get_output(self, body_feats, spatial_scale, fpn_name_list):
+    def class_subnet(self, body_feats, spatial_scale, fpn_name_list):
         """
-        Get class, bounding box predictions and anchor boxes of all level FPN level.
+        Get class predictions of all level FPN level.
         
         Args:
             fpn_dict(Dict): A dictionary represents the output of FPN neck with 
@@ -55,15 +58,9 @@ class RETINAHead(object):
 
         Return:
             cls_pred_input(List): Class prediction of all input fpn levels.
-            bbox_pred_input(List): Bounding box prediction of all input fpn
-                levels.
-            anchor_input(List): Anchors of all input fpn levels with shape of.
-            anchor_var_input(List): Anchor variance of all input fpn levels with
-                shape.
         """
         retina_cfg = self.cfg.RETINA_HEAD
         assert len(body_feats) == self.k_max - self.k_min + 1
-        # class subnet
         cls_pred_list = []
         for lvl in range(self.k_min, self.k_max + 1):
             fpn_name = fpn_name_list[self.k_max - lvl]
@@ -117,8 +114,24 @@ class RETINAHead(object):
                     learning_rate=2.,
                     regularizer=L2Decay(0.)))
             cls_pred_list.append(out_cls)
+        return cls_pred_list
 
-        # bbox subnet
+    def bbox_subnet(self, body_feats, spatial_scale, fpn_name_list):
+        """
+        Get bounding box predictions of all level FPN level.
+        
+        Args:
+            fpn_dict(Dict): A dictionary represents the output of FPN neck with 
+                their name.
+            spatial_scale(List): A list of multiplicative spatial scale factor.
+            fpn_name_list(List): A list of names regarding to output of FPN neck.
+
+        Return:
+            bbox_pred_input(List): Bounding box prediction of all input fpn
+                levels.
+        """
+        retina_cfg = self.cfg.RETINA_HEAD
+        assert len(body_feats) == self.k_max - self.k_min + 1
         bbox_pred_list = []
         for lvl in range(self.k_min, self.k_max + 1):
             fpn_name = fpn_name_list[self.k_max - lvl]
@@ -168,8 +181,25 @@ class RETINAHead(object):
                     learning_rate=2.,
                     regularizer=L2Decay(0.)))
             bbox_pred_list.append(out_bbox)
+        return bbox_pred_list
 
-        #generate anchors
+    def anchor_generate(self, body_feats, spatial_scale, fpn_name_list):
+        """
+        Get anchor boxes of all level FPN level.
+        
+        Args:
+            fpn_dict(Dict): A dictionary represents the output of FPN neck with 
+                their name.
+            spatial_scale(List): A list of multiplicative spatial scale factor.
+            fpn_name_list(List): A list of names regarding to output of FPN neck.
+
+        Return:
+            anchor_input(List): Anchors of all input fpn levels with shape of.
+            anchor_var_input(List): Anchor variance of all input fpn levels with
+                shape.
+        """
+        retina_cfg = self.cfg.RETINA_HEAD
+        assert len(body_feats) == self.k_max - self.k_min + 1
         anchor_list = []
         anchor_var_list = []
         for lvl in range(self.k_min, self.k_max + 1):
@@ -189,6 +219,37 @@ class RETINAHead(object):
                 stride=[stride, stride])
             anchor_list.append(anchor)
             anchor_var_list.append(anchor_var)
+        return anchor_list, anchor_var_list
+
+    def _get_output(self, body_feats, spatial_scale, fpn_name_list):
+        """
+        Get class, bounding box predictions and anchor boxes of all level FPN level.
+        
+        Args:
+            fpn_dict(Dict): A dictionary represents the output of FPN neck with 
+                their name.
+            spatial_scale(List): A list of multiplicative spatial scale factor.
+            fpn_name_list(List): A list of names regarding to output of FPN neck.
+
+        Return:
+            cls_pred_input(List): Class prediction of all input fpn levels.
+            bbox_pred_input(List): Bounding box prediction of all input fpn
+                levels.
+            anchor_input(List): Anchors of all input fpn levels with shape of.
+            anchor_var_input(List): Anchor variance of all input fpn levels with
+                shape.
+        """
+        retina_cfg = self.cfg.RETINA_HEAD
+        assert len(body_feats) == self.k_max - self.k_min + 1
+        # class subnet
+        cls_pred_list = self.class_subnet(body_feats, spatial_scale,
+                                          fpn_name_list)
+        # bbox subnet
+        bbox_pred_list = self.bbox_subnet(body_feats, spatial_scale,
+                                          fpn_name_list)
+        #generate anchors
+        anchor_list, anchor_var_list = self.anchor_generate(
+            body_feats, spatial_scale, fpn_name_list)
 
         cls_pred_reshape_list = []
         bbox_pred_reshape_list = []
@@ -210,7 +271,12 @@ class RETINAHead(object):
             bbox_pred_reshape_list.append(bbox_pred_reshape)
             anchor_reshape_list.append(anchor_reshape)
             anchor_var_reshape_list.append(anchor_var_reshape)
-        return cls_pred_reshape_list, bbox_pred_reshape_list, anchor_reshape_list, anchor_var_reshape_list
+        output = {}
+        output['cls_pred'] = cls_pred_reshape_list
+        output['bbox_pred'] = bbox_pred_reshape_list
+        output['anchor'] = anchor_reshape_list
+        output['anchor_var'] = anchor_var_reshape_list
+        return output
 
     def get_prediction(self, body_feats, spatial_scale, fpn_name_list, im_info):
         """
@@ -234,9 +300,11 @@ class RETINAHead(object):
                 row has 6 values: [label, confidence, xmin, ymin, xmax, ymax]. 
                 N is the total number of prediction.
         """
-
-        cls_pred_reshape_list, bbox_pred_reshape_list, anchor_reshape_list, anchor_var_reshape_list = self._get_output(
-            body_feats, spatial_scale, fpn_name_list)
+        output = self._get_output(body_feats, spatial_scale, fpn_name_list)
+        cls_pred_reshape_list = output['cls_pred']
+        bbox_pred_reshape_list = output['bbox_pred']
+        anchor_reshape_list = output['anchor']
+        anchor_var_reshape_list = output['anchor_var']
         for i in range(self.k_max - self.k_min + 1):
             cls_pred_reshape_list[i] = fluid.layers.sigmoid(
                 cls_pred_reshape_list[i])
@@ -276,9 +344,11 @@ class RETINAHead(object):
                 loss_cls(Variable): focal loss.
                 loss_bbox(Variable): smooth l1 loss.
         """
-
-        cls_pred_reshape_list, bbox_pred_reshape_list, anchor_reshape_list, anchor_var_reshape_list = self._get_output(
-            body_feats, spatial_scale, fpn_name_list)
+        output = self._get_output(body_feats, spatial_scale, fpn_name_list)
+        cls_pred_reshape_list = output['cls_pred']
+        bbox_pred_reshape_list = output['bbox_pred']
+        anchor_reshape_list = output['anchor']
+        anchor_var_reshape_list = output['anchor_var']
 
         cls_pred_input = fluid.layers.concat(cls_pred_reshape_list, axis=1)
         bbox_pred_input = fluid.layers.concat(bbox_pred_reshape_list, axis=1)
