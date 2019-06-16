@@ -86,9 +86,9 @@ class OptimizerBuilder():
             end_lr = warmup_cfg.WARMUP_END_LR
             start_lr = warmup_cfg.WARMUP_INIT_FACTOR * \
                        warmup_cfg.WARMUP_END_LR
-            logger.info("Learning rate warm up from {:4f} to {:4f} "
-                        "in {} steps.".format(start_lr, end_lr, 
-                                             warmup_steps))
+            logger.debug("Learning rate warm up from {:4f} to {:4f} "
+                         "in {} steps.".format(start_lr, end_lr, 
+                                               warmup_steps))
             learning_rate = layers.linear_lr_warmup(
                 learning_rate=learning_rate,
                 warmup_steps=warmup_steps,

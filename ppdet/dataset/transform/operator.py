@@ -379,7 +379,7 @@ class RandomDistort(BaseOperator):
         return img
 
     def random_contrast(self, img):
-        contrast_delta = np.random.uniform(self.contrast_lower, 
+        contrast_delta = np.random.uniform(self.contrast_lower,
                                            self.contrast_upper)
         prob = np.random.uniform(0, 1)
         if prob < self.contrast_prob:
@@ -395,8 +395,7 @@ class RandomDistort(BaseOperator):
         return img
 
     def random_hue(self, img):
-        hue_delta = np.random.uniform(self.hue_lower, 
-                                      self.hue_upper)
+        hue_delta = np.random.uniform(self.hue_lower, self.hue_upper)
         prob = np.random.uniform(0, 1)
         if prob < self.hue_prob:
             img_hsv = np.array(img.convert('HSV'))

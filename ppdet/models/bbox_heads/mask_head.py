@@ -41,7 +41,6 @@ class MaskHead(object):
     def _mask_conv_head(self, roi_feat, conv_num):
         for i in range(conv_num):
             layer_name = "mask_inter_feat_" + str(i + 1)
-            print(i, layer_name)
             roi_feat = fluid.layers.conv2d(
                 input=roi_feat,
                 num_filters=self.cfg.MASK_HEAD.DIM_REDUCED,

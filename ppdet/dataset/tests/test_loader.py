@@ -53,7 +53,7 @@ class TestLoader(unittest.TestCase):
         """
         from dataset.source.coco_loader import load
         if not os.path.exists(self.anno_path):
-            print('warning: not found %s, so skip this test' % (self.anno_path))
+            logging.warn('not found %s, so skip this test' % (self.anno_path))
             return
         samples = 10
         records, cname2id = load(self.anno_path, samples)
@@ -67,7 +67,7 @@ class TestLoader(unittest.TestCase):
                                  'data/roidbs/instances_val2017.roidb')
 
         if not os.path.exists(anno_path):
-            print('warning: not found %s, so skip this test' % (anno_path))
+            logging.warn('not found %s, so skip this test' % (anno_path))
             return
 
         samples = 10
@@ -81,7 +81,7 @@ class TestLoader(unittest.TestCase):
         """
         from dataset.source.voc_loader import load
         if not os.path.exists(self.anno_path1):
-            print('warning: not found %s, so skip this test' %
+            logging.warn('not found %s, so skip this test' %
                   (self.anno_path1))
             return
         samples = 3
@@ -95,7 +95,7 @@ class TestLoader(unittest.TestCase):
         anno_path = os.path.join(self.prefix, 'data/roidbs/train.roidb')
 
         if not os.path.exists(anno_path):
-            print('warning: not found %s, so skip this test' % (anno_path))
+            logging.warn('not found %s, so skip this test' % (anno_path))
             return
 
         samples = 3

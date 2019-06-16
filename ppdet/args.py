@@ -18,10 +18,13 @@ from __future__ import print_function
 
 import six
 import argparse
+import logging
 import functools
 import distutils.util
 
 __all__ = ['print_arguments', 'parse_args']
+
+logger = logging.getLogger(__name__)
 
 
 def print_arguments(args):
@@ -39,10 +42,10 @@ def print_arguments(args):
     :param args: Input argparse.Namespace for printing.
     :type args: argparse.Namespace
     """
-    print("-----------  Configuration Arguments -----------")
+    logger.info("-----------  Configuration Arguments -----------")
     for arg, value in sorted(six.iteritems(vars(args))):
-        print("%s: %s" % (arg, value))
-    print("------------------------------------------------")
+        logger.info("%s: %s" % (arg, value))
+    logger.info("------------------------------------------------")
 
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
@@ -73,6 +76,11 @@ def parse_args():
     # yapf: disable
     add_arg('cfg_file',       str,   None,      "Configure file path, users must specify it.")
     add_arg('out_file',       str,   None,      "Output file for evaluation, if not set, default files are bbox.json and mask.json.")
+    # TODO(dengkaipeng): change to inline in github
+    add_arg('eval_interval',
+            int,
+            0,
+            "Evaluate train performance every N snapshots, 0 for no validation.")
     # yapf: enable
     args = parser.parse_args()
     return args
