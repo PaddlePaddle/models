@@ -21,6 +21,9 @@ from .resnext import *
 from . import resnet_vd
 from .resnet_vd import *
 
+from . import resnet_a
+from .resnet_a import *
+
 from . import darknet
 from .darknet import *
 
@@ -30,5 +33,6 @@ from .mobilenet import *
 __all__ = resnet.__all__
 __all__ += resnext.__all__
 __all__ += resnet_vd.__all__
+__all__ += resnet_a.__all__
 __all__ += darknet.__all__
 __all__ += mobilenet.__all__

@@ -123,7 +123,7 @@ TEST:
   SCORE_THRESH: 0.05
   NMS_THRESH: 0.5
   DETECTIONS_PER_IM: 100
-  WEIGHTS: output/FasterRCNN/model_final
+  WEIGHTS: /home/ai/model/obj_det/weight/cloud/resnet50_a/
   METRIC_TYPE: COCO
 
 DATA:

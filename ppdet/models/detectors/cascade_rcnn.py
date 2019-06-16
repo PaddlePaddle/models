@@ -30,7 +30,6 @@ from ..registry import RoIExtractors
 from ..registry import Necks
 from ..target_assigners.bbox_assigner import CascadeBBoxAssigner
 
-#from .base import DetectorBase
 from .faster_rcnn import FasterRCNN
 
 __all__ = ['CascadeRCNN']
@@ -55,7 +54,8 @@ class CascadeRCNN(FasterRCNN):
             [1. / brw2, 1. / brw2, 2. / brw2, 2. / brw2]
         ]
         self.is_cls_agnostic = self.cfg.RPN_HEAD.PROPOSAL.CLS_AGNOSTIC_BBOX_REG
-        self.cls_agnostic_bbox_reg = 2 if self.is_cls_agnostic else self.cfg.DATA.CLASS_NUM
+        self.cls_agnostic_bbox_reg = 2 if self.is_cls_agnostic \
+     else self.cfg.DATA.CLASS_NUM
         self.cascade_rcnn_loss_weight = self.cfg.TRAIN.CASCADE_LOSS_WEIGHT
 
     def _forward(self):
@@ -143,9 +143,7 @@ class CascadeRCNN(FasterRCNN):
             target_box=rcnn_loc_delta_s,
             code_type='decode_center_size',
             box_normalized=False,
-            axis=1,
-            # name=name
-        )
+            axis=1, )
         refined_bbox = fluid.layers.reshape(refined_bbox, shape=[-1, 4])
 
         return refined_bbox

@@ -103,12 +103,8 @@ class BBoxAssigner(object):
 
 class CascadeBBoxAssigner(BBoxAssigner):
     """
-    Get the sampled proposal RoIs and the target bounding-boxes (target
-    bounding-box regression deltas given proposal RoIs and ground-truth
-    boxes). And for sampled target bbox, assign the classification
-    (class label) and the inside weights and outside weights for regression
-    loss.
-
+    Matching the RPN's proposed bbox to Ground Truth(GT) bbox based on IoU, 
+    and specify the label from GT bbox's label.
     Args:
         cfg (AttrDict): All configuration.
     """
@@ -130,9 +126,13 @@ class CascadeBBoxAssigner(BBoxAssigner):
         loss.
 
         Args:
-            input_rois (Variable): input RoI bboxes.
+            input_rois (Variable): Input RoI bboxes.
             feed_vars (dict): the
-
+	    is_cls_agnostic(boolean): Bbox regressiong use classification agnostic simply.
+		When setting True, bbox category only include fore-ground and back-ground.
+	    is_cascade_rcnn(boolean): It will open the decode filter for cascade rcnn.
+	    cascade_curr_stage(int): It will specify cascade rcnn's current statge for params selection.
+ 
         Returns:
             The last variable in endpoint-th stage.
         """

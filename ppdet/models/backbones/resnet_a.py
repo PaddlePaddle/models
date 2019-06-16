@@ -29,12 +29,18 @@ from ..registry import BBoxHeadConvs
 from .base import BackboneBase
 
 __all__ = [
-    'ResNet50Backbone', 'ResNet101Backbone', 'ResNet34Backbone', 'ResNet50C5'
+    'ResNetA50Backbone', 'ResNetA101Backbone', 'ResNetA34Backbone',
+    'ResNetA50C5'
 ]
 
 
 class ResNet(object):
-    def __init__(self, depth, freeze_bn, affine_channel, bn_decay=True):
+    def __init__(self,
+                 depth,
+                 freeze_bn,
+                 affine_channel,
+                 bn_decay=True,
+                 cfg=None):
         """
         Args:
             depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
@@ -59,6 +65,7 @@ class ResNet(object):
             152: ([3, 8, 36, 3], self.bottleneck)
         }
         self.stage_filters = [64, 128, 256, 512]
+        self.cfg = cfg
 
     def _conv_norm(self,
                    input,
@@ -133,17 +140,20 @@ class ResNet(object):
             return input
 
     def bottleneck(self, input, num_filters, stride, is_first, name):
+        (stride1, stride3) = (
+            stride, 1) if self.cfg.MODEL.RESNET_TYPE == 'A' else (1, stride)
         conv0 = self._conv_norm(
             input=input,
             num_filters=num_filters,
             filter_size=1,
+            stride=stride1,
             act='relu',
             name=name + "_branch2a")
         conv1 = self._conv_norm(
             input=conv0,
             num_filters=num_filters,
             filter_size=3,
-            stride=stride,
+            stride=stride3,
             act='relu',
             name=name + "_branch2b")
         conv2 = self._conv_norm(
@@ -256,7 +266,7 @@ class ResNet(object):
 
 
 @Backbones.register
-class ResNet50Backbone(BackboneBase):
+class ResNetA50Backbone(BackboneBase):
     def __init__(self, cfg):
         """
         Get the ResNet50 C4 backbone. We define ResNet50 has 5 stages,
@@ -265,7 +275,7 @@ class ResNet50Backbone(BackboneBase):
         Args:
             cfg (AttrDict): the config from given config filename.
         """
-        super(ResNet50Backbone, self).__init__(cfg)
+        super(ResNetA50Backbone, self).__init__(cfg)
         # freeze the backbone at which stage.
         # This number should be not large than 4. 0 means that
         # no layers are fixed.
@@ -299,7 +309,7 @@ class ResNet50Backbone(BackboneBase):
             raise TypeError(str(input) + " should be Variable")
 
         model = ResNet(self.number, self.freeze_bn, self.affine_channel,
-                       self.bn_decay)
+                       self.bn_decay, self.cfg)
         res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
         return {k: v for k, v in zip(self.body_feat_names, res_list)}
 
@@ -309,7 +319,7 @@ class ResNet50Backbone(BackboneBase):
 
 
 @Backbones.register
-class ResNet101Backbone(ResNet50Backbone):
+class ResNetA101Backbone(ResNetA50Backbone):
     def __init__(self, cfg):
         """
         Get the ResNet101 C4 backbone. We define ResNet50 has 5 stages,
@@ -318,12 +328,12 @@ class ResNet101Backbone(ResNet50Backbone):
         Args:
             cfg (AttrDict): the config from given config filename.
         """
-        super(ResNet101Backbone, self).__init__(cfg)
+        super(ResNetA101Backbone, self).__init__(cfg)
         self.number = 101
 
 
 @Backbones.register
-class ResNet34Backbone(ResNet50Backbone):
+class ResNetA34Backbone(ResNetA50Backbone):
     def __init__(self, cfg):
         """
         Get the ResNet34 backbone. We define ResNet34 has 5 stages,
@@ -332,12 +342,12 @@ class ResNet34Backbone(ResNet50Backbone):
         Args:
             cfg (AttrDict): the config from given config filename.
         """
-        super(ResNet34Backbone, self).__init__(cfg)
+        super(ResNet34ABackbone, self).__init__(cfg)
         self.number = 34
 
 
 @BBoxHeadConvs.register
-class ResNet50C5(object):
+class ResNetA50C5(object):
     """
     Args:
         freeze_bn (bool): whether to fix batch norm

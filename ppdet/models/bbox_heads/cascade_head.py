@@ -161,7 +161,6 @@ class CascadeHead(object):
         rcnn_pred = rcnn_pred_list[-1]  # stage 3 
         repreat_num = 1
         repreat_num = 3
-        print(rcnn_loss_weight_list)
         bbox_reg_w = cascade_bbox_reg_weights[-1]
         for i in range(repreat_num):
             # cls score

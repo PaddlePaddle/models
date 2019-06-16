@@ -16,7 +16,7 @@
 MODEL:
   TYPE: CascadeRCNN
   BACKBONE: ResNet50Backbone
-  RESNET_TYPE: 'A'
+  #RESNET_TYPE: 'A'
   ENDPOINT: 5
   NECK: FPN
   FREEZE_AT: 2
@@ -123,7 +123,7 @@ TEST:
   SCORE_THRESH: 0.05
   NMS_THRESH: 0.5
   DETECTIONS_PER_IM: 100
-  WEIGHTS: output/FasterRCNN/model_final
+  WEIGHTS: /home/ai/model/obj_det/weight/cloud/resnet50_a/CascadeRCNN/model_final/
   METRIC_TYPE: COCO
 
 DATA:
