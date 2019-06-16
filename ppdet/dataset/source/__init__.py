@@ -19,9 +19,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import copy
 from .roidb_source import RoiDbSource
 from .simple_source import SimpleSource
+from ...utils import get_dataset_path
 
 
 def build(config):
@@ -46,6 +48,23 @@ def build(config):
         data_cf['cname2cid'] = config['cname2cid']
     else:
         data_cf = config
+
+    # if DATASET_DIR set and not exists, search dataset under ~/.paddle/dataset
+    # if not exists base on DATASET_DIR name (coco or pascal), if not found 
+    # under ~/.paddle/dataset, download it.
+    if 'dataset_dir' in data_cf:
+        dataset_dir = get_dataset_path(data_cf['dataset_dir'])
+        data_cf['anno_file'] = os.path.join(dataset_dir, 
+                                            data_cf['anno_file'])
+        data_cf['image_dir'] = os.path.join(dataset_dir, 
+                                            data_cf['image_dir'])
+        del data_cf['dataset_dir']
+
+        if data_cf is not config:
+            config['data_cf']['ANNO_FILE'] = os.path.join(dataset_dir, 
+                                                data_cf['anno_file'])
+            config['data_cf']['IMAGE_DIR'] = os.path.join(dataset_dir, 
+                                                data_cf['image_dir'])
 
     args = copy.deepcopy(data_cf)
 
