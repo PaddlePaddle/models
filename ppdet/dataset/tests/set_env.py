@@ -1,6 +1,7 @@
 import sys
 import os
 import six
+import logging
 
 path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../')
 if path not in sys.path:
