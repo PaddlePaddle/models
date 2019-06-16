@@ -24,7 +24,7 @@ from .simple_source import SimpleSource
 from ppdet.utils import get_dataset_path
 
 
-def build(config):
+def build_source(config):
     """ build dataset from source data, 
         default source type is 'RoiDbSource'
         Args: 

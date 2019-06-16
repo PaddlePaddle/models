@@ -22,8 +22,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import logging
-from . import source
-from . import transform as tf
+from .source import build_source
+from .transform import build_mapper, map, batch, batch_map
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class Reader(object):
         # 1, Build data source
 
         sc_conf = {'data_cf': file_conf, 'cname2cid': self._cname2cid}
-        sc = source.build(sc_conf)
+        sc = build_source(sc_conf)
 
         # 2, Buid a transformed dataset
         ops = self._trans_conf[which]['OPS']
@@ -58,15 +58,15 @@ class Reader(object):
         drop_last = False if 'DROP_LAST' not in \
             self._trans_conf[which] else self._trans_conf[which]['DROP_LAST']
 
-        mapper = tf.build(ops, {'is_train': which == 'TRAIN'})
+        mapper = build_mapper(ops, {'is_train': which == 'TRAIN'})
 
         worker_args = None
         if 'WORKER_CONF' in self._trans_conf:
             worker_args = self._trans_conf['WORKER_CONF']
             worker_args = {k.lower(): v for k, v in worker_args.items()}
 
-        mapped_ds = tf.map(sc, mapper, worker_args)
-        batched_ds = tf.batch(mapped_ds, batchsize, drop_last)
+        mapped_ds = map(sc, mapper, worker_args)
+        batched_ds = batch(mapped_ds, batchsize, drop_last)
 
         trans_conf = {k.lower(): v for k, v in self._trans_conf[which].items()}
         need_keys = {
@@ -76,7 +76,7 @@ class Reader(object):
             key: value
             for key, value in trans_conf.items() if key in need_keys
         }
-        batched_ds = tf.batch_map(batched_ds, bm_config)
+        batched_ds = batch_map(batched_ds, bm_config)
 
         batched_ds.reset()
         if which.lower() == 'train':
