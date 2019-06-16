@@ -23,8 +23,7 @@ from __future__ import unicode_literals
 
 import logging
 from . import source
-from .transform import transformer as tf
-from .transform import operator as op
+from . import transform as tf
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +58,7 @@ class Reader(object):
         drop_last = False if 'DROP_LAST' not in \
             self._trans_conf[which] else self._trans_conf[which]['DROP_LAST']
 
-        mapper = op.build(ops, {'is_train': which == 'TRAIN'})
+        mapper = tf.build(ops, {'is_train': which == 'TRAIN'})
 
         worker_args = None
         if 'WORKER_CONF' in self._trans_conf:

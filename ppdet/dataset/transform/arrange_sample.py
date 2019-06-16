@@ -29,7 +29,7 @@ import numpy as np
 import cv2
 from PIL import Image, ImageEnhance, ImageDraw
 from functools import reduce
-from .base import BaseOperator, registered_ops, register_op
+from .operator import BaseOperator, registered_ops, register_op
 
 logger = logging.getLogger(__name__)
 
