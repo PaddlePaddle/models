@@ -24,7 +24,11 @@ from .yolo_head import *
 from . import ssd_head
 from .ssd_head import *
 
+from . import retina_head
+from .retina_head import *
+
 __all__ = rpn_head.__all__
 __all__ += fpn_rpn_head.__all__
 __all__ += yolo_head.__all__
 __all__ += ssd_head.__all__
+__all__ += retina_head.__all__

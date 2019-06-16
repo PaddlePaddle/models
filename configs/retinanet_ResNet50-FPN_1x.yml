@@ -1,0 +1,151 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+MODEL:
+    TYPE: Retinanet
+    BACKBONE: ResNet50Backbone
+    ENDPOINT: 5
+    NECK: FPN
+    FREEZE_AT: 2
+    FREEZE_BN: ON
+    AFFINE_CHANNEL: ON
+    HIGHEST_BACKBONE_LVL: 5
+    LOWEST_BACKBONE_LVL: 2
+
+RETINA_HEAD:
+    TYPE: RETINAHead
+    NUM_CONVS: 4
+    ASPECT_RATIOS: [1.0, 2.0, 0.5]
+    VARIANCE: [1., 1., 1., 1.]
+    SCALES_PER_OCTAVE: 3
+    ANCHOR_SCALE: 4
+    TRAIN:
+        SIGMA: 3.0151134457776365
+        POSITIVE_OVERLAP: 0.5
+        NEGATIVE_OVERLAP: 0.4
+        LOSS_GAMMA: 2.0
+        LOSS_ALPHA: 0.25
+        PRIOR_PROB: 0.01
+    TEST:
+        SCORE_THRESH: 0.05
+        NMS_THRESH: 0.3
+        PRE_NMS_TOP_N: 1000
+        DETECTIONS_PER_IM: 100
+        NMA_ETA: 1.0
+
+FPN:
+    DIM: 256
+    SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8.]
+    RPN_MAX_LEVEL: 7
+    RPN_MIN_LEVEL: 3
+    EXTRA_CONV_LEVELS: True
+
+ENV:
+    GPU: ON
+    MULTIPROCESS_READER: OFF
+
+OPTIMIZER:
+    TYPE: Momentum
+    MOMENTUM: 0.9
+
+    LR_DECAY:
+        POLICY: piecewise_decay 
+        BOUNDARIES: [60000, 80000]
+        VALUES: [0.01, 0.001, 0.0001]
+
+    LR_WARMUP:
+        WARMUP: ON
+        WARMUP_STEPS: 500
+        WARMUP_INIT_FACTOR: 1. / 3.
+        WARMUP_END_LR: 0.01
+
+    WEIGHT_DECAY:
+        TYPE: L2
+        FACTOR: 0.0001
+
+TRAIN:
+    MAX_ITERS: 90000
+    LOG_SMOOTH_WINDOW: 20
+    SNAPSHOT_ITER: 10000
+    PRETRAIN_WEIGHTS: ResNet50_pretrained
+    BATCH_NORM_TYPE: BN
+    RANDOM: ON
+    SAVE_DIR: output
+
+TEST:
+    WEIGHTS: output/Retinanet/model_final
+    METRIC_TYPE: COCO
+
+DATA:
+    TRAIN:
+        ANNO_FILE: COCO17/annotations/instances_train2017.json
+        IMAGE_DIR: COCO17/train2017
+        IS_SHUFFLE: True
+    VAL:
+        ANNO_FILE: COCO17/annotations/instances_val2017.json
+        IMAGE_DIR: COCO17/val2017
+        IS_SHUFFLE: False
+    CLASS_NUM: 81
+
+TRANSFORM:
+    TRAIN:
+        OPS:
+            - OP: DecodeImage
+              TO_RGB: True
+            - OP: RandomFlipImage
+              PROB: 0.5
+            - OP: NormalizeImage
+              MEAN: [0.485, 0.456, 0.406]
+              STD: [0.229, 0.224, 0.225]
+              IS_SCALE: True
+              IS_CHANNEL_FIRST: False
+            - OP: ResizeImage
+              TARGET_SIZE: 800
+              MAX_SIZE: 1333
+              INTERP: 1
+            - OP: Rgb2Bgr
+              TO_BGR: False
+            - OP: ArrangeRCNN
+        BATCH_SIZE: 2
+        DEVICES_NUM: 8
+        IS_PADDING: True
+        # TODO(guanzhong): use a better name for coarsest_stride
+        COARSEST_STRIDE: 128
+
+    VAL:
+        OPS:
+            - OP: DecodeImage
+              TO_RGB: True
+            - OP: NormalizeImage
+              MEAN: [0.485, 0.456, 0.406]
+              STD: [0.229, 0.224, 0.225]
+              IS_SCALE: True
+              IS_CHANNEL_FIRST: False
+            - OP: ResizeImage
+              TARGET_SIZE: 800
+              MAX_SIZE: 1333
+              INTERP: 1
+            - OP: Rgb2Bgr
+              TO_BGR: False
+            - OP: ArrangeTestRCNN
+        BATCH_SIZE: 2
+        DEVICES_NUM: 1
+        IS_PADDING: True
+        # TODO(guanzhong): use a better name for coarsest_stride
+        COARSEST_STRIDE: 128
+        WORKER_CONF:
+            bufsize: 100
+            worker_num: 8
+
