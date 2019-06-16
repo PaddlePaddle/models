@@ -30,7 +30,7 @@ import paddle.fluid as fluid
 from ppdet.core.config import load_cfg, merge_cfg
 from ppdet.models import Detectors
 from ppdet.core.optimizer import OptimizerBuilder
-from ppdet.utils.stats import TrainingStats, Time
+from ppdet.utils.stats import TrainingStats
 from args import parse_args, print_arguments
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.utils.run_utils import parse_fetches, eval_run, eval_results
