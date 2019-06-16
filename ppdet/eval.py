@@ -19,10 +19,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import paddle.fluid as fluid
-
 import numpy as np
+
 import logging
+FORMAT='%(asctime)s-%(levelname)s: %(message)s'
+logging.basicConfig(level=logging.INFO, format=FORMAT)
+
+import paddle.fluid as fluid
 
 from args import parse_args, print_arguments
 from ppdet.core.config import load_cfg, merge_cfg
@@ -32,7 +35,6 @@ from ppdet.dataset.reader import Reader
 from ppdet.utils.run_utils import parse_fetches, eval_run, eval_results
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 def main():

@@ -18,10 +18,13 @@ from __future__ import print_function
 
 import six
 import argparse
+import logging
 import functools
 import distutils.util
 
 __all__ = ['print_arguments', 'parse_args']
+
+logger = logging.getLogger(__name__)
 
 
 def print_arguments(args):
@@ -39,10 +42,10 @@ def print_arguments(args):
     :param args: Input argparse.Namespace for printing.
     :type args: argparse.Namespace
     """
-    print("-----------  Configuration Arguments -----------")
+    logger.info("-----------  Configuration Arguments -----------")
     for arg, value in sorted(six.iteritems(vars(args))):
-        print("%s: %s" % (arg, value))
-    print("------------------------------------------------")
+        logger.info("%s: %s" % (arg, value))
+    logger.info("------------------------------------------------")
 
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
