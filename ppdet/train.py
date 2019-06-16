@@ -22,8 +22,8 @@ import time
 import numpy as np
 
 import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
+logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 import paddle.fluid as fluid
 
@@ -36,6 +36,8 @@ import ppdet.utils.checkpoint as checkpoint
 from ppdet.utils.run_utils import parse_fetches, eval_run, eval_results
 from ppdet.dataset.reader import Reader
 import multiprocessing
+
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -136,10 +138,9 @@ def main():
         stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
         train_stats.update(stats)
         logs = train_stats.log()
-        strs = '{}, iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
-            Time(), it, np.mean(outs[-1]), logs, end_time - start_time)
-        print(strs)
-        sys.stdout.flush()
+        strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
+                it, np.mean(outs[-1]), logs, end_time - start_time)
+        logger.info(strs)
 
         # save model
         if it > 0 and it % cfg.TRAIN.SNAPSHOT_ITER == 0:

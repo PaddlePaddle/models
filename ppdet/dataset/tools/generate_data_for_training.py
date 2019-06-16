@@ -30,7 +30,9 @@ from __future__ import unicode_literals
 import argparse
 import os
 import sys
+import logging
 import pickle as pkl
+
 
 path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../')
 if path not in sys.path:
@@ -91,7 +93,7 @@ def dump_coco_as_pickle(args):
 
     #for rec in roidb:
     #    sys.stderr.write('%s\n' % (rec['im_file']))
-    print('dumped %d samples to file[%s]' % (samples, roidb_fname))
+    logging.info('dumped %d samples to file[%s]' % (samples, roidb_fname))
 
 
 def dump_voc_as_pickle(args):
@@ -116,7 +118,7 @@ def dump_voc_as_pickle(args):
     with open(roidb_fname, "wb") as fout:
         pkl.dump((roidb, cat2id), fout)
 
-    print('dumped %d samples to file[%s]' % (samples, roidb_fname))
+    logging.info('dumped %d samples to file[%s]' % (samples, roidb_fname))
 
 
 if __name__ == "__main__":
