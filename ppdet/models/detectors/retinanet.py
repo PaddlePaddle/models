@@ -75,8 +75,7 @@ class Retinanet(DetectorBase):
         else:
             pred = self.retina_head.get_prediction(body_feats, spatial_scale,
                                                    body_feat_names, im_info)
-        print(pred)
-        return pred
+            return pred
 
     def train(self):
         return self._forward()
