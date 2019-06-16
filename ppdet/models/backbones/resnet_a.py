@@ -37,9 +37,10 @@ __all__ = [
 
 
 class ResNet(object):
-    '''
+    """
     ResNet A style.
-    '''
+    """
+
     def __init__(self,
                  depth,
                  freeze_bn,
