@@ -93,7 +93,7 @@ TRANSFORM:
     use_process: True
   TRAIN:
     DEVICES_NUM: 8
-    BATCH_SIZE: 2
+    BATCH_SIZE: 8
     RANDOM_SHAPES: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
     OPS:
       - op: DecodeImage
