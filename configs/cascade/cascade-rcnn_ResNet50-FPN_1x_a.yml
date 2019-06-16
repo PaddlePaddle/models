@@ -15,7 +15,7 @@
 
 MODEL:
   TYPE: CascadeRCNN
-  BACKBONE: ResNet50Backbone
+  BACKBONE: ResNetA50Backbone
   ENDPOINT: 5
   NECK: FPN
   FREEZE_AT: 2
