@@ -163,11 +163,11 @@ TRANSFORM:
   VAL:
     OPS:
       - op: DecodeImage
-        to_rgb: True
+        to_rgb: False #True
       - op: NormalizeImage
-        mean: [0.485, 0.456, 0.406]
-        std: [0.229, 0.224, 0.225]
-        is_scale: True
+	mean: [102.9801, 115.9465, 122.7717] #[0.485, 0.456, 0.406]
+        std: [1., 1., 1.] #[0.229, 0.224, 0.225]
+        is_scale: False
         is_channel_first: False
       - op: ResizeImage
         target_size: 800
