@@ -34,14 +34,20 @@ class SENet(ResNetVd):
     SENet(SE_ResNeXt_vd) backbone
     """
 
-    def __init__(self, depth, freeze_bn, affine_channel, groups, bn_decay=True):
+    def __init__(self,
+                 depth,
+                 groups,
+                 freeze_bn=False,
+                 affine_channel=False,
+                 bn_decay=True):
         """
         Args:
             depth (int): SENet depth, should be 50, 101, 152.
-            freeze_bn (bool): whether to fix batch norm
-                (meaning the scale and bias does not update).
-            affine_channel (bool): Use batch_norm or affine_channel.
             groups (int): define group parammeter for bottleneck
+            freeze_bn (bool): whether to fix batch norm
+                (meaning the scale and bias does not update).default False.
+            affine_channel (bool): Use batch_norm or affine_channel.
+                default False.
             bn_decay (bool): Wether perform L2Decay in batch_norm offset
                              and scale, default True.
         """
