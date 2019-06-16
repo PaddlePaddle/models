@@ -98,9 +98,9 @@ class Reader(object):
                     n += 1
                     if maxit > 0 and n == maxit:
                         return
+                batched_ds.reset()
                 if maxit <= 0:
                     return
-                batched_ds.reset()
 
         return _reader
 
