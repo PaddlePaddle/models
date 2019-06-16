@@ -36,7 +36,6 @@ def init_input(cfg):
     """
     Set all output layers from FPN neck
     """
-    im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
     fpn_3 = fluid.layers.data(
         name='fpn_res3d_sum', shape=[256, 334, 334], dtype='float32')
     fpn_4 = fluid.layers.data(
@@ -54,7 +53,7 @@ def init_input(cfg):
         fpn_dict[var.name] = var
         fpn_name_list.append(var.name)
     spatial_scale = [1. / 128., 1. / 64., 1. / 32., 1. / 16., 1. / 8.]
-    return fpn_dict, im_info, fpn_name_list, spatial_scale
+    return fpn_dict, fpn_name_list, spatial_scale
 
 
 @prog_scope()
@@ -66,10 +65,10 @@ def test_retina_head(cfg_file, is_train):
     merge_cfg({'IS_TRAIN': is_train}, cfg)
     ob = RETINAHead(cfg)
     input = init_input(cfg)
-    im_info = input[1]
     body_feats = input[0]
-    spatial_scale = input[3]
-    fpn_name_list = input[2]
+    spatial_scale = input[2]
+    fpn_name_list = input[1]
+    im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
     gt_box = fluid.layers.data(
         name='gt_box', shape=[4], dtype='float32', lod_level=1)
     gt_label = fluid.layers.data(
@@ -91,6 +90,10 @@ def test_retina_head(cfg_file, is_train):
 
 
 class TestRETINAHead(unittest.TestCase):
+    """
+    Class TestRETINAHead
+    """
+
     def test_retina_heads_test(self):
         """
         Test the testing stage of retinanet

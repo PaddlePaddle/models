@@ -116,7 +116,7 @@ class Retinanet(DetectorBase):
             anno_info = [
                 {'name': 'gt_box', 'shape': [4], 'dtype': 'float32', 'lod_level': 1},
                 {'name': 'gt_label','shape': [1], 'dtype': 'int32', 'lod_level': 1},
-                {'name': 'is_crowd', 'shape': [1],'dtype': 'int32', 'lod_level': 1},
+                {'name': 'is_crowd', 'shape': [1], 'dtype': 'int32', 'lod_level': 1},
             ]
             feed_info += anno_info
         # yapf: enable
