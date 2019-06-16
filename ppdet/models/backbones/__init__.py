@@ -22,7 +22,8 @@ from . import resnet_vd
 from .resnet_vd import *
 
 from . import resnet_a
-from .resnet_a import *
+from .resnet_a import ResNetA50Backbone, ResNetA101Backbone, \
+    ResNetA34Backbone,ResNetA50C5
 
 from . import darknet
 from .darknet import *

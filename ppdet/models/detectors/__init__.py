@@ -19,7 +19,7 @@ from . import mask_rcnn
 from .mask_rcnn import *
 
 from . import cascade_rcnn
-from .cascade_rcnn import *
+from .cascade_rcnn import CascadeRCNN
 
 from . import yolov3
 from .yolov3 import *
