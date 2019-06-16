@@ -72,8 +72,15 @@ class ResNetVd(ResNet):
             bn_name = "bn" + name[3:]
 
         lr = 0. if self.freeze_bn else 1.
-        pattr = ParamAttr(name=bn_name + '_scale', learning_rate=lr)
-        battr = ParamAttr(name=bn_name + '_offset', learning_rate=lr)
+        bn_decay = float(self.bn_decay)
+        pattr = ParamAttr(
+            name=bn_name + '_scale',
+            learning_rate=lr,
+            regularizer=L2Decay(bn_decay))
+        battr = ParamAttr(
+            name=bn_name + '_offset',
+            learning_rate=lr,
+            regularizer=L2Decay(bn_decay))
 
         if not self.affine_channel:
             out = fluid.layers.batch_norm(

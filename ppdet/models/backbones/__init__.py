@@ -30,9 +30,13 @@ from .darknet import *
 from . import mobilenet
 from .mobilenet import *
 
+from . import senet
+from .senet import SENet154Backbone, SENet154C5
+
 __all__ = resnet.__all__
 __all__ += resnext.__all__
 __all__ += resnet_vd.__all__
 __all__ += resnet_a.__all__
+__all__ += senet.__all__
 __all__ += darknet.__all__
 __all__ += mobilenet.__all__

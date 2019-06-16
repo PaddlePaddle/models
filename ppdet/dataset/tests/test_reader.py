@@ -9,8 +9,6 @@ import yaml
 import set_env
 from dataset import Reader
 
-logging.basicConfig(level=logging.INFO)
-
 
 class TestReader(unittest.TestCase):
     """Test cases for dataset.reader
@@ -67,7 +65,7 @@ class TestReader(unittest.TestCase):
                 qps = total / (time.time() - start_ts)
                 bps = bytes / (time.time() - start_ts)
 
-                print('got %d/%d samples in %.3fsec with qps:%d bps:%d' % 
+                logging.info('got %d/%d samples in %.3fsec with qps:%d bps:%d' % 
                     (ct, total, cost, qps, bps))
                 bytes = 0
                 ct = 0
@@ -96,7 +94,7 @@ class TestReader(unittest.TestCase):
         """
         anno = self.rcnn_conf['DATA']['TRAIN']['ANNO_FILE']
         if not os.path.exists(anno):
-            print('exit test_rcnn for not found file[%s]' % (anno))
+            logging.error('exit test_rcnn for not found file[%s]' % (anno))
             return
 
         rcnn = Reader(self.rcnn_conf['DATA'], self.rcnn_conf['TRANSFORM'], 10)

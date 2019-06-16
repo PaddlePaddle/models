@@ -25,9 +25,10 @@ import uuid
 import logging
 import threading
 import multiprocessing as mp
-from .base import ProxiedDataset
+from .transformer import ProxiedDataset
 
 logger = logging.getLogger(__name__)
+
 
 class EndSignal(object):
     def __init__(self, errno=0, errmsg=''):
@@ -42,6 +43,7 @@ class ParallelMappedDataset(ProxiedDataset):
         Notes:
             this class is not thread-safe
     """
+
     def __init__(self, source, mapper, worker_args):
         """ init
         """
@@ -67,7 +69,7 @@ class ParallelMappedDataset(ProxiedDataset):
         bufsize = self._worker_args['bufsize']
         if use_process:
             #from multiprocessing import Queue
-            from .shared_queue import SharedQueue as Queue
+            from ppdet.utils.shared_queue import SharedQueue as Queue
             from multiprocessing import Process as Worker
             from multiprocessing import Event
         else:
@@ -92,15 +94,15 @@ class ParallelMappedDataset(ProxiedDataset):
         for i in range(consumer_num):
             p = Worker(
                 target=self._consume,
-                args=('consumer-' + id + '_%d' % (i),
-                    self._inq, self._outq, self._mapper))
+                args=('consumer-' + id + '_%d' % (i), self._inq, self._outq,
+                      self._mapper))
             self._consumers.append(p)
             p.daemon = True
 
         self._epoch = -1
         self._feeding_ev = Event()
-        self._produced = 0 # produced sample in self._produce
-        self._consumed = 0 # consumed sample in self.next
+        self._produced = 0  # produced sample in self._produce
+        self._consumed = 0  # consumed sample in self.next
         self._stopped_consumers = 0
 
     def _produce(self, id, source, inq):
@@ -115,8 +117,10 @@ class ParallelMappedDataset(ProxiedDataset):
                 self._produced += 1
             except StopIteration as e:
                 self._feeding_ev.clear()
-                self._feeding_ev.wait() # wait other guy to wake up me
-                logger.debug('producer[%s] begin another epoch to produce samples' % (id))
+                self._feeding_ev.wait()  # wait other guy to wake up me
+                logger.debug(
+                    'producer[%s] begin another epoch to produce samples' %
+                    (id))
             except Exception as e:
                 inq.put(
                     EndSignal(
@@ -145,7 +149,7 @@ class ParallelMappedDataset(ProxiedDataset):
             except Exception as e:
                 outq.put(
                     EndSignal(-1, 'failed to do mapper with '
-                            'exception[%s] in consumer[%s]' % (str(e), id)))
+                              'exception[%s] in consumer[%s]' % (str(e), id)))
                 break
 
     def drained(self):
@@ -175,8 +179,8 @@ class ParallelMappedDataset(ProxiedDataset):
             if isinstance(sample, EndSignal):
                 self._stopped_consumers += 1
                 if sample.errno != 0:
-                    logger.warn('error happened in consumer with errmsg[%s]' 
-                        % (sample.errmsg))
+                    logger.warn('error happened in consumer with errmsg[%s]' %
+                                (sample.errmsg))
 
                 if self._stopped_consumers < len(self._consumers):
                     self._inq.put(sample)

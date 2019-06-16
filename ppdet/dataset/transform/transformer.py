@@ -19,7 +19,7 @@ import os
 import numpy as np
 import functools
 import collections
-from ...dataset import Dataset
+from ..dataset import Dataset
 
 
 class ProxiedDataset(Dataset):

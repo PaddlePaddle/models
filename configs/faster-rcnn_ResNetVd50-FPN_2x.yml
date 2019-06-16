@@ -1,0 +1,184 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+MODEL:
+  TYPE: FasterRCNN
+  BACKBONE: ResNetVd50Backbone
+  ENDPOINT: 5
+  NECK: FPN
+  FREEZE_AT: 2
+  FREEZE_BN: ON
+  AFFINE_CHANNEL: ON
+  HIGHEST_BACKBONE_LVL: 5
+  LOWEST_BACKBONE_LVL: 2
+
+RPN_HEAD:
+  TYPE: FPNRPNHead
+  ANCHOR:
+    VARIANCE: [1., 1., 1., 1.]
+
+  PROPOSAL:
+    BATCH_SIZE_PER_IM: 512
+    FG_FRACTION: 0.25
+    FG_THRESH: 0.5
+    BG_THRESH_HI: 0.5
+    BG_THRESH_LO: 0.0
+    BBOX_REG_WEIGHTS: [0.1, 0.1, 0.2, 0.2]
+    PRE_NMS_TOPN: 1000 
+    POST_NMS_TOPN: 1000
+
+  TRAIN:
+    RPN_PRE_NMS_TOP_N: 2000
+    RPN_POST_NMS_TOP_N: 2000
+    RPN_NMS_THRESH: 0.7
+    RPN_MIN_SIZE: 0.0
+    RPN_ETA: 1.0
+  TEST:
+    RPN_PRE_NMS_TOP_N: 1000
+    RPN_POST_NMS_TOP_N: 1000
+    RPN_NMS_THRESH: 0.7
+    RPN_MIN_SIZE: 0.0
+    RPN_ETA: 1.0
+
+  RPN_BATCH_SIZE_PER_IM: 256
+  RPN_STRADDLE_THRESH: 0.
+  RPN_FG_FRACTION: 0.5
+  RPN_POSITIVE_OVERLAP: 0.7
+  RPN_NEGATIVE_OVERLAP: 0.3
+
+BBOX_HEAD:
+  TYPE: BBoxHead
+  HEAD_CONV: BBox2MLP
+  MLP_HEAD_DIM: 1024
+
+ROI_EXTRACTOR:
+  EXTRACT_METHOD: FPNRoIAlign
+  ROI_RESOLUTION: 14
+  SPATIAL_SCALE: 1. / 16.
+  SAMPLING_RATIO: 2
+  FPN_ROI_MIN_LEVEL: 2
+  FPN_ROI_MAX_LEVEL: 5
+  FPN_ROI_CANCONICAL_LEVEL: 4
+  FPN_ROI_CANONICAL_SCALE: 224
+  SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8., 1. / 4.]  
+
+FPN:
+  DIM: 256
+  SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8., 1. / 4.]
+  RPN_MAX_LEVEL: 6
+  RPN_MIN_LEVEL: 2
+  RPN_ASPECT_RATIOS: [0.5, 1, 2]
+  RPN_ANCHOR_START_SIZE: 32
+
+ENV:
+  GPU: ON
+  GPU_NUM: 8
+  MULTIPROCESS_READER: OFF
+
+OPTIMIZER:
+  TYPE: Momentum
+  MOMENTUM: 0.9
+
+  LR_DECAY:
+    POLICY: piecewise_decay 
+    BOUNDARIES: [240000, 320000]
+    VALUES: [0.01, 0.001, 0.0001]
+
+  LR_WARMUP:
+    WARMUP: ON
+    WARMUP_STEPS: 500
+    WARMUP_INIT_FACTOR: 1. / 3.
+    WARMUP_END_LR: 0.01
+
+  WEIGHT_DECAY:
+    TYPE: L2
+    FACTOR: 0.0001
+
+TRAIN:
+  MAX_ITERS: 360000
+  LOG_SMOOTH_WINDOW: 20
+  SNAPSHOT_ITER: 10000
+  PRETRAIN_WEIGHTS: resnet50_vd_fusebn
+  BATCH_NORM_TYPE: BN
+  RANDOM: ON
+  SAVE_DIR: output
+
+TEST:
+  SCORE_THRESH: 0.05
+  NMS_THRESH: 0.5
+  DETECTIONS_PER_IM: 100
+  WEIGHTS: output/FasterRCNN/model_final
+  METRIC_TYPE: COCO
+
+DATA:
+  TRAIN:
+      ANNO_FILE: COCO17/annotations/instances_train2017.json
+      IMAGE_DIR: COCO17/train2017
+      IS_SHUFFLE: True
+  VAL:
+      ANNO_FILE: COCO17/annotations/instances_val2017.json
+      IMAGE_DIR: COCO17/val2017
+      IS_SHUFFLE: False
+  CLASS_NUM: 81
+
+TRANSFORM:
+  TRAIN:
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+      - op: RandomFlipImage
+        prob: 0.5
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True
+        is_channel_first: False
+      - op: ResizeImage
+        target_size: 800
+        max_size: 1333
+        interp: 1
+      - op: Rgb2Bgr
+        to_bgr: False
+      - op: ArrangeRCNN
+    BATCH_SIZE: 1
+    IS_PADDING: True
+    # TODO(guanzhong): use a better name for coarsest_stride
+    COARSEST_STRIDE: 32
+
+  VAL:
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True
+        is_channel_first: False
+      - op: ResizeImage
+        target_size: 800
+        max_size: 1333
+        interp: 1
+      - op: Rgb2Bgr
+        to_bgr: False
+      - op: ArrangeTestRCNN
+    BATCH_SIZE: 1
+    IS_PADDING: True
+    # TODO(guanzhong): use a better name for coarsest_stride
+    COARSEST_STRIDE: 32
+    PADDING_IM_INFO: ON
+  WORKER_CONF:
+    bufsize: 100
+    worker_num: 8
+
