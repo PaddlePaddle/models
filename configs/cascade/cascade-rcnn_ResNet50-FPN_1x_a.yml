@@ -16,7 +16,6 @@
 MODEL:
   TYPE: CascadeRCNN
   BACKBONE: ResNet50Backbone
-  #RESNET_TYPE: 'A'
   ENDPOINT: 5
   NECK: FPN
   FREEZE_AT: 2
@@ -113,26 +112,26 @@ TRAIN:
   MAX_ITERS: 90000
   LOG_SMOOTH_WINDOW: 20
   SNAPSHOT_ITER: 10000
-  PRETRAIN_WEIGHTS: ../../../weight/imagenet_resnet50_fusebn/ #ResNet50_pretrained
+  PRETRAIN_WEIGHTS: ./imagenet_resnet50_fusebn
   BATCH_NORM_TYPE: BN
   RANDOM: ON
-  SAVE_DIR: output/resnet50_a
+  SAVE_DIR: output
   CASCADE_LOSS_WEIGHT: [1.0, 0.5, 0.25]
 
 TEST:
   SCORE_THRESH: 0.05
   NMS_THRESH: 0.5
   DETECTIONS_PER_IM: 100
-  WEIGHTS: /home/ai/model/obj_det/weight/cloud/resnet50_a/CascadeRCNN/model_final/
+  WEIGHTS: output/CascadeRCNN/model_final/
   METRIC_TYPE: COCO
 
 DATA:
   TRAIN:
-      ANNO_FILE: /home/ai/dataset/COCO17/annotations/instances_train2017.json
-      IMAGE_DIR: /home/ai/dataset/COCO17/train2017
+      ANNO_FILE: COCO17/annotations/instances_train2017.json
+      IMAGE_DIR: COCO17/train2017
       IS_SHUFFLE: True
   VAL:
-      ANNO_FILE: /home/ai/dataset/COCO17/annotations/instances_val2017.json
+      ANNO_FILE: COCO17/annotations/instances_val2017.json
       IMAGE_DIR: /home/ai/dataset/COCO17/val2017
       IS_SHUFFLE: False
   CLASS_NUM: 81
