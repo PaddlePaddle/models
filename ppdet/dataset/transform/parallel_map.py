@@ -218,9 +218,10 @@ class ParallelMappedDataset(ProxiedDataset):
         self._consumed = 0
         self._feeding_ev.set()
 
-# FIXUP(dengkaipeng): fix me if you have better impliment
+# FIXME(dengkaipeng): fix me if you have better impliment
 # handle terminate reader process, do not print stack frame
-def _reader_quit(signum, frame):
+def _reader_exit(signum, frame):
+    logger.debug("Reader process exit.")
     sys.exit()
 
-signal.signal(signal.SIGTERM, _reader_quit)
+signal.signal(signal.SIGTERM, _reader_exit)
