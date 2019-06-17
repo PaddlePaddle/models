@@ -208,6 +208,13 @@ def expand_boxes(boxes, scale):
     return boxes_exp
 
 def coco17_labels(with_background=True):
+    """
+    Get default class id to labels map in COCO2017.
+
+    Args:
+        with_background (bool, default True):
+            whether load background as class 0.
+    """
     labels_map = {
         0: 'background',
         1: 'person',
