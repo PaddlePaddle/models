@@ -25,15 +25,15 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 
 
 # yapf: disable
-add_arg('input',             str,   "123_A.jpg",      "input image")
+add_arg('input',             str,   "./image/testA/123_A.jpg",      "input image")
 add_arg('output',            str,   "./output_0", "The directory the model and the test result to be saved to.")
-add_arg('init_model',        str,   './G/150',       "The init model file of directory.")
+add_arg('init_model',        str,   './output_0/checkpoints/0',       "The init model file of directory.")
 add_arg('input_style',       str,   "A",        "A or B")
 def infer():
     with fluid.dygraph.guard():
         data_shape = [-1,3,256,256]
        
-        out_path = args.output + "/single" + "/" + str(args.input)
+        out_path = args.output + "/single"
         if not os.path.exists(out_path):
             os.makedirs(out_path)
         cycle_gan = Cycle_Gan("cycle_gan")
