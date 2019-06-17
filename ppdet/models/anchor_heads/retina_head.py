@@ -206,7 +206,7 @@ class RetinaHead(object):
             anchor_sizes = []
             stride = int(1 / spatial_scale[self.k_max - lvl])
             for octave in range(retina_cfg.SCALES_PER_OCTAVE):
-                anchor_size = stride * (2**(float(octave) /
+                anchor_size = stride * (2 ** (float(octave) /
                                             float(retina_cfg.SCALES_PER_OCTAVE))
                                         ) * retina_cfg.ANCHOR_SCALE
                 anchor_sizes.append(anchor_size)
