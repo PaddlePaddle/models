@@ -24,7 +24,7 @@ from .simple_source import SimpleSource
 from ppdet.utils import get_dataset_path
 
 
-def build(config):
+def build_source(config):
     """ build dataset from source data, 
         default source type is 'RoiDbSource'
         Args: 
@@ -63,7 +63,10 @@ def build(config):
     # defaut type is 'RoiDbSource'
     source_type = 'RoiDbSource'
     if 'type' in data_cf:
-        source_type = data_cf['type']
+        if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource']:
+            source_type = 'RoiDbSource'
+        else:
+            source_type = data_cf['type']
         del args['type']
     if source_type == 'RoiDbSource':
         return RoiDbSource(**args)

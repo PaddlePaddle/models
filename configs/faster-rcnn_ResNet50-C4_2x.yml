@@ -131,7 +131,7 @@ TRANSFORM:
           target_size: 800
           max_size: 1333
           interp: 1
-        - op: Rgb2Bgr
+        - op: Permute
           to_bgr: False
         - op: ArrangeRCNN
       BATCH_SIZE: 1 # batch size per device
@@ -150,7 +150,7 @@ TRANSFORM:
           target_size: 800
           max_size: 1333
           interp: 1
-        - op: Rgb2Bgr
+        - op: Permute
           to_bgr: False
         - op: ArrangeTestRCNN
 
