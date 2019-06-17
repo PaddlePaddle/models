@@ -88,8 +88,7 @@ def main():
 
     # 4. Define reader
     reader = Reader(cfg.DATA, cfg.TRANSFORM)
-    #reader.train()
-    test_reader = reader.val()
+    test_reader = reader.test()
     pyreader = detector.get_pyreader()
     pyreader.decorate_sample_list_generator(test_reader, place)
 
@@ -101,8 +100,8 @@ def main():
     # 6. Run
     iter_id = 1
     results = []
-    file_list = '/workspace/icode/baidu/paddle/ppdetection/COCO17/annotations/instances_val2017.json'
-    with_background = getattr(cfg.DATA.VAL, 'WITH_BACKGROUND', True)
+    file_list = cfg.DATA.TEST.ANNO_FILE
+    with_background = getattr(cfg.DATA.TEST, 'WITH_BACKGROUND', True)
     a = True
     try:
         pyreader.start()

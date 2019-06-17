@@ -124,13 +124,23 @@ TEST:
 
 DATA:
   TRAIN:
-      ANNO_FILE: COCO17/annotations/instances_train2017.json
-      IMAGE_DIR: COCO17/train2017
+      DATASET_DIR: COCO17
+      ANNO_FILE: annotations/instances_train2017.json
+      IMAGE_DIR: train2017
       IS_SHUFFLE: True
   VAL:
-      ANNO_FILE: COCO17/annotations/instances_val2017.json
-      IMAGE_DIR: COCO17/val2017
+      DATASET_DIR: COCO17
+      ANNO_FILE: annotations/instances_val2017.json
+      IMAGE_DIR: val2017
       IS_SHUFFLE: False
+  TEST:
+      DATASET_DIR: COCO17
+      ANNO_FILE: annotations/instances_val2017.json
+      IMAGE_DIR: val2017
+      TEST_FILE: val2017.txt
+      IS_SHUFFLE: False
+      TYPE: SimpleSource
+      SAMPLES: 5
   CLASS_NUM: 81
 
 TRANSFORM:
@@ -177,6 +187,28 @@ TRANSFORM:
     IS_PADDING: True
     # TODO(guanzhong): use a better name for coarsest_stride
     COAREST_STRIDE: 32
+
+  TEST:
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True
+        is_channel_first: False
+      - op: ResizeImage
+        target_size: 800
+        max_size: 1333
+        interp: 1
+      - op: Permute
+        to_bgr: False
+      - op: ArrangeTestRCNN
+    BATCH_SIZE: 1
+    IS_PADDING: True
+    # TODO(guanzhong): use a better name for coarsest_stride
+    COAREST_STRIDE: 32
+
   WORKER_CONF:
     bufsize: 100
     worker_num: 8
