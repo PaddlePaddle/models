@@ -148,15 +148,15 @@ class ResNet(object):
 
     def bottleneck(self, input, num_filters, stride, is_first, name):
         """
-	resnet's bottleneck structure
+        resnet's bottleneck structure
 
-	Args:
-	    input(Variable): input tensor
-	    num_filters(int): kernel num
-	    stride(int): operator's stride
-	    is_first(boolean): whether shortcut use self._conv_norm
-	    name(string): operator's name 
-	"""
+        Args:
+            input(Variable): input tensor
+            num_filters(int): kernel num
+            stride(int): operator's stride
+            is_first(boolean): whether shortcut use self._conv_norm
+            name(string): operator's name 
+        """
         (stride1, stride3) = (stride,
                               1) if self.resnet_type == 'A' else (1, stride)
         conv0 = self._conv_norm(
@@ -336,9 +336,9 @@ class ResNet50Backbone(BackboneBase):
 
     def get_body_feat_names(self):
         """
-	Retures:
-	    get the names of body's features 
-	"""
+        Retures:
+            get the names of body's features 
+        """
         return self.body_feat_names
 
 
@@ -447,9 +447,9 @@ class ResNetA50Backbone(BackboneBase):
 
     def get_body_feat_names(self):
         """
-	Returns:
-		get the names of body's features
-	"""
+        Returns:
+            get the names of body's features
+        """
         return self.body_feat_names
 
 
@@ -485,7 +485,7 @@ class ResNetA34Backbone(ResNetA50Backbone):
         Args:
             cfg (AttrDict): the config from given config filename.
         """
-        super(ResNet34ABackbone, self).__init__(cfg)
+        super(ResNetA34Backbone, self).__init__(cfg)
         self.number = 34
 
 
