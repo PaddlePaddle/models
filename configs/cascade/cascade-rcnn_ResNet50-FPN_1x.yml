@@ -157,7 +157,6 @@ TRANSFORM:
       - op: ArrangeRCNN
     BATCH_SIZE: 2
     IS_PADDING: True
-    # TODO(guanzhong): use a better name for coarsest_stride
     COARSEST_STRIDE: 32
 
   VAL:
@@ -178,7 +177,6 @@ TRANSFORM:
       - op: ArrangeTestRCNN
     BATCH_SIZE: 1
     IS_PADDING: True
-    # TODO(guanzhong): use a better name for coarsest_stride
     COARSEST_STRIDE: 32
   WORKER_CONF:
     bufsize: 100
