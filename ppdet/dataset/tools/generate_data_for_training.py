@@ -28,11 +28,11 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
+
 import os
 import sys
 import logging
 import pickle as pkl
-
 
 path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../')
 if path not in sys.path:
@@ -110,7 +110,8 @@ def dump_voc_as_pickle(args):
         os.makedirs(save_dir)
     save_dir = args.save_dir
     anno_path = args.annotation
-    roidb, cat2id = loader.load(anno_path, samples, with_cat2id=True, use_default_label=None)
+    roidb, cat2id = loader.load(
+        anno_path, samples, with_cat2id=True, use_default_label=None)
     samples = len(roidb)
     part = anno_path.split('/')
     dsname = part[-4]
@@ -120,7 +121,7 @@ def dump_voc_as_pickle(args):
     anno_path = os.path.join(anno_path.split('/train.txt')[0], 'label_list.txt')
     with open(anno_path, 'w') as fw:
         for key in cat2id.keys():
-            fw.write(key+'\n')
+            fw.write(key + '\n')
     logging.info('dumped %d samples to file[%s]' % (samples, roidb_fname))
 
 

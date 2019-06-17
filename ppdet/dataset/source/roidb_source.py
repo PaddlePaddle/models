@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 
 import os
 import random
+
 import copy
 import pickle as pkl
 from ..dataset import Dataset
@@ -109,8 +110,8 @@ class RoiDbSource(Dataset):
         """
         from . import loader
         records, _ = loader.load(self._fname, self._samples,
-                                         self._with_background, True,
-                                         self.use_default_label)
+                                 self._with_background, True,
+                                 self.use_default_label)
         return records
 
     def _load_image(self, where):

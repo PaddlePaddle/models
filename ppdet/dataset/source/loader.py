@@ -21,6 +21,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
+
 import numpy as np
 import logging
 import pickle as pkl
@@ -122,7 +123,8 @@ def load(fname,
         if use_default_label is None:
             records, cname2cid = voc_loader.get_roidb(fname, samples)
         else:
-            records, cname2cid = voc_loader.load(fname, samples, use_default_label)
+            records, cname2cid = voc_loader.load(fname, samples,
+                                                 use_default_label)
     else:
         raise ValueError('invalid file type when load data from file[%s]' %
                          (fname))

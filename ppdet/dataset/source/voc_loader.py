@@ -14,6 +14,7 @@
 
 import os
 import numpy as np
+
 import xml.etree.ElementTree as ET
 
 
@@ -167,8 +168,8 @@ def load(anno_path, sample_num=-1, use_default_label=True):
     ct = 0
     cname2cid = {}
     existence = False if cname2cid is None else True
-    if not use_default_label:   
-        label_path =  os.path.join(part[0], 'ImageSets/Main/label_list.txt')
+    if not use_default_label:
+        label_path = os.path.join(part[0], 'ImageSets/Main/label_list.txt')
         with open(label_path, 'r') as fr:
             label_id = 1
             for line in fr.readlines():
@@ -176,7 +177,7 @@ def load(anno_path, sample_num=-1, use_default_label=True):
                 label_id += 1
     else:
         cname2cid = pascalvoc_label()
-                  
+
     # mapping category name to class id
     # background:0, first_class:1, second_class:2, ...
     with open(txt_file, 'r') as fr:
