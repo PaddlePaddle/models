@@ -1124,7 +1124,7 @@ def train():
                         ModelHyperParams.trg_vocab_size),
             batch_size=TrainTaskConfig.batch_size)
         if args.use_data_parallel:
-            reader = fluid.contrib.reader.multi_process_reader(reader)
+            reader = fluid.contrib.reader.distributed_batch_reader(reader)
 
         for i in range(200):
             dy_step = 0

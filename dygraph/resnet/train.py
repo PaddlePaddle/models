@@ -285,7 +285,7 @@ def train_resnet():
         train_reader = paddle.batch(
             paddle.dataset.flowers.train(use_xmap=False), batch_size=batch_size)
         if args.use_data_parallel:
-            train_reader = fluid.contrib.reader.multi_process_reader(
+            train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
 
         test_reader = paddle.batch(

@@ -187,7 +187,7 @@ def train_mnist(args):
         train_reader = paddle.batch(
             paddle.dataset.mnist.train(), batch_size=BATCH_SIZE, drop_last=True)
         if args.use_data_parallel:
-            train_reader = fluid.contrib.reader.multi_process_reader(
+            train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
 
         test_reader = paddle.batch(
