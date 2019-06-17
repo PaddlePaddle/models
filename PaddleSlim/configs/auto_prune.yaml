@@ -1,0 +1,32 @@
+version: 1.0
+pruners:
+    pruner_1:
+        class: 'StructurePruner'
+        pruning_axis:
+            '*': 0
+        criterions:
+            '*': 'l1_norm'
+controllers:
+    sa_controller:
+        class: 'SAController'
+        reduce_rate: 0.9
+        init_temperature: 100
+        max_iter_number: 300
+strategies:
+    auto_pruning_strategy:
+        class: 'AutoPruneStrategy'
+        pruner: 'pruner_1'
+        controller: 'sa_controller'
+        start_epoch: 0
+        end_epoch: 500
+        retrain_epoch: 0
+        max_ratio: 0.50
+        min_ratio: 0.48
+        uniform_range: 0.4
+        pruned_params: '.*_sep_weights'
+        metric_name: 'acc_top1'
+compressor:
+    epoch: 500
+    checkpoint_path: './checkpoints_auto_pruning/'
+    strategies:
+        - auto_pruning_strategy

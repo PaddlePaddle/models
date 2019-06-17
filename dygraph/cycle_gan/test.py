@@ -38,7 +38,7 @@ def test():
             os.makedirs(out_path)
         cycle_gan = Cycle_Gan("cycle_gan")
         save_dir = args.init_model + str(epoch)
-        restore = fluid.dygraph.load_persistables(save_dir)
+        restore, _ = fluid.dygraph.load_persistables(save_dir)
         cycle_gan.load_dict(restore)
         cycle_gan.eval()
         for data_A , data_B in zip(A_test_reader(), B_test_reader()): 

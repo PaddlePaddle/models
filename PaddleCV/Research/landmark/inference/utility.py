@@ -1,24 +1,11 @@
-"""Contains common utility functions."""
-#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import time
+import os
+import subprocess
 import distutils.util
 import numpy as np
-import six
 from paddle.fluid import core
 
 
@@ -38,7 +25,7 @@ def print_arguments(args):
     :type args: argparse.Namespace
     """
     print("-----------  Configuration Arguments -----------")
-    for arg, value in sorted(six.iteritems(vars(args))):
+    for arg, value in sorted(vars(args).iteritems()):
         print("%s: %s" % (arg, value))
     print("------------------------------------------------")
 
@@ -61,3 +48,23 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
         type=type,
         help=help + ' Default: %(default)s.',
         **kwargs)
+
+
+def fmt_time():
+    """ get formatted time for now
+    """
+    now_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    return now_str
+
+
+def get_gpunum():
+    """ get number of gpu devices
+    """
+    visibledevice = os.getenv('CUDA_VISIBLE_DEVICES')
+    if visibledevice:
+        devicenum = len(visibledevice.split(','))
+    else:
+        devicenum = subprocess.check_output(['nvidia-smi', '-L']).count('\n')
+    return devicenum
+
+

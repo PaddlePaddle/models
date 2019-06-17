@@ -58,6 +58,7 @@ run_type_g.add_arg("task_name", str, None,
 run_type_g.add_arg("do_train", bool, True, "Whether to perform training.")
 run_type_g.add_arg("do_val", bool, True, "Whether to perform evaluation.")
 run_type_g.add_arg("do_infer", bool, True, "Whether to perform inference.")
+parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
 args = parser.parse_args()
 # yapf: enable.
@@ -199,6 +200,8 @@ def main(args):
         print("Max train steps: %d" % max_train_steps)
 
         train_program = fluid.Program()
+        if args.enable_ce and args.random_seed is not None:
+            train_program.random_seed = args.random_seed
 
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
@@ -363,6 +366,7 @@ def main(args):
         print("Final test result:")
         inference(exe, infer_prog, infer_pyreader,
             [prop.name], "infer")
+
 
 if __name__ == "__main__":
     print_arguments(args)

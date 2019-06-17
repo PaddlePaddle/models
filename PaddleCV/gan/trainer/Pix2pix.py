@@ -70,17 +70,23 @@ class GTrainer():
                         "generator"):
                     vars.append(var.name)
             self.param = vars
-            optimizer = fluid.optimizer.Adam(
-                learning_rate=fluid.layers.piecewise_decay(
-                    boundaries=[99 * step_per_epoch] +
-                    [x * step_per_epoch for x in range(100, cfg.epoch - 1)],
-                    values=[lr] + [
-                        lr * (1.0 - (x - 99.0) / 101.0)
-                        for x in range(100, cfg.epoch)
-                    ]),
-                beta1=0.5,
-                beta2=0.999,
-                name="net_G")
+            if cfg.epoch <= 100:
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=lr, beta1=0.5, beta2=0.999, name="net_G")
+            else:
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=fluid.layers.piecewise_decay(
+                        boundaries=[99 * step_per_epoch] + [
+                            x * step_per_epoch
+                            for x in range(100, cfg.epoch - 1)
+                        ],
+                        values=[lr] + [
+                            lr * (1.0 - (x - 99.0) / 101.0)
+                            for x in range(100, cfg.epoch)
+                        ]),
+                    beta1=0.5,
+                    beta2=0.999,
+                    name="net_G")
             optimizer.minimize(self.g_loss, parameter_list=vars)
 
 
@@ -142,17 +148,23 @@ class DTrainer():
                     vars.append(var.name)
 
             self.param = vars
-            optimizer = fluid.optimizer.Adam(
-                learning_rate=fluid.layers.piecewise_decay(
-                    boundaries=[99 * step_per_epoch] +
-                    [x * step_per_epoch for x in range(100, cfg.epoch - 1)],
-                    values=[lr] + [
-                        lr * (1.0 - (x - 99.0) / 101.0)
-                        for x in range(100, cfg.epoch)
-                    ]),
-                beta1=0.5,
-                beta2=0.999,
-                name="net_D")
+            if cfg.epoch <= 100:
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=lr, beta1=0.5, beta2=0.999, name="net_D")
+            else:
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=fluid.layers.piecewise_decay(
+                        boundaries=[99 * step_per_epoch] + [
+                            x * step_per_epoch
+                            for x in range(100, cfg.epoch - 1)
+                        ],
+                        values=[lr] + [
+                            lr * (1.0 - (x - 99.0) / 101.0)
+                            for x in range(100, cfg.epoch)
+                        ]),
+                    beta1=0.5,
+                    beta2=0.999,
+                    name="net_D")
 
             optimizer.minimize(self.d_loss, parameter_list=vars)
 
