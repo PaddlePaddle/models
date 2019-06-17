@@ -20,9 +20,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import sys
 import six
 import uuid
 import logging
+import signal
 import threading
 import multiprocessing as mp
 from .transformer import ProxiedDataset
@@ -215,3 +217,10 @@ class ParallelMappedDataset(ProxiedDataset):
         self._source.reset()
         self._consumed = 0
         self._feeding_ev.set()
+
+# FIXUP(dengkaipeng): fix me if you have better impliment
+# handle terminate reader process, do not print stack frame
+def _reader_quit(signum, frame):
+    sys.exit()
+
+signal.signal(signal.SIGTERM, _reader_quit)
