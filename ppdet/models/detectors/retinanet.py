@@ -40,7 +40,7 @@ class Retinanet(DetectorBase):
         self.is_train = cfg.IS_TRAIN
         self.NECK_ON = getattr(cfg.MODEL, 'NECK', None)
         self.backbone = Backbones.get(cfg.MODEL.BACKBONE)(cfg)
-        self.retina_head = RETINAHeads.get(cfg.RETINA_HEAD.TYPE)(cfg)
+        self.retina_head = RetinaHeads.get(cfg.RETINA_HEAD.TYPE)(cfg)
         if self.NECK_ON:
             self.neck = Necks.get(cfg.MODEL.NECK)(cfg)
         self.use_pyreader = True
