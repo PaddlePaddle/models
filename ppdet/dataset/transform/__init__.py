@@ -13,19 +13,20 @@
 # limitations under the License.
 
 import copy
-from . import operator
-from . import arrange_sample
-from . import transformer
-from . import post_map
-from .parallel_map import ParallelMappedDataset
 import logging
-logging.basicConfig(level=logging.INFO)
+
+from .transformer import MappedDataset, BatchedDataset
+from .post_map import build_post_map
+from .parallel_map import ParallelMappedDataset
+from .operator import BaseOperator, registered_ops
+from . import arrange_sample
+
+__all__ = ['build_mapper', 'map', 'batch', 'batch_map']
+
 logger = logging.getLogger(__name__)
 
-__all__ = ['build', 'map', 'batch', 'batch_mapper']
 
-
-def build(ops, context=None):
+def build_mapper(ops, context=None):
     """ Build a mapper for operators in 'ops'
 
     Args:
@@ -49,17 +50,17 @@ def build(ops, context=None):
     op_repr = []
     for op in ops:
         if type(op) is dict and 'op' in op:
-            op_func = getattr(operator.BaseOperator, op['op'])
+            op_func = getattr(BaseOperator, op['op'])
             params = copy.deepcopy(op)
             del params['op']
             o = op_func(**params)
-        elif not isinstance(op, operator.BaseOperator):
-            op_func = getattr(operator.BaseOperator, op['name'])
+        elif not isinstance(op, BaseOperator):
+            op_func = getattr(BaseOperator, op['name'])
             params = {} if 'params' not in op else op['params']
             o = op_func(**params)
         else:
             assert isinstance(
-                op, operator.BaseOperator), 'invalid operator when build ops'
+                op, BaseOperator), 'invalid operator when build ops'
             o = op
         op_funcs.append(o)
         op_repr.append('{%s}' % str(o))
@@ -92,7 +93,7 @@ def map(ds, mapper, worker_args=None):
     if worker_args is not None:
         return ParallelMappedDataset(ds, mapper, worker_args)
     else:
-        return transformer.MappedDataset(ds, mapper)
+        return MappedDataset(ds, mapper)
 
 
 def batch(ds, batchsize, drop_last=False):
@@ -104,7 +105,7 @@ def batch(ds, batchsize, drop_last=False):
     Returns:
         a batched dataset
     """
-    return transformer.BatchedDataset(ds, batchsize, drop_last=drop_last)
+    return BatchedDataset(ds, batchsize, drop_last=drop_last)
 
 
 def batch_map(ds, config):
@@ -115,8 +116,8 @@ def batch_map(ds, config):
     Returns:
         a batched dataset which is processed
     """
-    mapper = post_map.build(**config)
-    return transformer.MappedDataset(ds, mapper)
+    mapper = build_post_map(**config)
+    return MappedDataset(ds, mapper)
 
 
 for nm in operator.registered_ops:

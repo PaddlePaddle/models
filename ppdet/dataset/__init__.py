@@ -40,26 +40,5 @@ from __future__ import unicode_literals
 
 from .dataset import Dataset
 from .reader import Reader
-from . import source
-from . import transform
 
-build_source = source.build
-
-def build_dataset(config):
-    """ build a transformed dataset by:
-        1, loading data from 'config.source'
-        2, transform sample using 'config.ops'
-        3, accelerate it using multiple workers
-    """
-    sc_conf = config['source']
-    op_conf = config['ops']
-    worker_conf = config['worker_args']
-
-    sc = source.build(sc_conf)
-    return transform.transform(sc, \
-        op_conf, worker_conf)
-
-
-__all__ = ['Dataset', 'source', \
-    'build_source', 'build_dataset', 'Reader']
-
+__all__ = ['Dataset', 'source', 'Reader']

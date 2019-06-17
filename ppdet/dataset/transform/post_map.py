@@ -23,10 +23,10 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-def build(coarsest_stride=1,
-          is_padding=False,
-          random_shapes=[],
-          multi_scales=[]):
+def build_post_map(coarsest_stride=1,
+                   is_padding=False,
+                   random_shapes=[],
+                   multi_scales=[]):
     """ Build a mapper for post-processing batches
 
     Args:

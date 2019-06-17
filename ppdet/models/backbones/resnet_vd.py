@@ -19,6 +19,7 @@ from __future__ import print_function
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.framework import Variable
+from paddle.fluid.regularizer import L2Decay
 
 from ..registry import Backbones
 from ..registry import BBoxHeadConvs
@@ -29,15 +30,18 @@ __all__ = ['ResNetVd50Backbone', 'ResNetVd50C5']
 
 
 class ResNetVd(ResNet):
-    def __init__(self, depth, freeze_bn, affine_channel):
+    def __init__(self, depth, freeze_bn, affine_channel, bn_decay=True):
         """
         Args:
             depth (int): ResNet_Vd depth, should be 18, 34, 50, 101, 152.
             freeze_bn (bool): whether to fix batch norm
                 (meaning the scale and bias does not update).
             affine_channel (bool): Use batch_norm or affine_channel.
+            bn_decay (bool): Wether perform L2Decay in batch_norm offset
+                             and scale, default True.
         """
         super(ResNetVd, self).__init__(depth, freeze_bn, affine_channel)
+        self.bn_decay = bn_decay
 
     def _conv_norm_vd(self,
                       input,
@@ -234,6 +238,8 @@ class ResNetVd50Backbone(BackboneBase):
         self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
         # use batch_norm or affine_channel.
         self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
+        # whether ignore batch_norm offset and scale L2Decay
+        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', True)
         self.endpoint = getattr(cfg.MODEL, 'ENDPOINT', 4)
         self.number = 50
         # This list contains names of each Res Block output.
@@ -253,7 +259,8 @@ class ResNetVd50Backbone(BackboneBase):
         if not isinstance(input, Variable):
             raise TypeError(str(input) + " should be Variable")
 
-        model = ResNetVd(self.number, self.freeze_bn, self.affine_channel)
+        model = ResNetVd(self.number, self.freeze_bn, self.affine_channel,
+                         self.bn_decay)
         res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
         return {k: v for k, v in zip(self.body_feat_names, res_list)}
 
@@ -278,10 +285,13 @@ class ResNetVd50C5(object):
         self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
         # use batch_norm or affine_channel.
         self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
+        # whether ignore batch_norm offset and scale L2Decay
+        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', True)
         self.number = 50
         self.stage_number = 5
 
     def __call__(self, input):
-        model = ResNetVd(self.number, self.freeze_bn, self.affine_channel)
+        model = ResNetVd(self.number, self.freeze_bn, self.affine_channel,
+                         self.bn_decay)
         res5 = model.layer_warp(input, self.stage_number)
         return res5

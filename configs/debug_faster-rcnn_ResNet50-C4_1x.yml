@@ -127,7 +127,7 @@ TRANSFORM:
           target_size: 800
           max_size: 1333
           interp: 1
-        - op: Rgb2Bgr
+        - op: Permute
           to_bgr: False
         - op: ArrangeRCNN
     batch_size: 1

@@ -90,9 +90,9 @@ class SimpleSource(Dataset):
                 line = fr.readline().strip()
                 if not line or ct >= self._samples:
                     break
-                voc_rec = {'im_id': np.array([ct]), 'im_file': line}
+                rec = {'im_id': np.array([ct]), 'im_file': line}
                 ct += 1
-                records.append(voc_rec)
+                records.append(rec)
         assert len(records) > 0, 'not found any test image in %s' % (
             self._fname)
         return records

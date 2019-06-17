@@ -16,9 +16,6 @@ MODEL:
   TYPE: SSD
   BACKBONE: MobileNetV1Backbone
   CONV_GROUP_SCALE: 1
-
-
-
 SSD_HEAD:
   TYPE: SSDHead
   FILTER_NUM_LIST: [[256, 512], [128, 256], [128, 256], [64, 128]]
@@ -31,58 +28,41 @@ SSD_HEAD:
   FLIP_ASPECT: True
   NMS_THRESH: 0.45
   
-
 OPTIMIZER:
   TYPE: RMSProp
-
   LR_DECAY:
     POLICY: piecewise_decay
-
-    BOUNDARIES: [1700, 6000, 10000, 18400, 23000, 25000]
-    VALUES: [0.002, 0.001, 0.0005, 0.00025, 0.0001, 0.00005, 0.00001]
-
+    BOUNDARIES: [10000, 15000, 20000, 25000]
+    VALUES: [0.001, 0.0005, 0.00025, 0.0001, 0.00001]
   LR_WARMUP:
     WARMUP: OFF
-
   WEIGHT_DECAY:
     TYPE: L2
     FACTOR: 0.00005
     BN_DECAY: False
     
-
 TRAIN:
-  MAX_ITERS: 26000
+  MAX_ITERS: 28000
   LOG_SMOOTH_WINDOW: 1
-  SNAPSHOT_ITER: 200
+  SNAPSHOT_ITER: 1000
   PRETRAIN_WEIGHTS: ./ssd3/
   INPUT_SIZE: 300
   BATCH_NORM_TYPE: BN
-  ENABLE_CE: ON
-  USE_PARALLEL: OFF
   SHAPE: 300
   SAVE_DIR: ./results/
-  MAP_ITER: 2
-  
-VAL:
-  MAX_ITERS: 100
-
-
 TEST:
-  WEIGHTS: ./results/SSD/28000/
+  WEIGHTS: ./results/SSD/model_final/
   METRIC_TYPE: VOC
   INPUT_SIZE: 300
-
   
 METRIC:
   AP_VERSION: 11point
   AP_OVERLAP_THRESH: 0.5
-
 ENV:
   GPU: ON
-
 DATA:
     TRAIN:
-        ANNO_FILE: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/train.txt
+        ANNO_FILE: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/val.txt
         IMAGE_DIR: pascalvoc/VOCdevkit/VOC_all/JPEGImages
         SAMPLES: -1
         IS_SHUFFLE: True
@@ -100,7 +80,6 @@ DATA:
         TYPE: SimpleSource
         SAMPLES: 1
     CLASS_NUM: 21
-
 TRANSFORM:
     TRAIN:
         OPS:
@@ -108,6 +87,11 @@ TRANSFORM:
               TO_RGB: True
             - OP: NormalizeBox
             - OP: RandomDistort
+              BRIGHTNESS_LOWER: 0.875
+              BRIGHTNESS_UPPER: 1.125
+              HUE_LOWER: -18
+              HUE_UPPER: 18
+              IS_ORDER: True
             - OP: ExpandImage
               MAX_RATIO: 3
               PROB: 0.5
@@ -125,7 +109,7 @@ TRANSFORM:
               Interp: 1
             - OP: RandomFlipImage
               IS_NORMALIZED: True
-            - OP: Rgb2Bgr
+            - OP: Permute
             - OP: NormalizeImage
               MEAN: [127.5,127.5,127.5]
               STD: [127.502231,127.502231,127.502231]
@@ -135,7 +119,6 @@ TRANSFORM:
         DEVICES_NUM: 2
         IS_PADDING: False
         DROP_LAST: True
-
             
     VAL:
         OPS:
@@ -146,7 +129,7 @@ TRANSFORM:
               TARGET_SIZE: 300
               USE_CV2: False
               Interp: 1
-            - OP: Rgb2Bgr
+            - OP: Permute
             - OP: NormalizeImage
               MEAN: [127.5,127.5,127.5]
               STD: [127.502231,127.502231,127.502231]
@@ -155,8 +138,7 @@ TRANSFORM:
         BATCH_SIZE: 64
         DEVICES_NUM: 2
         IS_PADDING: False
-        DROP_LAST: True
-
+        DROP_LAST: False
             
             
     TEST:
@@ -167,6 +149,11 @@ TRANSFORM:
               TARGET_SIZE: 300
               USE_CV2: False
               Interp: 1
+            - OP: Permute
+            - OP: NormalizeImage
+              MEAN: [127.5,127.5,127.5]
+              STD: [127.502231,127.502231,127.502231]
+              IS_SCALE: False
             - OP: ArrangeTestSSD
         BATCH_SIZE: 1
         DEVICES_NUM: 1

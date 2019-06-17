@@ -105,6 +105,11 @@ class DecodeImage(BaseOperator):
             im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         sample['image'] = im
 
+        if 'h' not in sample:
+            sample['h'] = im.shape[0]
+        if 'w' not in sample:
+            sample['w'] = im.shape[1]
+
         # decode mixup image
         if self.with_mixup and 'mixup' in sample:
             self.__call__(sample['mixup'], context)
@@ -334,11 +339,12 @@ class RandomDistort(BaseOperator):
                  saturation_upper=1.5,
                  hue_lower=0.5,
                  hue_upper=1.5,
-                 brightness_prob=1,
-                 contrast_prob=1,
-                 saturation_prob=1,
-                 hue_prob=1,
-                 count=4):
+                 brightness_prob=0.5,
+                 contrast_prob=0.5,
+                 saturation_prob=0.5,
+                 hue_prob=0.5,
+                 count=4,
+                 is_order=False):
         """
         Args:
             brightness_lower/ brightness_upper (float): the brightness
@@ -354,6 +360,7 @@ class RandomDistort(BaseOperator):
             saturation_prob (float): the probability of changing saturation
             hue_prob (float): the probability of changing hue
             count (int): the kinds of doing distrot
+            is_order (bool): whether determine the order of distortion
         """
         super(RandomDistort, self).__init__()
         self.brightness_lower = brightness_lower
@@ -369,6 +376,7 @@ class RandomDistort(BaseOperator):
         self.saturation_prob = saturation_prob
         self.hue_prob = hue_prob
         self.count = count
+        self.is_order = is_order
 
     def random_brightness(self, img):
         brightness_delta = np.random.uniform(self.brightness_lower,
@@ -398,9 +406,9 @@ class RandomDistort(BaseOperator):
         hue_delta = np.random.uniform(self.hue_lower, self.hue_upper)
         prob = np.random.uniform(0, 1)
         if prob < self.hue_prob:
-            img_hsv = np.array(img.convert('HSV'))
-            img_hsv[:, :, 0] = img_hsv[:, :, 0] + hue_delta
-        img = Image.fromarray(img_hsv, mode='HSV').convert('RGB')
+            img = np.array(img.convert('HSV'))
+            img[:, :, 0] = img[:, :, 0] + hue_delta
+            img = Image.fromarray(img, mode='HSV').convert('RGB')
         return img
 
     def __call__(self, sample, context):
@@ -410,7 +418,17 @@ class RandomDistort(BaseOperator):
             self.random_brightness, self.random_contrast,
             self.random_saturation, self.random_hue
         ]
-        ops = random.sample(ops, self.count)
+        if self.is_order:
+            prob = np.random.uniform(0, 1)
+            if prob < 0.5:
+                ops = [
+                    self.random_brightness,
+                    self.random_saturation,
+                    self.random_hue,
+                    self.random_contrast,
+                ]
+        else:
+            ops = random.sample(ops, self.count)
         assert 'image' in sample, 'not found image data'
         im = sample['image']
         im = Image.fromarray(im)
@@ -572,15 +590,18 @@ class NormalizeBox(BaseOperator):
         return sample
 
 
+
 @register_op
-class Rgb2Bgr(BaseOperator):
+class Permute(BaseOperator):
     def __init__(self, to_bgr=True, channel_first=True):
-        """ Change the channel and color space.
+        """ 
+        Change the channel.
         Args:
             to_bgr (bool): confirm whether to convert RGB to BGR
             channel_first (bool): confirm whether to change channel
+
         """
-        super(Rgb2Bgr, self).__init__()
+        super(Permute, self).__init__()
         self.to_bgr = to_bgr
         self.channel_first = channel_first
         if not (isinstance(self.to_bgr, bool) and
@@ -590,10 +611,11 @@ class Rgb2Bgr(BaseOperator):
     def __call__(self, sample, context=None):
         assert 'image' in sample, 'not found image data'
         im = sample['image']
-        if self.to_bgr:
-            im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
         if self.channel_first:
-            im = im.transpose((2, 0, 1))
+            im = np.swapaxes(im, 1, 2)
+            im = np.swapaxes(im, 1, 0)
+        if self.to_bgr:
+            im = im[[2, 1, 0], :, :]
         sample['image'] = im
         return sample
 
