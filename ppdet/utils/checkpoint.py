@@ -64,13 +64,6 @@ def load(exe, prog, path):
     fluid.io.load_vars(exe, path, prog, predicate=if_exist)
 
 
-def resume(exe, prog, path):
-    if not os.path.exists(path):
-        logger.info('Model path {} does not exists.'.format(path))
-    logger.info('Resume from {}...'.format(path))
-    fluid.io.load_persistable(exe, path, prog)
-
-
 def save(exe, prog, path):
     """
     Load model from the given path.
@@ -88,6 +81,11 @@ def save(exe, prog, path):
 def load_and_fusebn(exe, prog, path):
     """
     Fuse params of batch norm to scale and bias.
+
+    Args:
+        exe (fluid.Executor): The fluid.Executor object.
+        prog (fluid.Program): save weight from which Program object.
+        path (string): the path to save model.
     """
     logger.info('Load model and fuse batch norm from {}...'.format(path))
     if is_url(path):

@@ -74,10 +74,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     add_arg = functools.partial(add_arguments, argparser=parser)
     # yapf: disable
-    add_arg('cfg_file',        str,   None,      "Configure file path, users must specify it.")
-    add_arg('out_file',        str,   None,      "Output file for evaluation, if not set, default files are bbox.json and mask.json.")
-    add_arg('resume_path',     str,   None,      "The checkpoint path for resuming training.")
-    add_arg('fusebn',          bool,  True,     "Whether to fuse params of batch norm to scale and bias.")
+    add_arg('cfg_file', str, None, "Configure file path, users must specify it.")
+    add_arg('out_file', str, None, "Output file for evaluation, if not set, default files are bbox.json and mask.json.")
+    add_arg('resume_path', str, None, "The checkpoint path for resuming training.")
+    add_arg('fusebn', bool, True, "Whether to fuse params of batch norm to scale and bias.")
     # TODO(dengkaipeng): change to inline in github
     add_arg('eval_interval',
             int,
