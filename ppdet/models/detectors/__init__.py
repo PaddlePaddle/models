@@ -27,8 +27,12 @@ from .yolov3 import *
 from . import ssd
 from .ssd import *
 
+from . import retinanet
+from .retinanet import Retinanet
+
 __all__ = faster_rcnn.__all__
 __all__ = mask_rcnn.__all__
 __all__ = cascade_rcnn.__all__
 __all__ += yolov3.__all__
 __all__ += ssd.__all__
+__all__ += retinanet.__all__
