@@ -293,7 +293,8 @@ def coco17_labels(with_background=True):
     }
 
     if not with_background:
+        labels_map.pop(0)
         labels_map = {k - 1: v for k, v in \
-                      labels_map.items()}
+                    labels_map.items()}
 
     return labels_map
