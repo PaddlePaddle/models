@@ -88,8 +88,8 @@ def main():
         # parse eval fetches
         extra_keys = ['im_info', 'im_id'] if cfg.TEST.METRIC_TYPE == 'COCO' \
                      else []
-        eval_keys, eval_values = parse_fetches(eval_fetches, eval_prog, 
-                                                 extra_keys)
+        eval_keys, eval_values = parse_fetches(eval_fetches, eval_prog,
+                                               extra_keys)
 
     # define executor
     place = fluid.CUDAPlace(0) if cfg.ENV.GPU else fluid.CPUPlace()
@@ -122,7 +122,11 @@ def main():
 
     # 5. Load pre-trained model
     exe.run(startup_prog)
-    if cfg.TRAIN.PRETRAIN_WEIGHTS:
+    if cfg.resume:
+        checkpoint.load(exe, train_prog, cfg.resume)
+    elif cfg.TRAIN.PRETRAIN_WEIGHTS and cfg.MODEL.AFFINE_CHANNEL and cfg.fuse_bn:
+        checkpoint.load_and_fusebn(exe, train_prog, cfg.TRAIN.PRETRAIN_WEIGHTS)
+    elif cfg.TRAIN.PRETRAIN_WEIGHTS:
         checkpoint.load(exe, train_prog, cfg.TRAIN.PRETRAIN_WEIGHTS)
 
     # 6. Run
@@ -139,7 +143,7 @@ def main():
         train_stats.update(stats)
         logs = train_stats.log()
         strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
-                it, np.mean(outs[-1]), logs, end_time - start_time)
+            it, np.mean(outs[-1]), logs, end_time - start_time)
         logger.info(strs)
 
         # save model
