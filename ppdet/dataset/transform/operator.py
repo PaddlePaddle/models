@@ -105,6 +105,11 @@ class DecodeImage(BaseOperator):
             im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         sample['image'] = im
 
+        if 'h' not in sample:
+            sample['h'] = im.shape[0]
+        if 'w' not in sample:
+            sample['w'] = im.shape[1]
+
         # decode mixup image
         if self.with_mixup and 'mixup' in sample:
             self.__call__(sample['mixup'], context)

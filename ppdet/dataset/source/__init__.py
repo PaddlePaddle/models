@@ -51,12 +51,14 @@ def build_source(config):
     # under ~/.paddle/dataset, download it.
     if 'dataset_dir' in data_cf:
         dataset_dir = get_dataset_path(data_cf['dataset_dir'])
-        data_cf['anno_file'] = os.path.join(dataset_dir, data_cf['anno_file'])
+        if 'anno_file' in data_cf:
+            data_cf['anno_file'] = os.path.join(dataset_dir, data_cf['anno_file'])
         data_cf['image_dir'] = os.path.join(dataset_dir, data_cf['image_dir'])
         del data_cf['dataset_dir']
         if data_cf is not config:
-            config['data_cf']['ANNO_FILE'] = os.path.join(dataset_dir,
-                                                          data_cf['anno_file'])
+            if 'anno_file' in data_cf:
+                config['data_cf']['ANNO_FILE'] = os.path.join(dataset_dir,
+                                                              data_cf['anno_file'])
             config['data_cf']['IMAGE_DIR'] = os.path.join(dataset_dir,
                                                           data_cf['image_dir'])
     args = copy.deepcopy(data_cf)
@@ -72,6 +74,8 @@ def build_source(config):
         return RoiDbSource(**args)
     elif source_type == 'SimpleSource':
         del args['cname2cid']
+        if 'with_background' in args:
+            del args['with_background']
         return SimpleSource(**args)
     else:
         raise ValueError('not supported source type[%s]' % (source_type))
