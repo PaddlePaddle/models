@@ -100,8 +100,8 @@ def main():
     # 6. Run
     iter_id = 1
     results = []
-    file_list = '/root/.cache/paddle/dataset/coco/annotations/instances_val2017.json'
-    with_background = getattr(cfg.DATA.VAL, 'WITH_BACKGROUND', True)
+    file_list = cfg.DATA.TEST.ANNO_FILE
+    with_background = getattr(cfg.DATA.TEST, 'WITH_BACKGROUND', True)
     a = True
     try:
         pyreader.start()

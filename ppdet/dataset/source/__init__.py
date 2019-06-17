@@ -74,8 +74,9 @@ def build_source(config):
         return RoiDbSource(**args)
     elif source_type == 'SimpleSource':
         del args['cname2cid']
-        if 'with_background' in args:
-            del args['with_background']
+        for k in ['with_background', 'anno_file']:
+            if k in args:
+                del args[k]
         return SimpleSource(**args)
     else:
         raise ValueError('not supported source type[%s]' % (source_type))
