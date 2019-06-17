@@ -61,7 +61,7 @@ RoIExtractors = Registry('RoIExtractor')
 BBoxHeadConvs = Registry('BBoxHeadConv')
 BBoxHeads = Registry('BBoxHead')
 MaskHeads = Registry('MaskHead')
-RETINAHeads = Registry('RetinaHead')
+RetinaHeads = Registry('RetinaHead')
 
 YOLOHeads = Registry('YOLOHeads')
 SSDHeads = Registry('SSDHead')
