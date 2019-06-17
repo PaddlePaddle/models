@@ -58,9 +58,7 @@ def random_crop(img, size, settings, scale=None, ratio=None):
 
     img = img[i:i + h, j:j + w, :]
 
-    resized = cv2.resize(img, (size, size)
-            #, interpolation=cv2.INTER_LANCZOS4
-            )
+    resized = cv2.resize(img, (size, size))
     return resized
 
 def distort_color(img):
@@ -71,9 +69,7 @@ def resize_short(img, target_size):
     percent = float(target_size) / min(img.shape[0], img.shape[1])
     resized_width = int(round(img.shape[1] * percent))
     resized_height = int(round(img.shape[0] * percent))
-    resized = cv2.resize(img, (resized_width, resized_height), 
-            #interpolation=cv2.INTER_LANCZOS4
-            )
+    resized = cv2.resize(img, (resized_width, resized_height))
     return resized
 
 def crop_image(img, target_size, center):
@@ -162,7 +158,7 @@ def process_image(
     else:
         if crop_size > 0:
             target_size = settings.resize_short_size
-            img = resize_short(img, 256)
+            img = resize_short(img, target_size)
 
             img = crop_image(img, target_size=crop_size, center=True)
 
