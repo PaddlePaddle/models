@@ -18,7 +18,7 @@
 ---
 # Paddle模型压缩工具库使用说明
 
-本文第一章介绍PaddleSlim模块通用功能的使用，不涉及具体压缩策略的细节。第二、三、四章分别介绍量化训练、剪切、蒸馏三种压缩策略的使用方式。
+本文第一章介绍PaddleSlim模块通用功能的使用，不涉及具体压缩策略的细节。第二章分别用4小节介绍量化训练、剪切、蒸馏和小模型网络结构搜索四种压缩策略的使用方式。
 建议在看具体策略使用方式之前，先浏览下对应的原理介绍：<a href="tutorial.md">算法原理介绍</a>
 
 >在本文中不区分operator和layer的概念。不区分loss和cost的概念。
@@ -29,6 +29,7 @@
 - [量化使用说明](#21-量化训练)
 - [剪切使用说明](#22-卷积核剪切)
 - [蒸馏使用说明](#23-蒸馏)
+- [小模型网络结构搜索使用说明](#24-Light-NAS)
 
 
 ## 1. PaddleSlim通用功能使用介绍
@@ -452,3 +453,92 @@ distillers:
 - **student_temperature:** 在计算softmax_with_cross_entropy之前，用该系数除student_feature_map。
 - **teacher_temperature:** 在计算softmax_with_cross_entropy之前，用该系数除teacher_feature_map。
 - **distillation_loss_weight:** 当前定义的loss对应的权重。默认为1.0
+
+
+### 2.4 小模型网络结构搜索
+
+该功能基于模拟退火算法，实现了小模型网络结构的快速搜索，简称为LightNAS(Light Network Architecture Search).
+
+使用改功能，需要用户做两个工作：
+
+- 定义搜索空间
+- 配置LightNASStrategy,并启动压缩任务
+
+#### 2.4.1 定义搜索空间
+
+用户需要通过继承[SearchSpace类](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/fluid/contrib/slim/nas/search_space.py#L19)并重写其方法来定义搜索空间。用户需要重写实现的方法有：
+
+- init_tokens: tokens以数组的形式格式表示网络结构，一个tokens对应一个网络结构。init_tokens指搜索的初始化tokens.
+
+- range_table: 以数组的形式指定tokens数组中每个位置的取值范围，其长度与tokens长度相同。tokens[i]的取值范围为[0, range_table[i]).
+
+- create_net: 根据指定的tokens构造初始化Program、训练Program和测试Program.
+
+在[PaddlePaddle/models/light_nas](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)下，定义了经过验证的一个搜索空间，建议一般用户直接用该搜索空间。
+
+在构造Compressor对象时，按一下方式将SeachSpace实例传入：
+
+```
+...
+space = LightNASSpace()
+...
+com_pass = Compressor(
+    place,
+    fluid.global_scope(),
+    train_prog,
+    train_reader=train_reader,
+    train_feed_list=None,
+    train_fetch_list=train_fetch_list,
+    eval_program=test_prog,
+    eval_reader=test_reader,
+    eval_feed_list=None,
+    eval_fetch_list=val_fetch_list,
+    train_optimizer=None,
+    search_space=space)
+```
+
+
+#### 2.4.2 配置LightNASStrategy
+
+在配置文件中，配置搜索策略方式如下：
+```
+strategies:
+    light_nas_strategy:
+        class: 'LightNASStrategy'
+        controller: 'sa_controller'
+        target_flops: 592948064
+        end_epoch: 500
+        retrain_epoch: 5
+        metric_name: 'acc_top1'
+        server_ip: ''
+        server_port: 8871
+        is_server: True
+        search_steps: 100
+```
+其中， 需要在关键字`strategies`下注册策略实例，可配置参数有：
+
+- **class:** 策略类的名称，小模型结构搜索策略请设置为LightNASStrategy。
+- **controller:** 用于搜索的controller, 需要在当前配置文件提前注册，下文会详细介绍其注册方法。
+- **target_flops:** FLOPS限制，搜索出的网络结构的FLOPS不超过该数值。
+- **end_epoch:** 当前client结束搜索策略的epoch.
+- **retrain_epoch:** 在评估模型结构性能之前，需要训练的epoch数量。(end_epoch-0)/retrain_epoch为当前client搜索出的网络结构的数量。
+- **metric_name：** 评估模型性能的指标。
+- **server_ip:** 指定controller server的ip。默认为空，即自动获取当前机器的ip.
+- **server_port:** 指定controller server监听的端口。
+- **is_server:** 以当前配置文件启动的进程是否包含controller server. 整个搜索任务必须有且只有一个controller server。
+- **search_steps:** controller server搜索的步数，也就是server产出的网络结构的数量.
+
+controller的配置方式如下：
+
+```
+controllers:
+    sa_controller:
+        class: 'SAController'
+        reduce_rate: 0.85
+        init_temperature: 10.24
+        max_iter_number: 300
+```
+- **class:** distiller类名称，当前可选：`SAController`。
+- **reduce_rate:** float类型；温度的衰减率。
+- **init_temperature:** float类型；初始化温度。
+- **max_iter_number:** int类型；在得到一个满足FLOPS限制的tokens之前，最多尝试的次数。

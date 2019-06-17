@@ -23,7 +23,7 @@
 ---
 # PaddleSlim模型压缩工具库
 
-PaddleSlim是PaddlePaddle框架的一个子模块。PaddleSlim首次在PaddlePaddle 1.4版本中发布。在PaddleSlim中，实现了目前主流的网络剪枝、量化、蒸馏三种压缩策略，主要用于压缩图像领域模型。在后续版本中，会添加更多的压缩策略，以及完善对NLP领域模型的支持。
+PaddleSlim是PaddlePaddle框架的一个子模块，主要用于压缩图像领域模型。在PaddleSlim中，不仅实现了目前主流的网络剪枝、量化、蒸馏三种压缩策略，还实现了超参搜索和小模型网络结构搜索功能。在后续版本中，会添加更多的压缩策略，以及完善对NLP领域模型的支持。
 
 ## 目录
 - [特色](#特色)
@@ -66,7 +66,7 @@ Paddle-Slim工具库有以下特点：
 **图 1**为模型压缩工具的架构图，从上到下为API依赖关系。蒸馏模块、量化模块和剪切模块都间接依赖底层的paddle框架。目前，模型压缩工具作为了PaddlePaddle框架的一部分，所以已经安装普通版本paddle的用户需要重新下载安装支持模型压缩功能的paddle，才能使用压缩功能。
 
 <p align="center">
-<img src="docs/images/framework_0.png" height=452 width=706 hspace='10'/> <br />
+<img src="docs/images/framework_0.png" height=452 width=900 hspace='10'/> <br />
 <strong>图 1</strong>
 </p>
 
@@ -84,7 +84,7 @@ Paddle-Slim工具库有以下特点：
 
 ### 剪切
 
-- 支持敏感度和uniform两种方式
+- 支持敏感度、uniform和基于模拟退火算法的自动剪切三种方式
 - 支持VGG、ResNet、MobileNet等各种类型的网络
 - 支持用户自定义剪切范围
 
@@ -102,6 +102,10 @@ Paddle-Slim工具库有以下特点：
   - 支持FSP loss
   - 支持L2 loss
   - 支持softmax with cross-entropy loss
+
+### 小模型网络结构搜索
+
+- 支持基于模拟退火算法的小模型搜索功能
 
 ### 其它功能
 
@@ -177,6 +181,16 @@ Paddle-Slim工具库有以下特点：
 | ResNet50蒸馏训练 + 量化|90.94% / 72.01%|4.8M|
 | 剪切-50% FLOPS|89.13% / 69.83%|9.0M|
 | 剪切-50% FLOPS + 量化|89.11% / 69.20%|2.3M|
+
+### 模型结构搜索实验
+
+数据：ImageNet 1000类
+
+| |Light-NAS-model0 |Light-NAS-model1 |MobileNetV2 |
+|---|---|---|---|
+|FLOPS|-3%|-17%|-0%|
+|top1 accuracy|72.45%|71.84%|71.90%|
+|GPU cost|1.2K GPU hours|1.2K GPU hours|-|
 
 ## 模型导出格式
 
