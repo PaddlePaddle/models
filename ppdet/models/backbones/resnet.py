@@ -336,7 +336,8 @@ class ResNet50Backbone(BackboneBase):
 
     def get_body_feat_names(self):
 	"""
-	get the names of body's features 
+	Retures:
+	    get the names of body's features 
 	"""
         return self.body_feat_names
 
@@ -446,7 +447,8 @@ class ResNetA50Backbone(BackboneBase):
 
     def get_body_feat_names(self):
 	"""
-	get the names of body's features
+	Returns:
+	    get the names of body's features
 	"""
         return self.body_feat_names
 
