@@ -43,7 +43,7 @@ class RetinaHead(object):
         self.k_min = cfg.FPN.RPN_MIN_LEVEL
         self.fpn_dim = cfg.FPN.DIM
 
-    def class_subnet(self, body_feats, spatial_scale, fpn_name_list):
+    def _class_subnet(self, body_feats, spatial_scale, fpn_name_list):
         """
         Get class predictions of all level FPN level.
         
@@ -113,7 +113,7 @@ class RetinaHead(object):
             cls_pred_list.append(out_cls)
         return cls_pred_list
 
-    def bbox_subnet(self, body_feats, spatial_scale, fpn_name_list):
+    def _bbox_subnet(self, body_feats, spatial_scale, fpn_name_list):
         """
         Get bounding box predictions of all level FPN level.
         
@@ -180,7 +180,7 @@ class RetinaHead(object):
             bbox_pred_list.append(out_bbox)
         return bbox_pred_list
 
-    def anchor_generate(self, body_feats, spatial_scale, fpn_name_list):
+    def _anchor_generate(self, body_feats, spatial_scale, fpn_name_list):
         """
         Get anchor boxes of all level FPN level.
         
@@ -239,13 +239,13 @@ class RetinaHead(object):
         retina_cfg = self.cfg.RETINA_HEAD
         assert len(body_feats) == self.k_max - self.k_min + 1
         # class subnet
-        cls_pred_list = self.class_subnet(body_feats, spatial_scale,
-                                          fpn_name_list)
+        cls_pred_list = self._class_subnet(body_feats, spatial_scale,
+                                           fpn_name_list)
         # bbox subnet
-        bbox_pred_list = self.bbox_subnet(body_feats, spatial_scale,
-                                          fpn_name_list)
+        bbox_pred_list = self._bbox_subnet(body_feats, spatial_scale,
+                                           fpn_name_list)
         #generate anchors
-        anchor_list, anchor_var_list = self.anchor_generate(
+        anchor_list, anchor_var_list = self._anchor_generate(
             body_feats, spatial_scale, fpn_name_list)
 
         cls_pred_reshape_list = []
@@ -352,18 +352,19 @@ class RetinaHead(object):
         anchor_input = fluid.layers.concat(anchor_reshape_list, axis=0)
         anchor_var_input = fluid.layers.concat(anchor_var_reshape_list, axis=0)
 
-        score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight, fg_num = fluid.layers.retinanet_target_assign(
-            bbox_pred=bbox_pred_input,
-            cls_logits=cls_pred_input,
-            anchor_box=anchor_input,
-            anchor_var=anchor_var_input,
-            gt_boxes=gt_box,
-            gt_labels=gt_label,
-            is_crowd=is_crowd,
-            im_info=im_info,
-            num_classes=self.cfg.DATA.CLASS_NUM - 1,
-            positive_overlap=self.cfg.RETINA_HEAD.TRAIN.POSITIVE_OVERLAP,
-            negative_overlap=self.cfg.RETINA_HEAD.TRAIN.NEGATIVE_OVERLAP)
+        score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight, fg_num = \
+            fluid.layers.retinanet_target_assign(
+                bbox_pred=bbox_pred_input,
+                cls_logits=cls_pred_input,
+                anchor_box=anchor_input,
+                anchor_var=anchor_var_input,
+                gt_boxes=gt_box,
+                gt_labels=gt_label,
+                is_crowd=is_crowd,
+                im_info=im_info,
+                num_classes=self.cfg.DATA.CLASS_NUM - 1,
+                positive_overlap=self.cfg.RETINA_HEAD.TRAIN.POSITIVE_OVERLAP,
+                negative_overlap=self.cfg.RETINA_HEAD.TRAIN.NEGATIVE_OVERLAP)
 
         fg_num = fluid.layers.reduce_sum(fg_num, name='fg_num')
         loss_cls = fluid.layers.sigmoid_focal_loss(

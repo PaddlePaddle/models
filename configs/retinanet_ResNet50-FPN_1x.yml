@@ -50,11 +50,10 @@ FPN:
     SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8.]
     RPN_MAX_LEVEL: 7
     RPN_MIN_LEVEL: 3
-    EXTRA_CONV_LEVELS: True
+    HAS_EXTRA_CONVS: True
 
 ENV:
     GPU: ON
-    MULTIPROCESS_READER: OFF
 
 OPTIMIZER:
     TYPE: Momentum

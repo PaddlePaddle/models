@@ -83,7 +83,7 @@ class FPN(object):
             fpn_name_list(List): A list of names regarding to output of FPN neck.
         """
         body_name_list = body_name_list[::-1]
-        if self.cfg.FPN.EXTRA_CONV_LEVELS:
+        if self.cfg.FPN.HAS_EXTRA_CONVS:
             max_level = self.cfg.FPN.RPN_MAX_LEVEL
             min_level = self.cfg.FPN.RPN_MIN_LEVEL
         else:
@@ -134,7 +134,7 @@ class FPN(object):
             fpn_dict[fpn_name] = fpn_output
             fpn_name_list.append(fpn_name)
 
-        if not self.cfg.FPN.EXTRA_CONV_LEVELS and max_level == self.cfg.MODEL.HIGHEST_BACKBONE_LVL + 1:
+        if not self.cfg.FPN.HAS_EXTRA_CONVS and max_level == self.cfg.MODEL.HIGHEST_BACKBONE_LVL + 1:
             body_top_name = fpn_name_list[0]
             body_top_extension = fluid.layers.pool2d(
                 fpn_dict[body_top_name],
@@ -147,7 +147,7 @@ class FPN(object):
             self.spatial_scale.insert(0, self.spatial_scale[0] * 0.5)
 
         # Coarser FPN levels introduced for RetinaNet
-        if self.cfg.FPN.EXTRA_CONV_LEVELS and max_level > self.cfg.MODEL.HIGHEST_BACKBONE_LVL:
+        if self.cfg.FPN.HAS_EXTRA_CONVS and max_level > self.cfg.MODEL.HIGHEST_BACKBONE_LVL:
             fpn_blob = body_dict[body_name_list[0]]
             for i in range(self.cfg.MODEL.HIGHEST_BACKBONE_LVL + 1,
                            max_level + 1):
