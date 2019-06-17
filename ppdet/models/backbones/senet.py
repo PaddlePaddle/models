@@ -14,18 +14,15 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
 import math
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.framework import Variable
 from paddle.fluid.regularizer import L2Decay
-
 from ..registry import Backbones
 from ..registry import BBoxHeadConvs
 from .base import BackboneBase
 from .resnet_vd import ResNetVd
-
 __all__ = ['SENet154Backbone', 'SENet154C5']
 
 
@@ -163,7 +160,6 @@ class SENet(ResNetVd):
             name=bn_name + '_offset',
             learning_rate=lr,
             regularizer=L2Decay(bn_decay))
-
         if not self.affine_channel:
             out = fluid.layers.batch_norm(
                 input=conv,
@@ -260,10 +256,8 @@ class SENet(ResNetVd):
             num_channels=num_filters * 2,
             reduction_ratio=reduction_ratio,
             name='fc' + name)
-
         short = self._shortcut(
             input, num_filters * 2, stride, is_first=is_first, name=name)
-
         return fluid.layers.elementwise_add(x=short, y=scale, act='relu')
 
     def layer_warp(self, input, stage_num):
@@ -354,8 +348,8 @@ class SENet154Backbone(BackboneBase):
     def __call__(self, input):
         if not isinstance(input, Variable):
             raise TypeError(str(input) + " shouble be Variable")
-        model = SENet(self.number, self.freeze_bn, self.affine_channel,
-                      self.groups, self.bn_decay)
+        model = SENet(self.number, self.groups, self.freeze_bn,
+                      self.affine_channel, self.bn_decay)
         res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
         return {k: v for k, v in zip(self.body_feat_names, res_list)}
 
@@ -380,12 +374,14 @@ class SENet154C5(object):
         self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
         self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
         self.groups = getattr(cfg.MODEL, 'GROUPS', 64)
+        # whether ignore batch_norm offset and scale L2Decay
+        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', True)
         self.number = 152
         self.stage_number = 5
 
     def __call__(self, input):
-        model = SENet(self.number, self.freeze_bn, self.affine_channel,
-                      self.groups)
+        model = SENet(self.number, self.groups, self.freeze_bn,
+                      self.affine_channel, self.bn_decay)
         res5 = model.layer_warp(input, self.stage_number)
         feat = fluid.layers.pool2d(
             input=res5,

@@ -77,6 +77,14 @@ DATA:
       ANNO_FILE: annotations/instances_val2017.json
       IMAGE_DIR: val2017
       WITH_BACKGROUND: False
+  TEST:
+      DATASET_DIR: coco17
+      IMAGE_DIR: val2017
+      ANNO_FILE: annotations/instances_val2017.json
+      TEST_FILE: val2017.txt
+      WITH_BACKGROUND: False
+      TYPE: SimpleSource
+      SAMPLES: 5
   DATASET: coco2017
   CLASS_NUM: 80
   ANCHORS: [[10, 13], [16, 30], [33, 23], 
@@ -132,6 +140,23 @@ TRANSFORM:
   VAL:
     DEVICES_NUM: 8
     BATCH_SIZE: 8
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+      - op: ResizeImage
+        target_size: 608
+        interp: 2
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True 
+        is_channel_first: False
+      - op: Permute
+        to_bgr: False
+      - op: ArrangeTestYOLO
+  TEST:
+    DEVICES_NUM: 1
+    BATCH_SIZE: 1
     OPS:
       - op: DecodeImage
         to_rgb: True

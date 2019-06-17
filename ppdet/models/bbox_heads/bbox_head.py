@@ -66,8 +66,9 @@ class BBoxHead(object):
                 [N, num_anchors * 4, H, W].
         """
         head_feat = self.get_head_feat(roi_feat)
-        head_feat = fluid.layers.pool2d(
-            head_feat, pool_type='avg', global_pooling=True)
+        if not self.cfg.BBOX_HEAD.HEAD_CONV == 'BBox2MLP':
+            head_feat = fluid.layers.pool2d(
+                head_feat, pool_type='avg', global_pooling=True)
         cls_score = fluid.layers.fc(input=head_feat,
                                     size=self.class_num,
                                     act=None,
