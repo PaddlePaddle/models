@@ -1,3 +1,4 @@
+"""
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+# TODO(luoqianhui): change comment stype above in github
 
 from __future__ import division
 from __future__ import print_function
@@ -30,6 +33,9 @@ YAML_LIST = ['retinanet_ResNet50-FPN_1x.yml', ]
 
 
 def init_input(cfg):
+    """
+    Set all output layers from FPN neck
+    """
     fpn_3 = fluid.layers.data(
         name='fpn_res3d_sum', shape=[256, 334, 334], dtype='float32')
     fpn_4 = fluid.layers.data(
@@ -52,6 +58,9 @@ def init_input(cfg):
 
 @prog_scope()
 def test_retina_head(cfg_file, is_train):
+    """
+    Test the training and testing stages of retinanet
+    """
     cfg = load_cfg(cfg_file)
     merge_cfg({'IS_TRAIN': is_train}, cfg)
     ob = RetinaHead(cfg)
@@ -81,12 +90,22 @@ def test_retina_head(cfg_file, is_train):
 
 
 class TestRetinaHead(unittest.TestCase):
+    """
+    Class TestRETINAHead
+    """
+
     def test_retina_heads_test(self):
+        """
+        Test the testing stage of retinanet
+        """
         path = os.path.dirname(configs.__file__)
         for yml_file in YAML_LIST:
             test_retina_head(os.path.join(path, yml_file), False)
 
     def test_retina_heads_train(self):
+        """
+        Test the training stage of retinanet
+        """
         path = os.path.dirname(configs.__file__)
         for yml_file in YAML_LIST:
             test_retina_head(os.path.join(path, yml_file), True)
