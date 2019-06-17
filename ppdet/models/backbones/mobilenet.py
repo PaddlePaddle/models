@@ -68,10 +68,14 @@ class MobileNet(object):
 
         bn_name = name + "_bn"
         bn_decay = float(self.bn_decay)
-        bn_param_attr = ParamAttr(
-            regularizer=L2Decay(bn_decay), name=bn_name + '_scale')
-        bn_bias_attr = ParamAttr(
-            regularizer=L2Decay(bn_decay), name=bn_name + '_offset')
+        if self.bn_decay == True:
+            bn_param_attr = ParamAttr(
+                regularizer=L2Decay(bn_decay), name=bn_name + '_scale')
+            bn_bias_attr = ParamAttr(
+                regularizer=L2Decay(bn_decay), name=bn_name + '_offset')
+        else:
+            bn_param_attr = ParamAttr(name=bn_name + '_scale')
+            bn_bias_attr = ParamAttr(name=bn_name + '_offset')
         return fluid.layers.batch_norm(
             input=conv,
             act=act,
@@ -185,10 +189,14 @@ class MobileNetV1Backbone(BackboneBase):
 
         bn_name = name + "_bn"
         bn_decay = float(self.bn_decay)
-        bn_param_attr = ParamAttr(
-            regularizer=L2Decay(bn_decay), name=bn_name + '_scale')
-        bn_bias_attr = ParamAttr(
-            regularizer=L2Decay(bn_decay), name=bn_name + '_offset')
+        if self.bn_decay == True:
+            bn_param_attr = ParamAttr(
+                regularizer=L2Decay(bn_decay), name=bn_name + '_scale')
+            bn_bias_attr = ParamAttr(
+                regularizer=L2Decay(bn_decay), name=bn_name + '_offset')
+        else:
+            bn_param_attr = ParamAttr(name=bn_name + '_scale')
+            bn_bias_attr = ParamAttr(name=bn_name + '_offset')
         return fluid.layers.batch_norm(
             input=conv,
             act=act,
