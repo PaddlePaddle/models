@@ -25,7 +25,7 @@ from . import ssd
 from .ssd import *
 
 from . import retinanet
-from .retinanet import Retinanet
+from .retinanet import *
 
 __all__ = faster_rcnn.__all__
 __all__ = mask_rcnn.__all__

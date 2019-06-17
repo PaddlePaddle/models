@@ -1,4 +1,3 @@
-"""
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-#TODO(luoqianhui): change comment stype above in github
 
 from __future__ import absolute_import
 from __future__ import division
@@ -29,7 +26,7 @@ from paddle.fluid.framework import Variable
 from ..registry import Detectors
 from ..registry import Backbones
 from ..registry import Necks
-from ..registry import RETINAHeads
+from ..registry import RetinaHeads
 
 from .base import DetectorBase
 
@@ -38,10 +35,6 @@ __all__ = ['Retinanet']
 
 @Detectors.register
 class Retinanet(DetectorBase):
-    """
-    Retinanet class
-    """
-
     def __init__(self, cfg):
         super(Retinanet, self).__init__(cfg)
         self.is_train = cfg.IS_TRAIN
@@ -85,21 +78,12 @@ class Retinanet(DetectorBase):
             return pred
 
     def train(self):
-        """
-        Get the focal loss and smooth L1 loss
-        """
         return self._forward()
 
     def test(self):
-        """
-        Get the class and bounding box predictions
-        """
         return self._forward()
 
     def feed_info(self):
-        """
-        The input setting
-        """
         c = getattr(self.cfg.DATA, 'IM_CHANNEL', 3)
         h = getattr(self.cfg.DATA, 'IM_HEIGHT', 224)
         w = getattr(self.cfg.DATA, 'IM_WIDTH', 224)

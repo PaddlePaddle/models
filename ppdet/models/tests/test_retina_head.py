@@ -1,4 +1,3 @@
-"""
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-#(luoqianhui): change comment stype above in github
 
 from __future__ import division
 from __future__ import print_function
@@ -25,7 +22,7 @@ import unittest
 import configs
 from ppdet.models.tests.decorator_helper import prog_scope
 from ppdet.core.config import load_cfg, merge_cfg
-from ppdet.models.anchor_heads.retina_head import RETINAHead
+from ppdet.models.anchor_heads.retina_head import RetinaHead
 
 import paddle.fluid as fluid
 
@@ -33,9 +30,6 @@ YAML_LIST = ['retinanet_ResNet50-FPN_1x.yml', ]
 
 
 def init_input(cfg):
-    """
-    Set all output layers from FPN neck
-    """
     fpn_3 = fluid.layers.data(
         name='fpn_res3d_sum', shape=[256, 334, 334], dtype='float32')
     fpn_4 = fluid.layers.data(
@@ -58,12 +52,9 @@ def init_input(cfg):
 
 @prog_scope()
 def test_retina_head(cfg_file, is_train):
-    """
-    Test the training and testing stages of retinanet
-    """
     cfg = load_cfg(cfg_file)
     merge_cfg({'IS_TRAIN': is_train}, cfg)
-    ob = RETINAHead(cfg)
+    ob = RetinaHead(cfg)
     input = init_input(cfg)
     body_feats = input[0]
     spatial_scale = input[2]
@@ -89,23 +80,13 @@ def test_retina_head(cfg_file, is_train):
         assert pred_result is not None
 
 
-class TestRETINAHead(unittest.TestCase):
-    """
-    Class TestRETINAHead
-    """
-
+class TestRetinaHead(unittest.TestCase):
     def test_retina_heads_test(self):
-        """
-        Test the testing stage of retinanet
-        """
         path = os.path.dirname(configs.__file__)
         for yml_file in YAML_LIST:
             test_retina_head(os.path.join(path, yml_file), False)
 
     def test_retina_heads_train(self):
-        """
-        Test the training stage of retinanet
-        """
         path = os.path.dirname(configs.__file__)
         for yml_file in YAML_LIST:
             test_retina_head(os.path.join(path, yml_file), True)

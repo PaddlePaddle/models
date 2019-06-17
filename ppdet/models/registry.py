@@ -20,7 +20,7 @@ __all__ = [
     'BBoxHeadConvs',
     'BBoxHeads',
     'SSDHeads',
-    'RETINAHeads',
+    'RetinaHeads',
     'Necks',
 ]
 
@@ -61,7 +61,7 @@ RoIExtractors = Registry('RoIExtractor')
 BBoxHeadConvs = Registry('BBoxHeadConv')
 BBoxHeads = Registry('BBoxHead')
 MaskHeads = Registry('MaskHead')
-RETINAHeads = Registry('RETINAHead')
+RETINAHeads = Registry('RetinaHead')
 
 YOLOHeads = Registry('YOLOHeads')
 SSDHeads = Registry('SSDHead')

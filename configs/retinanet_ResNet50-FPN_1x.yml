@@ -25,7 +25,7 @@ MODEL:
     LOWEST_BACKBONE_LVL: 2
 
 RETINA_HEAD:
-    TYPE: RETINAHead
+    TYPE: RetinaHead
     NUM_CONVS: 4
     ASPECT_RATIOS: [1.0, 2.0, 0.5]
     VARIANCE: [1., 1., 1., 1.]
@@ -115,7 +115,7 @@ TRANSFORM:
               TARGET_SIZE: 800
               MAX_SIZE: 1333
               INTERP: 1
-            - OP: Rgb2Bgr
+            - OP: Permute
               TO_BGR: False
             - OP: ArrangeRCNN
         BATCH_SIZE: 2
@@ -137,7 +137,7 @@ TRANSFORM:
               TARGET_SIZE: 800
               MAX_SIZE: 1333
               INTERP: 1
-            - OP: Rgb2Bgr
+            - OP: Permute
               TO_BGR: False
             - OP: ArrangeTestRCNN
         BATCH_SIZE: 2

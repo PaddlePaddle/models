@@ -91,7 +91,6 @@ class FPN(object):
                             self.cfg.ROI_EXTRACTOR.FPN_ROI_MAX_LEVEL)
             min_level = min(self.cfg.FPN.RPN_MIN_LEVEL,
                             self.cfg.ROI_EXTRACTOR.FPN_ROI_MIN_LEVEL)
-
         num_backbone_stages = len(body_name_list) - (
             min_level - self.cfg.MODEL.LOWEST_BACKBONE_LVL)
         body_name_list = body_name_list[:num_backbone_stages]
