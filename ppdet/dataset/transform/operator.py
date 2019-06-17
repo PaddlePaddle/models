@@ -409,13 +409,12 @@ class RandomDistort(BaseOperator):
     def __call__(self, sample, context):
         """random distort the image
         """
-        prob = np.random.uniform(0, 1)
-
         ops = [
             self.random_brightness, self.random_contrast,
             self.random_saturation, self.random_hue
         ]
         if self.is_order:
+            prob = np.random.uniform(0, 1)
             if prob < 0.5:
                 ops = [
                     self.random_brightness,
@@ -586,35 +585,32 @@ class NormalizeBox(BaseOperator):
         return sample
 
 
-@register_op
-class Rgb2Bgr(BaseOperator):
-    def __init__(self):
-        """ 
-        Change the color space.
-        """
-        super(Rgb2Bgr, self).__init__()
-
-    def __call__(self, sample, context=None):
-        assert 'image' in sample, 'not found image data'
-        im = sample['image']
-        im = im[[2, 1, 0], :, :]
-        sample['image'] = im
-        return sample
-
 
 @register_op
-class ChannelFirst(BaseOperator):
-    def __init__(self):
+class Permute(BaseOperator):
+    def __init__(self, to_bgr=True, channel_first=True):
         """ 
         Change the channel.
+        Args:
+            to_bgr (bool): confirm whether to convert RGB to BGR
+            channel_first (bool): confirm whether to change channel
+
         """
-        super(ChannelFirst, self).__init__()
+        super(Permute, self).__init__()
+        self.to_bgr = to_bgr
+        self.channel_first = channel_first
+        if not (isinstance(self.to_bgr, bool) and
+                isinstance(self.channel_first, bool)):
+            raise TypeError('{}: the input type is error.'.format(self.__str__))
 
     def __call__(self, sample, context=None):
         assert 'image' in sample, 'not found image data'
         im = sample['image']
-        im = np.swapaxes(im, 1, 2)
-        im = np.swapaxes(im, 1, 0)
+        if self.channel_first:
+            im = np.swapaxes(im, 1, 2)
+            im = np.swapaxes(im, 1, 0)
+        if self.to_bgr:
+            im = im[[2, 1, 0], :, :]
         sample['image'] = im
         return sample
 

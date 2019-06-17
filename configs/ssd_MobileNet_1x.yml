@@ -109,8 +109,7 @@ TRANSFORM:
               Interp: 1
             - OP: RandomFlipImage
               IS_NORMALIZED: True
-            - OP: ChannelFirst
-            - OP: Rgb2Bgr
+            - OP: Permute
             - OP: NormalizeImage
               MEAN: [127.5,127.5,127.5]
               STD: [127.502231,127.502231,127.502231]
@@ -130,8 +129,7 @@ TRANSFORM:
               TARGET_SIZE: 300
               USE_CV2: False
               Interp: 1
-            - OP: ChannelFirst
-            - OP: Rgb2Bgr
+            - OP: Permute
             - OP: NormalizeImage
               MEAN: [127.5,127.5,127.5]
               STD: [127.502231,127.502231,127.502231]
@@ -151,8 +149,7 @@ TRANSFORM:
               TARGET_SIZE: 300
               USE_CV2: False
               Interp: 1
-            - OP: ChannelFirst
-            - OP: Rgb2Bgr
+            - OP: Permute
             - OP: NormalizeImage
               MEAN: [127.5,127.5,127.5]
               STD: [127.502231,127.502231,127.502231]

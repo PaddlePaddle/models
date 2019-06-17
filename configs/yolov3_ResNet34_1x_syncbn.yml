@@ -126,7 +126,7 @@ TRANSFORM:
         std: [0.229, 0.224, 0.225]
         is_scale: True 
         is_channel_first: False
-      - op: Rgb2Bgr
+      - op: Permute
         to_bgr: False
       - op: ArrangeYOLO
   VAL:
@@ -143,6 +143,6 @@ TRANSFORM:
         std: [0.229, 0.224, 0.225]
         is_scale: True 
         is_channel_first: False
-      - op: Rgb2Bgr
+      - op: Permute
         to_bgr: False
       - op: ArrangeTestYOLO
