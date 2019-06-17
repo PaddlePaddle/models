@@ -110,14 +110,17 @@ def dump_voc_as_pickle(args):
         os.makedirs(save_dir)
     save_dir = args.save_dir
     anno_path = args.annotation
-    roidb, cat2id = loader.load(anno_path, samples, with_cat2id=True)
+    roidb, cat2id = loader.load(anno_path, samples, with_cat2id=True, use_default_label=None)
     samples = len(roidb)
     part = anno_path.split('/')
     dsname = part[-4]
     roidb_fname = save_dir + "/%s.roidb" % (dsname)
     with open(roidb_fname, "wb") as fout:
         pkl.dump((roidb, cat2id), fout)
-
+    anno_path = os.path.join(anno_path.split('/train.txt')[0], 'label_list.txt')
+    with open(anno_path, 'w') as fw:
+        for key in cat2id.keys():
+            fw.write(key+'\n')
     logging.info('dumped %d samples to file[%s]' % (samples, roidb_fname))
 
 

@@ -38,7 +38,7 @@ class RoiDbSource(Dataset):
                  samples=-1,
                  is_shuffle=True,
                  load_img=False,
-                 cname2cid=None,
+                 use_default_label=True,
                  mixup_epoch=-1,
                  with_background=True):
         """ Init
@@ -49,7 +49,7 @@ class RoiDbSource(Dataset):
             samples (int): samples to load, -1 means all
             is_shuffle (bool): whether to shuffle samples
             load_img (bool): whether load data in this class
-            cname2cid (dict): the label name to id dictionary
+            use_default_label (bool):whether use the default mapping of label to id
             mixup_epoch (int): parse mixup in first n epoch
             with_background (bool): whether load background 
                                     as a class
@@ -69,7 +69,7 @@ class RoiDbSource(Dataset):
         self._samples = samples
         self._is_shuffle = is_shuffle
         self._load_img = load_img
-        self.cname2cid = cname2cid
+        self.use_default_label = use_default_label
         self._mixup_epoch = mixup_epoch
         self._with_background = with_background
 
@@ -108,10 +108,9 @@ class RoiDbSource(Dataset):
         """ load data from file
         """
         from . import loader
-        records, cname2cid = loader.load(self._fname, self._samples,
+        records, _ = loader.load(self._fname, self._samples,
                                          self._with_background, True,
-                                         self.cname2cid)
-        self.cname2cid = cname2cid
+                                         self.use_default_label)
         return records
 
     def _load_image(self, where):

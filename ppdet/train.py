@@ -49,6 +49,7 @@ def main():
     cfg = load_cfg(args.cfg_file)
     merge_cfg(vars(args), cfg)
     merge_cfg({'IS_TRAIN': True}, cfg)
+    merge_cfg({'MODE': 'train'}, cfg)
     if cfg.ENV.GPU:
         devices_num = int(fluid.core.get_cuda_device_count())
     else:

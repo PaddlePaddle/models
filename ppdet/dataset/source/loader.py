@@ -85,7 +85,7 @@ def load(fname,
          samples=-1,
          with_background=True,
          with_cat2id=False,
-         cname2cid=None):
+         use_default_label=True):
     """ Load data records from 'fnames'
 
     Args:
@@ -95,7 +95,7 @@ def load(fname,
         with_background (bool): whether load background as a class.
                                 default True.
         with_cat2id (bool): whether return cname2cid info out
-        cname2cid (dict): the mapping of category name to id
+        use_default_label (bool): whether use the default mapping of label to id
 
     Returns:
         list of loaded records whose structure is:
@@ -119,7 +119,10 @@ def load(fname,
         records, cname2cid = coco_loader.load(fname, samples, with_background)
     elif os.path.isfile(fname):
         from . import voc_loader
-        records, cname2cid = voc_loader.load(fname, samples, cname2cid)
+        if use_default_label is None:
+            records, cname2cid = voc_loader.get_roidb(fname, samples)
+        else:
+            records, cname2cid = voc_loader.load(fname, samples, use_default_label)
     else:
         raise ValueError('invalid file type when load data from file[%s]' %
                          (fname))
