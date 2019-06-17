@@ -55,13 +55,13 @@ def load(exe, prog, path):
 
     logger.info('Loading model from {}...'.format(path))
 
-    def if_exist(var):
+    def _if_exist(var):
         b = os.path.exists(os.path.join(path, var.name))
         if b:
             logger.debug('load weight {}'.format(var.name))
         return b
 
-    fluid.io.load_vars(exe, path, prog, predicate=if_exist)
+    fluid.io.load_vars(exe, path, prog, predicate=_if_exist)
 
 
 def save(exe, prog, path):
@@ -91,13 +91,13 @@ def load_and_fusebn(exe, prog, path):
     if is_url(path):
         path = get_weights_path(path)
 
-    def if_exist(var):
+    def _if_exist(var):
         b = os.path.exists(os.path.join(path, var.name))
         if b:
             logger.debug('load weight {}'.format(var.name))
         return b
 
-    all_vars = list(filter(if_exist, prog.list_vars()))
+    all_vars = list(filter(_if_exist, prog.list_vars()))
 
     # Since the program uses affine-channel, there is no running mean and var
     # in the program, here append running mean and var.
