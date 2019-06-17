@@ -31,7 +31,7 @@ from ..registry import BBoxHeadConvs
 from .base import BackboneBase
 
 __all__ = [
-    'ResNet50Backbone', 'ResNet101Backbone', 'ResNet34Backbone', 'ResNet50C5'
+    'ResNet50Backbone', 'ResNet101Backbone', 'ResNet34Backbone', 'ResNet50C5',
     'ResNetA50Backbone', 'ResNetA101Backbone', 'ResNetA34Backbone',
     'ResNetA50C5'
 ]
@@ -39,7 +39,7 @@ __all__ = [
 
 class ResNet(object):
     """
-    ResNet A style.
+    ResNet model.
     """
 
     def __init__(self,
@@ -334,8 +334,10 @@ class ResNet50Backbone(BackboneBase):
         res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
         return {k: v for k, v in zip(self.body_feat_names, res_list)}
 
-    # TODO(guanzhong): add more comments.
     def get_body_feat_names(self):
+	"""
+	get the names of body's features 
+	"""
         return self.body_feat_names
 
 
@@ -442,8 +444,10 @@ class ResNetA50Backbone(BackboneBase):
         res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
         return {k: v for k, v in zip(self.body_feat_names, res_list)}
 
-    # TODO(guanzhong): add more comments.
     def get_body_feat_names(self):
+	"""
+	get the names of body's features
+	"""
         return self.body_feat_names
 
 
