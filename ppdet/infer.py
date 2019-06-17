@@ -16,17 +16,23 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import paddle.fluid as fluid
 import sys
 import numpy as np
-import logging
 from pycocotools.coco import COCO
-from args import parse_args, print_arguments
+
+import logging
+logging.basicConfig(level=logging.INFO)
+
+import paddle.fluid as fluid
+
 from ppdet.core.config import load_cfg, merge_cfg
 from ppdet.models import Detectors
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.dataset.reader import Reader
+from ppdet.utils.run_utils import parse_fetches
+from args import parse_args, print_arguments
 #from visualizer import get_color, visual_single_img
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -64,21 +70,9 @@ def main():
     exe = fluid.Executor(place)
 
     # 3. Compile program for multi-devices
-    keys, values = [], []
-    for k, v in fetches.items():
-        keys.append(k)
-        values.append(v.name)
-    if cfg.TEST.METRIC_TYPE == 'COCO':
-        for v in ['im_info', 'im_id']:
-            try:
-                if fluid.framework._get_var(v, test_prog):
-                    keys += [v]
-                    values += [v]
-            except:
-                pass
-    #print("the final key",keys,values)
-    for v in values:
-        fluid.framework._get_var(str(v), test_prog).persistable = True
+    extra_keys = ['im_info', 'im_id'] if cfg.TEST.METRIC_TYPE == 'COCO' \
+                 else []
+    keys, values = parse_fetches(fetches, test_prog, extra_keys)
 
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
@@ -90,6 +84,8 @@ def main():
     reader = Reader(cfg.DATA, cfg.TRANSFORM)
     test_reader = reader.test()
     pyreader = detector.get_pyreader()
+    # TODO(dengkaipeng): need better impliment
+    pyreader._use_double_buffer = False
     pyreader.decorate_sample_list_generator(test_reader, place)
 
     # 5. Load model
@@ -98,14 +94,13 @@ def main():
         checkpoint.load(exe, test_prog, cfg.TEST.WEIGHTS)
 
     # 6. Run
-    iter_id = 1
+    iter_id = 0
     results = []
     file_list = cfg.DATA.TEST.ANNO_FILE
     with_background = getattr(cfg.DATA.TEST, 'WITH_BACKGROUND', True)
-    a = True
     try:
         pyreader.start()
-        while a:
+        while True:
             outs = exe.run(compile_program,
                            fetch_list=values,
                            return_numpy=False)
@@ -114,15 +109,10 @@ def main():
                 for k, v in zip(keys, outs)
             }
             results.append(res)
-            # only infer first pics
-            if iter_id > 3:
-                a = False
-            if iter_id % 10 == 0:
-                logger.info('Test iter {}'.format(iter_id))
+            logger.info('Infer iter {}'.format(iter_id))
             iter_id += 1
     except (StopIteration, fluid.core.EOFException):
         pyreader.reset()
-    logger.info('Test iter {}'.format(iter_id))
 
     # infer
     if cfg.TEST.METRIC_TYPE == 'COCO':
