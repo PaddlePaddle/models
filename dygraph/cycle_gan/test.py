@@ -25,7 +25,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size',        int,   1,          "Minibatch size.")
 add_arg('epoch',             int,   None,        "The number of weights to be testes.")
 add_arg('output',            str,   "./output_0", "The directory the model and the test result to be saved to.")
-add_arg('init_model',        str,   './G/',       "The init model file of directory.")
+add_arg('init_model',        str,   './output_0/checkpoints/',       "The init model file of directory.")
 
 def test():
     with fluid.dygraph.guard():
