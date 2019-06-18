@@ -30,17 +30,17 @@ __all__ = ['global_config', 'load_config', 'merge_config',
 global_config = {}
 
 
-def load_config(fp):
+def load_config(file_path):
     r"""Load config from file.
 
     Args:
-        fp (str): Path of the config file to be loaded.
+        file_path (str): Path of the config file to be loaded.
 
     Returns: global config
     """
-    _, ext = os.path.splitext(fp)
+    _, ext = os.path.splitext(file_path)
     assert ext in ['.yml', '.yaml'], "only support yaml files for now"
-    merge_config(yaml.load(open(fp), Loader=yaml.Loader))
+    merge_config(yaml.load(open(file_path), Loader=yaml.Loader))
     return global_config
 
 
