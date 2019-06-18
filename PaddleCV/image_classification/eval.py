@@ -84,7 +84,7 @@ def eval(args):
 
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    val_reader = paddle.batch(reader.val(), batch_size=args.batch_size)
+    val_reader = paddle.batch(reader.val(settings=args), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     test_info = [[], [], []]
