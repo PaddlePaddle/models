@@ -158,8 +158,8 @@ class DataSet(object):
 
 COCO_TRAIN_ANNOTATION = 'coco/annotations/instances_train2017.json'
 COCO_TRAIN_IMAGE_DIR = 'coco/train2017'
-COCO_TEST_ANNOTATION = 'coco/annotations/instances_val2017.json'
-COCO_TEST_IMAGE_DIR = 'coco/val2017'
+COCO_VAL_ANNOTATION = 'coco/annotations/instances_val2017.json'
+COCO_VAL_IMAGE_DIR = 'coco/val2017'
 
 
 @serializable
@@ -357,8 +357,8 @@ class FasterRCNNTestFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
     def __init__(self,
-                 dataset=CocoDataSet(COCO_TEST_ANNOTATION,
-                                     COCO_TEST_IMAGE_DIR).__dict__,
+                 dataset=CocoDataSet(COCO_VAL_ANNOTATION,
+                                     COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id'],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
@@ -388,8 +388,8 @@ class MaskRCNNTestFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
     def __init__(self,
-                 dataset=CocoDataSet(COCO_TEST_ANNOTATION,
-                                     COCO_TEST_IMAGE_DIR).__dict__,
+                 dataset=CocoDataSet(COCO_VAL_ANNOTATION,
+                                     COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id'],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
