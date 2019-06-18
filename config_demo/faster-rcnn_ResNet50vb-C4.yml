@@ -22,9 +22,11 @@ ResNet:
   - 4
   freeze_at: 2
   freeze_bn: true
+  variant: b
 
 ResNetC5:
   affine_channel: true
+  variant: b
 
 RPNHead:
   anchor_generator:

@@ -5,14 +5,14 @@ use_gpu: yes
 max_iters: 1000
 
 FasterRCNN:
-  backbone: ResNet
+  backbone: ResNeXt
   bbox_assigner: BBoxAssigner
   bbox_head: BBoxHead
   roi_extractor: ROIAlign
   rpn_head: RPNHead
   neck: null
 
-ResNet:
+ResNeXt:
   affine_channel: true
   bn_decay: true
   depth: 50
@@ -23,7 +23,7 @@ ResNet:
   freeze_at: 2
   freeze_bn: true
 
-ResNetC5:
+ResNeXtC5:
   affine_channel: true
 
 RPNHead:
@@ -96,7 +96,7 @@ BBoxHead:
     - 0.1
     - 0.2
     - 0.2
-  head: ResNetC5
+  head: ResNeXtC5
   nms:
     background_label: 0
     keep_top_k: 100

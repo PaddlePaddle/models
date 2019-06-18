@@ -1,32 +1,41 @@
 architecture: FasterRCNN
 train_feed: FasterRCNNTrainFeed
 test_feed: FasterRCNNTestFeed
-use_gpu: yes
 max_iters: 1000
+use_gpu: yes
 
 FasterRCNN:
   backbone: ResNet
   bbox_assigner: BBoxAssigner
   bbox_head: BBoxHead
-  roi_extractor: ROIAlign
-  rpn_head: RPNHead
-  neck: null
+  roi_extractor: FPNROIAlign
+  rpn_head: FPNRPNHead
+  neck: FPN
 
 ResNet:
-  affine_channel: true
+  affine_channel: false
   bn_decay: true
   depth: 50
   feature_maps:
   - 2
   - 3
   - 4
+  - 5
   freeze_at: 2
   freeze_bn: true
+  variant: a
 
-ResNetC5:
-  affine_channel: true
+FPN:
+  max_level: 6
+  min_level: 2
+  num_chan: 256
+  spatial_scale:
+  - 0.03125
+  - 0.0625
+  - 0.125
+  - 0.25
 
-RPNHead:
+FPNRPNHead:
   anchor_generator:
     anchor_sizes:
     - 32
@@ -46,6 +55,10 @@ RPNHead:
     - 1.0
     - 1.0
     - 1.0
+  anchor_start_size: 32
+  max_level: 6
+  min_level: 2
+  num_chan: 256
   rpn_target_assign:
     rpn_batch_size_per_im: 256
     rpn_fg_fraction: 0.5
@@ -66,11 +79,14 @@ RPNHead:
     post_nms_top_n: 2000
     pre_nms_top_n: 12000
 
-ROIAlign:
+FPNROIAlign:
+  canconical_level: 4
+  canonical_size: 224
+  max_level: 5
+  min_level: 2
   pooled_height: 14
   pooled_width: 14
   sampling_ratio: 0
-  spatial_scale: 0.0625
 
 BBoxAssigner:
   batch_size_per_im: 512
@@ -96,7 +112,7 @@ BBoxHead:
     - 0.1
     - 0.2
     - 0.2
-  head: ResNetC5
+  head: TwoFCHead
   nms:
     background_label: 0
     keep_top_k: 100
@@ -106,6 +122,9 @@ BBoxHead:
     normalized: false
     score_threshold: 0.05
   num_classes: 81
+
+TwoFCHead:
+  num_chan: 1024
 
 LearningRate:
   base_lr: 0.01

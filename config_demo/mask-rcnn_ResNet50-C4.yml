@@ -1,19 +1,22 @@
-architecture: FasterRCNN
-train_feed: FasterRCNNTrainFeed
-test_feed: FasterRCNNTestFeed
+architecture: MaskRCNN
+train_feed: MaskRCNNTrainFeed
+test_feed: MaskRCNNTestFeed
 use_gpu: yes
 max_iters: 1000
 
-FasterRCNN:
+
+MaskRCNN:
   backbone: ResNet
   bbox_assigner: BBoxAssigner
   bbox_head: BBoxHead
+  mask_assigner: MaskAssigner
+  mask_head: MaskHead
   roi_extractor: ROIAlign
   rpn_head: RPNHead
   neck: null
 
 ResNet:
-  affine_channel: true
+  affine_channel: false
   bn_decay: true
   depth: 50
   feature_maps:
@@ -22,9 +25,11 @@ ResNet:
   - 4
   freeze_at: 2
   freeze_bn: true
+  variant: a
 
 ResNetC5:
   affine_channel: true
+  variant: a
 
 RPNHead:
   anchor_generator:
@@ -72,20 +77,6 @@ ROIAlign:
   sampling_ratio: 0
   spatial_scale: 0.0625
 
-BBoxAssigner:
-  batch_size_per_im: 512
-  bbox_reg_weights:
-  - 0.1
-  - 0.1
-  - 0.2
-  - 0.2
-  bg_thresh_hi: 0.5
-  bg_thresh_lo: 0.0
-  fg_fraction: 0.25
-  fg_thresh: 0.5
-  num_classes: 81
-  shuffle_before_sample: true
-
 BBoxHead:
   box_coder:
     axis: 1
@@ -106,6 +97,31 @@ BBoxHead:
     normalized: false
     score_threshold: 0.05
   num_classes: 81
+
+MaskHead:
+  dilation: 1
+  num_chan_reduced: 256
+  num_classes: 81
+  num_convs: 4
+  resolution: 14
+
+BBoxAssigner:
+  batch_size_per_im: 512
+  bbox_reg_weights:
+  - 0.1
+  - 0.1
+  - 0.2
+  - 0.2
+  bg_thresh_hi: 0.5
+  bg_thresh_lo: 0.0
+  fg_fraction: 0.25
+  fg_thresh: 0.5
+  num_classes: 81
+  shuffle_before_sample: true
+
+MaskAssigner:
+  num_classes: 81
+  resolution: 14
 
 LearningRate:
   base_lr: 0.01
@@ -128,7 +144,7 @@ OptimizerBuilder:
     factor: 0.0001
     type: L2
 
-FasterRCNNTrainFeed:
+MaskRCNNTrainFeed:
   batch_size: 1
   batch_transforms:
   - !PadBatch
@@ -144,6 +160,7 @@ FasterRCNNTrainFeed:
   - gt_box
   - gt_label
   - is_crowd
+  - gt_mask
   image_shape:
   - 3
   - 1333
@@ -154,7 +171,7 @@ FasterRCNNTrainFeed:
     to_rgb: true
     with_mixup: false
   - !RandomFlipImage
-    is_mask_flip: false
+    is_mask_flip: true
     is_normalized: false
     prob: 0.5
   - !NormalizeImage
@@ -178,7 +195,7 @@ FasterRCNNTrainFeed:
     to_bgr: false
   shuffle: true
 
-FasterRCNNTestFeed:
+MaskRCNNTestFeed:
   batch_size: 1
   batch_transforms:
   - !PadBatch
