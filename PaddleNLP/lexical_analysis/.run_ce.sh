@@ -4,7 +4,8 @@ export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fast_eager_deletion_mode=1
 
 
-function train() {
+train()
+{
     python run_sequence_labeling.py \
         --do_train True \
         --do_test True \

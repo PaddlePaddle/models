@@ -59,7 +59,6 @@ class SimpleImgConvPool(fluid.dygraph.Layer):
 
         self._conv2d = Conv2D(
             self.full_name(),
-            num_channels=num_channels,
             num_filters=num_filters,
             filter_size=filter_size,
             stride=conv_stride,
@@ -148,7 +147,8 @@ def inference_mnist():
     with fluid.dygraph.guard(place):
         mnist_infer = MNIST("mnist")
         # load checkpoint
-        mnist_infer.load_dict(fluid.dygraph.load_persistables("save_dir"))
+        model_dict, _ = fluid.dygraph.load_persistables("save_dir")
+        mnist_infer.load_dict(model_dict)
         print("checkpoint loaded")
 
         # start evaluate mode
@@ -173,6 +173,7 @@ def train_mnist(args):
     epoch_num = 5
     BATCH_SIZE = 64
 
+    trainer_count = fluid.dygraph.parallel.Env().nranks
     place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
         if args.use_data_parallel else fluid.CUDAPlace(0)
     with fluid.dygraph.guard(place):
@@ -185,7 +186,8 @@ def train_mnist(args):
 
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_sampler(
-                paddle.dataset.mnist.train(), batch_size=BATCH_SIZE)
+                paddle.dataset.mnist.train(),
+                batch_size=BATCH_SIZE * trainer_count)
         else:
             train_reader = paddle.batch(
                 paddle.dataset.mnist.train(),
