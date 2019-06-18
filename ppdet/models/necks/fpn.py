@@ -20,7 +20,7 @@ from collections import OrderedDict
 
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.initializer import Normal, Xavier, Constant
+from paddle.fluid.initializer import Normal, Xavier
 from paddle.fluid.regularizer import L2Decay
 
 from ppdet.core.workspace import register
@@ -87,19 +87,8 @@ class FPN(object):
                 their name.
             spatial_scale(List): A list of multiplicative spatial scale factor.
         """
-        body_name_list = body_name_list[::-1]
-        if self.cfg.FPN.HAS_EXTRA_CONVS:
-            max_level = self.cfg.FPN.RPN_MAX_LEVEL
-            min_level = self.cfg.FPN.RPN_MIN_LEVEL
-        else:
-            max_level = max(self.cfg.FPN.RPN_MAX_LEVEL,
-                            self.cfg.ROI_EXTRACTOR.FPN_ROI_MAX_LEVEL)
-            min_level = min(self.cfg.FPN.RPN_MIN_LEVEL,
-                            self.cfg.ROI_EXTRACTOR.FPN_ROI_MIN_LEVEL)
-        num_backbone_stages = len(body_name_list) - (
-            min_level - self.cfg.MODEL.LOWEST_BACKBONE_LVL)
-        body_name_list = body_name_list[:num_backbone_stages]
-        self.spatial_scale = self.spatial_scale[:num_backbone_stages]
+        body_name_list = list(body_dict.keys())[::-1]
+        num_backbone_stages = len(body_name_list)
         self.fpn_inner_output = [[] for _ in range(num_backbone_stages)]
         fpn_inner_name = 'fpn_inner_' + body_name_list[0]
         self.fpn_inner_output[0] = fluid.layers.conv2d(
@@ -138,8 +127,7 @@ class FPN(object):
                 name=fpn_name)
             fpn_dict[fpn_name] = fpn_output
             fpn_name_list.append(fpn_name)
-
-        if not self.cfg.FPN.HAS_EXTRA_CONVS and max_level == self.cfg.MODEL.HIGHEST_BACKBONE_LVL + 1:
+        if self.max_level - self.min_level == len(self.spatial_scale):
             body_top_name = fpn_name_list[0]
             body_top_extension = fluid.layers.pool2d(
                 fpn_dict[body_top_name],
@@ -150,31 +138,5 @@ class FPN(object):
             fpn_dict[body_top_name + '_subsampled_2x'] = body_top_extension
             fpn_name_list.insert(0, body_top_name + '_subsampled_2x')
             self.spatial_scale.insert(0, self.spatial_scale[0] * 0.5)
-
-        # Coarser FPN levels introduced for RetinaNet
-        if self.cfg.FPN.HAS_EXTRA_CONVS and max_level > self.cfg.MODEL.HIGHEST_BACKBONE_LVL:
-            fpn_blob = body_dict[body_name_list[0]]
-            for i in range(self.cfg.MODEL.HIGHEST_BACKBONE_LVL + 1,
-                           max_level + 1):
-                fpn_blob_in = fpn_blob
-                fpn_name = 'fpn_' + str(i)
-                if i > self.cfg.MODEL.HIGHEST_BACKBONE_LVL + 1:
-                    fpn_blob_in = fluid.layers.relu(fpn_blob)
-                fpn_blob = fluid.layers.conv2d(
-                    input=fpn_blob_in,
-                    num_filters=self.fpn_dim,
-                    filter_size=3,
-                    stride=2,
-                    padding=1,
-                    param_attr=ParamAttr(
-                        name=fpn_name + "_w", initializer=Xavier()),
-                    bias_attr=ParamAttr(
-                        name=fpn_name + "_b",
-                        initializer=Constant(value=0.0),
-                        learning_rate=2.,
-                        regularizer=L2Decay(0.)),
-                    name=fpn_name)
-                fpn_dict[fpn_name] = fpn_blob
-                fpn_name_list.insert(0, fpn_name)
-                self.spatial_scale.insert(0, self.spatial_scale[0] * 0.5)
-        return fpn_dict, self.spatial_scale, fpn_name_list
+        res_dict = OrderedDict({k: fpn_dict[k] for k in fpn_name_list})
+        return res_dict, self.spatial_scale
