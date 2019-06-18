@@ -162,7 +162,7 @@ def process_image(
     else:
         if crop_size > 0:
             target_size = settings.resize_short_size
-            img = resize_short(img, 256)
+            img = resize_short(img, target_size)
 
             img = crop_image(img, target_size=crop_size, center=True)
 
@@ -222,14 +222,14 @@ def _reader_creator(settings,
                     img_path = os.path.join(data_dir, img_path)
  
                     yield [img_path]
-
+    crop_size = int(settings.image_shape.split(",")[2])
     image_mapper = functools.partial(
         process_image,
         settings=settings,
         mode=mode,
         color_jitter=color_jitter,
         rotate=rotate,
-        crop_size=224)
+        crop_size=crop_size)
     reader = paddle.reader.xmap_readers(
         image_mapper, reader, THREAD, BUF_SIZE, order=False)
     return reader
