@@ -39,8 +39,12 @@ def lm_model(hidden_size,
         cell_array = []
         mask_array = []
         for i in range(num_layers):
-            weight_1 = layers.create_parameter([hidden_size * 2, hidden_size*4], dtype="float32", name="fc_weight1_"+str(i), \
-                    default_initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale))
+            weight_1 = layers.create_parameter(
+                [hidden_size * 2, hidden_size * 4],
+                dtype="float32",
+                name="fc_weight1_" + str(i),
+                default_initializer=fluid.initializer.UniformInitializer(
+                    low=-init_scale, high=init_scale))
             weight_1_arr.append(weight_1)
             bias_1 = layers.create_parameter(
                 [hidden_size * 4],
@@ -167,8 +171,12 @@ def lm_model(hidden_size,
         cell_array = []
         mask_array = []
         for i in range(num_layers):
-            weight_1 = layers.create_parameter([hidden_size * 2, hidden_size*4], dtype="float32", name="fc_weight1_"+str(i), \
-                    default_initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale))
+            weight_1 = layers.create_parameter(
+                [hidden_size * 2, hidden_size * 4],
+                dtype="float32",
+                name="fc_weight1_" + str(i),
+                default_initializer=fluid.initializer.UniformInitializer(
+                    low=-init_scale, high=init_scale))
             weight_1_arr.append(weight_1)
             bias_1 = layers.create_parameter(
                 [hidden_size * 4],
@@ -209,6 +217,13 @@ def lm_model(hidden_size,
 
                 try:
                     from paddle.fluid.contrib.layers import fused_elemwise_activation
+                    # fluid.contrib.layers.fused_elemwise_activation can do a fused
+                    # operation, like:
+                    # 1) x + sigmoid(y); x + tanh(y)
+                    # 2) tanh(x + y)
+                    # Now the unary operation supported in this fused op is limit, and
+                    # we will extent this operation to support more unary operations and
+                    # do this kind of fusion automitically in future version of paddle.fluid.
                     # layers.sigmoid(i) * layers.tanh(j)
                     tmp0 = fused_elemwise_activation(
                         x=layers.tanh(j),
@@ -332,9 +347,16 @@ def lm_model(hidden_size,
             init_cell=init_cell_reshape)
     elif rnn_model == "cudnn":
         x_emb = layers.transpose(x_emb, perm=[1, 0, 2])
-        rnn_out, last_hidden, last_cell = layers.lstm(x_emb, init_hidden_reshape, init_cell_reshape,  num_steps, hidden_size, num_layers, \
-                is_bidirec=False, \
-                default_initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale) )
+        rnn_out, last_hidden, last_cell = layers.lstm(
+            x_emb,
+            init_hidden_reshape,
+            init_cell_reshape,
+            num_steps,
+            hidden_size,
+            num_layers,
+            is_bidirec=False,
+            default_initializer=fluid.initializer.UniformInitializer(
+                low=-init_scale, high=init_scale))
         rnn_out = layers.transpose(rnn_out, perm=[1, 0, 2])
     else:
         print("type not support")
@@ -343,10 +365,18 @@ def lm_model(hidden_size,
     rnn_out = layers.reshape(
         rnn_out, shape=[-1, num_steps, hidden_size], inplace=True)
 
-    softmax_weight = layers.create_parameter([hidden_size, vocab_size], dtype="float32", name="softmax_weight", \
-            default_initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale))
-    softmax_bias = layers.create_parameter([vocab_size], dtype="float32", name='softmax_bias', \
-            default_initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale))
+    softmax_weight = layers.create_parameter(
+        [hidden_size, vocab_size],
+        dtype="float32",
+        name="softmax_weight",
+        default_initializer=fluid.initializer.UniformInitializer(
+            low=-init_scale, high=init_scale))
+    softmax_bias = layers.create_parameter(
+        [vocab_size],
+        dtype="float32",
+        name='softmax_bias',
+        default_initializer=fluid.initializer.UniformInitializer(
+            low=-init_scale, high=init_scale))
 
     projection = layers.matmul(rnn_out, softmax_weight)
     projection = layers.elementwise_add(projection, softmax_bias)
@@ -364,6 +394,10 @@ def lm_model(hidden_size,
     last_cell.persistable = True
     last_hidden.persistable = True
 
+    # This will feed last_hidden, last_cell to init_hidden, init_cell, which
+    # can be used directly in next batch. This can avoid the fetching of
+    # last_hidden and last_cell and feeding of init_hidden and init_cell in
+    # each training step.
     layers.assign(input=last_cell, output=init_cell)
     layers.assign(input=last_hidden, output=init_hidden)
 
