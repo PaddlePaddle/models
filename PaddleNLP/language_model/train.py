@@ -285,12 +285,6 @@ def train():
         total_time += end_time - start_time
         print("train ppl", ppl[0])
 
-        if epoch_id == max_epoch - 1 and args.enable_ce:
-            card_num = get_cards()
-            print("ptblm\tlstm_language_model_%s_duration_card%d\t%s" %
-                        (args.rnn_model, card_num, total_time / max_epoch))
-            print("ptblm\tlstm_language_model_%s_loss_card%d\t%s" % (args.rnn_model, card_num, ppl[0]))
-
         model_path = os.path.join("model_new/", str(epoch_id))
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
@@ -298,6 +292,13 @@ def train():
             executor=exe, dirname=model_path, main_program=main_program)
         valid_ppl = eval(valid_data)
         print("valid ppl", valid_ppl[0])
+        
+        if epoch_id == max_epoch - 1 and args.enable_ce:
+            card_num = get_cards()
+            print("ptblm\tlstm_language_model_%s_duration_card%d\t%s" %
+                        (args.rnn_model, card_num, total_time / max_epoch))
+            print("ptblm\tlstm_language_model_%s_loss_card%d\t%s" % (args.rnn_model, card_num, ppl[0]))
+            print("ptblm\tlstm_language_model_%s_ppl_card%d\t%s" % (args.rnn_model, card_num, valid_ppl[0]))
     test_ppl = eval(test_data)
     print("test ppl", test_ppl[0])
 
