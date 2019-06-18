@@ -587,7 +587,6 @@ def make_reader(feed, max_iter=0):
 
     Args:
         feed (object): a `DataFeed` instance
-        batch_size (int): sample per device
         max_iter (int): number of iterations, could be removed after some bug fix
 
     Returns: pyreader, user reader, feed_vars dict
