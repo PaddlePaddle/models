@@ -1,0 +1,138 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+MODEL:
+  TYPE: FasterRCNN
+  BACKBONE: ResNet50C4Backbone
+  FREEZE_AT: 2
+  FREEZE_BN: ON
+  AFFINE_CHANNEL: ON
+
+RPN_HEAD:
+  TYPE: RPNHead
+  ANCHOR:
+    ANCHOR_SIZES: [32, 64, 128, 256, 512]
+    ASPECT_RATIOS: [0.5, 1.0, 2.0]
+    VARIANCE: [1., 1., 1., 1.]
+    RPN_STRIDE: [16.0, 16.0]
+
+  PROPOSAL:
+    BATCH_SIZE_PER_IM: 512
+    FG_FRACTION: 0.25
+    FG_THRESH: 0.5
+    BG_THRESH_HI: 0.5
+    BG_THRESH_LO: 0.0
+    BBOX_REG_WEIGHTS: [0.1, 0.1, 0.2, 0.2]
+  TRAIN:
+    RPN_PRE_NMS_TOP_N: 12000
+    RPN_POST_NMS_TOP_N: 2000
+    RPN_NMS_THRESH: 0.7
+    RPN_MIN_SIZE: 0.0
+    RPN_ETA: 1.0
+  TEST:
+    RPN_PRE_NMS_TOP_N: 6000
+    RPN_POST_NMS_TOP_N: 1000
+    RPN_NMS_THRESH: 0.5
+    RPN_MIN_SIZE: 0.0
+    RPN_ETA: 1.0
+
+  RPN_BATCH_SIZE_PER_IM: 256
+  RPN_STRADDLE_THRESH: 0.
+  RPN_FG_FRACTION: 0.5
+  RPN_POSITIVE_OVERLAP: 0.7
+  RPN_NEGATIVE_OVERLAP: 0.3
+
+BBOX_HEAD:
+  TYPE: BBoxHead
+  HEAD_CONV: ResNet50C5
+  
+  ROI:
+    BBOX_REG_WEIGHTS: [0.1, 0.1, 0.2, 0.2]
+
+ROI_EXTRACTOR:
+  EXTRACT_METHOD: RoIAlign
+  ROI_RESOLUTION: 14
+  SPATIAL_SCALE: 1. / 16.
+  SAMPLING_RATIO: 0 
+
+ENV:
+  GPU: ON
+
+OPTIMIZER:
+  TYPE: Momentum
+  MOMENTUM: 0.9
+
+  LR_DECAY:
+    POLICY: piecewise_decay 
+    BOUNDARIES: [120000, 160000]
+    VALUES: [0.01, 0.001, 0.0001]
+
+  LR_WARMUP:
+    WARMUP: ON
+    WARMUP_STEPS: 500
+    WARMUP_INIT_FACTOR: 1. / 3.
+    WARMUP_END_LR: 0.01
+
+  WEIGHT_DECAY:
+    TYPE: L2
+    FACTOR: 0.0001
+
+TRAIN:
+  MAX_ITERS: 10
+  LOG_SMOOTH_WINDOW: 1
+  SNAPSHOT_ITER: 10000
+  PRETRAIN_WEIGTS: model_final
+  BATCH_NORM_TYPE: BN
+  RANDOM: OFF
+  SAVE_DIR: output
+
+TEST:
+  SCORE_THRESH: 0.05
+  NMS_THRESH: 0.5
+  DETECTIONS_PER_IM: 100
+  WEIGTS: model_final
+
+DATA:
+  train:
+      anno_file: COCO17/annotations/instances_val2017.json
+      image_dir: COCO17/val2017
+  samples: 1
+  max_iter: 10
+  CLASS_NUM: 81
+
+TRANSFORM:
+    train:
+        - op: DecodeImage
+          to_rgb: True
+        - op: RandomFlipImage
+          prob: 1.0
+        - op: NormalizeImage
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+          is_scale: True
+          is_channel_first: False
+        - op: ResizeImage
+          target_size: 800
+          max_size: 1333
+          interp: 1
+        - op: Permute
+          to_bgr: False
+        - op: ArrangeRCNN
+    batch_size: 1
+    gpu_counts: 1
+    is_padding: True
+    worker_conf:
+        bufsize: 10
+        worker_num: 2

@@ -1,0 +1,173 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MODEL:
+  TYPE: YOLOv3
+  BACKBONE: MobileNetV1Backbone
+  CONV_GROUP_SCALE: 1.0
+
+YOLO_HEAD:
+  TYPE: YOLOv3Head
+  ANCHORS: [[10, 13], [16, 30], [33, 23], 
+            [30, 61], [62, 45], [59, 119], 
+            [116, 90], [156, 198], [373, 326]]
+  ANCHOR_MASKS: [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
+  IGNORE_THRESH: 0.7
+  LABEL_SMOOTH: True
+
+ENV:
+  GPU: ON
+
+OPTIMIZER:
+  TYPE: Momentum
+  MOMENTUM: 0.9
+
+  LR_DECAY:
+    POLICY: piecewise_decay
+    BOUNDARIES: [400000, 450000]
+    VALUES: [0.001, 0.0001, 0.00001]
+
+  LR_WARMUP:
+    WARMUP: ON
+    WARMUP_STEPS: 4000
+    WARMUP_INIT_FACTOR: 0.
+    WARMUP_END_LR: 0.001
+
+  WEIGHT_DECAY:
+    TYPE: L2
+    FACTOR: 0.0005
+    BN_DECAY: False
+
+TRAIN:
+  MAX_ITERS: 500200
+  PRETRAIN_WEIGHTS: http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar
+  BATCH_NORM_TYPE: SYNC_BN
+  LOG_SMOOTH_WINDOW: 20
+  SAVE_DIR: checkpoints
+  SNAPSHOT_ITER: 2000
+
+TEST:
+  SCORE_THRESH: 0.01
+  NMS_THRESH: 0.45
+  NMS_TOPK: 1000
+  NMS_POSK: 100
+  WEIGHTS: https://paddlemodels.bj.bcebos.com/yolo/yolo_mobilenet1.0.tar.gz
+  METRIC_TYPE: COCO
+
+DATA:
+  TRAIN:
+      DATASET_DIR: coco17
+      ANNO_FILE: annotations/instances_train2017.json
+      IMAGE_DIR: train2017
+      MIXUP_EPOCH: 250 
+      WITH_BACKGROUND: False
+  VAL:
+      DATASET_DIR: coco17
+      ANNO_FILE: annotations/instances_val2017.json
+      IMAGE_DIR: val2017
+      WITH_BACKGROUND: False
+  TEST:
+      DATASET_DIR: coco17
+      IMAGE_DIR: val2017
+      ANNO_FILE: annotations/instances_val2017.json
+      TEST_FILE: val2017.txt
+      WITH_BACKGROUND: False
+      TYPE: SimpleSource
+      SAMPLES: 5
+  DATASET: coco2017
+  CLASS_NUM: 80
+  ANCHORS: [[10, 13], [16, 30], [33, 23], 
+            [30, 61], [62, 45], [59, 119], 
+            [116, 90], [156, 198], [373, 326]]
+  ANCHOR_MASKS: [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
+  MAX_BOX_NUM: 50
+  INPUT_SIZE: 608
+
+TRANSFORM:
+  WORKER_CONF:
+    BUFSIZE: 128
+    WORKER_NUM: 8
+    use_process: True
+  TRAIN:
+    DEVICES_NUM: 8
+    BATCH_SIZE: 8
+    RANDOM_SHAPES: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+        with_mixup: True
+      - op: MixupImage
+        alpha: 1.5
+        beta: 1.5
+      - op: NormalizeBox
+      - op: RandomDistort
+      - op: ExpandImage
+        max_ratio: 4.0
+        prob: 0.5
+        mean: [123.675, 116.28, 103.53]
+      - op: CropImage
+        batch_sampler: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 1.0],
+                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
+        satisfy_all: True
+      - op: RandomInterpImage 
+        target_size: 608
+      - op: RandomFlipImage
+        is_normalized: True
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True 
+        is_channel_first: False
+      - op: Permute
+        to_bgr: False
+      - op: ArrangeYOLO
+  VAL:
+    DEVICES_NUM: 8
+    BATCH_SIZE: 8
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+      - op: ResizeImage
+        target_size: 608
+        interp: 2
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True 
+        is_channel_first: False
+      - op: Permute
+        to_bgr: False
+      - op: ArrangeTestYOLO
+  TEST:
+    DEVICES_NUM: 1
+    BATCH_SIZE: 1
+    OPS:
+      - op: DecodeImage
+        to_rgb: True
+      - op: ResizeImage
+        target_size: 608
+        interp: 2
+      - op: NormalizeImage
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        is_scale: True 
+        is_channel_first: False
+      - op: Permute
+        to_bgr: False
+      - op: ArrangeTestYOLO
