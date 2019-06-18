@@ -26,6 +26,16 @@ from ppdet.utils.cli import ColorTTY
 color_tty = ColorTTY()
 
 
+MISC_CONFIG = {
+    "architecture": "<value>",
+    "max_iters": "<value>",
+    "train_feed": "<value>",
+    "eval_feed": "<value>",
+    "test_feed": "<value>",
+    "use_gpu": True
+}
+
+
 def dump_value(value):
     # XXX this is hackish, but collections.abc is not available in python 2
     if hasattr(value, '__dict__') or type(value) in (dict, tuple, list):
@@ -112,6 +122,12 @@ def generate_config(**kwargs):
     for mod in modules:
         walk(mod)
 
+    # XXX for ordered printing
+    header = ""
+    for k, v in MISC_CONFIG.items():
+        header += yaml.dump({k: v}, default_flow_style=False, default_style='')
+    print(header)
+
     for s in schema:
         print(dump_config(s, minimal))
 
@@ -120,8 +136,6 @@ def generate_config(**kwargs):
 def analyze_config(**kwargs):
     config = load_config(kwargs['file'])
     modules = get_registered_modules()
-    red = '___{}___'.format(color_tty.colors.index('red') + 31)
-    yellow = '___{}___'.format(color_tty.colors.index('yellow') + 31)
     green = '___{}___'.format(color_tty.colors.index('green') + 31)
 
     styled = {}
