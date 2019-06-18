@@ -138,5 +138,5 @@ class FPN(object):
             fpn_dict[body_top_name + '_subsampled_2x'] = body_top_extension
             fpn_name_list.insert(0, body_top_name + '_subsampled_2x')
             self.spatial_scale.insert(0, self.spatial_scale[0] * 0.5)
-        res_dict = OrderedDict({k: fpn_dict[k] for k in fpn_name_list})
+        res_dict = OrderedDict([(k, fpn_dict[k]) for k in fpn_name_list])
         return res_dict, self.spatial_scale

@@ -681,14 +681,14 @@ def make_reader(feed, max_iter=0):
     if getattr(feed, 'use_process', None) is not None:
         use_process = feed.use_process
 
-    feed_vars = OrderedDict({
-        key: fluid.layers.data(
+    feed_vars = OrderedDict([
+        (key, fluid.layers.data(
             name=feed_var_map[key]['name'],
             shape=feed_var_map[key]['shape'],
             dtype=feed_var_map[key]['dtype'],
-            lod_level=feed_var_map[key]['lod_level'])
+            lod_level=feed_var_map[key]['lod_level']))
         for key in feed.fields
-    })
+    ])
 
     pyreader = fluid.io.PyReader(
         feed_list=list(feed_vars.values()),
