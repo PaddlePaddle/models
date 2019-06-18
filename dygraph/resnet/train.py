@@ -356,13 +356,25 @@ def train_resnet():
                            ( eop, batch_id, total_loss / total_sample, \
                              total_acc1 / total_sample, total_acc5 / total_sample))
 
+            fluid.dygraph.save_persistables(resnet.state_dict(), "save_dir")
             print("epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f" % \
                   (eop, batch_id, total_loss / total_sample, \
                    total_acc1 / total_sample, total_acc5 / total_sample))
             resnet.eval()
             eval(resnet, test_reader)
 
+def infer():
+    with fluid.dygraph.guard():
+        resnet = ResNet("resnet")
+        model_dict, _ = fluid.dygraph.load_persistables("save_dir")
+        resnet.load_dict(model_dict)
+        test_reader = paddle.batch(
+            paddle.dataset.flowers.test(use_xmap=False), batch_size=batch_size)
+        resnet.eval()
+        eval(resnet, test_reader)
 
 if __name__ == '__main__':
 
     train_resnet()
+    infer()
+
