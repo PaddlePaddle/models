@@ -31,7 +31,7 @@ __all__ = ['MaskRCNN']
 
 
 @register
-class MaskRCNN(FasterRCNN):
+class MaskRCNN(object):
     r"""
     Mask R-CNN architecture, see https://arxiv.org/abs/1703.06870
     Args:
@@ -56,7 +56,7 @@ class MaskRCNN(FasterRCNN):
                  mask_assigner='MaskAssigner',
                  mask_head='MaskHead',
                  neck=None):
-        super(FasterRCNN, self).__init__()
+        super(MaskRCNN, self).__init__()
         self.backbone = backbone
         self.rpn_head = rpn_head
         self.bbox_assigner = bbox_assigner
@@ -109,7 +109,7 @@ class MaskRCNN(FasterRCNN):
         # mask head and mask loss
 
         # sampled rpn proposals
-        assert 'gt_mask' in feed_vars, "{} has no gt_mask".format(feed_vars, var)
+        assert 'gt_mask' in feed_vars, "{} has no gt_mask".format(feed_vars)
         outs = self.mask_assigner(rois=rois,
                                   gt_classes=feed_vars['gt_label'],
                                   is_crowd=feed_vars['is_crowd'],
