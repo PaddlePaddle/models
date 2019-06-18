@@ -27,7 +27,7 @@ from ppdet.dataset.reader import Reader
 # XXX these are for triggering the decorator
 from ppdet.dataset.transform.operator import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage,
-    RandomFlipImage, RandomDistort, RandomFlipImage, RandomInterpImage,
+    RandomDistort, RandomFlipImage, RandomInterpImage,
     ResizeImage, ExpandImage, CropImage, Permute)
 from ppdet.dataset.transform.arrange_sample import (
     ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeTestSSD, ArrangeYOLO)
@@ -449,6 +449,8 @@ class SSDTrainFeed(DataFeed):
                  drop_last=True,
                  num_workers=8):
         sample_transforms.append(ArrangeSSD())
+        if isinstance(dataset, dict):
+            dataset = VocDataSet(**dataset)
         super(SSDTrainFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
@@ -481,6 +483,8 @@ class SSDEvalFeed(DataFeed):
                  drop_last=True,
                  num_workers=8):
         sample_transforms.append(ArrangeSSD())
+        if isinstance(dataset, dict):
+            dataset = VocDataSet(**dataset)
         super(SSDEvalFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
@@ -506,6 +510,8 @@ class SSDTestFeed(DataFeed):
                  drop_last=False,
                  num_workers=8):
         sample_transforms.append(ArrangeTestSSD())
+        if isinstance(dataset, dict):
+            dataset = SimpleDataSet(**dataset)
         super(SSDTestFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
