@@ -13,6 +13,6 @@
 # limitations under the License.
 
 import ppdet.models
-from ppdet.optimizer import *
-from ppdet.data_feed import *
-from ppdet.models.nms import *
+import ppdet.optimizer
+import ppdet.data_feed
+import ppdet.models.nms
