@@ -30,7 +30,8 @@ from ppdet.dataset.transform.operator import (
     RandomDistort, RandomFlipImage, RandomInterpImage,
     ResizeImage, ExpandImage, CropImage, Permute)
 from ppdet.dataset.transform.arrange_sample import (
-    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeTestSSD, ArrangeYOLO)
+    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeTestSSD,
+    ArrangeYOLO, ArrangeTestYOLO)
 
 __all__ = ['PadBatch', 'MultiScale', 'RandomShape',
            'DataSet', 'CocoDataSet', 'DataFeed', 'TrainFeed', 'EvalFeed',
@@ -528,24 +529,26 @@ class YoloTrainFeed(DataFeed):
                  fields=['image', 'gt_box', 'gt_label', 'gt_score'],
                  image_shape=[3, 608, 608],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True),
+                     DecodeImage(to_rgb=True, with_mixup=True),
+                     MixupImage(alpha=1.5, beta=1.5),
                      NormalizeBox(),
                      RandomDistort(),
-                     ExpandImage(max_ratio=3, prob=0.5),
+                     ExpandImage(max_ratio=3., prob=.5),
                      CropImage([[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]),
-                     ResizeImage(target_size=300, use_cv2=False, interp=1),
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 1.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 1.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 1.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
+                               satisfy_all=True),
+                     RandomInterpImage(target_size=608),
                      RandomFlipImage(is_normalized=True),
-                     Permute(),
-                     NormalizeImage(
-                         mean=[127.5, 127.5, 127.5],
-                         std=[127.502231, 127.502231, 127.502231],
-                         is_scale=False)
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
+                     Permute(to_bgr=False),
                  ],
                  batch_transforms=[
                      RandomShape(sizes=[320, 352, 384, 416, 448, 480,
@@ -555,37 +558,90 @@ class YoloTrainFeed(DataFeed):
                  shuffle=True,
                  drop_last=True,
                  num_workers=8,
-                 num_max_boxes=50):
-        sample_transforms.append(ArrangeYOLO(is_train=True))
+                 num_max_boxes=50,
+                 mixup_epoch=250):
+        sample_transforms.append(ArrangeYOLO())
         super(YoloTrainFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
             drop_last=drop_last, num_workers=num_workers)
         self.num_max_boxes = num_max_boxes
+        self.mixup_epoch = mixup_epoch
         self.mode = 'TRAIN'
-        self.buffer_size = 128
+        self.bufsize = 128
         self.use_process = True
 
 
-    # def feed_info(self):
-    #     # yapf: disable
-    #     feed_info = [
-    #         {'name': 'image',  'shape': [3, size, size], 'dtype': 'float32', 'lod_level': 0},
-    #     ]
-    #     if self.is_train:
-    #         train_info = [
-    #             {'name': 'gt_box',  'shape': [box_num, 4], 'dtype': 'float32', 'lod_level': 0},
-    #             {'name': 'gt_label','shape': [box_num], 'dtype': 'int32', 'lod_level': 0},
-    #             {'name': 'gt_score','shape': [box_num], 'dtype': 'float32', 'lod_level': 0},
-    #         ]
-    #     else:
-    #         test_info = [
-    #             {'name': 'im_shape', 'shape': [2], 'dtype': 'int32', 'lod_level': 0},
-    #             {'name': 'im_id', 'shape': [1], 'dtype': 'int32', 'lod_level': 0},
-    #         ]
-    #         feed_info += test_info
-    #     # yapf: enable
-    #     return feed_info
+@register
+class YoloEvalFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=CocoDataSet(COCO_VAL_ANNOTATION,
+                                     COCO_VAL_IMAGE_DIR).__dict__,
+                 fields=['image', 'im_shape', 'im_id'],
+                 image_shape=[3, 608, 608],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=True),
+                     ResizeImage(target_size=608, interp=2),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
+                     Permute(to_bgr=False),
+                 ],
+                 batch_transforms=[],
+                 batch_size=8,
+                 shuffle=True,
+                 drop_last=True,
+                 num_workers=8,
+                 num_max_boxes=50):
+        sample_transforms.append(ArrangeTestYOLO())
+        super(YoloTrainFeed, self).__init__(
+            dataset, fields, image_shape, sample_transforms, batch_transforms,
+            batch_size=batch_size, shuffle=shuffle,
+            drop_last=drop_last, num_workers=num_workers)
+        self.num_max_boxes = num_max_boxes
+        self.mode = 'VAL'
+        self.bufsize = 128
+        self.use_process = True
+
+
+@register
+class YoloTestFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
+                                       COCO_VAL_IMAGE_DIR).__dict__,
+                 fields=['image', 'im_shape', 'im_id'],
+                 image_shape=[3, 608, 608],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=True),
+                     ResizeImage(target_size=608, interp=2),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
+                     Permute(to_bgr=False),
+                 ],
+                 batch_transforms=[],
+                 batch_size=1,
+                 shuffle=True,
+                 drop_last=True,
+                 num_workers=8,
+                 num_max_boxes=50):
+        sample_transforms.append(ArrangeTestYOLO())
+        if isinstance(dataset, dict):
+            dataset = SimpleDataSet(**dataset)
+        super(YoloTrainFeed, self).__init__(
+            dataset, fields, image_shape, sample_transforms, batch_transforms,
+            batch_size=batch_size, shuffle=shuffle,
+            drop_last=drop_last, num_workers=num_workers)
+        self.num_max_boxes = num_max_boxes
+        self.mode = 'TEST'
+        self.bufsize = 128
+        self.use_process = True
 
 
 def make_reader(feed, max_iter=0):
@@ -606,6 +662,24 @@ def make_reader(feed, max_iter=0):
         'dtype': 'float32',
         'lod_level': 0
     }
+
+    # YOLO var dim is fixed
+    if getattr(feed, 'num_max_boxes', None) is not None:
+        feed_var_map['gt_label']['shape'] = [feed.num_max_boxes]
+        feed_var_map['gt_score']['shape'] = [feed.num_max_boxes]
+        feed_var_map['gt_box']['shape'] = [feed.num_max_boxes, 4]
+        feed_var_map['gt_label']['lod_level'] = 0
+        feed_var_map['gt_score']['lod_level'] = 0
+        feed_var_map['gt_box']['lod_level'] = 0
+    mixup_epoch = -1
+    if getattr(feed, 'mixup_epoch', None) is not None:
+        mixup_epoch = feed.mixup_epoch
+    bufsize = 10
+    use_process = False
+    if getattr(feed, 'bufsize', None) is not None:
+        bufsize = feed.bufsize
+    if getattr(feed, 'use_process', None) is not None:
+        use_process = feed.use_process
 
     feed_vars = OrderedDict({
         key: fluid.layers.data(
@@ -629,14 +703,16 @@ def make_reader(feed, max_iter=0):
             'ANNO_FILE': feed.dataset.annotation,
             'IMAGE_DIR': feed.dataset.image_dir,
             'IS_SHUFFLE': feed.shuffle,
+            'MIXUP_EPOCH': mixup_epoch,
             'TYPE': type(feed.dataset).__source__
         }
     }
 
     transform_config = {
         'WORKER_CONF': {
-            'bufsize': 10,
-            'worker_num': feed.num_workers
+            'bufsize': bufsize,
+            'worker_num': feed.num_workers,
+            'use_process': use_process
         },
         'BATCH_SIZE': feed.batch_size,
         'DROP_LAST': feed.drop_last

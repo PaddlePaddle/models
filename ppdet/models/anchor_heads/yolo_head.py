@@ -61,8 +61,8 @@ class YOLOv3Head(object):
                                    background_label=-1).__dict__):
         self.bn_decay = bn_decay
         self.num_classes = num_classes
-        self.ignore_thresh = ignore_thresh,
-        self.label_smooth = label_smooth,
+        self.ignore_thresh = ignore_thresh
+        self.label_smooth = label_smooth
         self.anchor_masks = anchor_masks
         self._get_and_check_anchors(anchors)
         self.nms = nms
@@ -214,7 +214,7 @@ class YOLOv3Head(object):
                 name="yolo_block.{}".format(i))
 
             # out channel number = mask_num * (5 + class_num)
-            num_filters = len(self.anchor_masks[i]) * (self.class_num + 5)
+            num_filters = len(self.anchor_masks[i]) * (self.num_classes + 5)
             block_out = fluid.layers.conv2d(
                 input=tip,
                 num_filters=num_filters,
@@ -271,7 +271,7 @@ class YOLOv3Head(object):
                 gt_score=gt_score,
                 anchors=self.anchors,
                 anchor_mask=anchor_mask,
-                class_num=self.class_num,
+                class_num=self.num_classes,
                 ignore_thresh=self.ignore_thresh,
                 downsample_ratio=downsample,
                 use_label_smooth=self.label_smooth,
@@ -304,7 +304,7 @@ class YOLOv3Head(object):
                 x=output,
                 img_size=im_shape,
                 anchors=self.mask_anchors[i],
-                class_num=self.class_num,
+                class_num=self.num_classes,
                 conf_thresh=self.nms.score_threshold,
                 downsample_ratio=downsample,
                 name="yolo_box" + str(i))
