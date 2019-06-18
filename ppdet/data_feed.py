@@ -17,6 +17,7 @@ from __future__ import print_function
 from __future__ import division
 
 from collections import OrderedDict
+import inspect
 
 from paddle import fluid
 
@@ -651,11 +652,17 @@ def make_reader(feed, max_iter=0):
     if any(multi_scale):
         transform_config['MULTI_SCALES'] = multi_scale[0].scales
 
+    if hasattr(inspect, 'getfullargspec'):
+        argspec = inspect.getfullargspec
+    else:
+        argspec = inspect.getargspec
+
     ops = []
     for op in feed.sample_transforms:
         op_dict = op.__dict__.copy()
-        if '_id' in op_dict:
-            del op_dict['_id']
+        argnames = [arg for arg in argspec(type(op).__init__).args
+                    if arg != 'self']
+        op_dict = {k: v for k, v in op_dict.items() if k in argnames}
         op_dict['op'] = op.__class__.__name__
         ops.append(op_dict)
     transform_config['OPS'] = ops
