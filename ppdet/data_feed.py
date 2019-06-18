@@ -747,6 +747,17 @@ def make_reader(feed, max_iter=0):
         op_dict['op'] = op.__class__.__name__
         ops.append(op_dict)
     transform_config['OPS'] = ops
+
+    import yaml
+    from ppdet.utils.cli import ColorTTY
+    tty = ColorTTY()
+    print(tty.green("============ generated data_config ================"))
+    print(yaml.dump(data_config, default_flow_style=False, default_style=''))
+    print(tty.green("========== generated transform_config =============="))
+    print(yaml.dump(transform_config, default_flow_style=False, default_style=''))
+    print(tty.green("========== please verify they are correct!!!! =============="))
+    print("")
+
     reader = Reader(data_config, {mode: transform_config}, max_iter)
 
     return pyreader, reader._make_reader(mode), feed_vars
