@@ -29,7 +29,7 @@
 - [量化使用说明](#21-量化训练)
 - [剪切使用说明](#22-卷积核剪切)
 - [蒸馏使用说明](#23-蒸馏)
-- [小模型网络结构搜索使用说明](#24-Light-NAS)
+- [小模型网络结构搜索使用说明](#24-小模型网络结构搜索)
 
 
 ## 1. PaddleSlim通用功能使用介绍
@@ -476,7 +476,7 @@ distillers:
 
 在[PaddlePaddle/models/light_nas](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)下，定义了经过验证的一个搜索空间，建议一般用户直接用该搜索空间。
 
-在构造Compressor对象时，按一下方式将SeachSpace实例传入：
+在构造Compressor对象时，按以下方式将SeachSpace实例传入：
 
 ```
 ...
