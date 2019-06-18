@@ -147,6 +147,9 @@ def main():
                 dropout=config.dropout,
                 rnn_model=config.rnn_model,
                 use_py_reader=False)
+    # Some op behaves differently for train and inference, we need to call
+    # this clone function to ensure every op is right for inference.
+    inference_program = inference_program.clone(for_test=True)
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = Executor(place)
