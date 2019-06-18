@@ -77,12 +77,8 @@ def eval(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    if pretrained_model:
 
-        def if_exist(var):
-            return os.path.exists(os.path.join(pretrained_model, var.name))
-
-        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
+    fluid.io.load_persistables(exe, pretrained_model)
 
     val_reader = paddle.batch(reader.val(settings=args), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
