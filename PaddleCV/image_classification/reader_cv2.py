@@ -81,8 +81,8 @@ def crop_image(img, target_size, center):
     height, width = img.shape[:2]
     size = target_size
     if center == True:
-        w_start = (width - size) / 2
-        h_start = (height - size) / 2
+        w_start = (width - size) // 2
+        h_start = (height - size) // 2
     else:
         w_start = np.random.randint(0, width - size + 1)
         h_start = np.random.randint(0, height - size + 1)
@@ -108,7 +108,8 @@ def create_mixup_reader(settings, rd):
             if i % batch_size == batch_size - 1:         
                 yield data_list
                 data_list =[]
-                   
+
+
     def mixup_data():
         
         for data_list in fetch_data():
