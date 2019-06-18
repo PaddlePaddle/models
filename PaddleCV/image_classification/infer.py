@@ -7,7 +7,7 @@ import time
 import sys
 import paddle
 import paddle.fluid as fluid
-import reader
+import reader_cv2 as reader
 import argparse
 import functools
 import models
@@ -25,6 +25,7 @@ add_arg('with_mem_opt',     bool, True,                 "Whether to use memory o
 add_arg('pretrained_model', str,  None,                 "Whether to use pretrained model.")
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('save_inference',   bool, False,                 "Whether to save inference model or not")
+add_arg('resize_short_size', int, 256,                  "Set resize short size")
 # yapf: enable
 
 def infer(args):
