@@ -19,32 +19,41 @@ from __future__ import print_function
 import paddle.fluid as fluid
 from paddle.fluid.framework import Variable
 
-from ..registry import Backbones
-from ..registry import BBoxHeadConvs
-from .base import BackboneBase
+from ppdet.core.workspace import register, serializable
+
 from .resnet import ResNet
 
-__all__ = ['ResNeXt101Backbone', 'ResNeXt101C5']
+__all__ = ['ResNeXt']
 
 
+@register
+@serializable
 class ResNeXt(ResNet):
-    def __init__(self, depth, freeze_bn, affine_channel, groups, bn_decay=True):
-        """
-        Args:
-            depth (int): ResNeXt depth, should be 50, 101, 152.
-            freeze_bn (bool): whether to fix batch norm
-                (meaning the scale and bias does not update).
-            affine_channel (bool): Use batch_norm or affine_channel.
-            groups (int): define group parammeter for bottleneck
-            bn_decay (bool): Wether perform L2Decay in batch_norm offset
-                            and scale, default True.
-        """
-        if depth not in [50, 101, 152]:
-            raise ValueError("depth {} not in [50, 101, 152].".format(depth))
-
-        self.depth = depth
-        self.freeze_bn = freeze_bn
-        self.affine_channel = affine_channel
+    """
+    ResNeXt, see https://arxiv.org/abs/1611.05431
+    Args:
+        depth (int): network depth, should be 50, 101, 152.
+        group (int): group convolution cardinality
+        freeze_at (int): freeze the backbone at which stage
+        freeze_bn (bool): fix batch norm weights
+        affine_channel (bool): use batch_norm or affine_channel.
+        bn_decay (bool): apply weight decay to in batch norm weights
+        variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
+        feature_maps (list): index of the stages whose feature maps are returned
+    """
+    def __init__(self,
+                 depth=50,
+                 groups=64,
+                 freeze_at=2,
+                 freeze_bn=True,
+                 affine_channel=False,
+                 bn_decay=True,
+                 variant='a',
+                 feature_maps=[2, 3, 4, 5]):
+        assert depth in [50, 101, 152], "depth {} should be 50, 101 or 152"
+        super(ResNeXt, self).__init__(
+            depth, freeze_at, freeze_bn, affine_channel, bn_decay,
+            variant, feature_maps)
         self.depth_cfg = {
             50: ([3, 4, 6, 3], self.bottleneck),
             101: ([3, 4, 23, 3], self.bottleneck),
@@ -52,85 +61,22 @@ class ResNeXt(ResNet):
         }
         self.stage_filters = [256, 512, 1024, 2048]
         self.groups = groups
-        self.bn_decay = bn_decay
-
-    def bottleneck(self, input, num_filters, stride, is_first, name):
-        conv0 = self._conv_norm(
-            input=input,
-            num_filters=num_filters,
-            filter_size=1,
-            act='relu',
-            name=name + "_branch2a")
-        conv1 = self._conv_norm(
-            input=conv0,
-            num_filters=num_filters,
-            filter_size=3,
-            stride=stride,
-            groups=self.groups,
-            act='relu',
-            name=name + "_branch2b")
-        conv2 = self._conv_norm(
-            input=conv1,
-            num_filters=num_filters,
-            filter_size=1,
-            act=None,
-            name=name + "_branch2c")
-        short = self._shortcut(
-            input,
-            num_filters,
-            stride,
-            is_first=is_first,
-            name=name + "_branch1")
-        return fluid.layers.elementwise_add(
-            x=short, y=conv2, act='relu', name=name + ".add.output.5")
 
 
-@Backbones.register
-class ResNeXt101Backbone(BackboneBase):
-    def __init__(self, cfg):
-        super(ResNeXt101Backbone, self).__init__(cfg)
-        self.freeze_at = getattr(cfg.MODEL, 'FREEZE_AT', 2)
-        assert self.freeze_at in [0, 1, 2, 3, 4
-                                  ], "The freeze_at should be 0, 1, 2, 3, or 4"
-        self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
-        self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
-        self.groups = getattr(cfg.MODEL, "GROUPS", 64)
-        self.bn_decay = getattr(cfg.OPTIMIZER.WEIGHT_DECAY, 'BN_DECAY', True)
-        self.endpoint = getattr(cfg.MODEL, 'ENDPOINT', 4)
-        self.number = 101
-        # This list contains names of each Res Block output.
-        # The name is the key of body_dict as well.
-        self.body_feat_names = [
-            'res' + str(lvl) + '_sum' for lvl in range(2, self.endpoint + 1)
-        ]
+@register
+@serializable
+class ResNeXtC5(ResNeXt):
+    __doc__ = ResNeXt.__doc__
 
-    def __call__(self, input):
-        if not isinstance(input, Variable):
-            raise TypeError(str(input) + " shouble be Variable")
-
-        model = ResNeXt(self.number, self.freeze_bn, self.affine_channel,
-                        self.groups, self.bn_decay)
-        res_list = model.get_backbone(input, self.endpoint, self.freeze_at)
-        return {k: v for k, v in zip(self.body_feat_names, res_list)}
-
-    # TODO(guanzhong): add more comments.
-    def get_body_feat_names(self):
-        return self.body_feat_names
-
-
-@BBoxHeadConvs.register
-class ResNeXt101C5(object):
-    def __init__(self, cfg):
-        self.freeze_bn = getattr(cfg.MODEL, 'FREEZE_BN', False)
-        self.affine_channel = getattr(cfg.MODEL, 'AFFINE_CHANNEL', False)
-        self.groups = getattr(cfg.MODEL, 'GROUPS', 64)
-        self.number = 101
-        self.stage_number = 5
-
-    def __call__(self, input):
-        model = ResNeXt(self.number, self.freeze_bn, self.affine_channel,
-                        self.groups)
-        res5 = model.layer_warp(input, self.stage_number)
-        feat = fluid.layers.pool2d(
-            input=res5, pool_type='avg', pool_size=7, name='res5_pool')
-        return feat
+    def __init__(self,
+                 depth=50,
+                 groups=64,
+                 freeze_at=2,
+                 freeze_bn=True,
+                 affine_channel=False,
+                 bn_decay=True,
+                 variant='a',
+                 feature_maps=[5]):
+        super(ResNeXtC5, self).__init__(
+            depth, groups, freeze_at, freeze_bn, affine_channel,
+            bn_decay, variant, feature_maps)
