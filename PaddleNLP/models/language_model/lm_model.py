@@ -295,9 +295,10 @@ def lm_model(hidden_size,
     init_cell.persistable = True
     init_hidden.persistable = True
 
-    init_hidden = layers.reshape(
+    init_hidden_reshape = layers.reshape(
         init_hidden, shape=[num_layers, -1, hidden_size])
-    init_cell = layers.reshape(init_cell, shape=[num_layers, -1, hidden_size])
+    init_cell_reshape = layers.reshape(
+        init_cell, shape=[num_layers, -1, hidden_size])
 
     x_emb = layers.embedding(
         input=x,
@@ -319,13 +320,19 @@ def lm_model(hidden_size,
 
     if rnn_model == "padding":
         rnn_out, last_hidden, last_cell = padding_rnn(
-            x_emb, len=num_steps, init_hidden=init_hidden, init_cell=init_cell)
+            x_emb,
+            len=num_steps,
+            init_hidden=init_hidden_reshape,
+            init_cell=init_cell_reshape)
     elif rnn_model == "static":
         rnn_out, last_hidden, last_cell = encoder_static(
-            x_emb, len=num_steps, init_hidden=init_hidden, init_cell=init_cell)
+            x_emb,
+            len=num_steps,
+            init_hidden=init_hidden_reshape,
+            init_cell=init_cell_reshape)
     elif rnn_model == "cudnn":
         x_emb = layers.transpose(x_emb, perm=[1, 0, 2])
-        rnn_out, last_hidden, last_cell = layers.lstm( x_emb, init_hidden, init_cell,  num_steps, hidden_size, num_layers, \
+        rnn_out, last_hidden, last_cell = layers.lstm(x_emb, init_hidden_reshape, init_cell_reshape,  num_steps, hidden_size, num_layers, \
                 is_bidirec=False, \
                 default_initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale) )
         rnn_out = layers.transpose(rnn_out, perm=[1, 0, 2])

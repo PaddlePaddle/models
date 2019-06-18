@@ -162,9 +162,6 @@ def main():
     build_strategy = fluid.BuildStrategy()
     build_strategy.enable_inplace = True
     build_strategy.memory_optimize = False
-    build_strategy.remove_unnecessary_lock = True
-    build_strategy.enable_sequential_execution = False
-    build_strategy.cache_runtime_context = True
     build_strategy.fuse_all_optimizer_ops = True
 
     if args.parallel:
@@ -238,11 +235,11 @@ def main():
                 fetch_list=[loss.name, last_hidden.name, last_cell.name],
                 use_program_cache=True)
 
-            cost_train = np.array(fetch_outs[0])
+            cost_eval = np.array(fetch_outs[0])
             init_hidden = np.array(fetch_outs[1])
             init_cell = np.array(fetch_outs[2])
 
-            total_loss += cost_train
+            total_loss += cost_eval
             iters += config.num_steps
 
         ppl = np.exp(total_loss / iters)
