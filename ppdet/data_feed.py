@@ -597,7 +597,7 @@ class YoloEvalFeed(DataFeed):
                  num_workers=8,
                  num_max_boxes=50):
         sample_transforms.append(ArrangeTestYOLO())
-        super(YoloTrainFeed, self).__init__(
+        super(YoloEvalFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
             drop_last=drop_last, num_workers=num_workers)
@@ -634,7 +634,7 @@ class YoloTestFeed(DataFeed):
         sample_transforms.append(ArrangeTestYOLO())
         if isinstance(dataset, dict):
             dataset = SimpleDataSet(**dataset)
-        super(YoloTrainFeed, self).__init__(
+        super(YoloTestFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
             drop_last=drop_last, num_workers=num_workers)
