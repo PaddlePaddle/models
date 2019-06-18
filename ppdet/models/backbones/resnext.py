@@ -61,6 +61,7 @@ class ResNeXt(ResNet):
         }
         self.stage_filters = [256, 512, 1024, 2048]
         self.groups = groups
+        self._resnext_pretrained_name_fix = True
 
 
 @register

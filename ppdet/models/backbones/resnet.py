@@ -101,6 +101,8 @@ class ResNet(object):
             bn_name = "bn_" + name
         else:
             bn_name = "bn" + name[3:]
+        if getattr(self, '_senet_pretrained_weight_fix', False):
+            bn_name = "bn_" + name
 
         lr = 0. if self.freeze_bn else 1.
         bn_decay = float(self.bn_decay)
@@ -143,6 +145,8 @@ class ResNet(object):
     def _shortcut(self, input, ch_out, stride, is_first, name):
         max_pooling_in_short_cut = self.variant == 'd'
         ch_in = input.shape[1]
+        if getattr(self, '_senet_pretrained_weight_fix', False):
+            name = 'conv' + name + '_prj'
         if ch_in != ch_out or stride != 1 or is_first:
             if max_pooling_in_short_cut:
                 input = fluid.layers.pool2d(
@@ -260,7 +264,10 @@ class ResNet(object):
                 [num_out_chan, 3, 1, "conv1_3"],
             ]
         else:
-            conv_def = [[num_out_chan, 7, 2, "conv1"]]
+            conv1_name = "conv1"
+            if getattr(self, '_resnext_pretrained_name_fix', False):
+                conv1_name = "res_conv1"
+            conv_def = [[num_out_chan, 7, 2, conv1_name]]
 
         for (c, k, s, _name) in conv_def:
             input = self._conv_norm(

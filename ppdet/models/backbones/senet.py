@@ -59,6 +59,7 @@ class SENet(ResNeXt):
         else:
             self.stage_filters = [256, 512, 1024, 2048]
         self.reduction_ratio = 16
+        self._senet_pretrained_weight_fix = True
 
     def _squeeze_excitation(self,
                             input,
