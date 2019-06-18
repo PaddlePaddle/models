@@ -13,7 +13,7 @@ FasterRCNN:
   neck: FPN
 
 ResNet:
-  affine_channel: false
+  affine_channel: true
   bn_decay: true
   depth: 50
   feature_maps:
@@ -151,7 +151,7 @@ FasterRCNNTrainFeed:
   batch_size: 1
   batch_transforms:
   - !PadBatch
-    pad_to_stride: 0
+    pad_to_stride: 32
   dataset:
     annotation: ../coco/annotations/instances_train2017.json
     image_dir: ../coco/train2017
@@ -201,7 +201,7 @@ FasterRCNNTestFeed:
   batch_size: 1
   batch_transforms:
   - !PadBatch
-    pad_to_stride: 0
+    pad_to_stride: 32
   dataset:
     annotation: coco/annotations/instances_val2017.json
     image_dir: coco/val2017
