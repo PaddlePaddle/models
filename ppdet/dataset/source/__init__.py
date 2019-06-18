@@ -15,6 +15,7 @@
 """
 from __future__ import absolute_import
 from __future__ import division
+
 from __future__ import print_function
 from __future__ import unicode_literals
 import os
@@ -43,7 +44,6 @@ def build_source(config):
     """
     if 'data_cf' in config:
         data_cf = {k.lower(): v for k, v in config['data_cf'].items()}
-        data_cf['cname2cid'] = config['cname2cid']
     else:
         data_cf = config
     # if DATASET_DIR set and not exists, search dataset under ~/.paddle/dataset

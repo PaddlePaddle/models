@@ -62,10 +62,11 @@ ENV:
   GPU: ON
 DATA:
     TRAIN:
-        ANNO_FILE: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/val.txt
+        ANNO_FILE: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/train.txt
         IMAGE_DIR: pascalvoc/VOCdevkit/VOC_all/JPEGImages
         SAMPLES: -1
         IS_SHUFFLE: True
+        USE_DEFAULT_LABEL: False
         TYPE: VOCSource
     VAL:
         ANNO_FILE: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/val.txt
