@@ -63,7 +63,10 @@ def main():
         devices_num = int(
             os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
-    train_feed = create(config['train_feed'])
+    if 'train_feed' not in config:
+        train_feed = create(type(main_arch).__name__ + 'TrainFeed')
+    else:
+        train_feed = create(config['train_feed'])
 
     place = fluid.CUDAPlace(0) if config['use_gpu'] else fluid.CPUPlace()
     exe = fluid.Executor(place)
