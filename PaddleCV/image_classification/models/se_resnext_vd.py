@@ -147,7 +147,7 @@ class SE_ResNeXt():
             act='relu',
             name='conv'+name+'_x2')
         if cardinality == 64:
-            num_filters = num_filters / 2
+            num_filters = num_filters // 2
         conv2 = self.conv_bn_layer(
             input=conv1, num_filters=num_filters * 2, filter_size=1, act=None, name='conv'+name+'_x3')
         scale = self.squeeze_excitation(
@@ -224,7 +224,7 @@ class SE_ResNeXt():
             input=input, pool_size=0, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
         squeeze = fluid.layers.fc(input=pool,
-                                  size=num_channels / reduction_ratio,
+                                  size=num_channels // reduction_ratio,
                                   act='relu',
                                   param_attr=fluid.param_attr.ParamAttr(
                                       initializer=fluid.initializer.Uniform(
