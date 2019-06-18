@@ -190,7 +190,7 @@ class ResNet(object):
                 name=_name)
         short = self._shortcut(
             input,
-            num_filters * 4,
+            num_filters * expand,
             stride,
             is_first=False,
             name=name + "_branch1")
