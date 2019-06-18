@@ -46,7 +46,7 @@ class MobileNet(object):
     def __init__(self,
                  bn_decay=False,
                  conv_group_scale=1,
-                 with_extra_blocks=True,
+                 with_extra_blocks=False,
                  extra_block_filters=[
                      [256, 512], [128, 256], [128, 256], [64, 128]]):
         self.bn_decay = bn_decay
