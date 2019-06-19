@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import paddle.fluid as fluid
+from paddle import fluid
 
 from ppdet.core.workspace import register
-
 from ppdet.models.necks import FPN
 
 __all__ = ['FasterRCNN']
@@ -27,7 +26,7 @@ __all__ = ['FasterRCNN']
 
 @register
 class FasterRCNN(object):
-    r"""
+    """
     Faster R-CNN architecture, see https://arxiv.org/abs/1506.01497
     Args:
         backbone (object): backbone instance
@@ -64,15 +63,12 @@ class FasterRCNN(object):
             gt_box = feed_vars['gt_box']
             is_crowd = feed_vars['is_crowd']
 
-        # backbone
         body_feats = self.backbone(im)
         body_feat_names = list(body_feats.keys())
 
-        # neck
         if self.neck is not None:
             body_feats, spatial_scale = self.neck.get_output(body_feats)
 
-        # rpn proposals
         rois = self.rpn_head.get_proposals(body_feats, im_info, mode=mode)
 
         if mode == 'train':
