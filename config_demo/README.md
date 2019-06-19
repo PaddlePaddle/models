@@ -103,12 +103,12 @@ class RPNHead(object):
     Args:
         anchor_generator (object): `AnchorGenerator` instance
         rpn_target_assign (object): `RPNTargetAssign` instance
-        train_prop (object): `GenerateProposals` instance for training
-        test_prop (object): `GenerateProposals` instance for testing
+        train_proposal (object): `GenerateProposals` instance for training
+        test_proposal (object): `GenerateProposals` instance for testing
     """
     # XXX these are
     __inject__ = ['anchor_generator', 'rpn_target_assign',
-                  'train_prop', 'test_prop']
+                  'train_proposal', 'test_proposal']
 
     def __init__(self,
                  anchor_generator=AnchorGenerator().__dict__,
@@ -118,24 +118,24 @@ class RPNHead(object):
         super(RPNHead, self).__init__()
         self.anchor_generator = anchor_generator
         self.rpn_target_assign = rpn_target_assign
-        self.train_prop = train_prop
-        self.test_prop = test_prop
+        self.train_proposal = train_proposal
+        self.test_proposal = test_proposal
         # XXX if dict input is desired, they need to be handled here
         if isinstance(anchor_generator, dict):
             self.anchor_generator = AnchorGenerator(**anchor_generator)
         if isinstance(rpn_target_assign, dict):
             self.rpn_target_assign = RPNTargetAssign(**rpn_target_assign)
-        if isinstance(train_prop, dict):
-            self.train_prop = GenerateProposals(**train_prop)
-        if isinstance(test_prop, dict):
-            self.test_prop = GenerateProposals(**test_prop)
+        if isinstance(train_proposal, dict):
+            self.train_proposal = GenerateProposals(**train_prop)
+        if isinstance(test_proposal, dict):
+            self.test_proposal = GenerateProposals(**test_prop)
 
     # XXX demo purpose
     def forward(self, mode='train'):
         # ...
         anchor, anchor_var = self.anchor_generator(input=rpn_conv)
         # ...
-        prop_op = self.train_prop if mode == 'train' else self.test_prop
+        prop_op = self.train_proposal if mode == 'train' else self.test_proposal
         rpn_rois, rpn_roi_probs = prop_op(
             scores=rpn_cls_score_prob,
             bbox_deltas=rpn_bbox_pred,
@@ -175,13 +175,13 @@ RPNHead:
     rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
     use_random: true
-  test_prop:
+  test_proposal:
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
     post_nms_top_n: 1000
     pre_nms_top_n: 6000
-  train_prop:
+  train_proposal:
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
@@ -219,13 +219,13 @@ RPNHead:
     rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
     use_random: true
-  test_prop: !GenerateProposals
+  test_proposal: !GenerateProposals
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
     post_nms_top_n: 1000
     pre_nms_top_n: 6000
-  train_prop: !GenerateProposals
+  train_proposal: !GenerateProposals
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
@@ -270,7 +270,7 @@ pip install typeguard http://github.com/willthefrog/docstring_parser/tarball/mas
 4.  `generate`: generate a configuration template for a given list of modules, by default it generates a full config file, if a "&#x2013;minimal" flag is given, it will generate a template that only contain non optional settings, for example, to generate a configuration for Faster R-CNN with ResNet backbone and FPN, run
 
     ```shell
-    python configure.py generate FasterRCNN ResNet RPNHead ROIAlign BBoxAssigner BBoxHead FasterRCNNTrainFeed FasterRCNNTestFeed LearningRate OptimizerBuilder
+    python configure.py generate FasterRCNN ResNet RPNHead RoIAlign BBoxAssigner BBoxHead FasterRCNNTrainFeed FasterRCNNTestFeed LearningRate OptimizerBuilder
     ```
 
     for a minimal version, run
