@@ -47,6 +47,7 @@ class ResNet(object):
                  depth=50,
                  freeze_at=2,
                  freeze_bn=True,
+                 sync_bn=False,
                  affine_channel=True,
                  bn_decay=True,
                  variant='b',
@@ -58,10 +59,13 @@ class ResNet(object):
         assert variant in ['a', 'b', 'c', 'd'], "invalid ResNet variant"
         assert 0 <= freeze_at <= 4, "freeze_at should be 0, 1, 2, 3 or 4"
         assert len(feature_maps) > 0, "need one or more feature maps"
+        if sync_bn:
+            assert not freeze_bn, "synchronous BN should not be frozen"
 
         self.depth = depth
         self.freeze_at = freeze_at
         self.freeze_bn = freeze_bn
+        self.sync_bn = sync_bn
         self.affine_channel = affine_channel
         self.bn_decay = bn_decay
         self.variant = variant
@@ -333,6 +337,7 @@ class ResNetC5(ResNet):
                  depth=50,
                  freeze_at=2,
                  freeze_bn=True,
+                 sync_bn=False,
                  affine_channel=True,
                  bn_decay=True,
                  variant='a',

@@ -35,9 +35,10 @@ class DarkNet(object):
         depth (int): network depth, currently only darknet 53 is supported
         bn_decay (bool): apply weight decay to in batch norm weights
     """
-    def __init__(self, depth=53, bn_decay=True):
+    def __init__(self, depth=53, sync_bn=False, bn_decay=True):
         assert depth in [53], "unsupported depth value"
         self.depth = depth
+        self.sync_bn = sync_bn
         self.bn_decay = bn_decay
         self.depth_cfg = {53: ([1, 2, 8, 8, 4], self.basicblock)}
 

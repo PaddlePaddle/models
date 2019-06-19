@@ -38,11 +38,13 @@ class MobileNet(object):
     """
 
     def __init__(self,
+                 sync_bn=False,
                  bn_decay=False,
                  conv_group_scale=1,
                  with_extra_blocks=False,
                  extra_block_filters=[
                      [256, 512], [128, 256], [128, 256], [64, 128]]):
+        self.sync_bn = sync_bn
         self.bn_decay = bn_decay
         self.conv_group_scale = conv_group_scale
         self.with_extra_blocks = with_extra_blocks
