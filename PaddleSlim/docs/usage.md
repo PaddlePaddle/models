@@ -374,6 +374,62 @@ SensitivePruneStrategy可配置的参数有：
 - **num_steps:** 整个剪切过程的步数。每次迭代剪掉的比例为：$step = 1 - (1-target\_ratio)^{\frac{1}{num\_steps}}$
 - **eval_rate:** 计算敏感度时，随机抽取使用的验证数据的比例。在迭代剪切中，为了快速重新计算每一步的每个parameter的敏感度，建议随机选取部分验证数据进行计算。当`num_steps`等于1时，建议使用全量数据进行计算。
 
+#### 2.2.3  auto filter pruning
+
+该策略使用模拟退火算法搜索得到一组剪切率，按搜索到的这组剪切率剪切网络，并对剪切后的网络进行训练。
+
+自动通道剪切策略需要在配置文件的`strategies`关键字下注册`AutoPruneStrategy`实例，并将其添加至compressor的strategies列表中。
+如下所示：
+```
+strategies:
+    auto_pruning_strategy:
+        class: 'AutoPruneStrategy'
+        pruner: 'pruner_1'
+        controller: 'sa_controller'
+        start_epoch: 0
+        end_epoch: 500
+        retrain_epoch: 0
+        max_ratio: 0.50
+        min_ratio: 0.48
+        uniform_range: 0.4
+        pruned_params: '.*_sep_weights'
+        metric_name: 'acc_top1'
+compressor:
+    epoch: 500
+    checkpoint_path: './checkpoints/'
+    strategies:
+        - auto_pruning_strategy
+```
+AutoPruneStrategy可配置的参数有：
+
+- **class:** 如果使用自动通道剪切策略，请设置为`AutoPruneStrategy`
+- **pruner:** StructurePruner实例的名称，需要在配置文件中注册。在pruner中指定了对单个parameter的剪切方式。
+- **controller:** 用于搜索的controller, 需要在当前配置文件提前注册，下文会详细介绍其注册方法。
+
+- **start_epoch:** 开始搜索剪切率组合的的epoch。
+- **end_epoch:** 结束搜索剪切率组合的epoch。 在end_epoch，该策略会根据当前搜索到的最好的剪切率组合对网络进行剪切。
+
+- **retrain_epoch:** 评估一个模型性能之前，需要训练的epoch的数量。默认为0。
+- **max_ratio:** 剪掉FLOPS的最高比例
+- **target_ratio:** 剪掉FLOPS的最低比例
+- **uniform_range:** 每个Parameter最多允许被剪掉的比例
+- **pruned_params:** 被剪切的parameter的名称，支持通配符。如，‘*’为对所有parameter进行剪切，‘conv*’意为对所有名义以‘conv’开头的parameter进行剪切。
+- **metric_name：** 评估模型性能的指标。
+
+controller的配置方式如下：
+
+```
+controllers:
+    sa_controller:
+        class: 'SAController'
+        reduce_rate: 0.85
+        init_temperature: 10.24
+        max_iter_number: 300
+```
+- **class:** distiller类名称，当前可选：`SAController`。
+- **reduce_rate:** float类型；温度的衰减率。
+- **init_temperature:** float类型；初始化温度。
+- **max_iter_number:** int类型；在得到一个满足FLOPS限制的tokens之前，最多尝试的次数。
 
 ### 2.3 蒸馏
 
