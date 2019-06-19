@@ -54,6 +54,7 @@ class SimpleSource(Dataset):
         self._drained = False
         self._samples = samples
         self._load_img = load_img
+        self._image_list = []
 
     def __str__(self):
         return 'SimpleSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
@@ -88,9 +89,11 @@ class SimpleSource(Dataset):
         with open(self._fname, 'r') as fr:
             while True:
                 line = fr.readline().strip()
-                if not line or ct >= self._samples:
+                if not line or (self._samples > 0 \
+                        and ct >= self._samples):
                     break
                 rec = {'im_id': np.array([ct]), 'im_file': line}
+                self._image_list.append(line)
                 ct += 1
                 records.append(rec)
         assert len(records) > 0, 'not found any test image in %s' % (
@@ -131,3 +134,8 @@ class SimpleSource(Dataset):
         """ return epoch id for latest sample
         """
         return self._epoch
+
+    def get_image_list(self):
+        """ return image file path list
+        """
+        return self._image_list

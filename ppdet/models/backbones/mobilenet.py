@@ -31,6 +31,7 @@ class MobileNet(object):
     MobileNet v1, see https://arxiv.org/abs/1704.04861
 
     Args:
+        norm_type (str): normalization type, 'bn' and 'sync_bn' are supported
         bn_decay (bool): perform weight decay on batch norm weights
         conv_group_scale (int): scaling factor for convolution groups
         with_extra_blocks (bool): if extra blocks should be added
@@ -38,11 +39,13 @@ class MobileNet(object):
     """
 
     def __init__(self,
+                 norm_type='bn',
                  bn_decay=False,
                  conv_group_scale=1,
                  with_extra_blocks=False,
                  extra_block_filters=[
                      [256, 512], [128, 256], [128, 256], [64, 128]]):
+        self.norm_type = norm_type
         self.bn_decay = bn_decay
         self.conv_group_scale = conv_group_scale
         self.with_extra_blocks = with_extra_blocks
@@ -177,7 +180,7 @@ class MobileNet(object):
         out = self.depthwise_separable(
             out, 1024, 1024, 1024, 1, scale, name="conv6")
         module13 = out
-        blocks.apppend(out)
+        blocks.append(out)
         if not self.with_extra_blocks:
             return blocks
 

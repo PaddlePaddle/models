@@ -20,11 +20,11 @@ import paddle.fluid as fluid
 
 from ppdet.core.workspace import register
 
-__all__ = ['ROIPool', 'ROIAlign', 'FPNROIAlign']
+__all__ = ['RoIPool', 'RoIAlign', 'FPNRoIAlign']
 
 
 @register
-class ROIAlign(object):
+class RoIAlign(object):
     __op__ = fluid.layers.roi_align
     __append_doc__ = True
 
@@ -33,7 +33,7 @@ class ROIAlign(object):
                  pooled_width=14,
                  spatial_scale=1. / 16,
                  sampling_ratio=0):
-        super(ROIAlign, self).__init__()
+        super(RoIAlign, self).__init__()
         self.pooled_height = pooled_height
         self.pooled_width = pooled_width
         self.spatial_scale = spatial_scale
@@ -41,20 +41,20 @@ class ROIAlign(object):
 
 
 @register
-class ROIPool(object):
+class RoIPool(object):
     __op__ = fluid.layers.roi_pool
     __append_doc__ = True
 
     def __init__(self, pooled_height=14, pooled_width=14,
                  spatial_scale=1. / 16):
-        super(ROIPool, self).__init__()
+        super(RoIPool, self).__init__()
         self.pooled_height = pooled_height
         self.pooled_width = pooled_width
         self.spatial_scale = spatial_scale
 
 
 @register
-class FPNROIAlign(object):
+class FPNRoIAlign(object):
     """
     RoI align pooling for FPN feature maps
     Args:

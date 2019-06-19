@@ -36,17 +36,17 @@ class ResNet(object):
     Args:
         depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
         freeze_at (int): freeze the backbone at which stage
-        freeze_bn (bool): fix batch norm weights
-        affine_channel (bool): use batch_norm or affine_channel.
+        norm_type (str): normalization type, 'bn', 'freeze_bn', 'sync_bn' and
+        'affine_channel' are supported
         bn_decay (bool): apply weight decay to in batch norm weights
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
         feature_maps (list): index of the stages whose feature maps are returned
     """
+
     def __init__(self,
                  depth=50,
                  freeze_at=2,
-                 freeze_bn=True,
-                 affine_channel=True,
+                 norm_type='affine_channel',
                  bn_decay=True,
                  variant='b',
                  feature_maps=[2, 3, 4, 5]):
@@ -57,13 +57,14 @@ class ResNet(object):
         assert variant in ['a', 'b', 'c', 'd'], "invalid ResNet variant"
         assert 0 <= freeze_at <= 4, "freeze_at should be 0, 1, 2, 3 or 4"
         assert len(feature_maps) > 0, "need one or more feature maps"
+        assert norm_type in ['bn', 'freeze_bn', 'sync_bn', 'affine_channel']
 
         self.depth = depth
         self.freeze_at = freeze_at
-        self.freeze_bn = freeze_bn
-        self.affine_channel = affine_channel
+        self.norm_type = norm_type
         self.bn_decay = bn_decay
         self.variant = variant
+        self._model_type = 'ResNet'
         self.feature_maps = feature_maps
         self.depth_cfg = {
             18: ([2, 2, 2, 2], self.basicblock),
@@ -98,19 +99,22 @@ class ResNet(object):
             bn_name = "bn_" + name
         else:
             bn_name = "bn" + name[3:]
-        if getattr(self, '_senet_pretrained_weight_fix', False):
+        # the naming rule is same as pretrained weight
+        if self._model_type == 'SENet':
             bn_name = "bn_" + name
 
         lr = 0. if self.freeze_bn else 1.
         bn_decay = float(self.bn_decay)
-        pattr = ParamAttr(name=bn_name + '_scale',
-                          learning_rate=lr,
-                          regularizer=L2Decay(bn_decay))
-        battr = ParamAttr(name=bn_name + '_offset',
-                          learning_rate=lr,
-                          regularizer=L2Decay(bn_decay))
+        pattr = ParamAttr(
+            name=bn_name + '_scale',
+            learning_rate=lr,
+            regularizer=L2Decay(bn_decay))
+        battr = ParamAttr(
+            name=bn_name + '_offset',
+            learning_rate=lr,
+            regularizer=L2Decay(bn_decay))
 
-        if not self.affine_channel:
+        if self.norm_type in ['bn', 'freeze_bn', 'sync_bn']:
             out = fluid.layers.batch_norm(
                 input=conv,
                 act=act,
@@ -121,7 +125,7 @@ class ResNet(object):
                 moving_variance_name=bn_name + '_variance', )
             scale = fluid.framework._get_var(pattr.name)
             bias = fluid.framework._get_var(battr.name)
-        else:
+        elif self.norm_type == 'affine_channel':
             scale = fluid.layers.create_parameter(
                 shape=[conv.shape[1]],
                 dtype=conv.dtype,
@@ -134,7 +138,7 @@ class ResNet(object):
                 default_initializer=fluid.initializer.Constant(0.))
             out = fluid.layers.affine_channel(
                 x=conv, scale=scale, bias=bias, act=act)
-        if self.freeze_bn:
+        if self.norm_type == 'freeze_bn':
             scale.stop_gradient = True
             bias.stop_gradient = True
         return out
@@ -142,8 +146,10 @@ class ResNet(object):
     def _shortcut(self, input, ch_out, stride, is_first, name):
         max_pooling_in_short_cut = self.variant == 'd'
         ch_in = input.shape[1]
-        if getattr(self, '_senet_pretrained_weight_fix', False):
+        # the naming rule is same as pretrained weight
+        if self._model_type == 'SENet':
             name = 'conv' + name + '_prj'
+
         if ch_in != ch_out or stride != 1 or is_first:
             if max_pooling_in_short_cut:
                 input = fluid.layers.pool2d(
@@ -202,9 +208,7 @@ class ResNet(object):
         # Squeeze-and-Excitation
         if callable(getattr(self, '_squeeze_excitation', None)):
             residual = self._squeeze_excitation(
-                input=residual,
-                num_channels=num_filters * 2,
-                name='fc' + name)
+                input=residual, num_channels=num_filters * 2, name='fc' + name)
         return fluid.layers.elementwise_add(
             x=short, y=residual, act='relu', name=name + ".add.output.5")
 
@@ -269,7 +273,8 @@ class ResNet(object):
             ]
         else:
             conv1_name = "conv1"
-            if getattr(self, '_resnext_pretrained_name_fix', False):
+            # the naming rule is same as pretrained weight
+            if self._model_type == 'ResNext':
                 conv1_name = "res_conv1"
             conv_def = [[num_out_chan, 7, 2, conv1_name]]
 
@@ -314,8 +319,8 @@ class ResNet(object):
         if len(res_endpoints) == 1:
             return res_endpoints[0]
 
-        return OrderedDict([('res{}_sum'.format(idx), feat) for idx, feat
-                            in enumerate(res_endpoints)])
+        return OrderedDict([('res{}_sum'.format(idx), feat)
+                            for idx, feat in enumerate(res_endpoints)])
 
 
 @register
@@ -326,12 +331,11 @@ class ResNetC5(ResNet):
     def __init__(self,
                  depth=50,
                  freeze_at=2,
-                 freeze_bn=True,
-                 affine_channel=True,
+                 norm_type='affine_channel',
                  bn_decay=True,
                  variant='a',
                  feature_maps=[5]):
-        super(ResNetC5, self).__init__(
-            depth, freeze_at, freeze_bn, affine_channel, bn_decay,
-            variant, feature_maps)
+        super(ResNetC5, self).__init__(depth, freeze_at, freeze_bn,
+                                       affine_channel, bn_decay, variant,
+                                       feature_maps)
         self.severed_head = True

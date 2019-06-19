@@ -48,7 +48,7 @@ class MaskRCNN(object):
                  rpn_head,
                  bbox_head='BBoxHead',
                  bbox_assigner='BBoxAssigner',
-                 roi_extractor='ROIAlign',
+                 roi_extractor='RoIAlign',
                  mask_assigner='MaskAssigner',
                  mask_head='MaskHead',
                  neck=None):

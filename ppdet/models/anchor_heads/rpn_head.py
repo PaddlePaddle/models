@@ -95,11 +95,11 @@ class RPNHead(object):
     Args:
         anchor_generator (object): `AnchorGenerator` instance
         rpn_target_assign (object): `RPNTargetAssign` instance
-        train_prop (object): `GenerateProposals` instance for training
-        test_prop (object): `GenerateProposals` instance for testing
+        train_proposal (object): `GenerateProposals` instance for training
+        test_proposal (object): `GenerateProposals` instance for testing
     """
     __inject__ = ['anchor_generator', 'rpn_target_assign',
-                  'train_prop', 'test_prop']
+                  'train_proposal', 'test_proposal']
 
     def __init__(self,
                  anchor_generator=AnchorGenerator().__dict__,
@@ -109,16 +109,16 @@ class RPNHead(object):
         super(RPNHead, self).__init__()
         self.anchor_generator = anchor_generator
         self.rpn_target_assign = rpn_target_assign
-        self.train_prop = train_prop
-        self.test_prop = test_prop
+        self.train_proposal = train_proposal
+        self.test_proposal = test_proposal
         if isinstance(anchor_generator, dict):
             self.anchor_generator = AnchorGenerator(**anchor_generator)
         if isinstance(rpn_target_assign, dict):
             self.rpn_target_assign = RPNTargetAssign(**rpn_target_assign)
-        if isinstance(train_prop, dict):
-            self.train_prop = GenerateProposals(**train_prop)
-        if isinstance(test_prop, dict):
-            self.test_prop = GenerateProposals(**test_prop)
+        if isinstance(train_proposal, dict):
+            self.train_proposal = GenerateProposals(**train_prop)
+        if isinstance(test_proposal, dict):
+            self.test_proposal = GenerateProposals(**test_prop)
 
     def _get_output(self, input):
         """
@@ -207,7 +207,7 @@ class RPNHead(object):
         rpn_cls_score_prob = fluid.layers.sigmoid(
             rpn_cls_score, name='rpn_cls_score_prob')
 
-        prop_op = self.train_prop if mode == 'train' else self.test_prop
+        prop_op = self.train_proposal if mode == 'train' else self.test_proposal
         rpn_rois, rpn_roi_probs = prop_op(
             scores=rpn_cls_score_prob,
             bbox_deltas=rpn_bbox_pred,
@@ -301,8 +301,8 @@ class FPNRPNHead(RPNHead):
     Args:
         anchor_generator (object): `AnchorGenerator` instance
         rpn_target_assign (object): `RPNTargetAssign` instance
-        train_prop (object): `GenerateProposals` instance for training
-        test_prop (object): `GenerateProposals` instance for testing
+        train_proposal (object): `GenerateProposals` instance for training
+        test_proposal (object): `GenerateProposals` instance for testing
         anchor_start_size (int): size of anchor at the first scale
         num_chan (int): number of FPN output channels
         min_level (int): lowest level of FPN output
@@ -310,7 +310,7 @@ class FPNRPNHead(RPNHead):
     """
 
     __inject__ = ['anchor_generator', 'rpn_target_assign',
-                  'train_prop', 'test_prop']
+                  'train_proposal', 'test_proposal']
 
     def __init__(self,
                  anchor_generator=AnchorGenerator().__dict__,
@@ -322,7 +322,7 @@ class FPNRPNHead(RPNHead):
                  min_level=2,
                  max_level=6):
         super(FPNRPNHead, self).__init__(anchor_generator, rpn_target_assign,
-                                         train_prop, test_prop)
+                                         train_proposal, test_proposal)
         self.anchor_start_size = anchor_start_size
         self.num_chan = num_chan
         self.min_level = min_level
@@ -427,7 +427,7 @@ class FPNRPNHead(RPNHead):
         rpn_cls_logits_fpn, rpn_bbox_pred_fpn = self._get_output(body_feat,
                                                                  feat_lvl)
 
-        prop_op = self.train_prop if mode == 'train' else self.test_prop
+        prop_op = self.train_proposal if mode == 'train' else self.test_proposal
         rpn_cls_prob_fpn = fluid.layers.sigmoid(
             rpn_cls_logits_fpn, name='rpn_cls_probs_fpn' + str(feat_lvl))
         rpn_rois_fpn, rpn_roi_probs_fpn = prop_op(
@@ -465,7 +465,7 @@ class FPNRPNHead(RPNHead):
             roi_probs_list.append(roi_probs_fpn)
             self.anchors_list.append(self.anchors)
             self.anchor_var_list.append(self.anchor_var)
-        prop_op = self.train_prop if mode == 'train' else self.test_prop
+        prop_op = self.train_proposal if mode == 'train' else self.test_proposal
         post_nms_top_n = prop_op.post_nms_top_n
         rois_collect = fluid.layers.collect_fpn_proposals(
             rois_list,

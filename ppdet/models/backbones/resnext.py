@@ -32,26 +32,26 @@ class ResNeXt(ResNet):
         groups (int): group convolution cardinality
         group_width (int): width of each group convolution
         freeze_at (int): freeze the backbone at which stage
-        freeze_bn (bool): fix batch norm weights
-        affine_channel (bool): use batch_norm or affine_channel.
+        norm_type (str): normalization type, 'bn', 'freeze_bn', 'sync_bn' and
+        'affine_channel' are supported
         bn_decay (bool): apply weight decay to in batch norm weights
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
         feature_maps (list): index of the stages whose feature maps are returned
     """
+
     def __init__(self,
                  depth=50,
                  groups=64,
                  group_width=4,
                  freeze_at=2,
-                 freeze_bn=True,
-                 affine_channel=True,
+                 norm_type='affine_channel',
                  bn_decay=True,
                  variant='a',
                  feature_maps=[2, 3, 4, 5]):
         assert depth in [50, 101, 152], "depth {} should be 50, 101 or 152"
-        super(ResNeXt, self).__init__(
-            depth, freeze_at, freeze_bn, affine_channel, bn_decay,
-            variant, feature_maps)
+        super(ResNeXt, self).__init__(depth, freeze_at, freeze_bn,
+                                      affine_channel, bn_decay, variant,
+                                      feature_maps)
         self.depth_cfg = {
             50: ([3, 4, 6, 3], self.bottleneck),
             101: ([3, 4, 23, 3], self.bottleneck),
@@ -60,7 +60,7 @@ class ResNeXt(ResNet):
         self.stage_filters = [256, 512, 1024, 2048]
         self.groups = groups
         self.group_width = group_width
-        self._resnext_pretrained_name_fix = True
+        self._model_type = 'ResNeXt'
 
 
 @register
@@ -73,12 +73,11 @@ class ResNeXtC5(ResNeXt):
                  groups=64,
                  group_width=4,
                  freeze_at=2,
-                 freeze_bn=True,
-                 affine_channel=True,
+                 norm_type='affine_channel',
                  bn_decay=True,
-                 variant='a',
+                 variant='b',
                  feature_maps=[5]):
-        super(ResNeXtC5, self).__init__(
-            depth, groups, group_width, freeze_at, freeze_bn, affine_channel,
-            bn_decay, variant, feature_maps)
+        super(ResNeXtC5, self).__init__(depth, groups, group_width, freeze_at,
+                                        freeze_bn, affine_channel, bn_decay,
+                                        variant, feature_maps)
         self.severed_head = True

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -38,8 +37,8 @@ class SENet(ResNeXt):
         groups (int): group convolution cardinality
         group_width (int): width of each group convolution
         freeze_at (int): freeze the backbone at which stage
-        freeze_bn (bool): fix batch norm weights
-        affine_channel (bool): use batch_norm or affine_channel.
+        norm_type (str): normalization type, 'bn', 'freeze_bn', 'sync_bn' and
+        'affine_channel' are supported
         bn_decay (bool): apply weight decay to in batch norm weights
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
         feature_maps (list): index of the stages whose feature maps are returned
@@ -50,25 +49,22 @@ class SENet(ResNeXt):
                  groups=64,
                  group_width=4,
                  freeze_at=2,
-                 freeze_bn=True,
-                 affine_channel=True,
+                 norm_type='affine_channel',
                  bn_decay=True,
                  variant='d',
                  feature_maps=[2, 3, 4, 5]):
-        super(SENet, self).__init__(
-            depth, groups, group_width, freeze_at, freeze_bn, affine_channel, bn_decay,
-            variant, feature_maps)
+        super(SENet, self).__init__(depth, groups, group_width, freeze_at,
+                                    freeze_bn, affine_channel, bn_decay,
+                                    variant, feature_maps)
         if depth < 152:
             self.stage_filters = [128, 256, 512, 1024]
         else:
             self.stage_filters = [256, 512, 1024, 2048]
         self.reduction_ratio = 16
+        self._model_type = 'SENet'
         self._senet_pretrained_weight_fix = True
 
-    def _squeeze_excitation(self,
-                            input,
-                            num_channels,
-                            name=None):
+    def _squeeze_excitation(self, input, num_channels, name=None):
         pool = fluid.layers.pool2d(
             input=input,
             pool_size=0,
@@ -107,12 +103,11 @@ class SENetC5(SENet):
                  groups=64,
                  group_width=4,
                  freeze_at=2,
-                 freeze_bn=True,
-                 affine_channel=True,
+                 norm_type='affine_channel',
                  bn_decay=True,
                  variant='d',
                  feature_maps=[5]):
         super(SENetC5, self).__init__(
-            depth, groups, group_width, freeze_at, freeze_bn, affine_channel,
-            bn_decay, variant, feature_maps)
+            depth, groups, group_width, freeze_at, norm_type, bn_decay,
+            variant, feature_maps)
         self.severed_head = True
