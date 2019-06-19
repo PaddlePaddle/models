@@ -122,11 +122,14 @@ def generate_config(**kwargs):
     for mod in modules:
         walk(mod)
 
-    # XXX for ordered printing
-    header = ""
-    for k, v in MISC_CONFIG.items():
-        header += yaml.dump({k: v}, default_flow_style=False, default_style='')
-    print(header)
+    # XXX try to be smart about when to add header,
+    # if any "architecture" module, is included, head will be added as well
+    if any([getattr(m, 'category', None) == 'architecture' for m in schema]):
+        # XXX for ordered printing
+        header = ""
+        for k, v in MISC_CONFIG.items():
+            header += yaml.dump({k: v}, default_flow_style=False, default_style='')
+        print(header)
 
     for s in schema:
         print(dump_config(s, minimal))
