@@ -133,9 +133,9 @@ class ResizeImage(BaseOperator):
             use_cv2 (bool): use the cv2 interpolation method or use PIL interpolation method
         """
         super(ResizeImage, self).__init__()
-        self.target_size = target_size
-        self.max_size = max_size
-        self.interp = interp
+        self.target_size = int(target_size)
+        self.max_size = int(max_size)
+        self.interp = int(interp)
         self.use_cv2 = use_cv2
         if not (isinstance(self.target_size, int) and isinstance(
                 self.max_size, int) and isinstance(self.interp, int)):
