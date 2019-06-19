@@ -140,9 +140,6 @@ def train(args):
             optimizer.minimize(train_loss)
             train_pyreader = train_model.pyreader()
 
-    if not args.no_memory_optimize:
-        fluid.memory_optimize(train_prog)
-
     valid_prog = fluid.Program()
     with fluid.program_guard(valid_prog, startup):
         with fluid.unique_name.guard():
@@ -176,10 +173,15 @@ def train(args):
         if pretrain:
             train_model.load_pretrain_params(exe, pretrain, train_prog, place)
 
+    build_strategy = fluid.BuildStrategy()
+    build_strategy.enable_inplace = True
+    #build_strategy.memory_optimize = True
+
     train_exe = fluid.ParallelExecutor(
         use_cuda=args.use_gpu,
         loss_name=train_loss.name,
-        main_program=train_prog)
+        main_program=train_prog,
+        build_strategy=build_strategy)
     valid_exe = fluid.ParallelExecutor(
         use_cuda=args.use_gpu,
         share_vars_from=train_exe,

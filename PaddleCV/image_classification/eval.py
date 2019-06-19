@@ -7,7 +7,7 @@ import time
 import sys
 import paddle
 import paddle.fluid as fluid
-import reader as reader
+import reader_cv2 as reader
 import argparse
 import functools
 import models
@@ -25,7 +25,7 @@ add_arg('image_shape',      str,  "3,224,224",         "Input image size")
 add_arg('with_mem_opt',     bool, True,                "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,  None,                "Whether to use pretrained model.")
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
-
+add_arg('resize_short_size', int, 256,                "Set resize short size")
 # yapf: enable
 
 def eval(args):
@@ -77,14 +77,10 @@ def eval(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    if pretrained_model:
 
-        def if_exist(var):
-            return os.path.exists(os.path.join(pretrained_model, var.name))
+    fluid.io.load_persistables(exe, pretrained_model)
 
-        fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
-
-    val_reader = paddle.batch(reader.val(), batch_size=args.batch_size)
+    val_reader = paddle.batch(reader.val(settings=args), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     test_info = [[], [], []]

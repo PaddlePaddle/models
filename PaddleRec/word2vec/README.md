@@ -27,7 +27,7 @@
 ```bash
 mkdir data
 wget http://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz
-tar xzvf 1-billion-word-language-modeling-benchmark-r13output.tar
+tar xzvf 1-billion-word-language-modeling-benchmark-r13output.tar.gz
 mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled/ data/
 ```
 

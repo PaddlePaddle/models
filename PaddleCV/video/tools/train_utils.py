@@ -101,7 +101,7 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
                        info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
             train_iter += 1
         logger.info('[TRAIN] Epoch {} training finished, average time: {}'.
-                    format(epoch, np.mean(epoch_periods)))
+                    format(epoch, np.mean(epoch_periods[1:])))
         save_model(exe, train_prog, save_dir, save_model_name,
                    "_epoch{}".format(epoch))
         if test_exe and valid_interval > 0 and (epoch + 1
@@ -144,7 +144,7 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
         except fluid.core.EOFException:
             # eval here
             logger.info('[TRAIN] Epoch {} training finished, average time: {}'.
-                        format(epoch, np.mean(epoch_periods)))
+                        format(epoch, np.mean(epoch_periods[1:])))
             save_model(exe, train_prog, save_dir, save_model_name,
                        "_epoch{}".format(epoch))
             if test_exe and valid_interval > 0 and (epoch + 1
@@ -159,7 +159,9 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
         cards = os.environ.get('CUDA_VISIBLE_DEVICES')
         gpu_num = len(cards.split(","))
         print("kpis\ttrain_cost_card{}\t{}".format(gpu_num, train_loss))
-        print("kpis\ttrain_speed_card{}\t{}".format(gpu_num, np.mean(epoch_periods)))
+        print("kpis\ttrain_speed_card{}\t{}".format(gpu_num,
+                                                    np.mean(epoch_periods)))
+
 
 def save_model(exe, program, save_dir, model_name, postfix=None):
     model_path = os.path.join(save_dir, model_name + postfix)

@@ -29,7 +29,7 @@ from nets import ernie_base_net
 from nets import ernie_bilstm_net
 from preprocess.ernie import task_reader
 from models.representation.ernie import ErnieConfig
-from models.representation.ernie import ernie_encoder
+from models.representation.ernie import ernie_encoder, ernie_encoder_with_paddle_hub
 from models.representation.ernie import ernie_pyreader
 from utils import ArgumentGroup
 from utils import print_arguments
@@ -43,6 +43,7 @@ model_g.add_arg("senta_config_path", str, None, "Path to the json file for senta
 model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
 model_g.add_arg("checkpoints", str, "checkpoints", "Path to save checkpoints")
 model_g.add_arg("model_type", str, "ernie_base", "Type of current ernie model")
+model_g.add_arg("use_paddle_hub", bool, False, "Whether to load ERNIE using PaddleHub")
 
 train_g = ArgumentGroup(parser, "training", "training options.")
 train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
@@ -212,7 +213,10 @@ def main(args):
                     pyreader_name='train_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                if args.use_paddle_hub:
+                    embeddings = ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                else:
+                    embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
                 # user defined model based on ernie embeddings
                 loss, accuracy, num_seqs = create_model(
@@ -244,7 +248,10 @@ def main(args):
                     pyreader_name='eval_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                if args.use_paddle_hub:
+                    embeddings = ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                else:
+                    embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
                 # user defined model based on ernie embeddings
                 loss, accuracy, num_seqs = create_model(
@@ -264,7 +271,10 @@ def main(args):
                     pyreader_name="infer_reader")
 
                 # get ernie_embeddings
-                embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                if args.use_paddle_hub:
+                    embeddings = ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                else:
+                    embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
                 probs = create_model(args,
                                     embeddings,
@@ -280,26 +290,34 @@ def main(args):
             init_checkpoint(
                 exe,
                 args.init_checkpoint,
-                main_program=startup_prog)
-    elif args.do_val or args.do_infer:
+                main_program=train_program)
+    elif args.do_val:
         if not args.init_checkpoint:
             raise ValueError("args 'init_checkpoint' should be set if"
                              "only doing validation or testing!")
         init_checkpoint(
             exe,
             args.init_checkpoint,
-            main_program=startup_prog)
+            main_program=test_prog)
+    elif args.do_infer:
+        if not args.init_checkpoint:
+            raise ValueError("args 'init_checkpoint' should be set if"
+                             "only doing validation or testing!")
+        init_checkpoint(
+            exe,
+            args.init_checkpoint,
+            main_program=infer_prog)
 
     if args.do_train:
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_iteration_per_drop_scope = 1
-        
+
         train_exe = fluid.ParallelExecutor(
             use_cuda=args.use_cuda,
             loss_name=loss.name,
             exec_strategy=exec_strategy,
             main_program=train_program)
-        
+
         train_pyreader.decorate_tensor_provider(train_data_generator)
     else:
         train_exe = None
@@ -362,7 +380,7 @@ def main(args):
                         evaluate(exe, test_prog, test_pyreader,
                                 [loss.name, accuracy.name, num_seqs.name],
                                 "dev")
-                        
+
                         test_pyreader.decorate_tensor_provider(
                             reader.data_generator(
                                 input_file=args.test_set,
@@ -370,7 +388,7 @@ def main(args):
                                 phase='infer',
                                 epoch=1,
                                 shuffle=False))
-                        
+
                         evaluate(exe, test_prog, test_pyreader,
                                  [loss.name, accuracy.name, num_seqs.name],
                                  "infer")

@@ -429,9 +429,12 @@ def test_context(exe, train_exe, dev_count):
     if TrainTaskConfig.ckpt_path:
         fluid.io.load_persistables(
             exe, TrainTaskConfig.ckpt_path, main_program=test_prog)
+
+    build_strategy = fluid.BuildStrategy()
     test_exe = fluid.ParallelExecutor(
         use_cuda=TrainTaskConfig.use_gpu,
         main_program=test_prog,
+        build_strategy=build_strategy,
         share_vars_from=train_exe)
 
     def test(exe=test_exe, pyreader=pyreader):
@@ -641,7 +644,7 @@ def train(args):
     else:
         gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
         place = fluid.CUDAPlace(gpu_id)
-        dev_count = get_device_num()
+        dev_count = fluid.core.get_cuda_device_count()
 
     exe = fluid.Executor(place)
 
