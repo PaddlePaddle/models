@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -55,20 +54,18 @@ class SENet(ResNeXt):
                  bn_decay=True,
                  variant='d',
                  feature_maps=[2, 3, 4, 5]):
-        super(SENet, self).__init__(
-            depth, groups, group_width, freeze_at, freeze_bn, affine_channel, bn_decay,
-            variant, feature_maps)
+        super(SENet, self).__init__(depth, groups, group_width, freeze_at,
+                                    freeze_bn, affine_channel, bn_decay,
+                                    variant, feature_maps)
         if depth < 152:
             self.stage_filters = [128, 256, 512, 1024]
         else:
             self.stage_filters = [256, 512, 1024, 2048]
         self.reduction_ratio = 16
+        self._model_type = 'SENet'
         self._senet_pretrained_weight_fix = True
 
-    def _squeeze_excitation(self,
-                            input,
-                            num_channels,
-                            name=None):
+    def _squeeze_excitation(self, input, num_channels, name=None):
         pool = fluid.layers.pool2d(
             input=input,
             pool_size=0,
@@ -112,7 +109,7 @@ class SENetC5(SENet):
                  bn_decay=True,
                  variant='d',
                  feature_maps=[5]):
-        super(SENetC5, self).__init__(
-            depth, groups, group_width, freeze_at, freeze_bn, affine_channel,
-            bn_decay, variant, feature_maps)
+        super(SENetC5, self).__init__(depth, groups, group_width, freeze_at,
+                                      freeze_bn, affine_channel, bn_decay,
+                                      variant, feature_maps)
         self.severed_head = True
