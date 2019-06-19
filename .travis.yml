@@ -8,7 +8,8 @@ flake8-steps: &flake8-steps
   before_script:
     - flake8 --version
     # stop the build if there are Python syntax errors or undefined names
-    - flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics --exclude ./ckan/include/rjsmin.py
+    #- flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics --exclude ./PaddleNLP/knowledge_driven_dialogue/generative_pt/source/utils/misc.py
+    - flake8 . --count --select=E9,F72 --show-source --statistics --exclude ./PaddleNLP/knowledge_driven_dialogue/generative_pt/source/utils/misc.py
     # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
     - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
   script:
