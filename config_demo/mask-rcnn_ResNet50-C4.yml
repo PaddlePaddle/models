@@ -11,12 +11,12 @@ MaskRCNN:
   bbox_head: BBoxHead
   mask_assigner: MaskAssigner
   mask_head: MaskHead
-  roi_extractor: ROIAlign
+  roi_extractor: RoIAlign
   rpn_head: RPNHead
   neck: null
 
 ResNet:
-  affine_channel: true
+  norm_type: affine_channel
   bn_decay: true
   depth: 50
   feature_maps:
@@ -24,11 +24,10 @@ ResNet:
   - 3
   - 4
   freeze_at: 2
-  freeze_bn: true
   variant: a
 
 ResNetC5:
-  affine_channel: true
+  norm_type: affine_channel
   variant: a
 
 RPNHead:
@@ -58,20 +57,20 @@ RPNHead:
     rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
     use_random: true
-  test_prop:
+  test_proposal:
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
     post_nms_top_n: 1000
     pre_nms_top_n: 6000
-  train_prop:
+  train_proposal:
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
     post_nms_top_n: 2000
     pre_nms_top_n: 12000
 
-ROIAlign:
+RoIAlign:
   pooled_height: 14
   pooled_width: 14
   sampling_ratio: 0
