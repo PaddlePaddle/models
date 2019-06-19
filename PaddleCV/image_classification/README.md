@@ -86,6 +86,15 @@ python train.py \
 * **scale_loss**: scale loss for fp16. Default: 1.0.
 * **l2_decay**: L2_decay parameter. Default: 1e-4.
 * **momentum_rate**: momentum_rate. Default: 0.9.
+* **use_label_smoothing**: whether to use label_smoothing or not. Default:False.
+* **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.2.
+* **lower_scale**: the lower scale in random crop data processing, upper is 1.0. Default:0.08.
+* **lower_ratio**: the lower ratio in ramdom crop. Default:3./4. .
+* **upper_ration**: the upper ratio in ramdom crop. Default:4./3. .
+* **resize_short_size**: the resize_short_size. Default: 256.
+* **use_mixup**: whether to use mixup data processing or not. Default:False.
+* **mixup_alpha**: the mixup_alpha parameter. Default: 0.2.
+* **is_distill**: whether to use distill or not. Default: False.
 
 Or can start the training step by running the ```run.sh```.
 
