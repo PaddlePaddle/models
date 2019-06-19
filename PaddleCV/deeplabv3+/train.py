@@ -36,6 +36,7 @@ add_arg('memory_optimize',      bool,   True,   "Using memory optimizer.")
 add_arg('norm_type',            str,    'bn',   "Normalization type, should be 'bn' or 'gn'.")
 add_arg('profile',              bool,    False, "Enable profiler.")
 add_arg('use_py_reader',        bool,    True,  "Use py reader.")
+add_arg("num_workers",          int,     8,     "The number of python processes used to read and preprocess data.")
 parser.add_argument(
     '--enable_ce',
     action='store_true',
@@ -192,13 +193,14 @@ if args.use_py_reader:
     def data_gen():
         batches = dataset.get_batch_generator(
             batch_size // fluid.core.get_cuda_device_count(),
-            total_step * fluid.core.get_cuda_device_count())
+            total_step * fluid.core.get_cuda_device_count(),
+            use_multiprocessing=True, num_workers=args.num_workers)
         for b in batches:
-            yield b[1], b[2]
+            yield b[0], b[1]
     py_reader.decorate_tensor_provider(data_gen)
     py_reader.start()
 else:
-    batches = dataset.get_batch_generator(batch_size, total_step)
+    batches = dataset.get_batch_generator(batch_size, total_step, use_multiprocessing=True, num_workers=args.num_workers)
 total_time = 0.0
 epoch_idx = 0
 train_loss = 0
@@ -207,9 +209,8 @@ with profile_context(args.profile):
     for i in range(total_step):
         epoch_idx += 1
         begin_time = time.time()
-        prev_start_time = time.time()
         if not args.use_py_reader:
-            _, imgs, labels, names = next(batches)
+            imgs, labels, names = next(batches)
             train_loss, = exe.run(binary,
                              feed={'img': imgs,
                                    'label': labels}, fetch_list=[loss_mean])
@@ -221,8 +222,8 @@ with profile_context(args.profile):
         if i % 100 == 0:
             print("Model is saved to", args.save_weights_path)
             save_model()
-        print("step {:d}, loss: {:.6f}, step_time_cost: {:.3f}".format(
-            i, train_loss, end_time - prev_start_time))
+        print("step {:d}, loss: {:.6f}, step_time_cost: {:.3f} s".format(
+            i, train_loss, end_time - begin_time))
 
 print("Training done. Model is saved to", args.save_weights_path)
 save_model()
