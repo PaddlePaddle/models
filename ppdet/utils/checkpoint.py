@@ -27,7 +27,7 @@ import paddle.fluid as fluid
 
 from .download import get_weights_path
 
-__all__ = ['load', 'save']
+__all__ = ['load', 'load_checkpoint', 'load_and_fusebn', 'save']
 
 
 def is_url(path):
@@ -39,7 +39,7 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
-def load(exe, prog, path):
+def load_pretrain(exe, prog, path):
     """
     Load model from the given path.
     Args:
@@ -53,7 +53,7 @@ def load(exe, prog, path):
     if not os.path.exists(path):
         logger.info('Model path {} does not exists.'.format(path))
 
-    logger.info('Loading model from {}...'.format(path))
+    logger.info('Loading pretrained model from {}...'.format(path))
 
     def _if_exist(var):
         b = os.path.exists(os.path.join(path, var.name))
@@ -62,6 +62,21 @@ def load(exe, prog, path):
         return b
 
     fluid.io.load_vars(exe, path, prog, predicate=_if_exist)
+
+
+def load_checkpoint(exe, prog, path):
+    """
+    Load model from the given path.
+    Args:
+        exe (fluid.Executor): The fluid.Executor object.
+        prog (fluid.Program): load weight to which Program object.
+        path (string): URL string or loca model path.
+    """
+    if not os.path.exists(path):
+        logger.info('Model path {} does not exists.'.format(path))
+
+    logger.info('Loading checkpoint from {}...'.format(path))
+    fluid.io.load_persistables(exe, path, prog)
 
 
 def save(exe, prog, path):

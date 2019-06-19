@@ -26,15 +26,17 @@ class ColorTTY(object):
         return "[{}m{}[0m".format(code, message)
 
 
-def parse_args(argv):
+def parse_args():
     parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter)
-    parser.add_argument("-c", "--config", help="configuration file to use")
-    parser.add_argument("-o", "--opt", nargs=REMAINDER, help="set configuration options")
-    args = parser.parse_args(argv)
+    parser.add_argument("-c", "--config",            help="configuration file to use")
+    parser.add_argument("-r", "--resume_checkpoint", default=None, type=str, help="The checkpoint path for resuming training.")
+    # TODO(dangqingqing) remove this flag
+    parser.add_argument("-f", "--fusebn",            default=True, help="Whether to fuse params of batch norm to scale and bias.")
+    parser.add_argument("-o", "--opt",               nargs=REMAINDER, help="set configuration options")
+    args = parser.parse_args()
 
     if args.config is None:
-        print("Please specify config file")
-        sys.exit(1)
+        raise ValueError("Please specify --config=configure_file_path.")
 
     cli_config = {}
     if 'opt' in vars(args) and args.opt is not None:
@@ -53,6 +55,5 @@ def parse_args(argv):
                     else:
                         cur[key] = {}
                         cur = cur[key]
-
     args.cli_config = cli_config
     return args

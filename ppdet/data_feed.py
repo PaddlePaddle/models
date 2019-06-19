@@ -224,7 +224,8 @@ class DataFeed(object):
                  batch_size=1,
                  shuffle=False,
                  drop_last=False,
-                 num_workers=2):
+                 num_workers=2,
+                 use_process=False):
         super(DataFeed, self).__init__()
         self.fields = fields
         self.image_shape = image_shape
@@ -234,6 +235,7 @@ class DataFeed(object):
         self.shuffle = shuffle
         self.drop_last = drop_last
         self.num_workers = num_workers
+        self.use_process = use_process
         self.dataset = dataset
         if isinstance(dataset, dict):
             self.dataset = DataSet(**dataset)
@@ -305,14 +307,16 @@ class FasterRCNNTrainFeed(DataFeed):
                  batch_size=1,
                  shuffle=True,
                  drop_last=False,
-                 num_workers=2):
+                 num_workers=2,
+                 use_process=False):
         # XXX this should be handled by the data loader, since `fields` is
         # given, just collect them
         sample_transforms.append(ArrangeRCNN())
         super(FasterRCNNTrainFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
-            drop_last=drop_last, num_workers=num_workers)
+            drop_last=drop_last, num_workers=num_workers,
+            use_process=use_process)
         # XXX these modes should be unified
         self.mode = 'TRAIN'
 
@@ -345,12 +349,14 @@ class MaskRCNNTrainFeed(DataFeed):
                  batch_size=1,
                  shuffle=True,
                  drop_last=False,
-                 num_workers=2):
+                 num_workers=2,
+                 use_process=False):
         sample_transforms.append(ArrangeRCNN(is_mask=True))
         super(MaskRCNNTrainFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
-            drop_last=drop_last, num_workers=num_workers)
+            drop_last=drop_last, num_workers=num_workers,
+            use_process=use_process)
         self.mode = 'TRAIN'
 
 
@@ -407,12 +413,14 @@ class MaskRCNNTestFeed(DataFeed):
                  batch_size=1,
                  shuffle=False,
                  drop_last=False,
-                 num_workers=2):
+                 num_workers=2,
+                 use_process=False):
         sample_transforms.append(ArrangeTestRCNN(is_mask=True))
         super(MaskRCNNTestFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
-            drop_last=drop_last, num_workers=num_workers)
+            drop_last=drop_last, num_workers=num_workers,
+            use_process=use_process)
         self.mode = 'VAL'
 
 
@@ -448,14 +456,16 @@ class SSDTrainFeed(DataFeed):
                  batch_size=32,
                  shuffle=True,
                  drop_last=True,
-                 num_workers=8):
+                 num_workers=8,
+                 use_process=True):
         sample_transforms.append(ArrangeSSD())
         if isinstance(dataset, dict):
             dataset = VocDataSet(**dataset)
         super(SSDTrainFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
-            drop_last=drop_last, num_workers=num_workers)
+            drop_last=drop_last, num_workers=num_workers,
+            use_process=use_process)
         self.mode = 'TRAIN'
 
 
@@ -482,14 +492,16 @@ class SSDEvalFeed(DataFeed):
                  batch_size=64,
                  shuffle=False,
                  drop_last=True,
-                 num_workers=8):
+                 num_workers=8,
+                 use_process=False):
         sample_transforms.append(ArrangeSSD())
         if isinstance(dataset, dict):
             dataset = VocDataSet(**dataset)
         super(SSDEvalFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
-            drop_last=drop_last, num_workers=num_workers)
+            drop_last=drop_last, num_workers=num_workers,
+            use_process=use_process)
         self.mode = 'VAL'
 
 
@@ -509,7 +521,8 @@ class SSDTestFeed(DataFeed):
                  batch_size=1,
                  shuffle=False,
                  drop_last=False,
-                 num_workers=8):
+                 num_workers=8,
+                 use_process=False):
         sample_transforms.append(ArrangeTestSSD())
         if isinstance(dataset, dict):
             dataset = SimpleDataSet(**dataset)
@@ -559,17 +572,18 @@ class YoloTrainFeed(DataFeed):
                  drop_last=True,
                  num_workers=8,
                  num_max_boxes=50,
-                 mixup_epoch=250):
+                 mixup_epoch=250,
+                 use_process=True):
         sample_transforms.append(ArrangeYOLO())
         super(YoloTrainFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
-            drop_last=drop_last, num_workers=num_workers)
+            drop_last=drop_last, num_workers=num_workers,
+            use_process=use_process)
         self.num_max_boxes = num_max_boxes
         self.mixup_epoch = mixup_epoch
         self.mode = 'TRAIN'
         self.bufsize = 128
-        self.use_process = True
 
 
 @register
@@ -595,16 +609,17 @@ class YoloEvalFeed(DataFeed):
                  shuffle=True,
                  drop_last=True,
                  num_workers=8,
-                 num_max_boxes=50):
+                 num_max_boxes=50,
+                 use_process=False):
         sample_transforms.append(ArrangeTestYOLO())
         super(YoloEvalFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
-            drop_last=drop_last, num_workers=num_workers)
+            drop_last=drop_last, num_workers=num_workers,
+            use_process=use_process)
         self.num_max_boxes = num_max_boxes
         self.mode = 'VAL'
         self.bufsize = 128
-        self.use_process = True
 
 
 @register
@@ -630,18 +645,19 @@ class YoloTestFeed(DataFeed):
                  shuffle=True,
                  drop_last=True,
                  num_workers=8,
-                 num_max_boxes=50):
+                 num_max_boxes=50,
+                 use_process=False):
         sample_transforms.append(ArrangeTestYOLO())
         if isinstance(dataset, dict):
             dataset = SimpleDataSet(**dataset)
         super(YoloTestFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle,
-            drop_last=drop_last, num_workers=num_workers)
+            drop_last=drop_last, num_workers=num_workers,
+            use_process=use_process)
         self.num_max_boxes = num_max_boxes
         self.mode = 'TEST'
         self.bufsize = 128
-        self.use_process = True
 
 
 def make_reader(feed, max_iter=0):
