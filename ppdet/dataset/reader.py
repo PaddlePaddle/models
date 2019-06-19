@@ -101,6 +101,9 @@ class Reader(object):
                 if maxit <= 0:
                     return
 
+        if hasattr(sc, 'get_image_list'):
+            _reader.image_list = sc.get_image_list()
+
         return _reader
 
     def train(self):

@@ -4,13 +4,15 @@ eval_feed: YoloEvalFeed
 test_feed: YoloTestFeed
 use_gpu: yes
 max_iters: 1000
+metric: COCO
+weights: https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz
 
 YOLOv3:
   backbone: DarkNet
   yolo_head: YOLOv3Head
 
 DarkNet:
-  bn_decay: true
+  bn_decay: false
   depth: 53
 
 YOLOv3Head:
@@ -74,7 +76,7 @@ OptimizerBuilder:
     momentum: 0.9
     type: Momentum
   regularizer:
-    factor: 0.0001
+    factor: 0.0005
     type: L2
 
 YoloTrainFeed:
@@ -93,8 +95,9 @@ YoloTrainFeed:
     - 576
     - 608
   dataset:
-    annotation: ../coco/annotations/instances_train2017.json
-    image_dir: ../coco/train2017
+    dataset_dir: coco17
+    annotation: annotations/instances_train2017.json
+    image_dir: train2017
   drop_last: true
   fields:
   - image
@@ -224,8 +227,9 @@ YoloEvalFeed:
   batch_size: 8
   batch_transforms: []
   dataset:
-    annotation: coco/annotations/instances_val2017.json
-    image_dir: coco/val2017
+    dataset_dir: coco17
+    annotation: annotations/instances_val2017.json
+    image_dir: val2017
   drop_last: true
   fields:
   - image
@@ -266,9 +270,12 @@ YoloTestFeed:
   batch_size: 1
   batch_transforms: []
   dataset:
-    annotation: coco/annotations/instances_val2017.json
-    image_dir: coco/val2017
-  drop_last: true
+    dataset_dir: coco17
+    annotation: annotations/instances_val2017.json
+    image_dir: val2017
+    test_file: ./val2017.txt
+  samples: 5
+  drop_last: false
   fields:
   - image
   - im_shape
