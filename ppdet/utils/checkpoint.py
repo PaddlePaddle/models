@@ -72,6 +72,9 @@ def load_checkpoint(exe, prog, path):
         prog (fluid.Program): load weight to which Program object.
         path (string): URL string or loca model path.
     """
+    if is_url(path):
+        path = get_weights_path(path)
+
     if not os.path.exists(path):
         logger.info('Model path {} does not exists.'.format(path))
 

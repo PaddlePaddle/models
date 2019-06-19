@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,14 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 import math
-import paddle.fluid as fluid
+
+from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.framework import Variable
-from paddle.fluid.regularizer import L2Decay
 
 from ppdet.core.workspace import register, serializable
 from .resnext import ResNeXt
@@ -49,7 +50,7 @@ class SENet(ResNeXt):
                  group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='d',
                  feature_maps=[2, 3, 4, 5]):
@@ -104,10 +105,11 @@ class SENetC5(SENet):
                  group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='d',
                  feature_maps=[5]):
         super(SENetC5, self).__init__(depth, groups, group_width, freeze_at,
                                       freeze_bn, affine_channel, bn_decay,
                                       variant, feature_maps)
+        self.severed_head = True

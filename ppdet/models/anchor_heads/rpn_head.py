@@ -1,22 +1,23 @@
-#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import paddle.fluid as fluid
+from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
@@ -88,7 +89,7 @@ class GenerateProposals(object):
 
 @register
 class RPNHead(object):
-    r"""
+    """
     RPN Head
 
     Args:
@@ -188,10 +189,10 @@ class RPNHead(object):
         Get proposals according to the output of backbone.
 
         Args:
-            body_feats (Dict): The dictionary of feature maps from backbone.
+            body_feats (dict): The dictionary of feature maps from backbone.
             im_info(Variable): The information of image with shape [N, 3] with
                 shape (height, width, scale).
-            body_feat_names(List): A list of names of feature maps from
+            body_feat_names(list): A list of names of feature maps from
                 backbone.
 
         Returns:
@@ -250,7 +251,7 @@ class RPNHead(object):
                 shape [M, 1]. M is the number of groundtruth.
 
         Returns:
-            Type: Dict
+            Type: dict
                 rpn_cls_loss(Variable): RPN classification loss.
                 rpn_bbox_loss(Variable): RPN bounding box regression loss.
 
@@ -294,7 +295,7 @@ class RPNHead(object):
 
 @register
 class FPNRPNHead(RPNHead):
-    r"""
+    """
     RPN Head that supports FPN input
 
     Args:
@@ -337,7 +338,7 @@ class FPNRPNHead(RPNHead):
 
         Args:
             input(Variable): Body feature from backbone.
-            feat_lvl(Integer): Indicate the level of rpn output corresponding
+            feat_lvl(int): Indicate the level of rpn output corresponding
                 to the level of feature map.
 
         Return:
@@ -414,7 +415,7 @@ class FPNRPNHead(RPNHead):
             body_feat(Variable): the feature map from backone.
             im_info(Variable): The information of image with shape [N, 3] with
                 format (height, width, scale).
-            feat_lvl(Integer): Indicate the level of proposals corresponding to
+            feat_lvl(int): Indicate the level of proposals corresponding to
                 the feature maps.
 
         Returns:
@@ -443,7 +444,7 @@ class FPNRPNHead(RPNHead):
         rpn head
 
         Args:
-            fpn_feats(Dict): A dictionary represents the output feature map
+            fpn_feats(dict): A dictionary represents the output feature map
                 of FPN neck with their name.
             im_info(Variable): The information of image with shape [N, 3] with
                 format (height, width, scale).

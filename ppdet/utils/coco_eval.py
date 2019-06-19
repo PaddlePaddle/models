@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import json
 import cv2
 import numpy as np
@@ -27,7 +28,7 @@ import pycocotools.mask as mask_util
 import logging
 logger = logging.getLogger(__name__)
 
-__all__ = ['bbox_eval', 'mask_eval']
+__all__ = ['bbox_eval', 'mask_eval', 'bbox2out', 'mask2out', 'get_category_info']
 
 
 def bbox_eval(results, anno_file, outfile, with_background=True):
@@ -208,101 +209,212 @@ def expand_boxes(boxes, scale):
     return boxes_exp
 
 
-def coco17_labels(with_background=True):
+def get_category_info(anno_file=None, with_background=True):
+    if anno_file is None or not os.path.exists(anno_file):
+        logger.info("Not found annotation file {}, load "
+                    "coco17 categories.".format(anno_file))
+        return coco17_category_info(with_background)
+    else:
+        logger.info("Load categories from {}".format(anno_file))
+        return get_category_info_from_anno(anno_file, with_background)
+
+
+def get_category_info_from_anno(anno_file, with_background=True):
     """
-    Get default class id to labels map in COCO2017.
+    Get class id to category id map and category id 
+    to category name map from annotation file.
+
+    Args:
+        anno_file (str): annotation file path
+        with_background (bool, default True):
+            whether load background as class 0.
+    """
+    coco = COCO(anno_file)
+    cats = coco.loadCats(coco.getCatIds())
+    clsid2catid = {i + int(with_background): cat['id']
+                   for i, cat in enumerate(cats)}
+    catid2name = {cat['id']: cat['name'] for cat in cats}
+
+    return clsid2catid, catid2name
+
+
+def coco17_category_info(with_background=True):
+    """
+    Get class id to category id map and category id 
+    to category name map of COCO2017 dataset
 
     Args:
         with_background (bool, default True):
             whether load background as class 0.
     """
-    labels_map = {
-        0: 'background',
-        1: 'person',
-        2: 'bicycle',
-        3: 'car',
-        4: 'motorcycle',
-        5: 'airplane',
-        6: 'bus',
-        7: 'train',
-        8: 'truck',
-        9: 'boat',
-        10: 'traffic light',
-        11: 'fire hydrant',
-        12: 'stop sign',
-        13: 'parking meter',
-        14: 'bench',
-        15: 'bird',
-        16: 'cat',
-        17: 'dog',
-        18: 'horse',
-        19: 'sheep',
-        20: 'cow',
-        21: 'elephant',
-        22: 'bear',
-        23: 'zebra',
-        24: 'giraffe',
-        25: 'backpack',
-        26: 'umbrella',
-        27: 'handbag',
-        28: 'tie',
-        29: 'suitcase',
-        30: 'frisbee',
-        31: 'skis',
-        32: 'snowboard',
-        33: 'sports ball',
-        34: 'kite',
-        35: 'baseball bat',
-        36: 'baseball glove',
-        37: 'skateboard',
-        38: 'surfboard',
-        39: 'tennis racket',
-        40: 'bottle',
-        41: 'wine glass',
-        42: 'cup',
-        43: 'fork',
-        44: 'knife',
-        45: 'spoon',
-        46: 'bowl',
-        47: 'banana',
-        48: 'apple',
-        49: 'sandwich',
-        50: 'orange',
-        51: 'broccoli',
-        52: 'carrot',
-        53: 'hot dog',
-        54: 'pizza',
-        55: 'donut',
-        56: 'cake',
-        57: 'chair',
-        58: 'couch',
-        59: 'potted plant',
-        60: 'bed',
-        61: 'dining table',
-        62: 'toilet',
-        63: 'tv',
-        64: 'laptop',
-        65: 'mouse',
-        66: 'remote',
-        67: 'keyboard',
-        68: 'cell phone',
-        69: 'microwave',
-        70: 'oven',
-        71: 'toaster',
-        72: 'sink',
-        73: 'refrigerator',
-        74: 'book',
-        75: 'clock',
-        76: 'vase',
-        77: 'scissors',
-        78: 'teddy bear',
-        79: 'hair drier',
-        80: 'toothbrush'
+    clsid2catid = {1:  1,
+                   2:  2,
+                   3:  3,
+                   4:  4,
+                   5:  5,
+                   6:  6,
+                   7:  7,
+                   8:  8,
+                   9:  9,
+                   10: 10,
+                   11: 11,
+                   12: 13,
+                   13: 14,
+                   14: 15,
+                   15: 16,
+                   16: 17,
+                   17: 18,
+                   18: 19,
+                   19: 20,
+                   20: 21,
+                   21: 22,
+                   22: 23,
+                   23: 24,
+                   24: 25,
+                   25: 27,
+                   26: 28,
+                   27: 31,
+                   28: 32,
+                   29: 33,
+                   30: 34,
+                   31: 35,
+                   32: 36,
+                   33: 37,
+                   34: 38,
+                   35: 39,
+                   36: 40,
+                   37: 41,
+                   38: 42,
+                   39: 43,
+                   40: 44,
+                   41: 46,
+                   42: 47,
+                   43: 48,
+                   44: 49,
+                   45: 50,
+                   46: 51,
+                   47: 52,
+                   48: 53,
+                   49: 54,
+                   50: 55,
+                   51: 56,
+                   52: 57,
+                   53: 58,
+                   54: 59,
+                   55: 60,
+                   56: 61,
+                   57: 62,
+                   58: 63,
+                   59: 64,
+                   60: 65,
+                   61: 67,
+                   62: 70,
+                   63: 72,
+                   64: 73,
+                   65: 74,
+                   66: 75,
+                   67: 76,
+                   68: 77,
+                   69: 78,
+                   70: 79,
+                   71: 80,
+                   72: 81,
+                   73: 82,
+                   74: 84,
+                   75: 85,
+                   76: 86,
+                   77: 87,
+                   78: 88,
+                   79: 89,
+                   80: 90
+    }
+
+    catid2name = {
+            0: 'background',
+            1: 'person',
+            2: 'bicycle',
+            3: 'car',
+            4: 'motorcycle',
+            5: 'airplane',
+            6: 'bus',
+            7: 'train',
+            8: 'truck',
+            9: 'boat',
+            10: 'traffic light',
+            11: 'fire hydrant',
+            13: 'stop sign',
+            14: 'parking meter',
+            15: 'bench',
+            16: 'bird',
+            17: 'cat',
+            18: 'dog',
+            19: 'horse',
+            20: 'sheep',
+            21: 'cow',
+            22: 'elephant',
+            23: 'bear',
+            24: 'zebra',
+            25: 'giraffe',
+            27: 'backpack',
+            28: 'umbrella',
+            31: 'handbag',
+            32: 'tie',
+            33: 'suitcase',
+            34: 'frisbee',
+            35: 'skis',
+            36: 'snowboard',
+            37: 'sports ball',
+            38: 'kite',
+            39: 'baseball bat',
+            40: 'baseball glove',
+            41: 'skateboard',
+            42: 'surfboard',
+            43: 'tennis racket',
+            44: 'bottle',
+            46: 'wine glass',
+            47: 'cup',
+            48: 'fork',
+            49: 'knife',
+            50: 'spoon',
+            51: 'bowl',
+            52: 'banana',
+            53: 'apple',
+            54: 'sandwich',
+            55: 'orange',
+            56: 'broccoli',
+            57: 'carrot',
+            58: 'hot dog',
+            59: 'pizza',
+            60: 'donut',
+            61: 'cake',
+            62: 'chair',
+            63: 'couch',
+            64: 'potted plant',
+            65: 'bed',
+            67: 'dining table',
+            70: 'toilet',
+            72: 'tv',
+            73: 'laptop',
+            74: 'mouse',
+            75: 'remote',
+            76: 'keyboard',
+            77: 'cell phone',
+            78: 'microwave',
+            79: 'oven',
+            80: 'toaster',
+            81: 'sink',
+            82: 'refrigerator',
+            84: 'book',
+            85: 'clock',
+            86: 'vase',
+            87: 'scissors',
+            88: 'teddy bear',
+            89: 'hair drier',
+            90: 'toothbrush'
     }
 
     if not with_background:
-        labels_map.pop(0)
-        labels_map = {k - 1: v for k, v in \
-                    labels_map.items()}
+        clsid2catid = {k - 1: v for k, v in \
+                       clsid2catid.items()}
 
-    return labels_map
+    return clsid2catid, catid2name

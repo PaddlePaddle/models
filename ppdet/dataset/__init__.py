@@ -24,21 +24,16 @@
 #    * load data from local files and other source data
 #
 # - xxxOperator (DecodeImage)
-#    * subclass of 'BaseOperator' 
+#    * subclass of 'BaseOperator'
 #    * each op can transform a sample, eg: decode/resize/crop image
 #    * each op must obey basic rules defined in transform.operator.base
 #
 # - transformer
 #    * subclass of 'Dataset'
-#    * 'MappedDataset' accept a 'xxxSource' and a list of 'xxxOperator' 
+#    * 'MappedDataset' accept a 'xxxSource' and a list of 'xxxOperator'
 #       to build a transformed 'Dataset'
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 from .dataset import Dataset
 from .reader import Reader
 
-__all__ = ['Dataset', 'source', 'Reader']
+__all__ = ['Dataset', 'Reader']

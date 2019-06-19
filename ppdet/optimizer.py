@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,11 +32,12 @@ logger = logging.getLogger(__name__)
 
 @serializable
 class PiecewiseDecay(object):
-    r"""Multi step learning rate decay
+    """
+    Multi step learning rate decay
 
-        Args:
-            gamma (float): decay factor
-            milestones (list): steps at which to decay learning rate
+    Args:
+        gamma (float): decay factor
+        milestones (list): steps at which to decay learning rate
     """
 
     def __init__(self, gamma=0.1, milestones=[6000, 8000], values=None):
@@ -59,7 +60,8 @@ class PiecewiseDecay(object):
 
 @serializable
 class LinearWarmup(object):
-    r"""Warm up learning rate linearly
+    """
+    Warm up learning rate linearly
 
     Args:
         steps (int): warm up steps
@@ -83,7 +85,8 @@ class LinearWarmup(object):
 
 @register
 class LearningRate(object):
-    r"""Learning Rate configuration
+    """
+    Learning Rate configuration
 
     Args:
         base_lr (float): base learning rate
@@ -107,8 +110,8 @@ class LearningRate(object):
 
 @register
 class OptimizerBuilder():
-    """ Optimizer Builder
-    Build optimizer handle base on given config AttrDict
+    """
+    Build optimizer handles
 
     Args:
         regularizer (object): an `Regularizer` instance

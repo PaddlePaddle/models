@@ -13,14 +13,5 @@
 # limitations under the License.
 
 from . import bbox_head
-from .bbox_head import *
-
 from . import mask_head
-from .mask_head import *
-
 from . import cascade_head
-from .cascade_head import CascadeHead, FC6FC7
-
-__all__ = bbox_head.__all__
-__all__ += mask_head.__all__
-__all__ += cascade_head.__all__

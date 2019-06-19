@@ -1,11 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import paddle.fluid as fluid
+
+from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.framework import Variable
 from paddle.fluid.regularizer import L2Decay
 
 from ppdet.core.workspace import register
@@ -33,7 +27,7 @@ __all__ = ['MobileNet']
 
 @register
 class MobileNet(object):
-    r"""
+    """
     MobileNet v1, see https://arxiv.org/abs/1704.04861
 
     Args:
@@ -130,11 +124,6 @@ class MobileNet(object):
                      stride,
                      scale,
                      name=None):
-        '''
-            Get the feature map which is used to get bbox and label.
-            Contain two convolution process, so there are two filters.
-            '''
-        # 1x1 conv
         pointwise_conv = self._conv_norm(
             input=input,
             filter_size=1,
@@ -143,7 +132,6 @@ class MobileNet(object):
             num_groups=int(num_groups * scale),
             padding=0,
             name=name + "_extra1")
-        # 3x3 conv
         normal_conv = self._conv_norm(
             input=pointwise_conv,
             filter_size=3,
@@ -155,13 +143,6 @@ class MobileNet(object):
         return normal_conv
 
     def __call__(self, input):
-        """
-        Get the backbone of MobileNetV1.
-        Args:
-            input (Variable): input variable.
-        Returns:
-            feature maps
-        """
         scale = self.conv_group_scale
 
         blocks = []
@@ -196,7 +177,7 @@ class MobileNet(object):
         out = self.depthwise_separable(
             out, 1024, 1024, 1024, 1, scale, name="conv6")
         module13 = out
-        blocks.apppend(out)
+        blocks.append(out)
         if not self.with_extra_blocks:
             return blocks
 
