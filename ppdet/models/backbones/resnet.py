@@ -255,8 +255,11 @@ class ResNet(object):
         return res_out
 
     def c1_stage(self, input):
-        # TODO verify SE154 out chan, 128 or 256?
-        num_out_chan = self.stage_filters[0]
+        # FIXME hard code for now
+        if getattr(self, '_squeeze_excitation', None) is not None:
+            num_out_chan = 128
+        else:
+            num_out_chan = 64
         if self.variant in ['c', 'd']:
             conv_def = [
                 [num_out_chan / 2, 3, 2, "conv1_1"],
