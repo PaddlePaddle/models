@@ -178,29 +178,29 @@ class MobileNet(object):
         out = self.depthwise_separable(
             out, 128, 256, 128, 2, scale, name="conv3_2")
         # 1/8
+        blocks.append(out)
         out = self.depthwise_separable(
             out, 256, 256, 256, 1, scale, name="conv4_1")
-        blocks.append(out)
         out = self.depthwise_separable(
             out, 256, 512, 256, 2, scale, name="conv4_2")
         # 1/16
+        blocks.append(out)
         for i in range(5):
             out = self.depthwise_separable(
                 out, 512, 512, 512, 1, scale, name="conv5_" + str(i + 1))
-        blocks.append(out)
+        module11 = out
 
         out = self.depthwise_separable(
             out, 512, 1024, 512, 2, scale, name="conv5_6")
         # 1/32
         out = self.depthwise_separable(
             out, 1024, 1024, 1024, 1, scale, name="conv6")
-        blocks.append(out)
+        module13 = out
+        blocks.apppend(out)
         if not self.with_extra_blocks:
             return blocks
 
         num_filters = self.extra_block_filters
-        module11 = blocks[1]
-        module13 = blocks[2]
         module14 = self._extra_block(module13, num_filters[0][0],
                                      num_filters[0][1], 1, 2,
                                      scale, "conv7_1")
