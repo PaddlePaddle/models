@@ -3,7 +3,10 @@ train_feed: YoloTrainFeed
 eval_feed: YoloEvalFeed
 test_feed: YoloTestFeed
 use_gpu: yes
-max_iters: 1000
+max_iters: 500200
+log_smooth_window: 20
+save_dir: output
+snapshot_iter: 20
 metric: COCO
 weights: https://paddlemodels.bj.bcebos.com/yolo/yolo_mobilenet1.0.tar.gz
 
@@ -40,8 +43,9 @@ LearningRate:
   - !PiecewiseDecay
     gamma: 0.1
     milestones:
-    - 6000
-    - 8000
+    - 400000
+    - 400000
+    values: null
   - !LinearWarmup
     start_factor: 0.
     steps: 4000
@@ -142,7 +146,7 @@ YoloEvalFeed:
     dataset_dir: coco17
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  drop_last: true
+  drop_last: false
   with_background: false
   fields:
   - image
