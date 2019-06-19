@@ -239,8 +239,9 @@ def train_mnist(args):
             mnist.eval()
             test_cost, test_acc = test_mnist(test_reader, mnist, BATCH_SIZE)
             mnist.train()
-            print("kpis\ttest_acc\t%s" % test_acc)
-            print("kpis\ttest_cost\t%s" % test_cost)
+            if args.ce:
+                print("kpis\ttest_acc\t%s" % test_acc)
+                print("kpis\ttest_cost\t%s" % test_cost)
             print("Loss at epoch {} , Test avg_loss is: {}, acc is: {}".format(
                 epoch, test_cost, test_acc))
 
