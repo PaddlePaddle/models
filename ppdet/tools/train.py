@@ -27,8 +27,8 @@ import logging
 
 from paddle import fluid
 
+from ppdet.tools.eval_utils import parse_fetches
 from ppdet.utils.stats import TrainingStats
-from ppdet.utils.run_utils import parse_fetches
 from ppdet.utils.cli import parse_args
 import ppdet.utils.checkpoint as checkpoint
 

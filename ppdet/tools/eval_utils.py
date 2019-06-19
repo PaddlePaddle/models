@@ -80,23 +80,24 @@ def eval_run(exe, compile_program, pyreader, keys, values):
     return results
 
 
-def eval_results(results, cfg, args):
+def eval_results(results, feed, args, metric='COCO'):
     """
     Evaluation for evaluation program results
     """
-    if cfg.TEST.METRIC_TYPE == 'COCO':
-        from ppdet.metrics.coco import bbox_eval, mask_eval
-        with_background = getattr(cfg.DATA.VAL, 'WITH_BACKGROUND', True)
-        outfile = 'bbox.json'
-        if args.out_file:
-            outfile = '{}_bbox.json'.format(args.out_file)
-        bbox_eval(results, cfg.DATA.VAL.ANNO_FILE, outfile, with_background)
+    if metric == 'COCO':
+        from ppdet.utils.coco_eval import bbox_eval, mask_eval
+        anno_file = getattr(feed.dataset, 'annotation', None)
+        with_background = getattr(feed, 'with_background', True)
+        savefile = 'bbox.json'
+        if args.savefile:
+            savefile = '{}_bbox.json'.format(args.savefile)
+        bbox_eval(results, anno_file, savefile, with_background)
         if 'mask' in results[0]:
-            outfile = 'mask.json'
-            if args.out_file:
-                outfile = '{}_mask.json'.format(args.out_file)
-            mask_eval(results, cfg.DATA.VAL.ANNO_FILE, outfile,
-                      cfg.MASK_HEAD.RESOLUTION)
+            savefile= 'mask.json'
+            if args.savefile:
+                savefile = '{}_mask.json'.format(args.savefile)
+            mask_eval(results, anno_file, savefile,
+                      cfg['MaskHead']['resolution'])
     else:
         res = np.mean(results[-1]['map'][0])
         logger.info('Test mAP: {}'.format(res))
