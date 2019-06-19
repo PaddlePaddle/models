@@ -8,7 +8,7 @@ FasterRCNN:
   backbone: ResNet
   bbox_assigner: BBoxAssigner
   bbox_head: BBoxHead
-  roi_extractor: ROIAlign
+  roi_extractor: RoIAlign
   rpn_head: RPNHead
   neck: null
 
@@ -53,20 +53,20 @@ RPNHead:
     rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
     use_random: true
-  test_prop:
+  test_proposal:
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
     post_nms_top_n: 1000
     pre_nms_top_n: 6000
-  train_prop:
+  train_proposal:
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
     post_nms_top_n: 2000
     pre_nms_top_n: 12000
 
-ROIAlign:
+RoIAlign:
   pooled_height: 14
   pooled_width: 14
   sampling_ratio: 0
