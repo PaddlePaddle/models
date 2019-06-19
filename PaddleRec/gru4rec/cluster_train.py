@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import time
@@ -78,7 +79,7 @@ def train():
     train_dir = args.train_dir
     vocab_path = args.vocab_path
     use_cuda = True if args.use_cuda else False
-    print("use_cuda:", use_cuda)
+    print(("use_cuda:", use_cuda))
     batch_size = args.batch_size
     vocab_size, train_reader = utils.prepare_data(
         train_dir, vocab_path, batch_size=batch_size * get_cards(args),\

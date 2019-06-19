@@ -3,6 +3,7 @@ MIFGSM tutorial on mnist using advbox tool.
 MIFGSM is a broad class of momentum iterative gradient-based methods based on FSGM.
 It supports non-targeted attack and targeted attack.
 """
+from __future__ import print_function
 import sys
 sys.path.append("..")
 

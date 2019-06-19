@@ -1,6 +1,7 @@
 """
 comput unicom
 """
+from __future__ import print_function
 
 infer_results = []
 labels = []

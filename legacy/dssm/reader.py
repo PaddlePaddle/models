@@ -1,3 +1,4 @@
+from __future__ import print_function
 from utils import UNK, ModelType, TaskType, load_dic, \
         sent2ids, logger, ModelType
 
@@ -118,4 +119,4 @@ if __name__ == '__main__':
                       ModelType.CLASSIFICATION)
 
     for rcd in dataset.train():
-        print rcd
+        print(rcd)

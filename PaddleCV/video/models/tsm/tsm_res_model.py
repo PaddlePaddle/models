@@ -1,3 +1,4 @@
+from __future__ import print_function
 #  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
@@ -90,8 +91,8 @@ class TSM_ResNet():
         seg_num = self.seg_num
         supported_layers = [50, 101, 152]
         if layers not in supported_layers:
-            print("supported layers are", supported_layers, \
-                  "but input layer is ", layers)
+            print(("supported layers are", supported_layers, \
+                  "but input layer is ", layers))
             exit()
 
         # reshape input

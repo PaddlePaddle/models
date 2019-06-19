@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Run MRQA"""
+from __future__ import print_function
 
 import six
 import math
@@ -156,8 +157,8 @@ def read_mrqa_examples(input_file, is_training, with_negative=False):
                         cleaned_answer_text = " ".join(
                             tokenization.whitespace_tokenize(orig_answer_text))
                         if actual_text.find(cleaned_answer_text) == -1:
-                            print("Could not find answer: '%s' vs. '%s'",
-                                  actual_text, cleaned_answer_text)
+                            print(("Could not find answer: '%s' vs. '%s'",
+                                  actual_text, cleaned_answer_text))
                             continue
                     else:
                         start_position = -1
@@ -436,8 +437,8 @@ def estimate_runtime_examples(data_path, sample_rate, tokenizer, \
                     cleaned_answer_text = " ".join(
                         tokenization.whitespace_tokenize(orig_answer_text))
                     if actual_text.find(cleaned_answer_text) == -1:
-                        print("Could not find answer: '%s' vs. '%s'",
-                              actual_text, cleaned_answer_text)
+                        print(("Could not find answer: '%s' vs. '%s'",
+                              actual_text, cleaned_answer_text))
                         continue
 
                 example = MRQAExample(
@@ -1005,8 +1006,8 @@ def get_final_text(pred_text, orig_text, do_lower_case, verbose):
 
     if len(orig_ns_text) != len(tok_ns_text):
         if verbose:
-            print("Length not equal after stripping spaces: '%s' vs '%s'",
-                  orig_ns_text, tok_ns_text)
+            print(("Length not equal after stripping spaces: '%s' vs '%s'",
+                  orig_ns_text, tok_ns_text))
         return orig_text
 
     # We then project the characters in `pred_text` back to `orig_text` using
@@ -1097,5 +1098,5 @@ if __name__ == '__main__':
                 #output_fn=train_writer.process_feature
             )):
         if index < 10:
-            print(index, feature.input_ids, feature.input_mask,
-                  feature.segment_ids)
+            print((index, feature.input_ids, feature.input_mask,
+                  feature.segment_ids))

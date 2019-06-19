@@ -1,6 +1,7 @@
 """
 This code is based on https://github.com/fchollet/keras/blob/master/keras/utils/data_utils.py
 """
+from __future__ import print_function
 
 import sys
 import signal

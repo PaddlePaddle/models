@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import argparse
 import time
@@ -112,8 +113,8 @@ def infer(args, vocab_size, test_reader):
                     accum_num_sum += (data_length)
                     accum_num_recall += (data_length * acc_)
                     if step_id % 1 == 0:
-                        print("step:%d  " % (step_id),
-                              accum_num_recall / accum_num_sum)
+                        print(("step:%d  " % (step_id),
+                              accum_num_recall / accum_num_sum))
                 t1 = time.time()
                 print("model:%s recall@20:%.3f time_cost(s):%.2f" %
                       (model_path, accum_num_recall / accum_num_sum, t1 - t0))
@@ -128,7 +129,7 @@ if __name__ == "__main__":
     batch_size = args.batch_size
     vocab_path = args.vocab_path
     use_cuda = True if args.use_cuda else False
-    print("start index: ", start_index, " last_index:", last_index)
+    print(("start index: ", start_index, " last_index:", last_index))
     test_reader, vocab_size = utils.construct_test_data(
         test_dir, vocab_path, batch_size=args.batch_size)
     infer(args, vocab_size, test_reader=test_reader)

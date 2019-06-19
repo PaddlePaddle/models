@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import os
 import gzip
 import paddle.v2 as paddle
@@ -105,7 +106,7 @@ def get_a_batch_user_vector(inferer, test_batch):
         user_vector.append(0.000)
         norm = np.linalg.norm(user_vector)
         user_vector_norm = [str(_ / norm) for _ in user_vector]
-        print ",".join(user_vector_norm)
+        print(",".join(user_vector_norm))
 
 
 if __name__ == "__main__":

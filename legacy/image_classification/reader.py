@@ -1,3 +1,4 @@
+from __future__ import print_function
 import random
 from paddle.v2.image import load_and_transform
 import paddle.v2 as paddle
@@ -50,6 +51,6 @@ def test_reader(test_list, buffered_size=1024):
 
 if __name__ == '__main__':
     for im in train_reader('train.list'):
-        print len(im[0])
+        print(len(im[0]))
     for im in train_reader('test.list'):
-        print len(im[0])
+        print(len(im[0]))

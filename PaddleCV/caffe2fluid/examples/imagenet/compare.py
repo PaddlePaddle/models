@@ -4,6 +4,7 @@
 #a tool to compare tensors in two files or two directories
 #
 
+from __future__ import print_function
 import sys
 import os
 
@@ -31,8 +32,8 @@ def calc_diff(f1, f2):
     d1_num = reduce(lambda x, y: x * y, d1.shape)
     d2_num = reduce(lambda x, y: x * y, d2.shape)
     if d1_num != d2_num:
-        print d1.shape
-        print d2.shape
+        print(d1.shape)
+        print(d2.shape)
         assert (d1_num == d2_num), "their shape is not consistent"
 
     try:

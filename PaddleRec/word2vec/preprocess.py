@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*
+from __future__ import print_function
 import os
 import random
 import re
@@ -153,7 +154,7 @@ def build_dict(args):
     for file in os.listdir(args.build_dict_corpus_dir):
         with io.open(
                 args.build_dict_corpus_dir + "/" + file, encoding='utf-8') as f:
-            print("build dict : ", args.build_dict_corpus_dir + "/" + file)
+            print(("build dict : ", args.build_dict_corpus_dir + "/" + file))
             for line in f:
                 line = text_strip(line)
                 words = line.split()

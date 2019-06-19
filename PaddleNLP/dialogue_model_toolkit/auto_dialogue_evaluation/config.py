@@ -1,6 +1,7 @@
 """
 Auto Dialogue Evaluation.
 """
+from __future__ import print_function
 
 import argparse
 import six

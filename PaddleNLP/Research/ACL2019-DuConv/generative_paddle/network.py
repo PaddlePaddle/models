@@ -8,6 +8,7 @@
 """
 File: network.py
 """
+from __future__ import print_function
 
 import argparse
 
@@ -226,7 +227,7 @@ def init_model(config, param_name_list, place):
         try:
             model_init = np.load(model_init_file)
         except:
-            print("load init model failed", model_init_file)
+            print(("load init model failed", model_init_file))
             raise Exception("load init model failed")
 
         print("load init model")
@@ -258,7 +259,7 @@ def train_loop(config,
     total_step = 0
     start_epoch = 0 if stage == 0 else config.pretrain_epoch
     end_epoch = config.pretrain_epoch if stage == 0 else config.num_epochs
-    print("start end", start_epoch, end_epoch)
+    print(("start end", start_epoch, end_epoch))
 
     best_score = float('inf')
     for epoch_idx in range(start_epoch, end_epoch):
@@ -313,7 +314,7 @@ def train_loop(config,
                     if eval_nll_loss < best_score:
                         # save to best
                         best_model_path = config.save_dir + "/best_model"
-                        print("save to best", eval_nll_loss, best_model_path)
+                        print(("save to best", eval_nll_loss, best_model_path))
                         fluid.io.save_params(executor=exe, dirname=best_model_path,
                                              main_program=main_program)
                         best_score = eval_nll_loss
@@ -327,7 +328,7 @@ def train_loop(config,
                                  main_program=main_program)
             if eval_nll_loss < best_score:
                 best_model_path = config.save_dir + "/best_model"
-                print("save to best", eval_nll_loss, best_model_path)
+                print(("save to best", eval_nll_loss, best_model_path))
                 fluid.io.save_params(executor=exe, dirname=best_model_path,
                                      main_program=main_program)
                 best_score = eval_nll_loss

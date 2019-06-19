@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import os
 import gzip
 import paddle.v2 as paddle
@@ -95,7 +96,7 @@ def item_vector():
     item_vector = convt_simple_lsh(get_item_vec_from_softmax(nce_w, nce_b))
     for i in range(0, len(item_vector)):
         itemid = nid_to_word[i]
-        print itemid + "\t" + ",".join(map(str, item_vector[i]))
+        print(itemid + "\t" + ",".join(map(str, item_vector[i])))
 
 
 if __name__ == "__main__":

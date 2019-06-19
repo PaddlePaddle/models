@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import sys
 
 from utils import logger
@@ -151,4 +152,4 @@ if __name__ == "__main__":
     r = Reader(feature_dict, window_size)
 
     for dat in r.train(train_data):
-        print dat
+        print(dat)

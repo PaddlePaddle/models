@@ -36,9 +36,9 @@ def init_pretraining_params(exe,
                           ), "[%s] cann't be found." % pretraining_params_path
 
     def existed_params(var):
-    	"""
-    	Test existed
-    	"""
+        """
+        Test existed
+        """
         if not isinstance(var, fluid.framework.Parameter):
             return False
         return os.path.exists(os.path.join(pretraining_params_path, var.name))
@@ -50,4 +50,3 @@ def init_pretraining_params(exe,
         predicate=existed_params)
     print("Load pretraining parameters from {}.".format(
         pretraining_params_path))
-

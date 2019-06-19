@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 
+from __future__ import print_function
 from DQN_agent import DQNModel
 from DoubleDQN_agent import DoubleDQNModel
 from DuelingDQN_agent import DuelingDQNModel

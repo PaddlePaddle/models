@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -390,14 +391,14 @@ def train_parallel(args):
                   (pass_id, test_ret[0], test_ret[1], test_ret[2]))
             model_path = os.path.join(args.model_save_dir + '/' + args.model,
                                       str(pass_id))
-            print("saving model to ", model_path)
+            print(("saving model to ", model_path))
             if not os.path.isdir(model_path):
                 os.makedirs(model_path)
             fluid.io.save_persistables(
                 startup_exe, model_path, main_program=train_prog)
     train_pyreader.reset()
     startup_exe.close()
-    print("total train time: ", time.time() - over_all_start)
+    print(("total train time: ", time.time() - over_all_start))
 
 
 def print_train_time(start_time, end_time, num_samples):

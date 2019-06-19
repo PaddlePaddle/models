@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import os
 import gzip
 import paddle.v2 as paddle
@@ -109,7 +110,7 @@ def infer_a_batch(inferer, test_batch, nid_to_word):
             item_id_to_word = nid_to_word[item_id]
             ret += "%s:%.6f," \
                     % (item_id_to_word, softmax_output[item_id])
-        print ret.rstrip(",")
+        print(ret.rstrip(","))
 
 
 if __name__ == "__main__":

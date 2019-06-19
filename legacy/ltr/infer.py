@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import gzip
 import functools
@@ -39,7 +40,7 @@ def ranknet_infer(input_dim, model_path):
     scores = paddle.infer(
         output_layer=output, parameters=parameters, input=infer_data)
     for query_id, score in zip(infer_query_id, scores):
-        print "query_id : ", query_id, " score : ", score
+        print("query_id : ", query_id, " score : ", score)
 
 
 def lambda_rank_infer(input_dim, model_path):
@@ -66,7 +67,7 @@ def lambda_rank_infer(input_dim, model_path):
     predicitons = paddle.infer(
         output_layer=output, parameters=parameters, input=infer_data)
     for i, score in enumerate(predicitons):
-        print i, score
+        print(i, score)
 
 
 def parse_args():

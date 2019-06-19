@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -443,7 +444,7 @@ def train_parallel(args):
                   (test_acc1, test_acc5))
             break
 
-    print("total train time: ", time.time() - over_all_start)
+    print(("total train time: ", time.time() - over_all_start))
 
 
 def print_train_time(start_time, end_time, num_samples):

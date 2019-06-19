@@ -1,6 +1,7 @@
 """
     Contains infering script for machine translation with external memory.
 """
+from __future__ import print_function
 import distutils.util
 import argparse
 import gzip
@@ -143,11 +144,11 @@ def infer():
     beam_probs, beam_sentences = parse_beam_search_result(beam_result,
                                                           target_dict)
     for i in xrange(args.infer_data_num):
-        print "\n***************************************************\n"
-        print "src:", ' '.join(
-            [source_dict.get(word) for word in infer_data[i][0]]), "\n"
+        print("\n***************************************************\n")
+        print("src:", ' '.join(
+            [source_dict.get(word) for word in infer_data[i][0]]), "\n")
         for j in xrange(args.beam_size):
-            print "prob = %f : %s" % (beam_probs[i][j], beam_sentences[i][j])
+            print("prob = %f : %s" % (beam_probs[i][j], beam_sentences[i][j]))
 
 
 def main():

@@ -3,6 +3,7 @@ DeepFool tutorial on mnist using advbox tool.
 Deepfool is a simple and accurate adversarial attack method.
 It supports both targeted attack and non-targeted attack.
 """
+from __future__ import print_function
 import sys
 sys.path.append("..")
 

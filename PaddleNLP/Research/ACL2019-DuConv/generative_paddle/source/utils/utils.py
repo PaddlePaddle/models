@@ -8,6 +8,7 @@
 """
 File: source/utils/utils.py
 """
+from __future__ import print_function
 
 import argparse
 import numpy as np
@@ -225,11 +226,11 @@ def init_embedding(embedding_file, vocab_file, init_scale, shape):
         try:
             emb_np = load_embedding(embedding_file, vocab_file)
         except:
-            print("load init emb file failed", embedding_file)
+            print(("load init emb file failed", embedding_file))
             raise Exception("load embedding file failed")
 
         if emb_np.shape != shape:
-            print("shape not match", emb_np.shape, shape)
+            print(("shape not match", emb_np.shape, shape))
             raise Exception("shape not match")
 
         zero_count = 0

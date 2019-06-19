@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import struct
 import gzip
@@ -145,7 +146,7 @@ class ModelConverter(object):
         out = net.forward()
 
         output_prob = net.blobs['prob'].data[0].flatten()
-        print zip(np.argsort(output_prob)[::-1], np.sort(output_prob)[::-1])
+        print(zip(np.argsort(output_prob)[::-1], np.sort(output_prob)[::-1]))
 
 
 def load_image(file, resize_size=256, crop_size=224, mean_file=None):

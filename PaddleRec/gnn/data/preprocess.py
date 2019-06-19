@@ -5,6 +5,7 @@ Created on July, 2018
 
 @author: Tangrizzly
 """
+from __future__ import print_function
 
 import argparse
 import time
@@ -119,7 +120,7 @@ if opt.dataset == 'yoochoose':
 else:
     splitdate = maxdate - 86400 * 7
 
-print('Splitting date', splitdate)  # Yoochoose: ('Split date', 1411930799.0)
+print(('Splitting date', splitdate))  # Yoochoose: ('Split date', 1411930799.0)
 tra_sess = filter(lambda x: x[1] < splitdate, dates)
 tes_sess = filter(lambda x: x[1] > splitdate, dates)
 
@@ -209,15 +210,15 @@ tra = (tr_seqs, tr_labs)
 tes = (te_seqs, te_labs)
 print(len(tr_seqs))
 print(len(te_seqs))
-print(tr_seqs[:3], tr_dates[:3], tr_labs[:3])
-print(te_seqs[:3], te_dates[:3], te_labs[:3])
+print((tr_seqs[:3], tr_dates[:3], tr_labs[:3]))
+print((te_seqs[:3], te_dates[:3], te_labs[:3]))
 all = 0
 
 for seq in tra_seqs:
     all += len(seq)
 for seq in tes_seqs:
     all += len(seq)
-print('avg length: ', all / (len(tra_seqs) + len(tes_seqs) * 1.0))
+print(('avg length: ', all / (len(tra_seqs) + len(tes_seqs) * 1.0)))
 if opt.dataset == 'diginetica':
     if not os.path.exists('diginetica'):
         os.makedirs('diginetica')

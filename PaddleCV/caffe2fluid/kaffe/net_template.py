@@ -1,5 +1,6 @@
 """ this module is used as a template for generating sub class of Network
 """
+from __future__ import print_function
 
 
 class MyNet(object):
@@ -157,5 +158,5 @@ def generate_main_code(net_name):
 if __name__ == "__main__":
     """ just for testing
     """
-    print generate_net_code('Attribute', "{'data': [3, 277, 277]}")
-    print generate_main_code('Attribute')
+    print(generate_net_code('Attribute', "{'data': [3, 277, 277]}"))
+    print(generate_main_code('Attribute'))

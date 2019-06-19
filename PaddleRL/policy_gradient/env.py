@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 import sys
 import numpy as np
@@ -43,9 +44,9 @@ class Env():
 
     def draw(self, new_line=False):
         if new_line:
-            print ""
+            print("")
         else:
-            print "\r",
+            print("\r", end=' ')
         for i in range(self.stage_len):
             if i == self.position:
                 sys.stdout.write("O")

@@ -1,6 +1,7 @@
 """
     Contains training script for machine translation with external memory.
 """
+from __future__ import print_function
 import argparse
 import sys
 import gzip
@@ -129,8 +130,8 @@ def train():
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
             if event.batch_id % 10 == 0:
-                print "Pass: %d, Batch: %d, TrainCost: %f, %s" % (
-                    event.pass_id, event.batch_id, event.cost, event.metrics)
+                print("Pass: %d, Batch: %d, TrainCost: %f, %s" % (
+                    event.pass_id, event.batch_id, event.cost, event.metrics))
                 with gzip.open("checkpoints/params.latest.tar.gz", 'w') as f:
                     trainer.save_parameter_to_tar(f)
             else:
@@ -138,8 +139,8 @@ def train():
                 sys.stdout.flush()
         if isinstance(event, paddle.event.EndPass):
             result = trainer.test(reader=test_batch_reader, feeding=feeding)
-            print "Pass: %d, TestCost: %f, %s" % (event.pass_id, result.cost,
-                                                  result.metrics)
+            print("Pass: %d, TestCost: %f, %s" % (event.pass_id, result.cost,
+                                                  result.metrics))
             with gzip.open("checkpoints/params.pass-%d.tar.gz" % event.pass_id,
                            'w') as f:
                 trainer.save_parameter_to_tar(f)

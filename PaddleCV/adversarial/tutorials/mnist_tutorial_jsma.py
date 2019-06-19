@@ -2,6 +2,7 @@
 JSMA tutorial on mnist using advbox tool.
 JSMA method supports both targeted attack and non-targeted attack.
 """
+from __future__ import print_function
 import sys
 sys.path.append("..")
 

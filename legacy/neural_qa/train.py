@@ -56,7 +56,7 @@ def show_parameter_status(parameters):
 
 def train(conf):
     if not os.path.exists(conf.model_save_dir):
-        os.makedirs(conf.model_save_dir, mode=0755)
+        os.makedirs(conf.model_save_dir, mode=0o755)
 
     settings = reader.Settings(
         vocab=conf.vocab,

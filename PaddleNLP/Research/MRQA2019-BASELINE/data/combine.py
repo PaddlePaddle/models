@@ -18,6 +18,7 @@
 """
 This module add all train/dev data to a file named "mrqa-combined.raw.json".
 """
+from __future__ import print_function
 
 import json
 import argparse
@@ -31,7 +32,7 @@ path = args.path
 
 # all train/dev data files
 files = glob.glob(path + '/*.raw.json')
-print ('files:', files)
+print(('files:', files))
 
 # add all train/dev data to "datasets"
 with open(files[0]) as fin:

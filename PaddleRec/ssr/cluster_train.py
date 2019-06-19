@@ -1,3 +1,4 @@
+from __future__ import print_function
 #Copyright (c) 2016 PaddlePaddle Authors. All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -154,7 +155,7 @@ def train(args):
         fluid.default_main_program().random_seed = SEED
     use_cuda = True if args.use_cuda else False
     parallel = True if args.parallel else False
-    print("use_cuda:", use_cuda, "parallel:", parallel)
+    print(("use_cuda:", use_cuda, "parallel:", parallel))
     train_reader, vocab_size = utils.construct_train_data(
         args.train_dir, args.vocab_path, args.batch_size * get_cards(args))
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()

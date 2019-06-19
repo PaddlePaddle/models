@@ -1,3 +1,4 @@
+from __future__ import print_function
 # this file is only used for continuous evaluation test!
 
 import os
@@ -48,7 +49,7 @@ def log_to_ce(log):
 
     for (kpi_name, kpi_value) in parse_log(log):
         if kpi_name in kpi_tracker:
-            print(kpi_name, kpi_value)
+            print((kpi_name, kpi_value))
             kpi_tracker[kpi_name].add_record(kpi_value)
             kpi_tracker[kpi_name].persist()
 

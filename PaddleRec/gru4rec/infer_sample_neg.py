@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 import sys
 import time
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     batch_size = args.batch_size
     vocab_path = args.vocab_path
     use_cuda = True if args.use_cuda else False
-    print("start index: ", start_index, " last_index:", last_index)
+    print(("start index: ", start_index, " last_index:", last_index))
     vocab_size, test_reader = utils.prepare_data(
         test_dir,
         vocab_path,

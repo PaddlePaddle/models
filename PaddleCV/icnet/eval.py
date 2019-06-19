@@ -1,4 +1,5 @@
 """Evaluator for ICNet model."""
+from __future__ import print_function
 import paddle.fluid as fluid
 import numpy as np
 from utils import add_arguments, print_arguments, get_feeder_data

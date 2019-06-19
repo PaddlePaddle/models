@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 sys.path.append('./so')
@@ -98,7 +99,7 @@ def test_retrieval(model_name):
         run_time += (time.time() - starttime)
         fea = res[0][0]
         img_feas.append(fea)
-        print("Time:", run_time)
+        print(("Time:", run_time))
 
     for i in xrange(len(img_names)-1):
         cosdist = cosinedist(img_feas[0], img_feas[i+1])
@@ -110,4 +111,4 @@ if __name__ == "__main__":
         func = getattr(sys.modules[__name__], sys.argv[1])
         func(*sys.argv[2:])
     else:
-        print >> sys.stderr,'tools.py command'
+        print('tools.py command', file=sys.stderr)

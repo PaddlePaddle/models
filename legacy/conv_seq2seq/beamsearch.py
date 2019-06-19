@@ -1,5 +1,6 @@
 #coding=utf-8
 
+from __future__ import print_function
 import sys
 import time
 import math
@@ -193,5 +194,5 @@ class BeamSearch(object):
             batch = infer_data[pos:min(pos + self.batch_size, len(infer_data))]
             self.final_path = self.search_one_batch(batch)
             for top_path in self.final_path:
-                print _to_sentence(top_path[0]['seq'])
+                print(_to_sentence(top_path[0]['seq']))
             sys.stdout.flush()

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import gzip
 import argparse
 import distutils.util
@@ -62,10 +63,10 @@ def generate(gen_data, dict_size, model_path, beam_size):
 
     prob = beam_result[0]
     for i in xrange(gen_num):
-        print "\n*******************************************************\n"
-        print "src:", ' '.join([src_dict.get(w) for w in gen_data[i][0]]), "\n"
+        print("\n*******************************************************\n")
+        print("src:", ' '.join([src_dict.get(w) for w in gen_data[i][0]]), "\n")
         for j in xrange(beam_size):
-            print "prob = %f:" % (prob[i][j]), seq_list[i * beam_size + j]
+            print("prob = %f:" % (prob[i][j]), seq_list[i * beam_size + j])
 
 
 if __name__ == '__main__':

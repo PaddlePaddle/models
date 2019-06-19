@@ -22,7 +22,7 @@ def crop_shape(input_shape, shape=None):
             input_shape.shape), "input_shape is diff with output_shape"
         return shape
     else:
-        raise Exception, "crop_shape input error"
+        raise Exception("crop_shape input error")
         return None
 
 
@@ -54,7 +54,7 @@ def crop_layer(input, name, shape=None, axis=2, offset=None):
         output_shape = shape
         input_tensor = input
     else:
-        raise Exception, "crop_layer input error"
+        raise Exception("crop_layer input error")
 
     assert len(output_shape) == len(
         input_shape), "input_shape is diff with output_shape"

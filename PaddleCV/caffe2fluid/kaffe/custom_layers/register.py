@@ -1,5 +1,6 @@
 """ this module provides 'register' for registering customized layers
 """
+from __future__ import print_function
 
 g_custom_layers = {}
 

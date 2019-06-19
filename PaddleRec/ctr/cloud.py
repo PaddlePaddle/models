@@ -6,6 +6,7 @@
 #
 # ======================================================================
 """this file is only for PaddleCloud"""
+from __future__ import print_function
 
 import os
 
@@ -99,7 +100,7 @@ def download():
     for d in downloads:
         base_dir = os.path.dirname(d)
         tar_cmd = "tar -zxvf {} -C {}".format(d, base_dir)
-        print tar_cmd
+        print(tar_cmd)
 
     for d in downloads:
         base_dir = os.path.dirname(d)

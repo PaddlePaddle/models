@@ -1,3 +1,4 @@
+from __future__ import print_function
 import gzip
 import argparse
 
@@ -106,14 +107,14 @@ def main():
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
             if event.batch_id % 1 == 0:
-                print "\nPass %d, Batch %d, Cost %f, %s" % (
-                    event.pass_id, event.batch_id, event.cost, event.metrics)
+                print("\nPass %d, Batch %d, Cost %f, %s" % (
+                    event.pass_id, event.batch_id, event.cost, event.metrics))
         if isinstance(event, paddle.event.EndPass):
             with gzip.open('params_pass_%d.tar.gz' % event.pass_id, 'w') as f:
                 trainer.save_parameter_to_tar(f)
 
             result = trainer.test(reader=test_reader)
-            print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
+            print("\nTest with Pass %d, %s" % (event.pass_id, result.metrics))
 
     trainer.train(
         reader=train_reader, num_passes=200, event_handler=event_handler)

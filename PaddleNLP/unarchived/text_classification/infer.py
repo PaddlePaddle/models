@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import time
 import unittest

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from paddle import v2 as paddle
 from paddle.v2.attr import ParamAttr
 from utils import TaskType, logger, ModelType, ModelArch
@@ -72,7 +73,7 @@ class DSSM(object):
             "rank": self._build_rank_model,
             "regression": self._build_regression_model,
         }
-        print("model type: ", str(self.model_type))
+        print(("model type: ", str(self.model_type)))
         self.model_type_creater = _model_type[str(self.model_type)]
 
     def __call__(self):

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 import gym
 import numpy as np

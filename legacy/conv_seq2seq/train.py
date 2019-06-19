@@ -1,5 +1,6 @@
 #coding=utf-8
 
+from __future__ import print_function
 import os
 import sys
 import time
@@ -209,17 +210,17 @@ def train(train_data_path,
         if isinstance(event, paddle.event.EndIteration):
             if event.batch_id % 20 == 0:
                 cur_time = time.strftime('%Y.%m.%d %H:%M:%S', time.localtime())
-                print "[%s]: Pass: %d, Batch: %d, TrainCost: %f, %s" % (
+                print("[%s]: Pass: %d, Batch: %d, TrainCost: %f, %s" % (
                     cur_time, event.pass_id, event.batch_id, event.cost,
-                    event.metrics)
+                    event.metrics))
                 sys.stdout.flush()
 
         if isinstance(event, paddle.event.EndPass):
             if test_reader is not None:
                 cur_time = time.strftime('%Y.%m.%d %H:%M:%S', time.localtime())
                 result = trainer.test(reader=test_reader, feeding=feeding)
-                print "[%s]: Pass: %d, TestCost: %f, %s" % (
-                    cur_time, event.pass_id, result.cost, result.metrics)
+                print("[%s]: Pass: %d, TestCost: %f, %s" % (
+                    cur_time, event.pass_id, result.cost, result.metrics))
                 sys.stdout.flush()
             with gzip.open("output/params.pass-%d.tar.gz" % event.pass_id,
                            'w') as f:

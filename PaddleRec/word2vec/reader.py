@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*
 
+from __future__ import print_function
 import numpy as np
 import preprocess
 import logging
@@ -60,7 +61,7 @@ class Word2VecReader(object):
         self.dict_size = len(id_counts)
         self.id_counts_ = id_counts
 
-        print("corpus_size:", self.corpus_size_)
+        print(("corpus_size:", self.corpus_size_))
         self.id_frequencys = [
             float(count) / word_all_count for count in self.id_counts_
         ]

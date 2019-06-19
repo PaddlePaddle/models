@@ -2,6 +2,7 @@
 ILCM tutorial on mnist using advbox tool.
 ILCM method extends "BIM" to support targeted attack.
 """
+from __future__ import print_function
 import sys
 sys.path.append("..")
 

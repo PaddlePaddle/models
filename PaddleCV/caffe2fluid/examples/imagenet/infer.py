@@ -6,6 +6,7 @@
 #notes:
 #   only support imagenet data
 
+from __future__ import print_function
 import os
 import sys
 import inspect

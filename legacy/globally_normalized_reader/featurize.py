@@ -2,6 +2,7 @@
 """
 Convert the raw json data into training and validation examples.
 """
+from __future__ import print_function
 from collections import Counter
 import json
 import os

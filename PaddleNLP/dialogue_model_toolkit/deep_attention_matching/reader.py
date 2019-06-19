@@ -1,6 +1,7 @@
 """
 Reader for deep attention matching network
 """
+from __future__ import print_function
 
 import six
 import numpy as np

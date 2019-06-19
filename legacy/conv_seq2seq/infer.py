@@ -1,5 +1,6 @@
 #coding=utf-8
 
+from __future__ import print_function
 import sys
 import argparse
 import distutils.util
@@ -182,7 +183,7 @@ def infer(infer_data_path,
                 weight.reshape((trg_len, src_len))
                 for weight in attention_weight
             ]
-            print attention_weight
+            print(attention_weight)
             break
         return
 

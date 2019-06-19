@@ -14,6 +14,7 @@
 """
 evaluate task metrics
 """
+from __future__ import print_function
 
 import sys
 

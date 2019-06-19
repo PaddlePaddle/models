@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #-*- coding:utf-8 -*-
 
+from __future__ import print_function
 import sys
 if sys.version[0] == '2':
     reload(sys)
@@ -191,7 +192,7 @@ if __name__ == "__main__":
         try:
             sample = json.loads(line, encoding='utf8')
         except:
-            print >>sys.stderr, "Invalid input json format - '{}' will be ignored".format(line)
+            print("Invalid input json format - '{}' will be ignored".format(line), file=sys.stderr)
             continue
         compute_paragraph_score(sample)
         paragraph_selection(sample, mode)

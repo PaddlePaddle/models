@@ -1,3 +1,4 @@
+from __future__ import print_function
 import paddle.v2 as paddle
 import data_provider
 import vgg_ssd_net
@@ -42,11 +43,11 @@ def train(train_file_list, dev_file_list, data_args, init_model_path):
     def event_handler(event):
         if isinstance(event, paddle.event.EndIteration):
             if event.batch_id % 1 == 0:
-                print "\nPass %d, Batch %d, TrainCost %f, Detection mAP=%f" % \
+                print("\nPass %d, Batch %d, TrainCost %f, Detection mAP=%f" % \
                         (event.pass_id,
                          event.batch_id,
                          event.cost,
-                         event.metrics['detection_evaluator'])
+                         event.metrics['detection_evaluator']))
             else:
                 sys.stdout.write('.')
                 sys.stdout.flush()
@@ -56,10 +57,10 @@ def train(train_file_list, dev_file_list, data_args, init_model_path):
                     event.pass_id, 'w') as f:
                 trainer.save_parameter_to_tar(f)
             result = trainer.test(reader=dev_reader, feeding=feeding)
-            print "\nTest with Pass %d, TestCost: %f, Detection mAP=%g" % \
+            print("\nTest with Pass %d, TestCost: %f, Detection mAP=%g" % \
                     (event.pass_id,
                      result.cost,
-                     result.metrics['detection_evaluator'])
+                     result.metrics['detection_evaluator']))
 
     trainer.train(
         reader=train_reader,

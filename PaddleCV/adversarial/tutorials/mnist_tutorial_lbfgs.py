@@ -2,6 +2,7 @@
 LBFGS tutorial on mnist using advbox tool.
 LBFGS method only supports targeted attack.
 """
+from __future__ import print_function
 import sys
 sys.path.append("..")
 

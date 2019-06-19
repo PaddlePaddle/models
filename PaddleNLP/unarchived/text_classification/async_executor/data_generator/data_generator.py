@@ -1,3 +1,4 @@
+from __future__ import print_function
 #   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -139,12 +140,11 @@ class DataGenerator(object):
                                  recommended to modify it.
         '''
         if is_local:
-            print \
-'''\033[1;34m=======================================================
+            print('''\033[1;34m=======================================================
  Pay attention to that the version of Python in Hadoop
  may inconsistent with local version. Please check the
  Python version of Hadoop to ensure that it is >= 2.7.
-=======================================================\033[0m'''
+=======================================================\033[0m''')
         else:
             if hadoop_ugi is None or \
                hadoop_host is None or \

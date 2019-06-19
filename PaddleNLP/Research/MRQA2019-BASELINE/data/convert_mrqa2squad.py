@@ -18,6 +18,7 @@
 """
 This module convert MRQA official data to SQuAD format
 """
+from __future__ import print_function
 
 import json
 import argparse

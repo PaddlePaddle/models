@@ -1,4 +1,5 @@
 from __future__ import division
+from __future__ import print_function
 import os
 
 import numpy as np
@@ -46,7 +47,7 @@ class PaddleDataLoader(object):
             worker_processes = []
             index_queues = []
             total_img = len(self.dataset)
-            print("total image: ", total_img)
+            print(("total image: ", total_img))
             if self.shuffle:
                 self.indices = [i for i in xrange(total_img)]
                 random.seed(self.shuffle_seed)

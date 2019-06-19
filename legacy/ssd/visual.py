@@ -1,3 +1,4 @@
+from __future__ import print_function
 import cv2
 import os
 
@@ -30,4 +31,4 @@ for img_path in path_to_im:
     out_path = os.path.join(out_dir, os.path.basename(img_path))
     cv2.imwrite(out_path, im)
 
-print 'Done.'
+print('Done.')

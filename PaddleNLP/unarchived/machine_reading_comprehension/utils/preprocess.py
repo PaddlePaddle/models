@@ -17,6 +17,7 @@
 """
 This module finds the most related paragraph of each document according to recall.
 """
+from __future__ import print_function
 
 import sys
 if sys.version[0] == '2':

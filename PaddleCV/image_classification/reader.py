@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import math
 import random
@@ -168,7 +169,7 @@ def _reader_creator(file_list,
                 if not infinite:
                     break
                 pass_id_as_seed_counter += 1
-                print("passid ++, current: ", pass_id_as_seed_counter)
+                print(("passid ++, current: ", pass_id_as_seed_counter))
 
     mapper = functools.partial(
         process_image, mode=mode, color_jitter=color_jitter, rotate=rotate)

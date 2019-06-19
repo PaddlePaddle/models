@@ -17,6 +17,7 @@
 """
 Utility function to generate vocabulary file.
 """
+from __future__ import print_function
 
 import argparse
 import sys
@@ -51,7 +52,7 @@ def get_vocab(files, vocab_file):
         [(v, c) for v, c in vocab.items()], key=lambda x: x[1], reverse=True)
     with open(vocab_file, 'w') as outf:
         for w, c in sorted_vocab:
-            print >> outf, '{}\t{}'.format(w.encode('utf8'), c)
+            print('{}\t{}'.format(w.encode('utf8'), c), file=outf)
 
 
 if __name__ == '__main__':

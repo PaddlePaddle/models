@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os, sys
 import shutil
 
@@ -6,7 +7,7 @@ def decode():
     path = './UCF-101/'
     for folder in os.listdir(path):
         for vid in os.listdir(path + folder):
-            print vid
+            print(vid)
             video_path = path + folder + '/' + vid
             image_folder = './frame/' + folder + '/' + vid.split('.')[0] + '/'
             if not os.path.exists(image_folder):

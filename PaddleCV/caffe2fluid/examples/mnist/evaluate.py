@@ -4,6 +4,7 @@
 #   demo to show how to use converted model using caffe2fluid
 #
 
+from __future__ import print_function
 import sys
 import os
 import numpy as np

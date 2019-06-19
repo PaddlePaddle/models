@@ -1,3 +1,4 @@
+from __future__ import print_function
 import paddle.v2 as paddle
 import data_provider
 import vgg_ssd_net
@@ -26,8 +27,8 @@ def eval(eval_file_list, batch_size, data_args, model_path):
 
     result = trainer.test(reader=reader, feeding=feeding)
 
-    print "TestCost: %f, Detection mAP=%g" % \
-            (result.cost, result.metrics['detection_evaluator'])
+    print("TestCost: %f, Detection mAP=%g" % \
+            (result.cost, result.metrics['detection_evaluator']))
 
 
 if __name__ == "__main__":

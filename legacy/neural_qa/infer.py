@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import argparse
@@ -51,7 +52,7 @@ class Infer(object):
                 input=test_batch, field=["id"], feeding=network.feeding)
             evi_ids_num = count_evi_ids(test_batch)
             assert len(tags) == evi_ids_num
-            print >> output, ";\n".join(str(tag) for tag in tags) + ";"
+            print(";\n".join(str(tag) for tag in tags) + ";", file=output)
 
 
 def parse_cmd():

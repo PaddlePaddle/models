@@ -1,6 +1,7 @@
 """
 The file_reader converts raw corpus to input.
 """
+from __future__ import print_function
 import os
 import argparse
 import __future__
@@ -116,6 +117,6 @@ if __name__ == "__main__":
     dataset = Dataset(args)
     data_generator = dataset.file_reader("data/train.tsv")
     for word_idx, target_idx in data_generator():
-        print(word_idx, target_idx)
-        print(len(word_idx), len(target_idx))
+        print((word_idx, target_idx))
+        print((len(word_idx), len(target_idx)))
         break

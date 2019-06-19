@@ -14,6 +14,7 @@
 """
 This module provides utilities for data generator and optimizer definition 
 """
+from __future__ import print_function
 
 import sys
 import time
@@ -98,7 +99,7 @@ def get_pretrained_word_embedding(word2vec, word2id, config):
                     loc=0.0, scale=0.1, size=[config.emb_dim]).astype(
                         np.float32))
         else:
-            print("Unkown OOV fill method: ", OOV_fill)
+            print(("Unkown OOV fill method: ", OOV_fill))
             exit()
     word_embedding = np.stack(pretrained_emb)
     return word_embedding
@@ -113,7 +114,7 @@ def getDict(data_type="quora_question_pairs"):
         word_dict = quora_question_pairs.word_dict()
     else:
         raise RuntimeError("No such dataset")
-    print("Vocab size: ", len(word_dict))
+    print(("Vocab size: ", len(word_dict)))
     return word_dict
 
 

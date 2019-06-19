@@ -3,6 +3,7 @@ BIM tutorial on mnist using advbox tool.
 BIM method iteratively take multiple small steps while adjusting the direction after each step.
 It only supports non-targeted attack.
 """
+from __future__ import print_function
 import sys
 sys.path.append("..")
 

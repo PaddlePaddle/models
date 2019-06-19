@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import argparse
@@ -94,7 +95,7 @@ def run_eval(infer_obj,
 
                     # wait for one minute and rerun
                     time.sleep(60)
-            print >> log, "Pass=%d %s" % (i, eval_ret.rstrip())
+            print("Pass=%d %s" % (i, eval_ret.rstrip()), file=log)
             log.flush()
     return evals
 

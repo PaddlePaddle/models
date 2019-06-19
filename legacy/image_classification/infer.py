@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import gzip
 import argparse
@@ -74,7 +75,7 @@ def main():
         output_layer=out, parameters=parameters, input=test_data)
     lab = np.argsort(-probs)
     for file_name, result in zip(file_list, lab):
-        print "Label of %s is: %d" % (file_name, result[0])
+        print("Label of %s is: %d" % (file_name, result[0]))
 
 
 if __name__ == '__main__':
