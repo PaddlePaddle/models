@@ -33,7 +33,8 @@ class ResNeXt(ResNet):
     ResNeXt, see https://arxiv.org/abs/1611.05431
     Args:
         depth (int): network depth, should be 50, 101, 152.
-        group (int): group convolution cardinality
+        groups (int): group convolution cardinality
+        group_width (int): width of each group convolution
         freeze_at (int): freeze the backbone at which stage
         freeze_bn (bool): fix batch norm weights
         affine_channel (bool): use batch_norm or affine_channel.
@@ -44,6 +45,7 @@ class ResNeXt(ResNet):
     def __init__(self,
                  depth=50,
                  groups=64,
+                 group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
                  affine_channel=False,
@@ -61,6 +63,7 @@ class ResNeXt(ResNet):
         }
         self.stage_filters = [256, 512, 1024, 2048]
         self.groups = groups
+        self.group_width = group_width
         self._resnext_pretrained_name_fix = True
 
 
@@ -72,6 +75,7 @@ class ResNeXtC5(ResNeXt):
     def __init__(self,
                  depth=50,
                  groups=64,
+                 group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
                  affine_channel=False,
@@ -79,5 +83,5 @@ class ResNeXtC5(ResNeXt):
                  variant='a',
                  feature_maps=[5]):
         super(ResNeXtC5, self).__init__(
-            depth, groups, freeze_at, freeze_bn, affine_channel,
+            depth, groups, group_width, freeze_at, freeze_bn, affine_channel,
             bn_decay, variant, feature_maps)

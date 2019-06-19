@@ -169,10 +169,14 @@ class ResNet(object):
 
         # ResNeXt
         groups = getattr(self, 'groups', 1)
+        group_width = getattr(self, 'group_width', -1)
         if groups == 1:
             expand = 4
-        else:
-            expand = groups == 64 and 1 or 2
+        elif (groups * group_width) == 256:
+            expand = 1
+        else:  # FIXME hard code for now, handles 32x4d, 64x4d and 32x8d
+            num_filters = num_filters // 2
+            expand = 2
 
         conv_def = [
             [num_filters, 1, stride1, 'relu', 1, name + "_branch2a"],

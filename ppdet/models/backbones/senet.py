@@ -33,7 +33,8 @@ class SENet(ResNeXt):
     Squeeze-and-Excitation Networks, see https://arxiv.org/abs/1709.01507
     Args:
         depth (int): SENet depth, should be 50, 101, 152
-        group (int): group convolution cardinality
+        groups (int): group convolution cardinality
+        group_width (int): width of each group convolution
         freeze_at (int): freeze the backbone at which stage
         freeze_bn (bool): fix batch norm weights
         affine_channel (bool): use batch_norm or affine_channel.
@@ -45,6 +46,7 @@ class SENet(ResNeXt):
     def __init__(self,
                  depth=50,
                  groups=64,
+                 group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
                  affine_channel=False,
@@ -52,7 +54,7 @@ class SENet(ResNeXt):
                  variant='d',
                  feature_maps=[2, 3, 4, 5]):
         super(SENet, self).__init__(
-            depth, groups, freeze_at, freeze_bn, affine_channel, bn_decay,
+            depth, groups, group_width, freeze_at, freeze_bn, affine_channel, bn_decay,
             variant, feature_maps)
         if depth < 152:
             self.stage_filters = [128, 256, 512, 1024]
@@ -101,6 +103,7 @@ class SENetC5(SENet):
     def __init__(self,
                  depth=50,
                  groups=64,
+                 group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
                  affine_channel=False,
@@ -108,5 +111,5 @@ class SENetC5(SENet):
                  variant='d',
                  feature_maps=[5]):
         super(SENetC5, self).__init__(
-            depth, freeze_at, freeze_bn, affine_channel, bn_decay,
-            variant, feature_maps)
+            depth, groups, group_width, freeze_at, freeze_bn, affine_channel,
+            bn_decay, variant, feature_maps)
