@@ -414,14 +414,11 @@ def test_context(exe, train_exe, dev_count):
         fluid.io.load_persistables(
             exe, TrainTaskConfig.ckpt_path, main_program=test_prog)
 
-    exec_strategy = fluid.ExecutionStrategy()
-    exec_strategy.use_experimental_executor = True
     build_strategy = fluid.BuildStrategy()
     test_exe = fluid.ParallelExecutor(
         use_cuda=TrainTaskConfig.use_gpu,
         main_program=test_prog,
         build_strategy=build_strategy,
-        exec_strategy=exec_strategy,
         share_vars_from=train_exe)
 
     def test(exe=test_exe, pyreader=pyreader):
@@ -482,7 +479,6 @@ def train_loop(exe,
 
     # For faster executor
     exec_strategy = fluid.ExecutionStrategy()
-    exec_strategy.use_experimental_executor = True
     exec_strategy.num_iteration_per_drop_scope = int(args.fetch_steps)
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
