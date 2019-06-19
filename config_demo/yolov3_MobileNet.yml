@@ -53,7 +53,7 @@ OptimizerBuilder:
     type: L2
 
 YoloTrainFeed:
-  batch_size: 32
+  batch_size: 4
   batch_transforms:
   - !RandomShape
     sizes: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]

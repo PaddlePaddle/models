@@ -16,7 +16,7 @@ MaskRCNN:
   neck: null
 
 ResNet:
-  affine_channel: false
+  affine_channel: true
   bn_decay: true
   depth: 50
   feature_maps:

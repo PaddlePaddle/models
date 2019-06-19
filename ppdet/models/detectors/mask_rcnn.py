@@ -44,6 +44,7 @@ class MaskRCNN(object):
         neck (object): feature enricher instance, e.g., FPN
     """
 
+    __category__ = 'architecture'
     __inject__ = ['backbone', 'rpn_head', 'bbox_assigner', 'roi_extractor',
                   'bbox_head', 'mask_assigner', 'mask_head', 'neck']
 

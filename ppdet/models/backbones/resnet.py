@@ -101,6 +101,8 @@ class ResNet(object):
             bn_name = "bn_" + name
         else:
             bn_name = "bn" + name[3:]
+        if getattr(self, '_senet_pretrained_weight_fix', False):
+            bn_name = "bn_" + name
 
         lr = 0. if self.freeze_bn else 1.
         bn_decay = float(self.bn_decay)
@@ -143,6 +145,8 @@ class ResNet(object):
     def _shortcut(self, input, ch_out, stride, is_first, name):
         max_pooling_in_short_cut = self.variant == 'd'
         ch_in = input.shape[1]
+        if getattr(self, '_senet_pretrained_weight_fix', False):
+            name = 'conv' + name + '_prj'
         if ch_in != ch_out or stride != 1 or is_first:
             if max_pooling_in_short_cut:
                 input = fluid.layers.pool2d(
@@ -165,10 +169,14 @@ class ResNet(object):
 
         # ResNeXt
         groups = getattr(self, 'groups', 1)
+        group_width = getattr(self, 'group_width', -1)
         if groups == 1:
             expand = 4
-        else:
-            expand = groups == 64 and 1 or 2
+        elif (groups * group_width) == 256:
+            expand = 1
+        else:  # FIXME hard code for now, handles 32x4d, 64x4d and 32x8d
+            num_filters = num_filters // 2
+            expand = 2
 
         conv_def = [
             [num_filters, 1, stride1, 'relu', 1, name + "_branch2a"],
@@ -251,8 +259,11 @@ class ResNet(object):
         return res_out
 
     def c1_stage(self, input):
-        # TODO verify SE154 out chan, 128 or 256?
-        num_out_chan = self.stage_filters[0]
+        # FIXME hard code for now
+        if getattr(self, '_squeeze_excitation', None) is not None:
+            num_out_chan = 128
+        else:
+            num_out_chan = 64
         if self.variant in ['c', 'd']:
             conv_def = [
                 [num_out_chan / 2, 3, 2, "conv1_1"],
@@ -260,7 +271,10 @@ class ResNet(object):
                 [num_out_chan, 3, 1, "conv1_3"],
             ]
         else:
-            conv_def = [[num_out_chan, 7, 2, "conv1"]]
+            conv1_name = "conv1"
+            if getattr(self, '_resnext_pretrained_name_fix', False):
+                conv1_name = "res_conv1"
+            conv_def = [[num_out_chan, 7, 2, conv1_name]]
 
         for (c, k, s, _name) in conv_def:
             input = self._conv_norm(
@@ -299,8 +313,8 @@ class ResNet(object):
         if len(res_endpoints) == 1:
             return res_endpoints[0]
 
-        return OrderedDict({'res{}_sum'.format(idx): feat for idx, feat in
-                            enumerate(res_endpoints)})
+        return OrderedDict([('res{}_sum'.format(idx), feat) for idx, feat
+                            in enumerate(res_endpoints)])
 
 
 @register
