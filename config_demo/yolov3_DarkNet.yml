@@ -3,8 +3,12 @@ train_feed: YoloTrainFeed
 eval_feed: YoloEvalFeed
 test_feed: YoloTestFeed
 use_gpu: yes
-max_iters: 1000
+max_iters: 500200
+log_smooth_window: 20
+save_dir: output
+snapshot_iter: 20
 metric: COCO
+pretrain_weights: https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz
 weights: https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz
 
 YOLOv3:
@@ -60,17 +64,17 @@ YOLOv3Head:
   num_classes: 80
 
 LearningRate:
-  base_lr: 0.01
+  base_lr: 0.001
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
     milestones:
-    - 6000
-    - 8000
+    - 400000
+    - 400000
     values: null
   - !LinearWarmup
-    start_factor: 0.3333333333333333
-    steps: 500
+    start_factor: 0.
+    steps: 4000
 
 OptimizerBuilder:
   optimizer:

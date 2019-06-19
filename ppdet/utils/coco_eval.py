@@ -18,6 +18,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
+import sys
 import json
 import cv2
 import numpy as np
@@ -54,6 +55,8 @@ def bbox_eval(results, anno_file, outfile, with_background=True):
     coco_ev.evaluate()
     coco_ev.accumulate()
     coco_ev.summarize()
+    # flush coco evaluation result
+    sys.stdout.flush()
 
 
 def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
