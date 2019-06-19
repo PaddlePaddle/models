@@ -57,14 +57,14 @@ def main():
     # get detector and losses
     detector = Detectors.get(cfg.MODEL.TYPE)(cfg)
     startup_prog = fluid.Program()
-    test_prog = fluid.Program()
-    with fluid.program_guard(test_prog, startup_prog):
+    eval_prog = fluid.Program()
+    with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
             if cfg.TEST.METRIC_TYPE == 'COCO':
                 fetches = detector.test()
             else:
                 fetches = detector.val()
-    test_prog = test_prog.clone(True)
+    eval_prog = eval_prog.clone(True)
 
     # define executor
     place = fluid.CUDAPlace(0) if cfg.ENV.GPU else fluid.CPUPlace()
@@ -73,25 +73,25 @@ def main():
     # 3. Compile program for multi-devices
     extra_keys = ['im_info', 'im_id'] if cfg.TEST.METRIC_TYPE == 'COCO' \
                  else []
-    keys, values = parse_fetches(fetches, test_prog, extra_keys)
+    keys, values = parse_fetches(fetches, eval_prog, extra_keys)
 
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
     compile_program = fluid.compiler.CompiledProgram(
-        test_prog).with_data_parallel(build_strategy=build_strategy)
+        eval_prog).with_data_parallel(build_strategy=build_strategy)
 
     # 4. Define reader
     reader = Reader(cfg.DATA, cfg.TRANSFORM)
     reader.train()
-    test_reader = reader.val()
+    eval_reader = reader.val()
     pyreader = detector.get_pyreader()
-    pyreader.decorate_sample_list_generator(test_reader, place)
+    pyreader.decorate_sample_list_generator(eval_reader, place)
 
     # 5. Load model
     exe.run(startup_prog)
     if cfg.TEST.WEIGHTS:
-        checkpoint.load(exe, test_prog, cfg.TEST.WEIGHTS)
+        checkpoint.load(exe, eval_prog, cfg.TEST.WEIGHTS)
 
     # 6. Run
     results = eval_run(exe, compile_program, pyreader,
