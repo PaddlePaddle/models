@@ -177,7 +177,7 @@ class MobileNet(object):
         out = self.depthwise_separable(
             out, 1024, 1024, 1024, 1, scale, name="conv6")
         module13 = out
-        blocks.apppend(out)
+        blocks.append(out)
         if not self.with_extra_blocks:
             return blocks
 
