@@ -259,7 +259,12 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
     return data_input_dict, np.asarray([num_token], dtype="float32")
 
 
-def prepare_data_generator(args, is_test, count, pyreader):
+def prepare_data_generator(args,
+                           is_test,
+                           count,
+                           pyreader,
+                           py_reader_provider_wrapper,
+                           place=None):
     """
     Data generator wrapper for DataReader. If use py_reader, set the data
     provider for py_reader
@@ -320,7 +325,7 @@ def prepare_data_generator(args, is_test, count, pyreader):
         data_reader = split(data_reader, count)
     if args.use_py_reader:
         pyreader.decorate_tensor_provider(
-            py_reader_provider_wrapper(data_reader))
+            py_reader_provider_wrapper(data_reader, place))
         data_reader = None
     else:  # Data generator for multi-devices
         data_reader = stack(data_reader, count)
@@ -358,7 +363,7 @@ def prepare_feed_dict_list(data_generator, init_flag, count):
     return feed_dict_list if len(feed_dict_list) == count else None
 
 
-def py_reader_provider_wrapper(data_reader):
+def py_reader_provider_wrapper(data_reader, place):
     """
     Data provider needed by fluid.layers.py_reader.
     """
@@ -407,7 +412,11 @@ def test_context(exe, train_exe, dev_count):
                 is_test=True)
     test_prog = test_prog.clone(for_test=True)
     test_data = prepare_data_generator(
-        args, is_test=True, count=dev_count, pyreader=pyreader)
+        args,
+        is_test=True,
+        count=dev_count,
+        pyreader=pyreader,
+        py_reader_provider_wrapper=py_reader_provider_wrapper)
 
     exe.run(startup_prog)  # to init pyreader for testing
     if TrainTaskConfig.ckpt_path:
@@ -475,7 +484,11 @@ def train_loop(exe,
 
     logging.info("begin reader")
     train_data = prepare_data_generator(
-        args, is_test=False, count=dev_count, pyreader=pyreader)
+        args,
+        is_test=False,
+        count=dev_count,
+        pyreader=pyreader,
+        py_reader_provider_wrapper=py_reader_provider_wrapper)
 
     # For faster executor
     exec_strategy = fluid.ExecutionStrategy()
