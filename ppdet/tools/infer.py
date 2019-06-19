@@ -27,8 +27,8 @@ import logging
 
 from paddle import fluid
 
+from ppdet.tools.eval_utils import parse_fetches
 from ppdet.utils.stats import TrainingStats
-from ppdet.utils.run_utils import parse_fetches
 from ppdet.utils.cli import parse_args
 from ppdet.utils.visualizer import visualize_results
 import ppdet.utils.checkpoint as checkpoint
@@ -95,7 +95,7 @@ def main():
         pass
 
     anno_file = getattr(test_feed.dataset, 'annotation', None)
-    with_background = getattr(cfg, 'WITH_BACKGROUND', False)
+    with_background = getattr(test_feed, 'with_background', True)
     clsid2catid, catid2name = get_category_info(anno_file, with_background)
 
     images = reader.image_list

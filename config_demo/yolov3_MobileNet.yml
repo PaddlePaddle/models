@@ -65,6 +65,7 @@ YoloTrainFeed:
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   drop_last: true
+  with_background: false
   fields:
   - image
   - gt_box
@@ -143,6 +144,7 @@ YoloEvalFeed:
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   drop_last: true
+  with_background: false
   fields:
   - image
   - im_shape
@@ -185,9 +187,10 @@ YoloTestFeed:
     dataset_dir: coco17
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-    test_file: ./val2017.txt
+  test_file: ./val2017.txt
   samples: 5
   drop_last: false
+  with_background: false
   fields:
   - image
   - im_shape
