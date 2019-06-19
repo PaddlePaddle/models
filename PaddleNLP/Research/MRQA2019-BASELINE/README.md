@@ -82,6 +82,7 @@ Where `parameters_to_restore` is the model parameters used in the evaluatation (
 | :------------- | :---------: | :----------: | :---------: | :----------: | :---------: | :----------: |:----------: |
 | baseline + EMA | 70.2/54.7 | 57.3/47.5 | 64.1/52.8 | 51.7/37.2 | 87.9/77.7 | 63.1/53.5 | 65.7 |
 | baseline woEMA | 69.9/54.6 | 57.0/47.3 | 64.0/52.8 | 51.8/37.4 | 87.8/77.6 | 63.0/53.4 | 65.6 |
+
 Note that we turn on exponential moving average (EMA) during training by default (in most cases EMA can improve performance) and save EMA parameters into the final checkpoint files. The predicted answers using EMA parameters are saved into `ema_predictions.json`.   
 
 
