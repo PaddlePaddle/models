@@ -35,18 +35,18 @@ __all__ = ['visualize_results']
 SAVE_HOME = './output'
 
 
-def visualize_results(image_path, catid2name, draw_threshold=0.5, bbox_results=None, mask_results=None):
+def visualize_results(image_path, catid2name, threshold=0.5, bbox_results=None, mask_results=None):
     """
     TODO(dengkaipeng): add more comments
     Visualize bbox and mask results
     """
     if bbox_results:
-        draw_bbox_on_image(image_path, catid2name, bbox_results, draw_threshold)
+        draw_bbox(image_path, catid2name, bbox_results, threshold)
     if mask_results:
-        draw_mask_on_image(image_path, mask_results, draw_threshold)
+        draw_mask(image_path, mask_results, threshold)
 
 
-def draw_mask_on_image(image_path, segms, draw_threshold, alpha=0.7):
+def draw_mask(image_path, segms, threshold, alpha=0.7):
     """
     TODO(dengkaipeng): add more comments
     Draw mask on image
@@ -59,7 +59,7 @@ def draw_mask_on_image(image_path, segms, draw_threshold, alpha=0.7):
     image = np.array(image).astype('float32')
     for dt in np.array(segms):
         segm, score = dt['segmentation'], dt['score']
-        if score < draw_threshold:
+        if score < threshold:
             continue
         mask = mask_util.decode(segm) * 255
         color_list = colormap(rgb=True)
@@ -76,7 +76,7 @@ def draw_mask_on_image(image_path, segms, draw_threshold, alpha=0.7):
     image.save(save_name)
 
 
-def draw_bbox_on_image(image_path, catid2name, bboxes, draw_threshold):
+def draw_bbox(image_path, catid2name, bboxes, threshold):
     """
     TODO(dengkaipeng): add more comments
     Draw bbox on image
@@ -87,7 +87,7 @@ def draw_bbox_on_image(image_path, catid2name, bboxes, draw_threshold):
 
     for dt in np.array(bboxes):
         catid, bbox, score = dt['category_id'], dt['bbox'], dt['score']
-        if score < draw_threshold:
+        if score < threshold:
             continue
         xmin, ymin, w, h = bbox
         xmax = xmin + w

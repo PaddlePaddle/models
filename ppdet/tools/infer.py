@@ -52,7 +52,6 @@ def main():
         raise ValueError("Main architecture is not specified in config file")
 
     merge_config(args.cli_config)
-    print(cfg)
 
     if cfg['use_gpu']:
         devices_num = fluid.core.get_cuda_device_count()
@@ -90,7 +89,7 @@ def main():
 
     # 6. Parse dataset category
     if cfg['metric'] == 'COCO':
-        from ppdet.metrics.coco import bbox2out, mask2out, get_category_info
+        from ppdet.utils.coco_eval import bbox2out, mask2out, get_category_info
     if cfg['metric'] == "VOC":
         # TODO(dengkaipeng): add VOC metric process
         pass
@@ -112,7 +111,7 @@ def main():
         logger.info('Infer iter {}'.format(iter_id))
 
         im_id = int(res['im_id'][0])
-        image_path = os.path.join('/root/.cache/paddle/dataset/coco/val2017', images[im_id])
+        image_path = os.path.join(test_feed.dataset.image_dir, images[im_id])
         if cfg['metric'] == 'COCO':
             bbox_results = bbox2out([res], clsid2catid) \
                                 if 'bbox' in res else None
