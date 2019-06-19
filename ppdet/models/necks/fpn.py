@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ from __future__ import print_function
 
 from collections import OrderedDict
 
-import paddle.fluid as fluid
+from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.initializer import Normal, Xavier
+from paddle.fluid.initializer import Xavier
 from paddle.fluid.regularizer import L2Decay
 
 from ppdet.core.workspace import register
@@ -85,7 +85,7 @@ class FPN(object):
         Return:
             fpn_dict(OrderedDict): A dictionary represents the output of FPN neck with
                 their name.
-            spatial_scale(List): A list of multiplicative spatial scale factor.
+            spatial_scale(list): A list of multiplicative spatial scale factor.
         """
         body_name_list = list(body_dict.keys())[::-1]
         num_backbone_stages = len(body_name_list)

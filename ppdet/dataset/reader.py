@@ -38,6 +38,7 @@ class Reader(object):
         self._data_cf = data_cf
         self._trans_conf = trans_conf
         self._maxiter = maxiter
+        self._cname2cid = None
         assert type(self._maxiter
                     ) is int or long, 'The type of maxiter is not int or long.'
 
@@ -48,7 +49,7 @@ class Reader(object):
 
         # 1, Build data source
 
-        sc_conf = {'data_cf': file_conf} 
+        sc_conf = {'data_cf': file_conf, 'cname2cid': self._cname2cid}
         sc = build_source(sc_conf)
 
         # 2, Buid a transformed dataset
@@ -78,6 +79,12 @@ class Reader(object):
         batched_ds = batch_map(batched_ds, bm_config)
 
         batched_ds.reset()
+        if which.lower() == 'train':
+            if self._cname2cid is not None:
+                logger.warn(
+                    'The cname2cid field has been setted, and it will be overrided by a new one.'
+                )
+            self._cname2cid = sc.cname2cid
 
         # 3, Build a reader
         maxit = -1 if self._maxiter <= 0 else self._maxiter

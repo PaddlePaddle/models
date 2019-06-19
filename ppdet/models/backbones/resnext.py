@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,11 +16,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import paddle.fluid as fluid
-from paddle.fluid.framework import Variable
-
 from ppdet.core.workspace import register, serializable
-
 from .resnet import ResNet
 
 __all__ = ['ResNeXt']
@@ -48,7 +44,7 @@ class ResNeXt(ResNet):
                  group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='a',
                  feature_maps=[2, 3, 4, 5]):
@@ -78,10 +74,11 @@ class ResNeXtC5(ResNeXt):
                  group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='a',
                  feature_maps=[5]):
         super(ResNeXtC5, self).__init__(
             depth, groups, group_width, freeze_at, freeze_bn, affine_channel,
             bn_decay, variant, feature_maps)
+        self.severed_head = True

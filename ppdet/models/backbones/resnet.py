@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,10 +18,7 @@ from __future__ import print_function
 
 from collections import OrderedDict
 
-import math
-import six
-
-import paddle.fluid as fluid
+from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.framework import Variable
 from paddle.fluid.regularizer import L2Decay
@@ -49,7 +46,7 @@ class ResNet(object):
                  depth=50,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='b',
                  feature_maps=[2, 3, 4, 5]):
@@ -233,7 +230,7 @@ class ResNet(object):
         """
         Args:
             input (Variable): input variable.
-            stage_num (int): the stage number, should be 0, 1, 2, 3
+            stage_num (int): the stage number, should be 2, 3, 4, 5
 
         Returns:
             The last variable in endpoint-th stage.
@@ -301,13 +298,17 @@ class ResNet(object):
         res_endpoints = []
 
         res = input
-        # XXX this may not cover all use case, but enough for now
-        if len(self.feature_maps) > 1 and 2 in self.feature_maps:
+        feature_maps = self.feature_maps
+        severed_head = getattr(self, 'severed_head', False)
+        if not severed_head:
             res = self.c1_stage(res)
-        for i in self.feature_maps:
+            feature_maps = range(2, max(self.feature_maps) + 1)
+
+        for i in feature_maps:
             res = self.layer_warp(res, i)
-            res_endpoints.append(res)
-            if self.freeze_at > i:
+            if i in self.feature_maps:
+                res_endpoints.append(res)
+            if self.freeze_at >= i:
                 res.stop_gradient = True
 
         if len(res_endpoints) == 1:
@@ -326,10 +327,11 @@ class ResNetC5(ResNet):
                  depth=50,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='a',
                  feature_maps=[5]):
         super(ResNetC5, self).__init__(
             depth, freeze_at, freeze_bn, affine_channel, bn_decay,
             variant, feature_maps)
+        self.severed_head = True
