@@ -339,8 +339,8 @@ class RandomDistort(BaseOperator):
                  contrast_upper=1.5,
                  saturation_lower=0.5,
                  saturation_upper=1.5,
-                 hue_lower=0.5,
-                 hue_upper=1.5,
+                 hue_lower=-18,
+                 hue_upper=18,
                  brightness_prob=0.5,
                  contrast_prob=0.5,
                  saturation_prob=0.5,
@@ -550,21 +550,24 @@ class CropImage(BaseOperator):
                     sampled_bbox.append(sample_bbox)
                     found = found + 1
         im = np.array(im)
-        if len(sampled_bbox) > 0:
+        while sampled_bbox:
             idx = int(np.random.uniform(0, len(sampled_bbox)))
-            sample_bbox = sampled_bbox[idx]
+            sample_bbox = sampled_bbox.pop(idx)
             sample_bbox = clip_bbox(sample_bbox)
+            crop_bbox, crop_class, crop_score = \
+                deal_bbox_label(sample_bbox, gt_bbox, gt_class, gt_score)
+            if len(crop_bbox) <= 1:
+                continue
             xmin = int(sample_bbox[0] * im_width)
             xmax = int(sample_bbox[2] * im_width)
             ymin = int(sample_bbox[1] * im_height)
             ymax = int(sample_bbox[3] * im_height)
             im = im[ymin:ymax, xmin:xmax]
-            gt_bbox, gt_class, gt_score = \
-                deal_bbox_label(sample_bbox, gt_bbox, gt_class, gt_score)
             sample['image'] = im
-            sample['gt_bbox'] = gt_bbox
-            sample['gt_class'] = gt_class
-            sample['gt_score'] = gt_score
+            sample['gt_bbox'] = crop_bbox
+            sample['gt_class'] = crop_class
+            sample['gt_score'] = crop_score
+            return sample
         return sample
 
 

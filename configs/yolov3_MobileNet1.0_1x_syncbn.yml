@@ -124,7 +124,6 @@ TRANSFORM:
                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 1.0],
                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 1.0],
                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
-        satisfy_all: True
       - op: RandomInterpImage 
         target_size: 608
       - op: RandomFlipImage
