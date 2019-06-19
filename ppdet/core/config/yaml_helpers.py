@@ -57,7 +57,8 @@ def _make_python_representer(cls):
 
 
 def serializable(cls):
-    r"""Add loader and dumper for given class, which must be "trivially serializable"
+    """
+    Add loader and dumper for given class, which must be "trivially serializable"
 
     Args:
         cls: class to be serialized
@@ -71,14 +72,14 @@ def serializable(cls):
 
 @serializable
 class Callable(object):
-    r"""Helper to be used in Yaml for creating arbitrary class objects."""
+    """
+    Helper to be used in Yaml for creating arbitrary class objects
+
+    Args:
+        full_type (str): the full module path to target function
+    """
 
     def __init__(self, full_type, args=[], kwargs={}):
-        r""" Creates a Callable object
-
-        Args:
-            full_type (str): the full module path to target function
-        """
         super(Callable, self).__init__()
         self.full_type = full_type
         self.args = args

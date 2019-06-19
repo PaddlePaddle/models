@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,33 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# XXX for triggering decorators
 from . import backbones
-from .backbones import *
-
 from . import anchor_heads
-from .anchor_heads import *
-
 from . import detectors
-from .detectors import *
-
 from . import roi_extractors
-from .roi_extractors import *
-
 from . import bbox_heads
-from .bbox_heads import *
-
 from . import necks
-from .necks import *
-
-from . import registry
-from .registry import *
-
-from .target_assigners import *
-
-__all__ = backbones.__all__
-__all__ += anchor_heads.__all__
-__all__ += roi_extractors.__all__
-__all__ += bbox_heads.__all__
-__all__ += detectors.__all__
-__all__ += necks.__all__
-__all__ += registry.__all__
+from . import nms
+from . import target_assigners

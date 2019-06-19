@@ -22,17 +22,17 @@ import os
 import copy
 from .roidb_source import RoiDbSource
 from .simple_source import SimpleSource
-from ppdet.utils import get_dataset_path
+from ppdet.utils.download import get_dataset_path
 
 
 def build_source(config):
-    """ build dataset from source data, 
+    """ build dataset from source data,
         default source type is 'RoiDbSource'
-        Args: 
+        Args:
           config (dict): should has a structure:
           {
               data_cf (dict):
-                  anno_file (str): label file path or image list file path 
+                  anno_file (str): label file path or image list file path
                   image_dir (str): root dir for images
                   samples (int): samples to load, -1 means all
                   is_shuffle (bool): whether load data in this class

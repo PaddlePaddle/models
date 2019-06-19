@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,14 +16,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import math
-import six
-
 from collections import OrderedDict
-
-import paddle.fluid as fluid
-from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.framework import Variable
 
 from ppdet.core.workspace import register
 
@@ -49,7 +42,6 @@ class YOLOv3(object):
         self.yolo_head = yolo_head
 
     def _forward(self, feed_vars, mode='train'):
-        # backbone
         im = feed_vars['image']
         body_feats = self.backbone(im)
 
@@ -58,7 +50,6 @@ class YOLOv3(object):
             body_feats = [body_feats[name] for name in body_feat_names]
 
         if mode == 'train':
-            # get loss in train mode
             gt_box = feed_vars['gt_box']
             gt_label = feed_vars['gt_label']
             gt_score = feed_vars['gt_score']
@@ -66,7 +57,6 @@ class YOLOv3(object):
             return {'loss': self.yolo_head.get_loss(
                 body_feats, gt_box, gt_label, gt_score)}
         else:
-            # get prediction in test mode
             im_shape = feed_vars['im_shape']
             return self.yolo_head.get_prediction(body_feats, im_shape)
 

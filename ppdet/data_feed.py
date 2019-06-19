@@ -101,7 +101,8 @@ feed_var_def = [
 # XXX batch transforms are only stubs for now, actually handled by `post_map`
 @serializable
 class PadBatch(object):
-    r"""Pad a batch of samples to same dimensions
+    """
+    Pad a batch of samples to same dimensions
 
     Args:
         pad_to_stride (int): pad to multiple of strides, e.g., 32
@@ -114,7 +115,8 @@ class PadBatch(object):
 
 @serializable
 class MultiScale(object):
-    r"""Randomly resize image by scale
+    """
+    Randomly resize image by scale
 
     Args:
         scales (list): list of int, randomly resize to one of these scales
@@ -127,7 +129,8 @@ class MultiScale(object):
 
 @serializable
 class RandomShape(object):
-    r"""Randomly reshape a batch
+    """
+    Randomly reshape a batch
 
     Args:
         sizes (list): list of int, random choose a size from these
@@ -140,7 +143,8 @@ class RandomShape(object):
 
 @serializable
 class DataSet(object):
-    r"""Dataset, e.g., coco, pascal voc
+    """
+    Dataset, e.g., coco, pascal voc
 
     Args:
         annotation (str): annotation file path
@@ -200,7 +204,8 @@ class SimpleDataSet(DataSet):
 
 @serializable
 class DataFeed(object):
-    r"""DataFeed encompasses all data loading related settings
+    """
+    DataFeed encompasses all data loading related settings
 
     Args:
         dataset (object): a `Dataset` instance
@@ -681,7 +686,8 @@ class YoloTestFeed(DataFeed):
 
 
 def make_reader(feed, max_iter=0):
-    r"""this is a adapter for now, some part may be quite hackish
+    """
+    this is a adapter for now, some part may be quite hackish
 
     Args:
         feed (object): a `DataFeed` instance

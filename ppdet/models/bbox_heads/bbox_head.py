@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import paddle.fluid as fluid
+
+from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Xavier
 from paddle.fluid.regularizer import L2Decay
@@ -46,8 +47,8 @@ class BoxCoder(object):
 
 @register
 class TwoFCHead(object):
-    r"""
-    Two MLP RCNN Head
+    """
+    RCNN head with two Fully Connected layers
 
     Args:
         num_chan (int): num of filters for the fc layers
@@ -83,11 +84,11 @@ class TwoFCHead(object):
 
 @register
 class BBoxHead(object):
-    r"""
+    """
     RCNN bbox head
 
     Args:
-        head (object): the head module instance
+        head (object): the head module instance, e.g., `ResNetC5` or `TwoFCHead`
         box_coder (object): `BoxCoder` instance
         nms (object): `MultiClassNMS` instance
         num_classes: number of output classes

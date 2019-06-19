@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,23 +16,15 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import math
-import six
-
-import paddle.fluid as fluid
-from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.framework import Variable
-
+from paddle import fluid
 from ppdet.core.workspace import register
-
-from .faster_rcnn import FasterRCNN
 
 __all__ = ['MaskRCNN']
 
 
 @register
 class MaskRCNN(object):
-    r"""
+    """
     Mask R-CNN architecture, see https://arxiv.org/abs/1703.06870
     Args:
         backbone (object): backbone instance
@@ -68,21 +60,17 @@ class MaskRCNN(object):
         self.neck = neck
 
     def train(self, feed_vars):
-        # inputs
         im = feed_vars['image']
         im_info = feed_vars['im_info']
         gt_box = feed_vars['gt_box']
         is_crowd = feed_vars['is_crowd']
 
-        # backbone
         body_feats = self.backbone(im)
 
-        # rpn proposals
         rois = self.rpn_head.get_proposals(body_feats, im_info)
 
         rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
 
-        # sampled rpn proposals
         for var in ['gt_label', 'is_crowd', 'gt_box', 'im_info']:
             assert var in feed_vars, "{} has no {}".format(feed_vars, var)
         outs = self.bbox_assigner(rpn_rois=rois,
@@ -96,20 +84,15 @@ class MaskRCNN(object):
         bbox_inside_weights = outs[3]
         bbox_outside_weights = outs[4]
 
-        # RoI Extractor
         body_feat = body_feats[list(body_feats.keys())[-1]]
         # TODO no FPN support?
         roi_feat = self.roi_extractor(body_feat, rois)
 
-        # fast-rcnn head and rcnn loss
         loss = self.bbox_head.get_loss(roi_feat, labels_int32, bbox_targets,
                                        bbox_inside_weights,
                                        bbox_outside_weights)
         loss.update(rpn_loss)
 
-        # mask head and mask loss
-
-        # sampled rpn proposals
         assert 'gt_mask' in feed_vars, "{} has no gt_mask".format(feed_vars)
         outs = self.mask_assigner(rois=rois,
                                   gt_classes=feed_vars['gt_label'],
@@ -129,24 +112,18 @@ class MaskRCNN(object):
         return loss
 
     def test(self, feed_vars):
-        # inputs
         im = feed_vars['image']
         im_info = feed_vars['im_info']
 
-        # backbone
         body_feats = self.backbone(im)
 
-        # rpn proposals
         rois = self.rpn_head.get_proposals(body_feats, im_info)
-        # RoI Extractor
         body_feat = body_feats[list(body_feats.keys())[-1]]
         roi_feat = self.roi_extractor(body_feat, rois)
 
-        # bbox prediction
         bbox_pred = self.bbox_head.get_prediction(roi_feat, rois, im_info)
         bbox_pred = bbox_pred['bbox']
 
-        # mask prediction
         # share weight
         head_conv = self.bbox_head.head
         bbox_shape = fluid.layers.shape(bbox_pred)

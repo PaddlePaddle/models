@@ -153,7 +153,8 @@ class SchemaDict(dict):
 
 
 def extract_schema(cls):
-    r""" Extract schema from a given class
+    """
+    Extract schema from a given class
 
     Args:
         cls (type): Class from which to extract.
