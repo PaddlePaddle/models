@@ -29,10 +29,11 @@ from paddle import fluid
 
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.run_utils import parse_fetches
+from ppdet.utils.cli import parse_args
+import ppdet.utils.checkpoint as checkpoint
 
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data_feed import make_reader
-from ppdet.utils.cli import parse_args
 
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -41,34 +42,27 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    args = parse_args(sys.argv[1:])
-    if args.config is None:
-        print("Please specify config file")
-        sys.exit(1)
+    args = parse_args()
+    cfg = load_config(args.config)
 
-    config = load_config(args.config)
-
-    if 'architecture' in config:
-        main_arch = config['architecture']
+    if 'architecture' in cfg:
+        main_arch = cfg['architecture']
     else:
-        print("main architecture not given in config file")
-        sys.exit(1)
+        raise ValueError("Not give the architecture in config file.")
 
     merge_config(args.cli_config)
 
-    if config['use_gpu']:
+    if cfg['use_gpu']:
         devices_num = fluid.core.get_cuda_device_count()
     else:
-        # XXX is this intended????
-        devices_num = int(
-            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+        devices_num = os.environ.get('CPU_NUM', multiprocessing.cpu_count())
 
-    if 'train_feed' not in config:
+    if 'train_feed' not in cfg:
         train_feed = create(type(main_arch).__name__ + 'TrainFeed')
     else:
-        train_feed = create(config['train_feed'])
+        train_feed = create(cfg['train_feed'])
 
-    place = fluid.CUDAPlace(0) if config['use_gpu'] else fluid.CPUPlace()
+    place = fluid.CUDAPlace(0) if cfg['use_gpu'] else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
     model = create(main_arch)
@@ -79,9 +73,9 @@ def main():
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
-            # XXX must be in the same scope as model when initialize feed_vars
+            # must be in the same scope as model when initialize feed_vars
             train_pyreader, reader, feed_vars = make_reader(
-                train_feed, max_iter=config['max_iters'] * devices_num)
+                train_feed, max_iter=cfg['max_iters'] * devices_num)
             train_fetches = model.train(feed_vars)
             loss = train_fetches['loss']
             lr = lr_builder()
@@ -98,26 +92,31 @@ def main():
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
-    sync_bn = 'batch_norm_type' in config and config['batch_norm_type'] == 'SYNC_BN'
+    sync_bn = False if 'sync_bn' not in cfg else cfg['sync_bn']
     build_strategy.sync_batch_norm = sync_bn
     train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
             loss_name=loss.name, build_strategy=build_strategy)
 
     exe.run(startup_prog)
-    # if cfg.resume:
-    #     checkpoint.load(exe, train_prog, cfg.resume)
-    # elif cfg.TRAIN.PRETRAIN_WEIGHTS and cfg.MODEL.AFFINE_CHANNEL and cfg.fuse_bn:
-    #     checkpoint.load_and_fusebn(exe, train_prog, cfg.TRAIN.PRETRAIN_WEIGHTS)
-    # elif cfg.TRAIN.PRETRAIN_WEIGHTS:
-    #     checkpoint.load(exe, train_prog, cfg.TRAIN.PRETRAIN_WEIGHTS)
 
-    train_stats = TrainingStats(20, train_keys)
+    sub_cfg = cfg[cfg[cfg['architecture']]['backbone']]
+    freeze_bn = False if 'freeze_bn' not in sub_cfg else sub_cfg['freeze_bn']
+    print(freeze_bn)
+    if args.resume_checkpoint:
+        checkpoint.load_checkpoint(exe, train_prog, args.resume_checkpoint)
+    elif cfg['pretrain_weights'] and freeze_bn and args.fusebn:
+        checkpoint.load_and_fusebn(exe, train_prog, cfg['pretrain_weights'])
+    elif cfg['pretrain_weights']:
+        checkpoint.load_pretrain(exe, train_prog, cfg['pretrain_weights'])
+
+    train_stats = TrainingStats(cfg['log_smooth_window'], train_keys)
     train_pyreader.start()
     start_time = time.time()
     end_time = time.time()
 
-    for it in range(config['max_iters']):
+    save_dir = os.path.join(cfg['save_dir'], cfg['architecture'])
+    for it in range(cfg['max_iters']):
         start_time = end_time
         end_time = time.time()
         outs = exe.run(train_compile_program, fetch_list=train_values)
@@ -128,6 +127,7 @@ def main():
             it, np.mean(outs[-1]), logs, end_time - start_time)
         logger.info(strs)
 
+    checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()
 
 

@@ -51,7 +51,7 @@ class ResNet(object):
                  freeze_bn=True,
                  affine_channel=False,
                  bn_decay=True,
-                 variant='a',
+                 variant='b',
                  feature_maps=[2, 3, 4, 5]):
         super(ResNet, self).__init__()
 
