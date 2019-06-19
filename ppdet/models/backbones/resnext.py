@@ -42,6 +42,7 @@ class ResNeXt(ResNet):
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
         feature_maps (list): index of the stages whose feature maps are returned
     """
+
     def __init__(self,
                  depth=50,
                  groups=64,
@@ -53,9 +54,9 @@ class ResNeXt(ResNet):
                  variant='a',
                  feature_maps=[2, 3, 4, 5]):
         assert depth in [50, 101, 152], "depth {} should be 50, 101 or 152"
-        super(ResNeXt, self).__init__(
-            depth, freeze_at, freeze_bn, affine_channel, bn_decay,
-            variant, feature_maps)
+        super(ResNeXt, self).__init__(depth, freeze_at, freeze_bn,
+                                      affine_channel, bn_decay, variant,
+                                      feature_maps)
         self.depth_cfg = {
             50: ([3, 4, 6, 3], self.bottleneck),
             101: ([3, 4, 23, 3], self.bottleneck),
@@ -64,7 +65,7 @@ class ResNeXt(ResNet):
         self.stage_filters = [256, 512, 1024, 2048]
         self.groups = groups
         self.group_width = group_width
-        self._resnext_pretrained_name_fix = True
+        self._model_type = 'ResNeXt'
 
 
 @register
@@ -80,8 +81,8 @@ class ResNeXtC5(ResNeXt):
                  freeze_bn=True,
                  affine_channel=False,
                  bn_decay=True,
-                 variant='a',
+                 variant='b',
                  feature_maps=[5]):
-        super(ResNeXtC5, self).__init__(
-            depth, groups, group_width, freeze_at, freeze_bn, affine_channel,
-            bn_decay, variant, feature_maps)
+        super(ResNeXtC5, self).__init__(depth, groups, group_width, freeze_at,
+                                        freeze_bn, affine_channel, bn_decay,
+                                        variant, feature_maps)
