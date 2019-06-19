@@ -4,5 +4,5 @@
 # dygraph single card
 export FLAGS_cudnn_deterministic=True
 export CUDA_VISIBLE_DEVICES=0
-python3.6 train.py --ce --epoch 1| python _ce.py
+python train.py --ce --epoch 1 | python _ce.py
 
