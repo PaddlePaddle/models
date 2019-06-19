@@ -22,7 +22,8 @@ import sys
 
 import yaml
 
-from ppdet.core.config import SchemaDict, extract_schema, serializable
+from .config.schema import SchemaDict, extract_schema
+from .config.yaml_helpers import serializable
 
 __all__ = ['global_config', 'load_config', 'merge_config',
            'get_registered_modules', 'create', 'register', 'serializable']

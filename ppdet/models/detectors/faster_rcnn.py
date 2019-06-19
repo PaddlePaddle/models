@@ -19,7 +19,6 @@ from __future__ import print_function
 from paddle import fluid
 
 from ppdet.core.workspace import register
-from ppdet.models.necks import FPN
 
 __all__ = ['FasterRCNN']
 
@@ -94,11 +93,9 @@ class FasterRCNN(object):
             # last feature map.
             body_feat = body_feats[body_feat_names[-1]]
             roi_feat = self.roi_extractor(body_feat, rois)
-        elif isinstance(self.neck, FPN):
+        else:
             roi_feat = self.roi_extractor(
                 body_feats, rois, spatial_scale)
-        else:
-            raise ValueError("only supports FPN as enricher for now")
 
         if mode == 'train':
             loss = self.bbox_head.get_loss(roi_feat, labels_int32, bbox_targets,
