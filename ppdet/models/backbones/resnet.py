@@ -36,8 +36,8 @@ class ResNet(object):
     Args:
         depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
         freeze_at (int): freeze the backbone at which stage
-        freeze_bn (bool): fix batch norm weights
-        affine_channel (bool): use batch_norm or affine_channel.
+        norm_type (str): normalization type, 'bn', 'freeze_bn', 'sync_bn' and
+        'affine_channel' are supported
         bn_decay (bool): apply weight decay to in batch norm weights
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
         feature_maps (list): index of the stages whose feature maps are returned
@@ -46,9 +46,7 @@ class ResNet(object):
     def __init__(self,
                  depth=50,
                  freeze_at=2,
-                 freeze_bn=True,
-                 sync_bn=False,
-                 affine_channel=True,
+                 norm_type='affine_channel',
                  bn_decay=True,
                  variant='b',
                  feature_maps=[2, 3, 4, 5]):
@@ -59,14 +57,11 @@ class ResNet(object):
         assert variant in ['a', 'b', 'c', 'd'], "invalid ResNet variant"
         assert 0 <= freeze_at <= 4, "freeze_at should be 0, 1, 2, 3 or 4"
         assert len(feature_maps) > 0, "need one or more feature maps"
-        if sync_bn:
-            assert not freeze_bn, "synchronous BN should not be frozen"
+        assert norm_type in ['bn', 'freeze_bn', 'sync_bn', 'affine_channel']
 
         self.depth = depth
         self.freeze_at = freeze_at
-        self.freeze_bn = freeze_bn
-        self.sync_bn = sync_bn
-        self.affine_channel = affine_channel
+        self.norm_type = norm_type
         self.bn_decay = bn_decay
         self.variant = variant
         self._model_type = 'ResNet'
@@ -119,7 +114,7 @@ class ResNet(object):
             learning_rate=lr,
             regularizer=L2Decay(bn_decay))
 
-        if not self.affine_channel:
+        if self.norm_type in ['bn', 'freeze_bn', 'sync_bn']:
             out = fluid.layers.batch_norm(
                 input=conv,
                 act=act,
@@ -130,7 +125,7 @@ class ResNet(object):
                 moving_variance_name=bn_name + '_variance', )
             scale = fluid.framework._get_var(pattr.name)
             bias = fluid.framework._get_var(battr.name)
-        else:
+        elif self.norm_type == 'affine_channel':
             scale = fluid.layers.create_parameter(
                 shape=[conv.shape[1]],
                 dtype=conv.dtype,
@@ -143,7 +138,7 @@ class ResNet(object):
                 default_initializer=fluid.initializer.Constant(0.))
             out = fluid.layers.affine_channel(
                 x=conv, scale=scale, bias=bias, act=act)
-        if self.freeze_bn:
+        if self.norm_type == 'freeze_bn':
             scale.stop_gradient = True
             bias.stop_gradient = True
         return out
@@ -336,9 +331,7 @@ class ResNetC5(ResNet):
     def __init__(self,
                  depth=50,
                  freeze_at=2,
-                 freeze_bn=True,
-                 sync_bn=False,
-                 affine_channel=True,
+                 norm_type='affine_channel',
                  bn_decay=True,
                  variant='a',
                  feature_maps=[5]):

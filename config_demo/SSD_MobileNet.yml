@@ -22,7 +22,7 @@ SSD:
     score_threshold: 0.01
 
 MobileNet:
-  bn_decay: false
+  norm_type: bn
   conv_group_scale: 1
   extra_block_filters:
   - - 256

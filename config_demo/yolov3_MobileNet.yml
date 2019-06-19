@@ -12,6 +12,7 @@ YOLOv3:
   yolo_head: YOLOv3Head
 
 MobileNet:
+  norm_type: bn
   bn_decay: false
   conv_group_scale: 1
   with_extra_blocks: false

@@ -13,7 +13,7 @@ FasterRCNN:
   neck: null
 
 ResNet:
-  affine_channel: true
+  norm_type: affine_channel
   bn_decay: true
   depth: 50
   feature_maps:
@@ -21,9 +21,9 @@ ResNet:
   - 3
   - 4
   freeze_at: 2
-  freeze_bn: true
 
 ResNetC5:
+  norm_type: affine_channel
   affine_channel: true
 
 RPNHead:
