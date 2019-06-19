@@ -50,6 +50,13 @@ def eval():
             return os.path.exists(os.path.join(cfg.weights, var.name))
         fluid.io.load_vars(exe, cfg.weights, predicate=if_exist)
     # yapf: enable
+
+    # you can save inference model by following code
+    # fluid.io.save_inference_model("./output/yolov3", 
+    #                               feeded_var_names=['image', 'im_shape'],
+    #                               target_vars=outputs,
+    #                               executor=exe)
+
     input_size = cfg.input_size
     test_reader = reader.test(input_size, 1)
     label_names, label_ids = reader.get_label_infos()

@@ -28,6 +28,7 @@ model_g.add_arg("ernie_config_path", str, None, "Path to the json file for ernie
 model_g.add_arg("senta_config_path", str, None, "Path to the json file for senta model config.")
 model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
 model_g.add_arg("output_dir", str, "checkpoints", "Path to save checkpoints")
+model_g.add_arg("use_paddle_hub", bool, False, "Whether to load ERNIE using PaddleHub")
 
 train_g = utils.ArgumentGroup(parser, "training", "training options.")
 train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
@@ -201,7 +202,10 @@ def main(args):
                     pyreader_name='train_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                if args.use_paddle_hub:
+                    embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                else:
+                    embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
                 # user defined model based on ernie embeddings
                 loss, accuracy, num_seqs = create_model(
@@ -233,7 +237,10 @@ def main(args):
                     pyreader_name='eval_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                if args.use_paddle_hub:
+                    embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                else:
+                    embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
                 # user defined model based on ernie embeddings
                 loss, accuracy, num_seqs = create_model(
@@ -253,7 +260,10 @@ def main(args):
                     pyreader_name='infer_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                if args.use_paddle_hub:
+                    embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                else:
+                    embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
                 probs = create_model(args,
                                     embeddings,

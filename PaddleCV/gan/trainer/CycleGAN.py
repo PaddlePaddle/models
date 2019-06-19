@@ -88,17 +88,23 @@ class GTrainer():
                     vars.append(var.name)
             self.param = vars
             lr = cfg.learning_rate
-            optimizer = fluid.optimizer.Adam(
-                learning_rate=fluid.layers.piecewise_decay(
-                    boundaries=[99 * step_per_epoch] +
-                    [x * step_per_epoch for x in range(100, cfg.epoch - 1)],
-                    values=[lr] + [
-                        lr * (1.0 - (x - 99.0) / 101.0)
-                        for x in range(100, cfg.epoch)
-                    ]),
-                beta1=0.5,
-                beta2=0.999,
-                name="net_G")
+            if cfg.epoch <= 100:
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=lr, beta1=0.5, beta2=0.999, name="net_G")
+            else:
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=fluid.layers.piecewise_decay(
+                        boundaries=[99 * step_per_epoch] + [
+                            x * step_per_epoch
+                            for x in xrange(100, cfg.epoch - 1)
+                        ],
+                        values=[lr] + [
+                            lr * (1.0 - (x - 99.0) / 101.0)
+                            for x in xrange(100, cfg.epoch)
+                        ]),
+                    beta1=0.5,
+                    beta2=0.999,
+                    name="net_G")
             optimizer.minimize(self.g_loss, parameter_list=vars)
 
 
@@ -122,17 +128,23 @@ class DATrainer():
 
             self.param = vars
             lr = cfg.learning_rate
-            optimizer = fluid.optimizer.Adam(
-                learning_rate=fluid.layers.piecewise_decay(
-                    boundaries=[99 * step_per_epoch] +
-                    [x * step_per_epoch for x in range(100, cfg.epoch - 1)],
-                    values=[lr] + [
-                        lr * (1.0 - (x - 99.0) / 101.0)
-                        for x in range(100, cfg.epoch)
-                    ]),
-                beta1=0.5,
-                beta2=0.999,
-                name="net_DA")
+            if cfg.epoch <= 100:
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=lr, beta1=0.5, beta2=0.999, name="net_DA")
+            else:
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=fluid.layers.piecewise_decay(
+                        boundaries=[99 * step_per_epoch] + [
+                            x * step_per_epoch
+                            for x in xrange(100, cfg.epoch - 1)
+                        ],
+                        values=[lr] + [
+                            lr * (1.0 - (x - 99.0) / 101.0)
+                            for x in xrange(100, cfg.epoch)
+                        ]),
+                    beta1=0.5,
+                    beta2=0.999,
+                    name="net_DA")
 
             optimizer.minimize(self.d_loss_A, parameter_list=vars)
 
@@ -155,17 +167,23 @@ class DBTrainer():
                     vars.append(var.name)
             self.param = vars
             lr = 0.0002
-            optimizer = fluid.optimizer.Adam(
-                learning_rate=fluid.layers.piecewise_decay(
-                    boundaries=[99 * step_per_epoch] +
-                    [x * step_per_epoch for x in range(100, cfg.epoch - 1)],
-                    values=[lr] + [
-                        lr * (1.0 - (x - 99.0) / 101.0)
-                        for x in range(100, cfg.epoch)
-                    ]),
-                beta1=0.5,
-                beta2=0.999,
-                name="net_DB")
+            if cfg.epoch <= 100:
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=lr, beta1=0.5, beta2=0.999, name="net_DA")
+            else:
+                optimizer = fluid.optimizer.Adam(
+                    learning_rate=fluid.layers.piecewise_decay(
+                        boundaries=[99 * step_per_epoch] + [
+                            x * step_per_epoch
+                            for x in xrange(100, cfg.epoch - 1)
+                        ],
+                        values=[lr] + [
+                            lr * (1.0 - (x - 99.0) / 101.0)
+                            for x in xrange(100, cfg.epoch)
+                        ]),
+                    beta1=0.5,
+                    beta2=0.999,
+                    name="net_DB")
             optimizer.minimize(self.d_loss_B, parameter_list=vars)
 
 
