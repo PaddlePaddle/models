@@ -256,7 +256,7 @@ def val(settings,data_dir=DATA_DIR):
             data_dir=data_dir)
 
 
-def test(data_dir=DATA_DIR):
+def test(settings,data_dir=DATA_DIR):
     file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(file_list, 'test', shuffle=False,
+    return _reader_creator(settings, file_list, 'test', shuffle=False,
             data_dir=data_dir)
