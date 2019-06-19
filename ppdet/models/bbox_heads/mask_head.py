@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import paddle.fluid as fluid
+from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.regularizer import L2Decay
@@ -28,8 +28,8 @@ __all__ = ['MaskHead']
 
 @register
 class MaskHead(object):
-    r"""
-    RCNN bbox head
+    """
+    RCNN mask head
     Args:
         num_convs (int): num of convolutions, 4 for FPN, 1 otherwise
         num_chan_reduced (int): num of channels after first convolution
@@ -99,9 +99,6 @@ class MaskHead(object):
         return mask_logits
 
     def get_loss(self, roi_feat, mask_int32):
-        """
-        TODO(qingqing): add more comments
-        """
         mask_logits = self._get_output(roi_feat)
         num_classes = self.num_classes
         resolution = self.resolution
