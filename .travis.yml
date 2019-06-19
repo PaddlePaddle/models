@@ -2,7 +2,7 @@ language: cpp
 cache: ccache
 
 flake8-steps: &flake8-steps
-  env: FLAKE8=true
+  language: python
   cache: pip
   install: pip install flake8
   before_script:
