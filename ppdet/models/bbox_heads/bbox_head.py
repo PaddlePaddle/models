@@ -113,11 +113,10 @@ class BBoxHead(object):
         """
         Get the bbox head feature map.
         """
-        if input is not None:
-            self.head_feat = self.head(input)
-            return self.head_feat
-        else:
-            return self.head_feat
+        if input is None:
+            return None
+        self.head_feat = self.head(input)
+        return self.head_feat
 
     def _get_output(self, roi_feat):
         """

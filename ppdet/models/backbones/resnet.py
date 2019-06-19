@@ -49,7 +49,7 @@ class ResNet(object):
                  depth=50,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='b',
                  feature_maps=[2, 3, 4, 5]):
@@ -301,13 +301,17 @@ class ResNet(object):
         res_endpoints = []
 
         res = input
-        # XXX this may not cover all use case, but enough for now
-        if len(self.feature_maps) > 1 and 2 in self.feature_maps:
+        feature_maps = self.feature_maps
+        severed_head = getattr(self, 'severed_head', False)
+        if not severed_head:
             res = self.c1_stage(res)
-        for i in self.feature_maps:
+            feature_maps = range(2, max(self.feature_maps) + 1)
+
+        for i in feature_maps:
             res = self.layer_warp(res, i)
-            res_endpoints.append(res)
-            if self.freeze_at > i:
+            if i in self.feature_maps:
+                res_endpoints.append(res)
+            if self.freeze_at >= i:
                 res.stop_gradient = True
 
         if len(res_endpoints) == 1:
@@ -326,10 +330,11 @@ class ResNetC5(ResNet):
                  depth=50,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='a',
                  feature_maps=[5]):
         super(ResNetC5, self).__init__(
             depth, freeze_at, freeze_bn, affine_channel, bn_decay,
             variant, feature_maps)
+        self.severed_head = True

@@ -49,7 +49,7 @@ class SENet(ResNeXt):
                  group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='d',
                  feature_maps=[2, 3, 4, 5]):
@@ -106,10 +106,11 @@ class SENetC5(SENet):
                  group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='d',
                  feature_maps=[5]):
         super(SENetC5, self).__init__(
             depth, groups, group_width, freeze_at, freeze_bn, affine_channel,
             bn_decay, variant, feature_maps)
+        self.severed_head = True
