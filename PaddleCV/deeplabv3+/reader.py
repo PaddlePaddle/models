@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 import os
 import six
+import time
+from data_utils import GeneratorEnqueuer
 
 default_config = {
     "shuffle": True,
@@ -138,21 +140,55 @@ class CityscapeDataset:
             self.next_img()
         return np.array(imgs), np.array(labels), names
 
-    def get_batch_generator(self, batch_size, total_step):
+    def get_batch_generator(self,
+                            batch_size,
+                            total_step,
+                            num_workers=8,
+                            max_queue=32,
+                            use_multiprocessing=True):
         def do_get_batch():
-            for i in range(total_step):
+            iter_id = 0
+            while True:
                 imgs, labels, names = self.get_batch(batch_size)
                 labels = labels.astype(np.int32)[:, :, :, 0]
                 imgs = imgs[:, :, :, ::-1].transpose(
                     0, 3, 1, 2).astype(np.float32) / (255.0 / 2) - 1
-                yield i, imgs, labels, names
+                yield imgs, labels, names
+                if not use_multiprocessing:
+                    iter_id += 1
+                    if iter_id >= total_step:
+                        break
 
         batches = do_get_batch()
-        try:
-            from prefetch_generator import BackgroundGenerator
-            batches = BackgroundGenerator(batches, 100)
-        except:
-            print(
-                "You can install 'prefetch_generator' for acceleration of data reading."
-            )
-        return batches
+        if not use_multiprocessing:
+            try:
+                from prefetch_generator import BackgroundGenerator
+                batches = BackgroundGenerator(batches, 100)
+            except:
+                print(
+                    "You can install 'prefetch_generator' for acceleration of data reading."
+                )
+            return batches
+
+        def reader():
+            try:
+                enqueuer = GeneratorEnqueuer(
+                    batches, use_multiprocessing=use_multiprocessing)
+                enqueuer.start(max_queue_size=max_queue, workers=num_workers)
+                generator_out = None
+                for i in range(total_step):
+                    while enqueuer.is_running():
+                        if not enqueuer.queue.empty():
+                            generator_out = enqueuer.queue.get()
+                            break
+                        else:
+                            time.sleep(0.02)
+                    yield generator_out
+                    generator_out = None
+                enqueuer.stop()
+            finally:
+                if enqueuer is not None:
+                    enqueuer.stop()
+
+        data_gen = reader()
+        return data_gen

@@ -48,7 +48,7 @@ python -u src/run_mrqa.py --use_cuda true\
         --max_seq_len 512 \
         --bert_config_path ${BERT_BASE_PATH}/bert_config.json \
         --predict_file ${DATA_PATH_dev}/mrqa-combined.raw.json \
-        --do_lower_case false \
+        --do_lower_case true \
         --doc_stride 128 \
         --train_file ${DATA_PATH_train}/mrqa-combined.raw.json \
         --learning_rate 3e-5 \
