@@ -97,7 +97,6 @@ def draw_bbox_on_image(image_path, catid2name, bboxes, draw_threshold):
              (xmin, ymin)],
             width=2,
             fill='red')
-        logger.info([xmin, ymin, xmax, ymax], catid)
         if image.mode == 'RGB':
             draw.text((xmin, ymin), catid2name[catid], (255, 255, 0))
     save_name = get_save_image_name(image_path, 'bbox')

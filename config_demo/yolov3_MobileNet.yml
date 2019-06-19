@@ -179,7 +179,8 @@ YoloTestFeed:
   dataset:
     annotation: coco/annotations/instances_val2017.json
     image_dir: coco/val2017
-  drop_last: true
+  test_file: val2017.txt
+  drop_last: false
   fields:
   - image
   - im_shape
