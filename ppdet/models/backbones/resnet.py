@@ -311,7 +311,7 @@ class ResNet(object):
             res = self.layer_warp(res, i)
             if i in self.feature_maps:
                 res_endpoints.append(res)
-            if self.freeze_at > i:
+            if self.freeze_at >= i:
                 res.stop_gradient = True
 
         if len(res_endpoints) == 1:
