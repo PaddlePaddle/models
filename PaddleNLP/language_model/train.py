@@ -155,7 +155,8 @@ def main():
     exe = Executor(place)
     exe.run(startup_program)
 
-    device_count = fluid.core.get_cuda_device_count()
+    device_count = len(fluid.cuda_places()) if args.use_gpu else len(
+        fluid.cpu_places())
 
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.num_threads = device_count
