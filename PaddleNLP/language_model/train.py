@@ -159,7 +159,6 @@ def main():
 
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.num_threads = device_count
-    exec_strategy.use_experimental_executor = False
     exec_strategy.num_iteration_per_drop_scope = 100
 
     build_strategy = fluid.BuildStrategy()
@@ -194,10 +193,7 @@ def main():
     def generate_new_lr(epoch_id=0, device_count=1):
         new_lr = config.base_learning_rate * (config.lr_decay**max(
             epoch_id + 1 - config.epoch_start_decay, 0.0))
-        if device_count > 1 and args.parallel:
-            lr = np.ones((device_count), dtype='float32') * new_lr
-        else:
-            lr = np.ones((1), dtype='float32') * new_lr
+        lr = np.ones((device_count), dtype='float32') * new_lr
         return lr
 
     def prepare_input(batch,
