@@ -31,7 +31,8 @@ global_config = {}
 
 
 def load_config(file_path):
-    r"""Load config from file.
+    """
+    Load config from file.
 
     Args:
         file_path (str): Path of the config file to be loaded.
@@ -45,7 +46,8 @@ def load_config(file_path):
 
 
 def merge_config(config):
-    r"""Merge config into global config.
+    """
+    Merge config into global config.
 
     Args:
         config (dict): Config to be merged.
@@ -87,7 +89,8 @@ def make_partial(cls):
 
 
 def register(cls):
-    r"""Register a given module class.
+    """
+    Register a given module class.
 
     Args:
         cls (type): Module class to be registered.
@@ -103,7 +106,8 @@ def register(cls):
 
 
 def create(cls_or_name, **kwargs):
-    r"""Create an instance of given module class.
+    """
+    Create an instance of given module class.
 
     Args:
         cls_or_name (type or str): Class of which to create instance.
