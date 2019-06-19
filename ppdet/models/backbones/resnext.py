@@ -85,3 +85,4 @@ class ResNeXtC5(ResNeXt):
         super(ResNeXtC5, self).__init__(
             depth, groups, group_width, freeze_at, freeze_bn, affine_channel,
             bn_decay, variant, feature_maps)
+        self.severed_head = True
