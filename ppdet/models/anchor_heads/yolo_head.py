@@ -1,30 +1,28 @@
-#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import six
-
-import paddle.fluid as fluid
+from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
 
 from ppdet.models.nms import MultiClassNMS
-from ppdet.core.workspace import register, serializable
+from ppdet.core.workspace import register
 
 __all__ = ['YOLOv3Head']
 
@@ -64,7 +62,7 @@ class YOLOv3Head(object):
         self.ignore_thresh = ignore_thresh
         self.label_smooth = label_smooth
         self.anchor_masks = anchor_masks
-        self._get_and_check_anchors(anchors)
+        self._parse_anchors(anchors)
         self.nms = nms
         if isinstance(nms, dict):
             self.nms = MultiClassNMS(**nms)
@@ -162,7 +160,7 @@ class YOLOv3Head(object):
             input=input, scale=scale, actual_shape=out_shape, name=name)
         return out
 
-    def _get_and_check_anchors(self, anchors):
+    def _parse_anchors(self, anchors):
         """
         Check ANCHORS/ANCHOR_MASKS in config and parse mask_anchors
 
@@ -184,24 +182,23 @@ class YOLOv3Head(object):
                 assert mask < anchor_num, "anchor mask index overflow"
                 self.mask_anchors[-1].extend(anchors[mask])
 
-    def _get_outputs(self, inputs, is_train=True):
+    def _get_outputs(self, input, is_train=True):
         """
         Get YOLOv3 head output
 
         Args:
-            inputs ([Variable, ...]): Last Variable of each stage in backbone
-            is_train (bool, default True): whether in train or test mode
+            input (list): List of Variables, output of backbone stages
+            is_train (bool): whether in train or test mode
 
         Returns:
-            outputs ([Variable, ...]): Variables of each output layer
-
+            outputs (list): Variables of each output layer
         """
 
         outputs = []
 
         # get last out_layer_num blocks in reverse order
         out_layer_num = len(self.anchor_masks)
-        blocks = inputs[-1:-out_layer_num - 1:-1]
+        blocks = input[-1:-out_layer_num - 1:-1]
 
         route = None
         for i, block in enumerate(blocks):
@@ -244,12 +241,12 @@ class YOLOv3Head(object):
 
         return outputs
 
-    def get_loss(self, inputs, gt_box, gt_label, gt_score):
+    def get_loss(self, input, gt_box, gt_label, gt_score):
         """
         Get final loss of network of YOLOv3.
 
         Args:
-            inputs ([Variable, ...]): Last Variable of each stage in backbone.
+            input (list): List of Variables, output of backbone stages
             gt_box (Variable): The ground-truth boudding boxes.
             gt_label (Variable): The ground-truth class labels.
             gt_score (Variable): The ground-truth boudding boxes mixup scores.
@@ -258,7 +255,7 @@ class YOLOv3Head(object):
             loss (Variable): The loss Variable of YOLOv3 network.
 
         """
-        outputs = self._get_outputs(inputs, is_train=True)
+        outputs = self._get_outputs(input, is_train=True)
 
         losses = []
         downsample = 32
@@ -281,12 +278,12 @@ class YOLOv3Head(object):
 
         return sum(losses)
 
-    def get_prediction(self, inputs, im_shape):
+    def get_prediction(self, input, im_shape):
         """
         Get prediction result of YOLOv3 network
 
         Args:
-            inputs ([Variable, ...]): Last Variable of each stage in backbone.
+            input (list): List of Variables, output of backbone stages
             im_shape (Variable): Variable of shape([h, w]) of each image
 
         Returns:
@@ -294,7 +291,7 @@ class YOLOv3Head(object):
 
         """
 
-        outputs = self._get_outputs(inputs, is_train=False)
+        outputs = self._get_outputs(input, is_train=False)
 
         boxes = []
         scores = []
