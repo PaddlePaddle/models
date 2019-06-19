@@ -1,7 +1,7 @@
-architecture: FasterRCNN
-train_feed: FasterRCNNTrainFeed
-test_feed: FasterRCNNTestFeed
-max_iters: 1000
+architecture: MaskRCNN
+train_feed: MaskRCNNTrainFeed
+test_feed: MaskRCNNTestFeed
+max_iters: 18000
 use_gpu: yes
 
 FasterRCNN:
@@ -37,19 +37,10 @@ FPN:
 
 FPNRPNHead:
   anchor_generator:
-    anchor_sizes:
-    - 32
-    - 64
-    - 128
-    - 256
-    - 512
     aspect_ratios:
     - 0.5
     - 1.0
     - 2.0
-    stride:
-    - 16.0
-    - 16.0
     variance:
     - 1.0
     - 1.0
@@ -68,25 +59,25 @@ FPNRPNHead:
     use_random: true
   test_prop:
     eta: 1.0
-    min_size: 0.1
-    nms_thresh: 0.5
+    min_size: 0.0
+    nms_thresh: 0.7
     post_nms_top_n: 1000
-    pre_nms_top_n: 6000
+    pre_nms_top_n: 1000
   train_prop:
     eta: 1.0
-    min_size: 0.1
-    nms_thresh: 0.5
+    min_size: 0.0
+    nms_thresh: 0.7
     post_nms_top_n: 2000
-    pre_nms_top_n: 12000
+    pre_nms_top_n: 2000
 
 FPNROIAlign:
   canconical_level: 4
   canonical_size: 224
   max_level: 5
   min_level: 2
-  pooled_height: 14
-  pooled_width: 14
   sampling_ratio: 0
+  resolution: 7
+  mask_resolution: 14
 
 BBoxAssigner:
   batch_size_per_im: 512
@@ -132,8 +123,8 @@ LearningRate:
   - !PiecewiseDecay
     gamma: 0.1
     milestones:
-    - 6000
-    - 8000
+    - 12000
+    - 16000
     values: null
   - !LinearWarmup
     start_factor: 0.3333333333333333
@@ -147,7 +138,7 @@ OptimizerBuilder:
     factor: 0.0001
     type: L2
 
-FasterRCNNTrainFeed:
+MaskRCNNTrainFeed:
   batch_size: 1
   batch_transforms:
   - !PadBatch
@@ -173,7 +164,7 @@ FasterRCNNTrainFeed:
     to_rgb: true
     with_mixup: false
   - !RandomFlipImage
-    is_mask_flip: false
+    is_mask_flip: True
     is_normalized: false
     prob: 0.5
   - !NormalizeImage
@@ -196,8 +187,9 @@ FasterRCNNTrainFeed:
     channel_first: true
     to_bgr: false
   shuffle: true
+  use_padded_im_info: False
 
-FasterRCNNTestFeed:
+MaskRCNNTestFeed:
   batch_size: 1
   batch_transforms:
   - !PadBatch
@@ -240,3 +232,4 @@ FasterRCNNTestFeed:
     channel_first: true
     to_bgr: false
   shuffle: false
+  use_padded_im_info: True

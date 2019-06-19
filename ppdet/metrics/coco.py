@@ -40,8 +40,8 @@ def bbox_eval(results, anno_file, outfile, with_background=True):
     # when with_background = True, mapping category to classid, like:
     #   background:0, first_class:1, second_class:2, ...
     clsid2catid = dict(
-            {i + int(with_background): catid
-                for i, catid in enumerate(cat_ids)})
+        {i + int(with_background): catid
+         for i, catid in enumerate(cat_ids)})
 
     xywh_results = bbox2out(results, clsid2catid)
     with open(outfile, 'w') as f:
@@ -137,8 +137,8 @@ def mask2out(results, clsid2catid, resolution, thresh_binarize=0.5):
             mask = masks[s:s + num]
             s += num
 
-            im_h = int(round(im_info[0] / im_info[2]))
-            im_w = int(round(im_info[1] / im_info[2]))
+            im_h = int(im_info[0])
+            im_w = int(im_info[1])
 
             expand_bbox = expand_boxes(bbox, scale)
             expand_bbox = expand_bbox.astype(np.int32)

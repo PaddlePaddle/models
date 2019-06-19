@@ -45,9 +45,7 @@ class ROIPool(object):
     __op__ = fluid.layers.roi_pool
     __append_doc__ = True
 
-    def __init__(self,
-                 pooled_height=14,
-                 pooled_width=14,
+    def __init__(self, pooled_height=14, pooled_width=14,
                  spatial_scale=1. / 16):
         super(ROIPool, self).__init__()
         self.pooled_height = pooled_height
@@ -70,23 +68,23 @@ class FPNROIAlign(object):
     """
 
     def __init__(self,
-                 pooled_height=14,
-                 pooled_width=14,
                  sampling_ratio=0,
                  min_level=2,
                  max_level=5,
                  canconical_level=4,
-                 canonical_size=224):
+                 canonical_size=224,
+                 resolution=7,
+                 mask_resolution=14):
         super(FPNROIAlign, self).__init__()
-        self.pooled_height = pooled_height
-        self.pooled_width = pooled_width
         self.sampling_ratio = sampling_ratio
         self.min_level = min_level
         self.max_level = max_level
         self.canconical_level = canconical_level
         self.canonical_size = canonical_size
+        self.resolution = resolution
+        self.mask_resolution = mask_resolution
 
-    def __call__(self, head_inputs, rois, spatial_scale):
+    def __call__(self, head_inputs, rois, spatial_scale, is_mask=False):
         """
         Adopt RoI align onto several level of feature maps to get RoI features.
         Distribute RoIs to different levels by area and get a list of RoI
@@ -104,14 +102,10 @@ class FPNROIAlign(object):
         input_name_list = name_list[-num_roi_lvls:]
         spatial_scale = spatial_scale[-num_roi_lvls:]
         rois_dist, restore_index = fluid.layers.distribute_fpn_proposals(
-            rois,
-            k_min,
-            k_max,
-            self.canconical_level,
-            self.canonical_size,
-            name='distribute')
+            rois, k_min, k_max, self.canconical_level, self.canonical_size)
         # rois_dist is in ascend order
         roi_out_list = []
+        resolution = is_mask and self.resolution or self.mask_resolution
         for lvl in range(num_roi_lvls):
             name_index = num_roi_lvls - lvl - 1
             rois_input = rois_dist[lvl]
@@ -120,11 +114,10 @@ class FPNROIAlign(object):
             roi_out = fluid.layers.roi_align(
                 input=head_input,
                 rois=rois_input,
-                pooled_height=self.pooled_height,
-                pooled_width=self.pooled_width,
+                pooled_height=resolution,
+                pooled_width=resolution,
                 spatial_scale=sc,
-                sampling_ratio=self.sampling_ratio,
-                name='roi_align_lvl_' + str(lvl))
+                sampling_ratio=self.sampling_ratio)
             roi_out_list.append(roi_out)
         roi_feat_shuffle = fluid.layers.concat(roi_out_list)
         roi_feat_ = fluid.layers.gather(roi_feat_shuffle, restore_index)
