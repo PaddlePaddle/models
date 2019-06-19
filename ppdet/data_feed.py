@@ -281,6 +281,26 @@ class EvalFeed(DataFeed):
 
 
 @register
+class TestFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset,
+                 fields,
+                 image_shape,
+                 sample_transforms=[],
+                 batch_transforms=[],
+                 batch_size=1,
+                 shuffle=False,
+                 drop_last=False,
+                 num_workers=2):
+        super(TestFeed, self).__init__(
+            dataset, fields, image_shape, sample_transforms, batch_transforms,
+            batch_size=batch_size, shuffle=shuffle,
+            drop_last=drop_last, num_workers=num_workers)
+
+
+@register
 class FasterRCNNTrainFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
