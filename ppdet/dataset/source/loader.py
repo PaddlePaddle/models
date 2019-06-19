@@ -86,7 +86,8 @@ def load(fname,
          samples=-1,
          with_background=True,
          with_cat2id=False,
-         use_default_label=True):
+         use_default_label=True,
+         cname2cid=None):
     """ Load data records from 'fnames'
 
     Args:
@@ -97,6 +98,7 @@ def load(fname,
                                 default True.
         with_cat2id (bool): whether return cname2cid info out
         use_default_label (bool): whether use the default mapping of label to id
+        cname2cid (dict): the mapping of category name to id
 
     Returns:
         list of loaded records whose structure is:
@@ -120,8 +122,9 @@ def load(fname,
         records, cname2cid = coco_loader.load(fname, samples, with_background)
     elif os.path.isfile(fname):
         from . import voc_loader
-        if use_default_label is None:
-            records, cname2cid = voc_loader.get_roidb(fname, samples)
+
+        if use_default_label is None or cname2cid is not None:
+            records, cname2cid = voc_loader.get_roidb(fname, samples, cname2cid)
         else:
             records, cname2cid = voc_loader.load(fname, samples,
                                                  use_default_label)

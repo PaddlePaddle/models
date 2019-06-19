@@ -44,6 +44,7 @@ def build_source(config):
     """
     if 'data_cf' in config:
         data_cf = {k.lower(): v for k, v in config['data_cf'].items()}
+        data_cf['cname2cid'] = config['cname2cid']
     else:
         data_cf = config
     # if DATASET_DIR set and not exists, search dataset under ~/.paddle/dataset
@@ -52,13 +53,14 @@ def build_source(config):
     if 'dataset_dir' in data_cf:
         dataset_dir = get_dataset_path(data_cf['dataset_dir'])
         if 'anno_file' in data_cf:
-            data_cf['anno_file'] = os.path.join(dataset_dir, data_cf['anno_file'])
+            data_cf['anno_file'] = os.path.join(dataset_dir,
+                                                data_cf['anno_file'])
         data_cf['image_dir'] = os.path.join(dataset_dir, data_cf['image_dir'])
         del data_cf['dataset_dir']
         if data_cf is not config:
             if 'anno_file' in data_cf:
-                config['data_cf']['ANNO_FILE'] = os.path.join(dataset_dir,
-                                                              data_cf['anno_file'])
+                config['data_cf']['ANNO_FILE'] = os.path.join(
+                    dataset_dir, data_cf['anno_file'])
             config['data_cf']['IMAGE_DIR'] = os.path.join(dataset_dir,
                                                           data_cf['image_dir'])
     args = copy.deepcopy(data_cf)
