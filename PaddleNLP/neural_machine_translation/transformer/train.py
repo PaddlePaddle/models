@@ -259,12 +259,7 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
     return data_input_dict, np.asarray([num_token], dtype="float32")
 
 
-def prepare_data_generator(args,
-                           is_test,
-                           count,
-                           pyreader,
-                           py_reader_provider_wrapper,
-                           place=None):
+def prepare_data_generator(args, is_test, count, pyreader):
     """
     Data generator wrapper for DataReader. If use py_reader, set the data
     provider for py_reader
@@ -325,7 +320,7 @@ def prepare_data_generator(args,
         data_reader = split(data_reader, count)
     if args.use_py_reader:
         pyreader.decorate_tensor_provider(
-            py_reader_provider_wrapper(data_reader, place))
+            py_reader_provider_wrapper(data_reader))
         data_reader = None
     else:  # Data generator for multi-devices
         data_reader = stack(data_reader, count)
@@ -363,7 +358,7 @@ def prepare_feed_dict_list(data_generator, init_flag, count):
     return feed_dict_list if len(feed_dict_list) == count else None
 
 
-def py_reader_provider_wrapper(data_reader, place):
+def py_reader_provider_wrapper(data_reader):
     """
     Data provider needed by fluid.layers.py_reader.
     """
@@ -376,7 +371,8 @@ def py_reader_provider_wrapper(data_reader, place):
                 data, data_input_names, ModelHyperParams.eos_idx,
                 ModelHyperParams.eos_idx, ModelHyperParams.n_head,
                 ModelHyperParams.d_model)
-            yield [data_input_dict[item] for item in data_input_names]
+            total_dict = dict(data_input_dict.items())
+            yield [total_dict[item] for item in data_input_names]
 
     return py_reader_provider
 
@@ -411,11 +407,7 @@ def test_context(exe, train_exe, dev_count):
                 is_test=True)
     test_prog = test_prog.clone(for_test=True)
     test_data = prepare_data_generator(
-        args,
-        is_test=True,
-        count=dev_count,
-        pyreader=pyreader,
-        py_reader_provider_wrapper=py_reader_provider_wrapper)
+        args, is_test=True, count=dev_count, pyreader=pyreader)
 
     exe.run(startup_prog)  # to init pyreader for testing
     if TrainTaskConfig.ckpt_path:
@@ -486,21 +478,23 @@ def train_loop(exe,
 
     logging.info("begin reader")
     train_data = prepare_data_generator(
-        args,
-        is_test=False,
-        count=dev_count,
-        pyreader=pyreader,
-        py_reader_provider_wrapper=py_reader_provider_wrapper)
+        args, is_test=False, count=dev_count, pyreader=pyreader)
 
     # For faster executor
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.use_experimental_executor = True
     exec_strategy.num_iteration_per_drop_scope = int(args.fetch_steps)
     build_strategy = fluid.BuildStrategy()
+    build_strategy.memory_optimize = False
+    build_strategy.enable_inplace = True
+
+    sum_cost.persistable = True
+    token_num.persistable = True
     # Since the token number differs among devices, customize gradient scale to
     # use token average cost among multi-devices. and the gradient scale is
     # `1 / token_number` for average cost.
     # build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
+    build_strategy.fuse_all_optimizer_ops = True
 
     logging.info("begin executor")
     train_exe = fluid.ParallelExecutor(
@@ -632,7 +626,8 @@ def train(args):
         place = fluid.CPUPlace()
         dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
     else:
-        place = fluid.CUDAPlace(0)
+        gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+        place = fluid.CUDAPlace(gpu_id)
         dev_count = fluid.core.get_cuda_device_count()
 
     exe = fluid.Executor(place)
