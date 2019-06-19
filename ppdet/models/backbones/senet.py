@@ -62,8 +62,8 @@ class SENet(ResNeXt):
         else:
             self.stage_filters = [256, 512, 1024, 2048]
         self.reduction_ratio = 16
-        self._model_type = 'SENet'
-        self._senet_pretrained_weight_fix = True
+        self._c1_out_chan_num = 128
+        self._model_type = 'SEResNeXt'
 
     def _squeeze_excitation(self, input, num_channels, name=None):
         pool = fluid.layers.pool2d(

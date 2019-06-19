@@ -75,6 +75,7 @@ class ResNet(object):
             152: ([3, 8, 36, 3], self.bottleneck)
         }
         self.stage_filters = [64, 128, 256, 512]
+        self._c1_out_chan_num = 64
 
     def _conv_norm(self,
                    input,
@@ -101,7 +102,7 @@ class ResNet(object):
         else:
             bn_name = "bn" + name[3:]
         # the naming rule is same as pretrained weight
-        if self._model_type == 'SENet':
+        if self._model_type == 'SEResNeXt':
             bn_name = "bn_" + name
 
         lr = 0. if self.freeze_bn else 1.
@@ -148,7 +149,7 @@ class ResNet(object):
         max_pooling_in_short_cut = self.variant == 'd'
         ch_in = input.shape[1]
         # the naming rule is same as pretrained weight
-        if self._model_type == 'SENet':
+        if self._model_type == 'SEResNeXt':
             name = 'conv' + name + '_prj'
 
         if ch_in != ch_out or stride != 1 or is_first:
@@ -261,23 +262,19 @@ class ResNet(object):
         return res_out
 
     def c1_stage(self, input):
-        # FIXME hard code for now
-        if getattr(self, '_squeeze_excitation', None) is not None:
-            num_out_chan = 128
-        else:
-            num_out_chan = 64
+        out_chan = self._c1_out_chan_num
         if self.variant in ['c', 'd']:
             conv_def = [
-                [num_out_chan / 2, 3, 2, "conv1_1"],
-                [num_out_chan / 2, 3, 1, "conv1_2"],
-                [num_out_chan, 3, 1, "conv1_3"],
+                [out_chan / 2, 3, 2, "conv1_1"],
+                [out_chan / 2, 3, 1, "conv1_2"],
+                [out_chan, 3, 1, "conv1_3"],
             ]
         else:
             conv1_name = "conv1"
             # the naming rule is same as pretrained weight
             if self._model_type == 'ResNext':
                 conv1_name = "res_conv1"
-            conv_def = [[num_out_chan, 7, 2, conv1_name]]
+            conv_def = [[out_chan, 7, 2, conv1_name]]
 
         for (c, k, s, _name) in conv_def:
             input = self._conv_norm(
