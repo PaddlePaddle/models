@@ -117,7 +117,7 @@ def main():
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
-    sync_bn = False if 'sync_bn' not in cfg else cfg['sync_bn']
+    sync_bn = getattr(model.backbone, 'norm_type') == 'sync_bn'
     build_strategy.sync_batch_norm = sync_bn
     train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
@@ -128,7 +128,7 @@ def main():
 
     exe.run(startup_prog)
 
-    freeze_bn = getattr(model.backbone, 'freeze_bn', False)
+    freeze_bn = getattr(model.backbone, 'norm_type') == 'freeze_bn'
     if args.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, args.resume_checkpoint)
     elif cfg['pretrain_weights'] and freeze_bn and args.fusebn:
