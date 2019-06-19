@@ -48,7 +48,7 @@ class ResNeXt(ResNet):
                  group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='a',
                  feature_maps=[2, 3, 4, 5]):
@@ -78,7 +78,7 @@ class ResNeXtC5(ResNeXt):
                  group_width=4,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='a',
                  feature_maps=[5]):

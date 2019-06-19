@@ -49,7 +49,7 @@ class ResNet(object):
                  depth=50,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='a',
                  feature_maps=[2, 3, 4, 5]):
@@ -326,7 +326,7 @@ class ResNetC5(ResNet):
                  depth=50,
                  freeze_at=2,
                  freeze_bn=True,
-                 affine_channel=False,
+                 affine_channel=True,
                  bn_decay=True,
                  variant='a',
                  feature_maps=[5]):
