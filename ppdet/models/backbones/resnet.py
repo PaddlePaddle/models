@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,10 +18,7 @@ from __future__ import print_function
 
 from collections import OrderedDict
 
-import math
-import six
-
-import paddle.fluid as fluid
+from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.framework import Variable
 from paddle.fluid.regularizer import L2Decay
@@ -233,7 +230,7 @@ class ResNet(object):
         """
         Args:
             input (Variable): input variable.
-            stage_num (int): the stage number, should be 0, 1, 2, 3
+            stage_num (int): the stage number, should be 2, 3, 4, 5
 
         Returns:
             The last variable in endpoint-th stage.
