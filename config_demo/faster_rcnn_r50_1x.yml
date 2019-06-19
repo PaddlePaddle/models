@@ -135,8 +135,9 @@ FasterRCNNTrainFeed:
   # batch size per device
   batch_size: 1
   dataset:
-    annotation: COCO17/annotations/instances_val2017.json
-    image_dir: COCO17/val2017
+    # TODO: change dataset dir
+    annotation: COCO17/annotations/instances_train2017.json
+    image_dir: COCO17/train2017
   drop_last: false
   num_workers: 2
 

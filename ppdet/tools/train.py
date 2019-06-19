@@ -48,7 +48,7 @@ def main():
     if 'architecture' in cfg:
         main_arch = cfg['architecture']
     else:
-        raise ValueError("Not give the architecture in config file.")
+        raise ValueError("The architecture is not specified in config file.")
 
     merge_config(args.cli_config)
 
@@ -100,9 +100,7 @@ def main():
 
     exe.run(startup_prog)
 
-    sub_cfg = cfg[cfg[cfg['architecture']]['backbone']]
-    freeze_bn = False if 'freeze_bn' not in sub_cfg else sub_cfg['freeze_bn']
-    print(freeze_bn)
+    freeze_bn = getattr(model.backbone, 'freeze_bn', False)
     if args.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, args.resume_checkpoint)
     elif cfg['pretrain_weights'] and freeze_bn and args.fusebn:
