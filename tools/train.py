@@ -117,7 +117,7 @@ def main():
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
-    sync_bn = getattr(model.backbone, 'norm_type') == 'sync_bn'
+    sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     build_strategy.sync_batch_norm = sync_bn
     train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
