@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,11 +16,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import numpy as np
-
-import logging
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
+import os
+import multiprocessing
 
 import paddle.fluid as fluid
 
@@ -31,6 +28,9 @@ from ppdet.models.model_inputs import create_feeds
 from ppdet.dataset.data_feed import create_reader
 from ppdet.core.workspace import load_config, merge_config, create
 
+import logging
+FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
+logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 
@@ -44,7 +44,7 @@ def main():
     if 'architecture' in cfg:
         main_arch = cfg['architecture']
     else:
-        raise ValueError("The architecture is not specified in config file.")
+        raise ValueError("'architecture' not specified in config file.")
 
     merge_config(args.cli_config)
 
@@ -94,8 +94,10 @@ def main():
     if cfg['weights']:
         checkpoint.load_checkpoint(exe, eval_prog, cfg['weights'])
 
-    extra_keys = ['im_info', 'im_id', 'im_shape'] if cfg['metric'] == 'COCO' \
-                 else []
+    extra_keys = []
+    if cfg['metric'] == 'COCO':
+        extra_keys = ['im_info', 'im_id', 'im_shape']
+
     keys, values = parse_fetches(fetches, eval_prog, extra_keys)
 
     # 6. Run
