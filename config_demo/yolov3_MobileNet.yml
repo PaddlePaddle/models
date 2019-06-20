@@ -74,10 +74,7 @@ YoloTrainFeed:
   - gt_box
   - gt_label
   - gt_score
-  image_shape:
-  - 3
-  - 608
-  - 608
+  image_shape: [3, 608, 608]
   mixup_epoch: 250
   num_max_boxes: 50
   num_workers: 8
@@ -118,14 +115,8 @@ YoloTrainFeed:
   - !NormalizeImage
     is_channel_first: false
     is_scale: true
-    mean:
-    - 0.485
-    - 0.456
-    - 0.406
-    std:
-    - 0.229
-    - 0.224
-    - 0.225
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
   - !Permute
     channel_first: true
     to_bgr: false
@@ -144,10 +135,7 @@ YoloEvalFeed:
   - image
   - im_shape
   - im_id
-  image_shape:
-  - 3
-  - 608
-  - 608
+  image_shape: [3, 608, 608]
   num_max_boxes: 50
   num_workers: 8
   sample_transforms:
@@ -156,20 +144,13 @@ YoloEvalFeed:
     with_mixup: false
   - !ResizeImage
     interp: 2
-    max_size: 0
     target_size: 608
     use_cv2: true
   - !NormalizeImage
     is_channel_first: false
     is_scale: true
-    mean:
-    - 0.485
-    - 0.456
-    - 0.406
-    std:
-    - 0.229
-    - 0.224
-    - 0.225
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
   - !Permute
     channel_first: true
     to_bgr: false
@@ -190,10 +171,7 @@ YoloTestFeed:
   - image
   - im_shape
   - im_id
-  image_shape:
-  - 3
-  - 608
-  - 608
+  image_shape: [3, 608, 608]
   num_max_boxes: 50
   num_workers: 8
   sample_transforms:
@@ -202,20 +180,13 @@ YoloTestFeed:
     with_mixup: false
   - !ResizeImage
     interp: 2
-    max_size: 0
     target_size: 608
     use_cv2: true
   - !NormalizeImage
     is_channel_first: false
     is_scale: true
-    mean:
-    - 0.485
-    - 0.456
-    - 0.406
-    std:
-    - 0.229
-    - 0.224
-    - 0.225
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
   - !Permute
     channel_first: true
     to_bgr: false
