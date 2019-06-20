@@ -24,20 +24,19 @@ import multiprocessing
 import numpy as np
 
 import logging
+FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
+logging.basicConfig(level=logging.INFO, format=FORMAT)
+
 
 from paddle import fluid
 
-from ppdet.tools.eval_utils import parse_fetches
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import parse_args
 from ppdet.utils.visualizer import visualize_results
 import ppdet.utils.checkpoint as checkpoint
-
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data_feed import make_reader
-
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
+from tools.eval_utils import parse_fetches
 
 logger = logging.getLogger(__name__)
 
