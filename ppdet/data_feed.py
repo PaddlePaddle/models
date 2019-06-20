@@ -243,6 +243,7 @@ class DataFeed(object):
                  with_background=True,
                  test_file=None,
                  num_workers=2,
+                 bufsize=10,
                  use_process=False):
         super(DataFeed, self).__init__()
         self.fields = fields
@@ -256,6 +257,7 @@ class DataFeed(object):
         self.with_background = with_background
         self.test_file = test_file
         self.num_workers = num_workers
+        self.bufsize = bufsize
         self.use_process = use_process
         self.dataset = dataset
         if isinstance(dataset, dict):
@@ -278,12 +280,15 @@ class TrainFeed(DataFeed):
                  samples=-1,
                  drop_last=False,
                  with_background=True,
-                 num_workers=2):
+                 num_workers=2,
+                 bufsize=10,
+                 use_process=True):
         super(TrainFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle, samples=samples,
             drop_last=drop_last, with_background=with_background,
-            num_workers=num_workers)
+            num_workers=num_workers, bufsize=bufsize,
+            use_process=use_process)
 
 
 @register
@@ -635,19 +640,20 @@ class YoloTrainFeed(DataFeed):
                  drop_last=True,
                  with_background=False,
                  num_workers=8,
+                 bufsize=128,
+                 use_process=True,
                  num_max_boxes=50,
-                 mixup_epoch=250,
-                 use_process=True):
+                 mixup_epoch=250):
         sample_transforms.append(ArrangeYOLO())
         super(YoloTrainFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle, samples=samples,
             drop_last=drop_last,  with_background=with_background,
-            num_workers=num_workers, use_process=use_process)
+            num_workers=num_workers, bufsize=bufsize,
+            use_process=use_process)
         self.num_max_boxes = num_max_boxes
         self.mixup_epoch = mixup_epoch
         self.mode = 'TRAIN'
-        self.bufsize = 128
 
 
 @register
