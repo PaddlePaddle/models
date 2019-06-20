@@ -5,7 +5,7 @@ use_gpu: yes
 max_iters: 180000
 log_smooth_window: 20
 save_dir: output
-snapshot_iter: 20
+snapshot_iter: 10000
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
 
 FasterRCNN:

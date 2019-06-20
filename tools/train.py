@@ -89,10 +89,6 @@ def main():
     train_reader = create_reader(train_feed, cfg['max_iters'] * devices_num)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
-    print(train_reader)
-    for data in next(train_reader()):
-        print(data)
-
     # parse train fetches
     train_keys, train_values = parse_fetches(train_fetches)
     train_values.append(lr)
