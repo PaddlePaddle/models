@@ -129,9 +129,9 @@ MaskRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    #dataset_dir: coco/
-    annotation: COCO17/annotations/instances_val2017.json
-    image_dir: COCO17/val2017
+    dataset_dir: coco/
+    annotation: annotations/instances_train2017.json
+    image_dir: train2017
   use_padded_im_info: False
 
 MaskRCNNEvalFeed:
