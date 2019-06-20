@@ -4,11 +4,10 @@ eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 90000
 use_gpu: yes
-# TODO
-pretrain_weights: ResNet50_pretrained
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
 weights: output/Retinanet/model_final
 log_smooth_window: 20
-snapshot_iter: 1000
+snapshot_iter: 10000
 metric: COCO
 save_dir: output
 
@@ -22,10 +21,7 @@ ResNet:
   freeze_norm: true
   norm_decay: 0.0001
   depth: 50
-  feature_maps:
-  - 3
-  - 4
-  - 5
+  feature_maps: [3, 4, 5]
   freeze_at: 2
   variant: b
 
@@ -33,10 +29,7 @@ FPN:
   max_level: 7
   min_level: 3
   num_chan: 256
-  spatial_scale:
-  - 0.03125
-  - 0.0625
-  - 0.125
+  spatial_scale: [0.03125, 0.0625, 0.125]
   has_extra_convs: true
 
 RetinaHead:
@@ -48,34 +41,28 @@ RetinaHead:
   base_scale: 4
   num_scales_per_octave: 3
   num_classes: 81
-  aspect_ratios:
-  - 1.0
-  - 2.0
-  - 0.5
-  variance:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
-  positive_overlap: 0.5
-  negative_overlap: 0.4
+  anchor_generator:
+    aspect_ratios: [1.0, 2.0, 0.5]
+    variance: [1.0, 1.0, 1.0, 1.0]
+  retina_target_assign:
+    positive_overlap: 0.5
+    negative_overlap: 0.4
   gamma: 2.0
   alpha: 0.25
   sigma: 3.0151134457776365
-  score_thresh: 0.05
-  nms_thresh: 0.3
-  pre_nms_top_n: 1000
-  detections_per_im: 100
-  nms_eta: 1.0
+  retina_detection_output:
+    score_thresh: 0.05
+    nms_thresh: 0.3
+    pre_nms_top_n: 1000
+    detections_per_im: 100
+    nms_eta: 1.0
 
 LearningRate:
   base_lr: 0.01
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
-    milestones:
-    - 6000
-    - 8000
+    milestones: [60000, 80000]
     values: null
   - !LinearWarmup
     start_factor: 0.3333333333333333
@@ -99,14 +86,7 @@ FasterRCNNTrainFeed:
     dataset_dir: coco17
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  drop_last: false
-  fields:
-  - image
-  - im_info
-  - im_id
-  - gt_box
-  - gt_label
-  - is_crowd
+  #TODO(check the w,h)
   image_shape:
   - 3
   - 1333
@@ -156,6 +136,7 @@ FasterRCNNEvalFeed:
   - image
   - im_info
   - im_id
+  #TODO(check the w,h)
   image_shape:
   - 3
   - 800
@@ -205,6 +186,7 @@ FasterRCNNTestFeed:
   - image
   - im_info
   - im_id
+  #TODO(check the w,h)
   image_shape:
   - 3
   - 800

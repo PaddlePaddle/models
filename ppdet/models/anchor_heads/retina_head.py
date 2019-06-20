@@ -15,7 +15,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
 
 import numpy as np
 
@@ -23,22 +22,74 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Constant
 from paddle.fluid.regularizer import L2Decay
+from ppdet.models.anchor_heads.rpn_head import AnchorGenerator
 
-from ppdet.core.workspace import register
+from ppdet.core.workspace import register, serializable
 
-__all__ = ['RetinaHead']
+__all__ = ['RetinaTargetAssign', 'RetinaDetectionOutput', 'RetinaHead']
+
+
+@register
+@serializable
+class RetinaTargetAssign(object):
+    __op__ = fluid.layers.retinanet_target_assign
+    __append_doc__ = True
+
+    def __init__(self, positive_overlap=0.5, negative_overlap=0.4):
+        super(RetinaTargetAssign, self).__init__()
+        self.positive_overlap = positive_overlap
+        self.negative_overlap = negative_overlap
+
+
+@register
+@serializable
+class RetinaDetectionOutput(object):
+    __op__ = fluid.layers.retinanet_detection_output
+    __append_doc__ = True
+
+    def __init__(self,
+                 score_thresh=0.05,
+                 nms_thresh=0.3,
+                 pre_nms_top_n=1000,
+                 detections_per_im=100,
+                 nms_eta=1.0):
+        super(RetinaDetectionOutput, self).__init__()
+        self.score_thresh = score_thresh
+        self.nms_thresh = nms_thresh
+        self.pre_nms_top_n = pre_nms_top_n
+        self.detections_per_im = detections_per_im
+        self.nms_eta = nms_eta
 
 
 @register
 class RetinaHead(object):
     """
-    RetinaHead class
-    Args:
-    """
+    Retina Head
 
-    #TODO(luoqianhui): give more description
+    Args:
+        anchor_generator (object): `AnchorGenerator` instance
+        retina_target_assign (object): `RetinaTargetAssign` instance
+        retina_detection_output (object): `RetinaDetectionOutput` instance
+        num_convs_per_octave (int): The number of convolution layers if each octave
+        num_chan (int): Number of octave output channels
+        max_level (int): Highest level of FPN output
+        min_level (int): Lowest level of FPN output
+        prior_prob (float): Used to set the bias init for the class prediction layer
+        base_scale (int): Anchors are generated based on this scale
+        num_scales_per_octave (int): Number of anchor scales per octave
+        num_classes (int): Number of classes
+        gamma (float): The parameter in focal loss
+        alpha (float): The parameter in focal loss
+        sigma (float): The parameter in smooth l1 loss
+    """
+    __inject__ = [
+        'anchor_generator', 'retina_target_assign', 'retina_detection_output'
+    ]
 
     def __init__(self,
+                 anchor_generator=AnchorGenerator().__dict__,
+                 retina_target_assign=RetinaTargetAssign().__dict__,
+                 retina_detection_output=RetinaDetectionOutput().__dict__,
                  num_convs_per_octave=4,
                  num_chan=256,
                  max_level=7,
@@ -46,19 +97,13 @@ class RetinaHead(object):
                  prior_prob=0.01,
                  base_scale=4,
                  num_scales_per_octave=3,
-                 num_classes=8,
-                 aspect_ratios=[1.0, 2.0, 0.5],
-                 variance=[1.0, 1.0, 1.0, 1.0],
-                 positive_overlap=0.5,
-                 negative_overlap=0.4,
+                 num_classes=81,
                  gamma=2.0,
                  alpha=0.25,
-                 sigma=3.0151134457776365,
-                 score_thresh=0.05,
-                 nms_thresh=0.3,
-                 pre_nms_top_n=1000,
-                 detections_per_im=100,
-                 nms_eta=1.0):
+                 sigma=3.0151134457776365):
+        self.anchor_generator = anchor_generator
+        self.retina_target_assign = retina_target_assign
+        self.retina_detection_output = retina_detection_output
         self.num_convs_per_octave = num_convs_per_octave
         self.num_chan = num_chan
         self.max_level = max_level
@@ -67,18 +112,17 @@ class RetinaHead(object):
         self.base_scale = base_scale
         self.num_scales_per_octave = num_scales_per_octave
         self.num_classes = num_classes
-        self.aspect_ratios = aspect_ratios
-        self.variance = variance
-        self.positive_overlap = positive_overlap
-        self.negative_overlap = negative_overlap
         self.gamma = gamma
         self.alpha = alpha
         self.sigma = sigma
-        self.score_thresh = score_thresh
-        self.nms_thresh = nms_thresh
-        self.pre_nms_top_n = pre_nms_top_n
-        self.detections_per_im = detections_per_im
-        self.nms_eta = nms_eta
+        if isinstance(anchor_generator, dict):
+            self.anchor_generator = AnchorGenerator(**anchor_generator)
+        if isinstance(retina_target_assign, dict):
+            self.retina_target_assign = RetinaTargetAssign(
+                **retina_target_assign)
+        if isinstance(retina_detection_output, dict):
+            self.retina_detection_output = RetinaDetectionOutput(
+                **retina_detection_output)
 
     def _class_subnet(self, body_feats, spatial_scale):
         """
@@ -123,7 +167,8 @@ class RetinaHead(object):
             # class prediction
             cls_name = 'retnet_cls_pred_fpn{}'.format(lvl)
             cls_share_name = 'retnet_cls_pred_fpn{}'.format(self.min_level)
-            num_anchors = self.num_scales_per_octave * len(self.aspect_ratios)
+            num_anchors = self.num_scales_per_octave * len(
+                self.anchor_generator.aspect_ratios)
             cls_dim = num_anchors * (self.num_classes - 1)
             # bias initialization: b = -log((1 - pai) / pai)
             bias_init = float(-np.log((1 - self.prior_prob) / self.prior_prob))
@@ -192,7 +237,8 @@ class RetinaHead(object):
             # bbox prediction
             bbox_name = 'retnet_bbox_pred_fpn{}'.format(lvl)
             bbox_share_name = 'retnet_bbox_pred_fpn{}'.format(self.min_level)
-            num_anchors = self.num_scales_per_octave * len(self.aspect_ratios)
+            num_anchors = self.num_scales_per_octave * len(
+                self.anchor_generator.aspect_ratios)
             bbox_dim = num_anchors * 4
             out_bbox = fluid.layers.conv2d(
                 input=subnet_blob,
@@ -240,11 +286,10 @@ class RetinaHead(object):
                         float(self.num_scales_per_octave))) * self.base_scale
                 anchor_sizes.append(anchor_size)
             fpn_name = fpn_name_list[self.max_level - lvl]
-            anchor, anchor_var = fluid.layers.anchor_generator(
+            anchor, anchor_var = self.anchor_generator(
                 input=body_feats[fpn_name],
                 anchor_sizes=anchor_sizes,
-                aspect_ratios=self.aspect_ratios,
-                variance=self.variance,
+                aspect_ratios=self.anchor_generator.aspect_ratios,
                 stride=[stride, stride])
             anchor_list.append(anchor)
             anchor_var_list.append(anchor_var)
@@ -327,7 +372,7 @@ class RetinaHead(object):
         for i in range(self.max_level - self.min_level + 1):
             cls_pred_reshape_list[i] = fluid.layers.sigmoid(
                 cls_pred_reshape_list[i])
-        pred_result = fluid.layers.retinanet_detection_output(
+        pred_result = self.retina_detection_output(
             bboxes=bbox_pred_reshape_list,
             scores=cls_pred_reshape_list,
             anchors=anchor_reshape_list,
@@ -368,7 +413,7 @@ class RetinaHead(object):
         anchor_input = fluid.layers.concat(anchor_reshape_list, axis=0)
         anchor_var_input = fluid.layers.concat(anchor_var_reshape_list, axis=0)
         score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight, fg_num = \
-            fluid.layers.retinanet_target_assign(
+            self.retina_target_assign(
                 bbox_pred=bbox_pred_input,
                 cls_logits=cls_pred_input,
                 anchor_box=anchor_input,
@@ -377,9 +422,7 @@ class RetinaHead(object):
                 gt_labels=gt_label,
                 is_crowd=is_crowd,
                 im_info=im_info,
-                num_classes=self.num_classes - 1,
-                positive_overlap=self.positive_overlap,
-                negative_overlap=self.negative_overlap)
+                num_classes=self.num_classes - 1)
         fg_num = fluid.layers.reduce_sum(fg_num, name='fg_num')
         loss_cls = fluid.layers.sigmoid_focal_loss(
             x=score_pred,

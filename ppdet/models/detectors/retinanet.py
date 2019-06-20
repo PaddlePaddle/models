@@ -26,7 +26,7 @@ __all__ = ['Retinanet']
 
 @register
 class Retinanet(object):
-    r"""
+    """
     Retinanet architecture, see https://arxiv.org/abs/1708.02002
     Args:
         backbone (object): backbone instance
