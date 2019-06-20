@@ -2,8 +2,9 @@ architecture: MaskRCNN
 train_feed: MaskRCNNTrainFeed
 test_feed: MaskRCNNTestFeed
 max_iters: 180000
-pretrain_weights: /paddle/baidu/paddle/ppdetection/ResNet50_pretrained/ 
+pretrain_weights: ResNet50_pretrained/ 
 log_smooth_window: 20
+snapshot_iter: 10000
 save_dir: output
 use_gpu: no
 
@@ -73,14 +74,21 @@ FPNRPNHead:
     post_nms_top_n: 2000
     pre_nms_top_n: 2000
 
-FPNROIAlign:
+FPNRoIAlign:
   canconical_level: 4
   canonical_size: 224
   max_level: 5
   min_level: 2
-  sampling_ratio: 0
+  sampling_ratio: 2
   resolution: 7
   mask_resolution: 14
+
+MaskHead:
+  dilation: 1
+  num_chan_reduced: 256
+  num_classes: 81
+  num_convs: 4
+  resolution: 28
 
 BBoxAssigner:
   batch_size_per_im: 512
@@ -147,8 +155,8 @@ MaskRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    annotation: /paddle/models/fluid/faster_rcnn/data/COCO17/annotations/instances_val2017_debug_139.json
-    image_dir: /paddle/models/fluid/faster_rcnn/data/COCO17/val2017
+    annotation: coco/annotations/instances_val2017_debug_139.json
+    image_dir: coco/val2017
   drop_last: false
   fields:
   - image
