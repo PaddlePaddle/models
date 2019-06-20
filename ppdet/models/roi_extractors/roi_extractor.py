@@ -83,7 +83,7 @@ class FPNRoIAlign(object):
         self.max_level = max_level
         self.canconical_level = canconical_level
         self.canonical_size = canonical_size
-        self.resolution = resolution
+        self.box_resolution = box_resolution
         self.mask_resolution = mask_resolution
 
     def __call__(self, head_inputs, rois, spatial_scale, is_mask=False):

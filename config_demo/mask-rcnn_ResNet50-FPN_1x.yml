@@ -106,6 +106,9 @@ BBoxAssigner:
   num_classes: 81
   shuffle_before_sample: true
 
+MaskAssigner:
+  resolution: 28
+
 BBoxHead:
   box_coder:
     axis: 1
@@ -168,7 +171,7 @@ MaskRCNNEvalFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: coco
+    dataset_dir: coco/
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   use_padded_im_info: True

@@ -530,7 +530,7 @@ class MaskRCNNEvalFeed(DataFeed):
                  use_process=False,
                  use_padded_im_info=True):
         sample_transforms.append(ArrangeTestRCNN())
-        super(MaskRCNNevalFeed, self).__init__(
+        super(MaskRCNNEvalFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle, samples=samples,
             drop_last=drop_last, test_file=test_file, 
@@ -547,7 +547,7 @@ class MaskRCNNTestFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
     def __init__(self,
-                 dataset=CocoDataSet(COCO_VAL_ANNOTATION,
+                 dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 1333, 800],
@@ -568,13 +568,15 @@ class MaskRCNNTestFeed(DataFeed):
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
-        sample_transforms.append(ArrangeTestRCNN(is_mask=True))
+        sample_transforms.append(ArrangeTestRCNN())
+        if isinstance(dataset, dict):
+            dataset = SimpleDataSet(**dataset) 
         super(MaskRCNNTestFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle, samples=samples,
             drop_last=drop_last, test_file=test_file, 
             num_workers=num_workers, use_process=use_process)
-        self.mode = 'Test'
+        self.mode = 'TEST'
         # in rcnn models, im_shape is in format of [N, 3] for box clip
         for var in feed_var_def:
             if var['name'] == 'im_shape':
