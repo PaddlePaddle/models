@@ -70,7 +70,11 @@ class Reader(object):
 
         trans_conf = {k.lower(): v for k, v in self._trans_conf[which].items()}
         need_keys = {
-            'is_padding', 'coarsest_stride', 'random_shapes', 'multi_scales'
+            'is_padding',
+            'coarsest_stride',
+            'random_shapes',
+            'multi_scales',
+            'use_padded_im_info',
         }
         bm_config = {
             key: value

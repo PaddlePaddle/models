@@ -111,7 +111,9 @@ class DecodeImage(BaseOperator):
             sample['h'] = im.shape[0]
         if 'w' not in sample:
             sample['w'] = im.shape[1]
-
+        # make default im_info with [h, w, 1]
+        sample['im_info'] = np.array(
+            [im.shape[0], im.shape[1], 1.], dtype=np.float32)
         # decode mixup image
         if self.with_mixup and 'mixup' in sample:
             self.__call__(sample['mixup'], context)

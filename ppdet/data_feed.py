@@ -28,9 +28,9 @@ from ppdet.utils.download import get_dataset_path
 from ppdet.dataset.reader import Reader
 # XXX these are for triggering the decorator
 from ppdet.dataset.transform.operator import (
-    DecodeImage, MixupImage, NormalizeBox, NormalizeImage,
-    RandomDistort, RandomFlipImage, RandomInterpImage,
-    ResizeImage, ExpandImage, CropImage, Permute)
+    DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
+    RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
+    Permute)
 from ppdet.dataset.transform.arrange_sample import (
     ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeTestSSD,
     ArrangeYOLO, ArrangeTestYOLO)
@@ -41,7 +41,7 @@ __all__ = ['PadBatch', 'MultiScale', 'RandomShape',
            'FasterRCNNTestFeed', 'MaskRCNNTestFeed',
            'SSDTrainFeed', 'SSDEvalFeed', 'SSDTestFeed',
            'YolorainFeed', 'YoloEvalFeed', 'YoloTestFeed',
-           'make_reader']
+           'make_reader',]
 
 feed_var_def = [
     {
@@ -355,13 +355,13 @@ class FasterRCNNTrainFeed(DataFeed):
                  ],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True),
-                     RandomFlipImage(prob=0.5),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
-                     ResizeImage(target_size=800, max_size=1333, interp=1),
+                     DecodeImage(to_rgb=True), RandomFlipImage(prob=0.5),
+                     NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False), ResizeImage(
+                             target_size=800, max_size=1333, interp=1),
                      Permute(to_bgr=False)
                  ],
                  batch_transforms=[PadBatch()],
@@ -398,14 +398,15 @@ class MaskRCNNTrainFeed(DataFeed):
                  ],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True),
-                     RandomFlipImage(prob=0.5, is_mask_flip=True),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
-                     ResizeImage(target_size=800, max_size=1333, interp=1),
-                     Permute(to_bgr=False)
+                     DecodeImage(to_rgb=True), RandomFlipImage(
+                         prob=0.5, is_mask_flip=True), NormalizeImage(
+                             mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225],
+                             is_scale=True,
+                             is_channel_first=False), ResizeImage(
+                                 target_size=800, max_size=1333, 
+                                 interp=1, use_cv2=True),
+                     Permute(to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
@@ -413,7 +414,8 @@ class MaskRCNNTrainFeed(DataFeed):
                  samples=-1,
                  drop_last=False,
                  num_workers=2,
-                 use_process=False):
+                 use_process=False,
+                 use_padded_im_info=False):
         sample_transforms.append(ArrangeRCNN(is_mask=True))
         super(MaskRCNNTrainFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
@@ -424,21 +426,21 @@ class MaskRCNNTrainFeed(DataFeed):
 
 
 @register
-class FasterRCNNTestFeed(DataFeed):
+class FasterRCNNEvalFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_info', 'im_id'],
+                 fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
-                     ResizeImage(target_size=800, max_size=1333, interp=1),
+                     DecodeImage(to_rgb=True), NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False), ResizeImage(
+                             target_size=800, max_size=1333, interp=1),
                      Permute(to_bgr=False)
                  ],
                  batch_transforms=[PadBatch()],
@@ -449,30 +451,33 @@ class FasterRCNNTestFeed(DataFeed):
                  test_file=None,
                  num_workers=2):
         sample_transforms.append(ArrangeTestRCNN())
-        super(FasterRCNNTestFeed, self).__init__(
+        super(FasterRCNNEvalFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle, samples=samples,
             drop_last=drop_last, test_file=test_file, 
             num_workers=num_workers)
         self.mode = 'VAL'
-
+        # in rcnn models, im_shape is in format of [N, 3] for box clip
+        for var in feed_var_def:
+            if var['name'] == 'im_shape':
+                var['shape'] = [3]
+                var['dtype'] = 'float32'
 
 @register
-class MaskRCNNTestFeed(DataFeed):
+class FasterRCNNTestFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
     def __init__(self,
-                 dataset=CocoDataSet(COCO_VAL_ANNOTATION,
+                 dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_info', 'im_id'],
+                 fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
-                     ResizeImage(target_size=800, max_size=1333, interp=1),
+                     DecodeImage(to_rgb=True), NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False),
                      Permute(to_bgr=False)
                  ],
                  batch_transforms=[PadBatch()],
@@ -481,15 +486,107 @@ class MaskRCNNTestFeed(DataFeed):
                  samples=-1,
                  drop_last=False,
                  test_file=None,
+                 num_workers=2):
+        sample_transforms.append(ArrangeTestRCNN())
+        if isinstance(dataset, dict):
+            dataset = SimpleDataSet(**dataset)
+        super(FasterRCNNTestFeed, self).__init__(
+            dataset, fields, image_shape, sample_transforms, batch_transforms,
+            batch_size=batch_size, shuffle=shuffle, samples=samples,
+            drop_last=drop_last, test_file=test_file, 
+            num_workers=num_workers)
+        self.mode = 'TEST'
+        # in rcnn models, im_shape is in format of [N, 3] for box clip
+        for var in feed_var_def:
+            if var['name'] == 'im_shape':
+                var['shape'] = [3]
+                var['dtype'] = 'float32'
+
+
+@register
+class MaskRCNNEvalFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=CocoDataSet(COCO_VAL_ANNOTATION,
+                                     COCO_VAL_IMAGE_DIR).__dict__,
+                 fields=['image', 'im_info', 'im_id', 'im_shape'],
+                 image_shape=[3, 1333, 800],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=True), NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False), ResizeImage(
+                             target_size=800, max_size=1333, 
+                             interp=1, use_cv2=True),
+                     Permute(to_bgr=False, channel_first=True)
+                 ],
+                 batch_transforms=[PadBatch()],
+                 batch_size=1,
+                 shuffle=False,
+                 samples=-1,
+                 drop_last=False,
+                 test_file=None,
                  num_workers=2,
-                 use_process=False):
-        sample_transforms.append(ArrangeTestRCNN(is_mask=True))
-        super(MaskRCNNTestFeed, self).__init__(
+                 use_process=False,
+                 use_padded_im_info=True):
+        sample_transforms.append(ArrangeTestRCNN())
+        super(MaskRCNNEvalFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle, samples=samples,
             drop_last=drop_last, test_file=test_file, 
             num_workers=num_workers, use_process=use_process)
         self.mode = 'VAL'
+        # in rcnn models, im_shape is in format of [N, 3] for box clip
+        for var in feed_var_def:
+            if var['name'] == 'im_shape':
+                var['shape'] = [3]
+                var['dtype'] = 'float32'
+
+@register
+class MaskRCNNTestFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
+                                     COCO_VAL_IMAGE_DIR).__dict__,
+                 fields=['image', 'im_info', 'im_id', 'im_shape'],
+                 image_shape=[3, 1333, 800],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=True), NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False),
+                     Permute(to_bgr=False, channel_first=True)
+                 ],
+                 batch_transforms=[PadBatch()],
+                 batch_size=1,
+                 shuffle=False,
+                 samples=-1,
+                 drop_last=False,
+                 test_file=None,
+                 num_workers=2,
+                 use_process=False,
+                 use_padded_im_info=True):
+        sample_transforms.append(ArrangeTestRCNN())
+        if isinstance(dataset, dict):
+            dataset = SimpleDataSet(**dataset) 
+        super(MaskRCNNTestFeed, self).__init__(
+            dataset, fields, image_shape, sample_transforms, batch_transforms,
+            batch_size=batch_size, shuffle=shuffle, samples=samples,
+            drop_last=drop_last, test_file=test_file, 
+            num_workers=num_workers, use_process=use_process)
+        self.mode = 'TEST'
+        # in rcnn models, im_shape is in format of [N, 3] for box clip
+        for var in feed_var_def:
+            if var['name'] == 'im_shape':
+                var['shape'] = [3]
+                var['dtype'] = 'float32'
+
+
+
 
 
 @register
@@ -547,11 +644,9 @@ class SSDEvalFeed(DataFeed):
                  fields=['image'],
                  image_shape=[3, 300, 300],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True),
-                     NormalizeBox(),
-                     ResizeImage(target_size=300, use_cv2=False, interp=1),
-                     RandomFlipImage(is_normalized=True),
-                     Permute(),
+                     DecodeImage(to_rgb=True), NormalizeBox(), ResizeImage(
+                         target_size=300, use_cv2=False, interp=1),
+                     RandomFlipImage(is_normalized=True), Permute(),
                      NormalizeImage(
                          mean=[127.5, 127.5, 127.5],
                          std=[127.502231, 127.502231, 127.502231],
@@ -585,7 +680,8 @@ class SSDTestFeed(DataFeed):
                  image_shape=[3, 300, 300],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(target_size=300, use_cv2=False, interp=1),
+                     ResizeImage(
+                         target_size=300, use_cv2=False, interp=1),
                  ],
                  batch_transforms=[],
                  batch_size=1,
@@ -615,30 +711,36 @@ class YoloTrainFeed(DataFeed):
                  fields=['image', 'gt_box', 'gt_label', 'gt_score'],
                  image_shape=[3, 608, 608],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True, with_mixup=True),
-                     MixupImage(alpha=1.5, beta=1.5),
+                     DecodeImage(
+                         to_rgb=True, with_mixup=True),
+                     MixupImage(
+                         alpha=1.5, beta=1.5),
                      NormalizeBox(),
                      RandomDistort(),
-                     ExpandImage(max_ratio=3., prob=.5),
-                     CropImage([[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 1.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 1.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 1.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
-                               satisfy_all=True),
+                     ExpandImage(
+                         max_ratio=3., prob=.5),
+                     CropImage(
+                         [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 1.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 1.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 1.0],
+                          [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
+                         satisfy_all=True),
                      RandomInterpImage(target_size=608),
                      RandomFlipImage(is_normalized=True),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
+                     NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False),
                      Permute(to_bgr=False),
                  ],
                  batch_transforms=[
-                     RandomShape(sizes=[320, 352, 384, 416, 448, 480,
-                                        512, 544, 576, 608])
+                     RandomShape(sizes=[
+                         320, 352, 384, 416, 448, 480, 512, 544, 576, 608
+                     ])
                  ],
                  batch_size=32,
                  shuffle=True,
@@ -673,11 +775,13 @@ class YoloEvalFeed(DataFeed):
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(target_size=608, interp=2),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
+                     ResizeImage(
+                         target_size=608, interp=2),
+                     NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False),
                      Permute(to_bgr=False),
                  ],
                  batch_transforms=[],
@@ -711,11 +815,13 @@ class YoloTestFeed(DataFeed):
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(target_size=608, interp=2),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
+                     ResizeImage(
+                         target_size=608, interp=2),
+                     NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False),
                      Permute(to_bgr=False),
                  ],
                  batch_transforms=[],
@@ -774,19 +880,19 @@ def make_reader(feed, max_iter=0, use_pyreader=True):
         mixup_epoch = feed.mixup_epoch
     bufsize = 10
     use_process = False
+    use_padded_im_info = False
     if getattr(feed, 'bufsize', None) is not None:
         bufsize = feed.bufsize
     if getattr(feed, 'use_process', None) is not None:
         use_process = feed.use_process
+    if getattr(feed, 'use_padded_im_info', False):
+        use_padded_im_info = feed.use_padded_im_info
 
-    feed_vars = OrderedDict([
-        (key, fluid.layers.data(
-            name=feed_var_map[key]['name'],
-            shape=feed_var_map[key]['shape'],
-            dtype=feed_var_map[key]['dtype'],
-            lod_level=feed_var_map[key]['lod_level']))
-        for key in feed.fields
-    ])
+    feed_vars = OrderedDict([(key, fluid.layers.data(
+        name=feed_var_map[key]['name'],
+        shape=feed_var_map[key]['shape'],
+        dtype=feed_var_map[key]['dtype'],
+        lod_level=feed_var_map[key]['lod_level'])) for key in feed.fields])
 
     pyreader = None
     if use_pyreader:
@@ -829,14 +935,17 @@ def make_reader(feed, max_iter=0, use_pyreader=True):
             'use_process': use_process
         },
         'BATCH_SIZE': feed.batch_size,
-        'DROP_LAST': feed.drop_last
+        'DROP_LAST': feed.drop_last,
+        'USE_PADDED_IM_INFO': use_padded_im_info,
     }
 
     pad = [t for t in feed.batch_transforms if isinstance(t, PadBatch)]
-    random_shape = [t for t in feed.batch_transforms
-                    if isinstance(t, RandomShape)]
-    multi_scale = [t for t in feed.batch_transforms
-                   if isinstance(t, MultiScale)]
+    random_shape = [
+        t for t in feed.batch_transforms if isinstance(t, RandomShape)
+    ]
+    multi_scale = [
+        t for t in feed.batch_transforms if isinstance(t, MultiScale)
+    ]
 
     if any(pad):
         transform_config['IS_PADDING'] = True
@@ -855,8 +964,9 @@ def make_reader(feed, max_iter=0, use_pyreader=True):
     ops = []
     for op in feed.sample_transforms:
         op_dict = op.__dict__.copy()
-        argnames = [arg for arg in argspec(type(op).__init__).args
-                    if arg != 'self']
+        argnames = [
+            arg for arg in argspec(type(op).__init__).args if arg != 'self'
+        ]
         op_dict = {k: v for k, v in op_dict.items() if k in argnames}
         op_dict['op'] = op.__class__.__name__
         ops.append(op_dict)
@@ -868,8 +978,10 @@ def make_reader(feed, max_iter=0, use_pyreader=True):
     print(tty.green("============ generated data_config ================"))
     print(yaml.dump(data_config, default_flow_style=False, default_style=''))
     print(tty.green("========== generated transform_config =============="))
-    print(yaml.dump(transform_config, default_flow_style=False, default_style=''))
-    print(tty.green("========== please verify they are correct!!!! =============="))
+    print(yaml.dump(
+        transform_config, default_flow_style=False, default_style=''))
+    print(tty.green(
+        "========== please verify they are correct!!!! =============="))
     print("")
 
     reader = Reader(data_config, {mode: transform_config}, max_iter)
