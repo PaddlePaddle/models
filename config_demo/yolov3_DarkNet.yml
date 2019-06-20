@@ -16,7 +16,7 @@ YOLOv3:
   yolo_head: YOLOv3Head
 
 DarkNet:
-  norm_type: bn
+  norm_type: sync_bn
   norm_decay: 0.
   depth: 53
 
