@@ -6,7 +6,7 @@ use_gpu: yes
 max_iters: 500200
 log_smooth_window: 20
 save_dir: output
-snapshot_iter: 20
+snapshot_iter: 2000
 metric: COCO
 pretrain_weights: https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz
 weights: https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz
@@ -17,7 +17,7 @@ YOLOv3:
 
 DarkNet:
   norm_type: bn
-  norm_decay: false
+  norm_decay: 0.
   depth: 53
 
 YOLOv3Head:
@@ -50,7 +50,7 @@ YOLOv3Head:
     - 198
   - - 373
     - 326
-  norm_decay: false
+  norm_decay: 0.
   ignore_thresh: 0.7
   label_smooth: true
   nms:
@@ -70,8 +70,7 @@ LearningRate:
     gamma: 0.1
     milestones:
     - 400000
-    - 400000
-    values: null
+    - 450000
   - !LinearWarmup
     start_factor: 0.
     steps: 4000
@@ -117,6 +116,8 @@ YoloTrainFeed:
   mixup_epoch: 250
   num_max_boxes: 50
   num_workers: 8
+  bufsize: 128
+  use_process: true
   sample_transforms:
   - !DecodeImage
     to_rgb: true
