@@ -393,8 +393,9 @@ class MaskRCNNTrainFeed(DataFeed):
                              std=[0.229, 0.224, 0.225],
                              is_scale=True,
                              is_channel_first=False), ResizeImage(
-                                 target_size=800, max_size=1333, interp=1),
-                     Permute(to_bgr=False)
+                                 target_size=800, max_size=1333, 
+                                 interp=1, use_cv2=True),
+                     Permute(to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
@@ -504,8 +505,9 @@ class MaskRCNNEvalFeed(DataFeed):
                          std=[0.229, 0.224, 0.225],
                          is_scale=True,
                          is_channel_first=False), ResizeImage(
-                             target_size=800, max_size=1333, interp=1),
-                     Permute(to_bgr=False)
+                             target_size=800, max_size=1333, 
+                             interp=1, use_cv2=True),
+                     Permute(to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
@@ -544,7 +546,7 @@ class MaskRCNNTestFeed(DataFeed):
                          std=[0.229, 0.224, 0.225],
                          is_scale=True,
                          is_channel_first=False),
-                     Permute(to_bgr=False)
+                     Permute(to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
