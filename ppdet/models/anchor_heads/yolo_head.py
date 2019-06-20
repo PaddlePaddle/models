@@ -33,7 +33,7 @@ class YOLOv3Head(object):
     Head block for YOLOv3 network
 
     Args:
-        bn_decay (bool): apply weight decay to batch norm weights
+        norm_decay (float): weight decay for normalization layer weights
         num_classes (int): number of output classes
         ignore_thresh (float): threshold to ignore confidence loss
         label_smooth (bool): whether to use label smoothing
@@ -44,7 +44,7 @@ class YOLOv3Head(object):
     __inject__ = ['nms']
 
     def __init__(self,
-                 bn_decay=False,
+                 norm_decay=0.,
                  num_classes=80,
                  ignore_thresh=0.7,
                  label_smooth=True,
@@ -57,7 +57,7 @@ class YOLOv3Head(object):
                                    keep_top_k=100,
                                    nms_threshold=0.45,
                                    background_label=-1).__dict__):
-        self.bn_decay = bn_decay
+        self.norm_decay = norm_decay
         self.num_classes = num_classes
         self.ignore_thresh = ignore_thresh
         self.label_smooth = label_smooth
@@ -88,9 +88,9 @@ class YOLOv3Head(object):
 
         bn_name = name + ".bn"
         bn_param_attr = ParamAttr(
-            regularizer=L2Decay(float(self.bn_decay)), name=bn_name + '.scale')
+            regularizer=L2Decay(self.norm_decay), name=bn_name + '.scale')
         bn_bias_attr = ParamAttr(
-            regularizer=L2Decay(float(self.bn_decay)), name=bn_name + '.offset')
+            regularizer=L2Decay(self.norm_decay), name=bn_name + '.offset')
         out = fluid.layers.batch_norm(
             input=conv,
             act=None,

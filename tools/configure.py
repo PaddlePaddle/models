@@ -38,7 +38,7 @@ MISC_CONFIG = {
 
 def dump_value(value):
     # XXX this is hackish, but collections.abc is not available in python 2
-    if hasattr(value, '__dict__') or type(value) in (dict, tuple, list):
+    if hasattr(value, '__dict__') or isinstance(value, (dict, tuple, list)):
         value = yaml.dump(value, default_flow_style=True)
         value = value.replace('\n', '')
         value = value.replace('...', '')

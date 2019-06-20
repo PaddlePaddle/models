@@ -6,7 +6,7 @@ pretrain_weights: ResNet50_pretrained/
 log_smooth_window: 20
 snapshot_iter: 10000
 save_dir: output
-use_gpu: no
+use_gpu: yes
 
 MaskRCNN:
   backbone: ResNet
