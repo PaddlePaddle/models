@@ -31,12 +31,11 @@ from paddle import fluid
 
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import parse_args
+from ppdet.core.workspace import load_config, merge_config, create
+from ppdet.dataset.data_feed import create_reader
 import ppdet.utils.checkpoint as checkpoint
 
-from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.data_feed import create_reader
-from ppdet.placeholder import create_feeds
-
+from tools.placeholder import create_feeds
 from tools.eval_utils import parse_fetches, eval_run, eval_results
 
 logger = logging.getLogger(__name__)
@@ -89,6 +88,10 @@ def main():
 
     train_reader = create_reader(train_feed, cfg['max_iters'] * devices_num)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
+
+    print(train_reader)
+    for data in next(train_reader()):
+        print(data)
 
     # parse train fetches
     train_keys, train_values = parse_fetches(train_fetches)
