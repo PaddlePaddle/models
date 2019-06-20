@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
-import os
+
 import numpy as np
 import functools
 import collections
@@ -23,8 +23,7 @@ from ..dataset import Dataset
 
 
 class ProxiedDataset(Dataset):
-    """ proxy the method calling to this class to 'self._ds' when itself not avaialbe
-    """
+    """proxy method called to 'self._ds' when if not defined"""
 
     def __init__(self, ds):
         super(ProxiedDataset, self).__init__()
@@ -36,13 +35,14 @@ class ProxiedDataset(Dataset):
             setattr(self, m, func)
 
     def _proxy_method(self, func, *args, **kwargs):
-        """ proxy call to 'func', if not available then call self._ds.xxx 
-            whose name is the same with func.__name__
+        """
+        proxy call to 'func', if not available then call self._ds.xxx
+        whose name is the same with func.__name__
         """
         method = func.__name__
         try:
             return func(*args, **kwargs)
-        except NotImplementedError as e:
+        except NotImplementedError:
             ds_func = getattr(self._ds, method)
             return ds_func(*args, **kwargs)
 
@@ -59,24 +59,22 @@ class MappedDataset(ProxiedDataset):
 
 
 class BatchedDataset(ProxiedDataset):
-    """ transform samples to batches
+    """
+    Batching samples
+
+    Args:
+        ds (instance of Dataset): dataset to be batched
+        batchsize (int): sample number for each batch
+        drop_last (bool): drop last samples when not enough for one batch
     """
 
     def __init__(self, ds, batchsize, drop_last=False):
-        """
-        Args:
-            ds (instance of Dataset): dataset to be batched
-            batchsize (int): sample number for each batch
-            drop_last (bool): whether to drop last samples when not
-                enough for one batch
-        """
         super(BatchedDataset, self).__init__(ds)
         self._batchsz = batchsize
         self._drop_last = drop_last
 
     def next(self):
-        """ proxy to self._ds.next
-        """
+        """proxy to self._ds.next"""
 
         def empty(x):
             if isinstance(x, np.ndarray) and x.size == 0:
@@ -100,7 +98,7 @@ class BatchedDataset(ProxiedDataset):
                 while has_empty(out):
                     out = self._ds.next()
                 batch.append(out)
-            except StopIteration as e:
+            except StopIteration:
                 if not self._drop_last and len(batch) > 0:
                     return batch
                 else:
