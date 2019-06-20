@@ -122,8 +122,7 @@ def main():
         train_prog).with_data_parallel(
             loss_name=loss.name, build_strategy=build_strategy)
     if args.eval:
-        eval_compile_program = fluid.compiler.CompiledProgram(
-            eval_prog).with_data_parallel(build_strategy=build_strategy)
+        eval_compile_program = fluid.compiler.CompiledProgram(eval_prog)
 
     exe.run(startup_prog)
 
