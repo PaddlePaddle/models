@@ -97,8 +97,8 @@ class Reader(object):
         def _reader():
             n = 0
             while True:
-                for batch in batched_ds:
-                    yield batch
+                for _batch in batched_ds:
+                    yield _batch
                     n += 1
                     if maxit > 0 and n == maxit:
                         return
