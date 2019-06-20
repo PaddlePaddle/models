@@ -37,9 +37,9 @@ class SENet(ResNeXt):
         groups (int): group convolution cardinality
         group_width (int): width of each group convolution
         freeze_at (int): freeze the backbone at which stage
-        norm_type (str): normalization type, 'bn', 'freeze_bn', 'sync_bn' and
-        'affine_channel' are supported
-        bn_decay (bool): apply weight decay to in batch norm weights
+        norm_type (str): normalization type, 'bn', 'sync_bn' or 'affine_channel'
+        freeze_norm (bool): freeze normalization layers
+        norm_decay (float): weight decay for normalization layer weights
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
         feature_maps (list): index of the stages whose feature maps are returned
     """
@@ -50,11 +50,12 @@ class SENet(ResNeXt):
                  group_width=4,
                  freeze_at=2,
                  norm_type='affine_channel',
-                 bn_decay=True,
+                 freeze_norm=True,
+                 norm_decay=0.,
                  variant='d',
                  feature_maps=[2, 3, 4, 5]):
         super(SENet, self).__init__(depth, groups, group_width, freeze_at,
-                                    freeze_bn, affine_channel, bn_decay,
+                                    norm_type, freeze_norm, norm_decay,
                                     variant, feature_maps)
         if depth < 152:
             self.stage_filters = [128, 256, 512, 1024]
@@ -104,10 +105,11 @@ class SENetC5(SENet):
                  group_width=4,
                  freeze_at=2,
                  norm_type='affine_channel',
-                 bn_decay=True,
+                 freeze_norm=True,
+                 norm_decay=0.,
                  variant='d',
                  feature_maps=[5]):
         super(SENetC5, self).__init__(depth, groups, group_width, freeze_at,
-                                      norm_type, bn_decay, variant,
-                                      feature_maps)
+                                      norm_type, freeze_norm, norm_decay,
+                                      variant, feature_maps)
         self.severed_head = True

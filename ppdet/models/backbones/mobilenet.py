@@ -32,7 +32,7 @@ class MobileNet(object):
 
     Args:
         norm_type (str): normalization type, 'bn' and 'sync_bn' are supported
-        bn_decay (bool): perform weight decay on batch norm weights
+        norm_decay (float): weight decay for normalization layer weights
         conv_group_scale (int): scaling factor for convolution groups
         with_extra_blocks (bool): if extra blocks should be added
         extra_block_filters (list): number of filter for each extra block
@@ -40,13 +40,13 @@ class MobileNet(object):
 
     def __init__(self,
                  norm_type='bn',
-                 bn_decay=False,
+                 norm_decay=0.,
                  conv_group_scale=1,
                  with_extra_blocks=False,
                  extra_block_filters=[
                      [256, 512], [128, 256], [128, 256], [64, 128]]):
         self.norm_type = norm_type
-        self.bn_decay = bn_decay
+        self.norm_decay = norm_decay
         self.conv_group_scale = conv_group_scale
         self.with_extra_blocks = with_extra_blocks
         self.extra_block_filters = extra_block_filters
@@ -79,11 +79,11 @@ class MobileNet(object):
             bias_attr=False)
 
         bn_name = name + "_bn"
-        bn_decay = float(self.bn_decay)
+        norm_decay = self.norm_decay
         bn_param_attr = ParamAttr(
-            regularizer=L2Decay(bn_decay), name=bn_name + '_scale')
+            regularizer=L2Decay(norm_decay), name=bn_name + '_scale')
         bn_bias_attr = ParamAttr(
-            regularizer=L2Decay(bn_decay), name=bn_name + '_offset')
+            regularizer=L2Decay(norm_decay), name=bn_name + '_offset')
         return fluid.layers.batch_norm(
             input=conv,
             act=act,
