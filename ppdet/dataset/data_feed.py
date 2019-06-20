@@ -18,7 +18,6 @@ from __future__ import division
 
 import os
 import inspect
-from collections import OrderedDict
 
 from ppdet.core.workspace import register, serializable
 from ppdet.utils.download import get_dataset_path
@@ -49,15 +48,16 @@ def create_reader(feed, max_iter=0):
     Args:
         max_iter (int): number of iterations.
     """
-    # if DATASET_DIR set and not exists, search dataset under ~/.paddle/dataset
-    # if not exists base on DATASET_DIR name (coco or pascal), if not found 
-    # under ~/.paddle/dataset, download it.
+
+    # if `DATASET_DIR` does not exists, search ~/.paddle/dataset for a directory
+    # named `DATASET_DIR` (e.g., coco, pascal), if not present either, download
     if feed.dataset.dataset_dir:
         dataset_dir = get_dataset_path(feed.dataset.dataset_dir)
         feed.dataset.annotation = os.path.join(dataset_dir,
                                                feed.dataset.annotation)
         feed.dataset.image_dir = os.path.join(dataset_dir,
                                               feed.dataset.image_dir)
+
     mixup_epoch = -1
     if getattr(feed, 'mixup_epoch', None) is not None:
         mixup_epoch = feed.mixup_epoch
@@ -94,20 +94,17 @@ def create_reader(feed, max_iter=0):
         'DROP_LAST': feed.drop_last
     }
 
-    pad = [t for t in feed.batch_transforms if isinstance(t, PadBatch)]
-    random_shape = [
-        t for t in feed.batch_transforms if isinstance(t, RandomShape)
-    ]
-    multi_scale = [
-        t for t in feed.batch_transforms if isinstance(t, MultiScale)
-    ]
+    batch_transforms = feed.batch_transforms
+    pad = filter(lambda t: isinstance(t, PadBatch), batch_transforms)
+    rand_shape = filter(lambda t: isinstance(t, RandomShape), batch_transforms)
+    multi_scale = filter(lambda t: isinstance(t, MultiScale), batch_transforms)
 
     if any(pad):
         transform_config['IS_PADDING'] = True
         if pad[0].pad_to_stride != 0:
             transform_config['COARSEST_STRIDE'] = pad[0].pad_to_stride
-    if any(random_shape):
-        transform_config['RANDOM_SHAPES'] = random_shape[0].sizes
+    if any(rand_shape):
+        transform_config['RANDOM_SHAPES'] = rand_shape[0].sizes
     if any(multi_scale):
         transform_config['MULTI_SCALES'] = multi_scale[0].scales
 
@@ -127,6 +124,7 @@ def create_reader(feed, max_iter=0):
         ops.append(op_dict)
     transform_config['OPS'] = ops
 
+    # FIXME debug code, remove before merge
     import yaml
     from ppdet.utils.cli import ColorTTY
     tty = ColorTTY()
