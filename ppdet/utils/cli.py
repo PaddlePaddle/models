@@ -42,14 +42,33 @@ class ColorTTY(object):
 
 def parse_args():
     parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter)
-    parser.add_argument("-c", "--config",            help="configuration file to use")
-    parser.add_argument("-s", "--savefile",          default=None, type=str, 
-                        help="Save json file name for evaluation, if not set, default files are bbox.json and mask.json.")
-    parser.add_argument("-r", "--resume_checkpoint", default=None, type=str, help="The checkpoint path for resuming training.")
-    parser.add_argument("-e", "--eval",              default=False, type=bool, help="Whether perform evaluation in train")
+    parser.add_argument("-c", "--config", help="configuration file to use")
+    parser.add_argument(
+        "-s",
+        "--savefile",
+        default=None,
+        type=str,
+        help="Save json file name for evaluation, if not set, default files are bbox.json and mask.json."
+    )
+    parser.add_argument(
+        "-r",
+        "--resume_checkpoint",
+        default=None,
+        type=str,
+        help="The checkpoint path for resuming training.")
+    parser.add_argument(
+        "--eval",
+        action='store_true',
+        default=False,
+        help="Whether perform evaluation in train")
     # TODO(dangqingqing) remove this flag
-    parser.add_argument("-f", "--fusebn",            default=True, help="Whether to fuse params of batch norm to scale and bias.")
-    parser.add_argument("-o", "--opt",               nargs=REMAINDER, help="set configuration options")
+    parser.add_argument(
+        "--fusebn",
+        action='store_false',
+        default=True,
+        help="Whether to fuse params of batch norm to scale and bias.")
+    parser.add_argument(
+        "-o", "--opt", nargs=REMAINDER, help="set configuration options")
     args = parser.parse_args()
 
     if args.config is None:
