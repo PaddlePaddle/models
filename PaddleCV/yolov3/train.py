@@ -41,7 +41,23 @@ import reader
 from models.yolov3 import YOLOv3
 from learning_rate import exponential_with_warmup_decay
 from config import cfg
+import dist_utils
 
+def get_device_num():
+    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
+    # NOTE(zcd): use multi processes to train the model,
+    # and each process use one GPU card.
+    num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+    if num_trainers > 1 : return 1
+    if visible_device:
+        device_num = len(visible_device.split(','))
+    else:
+        device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
+    return device_num
+
+def update_lr(args):
+    num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+    args.learning_rate = args.learning_rate / num_trainers
 
 def train():
 
@@ -60,10 +76,11 @@ def train():
     loss = model.loss()
     loss.persistable = True
 
-    devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
-    devices_num = len(devices.split(","))
+    devices_num = get_device_num()
     print("Found {} CUDA devices.".format(devices_num))
 
+    update_lr(cfg)
+    
     learning_rate = cfg.learning_rate
     boundaries = cfg.lr_steps
     gamma = cfg.lr_gamma
@@ -81,7 +98,8 @@ def train():
         momentum=cfg.momentum)
     optimizer.minimize(loss)
 
-    place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
+    gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+    place = fluid.CUDAPlace(gpu_id) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
@@ -95,11 +113,18 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = False #gc and memory optimize may conflict 
+   
+    if cfg.use_gpu:
+        dist_utils.prepare_for_multi_process(exe, 
+               build_strategy, 
+               fluid.default_main_program(), 
+               fluid.default_startup_program())
+
     build_strategy.sync_batch_norm = cfg.syncbn
-    compile_program = fluid.compiler.CompiledProgram(fluid.default_main_program(
-    )).with_data_parallel(
-        loss_name=loss.name, build_strategy=build_strategy)
+    compile_program = fluid.compiler.CompiledProgram(
+            fluid.default_main_program()).with_data_parallel(
+            loss_name=loss.name,
+            build_strategy=build_strategy)
 
     random_sizes = [cfg.input_size]
     if cfg.random_shape:
