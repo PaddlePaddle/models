@@ -75,7 +75,7 @@ class FPNRoIAlign(object):
                  canonical_size=224,
                  resolution=7,
                  mask_resolution=14):
-        super(FPNROIAlign, self).__init__()
+        super(FPNRoIAlign, self).__init__()
         self.sampling_ratio = sampling_ratio
         self.min_level = min_level
         self.max_level = max_level

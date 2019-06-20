@@ -158,9 +158,9 @@ class DataSet(object):
     __source__ = 'RoiDbSource'
 
     def __init__(self,
-                 dataset_dir,
                  annotation,
-                 image_dir):
+                 image_dir,
+                 dataset_dir=None):
         super(DataSet, self).__init__()
         self.dataset_dir = dataset_dir
         self.annotation = annotation
@@ -791,11 +791,12 @@ def make_reader(feed, max_iter=0, use_pyreader=True):
         mixup_epoch = feed.mixup_epoch
     bufsize = 10
     use_process = False
+    use_padded_im_info = False
     if getattr(feed, 'bufsize', None) is not None:
         bufsize = feed.bufsize
     if getattr(feed, 'use_process', None) is not None:
         use_process = feed.use_process
-    if getattr(feed, 'use_padded_im_info', None) is not None:
+    if getattr(feed, 'use_padded_im_info', False):
         use_padded_im_info = feed.use_padded_im_info
 
     feed_vars = OrderedDict([(key, fluid.layers.data(
@@ -818,7 +819,7 @@ def make_reader(feed, max_iter=0, use_pyreader=True):
     # if DATASET_DIR set and not exists, search dataset under ~/.paddle/dataset
     # if not exists base on DATASET_DIR name (coco or pascal), if not found 
     # under ~/.paddle/dataset, download it.
-    if hasattr(feed.dataset, 'dataset_dir'):
+    if hasattr(feed.dataset, 'dataset_dir') and feed.dataset.dataset_dir:
         dataset_dir = get_dataset_path(feed.dataset.dataset_dir)
         feed.dataset.annotation = os.path.join(dataset_dir, feed.dataset.annotation)
         feed.dataset.image_dir = os.path.join(dataset_dir, feed.dataset.image_dir)

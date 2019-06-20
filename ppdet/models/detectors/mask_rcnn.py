@@ -100,8 +100,7 @@ class MaskRCNN(object):
             body_feat = body_feats[list(body_feats.keys())[-1]]
             roi_feat = self.roi_extractor(body_feat, rois)
         else:
-            roi_feat = self.roi_extractor(body_feats, rois, spatial_scale,
-                                          False)
+            roi_feat = self.roi_extractor(body_feats, rois, spatial_scale)
 
         loss = self.bbox_head.get_loss(roi_feat, labels_int32, bbox_targets,
                                        bbox_inside_weights,
@@ -117,13 +116,11 @@ class MaskRCNN(object):
             im_info=feed_vars['im_info'],
             labels_int32=labels_int32)
         mask_rois, roi_has_mask_int32, mask_int32 = outs
-
-        if not isinstance(self.bbox_head.head, TwoFCHead):
+        if self.neck is None: 
             bbox_head_feat = self.bbox_head.get_head_feat()
             feat = fluid.layers.gather(bbox_head_feat, roi_has_mask_int32)
         else:
-            feat = self.roi_extractor(body_feats, mask_rois, spatial_scale,
-                                      True)
+            feat = self.roi_extractor(body_feats, mask_rois, spatial_scale, True)
 
         mask_loss = self.mask_head.get_loss(feat, mask_int32)
         loss.update(mask_loss)

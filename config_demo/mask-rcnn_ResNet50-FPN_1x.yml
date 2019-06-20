@@ -1,20 +1,24 @@
 architecture: MaskRCNN
 train_feed: MaskRCNNTrainFeed
 test_feed: MaskRCNNTestFeed
-max_iters: 18000
-use_gpu: yes
+max_iters: 180000
+pretrain_weights: /paddle/baidu/paddle/ppdetection/ResNet50_pretrained/ 
+log_smooth_window: 20
+save_dir: output
+use_gpu: no
 
-FasterRCNN:
+MaskRCNN:
   backbone: ResNet
   bbox_assigner: BBoxAssigner
   bbox_head: BBoxHead
-  roi_extractor: FPNROIAlign
+  roi_extractor: FPNRoIAlign
   rpn_head: FPNRPNHead
   neck: FPN
 
 ResNet:
-  affine_channel: true
-  bn_decay: true
+  norm_type: affine_channel
+  norm_decay: true
+  freeze_norm: true
   depth: 50
   feature_maps:
   - 2
@@ -22,8 +26,7 @@ ResNet:
   - 4
   - 5
   freeze_at: 2
-  freeze_bn: true
-  variant: a
+  variant: b
 
 FPN:
   max_level: 6
@@ -57,13 +60,13 @@ FPNRPNHead:
     rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
     use_random: true
-  test_prop:
+  test_proposal:
     eta: 1.0
     min_size: 0.0
     nms_thresh: 0.7
     post_nms_top_n: 1000
     pre_nms_top_n: 1000
-  train_prop:
+  train_proposal:
     eta: 1.0
     min_size: 0.0
     nms_thresh: 0.7
@@ -144,8 +147,8 @@ MaskRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    annotation: ../coco/annotations/instances_train2017.json
-    image_dir: ../coco/train2017
+    annotation: /paddle/models/fluid/faster_rcnn/data/COCO17/annotations/instances_val2017_debug_139.json
+    image_dir: /paddle/models/fluid/faster_rcnn/data/COCO17/val2017
   drop_last: false
   fields:
   - image
@@ -154,6 +157,7 @@ MaskRCNNTrainFeed:
   - gt_box
   - gt_label
   - is_crowd
+  - gt_mask
   image_shape:
   - 3
   - 1333

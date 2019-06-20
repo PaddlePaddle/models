@@ -45,7 +45,7 @@ def dump_value(value):
         return "'{}'".format(value)
     else:
         # primitive types
-        return value
+        return str(value)
 
 
 def dump_config(module, minimal=False):
