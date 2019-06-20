@@ -8,7 +8,7 @@ log_smooth_window: 20
 save_dir: output
 snapshot_iter: 2000
 metric: COCO
-pretrain_weights: http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar
+pretrain_weights: https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz
 weights: https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz
 
 YOLOv3:
@@ -17,7 +17,7 @@ YOLOv3:
 
 DarkNet:
   norm_type: bn
-  norm_decay: false
+  norm_decay: 0.
   depth: 53
 
 YOLOv3Head:
@@ -50,7 +50,7 @@ YOLOv3Head:
     - 198
   - - 373
     - 326
-  norm_decay: false
+  norm_decay: 0.
   ignore_thresh: 0.7
   label_smooth: true
   nms:
