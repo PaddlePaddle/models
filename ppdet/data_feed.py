@@ -811,7 +811,8 @@ def make_reader(feed, max_iter=0, use_pyreader=True):
     # if DATASET_DIR set and not exists, search dataset under ~/.paddle/dataset
     # if not exists base on DATASET_DIR name (coco or pascal), if not found 
     # under ~/.paddle/dataset, download it.
-    if getattr(feed.dataset, 'dataset_dir', None):
+    if feed.dataset.dataset_dir:
+        print("dataset_dir: ", feed.dataset.dataset_dir)
         dataset_dir = get_dataset_path(feed.dataset.dataset_dir)
         feed.dataset.annotation = os.path.join(dataset_dir, feed.dataset.annotation)
         feed.dataset.image_dir = os.path.join(dataset_dir, feed.dataset.image_dir)

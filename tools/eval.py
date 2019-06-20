@@ -24,12 +24,11 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 import paddle.fluid as fluid
 
-from ppdet.tools.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.cli import parse_args
 import ppdet.utils.checkpoint as checkpoint
-
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data_feed import make_reader
+from tools.eval_utils import parse_fetches, eval_run, eval_results
 
 logger = logging.getLogger(__name__)
 

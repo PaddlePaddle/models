@@ -105,7 +105,7 @@ class FPNRoIAlign(object):
             rois, k_min, k_max, self.canconical_level, self.canonical_size)
         # rois_dist is in ascend order
         roi_out_list = []
-        resolution = is_mask and self.resolution or self.mask_resolution
+        resolution = is_mask and self.mask_resolution or self.resolution
         for lvl in range(num_roi_lvls):
             name_index = num_roi_lvls - lvl - 1
             rois_input = rois_dist[lvl]
