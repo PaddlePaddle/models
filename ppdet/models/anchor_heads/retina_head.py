@@ -1,4 +1,3 @@
-"""
 #  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-# TODO(luoqianhui): change comment stype above in github
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import numpy as np
 
@@ -26,26 +24,63 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Constant
 from paddle.fluid.regularizer import L2Decay
 
-from ..registry import RetinaHeads
+from ppdet.core.workspace import register
 
 __all__ = ['RetinaHead']
 
 
-@RetinaHeads.register
+@register
 class RetinaHead(object):
     """
     RetinaHead class
     Args:
-        cfg(dict): All parameters in dictionary
     """
 
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.k_max = cfg.FPN.RPN_MAX_LEVEL
-        self.k_min = cfg.FPN.RPN_MIN_LEVEL
-        self.fpn_dim = cfg.FPN.DIM
+    #TODO(luoqianhui): give more description
 
-    def _class_subnet(self, body_feats, spatial_scale, fpn_name_list):
+    def __init__(self,
+                 num_convs_per_octave=4,
+                 num_chan=256,
+                 max_level=7,
+                 min_level=3,
+                 prior_prob=0.01,
+                 base_scale=4,
+                 num_scales_per_octave=3,
+                 num_classes=8,
+                 aspect_ratios=[1.0, 2.0, 0.5],
+                 variance=[1.0, 1.0, 1.0, 1.0],
+                 positive_overlap=0.5,
+                 negative_overlap=0.4,
+                 gamma=2.0,
+                 alpha=0.25,
+                 sigma=3.0151134457776365,
+                 score_thresh=0.05,
+                 nms_thresh=0.3,
+                 pre_nms_top_n=1000,
+                 detections_per_im=100,
+                 nms_eta=1.0):
+        self.num_convs_per_octave = num_convs_per_octave
+        self.num_chan = num_chan
+        self.max_level = max_level
+        self.min_level = min_level
+        self.prior_prob = prior_prob
+        self.base_scale = base_scale
+        self.num_scales_per_octave = num_scales_per_octave
+        self.num_classes = num_classes
+        self.aspect_ratios = aspect_ratios
+        self.variance = variance
+        self.positive_overlap = positive_overlap
+        self.negative_overlap = negative_overlap
+        self.gamma = gamma
+        self.alpha = alpha
+        self.sigma = sigma
+        self.score_thresh = score_thresh
+        self.nms_thresh = nms_thresh
+        self.pre_nms_top_n = pre_nms_top_n
+        self.detections_per_im = detections_per_im
+        self.nms_eta = nms_eta
+
+    def _class_subnet(self, body_feats, spatial_scale):
         """
         Get class predictions of all level FPN level.
         
@@ -53,25 +88,24 @@ class RetinaHead(object):
             fpn_dict(Dict): A dictionary represents the output of FPN neck with 
                 their name.
             spatial_scale(List): A list of multiplicative spatial scale factor.
-            fpn_name_list(List): A list of names regarding to output of FPN neck.
 
         Return:
             cls_pred_input(List): Class prediction of all input fpn levels.
         """
-        retina_cfg = self.cfg.RETINA_HEAD
-        assert len(body_feats) == self.k_max - self.k_min + 1
+        assert len(body_feats) == self.max_level - self.min_level + 1
+        fpn_name_list = list(body_feats.keys())
         cls_pred_list = []
-        for lvl in range(self.k_min, self.k_max + 1):
-            fpn_name = fpn_name_list[self.k_max - lvl]
+        for lvl in range(self.min_level, self.max_level + 1):
+            fpn_name = fpn_name_list[self.max_level - lvl]
             subnet_blob = body_feats[fpn_name]
-            for i in range(retina_cfg.NUM_CONVS):
+            for i in range(self.num_convs_per_octave):
                 conv_name = 'retnet_cls_conv_n{}_fpn{}'.format(i, lvl)
-                conv_share_name = 'retnet_cls_conv_n{}_fpn{}'.format(i,
-                                                                     self.k_min)
+                conv_share_name = 'retnet_cls_conv_n{}_fpn{}'.format(
+                    i, self.min_level)
                 subnet_blob_in = subnet_blob
                 subnet_blob = fluid.layers.conv2d(
                     input=subnet_blob_in,
-                    num_filters=self.fpn_dim,
+                    num_filters=self.num_chan,
                     filter_size=3,
                     stride=1,
                     padding=1,
@@ -88,13 +122,11 @@ class RetinaHead(object):
 
             # class prediction
             cls_name = 'retnet_cls_pred_fpn{}'.format(lvl)
-            cls_share_name = 'retnet_cls_pred_fpn{}'.format(self.k_min)
-            num_anchors = retina_cfg.SCALES_PER_OCTAVE * len(
-                retina_cfg.ASPECT_RATIOS)
-            cls_dim = num_anchors * (self.cfg.DATA.CLASS_NUM - 1)
+            cls_share_name = 'retnet_cls_pred_fpn{}'.format(self.min_level)
+            num_anchors = self.num_scales_per_octave * len(self.aspect_ratios)
+            cls_dim = num_anchors * (self.num_classes - 1)
             # bias initialization: b = -log((1 - pai) / pai)
-            bias_init = float(-np.log((1 - retina_cfg.TRAIN.PRIOR_PROB) /
-                                      retina_cfg.TRAIN.PRIOR_PROB))
+            bias_init = float(-np.log((1 - self.prior_prob) / self.prior_prob))
             out_cls = fluid.layers.conv2d(
                 input=subnet_blob,
                 num_filters=cls_dim,
@@ -113,9 +145,10 @@ class RetinaHead(object):
                     learning_rate=2.,
                     regularizer=L2Decay(0.)))
             cls_pred_list.append(out_cls)
+
         return cls_pred_list
 
-    def _bbox_subnet(self, body_feats, spatial_scale, fpn_name_list):
+    def _bbox_subnet(self, body_feats, spatial_scale):
         """
         Get bounding box predictions of all level FPN level.
         
@@ -123,26 +156,25 @@ class RetinaHead(object):
             fpn_dict(Dict): A dictionary represents the output of FPN neck with 
                 their name.
             spatial_scale(List): A list of multiplicative spatial scale factor.
-            fpn_name_list(List): A list of names regarding to output of FPN neck.
 
         Return:
             bbox_pred_input(List): Bounding box prediction of all input fpn
                 levels.
         """
-        retina_cfg = self.cfg.RETINA_HEAD
-        assert len(body_feats) == self.k_max - self.k_min + 1
+        assert len(body_feats) == self.max_level - self.min_level + 1
+        fpn_name_list = list(body_feats.keys())
         bbox_pred_list = []
-        for lvl in range(self.k_min, self.k_max + 1):
-            fpn_name = fpn_name_list[self.k_max - lvl]
+        for lvl in range(self.min_level, self.max_level + 1):
+            fpn_name = fpn_name_list[self.max_level - lvl]
             subnet_blob = body_feats[fpn_name]
-            for i in range(retina_cfg.NUM_CONVS):
+            for i in range(self.num_convs_per_octave):
                 conv_name = 'retnet_bbox_conv_n{}_fpn{}'.format(i, lvl)
                 conv_share_name = 'retnet_bbox_conv_n{}_fpn{}'.format(
-                    i, self.k_min)
+                    i, self.min_level)
                 subnet_blob_in = subnet_blob
                 subnet_blob = fluid.layers.conv2d(
                     input=subnet_blob_in,
-                    num_filters=self.fpn_dim,
+                    num_filters=self.num_chan,
                     filter_size=3,
                     stride=1,
                     padding=1,
@@ -159,9 +191,8 @@ class RetinaHead(object):
 
             # bbox prediction
             bbox_name = 'retnet_bbox_pred_fpn{}'.format(lvl)
-            bbox_share_name = 'retnet_bbox_pred_fpn{}'.format(self.k_min)
-            num_anchors = retina_cfg.SCALES_PER_OCTAVE * len(
-                retina_cfg.ASPECT_RATIOS)
+            bbox_share_name = 'retnet_bbox_pred_fpn{}'.format(self.min_level)
+            num_anchors = self.num_scales_per_octave * len(self.aspect_ratios)
             bbox_dim = num_anchors * 4
             out_bbox = fluid.layers.conv2d(
                 input=subnet_blob,
@@ -182,7 +213,7 @@ class RetinaHead(object):
             bbox_pred_list.append(out_bbox)
         return bbox_pred_list
 
-    def _anchor_generate(self, body_feats, spatial_scale, fpn_name_list):
+    def _anchor_generate(self, body_feats, spatial_scale):
         """
         Get anchor boxes of all level FPN level.
         
@@ -190,37 +221,36 @@ class RetinaHead(object):
             fpn_dict(Dict): A dictionary represents the output of FPN neck with 
                 their name.
             spatial_scale(List): A list of multiplicative spatial scale factor.
-            fpn_name_list(List): A list of names regarding to output of FPN neck.
 
         Return:
             anchor_input(List): Anchors of all input fpn levels with shape of.
             anchor_var_input(List): Anchor variance of all input fpn levels with
                 shape.
         """
-        retina_cfg = self.cfg.RETINA_HEAD
-        assert len(body_feats) == self.k_max - self.k_min + 1
+        assert len(body_feats) == self.max_level - self.min_level + 1
+        fpn_name_list = list(body_feats.keys())
         anchor_list = []
         anchor_var_list = []
-        for lvl in range(self.k_min, self.k_max + 1):
+        for lvl in range(self.min_level, self.max_level + 1):
             anchor_sizes = []
-            stride = int(1 / spatial_scale[self.k_max - lvl])
-            for octave in range(retina_cfg.SCALES_PER_OCTAVE):
-                anchor_size = stride * (2 ** (float(octave) /
-                                            float(retina_cfg.SCALES_PER_OCTAVE))
-                                        ) * retina_cfg.ANCHOR_SCALE
+            stride = int(1 / spatial_scale[self.max_level - lvl])
+            for octave in range(self.num_scales_per_octave):
+                anchor_size = stride * (
+                    2**(float(octave) /
+                        float(self.num_scales_per_octave))) * self.base_scale
                 anchor_sizes.append(anchor_size)
-            fpn_name = fpn_name_list[self.k_max - lvl]
+            fpn_name = fpn_name_list[self.max_level - lvl]
             anchor, anchor_var = fluid.layers.anchor_generator(
                 input=body_feats[fpn_name],
                 anchor_sizes=anchor_sizes,
-                aspect_ratios=retina_cfg.ASPECT_RATIOS,
-                variance=retina_cfg.VARIANCE,
+                aspect_ratios=self.aspect_ratios,
+                variance=self.variance,
                 stride=[stride, stride])
             anchor_list.append(anchor)
             anchor_var_list.append(anchor_var)
         return anchor_list, anchor_var_list
 
-    def _get_output(self, body_feats, spatial_scale, fpn_name_list):
+    def _get_output(self, body_feats, spatial_scale):
         """
         Get class, bounding box predictions and anchor boxes of all level FPN level.
         
@@ -228,7 +258,6 @@ class RetinaHead(object):
             fpn_dict(Dict): A dictionary represents the output of FPN neck with 
                 their name.
             spatial_scale(List): A list of multiplicative spatial scale factor.
-            fpn_name_list(List): A list of names regarding to output of FPN neck.
 
         Return:
             cls_pred_input(List): Class prediction of all input fpn levels.
@@ -238,27 +267,23 @@ class RetinaHead(object):
             anchor_var_input(List): Anchor variance of all input fpn levels with
                 shape.
         """
-        retina_cfg = self.cfg.RETINA_HEAD
-        assert len(body_feats) == self.k_max - self.k_min + 1
+        assert len(body_feats) == self.max_level - self.min_level + 1
         # class subnet
-        cls_pred_list = self._class_subnet(body_feats, spatial_scale,
-                                           fpn_name_list)
+        cls_pred_list = self._class_subnet(body_feats, spatial_scale)
         # bbox subnet
-        bbox_pred_list = self._bbox_subnet(body_feats, spatial_scale,
-                                           fpn_name_list)
+        bbox_pred_list = self._bbox_subnet(body_feats, spatial_scale)
         #generate anchors
-        anchor_list, anchor_var_list = self._anchor_generate(
-            body_feats, spatial_scale, fpn_name_list)
-
+        anchor_list, anchor_var_list = self._anchor_generate(body_feats,
+                                                             spatial_scale)
         cls_pred_reshape_list = []
         bbox_pred_reshape_list = []
         anchor_reshape_list = []
         anchor_var_reshape_list = []
-        for i in range(self.k_max - self.k_min + 1):
+        for i in range(self.max_level - self.min_level + 1):
             cls_pred_transpose = fluid.layers.transpose(
                 cls_pred_list[i], perm=[0, 2, 3, 1])
             cls_pred_reshape = fluid.layers.reshape(
-                cls_pred_transpose, shape=(0, -1, self.cfg.DATA.CLASS_NUM - 1))
+                cls_pred_transpose, shape=(0, -1, self.num_classes - 1))
             bbox_pred_transpose = fluid.layers.transpose(
                 bbox_pred_list[i], perm=[0, 2, 3, 1])
             bbox_pred_reshape = fluid.layers.reshape(
@@ -277,7 +302,7 @@ class RetinaHead(object):
         output['anchor_var'] = anchor_var_reshape_list
         return output
 
-    def get_prediction(self, body_feats, spatial_scale, fpn_name_list, im_info):
+    def get_prediction(self, body_feats, spatial_scale, im_info):
         """
         Get prediction bounding box in test stage.
         
@@ -285,12 +310,7 @@ class RetinaHead(object):
             fpn_dict(Dict): A dictionary represents the output of FPN neck with 
                 their name.
             spatial_scale(List): A list of multiplicative spatial scale factor.
-            fpn_name_list(List): A list of names regarding to output of FPN neck.
             im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
-                number of input images, each element consists of im_height, 
-                im_width, im_scale.
-            cls_score (Variable), bbox_pred(Variable): Output of get_output.
-            im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
                 number of input images, each element consists of im_height, 
                 im_width, im_scale.
      
@@ -299,35 +319,29 @@ class RetinaHead(object):
                 row has 6 values: [label, confidence, xmin, ymin, xmax, ymax]. 
                 N is the total number of prediction.
         """
-        output = self._get_output(body_feats, spatial_scale, fpn_name_list)
+        output = self._get_output(body_feats, spatial_scale)
         cls_pred_reshape_list = output['cls_pred']
         bbox_pred_reshape_list = output['bbox_pred']
         anchor_reshape_list = output['anchor']
         anchor_var_reshape_list = output['anchor_var']
-        for i in range(self.k_max - self.k_min + 1):
+        for i in range(self.max_level - self.min_level + 1):
             cls_pred_reshape_list[i] = fluid.layers.sigmoid(
                 cls_pred_reshape_list[i])
         pred_result = fluid.layers.retinanet_detection_output(
             bboxes=bbox_pred_reshape_list,
             scores=cls_pred_reshape_list,
             anchors=anchor_reshape_list,
-            im_info=im_info,
-            score_threshold=self.cfg.RETINA_HEAD.TEST.SCORE_THRESH,
-            nms_top_k=self.cfg.RETINA_HEAD.TEST.PRE_NMS_TOP_N,
-            keep_top_k=self.cfg.RETINA_HEAD.TEST.DETECTIONS_PER_IM,
-            nms_threshold=self.cfg.RETINA_HEAD.TEST.NMS_THRESH,
-            nms_eta=self.cfg.RETINA_HEAD.TEST.NMA_ETA)
+            im_info=im_info)
         return {'bbox': pred_result}
 
-    def get_loss(self, body_feats, spatial_scale, fpn_name_list, im_info,
-                 gt_box, gt_label, is_crowd):
+    def get_loss(self, body_feats, spatial_scale, im_info, gt_box, gt_label,
+                 is_crowd):
         """
         Calculate the loss of retinanet.
         Args:
             fpn_dict(Dict): A dictionary represents the output of FPN neck with 
                 their name.
             spatial_scale(List): A list of multiplicative spatial scale factor.
-            fpn_name_list(List): A list of names regarding to output of FPN neck.
             im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
                 number of input images, each element consists of im_height, 
                 im_width, im_scale.
@@ -343,7 +357,7 @@ class RetinaHead(object):
                 loss_cls(Variable): focal loss.
                 loss_bbox(Variable): smooth l1 loss.
         """
-        output = self._get_output(body_feats, spatial_scale, fpn_name_list)
+        output = self._get_output(body_feats, spatial_scale)
         cls_pred_reshape_list = output['cls_pred']
         bbox_pred_reshape_list = output['bbox_pred']
         anchor_reshape_list = output['anchor']
@@ -353,7 +367,6 @@ class RetinaHead(object):
         bbox_pred_input = fluid.layers.concat(bbox_pred_reshape_list, axis=1)
         anchor_input = fluid.layers.concat(anchor_reshape_list, axis=0)
         anchor_var_input = fluid.layers.concat(anchor_var_reshape_list, axis=0)
-
         score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight, fg_num = \
             fluid.layers.retinanet_target_assign(
                 bbox_pred=bbox_pred_input,
@@ -364,25 +377,23 @@ class RetinaHead(object):
                 gt_labels=gt_label,
                 is_crowd=is_crowd,
                 im_info=im_info,
-                num_classes=self.cfg.DATA.CLASS_NUM - 1,
-                positive_overlap=self.cfg.RETINA_HEAD.TRAIN.POSITIVE_OVERLAP,
-                negative_overlap=self.cfg.RETINA_HEAD.TRAIN.NEGATIVE_OVERLAP)
-
+                num_classes=self.num_classes - 1,
+                positive_overlap=self.positive_overlap,
+                negative_overlap=self.negative_overlap)
         fg_num = fluid.layers.reduce_sum(fg_num, name='fg_num')
         loss_cls = fluid.layers.sigmoid_focal_loss(
             x=score_pred,
             label=score_tgt,
             fg_num=fg_num,
-            gamma=self.cfg.RETINA_HEAD.TRAIN.LOSS_GAMMA,
-            alpha=self.cfg.RETINA_HEAD.TRAIN.LOSS_ALPHA)
+            gamma=self.gamma,
+            alpha=self.alpha)
         loss_cls = fluid.layers.reduce_sum(loss_cls, name='loss_cls')
         loss_bbox = fluid.layers.smooth_l1(
             x=loc_pred,
             y=loc_tgt,
-            sigma=self.cfg.RETINA_HEAD.TRAIN.SIGMA,
+            sigma=self.sigma,
             inside_weight=bbox_weight,
             outside_weight=bbox_weight)
         loss_bbox = fluid.layers.reduce_sum(loss_bbox, name='loss_bbox')
         loss_bbox = loss_bbox / fg_num
-
         return {'loss_cls': loss_cls, 'loss_bbox': loss_bbox}

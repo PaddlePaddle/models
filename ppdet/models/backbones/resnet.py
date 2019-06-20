@@ -318,8 +318,9 @@ class ResNet(object):
         if len(res_endpoints) == 1:
             return res_endpoints[0]
 
-        return OrderedDict([('res{}_sum'.format(idx), feat)
-                            for idx, feat in enumerate(res_endpoints)])
+        return OrderedDict(
+            [('res{}_sum'.format(idx + self.feature_maps[0]), feat)
+             for idx, feat in enumerate(res_endpoints)])
 
 
 @register

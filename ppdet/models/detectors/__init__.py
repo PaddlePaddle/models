@@ -16,3 +16,4 @@ from . import faster_rcnn
 from . import mask_rcnn
 from . import yolov3
 from . import ssd
+from . import retinanet
