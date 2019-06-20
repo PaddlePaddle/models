@@ -34,10 +34,10 @@ from ppdet.models.model_inputs import create_feeds
 from ppdet.dataset.data_feed import create_reader
 
 from ppdet.utils.stats import TrainingStats
+from ppdet.utils.eval_utils import parse_fetches
 from ppdet.utils.cli import parse_args
 from ppdet.utils.visualizer import visualize_results
 import ppdet.utils.checkpoint as checkpoint
-from tools.eval_utils import parse_fetches
 
 logger = logging.getLogger(__name__)
 
