@@ -640,7 +640,7 @@ class YoloTrainFeed(DataFeed):
                      RandomShape(sizes=[320, 352, 384, 416, 448, 480,
                                         512, 544, 576, 608])
                  ],
-                 batch_size=64,
+                 batch_size=8,
                  shuffle=True,
                  samples=-1,
                  drop_last=True,
@@ -721,7 +721,7 @@ class YoloTestFeed(DataFeed):
                  batch_transforms=[],
                  batch_size=1,
                  shuffle=False,
-                 samples=-1,
+                 samples=1,
                  drop_last=False,
                  with_background=False,
                  test_file=None,
