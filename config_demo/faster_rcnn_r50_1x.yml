@@ -18,12 +18,9 @@ FasterRCNN:
 
 ResNet:
   norm_type: affine_channel
-  norm_decay: true
+  norm_decay: 0
   depth: 50
-  feature_maps:
-  - 2
-  - 3
-  - 4
+  feature_maps: [2,3,4]
   freeze_at: 2
 
 ResNetC5:
@@ -31,24 +28,10 @@ ResNetC5:
 
 RPNHead:
   anchor_generator:
-    anchor_sizes:
-    - 32
-    - 64
-    - 128
-    - 256
-    - 512
-    aspect_ratios:
-    - 0.5
-    - 1.0
-    - 2.0
-    stride:
-    - 16.0
-    - 16.0
-    variance:
-    - 1.0
-    - 1.0
-    - 1.0
-    - 1.0
+    anchor_sizes: [32, 64, 128, 256, 512]
+    aspect_ratios: [0.5, 1.0, 2.0]
+    stride: [16.0, 16.0]
+    variance: [1.0, 1.0, 1.0, 1.0]
   rpn_target_assign:
     rpn_batch_size_per_im: 256
     rpn_fg_fraction: 0.5
@@ -57,13 +40,11 @@ RPNHead:
     rpn_straddle_thresh: 0.0
     use_random: true
   test_proposal:
-    eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
     post_nms_top_n: 1000
     pre_nms_top_n: 6000
   train_proposal:
-    eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
     post_nms_top_n: 2000
@@ -77,11 +58,7 @@ RoIAlign:
 
 BBoxAssigner:
   batch_size_per_im: 512
-  bbox_reg_weights:
-  - 0.1
-  - 0.1
-  - 0.2
-  - 0.2
+  bbox_reg_weights: [0.1, 0.1, 0.2, 0.2]
   bg_thresh_hi: 0.5
   bg_thresh_lo: 0.0
   fg_fraction: 0.25
@@ -94,18 +71,12 @@ BBoxHead:
     axis: 1
     box_normalized: false
     code_type: decode_center_size
-    prior_box_var:
-    - 0.1
-    - 0.1
-    - 0.2
-    - 0.2
+    prior_box_var: [0.1, 0.1, 0.2, 0.2]
   head: ResNetC5
   nms:
     background_label: 0
     keep_top_k: 100
-    nms_eta: 1.0
     nms_threshold: 0.5
-    nms_top_k: -1
     normalized: false
     score_threshold: 0.05
   num_classes: 81
@@ -115,9 +86,7 @@ LearningRate:
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
-    milestones:
-    - 6000
-    - 8000
+    milestones: [6000, 8000]
     values: null
   - !LinearWarmup
     start_factor: 0.3333333333333333
@@ -136,8 +105,8 @@ FasterRCNNTrainFeed:
   batch_size: 1
   dataset:
     # TODO: change dataset dir
-    annotation: COCO17/annotations/instances_val2017.json
-    image_dir: COCO17/val2017
+    annotation: COCO17/annotations/instances_train2017.json
+    image_dir: COCO17/train2017
   drop_last: false
   num_workers: 2
 
