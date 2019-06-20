@@ -95,7 +95,7 @@ class MaskRCNN(object):
 
         if self.neck is None:
             # in models without FPN, roi extractor only uses the last level of
-            # feature maps. And body_feat_names[-1] represents the name of
+            # feature maps. And list(body_feats.keys())[-1] represents the name of
             # last feature map.
             last_feat = body_feats[list(body_feats.keys())[-1]]
             roi_feat = self.roi_extractor(last_feat, rois)
