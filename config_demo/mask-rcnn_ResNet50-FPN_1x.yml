@@ -2,8 +2,8 @@ architecture: MaskRCNN
 train_feed: MaskRCNNTrainFeed
 test_feed: MaskRCNNTestFeed
 max_iters: 180000
-pretrain_weights: ResNet50_pretrained/ 
-weights: model_final/ 
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
+weights: output/MaskRCNN/model_final/ 
 log_smooth_window: 20
 snapshot_iter: 10000
 metric: COCO
