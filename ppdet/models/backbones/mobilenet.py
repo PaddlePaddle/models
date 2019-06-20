@@ -79,7 +79,7 @@ class MobileNet(object):
             bias_attr=False)
 
         bn_name = name + "_bn"
-        norm_decay = float(self.norm_decay)
+        norm_decay = self.norm_decay
         bn_param_attr = ParamAttr(
             regularizer=L2Decay(norm_decay), name=bn_name + '_scale')
         bn_bias_attr = ParamAttr(
