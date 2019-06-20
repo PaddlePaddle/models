@@ -60,7 +60,7 @@ OptimizerBuilder:
     type: L2
 
 YoloTrainFeed:
-  batch_size: 4
+  batch_size: 8
   batch_transforms:
   - !RandomShape
     sizes: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
@@ -100,9 +100,9 @@ YoloTrainFeed:
     contrast_prob: 0.5
     contrast_upper: 1.5
     count: 4
-    hue_lower: 0.5
+    hue_lower: 18
     hue_prob: 0.5
-    hue_upper: 1.5
+    hue_upper: 18
     is_order: false
     saturation_lower: 0.5
     saturation_prob: 0.5
@@ -119,7 +119,6 @@ YoloTrainFeed:
                     [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 1.0],
                     [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 1.0],
                     [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
-    satisfy_all: true
   - !RandomInterpImage
     target_size: 608
   - !RandomFlipImage
@@ -184,7 +183,7 @@ YoloEvalFeed:
   - !Permute
     channel_first: true
     to_bgr: false
-  shuffle: true
+  shuffle: false
 
 YoloTestFeed:
   batch_size: 1
@@ -230,4 +229,4 @@ YoloTestFeed:
   - !Permute
     channel_first: true
     to_bgr: false
-  shuffle: true
+  shuffle: false

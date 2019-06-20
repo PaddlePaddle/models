@@ -134,19 +134,19 @@ YoloTrainFeed:
     contrast_prob: 0.5
     contrast_upper: 1.5
     count: 4
-    hue_lower: 0.5
+    hue_lower: 18
     hue_prob: 0.5
-    hue_upper: 1.5
+    hue_upper: 18
     is_order: false
     saturation_lower: 0.5
     saturation_prob: 0.5
     saturation_upper: 1.5
   - !ExpandImage
     max_ratio: 3.0
-    mean:
-    - 127.5
-    - 127.5
-    - 127.5
+    mean: 
+    - 123.675
+    - 116.28
+    - 103.53
     prob: 0.5
   - !CropImage
     batch_sampler:
@@ -206,9 +206,7 @@ YoloTrainFeed:
       - 2.0
       - 0.0
       - 1.0
-    satisfy_all: true
   - !RandomInterpImage
-    max_size: 0
     target_size: 608
   - !RandomFlipImage
     is_mask_flip: false
@@ -272,7 +270,7 @@ YoloEvalFeed:
   - !Permute
     channel_first: true
     to_bgr: false
-  shuffle: true
+  shuffle: false
 
 YoloTestFeed:
   batch_size: 1
@@ -301,7 +299,6 @@ YoloTestFeed:
     with_mixup: false
   - !ResizeImage
     interp: 2
-    max_size: 0
     target_size: 608
     use_cv2: true
   - !NormalizeImage
@@ -318,4 +315,4 @@ YoloTestFeed:
   - !Permute
     channel_first: true
     to_bgr: false
-  shuffle: true
+  shuffle: false
