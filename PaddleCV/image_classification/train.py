@@ -430,7 +430,7 @@ def train(args):
         build_strategy = fluid.BuildStrategy()
         build_strategy.memory_optimize = args.with_mem_opt
         build_strategy.enable_inplace = args.with_inplace
-        build_strategy.fuse_all_reduce_ops=1
+        #build_strategy.fuse_all_reduce_ops=1
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_iteration_per_drop_scope = 10
