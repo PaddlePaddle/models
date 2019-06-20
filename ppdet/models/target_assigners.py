@@ -50,8 +50,6 @@ class BBoxAssigner(object):
 
 @register
 class CascadeBBoxAssigner(object):
-    __append_doc__ = True
-
     def __init__(
             self,
             batch_size_per_im=512,
