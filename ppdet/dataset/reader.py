@@ -61,8 +61,8 @@ class Reader(object):
         mapper = build_mapper(ops, {'is_train': which == 'TRAIN'})
 
         worker_args = None
-        if 'WORKER_CONF' in self._trans_conf:
-            worker_args = self._trans_conf['WORKER_CONF']
+        if 'WORKER_CONF' in self._trans_conf[which]:
+            worker_args = self._trans_conf[which]['WORKER_CONF']
             worker_args = {k.lower(): v for k, v in worker_args.items()}
 
         mapped_ds = map(sc, mapper, worker_args)

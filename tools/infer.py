@@ -24,6 +24,9 @@ import multiprocessing
 import numpy as np
 
 import logging
+FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
+logging.basicConfig(level=logging.INFO, format=FORMAT)
+
 
 from paddle import fluid
 
@@ -34,9 +37,6 @@ import ppdet.utils.checkpoint as checkpoint
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data_feed import make_reader
 from tools.eval_utils import parse_fetches
-
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,6 @@ def main():
         raise ValueError("Main architecture is not specified in config file")
 
     merge_config(args.cli_config)
-    print(cfg)
 
     if cfg['use_gpu']:
         devices_num = fluid.core.get_cuda_device_count()
