@@ -31,22 +31,18 @@ logger = logging.getLogger(__name__)
 
 
 class Reader(object):
-    """ Interface to make readers for training or evaluation
-    """
+    """Interface to make readers for training or evaluation"""
 
     def __init__(self, data_cf, trans_conf, maxiter=-1):
-        """ Init
-        """
         self._data_cf = data_cf
         self._trans_conf = trans_conf
         self._maxiter = maxiter
         self._cname2cid = None
         assert isinstance(self._maxiter, Integral), "maxiter should be int"
 
-    def _make_reader(self, which):
-        """ Build reader for training or validation
-        """
-        file_conf = self._data_cf[which]
+    def _make_reader(self, mode):
+        """Build reader for training or validation"""
+        file_conf = self._data_cf[mode]
 
         # 1, Build data source
 
@@ -54,12 +50,12 @@ class Reader(object):
         sc = build_source(sc_conf)
 
         # 2, Buid a transformed dataset
-        ops = self._trans_conf[which]['OPS']
-        batchsize = self._trans_conf[which]['BATCH_SIZE']
+        ops = self._trans_conf[mode]['OPS']
+        batchsize = self._trans_conf[mode]['BATCH_SIZE']
         drop_last = False if 'DROP_LAST' not in \
-            self._trans_conf[which] else self._trans_conf[which]['DROP_LAST']
+            self._trans_conf[mode] else self._trans_conf[mode]['DROP_LAST']
 
-        mapper = build_mapper(ops, {'is_train': which == 'TRAIN'})
+        mapper = build_mapper(ops, {'is_train': mode == 'TRAIN'})
 
         worker_args = None
         if 'WORKER_CONF' in self._trans_conf[which]:
@@ -69,7 +65,7 @@ class Reader(object):
         mapped_ds = map(sc, mapper, worker_args)
         batched_ds = batch(mapped_ds, batchsize, drop_last)
 
-        trans_conf = {k.lower(): v for k, v in self._trans_conf[which].items()}
+        trans_conf = {k.lower(): v for k, v in self._trans_conf[mode].items()}
         need_keys = {
             'is_padding',
             'coarsest_stride',
@@ -81,14 +77,13 @@ class Reader(object):
             key: value
             for key, value in trans_conf.items() if key in need_keys
         }
+
         batched_ds = batch_map(batched_ds, bm_config)
 
         batched_ds.reset()
-        if which.lower() == 'train':
+        if mode.lower() == 'train':
             if self._cname2cid is not None:
-                logger.warn(
-                    'The cname2cid field has been setted, and it will be overrided by a new one.'
-                )
+                logger.warn('cname2cid already set, it will be overridden')
             self._cname2cid = sc.cname2cid
 
         # 3, Build a reader
@@ -112,16 +107,13 @@ class Reader(object):
         return _reader
 
     def train(self):
-        """ Build reader for training
-        """
+        """Build reader for training"""
         return self._make_reader('TRAIN')
 
     def val(self):
-        """ Build reader for validation
-        """
+        """Build reader for validation"""
         return self._make_reader('VAL')
 
     def test(self):
-        """ Build reader for inference
-        """
+        """Build reader for inference"""
         return self._make_reader('TEST')
