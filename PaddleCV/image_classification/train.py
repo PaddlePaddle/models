@@ -328,6 +328,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                 else:
                     optimizer.minimize(avg_cost)
                 global_lr = optimizer._global_learning_rate()
+                global_lr.persistable=True
                 build_program_out.append(global_lr)
 
     return build_program_out
@@ -429,7 +430,7 @@ def train(args):
         build_strategy = fluid.BuildStrategy()
         build_strategy.memory_optimize = args.with_mem_opt
         build_strategy.enable_inplace = args.with_inplace
-        build_strategy.fuse_all_reduce_ops=1
+        #build_strategy.fuse_all_reduce_ops=1
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_iteration_per_drop_scope = 10
