@@ -32,6 +32,8 @@ def parse_args():
         type=ast.literal_eval,
         default=False,
         help="The flag indicating whether to shuffle instances in each pass.")
+    parser.add_argument("-e", "--epoch", default=5, type=int, help="set epoch")
+    parser.add_argument("--ce", action="store_true", help="run ce")
     args = parser.parse_args()
     return args
 
@@ -170,13 +172,20 @@ def inference_mnist():
 
 
 def train_mnist(args):
-    epoch_num = 5
+    epoch_num = args.epoch
     BATCH_SIZE = 64
 
     trainer_count = fluid.dygraph.parallel.Env().nranks
     place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
         if args.use_data_parallel else fluid.CUDAPlace(0)
     with fluid.dygraph.guard(place):
+        if args.ce:
+            print("ce mode")
+            seed = 33
+            np.random.seed(seed)
+            fluid.default_startup_program().random_seed = seed
+            fluid.default_main_program().random_seed = seed
+
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
         mnist = MNIST("mnist")
@@ -226,6 +235,9 @@ def train_mnist(args):
             mnist.eval()
             test_cost, test_acc = test_mnist(test_reader, mnist, BATCH_SIZE)
             mnist.train()
+            if args.ce:
+                print("kpis\ttest_acc\t%s" % test_acc)
+                print("kpis\ttest_cost\t%s" % test_cost)
             print("Loss at epoch {} , Test avg_loss is: {}, acc is: {}".format(
                 epoch, test_cost, test_acc))
 
