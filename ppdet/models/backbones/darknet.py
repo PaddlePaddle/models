@@ -34,13 +34,13 @@ class DarkNet(object):
     Args:
         depth (int): network depth, currently only darknet 53 is supported
         norm_type (str): normalization type, 'bn' and 'sync_bn' are supported
-        bn_decay (bool): apply weight decay to in batch norm weights
+        norm_decay (float): weight decay for normalization layer weights
     """
-    def __init__(self, depth=53, norm_type='bn', bn_decay=True):
+    def __init__(self, depth=53, norm_type='bn', norm_decay=0.):
         assert depth in [53], "unsupported depth value"
         self.depth = depth
         self.norm_type = norm_type
-        self.bn_decay = bn_decay
+        self.norm_decay = norm_decay
         self.depth_cfg = {53: ([1, 2, 8, 8, 4], self.basicblock)}
 
     def _conv_norm(self,
@@ -62,9 +62,9 @@ class DarkNet(object):
             bias_attr=False)
 
         bn_name = name + ".bn"
-        bn_param_attr = ParamAttr(regularizer=L2Decay(float(self.bn_decay)),
+        bn_param_attr = ParamAttr(regularizer=L2Decay(float(self.norm_decay)),
                                   name=bn_name + '.scale')
-        bn_bias_attr = ParamAttr(regularizer=L2Decay(float(self.bn_decay)),
+        bn_bias_attr = ParamAttr(regularizer=L2Decay(float(self.norm_decay)),
                                  name=bn_name + '.offset')
 
         out = fluid.layers.batch_norm(
