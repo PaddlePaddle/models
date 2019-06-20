@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -98,8 +97,10 @@ class RPNHead(object):
         train_proposal (object): `GenerateProposals` instance for training
         test_proposal (object): `GenerateProposals` instance for testing
     """
-    __inject__ = ['anchor_generator', 'rpn_target_assign',
-                  'train_proposal', 'test_proposal']
+    __inject__ = [
+        'anchor_generator', 'rpn_target_assign', 'train_proposal',
+        'test_proposal'
+    ]
 
     def __init__(self,
                  anchor_generator=AnchorGenerator().__dict__,
@@ -218,17 +219,13 @@ class RPNHead(object):
 
     def _transform_input(self, rpn_cls_score, rpn_bbox_pred, anchor,
                          anchor_var):
-        rpn_cls_score_reshape = fluid.layers.transpose(
-            rpn_cls_score, perm=[0, 2, 3, 1])
-        rpn_bbox_pred_reshape = fluid.layers.transpose(
-            rpn_bbox_pred, perm=[0, 2, 3, 1])
-        anchor_reshape = fluid.layers.reshape(anchor, shape=(-1, 4))
-        var_reshape = fluid.layers.reshape(anchor_var, shape=(-1, 4))
-        rpn_cls_score_reshape = fluid.layers.reshape(
-            x=rpn_cls_score_reshape, shape=(0, -1, 1))
-        rpn_bbox_pred_reshape = fluid.layers.reshape(
-            x=rpn_bbox_pred_reshape, shape=(0, -1, 4))
-        return rpn_cls_score_reshape, rpn_bbox_pred_reshape, anchor_reshape, var_reshape
+        rpn_cls_score = fluid.layers.transpose(rpn_cls_score, perm=[0, 2, 3, 1])
+        rpn_bbox_pred = fluid.layers.transpose(rpn_bbox_pred, perm=[0, 2, 3, 1])
+        anchor = fluid.layers.reshape(anchor, shape=(-1, 4))
+        anchor_var = fluid.layers.reshape(anchor_var, shape=(-1, 4))
+        rpn_cls_score = fluid.layers.reshape(x=rpn_cls_score, shape=(0, -1, 1))
+        rpn_bbox_pred = fluid.layers.reshape(x=rpn_bbox_pred, shape=(0, -1, 4))
+        return rpn_cls_score, rpn_bbox_pred, anchor, anchor_var
 
     def _get_loss_input(self):
         for attr in ['rpn_cls_score', 'rpn_bbox_pred', 'anchor', 'anchor_var']:
@@ -309,8 +306,10 @@ class FPNRPNHead(RPNHead):
         max_level (int): highest level of FPN output
     """
 
-    __inject__ = ['anchor_generator', 'rpn_target_assign',
-                  'train_proposal', 'test_proposal']
+    __inject__ = [
+        'anchor_generator', 'rpn_target_assign', 'train_proposal',
+        'test_proposal'
+    ]
 
     def __init__(self,
                  anchor_generator=AnchorGenerator().__dict__,
@@ -374,7 +373,8 @@ class FPNRPNHead(RPNHead):
 
         self.anchors, self.anchor_var = self.anchor_generator(
             input=conv_rpn_fpn,
-            anchor_sizes=(self.anchor_start_size * 2. ** (feat_lvl - self.min_level), ),
+            anchor_sizes=(self.anchor_start_size * 2.
+                          **(feat_lvl - self.min_level), ),
             stride=(2.**feat_lvl, 2.**feat_lvl))
 
         self.rpn_cls_score = fluid.layers.conv2d(
@@ -477,21 +477,21 @@ class FPNRPNHead(RPNHead):
         return rois_collect
 
     def _get_loss_input(self):
-        rpn_cls_reshape_list = []
-        rpn_bbox_reshape_list = []
-        anchors_reshape_list = []
-        anchor_var_reshape_list = []
+        rpn_clses = []
+        rpn_bboxes = []
+        anchors = []
+        anchor_vars = []
         for i in range(len(self.fpn_rpn_list)):
             single_input = self._transform_input(
                 self.fpn_rpn_list[i][0], self.fpn_rpn_list[i][1],
                 self.anchors_list[i], self.anchor_var_list[i])
-            rpn_cls_reshape_list.append(single_input[0])
-            rpn_bbox_reshape_list.append(single_input[1])
-            anchors_reshape_list.append(single_input[2])
-            anchor_var_reshape_list.append(single_input[3])
+            rpn_clses.append(single_input[0])
+            rpn_bboxes.append(single_input[1])
+            anchors.append(single_input[2])
+            anchor_vars.append(single_input[3])
 
-        rpn_cls_input = fluid.layers.concat(rpn_cls_reshape_list, axis=1)
-        rpn_bbox_input = fluid.layers.concat(rpn_bbox_reshape_list, axis=1)
-        anchors_input = fluid.layers.concat(anchors_reshape_list)
-        anchor_var_input = fluid.layers.concat(anchor_var_reshape_list)
+        rpn_cls_input = fluid.layers.concat(rpn_clses, axis=1)
+        rpn_bbox_input = fluid.layers.concat(rpn_bboxes, axis=1)
+        anchors_input = fluid.layers.concat(anchors)
+        anchor_var_input = fluid.layers.concat(anchor_vars)
         return rpn_cls_input, rpn_bbox_input, anchors_input, anchor_var_input

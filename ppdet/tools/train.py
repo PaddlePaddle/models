@@ -24,10 +24,12 @@ import multiprocessing
 import numpy as np
 
 import logging
+FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
+logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 from paddle import fluid
 
-from ppdet.tools.eval_utils import parse_fetches
+from ppdet.tools.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import parse_args
 import ppdet.utils.checkpoint as checkpoint
@@ -35,8 +37,6 @@ import ppdet.utils.checkpoint as checkpoint
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data_feed import make_reader
 
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +62,12 @@ def main():
     else:
         train_feed = create(cfg['train_feed'])
 
+    if args.eval:
+        if 'eval_feed' not in cfg:
+            eval_feed = create(type(main_arch).__name__ + 'EvalFeed')
+        else:
+            eval_feed = create(cfg['eval_feed'])
+
     place = fluid.CUDAPlace(0) if cfg['use_gpu'] else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
@@ -74,7 +80,7 @@ def main():
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             # must be in the same scope as model when initialize feed_vars
-            train_pyreader, reader, feed_vars = make_reader(
+            train_pyreader, train_reader, feed_vars = make_reader(
                 train_feed, max_iter=cfg['max_iters'] * devices_num)
             train_fetches = model.train(feed_vars)
             loss = train_fetches['loss']
@@ -82,11 +88,30 @@ def main():
             optimizer = optim_builder(lr)
             optimizer.minimize(loss)
 
-    train_pyreader.decorate_sample_list_generator(reader, place)
+    train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     # parse train fetches
     train_keys, train_values = parse_fetches(train_fetches)
     train_values.append(lr)
+
+    if args.eval:
+        eval_prog = fluid.Program()
+        with fluid.program_guard(eval_prog, startup_prog):
+            with fluid.unique_name.guard():
+                # must be in the same scope as model when initialize feed_vars
+                eval_pyreader, eval_reader, feed_vars = make_reader(eval_feed)
+                if cfg['metric'] == 'COCO':
+                    fetches = model.test(feed_vars)
+                else:
+                    fetches = model.val(feed_vars)
+        eval_prog = eval_prog.clone(True)
+
+        eval_pyreader.decorate_sample_list_generator(eval_reader, place)
+
+        # parse train fetches
+        extra_keys = ['im_info', 'im_id'] if cfg['metric'] == 'COCO' \
+                     else []
+        eval_keys, eval_values = parse_fetches(fetches, eval_prog, extra_keys)
 
     # 3. Compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
@@ -97,6 +122,9 @@ def main():
     train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
             loss_name=loss.name, build_strategy=build_strategy)
+    if args.eval:
+        eval_compile_program = fluid.compiler.CompiledProgram(
+            eval_prog).with_data_parallel(build_strategy=build_strategy)
 
     exe.run(startup_prog)
 
@@ -124,6 +152,16 @@ def main():
         strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
             it, np.mean(outs[-1]), logs, end_time - start_time)
         logger.info(strs)
+
+        if it > 0 and it % cfg['snapshot_iter'] == 0:
+            checkpoint.save(exe, train_prog, os.path.join(save_dir, str(it)))
+
+            if args.eval:
+                # Run evaluation
+                results = eval_run(exe, eval_compile_program, eval_pyreader,
+                                   eval_keys, eval_values)
+                # Evaluation
+                eval_results(results, eval_feed, args, cfg['metric'])
 
     checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()
