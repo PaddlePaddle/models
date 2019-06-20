@@ -18,6 +18,8 @@ from desc import *
 from model import transformer, position_encoding_init
 import dist_utils
 
+num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+
 def parse_args():
     parser = argparse.ArgumentParser("Training for Transformer.")
     parser.add_argument(
@@ -146,21 +148,14 @@ def parse_args():
     return args
 
 def get_device_num():
-    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
-    # NOTE(zcd): use multi processes to train the model,
-    # and each process use one GPU card.
-    num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+    # NOTE(zcd): for multi-processe training, each process use one GPU card.
     if num_trainers > 1 : return 1
+    visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
     if visible_device:
         device_num = len(visible_device.split(','))
     else:
         device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
     return device_num
-
-def update_lr(TrainTaskConfig):
-    # For multi-process, all the process train the same data, so we should decay the learning rate.
-    num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-    TrainTaskConfig.learning_rate = TrainTaskConfig.learning_rate / num_trainers
 
 def append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
                          current_endpoint):
@@ -280,6 +275,9 @@ def prepare_data_generator(args, is_test, count, pyreader):
     Data generator wrapper for DataReader. If use py_reader, set the data
     provider for py_reader
     """
+    # NOTE: do not shuffle dataset when using multi-process training.
+    if num_trainers > 1:
+        args.shuffle = False
     data_reader = reader.DataReader(
         fpattern=args.val_file_pattern if is_test else args.train_file_pattern,
         src_vocab_fpath=args.src_vocab_fpath,
@@ -335,8 +333,11 @@ def prepare_data_generator(args, is_test, count, pyreader):
         # to make data on each device have similar token number
         data_reader = split(data_reader, count)
     if args.use_py_reader:
-        pyreader.decorate_tensor_provider(
-            py_reader_provider_wrapper(data_reader))
+        train_reader = py_reader_provider_wrapper(data_reader,)   
+        if num_trainers > 1:
+            train_reader = fluid.contrib.reader.distributed_batch_reader(
+                train_reader)
+        pyreader.decorate_tensor_provider(train_reader)
         data_reader = None
     else:  # Data generator for multi-devices
         data_reader = stack(data_reader, count)
@@ -508,8 +509,9 @@ def train_loop(exe,
     # build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
     build_strategy.fuse_all_optimizer_ops = True
 
-    if TrainTaskConfig.use_gpu:
-        dist_utils.prepare_for_multi_process(exe, build_strategy, train_prog, startup_prog)
+    if num_trainers > 1 and args.use_py_reader and TrainTaskConfig.use_gpu:
+        dist_utils.prepare_for_multi_process(exe, build_strategy, train_prog)
+        exec_strategy.num_threads = 1
 
     logging.info("begin executor")
     train_exe = fluid.ParallelExecutor(
@@ -644,12 +646,9 @@ def train(args):
     else:
         gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
         place = fluid.CUDAPlace(gpu_id)
-        dev_count = fluid.core.get_cuda_device_count()
+        dev_count = get_device_num()
 
     exe = fluid.Executor(place)
-
-    update_lr(TrainTaskConfig)
-
     train_prog = fluid.Program()
     startup_prog = fluid.Program()
 
