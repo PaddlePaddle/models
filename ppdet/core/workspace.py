@@ -28,7 +28,21 @@ from .config.yaml_helpers import serializable
 __all__ = ['global_config', 'load_config', 'merge_config',
            'get_registered_modules', 'create', 'register', 'serializable']
 
-global_config = {}
+
+class AttrDict(dict):
+    """Single level attribute dict, NOT recursive"""
+
+    def __init__(self, **kwargs):
+        super(AttrDict, self).__init__()
+        super(AttrDict, self).update(kwargs)
+
+    def __getattr__(self, key):
+        if key in self:
+            return self[key]
+        raise AttributeError("object has no attribute '{}'".format(key))
+
+
+global_config = AttrDict()
 
 
 def load_config(file_path):
