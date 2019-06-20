@@ -35,8 +35,8 @@ from ppdet.utils.cli import parse_args
 import ppdet.utils.checkpoint as checkpoint
 
 from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.data_feed import make_reader
-
+from ppdet.data_feed import create_reader
+from ppdet.placeholder import create_feeds
 
 logger = logging.getLogger(__name__)
 
@@ -79,15 +79,14 @@ def main():
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
-            # must be in the same scope as model when initialize feed_vars
-            train_pyreader, train_reader, feed_vars = make_reader(
-                train_feed, max_iter=cfg['max_iters'] * devices_num)
+            train_pyreader, feed_vars = create_feeds(train_feed)
             train_fetches = model.train(feed_vars)
             loss = train_fetches['loss']
             lr = lr_builder()
             optimizer = optim_builder(lr)
             optimizer.minimize(loss)
 
+    train_reader = create_reader(train_feed, cfg['max_iters'] * devices_num)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     # parse train fetches
@@ -99,13 +98,14 @@ def main():
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
                 # must be in the same scope as model when initialize feed_vars
-                eval_pyreader, eval_reader, feed_vars = make_reader(eval_feed)
+                eval_pyreader, feed_vars = create_feeds(eval_feed)
                 if cfg['metric'] == 'COCO':
                     fetches = model.test(feed_vars)
                 else:
                     fetches = model.val(feed_vars)
         eval_prog = eval_prog.clone(True)
 
+        eval_reader = create_reader(train_feed)
         eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
         # parse train fetches
