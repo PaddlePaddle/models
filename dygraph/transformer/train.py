@@ -1119,16 +1119,12 @@ def train():
             transformer = fluid.dygraph.parallel.DataParallel(transformer,
                                                               strategy)
 
+        reader = paddle.batch(
+            wmt16.train(ModelHyperParams.src_vocab_size,
+                        ModelHyperParams.trg_vocab_size),
+            batch_size=TrainTaskConfig.batch_size)
         if args.use_data_parallel:
-            reader = fluid.contrib.reader.distributed_sampler(
-                wmt16.train(ModelHyperParams.src_vocab_size,
-                            ModelHyperParams.trg_vocab_size),
-                batch_size=TrainTaskConfig.batch_size * trainer_count)
-        else:
-            reader = paddle.batch(
-                wmt16.train(ModelHyperParams.src_vocab_size,
-                            ModelHyperParams.trg_vocab_size),
-                batch_size=TrainTaskConfig.batch_size)
+            reader = fluid.contrib.reader.distributed_batch_reader(reader)
 
         for i in range(200):
             dy_step = 0
