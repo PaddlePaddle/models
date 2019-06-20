@@ -22,7 +22,6 @@ from .transformer import MappedDataset, BatchedDataset
 from .post_map import build_post_map
 from .parallel_map import ParallelMappedDataset
 from .operators import BaseOperator, registered_ops
-from . import arrange_sample
 
 __all__ = ['build_mapper', 'map', 'batch', 'batch_map']
 
@@ -30,7 +29,8 @@ logger = logging.getLogger(__name__)
 
 
 def build_mapper(ops, context=None):
-    """ Build a mapper for operators in 'ops'
+    """
+    Build a mapper for operators in 'ops'
 
     Args:
         ops (list of operator.BaseOperator or list of op dict):
@@ -62,12 +62,12 @@ def build_mapper(ops, context=None):
             params = {} if 'params' not in op else op['params']
             o = op_func(**params)
         else:
-            assert isinstance(
-                op, BaseOperator), 'invalid operator when build ops'
+            assert isinstance(op, BaseOperator), \
+                "invalid operator when build ops"
             o = op
         op_funcs.append(o)
-        op_repr.append('{%s}' % str(o))
-    op_repr = '[%s]' % ','.join(op_repr)
+        op_repr.append('{{}}'.format(str(o)))
+    op_repr = '[{}]'.format(','.join(op_repr))
 
     def _mapper(sample):
         ctx = {} if context is None else copy.deepcopy(context)
@@ -76,8 +76,7 @@ def build_mapper(ops, context=None):
                 out = f(sample, ctx)
                 sample = out
             except Exception as e:
-                logger.warn('failed to map operator[%s] with exception[%s]' \
-                    % (f, str(e)))
+                logger.warn("fail to map op [{}] with error: {}".format(f, e))
         return out
 
     _mapper.ops = op_repr
@@ -85,7 +84,9 @@ def build_mapper(ops, context=None):
 
 
 def map(ds, mapper, worker_args=None):
-    """ apply 'mapper' to 'ds'
+    """
+    Apply 'mapper' to 'ds'
+
     Args:
         ds (instance of Dataset): dataset to be mapped
         mapper (function): action to be executed for every data sample
@@ -93,6 +94,7 @@ def map(ds, mapper, worker_args=None):
     Returns:
         a mapped dataset
     """
+
     if worker_args is not None:
         return ParallelMappedDataset(ds, mapper, worker_args)
     else:
@@ -100,7 +102,8 @@ def map(ds, mapper, worker_args=None):
 
 
 def batch(ds, batchsize, drop_last=False):
-    """ Batch data samples to batches
+    """
+    Batch data samples to batches
     Args:
         batchsize (int): number of samples for a batch
         drop_last (bool): drop last few samples if not enough for a batch
@@ -108,17 +111,21 @@ def batch(ds, batchsize, drop_last=False):
     Returns:
         a batched dataset
     """
+
     return BatchedDataset(ds, batchsize, drop_last=drop_last)
 
 
 def batch_map(ds, config):
-    """ Post process the batches.
+    """
+    Post process the batches.
+
     Args:
         ds (instance of Dataset): dataset to be mapped
         mapper (function): action to be executed for every batch
     Returns:
         a batched dataset which is processed
     """
+
     mapper = build_post_map(**config)
     return MappedDataset(ds, mapper)
 
