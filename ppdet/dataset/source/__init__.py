@@ -1,4 +1,3 @@
-"""
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,35 +11,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
+
 from __future__ import absolute_import
 from __future__ import division
-
 from __future__ import print_function
-from __future__ import unicode_literals
-import os
+
 import copy
+
 from .roidb_source import RoiDbSource
 from .simple_source import SimpleSource
-from ppdet.utils.download import get_dataset_path
 
 
 def build_source(config):
-    """ build dataset from source data,
-        default source type is 'RoiDbSource'
-        Args:
-          config (dict): should has a structure:
-          {
-              data_cf (dict):
-                  anno_file (str): label file path or image list file path
-                  image_dir (str): root dir for images
-                  samples (int): samples to load, -1 means all
-                  is_shuffle (bool): whether load data in this class
-                  load_img (bool): whether load data in this class
-                  mixup_epoch (int): parse mixup in first n epoch
-                  with_background (bool): whether load background as a class
-              cname2cid (dict): the label name to id dictionary
-          }
+    """
+    Build dataset from source data, default source type is 'RoiDbSource'
+    Args:
+        config (dict): should have following structure:
+        {
+            data_cf (dict):
+                anno_file (str): label file or image list file path
+                image_dir (str): root directory for images
+                samples (int): number of samples to load, -1 means all
+                is_shuffle (bool): should samples be shuffled
+                load_img (bool): should images be loaded
+                mixup_epoch (int): parse mixup in first n epoch
+                with_background (bool): whether load background as a class
+            cname2cid (dict): the label name to id dictionary
+        }
     """
     if 'data_cf' in config:
         data_cf = {k.lower(): v for k, v in config['data_cf'].items()}
@@ -60,8 +57,6 @@ def build_source(config):
     if source_type == 'RoiDbSource':
         return RoiDbSource(**args)
     elif source_type == 'SimpleSource':
-        need_keys = ['test_file', 'image_dir', 'samples', 'load_img']
-        simple_source_args = {k: v for k, v in args.items() if k in need_keys}
-        return SimpleSource(**simple_source_args)
+        return SimpleSource(**args)
     else:
-        raise ValueError('not supported source type[%s]' % (source_type))
+        raise ValueError('source type not supported: ' + source_type)
