@@ -19,7 +19,7 @@ ResNet:
   norm_type: sync_bn
   norm_decay: 0.
   depth: 34
-  feature_maps:[3, 4, 5]
+  feature_maps: [3, 4, 5]
 
 YOLOv3Head:
   anchor_masks: [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
