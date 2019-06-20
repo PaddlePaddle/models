@@ -29,7 +29,6 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 from paddle import fluid
 
-from ppdet.tools.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import parse_args
 import ppdet.utils.checkpoint as checkpoint
@@ -37,6 +36,8 @@ import ppdet.utils.checkpoint as checkpoint
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data_feed import create_reader
 from ppdet.placeholder import create_feeds
+
+from tools.eval_utils import parse_fetches, eval_run, eval_results
 
 logger = logging.getLogger(__name__)
 
