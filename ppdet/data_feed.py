@@ -468,7 +468,7 @@ class FasterRCNNTestFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
     def __init__(self,
-                 dataset=CocoDataSet(COCO_VAL_ANNOTATION,
+                 dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 1333, 800],
@@ -488,6 +488,8 @@ class FasterRCNNTestFeed(DataFeed):
                  test_file=None,
                  num_workers=2):
         sample_transforms.append(ArrangeTestRCNN())
+        if isinstance(dataset, dict):
+            dataset = SimpleDataSet(**dataset)
         super(FasterRCNNTestFeed, self).__init__(
             dataset, fields, image_shape, sample_transforms, batch_transforms,
             batch_size=batch_size, shuffle=shuffle, samples=samples,
