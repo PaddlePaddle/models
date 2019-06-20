@@ -22,10 +22,23 @@ import time
 import sys
 import functools
 import math
+
+def set_paddle_flags(flags):
+    for key, value in flags.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
+# NOTE(paddle-dev): All of these flags should be
+# set before `import paddle`. Otherwise, it would
+# not take any effect. 
+set_paddle_flags({
+    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc 
+    'FLAGS_fraction_of_gpu_memory_to_use': 0.98
+})
 import argparse
 import functools
 import subprocess
-
 import paddle
 import paddle.fluid as fluid
 import paddle.dataset.flowers as flowers
@@ -50,6 +63,7 @@ add_arg('class_dim',        int,   1000,                 "Class number.")
 add_arg('image_shape',      str,   "3,224,224",          "input image size")
 add_arg('model_save_dir',   str,   "output",             "model save directory")
 add_arg('with_mem_opt',     bool,  True,                 "Whether to use memory optimization or not.")
+add_arg('with_inplace',     bool,  True,                 "Whether to use inplace memory optimization.")
 add_arg('pretrained_model', str,   None,                 "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                 "Whether to resume checkpoint.")
 add_arg('lr',               float, 0.1,                  "set learning rate.")
@@ -412,10 +426,20 @@ def train(args):
     # use_ngraph is for CPU only, please refer to README_ngraph.md for details
     use_ngraph = os.getenv('FLAGS_use_ngraph')
     if not use_ngraph:
+        build_strategy = fluid.BuildStrategy()
+        build_strategy.memory_optimize = args.with_mem_opt
+        build_strategy.enable_inplace = args.with_inplace
+        build_strategy.fuse_all_reduce_ops=1
+
+        exec_strategy = fluid.ExecutionStrategy()
+        exec_strategy.num_iteration_per_drop_scope = 10
+
         train_exe = fluid.ParallelExecutor(
             main_program=train_prog,
             use_cuda=bool(args.use_gpu),
-            loss_name=train_cost.name)
+            loss_name=train_cost.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     else:
         train_exe = exe
 
@@ -429,6 +453,7 @@ def train(args):
         test_info = [[], [], []]
         train_time = []
         batch_id = 0
+        time_record=[]
         try:
             while True:
                 t1 = time.time()
@@ -450,6 +475,7 @@ def train(args):
 
                 t2 = time.time()
                 period = t2 - t1
+                time_record.append(period)
 
                 loss = np.mean(np.array(loss))
                 train_info[0].append(loss)
@@ -457,6 +483,8 @@ def train(args):
                 train_time.append(period)
 
                 if batch_id % 10 == 0:
+                    period = np.mean(time_record)
+                    time_record=[]
                     if use_mixup:
                         print("Pass {0}, trainbatch {1}, loss {2}, lr {3}, time {4}"
                               .format(pass_id, batch_id, "%.5f"%loss, "%.5f" %lr, "%2.2f sec" % period))
