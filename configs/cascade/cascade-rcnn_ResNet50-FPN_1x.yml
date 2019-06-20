@@ -11,7 +11,7 @@ CascadeRCNN:
   backbone: ResNet
   neck: FPN
   rpn_head: FPNRPNHead
-  roi_extractor: FPNROIAlign
+  roi_extractor: FPNRoIAlign
   bbox_head: CascadeBBoxHead
   bbox_assigner: CascadeBBoxAssigner
   
@@ -60,13 +60,13 @@ FPNRPNHead:
     rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
     use_random: false
-  train_prop:
+  train_proposal:
     eta: 1.0
     min_size: 0.0
     nms_thresh: 0.7
     post_nms_top_n: 2000
     pre_nms_top_n: 2000
-  test_prop:
+  test_proposal:
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.7
@@ -74,7 +74,7 @@ FPNRPNHead:
     pre_nms_top_n: 1000
   
 
-FPNROIAlign:
+FPNRoIAlign:
   canconical_level: 4
   canonical_size: 224
   max_level: 5
