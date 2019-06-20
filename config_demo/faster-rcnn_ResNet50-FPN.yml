@@ -209,6 +209,7 @@ FasterRCNNTestFeed:
   - image
   - im_info
   - im_id
+  - im_shape
   image_shape:
   - 3
   - 1333

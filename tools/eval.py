@@ -53,7 +53,7 @@ def main():
         devices_num = os.environ.get('CPU_NUM', multiprocessing.cpu_count())
 
     if 'eval_feed' not in cfg:
-        eval_feed = create(type(main_arch).__name__ + 'EvalFeed')
+        eval_feed = create(main_arch + 'EvalFeed')
     else:
         eval_feed = create(cfg['eval_feed'])
 
@@ -89,7 +89,7 @@ def main():
     if cfg['weights']:
         checkpoint.load_checkpoint(exe, eval_prog, cfg['weights'])
 
-    extra_keys = ['im_info', 'im_id'] if cfg['metric'] == 'COCO' \
+    extra_keys = ['im_info', 'im_id', 'im_shape'] if cfg['metric'] == 'COCO' \
                  else []
     keys, values = parse_fetches(fetches, eval_prog, extra_keys)
 
@@ -97,7 +97,7 @@ def main():
     results = eval_run(exe, compile_program, pyreader,
                        keys, values)
     # Evaluation
-    eval_results(results, eval_feed, args, cfg['metric'])
+    eval_results(results, eval_feed, args, cfg)
 
 
 if __name__ == '__main__':

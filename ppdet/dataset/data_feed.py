@@ -469,8 +469,11 @@ class MaskRCNNTrainFeed(DataFeed):
                              std=[0.229, 0.224, 0.225],
                              is_scale=True,
                              is_channel_first=False), ResizeImage(
-                                 target_size=800, max_size=1333, interp=1),
-                     Permute(to_bgr=False)
+                                 target_size=800,
+                                 max_size=1333,
+                                 interp=1,
+                                 use_cv2=True), Permute(
+                                     to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
@@ -478,7 +481,8 @@ class MaskRCNNTrainFeed(DataFeed):
                  samples=-1,
                  drop_last=False,
                  num_workers=2,
-                 use_process=False):
+                 use_process=False,
+                 use_padded_im_info=False):
         sample_transforms.append(ArrangeRCNN(is_mask=True))
         super(MaskRCNNTrainFeed, self).__init__(
             dataset,
@@ -496,13 +500,13 @@ class MaskRCNNTrainFeed(DataFeed):
 
 
 @register
-class FasterRCNNTestFeed(DataFeed):
+class FasterRCNNEvalFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_info', 'im_id'],
+                 fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
                      DecodeImage(to_rgb=True), NormalizeImage(
@@ -521,7 +525,7 @@ class FasterRCNNTestFeed(DataFeed):
                  test_file=None,
                  num_workers=2):
         sample_transforms.append(ArrangeTestRCNN())
-        super(FasterRCNNTestFeed, self).__init__(
+        super(FasterRCNNEvalFeed, self).__init__(
             dataset,
             fields,
             image_shape,
@@ -534,16 +538,67 @@ class FasterRCNNTestFeed(DataFeed):
             test_file=test_file,
             num_workers=num_workers)
         self.mode = 'VAL'
+        # in rcnn models, im_shape is in format of [N, 3] for box clip
+        for var in feed_var_def:
+            if var['name'] == 'im_shape':
+                var['shape'] = [3]
+                var['dtype'] = 'float32'
 
 
 @register
-class MaskRCNNTestFeed(DataFeed):
+class FasterRCNNTestFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
+                                       COCO_VAL_IMAGE_DIR).__dict__,
+                 fields=['image', 'im_info', 'im_id', 'im_shape'],
+                 image_shape=[3, 1333, 800],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=True), NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False), Permute(to_bgr=False)
+                 ],
+                 batch_transforms=[PadBatch()],
+                 batch_size=1,
+                 shuffle=False,
+                 samples=-1,
+                 drop_last=False,
+                 test_file=None,
+                 num_workers=2):
+        sample_transforms.append(ArrangeTestRCNN())
+        if isinstance(dataset, dict):
+            dataset = SimpleDataSet(**dataset)
+        super(FasterRCNNTestFeed, self).__init__(
+            dataset,
+            fields,
+            image_shape,
+            sample_transforms,
+            batch_transforms,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            samples=samples,
+            drop_last=drop_last,
+            test_file=test_file,
+            num_workers=num_workers)
+        self.mode = 'TEST'
+        # in rcnn models, im_shape is in format of [N, 3] for box clip
+        for var in feed_var_def:
+            if var['name'] == 'im_shape':
+                var['shape'] = [3]
+                var['dtype'] = 'float32'
+
+
+@register
+class MaskRCNNEvalFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_info', 'im_id'],
+                 fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
                      DecodeImage(to_rgb=True), NormalizeImage(
@@ -551,8 +606,11 @@ class MaskRCNNTestFeed(DataFeed):
                          std=[0.229, 0.224, 0.225],
                          is_scale=True,
                          is_channel_first=False), ResizeImage(
-                             target_size=800, max_size=1333, interp=1),
-                     Permute(to_bgr=False)
+                             target_size=800,
+                             max_size=1333,
+                             interp=1,
+                             use_cv2=True), Permute(
+                                 to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
@@ -561,9 +619,10 @@ class MaskRCNNTestFeed(DataFeed):
                  drop_last=False,
                  test_file=None,
                  num_workers=2,
-                 use_process=False):
-        sample_transforms.append(ArrangeTestRCNN(is_mask=True))
-        super(MaskRCNNTestFeed, self).__init__(
+                 use_process=False,
+                 use_padded_im_info=True):
+        sample_transforms.append(ArrangeTestRCNN())
+        super(MaskRCNNEvalFeed, self).__init__(
             dataset,
             fields,
             image_shape,
@@ -577,6 +636,61 @@ class MaskRCNNTestFeed(DataFeed):
             num_workers=num_workers,
             use_process=use_process)
         self.mode = 'VAL'
+        # in rcnn models, im_shape is in format of [N, 3] for box clip
+        for var in feed_var_def:
+            if var['name'] == 'im_shape':
+                var['shape'] = [3]
+                var['dtype'] = 'float32'
+
+
+@register
+class MaskRCNNTestFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
+                                       COCO_VAL_IMAGE_DIR).__dict__,
+                 fields=['image', 'im_info', 'im_id', 'im_shape'],
+                 image_shape=[3, 1333, 800],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=True), NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False), Permute(
+                             to_bgr=False, channel_first=True)
+                 ],
+                 batch_transforms=[PadBatch()],
+                 batch_size=1,
+                 shuffle=False,
+                 samples=-1,
+                 drop_last=False,
+                 test_file=None,
+                 num_workers=2,
+                 use_process=False,
+                 use_padded_im_info=True):
+        sample_transforms.append(ArrangeTestRCNN())
+        if isinstance(dataset, dict):
+            dataset = SimpleDataSet(**dataset)
+        super(MaskRCNNTestFeed, self).__init__(
+            dataset,
+            fields,
+            image_shape,
+            sample_transforms,
+            batch_transforms,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            samples=samples,
+            drop_last=drop_last,
+            test_file=test_file,
+            num_workers=num_workers,
+            use_process=use_process)
+        self.mode = 'TEST'
+        # in rcnn models, im_shape is in format of [N, 3] for box clip
+        for var in feed_var_def:
+            if var['name'] == 'im_shape':
+                var['shape'] = [3]
+                var['dtype'] = 'float32'
 
 
 @register
