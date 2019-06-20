@@ -97,8 +97,8 @@ class MaskRCNN(object):
             # in models without FPN, roi extractor only uses the last level of
             # feature maps. And body_feat_names[-1] represents the name of
             # last feature map.
-            body_feat = body_feats[list(body_feats.keys())[-1]]
-            roi_feat = self.roi_extractor(body_feat, rois)
+            last_feat = body_feats[list(body_feats.keys())[-1]]
+            roi_feat = self.roi_extractor(last_feat, rois)
         else:
             roi_feat = self.roi_extractor(body_feats, rois, spatial_scale)
 
@@ -161,7 +161,7 @@ class MaskRCNN(object):
         cond = fluid.layers.less_than(x=bbox_size, y=size)
 
         mask_pred = fluid.layers.create_global_var(
-            shape=[1], value=0.0, dtype='float32', persistable=True)
+            shape=[1], value=0.0, dtype='float32', persistable=False)
 
         with fluid.layers.control_flow.Switch() as switch:
             with switch.case(cond):

@@ -45,7 +45,9 @@ class RoIPool(object):
     __op__ = fluid.layers.roi_pool
     __append_doc__ = True
 
-    def __init__(self, pooled_height=14, pooled_width=14,
+    def __init__(self, 
+                 pooled_height=14, 
+                 pooled_width=14,
                  spatial_scale=1. / 16):
         super(RoIPool, self).__init__()
         self.pooled_height = pooled_height
@@ -73,7 +75,7 @@ class FPNRoIAlign(object):
                  max_level=5,
                  canconical_level=4,
                  canonical_size=224,
-                 resolution=7,
+                 box_resolution=14,
                  mask_resolution=14):
         super(FPNRoIAlign, self).__init__()
         self.sampling_ratio = sampling_ratio
@@ -105,7 +107,7 @@ class FPNRoIAlign(object):
             rois, k_min, k_max, self.canconical_level, self.canonical_size)
         # rois_dist is in ascend order
         roi_out_list = []
-        resolution = is_mask and self.mask_resolution or self.resolution
+        resolution = is_mask and self.mask_resolution or self.box_resolution
         for lvl in range(num_roi_lvls):
             name_index = num_roi_lvls - lvl - 1
             rois_input = rois_dist[lvl]

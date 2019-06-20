@@ -224,7 +224,7 @@ class BBoxHead(object):
         im_scale_lod = fluid.layers.sequence_expand(im_scale, rois)
         boxes = rois / im_scale_lod
         cls_prob = fluid.layers.softmax(cls_score, use_cudnn=False)
-        bbox_pred = fluid.layers.reshape(bbox_pred, (-1, self.class_num, 4))
+        bbox_pred = fluid.layers.reshape(bbox_pred, (-1, self.num_classes, 4))
         decoded_box = self.box_coder(prior_box=boxes, target_box=bbox_pred)
         cliped_box = fluid.layers.box_clip(input=decoded_box, im_info=im_shape)
         pred_result = self.nms(bboxes=cliped_box, scores=cls_prob)

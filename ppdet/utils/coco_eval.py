@@ -126,7 +126,7 @@ def mask2out(results, clsid2catid, resolution, thresh_binarize=0.5):
             continue
 
         masks = t['mask'][0]
-        im_info = t['im_info'][0][0]
+        im_shape = t['im_shape'][0][0]
 
         k = 0
         s = 0
@@ -141,8 +141,8 @@ def mask2out(results, clsid2catid, resolution, thresh_binarize=0.5):
             mask = masks[s:s + num]
             s += num
 
-            im_h = int(im_info[0])
-            im_w = int(im_info[1])
+            im_h = int(im_shape[0])
+            im_w = int(im_shape[1])
 
             expand_bbox = expand_boxes(bbox, scale)
             expand_bbox = expand_bbox.astype(np.int32)

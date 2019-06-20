@@ -80,10 +80,11 @@ def eval_run(exe, compile_program, pyreader, keys, values):
     return results
 
 
-def eval_results(results, feed, args, metric='COCO'):
+def eval_results(results, feed, args, cfg):
     """
     Evaluation for evaluation program results
     """
+    metric = cfg['metric']
     if metric == 'COCO':
         from ppdet.utils.coco_eval import bbox_eval, mask_eval
         anno_file = getattr(feed.dataset, 'annotation', None)

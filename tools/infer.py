@@ -83,7 +83,7 @@ def main():
         checkpoint.load_checkpoint(exe, infer_prog, cfg['weights'])
 
     # parse infer fetches
-    extra_keys = ['im_info', 'im_id'] if cfg['metric'] == 'COCO' \
+    extra_keys = ['im_info', 'im_id', 'im_shape'] if cfg['metric'] == 'COCO' \
                  else []
     keys, values = parse_fetches(test_fetches, infer_prog, extra_keys)
 

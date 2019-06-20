@@ -3,8 +3,10 @@ train_feed: MaskRCNNTrainFeed
 test_feed: MaskRCNNTestFeed
 max_iters: 180000
 pretrain_weights: ResNet50_pretrained/ 
+weights: model_final/ 
 log_smooth_window: 20
 snapshot_iter: 10000
+metric: COCO
 save_dir: output
 use_gpu: yes
 
@@ -80,7 +82,7 @@ FPNRoIAlign:
   max_level: 5
   min_level: 2
   sampling_ratio: 2
-  resolution: 7
+  box_resolution: 7
   mask_resolution: 14
 
 MaskHead:
@@ -155,21 +157,9 @@ MaskRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    annotation: coco/annotations/instances_val2017_debug_139.json
-    image_dir: coco/val2017
-  drop_last: false
-  fields:
-  - image
-  - im_info
-  - im_id
-  - gt_box
-  - gt_label
-  - is_crowd
-  - gt_mask
-  image_shape:
-  - 3
-  - 1333
-  - 800
+    dataset_dir: coco/
+    annotation: annotations/instances_val2017_debug_139.json
+    image_dir: val2017
   num_workers: 2
   sample_transforms:
   - !DecodeImage
@@ -198,27 +188,17 @@ MaskRCNNTrainFeed:
   - !Permute
     channel_first: true
     to_bgr: false
-  shuffle: true
   use_padded_im_info: False
 
-MaskRCNNTestFeed:
+MaskRCNNEvalFeed:
   batch_size: 1
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    annotation: coco/annotations/instances_val2017.json
-    image_dir: coco/val2017
-  drop_last: false
-  fields:
-  - image
-  - im_info
-  - im_id
-  - im_shape
-  image_shape:
-  - 3
-  - 1333
-  - 800
+    dataset_dir: coco
+    annotation: annotations/instances_val2017.json
+    image_dir: val2017
   num_workers: 2
   sample_transforms:
   - !DecodeImage
@@ -243,5 +223,36 @@ MaskRCNNTestFeed:
   - !Permute
     channel_first: true
     to_bgr: false
-  shuffle: false
+  use_padded_im_info: True
+
+MaskRCNNTestFeed:
+  batch_size: 1
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 32
+  dataset:
+    dataset_dir: coco/
+    annotation: annotations/instances_val2017.json
+    image_dir: val2017
+  test_file: val2017.txt
+  samples: 5
+  num_workers: 2
+  sample_transforms:
+  - !DecodeImage
+    to_rgb: true
+    with_mixup: false
+  - !NormalizeImage
+    is_channel_first: false
+    is_scale: true
+    mean:
+    - 0.485
+    - 0.456
+    - 0.406
+    std:
+    - 0.229
+    - 0.224
+    - 0.225
+  - !Permute
+    channel_first: true
+    to_bgr: false
   use_padded_im_info: True
