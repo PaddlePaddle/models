@@ -17,7 +17,7 @@ YOLOv3:
 
 DarkNet:
   norm_type: bn
-  bn_decay: false
+  norm_decay: false
   depth: 53
 
 YOLOv3Head:
@@ -50,7 +50,7 @@ YOLOv3Head:
     - 198
   - - 373
     - 326
-  bn_decay: false
+  nrom_decay: false
   ignore_thresh: 0.7
   label_smooth: true
   nms:

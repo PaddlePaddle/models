@@ -16,7 +16,7 @@ YOLOv3:
 
 MobileNet:
   norm_type: bn
-  bn_decay: false
+  norm_decay: false
   conv_group_scale: 1
   with_extra_blocks: false
 
@@ -25,7 +25,7 @@ YOLOv3Head:
   anchors: [[10, 13], [16, 30], [33, 23],
             [30, 61], [62, 45], [59, 119],
             [116, 90], [156, 198], [373, 326]]
-  bn_decay: false
+  norm_decay: false
   ignore_thresh: 0.7
   label_smooth: true
   nms:
