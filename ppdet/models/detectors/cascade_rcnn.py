@@ -33,7 +33,7 @@ __all__ = ['CascadeRCNN']
 @register
 class CascadeRCNN(object):
     r"""
-    Faster R-CNN architecture, see https://arxiv.org/abs/1506.01497
+    Cascade R-CNN architecture, see https://arxiv.org/abs/1712.00726
     Args:
         backbone (object): backbone instance
         rpn_head (object): `RPNhead` instance

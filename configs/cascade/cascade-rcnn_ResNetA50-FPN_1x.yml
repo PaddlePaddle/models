@@ -25,7 +25,7 @@ ResNet:
   - 4
   - 5
   freeze_at: 2
-  variant: b
+  variant: a
 
 
 FPN:
@@ -165,7 +165,7 @@ FasterRCNNTrainFeed:
   num_workers: 2
   sample_transforms:
   - !DecodeImage
-    to_rgb: true
+    to_rgb: false
     with_mixup: false
   - !RandomFlipImage
     is_mask_flip: false
@@ -173,15 +173,15 @@ FasterRCNNTrainFeed:
     prob: 0.5
   - !NormalizeImage
     is_channel_first: false
-    is_scale: true
+    is_scale: false
     mean:
-    - 0.485
-    - 0.456
-    - 0.406
+    - 102.9801
+    - 115.9465
+    - 122.7717
     std:
-    - 0.229
-    - 0.224
-    - 0.225
+    - 1.0
+    - 1.0
+    - 1.0
   - !ResizeImage
     interp: 1
     max_size: 1333
@@ -212,19 +212,19 @@ FasterRCNNTestFeed:
   num_workers: 2
   sample_transforms:
   - !DecodeImage
-    to_rgb: true
+    to_rgb: false
     with_mixup: false
   - !NormalizeImage
     is_channel_first: false
-    is_scale: true
+    is_scale: false
     mean:
-    - 0.485
-    - 0.456
-    - 0.406
+    - 102.9801
+    - 115.9465
+    - 122.7717
     std:
-    - 0.229
-    - 0.224
-    - 0.225
+    - 1.0
+    - 1.0
+    - 1.0
   - !ResizeImage
     interp: 1
     max_size: 1333
