@@ -23,11 +23,7 @@ ResNet:
   norm_decay: true
   freeze_norm: true
   depth: 50
-  feature_maps:
-  - 2
-  - 3
-  - 4
-  - 5
+  feature_maps: [2,3,4,5]
   freeze_at: 2
   variant: b
 
@@ -35,23 +31,12 @@ FPN:
   max_level: 6
   min_level: 2
   num_chan: 256
-  spatial_scale:
-  - 0.03125
-  - 0.0625
-  - 0.125
-  - 0.25
+  spatial_scale: [0.003125, 0.0625, 0.125, 0.25]
 
 FPNRPNHead:
   anchor_generator:
-    aspect_ratios:
-    - 0.5
-    - 1.0
-    - 2.0
-    variance:
-    - 1.0
-    - 1.0
-    - 1.0
-    - 1.0
+    aspect_ratios: [0.5, 1.0, 2.0]
+    variance: [1.0, 1.0, 1.0, 1.0]
   anchor_start_size: 32
   max_level: 6
   min_level: 2
@@ -64,13 +49,11 @@ FPNRPNHead:
     rpn_straddle_thresh: 0.0
     use_random: true
   test_proposal:
-    eta: 1.0
     min_size: 0.0
     nms_thresh: 0.7
     post_nms_top_n: 1000
     pre_nms_top_n: 1000
   train_proposal:
-    eta: 1.0
     min_size: 0.0
     nms_thresh: 0.7
     post_nms_top_n: 2000
@@ -94,11 +77,7 @@ MaskHead:
 
 BBoxAssigner:
   batch_size_per_im: 512
-  bbox_reg_weights:
-  - 0.1
-  - 0.1
-  - 0.2
-  - 0.2
+  bbox_reg_weights: [0.1, 0.1, 0.2, 0.2]
   bg_thresh_hi: 0.5
   bg_thresh_lo: 0.0
   fg_fraction: 0.25
@@ -110,20 +89,10 @@ MaskAssigner:
   resolution: 28
 
 BBoxHead:
-  box_coder:
-    axis: 1
-    box_normalized: false
-    code_type: decode_center_size
-    prior_box_var:
-    - 0.1
-    - 0.1
-    - 0.2
-    - 0.2
   head: TwoFCHead
   nms:
     background_label: 0
     keep_top_k: 100
-    nms_eta: 1.0
     nms_threshold: 0.5
     nms_top_k: -1
     normalized: false
