@@ -32,7 +32,12 @@ MISC_CONFIG = {
     "train_feed": "<value>",
     "eval_feed": "<value>",
     "test_feed": "<value>",
-    "use_gpu": True
+    "pretrain_weights": "<value>",
+    "save_dir": "<value>",
+    "log_smooth_window": 20,
+    "snapshot_iter": 10000,
+    "use_gpu": True,
+    "sync_bn": False,
 }
 
 
