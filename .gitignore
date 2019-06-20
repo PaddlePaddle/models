@@ -9,6 +9,9 @@ __pycache__/
 # C extensions
 *.so
 
+# json file
+*.json
+
 # Distribution / packaging
 /bin/
 /build/
