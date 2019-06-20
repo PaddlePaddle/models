@@ -17,9 +17,8 @@
 #    eg: decode/resize/crop image
 
 from __future__ import absolute_import
-from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import division
 
 import uuid
 import logging
@@ -31,10 +30,8 @@ from PIL import Image, ImageEnhance
 
 from ppdet.core.workspace import serializable
 
-from .op_helper import satisfy_sample_constraint, \
-                       deal_bbox_label, \
-                       generate_sample_bbox, \
-                       clip_bbox
+from .op_helper import (satisfy_sample_constraint, filter_and_process,
+                        generate_sample_bbox, clip_bbox)
 
 logger = logging.getLogger(__name__)
 
@@ -75,27 +72,28 @@ class BaseOperator(object):
         return sample
 
     def __str__(self):
-        return '%s' % (self._id)
+        return str(self._id)
 
 
 @register_op
 class DecodeImage(BaseOperator):
     def __init__(self, to_rgb=True, with_mixup=False):
         """ Transform the image data to numpy format.
+
         Args:
-            to_rgb (bool): confirm whether to convert BGR to RGB
+            to_rgb (bool): whether to convert BGR to RGB
         """
+
         super(DecodeImage, self).__init__()
         self.to_rgb = to_rgb
         self.with_mixup = with_mixup
         if not isinstance(self.to_rgb, bool):
-            raise TypeError('{}: the input type is error.'.format(self.__str__))
+            raise TypeError("{}: input type is invalid.".format(self))
         if not isinstance(self.with_mixup, bool):
-            raise TypeError('{}: the input type is error.'.format(self.__str__))
+            raise TypeError("{}: input type is invalid.".format(self))
 
     def __call__(self, sample, context=None):
-        """ load image from disk if 'image' field not exist and 'im_file' field is exist
-        """
+        """ load image if 'im_file' field is not empty but 'image' is"""
         if 'image' not in sample:
             with open(sample['im_file'], 'rb') as f:
                 sample['image'] = f.read()
@@ -141,24 +139,21 @@ class ResizeImage(BaseOperator):
         self.use_cv2 = use_cv2
         if not (isinstance(self.target_size, int) and isinstance(
                 self.max_size, int) and isinstance(self.interp, int)):
-            raise TypeError('{}: the input type is error.'.format(self.__str__))
+            raise TypeError("{}: input type is invalid.".format(self))
 
     def __call__(self, sample, context=None):
         """ Resise the image numpy.
         """
         im = sample['image']
         if not isinstance(im, np.ndarray):
-            raise TypeError('{}: the image type is not numpy.'
-                            .format(self.__str__))
+            raise TypeError("{}: image type is not numpy.".format(self))
         if len(im.shape) != 3:
-            raise ImageError('{}: the image type is not \
-                    three-dimensional.'.format(self.__str__))
+            raise ImageError('{}: image is not 3-dimensional.'.format(self))
         im_shape = im.shape
         im_size_min = np.min(im_shape[0:2])
         im_size_max = np.max(im_shape[0:2])
         if float(im_size_min) == 0:
-            raise ZeroDivisionError('{}: the min size of image is \
-                    zero.'.format(self.__str__))
+            raise ZeroDivisionError('{}: min size of image is 0'.format(self))
         if self.max_size != 0:
             im_scale = float(self.target_size) / float(im_size_min)
             # Prevent the biggest axis from being more than max_size
@@ -205,10 +200,10 @@ class RandomFlipImage(BaseOperator):
         self.prob = prob
         self.is_normalized = is_normalized
         self.is_mask_flip = is_mask_flip
-        if not (isinstance(self.prob, float) and
-                isinstance(self.is_normalized, bool) and
-                isinstance(self.is_mask_flip, bool)):
-            raise TypeError('{}: the input type is error.'.format(self.__str__))
+        if not (isinstance(self.prob, float)
+                and isinstance(self.is_normalized, bool)
+                and isinstance(self.is_mask_flip, bool)):
+            raise TypeError("{}: input type is invalid.".format(self))
 
     def flip_segms(self, segms, height, width):
         def _flip_poly(poly, width):
@@ -226,7 +221,7 @@ class RandomFlipImage(BaseOperator):
 
         def is_poly(segm):
             assert isinstance(segm, (list, dict)), \
-                'Invalid segm type: {}'.format(type(segm))
+                "Invalid segm type: {}".format(type(segm))
             return isinstance(segm, list)
 
         flipped_segms = []
@@ -255,11 +250,9 @@ class RandomFlipImage(BaseOperator):
         gt_bbox = sample['gt_bbox']
         im = sample['image']
         if not isinstance(im, np.ndarray):
-            raise TypeError('{}: the image type is not numpy.'
-                            .format(self.__str__))
+            raise TypeError("{}: image is not a numpy array.".format(self))
         if len(im.shape) != 3:
-            raise ImageError('{}: the image type is not \
-                    three-dimensional.'.format(self.__str__))
+            raise ImageError("{}: image is not 3-dimensional.".format(self))
         height, width, _ = im.shape
         if np.random.uniform(0, 1) < self.prob:
             im = im[:, ::-1, :]
@@ -274,9 +267,8 @@ class RandomFlipImage(BaseOperator):
                 gt_bbox[:, 0] = width - oldx2 - 1
                 gt_bbox[:, 2] = width - oldx1 - 1
             if gt_bbox.shape[0] != 0 and (gt_bbox[:, 2] < gt_bbox[:, 0]).all():
-                raise BboxError('{}: invalid coordinate for bounding box for \
-                                the x2 isn\'t more than the x1!'
-                                .format(self.__str__))
+                m = "{}: invalid box, x2 should be greater than x1".format(self)
+                raise BboxError(m)
             sample['gt_bbox'] = gt_bbox
             if self.is_mask_flip and len(sample['gt_poly']) != 0:
                 sample['gt_poly'] = self.flip_segms(sample['gt_poly'], height,
@@ -303,12 +295,12 @@ class NormalizeImage(BaseOperator):
         self.std = std
         self.is_scale = is_scale
         self.is_channel_first = is_channel_first
-        if not (isinstance(self.mean, list) and isinstance(self.std, list) and
-                isinstance(self.is_scale, bool)):
-            raise TypeError('{}: the input type is error.'.format(self.__str__))
+        if not (isinstance(self.mean, list) and isinstance(self.std, list)
+                and isinstance(self.is_scale, bool)):
+            raise TypeError("{}: input type is invalid.".format(self))
         from functools import reduce
         if reduce(lambda x, y: x * y, self.std) == 0:
-            raise ValueError('{}: the std is wrong!'.format(self.__str__))
+            raise ValueError('{}: std is invalid!'.format(self))
 
     def __call__(self, sample, context=None):
         """Normalize the image.
@@ -389,6 +381,7 @@ class RandomDistort(BaseOperator):
         if prob < self.brightness_prob:
             img = ImageEnhance.Brightness(img).enhance(brightness_delta)
         return img
+
     def random_contrast(self, img):
         contrast_delta = np.random.uniform(self.contrast_lower,
                                            self.contrast_upper)
@@ -396,6 +389,7 @@ class RandomDistort(BaseOperator):
         if prob < self.contrast_prob:
             img = ImageEnhance.Contrast(img).enhance(contrast_delta)
         return img
+
     def random_saturation(self, img):
         saturation_delta = np.random.uniform(self.saturation_lower,
                                              self.saturation_upper)
@@ -403,6 +397,7 @@ class RandomDistort(BaseOperator):
         if prob < self.saturation_prob:
             img = ImageEnhance.Color(img).enhance(saturation_delta)
         return img
+
     def random_hue(self, img):
         hue_delta = np.random.uniform(self.hue_lower, self.hue_upper)
         prob = np.random.uniform(0, 1)
@@ -411,9 +406,9 @@ class RandomDistort(BaseOperator):
             img[:, :, 0] = img[:, :, 0] + hue_delta
             img = Image.fromarray(img, mode='HSV').convert('RGB')
         return img
+
     def __call__(self, sample, context):
-        """random distort the image
-        """
+        """random distort the image"""
         ops = [
             self.random_brightness, self.random_contrast,
             self.random_saturation, self.random_hue
@@ -429,7 +424,7 @@ class RandomDistort(BaseOperator):
                 ]
         else:
             ops = random.sample(ops, self.count)
-        assert 'image' in sample, 'not found image data'
+        assert 'image' in sample, "image data not found"
         im = sample['image']
         im = Image.fromarray(im)
         for id in range(self.count):
@@ -454,7 +449,8 @@ class ExpandImage(BaseOperator):
         self.prob = prob
 
     def __call__(self, sample, context):
-        """Expand the image and modify bounding box.
+        """
+        Expand the image and modify bounding box.
         Operators:
             1. Scale the image weight and height.
             2. Construct new images with new height and width.
@@ -462,9 +458,10 @@ class ExpandImage(BaseOperator):
             4. Put original imge into new image.
             5. Rescale the bounding box.
             6. Determine if the new bbox is satisfied in the new image.
-        Output:
+        Returns:
             sample: the image, bounding box are replaced.
         """
+
         prob = np.random.uniform(0, 1)
         assert 'image' in sample, 'not found image data'
         im = sample['image']
@@ -489,7 +486,7 @@ class ExpandImage(BaseOperator):
                 im = Image.fromarray(im)
                 expand_im.paste(im, (int(w_off), int(h_off)))
                 expand_im = np.asarray(expand_im)
-                gt_bbox, gt_class, _ = deal_bbox_label(expand_bbox, gt_bbox,
+                gt_bbox, gt_class, _ = filter_and_process(expand_bbox, gt_bbox,
                                                        gt_class)
                 sample['image'] = expand_im
                 sample['gt_bbox'] = gt_bbox
@@ -523,16 +520,17 @@ class CropImage(BaseOperator):
         self.satisfy_all = satisfy_all
 
     def __call__(self, sample, context):
-        """Crop the image and modify bounding box.
+        """
+        Crop the image and modify bounding box.
         Operators:
             1. Scale the image weight and height.
             2. Crop the image according to a radom sample.
             3. Rescale the bounding box.
             4. Determine if the new bbox is satisfied in the new image.
-        Output:
+        Returns:
             sample: the image, bounding box are replaced.
         """
-        assert 'image' in sample, 'not found image data'
+        assert 'image' in sample, "image data not found"
         im = sample['image']
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
@@ -557,7 +555,7 @@ class CropImage(BaseOperator):
             sample_bbox = sampled_bbox.pop(idx)
             sample_bbox = clip_bbox(sample_bbox)
             crop_bbox, crop_class, crop_score = \
-                deal_bbox_label(sample_bbox, gt_bbox, gt_class, gt_score)
+                filter_and_process(sample_bbox, gt_bbox, gt_class, gt_score)
             if len(crop_bbox) <= 1:
                 continue
             xmin = int(sample_bbox[0] * im_width)
@@ -593,7 +591,6 @@ class NormalizeBox(BaseOperator):
         return sample
 
 
-
 @register_op
 class Permute(BaseOperator):
     def __init__(self, to_bgr=True, channel_first=True):
@@ -607,12 +604,12 @@ class Permute(BaseOperator):
         super(Permute, self).__init__()
         self.to_bgr = to_bgr
         self.channel_first = channel_first
-        if not (isinstance(self.to_bgr, bool) and
-                isinstance(self.channel_first, bool)):
-            raise TypeError('{}: the input type is error.'.format(self.__str__))
+        if not (isinstance(self.to_bgr, bool)
+                and isinstance(self.channel_first, bool)):
+            raise TypeError("{}: input type is invalid.".format(self))
 
     def __call__(self, sample, context=None):
-        assert 'image' in sample, 'not found image data'
+        assert 'image' in sample, "image data not found"
         im = sample['image']
         if self.channel_first:
             im = np.swapaxes(im, 1, 2)
@@ -635,20 +632,18 @@ class MixupImage(BaseOperator):
         self.alpha = alpha
         self.beta = beta
         if self.alpha <= 0.0:
-            raise ValueError("alpha shold be positive in {}".format(
-                self.__str__))
+            raise ValueError("alpha shold be positive in {}".format(self))
         if self.beta <= 0.0:
-            raise ValueError("beta shold be positive in {}".format(
-                self.__str__))
+            raise ValueError("beta shold be positive in {}".format(self))
 
     def _mixup_img(self, img1, img2, factor):
         h = max(img1.shape[0], img2.shape[0])
         w = max(img1.shape[1], img2.shape[1])
         img = np.zeros((h, w, img1.shape[2]), 'float32')
         img[:img1.shape[0], :img1.shape[1], :] = \
-                img1.astype('float32') * factor
+            img1.astype('float32') * factor
         img[:img2.shape[0], :img2.shape[1], :] += \
-                img2.astype('float32') * (1.0 - factor)
+            img2.astype('float32') * (1.0 - factor)
         return img.astype('uint8')
 
     def __call__(self, sample, context=None):
@@ -695,9 +690,9 @@ class RandomInterpImage(BaseOperator):
         super(RandomInterpImage, self).__init__()
         self.target_size = target_size
         self.max_size = max_size
-        if not (isinstance(self.target_size, int) and
-                isinstance(self.max_size, int)):
-            raise TypeError('{}: the input type is error.'.format(self.__str__))
+        if not (isinstance(self.target_size, int)
+                and isinstance(self.max_size, int)):
+            raise TypeError('{}: input type is invalid.'.format(self))
         interps = [
             cv2.INTER_NEAREST,
             cv2.INTER_LINEAR,
@@ -710,7 +705,6 @@ class RandomInterpImage(BaseOperator):
             self.resizers.append(ResizeImage(target_size, max_size, interp))
 
     def __call__(self, sample, context=None):
-        """ Resise the image numpy by random resizer.
-        """
+        """Resise the image numpy by random resizer."""
         resizer = random.choice(self.resizers)
         return resizer(sample, context)
