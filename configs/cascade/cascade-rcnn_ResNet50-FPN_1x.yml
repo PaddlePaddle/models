@@ -2,6 +2,7 @@ architecture: CascadeRCNN
 train_feed: FasterRCNNTrainFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 90000
+snapshot_iter: 10000
 use_gpu: true
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
 save_dir: output
@@ -17,7 +18,7 @@ CascadeRCNN:
   
 ResNet:
   norm_type: affine_channel
-  bn_decay: true
+  norm_decay: true
   depth: 50
   feature_maps:
   - 2
