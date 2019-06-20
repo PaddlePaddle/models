@@ -22,105 +22,118 @@ import math
 import six
 
 import paddle.fluid as fluid
-from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.framework import Variable
 
-from ..registry import Detectors
-from ..registry import Backbones
-from ..registry import RPNHeads
-from ..registry import RoIExtractors
-from ..registry import Necks
-from ..target_assigners.bbox_assigner import CascadeBBoxAssigner
+from ppdet.core.workspace import register
 
-from .faster_rcnn import FasterRCNN
+from ppdet.models.necks.fpn import FPN
 
 __all__ = ['CascadeRCNN']
 
 
-@Detectors.register
-class CascadeRCNN(FasterRCNN):
-    """
-    CascadeRCNN class
+@register
+class CascadeRCNN(object):
+    r"""
+    Faster R-CNN architecture, see https://arxiv.org/abs/1506.01497
     Args:
-        cfg (Dict): All parameters in dictionary.
+        backbone (object): backbone instance
+        rpn_head (object): `RPNhead` instance
+        bbox_assigner (object): `BBoxAssigner` instance
+        roi_extractor (object): ROI extractor instance
+        bbox_head (object): `BBoxHead` instance
+        neck (object): feature enricher instance, e.g., FPN
     """
 
-    def __init__(self, cfg):
-        super(CascadeRCNN, self).__init__(cfg)
-        self.bbox_assigner = CascadeBBoxAssigner(cfg)
-        brw = self.cfg.RPN_HEAD.PROPOSAL.BBOX_REG_WEIGHTS
-        brw0, brw1, brw2 = brw[0], brw[1], brw[2]
+    __category__ = 'architecture'
+    __inject__ = [
+        'backbone', 'neck', 'rpn_head', 'bbox_assigner', 'roi_extractor',
+        'bbox_head'
+    ]
+
+    def __init__(self,
+                 backbone,
+                 rpn_head,
+                 roi_extractor,
+                 bbox_head='CascadeBBoxHead',
+                 bbox_assigner='CascadeBBoxAssigner',
+                 neck=None):
+        super(CascadeRCNN, self).__init__()
+        self.backbone = backbone
+        self.neck = neck
+        self.rpn_head = rpn_head
+        self.bbox_assigner = bbox_assigner
+        self.roi_extractor = roi_extractor
+        self.bbox_head = bbox_head
+        # Cascade local cfg
+        self.cls_agnostic_bbox_reg = 2
+        (brw0, brw1, brw2) = self.bbox_assigner.bbox_reg_weights
         self.cascade_bbox_reg_weights = [
-            [1., 1., 1., 1.], [1. / brw0, 1. / brw0, 2. / brw0, 2. / brw0],
+            [1. / brw0, 1. / brw0, 2. / brw0, 2. / brw0],
             [1. / brw1, 1. / brw1, 2. / brw1, 2. / brw1],
             [1. / brw2, 1. / brw2, 2. / brw2, 2. / brw2]
         ]
-        self.is_cls_agnostic = self.cfg.RPN_HEAD.PROPOSAL.CLS_AGNOSTIC_BBOX_REG
-        self.cls_agnostic_bbox_reg = 2 if self.is_cls_agnostic \
-     else self.cfg.DATA.CLASS_NUM
-        self.cascade_rcnn_loss_weight = self.cfg.TRAIN.CASCADE_LOSS_WEIGHT
+        self.cascade_rcnn_loss_weight = [1.0, 0.5, 0.25]
 
-    def _forward(self):
-        # inputs
-        feed_vars = self.build_feeds(self.feed_info(), self.use_pyreader)
+    def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
         im_info = feed_vars['im_info']
-        if self.is_train:
+        if mode == 'train':
             gt_box = feed_vars['gt_box']
             is_crowd = feed_vars['is_crowd']
 
         # backbone
-        body_dict = self.backbone(im)
-        body_name_list = self.backbone.get_body_feat_names()
+        body_feats = self.backbone(im)
+        # body_feat_names = list(body_feats.keys())
 
-        # fpn
-        fpn_dict, spatial_scale, fpn_name_list = self.neck.get_output(
-            body_dict, body_name_list)
+        # neck
+        if self.neck is not None:
+            body_feats, spatial_scale = self.neck.get_output(body_feats)
 
         # rpn proposals
-        rpn_rois = self.rpn_head.get_proposals(fpn_dict, im_info, fpn_name_list)
+        rpn_rois = self.rpn_head.get_proposals(body_feats, im_info, mode=mode)
 
-        if self.is_train:
+        if mode == 'train':
             rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
 
         proposal_list = []
         roi_feat_list = []
         rcnn_pred_list = []
         rcnn_target_list = []
+
         for i in range(3):
             if i > 0:
                 refined_bbox = self._decode_box(
                     proposals,
                     bbox_pred,
-                    self.cascade_bbox_reg_weights[i], )
+                    curr_stage=i - 1, )
             else:
                 refined_bbox = rpn_rois
 
-            if self.is_train:
-                outs = self.bbox_assigner.get_sampled_rois_and_targets(
-                    refined_bbox,
-                    feed_vars,
-                    is_cls_agnostic=self.is_cls_agnostic,
-                    is_cascade_rcnn=True if i > 0 else False,
-                    cascade_curr_stage=i, )
+            if mode == 'train':
+                outs = self.bbox_assigner(
+                    input_rois=refined_bbox, feed_vars=feed_vars, curr_stage=i)
+
                 proposals = outs[0]
                 rcnn_target_list.append(outs)
             else:
                 proposals = refined_bbox
             proposal_list.append(proposals)
 
-            # RoI Extractor
-            roi_feat = self.roi_extractor.get_roi_feat(
-                fpn_dict, proposals, fpn_name_list, spatial_scale)
-            roi_feat_list.append(roi_feat)
-            # fast-rcnn head
+            # extract roi features 
+            if isinstance(self.neck, FPN):
+                roi_feat = self.roi_extractor(body_feats, proposals,
+                                              spatial_scale)
+                roi_feat_list.append(roi_feat)
+            else:
+                raise ValueError("only supports FPN as enricher for now")
+
+            # bbox head  
             cls_score, bbox_pred = self.bbox_head.get_output(
                 roi_feat,
                 wb_scalar=1.0 / self.cascade_rcnn_loss_weight[i],
                 name='_' + str(i + 1) if i > 0 else '')
             rcnn_pred_list.append((cls_score, bbox_pred))
 
-        if self.is_train:
+        if mode == 'train':
             loss = self.bbox_head.get_loss(rcnn_pred_list, rcnn_target_list,
                                            self.cascade_rcnn_loss_weight)
             loss.update(rpn_loss)
@@ -133,7 +146,7 @@ class CascadeRCNN(FasterRCNN):
                 self.cascade_bbox_reg_weights, self.cls_agnostic_bbox_reg)
             return pred
 
-    def _decode_box(self, proposals, bbox_pred, bbox_reg_weights):
+    def _decode_box(self, proposals, bbox_pred, curr_stage):
         rcnn_loc_delta_r = fluid.layers.reshape(
             bbox_pred, (-1, self.cls_agnostic_bbox_reg, 4))
         # only use fg box delta to decode box
@@ -141,7 +154,7 @@ class CascadeRCNN(FasterRCNN):
             rcnn_loc_delta_r, axes=[1], starts=[1], ends=[2])
         refined_bbox = fluid.layers.box_coder(
             prior_box=proposals,
-            prior_box_var=bbox_reg_weights,
+            prior_box_var=self.cascade_bbox_reg_weights[curr_stage],
             target_box=rcnn_loc_delta_s,
             code_type='decode_center_size',
             box_normalized=False,
@@ -150,14 +163,8 @@ class CascadeRCNN(FasterRCNN):
 
         return refined_bbox
 
-    def train(self):
-        """
-	Run train process
-	"""
-        return self._forward()
+    def train(self, feed_vars):
+        return self.build(feed_vars, 'train')
 
-    def test(self):
-        """
-	Run infer process
-	"""
-        return self._forward()
+    def test(self, feed_vars):
+        return self.build(feed_vars, 'test')

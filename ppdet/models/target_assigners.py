@@ -20,7 +20,7 @@ from paddle import fluid
 
 from ppdet.core.workspace import register
 
-__all__ = ['BBoxAssigner', 'MaskAssigner']
+__all__ = ['BBoxAssigner', 'CascadeBBoxAssigner', 'MaskAssigner']
 
 
 @register
@@ -46,6 +46,56 @@ class BBoxAssigner(object):
         self.bbox_reg_weights = bbox_reg_weights
         self.class_nums = num_classes
         self.use_random = shuffle_before_sample
+
+
+@register
+class CascadeBBoxAssigner(object):
+    __append_doc__ = True
+
+    def __init__(
+            self,
+            batch_size_per_im=512,
+            fg_fraction=.25,
+            fg_thresh=[0.5, 0.6, 0.7],
+            bg_thresh_hi=[0.5, 0.6, 0.7],
+            bg_thresh_lo=[0., 0., 0.],
+            bbox_reg_weights=[10, 20, 30],
+            num_classes=81,
+            shuffle_before_sample=True, ):
+        super(CascadeBBoxAssigner, self).__init__()
+        self.batch_size_per_im = batch_size_per_im
+        self.fg_fraction = fg_fraction
+        self.fg_thresh = fg_thresh
+        self.bg_thresh_hi = bg_thresh_hi
+        self.bg_thresh_lo = bg_thresh_lo
+        self.bbox_reg_weights = bbox_reg_weights
+        self.class_nums = num_classes
+        self.use_random = shuffle_before_sample
+
+    def __call__(self, input_rois, feed_vars, curr_stage):
+
+        curr_bbox_reg_w = [
+            1. / self.bbox_reg_weights[curr_stage],
+            2. / self.bbox_reg_weights[curr_stage],
+            2. / self.bbox_reg_weights[curr_stage],
+            2. / self.bbox_reg_weights[curr_stage],
+        ]
+        outs = fluid.layers.generate_proposal_labels(
+            rpn_rois=input_rois,
+            gt_classes=feed_vars['gt_label'],
+            is_crowd=feed_vars['is_crowd'],
+            gt_boxes=feed_vars['gt_box'],
+            im_info=feed_vars['im_info'],
+            batch_size_per_im=self.batch_size_per_im,
+            fg_thresh=self.fg_thresh[curr_stage],
+            bg_thresh_hi=self.bg_thresh_hi[curr_stage],
+            bg_thresh_lo=self.bg_thresh_lo[curr_stage],
+            bbox_reg_weights=curr_bbox_reg_w,
+            use_random=False,
+            class_nums=2,
+            is_cls_agnostic=True,
+            is_cascade_rcnn=True if curr_stage > 0 else False, )
+        return outs
 
 
 @register

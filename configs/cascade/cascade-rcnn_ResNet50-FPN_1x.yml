@@ -1,184 +1,236 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+architecture: CascadeRCNN
+train_feed: FasterRCNNTrainFeed
+test_feed: FasterRCNNTestFeed
+max_iters: 90000
+use_gpu: true
+pretrain_weights: /home/ai/model/obj_det/weight/ResNet50_pretrained/ 
+save_dir: /home/ai/model/obj_det/weight/gitlab/
+log_smooth_window: 20
 
-
-MODEL:
-  TYPE: CascadeRCNN
-  BACKBONE: ResNet50Backbone
-  ENDPOINT: 5
-  NECK: FPN
-  FREEZE_AT: 2
-  FREEZE_BN: ON
-  AFFINE_CHANNEL: ON
-  HIGHEST_BACKBONE_LVL: 5
-  LOWEST_BACKBONE_LVL: 2
-
-RPN_HEAD:
-  TYPE: FPNRPNHead
-  ANCHOR:
-    VARIANCE: [1., 1., 1., 1.]
-
-  PROPOSAL:
-    BATCH_SIZE_PER_IM: 512
-    FG_FRACTION: 0.25
-    FG_THRESH: [0.5, 0.6, 0.7]
-    BG_THRESH_HI: [0.5, 0.6, 0.7]
-    BG_THRESH_LO: [0.0, 0.0, 0.0]
-    BBOX_REG_WEIGHTS: [10, 20, 30]
-    CLS_AGNOSTIC_BBOX_REG: True
-    PRE_NMS_TOPN: 1000 
-    POST_NMS_TOPN: 1000
-    
-  TRAIN:
-    RPN_PRE_NMS_TOP_N: 2000
-    RPN_POST_NMS_TOP_N: 2000
-    RPN_NMS_THRESH: 0.7
-    RPN_MIN_SIZE: 0.0
-    RPN_ETA: 1.0
-
-  TEST:
-    RPN_PRE_NMS_TOP_N: 1000
-    RPN_POST_NMS_TOP_N: 1000
-    RPN_NMS_THRESH: 0.7
-    RPN_MIN_SIZE: 0.0
-    RPN_ETA: 1.0
-
-  RPN_BATCH_SIZE_PER_IM: 256
-  RPN_STRADDLE_THRESH: 0.
-  RPN_FG_FRACTION: 0.5
-  RPN_POSITIVE_OVERLAP: 0.7
-  RPN_NEGATIVE_OVERLAP: 0.3
-
-BBOX_HEAD:
-  TYPE: CascadeHead
-  HEAD_CONV: FC6FC7
-  MLP_HEAD_DIM: 1024
+CascadeRCNN:
+  backbone: ResNet
+  neck: FPN
+  rpn_head: FPNRPNHead
+  roi_extractor: FPNROIAlign
+  bbox_head: CascadeBBoxHead
+  bbox_assigner: CascadeBBoxAssigner
   
-ROI_EXTRACTOR:
-  EXTRACT_METHOD: FPNRoIAlign
-  ROI_RESOLUTION: 7
-  SPATIAL_SCALE: 1. / 32.
-  SAMPLING_RATIO: 2
-  FPN_ROI_MIN_LEVEL: 2
-  FPN_ROI_MAX_LEVEL: 5
-  FPN_ROI_CANCONICAL_LEVEL: 4
-  FPN_ROI_CANONICAL_SCALE: 224
-  SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8., 1. / 4.]  
+ResNet:
+  affine_channel: true
+  bn_decay: true
+  depth: 50
+  feature_maps:
+  - 2
+  - 3
+  - 4
+  - 5
+  freeze_at: 2
+  freeze_bn: true
+  variant: b
 
 FPN:
-  DIM: 256
-  SPATIAL_SCALE: [1. / 32., 1. / 16., 1. / 8., 1. / 4.]
-  RPN_MAX_LEVEL: 6
-  RPN_MIN_LEVEL: 2
-  RPN_ASPECT_RATIOS: [0.5, 1, 2]
-  RPN_ANCHOR_START_SIZE: 32
+  max_level: 6
+  min_level: 2
+  num_chan: 256
+  spatial_scale:
+  - 0.03125
+  - 0.0625
+  - 0.125
+  - 0.25
 
-ENV:
-  GPU: ON
-  GPU_NUM: 8
-  MULTIPROCESS_READER: OFF
+FPNRPNHead:
+  anchor_generator:
+    aspect_ratios:
+    - 0.5
+    - 1.0
+    - 2.0
+    variance:
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+  anchor_start_size: 32
+  max_level: 6
+  min_level: 2
+  num_chan: 256
+  rpn_target_assign:
+    rpn_batch_size_per_im: 256
+    rpn_fg_fraction: 0.5
+    rpn_negative_overlap: 0.3
+    rpn_positive_overlap: 0.7
+    rpn_straddle_thresh: 0.0
+    use_random: false
+  train_prop:
+    eta: 1.0
+    min_size: 0.0
+    nms_thresh: 0.7
+    post_nms_top_n: 2000
+    pre_nms_top_n: 2000
+  test_prop:
+    eta: 1.0
+    min_size: 0.1
+    nms_thresh: 0.7
+    post_nms_top_n: 1000
+    pre_nms_top_n: 1000
+  
 
-OPTIMIZER:
-  TYPE: Momentum
-  MOMENTUM: 0.9
+FPNROIAlign:
+  canconical_level: 4
+  canonical_size: 224
+  max_level: 5
+  min_level: 2
+  pooled_height: 7
+  pooled_width: 7
+  sampling_ratio: 2
 
-  LR_DECAY:
-    POLICY: piecewise_decay 
-    BOUNDARIES: [60000, 80000]
-    VALUES: [0.02, 0.002, 0.0002]
+CascadeBBoxAssigner:
+  batch_size_per_im: 512
+  bbox_reg_weights:
+  - 10
+  - 20
+  - 30
+  bg_thresh_hi: 
+  - 0.5
+  - 0.6
+  - 0.7
+  bg_thresh_lo: 
+  - 0.0
+  - 0.0
+  - 0.0
+  fg_thresh: 
+  - 0.5
+  - 0.6
+  - 0.7
+  fg_fraction: 0.25
+  num_classes: 81
+  shuffle_before_sample: true
 
-  LR_WARMUP:
-    WARMUP: ON
-    WARMUP_STEPS: 500
-    WARMUP_INIT_FACTOR: 1. / 3.
-    WARMUP_END_LR: 0.02
+FC6FC7Head:
+  num_chan: 1024
 
-  WEIGHT_DECAY:
-    TYPE: L2
-    FACTOR: 0.0001
+CascadeBBoxHead:
+  head: FC6FC7Head
+  nms:
+    background_label: 0
+    keep_top_k: 100
+    nms_eta: 1.0
+    nms_threshold: 0.5
+    nms_top_k: -1
+    normalized: false
+    score_threshold: 0.05
+  num_classes: 81
 
-TRAIN:
-  MAX_ITERS: 90000
-  LOG_SMOOTH_WINDOW: 20
-  SNAPSHOT_ITER: 10000
-  PRETRAIN_WEIGHTS: ./gry_resnet50_fusebn
-  BATCH_NORM_TYPE: BN
-  RANDOM: ON
-  SAVE_DIR: output/
-  CASCADE_LOSS_WEIGHT: [1.0, 0.5, 0.25]
+LearningRate:
+  base_lr: 0.01
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1
+    milestones:
+    - 6000
+    - 8000
+    values: null
+  - !LinearWarmup
+    start_factor: 0.3333333333333333
+    steps: 500
 
-TEST:
-  SCORE_THRESH: 0.05
-  NMS_THRESH: 0.5
-  DETECTIONS_PER_IM: 100
-  WEIGHTS: output/CascadeRCNN/model_final
-  METRIC_TYPE: COCO
+OptimizerBuilder:
+  optimizer:
+    momentum: 0.9
+    type: Momentum
+  regularizer:
+    factor: 0.0001
+    type: L2
 
-DATA:
-  TRAIN:
-      ANNO_FILE: /COCO17/annotations/instances_train2017.json
-      IMAGE_DIR: /COCO17/train2017
-      IS_SHUFFLE: True
-  VAL:
-      ANNO_FILE: /COCO17/annotations/instances_val2017.json
-      IMAGE_DIR: /COCO17/val2017
-      IS_SHUFFLE: False
-  CLASS_NUM: 81
+FasterRCNNTrainFeed:
+  batch_size: 1
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 32
+  dataset:
+    dataset_dir: ./coco/COCO17
+    annotation: ./annotations/instances_train2017.json
+    image_dir: ./train2017
+  drop_last: false
+  fields:
+  - image
+  - im_info
+  - im_id
+  - gt_box
+  - gt_label
+  - is_crowd
+  image_shape:
+  - 3
+  - 1333
+  - 800
+  num_workers: 2
+  sample_transforms:
+  - !DecodeImage
+    to_rgb: true
+    with_mixup: false
+  - !RandomFlipImage
+    is_mask_flip: false
+    is_normalized: false
+    prob: 0.0
+  - !NormalizeImage
+    is_channel_first: false
+    is_scale: true
+    mean:
+    - 0.485
+    - 0.456
+    - 0.406
+    std:
+    - 0.229
+    - 0.224
+    - 0.225
+  - !ResizeImage
+    interp: 1
+    max_size: 1333
+    target_size: 800
+    use_cv2: true
+  - !Permute
+    channel_first: true
+    to_bgr: false
 
-TRANSFORM:
-  TRAIN:
-    OPS:
-      - op: DecodeImage
-        to_rgb: True
-      - op: RandomFlipImage
-        prob: 0.5
-      - op: NormalizeImage
-        mean: [0.485, 0.456, 0.406]
-        std: [0.229, 0.224, 0.225]
-        is_scale: True
-        is_channel_first: False
-      - op: ResizeImage
-        target_size: 800
-        max_size: 1333
-        interp: 1
-      - op: Permute
-        to_bgr: False
-      - op: ArrangeRCNN
-    BATCH_SIZE: 2
-    IS_PADDING: True
-    COARSEST_STRIDE: 32
-
-  VAL:
-    OPS:
-      - op: DecodeImage
-        to_rgb: True
-      - op: NormalizeImage
-        mean: [0.485, 0.456, 0.406]
-        std: [0.229, 0.224, 0.225]
-        is_scale: True
-        is_channel_first: False
-      - op: ResizeImage
-        target_size: 800
-        max_size: 1333
-        interp: 1
-      - op: Permute
-        to_bgr: False
-      - op: ArrangeTestRCNN
-    BATCH_SIZE: 1
-    IS_PADDING: True
-    COARSEST_STRIDE: 32
-  WORKER_CONF:
-    bufsize: 100
-    worker_num: 8
-
+FasterRCNNTestFeed:
+  batch_size: 1
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 0
+  dataset:
+    dataset_dir: ./coco/COCO17
+    annotation: ./annotations/instances_val2017.json
+    image_dir: ./val2017
+  drop_last: false
+  fields:
+  - image
+  - im_info
+  - im_id
+  image_shape:
+  - 3
+  - 1333
+  - 800
+  num_workers: 2
+  sample_transforms:
+  - !DecodeImage
+    to_rgb: true
+    with_mixup: false
+  - !NormalizeImage
+    is_channel_first: false
+    is_scale: true
+    mean:
+    - 0.485
+    - 0.456
+    - 0.406
+    std:
+    - 0.229
+    - 0.224
+    - 0.225
+  - !ResizeImage
+    interp: 1
+    max_size: 1333
+    target_size: 800
+    use_cv2: true
+  - !Permute
+    channel_first: true
+    to_bgr: false
+  shuffle: false
