@@ -33,12 +33,15 @@ class MaskRCNN(object):
         roi_extractor (object): ROI extractor instance
         bbox_head (object): `BBoxHead` instance
         mask_assigner (object): `MaskAssigner` instance
+        mask_head (object): `MaskHead` instance
         neck (object): feature enricher instance, e.g., FPN
     """
 
     __category__ = 'architecture'
-    __inject__ = ['backbone', 'rpn_head', 'bbox_assigner', 'roi_extractor',
-                  'bbox_head', 'mask_assigner', 'mask_head', 'neck']
+    __inject__ = [
+        'backbone', 'rpn_head', 'bbox_assigner', 'roi_extractor', 'bbox_head',
+        'mask_assigner', 'mask_head', 'neck'
+    ]
 
     def __init__(self,
                  backbone,
@@ -67,26 +70,37 @@ class MaskRCNN(object):
 
         body_feats = self.backbone(im)
 
+        # neck
+        if self.neck is not None:
+            body_feats, spatial_scale = self.neck.get_output(body_feats)
+
+        # rpn proposals
         rois = self.rpn_head.get_proposals(body_feats, im_info)
 
         rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
 
         for var in ['gt_label', 'is_crowd', 'gt_box', 'im_info']:
             assert var in feed_vars, "{} has no {}".format(feed_vars, var)
-        outs = self.bbox_assigner(rpn_rois=rois,
-                                  gt_classes=feed_vars['gt_label'],
-                                  is_crowd=feed_vars['is_crowd'],
-                                  gt_boxes=feed_vars['gt_box'],
-                                  im_info=feed_vars['im_info'])
+        outs = self.bbox_assigner(
+            rpn_rois=rois,
+            gt_classes=feed_vars['gt_label'],
+            is_crowd=feed_vars['is_crowd'],
+            gt_boxes=feed_vars['gt_box'],
+            im_info=feed_vars['im_info'])
         rois = outs[0]
         labels_int32 = outs[1]
         bbox_targets = outs[2]
         bbox_inside_weights = outs[3]
         bbox_outside_weights = outs[4]
 
-        body_feat = body_feats[list(body_feats.keys())[-1]]
-        # TODO no FPN support?
-        roi_feat = self.roi_extractor(body_feat, rois)
+        if self.neck is None:
+            # in models without FPN, roi extractor only uses the last level of
+            # feature maps. And list(body_feats.keys())[-1] represents the name of
+            # last feature map.
+            last_feat = body_feats[list(body_feats.keys())[-1]]
+            roi_feat = self.roi_extractor(last_feat, rois)
+        else:
+            roi_feat = self.roi_extractor(body_feats, rois, spatial_scale)
 
         loss = self.bbox_head.get_loss(roi_feat, labels_int32, bbox_targets,
                                        bbox_inside_weights,
@@ -94,16 +108,20 @@ class MaskRCNN(object):
         loss.update(rpn_loss)
 
         assert 'gt_mask' in feed_vars, "{} has no gt_mask".format(feed_vars)
-        outs = self.mask_assigner(rois=rois,
-                                  gt_classes=feed_vars['gt_label'],
-                                  is_crowd=feed_vars['is_crowd'],
-                                  gt_segms=feed_vars['gt_mask'],
-                                  im_info=feed_vars['im_info'],
-                                  labels_int32=labels_int32)
+        outs = self.mask_assigner(
+            rois=rois,
+            gt_classes=feed_vars['gt_label'],
+            is_crowd=feed_vars['is_crowd'],
+            gt_segms=feed_vars['gt_mask'],
+            im_info=feed_vars['im_info'],
+            labels_int32=labels_int32)
         mask_rois, roi_has_mask_int32, mask_int32 = outs
-        bbox_head_feat = self.bbox_head.get_head_feat()
+        if self.neck is None: 
+            bbox_head_feat = self.bbox_head.get_head_feat()
+            feat = fluid.layers.gather(bbox_head_feat, roi_has_mask_int32)
+        else:
+            feat = self.roi_extractor(body_feats, mask_rois, spatial_scale, True)
 
-        feat = fluid.layers.gather(bbox_head_feat, roi_has_mask_int32)
         mask_loss = self.mask_head.get_loss(feat, mask_int32)
         loss.update(mask_loss)
 
@@ -114,14 +132,24 @@ class MaskRCNN(object):
     def test(self, feed_vars):
         im = feed_vars['image']
         im_info = feed_vars['im_info']
+        im_shape = feed_vars['im_shape']
 
         body_feats = self.backbone(im)
+        # neck
+        if self.neck is not None:
+            body_feats, spatial_scale = self.neck.get_output(body_feats)
 
         rois = self.rpn_head.get_proposals(body_feats, im_info)
-        body_feat = body_feats[list(body_feats.keys())[-1]]
-        roi_feat = self.roi_extractor(body_feat, rois)
 
-        bbox_pred = self.bbox_head.get_prediction(roi_feat, rois, im_info)
+        if self.neck is None:
+            body_feat = body_feats[list(body_feats.keys())[-1]]
+            roi_feat = self.roi_extractor(body_feat, rois)
+        else:
+            roi_feat = self.roi_extractor(body_feats, rois, spatial_scale,
+                                          False)
+
+        bbox_pred = self.bbox_head.get_prediction(roi_feat, rois, im_info,
+                                                  im_shape)
         bbox_pred = bbox_pred['bbox']
 
         # share weight
@@ -133,7 +161,7 @@ class MaskRCNN(object):
         cond = fluid.layers.less_than(x=bbox_size, y=size)
 
         mask_pred = fluid.layers.create_global_var(
-            shape=[1], value=0.0, dtype='float32', persistable=True)
+            shape=[1], value=0.0, dtype='float32', persistable=False)
 
         with fluid.layers.control_flow.Switch() as switch:
             with switch.case(cond):
@@ -146,9 +174,12 @@ class MaskRCNN(object):
                 im_scale = fluid.layers.sequence_expand(im_scale, bbox)
 
                 mask_rois = bbox * im_scale
-                mask_feat = self.roi_extractor(body_feat, mask_rois)
-
-                mask_feat = head_conv(mask_feat)
+                if self.neck is None:
+                    mask_feat = self.roi_extractor(body_feat, mask_rois)
+                    mask_feat = head_conv(mask_feat)
+                else:
+                    mask_feat = self.roi_extractor(body_feats, mask_rois,
+                                                   spatial_scale, True)
 
                 mask_out = self.mask_head.get_prediction(mask_feat, bbox)
                 fluid.layers.assign(input=mask_out, output=mask_pred)

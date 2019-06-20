@@ -6,8 +6,9 @@ use_gpu: yes
 max_iters: 500200
 log_smooth_window: 20
 save_dir: output
-snapshot_iter: 20
+snapshot_iter: 2000
 metric: COCO
+pretrain_weights: http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar
 weights: https://paddlemodels.bj.bcebos.com/yolo/yolo_mobilenet1.0.tar.gz
 
 YOLOv3:
@@ -16,7 +17,7 @@ YOLOv3:
 
 MobileNet:
   norm_type: bn
-  bn_decay: false
+  norm_decay: 0.
   conv_group_scale: 1
   with_extra_blocks: false
 
@@ -25,7 +26,7 @@ YOLOv3Head:
   anchors: [[10, 13], [16, 30], [33, 23],
             [30, 61], [62, 45], [59, 119],
             [116, 90], [156, 198], [373, 326]]
-  bn_decay: false
+  norm_decay: 0.
   ignore_thresh: 0.7
   label_smooth: true
   nms:
@@ -45,8 +46,7 @@ LearningRate:
     gamma: 0.1
     milestones:
     - 400000
-    - 400000
-    values: null
+    - 450000
   - !LinearWarmup
     start_factor: 0.
     steps: 4000
@@ -82,6 +82,8 @@ YoloTrainFeed:
   mixup_epoch: 250
   num_max_boxes: 50
   num_workers: 8
+  bufsize: 128
+  use_process: true
   sample_transforms:
   - !DecodeImage
     to_rgb: true

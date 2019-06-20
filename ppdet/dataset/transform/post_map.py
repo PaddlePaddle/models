@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 def build_post_map(coarsest_stride=1,
                    is_padding=False,
                    random_shapes=[],
-                   multi_scales=[]):
+                   multi_scales=[],
+                   use_padded_im_info=False):
     """ Build a mapper for post-processing batches
 
     Args:
@@ -59,7 +60,8 @@ def build_post_map(coarsest_stride=1,
             padding_im = np.zeros(
                 (im_c, max_shape[1], max_shape[2]), dtype=np.float32)
             padding_im[:, :im_h, :im_w] = data[0]
-            data[1][:2] = max_shape[1:3]
+            if use_padded_im_info:
+                data[1][:2] = max_shape[1:3]
             padding_batch.append((padding_im, ) + data[1:])
         return padding_batch
 

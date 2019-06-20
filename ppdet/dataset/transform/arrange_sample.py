@@ -129,8 +129,14 @@ class ArrangeTestRCNN(BaseOperator):
         else:
             raise KeyError("The dataset doesn't have 'im_info' key.")
         im_id = sample['im_id']
-
-        outs = (im, im_info, im_id)
+        h = sample['h']
+        w = sample['w']
+        # For rcnn models in eval and infer stage, original image size
+        # is needed to clip the bounding boxes. And box clip op in 
+        # bbox prediction needs im_info as input in format of [N, 3],
+        # so im_shape is appended by 1 to match dimension.
+        im_shape = np.array((h, w, 1), dtype=np.float32)
+        outs = (im, im_info, im_id, im_shape)
         return outs
 
 

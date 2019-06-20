@@ -54,6 +54,7 @@ class MaskHead(object):
     def _mask_conv_head(self, roi_feat, num_convs):
         for i in range(num_convs):
             layer_name = "mask_inter_feat_" + str(i + 1)
+            fan = self.num_chan_reduced * 3 * 3
             roi_feat = fluid.layers.conv2d(
                 input=roi_feat,
                 num_filters=self.num_chan_reduced,
@@ -64,11 +65,12 @@ class MaskHead(object):
                 dilation=self.dilation,
                 name=layer_name,
                 param_attr=ParamAttr(
-                    name=layer_name + '_w', initializer=MSRA(uniform=True)),
+                    name=layer_name + '_w', initializer=MSRA(uniform=False, fan_in=fan)),
                 bias_attr=ParamAttr(
                     name=layer_name + '_b',
                     learning_rate=2.,
                     regularizer=L2Decay(0.)))
+        fan = self.num_chan_reduced * 2 * 2
         feat = fluid.layers.conv2d_transpose(
             input=roi_feat,
             num_filters=self.num_chan_reduced,
@@ -76,7 +78,7 @@ class MaskHead(object):
             stride=2,
             act='relu',
             param_attr=ParamAttr(
-                name='conv5_mask_w', initializer=MSRA(uniform=False)),
+                name='conv5_mask_w', initializer=MSRA(uniform=False, fan_in=fan)),
             bias_attr=ParamAttr(
                 name='conv5_mask_b', learning_rate=2., regularizer=L2Decay(0.)))
         return feat
@@ -85,13 +87,14 @@ class MaskHead(object):
         class_num = self.num_classes
         # configure the conv number for FPN if necessary
         head_feat = self._mask_conv_head(roi_feat, self.num_convs)
+        fan = class_num
         mask_logits = fluid.layers.conv2d(
             input=head_feat,
             num_filters=class_num,
             filter_size=1,
             act=None,
             param_attr=ParamAttr(
-                name='mask_fcn_logits_w', initializer=MSRA(uniform=False)),
+                name='mask_fcn_logits_w', initializer=MSRA(uniform=False, fan_in=fan)),
             bias_attr=ParamAttr(
                 name="mask_fcn_logits_b",
                 learning_rate=2.,

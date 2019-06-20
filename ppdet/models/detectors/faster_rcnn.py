@@ -37,8 +37,10 @@ class FasterRCNN(object):
     """
 
     __category__ = 'architecture'
-    __inject__ = ['backbone', 'rpn_head', 'bbox_assigner',
-                  'roi_extractor', 'bbox_head', 'neck']
+    __inject__ = [
+        'backbone', 'rpn_head', 'bbox_assigner', 'roi_extractor', 'bbox_head',
+        'neck'
+    ]
 
     def __init__(self,
                  backbone,
@@ -61,7 +63,8 @@ class FasterRCNN(object):
         if mode == 'train':
             gt_box = feed_vars['gt_box']
             is_crowd = feed_vars['is_crowd']
-
+        else:
+            im_shape = feed_vars['im_info']
         body_feats = self.backbone(im)
         body_feat_names = list(body_feats.keys())
 
@@ -75,11 +78,12 @@ class FasterRCNN(object):
             # sampled rpn proposals
             for var in ['gt_label', 'is_crowd', 'gt_box', 'im_info']:
                 assert var in feed_vars, "{} has no {}".format(feed_vars, var)
-            outs = self.bbox_assigner(rpn_rois=rois,
-                                      gt_classes=feed_vars['gt_label'],
-                                      is_crowd=feed_vars['is_crowd'],
-                                      gt_boxes=feed_vars['gt_box'],
-                                      im_info=feed_vars['im_info'])
+            outs = self.bbox_assigner(
+                rpn_rois=rois,
+                gt_classes=feed_vars['gt_label'],
+                is_crowd=feed_vars['is_crowd'],
+                gt_boxes=feed_vars['gt_box'],
+                im_info=feed_vars['im_info'])
 
             rois = outs[0]
             labels_int32 = outs[1]
@@ -94,8 +98,7 @@ class FasterRCNN(object):
             body_feat = body_feats[body_feat_names[-1]]
             roi_feat = self.roi_extractor(body_feat, rois)
         else:
-            roi_feat = self.roi_extractor(
-                body_feats, rois, spatial_scale)
+            roi_feat = self.roi_extractor(body_feats, rois, spatial_scale)
 
         if mode == 'train':
             loss = self.bbox_head.get_loss(roi_feat, labels_int32, bbox_targets,
@@ -106,7 +109,8 @@ class FasterRCNN(object):
             loss.update({'loss': total_loss})
             return loss
         else:
-            pred = self.bbox_head.get_prediction(roi_feat, rois, im_info)
+            pred = self.bbox_head.get_prediction(roi_feat, rois, im_info,
+                                                 im_shape)
             return pred
 
     def train(self, feed_vars):
