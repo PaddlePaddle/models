@@ -21,6 +21,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from numbers import Integral
+
 import logging
 from .source import build_source
 from .transform import build_mapper, map, batch, batch_map
@@ -39,8 +41,7 @@ class Reader(object):
         self._trans_conf = trans_conf
         self._maxiter = maxiter
         self._cname2cid = None
-        assert type(self._maxiter
-                    ) is int or long, 'The type of maxiter is not int or long.'
+        assert isinstance(self._maxiter, Integral), "maxiter should be int"
 
     def _make_reader(self, which):
         """ Build reader for training or validation
