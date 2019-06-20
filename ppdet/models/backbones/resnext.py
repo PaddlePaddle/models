@@ -75,7 +75,7 @@ class ResNeXtC5(ResNeXt):
                  freeze_at=2,
                  norm_type='affine_channel',
                  bn_decay=True,
-                 variant='b',
+                 variant='a',
                  feature_maps=[5]):
         super(ResNeXtC5, self).__init__(depth, groups, group_width, freeze_at,
                                         freeze_bn, affine_channel, bn_decay,
