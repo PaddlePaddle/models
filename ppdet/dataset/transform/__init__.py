@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import copy
 import logging
 
 from .transformer import MappedDataset, BatchedDataset
 from .post_map import build_post_map
 from .parallel_map import ParallelMappedDataset
-from .operator import BaseOperator, registered_ops
+from .operators import BaseOperator, registered_ops
 from . import arrange_sample
 
 __all__ = ['build_mapper', 'map', 'batch', 'batch_map']
@@ -30,7 +33,7 @@ def build_mapper(ops, context=None):
     """ Build a mapper for operators in 'ops'
 
     Args:
-        ops (list of operator.BaseOperator or list of op dict): 
+        ops (list of operator.BaseOperator or list of op dict):
             configs for oprators, eg:
             [{'name': 'DecodeImage', 'params': {'to_rgb': True}}, {xxx}]
         context (dict): a context object for mapper
@@ -101,7 +104,7 @@ def batch(ds, batchsize, drop_last=False):
     Args:
         batchsize (int): number of samples for a batch
         drop_last (bool): drop last few samples if not enough for a batch
-        
+
     Returns:
         a batched dataset
     """
@@ -120,8 +123,8 @@ def batch_map(ds, config):
     return MappedDataset(ds, mapper)
 
 
-for nm in operator.registered_ops:
-    op = getattr(operator.BaseOperator, nm)
+for nm in registered_ops:
+    op = getattr(BaseOperator, nm)
     locals()[nm] = op
 
-__all__ += operator.registered_ops
+__all__ += registered_ops

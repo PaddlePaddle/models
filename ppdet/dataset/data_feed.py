@@ -25,7 +25,7 @@ from ppdet.utils.download import get_dataset_path
 
 from ppdet.dataset.reader import Reader
 # XXX these are for triggering the decorator
-from ppdet.dataset.transform.operator import (
+from ppdet.dataset.transform.operators import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
     Permute)

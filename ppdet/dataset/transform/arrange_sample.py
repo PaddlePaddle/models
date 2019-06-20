@@ -29,7 +29,7 @@ import numpy as np
 import cv2
 from PIL import Image, ImageEnhance, ImageDraw
 from functools import reduce
-from .operator import BaseOperator, registered_ops, register_op
+from .operators import BaseOperator, registered_ops, register_op
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +226,7 @@ class ArrangeYOLO(BaseOperator):
         Output:
             sample: a tuple which contains the
                     info which training model need.
-                    tupe is (image, gt_bbox, gt_class, gt_score, 
+                    tupe is (image, gt_bbox, gt_class, gt_score,
                              is_crowd, im_info, gt_masks)
         """
         im = sample['image']
@@ -268,7 +268,7 @@ class ArrangeTestYOLO(BaseOperator):
         Output:
             sample: a tuple which contains the
                     info which training model need.
-                    tupe is (image, gt_bbox, gt_class, gt_score, 
+                    tupe is (image, gt_bbox, gt_class, gt_score,
                              is_crowd, im_info, gt_masks)
         """
         im = sample['image']
