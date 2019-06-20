@@ -219,7 +219,8 @@ class CocoDataSet(DataSet):
                  dataset_dir=COCO_DATASET_DIR,
                  annotation=COCO_TRAIN_ANNOTATION,
                  image_dir=COCO_TRAIN_IMAGE_DIR):
-        super(CocoDataSet, self).__init__(dataset_dir, annotation, image_dir)
+        super(CocoDataSet, self).__init__(
+            dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
 
 
 VOC_DATASET_DIR = 'pascalvoc'
@@ -237,7 +238,8 @@ class VocDataSet(DataSet):
                  dataset_dir=VOC_DATASET_DIR,
                  annotation=VOC_TRAIN_ANNOTATION,
                  image_dir=VOC_IMAGE_DIR):
-        super(VocDataSet, self).__init__(dataset_dir, annotation, image_dir)
+        super(VocDataSet, self).__init__(
+            dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
 
 
 @serializable
@@ -248,7 +250,8 @@ class SimpleDataSet(DataSet):
                  dataset_dir=VOC_DATASET_DIR,
                  annotation=VOC_TEST_ANNOTATION,
                  image_dir=VOC_IMAGE_DIR):
-        super(SimpleDataSet, self).__init__(dataset_dir, annotation, image_dir)
+        super(SimpleDataSet, self).__init__(
+            dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
 
 
 @serializable
