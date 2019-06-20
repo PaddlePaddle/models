@@ -105,8 +105,8 @@ class RPNHead(object):
     def __init__(self,
                  anchor_generator=AnchorGenerator().__dict__,
                  rpn_target_assign=RPNTargetAssign().__dict__,
-                 train_prop=GenerateProposals(12000, 2000).__dict__,
-                 test_prop=GenerateProposals().__dict__):
+                 train_proposal=GenerateProposals(12000, 2000).__dict__,
+                 test_proposal=GenerateProposals().__dict__):
         super(RPNHead, self).__init__()
         self.anchor_generator = anchor_generator
         self.rpn_target_assign = rpn_target_assign
@@ -117,9 +117,9 @@ class RPNHead(object):
         if isinstance(rpn_target_assign, dict):
             self.rpn_target_assign = RPNTargetAssign(**rpn_target_assign)
         if isinstance(train_proposal, dict):
-            self.train_proposal = GenerateProposals(**train_prop)
+            self.train_proposal = GenerateProposals(**train_proposal)
         if isinstance(test_proposal, dict):
-            self.test_proposal = GenerateProposals(**test_prop)
+            self.test_proposal = GenerateProposals(**test_proposal)
 
     def _get_output(self, input):
         """
@@ -314,8 +314,8 @@ class FPNRPNHead(RPNHead):
     def __init__(self,
                  anchor_generator=AnchorGenerator().__dict__,
                  rpn_target_assign=RPNTargetAssign().__dict__,
-                 train_prop=GenerateProposals(12000, 2000).__dict__,
-                 test_prop=GenerateProposals().__dict__,
+                 train_proposal=GenerateProposals(12000, 2000).__dict__,
+                 test_proposal=GenerateProposals().__dict__,
                  anchor_start_size=32,
                  num_chan=256,
                  min_level=2,
