@@ -68,7 +68,7 @@ MultiBoxHead:
   - 285.0
   offset: 0.5
 
-OutputDecoder:
+SSDOutputDecoder:
   background_label: 0
   keep_top_k: 200
   nms_eta: 1.0

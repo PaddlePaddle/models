@@ -142,7 +142,7 @@ class FPN(object):
             fpn_dict[body_top_name + '_subsampled_2x'] = body_top_extension
             fpn_name_list.insert(0, body_top_name + '_subsampled_2x')
             self.spatial_scale.insert(0, self.spatial_scale[0] * 0.5)
-        # Coarser FPN levels introduced for Retinanet
+        # Coarser FPN levels introduced for RetinaNet
         highest_backbone_level = self.min_level + len(self.spatial_scale) - 1
         if self.has_extra_convs and self.max_level > highest_backbone_level:
             fpn_blob = body_dict[body_name_list[0]]

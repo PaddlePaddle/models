@@ -20,12 +20,12 @@ from paddle import fluid
 
 from ppdet.core.workspace import register, serializable
 
-__all__ = ['OutputDecoder', 'SSDMetric', 'SSD']
+__all__ = ['SSDOutputDecoder', 'SSDMetric', 'SSD']
 
 
 @register
 @serializable
-class OutputDecoder(object):
+class SSDOutputDecoder(object):
     __op__ = fluid.layers.detection_output
     __append_doc__ = True
 
@@ -36,7 +36,7 @@ class OutputDecoder(object):
                  score_threshold=0.01,
                  nms_eta=1.0,
                  background_label=0):
-        super(OutputDecoder, self).__init__()
+        super(SSDOutputDecoder, self).__init__()
         self.nms_threshold = nms_threshold
         self.background_label = background_label
         self.nms_top_k = nms_top_k
@@ -69,7 +69,7 @@ class SSD(object):
     Args:
         backbone (object): backbone instance
         multi_box_head (object): `MultiBoxHead` instance
-        output_decoder (object): `OutputDecoder` instance
+        output_decoder (object): `SSDOutputDecoder` instance
         metric (object): `SSDMetric` instance for training
         num_classes (int): number of output classes
     """
@@ -80,7 +80,7 @@ class SSD(object):
     def __init__(self,
                  backbone,
                  multi_box_head='MultiBoxHead',
-                 output_decoder=OutputDecoder().__dict__,
+                 output_decoder=SSDOutputDecoder().__dict__,
                  metric=SSDMetric().__dict__,
                  num_classes=21):
         super(SSD, self).__init__()
@@ -90,7 +90,7 @@ class SSD(object):
         self.output_decoder = output_decoder
         self.metric = metric
         if isinstance(output_decoder, dict):
-            self.output_decoder = OutputDecoder(**output_decoder)
+            self.output_decoder = SSDOutputDecoder(**output_decoder)
         if isinstance(metric, dict):
             self.metric = SSDMetric(**metric)
 

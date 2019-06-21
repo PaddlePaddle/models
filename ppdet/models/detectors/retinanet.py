@@ -21,24 +21,25 @@ from collections import OrderedDict
 
 from ppdet.core.workspace import register
 
-__all__ = ['Retinanet']
+__all__ = ['RetinaNet']
 
 
 @register
-class Retinanet(object):
+class RetinaNet(object):
     """
-    Retinanet architecture, see https://arxiv.org/abs/1708.02002
+    RetinaNet architecture, see https://arxiv.org/abs/1708.02002
+
     Args:
         backbone (object): backbone instance
         neck (object): feature enricher instance, e.g., FPN
-        retina_head (object): `RetinaHead` instance 
+        retina_head (object): `RetinaHead` instance
     """
 
     __category__ = 'architecture'
     __inject__ = ['backbone', 'neck', 'retina_head']
 
     def __init__(self, backbone, neck, retina_head):
-        super(Retinanet, self).__init__()
+        super(RetinaNet, self).__init__()
         self.backbone = backbone
         self.neck = neck
         self.retina_head = retina_head

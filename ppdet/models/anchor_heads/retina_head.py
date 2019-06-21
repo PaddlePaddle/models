@@ -26,7 +26,7 @@ from ppdet.models.anchor_heads.rpn_head import AnchorGenerator
 
 from ppdet.core.workspace import register, serializable
 
-__all__ = ['RetinaTargetAssign', 'RetinaDetectionOutput', 'RetinaHead']
+__all__ = ['RetinaTargetAssign', 'RetinaOutputDecoder', 'RetinaHead']
 
 
 @register
@@ -43,7 +43,7 @@ class RetinaTargetAssign(object):
 
 @register
 @serializable
-class RetinaDetectionOutput(object):
+class RetinaOutputDecoder(object):
     __op__ = fluid.layers.retinanet_detection_output
     __append_doc__ = True
 
@@ -53,7 +53,7 @@ class RetinaDetectionOutput(object):
                  pre_nms_top_n=1000,
                  detections_per_im=100,
                  nms_eta=1.0):
-        super(RetinaDetectionOutput, self).__init__()
+        super(RetinaOutputDecoder, self).__init__()
         self.score_threshold = score_thresh
         self.nms_threshold = nms_thresh
         self.nms_top_k = pre_nms_top_n
@@ -68,8 +68,8 @@ class RetinaHead(object):
 
     Args:
         anchor_generator (object): `AnchorGenerator` instance
-        retina_target_assign (object): `RetinaTargetAssign` instance
-        retina_detection_output (object): `RetinaDetectionOutput` instance
+        target_assign (object): `RetinaTargetAssign` instance
+        output_decoder (object): `RetinaOutputDecoder` instance
         num_convs_per_octave (int): Number of convolution layers in each octave
         num_chan (int): Number of octave output channels
         max_level (int): Highest level of FPN output
@@ -83,13 +83,13 @@ class RetinaHead(object):
         sigma (float): The parameter in smooth l1 loss
     """
     __inject__ = [
-        'anchor_generator', 'retina_target_assign', 'retina_detection_output'
+        'anchor_generator', 'target_assign', 'output_decoder'
     ]
 
     def __init__(self,
                  anchor_generator=AnchorGenerator().__dict__,
-                 retina_target_assign=RetinaTargetAssign().__dict__,
-                 retina_detection_output=RetinaDetectionOutput().__dict__,
+                 target_assign=RetinaTargetAssign().__dict__,
+                 output_decoder=RetinaOutputDecoder().__dict__,
                  num_convs_per_octave=4,
                  num_chan=256,
                  max_level=7,
@@ -102,8 +102,8 @@ class RetinaHead(object):
                  alpha=0.25,
                  sigma=3.0151134457776365):
         self.anchor_generator = anchor_generator
-        self.retina_target_assign = retina_target_assign
-        self.retina_detection_output = retina_detection_output
+        self.target_assign = target_assign
+        self.output_decoder = output_decoder
         self.num_convs_per_octave = num_convs_per_octave
         self.num_chan = num_chan
         self.max_level = max_level
@@ -117,12 +117,10 @@ class RetinaHead(object):
         self.sigma = sigma
         if isinstance(anchor_generator, dict):
             self.anchor_generator = AnchorGenerator(**anchor_generator)
-        if isinstance(retina_target_assign, dict):
-            self.retina_target_assign = RetinaTargetAssign(
-                **retina_target_assign)
-        if isinstance(retina_detection_output, dict):
-            self.retina_detection_output = RetinaDetectionOutput(
-                **retina_detection_output)
+        if isinstance(target_assign, dict):
+            self.target_assign = RetinaTargetAssign(**target_assign)
+        if isinstance(output_decoder, dict):
+            self.output_decoder = RetinaOutputDecoder(**output_decoder)
 
     def _class_subnet(self, body_feats, spatial_scale):
         """
@@ -262,9 +260,9 @@ class RetinaHead(object):
     def _anchor_generate(self, body_feats, spatial_scale):
         """
         Get anchor boxes of all level FPN level.
-        
+
         Args:
-            fpn_dict(Dict): A dictionary represents the output of FPN neck with 
+            fpn_dict(Dict): A dictionary represents the output of FPN neck with
                 their name.
             spatial_scale(List): A list of multiplicative spatial scale factor.
 
@@ -372,7 +370,7 @@ class RetinaHead(object):
         for i in range(self.max_level - self.min_level + 1):
             cls_pred_reshape_list[i] = fluid.layers.sigmoid(
                 cls_pred_reshape_list[i])
-        pred_result = self.retina_detection_output(
+        pred_result = self.output_decoder(
             bboxes=bbox_pred_reshape_list,
             scores=cls_pred_reshape_list,
             anchors=anchor_reshape_list,
@@ -384,11 +382,11 @@ class RetinaHead(object):
         """
         Calculate the loss of retinanet.
         Args:
-            fpn_dict(Dict): A dictionary represents the output of FPN neck with 
+            fpn_dict(Dict): A dictionary represents the output of FPN neck with
                 their name.
             spatial_scale(List): A list of multiplicative spatial scale factor.
-            im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
-                number of input images, each element consists of im_height, 
+            im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the
+                number of input images, each element consists of im_height,
                 im_width, im_scale.
             gt_box(Variable): The ground-truth bounding boxes with shape [M, 4].
                 M is the number of groundtruth.
@@ -413,7 +411,7 @@ class RetinaHead(object):
         anchor_input = fluid.layers.concat(anchor_reshape_list, axis=0)
         anchor_var_input = fluid.layers.concat(anchor_var_reshape_list, axis=0)
         score_pred, loc_pred, score_tgt, loc_tgt, bbox_weight, fg_num = \
-            self.retina_target_assign(
+            self.target_assign(
                 bbox_pred=bbox_pred_input,
                 cls_logits=cls_pred_input,
                 anchor_box=anchor_input,

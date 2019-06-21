@@ -14,7 +14,7 @@
 
 
 MODEL:
-    TYPE: Retinanet
+    TYPE: RetinaNet
     BACKBONE: ResNet50Backbone
     ENDPOINT: 5
     NECK: FPN
@@ -60,7 +60,7 @@ OPTIMIZER:
     MOMENTUM: 0.9
 
     LR_DECAY:
-        POLICY: piecewise_decay 
+        POLICY: piecewise_decay
         BOUNDARIES: [60000, 80000]
         VALUES: [0.01, 0.001, 0.0001]
 
@@ -84,7 +84,7 @@ TRAIN:
     SAVE_DIR: output
 
 TEST:
-    WEIGHTS: output/Retinanet/model_final
+    WEIGHTS: output/retinanet/model_final
     METRIC_TYPE: COCO
 
 DATA:
@@ -147,4 +147,3 @@ TRANSFORM:
         WORKER_CONF:
             bufsize: 100
             worker_num: 8
-

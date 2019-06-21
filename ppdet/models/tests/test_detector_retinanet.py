@@ -29,7 +29,7 @@ from ppdet.core.config import load_cfg, merge_cfg
 from ppdet.models.registry import Detectors
 
 
-class TestDetectorRetinanet(unittest.TestCase):
+class TestDetectorRetinaNet(unittest.TestCase):
     """
     Test the detector: retinanet
     """
@@ -37,7 +37,7 @@ class TestDetectorRetinanet(unittest.TestCase):
     def setUp(self):
         cfg_file = 'configs/retinanet_ResNet50-FPN_1x.yml'
         self.cfg = load_cfg(cfg_file)
-        self.detector_type = 'Retinanet'
+        self.detector_type = 'RetinaNet'
 
     @prog_scope()
     def test_train(self):
