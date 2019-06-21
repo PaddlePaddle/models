@@ -16,6 +16,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from numbers import Integral
+
 import paddle.fluid as fluid
 
 from ppdet.core.workspace import register
@@ -29,13 +31,14 @@ class RoIAlign(object):
     __append_doc__ = True
 
     def __init__(self,
-                 pooled_height=14,
-                 pooled_width=14,
+                 resolution=7,
                  spatial_scale=1. / 16,
                  sampling_ratio=0):
         super(RoIAlign, self).__init__()
-        self.pooled_height = pooled_height
-        self.pooled_width = pooled_width
+        if isinstance(resolution, Integral):
+            resolution = [resolution, resolution]
+        self.pooled_height = resolution[0]
+        self.pooled_width = resolution[1]
         self.spatial_scale = spatial_scale
         self.sampling_ratio = sampling_ratio
 
@@ -45,13 +48,14 @@ class RoIPool(object):
     __op__ = fluid.layers.roi_pool
     __append_doc__ = True
 
-    def __init__(self, 
-                 pooled_height=14, 
-                 pooled_width=14,
+    def __init__(self,
+                 resolution=7,
                  spatial_scale=1. / 16):
         super(RoIPool, self).__init__()
-        self.pooled_height = pooled_height
-        self.pooled_width = pooled_width
+        if isinstance(resolution, Integral):
+            resolution = [resolution, resolution]
+        self.pooled_height = resolution[0]
+        self.pooled_width = resolution[1]
         self.spatial_scale = spatial_scale
 
 
@@ -75,7 +79,7 @@ class FPNRoIAlign(object):
                  max_level=5,
                  canconical_level=4,
                  canonical_size=224,
-                 box_resolution=14,
+                 box_resolution=7,
                  mask_resolution=14):
         super(FPNRoIAlign, self).__init__()
         self.sampling_ratio = sampling_ratio
