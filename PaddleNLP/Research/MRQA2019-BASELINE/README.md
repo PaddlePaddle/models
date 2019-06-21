@@ -50,7 +50,7 @@ The combined files will be saved in `./data/train/mrqa-combined.raw.json` and `.
 To get better performance than the official baseline, we provide a pretrained model - **ERNIE** for fine-tuning. To download the ERNIE parameters, run
 
 ```
-sh download_pre_train_model.sh
+sh download_pretrained_model.sh
 ```
 The pretrained model parameters and config files will be saved in `./ernie_model`.
 
@@ -73,7 +73,7 @@ Where `parameters_to_restore` is the model parameters used in the evaluatation (
 
 |      Model     | HotpotQA | NaturalQ | NewsQA | SearchQA | SQuAD | TriviaQA | Macro-F1 |
 | :------------- | :---------: | :----------: | :---------: | :----------: | :---------: | :----------: |:----------: |
-| baseline + EMA | 82.3/66.8 | 81.6/70.0 | 73.1/57.9 | 85.1/79.1 | 93.3/87.1 | 79.0/73.4 | 82.4 |
+| baseline + EMA | 81.4/65.5 | 81.6/70.0 | 73.1/57.9 | 85.1/79.1 | 93.3/87.1 | 79.0/73.4 | 82.4 |
 | baseline woEMA | 82.4/66.9 | 81.7/69.9 | 73.0/57.8 | 85.1/79.2 | 93.4/87.2 | 79.0/73.4 | 82.4 |
 
 ##### out-of-domain dev  (F1/EM)
