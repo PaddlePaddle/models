@@ -1,18 +1,25 @@
 architecture: SSD
-max_iters: 1000
+max_iters: 28000
 train_feed: SSDTrainFeed
 eval_feed: SSDEvalFeed
 test_feed: SSDTestFeed
+pretrain_weights: ./ssd3/
+
 use_gpu: true
+snapshot_iter: 2000
+log_smooth_window: 1
+metric: VOC
+save_dir: output
+weights: ./output/SSD/28000/
 
 SSD:
   backbone: MobileNet
-  metric:
-    ap_version: integral
-    evaluate_difficult: false
-    overlap_threshold: 0.5
   multi_box_head: MultiBoxHead
   num_classes: 21
+  metric: 
+    ap_version: 11point
+    evaluate_difficult: false
+    overlap_threshold: 0.5
   output_decoder:
     background_label: 0
     keep_top_k: 200
@@ -21,189 +28,91 @@ SSD:
     nms_top_k: 400
     score_threshold: 0.01
 
+
+ 
 MobileNet:
-  norm_type: bn
+  norm_decay: 0.
   conv_group_scale: 1
-  extra_block_filters:
-  - - 256
-    - 512
-  - - 128
-    - 256
-  - - 128
-    - 256
-  - - 64
-    - 128
+  extra_block_filters: [[256, 512], [128, 256], [128, 256], [64, 128]]
   with_extra_blocks: true
 
+
 MultiBoxHead:
-  aspect_ratios:
-  - - 2.0
-  - - 2.0
-    - 3.0
-  - - 2.0
-    - 3.0
-  - - 2.0
-    - 3.0
-  - - 2.0
-    - 3.0
-  - - 2.0
-    - 3.0
+  aspect_ratios: [[2.], [2., 3.], [2., 3.], [2., 3.], [2., 3.], [2., 3.]]
   base_size: 300
   flip: true
   max_ratio: 90
-  max_sizes:
-  - []
-  - 150.0
-  - 195.0
-  - 240.0
-  - 285.0
-  - 300.0
+  max_sizes: [[], 150.0, 195.0, 240.0, 285.0, 300.0]
   min_ratio: 20
-  min_sizes:
-  - 60.0
-  - 105.0
-  - 150.0
-  - 195.0
-  - 240.0
-  - 285.0
+  min_sizes: [60.0, 105.0, 150.0, 195.0, 240.0, 285.0]
   offset: 0.5
 
-SSDOutputDecoder:
-  background_label: 0
-  keep_top_k: 200
-  nms_eta: 1.0
-  nms_threshold: 0.45
-  nms_top_k: 400
-  score_threshold: 0.01
-
-SSDMetric:
-  ap_version: integral
-  evaluate_difficult: false
-  overlap_threshold: 0.5
 
 LearningRate:
-  base_lr: 0.01
   schedulers:
   - !PiecewiseDecay
-    gamma: 0.1
-    milestones:
-    - 6000
-    - 8000
-    values: null
-  - !LinearWarmup
-    start_factor: 0.3333333333333333
-    steps: 500
+    milestones: [10000, 15000, 20000, 25000]
+    values: [0.001, 0.0005, 0.00025, 0.0001, 0.00001]
 
 OptimizerBuilder:
   optimizer:
-    momentum: 0.9
-    type: Momentum
+    momentum: 0.0
+    type: RMSPropOptimizer
   regularizer:
-    factor: 0.0001
+    factor: 0.00005
     type: L2
-
+    
+    
+    
+    
+    
 SSDTrainFeed:
   batch_size: 32
   batch_transforms: []
   dataset:
-    annotation: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/train.txt
-    image_dir: pascalvoc/VOCdevkit/VOC_all/JPEGImages
+    annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
+    image_dir: VOCdevkit/VOC_all/JPEGImages
   drop_last: true
   fields:
   - image
   - gt_box
   - gt_label
   - is_difficult
-  image_shape:
-  - 3
-  - 300
-  - 300
+  image_shape: [3,300, 300]
   num_workers: 8
+  bufsize: 10
+  use_process: true
   sample_transforms:
   - !DecodeImage
     to_rgb: true
     with_mixup: false
   - !NormalizeBox {}
   - !RandomDistort
-    brightness_lower: 0.5
+    brightness_lower: 0.875
     brightness_prob: 0.5
-    brightness_upper: 1.5
+    brightness_upper: 1.125
     contrast_lower: 0.5
     contrast_prob: 0.5
     contrast_upper: 1.5
     count: 4
-    hue_lower: 0.5
+    hue_lower: -18
     hue_prob: 0.5
-    hue_upper: 1.5
-    is_order: false
+    hue_upper: 18
+    is_order: true
     saturation_lower: 0.5
     saturation_prob: 0.5
     saturation_upper: 1.5
   - !ExpandImage
-    max_ratio: 3
-    mean:
-    - 127.5
-    - 127.5
-    - 127.5
+    max_ratio: 4
     prob: 0.5
   - !CropImage
-    batch_sampler:
-    - - 1
-      - 1
-      - 1.0
-      - 1.0
-      - 1.0
-      - 1.0
-      - 0.0
-      - 0.0
-    - - 1
-      - 50
-      - 0.3
-      - 1.0
-      - 0.5
-      - 2.0
-      - 0.1
-      - 0.0
-    - - 1
-      - 50
-      - 0.3
-      - 1.0
-      - 0.5
-      - 2.0
-      - 0.3
-      - 0.0
-    - - 1
-      - 50
-      - 0.3
-      - 1.0
-      - 0.5
-      - 2.0
-      - 0.5
-      - 0.0
-    - - 1
-      - 50
-      - 0.3
-      - 1.0
-      - 0.5
-      - 2.0
-      - 0.7
-      - 0.0
-    - - 1
-      - 50
-      - 0.3
-      - 1.0
-      - 0.5
-      - 2.0
-      - 0.9
-      - 0.0
-    - - 1
-      - 50
-      - 0.3
-      - 1.0
-      - 0.5
-      - 2.0
-      - 0.0
-      - 1.0
+    batch_sampler: [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
     satisfy_all: false
   - !ResizeImage
     interp: 1
@@ -220,30 +129,30 @@ SSDTrainFeed:
   - !NormalizeImage
     is_channel_first: true
     is_scale: false
-    mean:
-    - 127.5
-    - 127.5
-    - 127.5
-    std:
-    - 127.502231
-    - 127.502231
-    - 127.502231
+    mean: [127.5,127.5,127.5]
+    std: [127.502231,127.502231,127.502231]
   shuffle: true
 
 SSDEvalFeed:
   batch_size: 64
   batch_transforms: []
   dataset:
-    annotation: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/val.txt
-    image_dir: pascalvoc/VOCdevkit/VOC_all/JPEGImages
+    annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
+    image_dir: VOCdevkit/VOC_all/JPEGImages
+    use_default_label: false
   drop_last: true
   fields:
   - image
+  - gt_box
+  - gt_label
+  - is_difficult
   image_shape:
   - 3
   - 300
   - 300
   num_workers: 8
+  bufsize: 10
+  use_process: true
   sample_transforms:
   - !DecodeImage
     to_rgb: true
@@ -254,15 +163,8 @@ SSDEvalFeed:
     max_size: 0
     target_size: 300
     use_cv2: false
-  - !RandomFlipImage
-    is_mask_flip: false
-    is_normalized: true
-    prob: 0.5
-  - !Permute
-    channel_first: true
-    to_bgr: true
+  - !Permute {}
   - !NormalizeImage
-    is_channel_first: true
     is_scale: false
     mean:
     - 127.5
@@ -280,6 +182,7 @@ SSDTestFeed:
   dataset:
     annotation: pascalvoc/VOCdevkit/VOC_all/ImageSets/Main/test.txt
     image_dir: pascalvoc/VOCdevkit/VOC_all/JPEGImages
+    use_default_label: false
   drop_last: false
   fields:
   - image
@@ -297,4 +200,18 @@ SSDTestFeed:
     max_size: 0
     target_size: 300
     use_cv2: false
+  - !Permute
+    channel_first: true
+    to_bgr: true
+  - !NormalizeImage
+    is_channel_first: true
+    is_scale: false
+    mean:
+    - 127.5
+    - 127.5
+    - 127.5
+    std:
+    - 127.502231
+    - 127.502231
+    - 127.502231
   shuffle: false

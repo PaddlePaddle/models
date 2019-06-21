@@ -69,16 +69,21 @@ class SSD(object):
             inputs=body_feats, image=im, num_classes=self.num_classes)
 
         if mode == 'train':
-            loss = fluid.layers.ssd_loss(
-                locs, confs, gt_box, gt_label, box, box_var)
+            loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
+                                         box_var)
             loss = fluid.layers.reduce_sum(loss)
             return {'loss': loss}
         else:
             pred = self.output_decoder(locs, confs, box, box_var)
             if mode == 'eval':
-                map_eval = self.metric(pred, gt_box, gt_label, difficult,
-                                       class_num=self.num_classes)
-                return {'map': map_eval}
+                map_eval = self.metric(
+                    pred,
+                    gt_label,
+                    gt_box,
+                    difficult,
+                    class_num=self.num_classes)
+                _, accum_map = map_eval.get_map_var()
+                return {'map': map_eval, 'accum_map': accum_map}
             else:
                 return {'bbox': pred}
 

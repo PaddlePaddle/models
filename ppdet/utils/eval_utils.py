@@ -32,10 +32,14 @@ def parse_fetches(fetches, prog=None, extra_keys=None):
     values for fetch_list and keys for stat
     """
     keys, values = [], []
+    cls = []
     for k, v in fetches.items():
-        keys.append(k)
-        v.persistable = True
-        values.append(v.name)
+        if hasattr(v, 'name'):
+            keys.append(k)
+            v.persistable = True
+            values.append(v.name)
+        else:
+            cls.append(v)
 
     if prog is not None and extra_keys is not None:
         for k in extra_keys:
@@ -44,16 +48,25 @@ def parse_fetches(fetches, prog=None, extra_keys=None):
                 v.persistable = True
                 keys.append(k)
                 values.append(v.name)
-            except Exception:
+            except:
                 pass
 
-    return keys, values
+    return keys, values, cls
 
 
-def eval_run(exe, compile_program, pyreader, keys, values):
-    """Run evaluation program, return program outputs."""
+def eval_run(exe, compile_program, pyreader, keys, values, cls):
+    """
+    Run evaluation program, return program outputs.
+    """
     iter_id = 0
     results = []
+    if len(cls) != 0:
+        values = []
+        for i in range(len(cls)):
+            _, accum_map = cls[i].get_map_var()
+            cls[i].reset(exe)
+            values.append(accum_map)
+
     try:
         pyreader.start()
         while True:
@@ -93,5 +106,5 @@ def eval_results(results, feed, args, cfg):
             mask_eval(results, anno_file, savefile,
                       cfg['MaskHead']['resolution'])
     else:
-        res = np.mean(results[-1]['map'][0])
+        res = np.mean(results[-1]['accum_map'][0])
         logger.info('Test mAP: {}'.format(res))
