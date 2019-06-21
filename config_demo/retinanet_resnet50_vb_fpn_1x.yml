@@ -52,7 +52,7 @@ RetinaHead:
   sigma: 3.0151134457776365
   retina_detection_output:
     score_thresh: 0.05
-    nms_thresh: 0.3
+    nms_thresh: 0.5
     pre_nms_top_n: 1000
     detections_per_im: 100
     nms_eta: 1.0
