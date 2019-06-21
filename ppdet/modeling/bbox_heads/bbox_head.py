@@ -16,6 +16,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from collections import OrderedDict
+
 from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Xavier
@@ -135,6 +137,9 @@ class BBoxHead(object):
                 [N, num_anchors * 4, H, W].
         """
         head_feat = self.get_head_feat(roi_feat)
+        # when ResNetC5 output a single feature map
+        if isinstance(head_feat, OrderedDict):
+            head_feat = list(head_feat.values())[0]
         if not isinstance(self.head, TwoFCHead):
             head_feat = fluid.layers.pool2d(
                 head_feat, pool_type='avg', global_pooling=True)

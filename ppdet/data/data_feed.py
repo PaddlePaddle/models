@@ -95,9 +95,9 @@ def create_reader(feed, max_iter=0):
     }
 
     batch_transforms = feed.batch_transforms
-    pad = filter(lambda t: isinstance(t, PadBatch), batch_transforms)
-    rand_shape = filter(lambda t: isinstance(t, RandomShape), batch_transforms)
-    multi_scale = filter(lambda t: isinstance(t, MultiScale), batch_transforms)
+    pad = [t for t in batch_transforms if isinstance(t, PadBatch)]
+    rand_shape = [t for t in batch_transforms if isinstance(t, RandomShape)]
+    multi_scale = [t for t in batch_transforms if isinstance(t, MultiScale)]
 
     if any(pad):
         transform_config['IS_PADDING'] = True
