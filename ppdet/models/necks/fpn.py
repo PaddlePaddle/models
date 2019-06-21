@@ -38,17 +38,20 @@ class FPN(object):
         min_level (int): lowest level of the backbone feature map to use
         max_level (int): highest level of the backbone feature map to use
         spatial_scale (list): feature map scaling factor
+        has_extra_convs (bool): whether has extral convolutions in higher levels
     """
 
     def __init__(self,
                  num_chan=256,
                  min_level=2,
                  max_level=6,
-                 spatial_scale=[1. / 32., 1. / 16., 1. / 8., 1. / 4.]):
+                 spatial_scale=[1. / 32., 1. / 16., 1. / 8., 1. / 4.],
+                 has_extra_convs=False):
         self.num_chan = num_chan
         self.min_level = min_level
         self.max_level = max_level
         self.spatial_scale = spatial_scale
+        self.has_extra_convs = has_extra_convs
 
     def _add_topdown_lateral(self, body_name, body_input, upper_output):
         lateral_name = 'fpn_inner_' + body_name + '_lateral'
@@ -127,7 +130,8 @@ class FPN(object):
                 name=fpn_name)
             fpn_dict[fpn_name] = fpn_output
             fpn_name_list.append(fpn_name)
-        if self.max_level - self.min_level == len(self.spatial_scale):
+        if not self.has_extra_convs and self.max_level - self.min_level == len(
+                self.spatial_scale):
             body_top_name = fpn_name_list[0]
             body_top_extension = fluid.layers.pool2d(
                 fpn_dict[body_top_name],
@@ -138,5 +142,30 @@ class FPN(object):
             fpn_dict[body_top_name + '_subsampled_2x'] = body_top_extension
             fpn_name_list.insert(0, body_top_name + '_subsampled_2x')
             self.spatial_scale.insert(0, self.spatial_scale[0] * 0.5)
+        # Coarser FPN levels introduced for Retinanet
+        highest_backbone_level = self.min_level + len(self.spatial_scale) - 1
+        if self.has_extra_convs and self.max_level > highest_backbone_level:
+            fpn_blob = body_dict[body_name_list[0]]
+            for i in range(highest_backbone_level + 1, self.max_level + 1):
+                fpn_blob_in = fpn_blob
+                fpn_name = 'fpn_' + str(i)
+                if i > highest_backbone_level + 1:
+                    fpn_blob_in = fluid.layers.relu(fpn_blob)
+                fpn_blob = fluid.layers.conv2d(
+                    input=fpn_blob_in,
+                    num_filters=self.num_chan,
+                    filter_size=3,
+                    stride=2,
+                    padding=1,
+                    param_attr=ParamAttr(
+                        name=fpn_name + "_w", initializer=Xavier()),
+                    bias_attr=ParamAttr(
+                        name=fpn_name + "_b",
+                        learning_rate=2.,
+                        regularizer=L2Decay(0.)),
+                    name=fpn_name)
+                fpn_dict[fpn_name] = fpn_blob
+                fpn_name_list.insert(0, fpn_name)
+                self.spatial_scale.insert(0, self.spatial_scale[0] * 0.5)
         res_dict = OrderedDict([(k, fpn_dict[k]) for k in fpn_name_list])
         return res_dict, self.spatial_scale
