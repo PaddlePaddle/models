@@ -52,7 +52,6 @@ def create_reader(feed, max_iter=0):
     # if DATASET_DIR set and not exists, search dataset under ~/.paddle/dataset
     # if not exists base on DATASET_DIR name (coco or pascal), if not found 
     # under ~/.paddle/dataset, download it.
-    print("===========", feed.dataset.dataset_dir)
     if feed.dataset.dataset_dir:
         dataset_dir = get_dataset_path(feed.dataset.dataset_dir)
         feed.dataset.annotation = os.path.join(dataset_dir,
@@ -447,7 +446,6 @@ class FasterRCNNTrainFeed(DataFeed):
             use_process=use_process)
         # XXX these modes should be unified
         self.mode = 'TRAIN'
-        print("=======CocoDataSet=======", self.dataset.dataset_dir)
 
 
 # XXX currently use two presets, in the future, these should be combined into a
