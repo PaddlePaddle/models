@@ -107,9 +107,14 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.sync_batch_norm = cfg.syncbn
+    build_strategy.memory_optimize = False #gc and memory optimize may conflict
+    syncbn = cfg.syncbn
+    if syncbn and devices_num <= 1:
+        print("Disable syncbn in single device")
+        syncbn = False
+    build_strategy.sync_batch_norm = syncbn
+
     exec_strategy = fluid.ExecutionStrategy()
-   
     if cfg.use_gpu and num_trainers > 1:
         dist_utils.prepare_for_multi_process(exe, 
                build_strategy, 
