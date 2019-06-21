@@ -29,13 +29,14 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 from paddle import fluid
 
+from ppdet.core.workspace import load_config, merge_config, create
+from ppdet.models.model_inputs import create_feeds
+from ppdet.dataset.data_feed import create_reader
+
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import parse_args
-from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.dataset.data_feed import create_reader
 import ppdet.utils.checkpoint as checkpoint
 
-from tools.placeholder import create_feeds
 from tools.eval_utils import parse_fetches, eval_run, eval_results
 
 logger = logging.getLogger(__name__)
@@ -97,7 +98,6 @@ def main():
         eval_prog = fluid.Program()
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
-                # must be in the same scope as model when initialize feed_vars
                 eval_pyreader, feed_vars = create_feeds(eval_feed)
                 if cfg['metric'] == 'COCO':
                     fetches = model.test(feed_vars)

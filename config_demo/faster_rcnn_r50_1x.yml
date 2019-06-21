@@ -1,5 +1,6 @@
 architecture: FasterRCNN
 train_feed: FasterRCNNTrainFeed
+eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 use_gpu: yes
 max_iters: 180000
@@ -7,6 +8,8 @@ log_smooth_window: 20
 save_dir: output
 snapshot_iter: 10000
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
+metric: COCO
+weights: model_final
 
 FasterRCNN:
   backbone: ResNet
@@ -105,14 +108,25 @@ FasterRCNNTrainFeed:
   batch_size: 1
   dataset:
     # TODO: change dataset dir
-    annotation: COCO17/annotations/instances_train2017.json
-    image_dir: COCO17/train2017
+    dataset_dir: COCO17
+    annotation: COCO17/annotations/instances_val2017.json
+    image_dir: COCO17/val2017
   drop_last: false
+  num_workers: 2
+
+FasterRCNNEvalFeed:
+  batch_size: 1
+  dataset:
+    dataset_dir: COCO17
+    annotation: annotations/instances_val2017.json
+    image_dir: val2017
   num_workers: 2
 
 FasterRCNNTestFeed:
   batch_size: 1
   dataset:
-    annotation: COCO17/annotations/instances_val2017.json
-    image_dir: COCO17/val2017
-  num_workers: 2
+    dataset_dir: COCO17
+    annotation: annotations/instances_val2017.json
+    image_dir: val2017
+  test_file: val2017.txt
+  samples: 5

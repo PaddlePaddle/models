@@ -27,15 +27,16 @@ import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 
-
 from paddle import fluid
+
+from ppdet.core.workspace import load_config, merge_config, create
+from ppdet.models.model_inputs import create_feeds
+from ppdet.dataset.data_feed import create_reader
 
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import parse_args
 from ppdet.utils.visualizer import visualize_results
 import ppdet.utils.checkpoint as checkpoint
-from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.data_feed import make_reader
 from tools.eval_utils import parse_fetches
 
 logger = logging.getLogger(__name__)
@@ -72,9 +73,11 @@ def main():
     infer_prog = fluid.Program()
     with fluid.program_guard(infer_prog, startup_prog):
         with fluid.unique_name.guard():
-            _, reader, feed_vars = make_reader(test_feed, use_pyreader=False)
+            _, feed_vars = create_feeds(test_feed, use_pyreader=False)
             test_fetches = model.test(feed_vars)
     infer_prog = infer_prog.clone(True)
+
+    reader = create_reader(test_feed)
     feeder = fluid.DataFeeder(place=place, feed_list=feed_vars.values())
 
     exe.run(startup_prog)
@@ -116,7 +119,8 @@ def main():
                                 if 'bbox' in res else None
             mask_results = mask2out([res], clsid2catid, cfg['MaskHead']['resolution']) \
                                 if 'mask' in res else None
-            visualize_results(image_path, catid2name, 0.5, bbox_results, mask_results)
+            visualize_results(image_path, catid2name, 0.5, bbox_results,
+                              mask_results)
         if cfg['metric'] == "VOC":
             # TODO(dengkaipeng): add VOC metric process
             pass

@@ -34,7 +34,7 @@ feed_var_def = [
     {'name': 'gt_mask',       'shape': [2],  'dtype': 'float32', 'lod_level': 3},
     {'name': 'is_difficult',  'shape': [1],  'dtype': 'int32',   'lod_level': 1},
     {'name': 'gt_score',      'shape': None, 'dtype': 'float32', 'lod_level': 0},
-    {'name': 'im_shape',      'shape': [2],  'dtype': 'int32',   'lod_level': 0},
+    {'name': 'im_shape',      'shape': [3],  'dtype': 'int32',   'lod_level': 0},
 ]
 # yapf: enable
 
@@ -57,6 +57,7 @@ def create_feeds(feed, use_pyreader=True):
         feed_var_map['gt_label']['lod_level'] = 0
         feed_var_map['gt_score']['lod_level'] = 0
         feed_var_map['gt_box']['lod_level'] = 0
+        feed_var_map['im_shape']['shape'] = [2]
 
     feed_vars = OrderedDict([(key, fluid.layers.data(
         name=feed_var_map[key]['name'],

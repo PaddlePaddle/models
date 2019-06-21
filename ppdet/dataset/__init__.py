@@ -35,5 +35,6 @@
 
 from .dataset import Dataset
 from .reader import Reader
+from .data_feed import create_reader
 
-__all__ = ['Dataset', 'Reader']
+__all__ = ['Dataset', 'Reader', 'create_reader']
