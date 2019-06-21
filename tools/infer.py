@@ -23,8 +23,8 @@ import numpy as np
 from paddle import fluid
 
 from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.models.model_inputs import create_feeds
-from ppdet.dataset.data_feed import create_reader
+from ppdet.modeling.model_inputs import create_feeds
+from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
 from ppdet.utils.cli import parse_args

@@ -25,13 +25,13 @@ import numpy as np
 from paddle import fluid
 
 from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.dataset.data_feed import create_reader
+from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import parse_args
 import ppdet.utils.checkpoint as checkpoint
-from ppdet.models.model_input import create_feeds
+from ppdet.modeling.model_input import create_feeds
 
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
