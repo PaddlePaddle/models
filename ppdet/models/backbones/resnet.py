@@ -24,7 +24,7 @@ from paddle.fluid.framework import Variable
 from paddle.fluid.regularizer import L2Decay
 
 from ppdet.core.workspace import register, serializable
-from ppdet.utils.fetch_net_name import FetchName
+from .fetch_net_name import FetchName
 
 __all__ = ['ResNet', 'ResNetC5']
 

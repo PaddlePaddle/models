@@ -18,7 +18,7 @@ from __future__ import print_function
 
 from ppdet.core.workspace import register, serializable
 from .resnet import ResNet
-from ppdet.utils.fetch_net_name import FetchName
+from .fetch_net_name import FetchName
 
 __all__ = ['ResNeXt']
 
