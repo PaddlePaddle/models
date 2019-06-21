@@ -1,14 +1,14 @@
 architecture: MaskRCNN
 train_feed: MaskRCNNTrainFeed
+eval_feed: MaskRCNNEvalFeed
 test_feed: MaskRCNNTestFeed
-max_iters: 180000
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
-weights: output/MaskRCNN/model_final/ 
-log_smooth_window: 20
-snapshot_iter: 10000
-metric: COCO
-save_dir: output
 use_gpu: yes
+max_iters: 180000
+log_smooth_window: 20
+save_dir: output
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
+metric: COCO
+weights: output/MaskRCNN/model_final/ 
 
 MaskRCNN:
   backbone: ResNet
@@ -20,12 +20,10 @@ MaskRCNN:
 
 ResNet:
   norm_type: affine_channel
-  norm_decay: true
-  freeze_norm: true
+  norm_decay: 0
   depth: 50
   feature_maps: [2,3,4,5]
   freeze_at: 2
-  variant: b
 
 FPN:
   max_level: 6
@@ -107,9 +105,7 @@ LearningRate:
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
-    milestones:
-    - 120000
-    - 160000
+    milestones: [120000, 160000]
     values: null
   - !LinearWarmup
     start_factor: 0.3333333333333333
@@ -129,7 +125,7 @@ MaskRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: coco/
+    dataset_dir: COCO17
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   use_padded_im_info: False
@@ -140,7 +136,7 @@ MaskRCNNEvalFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: coco/
+    dataset_dir: COCO17
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   use_padded_im_info: True
@@ -151,7 +147,7 @@ MaskRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: coco/
+    dataset_dir: COCO17
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   test_file: val2017.txt
