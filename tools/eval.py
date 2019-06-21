@@ -78,11 +78,14 @@ def main():
     pyreader.decorate_sample_list_generator(reader, place)
 
     # 3. Compile program for multi-devices
-    build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = False
-    build_strategy.enable_inplace = False
-    compile_program = fluid.compiler.CompiledProgram(
-        eval_prog).with_data_parallel(build_strategy=build_strategy)
+    if devices_num <= 1:
+        compile_program = fluid.compiler.CompiledProgram(eval_prog)
+    else:
+        build_strategy = fluid.BuildStrategy()
+        build_strategy.memory_optimize = False
+        build_strategy.enable_inplace = False
+        compile_program = fluid.compiler.CompiledProgram(
+            eval_prog).with_data_parallel(build_strategy=build_strategy)
 
     # 5. Load model
     exe.run(startup_prog)
