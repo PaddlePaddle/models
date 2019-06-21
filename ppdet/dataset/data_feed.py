@@ -538,11 +538,6 @@ class FasterRCNNEvalFeed(DataFeed):
             test_file=test_file,
             num_workers=num_workers)
         self.mode = 'VAL'
-        # in rcnn models, im_shape is in format of [N, 3] for box clip
-        for var in feed_var_def:
-            if var['name'] == 'im_shape':
-                var['shape'] = [3]
-                var['dtype'] = 'float32'
 
 
 @register
@@ -584,11 +579,6 @@ class FasterRCNNTestFeed(DataFeed):
             test_file=test_file,
             num_workers=num_workers)
         self.mode = 'TEST'
-        # in rcnn models, im_shape is in format of [N, 3] for box clip
-        for var in feed_var_def:
-            if var['name'] == 'im_shape':
-                var['shape'] = [3]
-                var['dtype'] = 'float32'
 
 
 @register
@@ -636,11 +626,6 @@ class MaskRCNNEvalFeed(DataFeed):
             num_workers=num_workers,
             use_process=use_process)
         self.mode = 'VAL'
-        # in rcnn models, im_shape is in format of [N, 3] for box clip
-        for var in feed_var_def:
-            if var['name'] == 'im_shape':
-                var['shape'] = [3]
-                var['dtype'] = 'float32'
 
 
 @register
@@ -686,11 +671,6 @@ class MaskRCNNTestFeed(DataFeed):
             num_workers=num_workers,
             use_process=use_process)
         self.mode = 'TEST'
-        # in rcnn models, im_shape is in format of [N, 3] for box clip
-        for var in feed_var_def:
-            if var['name'] == 'im_shape':
-                var['shape'] = [3]
-                var['dtype'] = 'float32'
 
 
 @register
@@ -840,8 +820,8 @@ class YoloTrainFeed(DataFeed):
                          alpha=1.5, beta=1.5),
                      NormalizeBox(),
                      RandomDistort(),
-                     ExpandImage(max_ratio=4., prob=.5,
-                                 mean=[123.675, 116.28, 103.53]),
+                     ExpandImage(
+                         max_ratio=4., prob=.5, mean=[123.675, 116.28, 103.53]),
                      CropImage([[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
                                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
                                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],

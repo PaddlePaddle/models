@@ -14,4 +14,3 @@
 
 import ppdet.models
 import ppdet.optimizer
-import ppdet.dataset.data_feed
