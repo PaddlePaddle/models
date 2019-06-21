@@ -1,10 +1,10 @@
-#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -125,14 +125,14 @@ class RetinaHead(object):
     def _class_subnet(self, body_feats, spatial_scale):
         """
         Get class predictions of all level FPN level.
-        
-        Args:
-            fpn_dict(Dict): A dictionary represents the output of FPN neck with 
-                their name.
-            spatial_scale(List): A list of multiplicative spatial scale factor.
 
-        Return:
-            cls_pred_input(List): Class prediction of all input fpn levels.
+        Args:
+            fpn_dict(dict): A dictionary represents the output of FPN neck with
+                their name.
+            spatial_scale(list): A list of multiplicative spatial scale factor.
+
+        Returns:
+            cls_pred_input(list): Class prediction of all input fpn levels.
         """
         assert len(body_feats) == self.max_level - self.min_level + 1
         fpn_name_list = list(body_feats.keys())
@@ -194,14 +194,14 @@ class RetinaHead(object):
     def _bbox_subnet(self, body_feats, spatial_scale):
         """
         Get bounding box predictions of all level FPN level.
-        
-        Args:
-            fpn_dict(Dict): A dictionary represents the output of FPN neck with 
-                their name.
-            spatial_scale(List): A list of multiplicative spatial scale factor.
 
-        Return:
-            bbox_pred_input(List): Bounding box prediction of all input fpn
+        Args:
+            fpn_dict(dict): A dictionary represents the output of FPN neck with
+                their name.
+            spatial_scale(list): A list of multiplicative spatial scale factor.
+
+        Returns:
+            bbox_pred_input(list): Bounding box prediction of all input fpn
                 levels.
         """
         assert len(body_feats) == self.max_level - self.min_level + 1
@@ -262,13 +262,13 @@ class RetinaHead(object):
         Get anchor boxes of all level FPN level.
 
         Args:
-            fpn_dict(Dict): A dictionary represents the output of FPN neck with
+            fpn_dict(dict): A dictionary represents the output of FPN neck with
                 their name.
-            spatial_scale(List): A list of multiplicative spatial scale factor.
+            spatial_scale(list): A list of multiplicative spatial scale factor.
 
         Return:
-            anchor_input(List): Anchors of all input fpn levels with shape of.
-            anchor_var_input(List): Anchor variance of all input fpn levels with
+            anchor_input(list): Anchors of all input fpn levels with shape of.
+            anchor_var_input(list): Anchor variance of all input fpn levels with
                 shape.
         """
         assert len(body_feats) == self.max_level - self.min_level + 1
@@ -279,9 +279,8 @@ class RetinaHead(object):
             anchor_sizes = []
             stride = int(1 / spatial_scale[self.max_level - lvl])
             for octave in range(self.num_scales_per_octave):
-                anchor_size = stride * (
-                    2**(float(octave) /
-                        float(self.num_scales_per_octave))) * self.base_scale
+                anchor_size = stride * (2**(float(octave) / float(
+                    self.num_scales_per_octave))) * self.base_scale
                 anchor_sizes.append(anchor_size)
             fpn_name = fpn_name_list[self.max_level - lvl]
             anchor, anchor_var = self.anchor_generator(
@@ -296,18 +295,18 @@ class RetinaHead(object):
     def _get_output(self, body_feats, spatial_scale):
         """
         Get class, bounding box predictions and anchor boxes of all level FPN level.
-        
-        Args:
-            fpn_dict(Dict): A dictionary represents the output of FPN neck with 
-                their name.
-            spatial_scale(List): A list of multiplicative spatial scale factor.
 
-        Return:
-            cls_pred_input(List): Class prediction of all input fpn levels.
-            bbox_pred_input(List): Bounding box prediction of all input fpn
+        Args:
+            fpn_dict(dict): A dictionary represents the output of FPN neck with
+                their name.
+            spatial_scale(list): A list of multiplicative spatial scale factor.
+
+        Returns:
+            cls_pred_input(list): Class prediction of all input fpn levels.
+            bbox_pred_input(list): Bounding box prediction of all input fpn
                 levels.
-            anchor_input(List): Anchors of all input fpn levels with shape of.
-            anchor_var_input(List): Anchor variance of all input fpn levels with
+            anchor_input(list): Anchors of all input fpn levels with shape of.
+            anchor_var_input(list): Anchor variance of all input fpn levels with
                 shape.
         """
         assert len(body_feats) == self.max_level - self.min_level + 1
@@ -348,18 +347,18 @@ class RetinaHead(object):
     def get_prediction(self, body_feats, spatial_scale, im_info):
         """
         Get prediction bounding box in test stage.
-        
+
         Args:
-            fpn_dict(Dict): A dictionary represents the output of FPN neck with 
+            fpn_dict(dict): A dictionary represents the output of FPN neck with
                 their name.
-            spatial_scale(List): A list of multiplicative spatial scale factor.
-            im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
-                number of input images, each element consists of im_height, 
+            spatial_scale(list): A list of multiplicative spatial scale factor.
+            im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the
+                number of input images, each element consists of im_height,
                 im_width, im_scale.
-     
+
         Returns:
-            pred_result(Variable): Prediction result with shape [N, 6]. Each 
-                row has 6 values: [label, confidence, xmin, ymin, xmax, ymax]. 
+            pred_result(Variable): Prediction result with shape [N, 6]. Each
+                row has 6 values: [label, confidence, xmin, ymin, xmax, ymax].
                 N is the total number of prediction.
         """
         output = self._get_output(body_feats, spatial_scale)
@@ -382,9 +381,9 @@ class RetinaHead(object):
         """
         Calculate the loss of retinanet.
         Args:
-            fpn_dict(Dict): A dictionary represents the output of FPN neck with
+            fpn_dict(dict): A dictionary represents the output of FPN neck with
                 their name.
-            spatial_scale(List): A list of multiplicative spatial scale factor.
+            spatial_scale(list): A list of multiplicative spatial scale factor.
             im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the
                 number of input images, each element consists of im_height,
                 im_width, im_scale.
@@ -396,7 +395,7 @@ class RetinaHead(object):
                 shape [M, 1]. M is the number of groundtruth.
 
         Returns:
-            Type: Dict
+            Type: dict
                 loss_cls(Variable): focal loss.
                 loss_bbox(Variable): smooth l1 loss.
         """
