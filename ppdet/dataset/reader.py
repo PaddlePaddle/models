@@ -105,8 +105,8 @@ class Reader(object):
                 if maxit <= 0:
                     return
 
-        if hasattr(sc, 'get_image_list'):
-            _reader.image_list = sc.get_image_list()
+        if hasattr(sc, 'get_imid2path'):
+            _reader.imid2path = sc.get_imid2path()
 
         return _reader
 
