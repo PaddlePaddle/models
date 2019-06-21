@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ppdet.models
+import ppdet.modeling
 import ppdet.optimizer
-import ppdet.dataset.data_feed
+import ppdet.data.data_feed

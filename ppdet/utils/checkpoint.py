@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,14 +20,15 @@ from __future__ import unicode_literals
 import os
 import shutil
 import numpy as np
-import logging
-logger = logging.getLogger(__name__)
 
 import paddle.fluid as fluid
 
 from .download import get_weights_path
 
-__all__ = ['load', 'load_checkpoint', 'load_and_fusebn', 'save']
+import logging
+logger = logging.getLogger(__name__)
+
+__all__ = ['load_checkpoint', 'load_and_fusebn', 'save']
 
 
 def is_url(path):
@@ -140,8 +141,8 @@ def load_and_fusebn(exe, prog, path):
             for op in ops:
                 if op.type == 'affine_channel':
                     # remove 'scale' as prefix
-                    scale_name = op.input('Scale')[0]  #_scale
-                    bias_name = op.input('Bias')[0]  #_offset
+                    scale_name = op.input('Scale')[0]  # _scale
+                    bias_name = op.input('Bias')[0]  # _offset
                     prefix = scale_name[:-5]
                     mean_name = prefix + 'mean'
                     variance_name = prefix + 'variance'
