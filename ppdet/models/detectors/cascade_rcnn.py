@@ -1,5 +1,4 @@
-"""
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
-import math
-import six
 
 import paddle.fluid as fluid
 
@@ -32,8 +27,9 @@ __all__ = ['CascadeRCNN']
 
 @register
 class CascadeRCNN(object):
-    r"""
+    """
     Cascade R-CNN architecture, see https://arxiv.org/abs/1712.00726
+
     Args:
         backbone (object): backbone instance
         rpn_head (object): `RPNhead` instance
@@ -99,6 +95,8 @@ class CascadeRCNN(object):
         rcnn_pred_list = []
         rcnn_target_list = []
 
+        proposals = None
+        bbox_pred = None
         for i in range(3):
             if i > 0:
                 refined_bbox = self._decode_box(
@@ -118,7 +116,7 @@ class CascadeRCNN(object):
                 proposals = refined_bbox
             proposal_list.append(proposals)
 
-            # extract roi features 
+            # extract roi features
             if isinstance(self.neck, FPN):
                 roi_feat = self.roi_extractor(body_feats, proposals,
                                               spatial_scale)
@@ -126,7 +124,7 @@ class CascadeRCNN(object):
             else:
                 raise ValueError("only supports FPN as enricher for now")
 
-            # bbox head  
+            # bbox head
             cls_score, bbox_pred = self.bbox_head.get_output(
                 roi_feat,
                 wb_scalar=1.0 / self.cascade_rcnn_loss_weight[i],
