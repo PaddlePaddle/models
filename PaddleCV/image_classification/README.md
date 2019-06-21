@@ -77,7 +77,7 @@ python train.py \
 * **class_dim**: the class number of the classification task. Default: 1000.
 * **image_shape**: input size of the network. Default: "3,224,224".
 * **model_save_dir**: the directory to save trained model. Default: "output".
-* **with_mem_opt**: whether to use memory optimization or not. Default: True.
+* **with_mem_opt**: whether to use memory optimization or not. Default: False.
 * **with_inplace**: whether to use inplace memory optimization or not. Default: True.
 * **lr_strategy**: learning rate changing strategy. Default: "piecewise_decay".
 * **lr**: initialized learning rate. Default: 0.1.
