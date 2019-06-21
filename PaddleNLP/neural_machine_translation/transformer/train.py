@@ -270,7 +270,12 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
     return data_input_dict, np.asarray([num_token], dtype="float32")
 
 
-def prepare_data_generator(args, is_test, count, pyreader):
+def prepare_data_generator(args,                        
+                           is_test,	
+                           count,	
+                           pyreader,	
+                           py_reader_provider_wrapper,	
+                           place=None):
     """
     Data generator wrapper for DataReader. If use py_reader, set the data
     provider for py_reader
@@ -378,7 +383,7 @@ def prepare_feed_dict_list(data_generator, init_flag, count):
     return feed_dict_list if len(feed_dict_list) == count else None
 
 
-def py_reader_provider_wrapper(data_reader):
+def py_reader_provider_wrapper(data_reader, place):
     """
     Data provider needed by fluid.layers.py_reader.
     """
@@ -427,7 +432,11 @@ def test_context(exe, train_exe, dev_count):
                 is_test=True)
     test_prog = test_prog.clone(for_test=True)
     test_data = prepare_data_generator(
-        args, is_test=True, count=dev_count, pyreader=pyreader)
+        args, 
+        is_test=True,	
+        count=dev_count,	
+        pyreader=pyreader,	
+        py_reader_provider_wrapper=py_reader_provider_wrapper)
 
     exe.run(startup_prog)  # to init pyreader for testing
     if TrainTaskConfig.ckpt_path:
@@ -495,7 +504,11 @@ def train_loop(exe,
 
     logging.info("begin reader")
     train_data = prepare_data_generator(
-        args, is_test=False, count=dev_count, pyreader=pyreader)
+        args,        
+        is_test=False,	
+        count=dev_count,	
+        pyreader=pyreader,	
+        py_reader_provider_wrapper=py_reader_provider_wrapper)
 
     # For faster executor
     exec_strategy = fluid.ExecutionStrategy()
@@ -538,7 +551,6 @@ def train_loop(exe,
 
     step_idx = 0
     init_flag = True
-    avg_speed = []
     logging.info("begin train")
     for pass_id in six.moves.xrange(TrainTaskConfig.pass_num):
         pass_start_time = time.time()
@@ -576,14 +588,13 @@ def train_loop(exe,
                              np.exp([min(total_avg_cost, 100)])))
                         avg_batch_time = time.time()
                     else:
-                        speed = args.fetch_steps / (time.time() - avg_batch_time)
-                        avg_speed.append(speed)
                         logging.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
                             "normalized loss: %f, ppl: %f, speed: %.2f step/s" %
                             (step_idx, pass_id, batch_id, total_avg_cost,
                              total_avg_cost - loss_normalizer,
-                             np.exp([min(total_avg_cost, 100)]),speed))
+                             np.exp([min(total_avg_cost, 100)]),
+                             args.fetch_steps / (time.time() - avg_batch_time)))))
                         avg_batch_time = time.time()
 
                 if step_idx % TrainTaskConfig.save_freq == 0 and step_idx > 0:
@@ -616,8 +627,8 @@ def train_loop(exe,
                                    val_avg_cost - loss_normalizer, val_ppl,
                                    time_consumed))
         else:
-            logging.info("epoch: %d, consumed %fs, avg_speed: %f step/s" % (pass_id, time_consumed, np.average(avg_speed)))
-        avg_speed = []
+            logging.info("epoch: %d, consumed %fs" % (pass_id, time_consumed))
+
         if not args.enable_ce:
             fluid.io.save_persistables(
                 exe,
@@ -630,6 +641,7 @@ def train_loop(exe,
         if args.val_file_pattern is not None:
             print("kpis\ttest_cost_card%d\t%f" % (dev_count, val_avg_cost))
         print("kpis\ttrain_duration_card%d\t%f" % (dev_count, time_consumed))
+
 
 def train(args):
     # priority: ENV > args > config
@@ -652,6 +664,7 @@ def train(args):
         dev_count = get_device_num()
 
     exe = fluid.Executor(place)
+    
     train_prog = fluid.Program()
     startup_prog = fluid.Program()
 
