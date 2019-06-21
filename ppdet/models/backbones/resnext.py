@@ -18,7 +18,6 @@ from __future__ import print_function
 
 from ppdet.core.workspace import register, serializable
 from .resnet import ResNet
-from .fetch_net_name import FetchName
 
 __all__ = ['ResNeXt']
 
@@ -62,7 +61,6 @@ class ResNeXt(ResNet):
         self.groups = groups
         self.group_width = group_width
         self._model_type = 'ResNeXt'
-        self.fetch_net_name = FetchName(self._model_type, self.variant)
 
 
 @register

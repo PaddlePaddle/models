@@ -13,36 +13,38 @@
 # limitations under the License.
 
 
-class FetchName(object):
-    """
-        fetch the backbones layer names
-        Args:
-            model_type (str): model type, 'ResNet', 'ResNeXt' or 'SEResNeXt'
-            variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
-        """
+class NameAdapter(object):
+    """Fix the backbones variable names for pretrained weight"""
 
-    def __init__(self, model_type, variant):
-        super(FetchName, self).__init__()
-        self._model_type = model_type
-        self._variant = variant
+    def __init__(self, model):
+        super(NameAdapter, self).__init__()
+        self.model = model
 
-    def fetch_conv_norm(self, name):
+    @property
+    def model_type(self):
+        return getattr(self.model, '_model_type', '')
+
+    @property
+    def variant(self):
+        return getattr(self.model, 'variant', '')
+
+    def fix_conv_norm_name(self, name):
         if name == "conv1":
             bn_name = "bn_" + name
         else:
             bn_name = "bn" + name[3:]
         # the naming rule is same as pretrained weight
-        if self._model_type == 'SEResNeXt':
+        if self.model_type == 'SEResNeXt':
             bn_name = name + "_bn"
         return bn_name
 
-    def fetch_shortcut(self, name):
-        if self._model_type == 'SEResNeXt':
+    def fix_shortcut_name(self, name):
+        if self.model_type == 'SEResNeXt':
             name = 'conv' + name + '_prj'
         return name
 
-    def fetch_bottleneck(self, name):
-        if self._model_type == 'SEResNeXt':
+    def fix_bottleneck_name(self, name):
+        if self.model_type == 'SEResNeXt':
             conv_name1 = 'conv' + name + '_x1'
             conv_name2 = 'conv' + name + '_x2'
             conv_name3 = 'conv' + name + '_x3'
@@ -54,7 +56,7 @@ class FetchName(object):
             shortcut_name = name + "_branch1"
         return conv_name1, conv_name2, conv_name3, shortcut_name
 
-    def fetch_layer_warp(self, stage_num, count, i):
+    def fix_layer_warp_name(self, stage_num, count, i):
         name = 'res' + str(stage_num)
         if count > 10 and stage_num == 4:
             if i == 0:
@@ -63,12 +65,12 @@ class FetchName(object):
                 conv_name = name + "b" + str(i)
         else:
             conv_name = name + chr(ord("a") + i)
-        if self._model_type == 'SEResNeXt':
+        if self.model_type == 'SEResNeXt':
             conv_name = str(stage_num + 2) + '_' + str(i + 1)
         return conv_name
 
-    def fetch_c1_stage(self, out_chan):
-        if self._variant in ['c', 'd']:
+    def fix_c1_stage_name(self, out_chan):
+        if self.variant in ['c', 'd']:
             conv_def = [
                 [out_chan / 2, 3, 2, "conv1_1"],
                 [out_chan / 2, 3, 1, "conv1_2"],
@@ -77,7 +79,7 @@ class FetchName(object):
         else:
             conv1_name = "conv1"
             # the naming rule is same as pretrained weight
-            if self._model_type == 'ResNext':
+            if self.model_type == 'ResNext':
                 conv1_name = "res_conv1"
             conv_def = [[out_chan, 7, 2, conv1_name]]
         return conv_def

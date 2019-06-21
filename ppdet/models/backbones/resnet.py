@@ -26,7 +26,7 @@ from paddle.fluid.regularizer import L2Decay
 from ppdet.core.workspace import register, serializable
 from numbers import Integral
 
-from .fetch_net_name import FetchName
+from .name_adapter import NameAdapter
 
 __all__ = ['ResNet', 'ResNetC5']
 
@@ -82,7 +82,7 @@ class ResNet(object):
         }
         self.stage_filters = [64, 128, 256, 512]
         self._c1_out_chan_num = 64
-        self.fetch_net_name = FetchName(self._model_type, self.variant)
+        self.na = NameAdapter(self)
 
     def _conv_norm(self,
                    input,
@@ -104,7 +104,7 @@ class ResNet(object):
             bias_attr=False,
             name=name + '.conv2d.output.1')
 
-        bn_name = self.fetch_net_name.fetch_conv_norm(name)
+        bn_name = self.na.fix_conv_norm_name(name)
 
         norm_lr = 0. if self.freeze_norm else 1.
         norm_decay = self.norm_decay
@@ -150,7 +150,7 @@ class ResNet(object):
         max_pooling_in_short_cut = self.variant == 'd'
         ch_in = input.shape[1]
         # the naming rule is same as pretrained weight
-        name = self.fetch_net_name.fetch_shortcut(name)
+        name = self.na.fix_shortcut_name(name)
 
         if ch_in != ch_out or stride != 1:
             if max_pooling_in_short_cut and not is_first:
@@ -184,7 +184,7 @@ class ResNet(object):
             expand = 2
 
         conv_name1, conv_name2, conv_name3, \
-            shortcut_name = self.fetch_net_name.fetch_bottleneck(name)
+            shortcut_name = self.na.fix_bottleneck_name(name)
         conv_def = [[num_filters, 1, stride1, 'relu', 1, conv_name1],
                     [num_filters, 3, stride2, 'relu', groups, conv_name2],
                     [num_filters * expand, 1, 1, None, 1, conv_name3]]
@@ -252,8 +252,7 @@ class ResNet(object):
         # with ImageNet pre-trained model
         conv = input
         for i in range(count):
-            conv_name = self.fetch_net_name.fetch_layer_warp(stage_num, count,
-                                                             i)
+            conv_name = self.na.fix_layer_warp_name(stage_num, count, i)
             conv = block_func(
                 input=conv,
                 num_filters=ch_out,
@@ -264,7 +263,7 @@ class ResNet(object):
 
     def c1_stage(self, input):
         out_chan = self._c1_out_chan_num
-        conv_def = self.fetch_net_name.fetch_c1_stage(out_chan)
+        conv_def = self.na.fix_c1_stage_name(out_chan)
         if self.variant in ['c', 'd'] and len(conv_def) != 3:
             assert "variant 'c', 'd' len conv_def is 3!"
 
