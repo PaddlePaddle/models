@@ -8,17 +8,18 @@ log_smooth_window: 20
 save_dir: output
 snapshot_iter: 2000
 metric: COCO
-pretrain_weights: https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz
-weights: https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet34_pretrained.tar
+weights: https://paddlemodels.bj.bcebos.com/yolo/yolo_resnet34.tar.gz
 
 YOLOv3:
-  backbone: DarkNet
+  backbone: ResNet
   yolo_head: YOLOv3Head
 
-DarkNet:
+ResNet:
   norm_type: sync_bn
   norm_decay: 0.
-  depth: 53
+  depth: 34
+  feature_maps: [3, 4, 5]
 
 YOLOv3Head:
   anchor_masks: [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
