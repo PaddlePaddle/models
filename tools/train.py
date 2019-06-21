@@ -31,7 +31,7 @@ from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import parse_args
 import ppdet.utils.checkpoint as checkpoint
-from tools.placeholder import create_feeds
+from ppdet.models.model_input import create_feeds
 
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
