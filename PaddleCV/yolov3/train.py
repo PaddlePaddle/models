@@ -43,21 +43,17 @@ from learning_rate import exponential_with_warmup_decay
 from config import cfg
 import dist_utils
 
+num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+
 def get_device_num():
-    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
-    # NOTE(zcd): use multi processes to train the model,
-    # and each process use one GPU card.
-    num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+    # NOTE(zcd): for multi-processe training, each process use one GPU card.
     if num_trainers > 1 : return 1
+    visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
     if visible_device:
         device_num = len(visible_device.split(','))
     else:
         device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
     return device_num
-
-def update_lr(args):
-    num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-    args.learning_rate = args.learning_rate / num_trainers
 
 def train():
 
@@ -79,8 +75,6 @@ def train():
     devices_num = get_device_num()
     print("Found {} CUDA devices.".format(devices_num))
 
-    update_lr(cfg)
-    
     learning_rate = cfg.learning_rate
     boundaries = cfg.lr_steps
     gamma = cfg.lr_gamma
@@ -113,18 +107,20 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     build_strategy = fluid.BuildStrategy()
+    build_strategy.sync_batch_norm = cfg.syncbn
+    exec_strategy = fluid.ExecutionStrategy()
    
-    if cfg.use_gpu:
+    if cfg.use_gpu and num_trainers > 1:
         dist_utils.prepare_for_multi_process(exe, 
                build_strategy, 
-               fluid.default_main_program(), 
-               fluid.default_startup_program())
+               fluid.default_main_program())
+        exec_strategy.num_threads = 1 
 
-    build_strategy.sync_batch_norm = cfg.syncbn
     compile_program = fluid.compiler.CompiledProgram(
             fluid.default_main_program()).with_data_parallel(
             loss_name=loss.name,
-            build_strategy=build_strategy)
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
 
     random_sizes = [cfg.input_size]
     if cfg.random_shape:
@@ -132,17 +128,23 @@ def train():
 
     total_iter = cfg.max_iter - cfg.start_iter
     mixup_iter = total_iter - cfg.no_mixup_iter
+
     shuffle = True
+    shuffle_seed=None
     if args.enable_ce:
         shuffle = False
+    # NOTE: shuffle_seed must be set when using multi-process training.
+    if num_trainers > 1 :
+        shuffle_seed = 1
     train_reader = reader.train(
         input_size,
         batch_size=cfg.batch_size,
         shuffle=shuffle,
+        shuffle_seed=shuffle_seed,
         total_iter=total_iter * devices_num,
         mixup_iter=mixup_iter * devices_num,
         random_sizes=random_sizes,
-        use_multiprocessing=cfg.use_multiprocess)
+        use_multiprocess_reader=cfg.use_multiprocess_reader)
     py_reader = model.py_reader
     py_reader.decorate_paddle_reader(train_reader)
 
