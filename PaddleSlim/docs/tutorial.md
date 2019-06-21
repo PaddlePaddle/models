@@ -22,6 +22,7 @@
 - [量化原理介绍](#1-quantization-aware-training量化介绍)
 - [剪切原理介绍](#2-卷积核剪切原理)
 - [蒸馏原理介绍](#3-蒸馏)
+- [小模型结构搜索原理介绍](#4-小模型结构搜索)
 
 ## 1. Quantization Aware Training量化介绍
 
@@ -222,9 +223,53 @@ Fast Optimization, Network Minimization and Transfer Learning](http://openaccess
 
    由于小模型和大模型之间通过L2 loss进行监督，必须保证两个FSP矩阵的维度必须相同，而FSP矩阵的维度为M*N，其中M、N分别为输入和输出特征的channel数，因此大模型和小模型的FSP矩阵需要一一对应。
 
+## 4. 小模型结构搜索
+
+深度学习模型在很多任务上都取得了不错的效果，网络结构的好坏对最终模型的效果有非常重要的影响。手工设计网络需要非常丰富的经验和众多尝试，并且众多的超参数和网络结构参数会产生爆炸性的组合，常规的random search几乎不可行，因此最近几年自动模型搜索技术（Neural Architecture Search）成为研究热点。区别与传统NAS，我们专注在搜索精度高并且速度快的模型结构，我们将该功能统称为Light-NAS.
+
+### 4.1 搜索策略
+
+搜索策略定义了使用怎样的算法可以快速、准确找到最优的网络结构参数配置。常见的搜索方法包括：强化学习、贝叶斯优化、进化算法、基于梯度的算法。我们当前的实现以模拟退火算法为主。
+
+#### 4.1.1 模拟退火
+
+模拟退火算法来源于固体退火原理，将固体加温至充分高，再让其徐徐冷却，加温时，固体内部粒子随温升变为无序状，内能增大，而徐徐冷却时粒子渐趋有序，在每个温度都达到平衡态，最后在常温时达到基态，内能减为最小。
+
+鉴于物理中固体物质的退火过程与一般组合优化问题之间的相似性，我们将其用于网络结构的搜索。
+
+使用模拟退火算法搜索模型的过程如下:
+
+$$
+T_k = T_0*\theta^k
+$$
+
+\begin{equation}
+P(r_k) =
+\begin{cases}
+e^{\frac{(r_k-r)}{T_k}} & r_k < r\\
+1 & r_k>=r
+\end{cases}
+\end{equation}
+
+在第k次迭代，搜到的网络为$N_k$, 对$N_k$训练若干epoch后，在测试集上得到reward为$r_k$, 以概率$P(r_k)$接受$r_k$，即执行$r=r_k$。$r$在搜索过程起始时被初始化为0. $T_0$为初始化温度，$\theta$为温度衰减系数，$T_k$为第k次迭代的温度。
 
 
-## 4. 参考文献
+在我们的NAS任务中，区别于RL每次重新生成一个完整的网络，我们将网络结构映射成一段编码，第一次随机初始化，然后每次随机修改编码中的一部分（对应于网络结构的一部分）生成一个新的编码，然后将这个编码再映射回网络结构，通过在训练集上训练一定的epochs后的精度以及网络延时融合获得reward，来指导退火算法的收敛。
+
+
+### 4.2 搜索空间
+
+搜索空间定义了优化问题的变量，变量规模决定了搜索算法的难度和搜索时间。因此为了加快搜索速度，定义一个合理的搜索空间至关重要。在Light-NAS中，为了加速搜索速度，我们将一个网络划分为多个block，先手动按链状层级结构堆叠c，再 使用搜索算法自动搜索每个block内部的结构。
+
+因为要搜索出在移动端运行速度快的模型，我们参考了mnas中使用的mobienetV2结构中的Linear Bottlenecks和Inverted residuals结构，搜索每一个Inverted residuals中的具体参数，包括kernelsize、channel扩张倍数、repeat number、channels number。如图10所示：
+
+<p align="center">
+<img src="images/tutorial/light-nas-block.png" height=300 width=600 hspace='10'/> <br />
+<strong>图10</strong>
+</p>
+
+
+## 5. 参考文献
 
 1. [High-Performance Hardware for Machine Learning](https://media.nips.cc/Conferences/2015/tutorialslides/Dally-NIPS-Tutorial-2015.pdf)
 
