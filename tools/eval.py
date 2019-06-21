@@ -24,7 +24,7 @@ import paddle.fluid as fluid
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.utils.cli import parse_args
-from ppdet.modeling.model_inputs import create_feeds
+from ppdet.modeling.model_input import create_feeds
 from ppdet.data.data_feed import create_reader
 from ppdet.core.workspace import load_config, merge_config, create
 
