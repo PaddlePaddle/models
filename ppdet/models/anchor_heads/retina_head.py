@@ -22,43 +22,12 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Constant
 from paddle.fluid.regularizer import L2Decay
-from ppdet.models.anchor_heads.rpn_head import AnchorGenerator
+from ppdet.models.ops import (AnchorGenerator, RetinaTargetAssign,
+                              RetinaOutputDecoder)
 
 from ppdet.core.workspace import register, serializable
 
-__all__ = ['RetinaTargetAssign', 'RetinaOutputDecoder', 'RetinaHead']
-
-
-@register
-@serializable
-class RetinaTargetAssign(object):
-    __op__ = fluid.layers.retinanet_target_assign
-    __append_doc__ = True
-
-    def __init__(self, positive_overlap=0.5, negative_overlap=0.4):
-        super(RetinaTargetAssign, self).__init__()
-        self.positive_overlap = positive_overlap
-        self.negative_overlap = negative_overlap
-
-
-@register
-@serializable
-class RetinaOutputDecoder(object):
-    __op__ = fluid.layers.retinanet_detection_output
-    __append_doc__ = True
-
-    def __init__(self,
-                 score_thresh=0.05,
-                 nms_thresh=0.3,
-                 pre_nms_top_n=1000,
-                 detections_per_im=100,
-                 nms_eta=1.0):
-        super(RetinaOutputDecoder, self).__init__()
-        self.score_threshold = score_thresh
-        self.nms_threshold = nms_thresh
-        self.nms_top_k = pre_nms_top_n
-        self.keep_top_k = detections_per_im
-        self.nms_eta = nms_eta
+__all__ = ['RetinaHead']
 
 
 @register

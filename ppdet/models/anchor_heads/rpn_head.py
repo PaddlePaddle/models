@@ -21,69 +21,10 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
 
-from ppdet.core.workspace import register, serializable
+from ppdet.core.workspace import register
+from ppdet.models.ops import AnchorGenerator, RPNTargetAssign, GenerateProposals
 
-__all__ = ['AnchorGenerator', 'RPNTargetAssign', 'GenerateProposals', 'RPNHead']
-
-
-@register
-@serializable
-class AnchorGenerator(object):
-    __op__ = fluid.layers.anchor_generator
-    __append_doc__ = True
-
-    def __init__(self,
-                 stride=[16.0, 16.0],
-                 anchor_sizes=[32, 64, 128, 256, 512],
-                 aspect_ratios=[0.5, 1., 2.],
-                 variance=[1., 1., 1., 1.]):
-        super(AnchorGenerator, self).__init__()
-        self.anchor_sizes = anchor_sizes
-        self.aspect_ratios = aspect_ratios
-        self.variance = variance
-        self.stride = stride
-
-
-@register
-@serializable
-class RPNTargetAssign(object):
-    __op__ = fluid.layers.rpn_target_assign
-    __append_doc__ = True
-
-    def __init__(self,
-                 rpn_batch_size_per_im=256,
-                 rpn_straddle_thresh=0.,
-                 rpn_fg_fraction=0.5,
-                 rpn_positive_overlap=0.7,
-                 rpn_negative_overlap=0.3,
-                 use_random=True):
-        super(RPNTargetAssign, self).__init__()
-        self.rpn_batch_size_per_im = rpn_batch_size_per_im
-        self.rpn_straddle_thresh = rpn_straddle_thresh
-        self.rpn_fg_fraction = rpn_fg_fraction
-        self.rpn_positive_overlap = rpn_positive_overlap
-        self.rpn_negative_overlap = rpn_negative_overlap
-        self.use_random = use_random
-
-
-@register
-@serializable
-class GenerateProposals(object):
-    __op__ = fluid.layers.generate_proposals
-    __append_doc__ = True
-
-    def __init__(self,
-                 pre_nms_top_n=6000,
-                 post_nms_top_n=1000,
-                 nms_thresh=.5,
-                 min_size=.1,
-                 eta=1.):
-        super(GenerateProposals, self).__init__()
-        self.pre_nms_top_n = pre_nms_top_n
-        self.post_nms_top_n = post_nms_top_n
-        self.nms_thresh = nms_thresh
-        self.min_size = min_size
-        self.eta = eta
+__all__ = ['RPNTargetAssign', 'GenerateProposals', 'RPNHead']
 
 
 @register
@@ -373,8 +314,8 @@ class FPNRPNHead(RPNHead):
 
         self.anchors, self.anchor_var = self.anchor_generator(
             input=conv_rpn_fpn,
-            anchor_sizes=(self.anchor_start_size * 2.
-                          **(feat_lvl - self.min_level), ),
+            anchor_sizes=(
+                self.anchor_start_size * 2. ** (feat_lvl - self.min_level), ),
             stride=(2.**feat_lvl, 2.**feat_lvl))
 
         self.rpn_cls_score = fluid.layers.conv2d(
@@ -383,14 +324,11 @@ class FPNRPNHead(RPNHead):
             filter_size=1,
             act=None,
             name=cls_name,
-            param_attr=ParamAttr(
-                name=cls_share_name + '_w',
-                initializer=Normal(
-                    loc=0., scale=0.01)),
-            bias_attr=ParamAttr(
-                name=cls_share_name + '_b',
-                learning_rate=2.,
-                regularizer=L2Decay(0.)))
+            param_attr=ParamAttr(name=cls_share_name + '_w',
+                                 initializer=Normal(loc=0., scale=0.01)),
+            bias_attr=ParamAttr(name=cls_share_name + '_b',
+                                learning_rate=2.,
+                                regularizer=L2Decay(0.)))
         self.rpn_bbox_pred = fluid.layers.conv2d(
             input=conv_rpn_fpn,
             num_filters=num_anchors * 4,

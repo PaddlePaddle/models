@@ -19,33 +19,9 @@ from __future__ import print_function
 from paddle import fluid
 
 from ppdet.core.workspace import register
+from ppdet.models.ops import BBoxAssigner, MaskAssigner
 
-__all__ = ['BBoxAssigner', 'CascadeBBoxAssigner', 'MaskAssigner']
-
-
-@register
-class BBoxAssigner(object):
-    __op__ = fluid.layers.generate_proposal_labels
-    __append_doc__ = True
-
-    def __init__(self,
-                 batch_size_per_im=512,
-                 fg_fraction=.25,
-                 fg_thresh=.5,
-                 bg_thresh_hi=.5,
-                 bg_thresh_lo=0.,
-                 bbox_reg_weights=[0.1, 0.1, 0.2, 0.2],
-                 num_classes=81,
-                 shuffle_before_sample=True):
-        super(BBoxAssigner, self).__init__()
-        self.batch_size_per_im = batch_size_per_im
-        self.fg_fraction = fg_fraction
-        self.fg_thresh = fg_thresh
-        self.bg_thresh_hi = bg_thresh_hi
-        self.bg_thresh_lo = bg_thresh_lo
-        self.bbox_reg_weights = bbox_reg_weights
-        self.class_nums = num_classes
-        self.use_random = shuffle_before_sample
+__all__ = ['BBoxAssigner', 'MaskAssigner', 'CascadeBBoxAssigner']
 
 
 @register
@@ -94,14 +70,3 @@ class CascadeBBoxAssigner(object):
             is_cls_agnostic=True,
             is_cascade_rcnn=True if curr_stage > 0 else False, )
         return outs
-
-
-@register
-class MaskAssigner(object):
-    __op__ = fluid.layers.generate_mask_labels
-    __append_doc__ = True
-
-    def __init__(self, num_classes=81, resolution=14):
-        super(MaskAssigner, self).__init__()
-        self.num_classes = num_classes
-        self.resolution = resolution

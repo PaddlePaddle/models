@@ -20,7 +20,7 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Xavier
 from paddle.fluid.regularizer import L2Decay
 
-from ppdet.models.nms import MultiClassNMS
+from ppdet.models.ops import MultiClassNMS
 from ppdet.core.workspace import register
 
 __all__ = ['CascadeBBoxHead']
