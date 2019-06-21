@@ -54,10 +54,10 @@ class RetinaDetectionOutput(object):
                  detections_per_im=100,
                  nms_eta=1.0):
         super(RetinaDetectionOutput, self).__init__()
-        self.score_thresh = score_thresh
-        self.nms_thresh = nms_thresh
-        self.pre_nms_top_n = pre_nms_top_n
-        self.detections_per_im = detections_per_im
+        self.score_threshold = score_thresh
+        self.nms_threshold = nms_thresh
+        self.nms_top_k = pre_nms_top_n
+        self.keep_top_k = detections_per_im
         self.nms_eta = nms_eta
 
 
