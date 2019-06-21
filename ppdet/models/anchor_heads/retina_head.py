@@ -70,7 +70,7 @@ class RetinaHead(object):
         anchor_generator (object): `AnchorGenerator` instance
         retina_target_assign (object): `RetinaTargetAssign` instance
         retina_detection_output (object): `RetinaDetectionOutput` instance
-        num_convs_per_octave (int): The number of convolution layers if each octave
+        num_convs_per_octave (int): Number of convolution layers in each octave
         num_chan (int): Number of octave output channels
         max_level (int): Highest level of FPN output
         min_level (int): Lowest level of FPN output
