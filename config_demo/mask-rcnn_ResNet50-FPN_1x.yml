@@ -2,8 +2,9 @@ architecture: MaskRCNN
 train_feed: MaskRCNNTrainFeed
 eval_feed: MaskRCNNEvalFeed
 test_feed: MaskRCNNTestFeed
-use_gpu: yes
+use_gpu: True
 max_iters: 180000
+snapshot_iter: 10000
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
@@ -89,10 +90,8 @@ MaskAssigner:
 BBoxHead:
   head: TwoFCHead
   nms:
-    background_label: 0
     keep_top_k: 100
     nms_threshold: 0.5
-    nms_top_k: -1
     normalized: false
     score_threshold: 0.05
   num_classes: 81
