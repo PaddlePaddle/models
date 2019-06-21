@@ -42,7 +42,7 @@ def CentorCrop(img, crop_w, crop_h):
 def RandomHorizonFlip(img):
     i = np.random.rand()
     if i > 0.5:
-        img = ImageOps.mirror(image)
+        img = ImageOps.mirror(img)
     return img
 
 
@@ -283,13 +283,21 @@ class celeba_reader_creator(reader_creator):
                 if shuffle:
                     np.random.shuffle(self.images)
                 for file, label in self.images:
-                    img = Image.open(os.path.join(self.image_dir,
-                                                  file)).convert('RGB')
-                    label = np.array(label).astype("float32")
-                    label = (label + 1) // 2
-                    img = CentorCrop(img, args.crop_size, args.crop_size)
-                    img = img.resize((args.load_size, args.load_size),
-                                     Image.BILINEAR)
+                    if args.model_net == "StarGAN":
+                        img = Image.open(os.path.join(self.image_dir, file))
+                        label = np.array(label).astype("float32")
+                        img = RandomHorizonFlip(img)
+                        img = CentorCrop(img, args.crop_size, args.crop_size)
+                        img = img.resize((args.image_size, args.image_size),
+                                         Image.BILINEAR)
+                    else:
+                        img = Image.open(os.path.join(self.image_dir,
+                                                      file)).convert('RGB')
+                        label = np.array(label).astype("float32")
+                        label = (label + 1) // 2
+                        img = CentorCrop(img, args.crop_size, args.crop_size)
+                        img = img.resize((args.load_size, args.load_size),
+                                         Image.BILINEAR)
                     img = (np.array(img).astype('float32') / 255.0 - 0.5) / 0.5
                     img = img.transpose([2, 0, 1])
 
@@ -310,12 +318,19 @@ class celeba_reader_creator(reader_creator):
             batch_out_2 = []
             batch_out_3 = []
             for file, label in self.images:
-                img = Image.open(os.path.join(self.image_dir, file)).convert(
-                    'RGB')
-                label = np.array(label).astype("float32")
-                img = CentorCrop(img, 170, 170)
-                img = img.resize((args.image_size, args.image_size),
-                                 Image.BILINEAR)
+                if args.model_net == 'StarGAN':
+                    img = Image.open(os.path.join(self.image_dir, file))
+                    label = np.array(label).astype("float32")
+                    img = CentorCrop(img, args.crop_size, args.crop_size)
+                    img = img.resize((args.image_size, args.image_size),
+                                     Image.BILINEAR)
+                else:
+                    img = Image.open(os.path.join(self.image_dir,
+                                                  file)).convert('RGB')
+                    label = np.array(label).astype("float32")
+                    img = CentorCrop(img, 170, 170)
+                    img = img.resize((args.image_size, args.image_size),
+                                     Image.BILINEAR)
                 img = (np.array(img).astype('float32') / 255.0 - 0.5) / 0.5
                 img = img.transpose([2, 0, 1])
                 if return_name:
@@ -482,7 +497,7 @@ class data_reader(object):
                     self.cfg, shuffle=self.shuffle)
                 return reader, reader_test, batch_num
 
-            else:
+            elif self.cfg.model_net == 'Pix2pix':
                 dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
                 train_list = os.path.join(dataset_dir, 'train.txt')
                 if self.cfg.train_list is not None:
