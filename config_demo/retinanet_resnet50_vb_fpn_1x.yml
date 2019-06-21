@@ -83,8 +83,8 @@ FasterRCNNTrainFeed:
     pad_to_stride: 128
   dataset:
     dataset_dir: coco
-    annotation: annotations/instances_val2017.json
-    image_dir: val2017
+    annotation: annotations/instances_train2017.json
+    image_dir: train2017
   drop_last: false
   image_shape: [3, 1333, 800]
   num_workers: 2
