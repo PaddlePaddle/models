@@ -23,6 +23,7 @@ from paddle.fluid.param_attr import ParamAttr
 
 from ppdet.core.workspace import register, serializable
 from .resnext import ResNeXt
+from .fetch_net_name import FetchName
 
 __all__ = ['SENet', 'SENetC5']
 
@@ -55,8 +56,8 @@ class SENet(ResNeXt):
                  variant='d',
                  feature_maps=[2, 3, 4, 5]):
         super(SENet, self).__init__(depth, groups, group_width, freeze_at,
-                                    norm_type, freeze_norm, norm_decay,
-                                    variant, feature_maps)
+                                    norm_type, freeze_norm, norm_decay, variant,
+                                    feature_maps)
         if depth < 152:
             self.stage_filters = [128, 256, 512, 1024]
         else:
@@ -64,6 +65,7 @@ class SENet(ResNeXt):
         self.reduction_ratio = 16
         self._c1_out_chan_num = 128
         self._model_type = 'SEResNeXt'
+        self.fetch_net_name = FetchName(self._model_type, self.variant)
 
     def _squeeze_excitation(self, input, num_channels, name=None):
         pool = fluid.layers.pool2d(

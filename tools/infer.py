@@ -17,27 +17,23 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import sys
-import time
-import multiprocessing
 
 import numpy as np
+
+from paddle import fluid
+
+from ppdet.core.workspace import load_config, merge_config, create
+from ppdet.models.model_inputs import create_feeds
+from ppdet.dataset.data_feed import create_reader
+
+from ppdet.utils.eval_utils import parse_fetches
+from ppdet.utils.cli import parse_args
+from ppdet.utils.visualizer import visualize_results
+import ppdet.utils.checkpoint as checkpoint
 
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
-
-
-from paddle import fluid
-
-from ppdet.utils.stats import TrainingStats
-from ppdet.utils.cli import parse_args
-from ppdet.utils.visualizer import visualize_results
-import ppdet.utils.checkpoint as checkpoint
-from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.data_feed import make_reader
-from tools.eval_utils import parse_fetches
-
 logger = logging.getLogger(__name__)
 
 
@@ -48,15 +44,9 @@ def main():
     if 'architecture' in cfg:
         main_arch = cfg['architecture']
     else:
-        raise ValueError("Main architecture is not specified in config file")
+        raise ValueError("'architecture' not specified in config file.")
 
     merge_config(args.cli_config)
-
-    if cfg['use_gpu']:
-        devices_num = fluid.core.get_cuda_device_count()
-    else:
-        devices_num = int(
-            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     if 'test_feed' not in cfg:
         test_feed = create(type(main_arch).__name__ + 'TestFeed')
@@ -72,9 +62,11 @@ def main():
     infer_prog = fluid.Program()
     with fluid.program_guard(infer_prog, startup_prog):
         with fluid.unique_name.guard():
-            _, reader, feed_vars = make_reader(test_feed, use_pyreader=False)
+            _, feed_vars = create_feeds(test_feed, use_pyreader=False)
             test_fetches = model.test(feed_vars)
     infer_prog = infer_prog.clone(True)
+
+    reader = create_reader(test_feed)
     feeder = fluid.DataFeeder(place=place, feed_list=feed_vars.values())
 
     exe.run(startup_prog)
@@ -82,8 +74,9 @@ def main():
         checkpoint.load_checkpoint(exe, infer_prog, cfg['weights'])
 
     # parse infer fetches
-    extra_keys = ['im_info', 'im_id', 'im_shape'] if cfg['metric'] == 'COCO' \
-                 else []
+    extra_keys = []
+    if cfg['metric'] == 'COCO':
+        extra_keys = ['im_info', 'im_id', 'im_shape']
     keys, values = parse_fetches(test_fetches, infer_prog, extra_keys)
 
     # 6. Parse dataset category
@@ -97,7 +90,7 @@ def main():
     with_background = getattr(test_feed, 'with_background', True)
     clsid2catid, catid2name = get_category_info(anno_file, with_background)
 
-    images = reader.image_list
+    imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
         outs = exe.run(infer_prog,
                        feed=feeder.feed(data),
@@ -110,13 +103,17 @@ def main():
         logger.info('Infer iter {}'.format(iter_id))
 
         im_id = int(res['im_id'][0])
-        image_path = os.path.join(test_feed.dataset.image_dir, images[im_id])
+        image_path = os.path.join(test_feed.dataset.image_dir, imid2path[im_id])
         if cfg['metric'] == 'COCO':
-            bbox_results = bbox2out([res], clsid2catid) \
-                                if 'bbox' in res else None
-            mask_results = mask2out([res], clsid2catid, cfg['MaskHead']['resolution']) \
-                                if 'mask' in res else None
+            bbox_results = None
+            mask_results = None
+            if 'bbox' in res:
+                bbox_results = bbox2out([res], clsid2catid)
+            if 'mask' in res:
+                mask_results = mask2out([res], clsid2catid,
+                                        cfg['MaskHead']['resolution'])
             visualize_results(image_path, catid2name, 0.5, bbox_results, mask_results)
+
         if cfg['metric'] == "VOC":
             # TODO(dengkaipeng): add VOC metric process
             pass

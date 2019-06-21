@@ -24,6 +24,9 @@ from paddle.fluid.framework import Variable
 from paddle.fluid.regularizer import L2Decay
 
 from ppdet.core.workspace import register, serializable
+from numbers import Integral
+
+from .fetch_net_name import FetchName
 
 __all__ = ['ResNet', 'ResNetC5']
 
@@ -67,6 +70,8 @@ class ResNet(object):
         self.freeze_norm = freeze_norm
         self.variant = variant
         self._model_type = 'ResNet'
+        if isinstance(feature_maps, Integral):
+            feature_maps = [feature_maps]
         self.feature_maps = feature_maps
         self.depth_cfg = {
             18: ([2, 2, 2, 2], self.basicblock),
@@ -77,6 +82,7 @@ class ResNet(object):
         }
         self.stage_filters = [64, 128, 256, 512]
         self._c1_out_chan_num = 64
+        self.fetch_net_name = FetchName(self._model_type, self.variant)
 
     def _conv_norm(self,
                    input,
@@ -98,13 +104,7 @@ class ResNet(object):
             bias_attr=False,
             name=name + '.conv2d.output.1')
 
-        if name == "conv1":
-            bn_name = "bn_" + name
-        else:
-            bn_name = "bn" + name[3:]
-        # the naming rule is same as pretrained weight
-        if self._model_type == 'SEResNeXt':
-            bn_name = "bn_" + name
+        bn_name = self.fetch_net_name.fetch_conv_norm(name)
 
         norm_lr = 0. if self.freeze_norm else 1.
         norm_decay = self.norm_decay
@@ -150,11 +150,10 @@ class ResNet(object):
         max_pooling_in_short_cut = self.variant == 'd'
         ch_in = input.shape[1]
         # the naming rule is same as pretrained weight
-        if self._model_type == 'SEResNeXt':
-            name = 'conv' + name + '_prj'
+        name = self.fetch_net_name.fetch_shortcut(name)
 
-        if ch_in != ch_out or stride != 1 or is_first:
-            if max_pooling_in_short_cut:
+        if ch_in != ch_out or stride != 1:
+            if max_pooling_in_short_cut and not is_first:
                 input = fluid.layers.pool2d(
                     input=input,
                     pool_size=2,
@@ -184,11 +183,11 @@ class ResNet(object):
             num_filters = num_filters // 2
             expand = 2
 
-        conv_def = [
-            [num_filters, 1, stride1, 'relu', 1, name + "_branch2a"],
-            [num_filters, 3, stride2, 'relu', groups, name + "_branch2b"],
-            [num_filters * expand, 1, 1, None, 1, name + "_branch2c"]
-        ]
+        conv_name1, conv_name2, conv_name3, \
+            shortcut_name = self.fetch_net_name.fetch_bottleneck(name)
+        conv_def = [[num_filters, 1, stride1, 'relu', 1, conv_name1],
+                    [num_filters, 3, stride2, 'relu', groups, conv_name2],
+                    [num_filters * expand, 1, 1, None, 1, conv_name3]]
 
         residual = input
         for (c, k, s, act, g, _name) in conv_def:
@@ -206,12 +205,12 @@ class ResNet(object):
             input,
             num_filters * expand,
             stride,
-            is_first=False,
-            name=name + "_branch1")
+            is_first=is_first,
+            name=shortcut_name)
         # Squeeze-and-Excitation
         if callable(getattr(self, '_squeeze_excitation', None)):
             residual = self._squeeze_excitation(
-                input=residual, num_channels=num_filters * 2, name='fc' + name)
+                input=residual, num_channels=num_filters, name='fc' + name)
         return fluid.layers.elementwise_add(
             x=short, y=residual, act='relu', name=name + ".add.output.5")
 
@@ -247,37 +246,31 @@ class ResNet(object):
         stages, block_func = self.depth_cfg[self.depth]
         count = stages[stage_num - 2]
 
-        stride = 1 if stage_num == 2 else 2
         ch_out = self.stage_filters[stage_num - 2]
+        is_first = False if stage_num != 2 else True
         # Make the layer name and parameter name consistent
         # with ImageNet pre-trained model
-        name = 'res' + str(stage_num)
-
-        res_out = block_func(
-            input, ch_out, stride, is_first=True, name=name + "a")
-        for i in range(1, count):
-            conv_name = name + "b" + str(i) if count > 10 else name + chr(
-                ord("a") + i)
-            res_out = block_func(
-                res_out, ch_out, 1, is_first=False, name=conv_name)
-        return res_out
+        conv = input
+        for i in range(count):
+            conv_name = self.fetch_net_name.fetch_layer_warp(stage_num, count,
+                                                             i)
+            conv = block_func(
+                input=conv,
+                num_filters=ch_out,
+                stride=2 if i == 0 and stage_num != 2 else 1,
+                is_first=is_first,
+                name=conv_name)
+        return conv
 
     def c1_stage(self, input):
         out_chan = self._c1_out_chan_num
-        if self.variant in ['c', 'd']:
-            conv_def = [
-                [out_chan / 2, 3, 2, "conv1_1"],
-                [out_chan / 2, 3, 1, "conv1_2"],
-                [out_chan, 3, 1, "conv1_3"],
-            ]
-        else:
-            conv1_name = "conv1"
-            # the naming rule is same as pretrained weight
-            if self._model_type == 'ResNext':
-                conv1_name = "res_conv1"
-            conv_def = [[out_chan, 7, 2, conv1_name]]
+        conv_def = self.fetch_net_name.fetch_c1_stage(out_chan)
+        if self.variant in ['c', 'd'] and len(conv_def) != 3:
+            assert "variant 'c', 'd' len conv_def is 3!"
 
         for (c, k, s, _name) in conv_def:
+            print("[01;32m{} c: {}, k: {}, s: {}, g: 1, act: relu[0m".format(
+                _name, str(c).ljust(4), k, s))
             input = self._conv_norm(
                 input=input,
                 num_filters=c,
@@ -314,9 +307,6 @@ class ResNet(object):
                 res_endpoints.append(res)
             if self.freeze_at >= i:
                 res.stop_gradient = True
-
-        if len(res_endpoints) == 1:
-            return res_endpoints[0]
 
         return OrderedDict([('res{}_sum'.format(self.feature_maps[idx]), feat)
                             for idx, feat in enumerate(res_endpoints)])

@@ -116,7 +116,7 @@ class MaskRCNN(object):
             im_info=feed_vars['im_info'],
             labels_int32=labels_int32)
         mask_rois, roi_has_mask_int32, mask_int32 = outs
-        if self.neck is None: 
+        if self.neck is None:
             bbox_head_feat = self.bbox_head.get_head_feat()
             feat = fluid.layers.gather(bbox_head_feat, roi_has_mask_int32)
         else:

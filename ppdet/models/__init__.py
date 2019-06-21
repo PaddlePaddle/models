@@ -19,5 +19,5 @@ from . import detectors
 from . import roi_extractors
 from . import bbox_heads
 from . import necks
-from . import nms
+from . import ops
 from . import target_assigners

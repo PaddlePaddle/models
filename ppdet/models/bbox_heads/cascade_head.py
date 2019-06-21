@@ -1,5 +1,4 @@
-"""
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -22,24 +20,29 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Xavier
 from paddle.fluid.regularizer import L2Decay
 
-from ..registry import BBoxHeads
-from ..registry import BBoxHeadConvs
+from ppdet.models.ops import MultiClassNMS
+from ppdet.core.workspace import register
 
-__all__ = ['CascadeHead']
+__all__ = ['CascadeBBoxHead']
 
 
-@BBoxHeads.register
-class CascadeHead(object):
+@register
+class CascadeBBoxHead(object):
     """
-    CascadeHead Head parts
+    Cascade RCNN bbox head
+
     Args:
-        cfg (Dict): All parameters in dictionary.
+        head (object): the head module instance
+        nms (object): `MultiClassNMS` instance
+        num_classes: number of output classes
     """
+    __inject__ = ['head', 'nms']
 
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.class_num = self.cfg.DATA.CLASS_NUM
-        self.head_func = BBoxHeadConvs.get(cfg.BBOX_HEAD.HEAD_CONV)(cfg)
+    def __init__(self, head, nms=MultiClassNMS().__dict__, num_classes=81):
+        super(CascadeBBoxHead, self).__init__()
+        self.head = head
+        self.nms = nms
+        self.num_classes = num_classes
 
     def get_output(self,
                    roi_feat,
@@ -51,17 +54,17 @@ class CascadeHead(object):
 
         Args:
             roi_feat (Variable): RoI feature from RoIExtractor.
-	    cls_agnostic_bbox_reg(Int): BBox regressor are class agnostic.
-	    wb_scalar(Float): Weights and Bias's learning rate.
-	    name(String): Layer's name
+            cls_agnostic_bbox_reg(Int): BBox regressor are class agnostic.
+            wb_scalar(Float): Weights and Bias's learning rate.
+            name(String): Layer's name
 
         Returns:
-            cls_score(Variable): TODO(guanzhong) add comments
-            bbox_pred(Variable): are output of bbox_head.
+            cls_score(Variable): cls score.
+            bbox_pred(Variable): bbox regression.
         """
-        head_feat = self.head_func(roi_feat, wb_scalar, name)
+        head_feat = self.head(roi_feat, wb_scalar, name)
         cls_score = fluid.layers.fc(input=head_feat,
-                                    size=self.class_num,
+                                    size=self.num_classes,
                                     act=None,
                                     name='cls_score' + name,
                                     param_attr=ParamAttr(
@@ -91,13 +94,13 @@ class CascadeHead(object):
     def get_loss(self, rcnn_pred_list, rcnn_target_list, rcnn_loss_weight_list):
         """
         Get bbox_head loss.
-        
+
         Args:
-	    rcnn_pred_list(List): Cascade rcnn's head's output including 
-				  bbox_pred and cls_score
-	    rcnn_target_list(List): Cascade rcnn's bbox and label target 
-	    rcnn_loss_weight_list(List): The weight of location and class loss 
- 
+            rcnn_pred_list(List): Cascade RCNN's head's output including
+                bbox_pred and cls_score
+            rcnn_target_list(List): Cascade rcnn's bbox and label target
+            rcnn_loss_weight_list(List): The weight of location and class loss
+
         Return:
             loss_cls(Variable): bbox_head loss.
             loss_bbox(Variable): bbox_head loss.
@@ -142,25 +145,25 @@ class CascadeHead(object):
         Get prediction bounding box in test stage.
         :
         Args:
-            im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
-                               number of input images, each element consists 
-                               of im_height, im_width, im_scale.
-	    rois_feat_list (List): RoI feature from RoIExtractor.
-            rcnn_pred_list (Variable): Cascade rcnn's head's output 
-				       including bbox_pred and cls_score
-	    proposal_list (List): RPN proposal boxes.
-	    cascade_bbox_reg_weights (List): BBox decode var.
-	    cls_agnostic_bbox_reg(Int): BBox regressor are class agnostic 
-     
+            im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the
+                number of input images, each element consists
+                of im_height, im_width, im_scale.
+            rois_feat_list (List): RoI feature from RoIExtractor.
+            rcnn_pred_list (Variable): Cascade rcnn's head's output
+                including bbox_pred and cls_score
+            proposal_list (List): RPN proposal boxes.
+            cascade_bbox_reg_weights (List): BBox decode var.
+            cls_agnostic_bbox_reg(Int): BBox regressor are class agnostic
+
         Returns:
-            pred_result(Variable): Prediction result with shape [N, 6]. Each 
-               row has 6 values: [label, confidence, xmin, ymin, xmax, ymax]. 
+            pred_result(Variable): Prediction result with shape [N, 6]. Each
+               row has 6 values: [label, confidence, xmin, ymin, xmax, ymax].
                N is the total number of prediction.
         """
         self.im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
         boxes_cls_prob_l = []
 
-        rcnn_pred = rcnn_pred_list[-1]  # stage 3 
+        rcnn_pred = rcnn_pred_list[-1]  # stage 3
         repreat_num = 1
         repreat_num = 3
         bbox_reg_w = cascade_bbox_reg_weights[-1]
@@ -203,29 +206,13 @@ class CascadeHead(object):
         # TODO: notice detectron use img.shape
         box_out = fluid.layers.box_clip(input=decoded_box, im_info=im_info)
 
-        pred_result = fluid.layers.multiclass_nms(
-            bboxes=box_out,
-            scores=boxes_cls_prob_mean,
-            score_threshold=self.cfg.TEST.SCORE_THRESH,
-            nms_top_k=-1,
-            nms_threshold=self.cfg.TEST.NMS_THRESH,
-            keep_top_k=self.cfg.TEST.DETECTIONS_PER_IM,
-            normalized=False)
-
+        pred_result = self.nms(bboxes=box_out, scores=boxes_cls_prob_mean)
         return {"bbox": pred_result}
 
     def _head_share(self, roi_feat, wb_scalar=2.0, name=''):
-        """
-        Cascade Prediction Shared Head.
-        :
-        Args:
-
-	Returns:
-	"""
-
         # FC6 FC7
         fc6 = fluid.layers.fc(input=roi_feat,
-                              size=self.cfg.BBOX_HEAD.MLP_HEAD_DIM,
+                              size=self.head.num_chan,
                               act='relu',
                               name='fc6' + name,
                               param_attr=ParamAttr(
@@ -237,7 +224,7 @@ class CascadeHead(object):
                                   learning_rate=2.0,
                                   regularizer=L2Decay(0.)))
         fc7 = fluid.layers.fc(input=fc6,
-                              size=self.cfg.BBOX_HEAD.MLP_HEAD_DIM,
+                              size=self.head.num_chan,
                               act='relu',
                               name='fc7' + name,
                               param_attr=ParamAttr(
@@ -264,18 +251,22 @@ class CascadeHead(object):
         return cls_score
 
 
-@BBoxHeadConvs.register
-class FC6FC7(object):
+@register
+class FC6FC7Head(object):
     """
-    add fc6, fc7 after roi feature
+    Cascade RCNN head with two Fully Connected layers
+
+    Args:
+        num_chan (int): num of filters for the fc layers
     """
 
-    def __init__(self, cfg):
-        self.mlp_head_dim = cfg.BBOX_HEAD.MLP_HEAD_DIM
+    def __init__(self, num_chan):
+        super(FC6FC7Head, self).__init__()
+        self.num_chan = num_chan
 
     def __call__(self, roi_feat, wb_scalar=1.0, name=''):
         fc6 = fluid.layers.fc(input=roi_feat,
-                              size=self.mlp_head_dim,
+                              size=self.num_chan,
                               act='relu',
                               name='fc6' + name,
                               param_attr=ParamAttr(
@@ -287,7 +278,7 @@ class FC6FC7(object):
                                   learning_rate=wb_scalar,
                                   regularizer=L2Decay(0.)))
         head_feat = fluid.layers.fc(input=fc6,
-                                    size=self.mlp_head_dim,
+                                    size=self.num_chan,
                                     act='relu',
                                     name='fc7' + name,
                                     param_attr=ParamAttr(
