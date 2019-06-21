@@ -15,19 +15,29 @@
 from __future__ import division
 import paddle.fluid as fluid
 import numpy as np
+import math
 import os
+import warnings
 
 use_cudnn = True
 if 'ce_mode' in os.environ:
     use_cudnn = False
 
 
+def cal_padding(img_size, stride, filter_size, dilation=1):
+    """Calculate padding size."""
+    valid_filter_size = dilation * (filter_size - 1) + 1
+    if img_size % stride == 0:
+        out_size = max(filter_size - stride, 0)
+    else:
+        out_size = max(filter_size - (img_size % stride), 0)
+    return out_size // 2, out_size - out_size // 2
+
+
 def norm_layer(input, norm_type='batch_norm', name=None):
     if norm_type == 'batch_norm':
         param_attr = fluid.ParamAttr(
-            name=name + '_w',
-            initializer=fluid.initializer.NormalInitializer(
-                loc=1.0, scale=0.02))
+            name=name + '_w', initializer=fluid.initializer.Constant(1.0))
         bias_attr = fluid.ParamAttr(
             name=name + '_b', initializer=fluid.initializer.Constant(value=0.0))
         return fluid.layers.batch_norm(
@@ -49,8 +59,7 @@ def norm_layer(input, norm_type='batch_norm', name=None):
             offset_name = name + "_offset"
         scale_param = fluid.ParamAttr(
             name=scale_name,
-            initializer=fluid.initializer.NormalInitializer(
-                loc=0.0, scale=0.02),
+            initializer=fluid.initializer.Constant(1.0),
             trainable=True)
         offset_param = fluid.ParamAttr(
             name=offset_name,
@@ -69,6 +78,38 @@ def norm_layer(input, norm_type='batch_norm', name=None):
         raise NotImplementedError("norm tyoe: [%s] is not support" % norm_type)
 
 
+def initial_type(name,
+                 init="normal",
+                 use_bias=False,
+                 f_in=0,
+                 filter_size=0,
+                 stddev=0.02):
+    if init == "kaiming":
+        fan_in = f_in * filter_size * filter_size
+        bound = 1 / math.sqrt(fan_in)
+        param_attr = fluid.ParamAttr(
+            name=name + "_w",
+            initializer=fluid.initializer.MSRAInitializer(uniform=True))
+        if use_bias == True:
+            bias_attr = fluid.ParamAttr(
+                name=name + '_b',
+                initializer=fluid.initializer.Uniform(
+                    low=-bound, high=bound))
+        else:
+            bias_attr = False
+    else:
+        param_attr = fluid.ParamAttr(
+            name=name + "_w",
+            initializer=fluid.initializer.NormalInitializer(
+                loc=0.0, scale=stddev))
+        if use_bias == True:
+            bias_attr = fluid.ParamAttr(
+                name=name + "_b", initializer=fluid.initializer.Constant(0.0))
+        else:
+            bias_attr = False
+    return param_attr, bias_attr
+
+
 def conv2d(input,
            num_filters=64,
            filter_size=7,
@@ -79,16 +120,42 @@ def conv2d(input,
            norm=None,
            activation_fn=None,
            relufactor=0.0,
-           use_bias=False):
-    param_attr = fluid.ParamAttr(
-        name=name + "_w",
-        initializer=fluid.initializer.NormalInitializer(
-            loc=0.0, scale=stddev))
-    if use_bias == True:
-        bias_attr = fluid.ParamAttr(
-            name=name + "_b", initializer=fluid.initializer.Constant(0.0))
+           use_bias=False,
+           padding_type=None,
+           initial="normal"):
+
+    if padding != 0 and padding_type != None:
+        warnings.warn(
+            'padding value and padding type are set in the same time, and the final padding width and padding height are computed by padding_type'
+        )
+
+    param_attr, bias_attr = initial_type(
+        name=name,
+        init=initial,
+        use_bias=use_bias,
+        f_in=input.shape[1],
+        filter_size=filter_size,
+        stddev=stddev)
+
+    need_crop = False
+    if padding_type == "SAME":
+        top_padding, bottom_padding = cal_padding(input.shape[2], stride,
+                                                  filter_size)
+        left_padding, right_padding = cal_padding(input.shape[2], stride,
+                                                  filter_size)
+        height_padding = bottom_padding
+        width_padding = right_padding
+        if top_padding != bottom_padding or left_padding != right_padding:
+            height_padding = top_padding + stride
+            width_padding = left_padding + stride
+            need_crop = True
+        padding = [height_padding, width_padding]
+    elif padding_type == "VALID":
+        height_padding = 0
+        width_padding = 0
+        padding = [height_padding, width_padding]
     else:
-        bias_attr = False
+        padding = padding
 
     conv = fluid.layers.conv2d(
         input,
@@ -109,6 +176,8 @@ def conv2d(input,
             conv, alpha=relufactor, name=name + '_leaky_relu')
     elif activation_fn == 'tanh':
         conv = fluid.layers.tanh(conv, name=name + '_tanh')
+    elif activation_fn == 'sigmoid':
+        conv = fluid.layers.sigmoid(conv, name=name + '_sigmoid')
     elif activation_fn == None:
         conv = conv
     else:
@@ -123,23 +192,49 @@ def deconv2d(input,
              filter_size=7,
              stride=1,
              stddev=0.02,
-             padding=[0, 0],
+             padding=0,
              outpadding=[0, 0, 0, 0],
              name="deconv2d",
              norm=None,
              activation_fn=None,
              relufactor=0.0,
              use_bias=False,
-             output_size=None):
-    param_attr = fluid.ParamAttr(
-        name=name + "_w",
-        initializer=fluid.initializer.NormalInitializer(
-            loc=0.0, scale=stddev))
-    if use_bias == True:
-        bias_attr = fluid.ParamAttr(
-            name=name + "_b", initializer=fluid.initializer.Constant(0.0))
+             padding_type=None,
+             output_size=None,
+             initial="normal"):
+
+    if padding != 0 and padding_type != None:
+        warnings.warn(
+            'padding value and padding type are set in the same time, and the final padding width and padding height are computed by padding_type'
+        )
+
+    param_attr, bias_attr = initial_type(
+        name=name,
+        init=initial,
+        use_bias=use_bias,
+        f_in=input.shape[1],
+        filter_size=filter_size,
+        stddev=stddev)
+
+    need_crop = False
+    if padding_type == "SAME":
+        top_padding, bottom_padding = cal_padding(input.shape[2], stride,
+                                                  filter_size)
+        left_padding, right_padding = cal_padding(input.shape[2], stride,
+                                                  filter_size)
+        height_padding = bottom_padding
+        width_padding = right_padding
+        if top_padding != bottom_padding or left_padding != right_padding:
+            height_padding = top_padding + stride
+            width_padding = left_padding + stride
+            need_crop = True
+        padding = [height_padding, width_padding]
+    elif padding_type == "VALID":
+        height_padding = 0
+        width_padding = 0
+        padding = [height_padding, width_padding]
     else:
-        bias_attr = False
+        padding = padding
 
     conv = fluid.layers.conv2d_transpose(
         input,
@@ -153,8 +248,9 @@ def deconv2d(input,
         param_attr=param_attr,
         bias_attr=bias_attr)
 
-    conv = fluid.layers.pad2d(
-        conv, paddings=outpadding, mode='constant', pad_value=0.0)
+    if outpadding != 0 and padding_type == None:
+        conv = fluid.layers.pad2d(
+            conv, paddings=outpadding, mode='constant', pad_value=0.0)
 
     if norm is not None:
         conv = norm_layer(input=conv, norm_type=norm, name=name + "_norm")
@@ -185,13 +281,17 @@ def linear(input,
            stddev=0.02,
            activation_fn=None,
            relufactor=0.2,
-           name='linear'):
-    param_attr = fluid.ParamAttr(
-        name=name + '_w',
-        initializer=fluid.initializer.NormalInitializer(
-            loc=0.0, scale=stddev))
-    bias_attr = fluid.ParamAttr(
-        name=name + "_b", initializer=fluid.initializer.Constant(0.0))
+           name="linear",
+           initial="normal"):
+
+    param_attr, bias_attr = initial_type(
+        name=name,
+        init=initial,
+        use_bias=True,
+        f_in=input.shape[1],
+        filter_size=1,
+        stddev=stddev)
+
     linear = fluid.layers.fc(input,
                              output_size,
                              param_attr=param_attr,

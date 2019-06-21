@@ -41,12 +41,29 @@ add_arg('use_gpu',           bool,  True,              "Whether to use GPU to tr
 add_arg('dropout',           bool,  False,             "Whether to use dropout")
 add_arg('data_shape',        int,   256,               "The shape of load image")
 add_arg('g_base_dims',       int,   64,                "Base channels in CycleGAN generator")
+add_arg('c_dim',             int,   13,                "the size of attrs")
+add_arg('use_gru',           bool,  False,             "Whether to use GRU")
+add_arg('crop_size',         int,   178,               "crop size")
+add_arg('image_size',        int,   128,               "image size")
+add_arg('selected_attrs',    str,
+    "Bald,Bangs,Black_Hair,Blond_Hair,Brown_Hair,Bushy_Eyebrows,Eyeglasses,Male,Mouth_Slightly_Open,Mustache,No_Beard,Pale_Skin,Young",
+"the attributes we selected to change")
+add_arg('batch_size',        int,   16,                "batch size when test")
+add_arg('test_list',       str,   "./data/celeba/test_list_attr_celeba.txt",                "the test list file")
+add_arg('dataset_dir',       str,   "./data/celeba/",                "the dataset directory")
+add_arg('n_layers',        int,     5,      "default layers in generotor")
+add_arg('gru_n_layers',    int,     4,       "default layers of GRU in generotor")
 # yapf: enable
 
 
 def infer(args):
     data_shape = [-1, 3, args.data_shape, args.data_shape]
     input = fluid.layers.data(name='input', shape=data_shape, dtype='float32')
+    label_org_ = fluid.layers.data(
+        name='label_org_', shape=[args.c_dim], dtype='float32')
+    label_trg_ = fluid.layers.data(
+        name='label_trg_', shape=[args.c_dim], dtype='float32')
+
     model_name = 'net_G'
     if args.model_net == 'cyclegan':
         from network.CycleGAN_network import CycleGAN_model
@@ -62,10 +79,19 @@ def infer(args):
         model = Pix2pix_model()
         fake = model.network_G(input, "generator", cfg=args)
 
-    elif args.model_net == 'cgan':
-        pass
+    elif args.model_net == 'STGAN':
+        from network.STGAN_network import STGAN_model
+        model = STGAN_model()
+        fake, _ = model.network_G(
+            input, label_org_, label_trg_, cfg=args, name='net_G')
+    elif args.model_net == 'AttGAN':
+        from network.AttGAN_network import AttGAN_model
+        model = AttGAN_model()
+        fake, _ = model.network_G(
+            input, label_org_, label_trg_, cfg=args, name='net_G')
     else:
-        pass
+        raise NotImplementedError("model_net {} is not support".format(
+            args.model_net))
 
     # prepare environment
     place = fluid.CPUPlace()
@@ -82,24 +108,73 @@ def infer(args):
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 
-    for file in glob.glob(args.input):
-        print("read {}".format(file))
-        image_name = os.path.basename(file)
-        image = Image.open(file).convert('RGB')
-        image = image.resize((256, 256), Image.BICUBIC)
-        image = np.array(image).transpose([2, 0, 1]).astype('float32')
-        image = image / 255.0
-        image = (image - 0.5) / 0.5
-        data = image[np.newaxis, :]
-        tensor = fluid.LoDTensor()
-        tensor.set(data, place)
+    if args.model_net == 'AttGAN' or args.model_net == 'STGAN':
+        test_reader = celeba_reader_creator(
+            image_dir=args.dataset_dir,
+            list_filename=args.test_list,
+            batch_size=args.batch_size,
+            drop_last=False,
+            args=args)
+        reader_test = test_reader.get_test_reader(
+            args, shuffle=False, return_name=True)
+        for data in zip(reader_test()):
+            real_img, label_org, name = data[0]
+            print("read {}".format(name))
+            label_trg = copy.deepcopy(label_org)
+            tensor_img = fluid.LoDTensor()
+            tensor_label_org = fluid.LoDTensor()
+            tensor_label_trg = fluid.LoDTensor()
+            tensor_label_org_ = fluid.LoDTensor()
+            tensor_label_trg_ = fluid.LoDTensor()
+            tensor_img.set(real_img, place)
+            tensor_label_org.set(label_org, place)
+            real_img_temp = np.squeeze(real_img).transpose([0, 2, 3, 1])
+            images = [real_img_temp]
+            for i in range(args.c_dim):
+                label_trg_tmp = copy.deepcopy(label_trg)
+                for j in range(args.batch_size):
+                    label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
+                label_trg_ = map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp)
+                for j in range(args.batch_size):
+                    label_trg_[j][i] = label_trg_[j][i] * 2.0
+                tensor_label_org_.set(label_org, place)
+                tensor_label_trg.set(label_trg, place)
+                tensor_label_trg_.set(label_trg_, place)
+                out = exe.run(feed={
+                    "input": tensor_img,
+                    "label_org_": tensor_label_org_,
+                    "label_trg_": tensor_label_trg_
+                },
+                              fetch_list=fake.name)
+                fake_temp = np.squeeze(out[0]).transpose([0, 2, 3, 1])
+                images.append(fake_temp)
+            images_concat = np.concatenate(images, 1)
+            images_concat = np.concatenate(images_concat, 1)
+            imsave(args.output + "/fake_img_" + name[0], (
+                (images_concat + 1) * 127.5).astype(np.uint8))
 
-        fake_temp = exe.run(fetch_list=[fake.name], feed={"input": tensor})
-        fake_temp = np.squeeze(fake_temp[0]).transpose([1, 2, 0])
-        input_temp = np.squeeze(data).transpose([1, 2, 0])
+    elif args.model_net == 'Pix2pix' or args.model_net == 'cyclegan':
+        for file in glob.glob(args.input):
+            print("read {}".format(file))
+            image_name = os.path.basename(file)
+            image = Image.open(file).convert('RGB')
+            image = image.resize((256, 256), Image.BICUBIC)
+            image = np.array(image).transpose([2, 0, 1]).astype('float32')
+            image = image / 255.0
+            image = (image - 0.5) / 0.5
+            data = image[np.newaxis, :]
+            tensor = fluid.LoDTensor()
+            tensor.set(data, place)
 
-        imsave(args.output + "/fake_" + image_name, (
-            (fake_temp + 1) * 127.5).astype(np.uint8))
+            fake_temp = exe.run(fetch_list=[fake.name], feed={"input": tensor})
+            fake_temp = np.squeeze(fake_temp[0]).transpose([1, 2, 0])
+            input_temp = np.squeeze(data).transpose([1, 2, 0])
+
+            imsave(args.output + "/fake_" + image_name, (
+                (fake_temp + 1) * 127.5).astype(np.uint8))
+    else:
+        raise NotImplementedError("model_net {} is not support".format(
+            args.model_net))
 
 
 if __name__ == "__main__":

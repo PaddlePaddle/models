@@ -237,6 +237,113 @@ class pair_reader_creator(reader_creator):
         return reader
 
 
+class celeba_reader_creator(reader_creator):
+    ''' read and preprocess dataset'''
+
+    def __init__(self,
+                 image_dir,
+                 list_filename,
+                 args,
+                 batch_size=1,
+                 drop_last=False):
+        self.image_dir = image_dir
+        self.list_filename = list_filename
+        self.batch_size = batch_size
+        self.drop_last = drop_last
+
+        print(self.image_dir, self.list_filename)
+        lines = open(self.list_filename).readlines()
+        all_attr_names = lines[1].split()
+        attr2idx = {}
+        for i, attr_name in enumerate(all_attr_names):
+            attr2idx[attr_name] = i
+        lines = lines[2:]
+        self.images = []
+        attr_names = args.selected_attrs.split(',')
+        for line in lines:
+            arr = line.strip().split()
+            name = './images/' + arr[0]
+            label = []
+            for attr_name in attr_names:
+                idx = attr2idx[attr_name]
+                label.append(arr[idx + 1] == "1")
+            self.images.append((name, label))
+
+    def len(self):
+        if self.drop_last or len(self.images) % self.batch_size == 0:
+            return len(self.images) // self.batch_size
+        else:
+            return len(self.images) // self.batch_size + 1
+
+    def get_train_reader(self, args, shuffle=False, return_name=False):
+        def reader():
+            batch_out_1 = []
+            batch_out_2 = []
+            while True:
+                if shuffle:
+                    np.random.shuffle(self.images)
+                for file, label in self.images:
+                    img = Image.open(os.path.join(self.image_dir,
+                                                  file)).convert('RGB')
+                    label = np.array(label).astype("float32")
+                    label = (label + 1) // 2
+                    img = CentorCrop(img, args.crop_size, args.crop_size)
+                    img = img.resize((args.load_size, args.load_size),
+                                     Image.BILINEAR)
+                    img = (np.array(img).astype('float32') / 255.0 - 0.5) / 0.5
+                    img = img.transpose([2, 0, 1])
+
+                    batch_out_1.append(img)
+                    batch_out_2.append(label)
+                    if len(batch_out_1) == self.batch_size:
+                        yield batch_out_1, batch_out_2
+                        batch_out_1 = []
+                        batch_out_2 = []
+                if self.drop_last == False and len(batch_out_1) != 0:
+                    yield batch_out_1, batch_out_2
+
+        return reader
+
+    def get_test_reader(self, args, shuffle=False, return_name=False):
+        def reader():
+            batch_out_1 = []
+            batch_out_2 = []
+            batch_out_3 = []
+            for file, label in self.images:
+                img = Image.open(os.path.join(self.image_dir, file)).convert(
+                    'RGB')
+                label = np.array(label).astype("float32")
+                img = CentorCrop(img, 170, 170)
+                img = img.resize((args.image_size, args.image_size),
+                                 Image.BILINEAR)
+                img = (np.array(img).astype('float32') / 255.0 - 0.5) / 0.5
+                img = img.transpose([2, 0, 1])
+                if return_name:
+                    batch_out_1.append(img)
+                    batch_out_2.append(label)
+                    batch_out_3.append(os.path.basename(file))
+                else:
+                    batch_out_1.append(img)
+                    batch_out_2.append(label)
+                if len(batch_out_1) == self.batch_size:
+                    if return_name:
+                        yield batch_out_1, batch_out_2, batch_out_3
+                        batch_out_1 = []
+                        batch_out_2 = []
+                        batch_out_3 = []
+                    else:
+                        yield batch_out_1, batch_out_2
+                        batch_out_1 = []
+                        batch_out_2 = []
+            if len(batch_out_1) != 0:
+                if return_name:
+                    yield batch_out_1, batch_out_2, batch_out_3
+                else:
+                    yield batch_out_1, batch_out_2
+
+        return reader
+
+
 def mnist_reader_creator(image_filename, label_filename, buffer_size):
     def reader():
         with gzip.GzipFile(image_filename, 'rb') as image_file:
@@ -345,6 +452,35 @@ class data_reader(object):
                     self.cfg, shuffle=self.shuffle)
 
                 return a_reader, b_reader, a_reader_test, b_reader_test, batch_num
+
+            elif self.cfg.model_net == 'StarGAN' or self.cfg.model_net == 'STGAN' or self.cfg.model_net == 'AttGAN':
+                dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
+                train_list = os.path.join(dataset_dir, 'train.txt')
+                if self.cfg.train_list is not None:
+                    train_list = self.cfg.train_list
+                train_reader = celeba_reader_creator(
+                    image_dir=dataset_dir,
+                    list_filename=train_list,
+                    batch_size=self.cfg.batch_size,
+                    args=self.cfg,
+                    drop_last=self.cfg.drop_last)
+                reader_test = None
+                if self.cfg.run_test:
+                    test_list = os.path.join(dataset_dir, "test.txt")
+                    if self.cfg.test_list is not None:
+                        test_list = self.cfg.test_list
+                    test_reader = celeba_reader_creator(
+                        image_dir=dataset_dir,
+                        list_filename=test_list,
+                        batch_size=self.cfg.n_samples,
+                        drop_last=self.cfg.drop_last,
+                        args=self.cfg)
+                    reader_test = test_reader.get_test_reader(
+                        self.cfg, shuffle=False, return_name=True)
+                batch_num = train_reader.len()
+                reader = train_reader.get_train_reader(
+                    self.cfg, shuffle=self.shuffle)
+                return reader, reader_test, batch_num
 
             else:
                 dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
