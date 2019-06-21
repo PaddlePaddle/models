@@ -22,52 +22,29 @@ import numpy as np
 import paddle.fluid as fluid
 
 from ppdet.models.tests.decorator_helper import prog_scope
-from ppdet.core.config import load_cfg, merge_cfg
-from ppdet.models.registry import Detectors
+from ppdet.core.workspace import load_config, merge_config, create
+from tools.placeholder import create_feeds
 
 
 class TestDetectorFasterRCNN(unittest.TestCase):
     def setUp(self):
-        cfg_file = 'configs/faster-rcnn_ResNet50-C4_1x.yml'
-        self.cfg = load_cfg(cfg_file)
-        self.detector_type = 'FasterRCNN'
+        cfg_file = 'config_demo/faster_rcnn_r50_1x.yml'
+        self.cfg = load_config(cfg_file)
+        self.detector_type = self.cfg['architecture']
 
     @prog_scope()
     def test_train(self):
-        merge_cfg({'IS_TRAIN': True}, self.cfg)
-        assert self.cfg.IS_TRAIN
-        self.detector = Detectors.get(self.detector_type)(self.cfg)
-        self.detector.train()
-        #TODO(dangqingqing): add more check
+        train_feed = create(self.cfg['train_feed'])
+        model = create(self.detector_type)
+        _, feed_vars = create_feeds(train_feed)
+        train_fetches = model.train(feed_vars)
 
     @prog_scope()
     def test_test(self):
-        merge_cfg({'IS_TRAIN': False}, self.cfg)
-        assert not self.cfg.IS_TRAIN
-        self.detector = Detectors.get(self.detector_type)(self.cfg)
-        self.detector.test()
-        #TODO(dangqingqing): add more check
-
-
-class TestDetectorFasterRCNNFPN(unittest.TestCase):
-    def setUp(self):
-        cfg_file = 'configs/faster-rcnn_ResNet50-FPN_1x.yml'
-        self.cfg = load_cfg(cfg_file)
-        self.detector_type = 'FasterRCNN'
-
-    @prog_scope()
-    def test_train(self):
-        merge_cfg({'IS_TRAIN': True}, self.cfg)
-        assert self.cfg.IS_TRAIN
-        self.detector = Detectors.get(self.detector_type)(self.cfg)
-        self.detector.train()
-
-    @prog_scope()
-    def test_test(self):
-        merge_cfg({'IS_TRAIN': False}, self.cfg)
-        assert not self.cfg.IS_TRAIN
-        self.detector = Detectors.get(self.detector_type)(self.cfg)
-        self.detector.test()
+        test_feed = create(self.cfg['test_feed'])
+        model = create(self.detector_type)
+        _, feed_vars = create_feeds(test_feed)
+        test_fetches = model.test(feed_vars)
 
 
 if __name__ == '__main__':
