@@ -95,8 +95,12 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = False #gc and memory optimize may conflict 
-    build_strategy.sync_batch_norm = cfg.syncbn
+    build_strategy.memory_optimize = False #gc and memory optimize may conflict
+    syncbn = cfg.syncbn
+    if syncbn and devices_num <= 1:
+        print("Disable syncbn in single device")
+        syncbn = False
+    build_strategy.sync_batch_norm = syncbn
     compile_program = fluid.compiler.CompiledProgram(fluid.default_main_program(
     )).with_data_parallel(
         loss_name=loss.name, build_strategy=build_strategy)
