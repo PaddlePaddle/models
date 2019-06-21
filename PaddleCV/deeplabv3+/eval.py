@@ -112,7 +112,7 @@ else:
 
 batches = dataset.get_batch_generator(batch_size, total_step)
 if args.use_py_reader:
-    py_reader.decorate_tensor_provider(lambda :[ (yield b[1],b[2]) for b in batches])
+    py_reader.decorate_tensor_provider(lambda :[ (yield b[0],b[1]) for b in batches])
     py_reader.start()
 
 sum_iou = 0
