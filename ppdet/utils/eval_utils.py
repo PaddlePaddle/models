@@ -1,19 +1,16 @@
-"""
-  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-# TODO(dengkaipeng): change comment stype above in github
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import absolute_import
 from __future__ import division
@@ -47,16 +44,14 @@ def parse_fetches(fetches, prog=None, extra_keys=None):
                 v.persistable = True
                 keys.append(k)
                 values.append(v.name)
-            except:
+            except Exception:
                 pass
 
     return keys, values
 
 
 def eval_run(exe, compile_program, pyreader, keys, values):
-    """
-    Run evaluation program, return program outputs.
-    """
+    """Run evaluation program, return program outputs."""
     iter_id = 0
     results = []
     try:
@@ -81,9 +76,7 @@ def eval_run(exe, compile_program, pyreader, keys, values):
 
 
 def eval_results(results, feed, args, cfg):
-    """
-    Evaluation for evaluation program results
-    """
+    """Evaluation for evaluation program results"""
     metric = cfg['metric']
     if metric == 'COCO':
         from ppdet.utils.coco_eval import bbox_eval, mask_eval
@@ -94,7 +87,7 @@ def eval_results(results, feed, args, cfg):
             savefile = '{}_bbox.json'.format(args.savefile)
         bbox_eval(results, anno_file, savefile, with_background)
         if 'mask' in results[0]:
-            savefile= 'mask.json'
+            savefile = 'mask.json'
             if args.savefile:
                 savefile = '{}_mask.json'.format(args.savefile)
             mask_eval(results, anno_file, savefile,
@@ -102,4 +95,3 @@ def eval_results(results, feed, args, cfg):
     else:
         res = np.mean(results[-1]['map'][0])
         logger.info('Test mAP: {}'.format(res))
-
