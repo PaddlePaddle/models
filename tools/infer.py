@@ -97,7 +97,7 @@ def main():
     with_background = getattr(test_feed, 'with_background', True)
     clsid2catid, catid2name = get_category_info(anno_file, with_background)
 
-    images = reader.image_list
+    imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
         outs = exe.run(infer_prog,
                        feed=feeder.feed(data),
@@ -110,7 +110,7 @@ def main():
         logger.info('Infer iter {}'.format(iter_id))
 
         im_id = int(res['im_id'][0])
-        image_path = os.path.join(test_feed.dataset.image_dir, images[im_id])
+        image_path = os.path.join(test_feed.dataset.image_dir, imid2path[im_id])
         if cfg['metric'] == 'COCO':
             bbox_results = bbox2out([res], clsid2catid) \
                                 if 'bbox' in res else None
