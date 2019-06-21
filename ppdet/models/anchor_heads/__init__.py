@@ -14,5 +14,4 @@
 
 from . import rpn_head
 from . import yolo_head
-from . import ssd_head
 from . import retina_head

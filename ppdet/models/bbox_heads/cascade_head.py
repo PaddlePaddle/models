@@ -1,5 +1,4 @@
-"""
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -22,15 +20,15 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Normal, Xavier
 from paddle.fluid.regularizer import L2Decay
 
-from ppdet.models.nms import MultiClassNMS
-from ppdet.core.workspace import register, serializable
+from ppdet.models.ops import MultiClassNMS
+from ppdet.core.workspace import register
 
 __all__ = ['CascadeBBoxHead']
 
 
 @register
 class CascadeBBoxHead(object):
-    r"""
+    """
     Cascade RCNN bbox head
 
     Args:
@@ -61,8 +59,8 @@ class CascadeBBoxHead(object):
             name(String): Layer's name
 
         Returns:
-            cls_score(Variable): TODO(guanzhong) add comments
-            bbox_pred(Variable): are output of bbox_head.
+            cls_score(Variable): cls score.
+            bbox_pred(Variable): bbox regression.
         """
         head_feat = self.head(roi_feat, wb_scalar, name)
         cls_score = fluid.layers.fc(input=head_feat,
@@ -96,13 +94,13 @@ class CascadeBBoxHead(object):
     def get_loss(self, rcnn_pred_list, rcnn_target_list, rcnn_loss_weight_list):
         """
         Get bbox_head loss.
-        
+
         Args:
-            rcnn_pred_list(List): Cascade rcnn's head's output including 
+            rcnn_pred_list(List): Cascade RCNN's head's output including
                 bbox_pred and cls_score
-            rcnn_target_list(List): Cascade rcnn's bbox and label target 
-            rcnn_loss_weight_list(List): The weight of location and class loss 
- 
+            rcnn_target_list(List): Cascade rcnn's bbox and label target
+            rcnn_loss_weight_list(List): The weight of location and class loss
+
         Return:
             loss_cls(Variable): bbox_head loss.
             loss_bbox(Variable): bbox_head loss.
@@ -147,25 +145,25 @@ class CascadeBBoxHead(object):
         Get prediction bounding box in test stage.
         :
         Args:
-            im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the 
-                number of input images, each element consists 
+            im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the
+                number of input images, each element consists
                 of im_height, im_width, im_scale.
-	        rois_feat_list (List): RoI feature from RoIExtractor.
-            rcnn_pred_list (Variable): Cascade rcnn's head's output 
-				including bbox_pred and cls_score
+            rois_feat_list (List): RoI feature from RoIExtractor.
+            rcnn_pred_list (Variable): Cascade rcnn's head's output
+                including bbox_pred and cls_score
             proposal_list (List): RPN proposal boxes.
             cascade_bbox_reg_weights (List): BBox decode var.
-            cls_agnostic_bbox_reg(Int): BBox regressor are class agnostic 
-     
+            cls_agnostic_bbox_reg(Int): BBox regressor are class agnostic
+
         Returns:
-            pred_result(Variable): Prediction result with shape [N, 6]. Each 
-               row has 6 values: [label, confidence, xmin, ymin, xmax, ymax]. 
+            pred_result(Variable): Prediction result with shape [N, 6]. Each
+               row has 6 values: [label, confidence, xmin, ymin, xmax, ymax].
                N is the total number of prediction.
         """
         self.im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
         boxes_cls_prob_l = []
 
-        rcnn_pred = rcnn_pred_list[-1]  # stage 3 
+        rcnn_pred = rcnn_pred_list[-1]  # stage 3
         repreat_num = 1
         repreat_num = 3
         bbox_reg_w = cascade_bbox_reg_weights[-1]
@@ -212,15 +210,6 @@ class CascadeBBoxHead(object):
         return {"bbox": pred_result}
 
     def _head_share(self, roi_feat, wb_scalar=2.0, name=''):
-        """
-        Cascade Prediction Shared Head.
-        :
-        Args:
-
-	    Returns:
-
-	    """
-
         # FC6 FC7
         fc6 = fluid.layers.fc(input=roi_feat,
                               size=self.head.num_chan,
@@ -265,7 +254,10 @@ class CascadeBBoxHead(object):
 @register
 class FC6FC7Head(object):
     """
-    add fc6, fc7 after roi feature
+    Cascade RCNN head with two Fully Connected layers
+
+    Args:
+        num_chan (int): num of filters for the fc layers
     """
 
     def __init__(self, num_chan):

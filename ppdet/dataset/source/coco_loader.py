@@ -20,13 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 def load(anno_path, sample_num=-1, with_background=True):
-    """ Load COCO records with annotations in json file 'anno_path'
+    """
+    Load COCO records with annotations in json file 'anno_path'
 
     Args:
         anno_path (str): json file path
         sample_num (int): number of samples to load, -1 means all
         with_background (bool): whether load background as a class.
-                                if True, total class number will 
+                                if True, total class number will
                                 be 81. default True
 
     Returns:
@@ -45,8 +46,8 @@ def load(anno_path, sample_num=-1, with_background=True):
         }
         'cname2cid' is a dict used to map category name to class id
     """
-    assert anno_path.endswith('.json'), 'invalid coco annotation file[%s]' % (
-        anno_path)
+    assert anno_path.endswith('.json'), 'invalid coco annotation file: ' \
+        + anno_path
     coco = COCO(anno_path)
     img_ids = coco.getImgIds()
     cat_ids = coco.getCatIds()
@@ -119,4 +120,4 @@ def load(anno_path, sample_num=-1, with_background=True):
             break
     assert len(records) > 0, 'not found any coco record in %s' % (anno_path)
     logger.info('{} samples in file {}'.format(ct, anno_path))
-    return [records, cname2cid]
+    return records, cname2cid

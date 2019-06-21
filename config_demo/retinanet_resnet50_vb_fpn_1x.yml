@@ -1,17 +1,17 @@
-architecture: Retinanet
+architecture: RetinaNet
 train_feed: FasterRCNNTrainFeed
 eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 90000
 use_gpu: yes
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
-weights: output/Retinanet/model_final
+weights: output/retinanet/model_final
 log_smooth_window: 20
 snapshot_iter: 10000
 metric: COCO
 save_dir: output
 
-Retinanet:
+RetinaNet:
   backbone: ResNet
   neck: FPN
   retina_head: RetinaHead
@@ -44,13 +44,13 @@ RetinaHead:
   anchor_generator:
     aspect_ratios: [1.0, 2.0, 0.5]
     variance: [1.0, 1.0, 1.0, 1.0]
-  retina_target_assign:
+  target_assign:
     positive_overlap: 0.5
     negative_overlap: 0.4
   gamma: 2.0
   alpha: 0.25
   sigma: 3.0151134457776365
-  retina_detection_output:
+  output_decoder:
     score_thresh: 0.05
     nms_thresh: 0.3
     pre_nms_top_n: 1000

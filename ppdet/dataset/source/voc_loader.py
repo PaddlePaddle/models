@@ -19,17 +19,17 @@ import xml.etree.ElementTree as ET
 
 
 def get_roidb(anno_path, sample_num=-1, cname2cid=None):
-    """ Load VOC records with annotations in 
-        xml directory 'anno_path'
+    """
+    Load VOC records with annotations in xml directory 'anno_path'
 
-        Notes:
-        ${anno_path}/ImageSets/Main/train.txt must contains xml file names for annotations
-        ${anno_path}/Annotations/xxx.xml must contain annotation info for one record
+    Notes:
+    ${anno_path}/ImageSets/Main/train.txt must contains xml file names for annotations
+    ${anno_path}/Annotations/xxx.xml must contain annotation info for one record
 
     Args:
-        @anno_path (str): root directory for voc annotation data
-        @sample_num (int): number of samples to load, -1 means all
-        @cname2cid (dict): the label name to id dictionary
+        anno_path (str): root directory for voc annotation data
+        sample_num (int): number of samples to load, -1 means all
+        cname2cid (dict): the label name to id dictionary
 
     Returns:
         (records, catname2clsid)
@@ -45,13 +45,13 @@ def get_roidb(anno_path, sample_num=-1, cname2cid=None):
             'gt_poly': gt_poly,
         }
         'cname2id' is a dict to map category name to class id
-
     """
+
     txt_file = anno_path
     part = txt_file.split('ImageSets')
     xml_path = os.path.join(part[0], 'Annotations')
     assert os.path.isfile(txt_file) and \
-           os.path.isdir(xml_path), 'invalid xml path'
+        os.path.isdir(xml_path), 'invalid xml path'
 
     records = []
     ct = 0
@@ -130,12 +130,13 @@ def get_roidb(anno_path, sample_num=-1, cname2cid=None):
 
 
 def load(anno_path, sample_num=-1, use_default_label=True):
-    """ Load VOC records with annotations in 
-        xml directory 'anno_path'
+    """
+    Load VOC records with annotations in
+    xml directory 'anno_path'
 
-        Notes:
-        ${anno_path}/ImageSets/Main/train.txt must contains xml file names for annotations
-        ${anno_path}/Annotations/xxx.xml must contain annotation info for one record
+    Notes:
+    ${anno_path}/ImageSets/Main/train.txt must contains xml file names for annotations
+    ${anno_path}/Annotations/xxx.xml must contain annotation info for one record
 
     Args:
         @anno_path (str): root directory for voc annotation data
@@ -156,18 +157,17 @@ def load(anno_path, sample_num=-1, use_default_label=True):
             'gt_poly': gt_poly,
         }
         'cname2id' is a dict to map category name to class id
-
     """
+
     txt_file = anno_path
     part = txt_file.split('ImageSets')
     xml_path = os.path.join(part[0], 'Annotations')
     assert os.path.isfile(txt_file) and \
-           os.path.isdir(xml_path), 'invalid xml path'
+        os.path.isdir(xml_path), 'invalid xml path'
 
     records = []
     ct = 0
     cname2cid = {}
-    existence = False if cname2cid is None else True
     if not use_default_label:
         label_path = os.path.join(part[0], 'ImageSets/Main/label_list.txt')
         with open(label_path, 'r') as fr:

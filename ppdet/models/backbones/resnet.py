@@ -24,6 +24,8 @@ from paddle.fluid.framework import Variable
 from paddle.fluid.regularizer import L2Decay
 
 from ppdet.core.workspace import register, serializable
+from numbers import Integral
+
 from .fetch_net_name import FetchName
 
 __all__ = ['ResNet', 'ResNetC5']
@@ -68,6 +70,8 @@ class ResNet(object):
         self.freeze_norm = freeze_norm
         self.variant = variant
         self._model_type = 'ResNet'
+        if isinstance(feature_maps, Integral):
+            feature_maps = [feature_maps]
         self.feature_maps = feature_maps
         self.depth_cfg = {
             18: ([2, 2, 2, 2], self.basicblock),
@@ -180,7 +184,7 @@ class ResNet(object):
             expand = 2
 
         conv_name1, conv_name2, conv_name3, \
-                    shortcut_name = self.fetch_net_name.fetch_bottleneck(name)
+            shortcut_name = self.fetch_net_name.fetch_bottleneck(name)
         conv_def = [[num_filters, 1, stride1, 'relu', 1, conv_name1],
                     [num_filters, 3, stride2, 'relu', groups, conv_name2],
                     [num_filters * expand, 1, 1, None, 1, conv_name3]]
@@ -303,9 +307,6 @@ class ResNet(object):
                 res_endpoints.append(res)
             if self.freeze_at >= i:
                 res.stop_gradient = True
-
-        if len(res_endpoints) == 1:
-            return res_endpoints[0]
 
         return OrderedDict([('res{}_sum'.format(self.feature_maps[idx]), feat)
                             for idx, feat in enumerate(res_endpoints)])

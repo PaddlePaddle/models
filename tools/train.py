@@ -17,28 +17,25 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import sys
 import time
 import multiprocessing
 
 import numpy as np
 
-import logging
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
-
 from paddle import fluid
 
 from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.models.model_inputs import create_feeds
 from ppdet.dataset.data_feed import create_reader
 
+from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import parse_args
 import ppdet.utils.checkpoint as checkpoint
+from ppdet.models.model_input import create_feeds
 
-from tools.eval_utils import parse_fetches, eval_run, eval_results
-
+import logging
+FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
+logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +46,7 @@ def main():
     if 'architecture' in cfg:
         main_arch = cfg['architecture']
     else:
-        raise ValueError("The architecture is not specified in config file.")
+        raise ValueError("'architecture' not specified in config file.")
 
     merge_config(args.cli_config)
 
@@ -109,15 +106,14 @@ def main():
         eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
         # parse train fetches
-        extra_keys = ['im_info', 'im_id'] if cfg['metric'] == 'COCO' \
-                     else []
+        extra_keys = ['im_info', 'im_id'] if cfg['metric'] == 'COCO' else []
         eval_keys, eval_values = parse_fetches(fetches, eval_prog, extra_keys)
 
     # 3. Compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
-    sync_bn = getattr(model.backbone, 'norm_type') == 'sync_bn'
+    sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     build_strategy.sync_batch_norm = sync_bn
     train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(

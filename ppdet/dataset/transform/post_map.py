@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
-import os
+
 import logging
 import cv2
 import numpy as np
@@ -28,16 +28,17 @@ def build_post_map(coarsest_stride=1,
                    random_shapes=[],
                    multi_scales=[],
                    use_padded_im_info=False):
-    """ Build a mapper for post-processing batches
+    """
+    Build a mapper for post-processing batches
 
     Args:
-        config (dict of parameters): 
+        config (dict of parameters):
           {
             coarsest_stride (int): stride of the coarsest FPN level
             is_padding (bool): whether to padding in minibatch
-            random_shapes: (list of int): resize to image to random 
+            random_shapes: (list of int): resize to image to random
                                           shapes, [] for not resize.
-            multi_scales: (list of int): resize image by random 
+            multi_scales: (list of int): resize image by random
                                           scales, [] for not resize.
           }
     Returns:
@@ -96,8 +97,7 @@ def build_post_map(coarsest_stride=1,
                 fy=scale,
                 interpolation=cv2.INTER_NEAREST)
             im_info = [im.shape[:2], scale]
-            scaled_batch.append((im.transpose(2, 0, 1), im_info) \
-                                 + data[2:])
+            scaled_batch.append((im.transpose(2, 0, 1), im_info) + data[2:])
         return scaled_batch
 
     def _mapper(batch_data):
@@ -109,8 +109,7 @@ def build_post_map(coarsest_stride=1,
             if len(multi_scales) > 0:
                 batch_data = multi_scale_resize(batch_data)
         except Exception as e:
-            errmsg = 'failed to postprocess the batch for reason:[%s]' % (
-                str(e))
+            errmsg = "post-process failed with error: " + str(e)
             logger.warn(errmsg)
             raise e
 

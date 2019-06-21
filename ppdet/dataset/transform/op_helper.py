@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # this file contains helper methods for BBOX processing
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
+
 import numpy as np
 
 
@@ -44,7 +45,7 @@ def bbox_area(src_bbox):
     return width * height
 
 
-def deal_bbox_label(sample_bbox, bboxes, labels, scores=None):
+def filter_and_process(sample_bbox, bboxes, labels, scores=None):
     new_bboxes = []
     new_labels = []
     new_scores = []
