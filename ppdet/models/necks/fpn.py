@@ -38,7 +38,7 @@ class FPN(object):
         min_level (int): lowest level of the backbone feature map to use
         max_level (int): highest level of the backbone feature map to use
         spatial_scale (list): feature map scaling factor
-        has_extra_convs (bool): whether has extral convolutions for igher levels
+        has_extra_convs (bool): whether has extral convolutions in higher levels
     """
 
     def __init__(self,
