@@ -322,7 +322,7 @@ class ResNetC5(ResNet):
                  norm_type='affine_channel',
                  freeze_norm=True,
                  norm_decay=0.,
-                 variant='a',
+                 variant='b',
                  feature_maps=[5]):
         super(ResNetC5, self).__init__(depth, freeze_at, norm_type, freeze_norm,
                                        norm_decay, variant, feature_maps)
