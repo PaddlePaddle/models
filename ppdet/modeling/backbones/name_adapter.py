@@ -69,17 +69,5 @@ class NameAdapter(object):
             conv_name = str(stage_num + 2) + '_' + str(i + 1)
         return conv_name
 
-    def fix_c1_stage_name(self, out_chan):
-        if self.variant in ['c', 'd']:
-            conv_def = [
-                [out_chan / 2, 3, 2, "conv1_1"],
-                [out_chan / 2, 3, 1, "conv1_2"],
-                [out_chan, 3, 1, "conv1_3"],
-            ]
-        else:
-            conv1_name = "conv1"
-            # the naming rule is same as pretrained weight
-            if self.model_type == 'ResNext':
-                conv1_name = "res_conv1"
-            conv_def = [[out_chan, 7, 2, conv1_name]]
-        return conv_def
+    def fix_c1_stage_name(self):
+        return "res_conv1" if self.model_type == 'ResNext' else "conv1"
