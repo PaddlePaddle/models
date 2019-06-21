@@ -297,6 +297,9 @@ if cfg.pretrain:
 **Q:** 我训练YOLOv3速度比较慢，要怎么提速？  
 **A:** YOLOv3的数据增强比较复杂，速度比较慢，可通过在[reader.py](./reader.py#L284)中增加数据读取的进程数来提速。若用户是进行fine-tune，也可将`--no_mixup_iter`设置大于`--max_iter`的值来禁用mixup提升速度。
 
+**Q:** 我使用YOLOv3训练两个类别的数据集，训练`loss=nan`或推断结果不符合预期，这是为什么？  
+**A:** `--label_smooth`参数会把所有正例的目标值设置为`1-1/class_num`，负例的目标值设为`1/class_num`，当`class_num`较小时，这个操作影响过大，可能会出现`loss=nan`或者训练结果错误，类别数较小时建议设置`--label_smooth=False`。若使用Paddle Fluid v1.5及以上版本，我们在C++代码中对这种情况作了保护，设置`--label_smooth=True`也不会出现这些问题。
+
 ## 参考文献
 
 - [You Only Look Once: Unified, Real-Time Object Detection](https://arxiv.org/abs/1506.02640v5), Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi.

@@ -297,6 +297,9 @@ if cfg.pretrain:
 **Q:** YOLOv3 training in my machine is very slow, how can I speed it up?  
 **A:** Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](./reader.py#L284) for speeding up. If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
 
+**Q:** YOLOv3 training with 2 categories dataset got `loss=nan` or wrong prediction, why?  
+**A:** Settting `--label_smooth` will smooth target value of positive sample to `1-1/class_num` and target of negative sample to `1/class_num`, if `class_num` is very small, label smooth will incur excessive influence and may cause `loss=nan` or wrong prediction, it is recommend to set `--label_smooth=False` while category number is small. If you are using Paddle Fluid v1.5 and above, this situation is protected in C++ code, setting `--label_smooth=True` will no longer incur such error.
+
 ## Reference
 
 - [You Only Look Once: Unified, Real-Time Object Detection](https://arxiv.org/abs/1506.02640v5), Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi.

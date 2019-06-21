@@ -25,7 +25,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size',        int,   1,          "Minibatch size.")
 add_arg('epoch',             int,   None,        "The number of weights to be testes.")
 add_arg('output',            str,   "./output_0", "The directory the model and the test result to be saved to.")
-add_arg('init_model',        str,   './G/',       "The init model file of directory.")
+add_arg('init_model',        str,   './output_0/checkpoints/',       "The init model file of directory.")
 
 def test():
     with fluid.dygraph.guard():
@@ -38,7 +38,7 @@ def test():
             os.makedirs(out_path)
         cycle_gan = Cycle_Gan("cycle_gan")
         save_dir = args.init_model + str(epoch)
-        restore = fluid.dygraph.load_persistables(save_dir)
+        restore, _ = fluid.dygraph.load_persistables(save_dir)
         cycle_gan.load_dict(restore)
         cycle_gan.eval()
         for data_A , data_B in zip(A_test_reader(), B_test_reader()): 

@@ -48,7 +48,7 @@ def plot(gen_data):
 
 
 def checkpoints(epoch, cfg, exe, trainer, name):
-    output_path = cfg.output + '/chechpoints/' + str(epoch)
+    output_path = cfg.output + '/checkpoints/' + str(epoch)
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     fluid.io.save_persistables(

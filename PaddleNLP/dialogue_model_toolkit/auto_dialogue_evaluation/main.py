@@ -23,6 +23,7 @@ sys.path.append('../../models/dialogue_model_toolkit/auto_dialogue_evaluation/')
 from net import Network
 import config
 
+
 def train(args):
     """Train
     """
@@ -45,8 +46,7 @@ def train(args):
             fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
                 max=1.0, min=-1.0))
 
-            optimizer = fluid.optimizer.Adam(
-                learning_rate=args.learning_rate)
+            optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
             optimizer.minimize(loss)
             print("begin memory optimization ...")
             fluid.memory_optimize(train_program)
@@ -59,7 +59,7 @@ def train(args):
         test_startup.random_seed = 110
     with fluid.program_guard(test_program, test_startup):
         with fluid.unique_name.guard():
-            logits, loss = net.network(args.loss_type) 
+            logits, loss = net.network(args.loss_type)
             loss.persistable = True
             logits.persistable = True
 
@@ -73,9 +73,8 @@ def train(args):
 
     print("device count %d" % dev_count)
     print("theoretical memory usage: ")
-    print(
-        fluid.contrib.memory_usage(
-            program=train_program, batch_size=args.batch_size))
+    print(fluid.contrib.memory_usage(
+        program=train_program, batch_size=args.batch_size))
 
     exe = fluid.Executor(place)
     exe.run(train_startup)
@@ -127,49 +126,54 @@ def train(args):
         """
         Evaluate to choose model
         """
-        val_batches = reader.batch_reader(
-            args.val_path, args.batch_size, place, args.max_len, 1)
+        val_batches = reader.batch_reader(args.val_path, args.batch_size, place,
+                                          args.max_len, 1)
         scores = []
         labels = []
         for batch in val_batches:
             scores.extend(test_with_feed(batch))
             labels.extend([x[0] for x in batch[2]])
 
-        return eva.evaluate_Recall(zip(scores, labels))
-    
+        return eva.evaluate_Recall(list(zip(scores, labels)))
+
     def save_exe(step, best_recall):
         """
         Save exe conditional
         """
         recall_dict = evaluate()
         print('evaluation recall result:')
-        print('1_in_2: %s\t1_in_10: %s\t2_in_10: %s\t5_in_10: %s' % (
-            recall_dict['1_in_2'], recall_dict['1_in_10'], 
-            recall_dict['2_in_10'], recall_dict['5_in_10']))
+        print('1_in_2: %s\t1_in_10: %s\t2_in_10: %s\t5_in_10: %s' %
+              (recall_dict['1_in_2'], recall_dict['1_in_10'],
+               recall_dict['2_in_10'], recall_dict['5_in_10']))
 
         if recall_dict['1_in_10'] > best_recall and step != 0:
-            fluid.io.save_inference_model(args.save_path, 
-                net.get_feed_inference_names(), 
-                logits, exe, main_program=train_program)
+            fluid.io.save_inference_model(
+                args.save_path,
+                net.get_feed_inference_names(),
+                logits,
+                exe,
+                main_program=train_program)
 
             print("Save model at step %d ... " % step)
-            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+            print(time.strftime('%Y-%m-%d %H:%M:%S',
+                                time.localtime(time.time())))
             best_recall = recall_dict['1_in_10']
         return best_recall
 
     # train over different epoches
     global_step, train_time = 0, 0.0
-    best_recall = 0 
+    best_recall = 0
     for epoch in six.moves.xrange(args.num_scan_data):
-        train_batches = reader.batch_reader(
-            args.train_path, args.batch_size, place, 
-            args.max_len, args.sample_pro)
+        train_batches = reader.batch_reader(args.train_path, args.batch_size,
+                                            place, args.max_len,
+                                            args.sample_pro)
 
         begin_time = time.time()
         sum_cost = 0
         ce_cost = 0
         for batch in train_batches:
-            if (args.save_path is not None) and (global_step % args.save_step == 0):
+            if (args.save_path is not None) and (
+                    global_step % args.save_step == 0):
                 best_recall = save_exe(global_step, best_recall)
 
             cost = train_with_feed(batch)
@@ -178,7 +182,8 @@ def train(args):
             ce_cost = cost.mean()
 
             if global_step % args.print_step == 0:
-                print('training step %s avg loss %s' % (global_step, sum_cost / args.print_step))
+                print('training step %s avg loss %s' %
+                      (global_step, sum_cost / args.print_step))
                 sum_cost = 0
 
         pass_time_cost = time.time() - begin_time
@@ -187,7 +192,8 @@ def train(args):
               .format(epoch, "%2.2f sec" % pass_time_cost))
         if "CE_MODE_X" in os.environ and epoch == args.num_scan_data - 1:
             card_num = get_cards()
-            print("kpis\ttrain_duration_card%s\t%s" % (card_num, pass_time_cost))
+            print("kpis\ttrain_duration_card%s\t%s" %
+                  (card_num, pass_time_cost))
             print("kpis\ttrain_loss_card%s\t%s" % (card_num, ce_cost))
 
 
@@ -232,7 +238,7 @@ def finetune(args):
         test_startup.random_seed = 110
     with fluid.program_guard(test_program, test_startup):
         with fluid.unique_name.guard():
-            logits, loss = net.network(args.loss_type) 
+            logits, loss = net.network(args.loss_type)
             loss.persistable = True
             logits.persistable = True
 
@@ -246,9 +252,8 @@ def finetune(args):
 
     print("device count %d" % dev_count)
     print("theoretical memory usage: ")
-    print(
-        fluid.contrib.memory_usage(
-            program=train_program, batch_size=args.batch_size))
+    print(fluid.contrib.memory_usage(
+        program=train_program, batch_size=args.batch_size))
 
     exe = fluid.Executor(place)
     exe.run(train_startup)
@@ -264,9 +269,7 @@ def finetune(args):
 
     if args.init_model:
         init.init_pretraining_params(
-            exe,
-            args.init_model,
-            main_program=train_startup)
+            exe, args.init_model, main_program=train_startup)
         print('sccuess init %s' % args.init_model)
 
     print("start loading data ...")
@@ -294,8 +297,8 @@ def finetune(args):
         """
         Evaluate to choose model
         """
-        val_batches = reader.batch_reader(
-            args.val_path, args.batch_size, place, args.max_len, 1)
+        val_batches = reader.batch_reader(args.val_path, args.batch_size, place,
+                                          args.max_len, 1)
         scores = []
         labels = []
         for batch in val_batches:
@@ -303,7 +306,7 @@ def finetune(args):
             labels.extend([x[0] for x in batch[2]])
         scores = [x[0] for x in scores]
         return eva.evaluate_cor(scores, labels)
-    
+
     def save_exe(step, best_cor):
         """
         Save exe conditional
@@ -311,28 +314,32 @@ def finetune(args):
         cor = evaluate()
         print('evaluation cor relevance %s' % cor)
         if cor > best_cor and step != 0:
-            fluid.io.save_inference_model(args.save_path, 
-                net.get_feed_inference_names(), logits, 
-                exe, main_program=train_program)
+            fluid.io.save_inference_model(
+                args.save_path,
+                net.get_feed_inference_names(),
+                logits,
+                exe,
+                main_program=train_program)
             print("Save model at step %d ... " % step)
-            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+            print(time.strftime('%Y-%m-%d %H:%M:%S',
+                                time.localtime(time.time())))
             best_cor = cor
         return best_cor
 
     # train over different epoches
     global_step, train_time = 0, 0.0
-    best_cor = 0.0 
+    best_cor = 0.0
     pre_index = -1
     for epoch in six.moves.xrange(args.num_scan_data):
-        train_batches = reader.batch_reader(
-            args.train_path, 
-            args.batch_size, place, 
-            args.max_len, args.sample_pro)
+        train_batches = reader.batch_reader(args.train_path, args.batch_size,
+                                            place, args.max_len,
+                                            args.sample_pro)
 
         begin_time = time.time()
         sum_cost = 0
         for batch in train_batches:
-            if (args.save_path is not None) and (global_step % args.save_step == 0):
+            if (args.save_path is not None) and (
+                    global_step % args.save_step == 0):
                 best_cor = save_exe(global_step, best_cor)
 
             cost = train_with_feed(batch)
@@ -340,7 +347,8 @@ def finetune(args):
             sum_cost += cost.mean()
 
             if global_step % args.print_step == 0:
-                print('training step %s avg loss %s' % (global_step, sum_cost / args.print_step))
+                print('training step %s avg loss %s' %
+                      (global_step, sum_cost / args.print_step))
                 sum_cost = 0
 
         pass_time_cost = time.time() - begin_time
@@ -361,36 +369,38 @@ def evaluate(args):
     with fluid.scope_guard(fluid.Scope()):
         infer_program, feed_target_names, fetch_vars = fluid.io.load_inference_model(
             args.init_model, exe)
+        print('init model %s' % args.init_model)
 
         global_step, infer_time = 0, 0.0
-        test_batches = reader.batch_reader(
-            args.test_path, args.batch_size, place,
-            args.max_len, 1)
+        test_batches = reader.batch_reader(args.test_path, args.batch_size,
+                                           place, args.max_len, 1)
         scores = []
         labels = []
         for batch in test_batches:
-            logits = exe.run(
-                infer_program,
-                feed = {
-                    'context_wordseq': batch[0],
-                    'response_wordseq': batch[1]},
-                fetch_list = fetch_vars)
-            logits = [x[0] for x in logits[0]] 
+            logits = exe.run(infer_program,
+                             feed={
+                                 'context_wordseq': batch[0],
+                                 'response_wordseq': batch[1]
+                             },
+                             fetch_list=fetch_vars)
+            logits = [x[0] for x in logits[0]]
 
             scores.extend(logits)
             labels.extend([x[0] for x in batch[2]])
 
-        mean_score = sum(scores)/len(scores)
+        print('len scores: %s len labels: %s' % (len(scores), len(labels)))
+        mean_score = sum(scores) / len(scores)
         if args.loss_type == 'CLS':
-            recall_dict = eva.evaluate_Recall(zip(scores, labels))
+            recall_dict = eva.evaluate_Recall(list(zip(scores, labels)))
             print('mean score: %s' % mean_score)
             print('evaluation recall result:')
-            print('1_in_2: %s\t1_in_10: %s\t2_in_10: %s\t5_in_10: %s' % (
-                recall_dict['1_in_2'], recall_dict['1_in_10'], 
-                recall_dict['2_in_10'], recall_dict['5_in_10']))
+            print('1_in_2: %s\t1_in_10: %s\t2_in_10: %s\t5_in_10: %s' %
+                  (recall_dict['1_in_2'], recall_dict['1_in_10'],
+                   recall_dict['2_in_10'], recall_dict['5_in_10']))
         elif args.loss_type == 'L2':
             cor = eva.evaluate_cor(scores, labels)
-            print('mean score: %s\nevaluation cor resuls:%s' % (mean_score, cor))
+            print('mean score: %s\nevaluation cor resuls:%s' %
+                  (mean_score, cor))
         else:
             raise ValueError
 
@@ -413,18 +423,17 @@ def infer(args):
             args.init_model, exe)
 
         global_step, infer_time = 0, 0.0
-        test_batches = reader.batch_reader(
-            args.test_path, args.batch_size, place,
-            args.max_len, 1)
+        test_batches = reader.batch_reader(args.test_path, args.batch_size,
+                                           place, args.max_len, 1)
         scores = []
         for batch in test_batches:
-            logits = exe.run(
-                infer_program,
-                feed = {
-                    'context_wordseq': batch[0],
-                    'response_wordseq': batch[1]},
-                fetch_list = fetch_vars)
-            logits = [x[0] for x in logits[0]] 
+            logits = exe.run(infer_program,
+                             feed={
+                                 'context_wordseq': batch[0],
+                                 'response_wordseq': batch[1]
+                             },
+                             fetch_list=fetch_vars)
+            logits = [x[0] for x in logits[0]]
 
             scores.extend(logits)
 
@@ -433,7 +442,7 @@ def infer(args):
         out_file = open(out_path, 'w')
         for line, s in zip(in_file, scores):
             out_file.write('%s\t%s\n' % (line.strip(), s))
-            
+
         in_file.close()
         out_file.close()
 
@@ -470,6 +479,7 @@ def main():
         infer(args)
     else:
         raise ValueError
+
 
 if __name__ == '__main__':
     main()

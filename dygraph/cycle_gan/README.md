@@ -88,6 +88,7 @@ todo：loss曲线
 ```
 env CUDA_VISIBLE_DEVICES=0 python test.py --epoch=200
 ```
+生成结果在 `output_0/eval`中
 
 
 ### 预测
@@ -98,7 +99,7 @@ env CUDA_VISIBLE_DEVICES=0 python test.py --epoch=200
 
 ```
 env CUDA_VISIBLE_DEVICES=0 python infer.py \
-    --init_model="./G/199" --input="./image/testA/123_A.jpg" \
+    --init_model="./output_0/checkpoints/199" --input="./image/testA/123_A.jpg" \
     --input_style=A 
 ```
 
@@ -106,9 +107,10 @@ env CUDA_VISIBLE_DEVICES=0 python infer.py \
 
 ```
 env CUDA_VISIBLE_DEVICES=0 python infer.py \
-    --init_model="./G/199" --input="./image/testB/78_B.jpg" \
+    --init_model="./output_0/checkpoints/199" --input="./image/testB/78_B.jpg" \
     --input_style=B 
 ```
+生成结果在 `output_0/single`中
 
 训练180轮的模型预测效果如fakeA和fakeB所示：
 
