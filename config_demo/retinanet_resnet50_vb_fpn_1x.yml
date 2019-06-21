@@ -5,7 +5,7 @@ test_feed: FasterRCNNTestFeed
 max_iters: 90000
 use_gpu: yes
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
-weights: output/retinanet/model_final
+weights: output/RetinaNet/model_final
 log_smooth_window: 20
 snapshot_iter: 10000
 metric: COCO
@@ -52,7 +52,7 @@ RetinaHead:
   sigma: 3.0151134457776365
   output_decoder:
     score_thresh: 0.05
-    nms_thresh: 0.3
+    nms_thresh: 0.5
     pre_nms_top_n: 1000
     detections_per_im: 100
     nms_eta: 1.0
