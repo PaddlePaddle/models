@@ -184,7 +184,7 @@ class ResNet(object):
             expand = 2
 
         conv_name1, conv_name2, conv_name3, \
-                    shortcut_name = self.fetch_net_name.fetch_bottleneck(name)
+            shortcut_name = self.fetch_net_name.fetch_bottleneck(name)
         conv_def = [[num_filters, 1, stride1, 'relu', 1, conv_name1],
                     [num_filters, 3, stride2, 'relu', groups, conv_name2],
                     [num_filters * expand, 1, 1, None, 1, conv_name3]]

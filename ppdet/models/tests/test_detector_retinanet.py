@@ -20,9 +20,6 @@ from __future__ import division
 from __future__ import print_function
 
 import unittest
-import numpy as np
-
-import paddle.fluid as fluid
 
 from ppdet.models.tests.decorator_helper import prog_scope
 from ppdet.core.config import load_cfg, merge_cfg
@@ -47,7 +44,7 @@ class TestDetectorRetinaNet(unittest.TestCase):
         merge_cfg({'IS_TRAIN': True}, self.cfg)
         self.detector = Detectors.get(self.detector_type)(self.cfg)
         self.detector.train()
-        #TODO(luoqianhui): add more check
+        # TODO(luoqianhui): add more check
 
     @prog_scope()
     def test_test(self):
@@ -57,7 +54,7 @@ class TestDetectorRetinaNet(unittest.TestCase):
         merge_cfg({'IS_TRAIN': False}, self.cfg)
         self.detector = Detectors.get(self.detector_type)(self.cfg)
         self.detector.test()
-        #TODO(luoqianhui): add more check
+        # TODO(luoqianhui): add more check
 
 
 if __name__ == '__main__':
