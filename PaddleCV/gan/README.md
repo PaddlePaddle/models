@@ -1,16 +1,16 @@
-#图像生成模型库
+# 图像生成模型库
 
 生成对抗网络(Generative Adversarial Network\[[1](#参考文献)\], 简称GAN) 是一种非监督学习的方式，通过让两个神经网络相互博弈的方法进行学习，该方法由lan Goodfellow等人在2014年提出。生成对抗网络由一个生成网络和一个判别网络组成，生成网络从潜在的空间(latent space)中随机采样作为输入，其输出结果需要尽量模仿训练集中的真实样本。判别网络的输入为真实样本或生成网络的输出，其目的是将生成网络的输出从真实样本中尽可能的分辨出来。而生成网络则尽可能的欺骗判别网络，两个网络相互对抗，不断调整参数。
 生成对抗网络常用于生成以假乱真的图片。此外，该方法还被用于生成影片，三维物体模型等。\[[2](#参考文献)\]
 
 ---
-##内容
+## 内容
 
 -[简介](#简介)
 -[快速开始](#快速开始)
 -[参考文献](#参考文献)
 
-##简介
+## 简介
 
 本图像生成模型库包含CGAN\[[3](#参考文献)\], DCGAN\[[4](#参考文献)\], Pix2Pix\[[5](#参考文献)\], CycleGAN\[[6](#参考文献)\], StarGAN\[[7](#参考文献)\], AttGAN\[[8](#参考文献)\], STGAN\[[9](#参考文献)\]。
 
@@ -54,12 +54,12 @@
 
 ```
 
-##快速开始
+## 快速开始
 **安装[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)：**
 
 在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
-###数据准备
+### 数据准备
 
 模型库中提供了download.py数据下载脚本，该脚本支持下载MNIST数据集，CycleGAN和Pix2Pix所需要的数据集。使用以下命令下载数据：
     python download.py --dataset=mnist
@@ -70,12 +70,12 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 **自定义数据集：**
 用户可以使用自定义的数据集，只要设置成所对应的生成模型所需要的数据格式即可。
 
-ps: pix2pix模型数据集准备中的list文件需要通过scripts文件夹里的make_pair_data.py来生成，可以使用以下命令来生成：
+注意: pix2pix模型数据集准备中的list文件需要通过scripts文件夹里的make_pair_data.py来生成，可以使用以下命令来生成：
   python scripts/make_pair_data.py \
     --direction=A2B
 用户可以通过指定direction参数生成list文件，从而确保图像风格转变的方向。
 
-###模型训练
+### 模型训练
 **开始训练：** 数据准备完毕后，可以通过一下方式启动训练：
   python train.py \
     --model_net=$(name_of_model) \
@@ -87,7 +87,7 @@ ps: pix2pix模型数据集准备中的list文件需要通过scripts文件夹里�
 
 用户可以通过设置model_net参数来选择想要训练的模型，通过设置dataset参数来选择训练所需要的数据集。
 
-###模型测试
+### 模型测试
 模型测试是利用训练完成的生成模型进行图像生成。infer.py是主要的执行程序，调用示例如下：
   python infer.py \
     --model_net=$(name_of_model) \
@@ -95,13 +95,21 @@ ps: pix2pix模型数据集准备中的list文件需要通过scripts文件夹里�
     --dataset_dir=$(path_to_data)
 
 
-##参考文献
+## 参考文献
 [1] [Goodfellow, Ian J.; Pouget-Abadie, Jean; Mirza, Mehdi; Xu, Bing; Warde-Farley, David; Ozair, Sherjil; Courville, Aaron; Bengio, Yoshua. Generative Adversarial Networks. 2014. arXiv:1406.2661 [stat.ML].](https://arxiv.org/abs/1406.2661)
+
 [2] [https://zh.wikipedia.org/wiki/生成对抗网络](https://zh.wikipedia.org/wiki/生成对抗网络)
+
 [3] [Conditional Generative Adversarial Nets](https://arxiv.org/abs/1411.1784)
+
 [4] [Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks](https://arxiv.org/abs/1511.06434)
+
 [5] [Image-to-Image Translation with Conditional Adversarial Networks](https://arxiv.org/abs/1611.07004)
+
 [6] [Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://arxiv.org/abs/1703.10593)
+
 [7] [StarGAN: Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation](https://arxiv.org/abs/1711.09020)
+
 [8] [AttGAN: Facial Attribute Editing by Only Changing What You Want](https://arxiv.org/abs/1711.10678)
+
 [9] [STGAN: A Unified Selective Transfer Network for Arbitrary Image Attribute Editing](https://arxiv.org/abs/1904.09709)

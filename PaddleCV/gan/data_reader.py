@@ -262,7 +262,7 @@ class celeba_reader_creator(reader_creator):
         attr_names = args.selected_attrs.split(',')
         for line in lines:
             arr = line.strip().split()
-            name = './images/' + arr[0]
+            name = './img_align_celeba/' + arr[0]
             label = []
             for attr_name in attr_names:
                 idx = attr2idx[attr_name]
@@ -523,3 +523,22 @@ class data_reader(object):
                 reader = train_reader.get_train_reader(
                     self.cfg, shuffle=self.shuffle)
                 return reader, reader_test, batch_num
+            else:
+                dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
+                train_list = os.path.join(dataset_dir, 'train.txt')
+                if self.cfg.train_list is not None:
+                    train_list = self.cfg.train_list
+                train_reader = reader_creator(
+                    image_dir=dataset_dir, list_filename=train_list)
+                reader_test = None
+                if self.cfg.run_test:
+                    test_list = os.path.join(dataset_dir, "test.txt")
+                    test_reader = reader_creator(
+                        image_dir=dataset_dir,
+                        list_filename=test_list,
+                        batch_size=1,
+                        drop_last=self.cfg.drop_last)
+                    reader_test = test_reader.get_test_reader(
+                        self.cfg, shuffle=False, return_name=True)
+                batch_num = train_reader.len()
+                return train_reader, reader_test, batch_num

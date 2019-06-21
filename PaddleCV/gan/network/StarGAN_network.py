@@ -60,7 +60,7 @@ class StarGAN_model(object):
         input1 = fluid.layers.concat([input, label_trg_e], 1)
         conv0 = conv2d(
             input1,
-            cfg.g_conv_dim,
+            cfg.g_base_dims,
             7,
             1,
             padding=3,
@@ -74,7 +74,7 @@ class StarGAN_model(object):
             rate = 2**(i + 1)
             conv_down = conv2d(
                 conv_down,
-                cfg.g_conv_dim * rate,
+                cfg.g_base_dims * rate,
                 4,
                 2,
                 padding=1,
@@ -86,13 +86,15 @@ class StarGAN_model(object):
         res_block = conv_down
         for i in range(repeat_num):
             res_block = self.ResidualBlock(
-                res_block, cfg.g_conv_dim * (2**2), name=name + '.%d' % (i + 9))
+                res_block,
+                cfg.g_base_dims * (2**2),
+                name=name + '.%d' % (i + 9))
         deconv = res_block
         for i in range(2):
             rate = 2**(1 - i)
             deconv = deconv2d(
                 deconv,
-                cfg.g_conv_dim * rate,
+                cfg.g_base_dims * rate,
                 4,
                 2,
                 padding=1,
@@ -117,7 +119,7 @@ class StarGAN_model(object):
     def network_D(self, input, cfg, name="discriminator"):
         conv0 = conv2d(
             input,
-            cfg.d_conv_dim,
+            cfg.d_base_dims,
             4,
             2,
             padding=1,
@@ -125,7 +127,7 @@ class StarGAN_model(object):
             name=name + '0',
             initial='kaiming')
         repeat_num = 6
-        curr_dim = cfg.d_conv_dim
+        curr_dim = cfg.d_base_dims
         conv = conv0
         for i in range(1, repeat_num):
             curr_dim *= 2
