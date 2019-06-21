@@ -80,19 +80,19 @@ def get_dataset_path(path):
             for url, md5sum in dataset:
                 get_path(url, data_dir, md5sum)
             return data_dir
-    
+
     # not match any dataset in DATASETS
     raise ValueError("{} not exists and unknow dataset type".format(path))
 
 
 def get_path(url, root_dir, md5sum=None):
-    """ Download from given url to root_dir. 
-    if file or directory specified by url is exists under 
-    root_dir, return the path directly, otherwise download 
+    """ Download from given url to root_dir.
+    if file or directory specified by url is exists under
+    root_dir, return the path directly, otherwise download
     from url and decompress it, return the path.
 
     url (str): download url
-    root_dir (str): root dir for downloading, it should be 
+    root_dir (str): root dir for downloading, it should be
                     WEIGHTS_HOME or DATASET_HOME
     md5sum (str): md5 sum of download package
     """
@@ -104,7 +104,7 @@ def get_path(url, root_dir, md5sum=None):
         fpath = fpath.replace(zip_format, '')
     fullpath = os.path.join(root_dir, fpath)
 
-    # For same zip file, decompressed directory name different 
+    # For same zip file, decompressed directory name different
     # from zip file name, rename by following map
     decompress_name_map = {"VOCtrainval": "VOCdevkit",
                            "annotations_trainval": "annotations"}
@@ -117,13 +117,13 @@ def get_path(url, root_dir, md5sum=None):
     else:
         fullname = _download(url, root_dir, md5sum)
         _decompress(fullname)
-    
+
     return fullpath
 
 
 def _download(url, path, md5sum=None):
     """
-    Download from url, save to path. 
+    Download from url, save to path.
 
     url (str): download url
     path (str): download to given path
@@ -187,9 +187,9 @@ def _decompress(fname):
     """
     logger.info("Decompressing {}...".format(fname))
 
-    # For protecting decompressing interupted, 
-    # decompress to fpath_tmp directory firstly, if decompress 
-    # successed, move decompress files to fpath and delete 
+    # For protecting decompressing interupted,
+    # decompress to fpath_tmp directory firstly, if decompress
+    # successed, move decompress files to fpath and delete
     # fpath_tmp and download file.
     fpath = '/'.join(fname.split('/')[:-1])
     fpath_tmp = os.path.join(fpath, 'tmp')
@@ -210,4 +210,3 @@ def _decompress(fname):
         shutil.move(os.path.join(fpath_tmp, f), os.path.join(fpath, f))
     os.rmdir(fpath_tmp)
     os.remove(fname)
-
