@@ -20,6 +20,7 @@ import dist_utils
 
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
+
 def parse_args():
     parser = argparse.ArgumentParser("Training for Transformer.")
     parser.add_argument(
@@ -147,15 +148,18 @@ def parse_args():
                         [TrainTaskConfig, ModelHyperParams])
     return args
 
+
 def get_device_num():
     # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1 : return 1
+    if num_trainers > 1: return 1
     visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
     if visible_device:
         device_num = len(visible_device.split(','))
     else:
-        device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
+        device_num = subprocess.check_output(
+            ['nvidia-smi', '-L']).decode().count('\n')
     return device_num
+
 
 def append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
                          current_endpoint):
@@ -270,11 +274,11 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
     return data_input_dict, np.asarray([num_token], dtype="float32")
 
 
-def prepare_data_generator(args,                        
-                           is_test,	
-                           count,	
-                           pyreader,	
-                           py_reader_provider_wrapper,	
+def prepare_data_generator(args,
+                           is_test,
+                           count,
+                           pyreader,
+                           py_reader_provider_wrapper,
                            place=None):
     """
     Data generator wrapper for DataReader. If use py_reader, set the data
@@ -340,7 +344,7 @@ def prepare_data_generator(args,
         # to make data on each device have similar token number
         data_reader = split(data_reader, count)
     if args.use_py_reader:
-        train_reader = py_reader_provider_wrapper(data_reader,)   
+        train_reader = py_reader_provider_wrapper(data_reader, )
         if num_trainers > 1:
             assert shuffle_seed is not None
             train_reader = fluid.contrib.reader.distributed_batch_reader(
@@ -432,10 +436,10 @@ def test_context(exe, train_exe, dev_count):
                 is_test=True)
     test_prog = test_prog.clone(for_test=True)
     test_data = prepare_data_generator(
-        args, 
-        is_test=True,	
-        count=dev_count,	
-        pyreader=pyreader,	
+        args,
+        is_test=True,
+        count=dev_count,
+        pyreader=pyreader,
         py_reader_provider_wrapper=py_reader_provider_wrapper)
 
     exe.run(startup_prog)  # to init pyreader for testing
@@ -504,10 +508,10 @@ def train_loop(exe,
 
     logging.info("begin reader")
     train_data = prepare_data_generator(
-        args,        
-        is_test=False,	
-        count=dev_count,	
-        pyreader=pyreader,	
+        args,
+        is_test=False,
+        count=dev_count,
+        pyreader=pyreader,
         py_reader_provider_wrapper=py_reader_provider_wrapper)
 
     # For faster executor
@@ -594,7 +598,7 @@ def train_loop(exe,
                             (step_idx, pass_id, batch_id, total_avg_cost,
                              total_avg_cost - loss_normalizer,
                              np.exp([min(total_avg_cost, 100)]),
-                             args.fetch_steps / (time.time() - avg_batch_time)))))
+                             args.fetch_steps / (time.time() - avg_batch_time)))
                         avg_batch_time = time.time()
 
                 if step_idx % TrainTaskConfig.save_freq == 0 and step_idx > 0:
@@ -664,7 +668,7 @@ def train(args):
         dev_count = get_device_num()
 
     exe = fluid.Executor(place)
-    
+
     train_prog = fluid.Program()
     startup_prog = fluid.Program()
 
