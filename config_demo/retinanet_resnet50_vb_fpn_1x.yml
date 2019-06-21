@@ -82,15 +82,11 @@ FasterRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 128
   dataset:
-    # TODO: change dataset dir
-    dataset_dir: coco17
+    dataset_dir: coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  #TODO(check the w,h)
-  image_shape:
-  - 3
-  - 1333
-  - 800
+  drop_last: false
+  image_shape: [3, 1333, 800]
   num_workers: 2
   sample_transforms:
   - !DecodeImage
@@ -99,18 +95,12 @@ FasterRCNNTrainFeed:
   - !RandomFlipImage
     is_mask_flip: false
     is_normalized: false
-    prob: 0.
+    prob: 0.5
   - !NormalizeImage
     is_channel_first: false
     is_scale: true
-    mean:
-    - 0.485
-    - 0.456
-    - 0.406
-    std:
-    - 0.229
-    - 0.224
-    - 0.225
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
   - !ResizeImage
     interp: 1
     max_size: 1333
@@ -127,40 +117,21 @@ FasterRCNNEvalFeed:
   - !PadBatch
     pad_to_stride: 128
   dataset:
-    # TODO: change dataset dir
-    dataset_dir: coco17
+    dataset_dir: coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   shuffle: false
-  fields:
-  - image
-  - im_info
-  - im_id
-  #TODO(check the w,h)
-  image_shape:
-  - 3
-  - 800
-  - 1333
+  image_shape: [3, 1333, 800]
   num_workers: 2
   sample_transforms:
   - !DecodeImage
     to_rgb: true
     with_mixup: false
-  - !RandomFlipImage
-    is_mask_flip: false
-    is_normalized: false
-    prob: 0.
   - !NormalizeImage
     is_channel_first: false
     is_scale: true
-    mean:
-    - 0.485
-    - 0.456
-    - 0.406
-    std:
-    - 0.229
-    - 0.224
-    - 0.225
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
   - !ResizeImage
     interp: 1
     max_size: 1333
@@ -177,40 +148,22 @@ FasterRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 128
   dataset:
-    # TODO: change dataset dir
-    dataset_dir: coco17
+    dataset_dir: coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  shuffle: false
-  fields:
-  - image
-  - im_info
-  - im_id
-  #TODO(check the w,h)
-  image_shape:
-  - 3
-  - 800
-  - 1333
+  test_file: val2017.txt
+  drop_last: false
+  image_shape: [3, 1333, 800]
   num_workers: 2
   sample_transforms:
   - !DecodeImage
     to_rgb: true
     with_mixup: false
-  - !RandomFlipImage
-    is_mask_flip: false
-    is_normalized: false
-    prob: 0.
   - !NormalizeImage
     is_channel_first: false
     is_scale: true
-    mean:
-    - 0.485
-    - 0.456
-    - 0.406
-    std:
-    - 0.229
-    - 0.224
-    - 0.225
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
   - !ResizeImage
     interp: 1
     max_size: 1333
