@@ -99,7 +99,7 @@ class Paradigm(object):
                 name="cls_out_b", initializer=fluid.initializer.Constant(0.)))
 
         labels_onehot = fluid.layers.cast(params["labels"], dtype='float32')
-        ce_loss = fluid.layers.sum(
+        ce_loss = fluid.layers.reduce_sum(
             fluid.layers.sigmoid_cross_entropy_with_logits(
                 x=logits, label=labels_onehot))
         loss = fluid.layers.mean(input=ce_loss)
