@@ -33,6 +33,8 @@ def train(cfg):
         )
     elif cfg.model_net == 'Pix2pix':
         train_reader, test_reader, batch_num = reader.make_data()
+    elif cfg.model_net == 'StarGAN':
+        train_reader, test_reader, batch_num = reader.make_data()
     else:
         if cfg.dataset == 'mnist':
             train_reader = reader.make_data()
@@ -56,6 +58,9 @@ def train(cfg):
     elif cfg.model_net == 'Pix2pix':
         from trainer.Pix2pix import Pix2pix
         model = Pix2pix(cfg, train_reader, test_reader, batch_num)
+    elif cfg.model_net == 'StarGAN':
+        from trainer.StarGAN import StarGAN
+        model = StarGAN(cfg, train_reader, test_reader, batch_num)
     elif cfg.model_net == 'AttGAN':
         from trainer.AttGAN import AttGAN
         model = AttGAN(cfg, train_reader, test_reader, batch_num)

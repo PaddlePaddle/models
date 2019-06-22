@@ -78,7 +78,10 @@ def infer(args):
         from network.Pix2pix_network import Pix2pix_model
         model = Pix2pix_model()
         fake = model.network_G(input, "generator", cfg=args)
-
+    elif args.model_net == 'StarGAN':
+        from network.StarGAN_network import StarGAN_model
+        model = StarGAN_model()
+        fake = model.network_G(input, label_trg_, name="g_main", cfg=args)
     elif args.model_net == 'STGAN':
         from network.STGAN_network import STGAN_model
         model = STGAN_model()
@@ -151,6 +154,37 @@ def infer(args):
             images_concat = np.concatenate(images, 1)
             images_concat = np.concatenate(images_concat, 1)
             imsave(args.output + "/fake_img_" + name[0], (
+                (images_concat + 1) * 127.5).astype(np.uint8))
+    elif args.model_net == 'StarGAN':
+        test_reader = celeba_reader_creator(
+            image_dir=args.dataset_dir,
+            list_filename=args.test_list,
+            batch_size=args.batch_size,
+            drop_last=False,
+            args=args)
+        reader_test = test_reader.get_test_reader(
+            args, shuffle=False, return_name=True)
+        for data in zip(reader_test()):
+            real_img, label_org, name = data[0]
+            tensor_img = fluid.LoDTensor()
+            tensor_label_org = fluid.LoDTensor()
+            tensor_img.set(real_img, place)
+            tensor_label_org.set(label_org, place)
+            real_img_temp = np.squeeze(real_img).transpose([1, 2, 0])
+            images = [real_img_temp]
+            for i in range(cfg.c_dim):
+                label_trg = np.zeros([1, cfg.c_dim]).astype("float32")
+                label_trg[0][i] = 1
+                tensor_label_trg = fluid.LoDTensor()
+                tensor_label_trg.set(label_trg, place)
+                out = exe.run(
+                    feed={"input": tensor_img,
+                          "label_trg_": tensor_label_trg},
+                    fetch_list=fake.name)
+                fake_temp = np.squeeze(out[0]).transpose([1, 2, 0])
+                images.append(fake_temp)
+            images_concat = np.concatenate(images, 1)
+            imsave(out_path + "/fake_img" + str(epoch) + "_" + name[0], (
                 (images_concat + 1) * 127.5).astype(np.uint8))
 
     elif args.model_net == 'Pix2pix' or args.model_net == 'cyclegan':
