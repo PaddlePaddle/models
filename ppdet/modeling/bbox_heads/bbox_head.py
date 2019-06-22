@@ -107,11 +107,11 @@ class BBoxHead(object):
         self.num_classes = num_classes
         self.box_coder = box_coder
         self.nms = nms
-        self.head_feat = None
         if isinstance(box_coder, dict):
             self.box_coder = BoxCoder(**box_coder)
         if isinstance(nms, dict):
             self.nms = MultiClassNMS(**nms)
+        self.head_feat = None
 
     def get_head_feat(self, input=None):
         """
