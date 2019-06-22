@@ -39,7 +39,7 @@ class MaskHead(object):
     """
 
     def __init__(self,
-                 num_convs=4,
+                 num_convs=0,
                  num_chan_reduced=256,
                  resolution=14,
                  dilation=1,
