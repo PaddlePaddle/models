@@ -102,7 +102,7 @@ def main():
                     fetches = model.eval(feed_vars)
         eval_prog = eval_prog.clone(True)
 
-        eval_reader = create_reader(train_feed)
+        eval_reader = create_reader(eval_feed)
         eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
         # parse train fetches
@@ -157,7 +157,7 @@ def main():
                 results = eval_run(exe, eval_compile_program, eval_pyreader,
                                    eval_keys, eval_values, eval_cls)
                 # Evaluation
-                eval_results(results, eval_feed, args, cfg['metric'])
+                eval_results(results, eval_feed, args, cfg)
 
     checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()
