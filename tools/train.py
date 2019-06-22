@@ -88,7 +88,7 @@ def main():
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     # parse train fetches
-    train_keys, train_values = parse_fetches(train_fetches)
+    train_keys, train_values, _ = parse_fetches(train_fetches)
     train_values.append(lr)
 
     if args.eval:
@@ -99,15 +99,16 @@ def main():
                 if cfg['metric'] == 'COCO':
                     fetches = model.test(feed_vars)
                 else:
-                    fetches = model.val(feed_vars)
+                    fetches = model.eval(feed_vars)
         eval_prog = eval_prog.clone(True)
 
-        eval_reader = create_reader(train_feed)
+        eval_reader = create_reader(eval_feed)
         eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
         # parse train fetches
         extra_keys = ['im_info', 'im_id'] if cfg['metric'] == 'COCO' else []
-        eval_keys, eval_values = parse_fetches(fetches, eval_prog, extra_keys)
+        eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
+                                                         extra_keys)
 
     # 3. Compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
@@ -154,9 +155,9 @@ def main():
             if args.eval:
                 # Run evaluation
                 results = eval_run(exe, eval_compile_program, eval_pyreader,
-                                   eval_keys, eval_values)
+                                   eval_keys, eval_values, eval_cls)
                 # Evaluation
-                eval_results(results, eval_feed, args, cfg['metric'])
+                eval_results(results, eval_feed, args, cfg)
 
     checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()

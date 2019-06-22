@@ -86,7 +86,7 @@ def load(fname,
          samples=-1,
          with_background=True,
          with_cat2id=False,
-         use_default_label=True,
+         use_default_label=None,
          cname2cid=None):
     """ Load data records from 'fnames'
 
@@ -122,7 +122,6 @@ def load(fname,
         records, cname2cid = coco_loader.load(fname, samples, with_background)
     elif os.path.isfile(fname):
         from . import voc_loader
-
         if use_default_label is None or cname2cid is not None:
             records, cname2cid = voc_loader.get_roidb(fname, samples, cname2cid)
         else:

@@ -73,7 +73,7 @@ def main():
             if cfg['metric'] == 'COCO':
                 fetches = model.test(feed_vars)
             else:
-                fetches = model.val(feed_vars)
+                fetches = model.eval(feed_vars)
     eval_prog = eval_prog.clone(True)
 
     reader = create_reader(eval_feed)
@@ -92,16 +92,16 @@ def main():
     # 5. Load model
     exe.run(startup_prog)
     if cfg['weights']:
-        checkpoint.load_checkpoint(exe, eval_prog, cfg['weights'])
+        checkpoint.load_pretrain(exe, eval_prog, cfg['weights'])
 
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
 
-    keys, values = parse_fetches(fetches, eval_prog, extra_keys)
+    keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
 
     # 6. Run
-    results = eval_run(exe, compile_program, pyreader, keys, values)
+    results = eval_run(exe, compile_program, pyreader, keys, values, cls)
     # Evaluation
     eval_results(results, eval_feed, args, cfg)
 
